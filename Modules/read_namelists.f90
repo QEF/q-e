@@ -327,12 +327,12 @@ MODULE read_namelists_module
        minimization_scheme = 'quick-min'
        damp                = 1.D0
        temp_req            = 0.D0
-       ds                  = 0.6D0
+       ds                  = 1.5D0
        k_max               = 0.1D0
        k_min               = 0.1D0
        neb_thr             = 0.05D0
        !
-       sic_rloc    = 0.0d0
+       sic_rloc    = 0.0D0
        !
        RETURN
        !
