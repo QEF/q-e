@@ -608,12 +608,17 @@ MODULE read_cards_module
           IF ( atomic_positions == 'bohr' ) THEN
              tscal = .FALSE.
           ELSE IF( atomic_positions == 'angstrom' ) THEN
+             IF ( calculation == 'neb' ) pos = pos * angstrom_au
              rd_pos = rd_pos * angstrom_au
              tscal = .FALSE.
           ELSE IF( atomic_positions == 'alat' ) THEN
+             IF ( calculation == 'neb' ) pos = pos * celldm(1)
              rd_pos = rd_pos * celldm(1)  ! Remember celldm(i) = alat
              tscal = .FALSE.
           ELSE
+             IF ( calculation == 'neb' ) THEN
+               CALL errore( ' read_cards ', ' scaled coordinate not allowed with neb dynamics ', 1 )
+             END IF
              tscal = .TRUE.
           END IF
        END IF

@@ -1172,6 +1172,11 @@ MODULE read_namelists_module
           CASE ( 'neb' )
              IF( prog == 'PW' ) startingpot  = 'atomic'
              IF( prog == 'PW' ) startingwfc  = 'random'
+             IF( prog == 'FP' ) THEN
+                 electron_dynamics = 'sd'
+                 ion_dynamics = 'none'
+                 cell_dynamics = 'none'
+             END IF
           CASE DEFAULT
              CALL errore( sub_name,' calculation '// & 
                           & calculation//' not implemented ',1)
