@@ -33,6 +33,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE constants, ONLY: tpi
 #ifdef __PARA
   use mp, only: mp_bcast
 #endif
@@ -64,8 +65,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: [S(irotq)*q - q]
 ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat), t (max_irr_dim, max_irr_dim, 48, 3 * nat), &
-       tmq (max_irr_dim, max_irr_dim, 3 * nat)
+  complex(kind=DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat), &
+       tmq (max_irr_dim, max_irr_dim, 3*nat)
 ! output: the pattern vectors
 ! output: the symmetry matrices
 ! output: the matrice sending q -> -q+G
@@ -74,38 +75,23 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   here the local variables
 !
-  real(kind=DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
-
   integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on modes
-  ! counter on modes
-  ! counter on perturbations
-  ! counter on perturbations
-  ! total number of symmetries
-  ! auxiliry variable for mode counting
-  ! counter on irreducible representation
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on symmetries
-  ! counter on rotations
-  ! the rotated atom
+  ! counters and auxiliary variables
 
   integer :: info
 
   real(kind=DP) :: eigen (3 * nat), modul, arg
-! the eigenvalues of dynamical ma
+! the eigenvalues of dynamical matrix
 ! the modulus of the mode
 ! the argument of the phase
 
   complex(kind=DP) :: wdyn (3, 3, nat, nat), phi (3 * nat, 3 * nat), &
        wrk_u (3, nat), wrk_ru (3, nat), fase
 ! the dynamical matrix
-! the bi-dimensional dynamical ma
-! one pattern
-! the rotated of one pattern
+! the dynamical matrix with two indices
+! pattern
+! rotated pattern
 ! the phase factor
 
   logical :: lgamma
@@ -113,7 +99,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   Allocate the necessary quantities
 !
-  lgamma = (xq(1).eq.0.d0 .and. xq(2).eq.0.d0 .and. xq(3).eq.0.d0)
+  lgamma = (xq(1) == 0.d0 .and. xq(2) == 0.d0 .and. xq(3) == 0.d0)
 !
 !   find the small group of q
 !
@@ -196,7 +182,6 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
       end if
 !
 !  Here we count the irreducible representations and their dimensions
-!
   do imode = 1, 3 * nat
 ! initialization
      npert (imode) = 0

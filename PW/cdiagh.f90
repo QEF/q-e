@@ -49,8 +49,10 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   CALL cdiagh_crayy() 
   !
 # else
-  !
-  CALL cdiagh_lapack()
+  !   
+  ! CALL cdiagh_lapack( )
+  ! workaround for Intel ifc8 bug:
+  CALL cdiagh_lapack( v )
   !
 # endif
 #endif
@@ -152,17 +154,19 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
 # else        
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE cdiagh_lapack()
+    ! workaround for Intel ifc8 bug:
+    !    SUBROUTINE cdiagh_lapack( )
+    SUBROUTINE cdiagh_lapack( v )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
-      !
+      ! workaround for Intel ifc8 bug:
+      COMPLEX(KIND=DP) ::  v(ldh,n)
       !
       ! ... local variables (LAPACK version)
       !
       INTEGER :: lwork, nb, info
-      INTEGER :: ILAENV
-      EXTERNAL   ILAENV
+      INTEGER, EXTERNAL :: ILAENV
         ! ILAENV returns optimal block size "nb"
       REAL(KIND=DP),    ALLOCATABLE :: rwork(:)
       COMPLEX(KIND=DP), ALLOCATABLE :: work(:)

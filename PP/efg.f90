@@ -131,7 +131,7 @@ subroutine do_efg(Q)
   use parameters ,only: ntypx
   use constants, only: pi,tpi,fpi,ANGSTROM_AU,rytoev,ELECTRONVOLT_SI
   use scf, only: rho              !rho
-  use gvect, only: nr1,nr2,nr3,nrx1,nrx1,nrx2,nrx3,nrxx,&
+  use gvect, only: nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,&
        g,gg,nl,gstart,ngm         !gvectors and parameters for the FFT
   use brilz , only: at,bg         !parameters of the cell
   use basis , only : nat, atm, tau, ityp         !coordinates of the atoms

@@ -15,9 +15,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   ! ... Hv=eSv, with H hermitean matrix, S overlap matrix .
   ! ... On output both matrix are unchanged
   !
-  ! ... LAPACK version - may use both ZHEGV and ZHEGVX
-  ! ... ZHEGVX should be faster but it is not available on many machines
-  ! ... define HAS_ZHEGVX in the preprocessing options to use ZHEGVX
+  ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
   USE kinds,     ONLY : DP
 #if defined (__PARA)
@@ -47,18 +45,14 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LOCAL variables
   !
-  INTEGER :: lwork, nb, ILAENV, mm, info
-    ! ILAENV returns optimal block size "nb"
+  INTEGER :: lwork, nb, mm, info
     ! mm = number of calculated eigenvectors
+  INTEGER, EXTERNAL :: ILAENV
+    ! ILAENV returns optimal block size "nb"
   INTEGER,          ALLOCATABLE :: iwork(:), ifail(:)
   REAL(KIND=DP),    ALLOCATABLE :: rwork(:)
   COMPLEX(KIND=DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
   LOGICAL :: all_eigenvalues
-  !
-  ! ... external methods
-  !
-  EXTERNAL ZCOPY, ZHEGV, ILAENV
-  !
   !
   CALL start_clock( 'cdiaghg' )
   !
@@ -80,15 +74,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
 #endif
 #endif
-#if defined (HAS_ZHEGVX)
   !
   all_eigenvalues = ( m == n )
-  !
-#else
-  !
-  all_eigenvalues = .TRUE.
-  !
-#endif
   !
   ! ... check for optimal block size
   !
@@ -145,7 +132,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
                     lwork, rwork, info )
         !
      ELSE
-#if defined (HAS_ZHEGVX)
         !
         ! ... calculate only m lowest eigenvalues
         !
@@ -155,7 +141,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
                      0.0D0, 0.0D0, 1, m, 0.D0, mm, e(1), v, ldh, &
                      work, lwork, rwork, iwork, ifail, info )
         !
-#endif
      END IF
      !
      CALL errore( 'cdiaghg', 'info =/= 0', ABS( info ) )
