@@ -49,23 +49,23 @@ subroutine startup (nd_nmbr, version)
 #if ! defined __PARA
   integer :: me, nproc
 #endif
+#ifdef __T3E
+#define iargc ipxfargc
+#define getarg(x,y) pxfgetarg(x,y, ilen, ierr)
+#endif
 
   character :: np * 2, cdate * 9, ctime * 9
   external date_and_tim
 
 #ifdef __PARA
 
-  integer :: ierr, ilen, iargc, nargs
+  integer :: ierr, ilen, iargc, nargs, iiarg
 
 #  ifdef __T3E
-
-  integer ipxfargc
   !
   ! set streambuffers on
   !
-
   call set_d_stream (1)
-
 #  endif
 
 #endif
@@ -83,46 +83,27 @@ subroutine startup (nd_nmbr, version)
 
 #ifdef __PARA
 
-  if (me.eq.1) then
+  if (me == 1) then
      !
      ! How many pools?
      !
-
-#  ifdef __T3E
-
-     nargs = ipxfargc ()
-     if (nargs.ge.2) then
-        call pxfgetarg (2, np, ilen, ierr)
-
-#  else
-
-#    ifdef HITACHI
-
-     nargs = iargc ()
-     if (nargs.ge.3) then
-        call getarg (3, np)
-
-#    else
-
-     nargs = iargc ()
-     if (nargs.ge.2) then
-        call getarg (2, np)
-
-#    endif
-
-#  endif
-
-        read (np, '(i2)') npool
-        if (npool.le.0) npool = 1
-        if (npool.gt.nproc) npool = nproc
-     else
-        npool = 1
-     end if
+     npool = 1
+     nargs = iargc () 
      !
-     ! set number of processes per pool (must be equal for all pool)
+     do iiarg=1,nargs-1
+        call getarg (iiarg, np)  
+        if (np == '-npool') then
+          call getarg (iiarg+1, np)  
+          read (np, '(i2)') npool  
+        end if
+     end do
+     npool = max (npool, 1)
+     npool = min (npool, nproc)
+     !
+     ! set number of processes per pool (must be equal for all pools)
      !
      nprocp = nproc / npool
-     if (nproc.ne.nprocp * npool) &
+     if (nproc /= nprocp * npool) &
           &call errore ('startup','nproc.ne.nprocp*npool', 1)
 
   endif
@@ -140,22 +121,22 @@ subroutine startup (nd_nmbr, version)
   ! set the processor label for files
   !
 
-  if (nproc.gt.maxproc) call errore ('startup', ' too many processors', nproc)
+  if (nproc > maxproc) call errore ('startup', ' too many processors', nproc)
   nd_nmbr = '   '
-  if (nproc.lt.10) then
+  if (nproc < 10) then
      write (nd_nmbr (1:1) , '(i1)') me
-  elseif (nproc.lt.100) then
-     if (me.lt.10) then
+  elseif (nproc < 100) then
+     if (me < 10) then
         nd_nmbr = '0'
         write (nd_nmbr (2:2) , '(i1)') me
      else
         write (nd_nmbr (1:2) , '(i2)') me
      endif
   else
-     if (me.lt.10) then
+     if (me < 10) then
         nd_nmbr = '00'
         write (nd_nmbr (3:3) , '(i1)') me
-     elseif (me.lt.100) then
+     elseif (me < 100) then
         nd_nmbr = '0'
         write (nd_nmbr (2:3) , '(i2)') me
      else
@@ -163,18 +144,18 @@ subroutine startup (nd_nmbr, version)
      endif
   endif
 #ifdef DEBUG
-  if (me.ne.1) open (6, file = './out_'//nd_nmbr, status = 'unknown')
+  if (me /= 1) open (6, file = './out_'//nd_nmbr, status = 'unknown')
 #else
-  if (me.ne.1) open (6, file = '/dev/null', status = 'unknown')
+  if (me /= 1) open (6, file = '/dev/null', status = 'unknown')
 #endif
-  if (me.eq.1) then
+  if (me == 1) then
      call date_and_tim (cdate, ctime)
      write (6, 9000) version, cdate, ctime
      write (6, '(/5x,"Parallel version (MPI)")')
      write (6, '(5x,"Number of processors in use:   ",i4)') nproc
-     if (npool.ne.1) &
+     if (npool /= 1) &
           write (6, '(5x,"K-points division:    npool  = ",i4)') npool
-     if (nprocp.ne.1)&
+     if (nprocp /= 1)&
           write (6, '(5x,"R & G space division: nprocp = ",i4/)') nprocp
   endif
 

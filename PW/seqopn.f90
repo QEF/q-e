@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   !
   !    first the dummy variables
   !
-  character :: filename * ( * ), formatt * ( * )
+  character(len=*) :: filename, formatt
   ! input: name of the file to connect
   ! input: 'formatted' or 'unformatted'
   integer :: unit
@@ -37,21 +37,21 @@ subroutine seqopn (unit, filename, formatt, exst)
   ! true if the file is already opened
 
 
-  if (unit.le.0) call errore ('seqopn', 'wrong unit', 1)
+  if (unit < 1) call errore ('seqopn', 'wrong unit', 1)
   !
   !    test if the file is already opened
   !
   ios = 0
   inquire (unit = unit, opened = opnd)
-  if (opnd) call errore ('seqopn', 'can"t open a connected unit', &
+  if (opnd) call errore ('seqopn', "can't open a connected unit", &
        abs (unit) )
   !
   !      then we check the filename
   !
 
   if (filename.eq.' ') call errore ('seqopn', 'filename not given', 2)
-  if ( trim(nd_nmbr).eq.'1' .or. trim(nd_nmbr).eq.'01'.or. &
-       trim(nd_nmbr).eq.'001') then
+  if ( trim(nd_nmbr) == '1' .or. trim(nd_nmbr) == '01'.or. &
+       trim(nd_nmbr) == '001') then
      !
      ! do not add processor number to files opened by processor 1
      ! in parallel execution: if only the first processor writes,
@@ -70,7 +70,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   open (unit = unit, file = tempfile, form = formatt, status = &
        'unknown', iostat = ios)
 
-  if (ios.ne.0) call errore ('seqopn', 'error opening '//filename, &
+  if (ios /= 0) call errore ('seqopn', 'error opening '//filename, &
        unit)
   return
 end subroutine seqopn

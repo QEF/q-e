@@ -29,6 +29,8 @@ COMMON
 
 - Nudged Elastic Band
 
+- process numbering: 1 to nproc or 0 to nproc-1 ?
+
 PW
 
 - replace "use pwcom" into more "use" statement
