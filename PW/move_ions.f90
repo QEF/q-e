@@ -37,7 +37,8 @@ SUBROUTINE move_ions()
   USE io_global,     ONLY : stdout
   USE io_files,      ONLY : tmp_dir, prefix, iunupdate
   USE kinds,         ONLY : DP
-  USE cell_base,     ONLY : alat, at, bg
+  USE cell_base,     ONLY : alat, at, bg, omega
+  USE cellmd,        ONLY : omega_old, at_old, lmovecell
   USE ions_base,     ONLY : nat, ityp, tau, atm
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symme,         ONLY : s, ftau, nsym, irt
