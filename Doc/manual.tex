@@ -2,8 +2,8 @@
  \def\version{2.1}
 
  \usepackage{epsfig}
- %\usepackage{html}
-  \def\htmladdnormallink#1#2{#1}
+ \usepackage{html}
+  %\def\htmladdnormallink#1#2{#1}
 
 \begin{document} 
 
@@ -652,7 +652,7 @@ still missing, see below (for Linux PC).
 
 If at linking stage you get error messages like: ``undefined reference
 to `for\_check\_mult\_overflow64' '' with Compaq/HP fortran compiler
-on Linux Alphas, check the following page:\break
+on Linux Alphas, check the following page:
 \htmladdnormallink%
 {\texttt{http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}}%
 {http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}.
@@ -837,7 +837,7 @@ Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
 implemented with US PPs. Presently FPMD supports only NC PPs.
 
-The ESPRESSO package uses a unified pseudopotential format (UPF)\break
+The ESPRESSO package uses a unified pseudopotential format (UPF)
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
                    {http://www.pwscf.org/format.htm})
 for all types of PPs, but still accepts a number of other formats:
@@ -855,8 +855,8 @@ Note however that PWscf accept the first, fourth and fifth in the
 above list; CP the second, fourth and fifth; FPMD the third only.
 
 PPs for selected elements can be downloaded from the PWscf PP page
-(\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.html}}%
-                   {http://www.pwscf.org/pseudo.html}).
+(\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
+                   {http://www.pwscf.org/pseudo.htm}).
 If you do not find there the PP you need (because there is no PP for
 the atom you need or you need a different exchange-correlation
 functional or a different core-valence partition or for whatever
@@ -920,7 +920,7 @@ with the PWscf package.
 See \texttt{PWgui-X.Y.Z/INSTALL} for more info on this subject (or
 \texttt{GUI/README} if you are using CVS sources).
 
-Tests and examples can be downloaded from the Test and Examples Page\break
+Tests and examples can be downloaded from the Test and Examples Page
 (\htmladdnormallink{\texttt{http://www.pwscf.org/tests.htm}}%
                    {http://www.pwscf.org/tests.htm}).
 The necessary pseudopotentials are included.
@@ -1092,8 +1092,8 @@ If $\mathbf{q}=0$, the data files can be produced directly by a simple
 SCF calculation.
 For phonons at a generic \textbf{q}-vector, you need to perform first
 a SCF calculation, then a band-structure calculation (see above)
-with\hfill\break
-\texttt{calculation='phonon'}, specifying the \textbf{q}-vector
+with
+\texttt{calculation = 'phonon'}, specifying the \textbf{q}-vector
 in variable \texttt{xq} of namelist \texttt{\&PHONON}.
 
 The output data file appear in the directory specified by variables
@@ -1588,8 +1588,8 @@ H 1.00d0 h.ps
 \end{verbatim}
     If you want to specify the initial velocities for ions, you have
     to set \texttt{ion\_velocities = 'from\_input'}, and add the
-    \texttt{IONIC\_VELOCITIES}\break card, with the list of velocities in
-    atomic units.
+    \texttt{IONIC\_VELOCITIES}\break
+    card, with the list of velocities in atomic units.
 
     IMPORTANT: in restarting the dynamics after the first CP run,
     remember to remove or comment the velocities parameters:
