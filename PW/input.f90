@@ -976,7 +976,7 @@ SUBROUTINE iosys()
      !
      DO ia = 1, nconstr
         !
-        target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) )
+        target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) ) * alat
         !
         ltest = if_pos(1,constr(1,ia)) == 0 .OR. &
                 if_pos(1,constr(2,ia)) == 0 .OR. &
