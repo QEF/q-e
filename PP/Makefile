@@ -166,6 +166,7 @@ PWOBJS = \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
 ../PW/lsda_functionals.o \
+../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \

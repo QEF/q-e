@@ -18,11 +18,14 @@ subroutine allocate_fft
   USE gvect,     ONLY : nr1, nr2, nr3, nrxx, ngm, g, gg, nl, nlm, &
        ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl
   USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
+  USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
   USE scf,       ONLY : rho, vr, vltot, vrs, rho_core, rho_save
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE noncollin_module, ONLY : pointlist, factlist, pointnum, r_loc, &
+      report, i_cons, noncolin, npol
+  USE wavefunctions_module, ONLY : psic, psic_nc
   implicit none
   !
   !     determines the data structure for fft arrays
@@ -72,6 +75,23 @@ subroutine allocate_fft
      nls => nl
      if (gamma_only) nlsm=> nlm
   endif
+
+  if (noncolin) then
+     allocate (psic_nc( nrxx, npol))    
+     if (((report.ne.0).or.(i_cons.ne.0)).and.(noncolin)) then
+!
+! In order to print out local quantities, integrated around the atoms,
+! we need the following variables
+!
+        allocate(pointlist(nrxx,nat))
+        allocate(factlist(nrxx,nat))
+        allocate(pointnum(nat))
+        allocate(r_loc(nat))
+
+        call make_pointlists
+     endif
+  endif
+
   return
 end subroutine allocate_fft
 

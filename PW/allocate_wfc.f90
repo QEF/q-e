@@ -83,7 +83,8 @@ SUBROUTINE allocate_wfc()
        USE wvfct,                ONLY : et, wg
        USE klist,                ONLY : nkstot
        USE ldaU,                 ONLY : swfcatom, lda_plus_u
-       USE wavefunctions_module, ONLY : evc
+       USE noncollin_module,     ONLY : noncolin, npol
+       USE wavefunctions_module, ONLY : evc, evc_nc
        !
        IMPLICIT NONE
        !
@@ -91,7 +92,11 @@ SUBROUTINE allocate_wfc()
        !
        ALLOCATE( et( nbnd, nkstot ) )    
        ALLOCATE( wg( nbnd, nkstot ) )    
-       ALLOCATE( evc( npwx, nbnd ) )    
+       IF (noncolin) THEN
+          ALLOCATE( evc_nc( npwx, npol, nbnd ) )    
+       ELSE
+          ALLOCATE( evc( npwx, nbnd ) )    
+       ENDIF
        !
        ! ... needed for LDA+U
        !

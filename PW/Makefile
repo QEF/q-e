@@ -123,6 +123,7 @@ kpoint_grid.o \
 lchk_tauxk.o \
 linmin.o \
 lsda_functionals.o \
+make_pointlists.o \
 mix_pot.o \
 mix_rho.o \
 mode_group.o \
