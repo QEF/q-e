@@ -116,7 +116,7 @@ SUBROUTINE setup
      !
      ! ... force msh to be odd for simpson integration
      !
-5    msh(nt) = 2 * ( (msh(nt) + 1) / 2) - 1
+5    msh(nt) = 2 * ( ( msh(nt) + 1 ) / 2) - 1
   END DO
   !
   ! ... Compute the ionic charge for each atom type
@@ -154,7 +154,7 @@ SUBROUTINE setup
   ! ... Set the number of occupied bands if not given in input
   !
   IF ( nbnd == 0 ) THEN
-     nbnd = NINT( nelec ) / 2.D0  ! ???? SICURI ????
+     nbnd = NINT( nelec / 2.D0 )
      IF ( lgauss .OR. ltetra ) THEN
         !
         ! ... metallic case: add 20% more bands, with a minimum of 4
@@ -162,7 +162,7 @@ SUBROUTINE setup
         nbnd = MAX( NINT( 1.20D0 * nelec / 2.D0 ), ( nbnd + 4 ) )
      END IF
   ELSE
-     IF ( nbnd < NINT( nelec ) / 2.D0 .AND. lscf ) &
+     IF ( nbnd < NINT( nelec / 2.D0 ) .AND. lscf ) &
         CALL errore( 'setup', 'too few bands', 1 )
   END IF
   !
