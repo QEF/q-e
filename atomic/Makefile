@@ -86,6 +86,7 @@ MODULES = \
 ../Modules/functionals.o \
 ../Modules/io_global.o \
 ../Modules/kind.o \
+../Modules/io_files.o \
 ../PW/bachel.o \
 ../PW/functionals.o \
 ../PW/lsda_functionals.o

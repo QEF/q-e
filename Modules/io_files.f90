@@ -54,6 +54,7 @@ MODULE io_files
     axsf_file = 'os.axsf'    ! file containing coordinates of all images in axsf format
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
+  CHARACTER (LEN=11), PARAMETER :: xmlpun = 'restart.xml'
   !
   ! ... The units where various variables are saved
   !

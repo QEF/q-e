@@ -408,9 +408,10 @@ MODULE char
   !
   ! ... The names of the system and of the symmetries
   !  
+  USE printout_base, ONLY: title    ! title of the run
+  !
   SAVE
   !
-  CHARACTER(LEN=75) ::  title       ! title of the run
   CHARACTER(LEN=20) ::  crystal     ! type of the solid
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   !

@@ -48,11 +48,11 @@
       CHARACTER(LEN=3  ) :: atm( ntypx ) 
       CHARACTER(LEN=80 ) :: tau_units
 
-      ! if if_pos( x, i ) = 0 then 
-      !    x coordinate of the i-th atom will be kept fixed
 
-      INTEGER, ALLOCATABLE :: if_pos(:,:)  
-      INTEGER :: fixatom  !!! to be removed
+      INTEGER, ALLOCATABLE :: if_pos(:,:)     ! if if_pos( x, i ) = 0 then  x coordinate of 
+                                              ! the i-th atom will be kept fixed
+      INTEGER, ALLOCATABLE :: iforce(:,:)     ! if_pos sorted by specie 
+      INTEGER :: fixatom                      !!! to be removed
 
       INTEGER :: ind_localisation(natx) = 0   ! true if we want to know the localization arount the atom
       INTEGER :: nat_localisation = 0 
@@ -217,6 +217,7 @@
       ALLOCATE( vel_srt( 3, nat ) )
       ALLOCATE( ind_srt( nat ) )
       ALLOCATE( if_pos( 3, nat ) )
+      ALLOCATE( iforce( 3, nat ) )
 
       ityp( 1:nat )      = ityp_ ( 1:nat )
       vel( : , 1:nat )   = vel_ ( : , 1:nat )
@@ -309,6 +310,13 @@
       if_pos = 1
       if_pos(:,:) = if_pos_ (:,1:nat)
 
+      iforce = 0
+      DO ia = 1, nat
+        iforce ( :, ia ) = if_pos ( :, ind_srt( ia ) )
+      END DO
+
+
+
       IF( PRESENT( sic_ ) ) THEN
         select case ( TRIM( sic_ ) )
         case ( 'sic_pz' ) 
@@ -373,6 +381,7 @@
       IF( ALLOCATED( vel_srt ) ) DEALLOCATE( vel_srt )
       IF( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
       IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+      IF( ALLOCATED( iforce ) ) DEALLOCATE( iforce )
       IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
       tions_base_init = .FALSE.
       RETURN
@@ -704,8 +713,6 @@
       REAL(dbl) :: tau0(3,natx), taum(3,natx),  taup(3,natx)
       REAL(dbl) :: taus(3,natx), tausm(3,natx), tausp(3,natx)
       REAL(dbl) :: vels(3,natx), velsm(3,natx), velsp(3,natx)
-
-      INTEGER :: iforce(3,natx)
 
 !------------------------------------------------------------------------------!
   CONTAINS 

@@ -88,14 +88,11 @@ CONTAINS
            ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, rd_pos, atom_label, rd_vel, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
-           num_of_images, smd_ene_ini, smd_ene_fin
-
-      use read_namelists_module, only: read_namelists
-      use read_cards_module, only: read_cards
+           num_of_images, smd_ene_ini, smd_ene_fin, title
 
       use constants, only: pi, scmass, factem, eps8, uma_au, terahertz 
 
-      use parameters, only: nsx, natx, nbndxx
+      use parameters, only: natx
 
       use io_global, only: ionode, stdout
 
@@ -140,7 +137,6 @@ CONTAINS
            fricp_ => fricp, &
            greasp_ => greasp
       USE ions_positions, ONLY: &
-           iforce_ => iforce, &
            tau0_ => tau0
       ! 
       USE cell_base, ONLY: cell_base_init, a1, a2, a3, &
@@ -210,6 +206,8 @@ CONTAINS
            maxlm_ => smd_maxlm, &
            ene_ini_ => smd_ene_ini, &
            ene_fin_ => smd_ene_fin
+      USE printout_base, ONLY: &
+           title_ => title
 
       !
       implicit none
@@ -218,13 +216,15 @@ CONTAINS
       ! local variables
       !
 
-      real(kind=8) :: taus( 3, natx ), ocp, fsum
+      real(kind=8) :: ocp, fsum
       integer :: i, ia, is, iss, in, isa
       real(kind=8) :: alat_
 
       !
       ! Subroutine body
       !
+
+      title_ = title   ! simulation title
 
       IF( TRIM( calculation ) == 'nscf' ) trhor_ = .true.
      
@@ -262,8 +262,8 @@ CONTAINS
       ! ... if smlm
       !
       IF(smd_smlm) THEN
-       IF(smd_ene_ini >= 0.d0 .OR. smd_ene_fin >= 0.d0) &
-       & CALL errore(' start : ',' Check : ene_ini & ene_fin ', 1 )
+         IF(smd_ene_ini >= 0.d0 .OR. smd_ene_fin >= 0.d0) &
+           & CALL errore(' start : ',' Check : ene_ini & ene_fin ', 1 )
       ENDIF
       !
       ene_ini_ = smd_ene_ini
@@ -284,10 +284,6 @@ CONTAINS
         CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
              atom_label, if_pos, atomic_positions , alat_ , a1, a2, a3  )
       end if
-      iforce_ = 0
-      DO isa = 1, nat
-        iforce_ ( :, isa ) = if_pos( :, ind_srt( isa ) ) 
-      END DO
 
       ! ...   Set Values for bands and spin
 
@@ -320,8 +316,8 @@ CONTAINS
       END SELECT
 
 
-      ndr_ = ndr
-      ndw_ = ndw
+      ndr_    = ndr
+      ndw_    = ndw
       iprint_ = iprint
 
       IF( .NOT. lneb ) THEN

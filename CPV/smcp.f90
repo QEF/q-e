@@ -78,7 +78,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use reciprocal_vectors, only: ng0 => gstart
   use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
   use ions_base, only: ind_srt, ions_vel, ions_cofmass, ions_kinene, ions_temp
-  use ions_base, only: ions_thermal_stress, ions_vrescal, fricp, greasp
+  use ions_base, only: ions_thermal_stress, ions_vrescal, fricp, greasp, iforce
   use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
   use cell_base, only: ainv, a1, a2, a3, r_to_s, celldm, ibrav
   use cell_base, only: omega, alat, frich, greash, press
@@ -117,7 +117,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   USE control_flags, ONLY : conv_elec, tconvthrs
   USE check_stop, ONLY : check_stop_now
   USE cpr_subroutines
-  use ions_positions, only: tau0, velsp, iforce
+  use ions_positions, only: tau0, velsp
   use ions_positions, only: ions_hmove, ions_move
   use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove

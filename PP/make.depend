@@ -34,8 +34,8 @@ bands.o : ../Modules/constants.o
 bands.o : ../Modules/io_files.o
 bands.o : ../Modules/io_global.o
 bands.o : ../Modules/ions_base.o
-bands.o : ../Modules/mp.o
 bands.o : ../Modules/mp_global.o
+bands.o : ../Modules/mp.o
 bands.o : ../Modules/uspp.o
 bands.o : ../Modules/wavefunctions.o
 bands.o : ../PW/pwcom.o
@@ -58,6 +58,7 @@ do_initial_state.o : ../Modules/kind.o
 do_initial_state.o : ../Modules/parameters.o
 do_initial_state.o : ../Modules/uspp.o
 do_initial_state.o : ../PW/pwcom.o
+dosg.o : ../Modules/kind.o
 do_shift_ew.o : ../Modules/kind.o
 dos.o : ../Modules/constants.o
 dos.o : ../Modules/io_files.o
@@ -65,7 +66,6 @@ dos.o : ../Modules/io_global.o
 dos.o : ../Modules/kind.o
 dos.o : ../Modules/mp.o
 dos.o : ../PW/pwcom.o
-dosg.o : ../Modules/kind.o
 efg.o : ../Modules/atom.o
 efg.o : ../Modules/cell_base.o
 efg.o : ../Modules/constants.o
@@ -97,6 +97,12 @@ initial_state.o : ../Modules/parameters.o
 initial_state.o : ../Modules/uspp.o
 initial_state.o : ../Modules/wavefunctions.o
 initial_state.o : ../PW/pwcom.o
+local_dos1d.o : ../Modules/cell_base.o
+local_dos1d.o : ../Modules/ions_base.o
+local_dos1d.o : ../Modules/uspp.o
+local_dos1d.o : ../Modules/wavefunctions.o
+local_dos1d.o : ../PW/becmod.o
+local_dos1d.o : ../PW/pwcom.o
 local_dos.o : ../Modules/cell_base.o
 local_dos.o : ../Modules/io_files.o
 local_dos.o : ../Modules/ions_base.o
@@ -105,12 +111,6 @@ local_dos.o : ../Modules/mp.o
 local_dos.o : ../Modules/uspp.o
 local_dos.o : ../Modules/wavefunctions.o
 local_dos.o : ../PW/pwcom.o
-local_dos1d.o : ../Modules/cell_base.o
-local_dos1d.o : ../Modules/ions_base.o
-local_dos1d.o : ../Modules/uspp.o
-local_dos1d.o : ../Modules/wavefunctions.o
-local_dos1d.o : ../PW/becmod.o
-local_dos1d.o : ../PW/pwcom.o
 openfil_pp.o : ../Modules/control_flags.o
 openfil_pp.o : ../Modules/io_files.o
 openfil_pp.o : ../Modules/io_global.o
@@ -126,12 +126,12 @@ plan_avg.o : ../Modules/uspp.o
 plan_avg.o : ../Modules/wavefunctions.o
 plan_avg.o : ../PW/becmod.o
 plan_avg.o : ../PW/pwcom.o
+plotband.o : ../Modules/io_global.o
 plot_io.o : ../Modules/io_global.o
 plot_io.o : ../Modules/kind.o
-plot_whole_cell.o : ../Modules/kind.o
-plotband.o : ../Modules/io_global.o
 plotrho.o : ../Modules/io_global.o
 plotrho.o : ../Modules/kind.o
+plot_whole_cell.o : ../Modules/kind.o
 poormanwannier.o : ../Modules/atom.o
 poormanwannier.o : ../Modules/cell_base.o
 poormanwannier.o : ../Modules/constants.o
@@ -187,8 +187,8 @@ pw2wan.o : ../Modules/io_base.o
 pw2wan.o : ../Modules/io_files.o
 pw2wan.o : ../Modules/io_global.o
 pw2wan.o : ../Modules/ions_base.o
-pw2wan.o : ../Modules/mp.o
 pw2wan.o : ../Modules/mp_global.o
+pw2wan.o : ../Modules/mp.o
 pw2wan.o : ../Modules/wavefunctions.o
 pw2wan.o : ../PW/pwcom.o
 pw_export.o : ../Modules/io_files.o
@@ -196,8 +196,8 @@ pw_export.o : ../Modules/io_global.o
 pw_export.o : ../Modules/ions_base.o
 pw_export.o : ../Modules/iotk_module.o
 pw_export.o : ../Modules/kind.o
-pw_export.o : ../Modules/mp.o
 pw_export.o : ../Modules/mp_global.o
+pw_export.o : ../Modules/mp.o
 pw_export.o : ../Modules/mp_wave.o
 pw_export.o : ../Modules/parameters.o
 pw_export.o : ../Modules/wavefunctions.o

@@ -13,6 +13,7 @@ clocks.o \
 constants.o \
 control_flags.o \
 cp_emass.o \
+cp_restart.o \
 cp_fpmd.o \
 descriptors.o \
 electrons_base.o \

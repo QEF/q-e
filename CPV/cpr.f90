@@ -80,7 +80,7 @@
       use reciprocal_vectors, only: gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
       use ions_base, only: ind_srt, ions_cofmass, ions_kinene, ions_temp, ions_thermal_stress
-      use ions_base, only: ions_vrescal, fricp, greasp
+      use ions_base, only: ions_vrescal, fricp, greasp, iforce
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3, frich, greash
       use cell_base, only: omega, alat, ibrav, celldm
@@ -125,7 +125,7 @@
       use cp_electronic_mass, only: emass_precond
       use cpr_subroutines
       use ions_positions, only: tau0, taum, taup, taus, tausm, tausp, vels, velsm, velsp
-      use ions_positions, only: ions_hmove, ions_move, iforce
+      use ions_positions, only: ions_hmove, ions_move
       use ions_nose, only: gkbt, qnp, vnhp, xnhp0, xnhpm, xnhpp, ions_nosevel, &
                            ions_noseupd, tempw
       use electrons_nose, only: qne, ekincw
