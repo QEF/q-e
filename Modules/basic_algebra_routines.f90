@@ -19,7 +19,7 @@ MODULE basic_algebra_routines
      !
   END INTERFACE
   !  
-  INTERFACE OPERATOR( * )
+  INTERFACE OPERATOR( .times. )
      !
      MODULE PROCEDURE matrix_times_vector, vector_times_matrix
      !

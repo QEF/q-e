@@ -167,7 +167,7 @@ MODULE bfgs_module
              !
              inverse_hessian = identity(dim)
              !
-             bfgs_step = - inverse_hessian * gradient
+             bfgs_step = - inverse_hessian .times. gradient
              !
              trust_radius = trust_radius_ini
              !
@@ -208,7 +208,7 @@ MODULE bfgs_module
           !
           ! ... bfgs direction ( not normalized ) 
           !
-          bfgs_step = - inverse_hessian * gradient
+          bfgs_step = - inverse_hessian .times. gradient
           !
           IF ( ( gradient .dot. bfgs_step ) > 0.D0 ) THEN
              !  
@@ -684,33 +684,34 @@ MODULE bfgs_module
        REAL(KIND=DP), INTENT(IN)  :: gradient(:)   
        INTEGER, INTENT(IN)        :: dim       
        INTEGER, INTENT(IN)        :: stdout                       
-       REAL(KIND=DP)              :: gamma(dim)
-       REAL(KIND=DP)              :: sdotgamma
+       REAL(KIND=DP)              :: y(dim)
+       REAL(KIND=DP)              :: sdoty
        !
        !
-       gamma = gradient - gradient_old(:,m)
+       y(:) = gradient(:) - gradient_old(:,m)
        !
-       sdotgamma = bfgs_step_old .dot. gamma 
+       sdoty = bfgs_step_old(:) .dot. y(:) 
        !
-       IF ( ABS( sdotgamma ) < eps16 ) THEN
+       IF ( ABS( sdoty ) < eps16 ) THEN
           !
           ! ... the history is reset
           !
           WRITE( stdout, '(/,5X,"WARINIG: unexpected behaviour in ", &
-	                      & "update_inverse_hessian")' )
+                              & "update_inverse_hessian")' )
           WRITE( stdout, '(5X,"         resetting bfgs history",/)' )
           !
-          inverse_hessian = identity(dim)
+          inverse_hessian(:,:) = identity(dim)
           !
           RETURN
           !
        END IF 
        !
-       inverse_hessian = inverse_hessian + &
-         ( 1.D0 + ( gamma .dot. ( inverse_hessian * gamma ) ) / sdotgamma ) * &
-         matrix( bfgs_step_old, bfgs_step_old ) / sdotgamma - &
-         ( matrix( bfgs_step_old, ( gamma * inverse_hessian ) ) + &
-           matrix( ( inverse_hessian * gamma ), bfgs_step_old ) ) / sdotgamma
+       inverse_hessian(:,:) = inverse_hessian(:,:) + &
+         ( 1.D0 + ( y(:) .dot. ( inverse_hessian(:,:) &
+                                 .times. y(:) ) ) / sdoty ) * &
+         matrix( bfgs_step_old(:), bfgs_step_old(:) ) / sdoty - &
+         ( matrix( bfgs_step_old(:), ( y .times. inverse_hessian(:,:) ) ) + &
+           matrix( ( inverse_hessian(:,:) .times. y ), bfgs_step_old ) ) / sdoty
        !
      END SUBROUTINE update_inverse_hessian
      !
@@ -864,7 +865,7 @@ MODULE bfgs_module
              !
              inverse_hessian = identity(dim)
              !
-             bfgs_step = - inverse_hessian * gradient
+             bfgs_step = - inverse_hessian .times. gradient
              !
              trust_radius = trust_radius_ini
              !
