@@ -74,8 +74,9 @@ module ChDens\#auto -title "PWSCF GUI: module ChDens.x" -script {
 		"format suitable for contour.x"
 		"format suitable for plotrho"
 		"format suitable for gOpenMol"
+		"Gaussian cube-file format"
 	    }
-	    -value     { 3 5 0 1 2 4 }
+	    -value     { 3 5 0 1 2 4 6 }
 	    -widget    optionmenu
 	}
 

@@ -47,6 +47,8 @@ help output_format -vartype integer -helpfmt txt2html -helptext {
           4  format suitable for gOpenMol  (3D)
              (formatted: convert to unformatted *.plt)
           5  format suitable for XCRYSDEN  (3D)
+          6  Gaussian cube-file format (3D)
+             (can be read by many programs)
 <p> ( default = 0 )
 }
 
