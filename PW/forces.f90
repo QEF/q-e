@@ -8,7 +8,7 @@
 #include "machine.h"
 !
 !----------------------------------------------------------------------
-SUBROUTINE forces
+SUBROUTINE forces()
   !----------------------------------------------------------------------
   !
   !    This routine is a driver routine which computes the forces
@@ -127,15 +127,17 @@ SUBROUTINE forces
      END DO
   END IF
   !
-  ! ... forces on fixed coordinates are set to zero ( C.S. 15/10/2003 )
-  !
-  force = force * REAL( if_pos )
-  !
   ! ... write on output the forces
   !
   DO na = 1, nat
      WRITE( stdout, 9035) na, ityp(na), ( force(ipol,na), ipol = 1, 3 )
-  enddo
+  END DO
+  !
+  ! ... forces on fixed coordinates are set to zero ( C.S. 15/10/2003 )
+  !
+  force    = force    * REAL( if_pos )
+  forcescc = forcescc * REAL( if_pos )
+  !
 #ifdef DEBUG
   WRITE( stdout, '(5x,"The SCF correction term to forces")')
   DO na = 1, nat
@@ -163,6 +165,7 @@ SUBROUTINE forces
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   !
   lforce = .TRUE.
+  !
   CALL stop_clock( 'forces' )
   !
   RETURN
