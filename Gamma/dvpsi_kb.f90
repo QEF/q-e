@@ -90,9 +90,9 @@ subroutine dvpsi_kb(kpoint,nu)
      allocate (bec1( nh(nt), nbnd))    
      allocate (bec2( nh(nt), nbnd))    
      do na = 1,nat
-        if (ityp(na).eq.nt) then
+        if (ityp(na) == nt .and. nh(nt) > 0) then
            mu =3*(na-1)
-           if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2 .gt. 1.0e-12) then
+           if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2 > 1.0e-12) then
               !
               !  first term: sum_l sum_G' [ i V_l(G) V^*_l(G') (G'*u) psi(G')
               !  second term: sum_l sum_G' [-i (G*u) V_l(G) V^*_l(G') psi(G')
