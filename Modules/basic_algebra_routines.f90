@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #undef __NOBLAS
+#include "machine.h"
 !
 !----------------------------------------------------------------------------
 MODULE basic_algebra_routines

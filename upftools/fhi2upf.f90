@@ -14,7 +14,6 @@ program fhi2upf
   !     Convert a pseudopotential written in the Fritz-Haber format
   !     (numerical format) to unified pseudopotential format
   !     Restrictions:
-  !     - no core corrections
   !     - no semicore states
   !     Adapted from the converter written by Andrea Ferretti 
   !
@@ -79,6 +78,9 @@ module fhi
   real(kind=8) :: Zval           ! valence charge
   integer      :: lmax_          ! max l-component used
 
+  logical      :: nlcc_
+  real(kind=8), allocatable :: rho_atc_(:) ! core  charge
+
   type (angular_comp), pointer :: comp(:)  ! PP numerical info
                                            ! (wfc, grid, potentials...)
   !------------------------------
@@ -93,6 +95,7 @@ subroutine read_fhi(iunps)
   implicit none
   integer, parameter    :: Nl=7  ! max number of l-components
   integer :: iunps
+  real(kind=8) :: r, rhoc, drhoc, d2rhoc
   !
   
   integer               :: l, i, idum, mesh
@@ -132,12 +135,29 @@ subroutine read_fhi(iunps)
                             comp(l)%pot(i)       
      end do
   end do
-  
+
+  nlcc_ =.false.
+  allocate(rho_atc_(comp(0)%nmesh))
+  mesh = comp(0)%nmesh
+  do i=1,mesh
+     read(iunps,*,end=10, err=20) r, rho_atc_(i), drhoc, d2rhoc
+     if ( abs( r - comp(0)%grid(i) ) > 1.d-6 ) then
+        call errore('read_fhi','radial grid for core charge?',i)
+     end if
+  end do
+  nlcc_ = .true.
   !     ----------------------------------------------------------
-  write (6,'(a)') 'Pseudopotential successfully read'
+  write (6,'(a)') 'Pseudopotential with NLCC successfully read'
   !     ----------------------------------------------------------
-  !
   return
+10 continue
+  !     ----------------------------------------------------------
+  write (6,'(a)') 'Pseudopotential without NLCC successfully read'
+  !     ----------------------------------------------------------
+  return
+  !
+20 call errore('read_fhi','error reading core charge',i)
+  !
 100 call errore ('read_fhi', 'Reading pseudo file', 100 )  
 
 end subroutine read_fhi
@@ -158,7 +178,7 @@ subroutine convert_fhi
   !
   print '("Atom name > ",$)'
   read (5,'(a)') psd
-  print '("l local > ",$)'
+  print '("l local (max: ",i1,") > ",$)', lmax_
   read (5,*) lloc
   print '("DFT > ",$)'
   read (5,'(a)') dft
@@ -184,7 +204,7 @@ subroutine convert_fhi
   end do
 
   pseudotype = 'NC'
-  nlcc = .false.
+  nlcc = nlcc_
   zp   = Zval
   etotps = 0.0
   ecutrho=0.0
@@ -210,7 +230,10 @@ subroutine convert_fhi
   r = comp(0)%grid
   rab = r * log( comp(0)%amesh )
 
-!  allocate (rho_atc(mesh))
+  if (nlcc) then
+     allocate (rho_atc(mesh))
+     rho_atc(:) = rho_atc_(:) / (4.d0*3.141592653589793d0)
+  end if
 
   allocate (vloc0(mesh))
   ! the factor 2 converts from Hartree to Rydberg
