@@ -60,6 +60,10 @@
 !       .......
 !       cell_parameter_Lastone
 !     /
+!     &PHONON
+!       phonon_parameter_1,
+!       phonon_parameter_Lastone
+!     /
 !     ATOMIC_SPECIES
 !      slabel_1 mass_1 pseudo_file_1
 !      slabel_2 mass_2 pseudo_file_2
@@ -823,6 +827,18 @@
         NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, press, &
           wmass, cell_temperature, temph, fnoseh, cell_dofree, greash, cell_factor, &
           cell_nstepe, cell_damping
+!
+!=----------------------------------------------------------------------------=!  
+!  PHONON Namelist Input Parameters
+!=----------------------------------------------------------------------------=!  
+!
+
+        INTEGER :: modenum = 0
+        
+        REAL(dbl) :: xqq(3) = 0.0d0
+          ! coordinates of q point for phonon calculation
+
+        NAMELIST / phonon / modenum, xqq
 
 !  END manual
 ! ----------------------------------------------------------------------

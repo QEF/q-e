@@ -434,6 +434,11 @@
 
       IF ( .NOT. tk ) THEN
 
+        !  when gamma symmetry is used only the sticks of half reciprocal space
+        !  are generated, then here we pair-up the sticks with those of the other
+        !  half of the space, using the gamma symmetri relation
+        !  Note that the total numero of stick "nct" is not modified
+
         DO mc = 1, nct
            i = index(mc)
            i1 = in1(i)

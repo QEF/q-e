@@ -160,6 +160,7 @@
 !
       real(kind=8) taus(3,natx,nsx)
       real(kind=8) f_(nbndxx)
+      real(kind=8) ispin_(nbndxx)
       integer iforceh(3,3)
 !
       integer ndr, ndw, nbeg, maxit, nomore
@@ -246,10 +247,13 @@
      & , nat , nsp , na , pmass , rcmax , ipp , f_ , nel , nspin , nupdwn  &
      & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
      & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &
-     & , psfile , pseudo_dir, iprsta )
+     & , psfile , pseudo_dir, iprsta, ispin_ )
       allocate( f( nx ) )
       f( :   ) = 0.0d0
       f( 1:n ) = f_( 1:n )
+      allocate( ispin( nx ) )
+      ispin( :   ) = 0.0d0
+      ispin( 1:n ) = ispin_( 1:n )
       endif
 !     ==================================================================
 !

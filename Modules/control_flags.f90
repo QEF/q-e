@@ -6,20 +6,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - CINECA
-!  ----------------------------------------------
-!
 
 !=----------------------------------------------------------------------------=!
   MODULE control_flags
 !=----------------------------------------------------------------------------=!
 
-!  this module handles the reading of input data
-!  ----------------------------------------------
-!  list of routines in this module:
+!
+!  this module contains all basic variables that controls the istuctions
+!  execution flow
 !  ----------------------------------------------
 !
         USE kinds
@@ -69,7 +63,7 @@
                   tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, &
                   convergence_criteria, do_ionic_step, tionstep, tsteepdesc, &
                   electronic_steepest_descent, ionic_conjugate_gradient, tconjgrad_ion, &
-                  tatomicwfc, tscreen
+                  tatomicwfc, tscreen, gamma_only
 
 
         PUBLIC ::  control_flags_setup, set_restart_mode, set_verbosity, set_ortho, &
@@ -113,14 +107,14 @@
         LOGICAL :: tdamp      ! Use damped dinamics for electrons
         LOGICAL :: tdampions  ! Use damped dinamics for electrons
         LOGICAL :: tatomicwfc ! Use atomic wavefunctions as starting guess for ch. density
-
         LOGICAL :: tscreen    ! Use screened coulomb potentials for cluster calculations
 
         TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence 
 
         TYPE (do_ionic_step) :: tionstep
-                              !  parameters to control how many electronic steps between ions move
+                              !  parameters to control how many electronic steps 
+                              !  between ions move
 
         TYPE (electronic_steepest_descent) :: tsteepdesc
                               !  parameters for electronic steepest desceent
@@ -135,8 +129,9 @@
         INTEGER :: iprint ! print output every iprint step
         INTEGER :: isave  ! write restart to ndr unit every isave step
         INTEGER :: nv0rd
-
         INTEGER :: iprsta ! output verbosity (increasing from 0 to infinity)
+
+        LOGICAL :: gamma_only !  true if only gamma point is used
 
 
         LOGICAL :: tnewnfi = .FALSE.
@@ -181,7 +176,8 @@
 !=----------------------------------------------------------------------------=!
 
        SUBROUTINE control_flags_setup(ndr_inp, ndw_inp, iprint_inp, isave_inp, &
-         tstress_inp, tprnfor_inp, tdipole_inp, toptical_inp, newnfi_inp, tnewnfi_inp)
+         tstress_inp, tprnfor_inp, tdipole_inp, toptical_inp, newnfi_inp,      &
+         tnewnfi_inp, gamma_inp )
          IMPLICIT NONE
           INTEGER, INTENT(IN) :: ndr_inp
           INTEGER, INTENT(IN) :: ndw_inp
@@ -193,6 +189,7 @@
           LOGICAL, INTENT(IN) :: toptical_inp
           INTEGER, INTENT(IN) :: newnfi_inp
           LOGICAL, INTENT(IN) :: tnewnfi_inp
+          LOGICAL, INTENT(IN) :: gamma_inp
           ndr     = ndr_inp
           ndw     = ndw_inp
           iprint  = iprint_inp
@@ -203,6 +200,7 @@
           toptical = toptical_inp
           newnfi = newnfi_inp
           tnewnfi = tnewnfi_inp
+          gamma_only = gamma_inp
         RETURN
       END SUBROUTINE
 

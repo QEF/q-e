@@ -10,7 +10,7 @@
       subroutine iosys(nbeg,ndr,ndw,nomore,iprint                       &
      &                ,delt,emass,emaec                                 &
      &                ,tsde,frice,grease,twall                          &
-     &                ,tortho,eps,max                                   &
+     &                ,tortho,eps,maxit                                   &
      &                ,trane,ampre,tranp,amprp                          &
      &                ,tfor,tsdp,fricp,greasp                           &
      &                ,tcp,tcap,tolp,trhor,trhow,tvlocw                 &
@@ -27,7 +27,7 @@
       use constants, only: pi, scmass, factem
       use parameters, only: nsx, natx
       use ions_base, only : nat, nsp, na, pmass, rcmax, ipp ! ipp TEMP
-      use elct, only: f, nel, nspin, nupdwn, iupdwn, n
+      use elct, only: f, nel, nspin, nupdwn, iupdwn, n, nx, ispin
       use grid_dimensions,  only: nr1 ,nr2 ,nr3
       use cell_base, only: omega, alat, a1, a2, a3
       use smallbox_grid_dimensions, only: nr1b,nr2b,nr3b 
@@ -46,7 +46,7 @@
      &       frice, fricp, frich, grease, greasp, greash,        &
      &       press, qnp, qne, qnh, tempw, temph, tolp, wmass,    &
              amprp(nsx), celldm(6), tau0(3,natx,nsx), ecut, ecutw
-      integer :: nbeg, ndr,ndw,nomore, iprint, max, iforce(3,natx,nsx)
+      integer :: nbeg, ndr,ndw,nomore, iprint, maxit, iforce(3,natx,nsx)
 
       logical :: trane, tsde, twall, tortho, tnosee, tfor, tsdp, tcp, &
            tcap, tnosep, trhor, trhow, tvlocw, tpre, thdyn, thdiag,   &
@@ -57,7 +57,8 @@
       real(kind=8), parameter:: terahertz = 2.418D-5
       real(kind=8) :: taus(3,natx,nsx)
       character (len=30) :: atomic_positions
-      integer :: unit = 5, ionode_id = 0, i, ia, ios, is
+      integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in
+      real(kind=8) :: ocp, fsum
       !
       ! CONTROL namelist
 
@@ -768,7 +769,7 @@
       sgg = q2sigma
       e0gg= ecfixed
       eps = ortho_eps
-      max = ortho_max
+      maxit = ortho_max
       ! wmass is calculated in "init"
       twmass = wmass.eq.0.d0
       if (tstress) tpre=.true.
@@ -891,6 +892,57 @@
          nupdwn(2)=nbnd
          iupdwn(2)=nbnd+1
       end if
+
+!     =========================================================
+!     ==== species, states, electrons, occupations, odd/ev ====
+!     =========================================================
+!
+!     important: if n is odd then nx=n+1 and c(*,n+1)=0.
+!
+      if(mod(n,2).ne.0) then
+         nx=n+1
+      else
+         nx=n
+      end if
+
+! TEMP: this should be moved to where occupations are read/set
+!
+      if (.not.allocated(f)) then
+         allocate(f(nx))
+! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
+         ocp = 2.d0/nspin
+! default filling: attribute ocp electrons to each states
+!                  until the good number of electrons is reached
+         do iss=1,nspin
+            fsum = 0.d0
+            do in=iupdwn(iss),iupdwn(iss)-1+nupdwn(iss)
+               if (fsum+ocp < nel(iss)+0.0001) then
+                  f(in)=ocp
+               else
+                  f(in)=max(nel(iss)-fsum,0.d0)
+               end if
+               fsum=fsum + f(in)
+            end do
+         end do
+      end if
+
+      allocate(ispin(nx))
+      do iss=1,nspin
+         do in=iupdwn(iss),iupdwn(iss)-1+nupdwn(iss)
+            ispin(in)=iss
+         end do
+      end do
+
+!     =========================================================
+!     ==== other control parameters
+!     =========================================================
+      fsum = SUM(f(1:n))
+      write(6,*) ' init1:  fsum = ',fsum
+      if(nspin == 1 .and. abs(fsum-float(nel(1))) > 0.001 .or.     &
+         nspin == 2 .and. abs(fsum-float(nel(1)+nel(2))) > 0.001 ) &
+         call errore(' iosys ',' sum f(i) != number of electrons',   &
+         nel(1)+nel(2))
+
 !
 !     --------------------------------------------------------
 !     print out heading
@@ -905,7 +957,7 @@
       write(6,510) emass,emaec
 !
       if(tortho) then
-         write(6,511) eps,max
+         write(6,511) eps,maxit
       else
          write(6,512)
       endif
@@ -1006,7 +1058,7 @@
  510  format(' parameters for electron dynamics:'/                      &
      &       ' emass= ',f10.2,2x,'emaec= ',f10.2,'ry')
  511  format(' orthog. with lagrange multipliers: eps=',e10.2,          &
-     &         ' max=',i3)
+     &         ' maxit=',i3)
  512  format(' orthog. with gram-schmidt')
  513  format(' electron dynamics with steepest descent')
  509  format(' verlet algorithm for electron dynamics')
@@ -1239,7 +1291,7 @@
      & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , ipp_ , f_ , nel_ , nspin_ , nupdwn_  &
      & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
      & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , agg_ , sgg_ , e0gg_ &
-     & , psfile_ , pseudo_dir_, iprsta_ )
+     & , psfile_ , pseudo_dir_, iprsta_, ispin_ )
 
 !-----------------------------------------------------------------------
 !   this subroutine reads control variables from standard input (unit 5)
@@ -1273,7 +1325,7 @@
      &     nupdwn_ ( 2 ), iupdwn_ ( 2 ), n_ , nx_ , nr1_ , nr2_ , nr3_ , &
      &     nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , ibrav_, iprsta_
 
-      real(kind=8) :: pmass_ ( nsx ), rcmax_ ( nsx ), f_ ( nbndxx ), &
+      real(kind=8) :: pmass_ ( nsx ), rcmax_ ( nsx ), f_ ( nbndxx ), ispin_ ( nbndxx ), &
      &     omega_ , alat_ , a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 ), agg_ , sgg_ , e0gg_
 
 
@@ -1782,10 +1834,15 @@
             end do
          end do
 
-
       CASE DEFAULT
          CALL errore(' iosys ',' occupation method not implemented', 1 )
       END SELECT
+
+      do iss = 1, nspin_
+         do in = iupdwn_(iss), iupdwn_(iss) - 1 + nupdwn_(iss)
+            ispin_(in) = iss
+         end do
+      end do
 
 !
 !     --------------------------------------------------------

@@ -3414,55 +3414,7 @@
 !       (but only if the axis triplet is right-handed, otherwise
 !        for a left-handed triplet, ainv is minus the inverse of a)
 !
-!     =========================================================
-!     ==== species, states, electrons, occupations, odd/ev ====
-!     =========================================================
-!
-!     important: if n is odd then nx=n+1 and c(*,n+1)=0.
-!
-      if(mod(n,2).ne.0) then
-         nx=n+1
-      else
-         nx=n
-      end if
-!
-! TEMP: this should be moved to where occupations are read/set
-!
-      if (.not.allocated(f)) then
-         allocate(f(nx))
-! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
-         ocp = 2.d0/nspin 
-! default filling: attribute ocp electrons to each states
-!                  until the good number of electrons is reached
-         do iss=1,nspin
-            fsum = 0.d0
-            do in=iupdwn(iss),iupdwn(iss)-1+nupdwn(iss)
-               if (fsum+ocp < nel(iss)+0.0001) then
-                  f(in)=ocp
-               else
-                  f(in)=max(nel(iss)-fsum,0.d0)
-               end if
-               fsum=fsum + f(in)
-            end do
-         end do
-      end if
 
-      allocate(ispin(nx))
-      do iss=1,nspin
-         do in=iupdwn(iss),iupdwn(iss)-1+nupdwn(iss)
-            ispin(in)=iss
-         end do
-      end do
-!
-!     =========================================================
-!     ==== other control parameters
-!     =========================================================
-      fsum = SUM(f(1:n))
-      write(6,*) ' init1:  fsum = ',fsum
-      if(nspin == 1 .and. abs(fsum-float(nel(1))) > 0.001 .or.     &
-         nspin == 2 .and. abs(fsum-float(nel(1)+nel(2))) > 0.001 ) &
-         call errore(' init1',' sum f(i) != number of electrons',   &
-         nel(1)+nel(2))
 !
 !     ==============================================================
 !     ==== set parameters and cutoffs                           ==== 

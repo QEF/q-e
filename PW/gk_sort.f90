@@ -69,8 +69,7 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
         igk (ngk) = ng
      else
         !  if |G| > |k| + sqrt(Ecut)  stop search and order vectors
-        if (g (1, ng) **2 + g (2, ng) **2 + g (3, ng) **2.gt.q2x) goto &
-             10
+        if ( ( g (1, ng) **2 + g (2, ng) **2 + g (3, ng) **2 ) .gt. ( q2x + eps8 ) ) exit
      endif
   enddo
   call errore ('gk_sort', 'unexpected exit from do-loop', - 1)

@@ -218,6 +218,15 @@
         RETURN
       END SUBROUTINE
 
+      SUBROUTINE phonon_defaults( prog )
+! ...   Variables initialization for PHONON
+        CHARACTER(LEN=2) :: prog  !  specify the calling program
+        modenum = 0
+        xqq = 0.0d0
+        RETURN
+      END SUBROUTINE
+ 
+
       SUBROUTINE control_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
@@ -381,6 +390,14 @@
         CALL mp_bcast( cell_factor, ionode_id )
         CALL mp_bcast( cell_nstepe, ionode_id )
         CALL mp_bcast( cell_damping, ionode_id )
+        RETURN
+      END SUBROUTINE
+
+      SUBROUTINE phonon_bcast()
+        USE io_global, ONLY: ionode_id
+        USE mp, ONLY: mp_bcast
+        CALL mp_bcast( modenum, ionode_id )
+        CALL mp_bcast( xqq, ionode_id )
         RETURN
       END SUBROUTINE
 
@@ -628,6 +645,13 @@
       END SUBROUTINE
 
 
+
+      SUBROUTINE phonon_checkin( prog )
+        CHARACTER(LEN=2) :: prog  !  specify the calling program
+        RETURN
+      END SUBROUTINE
+
+
       SUBROUTINE fixval( prog )
 
         CHARACTER(LEN=2) :: prog  !  specify the calling program
@@ -728,6 +752,7 @@
         CALL electrons_defaults( prog )
         CALL ions_defaults( prog )
         CALL cell_defaults( prog )
+        CALL phonon_defaults( prog )
 !
 ! ...   Here start reading standard input file
         IF( ionode ) THEN
@@ -792,6 +817,21 @@
 
         CALL cell_bcast()
         CALL cell_checkin( prog )
+
+
+        IF( ionode ) THEN
+          IF( TRIM( calculation ) == 'phonon' ) THEN
+            READ (5, phonon, iostat = ios )
+          END IF
+        END IF
+        CALL mp_bcast( ios, ionode_id )
+        IF( ios /= 0 ) THEN
+          CALL errore( ' code_input ', ' reading namelist cell ', ABS(ios) )
+        END IF
+
+        CALL phonon_bcast()
+        CALL phonon_checkin( prog )
+
 
         RETURN
       END SUBROUTINE read_namelists
