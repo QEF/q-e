@@ -1,3 +1,6 @@
+19 Nov 2004 punch_plot can now write the charge density of each state
+            in the noncollinear case (ADC)
+
 18 Nov 2004 Reduction in memory requirements for phonon calculation
             with uspp (routine dvanqq) - courtesy of N. Mounet
             Memory leak in Raman code fixed (PG).

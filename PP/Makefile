@@ -8,6 +8,7 @@ addusdens1d.o \
 add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
+ccalbec_nc.o \
 cft.o \
 cgracsc.o \
 cube.o \

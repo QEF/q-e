@@ -172,7 +172,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 7) THEN
 
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
 
   ELSEIF (plot_num == 8) THEN

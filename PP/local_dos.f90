@@ -30,11 +30,13 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
-  USE uspp,                 ONLY : nkb, vkb, becsum
-  USE uspp_param,           ONLY : nh, tvanp
-  USE wavefunctions_module, ONLY : evc, psic
+  USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
+  USE uspp_param,           ONLY : nh, nhm, tvanp
+  USE wavefunctions_module, ONLY : evc, evc_nc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
                                    gamma_only
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE spin_orb,             ONLY : lspinorb, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
 #ifdef __PARA
   USE mp,                   ONLY : mp_bcast
@@ -51,17 +53,17 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
 
   logical :: lsign    ! if true and k=gamma and iflag=0 
                       ! write |psi|^2 * sign(psi)
-                      
   !
   !    local variables
   !
-  integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, np
+  integer :: ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
   ! counters for US PPs
-  integer :: ir, is, ig, ibnd, ik, irm, isup, isdw
+  integer :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
   ! counters
   real(kind=DP) :: w, w1, modulus, maxmod
   real(kind=DP), allocatable :: rbecp(:,:), segno(:)
-  complex(kind=DP), allocatable :: becp(:,:)
+  complex(kind=DP), allocatable :: becp(:,:),  &
+                                   becp_nc(:,:,:), be1(:,:), be2(:,:)
   complex(kind=DP) :: phase 
   real(kind=DP), external :: w0gauss, w1gauss
   !
@@ -69,6 +71,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   if (lsign .and.  (iflag /= 0)) call errore ('local_dos', &
        'inconsistent flags', 1)
+  if (noncolin.and. lsign) call errore('local_dos','not available yet',1)
+  if (noncolin.and. iflag.ne. 0) call errore('local_dos','not available yet',1)
+  if (noncolin.and. gamma_only) call errore('local_dos','not available yet',1)
   if (lsign .and. (kpoint < 1) .or. (kpoint > nks)) &
        call errore ('local_dos', 'wrong k-point specified', 1)
   if (lsign .and. ( sqrt(xk(1,kpoint)**2 + xk(2,kpoint)**2 + &
@@ -82,8 +87,16 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   if (gamma_only) then 
      allocate (rbecp(nkb,nbnd))
   else 
-     allocate (becp(nkb,nbnd))
-  end if
+     if (noncolin) then
+        allocate (becp_nc(nkb,npol,nbnd))
+        if (lspinorb) then
+          allocate(be1(nhm,2))
+          allocate(be2(nhm,2))
+        endif
+     else
+        allocate (becp(nkb,nbnd))
+     endif
+  endif
   rho(:,:) = 0.d0
   dos(:) = 0.d0
   becsum(:,:,:) = 0.d0
@@ -125,29 +138,48 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
      if (ik == kpoint .or. iflag /= 0) then
         if (lsda) current_spin = isk (ik)
         call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        if (noncolin) then
+           call davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
+        else
+           call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        endif
         call init_us_2 (npw, igk, xk (1, ik), vkb)
 
         if (gamma_only) then
            call pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, rbecp, nkb)
         else
-           call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+           if (noncolin) then
+              call ccalbec_nc (nkb,npwx,npw,npol,nbnd,becp_nc,vkb,evc_nc)
+           else
+              call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+           endif
         end if
      !
      !     here we compute the density of states
      !
         do ibnd = 1, nbnd
            if (ibnd == kband .or. iflag /= 0) then
-              psic(1:nrxxs) = (0.d0,0.d0)
-              do ig = 1, npw
-                 psic (nls (igk (ig) ) ) = evc (ig, ibnd)
-              enddo
-              if (gamma_only) then
-                 do ig = 1, npw
-                    psic (nlsm(igk (ig) ) ) = CONJG(evc (ig, ibnd))
+              if (noncolin) then
+                 psic_nc = (0.d0,0.d0)
+                 do ipol=1,npol
+                    do ig = 1, npw
+                       psic_nc(nls(igk(ig)),ipol)=evc_nc(ig,ipol,ibnd)
+                    enddo
+                    call cft3s (psic_nc(1,ipol),nr1s,nr2s,nr3s, &
+                                                nrx1s,nrx2s,nrx3s,2)
                  enddo
-              end if
-              call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+              else
+                 psic(1:nrxxs) = (0.d0,0.d0)
+                 do ig = 1, npw
+                    psic (nls (igk (ig) ) ) = evc (ig, ibnd)
+                 enddo
+                 if (gamma_only) then
+                    do ig = 1, npw
+                       psic (nlsm(igk (ig) ) ) = CONJG(evc (ig, ibnd))
+                    enddo
+                 end if
+                 call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+              endif
               w1 = wg (ibnd, ik) / omega
 !
 !  Compute and save the sign of the wavefunction at the gamma point
@@ -180,55 +212,123 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                  segno(:) = sign( 1.d0, segno(:) )
               endif
               !
-              do ir=1,nrxxs
-                 rho (ir, current_spin) = rho (ir, current_spin) + &
-                   w1 * (real ( psic (ir) ) **2 + DIMAG (psic (ir) ) **2)
-              enddo
+              if (noncolin) then
+                 do ipol=1,npol
+                    do ir=1,nrxxs
+                       rho(ir,current_spin)=rho(ir,current_spin)+&
+                          w1*(real(psic_nc(ir,ipol))**2+ &
+                                        DIMAG(psic_nc(ir,ipol))**2)
+                    enddo
+                 enddo
+              else
+                 do ir=1,nrxxs
+                    rho (ir, current_spin) = rho (ir, current_spin) + &
+                      w1 * (real ( psic (ir) ) **2 + DIMAG (psic (ir) ) **2)
+                 enddo
+              endif
         !
         !    If we have a US pseudopotential we compute here the becsum term
         !
-
               w1 = wg (ibnd, ik)
               ijkb0 = 0
               do np = 1, ntyp
-                 if (tvanp (np) ) then
-                    do na = 1, nat
-                       if (ityp (na) == np) then
-                          ijh = 1
-                          do ih = 1, nh (np)
-                             ikb = ijkb0 + ih
-                             if(gamma_only) then
+                if (tvanp (np) ) then
+                  do na = 1, nat
+                    if (ityp (na) == np) then
+                      if (noncolin) then
+                        if (lspinorb) then
+                          be1=(0.d0,0.d0)
+                          be2=(0.d0,0.d0)
+                          do ih = 1, nh(np)
+                            ikb = ijkb0 + ih
+                            do kh = 1, nh(np)
+                              if ((nhtol(kh,np).eq.nhtol(ih,np)).and. &
+                                  (nhtoj(kh,np).eq.nhtoj(ih,np)).and. &
+                                  (indv(kh,np).eq.indv(ih,np))) then
+                                 kkb=ijkb0 + kh
+                                 do is1=1,2
+                                   do is2=1,2
+                                     be1(ih,is1)=be1(ih,is1)+ &
+                                           fcoef(ih,kh,is1,is2,np)* &
+                                           becp_nc(kkb,is2,ibnd)
+                                     be2(ih,is1)=be2(ih,is1)+ &
+                                           fcoef(kh,ih,is2,is1,np)* &
+                                        conjg(becp_nc(kkb,is2,ibnd))
+                                   enddo
+                                 enddo
+                              endif
+                            enddo
+                          enddo
+                        endif
+                        ijh = 1
+                        do ih = 1, nh (np)
+                          ikb = ijkb0 + ih
+                          if (lspinorb) then
+                            becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
+                               (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
+                          else
+                            becsum(ijh,na,1) = becsum(ijh,na,1)+  &
+                             w1*(conjg(becp_nc(ikb,1,ibnd))*      &
+                                       becp_nc(ikb,1,ibnd)+       &
+                                 conjg(becp_nc(ikb,2,ibnd))*      &
+                                       becp_nc(ikb,2,ibnd))
+                          endif
+                          ijh = ijh + 1
+                          do jh = ih + 1, nh (np)
+                            jkb = ijkb0 + jh
+                            if (lspinorb) then 
+                              becsum(ijh,na,1)=becsum(ijh,na,1) &
+                                 + w1*((be1(jh,1)*be2(ih,1)+   &
+                                        be1(jh,2)*be2(ih,2))+  &
+                                       (be1(ih,1)*be2(jh,1)+   &
+                                        be1(ih,2)*be2(jh,2)) )
+                            else
+                              becsum(ijh,na,1)= becsum(ijh,na,1)+ &
+                                   w1*2.d0*real(conjg(becp_nc(ikb,1,ibnd)) &
+                                     *becp_nc(jkb,1,ibnd) + &
+                                conjg(becp_nc(ikb,2,ibnd)) &
+                                     *becp_nc(jkb,2,ibnd) )
+                            endif
+                            ijh = ijh + 1
+                          enddo
+                        enddo
+                      else
+                        ijh = 1
+                        do ih = 1, nh (np)
+                          ikb = ijkb0 + ih
+                          if (gamma_only) then
+                              becsum(ijh,na,current_spin) = &
+                                    becsum(ijh,na,current_spin) + w1 * &
+                                    rbecp(ikb,ibnd)*rbecp(ikb,ibnd)
+                          else
+                              becsum(ijh,na,current_spin) = &
+                                   becsum(ijh,na,current_spin) + w1 * &
+                               real(conjg(becp(ikb,ibnd))*becp(ikb,ibnd))
+                          end if
+                          ijh = ijh + 1
+                          do jh = ih + 1, nh (np)
+                             jkb = ijkb0 + jh
+                             if (gamma_only) then
                                 becsum(ijh,na,current_spin) = &
-                                     becsum(ijh,na,current_spin) + w1 * &
-                                     rbecp(ikb,ibnd)*rbecp(ikb,ibnd)
+                                   becsum(ijh,na,current_spin) + 2.d0*w1 * &
+                                   rbecp(ikb,ibnd)*rbecp(jkb,ibnd)
                              else
                                 becsum(ijh,na,current_spin) = &
-                                     becsum(ijh,na,current_spin) + w1 * &
-                                     real(conjg(becp(ikb,ibnd))*becp(ikb,ibnd))
-                             end if
+                                  becsum(ijh,na,current_spin) + 2.d0*w1 * &
+                                  real(conjg(becp(ikb,ibnd))*becp(jkb,ibnd))
+                             endif
                              ijh = ijh + 1
-                             do jh = ih + 1, nh (np)
-                                jkb = ijkb0 + jh
-                                if(gamma_only) then
-                                   becsum(ijh,na,current_spin) = &
-                                     becsum(ijh,na,current_spin) + 2.d0*w1 * &
-                                     rbecp(ikb,ibnd)*rbecp(jkb,ibnd)
-                                else
-                                   becsum(ijh,na,current_spin) = &
-                                     becsum(ijh,na,current_spin) + 2.d0*w1 * &
-                                     real(conjg(becp(ikb,ibnd))*becp(jkb,ibnd))
-                                end if
-                                ijh = ijh + 1
-                             enddo
                           enddo
-                          ijkb0 = ijkb0 + nh (np)
-                       endif
-                    enddo
-                 else
-                    do na = 1, nat
-                       if (ityp (na) == np) ijkb0 = ijkb0 + nh (np)
-                    enddo
-                 endif
+                        enddo
+                      endif
+                      ijkb0 = ijkb0 + nh (np)
+                    endif
+                  enddo
+                else
+                  do na = 1, nat
+                    if (ityp (na) == np) ijkb0 = ijkb0 + nh (np)
+                  enddo
+                endif
               enddo
            endif
         enddo
@@ -237,19 +337,31 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   if (gamma_only) then
      deallocate(rbecp)
   else
-     deallocate(becp)
-  end if
+     if (noncolin) then
+        if (lspinorb) then
+           deallocate(be1)
+           deallocate(be2)
+        endif
+        deallocate(becp_nc)
+     else
+        deallocate(becp)
+     endif
+  endif
   if (doublegrid) then
-     do is = 1, nspin
-        call interpolate (rho (1, is), rho (1, is), 1)
-     enddo
+     if (noncolin) then
+       call interpolate(rho, rho, 1)
+     else
+       do is = 1, nspin
+         call interpolate(rho(1, is), rho(1, is), 1)
+       enddo
+     endif
   endif
   !
   !    Here we add the US contribution to the charge
   !
   call addusdens
   !
-  if (nspin == 1) then
+  if (nspin == 1 .or. nspin==4) then
      is = 1 
      dos(:) = rho (:, is)
   else
