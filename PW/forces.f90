@@ -24,12 +24,11 @@ SUBROUTINE forces
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE cell_base,      ONLY : at, bg, alat, omega  
-  USE basis,      ONLY : nat, ntyp, ityp, tau
+  USE basis,      ONLY : nat, ntyp, ityp, tau, zv
   USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                          ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,   ONLY : nspin
   USE symme,      ONLY : s, nsym, irt
-  USE pseud,      ONLY : zv 
   USE vlocal,     ONLY : strf, vloc
   USE wvfct,      ONLY : gamma_only
   USE force_mod,  ONLY : force, lforce

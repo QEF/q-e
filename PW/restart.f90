@@ -26,7 +26,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !
   !
   USE kinds, ONLY: DP
-  USE basis, ONLY: nat, ntyp, ityp, tau, natomwfc, atm
+  USE basis, ONLY: nat, ntyp, ityp, tau, zv, natomwfc, atm
   USE cell_base, ONLY: at, bg, ibrav, celldm, alat, symm_type
   USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
        ngk, nks, nkstot
@@ -44,7 +44,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   USE ener, ONLY: ef
   USE atom, ONLY: zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
        rho_atc, mesh, msh, nchi, lchi, numeric
-  USE pseud, ONLY: cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc,&
+  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc,&
        bhstype
   USE us, ONLY: dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
        kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
@@ -496,7 +496,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE constants, ONLY: pi
   USE io_files,  ONLY : iunwfc, nwordwfc, prefix, tmp_dir
   USE kinds, ONLY: DP
-  USE basis, ONLY: nat, ntyp, ityp, tau, natomwfc, atm
+  USE basis, ONLY: nat, ntyp, ityp, tau, zv, natomwfc, atm
   USE cell_base, ONLY: at, bg, ibrav, celldm, alat, tpiba, tpiba2, omega, &
        symm_type
   USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
@@ -515,7 +515,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE ener, ONLY: ef
   USE atom, ONLY: zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
        rho_atc, mesh, msh, nchi, lchi, numeric
-  USE pseud, ONLY: cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc,&
+  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc,&
        bhstype
   USE us, ONLY: dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
        kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo

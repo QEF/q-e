@@ -24,13 +24,15 @@ subroutine set_pseudo (is, upf, ierr)
   !
   ! PWSCF modules
   !
-  USE pseud, ONLY: zv, lloc, lmax, zp
+    
+  USE pseud, ONLY: lloc, lmax, zp
   USE char, ONLY: psd
   USE nl_c_c, ONLY: nlcc
   USE atom
   USE us
   USE funct
   !
+  USE ions_base, ONLY: zv
   USE pseudo_types
   USE read_pseudo_module
   !
@@ -105,7 +107,7 @@ subroutine set_pseudo (is, upf, ierr)
   !
 5 msh (is) = 2 * ( (msh (is) + 1) / 2) - 1
 
-  zv(is) = zp(is)
+  zv(is) = zp(is)  !!! maybe not needed: it is done in setup
 
 end subroutine set_pseudo
 

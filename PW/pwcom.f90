@@ -14,6 +14,7 @@ MODULE basis
   USE kinds,      ONLY : DP
   USE parameters, ONLY : ntypx
   USE ions_base,  ONLY : &
+       zv,               &! the valence charge of the atom
        nat,              &! number of atoms in the unit cell
        ntyp => nsp,      &! number of different types of atoms
        tau,              &! the positions of each atom
@@ -277,8 +278,7 @@ MODULE pseud
        alpc(2,npsx),          &! the alpha of the erf functions
        zp(npsx),              &! the charge of the pseudopotential
        aps(6,0:3,npsx),       &! the a_l coefficient
-       alps(3,0:3,npsx),      &! the b_l coefficient
-       zv(ntypx)               ! the valence charge of the atom
+       alps(3,0:3,npsx)        ! the b_l coefficient
   INTEGER :: &
        nlc(npsx),             &! number of erf functions
        nnl(npsx),             &! number of the gaussian functions

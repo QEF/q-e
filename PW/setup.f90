@@ -42,9 +42,9 @@ SUBROUTINE setup()
   USE parameters,    ONLY : npsx, nchix, npk
   USE io_global,     ONLY : stdout
   USE constants,     ONLY : pi
-  USE cell_base,         ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE cell_base,     ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
   USE basis,         ONLY : nat, tau, ntyp, ityp, startingwfc, startingpot, &
-                            natomwfc
+                            natomwfc, zv
   USE gvect,         ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,       ONLY : doublegrid, gcutms
   USE klist,         ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, lxkcry, &
@@ -53,7 +53,7 @@ SUBROUTINE setup()
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
   USE symme,         ONLY : s, irt, ftau, nsym, invsym
   USE atom,          ONLY : r, oc, nchi, lchi, mesh, msh
-  USE pseud,         ONLY : zv, zp, nlc, nnl, bhstype, alps, aps, lmax
+  USE pseud,         ONLY : zp, nlc, nnl, bhstype, alps, aps, lmax
   USE wvfct,         ONLY : nbnd, nbndx
   USE control_flags, ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
                             lneb, lphonon, david, isolve, imix, niter, noinv, &

@@ -23,7 +23,6 @@ program chdens
   use lsda_mod, only: nspin
   use gvect
   use gsmooth
-  use pseud, only: zv
   use scf, only: rho
   USE wavefunctions_module,  ONLY: psic
   use io_files, only: nd_nmbr

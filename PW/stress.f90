@@ -15,7 +15,7 @@ subroutine stress
   USE io_global,  ONLY : stdout
   USE kinds, ONLY: DP
   USE cell_base, ONLY: omega, alat, at, bg
-  USE basis, ONLY: nat, ntyp, ityp, tau
+  USE basis, ONLY: nat, ntyp, ityp, tau, zv
   USE constants, ONLY: uakbar
   USE ener, ONLY: etxc, vtxc
   USE force_mod, ONLY: sigma
@@ -23,7 +23,6 @@ subroutine stress
        nrxx, nl, g, gg, gcutm
   USE ldaU, ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin
-  USE pseud, ONLY: zv
   USE scf, ONLY: rho, rho_core
   USE control_flags, only: iverbosity
   USE wvfct, ONLY: gamma_only

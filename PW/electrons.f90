@@ -25,7 +25,7 @@ SUBROUTINE electrons()
   USE parameters,           ONLY : npk 
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE basis,                ONLY : nat, ntyp, ityp, tau, startingpot
+  USE basis,                ONLY : zv, nat, ntyp, ityp, tau, startingpot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid  
@@ -33,7 +33,6 @@ SUBROUTINE electrons()
                                    lgauss    
   USE lsda_mod,             ONLY : lsda, nspin  
   USE ktetra,               ONLY : ltetra  
-  USE pseud,                ONLY : zv    
   USE vlocal,               ONLY : strf, vnew  
   USE wvfct,                ONLY : nbnd, et, gamma_only  
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &

@@ -59,7 +59,7 @@ subroutine compute_casino
 
   use kinds, ONLY: DP
   use atom, only: zmesh
-  use basis, only: nat, ntyp, ityp, tau
+  use basis, only: nat, ntyp, ityp, tau, zv
   use cell_base, only: omega, alat, tpiba2, at, bg
   use char, only: title
   use constants, only: tpi
@@ -68,7 +68,6 @@ subroutine compute_casino
        nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
   use klist , only: nks, nelec, xk
   use lsda_mod, only: lsda, nspin
-  use pseud, only: zv
   use scf, only: rho, rho_core
   use vlocal, only: vloc, vnew, strf
   use wvfct, only: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
