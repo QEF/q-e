@@ -36,6 +36,8 @@ MODULES = \
 ../Modules/kind.o \
 ../Modules/mp.o \
 ../Modules/mp_global.o \
+../Modules/parallel_include.o \
+../Modules/shmem_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/supercell.o \

@@ -211,6 +211,7 @@ Here is a list of supported architectures:
   alphaMPI    HP-Compaq alpha parallel machines, HP-Compaq compiler
   hp          HP PA-RISC workstations, HP compiler
   hpMPI       HP PA-RISC parallel machines, HP compiler
+  ia64        HP Itanium, HP compiler
   beowulf     Linux Beowulf (PC cluster), Portland compiler
   beo_ifc     As above, Intel compiler
   alpha       HP-Compaq alpha workstations, HP-Compaq compiler

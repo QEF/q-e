@@ -1,0 +1,67 @@
+#
+# System-dependent definitions for HP Itanium machines, HP-UX
+# (a64-hp-hpux11.23) Contributed by Xianghjun
+#
+# Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
+# In this case, specify also  how to load the fftw library (FFTW_LIB)
+# and the path to the fftw.h include file (FFTW_INC_DIR). Example:
+#  32-bit version
+#  FFTW_LIB=-L/nethome/proffess/lib/fftw-2.1.5/32/lib -lfftw
+#  FFTW_INC_DIR=/nethome/proffess/lib/fftw-2.1.5/32/include
+#  64-bit version
+# FFTW_LIB=-L/nethome/proffess/lib/fftw-2.1.5/64/lib -lfftw
+# FFTW_INC_DIR=/nethome/proffess/lib/fftw-2.1.5/64/include
+#  CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -I$(FFTW_INC_DIR)
+#
+#-------------------------------------------------#
+# Add -D__HP64 to CPPFLAGS for 64-bit compilation #
+#-------------------------------------------------#
+#
+# Use the local copy of fftw
+CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -D__USE_INTERNAL_FFTW -D__HP64
+#
+# Fortran compiler:
+#
+F90 = f90
+F77 = $(F90)
+#
+# Fortran compiler flags
+#
+# 32-bit
+#FFLAGS = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 +DA2.0 +DS2.0
+# 64-bit
+FFLAGS = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77  +noppu +DD64
+
+F90FLAGS = $(FFLAGS) $(CPPFLAGS)
+#
+# Fortran77 compiler flags
+#
+F77FLAGS = $(FFLAGS)
+F77FLAGS_NOOPT = -O0
+#
+# C compiler flags
+#
+CC = cc
+# 32-bit
+#CCFLAGS  = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
+# 64-bit
+CCFLAGS  = $(CPPFLAGS) +O2  +DD64 +Odataprefetch +Onolimit
+# This is needed to tell the compiler where modules are
+MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+#
+# Libraries:
+# 32-bit
+#LIBS = -L/opt/mpi/lib/hpux32 -lmpi -ldmpi -lmpio -lmtmpi -L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB)  -lm
+# 64-bit
+LIBS =  -L/opt/mlib/lib/hpux64 -lveclib -llapack $(FFTW_LIB) 
+# Loader:
+LD=$(F90)
+#32-bit
+#LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a +U77 +DA2.0 +DS2.0 +O2  $(LIBS)
+# 64-bit
+LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a  +U77  +O2  +DD64  $(LIBS)
+#
+# ar:
+#
+AR = ar
+ARFLAGS = ruv
