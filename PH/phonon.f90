@@ -74,14 +74,12 @@ program phonon
   call seqopn (iustat, filname, 'formatted', exst)
   if(exst) then
      read(iustat, *, end=10, err=10) iq_start
-     if (iq_start < 0) go to 10
+     if (iq_start <= 0) go to 10
      write(stdout, "(//5x,' STARTING FROM AN OLD RUN')")
      write(stdout, "(5x,' Doing now the calculation for q point nr',i3)")  &
           iq_start
      go to 20
-10   close (unit = iustat, status='delete')
-     open (unit = iustat, file = filname, form='formatted', status='new')
-     iq_start = 1
+10   iq_start = 1
 20   continue
   else
      iq_start = 1
