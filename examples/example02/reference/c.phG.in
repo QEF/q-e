@@ -1,0 +1,9 @@
+phonons of c at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  epsil=.true.,
+  prefix='C',
+  amass(1)=12.0107,
+  outdir='/home/dalcorso/tmp/'
+ /
+0.0 0.0 0.0
