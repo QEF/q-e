@@ -14,14 +14,18 @@ CPP = /usr/bin/cpp
 # (in some cases it is slower than the full 3d FFT)
 #
 CPPFLAGS = -P -E -traditional -DDEC -DFFTW -DPARA -D__MPI \
-                 -DLANGUAGE_FORTRAN -I$(INCL_DIR)
+                 -DLANGUAGE_FORTRAN -I$(OSHOME)/include
 
 #
 # Fortran compiler:
 #
 F90 = f90
 F90FLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
-	-align records -I$(INCL_DIR)
+	-align records
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 
 #
 # Libraries (mpi + cxml + fftw) :

@@ -2,7 +2,6 @@
 # System-dependent definitions for t3e using MPI
 # Edit according to your needs
 #
-#
 # Precompiler
 #
 CPP = /opt/ctl/bin/cpp
@@ -10,7 +9,7 @@ CPP = /opt/ctl/bin/cpp
 # add -DT3D_BENCHLIB if the benchlib is installed
 # remove -DFFTW if fftw is not installed and you cannot compile it
 # (you will use the fft's contained in standard t3e libraries)
-CPPFLAGS = -P -N -I$(INCL_DIR) -DT3D -DPARA -D__MPI -DFFTW
+CPPFLAGS = -P -N -I$(OSHOME)/include/ -DT3D -DPARA -D__MPI -DFFTW
 
 #
 # Fortran compiler:
@@ -21,7 +20,8 @@ F90 = f90
 # with -M1110 flag compiler does not issue warning messages for 
 # the use of DOUBLE PRECISION constants in the code. (SdG)
 #
-FFLAGS = -em -dp  -M1110 -p../include
+FFLAGS = -em -dp  -M1110 -p$(OSHOME)/Modules -p$(OSHOME)/PW \
+         -p$(OSHOME)/PH
 F90FLAGS = $(FFLAGS) 
 #
 # Loader:

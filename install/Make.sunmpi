@@ -5,14 +5,12 @@
 # add -DFFTW to CPPFLAGS
 #
 CPP = fpp
-CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -DHAS_ZHEGVX -I$(INCL_DIR)
+CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -DHAS_ZHEGVX -I$(OSHOME)/include
 # Fortran compiler:
 F90 = mpf90
 #
-F90FLAGS = -fast -xchip=ultra3 -xarch=v8plusb \
-         -M$(INCL_DIR) \
-         -stackvar \
-         -xlic_lib=sunperf
+F90FLAGS = -fast -xchip=ultra3 -xarch=v8plusb -stackvar -xlic_lib=sunperf
+           -M$(OSHOME)/Modules -M$(OSHOME)/PW -M$(OSHOME)/PH
 #
 LIBS = -L/usr/opt/SUNWhpc/lib \
        -R/opt/SUNWhpc/lib -lmvec -lmpi

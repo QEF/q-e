@@ -13,7 +13,7 @@ CPP = /lib/cpp
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DPGI -DFFTW  \
+CPPFLAGS = -P -traditional -I$(OSHOME)/include -DPC -DPGI -DFFTW  \
            -D"FFTWND_F77_ONE=fftwnd_f77_one" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan"
 
@@ -21,7 +21,11 @@ CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DPGI -DFFTW  \
 # Fortran compilers:
 # Please note: -r8 is necessary for numerical stability ..
 F90 =pgf90
-F90FLAGS =  -fast -r8 -I$(INCL_DIR) 
+F90FLAGS =  -fast -r8
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 
 #
 # Loader:
@@ -31,7 +35,7 @@ F90FLAGS =  -fast -r8 -I$(INCL_DIR)
 LD=$(F90)
 LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw 
 #
-LFLAGS = $(LIBS) -I$(INCL_DIR)
+LFLAGS = $(LIBS) -I$(MODULEFLAG)
 
 #
 # ar:

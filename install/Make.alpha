@@ -13,7 +13,8 @@ CPP = /lib/cpp
 #  in some cases it is slower than the full 3d FFT)
 # Use -DFFTW instead of -DDXML if you use fft routines from fftw library
 #
-CPPFLAGS = -P -DDEC -DLANGUAGE_FORTRAN -DDXML -DNOPENCILS -I$(INCL_DIR)
+CPPFLAGS = -P -DDEC -DLANGUAGE_FORTRAN -DDXML -DNOPENCILS \
+           -I$(OSHOME)/include
 
 #
 # Fortran compiler:
@@ -22,10 +23,13 @@ F90 = f90
 #
 # options suggested by Ph. Baranek:
 # F90FLAGS =-O5 -fast -big_endian  -fpe0 -check underflow -real_size 64 \
-#        -align dcommons -align records -I. -I$(INCL_DIR)
+#        -align dcommons -align records
 #  -big_endian allows to read files generated on other (big endian) machines
-# F90FLAGS = -O -real_size 64 -align dcommons -align records -I. -I$(INCL_DIR)
-
+F90FLAGS = -O -real_size 64 -align dcommons -align records
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 #
 # Libraries:
 # If you have dxml or cxml libraries, use

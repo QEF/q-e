@@ -10,7 +10,7 @@ CPP = /lib/cpp
 # Add -DFFTW if you want to use fft routines from fftw library
 # instead of fft from complib library
 #
-CPPFLAGS = -P -DORIGIN -DPARA -D__MPI -I$(INCL_DIR)
+CPPFLAGS = -P -DORIGIN -DPARA -D__MPI -I$(OSHOME)/include
 
 #
 # Fortran compiler:
@@ -19,7 +19,11 @@ F90 = f90
 #
 # use -O3 only if you are sure that it actually works 
 #
-F90FLAGS = -mips4 -64 -O2 -r10000 -r8 -I/usr/include -I../include
+F90FLAGS = -mips4 -64 -O2 -r10000 -r8
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 
 #
 # Libraries:
@@ -27,13 +31,9 @@ F90FLAGS = -mips4 -64 -O2 -r10000 -r8 -I/usr/include -I../include
 LIBS = -lmpi -lcomplib.sgimath
 #
 # Loader:
-# $(PWLIBS) are defined in main/Makefile and automatically loaded.
-# The loader of some machines is unable to resolve the few existing
-# cross-references between libraries in $(PWLIBS). Reloading them
-# once again should fix the problem
 LD=$(F90)
 
-LFLAGS = $(PWLIBS) $(LIBS)
+LFLAGS = $(LIBS)
 
 #
 # ar:
