@@ -150,7 +150,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! go to  crystal coordinates
   !
   do i = 1, 3
-     aq (i) = xq (1) * at (1, i) + xq (2) * at (2, i) + xq (3) * at (3, i)
+     aq(i) = xq(1) * at(1,i) + xq(2) * at(2,i) + xq(3) * at(3,i)
   enddo
   !
   ! create the list of rotated q
@@ -163,11 +163,13 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   do isym = 1, nsym
      ism1 = invs (isym)
      do i = 1, 3
-        raq (i) = s (i, 1, ism1) * aq (1) + s (i, 2, ism1) * aq (2) &
+        raq (i) = s (i, 1, ism1) * aq (1) &
+                + s (i, 2, ism1) * aq (2) &
                 + s (i, 3, ism1) * aq (3)
      enddo
      do i = 1, 3
-        sxq (i, 48) = bg (i, 1) * raq (1) + bg (i, 2) * raq (2) &
+        sxq (i, 48) = bg (i, 1) * raq (1) &
+                    + bg (i, 2) * raq (2) &
                     + bg (i, 3) * raq (3)
      enddo
      do iq = 1, nq
@@ -182,7 +184,8 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
         isq (isym) = nq
         saq(:,nq) = raq(:) 
         do i = 1, 3
-           sxq (i, nq) = bg (i, 1) * saq (1, nq) + bg (i, 2) * saq (2, nq) &
+           sxq (i, nq) = bg (i, 1) * saq (1, nq) &
+                       + bg (i, 2) * saq (2, nq) &
                        + bg (i, 3) * saq (3, nq)
         enddo
      endif
@@ -194,7 +197,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   imq = 0
   do iq = 1, nq
      if (eqvect (raq, saq (1, iq), zero) ) imq = iq
-     if (nsq (iq)*nq /= nsym) call errore ('star_q', 'wrong degeneracy', iq)
+     if (nsq(iq)*nq /= nsym) call errore ('star_q', 'wrong degeneracy', iq)
   enddo
   !
   ! writes star of q
@@ -202,11 +205,10 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   WRITE( stdout, * )
   WRITE( stdout, '(5x,a,i4)') 'Number of q in the star = ', nq
   WRITE( stdout, '(5x,a)') 'List of q in the star:'
-  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq (i, iq) , i = 1, 3) , iq = 1, nq)
+  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq(i,iq), i=1,3), iq=1,nq)
   if (imq == 0) then
      WRITE( stdout, '(5x,a)') 'In addition there is the -q list: '
-     WRITE( stdout, '(7x,i4,3f12.9)') (iq, ( - sxq (i, iq) , i = 1, 3) , &
-          iq = 1, nq)
+     WRITE( stdout, '(7x,i4,3f12.9)') (iq, (-sxq(i,iq), i=1,3), iq=1,nq)
   endif
   return
 end subroutine star_q

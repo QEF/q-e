@@ -25,9 +25,8 @@ logical function eqvect (x, y, f)
   ! acceptance parameter
   parameter (accep = 1.0d-5)
   !
-  eqvect = abs (x (1) - y (1) - f (1) - nint (x (1) - y (1) - f (1) &
-       ) ) .lt.accep.and.abs (x (2) - y (2) - f (2) - nint (x (2) &
-       - y (2) - f (2) ) ) .lt.accep.and.abs (x (3) - y (3) - f (3) &
-       - nint (x (3) - y (3) - f (3) ) ) .lt.accep
+  eqvect = abs( x(1)-y(1)-f(1) - nint(x(1)-y(1)-f(1)) ).lt.accep .and. &
+           abs( x(2)-y(2)-f(2) - nint(x(2)-y(2)-f(2)) ).lt.accep .and. &
+           abs( x(3)-y(3)-f(3) - nint(x(3)-y(3)-f(3)) ).lt.accep
   return
 end function eqvect
