@@ -147,17 +147,21 @@ MODULE read_namelists_module
        xc_type = 'PZ'
        IF ( prog == 'PW' ) THEN
           !
-          ! set to an invalid value:
-          ! starting_magnetization MUST be set for at least one atomic type
+          ! ... set to an invalid value:
+          ! ... starting_magnetization MUST be set for at least one atomic type
           !
-          starting_magnetization =-2.0D0
+          starting_magnetization = -2.D0
        ELSE
-          starting_magnetization = 0.0D0
-       ENDIF
+          !
+          starting_magnetization =  0.D0
+          !
+       END IF
        IF ( prog == 'PW' ) THEN
-          starting_ns_eigenvalue=-1.d0
-          U_projection_type='atomic'
-       ENDIF
+          !
+          starting_ns_eigenvalue = -1.d0
+          U_projection_type = 'atomic'
+          !
+       END IF
        lda_plus_U = .FALSE.
        Hubbard_U = 0.0D0
        Hubbard_alpha = 0.0D0
@@ -262,9 +266,7 @@ MODULE read_namelists_module
        diago_thr_init = 0.D0
        diago_cg_maxiter = 20
        diago_david_ndim = 4
-       diago_diis_buff = 200
        diago_diis_ndim = 3
-       diago_diis_keep = .FALSE.
 
        sic = 'none' 
        sic_epsilon = 1.d0
@@ -647,9 +649,7 @@ MODULE read_namelists_module
        CALL mp_bcast( diago_thr_init, ionode_id )
        CALL mp_bcast( diago_cg_maxiter, ionode_id )
        CALL mp_bcast( diago_david_ndim, ionode_id )
-       CALL mp_bcast( diago_diis_buff, ionode_id )
        CALL mp_bcast( diago_diis_ndim, ionode_id )
-       CALL mp_bcast( diago_diis_keep, ionode_id )
        CALL mp_bcast( sic, ionode_id )
        CALL mp_bcast( sic_epsilon , ionode_id )
        CALL mp_bcast( force_pairing , ionode_id )
@@ -1584,7 +1584,7 @@ MODULE read_namelists_module
        !
        ios = 0
        IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'phonon') THEN
+          IF( TRIM( calculation ) == 'phonon' ) THEN
              READ( 5, phonon, iostat = ios )
           END IF
        END IF

@@ -87,7 +87,7 @@ SUBROUTINE iosys()
                             psfile
   USE relax,         ONLY : epsf, starting_scf_threshold, &
                             restart_bfgs, epse
-  USE control_flags, ONLY : diis_ndim, diis_wfc_keep, isolve, &
+  USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
                             iverbosity, tr2, niter, order, iswitch, &
                             upscale_     => upscale, &
@@ -163,8 +163,7 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : electron_maxstep, electron_dynamics, &
                                mixing_mode, mixing_beta, mixing_ndim, &
                                mixing_fixed_ns, diago_cg_maxiter, &
-                               diago_david_ndim, diago_diis_buff, &
-                               diago_diis_ndim, diago_diis_keep, &
+                               diago_david_ndim, diago_diis_ndim, &
                                diagonalization, startingwfc, &
                                startingpot, conv_thr, diago_thr_init
   !
@@ -460,9 +459,7 @@ SUBROUTINE iosys()
   CASE ( 'diis' )
      isolve = 2
      max_cg_iter   = diago_cg_maxiter
-     diis_buff     = diago_diis_buff
      diis_ndim     = diago_diis_ndim   ! ... SF
-     diis_wfc_keep = diago_diis_keep
   CASE ( 'david' )
      isolve = 0
      david = diago_david_ndim

@@ -720,14 +720,6 @@ MODULE input_parameters
         INTEGER :: diago_diis_ndim = 10
           ! NOT used in FPMD
 
-        INTEGER :: diago_diis_buff = 10
-          ! buffer for diis diagonalization 
-          ! NOT used in FPMD
-
-        LOGICAL :: diago_diis_keep = .FALSE.
-          ! .....
-          ! NOT used in FPMD
-
         REAL(dbl) :: conv_thr = 1.d-6
           ! convergence threshold in electronic ONLY minimizations
           ! NOT used in FPMD
@@ -741,16 +733,18 @@ MODULE input_parameters
           ! NOT used in FPMD
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
-          electron_maxstep, ortho_eps, ortho_max, electron_dynamics, electron_damping, &
-          electron_velocities, electron_temperature, ekincw, fnosee, ampre, &
-          grease, twall, empty_states_nbnd, empty_states_maxstep, empty_states_delt, &
-          empty_states_emass, empty_states_ethr, diis_size, diis_nreset, diis_hcut, &
-          diis_wthr, diis_delt, diis_maxstep, diis_rot, diis_fthr, diis_temp, &
-          diis_achmix, diis_g0chmix, diis_g1chmix, diis_nchmix, diis_nrot, &
-          diis_rothr, diis_ethr, diis_chguess, mixing_mode, &
-          mixing_beta, mixing_ndim, mixing_fixed_ns, diago_cg_maxiter, diago_david_ndim, &
-          diago_diis_buff, diago_diis_keep, diagonalization, &
-          startingpot, startingwfc , conv_thr, diago_diis_ndim, diago_thr_init
+          electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
+          electron_damping, electron_velocities, electron_temperature, &
+          ekincw, fnosee, ampre, grease, twall, empty_states_nbnd,     &
+          empty_states_maxstep, empty_states_delt, empty_states_emass, &
+          empty_states_ethr, diis_size, diis_nreset, diis_hcut,        &
+          diis_wthr, diis_delt, diis_maxstep, diis_rot, diis_fthr,     &
+          diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
+          diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
+          mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
+          diago_cg_maxiter, diago_david_ndim, diagonalization,         &
+          startingpot, startingwfc , conv_thr, diago_diis_ndim,        &
+          diago_thr_init
 
 !
 !=----------------------------------------------------------------------------=!
