@@ -22,7 +22,7 @@ F77 = $(F90)
 #
 # Fortran compiler flags
 #
-FFLAGS = -qalias=noaryovrlp -I../include \
+FFLAGS = -qalias=noaryovrlp -I$(OSHOME)/include \
          -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
          -qdpc -Q -qalias=nointptr
 #
@@ -33,11 +33,11 @@ F77FLAGS_NOOPT = -O0
 #
 # Fortran90 compiler flags
 #
-F90FLAGS = $(FFLAGS) -qfree=f90 -I$(OSHOME)/install -WF,$(CPPFLAGS)
+F90FLAGS = $(FFLAGS) -qfree=f90 -I$(OSHOME)/include -WF,$(CPPFLAGS)
 #
 # C compiler flags
 #
-CCFLAGS  = -Wp,$(CPPFLAGS) -O2
+CCFLAGS  = -I$(OSHOME)/include -Wp,$(CPPFLAGS) -O2
 #
 # This is needed to tell the compiler where modules are
 #
