@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine data_structure
+subroutine data_structure( lgamma )
   !-----------------------------------------------------------------------
   ! this routine sets the data structure for the fft arrays.
   ! In the parallel case distributes columns to processes, too
@@ -18,22 +18,35 @@ subroutine data_structure
   use para
 #endif
   use mp, only: mp_sum
-  use mp_global, only: intra_pool_comm, nproc_pool
+  use mp_global, only: intra_pool_comm, nproc_pool, me_pool
   use stick_base
   use fft_scalar, only: good_fft_dimension
+  use fft_types, only: fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
   !
   implicit none
+  logical, intent(in) :: lgamma
   integer :: n1, n2, n3, i1, i2, i3
   ! counters on G space
   !
 
   real(kind=DP) :: amod
   ! modulus of G vectors
-#ifdef __PARA
-  ! counters on planes
+
+  integer, allocatable :: st(:,:), stw(:,:), sts(:,:) 
+  ! sticks maps
+
+  integer :: ub(3), lb(3)  
+  ! upper and lower bounds for maps
+
+  real(kind=DP) :: gkcut
+  ! cut-off for the wavefunctions
 
   integer :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &
        m2, i, mc, nct_, ic, ics
+
+#ifdef __PARA
+  ! counters on planes
+
   integer, allocatable :: ngc (:), ngcs (:), ngkc (:)
   integer  ::  ngp (maxproc), ngps(maxproc), ngkp (maxproc), ncp_(maxproc),&
        j, jj, idum
@@ -53,35 +66,34 @@ subroutine data_structure
   ! counter on processors
   ! used for swap
 
-  integer, allocatable :: st(:,:), stw(:,:), sts(:,:) 
-  ! sticks maps
-  integer :: ub(3), lb(3)  
-  ! upper and lower bounds for maps
   logical :: tk = .TRUE.   
   ! map type: true for full space sticks map, false for half space sticks map
   integer, allocatable :: in1(:), in2(:), index(:)
   ! sticks coordinates
 
+  !
+  !  Subroutine body
+  !
 
-  real(kind=DP) :: gkcut
-  ! cut-off for the wavefunctions
+  tk = .NOT. lgamma
+
   !
   ! set the values of fft arrays
   !
-  nrx1 = good_fft_dimension (nr1)
+
+  nrx1  = good_fft_dimension (nr1)
   nrx1s = good_fft_dimension (nr1s)
   !
   ! nrx2 is there just for compatibility
   !
-  nrx2 = nr2
+  nrx2  = nr2
   nrx2s = nr2s
-  nrx3 = good_fft_dimension (nr3)
+  nrx3  = good_fft_dimension (nr3)
   nrx3s = good_fft_dimension (nr3s)
   !
   !     compute number of columns per plane for each processor
   !
-  ncplane = nrx1 * nrx2
-
+  ncplane  = nrx1 * nrx2
   ncplanes = nrx1s * nrx2s
   !
   !    global pointers passed with commons are allocate here
@@ -117,24 +129,28 @@ subroutine data_structure
   if (nr3s.ne.nr3) write (6, '(/5x,"Planes per process (smooth): nr3s=",&
        &i3," npps= ",i3," ncplanes=",i5)') &
        nr3s, npps (me) , ncplanes
-  if (nks.eq.0) then
-     !
-     ! if k-points are automatically generated (which happens later)
-     ! use max(bg)/2 as an estimate of the largest k-point
-     !
-     gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max (sqrt (bg ( &
-          1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), sqrt (bg (1, 2) ** &
-          2 + bg (2, 2) **2 + bg (3, 2) **2), sqrt (bg (1, 3) **2 + bg ( &
-          2, 3) **2 + bg (3, 3) **2) )
-  else
-     gkcut = 0.0d0
-     do kpoint = 1, nks
-        gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt (xk ( &
-             1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
-     enddo
-  endif
 
-  gkcut = gkcut * gkcut
+  !if (nks.eq.0) then
+  !   !
+  !   ! if k-points are automatically generated (which happens later)
+  !   ! use max(bg)/2 as an estimate of the largest k-point
+  !   !
+  !   gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max (sqrt (bg ( &
+  !        1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), sqrt (bg (1, 2) ** &
+  !        2 + bg (2, 2) **2 + bg (3, 2) **2), sqrt (bg (1, 3) **2 + bg ( &
+  !        2, 3) **2 + bg (3, 3) **2) )
+  !else
+  !   gkcut = 0.0d0
+  !   do kpoint = 1, nks
+  !      gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt (xk ( &
+  !           1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
+  !   enddo
+  !endif
+!
+!  gkcut = gkcut * gkcut
+
+  call calculate_gkcut()  ! call the internal procedure
+
   ! find maximum among the nodes
   call poolextreme (gkcut, + 1)
   !
@@ -179,16 +195,16 @@ subroutine data_structure
   nct  = COUNT( st  > 0 )
   ncts = COUNT( sts > 0 )
 
-  if (nct.gt.ncplane)    &
+  if ( nct > ncplane )    &
      &    call errore('data_structure','too many sticks',1)
 
-  if (ncts.gt.ncplanes)  &
+  if ( ncts > ncplanes )  &
      &    call errore('data_structure','too many sticks',2)
 
-  if (nct .eq.0) &
+  if ( nct  == 0 ) &
      &    call errore('data_structure','number of sticks 0', 1)
 
-  if (ncts.eq.0) &
+  if ( ncts == 0 ) &
      &    call errore('data_structure','number smooth sticks 0', 1)
 
   !
@@ -210,6 +226,19 @@ subroutine data_structure
 
   CALL sticks_dist( tk, ub, lb, index, in1, in2, ngc, ngkc, ngcs, nct, &
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts )
+
+  CALL sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngkc, ngcs, nct, &
+          ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts )
+
+  CALL fft_dlay_allocate( dfftp, nproc_pool, nrx1,  nrx2  )
+  CALL fft_dlay_allocate( dffts, nproc_pool, nrx1s, nrx2s )
+
+  CALL fft_dlay_set( dfftp, &
+       tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, (me_pool+1), &
+       nproc_pool, ub, lb, index, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
+  CALL fft_dlay_set( dffts, &
+       tk, nct, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx2s, (me_pool+1), &
+       nproc_pool, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
 
   !
   !  Set the the correspondence between planes in the smooth thick mesh
@@ -435,7 +464,9 @@ subroutine data_structure
   nxx = nrxx
 
   nxxs = nrxxs
+
 #else
+
   nrx1 = good_fft_dimension (nr1)
   nrx1s = good_fft_dimension (nr1s)
   !
@@ -448,15 +479,31 @@ subroutine data_structure
   nrx2s = nr2s
   nrx3s = nr3s
   nrxxs = nrx1s * nrx2s * nrx3s
+
+  CALL fft_dlay_allocate( dfftp, nproc_pool, MAX(nrx1, nrx3),  nrx2  )
+  CALL fft_dlay_allocate( dffts, nproc_pool, MAX(nrx1s, nrx3s), nrx2s )
+
+  CALL calculate_gkcut()
+
   !
   !     compute the number of g necessary to the calculation
   !
   n1 = nr1 + 1
   n2 = nr2 + 1
-
   n3 = nr3 + 1
   ngm = 0
   ngms = 0
+
+  lb(1) = -n1
+  lb(2) = -n2
+  lb(3) = -n3
+  ub(1) =  n1
+  ub(2) =  n2
+  ub(3) =  n3
+!
+  ALLOCATE( stw ( lb(2):ub(2), lb(3):ub(3) ) )
+  stw = 0
+
   do i1 = - n1, n1
      do i2 = - n2, n2
         do i3 = - n3, n3
@@ -465,10 +512,16 @@ subroutine data_structure
                 bg (3, 1) + i2 * bg (3, 2) + i3 * bg (3, 3) ) **2
            if (amod.le.gcutm) ngm = ngm + 1
            if (amod.le.gcutms) ngms = ngms + 1
+           if (amod <= gkcut ) stw( i2, i3 ) = 1
         enddo
      enddo
-
   enddo
+
+  call fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nrx1, nrx2, nrx3, stw )
+  call fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, stw )
+
+  deallocate( stw )
+
 #endif
 
   !
@@ -483,5 +536,30 @@ subroutine data_structure
   call mp_sum( ngms_g, intra_pool_comm )
 
   return
+
+contains
+
+  subroutine calculate_gkcut()
+    if (nks.eq.0) then
+       !
+       ! if k-points are automatically generated (which happens later)
+       ! use max(bg)/2 as an estimate of the largest k-point
+       !
+       gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max (sqrt (bg ( &
+          1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), sqrt (bg (1, 2) ** &
+          2 + bg (2, 2) **2 + bg (3, 2) **2), sqrt (bg (1, 3) **2 + bg ( &
+          2, 3) **2 + bg (3, 3) **2) )
+    else
+       gkcut = 0.0d0
+       do kpoint = 1, nks
+          gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt (xk ( &
+               1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
+       enddo
+    endif
+    gkcut = gkcut * gkcut
+    return
+  end subroutine calculate_gkcut
+
+
 end subroutine data_structure
 

@@ -19,7 +19,7 @@ subroutine allocate_fft
   !
   !     determines the data structure for fft arrays
   !
-  call data_structure
+  call data_structure( .FALSE. )
   !
   if (nrxx.lt.ngm) then
      write (6, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &

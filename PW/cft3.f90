@@ -34,27 +34,26 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
 
 #if defined __FFT_MODULE_DRV
   use fft_scalar, only : cft_1z, cft_2xy
+  use sticks, only: dfftp
 #endif
 
   use fft_base, only: fft_scatter
 
   use parameters, only : DP
-  use para
+  use para, only: nct, ncp, ncplane, icpl, nprocp, nxx, me, npp
+
   implicit none
+
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
 
   complex (kind=DP) :: f (nxx)
   integer :: nxx_save, mc, i, j, ii, iproc, nppx
   complex (kind=DP), allocatable  :: aux (:)
-  data nxx_save / 0 /
-  save nxx_save, aux
   !
   call start_clock ('cft3')
-  if (nxx_save.ne.nxx) then
-     if (nxx_save.ne.0) deallocate (aux)
-     nxx_save = nxx
-     allocate (aux( nxx))    
-  endif
+
+  allocate( aux( nxx ) )
+
   !
   ! the following is needed if the fft is distributed over only one proces
   ! for the special case nx3.ne.n3. Not an elegant solution, but simple, f
@@ -70,6 +69,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   if (sign.eq.1) then
 #if defined __FFT_MODULE_DRV
      call cft_1z (f, ncp (me), n3, nx3, sign, aux)
+     ! call cft_1z (f, dfftp%nsp(me), n3, nx3, sign, aux)
 #else
      call cft_1 (f, ncp (me), n3, nx3, sign, aux)
 #endif
@@ -83,12 +83,14 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      enddo
 #if defined __FFT_MODULE_DRV
      call cft_2xy (f, npp (me), n1, n2, nx1, nx2, sign)
+     ! call cft_2xy (f, dfftp%npp (me), n1, n2, nx1, nx2, sign)
 #else
      call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
 #endif
   elseif (sign.eq. - 1) then
 #if defined __FFT_MODULE_DRV
      call cft_2xy (f, npp (me), n1, n2, nx1, nx2, sign)
+     ! call cft_2xy (f, dfftp%npp (me), n1, n2, nx1, nx2, sign)
 #else
      call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
 #endif
@@ -101,6 +103,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
 #if defined __FFT_MODULE_DRV
      call cft_1z (aux, ncp (me), n3, nx3, sign, f)
+     ! call cft_1z (aux, dfftp%nsp (me), n3, nx3, sign, f)
 #else
      call cft_1 (aux, ncp (me), n3, nx3, sign, f)
 #endif
@@ -108,6 +111,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call errore ('cft3', 'not allowed', abs (sign) )
 
   endif
+  deallocate( aux )
   call stop_clock ('cft3')
   return
 end subroutine cft3

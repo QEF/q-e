@@ -50,17 +50,16 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   use fft_base, only: fft_scatter
 
   use parameters, only: DP
-  use para
+  use para, only: icpls, ncts, ncplanes, ncp0s, nkcp, nprocp, nxxs, npps, ncps, me
+
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
-  complex (kind=DP) :: f (nxxs)
+  complex (kind=DP) :: f ( nxxs )
   !
   include 'mpif.h'
-  integer :: nxx_save, mc, i, j, ii, iproc, k, nppx
+  integer :: mc, i, j, ii, iproc, k, nppx
   complex (kind=DP), allocatable :: aux (:)
-  integer :: planes (nx1)
-  data nxx_save / 0 /
-  save nxx_save, aux
+  integer :: planes ( nx1 )
 
 #if defined(__FFTW)
 # define CFT_1S cft_1s
@@ -76,20 +75,19 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !
 
   call start_clock ('cft3s')
-  if (nxx_save.ne.nxxs) then
-     if (nxx_save.ne.0) deallocate (aux)
-     nxx_save = nxxs
-     allocate (aux( nxxs))    
-  endif
+
+  allocate( aux( nxxs ) )
+
   !
   ! see comments in cft3.F for the logic (or lack of it) of the following
   !
+
   if (nprocp.eq.1) then
      nppx = nx3
   else
      nppx = npps (me)
-
   endif
+
   if (sign.gt.0) then
      if (sign.ne.2) then
 #if defined __FFT_MODULE_DRV
@@ -191,23 +189,19 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #endif
      endif
   endif
+
+  deallocate( aux )
+
   call stop_clock ('cft3s')
+
   return
 end subroutine cft3s
 
 #else
 
-# define CFT_WITH_PENCILS cft_3
-
 # ifdef DEC
 #  ifdef DXML
 #   define NOPENCILS
-#  endif
-# endif
-
-# ifndef NOPENCILS
-#  if defined(__AIX) || defined(__SX4) || defined(DEC)
-#   define CFT_WITH_PENCILS cfts_3
 #  endif
 # endif
 
@@ -221,10 +215,16 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !----------------------------------------------------------------------
   !
   use parameters
+
+  use fft_scalar, only: cfft3ds    !  common scalar fft driver
+  use sticks, only: dffts          !  data structure for fft data layout
+
   implicit none
+
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
 
   complex(kind=DP) :: f (nx1 * nx2 * nx3)
+
   call start_clock ('cft3s')
 
 #if defined __HPM
@@ -234,20 +234,43 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !
   !   sign = +-1 : complete 3d fft (for rho and for the potential)
   !
+
   if (sign.eq.1) then
+
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
+
   elseif (sign.eq. - 1) then
+
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1)
+
      !
      !   sign = +-2 : if available, call the "short" fft (for psi's)
      !
+
   elseif (sign.eq.2) then
-     call CFT_WITH_PENCILS (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
+
+#if defined __FFT_MODULE_DRV && defined __AIX
+     call cfft3ds (f, n1, n2, n3, nx1, nx2, nx3,  1, dffts%isind, dffts%iplw)
+#elif defined NOPENCILS
+     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
+#else
+     call cfts_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1, dffts%isind, dffts%iplw)
+#endif
+
   elseif (sign.eq. - 2) then
-     call CFT_WITH_PENCILS (f, n1, n2, n3, nx1, nx2, nx3, 2, &
-          - 1)
+
+#if defined __FFT_MODULE_DRV && defined __AIX
+     call cfft3ds (f, n1, n2, n3, nx1, nx2, nx3, -1, dffts%isind, dffts%iplw)
+#elif defined NOPENCILS
+     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1)
+#else
+     call cfts_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1, dffts%isind, dffts%iplw)
+#endif
+
   else
+
      call errore ('cft3', 'what should i do?', 1)
+
   endif
 
 #if defined __HPM
@@ -255,10 +278,9 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #endif
 
   call stop_clock ('cft3s')
+
   return
 end subroutine cft3s
 
 
 #endif
-
-

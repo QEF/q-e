@@ -15,7 +15,7 @@ program pwscf
   use pwcom
   use io
   implicit none
-  character :: cdate * 9, ctime * 9, version * 12
+  character :: version * 12
   external date_and_tim
   ! use ".false." to disable all clocks except the total cpu time clock
   ! use ".true."  to enable clocks
@@ -25,15 +25,7 @@ program pwscf
   call start_clock ('PWSCF')
   version = 'PWSCF 1.2.0'
   gamma_only =.false.
-#ifdef __PARA
   call startup (nd_nmbr, version)
-#else
-  nd_nmbr = '   '
-  call date_and_tim (cdate, ctime)
-  write (6, 9000) version, cdate, ctime
-9000 format (/5x,'Program ',a12,' starts ...',/5x, &
-       &            'Today is ',a9,' at ',a9)
-#endif
   call init_run
   istep = 0
   do while (istep.lt.nstep)

@@ -108,8 +108,6 @@ subroutine read_file
   !
   call allocate_fft
   call ggen
-  call set_pencils (nks, xk, ngms, gg, nls, ecutwfc / tpiba2, &
-       nrx1s, nr1s, nr2s, nr3s)
   !
   !    allocate the potential
   !
@@ -231,8 +229,6 @@ subroutine read_file
   !
   call allocate_fft
   call ggen
-  call set_pencils (nks, xk, ngms, gg, nls, ecutwfc / tpiba2, &
-       nrx1s, nr1s, nr2s, nr3s)
   !
   !    allocate the potential
   !

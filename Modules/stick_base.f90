@@ -62,6 +62,7 @@
             IF( MOD( kip, nproc_pool ) == me_pool ) THEN
               st (0,0) = st (0,0) + 1
               stw(0,0) = stw(0,0) + 1
+              sts(0,0) = sts(0,0) + 1
             END IF
 
             DO i= 0, 0 
@@ -182,6 +183,8 @@
 ! ...     first, then smooth mesh sticks, and finally potential
 ! ...     sticks
 
+        USE mp_global, ONLY: nproc_pool
+
         ! lenghts of sticks, ngc for potential mesh, ngcw for wave functions mesh
         ! and ngcs for smooth mesh
 
@@ -195,17 +198,40 @@
 
         INTEGER, INTENT(OUT) :: index(:)                
 
-        INTEGER :: mc, nr3x
+        INTEGER :: mc, nr3x, ic
         REAL(dbl), ALLOCATABLE :: aux(:)
 
         nr3x = MAXVAL( ngc(1:nct) ) + 1
-        ALLOCATE( aux( nct ) )
-        DO mc = 1, nct
-          aux(mc) = -(ngcw(mc)*nr3x**2 + ngcs(mc)*nr3x + ngc(mc))
-          index(mc) = 0
-        END DO
-        CALL hpsort( nct, aux(1), index(1))
-        DEALLOCATE( aux )
+
+        IF( nproc_pool > 1 ) THEN
+          ALLOCATE( aux( nct ) )
+          DO mc = 1, nct
+            aux(mc) = -(ngcw(mc)*nr3x**2 + ngcs(mc)*nr3x + ngc(mc))
+            index(mc) = 0
+          END DO
+          CALL hpsort( nct, aux(1), index(1))
+          DEALLOCATE( aux )
+        ELSE
+          ic = 0
+          do mc = 1, nct
+            if( ngcw(mc) > 0 ) then
+              ic = ic + 1
+              index(ic) = mc
+            endif
+          end do
+          do mc = 1, nct
+            if( ngcs(mc) > 0 .AND. ngcw(mc) == 0 ) then
+              ic = ic + 1
+              index(ic) = mc
+            endif
+          end do
+          do mc = 1, nct
+            if( ngc(mc) > 0 .AND. ngcs(mc) == 0 .AND. ngcw(mc) == 0 ) then
+              ic = ic + 1
+              index(ic) = mc
+            endif
+          end do
+        END IF
 
         ! WRITE(6,*) '-----------------'
         ! WRITE(6,*) 'STICKS_SORT DEBUG'
@@ -406,26 +432,35 @@
            i = index(mc)
            i1 = in1(i)
            i2 = in2(i)
-           IF( i1 == 0 .and. i2 == 0 ) CYCLE
-           jj = stown( i1, i2 )
-           if( jj > 0 ) then
-             stown( -i1, -i2 ) = jj
-             ncp( jj ) = ncp( jj ) + 1
-             ngp( jj ) = ngp( jj ) + ngc( i )
-           end if
-           jj = stowns( i1, i2 )
-           if( jj > 0 ) then
-             stowns( -i1, -i2 ) = jj
-             ncps( jj ) = ncps( jj ) + 1
-             ngps( jj ) = ngps( jj ) + ngcs( i )
-           end if
-           jj = stownw( i1, i2 )
-           if( jj > 0 ) then
-             stownw( -i1, -i2 ) = jj
-             ncpw( jj ) = ncpw( jj ) + 1
-             ngpw( jj ) = ngpw( jj ) + ngcw( i )
-           end if
+           IF( i1 == 0 .and. i2 == 0 ) THEN
+             jj = stown( i1, i2 )
+             if( jj > 0 ) ngp( jj ) = ngp( jj ) + ngc( i ) - 1
+             jj = stowns( i1, i2 )
+             if( jj > 0 ) ngps( jj ) = ngps( jj ) + ngcs( i ) - 1
+             jj = stownw( i1, i2 )
+             if( jj > 0 ) ngpw( jj ) = ngpw( jj ) + ngcw( i ) - 1
+           ELSE
+             jj = stown( i1, i2 )
+             if( jj > 0 ) then
+               stown( -i1, -i2 ) = jj
+               ncp( jj ) = ncp( jj ) + 1
+               ngp( jj ) = ngp( jj ) + ngc( i )
+             end if
+             jj = stowns( i1, i2 )
+             if( jj > 0 ) then
+               stowns( -i1, -i2 ) = jj
+               ncps( jj ) = ncps( jj ) + 1
+               ngps( jj ) = ngps( jj ) + ngcs( i )
+             end if
+             jj = stownw( i1, i2 )
+             if( jj > 0 ) then
+               stownw( -i1, -i2 ) = jj
+               ncpw( jj ) = ncpw( jj ) + 1
+               ngpw( jj ) = ngpw( jj ) + ngcw( i )
+             end if
+           END IF
         END DO
+
       END IF
 
       RETURN

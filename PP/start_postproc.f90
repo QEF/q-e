@@ -54,11 +54,12 @@ subroutine start_postproc (nodenumber)
         open (unit = 5, form = 'formatted', status = 'old', file = filin)
      endif
   endif
-#ifdef __PARA
 
   call startup (nodenumber, version)
-  call init_pool
 
+#ifdef __PARA
+  call init_pool
 #endif
+
   return
 end subroutine start_postproc

@@ -55,7 +55,17 @@ CONTAINS
     ALLOCATE( desc%ismap( nx * ny ) )
     ALLOCATE( desc%iplp( nx ) )
     ALLOCATE( desc%iplw( nx ) )
-    desc%id = 0
+    desc%nsp   = 0
+    desc%nsw   = 0
+    desc%ngl   = 0
+    desc%npp   = 0
+    desc%ipp   = 0
+    desc%iss   = 0
+    desc%isind = 0
+    desc%ismap = 0
+    desc%iplp  = 0
+    desc%iplw  = 0
+    desc%id    = 0
   END SUBROUTINE
 
   SUBROUTINE fft_dlay_deallocate( desc )
@@ -113,7 +123,8 @@ CONTAINS
       CALL errore( ' fft_dlay_set ', ' wrong stick dimensions ', 4 )
 
 
-    !  Set the number of "Z" planes for each processor
+    !  Set the number of "xy" planes for each processor
+    !  in other word do a slab partition along the z axis
 
     npp = 0
     IF ( nproc == 1 ) THEN
@@ -285,5 +296,46 @@ CONTAINS
 
     RETURN
   END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+  SUBROUTINE fft_dlay_scalar( desc, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
+
+    implicit none
+
+    TYPE (fft_dlay_descriptor) :: desc
+    INTEGER, INTENT(IN) :: lb(:), ub(:)
+    INTEGER, INTENT(IN) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
+
+    integer :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+    integer :: m1, m2, i1, i2, i3
+
+    IF( SIZE( desc%iplw ) < nr3x .OR. SIZE( desc%isind ) < nr2x * nr3x ) &
+      CALL errore(' fft_dlay_scalar ', ' wrong dimensions ', 1 )
+
+    desc%isind = 0
+    desc%iplw  = 0
+    desc%iplp  = 1
+    desc%nr1   = nr1
+    desc%nr2   = nr2
+    desc%nr3   = nr3
+    desc%nr1x  = nr1x
+    desc%nr2x  = nr2x
+    desc%nr3x  = nr3x
+
+    DO i2 = lb( 2 ), ub( 2 )
+      DO i3 = lb( 3 ), ub( 3 )
+        m1 = i2 + 1; if ( m1 < 1 ) m1 = m1 + nr2
+        m2 = i3 + 1; if ( m2 < 1 ) m2 = m2 + nr3
+        IF( stw( i2, i3 ) > 0 ) THEN
+          desc%isind( m1 + ( m2 - 1 ) * nr2x ) =  1  ! st( i1, i2 )
+          desc%iplw( m2 ) = 1
+        END IF
+      END DO
+    END DO
+
+    return
+  end subroutine fft_dlay_scalar
+
 
 END MODULE fft_types

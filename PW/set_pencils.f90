@@ -30,17 +30,12 @@ subroutine set_pencils (nks, xk, ngm, gg, nl, gcut, nrx1, nr1, &
   do kpoint = 1, nks
      qmax = max (qmax, xk (1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, &
           kpoint) **2)
-
-
   enddo
-  !  i - direction ...
-  do n3 = 1, nr3
-     do_fft_y (n3) = 0
-     do n2 = 1, nr2
-        do_fft_x (n2, n3) = 0
-     enddo
 
-  enddo
+  do_fft_y = 0
+  do_fft_x = 0
+  
+
   do ng = 1, ngm
      if (sqrt (gg (ng) ) .gt.sqrt (gcut) + sqrt (qmax) ) return
      n321 = nl (ng) - 1

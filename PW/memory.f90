@@ -17,7 +17,7 @@ program pwmemory
   call iosys
   call setup
   !
-  call data_structure
+  call data_structure( .FALSE. )
   !
   call setup2
   !

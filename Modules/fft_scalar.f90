@@ -5,17 +5,25 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+! Copyright (C) 2001-2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 
-!----------------------------------------------------------------------
-! FFT scalar driver Module.
+
+!----------------------------------------------------------------------!
+! FFT scalar drivers Module.
 ! Written by Carlo Cavazzoni 
 ! Last update April 2003
-!----------------------------------------------------------------------
+!----------------------------------------------------------------------!
+
 
 #if defined __HPM
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
-
 
 
 !=----------------------------------------------------------------------=!
@@ -29,25 +37,27 @@
 
         PRIVATE
         PUBLIC :: set_scale, fft_x, fft_y, fft_z
-        PUBLIC :: cft_1z, cft_2xy, cft_b, cfft3d
+        PUBLIC :: cft_1z, cft_2xy, cft_b, cfft3d, cfft3ds
         PUBLIC :: good_fft_dimension, allowed, good_fft_order
 
 ! ...   Local Parameter
 
-        INTEGER, PARAMETER :: ndims = 4          
+        INTEGER, PARAMETER :: ndims = 3          
 
         !   ndims   Number of different FFT tables that the module 
         !           could keep into memory without reinitialization
 
 #if defined __AIX
 
-        INTEGER, PARAMETER :: nfftx = 2048
-        INTEGER, PARAMETER :: lwork = 100000
-        INTEGER, PARAMETER :: ltabl = 20000
+        INTEGER, PARAMETER :: nfftx = 2049
+        INTEGER, PARAMETER :: lwork = 20000 + ( 2 * nfftx + 256 ) * 64 + 3 * nfftx
+        INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
+
+        !   see the ESSL manual ( DCFT ) for the workspace and table lenght formulas
 
 #else
 
-        INTEGER, PARAMETER :: nfftx = 1024
+        INTEGER, PARAMETER :: nfftx = 1025
         INTEGER, PARAMETER :: lwork = 20 * nfftx
         INTEGER, PARAMETER :: ltabl = 4 * nfftx
 
@@ -67,25 +77,24 @@
         !         ipt = 4 for 32bit executables
         !         ipt = 8 for 64bit executables
 
-
 #if defined __FFTW
 
-        INTEGER ( kind=ipt ) :: fw_plan_x(ndims) = 0
-        INTEGER ( kind=ipt ) :: fw_plan_y(ndims) = 0
-        INTEGER ( kind=ipt ) :: fw_plan_z(ndims) = 0
-        INTEGER ( kind=ipt ) :: bw_plan_x(ndims) = 0
-        INTEGER ( kind=ipt ) :: bw_plan_y(ndims) = 0
-        INTEGER ( kind=ipt ) :: bw_plan_z(ndims) = 0
+        INTEGER ( kind=ipt ) :: fw_plan_x( ndims ) = 0
+        INTEGER ( kind=ipt ) :: fw_plan_y( ndims ) = 0
+        INTEGER ( kind=ipt ) :: fw_plan_z( ndims ) = 0
+        INTEGER ( kind=ipt ) :: bw_plan_x( ndims ) = 0
+        INTEGER ( kind=ipt ) :: bw_plan_y( ndims ) = 0
+        INTEGER ( kind=ipt ) :: bw_plan_z( ndims ) = 0
+
+        !   Pointers to the "C" structures containing FFT factors ( PLAN )
 
 #elif defined __AIX
 
-        REAL (dbl) :: work(lwork) 
-        REAL (dbl) :: fw_tablez(ltabl,ndims)
-        REAL (dbl) :: fw_tablex(ltabl,ndims)
-        REAL (dbl) :: fw_tabley(ltabl,ndims)
-        REAL (dbl) :: bw_tablez(ltabl,ndims)
-        REAL (dbl) :: bw_tablex(ltabl,ndims)
-        REAL (dbl) :: bw_tabley(ltabl,ndims)
+        REAL (dbl) :: fw_table( ltabl, 3, ndims )
+        REAL (dbl) :: bw_table( ltabl, 3, ndims )
+        REAL (dbl) :: work( lwork ) 
+
+        !   Array containing FFT factors + workspace
 
 #elif defined __SGI || defined __T3E
 
@@ -94,45 +103,18 @@
         REAL (dbl) :: tablex(ltabl,ndims)
         REAL (dbl) :: tabley(ltabl,ndims)
 
+        !   Array containing FFT factors + workspace
+
 #endif
 
         REAL (dbl) :: scale
+
+
 
 !=----------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------=!
 
-
-!=----------------------------------------------------------------------=!
-!
-!  Set scaling factor for 3D FFT performed by the sequence 
-!  fft_z + fft_y + fft_x
-!
-!=----------------------------------------------------------------------=!
-
-   SUBROUTINE set_scale (nx, ny, nz)
-
-     IMPLICIT NONE
-
-     INTEGER, INTENT(IN) :: nx, ny, nz
-
-     IF( (nx * ny * nz) == 0 ) THEN
-       CALL errore(" fft_scalar: initialize_tables ", " an fft dimension is equal to zero ", 0)
-     END IF
-     IF( nx < 0 .OR. nx > nfftx ) THEN
-       CALL errore(" fft_scalar: initialize_tables ", " nx out of range ", nx)
-     END IF
-     IF( ny < 0 .OR. ny > nfftx ) THEN
-       CALL errore(" fft_scalar: initialize_tables ", " ny out of range ", ny)
-     END IF
-     IF( nz < 0 .OR. nz > nfftx ) THEN
-       CALL errore(" fft_scalar: initialize_tables ", " nz out of range ", nz)
-     END IF
-
-     scale = 1.d0 / REAL(nx * ny * nz)
-!
-     RETURN 
-   END SUBROUTINE set_scale
 
 !
 !=----------------------------------------------------------------------=!
@@ -146,12 +128,24 @@
 !=----------------------------------------------------------------------=!
 !
    SUBROUTINE fft_z( isign, c, ldc, nz, nsl )
+
+     !  Transforms the 1D sequences stored in the columns of 2D array C,
+     !  in Plane-Wave context, these represent the sticks in z direction 
+     !  of an overall 3D transform from Real and Reciprocal space
        
      IMPLICIT NONE
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldc
      COMPLEX (dbl) :: c(:,:) 
+
+     !  isign     signum of the transorm
+     !  c(:,:)    array containing in its columns the 1D sequences 
+     !            to be transform
+     !  ldc       leading dimension of matrix c
+     !  nz        lengh of 1D fft
+     !  nsl       number of sequences to be transformed (number of c clolumns) 
+
      REAL(dbl)  :: tscale
      INTEGER    :: i, j
      INTEGER    :: err, idir, ip
@@ -189,7 +183,7 @@
        !   no table exist for these parameters
        !   initialize a new one
 
-       WRITE(6, fmt="('DEBUG fft_z, initializing tables ', I3)" ) icurrent
+       ! WRITE(6, fmt="('DEBUG fft_z, initializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -209,9 +203,9 @@
 #elif defined __AIX
 
        CALL DCFT ( 1, c(1,1), 1, ldc, c(1,1), 1, ldc, nz, nsl,  1, &
-          scale, fw_tablez(1,icurrent), ltabl, work(1), lwork)
+          scale, fw_table(1, 3, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, c(1,1), 1, ldc, c(1,1), 1, ldc, nz, nsl, -1, &
-          1.0d0, bw_tablez(1,icurrent), ltabl, work(1), lwork)
+          1.0d0, bw_table(1, 3, icurrent), ltabl, work(1), lwork)
 
 #else 
 
@@ -263,11 +257,11 @@
      IF( isign > 0 ) THEN
        tscale = scale
        CALL DCFT (0, c(1,1), 1, ldc, c(1,1), 1, ldc, nz, nsl, isign, &
-          tscale, fw_tablez(1,ip), ltabl, work, lwork)
+          tscale, fw_table(1, 3, ip), ltabl, work, lwork)
      ELSE IF( isign < 0 ) THEN
        tscale = 1.0d0
        CALL DCFT (0, c(1,1), 1, ldc, c(1,1), 1, ldc, nz, nsl, isign, &
-          tscale, bw_tablez(1,ip), ltabl, work, lwork)
+          tscale, bw_table(1, 3, ip), ltabl, work, lwork)
      END IF
 
 #else 
@@ -331,7 +325,7 @@
        !   no table exist for these parameters
        !   initialize a new one
 
-       WRITE(6, fmt="('DEBUG fft_y, initializing tables ', I3)" ) icurrent
+       ! WRITE(6, fmt="('DEBUG fft_y, initializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -347,9 +341,9 @@
 #elif defined __AIX
 
        CALL DCFT ( 1, r(1,1,1), ldx, ldx*ldy, r(1,1,1), ldx, ldx*ldy, ny, nzl,  1, 1.0d0, &
-          fw_tabley(1,icurrent), ltabl, work(1), lwork)
+          fw_table( 1, 2, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1,1,1), ldx, ldx*ldy, r(1,1,1), ldx, ldx*ldy, ny, nzl, -1, 1.0d0, &
-          bw_tabley(1,icurrent), ltabl, work(1), lwork)
+          bw_table(1, 2, icurrent), ltabl, work(1), lwork)
 
 #elif defined __SGI
 
@@ -395,10 +389,10 @@
          IF( pl2ix( i ) > 0 ) THEN
            IF( isign > 0 ) THEN
              CALL DCFT ( 0, r(i,1,1), ldx, ldx*ldy, r(i,1,1), ldx, ldx*ldy, ny, nzl, &
-               isign, 1.0d0, fw_tabley(1,ip), ltabl, work, lwork)
+               isign, 1.0d0, fw_table( 1, 2, ip), ltabl, work, lwork)
            ELSE
              CALL DCFT ( 0, r(i,1,1), ldx, ldx*ldy, r(i,1,1), ldx, ldx*ldy, ny, nzl, &
-               isign, 1.0d0, bw_tabley(1,ip), ltabl, work, lwork)
+               isign, 1.0d0, bw_table( 1, 2, ip), ltabl, work, lwork)
            END IF
          END IF
        END DO
@@ -489,7 +483,7 @@
        !   no table exist for these parameters
        !   initialize a new one
 
-       WRITE(6, fmt="('DEBUG fft_x, initializing tables ', I3)" ) icurrent
+       ! WRITE(6, fmt="('DEBUG fft_x, initializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -509,9 +503,9 @@
 #elif defined __AIX
 
        CALL DCFT ( 1, r(1,1,1), 1, 1, r(1,1,1), 1, 1, nx, 1,  1, &
-          1.0d0, fw_tablex(1,icurrent), ltabl, work(1), lwork)
+          1.0d0, fw_table(1, 1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1,1,1), 1, 1, r(1,1,1), 1, 1, nx, 1, -1, &
-          1.0d0, bw_tablex(1,icurrent), ltabl, work(1), lwork)
+          1.0d0, bw_table(1, 1, icurrent), ltabl, work(1), lwork)
 
 #else
 
@@ -562,10 +556,10 @@
          DO j = 1, nyl
            IF( isign > 0 ) THEN
              CALL DCFT ( 0, r(1,j,i), 1, 1, r(1,j,i), 1, 1, nx, 1, isign, &
-               1.0d0, fw_tablex(1,ip), ltabl, work, lwork)
+               1.0d0, fw_table( 1, 1, ip), ltabl, work, lwork)
            ELSE
              CALL DCFT ( 0, r(1,j,i), 1, 1, r(1,j,i), 1, 1, nx, 1, isign, &
-               1.0d0, bw_tablex(1,ip), ltabl, work, lwork)
+               1.0d0, bw_table( 1, 1, ip), ltabl, work, lwork)
            END IF
          END DO
        END DO
@@ -650,7 +644,7 @@
        !   no table exist for these parameters
        !   initialize a new one
 
-       WRITE(6, fmt="('DEBUG cft_1z, reinitializing tables ', I3)" ) icurrent
+       ! WRITE(6, fmt="('DEBUG cft_1z, reinitializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -671,9 +665,9 @@
 
        tscale = 1.0d0 / nz
        CALL DCFT ( 1, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl,  1, &
-          tscale, fw_tablez(1,icurrent), ltabl, work(1), lwork)
+          tscale, fw_table(1, 3, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, -1, &
-          1.0d0, bw_tablez(1,icurrent), ltabl, work(1), lwork)
+          1.0d0, bw_table(1, 3, icurrent), ltabl, work(1), lwork)
 
 #else 
 
@@ -732,12 +726,12 @@
        tscale = 1.0d0 / nz
        idir   = 1
        CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
-          tscale, fw_tablez(1,ip), ltabl, work, lwork)
+          tscale, fw_table(1, 3, ip), ltabl, work, lwork)
      ELSE IF( isign < 0 ) THEN
        idir   = -1
        tscale = 1.0d0
        CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
-          tscale, bw_tablez(1,ip), ltabl, work, lwork)
+          tscale, bw_table(1, 3, ip), ltabl, work, lwork)
      END IF
 
 #else 
@@ -785,16 +779,16 @@
 
      INTEGER, INTENT(IN) :: sgn, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
-     COMPLEX (dbl) :: r(:)
-     INTEGER :: i, k, j, err, idir, ip, isign
+     COMPLEX (dbl) :: r( : )
+     INTEGER :: i, k, j, err, idir, ip, isign, kk
      REAL(dbl) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
-     LOGICAL, SAVE :: dofft( nfftx )
+     LOGICAL :: dofft( nfftx )
 
 #if defined __T3E
      INTEGER :: isys = 0
-     COMPLEX (dbl) :: yt(ny)
+     COMPLEX (dbl) :: yt( ny )
 #endif
 
 #if defined __HPM
@@ -811,6 +805,8 @@
          IF( pl2ix(i) < 1 ) dofft( i ) = .FALSE.
        END DO
      END IF
+
+     ! WRITE(6,*) 'DEBUG: ', COUNT( dofft )
 
      !
      !   Here initialize table only if necessary
@@ -835,7 +831,7 @@
        !   no table exist for these parameters
        !   initialize a new one 
 
-       WRITE(6, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
+       ! WRITE(6, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -857,14 +853,14 @@
 #elif defined __AIX
 
        tscale = 1.0d0 / ( nx * ny )
-       CALL DCFT ( 1, r(1), ldx, ldx*ldy, r(1), ldx, ldx*ldy, ny, nzl,  1, 1.0d0, &
-          fw_tabley(1,icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, r(1), ldx, ldx*ldy, r(1), ldx, ldx*ldy, ny, nzl, -1, 1.0d0, &
-          bw_tabley(1,icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl,  1, &
-          tscale, fw_tablex(1,icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl, -1, &
-          1.0d0, bw_tablex(1,icurrent), ltabl, work(1), lwork)
+       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0d0, &
+          fw_table( 1, 2, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1, -1, 1.0d0, &
+          bw_table(1, 2, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny,  1, &
+          tscale, fw_table( 1, 1, icurrent), ltabl, work(1), lwork)
+       CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny, -1, &
+          1.0d0, bw_table(1, 1, icurrent), ltabl, work(1), lwork)
 
 #elif defined __SGI
 
@@ -924,26 +920,34 @@
 
        idir = 1
        tscale = 1.0d0 / ( nx * ny )
-       CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, nzl*ny, idir, &
-           tscale, fw_tablex( 1, ip ), ltabl, work, lwork)
-       do i = 1, nx
-         IF( dofft( i ) ) THEN
-           call DCFT ( 0, r(i), ldx, ldx*ldy, r(i), ldx, ldx*ldy, ny, nzl, &
-               idir, 1.0d0, fw_tabley(1, ip), ltabl, work, lwork)
-         END IF
+       do k = 1, nzl
+         kk = 1 + ( k - 1 ) * ldx * ldy
+         CALL DCFT ( 0, r(kk), 1, ldx, r(kk), 1, ldx, nx, ny, idir, &
+           tscale, fw_table( 1, 1, ip ), ltabl, work( 1 ), lwork)
+         do i = 1, nx
+           IF( dofft( i ) ) THEN
+             kk = i + ( k - 1 ) * ldx * ldy
+             call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
+               idir, 1.0d0, fw_table(1, 2, ip), ltabl, work( 1 ), lwork)
+           END IF
+         end do
        end do
 
      ELSE IF( isign < 0 ) THEN
 
        idir = -1
-       do i = 1, nx
-         IF( dofft( i ) ) THEN
-           call DCFT ( 0, r(i), ldx, ldx*ldy, r(i), ldx, ldx*ldy, ny, nzl, &
-               idir, 1.0d0, bw_tabley(1, ip), ltabl, work, lwork)
-         END IF
-       end do
-       CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl, idir, &
-         1.0d0, bw_tablex(1, ip), ltabl, work, lwork)
+       DO k = 1, nzl
+         do i = 1, nx
+           IF( dofft( i ) ) THEN
+             kk = i + ( k - 1 ) * ldx * ldy
+             call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
+               idir, 1.0d0, bw_table(1, 2, ip), ltabl, work( 1 ), lwork)
+           END IF
+         end do
+         kk = 1 + ( k - 1 ) * ldx * ldy
+         CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, idir, &
+           1.0d0, bw_table(1, 1,  ip), ltabl, work( 1 ), lwork)
+       END DO
          
      END IF
 
@@ -959,12 +963,8 @@
        END DO
 
        do i=1,nx
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
          do k=1,nzl
-           IF( dofft ) THEN
+           IF( dofft( i ) ) THEN
              do j=1,ny
                yt(j) = r(i,j,k)
              end do
@@ -981,12 +981,8 @@
      ELSE IF( isign < 0 ) THEN
 
        do i=1,nxl
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
          do k=1,nzl
-           IF( dofft ) THEN
+           IF( dofft( i ) ) THEN
              do j=1,ny
                yt(j) = r(i,j,k)
              end do
@@ -1188,6 +1184,227 @@
 !
 !
 !
+!         3D scalar FFTs,  but using sticks!
+!
+!
+!
+!=----------------------------------------------------------------------=!
+!
+
+
+!
+! Copyright (C) 2001-2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!----------------------------------------------------------------------
+
+subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y)
+  !
+  !     driver routine for 3d complex "reduced" fft
+  !     sign > 0 : f(G) => f(R)   ; sign < 0 : f(R) => f(G)
+  !
+  !     The 3D fft are computed only on lines and planes which have
+  !     non zero elements. These lines and planes are defined by
+  !     the two vectors do_fft_x and do_fft_y 
+  !
+  !     The routine is implemented for:
+  !
+  !       IBM      : essl library
+  !
+  !----------------------------------------------------------------------
+  !
+  implicit none
+
+  integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, sign
+  !
+  !   logical dimensions of the fft
+  !   physical dimensions of the f array
+  !   sign of the transformation
+
+  complex(dbl) :: f ( nrx1 * nrx2 * nrx3 )
+  integer :: do_fft_x(:), do_fft_y(:)
+  !
+  ! the fft array
+  !
+  ! ESSL fft's require a different initialization for sign=-1 and sign=1
+  ! aux1 contains the initialized quantities
+  ! aux2 is work space
+  !
+  integer :: m, incx1, incx2
+  INTEGER :: i, k, j, err, idir, ip, isign, ii, jj
+  REAL(dbl) :: tscale
+  INTEGER, SAVE :: icurrent = 1
+  INTEGER, SAVE :: dims(3,ndims) = -1
+
+
+  tscale = 1.d0
+  isign = - sign   !  here we follow ESSL convention
+  !
+  ! ESSL sign convention for fft's is the opposite of the "usual" one
+  !
+
+  IF( nr2 /= nrx2 ) &
+    CALL errore(' cfft3ds ', ' wrong dimensions: nr2 /= nrx2 ', 1 )
+
+     ip = -1
+     DO i = 1, ndims
+
+       !   first check if there is already a table initialized
+       !   for this combination of parameters
+
+       IF( ( nr1 == dims(1,i) ) .and. ( nr2 == dims(2,i) ) .and. &
+           ( nr3 == dims(3,i) ) ) THEN
+         ip = i
+         EXIT
+       END IF
+
+     END DO
+
+     IF( ip == -1 ) THEN
+
+       !   no table exist for these parameters
+       !   initialize a new one
+
+#if defined __AIX
+
+       tscale = 1.0d0 
+       !  x - direction
+       incx1 = 1; incx2 = nrx1; m = 1
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nr1, m,  1, 1.0d0, &
+          fw_table( 1, 1, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nr1, m, -1, 1.0d0, &
+          bw_table(1, 1, icurrent), ltabl, work(1), lwork )
+       !  y - direction
+       incx1 = nrx1; incx2 = 1; m = nr1;
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nr2, m,  1, 1.0d0, &
+          fw_table( 1, 2, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nr2, m, -1, 1.0d0, &
+          bw_table(1, 2, icurrent), ltabl, work(1), lwork )
+       !  z - direction
+       incx1 = nrx1 * nrx2; incx2 = 1; m = nrx1 * nr2
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nr3, m,  1, 1.0d0, &
+          fw_table(1, 3, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nr3, m, -1, 1.0d0, &
+          bw_table(1, 3, icurrent), ltabl, work(1), lwork )
+
+#endif
+
+       dims(1,icurrent) = nr1; dims(2,icurrent) = nr2; dims(3,icurrent) = nr3
+       ip = icurrent
+       icurrent = MOD( icurrent, ndims ) + 1
+
+     END IF
+
+
+     IF ( isign < 0 ) THEN
+   
+        !
+        !  i - direction ...
+        !
+
+        incx1 = 1;  incx2 = nrx1;  m = 1
+
+        do k = 1, nr3
+           do j = 1, nr2
+#if defined __AIX
+              jj = j + ( k - 1 ) * nrx2 
+              ii = 1 + nrx1 * ( jj - 1 ) 
+              if ( do_fft_x( jj ) == 1 ) &
+                call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr1, m, &
+                  isign, 1.0d0, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
+#endif
+           enddo
+        enddo
+
+        !
+        !  ... j-direction ...
+        !
+
+        incx1 = nrx1;  incx2 = 1;  m = nr1
+
+        do k = 1, nr3
+#if defined __AIX
+           ii = 1 + nrx1 * nrx2 * ( k - 1 ) 
+           if ( do_fft_y( k ) == 1 ) &
+             call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr2, m, &
+               isign, 1.0d0, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
+#endif
+        enddo
+
+        !
+        !     ... k-direction
+        !
+
+        incx1 = nrx1 * nrx2;  incx2 = 1;  m = nrx1 * nr2
+
+#if defined __AIX
+        call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nr3, m, &
+          isign, 1.0d0, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+#endif
+
+     ELSE
+
+        !
+        !     ... k-direction
+        !
+
+        incx1 = nrx1 * nr2;  incx2 = 1;  m = nrx1 * nr2
+
+#if defined __AIX
+        call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nr3, m, &
+          isign, 1.0d0, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+#endif
+
+        !
+        !     ... j-direction ...
+        !
+
+        incx1 = nrx1;  incx2 = 1;  m = nr1
+
+        do k = 1, nr3
+#if defined __AIX
+           ii = 1 + nrx1 * nrx2 * ( k - 1 ) 
+           if ( do_fft_y ( k ) == 1 ) &
+             call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr2, m, &
+               isign, 1.0d0, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
+#endif
+        enddo
+
+        !
+        !     i - direction ...
+        !
+
+        incx1 = 1;  incx2 = nrx1;  m = 1
+
+        do k = 1, nr3
+           do j = 1, nr2
+              jj = j + ( k - 1 ) * nrx2 
+              ii = 1 + nrx1 * ( jj - 1 ) 
+#if defined __AIX
+              if ( do_fft_x( jj ) == 1 ) &
+                call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr1, m, &
+                   isign, 1.0d0, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
+#endif
+           enddo
+        enddo
+
+#if defined __AIX
+        call dscal (2 * nrx1 * nrx2 * nr3, 1d0 / (nr1 * nr2 * nr3), f( 1 ), 1)
+#endif
+
+     END IF
+
+     RETURN
+   END SUBROUTINE 
+
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
 !         3D parallel FFT on sub-grids
 !
 !
@@ -1356,13 +1573,34 @@
 !
 !=----------------------------------------------------------------------=!
 !
+
+   SUBROUTINE set_scale (nx, ny, nz)
+
+     !   Set scaling factor for 3D FFT performed by the sequence 
+     !   fft_z + fft_y + fft_x
+
+     IMPLICIT NONE
+
+     INTEGER, INTENT(IN) :: nx, ny, nz
+
+     IF( (nx * ny * nz) == 0 ) THEN
+       CALL errore(" fft_scalar: set_scale ", " a fft dimension is equal to zero ", 0)
+     END IF
+     IF( nx < 0 .OR. nx > nfftx ) THEN
+       CALL errore(" fft_scalar: set_scale ", " nx out of range ", nx)
+     END IF
+     IF( ny < 0 .OR. ny > nfftx ) THEN
+       CALL errore(" fft_scalar: set_scale ", " ny out of range ", ny)
+     END IF
+     IF( nz < 0 .OR. nz > nfftx ) THEN
+       CALL errore(" fft_scalar: set_scale ", " nz out of range ", nz)
+     END IF
+
+     scale = 1.d0 / REAL(nx * ny * nz)
 !
-! Copyright (C) 2001-2003 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
+     RETURN 
+   END SUBROUTINE set_scale
+
 !
 integer function good_fft_dimension (n)
   !
@@ -1386,16 +1624,7 @@ integer function good_fft_dimension (n)
   return
 end function good_fft_dimension
 
-!
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
-!-----------------------------------------------------------------------
-
+!=----------------------------------------------------------------------=!
 
 function allowed (nr)
 

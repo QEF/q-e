@@ -44,12 +44,18 @@ subroutine startup (nd_nmbr, version)
   implicit none
   character :: nd_nmbr * 3, version * 12
 
-#ifdef __PARA
+  integer :: gid
+
+#if ! defined __PARA
+  integer :: me, nproc
+#endif
 
   character :: np * 2, cdate * 9, ctime * 9
   external date_and_tim
+
+#ifdef __PARA
+
   integer :: ierr, ilen, iargc, nargs
-  integer :: gid
 
 #  ifdef __T3E
 
@@ -66,8 +72,6 @@ subroutine startup (nd_nmbr, version)
 
   call mp_start()
 
-#ifdef __PARA
-
   call mp_env( nproc, me, gid )
 
   !
@@ -76,6 +80,9 @@ subroutine startup (nd_nmbr, version)
   !
 
   me = me + 1
+
+#ifdef __PARA
+
   if (me.eq.1) then
      !
      ! How many pools?
@@ -89,19 +96,19 @@ subroutine startup (nd_nmbr, version)
 
 #  else
 
-#  ifdef HITACHI
+#    ifdef HITACHI
 
      nargs = iargc ()
      if (nargs.ge.3) then
         call getarg (3, np)
 
-#  else
+#    else
 
      nargs = iargc ()
      if (nargs.ge.2) then
         call getarg (2, np)
 
-#  endif
+#    endif
 
 #  endif
 
@@ -171,20 +178,26 @@ subroutine startup (nd_nmbr, version)
           write (6, '(5x,"R & G space division: nprocp = ",i4/)') nprocp
   endif
 
+#else
+
+  nd_nmbr = '   '
+  call date_and_tim (cdate, ctime)
+  write (6, 9000) version, cdate, ctime
+
+#endif
+
+9000 format (/5x,'Program ',a12,' starts ...',/5x, &
+       &            'Today is ',a9,' at ',a9)
+
+
   !
   ! Set the I/O node
-  !
-  call io_global_start( (me-1), 0 )
+   call io_global_start( (me-1), 0 )
 
   !
   ! Set global coordinate for this processor
   !
   call mp_global_start( 0, (me-1), gid, nproc )
-
-9000 format (/5x,'Program ',a12,' starts ...'/5x, &
-       &            'Today is ',a9,' at ',a9)
-
-#endif
 
   return
 end subroutine startup

@@ -9,7 +9,7 @@
 !
 !----------------------------------------------------------------------
 
-subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
+subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do_fft_y)
   !
   !     driver routine for psi 3d complex "reduced" fft
   !     sign > 0 : psi(G) => psi(R)   ; sign < 0 : psi(R) => psi(G)
@@ -28,8 +28,8 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !
 #include "machine.h"
   use parameters
-  use pencils
-  !implicit none
+
+  implicit none
 
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign
   !
@@ -41,7 +41,8 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !   grid used (always the smooth grid)
   !   sign of the transformation
 
-  integer :: j, k!, do_fft_x (nr2, nr3), do_fft_y (nr3)
+  integer :: j, k
+  integer :: do_fft_x (nrx2, nr3), do_fft_y (nr3)
   !
   ! counters on directions
   ! pencils on the plane

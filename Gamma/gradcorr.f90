@@ -161,18 +161,18 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   ! copy a(r) to complex array...
   !
   call setv (nrxx, 0.d0, aux (2, 1), 2)
-  call DCOPY (nrxx, a, 1, aux, 2)
+  call DCOPY (nrxx, a, 1, aux (1,1) , 2)
   !
   ! bring a(r) to G-space, a(G) ...
   !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  call cft3 (aux(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   ! multiply by (iG) to get (\grad_ipol a)(G) ...
   !
-  call setv (3 * nrxx, 0.d0, ga, 1)
+  ga = 0.0d0
 
   do ipol = 1, 3
-     call setv (2 * nrxx, 0.d0, gaux, 1)
+     gaux = 0.0d0
      do n = 1, ngm
         gaux (1, nl (n) ) = - g (ipol, n) * aux (2, nl (n) )
         gaux (1, nlm(n) ) = - g (ipol, n) * aux (2, nl (n) )
@@ -182,12 +182,12 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
      !
      ! bring back to R-space, (\grad_ipol a)(r) ...
      !
-     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     call cft3 (gaux(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
 
-     call DAXPY (nrxx, tpiba, gaux, 2, ga (ipol, 1), 3)
+     call DAXPY (nrxx, tpiba, gaux(1,1), 2, ga (ipol, 1), 3)
   enddo
 
   deallocate (gaux)

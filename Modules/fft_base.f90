@@ -568,7 +568,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !
 
 #if defined __HPM
-            CALL f_hpmstart( 10, 'scatter' )
+     !       CALL f_hpmstart( 10, 'scatter' )
 #endif
 
   me     = me_pool + 1
@@ -659,7 +659,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
 #endif
 
 #if defined __HPM
-            CALL f_hpmstop( 10 )
+     !       CALL f_hpmstop( 10 )
 #endif
 
   return

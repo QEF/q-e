@@ -34,15 +34,7 @@ program phonon
   call init_clocks (.true.)
   call start_clock ('PHONON')
   version = 'PHONON 1.2.0'
-#ifdef __PARA
   call startup (nd_nmbr, version)
-#else
-  nd_nmbr = '   '
-  call date_and_tim (cdate, ctime)
-  write (6, 9000) version, cdate, ctime
-9000 format (/5x,'Program ',a12,' starts ...',/5x, &
-       &            'Today is ',a9,' at ',a9)
-#endif
   write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   !
   !   and begin with the initialization part
