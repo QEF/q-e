@@ -45,16 +45,23 @@
         REAL(dbl)  :: EXC = 0.0_dbl
         REAL(dbl)  :: VXC = 0.0_dbl
         REAL(dbl)  :: EBAND = 0.0_dbl
+        REAL(dbl)  :: self_ehte = 0.0d0
+        REAL(dbl)  :: self_sxc = 0.0d0
+        REAL(dbl)  :: self_vxc = 0.0d0
 
 
       CONTAINS
 
 ! ---------------------------------------------------------------------------- !
 
-        SUBROUTINE total_energy(edft, omega, eexc, vvxc, eh, eps, nnr)
+        SUBROUTINE total_energy(edft, omega, eexc, vvxc, eh, eps, &
+          self_ehte_in, self_sxc_in, self_vxc_in, nnr)
+
           TYPE (dft_energy_type) :: edft
           REAL(dbl), INTENT(IN) :: OMEGA, EEXC, VVXC
           REAL(dbl) :: VXC
+          REAL(dbl) :: self_sxc_in, self_vxc_in
+          COMPLEX(dbl) :: self_ehte_in
           COMPLEX(dbl), INTENT(IN) :: EH, EPS
           INTEGER, INTENT(IN) :: nnr 
 
@@ -64,6 +71,10 @@
           evdw  = edft%evdw
           esr   = edft%esr
           ekin  = edft%ekin
+
+          self_ehte = REAL( self_ehte_in )
+          self_sxc = self_sxc_in
+          self_vxc = self_vxc_in
 
           EXC   = EEXC * omega / REAL(NNR)
           VXC   = VVXC * omega / REAL(NNR)
@@ -112,7 +123,8 @@
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           IF( PRESENT ( edft ) ) THEN
             WRITE( stdout,1) edft%ETOT, edft%EKIN, edft%EHT, edft%ESELF, edft%ESR, &
-              edft%EPSEU, edft%ENL, edft%EXC, edft%EVDW, edft%emkin
+              edft%EPSEU, edft%ENL, edft%EXC, edft%EVDW, edft%emkin, &
+              self_ehte, self_sxc, self_vxc, edft%ehti
           ELSE
             WRITE( stdout,1) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, EVDW
           END IF
@@ -125,7 +137,12 @@
                     ,6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.'/ &
                     ,6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' A.U.'/ &
                     ,6X,'        VAN DER WAALS ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        EMASS KINETIC ENERGY = ',F18.10,' A.U.'/,/)
+                    ,6X,'        EMASS KINETIC ENERGY = ',F18.10,' A.U.'/ &
+                    ,6X,' SIC HARTREE ELECTRON ENERGY = ',F18.10,' A.U.'/ &
+                    ,6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' A.U.'/ &
+                    ,6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.'/ &
+                    ,6X,' IONIC ELECTROSTATIC  ENERGY = ',F18.10,' A.U.'/,/)
+
           RETURN
         END SUBROUTINE print_energies
 

@@ -265,6 +265,10 @@ MODULE read_namelists_module
        diago_diis_ndim = 3
        diago_diis_ethr = 1.0D-3
        diago_diis_keep = .FALSE.
+
+       sic = 'none' 
+       sic_epsilon = 1.d0
+       force_pairing = .false.
        ! 
        RETURN
        ! 
@@ -327,6 +331,8 @@ MODULE read_namelists_module
        k_max               = 0.1D0
        k_min               = 0.1D0
        neb_thr             = 0.05D0
+       !
+       sic_rloc    = 0.0d0
        !
        RETURN
        !
@@ -589,6 +595,9 @@ MODULE read_namelists_module
        CALL mp_bcast( diago_diis_ndim, ionode_id )
        CALL mp_bcast( diago_diis_ethr, ionode_id )
        CALL mp_bcast( diago_diis_keep, ionode_id )
+       CALL mp_bcast( sic, ionode_id )
+       CALL mp_bcast( sic_epsilon , ionode_id )
+       CALL mp_bcast( force_pairing , ionode_id )
        ! 
        RETURN
        !
@@ -640,6 +649,8 @@ MODULE read_namelists_module
        CALL mp_bcast( k_max, ionode_id )
        CALL mp_bcast( k_min, ionode_id )
        CALL mp_bcast( neb_thr, ionode_id )
+
+       CALL mp_bcast( sic_rloc, ionode_id )
        ! 
        RETURN
        !
@@ -885,9 +896,32 @@ MODULE read_namelists_module
           IF ( i_cons < 0 .OR. i_cons > 2 ) &
              CALL errore( sub_name ,' wrong i_cons ', -1 )
        END IF       
-       ! 
+
+!!control on SIC variables
+       IF (sic /='none' ) then
+          IF (sic_epsilon > 1.d0 )  &
+           CALL errore( sub_name, &
+                       & ' invalid sic_epsilon, greater than 1.',-1)
+          IF (sic_epsilon < 0.d0 )  &
+           CALL errore( sub_name, &
+                       & ' invalid sic_epsilon, less than 0 ',-1)
+
+          IF ( force_pairing == .false.) &
+           CALL errore( sub_name, &
+                       & ' invalid force_pairing with sic activated', -1)
+          IF ( nspin /= 2) &
+           CALL errore( sub_name, &
+                       & ' invalid nspin with sic activated', -1)
+          IF ( (nelup /= 0) .or. (neldw /= 0) ) &
+           CALL errore( sub_name, &
+                      & ' invalid nelup and neldwn spin with sic activated', -1)
+          IF ( nelup /= (neldw + 1) )   &
+           CALL errore( sub_name, &
+                       & ' invalid nelup /= (neldwn +1) spin with sic activated', -1)
+          
+       ENDIF  !! on sic_control 
+ 
        RETURN
-       !
      END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
@@ -947,9 +981,9 @@ MODULE read_namelists_module
        IF( empty_states_ethr < 0.0d0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_ethr, less than 0 ',-1)
-       !
+
+!
        RETURN
-       !
      END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
@@ -1022,6 +1056,8 @@ MODULE read_namelists_module
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' minimization_scheme '''// &
                        & TRIM( minimization_scheme )//''' not allowed ', -1 )       
+       IF (sic /= 'none' .and. sic_rloc == 0.d0) &
+          CALL errore( sub_name, ' invalid sic_rloc with sic activated ', -1)
        !
        RETURN
        !
@@ -1185,6 +1221,7 @@ MODULE read_namelists_module
              CALL errore( sub_name,' calculation '// & 
                           & calculation//' not implemented ',1)
        END SELECT
+
        !              
        IF ( prog == 'PW' ) THEN
           !       
@@ -1208,6 +1245,13 @@ MODULE read_namelists_module
           END IF   
           !      
        END IF                   
+
+       IF ( TRIM( sic ) /= 'none' ) THEN 
+         IF ( nspin == 2 .and. nelec > 1 .and. ( nelup == neldw .or. nelup == (neldw+1) ) ) THEN
+            force_pairing = .true.
+         END IF
+       END IF
+
        !
        RETURN
        !

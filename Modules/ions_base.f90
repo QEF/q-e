@@ -52,6 +52,13 @@
       INTEGER, ALLOCATABLE :: if_pos(:,:)  
       INTEGER :: fixatom  !!! to be removed
 
+      INTEGER :: ind_localisation(natx) = 0   ! true if we want to know the localization arount the atom
+      INTEGER :: nat_localisation = 0 
+      LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
+      INTEGER :: self_interaction = 0 
+      REAL(dbl) :: si_epsilon = 0.0d0
+      REAL(dbl) :: rad_localisation = 0.0d0
+      REAL(dbl), ALLOCATABLE :: pos_localisation(:,:)
 
       LOGICAL :: tions_base_init = .FALSE.
       
@@ -96,7 +103,7 @@
 
 
     SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , amass_ , &
-        atm_ , if_pos_ )
+        atm_ , if_pos_ , id_loc_ , sic_ , sic_epsilon_, sic_rloc_ )
       USE constants, ONLY: scmass
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nsp_ , nat_ , na_ (:) , ityp_ (:)
@@ -104,6 +111,10 @@
       REAL(dbl), INTENT(IN) :: amass_(:)
       CHARACTER(LEN=*), INTENT(IN) :: atm_ (:)
       INTEGER, INTENT(IN) :: if_pos_ (:,:)
+      INTEGER, OPTIONAL, INTENT(IN) :: id_loc_ (:)
+      CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: sic_
+      REAL(dbl), OPTIONAL, INTENT(IN) :: sic_epsilon_
+      REAL(dbl), OPTIONAL, INTENT(IN) :: sic_rloc_
       INTEGER :: i, ia
 
       nsp = nsp_
@@ -139,6 +150,39 @@
       if_pos = 1
       if_pos(:,:) = if_pos_ (:,1:nat)
 
+      IF( PRESENT( sic_ ) ) THEN
+        select case ( TRIM( sic_ ) )
+        case ( 'sic_pz' ) 
+          self_interaction = 1
+        case ( 'sic_mac' )
+          self_interaction = 2
+        case ( 'only_sich' )
+          self_interaction = 3
+        case ( 'only_sicxc_pz' )
+          self_interaction = -1
+        case ( 'only_sicxc_mac' )
+          self_interaction = -2
+        case default
+          self_interaction = 0
+        end select
+      END IF
+      IF( PRESENT( sic_epsilon_ ) ) THEN
+        si_epsilon       = sic_epsilon_
+      END IF
+      IF( PRESENT( sic_rloc_ ) ) THEN
+        rad_localisation = sic_rloc_
+      END IF
+      IF( PRESENT( id_loc_ ) ) THEN
+        ind_localisation(1:nat) = id_loc_ ( 1:nat )
+        nat_localisation = COUNT( ind_localisation > 0 ) 
+        ALLOCATE( pos_localisation( 4, nat_localisation ) )
+      !counting the atoms around which i want to calculate the charge localization
+      ELSE
+        ind_localisation(1:nat) = 0
+        nat_localisation = 0
+      END IF
+      !
+      IF( nat_localisation > 0 ) print_localisation = .TRUE.
       !
       ! ... TEMP: calculate fixatom (to be removed)
       !
@@ -166,6 +210,7 @@
       IF( ALLOCATED( ityp ) ) DEALLOCATE( ityp )
       IF( ALLOCATED( tau ) ) DEALLOCATE( tau )
       IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+      IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
       RETURN
     END SUBROUTINE
 

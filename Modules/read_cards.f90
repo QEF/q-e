@@ -253,9 +253,7 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
           !
           CALL card_climbing_images( input_line )
-          IF ( ( prog == 'FPMD' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          !  
+
        ELSE
           !
           IF ( ionode ) &
@@ -557,6 +555,9 @@ MODULE read_cards_module
              CALL read_line( input_line )
              CALL field_count( nfield, input_line )
              !
+             IF( sic /= 'none' .AND. nfield /= 8 ) &
+               CALL errore(' read_cards ', ' ATOMIC_POSITIONS with sic, 8 columns required ', 1 )
+             !
              IF ( nfield == 4 ) THEN
                 !     
                 READ(input_line,*) lb_pos, ( rd_pos(k,ia), k = 1, 3 )
@@ -570,6 +571,16 @@ MODULE read_cards_module
                                            if_pos(2,ia), &
                                            if_pos(3,ia)
                 ! 
+             ELSE IF ( nfield == 8 ) THEN
+                !
+                READ(input_line,*) lb_pos, rd_pos(1,ia), &
+                                           rd_pos(2,ia), &
+                                           rd_pos(3,ia), &
+                                           if_pos(1,ia), &
+                                           if_pos(2,ia), &
+                                           if_pos(3,ia), &
+                                           id_loc(ia)
+                !
              ELSE
                 !
                 CALL errore( ' read_cards ', ' wrong number of columns ' // &
@@ -1720,11 +1731,9 @@ MODULE read_cards_module
      !
      !   index1, ..., indexN are indeces of the images that have to climb
      !
-     !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
      !----------------------------------------------------------------------
+     !    END manual
+     !------------------------------------------------------------------------
      !
      SUBROUTINE card_climbing_images( input_line )
        !
@@ -1777,6 +1786,11 @@ MODULE read_cards_module
        RETURN
        !
      END SUBROUTINE card_climbing_images   
+     !
+     !
+     !------------------------------------------------------------------------
+     !    BEGIN manual
+     !----------------------------------------------------------------------
      !
      !
      !

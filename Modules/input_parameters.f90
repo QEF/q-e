@@ -419,13 +419,44 @@ MODULE input_parameters
 
         INTEGER :: report = 1
 
+        CHARACTER(LEN=80) :: sic = 'none'
+          ! sic = 'none' | 'sic_pz' | 'sic_mac' | 'only_sich' | 'only_sicxc_pz' | 'only_sicxc_mac' |
+               
+	 ! Where:   
+         ! 'none'          => self_interaction == 0   -> no USIC 
+         ! 'sic_pz'        => self_interaction == 1   -> USIC = Exc[rhoup-rhodown,0] + Uhartree[rhoup-rhodown] 
+                                               !! proposed by Perdew, Zunger, PRB 23 (1981) 5048
+         ! 'sic_mac'       => self_interaction == 2   -> USIC = Exc[rhoup,rhodown] - Exc[rhopaired, rhopaired] + Uhartree[rhoup-rhodown]
+                                               !! proposed by Lundin-Eriksson, IJQC 81 (2003) 247 
+                                               !! implemented by Mauri-Calandra-d'Avezac (2003/04) for one electron/hole 
+         ! 'only_sich'     => self_interaction == 3   -> USIC = Uhartree[rhoup-rhodown]
+                                               !!SIcorrection only on hartree part )
+         ! 'only_sich_pz'  => self_interaction == -1  -> USIC = Exc[rhoup-rhodown,0]
+                                               !!SIcorrection only on xc by PZ 
+         ! 'only_sich_mac' => self_interaction == -2  -> USIC = Exc[rhoup,rhodown] - Exc[rhopaired, rhopaired]
+                                               !!sIcorrection only on xc by MAC: 
+                                               !!rhopaired==rhodown since that the charge more is defined in the highest level and up
+                                               !!rhounpaired==rhoup-rhodown 
+        REAL(dbl) :: sic_epsilon   = 1.0d0
+
+LOGICAL   :: force_pairing= .FALSE.
+          !  FORCEPAIRING 
+          !      paires electrons forcedly in two spin channels calculation
+          !      works for stuctures with at most one unpaired eletron
+          ! just a comment: nelu is the number of el with spin up
+          ! while neld== number of el with spin down
+          ! define the unpaired el with spin up
+
+
+
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat,&
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
              nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
              occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
-             noncolin, mcons, lambda, i_cons, angle1, angle2, report
+             noncolin, mcons, lambda, i_cons, angle1, angle2, report, &
+             sic, sic_epsilon, force_pairing
 
 
 !=----------------------------------------------------------------------------=!
@@ -889,13 +920,15 @@ MODULE input_parameters
         REAL(KIND=DP)  :: w_1 = 0.5D-1
         REAL(KIND=DP)  :: w_2 = 0.5D0 
 
+        REAL(KIND=DP)  :: sic_rloc = 0.0d0
+
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
           num_of_images, CI_scheme, VEC_scheme, minimization_scheme, &
           optimization, damp, temp_req, ds, k_max, k_min, neb_thr, &
           trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
-          w_1, w_2, lbfgs_ndim
+          w_1, w_2, lbfgs_ndim, sic_rloc
 
 !
 !=----------------------------------------------------------------------------=!  
@@ -1032,6 +1065,7 @@ MODULE input_parameters
         REAL(dbl) :: rd_pos(3,natx) = 0.0d0 ! unsorted position from input
         INTEGER   :: sp_pos(natx)   = 0
         INTEGER   :: if_pos(3,natx) = 1
+        INTEGER   :: id_loc(natx)   = 0
         INTEGER   :: na_inp(nsx)    = 0     ! number of atom for each specie
         LOGICAL   :: tapos = .FALSE.
         LOGICAL   :: tscal = .TRUE.
@@ -1044,6 +1078,8 @@ MODULE input_parameters
         !
  
         REAL (KIND=DP), ALLOCATABLE :: pos(:,:) 
+
+        
 
 !
 !    ION_VELOCITIES
@@ -1183,6 +1219,7 @@ MODULE input_parameters
 !
 
       LOGICAL   :: tprnrho = .FALSE.
+
 
 !
 !   CLIMBING_IMAGES

@@ -52,7 +52,7 @@
                   tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, &
                   convergence_criteria, tionstep, nstepe, tsteepdesc, &
                   ionic_conjugate_gradient, tconjgrad_ion, &
-                  tatomicwfc, tscreen, gamma_only, ekin_conv_thr, ekin_maxiter
+                  tatomicwfc, tscreen, gamma_only, ekin_conv_thr, ekin_maxiter, force_pairing
 
 
         PUBLIC ::  fix_dependencies, check_flags
@@ -98,6 +98,10 @@
         LOGICAL :: tatomicwfc= .FALSE.  ! Use atomic wavefunctions as starting guess for ch. density
         LOGICAL :: tscreen   = .FALSE.  ! Use screened coulomb potentials for cluster calculations
         LOGICAL :: twfcollect = .FALSE. ! Collect wave function in the restart file at the end of run.
+
+! ...   Force pairing
+        LOGICAL :: force_pairing
+
 
         TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence 
