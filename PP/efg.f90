@@ -1,4 +1,12 @@
+! Copyright (C) 2004 PWSCF group 
+! This file is distributed under the terms of the 
+! GNU General Public License. See the file `License' 
+! in the root directory of the present distribution, 
+! or http://www.gnu.org/copyleft/gpl.txt . 
+! 
+!----------------------------------------------------------------------- 
 program efg
+!-----------------------------------------------------------------------
   use kinds, only: DP
   use io_files, only: nd_nmbr,prefix, outdir, tmp_dir
   use parameters, only: ntypx
@@ -15,6 +23,7 @@ program efg
   namelist / inputpp / prefix, filerec, Q, outdir
 
   call start_postproc(nd_nmbr)
+
   !
   ! set default value
   !
@@ -25,9 +34,12 @@ program efg
 #ifdef __PARA 
   if (me == 1)  then 
 #endif 
+
   read (5, inputpp, err=200, iostat=ios)
 200 call errore('efg.x', 'reading inputpp namelist', abs(ios))
+
   tmp_dir = trim(outdir)
+
 #ifdef __PARA 
   end if
   
@@ -44,7 +56,6 @@ program efg
 
   call openfil
   
-
   call read_recon(filerec)
 
   call do_efg(Q) 
@@ -225,6 +236,7 @@ efgr_el=(0.d0,0.d0)
 
   call efg_correction(efg_corr_tens)
 
+
 !symmetrize efg_tensor
 
 
@@ -305,7 +317,7 @@ subroutine efg_correction(efg_corr_tens)
   use parameters, only: lmaxx, ntypx
   use atom , only: r,rab,msh
   use gvect, only: g,ngm,ecutwfc
-  use klist, only: nks, xk
+  use klist, only: nks, xk, wk
   use cell_base, only: tpiba2
   use basis, only: nat, ntyp,ityp
   use wvfct, only:npwx, nbnd, npw, igk, g2kin
@@ -364,44 +376,44 @@ at_efg=0.d0
 !  calculation of the reconstruction part
 !
 
-  do ik = 1, nks
-     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     call init_paw_2 (npw, igk, xk (1, ik), paw_vkb)
-     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
+do ik = 1, nks
+   call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+   call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+   call init_paw_2 (npw, igk, xk (1, ik), paw_vkb)
+   call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
 
-do ibnd = 1, nbnd
-   ijkb0 = 0
-   do nt = 1, ntyp
-      do na = 1, nat
-         if (ityp (na) .eq.nt) then
-            do ih = 1, paw_nh (nt)
-               ikb = ijkb0 + ih
-               nbs1=paw_indv(ih,nt)
-               l1=paw_nhtol(ih,nt)
-               m1=paw_nhtom(ih,nt)
-               lm1=m1+l1**2
-               do jh = 1, paw_nh (nt) 
-                  jkb = ijkb0 + jh
-                  nbs2=paw_indv(jh,nt)
-                  l2=paw_nhtol(jh,nt)
-                  m2=paw_nhtom(jh,nt)
-                  lm2=m2+l2**2 
-                  do lm=5,9
-                     efg_corr(lm,na) =  efg_corr(lm,na) + &
+   do ibnd = 1, nbnd
+      ijkb0 = 0
+      do nt = 1, ntyp
+         do na = 1, nat
+            if (ityp (na) .eq.nt) then
+               do ih = 1, paw_nh (nt)
+                  ikb = ijkb0 + ih
+                  nbs1=paw_indv(ih,nt)
+                  l1=paw_nhtol(ih,nt)
+                  m1=paw_nhtom(ih,nt)
+                  lm1=m1+l1**2
+                  do jh = 1, paw_nh (nt) 
+                     jkb = ijkb0 + jh
+                     nbs2=paw_indv(jh,nt)
+                     l2=paw_nhtol(jh,nt)
+                     m2=paw_nhtom(jh,nt)
+                     lm2=m2+l2**2 
+                     do lm=5,9
+                        efg_corr(lm,na) =  efg_corr(lm,na) + &
                           (paw_becp(jkb,ibnd) * conjg(paw_becp(ikb,ibnd))) &
                           * at_efg(nbs1,nbs2,nt) * &
-                          ap(lm,lm1,lm2)
+                          ap(lm,lm1,lm2) * wk(ik) / 2.d0
+                     enddo
                   enddo
                enddo
-            enddo
-            ijkb0 = ijkb0 + paw_nh (nt)
-         endif
+               ijkb0 = ijkb0 + paw_nh (nt)
+            endif
+         enddo
       enddo
    enddo
-enddo
  
-enddo 
+enddo
 
 !
 !  transforme in cartesian coordinates
