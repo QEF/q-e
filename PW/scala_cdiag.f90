@@ -27,6 +27,7 @@ subroutine scala_cdiag (n, a, ilda, w, z, ildz)
   !                Leading dimension of matrix z.
   !     ..
   USE kinds, only : DP
+  USE io_global,  ONLY :  stdout
   implicit none
   integer :: n, ilda, ildz
   ! input: size of the matrix to diagonalize

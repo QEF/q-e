@@ -80,8 +80,6 @@ MODULE cgconv
   !
   INTEGER :: &
       niter_ph
-  REAL(kind=DP) :: &
-      tr2_ph
   !    
 END MODULE cgconv
 !

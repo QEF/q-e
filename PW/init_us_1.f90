@@ -38,7 +38,7 @@ subroutine init_us_1
   USE lsda_mod, ONLY : nspin
   USE us, ONLY: okvan, nqxq, dq, nqx, tab, qrad
   USE uspp, ONLY: nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
-	qq_so, dvan_so
+       qq_so, dvan_so
   USE uspp_param, ONLY: lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
        kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm
   USE spin_orb, ONLY : lspinorb, rot_ylm, fcoef
