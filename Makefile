@@ -96,9 +96,10 @@ veryclean: clean
 # for the same reason can't pipe directly to gzip
 tar:
 	rm -f pw.tar pw.tar.gz
+	touch pw.tar
+	tar cvf pw.tar pw.tar # create empty archive to start with
 	find License README */README INSTALL configure \
-	     makedeps.sh moduledep.sh Makefile */Makefile \
-	     NEB/make.dep \
+	     makedeps.sh moduledep.sh Makefile */Makefile NEB/make.dep \
 	     configure.new configure.ac config.guess config.sub \
 	     install-sh make.rules.in make.sys.in \
 	     */*.f90 */*.c */*.f clib/*.h include/*.h* \
