@@ -1,4 +1,4 @@
-
+!
 ! Copyright (C) 2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -8,157 +8,156 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine solve_ph
+SUBROUTINE solve_ph
   !-----------------------------------------------------------------------
   !
-  USE io_global,             ONLY : stdout
-  use io_files,              ONLY : iunres
-  use pwcom
+  USE io_global,             ONLY : stdout, ionode
+  USE io_files,              ONLY : iunres
+  USE pwcom
   USE wavefunctions_module,  ONLY : evc
   USE becmod,                ONLY : rbecp
-  use cgcom
-#ifdef __PARA
-  use para
-#endif
+  USE cgcom
 
   IMPLICIT NONE
 
-  integer :: nu, i, ibnd, jbnd, info, iter, mode_done, kpoint
-  real(kind=DP), allocatable ::  diag(:)
-  complex(kind=DP), allocatable :: gr(:,:), h(:,:), work(:,:)
-  real(kind=DP), allocatable :: overlap(:,:)
-  logical :: orthonormal, precondition, startwith0
-  external A_h
+  INTEGER :: nu, i, ibnd, jbnd, info, iter, mode_done, kpoint
+  REAL(kind=DP), ALLOCATABLE ::  diag(:)
+  COMPLEX(kind=DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
+  REAL(kind=DP), ALLOCATABLE :: overlap(:,:)
+  LOGICAL :: orthonormal, precondition, startwith0
+  EXTERNAL A_h
   !
-  call start_clock('solve_ph')
+  CALL start_clock('solve_ph')
   !
-  allocate ( rbecp( nkb,nbnd) )
-  allocate ( diag( npwx) )
-  allocate ( overlap( nbnd, nbnd) )
-  allocate ( work( npwx, nbnd) )
-  allocate ( gr  ( npwx, nbnd) )
-  allocate ( h   ( npwx, nbnd) )
+  ALLOCATE ( rbecp( nkb,nbnd) )
+  ALLOCATE ( diag( npwx) )
+  ALLOCATE ( overlap( nbnd, nbnd) )
+  ALLOCATE ( work( npwx, nbnd) )
+  ALLOCATE ( gr  ( npwx, nbnd) )
+  ALLOCATE ( h   ( npwx, nbnd) )
   !
   kpoint = 1
-  do i = 1,npw
+  DO i = 1,npw
      g2kin(i) = ( (xk(1,kpoint)+g(1,igk(i)))**2 +                   &
                   (xk(2,kpoint)+g(2,igk(i)))**2 +                   &
                   (xk(3,kpoint)+g(3,igk(i)))**2 ) * tpiba2
-  end do
+  END DO
   !
-  orthonormal = .false.
-  precondition= .true.
+  orthonormal = .FALSE.
+  precondition= .TRUE.
   !
-  if (precondition) then
-     do i = 1,npw
-        diag(i) = 1.0/max(1.d0,g2kin(i))
-     end do
-     call zvscal(npw,npwx,nbnd,diag,evc,work)
-     call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
-     call DPOTRF('U',nbnd,overlap,nbnd,info)
-     if (info.ne.0) call errore('solve_ph','cannot factorize',info)
-  end if
+  IF (precondition) THEN
+     DO i = 1,npw
+        diag(i) = 1.0/MAX(1.d0,g2kin(i))
+     END DO
+     CALL zvscal(npw,npwx,nbnd,diag,evc,work)
+     CALL pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
+     CALL DPOTRF('U',nbnd,overlap,nbnd,info)
+     IF (info.NE.0) CALL errore('solve_ph','cannot factorize',info)
+  END IF
   !
   WRITE( stdout,'(/" ***  Starting Conjugate Gradient minimization",   &
        &            9x,"***")')
   !
   !  check if a restart file exists
   !
-  open (unit=iunres,file='restartph',form='formatted',status='unknown')
-  read (iunres,*,err=1,end=1) mode_done
-  read (iunres,*,err=1,end=1) dyn
-  close(unit=iunres)
-  print '("  Phonon: modes up to mode ",i3," are done")',       &
+  OPEN (unit=iunres,file='restartph',form='formatted',status='unknown')
+  READ (iunres,*,err=1,END=1) mode_done
+  READ (iunres,*,err=1,END=1) dyn
+  CLOSE(unit=iunres)
+  PRINT '("  Phonon: modes up to mode ",i3," are done")',       &
        &     mode_done
   go to 2
-1 close(unit=iunres)
+1 CLOSE(unit=iunres)
   !  restart failed or file not found
-  call  dynmat_init
+  CALL  dynmat_init
   mode_done=0
-2 continue
+2 CONTINUE
   !
-  do nu = 1, nmodes
-     if ( has_equivalent((nu-1)/3+1).eq.1) then
+  DO nu = 1, nmodes
+     IF ( has_equivalent((nu-1)/3+1).EQ.1) THEN
         ! calculate only independent modes
         WRITE( stdout,'(" ***  mode # ",i3," : using symmetry")') nu
-        goto 10
-     end if
-     if ( nu.le.mode_done) then
+        GOTO 10
+     END IF
+     IF ( nu.LE.mode_done) THEN
         ! do not recalculate modes already done
         WRITE( stdout,'(" ***  mode # ",i3," : using previous run")') nu
-        goto 10
-     end if
-     if ( asr .and. (nu-1)/3+1.eq.nasr ) then
+        GOTO 10
+     END IF
+     IF ( asr .AND. (nu-1)/3+1.EQ.nasr ) THEN
         ! impose ASR on last atom instead of calculating mode
         WRITE( stdout,'(" ***  mode # ",i3," : using asr")') nu
-        goto 10
-     end if
+        GOTO 10
+     END IF
      ! calculate |b> = dV/dtau*psi
-     call dvpsi_kb(kpoint,nu)
+     CALL dvpsi_kb(kpoint,nu)
      ! initialize delta psi
-     startwith0=.true.
+     startwith0=.TRUE.
      dpsi(:,:) = (0.d0, 0.d0)
      ! solve the linear system
      ! NB: dvpsi is used also as work space and is destroyed by cgsolve
-     call cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
+     CALL cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
                    orthonormal,precondition,diag,      &
                    startwith0,et(1,kpoint),dvpsi,gr,h, &
                    dvpsi,work,niter_ph,tr2_ph,iter,dpsi)
      ! < DeltaPsi | DeltaV | Psi > contribution to the dynamical matrix
-     call drhodv(nu)
+     CALL drhodv(nu)
      ! save partial result
-#ifdef __PARA
-     if (me.eq.1) then
-#endif
-        open (unit=iunres,file='restartph',form='formatted',status='unknown')
-        write(iunres,*) nu
-        write(iunres,*) dyn
-        close(unit=iunres)
-#ifdef __PARA
-     end if
-#endif
+     !
+     IF ( ionode ) THEN
+        !
+        OPEN (unit=iunres,file='restartph',form='formatted',status='unknown')
+        WRITE(iunres,*) nu
+        WRITE(iunres,*) dyn
+        CLOSE(unit=iunres)
+        !
+     END IF
+     !
      WRITE( stdout,'(" ***  mode # ",i3," : ",i3," iterations")')  &
           &          nu, iter
-10   continue
-  end do
+10   CONTINUE
+  END DO
   !
-  deallocate(h)
-  deallocate(gr)
-  deallocate(overlap)
-  deallocate(work)
-  deallocate(diag)
-  deallocate(rbecp)
+  DEALLOCATE(h)
+  DEALLOCATE(gr)
+  DEALLOCATE(overlap)
+  DEALLOCATE(work)
+  DEALLOCATE(diag)
+  DEALLOCATE(rbecp)
   !
-  call stop_clock('solve_ph')
+  CALL stop_clock('solve_ph')
   !
-  return
-end subroutine solve_ph
-
-subroutine set_asr(nat,nasr,dyn)
+  RETURN
+END SUBROUTINE solve_ph
+!
+!---------------------------------------------------------------------------
+SUBROUTINE set_asr(nat,nasr,dyn)
+  !---------------------------------------------------------------------------
   !
   ! Impose Acoustic Sum Rule on the dynamical matrix
   ! We assume that (3*nat-1) columns have been calculated
   ! and that the missing column corresponds to atom nasr
   !
-  implicit none
-  integer nat, nasr
-  real(kind=8) :: dyn(3*nat,3*nat)
+  IMPLICIT NONE
+  INTEGER nat, nasr
+  REAL(kind=8) :: dyn(3*nat,3*nat)
   !
-  integer na, nb, i,j
-  real(kind=8) :: sum
+  INTEGER na, nb, i,j
+  REAL(kind=8) :: sum
 
-  if (nasr.le.0 .or. nasr.gt.nat) return
-  do j=1,3
-     do i=1,3
-        do nb=1,nat
+  IF (nasr.LE.0 .OR. nasr.GT.nat) RETURN
+  DO j=1,3
+     DO i=1,3
+        DO nb=1,nat
            sum=0.d0
-           do na=1,nat
-              if (na.ne.nasr) sum = sum + dyn(3*(na-1)+i,3*(nb-1)+j)
-           end do
+           DO na=1,nat
+              IF (na.NE.nasr) sum = sum + dyn(3*(na-1)+i,3*(nb-1)+j)
+           END DO
            dyn(3*(nasr-1)+i,3*(nb-1)+j)= -sum
-        end do
-     end do
-  end do
+        END DO
+     END DO
+  END DO
 
-  return
-end subroutine set_asr
+  RETURN
+END SUBROUTINE set_asr

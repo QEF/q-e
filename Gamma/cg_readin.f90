@@ -5,41 +5,40 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine cg_readin
+SUBROUTINE cg_readin()
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE ions_base, ONLY : nat
-  use pwcom
-  use cgcom
-  use io_files, only: tmp_dir, prefix
-#ifdef __PARA
-  use para, only: me
-  use mp, only: mp_bcast
-#endif
-  implicit none
-  integer :: iunit =5, ionode_id = 0
-  character(len=256) :: outdir
-  namelist /inputph/ prefix, fildyn, trans, epsil, raman, nmodes,     &
+  USE pwcom
+  USE cgcom
+  USE io_files,  ONLY : tmp_dir, prefix
+  USE io_global, ONLY : ionode, ionode_id
+  USE mp,        ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  INTEGER :: iunit =5
+  CHARACTER(len=256) :: outdir
+  NAMELIST /inputph/ prefix, fildyn, trans, epsil, raman, nmodes,     &
             tr2_ph, niter_ph, amass, outdir, asr, deltatau, nderiv, &
             first, last
-                                                                                
+                                             
   CHARACTER (LEN=256) :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ilen
+  INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
 
   !
-  call start_clock('cg_readin')
+  CALL start_clock('cg_readin')
   !
   outdir = './'
   prefix = 'pwscf'
   fildyn = 'matdyn'
-  epsil  = .true.
-  trans  = .true.
-  raman  = .false.
-  asr    = .false.
+  epsil  = .TRUE.
+  trans  = .TRUE.
+  raman  = .FALSE.
+  asr    = .FALSE.
   tr2_ph = 1.0e-12
   niter_ph= 50
   nmodes =  0
@@ -47,182 +46,177 @@ subroutine cg_readin
   nderiv = 2
   first  = 1
   last   = 0
-#ifdef __PARA
-  if (me == 1) then
-#endif
   !
-  ! ... Input from file ?
-  !
-  nargs = iargc()
-  !
-  DO iiarg = 1, ( nargs - 1 )
+  IF ( ionode ) THEN
      !
-     CALL getarg( iiarg, input_file )
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
-        !
-        CALL getarg( ( iiarg + 1 ) , input_file )
-        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
-        !
-     END IF
+     ! ... Input from file ?
      !
-  END DO
+     nargs = iargc()
+     !
+     DO iiarg = 1, ( nargs - 1 )
+        !
+        CALL getarg( iiarg, input_file )
+        IF ( TRIM( input_file ) == '-input' .OR. &
+             TRIM( input_file ) == '-inp'   .OR. &
+             TRIM( input_file ) == '-in' ) THEN
+           !
+           CALL getarg( ( iiarg + 1 ) , input_file )
+           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+                STATUS = 'OLD', IOSTAT = ierr )
+           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                & ' not found' , ierr )
+           !
+        END IF
+        !
+     END DO
 
-  read(iunit,'(a)') title_ph
-  read(iunit,inputph)
+     READ(iunit,'(a)') title_ph
+     READ(iunit,inputph)
+     !
+     tmp_dir = TRIM(outdir)
+     !
+  END IF
   !
-  tmp_dir = trim(outdir)
-#ifdef __PARA
-  endif
-  !
-  call mp_bcast(prefix,ionode_id)
-  call mp_bcast(fildyn,ionode_id)
-  call mp_bcast(trans,ionode_id)
-  call mp_bcast(epsil,ionode_id)
-  call mp_bcast(raman,ionode_id)
-  call mp_bcast(nmodes,ionode_id)
-  call mp_bcast(tr2_ph,ionode_id)
-  call mp_bcast(niter_ph,ionode_id)
-  call mp_bcast(amass,ionode_id)
-  call mp_bcast(tr2_ph,ionode_id)
-  call mp_bcast(tmp_dir,ionode_id)
-  call mp_bcast(asr,ionode_id)
-  call mp_bcast(deltatau,ionode_id)
-  call mp_bcast(nderiv,ionode_id)
-  call mp_bcast(first,ionode_id)
-  call mp_bcast(last,ionode_id)
-  !
-#endif
+  CALL mp_bcast(prefix,ionode_id)
+  CALL mp_bcast(fildyn,ionode_id)
+  CALL mp_bcast(trans,ionode_id)
+  CALL mp_bcast(epsil,ionode_id)
+  CALL mp_bcast(raman,ionode_id)
+  CALL mp_bcast(nmodes,ionode_id)
+  CALL mp_bcast(tr2_ph,ionode_id)
+  CALL mp_bcast(niter_ph,ionode_id)
+  CALL mp_bcast(amass,ionode_id)
+  CALL mp_bcast(tr2_ph,ionode_id)
+  CALL mp_bcast(tmp_dir,ionode_id)
+  CALL mp_bcast(asr,ionode_id)
+  CALL mp_bcast(deltatau,ionode_id)
+  CALL mp_bcast(nderiv,ionode_id)
+  CALL mp_bcast(first,ionode_id)
+  CALL mp_bcast(last,ionode_id)
   !
   !  read the input file produced by 'punch' subroutine in pwscf program
   !  allocate memory and recalculate what is needed
   !
-  call read_file
+  CALL read_file
   !
   !  various checks
   !
-  if (.not. gamma_only) call errore('cg_readin', &
+  IF (.NOT. gamma_only) CALL errore('cg_readin', &
       'need pw.x data file produced using Gamma tricks',1)
-  if (okvan) call errore('cg_readin', &
+  IF (okvan) CALL errore('cg_readin', &
       'ultrasoft pseudopotential not implemented',1)
-  if (.not.trans .and. .not.epsil)                                  &
-       &     call errore('cg_readin','nothing to do',1)
-  if (nks.ne.1) call errore('cg_readin','too many k-points',1)
+  IF (.NOT.trans .AND. .NOT.epsil)                                  &
+       &     CALL errore('cg_readin','nothing to do',1)
+  IF (nks.NE.1) CALL errore('cg_readin','too many k-points',1)
   !      if (xk(1,1).ne.0.0 .or. xk(2,1).ne.0.0 .or. xk(3,1).ne.0.0)
   !     &    call errore('data','only k=0 allowed',1)
-  if (nmodes.gt.3*nat .or. nmodes.lt.0)                             &
-       &     call errore('cg_readin','wrong number of normal modes',1)
-  if (epsil .and. nmodes.ne.0) call errore('cg_readin','not allowed',1)
+  IF (nmodes.GT.3*nat .OR. nmodes.LT.0)                             &
+       &     CALL errore('cg_readin','wrong number of normal modes',1)
+  IF (epsil .AND. nmodes.NE.0) CALL errore('cg_readin','not allowed',1)
   !
-  if (raman) call errore &
+  IF (raman) CALL errore &
       ('phcg.x','Raman with finite differences no longer maintained',1)
-  if (raman .and. deltatau.le.0.d0)                                 &
-       &     call errore('cg_readin','deltatau > 0 needed for raman CS',1)
-  if (nderiv.ne.2 .and. nderiv.ne.4) &
-       call errore('cg_readin','nderiv not allowed',1)
+  IF (raman .AND. deltatau.LE.0.d0)                                 &
+       &     CALL errore('cg_readin','deltatau > 0 needed for raman CS',1)
+  IF (nderiv.NE.2 .AND. nderiv.NE.4) &
+       CALL errore('cg_readin','nderiv not allowed',1)
   !
-  if (last.eq.0) last=3*nat
+  IF (last.EQ.0) last=3*nat
   !
-  call cg_readmodes(iunit)
+  CALL cg_readmodes(iunit)
   !
-  call stop_clock('cg_readin')
+  CALL stop_clock('cg_readin')
   !
-  return
-end subroutine cg_readin
+  RETURN
+END SUBROUTINE cg_readin
 !
 !-----------------------------------------------------------------------
-subroutine cg_readmodes(iunit)
+SUBROUTINE cg_readmodes(iunit)
   !-----------------------------------------------------------------------
   !
   USE ions_base, ONLY : nat
-  USE kinds, only: DP
-  use pwcom
-  use cgcom
-#ifdef __PARA
-  use para, only: me
-  use mp, only: mp_bcast
-#endif
+  USE kinds,     ONLY : DP
+  USE pwcom
+  USE cgcom
+  USE io_global, ONLY : ionode, ionode_id
+  USE mp,        ONLY : mp_bcast
   !
-  implicit none
-  integer :: iunit
+  IMPLICIT NONE
   !
-  integer :: ionode_id = 0, na, nu, mu
-  real(kind=DP) utest, unorm, DDOT
+  INTEGER :: iunit
+  !
+  INTEGER :: na, nu, mu
+  REAL(kind=DP) utest, unorm, DDOT
   !
   ! allocate space for modes, dynamical matrix, auxiliary stuff
   !
-  allocate  (u(  3*nat, 3*nat))    
-  allocate  (dyn(3*nat, 3*nat))    
-  allocate  (equiv_atoms( nat, nat))    
-  allocate  (n_equiv_atoms( nat))    
-  allocate  (has_equivalent(nat))    
+  ALLOCATE  (u(  3*nat, 3*nat))    
+  ALLOCATE  (dyn(3*nat, 3*nat))    
+  ALLOCATE  (equiv_atoms( nat, nat))    
+  ALLOCATE  (n_equiv_atoms( nat))    
+  ALLOCATE  (has_equivalent(nat))    
   !
   ! nmodes not given: use defaults (all modes) as normal modes ...
   !
-  if (nmodes.eq.0) then
-     call find_equiv_sites (nat,nat,nsym,irt,has_equivalent,        &
+  IF (nmodes.EQ.0) THEN
+     CALL find_equiv_sites (nat,nat,nsym,irt,has_equivalent,        &
           &      n_diff_sites,n_equiv_atoms,equiv_atoms)
-     if (n_diff_sites .le. 0 .or. n_diff_sites .gt. nat)            &
-          &      call errore('equiv.sites','boh!',1)
+     IF (n_diff_sites .LE. 0 .OR. n_diff_sites .GT. nat)            &
+          &      CALL errore('equiv.sites','boh!',1)
      !
      ! these are all modes, but only independent modes are calculated
      !
      nmodes = 3*nat
      u(:,:) = 0.d0
-     do nu = 1,nmodes
+     DO nu = 1,nmodes
         u(nu,nu) = 1.0
-     end do
+     END DO
      ! look if ASR can be exploited to reduce the number of calculations
      ! we need to locate an independent atom with no equivalent atoms
      nasr=0
-     if (asr.and.n_diff_sites.gt.1) then
-        do na = 1, n_diff_sites
-           if (n_equiv_atoms(na).eq.1 ) then
+     IF (asr.AND.n_diff_sites.GT.1) THEN
+        DO na = 1, n_diff_sites
+           IF (n_equiv_atoms(na).EQ.1 ) THEN
               nasr = equiv_atoms(na, 1)
               go to 1
-           end if
-        end do
- 1      continue
-     end if
-  else
-     if (asr) call errore('readin','warning: asr disabled',-1)
+           END IF
+        END DO
+ 1      CONTINUE
+     END IF
+  ELSE
+     IF (asr) CALL errore('readin','warning: asr disabled',-1)
      nasr=0
      !
      ! ... otherwise read normal modes from input
      !
-     do na = 1,nat
+     DO na = 1,nat
         has_equivalent(na) = 0
-     end do
-#ifdef __PARA
-     if (me == 0) then
-#endif
-     do nu = 1,nmodes
-        read (iunit,*,end=10,err=10) (u(mu,nu), mu=1,3*nat)
-     end do
-#ifdef __PARA
-     endif
-     call mp_bcast(u,ionode_id)
-#endif
-     do nu = 1,nmodes
-        do mu = 1, nu-1
+     END DO
+
+     IF ( ionode ) THEN
+        !
+        DO nu = 1,nmodes
+           READ (iunit,*,END=10,err=10) (u(mu,nu), mu=1,3*nat)
+        END DO
+        !
+     END IF
+     CALL mp_bcast(u,ionode_id)
+     DO nu = 1,nmodes
+        DO mu = 1, nu-1
            utest = DDOT(3*nat,u(1,nu),1,u(1,mu),1)
-           if (abs(utest).gt.1.0e-10) then
-              print *, ' warning: input modes are not orthogonal'
-              call DAXPY(3*nat,-utest,u(1,mu),1,u(1,nu),1)
-           end if
-        end do
-        unorm = sqrt(DDOT(3*nat,u(1,nu),1,u(1,nu),1))
-        if (abs(unorm).lt.1.0e-10) go to 10
-        call DSCAL(3*nat,1.0/unorm,u(1,nu),1)
-     end do
+           IF (ABS(utest).GT.1.0e-10) THEN
+              PRINT *, ' warning: input modes are not orthogonal'
+              CALL DAXPY(3*nat,-utest,u(1,mu),1,u(1,nu),1)
+           END IF
+        END DO
+        unorm = SQRT(DDOT(3*nat,u(1,nu),1,u(1,nu),1))
+        IF (ABS(unorm).LT.1.0e-10) go to 10
+        CALL DSCAL(3*nat,1.0/unorm,u(1,nu),1)
+     END DO
      go to 20
-10   call errore('phonon','wrong data read',1)
-  endif
-20 continue
+10   CALL errore('phonon','wrong data read',1)
+  ENDIF
+20 CONTINUE
   !
-  return
-end subroutine cg_readmodes
+  RETURN
+END SUBROUTINE cg_readmodes
