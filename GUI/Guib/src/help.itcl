@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: help.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: help.itcl,v 1.2 2004-09-20 07:22:54 kokalj Exp $ 
 #
 
 #
@@ -121,7 +121,7 @@ proc ::guib::widgets::displayhelp {varName varType helpFmt helpText} {
 	::tclu::ERROR "unknown help format $helpFMT, must be html, txt2html, or txt"
     }
 
-    $wid configure -width 700 -height 300 
+    #$wid configure -width 700 -height 300 
     
     set bb  [::iwidgets::buttonbox $t.bb]
     $bb add Close -text "Close" -command "destroy $t"
