@@ -64,6 +64,7 @@
 
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
+
       
       INTERFACE ions_vel
          MODULE PROCEDURE ions_vel3, ions_vel2
@@ -628,4 +629,207 @@
 
 !------------------------------------------------------------------------------!
   END MODULE ions_base
+!------------------------------------------------------------------------------!
+
+
+!------------------------------------------------------------------------------!
+  MODULE ions_positions
+!------------------------------------------------------------------------------!
+
+      USE kinds, ONLY: dbl
+      USE parameters, ONLY: natx
+!
+      IMPLICIT NONE
+
+! ... Atomic positions arrays used in the cp codes during the dynamic
+      REAL(dbl) :: tau0(3,natx), taum(3,natx),  taup(3,natx)
+      REAL(dbl) :: taus(3,natx), tausm(3,natx), tausp(3,natx)
+      REAL(dbl) :: vels(3,natx), velsm(3,natx), velsp(3,natx)
+
+!------------------------------------------------------------------------------!
+  CONTAINS 
+!------------------------------------------------------------------------------!
+
+  subroutine ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
+    real(kind=8), intent(in) :: tausm(:,:), pmass(:), fion(:,:)
+    integer, intent(in) :: iforce(:,:)
+    real(kind=8), intent(in) :: ainv(3,3), delt
+    real(kind=8), intent(out) :: taus(:,:) 
+    integer, intent(in) :: na(:), nsp
+    integer :: is, ia, i, isa
+    real(kind=8) :: dt2by2, fac, fions(3)
+
+    dt2by2 = .5d0 * delt * delt
+
+    isa = 0
+    do is=1,nsp
+      fac = dt2by2/pmass(is)
+      do ia=1,na(is)
+        isa = isa + 1
+        do i=1,3
+          fions( i ) = fion(1,isa)*ainv(i,1) + fion(2,isa)*ainv(i,2) + fion(3,isa)*ainv(i,3)
+        end do
+        do i=1,3
+          taus(i,isa) = tausm(i,isa) + iforce(i,isa) * fac * fions( i )
+        end do
+      end do
+    end do
+    return
+  end subroutine
+
+
+  subroutine ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp, &
+                        fricp, hgamma, vels, tsdp, tnosep, fionm, vnhp, velsp, velsm )
+    implicit none
+    real(kind=8), intent(in) :: taus(:,:), tausm(:,:), pmass(:), fion(:,:)
+    integer, intent(in) :: iforce(:,:)
+    real(kind=8), intent(in) :: ainv(3,3), delt
+    real(kind=8), intent(out) :: tausp(:,:)
+    integer, intent(in) :: na(:), nsp
+    real(kind=8), intent(in) :: fricp, hgamma(3,3), vels(:,:)
+    logical, intent(in) :: tsdp, tnosep
+    real(kind=8), intent(inout) :: fionm(:,:)
+    real(kind=8), intent(in) :: vnhp
+    real(kind=8), intent(out) :: velsp(:,:)
+    real(kind=8), intent(in) :: velsm(:,:)
+    integer :: is, ia, i, isa
+    real(kind=8) :: dt2by2, fac, fions(3), dt2, twodel
+    real(kind=8) :: verl1, verl2, verl3
+
+    dt2by2 = .5d0 * delt * delt
+    dt2    = delt * delt
+    twodel = 2.0d0 * delt
+
+         verl1=2./(1.+fricp)
+         verl2=1.-verl1
+         verl3=dt2/(1.+fricp)
+!
+         if(tsdp) then
+            isa = 0
+            do is=1,nsp
+               do ia=1,na(is)
+                  isa = isa + 1
+                  do i=1,3
+                     tausp(i,isa) = taus(i,isa) +                   &
+     &                    iforce(i,isa)*dt2by2/pmass(is)*             &
+     &        (ainv(i,1)*fion(1,isa)+ainv(i,2)*fion(2,isa)+         &
+     &         ainv(i,3)*fion(3,isa) ) -                              &
+     &                    pmass(is)*(hgamma(i,1)*vels(1,isa)+         &
+     &         hgamma(i,2)*vels(2,isa)+hgamma(i,3)*vels(3,isa))
+                  end do
+               end do
+            end do
+         else if (tnosep) then
+            isa = 0
+            do is=1,nsp
+               do ia=1,na(is)
+                  isa = isa + 1
+                  do i=1,3
+                     fionm(i,isa) = (ainv(i,1)*fion(1,isa)          &
+     &                                +ainv(i,2)*fion(2,isa)          &
+     &                                +ainv(i,3)*fion(3,isa))         &
+     &                              - vnhp*vels(i,isa)*pmass(is)      &
+     &                    - pmass(is)*(hgamma(i,1)*vels(1,isa)        &
+     &                                +hgamma(i,2)*vels(2,isa)        &
+     &                                +hgamma(i,3)*vels(3,isa))
+                     tausp(i,isa)=-tausm(i,isa)+2.*taus(i,isa)+   &
+     &                   iforce(i,isa)*dt2*fionm(i,isa)/pmass(is)
+                     velsp(i,isa) = velsm(i,isa) +                  &
+     &                    twodel*fionm(i,isa)/pmass(is)
+                  end do
+               end do
+            end do
+         else
+            isa = 0
+            do is=1,nsp
+               do ia=1,na(is)
+                  isa = isa + 1
+                  do i=1,3
+                     tausp(i,isa) = verl1*taus(i,isa)               &
+     &                    + verl2*tausm(i,isa)                        &
+     &        + verl3/pmass(is)*iforce(i,isa) * (ainv(i,1)*fion(1,isa)&
+     &        + ainv(i,2)*fion(2,isa) + ainv(i,3)*fion(3,isa))      &
+     &        - verl3*iforce(i,isa) * (hgamma(i,1)*vels(1,isa)      &
+     &        + hgamma(i,2)*vels(2,isa) + hgamma(i,3)*vels(3,isa))
+                     velsp(i,isa)=velsm(i,isa)                      &
+     &        - 4.*fricp*vels(i,isa)                                  &
+     &        + twodel/pmass(is)*iforce(i,isa)*(ainv(i,1)*fion(1,isa) &
+     &        + ainv(i,2)*fion(2,isa) + ainv(i,3)*fion(3,isa))      &
+     &        - twodel*iforce(i,isa) * (hgamma(i,1)*vels(1,isa)     &
+     &        + hgamma(i,2)*vels(2,isa) + hgamma(i,3)*vels(3,isa))
+                  end do
+               end do
+            end do
+         endif
+    return
+  end subroutine
+
+
+
+!------------------------------------------------------------------------------!
+  END MODULE ions_positions
+!------------------------------------------------------------------------------!
+
+
+!------------------------------------------------------------------------------!
+  MODULE ions_nose
+!------------------------------------------------------------------------------!
+
+      USE kinds, ONLY: dbl
+!
+      IMPLICIT NONE
+
+      REAL(dbl) :: vnhp, xnhp0, xnhpm, xnhpp, qnp, gkbt
+      REAL(dbl) :: tempw, fnosep
+
+!------------------------------------------------------------------------------!
+  CONTAINS 
+!------------------------------------------------------------------------------!
+
+  subroutine ions_noseinit( tempw_ , fnosep_ , nat )
+    use constants, only: factem, pi, terahertz
+    implicit none
+    real(kind=8), intent(in)  :: tempw_ , fnosep_
+    integer, intent(in) :: nat
+    integer :: nsvar
+    vnhp  = 0.0d0
+    xnhp0 = 0.0d0
+    xnhpm = 0.0d0 
+    xnhpp = 0.0d0
+    tempw = tempw_
+    fnosep = fnosep_
+    qnp = 0.0d0
+    if( fnosep > 0.0d0 ) qnp = 2.d0*(3*nat)*tempw/factem/(fnosep*(2.d0*pi)*terahertz)**2
+    gkbt = 3.*nat*tempw/factem
+    !    WRITE( stdout,100)
+    !    WRITE( stdout,110) QNOSEP,TEMPW
+    !    WRITE( stdout,120) GLIB
+    !    WRITE( stdout,130) NSVAR
+ 100  FORMAT(//' * Temperature control of ions with nose thermostat'/)
+ 110  FORMAT(3X,'nose mass:',F12.4,' temperature (K):',F12.4)
+ 120  FORMAT(3X,'ionic degrees of freedom:        ',F5.0)
+ 130  FORMAT(3X,'time steps per nose oscillation: ',I5,//)
+    return
+  end subroutine
+  
+
+  subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt )
+    implicit none
+    real(kind=8), intent(inout) :: vnhp
+    real(kind=8), intent(in) :: xnhp0, xnhpm, delt
+    vnhp=2.*(xnhp0-xnhpm)/delt-vnhp
+    return 
+  end subroutine
+
+  subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp )
+    implicit none
+    real(kind=8), intent(out) :: xnhpp, vnhp
+    real(kind=8), intent(in) :: xnhp0, xnhpm, delt, qnp, ekinpr, gkbt
+    xnhpp=2.*xnhp0-xnhpm+2.*( delt**2 / qnp )*(ekinpr-gkbt/2.)
+    vnhp =(xnhpp-xnhpm)/( 2.0d0 * delt )
+    return
+  end subroutine
+
+!------------------------------------------------------------------------------!
+  END MODULE ions_nose
 !------------------------------------------------------------------------------!

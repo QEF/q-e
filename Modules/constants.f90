@@ -42,7 +42,9 @@ MODULE constants
   REAL(dbl), PARAMETER :: ANGSTROM_AU      = 1.889727D0     ! au
   REAL(dbl), PARAMETER :: AU_TO_OHMCMM1    = 46000.0D0      ! (ohm cm)^-1
   REAL(dbl), PARAMETER :: AU_KB            = 294210.0D0     ! Kbar
-  REAL(dbl), PARAMETER :: KB_AU            = 1.0D0/294210.0D0  ! au
+  REAL(dbl), PARAMETER :: KB_AU            = 1.0D0/294210.0D0 ! au
+  REAL(dbl), PARAMETER :: AU_GPA           = 29421.0D0      ! GPa
+  REAL(dbl), PARAMETER :: GPA_AU           = 1.0D0/29421.0D0  ! au
   REAL(dbl), PARAMETER :: AU               = 27.212D0    ! eV
   REAL(dbl), PARAMETER :: RY               = 13.606D0    ! eV
   ! REAL(dbl), PARAMETER :: AU               = 27.211652D0    ! eV

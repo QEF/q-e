@@ -26,8 +26,9 @@
           REAL(dbl) :: omega     ! cell volume = determinant of a
           REAL(dbl) :: g(3,3)    ! metric tensor
           REAL(dbl) :: pail(3,3) ! stress tensor
-          REAL(dbl) :: hmat(3,3)
-          REAL(dbl) :: h_inv(3,3)
+          REAL(dbl) :: hmat(3,3) ! cell parameters ( transpose of "a" )
+          REAL(dbl) :: hvel(3,3) ! cell velocity
+          REAL(dbl) :: hinv(3,3)
           REAL(dbl) :: deth
           INTEGER :: perd(3)
         END TYPE boxdimensions
@@ -70,11 +71,18 @@
         INTEGER          :: ibrav      ! index of the bravais lattice
         CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
 
-        REAL(dbl) :: h(3,3) = 0.0d0
-        REAL(dbl) :: hold(3,3) = 0.0d0
-        REAL(dbl) :: deth = 0.0d0
+        REAL(dbl) :: h(3,3)    = 0.0d0 ! simulation cell at time t 
+        REAL(dbl) :: hold(3,3) = 0.0d0 ! simulation cell at time t-delt
+        REAL(dbl) :: deth      = 0.0d0 ! determinant of h ( cell volume )
 
-        REAL(dbl) :: wmass = 0.0d0
+        INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
+                                       ! is not allowed to move
+
+        REAL(dbl) :: wmass = 0.0d0     ! cell fictitious mass
+        REAL(dbl) :: press = 0.0d0     ! external pressure 
+
+        REAL(dbl) :: frich  = 0.0d0    ! firction parameter for cell damped dynamics
+        REAL(dbl) :: greash = 1.0d0    ! greas parameter for damped dynamics
 
         LOGICAL :: tcell_base_init = .FALSE.
 
@@ -106,8 +114,6 @@
             box_tm2  = box_tm1
             box_tm1  = box_t0
             box_t0   = box_tp1
-            box_t0%g = MATMUL( box_t0%a(:,:), TRANSPOSE( box_t0%a(:,:) ) )
-            call gethinv(box_t0)
           RETURN
         END SUBROUTINE UPDATECELL
 
@@ -137,8 +143,9 @@
           REAL(dbl) :: ht(3,3)
             box%a = ht
             box%hmat = TRANSPOSE( ht )
-            CALL gethinv(box)
-            box%g = MATMUL(box%a(:,:),TRANSPOSE(box%a(:,:)))
+            CALL gethinv( box )
+            box%g = MATMUL( box%a(:,:), box%hmat(:,:) )
+            box%hvel = 0.0d0
             box%pail = 0.0d0
           RETURN
         END SUBROUTINE
@@ -158,8 +165,9 @@
               box%hmat(I,3) = A3(I)
             END DO
             box%pail = 0.0d0
+            box%hvel = 0.0d0
             CALL gethinv(box)
-            box%g = MATMUL(box%a(:,:),TRANSPOSE(box%a(:,:)))
+            box%g = MATMUL( box%a(:,:), box%hmat(:,:) )
           RETURN
         END SUBROUTINE
 
@@ -293,9 +301,9 @@
         hmati(3,1) = (hmat(2,1)*hmat(3,2)-hmat(3,1)*hmat(2,2))*odet
         hmati(2,3) = (hmat(1,3)*hmat(2,1)-hmat(2,3)*hmat(1,1))*odet
         hmati(3,2) = (hmat(3,1)*hmat(1,2)-hmat(3,2)*hmat(1,1))*odet
-        box%h_inv = hmati
+        box%hinv = hmati
 
-        CALL invmat(3,box%a,box%m1,box%omega)
+        CALL invmat( 3, box%a, box%m1, box%omega )
 
         IF(abs(box%omega-box%deth)/abs(box%omega+box%deth).gt.1.0d-12) THEN
           CALL errore('gethinv', 'box determinants are different',2)
@@ -312,7 +320,7 @@
         REAL (dbl) :: rout(3), s(3)
         INTEGER, OPTIONAL :: nl(3)
 
-        s = matmul(box%h_inv(:,:),rin)
+        s = matmul(box%hinv(:,:),rin)
         s = s - box%perd*nint(s)
         rout = matmul(box%hmat(:,:),s)
         IF (present(nl)) THEN
@@ -488,6 +496,22 @@
   END SUBROUTINE
       
 
+  SUBROUTINE cell_steepest( hnew, h, delt, iforceh, fcell )
+    REAL(kind=8), INTENT(OUT) :: hnew(3,3)
+    REAL(kind=8), INTENT(IN) :: h(3,3), fcell(3,3)
+    INTEGER,      INTENT(IN) :: iforceh(3,3)
+    REAL(kind=8), INTENT(IN) :: delt
+    INTEGER      :: i, j
+    REAL(kind=8) :: dt2
+    DO j=1,3
+      DO i=1,3
+        hnew(i,j) = h(i,j) + dt2 * fcell(i,j) * iforceh(i,j)
+      ENDDO
+    ENDDO
+    RETURN
+  END SUBROUTINE
+
+
 
   SUBROUTINE cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
     REAL(kind=8), INTENT(OUT) :: hnew(3,3)
@@ -524,7 +548,178 @@
     RETURN
   END SUBROUTINE
 
+
+  subroutine cell_hmove( h, hold, delt, iforceh, fcell )
+    real(kind=8), intent(out) :: h(3,3)
+    real(kind=8), intent(in) :: hold(3,3), fcell(3,3)
+    real(kind=8), intent(in) :: delt
+    integer, intent(in) :: iforceh(3,3)
+    real(kind=8) :: dt2by2, fac
+    integer :: i, j
+    dt2by2 = .5d0 * delt * delt
+    fac = dt2by2
+    do i=1,3
+      do j=1,3
+        h(i,j) = hold(i,j) + fac * iforceh(i,j) * fcell(i,j)
+      end do
+    end do
+    return
+  end subroutine
+
+
+  subroutine cell_force( fcell, ainv, stress, omega, press, wmass )
+    real(kind=8), intent(out) :: fcell(3,3)
+    real(kind=8), intent(in) :: stress(3,3), ainv(3,3)
+    real(kind=8), intent(in) :: omega, press, wmass
+    integer      :: i, j
+    do j=1,3
+      do i=1,3
+        fcell(i,j) = ainv(j,1)*stress(i,1) + ainv(j,2)*stress(i,2) + ainv(j,3)*stress(i,3)
+      end do
+    end do
+    do j=1,3
+      do i=1,3
+        fcell(i,j) = fcell(i,j) - ainv(j,i) * press
+      end do
+    end do
+    fcell = omega * fcell / wmass
+    return
+  end subroutine
+
+
+  subroutine cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
+    real(kind=8), intent(out) :: hnew(3,3)
+    real(kind=8), intent(in) :: h(3,3), hold(3,3), fcell(3,3)
+    real(kind=8), intent(in) :: vnhh(3,3), velh(3,3)
+    integer,      intent(in) :: iforceh(3,3)
+    real(kind=8), intent(in) :: frich, delt
+    logical,      intent(in) :: tnoseh, tsdc
+
+    real(kind=8) :: hnos(3,3)
+
+    if( tnoseh ) then
+      hnos = vnhh * velh
+    else
+      hnos = 0.0d0
+    end if
+!
+    IF( tsdc ) THEN
+      call cell_steepest( hnew, h, delt, iforceh, fcell )
+    ELSE
+      call cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
+    END IF
+
+    return
+  end subroutine
+
+
+  subroutine cell_gamma( hgamma, ainv, h, velh )
+    implicit none
+    real(kind=8) :: hgamma(3,3)
+    real(kind=8), intent(in) :: ainv(3,3), h(3,3), velh(3,3)
+    integer :: i,j,k,l,m
+         do i=1,3
+            do j=1,3
+               do k=1,3
+                  do l=1,3
+                     do m=1,3
+                        hgamma(i,j)=hgamma(i,j)+ainv(i,l)*ainv(k,l)*    &
+     &                       (velh(m,k)*h(m,j)+h(m,k)*velh(m,j))
+                     enddo
+                  enddo
+               enddo
+            enddo
+         enddo
+    return
+  end subroutine
+
+
+  subroutine cell_kinene( ekinh, temphh, velh )
+    use constants, only: factem
+    implicit none
+    real(kind=8), intent(out) :: ekinh, temphh(3,3)
+    real(kind=8), intent(in)  :: velh(3,3)
+    integer :: i,j
+    ekinh = 0.0d0
+    do j=1,3
+      do i=1,3
+        ekinh=ekinh+0.5*wmass*velh(i,j)*velh(i,j)
+        temphh(i,j)=factem*wmass*velh(i,j)*velh(i,j)
+      end do
+    end do
+    return
+  end subroutine
+
+
 !
 !------------------------------------------------------------------------------!
    END MODULE cell_base
 !------------------------------------------------------------------------------!
+
+
+!------------------------------------------------------------------------------!
+  MODULE cell_nose
+!------------------------------------------------------------------------------!
+
+      USE kinds, ONLY : dbl
+!
+      IMPLICIT NONE
+      SAVE
+
+      REAL(dbl) :: xnhh0(3,3) = 0.0d0
+      REAL(dbl) :: xnhhm(3,3) = 0.0d0
+      REAL(dbl) :: xnhhp(3,3) = 0.0d0
+      REAL(dbl) :: vnhh(3,3)  = 0.0d0
+      REAL(dbl) :: temph      = 0.0d0  !  Thermostat temperature (from input)
+      REAL(dbl) :: fnoseh     = 0.0d0  !  Thermostat frequency (from input)
+      REAL(dbl) :: qnh        = 0.0d0  !  Thermostat mass (computed)
+
+CONTAINS
+
+  subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
+    implicit none
+    real(kind=8), intent(inout) :: vnhh(3,3), velh(3,3)
+    real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, h(3,3), hold(3,3)
+    vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
+    velh(:,:)=2.*(h(:,:)-hold(:,:))/delt-velh(:,:)
+    return
+  end subroutine
+
+  subroutine cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
+    use constants, only: factem
+    implicit none
+    real(kind=8), intent(out) :: xnhhp(3,3), vnhh(3,3)
+    real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, qnh, temphh(3,3), temph
+    integer :: i, j
+    do j=1,3
+      do i=1,3
+        xnhhp(i,j)=2.*xnhh0(i,j)-xnhhm(i,j)+ (delt**2/qnh)/factem*(temphh(i,j)-temph)
+        vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/( 2.0d0 * delt )
+      end do
+    end do
+    return
+  end subroutine
+
+  
+  real(kind=8) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
+    use constants, only: factem
+    implicit none
+    real(kind=8) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
+    integer :: iforceh( 3, 3 )
+    integer :: i, j
+    real(kind=8) :: enij
+    cell_nose_nrg = 0.0d0
+    do i=1,3
+      do j=1,3
+        enij = 0.5*qnh*vnhh(i,j)*vnhh(i,j)+temph/factem*xnhh0(i,j)
+        cell_nose_nrg = cell_nose_nrg + iforceh( i, j ) * enij
+      enddo
+    enddo
+    return
+  end function
+
+!
+!------------------------------------------------------------------------------!
+   END MODULE cell_nose
+!------------------------------------------------------------------------------!
+

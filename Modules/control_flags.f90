@@ -258,8 +258,8 @@
           tcarpar = .FALSE.
         END IF
 
-! ...   if TPRE = .FALSE. set TSDC and TZEROC to .FALSE. too.
-        IF( .NOT. tpre ) THEN
+! ...   if thdyn = .FALSE. set TSDC and TZEROC to .FALSE. too.
+        IF( .NOT. thdyn ) THEN
           tsdc   = .FALSE.
           tzeroc = .FALSE.
         END IF
@@ -312,7 +312,7 @@
         IF(tcp .AND. tcap) THEN
           CALL errore(' control_flags ',' TCP AND TCAP BOTH TRUE',0)
         END IF
-        IF( tdipole .AND. tpre ) THEN
+        IF( tdipole .AND. thdyn ) THEN
           CALL errore('  control_flags  ',' DIPOLE WITH CELL DYNAMICS ',0)
         END IF
         IF( tv0rd .AND. tsdp ) THEN

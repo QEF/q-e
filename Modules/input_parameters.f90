@@ -577,10 +577,6 @@ MODULE input_parameters
           ! grease = 1 : normal damped dynamics
           ! NOT used in FPMD
 
-        LOGICAL :: twall = .FALSE.
-          ! for electronic damped dynamics: Obsolete ?
-          ! NOT used in FPMD
-
         INTEGER :: empty_states_nbnd = 0
           ! number of empty states to be calculated every iprint steps
           ! default value is zero
@@ -749,7 +745,7 @@ MODULE input_parameters
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
-          ekincw, fnosee, ampre, grease, twall, empty_states_nbnd,     &
+          ekincw, fnosee, ampre, grease, empty_states_nbnd,     &
           empty_states_maxstep, empty_states_delt, empty_states_emass, &
           empty_states_ethr, diis_size, diis_nreset, diis_hcut,        &
           diis_wthr, diis_delt, diis_maxstep, diis_rot, diis_fthr,     &
@@ -1022,7 +1018,7 @@ MODULE input_parameters
           ! 'default' restart using cell velocity of the previous run
 
         REAL(dbl) :: press = 0.0d0
-          ! external pressure (in kilobars: 1 kbar = 10^8 Pa)
+          ! external pressure (in GPa, remember 1 kbar = 10^8 Pa)
 
         REAL(dbl) :: wmass = 0.0d0
           ! effective cell mass in the Parrinello-Rahman Lagrangian (in atomic units)
@@ -1041,18 +1037,15 @@ MODULE input_parameters
 
         REAL(dbl) :: temph = 0.0d0
           ! meaningful only with "cell_temperature /= 'not_controlled' "
-          ! value of the cell temperature (in ???) forced
+          ! value of the cell temperature (in Kelvin) forced
           ! by the temperature control
-          ! NOT used in FPMD
 
         REAL(dbl) :: fnoseh = 1.0d0
           ! meaningful only with "cell_temperature = 'nose' "
           ! oscillation frequency of the nose thermostat (in terahertz) 
-          ! NOT used in FPMD
 
         REAL(dbl) :: greash = 0.0d0
           ! same as "grease", for cell damped dynamics
-          ! NOT used in FPMD
 
         CHARACTER(LEN=80) :: cell_dofree = 'all'
           ! cell_dofree = 'all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz'
@@ -1080,7 +1073,6 @@ MODULE input_parameters
           !        sqrt(0.5*log((E1-E2)/(E2-E3))) 
           ! where E1 E2 E3 are successive values of the DFT total energy 
           ! in a ionic steepest descent simulation
-          ! NOT used in FPMD
 
         NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, press, &
           wmass, cell_temperature, temph, fnoseh, cell_dofree, greash, cell_factor, &

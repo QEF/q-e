@@ -423,7 +423,7 @@ end module qrl_mod
       CALL gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3,  &
      &      gcut, gcuts, gcutw, dfftp%isind, dfftp%nr1x, lgam )
 
-      WRITE(6,*) 'DEBUG gcount: ng, ngs, ngw = ', ng, ngs, ngw
+      ! WRITE(6,*) 'DEBUG gcount: ng, ngs, ngw = ', ng, ngs, ngw
 
 !
 !     Second step. Compute and sort all G vectors, and build non
@@ -441,7 +441,7 @@ end module qrl_mod
 
       CALL gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 
-      WRITE(6,*) 'DEBUG gglobal: ng_g  = ', ng_g
+      ! WRITE(6,*) 'DEBUG gglobal: ng_g  = ', ng_g
 
 !
 !     third step: allocate space
@@ -463,9 +463,9 @@ end module qrl_mod
 !
       CALL glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
-      WRITE(6,*) 'DEBUG glocal: ng, ng_g  = ', ng, ng_g
-      !call hangup
-      !stop
+      ! WRITE(6,*) 'DEBUG glocal: ng, ng_g  = ', ng, ng_g
+      ! call hangup
+      ! stop
 
       WRITE( stdout,*)
       WRITE( stdout,150) ng

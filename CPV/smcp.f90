@@ -55,7 +55,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !***********************************************************************
   !
   use control_flags, only: iprint, isave, thdyn, tpre, tbuff, iprsta, trhor, &
-       tfor, tvlocw, trhow, taurdr, tprnfor
+       tfor, tvlocw, trhow, taurdr, tprnfor, tsdc
   use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
        tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
   !
@@ -79,8 +79,8 @@ subroutine smdmain( tau, fion_out, etot_out )
   use ions_base, only: ions_thermal_stress, ions_vrescal
   use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
   use cell_base, only: ainv, a1, a2, a3, r_to_s
-  use cell_base, only: omega, alat
-  use cell_base, only: h, hold, deth, wmass, s_to_r
+  use cell_base, only: omega, alat, frich, greash, press
+  use cell_base, only: h, hold, deth, wmass, s_to_r, iforceh, cell_force
   use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
   use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
   use pseu, only: vps, rhops
@@ -118,6 +118,13 @@ subroutine smdmain( tau, fion_out, etot_out )
   USE smd_rep
   USE smd_ene
   USE cpr_subroutines
+  use ions_positions, only: tau0, velsp
+  use ions_positions, only: ions_hmove, ions_move
+  use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw
+  USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
+  USE cell_nose, ONLY: cell_nosevel, cell_noseupd
+
+
   !
   !
   implicit none
@@ -131,7 +138,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
   ! control variables
   !
-  logical twall, tbump
+  logical tbump
   logical thdiag
   logical tfirst, tlast
   logical tstop
@@ -181,11 +188,6 @@ subroutine smdmain( tau, fion_out, etot_out )
   real(kind=8)  emaec
 
   !
-  !  ionic positions, center of mass position
-  !
-  real(kind=8) tau0(3,natx)
-
-  !
   !  iforce, 
   ! 
   integer :: iforce(3,natx)
@@ -194,7 +196,6 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
   real(kind=8) f_(nbndxx)
   real(kind=8) ispin_(nbndxx)
-  integer iforceh(3,3)
   !
   integer maxit
   !
@@ -211,9 +212,9 @@ subroutine smdmain( tau, fion_out, etot_out )
        &       econs(smx), econt(smx),                                    &
        &       ccc(smx)
   real(kind=8) temps(nsx) 
-  real(kind=8) verl1, verl2, verl3, anor, saveh, press, tps,        &
-       &       eps, qnp, tempw, qne, emass, delt, bigr, dt2,              &
-       &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe, fricp, greasp,&
+  real(kind=8) verl1, verl2, verl3, anor, saveh, tps,        &
+       &       eps, qne, emass, delt, bigr, dt2,              &
+       &       dt2by2, twodel, gausp, dt2bye, dt2hbe, fricp, greasp,&
        &        frice, grease, savee, savep
   real(kind=8) ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
        &       ekinc(smx), pre_ekinc(smx), enthal(smx),ekincw
@@ -222,16 +223,15 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
   ! work variables, 2
   !
-  real(kind=8) velsp(3,natx)
-  real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3)
+  real(kind=8) fcell(3,3), hnew(3,3),velh(3,3),hgamma(3,3)
   real(kind=8) cdm(3)
   real(kind=8) qr(3)
   real(kind=8) xnhh0(3,3),xnhhm(3,3),xnhhp(3,3),vnhh(3,3),temphh(3,3)
   real(kind=8) thstress(3,3) 
   !
   integer ibrav, k, ii, l, m
-  real(kind=8) ekinh, alfar, temphc, alfap, frich, tolp,    &
-       &     factp, temp1, temp2, temph, greash, qnh, randy
+  real(kind=8) ekinh, alfar, temphc, alfap, tolp,    &
+       &     factp, temp1, temp2, temph, qnh, randy
   real(kind=8) ftmp
 
   character(len=256) :: filename
@@ -289,7 +289,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !     ==================================================================
 
   call iosys( nbeg , ndr , ndw , nomore , iprint, isave                  &
-       & , delt , emass , emaec  , tsde , frice , grease , twall         &
+       & , delt , emass , emaec  , tsde , frice , grease          &
        & , tortho , eps , maxit , trane , ampre , tranp , amprp          &
        & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
        & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
@@ -443,8 +443,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !      ... taus is calculated here.
   !
 
-  call sminit( ibrav, celldm, ecut, ecutw, tranp, amprp, ndr, nbeg, tfirst,  &
-       delt, tps, iforce )
+  call sminit( ibrav, celldm, ecut, ecutw, ndr, nbeg, tfirst, delt, tps, iforce )
 
   !
   !
@@ -880,7 +879,8 @@ subroutine smdmain( tau, fion_out, etot_out )
         if(iprsta.ge.3) call dotcsc(eigr,rep_el(sm_k)%c0)
         !     
         if(thdyn) then
-           call cell_hmove( h, hold, delt, omega, press, iforceh, stress, ainv )
+           call cell_force( fcell, ainv, stress, omega, press, wmass )
+           call cell_hmove( h, hold, delt, iforceh, fcell )
            call invmat( 3, h, ainv, deth )
         endif
         !
@@ -1389,8 +1389,10 @@ subroutine smdmain( tau, fion_out, etot_out )
      hgamma(:,:) = 0.d0
      if(thdyn) then
 
-         call cell_move( hnew, h, hold, delt, omega, press, iforceh, stress, ainv, &
-                        frich, tnoseh, vnhh, velh )
+         call cell_force( fcell, ainv, stress, omega, press, wmass )
+
+         call cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
+
          !
          velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
          !
@@ -1771,45 +1773,14 @@ subroutine smdmain( tau, fion_out, etot_out )
 
         endif
         !
-        !     =====================================================================
-        !     automatic adapt of friction using grease and twall
-        !     =====================================================================
         !
         epre(sm_k) = enow(sm_k)
         enow(sm_k) = etot_ar(sm_k)
         !
-        tbump=.false.
-        !
-        if (enow(sm_k) .gt. (epre(sm_k)+0.00002)) then
-           if (tsde) then
-              WRITE( stdout,'(''etot rising with tsde - program stopped'')')
-              delt = delt - 1.
-              WRITE( stdout,'(''new delt = delt - 1. = '',f12.6)') delt       
-              WRITE( stdout,*)
-              if (delt .le. 0.) stop
-              if(nbeg.lt.0) goto 666
-           endif
-           if (frice .lt. grease) then
-              savee = frice
-              savep = fricp
-           endif
-           if (twall) then
-              tbump = .true.
-              frice = 1./grease
-              fricp = 1./greasp
-              frich = 1./greash
-           endif
-        else
-           if (tbump) then
-              tbump = .false.
-              frice = savee
-              fricp = savep
-              frich = saveh
-           endif
-        endif
         frice = frice * grease
         fricp = fricp * greasp
         frich = frich * greash
+
         !     =====================================================
         !
         delta_etot = ABS( epre(sm_k) - enow(sm_k) )

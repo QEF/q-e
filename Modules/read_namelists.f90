@@ -225,7 +225,6 @@ MODULE read_namelists_module
        fnosee = 1.0D0
        ampre  = 0.0D0
        grease = 1.0D0
-       twall  = .FALSE.
        IF ( prog == 'PW' ) THEN
           !
           startingwfc = 'atomic'
@@ -622,7 +621,6 @@ MODULE read_namelists_module
        CALL mp_bcast( startingwfc, ionode_id )
        CALL mp_bcast( ampre, ionode_id )
        CALL mp_bcast( grease, ionode_id )
-       CALL mp_bcast( twall, ionode_id )
        CALL mp_bcast( startingpot, ionode_id )
        CALL mp_bcast( empty_states_nbnd, ionode_id )
        CALL mp_bcast( empty_states_maxstep, ionode_id )
@@ -984,12 +982,12 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' nr2s is not used in FPMD ', nr2s)
           IF( nr3s /= 0 ) &
              CALL infomsg( sub_name ,' nr3s is not used in FPMD ', nr3s)
-          IF( nr1b /= 0 ) &
-             CALL infomsg( sub_name ,' nr1b is not used in FPMD ', nr1b)
-          IF( nr2b /= 0 ) &
-             CALL infomsg( sub_name ,' nr2b is not used in FPMD ', nr2b)
-          IF( nr3b /= 0 ) &
-             CALL infomsg( sub_name ,' nr3b is not used in FPMD ', nr3b)
+          ! IF( nr1b /= 0 ) &
+          !    CALL infomsg( sub_name ,' nr1b is not used in FPMD ', nr1b)
+          ! IF( nr2b /= 0 ) &
+          !    CALL infomsg( sub_name ,' nr2b is not used in FPMD ', nr2b)
+          ! IF( nr3b /= 0 ) &
+          !    CALL infomsg( sub_name ,' nr3b is not used in FPMD ', nr3b)
           IF( degauss /= 0.0d0 ) &
              CALL infomsg( sub_name ,' degauss is not used in FPMD ',-1)
        END IF
@@ -1102,10 +1100,6 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' fnosee less or equal 0 ',1)
        IF( ekincw <= 0.0d0 ) &
           CALL errore( sub_name, ' ekincw less or equal 0 ',1)
-       IF( prog == 'FP' ) THEN
-          IF( twall ) &
-             CALL infomsg( sub_name, ' twall not used in FPMD ',-1)
-       END IF
        IF( empty_states_nbnd < 0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_nbnd, less than 0 ',1)
@@ -1251,8 +1245,6 @@ MODULE read_namelists_module
        IF( wmass < 0.0d0 ) &
           CALL errore( sub_name,' wmass out of range ',1)
        IF( prog == 'FP' ) THEN
-          IF( temph /= 0.0d0 ) &
-             CALL infomsg( sub_name,' temph not used in FPMD ',-1)
           IF( cell_factor /= 0.0d0 ) &
              CALL infomsg( sub_name,' cell_factor not used in FPMD ',-1)
        END IF

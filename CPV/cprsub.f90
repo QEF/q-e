@@ -549,7 +549,7 @@
       return
       end
 !-----------------------------------------------------------------------
-      subroutine init (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
+      subroutine init (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
                        tfirst,tau0,taus,delt,tps,iforce)
 !-----------------------------------------------------------------------
 !
@@ -558,23 +558,21 @@
 !
       use control_flags, only: iprint, thdyn
       use io_global, only: stdout
-      use gvec
       use gvecw, only: ngw
-      use ions_base, only: na, pmass, nsp, randpos
+      use ions_base, only: na, pmass, nsp
       use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
-      use elct
       use constants, only: pi, fpi
       use cell_base, only: hold, h
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
-      use restart
+      use restart, only: readfile_new
       use parameters, only: nacx, nsx, natx
 
       implicit none
 ! input/output
       integer ibrav, ndr, nbeg
-      logical tranp(nsx), tfirst
-      real(kind=8) tau0(3,natx), taus(3,natx), amprp(nsx)
+      logical tfirst
+      real(kind=8) tau0(3,natx), taus(3,natx)
       integer iforce(3,natx)
       real(kind=8) celldm(6), ecut, ecutw
       real(kind=8) delt
@@ -600,7 +598,7 @@
 !
       CALL r_to_s( tau0, taus, na, nsp, ainv )
 !
-      refg=1.0*ecut/(mmx-1)
+      refg = 1.0d0 * ecut / ( mmx - 1 )
       WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
 !
       if( nbeg >= 0 ) then
@@ -640,10 +638,6 @@
 !
       call newinit( ibrav )
 !
-      IF( ANY( tranp( 1:nsp ) ) ) THEN
-        call randpos(taus, na, nsp, tranp, amprp, ainv, iforce )
-        call s_to_r( taus, tau0, na, nsp, h )
-      END IF
       !
  344  format(' ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))

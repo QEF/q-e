@@ -67,7 +67,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
       subroutine iosys( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , isave_                    &
-     & , delt_ , emass_ , emaec_  , tsde_ , frice_ , grease_ , twall_                        &
+     & , delt_ , emass_ , emaec_  , tsde_ , frice_ , grease_                         &
      & , tortho_ , eps_ , max_ , trane_ , ampre_ , tranp_ , amprp_                           &
      & , tfor_ , tsdp_ , fricp_ , greasp_ , tcp_ , tcap_ , tolp_ , trhor_ , trhow_ , tvlocw_ &
      & , tnosep_ , qnp_ , tempw_ , tnosee_ , qne_ , ekincw_                                &
@@ -86,7 +86,7 @@ CONTAINS
 
       use input_parameters, only: &
            nr1, nr2, nr3, greash, press, nr2s, nr3s, nr1s, tolp, temph, grease, &
-           tempw, fnoseh, amprp, greasp, twall, tranp, atomic_positions, nelec, &
+           tempw, fnoseh, amprp, greasp, tranp, atomic_positions, nelec, &
            if_pos, rd_ht, nelup, neldw, occupations, f_inp, pos, nr3b, pseudo_dir, &
            nr1b, nr2b, sp_pos, atom_mass, atom_pfile, iprint, isave, orthogonalization, &
            electron_velocities, startingwfc, ndr, ndw, ion_dynamics, ion_damping, &
@@ -99,7 +99,8 @@ CONTAINS
            ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, rd_pos, atom_label, rd_vel, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
-           num_of_images, smd_ene_ini, smd_ene_fin
+           num_of_images, smd_ene_ini, smd_ene_fin, electron_velocities, ion_velocities, &
+           cell_velocities
 
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
@@ -108,6 +109,7 @@ CONTAINS
       use parameters, only: nsx, natx, nbndxx
       use io_global, only: ionode, stdout
       use control_flags, only: taurdr, tprnfor_ => tprnfor
+      use control_flags, only: tzerop, tzeroe, tzeroc
       use mp, only: mp_bcast
       USE control_flags, ONLY: tconvthrs, lneb, lsmd 
       USE check_stop, ONLY: check_stop_init
@@ -124,7 +126,7 @@ CONTAINS
       integer :: nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , max_ , iforce_( 3, natx )
       integer :: isave_
 
-      logical :: trane_ , tsde_ , twall_ , tortho_ , tnosee_ , tfor_ , tsdp_ , tcp_ , &
+      logical :: trane_ , tsde_ , tortho_ , tnosee_ , tfor_ , tsdp_ , tcp_ , &
            tcap_ , tnosep_ , trhor_ , trhow_ , tvlocw_ , tpre_ , thdyn_ , thdiag_ ,   &
            tnoseh_ , tranp_ ( nsx )
 
@@ -301,6 +303,17 @@ CONTAINS
               trim(electron_dynamics),1)
       END SELECT
 
+      SELECT CASE ( electron_velocities )
+      CASE ('zero') 
+         tzeroe  = .TRUE.
+      CASE ('default')
+         tzeroe  = .FALSE.
+      CASE DEFAULT
+         CALL errore(' iosys ',' unknown electron_velocities '//&
+              trim(electron_dynamics),1)
+      END SELECT
+
+
       ! Ion velocities
 
       SELECT CASE ( ion_velocities ) 
@@ -309,7 +322,7 @@ CONTAINS
       CASE ('random')
          tcap_ = .true.
       CASE ('zero')
-         print '("Warning: ion_velocities = zero not yet implemented")'
+         tzerop = .TRUE.
       CASE DEFAULT
          CALL errore(' iosys ',' unknown ion_velocities '//trim(ion_velocities),1)
       END SELECT
@@ -341,9 +354,9 @@ CONTAINS
 
       SELECT CASE ( cell_velocities ) 
       CASE ('default')
-         continue
+        tzeroc = .FALSE.
       CASE ('zero')
-         print '("Warning: cell_velocities = zero not yet implemented")'
+        tzeroc = .TRUE.
       CASE DEFAULT
          CALL errore(' iosys ',' unknown cell_velocities '//trim(cell_velocities),1)
       END SELECT
@@ -472,6 +485,7 @@ CONTAINS
       ! compatibility between FPMD and CP90
       !
 
+
       tconvthrs%active = .FALSE.
       IF( ion_dynamics == 'none' .AND. cell_dynamics == 'none' ) THEN
         tconvthrs%ekin   = ekin_conv_thr
@@ -513,7 +527,6 @@ CONTAINS
       ekincw_ = ekincw
 
       grease_ = grease
-      twall_ = twall
       tranp_ ( 1 : nsp_ ) =  tranp ( 1 : nsp_ )
       amprp_ ( 1 : nsp_ ) =  amprp ( 1 : nsp_ )
  

@@ -5,6 +5,205 @@ MODULE restart
 
 CONTAINS
 
+  SUBROUTINE restart_sub( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
+      taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
+      detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
+      bephi, becp, velh, dt2bye, iforce )
+
+    USE control_flags, ONLY: tranp, trane, trhor, iprsta, tpre, tzeroc 
+    USE control_flags, ONLY: tzerop, tzeroe, tfor, thdyn, lwf, tprnfor, tortho
+    USE control_flags, ONLY: amprp
+    USE ions_positions, ONLY: taus, tau0, tausm, vels, velsm
+    USE ions_base, ONLY: na, nsp, randpos
+    USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
+    USE elct, ONLY: n
+    USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq
+    USE wavefunctions_module, ONLY: c0, cm, phi => cp
+    USE io_global, ONLY: stdout
+    USE cpr_subroutines
+    USE wannier_subroutines
+    USE core, ONLY: nlcc_any
+    USE gvecw, ONLY: ngw
+    USE reciprocal_vectors, ONLY: gstart
+    USE wave_base, ONLY: wave_verlet
+    USE cvan, ONLY: nvb
+
+    COMPLEX(kind=8) :: eigr(:,:,:), ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
+    COMPLEX(kind=8) :: eigrb(:,:,:)
+    REAL(kind=8) :: bec(:,:), fion(:,:), becdr(:,:,:)
+    REAL(kind=8) :: eself
+    REAL(kind=8) :: taub(:,:)
+    REAL(kind=8) :: b1(:), b2(:), b3(:)
+    INTEGER :: irb(:,:,:)
+    INTEGER :: nfi, iforce(:,:)
+    LOGICAL :: tfirst
+    COMPLEX(kind=8) :: sfac(:,:)
+    COMPLEX(kind=8) :: rhog(:,:)
+    REAL(kind=8) :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
+    REAL(kind=8) :: stress(:,:), detot(:,:), enthal, etot
+    REAL(kind=8) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+    REAL(kind=8) :: ema0bg(:)
+    REAL(kind=8) :: dbec(:,:,:,:)
+    REAL(kind=8) :: eps, delt
+    REAL(kind=8) :: bephi(:,:), becp(:,:)
+    REAL(kind=8) :: velh(:,:)
+    REAL(kind=8) :: dt2bye
+    INTEGER :: maxit
+
+
+    REAL(kind=8), ALLOCATABLE :: emadt2(:), emaver(:)
+    COMPLEX(kind=8), ALLOCATABLE :: c2(:), c3(:)
+    REAL(kind=8) :: verl1, verl2
+    REAL(kind=8) :: bigr
+    INTEGER :: i, j, iter
+    LOGICAL :: tlast = .FALSE.
+
+    IF( ANY( tranp( 1:nsp ) ) ) THEN
+      call invmat( 3, h, ainv, deth )
+      call randpos(taus, na, nsp, tranp, amprp, ainv, iforce )
+    END IF
+    call s_to_r( taus, tau0, na, nsp, h )
+!
+    if( trane .and. trhor ) then
+      call prefor(eigr,betae)
+      call graham(betae,bec,c0)
+      cm(:, 1:n,1,1)=c0(:, 1:n,1,1)
+    endif
+
+    IF(tzeroc) THEN
+       hold = h
+       velh = 0.0d0
+    END IF
+
+    fion = 0.0d0
+    if( tzerop ) then
+      tausm = taus
+      vels  = 0.0d0
+    end if
+
+    if( tzeroe ) then
+      lambdam = lambda
+      WRITE( stdout, * ) 'Electronic velocities set to zero'  
+    end if
+!     
+    call phfac(tau0,ei1,ei2,ei3,eigr)
+    call strucf(ei1,ei2,ei3,sfac)
+    call formf(tfirst,eself)
+    call calbec (1,nsp,eigr,c0,bec)
+    if (tpre) call caldbec(1,nsp,eigr,c0)
+
+
+    if ( tzerop .or. tzeroe ) then
+
+      if ( tfor .or. thdyn .or. tfirst ) then
+        call initbox ( tau0, taub, irb )
+        call phbox( taub, eigrb )
+      endif
+!
+      if( lwf ) then
+        call get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, ibrav, b1, b2, b3 )
+      end if
+!
+      call rhoofr ( nfi, c0, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, ekin )
+!
+!     put core charge (if present) in rhoc(r)
+!
+      if ( nlcc_any ) call set_cc( irb, eigrb, rhoc )
+
+      if( lwf ) then
+        call write_charge_and_exit( rhog )
+        call ef_tune( rhog, tau0 )
+      end if
+
+      call vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast,                 &
+     &  ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+
+      if( lwf ) then
+        call wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, irb, &
+             ibrav, b1, b2, b3, rhor, rhog, rhos, enl, ekin  )
+      end if
+
+      call newd( rhor, irb, eigrb, rhovan, fion )
+      call prefor( eigr, betae )
+!
+      verl1 = 1.0d0
+      verl2 = 0.0d0
+!
+!==== start loop ====
+!
+
+      ALLOCATE( emadt2( ngw ) )
+      ALLOCATE( emaver( ngw ) )
+      ALLOCATE( c2( ngw ) )
+      ALLOCATE( c3( ngw ) )
+      emadt2 = dt2bye * ema0bg
+      emaver = emadt2 * 0.5d0
+
+      if( lwf ) then
+        call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+      else
+        do i = 1, n, 2
+           call dforce(bec,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
+           cm(:,i,1,1) = c0(:,i,1,1)
+           CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
+                   verl1, verl2, emaver, c2 )
+           CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
+                   verl1, verl2, emaver, c3 )
+           if ( gstart == 2 ) then
+              cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
+              cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
+           end if
+        end do
+      end if
+
+      DEALLOCATE( emadt2 )
+      DEALLOCATE( emaver )
+      DEALLOCATE( c2 )
+      DEALLOCATE( c3 )
+!
+!     nlfq needs deeq bec
+!
+      if( tfor .or. tprnfor ) call nlfq( c0, eigr, bec, becdr, fion )
+!
+      if( tfor .or. thdyn ) then
+!
+! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
+!
+         lambdap(:,:) = 2.d0*lambda(:,:)-lambdam(:,:)
+         lambdam(:,:)=lambda (:,:)
+         lambda (:,:)=lambdap(:,:)
+      endif
+!
+!     calphi calculates phi
+!     the electron mass rises with g**2
+!
+      call calphi( c0, ema0bg, bec, betae, phi )
+!
+!     begin try and error loop (only one step!)
+!
+!       nlfl and nlfh need: lambda (guessed) becdr
+!
+      if ( tfor .or. tprnfor ) call nlfl( bec, becdr, lambda, fion )
+      if( tpre ) then
+         call nlfh( bec, dbec, lambda )
+      endif
+
+      if( tortho ) then
+         call ortho( eigr, cm, phi, lambda, bigr, iter, dt2bye, eps, maxit, delt, bephi, becp )
+      else
+         call graham( betae, bec, cm )
+      endif
+!
+      if ( tortho ) call updatc( dt2bye, lambda, phi, bephi, becp, bec, cm )
+      call calbec ( nvb+1, nsp, eigr, cm, bec )
+      if ( tpre ) call caldbec( 1, nsp, eigr, cm )
+!
+      call DSWAP(2*ngw*n,c0,1,cm,1)
+
+    end if
+
+    return
+  end subroutine
 
 !-----------------------------------------------------------------------
       subroutine writefile_new                                         &
