@@ -433,9 +433,7 @@ MODULE varie
   !
   ! ... Several variables controlling the run
   !
-  SAVE
-  !
-  REAL(KIND=DP)  :: &
+  USE control_flags, ONLY: &
        mixing_beta,      &! the mixing parameter
        tr2,              &! the convergence threshold for potential
        upscale,          &! maximum reduction of convergence threshold
@@ -443,8 +441,7 @@ MODULE varie
        ethr,             &! the convergence threshold for eigenvalues
        alpha0,           &! the mixing parameters for the extrapolation
        beta0,            &! of the starting potential
-       diis_ethr_cg       ! threshold in eigval for starting DIIS
-  INTEGER :: &
+       diis_ethr_cg,     &! threshold in eigval for starting DIIS
        ngm0,             &! used in mix_rho
        niter,            &! the maximum number of iteration
        nmix,             &! the number of iteration kept in the history
@@ -460,9 +457,7 @@ MODULE varie
        max_cg_iter,      &! maximum number of iterations in a CG di
        diis_buff,        &! dimension of the buffer in diis
        diis_ndim,        &! dimension of reduced basis in DIIS
-       order              ! type of potential updating ( see update_pot )
-  !
-  LOGICAL :: &
+       order,            &! type of potential updating ( see update_pot )
        lscf,             &! if .TRUE. the calculation is selfconsistent
        lbfgs,            &! if .TRUE. the calculation is a bfgs-type relaxation
        lnewbfgs,         &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
@@ -471,8 +466,8 @@ MODULE varie
        conv_elec,        &! if .TRUE. electron convergence has been reached
        conv_ions,        &! if .TRUE.    ionic convergence has been reached
        nosym,            &! if .TRUE. no symmetry is used
-       newpseudo(npsx),  &! if .TRUE. done with the new pseudopotentials
-       noinv = .FALSE.,  &! if .TRUE. eliminates inversion symmetry
+       newpseudo,        &! if .TRUE. done with the new pseudopotentials
+       noinv,            &! if .TRUE. eliminates inversion symmetry
        diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
        restart,          &! if .TRUE. restart from results of a preceding run
        reduce_io          ! if .TRUE. reduce the I/O to the strict minimum

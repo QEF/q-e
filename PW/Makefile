@@ -96,7 +96,6 @@ force_hub.o \
 force_lc.o \
 force_us.o \
 forces.o \
-formats.o \
 funct.o \
 functionals.o \
 g_psi.o \

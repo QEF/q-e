@@ -23,8 +23,16 @@ MODULE supercell
        !
        REAL (KIND=DP), DIMENSION(:), INTENT(IN) :: vect
        REAL (KIND=DP), DIMENSION(SIZE( vect ))  :: pbc
+#if defined __AIX
+       !  with AIX compiler some combination of flags lead to 
+       !  variables being defined as static, hence giving a conflict
+       !  with PURE function. We then force the variable be AUTOMATIC
+       REAL (KIND=DP), AUTOMATIC, DIMENSION(3)             :: crystal
+       INTEGER, AUTOMATIC                                  :: i, j, index
+#else
        REAL (KIND=DP), DIMENSION(3)             :: crystal
-       INTEGER                                  :: i, j, index  
+       INTEGER                                  :: i, j, index
+#endif
        !
        !
        pbc = 0.D0

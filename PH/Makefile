@@ -266,6 +266,7 @@ PWOBJS = \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
 ../PW/random.o \
+../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
