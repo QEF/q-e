@@ -22,6 +22,7 @@ PWOBJS = \
 ../PW/sgama.o \
 ../PW/smallg_q.o \
 ../PW/trnvecc.o \
+../PW/w0gauss.o \
 ../PW/wsweight.o
 
 MODULES = \
@@ -61,6 +62,9 @@ dynmat.x : dynmat.o rigid.o
 
 fqha.x : fqha.o
 	$(LD) -o fqha.x fqha.o  $(LDFLAGS)
+
+lambda.x : lambda.o
+	$(LD) -o lambda.x lambda.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 ev.x : ev.o
 	$(LD) -o ev.x ev.o $(PWOBJS) $(MODULES) $(LDFLAGS)

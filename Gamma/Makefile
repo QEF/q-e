@@ -154,6 +154,9 @@ PWOBJS = \
 ../PW/save_in_electrons.o \
 ../PW/save_in_ions.o \
 ../PW/s_axis_to_ca.o \
+../PW/scala_cdiag.o \
+../PW/scala_cdiaghg.o \
+../PW/scala_utils.o \
 ../PW/scale_h.o \
 ../PW/scopy_t3e.o \
 ../PW/seqopn.o \
@@ -299,6 +302,6 @@ phcg.x : $(PWOBJS) $(CGOBJS)
 	$(LD) -o phcg.x $(CGOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean :
-	- /bin/rm -f *.x *.o *.d *~ *.F90 *.mod work.pc
+	- /bin/rm -f *.x *.o *.d *.i *~ *.F90 *.mod work.pc
 
 include .dependencies

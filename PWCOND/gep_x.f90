@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine gep_x(n, amt, bmt, eigen, veigen)
+#include "machine.h"
 !
 ! It solves GEP: A X = lambda B X using LAPACK routines 
 !
@@ -35,13 +36,13 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
      bmt(i,i)=bmt(i,i)+5.d-10
   enddo
 
-  call zggev('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, &
+  call ZGGEV('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, &
               n, trywork, -1, rwork, info)          
 
   lwork=abs(trywork)
   allocate( work( lwork ) )
 
-  call zggev('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, & 
+  call ZGGEV('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, & 
               n, work, lwork, rwork, info)          
 
   if(info.ne.0) call errore('gep_x','error on zggev',info)

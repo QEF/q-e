@@ -142,7 +142,7 @@ subroutine cg_deps(deps_dtau)
   read(iunres,*,err=1,end=1) na_,ipol_,nd_
   read(iunres,*,err=1,end=1) deps_dtau
   close(unit=iunres)
-  if (na_.le.na) then
+  if (na_.le.nat) then
      WRITE( stdout,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
           &        ", nd=",i1)') na_,ipol_,nd_
   else
@@ -541,7 +541,7 @@ subroutine raman_cs2(w2,dynout)
   read(iunres,*,err=1,end=1) nu_,nd_
   read(iunres,*,err=1,end=1) raman_activity
   close(unit=iunres)
-  if (nu_.le.nu) then
+  if (nu_.le.last) then
      WRITE( stdout,'(5x,"Restarting from mode ",i3,", nd=",i1)') &
           nu_,nd_
   else

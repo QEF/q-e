@@ -725,3 +725,866 @@
 *     End of SLANST
 *
       END
+      SUBROUTINE CGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
+     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
+*
+*  -- LAPACK driver routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          JOBVL, JOBVR
+      INTEGER            INFO, LDA, LDB, LDVL, LDVR, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      REAL               RWORK( * )
+      COMPLEX            A( LDA, * ), ALPHA( * ), B( LDB, * ),
+     $                   BETA( * ), VL( LDVL, * ), VR( LDVR, * ),
+     $                   WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  CGGEV computes for a pair of N-by-N complex nonsymmetric matrices
+*  (A,B), the generalized eigenvalues, and optionally, the left and/or
+*  right generalized eigenvectors.
+*
+*  A generalized eigenvalue for a pair of matrices (A,B) is a scalar
+*  lambda or a ratio alpha/beta = lambda, such that A - lambda*B is
+*  singular. It is usually represented as the pair (alpha,beta), as
+*  there is a reasonable interpretation for beta=0, and even for both
+*  being zero.
+*
+*  The right generalized eigenvector v(j) corresponding to the
+*  generalized eigenvalue lambda(j) of (A,B) satisfies
+*
+*               A * v(j) = lambda(j) * B * v(j).
+*
+*  The left generalized eigenvector u(j) corresponding to the
+*  generalized eigenvalues lambda(j) of (A,B) satisfies
+*
+*               u(j)**H * A = lambda(j) * u(j)**H * B
+*
+*  where u(j)**H is the conjugate-transpose of u(j).
+*
+*  Arguments
+*  =========
+*
+*  JOBVL   (input) CHARACTER*1
+*          = 'N':  do not compute the left generalized eigenvectors;
+*          = 'V':  compute the left generalized eigenvectors.
+*
+*  JOBVR   (input) CHARACTER*1
+*          = 'N':  do not compute the right generalized eigenvectors;
+*          = 'V':  compute the right generalized eigenvectors.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A, B, VL, and VR.  N >= 0.
+*
+*  A       (input/output) COMPLEX array, dimension (LDA, N)
+*          On entry, the matrix A in the pair (A,B).
+*          On exit, A has been overwritten.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of A.  LDA >= max(1,N).
+*
+*  B       (input/output) COMPLEX array, dimension (LDB, N)
+*          On entry, the matrix B in the pair (A,B).
+*          On exit, B has been overwritten.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of B.  LDB >= max(1,N).
+*
+*  ALPHA   (output) COMPLEX array, dimension (N)
+*  BETA    (output) COMPLEX array, dimension (N)
+*          On exit, ALPHA(j)/BETA(j), j=1,...,N, will be the
+*          generalized eigenvalues.
+*
+*          Note: the quotients ALPHA(j)/BETA(j) may easily over- or
+*          underflow, and BETA(j) may even be zero.  Thus, the user
+*          should avoid naively computing the ratio alpha/beta.
+*          However, ALPHA will be always less than and usually
+*          comparable with norm(A) in magnitude, and BETA always less
+*          than and usually comparable with norm(B).
+*
+*  VL      (output) COMPLEX array, dimension (LDVL,N)
+*          If JOBVL = 'V', the left generalized eigenvectors u(j) are
+*          stored one after another in the columns of VL, in the same
+*          order as their eigenvalues.
+*          Each eigenvector will be scaled so the largest component
+*          will have abs(real part) + abs(imag. part) = 1.
+*          Not referenced if JOBVL = 'N'.
+*
+*  LDVL    (input) INTEGER
+*          The leading dimension of the matrix VL. LDVL >= 1, and
+*          if JOBVL = 'V', LDVL >= N.
+*
+*  VR      (output) COMPLEX array, dimension (LDVR,N)
+*          If JOBVR = 'V', the right generalized eigenvectors v(j) are
+*          stored one after another in the columns of VR, in the same
+*          order as their eigenvalues.
+*          Each eigenvector will be scaled so the largest component
+*          will have abs(real part) + abs(imag. part) = 1.
+*          Not referenced if JOBVR = 'N'.
+*
+*  LDVR    (input) INTEGER
+*          The leading dimension of the matrix VR. LDVR >= 1, and
+*          if JOBVR = 'V', LDVR >= N.
+*
+*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,2*N).
+*          For good performance, LWORK must generally be larger.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  RWORK   (workspace/output) REAL array, dimension (8*N)
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*          =1,...,N:
+*                The QZ iteration failed.  No eigenvectors have been
+*                calculated, but ALPHA(j) and BETA(j) should be
+*                correct for j=INFO+1,...,N.
+*          > N:  =N+1: other then QZ iteration failed in SHGEQZ,
+*                =N+2: error return from STGEVC.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      REAL               ZERO, ONE
+      PARAMETER          ( ZERO = 0.0E0, ONE = 1.0E0 )
+      COMPLEX            CZERO, CONE
+      PARAMETER          ( CZERO = ( 0.0E0, 0.0E0 ),
+     $                   CONE = ( 1.0E0, 0.0E0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            ILASCL, ILBSCL, ILV, ILVL, ILVR, LQUERY
+      CHARACTER          CHTEMP
+      INTEGER            ICOLS, IERR, IHI, IJOBVL, IJOBVR, ILEFT, ILO,
+     $                   IN, IRIGHT, IROWS, IRWRK, ITAU, IWRK, JC, JR,
+     $                   LWKMIN, LWKOPT
+      REAL               ANRM, ANRMTO, BIGNUM, BNRM, BNRMTO, EPS,
+     $                   SMLNUM, TEMP
+      COMPLEX            X
+*     ..
+*     .. Local Arrays ..
+      LOGICAL            LDUMMA( 1 )
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           CGEQRF, CGGBAK, CGGBAL, CGGHRD, CHGEQZ, CLACPY,
+     $                   CLASCL, CLASET, CTGEVC, CUNGQR, CUNMQR, SLABAD,
+     $                   XERBLA
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      REAL               CLANGE, SLAMCH
+      EXTERNAL           LSAME, ILAENV, CLANGE, SLAMCH
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, AIMAG, MAX, REAL, SQRT
+*     ..
+*     .. Statement Functions ..
+      REAL               ABS1
+*     ..
+*     .. Statement Function definitions ..
+      ABS1( X ) = ABS( REAL( X ) ) + ABS( AIMAG( X ) )
+*     ..
+*     .. Executable Statements ..
+*
+*     Decode the input arguments
+*
+      IF( LSAME( JOBVL, 'N' ) ) THEN
+         IJOBVL = 1
+         ILVL = .FALSE.
+      ELSE IF( LSAME( JOBVL, 'V' ) ) THEN
+         IJOBVL = 2
+         ILVL = .TRUE.
+      ELSE
+         IJOBVL = -1
+         ILVL = .FALSE.
+      END IF
+*
+      IF( LSAME( JOBVR, 'N' ) ) THEN
+         IJOBVR = 1
+         ILVR = .FALSE.
+      ELSE IF( LSAME( JOBVR, 'V' ) ) THEN
+         IJOBVR = 2
+         ILVR = .TRUE.
+      ELSE
+         IJOBVR = -1
+         ILVR = .FALSE.
+      END IF
+      ILV = ILVL .OR. ILVR
+*
+*     Test the input arguments
+*
+      INFO = 0
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( IJOBVL.LE.0 ) THEN
+         INFO = -1
+      ELSE IF( IJOBVR.LE.0 ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      ELSE IF( LDVL.LT.1 .OR. ( ILVL .AND. LDVL.LT.N ) ) THEN
+         INFO = -11
+      ELSE IF( LDVR.LT.1 .OR. ( ILVR .AND. LDVR.LT.N ) ) THEN
+         INFO = -13
+      END IF
+*
+*     Compute workspace
+*      (Note: Comments in the code beginning "Workspace:" describe the
+*       minimal amount of workspace needed at that point in the code,
+*       as well as the preferred amount for good performance.
+*       NB refers to the optimal block size for the immediately
+*       following subroutine, as returned by ILAENV. The workspace is
+*       computed assuming ILO = 1 and IHI = N, the worst case.)
+*
+      LWKMIN = 1
+      IF( INFO.EQ.0 .AND. ( LWORK.GE.1 .OR. LQUERY ) ) THEN
+         LWKOPT = N + N*ILAENV( 1, 'CGEQRF', ' ', N, 1, N, 0 )
+         LWKMIN = MAX( 1, 2*N )
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( LWORK.LT.LWKMIN .AND. .NOT.LQUERY )
+     $   INFO = -15
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'CGGEV ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      WORK( 1 ) = LWKOPT
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Get machine constants
+*
+      EPS = SLAMCH( 'E' )*SLAMCH( 'B' )
+      SMLNUM = SLAMCH( 'S' )
+      BIGNUM = ONE / SMLNUM
+      CALL SLABAD( SMLNUM, BIGNUM )
+      SMLNUM = SQRT( SMLNUM ) / EPS
+      BIGNUM = ONE / SMLNUM
+*
+*     Scale A if max element outside range [SMLNUM,BIGNUM]
+*
+      ANRM = CLANGE( 'M', N, N, A, LDA, RWORK )
+      ILASCL = .FALSE.
+      IF( ANRM.GT.ZERO .AND. ANRM.LT.SMLNUM ) THEN
+         ANRMTO = SMLNUM
+         ILASCL = .TRUE.
+      ELSE IF( ANRM.GT.BIGNUM ) THEN
+         ANRMTO = BIGNUM
+         ILASCL = .TRUE.
+      END IF
+      IF( ILASCL )
+     $   CALL CLASCL( 'G', 0, 0, ANRM, ANRMTO, N, N, A, LDA, IERR )
+*
+*     Scale B if max element outside range [SMLNUM,BIGNUM]
+*
+      BNRM = CLANGE( 'M', N, N, B, LDB, RWORK )
+      ILBSCL = .FALSE.
+      IF( BNRM.GT.ZERO .AND. BNRM.LT.SMLNUM ) THEN
+         BNRMTO = SMLNUM
+         ILBSCL = .TRUE.
+      ELSE IF( BNRM.GT.BIGNUM ) THEN
+         BNRMTO = BIGNUM
+         ILBSCL = .TRUE.
+      END IF
+      IF( ILBSCL )
+     $   CALL CLASCL( 'G', 0, 0, BNRM, BNRMTO, N, N, B, LDB, IERR )
+*
+*     Permute the matrices A, B to isolate eigenvalues if possible
+*     (Real Workspace: need 6*N)
+*
+      ILEFT = 1
+      IRIGHT = N + 1
+      IRWRK = IRIGHT + N
+      CALL CGGBAL( 'P', N, A, LDA, B, LDB, ILO, IHI, RWORK( ILEFT ),
+     $             RWORK( IRIGHT ), RWORK( IRWRK ), IERR )
+*
+*     Reduce B to triangular form (QR decomposition of B)
+*     (Complex Workspace: need N, prefer N*NB)
+*
+      IROWS = IHI + 1 - ILO
+      IF( ILV ) THEN
+         ICOLS = N + 1 - ILO
+      ELSE
+         ICOLS = IROWS
+      END IF
+      ITAU = 1
+      IWRK = ITAU + IROWS
+      CALL CGEQRF( IROWS, ICOLS, B( ILO, ILO ), LDB, WORK( ITAU ),
+     $             WORK( IWRK ), LWORK+1-IWRK, IERR )
+*
+*     Apply the orthogonal transformation to matrix A
+*     (Complex Workspace: need N, prefer N*NB)
+*
+      CALL CUNMQR( 'L', 'C', IROWS, ICOLS, IROWS, B( ILO, ILO ), LDB,
+     $             WORK( ITAU ), A( ILO, ILO ), LDA, WORK( IWRK ),
+     $             LWORK+1-IWRK, IERR )
+*
+*     Initialize VL
+*     (Complex Workspace: need N, prefer N*NB)
+*
+      IF( ILVL ) THEN
+         CALL CLASET( 'Full', N, N, CZERO, CONE, VL, LDVL )
+         CALL CLACPY( 'L', IROWS-1, IROWS-1, B( ILO+1, ILO ), LDB,
+     $                VL( ILO+1, ILO ), LDVL )
+         CALL CUNGQR( IROWS, IROWS, IROWS, VL( ILO, ILO ), LDVL,
+     $                WORK( ITAU ), WORK( IWRK ), LWORK+1-IWRK, IERR )
+      END IF
+*
+*     Initialize VR
+*
+      IF( ILVR )
+     $   CALL CLASET( 'Full', N, N, CZERO, CONE, VR, LDVR )
+*
+*     Reduce to generalized Hessenberg form
+*
+      IF( ILV ) THEN
+*
+*        Eigenvectors requested -- work on whole matrix.
+*
+         CALL CGGHRD( JOBVL, JOBVR, N, ILO, IHI, A, LDA, B, LDB, VL,
+     $                LDVL, VR, LDVR, IERR )
+      ELSE
+         CALL CGGHRD( 'N', 'N', IROWS, 1, IROWS, A( ILO, ILO ), LDA,
+     $                B( ILO, ILO ), LDB, VL, LDVL, VR, LDVR, IERR )
+      END IF
+*
+*     Perform QZ algorithm (Compute eigenvalues, and optionally, the
+*     Schur form and Schur vectors)
+*     (Complex Workspace: need N)
+*     (Real Workspace: need N)
+*
+      IWRK = ITAU
+      IF( ILV ) THEN
+         CHTEMP = 'S'
+      ELSE
+         CHTEMP = 'E'
+      END IF
+      CALL CHGEQZ( CHTEMP, JOBVL, JOBVR, N, ILO, IHI, A, LDA, B, LDB,
+     $             ALPHA, BETA, VL, LDVL, VR, LDVR, WORK( IWRK ),
+     $             LWORK+1-IWRK, RWORK( IRWRK ), IERR )
+      IF( IERR.NE.0 ) THEN
+         IF( IERR.GT.0 .AND. IERR.LE.N ) THEN
+            INFO = IERR
+         ELSE IF( IERR.GT.N .AND. IERR.LE.2*N ) THEN
+            INFO = IERR - N
+         ELSE
+            INFO = N + 1
+         END IF
+         GO TO 70
+      END IF
+*
+*     Compute Eigenvectors
+*     (Real Workspace: need 2*N)
+*     (Complex Workspace: need 2*N)
+*
+      IF( ILV ) THEN
+         IF( ILVL ) THEN
+            IF( ILVR ) THEN
+               CHTEMP = 'B'
+            ELSE
+               CHTEMP = 'L'
+            END IF
+         ELSE
+            CHTEMP = 'R'
+         END IF
+*
+         CALL CTGEVC( CHTEMP, 'B', LDUMMA, N, A, LDA, B, LDB, VL, LDVL,
+     $                VR, LDVR, N, IN, WORK( IWRK ), RWORK( IRWRK ),
+     $                IERR )
+         IF( IERR.NE.0 ) THEN
+            INFO = N + 2
+            GO TO 70
+         END IF
+*
+*        Undo balancing on VL and VR and normalization
+*        (Workspace: none needed)
+*
+         IF( ILVL ) THEN
+            CALL CGGBAK( 'P', 'L', N, ILO, IHI, RWORK( ILEFT ),
+     $                   RWORK( IRIGHT ), N, VL, LDVL, IERR )
+            DO 30 JC = 1, N
+               TEMP = ZERO
+               DO 10 JR = 1, N
+                  TEMP = MAX( TEMP, ABS1( VL( JR, JC ) ) )
+   10          CONTINUE
+               IF( TEMP.LT.SMLNUM )
+     $            GO TO 30
+               TEMP = ONE / TEMP
+               DO 20 JR = 1, N
+                  VL( JR, JC ) = VL( JR, JC )*TEMP
+   20          CONTINUE
+   30       CONTINUE
+         END IF
+         IF( ILVR ) THEN
+            CALL CGGBAK( 'P', 'R', N, ILO, IHI, RWORK( ILEFT ),
+     $                   RWORK( IRIGHT ), N, VR, LDVR, IERR )
+            DO 60 JC = 1, N
+               TEMP = ZERO
+               DO 40 JR = 1, N
+                  TEMP = MAX( TEMP, ABS1( VR( JR, JC ) ) )
+   40          CONTINUE
+               IF( TEMP.LT.SMLNUM )
+     $            GO TO 60
+               TEMP = ONE / TEMP
+               DO 50 JR = 1, N
+                  VR( JR, JC ) = VR( JR, JC )*TEMP
+   50          CONTINUE
+   60       CONTINUE
+         END IF
+      END IF
+*
+*     Undo scaling if necessary
+*
+      IF( ILASCL )
+     $   CALL CLASCL( 'G', 0, 0, ANRMTO, ANRM, N, 1, ALPHA, N, IERR )
+*
+      IF( ILBSCL )
+     $   CALL CLASCL( 'G', 0, 0, BNRMTO, BNRM, N, 1, BETA, N, IERR )
+*
+   70 CONTINUE
+      WORK( 1 ) = LWKOPT
+*
+      RETURN
+*
+*     End of CGGEV
+*
+      END
+      REAL             FUNCTION CLANGE( NORM, M, N, A, LDA, WORK )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          NORM
+      INTEGER            LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      REAL               WORK( * )
+      COMPLEX            A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  CLANGE  returns the value of the one norm,  or the Frobenius norm, or
+*  the  infinity norm,  or the  element of  largest absolute value  of a
+*  complex matrix A.
+*
+*  Description
+*  ===========
+*
+*  CLANGE returns the value
+*
+*     CLANGE = ( max(abs(A(i,j))), NORM = 'M' or 'm'
+*              (
+*              ( norm1(A),         NORM = '1', 'O' or 'o'
+*              (
+*              ( normI(A),         NORM = 'I' or 'i'
+*              (
+*              ( normF(A),         NORM = 'F', 'f', 'E' or 'e'
+*
+*  where  norm1  denotes the  one norm of a matrix (maximum column sum),
+*  normI  denotes the  infinity norm  of a matrix  (maximum row sum) and
+*  normF  denotes the  Frobenius norm of a matrix (square root of sum of
+*  squares).  Note that  max(abs(A(i,j)))  is not a  matrix norm.
+*
+*  Arguments
+*  =========
+*
+*  NORM    (input) CHARACTER*1
+*          Specifies the value to be returned in CLANGE as described
+*          above.
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.  When M = 0,
+*          CLANGE is set to zero.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.  When N = 0,
+*          CLANGE is set to zero.
+*
+*  A       (input) COMPLEX array, dimension (LDA,N)
+*          The m by n matrix A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(M,1).
+*
+*  WORK    (workspace) REAL array, dimension (LWORK),
+*          where LWORK >= M when NORM = 'I'; otherwise, WORK is not
+*          referenced.
+*
+* =====================================================================
+*
+*     .. Parameters ..
+      REAL               ONE, ZERO
+      PARAMETER          ( ONE = 1.0E+0, ZERO = 0.0E+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, J
+      REAL               SCALE, SUM, VALUE
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           CLASSQ
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, MAX, MIN, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+      IF( MIN( M, N ).EQ.0 ) THEN
+         VALUE = ZERO
+      ELSE IF( LSAME( NORM, 'M' ) ) THEN
+*
+*        Find max(abs(A(i,j))).
+*
+         VALUE = ZERO
+         DO 20 J = 1, N
+            DO 10 I = 1, M
+               VALUE = MAX( VALUE, ABS( A( I, J ) ) )
+   10       CONTINUE
+   20    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'O' ) ) .OR. ( NORM.EQ.'1' ) ) THEN
+*
+*        Find norm1(A).
+*
+         VALUE = ZERO
+         DO 40 J = 1, N
+            SUM = ZERO
+            DO 30 I = 1, M
+               SUM = SUM + ABS( A( I, J ) )
+   30       CONTINUE
+            VALUE = MAX( VALUE, SUM )
+   40    CONTINUE
+      ELSE IF( LSAME( NORM, 'I' ) ) THEN
+*
+*        Find normI(A).
+*
+         DO 50 I = 1, M
+            WORK( I ) = ZERO
+   50    CONTINUE
+         DO 70 J = 1, N
+            DO 60 I = 1, M
+               WORK( I ) = WORK( I ) + ABS( A( I, J ) )
+   60       CONTINUE
+   70    CONTINUE
+         VALUE = ZERO
+         DO 80 I = 1, M
+            VALUE = MAX( VALUE, WORK( I ) )
+   80    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'F' ) ) .OR. ( LSAME( NORM, 'E' ) ) ) THEN
+*
+*        Find normF(A).
+*
+         SCALE = ZERO
+         SUM = ONE
+         DO 90 J = 1, N
+            CALL CLASSQ( M, A( 1, J ), 1, SCALE, SUM )
+   90    CONTINUE
+         VALUE = SCALE*SQRT( SUM )
+      END IF
+*
+      CLANGE = VALUE
+      RETURN
+*
+*     End of CLANGE
+*
+      END
+      SUBROUTINE CLASCL( TYPE, KL, KU, CFROM, CTO, M, N, A, LDA, INFO )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          TYPE
+      INTEGER            INFO, KL, KU, LDA, M, N
+      REAL               CFROM, CTO
+*     ..
+*     .. Array Arguments ..
+      COMPLEX            A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  CLASCL multiplies the M by N complex matrix A by the real scalar
+*  CTO/CFROM.  This is done without over/underflow as long as the final
+*  result CTO*A(I,J)/CFROM does not over/underflow. TYPE specifies that
+*  A may be full, upper triangular, lower triangular, upper Hessenberg,
+*  or banded.
+*
+*  Arguments
+*  =========
+*
+*  TYPE    (input) CHARACTER*1
+*          TYPE indices the storage type of the input matrix.
+*          = 'G':  A is a full matrix.
+*          = 'L':  A is a lower triangular matrix.
+*          = 'U':  A is an upper triangular matrix.
+*          = 'H':  A is an upper Hessenberg matrix.
+*          = 'B':  A is a symmetric band matrix with lower bandwidth KL
+*                  and upper bandwidth KU and with the only the lower
+*                  half stored.
+*          = 'Q':  A is a symmetric band matrix with lower bandwidth KL
+*                  and upper bandwidth KU and with the only the upper
+*                  half stored.
+*          = 'Z':  A is a band matrix with lower bandwidth KL and upper
+*                  bandwidth KU.
+*
+*  KL      (input) INTEGER
+*          The lower bandwidth of A.  Referenced only if TYPE = 'B',
+*          'Q' or 'Z'.
+*
+*  KU      (input) INTEGER
+*          The upper bandwidth of A.  Referenced only if TYPE = 'B',
+*          'Q' or 'Z'.
+*
+*  CFROM   (input) REAL
+*  CTO     (input) REAL
+*          The matrix A is multiplied by CTO/CFROM. A(I,J) is computed
+*          without over/underflow if the final result CTO*A(I,J)/CFROM
+*          can be represented without over/underflow.  CFROM must be
+*          nonzero.
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX array, dimension (LDA,M)
+*          The matrix to be multiplied by CTO/CFROM.  See TYPE for the
+*          storage type.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  INFO    (output) INTEGER
+*          0  - successful exit
+*          <0 - if INFO = -i, the i-th argument had an illegal value.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      REAL               ZERO, ONE
+      PARAMETER          ( ZERO = 0.0E0, ONE = 1.0E0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            DONE
+      INTEGER            I, ITYPE, J, K1, K2, K3, K4
+      REAL               BIGNUM, CFROM1, CFROMC, CTO1, CTOC, MUL, SMLNUM
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      REAL               SLAMCH
+      EXTERNAL           LSAME, SLAMCH
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, MAX, MIN
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+*
+      IF( LSAME( TYPE, 'G' ) ) THEN
+         ITYPE = 0
+      ELSE IF( LSAME( TYPE, 'L' ) ) THEN
+         ITYPE = 1
+      ELSE IF( LSAME( TYPE, 'U' ) ) THEN
+         ITYPE = 2
+      ELSE IF( LSAME( TYPE, 'H' ) ) THEN
+         ITYPE = 3
+      ELSE IF( LSAME( TYPE, 'B' ) ) THEN
+         ITYPE = 4
+      ELSE IF( LSAME( TYPE, 'Q' ) ) THEN
+         ITYPE = 5
+      ELSE IF( LSAME( TYPE, 'Z' ) ) THEN
+         ITYPE = 6
+      ELSE
+         ITYPE = -1
+      END IF
+*
+      IF( ITYPE.EQ.-1 ) THEN
+         INFO = -1
+      ELSE IF( CFROM.EQ.ZERO ) THEN
+         INFO = -4
+      ELSE IF( M.LT.0 ) THEN
+         INFO = -6
+      ELSE IF( N.LT.0 .OR. ( ITYPE.EQ.4 .AND. N.NE.M ) .OR.
+     $         ( ITYPE.EQ.5 .AND. N.NE.M ) ) THEN
+         INFO = -7
+      ELSE IF( ITYPE.LE.3 .AND. LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -9
+      ELSE IF( ITYPE.GE.4 ) THEN
+         IF( KL.LT.0 .OR. KL.GT.MAX( M-1, 0 ) ) THEN
+            INFO = -2
+         ELSE IF( KU.LT.0 .OR. KU.GT.MAX( N-1, 0 ) .OR.
+     $            ( ( ITYPE.EQ.4 .OR. ITYPE.EQ.5 ) .AND. KL.NE.KU ) )
+     $             THEN
+            INFO = -3
+         ELSE IF( ( ITYPE.EQ.4 .AND. LDA.LT.KL+1 ) .OR.
+     $            ( ITYPE.EQ.5 .AND. LDA.LT.KU+1 ) .OR.
+     $            ( ITYPE.EQ.6 .AND. LDA.LT.2*KL+KU+1 ) ) THEN
+            INFO = -9
+         END IF
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'CLASCL', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 .OR. M.EQ.0 )
+     $   RETURN
+*
+*     Get machine parameters
+*
+      SMLNUM = SLAMCH( 'S' )
+      BIGNUM = ONE / SMLNUM
+*
+      CFROMC = CFROM
+      CTOC = CTO
+*
+   10 CONTINUE
+      CFROM1 = CFROMC*SMLNUM
+      CTO1 = CTOC / BIGNUM
+      IF( ABS( CFROM1 ).GT.ABS( CTOC ) .AND. CTOC.NE.ZERO ) THEN
+         MUL = SMLNUM
+         DONE = .FALSE.
+         CFROMC = CFROM1
+      ELSE IF( ABS( CTO1 ).GT.ABS( CFROMC ) ) THEN
+         MUL = BIGNUM
+         DONE = .FALSE.
+         CTOC = CTO1
+      ELSE
+         MUL = CTOC / CFROMC
+         DONE = .TRUE.
+      END IF
+*
+      IF( ITYPE.EQ.0 ) THEN
+*
+*        Full matrix
+*
+         DO 30 J = 1, N
+            DO 20 I = 1, M
+               A( I, J ) = A( I, J )*MUL
+   20       CONTINUE
+   30    CONTINUE
+*
+      ELSE IF( ITYPE.EQ.1 ) THEN
+*
+*        Lower triangular matrix
+*
+         DO 50 J = 1, N
+            DO 40 I = J, M
+               A( I, J ) = A( I, J )*MUL
+   40       CONTINUE
+   50    CONTINUE
+*
+      ELSE IF( ITYPE.EQ.2 ) THEN
+*
+*        Upper triangular matrix
+*
+         DO 70 J = 1, N
+            DO 60 I = 1, MIN( J, M )
+               A( I, J ) = A( I, J )*MUL
+   60       CONTINUE
+   70    CONTINUE
+*
+      ELSE IF( ITYPE.EQ.3 ) THEN
+*
+*        Upper Hessenberg matrix
+*
+         DO 90 J = 1, N
+            DO 80 I = 1, MIN( J+1, M )
+               A( I, J ) = A( I, J )*MUL
+   80       CONTINUE
+   90    CONTINUE
+*
+      ELSE IF( ITYPE.EQ.4 ) THEN
+*
+*        Lower half of a symmetric band matrix
+*
+         K3 = KL + 1
+         K4 = N + 1
+         DO 110 J = 1, N
+            DO 100 I = 1, MIN( K3, K4-J )
+               A( I, J ) = A( I, J )*MUL
+  100       CONTINUE
+  110    CONTINUE
+*
+      ELSE IF( ITYPE.EQ.5 ) THEN
+*
+*        Upper half of a symmetric band matrix
+*
+         K1 = KU + 2
+         K3 = KU + 1
+         DO 130 J = 1, N
+            DO 120 I = MAX( K1-J, 1 ), K3
+               A( I, J ) = A( I, J )*MUL
+  120       CONTINUE
+  130    CONTINUE
+*
+      ELSE IF( ITYPE.EQ.6 ) THEN
+*
+*        Band matrix
+*
+         K1 = KL + KU + 2
+         K2 = KL + 1
+         K3 = 2*KL + KU + 1
+         K4 = KL + KU + 1 + M
+         DO 150 J = 1, N
+            DO 140 I = MAX( K1-J, K2 ), MIN( K3, K4-J )
+               A( I, J ) = A( I, J )*MUL
+  140       CONTINUE
+  150    CONTINUE
+*
+      END IF
+*
+      IF( .NOT.DONE )
+     $   GO TO 10
+*
+      RETURN
+*
+*     End of CLASCL
+*
+      END

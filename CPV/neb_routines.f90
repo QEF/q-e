@@ -78,7 +78,7 @@ MODULE neb_routines
 
       REAL(dbl) :: alat_
 
-      INTEGER :: c_mkdir
+      INTEGER, EXTERNAL :: C_MKDIR
 
       IF ( num_of_images < 2 ) THEN
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
@@ -173,7 +173,7 @@ MODULE neb_routines
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
            !
-           ios = c_mkdir( TRIM( outdir ), LEN_TRIM( outdir ) )
+           ios = C_MKDIR( TRIM( outdir ), LEN_TRIM( outdir ) )
            !
         END IF
         !

@@ -29,7 +29,7 @@ program vdb2upf
      inquire (file=filein,exist=exst)
      if(.not.exst) go to 5
   elseif (i.eq.1) then  
-     call getarg (1, filein)  
+     call getarg(1, filein)  
   else  
      print '(''   usage: vdb2upf  [input file] '')'  
      stop

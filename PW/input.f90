@@ -1268,8 +1268,7 @@ SUBROUTINE verify_tmpdir()
   !
   INTEGER            :: l, ios, image
   CHARACTER (LEN=80) :: file_path, tmp_dir_saved
-  INTEGER            :: c_mkdir
-  EXTERNAL              c_mkdir
+  INTEGER, EXTERNAL  :: C_MKDIR
   !
   !
   ! ... verify if tmp_dir ends with /, add one if needed
@@ -1358,7 +1357,7 @@ SUBROUTINE verify_tmpdir()
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
            !
-           ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
+           ios = C_MKDIR( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
            !
         END IF
         !

@@ -67,8 +67,11 @@
 #  define ZDOTU       cdotu
 #  define ZGEMM       cgemm
 #  define ZGEMV       cgemv
+#  define ZGESV       cgesv
 #  define ZGESVD      cgesvd
+#  define ZGGEV       cggev
 #  define ZHEEV       cheev
+#  define ZHEEVX      cheevx
 #  define ZHEGV       chegv
 #  define ZHEGVX      chegvx
 #  define ZHETRD      CHETRD
@@ -83,8 +86,6 @@
 #  define DGEMUL   sgemul
 #  define DGESUB   sgesub
 #  define DGER     sger
-#  define ZGEFA    cgefa
-#  define ZGEDI    cgedi
 #  define DGEMTX   sgemtx
 #  define DGEMX    sgemx
 
@@ -102,6 +103,8 @@
 #  define ZLASET   claset
 #  define ZLASR    clasr
 
+#  define DPOTRF   spotrf
+#  define DPOTRS   spotrs
 
 #else
 
@@ -133,8 +136,11 @@
 #    define ZDOTU       zdotu__
 #    define ZGEMM       zgemm__
 #    define ZGEMV       zgemv__
+#    define ZGESV       zgesv__
 #    define ZGESVD      zgesvd__
+#    define ZGGEV       zggev__
 #    define ZHEEV       zheev__
+#    define ZHEEVX      zheevx__
 #    define ZHEGV       zhegv__
 #    define ZHEGVX      zhegvx__
 #    define ZHPEV       zhpev__
@@ -148,10 +154,11 @@
 #    define DGEMUL   dgemul__
 #    define DGESUB   dgesub__
 #    define DGER     dger__
-#    define ZGEFA    zgefa__
-#    define ZGEDI    zgedi__
 #    define DGEMTX   dgemtx__
 #    define DGEMX    dgemx__
+
+#    define DPOTRF   dpotrf__
+#    define DPOTRS   dpotrs__
 
 #  elif defined(ADD_BLAS_ONE_UNDERSCORE)
 
@@ -177,8 +184,11 @@
 #    define ZDOTU       zdotu_
 #    define ZGEMM       zgemm_
 #    define ZGEMV       zgemv_
+#    define ZGESV       zgesv_
 #    define ZGESVD      zgesvd_
+#    define ZGGEV       zggev_
 #    define ZHEEV       zheev_
+#    define ZHEEVX      zheevx_
 #    define ZHEGV       zhegv_
 #    define ZHEGVX      zhegvx_
 #    define ZHPEV       zhpev_
@@ -192,10 +202,11 @@
 #    define DGEMUL   dgemul_
 #    define DGESUB   dgesub_
 #    define DGER     dger_
-#    define ZGEFA    zgefa_
-#    define ZGEDI    zgedi_
 #    define DGEMTX   dgemtx_
 #    define DGEMX    dgemx_
+
+#    define DPOTRF   dpotrf_
+#    define DPOTRS   dpotrs_
 
 #  else
 
@@ -221,8 +232,11 @@
 #    define ZDOTU       zdotu
 #    define ZGEMM       zgemm
 #    define ZGEMV       zgemv
+#    define ZGESV       zgesv
 #    define ZGESVD      zgesvd
+#    define ZGGEV       zggev
 #    define ZHEEV       zheev
+#    define ZHEEVX      zheevx
 #    define ZHEGV       zhegv
 #    define ZHEGV       zhegv
 #    define ZHEGVX      zhegvx
@@ -237,10 +251,11 @@
 #    define DGEMUL   dgemul
 #    define DGESUB   dgesub
 #    define DGER     dger
-#    define ZGEFA    zgefa
-#    define ZGEDI    zgedi
 #    define DGEMTX   dgemtx
 #    define DGEMX    dgemx
+
+#    define DPOTRF   dpotrf
+#    define DPOTRS   dpotrs
 
 #  endif
 

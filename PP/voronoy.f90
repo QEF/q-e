@@ -107,6 +107,8 @@ program voronoy
   call rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, nr1big, &
        nr2big, nr3big, nrx1big, nlbig, rhobig)
 
+  allocate (partial_charge(nat))
+
   call calculate_partial_charges (nat, tau, at, bg, nrx1big, nr1big, &
        nr2big, nr3big, rhobig, partial_charge)
 
@@ -202,8 +204,7 @@ subroutine calculate_partial_charges (nat, tau, at, bg, nrx1big, &
   USE kinds, only: DP
   implicit none
   integer :: nat, nrx1big, nr1big, nr2big, nr3big
-  real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge ( &
-       nat)
+  real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge(nat)
 
   complex(kind=DP) :: rhobig (nrx1big, nr2big, nr3big)
   integer :: atom (nat), equidistant, n1, n2, n3, na, i
@@ -224,8 +225,9 @@ subroutine calculate_partial_charges (nat, tau, at, bg, nrx1big, &
            do na = 1, nat
               ! dr is the distance between r and this atom, in crystal axis
               do i = 1, 3
-                 dr (i) = (r (1) - tau (1, na) ) * bg (1, i) + (r (2) - tau (2, na) &
-                      ) * bg (2, i) + (r (3) - tau (3, na) ) * bg (3, i)
+                 dr (i) = (r (1) - tau (1, na) ) * bg (1, i) + &
+                          (r (2) - tau (2, na) ) * bg (2, i) + &
+                          (r (3) - tau (3, na) ) * bg (3, i)
                  ! this brings dr back into the unit cell
                  dr (i) = dr (i) - nint (dr (i) )
               enddo
@@ -249,8 +251,8 @@ subroutine calculate_partial_charges (nat, tau, at, bg, nrx1big, &
 10         continue
            ! the charge is assigned to the closest atom or shared among equidistant
            do na = 1, equidistant
-              partial_charge (atom (na) ) = partial_charge (atom (na) ) + real ( &
-                   rhobig (n1, n2, n3) ) / equidistant
+              partial_charge (atom (na) ) = partial_charge (atom (na) ) + &
+                 real ( rhobig (n1, n2, n3) ) / equidistant
            enddo
         enddo
      enddo

@@ -1274,6 +1274,7 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE constants,  ONLY :  pi
   implicit none
   integer :: ibrav, nat, ntyp, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3
 
@@ -1284,7 +1285,7 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   integer :: i, j, k, ipol, na
   real(kind=DP) :: rhotot, dr, zvtot
   real(kind=DP) :: rijk, deltax, deltay, deltaz, debye, omega, rhomin, rho_tmp
-  real(kind=DP) :: pi, corr1, corr2, qq, dipol(3), quadrupol, AA, BB
+  real(kind=DP) :: corr1, corr2, qq, dipol(3), quadrupol, AA, BB
 
   !  Note that the definition of the Madelung constant used here
   !  differs from the "traditional" one found in the literature. See
@@ -1311,7 +1312,7 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   quadrupol_el = 0.d0
 
 ! Volume element in real space
-  dr = omega / nr1 / nr2 / nr3
+  dr = omega * deltax * deltay * deltaz
 
   rhomin = MAX ( MINVAL (rhor), 1.d-10 )
   !
@@ -1362,7 +1363,6 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   !  Makov-Payne correction, PRB 51, 43014 (1995)
   !  Note that Eq. 15 has the wrong sign for the quadrupole term 
   !
-  pi = 3.14159265358979d0
   corr1 = -Madelung(ibrav)/alat * qq**2
   AA = quadrupol
   BB = dipol(1)**2 + dipol(2)**2 + dipol(3)**2

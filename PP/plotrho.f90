@@ -42,7 +42,7 @@ program plotrho
      WRITE( stdout, '("input file > ",$)')
      read (5, '(a)', end = 20, err = 20) filename
   elseif (i == 1) then
-     call getarg (1, filename)
+     call getarg(1, filename)
   else
      WRITE( stdout, '("usage: plotrho  [input file] ")')
   endif

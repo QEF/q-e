@@ -59,6 +59,6 @@ wavefunctions.o
 all : $(MODULES)
 
 clean :
-	- /bin/rm -f *.o *.d *~ *.F90 *.mod work.pc
+	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc
 
 include .dependencies
