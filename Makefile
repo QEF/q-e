@@ -52,7 +52,7 @@ upf : modules libs
 ld1 : modules libs pw
 	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
-pwall : pw ph pp gamma nc pwcond d3 tools
+pwall : pw ph pp gamma nc pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
 modules :
