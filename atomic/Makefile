@@ -46,7 +46,6 @@ newd_at.o \
 new_potential.o \
 nodenum.o \
 normalize.o \
-openfil.o \
 pseudovloc.o \
 read_newpseudo.o \
 read_pseudo.o \

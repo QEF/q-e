@@ -28,8 +28,6 @@ subroutine ld1_readin
 
   character(len=80) :: config, configts(ncmax1)
   character(len=2) :: atom
-  logical, dimension(nwfsx) :: unbound
-  logical :: found
   character, external :: atom_name*2
   integer, external :: atomic_number
   logical, external :: matches
@@ -52,15 +50,12 @@ subroutine ld1_readin
        isic,    &  ! if 1 self-interaction correction
        latt,    &  ! if <> 0 Latter correction is applied
        title,   &  ! the title of the run
-       file_wavefunctions,& ! file names with wavefunctions
-       file_logderae ! file with logder  
+       prefix      ! the prefix for file names
 
   namelist /test/                 &
        nconf,         & ! the number of configurations
        configts,      & ! the configurations of the tests
-       file_pseudo,   & ! input file containing the pseudopotential
-       file_wavefunctionsps,& ! output file for pseudowfc
-       file_tests       ! output file for  transferability test
+       file_pseudo      ! input file containing the pseudopotential
 
   namelist /inputp/ &
        pseudotype,&! the pseudopotential type
@@ -71,16 +66,25 @@ subroutine ld1_readin
        nlcc,  &    ! if true nlcc is set
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
-       file_screen,   & ! output file for screening potential
-       file_core,     & ! output file for total and core charge
-       file_beta,     & ! output file for beta functions
-       file_chi,      & ! output file for chi functions
-       file_qvan,     & ! output file for qvan functions
        file_pseudopw, & ! output file where the pseudopotential is written
-       file_recon,    & ! output file needed for paw reconstruction
-       file_logderps    ! output file for pseudo logarithmic derivatives
+       file_screen,   & ! output file for the screening potential
+       file_core,     & ! output file for total and core charge
+       file_beta,     & ! output file for the beta functions
+       file_chi,      & ! outpu  file for the chi functions
+       file_qvan,     & ! output file for the qvan functions
+       file_recon       ! output file needed for the paw reconstruction
+   !
+  prefix       = 'ld1'
+  file_pseudo  = ' '
+  file_pseudopw= ' '
+  file_recon   = ' '
+  file_screen  = ' '
+  file_core    = ' '
+  file_chi     = ' '
+  file_beta    = ' '
+  file_qvan    = ' '
   !
-  !   read the namelist input and set default values 
+  !   set default values 
   !
   atom  = '  '
   zed   = 0.0_dp
@@ -104,9 +108,8 @@ subroutine ld1_readin
   latt  = 0
   title = ' '
   config=' '
-  file_wavefunctions= ' '
-  file_recon= ' '
-  file_logderae= ' '
+
+  ! read the namelist input
 
   read(5,input,err=100,iostat=ios) 
 100 call errore('ld1_readin','reading input namelist ',abs(ios))
@@ -208,57 +211,159 @@ subroutine ld1_readin
      !
      return
      !
-  else if (iswitch == 2) then
+     
+  else if (iswitch == 3) then
      !
-     !    reading input for PP testing
+     !    reading input for PP generation
      !
+     zval=0.0_dp
+     lloc=-1
+     rcloc=1.5_dp
+     nlcc=.false.
+     rcore=0.0_dp
+     rho0=0.0_dp
+     tm  = .false.
+     pseudotype=0
      jjs=0.0_dp
-     jjts=0.0_dp
-     jjtsc=0.0_dp
-     
+
+     read(5,inputp,err=500,iostat=ios)
+500  call errore('ld1_readin','reading inputp',abs(ios))
+
+     if (rcloc <=0.0_dp) &
+          call errore('ld1_readin','rcloc is negative',1)
+     if (pseudotype < 1.or.pseudotype > 3) &
+          call errore('ld1_readin','specify correct pseudotype',1)
+     !
+     call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
+          isws, jjs, enls, rcut, rcutus )
+     !
+     lmax = maxval(lls(1:nwfs))
+     !
+     zdum = zed
      do n=1,nwf
-        oc_old(n)=oc(n)
-     enddo
-
-     nconf=1
-     configts=' '
-     file_wavefunctionsps= ' '
-     file_pseudo=' '
-     file_tests=' '
-
-     read(5,test,err=300,iostat=ios)
-300  call errore('ld1_readin','reading test',abs(ios))
-     
-     if (nconf > ncmax1.or.nconf < 1) &
-          call errore('ld1_readin','nconf is wrong',1)
-     if (iswitch == 3 .and. nconf > 1) &
-          call errore('ld1_readin','too many test configurations',1)
-
-     do nc=1,nconf
-        if (configts(nc) == ' ') then
-           call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
-                nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
-                jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
-        else
-           call el_config(configts(nc),.false.,nwftsc(nc),eltsc(1,nc),  &
-                &     nntsc(1,nc),lltsc(1,nc),octsc(1,nc),iswtsc(1,nc))
+        if ( oc(n) > 0.0_dp) zdum = zdum - oc(n)
+     end do
+     do ns=1,nwfs
+        if ( ocs(ns) > 0.0_dp) zdum = zdum + ocs(ns)
+     end do
+     if ( abs(nint(zdum)-zdum) > 1.d-8 ) call errore &
+          ('ld1_readin',' calculated valence charge not integer?',1)
+     if (zval == 0) then
+        zval = zdum
+     else if ( abs(zval-zdum) > 1.d-8 ) then
+        call errore ('ld1_readin',&
+             ' supplied and calculated valence charge do not match',1)
+     end if
+     !
+     do ns=1,nwfs
+        do ns1=1,ns-1
+           if (lls(ns) == lls(ns1).and.pseudotype == 1) &
+                call errore('ld1_readin','two wavefunctions for same l',1)
+        enddo
+        !
+        if (enls(ns) /= 0.0_dp .and. ocs(ns) > 0.0_dp) &
+             call errore('ld1_readin','unbound states must be empty',1)
+        if (rcut(ns) /= rcutus(ns)) then
+           !
+           ! this channel is US. Check that there is at least another energy
+           !
+          c1=0
+          do ns1=1,nwfs
+             if (els(ns) == els(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
+          enddo
+          if (c1 < 2) call errore('ld1_readin', &
+                        'US requires at least two energies per channel',1)
         endif
      enddo
-35   call errore('ld1_readin','reading test wavefunctions',abs(ios))
+     if (nwfs > 1) then
+        if (els(nwfs)==els(nwfs-1) .and. jjs(nwfs)==jjs(nwfs-1) .and. &
+            lloc > -1) call errore('ld1_readin','only one local channel',1)
+     endif
+     nlc=0
+     nnl=0
+
+  end if
+  !
+  !    reading input for PP testing
+  !
+  jjts=0.0_dp
+  jjtsc=0.0_dp
+  
+  do n=1,nwf
+     oc_old(n)=oc(n)
+  enddo
+
+  nconf=1
+  configts=' '
+
+  read(5,test,err=300,iostat=ios)
+
+300 continue
+  !
+  !  PP generation: if namelist test is not found, use defaults
+  !
+  if (iswitch == 3 .and. ios /= 0 ) then
+     !
+     ! use for testing the same configuration as for PP generation
+     ! (unless a different one is explicitely specified in namelist &test)
+     !
+     ns1 = 0
+     do ns=1,nwfs
+        !
+        if ( ocs(ns)  > 0.0_dp .or. &
+            (ocs(ns) == 0.0_dp .and. enls(ns) == 0.0_dp) ) then
+           !
+           ! copy states used in the PP generation to testing configuration
+           ! Only bound states must be copied. Note that this WILL NOT WORK
+           ! if bound states are not used in the generation of the PP
+           !
+           ns1 = ns1 + 1
+           eltsc (ns1,1)= els (ns)
+           nntsc (ns1,1)= nns (ns)
+           lltsc (ns1,1)= lls (ns)
+           octsc (ns1,1)= ocs (ns)
+           iswtsc(ns1,1)= isws(ns)
+           jjtsc (ns1,1)= jjs (ns)
+        end if
+     end do
+     !
+     nwftsc(1) = ns1
+     !
+     return
+     !
+  endif
+  !
+  call errore('ld1_readin','reading test',abs(ios))
+  !
+  if (nconf > ncmax1.or.nconf < 1) &
+       call errore('ld1_readin','nconf is wrong',1)
+  if (iswitch == 3 .and. nconf > 1) &
+       call errore('ld1_readin','too many test configurations',1)
+  !  
+  do nc=1,nconf
+     if (configts(nc) == ' ') then
+        call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
+             nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
+             jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
+     else
+        call el_config(configts(nc),.false.,nwftsc(nc),eltsc(1,nc),  &
+             &     nntsc(1,nc),lltsc(1,nc),octsc(1,nc),iswtsc(1,nc))
+     endif
      !
      !  adjust the occupations of the test cases if this is a lsd run
      !
      if (lsd == 1) then
-        do nc=1,nconf
-           call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
-                octsc(1,nc), iswtsc(1,nc)) 
-        enddo
+        call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
+             octsc(1,nc), iswtsc(1,nc)) 
      endif
-     !
-     !    reading the pseudopotential
+  end do
+  !
+  !    PP testing: reading the pseudopotential
+  !
+  if (iswitch ==2) then
      !
      if (file_pseudo == ' ') &
-          call errore('ld1_readin','file_pseudo is needed',1)
+       call errore('ld1_readin','file_pseudo is needed',1)
      if (matches('upf',file_pseudo) .or. matches('UPF', file_pseudo)) then
         !
         !    UPF format
@@ -297,153 +402,10 @@ subroutine ld1_readin
         pseudotype = 1
      endif
      !
-     ! initialize a few variables that may cause trouble otherwise
-     !
-     file_pseudopw=' '
-     file_logderps=' '
-     
-  else if (iswitch == 3) then
-     !
-     !    reading input for PP generation
-     !
-     file_pseudopw=' '
-     file_screen=' '
-     file_core=' '
-     file_chi=' '
-     file_beta=' '
-     file_qvan=' '
-     file_logderps=' '
-     zval=0.0_dp
-     lloc=-1
-     rcloc=1.5_dp
-     nlcc=.false.
-     rcore=0.0_dp
-     rho0=0.0_dp
-     tm  = .false.
-     pseudotype=0
-
-     read(5,inputp,err=500,iostat=ios)
-500  call errore('ld1_readin','reading inputp',abs(ios))
-
-     if (rcloc <=0.0_dp) &
-          call errore('ld1_readin','rcloc is negative',1)
-     if (pseudotype < 1.or.pseudotype > 3) &
-          call errore('ld1_readin','specify correct pseudotype',1)
-     !
-     call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
-          isws, jjs, enls, rcut, rcutus )
-     !
-     lmax = maxval(lls(1:nwfs))
-     !
-     zdum = zed
-     do n=1,nwf
-        if ( oc(n) > 0.0_dp) zdum = zdum - oc(n)
-     end do
-     do ns=1,nwfs
-        if ( ocs(ns) > 0.0_dp) zdum = zdum + ocs(ns)
-     end do
-     if ( abs(nint(zdum)-zdum) > 1.d-8 ) call errore &
-          ('ld1_readin',' calculated valence charge not integer?',1)
-     if (zval == 0) then
-        zval = zdum
-     else if ( abs(zval-zdum) > 1.d-8 ) then
-        call errore ('ld1_readin',&
-             ' suppied and calculated valence charge do not match',1)
-     end if
-     !
-     do ns=1,nwfs
-        do ns1=1,ns-1
-           if (lls(ns) == lls(ns1).and.pseudotype == 1) &
-                call errore('ld1_readin','two wavefunctions for same l',1)
-        enddo
-        !
-        ! flag unbound states, i.e. those with negative occupancy
-        ! and those with zero occupancy and nonzero reference energy
-        ! WARNING: this should be done in a cleaner way
-        !
-        unbound(ns) = (ocs(ns) < 0.0_dp) .or. &
-             (ocs(ns) == 0.0_dp .and. enls(ns) /= 0.0_dp) 
-        if (enls(ns) /= 0.0_dp .and. ocs(ns) > 0.0_dp) &
-             call errore('ld1_readin','unbound states must be empty',1)
-        if (rcut(ns) /= rcutus(ns)) then
-           !
-           ! this channel is US. Check that there is at least another energy
-           !
-          c1=0
-          do ns1=1,nwfs
-             if (els(ns) == els(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
-          enddo
-          if (c1 < 2) call errore('ld1_readin', &
-                        'US requires at least two energies per channel',1)
-        endif
-     enddo
-     if (nwfs > 1) then
-        if (els(nwfs)==els(nwfs-1) .and. jjs(nwfs)==jjs(nwfs-1) .and. &
-            lloc > -1) call errore('ld1_readin','only one local channel',1)
-     endif
-     nlc=0
-     nnl=0
-     !
-     ! initialize a few variables used in subsequent PP testing
-     !
-     file_wavefunctionsps= ' '
-     file_tests=' '
-     nconf=1
-     ns1 = 0
-     do n=1,nwfs
-        if (.not.unbound(n)) then
-           !
-           ! copy states used in the PP generation to testing configuration
-           ! Only bound states must be copied. Note that this WILL NOT WORK
-           ! if bound states are not used in the generation of the PP
-           !
-           ns1 = ns1 + 1
-           eltsc (ns1,1)= els (n)
-           nntsc (ns1,1)= nns (n)
-           lltsc (ns1,1)= lls (n)
-           octsc (ns1,1)= ocs (n)
-           iswtsc(ns1,1)= isws(n)
-           jjtsc (ns1,1)= jjs (n)
-        end if
-     end do
-     !
-     ! add additional valence states for PAW reconstruction, if not used
-     ! in PP generation. They must appear last in the list of all-electron
-     ! states and must be empty. To be done in a cleaner way !
-     !
-     do n=nwf,1,-1
-        found = .false.
-        do ns=1,nwfs
-           if ( el(n) == els(ns) ) found = .true.
-        end do
-        if (found) exit
-        !
-        ns1 = ns1 + 1
-        eltsc (ns1,1)= el (n)
-        lltsc (ns1,1)= ll (n)
-        if (oc(n) > 0.0_dp) &
-             call errore('ld1_readin','state'//el(n)//'should not be there',n)
-        octsc (ns1,1)= oc (n)
-        iswtsc(ns1,1)= isw(n)
-        jjtsc (ns1,1)= jj (n)
-        !
-        nntsc (ns1,1)= lltsc (ns1,1) + 1
-        do ns=1,ns1-1
-           if ( lltsc(ns,1) == lltsc(ns1,1) ) &
-                nntsc(ns1,1) = nntsc(ns1,1) + 1
-        end do
-        !
-     enddo
-     !
-     nwftsc(1) = ns1
-     !
-     do n=1,nwf
-        oc_old(n)=oc(n)
-     enddo
-     !
-  endif
+  end if
 
   return
+
 end subroutine ld1_readin
 !
 !---------------------------------------------------------------

@@ -55,10 +55,11 @@ subroutine ld1_setup
            enddo
            if (nstoaec(n,nc).eq.0) call errore('ld1_setup', &
                 'no all electron for this configuration',nc)
-           new(n)=.false.
         enddo
      enddo
   endif
+  !
+  new(:)=.false.
   !
   !  divide the core and valence states
   !
@@ -135,14 +136,12 @@ subroutine ld1_setup
   etot0=0.0_dp
   etots0=0.0_dp
   !
-  !    open file test if the name is available, otherwise the tests
-  !    go on file.13
+  !    initialize file names (used in all_electron)
   !
-  if (iswitch.gt.1.and.file_tests.ne.' ') then
-     open(unit=13,file=file_tests,iostat=ios,err=1111,status='unknown')
-1111 call errore('ld1_setup','opening file_tests',abs(ios))
-     rewind(13)
-  endif
+  file_wavefunctions  = trim(prefix)//'.wfc'
+  file_wavefunctionsps= trim(prefix)//'ps.wfc'
+  file_logder   = trim(prefix)//'.dlog'
+  file_logderps = trim(prefix)//'ps.dlog'
 
   return
 end subroutine ld1_setup

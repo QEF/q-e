@@ -15,10 +15,30 @@ subroutine run_test
        ir,&  ! counter on mesh points
        im,&  ! position of the maximum
        nc    ! counter on configurations
-
+  integer :: ios
   real(kind=dp) :: dum
 
+  file_tests = trim(prefix)//'.test'
+  open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')
+1111 call errore('ld1_setup','opening file_tests',abs(ios))
+
   do nc=1,nconf
+     if (nconf == 1) then
+        file_wavefunctions  = trim(prefix)//'.wfc'
+        file_wavefunctionsps= trim(prefix)//'ps.wfc'
+        file_logder   = trim(prefix)//'.dlog'
+        file_logderps = trim(prefix)//'ps.dlog'
+     else
+        if (nc < 10) then
+           file_wavefunctions  = trim(prefix)//char(nc)//'.wfc'
+           file_wavefunctionsps= trim(prefix)//char(nc)//'ps.wfc'
+           file_logder   = trim(prefix)//char(nc)//'.dlog'
+           file_logderps = trim(prefix)//char(nc)//'ps.dlog'
+        else
+           call errore ('run_test', &
+                'results for some configs not written to file',-1)
+        endif
+     endif
      nwfts=nwftsc(nc)
      do n=1,nwf
         oc(n)=oc_old(n)
@@ -86,6 +106,7 @@ subroutine run_test
      call write_resultsps 
      !
   enddo
+  close (unit = 13)  
 
   return
 end subroutine run_test

@@ -43,8 +43,6 @@ subroutine lderivps
        ios,           &  ! used for I/O control
        is, ind           ! counters on index
 
-  character(len=256) :: flld
-
 
   if (nld == 0 .or. file_logderps == ' ') return
   if (nld > nwfsx) call errore('lderivps','nld is too large',1)
@@ -146,10 +144,14 @@ subroutine lderivps
         endif
      enddo
 
-     flld=file_logderps
-     if (is == 2) flld=trim(file_logderps)//'.01'
-     open(unit=25,file=flld, status='unknown', iostat=ios, err=300 )
-300  call errore('lderivps','opening file '//flld, abs(ios))
+     if (is == 2) then
+        open(unit=25, file=trim(file_logder)//'01', status='unknown', &
+             iostat=ios, err=300 )
+     else
+        open(unit=25, file=trim(file_logder), status='unknown', &
+             iostat=ios, err=300 )
+     end if
+300  call errore('lderivps','opening file '//trim(file_logder), abs(ios))
 
      do ie=1,npte
         e= eminld+deld*(ie-1)

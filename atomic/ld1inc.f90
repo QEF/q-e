@@ -203,22 +203,26 @@ module ld1inc
        vpstot(ndm,2),& ! the total local pseudopotential
        vpsloc(ndm)     ! the local pseudopotential
   !
-  !   the files and relative names
+  !  file names
   !
   character(len=75)  :: title  ! the title of the run
-  character(len=256) ::      &
-       file_pseudo,          & ! the file of input pseudopotential
-       file_wavefunctions,   & ! the file with output wavefunctions
-       file_wavefunctionsps, & ! the file with output pseudowavefunctions
-       file_pseudopw,        & ! the file with output pseudopotential
-       file_chi,             & ! the file with the chi-functions
-       file_beta,            & ! the file with the beta-functions
-       file_qvan,            & ! the file with the qvan-functions
-       file_logderae,        & ! the file with all-electron log der 
-       file_logderps,        & ! the file with pseudo log der 
-       file_screen,          & ! the file with the screening potential
-       file_core,            & ! the file with the core charge
-       file_tests,           & ! the file with the tests
-       file_recon              ! the file for paw reconstruction
+  character(len=240) :: prefix ! prefix for file names
+  character(len=256) ::      & ! 
+       file_pseudo,          & ! input file containing the pseudopotential
+       file_pseudopw           ! output file where the pseudopot is written
+  character(len=256) ::      & ! output filenames read from input, containing:
+       file_chi,             & ! chi functions
+       file_beta,            & ! beta functions
+       file_qvan,            & ! qvan functions
+       file_screen,          & ! screening potential
+       file_core,            & ! core charge
+       file_recon              ! information for paw reconstruction
+  ! the following filenames are determined by "prefix", not read from input
+  character(len=256) ::      & ! output files, conatining:
+       file_wavefunctions,   & ! all-electron results for orbitals
+       file_wavefunctionsps, & ! pseudopotential results for orbitals
+       file_logder,          & ! all-electron logarithmic derivatives
+       file_logderps,        & ! pseudopotential logarithmic derivatives
+       file_tests              ! results of pseudopotential tests
 
 end module ld1inc
