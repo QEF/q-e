@@ -1,3 +1,5 @@
+ 1 Dec 2004 Hubbard forces were wrong in the case npsin.eq.1 (SdG)
+
 29 Nov 2004 Documentation updated (PG)
 
 26 Nov 2004 Cleanup of the pwscf molecular dynamics stuff. Velocity 

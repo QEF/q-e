@@ -42,6 +42,10 @@ subroutine tabd (nt, occ_loc)
      !
      ! OTHER ELEMENTS
      !
+  elseif (psd (nt) .eq.'C') then
+     occ_loc = 2.d0
+  elseif (psd (nt) .eq.'O') then
+     occ_loc = 4.d0
   elseif (psd (nt) .eq.'H') then
      occ_loc = 1.d0
   else

@@ -23,6 +23,8 @@ elseif (psd .eq.'Ce') then
 !
 ! OTHER ELEMENTS
 !
+elseif (psd .eq.'C' .or. psd .eq. 'O') then  
+   hubbard_l =  1
 elseif (psd .eq.'H') then  
    hubbard_l =  0
 else  

@@ -67,6 +67,11 @@ SUBROUTINE dndtau_of_k(dns,ldim,offset,proj,wfcatom,spsi,alpha,ipol,ik)
       END IF
    END DO
    !
+   ! In nspin.eq.1 k-point weight wg is normalized to 2 el/band 
+   ! in the whole BZ but we are interested in dns of one spin component
+   !
+   IF (nspin.EQ.1) dns = 0.5d0 * dns
+   !
    ! impose hermiticity of dn_{m1,m2}
    !
    DO na = 1,nat

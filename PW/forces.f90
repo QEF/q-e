@@ -139,13 +139,25 @@ SUBROUTINE forces()
   forcescc = forcescc * REAL( if_pos )
   !
 #ifdef DEBUG
+  WRITE( stdout, '(5x,"The non-local contrib.  to forces")')
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), ( forcenl(ipol,na), ipol = 1, 3 )
+  END DO
+  WRITE( stdout, '(5x,"The ionic contribution  to forces")')
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), ( forceion(ipol,na), ipol = 1, 3 )
+  END DO
+  WRITE( stdout, '(5x,"The local contribution  to forces")')
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), ( forcelc(ipol,na), ipol = 1, 3 )
+  END DO
+  WRITE( stdout, '(5x,"The Hubbard contrib.    to forces")')
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
+  END DO
   WRITE( stdout, '(5x,"The SCF correction term to forces")')
   DO na = 1, nat
      WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
-  END DO
-  WRITE( stdout, '(5x,"The Hubbard contribution to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
   END DO
 #endif
   !
