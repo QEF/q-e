@@ -2,15 +2,9 @@
 #############################################################################
 # Author:                                                                   #
 # ------                                                                    #
-#  Anton Kokalj                                  Email: Tone.Kokalj@ijs.si  #
-#  Department of Physical and Organic Chemistry  Phone: x 386 1 477 3523    #
-#  Jozef Stefan Institute                          Fax: x 386 1 477 3811    #
-#  Jamova 39, SI-1000 Ljubljana                                             #
-#  SLOVENIA                                                                 #
+# Anton Kokalj                                   Email: Tone.Kokalj@ijs.si  #
 #                                                                           #
-# Source: $XCRYSDEN_TOPDIR/scripts/pwo2xsf.sh
-# ------                                                                    #
-# Copyright (c) 1996-2003 by Anton Kokalj                                   #
+# Copyright (c) 2004 by Anton Kokalj                                        #
 #############################################################################
 
 #------------------------------------------------------------------------
@@ -20,17 +14,12 @@
 # or http://www.gnu.org/copyleft/gpl.txt .
 #------------------------------------------------------------------------
 
-#------------------------------------------------------------------------
-# pwo2xsf: PW-output--to--XSF conversion; created for the purpose 
-#          of PW spring college !!!
 #
-# Usage: pwo2xsf [options] pw-output-file
+# Purpose: PWscf(v2.0 or latter)-output--to--XSF conversion
+# Usage:   pwo2xsf [options] pw-output-file
 #
-#------------------------------------------------------------------------
-
-#############
-BOHR=0.529177
-#############
+# Last major rewrite by Tone Kokalj on Mon Feb  9 12:48:10 CET 2004
+#                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 cat > pwo2xsfUsage.$$ <<EOF
 
@@ -38,427 +27,457 @@ cat > pwo2xsfUsage.$$ <<EOF
 
  Options are:
 
-               pwo2xsf.sh --initcoor|-ic [pw-output-file]
-                             Will extract the initial (i.e. input) 
+               pwo2xsf.sh --inicoor|-ic [pw-output-file]
+                             Extract the initial (i.e. input) 
                              ionic coordinates.
 
                pwo2xsf.sh --latestcoor|-lc [pw-output-file]
-                             Will extract latest estimation of ionic 
+                             Extract latest estimation of ionic 
                              coordinates from pw-output file. The coordinates 
                              can be either taken from "Search of equilibrium 
                              positions" record or from "Final estimate of 
                              positions" record.
 
-               pwo2xsf.sh --optcoor|-oc [-A|-B|-F] [pw-output-file]
+               pwo2xsf.sh --optcoor|-oc [pw-output-file]
 			     Similar to "--latestcoor", but extract just the 
-			     optimized coordinates from "Final estimate of 
-                             positions" record.
+			     optimized coordinates.
 
 	       pwo2xsf.sh --animxsf|-a [pw-output-file1] ...
 			     Similar to "--latestcoor", but extract the
 			     coordinates from all ionic steps and make
-			     a AXSF file for animation.
-
-               pwo2xsf.sh -r option [pw-output-file]
-			     one must specify i.e. ityp->nat conversion, 
-			     and the corresponding data are written to file 
-			     nuclei.charges. The -r flag deletes this file.
-                             Here "option" is one of the above options
-			     (i.e -lc|-oc|-a).
+			     an AXSF file for animation.
 EOF
 
+
+# ------------------------------------------------------------------------
+# Utility functions
+# ------------------------------------------------------------------------
+CleanTmpFiles() {
+    if test -f pwo2xsfUsage.$$ ; then rm -f pwo2xsfUsage.$$; fi
+    if test -f xsf.$$ ; then rm -f xsf.$$; fi
+    if test -f pw.$$ ; then rm -f pw.$$; fi
+}
 pwoExit() {
-    rm -f pwo2xsfUsage.$$
-    exit 1
+    # Usage: $0 exit_status
+    CleanTmpFiles
+    exit $1
 }
 pwoUsage() {
-    if [ $1 ]; then
+    if test $1 ; then
 	echo "
 Usage: $2
-" 1>&2
-	pwoExit
+"
+	pwoExit 1
     fi
 }
-pwError() {
-    echo "
- ========================================================================
-    $1
- ========================================================================
-" 1>&2
-    if [ "$2" -ge 0 ]; then
-	exit $2
-    fi
+pwoGetVersion() {
+    grep 'Program PWSCF' $1 | tail -1 | awk '
+      {  ver=$3; n=split(ver,v,"."); 
+         ii=0; for(i=1; i<=n; i++) if ( v[i] ~ /[0-9]+/ ) vv[ii++]=v[i];  
+         if (ii>2) printf "%d.%d%d\n", vv[0],vv[1],vv[2];
+         else printf "%d.%d\n", vv[0], vv[1];
+      }'
 }
-
-# --------------------------------------------------------------------------
-# FUNCTION:   pwNucleiCharges --
-#
-# Purpose:    ityp->nat conversion data 
-#
-# Usage:      pwNucleiCharges pw_input|pw_output outfile
-#
-# Side efect: creates nuclei.charges file
-# --------------------------------------------------------------------------
-
-pwNucleiCharges() {
+pwoCheckPWSCFVersion() {
     #
-    # if file nuclei.charges does not exists prompt for ityp->nat conversion !!
+    # Usage: $0 option file
     #
-
-    if [ \( "$1" = "" \) -o \( "$2" = "" \) ]; then
-	pwError "Usage:  pwNucleiCharges  pw_input|pw_output  outfile" 1
-    fi
-    
-    # do we have PW-INPUT or PW-OUTPUT file ???
-    
-    if [ "`cat $1 | egrep -i '&input|&system'`" != "" ]; then
-	# it is PW-INPUT
-	ntyp=`cat "$1" | awk '{gsub(",","\n"); print}' | grep ntyp \
-		| awk '{split($0,a,"=|,"); print a[2];}'`
-    else
-	# PW-OUTPUT
-	ntyp=`cat "$1" | grep 'number of atomic types' | \
-	    head -1 | awk '{print $NF}'`
-	#echo 'NTYP=$ntyp'
-	if [ "$ntyp" = "" ]; then
-	    # some older PWSCF versions didn't have "number of atomic
-	    # types" printout -> user will have to make nuclei.charges
-	    # file by himself/herself !!!
-	    pwError "This is either non PW-output file or is a PW-output file 
-    produced with some old PWSCF version" -1
-	    echo -n "How many ityp->nat replacements ? " 1>&2
-	    read ntyp
+    # Purpose: if PWSCF version < 1.3 execute the old pwo2xsf_old.sh
+    #          script and exit
+    version=`pwoGetVersion $input`
+    result=`echo "$version < 1.3"|bc -l`
+    if test $result -eq 1 ; then
+	if test -f $scriptdir/pwo2xsf_old.sh ; then
+    	   # execute pwo2xsf_old.sh
+	    $scriptdir/pwo2xsf_old.sh $1 $2
+	    pwoExit $?
+	else
+	    echo "ERROR: PWscf output generated by version < 1.3 !!!"
+	    pwoExit 1
 	fi
-    fi		     
-
-    if [ ! -f nuclei.charges ]; then
-	echo -n "Please enter $ntyp ityp->nat replacements !!! " 1>&2
-	echo $ntyp > nuclei.charges
-	i=0
-	while [ $i -lt "$ntyp" ]
-	do
-	    i=`echo "$i + 1"|bc`
-	    echo "" 1>&2
-	    echo "Replacement #${i}: ityp->nat" 1>&2
-	    echo -n "ityp[$i]=$i; nat[$i]=" 1>&2; read nat
-	    echo "$i $nat" >> nuclei.charges
-	done
     fi
-	
-    cat nuclei.charges > "$2"
 }
 
-# ---------------------------------------------------------------------------
-# read PW-output file and print the XSF file according to specified flags
-pwoPrintCoor() {
+
+# ------------------------------------------------------------------------
+# Function: pwoOptCoor
+# Extract:  OPTIMIZED or LATEST coordinates
+# Perform:  read PW-output file and print the XSF file according to
+#           specified flags
+# ------------------------------------------------------------------------
+pwoOptCoor() {
     #set -x
     pwoUsage "$# -lt 1" \
 	"$0 --latestcoor|-lc [pw-output-file]   or   $0 --optcoor|-oc [pw-output-file]"
-   
+    
+    option=$1
     case $1 in
-	--latestcoor|-lc) type=lc; shift;;
-	--optcoor|-oc)    type=oc; shift;;
+	--latestcoor|-lc) type=LATEST;    shift;;
+	--optcoor|-oc)    type=OPTIMIZED; shift;;
     esac
-
-    if [ $# -eq 0 ]; then
-	pwNucleiCharges -  pw.$$
-	cat - >> pw.$$
+    
+    if test $# -eq 0 ; then
+	input=pw.$$
+	cat - >> $input
     else
-	pwNucleiCharges $1  pw.$$
-	for i in `seq 1 $#`
-	do
-	    cat $1 >> pw.$$
-    	    shift	    
-	done
+	input=$1
     fi
-    inp=pw.$$
+    
+    pwoCheckPWSCFVersion $option $input
 
-    cat "$inp" | awk -v bohr=$BOHR -v t=$type -- '
-function isInt(__num) {
-   if ( __num ~ /^[0-9]+$/ ) return 1;
-   else return 0;
-} 
-function PrintItyp(__ityp) {
-   if ( __ityp ~ /^[0-9]+$/ ) return atn[ __ityp ];
-   else return __ityp;
+    if test $type = "OPTIMIZED" ; then
+	# Check for the presence of CELL_PARAMETERS record
+	# and/or:
+	# Check also for the PWSCF-v.1.3.0 which uses the
+	# "Final estimate of positions" record
+	if test \( "`grep CELL_PARAMETERS $input`" = "" \) -a \( "`grep 'Final estimate of positions' $input`" = "" \) ; then
+	    echo "ERROR: OPTIMIZED coordinates does not exists"
+	    pwoExit 1
+	fi
+    fi
+
+    cat "$input" | awk -v t=$type '
+function CheckAtoms() {
+  if (nat < 1) {
+    print "ERROR: no atoms found";
+    error_status=1;
+    exit 1;
+  }
 }
+
+function CrysToCartCoor(i,v,a,b,c) {
+  # Crystal --> Cartesian (ANGSTROM units) conversion
+  x[i] = v[0,0]*a + v[1,0]*b + v[2,0]*c;
+  y[i] = v[0,1]*a + v[1,1]*b + v[2,1]*c;
+  z[i] = v[0,2]*a + v[1,2]*b + v[2,2]*c;
+}
+
+function make_error(message,status) {
+  printf "ERROR: %s\n", message;
+  error_status=status;
+  exit status;
+}
+
+
 BEGIN { 
-    line=0; optc=0; 
-    for (i=0; i<100; i++) atn[i]=i;
-    getline;
-    ntyp=$1;
-    for (i=0; i<ntyp; i++) {
-	getline;
-	atn[$1] = $2;
-    }
+  nat=0; 
+  opt_coor_found=0; 
+  error_status=0;
+  bohr=0.529177
 }
 
-/bravais-lattice index/       { ibrav=$NF; }
-/celldm\(1\)=/                { a0=$2*bohr; }
-/crystal axes:/               {
-    for (i=0; i<3; i++) {
-	getline;
-	for (j=4; j<7; j++) {
-	    vec[i,j-4] = $j * a0;
-	}
+
+/celldm\(1\)=/    { a0=$2*bohr; scale=a0; l_scale=a0; }
+/number of atoms/ { nat=$NF; }
+
+
+/crystal axes:/   {
+  # read the lattice-vectors
+  for (i=0; i<3; i++) {
+    getline;
+    for (j=4; j<7; j++) v[i,j-4] = $j * a0;      
+  }
+}
+
+
+$1 == "CELL_PARAMETERS" {
+  # read the lattice-vectors (type=OPTIMIZED)
+  opt_coor_found=1;
+  ff=l_scale;
+  if ( $2 ~ /alat/ )          ff=a0;
+  else if ( $2 ~ /angstrom/ ) ff=1.0;
+  else if ( $2 ~ /bohr/ )     ff=bohr;
+  CheckAtoms();
+  for (i=0; i<3; i++) {
+    getline;
+    if (NF != 3) make_error("error reading CELL_PARAMETERS records",1);
+    for (j=1; j<4; j++) {
+      v[i,j-1] = ff * $j;       
     }
-    printf " DIM-GROUP\n 3 1\n PRIMVEC\n";
-    printf "%15.10f %15.10f %15.10f\n", vec[0,0], vec[0,1], vec[0,2];
-    printf "%15.10f %15.10f %15.10f\n", vec[1,0], vec[1,1], vec[1,2];
-    printf "%15.10f %15.10f %15.10f\n", vec[2,0], vec[2,1], vec[2,2];
-}
-/number of atoms/             { 
-    nat=$NF; 
-}
-/Final estimate of positions/ { 
-    optc=1; line=1; 	    
-    printf " PRIMCOORD\n %d 1\n", nat;
-    next; 
-}
-/Cartesian coordinates/ {
-    if (optc==1 && line==1) {
-	next;
-    }
-}
-/Search of equilibrium positions/ { if ( t == "lc" ) {
-    getline; getline; 
-    # maybe current line is: "Cartesian coordinates"
-    if ( NF != 4 ) getline;
-    for(i=1; i<=nat; i++) {
-        if (isInt($4)) {
-           x[i]=a0*$1; y[i]=a0*$2; z[i]=a0*$3; ityp[i]=$4;
-        } else { 
-           x[i]=a0*$2; y[i]=a0*$3; z[i]=a0*$4; ityp[i]=$1;
-        }
-	getline;
+  }
+}    
+
+
+$1 == "ATOMIC_POSITIONS" {
+  crystal_coor=0;
+  if ( $2 ~ /alat/ )          scale=a0;
+  else if ( $2 ~ /angstrom/ ) scale=1.0;
+  else if ( $2 ~ /bohr/ )     scale=bohr;
+  else if ( $2 ~ /crystal/ ) {
+    scale=1.0;
+    crystal_coor=1;
+  }
+  CheckAtoms();
+  for(i=0; i<nat; i++) {
+    getline;
+    if (NF != 4) make_error("error reading ATOMIC_POSITIONS records",1);
+    atom[i]=$1; 
+    a=scale*$2;
+    b=scale*$3;
+    c=scale*$4; 
+    if (crystal_coor) {
+      CrysToCartCoor(i,v,a,b,c); 
+    } else {
+      x[i]=a; y[i]=b; z[i]=c; 
     }
   }
 }
-/Entering Dynamics;/ {
-    getline; getline; getline; nstep++;
-    for(i=1; i<=nat; i++) {
-        if (isInt($4)) {
-           x[i]=a0*$1; y[i]=a0*$2; z[i]=a0*$3; ityp[i]=$4;
-        } else { 
-           x[i]=a0*$2; y[i]=a0*$3; z[i]=a0*$4; ityp[i]=$1;
-        }
-	getline;
-    }
+
+
+/Forces acting on atoms/ { 
+  # read forces
+  getline;
+  for(i=0; i<nat; i++) {
+    getline;
+    if (NF != 9) make_error("error reading Forces records",1);
+    fx[i]=$7; fy[i]=$8; fz[i]=$9;
+  }
 }
 
-/a*/ { if (line == 1) {
-	    if (NF != 4) exit 0;	    	    
-            if (isInt($4)) printf "% 3d   % 15.10f  % 15.10f  % 15.10f\n",
-		                  atn[$4], a0*$1, a0*$2, a0*$3; 
-            else printf "% 3s   % 15.10f  % 15.10f  % 15.10f\n",
-		        $1, a0*$2, a0*$3, a0*$4;
-       } 
-}
-END { if ( t == "lc" && line == 0) {
-    printf " PRIMCOORD\n %d 1\n", nat;
-    for(i=1; i<=nat; i++)
-       printf "% 3s   % 15.10f  % 15.10f  % 15.10f\n", 
-	    PrintItyp(ityp[i]), x[i], y[i], z[i];
-       }
-    }' | tee pwo2xsf.xsf_out
+
+/Final estimate of positions/ {
+  # the PWscf v.1.3.0 has still this record
+  opt_coor_found=1;
 }
 
-# ---------------------------------------------------------------------------
-# read PW-output file and print the animated-XSF file
-pwoAnimXSF() {
+
+END {
+  if (error_status==0) {
+    if (t=="OPTIMIZED" && !opt_coor_found) {
+      print "ERROR: no optimized coordinates";
+      exit 1;
+    }      
+    printf "CRYSTAL\n";
+    printf "PRIMVEC\n";
+    printf "  %15.10f %15.10f %15.10f\n", v[0,0], v[0,1], v[0,2];
+    printf "  %15.10f %15.10f %15.10f\n", v[1,0], v[1,1], v[1,2];
+    printf "  %15.10f %15.10f %15.10f\n", v[2,0], v[2,1], v[2,2];
+    printf "PRIMCOORD\n %d 1\n", nat;
+
+    for(i=0; i<nat; i++)
+      printf "%  3s   % 15.10f  % 15.10f  % 15.10f   % 15.10f  % 15.10f  % 15.10f\n", atom[i], x[i], y[i], z[i], fx[i], fy[i], fz[i];
+  }
+}'
+}
+
+
+# ------------------------------------------------------------------------
+# Function: pwoAnimCoor
+# Extract:  INITIAL or ALL coordinates
+# Perform:  read PW-output file and print the XSF file according to
+#           specified flags
+# ------------------------------------------------------------------------
+
+pwoAnimCoor() {
     #set -x
-    pwoUsage "$# -lt 1" "$0 --animxsf|-a [pw-output-file1] ..."
+    pwoUsage "$# -lt 1" "$0 --animcoor|-ac|--animxsf|-a [pw-output-file1] or   $0 --inicoor|-ic [pw-output-file]"
     
+    option=$1
     only_init=0
     case $1 in
-	--inicoor|-ic) only_init=1;;
+	--inicoor|-ic) only_init=1; shift;;
+	--animcoor|-ac|--animxsf|-a) only_init=0; shift;;
     esac
 
-    if [ $# -eq 1 ]; then
-	pwNucleiCharges -  pw.$$    
-	cat - >> pw.$$
+    if test $# -eq 0 ; then
+	input=pw.$$
+	cat - >> $input
     else
-	pwNucleiCharges $2  pw.$$
-	# if "pw-output-file" is glob expresion -> must merge all outputs
-	for i in `seq 2 $#`
-	do
-	    cat $2 >> pw.$$
-	    shift	    
-	done
+	input=$1
     fi
-    inp=pw.$$
 
-    nstep=`egrep "Final estimate of positions|Search of equilibrium positions|Entering Dynamics;" $inp | wc | awk '{print $1}'`
-    # add also initial coordinates
-    nstep=`expr $nstep + 1`
+    pwoCheckPWSCFVersion $option $input
 
-    cat "$inp" | awk -v bohr=$BOHR -v astep=$nstep -v onlyinit=$only_init -- '
-function isInt(__num) {
-   if ( __num ~ /^[0-9]+$/ ) return 1;
-   else return 0;
-}
-function PrintItyp(__ityp) {
-   if ( __ityp ~ /^[0-9]+$/ ) return atn[ __ityp ];
-   else return __ityp;
-}
-
-function PrintPrimCoor(nstep, nat, atn, ityp, x, y, z, fx, fy, fz) {
-    if (onlyinit) {
-       print " PRIMCOORD";
-    } else {
-       print " PRIMCOORD", nstep;
-    }
-    print nat, 1;
-    for(i=1; i<=nat; i++) {
-	printf "% 3s ", PrintItyp(ityp[i]); 
-        printf "% 15.10f  % 15.10f  % 15.10f   % 15.10f  % 15.10f  % 15.10f\n", x[i], y[i], z[i], fx[i], fy[i], fz[i];
-    }
-}
-function GetInitCoor(nstep, nat, a0, ityp, x, y, z) {
-    for(i=1; i<=nat; i++) {
-        ityp[i]=$2;
-	split($0,rec,"("); split(rec[3],coor," ");
-	x[i]= a0*coor[1]; y[i]=a0*coor[2]; z[i]=a0*coor[3];
-	getline;
-    }
-}
-function GetPrimCoor(nstep, nat, a0, ityp, x, y, z) {
-    for(i=1; i<=nat; i++) {
-        if (isInt($4)) {
-           x[i]=a0*$1; y[i]=a0*$2; z[i]=a0*$3; ityp[i]=$4;
-        } else { 
-           x[i]=a0*$2; y[i]=a0*$3; z[i]=a0*$4; ityp[i]=$1;
-        }
-	getline;
-    }
-}
-function GetForces(nstep, nat, ityp, fx, fy, fz) {
-    for(i=1; i<=nat; i++) {
-	if (nstep==1) ityp[i]=$4;
-	fx[i]=$7; fy[i]=$8; fz[i]=$9;
-	getline;
-    }
+    ncoor=`egrep "ATOMIC_POSITIONS" $input | wc | awk '{print $1}'`
+    ncoor=`expr $ncoor + 1`; # add another step for initial coordinates
+    nvec=`egrep "CELL_PARAMETERS" $input | wc | awk '{print $1}'`
+    
+    cat "$input" | awk \
+	-v ncoor=$ncoor \
+	-v nvec=$nvec \
+	-v onlyinit=$only_init '
+function PrintPrimVec(is_vc,ith,vec) {
+  if (!is_vc) printf "PRIMVEC\n";
+  else        printf "PRIMVEC %d\n",ith;
+  printf "  %15.10f %15.10f %15.10f\n", v[0,0], v[0,1], v[0,2];
+  printf "  %15.10f %15.10f %15.10f\n", v[1,0], v[1,1], v[1,2];
+  printf "  %15.10f %15.10f %15.10f\n", v[2,0], v[2,1], v[2,2];  
 }
 
-BEGIN { 
-    nstep=1; print_celldm=1; 
-    for (i=0; i<100; i++) atn[i]=i;
+function PrintPrimCoor(onlyinit,istep, nat, atom, x, y, z, fx, fy, fz) {
+  if (onlyinit) {
+    print " PRIMCOORD";
+  } else {
+    print " PRIMCOORD", istep;
+  }
+  print nat, 1;
+  
+  for(i=0; i<nat; i++) {
+    printf "  %3s    % 15.10f  % 15.10f  % 15.10f    % 15.10f  % 15.10f  % 15.10f\n", atom[i], x[i], y[i], z[i], fx[i], fy[i], fz[i];
+  }
+}
+
+function GetInitCoor(nat, scale, atom, x, y, z) {
+  for(i=0; i<nat; i++) {
+    atom[i]=$2;
+    split($0,rec,"("); split(rec[3],coor," ");
+    x[i]= scale*coor[1]; y[i]=scale*coor[2]; z[i]=scale*coor[3];
     getline;
-    ntyp=$1;
-    for (i=0; i<ntyp; i++) {
-	getline;
-	atn[$1] = $2;
-    }
+  }
 }
 
-/bravais-lattice index/       { ibrav=$NF; }
-
-/celldm\(1\)=/                { a0=$2*bohr; }
-
-/crystal axes:/               {
-    if (print_celldm) {
-	for (i=0; i<3; i++) {
-	    getline;
-	    for (j=4; j<7; j++) {
-		vec[i,j-4] = $j * a0;
-	    }
-	}
-        #---
-        # this is now donw posteriori (see below)
-        #if (!onlyinit) printf " ANIMSTEPS %d\n", astep
-        #---
-	printf " DIM-GROUP\n 3 1\n PRIMVEC\n";
-	printf "%15.10f %15.10f %15.10f\n", vec[0,0], vec[0,1], vec[0,2];
-	printf "%15.10f %15.10f %15.10f\n", vec[1,0], vec[1,1], vec[1,2];
-	printf "%15.10f %15.10f %15.10f\n", vec[2,0], vec[2,1], vec[2,2];
-	print_celldm=0;
-    }
+function CrysToCartCoor(i,v,a,b,c) {
+  # Crystal --> Cartesian (ANGSTROM units) conversion
+  x[i] = v[0,0]*a + v[1,0]*b + v[2,0]*c;
+  y[i] = v[0,1]*a + v[1,1]*b + v[2,1]*c;
+  z[i] = v[0,2]*a + v[1,2]*b + v[2,2]*c;
 }
 
-/number of atoms/  { nat=$NF; }
-
-/Cartesian axes|Cartesian axes/  { 
-    getline; getline; getline;
-    if (nstep == 1) GetInitCoor(nstep, nat, a0, ityp, x, y, z);
-    if (onlyinit == 1) {
-       PrintPrimCoor(nstep, nat, atn, ityp, x, y, z, fx, fy, fz);
-       exit;
-    }
-}
-/Final estimate of positions/     { 
-    getline; nstep++;
-    # maybe current line is: "Cartesian coordinates"
-    if ( NF != 4 ) getline;
-    GetPrimCoor(nstep, nat, a0, ityp, x, y, z);
-    for (i=1; i<=nat; i++) {
-	fx[i]=0.0; fy[i]=0.0; fz[i]=0.0;
-    }
-    PrintPrimCoor(nstep, nat, atn, ityp, x, y, z, fx, fy, fz); 
+function make_error(message,status) {
+  printf "ERROR: %s\n", message;
+  error_status=status;
+  exit status;
 }
 
-/Search of equilibrium positions/ { 
-    getline; getline; nstep++;
-    # maybe current line is: "Cartesian coordinates"
-    if ( NF != 4 ) getline;
-    for (i=1; i<=nat; i++) {
-	fx[i]=0.0; fy[i]=0.0; fz[i]=0.0;
-    }
-    GetPrimCoor(nstep, nat, a0, ityp, x, y, z);
-}
-/Entering Dynamics;/ {
-    getline; getline; getline; nstep++;
-    for (i=1; i<=nat; i++) {
-	fx[i]=0.0; fy[i]=0.0; fz[i]=0.0;
-    }
-    GetPrimCoor(nstep, nat, a0, ityp, x, y, z);
-}
-/Forces acting on atoms/          { 
-    getline; getline; 
-    GetForces(nstep, nat, ityp, fx, fy, fz); 
-    PrintPrimCoor(nstep, nat, atn, ityp, x, y, z, fx, fy, fz); 
-}' > pwo2xsf.xsf_out
 
-    if [ $only_init -eq 0 ]; then
+BEGIN {
+  bohr=0.529177;
+  istep=1;
+  error_status=0;
+  if (nvec>1 || (nvec==1 && ncoor==2)) {
+    is_vc=1; # variable-cell
+  } else {
+    is_vc=0;
+  }
+}
+
+
+/celldm\(1\)=/    { a0=$2*bohr; scale=a0; l_scale=a0; }
+/number of atoms/ { nat=$NF; }
+
+
+/crystal axes:/   {
+  # read the lattice-vectors
+  for (i=0; i<3; i++) {
+    getline;
+    for (j=4; j<7; j++) v[i,j-4] = $j * a0;      
+  }
+  if (istep==1) {
+    printf "CRYSTAL\n";
+    PrintPrimVec(is_vc,istep,v);
+  }
+}
+
+
+/Cartesian axes/  { 
+  # read INITIAL coordinates
+  getline; getline; getline;
+  if (istep == 1) GetInitCoor(nat, a0, atom, x, y, z);
+}
+
+
+$1 == "CELL_PARAMETERS" {
+  # read the lattice-vectors (type=LATEST and OPTIMIZED)
+  ff=l_scale;
+  if      ( $2 ~ /alat/ )     ff=a0;
+  else if ( $2 ~ /angstrom/ ) ff=1.0;
+  else if ( $2 ~ /bohr/ )     ff=bohr;
+  for (i=0; i<3; i++) {
+    getline;
+    if (NF != 3) make_error("error reading CELL_PARAMETERS records",1);
+    for (j=1; j<4; j++) {
+      v[i,j-1] = ff * $j;       
+    }
+  }
+  if (is_vc) PrintPrimVec(is_vc,istep,v);
+}  
+
+
+$1 == "ATOMIC_POSITIONS" {
+  # read atomic positions
+  crystal_coor=0;
+  if      ( $2 ~ /alat/ )     scale=a0;
+  else if ( $2 ~ /angstrom/ ) scale=1.0;
+  else if ( $2 ~ /bohr/ )     scale=bohr;
+  else if ( $2 ~ /crystal/ ) {
+    scale=1.0;
+    crystal_coor=1;
+  }
+  for(i=0; i<nat; i++) {
+    getline;
+    if (NF != 4) make_error("error reading ATOMIC_POSITIONS records",1);
+    atom[i]=$1; 
+    a=scale*$2;
+    b=scale*$3;
+    c=scale*$4; 
+    if (crystal_coor) {
+      CrysToCartCoor(i,v,a,b,c); 
+    } else {
+      x[i]=a; y[i]=b; z[i]=c; 
+    }
+  }
+}
+
+
+/Forces acting on atoms/ { 
+  # read forces
+  getline;
+  for(i=0; i<nat; i++) {
+    getline;
+    if (NF != 9) make_error("error reading Forces records",1);
+    fx[i]=$7; fy[i]=$8; fz[i]=$9;
+  }
+  if (onlyinit) exit 0;
+  else PrintPrimCoor(onlyinit,istep, nat, atom, x, y, z, fx, fy, fz); 
+  istep++;
+}
+
+
+END {
+  if (error_status == 0 && onlyinit == 1) {
+    PrintPrimCoor(onlyinit,istep, nat, atom, x, y, z, fx, fy, fz);
+  }
+}
+' > xsf.$$
+
+    if test $only_init -eq 0 ; then
     # Assign the number of ANIMSTEPS here. The reason is that the
     # output file (queue runs) is the result of several job runs, then
     # some of them might be terminated on the "wrong" place, and the
     # initial ANIMSTEPS might be wrong. The most secure way is to extract the 
     # sequential digit from the last "PRIMCOORD id" record.
-	nsteps=`grep PRIMCOORD pwo2xsf.xsf_out | tail -1 | awk '{print $2}'`    
-	echo " ANIMSTEPS $nsteps" > pwo2xsf.xsf_out1
-	cp pwo2xsf.xsf_out pwo2xsf.xsf_out2
-	cat pwo2xsf.xsf_out1 pwo2xsf.xsf_out2 | tee pwo2xsf.xsf_out
-    else
-	cat pwo2xsf.xsf_out
+	#set -x
+	nsteps=`grep PRIMCOORD xsf.$$ | wc | awk '{print $1}'`    
+	echo "ANIMSTEPS $nsteps" 
     fi
+    cat xsf.$$
 }
 
 
 #######################################################################
 ####                              MAIN                              ###
 #######################################################################
-if [ $# -eq 0 ]; then
-    cat pwo2xsfUsage.$$
-    pwoExit
+
+scriptdir=$XCRYSDEN_TOPDIR/scripts; # take advantage of XCRYSDEN if it exists
+
+AWK=`type awk`
+if test "$AWK" == ""; then 
+    echo "ERROR: awk program not found"
+    pwoExit 1
 fi
 
-r=0
-if [ "$1" = "-r" ]; then
-    r=1
-    shift
+
+if [ $# -eq 0 ]; then
+    cat pwo2xsfUsage.$$
+    pwoExit 1
 fi
 
 case $1 in
-    --inicoor|-ic)    pwoAnimXSF $@;;
-    --latestcoor|-lc) pwoPrintCoor $@;;
-    --optcoor|-oc)    pwoPrintCoor $@;;
-    --animxsf|-a)     pwoAnimXSF $@;;    
-    *) cat pwo2xsfUsage.$$; pwoExit;;
+    --inicoor|-ic)           pwoAnimCoor $@;;
+    --latestcoor|-lc)        pwoOptCoor $@;;
+    --optcoor|-oc)           pwoOptCoor $@;;
+    --animcoor|-ac|--animxsf|-a) pwoAnimCoor $@;;    
+    *) cat pwo2xsfUsage.$$; pwoExit 1;;
 esac
 
-rm -f  pwo2xsfUsage.$$ pw.$$
-if [ $r -eq 1 ]; then
-    rm nuclei.charges
-fi
-
-exit 0
+pwoExit 0
