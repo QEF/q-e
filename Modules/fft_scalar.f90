@@ -36,7 +36,7 @@
         SAVE
 
         PRIVATE
-        PUBLIC :: set_scale, fft_x, fft_y, fft_z, fft_xy
+        PUBLIC :: set_scale, fft_z, fft_xy
         PUBLIC :: cft_1z, cft_2xy, cft_b, cfft3d, cfft3ds
         PUBLIC :: good_fft_dimension, allowed, good_fft_order
 
@@ -123,7 +123,7 @@
 !
 !=----------------------------------------------------------------------=!
 !
-   SUBROUTINE fft_z( isign, c, ldc, nz, nsl )
+   SUBROUTINE fft_z( c, nsl, nz, ldc, sgn )
 
      !  Transforms the 1D sequences stored in the columns of 2D array C,
      !  in Plane-Wave context, these represent the sticks in z direction 
@@ -131,7 +131,7 @@
        
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN) :: isign
+     INTEGER, INTENT(IN) :: sgn
      INTEGER, INTENT(IN) :: nsl, nz, ldc
      COMPLEX (dbl) :: c(:,:) 
 
@@ -144,7 +144,7 @@
 
      REAL(dbl)  :: tscale
      INTEGER    :: i, j
-     INTEGER    :: err, idir, ip
+     INTEGER    :: err, idir, ip, isign
      INTEGER, SAVE :: dims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      INTEGER :: isys = 0
@@ -152,6 +152,8 @@
      IF( nsl < 0 ) THEN
        CALL errore(" fft_scalar: fft_z ", " nsl out of range ", nsl)
      END IF
+
+     isign = -sgn
 
      IF( ( isign /= 0 ) .AND. ( ldc /= SIZE(c,1) ) ) THEN
        WRITE( 6, fmt = "( ' MSG: ', 2I5 )" ) SIZE(c,1), ldc
@@ -259,271 +261,6 @@
 !
 !
 !
-!         FFT along "y" direction
-!
-!
-!
-!=----------------------------------------------------------------------=!
-!
-
-   SUBROUTINE fft_y(isign, r, ldx, ldy, pl2ix, nxl, ny, nzl)
-
-     IMPLICIT NONE
-
-     INTEGER, INTENT(IN) :: isign, pl2ix(:), ldx, ldy, nxl, ny, nzl
-     COMPLEX (dbl) :: r(:,:,:)
-     COMPLEX (dbl) :: yt(ny)
-     INTEGER :: i, k, j, err, idir, ip
-     INTEGER, SAVE :: icurrent = 1
-     INTEGER, SAVE :: dims(4,ndims) = -1
-     INTEGER :: isys = 0
-
-     IF( ( isign /= 0 ) .AND. ( ldx /= SIZE(r,1) ) ) &
-       CALL errore(" fft_scalar: fft_y ", " wrong ldx size ", ldx)
-     IF( ( isign /= 0 ) .AND. ( ldy /= SIZE(r,2) ) ) &
-       CALL errore(" fft_scalar: fft_y ", " wrong ldy size ", ldy)
-
-     !
-     !   Here initialize table only if necessary
-     !
-
-     ip = -1
-     DO i = 1, ndims
-
-       !   first check if there is already a table initialized
-       !   for this combination of parameters
-
-       IF( ( ny == dims(1,i) ) .AND. ( ldx == dims(2,i) )  .AND. &
-           ( ldy == dims(3,i) ) .AND. ( nzl == dims(4,i) ) ) THEN
-         ip = i
-         EXIT
-       END IF
-
-     END DO
-
-     IF( ip == -1 ) THEN
-
-       !   no table exist for these parameters
-       !   initialize a new one
-
-       ! WRITE(6, fmt="('DEBUG fft_y, initializing tables ', I3)" ) icurrent
-
-#if defined __FFTW
-
-       IF( fw_plan( 2, icurrent) /= 0 )   CALL DESTROY_PLAN_1D( fw_plan( 2, icurrent) )
-       IF( bw_plan( 2, icurrent) /= 0 )   CALL DESTROY_PLAN_1D( bw_plan( 2, icurrent) )
-       idir = -1; CALL CREATE_PLAN_1D( fw_plan( 2, icurrent), ny, idir)
-       idir = +1; CALL CREATE_PLAN_1D( bw_plan( 2, icurrent), ny, idir)
-
-#elif defined __AIX
-
-       CALL DCFT ( 1, r(1,1,1), ldx, ldx*ldy, r(1,1,1), ldx, ldx*ldy, ny, nzl,  1, 1.0d0, &
-          fw_table( 1, 2, icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, r(1,1,1), ldx, ldx*ldy, r(1,1,1), ldx, ldx*ldy, ny, nzl, -1, 1.0d0, &
-          bw_table(1, 2, icurrent), ltabl, work(1), lwork)
-
-#elif defined __SGI
-
-       CALL ZFFT1DI( ny, tabley(1, icurrent) )
-
-#else
-
-       CALL errore(' fft_y ',' no scalar fft driver specified ', 1)
-
-#endif
-
-       dims(1,icurrent) = ny;  dims(2,icurrent) = ldx
-       dims(3,icurrent) = ldy; dims(4,icurrent) = nzl
-       ip = icurrent
-       icurrent = MOD( icurrent, ndims ) + 1
-
-     END IF
-
-     !
-     !   Now perform the FFTs using machine specific drivers
-     !
-
-#if defined __FFTW
-
-     IF( isign /= 0 ) THEN
-       do i = 1, nxl
-         do k = 1, nzl
-           IF( pl2ix( i ) > 0 ) THEN
-             IF( isign > 0 ) THEN
-               call FFT_Y_STICK( fw_plan( 2, ip), r(i,1,k), ny, ldx) 
-             ELSE
-               call FFT_Y_STICK( bw_plan( 2, ip), r(i,1,k), ny, ldx) 
-             END IF
-           END IF
-         end do
-       end do
-     END IF
-
-#elif defined __AIX
-
-     IF( isign /= 0 ) THEN
-       DO i = 1, nxl
-         IF( pl2ix( i ) > 0 ) THEN
-           IF( isign > 0 ) THEN
-             CALL DCFT ( 0, r(i,1,1), ldx, ldx*ldy, r(i,1,1), ldx, ldx*ldy, ny, nzl, &
-               isign, 1.0d0, fw_table( 1, 2, ip), ltabl, work, lwork)
-           ELSE
-             CALL DCFT ( 0, r(i,1,1), ldx, ldx*ldy, r(i,1,1), ldx, ldx*ldy, ny, nzl, &
-               isign, 1.0d0, bw_table( 1, 2, ip), ltabl, work, lwork)
-           END IF
-         END IF
-       END DO
-     END IF
-
-#elif defined __SGI
-
-     IF( isign /= 0 ) THEN
-       do i = 1, nxl
-         IF( pl2ix( i ) > 0 ) THEN
-         call zfftm1d( isign, ny, nzl, r(i,1,1), ldx, ldx*ldy, tabley(1,ip) )
-         END IF
-       end do
-     END IF
-
-#else
-
-     CALL errore(' fft_y ',' no scalar fft driver specified ', 1)
-
-#endif
-
-     RETURN
-   END SUBROUTINE fft_y
-
-!
-!=----------------------------------------------------------------------=!
-!
-!
-!
-!         FFT along "x" direction
-!
-!
-!
-!=----------------------------------------------------------------------=!
-!
-
-   SUBROUTINE fft_x(isign, r, ldx, ldy, nx, nyl, nzl)
-
-     INTEGER, INTENT(IN) :: isign, ldx, ldy, nzl, nyl, nx
-     COMPLEX (dbl) :: r(:,:,:)
-     INTEGER :: i, j, k, err, idir, ip
-     INTEGER, SAVE :: dims(1,ndims) = -1
-     INTEGER, SAVE  :: icurrent = 1
-     INTEGER :: isys = 0
-
-     IF( ( isign /= 0 ) .AND. ( ldx /= SIZE(r,1) ) ) &
-       CALL errore(" fft_scalar: fft_x ", " wrong ldx size ", ldx)
-     IF( ( isign /= 0 ) .AND. ( ldy /= SIZE(r,2) ) ) &
-       CALL errore(" fft_scalar: fft_x ", " wrong ldy size ", ldy)
-
-     !
-     !   Here initialize table only if necessary
-     !
-
-     ip = -1
-     DO i = 1, ndims
-
-       !   first check if there is already a table initialized
-       !   for this combination of parameters
-
-       IF( ( nx == dims(1,i) ) ) THEN
-         ip = i
-         EXIT
-       END IF
-
-     END DO
-
-     IF( ip == -1 ) THEN
-
-       !   no table exist for these parameters
-       !   initialize a new one
-
-       ! WRITE(6, fmt="('DEBUG fft_x, initializing tables ', I3)" ) icurrent
-
-#if defined __FFTW
-
-       IF( fw_plan( 1, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_plan( 1, icurrent) )
-       IF( bw_plan( 1, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 1, icurrent) )
-       idir = -1; CALL CREATE_PLAN_1D( fw_plan( 1, icurrent), nx, idir) 
-       idir = +1; CALL CREATE_PLAN_1D( bw_plan( 1, icurrent), nx, idir) 
-
-#elif defined __SGI
-
-       CALL ZFFT1DI( nx, tablex(1,icurrent) )
-
-#elif defined __AIX
-
-       CALL DCFT ( 1, r(1,1,1), 1, 1, r(1,1,1), 1, 1, nx, 1,  1, &
-          1.0d0, fw_table(1, 1, icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, r(1,1,1), 1, 1, r(1,1,1), 1, 1, nx, 1, -1, &
-          1.0d0, bw_table(1, 1, icurrent), ltabl, work(1), lwork)
-
-#else
-
-       CALL errore(' fft_x ',' no scalar fft driver specified ', 1)
-
-#endif
-
-       dims(1,icurrent) = nx
-       ip = icurrent
-       icurrent = MOD( icurrent, ndims ) + 1
-
-     END IF
-
-     !
-     !   Now perform the FFTs using machine specific drivers
-     !
-
-#if defined __FFTW
-
-     IF( isign > 0 ) THEN
-       CALL FFT_X_STICK( fw_plan( 1, ip), r(1,1,1), nx, nyl, nzl, ldx, ldy ) 
-     ELSE IF( isign < 0 ) THEN
-       CALL FFT_X_STICK( bw_plan( 1, ip), r(1,1,1), nx, nyl, nzl, ldx, ldy ) 
-     END IF
-
-#elif defined __SGI
-
-     IF( isign /= 0 ) THEN
-       DO i = 1, nzl
-         call zfftm1d( isign, nx, nyl, r(1,1,i), 1, ldx, tablex(1,ip) )
-       END DO
-     END IF
-
-#elif defined __AIX
-
-     IF( isign /= 0 ) THEN
-       DO i = 1, nzl
-         DO j = 1, nyl
-           IF( isign > 0 ) THEN
-             CALL DCFT ( 0, r(1,j,i), 1, 1, r(1,j,i), 1, 1, nx, 1, isign, &
-               1.0d0, fw_table( 1, 1, ip), ltabl, work, lwork)
-           ELSE
-             CALL DCFT ( 0, r(1,j,i), 1, 1, r(1,j,i), 1, 1, nx, 1, isign, &
-               1.0d0, bw_table( 1, 1, ip), ltabl, work, lwork)
-           END IF
-         END DO
-       END DO
-     END IF
-
-#else
-
-     CALL errore(' fft_x ',' no scalar fft driver specified ', 1)
-
-#endif
-
-     RETURN
-   END SUBROUTINE fft_x
-
-!
-!=----------------------------------------------------------------------=!
-!
-!
-!
 !         FFT along "x" and "y" direction
 !
 !
@@ -552,7 +289,7 @@
      LOGICAL :: dofft( nfftx )
 
 #if defined __HPM
-      CALL f_hpmstart( 40 + ABS(sgn), 'cft_2xy' )
+      CALL f_hpmstart( 40 + ABS(sgn), 'fft_xy' )
 #endif
 
      isign = - sgn
@@ -560,7 +297,7 @@
      dofft( 1 : nx ) = .TRUE.
      IF( PRESENT( pl2ix ) ) THEN
        IF( SIZE( pl2ix ) < nx ) &
-         CALL errore( ' cft_2xy ', ' wrong dimension for arg no. 8 ', 1 )
+         CALL errore( ' fft_xy ', ' wrong dimension for arg no. 8 ', 1 )
        DO i = 1, nx
          IF( pl2ix(i) < 1 ) dofft( i ) = .FALSE.
        END DO
@@ -589,7 +326,7 @@
        !   no table exist for these parameters
        !   initialize a new one 
 
-       ! WRITE(6, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
+       ! WRITE(6, fmt="('DEBUG fft_xy, reinitializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -611,7 +348,7 @@
        CALL DCFT ( 1, r(1,1,1), ldx, 1, r(1,1,1), ldx, 1, ny, 1, -1, 1.0d0, &
           bw_table(1, 2, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, r(1,1,1), 1, ldx, r(1,1,1), 1, ldx, nx, ny,  1, &
-          tscale, fw_table( 1, 1, icurrent), ltabl, work(1), lwork)
+          1.0d0, fw_table( 1, 1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1,1,1), 1, ldx, r(1,1,1), 1, ldx, nx, ny, -1, &
           1.0d0, bw_table(1, 1, icurrent), ltabl, work(1), lwork)
 
@@ -622,7 +359,7 @@
 
 #else
 
-       CALL errore(' fft_y ',' no scalar fft driver specified ', 1)
+       CALL errore(' fft_xy ',' no scalar fft driver specified ', 1)
 
 #endif
 
@@ -727,7 +464,7 @@
 
 #else
 
-     CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
+     CALL errore(' fft_xy ',' no scalar fft driver specified ', 1)
 
 #endif
 
