@@ -1,10 +1,10 @@
  &INPUTPP
-            prefix = 'pwscf' ,
-            outdir = '/scratch/tone/test/' ,
-         io_choice = 'both' ,
-            DeltaE = 0.01 ,
-         smoothing = 0.15 ,
-              Emin = -10.0 ,
-              Emax = 4.0 ,
+                      prefix = 'pwscf' ,
+                      outdir = '/scratch/tone/test/' ,
+                      ngauss = 1 ,
+                     degauss = 0.03 ,
+                      DeltaE = 0.01 ,
+                        Emin = -10.0 ,
+                        Emax = 4.0 ,
  /
 
