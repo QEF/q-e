@@ -972,7 +972,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
        CALL mp_bcast( npw_g, ipdest )
 
-       CALL read_restart_wfc(ndr, tovrw, trdwfc, ik, nkstot, kunit, ispin, nspin, &
+       CALL read_restart_wfc(ndr, tovrw, trdwfc, ik_, nkstot, kunit, ispin, nspin, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), tigl, npw )
 
        ! WRITE(6,*) ' *** DEBUG readfile ', evc(1,1), nsizwfc, iunitwfc, (ik-iks+1)
