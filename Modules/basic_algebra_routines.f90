@@ -183,8 +183,10 @@ MODULE basic_algebra_routines
           !
        END DO      
 #else
-       CALL DGER( dim1, dim2, 1.D0, &
-                  vector1, 1, vector2, 1, matrix, MAX( dim1, dim2 )  )
+       !
+       matrix = 0.D0
+       !
+       CALL DGER( dim1, dim2, 1.D0, vector1, 1, vector2, 1, matrix, dim1 )
 #endif
        !
      END FUNCTION matrix
