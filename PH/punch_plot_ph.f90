@@ -71,7 +71,7 @@ subroutine punch_plot_ph
   !
   !     reads the delta_rho on the aux variable
   !
-  aux1(:,:) = (0.d0, 0d.0)
+  aux1(:,:) = (0.d0, 0.d0)
   imode0 = 0
   do irr = 1, nirr
      if (comp_irr (irr) .eq.1) then
