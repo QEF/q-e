@@ -471,7 +471,7 @@ MODULE path_io_routines
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
                    WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,X))' ) frozen(i), vel_zeroed(i)
+                          FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
                       !
@@ -496,7 +496,7 @@ MODULE path_io_routines
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Mode: ",I4)' ) i
                    WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,X))' ) ft_frozen(i), ft_vel_zeroed(i)
+                          FMT = '(2(L1,1X))' ) ft_frozen(i), ft_vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
                       !
@@ -521,7 +521,7 @@ MODULE path_io_routines
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
                    WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,X))' ) frozen(i), vel_zeroed(i)
+                          FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
                       !
@@ -542,7 +542,7 @@ MODULE path_io_routines
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
                    WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,X))' ) frozen(i), vel_zeroed(i)
+                          FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
                       !
@@ -564,7 +564,7 @@ MODULE path_io_routines
                    i = 1
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, FMT = '(2("F",X))' )
+                   WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
                    !
                    DO j = 1, dim, 3
                       !
@@ -576,7 +576,7 @@ MODULE path_io_routines
                    i = num_of_images
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, FMT = '(2("F",X))' )
+                   WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
                    !
                    DO j = 1, dim, 3
                       !
@@ -673,7 +673,7 @@ MODULE path_io_routines
                       !
                       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
                       WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,X))' ) frozen(i), vel_zeroed(i)
+                             FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
                       !
                       DO j = 1, dim, 3
                          !
@@ -698,7 +698,7 @@ MODULE path_io_routines
                       !
                       WRITE( UNIT = iunrestart, FMT = '("Mode: ",I4)' ) i
                       WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,X))' ) ft_frozen(i), ft_vel_zeroed(i)
+                             FMT = '(2(L1,1X))' ) ft_frozen(i), ft_vel_zeroed(i)
                       !
                       DO j = 1, dim, 3
                          !
@@ -723,7 +723,7 @@ MODULE path_io_routines
                       !
                       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
                       WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,X))' ) frozen(i), vel_zeroed(i)
+                             FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
                       !
                       DO j = 1, dim, 3
                          !
@@ -744,7 +744,7 @@ MODULE path_io_routines
                       !
                       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
                       WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,X))' ) frozen(i), vel_zeroed(i)
+                             FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
                       !
                       DO j = 1, dim, 3
                          !
@@ -766,7 +766,7 @@ MODULE path_io_routines
                       i = 1
                       !
                       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, FMT = '(2("F",X))' )
+                      WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
                       !
                       DO j = 1, dim, 3
                          !
@@ -778,7 +778,7 @@ MODULE path_io_routines
                       i = num_of_images
                       !
                       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, FMT = '(2("F",X))' )
+                      WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
                       !
                       DO j = 1, dim, 3
                          !
