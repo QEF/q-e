@@ -18,7 +18,7 @@ SUBROUTINE close_phq( flag )
   USE mp_global,     ONLY : me_pool
   USE us,            ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iunrec, iunigk
+                            iunrec
   USE control_ph,    ONLY : zue, epsil
   USE output,        ONLY : fildrho
   !
