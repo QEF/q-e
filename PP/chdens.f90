@@ -16,6 +16,7 @@ program chdens
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
+  USE parameters,       ONLY : ntypx
   use constants, only:  pi, fpi
   use cell_base
   use basis
