@@ -1,12 +1,10 @@
-TODO LIST - 18 February 2004
+TODO LIST - 26 February 2004
 
 INSTALLATION/PORTING
 
 - expand new configure to cover as many configurations as possible
 
-- Linux Alpha ?
-
-- Make.irix ?
+- too many options for SGI machines
 
 COMMON
 
@@ -34,14 +32,7 @@ COMMON
 
 - process numbering: 1 to nproc or 0 to nproc-1 ?
 
-- constraints
-
 PW
-
-- extend wavefunctions extrapolation to ionic relaxation and to NEB 
-  calculations. subroutine find_alpha_and_beta() should be moved from 
-  dynamics.f90 to update_pot.f90 and relative informations should be written 
-  on a new file
 
 - remove iswitch, replace with existing (minus_q, lscf)
   or new logical variables
@@ -96,7 +87,7 @@ PW
     S|psi> is  inexpensive)
 
 - output should be more informative and less confused
-  the printout with UPF PP is incomplete or miisleading (lloc=0)
+  the printout with UPF PP is incomplete or misleading (lloc=0)
 
 - the various *bfgs, dynamics, vcsmd should be rewritten in a more
   uniform way with respect to what they print and how the parallel
@@ -149,5 +140,7 @@ CPV:
 - check on small box size
 
 - replace calls to zero, ssum, csum, blas copy, scal, with f90 commands
+
+- the output is horrible
 
 
