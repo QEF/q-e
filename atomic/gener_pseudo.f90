@@ -213,6 +213,7 @@ subroutine gener_pseudo
         do n=1,ikk(ns)
            vnl(n,lam)=chis(n,ns)/phis(n,ns)
         enddo
+        !
      enddo
      !
      !    unscreen the local potential, add it to all channels

@@ -43,7 +43,7 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
              d2pr(xc,xc(7),r(n)) + dpoly**2 - vpsloc(n))*phis(n,ns)
      enddo
      do n = ik+1,mesh
-        chis(n,ns) =0.0_dp
+        chis(n,ns) = (vpot(n,1) - vpsloc(n))*phis(n,ns)
      enddo
      return
   end if
