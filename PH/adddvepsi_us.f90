@@ -34,7 +34,7 @@ do nt = 1, ntyp
                do ibnd=1, nbnd_occ(kpoint)
                   ps(ibnd) = ps(ibnd)                             &
                      + becp2(jkb,ibnd)*(0.d0,1.d0)*qq(ih,jh,nt)+  &
-                       becp1(jkb,ibnd,kpoint)*(0.d0,1.d0)*fact
+                       becp1(jkb,ibnd,kpoint)*fact
                enddo
             enddo
             do ibnd = 1, nbnd_occ (kpoint)
