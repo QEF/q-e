@@ -1,3 +1,15 @@
+13 Sep 2004 Merge of cell dynamics (CC): 
+            - same cell dynamics subroutines used in CP and FPMD
+            - input pressure in GPa ( both code )
+            - Output stress in GPa ( both code )
+            - Output layout made more similar:
+              energies, positions, forces, cell displayed in the same way
+            - Zero velocities after a restart implemented in CP
+            - Nose and damped dynamics for cell implemented
+              in FPMD like in CP
+            Various GUI changes (TK)
+            Minor ouput fornat change (PG)
+
  8 Sep 2004 configure.old, documentation for configure updated [Gerardo]
             moved install/README.install to README.install_old [Gerardo]
 
