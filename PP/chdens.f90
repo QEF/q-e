@@ -27,9 +27,6 @@ program chdens
   use scf, only: rho
   USE wavefunctions_module,  ONLY: psic
   use io_files, only: nd_nmbr
-#ifdef __PARA
-  use para, only: nprocp, npool
-#endif
 
   implicit none
   integer, parameter :: nfilemax = 7
@@ -68,13 +65,6 @@ program chdens
 
   !
   call start_postproc (nd_nmbr)
-#ifdef __PARA
-  !
-  ! Works for parallel machines but only for one processor !!!
-  !
-  if (nprocp /= 1 .or. npool /= 1) &
-       call errore ('chdens','please run on a single processor',1)
-#endif
   !
   !   set the DEFAULT values
   !
