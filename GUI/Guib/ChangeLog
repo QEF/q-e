@@ -1,3 +1,7 @@
+Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding a "scriptvar" Guib keywords (=script variables used inside
+		the module definition files)
+	
 Tue Apr 06 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* open.itcl: adding ::guib::moduleObj::readFileError and
 		::guib::moduleObj::readFileWrongFormat for dealing with

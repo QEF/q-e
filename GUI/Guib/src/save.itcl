@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: save.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: save.itcl,v 1.2 2004-09-04 07:57:27 kokalj Exp $ 
 #
 
 
@@ -424,8 +424,10 @@ body ::guib::moduleObj::_save {obj} {
 			#
 			for {set ir 1} {$ir <= $nrow} {incr ir} {
 			    for {set ic 1} {$ic <= $ncol} {incr ic} {
+				set varIdent ${tableName}($ir,$ic)
 				set varName  ${tableName}($ir,$ic)
 				set varValue [tablevalue $tableIdent $ir $ic]
+				set widget   [getWidgetFromVarident $varIdent]
 
 				if { [isNotDisabledWidget $widget] } {
 				    if { [_findKeywordObjType $obj required] == 1 \
