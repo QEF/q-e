@@ -22,20 +22,20 @@ module bhs
   integer lloc(nsx)
 end module bhs
 
-module control_module
-  !     iprsta = output verbosity (increasing from 0 to infinity)
-  !     iprint = print output every iprint step
-  !              if true, do this:
-  !     tfor   = ion dynamics (calculate forces)
-  !     tpre   = calculate pressure
-  !     thdyn  = variable-cell dynamics
-  !     tvlocw = write potential to unit 46 (seldom used)
-  !     trhor  = read rho from unit 47      (seldom used)
-  !     trhow  = write rho to  unit 47      (seldom used)
-  !     tbuff  = save wfc on unit 21        (never used)
-  integer iprsta, iprint
-  logical tfor, tpre, thdyn, tbuff, tvlocw, trhor, trhow
-end module control_module
+!module control_module
+!  !     iprsta = output verbosity (increasing from 0 to infinity)
+!  !     iprint = print output every iprint step
+!  !              if true, do this:
+!  !     tfor   = ion dynamics (calculate forces)
+!  !     tpre   = calculate pressure
+!  !     thdyn  = variable-cell dynamics
+!  !     tvlocw = write potential to unit 46 (seldom used)
+!  !     trhor  = read rho from unit 47      (seldom used)
+!  !     trhow  = write rho to  unit 47      (seldom used)
+!  !     tbuff  = save wfc on unit 21        (never used)
+!  integer iprsta, iprint
+!  logical tfor, tpre, thdyn, tbuff, tvlocw, trhor, trhow
+!end module control_module
 
 module core
   !     nlcc = 0 no core correction on any atom
@@ -102,10 +102,6 @@ module elct
   !     ispin = spin of each state
   integer, allocatable:: ispin(:)
 end module elct
-
-module energies
-  real(kind=8) :: etot,ekin,eht,epseu,enl,exc,esr,eself
-end module energies
 
 module gvec
   !     G-vector quantities for the thick grid - see also doc in ggen 

@@ -814,7 +814,7 @@
 !
       use ions_module
       use elct
-      use control_module
+      use control_flags, only: iprint, iprsta
       use cvan
 !
       implicit none
@@ -861,7 +861,7 @@
       use elct
       use parm
       use constants, only: pi, fpi
-      use control_module
+      use control_flags, only: iprint, iprsta
 !
       implicit none
       complex(kind=8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
@@ -1262,7 +1262,7 @@
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
       use pres_mod
-      use control_module
+      use control_flags, only: iprint, tbuff
       use gvec
       use gvecs
       use cvan
@@ -1503,7 +1503,7 @@
 !     On input rhor and rhog must contain the smooth part only !!!
 !     Output in module derho (drhor, drhog)
 !
-      use control_module
+      use control_flags, only: iprint
       use ions_module
       use gvec
       use cvan
@@ -2102,7 +2102,7 @@
 !     forces on ions, ionic term in real space (also stress if requested)
 !
       use parameters, only: nsx, natx
-      use control_module, only: tpre
+      use control_flags, only: iprint, tpre
       use constants, only: pi, fpi
       use ions_module
       use parm
@@ -3430,7 +3430,7 @@
       use elct
       use constants, only: pi, fpi
       use parmb
-      use control_module
+      use control_flags, only: iprint
       use pres_mod
       use fft_scalar, only: good_fft_dimension, good_fft_order
       use constants, only: scmass
@@ -4094,7 +4094,7 @@
       use parmb
       use qgb_mod
       use elct
-      use control_module
+      use control_flags, only: iprint, thdyn, tfor
       use work_box
 #ifdef __PARA
       use para_mod
@@ -4647,7 +4647,7 @@
       use ions_module
       use cvan
       use elct
-      use control_module
+      use control_flags, only: iprint, iprsta
 !
       implicit none
 !
@@ -4893,7 +4893,7 @@
       use gvecb
       use parmb
       use constants, only: pi, fpi
-      use control_module
+      use control_flags, only: iprint, iprsta
 !
       implicit none
       real(kind=8) taub(3,natx,nsx)
@@ -5019,7 +5019,7 @@
       use parm
       use constants, only: pi, fpi
       use gvec
-      use control_module
+      use control_flags, only: iprint, iprsta
 !
       implicit none
       real(kind=8) tau0(3,natx,nsx)
@@ -6458,7 +6458,7 @@
       return
       end
 !-----------------------------------------------------------------------
-      subroutine rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos)
+   subroutine rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !-----------------------------------------------------------------------
 !     the normalized electron density rhor in real space
 !     the kinetic energy ekin
@@ -6471,7 +6471,7 @@
 !
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
-      use control_module
+      use control_flags, only: iprint, tbuff, iprsta, thdyn, tpre, trhor
       use ions_module
       use gvec
       use gvecs
@@ -6482,7 +6482,6 @@
       use elct
       use constants, only: pi, fpi
       use pseu
-      use energies
       use work1
 !
       use cdvan
@@ -6491,6 +6490,7 @@
       implicit none
       real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrs,nspin)
+      real(kind=8) enl, ekin
       complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
       integer irb(3,natx,nsx), nfi
 ! local variables
@@ -6841,7 +6841,7 @@
       use elct
       use gvecb
       use parmb
-      use control_module
+      use control_flags, only: iprint, iprsta
       use qgb_mod
       use work1
       use work_box
@@ -7110,7 +7110,7 @@
       use elct
       use gvecb
       use parmb
-      use control_module
+      use control_flags, only: iprint
       use core
       use work1
       use work_box
@@ -7636,7 +7636,7 @@
       use cvan
       use elct
       use work2
-      use control_module
+      use control_flags, only: iprint, iprsta
 !
       implicit none
 !
@@ -7721,7 +7721,7 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
-      use control_module
+      use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor
       use ions_module
       use gvec
       use gvecs
@@ -7729,7 +7729,7 @@
       use parms
       use elct
       use constants, only: pi, fpi
-      use energies
+      use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use pseu
       use core
       use ncprm

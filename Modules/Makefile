@@ -22,7 +22,11 @@ stick_base.o \
 fft_types.o \
 fft_base.o \
 fft_scalar.o \
-clocks.o
+clocks.o \
+parallel_types.o \
+descriptors.o \
+control_flags.o \
+energies.o
 #
 include ../make.rules
 #

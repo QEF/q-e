@@ -158,7 +158,7 @@
       use gvec, only: ng
       use parm
       use cell_module
-      use control_module, only: tpre
+      use control_flags, only: tpre
       use derho
 !
       implicit none
@@ -240,7 +240,7 @@
       return
       end
 !-----------------------------------------------------------------------
-      subroutine formf(tfirst)
+      subroutine formf(tfirst, eself)
 !-----------------------------------------------------------------------
 !computes (a) the self-energy eself of the ionic pseudocharges;
 !         (b) the form factors of: (i) pseudopotential (vps),
@@ -249,7 +249,7 @@
 !         also calculated the derivative of vps with respect to
 !         g^2 (dvps)
 ! 
-      use control_module
+      use control_flags, only: iprint, tpre, iprsta
       use bhs
       use gvec
       use gvecs
@@ -258,7 +258,6 @@
       use ions_module
       use pseu
       use elct, only: ng0
-      use energies, only: eself
       use ncprm
 !
       use dpseu
@@ -266,6 +265,7 @@
 !
       implicit none
       logical tfirst
+      real(kind=8) :: eself
 !
       real(kind=8), allocatable:: f(:),vscr(:), figl(:)
       real(kind=8) el, ql, par, sp, e1, e2, emax, vpsum, rhopsum, fint, &
@@ -488,7 +488,7 @@
 !
 !   the g's are in units of 2pi/a.
 !
-      use control_module
+      use control_flags, only: iprint
       use gvec
       use elct, only: ngw
       use pres_mod
@@ -525,7 +525,7 @@
       subroutine gcalb(b1b,b2b,b3b,nr1b,nr2b,nr3b)
 !-----------------------------------------------------------------------
 !
-      use control_module
+      use control_flags, only: iprint
       use gvecb
 !
       implicit none
@@ -563,7 +563,7 @@
 !     calculate the second part of gradient corrected xc potential
 !     plus the gradient-correction contribution to pressure
 !
-      use control_module
+      use control_flags, only: iprint, tpre
       use gvec
       use parm
       use work1
@@ -673,7 +673,7 @@
 !     initialize G-vectors and related quantities
 !     use ibrav=0 for generic cell vectors given by the matrix h(3,3)
 !
-      use control_module
+      use control_flags, only: iprint, thdyn
       use gvec
       use ions_module
       use parm
@@ -827,7 +827,7 @@
 !     a1,a2,a3, ainv, and corresponding quantities for small boxes
 !     are recalculated according to the value of cell parameter h
 !
-      use control_module
+      use control_flags, only: iprint, iprsta
       use gvec
       use parm
       use constants, only: pi, fpi
@@ -911,7 +911,7 @@
 !     and derivatives w.r.t. cell parameters dbeta, dqrad 
 !     See also comments in nlinit
 !
-      use control_module
+      use control_flags, only: iprint, tpre, iprsta
       use gvec
       use cvan
       use core
@@ -1212,7 +1212,7 @@
 !     (betax, qradx) then calculated on the box grid by interpolation
 !     (this is done in routine newnlinit)
 !     
-      use control_module
+      use control_flags, only: iprint, tpre
       use gvec
       use cvan
       use core
@@ -1538,7 +1538,7 @@
 !
 !     dq(i,j) derivatives wrt to h(i,j)
 !
-      use control_module
+      use control_flags, only: iprint, tpre
       use qradb_mod
       use cvan
       use gvecb

@@ -50,10 +50,11 @@
 !     dt2bye         = 2*delt/emass
 !***********************************************************************
 !
-      use control_module
+      use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
+            tfor, tvlocw, trhow
       use core
       use cvan
-      use energies
+      use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct
       use gvec
       use gvecs
@@ -405,10 +406,10 @@
 !     strucf calculates the structure factor sfac
 !
          call strucf(ei1,ei2,ei3,sfac)
-         call formf(tfirst)
+         call formf(tfirst,eself)
          call calbec (1,nsp,eigr,cm,bec)
          if (tpre) call caldbec(1,nsp,eigr,cm)
-         call rhoofr (nfi,cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos)
+         call rhoofr (nfi,cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
          if(iprsta.gt.0) write(6,*) ' out from rhoofr'
 !
 !     put core charge (if present) in rhoc(r)
@@ -638,7 +639,7 @@
 !
          call phfac(tau0,ei1,ei2,ei3,eigr)
          call strucf(ei1,ei2,ei3,sfac)
-         call formf(tfirst)
+         call formf(tfirst,eself)
          call calbec (1,nsp,eigr,c0,bec)
          if (tpre) call caldbec(1,nsp,eigr,c0)
 !
@@ -715,12 +716,12 @@
 !     strucf calculates the structure factor sfac
 !
       call strucf(ei1,ei2,ei3,sfac)
-      if (thdyn) call formf(tfirst)
+      if (thdyn) call formf(tfirst,eself)
 !
       nfi=nfi+1
       tlast=(nfi.eq.nomore)
 !
-      call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos)
+      call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !
 #ifdef __PARA     
       if(trhow .and. tlast) call write_rho(47,nspin,rhor)

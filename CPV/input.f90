@@ -22,7 +22,7 @@
 !-----------------------------------------------------------------------
 !   this subroutine reads control variables from standard input (unit 5)
 !     ------------------------------------------------------------------
-      use control_module, only: iprsta
+      use control_flags, only: iprsta
       use constants, only: pi, scmass, factem
       use parameters, only: nsx, natx
       use ions_module, only : nat, nsp, na, zv, pmass, rcmax, ipp ! ipp TEMP
