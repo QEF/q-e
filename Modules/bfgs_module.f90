@@ -15,6 +15,12 @@ MODULE basic_algebra_routines
   !
   IMPLICIT NONE
   !
+  INTERFACE OPERATOR( .dot. )
+     !
+     MODULE PROCEDURE internal_dot_product
+     !
+  END INTERFACE
+  !  
   INTERFACE OPERATOR( * )
      !
      MODULE PROCEDURE matrix_times_vector, vector_times_matrix
@@ -23,8 +29,23 @@ MODULE basic_algebra_routines
   !
   CONTAINS
      !
+     !-----------------------------------------------------------------------
+     PURE FUNCTION internal_dot_product( vector1, vector2 )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       REAL (KIND=DP), INTENT(IN) :: vector1(:), vector2(:)
+       REAL (KIND=DP)             :: internal_dot_product
+       !
+       !
+       internal_dot_product = DOT_PRODUCT( vector1 , vector2 )
+       !
+     END FUNCTION internal_dot_product
+     !
+     !     
      !-----------------------------------------------------------------------     
-     FUNCTION norm( vector )
+     PURE FUNCTION norm( vector )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -33,13 +54,13 @@ MODULE basic_algebra_routines
        REAL (KIND=DP)             :: norm
        !
        !
-       norm = SQRT( DOT_PRODUCT( vector , vector ) )
+       norm = SQRT( vector .dot. vector )
        !
      END FUNCTION norm
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION matrix_times_vector( matrix , vector )
+     PURE FUNCTION matrix_times_vector( matrix , vector )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -71,7 +92,7 @@ MODULE basic_algebra_routines
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION vector_times_matrix( vector , matrix )
+     PURE FUNCTION vector_times_matrix( vector , matrix )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -103,7 +124,7 @@ MODULE basic_algebra_routines
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION matrix( vector1 , vector2 )
+     PURE FUNCTION matrix( vector1 , vector2 )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -124,6 +145,26 @@ MODULE basic_algebra_routines
        END DO       
        !
      END FUNCTION matrix
+     !
+     !
+     !-----------------------------------------------------------------------
+     PURE FUNCTION identity( dim )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       INTEGER, INTENT(IN) :: dim
+       REAL(KIND=DP)       :: identity(dim,dim)
+       INTEGER             :: i
+       !
+       !
+       DO i = 1, dim
+          !
+          identity(i,i) = 1.D0
+          !
+       END DO
+       !
+     END FUNCTION identity
      !    
 END MODULE basic_algebra_routines
 !
@@ -138,9 +179,11 @@ MODULE bfgs_module
   !
   ! ... references :  
   !
-  ! ... 1) Salomon R. Billeter, Alexander J. Turner, Walter Thiel, 
+  ! ... 1) R. Fletcher, Practical Methods of Optimization, John Wiley and Sons,
+  ! ...    Chichester, 2nd edn, 1987. 
+  ! ... 2) Salomon R. Billeter, Alexander J. Turner, Walter Thiel, 
   ! ...    Phys. Chem. Chem. Phys. 2, 2177 (2000)
-  ! ... 2) Salomon R. Billeter, Alessandro Curioni, Wanda Andreoni,
+  ! ... 3) Salomon R. Billeter, Alessandro Curioni, Wanda Andreoni,
   ! ...    Comput. Mat. Science 27, 437, (2003)
   !
   !
@@ -164,7 +207,7 @@ MODULE bfgs_module
       trust_radius,             &!
       trust_radius_old,         &!
       energy_old                 !
-  INTEGER, SAVE :: &
+  INTEGER :: &
       iteration                  !     
   REAL(KIND=DP), PARAMETER  :: &
       trust_radius_max = 0.5D0, &!
@@ -181,6 +224,8 @@ MODULE bfgs_module
                       gradient_thr, energy_error, gradient_error, &
                       step_accepted, conv_bfgs )
        !-----------------------------------------------------------------------
+       !
+       USE io_files, ONLY : prefix
        !
        IMPLICIT NONE
        !
@@ -221,8 +266,13 @@ MODULE bfgs_module
        !
        IF ( conv_bfgs ) THEN
           !
-          WRITE( stdout, '(/,5X,"bfgs converged")' )
+          WRITE( stdout, '(/,5X,"bfgs converged in ",I3," iterations")' ) &
+              iteration
           WRITE( stdout, '(/,5X,"Final energy: ",F14.10," ryd"/)' ) energy
+          !
+          OPEN( UNIT = iunbfgs, &
+                FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs' )
+          CLOSE( UNIT = iunbfgs, STATUS = 'DELETE' )
           !
           RETURN
           !
@@ -238,7 +288,7 @@ MODULE bfgs_module
           !
           step_accepted = .FALSE.
           !
-          WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old")' )
+          WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old",/)' )
           !
           trust_radius = 0.5D0 * trust_radius
           !
@@ -253,17 +303,17 @@ MODULE bfgs_module
           !
           step_accepted = .TRUE.
           !
-          WRITE( stdout, '(/,5X,"CASE: energy_new < energy_old")' )
+          WRITE( stdout, '(/,5X,"CASE: energy_new < energy_old",/)' )
           !
           CALL check_wolfe_conditions( lwolfe, energy, gradient )
           !
-          WRITE( stdout, '(5X,"lwolfe = ",L1)' ) lwolfe
+          WRITE( stdout, '(5X,"lwolfe       = ",L1)' ) lwolfe
           !
-          CALL update_inverse_hessian( gradient )
+          CALL update_inverse_hessian( gradient, dim )
           !
           bfgs_step = - inverse_hessian * gradient
           !
-          IF ( DOT_PRODUCT( gradient, bfgs_step ) > 0.D0 ) THEN
+          IF ( ( gradient .dot. bfgs_step ) > 0.D0 ) THEN
              !  
              bfgs_step = - bfgs_step
              !
@@ -325,6 +375,7 @@ MODULE bfgs_module
           OPEN( UNIT = iunbfgs, FILE = TRIM( bfgs_file ), &
                 STATUS = 'UNKNOWN', ACTION = 'READ' )  
           !
+          READ( iunbfgs, * ) iteration
           READ( iunbfgs, * ) pos_old
           READ( iunbfgs, * ) energy_old
           READ( iunbfgs, * ) gradient_old
@@ -371,6 +422,7 @@ MODULE bfgs_module
        OPEN( UNIT = iunbfgs, FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs', &
              STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
        !
+       WRITE( iunbfgs, * ) iteration
        WRITE( iunbfgs, * ) pos_old
        WRITE( iunbfgs, * ) energy
        WRITE( iunbfgs, * ) gradient
@@ -384,23 +436,24 @@ MODULE bfgs_module
      !
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE update_inverse_hessian( gradient )
+     SUBROUTINE update_inverse_hessian( gradient, dim )
        !-----------------------------------------------------------------------
        !
        USE constants,  ONLY : eps16
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN)   :: gradient(:)                   
+       REAL(KIND=DP), INTENT(IN)   :: gradient(:)   
+       INTEGER, INTENT(IN)         :: dim                       
        REAL(KIND=DP), ALLOCATABLE  :: gamma(:)
        REAL(KIND=DP)               :: sdotgamma
        !
        !
-       ALLOCATE( gamma(SIZE(gradient)) )
+       ALLOCATE( gamma(dim) )
        !
        gamma = gradient - gradient_old
        !
-       sdotgamma = DOT_PRODUCT( bfgs_step_old, gamma )
+       sdotgamma = bfgs_step_old .dot. gamma 
        !
        IF ( ABS( sdotgamma ) < eps16 ) THEN
           !
@@ -408,13 +461,11 @@ MODULE bfgs_module
           !
        ELSE
           !
-          inverse_hessian = inverse_hessian + ( 1.D0 + DOT_PRODUCT( gamma, &
-                            inverse_hessian * gamma ) / sdotgamma ) * &
-                            matrix( bfgs_step_old, bfgs_step_old ) / &
-                            sdotgamma - ( &
-                            matrix( bfgs_step_old, gamma * inverse_hessian ) + &
-                            matrix( inverse_hessian * gamma, bfgs_step_old ) &
-                            ) / sdotgamma
+          inverse_hessian = inverse_hessian + &
+             ( identity(dim) + ( gamma .dot. ( inverse_hessian * gamma ) ) / sdotgamma ) * &
+             matrix( bfgs_step_old, bfgs_step_old ) / sdotgamma - &
+             ( matrix( bfgs_step_old, gamma * inverse_hessian ) + &
+               matrix( inverse_hessian * gamma, bfgs_step_old ) ) / sdotgamma
           !
        END IF  
        !
@@ -437,11 +488,11 @@ MODULE bfgs_module
        LOGICAL, INTENT(OUT)  :: lwolfe
        !
        lwolfe = ( energy - energy_old ) < & 
-                w_1 * DOT_PRODUCT( gradient_old, bfgs_step_old )
+                w_1 * ( gradient_old .dot. bfgs_step_old )
        !
        lwolfe = lwolfe .AND. &
-                ( DOT_PRODUCT( gradient, bfgs_step_old ) > &
-                  w_2 * DOT_PRODUCT( gradient_old, bfgs_step_old ) )
+                ( ( gradient .dot. bfgs_step_old ) > &
+                  w_2 * ( gradient_old .dot. bfgs_step_old ) )
        !
      END SUBROUTINE check_wolfe_conditions
      !
@@ -463,7 +514,7 @@ MODULE bfgs_module
        !
        !
        ltest = ( energy - energy_old ) < &
-               1.0D-4 * DOT_PRODUCT( gradient_old, bfgs_step_old )
+               1.0D-4 * ( gradient_old .dot. bfgs_step_old )
        !       
        ltest = ltest .AND. ( norm( bfgs_step ) > trust_radius_old )
        !
