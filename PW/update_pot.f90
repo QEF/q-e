@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,10 +8,10 @@
 #include "machine.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE update_pot
+SUBROUTINE update_pot()
   !----------------------------------------------------------------------------
   !
-  !     update potential, use the integer variable order to decide the way
+  ! ... update potential, use the integer variable order to decide the way
   !
   !     order = 0       copy the old potential (nothing is done)
   !
@@ -66,7 +66,7 @@ END SUBROUTINE update_pot
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE extrapolate_charge
+SUBROUTINE extrapolate_charge()
   !----------------------------------------------------------------------------
   !
   USE io_global,   ONLY :  stdout
@@ -86,11 +86,11 @@ SUBROUTINE extrapolate_charge
   IMPLICIT NONE
   !
   INTEGER :: ir
-  ! do-loop variable on FFT grid
-  !
+    ! do-loop variable on FFT grid
   REAL(KIND=DP), ALLOCATABLE :: work (:), work1 (:)
-  ! work is the difference between charge density and atomic charge at time t
-  ! work1 is the same thing at time t-dt
+    ! work is the difference between charge density and atomic charge 
+    !   at time t
+    ! work1 is the same thing at time t-dt
   REAL(KIND=DP) :: charge
   !
   !
@@ -187,7 +187,7 @@ END SUBROUTINE extrapolate_charge
 !
 !
 !-----------------------------------------------------------------------
-subroutine extrapolate_wfcs
+SUBROUTINE extrapolate_wfcs()
   !-----------------------------------------------------------------------
   !
   ! ... This routine extrapolate the wfc's after a "parallel alignment"
@@ -210,23 +210,22 @@ subroutine extrapolate_wfcs
   !
   IMPLICIT NONE
   !
+  ! ... local variables
+  !
   INTEGER :: j, i, ik
-  ! do-loop variables
-  ! counter on k-points
-  !
+    ! do-loop variables
+    ! counter on k-points
   COMPLEX(KIND=DP), ALLOCATABLE :: u_m (:,:), s_m (:,:), sp_m (:,:), temp (:,:)
-  ! the unitary matrix (eq. 3.21)
-  ! the overlap matrix s (eq. 3.24)
-  ! its dagger
-  ! workspace
+    ! the unitary matrix (eq. 3.21)
+    ! the overlap matrix s (eq. 3.24)
+    ! its dagger
+    ! workspace
   COMPLEX(KIND=DP), ALLOCATABLE :: evcold(:,:)
-  ! wavefunctions at previous iteration
-  !
+    ! wavefunctions at previous iteration
   REAL(KIND=DP), ALLOCATABLE :: ew (:)
-  ! the eigenvalues of sp_m*s_m
-  !
+    ! the eigenvalues of sp_m*s_m
   LOGICAL :: first
-  ! Used for initialization
+    ! Used for initialization
   DATA first / .TRUE. /
   SAVE first
   !
@@ -338,7 +337,7 @@ subroutine extrapolate_wfcs
               END DO
            END DO
            !
-           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
+           CALL davcio( evcold, nwordwfc, iunwfc, ik, - 1 )
            !
            DO j = 1, nbnd
               DO i = 1, npw
@@ -357,7 +356,7 @@ subroutine extrapolate_wfcs
         !
         IF ( order > 2 ) THEN
            CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
-           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, 1 )
+           CALL davcio( evcold, nwordwfc, iunwfc, ik, 1 )
         END IF
         !
         CALL davcio( evcold, nwordwfc, iunwfc, ik, - 1 )
@@ -378,4 +377,3 @@ subroutine extrapolate_wfcs
   RETURN
   !
 END SUBROUTINE extrapolate_wfcs
-
