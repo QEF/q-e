@@ -402,10 +402,6 @@ SUBROUTINE iosys()
      iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lphonon   = .TRUE.
      nstep     = 1
-  CASE ( 'dispersion' )
-     iswitch   = -2
-     lphonon   = .TRUE.
-     nstep = 1
   CASE ( 'raman' )
      lraman    = .TRUE.
      nstep     = 1
@@ -433,7 +429,7 @@ SUBROUTINE iosys()
   END IF
   !
   IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
-     CALL errore( ' iosys', 'wrong startingpot: use default', -1 )
+     CALL errore( ' iosys', 'wrong startingpot: use default', -2 )
      startingpot = 'file'
   END IF
   !
