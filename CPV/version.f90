@@ -10,6 +10,5 @@
         USE global_version, only : version_number
         IMPLICIT NONE
         SAVE
-        CHARACTER(LEN=79) :: cp_version
         INCLUDE 'version.h'
       END MODULE version
