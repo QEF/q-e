@@ -9,22 +9,33 @@ CPP = /opt/ctl/bin/cpp
 # add -D__BENCHLIB if the benchlib is installed
 # remove -D__FFTW if fftw is not installed and you cannot compile it
 # (you will use the fft's contained in standard t3e libraries)
+#
 CPPFLAGS = -I$(OSHOME)/include/ -D__T3E -D__PARA -D__MPI -D__FFTW
-
 #
 # Fortran compiler:
 #
 F90 = f90 
 F77 = f90 
 #
-# you may need to add -Idir, where "dir" is the directory where mpif.h resides
+# you may need to add -Idir, where "dir"=directory where mpif.h resides
 # with -M1110 flag compiler does not issue warning messages for 
 # the use of DOUBLE PRECISION constants in the code. (SdG)
 #
+# More aggressive optimization flags: 
+#   -O3 -O unroll2  -O pipeline3 -O aggress -O fusion -O bl
+#
 FFLAGS = -em -dp  -M1110
 #
-F77FLAGS = $(FFLAGS) -eZ 
+# Fortran90 compiler flags
+#
 F90FLAGS = $(FFLAGS) -F -eZ $(CPPFLAGS)
+#
+# Fortran77 compiler flags
+F77FLAGS = $(FFLAGS) -eZ 
+#
+# C compiler flags
+#
+CCFLAGS  = $(CPPFLAGS) -O2
 #
 # This is needed to tell the compiler where modules are
 #
@@ -34,7 +45,8 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 #
 # usually blas and lapack are automatically loaded
 # and only fftw (if required) and mpi need to be specified
-# if you use -D__BENCHLIB, load the benchlib as well
+# if you use -D__BENCHLIB, load the benchlib as well :
+#    -l _scalar -l _vect -l _ereg
 #
 LD=$(F90)
 LIBS = -lfftw -lmpi

@@ -1,5 +1,5 @@
 #
-# System-dependent Make definitions for Linux, Intel compiler (v.5-6)
+# System-dependent Make definitions for Linux, Intel compiler
 # Edit according to your needs
 #
 # add -D__MKL if using the Intel Mathematical Kernel Library
@@ -8,13 +8,13 @@
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__INTEL -D__MKL -D__FFTW  \
+CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__INTEL -D__MKL -D__FFTW \
            -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
            -D"FFTW_F77=fftw_f77_" \
            -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan_"
 #
-# Fortran compiler:
+# Fortran compiler
 #
 F90 = ifc
 F77 = ifc
@@ -29,11 +29,11 @@ F77 = ifc
 # -tpp6           Pentium Pro, 2, 3  optimization
 # -tpp7           Pentium 4  optimization
 #
-FFLAGS =-Vaxlib -O2 -tpp6
+FFLAGS = -Vaxlib -O2 -tpp6
 #
 # Fortran90 compiler flags
 #
-F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
+F90FLAGS = $(FFLAGS) -fpp $(CPPFLAGS)
 #
 # Fortran77 compiler flags
 #
@@ -52,10 +52,10 @@ CCFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
 #
 # Loader:
 #
-# The following is for Intel MKL libraries v. 5.1 on Pentium-4
+# The following is for Intel MKL libraries v. 5.1 on Pentium-3
 # (remember -D__MKL in CPPFLAGS !)
 # For MKL v. 5.2, add "-lguide"
-# Use libmkl_p3 for Pentium-3, libmkl_p4.a for Pentium-4 machines 
+# Use libmkl_p3.a for Pentium-3, libmkl_p4.a for Pentium-4 machines 
 # (MKL will likely not work for other CPUs like Athlon)
 #
 LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
@@ -69,7 +69,7 @@ LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
 #
 # The following is to use blas and lapack from the source code
 #  MYLIB=blas_and_lapack
-
+#
 LD=$(F90)
 LDFLAGS = $(OSHOME)/flib/flib.a -Vaxlib $(LIBS)
 

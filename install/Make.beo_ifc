@@ -3,26 +3,28 @@
 # Based on info from N. Marzari and B.R. Sahu
 # Edit according to your needs
 #
-# add -DMKL if using the Intel Mathematical Kernel Library
+# add -D__MKL if using the Intel Mathematical Kernel Library
 # Add -DADD_BLAS_ONE_UNDERSCORE if your blas/lapack library names contain 
 # two underscores at the end
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__MKL -D__PARA -D__MPI -D__FFTW \
-           -D"FFTWND_F77_ONE=fftwnd_f77_one" \
-           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan" \
-           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan" \
-           -D"FFTW_F77=fftw_f77"
+CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__INTEL -D__MKL -D__FFTW \
+           -D__PARA -D__MPI  \
+           -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
+           -D"FFTW_F77=fftw_f77_" \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan_"
 
 #
-# Fortran compiler:
+# Fortran compiler
 #
 F90 = mpif90
 F77 = mpif77
 CC = mpicc
 #
-# fortran options:
+# Fortran compiler flags
+#
 # -Vaxlib         enables the use of portability libraries (getarg
 #                 and maybe other library calls)
 # -W0             disable warnings
@@ -31,10 +33,20 @@ CC = mpicc
 # -tpp6           Pentium Pro, 2, 3  optimization
 # -tpp7           Pentium 4  optimization
 #
-FFLAGS = -O2 -Vaxlib
+FFLAGS = -Vaxlib -O2 -tpp6
 #
-F77FLAGS= $(FFLAGS)
-F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
+# Fortran90 compiler flags
+#
+F90FLAGS = $(FFLAGS) -fpp $(CPPFLAGS)
+#
+# Fortran77 compiler flags
+#
+F77FLAGS = $(FFLAGS)
+F77FLAGS_NOOPT = -O0
+#
+# C compiler flags
+#
+CCFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
 #
 # This is needed to tell the compiler where modules are
 #
@@ -45,20 +57,26 @@ MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW I $(OSHOME)/PH
 #
 # Loader:
 #
-# The following is for Intel MKL libraries (remember -DMKL in CPPFLAGS !)
+# The following is for Intel MKL libraries v. 5.1 on Pentium-3
+# (remember -D__MKL in CPPFLAGS !)
+# For MKL v. 5.2, add "-lguide"
 # Use libmkl_p3.a for Pentium-3, libmkl_p4.a for Pentium-4 machines 
 # (MKL will likely not work for other CPUs like Athlon)
 
 LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
-      /opt/intel/mkl/lib/32/libmkl_p3.a -lpthread
+      /opt/intel/mkl/lib/32/libmkl_p3.a -lguide -lpthread
 
 # The following is for Atlas optimized blas/lapack libraries
 # You may not actually need -lcblas . See the manual for details
 # on how to fix I/O incompatibility problems with ifc
 #
 # LIBS = -lfftw -L$(HOME)/Linux_ATHLON256/ -llapack -lf77blas -lcblas -latlas
+#
+# The following is to use blas and lapack from the source code
+#  MYLIB=blas_and_lapack
+#
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a -Vaxlib $(LIBS)
 
 #
 # ar:
