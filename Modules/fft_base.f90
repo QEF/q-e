@@ -18,6 +18,7 @@
 #endif
 
 #undef __FFT_BASE_TS1 
+!#define __FFT_BASE_TS1 
 
 !=----------------------------------------------------------------------=!
       MODULE fft_base
@@ -36,7 +37,7 @@
         PUBLIC :: fft_transpose, fft_scatter
 
 
-        INTEGER, ALLOCATABLE :: stmask(:,:,:)
+        INTEGER, ALLOCATABLE :: stmask(:)
 
 
 !=----------------------------------------------------------------------=!
@@ -54,35 +55,23 @@
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc ! number of processor
 
-          INTEGER :: i, j, is, ip, mc
-          INTEGER :: nspx
           INTEGER :: ierr
 !
 ! ...     Subroutine Body
 !
 
-! ...     nx, ny, nz are te sizes of the 3D fft data grid
-
-          nspx = MAXVAL( dfft%nsp )
-
           ierr = 0
           IF( ALLOCATED(stmask) ) DEALLOCATE(stmask, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' fft_base_setup ' , ' deallocation of stmask failed ', ierr)
+          IF( ierr /= 0 ) &
+            CALL errore(' fft_base_setup ' , ' deallocation of stmask failed ', ierr)
 
-          ALLOCATE( stmask ( 2, nspx, nproc ), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' fft_base_setup ' , ' allocation of stmask failed ', ierr)
+          ALLOCATE( stmask ( SIZE( dfft%ismap ) ), STAT=ierr)
+          IF( ierr /= 0 ) &
+            CALL errore(' fft_base_setup ' , ' allocation of stmask failed ', ierr)
 
 ! ...     the stick mask is copied locally to increase the efficiency
 
-          DO ip = 1, nproc
-            DO is = 1, dfft%nsp( ip )
-              mc = dfft%ismap( is + dfft%iss( ip ) )
-              j  = ( mc - 1 ) / dfft%nr1x + 1
-              i  = MOD( ( mc - 1 ), dfft%nr1x ) + 1
-              stmask( 1, is, ip ) = i
-              stmask( 2, is, ip ) = j
-            END DO
-          END DO
+          stmask( : ) = dfft%ismap( : )
 
           RETURN
         END SUBROUTINE transpose_setup
@@ -96,7 +85,7 @@
 
 #  if defined __FFT_BASE_TS1
 
-        SUBROUTINE fft_transpose( zstick, r, dfft, me, nproc, iopt)
+        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
 
           USE mp_buffers, ONLY: mp_allocate_buffers, &
             mp_snd_buffer, mp_rcv_buffer, mp_sendrecv_buffers, &
@@ -107,19 +96,20 @@
 
           include 'mpif.h'
 
-          COMPLEX (dbl) :: zstick(:,:)
-          COMPLEX (dbl) :: r(:,:,:)
+          COMPLEX (dbl) :: zstick( * )
+          COMPLEX (dbl) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
-          INTEGER, INTENT(IN) :: iopt
+          INTEGER, INTENT(IN) :: iopt, ldz, ldx, ldy
 
 
           INTEGER :: i, j, k, ipz, offset, k_start, k_end, is
           INTEGER :: npz, nz_l, ns_l, ns_lp
           INTEGER :: nsx_l, msgsiz
-          INTEGER :: i1, i2, j1, j2
+          INTEGER :: mc1, mc2, mc3, mc4, is_offset, ns1
           COMPLEX (dbl) :: zero
+          COMPLEX (dbl) :: bswp( ldz * 4 )
 
           INTEGER, SAVE :: dfft_id = -1
 
@@ -157,75 +147,143 @@
 
           IF ( iopt < 1 ) THEN
 
-            r = 0.0d0
+            r( 1 : ldx*ldy*nz_l ) = 0.0d0
 
-
-              DO ipz = 1, npz
-                k_start = (ipz-1)  * nz_l + 1
-                k_end   = k_start  + nz_l - 1
-                offset  = (ipz-1) * msgsiz - k_start + 1
-                DO is = 1, ns_l
-                  DO k = k_start , k_end
-                    mp_snd_buffer(k + offset) = zstick(k, is)
-                  END DO
-                  offset = offset + nz_l
+            DO ipz = 1, npz
+              k_start = (ipz-1)  * nz_l + 1
+              k_end   = k_start  + nz_l - 1
+              offset  = (ipz-1) * msgsiz - k_start + 1
+              DO is = 1, ns_l
+                is_offset = (is-1)*ldz
+                DO k = k_start , k_end
+                  mp_snd_buffer(k + offset) = zstick( k + is_offset )
                 END DO
+                offset = offset + nz_l
               END DO
+            END DO
 
 
-              CALL mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
+            CALL mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
 
 
-              DO ipz = 1, npz
-                offset = (ipz-1) * msgsiz 
-                IF( ABS( iopt ) == 1 ) THEN
-                  ns_lp  = dfft%nsp(ipz)
-                ELSE
-                  ns_lp  = dfft%nsw(ipz)
-                END IF
-                DO is = 1, ns_lp
-                  i = stmask( 1, is, ipz ) 
-                  j = stmask( 2, is, ipz ) 
+            DO ipz = 1, npz
+              offset = (ipz-1) * msgsiz 
+              is_offset = dfft%iss( ipz )
+              IF( ABS( iopt ) == 1 ) THEN
+                ns_lp  = dfft%nsp(ipz)
+              ELSE
+                ns_lp  = dfft%nsw(ipz)
+              END IF
+              ns1 = MOD( ns_lp, 4 )
+              IF( ns1 /= 0 ) THEN
+                DO is = 1, ns1
+                  mc1 = stmask( is   + is_offset )
                   DO k = 1 , nz_l
-                    r( i, j, k ) = mp_rcv_buffer( k + offset )
+                    r( mc1 + (k-1)*ldx*ldy ) = mp_rcv_buffer( k + offset )
                   END DO
                   offset = offset + nz_l
                 END DO
-              END DO
-
+              END IF
+              IF( ns_lp >= 4 ) THEN
+                ns1 = ns1 + 1
+                DO is = ns1, ns_lp, 4
+                  mc1 = stmask( is   + is_offset )
+                  mc2 = stmask( is+1 + is_offset )
+                  mc3 = stmask( is+2 + is_offset )
+                  mc4 = stmask( is+3 + is_offset )
+                  DO k = 1 , nz_l
+                    bswp( k ) = mp_rcv_buffer( k + offset )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    bswp( k + nz_l ) = mp_rcv_buffer( k + offset )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    bswp( k + 2*nz_l ) = mp_rcv_buffer( k + offset )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    bswp( k + 3*nz_l ) = mp_rcv_buffer( k + offset )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    r( mc1 + (k-1)*ldx*ldy ) = bswp( k          )
+                    r( mc2 + (k-1)*ldx*ldy ) = bswp( k +   nz_l )
+                    r( mc3 + (k-1)*ldx*ldy ) = bswp( k + 2*nz_l )
+                    r( mc4 + (k-1)*ldx*ldy ) = bswp( k + 3*nz_l )
+                  END DO
+                END DO
+              END IF
+            END DO
 
           ELSE IF ( iopt > 0 ) THEN
 
-              DO ipz = 1, npz
-                offset = (ipz-1) * msgsiz 
-                IF( ABS( iopt ) == 1 ) THEN
-                  ns_lp  = dfft%nsp(ipz)
-                ELSE
-                  ns_lp  = dfft%nsw(ipz)
-                END IF
-                DO is = 1, ns_lp
-                  i = stmask(1,is,ipz) 
-                  j = stmask(2,is,ipz) 
+            DO ipz = 1, npz
+              offset = (ipz-1) * msgsiz 
+              is_offset = dfft%iss( ipz )
+              IF( ABS( iopt ) == 1 ) THEN
+                ns_lp  = dfft%nsp(ipz)
+              ELSE
+                ns_lp  = dfft%nsw(ipz)
+              END IF
+              ns1 = MOD( ns_lp, 4 )
+              IF( ns1 /= 0 ) THEN
+                DO is = 1, ns1
+                  mc1 = stmask( is   + is_offset )
                   DO k = 1 , nz_l
-                    mp_snd_buffer( k + offset ) = r(i,j,k)
+                    mp_snd_buffer( k + offset ) = r( mc1 + (k-1)*ldx*ldy )
                   END DO
                   offset = offset + nz_l
                 END DO
-              END DO
-
-              call mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
-
-              DO IPZ = 1, NPZ
-                k_start = (ipz-1) * nz_l + 1
-                k_end   = k_start + nz_l - 1
-                offset  = (ipz-1) * msgsiz - k_start + 1
-                DO is = 1, ns_l
-                  DO k = k_start , k_end
-                    zstick(k,is) = mp_rcv_buffer( k + offset )
+              END IF
+              IF( ns_lp >= 4 ) THEN
+                ns1 = ns1 + 1
+                DO is = ns1, ns_lp, 4
+                  mc1 = stmask( is   + is_offset )
+                  mc2 = stmask( is+1 + is_offset )
+                  mc3 = stmask( is+2 + is_offset )
+                  mc4 = stmask( is+3 + is_offset )
+                  DO k = 1, nz_l
+                    bswp( k          ) = r( mc1 + (k-1)*ldx*ldy )
+                    bswp( k +   nz_l ) = r( mc2 + (k-1)*ldx*ldy )
+                    bswp( k + 2*nz_l ) = r( mc3 + (k-1)*ldx*ldy )
+                    bswp( k + 3*nz_l ) = r( mc4 + (k-1)*ldx*ldy )
+                  END DO
+                  DO k = 1 , nz_l
+                    mp_snd_buffer( k + offset ) = bswp( k )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    mp_snd_buffer( k + offset ) = bswp( k + nz_l )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    mp_snd_buffer( k + offset ) = bswp( k + 2*nz_l )
+                  END DO
+                  offset = offset + nz_l
+                  DO k = 1 , nz_l
+                    mp_snd_buffer( k + offset ) = bswp( k + 3*nz_l )
                   END DO
                   offset = offset + nz_l
                 END DO
+              END IF
+            END DO
+
+            call mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
+
+            DO IPZ = 1, NPZ
+              k_start = (ipz-1) * nz_l + 1
+              k_end   = k_start + nz_l - 1
+              offset  = (ipz-1) * msgsiz - k_start + 1
+              DO is = 1, ns_l
+                is_offset = ( is - 1 ) * ldz
+                DO k = k_start , k_end
+                  zstick( k + is_offset ) = mp_rcv_buffer( k + offset )
+                END DO
+                offset = offset + nz_l
               END DO
+            END DO
 
           END IF
 
@@ -264,7 +322,7 @@
           LOGICAL, ALLOCATABLE :: rdone( : )
           COMPLEX(dbl), ALLOCATABLE :: sndbuf(:,:)
           COMPLEX(dbl), ALLOCATABLE :: rcvbuf(:,:)
-          INTEGER :: i1, i2, j1, j2
+          INTEGER :: i1, i2, j1, j2, mc1, mc2, is_offset
 
           INTEGER, SAVE :: dfft_id = -1
 
@@ -337,31 +395,32 @@
               call mpi_test(irhand(ipz), rtest(ipz), istatus(1,ipz), ierr)
               IF( rtest(ipz) .AND. .NOT. rdone(ipz) ) THEN
                 offset = 0
+                is_offset = dfft%iss( ipz )
                 IF( ABS( iopt ) == 2 ) THEN
                   ns_lp  = dfft%nsw( ipz )  
                 ELSE
                   ns_lp  = dfft%nsp( ipz )  
                 END IF
                 DO is = 1, ns_lp - 1, 2
-                  i1 = stmask(1,is,ipz) ! descz%mask(1,is,ipz)
-                  j1 = stmask(2,is,ipz) ! descz%mask(2,is,ipz)
-                  i2 = stmask(1,is+1,ipz) ! descz%mask(1,is,ipz)
-                  j2 = stmask(2,is+1,ipz) ! descz%mask(2,is,ipz)
+                  !mc1 = dfft%ismap( is   + is_offset )
+                  !mc2 = dfft%ismap( is+1 + is_offset )
+                  mc1 = stmask( is   + is_offset )
+                  mc2 = stmask( is+1 + is_offset )
                   DO k = 1 , nz_l
-                    r( i1 + (j1-1)*ldx + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
+                    r( mc1 + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
                   offset = offset + nz_l
                   DO k = 1 , nz_l
-                    r( i2 + (j2-1)*ldx + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
+                    r( mc2 + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
                   offset = offset + nz_l
                 END DO
                 IF( MOD( ns_lp, 2 ) /= 0 ) THEN
                   is = ns_lp
-                  i = stmask(1,is,ipz) ! descz%mask(1,is,ipz)
-                  j = stmask(2,is,ipz) ! descz%mask(2,is,ipz)
+                  ! mc1 = dfft%ismap( is   + is_offset )
+                  mc1 = stmask( is   + is_offset )
                   DO k = 1 , nz_l
-                    r( i + (j-1)*ldx + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
+                    r( mc1 + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
                   offset = offset + nz_l
                 END IF
@@ -381,16 +440,17 @@
 
             DO ipz = 1, npz
               offset = 0
+              is_offset = dfft%iss( ipz )
               IF( ABS( iopt ) == 2 ) THEN
                 ns_lp  = dfft%nsw( ipz )  
               ELSE
                 ns_lp  = dfft%nsp( ipz )  
               END IF
               DO is = 1, ns_lp
-                i = stmask(1,is,ipz) 
-                j = stmask(2,is,ipz) 
+                ! mc1 = dfft%ismap( is   + is_offset )
+                mc1 = stmask( is   + is_offset )
                 DO k = 1 , nz_l
-                  sndbuf( k + offset, ipz ) = r( i + (j-1)*ldx + (k-1)*ldx*ldy )
+                  sndbuf( k + offset, ipz ) = r( mc1 + (k-1)*ldx*ldy )
                 END DO
                 offset = offset + nz_l
               END DO
@@ -453,7 +513,7 @@
           INTEGER, INTENT(IN) :: nproc
           INTEGER, INTENT(IN) :: iopt, ldx, ldy, ldz
 
-          INTEGER :: i, j, k, is, nz, ns
+          INTEGER :: i, j, k, is, nz, ns, mc1
           INTEGER, SAVE :: dfft_id = -1
 
 !
@@ -484,10 +544,10 @@
             END IF
 
             DO is = 1, ns
-              i = stmask( 1, is, 1 )
-              j = stmask( 2, is, 1 )
+              ! mc1 = dfft%ismap( is )
+              mc1 = stmask( is )
               DO k = 1 , nz
-                r( i + (j-1)*ldx + (k-1)*ldx*ldy ) = zstick( k + (is-1)*ldz )
+                r( mc1 + (k-1)*ldx*ldy ) = zstick( k + (is-1)*ldz )
               END DO
             END DO
 
@@ -500,10 +560,10 @@
             END IF
 
             DO is = 1, ns
-              i = stmask( 1, is, 1 )
-              j = stmask( 2, is, 1 )
+              ! mc1 = dfft%ismap( is )
+              mc1 = stmask( is )
               DO k = 1 , nz
-                zstick( k + (is-1)*ldz ) = r( i + (j-1)*ldx + (k-1)*ldx*ldy )
+                zstick( k + (is-1)*ldz ) = r( mc1 + (k-1)*ldx*ldy )
               END DO
             END DO
 

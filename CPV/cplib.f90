@@ -488,7 +488,8 @@
          do nb = 1,nchi(is)
             l = lchi(nb,is)
             do i=1,ngw
-               call bess(q(i),l+1,mesh(is),r(1,is),jl)
+               ! call bess(q(i),l+1,mesh(is),r(1,is),jl)
+               call sph_bes (mesh(is), r(1,is), q(i), l, jl)
                do ir=1,mesh(is)
                   vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
                enddo

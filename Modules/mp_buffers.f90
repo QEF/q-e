@@ -46,8 +46,8 @@
 #else
           integer :: mp_p_snd_buffer = 0
           integer :: mp_p_rcv_buffer = 0
-          complex (dbl), pointer :: mp_snd_buffer(:)
-          complex (dbl), pointer :: mp_rcv_buffer(:)
+          complex (dbl), allocatable :: mp_snd_buffer(:)
+          complex (dbl), allocatable :: mp_rcv_buffer(:)
 #endif
           PUBLIC :: mp_snd_buffer, mp_rcv_buffer, &
                     mp_p_snd_buffer, mp_p_rcv_buffer
@@ -167,7 +167,7 @@
 
 #  elif defined __MPI
 
-      CALL MPI_ALLREDUCE(mp_snd_buffer,mp_rcv_buffer,mp_bufsize, &
+      CALL MPI_ALLREDUCE( mp_snd_buffer(1), mp_rcv_buffer(1), mp_bufsize, &
            MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, IERR)
       IF(IERR /= 0) call errore(' mp_sum_buffers ', ' mpi_allreduce ',ierr)
 
@@ -175,7 +175,7 @@
 
 #else
 
-      call ZCOPY(mp_bufsize,mp_snd_buffer,1,mp_rcv_buffer,1)
+      call ZCOPY(mp_bufsize,mp_snd_buffer(1),1,mp_rcv_buffer(1),1)
 
 #endif
 
@@ -238,8 +238,8 @@
       !WRITE(6,*) ' MP_BUFFERS DEBUG ', mp_snd_buffer(1)
       !WRITE(6,*) ' MP_BUFFERS DEBUG ', mp_snd_buffer(1+msg_size)
 
-      call MPI_ALLTOALL(mp_snd_buffer,msg_size,MPI_DOUBLE_COMPLEX, &
-                        mp_rcv_buffer,msg_size,MPI_DOUBLE_COMPLEX, &
+      call MPI_ALLTOALL(mp_snd_buffer(1),msg_size,MPI_DOUBLE_COMPLEX, &
+                        mp_rcv_buffer(1),msg_size,MPI_DOUBLE_COMPLEX, &
                         MPI_COMM_WORLD,IERR)
 
       !WRITE(6, fmt='(10D8.2)' ) mp_rcv_buffer(1:mp_bufsize)
@@ -253,7 +253,7 @@
 #else
 
       msg_size = mp_bufsize
-      CALL ZCOPY(msg_size, mp_snd_buffer, 1, mp_rcv_buffer, 1)
+      CALL ZCOPY(msg_size, mp_snd_buffer(1), 1, mp_rcv_buffer(1), 1)
 
 #endif
 
@@ -289,8 +289,8 @@
 
 #  elif defined __MPI
 
-      CALL MPI_SENDRECV(mp_snd_buffer, mp_bufsize, MPI_DOUBLE_COMPLEX, &
-          IDEST-1, ip, mp_rcv_buffer, mp_bufsize, MPI_DOUBLE_COMPLEX, &
+      CALL MPI_SENDRECV(mp_snd_buffer(1), mp_bufsize, MPI_DOUBLE_COMPLEX, &
+          IDEST-1, ip, mp_rcv_buffer(1), mp_bufsize, MPI_DOUBLE_COMPLEX, &
           ISOUR-1, ip, MPI_COMM_WORLD, ISTATUS, ierr)
       IF(ierr /= 0) call errore(' mp_sendrecv_buffers ', ' MPI_SENDRECV ', ierr)
 
@@ -298,7 +298,7 @@
 
 #else 
 
-      CALL ZCOPY(mp_bufsize, mp_snd_buffer, 1, mp_rcv_buffer, 1)
+      CALL ZCOPY(mp_bufsize, mp_snd_buffer(1), 1, mp_rcv_buffer(1), 1)
 
 #endif
 

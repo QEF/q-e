@@ -1086,7 +1086,8 @@
             l=1
             do ig=1,ngb
                xg=sqrt(gb(ig))*tpibab
-               call bess(xg,l,kkbeta(is),r(1,is),jl)
+               ! call bess(xg,l,kkbeta(is),r(1,is),jl)
+               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
                do ir=1,kkbeta(is)
                   fint(ir)=r(ir,is)**2*rscore(ir,is)*jl(ir)
                end do
@@ -1334,11 +1335,13 @@
          do l=1,nqlc(is)
             do il=1,mmx
                xg=sqrt(refg*(il-1))
-               call bess(xg,l,kkbeta(is),r(1,is),jl)
+               ! call bess(xg,l,kkbeta(is),r(1,is),jl)
+               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
 !
                if(tpre) then
                   ltmp=l-1
-                  call bess(xg,ltmp,kkbeta(is),r(1,is),jltmp)
+                  ! call bess(xg,ltmp,kkbeta(is),r(1,is),jltmp)
+                  call sph_bes (kkbeta(is), r(1,is), xg, ltmp-1, jltmp )
                   if(l.eq.1) then
                      djl(1)=0.0
                   else
@@ -1434,11 +1437,13 @@
             l=nhtol(iv,is)+1
             do il=1,mmx
                xg=sqrt(refg*(il-1))
-               call bess(xg,l,kkbeta(is),r(1,is),jl)
+               ! call bess(xg,l,kkbeta(is),r(1,is),jl)
+               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl )
 !
                if(tpre)then
                   ltmp=l-1
-                  call bess(xg,ltmp,kkbeta(is),r(1,is),jltmp)
+                  ! call bess(xg,ltmp,kkbeta(is),r(1,is),jltmp)
+                  call sph_bes (kkbeta(is), r(1,is), xg, ltmp-1, jltmp )
                   if(l.eq.1) then
                      djl(1)=0.0
                   else
