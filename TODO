@@ -1,20 +1,18 @@
-TODO LIST - 24 Nov 2004
+TODO LIST - 20 Dec 2004
 
 BUGS
 
-- Efermi and restart (Alessandra)
 - fourfold degenerate phonons (Nicolas Mounet)
 - Zr hcp (Nathalie)
+- variable-cell minimization hanging (Lysenkov)
 
 NEW DEVELOPMENTS TO MERGE
 
 - ensemble-DFT dynamics (Nicola)
-- Axel's patches for configure (maybe not yet, or not now)
-- patches by Pascal Thibadeau: misc stuff in atomic/ (ok)
-  and support for FFTW3 (partly working)
+- finite electric field (Umari)
+  support for FFTW3 (partly working) by Pascal Thibadeau
 - porting/opimization for Altix by Martin Hilgeman (coming)
 - porting/opimization for SX6 from CASPUR (hopefully coming)
-- finite electric field (when finished)
 - META-GGA (when finished/tested)
 
 INSTALLATION/PORTING
@@ -25,6 +23,8 @@ INSTALLATION/PORTING
 - expand configure to cover as many configurations as possible
 
 - exotic architectures: __FUJITSU, FUJ64, HITACHI, NEC-SX5, ...
+
+- Axel's patches for multi-platform build?
 
 COMMON
 

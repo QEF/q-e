@@ -22,13 +22,13 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   LOGICAL :: lsda
     ! logical for local spin density approx.
-  REAL (KIND=DP) :: xk(3,nks), wk(nks)
-    ! k-points
-    ! k-point weights
   INTEGER :: nkstot, nks, isk(nks)
     ! total number of k-points
     ! number of k-points per pool
     ! spin index of each kpoint (when lsda=.t.)
+  REAL (KIND=DP) :: xk(3,nks), wk(nks)
+    ! k-points
+    ! k-point weights
   !
 #if defined (__PARA)
   !

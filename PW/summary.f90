@@ -311,7 +311,7 @@ subroutine summary
   endif
   WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
   do ik = 1, nkstot
-     WRITE( stdout, '(8x,"k(",i4,") = (",3f12.7,"), wk =",f12.7)') ik, &
+     WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
           (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
   enddo
   if (iverbosity.eq.1) then
@@ -322,7 +322,7 @@ subroutine summary
                        at(3,ipol)*xk(3,ik)
            ! xkg are the component in the crystal RL basis
         enddo
-        WRITE( stdout, '(8x,"k(",i4,") = (",3f12.7,"), wk =",f12.7)') &
+        WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') &
              ik, (xkg (ipol) , ipol = 1, 3) , wk (ik)
      enddo
   endif

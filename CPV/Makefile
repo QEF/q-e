@@ -44,7 +44,6 @@ gsmesh.o \
 guess.o \
 init.o \
 input.o \
-input.o \
 interfaces_main.o \
 interfaces.o \
 ions.o \

@@ -78,7 +78,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
      !
      mpime = 0
      !
-     CALL MPI_COMM_RANK( mpi_comm_world, mpime, ierr )
+     CALL MPI_COMM_RANK( MPI_COMM_WORLD, mpime, ierr )
      !
      !  .. write the message to a file and close it before exiting
      !  .. this will prevent loss of information on systems that

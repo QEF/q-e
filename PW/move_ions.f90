@@ -38,7 +38,7 @@ SUBROUTINE move_ions()
   USE io_files,      ONLY : tmp_dir, prefix, iunupdate
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : alat, at, bg, omega
-  USE cellmd,        ONLY : omega_old, at_old, lmovecell
+  USE cellmd,        ONLY : omega_old, at_old, lmovecell, calc
   USE ions_base,     ONLY : nat, ityp, tau, atm
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symme,         ONLY : s, ftau, nsym, irt
@@ -49,7 +49,6 @@ SUBROUTINE move_ions()
                             lmd, conv_ions, history, alpha0, beta0, tr2
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,      ONLY : lsda, absmag
-  USE cellmd,        ONLY : lmovecell, calc
   USE mp_global,     ONLY : intra_image_comm
   USE io_global,     ONLY : ionode_id, ionode
   USE mp,            ONLY : mp_bcast
