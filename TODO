@@ -1,4 +1,4 @@
-TODO LIST - 8 May 2003
+TODO LIST - 19 May 2003
 
 INSTALLATION
 
@@ -95,14 +95,17 @@ DOCUMENTATION
 
 - add a developer's guide
 
+FPMD:
+
+- Documentation is nonexistent
+
 CPV: 
 
-- Documentation close to non-existing. Document how to do empty states.
-
-- find reason for differences in empty states between CP and PW
-  with ultrasoft pps and box grids. If it is a bug, it is serious.
+- Documentation needs serious improvements
 
 - check on input ipp and pp type. Even better: remove ipp
   (leave either UPF or old-format Vanderbilt)
+
+- check on small box size
 
 - remove all calls to zero and to blas copy, scal

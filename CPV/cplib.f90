@@ -3491,6 +3491,8 @@
          nx=n
       end if
 !
+! TEMP: this should be moved to where occupations are read/set
+!
       if (.not.allocated(f)) then
          allocate(f(nx))
 ! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
@@ -3520,10 +3522,7 @@
 !     =========================================================
 !     ==== other control parameters
 !     =========================================================
-      fsum=0.
-      do i=1,n
-         fsum=fsum+f(i)
-      end do
+      fsum = SUM(f(1:n))
       write(6,*) ' init1:  fsum = ',fsum
       if(nspin == 1 .and. abs(fsum-float(nel(1))) > 0.001 .or.     &
          nspin == 2 .and. abs(fsum-float(nel(1)+nel(2))) > 0.001 ) &

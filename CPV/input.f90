@@ -342,6 +342,7 @@
          ion_dynamics = 'verlet'
          cell_dynamics = 'pr'
       CASE ('nscf')
+         occupations = 'bogus'
          electron_dynamics = 'damp'
          trhor =.true.
       CASE DEFAULT
@@ -530,43 +531,15 @@
          CALL errore(' iosys ',' ibrav out of range ', 1 )
       END IF
 
-      ! ...   Set Values for electron and bands          
+      ! ...   Set Values for bands          
 
-      SELECT CASE ( TRIM(occupations) ) 
-      CASE ('fixed')
-         continue
-      CASE ('from_input')
-         continue
-      CASE DEFAULT
-         CALL errore(' iosys ',' occupation method not implemented', 1 )
-      END SELECT
-      !
       IF( nbnd < 1 ) THEN
          CALL errore(' iosys ',' nbnd less than 1 ', nbnd )
-      END IF
-      IF( nelec < 1 ) THEN
-         CALL errore(' iosys ',' nelec less than 1 ', nelec )
       END IF
       IF( nspin < 1 .OR. nspin > 2 ) THEN
          CALL errore(' iosys ',' nspin out of range ', nspin )
       END IF
       n   = nbnd*nspin
-      iupdwn(1)=1
-      if(nspin.eq.1) then
-         nel(1) = nelec
-         nel(2) = 0
-         nupdwn(1)=n
-      else
-         if ( occupations == 'fixed' .and. nelup == 0 .and. neldw == 0 ) &
-              CALL errore(' iosys ',' need # of spin up and down ', 1 )
-         if ( occupations == 'fixed' .and. nelup+neldw .ne. nelec ) &
-              CALL errore(' iosys ',' wrong # of spin up and down ', 1 )
-         nel(1) = nelup
-         nel(2) = neldw
-         nupdwn(1)=nbnd
-         nupdwn(2)=nbnd
-         iupdwn(2)=nbnd+1
-      endif
 
       ! ...   Set Values for the cutoff
 
@@ -860,7 +833,62 @@
             CALL errore(' iosys ',' atomic_positions='//trim(atomic_positions)// &
                  ' not implemented ', 1 )
       END SELECT
-
+      !
+      !  set occupancies
+      !
+      SELECT CASE ( TRIM(occupations) ) 
+      CASE ('bogus')
+         !
+         ! empty-states calculation: occupancies have a (bogus) finite value
+         !
+         if (allocated(f)) CALL errore(' iosys ',&
+              ' do not specify occupations for empty-states calculation', 1 )
+         allocate(f(n))
+         !
+         ! bogus to ensure \sum_i f_i = Nelec  (nelec is integer)
+         !
+         f(:) = dfloat(nelec)/n         
+         if (nspin == 2) then
+            !
+            ! bogus to ensure Nelec = Nup + Ndw
+            !
+            nelup = (nelec+1)/2 
+            neldw = nelec/2 
+         end if
+      CASE ('from_input')
+         !
+         ! occupancies have been read from input
+         !
+         if (.not.allocated(f)) CALL errore(' iosys ',&
+              ' occupations are not there! ', 1 )
+         if (nelec == 0) nelec = SUM (f(1:n))
+         if (nspin == 2 .and. nelup == 0) nelup = SUM (f(1:nbnd))
+         if (nspin == 2 .and. neldw == 0) neldw = SUM (f(nbnd+1:2*nbnd))
+      CASE ('fixed')
+         if (allocated(f)) CALL errore(' iosys ',&
+              ' occupations were specified twice', 1 )
+      CASE DEFAULT
+         CALL errore(' iosys ',' occupation method not implemented', 1 )
+      END SELECT
+      !
+      IF( nelec < 1 ) THEN
+         CALL errore(' iosys ',' nelec less than 1 ', nelec )
+      END IF
+      iupdwn(1) = 1
+      if(nspin == 1) then
+         nel(1) = nelec
+         nel(2) = 0
+         nupdwn(1)=n
+      else
+         IF ( nelup + neldw .ne. nelec  ) THEN
+            CALL errore(' iosys ',' wrong # of up and down spin', 1 )
+         END IF
+         nel(1) = nelup
+         nel(2) = neldw
+         nupdwn(1)=nbnd
+         nupdwn(2)=nbnd
+         iupdwn(2)=nbnd+1
+      end if
 !
 !     --------------------------------------------------------
 !     print out heading
@@ -958,6 +986,9 @@
             write(6,606)
          endif
       endif
+      if ( agg .ne. 0.d0) then
+            write(6,650) agg, sgg, e0gg
+      end if
       write(6,700) iprsta
 !     
  400  format('************************************',                    &
@@ -1014,6 +1045,8 @@
      &       ' external pressure = ',f11.7,'(gpa)'//)
  606  format(' cell parameters are not allowed to move'//)
  608  format(' frozen off-diagonal cell parameters'//)
+ 650  format(' modified kinetic energy functional, with parameters:'/   &
+           & ' agg = ',f7.4,'  sgg = ', f7.4,'  e0gg = ',f6.2)
  700  format(' iprsta = ',i2/)
       return
       end

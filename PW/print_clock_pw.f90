@@ -44,13 +44,9 @@ subroutine print_clock_pw
    write (6, * )
    call print_clock ('c_bands')
    call print_clock ('init_us_2')
-   if (isolve.eq.0) then
-      call print_clock ('cegterg')
-   elseif (isolve.eq.1) then
-      call print_clock ('ccgdiagg')
-   else
-      call print_clock ('cdiisg')
-   endif
+   call print_clock ('cegterg')
+   call print_clock ('ccgdiagg')
+   call print_clock ('diis')
    write (6, * )
    call print_clock ('sum_band')
    call print_clock ('sumbec')
@@ -63,16 +59,13 @@ subroutine print_clock_pw
    call print_clock ('addus:aux')
 #endif
    write (6, * )
-   if (isolve.eq.0) then
-      call print_clock ('cegterg')
-   elseif (isolve.eq.1) then
-      call print_clock ('ccdiagg')
-   else
-      call print_clock ('cdiisg')
-   endif
-   if (isolve.eq.0.or.isolve.eq.2) then
+   call print_clock ('cegterg')
+   call print_clock ('ccdiagg')
+   call print_clock ('cdiisg')
+   if (isolve == 0) then
       call print_clock ('h_psi')
       call print_clock ('g_psi')
+      call print_clock ('wfcrot')
       if (loverlap) then
          call print_clock ('overlap')
          call print_clock ('cdiaghg')
@@ -92,6 +85,8 @@ subroutine print_clock_pw
    else
       call print_clock ('h_1psi')
       call print_clock ('s_1psi')
+      call print_clock ('wfcrot1')
+      call print_clock ('cdiaghg')
       write (6, * )
       call print_clock ('h_1psi')
       call print_clock ('init')

@@ -44,18 +44,18 @@ subroutine c_bands (iter, ik_, dr2)
   ! summation function
   ! error function
 
-  integer :: ik, ig, ibnd, ntrt, ntry, notconv
-  integer, allocatable :: btype(:)
+  integer :: ik, ig, ibnd, dav_iter, ntry, notconv
   ! counter on k points
   ! counter on G vectors
   ! counter on bands
   ! number of iterations in Davidson
-  ! number or repeated call to EGTER
-  ! type of band: conduction (1) or valence
+  ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
+  integer, allocatable :: btype(:)
+  ! type of band: conduction (1) or valence (0)
 
 
-  if (ik_.eq.nks) then
+  if (ik_ == nks) then
      ik_ = 0
      return
   endif
@@ -97,7 +97,7 @@ subroutine c_bands (iter, ik_, dr2)
 #endif
   !
 
-  if (nks.gt.1) rewind (iunigk)
+  if (nks > 1) rewind (iunigk)
   !
   !    For each k point diagonalizes the hamiltonian
   !
@@ -106,11 +106,11 @@ subroutine c_bands (iter, ik_, dr2)
      !
      !   Reads the Hamiltonian and the list k+G <-> G of this k point
      !
-     if (nks.gt.1) read (iunigk) npw, igk
+     if (nks > 1) read (iunigk) npw, igk
      !
      !   do not recalculate k-points if restored from a previous run
      !
-     if (ik.le.ik_) goto 20
+     if (ik <= ik_) goto 20
      !
      !   various initializations
      !
@@ -119,33 +119,27 @@ subroutine c_bands (iter, ik_, dr2)
      !   read in wavefunctions from the previous iteration
      !
 
-     if (nks.gt.1.or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,-1)
+     if (nks > 1 .or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,-1)
      ! Needed for LDA+U
      if (lda_plus_u) call davcio (swfcatom, nwordatwfc, iunat, ik,- 1)
      !
      !    sets the kinetic energy
      !
      do ig = 1, npw
-        g2kin (ig) = (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
+        g2kin (ig) =((xk (1, ik) + g (1, igk (ig) ) ) **2 + &
                      (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
-                     (xk (3, ik) + g (3, igk (ig) ) ) **2
+                     (xk (3, ik) + g (3, igk (ig) ) ) **2 ) * tpiba2
      enddo
      !
-     ! Put the correct units on the kinetic energy
-     !
-     call DSCAL (npw, tpiba2, g2kin, 1)
-     !
-     ! Put the correct units on the kinetic energy
-     !
-     if (qcutz.gt.0.d0) then
+     if (qcutz > 0.d0) then
         do ig = 1, npw
            g2kin (ig) = g2kin (ig) + qcutz * (1.d0 + erf ( (g2kin (ig) &
                 - ecfixed) / q2sigma) )
         enddo
-
      endif
-     if (isolve.eq.1 .or. &
-             (isolve.eq.2 .and. iter.le.diis_start_cg)) then
+     !
+     if (isolve == 1 .or. &
+             (isolve == 2 .and. iter <= diis_start_cg)) then
         !
         ! Conjugate-Gradient diagonalization
         ! and first "diis_start_cg" steps of RMM-DIIS diagonalization
@@ -168,11 +162,11 @@ subroutine c_bands (iter, ik_, dr2)
         !   save wave-functions to be used as input for the iterative
         !   diagonalization of the next scf iteration and for rho calculation
         !
-        if (nks.gt.1.or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
+        if (nks > 1 .or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
         ntry = ntry + 1
         if (ntry.le.5.and. ( &
              .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 10
-     elseif (isolve.eq.2) then
+     elseif (isolve == 2) then
         !
         !  after "diis_start_cg" steps of CG, start the RMM-DIIS method
         !
@@ -183,25 +177,15 @@ subroutine c_bands (iter, ik_, dr2)
         ntry = 0
         diis_iter = 0.d0
 
-        ! btype
-        do ibnd = 1, nbnd
-           btype (ibnd) = 0
-        enddo
-        if (iter.gt.1) then
-           if (degauss.gt.0.d0) then
-              do ibnd = 1, nbnd
-                 if (et (ibnd, ik) .gt. (ef + 3.d0 * degauss) ) btype (ibnd) = 1
-              enddo
-           else
-              do ibnd = 1, nbnd
-                 if (ibnd.gt.nint (nelec) / 2.d0) btype (ibnd) = 1
-              enddo
-           endif
-           endif
+        btype (:) = 0
+        if (iter > 1) then
+           do ibnd = 1, nbnd
+              if ( wg(ibnd, ik) < 1.0d-4 ) btype (ibnd) = 1
+           end do
            !             write(*,'(5f12.6)')(et(ibnd,ik),ibnd=1,nbnd)
            !             write(*,'(20i3)')(btype(ibnd),ibnd=1,nbnd)
            !
-
+        end if
 12      continue
         call cdiisg(npw, npwx, nbnd, diis_ndim, evc, et (1, ik), ethr, &
              btype, notconv, diis_iter, iter)
@@ -211,7 +195,7 @@ subroutine c_bands (iter, ik_, dr2)
         !   save wave-functions to be used as input for the iterative
         !   diagonalization of the next scf iteration and for rho calculation
         !
-        if (nks.gt.1.or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
+        if (nks > 1 .or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
         if (ntry.le.5.and. ( &
              .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 12
 
@@ -230,21 +214,14 @@ subroutine c_bands (iter, ik_, dr2)
 
 15      continue
 
-        if (isolve.eq.0) &
-             then
-#ifdef DEBUG_DAVIDSON
-           write (6,*) 'KPOINT=',ik
-#endif
-           call cegterg (npw, npwx, nbnd, nbndx, evc, ethr, loverlap, &
-                et (1, ik), notconv, ntrt)
-
-        endif
-        avg_iter = avg_iter + ntrt
+        call cegterg (npw, npwx, nbnd, nbndx, evc, ethr, loverlap, &
+                et (1, ik), notconv, dav_iter)
+        avg_iter = avg_iter + dav_iter
         !
         !   save wave-functions to be used as input for the iterative
         !   diagonalization of the next scf iteration and for rho calculation
         !
-        if (nks.gt.1.or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
+        if (nks > 1 .or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
         ntry = ntry + 1
         if (ntry.le.5.and. ( &
              .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 15

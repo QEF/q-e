@@ -41,6 +41,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, evc, e)
   real(kind=DP) :: DDOT
   !
   !
+  call start_clock ('wfcrot1')
   allocate (spsi( npwx))    
   allocate (hpsi( npwx))    
   allocate (hc( nstart , nstart , 2))    
@@ -88,6 +89,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, evc, e)
   deallocate (hc)
   deallocate (hpsi)
   deallocate (spsi)
+  call stop_clock ('wfcrot1')
 
   return
 end subroutine cinitcgg
