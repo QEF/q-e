@@ -17,7 +17,7 @@
 #  include "/cineca/prod/hpm_2_4_2/include/f_hpm.h"
 #endif
 
-#define __FFT_BASE_TS1 
+#undef __FFT_BASE_TS1 
 
 !=----------------------------------------------------------------------=!
       MODULE fft_base

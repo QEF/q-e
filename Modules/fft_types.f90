@@ -21,6 +21,7 @@ MODULE fft_types
     INTEGER :: nr1x     ! 
     INTEGER :: nr2x     ! FFT grids leading dimensions
     INTEGER :: nr3x     ! 
+    INTEGER :: npl      ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp      ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
     INTEGER :: nnr      ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
     INTEGER :: ngt      ! total number of non zero elemets (number of G-vec)
@@ -127,6 +128,7 @@ CONTAINS
     END IF
 
     desc%npp( 1:nproc )  = npp
+    desc%npl = npp( me )
 
     !  Find out the index of the starting plane on each proc
 

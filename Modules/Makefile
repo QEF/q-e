@@ -20,7 +20,8 @@ pseudo_types.o \
 ptoolkit.o \
 stick_base.o \
 fft_types.o \
-fft_base.o
+fft_base.o \
+fft_scalar.o
 #
 include ../make.rules
 #
