@@ -79,8 +79,9 @@ subroutine dynmatrix
   !  if only one mode is computed write the dynamical matrix and stop
   !
   if (iswitch.eq. - 4) then
+     WRITE( stdout, '(/,5x,"Dynamical matrix:")')
      do nu = 1, 3 * nat
-        WRITE( stdout, '(2i5,2f10.6)') modenum, nu, dyn (modenum, nu)
+        WRITE( stdout, '(5x,2i5,2f10.6)') modenum, nu, dyn (modenum, nu)
      enddo
      call stop_ph (.false.)
 

@@ -366,6 +366,31 @@ function check_key()
       # check passed
       return 1;
     }
+  else if (key == "DYNMAT")
+    {
+      tolerance = 2e-2;
+
+      # number of lines must match
+      if (i1 != i2)
+	return 0;
+
+      # all pairs of lines must match
+      for (j=0; j<i1; j++)
+	{
+	  # all components must match
+	  split(line1[j], x1);
+	  split(line2[j], x2);
+	  for (k=5; k<=6; k++)
+	    {
+	      delta = x1[k] - x2[k];
+	      if (delta*delta > tolerance*tolerance)
+		return 0;
+	    }
+	}
+
+      # check passed
+      return 1;
+    }
   else if (key == "OMEGA")
     {
       tol_thz = 2e-1;

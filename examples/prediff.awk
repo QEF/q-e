@@ -148,6 +148,13 @@ function check_line()
     {
       print_key("OMEGA");
     }
+  else if (match($0, "Dynamical matrix:"))
+    {
+      print;
+      while (getline && NF > 0)
+	print_key("DYNMAT");
+      print;
+    }
   else if (match($0, "atom.*type.*force ="))
     {
       print_key("FORCE");
