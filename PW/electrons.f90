@@ -101,6 +101,7 @@ SUBROUTINE electrons
   !
   ! ... end of local variables declaration
   !
+  !
   CALL start_clock( 'electrons' )
   !
   iter = 0
@@ -112,16 +113,22 @@ SUBROUTINE electrons
      !
      IF ( ik_ == - 1000 ) THEN
         conv_elec = .TRUE.
-        ! jump to the end 
+        !
+        ! ...jump to the end 
+        !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho
         CALL stop_clock( 'electrons' )
+        !
         RETURN
+        !
      END IF
      !
   END IF
   !
   IF ( lscf ) THEN
-     !   calculates the ewald contribution to total energy
+     !
+     ! ... calculates the ewald contribution to total energy
+     !
      ewld = ewald ( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
                     g, gg, ngm, gcutm, gstart, gamma_only, strf )
      IF ( reduce_io ) THEN
@@ -135,7 +142,7 @@ SUBROUTINE electrons
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  IF ( imix == 0 ) THEN
+  IF ( imix >= 0 ) THEN
      DO ig = 1, ngm
         IF ( gg(ig) < ( ecutwfc / tpiba2 ) ) ngm0 = ig
      END DO
@@ -147,7 +154,9 @@ SUBROUTINE electrons
      tcpu = get_clock( 'PWSCF' )
      WRITE(6, 9000) tcpu
      IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho, 1, rho_save, 1 )
+     !
      iter = iter + 1
+     !
      IF ( lscf ) THEN
         WRITE(6, 9010) iter, ecutwfc, mixing_beta
      ELSE
@@ -176,7 +185,8 @@ SUBROUTINE electrons
      !
      CALL c_bands( iter, ik_, dr2 )
      !
-     ! skip all the rest if not lscf
+     ! ... skip all the rest if not lscf
+     !
      IF ( .NOT. lscf ) THEN
         !
         conv_elec = .TRUE.
@@ -188,14 +198,16 @@ SUBROUTINE electrons
               IF ( ik == 1 ) WRITE(6, 9015)
               IF ( ik == ( 1 + nkstot / 2 ) ) WRITE(6, 9016)
            END IF
-           WRITE(6, 9020) ( xk(i, ik), i = 1, 3 )
-           WRITE(6, 9030) ( et(ibnd, ik) * 13.6058, ibnd = 1, nbnd )
+           WRITE(6, 9020) ( xk(i,ik), i = 1, 3 )
+           WRITE(6, 9030) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
         END DO
         !
-        ! DO a Berry phase polarization calculation if required
+        ! ... do a Berry phase polarization calculation if required
+        !
         IF ( lberry ) CALL c_phase
         !
-        ! jump to the end
+        ! ... jump to the end
+        !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho
         CALL stop_clock( 'electrons' )
         RETURN
@@ -223,12 +235,12 @@ SUBROUTINE electrons
         magtot = 0.0D0
         absmag = 0.0D0
         DO ir = 1, nrxx
-           mag    = rho(ir, 1) - rho(ir, 2)
+           mag    = rho(ir,1) - rho(ir,2)
            magtot = magtot + mag
            absmag = absmag + ABS( mag )
         enddo
-        magtot = magtot * omega / (nr1 * nr2 * nr3)
-        absmag = absmag * omega / (nr1 * nr2 * nr3)
+        magtot = magtot * omega / ( nr1 * nr2 * nr3 )
+        absmag = absmag * omega / ( nr1 * nr2 * nr3 )
 #ifdef __PARA
         CALL reduce( 1, magtot )
         CALL reduce( 1, absmag )
@@ -330,14 +342,14 @@ SUBROUTINE electrons
            END IF
            IF ( conv_elec ) THEN
 #ifdef __PARA
-              WRITE(6, 9021) (xk(i, ik), i = 1, 3), ngkp(ik)
+              WRITE(6, 9021) (xk(i,ik), i = 1, 3), ngkp(ik)
 #else
-              WRITE(6, 9021) (xk(i, ik), i = 1, 3), ngk(ik)
+              WRITE(6, 9021) (xk(i,ik), i = 1, 3), ngk(ik)
 #endif
            ELSE
-              WRITE(6, 9020) (xk(i, ik), i = 1, 3)
+              WRITE(6, 9020) (xk(i,ik), i = 1, 3)
            END IF
-           WRITE(6, 9030) (et(ibnd, ik) * 13.6058, ibnd = 1, nbnd)
+           WRITE(6, 9030) (et(ibnd,ik) * 13.6058, ibnd = 1, nbnd)
         END DO
         !
         IF ( lgauss .OR. ltetra ) WRITE(6, 9040) ef * 13.6058
