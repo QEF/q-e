@@ -33,9 +33,9 @@ SUBROUTINE move_ions()
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
   !
+  USE constants,     ONLY : eps8
   USE io_global,     ONLY : stdout
   USE io_files,      ONLY : tmp_dir, prefix, iunupdate
-  USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : alat, at, bg
   USE ions_base,     ONLY : nat, ityp, tau, atm
@@ -44,16 +44,20 @@ SUBROUTINE move_ions()
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
+  USE bfgs_module,   ONLY : lbfgs_ndim
   USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lconstrain, &
                             lmd, conv_ions, history, alpha0, beta0, tr2
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
+  USE lsda_mod,      ONLY : lsda, absmag
   USE cellmd,        ONLY : lmovecell, calc
   USE mp_global,     ONLY : intra_image_comm
   USE io_global,     ONLY : ionode_id, ionode
   USE mp,            ONLY : mp_bcast
+  USE bfgs_module
   !
   ! ... external procedures
   !
+  USE bfgs_module,            ONLY : new_bfgs => bfgs, lin_bfgs, terminate_bfgs
   USE constraints_module,     ONLY : dist_constrain, check_constrain, &
                                      new_force, compute_penalty
   USE basic_algebra_routines, ONLY : norm
@@ -62,6 +66,8 @@ SUBROUTINE move_ions()
   !
   ! ... local variables
   !
+  LOGICAL, SAVE              :: lcheck_mag
+    ! .TRUE. if the check of zero absolute magnetization is required
   REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms  
   REAL(KIND=DP), SAVE        :: lambda = 0.5D0    
@@ -131,11 +137,15 @@ SUBROUTINE move_ions()
         !
         IF ( lbfgs_ndim == 1 ) THEN
            !
+           ! ... standard BFGS 
+           !
            CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
                           epsf, energy_error, gradient_error, step_accepted, &
                           conv_ions )
            !
         ELSE
+           !
+           ! ... linear scaling BFGS
            !
            CALL lin_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
                           epsf, energy_error, gradient_error, step_accepted, &
@@ -143,9 +153,42 @@ SUBROUTINE move_ions()
            !
         END IF
         !
-        IF ( .NOT. conv_ions ) THEN
+        IF ( conv_ions ) THEN
            !
-           ! ... if a new bfgs step is done, new thresholds are computed
+           IF ( ( lsda .AND. ( absmag < eps8 ) .AND. lcheck_mag ) ) THEN
+              !
+              ! ... lsda relaxation :  a final configuration with zero 
+              ! ...                    absolute magnetization has been found
+              !
+              ! ... here we check if it is really the minimum energy structure
+              ! ... by performing a new scf iteration without any "electronic"
+              ! ... history
+              !
+              WRITE( UNIT = stdout, FMT = 9010 )
+              WRITE( UNIT = stdout, FMT = 9020 )
+              !
+              CALL hinit0()
+              CALL potinit()
+              CALL newd()
+              CALL wfcinit()
+              !
+              ! ... this check is performed only once
+              !
+              lcheck_mag = .FALSE.
+              !
+              ! ... conv_ions is set to .FALSE. to perform a final scf cycle
+              !
+              conv_ions = .FALSE.
+              ! 
+           ELSE
+              !
+              CALL terminate_bfgs( etot, stdout, tmp_dir )
+              !
+           END IF   
+           !
+        ELSE
+           !
+           ! ... if a new bfgs step is done, new threshold is computed
            !
            IF ( step_accepted ) THEN
               !
@@ -157,6 +200,12 @@ SUBROUTINE move_ions()
            END IF       
            !
            WRITE( stdout, '(5X,"new conv_thr",T30,"= ",F18.10,/)' ) tr2
+           !
+           ! ... the logical flag lcheck_mag is set again to .TRUE. (needed if 
+           ! ... a new configuration with zero zero absolute magnetization is 
+           ! ... identified in the following steps of the relaxation)
+           !
+           lcheck_mag = .TRUE.
            !
         END IF
         !   
@@ -224,6 +273,13 @@ SUBROUTINE move_ions()
   CALL mp_bcast( history,   ionode_id, intra_image_comm )
   ! 
   RETURN
+  !
+9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
+           & /5X,'                   absolute magnetization has been found' )
+9020 FORMAT( /5X,'the program is checking if it is really ', &
+           &     'the minimum energy structure',             &
+           & /5X,'by performing a new scf iteration',        & 
+           &     'without any "electronic" history' )               
   !
   CONTAINS
      !

@@ -41,7 +41,8 @@ MODULE bfgs_module
   ! ... public methods
   !
   PUBLIC :: bfgs, &
-            lin_bfgs
+            lin_bfgs, &
+            terminate_bfgs
   !
   ! ... public variables
   !   
@@ -153,11 +154,18 @@ MODULE bfgs_module
        !
        lbfgs_ndim = 1
        !
-       ALLOCATE( pos_old( dim, lbfgs_ndim ) )
-       ALLOCATE( inverse_hessian( dim, dim ) )
-       ALLOCATE( bfgs_step( dim ) )              
-       ALLOCATE( bfgs_step_old( dim ) )
-       ALLOCATE( gradient_old( dim, lbfgs_ndim ) )
+       ! ... conditional allocation
+       !
+       IF ( .NOT. ALLOCATED( pos_old ) ) &
+          ALLOCATE( pos_old( dim, lbfgs_ndim ) )
+       IF ( .NOT. ALLOCATED( inverse_hessian ) ) &
+          ALLOCATE( inverse_hessian( dim, dim ) )
+       IF ( .NOT. ALLOCATED( bfgs_step ) ) &
+          ALLOCATE( bfgs_step( dim ) )              
+       IF ( .NOT. ALLOCATED( bfgs_step_old ) ) &
+          ALLOCATE( bfgs_step_old( dim ) )
+       IF ( .NOT. ALLOCATED( gradient_old ) ) &
+          ALLOCATE( gradient_old( dim, lbfgs_ndim ) )
        !       
        CALL read_bfgs_file( pos, energy, gradient, scratch, dim, stdout )
        !
@@ -176,13 +184,7 @@ MODULE bfgs_module
           !
        END DO       
        !
-       IF ( conv_bfgs ) THEN
-          !
-          CALL terminate_bfgs( energy, stdout, scratch )
-          !
-          RETURN
-          !
-       END IF
+       IF ( conv_bfgs ) RETURN
        !
        ! ... some output is written
        !
@@ -473,15 +475,7 @@ MODULE bfgs_module
           !
        END DO       
        !
-       IF ( conv_bfgs ) THEN
-          !
-          ! ... convergence has been achieved
-          !
-          CALL terminate_bfgs( energy, stdout, scratch )
-          !
-          RETURN
-          !
-       END IF
+       IF ( conv_bfgs ) RETURN
        !
        ! ... some output is written
        !

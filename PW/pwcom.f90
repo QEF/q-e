@@ -180,7 +180,9 @@ MODULE lsda_mod
   LOGICAL :: &
        lsda
   REAL(KIND=DP) :: &
-       starting_magnetization(ntypx) ! the magnetization used to start with
+       magtot,                       &! total magnetization
+       absmag,                       &! total absolute magnetization  
+       starting_magnetization(ntypx)  ! the magnetization used to start with
   INTEGER :: &
        nspin,           &! number of spin polarization: 2 if lsda, 1 other
        current_spin,    &! spin of the current kpoint

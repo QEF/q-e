@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 PROGRAM pwscf
   !----------------------------------------------------------------------------
@@ -17,18 +16,18 @@ PROGRAM pwscf
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,            ONLY : nstep, istep, conv_elec, conv_ions, lneb
-  USE io_files,         ONLY : nd_nmbr, iunneb
+  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lneb
+  USE io_files,         ONLY : nd_nmbr, iunneb, tmp_dir
   USE neb_variables,    ONLY : conv_neb
-  USE neb_variables,    ONLY : neb_deallocation
-  USE input_parameters, ONLY : deallocate_input_parameters
   USE neb_routines,     ONLY : initialize_neb, search_mep
   USE mp_global,        ONLY : me_image, root_image
   USE io_global,        ONLY : ionode
   !
   IMPLICIT NONE
-  !  
-  CHARACTER (LEN=9)  :: code = 'PWSCF'
+  !
+  ! ... local variables
+  !
+  CHARACTER (LEN=9) :: code = 'PWSCF'
   !
   !
   ! ... use ".FALSE." to disable all clocks except the total cpu time clock
@@ -99,6 +98,8 @@ PROGRAM pwscf
         !
         CALL ions()
         !
+        ! ... ionic convergence is checked here
+        !
         IF ( conv_ions ) EXIT main_loop
         !
         ! ... the ionic part of the hamiltonian is reinitialized
@@ -116,7 +117,7 @@ PROGRAM pwscf
   STOP
   !
 9010 FORMAT( /5X,'Current dimensions of program pwscf are:' &
-             /5X,'ntypx =',I2,'   npk =',I5,'  lmax =',I2   &
-             /5X,'nchix =',I2,'  ndmx =',I5,'  nbrx =',I2,' nqfx =',I2 )
+           & /5X,'ntypx =',I2,'   npk =',I5,'  lmax =',I2   &
+           & /5X,'nchix =',I2,'  ndmx =',I5,'  nbrx =',I2,' nqfx =',I2 )
   !
 END PROGRAM pwscf

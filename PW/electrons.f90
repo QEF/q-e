@@ -31,7 +31,7 @@ SUBROUTINE electrons()
   USE gsmooth,              ONLY : doublegrid  
   USE klist,                ONLY : xk, degauss, nelec, ngk, nks, nkstot, &
                                    lgauss    
-  USE lsda_mod,             ONLY : lsda, nspin  
+  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag
   USE ktetra,               ONLY : ltetra  
   USE vlocal,               ONLY : strf, vnew  
   USE wvfct,                ONLY : nbnd, et, gamma_only  
@@ -41,7 +41,7 @@ SUBROUTINE electrons()
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, iswitch, &
                                    lscf, lneb, lmd, conv_elec, restart, &
-                                   reduce_io  
+                                   reduce_io
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunneb, &
                                    output_drho
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
@@ -72,8 +72,6 @@ SUBROUTINE electrons()
       dr2,           &!  the norm of the diffence between potential
       charge,        &!  the total charge
       mag,           &!  local magnetization
-      magtot,        &!  total magnetization
-      absmag,        &!  total absolute magnetization
       tcpu            !  cpu time
    INTEGER :: &
       i,             &!  counter on polarization
