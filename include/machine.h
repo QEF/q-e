@@ -11,6 +11,14 @@
 #  define C_POINTER  integer(kind=8)
 #endif
 
+#if defined __HP
+#  if defined __HP64
+#    define C_POINTER  integer(kind=8)
+#  else
+#    define C_POINTER  integer(kind=4)
+#  endif
+#endif
+
 #if defined __SGI || defined __ORIGIN
 #  if defined __SGI64
 #    define C_POINTER  integer(kind=8)

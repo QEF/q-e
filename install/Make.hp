@@ -18,6 +18,10 @@
 # FFTW_INC_DIR=/nethome/proffess/lib/fftw-2.1.5/64/include
   CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -I$(FFTW_INC_DIR)
 #
+#-------------------------------------------------#
+# Add -D__HP64 to CPPFLAGS for 64-bit compilation #
+#-------------------------------------------------#
+#
 # Use the local copy of fftw
 #CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -D__USE_INTERNAL_FFTW
 #
