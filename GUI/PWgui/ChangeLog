@@ -1,6 +1,10 @@
 Thu Mar 24 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* pw.tcl, pw-help.tcl: adding the pwscf's wf_collect variable
 
+Thu Mar 24 2005  Stefano de Gironcoli (degironc@sissa.it)
+	* pw.tcl, pw-help.tcl, pw-event.tcl: adding npsin=4 option and 
+                angle1, angle2 variables needed in the noncollinear case
+
 Wed Mar 23 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* pw.tcl, pw-help.tcl: pw.x module updated to syntax of PWscf-2.1.2
 	* pp.tcl, pp-help.tcl: pp.x module slightly updated to syntax of
