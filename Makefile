@@ -1,6 +1,6 @@
 default :
 	@echo 'to install, type at the shell prompt:'
-	@echo '  ./configure.new'
+	@echo '  ./configure'
 	@echo '  make target'
 	@echo 'where target is one of the following:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
