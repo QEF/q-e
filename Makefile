@@ -131,7 +131,8 @@ veryclean : clean
 	- cd examples ; ./make_clean
 	- if test -d GUI ; then \
 	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) veryclean ; \
-		else $(MAKE) $(MFLAGS) veryclean ; fi )
+		else $(MAKE) $(MFLAGS) veryclean ; fi ) \
+	  fi
 
 tar :
 	tar cvf espresso.tar \
