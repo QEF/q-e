@@ -152,7 +152,7 @@ MODULE path_base
          !
          FORALL( mode = 1 : ( Nft - 1 ) )
             !
-            ds_(mode) = ds / SQRT( REAL( mode ) )
+            ds_(mode) = ds
             !
          END FORALL
          !
@@ -614,7 +614,7 @@ MODULE path_base
       !
       pi_over_Nft = pi / REAL( Nft )
       !
-      DO j = 0, ( Nft - 1 )
+      DO j = 0, Nft
          !
          DO n = 1, ( Nft - 1 )
             !
@@ -1008,7 +1008,7 @@ MODULE path_base
       !
       ! ... local variables
       !
-      INTEGER        :: n
+      INTEGER        :: n, i
       REAL (KIND=DP) :: path_length_inv
       REAL (KIND=DP) :: V_previous, V_actual, V_next
       REAL (KIND=DP) :: abs_next, abs_previous
@@ -1063,6 +1063,8 @@ MODULE path_base
       ELSE IF ( lsmd ) THEN
          !
          ! ... tangent from fourier interpolation
+         !
+         i = index - 1
          !
          path_length_inv = 1.D0 / path_length
          !

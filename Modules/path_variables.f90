@@ -210,8 +210,8 @@ MODULE path_variables
           ALLOCATE( ft_pos_old(  dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_grad_old( dim, ( Nft - 1 ) ) )
           !
-          ALLOCATE( ft_sin( ( Nft - 1 ), 0:( Nft - 1 ) ) )
-          ALLOCATE( ft_cos( ( Nft - 1 ), 0:( Nft - 1 ) ) )
+          ALLOCATE( ft_sin( ( Nft - 1 ), 0:Nft ) )
+          ALLOCATE( ft_cos( ( Nft - 1 ), 0:Nft ) )
           !
           IF ( first_last_opt ) THEN
              ! 
