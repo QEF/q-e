@@ -18,12 +18,10 @@
 !
 #include "f_defs.h"
 !
-#undef PRESENT
+#if defined (__FFTW)
 !
 ! ... FFTW case
 !
-#if defined (__FFTW)
-#define PRESENT
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   !----------------------------------------------------------------------------
@@ -56,12 +54,11 @@ SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   RETURN
   !
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined (__AIX)
 !
 ! ... AIX case
 !
-#if defined (__AIX)
-#define PRESENT
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   !----------------------------------------------------------------------
@@ -104,12 +101,11 @@ SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   RETURN
   !
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined (__SGI) || defined (__ORIGIN)
 !
 ! ... Silicon Graphics case
 !
-#if defined (__SGI) || defined (__ORIGIN)
-#define PRESENT
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
   !----------------------------------------------------------------------------
@@ -154,12 +150,11 @@ SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
   RETURN
   !
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined (EXEMPLAR)
 !
 ! ... EXEMPLAR case
 !
-#if defined (EXEMPLAR)
-#define PRESENT
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !----------------------------------------------------------------------------
@@ -182,12 +177,11 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   RETURN
   !
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined (CRAYY)
 !
 ! ... CRAYY case
 !
-#ifdef CRAYY
-#define PRESENT
 !----------------------------------------------------------------------
 SUBROUTINE cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   !----------------------------------------------------------------------
@@ -285,12 +279,11 @@ SUBROUTINE cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   RETURN
 
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined (__SX4)
 !
 ! ... SX4 case
 !
-#ifdef __SX4
-#define PRESENT
 !----------------------------------------------------------------------
 SUBROUTINE cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !----------------------------------------------------------------------
@@ -388,13 +381,11 @@ SUBROUTINE cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   RETURN
 
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined (__SX6)
 !
 ! ... SX6 case
 !
-#ifdef __SX6
-#define PRESENT
-
 MODULE afftnec
   !
   USE kinds
@@ -547,12 +538,11 @@ SUBROUTINE cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 #endif
   !
   RETURN
-#endif
+!
+#elif defined(__SUN)
 !
 ! ... SUN case
 !
-#ifdef __SUN
-#define PRESENT
 !----------------------------------------------------------------------
 SUBROUTINE cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   !----------------------------------------------------------------------
@@ -591,12 +581,11 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   RETURN
 
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined(DXML)
 !
 ! ... DXML case
 !
-#ifdef DXML
-#define PRESENT
 !----------------------------------------------------------------------
 SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !----------------------------------------------------------------------
@@ -663,12 +652,11 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   RETURN
 
 END SUBROUTINE cft_3
-#endif
+!
+#elif defined(FUJ64)
 !
 ! ... FUJ64 case
 !
-#ifdef FUJ64
-#define PRESENT
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3( ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign )
   !----------------------------------------------------------------------------
@@ -763,11 +751,11 @@ SUBROUTINE cft_3( ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign )
   RETURN
   !
 END SUBROUTINE cft_3
-#endif
+!
+#else
 !
 ! ... error routine
 !
-#if ! defined (PRESENT)
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
   !---------------------------------------------------------------------------
