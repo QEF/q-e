@@ -22,7 +22,6 @@ SUBROUTINE force_hub(forceh)
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
                                     hubbard_alpha, ns, U_projection, &
                                     swfcatom
-   USE lsda_mod,             ONLY : nspin
    USE symme,                ONLY : s, nsym, irt
    USE io_files,             ONLY : prefix, iunocc
    USE wvfct,                ONLY : gamma_only, nbnd, npwx, npw, igk
