@@ -951,8 +951,6 @@ in the following example:
 \end{verbatim}
 (assuming that the library and the two object files are in the same
 directory). See also Axel Kohlmeyer's web site.
-Note that if you have a PC cluster running MPI, you may have to
-recompile MPI libraries as well, using the Intel C compiler (icc).
 
 Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9)
 may be incompatible with ifc 7.0 and 7.1.
@@ -992,6 +990,28 @@ much larger memory space, but apparently they are not especially
 faster than 32-bit executables. The Intel compiler has been 
 reported to be mor reliable and to produce faster executables 
 wrt the PGI compiler.
+
+\paragraph{Linux PC clusters with MPI}
+
+PC clusters running some version of MPI are a very popular 
+computational platform nowadays. Two major MPI implementations 
+(MPICH, LAM-MPI) are available. The number of possible
+configurations, in terms of type and and version of the MPI 
+libraries, kernels, system libraries, compilers, is very large. 
+ESPRESSO compiles and works on all non-buggy, properly configured 
+configuration. You may have to recompile MPI libraries in order 
+to be able to use them with the Intel compiler. See Axel Kohlmeyer's 
+web site for precompiled versions of the MPI library.
+
+If ESPRESSO does not work for some reason on a PC cluster, try first 
+if it works in serial execution. If the problem is clearly related to
+parallelism, it is likely that your MPI libraries are buggy or not
+properly configured: see Axel Kohlmeyer's web site for help.
+A frequent problem is that ESPRESSO does not read from standard 
+output: see section ``Running on parallel machines''.
+
+If you are dissatisfied with the performances in parallel 
+execution, read the ``Parallelization issues'' section.
 
 \paragraph{T3E}
 
@@ -2172,9 +2192,10 @@ PC) may yield error in reading.
 If none of the above applies and the code stops at the first namelist
 (``control'')
 and you are running on a PC cluster: your communication library
-(LAM-MPI or MPICH) might not be properly configured to allow input
+(MPI) might not be properly configured to allow input
 redirection (so that you are effectively reading an empty file).
-Inquire with your local computer wizard.
+See section ``Running on parallel machines'', or inquire with your 
+local computer wizard (if any).
 
 \paragraph{\texttt{pw.x} mumbles something like ``cannot recover'' or
            ``error reading recover file''.}

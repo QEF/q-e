@@ -600,6 +600,9 @@ SUBROUTINE iosys()
      !
   ELSE IF ( TRIM( calculation ) == 'vc-relax' ) THEN
      !
+     lmd     = .TRUE.
+     ldamped = .TRUE.
+     !
      SELECT CASE ( TRIM( cell_dynamics ) )
      CASE ( 'none' )
         epse    = etot_conv_thr

@@ -9,6 +9,10 @@
              2) trust_radius_max increased to 0.8 bohr
              3) some cleanup of internal routines
              (CS)
+             Old parallel variables (such as me mypool) removed from 
+             PH and PP (CS)
+             vc-relax was not working: variables lmd and ldamped 
+             not set (PC)
 
 1 Nov 2004   more CP/FPMD merging, cleanup (CC)
              Calculation of LDA+U contribution to forces modified:
