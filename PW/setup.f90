@@ -285,6 +285,14 @@ SUBROUTINE setup()
             .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
       CALL errore( 'setup', 'the system is metallic, specify occupations', 1 )
   !
+  ! ... Check: spin-polarized calculations require tetrahedra or broadening
+  !            or fixed occupation - the simple filling of levels is not 
+  !            implemented right now (it will yield an unpolarized system)
+  !
+  IF ( lscf .AND. lsda &
+            .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
+      CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
+  !
   ! ... Set the number of occupied bands if not given in input
   !
   IF ( nbnd == 0 ) THEN
