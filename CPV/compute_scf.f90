@@ -14,11 +14,11 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   USE kinds,             ONLY : DP
   USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos, ion_positions
-  USE input_parameters,  ONLY : outdir, prefix, nat, restart_mode
-  USE input_parameters,  ONLY : scradir, ndr
+  USE input_parameters,  ONLY : restart_mode
+  USE ions_base,         ONLY : nat
   USE constants,         ONLY : e2
-  USE control_flags,     ONLY : conv_elec, ethr, program_name
-  USE io_files,          ONLY : iunpath, iunexit
+  USE control_flags,     ONLY : conv_elec, ethr, ndr, program_name
+  USE io_files,          ONLY : iunpath, iunexit, outdir, prefix, scradir
   USE io_global,         ONLY : stdout
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &

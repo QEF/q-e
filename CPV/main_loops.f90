@@ -13,7 +13,8 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE wf_loop( nloop )
-      USE input_parameters, ONLY: nat, tprnfor
+      USE ions_base, ONLY: nat
+      USE control_flags, ONLY: tprnfor
       USE input_parameters, ONLY: ion_positions, rd_pos
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nloop
@@ -49,7 +50,8 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE smd_loop( nloop )
-      USE input_parameters, ONLY: nat, tprnfor
+      USE ions_base, ONLY: nat
+      USE control_flags, ONLY: tprnfor
       USE input_parameters, ONLY: ion_positions, rd_pos, num_of_images
       
       IMPLICIT NONE
@@ -139,7 +141,8 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE cpr_loop( nloop )
-      USE input_parameters, ONLY: nat, tprnfor
+      USE ions_base, ONLY: nat
+      USE control_flags, ONLY: tprnfor
       USE input_parameters, ONLY: ion_positions, rd_pos
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nloop
@@ -180,8 +183,9 @@
 
       USE kinds
       USE main_module,      ONLY: cpmain
-      USE input_parameters, ONLY: restart_mode, outdir
-      USE input_parameters, ONLY: nat
+      USE input_parameters, ONLY: restart_mode
+      USE io_files,         ONLY: outdir
+      USE ions_base,        ONLY: nat
       USE io_global,        ONLY:  stdout
 
       IMPLICIT NONE

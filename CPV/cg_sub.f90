@@ -72,7 +72,7 @@
       use qradb_mod, only: deallocate_qradb_mod
       use dqrad_mod, only: deallocate_dqrad_mod
       use betax, only: deallocate_betax
-      use input_parameters, only: outdir
+      use io_files, only: outdir
 
       use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
       use uspp_param, only: nh

@@ -136,7 +136,7 @@
       USE stick_base, ONLY: pstickset
       USE electrons_module, ONLY: bmeshset
       USE mp_global, ONLY: nproc, mpime, group
-      USE input_parameters, ONLY: nr1b, nr2b, nr3b
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE ions_base, ONLY: deallocate_ions_base
       USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
                             ind_localisation, pos_localisation, deallocate_sic

@@ -101,14 +101,13 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use restart_file
   use parameters, only: nacx, natx, nsx, nbndxx, nhclm
   use constants, only: pi, factem, au_gpa, au_ps, gpa_au
-  use io_files, only: psfile, pseudo_dir, smwout
+  use io_files, only: psfile, pseudo_dir, smwout, outdir
   use input, only: iosys
   use qgb_mod, only: deallocate_qgb_mod
   use dqgb_mod, only: deallocate_dqgb_mod
   use qradb_mod, only: deallocate_qradb_mod
   use dqrad_mod, only: deallocate_dqrad_mod
   use betax, only: deallocate_betax
-  use input_parameters, only: outdir
   use wave_base, only: wave_steepest, wave_verlet
   use wave_base, only: wave_speed2, frice, grease
   USE control_flags, ONLY : conv_elec, tconvthrs
