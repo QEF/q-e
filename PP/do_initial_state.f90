@@ -97,7 +97,7 @@ SUBROUTINE do_initial_state (excite)
   shift_ion(:)   = 0.D0
   !
   WRITE( stdout, '(/,5x,"INITIAL STATE CONTRIBUTION TO", &
-                   /,5x,"CORE LEVEL SHIFT ON ATOMS:", / )')
+                 & /,5x,"CORE LEVEL SHIFT ON ATOMS:", / )')
 
   do na=1,nat
      shift_ef(na) = ef * delta_zv(ityp(na))
