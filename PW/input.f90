@@ -155,6 +155,7 @@ subroutine iosys
   etot_conv_thr = 1.d-4
   forc_conv_thr = 1.d-3
   disk_io = 'default'
+  noinv = .false.    ! not actually used
   !
 #ifdef T3D
   call pxfgetenv('HOME',0,pseudo_dir,i,ios)
