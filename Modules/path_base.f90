@@ -6,8 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #define  USE_ELASTIC_CONSTANTS_RESCALING
-!#define  DEBUG_ELASTIC_CONSTANTS
-!#define  DEBUG_H3COLL
 !
 !-----------------------------------------------------------------------
 MODULE path_base
@@ -640,8 +638,6 @@ MODULE path_base
       USE path_variables, ONLY : dim, path_length, pos, ft_pos, &
                                  num_of_images, Nft, Nft_smooth
       USE basic_algebra_routines
-      USE path_variables, ONLY : istep_path
-      USE parser
       !
       IMPLICIT NONE
       !
@@ -653,13 +649,6 @@ MODULE path_base
       ALLOCATE( r_h(       dim ) )
       ALLOCATE( r_n(       dim ) )
       ALLOCATE( delta_pos( dim ) )
-      !
-#if defined (DEBUG_H3COLL)
-      !
-      OPEN( UNIT = 666, &
-            FILE = '2Dplot_' // TRIM( int_to_char( istep_path ) ) // '.dat' )
-      !
-#endif
       !
       delta_pos(:) = ( pos(:,num_of_images) - pos(:,1) )
       !
@@ -686,25 +675,6 @@ MODULE path_base
             !
             r_h(:) = r_n(:)
             !
-#if defined (DEBUG_H3COLL)
-            !
-            x = r_h(7) - r_h(4)
-            y = r_h(4) - r_h(1)
-            !
-            WRITE( 666, '(2(2X,F10.8))' ) x, y
-           ! IF ( j == 0 ) THEN
-           !    !
-           !    WRITE( 666, '(4(2X,F12.8),2X,I2)' ) &
-           !        REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * ( num_of_images - 1 ) ), path_length, x, y, i
-           !    !
-           ! ELSE
-           !    !
-           !    WRITE( 666, '(4(2X,F12.8))' ) &
-           !        REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * ( num_of_images - 1 ) ), path_length, x, y
-           !    !
-           ! END IF
-#endif
-            !
          END DO
          !
       END DO
@@ -712,20 +682,6 @@ MODULE path_base
       r_n(:) = pos(:,num_of_images)
       !
       path_length = path_length + norm( r_n - r_h )
-      !
-#if defined (DEBUG_H3COLL)
-      !
-      r_h(:) = r_n(:)
-      !
-      x = r_h(7) - r_h(4)
-      y = r_h(4) - r_h(1)
-      !
-      WRITE( 666, '(2(2X,F12.8))' ) x, y
-     ! WRITE( 666, '(4(2X,F12.8),2X,I2)' ) 1.D0, path_length, x, y, i
-      !
-      CLOSE( 666 )
-      !
-#endif      
       !
       DEALLOCATE( r_h )
       DEALLOCATE( r_n )

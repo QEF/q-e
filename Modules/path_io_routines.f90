@@ -879,7 +879,7 @@ MODULE path_io_routines
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     activation_energy, path_length, react_coord
-       USE path_variables,   ONLY : tangent, dim, Emax_index
+       USE path_variables,   ONLY : tangent, dim, Emax_index, error
        USE path_variables,   ONLY : Nft, Nft_smooth, ft_pes
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
@@ -904,23 +904,10 @@ MODULE path_io_routines
        !
        IF ( .NOT. meta_ionode ) RETURN
        !
-       ! ... the *.dat file is written here
+       ! ... the *.dat and *.int files are written here
        !
-       OPEN( UNIT = iundat, FILE = dat_file, &
-             STATUS = "UNKNOWN", ACTION = "WRITE" )
-       !  
-       DO image = 1, num_of_images
-          !
-          WRITE( UNIT = iundat, FMT = dat_fmt ) &
-              ( REAL( image - 1 ) / REAL( num_of_images - 1 ) ), &
-              ( pes(image) - pes(1) ) * au
-          !
-       END DO
-       !
-       CLOSE( UNIT = iundat )
-       !
-       ! ... the *.int file is written here
-       !
+       OPEN( UNIT = iundat, FILE = dat_file, STATUS = "UNKNOWN", &
+             ACTION = "WRITE" )
        OPEN( UNIT = iunint, FILE = int_file, STATUS = "UNKNOWN", &
              ACTION = "WRITE" )
        !
@@ -970,6 +957,15 @@ MODULE path_io_routines
              !
           END DO          
           !
+          DO image = 1, num_of_images
+             !
+             WRITE( UNIT = iundat, FMT = dat_fmt ) &
+                 ( react_coord(image) / react_coord(num_of_images) ), &
+                 ( pes(image) - pes(1) ) * au, &
+                 error(image) * ( au / bohr_radius_angs )
+             !
+          END DO
+          !
           image = 1
           !
           delta_R = react_coord(num_of_images) / REAL(max_i)
@@ -1002,6 +998,14 @@ MODULE path_io_routines
           DEALLOCATE( F )
           !
        ELSE IF ( lsmd ) THEN
+          !
+          DO image = 1, num_of_images
+             !
+             WRITE( UNIT = iundat, FMT = dat_fmt ) &
+                 ( REAL( image - 1 ) / REAL( num_of_images - 1 ) ), &
+                 ( pes(image) - pes(1) ) * au
+             !
+          END DO          
           !
           ! ... the forward activation energy is computed here
           !
@@ -1038,6 +1042,7 @@ MODULE path_io_routines
           !
        END IF
        !
+       CLOSE( UNIT = iundat )
        CLOSE( UNIT = iunint )
        !
        ! ... the *.xyz file is written here
