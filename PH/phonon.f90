@@ -20,7 +20,7 @@ program phonon
   use pwcom
   use parameters, only : DP
   use phcom
-  use io
+  use io_files
   use global_version
   implicit none
 

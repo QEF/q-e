@@ -30,7 +30,7 @@ subroutine dynamics
   !
 #include "machine.h"
   use pwcom
-  use io, only : prefix
+  use io_files, only : prefix
 #ifdef __PARA
   use para
 #endif

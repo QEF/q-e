@@ -14,7 +14,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   !     If appropriate, the node number is added to the file name
   !
   use parameters
-  use io
+  use io_files
   implicit none
   !
   !    first the dummy variables

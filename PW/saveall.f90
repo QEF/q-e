@@ -15,7 +15,7 @@ subroutine saveall (iun, iflag)
   !      i) dynamically allocated, ii) distributed in parallel execution
   !
   use pwcom
-  use io
+  use io_files
   use funct
   implicit none
 

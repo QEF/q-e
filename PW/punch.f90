@@ -19,7 +19,7 @@ subroutine punch
   !
   use pwcom, only: nks, filpun, reduce_io, evc, nwordwfc, iunwfc, lscf, &
     rho, nspin, iunpun, et, wg, nbnd, nkstot
-  use io, only: prefix
+  use io_files, only: prefix
 #ifdef __PARA
   use para
 #endif
@@ -89,7 +89,7 @@ subroutine punch
   !
   !
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
 #ifdef __PARA
   use para
 #endif

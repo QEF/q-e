@@ -13,7 +13,7 @@ subroutine cg_setup
 #include "machine.h"
   use parameters, only: DP
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
   use cgcom
   use funct
   !

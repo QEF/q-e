@@ -9,7 +9,7 @@
 subroutine write_config_to_file_old
   !-----------------------------------------------------------------------
   use pwcom
-  use io, only : prefix
+  use io_files, only : prefix
   implicit none
   logical :: exst
   integer :: iunit
@@ -37,7 +37,7 @@ end subroutine write_config_to_file_old
 subroutine write_config_to_file
   !-----------------------------------------------------------------------
   use pwcom, only: lscf, iunres, dp
-  use io, only : prefix
+  use io_files, only : prefix
   use restart_module, only : writefile_new
   !
   implicit none

@@ -13,7 +13,7 @@ subroutine readpp
   !
 #include "machine.h"
   use pwcom
-  use io, only: pseudo_dir, pseudop
+  use io_files, only: pseudo_dir, psfile
   !
   character :: file_pseudo * 256
   ! file name complete with path
@@ -26,9 +26,9 @@ subroutine readpp
   do nt = 1, ntyp
      ! add / if needed
      if (pseudo_dir (l:l) .ne.'/') then
-        file_pseudo = pseudo_dir (1:l) //'/'//pseudop (nt)
+        file_pseudo = pseudo_dir (1:l) //'/'//psfile (nt)
      else
-        file_pseudo = pseudo_dir (1:l) //pseudop (nt)
+        file_pseudo = pseudo_dir (1:l) //psfile (nt)
      endif
      !
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
@@ -45,8 +45,8 @@ subroutine readpp
         !    *.RRKJ3         Andrea's   US new code              pseudo_type=2
         !    none of the above: PWSCF norm-conserving format     pseudo_type=0
         !
-        if (pseudo_type (pseudop (nt) ) .eq.1 &
-             .or.pseudo_type (pseudop (nt) ) .eq.2) then
+        if (pseudo_type (psfile (nt) ) .eq.1 &
+             .or.pseudo_type (psfile (nt) ) .eq.2) then
            !
            !    The vanderbilt pseudopotential is always in numeric form
            !
@@ -59,12 +59,12 @@ subroutine readpp
            !    produced by Vanderbilt code and those produced
            !    by Andrea's atomic code.
            !
-           if (pseudo_type (pseudop (nt) ) .eq.1) then
+           if (pseudo_type (psfile (nt) ) .eq.1) then
               newpseudo (nt) = .false.
               tvanp (nt) = .true.
               call readvan (nt, iunps)
            endif
-           if (pseudo_type (pseudop (nt) ) .eq.2) then
+           if (pseudo_type (psfile (nt) ) .eq.2) then
               newpseudo (nt) = .true.
               ! tvanp is read inside readnewvan
               call readnewvan (nt, iunps)
@@ -103,18 +103,18 @@ subroutine readpp
   return
 end subroutine readpp
 !-----------------------------------------------------------------------
-integer function pseudo_type (pseudop)
+integer function pseudo_type (psfile)
   !-----------------------------------------------------------------------
   implicit none
-  character (len=*) :: pseudop
+  character (len=*) :: psfile
   integer :: l
   !
-  l = len_trim (pseudop)
+  l = len_trim (psfile)
   pseudo_type = 0
-  if (pseudop (l - 3:l) .eq.'.vdb'.or.pseudop (l - 3:l) .eq.'.van') &
+  if (psfile (l - 3:l) .eq.'.vdb'.or.psfile (l - 3:l) .eq.'.van') &
        pseudo_type = 1
   if (l > 5) then
-     if (pseudop (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
+     if (psfile (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
   end if
   !
   return

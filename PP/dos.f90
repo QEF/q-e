@@ -38,7 +38,7 @@ subroutine dos (nodenumber)
   ! Parallel case implemented only for one processor!
   !
   use pwcom
-  use io
+  use io_files, only: nd_nmbr, prefix, tmp_dir
 
   character(len=3) :: nodenumber
   character(len=80) :: fildos

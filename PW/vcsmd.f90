@@ -35,7 +35,7 @@ subroutine vcsmd
   use force_mod
   use varie
   use ener, only: etot
-  use io, only : prefix
+  use io_files, only : prefix
 #ifdef __PARA
   use para
 #endif

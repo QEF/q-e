@@ -10,7 +10,7 @@ subroutine read_config_from_file
   !-----------------------------------------------------------------------
 
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
   use restart_module, only: readfile_config
 
   implicit none
@@ -70,7 +70,7 @@ subroutine read_config_from_file_old
   !-----------------------------------------------------------------------
 
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
 
   implicit none
 

@@ -15,7 +15,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
 #include "machine.h"
    use pwcom
    use becmod
-   use io
+   use io_files
 #ifdef __PARA
    use para
 #endif

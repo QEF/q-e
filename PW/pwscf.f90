@@ -13,7 +13,7 @@ program pwscf
   !     Plane Wave Self-Consistent Field
   !
   use pwcom
-  use io
+  use io_files
   use global_version
   implicit none
   character(len=9) :: code = 'PWSCF'

@@ -64,7 +64,7 @@ subroutine extrapolate_charge
   !
 
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
   implicit none
   integer :: ir
   ! do-loop variable on FFT grid

@@ -55,7 +55,6 @@ subroutine do_wannier(nodenumber)
   !
   call read_file  
   call openfil  
-
   !
   if (nk(1)==0 .and. nk(2)==0 .and. nk(3) == 0) then
      nk(1) = nk1
@@ -154,13 +153,15 @@ subroutine write_wannier (nk, s0, kunit)
 
   END IF
 
+  ! find out the global number of G vectors: ngm_g  
   ngm_g = ngm
   call mp_sum( ngm_g , intra_pool_comm )
 
-  allocate ( ei_k( nbnd, nkstot ) )
-  allocate ( rat( 3, nat, ntyp ) )
-  allocate ( natom( ntyp ) )
+  allocate ( ei_k( nbnd, nkstot ) )  ! eigenvectors
+  allocate ( rat( 3, nat, ntyp ) )   ! atomic positions
+  allocate ( natom( ntyp ) )         ! number of atoms
   ei_k   = 0.0d0
+  rat    = 0.0d0
   natom  = 0 
 
   do i = 1, nat
@@ -179,6 +180,7 @@ subroutine write_wannier (nk, s0, kunit)
 
   if( ionode ) then
 
+    ! First write to launch.dat crystal base vectors
     write(6,*) 'Crystal basis vectors, in unit of alat = ', alat
     do i = 1, 3
       write(6,fmt="(' a(',I1,')',3F10.6)" ) i,at(1,i), at(2,i), at(3,i)
@@ -188,6 +190,7 @@ subroutine write_wannier (nk, s0, kunit)
     write( 40 ) ( at( i, 2 ), i = 1, 3 )  ! save A2
     write( 40 ) ( at( i, 3 ), i = 1, 3 )  ! save A3
 
+    ! write to launch.dat atomic positions 
     write(6,*) 'Atomic positions ( lattice coordinates )'
     write( 40 ) ntyp
     do i = 1, ntyp
@@ -201,6 +204,7 @@ subroutine write_wannier (nk, s0, kunit)
   
   end if
 
+  ! collect all G vectors across processors within the pools
   allocate( itmp( 3, ngm_g ) )
   itmp = 0
   do  ig = 1, ngm
@@ -210,6 +214,7 @@ subroutine write_wannier (nk, s0, kunit)
   end do
   call mp_sum( itmp , intra_pool_comm )
 
+  ! write G space parameters and vectors
   if( ionode ) then
     write (40) ecutwfc, nbnd
     write (40) ( nk(i), i = 1, 3 ), ( s0(j), j = 1, 3 ), ngm_g
@@ -218,6 +223,7 @@ subroutine write_wannier (nk, s0, kunit)
 
   deallocate( itmp )
 
+  ! build the G+k array indexes
   allocate ( kisort( npwx ) )
   do ik = 1, nks
      kisort = 0
@@ -228,6 +234,7 @@ subroutine write_wannier (nk, s0, kunit)
   end do
   deallocate (kisort)
 
+  ! compute the global number of G+k vectors for each k point
   allocate( ngk_g( nkstot ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
@@ -240,9 +247,11 @@ subroutine write_wannier (nk, s0, kunit)
     end if
   end do
 
+  ! compute the Maximum G vector index among all G+k an processors
   npw_g = MAXVAL( igk_l2g(:,:) )
   CALL mp_max( npw_g )
 
+  ! compute the Maximum number of G vector among all k points
   npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
 
   if( ionode ) then
@@ -250,6 +259,7 @@ subroutine write_wannier (nk, s0, kunit)
     write (6,*) 'Wave function dimensions ( npwx, nbnd, nkstot) = ', npwx_g, nbnd, nkstot
   end if
 
+  ! for each k point build and write the global G+k indexes array
   write (6,*) 'combining indexes'
 
   allocate( igwk( npwx_g ) )

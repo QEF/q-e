@@ -16,7 +16,7 @@ subroutine do_projwfc (nodenumber)
   ! outdir      temporary directory where files resides
   !
   use pwcom
-  use io
+  use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para, only: me
   use mp
@@ -86,7 +86,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
 #include "machine.h"
   use pwcom
   use becmod
-  use io
+  use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para
 #endif

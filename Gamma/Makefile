@@ -8,7 +8,6 @@ include ../make.sys
 #
 PWOBJS=../PW/pwcom.o \
 ../PW/para.o \
-../PW/io.o \
 ../PW/funct.o \
 ../PW/g_psi_mod.o \
 ../PW/aainit.o \

@@ -88,11 +88,11 @@ subroutine iosys
      nspin_ => nspin, &
      starting_magnetization_ => starting_magnetization, &
      lsda
-  use io, only : &
+  use io_files, only : &
      tmp_dir, &
      prefix_ => prefix, &
      pseudo_dir_ => pseudo_dir, &
-     pseudop
+     psfile
   use relax, only: &
      epsf, starting_scf_threshold, restart_bfgs, epse
   use varie, only: &
@@ -606,7 +606,7 @@ subroutine iosys
   allocate ( force( 3, nat_ ) ) ! compatibility with old readin
   if ( tefield ) allocate( forcefield( 3, nat_ ) )
   !
-  CALL read_cards (pseudop, atomic_positions)
+  CALL read_cards (psfile, atomic_positions)
   !
   ! set up atomic positions and crystal lattice
   !
@@ -744,7 +744,7 @@ end subroutine iosys
 
 !
 !-----------------------------------------------------------------------
-subroutine read_cards ( pseudop, atomic_positions_ )
+subroutine read_cards ( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
   use parser
@@ -770,7 +770,7 @@ subroutine read_cards ( pseudop, atomic_positions_ )
 
   implicit none
   !
-  character (len=80) :: pseudop (ntyp)
+  character (len=80) :: psfile (ntyp)
   character (len=30) :: atomic_positions_
   !
   logical :: tcell=.false.
@@ -787,7 +787,7 @@ subroutine read_cards ( pseudop, atomic_positions_ )
 
   do is = 1, ntyp
     amass( is ) = atom_mass( is )
-    pseudop( is ) = atom_pfile( is )
+    psfile( is ) = atom_pfile( is )
     atm(is) = atom_label(is)
     IF( amass(is) <= 0.d0 ) THEN
       CALL errore(' iosys ',' invalid  mass ', is)
@@ -877,7 +877,7 @@ end subroutine read_cards
 subroutine verify_tmpdir
   !-----------------------------------------------------------------------
   !
-  use io, only: tmp_dir, nd_nmbr
+  use io_files, only: tmp_dir, nd_nmbr
   implicit none
   integer :: l, ios
   !

@@ -139,7 +139,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/input.o  \
 ../PW/interpolate.o  \
 ../PW/invmat.o  \
-../PW/io.o  \
 ../PW/io_pot.o  \
 ../PW/irrek.o  \
 ../PW/iweights.o  \

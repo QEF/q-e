@@ -23,7 +23,6 @@ subroutine do_voronoy
 #include "machine.h"
   use parameters
   use pwcom
-  use io
   use fft_scalar, only: good_fft_dimension
   implicit none
   integer :: nr1big, nr2big, nr3big, nrx1big

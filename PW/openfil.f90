@@ -14,7 +14,7 @@ subroutine openfil
   !    sets various file names, units, record lengths
   !
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
   use restart_module, only: readfile_new
 #ifdef __PARA
   use para

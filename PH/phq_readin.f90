@@ -19,7 +19,7 @@ subroutine phq_readin
   use pwcom
   use parameters, only : DP
   use phcom
-  use io
+  use io_files, only: tmp_dir, prefix
   use control_flags, only : twfcollect
 #ifdef __PARA
   use para

@@ -12,7 +12,7 @@ subroutine cg_readin
   !
   use pwcom
   use cgcom
-  use io
+  use io_files, only: tmp_dir, prefix
 #ifdef __PARA
   use para, only: me
   use mp, only: mp_bcast

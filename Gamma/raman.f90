@@ -12,7 +12,7 @@ program cg_raman
   !
 #include "machine.h"
   use pwcom
-  use io
+  use io_files
   use cgcom
   use mp, only: mp_end
   use global_version

@@ -17,7 +17,7 @@ subroutine new_ns
   !
 #include "machine.h"
   use pwcom
-  use io
+  use io_files
 #ifdef __PARA
   use para
 #endif

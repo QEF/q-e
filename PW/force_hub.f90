@@ -18,7 +18,7 @@ subroutine force_hub(forceh)
 #include "machine.h"
    use pwcom
    use becmod
-   use io, only : prefix
+   use io_files, only : prefix
 #ifdef __PARA
    use para
 #endif

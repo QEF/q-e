@@ -16,7 +16,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
 #include "machine.h"
    use pwcom
    use becmod
-   use io
+   use io_files
 #ifdef __PARA
    use para
 #endif

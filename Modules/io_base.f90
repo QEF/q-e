@@ -2768,7 +2768,7 @@
             END IF
             IF( ionode ) WRITE(iuni) ( wtmp(i), i=1,igwx )
           ELSE
-            IF( ionode ) WRITE(iuni) idum
+            IF( ionode ) WRITE(iuni) j
           END IF
         END DO
 
@@ -2788,7 +2788,7 @@
             END IF
             IF( ionode ) WRITE(iuni) (wtmp(i),i=1,igwx)
           ELSE
-            IF( ionode ) WRITE(iuni) idum
+            IF( ionode ) WRITE(iuni) j
           END IF
         END DO
 

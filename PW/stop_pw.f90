@@ -14,7 +14,7 @@ subroutine stop_pw (flag)
   ! or during execution with flag=.false. (does not remove 'restart')
   !
   use pwcom
-  use io, only : prefix
+  use io_files, only : prefix
   use mp, only : mp_end
   logical :: flag
 #ifdef __PARA

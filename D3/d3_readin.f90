@@ -18,7 +18,7 @@ subroutine d3_readin
   use pwcom
   use phcom
   use d3com
-  use io
+  use io_files, only: tmp_dir, prefix
 #ifdef __PARA
   use para
 #endif

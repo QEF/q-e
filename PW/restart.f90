@@ -36,7 +36,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    nlcc, psd, lsda, bg, xk, wk, isk, evc, igk_l2g, nwordwfc, iunwfc, gamma_only, &
    tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp
   use control_flags, only: twfcollect
-  use io, only: prefix, tmp_dir, pseudo_dir, pseudop
+  use io_files, only: prefix, tmp_dir, pseudo_dir, psfile
   use funct, only: iexch, icorr, igcx, igcc
   use io_global, only: ionode
   use mp, only: mp_sum, mp_max, mp_end
@@ -312,9 +312,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          iunps = 10
          flen = len_trim (pseudo_dir)
          if (pseudo_dir (flen:flen) .ne.'/') then
-           file_pseudo = pseudo_dir (1:flen) //'/'//pseudop (i)
+           file_pseudo = pseudo_dir (1:flen) //'/'//psfile (i)
          else
-           file_pseudo = pseudo_dir (1:flen) //pseudop (i)
+           file_pseudo = pseudo_dir (1:flen) //psfile (i)
          endif
          inquire (unit = iunps, opened = opnd)
          IF( opnd ) &
@@ -477,7 +477,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !
   !
   use parameters, only: npk, nchix, ndm
-  use io, only: prefix, tmp_dir
+  use io_files, only: prefix, tmp_dir
   use funct, only: iexch, icorr, igcx, igcc
   use pwcom, only: DP, ngk, dual, ecutwfc, nat, istep, iswitch, nr1, nr2, nr3, &
    nr1s, nr2s, nr3s, ngm, ngm_g, nks, nkstot, nspin, nbnd, nelec, ntyp, alat, &
@@ -1013,7 +1013,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !
   use pwcom, only: DP
   use parameters, only: npk
-  use io, only: prefix, tmp_dir
+  use io_files, only: prefix, tmp_dir
   use io_global, only: ionode, ionode_id
   use mp, only: mp_bcast
 

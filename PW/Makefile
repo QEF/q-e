@@ -124,7 +124,6 @@ init_vloc.o  \
 input.o  \
 interpolate.o  \
 invmat.o  \
-io.o  \
 ions.o  \
 io_pot.o  \
 irrek.o  \

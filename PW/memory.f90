@@ -11,7 +11,7 @@ program pwmemory
   !-----------------------------------------------------------------------
   !
   use pwcom
-  use io
+  use io_files
   use mp, only : mp_end
   use global_version
   implicit none

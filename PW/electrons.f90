@@ -21,7 +21,7 @@ subroutine electrons
   !
 #include "machine.h"
   use pwcom
-  use io, only: prefix
+  use io_files, only: prefix
   !
   !     a few local variables
   !

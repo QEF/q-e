@@ -20,7 +20,7 @@ subroutine bfgs
   use varie
   use ener, only: etot
   use klist, only: nelec
-  use io, only : prefix
+  use io_files, only : prefix
 #ifdef __PARA
   use para, only : me, mypool
   use mp

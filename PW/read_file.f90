@@ -24,7 +24,7 @@ subroutine read_file
     natomwfc, et, wg, rho, vr, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
     strf, eigts1, eigts2, eigts3, isk, wk, forcefield, tefield
   use parameters, only: dp
-  use io, only: tmp_dir, prefix
+  use io_files, only: tmp_dir, prefix
   use restart_module, only: readfile_new
 #ifdef __PARA
   use para
@@ -166,7 +166,7 @@ subroutine read_file
   !
 #include "machine.h"
   use pwcom
-  use io
+  use io_files
 #ifdef __PARA
   use para
 #endif

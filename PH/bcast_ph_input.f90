@@ -19,7 +19,7 @@ subroutine bcast_ph_input
   use pwcom
   use phcom
   use mp, only: mp_bcast
-  use io
+  use io_files
 
   implicit none
   integer :: root = 0

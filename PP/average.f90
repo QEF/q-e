@@ -40,7 +40,6 @@ subroutine average
 #include "machine.h"
   use parameters, only: DP
   use pwcom
-  use io
 
   implicit none
   integer :: npixmax, nfilemax

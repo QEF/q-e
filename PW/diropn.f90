@@ -15,7 +15,7 @@ subroutine diropn (unit, filename, recl, exst)
   !
 #include "machine.h"
   use parameters
-  use io
+  use io_files
   use mp_global, only: mpime
   implicit none
 
