@@ -198,10 +198,10 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
      enddo
 
   enddo
-  !      write(6,*) 'nsymq',nsymq
+  !      WRITE( stdout,*) 'nsymq',nsymq
   !      do isymq=1,nsymq
   !        irot=irgq(isymq)
-  !        write(6,'("t(1,1,irot,modenum)",i5,2f10.5)')
+  !        WRITE( stdout,'("t(1,1,irot,modenum)",i5,2f10.5)')
   !     +                 irot,t(1,1,irot,modenum)
   !      enddo
   return

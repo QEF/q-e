@@ -16,6 +16,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   !
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   !
@@ -94,7 +95,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   !
   !    Writes on output the displacements and the normalized frequencies.
   !
-  write (6, 9000) (xq (i), i = 1, 3)
+  WRITE( stdout, 9000) (xq (i), i = 1, 3)
   if (iudyn.ne.0) write (iudyn, 9000) (xq (i), i = 1, 3)
 
 9000 format(/,5x,'Diagonalizing the dynamical matrix', &
@@ -103,7 +104,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   do nu_i = 1, nmodes
      w1 = sqrt (abs (w2 (nu_i) ) )
      if (w2 (nu_i) .lt.0.d0) w1 = - w1
-     write (6, 9010) nu_i, w1 * rydthz, w1 * rydcm1
+     WRITE( stdout, 9010) nu_i, w1 * rydthz, w1 * rydcm1
      if (iudyn.ne.0) write (iudyn, 9010) nu_i, w1 * rydthz, w1 * &
           rydcm1
 9010 format   (5x,'omega(',i2,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
@@ -119,7 +120,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
      if (iudyn.ne.0) write (iudyn, '(" (",6f10.6," ) ")') (dyn (mu, &
           nu_i) / sqrt (unorm) , mu = 1, 3 * nat)
   enddo
-  write (6, '(1x,74("*"))')
+  WRITE( stdout, '(1x,74("*"))')
   if (iudyn.ne.0) write (iudyn, '(1x,74("*"))')
   return
 

@@ -21,6 +21,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !    April 1997: parallel stuff added (SdG)
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   !
@@ -140,7 +141,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
   if (upperbound.gt.1.d-9) goto 11
 
-  write (6, '(/5x,"Alpha used in Ewald sum = ",f8.4)') alpha
+  WRITE( stdout, '(/5x,"Alpha used in Ewald sum = ",f8.4)') alpha
   call setv (2 * 3 * nat * nmodes, 0.d0, dy1, 1)
   call setv (2 * 3 * nat * nmodes, 0.d0, dy2, 1)
   call setv (2 * 3 * nat * nmodes, 0.d0, dy3, 1)

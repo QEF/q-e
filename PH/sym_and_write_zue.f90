@@ -14,7 +14,7 @@ subroutine sym_and_write_zue
   !
 #include "machine.h"
 
-
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
   use phcom
@@ -98,12 +98,12 @@ subroutine sym_and_write_zue
   !
   ! write Z_{s,alpha}{beta} on standard output
   !
-  write (6, '(/,10x,"Effective charges U-E in cartesian axis ",/)' &
+  WRITE( stdout, '(/,10x,"Effective charges U-E in cartesian axis ",/)' &
        &)
-  write (6, '(10x,  "          Z_{s,alpha}{beta} ",/)')
+  WRITE( stdout, '(10x,  "          Z_{s,alpha}{beta} ",/)')
   do na = 1, nat
-     write (6, '(10x," atom ",i6)') na
-     write (6, '(10x,"(",3f15.5," )")') ( (zstarue (ipol, na, jpol) &
+     WRITE( stdout, '(10x," atom ",i6)') na
+     WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstarue (ipol, na, jpol) &
           , jpol = 1, 3) , ipol = 1, 3)
 
   enddo

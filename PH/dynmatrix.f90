@@ -15,7 +15,7 @@ subroutine dynmatrix
   ! output.
   !
 #include "machine.h"
-
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
   use phcom
@@ -77,7 +77,7 @@ subroutine dynmatrix
   !
   if (iswitch.eq. - 4) then
      do nu = 1, 3 * nat
-        write (6, '(2i5,2f10.6)') modenum, nu, dyn (modenum, nu)
+        WRITE( stdout, '(2i5,2f10.6)') modenum, nu, dyn (modenum, nu)
      enddo
      call stop_ph (.false.)
 

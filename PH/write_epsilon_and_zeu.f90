@@ -8,6 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !-----------------------------------------------------------------------
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   ! input variables
@@ -37,15 +38,15 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !
   ! write dielectric tensor and Z(E,Us) effective charges on standard output
   !
-  write (6, '(/,10x,"Dielectric constant in cartesian axis ",/)')
+  WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
 
-  write (6, '(10x,"(",3f15.5," )")') ( (epsilon (icar, jcar) , &
+  WRITE( stdout, '(10x,"(",3f15.5," )")') ( (epsilon (icar, jcar) , &
        jcar = 1, 3) , icar = 1, 3)
-  write (6, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
-  write (6, '(10x,  "          Z_{alpha}{s,beta} ",/)')
+  WRITE( stdout, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
+  WRITE( stdout, '(10x,  "          Z_{alpha}{s,beta} ",/)')
   do na = 1, nat
-     write (6, '(10x," Atom ",i5)') na
-     write (6, '(10x,"(",3f15.5," )")') ( (zstareu (icar, jcar, na) &
+     WRITE( stdout, '(10x," Atom ",i5)') na
+     WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstareu (icar, jcar, na) &
           , jcar = 1, 3) , icar = 1, 3)
   enddo
   return

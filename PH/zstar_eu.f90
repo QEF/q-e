@@ -14,7 +14,7 @@ subroutine zstar_eu
   !
 #include "machine.h"
 
-
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   use parameters, only : DP
@@ -114,10 +114,10 @@ subroutine zstar_eu
      enddo
   enddo
 
-  !      write(6,'(/,10x,"Effective charges E-U in crystal axis ",/)')
+  !      WRITE( stdout,'(/,10x,"Effective charges E-U in crystal axis ",/)')
   !      do na=1,nat
-  !         write(6,'(10x," atom ",i6)') na
-  !         write(6,'(10x,"(",3f15.5," )")') ((work(jpol,ipol,na),
+  !         WRITE( stdout,'(10x," atom ",i6)') na
+  !         WRITE( stdout,'(10x,"(",3f15.5," )")') ((work(jpol,ipol,na),
   !     +                                ipol=1,3),jpol=1,3)
   !      enddo
 
@@ -136,10 +136,10 @@ subroutine zstar_eu
      enddo
   enddo
 
-  write (6, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
+  WRITE( stdout, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
   do na = 1, nat
-     write (6, '(10x," atom ",i6)') na
-     write (6, '(10x,"(",3f15.5," )")') ( (zstareu (ipol, jpol, na) &
+     WRITE( stdout, '(10x," atom ",i6)') na
+     WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstareu (ipol, jpol, na) &
           , ipol = 1, 3) , jpol = 1, 3)
 
   enddo

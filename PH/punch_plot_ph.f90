@@ -20,7 +20,7 @@ subroutine punch_plot_ph
   !
 #include "machine.h"
 
-
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
   use phcom
@@ -59,8 +59,8 @@ subroutine punch_plot_ph
 #endif
 
   if (fildrho.eq.' ') return
-  write (6, '(/5x,"Calling punch_plot_ph" )')
-  write (6, '(5x,"Writing on file  ",a)') fildrho
+  WRITE( stdout, '(/5x,"Calling punch_plot_ph" )')
+  WRITE( stdout, '(5x,"Writing on file  ",a)') fildrho
   !
   !    reads drho from the file
   !

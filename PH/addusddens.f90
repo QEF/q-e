@@ -74,7 +74,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   allocate (ylmk0(  ngm , lqx * lqx))    
   allocate (qmod (  ngm))    
   if (.not.lgamma) allocate (qpg( 3  , ngm))    
-  !      write(6,*) aux, ylmk0, qmod
+  !      WRITE( stdout,*) aux, ylmk0, qmod
   !
   !  And then we compute the additional charge in reciprocal space
   !

@@ -17,7 +17,7 @@ subroutine phqscf
   !
 #include "machine.h"
 
-
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
   use phcom
@@ -61,10 +61,10 @@ subroutine phqscf
            imode0 = imode0 + npert (irr1)
         enddo
         if (npert (irr) .eq.1) then
-           write (6, '(//,5x,"Representation #", i3," mode # ",i3)') &
+           WRITE( stdout, '(//,5x,"Representation #", i3," mode # ",i3)') &
                               irr, imode0 + 1
         else
-           write (6, '(//,5x,"Representation #", i3," modes # ",3i3)') &
+           WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",3i3)') &
                               irr, (imode0+irr1, irr1=1,npert(irr))
         endif
         !
@@ -85,11 +85,11 @@ subroutine phqscf
 
         endif
         if (convt) then
-           write (6, '(/,5x,"Convergence has been achieved ")')
+           WRITE( stdout, '(/,5x,"Convergence has been achieved ")')
            done_irr (irr) = 1
            iter0 = 0
         else
-           write (6, '(/,5x,"No convergence has been achieved ")')
+           WRITE( stdout, '(/,5x,"No convergence has been achieved ")')
            call stop_ph (.false.)
         endif
         !
@@ -110,14 +110,14 @@ subroutine phqscf
            !            if (tcpu.gt.time_max) then
            ! temporary fix: recover does not work if program stop here
            !
-           write (6, '(/,5x,"Stopping for time limit ",2f10.0)') &
+           WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') &
                 tcpu, time_max
            call stop_ph (.false.)
 
         endif
 
         if (irrc.ge.maxirr) then
-           write (6, '(/,5x,"Stopping at Representation #",i6)') irr
+           WRITE( stdout, '(/,5x,"Stopping at Representation #",i6)') irr
 #ifdef DEBUG
            if (me.ne.1.or.mypool.ne.1) close (6)
 #endif

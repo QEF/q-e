@@ -126,7 +126,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   ! add to the rest of the dynamical matrix
   !
-  !      write(6,*) 'drhodv dyn, wdyn'
+  !      WRITE( stdout,*) 'drhodv dyn, wdyn'
   !      call tra_write_matrix('drhodv dyn',dyn,u,nat)
   !      call tra_write_matrix('drhodv wdyn',wdyn,u,nat)
 

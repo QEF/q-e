@@ -82,7 +82,7 @@ enddo
 !      do na=1,nat
 !         nt=ityp(na)
 !         do ijh=1,nh(nt)*(nh(nt)+1)/2
-!            write(6,'(2i5,f20.10)') na, ijh, becsum(ijh,na,1)
+!            WRITE( stdout,'(2i5,f20.10)') na, ijh, becsum(ijh,na,1)
 !         enddo
 !      enddo
 !      call stop_ph(.true.)

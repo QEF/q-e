@@ -19,6 +19,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! if information for both symmetry-groups needs to be kept
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   !-input variables
@@ -205,14 +206,14 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   !
   ! writes star of q
   !
-  write (6, * )
-  write (6, '(5x,a,i4)') 'Number of q in the star = ', nq
-  write (6, '(5x,a)') 'List of q in the star:'
-  write (6, '(7x,i4,3f14.9)') (iq, (sxq (i, iq) , i = 1, 3) , iq = &
+  WRITE( stdout, * )
+  WRITE( stdout, '(5x,a,i4)') 'Number of q in the star = ', nq
+  WRITE( stdout, '(5x,a)') 'List of q in the star:'
+  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq (i, iq) , i = 1, 3) , iq = &
        1, nq)
   if (imq.eq.0) then
-     write (6, '(5x,a)') 'In addition there is the -q list: '
-     write (6, '(7x,i4,3f12.9)') (iq, ( - sxq (i, iq) , i = 1, 3) , &
+     WRITE( stdout, '(5x,a)') 'In addition there is the -q list: '
+     WRITE( stdout, '(7x,i4,3f12.9)') (iq, ( - sxq (i, iq) , i = 1, 3) , &
           iq = 1, nq)
 
   endif

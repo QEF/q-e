@@ -20,6 +20,7 @@ subroutine solve_e
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   use parameters, only : DP
@@ -249,7 +250,7 @@ subroutine solve_e
 
            ltaver = ltaver + lter
            lintercall = lintercall + 1
-           if (.not.conv_root) write (6, "(5x,'kpoint',i4,' ibnd',i4, &
+           if (.not.conv_root) WRITE( stdout, "(5x,'kpoint',i4,' ibnd',i4, &
                 &         ' linter: root not converged ',e10.3)") ik &
                 &, ibnd, anorm
            !
@@ -320,10 +321,10 @@ subroutine solve_e
      averlt = dfloat (ltaver) / dfloat (lintercall)
   
      tcpu = get_clock ('PHONON')
-     write (6, '(//,5x," iter # ",i3," total cpu time : ",f7.1, &
+     WRITE( stdout, '(//,5x," iter # ",i3," total cpu time : ",f7.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
      dr2 = dr2 / 3
-     write (6, "(5x,' thresh=',e10.3, ' alpha_mix = ',f6.3, &
+     WRITE( stdout, "(5x,' thresh=',e10.3, ' alpha_mix = ',f6.3, &
           &      ' |ddv_scf|^2 = ',e10.3 )") thresh, alpha_mix (kter), dr2
 #ifdef FLUSH
      call flush (6)
@@ -349,7 +350,7 @@ subroutine solve_e
   enddo
 155 continue
   if (tcpu.gt.time_max) then
-     write (6, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
+     WRITE( stdout, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
           time_max
      call stop_ph (.false.)
   endif

@@ -8,18 +8,19 @@
 !-----------------------------------------------------------------------
 subroutine write_matrix (alpha, wdyn, nat)
   !-----------------------------------------------------------------------
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   integer :: i, j, na, nb, nat
   complex(kind=DP) :: wdyn (3, 3, nat, nat)
 
   character (len=*) :: alpha
-  write (6, '(a)') alpha
+  WRITE( stdout, '(a)') alpha
   do na = 1, nat
      do nb = 1, nat
-        write (6, '(2i4)') na, nb
+        WRITE( stdout, '(2i4)') na, nb
         do i = 1, 3
-           write (6, '(6f10.5)') (wdyn (i, j, na, nb) , j = 1, 3)
+           WRITE( stdout, '(6f10.5)') (wdyn (i, j, na, nb) , j = 1, 3)
         enddo
      enddo
 

@@ -9,17 +9,17 @@
 subroutine print_clock_ph
 !-----------------------------------------------------------------------
 
-
+USE io_global,  ONLY : stdout
 use pwcom
 use parameters, only : DP
 use phcom
 implicit none
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('PHONON')
-write (6,  * ) '    INITIALIZATION: '
+WRITE( stdout,  * ) '    INITIALIZATION: '
 call print_clock ('phq_setup')
 call print_clock ('phq_init')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('phq_init')
 if (nlcc_any) call print_clock ('set_drhoc')
 call print_clock ('init_vloc')
@@ -31,13 +31,13 @@ call print_clock ('drho')
 if ((epsil.or.zue).and.okvan) call print_clock ('cmpt_qdipol')
 
 if(epsil) then 
-  write (6, * )
-  write (6,  * ) '    DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:'
+  WRITE( stdout, * )
+  WRITE( stdout,  * ) '    DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:'
   call print_clock ('solve_e')
   call print_clock ('dielec')
   call print_clock ('zstar_eu')
 #ifdef TIMING_ZSTAR_US
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('zstar_eu_us')
   call print_clock ('zstar_us_1')
   call print_clock ('zstar_us_2')
@@ -46,7 +46,7 @@ if(epsil) then
   call print_clock ('zstar_us_5')
 #endif
 #ifdef TIMING_ADD_DKMDS
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('add_dkmds')
   call print_clock ('add_dkmds1')
   call print_clock ('add_dkmds2')
@@ -57,12 +57,12 @@ if(epsil) then
 #endif
 endif
 if(trans) then 
-  write (6, * )
-  write (6,  * ) '    DYNAMICAL MATRIX:'
+  WRITE( stdout, * )
+  WRITE( stdout,  * ) '    DYNAMICAL MATRIX:'
   call print_clock ('dynmat0')
   call print_clock ('phqscf')
   call print_clock ('dynmatrix')
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('phqscf')
   call print_clock ('solve_linter')
   call print_clock ('drhodv')
@@ -70,19 +70,19 @@ if(trans) then
   if (zue) call print_clock('add_zstar_1')
   if (zue.and.okvan) call print_clock('add_zstar_us')
 endif
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('dynmat0')
 call print_clock ('dynmat_us')
 call print_clock ('addusdynmat1')
 call print_clock ('d2ionq')
 if (nlcc_any) call print_clock ('dynmatcc')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('dynmat_us')
 call print_clock ('addusdynmat')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('phqscf')
 call print_clock ('solve_linter')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('solve_linter')
 call print_clock ('dvqpsi_us')
 call print_clock ('ortho')
@@ -104,46 +104,46 @@ call print_clock ('adddvscf')
 
 
 call print_clock ('drhodvus')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('dvqpsi_us')
 
 call print_clock ('dvqpsi_us_on')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('cgsolve')
 
 call print_clock ('ch_psi')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('ch_psi')
 call print_clock ('first')
 call print_clock ('h_psiq')
 
 call print_clock ('last')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('h_psiq')
 call print_clock ('firstfft')
 call print_clock ('product')
 call print_clock ('secondfft')
 
 call print_clock ('add_vuspsi')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('incdrhoscf')
 
 call print_clock ('addusdbec')
-write (6, * )
+WRITE( stdout, * )
 call print_clock ('drhodvus')
 
 call print_clock ('addusddort')
-write (6, * )
-write (6,  * ) '     General routines'
+WRITE( stdout, * )
+WRITE( stdout,  * ) '     General routines'
 call print_clock ('ccalbec')
 call print_clock ('cft3')
 call print_clock ('cft3s')
 call print_clock ('cinterpolate')
 call print_clock ('davcio')
 call print_clock ('write_rec')
-write (6, * )
+WRITE( stdout, * )
 #ifdef __PARA
-write (6,  * ) '     Parallel routines'
+WRITE( stdout,  * ) '     Parallel routines'
 call print_clock ('reduce')
 call print_clock ('poolreduce')
 #endif

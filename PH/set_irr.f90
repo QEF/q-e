@@ -30,6 +30,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !     April 1997: parallel stuff added (SdG)
 !
 #include "machine.h"
+
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
 #ifdef __PARA
   use mp, only: mp_bcast
@@ -185,10 +187,10 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
       if (iverbosity.eq.1) then
          do imode=1,3*nat
-            write(6, '(2x,"autoval = ", e10.4)') eigen(imode)
-            write(6, '(2x,"Real(aut_vet)= ( ",6f10.5,")")') &
+            WRITE( stdout, '(2x,"autoval = ", e10.4)') eigen(imode)
+            WRITE( stdout, '(2x,"Real(aut_vet)= ( ",6f10.5,")")') &
                 ( DREAL(u(na,imode)), na=1,3*nat )
-            write(6, '(2x,"Imm(aut_vet)= ( ",6f10.5,")")') &
+            WRITE( stdout, '(2x,"Imm(aut_vet)= ( ",6f10.5,")")') &
                 ( DIMAG(u(na,imode)), na=1,3*nat )
          end do
       end if
@@ -309,9 +311,9 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !        u(na+3*nat/2,1)=(0.d0,0.d0)
 !      enddo
 !      u(1,1)=(-1.d0,0.d0)
-!      write(6,'(" Setting mode for testing ")')
+!      WRITE( stdout,'(" Setting mode for testing ")')
 !      do na=1,3*nat
-!         write(6,*) u(na,1)
+!         WRITE( stdout,*) u(na,1)
 !      enddo
 !      nsymq=1
 !      minus_q=.false.

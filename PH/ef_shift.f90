@@ -13,7 +13,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
 !
 #include "machine.h"
 
-
+USE io_global,      ONLY : stdout
 use pwcom
 USE wavefunctions,  ONLY: evc
 use parameters, only : DP
@@ -66,7 +66,7 @@ external w0gauss
 !
 call start_clock ('ef_shift')
 if (.not.flag) then
-   write (6, * )
+   WRITE( stdout, * )
    do ipert = 1, npert (irr)
       delta_n = (0.d0, 0.d0)
       do is = 1, nspin
@@ -81,7 +81,7 @@ if (.not.flag) then
 ! symmetrizes the Fermi energy shift
 !
    call sym_def (def, irr)
-   write (6, '(5x,"Pert. #",i3,": Fermi energy shift (Ryd) =", 2f10.4)') &
+   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ryd) =", 2f10.4)') &
          (ipert, def (ipert) , ipert = 1, npert (irr) )
 !
 ! corrects the density response accordingly...

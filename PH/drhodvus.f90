@@ -80,7 +80,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
 
   call reduce (18 * nat * nat, dyn1)
 #endif
-  !       write(6,*) 'drhodvus dyn1, dyn'
+  !       WRITE( stdout,*) 'drhodvus dyn1, dyn'
   !       call tra_write_matrix('drhodvus dyn1',dyn1,u,nat)
   !       call tra_write_matrix('drhodvus dyn',dyn,u,nat)
   !       call stop_ph(.true.)

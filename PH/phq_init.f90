@@ -31,7 +31,7 @@ subroutine phq_init
   !        second part of the dynamical matrix.
   !
 #include"machine.h"
-
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   use parameters, only : DP
@@ -128,10 +128,10 @@ subroutine phq_init
         if (abs (xq (1) - (xk (1, ikq) - xk (1, ikk) ) ) .gt.1.d-8 .or. &
             abs (xq (2) - (xk (2, ikq) - xk (2, ikk) ) ) .gt.1.d-8 .or. &
             abs (xq (3) - (xk (3, ikq) - xk (3, ikk) ) ) .gt.1.d-8) then
-           write (6, * ) ikk, ikq, nksq
-           write (6, * ) (xq (ipol), ipol = 1, 3)
-           write (6, * ) (xk (ipol, ikq), ipol = 1, 3)
-           write (6, * ) (xk (ipol, ikk), ipol = 1, 3)
+           WRITE( stdout, * ) ikk, ikq, nksq
+           WRITE( stdout, * ) (xq (ipol), ipol = 1, 3)
+           WRITE( stdout, * ) (xk (ipol, ikq), ipol = 1, 3)
+           WRITE( stdout, * ) (xk (ipol, ikk), ipol = 1, 3)
            call errore ('phq_init', 'wrong order of k points', 1)
         endif
      endif

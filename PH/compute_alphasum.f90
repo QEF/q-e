@@ -100,7 +100,7 @@ enddo
 !         nt=ityp(na)
 !         do ijh=1,nh(nt)*(nh(nt)+1)/2
 !            do ipol=1,3
-!               write(6,'(3i5,f20.10)') na, ijh, ipol,
+!               WRITE( stdout,'(3i5,f20.10)') na, ijh, ipol,
 !     +                              alphasum(ijh,ipol,na,1)
 !            enddo
 !         enddo

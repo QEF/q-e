@@ -137,7 +137,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   allocate (rhoold (  nbnd))    
   allocate (auxr (  ndmx , nbnd))    
   allocate (eu (  nbnd))    
-  !      write(6,*) g,gp,t,h,hold
+  !      WRITE( stdout,*) g,gp,t,h,hold
   kter = 0
 
   kter_eff = 0.d0
@@ -189,7 +189,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call reduce (1, rho (ibnd) )
 #endif
            anorm = sqrt (rho (ibnd) )
-           !               write(6,'(2i5,e20.5)') iter,ibnd,anorm
+           !               WRITE( stdout,'(2i5,e20.5)') iter,ibnd,anorm
 #ifdef FLUSH
            !               call flush(6)
 #endif

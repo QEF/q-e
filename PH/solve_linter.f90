@@ -20,6 +20,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   USE constants,  ONLY: degspin
@@ -361,7 +362,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
            ltaver = ltaver + lter
            lintercall = lintercall + 1
-           if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4,  &
+           if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4,  &
                 &              " linter: root not converged ",e10.3)') &
                 &              ik , ibnd, anorm
            !
@@ -460,10 +461,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #endif
      tcpu = get_clock ('PHONON')
 
-     write (6, '(//,5x," iter # ",i3," total cpu time : ",f7.1, &
+     WRITE( stdout, '(//,5x," iter # ",i3," total cpu time : ",f7.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
      dr2 = dr2 / npert (irr)
-     write (6, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
+     WRITE( stdout, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
           &      " |ddv_scf|^2 = ",e10.3 )') thresh, alpha_mix (kter) , dr2
      !
      !    Here we save the information for recovering the run from this poin
@@ -494,7 +495,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   enddo
 155 continue
   if (tcpu.gt.time_max.and..not.convt) then
-     write (6, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, time_max
+     WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, time_max
      call stop_ph (.false.)
   endif
   !

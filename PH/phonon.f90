@@ -16,7 +16,7 @@ program phonon
   !   computed. In the case q=0 the dielectric constant and the effective
   !   charges are computed.
   !
-
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
   use phcom
@@ -36,7 +36,7 @@ program phonon
   call start_clock ('PHONON')
   gamma_only = .false.
   call startup (nd_nmbr, code, version_number)
-  write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+  WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   !
   !   and begin with the initialization part
   !
@@ -55,7 +55,7 @@ program phonon
   call print_clock ('PHONON')
   if (epsil.and.irr0.le.0) then
 
-     write (6, '(/,5x," Computing electric fields")')
+     WRITE( stdout, '(/,5x," Computing electric fields")')
 
      call solve_e
      if (convt) then

@@ -235,7 +235,7 @@ subroutine dvanqq
   !      do ih=1,nh(1)
   !         do jh=1,nh(1)
   !            do ipol=1,3
-  !            write(6,'(3i5,2f20.10)') ipol,ih,jh,int2(ih,jh,ipol,1,1)
+  !            WRITE( stdout,'(3i5,2f20.10)') ipol,ih,jh,int2(ih,jh,ipol,1,1)
   !            enddo
   !         enddo
   !      enddo

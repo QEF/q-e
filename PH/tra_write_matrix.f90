@@ -8,6 +8,7 @@
 subroutine tra_write_matrix (alpha, adyn, u, nat)
   !-----------------------------------------------------------------------
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   !
@@ -20,7 +21,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   complex(kind=DP) :: adyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
   complex(kind=DP) :: wdyn (3, 3, nat, nat), work
   character (len=*) :: alpha
-  write (6, * ) nat
+  WRITE( stdout, * ) nat
   do i = 1, 3 * nat
      na = (i - 1) / 3 + 1
      icart = i - 3 * (na - 1)
@@ -38,12 +39,12 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
 
 
   enddo
-  write (6, '(a)') alpha
+  WRITE( stdout, '(a)') alpha
   do na = 1, nat
      do nb = 1, nat
-        write (6, '(2i4)') na, nb
+        WRITE( stdout, '(2i4)') na, nb
         do i = 1, 3
-           write (6, '(6f10.5)') (wdyn (i, j, na, nb) , j = 1, 3)
+           WRITE( stdout, '(6f10.5)') (wdyn (i, j, na, nb) , j = 1, 3)
         enddo
      enddo
 

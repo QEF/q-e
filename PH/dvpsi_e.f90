@@ -18,7 +18,7 @@ subroutine dvpsi_e (kpoint, ipol)
   !
 #include "machine.h"
   !
-
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   use parameters, only : DP
@@ -199,7 +199,7 @@ subroutine dvpsi_e (kpoint, ipol)
           h_diag, npwx, npw, thresh, kpoint, lter, conv_root, anorm, &
           nbnd_occ (kpoint) )
 
-     if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4, &
+     if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4, &
                               & " linter: root not converged ",e10.3)') &
                                   kpoint, ibnd, anorm
 #ifdef FLUSH

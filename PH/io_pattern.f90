@@ -8,6 +8,7 @@
 !---------------------------------------------------------------------
 subroutine io_pattern (fildrho,nirr,npert,u,iflag)
 !---------------------------------------------------------------------
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
 #ifdef __PARA
@@ -38,12 +39,12 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
   call seqopn(iunit,filname,'formatted',exst)
 
   if (iflag.gt.0) then
-     write (6,*) 'WRITING PATTERNS ON FILE ', filname
+     WRITE( stdout,*) 'WRITING PATTERNS ON FILE ', filname
      write(iunit,*) nirr
      write(iunit,*) (npert(i),i=1,nirr)
      write(iunit,*) u
   else
-     write (6,*) 'READING PATTERNS FROM FILE ', filname
+     WRITE( stdout,*) 'READING PATTERNS FROM FILE ', filname
      read(iunit,*) nirr
      read(iunit,*) (npert(i),i=1,nirr)
      read(iunit,*) u

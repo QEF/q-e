@@ -68,7 +68,7 @@ subroutine compute_weight (wgg)
      enddo
      !         do ibnd=1,nbnd
      !            do jbnd=1,nbnd
-     !               write(6,'(3i5,f20.10)') ibnd, jbnd, ik,wgg(ibnd,jbnd,ik)
+     !               WRITE( stdout,'(3i5,f20.10)') ibnd, jbnd, ik,wgg(ibnd,jbnd,ik)
      !            enddo
      !         enddo
 

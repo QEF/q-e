@@ -175,7 +175,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !         check = check + omega*DREAL(ldos(nl(1),is))
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   !      end do
-  !      write (*,*) ' check ', check, dos_ef
+  !      WRITE( stdout,*) ' check ', check, dos_ef
   !check
   !
   deallocate(becsum1)

@@ -14,7 +14,7 @@ subroutine dielec
 !
 #include "machine.h"
 
-
+USE io_global,  ONLY : stdout
 use pwcom
 use parameters, only : DP
 use phcom
@@ -59,8 +59,8 @@ call poolreduce (9, epsilon)
 !
 !      symmetrize
 !
-!       write(6,'(/,10x,"Unsymmetrized in crystal axis ",/)')
-!       write(6,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
+!       WRITE( stdout,'(/,10x,"Unsymmetrized in crystal axis ",/)')
+!       WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
 !     +                                ipol=1,3),jpol=1,3)
 
 
@@ -68,8 +68,8 @@ call symtns (epsilon, nsym, s)
 !
 !    pass to cartesian axis
 !
-!      write(6,'(/,10x,"Symmetrized in crystal axis ",/)')
-!      write(6,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
+!      WRITE( stdout,'(/,10x,"Symmetrized in crystal axis ",/)')
+!      WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
 !     +                                ipol=1,3),jpol=1,3)
 call trntns (epsilon, at, bg, 1)
 !
@@ -81,9 +81,9 @@ enddo
 !
 !  and print the result
 !
-write (6, '(/,10x,"Dielectric constant in cartesian axis ",/)')
+WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
 
-write (6, '(10x,"(",3f18.9," )")') ((epsilon(ipol,jpol), ipol=1,3), jpol=1,3)
+WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon(ipol,jpol), ipol=1,3), jpol=1,3)
 call stop_clock ('dielec')
 
 return

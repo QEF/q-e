@@ -90,7 +90,7 @@ do ipol = 1,3
                if (mb.gt.nb) call errore('compute_qdipol',' mb.gt.nb', 1)
                dpqq(ih,jh,ipol,nt)=fact*ap(lp,ivl,jvl)*qrad2(mb,nb,nt)
                dpqq(jh,ih,ipol,nt)=dpqq(ih,jh,ipol,nt)
-!               write(6,'(3i5,2f15.9)') ih,jh,ipol,dpqq(ih,jh,ipol,nt)
+!               WRITE( stdout,'(3i5,2f15.9)') ih,jh,ipol,dpqq(ih,jh,ipol,nt)
             enddo
          enddo
       endif

@@ -206,10 +206,10 @@ subroutine dynmat_us
 #endif
   !      do na = 1,nat
   !         do nb = 1,nat
-  !           write(6, '(2i3)') na,nb
+  !           WRITE( stdout, '(2i3)') na,nb
   !            do icart = 1,3
   !              na_icart = 3*(na-1)+icart
-  !               write(6,'(6f13.8)')
+  !               WRITE( stdout,'(6f13.8)')
   !     +               (dynwrk(na_icart,3*(nb-1)+jcart), jcart=1,3)
   !            end do
   !         end do

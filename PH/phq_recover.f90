@@ -15,7 +15,7 @@ subroutine phq_recover
   !
 #include "machine.h"
 
-
+  USE io_global,  ONLY : stdout
   use pwcom
   use parameters, only : DP
   use phcom
@@ -68,26 +68,26 @@ subroutine phq_recover
 
      endif
      if (irr0.eq. - 1) then
-        write (6, '(/,4x," Reading only int1 and int2" )')
+        WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
 
         close (unit = iunrec, status = 'keep')
      elseif (irr0.eq. - 2) then
         call errore ('phq_recover', 'recovering from wrong case', 1)
-        write (6, '(/,4x," Restart from Iteration #",i5, &
+        WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
              &                   " of Elect. Field")') iter0 + 1
      elseif (irr0.gt.0) then
         if (iter0.ne.0) then
-           write (6, '(/,4x," Restart from Iteration #",i5, &
+           WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
                 &             " of Representation #",i5)') iter0 + 1, irr0
         else
            if (irr0.eq.nirr) then
-              write (6, '(/,4x," From recover: Dynamical ", &
+              WRITE( stdout, '(/,4x," From recover: Dynamical ", &
                    &       " Matrix calculation ")')
            else
               do irr = 1, nirr
                  if ( (comp_irr (irr) .eq.1) .and. (done_irr (irr) &
                       .eq.0) ) then
-                    write (6, '(/,4x," Restart from first iteration", &
+                    WRITE( stdout, '(/,4x," Restart from first iteration", &
                          &      " of Representation # ",i5)') irr
                     goto 1000
                  endif
