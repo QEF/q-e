@@ -275,9 +275,11 @@ PROGRAM images_interpolator
     !
     WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATIONS")' )
     !
-    WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep
-    WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep
-    WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
+    ! ... by default istep and nstep are set to zero
+    !
+    WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
+    WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
+    WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
     !
     WRITE( UNIT = iunrestart, FMT = '("ENERGY, POSITIONS AND GRADIENTS")' )
     !

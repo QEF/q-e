@@ -40,6 +40,10 @@ new_num_of_images=
 first_image=
 last_image=  
 #
+# ... the number of atoms
+#
+nat=
+#
 # ... lattice parameter ( celldm(1) in the pw input file )
 #
 alat=1.D0
@@ -49,18 +53,20 @@ alat=1.D0
 #
 cat > CELL_PARAMETERS << EOF
 CELL_PARAMETERS
-  12.00000  0.00000  0.00000
-   0.00000  5.00000  0.00000
-   0.00000  0.00000  5.00000
+   0.00000  0.00000  0.00000
+   0.00000  0.00000  0.00000
+   0.00000  0.00000  0.00000
 EOF
 #
+# ... optional informations:
 # ... needed to gereate visualization files ( xyz and axsf formats ) 
 #
 # ... put a symbol for each atomic specie that compose the system
 #
 list_of_atoms=""
 #
-# ... number of atoms of each specie
+# ... number of atoms of each specie 
+# ... (the sum of all N[i] must be equal to nat)
 #
 N[1]=
 #
@@ -71,16 +77,6 @@ N[1]=
 ################################################################################
 #
 GAWK=$( which gawk )
-#
-################################################################################
-##                    the total number of atoms is computed                   ##
-################################################################################
-i=1
-Ntot=0
-while [ ${i} -le ${#N[@]} ]; do
-  Ntot=$(( ${Ntot} + ${N[${i}]} ))
-  i=$(( ${i} + 1 ))
-done
 #
 ################################################################################
 ##                     lattice vectors for gawk scripts                       ##
@@ -104,7 +100,7 @@ if [ ! -f ${old_restart_file} ]; then
 fi
 #
 cat > input << EOF
-${Ntot}
+${nat}
 ${old_num_of_images}
 ${new_num_of_images}
 ${first_image}
@@ -117,52 +113,57 @@ EOF
 cat CELL_PARAMETERS | $GAWK '{ if ( NR == 1 ) { print }; if ( NR > 1 ) \
 { printf "  %12.8f  %12.8f  %12.8f\n", $1, $2, $3} }' >> input
 #
-################################################################################
-##       dynamical generation of the "from_restart_to_xmol.gawk" script       ##
-################################################################################
-file="from_restart_to_xmol.gawk"
+#
+$ROOT_DIR/bin/path_int.x < input
+#
+if [[ "${list_of_atoms}" != "" ]]; then
+  #
+  ##############################################################################
+  ##      dynamical generation of the "from_restart_to_xyz.gawk" script       ##
+  ##############################################################################
+  file="from_restart_to_xyz.gawk"
 cat > ${file} << EOF
-BEGIN { a_zero = 0.529177 }
+BEGIN { a_zero = 0.529177 }   
 {
 if ( \$1 == "Image:" ) {
   count = -1 ;
-  printf "${Ntot}" ;
+  printf "${nat}" ;
   printf "     \n" ;
   printf "     \n" ;
   }
 else {
   count++;
 EOF
-#
-ref1=0
-ref2=0
-#
-index=0
-#
-for atom in ${list_of_atoms}; do
   #
-  index=$(( ${index} + 1 ))
+  ref1=0
+  ref2=0 
   #
-  ref1=$(( ${ref2} + 1 ))
-  ref2=$(( ${ref2} + ${N[${index}]} ))
+  index=0
   #
-  echo "  if ( count >= ${ref1} && count <= ${ref2} ) { " >> ${file}
-  echo "    printf \"${atom}  \";                       " >> ${file}
-  echo "    printf \" %8.4f   \", \$1 * a_zero ;        " >> ${file}
-  echo "    printf \" %8.4f   \", \$2 * a_zero ;        " >> ${file}
-  echo "    printf \" %8.4f   \", \$3 * a_zero ;        " >> ${file}
-  echo "    printf \" \\n\";                            " >> ${file}
-  echo "    }                                           " >> ${file}
+  for atom in ${list_of_atoms}; do
+    #
+    index=$(( ${index} + 1 ))
+    #
+    ref1=$(( ${ref2} + 1 ))
+    ref2=$(( ${ref2} + ${N[${index}]} ))
+    #
+    echo "  if ( count >= ${ref1} && count <= ${ref2} ) { " >> ${file}
+    echo "    printf \"${atom}  \";                       " >> ${file}
+    echo "    printf \" %8.4f   \", \$1 * a_zero ;        " >> ${file}
+    echo "    printf \" %8.4f   \", \$2 * a_zero ;        " >> ${file}
+    echo "    printf \" %8.4f   \", \$3 * a_zero ;        " >> ${file}
+    echo "    printf \" \\n\";                            " >> ${file}
+    echo "    }                                           " >> ${file}
+    #
+  done
   #
-done
-#
-echo "  }                                               " >> ${file}
-echo "}                                                 " >> ${file}
-#
-################################################################################
-##       dynamical generation of the "from_restart_to_axfs.gawk" script       ##
-################################################################################
-file="from_restart_to_axsf.gawk"
+  echo "  }                                               " >> ${file}
+  echo "}                                                 " >> ${file}
+  #
+  ##############################################################################
+  ##      dynamical generation of the "from_restart_to_axfs.gawk" script      ##
+  ##############################################################################
+  file="from_restart_to_axsf.gawk"
 cat > ${file} << EOF
 BEGIN{ 
   a_0  = 0.529177 ;
@@ -177,51 +178,54 @@ BEGIN{
   if ( \$1 == "Image:" ) {
     count = -1 ;
     printf " PRIMCOORD %3i \n", \$2 ;
-    printf "%4i  1 \n", ${Ntot} ;
+    printf "%4i  1 \n", ${nat} ;
     }
   else {
     count++;
 EOF
-#
-ref1=0
-ref2=0
-#
-index=0
-#
-for atom in ${list_of_atoms}; do
   #
-  index=$(( ${index} + 1 ))
+  ref1=0
+  ref2=0
   #
-  ref1=$(( ${ref2} + 1 ))
-  ref2=$(( ${ref2} + ${N[${index}]} ))
+  index=0
   #
-  echo "  if ( count >= ${ref1} && count <= ${ref2} ) { " >> ${file}
-  echo "    printf \"${atom}  \";                       " >> ${file}
-  echo "    printf \" %16.10f   \", \$1 * a_0 ;         " >> ${file}
-  echo "    printf \" %16.10f   \", \$2 * a_0 ;         " >> ${file}
-  echo "    printf \" %16.10f   \", \$3 * a_0 ;         " >> ${file}
-  echo "    printf \" %16.10f   \", \$4 / a_0 ;         " >> ${file}
-  echo "    printf \" %16.10f   \", \$5 / a_0 ;         " >> ${file}
-  echo "    printf \" %16.10f   \", \$6 / a_0 ;         " >> ${file}  
-  echo "    printf \" \\n\";                            " >> ${file}
-  echo "    }                                           " >> ${file}
+  for atom in ${list_of_atoms}; do
+    #
+    index=$(( ${index} + 1 ))
+    #
+    ref1=$(( ${ref2} + 1 ))
+    ref2=$(( ${ref2} + ${N[${index}]} ))
+    #
+    echo "  if ( count >= ${ref1} && count <= ${ref2} ) { " >> ${file}
+    echo "    printf \"${atom}  \";                       " >> ${file}
+    echo "    printf \" %16.10f   \", \$1 * a_0 ;         " >> ${file}
+    echo "    printf \" %16.10f   \", \$2 * a_0 ;         " >> ${file}
+    echo "    printf \" %16.10f   \", \$3 * a_0 ;         " >> ${file}
+    echo "    printf \" %16.10f   \", \$4 / a_0 ;         " >> ${file}
+    echo "    printf \" %16.10f   \", \$5 / a_0 ;         " >> ${file}
+    echo "    printf \" %16.10f   \", \$6 / a_0 ;         " >> ${file}  
+    echo "    printf \" \\n\";                            " >> ${file}
+    echo "    }                                           " >> ${file}
+    #
+  done
   #
-done
+  echo "  }                                               " >> ${file}
+  echo "}                                                 " >> ${file}
+  #
+  ##############################################################################
+  #
+  $GAWK -f from_restart_to_xyz.gawk ${new_restart_file} > \
+  ${new_restart_file}.xyz
+  #
+  $GAWK -f from_restart_to_axsf.gawk ${new_restart_file} > \
+  ${new_restart_file}.axsf
+  #
+  rm -f from_restart_to_xyz.gawk \
+        from_restart_to_axsf.gawk
+  #
+fi
 #
-echo "  }                                               " >> ${file}
-echo "}                                                 " >> ${file}
-#
-################################################################################
-#
-$ROOT_DIR/bin/path_int.x < input
-#
-$GAWK -f from_restart_to_xmol.gawk ${new_restart_file} > \
-${new_restart_file}.xmol
-#
-$GAWK -f from_restart_to_axsf.gawk ${new_restart_file} > \
-${new_restart_file}.axsf
+echo "done"
 #
 rm -f input 
 rm -f CELL_PARAMETERS
-rm -f from_restart_to_xyz.gawk \
-      from_restart_to_axsf.gawk
