@@ -73,7 +73,9 @@ PWOBJS = \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
 ../PW/clean_pw.o \
+../PW/close_files.o \
 ../PW/compute_dip.o \
+../PW/compute_scf.o \
 ../PW/constraints_module.o \
 ../PW/conv_to_num.o \
 ../PW/coset.o \
@@ -191,6 +193,7 @@ PWOBJS = \
 ../PW/reduce.o \
 ../PW/remove_atomic_rho.o \
 ../PW/regterg.o \
+../PW/reset_k_points.o \
 ../PW/restart.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
