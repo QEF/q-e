@@ -1,5 +1,6 @@
 \documentclass[12pt,a4paper]{article}
  \def\version{CVS}
+ \def\stableversion{2.1.2} % last stable release
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -292,23 +293,14 @@ A.~Kokalj, % PWgui
 \section{Installation}
   \label{installation}
 
-Presently, the $\nu-$ESPRESSO package is only distributed in source form;
-some precompiled executables (binary files) are provided only for
-PWgui.
-Providing binaries for $\nu-$ESPRESSO would require too much effort and
-would work only for a small number of machines anyway.
+Presently, the $\nu-$ESPRESSO package is only distributed in source
+form; some precompiled executables (binary files) are provided only
+for PWgui.
+Providing binaries for $\nu-$ESPRESSO would require too much effort
+and would work only for a small number of machines anyway.
 
-To install $\nu-$ESPRESSO, you need working C and fortran-95 compilers 
-(fortran-90 is not sufficient, but most "fortran-90" compilers are 
-actually fortran-95-compliant). If you do not have any, try the free 
-\texttt{g95} compiler (\htmladdnormallink{\texttt{http://www.g95.org}}%
-{http://www.pwscf.org/download.htm}):
-it is still unfinished but already usable. You will also need basic unix
-facilities: a shell, the \texttt{make} 
-and \texttt{awk} utilities.
-
-The latest stable release of the $\nu-$ESPRESSO source package (currently
-version \version) can be downloaded from this URL:
+Stable releases of the $\nu-$ESPRESSO source package (current version
+is \stableversion) can be downloaded from this URL:
 \medskip
 
 \htmladdnormallink{\texttt{http://www.pwscf.org/download.htm}}%
@@ -320,7 +312,7 @@ To uncompress and unpack it, move it to an empty directory of your
 choice, \texttt{cd} to that directory, and run the command:
 \medskip
 
-\texttt{tar zxvf pw.\version.tgz}
+\texttt{tar zxvf espresso-\stableversion.tar.gz}
 \medskip
 
 \noindent
@@ -328,7 +320,7 @@ If your version of \texttt{tar} doesn't recognize the \texttt{z} flag,
 use this instead:
 \medskip
 
-\texttt{gunzip -c pw.\version.tgz | tar xvf -}
+\texttt{gunzip -c espresso-\stableversion.tar.gz | tar xvf -}
 \medskip
 
 \noindent
@@ -336,13 +328,19 @@ The bravest may access the (unstable) development version via anonymous
 CVS (Concurrent Version System): see the file \texttt{README.cvs}
 contained in the distribution.
 
-To install $\nu-$ESPRESSO, you must:
-\begin{enumerate}
-  \item configure the source package for your system, compilers and
-        libraries;
-  \item compile some or all the executables in the package.
-\end{enumerate}
-For the impatient:
+To install $\nu-$ESPRESSO from source, you need C and Fortran-95
+compilers (Fortran-90 is not sufficient, but most "Fortran-90"
+compilers are actually Fortran-95-compliant).
+If you don't have a commercial Fortran-95 compiler, you may install
+the free \texttt{g95} compiler
+(\htmladdnormallink{\texttt{http://www.g95.org/}}%
+                   {http://www.g95.org/}):
+it is still unfinished but already usable.
+You also need a minimal Unix environment: basically, a command shell
+(e.g., \texttt{bash} or \texttt{tcsh}) and the \texttt{make} and
+\texttt{awk} utilities.
+
+Instructions for the impatient:
 \begin{verbatim}
   ./configure
   make all
@@ -363,9 +361,10 @@ and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
 HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
 assistance also on other architectures (see below).
 
-Cross-compilation is theoretically supported, but has never been
-tested; you have to specify the target machine with the
-\texttt{--host} option (see below).
+For cross-compilation, you have to specify the target machine with the
+\texttt{--host} option (see below).  This feature hasn't been tested
+extensively, but we've had at least one successful report (compile on
+PC for NEC SX6).
 
 Specifically, \texttt{configure} generates the following files:
 \begin{quote}
@@ -418,7 +417,7 @@ For example, the following command line:
 instructs \texttt{configure} to use \texttt{ifort} as Fortran 95
 compiler with flags \texttt{"-O2 -assume byterecl"},
 \texttt{gcc} as C compiler with flags \texttt{"-O3"}, and to link with
-\texttt{"-static"} flag.  Note that the value of \texttt{FFLAGS} must
+flags \texttt{"-static"}.  Note that the value of \texttt{FFLAGS} must
 be quoted, because it contains spaces.
 
 If your machine type is unknown to \texttt{configure}, you may use the

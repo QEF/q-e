@@ -8,16 +8,16 @@ source distribution, or download it from http://www.pwscf.org/guide.htm
 
 ----------------------------------------------------------------------
 
-To install Quantum-ESPRESSO, you need working C and f95 compilers (f90 is
-not sufficient, but most "f90" compilers are actually f95-compliant).
-You will also need basic unix facilities: a shell, the "make" and
-"awk" utilities. To install Quantum-ESPRESSO, you must:
+To install Quantum-ESPRESSO from source, you need C and Fortran-95
+compilers (Fortran-90 is not sufficient, but most "Fortran-90"
+compilers are actually Fortran-95-compliant).
+If you don't have a commercial Fortran-95 compiler, you may install
+the free "g95" compiler (http://www.g95.org/): it is still unfinished
+but already usable.
+You also need a minimal Unix environment: basically, a command shell
+(e.g., "bash" or "tcsh") and the "make" and "awk" utilities.
 
-1. configure the source package for your system, compilers and
-   libraries;
-2. compile some or all the executables in the package.
-
-For the impatient:
+Instructions for the impatient:
 
   ./configure
   make all
@@ -40,14 +40,10 @@ and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
 HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
 assistance also on other architectures (see below).
 
-Cross-compilation is theoretically supported, but has never been
-tested; you have to specify the target machine with the "--host"
-option (see below).
-
-Cross-compilation probably works, but we don't make guarantees.  It
-has been reported to work in one case (compile on PC for NEC SX6); to
-our knowledge, it hasn't been tried by anyone else.
-So that's 100% success...
+For cross-compilation, you have to specify the target machine with the
+"--host" option (see below).  This feature hasn't been tested
+extensively, but we've had at least one successful report (compile on
+PC for NEC SX6).
 
 Specifically, "configure" generates the following files:
 
@@ -59,8 +55,8 @@ script, that "configure" invokes.  If you modify the program sources,
 you might have to rerun it.
 
 You should always be able to compile the Quantum-ESPRESSO suite of 
-programs without having to edit any of the generated files. You may
-have to tune "configure" by specifying appropriate environment
+programs without having to edit any of the generated files.  However
+you may have to tune "configure" by specifying appropriate environment
 variables and/or command-line options.
 Usually the most tricky part is to get external libraries recognized
 and used: see the next section for details and hints.
@@ -78,7 +74,7 @@ Environment variables may be set in any of these ways:
 Some environment variables that are relevant to "configure" are:
 
   ARCH : label identifying the machine type (see below)
-  F90, F77, CC : names of Fortran 90, Fortran 77, and C compilers
+  F90, F77, CC : names of Fortran 95, Fortran 77, and C compilers
   CPP : source file preprocessor (defaults to "$CC -E")
   LD : linker (defaults to $F90)
   CFLAGS, FFLAGS, F90FLAGS, CPPFLAGS, LDFLAGS : compilation flags
@@ -86,18 +82,18 @@ Some environment variables that are relevant to "configure" are:
 
 For example, the following command line:
 
-  ./configure F90=ifort FFLAGS="-Vaxlib -O2 -assume byterecl" \
-              CC=gcc CFLAGS=-O3 LDFLAGS="-Vaxlib -static"
+  ./configure F90=ifort FFLAGS="-O2 -assume byterecl" CC=gcc \
+              CFLAGS=-O3 LDFLAGS=-static
 
 instructs "configure" to use "ifort" as Fortran 90 compiler with flags
-"-Vaxlib -O2 -assume byterecl", "gcc" as C compiler with flags "-O3",
-and to use flags "-Vaxlib -static" when linking.  Note that the values
-of FFLAGS and LDFLAGS must be quoted, because they contain spaces.
+"-O2 -assume byterecl", "gcc" as C compiler with flags "-O3", and to
+link with flags "-static".  Note that the value of FFLAGS must be
+quoted, because it contains spaces.
 
 If your machine type is unknown to "configure", you may use the "ARCH"
 variable to suggest an architecture among supported ones.
-Try the one that looks more similar to your machine type (you'll
-probably have to do some additional tweaking).
+Try the one that looks more similar to your machine type; you'll
+probably have to do some additional tweaking.
 Currently supported architectures are:
 
   linux64    Linux 64-bit machines (Itanium, Opteron)
@@ -112,10 +108,10 @@ Currently supported architectures are:
 Finally, "configure" recognizes the following command-line options:
 
   --disable-parallel : compile serial code, even if parallel
-                       environment is available
+                       environment is available.
   --disable-shared : don't use shared libraries: generate static
-                     executables
-  --enable-shared : use shared libraries
+                     executables.
+  --enable-shared : use shared libraries.
   --host=target : specify target machine for cross-compilation.
             "Target" must be a string identifying the architecture
             that you want to compile for; you can obtain it by running
@@ -143,8 +139,8 @@ A copy of the needed routines is provided with the distribution.
 However, when available, optimized vendor-specific libraries can be
 used instead: this often yields huge performance gains.
 
-Quantum-ESPRESSO can use the following architecture-specific replacements
-for BLAS and LAPACK:
+Quantum-ESPRESSO can use the following architecture-specific
+replacements for BLAS and LAPACK:
 
   essl for IBM machines
   complib.sgimath for SGI Origin
