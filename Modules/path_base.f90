@@ -154,7 +154,7 @@ MODULE path_base
          !
          FORALL( mode = 1 : ( Nft - 1 ) )
             !
-            ds_(mode) = ds
+            ds_(mode) = ds / SQRT( REAL( mode ) )
             !
          END FORALL
          !
