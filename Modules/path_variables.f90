@@ -31,12 +31,13 @@ MODULE path_variables
        use_multistep,            &! .TRUE. if multistep has to be used in smd
                                   !        optimization
        write_save,               &! .TRUE. if the save file has to be written
-       fixed_tan,                &! .TRUE. if the projection is done using the
-                                  !        tangent of the average path
+       fixed_tan,                &! if. TRUE. the projection is done using the
+                                  !           tangent of the average path
        use_freezing,             &! if .TRUE. images are optimised according
-                                  ! to they error (see frozen array)
+                                  !           to their error (see frozen array)
        tune_load_balance          ! if .TRUE. the load balance for image
-                                  ! parallelisation is tuned at runtime
+                                  !           parallelisation is tuned at 
+                                  !           runtime
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
