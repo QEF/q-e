@@ -95,7 +95,7 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   ef = efbetter
   sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef, is, isk )
 
-  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3') is
+  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
   WRITE( stdout, 9010) ef * rydtoev, sumkmid
   !     converged exit:
 100 continue

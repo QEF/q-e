@@ -59,7 +59,7 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
         Eup = Ef
      endif
   enddo
-  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3') is
+  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
        Ef * 13.6058, sumkmid
