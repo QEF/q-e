@@ -362,7 +362,7 @@ SUBROUTINE punch_band (filband, spin_component)
         !
         IF (ik == 1) THEN
            WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
-                nbnd, nks
+                nbnd, nks2-nks1+1
         END IF
         WRITE (iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
         WRITE (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
