@@ -39,18 +39,16 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE input_parameters, ONLY : pos, restart_mode, calculation, &
-                                   opt_scheme, climbing, nstep, ds, &
-                                   input_images
+                                   opt_scheme, climbing, nstep, input_images
       USE control_flags,    ONLY : conv_elec, lneb, lsmd
       USE ions_base,        ONLY : nat, if_pos
       USE io_files,         ONLY : prefix, iunpath, path_file, &
                                    dat_file, int_file, xyz_file, axsf_file
       USE cell_base,        ONLY : alat
       USE path_variables,   ONLY : pos_ => pos, &
-                                   ds_  => ds,  &
                                    istep_path, nstep_path, dim, num_of_images, &
                                    pes, grad_pes, grad_proj, tangent, error,   &
-                                   path_length, path_thr, deg_of_freedom,      &
+                                   path_length, path_thr, deg_of_freedom, ds,  &
                                    first_last_opt, reset_vel, react_coord,     &
                                    llangevin, temp_req, use_multistep
       USE path_variables,   ONLY : climbing_ => climbing,                  &
@@ -120,7 +118,6 @@ MODULE path_base
          !
          CALL path_allocation( 'neb' )
          !
-         ds_          = ds
          vel          = 0.D0
          pes          = 0.D0
          grad_pes     = 0.D0
@@ -149,7 +146,6 @@ MODULE path_base
          !
          CALL path_allocation( 'smd' )
          !
-         ds_           = ds
          pes           = 0.D0
          grad_pes      = 0.D0
          grad_proj     = 0.D0
@@ -923,6 +919,12 @@ MODULE path_base
       REAL (KIND=DP), ALLOCATABLE :: phi(:)
       !
       !
+      IF ( first_last_opt ) THEN
+         !s
+         grad(:,:) = grad_pes(:,:)
+         !
+      END IF
+      !
       ft_pes  = 0.D0
       ft_grad = 0.D0
       !
@@ -955,6 +957,9 @@ MODULE path_base
             ! ... the random term used in langevin dynamics is generated here
             !
             phi(:) = gaussian_vect() * DBLE( RESHAPE( if_pos, (/ dim /) ) )
+            !
+            IF ( first_last_opt ) &
+               grad(:,j) = grad(:,j) - phi(:) / SQRT( ds )
             !
             lang_proj(:,j) = phi(:) - &
                              tangent(:,j) * ( tangent(:,j) .dot. phi(:) )
@@ -1023,26 +1028,6 @@ MODULE path_base
          DEALLOCATE( phi )
          !
          ft_lang = ft_lang * ft_coeff
-         !
-      END IF
-      !
-      IF ( first_last_opt ) THEN
-         !
-         grad(:,:) = grad_pes(:,:)
-         !
-         IF ( llangevin ) THEN
-            !
-            j = 1
-            !
-            grad(:,j) = grad(:,j) - gaussian_vect() / SQRT( ds(1) ) * &
-                                    DBLE( RESHAPE( if_pos, (/ dim /) ) )
-            !
-            j = num_of_images
-            !
-            grad(:,j) = grad(:,j) - gaussian_vect() / SQRT( ds(1) ) * &
-                                    DBLE( RESHAPE( if_pos, (/ dim /) ) )
-            !
-         END IF
          !
       END IF
       !
@@ -1266,7 +1251,7 @@ MODULE path_base
             !
          END DO gaussian_loop
          !
-         w = SQRT( ( -2.D0 * LOG( w ) ) / w )
+         w = SQRT( ( - 2.D0 * LOG( w ) ) / w )
          !
          gaussian_vect(i) = x1 * w * coeff
          !
@@ -1681,6 +1666,7 @@ MODULE path_base
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
                                    conv_path, suspended_image, &
                                    num_of_images, llangevin, lmol_dyn
+      USE path_formats,     ONLY : final_fmt
       !
       IMPLICIT NONE
       !
@@ -1699,6 +1685,8 @@ MODULE path_base
                        
       !
       IF ( exit_condition )  THEN
+         !
+         WRITE( UNIT = iunpath, FMT = final_fmt )
          !
          IF ( ionode .AND. lneb ) &
             WRITE( UNIT = iunpath, &
@@ -1719,11 +1707,13 @@ MODULE path_base
          !
       END IF
       !
-      ! ... the programs checks if the maximum number of iterations has
+      ! ... the program checks if the maximum number of iterations has
       ! ... been reached
       !
       IF ( istep_path >= nstep_path ) THEN
          !
+         WRITE( UNIT = iunpath, FMT = final_fmt )
+         !         
          IF ( ionode .AND. lneb ) &
             WRITE( UNIT = iunpath, &
                    FMT = '(/,5X,"neb: reached the maximum number of ", &

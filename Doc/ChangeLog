@@ -1,3 +1,15 @@
+3 Nov 2004   path optimization: 
+             1) cleanup of the output format (more informative)
+             2) some cleanup of internal routines
+             3) added a couple of input variables and changed the default value
+                of ds from 1.5 to 1.0.
+             BFGS optimization:
+             1) implemented a mixed BFGS + Murtag-Sargent update of the inverse
+                hessian which is generally faster than the pure BFGS
+             2) trust_radius_max increased to 0.8 bohr
+             3) some cleanup of internal routines
+             (CS)
+
 1 Nov 2004   more CP/FPMD merging, cleanup (CC)
              Calculation of LDA+U contribution to forces modified:
              should be faster (SdG)

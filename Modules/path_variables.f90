@@ -31,11 +31,14 @@ MODULE path_variables
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
+       init_num_of_images,       &! number of images used in the initial
+                                  ! discretization (SMD only)
        deg_of_freedom,           &! number of degrees of freedom 
                                   ! ( dim - #( of fixed coordinates ) )
        suspended_image            ! last image for which scf has not been
                                   ! achieved
   REAL (KIND=DP) :: &
+       ds,                       &! the optimization step
        path_thr,                 &! convergence threshold
        damp,                     &! damp coefficient
        temp_req,                 &! required temperature
@@ -56,7 +59,6 @@ MODULE path_variables
   ! ... "general" real space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &
-       ds(:),                    &! the minimization step 
        pes(:),                   &! the potential enrgy along the path
        norm_tangent(:),          &!
        error(:)                   ! the error from the true MEP
@@ -187,9 +189,6 @@ MODULE path_variables
        SELECT CASE ( TRIM( method ) )
        CASE( 'neb' )
           !
-          ALLOCATE( ds( num_of_images ) )
-          
-          !
           ALLOCATE( pos(     dim, num_of_images ) )
           ALLOCATE( pos_old( dim, num_of_images ) )
           !
@@ -215,7 +214,6 @@ MODULE path_variables
           !
           ! ... real space arrays
           !       
-          ALLOCATE( ds(           num_of_images ) )
           ALLOCATE( pes(          num_of_images ) )
           ALLOCATE( norm_tangent( num_of_images ) )
           !
@@ -286,7 +284,6 @@ MODULE path_variables
        SELECT CASE ( TRIM( method ) )
        CASE( 'neb' )
           !
-          IF ( ALLOCATED( ds ) )             DEALLOCATE( ds )
           IF ( ALLOCATED( pos ) )            DEALLOCATE( pos )
           IF ( ALLOCATED( pos_old ) )        DEALLOCATE( pos_old )
           IF ( ALLOCATED( vel ) )            DEALLOCATE( vel )
@@ -307,8 +304,7 @@ MODULE path_variables
        CASE( 'smd' )
           !
           ! ... "general" real space arrays
-          !       
-          IF ( ALLOCATED( ds ) )             DEALLOCATE( ds )
+          !
           IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )
           IF ( ALLOCATED( norm_tangent ) )   DEALLOCATE( norm_tangent )
           !

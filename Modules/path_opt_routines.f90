@@ -41,7 +41,7 @@ MODULE path_opt_routines
        !
        IF ( frozen(index) ) RETURN
        !
-       pos(:,index) = pos(:,index) - ds(1) * grad(:,index)
+       pos(:,index) = pos(:,index) - ds * grad(:,index)
        !
        RETURN
        !
@@ -78,9 +78,9 @@ MODULE path_opt_routines
           !
        ELSE
           !
-          vel(:,index) = vel(:,index) - 0.5D0 * ds(1) * grad(:,index)
+          vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
           !
-          pos(:,index) = pos(:,index) + ds(1) * vel(:,index)
+          pos(:,index) = pos(:,index) + ds * vel(:,index)
           !
        END IF
        !       
@@ -105,11 +105,11 @@ MODULE path_opt_routines
        IF ( ldamped_dyn ) THEN
           !
           vel(:,index) = damp * ( vel(:,index) - &
-                                  0.5D0 * ds(1) * grad(:,index) )
+                                  0.5D0 * ds * grad(:,index) )
           !
        ELSE IF ( lmol_dyn ) THEN
           !       
-          vel(:,index) = vel(:,index) - 0.5D0 * ds(1) * grad(:,index)
+          vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
           !
        END IF
        !
@@ -135,7 +135,7 @@ MODULE path_opt_routines
        !
        IF ( frozen(index) ) RETURN
        !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds(1) * grad(:,index)
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
        !
        IF ( norm_grad(index) > eps32 ) THEN
           !
@@ -221,10 +221,10 @@ MODULE path_opt_routines
        !
        IF ( ft_frozen(mode) ) RETURN
        !
-       ft_pos(:,mode) = ft_pos(:,mode) - ds(mode) * ft_grad(:,mode)
+       ft_pos(:,mode) = ft_pos(:,mode) - ds * ft_grad(:,mode)
        !
        IF ( llangevin ) &
-          ft_pos(:,mode) = ft_pos(:,mode) + SQRT( ds(mode) ) * ft_lang(:,mode)
+          ft_pos(:,mode) = ft_pos(:,mode) + SQRT( ds ) * ft_lang(:,mode)
        !      
        RETURN
        !
@@ -263,9 +263,9 @@ MODULE path_opt_routines
        ELSE
           !
           ft_vel(:,mode) = ft_vel(:,mode) - &
-                           0.5D0 * ds(mode) * ft_grad(:,mode)
+                           0.5D0 * ds * ft_grad(:,mode)
           !
-          ft_pos(:,mode) = ft_pos(:,mode) + ds(mode) * ft_vel(:,mode)
+          ft_pos(:,mode) = ft_pos(:,mode) + ds * ft_vel(:,mode)
           !
        END IF
        !       
@@ -290,12 +290,11 @@ MODULE path_opt_routines
        IF ( ldamped_dyn ) THEN
           !
           ft_vel(:,mode) = damp * ( ft_vel(:,mode) - &
-                                    0.5D0 * ds(mode) * ft_grad(:,mode) )
+                                    0.5D0 * ds * ft_grad(:,mode) )
           !
        ELSE IF ( lmol_dyn ) THEN
           !       
-          ft_vel(:,mode) = ft_vel(:,mode) - &
-                           0.5D0 * ds(mode) * ft_grad(:,mode)
+          ft_vel(:,mode) = ft_vel(:,mode) - 0.5D0 * ds * ft_grad(:,mode)
           !
        END IF
        !
@@ -321,8 +320,7 @@ MODULE path_opt_routines
        !
        IF ( ft_frozen(mode) ) RETURN
        !
-       ft_vel(:,mode) = ft_vel(:,mode) - &
-                        0.5D0 * ds(mode) * ft_grad(:,mode)
+       ft_vel(:,mode) = ft_vel(:,mode) - 0.5D0 * ds * ft_grad(:,mode)
        !
        IF ( norm_ft_grad(mode) > eps32 ) THEN
           !

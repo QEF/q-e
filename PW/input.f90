@@ -127,20 +127,21 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : twfcollect 
   !
-  USE path_variables, ONLY : lsteep_des, lquick_min , &
+  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min , &
                              ldamped_dyn, lmol_dyn, llangevin, &
-                             write_save_     => write_save, &
-                             reset_vel_      => reset_vel, &
-                             use_multistep_  => use_multistep, &
-                             CI_scheme_      => CI_scheme, &
-                             k_max_          => k_max, & 
-                             k_min_          => k_min, &
-                             num_of_images_  => num_of_images, &
-                             first_last_opt_ => first_last_opt, &
-                             damp_           => damp, &
-                             temp_req_       => temp_req, &
-                             path_thr_       => path_thr, &
-                             nstep_path
+                             ds_                 => ds, &
+                             write_save_         => write_save, &
+                             reset_vel_          => reset_vel, &
+                             init_num_of_images_ => init_num_of_images, &
+                             use_multistep_      => use_multistep, &
+                             CI_scheme_          => CI_scheme, &
+                             k_max_              => k_max, & 
+                             k_min_              => k_min, &
+                             num_of_images_      => num_of_images, &
+                             first_last_opt_     => first_last_opt, &
+                             damp_               => damp, &
+                             temp_req_           => temp_req, &
+                             path_thr_           => path_thr
   !
   USE noncollin_module, ONLY : noncolin_  => noncolin, &
                                lambda_    => lambda, &
@@ -202,10 +203,10 @@ SUBROUTINE iosys()
                                tempw, tolp, upscale, potential_extrapolation, &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
-                               temp_req, k_max, k_min, write_save, &
-                               trust_radius_max, trust_radius_min, &
-                               trust_radius_ini, trust_radius_end, &
-                               w_1, w_2, lbfgs_ndim
+                               init_num_of_images, temp_req, k_max, k_min, ds, &
+                               write_save, trust_radius_max, trust_radius_min, &
+                               trust_radius_ini, trust_radius_end, w_1, w_2,   &
+                               lbfgs_ndim
   !
   ! CELL namelist
   !
@@ -860,6 +861,7 @@ SUBROUTINE iosys()
   !
   ! ... general "path" variables
   !
+  ds_             = ds
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
   reset_vel_      = reset_vel
@@ -876,7 +878,8 @@ SUBROUTINE iosys()
   !
   ! ... Fourier-SMD specific
   !
-  use_multistep_ = use_multistep
+  init_num_of_images_ = init_num_of_images
+  use_multistep_      = use_multistep
   !
   ! ... new BFGS specific
   !

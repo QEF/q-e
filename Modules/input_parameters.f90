@@ -865,6 +865,8 @@ MODULE input_parameters
         INTEGER   :: input_images = 0
         
         INTEGER   :: num_of_images = 0
+        
+        INTEGER   :: init_num_of_images = 0
 
         CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 
           ! CI_scheme = 'no-CI' | 'highest-TS' | 'all-SP' | 'manual'
@@ -987,6 +989,7 @@ MODULE input_parameters
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
           num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
           reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr, &
+          init_num_of_images, &
           trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
           w_1, w_2, lbfgs_ndim, sic_rloc, &
           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, &

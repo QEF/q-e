@@ -1,13 +1,13 @@
 !
-! Copyright (C) 2002-2004 FPMD & PWSCF group
+! Copyright (C) 2002-2004 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!---------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 MODULE read_namelists_module
-  !---------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   !  ... this module handles the reading of input namelists
   !  ... written by: Carlo Cavazzoni
@@ -67,7 +67,7 @@ MODULE read_namelists_module
 
        tstress = .FALSE.
        tprnfor = .FALSE.
-       dt  = 1.0D0
+       dt  = 1.D0
        ndr = 50
        ndw = 50
        !
@@ -115,12 +115,12 @@ MODULE read_namelists_module
        !
        ibrav  = -1
        celldm = (/ 0.D0, 0.D0, 0.D0, 0.D0, 0.D0, 0.D0 /)
-       a = 0.0D0 
-       b = 0.0D0
-       c = 0.0D0
-       cosab = 0.0D0
-       cosac = 0.0D0
-       cosbc = 0.0D0
+       a = 0.D0 
+       b = 0.D0
+       c = 0.D0
+       cosab = 0.D0
+       cosac = 0.D0
+       cosbc = 0.D0
        nat    = 0
        ntyp   = 0
        nbnd   = 0
@@ -160,13 +160,13 @@ MODULE read_namelists_module
        END IF
        IF ( prog == 'PW' ) THEN
           !
-          starting_ns_eigenvalue = -1.d0
+          starting_ns_eigenvalue = -1.D0
           U_projection_type = 'atomic'
           !
        END IF
        lda_plus_U = .FALSE.
-       Hubbard_U = 0.0D0
-       Hubbard_alpha = 0.0D0
+       Hubbard_U = 0.D0
+       Hubbard_alpha = 0.D0
        edir = 1
        emaxpos = 0.5D0
        eopreg = 0.1D0
@@ -222,9 +222,9 @@ MODULE read_namelists_module
        !
        electron_temperature = 'not_controlled' 
        ekincw = 0.001D0
-       fnosee = 1.0D0
-       ampre  = 0.0D0
-       grease = 1.0D0
+       fnosee = 1.D0
+       ampre  = 0.D0
+       grease = 1.D0
        IF ( prog == 'PW' ) THEN
           !
           startingwfc = 'atomic'
@@ -239,25 +239,25 @@ MODULE read_namelists_module
        conv_thr = 1.D-6
        empty_states_nbnd = 0
        empty_states_maxstep = 100
-       empty_states_delt = 0.0D0
-       empty_states_emass = 0.0D0
-       empty_states_ethr = 0.0D0
+       empty_states_delt = 0.D0
+       empty_states_emass = 0.D0
+       empty_states_ethr = 0.D0
        diis_size = 4
        diis_nreset = 3
-       diis_hcut = 1.0D0
-       diis_wthr = 0.0D0
-       diis_delt = 0.0D0
+       diis_hcut = 1.D0
+       diis_wthr = 0.D0
+       diis_delt = 0.D0
        diis_maxstep = 100
        diis_rot = .FALSE.
-       diis_fthr = 0.0D0
-       diis_temp = 0.0D0
-       diis_achmix = 0.0D0
-       diis_g0chmix = 0.0D0
-       diis_g1chmix = 0.0D0
+       diis_fthr = 0.D0
+       diis_temp = 0.D0
+       diis_achmix = 0.D0
+       diis_g0chmix = 0.D0
+       diis_g1chmix = 0.D0
        diis_nchmix = 3
        diis_nrot = 3
-       diis_rothr  = 0.0D0
-       diis_ethr   = 0.0D0
+       diis_rothr  = 0.D0
+       diis_ethr   = 0.D0
        diis_chguess = .FALSE.
        mixing_mode = 'plain'
        mixing_fixed_ns = 0
@@ -268,9 +268,9 @@ MODULE read_namelists_module
        diago_cg_maxiter = 20
        diago_david_ndim = 4
        diago_diis_ndim = 3
-
+       !
        sic = 'none' 
-       sic_epsilon = 1.d0
+       sic_epsilon = 1.D0
        force_pairing = .false.
        ! 
        RETURN
@@ -310,11 +310,11 @@ MODULE read_namelists_module
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
        !
        ion_temperature         = 'not_controlled'
-       tempw                   = 300.0D0
-       fnosep                  = 1.0D0
+       tempw                   = 300.D0
+       fnosep                  = 1.D0
        tranp                   = .FALSE.
-       amprp                   = 0.0D0
-       greasp                  = 1.0D0
+       amprp                   = 0.D0
+       greasp                  = 1.D0
        tolp                    = 100.D0
        ion_nstepe              = 1
        ion_maxstep             = 100
@@ -327,13 +327,12 @@ MODULE read_namelists_module
        !
        num_of_images   = 0
        first_last_opt  = .FALSE.
-       reset_vel       = .FALSE.
-       use_multistep   = .FALSE.
+       reset_vel       = .FALSE.       
        write_save      = .FALSE.
        opt_scheme      = 'quick-min'
        damp            = 1.D0
        temp_req        = 0.D0
-       ds              = 1.5D0
+       ds              = 1.D0
        path_thr        = 0.05D0
        !
        ! ... NEB specific
@@ -344,42 +343,43 @@ MODULE read_namelists_module
        !
        ! ... Fourier-SMD specific
        !
-       
+       init_num_of_images = 3
+       use_multistep      = .FALSE.
        !
        ! ... BFGS defaults
        !
-       lbfgs_ndim       = 1                            
-       trust_radius_max = 0.5D0
+       lbfgs_ndim       = 1
+       trust_radius_max = 0.8D0
        trust_radius_min = 1.D-5
        trust_radius_ini = 0.5D0
-       trust_radius_end = 1.D-7                               
-       w_1              = 0.5D-1
-       w_2              = 0.5D0 
+       trust_radius_end = 1.D-7
+       w_1              = 0.01D0
+       w_2              = 0.50D0
        !
-       sic_rloc    = 0.0D0
+       sic_rloc = 0.D0
        !
        ! ... SMD defaults (Y.K. 15/04/2004 )
        !
-       smd_polm              = .FALSE.
-       smd_kwnp              = 2
-       smd_linr              = .FALSE.
-       smd_stcd              = .FALSE.
-       smd_stcd1             = 0
-       smd_stcd2             = 0
-       smd_stcd3             = 0
-       smd_codf              = 50
-       smd_forf              = 50
-       smd_smwf              = 1
-       smd_lmfreq            = 1
-       smd_tol               = 1.d-4
-       smd_maxlm             = 10
-       smd_smcp              = .TRUE.
-       smd_smopt             = .FALSE.
-       smd_smlm              = .FALSE.
-       smd_splc              = .FALSE.
-       smd_spal              = 1.d0
-       smd_ene_ini           = 1.d0
-       smd_ene_fin           = 1.d0
+       smd_polm    = .FALSE.
+       smd_kwnp    = 2
+       smd_linr    = .FALSE.
+       smd_stcd    = .FALSE.
+       smd_stcd1   = 0
+       smd_stcd2   = 0
+       smd_stcd3   = 0
+       smd_codf    = 50
+       smd_forf    = 50
+       smd_smwf    = 1
+       smd_lmfreq  = 1
+       smd_tol     = 1.D-4
+       smd_maxlm   = 10
+       smd_smcp    = .TRUE.
+       smd_smopt   = .FALSE.
+       smd_smlm    = .FALSE.
+       smd_splc    = .FALSE.
+       smd_spal    = 1.D0
+       smd_ene_ini = 1.D0
+       smd_ene_fin = 1.D0
        !
        RETURN
        !
@@ -409,22 +409,22 @@ MODULE read_namelists_module
        ! ... ( 'zero' | 'default' )
        !
        cell_velocities = 'default' 
-       press = 0.0D0
-       wmass = 0.0D0
+       press = 0.D0
+       wmass = 0.D0
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
        !
        cell_temperature = 'not_controlled'
-       temph = 0.0D0
-       fnoseh = 1.0D0
-       greash = 1.0D0
+       temph = 0.D0
+       fnoseh = 1.D0
+       greash = 1.D0
        !
        ! ... ('all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz' )
        !
        cell_dofree = 'all' 
-       cell_factor = 0.0D0
+       cell_factor = 0.D0
        cell_nstepe = 1
-       cell_damping = 0.0D0
+       cell_damping = 0.D0
        !
        RETURN
        !
@@ -446,7 +446,7 @@ MODULE read_namelists_module
        !
        !
        modenum = 0
-       xqq = 0.0D0
+       xqq = 0.D0
        ! 
        RETURN
        !
@@ -705,6 +705,7 @@ MODULE read_namelists_module
        CALL mp_bcast( num_of_images, ionode_id )
        CALL mp_bcast( first_last_opt, ionode_id )
        CALL mp_bcast( reset_vel, ionode_id )
+       CALL mp_bcast( init_num_of_images, ionode_id )
        CALL mp_bcast( use_multistep, ionode_id )
        CALL mp_bcast( write_save, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
@@ -883,12 +884,12 @@ MODULE read_namelists_module
            CALL errore( sub_name,' isave out of range ', 1 )
        END IF
  
-       IF( dt < 0.0d0 ) &
+       IF( dt < 0.D0 ) &
           CALL errore( sub_name,' dt out of range ', 1 )
-       IF( max_seconds < 0.0d0 ) &
+       IF( max_seconds < 0.D0 ) &
           CALL errore( sub_name,' max_seconds out of range ', 1 )
 
-       IF( ekin_conv_thr < 0.0d0 ) THEN
+       IF( ekin_conv_thr < 0.D0 ) THEN
           IF( prog == 'PW' ) THEN
             CALL infomsg( sub_name,' ekin_conv_thr not used in PW ', 1 )
           ELSE 
@@ -896,9 +897,9 @@ MODULE read_namelists_module
           END IF
        END IF
 
-       IF( etot_conv_thr < 0.0d0 ) &
+       IF( etot_conv_thr < 0.D0 ) &
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
-       IF( forc_conv_thr < 0.0d0 ) &
+       IF( forc_conv_thr < 0.D0 ) &
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'FP' .OR. prog == 'CP' ) THEN
           IF( tefield ) & 
@@ -972,9 +973,9 @@ MODULE read_namelists_module
        IF( nspin < 1 .OR. nspin > nspinx ) &
           CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )
        !
-       IF( ecutwfc <= 0.0d0 ) &
+       IF( ecutwfc <= 0.D0 ) &
           CALL errore( sub_name ,' ecutwfc out of range ',1)
-       IF( ecutrho < 0.0d0 ) &
+       IF( ecutrho < 0.D0 ) &
           CALL errore( sub_name ,' ecutrho out of range ',1)
        !
        IF( prog == 'FP' ) THEN
@@ -990,13 +991,7 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' nr2s is not used in FPMD ', nr2s)
           IF( nr3s /= 0 ) &
              CALL infomsg( sub_name ,' nr3s is not used in FPMD ', nr3s)
-          ! IF( nr1b /= 0 ) &
-          !    CALL infomsg( sub_name ,' nr1b is not used in FPMD ', nr1b)
-          ! IF( nr2b /= 0 ) &
-          !    CALL infomsg( sub_name ,' nr2b is not used in FPMD ', nr2b)
-          ! IF( nr3b /= 0 ) &
-          !    CALL infomsg( sub_name ,' nr3b is not used in FPMD ', nr3b)
-          IF( degauss /= 0.0d0 ) &
+          IF( degauss /= 0.D0 ) &
              CALL infomsg( sub_name ,' degauss is not used in FPMD ',-1)
        END IF
        !
@@ -1004,70 +999,81 @@ MODULE read_namelists_module
           CALL errore( sub_name ,' nelup out of range ',1)
        IF( neldw < 0.d0 .OR. neldw > nelec ) &
           CALL errore( sub_name ,' neldw out of range ',1)
-       IF( ecfixed < 0.0d0 ) &
+       IF( ecfixed < 0.D0 ) &
           CALL errore( sub_name ,' ecfixed out of range ',1)
-       IF( qcutz < 0.0d0 ) &
+       IF( qcutz < 0.D0 ) &
           CALL errore( sub_name ,' qcutz out of range ',1)
-       IF( q2sigma < 0.0d0 ) &
+       IF( q2sigma < 0.D0 ) &
           CALL errore( sub_name ,' q2sigma out of range ',1)
        IF( prog == 'FP' ) THEN
-          IF( ANY(starting_magnetization /= 0.0d0) ) &
+          IF( ANY(starting_magnetization /= 0.D0) ) &
              CALL infomsg( sub_name ,&
                           & ' starting_magnetization is not used in FPMD ',-1)
           IF( lda_plus_U ) &
              CALL infomsg( sub_name ,' lda_plus_U is not used in FPMD ',-1)
-          IF( ANY(Hubbard_U /= 0.0d0) ) &
+          IF( ANY(Hubbard_U /= 0.D0) ) &
              CALL infomsg( sub_name ,' Hubbard_U is not used in FPMD ',-1)
-          IF( ANY(Hubbard_alpha /= 0.0d0) ) &
+          IF( ANY(Hubbard_alpha /= 0.D0) ) &
              CALL infomsg( sub_name ,' Hubbard_alpha is not used in FPMD ',-1)
           IF( nosym ) &
              CALL infomsg( sub_name ,' nosym not implemented in FPMD ', -1)
        END IF
+       !
        IF( prog == 'PW' ) THEN
           !
-          ! stop if starting_magnetization is set to -2 for all atomic types
+          ! ... stop if starting_magnetization is set to -2 for
+          ! ... all atomic types
           !
-          IF( nspin == 2 .AND. SUM(starting_magnetization) ==-2.0d0 * &
-              SIZE(starting_magnetization) ) CALL errore( sub_name ,&
-               & ' starting_magnetization MUST be set ', 1)
+          IF ( ( nspin == 2 ) .AND. &
+               ( SUM( starting_magnetization ) == -2.D0 * &
+                                           SIZE( starting_magnetization ) ) ) &
+            CALL errore( sub_name ,' starting_magnetization MUST be set ', 1 )
+          !
        END IF
        !
        ! ... non collinear check
        !
        IF ( noncolin ) THEN
-          IF (diagonalization == 'cg') &
+          !
+          IF ( diagonalization == 'cg' ) &
              CALL errore( sub_name ,' cg not allowed with noncolin ', 1 )
-          IF (diagonalization == 'diis') &
+          !
+          IF ( diagonalization == 'diis' ) &
              CALL errore( sub_name ,' diis not allowed with noncolin ', 1 )
+          !
           IF ( i_cons < 0 .OR. i_cons > 2 ) &
              CALL errore( sub_name ,' wrong i_cons ', 1 )
+          !
        END IF       
-
-!!control on SIC variables
-       IF (sic /='none' ) then
-          IF (sic_epsilon > 1.d0 )  &
-           CALL errore( sub_name, &
-                       & ' invalid sic_epsilon, greater than 1.',1)
+       !
+       ! ... control on SIC variables
+       !
+       IF ( sic /= 'none' ) THEN
+          !
+          IF (sic_epsilon > 1.D0 )  &
+             CALL errore( sub_name, &
+                        & ' invalid sic_epsilon, greater than 1.',1 )
           IF (sic_epsilon < 0.d0 )  &
-           CALL errore( sub_name, &
-                       & ' invalid sic_epsilon, less than 0 ',1)
-
+             CALL errore( sub_name, &
+                        & ' invalid sic_epsilon, less than 0 ',1 )
+          !
           IF ( .NOT. force_pairing ) &
-           CALL errore( sub_name, &
-                       & ' invalid force_pairing with sic activated', 1)
-          IF ( nspin /= 2) &
-           CALL errore( sub_name, &
-                       & ' invalid nspin with sic activated', 1)
-          IF ( (nelup == 0) .AND. (neldw == 0) ) &
-           CALL errore( sub_name, &
-                      & ' invalid nelup and neldwn spin with sic activated', 1)
+             CALL errore( sub_name, &
+                        & ' invalid force_pairing with sic activated', 1 )
+          IF ( nspin /= 2 ) &
+             CALL errore( sub_name, &
+                        & ' invalid nspin with sic activated', 1 )
+          IF ( ( nelup == 0 ) .AND. ( neldw == 0 ) ) &
+             CALL errore( sub_name, &
+                      & ' invalid nelup and neldwn spin with sic activated', 1 )
           IF ( nelup /= (neldw + 1) )   &
-           CALL errore( sub_name, &
-                       & ' invalid nelup /= (neldwn +1) spin with sic activated', 1)
-          
-       ENDIF  !! on sic_control 
- 
+             CALL errore( sub_name, &
+                  & ' invalid nelup /= (neldwn +1) spin with sic activated', 1 )
+          !  
+       ENDIF
+       !
        RETURN
+       !
      END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
@@ -1096,17 +1102,17 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' electron_dynamics '''//&
                        & TRIM(electron_dynamics)//''' not allowed ',1)
-       IF( emass <= 0.0d0 ) &
+       IF( emass <= 0.D0 ) &
           CALL errore( sub_name, ' emass less or equal 0 ',1)
-       IF( emass_cutoff <= 0.0d0 ) &
+       IF( emass_cutoff <= 0.D0 ) &
           CALL errore( sub_name, ' emass_cutoff less or equal 0 ',1)
-       IF( ortho_eps <= 0.0d0 ) &
+       IF( ortho_eps <= 0.D0 ) &
           CALL errore( sub_name, ' ortho_eps less or equal 0 ',1)
        IF( ortho_max < 1 ) &
           CALL errore( sub_name, ' ortho_max less than 1 ',1)
-       IF( fnosee <= 0.0d0 ) &
+       IF( fnosee <= 0.D0 ) &
           CALL errore( sub_name, ' fnosee less or equal 0 ',1)
-       IF( ekincw <= 0.0d0 ) &
+       IF( ekincw <= 0.D0 ) &
           CALL errore( sub_name, ' ekincw less or equal 0 ',1)
        IF( empty_states_nbnd < 0 ) &
           CALL errore( sub_name, &
@@ -1114,13 +1120,13 @@ MODULE read_namelists_module
        IF( empty_states_maxstep < 0 ) &
           CALL errore( sub_name,&
                        & ' invalid empty_states_maxstep, less than 0 ',1)
-       IF( empty_states_delt < 0.0d0 ) &
+       IF( empty_states_delt < 0.D0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_delt, less than 0 ',1)
-       IF( empty_states_emass < 0.0d0 ) &
+       IF( empty_states_emass < 0.D0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_emass, less than 0 ',1)
-       IF( empty_states_ethr < 0.0d0 ) &
+       IF( empty_states_ethr < 0.D0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_ethr, less than 0 ',1)
 
@@ -1153,9 +1159,9 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' ion_dynamics '''// &
                        & TRIM(ion_dynamics)//''' not allowed ',1)
-       IF( tempw <= 0.0d0 ) &
+       IF( tempw <= 0.D0 ) &
           CALL errore( sub_name,' tempw out of range ',1)
-       IF( fnosep <= 0.0d0 ) &
+       IF( fnosep <= 0.D0 ) &
           CALL errore( sub_name,' fnosep out of range ',1)
        IF( ion_nstepe <= 0 ) &
           CALL errore( sub_name,' ion_nstepe out of range ',1)
@@ -1250,10 +1256,10 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' cell_dynamics '''// &
                        TRIM(cell_dynamics)//''' not allowed ',1)
-       IF( wmass < 0.0d0 ) &
+       IF( wmass < 0.D0 ) &
           CALL errore( sub_name,' wmass out of range ',1)
        IF( prog == 'FP' ) THEN
-          IF( cell_factor /= 0.0d0 ) &
+          IF( cell_factor /= 0.D0 ) &
              CALL infomsg( sub_name,' cell_factor not used in FPMD ',-1)
        END IF
        IF( cell_nstepe <= 0 ) &

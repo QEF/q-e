@@ -45,10 +45,10 @@ MODULE constants
   REAL(dbl), PARAMETER :: KB_AU            = 1.0D0/294210.0D0 ! au
   REAL(dbl), PARAMETER :: AU_GPA           = 29421.0D0      ! GPa
   REAL(dbl), PARAMETER :: GPA_AU           = 1.0D0/29421.0D0  ! au
-  REAL(dbl), PARAMETER :: AU               = 27.212D0    ! eV
-  REAL(dbl), PARAMETER :: RY               = 13.606D0    ! eV
-  ! REAL(dbl), PARAMETER :: AU               = 27.211652D0    ! eV
-  ! REAL(dbl), PARAMETER :: RY               = 13.605826D0    ! eV
+  ! REAL(dbl), PARAMETER :: AU               = 27.212D0    ! eV
+  ! REAL(dbl), PARAMETER :: RY               = 13.606D0    ! eV
+  REAL(dbl), PARAMETER :: AU               = 27.211652D0    ! eV
+  REAL(dbl), PARAMETER :: RY               = 13.605826D0    ! eV
   REAL(dbl), PARAMETER :: SCMASS           = 1822.89D0   ! uma to au ( mass of a proton )
   REAL(dbl), PARAMETER :: UMA_AU           = 1822.89D0   ! au
   REAL(dbl), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! THz

@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#define NEW_INTERPOLATION
+#define __MIXEDBFGSMS
 !
 !----------------------------------------------------------------------------
 MODULE bfgs_module
@@ -297,58 +297,6 @@ MODULE bfgs_module
          lin_iter  = 1
          bfgs_iter = bfgs_iter + 1
          !
-#if defined (NEW_INTERPOLATION)
-         !
-         ! ... whenever possible the best guess of the minimum along the 
-         ! ... search direction is obtained with a quadratic interpolation
-         !
-         dEs = ( bfgs_step_old .dot. gradient )
-         !
-         IF ( ( bfgs_iter > 1 ) .AND. ( dEs >= 0.D0 ) ) THEN
-            !
-            ! ... E(s) = a*s*s + b*s + c      ( we use E(0), dE(s'), E(s') )
-            !
-            E_diff = ( energy - energy_old )
-            !
-            den = ( dEs - E_diff )
-            !              
-            IF ( den > eps16 ) THEN
-               !
-               ! ... interpolation
-               !
-               WRITE( UNIT = stdout, &
-                    & FMT = '(5X,"interpolation ...",/)' )
-               !
-               num = ( 2.D0 * E_diff - dEs )
-               !
-               bfgs_dir = bfgs_step_old / trust_radius_old
-               !
-               trust_radius = - 0.5D0 * trust_radius_old * num / den
-               !
-               energy = energy_old - 0.25D0 * num**2 / den
-               !
-               pos = pos_old(:,1) + trust_radius * bfgs_dir
-               !
-               ratio = trust_radius / trust_radius_old
-               !
-               gradient = ratio * gradient + &
-                    ( 1.D0 - ratio ) * gradient_old(:,1)
-               !
-               trust_radius_old = trust_radius
-               !
-               WRITE( UNIT = stdout, &
-                    & FMT = '(5X,"best energy",T30,"= ",F18.10," ryd")' ) &
-                    energy
-               WRITE( UNIT = stdout, &
-                    & FMT = '(5X,"Total force",T30,"= ",F18.10," ryd",/)' ) &
-                    norm( gradient ) 
-               !
-            END IF
-            !
-         END IF
-         !
-#endif
-         !
          IF ( bfgs_iter > 1 ) THEN
             !
             step_accepted = .TRUE.
@@ -370,7 +318,7 @@ MODULE bfgs_module
                !
             END IF
             !
-            CALL update_inverse_hessian( gradient, dim, stdout )
+            CALL update_inverse_hessian( pos, gradient, dim, stdout )
             !
          ELSE
             !
@@ -962,24 +910,27 @@ MODULE bfgs_module
     END SUBROUTINE write_lbfgs_file
     !
     !------------------------------------------------------------------------
-    SUBROUTINE update_inverse_hessian( gradient, dim, stdout )
+    SUBROUTINE update_inverse_hessian( pos, gradient, dim, stdout )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
+      REAL(KIND=DP), INTENT(IN)  :: pos(:)
       REAL(KIND=DP), INTENT(IN)  :: gradient(:)   
       INTEGER,       INTENT(IN)  :: dim
       INTEGER,       INTENT(IN)  :: stdout
       !
       ! ... local variables
       !
-      REAL(KIND=DP) :: y(dim)
-      REAL(KIND=DP) :: sdoty
+      REAL(KIND=DP) :: y(dim), s(dim), Hs(dim), Hy(dim), yH(dim), aux(dim)
+      REAL(KIND=DP) :: H_bfgs(dim,dim), H_ms(dim,dim)
+      REAL(KIND=DP) :: sdoty, coeff
       !
       !
-      y = gradient - gradient_old(:,lbfgs_ndim)
+      s(:) = pos(:) - pos_old(:,lbfgs_ndim)
+      y(:) = gradient(:) - gradient_old(:,lbfgs_ndim)
       !
-      sdoty = ( bfgs_step_old .dot. y )
+      sdoty = ( s(:) .dot. y(:) )
       !
       IF ( ABS( sdoty ) < eps16 ) THEN
          !
@@ -995,11 +946,49 @@ MODULE bfgs_module
          !
       END IF
       !
+      Hs(:) = ( inverse_hessian .times. s(:) )
+      Hy(:) = ( inverse_hessian .times. y(:) )
+      yH(:) = ( y(:) .times. inverse_hessian )
+      !
+#if defined (__DFP)
+      !
+      ! ... DFP update
+      !
       inverse_hessian = inverse_hessian + &
-           ( 1.D0 + ( y .dot. ( inverse_hessian .times. y ) ) / sdoty ) * &
-           matrix( bfgs_step_old, bfgs_step_old ) / sdoty -               &
-           ( matrix( bfgs_step_old, ( y .times. inverse_hessian ) ) +     &
-           matrix( ( inverse_hessian .times. y ), bfgs_step_old ) ) / sdoty
+                        matrix( y(:), y(:) ) / sdoty - &
+                        matrix( Hs(:), Hs(:) ) / ( s(:) .dot. Hs(:) )
+      !
+#endif
+      !
+#if defined (__BFGS)
+      !
+      ! ... BFGS update
+      !
+      inverse_hessian = inverse_hessian + 1.D0 / sdoty * &
+                      ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s )  - &
+                        ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+#endif
+      !
+#if defined (__MIXEDBFGSMS)
+      !
+      ! ... BFGS + Murtag-Sargent update
+      !
+      aux(:) = y(:) - Hs(:)
+      !
+      coeff = ABS( s .dot. aux )/ ( norm( s ) * norm( aux ) )
+      !
+      H_bfgs = 1.D0 / sdoty * &
+               ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s )  - &
+                 ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+      !
+      H_ms = matrix( aux, aux ) / ( s .dot. aux )
+      !
+      inverse_hessian = inverse_hessian + &
+                        coeff * H_bfgs + ( 1.D0 - coeff) * H_ms
+      !
+#endif
+      !
+      RETURN
       !
     END SUBROUTINE update_inverse_hessian
     !
@@ -1118,12 +1107,12 @@ MODULE bfgs_module
       !
       ltest = ( energy - energy_old ) < &
               w_1 * ( gradient_old(:,1) .dot. bfgs_step_old )
-      !       
+      !
       ltest = ltest .AND. ( norm( bfgs_step ) > trust_radius_old )
       !
       IF ( ltest ) THEN
          !
-         a = 1.25D0
+         a = 1.3D0
          !
       ELSE
          !

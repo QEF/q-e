@@ -1023,9 +1023,10 @@ MODULE path_io_routines
        USE control_flags,  ONLY : lneb, lsmd
        USE path_variables, ONLY : num_of_modes, num_of_images, error, &
                                   path_length, activation_energy, pes, &
-                                  pos, ft_pos, ft_grad, frozen, ft_frozen, &
+                                  pos, frozen, ft_pos, ft_pes, ft_grad, &
                                   ft_error, first_last_opt
-       USE path_formats,   ONLY : neb_run_output, smd_run_output
+       USE path_formats,   ONLY : real_space_run_info, real_space_run_output, &
+                                  fourier_run_info, fourier_run_output
        USE io_global,      ONLY : meta_ionode
        !
        IMPLICIT NONE
@@ -1049,6 +1050,8 @@ MODULE path_io_routines
        !
        IF ( lneb ) THEN
           !
+          WRITE( UNIT = iunpath, FMT = real_space_run_info )
+          !
           path_length = 0.D0
           !
           DO image = 1, num_of_images
@@ -1057,8 +1060,8 @@ MODULE path_io_routines
                 path_length = path_length + &
                               norm( pos(:,image) - pos(:,image-1) )
              !
-             WRITE( UNIT = iunpath, FMT = neb_run_output ) &
-                 image, pes(image) * au, error(image)
+             WRITE( UNIT = iunpath, FMT = real_space_run_output ) &
+                 image, pes(image) * au, error(image), frozen(image)
              !
           END DO
           !
@@ -1069,25 +1072,35 @@ MODULE path_io_routines
                          & T26," = ",F6.3," bohr")' ) path_length   
           WRITE( UNIT = iunpath, &
                  FMT = '(5X,"inter-image distance", &
-                       & T26," = ",F6.3," bohr")' ) inter_image_distance
+                         & T26," = ",F6.3," bohr")' ) inter_image_distance
           !
        ELSE IF ( lsmd ) THEN
           !
           IF ( first_last_opt ) THEN
              !
-             WRITE( UNIT = iunpath, FMT = neb_run_output ) &
-                 1, pes(1) * au, error(1)
-             WRITE( UNIT = iunpath, FMT = neb_run_output ) &
-                 num_of_images, pes(num_of_images) * au, error(num_of_images)   
+             WRITE( UNIT = iunpath, FMT = real_space_run_info )
+             !
+             image = 1
+             !
+             WRITE( UNIT = iunpath, FMT = real_space_run_output ) &
+                 image, pes(image) * au, error(image), frozen(image)
+             !
+             image = num_of_images
+             !
+             WRITE( UNIT = iunpath, FMT = real_space_run_output ) &
+                 image, pes(image) * au, error(image), frozen(image)
              !
              WRITE( UNIT = iunpath, FMT = * )
              !
           END IF
           !
+          WRITE( UNIT = iunpath, FMT = fourier_run_info )
+          !
           DO mode = 1, num_of_modes
              !
-             WRITE( UNIT = iunpath, FMT = smd_run_output ) &
-                 mode, norm( ft_pos(:,mode) ), ft_error(mode)
+             WRITE( UNIT = iunpath, FMT = fourier_run_output ) &
+                 mode, norm( ft_pos(:,mode) ), &
+                 ABS( ft_pes(mode) ), norm( ft_grad(:,mode) ), ft_error(mode)
              !
           END DO
           !
@@ -1114,8 +1127,7 @@ MODULE path_io_routines
        !
        DO na = 1, nat
           !
-          WRITE( iunpath,'(A3,3X,3F14.9)') &
-              atm(ityp(na)), pos_ts(:,na)
+          WRITE( iunpath, '(A3,3X,3F14.9)' ) atm(ityp(na)), pos_ts(:,na)
           !
        END DO
        !

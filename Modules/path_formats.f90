@@ -1,16 +1,17 @@
 !
-! Copyright (C) 2003-2004 PWSCF group
+! Copyright (C) 2003-2004 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!--------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 MODULE path_formats
-  !---------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   ! ... this module contains the I/O formats used by all "path"-routines
+  !
+  ! ... Written by Carlo Sbraccia ( 2003-2004 )
   !
   CHARACTER (LEN=*), PARAMETER :: &
     lattice_vectors  = "(3(2X,F14.10),/,3(2X,F14.10),/,3(2X,F14.10))"
@@ -29,18 +30,31 @@ MODULE path_formats
     xyz_fmt  = "(A2,3(2X,F14.10))", &
     axsf_fmt = "(A2,6(2X,F14.10))"
   !  
-  CHARACTER (LEN=*), PARAMETER :: &  
-    scf_iter_fmt       = "(/,5X,30('-'),(1X,'iteration ',I3,1X),30('-'),/)", &
-    scf_fmt            = "(5X,'tcpu = ',F8.1," // &
-                       & "';  self-consistency for image ', I3)", &
-    scf_fmt_para       = "(5X,'cpu = ',I2,'; tcpu = ',F8.1," // &
-                       & "';  self-consistency for image ', I3)", &
-    neb_run_output     = "(5X,'image: ',I2,'   E tot = ',F16.8," // &
-                       & "' eV   error = ',F8.4,' eV / A')", &
-    smd_run_output     = "(5X,'mode = ',I2,3X,'|ft_pos| = '," // &
-                       & "F10.6,3X,'error = ',F8.4,' eV / A')"                    
+  CHARACTER (LEN=*), PARAMETER :: &
+    scf_iter_fmt = "(/,5X,30('-'),(1X,'iteration ',I3,1X),30('-'),/)", &
+    scf_fmt      = "(5X,'tcpu = ',F8.1," // &
+                 & "'    self-consistency for image ', I3)", &
+    scf_fmt_para = "(5X,'cpu = ',I2,'   tcpu = ',F8.1," // &
+                 & "'    self-consistency for image ', I3)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
-    summary_fmt = "(5X,A,T35,' = ',X,A)"      
+    real_space_run_info = "(5X,'image',8X,'energy (eV)',8X," // &
+                        & "    'error (eV/A)',8X,'frozen',/)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    real_space_run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    fourier_run_info = "(5X,'mode',6X,'|FT[x(s)]|',6X," // &
+                     & "    '|FT[V(x(s))]|',6X,'|FT[F(x(s))]|',8X,'error',/)"  
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    fourier_run_output = "(5X,I4,6X,F10.6,9X,F10.6,9X,F10.6,5X,F8.3)"
+  !    
+  CHARACTER (LEN=*), PARAMETER :: &
+    summary_fmt = "(5X,A,T35,' = ',X,A)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    final_fmt = "(/,5X,75('-'),/)"
   !
 END MODULE path_formats

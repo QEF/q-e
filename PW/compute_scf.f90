@@ -33,13 +33,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE extfield,         ONLY : tefield, forcefield
   USE io_files,         ONLY : prefix, tmp_dir, &
                                iunpath, iunupdate, exit_file, iunexit
-  USE io_global,        ONLY : stdout
-  USE path_formats,     ONLY : scf_iter_fmt, scf_fmt, scf_fmt_para
+  USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, num_of_images, &
                                dim, suspended_image, istep_path,  &
                                first_last_opt, frozen, write_save
   USE parser,           ONLY : int_to_char
-  USE io_global,        ONLY : ionode, ionode_id, meta_ionode
+  USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
