@@ -729,7 +729,7 @@
           ! 'default' restart using cell velocity of the previous run
 
         REAL(dbl) :: press
-          ! external pressure (in kilobars: 1 kbar = 10^8 Pa)
+          ! external pressure (in GPa: 1GPa = 10 kbar)
 
         REAL(dbl) :: wmass
           ! effective cell mass in the Parrinello-Rahman Lagrangian (in atomic units)

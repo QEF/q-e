@@ -7,8 +7,13 @@
             - Zero velocities after a restart implemented in CP
             - Nose and damped dynamics for cell implemented
               in FPMD like in CP
+            - CP main subroutine simplified
             Various GUI changes (TK)
-            Minor ouput fornat change (PG)
+            Minor output format change, examples updated (PG)
+            DIIS: small bug-fix and general clean-up of the code.
+            ionode substituted by meta_ionode (this because in neb and 
+            smd all images have an ionode, but only one image, the one
+            identified by meta_ionode, can check stop). (C.S.)
 
  8 Sep 2004 configure.old, documentation for configure updated [Gerardo]
             moved install/README.install to README.install_old [Gerardo]
