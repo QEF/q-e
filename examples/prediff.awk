@@ -216,6 +216,14 @@ function check_line()
     {
       print_key("EFINAL");
     }
+  else if (match($0, "unit-cell volume"))
+    {
+      print_key("UNITCELL");
+    }
+  else if (match($0, "lambda.*gamma"))
+    {
+      print_key("LAMBDA");
+    }
   else
     {
       # unrecognized type of line, print as is

@@ -506,6 +506,46 @@ function check_key()
       # check passed
       return 1;
     }
+  else if (key == "UNITCELL")
+    {
+      tolerance = 1e-4;
+
+      # there must be exactly one line
+      if (i1 != 1 || i2 != 1)
+	return 0;
+
+      split(line1[0], x1);
+      split(line2[0], x2);
+      if (check_tol(x1[6] - x2[6], tolerance))
+	return 0;
+
+      # check passed
+      return 1;
+    }
+  else if (key == "LAMBDA")
+    {
+      tolerance_lambda = 2e-6;
+      tolerance_gamma  = 1e-4;
+
+      # number of lines must match
+      if (i1 != i2)
+	return 0;
+
+      # all pairs of lines must match
+      for (j=0; j<i1; j++)
+	{
+	  # all components must match
+	  split(line1[j], x1);
+	  split(line2[j], x2);
+	  if (check_tol(x1[5] - x2[5], tolerance_lambda))
+	    return 0;
+	  if (check_tol(x1[7] - x2[7], tolerance_gamma))
+	    return 0;
+	}
+
+      # check passed
+      return 1;
+    }
   else if (key == "CHECKPOINT")
     {
       return 1;
