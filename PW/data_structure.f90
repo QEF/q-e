@@ -237,7 +237,7 @@ subroutine data_structure( lgamma )
        tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, (me_pool+1), &
        nproc_pool, ub, lb, index, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
   CALL fft_dlay_set( dffts, &
-       tk, nct, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx2s, (me_pool+1), &
+       tk, ncts, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx2s, (me_pool+1), &
        nproc_pool, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
 
   !
