@@ -22,6 +22,7 @@ scnds.o \
 simpsn.o \
 sort.o \
 sph_bes.o \
+sph_dbes.o \
 transto.o \
 date_and_tim.o \
 sort_gvec.o \

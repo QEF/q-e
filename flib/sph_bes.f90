@@ -1,247 +1,283 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF-FPMD-CP90 group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!--------------------------------------------------------------------
-subroutine sph_bes (msh, r, q, l, jl)
-  !--------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE sph_bes( msh, r, q, l, jl )
+  !----------------------------------------------------------------------------
   !
-  ! input:
-  !   msh     = number of grid points points
-  !   r(1:msh)= radial grid
-  !   q       = q
-  !   l       = angular momentum (-1 <= l <= 6)
-  ! output:
-  !   jl(1:msh) = j_l(q*r(i))  (j_l = spherical bessel function)
+  ! ... input:
+  ! ...   msh     = number of grid points points
+  ! ...   r(1:msh)= radial grid
+  ! ...   q       = q
+  ! ...   l       = angular momentum (-1 <= l <= 6)
+  ! ... output:
+  ! ...   jl(1:msh) = j_l(q*r(i))  (j_l = spherical bessel function)
   !
-  use kinds, only: DP
-  implicit none
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : eps8
   !
-  integer :: msh, l
-  real(kind=DP) :: r (msh), q, jl (msh)
+  IMPLICIT NONE
   !
-  real(kind=DP), parameter :: eps = 1.d-8
-  integer :: ir, ir0
+  INTEGER :: msh, l
+  REAL(kind=DP) :: r(msh), q, jl(msh)
   !
-#if defined __MASS
-  real(kind=DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
+  INTEGER :: ir, ir0
+  !
+#if defined (__MASS)
+  REAL(kind=DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
 #endif
   !
-  if (abs (q) < eps) then
-     if (l == -1) then
-        call errore ('sph_bes', 'j_{-1}(0) ?!?', 1)
-     elseif (l == 0) then
-        jl(:) = 1.d0
-     else
-        jl(:) = 0.d0
-     endif
-  else
-     if (abs (q * r (1) ) > eps) then
+  IF ( ABS( q ) < eps8 ) THEN
+     !
+     IF ( l == -1 ) THEN
+        !
+        CALL errore( 'sph_bes', 'j_{-1}(0) ?!?', 1 )
+        !
+     ELSE IF ( l == 0 ) THEN
+        !
+        jl(:) = 1.D0
+        !
+     ELSE
+        !
+        jl(:) = 0.D0
+        !
+     END IF
+     !
+  ELSE
+     !
+     IF ( ABS( q*r(1) ) > eps8 ) THEN
+        !
         ir0 = 1
-     else
-        if (l == -1) then
-           call errore ('sph_bes', 'j_{-1}(0) ?!?', 2)
-        elseif (l == 0) then
-           jl (1) = 1.d0
-        else
-           jl (1) = 0.d0
-        endif
+        !
+     ELSE
+        !
+        IF (l == -1) THEN
+           !
+           CALL errore( 'sph_bes', 'j_{-1}(0) ?!?', 2 )
+           !
+        ELSE IF ( l == 0 ) THEN
+           !
+           jl(1) = 1.D0
+           !
+        ELSE
+           !
+           jl(1) = 0.D0
+           !
+        ENDIF
+        !
         ir0 = 2
-     endif
-
-     if (l == - 1) then
-
-#if defined __MASS
-
+        !
+     END IF
+     !
+     IF ( l == - 1 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh)
+        !
+        DO ir = ir0, msh
            jl (ir) = cos_qr(ir) / (q * r (ir) )
-        enddo
-
+        END DO
+         !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = cos (q * r (ir) ) / (q * r (ir) )
-        enddo
-
+        !
+        DO ir = ir0, msh
+           jl (ir) = COS (q * r (ir) ) / (q * r (ir) )
+        END DO
+        !
 #endif
-
-     elseif (l == 0) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 0 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vsin( sin_qr, qr, msh)
+        !
+        DO ir = ir0, msh
            jl (ir) = sin_qr(ir) / (q * r (ir) )
-        enddo
-
+        END DO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = sin (q * r (ir) ) / (q * r (ir) )
-        enddo
-
+        !
+        DO ir = ir0, msh
+           jl (ir) = SIN (q * r (ir) ) / (q * r (ir) )
+        END DO
+        !
 #endif
-
-     elseif (l == 1) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 1 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh)
+        CALL vsin( sin_qr, qr, msh)
+        !
+        DO ir = ir0, msh
            jl (ir) = ( sin_qr(ir) / (q * r (ir) ) - cos_qr(ir) ) / (q * r (ir) )
-        enddo
-
+        END DO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = (sin (q * r (ir) ) / (q * r (ir) ) - cos (q * r ( &
+        !
+        DO ir = ir0, msh
+           jl (ir) = (SIN (q * r (ir) ) / (q * r (ir) ) - COS (q * r ( &
                 ir) ) ) / (q * r (ir) )
-        enddo
-
+        END DO
+        !
 #endif
-
-     elseif (l == 2) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 2 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh)
+        CALL vsin( sin_qr, qr, msh)
+        !
+        DO ir = ir0, msh
            jl (ir) = ( (3.d0 / (q * r (ir) ) - (q * r (ir) ) ) * sin_qr( &
                 ir ) - 3.d0 * cos_qr(ir) ) / (q * r (ir) ) ** 2
-        enddo
-
+        END DO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = ( (3.d0 / (q * r (ir) ) - (q * r (ir) ) ) * sin ( &
-                q * r (ir) ) - 3.d0 * cos (q * r (ir) ) ) / (q * r (ir) ) ** &
-                2
-        enddo
-
+        !
+        DO ir = ir0, msh
+           jl (ir) = ( (3.d0 / (q * r (ir) ) - (q * r (ir) ) ) * SIN ( &
+                q * r (ir) ) - 3.d0 * COS (q * r (ir) ) ) / (q * r (ir) ) ** 2
+        END DO
+        !
 #endif
-
-     elseif (l == 3) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 3 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh)
+        CALL vsin( sin_qr, qr, msh)
+        !
+        DO ir = ir0, msh
            jl (ir) = (sin_qr (ir) * (15.d0 / (q * r (ir) ) &
                 - 6.d0 * (q * r (ir) ) ) + cos_qr (ir) * ( (q * r (ir) &
                 ) **2 - 15.d0) ) / (q * r (ir) ) **3
-        enddo
-
+        ENDDO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = (sin (q * r (ir) ) * (15.d0 / (q * r (ir) ) &
-                - 6.d0 * (q * r (ir) ) ) + cos (q * r (ir) ) * ( (q * r (ir) &
-                ) **2 - 15.d0) ) / (q * r (ir) ) **3
-        enddo
-
+        !
+        DO ir = ir0, msh
+           jl (ir) = (SIN (q * r (ir) ) * (15.d0 / (q * r (ir) ) &
+                - 6.d0 * (q * r (ir) ) ) + COS (q * r (ir) ) * ( (q * r (ir) &
+                ) **2 - 15.d0) ) / (q * r (ir) ) ** 3
+        END DO
+        !
 #endif
-
-     elseif (l == 4) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 4 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh)
+        CALL vsin( sin_qr, qr, msh)
+        !
+        DO ir = ir0, msh
            jl (ir) = (sin_qr (ir) * (105.d0 - 45.d0 * (q * r (ir) &
                 ) **2 + (q * r (ir) ) **4) + cos_qr (ir) * (10.d0 * &
                 (q * r (ir) ) **3 - 105.d0 * (q * r (ir) ) ) ) / (q * r (ir) &
                 ) **5
-        enddo
-
+        END DO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = (sin (q * r (ir) ) * (105.d0 - 45.d0 * (q * r (ir) &
-                ) **2 + (q * r (ir) ) **4) + cos (q * r (ir) ) * (10.d0 * &
+        !
+        DO ir = ir0, msh
+           jl (ir) = (SIN (q * r (ir) ) * (105.d0 - 45.d0 * (q * r (ir) &
+                ) **2 + (q * r (ir) ) **4) + COS (q * r (ir) ) * (10.d0 * &
                 (q * r (ir) ) **3 - 105.d0 * (q * r (ir) ) ) ) / (q * r (ir) &
                 ) **5
-        enddo
-
+        END DO
+        !
 #endif
-
-     elseif (l == 5) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 5 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh )
+        CALL vsin( sin_qr, qr, msh )
+        !
+        DO ir = ir0, msh
            jl (ir) = (-cos_qr(ir) - (945.d0*cos_qr(ir))/(q*r(ir)) ** 4 + &
                 (105.d0*cos_qr(ir))/ (q*r(ir)) ** 2 + &
                 (945.d0*sin_qr(ir))/ (q*r(ir)) ** 5 - &
                 (420.d0*sin_qr(ir))/(q*r(ir)) ** 3 + &
                 (15.d0*sin_qr(ir))/ (q*r(ir)))/(q*r(ir))
-        end do
-
+        END DO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = (-cos(q*r(ir)) - (945.d0*cos(q*r(ir)))/(q*r(ir)) ** 4 + &
-                (105.d0*cos(q*r(ir)))/ (q*r(ir)) ** 2 + &
-                (945.d0*sin(q*r(ir)))/ (q*r(ir)) ** 5 - &
-                (420.d0*sin(q*r(ir)))/(q*r(ir)) ** 3 + &
-                (15.d0*sin(q*r(ir)))/ (q*r(ir)))/(q*r(ir))
-        end do
-
+        !
+        DO ir = ir0, msh
+           jl (ir) = (-COS(q*r(ir)) - (945.d0*COS(q*r(ir)))/(q*r(ir)) ** 4 + &
+                (105.d0*COS(q*r(ir)))/ (q*r(ir)) ** 2 + &
+                (945.d0*SIN(q*r(ir)))/ (q*r(ir)) ** 5 - &
+                (420.d0*SIN(q*r(ir)))/(q*r(ir)) ** 3 + &
+                (15.d0*SIN(q*r(ir)))/ (q*r(ir)))/(q*r(ir))
+        END DO
+        !
 #endif
-
-     elseif (l == 6) then
-
-#if defined __MASS
-
+        !
+     ELSE IF ( l == 6 ) THEN
+        !
+#if defined (__MASS)
+        !
         qr = q * r
-        call vcos( cos_qr, qr, msh)
-        call vsin( sin_qr, qr, msh)
-        do ir = ir0, msh
+        !
+        CALL vcos( cos_qr, qr, msh )
+        CALL vsin( sin_qr, qr, msh )
+        !
+        DO ir = ir0, msh
            jl (ir) = ((-10395.d0*cos_qr(ir))/(q*r(ir)) ** 5 + &
                 (1260.d0*cos_qr(ir))/(q*r(ir)) ** 3 - &
                 (21.d0*cos_qr(ir))/ (q*r(ir)) - sin_qr(ir) + &
                 (10395.d0*sin_qr(ir))/(q*r(ir)) ** 6 - &
                 (4725.d0*sin_qr(ir))/ (q*r(ir)) ** 4 + &
                 (210.d0*sin_qr(ir))/(q*r(ir)) ** 2)/(q*r(ir))
-        end do
-
+        END DO
+        !
 #else
-
-        do ir = ir0, msh
-           jl (ir) = ((-10395.d0*cos(q*r(ir)))/(q*r(ir)) ** 5 + &
-                (1260.d0*cos(q*r(ir)))/(q*r(ir)) ** 3 - &
-                (21.d0*cos(q*r(ir)))/ (q*r(ir)) - sin(q*r(ir)) + &
-                (10395.d0*sin(q*r(ir)))/(q*r(ir)) ** 6 - &
-                (4725.d0*sin(q*r(ir)))/ (q*r(ir)) ** 4 + &
-                (210.d0*sin(q*r(ir)))/(q*r(ir)) ** 2)/(q*r(ir))
-        end do
-
+        !
+        DO ir = ir0, msh
+           jl (ir) = ((-10395.d0*COS(q*r(ir)))/(q*r(ir)) ** 5 + &
+                (1260.d0*COS(q*r(ir)))/(q*r(ir)) ** 3 - &
+                (21.d0*COS(q*r(ir)))/ (q*r(ir)) - SIN(q*r(ir)) + &
+                (10395.d0*SIN(q*r(ir)))/(q*r(ir)) ** 6 - &
+                (4725.d0*SIN(q*r(ir)))/ (q*r(ir)) ** 4 + &
+                (210.d0*SIN(q*r(ir)))/(q*r(ir)) ** 2)/(q*r(ir))
+        END DO
+        !
 #endif
-
-     else
-
-        call errore ('sph_bes', 'not implemented', l)
-
-     endif
-
-  endif
+        !
+     ELSE
+        !
+        CALL errore ('sph_bes', 'not implemented', l)
+        !
+     END IF
+     !
+  END IF
   !
-  return
-end subroutine sph_bes
+  RETURN
+  !
+END SUBROUTINE sph_bes
