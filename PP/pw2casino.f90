@@ -59,20 +59,7 @@ program pw2casino
 !  if(nks > 1) rewind(iunigk)
 !  do ik=1,nks
 !     if(nks > 1) read(iunigk) npw, igk
-!     do ig =1, npw
-!        if( igk(ig) > 4*npwx ) & 
-!             call errore ('pw2casino','increase allocation of index', ig)
-!        index( igk(ig) ) = 1
-!     enddo
-!  enddo
-!  ngtot = 0
-!  do ig = 1, 4*npwx
-!     if( index(ig) == 1 ) then
-!        ngtot = ngtot + 1
-!        igtog(ngtot) = ig
-!     endif
-!  enddo
-
+!     
 !  if(nks > 1) rewind(iunigk)
   ek  = 0.d0
   eloc= 0.d0
@@ -105,7 +92,12 @@ program pw2casino
      call init_us_2 (npw, igk, xk (1, ikk), vkb)
      call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
 
-     
+     do ig =1, npw
+        if( igk(ig) > 4*npwx ) & 
+             call errore ('pw2casino','increase allocation of index', ig)
+        index( igk(ig) ) = 1
+     enddo
+
 
 !        ikk = ik + nk*(ispin-1)
 !       if( nks > 1 ) then
@@ -132,17 +124,29 @@ program pw2casino
               enddo
            enddo
         enddo
-        ek = ek * tpiba2
+
 #ifdef PARA
         call reduce(1,ek)
 #endif
-        print *,ek
+!        print *,ek
         !
         ! calculate the non-local energy
         !
  !       call compute_enl (npwx, npw, evc, nbnd, enl, ikk)
      enddo
   enddo
+
+
+  ek = ek * tpiba2
+  ngtot = 0
+  do ig = 1, 4*npwx
+     if( index(ig) == 1 ) then
+        ngtot = ngtot + 1
+        igtog(ngtot) = ig
+     endif
+  enddo
+
+!print *,ngtot
 
 #ifdef PARA
   call poolreduce(1,ek)
@@ -208,11 +212,11 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   write(io,'(a)') ' G VECTORS'
   write(io,'(a)') ' ---------'
   write(io,'(a)') ' Number of G-vectors'
-  write(io,*) ngm
+  write(io,*) ngtot
   write(io,'(a)') ' Gx Gy Gz (au)'
-  do ig = 1, ngm
-     write(io,*) tpi/alat*g(1,ig), tpi/alat*g(2,ig), &
-          tpi/alat* g(3,ig)
+  do ig = 1, ngtot
+     write(io,*) tpi/alat*g(1,igtog(ig)), tpi/alat*g(2,igtog(ig)), &
+          tpi/alat* g(3,igtog(ig))
   enddo
   write(io,'(a)') ' '
   write(io,'(a)') ' WAVE FUNCTION'
@@ -225,6 +229,7 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
         ikk = ik + nks*(ispin-1)
         if( nks > 1 ) then
 !           read(iunigk) npw, igk
+           call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
            call davcio(evc,nwordwfc,iunwfc,ikk,-1)
         endif
 
@@ -236,11 +241,11 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
            write(io,'(a)') ' Band, spin, eigenvalue (au)'
            write(io,*) ibnd, ispin, et(ibnd,ikk)/2 
            write(io,'(a)') ' Eigenvectors coefficients'
-           do ig=1, ngm
+           do ig=1, ngtot
               ! now for all G vectors find the PW coefficient for this k-point
               found = .false.
               do ig7 = 1, npw
-                 if( igk(ig7) == ig )then
+                 if( igk(ig7) == igtog(ig) )then
                     write(io,*) evc(ig7,ibnd)
                     found = .true.
                     goto 17
