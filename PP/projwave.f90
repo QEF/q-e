@@ -17,12 +17,15 @@ subroutine do_projwfc (nodenumber)
   !
   use pwcom
   use io
-
+#ifdef __PARA
+  use para, only: me
+  use mp
+#endif
   implicit none
   character (len=3)  :: nodenumber
   character (len=8)  :: io_choice
   real (kind=DP)     :: Emin, Emax, DeltaE, smoothing
-  integer :: ios
+  integer :: ios,ionode_id = 0 
   namelist / inputpp / tmp_dir, prefix, io_choice, &
              Emin, Emax, DeltaE, smoothing
   !
@@ -38,7 +41,23 @@ subroutine do_projwfc (nodenumber)
   DeltaE = 0.01
   smoothing  = 0.d0
   !
+#ifdef __PARA
+  if (me == 1)  then
+#endif
   read (5, inputpp, err = 200, iostat = ios)
+#ifdef __PARA
+  end if
+  !
+  ! ... Broadcast variables
+  !
+  CALL mp_bcast( tmp_dir, ionode_id )
+  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( io_choice, ionode_id )
+  CALL mp_bcast( smoothing, ionode_id )
+  CALL mp_bcast( DeltaE, ionode_id )
+  CALL mp_bcast( Emin, ionode_id )
+  CALL mp_bcast( Emax, ionode_id )
+#endif
   if ( smoothing .lt. DeltaE ) smoothing= DeltaE
   if (io_choice.ne.'standard' .and. io_choice.ne.'files' .and.  &
       io_choice.ne.'both') &

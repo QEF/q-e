@@ -6,19 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine readpp (pseudo_dir, pseudop)
+subroutine readpp
   !-----------------------------------------------------------------------
   !
   !    Read pseudopotentials
   !
 #include "machine.h"
   use pwcom
-  ! input
-  character :: pseudo_dir * 50
-  ! the directory containing pseudo files
-  character (len=30) :: pseudop (npsx)
-  ! the name of pseudo files
-  ! local
+  use io, only: pseudo_dir, pseudop
+  !
   character :: file_pseudo * 80
   ! file name complete with path
   integer :: iunps, isupf, l, nt, ios, pseudo_type
@@ -39,7 +35,6 @@ subroutine readpp (pseudo_dir, pseudop)
 
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', iostat = ios)
-
      call read_pseudo (nt, iunps, isupf)
      if (isupf /= 0) then
         rewind (unit = iunps)

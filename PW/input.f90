@@ -949,7 +949,7 @@ subroutine iosys
   !
   !    read pseudopotentials
   !
-  CALL readpp(pseudo_dir,pseudop)
+  CALL readpp
   !
   !  Renata's dynamics uses masses in atomic units
   !

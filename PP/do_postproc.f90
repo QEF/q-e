@@ -60,12 +60,16 @@ subroutine do_postproc (nodenumber)
   !
   use pwcom
   use io
-
+#ifdef __PARA
+  use para, only: me
+  use mp
+#endif
   implicit none
   character :: nodenumber * 3, filband * 14, filplot * 14
 
   integer :: n_atom_wfc, plot_num, kpoint, kband, spin_component, ios
   logical :: stm_wfc_matching, lsign
+  integer :: ionode_id = 0 
 
   real(kind=DP) :: emin, emax, sample_bias, z, dz
   ! directory for temporary files
@@ -94,9 +98,33 @@ subroutine do_postproc (nodenumber)
   !
   !     reading the namelist inputpp
   !
+#ifdef __PARA
+  if (me == 1)  then
+#endif
   read (5, inputpp, err = 200, iostat = ios)
 200 call errore ('postproc', 'reading inputpp namelist', abs (ios) )
+#ifdef __PARA
+  end if
   !
+  ! ... Broadcast variables
+  !
+  CALL mp_bcast( tmp_dir, ionode_id )
+  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( plot_num, ionode_id )
+  CALL mp_bcast( stm_wfc_matching, ionode_id )
+  CALL mp_bcast( sample_bias, ionode_id )
+  CALL mp_bcast( spin_component, ionode_id )
+  CALL mp_bcast( z, ionode_id )
+  CALL mp_bcast( dz, ionode_id )
+  CALL mp_bcast( emin, ionode_id )
+  CALL mp_bcast( emax, ionode_id )
+  CALL mp_bcast( kpoint, ionode_id )
+  CALL mp_bcast( kband, ionode_id )
+  CALL mp_bcast( kpoint, ionode_id )
+  CALL mp_bcast( filplot, ionode_id )
+  CALL mp_bcast( filband, ionode_id )
+  CALL mp_bcast( lsign, ionode_id )
+#endif
   !     Check of namelist variables
   !
   if (filplot.ne.' ') then

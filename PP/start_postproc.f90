@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,8 +10,8 @@ subroutine start_postproc (nodenumber)
   !
   !  Usage: [mpirun, mpprun, whatever] postproc [-npool N] [filename]
   !
-  !  Reads input data from filename if present, from standard input otherw
-  !  On parallel machines filename is needed
+  !  Reads input data from filename if present
+  !  from standard input otherwise
   !
 #include "machine.h"
   implicit none
@@ -56,11 +56,9 @@ subroutine start_postproc (nodenumber)
   endif
 #ifdef __PARA
 
-  if (filin.eq.' ') call errore ('postproc','Usage: postproc [-npool N] filename',2)
-
   call startup (nodenumber, version)
-
   call init_pool
+
 #endif
   return
 end subroutine start_postproc
