@@ -72,7 +72,6 @@ subroutine phq_recover
         WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
         close (unit = iunrec, status = 'keep')
      elseif (irr0 == - 2) then
-        call errore ('phq_recover', 'recovering from wrong case', 1)
         WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
              &                   " of Elect. Field")') iter0 + 1
      elseif (irr0 > 0) then

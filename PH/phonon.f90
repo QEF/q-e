@@ -53,6 +53,8 @@ program phonon
   call show_memory ()
 
   call print_clock ('PHONON')
+  if (trans.and..not.recover) call dynmat0
+
   if (epsil.and.irr0.le.0) then
 
      WRITE( stdout, '(/,5x," Computing electric fields")')
@@ -74,7 +76,6 @@ program phonon
 
   endif
 
-  if (trans.and.irr0.le.0) call dynmat0
   if (trans) then
      call phqscf
      call dynmatrix
