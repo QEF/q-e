@@ -11,7 +11,7 @@
 # Uncomment to use benchlib
 #  BENCHLIB= -L /a/acv0/bnchlib/ -l _scalar -l _vect -l _ereg
 #
-  CPMACRO=-D__CRAY -D__PARA -D__MPI
+  CPMACRO=-D__T3E -D__PARA -D__MPI
   BENCHLIB=
 #
 ######################################################################

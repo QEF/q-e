@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef T3D
+#ifdef __T3E
 
 #ifdef __AIX
 #define CGERV2D zgerv2d

@@ -49,7 +49,7 @@ subroutine stop_pw (flag)
 
   call mpi_finalize (info)
 #endif
-#ifdef T3D
+#ifdef __T3E
   !
   ! set streambuffers off
   !

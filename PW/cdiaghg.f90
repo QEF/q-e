@@ -55,7 +55,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
 
   call start_clock ('cdiaghg')
 #ifdef __PARA
-#ifdef T3D
+#ifdef __T3E
   !
   !   NB: 150 has been determined empirically on the T3E as the point
   !       where it is convenient to use a parallel routines.

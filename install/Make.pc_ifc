@@ -38,6 +38,7 @@ F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
 # Fortran77 compiler flags
 #
 F77FLAGS = $(FFLAGS)
+F77FLAGS_NOOPT = -O0
 #
 # C compiler flags
 #

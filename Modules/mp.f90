@@ -24,7 +24,7 @@
         MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
           mp_bcast_z, mp_bcast_zv, &
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
-#if defined __CRAY
+#if defined __T3E
           mp_bcast_i4b, &
 #endif
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &

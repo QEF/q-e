@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine scala_cdiag (n, a, ilda, w, z, ildz)
-#ifdef T3D
+#ifdef __T3E
   !
   !     Solve the standard diagonalization problem:Ax=lambdax for
   !     hermitian comples matrix using Blacs and

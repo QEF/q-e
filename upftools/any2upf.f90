@@ -23,7 +23,7 @@ program mypp2upf
 #endif
   integer iargc
   external iargc  
-#ifdef T3D
+#ifdef __T3E
   external pxfgetarg  
 #else
   external getarg
@@ -38,7 +38,7 @@ program mypp2upf
      inquire (file=filein,exist=exst)
      if(.not.exst) go to 5
   elseif (i.eq.1) then  
-#ifdef T3D
+#ifdef __T3E
      call pxfgetarg (1, filein, i, j)  
 #else
      call getarg (1, filein)  

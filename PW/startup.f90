@@ -47,7 +47,7 @@ subroutine startup (nd_nmbr, version)
   character :: np * 2, cdate * 9, ctime * 9
   external date_and_tim
   integer :: ierr, ilen, iargc, nargs
-#ifdef T3D
+#ifdef __T3E
   integer ipxfargc
   !
   ! set streambuffers on
@@ -71,7 +71,7 @@ subroutine startup (nd_nmbr, version)
      !
      ! How many pools?
      !
-#ifdef T3D
+#ifdef __T3E
      nargs = ipxfargc ()
      if (nargs.ge.2) then
         call pxfgetarg (2, np, ilen, ierr)

@@ -34,6 +34,7 @@ FFLAGS =  -qfree=f90 -qalias=noaryovrlp -I../include \
 # Fortran77 compiler flags
 #
 F77FLAGS = $(FFLAGS)
+F77FLAGS_NOOPT = -O0
 #
 # Fortran90 compiler flags
 #

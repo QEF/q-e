@@ -1,9 +1,9 @@
 
-#if defined (__SX4) || defined (__ORIGIN) || defined (T3D) || defined (FUJ64) || defined (HITACHI)
+#if defined (__SX4) || defined (__ORIGIN) || defined (__T3E) || defined (FUJ64) || defined (HITACHI)
 #  define FLUSH
 #endif
 
-#if defined(CRAYY) || defined(__LINUX) || defined(__AIX) || defined(T3D) ||defined(HITACHI) || defined(SUN)
+#if defined(CRAYY) || defined(__LINUX) || defined(__AIX) || defined(__T3E) ||defined(HITACHI) || defined(SUN)
 #  define C_POINTER  integer
 #endif
 
@@ -31,7 +31,7 @@
 #  define DIRECT_IO_FACTOR 8 
 #endif
 
-#if defined(CRAYY) || defined (__SX4) || defined (T3D)
+#if defined(CRAYY) || defined (__SX4) || defined (__T3E)
 
 #  define DREAL       real
 #  define DIMAG       aimag
@@ -219,7 +219,7 @@
 #  define iargc  iargc_
 #endif
 
-#if defined(T3D_BENCHLIB)
+#if defined(__BENCHLIB)
 #  define DCOPY       scopy_t3e
 #  define DGEMM       s_gemm
 #  define ZGEMM       c_gemm

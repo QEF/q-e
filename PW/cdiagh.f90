@@ -113,7 +113,7 @@ subroutine cdiagh (n, h, ldh, e, v)
 !  if scalapack library is present and we have just one pool
 !  and the matrix is larger than 130 we use the scalapack driver
 !
-#ifdef T3D
+#ifdef __T3E
   if (npool.eq.1.and.n.gt.130) then
      call scala_cdiag (n, h, ldh, e, v, ldh)
      goto 10

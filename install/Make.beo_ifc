@@ -9,7 +9,7 @@
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -I$(OSHOME)/include/ -DPC -DMKL -D__PARA -D__MPI -D__FFTW \
+CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__MKL -D__PARA -D__MPI -D__FFTW \
            -D"FFTWND_F77_ONE=fftwnd_f77_one" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan" \
            -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan" \

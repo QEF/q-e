@@ -11,7 +11,7 @@ subroutine bidon_t3e
   stop 'cft_t3e'
 end subroutine bidon_t3e
 #else
-#ifdef T3D
+#ifdef __T3E
 !----------------------------------------------------------------------
 
 subroutine cft_1 (f, m, n, nx, sgn, fout)

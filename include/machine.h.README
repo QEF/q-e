@@ -3,16 +3,16 @@
 
    Input Machine definitions:
 
-      AIX       ibm rs/6000 machines
-      T3D       t3d/t3e machines 
-      PC        intel pc's
-      ORIGIN    sgi origin 2k or 3k machines
+      __AIX     ibm rs/6000 machines
+      __T3E     t3d/t3e machines 
+      __LINUX   intel pc's running Linux
+      __SGI     all sgi machines
+      __SGI64   64-bit mode for sgi machines
+      __ORIGIN  sgi origin 2k or 3k machines
       DEC       compaq (formerly dec) alphas
       __SX4     nec sx-4/5 vector machines (obsolete)
       __SX6     nec sx-6 vector machines
       CRAYY     cray vector machines (obsolete)
-      SGI       sgi workstations: iris, o2
-      EXEMPLAR  convex exemplar (obsolete)
       FUJ64     Fujitsu VPP5000 vector machines
    Other Input definitions:
       ABSOFT       for intel pc's with absoft compiler
@@ -20,7 +20,7 @@
       ADD_BLAS_ONE_UNDERSCORE
                    may be needed depending on how blas/lapack are
                    compiled and how they are called by the compiler
-      T3D_BENCHLIB t3d/t3e machines with benchlib library
+      __BENCHLIB   t3e machines with benchlib library
 
    Output Definitions:
 

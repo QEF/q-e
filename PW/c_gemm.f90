@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef T3D_BENCHLIB
+#ifdef __BENCHLIB
 
 subroutine c_gemm (forma, formb, l, n, m, alpha, a, lda, b, ldb, &
      beta, c, ldc)
@@ -43,11 +43,11 @@ subroutine c_gemm (forma, formb, l, n, m, alpha, a, lda, b, ldb, &
         call cgemm ('n', 'n', mm, nn, kk, alpha, b, ldb, a, lda, &
              beta, auxc, mm)
         s3 = irtc ()
-        call transpose (auxc, mm, c, ldc, nn, mm, itype, info (2) )
+        call c_transpose (auxc, mm, c, ldc, nn, mm, itype, info (2) )
         deallocate (auxc)
      else
         allocate (auxa (mm, kk) )
-        call transpose (a, lda, auxa, mm, mm, kk, itype, info (2) )
+        call c_transpose (a, lda, auxa, mm, mm, kk, itype, info (2) )
         s2 = irtc ()
         call cgemm ('n', 'n', mm, nn, kk, alpha, auxa, mm, b, ldb, &
              beta, c, ldc)
@@ -56,7 +56,7 @@ subroutine c_gemm (forma, formb, l, n, m, alpha, a, lda, b, ldb, &
      endif
   elseif (formb.eq.'c'.or.formb.eq.'C') then
      allocate (auxb (kk, nn) )
-     call transpose (b, ldb, auxb, kk, kk, nn, itype, info (2) )
+     call c_transpose (b, ldb, auxb, kk, kk, nn, itype, info (2) )
      s2 = irtc ()
      call cgemm ('n', 'n', mm, nn, kk, alpha, a, lda, auxb, kk, &
           beta, c, ldc)
@@ -74,7 +74,7 @@ subroutine c_gemm (forma, formb, l, n, m, alpha, a, lda, b, ldb, &
 
 end subroutine c_gemm
 
-subroutine transpose (a, lda, b, ldb, n, m, itype, info)
+subroutine c_transpose (a, lda, b, ldb, n, m, itype, info)
 
   implicit none
 
@@ -130,7 +130,7 @@ subroutine transpose (a, lda, b, ldb, n, m, itype, info)
      s3 = irtc ()
 
   else
-     write (6, * ) '*** transpose : parameter itype out of range'
+     write (6, * ) '*** c_transpose : parameter itype out of range'
 
      stop
 
@@ -139,7 +139,7 @@ subroutine transpose (a, lda, b, ldb, n, m, itype, info)
   info = int (dble (s3 - s2) * 3.333d-3)
   return
 
-end subroutine transpose
+end subroutine c_transpose
 #else
 subroutine cgemmdummy
   return

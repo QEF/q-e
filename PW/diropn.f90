@@ -72,7 +72,7 @@ subroutine diropn (unit, filename, recl, exst)
   !
   !     on T3E reduce the size of the buffer if it is too large
   !
-#ifdef T3E
+#ifdef __T3E
   if (unf_recl.gt.5000000) then
      if (unit.lt.10) then
         write (assstr, '("assign -b 1 u:",i1)') unit

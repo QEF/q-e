@@ -38,7 +38,7 @@ program plotrho
      print '("  input file > ",$)'
      read (5, '(a)', end = 20, err = 20) filename
   elseif (i.eq.1) then
-#ifdef T3D
+#ifdef __T3E
      call pxfgetarg (1, filename, i, j)
 #else
      call getarg (1, filename)

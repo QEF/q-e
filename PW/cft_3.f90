@@ -265,7 +265,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
 
 end subroutine cft_3
 #endif
-#if defined(T3D)
+#if defined(__T3E)
 #define PRESENT
 !----------------------------------------------------------------------
 subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)

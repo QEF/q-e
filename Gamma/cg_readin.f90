@@ -34,7 +34,7 @@ subroutine cg_readin
   nderiv = 2
   first  = 1
   last   = 0
-#if defined(T3E) || defined(__ORIGIN)
+#if defined(__T3E) || defined(__ORIGIN)
   iunit=9
 #else
   iunit=5

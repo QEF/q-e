@@ -332,7 +332,7 @@
       END SUBROUTINE PARALLEL_MIN_REAL
 
 
-#if defined __CRAY
+#if defined __T3E
 
 
       SUBROUTINE SHMEM_SUM_REAL(ARRAY, N)

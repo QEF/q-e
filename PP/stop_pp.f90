@@ -18,7 +18,7 @@ subroutine stop_pp
 
   call mpi_finalize (info)
 #endif
-#ifdef T3D
+#ifdef __T3E
   !
   ! set streambuffers off
   !

@@ -51,7 +51,7 @@ subroutine stop_ph (flag)
 
   call mpi_finalize (info)
 #endif
-#ifdef T3D
+#ifdef __T3E
   !
   ! set streambuffers off
   !

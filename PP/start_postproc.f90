@@ -16,7 +16,7 @@ subroutine start_postproc (nodenumber)
 #include "machine.h"
   implicit none
   integer :: nargs
-#ifdef T3D
+#ifdef __T3E
   integer :: ipxfargc, ierr, ilen
 #else
   integer :: iargc
@@ -31,7 +31,7 @@ subroutine start_postproc (nodenumber)
   !
   !  Read the number of arguments of the command
   !
-#ifdef T3D
+#ifdef __T3E
   nargs = ipxfargc ()
 #else
   nargs = iargc ()
@@ -43,7 +43,7 @@ subroutine start_postproc (nodenumber)
      !
      !  Read the input file name (if any). It must be the last argument
      !
-#ifdef T3D
+#ifdef __T3E
      call pxfgetarg (nargs, filin, ilen, ierr)
 #else
      call getarg (nargs, filin)

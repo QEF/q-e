@@ -6,10 +6,10 @@
 #
 CPP = /opt/ctl/bin/cpp
 #
-# add -DT3D_BENCHLIB if the benchlib is installed
+# add -D__BENCHLIB if the benchlib is installed
 # remove -D__FFTW if fftw is not installed and you cannot compile it
 # (you will use the fft's contained in standard t3e libraries)
-CPPFLAGS = -I$(OSHOME)/include/ -DT3D -D__PARA -D__MPI -D__FFTW
+CPPFLAGS = -I$(OSHOME)/include/ -D__T3E -D__PARA -D__MPI -D__FFTW
 
 #
 # Fortran compiler:
@@ -34,7 +34,7 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 #
 # usually blas and lapack are automatically loaded
 # and only fftw (if required) and mpi need to be specified
-# if you use -DT3D_BENCHLIB, load the benchlib as well
+# if you use -D__BENCHLIB, load the benchlib as well
 #
 LD=$(F90)
 LIBS = -lfftw -lmpi

@@ -7,7 +7,7 @@
 !
 
 subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
-#ifdef T3D
+#ifdef __T3E
 #ifdef __AIX
 #define PCELSET pzelset
 #define PCHEGVX pzhegvx

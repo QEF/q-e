@@ -157,7 +157,7 @@ subroutine iosys
   disk_io = 'default'
   noinv = .false.    ! not actually used
   !
-#ifdef T3D
+#ifdef __T3E
   call pxfgetenv('HOME',0,pseudo_dir,i,ios)
 #else
   call getenv('HOME',pseudo_dir)

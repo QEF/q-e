@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef T3D_BENCHLIB
+#ifdef __BENCHLIB
 
 
 SUBROUTINE S_gemm (FORMA, FORMB, L, N, M, alpha, A, LDA, B, LDB, &
@@ -45,11 +45,11 @@ SUBROUTINE S_gemm (FORMA, FORMB, L, N, M, alpha, A, LDA, B, LDB, &
         CALL SGEMM ('N', 'N', MM, NN, KK, alpha, B, LDB, A, LDA, &
              beta, AUXC, MM)
         S3 = IRTC ()
-        call transpose (AUXC, MM, C, LDC, NN, MM, itype, INFO (2) )
+        call r_transpose (AUXC, MM, C, LDC, NN, MM, itype, INFO (2) )
         deallocate (auxc)
      else
         allocate (auxa (MM, KK) )
-        call transpose (A, LDA, AUXA, MM, MM, KK, itype, INFO (2) )
+        call r_transpose (A, LDA, AUXA, MM, MM, KK, itype, INFO (2) )
         S2 = IRTC ()
         CALL SGEMM ('N', 'N', MM, NN, KK, alpha, auxa, MM, B, LDB, &
              beta, C, LDC)
@@ -58,7 +58,7 @@ SUBROUTINE S_gemm (FORMA, FORMB, L, N, M, alpha, A, LDA, B, LDB, &
      endif
   elseif (formb.eq.'t'.or.formb.eq.'T') then
      allocate (auxb (KK, NN) )
-     call transpose (B, LDB, AUXB, KK, KK, NN, itype, INFO (2) )
+     call r_transpose (B, LDB, AUXB, KK, KK, NN, itype, INFO (2) )
      S2 = IRTC ()
      CALL SGEMM ('N', 'N', MM, NN, KK, alpha, A, LDA, auxb, KK, &
           beta, C, LDC)
@@ -79,7 +79,7 @@ SUBROUTINE S_gemm (FORMA, FORMB, L, N, M, alpha, A, LDA, B, LDB, &
 
 END SUBROUTINE S_gemm
 
-subroutine transpose (A, LDA, B, LDB, N, M, ITYPE, INFO)
+subroutine r_transpose (A, LDA, B, LDB, N, M, ITYPE, INFO)
 
   IMPLICIT NONE
 
@@ -135,7 +135,7 @@ subroutine transpose (A, LDA, B, LDB, N, M, ITYPE, INFO)
      S3 = IRTC ()
 
   else
-     write (6,  * ) ' *** TRANSPOSE : PARAMETER ITYPE ', 'OUT OF RANGE'
+     write (6,  * ) ' *** r_traspose : PARAMETER ITYPE ', 'OUT OF RANGE'
 
      stop
 
@@ -143,7 +143,7 @@ subroutine transpose (A, LDA, B, LDB, N, M, ITYPE, INFO)
 
   INFO = INT (DBLE (S3 - S2) * 3.333d-3)
   return
-end subroutine transpose
+end subroutine r_transpose
 #else
 subroutine sgemmdummy
   return
