@@ -114,7 +114,7 @@ ia64-*-linux-gnu:* | x86_64-*-linux-gnu:* | *-pc-linux-gnu:* )
 	# because on GNU/Linux systems they often have nonstandard names
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
 	ifort_version=`$f90 -V 2>&1 | grep "Intel(R)"`
-	pgf_version=`$f90 -V 2>&1 | grep "pgf"`
+	pgf_version=`$f90 -V 2>&1 | grep "^pgf"`
 	g95_version=`$f90 -v 2>&1 | grep "version"`
 	if test "$ifort_version" != ""
 	then
@@ -225,7 +225,7 @@ ia64-*-linux-gnu:* | x86_64-*-linux-gnu | *-pc-linux-gnu:* )
 	# because on GNU/Linux systems they often have nonstandard names
 	echo $ECHO_N "checking version of $cc... $ECHO_C"
 	icc_version=`$cc -V 2>&1 | grep "Intel(R)"`
-	pgcc_version=`$cc -V 2>&1 | grep "pgcc"`
+	pgcc_version=`$cc -V 2>&1 | grep "^pgcc"`
 	gcc_version=`$cc -v 2>&1 | grep "version"`
 	if test "$icc_version" != ""
 	then
