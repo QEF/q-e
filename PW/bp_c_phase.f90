@@ -278,6 +278,7 @@ SUBROUTINE c_phase
 !  --- Write header ---
    WRITE( stdout,"(/,/,/,15X,50('='))")
    WRITE( stdout,"(28X,'POLARIZATION CALCULATION')")
+   WRITE( stdout,"(25X,'!!! NOT THOROUGHLY TESTED !!!')")
    WRITE( stdout,"(15X,50('-'),/)")
 
 !  --- Check that we are working with an insulator with no empty bands ---

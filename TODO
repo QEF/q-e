@@ -1,4 +1,4 @@
-TODO LIST -  5 February 2004
+TODO LIST - 18 February 2004
 
 INSTALLATION/PORTING
 
@@ -33,6 +33,8 @@ COMMON
 - calculation of <psi|exp(iGr)|psi'>
 
 - process numbering: 1 to nproc or 0 to nproc-1 ?
+
+- constraints
 
 PW
 
@@ -98,7 +100,7 @@ PW
 
 - the various *bfgs, dynamics, vcsmd should be rewritten in a more
   uniform way with respect to what they print and how the parallel
-  case is treated. Always write at the end the lattice parameters.
+  case is treated. 
 
 - write explicitly and unambiguosly the units of output quantities
 

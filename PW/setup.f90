@@ -341,6 +341,9 @@ SUBROUTINE setup()
      IF ( lberry ) THEN
         CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nks, xk, wk )
+        nosym=.true.
+        nrot=1
+        nsym=1
      ELSE
        CALL kpoint_grid( nrot, s, bg, npk, k1, k2, k3, &
                          nk1, nk2, nk3, nks, xk, wk )
