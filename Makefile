@@ -71,7 +71,7 @@ clean :
 	( cd CPV ; make clean ) ;
 
 veryclean: clean
-	/bin/rm make.rules make.sys */.dependencies
+	/bin/rm make.rules make.sys */.dependencies */dum1 */dum2
 
 tar:
 	tar -cf - License Makefile README include/machine.h* \

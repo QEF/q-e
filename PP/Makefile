@@ -306,7 +306,7 @@ bands.x: $(PPOBJS) bands.o
 	$(LD) -o bands.x bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
 
 plotrho.x: $(PPOBJS) plotrho.o
-	$(LD) -o plotrho.x plotrho.o $(MODULES) $(LFLAGS)
+	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LFLAGS)
 
 clean:
 	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod
