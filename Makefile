@@ -43,9 +43,9 @@ d3 : pw ph
 	if test -d D3  ; then  ( cd D3  ; make all ) ; fi
 
 tools : libs
-	( cd pwtools ; make all )
+	if test -d pwtools ; then ( cd pwtools ; make all ) ; fi
 upf : libs
-	( cd upftools ; make all )
+	if test -d upftools; then ( cd upftools; make all ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 tools
 all   : pwall fpmd cp upf 
