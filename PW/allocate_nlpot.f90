@@ -35,7 +35,8 @@ subroutine allocate_nlpot
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
   USE us, ONLY: nh, indv, nhtol, nhtolm, qq, dvan, deeq, qrad, vkb, tab, &
        tab_at, dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
-       tvanp, newpseudo
+       tvanp, newpseudo, nhtoj
+  USE spin_orb, ONLY: lspinorb, qq_spinorb, fcoef
   implicit none
   !
   !    a few local variables
@@ -90,12 +91,18 @@ subroutine allocate_nlpot
      nkb = nkb + nh (ityp(na))
   enddo
   !
-  allocate (indv(  nhm, ntyp))    
-  allocate (nhtol( nhm, ntyp))    
+  allocate (indv( nhm, ntyp))    
+  allocate (nhtol(nhm, ntyp))    
   allocate (nhtolm(nhm, ntyp))    
+  allocate (nhtoj(nhm, ntyp))    
   allocate (qq(   nhm, nhm, ntyp))    
-  allocate (dvan( nhm, nhm, ntyp))    
+  allocate (dvan( nhm, nhm, nspin, ntyp))    
   allocate (deeq( nhm, nhm, nat, nspin))    
+  if (lspinorb) then
+    allocate (qq_spinorb(nhm, nhm, 4, ntyp))    
+    allocate (fcoef(nhm,nhm,2,2,ntyp))
+  endif
+
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
           / dq + 4) * cell_factor

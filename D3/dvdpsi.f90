@@ -88,9 +88,9 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
                                  g (3, igk (ig) ) * u_x (mu + 3, nu_i) ) )
                  enddo
                  do ibnd = 1, nbnd
-                    ps(1,ibnd) = dvan(ikb,ikb,nt) * &
+                    ps(1,ibnd) = dvan(ikb,ikb,1,nt) * &
                          ZDOTC(npw, wrk2, 1, psi_(1,ibnd), 1)
-                    ps(2,ibnd) = dvan(ikb,ikb,nt) * &
+                    ps(2,ibnd) = dvan(ikb,ikb,1,nt) * &
                          ZDOTC(npw,vkb_(1,jkb),1,psi_(1,ibnd),1)
                  enddo
 #ifdef __PARA

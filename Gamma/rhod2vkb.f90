@@ -147,7 +147,7 @@ subroutine rhod2vkb(dyn0)
                           dynkb(nu_i,nu_j) = dynkb(nu_i,nu_j) + &
                                (-becp1(jkb+ih,ibnd,ipol)*becp1(jkb+ih,ibnd,jpol) &
                                 +becp2(jkb+ih,ibnd,ijpol)*becp(jkb+ih,ibnd) )    &
-                               * dvan(ih,ih,nt) * weight
+                               * dvan(ih,ih,1,nt) * weight
                        end do
                     end do
                  end do

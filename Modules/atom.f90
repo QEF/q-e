@@ -22,6 +22,7 @@ MODULE atom
        dx(npsx),                 &! linear interval for logaritmic mesh
        r(ndmx,npsx),             &! radial logaritmic mesh
        rab(ndmx,npsx),           &! derivative of the radial mesh
+       jchi(nchix,npsx),         &! total angular momentum of atomic orbitals
        chi(ndmx,nchix,npsx),     &! radial atomic orbitals
        oc(nchix,npsx),           &! atomic level occupation
        rho_at(ndmx,npsx),        &! radial atomic charge density

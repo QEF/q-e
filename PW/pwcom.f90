@@ -441,6 +441,8 @@ MODULE us
        dion(nbrx,nbrx,npsx),              &! D_{mu,nu} parameters (in the 
                                            !  atomic case)
        betar(ndmx,nbrx,npsx),            &! radial beta_{mu} functions
+       jjj(nbrx,npsx),                   &! total angular momentum of 
+                                           ! the beta function
        qqq(nbrx,nbrx,npsx),               &! q_{mu,nu} parameters (in the 
                                            !  atomic case)
        qfunc(ndmx,nbrx,nbrx,npsx),       &! Q_{mu,nu}(|r|) function for 
@@ -471,14 +473,15 @@ MODULE us
        nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
   COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
        vkb(:,:),              &! all beta functions in reciprocal space
+       dvan(:,:,:,:),           &! the D functions of the solid
+       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm}
        qgm(:)                  ! complete fourier transform of Q
   REAL(KIND=DP), PARAMETER:: &
        dq = 0.01D0           ! space between points in the pseudopotential tab.
   REAL(KIND=DP), ALLOCATABLE :: &
        qq(:,:,:),             &! the q functions in the solid
-       dvan(:,:,:),           &! the D functions of the solid
-       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm}
        becsum(:,:,:),         &! the sum of bec functions
+       nhtoj(:,:),            &! correspondence n <-> total angular momentum
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
@@ -596,6 +599,29 @@ MODULE fixed_occ
        tfixed_occ             ! if .TRUE. the occupations are fixed.
   !
 END MODULE fixed_occ
+
+MODULE spin_orb
+  
+  USE kinds, ONLY: DP
+  USE parameters, ONLY : lmaxx
+  
+  SAVE
+
+  LOGICAL :: &
+      lspinorb           ! if .TRUE. this is a spin-robit calculation
+
+  COMPLEX (kind=dp) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)  ! transform real
+                         ! spherical harmonics into complex ones
+  COMPLEX (kind=dp), ALLOCATABLE :: fcoef(:,:,:,:,:) ! function needed to
+                         ! account for spinors.
+  COMPLEX (kind=dp),ALLOCATABLE :: qq_spinorb(:,:,:,:) ! the qq coefficients
+                         ! in the spin_orbit case. NB: This variable should
+                         ! not be necessary, but to introduce an additional
+                         ! index in any place where qq is used was too
+                         ! cumbersome. As a first step I have introduced
+                         ! another variable with the required index 
+                         ! (ADC 26/3/04)
+END MODULE spin_orb
 !
 !
 MODULE pwcom
@@ -626,5 +652,6 @@ MODULE pwcom
   USE sticks
   USE bp
   USE fixed_occ
+  USE spin_orb
   !
 END MODULE pwcom

@@ -42,7 +42,7 @@ subroutine newd
         do is = 1, nspin
            do ih = 1, nh (nt)
               do jh = ih, nh (nt)
-                 deeq (ih, jh, na, is) = dvan (ih, jh, nt)
+                 deeq (ih, jh, na, is) = dvan (ih, jh, 1, nt)
                  deeq (jh, ih, na, is) = deeq (ih, jh, na, is)
               enddo
            enddo
@@ -149,14 +149,14 @@ subroutine newd
         !           end do
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)
-              deeq (ih, jh, na, is) = deeq (ih, jh, na, is) + dvan (ih, jh, nt)
+              deeq (ih, jh, na, is) = deeq (ih, jh, na, is) + dvan (ih,jh,1,nt)
               deeq (jh, ih, na, is) = deeq (ih, jh, na, is)
            enddo
         enddo
      enddo
      !        WRITE( stdout,'( "dion pseudo ",i4)') nt
      !        do ih = 1, nh(nt)
-     !           WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
+     !           WRITE( stdout,'(8f9.4)') (dvan(ih,jh,1,nt),jh=1,nh(nt))
      !        end do
 
   enddo

@@ -70,7 +70,7 @@ subroutine init_us_1
   allocate (besr( ndm))    
   allocate (qtot( ndm , nbrx , nbrx))    
   allocate (ylmk0( lqx * lqx))    
-  dvan (:,:,:) = 0.d0
+  dvan (:,:,:,:) = 0.d0
   qq (:,:,:)   = 0.d0
   ap (:,:,:)   = 0.d0
   if (lqx > 0) qrad(:,:,:,:)= 0.d0
@@ -104,7 +104,7 @@ subroutine init_us_1
                nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
-              dvan (ih, jh, nt) = dion (ir, is, nt)
+              dvan (ih, jh, 1, nt) = dion (ir, is, nt)
            endif
         enddo
      enddo

@@ -167,7 +167,7 @@ subroutine dqrhod2v (ipert, drhoscf)
                           d3dywrk(na_icart,na_jcart) = d3dywrk(na_icart,na_jcart) &
                             + conjg(alpha(1) * alpha(2) + alpha(3) * alpha(4) - &
                                     alpha(5) * alpha(6) - alpha(7) * alpha(8) ) &
-                                    * dvan (ikb, ikb, nt) * wgg * 2.0d0
+                                    * dvan (ikb, ikb, 1, nt) * wgg * 2.0d0
                        enddo
                     endif
                  enddo

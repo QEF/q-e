@@ -87,8 +87,8 @@ subroutine dvpsi_e(kpoint,ipol)
            do ih=1,nh(nt)
               jkb=jkb+1
               do ibnd = 1,nbnd
-                 dbec_(jkb,ibnd) = dbec(jkb,ibnd)*dvan(ih,ih,nt)
-                 becp_(jkb,ibnd) = becp(jkb,ibnd)*dvan(ih,ih,nt)
+                 dbec_(jkb,ibnd) = dbec(jkb,ibnd)*dvan(ih,ih,1,nt)
+                 becp_(jkb,ibnd) = becp(jkb,ibnd)*dvan(ih,ih,1,nt)
               enddo
            end do
         end if

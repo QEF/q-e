@@ -25,7 +25,7 @@ SUBROUTINE clean_pw()
   USE relax,                ONLY : if_pos
   USE wavefunctions_module, ONLY : evc, psic
   USE us,                   ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, qrad, &
-                                   vkb, qgm, becsum, tab, tab_at
+                                   vkb, qgm, becsum, tab, tab_at, nhtoj
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
   USE extfield,             ONLY : forcefield
   USE becmod,               ONLY : becp
@@ -36,7 +36,9 @@ SUBROUTINE clean_pw()
   USE afftnec,              ONLY : auxp
 #endif  
   USE fft_types,            ONLY : fft_dlay_deallocate
+  USE spin_orb,             ONLY : lspinorb, qq_spinorb, fcoef
   USE constraints_module,   ONLY : constr, target
+
   !
   IMPLICIT NONE
   !
@@ -96,7 +98,8 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( indv ) )       DEALLOCATE( indv )
   IF ( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
-  IF ( ALLOCATED( nhtolm) )      DEALLOCATE( nhtolm)
+  IF ( ALLOCATED( nhtolm ) )      DEALLOCATE( nhtolm )
+  IF ( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
   IF ( ALLOCATED( qq ) )         DEALLOCATE( qq )
   IF ( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
   IF ( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
@@ -108,6 +111,11 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( nsnew ) )      DEALLOCATE( nsnew )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
+  IF (lspinorb) then
+     IF ( ALLOCATED( qq_spinorb ) ) DEALLOCATE( qq_spinorb )
+     IF ( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
+  END IF
+ 
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !

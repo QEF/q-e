@@ -119,7 +119,7 @@ subroutine addusforce (forcenl)
   !            end do
   !            WRITE( stdout,'( "dion pseudo ",i4)') nt
   !            do ih = 1, nh(nt)
-  !               WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
+  !               WRITE( stdout,'(8f9.4)') (dvan(ih,jh,1,nt),jh=1,nh(nt))
   !            end do
   do is = 1, nspin
      do na = 1, nat
