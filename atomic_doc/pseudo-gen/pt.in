@@ -11,12 +11,8 @@
         config='[Xe] 4f14. 5d8 6s2 6p0',
         dft='LDA'
  /
- &test
-        nconf=1
-        pseudotype=3,
-        configts(1)= '5d8 6s2 6p0'
- /
  &inputp
+        pseudotype=3,
         lloc=0,
         file_pseudopw='Ptrel.RRKJ3',
         zval=10.d0,

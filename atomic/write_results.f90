@@ -138,6 +138,7 @@ subroutine write_results
      open(unit=15,file=file_wavefunctions,status='unknown',  &
           err=1110, iostat=ios,form='formatted')
 1110 call errore('write_result','opening file_wavefunctions',abs(ios))
+     write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
      do n=1,mesh 
         write(15,'(8f10.6)') r(n),(psi(n,i),i=nwf,max(1,nwf-6),-1)
      enddo

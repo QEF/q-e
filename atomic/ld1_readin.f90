@@ -56,15 +56,12 @@ subroutine ld1_readin
   namelist /test/                 &
        nconf,         & ! the number of configurations
        configts,      & ! the configurations of the tests
-       pseudotype,    & ! the pseudopotential type
-       file_wavefunctionsps,& ! the file with pseudowfc
-       file_pseudopw, & ! the file where to write pseudopotential
-       file_logderps, & ! file with logarithmic derivatives
-       file_pseudo,   & ! filename of the pseudopotential
-       file_tests,    & ! file with transferability test
-       file_recon       ! file needed for the paw reconstruction
+       file_pseudo,   & ! input file containing the pseudopotential
+       file_wavefunctionsps,& ! output file for pseudowfc
+       file_tests       ! output file for  transferability test
 
   namelist /inputp/ &
+       pseudotype,&! the pseudopotential type
        tm,    &    ! use Troullier-Martins instead of RRKJ
        rho0,  &    ! value of the charge at the origin
        zval,  &    ! the pseudo valence
@@ -72,13 +69,14 @@ subroutine ld1_readin
        nlcc,  &    ! if true nlcc is set
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
-       file_screen,   & ! file with screening potential
-       file_core,     & ! file with total and core charge
-       file_beta,     & ! file with the beta functions
-       file_chi,      & ! file with the chi functions
-       file_qvan,     & ! file with the qvan functions
-       file_pseudopw, & ! the file where to write pseudopotential
-       file_logderps    ! file with the pseudo log derivatives
+       file_screen,   & ! output file for screening potential
+       file_core,     & ! output file for total and core charge
+       file_beta,     & ! output file for beta functions
+       file_chi,      & ! output file for chi functions
+       file_qvan,     & ! output file for qvan functions
+       file_pseudopw, & ! output file where the pseudopotential is written
+       file_recon,    & ! output file needed for paw reconstruction
+       file_logderps    ! output file for pseudo logarithmic derivatives
   !
   !   read the namelist input and set default values 
   !
@@ -105,6 +103,7 @@ subroutine ld1_readin
   title = ' '
   config=' '
   file_wavefunctions= ' '
+  file_recon= ' '
   file_logderae= ' '
 
   read(5,input,err=100,iostat=ios) 
@@ -201,90 +200,92 @@ subroutine ld1_readin
   !
   if (lsd == 1)  call occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
 
-  if (iswitch == 1) return
-
-  jjs=0.0_dp
-  jjts=0.0_dp
-  jjtsc=0.0_dp
-
-  do n=1,nwf
-     oc_old(n)=oc(n)
-  enddo
-
-  nconf=1
-  pseudotype=0
-  configts=' '
-  file_wavefunctionsps= ' '
-  file_logderps=' '
-  file_pseudo=' '
-  file_pseudopw=' '
-  file_tests=' '
-  file_recon= ' '
-
-  read(5,test,err=300,iostat=ios)
-300 call errore('ld1_readin','reading test',abs(ios))
-
-  if (pseudotype < 1.or.pseudotype > 3) &
-       call errore('ld1_readin','wrong pseudotype',1)
-  if (nconf > ncmax1.or.nconf < 1) &
-       call errore('ld1_readin','nconf is wrong',1)
-  if (nconf > 1.and.file_pseudopw /= ' ') &
-       call errore('ld1_readin','test or write pseudo?',1)
-  if (file_pseudopw == file_pseudo .and. file_pseudo /= ' ') &
-       call errore('ld1_readin','rewrite file pseudo?',1)
-  if (iswitch == 3 .and. nconf > 1) &
-       call errore('ld1_readin','too many test configurations',1)
-
-  do nc=1,nconf
-     if (configts(nc) == ' ') then
-        call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
-             nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
-             jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
-     else
-        call el_config(configts(nc),.false.,nwftsc(nc),eltsc(1,nc),  &
-             &     nntsc(1,nc),lltsc(1,nc),octsc(1,nc),iswtsc(1,nc))
-     endif
-  enddo
-35 call errore('ld1_readin','reading test wavefunctions',abs(ios))
-  !
-  !  adjust the occupations of the test cases if this is a lsd run
-  !
-  if (lsd == 1) then
-     do nc=1,nconf
-        call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc), &
-             &   octsc(1,nc), iswtsc(1,nc)) 
-     enddo
-  endif
-  !
-  !    reading the pseudopotential
-  !
-  if (iswitch == 2) then
-     jjs=0.0_dp
-     if (file_pseudo == ' ') &
-          call errore('ld1_readin','iswitch=2 and file_pseudo?',1)
-     if (matches('upf',file_pseudo) .or. matches('UPF', file_pseudo)) then
-        call read_pseudoupf
-     else
-        if (pseudotype == 1) then
-           call read_pseudo  &
-                (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
-                dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
-        elseif (pseudotype == 2 .or. pseudotype == 3) then
-           call read_newpseudo
-           lmax=0
-           do ns=1,nwfs
-              lmax=max(lmax,lls(ns))
-           enddo
-        else
-           call errore('ld1_readin','pseudotype not programmed ',1)
-        endif
-     endif
-  endif
-
-
-  if (iswitch == 3) then
+  if (iswitch == 1) then
      !
-     !    pseudopotential input reading
+     !    no more data needed for AE calculations
+     !
+     return
+     !
+  else if (iswitch == 2) then
+     !
+     !    reading input for PP testing
+     !
+     jjs=0.0_dp
+     jjts=0.0_dp
+     jjtsc=0.0_dp
+     
+     do n=1,nwf
+        oc_old(n)=oc(n)
+     enddo
+
+     nconf=1
+     configts=' '
+     file_pseudo=' '
+     file_tests=' '
+
+     read(5,test,err=300,iostat=ios)
+300  call errore('ld1_readin','reading test',abs(ios))
+     
+     if (nconf > ncmax1.or.nconf < 1) &
+          call errore('ld1_readin','nconf is wrong',1)
+     if (iswitch == 3 .and. nconf > 1) &
+          call errore('ld1_readin','too many test configurations',1)
+
+     do nc=1,nconf
+        if (configts(nc) == ' ') then
+           call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
+                nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
+                jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
+        else
+           call el_config(configts(nc),.false.,nwftsc(nc),eltsc(1,nc),  &
+                &     nntsc(1,nc),lltsc(1,nc),octsc(1,nc),iswtsc(1,nc))
+        endif
+     enddo
+35   call errore('ld1_readin','reading test wavefunctions',abs(ios))
+     !
+     !  adjust the occupations of the test cases if this is a lsd run
+     !
+     if (lsd == 1) then
+        do nc=1,nconf
+           call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
+                octsc(1,nc), iswtsc(1,nc)) 
+        enddo
+     endif
+     !
+     !    reading the pseudopotential
+     !
+     if (file_pseudo == ' ') &
+          call errore('ld1_readin','file_pseudo is needed',1)
+     if (matches('upf',file_pseudo) .or. matches('UPF', file_pseudo)) then
+        !
+        !    UPF format
+        !
+        call read_pseudoupf
+        !
+     else if ( matches('rrkj3', file_pseudo) .or. &
+               matches('RRKJ3', file_pseudo)) then
+        !
+        !    Old RRKJ format
+        !
+        call read_newpseudo
+        !
+        lmax=0
+        do ns=1,nwfs
+           lmax=max(lmax,lls(ns))
+        enddo
+     else
+        !
+        !    Old Norm-Conserving format
+        !
+        call read_pseudo  &
+             (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
+             dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
+        pseudotype = 1
+     endif
+     
+  else if (iswitch == 3) then
+     !
+     !    reading input for PP generation
      !
      file_pseudopw=' '
      file_screen=' '
@@ -292,6 +293,7 @@ subroutine ld1_readin
      file_chi=' '
      file_beta=' '
      file_qvan=' '
+     file_logderps=' '
      zval=0.0_dp
      lloc=-1
      rcloc=1.5_dp
@@ -299,18 +301,19 @@ subroutine ld1_readin
      rcore=0.0_dp
      rho0=0.0_dp
      tm  = .false.
+     pseudotype=0
 
      read(5,inputp,err=500,iostat=ios)
 500  call errore('ld1_readin','reading inputp',abs(ios))
 
-     if (file_pseudopw == ' ') &
-          call errore('ld1_readin','iswitch=3 and file_pseudopw?',1)
      if (rcloc <=0.0_dp) &
           call errore('ld1_readin','rcloc is negative',1)
-
+     if (pseudotype < 1.or.pseudotype > 3) &
+          call errore('ld1_readin','specify correct pseudotype',1)
+     !
      call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
           isws, jjs, enls, rcut, rcutus )
-
+     !
      lmax=0
      do ns=1,nwfs
         do ns1=1,ns-1
@@ -339,6 +342,25 @@ subroutine ld1_readin
      endif
      nlc=0
      nnl=0
+     !
+     ! initialize a few variables used in subsequent PP testing
+     !
+     file_wavefunctionsps= ' '
+     file_tests=' '
+     nconf=1
+     nwftsc(1)  = nwfs
+     do n=1,nwfs
+        eltsc (n,1)= els (n)
+        nntsc (n,1)= nns (n)
+        lltsc (n,1)= lls (n)
+        octsc (n,1)= ocs (n)
+        iswtsc(n,1)= isws(n)
+        jjtsc (n,1)= jjs (n)
+     end do
+     do n=1,nwf
+        oc_old(n)=oc(n)
+     enddo
+
   endif
 
   return

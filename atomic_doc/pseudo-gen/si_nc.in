@@ -17,14 +17,8 @@
 2P  2  1  6.0  1
 3S  3  0  2.0  1
 3P  3  1  1.5  1
- &test
-  pseudotype=1,
-  nconf=1,
- / 
-2
-3S  1  0  2.00  0.00  2.40  2.40  1
-3P  2  1  1.50  0.00  2.40  2.40  1
  &inputp
+   pseudotype=1
    lloc=1,
    tm=.true.,
    file_pseudopw='SiPBE_nc',

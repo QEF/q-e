@@ -3,11 +3,11 @@ Input data cards for ld1.x program
 Always present:
   1)  namelist &input
   2)  optional cards for all-electron calculations
-Needed for pseudo-potential (PP) generation and test only:
+Needed for pseudo-potential (PP) test:
   3)  namelist &test
   4)  optional cards for PP test
-Needed for PP generation only:
-  5)  namelist &inputp [optional, for PP generation only]
+Needed for PP generation:
+  5)  namelist &inputp
   6)  additional cards for PP generation
 
   1) namelist &input
@@ -85,34 +85,21 @@ Needed for PP generation only:
       jj = the total angular momentum (0.0 is allowed for complete shells:
            the codes fills 2l states with jj=l-1/2, 2l+2 with jj=l+1/2)
 
-  3) namelist &test (optional, read only if iswitch=2 or 3)
+  3) namelist &test (optional, read only if iswitch=2)
 
       nconf =   the number of configurations to be tested    (default: 1)
-                (only in PP test mode)                       
-      pseudotype =                                           (no default)
-           1    norm-conserving, single-projector PP (old format)
-           2    norm-conserving, multiple-projector PP in separable format
-           3    ultrasoft PP
-      file_pseudo = file containing the PP
-                If a PP is tested, the PP is read from file_pseudo
-                (note that the acceptable format depend on pseudotype).
-                If a PP is generated, it is written to file_pseudo.
-      file_pseudopw= file where the PP read from file_pseudo is 
-                     written in a format readable by PWscf.
-                     If the file name ends with "upf" or "UPF",
-                     or in any case for spin-orbit PP (rel=2),
-                     the file is written in UPF format; otherwise,
-                     in the old "NC" format if pseudotype=1,
-                     in the old RRKJ format if  pseudotype=2 or 3
-                     (default: ' ')
-      file_tests =   file containing the results of transferability tests
-      file_recon =   file containing data needed for PAW reconstruction 
-                     of all-electron wavefunctions from PP results
+      file_pseudo = file containing the PP                   (default: ' ')
+                    If the file name contains "upf" or "UPF",
+                    the file is assumed to be in UPF format; 
+                    otherwise, if the file name contains "rrkj3" or "RRKJ3",
+                    the file is assumed to be in the old RRKJ format;
+                    otherwise, in the old NC format
+      file_tests =  file containing the results of transferability tests
       file_wavefunctionps = file containing output PP wavefunctions
-      configts(nc) = a string containing the test electronic configuration nc
-                     nc=1,nconf. Same syntax as for "config". Default: ' '. 
-                     If configts(nc)=' ' the electron configuration is read 
-                     from the following cards.
+      configts(nc) = a string containing the test valence electronic
+                     configuration nc, nc=1,nconf. Same syntax as for "config".
+                     If all configts(nc)=' ' the electron configuration is
+                     read from the following cards:
 
   4) optional cards for PP test calculation
 
@@ -135,6 +122,20 @@ Needed for PP generation only:
   5) namelist &inputp  (optional, read only if iswitch=3)
 
       zval = valence charge
+      pseudotype =                                           (no default)
+           1    norm-conserving, single-projector PP (old format)
+           2    norm-conserving, multiple-projector PP in separable format
+           3    ultrasoft PP
+      file_pseudopw= file where the PP read from file_pseudo is 
+                     written in a format readable by PWscf.
+                     If the file name ends with "upf" or "UPF",
+                     or in any case for spin-orbit PP (rel=2),
+                     the file is written in UPF format; otherwise,
+                     in the old "NC" format if pseudotype=1,
+                     in the old RRKJ format if  pseudotype=2 or 3
+                     (default: ' ')
+      file_recon =  file containing data needed for PAW reconstruction 
+                    of all-electron wavefunctions from PP results
       ltest=.true. : test for ghosts states                  (default: .false.)
       lloc = angular momentum of the local channel           (default -1)
            lloc=-1 pseudizes the all-electron potential

@@ -59,7 +59,7 @@ subroutine write_pseudo &
 
   if (numeric) then
      !
-     !      pseudopotenziali in forma numerica
+     !      pseudopotentials in numeric form
      !
      do l = 0, lmax
         write( iunps, '(a)', err=300, iostat=ios )

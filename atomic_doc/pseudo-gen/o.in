@@ -16,14 +16,8 @@
 2S  2  0  2.0  1
 2P  2  1  4.0  1
 3D  3  2 -1.0  1
- &test
-  pseudotype=3,
-  nconf=1,
- / 
-2
-2S  1  0  2.00  0.00  1.40  1.60  1
-2P  2  1  4.00  0.00  1.40  1.60  1
  &inputp
+   pseudotype=3,
    lloc=2,
    file_pseudopw='OPBE.RRKJ3',
    zval=6.d0,
