@@ -61,6 +61,8 @@
         PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
           print_energies, debug_energies
 
+        PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc
+
       CONTAINS
 
 ! ---------------------------------------------------------------------------- !
