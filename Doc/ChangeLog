@@ -1,8 +1,14 @@
+27 Sep 2004 suport for alpha-linux with compaq compiler (Axel)
+
+24 Sep 2004 atomic_number : patch from Axel, fixes the case of 
+            atomic symobols with one letter
+
 23 Sep 2004 "make tar" was not saving atomic_doc
             Misc. Alpha compilation errors and warning (PG)
 
-22 Sep 2004 chdens: fix/modifications in dipole moment calculation
-            and makov-payne correction (PC)
+22 Sep 2004 chdens: changes in the calculation of the makov-payne 
+            correction. Now the MP term and the dipole are
+            calculated using the same box and the same logic (PC)
             added case ifc7 on linux64 [Gerardo]
 
 -------------------------------------------------------------------
