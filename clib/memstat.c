@@ -22,7 +22,7 @@ void MEMSTAT(int *me)
   printf("\n   MEMORY STATISTICS FROM PE(%d) : \n",*me);
   malloc_stats (0);
 #endif
-#if defined __SGI
+#if defined __SGI || defined __ORIGIN
   printf("\n   MEMORY STATISTICS FROM PE(%d) : \n",*me);
   /* malloc_stats (0); */
 #endif

@@ -1,14 +1,22 @@
 
-#if defined (__SX4) || defined (ORIGIN) || defined (T3D) || defined (FUJ64) || defined (HITACHI)
+#if defined (__SX4) || defined (__ORIGIN) || defined (T3D) || defined (FUJ64) || defined (HITACHI)
 #  define FLUSH
 #endif
 
-#if defined(CRAYY) || defined(SGI) || defined(PC) || defined(__AIX) || defined(T3D) ||defined(HITACHI) || defined(SUN)
+#if defined(CRAYY) || defined(PC) || defined(__AIX) || defined(T3D) ||defined(HITACHI) || defined(SUN)
 #  define C_POINTER  integer
 #endif
 
-#if defined(ORIGIN) || defined (FUJ64)|| defined (DEC) || defined (__SX6)
+#if defined (FUJ64)|| defined (DEC) || defined (__SX6)
 #  define C_POINTER  integer*8
+#endif
+
+#if defined __SGI || defined __ORIGIN
+#  if defined __SGI64
+#    define C_POINTER  integer*8
+#  else
+#    define C_POINTER  integer
+#  endif
 #endif
 
 #if defined(__SX4)

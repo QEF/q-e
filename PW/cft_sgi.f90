@@ -11,7 +11,7 @@ subroutine bidon_sgi
   stop 'cft_sgi'
 end subroutine bidon_sgi
 #else
-#ifdef ORIGIN
+#ifdef __ORIGIN
 !----------------------------------------------------------------------
 
 subroutine cft_1 (f, m, n, nx, sgn, fout)

@@ -255,7 +255,7 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call FFTW2D_F77_CREATE_PLAN
+     &     call FFTW2D_F77_CREATE_PLAN                                  &
      &        (plan(ibid),n1,n2,isign,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
       call FFTWND_F77 (plan(ibid),mplane,f,1,nx1*nx2,f,1,nx1*nx2)
@@ -301,7 +301,7 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call FFTW_F77_CREATE_PLAN
+     &     call FFTW_F77_CREATE_PLAN                                    &
      &        (plan(ibid),n,isign1,FFTW_ESTIMATE)
 !
       call FFTW_F77 (plan(ibid),m,f,1,nx,fout,1,nx)

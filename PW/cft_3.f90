@@ -99,7 +99,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
 end subroutine cft_3
 #else
 #undef PRESENT
-#if defined(SGI) || defined(ORIGIN)
+#if defined(__SGI) || defined(__ORIGIN)
 #define PRESENT
 !----------------------------------------------------------------------
 

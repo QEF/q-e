@@ -5,8 +5,12 @@
 # Add -D__FFTW if you want to use fft routines from fftw library
 # instead of fft from complib library
 #
-CPPFLAGS = -DORIGIN -D__PARA -D__MPI -I$(OSHOME)/include
-
+# Add -D__SGI64 if you are going to compile in 64 bit mode
+#
+# flags for CP code
+# CPPFLAGS = -D__FFTW -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA -I$(OSHOME)/include
+#
+CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA -I$(OSHOME)/include
 #
 # Fortran compiler:
 #
@@ -22,13 +26,23 @@ F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
 # This is needed to tell the compiler where modules are
 #
 MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
-
+#
+# C compiler
+#
+CC=cc
+#
+# Flags for the C compiler
+#
+CCFLAGS=  -mips4 -64 -O2 -r10000  $(INCLUDEFFTW) $(CPPFLAGS) 
 #
 # Libraries:
 #
 LIBS = -lmpi -lcomplib.sgimath
+# libs for the CP code
+# LIBS = -L/cineca/lib -lfftw64 -lmpi -lcomplib.sgimath
 #
 # Loader:
+#
 LD=$(F90)
 
 LDFLAGS = $(FFLAGS) $(OSHOME)/flib/flib.a $(LIBS)
