@@ -23,7 +23,7 @@
 !
       implicit none
       integer nmaxpar, nmaxpt, nseek/10000/, nmin/4/, npar,npt,istat
-      parameter( nmaxpar=4, nmaxpt=20)
+      parameter( nmaxpar=4, nmaxpt=100)
       character bravais*3, filin*20
       real*8 par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar),
      &       parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), 
@@ -118,7 +118,7 @@
 !
       implicit none
       integer nmaxpt, npt, npar, i, istat
-      parameter( nmaxpt=20 )
+      parameter( nmaxpt=100 )
       real*8 par(npar), k0, dk0, d2k0, c0, c1, x,
      &       vol0, v0(nmaxpt), etot(nmaxpt), efit(nmaxpt),
      &       ddk, emin, conv_atomic_unit, chisq

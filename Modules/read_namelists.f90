@@ -748,7 +748,7 @@ MODULE read_namelists_module
        IF( etot_conv_thr < 0.0d0 ) &
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
        IF( forc_conv_thr < 0.0d0 ) &
-          CALL errore( sub_name,' force_conv_thr out of range ', 1 )
+          CALL errore( sub_name,' forc_conv_thr out of range ', 1 )
        IF( prog == 'FP' .OR. prog == 'CP' ) THEN
           IF( tefield ) & 
              CALL errore( sub_name,' tefield not implemented yet ',-1)
