@@ -11,7 +11,7 @@ MODULE supercell
   !---------------------------------------------------------------------------
   !
   USE kinds,  ONLY : DP
-  USE brilz,  ONLY : alat, at
+  USE cell_base,  ONLY : alat, at
   !
   IMPLICIT NONE
   !
