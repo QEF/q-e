@@ -133,10 +133,11 @@ linux* )
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
 	ifort_version=`$f90 -V 2>&1 | grep "Intel(R)"`
 	pgf_version=`$f90 -V 2>&1 | grep "^pgf"`
-	g95_version=`$f90 -v 2>&1 | grep "version"`
+	g95_version=`$f90 -v 2>&1 | grep "g95"`
 	if test "$ifort_version" != ""
 	then
-		version=`echo $ifort_version | awk '{print $8}'`
+		version=`$f90 -V 2>&1 | grep -o "Version[[^,]]*" |
+			 awk '{print $2}'`
 		if test `echo $version | sed 's/\..*//'` -lt 8
 		then
 			f90_id=ifc
@@ -145,7 +146,7 @@ linux* )
 		fi
 		echo "${ECHO_T}$f90_id $version"
 
-		try_cc="icc gcc cc"
+		try_cc="icc ecc gcc cc"
 		try_f77="ifort ifc efc $f90"
 	elif test "$pgf_version" != ""
 	then
@@ -257,11 +258,12 @@ linux* )
 	echo $ECHO_N "checking version of $cc... $ECHO_C"
 	icc_version=`$cc -V 2>&1 | grep "Intel(R)"`
 	pgcc_version=`$cc -V 2>&1 | grep "^pgcc"`
-	gcc_version=`$cc -v 2>&1 | grep "version"`
+	gcc_version=`$cc -v 2>&1 | grep "gcc version"`
 	if test "$icc_version" != ""
 	then
 		cc_id=icc
-		cversion=`echo $icc_version | awk '{print $8}'`
+		cversion=`$cc -V 2>&1 | grep -o "Version[[^,]]*" |
+			  awk '{print $2}'`
 		echo "${ECHO_T}icc $cversion"
 	elif test "$pgcc_version" != ""
 	then
@@ -282,11 +284,10 @@ esac
 # check whether the C and Fortran compilers are compatible
 case "$arch:$cc_id:$f90_id" in
 	# list supported combinations here
-linux*:icc:ifort )                  ;;
-linux*:gcc:ifort | linux*:gcc:efc ) ;;
+linux*:icc:ifort | linux*:icc:ifc ) ;;
+linux*:gcc:ifort | linux*:gcc:ifc ) ;;
 linux*:pgcc:pgf90 )                 ;;
 linux*:gcc:g95 )                    ;;
-linux32:icc:ifc | linux32:gcc:ifc ) ;;
 aix:mpcc*:mpxlf* )                  ;;
 aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
 mips:cc:f90 )                       ;;
@@ -306,8 +307,18 @@ esac
 
 # check Fortran compiler flags
 case "$arch:$f90_id" in
-linux64:ifort | linux64:efc )
+linux64:ifort )
 	try_fflags="-Vaxlib -O2 -assume byterecl"
+	try_f90flags="\$(FFLAGS) -nomodule"
+	try_fflags_noopt="-O0"
+	try_ldflags="-Vaxlib"
+	try_ldflags_static="-static"
+	try_dflags="$try_dflags -D__INTEL"
+	pre_fdflags="-fpp "
+	have_cpp=1
+	;;
+linux64:ifc )
+	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
 	try_ldflags="-Vaxlib"
@@ -570,7 +581,7 @@ then
 	case "$arch" in
 	linux64 )
 		case "$f90_id" in
-		ifort )
+		ifort | ifc )
 			try_libdirs="/usr/local/lib
 				     /opt/intel/mkl70/lib/64
 				     /opt/intel/mkl/mkl61/lib/64
