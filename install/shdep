@@ -1,54 +1,44 @@
 #!/bin/sh
-#
+# compute dependencies
+
 INSTALL=install
-#
 make moduledep.x 
-#
-# Dipendencies on modules contained in Modules/
-#
+
+# directory that only depends on itself
 cd ../Modules
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 > dum2
-../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
-#
-# Directories that contain dependencies on modules in ./ and Modules/
-#
+ls *.f90 > tmp1
+ls *.f90 > tmp2
+../$INSTALL/moduledep.x tmp1 tmp2 > .dependencies
+
+# directories that depend on Modules/
 DIRS="PW FPMD CPV flib"
 for DIR in $DIRS ; do
   if test -d ../$DIR ; then
     cd ../$DIR
-    rm -f .dependencies
-    touch .dependencies
-    ls *.f90 > dum1
-    ls *.f90 ../Modules/*.f90 > dum2
-    ../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
+    ls *.f90 > tmp1
+    ls *.f90 ../Modules/*.f90 > tmp2
+    ../$INSTALL/moduledep.x tmp1 tmp2 > .dependencies
   fi
 done
-#
-# Directories that contain dependencies on modules in  ./, Modules/, PW/
-#
+
+# directories that depend on Modules/, PW/
 DIRS="PP PWCOND PWNC Gamma PH NEB"
 for DIR in $DIRS ; do
   if test -d ../$DIR ; then
      cd ../$DIR
-     rm -f .dependencies
-     touch .dependencies
-     ls *.f90 > dum1
-     ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
-     ../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
+     ls *.f90 > tmp1
+     ls *.f90 ../PW/*.f90 ../Modules/*.f90 > tmp2
+     ../$INSTALL/moduledep.x tmp1 tmp2 > .dependencies
   fi
 done
-#
-# Directories that contain dependencies on modules in ./, Modules/, PW/, PH/
-#
-DIR=D3
-if test -d ../$DIR ; then
-  cd ../$DIR
-  rm -f .dependencies
-  touch .dependencies
-  ls *.f90 > dum1
-  ls *.f90 ../PW/*.f90 ../PH/*.f90 ../Modules/*.f90 > dum2
-  ../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
-fi
+
+# directories that depend on Modules/, PW/, PH/
+DIRS="D3"
+for DIR in $DIRS ; do
+  if test -d ../$DIR ; then
+    cd ../$DIR
+    ls *.f90 > tmp1
+    ls *.f90 ../PW/*.f90 ../PH/*.f90 ../Modules/*.f90 > tmp2
+    ../$INSTALL/moduledep.x tmp1 tmp2 > .dependencies
+  fi
+done
