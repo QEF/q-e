@@ -54,10 +54,23 @@ subroutine read_pseudoupf
   r2(1:mesh)= r(1:mesh)**2
   sqr(1:mesh)=sqrt(r(1:mesh))
   if (.not.upf%has_so) then
-     dx=log(r(2)/r(1))
-     rmax=r(mesh)
-     xmin=log(zed*r(1))
-     zmesh=zed
+     if (r(1) > 0.0_dp) then
+        !
+        ! r(i+1) = exp(xmin)/zmesh * exp(i*dx)
+        !
+        dx=log(r(2)/r(1))
+        rmax=r(mesh)
+        xmin=log(zed*r(1))
+        zmesh=zed
+     else
+        !
+        ! r(i+1) = exp(xmin)/zmesh * ( exp(i*dx) - 1 )
+        !
+        dx=log( (r(3)-r(2)) / r(2) )
+        rmax=r(mesh)
+        zmesh=zed
+        xmin=log(zed*r(2)**2/(r(3)-2.0_dp*r(2)))
+     end if
   else
      dx=upf%dx
      xmin=upf%xmin
@@ -65,7 +78,7 @@ subroutine read_pseudoupf
      rmax=exp(xmin+(mesh-1)*dx)/zmesh
   endif
   if (abs(exp(xmin+(mesh-1)*dx)/zed-rmax).gt.1.e-6_dp) &
-   &   call errore('read_pseudoup','mesh not supported',1)
+       call errore('read_pseudoup','mesh not supported',1)
 
   nwfs = upf%nwfc
 
