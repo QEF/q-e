@@ -140,7 +140,7 @@ function check_line()
   else if (match($0, "band energy sum") || match($0, "contribution") \
 	   || match($0, "correction for metals"))
     {
-      print_key("CONTRIBUTION");
+      print_key("ECONTRIB");
     }
   else if (match($0, "total   stress"))
     {
@@ -187,14 +187,6 @@ function check_line()
     {
       print_key("TFORCE");
     }
-  else if (match($0, "energy new *="))
-    {
-      print_key("ITERATION");
-      while (getline && ! match($0, "bfgs converged"))
-	print_key("ITERATION");
-      print_key("ITERATION");
-      print "@CHECKPOINT@";
-    }
   else if (match($0, "Final energy *="))
     {
       print_key("ENERGY");
@@ -208,18 +200,6 @@ function check_line()
     {
       print_key("TEMPERATURE");
     }
-  else if (match($0, "Ekin =.*T =.*Etot ="))
-    {
-      print_key("TEMPERATURE");
-    }
-  else if (match($0, "Search of equilibrium positions:"))
-    {
-      print_key("ITERATION");
-      while (getline && ! match($0, "convergence achieved, Efinal="))
-	print_key("ITERATION");
-      print "@CHECKPOINT@";
-      print_key("EFINAL");
-    }
   else if (match($0, "new positions"))
     {
       while (NF > 0)
@@ -229,12 +209,6 @@ function check_line()
 	    print_key("POSITIONS");
 	}
       print;
-
-      # geometry relaxation starting
-      while (getline && ! match($0, "convergence achieved, Efinal="))
-	print_key("ITERATION");
-      print "@CHECKPOINT@";
-      print_key("EFINAL");
     }
   else if (match($0, "ATOMIC_POSITIONS"))
     {

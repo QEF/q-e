@@ -193,7 +193,7 @@ function check_key()
       # check passed
       return 1;
     }
-  else if (key == "CONTRIBUTION")
+  else if (key == "ECONTRIB")
     {
       tolerance = 2e-2;
 
