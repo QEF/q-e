@@ -542,7 +542,7 @@ SUBROUTINE projwave( )
         END DO
         IF ( nspin == 1) THEN
            WRITE( stdout, 2000) na, totcharge(1), &
-                ( charges(na,l,is), l= 0,lmax_wfc)
+                ( charges(na,l,1), l= 0,lmax_wfc)
         ELSE IF ( nspin == 2) THEN 
            WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
                 ( charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
