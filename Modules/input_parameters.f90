@@ -183,18 +183,18 @@
         REAL(dbl) :: ekin_conv_thr = 1.0d-5
           ! convergence criterion, minimizing the electrons this criterion is met 
           ! when "ekin < ekin_conv_thr"
-          ! convergence is aceived when all criterions are met
+          ! convergence is achieved when all criteria are met
 
         REAL(dbl) :: etot_conv_thr = 1.0d-4
           ! convergence criterion, minimizing the ions this criterion is met
           ! when "etot(n+1)-etot(n) < etot_conv_thr", where "n" is the step index,
           ! and "etot" the DFT energy
-          ! convergence is aceived when all criterions are met
+          ! convergence is achieved when all criteria are met
 
         REAL(dbl) :: forc_conv_thr = 1.0d-3
           ! convergence criterion, minimizing the ions this criterion is met
           ! when "MAXVAL(fion) < forc_conv_thr", where fion are the atomic forces
-          ! convergence is aceived when all criterions are met
+          ! convergence is achieved when all criteria are met
 
         CHARACTER(LEN=80) :: disk_io = 'default' 
           ! disk_io = 'high', 'default', 'low', 'minimal'
@@ -267,8 +267,9 @@
         INTEGER :: nbnd = 0
           ! number of electronic states, this parameter is MANDATORY in FPMD
 
-        INTEGER :: nelec = 0
+        REAL(dbl):: nelec = 0.d0
           ! number of electrons, this parameter is MANDATORY in FPMD
+          ! may be fractionary in PW, but not in CP and FPMD !
 
         REAL(dbl) :: ecutwfc = 0.0d0
           ! energy cutoff for wave functions in k-space ( in Rydbergs )
@@ -323,7 +324,7 @@
           ! "nspin = 1" for LDA simulations
           ! "nspin = 2" for LSD simulations
 
-        INTEGER :: nelup = 0, neldw = 0
+        REAL(dbl) :: nelup = 0.d0, neldw = 0.d0
           ! meaningful only if "nspin = 2", 
           ! "nelup" is the number of electrons with spin up
           ! "neldw" is the number of electrons with spin down
@@ -338,7 +339,7 @@
           ! "ecfixed" is the value (in Rydbergs) of the constant-cutoff 
           ! "qcutz" and "q2sigma" are the height and the width (in Rydbergs) 
           !   of the energy step for reciprocal vector whose square modulus 
-          !   is grather than  "ecfixed"
+          !   is greater than  "ecfixed"
 
         CHARACTER(LEN=80) :: xc_type = 'PZ'
           ! xc_type = 'BLYP' | 'BP' | 'PBE' | 'PZ' | 'PW' | 'LDA'
@@ -383,12 +384,12 @@
 
         REAL(dbl) :: eamp = 0.0d0 
 
-        NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, ntyp, nbnd, nelec, &
-          ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, nr3s, nr1b, nr2b, nr3b, &
-          nosym, starting_magnetization, occupations, degauss, ngauss, &
-          nelup, neldw, nspin, ecfixed, qcutz, q2sigma, xc_type, &
-          lda_plus_U, Hubbard_U, Hubbard_alpha, &
-          edir, emaxpos, eopreg, eamp, smearing
+        NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat,&
+             ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
+             nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
+             occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
+             qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
+             edir, emaxpos, eopreg, eamp, smearing
 
 !=----------------------------------------------------------------------------=!  
 !  ELECTRONS Namelist Input Parameters

@@ -232,7 +232,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
      nr1s = nr1
      nr2s = nr2
      nr3s = nr3
-     allocate (trig1  2 * nr1))    
+     allocate (trig1( 2 * nr1))    
      allocate (trig2( 2 * nr2))    
      allocate (trig3( 2 * nr3))    
      call setgpfa (trig1, nr1)
@@ -306,12 +306,6 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
           nr1, lot, sign)
 
   endif
-
-  !  array deallocation
-
-  IF ( ALLOCATED( trig1 ) )	DEALLOCATE( trig1 )
-  IF ( ALLOCATED( trig2 ) )	DEALLOCATE( trig2 )  
-  IF ( ALLOCATED( trig3 ) )	DEALLOCATE( trig3 ) 
 
 #endif
   return

@@ -1,4 +1,4 @@
-TODO LIST -  29 July 2003
+TODO LIST -  20 August 2003
 
 INSTALLATION
 
@@ -19,8 +19,6 @@ COMMON
 
 - file format unification must be finished
 
-- start merge of input routines
-
 - merge spherical harmonics, integration routines, etc
   spherical bessel: add routine directly calculating dj_l(x)/dx,
   verify limits x=>0, fix special cases x=>0 into the codes
@@ -36,6 +34,8 @@ COMMON
 - process numbering: 1 to nproc or 0 to nproc-1 ?
 
 PW
+
+- add/merge noncolinear code
 
 - replace "use pwcom" into more "use" statement
 

@@ -100,7 +100,7 @@
         nat    = 0
         ntyp   = 0
         nbnd   = 0
-        nelec  = 0
+        nelec  = 0.d0
         ecutwfc = 0.d0
         ecutrho = 0.d0
         nr1  = 0
@@ -116,8 +116,8 @@
         smearing = 'gaussan'
         degauss = 0.d0
         ngauss  = 0
-        nelup = 0
-        neldw = 0
+        nelup = 0.d0
+        neldw = 0.d0
         nspin = 1
         IF( prog == 'PW' ) nosym = .FALSE.
         IF( prog == 'CP' ) nosym = .TRUE.
@@ -587,12 +587,12 @@
         IF( prog /= 'PW' ) THEN
           IF( nbnd < 1 .OR. nbnd > nbndxx ) &
             CALL errore( sub_name ,' nbnd out of range ', MAX(nbnd, 1) )
-          IF( nelec < 1 .OR. nelec > 2*nbnd ) &
-            CALL errore( sub_name ,' nelec out of range ', MAX(nelec, 1) )
+          IF( nelec <= 0.d0 .OR. nelec > 2*nbnd ) &
+            CALL errore( sub_name ,' nelec out of range ', MAX(int(nelec), 1) )
         END IF
 
         IF( nspin < 1 .OR. nspin > nspinx ) &
-          CALL errore( sub_name ,' nelec out of range ', MAX(nspin, 1 ) )
+          CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )
 
         IF( ecutwfc <= 0.0d0 ) &
           CALL errore( sub_name ,' ecutwfc out of range ',1)
@@ -623,9 +623,9 @@
           IF( ngauss /= 0 ) &
             CALL errore( sub_name ,' ngauss is not used in FPMD ',-1)
         END IF
-        IF( nelup < 0 .OR. nelup > nelec ) &
+        IF( nelup < 0.d0 .OR. nelup > nelec ) &
           CALL errore( sub_name ,' nelup out of range ',-1)
-        IF( neldw < 0 .OR. neldw > nelec ) &
+        IF( neldw < 0.d0 .OR. neldw > nelec ) &
           CALL errore( sub_name ,' neldw out of range ',-1)
         IF( ecfixed < 0.0d0 ) &
           CALL errore( sub_name ,' ecfixed out of range ',-1)

@@ -28,15 +28,14 @@ subroutine readpp
         file_pseudo = pseudo_dir (1:l) //'/'//pseudop (nt)
      else
         file_pseudo = pseudo_dir (1:l) //pseudop (nt)
-
      endif
-     !   The new pseudopotential UPF format is detected via the presence
-     !   of the keyword 'begin_header' at the start of the file
-
+     !
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', iostat = ios)
      call errore ('readin', 'file '//trim(file_pseudo)//' not found', ios)
      call read_pseudo (nt, iunps, isupf)
+     !   The new pseudopotential UPF format is detected via the presence
+     !   of the keyword '<PP_HEADER>' at the beginning of the file
      if (isupf /= 0) then
         rewind (unit = iunps)
         !

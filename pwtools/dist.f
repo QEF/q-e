@@ -335,8 +335,8 @@
       implicit none  
       character*1 capital, character
 !
-      character(len=26) minuscole/'abcdefghijklmnopqrstuvwxyz'/,        &
-     &                  maiuscole/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
+      character*26 minuscole/'abcdefghijklmnopqrstuvwxyz'/,             &
+     &             maiuscole/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
       integer  i
 !
       do i=1,26

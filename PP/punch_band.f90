@@ -14,7 +14,7 @@ subroutine do_bands (nodenumber)
 #ifdef __PARA
   use para, only: me
   use io_global, only: ionode_id
-  use mp
+  use mp, only: mp_bcast
 #endif
   implicit none
   character (len=3)  :: nodenumber
@@ -98,7 +98,7 @@ subroutine punch_band (filband)
   ! igkold: indices of k+G at previous k-point
   ! il: band ordering
   integer, parameter :: maxdeg = 4
-  ! maxdeg: max allowed degeneracy
+  ! maxdeg : max allowed degeneracy
   integer :: ndeg, deg, nd
   ! ndeg : number of degenerate states
   integer, allocatable :: degeneracy(:), degbands(:,:), index(:)
@@ -109,20 +109,26 @@ subroutine punch_band (filband)
   complex(kind=DP), external :: cgracsc
  ! scalar product with the S matrix
 
-
   if (filband == ' ') return
   iunpun = 18
+#ifdef __PARA
+  if (me == 1) then
+#endif
   open (unit = iunpun, file = filband, status = 'unknown', form = &
        'formatted', err = 100, iostat = ios)
 100 call errore ('punch_band', 'Opening filband file', abs (ios) )
   rewind (iunpun)
+#ifdef __PARA
+  endif
+#endif
+
   allocate (psiold( npwx, nbnd))    
   allocate (old(ngm), new(ngm))    
   allocate (becpold(nkb, nbnd))    
   allocate (igkold (npwx))    
   allocate (ok (nbnd), il (nbnd))    
-  allocate (degeneracy(nbnd), degbands(nbnd,maxdeg))
-  allocate (index(maxdeg), edeg(maxdeg))
+  allocate (degeneracy(nbnd), edeg(nbnd))
+  allocate (index(maxdeg), degbands(nbnd,maxdeg))
   !
   do ik = 1, nks
      !
@@ -253,14 +259,20 @@ subroutine punch_band (filband)
 #endif
   enddo
 
-  deallocate (edeg, index)
-  deallocate (degbands, degeneracy)
+  deallocate (index, degbands)
+  deallocate (edeg, degeneracy)
   deallocate (il, ok)
   deallocate (igkold)
   deallocate (becpold)
   deallocate (new, old)
   deallocate (psiold)
 
+#ifdef __PARA
+  if (me == 1) then
+#endif
   close (iunpun)
+#ifdef __PARA
+  endif
+#endif
   return
 end subroutine punch_band

@@ -112,8 +112,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
   integer :: n1, n2, mplane, nx1, nx2, isign
   complex (kind=DP) :: f (nx1 * nx2 * mplane)
   !
-  integer :: nmax
-  parameter (nmax = 256)
+  integer, parameter :: nmax = 256
   complex (kind=DP) :: fout (nmax)
   integer :: ibid, isign1, i, k
   real (kind=DP) :: fac
@@ -126,7 +125,8 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
   data plan1 / 0, 0 /, plan2 / 0, 0 /
   !
   !
-  if (n1.gt.nmax.or.n2.gt.nmax) call errore ('cft_2', 'increase nmax', max (n1, n2) )
+  if (n1 > nmax .or. n2 > nmax) &
+       call errore ('cft_fftw.f90:cft_2', 'increase nmax', max (n1, n2) )
   if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
   if (isign.eq.1.or.isign.eq.2) then
      isign1 = 1
@@ -190,8 +190,7 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
   integer :: n1, n2, mplane, nx1, nx2, isign, planes (nx1)
   complex (kind=DP) :: f (nx1 * nx2 * mplane)
 #include "machine.h"
-  integer :: nmax
-  parameter (nmax = 256)
+  integer, parameter :: nmax = 256
   complex (kind=DP) :: fout (nmax)
   real (kind=DP) :: fac
   integer :: ibid, isign1, i, k, m, istrt
@@ -203,8 +202,8 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
   data plan1 / 0, 0 /, plan2 / 0, 0 /
   !
   !
-  if (n1.gt.nmax.or.n2.gt.nmax) call errore ('cft_2s', 'increase nmax &
-       &', max (n1, n2) )
+  if (n1 > nmax .or. n2 > nmax) &
+       call errore ('cft_fftw.f90:cft_2s', 'increase nmax', max (n1, n2) )
   if (n2.ne.nx2) call errore ('cft_2s', 'not implemented', 1)
   if (isign.eq.1.or.isign.eq.2) then
      isign1 = 1

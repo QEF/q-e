@@ -49,7 +49,7 @@ CONTAINS
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
 
-      use constants, only: pi, scmass, factem
+      use constants, only: pi, scmass, factem, eps8
       use parameters, only: nsx, natx, nbndxx
       use io_global, only: ionode
       use mp, only: mp_bcast
@@ -475,7 +475,10 @@ CONTAINS
       !
       
       IF( nelec < 1 ) THEN
-         CALL errore(' iosys ',' nelec less than 1 ', nelec )
+         CALL errore(' iosys ',' nelec less than 1 ', int(nelec) )
+      END IF
+      IF( nint(nelec) - nelec > eps8 ) THEN
+         CALL errore(' iosys ',' nelec must be integer', int(nelec) )
       END IF
 
       if( mod( n_ , 2 ) .ne. 0 ) then
@@ -494,15 +497,15 @@ CONTAINS
          !
          ! bogus to ensure \sum_i f_i = Nelec  (nelec is integer)
          !
-         f_ ( : ) = dfloat( nelec ) / n_         
-         nel_ (1) = nelec
+         f_ ( : ) = nelec / n_         
+         nel_ (1) = nint(nelec)
          nupdwn_ (1) = n_
          if ( nspin_ == 2 ) then
             !
             ! bogus to ensure Nelec = Nup + Ndw
             !
-            nel_ (1) = ( nelec + 1 ) / 2
-            nel_ (2) =   nelec       / 2
+            nel_ (1) = ( nint(nelec) + 1 ) / 2
+            nel_ (2) =   nint(nelec)       / 2
             nupdwn_ (1)=nbnd
             nupdwn_ (2)=nbnd
             iupdwn_ (2)=nbnd+1
@@ -513,19 +516,19 @@ CONTAINS
          !
          f_ ( 1:nbnd ) = f_inp( 1:nbnd, 1 )
          if( nspin_ == 2 ) f_ ( nbnd+1 : 2*nbnd ) = f_inp( 1:nbnd, 2 ) 
-         if( nelec == 0 ) nelec = SUM ( f_ ( 1:n_ ) )
+         if( nelec == 0.d0 ) nelec = SUM ( f_ ( 1:n_ ) )
          if( nspin_ == 2 .and. nelup == 0) nelup = SUM ( f_ ( 1:nbnd ) )
          if( nspin_ == 2 .and. neldw == 0) neldw = SUM ( f_ ( nbnd+1 : 2*nbnd ) )
 
          if( nspin_ == 1 ) then 
-           nel_ (1) = nelec
+           nel_ (1) = nint(nelec)
            nupdwn_ (1) = n_
          else
-           IF ( nelup + neldw /= nelec  ) THEN
+           IF ( ABS (nelup + neldw - nelec) > eps8 ) THEN
               CALL errore(' iosys ',' wrong # of up and down spin', 1 )
            END IF
-           nel_ (1) = nelup
-           nel_ (2) = neldw
+           nel_ (1) = nint(nelup)
+           nel_ (2) = nint(neldw)
            nupdwn_ (1)=nbnd
            nupdwn_ (2)=nbnd
            iupdwn_ (2)=nbnd+1
@@ -534,14 +537,14 @@ CONTAINS
       CASE ('fixed')
 
          if( nspin_ == 1 ) then
-            nel_ (1) = nelec
+            nel_ (1) = nint(nelec)
             nupdwn_ (1) = n_
          else
             IF ( nelup + neldw /= nelec  ) THEN
                CALL errore(' iosys ',' wrong # of up and down spin', 1 )
             END IF
-            nel_ (1) = nelup
-            nel_ (2) = neldw
+            nel_ (1) = nint(nelup)
+            nel_ (2) = nint(neldw)
             nupdwn_ (1)=nbnd
             nupdwn_ (2)=nbnd
             iupdwn_ (2)=nbnd+1

@@ -36,8 +36,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
   complex(kind=DP) :: f (nm1, nm2, nm3)
-  integer :: ngrid, nmax
-  parameter (ngrid = 2, nmax = 1000)
+  integer, parameter :: ngrid =2, nmax = 1000
   logical, save :: first (ngrid)
   complex(kind=DP), save :: aux (nmax, ngrid)
   real(kind=DP) :: fac
@@ -45,8 +44,8 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
 
   !save first, aux
   !first = (/(.true.,i=1,ngrid)/)
-  if (n1 + n2 + n3 + 45.gt.nmax) call errore ('cft_3', 'nmax too small',&
-       n1 + n2 + n3 + 45)
+  if (n1 + n2 + n3 + 45 > nmax) &
+       call errore ('cft_3', 'increase nmax', n1 + n2 + n3 + 45)
   if (first (igrid) ) then
      call zfft3di (n1, n2, n3, aux (1, igrid) )
      first (igrid) = .false.
@@ -99,8 +98,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, isign
 
   real :: ac (2, nm1, nm2, nm3)
-  integer :: ngrid, nmax
-  parameter (ngrid = 2, nmax = 256)
+  integer, parameter :: ngrid = 2, nmax = 256
   integer, save :: ifax (19, 3, ngrid), np1
   integer       :: inc, lot, jump, j, k
   real, save    :: trig (2 * nmax, 3, ngrid)
@@ -213,12 +211,9 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
 
   real(kind=DP) :: f (2, nrx1, nrx2, nrx3)
   ! inp/out: the function to transform
-  integer :: ngrid, nmax
+  integer, parameter :: ngrid = 2, nmax = 256
   ! max number of different grid allowed
   ! max value of n1, n2, n3 allowed
-
-  parameter (ngrid = 2, nmax = 256)
-
   integer :: k, inc, jump, lot
   ! counter on z direction
   ! the increment between different values

@@ -116,7 +116,6 @@ subroutine summary
              &       " beta functions with: ")') nbeta (nt)
         do ib = 1, nbeta (nt)
            write (6, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
-
         enddo
         write (6, '(5x,"Q(r) pseudized with ", &
              &          i2," coefficients,  rinner = ",3f8.3,/ &

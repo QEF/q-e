@@ -6,6 +6,7 @@ include ../make.sys
 #
 PWOBJS = pwcom.o  \
 para.o  \
+becmod.o  \
 clean_pw.o \
 aainit.o  \
 add_efield.o \
@@ -20,7 +21,6 @@ allocate_wfc.o  \
 atomic_rho.o  \
 atomic_wfc.o  \
 bachel.o  \
-becmod.o  \
 bfgs.o  \
 bp_bess.o \
 bp_calc_btq.o \
@@ -263,5 +263,5 @@ memory: $(PWOBJS) memory.o
 	$(LD) -o memory.x memory.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean_:
-	-/bin/rm -f pw.x *.o *~ *.F90 *.d *.mod *.i work.pc
+	-/bin/rm -f pw.x memory.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #
