@@ -1,4 +1,9 @@
  1 Dec 2004 Hubbard forces were wrong in the case npsin.eq.1 (SdG)
+            Added new example (contributed by Yosuke Kanai) on using cp.x
+            with the string method (SMD) to find minimum energy path (MEP).
+            [Gerardo]
+            Added "cvs2cl.pl" script as suggested by Axel to produce
+            a detailed ChangeLog from CVS commit message (PG)
 
 29 Nov 2004 Documentation updated (PG)
 
