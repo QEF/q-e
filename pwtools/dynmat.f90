@@ -330,7 +330,7 @@ subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
     write (6,'(/"#  mode   [cm-1]     [THz]       IR")')
  else
     write (6,'(5x,"Raman cross sections are in A^4/amu units")')
-    write (6,'(/5x,"Multiply Raman by",f9.6," for Clausius-Mossotti" &
+    write (6,'(/5x,"Multiply Raman by",f9.6," for Clausius-Mossotti", &
          & " correction")') cmfac**2
     write (6,'(/"#  mode   [cm-1]     [THz]      IR       Raman     depol")')
  end if
