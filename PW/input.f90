@@ -92,7 +92,8 @@ SUBROUTINE iosys
   USE wvfct,         ONLY : nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
   USE control_flags, ONLY : twfcollect 
-  USE noncollin,     ONLY : noncolin_  => noncolin, &
+  USE noncollin_module,     ONLY : baco_ibm_xlf, &
+                            noncolin_  => noncolin, &
                             lambda_    => lambda, &
                             i_cons_    => i_cons, &
                             mcons_     => mcons, &
