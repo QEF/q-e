@@ -275,6 +275,7 @@ MODULES = \
 ../Modules/io_routines.o \
 ../Modules/kind.o \
 ../Modules/minimization_routines.o \
+../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
