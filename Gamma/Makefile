@@ -1,6 +1,5 @@
 # Makefile for Gamma-only code
 
-include ../make.rules
 include ../make.sys
 
 PWOBJS = \

@@ -1072,7 +1072,7 @@ AC_SUBST(arflags)
 AC_SUBST(ranlib)
 AC_SUBST(f90rule)
 
-AC_CONFIG_FILES(make.sys make.rules)
+AC_CONFIG_FILES(make.sys)
 
 AC_OUTPUT
 

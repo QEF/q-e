@@ -1,7 +1,6 @@
 # Makefile for clib
 
 include ../make.sys
-include ../make.rules
 
 OBJS = \
 c_mkdir.o \

@@ -1,7 +1,6 @@
 # Makefile for flib
 
 include ../make.sys
-include ../make.rules
 
 OBJS = \
 avrec.o \

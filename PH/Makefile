@@ -1,6 +1,5 @@
 # Makefile for phonon (PH)
 
-include ../make.rules
 include ../make.sys
 
 PHOBJS = \

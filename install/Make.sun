@@ -1,31 +1,36 @@
-#
 # System-dependent Make definitions, SUN workstations
 # (Using sunperf library ) - contributed by Lazaro Caldarin
-#
+
+.SUFFIXES :
+.SUFFIXES : .o .c .f .f90
+
+.f90.o:
+	$(CPP) $(CPPFLAGS) $*.f90 $*.F90
+	$(F90) $(F90FLAGS) -c $*.F90 -o $*.o
+
+.f.o:
+	$(F77) $(F77FLAGS) -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
 # To use fftw instead of the sunperf library fft subroutine
 # add -D__FFTW -D__USE_INTERNAL_FFTW to CPPFLAGS
 
-# Preprocessor
-#
-CPP = fpp
+CPP      = fpp
 CPPFLAGS = -P -D__SUN -DHAS_ZHEGVX -I../include
-#
-# Fortran compiler:
-#
-F90 = f90
-F77 = f77
-#
+
+F90      = f90
+F77      = f77
 F77FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf
-F90FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf -M../Modules -M../PW -M../PH
-#
-LIBS = -L/usr/opt/SUNWhpc/lib -R/opt/SUNWhpc/lib -lmvec 
-#
-LD=$(F90)
-LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -fast -dalign \
- -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf $(LIBS)
-#
-# ar:
-#
-AR = ar
-ARFLAGS = ruv
-RANLIB         = echo
+F90FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf \
+           -M../Modules -M../PW -M../PH
+
+LIBS     = -L/usr/opt/SUNWhpc/lib -R/opt/SUNWhpc/lib -lmvec 
+
+LD       = $(F90)
+LDFLAGS  = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -fast -dalign \
+           -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf $(LIBS)
+AR       = ar
+ARFLAGS  = ruv
+RANLIB   = echo

@@ -1,7 +1,6 @@
 # Makefile for tools
 
 include ../make.sys
-include ../make.rules
 
 PWOBJS = \
 ../PW/cft_3.o \

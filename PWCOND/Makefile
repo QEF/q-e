@@ -1,6 +1,5 @@
 # Makefile for postprocessing (PP)
 
-include ../make.rules
 include ../make.sys
 
 PPOBJS = \

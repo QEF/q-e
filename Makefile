@@ -108,7 +108,7 @@ bindir :
 
 # remove object files and executables
 clean :
-	touch make.rules make.sys 
+	touch make.sys 
 	# make complains if they aren't there; same with make.depend below
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND Raman \
@@ -124,7 +124,7 @@ clean :
 
 # remove configuration files too
 veryclean : clean
-	- /bin/rm -rf make.rules make.sys \
+	- /bin/rm -rf make.sys \
 		      config.log config.status autom4te.cache \
 		      espresso.tar.gz CPV/version.h \
 		      intel.pcl */intel.pcl
@@ -138,7 +138,7 @@ tar :
 	tar cvf espresso.tar \
 	    License README* */README* Makefile */Makefile \
 	    configure configure.ac config.guess config.sub install-sh \
-	    makedeps.sh moduledep.sh make.rules.in make.sys.in \
+	    makedeps.sh moduledep.sh make.sys.in \
 	    configure.old */make.depend \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh

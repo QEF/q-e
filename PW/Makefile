@@ -1,6 +1,5 @@
 # Makefile for PW
 
-include ../make.rules
 include ../make.sys
 
 PWOBJS = \

@@ -1,6 +1,5 @@
 # Makefile for converters to UPF format
 
-include ../make.rules
 include ../make.sys
 
 OBJS = write_upf.o errore.o

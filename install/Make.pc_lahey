@@ -1,50 +1,49 @@
-#
 # System-dependent Make definitions for Linux PCs, Lahey compiler
 # Contributed by Marcos Verissimo Alves
 # Edit according to your needs
-#
-# Precompiler
+
+.SUFFIXES :
+.SUFFIXES : .o .c .f .f90
+
+.f90.o:
+	$(CPP) $(CPPFLAGS) $*.f90 $*.F90
+	$(F90) $(F90FLAGS) -c $*.F90 -o $*.o
+
+.f.o:
+	$(F77) $(F77FLAGS) -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
 # we assume that the GNU precompiler is used. The option -traditional
 # prevent string concatenation '//' from being interpreted as a comment
-#
-CPP = /usr/local/lf9560/lib/cpp -P -traditional
-#
+CPP          = /usr/local/lf9560/lib/cpp -P -traditional
+
 # Add -DADD_BLAS_ONE_UNDERSCORE if your blas/lapack library names contain 
 # two underscores at the end
 
-
-# Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
-#
-# In this case, specify also  how to load the fftw library (FFTW_LIB)
-# and the path to the fftw.h include file (FFTW_INC_DIR). Example:
-# FFTW_LIB=-L/usr/lib  -ldfftw
-# FFTW_INC_DIR=/usr/include/
-# CPPFLAGS = -D__LINUX -D__LAHEY -D__FFTW -I../include -I$(FFTW_INC_DIR)
+## Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
+## In this case, specify also  how to load the fftw library (FFTW_LIB)
+## and the path to the fftw.h include file (FFTW_INC_DIR). Example:
+# FFTW_LIB     = -L/usr/lib  -ldfftw
+# FFTW_INC_DIR = /usr/include/
+# CPPFLAGS     = -D__LINUX -D__LAHEY -D__FFTW -I../include -I$(FFTW_INC_DIR)
 
 # Use the local copy of fftw
+CPPFLAGS     = -D__LINUX -D__LAHEY -D__FFTW -D__USE_INTERNAL_FFTW \
+               -I../include -I.
 
-CPPFLAGS = -D__LINUX -D__LAHEY -D__FFTW -D__USE_INTERNAL_FFTW -I../include -I.
+F90          = lf95
+F77          = lf95
+F90FLAGS     = --staticlink --dbl -O -I../include -I../Modules -I../PW -I../PH
+CFLAGS       = -O -$(CPPFLAGS)
 
-#
-# Fortran compilers:
-#
-F90 = lf95
-F90FLAGS = --staticlink --dbl -O -I../include -I../Modules -I../PW -I../PH
-F77 = lf95
-
-CFLAGS = -O -$(CPPFLAGS)
-
-#
-# Loader:
 # this below uses precompiled lahey libraries.
-# 
-LD=$(F90)
-LIBS = -llapackmt -lblasmt  $(FFTW_LIB)
-LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) -I../Modules -I../PW -I../PH
+LIBS         = -llapackmt -lblasmt  $(FFTW_LIB)
 
-#
-# ar:
-#
-AR = ar
-ARFLAGS = ruv
-RANLIB         = echo
+LD           = $(F90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
+               -I../Modules -I../PW -I../PH
+AR           = ar
+ARFLAGS      = ruv
+RANLIB       = echo

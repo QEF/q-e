@@ -1,6 +1,5 @@
 # Makefile for 3rd derivative calculations - D3
 
-include ../make.rules
 include ../make.sys
 
 D3OBJS = \

@@ -5721,7 +5721,7 @@ fi
 
 
 
-                    ac_config_files="$ac_config_files make.sys make.rules"
+          ac_config_files="$ac_config_files make.sys"
 
 
 cat >confcache <<\_ACEOF
@@ -6274,7 +6274,6 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "make.sys" ) CONFIG_FILES="$CONFIG_FILES make.sys" ;;
-  "make.rules" ) CONFIG_FILES="$CONFIG_FILES make.rules" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;

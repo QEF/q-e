@@ -1,7 +1,6 @@
 # Makefile for CP/FPMD
 
 include	../make.sys
-include ../make.rules
 
 FOBJS = \
 atoms_type.o \

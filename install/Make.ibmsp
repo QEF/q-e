@@ -1,68 +1,60 @@
-#
 # System-dependent definitions for IBM AIX (RISC6000) parallel machines
 # Edit according to your needs
-#
-# Macros for conditional compilation
-# If the mass library is available, use
-# CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-DHAS_ZHEGVX
-#
-CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
-#
+
+.SUFFIXES :
+.SUFFIXES : .o .c .f .f90
+
+.f90.o:
+	$(F90) $(F90FLAGS) -c $<
+
+.f.o:
+	$(F77) $(F77FLAGS) -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+## If the mass library is available, use
+# CPPFLAGS       = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-DHAS_ZHEGVX
+
+CPPFLAGS       = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
+
 # Fortran compiler:
-#
 # Use -g -C without -s in LDFLAGS for debugging
 # Use -O            for optimization
 # Use -O3 -qstrict  for higher optimization (may not go faster)
 # Use -qarch=auto -qtune=auto for processor-specific optimization
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
-#
-F90 = mpxlf
-F77 = $(F90)
-#
-# Fortran compiler flags
-#
-FFLAGS = -qalias=noaryovrlp -I../include \
-         -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
-         -qdpc -Q -qalias=nointptr
-#
-# Fortran77 compiler flags
-#
-F77FLAGS = $(FFLAGS)
+F90            = mpxlf
+F77            = $(F90)
+FFLAGS         = -qalias=noaryovrlp -I../include \
+                 -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+                 -qdpc -Q -qalias=nointptr
+F77FLAGS       = $(FFLAGS)
 F77FLAGS_NOOPT = -O0
-#
-# Fortran90 compiler flags
-#
-F90FLAGS = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS) -I../Modules -I../PW -I../PH
-#
-# C compiler flags
-#
-CFLAGS  = -I../include -Wp,$(CPPFLAGS) -O2
-#
-# Libraries:
-#
+F90FLAGS       = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS) \
+                 -I../Modules -I../PW -I../PH
+CFLAGS         = -I../include -Wp,$(CPPFLAGS) -O2
+
 # We assume that essl is installed and that lapack is in /usr/local/lib
 # NOTA BENE: essl must be loaded BEFORE lapack in order to load the correct
 #            version of diagonalization routines
 #            use esslp2 if available on power2 machines
-#
+LIBS           = -lessl  -L/usr/local/lib -llapack
+
 # For Cineca machines:
-# LIBS = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass -lmassvp4 -lmass
-#
-LIBS = -lessl  -L/usr/local/lib -llapack
-#
-# Linker flags
-#
-# Loader: use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
-#         use -bnso -bI:/usr/lib/syscalls.exp for static linking
-#         use -s for stripped executable (smaller file but no debugging)
-#
-LD=$(F90)
-#LDFLAGS = ../flib/ptools.a ../flib/flib.a $(LIBS) -s
-LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) -s -bmaxdata:512000000
-#
-# ar:
-#
-AR = ar
-ARFLAGS = ruv
+# LIBS           = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass \
+#                  -lmassvp4 -lmass
+
+# use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
+# use -bnso -bI:/usr/lib/syscalls.exp for static linking
+# use -s for stripped executable (smaller file but no debugging)
+LD             = $(F90)
+
+# LDFLAGS        = ../flib/ptools.a ../flib/flib.a $(LIBS) -s
+LDFLAGS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
+                 -s -bmaxdata:512000000
+
+AR             = ar
+ARFLAGS        = ruv
 RANLIB         = echo

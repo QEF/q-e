@@ -1,6 +1,5 @@
 # Makefile for Modules
 
-include ../make.rules
 include ../make.sys
 
 MODULES = \

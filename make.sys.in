@@ -1,4 +1,17 @@
 # @configure_input@
+
+.SUFFIXES :
+.SUFFIXES : .o .c .f .f90
+
+.f90.o:
+	@f90rule@
+
+.f.o:
+	$(F77) $(F77FLAGS) -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
 @SET_MAKE@
 CC             = @cc@
 CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)

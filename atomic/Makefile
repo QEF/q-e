@@ -2,7 +2,6 @@
 # Makefile for atomic code
 #
 
-include ../make.rules
 include ../make.sys
 
 LD1OBJS = \

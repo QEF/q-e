@@ -1,6 +1,5 @@
 # Makefile for Nmr
 
-include ../make.rules
 include ../make.sys
 
 NMROBJ = \
