@@ -29,6 +29,7 @@ MODULES = \
 ../Modules/basic_algebra_routines.o \
 ../Modules/cell_base.o \
 ../Modules/constants.o \
+../Modules/control_flags.o \
 ../Modules/io_global.o \
 ../Modules/io_files.o \
 ../Modules/fft_scalar.o \
@@ -39,7 +40,8 @@ MODULES = \
 ../Modules/parameters.o \
 ../Modules/path_formats.o \
 ../Modules/supercell.o \
-../Modules/splinelib.o
+../Modules/splinelib.o \
+../Modules/timestep.o
 
 all : band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
       path_int.x pwi2xsf.x q2r.x
