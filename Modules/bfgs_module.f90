@@ -984,7 +984,7 @@ MODULE bfgs_module
           !
        END DO 
        !
-       preconditioning = ( y(:,lbfgs_ndim) .dot. y(:,lbfgs_ndim) )
+       preconditioning = ( s(:,lbfgs_ndim) .dot. s(:,lbfgs_ndim) )
        !
        IF ( preconditioning > eps16 ) THEN
           !
