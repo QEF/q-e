@@ -830,7 +830,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
                                    nl, nlm, gg
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,                ONLY : ngm0
+  USE control_flags,        ONLY : ngm0
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
@@ -846,11 +846,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
   INTEGER, PARAMETER :: & 
     mmx = 12
   INTEGER :: &
-    iwork(mmx),i,j,m,info, nspin_save
+    iwork(mmx), i, j, m, info, nspin_save
   REAL(KIND=DP) :: &
     rs, min_rs, max_rs, avg_rsm1, target, dr2_best, ccc, cbest, l2smooth
   REAL(KIND=DP) :: &
-    aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx),agg0
+    aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
   COMPLEX(KIND=DP) :: &
     rrho, rmag
   COMPLEX(KIND=DP), ALLOCATABLE :: &
@@ -868,8 +868,15 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( nspin == 2 ) THEN
      !
-     drho(:,1) = drho(:,1) + drho(:,2)
-     drho(:,2) = drho(:,1) - drho(:,2)
+     DO ig = 1, ngm0
+        !
+        rrho = drho(ig,1) + drho(ig,2)
+        rmag = drho(ig,1) - drho(ig,2)
+        !        
+        drho(ig,1) = rrho
+        drho(ig,2) = rmag
+        !
+     END DO
      !
   END IF
   !
