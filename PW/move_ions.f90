@@ -98,6 +98,9 @@ SUBROUTINE move_ions()
         history = 0
         tauold  = 0.D0
         !
+        WRITE( UNIT = iunupdate, FMT = * ) history
+        WRITE( UNIT = iunupdate, FMT = * ) tauold
+        !
      END IF
      !
      CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
