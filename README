@@ -47,6 +47,8 @@ pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
 pwdoc/     documentation for PWscf, ChangeLog, etc
 pw_examples/ contains sample input and output files
+GUI/       Source files for the Graphical User Interface "Tk4PWscf",
+           written by Tone Kokalj (http://www-k3.ijs.si/kokalj/tkpwscf/)
 
 Directory structure of the CP code:
 
