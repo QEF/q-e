@@ -9,6 +9,7 @@
 subroutine save_in_electrons (iter, dr2)
   !-----------------------------------------------------------------------
   use pwcom
+  use io_files, only: iunres
   implicit none
   character :: where * 20
   ! are we in the right place?

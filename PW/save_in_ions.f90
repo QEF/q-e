@@ -9,6 +9,7 @@
 subroutine save_in_ions
   !-----------------------------------------------------------------------
   use pwcom
+  use io_files, only: iunres
   implicit none
   character :: where * 20
   ! are we in the right place?

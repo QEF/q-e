@@ -10,6 +10,7 @@ subroutine write_igk
   !
   use pwcom
   use phcom
+  USE io_files, ONLY : iunigk
   implicit none
   if (nksq.ne.1) return
   rewind (unit = iunigk)

@@ -82,7 +82,7 @@ subroutine write_wannier (nk, s0, kunit)
   USE io_global,      ONLY : stdout
   use pwcom  
   USE wavefunctions_module,  ONLY : evc
-  use io_files,       only : nd_nmbr, tmp_dir, prefix
+  use io_files,       only : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   use io_base,        only : write_restart_wfc
   use io_global,      only : ionode
   use mp_global,      only : nproc, nproc_pool

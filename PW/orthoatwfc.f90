@@ -16,6 +16,7 @@ subroutine orthoatwfc
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
+  USE io_files, ONLY: iunat, nwordatwfc, iunigk
   use pwcom
   use becmod
 #ifdef __PARA

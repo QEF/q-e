@@ -16,6 +16,7 @@ subroutine openfilq
   use pwcom
   use mp, only: mp_end
   use io_files, only: prefix
+  USE io_files, ONLY: iunigk, filpun
   use parameters, only : DP
   use phcom
 #ifdef __PARA

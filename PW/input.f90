@@ -48,7 +48,7 @@ SUBROUTINE iosys
                             eopreg_   => eopreg, &
                             eamp_     => eamp, &
                             forcefield
-  USE filnam,        ONLY : input_drho, output_drho
+  USE io_files,      ONLY : input_drho, output_drho
   USE force_mod,     ONLY : lforce, lstres, force
   USE gvect,         ONLY : dual, &
                             nr1_     => nr1, &

@@ -17,6 +17,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   use pwcom
   use parameters, only : DP
+  USE io_files, ONLY: iunigk
   use phcom
   implicit none
 

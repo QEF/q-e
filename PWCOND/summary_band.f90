@@ -12,6 +12,7 @@ subroutine summary_band(ik,ien)
 ! 
 #include "machine.h"
   USE io_global,  ONLY :  stdout
+  USE io_files, ONLY: band_file
   use pwcom
   use cond
   implicit none

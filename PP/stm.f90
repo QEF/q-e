@@ -27,6 +27,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY : evc, psic
+  USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
 !
   implicit none

@@ -15,7 +15,9 @@ subroutine openfil
   !
   USE io_global,  ONLY : stdout
   use pwcom
-  use io_files, only: prefix
+  use io_files, only: prefix, nwordatwfc, iunat, iunigk, iunocc, &
+                      iunoldwfc, iunwfc, nwordwfc, iunoldwfc2
+
   use restart_module, only: readfile_new
 #ifdef __PARA
   use para

@@ -9,6 +9,7 @@ subroutine zstar_eu_us
 
   use parameters, only : DP
   USE wavefunctions_module,    ONLY : evc
+  USE io_files, ONLY: iunigk
   use pwcom
   use phcom
   use becmod

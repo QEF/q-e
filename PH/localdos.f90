@@ -24,6 +24,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
   use becmod
   use parameters, only : DP
   use phcom
+  USE io_files, ONLY: iunigk
+
   implicit none
 
   complex(kind=DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)

@@ -39,6 +39,7 @@ subroutine update_pot
   !
 
   USE io_global,  ONLY : stdout
+
   use pwcom
   implicit none
 
@@ -169,6 +170,7 @@ subroutine extrapolate_wfcs
   !
 #include "machine.h"
   USE io_global,        ONLY : stdout
+  USE io_files, ONLY: iunoldwfc, iunoldwfc2, iunwfc, iunigk, nwordwfc
   use pwcom
   USE wavefunctions_module,    ONLY : evc
   implicit none

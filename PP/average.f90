@@ -42,7 +42,7 @@ program average
   use parameters,     only : DP
   use pwcom
   USE wavefunctions_module,  ONLY : psic
-  use io_files,       only : nd_nmbr
+  use io_files,       only : nd_nmbr, iunpun
 #ifdef __PARA
   use para,           only : me
 #endif

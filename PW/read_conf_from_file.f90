@@ -11,7 +11,7 @@ subroutine read_config_from_file
 
   USE io_global,      ONLY : stdout
   use pwcom
-  use io_files,       only: prefix
+  use io_files,       only: prefix, iunres
   use restart_module, only : readfile_config
 
   implicit none

@@ -19,7 +19,7 @@ subroutine bcast_d3_input
   use phcom
   use d3com
   use mp, only: mp_bcast
-  use io_files, only: prefix, tmp_dir
+  use io_files, only: prefix, tmp_dir, filpun
 
   implicit none
   integer :: root = 0

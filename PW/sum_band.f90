@@ -17,6 +17,7 @@ subroutine sum_band
   !
 #include "machine.h"
   use pwcom
+  use io_files, only: iunwfc, nwordwfc, iunigk
   USE wavefunctions_module,    ONLY : evc, psic
   use becmod
 #ifdef __PARA

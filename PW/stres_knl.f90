@@ -12,6 +12,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !
 #include "machine.h"
   use pwcom
+  use io_files, only: iunwfc, nwordwfc, iunigk
   USE wavefunctions_module,    ONLY : evc
   implicit none
   real(kind=DP) :: sigmanlc (3, 3), sigmakin (3, 3)

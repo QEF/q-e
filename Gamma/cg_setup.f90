@@ -14,7 +14,7 @@ subroutine cg_setup
   use parameters, only: DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use io_files, only: prefix
+  use io_files, only: prefix, filpun, iunpun, iunres
   use cgcom
   use funct
   !

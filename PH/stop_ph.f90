@@ -17,6 +17,7 @@ subroutine stop_ph (flag)
 
   use pwcom
   use parameters, only : DP
+  USE io_files, ONLY: iunigk
   use phcom
   use mp, only: mp_end
 #ifdef __PARA

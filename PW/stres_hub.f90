@@ -16,7 +16,7 @@ subroutine stres_hub ( sigmah )
    !
 #include "machine.h"
    use pwcom
-   use io_files, only : prefix
+   use io_files, only : prefix, iunocc
 #ifdef __PARA
    use para
 #endif

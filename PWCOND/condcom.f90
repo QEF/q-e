@@ -9,19 +9,6 @@
 !
 ! ... Common variables for conductance calculation  
 !
-MODULE filnam_cond
-  USE parameters
-  !
-  ! ...Names of the files     
-  !
-  SAVE
-  !
-  CHARACTER(LEN=80) :: &
-        band_file,     &!
-        tran_file,     &!
-        fil_loc         !  file with 2D eigenvectors and eigenvalues
-  !
-END MODULE filnam_cond
 !
 !
 MODULE zdir_cond
@@ -204,7 +191,6 @@ END MODULE cb_cond
 !
 !
 MODULE cond
-  USE filnam_cond
   USE zdir_cond
   USE perp_cond
   USE eigen_cond

@@ -9,6 +9,7 @@
 subroutine restart_in_electrons (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   USE io_global,        ONLY : stdout
+  USE io_files,        ONLY : iunwfc, nwordwfc, iunres
   use pwcom
   USE wavefunctions_module,    ONLY : evc
   implicit none

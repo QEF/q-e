@@ -9,7 +9,8 @@
 subroutine remove_atomic_rho
   !-----------------------------------------------------------------------
 #include "machine.h"
-  USE io_global,  ONLY : stdout
+  USE io_global, ONLY: stdout
+  USE io_files, ONLY: output_drho
   use pwcom
   implicit none
   integer :: ir

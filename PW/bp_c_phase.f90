@@ -149,6 +149,7 @@ SUBROUTINE c_phase
 
 !  --- Make use of the module with common information ---
    USE io_global,        ONLY : stdout
+   USE io_files, ONLY: iunwfc, nwordwfc
    USE pwcom
    USE wavefunctions_module,    ONLY : evc
 

@@ -21,11 +21,12 @@ subroutine c_bands (iter, ik_, dr2)
   !   c) DIIS algorithm
   !
 #include "machine.h"
-  USE io_global,      ONLY : stdout 
+  USE io_global,     ONLY : stdout 
+  USE io_files,      ONLY : iunigk, nwordwfc, nwordatwfc, iunwfc, iunat 
   use pwcom, ONLY: g, g2kin, tpiba2, ecfixed, qcutz, lda_plus_u, &
- iunwfc, swfcatom, iunat, nwordatwfc, q2sigma, diis_ndim, wg, nbndx, nkstot, &
+ swfcatom, q2sigma, diis_ndim, wg, nbndx, nkstot, &
  okvan, et, istep, ethr, lscf, max_cg_iter, vltot, nrxx, nr1, nr3, nr2, nbnd, &
- nks, npwx, diis_ethr_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, &
+ nks, npwx, diis_ethr_cg, isolve, vkb, xk, reduce_io, &
  current_spin, lsda, isk, igk, npw
   USE wavefunctions_module,  ONLY : evc
   use g_psi_mod

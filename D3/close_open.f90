@@ -14,8 +14,9 @@ subroutine close_open (isw)
   !
   !
 #include"machine.h"
-  use pwcom, only: filpun, degauss
+  use pwcom, only: degauss
   use phcom, only: iudwf, lrdwf, lgamma
+  use io_files, only: filpun
   use d3com
 #ifdef __PARA
   use para

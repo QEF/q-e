@@ -41,7 +41,7 @@ SUBROUTINE electrons
                             nmix, imix, iprint, istep, iswitch, lscf, &
                             conv_elec, restart, reduce_io  
   USE units,         ONLY : iunwfc, iunocc, nwordwfc
-  USE filnam,        ONLY : output_drho   
+  USE io_files,      ONLY : output_drho   
   USE ldaU,          ONLY : ns, nsnew, eth, Hubbard_U, niter_with_fixed_ns, &
                             Hubbard_lmax, lda_plus_u  
   USE extfield,      ONLY : tefield, etotefield  

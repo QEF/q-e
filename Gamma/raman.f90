@@ -115,6 +115,7 @@ subroutine cg_deps(deps_dtau)
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
+  USE io_files,      ONLY : iunres
   use pwcom
   use cgcom
 #ifdef __PARA
@@ -244,6 +245,7 @@ subroutine cg_eps0dyn(w2,dynout)
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
+  USE io_files,      ONLY : iunres
   use pwcom
   use cgcom
 #ifdef __PARA
@@ -399,6 +401,7 @@ subroutine newscf
   !
   use pwcom
   use funct
+  USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
   !
   implicit none
   integer :: iter
@@ -497,6 +500,7 @@ subroutine raman_cs2(w2,dynout)
   !
 #include "machine.h"
   USE io_global,  ONLY :  stdout
+  USE io_files,      ONLY : iunres
   use pwcom
   use cgcom
 #ifdef __PARA

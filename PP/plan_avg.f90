@@ -27,6 +27,7 @@ subroutine plan_avg (averag, plan, ninter)
 
   use pwcom
   USE wavefunctions_module,  ONLY: evc
+  USE io_files, ONLY: iunwfc, nwordwfc
   use becmod
 
   implicit none

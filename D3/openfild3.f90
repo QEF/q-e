@@ -17,6 +17,7 @@ subroutine openfild3
   use pwcom
   use phcom
   use d3com
+  USE io_files,      ONLY : iunigk, filpun
 #ifdef __PARA
   use para
 #endif

@@ -15,6 +15,7 @@ subroutine dielec
 #include "machine.h"
 
 USE io_global,  ONLY : stdout
+USE io_files, ONLY: iunigk
 use pwcom
 use parameters, only : DP
 use phcom

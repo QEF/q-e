@@ -14,6 +14,7 @@ subroutine dpsidvdpsi (nu_q0)
   use pwcom
   use phcom
   use d3com
+  USE io_files,      ONLY : iunigk
 
   implicit none
   integer :: nu_q0

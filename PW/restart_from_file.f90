@@ -9,6 +9,7 @@
 subroutine restart_from_file
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
+  USE io_files,  ONLY : iunres
   use pwcom
   implicit none
 

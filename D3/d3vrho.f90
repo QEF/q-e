@@ -17,6 +17,7 @@ subroutine d3vrho
 #include "machine.h"
   use pwcom
   USE wavefunctions_module,  ONLY: evc
+  USE io_files,      ONLY : iunigk
   use phcom
   use d3com
   !

@@ -165,6 +165,7 @@ subroutine elphel (npe, imode0, dvscfins)
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   use parameters, only : DP
+  USE io_files, ONLY: iunigk
   use phcom
   use el_phon
   implicit none

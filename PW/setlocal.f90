@@ -16,7 +16,7 @@ subroutine setlocal
   USE parameters, ONLY: DP
   USE basis,  ONLY: ntyp
   USE extfield, ONLY: tefield, dipfield
-  USE gvect,  ONLY : nl, nlm, igtongl
+  USE gvect,  ONLY: igtongl
   USE scf,    ONLY: vltot
   USE vlocal, ONLY : strf, vloc
   USE wvfct,  ONLY: gamma_only

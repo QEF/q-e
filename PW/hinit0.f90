@@ -12,6 +12,7 @@ subroutine hinit0
   ! configuration-independent hamiltonian initialization
   !
   use pwcom
+  USE io_files, ONLY: iunigk
   implicit none
   ! counter on k points
   integer :: ik

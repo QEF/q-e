@@ -16,6 +16,7 @@ subroutine stop_d3 (flag)
   use pwcom
   use phcom
   use d3com
+  USE io_files,      ONLY : iunigk
   use mp, only: mp_end
 #ifdef __PARA
   use para

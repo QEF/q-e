@@ -23,7 +23,7 @@ subroutine potinit
 #include "machine.h"
   USE io_global,  ONLY : stdout
   use pwcom
-  use io_files, only: prefix
+  use io_files, only: prefix, input_drho, iunocc
 #ifdef __PARA
   use para
   use mp

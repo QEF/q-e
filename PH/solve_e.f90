@@ -21,6 +21,7 @@ subroutine solve_e
   !
 #include "machine.h"
   USE io_global,      ONLY : stdout
+  USE io_files, ONLY: iunigk
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   use parameters, only : DP

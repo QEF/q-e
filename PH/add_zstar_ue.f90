@@ -17,6 +17,7 @@ subroutine add_zstar_ue (imode0, npe)
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   use parameters, only : DP
+  USE io_files, ONLY: iunigk
   use phcom
   implicit none
 

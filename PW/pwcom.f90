@@ -529,28 +529,6 @@ MODULE cellmd
 END MODULE cellmd
 !
 !
-MODULE units
-  USE parameters
-  !
-  ! ... The units where various variables are saved
-  !
-  SAVE
-  !
-  INTEGER :: &
-       iunpun,           &! unit for saving the final results
-       iunwfc,           &! unit with wavefunctions
-       iunat,            &! unit for saving orthogonal atomic wfcs
-       iunocc,           &! unit for saving the atomic n_{ij}
-       iunoldwfc,        &! unit with old wavefunctions (molecular dynamics)
-       iunoldwfc2,       &! as above at step -2
-       iunigk,           &! unit for saving indices
-       iunres,           &! unit for the restart of the run
-       iunneb,           &! unit for NEB output ( sdtout or what else )
-       nwordwfc,         &! lenght of record in wavefunction file
-       nwordatwfc         ! lenght of record in atomic wfc file
-  !
-END MODULE units
-!
 !
 MODULE char
   USE parameters
@@ -567,19 +545,6 @@ MODULE char
 END MODULE char
 !
 !
-MODULE filnam
-  USE parameters
-  !
-  ! ... The name of the files
-  !
-  SAVE
-  !
-  CHARACTER(LEN=80) :: &
-       filpun,         &! name of the punch file
-       input_drho,     &! name of the file with the input drho
-       output_drho      ! name of the file with the output drho
-  !
-END MODULE filnam
 !
 !
 MODULE us
@@ -771,9 +736,7 @@ MODULE pwcom
   USE varie
   USE relax
   USE cellmd
-  USE units
   USE char
-  USE filnam
   USE us
   USE ldaU
   USE extfield

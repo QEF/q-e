@@ -16,6 +16,7 @@ subroutine force_us (forcenl)
 
   use pwcom
   USE wavefunctions_module,  ONLY: evc
+  USE io_files,      ONLY : iunigk, iunwfc, nwordwfc
   implicit none
   !
   real(kind=DP) :: forcenl (3, nat)

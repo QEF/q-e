@@ -15,6 +15,8 @@ subroutine wfcinit
   !
 #include "machine.h"
   USE io_global,        ONLY : stdout
+  USE io_files, ONLY: nwordatwfc, iunat, iunigk, nwordwfc, iunwfc
+
   use pwcom
   USE wavefunctions_module,    ONLY : evc
   implicit none
