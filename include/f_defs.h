@@ -281,7 +281,7 @@
 
 #endif
 
-#if defined (__AIX)
+#if defined (__AIX) || defined (__MAC)
 #  define flush  flush_
 #endif
 
