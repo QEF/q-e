@@ -15,7 +15,7 @@ CONTAINS
 !
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
-!      use reciprocal_vectors, only: ng0 => gstart
+!      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na
       use parameters, only: natx
       use grid_dimensions, ONLY: nr1, nr2, nr3
@@ -344,7 +344,7 @@ CONTAINS
 !
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
-!      use reciprocal_vectors, only: ng0 => gstart
+!      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na
       use parameters, only: natx, nsx
       use grid_dimensions, ONLY: nr1, nr2, nr3

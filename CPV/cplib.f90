@@ -19,7 +19,7 @@
 
       ! this isn't really needed, but if I remove it, ifc 7.1
       ! gives an "internal compiler error"
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
 
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
@@ -72,7 +72,7 @@
 !
       use ncprm
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na, nas => nax
       use gvec
       use wfc_atomic
@@ -482,7 +482,7 @@
 !
       use ions_base, only: na
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use elct
       use cvan
 !
@@ -501,7 +501,7 @@
          temp(ig)=real(conjg(cp(ig,i))*cp(ig,i))
       end do
       rsum=2.*SUM(temp)
-      if (ng0.eq.2) rsum=rsum-temp(1)
+      if (gstart == 2) rsum=rsum-temp(1)
 #ifdef __PARA
       call reduce(1,rsum)
 #endif
@@ -534,7 +534,7 @@
       use constants, only: pi, fpi
       use elct
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cell_base, only: ainv
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use gvec
@@ -562,7 +562,7 @@
             end do
             do i=1,n
                sk(i)=0.d0
-               do ig=ng0,ngw
+               do ig=gstart,ngw
                   sk(i)=sk(i)+real(conjg(c(ig,i))*c(ig,i))*gtmp(ig)
                end do
             end do
@@ -597,7 +597,7 @@
       use ions_base, only: nsp
       use gvec
       use gvecs
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cell_base, only: omega
       use cell_base, only: ainv
       !use parm
@@ -627,8 +627,8 @@
      &                    sfac(ig,is)*rhops(ig,is)*ainv(j,i)
                enddo
             enddo
-            if (ng0.ne.1) vtemp(1)=(0.d0,0.d0)
-            do ig=ng0,ng
+            if (gstart == 2) vtemp(1)=(0.d0,0.d0)
+            do ig=gstart,ng
                vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/(tpiba2*g(ig))**2 &
      &                 * tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+           &
      &                   gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3)) +       &
@@ -656,7 +656,7 @@
       use cvan
       use cdvan
       use elct
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na
       implicit none
 ! input
@@ -727,7 +727,7 @@
       use ions_base, only: nsp
       use gvec
       use gvecs
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cell_base, only: omega
       use cell_base, only: ainv
       use pseu
@@ -760,7 +760,7 @@
                enddo
             enddo
             dps(i,j)=omega*real(wz*SUM(vtemp))
-            if (ng0.eq.2) dps(i,j)=dps(i,j)-omega*real(vtemp(1))
+            if (gstart == 2) dps(i,j)=dps(i,j)-omega*real(vtemp(1))
          enddo
       enddo
 #ifdef __PARA
@@ -956,7 +956,7 @@
       use io_global, only: stdout
       use elct
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cvan
 !
       implicit none
@@ -983,7 +983,7 @@
                temp(ig)=conjg(cp(ig,k))*cp(ig,i)
             end do
             csc(k)=2.*real(SUM(temp))
-            if (ng0.eq.2) csc(k)=csc(k)-real(temp(1))
+            if (gstart == 2) csc(k)=csc(k)-real(temp(1))
          end do
 #ifdef __PARA
          call reduce(kmax,csc)
@@ -1310,7 +1310,7 @@
       use elct
       use gvec
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
 
       implicit none
@@ -1323,7 +1323,7 @@
 !
       do i=1,n
          sk(i)=0.0
-         do ig=ng0,ngw
+         do ig=gstart,ngw
             sk(i)=sk(i)+real(conjg(c(ig,i))*c(ig,i))*ggp(ig)
          end do
       end do
@@ -1523,7 +1523,7 @@
       use gvecb
       use grid_dimensions, only: nr1, nr2, nr3, &
             nnr => nnrx
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cell_base, only: omega
       use ions_base, only: nsp, nas => nax, na
       use parameters, only: natx, nsx
@@ -1690,7 +1690,7 @@
       use elct
       use gvec
       use gvecs
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cell_base, only: omega
       use ions_base, only: nsp, na, nas => nax
       use grid_dimensions, only: nr1, nr2, nr3
@@ -1723,8 +1723,8 @@
             do ix=1,3
                if(nspin.eq.1)then
                   iss=1
-                  if (ng0.eq.2) vtemp(1)=0.0
-                  do ig=ng0,ngs
+                  if (gstart == 2) vtemp(1)=0.0
+                  do ig=gstart,ngs
                      vcgs=conjg(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
                      cvn=vps(ig,is)*conjg(rhog(ig,iss))
@@ -1735,8 +1735,8 @@
                else
                   isup=1
                   isdw=2
-                  if (ng0.eq.2) vtemp(1)=0.0
-                  do ig=ng0,ngs
+                  if (gstart == 2) vtemp(1)=0.0
+                  do ig=gstart,ngs
                      vcgs=conjg(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
                      cvn=vps(ig,is)*conjg(rhog(ig,isup)                 &
@@ -2016,7 +2016,7 @@
       use recvecs_indexes, only: in1p, in2p, in3p, nm, np
       use gvecs, only: ngs, nms, ngsl, nps
       use gvecw, only: ngw, ngwl, ngwt
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use io_global, only: stdout
       use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
       use para_mod, only: dfftp, dffts
@@ -2433,13 +2433,13 @@
          if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=g(ig)
       end do
 !
-! ng0 is the index of the first nonzero G-vector
+! gstart is the index of the first nonzero G-vector
 ! needed in the parallel case (G=0 is found on one node only!)
 !
       if (g(1).lt.1.e-6) then
-         ng0=2
+         gstart=2
       else
-         ng0=1
+         gstart=1
       end if
 !
       WRITE( stdout,180) ngl
@@ -2698,7 +2698,7 @@
       use cvan
       use elct
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
 !
       implicit none
 !
@@ -2719,7 +2719,7 @@
                temp(ig)=cp(1,ig,k)*cp(1,ig,i)+cp(2,ig,k)*cp(2,ig,i)
             end do
             csc(k)=2.*SUM(temp)
-            if (ng0.eq.2) csc(k)=csc(k)-temp(1)
+            if (gstart == 2) csc(k)=csc(k)-temp(1)
          endif
       end do
 #ifdef __PARA
@@ -2734,7 +2734,7 @@
      &               cp(2,ig,i)*aimag(betae(ig,inl))
          end do
          bec(inl,i)=2.*SUM(temp)
-         if (ng0.eq.2) bec(inl,i)= bec(inl,i)-temp(1)
+         if (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
       end do
 #ifdef __PARA
       call reduce(nhsavb,bec(1,i))
@@ -3716,7 +3716,7 @@
 !
       use ions_base, only: na, nas => nax
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
       use cvan
       use work, only: wrk2
@@ -3756,14 +3756,14 @@
             endif
 !
             do ia=1,na(is)
-               if (ng0.eq.2) then
+               if (gstart == 2) then
 !                   q = 0   component (with weight 1.0)
                   wrk2(1,ia)= cmplx(                                   &
      &               signre*beta(1,iv,is)*eigr(ixr,1,ia,is),           &
      &               signim*beta(1,iv,is)*eigr(ixi,1,ia,is) )
 !                   q > 0   components (with weight 2.0)
                end if
-               do ig=ng0,ngw
+               do ig=gstart,ngw
                   arg = 2.0*beta(ig,iv,is)
                   wrk2(ig,ia) = cmplx(                                 &
      &                  signre*arg*eigr(ixr,ig,ia,is),                 &
@@ -3799,7 +3799,7 @@
       use elct
       use gvec
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
       use cvan
       use work, only: wrk2
@@ -3848,14 +3848,14 @@
                endif
 !     
                do ia=1,na(is)
-                  if (ng0.eq.2) then
+                  if (gstart == 2) then
 !                             q = 0   component (with weight 1.0)
                      wrk2(1,ia) = cmplx (                               &
      &                  signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia,is),   &
      &                  signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia,is) )
 !                            q > 0   components (with weight 2.0)
                   end if
-                  do ig=ng0,ngw
+                  do ig=gstart,ngw
                      arg = 2.0*gk(ig)*beta(ig,iv,is)
                      wrk2(ig,ia) = cmplx (                              &
     &                     signre*arg*eigr(ixr,ig,ia,is),                &
@@ -4428,7 +4428,7 @@
       use io_global, only: stdout
       use elct, only: n, nx
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na, nas => nax
       use cvan, only: nhsa
       use wfc_atomic
@@ -4481,7 +4481,7 @@
       call reduce(n_atomic_wfc**2,overlap)
 #endif
       overlap=overlap*2.d0
-      if (ng0.eq.2) then
+      if (gstart == 2) then
          do l=1,n_atomic_wfc
             do m=1,n_atomic_wfc
                overlap(m,l)=overlap(m,l)-real(wfc(1,m))*real(swfc(1,l))
@@ -4526,7 +4526,7 @@
          do l=1,n_atomic_wfc
             temp(:)=real(conjg(c(:,m))*wfc(:,l))
             proj(m,l)=2.d0*SUM(temp)
-            if (ng0.eq.2) proj(m,l)=proj(m,l)-temp(1)
+            if (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
          end do
       end do
       deallocate(temp)
@@ -4618,12 +4618,12 @@
       end
 !
 !---------------------------------------------------------------------
-      subroutine randin(nmin,nmax,ng0,ngw,ampre,c)
+      subroutine randin(nmin,nmax,gstart,ngw,ampre,c)
 !---------------------------------------------------------------------
 !
       implicit none
 ! input
-      integer nmin, nmax, ng0, ngw
+      integer nmin, nmax, gstart, ngw
       real(kind=8) ampre
 ! output
       complex(kind=8) c(ngw,nmax)
@@ -4632,7 +4632,7 @@
       real(kind=8) ranf1, randy, ranf2, ampexp
 !
       do i=nmin,nmax
-         do j=ng0,ngw
+         do j=gstart,ngw
             ranf1=.5-randy()
             ranf2=.5-randy()
             ampexp=ampre*exp(-(4.*j)/ngw)
@@ -4654,7 +4654,7 @@
 !
       use elct, only: n, nx
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na
       use parameters, only: nacx, natx
       use io_global, only: stdout
@@ -4703,7 +4703,7 @@
       if (nr.lt.n) then
          WRITE( stdout,*) ' ## warning ## nr.lt.n  ',nr,n
          ampre=0.01
-         call randin(nr+1,n,ng0,ngw,ampre,c0)
+         call randin(nr+1,n,gstart,ngw,ampre,c0)
       end if
       if (flag.eq.0) go to 10
 !
@@ -5255,16 +5255,15 @@
 !     ------------------------------------------------------
 !
 !
-      use io_global, only: stdout
-      use parameters, only: nqfx, lqmax
+      use kinds, only: DP
+      use parameters, only: nchix, lmaxx, nbrx, mmaxx, nsx, lqmax, nqfx
       use ncprm, only: qfunc, qfcoef, qqq, betar, dion, rucore, cmesh, &
-                       qrl, rab, rscore, r, mesh, ifpcor, nbrx,  &
+                       qrl, rab, rscore, r, mesh, ifpcor,  &
                        rinner, kkbeta, lll, nbeta, nqf, nqlc
       use dft_mod, only: dft, bp88, pw91
-      use wfc_atomic, only: nchi, chi, lchi, nchix, mmaxx, nsx
+      use wfc_atomic, only: nchi, chi, lchi
       use ions_base, only: zv
-
-      ! the above module variables has no dependency from iosys
+      use io_global, only: stdout
 !
       implicit none
 !
@@ -5279,7 +5278,7 @@
 !   They are used only for the pseudopotential report. They are no 
 !   longer used in the rest of the code.
 !
-      real(kind=8)                                                            &
+      real(kind=DP)                                                     &
      &       exfact,        &! index of the exchange and correlation used 
      &       etotpseu,      &! total pseudopotential energy
      &       wwnl(nchix),   &! the occupation of the valence states
@@ -5717,7 +5716,7 @@
       use gvecs
       use gvecb, only: ngb
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cvan
       !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
@@ -5929,7 +5928,7 @@
                rsumr(iss)=SUM(rhor(:,iss))*omega/dble(nr1*nr2*nr3)
             end do
 #ifdef __PARA
-            if (ng0.ne.2) then
+            if (gstart.ne.2) then
 ! in the parallel case, only one processor has G=0 ! 
                do iss=1,nspin
                   rsumg(iss)=0.0
@@ -5973,7 +5972,7 @@
             rsumr(iss)=SUM(rhor(:,iss),1)*omega/dble(nr1*nr2*nr3)
          end do
 #ifdef __PARA
-         if (ng0.ne.2) then
+         if (gstart.ne.2) then
 ! in the parallel case, only one processor has G=0 ! 
             do iss=1,nspin
                rsumg(iss)=0.0
@@ -6015,7 +6014,7 @@
 !
       use parameters, only: nsx, natx
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cvan
       use elct
 !
@@ -6042,7 +6041,7 @@
          end do
       end do
 !
-      if (ng0.eq.2) then
+      if (gstart == 2) then
 !
 !     q = 0  components has weight 1.0
 !
@@ -6541,7 +6540,7 @@
       use cvan
       use elct
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
 !
       implicit none
 !
@@ -6563,7 +6562,7 @@
             sig(i,j)=-2.*sig(i,j)
          end do
       end do
-      if (ng0.eq.2) then
+      if (gstart == 2) then
 !
 !     q = 0  components has weight 1.0
 !
@@ -6627,7 +6626,7 @@
       use elct
       use io_global, only: stdout
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use grid_dimensions, only: nr1, nr2, nr3, &
             nnr => nnrx
       use cell_base, only: omega
@@ -6701,7 +6700,7 @@
                temp(ig)=real(conjg(c(ig,i))*c(ig,jj))
             end do
             overlap(i,j) = 2.d0*SUM(temp)
-            if (ng0.eq.2) overlap(i,j) = overlap(i,j) - temp(1)
+            if (gstart == 2) overlap(i,j) = overlap(i,j) - temp(1)
          end do
       end do
       deallocate (temp)
@@ -6794,7 +6793,7 @@
       use cvan
       use elct
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
 !
       implicit none
       integer nss, ist
@@ -6814,7 +6813,7 @@
             tau(i,j)=2.*tau(i,j)
          end do
       end do
-      if (ng0.eq.2) then
+      if (gstart == 2) then
 !
 !     q = 0  components has weight 1.0
 !
@@ -6955,7 +6954,7 @@
       use gvecs
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
@@ -7064,7 +7063,7 @@
       end do
 !
       epseu=wz*real(SUM(vtemp))
-      if (ng0.eq.2) epseu=epseu-vtemp(1)
+      if (gstart == 2) epseu=epseu-vtemp(1)
 #ifdef __PARA
       call reduce(1,epseu)
 #endif
@@ -7080,8 +7079,8 @@
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          end do
       end do
-      if (ng0.eq.2) vtemp(1)=0.0
-      do ig=ng0,ng
+      if (gstart == 2) vtemp(1)=0.0
+      do ig=gstart,ng
          vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
@@ -7100,8 +7099,8 @@
 !     calculation hartree + local pseudo potential
 !     -------------------------------------------------------------------
 !
-      if (ng0.eq.2) vtemp(1)=(0.,0.)
-      do ig=ng0,ng
+      if (gstart == 2) vtemp(1)=(0.,0.)
+      do ig=gstart,ng
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
       end do
 !

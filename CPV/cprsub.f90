@@ -20,7 +20,7 @@
       use ions_base, only: na, nas => nax
       use elct, only: n
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
       use cvan
       use cdvan
@@ -64,14 +64,14 @@
                   endif
                   !
                   do ia=1,na(is)
-                     if (ng0.eq.2) then
+                     if (gstart == 2) then
 !                   q = 0   component (with weight 1.0)
                         wrk2(1,ia)= cmplx(                             &
      &                  signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia,is),   &
      &                  signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia,is) )
 !                   q > 0   components (with weight 2.0)
                      end if
-                     do ig=ng0,ngw
+                     do ig=gstart,ngw
                         arg = 2.0*dbeta(ig,iv,is,i,j)
                         wrk2(ig,ia) = cmplx(                           &
      &                         signre*arg*eigr(ixr,ig,ia,is),          &
@@ -209,7 +209,7 @@
       use ions_base, only: rcmax, ipp, zv, nsp, na
 
       use pseu
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use ncprm
 !
       use dpseu
@@ -288,7 +288,7 @@
                call simpson_cp90(mesh(is),f,rab(1,is),fint)
             end if
 !
-            if (ng0.eq.2) then
+            if (gstart == 2) then
                vps(1,is)=fpi*fint/omega
                rhops(1,is)=-zv(is)/omega
                vpsum=vps(1,is)
@@ -302,7 +302,7 @@
 !     ------------------------------------------------------------------
 !     g>0
 !     ------------------------------------------------------------------
-            do ig=ng0,ngs
+            do ig=gstart,ngs
                xg=sqrt(g(ig))*tpiba
                do ir=1,mesh(is)
                   f(ir)=vscr(ir)*sin(r(ir,is)*xg)
@@ -321,7 +321,7 @@
                end if
             end do
 !
-            do ig=ng0,ngs
+            do ig=gstart,ngs
                xg=sqrt(g(ig))*tpiba
                rhops(ig,is)=-zv(is)*exp(-r2new*g(ig))/omega
                vps(ig,is)=fpi*figl(ig)/(omega*xg)
@@ -346,7 +346,7 @@
 !     ------------------------------------------------------------------
 !     g=0
 !     ------------------------------------------------------------------
-            if (ng0.eq.2) then
+            if (gstart == 2) then
                rhops(1,is)=-zv(is)/omega
                gps=-zv(is)*pi*(-wrc2(is)*r22-wrc1(is)*r21+r2max)/omega
                sfp=0.
@@ -369,7 +369,7 @@
 !     ------------------------------------------------------------------
 !     g>0
 !     ------------------------------------------------------------------
-            do ig=ng0,ngs
+            do ig=gstart,ngs
                rhops(ig,is)=-zv(is)*exp(-r2new*g(ig))/omega
                if(tpre) drhops(ig,is)=-rhops(ig,is)*r2new/tpiba2
                emax=exp(-0.25*r2max*g(ig)*tpiba2)
@@ -864,7 +864,7 @@
       use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cell_base, only: omega
       use cell_base, only: ainv
       use cvan
@@ -1069,7 +1069,7 @@
      &                                 +c*dylm(1,lp,i,j)*betagl
                   enddo
                enddo
-               do ig=ng0,ngw
+               do ig=gstart,ngw
                   gg=g(ig)*tpiba*tpiba/refg
                   jj=int(gg)+1
                   betagl = betagx(jj+1,iv,is)*(gg-real(jj-1)) +         &

@@ -67,7 +67,7 @@
       use gvecs, only: ngs
       use gvecb, only: ngb
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
       use ions_base, only: ind_srt
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
@@ -475,7 +475,7 @@
 !       
 !     random initialization
 !
-            call randin(1,n,ng0,ngw,ampre,cm)
+            call randin(1,n,gstart,ngw,ampre,cm)
 
          else if(nbeg.eq.-3) then
 !       
@@ -665,7 +665,7 @@
 
          emainv = 1.0d0 / ema0bg
          ftmp = 1.0d0
-         if( ng0 == 2 ) ftmp = 0.5d0 
+         if( gstart == 2 ) ftmp = 0.5d0 
          
          ekincm=0.0
          do i=1,n
@@ -860,7 +860,7 @@
             CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
                  verl1, verl2, emaver, c3 )
          endif
-         if (ng0.eq.2) then
+         if ( gstart == 2 ) then
             cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
             cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
          end if
@@ -1191,7 +1191,7 @@
 
       emainv = 1.0d0 / ema0bg
       ftmp = 1.0d0
-      if( ng0 == 2 ) ftmp = 0.5d0
+      if( gstart == 2 ) ftmp = 0.5d0
 
       do i=1,n
          ekinc0 = ekinc0 + 2.0d0 * &
