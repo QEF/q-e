@@ -35,10 +35,38 @@ program q2r
   complex(kind=8) :: phid(nrx1,nrx2,nrx3,3,3,nax,nax)
   !
   namelist / input / nr1,nr2,nr3,fild, zasr
+                                                                                
+  CHARACTER (LEN=80)  :: input_file
+  INTEGER             :: nargs, iiarg, ierr
+                                                                                
+
   !
   nr1=0
   nr2=0
   nr3=0
+
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc()
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+
   !
   read (5,input)
   !
