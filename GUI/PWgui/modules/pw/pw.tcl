@@ -1,6 +1,6 @@
 source commands.tcl
 
-module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
+module PW\#auto -title "PWSCF GUI: module PW.x" -script {
     
     readfilter  ::pwscf::pwReadFilter
     writefilter ::pwscf::pwWriteFilter
@@ -311,7 +311,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		}
 
 		var degauss {
-		    -label    "Gaussian spreading bor BZ integration \[in Ryd\] (degauss):"
+		    -label    "Gaussian spreading for BZ integration \[in Ryd\] (degauss):"
 		    -validate fortrannonnegreal
 		}
 
@@ -460,18 +460,20 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -widget   spinint
 		}
 
-		separator -label "--- Unused variable ---"
+		group unused_1 {
+		    separator -label "--- Unused variables ---"
 
-		var nelup {
-		    -label    "Number of spin-up electrons:"
-		    -validate fortrannonnegreal
+		    var nelup {
+			-label    "Number of spin-up electrons:"
+			-validate fortrannonnegreal
+		    }
+		    
+		    var neldw {
+			-label    "Number of spin-down electrons:"
+			-validate fortrannonnegreal
+		    }
+		    var xc_type -label    "Exchange-correlation functional (xc_type):"
 		}
-		
-		var neldw {
-		    -label    "Number of spin-down electrons:"
-		    -validate fortrannonnegreal
-		}
-		var xc_type -label    "Exchange-correlation functional (xc_type):"
 	    }
 	}
     }
@@ -969,6 +971,16 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}
 		
+	scriptvar old_path_inter_nimages
+	auxilvar path_inter_nimages {
+	    -label    "Number of intermediate images:"
+	    -widget   spinint
+	    -validate nonnegint
+	    -default  0
+	}
+	
+	# first_image
+	
 	keyword first_image first_image\n; # only for calculation == 'neb' || 'smd'
 	table atomic_coordinates {
 	    -caption   "Enter atomic coordinates:"
@@ -982,13 +994,35 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    -offvalues 0
 	}
 	loaddata atomic_coordinates ::pwscf::pwLoadAtomCoor \
-	    "Load atomic coordinates from file ..."
+	    "Load atomic coordinates from file ..."    
+
+	# intermediate_image
+	    
+	# BEWARE: is is assumed that 50 intermediate images is the
+	# largest allowed number (this is dirty)
+	    	
+	for {set i 1} {$i <= 50} {incr i} {
+	    keyword intermediate_image_$i intermediate_image\n
+	    table atomic_coordinates_${i}_inter [subst {
+		-caption   "Enter atomic coordinates for INTERMEDIATE image \#.$i:"
+		-head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate}
+		-validate  {string real real real}
+		-cols      4
+		-rows      1
+		-outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
+		-widgets   {entry entry entry entry}
+		-onvalues  1
+		-offvalues 0
+	    }]
+	    loaddata atomic_coordinates_${i}_inter [list ::pwscf::pwLoadAtomCoorInter $i] \
+		"Load atomic coordinates from file ..."    
+	}
 	
- 	# only for calculation == 'neb' || 'smd'
-	packwidgets left
+	# last_image
+	
 	keyword last_image last_image\n
-	table atomic_coordinates2 {
-	    -caption   "Enter atomic coordinates for last image:"
+	table atomic_coordinates_last {
+	    -caption   "Enter atomic coordinates for LAST image:"
 	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate}
 	    -validate  {string real real real}
 	    -cols      4
@@ -998,9 +1032,10 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    -onvalues  1
 	    -offvalues 0
 	}
-	loaddata atomic_coordinates2 ::pwscf::pwLoadAtomCoor2 \
+	loaddata atomic_coordinates_last ::pwscf::pwLoadAtomCoorLast \
 	    "Load atomic coordinates from file ..."    
-    }
+    }    
+
 
     ########################################################################
     ##                                                                    ##
