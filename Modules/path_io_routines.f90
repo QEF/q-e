@@ -18,7 +18,7 @@ MODULE path_io_routines
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : au, bohr_radius_angs
-  !      
+  !
   IMPLICIT NONE
   !
   PRIVATE
@@ -113,6 +113,7 @@ MODULE path_io_routines
        !    
        INTEGER              :: i, j, ia, ierr
        CHARACTER (LEN=256)  :: input_line
+       REAL (KIND=DP)       :: val
        LOGICAL, EXTERNAL    :: matches
        !
        ! ... end of local variables
@@ -229,11 +230,38 @@ MODULE path_io_routines
              !
           END DO
           !
-          IF ( lneb ) THEN
+          IF ( lneb .AND. ( suspended_image == 0 ) ) THEN
+            !
+#if defined (__PGI)
+            !
+            Emax_index = 1
+            !
+            Emax = pes(1)
+            Emin = pes(1)
+            !   
+            DO i = 2, num_of_images
+               !
+               val = pes(i)
+               !
+               IF ( val < Emin ) Emin = val
+               !
+               IF ( val > Emax ) THEN
+                  !
+                  Emax = val
+                  !
+                  Emax_index = i
+                  !
+               END IF
+               !
+            END DO
+            !
+#else
             !
             Emin       = MINVAL( pes(:) )
             Emax       = MAXVAL( pes(:) )
             Emax_index = MAXLOC( pes(:), 1 )
+            !
+#endif
             !
           END IF
           !

@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 #define USE_ELASTIC_CONSTANTS_RESCALING
-!#define NO_MULTISCALE
 !
 !-----------------------------------------------------------------------
 MODULE path_base
@@ -52,10 +53,11 @@ MODULE path_base
       USE path_variables,   ONLY : climbing_ => climbing,                  &
                                    CI_scheme, vel, grad, elastic_grad,     &
                                    norm_grad, k, k_min, k_max, Emax_index, &
-                                   vel_zeroed
+                                   vel_zeroed, pos_old, grad_old
       USE path_variables,   ONLY : num_of_modes, ft_vel_zeroed, ft_pos, ft_pes,&
                                    ft_vel, ft_grad, Nft, ft_coeff, ft_frozen,  &
-                                   ft_error, norm_ft_grad, Nft_smooth
+                                   ft_error, norm_ft_grad, Nft_smooth,         &
+                                   ft_pos_old, ft_grad_old
       USE path_formats,     ONLY : summary_fmt   
       USE io_global,        ONLY : meta_ionode
       USE parser,           ONLY : int_to_char
@@ -126,6 +128,8 @@ MODULE path_base
          norm_grad    = 0.D0
          error        = 0.D0
          k            = k_min
+         pos_old      = 0.D0
+         grad_old     = 0.D0
          frozen       = .FALSE.
          vel_zeroed   = .FALSE.
          !
@@ -165,6 +169,8 @@ MODULE path_base
             vel_zeroed  = .FALSE.
             grad        = 0.D0
             norm_grad   = 0.D0
+            pos_old     = 0.D0
+            grad_old    = 0.D0
             !
          END IF
          !
@@ -176,6 +182,8 @@ MODULE path_base
          ft_grad      = 0.D0
          norm_ft_grad = 0.D0
          ft_error     = 0.D0
+         ft_pos_old   = 0.D0
+         ft_grad_old  = 0.D0
          ft_frozen    = .FALSE.
          !
       END IF
@@ -1286,7 +1294,8 @@ MODULE path_base
       !
       ! ... local variables
       !
-      INTEGER  :: N_in, N_fin
+      INTEGER        :: N_in, N_fin, i
+      REAL (KIND=DP) :: val
       !
       !
       IF ( istep_path == 0 ) THEN
@@ -1318,9 +1327,36 @@ MODULE path_base
       !
       IF ( lneb ) THEN
          !
+#if defined (__PGI)
+         !
+         Emax_index = 1
+         !
+         Emax = pes(1)
+         Emin = pes(1)
+         !   
+         DO i = 2, num_of_images
+            !
+            val = pes(i)
+            !
+            IF ( val < Emin ) Emin = val
+            !
+            IF ( val > Emax ) THEN
+               !
+               Emax = val
+               !
+               Emax_index = i
+               !
+            END IF
+            !
+         END DO
+         !
+#else
+         !
          Emin       = MINVAL( pes(:) )
          Emax       = MAXVAL( pes(:) )
          Emax_index = MAXLOC( pes(:), 1 )
+         !
+#endif
          !
       END IF
       !
