@@ -1,3 +1,8 @@
+---------------------------------------------------------------------------
+      Please use the "cvs2cl.pl" script in the root directory 
+       of the distribution to produce a detailed ChangeLog
+---------------------------------------------------------------------------
+
 13 Dec 2004 sph_bes.f90 in flib was incorrect for some high value of l (SdG)
 
  1 Dec 2004 Hubbard forces were wrong in the case npsin.eq.1 (SdG)

@@ -1,9 +1,10 @@
-TODO LIST - 18 Nov 2004
+TODO LIST - 24 Nov 2004
 
 BUGS
 
 - Efermi and restart (Alessandra)
 - fourfold degenerate phonons (Nicolas Mounet)
+- Zr hcp (Nathalie)
 
 NEW DEVELOPMENTS TO MERGE
 
@@ -72,6 +73,7 @@ PW
   (minus_q, lscf) or new logical variables
 
 - maximize merge of colinear (PW) and noncolinear (PWNC) code
+  cleanup of the calbec mess
 
 - remove potential mixing, save and start from rho instead of V,
   at least for scf calculations. Requires fixing the noncolinear

@@ -1251,8 +1251,9 @@ CONTAINS
        IF ( .NOT. exst ) THEN
           CLOSE (unit = ndr, status = 'delete')
           ierr = 1
+       ELSE
+          REWIND ndr
        ENDIF
-       REWIND ndr
     END IF
     CALL mp_bcast( ierr, ionode_id, intra_image_comm )
     !
