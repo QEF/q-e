@@ -53,7 +53,7 @@ subroutine efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, &
   ! the number of states with ef
 
   real(kind=DP) :: efbetter, better
-  external sumkt, error
+  external sumkt
   !
   !      find bounds for the Fermi energy.
   !

@@ -86,7 +86,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   real (kind=DP) :: rho_dot_product, ns_dot_product, fn_dehar
 
   external DCOPY, DSYTRF, DSYTRI, DSCAL
-  external diropn, davcio, error, setv, &
+  external diropn, davcio, setv, &
            rho_dot_product, ns_dot_product, fn_dehar
 
   call start_clock('mix_rho')

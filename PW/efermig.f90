@@ -17,7 +17,7 @@ subroutine efermig (et, nbndx, nbnd, nks, nelec, wk, Degauss, &
   integer :: nks, nbndx, nbnd, i, kpoint, Ngauss
   real(kind=DP) :: wk (nks), et (nbndx, nks), Degauss, Ef, Eup, Elw, &
        sumkg, sumkup, sumklw, sumkmid, nelec
-  external sumkg, error
+  external sumkg
   !
   !      find bounds for the Fermi energy. Very safe choice!
   !
