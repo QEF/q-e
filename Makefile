@@ -93,7 +93,7 @@ veryclean : clean
 tar :
 	tar cvf pw.tar \
 	    License README */README README.cvs INSTALL Makefile */Makefile \
-	    configure.new configure.ac config.guess config.sub install-sh \
+	    configure.old configure.ac config.guess config.sub install-sh \
 	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
