@@ -22,7 +22,7 @@ PROGRAM phcg
 
   IMPLICIT NONE
 
-  REAL(kind=DP), ALLOCATABLE :: deps_dtau(:,:,:,:), dynout(:,:)
+  REAL(kind=DP), ALLOCATABLE :: dchi_dtau(:,:,:,:), dynout(:,:)
   REAL(kind=DP), ALLOCATABLE :: w2(:)
   REAL(kind=DP):: max_seconds = 1.D+6
   CHARACTER(len=9) :: cdate, ctime, code = 'PHCG'
@@ -51,14 +51,14 @@ PROGRAM phcg
   IF (raman) THEN
      IF (first.EQ.1.AND.last.EQ.nmodes) THEN
         !
-        !  calculate d eps0/d tau with finite differences
+        !  calculate dX/dtau (X=polarizability) with finite differences
         !
-        ALLOCATE ( deps_dtau( 3, 3, 3, nat))    
-        CALL cg_deps(deps_dtau)
+        ALLOCATE ( dchi_dtau( 3, 3, 3, nat))    
+        CALL cg_dchi(dchi_dtau)
         !
         !  calculate nonresonant raman intensities for all modes
         !
-        IF (trans) CALL raman_cs(dynout,deps_dtau)
+        IF (trans) CALL raman_cs(dynout,dchi_dtau)
      ELSE
         !
         !  calculate nonresonant raman intensities for selected modes
@@ -88,6 +88,7 @@ PROGRAM phcg
      CALL seqopn (iudwf,'fildwx3','unformatted',exst)
      CLOSE(unit=iudwf,status='delete')
   END IF
+  !
   CALL mp_end()
   STOP
   !
@@ -96,10 +97,10 @@ PROGRAM phcg
 END PROGRAM phcg
 !
 !-----------------------------------------------------------------------
-SUBROUTINE cg_deps(deps_dtau)
+SUBROUTINE cg_dchi(dchi_dtau)
   !-----------------------------------------------------------------------
   !
-  !  calculate d eps0/d tau with finite differences
+  !  calculate dX/dtau with finite differences
   !
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY : stdout, ionode
@@ -108,10 +109,10 @@ SUBROUTINE cg_deps(deps_dtau)
   USE cgcom
 
   IMPLICIT NONE
-  REAL(kind=DP) :: deps_dtau(3,3,3,nat)
+  REAL(kind=DP) :: dchi_dtau(3,3,3,nat)
   !
   REAL(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
-       delta, coeff
+       delta, coeff, convfact
   INTEGER iudyn, nd, na, ipol, nd_, na_, ipol_, jpol, kpol
   LOGICAL :: exst
   DATA delta2/-1.d0, 1.d0/, coeff2/-0.5d0, 0.5d0/
@@ -119,18 +120,18 @@ SUBROUTINE cg_deps(deps_dtau)
   DATA coeff4/ 0.08333333333333d0,-0.66666666666666d0,              &
        &       0.66666666666667d0,-0.08333333333337d0 /
   !
-  CALL start_clock('cg_deps')
+  CALL start_clock('cg_dchi')
   !
   !  Read partial results (if any)
   !
   na_  =1
   ipol_=1
   nd_  =1
-  deps_dtau(:,:,:,:) = 0.d0
+  dchi_dtau(:,:,:,:) = 0.d0
   IF (recover) THEN
      OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
      READ(iunres,*,err=1,END=1) na_,ipol_,nd_
-     READ(iunres,*,err=1,END=1) deps_dtau
+     READ(iunres,*,err=1,END=1) dchi_dtau
      CLOSE(unit=iunres)
      IF (na_.LE.nat) THEN
         WRITE( stdout,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
@@ -147,6 +148,9 @@ SUBROUTINE cg_deps(deps_dtau)
   END IF
   !
 2 CONTINUE
+  !
+  convfact = omega/fpi*0.529177**2
+  !
   DO na=na_,nat
      DO ipol=1,3
         IF (na.EQ.na_.AND.ipol.LT.ipol_) go to 11
@@ -173,11 +177,13 @@ SUBROUTINE cg_deps(deps_dtau)
            !
            tau(ipol,na) =  tau(ipol,na) - delta*deltatau/alat
            !
+           ! convfact converts d chi/d tau to A^2 units
+           !
            DO kpol=1,3
               DO jpol=1,3
-                 deps_dtau(kpol,jpol,ipol,na) =  &
-                      deps_dtau(kpol,jpol,ipol,na) + &
-                      epsilon0(kpol,jpol)*coeff/deltatau
+                 dchi_dtau(kpol,jpol,ipol,na) =  &
+                      dchi_dtau(kpol,jpol,ipol,na) + &
+                      epsilon0(kpol,jpol)*coeff/deltatau * convfact
               END DO
            END DO
            !
@@ -196,7 +202,7 @@ SUBROUTINE cg_deps(deps_dtau)
               ELSE
                  WRITE(iunres,*) na+1,1,1
               END IF
-              WRITE(iunres,*) deps_dtau
+              WRITE(iunres,*) dchi_dtau
               CLOSE(unit=iunres)
               !
            ENDIF
@@ -207,14 +213,15 @@ SUBROUTINE cg_deps(deps_dtau)
      END DO
   END DO
   !
-  WRITE( stdout,'(/5x, "Raman tensors (atomic)"/)')
+  WRITE( stdout,'(/5x, "Raman tensors (A^2)"/)')
+  !
   DO na=1,nat
      DO ipol=1,3
-        WRITE( stdout,'(/5x,"D eps(i,j)",5x,3e14.6     &
+        WRITE( stdout,'(/5x,"D X(i,j)",7x,3e14.6     &
              &    /5x,"----------  =  ",3e14.6   &
              &    /5x,"D tau(",i2,")_",i1,4x,3e14.6)')             &
-             &  (( deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,2),&
-             &     na,ipol, (deps_dtau(3,jpol,ipol,na), jpol=1,3)
+             &  (( dchi_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,2),&
+             &     na,ipol, (dchi_dtau(3,jpol,ipol,na), jpol=1,3)
      END DO
   END DO
   WRITE( stdout,*)
@@ -228,24 +235,25 @@ SUBROUTINE cg_deps(deps_dtau)
      ELSE
         OPEN( unit=iudyn, file=fildyn, form='formatted', status='new')
      END IF
-     WRITE (iudyn,'(/5x,"Raman: D eps_{alpha,beta}/D tau_{s,gamma}"/)')
+     WRITE (iudyn,'(/5x,"Raman: D X_{alpha,beta}/D tau_{s,gamma} (units: A^2)"/)')
      DO na=1,nat
         DO ipol=1,3
            WRITE (iudyn,'("atom # ",i4,"   pol. ",i2)') na, ipol
            WRITE (iudyn,'(3e24.12)') &
-                ( (deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,3)
+                ( (dchi_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,3)
         END DO
      END DO
      CLOSE (unit=iudyn)
   end if
   !
   RETURN
-END SUBROUTINE cg_deps
+END SUBROUTINE cg_dchi
 !
 !-----------------------------------------------------------------------
 SUBROUTINE cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
+
   USE ions_base,  ONLY : nat, tau, ityp
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
@@ -254,7 +262,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP) :: w2(3*nat), dynout(3*nat,3*nat)
+  REAL(kind=DP) :: w2(3*nat), dynout(3*nat,3*nat), chi(3,3)
   !
   INTEGER :: na, i,j,  nt, iudyn, mode_done
   !
@@ -293,9 +301,21 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
         !
      END IF
      !
-     WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.7,  &
-       &        /37x,3f10.7/37x,3f10.7)') ((epsilon0(i,j),j=1,3),i=1,3)
-     WRITE( stdout,'(/5x,"z*(",i2,")",3f10.3,/11x,3f10.3/11x,3f10.3)') &
+     call output_tau (.false.) 
+     !
+     do i=1,3
+        do j=1,3
+           if (i == j) then
+              chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*0.529177**3
+           else
+              chi(i,j) = epsilon0(i,j)*omega/fpi*0.529177**3
+           end if
+        end do
+     end do
+     WRITE(stdout,'(/5x,"dielectric constant",20x,"polarizability (A^3)")')
+     WRITE(stdout,'(3f10.6,5x,3e14.6)') ( (epsilon0(i,j), j=1,3), &
+                                          (chi(i,j),j=1,3), i=1,3)
+     WRITE( stdout,'(/5x,"z*(",i2,")",3f10.4,/11x,3f10.4/11x,3f10.4)') &
              (na, ((zstar(i,j,na),j=1,3),i=1,3), na=1,nat)
   END IF
   !
@@ -366,9 +386,9 @@ SUBROUTINE cg_neweps
   USE cgcom
   !
   IMPLICIT NONE
-  !
+
   INTEGER :: i, j
-  REAL(kind=DP) :: rhotot, dmxc
+  REAL(kind=DP) :: rhotot, dmxc, chi(3,3)
   !
   !  recalculate self-consistent potential etc
   !
@@ -395,12 +415,22 @@ SUBROUTINE cg_neweps
   !
   CALL dielec(.FALSE.)
   !
-  WRITE( stdout,'(/5x,"displaced atomic positions :")')
-  WRITE( stdout,'(5x,3f12.6)') ((tau(i,j),i=1,3),j=1,nat)
+  call output_tau (.false.)
   !
-  WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.7,       &
-       &        /37x,3f10.7/37x,3f10.7)') ((epsilon0(i,j),j=1,3),i=1,3)
-  WRITE( stdout,*)
+  do i=1,3
+     do j=1,3
+        if (i == j) then
+           chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*0.529177**3
+        else
+           chi(i,j) = epsilon0(i,j)*omega/fpi*0.529177**3
+        end if
+     end do
+  end do
+  !
+  WRITE(stdout,'(/5x,"dielectric constant",20x,"polarizability (A^3)")')
+  WRITE(stdout,'(3f10.6,5x,3e14.6)') ( (epsilon0(i,j), j=1,3), &
+                                       (chi(i,j),j=1,3), i=1,3)
+  WRITE(stdout,*)
   !
 END SUBROUTINE cg_neweps
 !
@@ -469,7 +499,7 @@ SUBROUTINE newscf
 END SUBROUTINE newscf
 !
 !-----------------------------------------------------------------------
-SUBROUTINE raman_cs(dynout,deps_dtau)
+SUBROUTINE raman_cs(dynout,dchi_dtau)
   !-----------------------------------------------------------------------
   !
   !  calculate Raman cross section
@@ -479,11 +509,13 @@ SUBROUTINE raman_cs(dynout,deps_dtau)
   USE pwcom
   USE cgcom
   !
-  REAL(kind=DP) :: dynout(3*nat,3*nat), deps_dtau(3,3,3,nat)
+  REAL(kind=DP) :: dynout(3*nat,3*nat), dchi_dtau(3,3,3,nat)
   !
   INTEGER :: nu, na, ipol, jpol, lpol
   REAL(kind=DP), ALLOCATABLE :: raman_activity(:,:,:)
+  REAL(kind=DP), PARAMETER   :: r1fac = 911.444
   !
+  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
   !
   ALLOCATE  ( raman_activity( 3, 3, nmodes))    
   WRITE( stdout,'(/5x, "Raman tensor for mode nu : dX_{alpha,beta}/d nu"/)')
@@ -495,13 +527,13 @@ SUBROUTINE raman_cs(dynout,deps_dtau)
            DO na=1,nat
               DO lpol=1,3
                  raman_activity(ipol,jpol,nu) = raman_activity(ipol,jpol,nu) +&
-                      deps_dtau(ipol,jpol,lpol,na) * dynout((na-1)*3+lpol,nu)
+                      dchi_dtau(ipol,jpol,lpol,na) * dynout((na-1)*3+lpol,nu)
               END DO
            END DO
         END DO
      END DO
      WRITE( stdout,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
-             nu,( ( raman_activity(ipol,jpol,nu),jpol=1,3), ipol=1,3)
+             nu,( ( raman_activity(ipol,jpol,nu)*r1fac,jpol=1,3), ipol=1,3)
   END DO
   DEALLOCATE(raman_activity)
   !
@@ -526,7 +558,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   REAL(kind=DP), ALLOCATABLE :: raman_activity(:,:,:), infrared(:)
   REAL(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
-       delta, norm, coeff
+       delta, norm, coeff, convfact
   INTEGER iudyn, nd, nu, nd_, nu_, na, ipol, jpol
   DATA delta2/-1.d0, 1.d0/, coeff2/-0.5d0, 0.5d0/
   DATA delta4/-2.d0, -1.d0, 1.d0, 2.d0/
@@ -563,10 +595,13 @@ SUBROUTINE raman_cs2(w2,dynout)
   END IF
   !
 2 CONTINUE
+  !
+  convfact = omega/fpi*0.529177**2
+  !
   DO nu=first,last
      IF (nu.LT.nu_) go to 11
      !
-     ! eigendisplacements are normalized as <u|M|U>=1
+     ! eigendisplacements are normalized as <u|M|u>=1
      ! we want to add a normalized eigendisplacement instead: <u|u>=1
      !
      norm = 0
@@ -618,7 +653,7 @@ SUBROUTINE raman_cs2(w2,dynout)
            DO jpol=1,3
               raman_activity(ipol,jpol,nu-first+1) =  &
                    raman_activity(ipol,jpol,nu-first+1) + &
-                   epsilon0(ipol,jpol)*coeff/deltatau * norm
+                   epsilon0(ipol,jpol)*coeff/deltatau * norm * convfact
            END DO
         END DO
         !
@@ -645,6 +680,7 @@ SUBROUTINE raman_cs2(w2,dynout)
 11   CONTINUE
   END DO
   !
+  WRITE( stdout,'(/5x, "Raman tensors for mode nu : dX_{alpha,beta}/d nu"/)')
   DO nu=first,last
      WRITE( stdout,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
           nu,( ( raman_activity(ipol,jpol,nu-first+1),jpol=1,3), ipol=1,3)
@@ -655,25 +691,23 @@ SUBROUTINE raman_cs2(w2,dynout)
   rydcm1 = 13.6058*8065.5
   cm1thz = 241.796/8065.5
   !
+  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
+  !
+  r1fac = 911.444
+  !
+  !  derivatives of epsilon are translated into derivatives of molecular
+  !  polarizabilities by assuming a Clausius-Mossotti behavior
+  !  (for anisotropic systems epsilon is replaced by its trace)
+  !
+  r2fac = 3.d0/( 2.d0 + (epsilon0(1,1) + epsilon0(2,2) + epsilon0(3,3))/3.d0 )
+  !
   !   conversion factor for IR cross sections from
   !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu
   !   1 Ry mass unit = 2 * mass of one electron = 2 amu
   !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
   !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
   !
-  irfac = 4.80324**2/2.d0
-  !
-  !   conversion factor for Raman cross sections from Ry atomic units
-  !   to A^4/amu
-  !
-  r1fac = 0.529177**4/2.d0
-  !
-  !  derivatives of epsilon are translated into derivatives of molecular
-  !  polarizabilities by assuming a Clausius-Mossotti behavior
-  !  (for anisotropic system epsilon is replaced by its trace)
-  !
-  r2fac = 3.d0*omega/(4.d0*3.1415926) *  &
-       3.d0 / ( 2.d0 + (epsilon0(1,1) + epsilon0(2,2) + epsilon0(3,3))/3.d0 )
+  irfac = 4.80324**2/2.d0*r1fac
   !
   ALLOCATE (infrared(3*nat))    
   !
@@ -690,14 +724,13 @@ SUBROUTINE raman_cs2(w2,dynout)
         END DO
      END DO
      !
-     ! infrared is in units of e^2/(Ry mass unit)
+     ! the factor two is e^2 in Ry atomic units
      !
-     infrared(nu) = polar(1)**2+polar(2)**2+polar(3)**2
+     infrared(nu) = 2.d0*(polar(1)**2+polar(2)**2+polar(3)**2)*irfac
      !
   END DO
   !
   WRITE( stdout,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
-  WRITE( stdout,'(/5x,"(multiplied by 1000)")')
   WRITE( stdout,'(5x,"Raman cross sections are in A^4/amu units")')
   WRITE( stdout,'(/"#  mode   [cm-1]     [THz]       IR      Raman")')
   !
@@ -724,7 +757,7 @@ SUBROUTINE raman_cs2(w2,dynout)
         beta2 = 0
      END IF
      WRITE( stdout,'(i5,f10.2,f12.4,2f10.4)') &
-          nu, freq, freq*cm1thz, infrared(nu)*irfac*1000, &
+          nu, freq, freq*cm1thz, infrared(nu), &
           (45.d0*alpha**2 + 7.0d0*beta2)*r1fac*r2fac
   END DO
   !
