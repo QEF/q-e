@@ -47,8 +47,8 @@ subroutine dvpsi_e (kpoint, ipol)
   logical :: conv_root
   ! true if convergence has been achieved
 
-  complex(kind=DP), allocatable :: ps (:,:), dvkb (:,:), dvkb1 (:,:), work (:,:), &
-                               becp2(:,:), spsi(:,:)
+  complex(kind=DP), allocatable :: ps (:,:), dvkb (:,:), dvkb1 (:,:), &
+                                   work (:,:), becp2(:,:), spsi(:,:)
   complex(kind=DP) :: ZDOTC
   ! the scalar products
   external ch_psi_all, cg_psi
@@ -200,7 +200,7 @@ subroutine dvpsi_e (kpoint, ipol)
           nbnd_occ (kpoint) )
 
      if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4, &
-                                " linter: root not converged ",e10.3)') &
+                              & " linter: root not converged ",e10.3)') &
                                   kpoint, ibnd, anorm
 #ifdef FLUSH
      call flush (6)
