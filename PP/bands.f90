@@ -20,6 +20,11 @@ program bands
   character(len=256) :: outdir
   integer :: ios
   namelist / inputpp / outdir, prefix, filband
+                                                                                
+  CHARACTER (LEN=80)  :: input_file
+  INTEGER             :: nargs, iiarg, ierr
+                                                                                
+
   !
   call start_postproc (nd_nmbr)
   !
@@ -33,6 +38,28 @@ program bands
   if (npool /= 1) call errore('bands','pools not implemented',npool)
   if (me == 1)  then
 #endif
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc()
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+
   read (5, inputpp, err = 200, iostat = ios)
 200 call errore ('do_bands', 'reading inputpp namelist', abs (ios) )
   !

@@ -41,6 +41,10 @@ program postproc
   namelist / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
        filplot, lsign
+
+  CHARACTER (LEN=80)  :: input_file
+  INTEGER             :: nargs, iiarg, ierr
+
   !
   call start_postproc (nd_nmbr)
   !
@@ -58,12 +62,35 @@ program postproc
   lsign=.false.
   emin = - 999.0d0
   emax = ef*13.6058d0
-  !
-  !     reading the namelist inputpp
-  !
+
 #ifdef __PARA
   if (me == 1)  then
 #endif
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc()
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+
+  !
+  !     reading the namelist inputpp
+  !
   read (5, inputpp, err = 200, iostat = ios)
 200 call errore ('postproc', 'reading inputpp namelist', abs (ios) )
   tmp_dir = trim(outdir)

@@ -59,6 +59,11 @@ program chdens
   namelist /input/  &
        nfile, filepp, weight, iflag, idpol, e1, e2, e3, nx, ny, nz, x0, &
        plot_out, output_format, fileout, epsilon, filepol
+                                                                                
+  CHARACTER (LEN=80)  :: input_file
+  INTEGER             :: nargs, iiarg, ierr
+                                                                                
+
   !
   call start_postproc (nd_nmbr)
 #ifdef __PARA
@@ -93,6 +98,28 @@ program chdens
   !    read and check input data
   !
   inunit = 5
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc()
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+
   !
   ! reading the namelist input
   !
