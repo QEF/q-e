@@ -325,9 +325,8 @@ subroutine summary
 
   if (isolve.eq.2) then
      write (6, * )
-     write (6, '(5x,"DIIS wfc buffer  : ",1i5)') diis_buff
-     write (6, '(5x,"initial DAV steps: ",1i5)') diis_start_dav
-     write (6, '(5x,"wfc keep         : ",1l5)') diis_wfc_keep
+     write (6, '(5x,"initial CG steps:   ",1i5)') diis_start_cg
+     write (6, '(5x,"reduced basis size: ",1i5)') diis_ndim
   endif
 
 #ifdef FLUSH

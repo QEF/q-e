@@ -36,9 +36,10 @@ subroutine c_bands (iter, ik_, dr2)
   !     here the local variables
   !
 
-  real(kind=DP) :: avg_iter, cg_iter, v_of_0, dsum, erf
+  real(kind=DP) :: avg_iter, cg_iter, diis_iter, v_of_0, dsum, erf
   ! average number of iterations
   ! number of iteration in CG
+  ! number of iteration in DIIS
   ! the average of the potential
   ! summation function
   ! error function
@@ -79,11 +80,9 @@ subroutine c_bands (iter, ik_, dr2)
   elseif (isolve.eq.2) then
      if (.not.loverlap) call errore ('c_bands', &
           'diis not implemented without overlap', 1)
-     if (.not.diis_wfc_keep) then
-        write (6, '("     DIIS style diagonalization")')
-     else
-        write (6, '("     DIIS style diagonalization (keeping old wfc)")')
-     endif
+     write (6, '("     DIIS style diagonalization")')
+     if (iter.le.diis_start_cg) &
+          write (6, '(6x,i3," of ",i3," CG iterations")')iter,diis_start_cg
   else
      call errore ('c_bands', 'isolve not implemented', 1)
 
@@ -145,10 +144,11 @@ subroutine c_bands (iter, ik_, dr2)
         enddo
 
      endif
-     if (isolve.eq.1) then
+     if (isolve.eq.1 .or. &
+             (isolve.eq.2 .and. iter.le.diis_start_cg)) then
         !
         ! Conjugate-Gradient diagonalization
-        !
+        ! and first "diis_start_cg" steps of RMM-DIIS diagonalization
         !
         ! h_diag is the precondition matrix
         !
@@ -172,9 +172,52 @@ subroutine c_bands (iter, ik_, dr2)
         ntry = ntry + 1
         if (ntry.le.5.and. ( &
              .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 10
+     elseif (isolve.eq.2) then
+        !
+        !  after "diis_start_cg" steps of CG, start the RMM-DIIS method
+        !
+        do ig = 1, npw
+           h_diag (ig) = g2kin (ig) + v_of_0
+        enddo
+        call usnldiag (h_diag, s_diag)
+        ntry = 0
+        diis_iter = 0.d0
+
+        ! btype
+        do ibnd = 1, nbnd
+           btype (ibnd) = 0
+        enddo
+        if (iter.gt.1) then
+           if (degauss.gt.0.d0) then
+              do ibnd = 1, nbnd
+                 if (et (ibnd, ik) .gt. (ef + 3.d0 * degauss) ) btype (ibnd) = 1
+              enddo
+           else
+              do ibnd = 1, nbnd
+                 if (ibnd.gt.nint (nelec) / 2.d0) btype (ibnd) = 1
+              enddo
+           endif
+           endif
+           !             write(*,'(5f12.6)')(et(ibnd,ik),ibnd=1,nbnd)
+           !             write(*,'(20i3)')(btype(ibnd),ibnd=1,nbnd)
+           !
+
+12      continue
+        call cdiisg(npw, npwx, nbnd, diis_ndim, evc, et (1, ik), ethr, &
+             btype, notconv, diis_iter, iter)
+        avg_iter = avg_iter + diis_iter
+        ntry = ntry + 1
+        !
+        !   save wave-functions to be used as input for the iterative
+        !   diagonalization of the next scf iteration and for rho calculation
+        !
+        if (nks.gt.1.or..not.reduce_io) call davcio(evc,nwordwfc,iunwfc,ik,1)
+        if (ntry.le.5.and. ( &
+             .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 12
+
      else
         !
-        !   Davidson or DIIS diagonalization
+        !   Davidson
         !
         !   h_diag are the diagonal matrix elements of the hamiltonian
         !   used in g_psi to evaluate the correction to the trial eigenvectors
@@ -187,34 +230,13 @@ subroutine c_bands (iter, ik_, dr2)
 
 15      continue
 
-        if (isolve.eq.0.or. (isolve.eq.2.and.iter.le.diis_start_dav) ) &
+        if (isolve.eq.0) &
              then
 #ifdef DEBUG_DAVIDSON
            write (6,*) 'KPOINT=',ik
 #endif
            call cegterg (npw, npwx, nbnd, nbndx, evc, ethr, loverlap, &
                 et (1, ik), notconv, ntrt)
-        else
-           ! btype
-           do ibnd = 1, nbnd
-              btype (ibnd) = 0
-           enddo
-           if (iter.gt.1) then
-              if (degauss.gt.0.d0) then
-                 do ibnd = 1, nbnd
-                    if (et (ibnd, ik) .gt. (ef + 3.d0 * degauss) ) btype (ibnd) = 1
-                 enddo
-              else
-                 do ibnd = 1, nbnd
-                    if (ibnd.gt.nint (nelec) / 2.d0) btype (ibnd) = 1
-                 enddo
-              endif
-           endif
-           !             write(*,'(5f12.6)')(et(ibnd,ik),ibnd=1,nbnd)
-           !             write(*,'(20i3)')(btype(ibnd),ibnd=1,nbnd)
-           !
-           call cdiisg (npw, npwx, nbnd, nbndx, diis_buff, btype, evc, &
-                ethr, et (1, ik), notconv, ntrt, diis_wfc_keep)
 
         endif
         avg_iter = avg_iter + ntrt

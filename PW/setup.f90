@@ -136,16 +136,6 @@ subroutine setup
   nbndx = nbnd
   if (isolve == 0) then
      nbndx = david * nbnd
-  elseif (isolve == 2) then
-     if (diis_start_dav > 0) then
-        nbndx = david * nbnd
-     else
-        if (diis_wfc_keep) then
-           nbndx = 2 * nbnd
-        else
-           nbndx = nbnd
-        endif
-     endif
   endif
 
   if (startingwfc == 'atomic' .and. .not.restart) nbndx = max (natomwfc, nbndx)

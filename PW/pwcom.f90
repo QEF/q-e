@@ -391,7 +391,8 @@ module varie
        modenum,          &! used with iswitch=-4
        max_cg_iter,      &! maximum number of iterations in a CG di
        diis_buff,        &! dimension of the buffer in diis
-       diis_start_dav,   &! number of initial davidson iterations
+       diis_start_cg,    &! number of CG iterations before DIIS
+       diis_ndim,        &! dimension of reduced basis in DIIS
        order             ! type of potential updating ( see update_pot )
   !
   logical                  :: &

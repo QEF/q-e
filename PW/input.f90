@@ -20,7 +20,7 @@ subroutine iosys
        lda_plus_U, Hubbard_U, Hubbard_alpha, niter_with_fixed_ns, rytoev, &
        niter, tr2, ethr, mixing_beta, nmix,&
        isolve, max_cg_iter, david, loverlap, diis_buff, diis_wfc_keep, &
-       diis_start_dav, startingwfc, startingpot, startingconfig, &
+       diis_start_cg, diis_ndim, startingwfc, startingpot, startingconfig, &
        restart_bfgs, nstep, epse, epsf, amass, &
        temperature, lforce, ttol, delta_t, nraise, ntcheck, upscale, &
        press, cmass, calc, cell_factor, xqq, alat, ntypx, &
@@ -89,7 +89,7 @@ subroutine iosys
   real (kind=8) :: conv_thr
   character(len=80) :: diagonalization
   integer :: diago_cg_maxiter, diago_david_ndim, diago_diis_buff, &
-       diago_diis_start
+       diago_diis_start, diago_diis_ndim
   logical :: diago_diis_keep
 
   NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
@@ -104,7 +104,7 @@ subroutine iosys
        diis_ethr, diis_chguess, &
        mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns, &
        diago_cg_maxiter, diago_david_ndim, diago_diis_buff, &
-       diago_diis_start, diago_diis_keep, diagonalization, &
+       diago_diis_start, diago_diis_ndim, diago_diis_keep, diagonalization, &
        startingwfc, startingpot, conv_thr
 
   ! IONS namelist
@@ -255,7 +255,8 @@ subroutine iosys
   diago_david_ndim  =4
   diago_diis_buff = 200
   diago_diis_keep = .false.
-  diago_diis_start= 0
+  diago_diis_start= 2
+  diago_diis_ndim = 3
   startingwfc = 'atomic'
   startingpot = 'atomic'
   conv_thr = 1.d-6
@@ -711,8 +712,10 @@ subroutine iosys
      loverlap =.false.
   CASE ('diis')
      isolve = 2
+     max_cg_iter= diago_cg_maxiter
      diis_buff = diago_diis_buff
-     diis_start_dav = diago_diis_start
+     diis_start_cg = diago_diis_start   ! SF
+     diis_ndim = diago_diis_ndim        ! SF
      diis_wfc_keep  = diago_diis_keep
      loverlap =.true.
   CASE ('david', 'david_overlap')
@@ -1004,8 +1007,8 @@ subroutine iosys
   !
   call verify_tmpdir
   !
-  ! write (6,'(/5x,"current restart_mode = ",a)') trim(restart_mode)
-  ! write (6,'( 5x,"current disk_io mode = ",a)') trim(disk_io)
+!  write (6,'(/5x,"current restart_mode = ",a)') trim(restart_mode)
+!  write (6,'( 5x,"current disk_io mode = ",a)') trim(disk_io)
   call restart_from_file
   if (startingconfig.eq.'file') call read_config_from_file
   call write_config_to_file
