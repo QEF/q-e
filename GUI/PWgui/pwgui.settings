@@ -36,12 +36,14 @@ set ::guib::settings(FILENAME.only_tail)  0
 
 
 # ------------------------------------------------------------------------
-#  (Tk)PWscf settings ...
+#  PWgui settings ...
 # ------------------------------------------------------------------------
 
 if { $tcl_platform(platform) == "unix" } {
-    set ::pwscf::settings(EDITOR) emacs
-    set ::pwscf::settings(PAGER)  {xterm -e less}
+    set ::pwscf::settings(EDITOR) PWgui
+    set ::pwscf::settings(PAGER)  PWgui
+    #set ::pwscf::settings(EDITOR) emacs
+    #set ::pwscf::settings(PAGER)  {xterm -e less}
 } else {
     set ::pwscf::settings(EDITOR) PWgui
     set ::pwscf::settings(PAGER)  PWgui
@@ -60,3 +62,17 @@ set ::pwscf::settings(XCRYSDEN.openAs) standalone
 # not yet used ...
 set ::pwscf::settings(PWGUI.geometry.remember) 0
 set ::pwscf::settings(PWGUI.geometry)          {}
+
+
+# ------------------------------------------------------------------------
+# PWscf settings ...
+# ------------------------------------------------------------------------
+set ::pwscf::settings(RUN.prefix)  ""
+set ::pwscf::settings(RUN.postfix) ""
+
+set ::pwscf::settings(PW)      pw.x
+set ::pwscf::settings(PH)      ph.x
+set ::pwscf::settings(PP)      pp.x
+set ::pwscf::settings(CHDENS)  chdens.x
+set ::pwscf::settings(PROJWFC) projwfc.x
+set ::pwscf::settings(D3)      d3.x
