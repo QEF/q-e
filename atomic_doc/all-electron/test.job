@@ -32,3 +32,5 @@ diff $work/mg.out $reference/mg.out  >> difference
 diff $work/u1.out $reference/u1.out    >> difference
 diff $work/u.out $reference/u.out    >> difference
 diff $work/w.out $reference/w.out    >> difference
+
+/bin/rm ld1.wfc

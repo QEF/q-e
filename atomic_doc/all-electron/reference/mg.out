@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 18:28: 0 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:25:52 
 
      -------------------- All-electron run ------------------------------
 
@@ -12,7 +12,7 @@
      mesh = 645 r(mesh) =  81.05220 xmin = -6.00 dx = 0.02000
 
      n l j   nl                  e(Ryd)         e(Ha)          e(eV)
-     Spin orbit splitted results
+     Spin orbit split results
      1 0 0.5 1S 1( 2.00)       -95.1438       -47.5719     -1294.5071
      2 0 0.5 2S 1( 2.00)        -6.5756        -3.2878       -89.4669
      2 1 0.5 2P 1( 2.00)        -4.1567        -2.0783       -56.5548
