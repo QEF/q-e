@@ -186,10 +186,22 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! derivatives of correlation wr. rho
   ! derivatives of correlation wr. grho
 
-  real(kind=DP), parameter :: small = 1.d-10
+  real(kind=DP), parameter :: small = 1.d-10, epsr=1.d-6
   !
   !
-  if (rho <= small .or. abs(zeta) > 1.d0 .or. sqrt(abs(grho)) <= small) then
+  if ( abs(zeta) > 1.d0 ) then
+     sc = 0.0d0
+     v1cup = 0.0d0
+     v1cdw = 0.0d0
+     v2c = 0.0d0
+     return
+  else
+     !
+     ! ... ( - 1.0 + epsr )  <  zeta  <  ( 1.0 - epsr )
+     zeta = SIGN( MIN( ABS( zeta ), ( 1.D0 - epsr ) ) , zeta )
+  endif
+
+  if (rho <= small .or. sqrt(abs(grho)) <= small) then
      sc = 0.0d0
      v1cup = 0.0d0
      v1cdw = 0.0d0
@@ -197,25 +209,11 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 1) then
      call perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 2) then
-     if (abs (zeta) < 1.d0) then
-        call ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
-     else
-        sc = 0.0d0
-        v1cup = 0.0d0
-        v1cdw = 0.0d0
-        v2c = 0.0d0
-     endif
+     call ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 3 .or. igcc > 4) then
      call errore ('lsda_functionals', 'not implemented', igcc)
   elseif (igcc == 4) then
-     if (abs (zeta) < 1.d0) then
         call pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
-     else
-        sc = 0.0d0
-        v1cup = 0.0d0
-        v1cdw = 0.0d0
-        v2c = 0.0d0
-     endif
   else
      sc = 0.0d0
      v1cup = 0.0d0
