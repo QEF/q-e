@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: run.itcl,v 1.1 2004-09-20 07:08:34 kokalj Exp $ 
+# $Id: run.itcl,v 1.2 2005-01-17 11:47:01 kokalj Exp $ 
 #
 
 proc ::pwscf::run::run {guiObj {init 1}} {
@@ -241,8 +241,9 @@ proc ::pwscf::run::_init {guiObj} {
     
     # get the output-file from the input-file; also the error file
     
-    set head [regsub {\.(inp|in)$} $inpFile {}]
-    set run(inpFile,$moduleObj) $inpFile
+    #set head [regsub {\.(inp|in)$} $inpFile {}]
+    regsub {\.(inp|in)$} $inpFile {} head
+    set run(inpFile,$moduleObj)  $inpFile
     set run(outFile,$moduleObj)  $head.out
     set run(errFile,$moduleObj)  $head.err
 
