@@ -96,9 +96,19 @@
 
 #else
 
-#  define DREAL       dreal
-#  define DCMPLX      dcmplx
-#  define DIMAG       dimag
+#  if defined (__ALPHA) && ! defined (__LINUX)
+
+#    define DREAL       real
+#    define DCMPLX      cmplx
+#    define DIMAG       imag
+
+#  else
+
+#    define DREAL       dreal
+#    define DCMPLX      dcmplx
+#    define DIMAG       dimag
+
+#  endif
 
 #  if defined(ADD_BLAS_TWO_UNDERSCORES)
 
