@@ -29,7 +29,7 @@ c nmix_ph     number of iterations used in potential mixing          4
 c
 c iverbosity  iverbosity=0 short output, iverbosity=1 verbose output 0
 c
-c time_max    maximum allowed run time before the job stops smoothly
+c max_seconds maximum allowed run time before the job stops smoothly
 c
 c fildyn      file where the dynamical matrix is written           'matdyn'
 c
