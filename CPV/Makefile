@@ -20,6 +20,7 @@ modules.o \
 para.o \
 read_pseudo.o \
 restart.o \
+restart_sub.o \
 path_routines.o \
 stop_pw.o \
 smd.o  \

@@ -104,6 +104,7 @@
       use stre
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use restart
+      use restart_subroutines
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem, au_gpa, au_ps
       use io_files, only: psfile, pseudo_dir
@@ -439,187 +440,24 @@
         call wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
       end if
 !
-      if ( nbeg < 0 ) then
+      if ( nbeg < -1 ) then
 
          !======================================================================
-         !    nbeg = -1 or nbeg = -2 or nbeg = -3
+         !    Initialize from scratch nbeg = -2 or nbeg = -3
          !======================================================================
-
-         if( nbeg == -1 ) then
-         
-           ! atomic positions ( tau0 ) are read from input
-           ! but all other staff are read from restart
-           !
-           call readfile_new                                            &
-     &     ( 0, ndr,h,hold,nfi,cm(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
-         endif
-!     
-         call phfac( tau0, ei1, ei2, ei3, eigr )
 !
-         call initbox ( tau0, taub, irb )
-!
-         call phbox( taub, eigrb )
-!
-         if( trane ) then
-!       
-            !     random initialization
-!
-            call randin(1,n,gstart,ngw,ampre,cm)
-
-         else if( nbeg == -3 ) then
-!       
-            !     gaussian initialization
-!
-            call gausin(eigr,cm)
-
-         end if
-!
-!     prefor calculates betae (used by graham)
-!
-         call prefor(eigr,betae)
-         call graham(betae,bec,cm)
-         if(iprsta.ge.3) call dotcsc(eigr,cm)
-!     
          nfi = 0
-!
-!     strucf calculates the structure factor sfac
-!
-         call strucf(ei1,ei2,ei3,sfac)
-         call formf(tfirst,eself)
-         call calbec (1,nsp,eigr,cm,bec)
-         if (tpre) call caldbec(1,nsp,eigr,cm)
-         call rhoofr (nfi,cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
-         if(iprsta.gt.0) WRITE( stdout,*) ' out from rhoofr'
-!
-!     put core charge (if present) in rhoc(r)
-!
-         if ( nlcc_any ) call set_cc(irb,eigrb,rhoc)
-!
-         call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
-     &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
-         call compute_stress( stress, detot, h, omega )
-
-         if(iprsta.gt.0) WRITE( stdout,*) ' out from vofrho'
-         if(iprsta.gt.2) call print_atomic_var( fion, na, nsp, ' fion ' )
-! 
-!     forces for eigenfunctions
+         CALL fromscra_sub &
+            ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
+              taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
+              detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
+              bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
 !
-!     newd calculates deeq and a contribution to fion
-!
-         call newd(rhor,irb,eigrb,rhovan,fion)
-         WRITE( stdout,*) ' out from newd'
-         call prefor(eigr,betae)
-!
-!     if n is odd => c(*,n+1)=0
-!
-         ALLOCATE( emadt2( ngw ) )
-         ccc = dt2hbe
-         if(tsde) ccc = dt2bye
-         emadt2 = ccc * ema0bg
-
-         do i=1,n,2
-            call dforce(bec,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
-            call wave_steepest( c0(:,i,1,1), cm(:,i,1,1), emadt2, c2 )
-            call wave_steepest( c0(:,i+1,1,1), cm(:,i+1,1,1), emadt2, c3 )
-         end do
-
-         DEALLOCATE( emadt2 )
-         WRITE( stdout,*) ' out from dforce'
-!
-!     buffer for wavefunctions is unit 21
-!
-         if(tbuff) rewind 21
-!
-!     nlfq needs deeq calculated in newd
-!
-         if ( tfor .or. tprnfor ) call nlfq(cm,eigr,bec,becdr,fion)
-         WRITE( stdout,*) ' out from nlfq'
-! 
-!     imposing the orthogonality
-!     ==========================================================
-!
-         call calphi(cm,ema0bg,bec,betae,phi)
-         WRITE( stdout,*) ' out from calphi'
-!     ==========================================================
-!
-         if(tortho) then
-            call ortho  (eigr,c0,phi,lambda,                            &
-     &                   bigr,iter,ccc,eps,maxit,delt,bephi,becp)
-         else
-            call graham(betae,bec,c0)
-            WRITE( stdout,*) ' graham  c0 '
-         endif
-!
-!     nlfl needs lambda becdr and bec
-!
-         if ( tfor .or. tprnfor ) call nlfl(bec,becdr,lambda,fion)
-         WRITE( stdout,*) ' out from nlfl'
-!
-         if ( iprsta >= 3 ) call print_lambda( lambda, n, 9, ccc )
-!
-         if(tpre) then
-            call nlfh(bec,dbec,lambda)
-            WRITE( stdout,*) ' out from nlfh'
-         end if
-!
-         if(tortho) then
-            call updatc(ccc,lambda,phi,bephi,becp,bec,c0)
-            WRITE( stdout,*) ' out from updatc'
-         endif
-         call calbec (nvb+1,nsp,eigr,c0,bec)
-         if (tpre) call caldbec(1,nsp,eigr,cm)
-         WRITE( stdout,*) ' out from calbec'
-!     ==============================================================
-!     cm now orthogonalized
-!     ==============================================================
-         if(iprsta.ge.3) call dotcsc(eigr,c0)
-!     
-         if(thdyn) then
-            call cell_force( fcell, ainv, stress, omega, press, wmass )
-            call cell_hmove( h, hold, delt, iforceh, fcell )
-            call invmat( 3, h, ainv, deth )
-         endif
-!
-         if( tfor ) then
-            if( lwf ) then
-              call ef_force( fion, na, nsp, zv )
-            end if
-            call ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
-            CALL s_to_r( taus, tau0, na, nsp, h )
-            call phfac(tau0,ei1,ei2,ei3,eigr)
-            call calbec (1,nsp,eigr,c0,bec)
-            if (tpre) call caldbec(1,nsp,eigr,c0)
-         endif
-!     
-         xnhp0=0.
-         xnhpm=0.
-         vnhp =0.
-         fionm=0.
-         CALL ions_vel( vels, taus, tausm, na, nsp, delt )
-         xnhh0(:,:)=0.
-         xnhhm(:,:)=0.
-         vnhh (:,:) =0.
-         velh (:,:)=(h(:,:)-hold(:,:))/delt
-!     
-!     ======================================================
-!     kinetic energy of the electrons
-!     ======================================================
-
-         call elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
-
-         xnhe0=0.
-         xnhem=0.
-         vnhe =0.
-!     
-         lambdam(:,:)=lambda(:,:)
-!     
       else
 
 !======================================================================
-!       nbeg = 0, nbeg = 1 or nbeg = 2
+!        nbeg = -1, nbeg = 0, nbeg = 1 or nbeg = 2
 !======================================================================
 
          call readfile_new                                           &
@@ -631,10 +469,10 @@
          ! WRITE(6,*) 'DEBUG tausm = ', tausm(:,1)
 
          call restart_sub     &
-              ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
+            ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
               taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
               detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
-              bephi, becp, velh, dt2bye, iforce )
+              bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
 !
       end if
 !==============================================end of if(nbeg.lt.0)====
