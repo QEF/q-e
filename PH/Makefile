@@ -156,6 +156,7 @@ MODULES = \
 PWOBJS = \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
+../PW/add_vuspsi_nc.o \
 ../PW/addusdens.o \
 ../PW/addusforce.o \
 ../PW/addusstress.o \
@@ -165,6 +166,7 @@ PWOBJS = \
 ../PW/allocate_wfc.o \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
+../PW/atomic_wfc_nc.o \
 ../PW/bachel.o \
 ../PW/becmod.o \
 ../PW/bfgs.o \
@@ -177,10 +179,14 @@ PWOBJS = \
 ../PW/c_bands.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
+../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
+../PW/ccgdiagg_nc.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
+../PW/cdiisg_nc.o \
 ../PW/cegterg.o \
+../PW/cegterg_nc.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \
@@ -190,12 +196,15 @@ PWOBJS = \
 ../PW/cft_t3e.o \
 ../PW/cfts_3.o \
 ../PW/cgramg1.o \
+../PW/cgramg1_nc.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
+../PW/cinitcgg_nc.o \
 ../PW/clean_pw.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
+../PW/compute_rho.o \
 ../PW/constraints_module.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
@@ -237,17 +246,22 @@ PWOBJS = \
 ../PW/force_us.o \
 ../PW/forces.o \
 ../PW/g_psi.o \
+../PW/g_psi_nc.o \
 ../PW/g_psi_mod.o \
 ../PW/gen_at_dj.o \
 ../PW/gen_at_dy.o \
 ../PW/gen_us_dj.o \
 ../PW/gen_us_dy.o \
+../PW/get_locals.o \
 ../PW/ggen.o \
 ../PW/gk_sort.o \
 ../PW/gradcorr.o \
+../PW/gradcorr_nc.o \
 ../PW/gweights.o \
 ../PW/h_1psi.o \
 ../PW/h_psi.o \
+../PW/h_1psi_nc.o \
+../PW/h_psi_nc.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
@@ -271,6 +285,7 @@ PWOBJS = \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
+../PW/mix_rho_nc.o \
 ../PW/mode_group.o \
 ../PW/move_ions.o \
 ../PW/multable.o \
@@ -288,6 +303,7 @@ PWOBJS = \
 ../PW/potinit.o \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
+../PW/psymrho_mag.o \
 ../PW/punch.o \
 ../PW/pw_gemm.o \
 ../PW/pwcom.o \
@@ -300,6 +316,7 @@ PWOBJS = \
 ../PW/readin.o \
 ../PW/readnewvan.o \
 ../PW/readvan.o \
+../PW/report_mag.o \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/reset_k_points.o \
@@ -311,11 +328,13 @@ PWOBJS = \
 ../PW/rho2zeta.o \
 ../PW/rotate_wfc.o \
 ../PW/rotate_wfc_gamma.o \
+../PW/rotate_wfc_nc.o \
 ../PW/ruotaijk.o \
 ../PW/s_1psi.o \
 ../PW/s_axis_to_ca.o \
 ../PW/s_gemm.o \
 ../PW/s_psi.o \
+../PW/s_psi_nc.o \
 ../PW/save_in_cbands.o \
 ../PW/save_in_electrons.o \
 ../PW/save_in_ions.o \
@@ -340,6 +359,7 @@ PWOBJS = \
 ../PW/sgam_at_mag.o \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
+../PW/show_memory.o \
 ../PW/smallg_q.o \
 ../PW/spinor.o \
 ../PW/sph_ind.o \
@@ -360,6 +380,7 @@ PWOBJS = \
 ../PW/summary.o \
 ../PW/swap.o \
 ../PW/symrho.o \
+../PW/symrho_mag.o \
 ../PW/symtns.o \
 ../PW/symvect.o \
 ../PW/symz.o \
@@ -372,10 +393,13 @@ PWOBJS = \
 ../PW/updathes.o \
 ../PW/upf_to_internal.o \
 ../PW/usnldiag.o \
+../PW/usnldiag_nc.o \
 ../PW/v_of_rho.o \
+../PW/v_of_rho_nc.o \
 ../PW/vcsmd.o \
 ../PW/vcsubs.o \
 ../PW/vhpsi.o \
+../PW/vhpsi_nc.o \
 ../PW/vloc_of_g.o \
 ../PW/vloc_psi.o \
 ../PW/vpack.o \

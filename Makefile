@@ -11,14 +11,13 @@ default :
 	@echo '  ph           phonon code'
 	@echo '  pp           postprocessing programs'
 	@echo '  gamma        Gamma-only version of phonon code'
-	@echo '  nc           non collinear magnetic version of pw code'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
 	@echo '  raman        raman tensor'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
-	@echo '  pwall        same as "make pw ph pp gamma nc pwcond d3 raman tools"'
+	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 raman tools"'
 	@echo '  all          same as "make pwall fpmd cp ld1 upf"'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
@@ -42,9 +41,6 @@ pp : bindir mods libs pw
 
 gamma : bindir mods libs pw
 	if test -d Gamma  ; then ( cd Gamma  ; $(MAKE) $(MFLAGS) all ) ; fi
-
-nc : bindir mods libs pw
-	if test -d PWNC   ; then ( cd PWNC   ; $(MAKE) $(MFLAGS) all ) ; fi
 
 pwcond : bindir mods libs pw pp
 	if test -d PWCOND ; then ( cd PWCOND ; $(MAKE) $(MFLAGS) all ) ; fi
@@ -70,7 +66,7 @@ iotk :
 pw_export : iotk bindir mods libs pw
 	if test -d PP ; then ( cd PP ; $(MAKE) $(MFLAGS) pw_export.x ) ; fi
 
-pwall : pw ph pp gamma nc pwcond d3 raman tools
+pwall : pw ph pp gamma pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
 mods :
@@ -86,7 +82,7 @@ clean :
 	touch make.rules make.sys 
 	# make complains if they aren't there; same with make.depend below
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND PWNC Raman \
+		CPV D3 Gamma Modules PH PP PW PWCOND Raman \
 		atomic clib flib pwtools upftools \
 	; do \
 	    if test -d $$dir ; then \
@@ -143,7 +139,6 @@ links : bindir
 	      ../PP/voronoy.x ../PP/pw_export.x \
 	    ../PW/memory.x ../PW/pw.x \
 	    ../PWCOND/pwcond.x \
-	    ../PWNC/pwnc.x \
 	    ../Raman/ram.x \
 	    ../atomic/ld1.x \
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/dynmat.x \

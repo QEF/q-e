@@ -6,6 +6,7 @@ include ../make.sys
 PWOBJS = \
 add_efield.o \
 add_vuspsi.o \
+add_vuspsi_nc.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \
@@ -15,6 +16,7 @@ allocate_nlpot.o \
 allocate_wfc.o \
 atomic_rho.o \
 atomic_wfc.o \
+atomic_wfc_nc.o \
 bachel.o \
 becmod.o \
 bfgs.o \
@@ -27,10 +29,14 @@ bp_ylm_q.o \
 c_bands.o \
 c_gemm.o \
 ccalbec.o \
+ccalbec_nc.o \
 ccgdiagg.o \
+ccgdiagg_nc.o \
 cdiagh.o \
 cdiaghg.o \
+cdiisg_nc.o \
 cegterg.o \
+cegterg_nc.o \
 cft3.o \
 cft3s.o \
 cft_3.o \
@@ -40,12 +46,15 @@ cft_sun.o \
 cft_t3e.o \
 cfts_3.o \
 cgramg1.o \
+cgramg1_nc.o \
 checkallsym.o \
 checksym.o \
 cinitcgg.o \
+cinitcgg_nc.o \
 clean_pw.o \
 close_files.o \
 compute_dip.o \
+compute_rho.o \
 compute_scf.o \
 constraints_module.o \
 coset.o \
@@ -89,16 +98,21 @@ force_us.o \
 forces.o \
 g_psi.o \
 g_psi_mod.o \
+g_psi_nc.o \
 gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \
 gen_us_dy.o \
+get_locals.o \
 ggen.o \
 gk_sort.o \
 gradcorr.o \
+gradcorr_nc.o \
 gweights.o \
 h_1psi.o \
 h_psi.o \
+h_1psi_nc.o \
+h_psi_nc.o \
 hexsym.o \
 hinit0.o \
 hinit1.o \
@@ -123,6 +137,7 @@ linmin.o \
 make_pointlists.o \
 mix_pot.o \
 mix_rho.o \
+mix_rho_nc.o \
 mode_group.o \
 move_ions.o \
 multable.o \
@@ -140,6 +155,7 @@ paw.o \
 potinit.o \
 print_clock_pw.o \
 psymrho.o \
+psymrho_mag.o \
 punch.o \
 pw_gemm.o \
 pwcom.o \
@@ -154,6 +170,7 @@ readnewvan.o \
 readvan.o \
 regterg.o \
 remove_atomic_rho.o \
+report_mag.o \
 reset_k_points.o \
 restart.o \
 restart_from_file.o \
@@ -163,11 +180,13 @@ rgen.o \
 rho2zeta.o \
 rotate_wfc.o \
 rotate_wfc_gamma.o \
+rotate_wfc_nc.o \
 ruotaijk.o \
 s_1psi.o \
 s_axis_to_ca.o \
 s_gemm.o \
 s_psi.o \
+s_psi_nc.o \
 save_in_cbands.o \
 save_in_electrons.o \
 save_in_ions.o \
@@ -192,6 +211,7 @@ sgam_at.o \
 sgam_at_mag.o \
 sgam_ph.o \
 sgama.o \
+show_memory.o \
 smallg_q.o \
 spinor.o \
 sph_ind.o \
@@ -213,6 +233,7 @@ sumkt.o \
 summary.o \
 swap.o \
 symrho.o \
+symrho_mag.o \
 symscalar.o \
 symtns.o \
 symvect.o \
@@ -226,10 +247,13 @@ update_pot.o \
 updathes.o \
 upf_to_internal.o \
 usnldiag.o \
+usnldiag_nc.o \
 v_of_rho.o \
+v_of_rho_nc.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
+vhpsi_nc.o \
 vloc_of_g.o \
 vloc_psi.o \
 vpack.o \
