@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
+subroutine fft_scatter1 (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -132,4 +132,4 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
 #endif
   return
 
-end subroutine fft_scatter
+end subroutine fft_scatter1

@@ -18,7 +18,7 @@
 #endif
 
 
-int CREATE_PLAN(fftw_plan *p, int *n, int *idir)
+int CREATE_PLAN_1D(fftw_plan *p, int *n, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD ); 
    *p = fftw_create_plan(*n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
@@ -27,7 +27,7 @@ int CREATE_PLAN(fftw_plan *p, int *n, int *idir)
    return 0;
 }
 
-int DESTROY_PLAN(fftw_plan *p)
+int DESTROY_PLAN_1D(fftw_plan *p)
 {
    if ( *p != NULL ) fftw_destroy_plan(*p);
    else fprintf(stderr," *** DESTROY_PLAN: warning empty plan ***\n");
@@ -109,7 +109,7 @@ int FFT_Z_STICK(fftw_plan *p, FFTW_COMPLEX *zstick, int *ldz, int *nstick_l)
    return 0;
 }
 
-int FFTW_INPLACE_DRW(fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *lda, int *inca)
+int FFTW_INPLACE_DRV_1D(fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *lda, int *inca)
 {
    int howmany, idist, inc;
    howmany = (*nfft);
@@ -119,13 +119,13 @@ int FFTW_INPLACE_DRW(fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *lda, int *in
    return 0;
 }
 
-int FFTW_INPLACE_DRW_2D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
+int FFTW_INPLACE_DRV_2D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
 {
    fftwnd( *p, *howmany, a, *inca, *idist, 0, 0, 0 );
    return 0;
 }
 
-int FFTW_INPLACE_DRW_3D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
+int FFTW_INPLACE_DRV_3D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
 {
    fftwnd( *p, *howmany, a, *inca, *idist, 0, 0, 0 );
    return 0;

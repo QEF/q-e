@@ -6,6 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #ifdef __PARA
+
+# if defined __AIX
+#  define __FFT_MODULE_DRV
+# endif
 !
 !----------------------------------------------------------------------
 subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -25,6 +29,13 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !               fft along z using pencils (cft_1)
   !
 #include "machine.h"
+
+#if defined __FFT_MODULE_DRV
+  use fft_scalar, only : cft_1z, cft_2xy
+#endif
+
+  use fft_base, only: fft_scatter
+
   use parameters, only : DP
   use para
   implicit none
@@ -55,7 +66,11 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   endif
   !
   if (sign.eq.1) then
+#if defined __FFT_MODULE_DRV
+     call cft_1z (f, ncp (me), n3, nx3, sign, aux)
+#else
      call cft_1 (f, ncp (me), n3, nx3, sign, aux)
+#endif
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
      call setv (2 * nxx, 0.0d0, f, 1)
      do i = 1, nct
@@ -64,9 +79,17 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
            f (mc + (j - 1) * ncplane) = aux (j + (i - 1) * nppx)
         enddo
      enddo
+#if defined __FFT_MODULE_DRV
+     call cft_2xy (f, npp (me), n1, n2, nx1, nx2, sign)
+#else
      call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
+#endif
   elseif (sign.eq. - 1) then
+#if defined __FFT_MODULE_DRV
+     call cft_2xy (f, npp (me), n1, n2, nx1, nx2, sign)
+#else
      call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
+#endif
      do i = 1, nct
         mc = icpl (i)
         do j = 1, npp (me)
@@ -74,7 +97,11 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
         enddo
      enddo
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
+#if defined __FFT_MODULE_DRV
+     call cft_1z (aux, ncp (me), n3, nx3, sign, f)
+#else
      call cft_1 (aux, ncp (me), n3, nx3, sign, f)
+#endif
   else
      call errore ('cft3', 'not allowed', abs (sign) )
 
@@ -88,6 +115,9 @@ end subroutine cft3
 subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !----------------------------------------------------------------------
   !
+#if defined __FFT_MODULE_DRV
+  use fft_scalar, only : cfft3d
+#endif
   use parameters
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
@@ -98,9 +128,17 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !   sign = +-1 : complete 3d fft (for rho and for the potential)
   !
   if (sign.eq.1) then
+#if defined __FFT_MODULE_DRV
+     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, 1)
+#else
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 1, 1)
+#endif
   elseif (sign.eq. - 1) then
+#if defined __FFT_MODULE_DRV
+     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, - 1)
+#else
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 1, - 1)
+#endif
   else
      call errore ('cft3', 'what should i do?', 1)
   endif

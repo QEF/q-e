@@ -10,13 +10,13 @@
 
 #if defined __T3E | defined __ABSOFT
 
-#  define FFTW_INPLACE_DRW FFTW_INPLACE_DRW
-#  define FFTW_INPLACE_DRW_2D FFTW_INPLACE_DRW_2D
-#  define FFTW_INPLACE_DRW_3D FFTW_INPLACE_DRW_3D
-#  define CREATE_PLAN CREATE_PLAN
+#  define FFTW_INPLACE_DRV_1D FFTW_INPLACE_DRV_1D
+#  define FFTW_INPLACE_DRV_2D FFTW_INPLACE_DRV_2D
+#  define FFTW_INPLACE_DRV_3D FFTW_INPLACE_DRV_3D
+#  define CREATE_PLAN_1D CREATE_PLAN_1D
 #  define CREATE_PLAN_2D CREATE_PLAN_2D
 #  define CREATE_PLAN_3D CREATE_PLAN_3D
-#  define DESTROY_PLAN DESTROY_PLAN
+#  define DESTROY_PLAN_1D DESTROY_PLAN_1D
 #  define DESTROY_PLAN_2D DESTROY_PLAN_2D
 #  define DESTROY_PLAN_3D DESTROY_PLAN_3D
 #  define FFT_X_STICK FFT_X_STICK
@@ -49,13 +49,13 @@
 
 #if defined __SGI | defined __FUJITSU | defined __SX4 | defined __INTEL
 
-#  define FFTW_INPLACE_DRW fftw_inplace_drw_
-#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
-#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
-#  define CREATE_PLAN create_plan_
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d_
+#  define CREATE_PLAN_1D create_plan_1d_
 #  define CREATE_PLAN_2D create_plan_2d_
 #  define CREATE_PLAN_3D create_plan_3d_
-#  define DESTROY_PLAN destroy_plan_
+#  define DESTROY_PLAN_1D destroy_plan_1d_
 #  define DESTROY_PLAN_2D destroy_plan_2d_
 #  define DESTROY_PLAN_3D destroy_plan_3d_
 #  define FFT_X_STICK fft_x_stick_
@@ -91,13 +91,13 @@
 
 #  if defined __GNU_LINK
 
-#  define FFTW_INPLACE_DRW fftw_inplace_drw__
-#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d__
-#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d__
-#  define CREATE_PLAN create_plan__
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d__
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d__
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d__
+#  define CREATE_PLAN_1D create_plan_1d__
 #  define CREATE_PLAN_2D create_plan_2d__
 #  define CREATE_PLAN_3D create_plan_3d__
-#  define DESTROY_PLAN destroy_plan__
+#  define DESTROY_PLAN_1D destroy_plan_1d__
 #  define DESTROY_PLAN_2D destroy_plan_2d__
 #  define DESTROY_PLAN_3D destroy_plan_3d__
 #  define FFT_X_STICK fft_x_stick__
@@ -129,13 +129,13 @@
 
 #  else
 
-#  define FFTW_INPLACE_DRW fftw_inplace_drw_
-#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
-#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
-#  define CREATE_PLAN create_plan_
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d_
+#  define CREATE_PLAN_1D create_plan_1d_
 #  define CREATE_PLAN_2D create_plan_2d_
 #  define CREATE_PLAN_3D create_plan_3d_
-#  define DESTROY_PLAN destroy_plan_
+#  define DESTROY_PLAN_1D destroy_plan_1d_
 #  define DESTROY_PLAN_2D destroy_plan_2d_
 #  define DESTROY_PLAN_3D destroy_plan_3d_
 #  define FFT_X_STICK fft_x_stick_
@@ -171,15 +171,15 @@
 
 #if defined __AIX 
 
-#  define FFTW_INPLACE_DRW fftw_inplace_drw
-#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d
-#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d
 #  define CP_GETENV cp_getenv
 #  define CP_DATE cp_date
 #  define CREATE_PLAN_2D create_plan_2d
 #  define CREATE_PLAN_3D create_plan_3d
-#  define CREATE_PLAN my_create_plan
-#  define DESTROY_PLAN my_destroy_plan
+#  define CREATE_PLAN_1D create_plan_1d
+#  define DESTROY_PLAN_1D destroy_plan_1d
 #  define DESTROY_PLAN_2D destroy_plan_2d
 #  define DESTROY_PLAN_3D destroy_plan_3d
 #  define FFT_X_STICK fft_x_stick
@@ -212,13 +212,13 @@
 
 #if defined __TRU64
 
-#  define FFTW_INPLACE_DRW fftw_inplace_drw_
-#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
-#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d_
 #  define CREATE_PLAN_2D create_plan_2d_
 #  define CREATE_PLAN_3D create_plan_3d_
-#  define CREATE_PLAN create_plan_
-#  define DESTROY_PLAN destroy_plan_
+#  define CREATE_PLAN_1D create_plan_1d_
+#  define DESTROY_PLAN_1D destroy_plan_1d_
 #  define DESTROY_PLAN_2D destroy_plan_2d_
 #  define DESTROY_PLAN_3D destroy_plan_3d_
 #  define FFT_X_STICK fft_x_stick_
@@ -252,11 +252,11 @@
 
 #if defined __QSW && defined __LINUX
 
-#    define FFTW_INPLACE_DRW fftw_inplace_drw_
-#    define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
-#    define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
-#    define CREATE_PLAN create_plan_
-#    define DESTROY_PLAN destroy_plan__
+#    define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
+#    define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
+#    define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d_
+#    define CREATE_PLAN_1D create_plan_1d_
+#    define DESTROY_PLAN_1D destroy_plan_1d__
 #    define CREATE_PLAN_2D create_plan_2d_
 #    define CREATE_PLAN_3D create_plan_3d_
 #    define DESTROY_PLAN_2D destroy_plan_2d_

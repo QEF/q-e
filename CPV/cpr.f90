@@ -169,7 +169,7 @@
      &       enthal, epot, xnhpp, xnhep, epre, enow, tps, econs, econt, &
      &       ampre,  fricp, greasp, eps, qnp, tempw, qne, factem,       &
      &       frice,  grease, emass, delt, ccc, bigr, dt2,               &
-     &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe, filesize
+     &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
       integer nnn, is, nacc, ia, j, iter, nfi, i
 !
@@ -359,15 +359,6 @@
 !======================================================================
 !
          if(nbeg.eq.-1) then
-#ifdef __PARA
-!            call readpfile                                              &
-#else
-!            call readfile                                               &
-#endif
-!     &     ( 0, ndr,h,hold,nfi,cm,cm,taus,tausm,vels,velsm,acc,         &
-!     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-!     &       xnhh0,xnhhm,vnhh,velh)
-
            call readfile_new                                            &
      &     ( 0, ndr,h,hold,nfi,cm,cm,taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
@@ -610,14 +601,6 @@
 !======================================================================
 !       nbeg = 0 or nbeg = 1 
 !======================================================================
-#ifdef __PARA
-!            call readpfile                                              &
-#else
-!            call readfile                                               &
-#endif
-!     &     ( 1, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,         &
-!     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-!     &       xnhh0,xnhhm,vnhh,velh)
 
             call readfile_new                                           &
      &     ( 1, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,         &
@@ -1362,15 +1345,6 @@
 !
       if(mod(nfi,iprint).eq.0) then
 !
-#ifdef __PARA
-!         call writepfile                                                &
-#else
-!         call writefile                                                 &
-#endif
-!     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,            &
-!     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-!     &       xnhh0,xnhhm,vnhh,velh)
-!
          call writefile_new                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
@@ -1438,24 +1412,11 @@
 #endif
 
 !
-#ifdef __PARA
-      filesize=float(2*16*n*ngw*nproc*2)/1000/1000
-!      call writepfile                                                   &
-#else
-      filesize=float(2*16*n*ngw)/1000/1000
-!      call writefile                                                    &
-#endif
-!     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,            &
-!     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-!     &       xnhh0,xnhhm,vnhh,velh)
-
          call writefile_new                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 
-! filesize is a very rough estimate in the parallel case
-      write(6,'(f8.2,'' Mb or so written on unit '',i3)') filesize,ndw
 !
       if(iprsta.gt.1) then
          write(6,*)

@@ -47,7 +47,6 @@ checkallsym.o  \
 check.o  \
 checksym.o  \
 cinitcgg.o  \
-clocks.o  \
 constrain.o  \
 conv_to_num.o  \
 coset.o  \

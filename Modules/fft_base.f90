@@ -482,6 +482,7 @@
             ELSE
               ns = dfft%nsp( me )
             END IF
+
             DO is = 1, ns
               i = stmask( 1, is, 1 )
               j = stmask( 2, is, 1 )
@@ -497,6 +498,7 @@
             ELSE
               ns = dfft%nsp( me )
             END IF
+
             DO is = 1, ns
               i = stmask( 1, is, 1 )
               j = stmask( 2, is, 1 )
@@ -570,7 +572,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !
   if (nprocp.eq.1) return
   !
-  !call start_clock ('fft_scatter')
+  call start_clock ('fft_scatter')
   !
   ! sendcount(proc): amount of data processor "me" must send to processor
   ! recvcount(proc): amount of data processor "me" must receive from
@@ -648,7 +650,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
 
   endif
 
-  !call stop_clock ('fft_scatter')
+  call stop_clock ('fft_scatter')
 
 #endif
 

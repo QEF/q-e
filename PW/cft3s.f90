@@ -6,6 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #ifdef __PARA
+
+# if defined __AIX
+#  define __FFT_MODULE_DRV
+# endif
+
 !
 !----------------------------------------------------------------------
 subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -35,6 +40,13 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !   and all planes(i) are set to 1
   !
 #include "machine.h"
+
+#if defined __FFT_MODULE_DRV
+  use fft_scalar, only: cft_1z, cft_2xy
+#endif
+
+  use fft_base, only: fft_scatter
+
   use parameters, only: DP
   use para
   implicit none
@@ -47,15 +59,17 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   integer :: planes (nx1)
   data nxx_save / 0 /
   save nxx_save, aux
+
 #if defined(__FFTW)
-#define CFT_1S cft_1s
+# define CFT_1S cft_1s
 #else
-#define CFT_1S cft_1
+# define CFT_1S cft_1
 #endif
+
 #if defined(__FFTW) || defined(__AIX)
-#define CFT_2S cft_2s
+# define CFT_2S cft_2s
 #else
-#define CFT_2S cft_2
+# define CFT_2S cft_2
 #endif
   !
 
@@ -76,7 +90,11 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   endif
   if (sign.gt.0) then
      if (sign.ne.2) then
+#if defined __FFT_MODULE_DRV
+        call cft_1z (f, ncps (me), n3, nx3, sign, aux)
+#else
         call CFT_1S (f, ncps (me), n3, nx3, sign, aux)
+#endif
         call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
         call setv (2 * nxxs, 0.0d0, f, 1)
         do i = 1, ncts
@@ -89,7 +107,11 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
            planes (i) = 1
         enddo
      else
+#if defined __FFT_MODULE_DRV
+        call cft_1z (f, nkcp (me), n3, nx3, sign, aux)
+#else
         call CFT_1S (f, nkcp (me), n3, nx3, sign, aux)
+#endif
         call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
         call setv (2 * nxxs, 0.0d0, f, 1)
         ii = 0
@@ -108,7 +130,11 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
            enddo
         enddo
      endif
+#if defined __FFT_MODULE_DRV
+     call cft_2xy (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+#else
      call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+#endif
   else
      if (sign.ne. - 2) then
         do i = 1, nx1
@@ -126,7 +152,11 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
            enddo
         enddo
      endif
+#if defined __FFT_MODULE_DRV
+     call cft_2xy (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+#else
      call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+#endif
      if (sign.ne. - 2) then
         do i = 1, ncts
            mc = icpls (i)
@@ -135,7 +165,11 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
            enddo
         enddo
         call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
+#if defined __FFT_MODULE_DRV
+        call cft_1z (aux, ncps (me), n3, nx3, sign, f)
+#else
         call CFT_1S (aux, ncps (me), n3, nx3, sign, f)
+#endif
      else
         ii = 0
         do iproc = 1, nprocp
@@ -148,26 +182,33 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
            enddo
         enddo
         call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
+#if defined __FFT_MODULE_DRV
+        call cft_1z (aux, nkcp (me), n3, nx3, sign, f)
+#else
         call CFT_1S (aux, nkcp (me), n3, nx3, sign, f)
+#endif
      endif
   endif
   call stop_clock ('cft3s')
   return
 end subroutine cft3s
+
 #else
-#define CFT_WITH_PENCILS cft_3
 
-#ifdef DEC
-#ifdef DXML
-#define NOPENCILS
-#endif
-#endif
+# define CFT_WITH_PENCILS cft_3
 
-#ifndef NOPENCILS
-#if defined(__AIX) || defined(__SX4) || defined(DEC)
-#define CFT_WITH_PENCILS cfts_3
-#endif
-#endif
+# ifdef DEC
+#  ifdef DXML
+#   define NOPENCILS
+#  endif
+# endif
+
+# ifndef NOPENCILS
+#  if defined(__AIX) || defined(__SX4) || defined(DEC)
+#   define CFT_WITH_PENCILS cfts_3
+#  endif
+# endif
+
 !
 !----------------------------------------------------------------------
 subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -201,6 +242,8 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   call stop_clock ('cft3s')
   return
 end subroutine cft3s
+
+
 #endif
 
 

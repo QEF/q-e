@@ -21,7 +21,8 @@ ptoolkit.o \
 stick_base.o \
 fft_types.o \
 fft_base.o \
-fft_scalar.o
+fft_scalar.o \
+clocks.o
 #
 include ../make.rules
 #
