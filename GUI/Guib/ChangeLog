@@ -1,3 +1,12 @@
+Tue Feb 01 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* validate.itcl, spininthelp.itcl: adding the "binary" (i.e. 0/1)
+		validator
+	* lib/tclUtils.tcl: fixing a small bug in ::tclu::warningDialog.
+	
+Sat Jan 29 2005 Anton Kokalj (tone.kokalj@ijs.si)
+ 	* lib/tclUtils.tcl: fixing typo in
+	::tclu::_error_or_warning_dialog routine
+	
 Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* gui.itcl: adding "getSelected saveFile" query. Making "save" and
 		"saveAs" methods public

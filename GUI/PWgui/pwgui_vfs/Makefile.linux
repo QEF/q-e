@@ -43,6 +43,7 @@ tclkit-runtime:
 	if test -x $(TCLKIT) ; then cp $(TCLKIT) tclkit-runtime ; fi
 
 main.tcl:
+	if [ ! -d pwgui.vfs ]; then MakeDir.sh $(LIBDIR); fi
 	TK_VERSION=$(TK_VERSION) \
 	ITCL_EXACT=$(ITCL_EXACT) \
 	ITCL_VERSION=$(ITCL_VERSION) $(SHELL) main.tcl.sh

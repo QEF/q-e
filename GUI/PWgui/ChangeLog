@@ -1,15 +1,26 @@
+Wed Mar 23 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl, pw-help.tcl: pw.x module updated to syntax of PWscf-2.1.2
+	* pp.tcl, pp-help.tcl: pp.x module slightly updated to syntax of
+		PWscf-2.1.2 
+	* run.itcl: changing a bit the "Run" behaviour
+	
+Tue Feb 01 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl:: fixing the "posint" bug with the k-shift validation (set to
+		binary (0/1) validation
+
 Mon Jan 17 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* projwfc module updated (files: pwojwfc.tcl, projwfc-help.tcl)
 	* run.itcl: regsub syntax bug fixed
 	
 Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si) and Carlo Sbraccia (sbraccia@sissa.it)
 	* adding "Run" menubutton: added file: run.itcl; adapted files:
-	menustate.itcl (adding runnable support), pwscf.itcl, settings.itcl.
+		menustate.itcl (adding runnable support), pwscf.itcl, 
+		settings.itcl.
 
 Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si) and Carlo Sbraccia (sbraccia@sissa.it)
 	* updating PWgui for PWscf 2.1 ( a lot of changes )
 	* PWgui version: the PWgui version will now match the version of
-	PWscf, so that the compatibility of the two codes will be obvious
+		PWscf, so that the compatibility of the two codes will be obvious
 
 Fri Apr 23 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* pw-event.tcl: tracevar on "nat": the starting_magnetization entries were not
