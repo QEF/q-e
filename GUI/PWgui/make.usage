@@ -16,7 +16,7 @@
 
 	pwgui-source-notcl   ... make PWgui-only source package
 	pwgui-source-all     ... make PWgui source package + Tcl libs
-	pwgui-linux-i386-bin ... make a binary PWgui package for Linux-i386
+	pwgui-linux-i386-bin ... make a binary PWgui package
 	
 	alldist                ... pwgui-source-all + 
                                    pwgui-linux-i386-bin + 
@@ -24,5 +24,8 @@
 
 * General target:
 
-	clean                  ... rm *tgz *tar *~
-	
+	clean                  ... rm *tgz *tar *~ 
+	veryclean              ... clean + remove *~ file recursively,
+				   clean-documents, and clean-external
+	distclean	       ... veryclean + cd lib/; rm -f *
+
