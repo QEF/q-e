@@ -17,7 +17,7 @@ CONTAINS
       use gvecw, only: ngw, ngwt
       use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, natx
-      use parm, ONLY: nr1, nr2, nr3
+      use grid_dimensions, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: write_restart_header, write_restart_ions, &
           write_restart_cell, write_restart_electrons, &
@@ -337,7 +337,7 @@ CONTAINS
       use gvecw, only: ngw, ngwt
       use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, natx
-      use parm, ONLY: nr1, nr2, nr3
+      use grid_dimensions, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: read_restart_header, read_restart_ions, &
           read_restart_cell, read_restart_electrons, &

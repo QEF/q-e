@@ -62,9 +62,11 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use ions_module
-      use parm
-      use parms
-      use parmb
+      use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
+      use cell_base, only: ainv
+      use cell_base, only: omega, alat
+      use smooth_grid_dimensions, only: nnrsx
+      use smallbox_grid_dimensions, only: nnrb => nnrbx
       use pseu
       use timex_mod
       use work1
@@ -289,7 +291,7 @@
       allocate(rhops(ngs,nsp))
       allocate(vps(ngs,nsp))
       allocate(rhor(nnr,nspin))
-      allocate(rhos(nnrs,nspin))
+      allocate(rhos(nnrsx,nspin))
       allocate(rhog(ng,nspin))
       if (nlcc.gt.0) allocate(rhoc(nnr))
       allocate(wrk1(nnr))

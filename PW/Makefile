@@ -163,7 +163,6 @@ read_ncpp.o  \
 readnewvan.o  \
 read_pseudo.o  \
 readvan.o  \
-recips.o  \
 reduce.o  \
 remove_atomic_rho.o  \
 restart.o  \

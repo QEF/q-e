@@ -27,9 +27,10 @@
       use parameters, only: nsx, natx
       use ions_module, only : nat, nsp, na, zv, pmass, rcmax, ipp ! ipp TEMP
       use elct, only: f, nel, nspin, nupdwn, iupdwn, n, nx
-      use parm,  only: nr1 ,nr2 ,nr3, alat, a1, a2, a3, omega
-      use parmb, only: nr1b,nr2b,nr3b 
-      use parms, only: nr1s,nr2s,nr3s 
+      use grid_dimensions,  only: nr1 ,nr2 ,nr3
+      use cell_base, only: omega, alat, a1, a2, a3
+      use smallbox_grid_dimensions, only: nr1b,nr2b,nr3b 
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s
       use pres_mod, only: agg, sgg, e0gg
       use psfiles, only: psfile, pseudo_dir
       use io_global, only: ionode
@@ -1058,7 +1059,7 @@
       use parameters, only: nsx, natx
       use ions_module, only : na, nat, nsp, ipp, pmass ! ipp TEMP
       use elct, only: f, n
-      use parm, only: a1, a2, a3
+      use cell_base, only: a1, a2, a3
       use psfiles, only: psfile
       use parser
 

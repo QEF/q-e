@@ -379,9 +379,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
      ALLOCATE( mill(3,1) )
      mill = 0
      tmill = .FALSE.
-     bg1_ = bg(:,1) / alat
-     bg2_ = bg(:,2) / alat
-     bg3_ = bg(:,3) / alat
+     bg1_ = bg(:,1) 
+     bg2_ = bg(:,2)
+     bg3_ = bg(:,3)
      CALL write_restart_gvec( ndw, twrgvec, ngm_g, bg1_, bg2_, bg3_, &
        bg1_, bg2_, bg3_, tmill, mill )
      DEALLOCATE( mill )
@@ -868,7 +868,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      tmill = .FALSE.
      CALL read_restart_gvec( ndr, tovrw, trdgvec, &
        ngm_g, bg_(:,1), bg_(:,2), bg_(:,3), bg_(:,1), bg_(:,2), bg_(:,3), tmill, mill )
-     bg_ = bg_ * alat
      DEALLOCATE( mill )
    ELSE
      CALL read_restart_gvec( ndr )

@@ -400,7 +400,9 @@
 !
       use elct, only: nspin
       use gvec, only: np, ng
-      use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
+      !use parm
       use work1
 !
       implicit none
@@ -652,8 +654,11 @@
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r) 
 !
       use parameters, only: natx, nsx
-      use parm
-      use parmb
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nnr => nnrx
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nnrb => nnrbx
 #ifdef __PARA
       use para_mod
 #endif
@@ -706,8 +711,11 @@
 ! irb   : position of the box in the dense grid
 !
       use parameters, only: nsx, natx
-      use parm
-      use parmb
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nnr => nnrx
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nnrb => nnrbx
 #ifdef __PARA
       use para_mod
 #endif
@@ -761,8 +769,11 @@
 ! Parallel execution: remember to sum the contributions from other nodes
 !
       use parameters, only: nsx, natx
-      use parm
-      use parmb
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nnr => nnrx
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nnrb => nnrbx
 #ifdef __PARA
       use para_mod
 #endif
@@ -862,7 +873,7 @@
       use cvan
       use elct
       use gvecw, only: ngw
-      use parm
+      !use parm
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
 !
@@ -1026,8 +1037,9 @@
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
+      use cell_base, only: ainv
       use gvec
-      use parm
+      !use parm
       use pres_mod
 !
       implicit none
@@ -1089,7 +1101,9 @@
       use gvec
       use gvecs
       use reciprocal_vectors, only: ng0 => gstart
-      use parm
+      use cell_base, only: omega
+      use cell_base, only: ainv
+      !use parm
       use pseu
       use dpseu
       implicit none
@@ -1219,7 +1233,9 @@
       use gvec
       use gvecs
       use reciprocal_vectors, only: ng0 => gstart
-      use parm
+      use cell_base, only: omega
+      use cell_base, only: ainv
+      !use parm
       use pseu
       use dpseu
       implicit none
@@ -1277,8 +1293,9 @@
       use gvecs
       use gvecw, only: ngw
       use cvan
-      use parm
-      use parms
+      !use parm
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+            nr1sx, nr2sx, nr3sx, nnrsx
       use elct
       use constants, only: pi, fpi
       use ions_module
@@ -1287,7 +1304,7 @@
       implicit none
 !
       complex(kind=8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      real(kind=8) bec(nhsa,n), deeq(nat,nhx,nhx,nspin), v(nnrs,nspin)
+      real(kind=8) bec(nhsa,n), deeq(nat,nhx,nhx,nspin), v(nnrsx,nspin)
       integer i
 ! local variables
       integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
@@ -1313,7 +1330,7 @@
 !
       if (.not.tbuff) then
 !
-         call zero(2*nnrs,psi)
+         call zero(2*nnrsx,psi)
          do ig=1,ngw
             psi(nms(ig))=conjg(c(ig)-ci*ca(ig))
             psi(nps(ig))=c(ig)+ci*ca(ig)
@@ -1326,7 +1343,7 @@
 !     read psi from buffer 21
 !
 #if defined(__CRAYY)
-         buffer in(21,0) (psi(1),psi(nnrs))
+         buffer in(21,0) (psi(1),psi(nnrsx))
          ios = unit(21)
 #else
          read(21,iostat=ios) psi
@@ -1346,7 +1363,7 @@
          iss2=iss1
       end if
 !
-      do ir=1,nnrs
+      do ir=1,nnrsx
          psi(ir)=cmplx(v(ir,iss1)* real(psi(ir)),                       &
      &                 v(ir,iss2)*aimag(psi(ir)) )
       end do
@@ -1520,10 +1537,14 @@
       use ions_module
       use gvec
       use cvan
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
       use elct
       use gvecb
-      use parmb
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      use cell_base, only: ainv
       use qgb_mod
       use work1
       use work_box
@@ -1798,7 +1819,7 @@
       use gvec
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use parm
+      !use parm
       use pres_mod
       implicit none
 ! input
@@ -2027,10 +2048,15 @@
       use elct, only: nspin
       use gvec
       use gvecb
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nnr => nnrx
       use reciprocal_vectors, only: ng0 => gstart
+      use cell_base, only: omega
       use ions_module
-      use parm
-      use parmb
+      !use parm
+      use small_box, only: tpibab
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use ncprm, only: ifpcor
       use work_box
 #ifdef __PARA
@@ -2120,8 +2146,9 @@
       use parameters, only: nsx, natx
       use control_flags, only: iprint, tpre
       use constants, only: pi, fpi
+      use cell_base, only: ainv, a1, a2, a3
       use ions_module
-      use parm
+      !use parm
       implicit none
 ! input
       real(kind=8) tau0(3,natx,nsx)
@@ -2192,8 +2219,10 @@
       use gvec
       use gvecs
       use reciprocal_vectors, only: ng0 => gstart
+      use cell_base, only: omega
       use ions_module
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3
       use pseu
 !
       implicit none
@@ -3453,16 +3482,22 @@
 !
       use gvec
       use ions_module
-      use parm
-      use parms
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
+      use cell_base, only: ainv, a1, a2, a3
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+            nr1sx, nr2sx, nr3sx, nnrsx
       use elct
       use constants, only: pi, fpi
-      use parmb
+      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint
       use pres_mod
       use fft_scalar, only: good_fft_dimension, good_fft_order
       use constants, only: scmass
-      use cell_base, only: recips
+      use cell_base, only: omega, alat
 
       implicit none
 ! 
@@ -3480,7 +3515,10 @@
 ! a1,a2,a3  are the crystal axis (the vectors generating the lattice)
 ! b1,b2,b3  are reciprocal crystal axis
 !
-      call recips(alat,a1,a2,a3,b1,b2,b3,ddum)
+      call recips(a1,a2,a3,b1,b2,b3)
+      b1 = b1 * alat
+      b2 = b2 * alat
+      b3 = b3 * alat
       write(6,*)
       write(6,210) 
 210   format(' unit vectors of full simulation cell',/,                 &
@@ -3589,10 +3627,10 @@
 #ifdef __PARA
       call set_fft_para ( b1, b2, b3, gcut, gcuts, gcutw,               &
      &                   nr1, nr2, nr3, nr1s, nr2s, nr3s,  nnr,         &
-     &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx, nnrs )
+     &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx, nnrsx )
 #else
       call set_fft_dim ( nr1, nr2, nr3, nr1s, nr2s, nr3s, nnr,          &
-     &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrs ) 
+     &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrsx ) 
 #endif
 !
 !     box grid
@@ -3630,7 +3668,10 @@
       end do
       omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
 !
-      call recips(alatb,a1b,a2b,a3b,b1b,b2b,b3b,ddum)
+      call recips(a1b,a2b,a3b,b1b,b2b,b3b)
+      b1b = b1b * alatb
+      b2b = b2b * alatb
+      b3b = b3b * alatb
       write(6,*)
       write(6,220) 
 220   format(' unit vectors of box grid cell',/,                        &
@@ -3728,8 +3769,10 @@
 !     around atoms
 !
       use ions_module
-      use parm
-      use parmb
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3
+      use cell_base, only: ainv, a1, a2, a3
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
       implicit none
 ! input
       real(kind=8), intent(in):: tau0(3,natx,nsx)
@@ -4117,9 +4160,12 @@
       use cvan, only:nh, nhx, nvb
       use ions_module
       use constants, only: pi, fpi
-      use parm
+      !use parm
+      use grid_dimensions, only: nr3, nnr => nnrx
       use gvecb
-      use parmb
+      use small_box, only: omegab, tpibab
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use qgb_mod
       use elct
       use control_flags, only: iprint, thdyn, tfor
@@ -4357,7 +4403,7 @@
       use cvan
       use elct
       use constants, only: pi, fpi
-      use parm
+      !use parm
 !
       implicit none
       real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
@@ -4431,7 +4477,7 @@
       use elct
       use gvecw, only: ngw
       use constants, only: pi, fpi
-      use parm
+      !use parm
 ! 
       implicit none
       real(kind=8) deeq(nat,nhx,nhx,nspin), bec(nhsa,n), becdr(nhsa,n,3),&
@@ -4924,7 +4970,9 @@
 !
       use ions_module
       use gvecb
-      use parmb
+      use cell_base, only: ainv
+      use small_box, only: ainvb
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
 !
@@ -5049,7 +5097,9 @@
 !
       use ions_module
       use gvecw, only: ngw
-      use parm
+      use cell_base, only: ainv
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3
       use constants, only: pi, fpi
       use gvec
       use control_flags, only: iprint, iprsta
@@ -6517,8 +6567,12 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use cvan
-      use parm
-      use parms
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
+      use cell_base, only: omega
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+            nr1sx, nr2sx, nr3sx, nnrsx
       use elct
       use constants, only: pi, fpi
       use pseu
@@ -6529,7 +6583,7 @@
 !
       implicit none
       real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
-      real(kind=8) rhor(nnr,nspin), rhos(nnrs,nspin)
+      real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
       real(kind=8) enl, ekin
       complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
       integer irb(3,natx,nsx), nfi
@@ -6549,7 +6603,7 @@
       ci=(0.0,1.0)
       do iss=1,nspin
          call zero(nnr,rhor(1,iss))
-         call zero(nnrs,rhos(1,iss))
+         call zero(nnrsx,rhos(1,iss))
          call zero(2*ng,rhog(1,iss))
       end do
 !
@@ -6616,7 +6670,7 @@
          endif
 !
          do i=1,n,2
-            call zero(2*nnrs,psis)
+            call zero(2*nnrsx,psis)
             do ig=1,ngw
                psis(nms(ig))=conjg(c(ig,i))+ci*conjg(c(ig,i+1))
                psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
@@ -6627,7 +6681,7 @@
 !     wavefunctions in unit 21
 !
 #if defined(__CRAYY)
-            if(tbuff) buffer out(21,0) (psis(1),psis(nnrs))
+            if(tbuff) buffer out(21,0) (psis(1),psis(nnrsx))
 #else
             if(tbuff) write(21,iostat=ios) psis
 #endif
@@ -6640,7 +6694,7 @@
                iss2=iss1
                sa2=0.0
             end if
-            do ir=1,nnrs
+            do ir=1,nnrsx
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                rhos(ir,iss2)=rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
@@ -6663,7 +6717,7 @@
 !
          if(nspin.eq.1)then
             iss=1
-            do ir=1,nnrs
+            do ir=1,nnrsx
                psis(ir)=cmplx(rhos(ir,iss),0.)
             end do
             call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
@@ -6673,7 +6727,7 @@
          else
             isup=1
             isdw=2
-             do ir=1,nnrs
+             do ir=1,nnrsx
                psis(ir)=cmplx(rhos(ir,isup),rhos(ir,isdw))
             end do
             call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
@@ -6879,10 +6933,15 @@
       use ions_module
       use gvec
       use cvan
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
       use elct
       use gvecb
-      use parmb
+      use cell_base, only: omega
+      use small_box, only: omegab
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint, iprsta
       use qgb_mod
       use work1
@@ -7148,10 +7207,12 @@
       use ions_module
       use gvec
       use ncprm, only: ifpcor
-      use parm
+      !use parm
+      use grid_dimensions, only: nr3, nnr => nnrx
       use elct
       use gvecb
-      use parmb
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint
       use core
       use work1
@@ -7233,7 +7294,7 @@
       use cvan
       use elct
       use gvecw, only: ngw
-      use parm
+      !use parm
       use constants, only: pi, fpi
       implicit none
 ! input
@@ -7278,7 +7339,7 @@
       end
 !-----------------------------------------------------------------------
       subroutine set_fft_dim ( nr1, nr2, nr3, nr1s, nr2s, nr3s, nnr,    &
-     &                         nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrs ) 
+     &                         nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrsx ) 
 !-----------------------------------------------------------------------
 !
 ! Set the dimensions of fft arrays (for the scalar case).
@@ -7295,7 +7356,7 @@
 ! input
       integer nr1, nr2, nr3, nr1s, nr2s, nr3s
 ! output 
-      integer nnr, nr1x, nr2x, nr3x, nr1sx, nr2sx, nr3sx, nnrs
+      integer nnr, nr1x, nr2x, nr3x, nr1sx, nr2sx, nr3sx, nnrsx
 ! local
 !
 !     dense grid
@@ -7310,7 +7371,7 @@
       nr1sx= good_fft_dimension(nr1s)
       nr2sx= nr2s
       nr3sx= nr3s
-      nnrs = nr1sx*nr2sx*nr3sx
+      nnrsx = nr1sx*nr2sx*nr3sx
 !
       return
       end
@@ -7456,9 +7517,12 @@
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nnr => nnrx
+      use cell_base, only: omega
       use cvan
       use ions_module, only: na
-      use parm
+      !use parm
 !
       implicit none
 ! input
@@ -7580,7 +7644,8 @@
 !
       use gvec
       use gvecs
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3
       use constants, only: pi, fpi
       use ions_module
 !
@@ -7775,9 +7840,14 @@
       use ions_module
       use gvec
       use gvecs
+      use cell_base, only: omega
+      use cell_base, only: a1, a2, a3
       use reciprocal_vectors, only: ng0 => gstart
-      use parm
-      use parms
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+            nr1sx, nr2sx, nr3sx, nnrsx
       use elct
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
@@ -7785,7 +7855,6 @@
       use core
       use ncprm
       use gvecb
-      use parmb
       use dft_mod
       use work1
       use work_box
@@ -7798,7 +7867,7 @@
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8)  rhor(nnr,nspin), rhos(nnrs,nspin), fion(3,natx,nsx)
+      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx,nsx)
       real(kind=8)  rhoc(nnr), tau0(3,natx,nsp)
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
      &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
@@ -8040,7 +8109,7 @@
 !     ===================================================================
 !     fourier transform of total potential to r-space (smooth grid)
 !     -------------------------------------------------------------------
-      call zero(2*nnrs,vs)
+      call zero(2*nnrsx,vs)
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
@@ -8050,7 +8119,7 @@
 !
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
-         do ir=1,nnrs
+         do ir=1,nnrsx
             rhos(ir,iss)=real(vs(ir))
          end do
       else
@@ -8061,7 +8130,7 @@
             vs(nms(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do 
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-         do ir=1,nnrs
+         do ir=1,nnrsx
             rhos(ir,isup)= real(vs(ir))
             rhos(ir,isdw)=aimag(vs(ir))
          end do
@@ -8432,7 +8501,8 @@
 !     alfredo pasquarello (02/1997)  
 !
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nnr => nnrx
       use constants, only: pi, fpi
 !
       implicit none
@@ -8797,7 +8867,8 @@
 !     Perdew, et al. PRL 77, 3865, 1996
 !
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nnr => nnrx
       use constants, only: pi, fpi
 !
       implicit none
@@ -9168,7 +9239,8 @@
 !     perdew-wang gga (PW91)
 !
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nnr => nnrx
       use constants, only: pi, fpi
 !
       implicit none
@@ -9656,7 +9728,9 @@
 !     in: charge density on G-space    out: gradient in R-space
 !
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
       use work1
 !
       implicit none
@@ -9712,7 +9786,9 @@
 !     \sum_alpha (D / D r_alpha) ( D(rho*exc)/D(grad_alpha rho) )
 !
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
       use work1
 !
       implicit none
@@ -9831,7 +9907,8 @@
 !     by alfredo pasquarello 22/09/1994
 !
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nnr => nnrx
       use constants, only: pi, fpi
 !
       implicit none

@@ -27,6 +27,8 @@ parallel_types.o \
 descriptors.o \
 control_flags.o \
 recvec.o \
+smallbox.o \
+griddim.o \
 energies.o
 #
 include ../make.rules

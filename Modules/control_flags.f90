@@ -69,7 +69,7 @@
                   tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, &
                   convergence_criteria, do_ionic_step, tionstep, tsteepdesc, &
                   electronic_steepest_descent, ionic_conjugate_gradient, tconjgrad_ion, &
-                  tatomicwfc
+                  tatomicwfc, tscreen
 
 
         PUBLIC ::  control_flags_setup, set_restart_mode, set_verbosity, set_ortho, &
@@ -113,6 +113,8 @@
         LOGICAL :: tdamp      ! Use damped dinamics for electrons
         LOGICAL :: tdampions  ! Use damped dinamics for electrons
         LOGICAL :: tatomicwfc ! Use atomic wavefunctions as starting guess for ch. density
+
+        LOGICAL :: tscreen    ! Use screened coulomb potentials for cluster calculations
 
         TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence 

@@ -13,6 +13,7 @@ subroutine do_bands (nodenumber)
   use io
 #ifdef __PARA
   use para, only: me
+  use io_global, only: ionode_id
   use mp
 #endif
   implicit none

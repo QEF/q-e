@@ -309,7 +309,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/readnewvan.o  \
 ../PW/read_pseudo.o  \
 ../PW/readvan.o  \
-../PW/recips.o  \
 ../PW/reduce.o  \
 ../PW/remove_atomic_rho.o  \
 ../PW/restart.o  \

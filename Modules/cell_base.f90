@@ -32,9 +32,44 @@
           INTEGER :: perd(3)
         END TYPE boxdimensions
 
-        REAL(dbl) :: alat    !  lattice parameter, often used to scale quantities
-                             !  or in combination to other parameters/constants
-                             !  to define new units
+        REAL(dbl) :: alat = 0.0d0   !  lattice parameter, often used to scale quantities
+                                    !  or in combination to other parameters/constants
+                                    !  to define new units
+
+        !  celldm are che simulation cell parameters
+
+        REAL(dbl) :: celldm(6) = (/ 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+
+        !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
+
+        REAL(dbl) :: a1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(dbl) :: a2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(dbl) :: a3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+
+        REAL(dbl) :: ainv(3,3) = 0.0d0
+
+        REAl(dbl) :: omega = 0.0d0  !  volume of the simulation cell
+
+        REAL(dbl) :: tpiba  = 0.0d0   !  = 2 PI / alat
+        REAL(dbl) :: tpiba2 = 0.0d0   !  = ( 2 PI / alat ) ** 2
+
+        !  direct lattice vectors and reciprocal lattice vectors
+        !  The folloving relations should alwais be kept valid
+        !  at( :, 1 ) = a1( : ) / alat  ;  h( :, 1 ) = a1( : )
+        !  at( :, 2 ) = a2( : ) / alat  ;  h( :, 2 ) = a2( : )
+        !  at( :, 3 ) = a3( : ) / alat  ;  h( :, 3 ) = a3( : )
+        !  ht = h^t ; ainv = h^(-1)
+        !
+        !  bg( :, 1 ) = b1( : )
+        !  bg( :, 2 ) = b2( : )
+        !  bg( :, 3 ) = b3( : )
+
+        REAL(dbl) :: at(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
+        REAL(dbl) :: bg(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
+
+        INTEGER          :: ibrav      ! index of the bravais lattice
+        CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
+
 
         INTERFACE cell_init
           MODULE PROCEDURE cell_init_ht, cell_init_a
@@ -148,11 +183,12 @@
 !------------------------------------------------------------------------------!
 !  BEGIN manual
 
-        SUBROUTINE RECIPS(alat, a1, a2, a3, b1, b2, b3, den)
+        SUBROUTINE recips2( a1, a2, a3, b1, b2, b3, alat, omega )
 
 !  this routine computes:
 !   b1, b2, b3 the reciprocal lattice base vectors
-!   in units of [2pi / alat]
+!   in units of [2pi / alat], given the direct lattice
+!   vector in cartesian coordinates
 !
 !                 a2 x a3
 !   b1 = alat --------------  [ 2pi / alat ] 
@@ -161,39 +197,45 @@
 !  ----------------------------------------------
 !  END manual
 
-          REAL(dbl), intent(in)  :: alat
-          REAL(dbl), intent(in)  :: a1(3), a2(3), a3(3)
-          REAL(dbl), intent(out) :: b1(3), b2(3), b3(3)
-          REAL(dbl), intent(out) :: den
-          INTEGER I,J,K,IPERM,IR,L
-          REAL(dbl)  S
-            DEN = 0.D0
-            I = 1; J = 2; K = 3; S = 1.D0
-            SIG: DO
-              DO IPERM = 1, 3
-                DEN = DEN + S * A1(I) * A2(J) * A3(K)
-                L = I; I = J; J = K; K = L
-              END DO
-              I = 2; J = 1; K = 3; S = -S
-              IF( S < 0.D0) CYCLE SIG
-              EXIT SIG 
-            END DO SIG
-            ! DEN =       A1(1) * A2(2) * A3(3)
-            ! DEN = DEN + A1(2) * A2(3) * A3(1)
-            ! DEN = DEN + A1(3) * A2(1) * A3(2)
-            ! DEN = DEN - A1(2) * A2(1) * A3(3)
-            ! DEN = DEN - A1(1) * A2(3) * A3(2)
-            ! DEN = DEN - A1(3) * A2(2) * A3(1)
-            I = 1; J = 2; K = 3
-            DEN = ALAT / ABS(DEN)
-            DO IR = 1, 3
-              B1(IR) = DEN*(A2(J)*A3(K)-A2(K)*A3(J))
-              B2(IR) = DEN*(A3(J)*A1(K)-A3(K)*A1(J))
-              B3(IR) = DEN*(A1(J)*A2(K)-A1(K)*A2(J))
-              L=I; I=J; J=K; K=L
-            END DO
+          REAL(dbl), INTENT(IN)  :: a1(3), a2(3), a3(3)
+          REAL(dbl), INTENT(OUT) :: b1(3), b2(3), b3(3)
+          REAL(dbl), INTENT(IN), OPTIONAL  :: alat
+          REAL(dbl), INTENT(OUT), OPTIONAL :: omega
+          REAL(dbl) :: al, den
+          REAL(dbl) :: S
+
+          al = 1.0d0
+          IF( PRESENT( alat ) ) al = alat
+
+          DEN = 0.D0
+          DEN =       A1(1) * A2(2) * A3(3)
+          DEN = DEN + A1(2) * A2(3) * A3(1)
+          DEN = DEN + A1(3) * A2(1) * A3(2)
+          DEN = DEN - A1(2) * A2(1) * A3(3)
+          DEN = DEN - A1(1) * A2(3) * A3(2)
+          DEN = DEN - A1(3) * A2(2) * A3(1)
+
+          IF( den == 0.0d0 ) &
+            CALL errore(' recips ', ' input vector are linear dependent ', 1 )
+
+          DEN = AL / ABS( DEN )
+
+          B1(1) = DEN * ( A2(2) * A3(3) - A2(3) * A3(2) )
+          B2(1) = DEN * ( A3(2) * A1(3) - A3(3) * A1(2) )
+          B3(1) = DEN * ( A1(2) * A2(3) - A1(3) * A2(2) )
+
+          B1(2) = DEN * ( A2(3) * A3(1) - A2(1) * A3(3) )
+          B2(2) = DEN * ( A3(3) * A1(1) - A3(1) * A1(3) )
+          B3(2) = DEN * ( A1(3) * A2(1) - A1(1) * A2(3) )
+
+          B1(3) = DEN * ( A2(1) * A3(2) - A2(2) * A3(1) )
+          B2(3) = DEN * ( A3(1) * A1(2) - A3(2) * A1(1) )
+          B3(3) = DEN * ( A1(1) * A2(2) - A1(2) * A2(1) )
+
+          IF( PRESENT( omega ) ) omega = den
+
           RETURN
-        END SUBROUTINE RECIPS
+        END SUBROUTINE RECIPS2
 
 !------------------------------------------------------------------------------!
 

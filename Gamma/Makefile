@@ -104,7 +104,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/readin.o \
 ../PW/readnewvan.o \
 ../PW/readvan.o \
-../PW/recips.o \
 ../PW/remove_atomic_rho.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \

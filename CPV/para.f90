@@ -143,7 +143,7 @@ end module para_mod
 ! read from file rhor(nnr,nspin) on first node and distribute to other nodes
 !
       use para_mod
-      use parm
+      use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
       implicit none
       include 'mpif.h'
       integer unit, nspin
@@ -196,7 +196,7 @@ end module para_mod
 ! collect rhor(nnr,nspin) on first node and write to file
 !
       use para_mod
-      use parm
+      use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
       implicit none
       include 'mpif.h'
       integer unit, nspin
@@ -692,7 +692,7 @@ end module para_mod
 !   longer be the same on all processors.
 !
       use para_mod
-      use parm, only: nr3
+      use grid_dimensions, only: nr3
       use fft_scalar, only: cft_b
 !
       implicit none

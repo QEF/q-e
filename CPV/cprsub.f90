@@ -99,7 +99,7 @@
       use cell_module
       use gvec
       use constants, only: pi, fpi
-      use parm, only: ainv
+      use cell_base, only: ainv
       implicit none
 !
       integer l,ig,i,j
@@ -158,8 +158,10 @@
 !
       use dft_mod
       use gvec, only: ng
-      use parm
+      use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
+      use cell_base, only: ainv
       use cell_module
+      use cell_base, only: omega
       use control_flags, only: tpre
       use derho
 !
@@ -255,8 +257,9 @@
       use bhs
       use gvec
       use gvecs
+      use cell_base, only: omega
       use constants, only: pi, fpi
-      use parm
+      !use parm
       use ions_module
       use pseu
       use reciprocal_vectors, only: ng0 => gstart
@@ -567,9 +570,12 @@
 !
       use control_flags, only: iprint, tpre
       use gvec
-      use parm
+      use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, &
+            nr1x, nr2x, nr3x
+      use cell_base, only: ainv
       use work1
       use cell_module
+      use cell_base, only: omega
       use derho
 !
       implicit none
@@ -679,12 +685,10 @@
       use gvec
       use gvecw, only: ngw
       use ions_module
-      use parm
-      use parms
+      !use parm
+      use cell_base, only: ainv, a1, a2, a3
       use elct
       use constants, only: pi, fpi
-      use parmb
-!
       use cell_module
       use pres_mod
       use betax, only: mmx, refg
@@ -832,11 +836,14 @@
 !
       use control_flags, only: iprint, iprsta
       use gvec
-      use parm
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3
+      use cell_base, only: ainv, a1, a2, a3
+      use cell_base, only: omega, alat
       use constants, only: pi, fpi
-      use parmb
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
+      use small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
       use cell_module
-      use cell_base, only: recips
       use pres_mod
 !
       implicit none
@@ -864,7 +871,10 @@
          a3(i)=h(i,3)
       enddo
 !
-      call recips(alat,a1,a2,a3,b1,b2,b3,ddum)
+      call recips(a1,a2,a3,b1,b2,b3)
+      b1 = b1 * alat
+      b2 = b2 * alat
+      b3 = b3 * alat
       call gcal(b1,b2,b3,nr1,nr2,nr3,gmax)
 !
 !     ==============================================================
@@ -880,7 +890,10 @@
       enddo
       omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
 !
-      call recips(alatb,a1b,a2b,a3b,b1b,b2b,b3b,ddum)
+      call recips(a1b,a2b,a3b,b1b,b2b,b3b)
+      b1b = b1b * alatb
+      b2b = b2b * alatb
+      b3b = b3b * alatb
       call gcalb(b1b,b2b,b3b,nr1b,nr2b,nr3b)
 !
       do i=1,3
@@ -918,18 +931,19 @@
       use gvec
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
+      use cell_base, only: omega
+      use cell_base, only: ainv
       use cvan
       use core
       use constants, only: pi, fpi
       use ions_module
-      use parm
+      !use parm
       use elct
       use ncprm
       use qradb_mod
       use qgb_mod
       use gvecb
-      use parmb
-!
+      use small_box,  only: omegab, tpibab
       use cdvan
       use dqrad_mod
       use dqgb_mod
@@ -1127,8 +1141,9 @@
       use cvan
       use ions_module
       use elct
+      use cell_base, only: omega
       use constants, only: pi, fpi
-      use parm
+      !use parm
       use stre
       use cell_module
 !
@@ -1224,14 +1239,12 @@
       use core
       use constants, only: pi, fpi
       use ions_module
-      use parm
+      !use parm
       use elct
       use ncprm
       use qradb_mod
       use qgb_mod
       use gvecb
-      use parmb
-!
       use cell_module
       use cdvan
       use dqrad_mod
@@ -1632,7 +1645,7 @@
 !     derivatives of real spherical harmonics (see ylmr2b)
 !
       use constants, only: pi, fpi
-      use parm, only: ainv
+      use cell_base, only: ainv
 !
       implicit none
       integer l, ngy, ngb

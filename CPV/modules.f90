@@ -85,9 +85,8 @@ end module elct
 
 module gvec
 
+  use cell_base, only: tpiba, tpiba2
   use reciprocal_vectors, only: &
-        tpiba, &
-        tpiba2, &
         ng => ngm, &
         ngl => ngml, &
         ng_g => ngmt, &
@@ -187,33 +186,31 @@ module ncprm
   real(kind=8)    r(mmaxx,nsx), rab(mmaxx,nsx), cmesh(nsx)
 end module ncprm
 
-module parm
-  use cell_base, only: alat   !     alat  = lattice parameter
-  real(kind=8) :: omega       !     omega = unit cell volume
-  !     nr1 ,nr2 ,nr3  = dense grid in real space (fft)
-  !     nr1x,nr2x,nr3x = fft dimensions - may differ from fft transform 
-  !                      lengths nr1,nr2,nr3 for efficiency reasons
-  !     nnr,nnrs,nnrb  = data size of fft arrays the for dense grid
-  !                      NOTA BENE: nnr .ne. nr1*nr2*nr3
-  !                                 nnr = nr1x*nr2x*nr3x only for scalar case
-  integer nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr
-  !
-  ! direct and reciprocal lattice vectors
-  !
-   real(kind=8) a1(3),a2(3),a3(3), ainv(3,3)
-end module parm
+!module parm
+!  !     nr1 ,nr2 ,nr3  = dense grid in real space (fft)
+!  !     nr1x,nr2x,nr3x = fft dimensions - may differ from fft transform 
+!  !                      lengths nr1,nr2,nr3 for efficiency reasons
+!  !     nnr,nnrs,nnrb  = data size of fft arrays the for dense grid
+!  !                      NOTA BENE: nnr .ne. nr1*nr2*nr3
+!  !                                 nnr = nr1x*nr2x*nr3x only for scalar case
+!  integer nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr
+!  !
+!  ! direct and reciprocal lattice vectors
+!  !
+!  ! real(kind=8) a1(3),a2(3),a3(3), ainv(3,3)
+!end module parm
 
-module parmb
-  !    as in module "parm", for the box grid
-  real(kind=8) tpibab, omegab
-  integer nr1b,nr2b,nr3b,nnrb,nr1bx,nr2bx,nr3bx
-  real(kind=8) a1b(3),a2b(3),a3b(3), ainvb(3,3)
-end module parmb
+!module parmb
+!  !    as in module "parm", for the box grid
+!  real(kind=8) tpibab, omegab
+!  ! integer nr1b,nr2b,nr3b,nnrb,nr1bx,nr2bx,nr3bx
+!  real(kind=8) a1b(3),a2b(3),a3b(3), ainvb(3,3)
+!end module parmb
 
-module parms
-  !    as in module "parm", for the smooth grid
-  integer nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrs
-end module parms
+!module parms
+!  !    as in module "parm", for the smooth grid
+!  integer nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrs
+!end module parms
 
 module pseu
   !    rhops = ionic pseudocharges (for Ewald term)

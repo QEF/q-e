@@ -139,10 +139,6 @@
                                   ! than 0 . 
                                   ! gstart = 2 when gzero == .TRUE., gstart = 1 otherwise 
 
-     REAL(dbl) :: tpiba  = 0.0d0
-     REAL(dbl) :: tpiba2 = 0.0d0
-
-
      !     G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
      !
      REAL(dbl), ALLOCATABLE, TARGET :: g(:) 
