@@ -143,7 +143,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         rhox = rho (ir, nspin) + rho_core (ir)
         arhox = abs (rhox)
         if (arhox.gt.1.d-30) then
-           call xc (arhox, ex, ec, vx, vc)
+           CALL xc( arhox, ex, ec, vx(1), vc(1) )
            v(ir,nspin) = e2 * (vx(1) + vc(1) )
            etxc = etxc + e2 * (ex + ec) * rhox
            vtxc = vtxc + v(ir,nspin) * rho(ir,nspin)

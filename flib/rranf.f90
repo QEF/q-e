@@ -90,9 +90,10 @@ function rndm ()
   data first / .true. /
   save first, shuffle, i
   !
+  if (first) irand = -1 ! starting seed, must be not be 0
+  !
   if (first.or.irand.lt.0) then
      irand = - irand
-     if (first) irand=1 ! starting seed, must be not be 0
      do i = 32 + 8, 1, - 1
         shuffle (min (i, 32) ) = rndx (irand)
      enddo
@@ -104,7 +105,7 @@ function rndm ()
 
   i = 32 * rndm + 1
   return
-
+ 
 end function rndm
 
 function rndx (irand)
