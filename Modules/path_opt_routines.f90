@@ -17,7 +17,7 @@ MODULE path_opt_routines
   ! ... Written by Carlo Sbraccia ( 2003-2004 )  
   !
   USE kinds,          ONLY : DP
-  USE constants,      ONLY : au, eV_to_kelvin, eps32
+  USE constants,      ONLY : eps32
   USE path_variables, ONLY : ds
   USE path_variables, ONLY : pos, grad, norm_grad, frozen
   USE path_variables, ONLY : ft_pos, ft_grad, norm_ft_grad, ft_frozen
@@ -34,6 +34,10 @@ MODULE path_opt_routines
      SUBROUTINE r_steepest_descent( index )
        !----------------------------------------------------------------------
        !
+       ! ... this routine is also used for the langevin dynamics
+       !
+       USE path_variables, ONLY : llangevin, lang
+       !
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
@@ -42,6 +46,9 @@ MODULE path_opt_routines
        IF ( frozen(index) ) RETURN
        !
        pos(:,index) = pos(:,index) - ds * grad(:,index)
+       !
+       IF ( llangevin ) &
+          pos(:,index) = pos(:,index) + SQRT( ds ) * lang(:,index)
        !
        RETURN
        !
@@ -212,6 +219,8 @@ MODULE path_opt_routines
      SUBROUTINE ft_steepest_descent( mode )
        !----------------------------------------------------------------------
        !
+       ! ... this routine is also used for the langevin dynamics
+       !
        USE path_variables, ONLY : llangevin, ft_lang
        !
        IMPLICIT NONE
@@ -272,7 +281,6 @@ MODULE path_opt_routines
        RETURN
        !
      END SUBROUTINE ft_velocity_Verlet_first_step
-     !
      !
      !----------------------------------------------------------------------
      SUBROUTINE ft_velocity_Verlet_second_step( mode )

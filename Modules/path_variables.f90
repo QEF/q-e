@@ -94,8 +94,9 @@ MODULE path_variables
        react_coord(:),           &! the reaction coordinate (in bohr)
        norm_grad(:)               !
   REAL (KIND=DP), ALLOCATABLE :: &
-       vel(:,:),                 &!
+       vel(:,:),                 &! 
        grad(:,:),                &!
+       lang(:,:),                &! langevin random force 
        pos_old(:,:),             &!
        grad_old(:,:)              !
   LOGICAL, ALLOCATABLE :: &
@@ -136,14 +137,14 @@ MODULE path_variables
   REAL(KIND=DP) :: &
        smd_tol,                    &! tolrance on const in terms of
                                     ! [alpha(k) - alpha(k-1)] - 1/sm_P
-       smd_ene_ini = 1.d0,         &
-       smd_ene_fin = 1.d0
-
-  TYPE smd_ptr
-    REAL(KIND=DP), POINTER :: &
-       d3(:,:)
-  END TYPE smd_ptr
+       smd_ene_ini = 1.D0,         &
+       smd_ene_fin = 1.D0
   !
+  TYPE smd_ptr
+    !
+    REAL(KIND=DP), POINTER :: d3(:,:)
+    !
+  END TYPE smd_ptr
   !
   ! ... real space arrays
   !
@@ -259,6 +260,8 @@ MODULE path_variables
           !
           IF ( llangevin ) THEN
              !
+             ALLOCATE( lang( dim, num_of_images ) )
+             !
              ALLOCATE( lang_proj( dim, num_of_images ) )
              !
              ALLOCATE( lang_proj_star( dim, 0:( Nft - 1 ) ) )
@@ -348,6 +351,7 @@ MODULE path_variables
           !
           IF ( llangevin ) THEN
              !
+             IF ( ALLOCATED( lang ) )           DEALLOCATE( lang )
              IF ( ALLOCATED( lang_proj ) )      DEALLOCATE( lang_proj )
              IF ( ALLOCATED( lang_proj_star ) ) DEALLOCATE( lang_proj_star )
              IF ( ALLOCATED( ft_lang ) )        DEALLOCATE( ft_lang )
