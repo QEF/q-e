@@ -40,6 +40,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/supercell.o \
 ../Modules/splinelib.o 
 
 all : band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x \

@@ -67,7 +67,6 @@ subroutine cg_readin
   call mp_bcast(first,ionode_id)
   call mp_bcast(last,ionode_id)
   !
-  call init_pool
 #endif
   !
   !  read the input file produced by 'punch' subroutine in pwscf program
