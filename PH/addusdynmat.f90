@@ -17,7 +17,7 @@ subroutine addusdynmat (dynwrk)
   !
 #include "machine.h"
 
-
+  USE ions_base, ONLY : nat, ityp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, only: tvanp, nh

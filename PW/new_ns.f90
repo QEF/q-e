@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
-
 subroutine new_ns
   !-----------------------------------------------------------------------
   !
@@ -15,24 +16,26 @@ subroutine new_ns
   ! These quantities are defined as follows: ns_{I,s,m1,m2} = \sum_{k,v}
   ! f_{kv} <\fi^{at}_{I,m1}|\psi_{k,v,s}><\psi_{k,v,s}|\fi^{at}_{I,m2}>
   !
-#include "machine.h"
-  USE io_global, ONLY: stdout
-  USE kinds,     ONLY: DP
-  USE atom,      ONLY: lchi, nchi, oc
-  USE basis,     ONLY: nat, natomwfc, ityp
-  USE klist,     ONLY: nks
-  USE ldaU,      ONLY: ns, nsnew, Hubbard_lmax, Hubbard_l, Hubbard_U, &
-       Hubbard_alpha, swfcatom, eth, d1, d2, d3
-  USE lsda_mod,  ONLY: lsda, current_spin, nspin, isk
-  USE symme,     ONLY: nsym, irt
-  USE wvfct,     ONLY: nbnd, npw, npwx, igk, wg, gamma_only
-  USE wavefunctions_module,    ONLY : evc
-  USE gvect,     ONLY : gstart
+  USE io_global,            ONLY : stdout
+  USE kinds,                ONLY : DP
+  USE atom,                 ONLY : lchi, nchi, oc
+  USE ions_base,            ONLY : nat, ityp
+  USE basis,                ONLY : natomwfc
+  USE klist,                ONLY : nks
+  USE ldaU,                 ONLY : ns, nsnew, Hubbard_lmax, Hubbard_l, &
+                                   Hubbard_U, Hubbard_alpha, swfcatom, &
+                                   eth, d1, d2, d3
+  USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
+  USE symme,                ONLY : nsym, irt
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, gamma_only
+  USE wavefunctions_module, ONLY : evc
+  USE gvect,                ONLY : gstart
   use io_files
 #ifdef __PARA
   use para
 #endif
   implicit none
+  !
   integer :: ik, ibnd, is, i, na, nb, nt, isym, n, counter, m1, m2, &
        m0, m00, l, ldim
   integer, allocatable ::  offset (:)

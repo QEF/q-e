@@ -22,7 +22,7 @@ subroutine adddvscf (ipert, ik)
 ! modules from pwcom
   USE us,         ONLY : okvan
   USE lsda_mod,   ONLY : lsda, current_spin, isk
-  USE basis,      ONLY : ntyp, nat, ityp
+  USE ions_base,  ONLY : ntyp => nsp, nat, ityp
   USE wvfct,      ONLY : nbnd
 ! modules from phcom
   USE control_ph, ONLY : lgamma

@@ -11,19 +11,22 @@ subroutine hinit0
   !
   ! configuration-independent hamiltonian initialization
   !
-  USE basis, ONLY: nat, ntyp, ityp, tau, startingconfig
-  USE cell_base, ONLY: at, bg, omega, tpiba2
-  USE cellmd, ONLY: omega_old, at_old, lmovecell
-  USE klist, ONLY: nks, xk
-  USE gvect, ONLY: nr1, nr2, nr3, ngm, ecutwfc, ig_l2g, &
-       g, eigts1, eigts2, eigts3
-  USE vlocal, ONLY: strf
-  USE wvfct, ONLY: npw, g2kin, igk, igk_l2g
-  USE pseud, ONLY: lloc, lmax, nnl, aps, alps
-  USE io_files, ONLY: iunigk
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
+  USE basis,     ONLY : startingconfig
+  USE cell_base, ONLY : at, bg, omega, tpiba2
+  USE cellmd,    ONLY : omega_old, at_old, lmovecell
+  USE klist,     ONLY : nks, xk
+  USE gvect,     ONLY : nr1, nr2, nr3, ngm, ecutwfc, ig_l2g, &
+                        g, eigts1, eigts2, eigts3
+  USE vlocal,    ONLY : strf
+  USE wvfct,     ONLY : npw, g2kin, igk, igk_l2g
+  USE pseud,     ONLY : lloc, lmax, nnl, aps, alps
+  USE io_files,  ONLY : iunigk
+  !
   implicit none
-  ! counter on k points
+  !
   integer :: ik
+    ! counter on k points
   !
   ! calculate the local part of the pseudopotentials
   !

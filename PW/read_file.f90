@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine read_file
@@ -14,27 +15,29 @@ subroutine read_file
   !     in the pwscf program and reads them from the data file.
   !
   !
-#include "machine.h"
-  USE kinds, ONLY: dp
-  USE basis, ONLY: nat, ntyp, tau, ityp, natomwfc
-  USE cell_base, ONLY: tpiba2, bg
-  USE force_mod, ONLY: force
-  USE klist, ONLY: nkstot, nks, xk, wk
-  USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
-  USE wvfct, ONLY: nbnd, nbndx, et, wg
-  USE symme, ONLY: irt 
-  USE ktetra, ONLY: tetra, ntetra 
-  USE extfield, ONLY:  forcefield, tefield
-  USE cellmd, ONLY: cell_factor, lmovecell
-  USE gvect, ONLY: gg, ecutwfc, ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
-  USE gsmooth, ONLY: ngms, nls, nrx1s, nr1s, nr2s, nr3s
-  USE scf, ONLY: rho, vr
-  USE vlocal, ONLY: strf
-  use io_files, only: tmp_dir, prefix, iunpun
-  use restart_module, only: readfile_new
+  USE kinds,          ONLY : DP
+  USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau
+  USE basis,          ONLY : natomwfc
+  USE cell_base,      ONLY : tpiba2, bg
+  USE force_mod,      ONLY : force
+  USE klist,          ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,       ONLY : lsda, nspin, current_spin, isk
+  USE wvfct,          ONLY : nbnd, nbndx, et, wg
+  USE symme,          ONLY : irt 
+  USE ktetra,         ONLY : tetra, ntetra 
+  USE extfield,       ONLY : forcefield, tefield
+  USE cellmd,         ONLY : cell_factor, lmovecell
+  USE gvect,          ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, &
+                             eigts1, eigts2, eigts3
+  USE gsmooth,        ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
+  USE scf,            ONLY : rho, vr
+  USE vlocal,         ONLY : strf
+  USE io_files,       only : tmp_dir, prefix, iunpun
+  USE restart_module, only : readfile_new
 #ifdef __PARA
-  use para
+  USE para
 #endif
+  !
   implicit none
   !
   integer, parameter :: nax =1000 ! an unlikely large number of atoms

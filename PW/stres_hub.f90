@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine stres_hub ( sigmah )
@@ -14,23 +15,24 @@ subroutine stres_hub ( sigmah )
    ! tensor. It gives in output the array sigmah(i,j) which corresponds to
    ! the quantity -(1/\Omega)dE_{h}/d\epsilon_{i,j}
    !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE basis, ONLY: nat, ityp
-  USE cell_base, ONLY: omega, at, bg
-  USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns, &
-                   U_projection
-  USE lsda_mod, ONLY: nspin
-  USE symme,    ONLY: s, nsym
-  USE io_files, ONLY : prefix, iunocc
-  USE wvfct,    ONLY : gamma_only   
+  USE kinds,     ONLY : DP
+  USE ions_base, ONLY : nat, ityp
+  USE cell_base, ONLY : omega, at, bg
+  USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
+                        hubbard_alpha, ns, U_projection
+  USE lsda_mod,  ONLY : nspin
+  USE symme,     ONLY : s, nsym
+  USE io_files,  ONLY : prefix, iunocc
+  USE wvfct,     ONLY : gamma_only   
 #ifdef DEBUG
-  USE io_global,      ONLY : stdout
+  USE io_global, ONLY : stdout
 #endif
 #ifdef __PARA
-   use para
+   USE para
 #endif
+   !
    implicit none
+   !
    real (kind=DP) :: sigmah(3,3)        ! output: the Hubbard stresses
 
    integer :: ipol, jpol, na, nt, is,isi, m1,m2,m3,m4

@@ -5,23 +5,25 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include"machine.h"
 !
 !----------------------------------------------------------------------
-subroutine init_vloc
+subroutine init_vloc()
   !----------------------------------------------------------------------
   !
   !    This routine computes the fourier coefficient of the local
   !    potential vloc(ig,it) for each type of atom
   !
-#include"machine.h"
-  USE atom, ONLY: numeric, msh, mesh, r, rab
-  USE uspp_param, ONLY: vloc_at
-  USE basis, ONLY: ntyp
-  USE cell_base, ONLY: omega, tpiba2
-  USE vlocal, ONLY: vloc
-  USE gvect, ONLY: ngl, gl
-  USE pseud, ONLY: lloc, lmax, cc, nlc, nnl, alpc, alps, aps, zp
+  USE atom,       ONLY : numeric, msh, mesh, r, rab
+  USE uspp_param, ONLY : vloc_at
+  USE ions_base,  ONLY : ntyp => nsp
+  USE cell_base,  ONLY : omega, tpiba2
+  USE vlocal,     ONLY : vloc
+  USE gvect,      ONLY : ngl, gl
+  USE pseud,      ONLY : lloc, lmax, cc, nlc, nnl, alpc, alps, aps, zp
+  !
   implicit none
+  !
   integer :: nt
   ! counter on atomic types
   !

@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !----------------------------------------------------------------------
 subroutine gen_us_dy (ik, u, dvkb)
   !----------------------------------------------------------------------
@@ -12,19 +14,19 @@ subroutine gen_us_dy (ik, u, dvkb)
   !  Calculates the kleinman-bylander pseudopotentials with the
   !  derivative of the spherical harmonics projected on vector u
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: nbrx
-  USE io_global,  ONLY :  stdout
-  USE constants, ONLY: tpi
-  USE basis, ONLY: nat, ntyp, tau, ityp
-  USE cell_base, ONLY: tpiba
-  USE klist, ONLY: xk
-  USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
-  USE wvfct, ONLY: npw, npwx, igk
-  USE uspp, ONLY: nkb, indv, nhtol, nhtolm
-  USE us, ONLY: tab, dq
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : nbrx
+  USE io_global,  ONLY : stdout
+  USE constants,  ONLY : tpi
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+  USE cell_base,  ONLY : tpiba
+  USE klist,      ONLY : xk
+  USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE wvfct,      ONLY : npw, npwx, igk
+  USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
+  USE us,         ONLY : tab, dq
   USE uspp_param, ONLY : lmaxkb, nbeta, nh
+  !
   implicit none
   !
   integer :: ik

@@ -13,6 +13,7 @@ subroutine dielec(do_zstar)
   !      calculates the dielectric tensor and effective charges
   !
 #include "machine.h"
+  USE ions_base, ONLY : nat, zv, ityp
   use pwcom
   use cgcom
   implicit none

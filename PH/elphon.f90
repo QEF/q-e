@@ -13,6 +13,8 @@ subroutine elphon
   ! Electron-phonon calculation from data saved in fildvscf
   !
 #include "machine.h"
+  !
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
   use pwcom
   USE kinds, only : DP
   use phcom
@@ -293,7 +295,7 @@ subroutine elphsum
   !      Original routine written by Francesco Mauri
   !
 #include "machine.h"
-
+  USE ions_base, ONLY : nat
   use pwcom
   USE kinds, only : DP
   use phcom

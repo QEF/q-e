@@ -18,7 +18,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, dr2, ethr, ethr_min, &
   ! ... On output: the mixed density is in rhoin, rhout is UNCHANGED
   !
   USE kinds,                ONLY : DP
-  USE basis,                ONLY : nat
+  USE ions_base,            ONLY : nat
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, nlm
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax
@@ -627,7 +627,7 @@ FUNCTION ns_dot_product( ns1, ns2 )
   USE kinds,      ONLY : DP
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
                          Hubbard_alpha
-  USE basis,      ONLY : nat, ityp
+  USE ions_base,  ONLY : nat, ityp
   USE lsda_mod,   ONLY : nspin
   !
   IMPLICIT NONE  

@@ -15,6 +15,7 @@ subroutine allocate_phq
   !
 #include "machine.h"
 
+  USE ions_base, ONLY : nat, ntyp => nsp
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP

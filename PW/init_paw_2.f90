@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine init_paw_2 (npw_, igk_, q_, vkb_)
@@ -13,16 +14,16 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   !   Calculates paw_beta functions (paw projectors), with
   !   structure factor, for all atoms, in reciprocal space
   !
-#include "machine.h"
-  use kinds , only : dp
-  use constants , only :tpi
-  use wvfct , only : npwx
-  use cell_base , only : tpiba
-  use basis , only : ntyp, nat, ityp, tau
-  use gvect , only : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
-  use us, only : dq
-  use paw, only : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
-       paw_nhtom, paw_indv, paw_tab, paw_nbeta
+  USE kinds ,     ONLY : dp
+  USE constants , ONLY : tpi
+  USE wvfct ,     ONLY : npwx
+  USE cell_base , ONLY : tpiba
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+  USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
+  USE us,         ONLY : dq
+  USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
+                         paw_nhtom, paw_indv, paw_tab, paw_nbeta
+  !
   implicit none
   !
   integer :: npw_, igk_ (npw_)

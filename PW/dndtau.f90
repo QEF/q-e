@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine dndtau(dns,ldim,alpha,ipol)
    !-----------------------------------------------------------------------
@@ -13,15 +15,16 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    ! displacement u(alpha,ipol) used to obtain the Hubbard contribution to the
    ! atomic forces.
    !
-#include "machine.h"
-   USE atom, ONLY: nchi, lchi, oc
-   USE basis, ONLY: nat, natomwfc, ityp
-   USE klist, ONLY: nks, xk
-   USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
-   USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
-   USE wavefunctions_module,    ONLY : evc
-   USE uspp, ONLY: nkb, vkb
-   USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
+   USE atom,                 ONLY : nchi, lchi, oc
+   USE ions_base,            ONLY : nat, ityp
+   USE basis,                ONLY : natomwfc
+   USE klist,                ONLY : nks, xk
+   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+   USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
+                                    Hubbard_U, Hubbard_alpha
+   USE wavefunctions_module, ONLY : evc
+   USE uspp,                 ONLY : nkb, vkb
+   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    use becmod
    use io_files
 #ifdef __PARA

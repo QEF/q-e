@@ -18,7 +18,8 @@ subroutine dynmat0
   !
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   use pwcom
   USE control_flags, ONLY : iswitch
   USE kinds,         ONLY : DP

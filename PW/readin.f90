@@ -5,20 +5,22 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine readpp
   !-----------------------------------------------------------------------
   !
   !    Read pseudopotentials
   !
-#include "machine.h"
-  USE atom, ONLY: numeric, xmin, dx
-  USE uspp_param, ONLY: iver, tvanp, newpseudo
-  USE basis, ONLY: ntyp
-  USE funct, ONLY: iexch, icorr, igcx, igcc
-  USE io_files, ONLY: pseudo_dir, psfile
+  USE atom,       ONLY : numeric, xmin, dx
+  USE uspp_param, ONLY : iver, tvanp, newpseudo
+  USE ions_base,  ONLY : ntyp => nsp
+  USE funct,      ONLY : iexch, icorr, igcx, igcc
+  USE io_files,   ONLY : pseudo_dir, psfile
   !
   implicit none
+  !
   character(len=256) :: file_pseudo
   ! file name complete with path
   integer :: iunps, isupf, l, nt, ios, pseudo_type

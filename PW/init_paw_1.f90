@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine init_paw_1
@@ -13,18 +14,18 @@ subroutine init_paw_1
   ! This routine initialize the variables of the paw projector
   ! and create the projectors in radial part (paw_betar) 
   !
-#include "machine.h"
-  USE kinds , only: dp
-  use parameters , only : lqmax , nbrx, lmaxx
-  use cell_base , only : omega
-  use basis , only : ntyp, nat, ityp
-  use constants , only : fpi
-  use us , only : nqx, dq
-  use uspp, only : ap, aainit
-  use paw , only : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, paw_iltonh, &
-       paw_tab, aephi, paw_betar, psphi, paw_indv, paw_nhtom, paw_nhtol, &
-       paw_nbeta 
-  use atom , only : r, rab, msh
+  USE kinds ,      ONLY : dp
+  USE parameters , ONLY : lqmax , nbrx, lmaxx
+  USE cell_base ,  ONLY : omega
+  USE ions_base,   ONLY : nat, ntyp => nsp, ityp
+  USE constants ,  ONLY : fpi
+  USE us ,         ONLY : nqx, dq
+  USE uspp,        ONLY : ap, aainit
+  USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
+                          paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
+                          paw_indv, paw_nhtom, paw_nhtol, paw_nbeta 
+  USE atom ,       ONLY : r, rab, msh
+  !
   implicit none
   !
   !     here a few local variables

@@ -13,7 +13,7 @@ subroutine set_drhoc (q)
   ! used to calculate derivatives of the core charge
   !
 #include "machine.h"
-
+  USE ions_base, ONLY : ntyp => nsp
   use pwcom
   USE parameters, ONLY: ndmx
   USE atom, ONLY : numeric, nlcc, msh, r, rab, rho_atc

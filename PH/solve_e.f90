@@ -20,6 +20,8 @@ subroutine solve_e
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
+  !
+  USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout
   USE io_files,              ONLY : iunigk
   use pwcom

@@ -16,7 +16,8 @@ subroutine addusddense (drhoscf, dbecsum)
   !  change of the becsum term.
   !
 #include "machine.h"
-
+  
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   use phcom
   USE kinds, only : DP

@@ -12,14 +12,14 @@ subroutine compute_dip(rho, dip, dipion, z0)
   ! the electric field. (This routine is called only if tefield is true)
   ! The direction is the reciprocal lattice vector bg(.,edir)
   !
-  USE io_global,  ONLY : stdout
-  USE kinds, ONLY: DP
-  USE constants, ONLY: fpi
-  USE basis, ONLY : nat, ityp, tau, zv
+  USE io_global, ONLY : stdout
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : fpi
+  USE ions_base, ONLY : nat, ityp, tau, zv
   USE cell_base, ONLY : alat, at, bg, omega
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE lsda_mod, ONLY: nspin
-  USE extfield, ONLY: edir
+  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE lsda_mod,  ONLY : nspin
+  USE extfield,  ONLY : edir
 #ifdef __PARA
   use para
 #endif

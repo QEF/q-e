@@ -13,7 +13,8 @@ subroutine sym_and_write_zue
   !  and write them on iudyn and standard output
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, zv, ityp
   USE io_global,  ONLY : stdout
   use pwcom
   USE kinds, only : DP

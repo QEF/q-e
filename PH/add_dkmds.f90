@@ -8,6 +8,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 #include "machine.h"
 
   use pwcom
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param, only: nh

@@ -5,7 +5,7 @@
 !
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
       USE kinds, ONLY: DP
-      USE basis, ONLY: ntyp
+      USE ions_base,  ONLY : ntyp => nsp
       USE us, ONLY: dq, qrad
       USE uspp_param, ONLY: lmaxq, nbrx
       USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm

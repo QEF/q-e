@@ -32,9 +32,9 @@ SUBROUTINE iosys()
                             celldm_ => celldm, &
                             ibrav_  => ibrav
   USE ions_base,     ONLY : if_pos, &
-                            ntyp_ => nsp                              
-  USE basis,         ONLY : nat_  => nat, &
-                            ityp, tau, atomic_positions, atm, &
+                            ntyp_ => nsp
+  USE ions_base,     ONLY : nat_  => nat, ityp, tau, atm  
+  USE basis,         ONLY : atomic_positions, &
                             startingwfc_ => startingwfc, &
                             startingpot_ => startingpot, &
                             startingconfig
@@ -1037,7 +1037,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   USE wvfct,              ONLY : gamma_only
   USE cell_base,          ONLY : at, ibrav, symm_type, celldm
-  USE basis,              ONLY : nat, ntyp, ityp, tau, atm
+  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE klist,              ONLY : nks
   USE ktetra,             ONLY : nk1_   => nk1, &
                                  nk2_   => nk2, &

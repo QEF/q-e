@@ -12,6 +12,7 @@
 !               (See Bengtsson PRB 59, 12 301 (1999) and
 !                    Meyer and Vanderbilt, PRB 63, 205426 (2001).)
 !
+#include "machine.h"
 !
 !--------------------------------------------------------------------------
   subroutine add_efield(rho,vpoten,etotefield)
@@ -34,18 +35,17 @@
 !   band energy is subtracted by deband.
 !
 !
-#include "machine.h"
-    USE kinds, ONLY : DP
-    USE constants, ONLY: fpi
-    USE basis, ONLY : nat, ityp, zv
-    USE cell_base, ONLY : alat, bg, omega
-    USE extfield, ONLY: tefield, dipfield, edir, eamp, emaxpos, eopreg, &
-                        forcefield
-    USE force_mod, ONLY: lforce
-    USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-    USE io_global,  ONLY : stdout
-    USE control_flags, ONLY: mixing_beta
-    USE lsda_mod, ONLY: nspin
+    USE kinds,         ONLY : DP
+    USE constants,     ONLY : fpi
+    USE ions_base,     ONLY : nat, ityp, zv
+    USE cell_base,     ONLY : alat, bg, omega
+    USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
+                              eopreg, forcefield
+    USE force_mod,     ONLY : lforce
+    USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+    USE io_global,     ONLY : stdout
+    USE control_flags, ONLY : mixing_beta
+    USE lsda_mod,      ONLY : nspin
 #ifdef __PARA
     USE mp_global,     ONLY : intra_image_comm
     use para

@@ -8,6 +8,8 @@
 !---------------------------------------------------------------------
 subroutine io_pattern (fildrho,nirr,npert,u,iflag)
 !---------------------------------------------------------------------
+  !
+  USE ions_base, ONLY : nat
   USE io_global,  ONLY : stdout
   use pwcom
   USE kinds, only : DP

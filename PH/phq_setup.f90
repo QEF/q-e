@@ -43,6 +43,8 @@ subroutine phq_setup
   !  Oct-Nov 1998: minor stuff added (SdG)
   !
 #include "machine.h"
+  !
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp
   USE io_global,     ONLY : stdout
   use pwcom
   USE atom,          ONLY : nlcc

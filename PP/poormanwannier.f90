@@ -76,7 +76,8 @@ subroutine projection (first_band, last_band)
 
   USE io_global,  ONLY : stdout 
   use atom 
-  use basis 
+  USE ions_base, ONLY : nat, ityp
+  use basis,     ONLY : natomwfc
   USE cell_base
   use constants, only: rytoev 
   use gvect 

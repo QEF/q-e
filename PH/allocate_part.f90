@@ -15,7 +15,7 @@ subroutine allocate_part
 !
 #include "machine.h"
 
-
+USE ions_base, ONLY : nat
 use pwcom
 USE kinds, only : DP
 use phcom

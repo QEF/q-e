@@ -5,23 +5,26 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
-#include "machine.h"
-  USE kinds, ONLY : DP
-  USE atom, ONLY: rho_atc, numeric, mesh, r, rab, nlcc
-  USE basis, ONLY: ntyp
-  USE cell_base, ONLY: alat, omega, tpiba, tpiba2
-  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, g, gg, ngl, gl, igtongl
-  USE ener, ONLY: etxc, vtxc
-  USE lsda_mod, ONLY: nspin
-  USE pseud, ONLY: a_nlcc, b_nlcc, alpha_nlcc
-  USE scf, ONLY: rho, rho_core
-  USE vlocal, ONLY : strf
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  !
+  USE kinds,                ONLY : DP
+  USE atom,                 ONLY : rho_atc, numeric, mesh, r, rab, nlcc
+  USE ions_base,            ONLY : ntyp => nsp
+  USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
+  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
+                                   nrx3, nrxx, nl, g, gg, ngl, gl, igtongl
+  USE ener,                 ONLY : etxc, vtxc
+  USE lsda_mod,             ONLY : nspin
+  USE pseud,                ONLY : a_nlcc, b_nlcc, alpha_nlcc
+  USE scf,                  ONLY : rho, rho_core
+  USE vlocal,               ONLY : strf
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  !
   implicit none
   ! output
   real(kind=DP) :: sigmaxcc (3, 3)

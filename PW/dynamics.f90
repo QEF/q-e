@@ -36,7 +36,7 @@ SUBROUTINE dynamics()
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE constants,     ONLY : amconv, eps8
-  USE basis,         ONLY : nat, ntyp, tau, ityp, atm
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
   USE ener,          ONLY : etot

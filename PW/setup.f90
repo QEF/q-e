@@ -37,38 +37,38 @@ SUBROUTINE setup()
   !    invsym    if true the system has inversion symmetry
   !  + LDA+U-related quantities.
   !
-  USE kinds,         ONLY : DP
-  USE parameters,    ONLY : npsx, nchix, npk
-  USE io_global,     ONLY : stdout
-  USE constants,     ONLY : pi, degspin
-  USE cell_base,     ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
-  USE basis,         ONLY : nat, tau, ntyp, ityp, startingwfc, startingpot, &
-                            natomwfc, zv
-  USE gvect,         ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
-  USE gsmooth,       ONLY : doublegrid, gcutms
-  USE klist,         ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, lxkcry, &
-                            nkstot, b_length, lcart
-  USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
-  USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
-  USE symme,         ONLY : s, irt, ftau, nsym, invsym
-  USE atom,          ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
-  USE pseud,         ONLY : zp, nlc, nnl, alps, aps, lmax
-  USE wvfct,         ONLY : nbnd, nbndx
-  USE control_flags, ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
-                            lneb, lphonon, david, isolve, imix, niter, noinv, &
-                            restart, nosym, modenum, lraman
-  USE relax,         ONLY : dtau_ref, starting_diag_threshold
-  USE cellmd,        ONLY : calc
-  USE uspp_param,    ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
-  USE us,            ONLY : okvan
-  USE ldaU,          ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
-                            Hubbard_alpha, Hubbard_lmax
-  USE bp,            ONLY : gdir, lberry, nppstr
-  USE fixed_occ,     ONLY : f_inp, tfixed_occ   
-  USE char,          ONLY : sname
-  USE para,          ONLY : kunit
-  USE mp_global,     ONLY : nimage
-  USE spin_orb,      ONLY : lspinorb
+  USE kinds,            ONLY : DP
+  USE parameters,       ONLY : npsx, nchix, npk
+  USE io_global,        ONLY : stdout
+  USE constants,        ONLY : pi, degspin
+  USE cell_base,        ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE ions_base,        ONLY : nat, tau, ntyp => nsp, ityp, zv
+  USE basis,            ONLY : startingwfc, startingpot, natomwfc
+  USE gvect,            ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
+  USE gsmooth,          ONLY : doublegrid, gcutms
+  USE klist,            ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
+                               lxkcry, nkstot, b_length, lcart
+  USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
+  USE ktetra,           ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
+  USE symme,            ONLY : s, irt, ftau, nsym, invsym
+  USE atom,             ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
+  USE pseud,            ONLY : zp, nlc, nnl, alps, aps, lmax
+  USE wvfct,            ONLY : nbnd, nbndx
+  USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, &
+                               lmd, lneb, lphonon, david, isolve, imix, &
+                               niter, noinv, restart, nosym, modenum, lraman
+  USE relax,            ONLY : dtau_ref, starting_diag_threshold
+  USE cellmd,           ONLY : calc
+  USE uspp_param,       ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
+  USE us,               ONLY : okvan
+  USE ldaU,             ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
+                               Hubbard_alpha, Hubbard_lmax
+  USE bp,               ONLY : gdir, lberry, nppstr
+  USE fixed_occ,        ONLY : f_inp, tfixed_occ   
+  USE char,             ONLY : sname
+  USE para,             ONLY : kunit
+  USE mp_global,        ONLY : nimage
+  USE spin_orb,         ONLY : lspinorb
   USE noncollin_module, ONLY : noncolin, npol, m_loc
   !
   IMPLICIT NONE

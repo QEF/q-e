@@ -102,7 +102,7 @@ subroutine punch_band (filband)
   use para, only: me
 #endif
   use atom
-  use basis
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use cell_base
   use constants, only: rytoev
   use gvect

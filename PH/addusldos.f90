@@ -14,6 +14,8 @@ subroutine addusldos (ldos, becsum1)
   !  the US augmentation.
   !
 #include "machine.h"
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE wavefunctions_module,  ONLY: psic
   USE uspp_param, ONLY: lmaxq, tvanp, nh, nhm

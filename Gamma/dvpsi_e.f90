@@ -14,6 +14,7 @@ subroutine dvpsi_e(kpoint,ipol)
   ! Requires on input: vkb, evc, igk
   !
 #include "machine.h"
+  USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE kinds, only: DP
   use pwcom
   USE uspp_param, ONLY: nh

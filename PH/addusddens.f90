@@ -16,7 +16,8 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !  change of the becsum term.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE wavefunctions_module,  ONLY: psic
   use phcom

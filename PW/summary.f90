@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine summary
@@ -16,28 +17,28 @@ subroutine summary
   !
   !    if iverbosity = 0 only a partial summary is done.
   !
-#include "machine.h"
-  USE io_global,  ONLY :  stdout
-  USE kinds, ONLY: DP
-  USE constants, ONLY: amconv
+  USE io_global,       ONLY :  stdout
+  USE kinds,           ONLY : DP
+  USE constants,       ONLY : amconv
   USE atom
   USE cell_base
-  USE basis
-  USE char, ONLY: title, sname
-  USE cellmd, ONLY: calc, cmass
-  USE dynam, ONLY: amass
+  USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
+  USE char,            ONLY : title, sname
+  USE cellmd,          ONLY : calc, cmass
+  USE dynam,           ONLY : amass
   USE gvect
   USE gsmooth
-  USE lsda_mod, ONLY: lsda, starting_magnetization
+  USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE klist
   USE ktetra
-  USE pseud, ONLY: zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
-       a_nlcc, b_nlcc, alpha_nlcc
-  USE symme, ONLY: nsym, invsym, s, ftau
+  USE pseud,           ONLY : zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
+                              a_nlcc, b_nlcc, alpha_nlcc
+  USE symme,           ONLY : nsym, invsym, s, ftau
   USE control_flags
-  USE uspp_param, ONLY: nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
-  USE spin_orb, only: lspinorb
+  USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
+  USE spin_orb,        ONLY : lspinorb
   USE funct
+  !
   implicit none
   !
   !     declaration of the local variables

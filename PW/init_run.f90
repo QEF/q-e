@@ -9,7 +9,7 @@
 SUBROUTINE init_run()
   !-----------------------------------------------------------------------
   !
-  USE basis,       ONLY : nat, tau, ityp
+  USE ions_base,   ONLY : nat, tau, ityp
   USE force_mod,   ONLY : force
   USE wvfct,       ONLY : gamma_only
   !

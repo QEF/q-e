@@ -16,7 +16,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   !  the nonlocal terms is computed here
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, ONLY: nh

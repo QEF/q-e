@@ -7,17 +7,19 @@
 !   Rydberg atomic units are  used.
 !
       use atom, only: r, rab, dx
-      use basis, only: ntyp
+      USE ions_base, ONLY : ntyp => nsp
       use cell_base, only: omega
       USE parameters, only:  ndmx, nbrx
       USE kinds, only: DP
       use constants, only: fpi
       USE uspp_param, only: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
            nbeta, kkbeta, tvanp
+      !
       implicit none
+      !
       integer :: ik,  msh_bp, i, np, m, k, l
       integer :: n,idbes,ilmin,ilmax,iv,jv
-      real(DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
+      real(kind=DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
              qr_k(nbrx,nbrx,lmaxq,ntyp)
 
 ! declaration readvan quantities

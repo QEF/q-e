@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
-
 subroutine force_corr (forcescc)
   !-----------------------------------------------------------------------
   !   This routine calculates the force term vanishing at full
@@ -17,18 +18,18 @@ subroutine force_corr (forcescc)
   ! Uses superposition of atomic charges contained in the array rho_at
   ! and already set in readin-readvan
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE constants, ONLY: tpi
-  USE atom, ONLY: rho_at, msh, r, rab
-  USE basis, ONLY: nat, ntyp, ityp, tau
-  USE cell_base, ONLY: tpiba
-  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, g, ngl, gl, igtongl
-  USE lsda_mod, ONLY: nspin
-  USE vlocal, ONLY: vnew
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  USE kinds,                ONLY : DP
+  USE constants,            ONLY : tpi
+  USE atom,                 ONLY : rho_at, msh, r, rab
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
+  USE cell_base,            ONLY : tpiba
+  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
+                                   nrx3, nrxx, nl, g, ngl, gl, igtongl
+  USE lsda_mod,             ONLY : nspin
+  USE vlocal,               ONLY : vnew
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  !
   implicit none
   !
   real(kind=DP) :: forcescc (3, nat)

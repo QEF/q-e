@@ -15,7 +15,8 @@ subroutine phq_readin
   !    by the self-consistent program.
   !
 #include "machine.h"
-
+  !
+  USE ions_base,     ONLY : nat, ntyp => nsp
   use pwcom
   USE check_stop,    ONLY : time_max => max_seconds
   USE kinds,         ONLY : DP

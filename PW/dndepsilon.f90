@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine dndepsilon ( dns,ldim,ipol,jpol )
    !-----------------------------------------------------------------------
@@ -12,16 +14,17 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    ! respect to the strain epsilon(ipol,jpol) used to obtain the hubbard
    ! contribution to the internal stres tensor.
    !
-#include "machine.h"
-   USE kinds, ONLY: DP
-   USE wavefunctions_module, ONLY: evc
-   USE atom, ONLY: nchi, lchi, oc
-   USE basis, ONLY: nat, natomwfc, ityp
-   USE klist, ONLY: nks, xk
-   USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
-   USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
-   USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
-   USE uspp, ONLY: nkb, vkb
+   USE kinds,                ONLY : DP
+   USE wavefunctions_module, ONLY : evc
+   USE atom,                 ONLY : nchi, lchi, oc
+   USE ions_base,            ONLY : nat, ityp
+   USE basis,                ONLY : natomwfc
+   USE klist,                ONLY : nks, xk
+   USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
+                                    Hubbard_U, Hubbard_alpha
+   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE uspp,                 ONLY : nkb, vkb
    use becmod
    use io_files
 #ifdef __PARA

@@ -10,13 +10,15 @@
 program pwmemory
   !-----------------------------------------------------------------------
   !
-  USE wvfct, ONLY : gamma_only
-  USE klist, ONLY : nkstot, xk
-  USE lsda_mod, ONLY: nspin
-  use io_files
-  use mp, only : mp_end
-  use global_version
+  USE wvfct,    ONLY : gamma_only
+  USE klist,    ONLY : nkstot, xk
+  USE lsda_mod, ONLY : nspin
+  USE io_files
+  USE mp,       ONLY : mp_end
+  USE global_version
+  !
   implicit none
+  !
   character(len=9) :: code = 'memory'
   !
   call startup (nd_nmbr, code, version_number)
@@ -43,18 +45,20 @@ end program pwmemory
 !-----------------------------------------------------------------------
 subroutine setup2()
   !-----------------------------------------------------------------------
-  USE kinds, only: DP
-  USE basis, ONLY: nat, ntyp, ityp
-  USE cell_base, ONLY: omega
-  USE cellmd, ONLY: cell_factor
-  USE constants, ONLY :tpi, fpi
-  USE gvect, ONLY: ecutwfc, gcutm, ngl, ngm
-  USE klist, ONLY: xqq
-  USE pseud, ONLY: lmax, lloc
-  USE uspp_param, ONLY: lmaxkb, nbeta, lll, lmaxq, nhm, tvanp, nh
-  USE us, ONLY: nqx, nqxq, dq
-  USE uspp, ONLY: nkb
-  USE wvfct, ONLY: npwx
+  !
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,  ONLY : omega
+  USE cellmd,     ONLY : cell_factor
+  USE constants,  ONLY :tpi, fpi
+  USE gvect,      ONLY : ecutwfc, gcutm, ngl, ngm
+  USE klist,      ONLY : xqq
+  USE pseud,      ONLY : lmax, lloc
+  USE uspp_param, ONLY : lmaxkb, nbeta, lll, lmaxq, nhm, tvanp, nh
+  USE us,         ONLY : nqx, nqxq, dq
+  USE uspp,       ONLY : nkb
+  USE wvfct,      ONLY : npwx
+  !
   implicit none
   !
   real(kind=DP) :: omegaBZ
@@ -104,24 +108,28 @@ end subroutine setup2
 !-----------------------------------------------------------------------
 subroutine memory_estimate ( )
   !-----------------------------------------------------------------------
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: ndmx, npsx, lmaxx, nchix, nbrx, nqfx, lqmax
-  USE basis, ONLY: nat, ntyp, natomwfc
-  USE cellmd,ONLY: lmovecell
-  USE klist, ONLY: npk, nks, nkstot
-  USE ktetra,ONLY: ntetra
-  USE gvect, ONLY: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngl, ngm, ngm_l
-  USE gsmooth,ONLY: ngms, doublegrid
-  USE ldaU,  ONLY: Hubbard_lmax, lda_plus_u
-  USE lsda_mod, ONLY: nspin
-  USE us,    ONLY: okvan,  nqx, nqxq
-  USE uspp,  ONLY: nkb
-  USE uspp_param,    ONLY: lmaxq, nhm
-  USE control_flags, ONLY: nmix, isolve, diis_ndim
-  USE wvfct, ONLY: gamma_only, npwx, nbnd, nbndx
+  !
+  USE kinds,         ONLY : DP
+  USE parameters,    ONLY : ndmx, npsx, lmaxx, nchix, nbrx, nqfx, lqmax
+  USE ions_base,     ONLY : nat, ntyp => nsp
+  USE basis,         ONLY : natomwfc
+  USE cellmd,        ONLY : lmovecell
+  USE klist,         ONLY : npk, nks, nkstot
+  USE ktetra,        ONLY : ntetra
+  USE gvect,         ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                            nrxx, ngl, ngm, ngm_l
+  USE gsmooth,       ONLY : ngms, doublegrid
+  USE ldaU,          ONLY : Hubbard_lmax, lda_plus_u
+  USE lsda_mod,      ONLY : nspin
+  USE us,            ONLY : okvan,  nqx, nqxq
+  USE uspp,          ONLY : nkb
+  USE uspp_param,    ONLY : lmaxq, nhm
+  USE control_flags, ONLY : nmix, isolve, diis_ndim
+  USE wvfct,         ONLY : gamma_only, npwx, nbnd, nbndx
 #ifdef __PARA
-  use para, only: nprocp, npool, nct, ncplane, ncts, ncplanes
+  USE para,          ONLY : nprocp, npool, nct, ncplane, ncts, ncplanes
 #endif
+  !
   implicit none
   !
   ! The following variables are real in order to prevent

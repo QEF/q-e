@@ -5,27 +5,27 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine stress
   !----------------------------------------------------------------------
   !
-#include "machine.h"
+  USE io_global,     ONLY : stdout
+  USE kinds,         ONLY : DP
+  USE cell_base,     ONLY : omega, alat, at, bg
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv
+  USE constants,     ONLY : uakbar
+  USE ener,          ONLY : etxc, vtxc
+  USE force_mod,     ONLY : sigma
+  USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                            nrxx, nl, g, gg, gcutm
+  USE ldaU,          ONLY : lda_plus_u
+  USE lsda_mod,      ONLY : nspin
+  USE scf,           ONLY : rho, rho_core
+  USE control_flags, ONLY : iverbosity
+  USE wvfct,         ONLY : gamma_only
   !
-  USE io_global,  ONLY : stdout
-  USE kinds, ONLY: DP
-  USE cell_base, ONLY: omega, alat, at, bg
-  USE basis, ONLY: nat, ntyp, ityp, tau, zv
-  USE constants, ONLY: uakbar
-  USE ener, ONLY: etxc, vtxc
-  USE force_mod, ONLY: sigma
-  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, g, gg, gcutm
-  USE ldaU, ONLY: lda_plus_u
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho, rho_core
-  USE control_flags, only: iverbosity
-  USE wvfct, ONLY: gamma_only
   implicit none
   !
   real(kind=DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &

@@ -15,6 +15,8 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   !  the nonlocal terms is computed here
   !
 #include "machine.h"
+  !
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp 
   use pwcom
   USE kinds, only : DP
   USE uspp_param, only: nh

@@ -134,7 +134,7 @@
 !#                                                                            #!
 !##############################################################################!
 
-
+#include "machine.h"
 
 !======================================================================!
 
@@ -145,25 +145,23 @@ SUBROUTINE c_phase
 !   Geometric phase calculation along a strip of nppstr k-points
 !   averaged over a 2D grid of nkort k-points ortogonal to nppstr 
 
-#include "machine.h"
-
 !  --- Make use of the module with common information ---
-   USE kinds, ONLY: DP
-   USE parameters, ONLY: nbrx
-   USE io_global,  ONLY: stdout
-   USE io_files, ONLY: iunwfc, nwordwfc
-   USE basis, ONLY: nat, ntyp, ityp, tau, zv, atm
-   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE constants, ONLY: pi, tpi
-   USE gvect, ONLY: ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, ecutwfc, &
-        g, gcutm
-   USE uspp, ONLY: nkb, vkb
-   USE uspp_param, ONLY: lmaxq, nh, nhm
-   USE lsda_mod, ONLY: nspin
-   USE klist, ONLY: nelec, degauss, nks, xk, wk
-   USE wvfct, ONLY: npwx, npw, nbnd
-   USE wavefunctions_module,    ONLY : evc
-   USE bp, ONLY: gdir, nppstr
+   USE kinds,                ONLY : DP
+   USE parameters,           ONLY : nbrx
+   USE io_global,            ONLY : stdout
+   USE io_files,             ONLY : iunwfc, nwordwfc
+   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
+   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
+   USE constants,            ONLY : pi, tpi
+   USE gvect,                ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                                    ecutwfc, g, gcutm
+   USE uspp,                 ONLY : nkb, vkb
+   USE uspp_param,           ONLY : lmaxq, nh, nhm
+   USE lsda_mod,             ONLY : nspin
+   USE klist,                ONLY : nelec, degauss, nks, xk, wk
+   USE wvfct,                ONLY : npwx, npw, nbnd
+   USE wavefunctions_module, ONLY : evc
+   USE bp,                   ONLY : gdir, nppstr
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -219,56 +217,56 @@ SUBROUTINE c_phase
    INTEGER :: nstring
    INTEGER :: nt
    LOGICAL :: lodd
-   REAL(dp) :: dk(3)
-   REAL(dp) :: dkmod
-   REAL(dp) :: el_loc
-   REAL(dp) :: eps
-   REAL(dp) :: fac
-   REAL(dp) :: g2kin_bp(npwx)
-   REAL(dp) :: gpar(3)
-   REAL(dp) :: gtr(3)
-   REAL(dp) :: gvec
-   REAL(dp) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
-   REAL(dp), ALLOCATABLE :: loc_k(:)
-   REAL(dp) , ALLOCATABLE :: pdl_elec(:)
-   REAL(dp) :: pdl_elec_dw
-   REAL(dp) :: pdl_elec_tot
-   REAL(dp) :: pdl_elec_up
-   REAL(dp) :: pdl_ion(nat)
-   REAL(dp) :: pdl_ion_dw
-   REAL(dp) :: pdl_ion_tot
-   REAL(dp) :: pdl_ion_up
-   REAL(dp) :: pdl_tot
-   REAL(dp) , ALLOCATABLE :: phik(:)
-   REAL(dp) :: phidw
-   REAL(dp) :: phiup
-   REAL(dp) :: rmod
-   REAL(dp) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
-   REAL(dp) :: upol(3)
-   REAL(dp) :: weight
-   REAL(dp), ALLOCATABLE :: wstring(:)
-   REAL(dp) :: ylm_dk(lmaxq*lmaxq)
-   REAL(dp) :: zeta_mod
-   COMPLEX(dp) :: aux(ngm)
-   COMPLEX(dp) :: aux0(ngm)
-   COMPLEX(dp) :: becp0(nkb,nbnd)
-   COMPLEX(dp) :: becp_bp(nkb,nbnd)
-   COMPLEX(dp) :: cdet(2)
-   COMPLEX(dp) :: cdwork(nbnd)
-   COMPLEX(dp) :: cave
-   COMPLEX(dp) :: cave_dw
-   COMPLEX(dp) :: cave_up
-   COMPLEX(dp) , ALLOCATABLE :: cphik(:)
-   COMPLEX(dp) :: det
-   COMPLEX(dp) :: dtheta
-   COMPLEX(dp) :: mat(nbnd,nbnd)
-   COMPLEX(dp) :: pref
-   COMPLEX(dp) :: psi(npwx,nbnd)
-   COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
-   COMPLEX(dp) :: struc(nat)
-   COMPLEX(dp) :: theta0
-   COMPLEX(dp) :: ZDOTC
-   COMPLEX(dp) :: zeta
+   REAL(KIND=DP) :: dk(3)
+   REAL(KIND=DP) :: dkmod
+   REAL(KIND=DP) :: el_loc
+   REAL(KIND=DP) :: eps
+   REAL(KIND=DP) :: fac
+   REAL(KIND=DP) :: g2kin_bp(npwx)
+   REAL(KIND=DP) :: gpar(3)
+   REAL(KIND=DP) :: gtr(3)
+   REAL(KIND=DP) :: gvec
+   REAL(KIND=DP) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
+   REAL(KIND=DP), ALLOCATABLE :: loc_k(:)
+   REAL(KIND=DP) , ALLOCATABLE :: pdl_elec(:)
+   REAL(KIND=DP) :: pdl_elec_dw
+   REAL(KIND=DP) :: pdl_elec_tot
+   REAL(KIND=DP) :: pdl_elec_up
+   REAL(KIND=DP) :: pdl_ion(nat)
+   REAL(KIND=DP) :: pdl_ion_dw
+   REAL(KIND=DP) :: pdl_ion_tot
+   REAL(KIND=DP) :: pdl_ion_up
+   REAL(KIND=DP) :: pdl_tot
+   REAL(KIND=DP) , ALLOCATABLE :: phik(:)
+   REAL(KIND=DP) :: phidw
+   REAL(KIND=DP) :: phiup
+   REAL(KIND=DP) :: rmod
+   REAL(KIND=DP) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
+   REAL(KIND=DP) :: upol(3)
+   REAL(KIND=DP) :: weight
+   REAL(KIND=DP), ALLOCATABLE :: wstring(:)
+   REAL(KIND=DP) :: ylm_dk(lmaxq*lmaxq)
+   REAL(KIND=DP) :: zeta_mod
+   COMPLEX(KIND=DP) :: aux(ngm)
+   COMPLEX(KIND=DP) :: aux0(ngm)
+   COMPLEX(KIND=DP) :: becp0(nkb,nbnd)
+   COMPLEX(KIND=DP) :: becp_bp(nkb,nbnd)
+   COMPLEX(KIND=DP) :: cdet(2)
+   COMPLEX(KIND=DP) :: cdwork(nbnd)
+   COMPLEX(KIND=DP) :: cave
+   COMPLEX(KIND=DP) :: cave_dw
+   COMPLEX(KIND=DP) :: cave_up
+   COMPLEX(KIND=DP) , ALLOCATABLE :: cphik(:)
+   COMPLEX(KIND=DP) :: det
+   COMPLEX(KIND=DP) :: dtheta
+   COMPLEX(KIND=DP) :: mat(nbnd,nbnd)
+   COMPLEX(KIND=DP) :: pref
+   COMPLEX(KIND=DP) :: psi(npwx,nbnd)
+   COMPLEX(KIND=DP) :: q_dk(nhm,nhm,ntyp)
+   COMPLEX(KIND=DP) :: struc(nat)
+   COMPLEX(KIND=DP) :: theta0
+   COMPLEX(KIND=DP) :: ZDOTC
+   COMPLEX(KIND=DP) :: zeta
 
 
 !  -------------------------------------------------------------------------   !

@@ -14,7 +14,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   ! nonlocal (separable pseudopotential) contribution to the stress
   !
   USE kinds,                ONLY : DP
-  USE basis,                ONLY : nat, ntyp, ityp
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE constants,            ONLY : eps8
   USE klist,                ONLY : nks, xk
   USE lsda_mod,             ONLY : current_spin, lsda, isk

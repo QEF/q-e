@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2003-2004 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE paw
 
   USE kinds, ONLY: DP
@@ -76,8 +83,8 @@ CONTAINS
   !  needed for PAW reconstruction
   !
 
-  use read_pseudo_module , only: scan_begin, scan_end
-  use basis, only:ntyp
+  use read_pseudo_module, only: scan_begin, scan_end
+  USE ions_base,          ONLY : ntyp => nsp
   use atom, only: mesh 
   use kinds, only: DP
   use parameters, only : ntypx
@@ -137,11 +144,3 @@ end subroutine read_recon
 
 
 END MODULE paw
-
-
-
-
-
-
-
-

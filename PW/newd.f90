@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine newd
@@ -14,20 +15,22 @@ subroutine newd
   !   the Q function and adds it to the bare ionic D term which is used
   !   to compute the non-local term in the US scheme.
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE basis, ONLY: nat, ntyp, ityp
-  USE cell_base, ONLY: omega
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, g, gg, ngm, &
-       gstart, ig1, ig2, ig3, eigts1, eigts2, eigts3, nl
-  USE lsda_mod, ONLY: nspin
-  USE scf,   ONLY: vr, vltot
-  USE us,    ONLY: okvan
-  USE uspp,  ONLY: deeq, dvan
-  USE uspp_param,  ONLY: lmaxq, nh, nhm, tvanp
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,            ONLY : omega
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, g, gg, &
+                                   ngm, gstart, ig1, ig2, ig3, eigts1, eigts2, &
+                                   eigts3, nl
+  USE lsda_mod,             ONLY : nspin
+  USE scf,                  ONLY : vr, vltot
+  USE us,                   ONLY : okvan
+  USE uspp,                 ONLY : deeq, dvan
+  USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  !
   implicit none
+  !
   integer :: ig, nt, ih, jh, na, is
   ! counters on g vectors, atom type, beta functions x 2, atoms, spin
   complex(kind=DP), allocatable :: aux (:,:), qgm(:), qgm_na (:)

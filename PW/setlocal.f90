@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine setlocal
@@ -12,16 +13,16 @@ subroutine setlocal
   !
   !    This routine computes the local potential in real space vltot(ir)
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE basis,  ONLY: ntyp
-  USE extfield, ONLY: tefield, dipfield, etotefield
-  USE gvect,  ONLY: igtongl
-  USE scf,    ONLY: vltot
-  USE vlocal, ONLY : strf, vloc
-  USE wvfct,  ONLY: gamma_only
-  USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, ngm
-  USE scf,    ONLY: rho
+  USE kinds,     ONLY : DP
+  USE ions_base, ONLY : ntyp => nsp
+  USE extfield,  ONLY : tefield, dipfield, etotefield
+  USE gvect,     ONLY : igtongl
+  USE scf,       ONLY : vltot
+  USE vlocal,    ONLY : strf, vloc
+  USE wvfct,     ONLY : gamma_only
+  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, ngm
+  USE scf,       ONLY : rho
+  !
   implicit none
   complex(kind=DP), allocatable :: aux (:)
   ! auxiliary variable

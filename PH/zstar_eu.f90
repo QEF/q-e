@@ -13,7 +13,8 @@ subroutine zstar_eu
   ! epsil =.true. is needed for this calculation to be meaningful
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, zv, ityp
   USE io_global,      ONLY : stdout
   USE io_files, ONLY: iunigk
   use pwcom

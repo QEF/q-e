@@ -5,6 +5,7 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   !
 #include "machine.h"
 
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, only: nh

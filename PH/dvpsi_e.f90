@@ -18,6 +18,7 @@ subroutine dvpsi_e (kpoint, ipol)
   !
 #include "machine.h"
   !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY: evc

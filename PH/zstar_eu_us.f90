@@ -7,6 +7,7 @@ subroutine zstar_eu_us
   !
 #include "machine.h"
   !
+  USE ions_base, ONLY : nat
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk

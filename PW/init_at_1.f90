@@ -5,23 +5,23 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
-subroutine init_at_1 
+subroutine init_at_1()
   !-----------------------------------------------------------------------
   !
   ! This routine computes a table with the radial Fourier transform 
   ! of the atomic wavefunctions.
   !
-#include "machine.h"
-
-  USE parameters, ONLY: nchix
-  USE kinds, ONLY: dp
-  USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
-  USE constants, ONLY: fpi
-  USE cell_base, ONLY: omega
-  USE basis, ONLY: ntyp
-  USE us, ONLY: tab_at, nqx, dq
+  USE parameters, ONLY : nchix
+  USE kinds,      ONLY : dp
+  USE atom,       ONLY : nchi, lchi, chi, oc, r, rab, msh
+  USE constants,  ONLY : fpi
+  USE cell_base,  ONLY : omega
+  USE ions_base,  ONLY : ntyp => nsp
+  USE us,         ONLY : tab_at, nqx, dq
+  !
   implicit none
   !
   integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq, ndm

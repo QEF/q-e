@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine atomic_rho (rhoa, nspina)
   !-----------------------------------------------------------------------
@@ -24,20 +26,21 @@ subroutine atomic_rho (rhoa, nspina)
   ! the total charge only could be needed, even in a LSDA calculation.
   !
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE io_global,  ONLY : stdout
-  USE atom, ONLY: r, rab, msh, rho_at
-  USE basis, ONLY: ntyp
-  USE cell_base, ONLY: tpiba, omega
-  USE gvect, ONLY: ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       gstart, nl, nlm, gl, igtongl
-  USE lsda_mod, ONLY: starting_magnetization, lsda
-  USE vlocal, ONLY: strf
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
-  USE noncollin_module, ONLY: angle1, angle2
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE atom,                 ONLY : r, rab, msh, rho_at
+  USE ions_base,            ONLY : ntyp => nsp
+  USE cell_base,            ONLY : tpiba, omega
+  USE gvect,                ONLY : ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, &
+                                   nrx3, gstart, nl, nlm, gl, igtongl
+  USE lsda_mod,             ONLY : starting_magnetization, lsda
+  USE vlocal,               ONLY : strf
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  USE noncollin_module,     ONLY : angle1, angle2
+  !
   implicit none
+  !
   integer :: nspina
   ! the number of spin polarizations
   real(kind=DP) :: rhoa (nrxx, nspina)

@@ -77,7 +77,7 @@ subroutine do_efg(Q)
   use gvect, only: nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,&
        g,gg,nl,gstart,ngm         !gvectors and parameters for the FFT
   use cell_base , only: at,bg         !parameters of the cell
-  use basis , only : nat, atm, tau, ityp, zv  !coordinates of the atoms
+  USE ions_base, ONLY : nat, atm, tau, ityp, zv
   use symme , only: nsym, s, irt
   implicit none
 
@@ -261,7 +261,7 @@ subroutine efg_correction(efg_corr_tens)
   use gvect, only: g,ngm,ecutwfc
   use klist, only: nks, xk, wk
   use cell_base, only: tpiba2
-  use basis, only: nat, ntyp,ityp
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use wvfct, only:npwx, nbnd, npw, igk, g2kin
   use wavefunctions_module, only: evc
   use paw, only: paw_vkb, paw_becp, paw_nkb, aephi, psphi, paw_nh, paw_nhtol, &

@@ -16,7 +16,8 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   ! and for each pattern u. It computes simultaneously all the bands.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp
   use pwcom
   use atom, only: nlcc
   USE wavefunctions_module,  ONLY: evc

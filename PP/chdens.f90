@@ -19,7 +19,7 @@ program chdens
   USE parameters,       ONLY : ntypx
   use constants, only:  pi, fpi
   use cell_base
-  use basis
+  USE ions_base, ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
   use char
   use lsda_mod, only: nspin
   use gvect

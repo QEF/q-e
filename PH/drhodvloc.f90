@@ -15,7 +15,8 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !    and for US pseudopotentials.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat
   use pwcom
   USE kinds, only : DP
   use phcom

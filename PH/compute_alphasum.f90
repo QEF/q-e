@@ -17,6 +17,8 @@ subroutine compute_alphasum
   !
   !
 #include "machine.h"
+
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, ONLY: nh, tvanp

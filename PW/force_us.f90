@@ -17,7 +17,7 @@ SUBROUTINE force_us( forcenl )
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, tpiba
-  USE basis,                ONLY : nat, ntyp, ityp
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq, deeq

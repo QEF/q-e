@@ -17,7 +17,8 @@ subroutine drho
   !
   !
 #include"machine.h"
-
+  !
+  USE ions_base, ONLY : nat
   use pwcom
   USE kinds, only : DP
   USE uspp_param, only: nhm

@@ -124,7 +124,8 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
 #include "machine.h" 
   USE io_global,  ONLY : stdout 
   use atom 
-  use basis 
+  USE ions_base, ONLY : nat, ityp, atm, ntyp => nsp
+  USE basis,     ONLY : natomwfc
   use cell_base 
   use constants, only: rytoev 
   use gvect 

@@ -5,25 +5,27 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
-
 subroutine vhpsi (ldap, np, mp, psip, hpsi)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the Hubbard potential applied to the electronic
   ! of the current k-point, the result is added to hpsi
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE atom, ONLY: oc, lchi, nchi
-  USE ldaU, ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-       ns, nsnew, swfcatom
-  USE lsda_mod, ONLY: nspin, current_spin
-  USE basis, ONLY: nat, ntyp, ityp, natomwfc
-  USE wvfct, ONLY: gamma_only
-  USE gvect,   ONLY : gstart
-
+  USE kinds,     ONLY : DP
+  USE atom,      ONLY : oc, lchi, nchi
+  USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+                        ns, nsnew, swfcatom
+  USE lsda_mod,  ONLY : nspin, current_spin
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp
+  USE basis,     ONLY : natomwfc
+  USE wvfct,     ONLY : gamma_only
+  USE gvect,     ONLY : gstart
+  !
   implicit none
+  !
   integer :: ldap, np, mp
   complex(kind=DP) :: psip (ldap, mp), hpsi (ldap, mp)
   !

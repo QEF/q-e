@@ -15,7 +15,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !  is computed in addusddens.
   !
 #include "machine.h"
-
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, only: nh, tvanp, nhm

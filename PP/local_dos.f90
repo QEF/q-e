@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !--------------------------------------------------------------------
 subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
@@ -17,10 +18,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !              (only for metals with fermi spreading)
   !     iflag=3: calculates the integral of local dos from emin to emax
   !
-#include "machine.h"
-  USE kinds, only: DP
+  USE kinds,                ONLY : DP
   USE cell_base,            ONLY : omega, tpiba2
-  USE basis,                ONLY : nat, ntyp, ityp
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : ef
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    ngm, g, ecutwfc
@@ -34,10 +34,10 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   USE uspp_param,           ONLY : nh, tvanp
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
-       gamma_only
-  USE io_files,             ONLY:  iunwfc, nwordwfc
+                                   gamma_only
+  USE io_files,             ONLY : iunwfc, nwordwfc
 #ifdef __PARA
-  use mp, only: mp_bcast
+  USE mp,                   ONLY : mp_bcast
 #endif
   implicit none
   !

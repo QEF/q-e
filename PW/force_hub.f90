@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine force_hub(forceh)
@@ -15,16 +16,15 @@ subroutine force_hub(forceh)
    ! /du(alpha,ipol)) which is the force acting on the atom at tau_{alpha}
    ! (in the unit ceel) along the direction ipol.
    !
-#include "machine.h"
-   USE kinds, ONLY: DP
-   USE basis, ONLY: nat, ityp
-   USE cell_base, ONLY: at, bg
-   USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns, &
-                    U_projection
-   USE lsda_mod, ONLY: nspin
-   USE symme,    ONLY: s, nsym, irt
-   USE io_files, ONLY : prefix, iunocc
-   USE wvfct,    ONLY : gamma_only   
+   USE kinds,     ONLY : DP
+   USE ions_base, ONLY : nat, ityp
+   USE cell_base, ONLY : at, bg
+   USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
+                         hubbard_alpha, ns, U_projection
+   USE lsda_mod,  ONLY : nspin
+   USE symme,     ONLY : s, nsym, irt
+   USE io_files,  ONLY : prefix, iunocc
+   USE wvfct,     ONLY : gamma_only   
 #ifdef __PARA
    use para
 #endif

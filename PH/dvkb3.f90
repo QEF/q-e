@@ -6,7 +6,8 @@ subroutine dvkb3(kpoint,dvkb)
 ! charge. It assume that the variable dpqq, has been set.
 !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc

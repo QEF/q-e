@@ -22,8 +22,9 @@ SUBROUTINE potinit()
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE cell_base,         ONLY : alat, omega
-  USE basis,         ONLY : nat, startingpot
+  USE cell_base,     ONLY : alat, omega
+  USE ions_base,     ONLY : nat
+  USE basis,         ONLY : startingpot
   USE klist,         ONLY : nelec
   USE lsda_mod,      ONLY : lsda, nspin
   USE gvect,         ONLY:  ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &

@@ -23,7 +23,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   ! output:
   !     spsi  S*psi
   !
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE wvfct,      ONLY : gamma_only
   USE us,         ONLY : okvan
   USE uspp,       ONLY : vkb, nkb, qq
@@ -31,7 +31,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE wvfct,      ONLY : igk, g2kin
   USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,       ONLY : lda_plus_u
-  USE basis,      ONLY : ntyp, ityp, nat 
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   !
   IMPLICIT NONE
   !

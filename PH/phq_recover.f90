@@ -14,7 +14,8 @@ subroutine phq_recover
   !    a given iteration of a given irreducible representation
   !
 #include "machine.h"
-
+  !
+  USE ions_base,     ONLY : nat
   USE io_global,     ONLY : stdout
   use pwcom
   USE kinds,         ONLY : DP

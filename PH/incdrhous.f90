@@ -15,7 +15,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   !     smooth part is computed here.
   !
 #include "machine.h"
-
+  USE ions_base, ONLY : ntyp => nsp, nat, ityp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, ONLY: nhm, nh

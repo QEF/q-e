@@ -7,6 +7,8 @@
 !
 
 subroutine writedyn
+  !
+  USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm
   use cgcom
   use pwcom
   implicit none

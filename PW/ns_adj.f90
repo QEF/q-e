@@ -11,13 +11,14 @@ subroutine ns_adj
 ! This routine tries to suggest to the code the right atomic orbital to 
 ! localize the charge on.
 !
-   USE kinds,     ONLY: DP
-   USE basis,     ONLY: nat, ityp, ntyp
-   USE ldaU,      ONLY: nsnew, Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns
-   USE lsda_mod,  ONLY: lsda, current_spin, nspin, isk, starting_magnetization
-   USE io_global,  ONLY :  stdout
+   USE kinds,     ONLY : DP
+   USE ions_base, ONLY : nat, ntyp => nsp, ityp
+   USE ldaU,      ONLY : nsnew, Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns
+   USE lsda_mod,  ONLY : lsda, current_spin, nspin, isk, starting_magnetization
+   USE io_global, ONLY :  stdout
  
    implicit none
+   !
    integer, parameter:: ldim=7
    integer :: na,nt,is,m1,m2,majs,mins,adjs,mol(ldim),nel,i,j,l,index(ldim) 
    real(kind=DP) :: totoc, delta,lambda(ldim) 

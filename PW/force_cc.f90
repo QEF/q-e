@@ -5,30 +5,30 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine force_cc (forcecc)
   !----------------------------------------------------------------------
   !
-#include "machine.h"
-  USE kinds, ONLY : DP
-  USE constants, ONLY: tpi
-  USE atom, ONLY: rho_atc, numeric, mesh, r, rab, nlcc
-  USE basis, ONLY: nat, ntyp, ityp, tau
-  USE cell_base, ONLY: alat, omega, tpiba, tpiba2
-  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, g, gg, ngl, gl, igtongl
-  USE ener, ONLY: etxc, vtxc
-  USE lsda_mod, ONLY: nspin
-  USE pseud, ONLY: a_nlcc, b_nlcc, alpha_nlcc
-  USE scf, ONLY: rho, rho_core
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  USE kinds,                ONLY : DP
+  USE constants,            ONLY : tpi
+  USE atom,                 ONLY : rho_atc, numeric, mesh, r, rab, nlcc
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
+  USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
+  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
+                                   nrx3, nrxx, nl, g, gg, ngl, gl, igtongl
+  USE ener,                 ONLY : etxc, vtxc
+  USE lsda_mod,             ONLY : nspin
+  USE pseud,                ONLY : a_nlcc, b_nlcc, alpha_nlcc
+  USE scf,                  ONLY : rho, rho_core
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  !
   implicit none
   !
   !   first the dummy variable
   !
-
   real(kind=DP) :: forcecc (3, nat)
   ! output: the local forces on atoms
 

@@ -14,6 +14,7 @@ subroutine cg_summary
   !%%%%%%%%%%           summarize input data          %%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
+  USE ions_base, ONLY : nat, atm, ityp, tau, zv, ntyp => nsp
   USE io_global,  ONLY : stdout
   use pwcom
   USE uspp_param, ONLY: psd

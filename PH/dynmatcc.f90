@@ -12,7 +12,8 @@ subroutine dynmatcc
   ! diagonal (q-independent) NLCC contribution to the dynamical matrix
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, tau
   use pwcom
   USE kinds, only : DP
   use phcom

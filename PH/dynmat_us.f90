@@ -14,7 +14,8 @@ subroutine dynmat_us
   !  of the dynamical matrix.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp, tau
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk

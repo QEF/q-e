@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !----------------------------------------------------------------------
 subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !----------------------------------------------------------------------
@@ -13,18 +15,18 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    ! (with respect to the q vector) of the bessel function. This vector
    ! is needed in computing the internal stress tensor.
    !
-#include "machine.h"
-   USE kinds, ONLY: DP
-   USE parameters, ONLY: nchix
+   USE kinds,      ONLY : DP
+   USE parameters, ONLY : nchix
    USE io_global,  ONLY : stdout
-   USE constants, ONLY: tpi, fpi
-   USE atom, ONLY: msh, r, rab, lchi, nchi, oc, chi
-   USE basis, ONLY: nat, ntyp, tau, ityp
-   USE cell_base, ONLY: omega, at, bg, tpiba
-   USE klist, ONLY: xk
-   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
-   USE wvfct, ONLY: npw, npwx, igk
-   USE us, ONLY: tab_at, dq
+   USE constants,  ONLY : tpi, fpi
+   USE atom,       ONLY : msh, r, rab, lchi, nchi, oc, chi
+   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+   USE cell_base,  ONLY : omega, at, bg, tpiba
+   USE klist,      ONLY : xk
+   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+   USE wvfct,      ONLY : npw, npwx, igk
+   USE us,         ONLY : tab_at, dq
+   !
    implicit none
    !
    !  I/O variables

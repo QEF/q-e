@@ -16,7 +16,8 @@ subroutine psidspsi (ik, uact, pdsp)
   ! and for each pattern u. It computes simultaneously all the bands.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE pwcom
   USE kinds, ONLY : DP
   USE wavefunctions_module,    ONLY : evc

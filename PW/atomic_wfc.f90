@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine atomic_wfc (ik, wfcatom)
@@ -13,19 +14,20 @@ subroutine atomic_wfc (ik, wfcatom)
   ! This routine computes the  superposition of atomic wavefunctions for a
   ! given k-point.
   !
-#include "machine.h"
-
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: nchix
-  USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
-  USE constants, ONLY: tpi, fpi
-  USE cell_base, ONLY: omega, tpiba
-  USE basis, ONLY: nat, ntyp, natomwfc, ityp, tau
-  USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
-  USE klist, ONLY: xk
-  USE wvfct, ONLY: npwx, npw, nbnd, igk
-  USE us,    ONLY: tab_at, dq
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : nchix
+  USE atom,       ONLY : nchi, lchi, chi, oc, r, rab, msh
+  USE constants,  ONLY : tpi, fpi
+  USE cell_base,  ONLY : omega, tpiba
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+  USE basis,      ONLY : natomwfc
+  USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE klist,      ONLY : xk
+  USE wvfct,      ONLY : npwx, npw, nbnd, igk
+  USE us,         ONLY : tab_at, dq
+  !
   implicit none
+  !
   integer :: ik
   ! input: k-point
   complex(kind=DP) :: wfcatom (npwx, natomwfc) ! output: atomic wavefunctions

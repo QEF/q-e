@@ -13,6 +13,7 @@ subroutine rhod2vkb(dyn0)
   !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
   !
 #include "machine.h"
+  USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
   USE uspp_param, only: nh

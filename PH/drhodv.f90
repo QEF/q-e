@@ -14,7 +14,8 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !    <psi|dv|dpsi> of the dynamical matrix
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat
   use pwcom
   USE kinds, only : DP
   USE io_files, ONLY: iunigk

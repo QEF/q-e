@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine init_us_2 (npw_, igk_, q_, vkb_)
@@ -13,16 +14,16 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   !   Calculates beta functions (Kleinman-Bylander projectors), with
   !   structure factor, for all atoms, in reciprocal space
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE basis, ONLY: nat, tau, ntyp, ityp
-  USE cell_base, ONLY: tpiba
-  USE constants, ONLY: tpi
-  USE gvect, ONLY: eigts1, eigts2, eigts3, ig1, ig2, ig3, g
-  USE wvfct, ONLY: npw, npwx, igk
-  USE us, ONLY: dq, tab
-  USE uspp, ONLY: nkb, vkb, nhtol, nhtolm, indv
-  USE uspp_param, ONLY: lmaxkb, nbeta, nhm, nh
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+  USE cell_base,  ONLY : tpiba
+  USE constants,  ONLY : tpi
+  USE gvect,      ONLY : eigts1, eigts2, eigts3, ig1, ig2, ig3, g
+  USE wvfct,      ONLY : npw, npwx, igk
+  USE us,         ONLY : dq, tab
+  USE uspp,       ONLY : nkb, vkb, nhtol, nhtolm, indv
+  USE uspp_param, ONLY : lmaxkb, nbeta, nhm, nh
+  !
   implicit none
   !
   integer :: npw_, igk_ (npw_)

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine addusdens
@@ -13,18 +14,19 @@ subroutine addusdens
   !  This routine adds to the charge density the part which is due to
   !  the US augmentation.
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE basis, ONLY : nat, ntyp, ityp
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
-       nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho
-  USE us, ONLY : okvan
-  USE uspp, ONLY: becsum
-  USE uspp_param, ONLY : lmaxq, tvanp, nh
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
+                                   eigts3, ig1, ig2, ig3
+  USE lsda_mod,             ONLY : nspin
+  USE scf,                  ONLY : rho
+  USE us,                   ONLY : okvan
+  USE uspp,                 ONLY : becsum
+  USE uspp_param,           ONLY : lmaxq, tvanp, nh
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  !
   implicit none
   !
   !     here the local variables

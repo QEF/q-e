@@ -31,7 +31,7 @@ SUBROUTINE vcsmd()
   USE io_global,     ONLY : stdout
   USE constants,     ONLY : e2, uakbar
   USE cell_base,     ONLY : omega, alat, at, bg
-  USE basis,         ONLY : tau, nat, ntyp, ityp, atm
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,        ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                             cmass, ttol, ntcheck, lmovecell
   USE dynam,         ONLY : dt, temperature, amass

@@ -16,7 +16,8 @@ subroutine compute_dvloc (mode, dvlocin)
   ! and for each pattern u. It computes simultaneously all the bands.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp
   use pwcom
   USE kinds, only : DP
   use phcom

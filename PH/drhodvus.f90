@@ -17,7 +17,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat
   use pwcom
   USE kinds, only : DP
   use phcom

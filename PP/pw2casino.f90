@@ -59,7 +59,7 @@ subroutine compute_casino
 
   use kinds, ONLY: DP
   use atom, only: zmesh
-  use basis, only: nat, ntyp, ityp, tau, zv
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv
   use cell_base, only: omega, alat, tpiba2, at, bg
   use char, only: title
   use constants, only: tpi

@@ -17,7 +17,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !    NB: this routine works only with gamma
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
   USE kinds, only : DP

@@ -32,14 +32,15 @@ SUBROUTINE phq_init()
   !        second part of the dynamical matrix.
   !
   !
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE constants,            ONLY : eps8
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk
   USE pwcom
   USE atom,                 ONLY : numeric, mesh, msh, r , rab
   USE wavefunctions_module, ONLY : evc
-  USE kinds,           ONLY : DP
-  USE uspp_param,      ONLY : vloc_at
+  USE kinds,                ONLY : DP
+  USE uspp_param,           ONLY : vloc_at
   USE phcom
   !
   IMPLICIT NONE

@@ -8,15 +8,16 @@
 !-----------------------------------------------------------------------
 subroutine read_config_from_file
   !-----------------------------------------------------------------------
-
-  USE io_global,      ONLY: stdout
-  USE kinds,          ONLY: DP
-  USE basis,          ONLY: nat, ityp, tau, startingconfig
-  USE cell_base,          ONLY: at, bg, ibrav, alat, omega
-  USE cellmd,         ONLY: at_old, omega_old, lmovecell
-  use io_files,       only: prefix, iunres
-  use restart_module, only: readfile_config
-
+  !
+  USE io_global,      ONLY : stdout
+  USE kinds,          ONLY : DP
+  USE ions_base,      ONLY : nat, ityp, tau
+  USE basis,          ONLY : startingconfig
+  USE cell_base,      ONLY : at, bg, ibrav, alat, omega
+  USE cellmd,         ONLY : at_old, omega_old, lmovecell
+  USE io_files,       ONLY : prefix, iunres
+  USE restart_module, ONLY : readfile_config
+  !
   implicit none
 
   ! parameter indicating from where to restart
@@ -75,7 +76,8 @@ subroutine read_config_from_file_old
 
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY: DP
-  USE basis,      ONLY: nat, ityp, tau, startingconfig
+  USE ions_base,      ONLY : nat, ityp, tau
+  USE basis,          ONLY : startingconfig  
   USE cell_base,      ONLY: at, bg, ibrav, alat, omega
   USE cellmd,     ONLY: at_old, omega_old, lmovecell
   use io_files,   only : prefix

@@ -25,55 +25,60 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !     programs.
   !
   !
-  USE kinds, ONLY: DP
-  USE basis, ONLY: ntyp, natomwfc
-  USE ions_base, ONLY: nat, ityp, tau, zv, atm
-  USE cell_base, ONLY: at, bg, ibrav, celldm, alat, symm_type
-  USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
-       ngk, nks, nkstot
-  USE ktetra,ONLY: tetra, ntetra, ltetra, k1, k2, k3, nk1, nk2, nk3
-  USE lsda_mod, ONLY: isk, nspin, lsda
-  USE force_mod, ONLY: lforce, lstres, force
-  USE gvect, ONLY: dual, ecutwfc, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-       nrxx, ngm, ngm_g, gcutm
-  USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
-       gcutms, doublegrid
-  USE wvfct, ONLY:  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
-  USE char, ONLY: title, crystal, sname
-  USE dynam, ONLY: amass
-  USE symme, ONLY: s, irt, ftau, nsym, invsym
-  USE ener, ONLY: ef
-  USE atom, ONLY: zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
-       rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
-  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
-       a_nlcc, b_nlcc, alpha_nlcc
-  USE us, ONLY:  okvan
-  USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, &
-       psd, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, nh, tvanp, newpseudo
-  USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
-  USE wavefunctions_module,    ONLY : evc
-  USE fixed_occ, ONLY: tfixed_occ 
-  use control_flags, only: twfcollect, noinv, istep, iswitch, modenum
-  use io_files, only: prefix, tmp_dir, pseudo_dir, psfile, &
-       iunwfc, nwordwfc
-  use funct, only: iexch, icorr, igcx, igcc
-  use io_global, only: ionode
-  use mp, only: mp_sum, mp_max, mp_end
-  use mp_global, only: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool, inter_pool_comm, my_image_id
-
-  USE io_base, only: write_restart_header, write_restart_ions, &
-            write_restart_cell, write_restart_electrons, &
-            write_restart_gvec, write_restart_gkvec, write_restart_charge, &
-            write_restart_wfc, write_restart_symmetry, &
-            write_restart_xdim, write_restart_pseudo, write_restart_ldaU
-
-  USE parameters, only: nacx, nsx, npk
-  use read_pseudo_module
-  use pseudo_types
-  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
-                     Hubbard_U, Hubbard_alpha
-
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : ntyp => nsp
+  USE basis,                ONLY : natomwfc
+  USE ions_base,            ONLY : nat, ityp, tau, zv, atm
+  USE cell_base,            ONLY : at, bg, ibrav, celldm, alat, symm_type
+  USE klist,                ONLY : xk, wk, degauss, ngauss, lgauss, nelec, &
+                                   ngk, nks, nkstot
+  USE ktetra,               ONLY : tetra, ntetra, ltetra, k1, k2, k3, &
+                                   nk1, nk2, nk3
+  USE lsda_mod,             ONLY : isk, nspin, lsda
+  USE force_mod,            ONLY : lforce, lstres, force
+  USE gvect,                ONLY : dual, ecutwfc, nrx1, nrx2, nrx3, nr1, nr2, &
+                                   nr3, nrxx, ngm, ngm_g, gcutm
+  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
+                                   nrxxs, gcutms, doublegrid
+  USE wvfct,                ONLY : npwx, nbndx, nbnd, igk, g2kin, &
+                                   igk_l2g, gamma_only
+  USE char,                 ONLY : title, crystal, sname
+  USE dynam,                ONLY : amass
+  USE symme,                ONLY : s, irt, ftau, nsym, invsym
+  USE ener,                 ONLY : ef
+  USE atom,                 ONLY : zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
+                                   rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
+  USE pseud,                ONLY : cc, alpc, zp, aps, alps, nlc, nnl, lmax, &
+                                   lloc, a_nlcc, b_nlcc, alpha_nlcc
+  USE us,                   ONLY : okvan
+  USE uspp_param,           ONLY : vloc_at, dion, betar, qqq, qfunc, qfcoef, &
+                                   rinner, psd, nbeta, kkbeta, nqf, nqlc, &
+                                   ifqopt, lll, iver, nh, tvanp, newpseudo
+  USE extfield,             ONLY : tefield, dipfield, edir, emaxpos, eopreg, &
+                                   eamp
+  USE wavefunctions_module, ONLY : evc
+  USE fixed_occ,            ONLY : tfixed_occ 
+  USE control_flags,        ONLY : twfcollect, noinv, istep, iswitch, modenum
+  USE io_files,             ONLY : prefix, tmp_dir, pseudo_dir, psfile, &
+                                   iunwfc, nwordwfc
+  USE funct,                ONLY : iexch, icorr, igcx, igcc
+  USE io_global,            ONLY : ionode
+  USE mp,                   ONLY : mp_sum, mp_max, mp_end
+  USE mp_global,            ONLY : mpime, nproc, root, me_pool, my_pool_id, &
+                                   nproc_pool, intra_pool_comm, root_pool, &
+                                   inter_pool_comm, my_image_id
+  USE io_base,              ONLY : write_restart_header, write_restart_ions, &
+                                   write_restart_cell, write_restart_electrons, &
+                                   write_restart_gvec, write_restart_gkvec, &
+                                   write_restart_charge, write_restart_wfc, &
+                                   write_restart_symmetry, write_restart_xdim, &
+                                   write_restart_pseudo, write_restart_ldaU
+  USE parameters,           ONLY : nacx, nsx, npk
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                                   Hubbard_U, Hubbard_alpha
+  USE read_pseudo_module
+  USE pseudo_types
+  !
   implicit none
   !
   integer, intent(in) :: ndw
@@ -506,56 +511,59 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !     programs.
   !
   !
-  USE parameters, only: npk, nchix, ndmx, nbrx, lqmax, nqfx
-  USE constants, ONLY: pi
-  USE io_files,  ONLY : iunwfc, nwordwfc, prefix, tmp_dir
-  USE kinds, ONLY: DP
-  USE basis, ONLY: nat, ntyp, ityp, tau, zv, natomwfc, atm
-  USE cell_base, ONLY: at, bg, ibrav, celldm, alat, tpiba, tpiba2, omega, &
-       symm_type
-  USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
-       ngk, nks, nkstot
-  USE ktetra,ONLY: tetra, ntetra, ltetra, k1, k2, k3, nk1, nk2, nk3
-  USE lsda_mod, ONLY: isk, nspin, lsda
-  USE force_mod, ONLY: lforce, lstres, force
-  USE gvect, ONLY: dual, ecutwfc, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-       nrxx, ngm, ngm_g, gcutm, g, ig_l2g
-  USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
-       gcutms, doublegrid
-  USE wvfct, ONLY:  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
-  USE char, ONLY: title, crystal, sname
-  USE dynam, ONLY: amass
-  USE symme, ONLY: s, irt, ftau, nsym, invsym
-  USE ener, ONLY: ef
-  USE atom, ONLY: zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
-       rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
-  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
-       a_nlcc, b_nlcc, alpha_nlcc
-  USE us, ONLY:  okvan
-  USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, &
-       psd, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, nh, tvanp, newpseudo
-  USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
-  USE wavefunctions_module,    ONLY : evc
-  USE fixed_occ, ONLY: tfixed_occ 
-  use control_flags, only: twfcollect, noinv, istep, iswitch, modenum
-  use funct, only: iexch, icorr, igcx, igcc
-  USE pseudo_types, ONLY: pseudo_upf
-  use mp, only: mp_sum, mp_bcast, mp_max, mp_end
-  use mp_global, only: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool, intra_image_comm, my_image_id
-  use io_global, only: ionode, ionode_id
-
-  USE io_base, only: read_restart_header, read_restart_ions, &
-            read_restart_cell, read_restart_electrons, &
-            read_restart_gvec, read_restart_gkvec, read_restart_charge, &
-            read_restart_wfc, read_restart_symmetry, &
-            read_restart_xdim, read_restart_pseudo, read_restart_ldaU
-
-  USE parameters, only: nacx, nsx
-  use upf_to_internal
-  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
-                     Hubbard_U, Hubbard_alpha
-
+  USE parameters,           ONLY : npk, nchix, ndmx, nbrx, lqmax, nqfx
+  USE constants,            ONLY : pi
+  USE io_files,             ONLY : iunwfc, nwordwfc, prefix, tmp_dir
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
+  USE basis,                ONLY : natomwfc
+  USE cell_base,            ONLY : at, bg, ibrav, celldm, alat, tpiba, tpiba2, &
+                                   omega, symm_type
+  USE klist,                ONLY : xk, wk, degauss, ngauss, lgauss, nelec, &
+                                   ngk, nks, nkstot
+  USE ktetra,               ONLY : tetra, ntetra, ltetra, k1, k2, k3, nk1, nk2, nk3
+  USE lsda_mod,             ONLY : isk, nspin, lsda
+  USE force_mod,            ONLY : lforce, lstres, force
+  USE gvect,                ONLY : dual, ecutwfc, nrx1, nrx2, nrx3, nr1, nr2, &
+                                   nr3, nrxx, ngm, ngm_g, gcutm, g, ig_l2g
+  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
+                                   nrxxs, gcutms, doublegrid
+  USE wvfct,                ONLY :  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
+  USE char,                 ONLY : title, crystal, sname
+  USE dynam,                ONLY : amass
+  USE symme,                ONLY : s, irt, ftau, nsym, invsym
+  USE ener,                 ONLY : ef
+  USE atom,                 ONLY : zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
+                                   rho_atc, mesh, msh, nchi, lchi, numeric, &
+                                   nlcc
+  USE pseud,                ONLY : cc, alpc, zp, aps, alps, nlc, nnl, lmax, &
+                                   lloc, a_nlcc, b_nlcc, alpha_nlcc
+  USE us,                   ONLY : okvan
+  USE uspp_param,           ONLY : vloc_at, dion, betar, qqq, qfunc, qfcoef, &
+                                   rinner, psd, nbeta, kkbeta, nqf, nqlc, &
+                                   ifqopt, lll, iver, nh, tvanp, newpseudo
+  USE extfield,             ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
+  USE wavefunctions_module, ONLY : evc
+  USE fixed_occ,            ONLY : tfixed_occ 
+  USE control_flags,        ONLY : twfcollect, noinv, istep, iswitch, modenum
+  USE funct,                ONLY : iexch, icorr, igcx, igcc
+  USE pseudo_types,         ONLY : pseudo_upf
+  USE mp,                   ONLY : mp_sum, mp_bcast, mp_max, mp_end
+  USE mp_global,            ONLY : mpime, nproc, root, me_pool, my_pool_id, &
+                                   nproc_pool, intra_pool_comm, root_pool, &
+                                   intra_image_comm, my_image_id
+  USE io_global,            ONLY : ionode, ionode_id
+  USE io_base,              ONLY : read_restart_header, read_restart_ions, &
+                                   read_restart_cell, read_restart_electrons, &
+                                   read_restart_gvec, read_restart_gkvec, &
+                                   read_restart_charge, read_restart_wfc, &
+                                   read_restart_symmetry, read_restart_xdim, &
+                                   read_restart_pseudo, read_restart_ldaU
+  USE parameters,           ONLY : nacx, nsx
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                                   Hubbard_U, Hubbard_alpha
+  USE upf_to_internal
+  !
   implicit none
   !
   integer, intent(in) :: ndr, nsizwfc, iunitwfc
@@ -1074,21 +1082,21 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !     programs.
   !
   !
-  use kinds, only: DP
-  USE parameters, only: npk, nacx, nsx
-  use io_files, only: prefix, tmp_dir
-  use io_global, only: ionode, ionode_id
-  USE mp_global, ONLY : intra_image_comm
-  use mp, only: mp_bcast
-  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
-                     Hubbard_U, Hubbard_alpha
-
-  USE io_base, only: read_restart_header, read_restart_ions, &
-            read_restart_cell, read_restart_electrons, &
-            read_restart_gvec, read_restart_gkvec, read_restart_charge, &
-            read_restart_wfc, read_restart_symmetry, &
-            read_restart_xdim, read_restart_pseudo, read_restart_ldaU
-
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npk, nacx, nsx
+  USE io_files,   ONLY : prefix, tmp_dir
+  USE io_global,  ONLY : ionode, ionode_id
+  USE mp_global,  ONLY : intra_image_comm
+  USE mp,         ONLY : mp_bcast
+  USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                         Hubbard_U, Hubbard_alpha
+  USE io_base,    ONLY : read_restart_header, read_restart_ions, &
+                         read_restart_cell, read_restart_electrons, &
+                         read_restart_gvec, read_restart_gkvec, &
+                         read_restart_charge, read_restart_wfc, &
+                         read_restart_symmetry, read_restart_xdim, &
+                         read_restart_pseudo, read_restart_ldaU
+  !
   implicit none
   !
   integer, intent(in) :: ndr

@@ -13,7 +13,8 @@ SUBROUTINE output_tau( plot_lattice )
   USE kinds,     ONLY : DP
   USE constants, ONLY : bohr_radius_angs
   USE cell_base, ONLY : alat, at, bg
-  USE basis,     ONLY : nat, tau, atomic_positions, ityp, atm
+  USE ions_base, ONLY : nat, tau, ityp, atm
+  USE basis,     ONLY : atomic_positions
   !
   IMPLICIT NONE
   !

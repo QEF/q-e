@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine init_ns
    !-----------------------------------------------------------------------
@@ -16,12 +18,11 @@ subroutine init_ns
    ! majority spin levels are populated first, then the remaining electrons
    ! are equally distributed among the minority spin states
    !
-#include "machine.h"
-
-   USE kinds, ONLY: DP
-   USE basis, ONLY: nat, ityp
-   USE lsda_mod, ONLY: nspin, starting_magnetization
-   USE ldaU, ONLY: ns, hubbard_u, hubbard_alpha, hubbard_l
+   USE kinds,     ONLY : DP
+   USE ions_base, ONLY : nat, ityp
+   USE lsda_mod,  ONLY : nspin, starting_magnetization
+   USE ldaU,      ONLY : ns, hubbard_u, hubbard_alpha, hubbard_l
+   !
    implicit none
 
    real(kind=DP) :: totoc

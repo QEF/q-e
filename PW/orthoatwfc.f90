@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
-
 subroutine orthoatwfc
   !-----------------------------------------------------------------------
   !
@@ -14,20 +15,20 @@ subroutine orthoatwfc
   ! useful when we want to compute the occupation of the atomic orbitals
   ! in order to make lda+U calculations
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: nchix
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : nchix
   USE io_global,  ONLY : stdout
-  USE io_files, ONLY: iunat, nwordatwfc, iunigk
-  USE basis, ONLY: nat, natomwfc
-  USE klist, ONLY: nks, xk
-  USE ldaU, ONLY: swfcatom, U_projection
-  USE wvfct, ONLY: npwx, npw, igk, gamma_only
-  USE uspp, ONLY: nkb, vkb
-  use becmod,   only: becp
-  use rbecmod,  only: rbecp => becp 
+  USE io_files,   ONLY : iunat, nwordatwfc, iunigk
+  USE ions_base,  ONLY : nat
+  USE basis,      ONLY : natomwfc
+  USE klist,      ONLY : nks, xk
+  USE ldaU,       ONLY : swfcatom, U_projection
+  USE wvfct,      ONLY : npwx, npw, igk, gamma_only
+  USE uspp,       ONLY : nkb, vkb
+  USE becmod,     ONLY : becp
+  USE rbecmod,    ONLY : rbecp => becp 
 #ifdef __PARA
-  use para
+  USE para
 #endif
   ! 
   IMPLICIT NONE

@@ -17,7 +17,8 @@ subroutine dvanqq
   ! addusdynmat, and int1 and int2 saved on disk by that routine.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   use phcom

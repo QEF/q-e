@@ -19,7 +19,8 @@ subroutine punch_plot_ph
   !     a file with the name in the variable fildrho# given in input.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout
   use pwcom
   USE kinds, only : DP

@@ -1,4 +1,12 @@
 !
+! Copyright (C) 2001-2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+#include "machine.h"
+!
 !--------------------------------------------------------------------------
       subroutine make_pointlists
 !--------------------------------------------------------------------------
@@ -14,12 +22,11 @@
 ! and    1 - (distance-r_m)/(0.2*r_m) if r_m<distance<1.2*r_m            
 !
 
-#include "machine.h"
-      USE kinds, ONLY : dp
+      USE kinds,      ONLY : dp
       USE io_global,  ONLY : stdout
-      USE basis, ONLY: nat, tau
-      USE cell_base, ONLY: at
-      USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrxx
+      USE ions_base,  ONLY : nat, tau
+      USE cell_base,  ONLY : at
+      USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
       USE noncollin_module
       USE para
 

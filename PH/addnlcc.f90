@@ -12,6 +12,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !
 #include "machine.h"
 
+  USE ions_base, ONLY : nat
   use funct
   use pwcom
   USE kinds, only : DP

@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine scale_h
   !-----------------------------------------------------------------------
@@ -12,18 +14,17 @@ subroutine scale_h
   ! quantities needed in the calculation of the hamiltonian using the
   ! new and old cell parameters.
   !
-#include "machine.h"
+  USE io_global,  ONLY : stdout
+  USE ions_base,  ONLY : ntyp => nsp
+  USE cell_base,  ONLY : bg, omega
+  USE cellmd,     ONLY : at_old, omega_old
+  USE gvect,      ONLY : g, gg, ngm
+  USE klist,      ONLY : xk, wk, nkstot
+  USE uspp_param, ONLY : lmaxq, nbrx
+  USE us,         ONLY : nqxq, nqx, qrad, tab
   !
-  USE io_global,  ONLY: stdout
-  USE basis, ONLY: ntyp
-  USE cell_base, ONLY: bg, omega
-  USE cellmd, ONLY : at_old, omega_old
-  USE gvect, ONLY: g, gg, ngm
-  USE klist, ONLY: xk, wk, nkstot
-  USE uspp_param, ONLY: lmaxq, nbrx
-  USE us, ONLY: nqxq, nqx, qrad, tab
   implicit none
-
+  !
   integer :: ig
   ! counter on G vectors
 

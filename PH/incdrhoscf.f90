@@ -15,7 +15,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   !
   !
 #include "machine.h"
-
+  USE ions_base, ONLY : nat
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP

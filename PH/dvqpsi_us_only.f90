@@ -16,7 +16,8 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   ! and for each pattern u. It computes simultaneously all the bands.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   USE uspp_param, ONLY: nh

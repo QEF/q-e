@@ -17,6 +17,8 @@ subroutine phq_summary
   !    if iverbosity = 0 only a partial summary is done.
   !
 #include"machine.h"
+  !
+  USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp
   USE io_global,     ONLY : stdout
   use pwcom
   USE atom,          ONLY : numeric, mesh, msh, dx, r , rab, xmin, nlcc

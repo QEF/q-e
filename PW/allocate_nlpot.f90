@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine allocate_nlpot
   !-----------------------------------------------------------------------
@@ -22,22 +24,22 @@ subroutine allocate_nlpot
   !     nhm           !  maximum number of beta functions
   !
   !
-#include "machine.h"
-  USE parameters, ONLY: nbrx, nchix
-  USE pseud, ONLY: lmax, lloc
-  USE basis, ONLY: ntyp, nat, ityp
-  USE cell_base, ONLY: tpiba2
-  USE cellmd,ONLY: cell_factor
-  USE gvect, ONLY: ngm, gcutm, ecutwfc, g
-  USE klist, ONLY: xk, wk, ngk, nks, nkstot, xqq
-  USE lsda_mod, ONLY: nspin
-  USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
-  USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
-  USE us, ONLY: qrad, tab, tab_at, dq, nqx, nqxq
-  USE uspp, ONLY: indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, nhtoj, &
-      becsum, qq_so, dvan_so
-  USE uspp_param, ONLY: lmaxq, lmaxkb, lll, nbeta, nh, nhm
-  USE spin_orb, ONLY: lspinorb, fcoef
+  USE parameters, ONLY : nbrx, nchix
+  USE pseud,      ONLY : lmax, lloc
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,  ONLY : tpiba2
+  USE cellmd,     ONLY : cell_factor
+  USE gvect,      ONLY : ngm, gcutm, ecutwfc, g
+  USE klist,      ONLY : xk, wk, ngk, nks, nkstot, xqq
+  USE lsda_mod,   ONLY : nspin
+  USE ldaU,       ONLY : Hubbard_lmax, ns, nsnew
+  USE wvfct,      ONLY : npwx, npw, igk, igk_l2g, g2kin
+  USE us,         ONLY : qrad, tab, tab_at, dq, nqx, nqxq
+  USE uspp,       ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
+                         nhtoj, becsum, qq_so, dvan_so
+  USE uspp_param, ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm
+  USE spin_orb,   ONLY : lspinorb, fcoef
+  !
   implicit none
   !
   !    a few local variables

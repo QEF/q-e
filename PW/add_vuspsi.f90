@@ -25,7 +25,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   !
   !
   USE kinds,      ONLY : DP
-  USE basis,      ONLY : nat, ntyp, ityp
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,   ONLY : current_spin
   USE wvfct,      ONLY : gamma_only
   USE uspp,       ONLY : vkb, nkb, deeq

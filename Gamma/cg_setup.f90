@@ -12,6 +12,7 @@ subroutine cg_setup
   !
 #include "machine.h"
   USE kinds, only: DP
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
   use pwcom
   USE atom, ONLY: nlcc
   USE restart_module, ONLY: readfile_new

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !----------------------------------------------------------------------
 subroutine addusstres (sigmanlc)
   !----------------------------------------------------------------------
@@ -12,19 +13,20 @@ subroutine addusstres (sigmanlc)
   !   This routine computes the part of the atomic force which is due
   !   to the dependence of the Q function on the atomic position.
   !
-#include "machine.h"
-  USE kinds, ONLY: DP
-  USE basis, ONLY : nat, ntyp, ityp
-  USE cell_base, ONLY: omega, tpiba
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
-       nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: vr, vltot
-  USE us, ONLY : okvan
-  USE uspp, ONLY : becsum
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,  ONLY : omega, tpiba
+  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
+                         nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE lsda_mod,   ONLY : nspin
+  USE scf,        ONLY : vr, vltot
+  USE us,         ONLY : okvan
+  USE uspp,       ONLY : becsum
   USE uspp_param, ONLY : lmaxq, tvanp, nh, nhm
-  USE wvfct, ONLY: gamma_only
+  USE wvfct,      ONLY : gamma_only
+  !
   implicit none
+  !
   real(kind=DP) :: sigmanlc (3, 3)
   ! the nonlocal stress
 

@@ -8,15 +8,17 @@
 !-----------------------------------------------------------------------
 subroutine write_ns
   !-----------------------------------------------------------------------
-
-  USE kinds, only : DP
-  USE constants, ONLY : rytoev
-  USE basis, ONLY : nat, ntyp, ityp
-  USE lsda_mod, ONLY : nspin
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : rytoev
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+  USE lsda_mod,   ONLY : nspin
   USE io_global,  ONLY :  stdout
-  USE ldaU, ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-       nsnew
+  USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+                         nsnew
+  !
   implicit none
+  !
   integer :: is, na, nt, m1, m2, ldim
   ! counter on spin component
   ! counters on atoms and their type

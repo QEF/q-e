@@ -25,7 +25,8 @@ SUBROUTINE electrons()
   USE parameters,           ONLY : npk 
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE basis,                ONLY : zv, nat, ntyp, ityp, tau, startingpot
+  USE ions_base,            ONLY : zv, nat, ntyp => nsp, ityp, tau
+  USE basis,                ONLY : startingpot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid  

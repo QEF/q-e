@@ -11,18 +11,21 @@ subroutine hinit1
   !-----------------------------------------------------------------------
   !  Atomic configuration dependent hamiltonian initialization
   !
-  USE basis, ONLY: nat, ntyp, ityp, tau, startingconfig
-  USE cell_base, ONLY: at, bg, omega, tpiba2
-  USE cellmd, ONLY: lmovecell 
-  USE gvect, ONLY: nr1, nr2, nr3, nrxx, ngm, g, eigts1, eigts2, eigts3
-  USE gsmooth, ONLY: doublegrid
-  USE ldaU, ONLY: lda_plus_u
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: vrs, vltot, vr
-  USE vlocal, ONLY: strf
-  USE control_flags, ONLY: order
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau
+  USE basis,         ONLY : startingconfig
+  USE cell_base,     ONLY : at, bg, omega, tpiba2
+  USE cellmd,        ONLY : lmovecell 
+  USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g, &
+                            eigts1, eigts2, eigts3
+  USE gsmooth,       ONLY : doublegrid
+  USE ldaU,          ONLY : lda_plus_u
+  USE lsda_mod,      ONLY : nspin
+  USE scf,           ONLY : vrs, vltot, vr
+  USE vlocal,        ONLY : strf
+  USE control_flags, ONLY : order
   !
   implicit none
+  !
   !  update the potential
   !
   call update_pot

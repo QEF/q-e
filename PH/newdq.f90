@@ -15,7 +15,8 @@ subroutine newdq (dvscf, npe)
   !     system and adds it to dvpsi.
   !
 #include "machine.h"
-
+  !
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
   use phcom

@@ -20,31 +20,33 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
-  USE io_global,            ONLY: stdout
-  USE io_files,             ONLY: iunigk
-  USE check_stop,           ONLY: time_max => max_seconds
-  USE wavefunctions_module, ONLY: evc
-  USE constants,            ONLY: degspin
-  USE kinds,                ONLY: DP
-  USE control_flags,        ONLY: reduce_io
-  USE becmod,               ONLY: becp  
+  !
+  USE ions_base,            ONLY : nat
+  USE io_global,            ONLY : stdout
+  USE io_files,             ONLY : iunigk
+  USE check_stop,           ONLY : time_max => max_seconds
+  USE wavefunctions_module, ONLY : evc
+  USE constants,            ONLY : degspin
+  USE kinds,                ONLY : DP
+  USE control_flags,        ONLY : reduce_io
+  USE becmod,               ONLY : becp  
   use pwcom
   USE uspp_param,           ONLY : nhm
 !  use phcom
   use disp,                 ONLY : tr2_ph
-  USE control_ph,           ONLY: iter0, niter_ph, nmix_ph, elph, &
-                                  alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
-  USE nlcc_ph,              ONLY: nlcc_any
-  USE units_ph,             ONLY: iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
-                                  iuwfc, lrwfc, iunrec, iudvscf
-  USE output,               ONLY: fildrho, fildvscf
-  USE phus,                 ONLY: int1, int2, int3
-  USE efield,               ONLY: epsilon, zstareu, zstarue, zstareu0, zstarue0
-  USE dynmat,               ONLY: dyn, dyn00
-  USE eqv,                  ONLY: dvpsi, dpsi, evq
-  USE qpoint,               ONLY: npwq, igkq, nksq
-  USE partial,              ONLY: comp_irr, done_irr, ifat
-  USE modes,                ONLY: npert, u
+  USE control_ph,           ONLY : iter0, niter_ph, nmix_ph, elph, &
+                                   alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
+  USE nlcc_ph,              ONLY : nlcc_any
+  USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
+                                   iuwfc, lrwfc, iunrec, iudvscf
+  USE output,               ONLY : fildrho, fildvscf
+  USE phus,                 ONLY : int1, int2, int3
+  USE efield,               ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
+  USE dynmat,               ONLY : dyn, dyn00
+  USE eqv,                  ONLY : dvpsi, dpsi, evq
+  USE qpoint,               ONLY : npwq, igkq, nksq
+  USE partial,              ONLY : comp_irr, done_irr, ifat
+  USE modes,                ONLY : npert, u
   !
   implicit none
 

@@ -15,6 +15,8 @@ subroutine dynmatrix
   ! output.
   !
 #include "machine.h"
+  !
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : iswitch, modenum, noinv
   use pwcom

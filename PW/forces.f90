@@ -24,7 +24,7 @@ SUBROUTINE forces
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg, alat, omega  
-  USE basis,      ONLY : nat, ntyp, ityp, tau, zv
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau, zv
   USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                          ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,   ONLY : nspin

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine allocate_locpot
@@ -13,12 +14,12 @@ subroutine allocate_locpot
   ! dynamical allocation of arrays:
   ! local potential for each kind of atom, structure factor
   !
-#include "machine.h"
-  USE basis,  ONLY: ntyp, nat
-  USE vlocal, ONLY: vloc, strf
-  USE gvect,  ONLY: eigts1, eigts2, eigts3, nr1, nr2, nr3, ngm, ngl
+  USE ions_base, ONLY : nat, ntyp => nsp
+  USE vlocal,    ONLY : vloc, strf
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, nr1, nr2, nr3, ngm, ngl
+  !
   implicit none
-
+  !
   allocate (vloc( ngl, ntyp))    
   allocate (strf( ngm, ntyp))    
 

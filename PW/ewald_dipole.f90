@@ -16,15 +16,15 @@ subroutine ewald_dipole (tens,dipole)
   ! Determines optimal alpha. Should hopefully work for any structure.
   !
   !
-  USE kinds , only : dp
-  use gvect , only : gcutm, gstart, ngm, g, gg
-  use constants , only: tpi, e2, fpi, pi
-  use cell_base , only: tpiba2, omega, alat, at, bg
-  use basis , only : ntyp, nat, tau, ityp
-  use vlocal , only: strf
+  USE kinds ,     ONLY : dp
+  USE gvect ,     ONLY : gcutm, gstart, ngm, g, gg
+  USE constants , ONLY : tpi, e2, fpi, pi
+  USE cell_base , ONLY : tpiba2, omega, alat, at, bg
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+  USE vlocal ,    ONLY : strf
+  !
   implicit none
   !
-
   real(kind=DP) :: dipole(ntyp),charge, eta, arg, upperbound, temp
   complex(kind=DP) :: tens(nat,3,3)
   complex(kind=DP) :: rhon
