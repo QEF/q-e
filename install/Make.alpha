@@ -13,6 +13,8 @@ CPPFLAGS = -DDEC -DDXML -DNOPENCILS -I$(OSHOME)/include
 # Fortran compiler:
 #
 F90 = f90
+F77 = f90
+CC = cc
 #
 # options suggested by Ph. Baranek:
 # FFLAGS =-O5 -fast -big_endian  -fpe0 -check underflow -real_size 64 \
@@ -20,6 +22,7 @@ F90 = f90
 #  -big_endian allows to read files generated on other (big endian) machines
 FFLAGS = -O -real_size 64 -align dcommons -align records
 #
+F77FLAGS = $(FFLAGS)
 F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -36,9 +39,15 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 # Loader:
 # 
 LD=$(F90)
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 #
 # ar:
 #
 AR = ar
 ARFLAGS = rv
+
+#
+# ranlib:
+#
+RANLIB=echo
+

@@ -23,6 +23,7 @@ CPPFLAGS = -P -traditional -I$(OSHOME)/include -DPC -DABSOFT -DFFTW \
 #
 #F90 = /usr/absoft/bin/f90
 F90 = f90
+F77 = f90
 #
 # fortran options: -s    for static allocation
 #                        (otherwise everything is allocated on the stack)
@@ -34,6 +35,7 @@ F90 = f90
 #                  -N113 Promote REAL and COMPLEX data types to DOUBLE
 #
 F90FLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS
+F77FLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS
 #
 # This is needed to tell the compiler where modules are
 #
@@ -47,7 +49,7 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 LD=$(F90)
 LIBS = -llapack -lblas -lfftw -lU77 -lm
 #
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 
 #
@@ -55,3 +57,8 @@ LFLAGS = $(LIBS)
 #
 AR = ar
 ARFLAGS = ruv
+#
+# ranlib:
+#
+RANLIB=echo
+

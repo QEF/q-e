@@ -13,7 +13,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-     subroutine matinv(hm, hi, dh)
+     subroutine invmat3(hm, hi, dh)
 !-----------------------------------------------------------------------
       implicit none
       real(kind=8) hm(3,3), hi(3,3), dh
@@ -33,7 +33,7 @@
       dh=hm(1,1)*d11+hm(1,2)*d12+hm(1,3)*d13
 
 ! ... check for singular matrices
-      IF(ABS(dh).LT.1.d-20) CALL error(' matinv ',' singular matrix ', 1)
+      IF(ABS(dh).LT.1.d-20) CALL error(' invmat3 ',' singular matrix ', 1)
 !
       hi(1,1)=d11/dh
       hi(2,2)=d22/dh

@@ -6,8 +6,10 @@ CPPFLAGS =-DHITACHI -DPARA -DFFTW
 # Fortran compiler:
 #
 F90 = f90
+F77 = f77
 FFLAGS = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
          -I$(OSHOME)/include -I/usr/mpi/include
+F77FLAGS = $(FFLAGS)
 F90FLAGS = $(FFLAGS) $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -24,9 +26,14 @@ LIBS= -L$(LAPACKdir) -llapack_sc -lblas_sc \
 
 # 
 LD=$(F90)
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 #
 # ar:
 #
 AR = ar
 ARFLAGS = rv
+#
+# ranlib:
+#
+RANLIB=echo
+

@@ -305,7 +305,7 @@ CONTAINS
       twm = .TRUE.
       twrite = .TRUE.
         
-      call matinv(h,ainv,deth)
+      call invmat3(h,ainv,deth)
       wfc_scal_cp90 = 1.0d0 / SQRT(ABS(deth))
       DO j = 1, nspin
         DO i = 1, nk

@@ -36,11 +36,13 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 #
 #
 F90 = sxf90
+F77 = sxf77
 
 #FFLAGS = $(BASIC) $(MISC) $(OPT) $(FTRACE)
 FFLAGS = $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
 #FCAUTIOUS=$(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
 F90FLAGS=$(FFLAGS)
+F77FLAGS=$(FFLAGS)
 
 #
 # C compiler:
@@ -63,5 +65,10 @@ LIBS = -llapack -lblas -lasl
 #
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 
-LFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)
+LFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/flib.a $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)
+
+#
+# ranlib:
+#
+RANLIB=echo
 

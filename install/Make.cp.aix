@@ -18,6 +18,7 @@
   MYLIB=
   FFT=ibmfft.o
   ESSL= -lessl
+  LAPACK= -L /cineca/lib -llapack
 #
 ######################################################################
 # ***  Usually you don't need to edit variables below this line **** #
@@ -35,7 +36,7 @@
   LNKFLAGS = $(ARCHFLAGS) -bmaxdata:0x70000000
 #
 # Flag for the compilation of the c source files
-  CCFLAGS   = -Wp,$(CPMACRO) -O2
+  CCFLAGS   = $(INCLUDEPATH) -Wp,$(CPMACRO) -O2
 #
 # Name of the fortran compiler
   FC= xlf

@@ -36,7 +36,7 @@
   LNKFLAGS=  $(ARCHFLAGS)  
 #
 # Flag for the compilation of the c source files
-  CCFLAGS=    $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) $(OPTIMIZATIONS)
+  CCFLAGS=   $(INCLUDEPATH) $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) $(OPTIMIZATIONS)
 #
 # Libraries
   LIB= $(FFTW) $(SCILIB)

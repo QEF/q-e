@@ -75,7 +75,6 @@ efermig.o  \
 efermit.o  \
 electrons.o  \
 eqvect.o  \
-erf.o  \
 error.o  \
 error_handler.o  \
 estimate.o  \
@@ -108,7 +107,6 @@ hexsym.o  \
 hinit0.o  \
 hinit1.o  \
 h_psi.o  \
-hpsort.o  \
 init_ns.o  \
 init_pool.o  \
 init_run.o  \
@@ -202,7 +200,6 @@ sgam_at.o  \
 sgam_ph.o  \
 s_gemm.o  \
 show_memory.o  \
-simpson.o  \
 smallg_q.o  \
 sph_bes.o  \
 s_psi.o  \

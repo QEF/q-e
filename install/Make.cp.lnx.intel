@@ -10,7 +10,7 @@
 
 #  ** Preprocessor Macro **
 # Parallel MPI
-  CPMACRO=-D__LINUX -D__MPI -D__PARA -D__INTEL -D__FFTW \
+  CPMACRO=-D__LINUX -D__MPI -D__PARA -D__INTEL -D__FFTW -D__FFTWDRV  \
  -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf
            -D"fftwnd_f77_one=fftwnd_f77_one_" \
            -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
@@ -18,7 +18,7 @@
            -D"fftw_f77_create_planefftw_f77_create_plan_"
 #
 # Serial Code
-  CPMACRO=-D__LINUX -D__INTEL -D__FFTW \
+  CPMACRO=-D__LINUX -D__INTEL -D__FFTW -D__FFTWDRV  \
  -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf \
            -D"fftwnd_f77_one=fftwnd_f77_one_" \
            -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
@@ -96,7 +96,7 @@
 #
 # --- Library ---
 # to link -lfmpich compiled with GNU compiler
-  LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -Vaxlib
+  LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -Vaxlib -lm -lc
 #
 # OTHER settings
   RANLIB=echo

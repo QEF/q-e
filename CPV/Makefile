@@ -15,7 +15,7 @@ WRAPPERS= wrapper.o
 
 #   Fortran objects
 FOBJS= modules.o $(FFT) para.o \
-read_pseudo.o cplib.o cpr.o input.o sort.o \
+read_pseudo.o cplib.o cpr.o input.o \
 macdep.o which_dft.o $(WRAPPERS) \
 restart.o cpr_mod.o cell_module.o cprsub.o
 
@@ -26,7 +26,7 @@ default:
 
 cp90 : $(FOBJS) cpflush.o
 	$(LNK) -o $(PROGNAME) $(LNKFLAGS) $(FOBJS) ../Modules/*.o cpflush.o \
-          ../flib/eispack.o $(LIB)
+          ../flib/flib.a ../flib/eispack.o $(LIB)
 	chmod a+r $(PROGNAME)
 	chmod a+x $(PROGNAME)
 

@@ -13,9 +13,13 @@ CPPFLAGS = -DAIX,-DHAS_ZHEGVX
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
 F90 = xlf
+F77 = xlf
+CC = xlc
 FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
          -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto \
          -qsuffix=cpp=f90
+F77FLAGS = -qdpc=e -qddim -qnosave -qalias=noaryovrlp \
+         -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto 
 F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -36,7 +40,7 @@ LIBS = -lessl -L/usr/local/lib -llapack
 #         use -bnso -bI:/usr/lib/syscalls.exp for static linking
 #
 LD=$(F90)
-LFLAGS = $(LIBS) -s
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
 #LFLAGS = $(LIBS) -s -bmaxdata:512000000
 
 #
@@ -45,4 +49,9 @@ LFLAGS = $(LIBS) -s
 AR = ar
 ARFLAGS = ruv
 
+
+#
+# ranlib:
+#
+RANLIB=echo
 

@@ -525,7 +525,7 @@
      &                   stress(i,3)*ainv(j,3)-press*ainv(j,i))
                end do
             end do
-            call matinv(h,ainv,deth)
+            call invmat3(h,ainv,deth)
          endif
 !
          if(tfor) then

@@ -14,9 +14,11 @@ CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I $(OSHOME)/include
 # Fortran compiler:
 #
 F90 = frt
+F77 = frt
 #F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9 -Kfreealloc -KA64
 #F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9
 #F90FLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am
+F77FLAGS = -g -Ad -AR -Am
 F90FLAGS = -g -Ad -AR -Am
 #
 # This is needed to tell the compiler where modules are
@@ -28,9 +30,14 @@ LIBS= -L/usr/lang/lib -llapackvp -lblasvp -lssl2vp  -L/usr/local/lib/lib64/ -lff
 
 # 
 LD=$(F90)
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 #
 # ar:
 #
 AR = ar
 ARFLAGS = rv
+#
+# ranlib:
+#
+RANLIB=echo
+

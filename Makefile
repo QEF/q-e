@@ -18,10 +18,10 @@ what:
 	@echo '   cp        (CP code: CP MD with ultrasoft pseudopotentials)'
 	@echo '   links     (creates links to executables in bin/)'
 
-tools:
+tools: libs
 	( cd pwtools ; make all )
 
-upf:
+upf: libs
 	( cd upftools ; make all )
 
 gamma: modules pw
@@ -38,7 +38,7 @@ ph: modules pw
 pp: modules pw
 	( cd PP; make all )
 
-pw: modules
+pw: modules libs
 	( cd PW; make all )
 
 modules:

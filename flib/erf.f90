@@ -1,13 +1,20 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2003 CP group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !
-! Copyright (C) 2001 PWSCF group
+! Machine-dependent routines for:
+!    erf, erfc, freq functions
+!
+! ================
+!     for machines that do not have these routines in the math libraries
+!
+#if defined __INTEL || defined __PGI
+!
+! Copyright (C) 2002 CP90 group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +22,7 @@
 !
 !
 !---------------------------------------------------------------------
-real(8) function erf (x)  
+real(kind=8) function erf (x)  
   !---------------------------------------------------------------------
   !
   !     Error function - computed from the rational approximations of
@@ -24,9 +31,8 @@ real(8) function erf (x)
   !     for abs(x) le 0.47 erf is calculated directly
   !     for abs(x) gt 0.47 erf is calculated via erf(x)=1-erfc(x)
   !
-  use parameters
   implicit none  
-  real(kind=DP) :: x, x2, p1 (4), q1 (4), erfc  
+  real(kind=8) :: x, x2, p1 (4), q1 (4), erfc  
   external erfc  
   data p1 / 2.42667955230532d2, 2.19792616182942d1, &
        6.99638348861914d0, - 3.56098437018154d-2 /
@@ -53,14 +59,13 @@ real(8) function erf (x)
 end function erf
 !
 !---------------------------------------------------------------------
-real(8) function erfc (x)  
+real(kind=8) function erfc (x)  
   !---------------------------------------------------------------------
   !
   !     erfc(x) = 1-erf(x)  - See comments in erf
   !
-  use parameters
   implicit none  
-  real(kind=DP) :: x, ax, x2, xm2, erf, p2 (8), q2 (8), p3 (5), q3 (5), &
+  real(kind=8) :: x, ax, x2, xm2, erf, p2 (8), q2 (8), p3 (5), q3 (5), &
        pim1
   external erf  
   data p2 / 3.00459261020162d2, 4.51918953711873d2, &
@@ -107,22 +112,24 @@ real(8) function erfc (x)
   !
   return  
 end function erfc
-#if defined __FREQ
+
+#endif
+
 !---------------------------------------------------------------------
-real(8) function freq (x)  
+real(8) function gauss_freq (x)
   !---------------------------------------------------------------------
   !
-  !     freq(x) = (1+erf(x/sqrt(2)))/2 = erfc(-x/sqrt(2))/2
+  !     gauss_freq(x) = (1+erf(x/sqrt(2)))/2 = erfc(-x/sqrt(2))/2
   !             - See comments in erf
   !
-  use parameters
-  real(kind=DP) :: x, c, erf, erfc  
-  external erf  
+  real(kind=8) :: x, c, erf, erfc
+  external erf
 
-  data c / 0.707106781186548d0 /  
+  data c / 0.707106781186548d0 /
   !        ( c= sqrt(1/2) )
-  freq = 0.5d0 * erfc ( - x * c)  
+  gauss_freq = 0.5d0 * erfc ( - x * c)
   !
-  return  
-end function freq
-#endif
+  return
+end function gauss_freq
+
+

@@ -11,10 +11,12 @@ CPPFLAGS = -DORIGIN -DPARA -D__MPI -I$(OSHOME)/include
 # Fortran compiler:
 #
 F90 = f90
+F77 = f90
 #
 # use -O3 only if you are sure that it actually works 
 #
 FFLAGS = -mips4 -64 -O2 -r10000 -r8
+F77FLAGS = $(FFLAGS)
 F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -29,10 +31,15 @@ LIBS = -lmpi -lcomplib.sgimath
 # Loader:
 LD=$(F90)
 
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 #
 # ar:
 #
 AR = ar
 ARFLAGS = ruv
+#
+# ranlib:
+#
+RANLIB=echo
+

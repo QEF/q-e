@@ -3,12 +3,8 @@ include ../make.sys
 
 all: flib.a ptools.a eispack $(MYLIB)
 
-OBJS = cp_oneover_v.o error.o \
-       forceconv.o inv3.o itoa.o \
-       sort.o miller.o simpsn.o \
-       geninv.o enthropy.o adjef.o \
-       indices.o transto.o cgedi.o cgefa.o dgemul.o iceil.o \
-       erf.o
+OBJS = inv3.o itoa.o sort.o simpsn.o \
+       transto.o iceil.o erf.o
 
 POBJS = gridsetup.o blockset.o hangup.o reduce.o \
        matmul.o localindex.o localdim.o ownerof.o \
@@ -20,11 +16,17 @@ flib.a : $(OBJS)
 	ar $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-blas_and_lapack : blas.o dlamch.o
+blas_and_lapack : blas lapack
+
+blas : blas.o dlamch.o
 	ar $(ARFLAGS) flib.a $?
 	$(RANLIB) flib.a
 
 lapack : lapack.o dlamch.o
+	ar $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
+
+lapack_ibm : lapack_ibm.o dlamch.o
 	ar $(ARFLAGS) flib.a $?
 	$(RANLIB) flib.a
 

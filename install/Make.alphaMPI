@@ -13,12 +13,15 @@ CPPFLAGS = -DDEC -DFFTW -DPARA -D__MPI -I$(OSHOME)/include
 # Fortran compiler:
 #
 F90 = f90
+F77 = f90
+CC = cc
 #
 # Fortran options:
 #
 FFLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
 	-align records
 #
+F77FLAGS = $(FFLAGS)
 F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -33,8 +36,12 @@ LIBS = -lfmpi -lpmpi -lmpi -lelan -lcxml -L/usr/local/fftw-2.1.3/lib/ -lfftw
 # Loader:
 # 
 LD=$(F90)
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 AR = ar
 ARFLAGS = rv
 
+#
+# ranlib:
+#
+RANLIB=echo

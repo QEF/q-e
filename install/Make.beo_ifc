@@ -19,6 +19,8 @@ CPPFLAGS = -I$(OSHOME)/include/ -DPC -DMKL -DPARA -D__MPI -DFFTW \
 # Fortran compiler:
 #
 F90 = mpif90
+F77 = mpif77
+CC = mpicc
 #
 # fortran options:
 # -Vaxlib         enables the use of portability libraries (getarg
@@ -31,6 +33,7 @@ F90 = mpif90
 #
 FFLAGS = -O2 -Vaxlib
 #
+F77FLAGS= $(FFLAGS)
 F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -55,7 +58,7 @@ LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
 #
 # LIBS = -lfftw -L$(HOME)/Linux_ATHLON256/ -llapack -lf77blas -lcblas -latlas
 LD=$(F90)
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 #
 # ar:
@@ -63,3 +66,8 @@ LFLAGS = $(LIBS)
 AR = ar
 
 ARFLAGS = ruv
+#
+# ranlib:
+#
+RANLIB=echo
+

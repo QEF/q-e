@@ -15,6 +15,7 @@ CPPFLAGS = -I$(OSHOME)/include/ -DT3D -DPARA -D__MPI -DFFTW
 # Fortran compiler:
 #
 F90 = f90 
+F77 = f90 
 #
 # you may need to add -Idir, where "dir" is the directory where mpif.h resides
 # with -M1110 flag compiler does not issue warning messages for 
@@ -22,6 +23,7 @@ F90 = f90
 #
 FFLAGS = -em -dp  -M1110
 #
+F77FLAGS = $(FFLAGS) -eZ 
 F90FLAGS = $(FFLAGS) -F -eZ $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
@@ -36,10 +38,15 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 #
 LD=$(F90)
 LIBS = -lfftw -lmpi
-LFLAGS = $(LIBS)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 #
 # ar:
 #
 AR = ar
 ARFLAGS = ruv
+#
+# ranlib:
+#
+RANLIB=echo
+

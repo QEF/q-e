@@ -9,19 +9,31 @@
 # --- Change Variables according to your system --- #
 
 # ** Preprocessor Macro **
+
 # Add -D__LIBMASS to use IBM mass
 # Add -D__FFTDRW  to use fftw
   CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL,-DSWAP=dswap,-DAXPY=daxpy,-DSCAL=dscal,-DCOPY=dcopy,-DGEMM=dgemm
-#
+
+
 # ** Uncomment to Use IBM mass **
+
 # Substitute -lmassvp4 with -lmassvp3 or -lmassvp2 depending on your arch
   MASS= -L /cineca/lib/mass -lmassvp4 -lmass
-#
+
 # ** Scientific Libraries **
-  MYLIB=
+
+# Uncomment to use system Lapack and IBM ESSL
+#  LAPACK= -L /cineca/lib -llapack
+# Uncomment to compile Lapack subset from the source code and use IBM ESSL
+#  MYLIB=lapack
+
   FFT=ibmfft.o
   ESSL= -lpessl -lessl
-#
+
+# Uncomment to use blas and lapack subset from the source code
+#  MYLIB=blas_and_lapack
+
+
 ######################################################################
 # ***  Usually you don't need to edit variables below this line **** #
 ######################################################################
@@ -48,7 +60,7 @@
 
 # Libraries
   LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
-  MODULEFLAG=-I $(OSHOME)/Modules/ -I $(OSHOME)/$(CODEDIR)/
+  MODULEFLAG=-I $(OSHOME)/Modules -I $(OSHOME)/$(CODEDIR)
 #
 # OTHER settings
   RANLIB=echo

@@ -71,6 +71,7 @@ end subroutine cft_3
 subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
   !----------------------------------------------------------------------
   !
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, iopt
   real(kind=DP) :: ac (2, nm1 * nm2 * nm3), fac
@@ -108,6 +109,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !
   !----------------------------------------------------------------------
 
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
@@ -148,6 +150,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !
   !----------------------------------------------------------------------
 
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
@@ -169,6 +172,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   !
   !      3d fft - cray scilib version
   !
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, isign
 
@@ -267,6 +271,7 @@ end subroutine cft_3
 subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
   !----------------------------------------------------------------------
   !
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, iopt
   real(kind=DP) :: ac (2, nm1 * nm2 * nm3), fac
@@ -302,6 +307,7 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !      uses GPFA routines
   !
 
+  use parameters, only : DP
   implicit none
 
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign
@@ -423,6 +429,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   !      3d fft for NEC SX6 - uses ASL library routines
   !      contributed by Guido Roma
   !
+  use parameters, only : DP
   use afftnec
   implicit none
 
@@ -559,6 +566,7 @@ subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   !     nx1=n1+1 is allowed (in order to avoid memory conflicts)
   !     for compatibility: nx2=n2, nx3=n3. nx2 and nx3 are not used
   !----------------------------------------------------------------------
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
 
@@ -644,6 +652,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !
   !----------------------------------------------------------------------
 
+  use parameters, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
@@ -784,6 +793,7 @@ end subroutine cft_3
 
 #ifndef PRESENT
 subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
+  use parameters, only : DP
   call error ('cft_3', 'machine-specific routine not available', 1)
   return
 

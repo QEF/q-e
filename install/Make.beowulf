@@ -21,10 +21,13 @@ CPPFLAGS = -P -traditional -I$(OSHOME)/include -DPC -DPGI -DPARA -D__MPI -DFFTW 
 #
 # Fortran compiler:
 F90 =mpif90
+F77 =mpif77
+CC =mpicc
 #
 # Please note: -r8 is necessary for numerical stability ..
 #
 F90FLAGS =  -fast -r8
+F77FLAGS =  -fast -r8
 #
 # This is needed to tell the compiler where modules are
 #
@@ -42,10 +45,15 @@ LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw
 #LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L/cineca/lib -lfftw 
 #
 LD=$(F90)
-LFLAGS = $(LIBS) $(MODULEFLAG)
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
 
 #
 # ar:
 #
 AR = ar
 ARFLAGS = ruv
+#
+# ranlib:
+#
+RANLIB=echo
+

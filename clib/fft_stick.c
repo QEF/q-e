@@ -121,4 +121,12 @@ ordinary array whose elements are contiguous in memory (no striding).
 
 */
 
+#else
+
+/* This dummy subroutine is there for compilers that dislike empty files */
+
+int dumfftwdrv() {
+  return 0;
+}
+
 #endif

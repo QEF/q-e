@@ -47,3 +47,8 @@ LFLAGS = $(LIBS) -s
 AR = ar
 ARFLAGS = ruv
 
+#
+# ranlib:
+#
+RANLIB=echo
+
