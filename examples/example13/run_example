@@ -465,9 +465,9 @@ ATOMIC_POSITIONS
 K_POINTS (automatic)
  8 8 8 0 0 0
 EOF
-$ECHO "  running the scf calculation for Cu with diis diagonalization...\c"
-$PWNC_COMMAND < cu.diis.in > cu.diis.out
-$ECHO " done"
+# $ECHO "  running the scf calculation for Cu with diis diagonalization...\c"
+# $PWNC_COMMAND < cu.diis.in > cu.diis.out
+# $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
