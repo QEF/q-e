@@ -275,11 +275,11 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
   deallocate (spsi)
   call stop_clock ('ccgdiagg')
 #ifdef DEBUG
-  if (notconv.ne.0) print
-  &   '(" warning : ",i3," eigenvectors did not converge",
-  &     " after ",i2," iterations")', notconv,maxter
-  if (moved.ne.0)  print '(" warning : ",i3,
-  &     " eigenvalues not correctly ordered")', moved
+  if (notconv.ne.0) print &
+      '(" warning : ",i3," eigenvectors did not converge", &
+        " after ",i2," iterations")', notconv,maxter
+  if (moved.ne.0)  print '(" warning : ",i3, &
+        " eigenvalues not correctly ordered")', moved
 #endif
   return
 end subroutine ccgdiagg
