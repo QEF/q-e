@@ -216,7 +216,7 @@
       ! ... +your_position+ configuration
 
       DO iloop = 1, nloop
-        call smdmain( tau, fion, etot)
+        call smdmain( tau, fion, etot, nat )
         call memstat( 1 )
       END DO
 

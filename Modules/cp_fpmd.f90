@@ -395,14 +395,14 @@ end module qrl_mod
 !
       use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill_l, ig_l2g
-      use reciprocal_vectors, only: gstart, sortedig_l2g
+      use reciprocal_vectors, only: gzero, gstart, sortedig_l2g
       use recvecs_indexes, only: nm, np
       use gvecs, only: ngs, nms, ngsl, nps
       use gvecw, only: ngw, ngwl, ngwt, ggp
       use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
       use io_global, only: stdout
       USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
-      use mp, ONLY: mp_sum
+      use mp, ONLY: mp_sum, mp_max
       use io_global, only: ionode
       use constants, only: eps8
 
@@ -415,6 +415,7 @@ end module qrl_mod
 !       cray:
 !      integer jwork(257)
       integer it, icurr, nr1m1, nr2m1, nr3m1, nrefold, ir, ig, i,j,k
+      integer ichk
       integer mill(3)
       real(kind=8) t(3), g2
 !
@@ -532,11 +533,18 @@ end module qrl_mod
 ! gstart is the index of the first nonzero G-vector
 ! needed in the parallel case (G=0 is found on one node only!)
 !
-      if (g(1).lt.1.e-6) then
-         gstart=2
+      if ( g(1) < 1.e-6 ) then
+         gstart = 2
+         gzero  = .TRUE.
       else
-         gstart=1
+         gstart = 1
+         gzero  = .FALSE.
       end if
+
+      ichk = gstart
+      CALL mp_max( ichk )
+      IF( ichk /= 2 ) &
+        CALL errore( ' ggencp ', ' inconsistent value for gstart ', ichk )
 !
       WRITE( stdout,180) ngl
  180  format(' ggen:  # of g shells  < gcut  ngl= ',i6)

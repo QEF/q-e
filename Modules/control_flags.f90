@@ -45,11 +45,11 @@
         PUBLIC :: tbeg, nomore, &
                   nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, newnfi, tnewnfi, &
                   tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
-                  ndw, tortho, tstress, tprnfor, prn, timing, &
+                  ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor, prn, timing, &
                   memchk, tconjgrad, tprnsfac, toptical, &
                   tcarpar, rhoout, trane, ampre, tranp, amprp, &
                   tdipole, t_diis, t_diis_simple, t_diis_rot, tnosee, tnosep, tnoseh, &
-                  tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, &
+                  tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, tolp, &
                   convergence_criteria, tionstep, nstepe, tsteepdesc, &
                   ionic_conjugate_gradient, tconjgrad_ion, &
                   tatomicwfc, tscreen, gamma_only, ekin_conv_thr, ekin_maxiter, force_pairing
@@ -169,6 +169,7 @@
         LOGICAL :: tnosep = .FALSE.
         LOGICAL :: tcap = .FALSE.
         LOGICAL :: tcp = .FALSE.
+        REAL(dbl) :: tolp = 0.0d0   !  tolerance for temperature variation
 
         REAL(dbl) :: ekin_conv_thr = 0.0d0
         INTEGER   :: ekin_maxiter = 100
@@ -231,6 +232,9 @@
        restart,          &! if .TRUE. restart from results of a preceding run
        reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
   !
+
+   INTEGER   :: ortho_max = 0     ! maximum number of iterations in routine ortho
+   REAL(dbl) :: ortho_eps = 0.0d0 ! threshold for convergence in routine ortho
 
 
 !  end of module-scope declarations

@@ -7,59 +7,12 @@
 !
 ! Y. Kanai
 !
-! mod. smd_variables
+! mod. smd_variables  ==> see Modules/path_variables.f90
 ! mod. smd_rep
 ! mod. smd_ene
 !
 !--------------------------------------------------------------------------
 !
-!
-MODULE smd_variables
- !
-  implicit none
- !
- !
- ! smx = max integer of sm_p
- ! smwout = index for replica files
- ! mi  = a parameter for  polynomial interpolation 
- !       # of replicas used for interpolation
- ! 
- integer, parameter :: smx = 20
- integer, parameter :: smwout = 20
- integer, parameter :: mi = 4
- !
- !
- ! sm_p = 0 .. SM_P replica 
- ! smcp = regular CP calculation
- ! smlm = String method w/ Lagrange Mult.
- ! smopt= CP for 2 replicas, initial & final
- ! linr = linear interpolation
- ! polm = polynomial interpolation  
- ! kwnp = # of points used in polm
- ! tol  = tolrance on const in terms of 
- !        [alpha(k) - alpha(k-1)] - 1/sm_P   
- ! smfreq = frequency of calculating Lag. Mul 
- ! max_ite = # of such iteration allowed
- !
- integer :: sm_p
- logical :: smcp,smlm,smopt
- logical :: linr,polm,stcd
- integer :: kwnp
- integer :: codfreq, forfreq, smwfreq
- real(kind=8) :: tol
- integer :: lmfreq
- integer :: maxlm
- !
- !
- !--- TYPE pointer ------------
- !
- TYPE ptr
-  real(kind=8), pointer :: d3(:,:)
- END TYPE ptr
- !
- !
- !
-END MODULE smd_variables
 !
 !
 MODULE smd_rep

@@ -111,6 +111,38 @@ MODULE path_variables
   REAL (KIND=DP) :: &
        ft_coeff                   ! normalization in fourier transformation
   !
+  ! ... Y. Kanai variabiles for combined smd/cp dynamics :
+  !
+  INTEGER, PARAMETER :: smx = 20    ! max number of images
+  INTEGER, PARAMETER :: smmi = 4    ! a parameter for  polynomial interpolation
+                                    ! # of replicas used for interpolation
+  LOGICAL :: &
+       smd_cp,                     &! regular CP calculation
+       smd_lm,                     &! String method w/ Lagrange Mult.
+       smd_opt,                    &! CP for 2 replicas, initial & final
+       smd_linr,                   &! linear interpolation
+       smd_polm,                   &! polynomial interpolation
+       smd_stcd
+  INTEGER :: &
+       smd_p,                      &! sm_p = 0 .. SM_P replica
+       smd_kwnp,                   &! # of points used in polm
+       smd_codfreq,                &!
+       smd_forfreq,                &! frequency of calculating Lag. Mul
+       smd_wfreq,                  &!
+       smd_lmfreq,                 &
+       smd_maxlm                    ! max_ite = # of such iteration allowed
+  REAL(KIND=DP) :: &
+       smd_tol,                    &! tolrance on const in terms of
+                                    ! [alpha(k) - alpha(k-1)] - 1/sm_P
+       smd_ene_ini = 1.d0,         &
+       smd_ene_fin = 1.d0
+
+  TYPE smd_ptr
+    REAL(KIND=DP), POINTER :: &
+       d3(:,:)
+  END TYPE smd_ptr
+  !
+  !
   ! ... real space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &

@@ -32,29 +32,20 @@ end module core
 module elct
   use electrons_base, only: nspin, nel, nupdwn, iupdwn
   use electrons_base, only: n => nbnd, nx => nbndx
+  use electrons_base, only: f, qbac, ispin => fspin
+  use electrons_base, only: deallocate_elct
   implicit none
   save
   !     f    = occupation numbers
   !     qbac = background neutralizing charge
-  real(kind=8), allocatable:: f(:)
-  real(kind=8) qbac
   !     nspin = number of spins (1=no spin, 2=LSDA)
   !     nel(nspin) = number of electrons (up, down)
   !     nupdwn= number of states with spin up (1) and down (2)
   !     iupdwn=      first state with spin (1) and down (2)
   !     n     = total number of electronic states
   !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
-  !            nx is used only to dimension arrays
+  !             nx is used only to dimension arrays
   !     ispin = spin of each state
-  integer, allocatable:: ispin(:)
-  !
-contains
-
-  subroutine deallocate_elct()
-      IF( ALLOCATED( f ) ) DEALLOCATE( f )
-      IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
-      return
-  end subroutine
   !
 end module elct
 

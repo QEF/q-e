@@ -175,5 +175,81 @@
      END SUBROUTINE realspace_grids_init
 
 !=----------------------------------------------------------------------------=!
+
+    SUBROUTINE realspace_grids_para( dfftp, dffts )
+
+      !  This subroutines sets local dimensions for real space grids
+
+      USE io_global, ONLY: ionode, stdout
+      USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: mpime, nproc
+      USE fft_types, ONLY: fft_dlay_descriptor
+      USE grid_dimensions, ONLY: nr1,  nr2,  nr3, nr1x, nr2x, nr3x
+      USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nnrx
+      USE smooth_grid_dimensions, ONLY: nr1s,  nr2s,  nr3s, nr1sx, nr2sx, nr3sx
+      USE smooth_grid_dimensions, ONLY: nr1sl, nr2sl, nr3sl, nnrsx
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
+      USE smallbox_grid_dimensions, ONLY: nr1bl, nr2bl, nr3bl
+
+      IMPLICIT NONE
+
+      TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftp, dffts
+
+      INTEGER :: i
+
+      ! ... Subroutine body
+
+      !   set the actual FFT dimensions
+
+      nr1l = dfftp % nr1
+      nr2l = dfftp % nr2
+      nr3l = dfftp % npl
+
+      nr1sl = dffts % nr1
+      nr2sl = dffts % nr2
+      nr3sl = dffts % npl
+
+      nnrx  = dfftp%nnr
+      nnrsx = dffts%nnr
+
+      IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3)                    &
+     &   CALL errore(' pmeshset ', ' smooth grid larger than dense grid? ', 1 )
+
+      IF ( nr1b > nr1 .or. nr2b > nr2 .or. nr3b > nr3)                    &
+     &   CALL errore(' pmeshset ', ' small box grid larger than dense grid? ', 1 )
+
+      IF(ionode) THEN
+        WRITE( stdout,*)
+        WRITE( stdout,*) '  Real Mesh Report '
+        WRITE( stdout,*) '  ---------------- '
+        WRITE( stdout,1000) nr1, nr2, nr3, nr1l, nr2l, nr3l, 1, 1, nproc
+
+        WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) ( dfftp%npp( i ), i = 1, nproc )
+      END IF
+
+      IF(ionode) THEN
+        WRITE( stdout,*)
+        WRITE( stdout,*) '  Smooth Real Mesh Report '
+        WRITE( stdout,*) '  ----------------------- '
+        WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1sl, nr2sl, nr3sl, 1, 1, nproc
+        WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc )
+
+        WRITE( stdout,*)
+        WRITE( stdout,*) '  Small Box Real Mesh Report '
+        WRITE( stdout,*) '  -------------------------- '
+        WRITE( stdout,1000) nr1b, nr2b, nr3b, nr1bl, nr2bl, nr3bl, 1, 1, 1
+
+      END IF
+
+1000  FORMAT(3X, &
+         'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
+         '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
+         3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
+
+      RETURN
+      END SUBROUTINE realspace_grids_para
+
+
+!=----------------------------------------------------------------------------=!
    END MODULE grid_subroutines
 !=----------------------------------------------------------------------------=!

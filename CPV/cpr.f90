@@ -59,8 +59,8 @@
       use control_flags, only: iprint, isave, thdyn, tpre, tbuff, iprsta, trhor, &
             tfor, tvlocw, trhow, taurdr, tprnfor, tsdc
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
-            tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
-      use control_flags, only: lwf
+            tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh, tolp
+      use control_flags, only: lwf, ortho_eps, ortho_max
 
       use core, only: nlcc_any
       use core, only: deallocate_core
@@ -70,8 +70,8 @@
            deeq
       use uspp, only: deallocate_uspp
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
-      use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
-      use elct, only: deallocate_elct
+      use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+      use electrons_base, only: deallocate_elct, nel, iupdwn, nupdwn
       use gvec, only: tpiba2, ng
       use gvec, only: deallocate_gvec
       use gvecs, only: ngs
@@ -80,13 +80,13 @@
       use reciprocal_vectors, only: gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
       use ions_base, only: ind_srt, ions_cofmass, ions_kinene, ions_temp, ions_thermal_stress
-      use ions_base, only: ions_vrescal
+      use ions_base, only: ions_vrescal, fricp, greasp
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3, frich, greash
-      use cell_base, only: omega, alat, ibrav
+      use cell_base, only: omega, alat, ibrav, celldm
       use cell_base, only: h, hold, deth, wmass, press
       use cell_base, only: s_to_r, r_to_s
-      use cell_base, only: iforceh, cell_force
+      use cell_base, only: iforceh, cell_force, thdiag
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
@@ -116,7 +116,7 @@
       use betax, only: deallocate_betax
       use input_parameters, only: outdir, prefix
       use wave_base, only: wave_steepest, wave_verlet
-      use wave_base, only: wave_speed2
+      use wave_base, only: wave_speed2, frice, grease
       USE control_flags, ONLY : conv_elec, tconvthrs
       USE check_stop, ONLY : check_stop_now
       use efcalc, ONLY: clear_nbeg, ef_force    !Electric Field (M.S)
@@ -124,12 +124,11 @@
       use cp_electronic_mass, only: emass, emaec => emass_cutoff
       use cp_electronic_mass, only: emass_precond
       use cpr_subroutines
-      use smd_variables, only: sm_p, smcp, smlm, smopt, linr, polm, kwnp, &
-                               codfreq, forfreq, smwfreq, sm_tol => tol, lmfreq, maxlm 
       use ions_positions, only: tau0, taum, taup, taus, tausm, tausp, vels, velsm, velsp
-      use ions_positions, only: ions_hmove, ions_move
+      use ions_positions, only: ions_hmove, ions_move, iforce
       use ions_nose, only: gkbt, qnp, vnhp, xnhp0, xnhpm, xnhpp, ions_nosevel, &
                            ions_noseupd, tempw
+      use electrons_nose, only: qne, ekincw
 
 ! wavefunctions
 !
@@ -146,6 +145,8 @@
       USE gvecw, ONLY: ecutw
       USE gvecp, ONLY: ecutp
 
+      USE time_step, ONLY: delt
+
 !
 !
       implicit none
@@ -161,7 +162,6 @@
 ! control variables
 !
       logical tbump
-      logical thdiag
       logical tfirst, tlast
       logical tstop
       logical tconv
@@ -218,16 +218,9 @@
 !  forces on ions
 !
       real(kind=8) :: fion(3,natx), fionm(3,natx)
-      integer :: iforce(3,natx)
-!
-      real(kind=8) f_(nbndxx)
-      real(kind=8) ispin_(nbndxx)
-!
-      integer maxit
 !
 ! work variables
 !
-      real(kind=8) celldm(6)
       real(kind=8) acc(nacx)
       complex(kind=8), allocatable:: c2(:), c3(:)
       complex(kind=8)  speed
@@ -235,10 +228,10 @@
      &       tempp, xnhe0, verl1, verl2, verl3,     &
      &       fccc, xnhem, vnhe, savee, saveh, savep,             &
      &       enthal, epot, xnhep, epre, enow, tps, econs, econt, &
-     &       ettt, fricp, greasp, eps, qne,                      &
-     &       frice,  grease, delt, ccc, bigr, dt2,               &
+     &       ettt,                       &
+     &       ccc, bigr, dt2,               &
      &       dt2by2, twodel, dt2bye, dt2hbe
-      real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
+      real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc
       real(kind=8) temps(nsx)
       integer is, nacc, ia, j, iter, nfi, i, isa, ipos
 !
@@ -249,7 +242,7 @@
       real(kind=8) cdm(3)
 !
       integer k, ii, l, m
-      real(kind=8) ekinh, temphc, tolp, factp, temp1, temp2, randy
+      real(kind=8) ekinh, temphc, factp, temp1, temp2, randy
       real(kind=8) ftmp
 
       character(len=256) :: filename
@@ -296,25 +289,7 @@
 !     read input from standard input (unit 5)
 !     ==================================================================
 
-      call iosys( nbeg , ndr , ndw , nomore , iprint, isave                 &
-     & , delt , emass , emaec  , tsde , frice , grease              &
-     & , tortho , eps , maxit , trane , ampre , tranp , amprp                &
-     & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
-     & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
-     & , tpre , thdyn , thdiag , iforceh , wmass , frich , greash , press   &
-     & , tnoseh , qnh , temph , celldm , ibrav , tau0 , iforce &
-     & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
-     & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
-     & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s &
-     & , psfile , pseudo_dir, iprsta, ispin_ &
-     & , sm_p, smcp, smlm, smopt, linr, polm, kwnp, codfreq, forfreq, smwfreq &
-     & , sm_tol, lmfreq, maxlm )
-      allocate( f( nx ) )
-      f( :   ) = 0.0d0
-      f( 1:n ) = f_( 1:n )
-      allocate( ispin( nx ) )
-      ispin( :   ) = 0.0d0
-      ispin( 1:n ) = ispin_( 1:n )
+      call iosys( )
 
       if( lwf ) then
         call read_efwan_param( nbeg )
@@ -453,7 +428,7 @@
          CALL fromscra_sub &
             ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
               taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
-              detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
+              detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
               bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
 !
       else
@@ -467,13 +442,11 @@
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 !
-         ! WRITE(6,*) 'DEBUG taus  = ', taus(:,1)
-         ! WRITE(6,*) 'DEBUG tausm = ', tausm(:,1)
 
          call restart_sub     &
             ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
               taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
-              detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
+              detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
               bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
 !
       end if
@@ -709,8 +682,20 @@
           call ef_force( fion, na, nsp, zv )
         end if
 
+        ! WRITE(6,*) 'DEBUG fion = '
+        ! WRITE(6,fmt='(3F20.14)') fion(:,1:nat)
+        ! WRITE(6,*) 'DEBUG iforce = '
+        ! WRITE(6,fmt='(3I4)') iforce(:,1:nat)
+
         call ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp, &
                         fricp, hgamma, vels, tsdp, tnosep, fionm, vnhp, velsp, velsm )
+
+        ! WRITE(6,*) 'DEBUG tausp = '
+        ! WRITE(6,fmt='(3F20.14)') tausp(:,1:nat)
+        ! WRITE(6,*) 'DEBUG taus  = '
+        ! WRITE(6,fmt='(3F20.14)') tausp(:,1:nat)
+        ! WRITE(6,*) 'DEBUG tausm = '
+        ! WRITE(6,fmt='(3F20.14)') tausm(:,1:nat)
 
 !cc   call cofmass(velsp,cdmvel)
 !cc   velsp(i,isa)=velsp(i,isa)-cdmvel(i)
@@ -756,7 +741,7 @@
 !
       if(tortho) then
          call ortho                                                     &
-     &         (eigr,cm,phi,lambda,bigr,iter,ccc,eps,maxit,delt,bephi,becp)
+     &         (eigr,cm,phi,lambda,bigr,iter,ccc,ortho_eps,ortho_max,delt,bephi,becp)
       else
          call graham(betae,bec,cm)
          if(iprsta.gt.4) call dotcsc(eigr,cm)
@@ -1089,7 +1074,6 @@
     call print_clock( 'fftw' )
     call print_clock( 'fftb' )
     call print_clock( 'rsg' )
-    call print_clock( 'setfftpara' )
     call print_clock( 'reduce' )
 
 !

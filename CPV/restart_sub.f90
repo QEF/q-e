@@ -7,12 +7,12 @@ CONTAINS
 
   SUBROUTINE fromscra_sub( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
       taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
-      detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
+      detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
       bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
 
     USE control_flags, ONLY: tranp, trane, trhor, iprsta, tpre, tzeroc 
     USE control_flags, ONLY: tzerop, tzeroe, tfor, thdyn, lwf, tprnfor, tortho
-    USE control_flags, ONLY: amprp, taurdr, ampre, tsde
+    USE control_flags, ONLY: amprp, taurdr, ampre, tsde, ortho_eps, ortho_max
     USE ions_positions, ONLY: taus, tau0, tausm, vels, velsm
     USE ions_base, ONLY: na, nsp, randpos, zv, ions_vel, pmass
     USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
@@ -48,11 +48,10 @@ CONTAINS
     REAL(kind=8) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
     REAL(kind=8) :: ema0bg(:)
     REAL(kind=8) :: dbec(:,:,:,:)
-    REAL(kind=8) :: eps, delt
+    REAL(kind=8) :: delt
     REAL(kind=8) :: bephi(:,:), becp(:,:)
     REAL(kind=8) :: velh(:,:)
     REAL(kind=8) :: dt2bye, xnhe0, xnhem, vnhe, ekincm
-    INTEGER :: maxit
 
 
     REAL(kind=8), ALLOCATABLE :: emadt2(:), emaver(:)
@@ -172,7 +171,7 @@ CONTAINS
 !
 
     if( tortho ) then
-       call ortho( eigr, c0, phi, lambda, bigr, iter, ccc, eps, maxit, delt, bephi, becp )
+       call ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
     else
        call graham( betae, bec, c0 )
     endif
@@ -218,12 +217,12 @@ CONTAINS
 
   SUBROUTINE restart_sub( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
       taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
-      detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, eps, maxit, delt,  &
+      detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
       bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
 
     USE control_flags, ONLY: tranp, trane, trhor, iprsta, tpre, tzeroc 
     USE control_flags, ONLY: tzerop, tzeroe, tfor, thdyn, lwf, tprnfor, tortho
-    USE control_flags, ONLY: amprp, taurdr
+    USE control_flags, ONLY: amprp, taurdr, ortho_eps, ortho_max
     USE ions_positions, ONLY: taus, tau0, tausm, vels, velsm, ions_hmove
     USE ions_base, ONLY: na, nsp, randpos, zv, ions_vel, pmass
     USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
@@ -260,11 +259,10 @@ CONTAINS
     REAL(kind=8) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
     REAL(kind=8) :: ema0bg(:)
     REAL(kind=8) :: dbec(:,:,:,:)
-    REAL(kind=8) :: eps, delt
+    REAL(kind=8) :: delt
     REAL(kind=8) :: bephi(:,:), becp(:,:)
     REAL(kind=8) :: velh(:,:)
     REAL(kind=8) :: dt2bye, xnhe0, xnhem, vnhe, ekincm
-    INTEGER :: maxit
 
 
     REAL(kind=8), ALLOCATABLE :: emadt2(:), emaver(:)
@@ -419,7 +417,7 @@ CONTAINS
       endif
 
       if( tortho ) then
-         call ortho( eigr, cm, phi, lambda, bigr, iter, dt2bye, eps, maxit, delt, bephi, becp )
+         call ortho( eigr, cm, phi, lambda, bigr, iter, dt2bye, ortho_eps, ortho_max, delt, bephi, becp )
       else
          call graham( betae, bec, cm )
       endif

@@ -66,28 +66,17 @@ CONTAINS
 
 
 !-----------------------------------------------------------------------
-      subroutine iosys( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , isave_                    &
-     & , delt_ , emass_ , emaec_  , tsde_ , frice_ , grease_                         &
-     & , tortho_ , eps_ , max_ , trane_ , ampre_ , tranp_ , amprp_                           &
-     & , tfor_ , tsdp_ , fricp_ , greasp_ , tcp_ , tcap_ , tolp_ , trhor_ , trhow_ , tvlocw_ &
-     & , tnosep_ , qnp_ , tempw_ , tnosee_ , qne_ , ekincw_                                &
-     & , tpre_ , thdyn_ , thdiag_ , iforceh_ , wmass_ , frich_ , greash_ , press_           &
-     & , tnoseh_ , qnh_ , temph_ , celldm_ , ibrav_ , tau0_ , iforce_ &
-     & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , f_ , nel_ , nspin_ , nupdwn_  &
-     & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
-     & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ &
-     & , psfile_ , pseudo_dir_, iprsta_, ispin_ &
-     & , sm_p, smcp_, smlm_, smopt_, linr_, polm_, kwnp_, codfreq_, forfreq_, smwfreq_ &
-     & , tol_, lmfreq_, maxlm_ )
 
-!-----------------------------------------------------------------------
-!   this subroutine reads control variables from standard input (unit 5)
-!     ------------------------------------------------------------------
+    subroutine iosys( )
+
+!     this subroutine copies variables from input module to other modules
+!     -------------------------------------------------------------------
 
       use input_parameters, only: &
            nr1, nr2, nr3, greash, press, nr2s, nr3s, nr1s, tolp, temph, grease, &
            tempw, fnoseh, amprp, greasp, tranp, atomic_positions, nelec, &
-           if_pos, rd_ht, nelup, neldw, occupations, f_inp, pos, nr3b, pseudo_dir, &
+           if_pos, rd_ht, trd_ht, a, b, c, cosab, cosac, cosbc, cell_symmetry, nelup, &
+           neldw, occupations, f_inp, pos, nr3b, pseudo_dir, &
            nr1b, nr2b, sp_pos, atom_mass, atom_pfile, iprint, isave, orthogonalization, &
            electron_velocities, startingwfc, ndr, ndw, ion_dynamics, ion_damping, &
            cell_velocities, electron_dynamics, electron_damping, ion_velocities, &
@@ -104,122 +93,201 @@ CONTAINS
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
 
-      use constants, only: pi, scmass, factem, eps8, uma_au
+      use constants, only: pi, scmass, factem, eps8, uma_au, terahertz 
+
       use parameters, only: nsx, natx, nbndxx
+
       use io_global, only: ionode, stdout
-      use control_flags, only: taurdr, tprnfor_ => tprnfor
-      use control_flags, only: tzerop, tzeroe, tzeroc
-      use mp, only: mp_bcast
+
       USE control_flags, ONLY: tconvthrs, lneb, lsmd 
+      use control_flags, only: taurdr, tprnfor_ => tprnfor
+      use control_flags, only: tzerop, tzeroe, tzeroc, nbeg
+      use control_flags, only: &
+            ndr_ => ndr, &
+            ndw_ => ndw, &
+            nomore_ => nomore, &
+            iprint_ => iprint, &
+            iprsta_ => iprsta, &
+            isave_ => isave, &
+            tortho_ => tortho, &
+            ortho_eps_ => ortho_eps, &
+            ortho_max_ => ortho_max, &
+            trane_ => trane, &
+            ampre_ => ampre, &
+            tranp_ => tranp, &
+            amprp_ => amprp, &
+            tfor_ => tfor, &
+            tsdp_ => tsdp, &
+            tcp_ => tcp, &
+            tcap_ => tcap, &
+            tolp_ => tolp, &
+            trhor_ => trhor, &
+            trhow_ => trhow, &
+            tvlocw_ => tvlocw, &
+            tnosep_ => tnosep, &
+            tnosee_ => tnosee, &
+            tnoseh_ => tnoseh, &
+            tpre_ => tpre, &
+            thdyn_ => thdyn, &
+            tsde_ => tsde
+
+      use mp, only: mp_bcast
+      !
       USE check_stop, ONLY: check_stop_init
-      USE ions_base, ONLY: ions_base_init
+      !
+      USE ions_base, ONLY: ions_base_init, tau_srt, ind_srt, &
+           rcmax_ => rcmax, &
+           fricp_ => fricp, &
+           greasp_ => greasp
+      USE ions_positions, ONLY: &
+           iforce_ => iforce, &
+           tau0_ => tau0
+      ! 
+      USE cell_base, ONLY: cell_base_init, a1, a2, a3, &
+           press_ => press, &
+           frich_ => frich, &
+           greash_ => greash, &
+           wmass_ => wmass, &
+           thdiag_ => thdiag, &
+           iforceh_ => iforceh
+      USE cell_nose, ONLY: &
+           qnh_ => qnh, &
+           temph_ => temph
 
       use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
+
+      USE time_step, ONLY: set_time_step, &
+           delt_ => delt
+      USE cp_electronic_mass, only: &
+           emass_ => emass, &
+           emaec_ => emass_cutoff
+      USE wave_base, ONLY: &
+           frice_ => frice, &
+           grease_ => grease
+      USE ions_nose, ONLY: &
+           qnp_ => qnp, &
+           tempw_ => tempw
+      USE electrons_base, ONLY: &
+           nupdwn_ => nupdwn, &
+           iupdwn_ => iupdwn, &
+           nel_ => nel, &
+           n_ => nbnd, &
+           nx_ => nbndx, &
+           f_ => f, &
+           ispin_ => fspin, &
+           nspin_ => nspin
+      USE electrons_nose, ONLY: &
+           qne_ => qne, &
+           ekincw_ => ekincw
+      USE grid_dimensions, ONLY: &
+           nr1_ => nr1, &
+           nr2_ => nr2, &
+           nr3_ => nr3
+      USE smallbox_grid_dimensions, ONLY: &
+           nr1b_ => nr1b, &
+           nr2b_ => nr2b, &
+           nr3b_ => nr3b
+      USE smooth_grid_dimensions, ONLY: &
+           nr1s_ => nr1s, &
+           nr2s_ => nr2s, &
+           nr3s_ => nr3s
+      USE io_files, ONLY: &
+           psfile_ => psfile, &
+           pseudo_dir_ => pseudo_dir
+      USE path_variables, ONLY: &
+           sm_p_ => smd_p, &
+           smcp_ => smd_cp, &
+           smlm_ => smd_lm, &
+           smopt_ => smd_opt, &
+           linr_ => smd_linr, &
+           polm_ => smd_polm, &
+           kwnp_ => smd_kwnp, &
+           codfreq_ => smd_codfreq, &
+           forfreq_ => smd_forfreq, &
+           smwfreq_ => smd_wfreq, &
+           tol_ => smd_tol, &
+           lmfreq_ => smd_lmfreq, &
+           maxlm_ => smd_maxlm, &
+           ene_ini_ => smd_ene_ini, &
+           ene_fin_ => smd_ene_fin
 
       !
       implicit none
       !
       !
-      real(kind=8) :: ampre_ , delt_ , ekincw_ , emass_ , emaec_ , eps_ ,       &
-     &       frice_ , fricp_ , frich_ , grease_ , greasp_ , greash_ ,        &
-     &       press_ , qnp_ , qne_ , qnh_ , tempw_ , temph_ , tolp_ , wmass_ ,    &
-             amprp_ ( nsx ), celldm_ ( 6 ), tau0_ ( 3, natx )
-
-      integer :: nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , max_ , iforce_( 3, natx )
-      integer :: isave_
-
-      logical :: trane_ , tsde_ , tortho_ , tnosee_ , tfor_ , tsdp_ , tcp_ , &
-           tcap_ , tnosep_ , trhor_ , trhow_ , tvlocw_ , tpre_ , thdyn_ , thdiag_ ,   &
-           tnoseh_ , tranp_ ( nsx )
-
-      integer :: nat_ , nsp_ , na_ ( nsx ), nel_ ( 2 ), nspin_ , &
-     &     nupdwn_ ( 2 ), iupdwn_ ( 2 ), n_ , nx_ , nr1_ , nr2_ , nr3_ , &
-     &     nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , ibrav_, iprsta_, &
-           iforceh_( 3, 3 )
-
-      real(kind=8) :: pmass_ ( nsx ), rcmax_ ( nsx ), f_ ( nbndxx ), ispin_ ( nbndxx ), &
-     &     omega_ , alat_ , a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 )
-
-
-      character(len=256) :: psfile_ ( nsx ) , pseudo_dir_
-
-      !
       ! local variables
       !
 
-      real(kind=8), parameter:: terahertz = 2.418D-5
       real(kind=8) :: taus( 3, natx ), ocp, fsum
-      integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in, isa, smpm
+      integer :: i, ia, is, iss, in, isa
+      real(kind=8) :: alat_
 
-      integer, intent(out) :: sm_p, kwnp_, codfreq_, forfreq_, smwfreq_, &
-                              & lmfreq_, maxlm_  
-      logical, intent(out) :: smcp_, smlm_, smopt_, linr_, polm_ 
-      real(kind=8) :: tol_
-
+      !
+      ! Subroutine body
+      !
 
       IF( TRIM( calculation ) == 'nscf' ) trhor_ = .true.
      
-! 
-! translate from input to internals of SMCP, 
-!
-
+      ! 
+      !     translate from input to internals of SMCP, 
+      !
       ! ... SM_P  
-
-      sm_p = num_of_images -1
-      smpm = sm_p -1
-
-
+      !
+      sm_p_ = num_of_images -1
+      !
       ! ... what to do
-
+      !
       smcp_   = smd_smcp
       smopt_  = smd_smopt
       smlm_   = smd_smlm
-      
-      
+      !      
       ! ... initial path info
-
+      !
       linr_ = smd_linr
       polm_ = smd_polm
       kwnp_ = smd_kwnp
-
-
+      !
       ! ...  Frequencey of wiriting
-
+      !
       codfreq_ = smd_codf
       forfreq_ = smd_forf
       smwfreq_ = smd_smwf
-
-
+      !
       ! ... Lagrange multiplier info.
-
+      !
       lmfreq_ = smd_lmfreq
       tol_    = smd_tol
       maxlm_  = smd_maxlm
-
-
+      !
       ! ... if smlm
-
+      !
       IF(smd_smlm) THEN
        IF(smd_ene_ini >= 0.d0 .OR. smd_ene_fin >= 0.d0) &
        & CALL errore(' start : ',' Check : ene_ini & ene_fin ', 1 )
       ENDIF
+      !
+      ene_ini_ = smd_ene_ini
+      ene_fin_ = smd_ene_fin
 
 !
-! translate from input to internals of CP, various checks
 
-      ! ...   Set the number of species
+      ! ...  Set cell base module
 
-      nsp_ = ntyp
+      if( .not. lneb ) then
+        CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, &
+               a, b, c, cosab, cosac, cosbc , alat_ )
+      end if
+
+      ! ...  Set ions base module
 
       if( .not. lneb ) then
         CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
-             atom_label, if_pos, atomic_positions  )
+             atom_label, if_pos, atomic_positions , alat_ , a1, a2, a3  )
       end if
-
-      ! ...   IBRAV and CELLDM
-
-      ibrav_  = ibrav
-      celldm_ = celldm
+      iforce_ = 0
+      DO isa = 1, nat
+        iforce_ ( :, isa ) = if_pos( :, ind_srt( isa ) ) 
+      END DO
 
       ! ...   Set Values for bands and spin
 
@@ -233,19 +301,19 @@ CONTAINS
       ampre_ = ampre
       SELECT CASE ( restart_mode ) 
          CASE ('from_scratch')
-            nbeg_ = -2
+            nbeg = -2
             nomore_ = nstep
             trane_  = ( startingwfc == 'random' )
             if ( ampre_ == 0.d0 ) ampre_ = 0.02
          CASE ('reset_counters')
-            nbeg_ = 0
+            nbeg = 0
             nomore_ = nstep
          CASE ('restart')
-            nbeg_ = 1
+            nbeg = 1
             nomore_ = nstep
             if ( ion_positions == 'from_input' ) then
               taurdr = .TRUE.
-              nbeg_ = -1
+              nbeg = -1
             end if
          CASE DEFAULT
             CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
@@ -474,7 +542,7 @@ CONTAINS
 
       ! ...  radii, masses
 
-      DO is = 1, nsp_
+      DO is = 1, ntyp
          rcmax_ (is) = ion_radius(is)
          IF( ion_radius(is) <= 0.d0 ) THEN
             CALL errore(' iosys ',' invalid  ion_radius ', is) 
@@ -502,11 +570,11 @@ CONTAINS
       else
          iprsta_ = 1
       end if
-      delt_   = dt
+      CALL set_time_step( dt ) 
       emass_ = emass
-      emaec_  = emass_cutoff
-      eps_ = ortho_eps
-      max_ = ortho_max
+      emaec_ = emass_cutoff
+      ortho_eps_ = ortho_eps
+      ortho_max_ = ortho_max
 
 
       if ( tstress ) tpre_ = .true.
@@ -523,10 +591,10 @@ CONTAINS
       temph_ = temph
       ekincw_ = ekincw
 
-      grease_ = grease
-      tranp_ ( 1 : nsp_ ) =  tranp ( 1 : nsp_ )
-      amprp_ ( 1 : nsp_ ) =  amprp ( 1 : nsp_ )
+      tranp_ ( 1 : ntyp ) =  tranp ( 1 : ntyp )
+      amprp_ ( 1 : ntyp ) =  amprp ( 1 : ntyp )
  
+      grease_ = grease
       greasp_ = greasp
       tolp_ = tolp
       greash_ = greash
@@ -542,64 +610,12 @@ CONTAINS
       nr2b_ = nr2b
       nr3b_ = nr3b
 
-      nat_ = nat
+
+      !  set pseudopotentials file and directory
+      !
       pseudo_dir_ = pseudo_dir
-
-      ! cards parameters
-
-      IF( .NOT. lsmd ) THEN
-        tau0_  = 0.0
-      END IF
-
-      iforce_= 0
       psfile_= ' '
-      a1_    = 0.0
-      a2_    = 0.0
-      a3_    = 0.0
-
-      !  masses are brought to au
-
-      pmass_ ( 1:nsp_ )  = atom_mass( 1:nsp_ ) * scmass
-      psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
-
-      ! ... Getting  'na
-
-      na_ = 0
-      isa = 0
-      do is = 1, nsp_
-          do ia = 1, nat_
-             if ( sp_pos(ia) == is) then
-                na_(is) = na_(is) + 1
-                isa = isa + 1 
-                if( na_(is) > natx ) call errore(' cards',' na > natx', na_ (is) )
-                IF( .NOT. lsmd ) THEN
-                  tau0_ (:, isa ) = rd_pos(:, ia)
-                END IF
-                iforce_(:, isa ) = if_pos(:, ia)
-             end if
-          end do
-       end do
-
-
-
-      !
-      ! set up atomic positions and crystal lattice
-      !
-
-      if ( ibrav_ == 0 ) then
-         a1_ = rd_ht( 1, 1:3 )
-         a2_ = rd_ht( 2, 1:3 )
-         a3_ = rd_ht( 3, 1:3 )
-         if ( celldm_ (1) == 0.d0 ) then
-            celldm_ (1) = sqrt( a1_ (1) ** 2 + a1_ (2) ** 2 + a1_ (3) ** 2 )
-            a1_(:) = a1_(:) / celldm_(1)
-            a2_(:) = a2_(:) / celldm_(1)
-            a3_(:) = a3_(:) / celldm_(1)
-         end if
-      else
-         call latgen( ibrav_ , celldm_ , a1_ , a2_ , a3_ , omega_ )
-      end if
-      alat_ = celldm_ (1)
+      psfile_ ( 1:ntyp ) = atom_pfile( 1:ntyp )
 
 
       IF( lsmd ) THEN
@@ -610,64 +626,26 @@ CONTAINS
 
          IF(smd_smopt) THEN
    
-          CALL init_path(sm_p,kwnp_,smd_stcd,nsp_,nat_,alat_,nbeg_,1)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,1)
 
          ELSEIF(smd_linr) THEN
 
-          CALL init_path(sm_p,kwnp_,smd_stcd,nsp_,nat_,alat_,nbeg_,2)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,2)
 
          ELSEIF(smd_polm .AND. (smd_kwnp < num_of_images) ) THEN
 
-          CALL init_path(sm_p,kwnp_,smd_stcd,nsp_,nat_,alat_,nbeg_,3)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,3)
 
          ELSEIF(smd_kwnp == num_of_images ) THEN
 
-          CALL init_path(sm_p,kwnp_,smd_stcd,nsp_,nat_,alat_,nbeg_,4)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,4)
 
          ENDIF
 
       ELSE
 
-         SELECT CASE ( atomic_positions )
-            !
-            !  convert input atomic positions to internally used format:
-            !  tau0 in atomic units
-            !
-            CASE ('alat')
-               !
-               !  input atomic positions are divided by a0
-               !
-               tau0_ = tau0_ * alat_
-            CASE ('bohr')
-               !
-               !  input atomic positions are in a.u.: do nothing
-               !
-               continue
-            CASE ('crystal')
-               !
-               !  input atomic positions are in crystal axis ("scaled"):
-               !
-               taus = tau0_
-               isa  = 0
-               do is = 1, nsp_
-                  do ia = 1, na_(is)
-                     isa = isa + 1
-                     do i = 1, 3
-                        tau0_ ( i, isa ) = a1_ (i) * taus( 1, isa ) &
-                                         + a2_ (i) * taus( 2, isa ) &
-                                         + a3_ (i) * taus( 3, isa )
-                     end do
-                  end do
-               end do
-            CASE ('angstrom')
-               !
-               !  atomic positions in A
-               !
-               tau0_ = tau0_ / 0.529177
-            CASE DEFAULT
-               CALL errore(' iosys ',' atomic_positions='//trim(atomic_positions)// &
-                 ' not implemented ', 1 )
-         END SELECT
+         tau0_ = 0.0d0
+         tau0_ ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
 
       END IF
 
@@ -701,6 +679,11 @@ CONTAINS
       else
          nx_= n_
       end if
+
+      ALLOCATE( f_ ( nx_ ) )
+      ALLOCATE( ispin_ ( nx_ ) )
+      f_     = 0.0d0
+      ispin_ = 0
 
       iupdwn_ ( 1 ) = 1
       nel_ = 0
@@ -795,12 +778,12 @@ CONTAINS
 !     --------------------------------------------------------
 !     print out heading
 !
-      WRITE( stdout,500) nbeg_ , nomore_ , iprint_ , ndr_ , ndw_
+      WRITE( stdout,500) nbeg , nomore_ , iprint_ , ndr_ , ndw_
       WRITE( stdout,505) delt_
       WRITE( stdout,510) emass_ , emaec_
 !
       if( tortho_ ) then
-         WRITE( stdout,511) eps_ , max_
+         WRITE( stdout,511) ortho_eps_ , ortho_max_
       else
          WRITE( stdout,512)
       endif
@@ -829,7 +812,7 @@ CONTAINS
          WRITE( stdout,515) ampre_
       endif
       WRITE( stdout,516)
-      do is =1, nsp_
+      do is =1, ntyp
          if(tranp_(is)) WRITE( stdout,517) is, amprp_(is)
       end do
 !

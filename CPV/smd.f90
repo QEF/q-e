@@ -23,14 +23,14 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
+subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
      tfirst,delt,tps, iforce)
   !-----------------------------------------------------------------------
   !
   !     initialize G-vectors and related quantities
   !     use ibrav=0 for generic cell vectors given by the matrix h(3,3)
   !
-  use control_flags, only: iprint, thdyn
+  use control_flags, only: iprint, thdyn, tranp, amprp
   use io_global, only: stdout
   !use gvec
   use gvecw, only: ngw
@@ -45,13 +45,13 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   use restart
   use parameters, only: nacx, nsx, natx
   USE smd_rep, only: rep
-  USE smd_variables, only: sm_p
+  USE path_variables, only: &
+        sm_p => smd_p
 
   implicit none
   ! input/output
   integer ibrav, ndr, nbeg, iforce(3,natx)
-  logical tranp(nsx), tfirst
-  real(kind=8) amprp(nsx)
+  logical tfirst
   real(kind=8) celldm(6), ecut, ecutw
   real(kind=8) delt
   ! local
@@ -176,7 +176,9 @@ SUBROUTINE TANGENT(state,tan)
 
   use ions_base, ONLY: na, nsp
   use smd_ene, ONLY: etot_ar
-  use smd_variables
+  USE path_variables, only: &
+        sm_p => smd_p, &
+        ptr => smd_ptr
 
   IMPLICIT NONE
 
@@ -333,7 +335,6 @@ SUBROUTINE PERP(vec,tan,paraforce)
 
   use ions_base, ONLY: na, nsp
   use parameters, only: nsx,natx
-  use smd_variables
 
   IMPLICIT NONE
 
@@ -395,7 +396,9 @@ SUBROUTINE LINEARP(state)
 
   use ions_base, ONLY: na, nsp
   use parameters, only: nsx,natx
-  use smd_variables
+  USE path_variables, only: &
+        sm_p => smd_p, &
+        ptr => smd_ptr
 
 
   IMPLICIT NONE
@@ -451,7 +454,9 @@ SUBROUTINE ARC(state,alpha,t_alpha,key)
 
   use ions_base, ONLY: na, nsp
   use parameters, only: nsx,natx
-  use smd_variables
+  USE path_variables, only: &
+        sm_p => smd_p, &
+        ptr => smd_ptr
 
 
   IMPLICIT NONE
@@ -560,7 +565,6 @@ SUBROUTINE ABSVEC(vec,norm)
 
   use ions_base, ONLY: na, nsp
   use parameters, only: nsx,natx
-  use smd_variables
 
   IMPLICIT NONE
 
@@ -930,7 +934,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
   USE parameters, ONLY: nsx, natx
   USE smd_rep
-  USE smd_variables, ONLY: ptr
+  USE path_variables, only: &
+        ptr => smd_ptr
   USE io_global, ONLY: stdout    
 
   implicit none

@@ -18,8 +18,10 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
   use ions_base, ONLY: na, nsp
   use parameters, only: nsx,natx
-  use smd_variables
-
+  use path_variables, ONLY: &
+        sm_p => smd_p, &
+        ptr  => smd_ptr, &
+        maxlm => smd_maxlm
 
   IMPLICIT NONE
 
@@ -212,7 +214,9 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
 
   use ions_base, ONLY: na,nsp
   use parameters, only: nsx,natx
-  use smd_variables
+  use path_variables, ONLY: &
+        sm_p => smd_p, &
+        tol => smd_tol
 
 
   IMPLICIT NONE

@@ -24,7 +24,9 @@ SUBROUTINE REDIS(state)
 
   use ions_base, ONLY: na,nsp
   use parameters, only: nsx,natx
-  use smd_variables
+  use path_variables, ONLY: &
+        sm_p => smd_p, &
+        ptr  => smd_ptr
 
   IMPLICIT NONE
 
@@ -198,7 +200,8 @@ SUBROUTINE MESH(monitor,dis,dis_out)
 
   use ions_base, ONLY: na,nsp
   use parameters, only: nsx,natx
-  use smd_variables
+  use path_variables, ONLY: &
+        sm_p => smd_p
 
   IMPLICIT NONE
 
@@ -308,7 +311,7 @@ SUBROUTINE INTPOL(md,n0,xi0,x0,n1,xi1,x1)
   ! how many replicas are used to interpolate.
 
 
-  use smd_variables, ONLY: mi
+  use path_variables, ONLY: mi => smmi
 
 
   IMPLICIT NONE

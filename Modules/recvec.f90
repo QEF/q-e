@@ -272,3 +272,53 @@
 !=----------------------------------------------------------------------------=!
    END MODULE recvecs_indexes
 !=----------------------------------------------------------------------------=!
+
+
+!=----------------------------------------------------------------------------=!
+   MODULE recvecs_subroutines
+!=----------------------------------------------------------------------------=!
+
+     IMPLICIT NONE
+     SAVE
+
+   CONTAINS
+
+     SUBROUTINE recvecs_init( ngm_ , ngw_ , ngs_ )
+       USE mp_global, ONLY: group
+       USE mp, ONLY: mp_max, mp_sum
+       USE gvecw, ONLY: ngw, ngwx, ngwt
+       USE gvecp, ONLY: ngm, ngmx, ngmt
+       USE gvecs, ONLY: ngs, ngsx, ngst
+
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: ngm_ , ngw_ , ngs_
+
+       ngm = ngm_
+       ngw = ngw_
+       ngs = ngs_
+
+       !
+       !  calculate maxima over all processors
+       !
+       ngwx = ngw
+       ngmx = ngm
+       ngsx = ngs
+       CALL mp_max( ngwx, group )
+       CALL mp_max( ngmx, group )
+       CALL mp_max( ngsx, group )
+       !
+       !  calculate SUM over all processors
+       !
+       ngwt = ngw
+       ngmt = ngm
+       ngst = ngs
+       CALL mp_sum( ngwt, group )
+       CALL mp_sum( ngmt, group )
+       CALL mp_sum( ngst, group )
+
+       RETURN 
+     END SUBROUTINE recvecs_init
+
+!=----------------------------------------------------------------------------=!
+   END MODULE recvecs_subroutines
+!=----------------------------------------------------------------------------=!

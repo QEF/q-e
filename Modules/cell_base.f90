@@ -77,6 +77,8 @@
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
+        LOGICAL   :: thdiag = .FALSE.  ! True if only cell diagonal elements 
+                                       ! should be updated
 
         REAL(dbl) :: wmass = 0.0d0     ! cell fictitious mass
         REAL(dbl) :: press = 0.0d0     ! external pressure 

@@ -18,7 +18,7 @@
         SAVE
 
         PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
-        PUBLIC :: sticks_owner, sticks_deallocate
+        PUBLIC :: sticks_owner, sticks_deallocate, pstickset
  
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
@@ -491,6 +491,238 @@
 
 !=----------------------------------------------------------------------=
 
+
+        SUBROUTINE pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gkcut, gcuts, &
+          nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
+          ngw, ngm, ngs )
+
+          USE kinds, ONLY: dbl
+          USE mp_global, ONLY: mpime, nproc, group
+          USE mp, ONLY: mp_max
+          USE control_flags, ONLY: gamma_only
+          USE io_global, ONLY: ionode
+          USE io_global, ONLY: stdout
+          USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_set
+
+
+          TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
+          REAL(dbl), INTENT(IN) :: a1(3), a2(3), a3(3), alat
+          REAL(dbl), INTENT(IN) :: gcut, gkcut, gcuts
+          INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+          INTEGER, INTENT(IN) :: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+          INTEGER, INTENT(OUT) :: ngw, ngm, ngs
+
+          LOGICAL :: tk
+! ...     tk  logical flag, TRUE if the symulation does not have the
+! ...         GAMMA symmetry
+
+          REAL(dbl) :: b1(3), b2(3), b3(3)
+! ...     b1, b2, b3 reciprocal space base vectors.
+
+          INTEGER :: ub(3), lb(3)
+! ...     ub(i), lb(i) upper and lower miller indexes
+
+!
+! ...     Plane Waves
+!
+
+        INTEGER, ALLOCATABLE :: stw(:,:)
+! ...   stick map (wave functions), stw(i,j) = number of G-vector in the
+! ...     stick whose x and y miller index are i and j
+
+        INTEGER, ALLOCATABLE :: nstpw(:)
+! ...   number of sticks (wave functions), nstpw(ip) = number of stick
+! ...     for processor ip
+
+        INTEGER, ALLOCATABLE :: sstpw(:)
+! ...   number of G-vectors (wave functions), sstpw(ip) = sum of the
+! ...     sticks lenght for processor ip = number of G-vectors
+! ...     owned by the processor ip
+
+        INTEGER :: nstw, nstpwx
+! ...   nstw     local number of sticks (wave functions)
+! ...   nstpwx   maximum among all processors of nstw
+
+!
+! ...     Potentials
+!
+
+        INTEGER, ALLOCATABLE :: st(:,:)
+! ...   stick map (potentials), st(i,j) = number of G-vector in the
+! ...     stick whose x and y miller index are i and j
+
+        INTEGER, ALLOCATABLE :: nstp(:)
+! ...   number of sticks (potentials), nstp(ip) = number of stick
+! ...     for processor ip
+
+        INTEGER, ALLOCATABLE :: sstp(:)
+! ...   number of G-vectors (potentials), sstp(ip) = sum of the
+! ...     sticks lenght for processor ip = number of G-vectors
+! ...     owned by the processor ip
+
+        INTEGER :: nst, nstpx
+! ...   nst      local number of sticks (potentials)
+! ...   nstpx    maximum among all processors of nst
+
+!
+! ...     Smooth Mesh
+!
+
+        INTEGER, ALLOCATABLE :: sts(:,:)
+! ...   stick map (smooth mesh), sts(i,j) = number of G-vector in the
+! ...     stick whose x and y miller index are i and j
+
+        INTEGER, ALLOCATABLE :: nstps(:)
+! ...   number of sticks (smooth mesh), nstp(ip) = number of stick
+! ...     for processor ip
+
+        INTEGER, ALLOCATABLE :: sstps(:)
+! ...   number of G-vectors (smooth mesh), sstps(ip) = sum of the
+! ...     sticks lenght for processor ip = number of G-vectors
+! ...     owned by the processor ip
+
+        INTEGER :: nsts, nstpsx
+! ...   nsts      local number of sticks (smooth mesh)
+! ...   nstpsx    maximum among all processors of nst
+
+
+        INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indexes ordered
+
+
+
+          INTEGER :: i, j, k
+          INTEGER :: ip, is, itmp, iss, i1, i2
+          INTEGER, ALLOCATABLE :: ist_tmp(:), index(:)
+
+          tk    = .NOT. gamma_only
+          ub(1) = ( nr1 - 1 ) / 2
+          ub(2) = ( nr2 - 1 ) / 2
+          ub(3) = ( nr3 - 1 ) / 2
+          lb    = - ub
+
+          ! ... reciprocal lattice generators
+
+          CALL recips( a1, a2, a3, b1, b2, b3 )
+          b1 = b1 * alat
+          b2 = b2 * alat
+          b3 = b3 * alat
+
+          ! ...       Allocate maps
+
+          ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
+
+          st  = 0
+          stw = 0
+          sts = 0
+
+! ...       Fill in the stick maps, for given g-space base (b1,b2,b3)  and cut-off
+
+          CALL sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gkcut, gcuts, st, stw, sts )
+
+! ...       Now count the number of stick nst and nstw
+
+          nst  = COUNT( st  > 0 )
+          nstw = COUNT( stw > 0 )
+          nsts = COUNT( sts > 0 )
+
+          IF (ionode) THEN
+            WRITE( stdout,*)
+            WRITE( stdout,10)
+ 10         FORMAT(3X,'Stick Mesh',/, &
+                   3X,'----------')
+            WRITE( stdout,15) nst, nstw, nsts
+ 15         FORMAT( 3X, 'nst =', I6, ',  nstw =', I6, ', nsts =', I6 )
+          END IF
+
+          ALLOCATE(ist(nst,5))
+
+          ALLOCATE(nstp(nproc))
+          ALLOCATE(sstp(nproc))
+
+          ALLOCATE(nstpw(nproc))
+          ALLOCATE(sstpw(nproc))
+
+          ALLOCATE(nstps(nproc))
+          ALLOCATE(sstps(nproc))
+
+! ...       initialize the sticks indexes array ist
+
+          CALL sticks_countg( tk, ub, lb, st, stw, sts, &
+            ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5) )
+
+! ...       Sorts the sticks according to their lenght
+
+          ALLOCATE( index( nst ) )
+
+          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, index )
+
+          ! ... Set as first stick the stick containing the G=0
+          !
+          !  DO iss = 1, nst
+          !    IF( ist( index( iss ), 1 ) == 0 .AND. ist( index( iss ), 2 ) == 0 )  EXIT
+          !  END DO
+          !  itmp         = index( 1 )
+          !  index( 1 )   = index( iss )
+          !  index( iss ) = itmp
+
+          CALL sticks_dist( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
+
+          ngw = sstpw( mpime + 1 )
+          ngm = sstp( mpime + 1 )
+          ngs = sstps( mpime + 1 )
+
+          CALL sticks_pairup( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
+
+! ...     Allocate data layout descriptors
+
+          CALL fft_dlay_allocate( dfftp, nproc, nr1x,  nr2x )
+          CALL fft_dlay_allocate( dffts, nproc, nr1sx, nr2sx )
+
+          CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (mpime+1), &
+            nproc, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+          CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (mpime+1), &
+            nproc, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+
+! ...     Maximum number of sticks (potentials)
+          nstpx  = MAXVAL( nstp )
+! ...     Maximum number of sticks (wave func.)
+          nstpwx = MAXVAL( nstpw  )
+
+          IF (ionode) WRITE( stdout,119)
+ 119      FORMAT(3X,'     PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs')
+          DO ip = 1, nproc
+            IF (ionode) THEN
+              WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
+            END IF
+          END DO
+          IF (ionode) THEN
+            WRITE( stdout,120) 0, SUM(nstp),  SUM(nstpw), SUM(nstps), SUM(sstp), SUM(sstpw), SUM(sstps)
+          END IF
+ 120      FORMAT(3X,7I8)
+
+
+          DEALLOCATE( ist )
+          DEALLOCATE( index )
+
+          DEALLOCATE( st, stw, sts )
+          DEALLOCATE( sstp )
+          DEALLOCATE( nstp )
+          DEALLOCATE( sstpw )
+          DEALLOCATE( nstpw )
+          DEALLOCATE( sstps )
+          DEALLOCATE( nstps )
+
+          IF(ionode) WRITE( stdout,*)
+
+          RETURN
+        END SUBROUTINE pstickset
+
+
+!=----------------------------------------------------------------------=
 
     SUBROUTINE sticks_deallocate
       IF( ALLOCATED( sticks_owner ) ) DEALLOCATE( sticks_owner )

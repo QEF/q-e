@@ -40,10 +40,10 @@
       !     tau( 1:3, i ) = position of the i-th atom
 
       INTEGER,   ALLOCATABLE :: ityp(:)
-      REAL(dbl), ALLOCATABLE :: tau(:,:)      !  initial position
-      REAL(dbl), ALLOCATABLE :: vel(:,:)      !  initial velocities
-      REAL(dbl), ALLOCATABLE :: tau_srt(:,:)  !  tau sorted by specie
-      REAL(dbl), ALLOCATABLE :: vel_srt(:,:)  !  vel sorted by specie
+      REAL(dbl), ALLOCATABLE :: tau(:,:)      !  initial positions read from stdin (in bohr)
+      REAL(dbl), ALLOCATABLE :: vel(:,:)      !  initial velocities read from stdin (in bohr)
+      REAL(dbl), ALLOCATABLE :: tau_srt(:,:)  !  tau sorted by specie in bohr
+      REAL(dbl), ALLOCATABLE :: vel_srt(:,:)  !  vel sorted by specie in bohr
       INTEGER,   ALLOCATABLE :: ind_srt( : )  !  index of tau sorted by specie
       CHARACTER(LEN=3  ) :: atm( ntypx ) 
       CHARACTER(LEN=80 ) :: tau_units
@@ -61,6 +61,9 @@
       REAL(dbl) :: si_epsilon = 0.0d0
       REAL(dbl) :: rad_localisation = 0.0d0
       REAL(dbl), ALLOCATABLE :: pos_localisation(:,:)
+
+      REAL(dbl) :: fricp   ! friction parameter for damped dynamics
+      REAL(dbl) :: greasp  ! friction parameter for damped dynamics
 
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
@@ -167,7 +170,8 @@
 
 
     SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , vel_, amass_ , &
-        atm_ , if_pos_ , tau_units_ , id_loc_ , sic_ , sic_epsilon_, sic_rloc_ )
+        atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , id_loc_ , sic_ ,  &
+        sic_epsilon_, sic_rloc_ )
 
       USE constants, ONLY: scmass
       USE io_base, ONLY: stdout
@@ -180,6 +184,7 @@
       CHARACTER(LEN=*), INTENT(IN) :: atm_ (:)
       CHARACTER(LEN=*), INTENT(IN) :: tau_units_
       INTEGER, INTENT(IN) :: if_pos_ (:,:)
+      REAL(dbl), INTENT(IN) :: alat_ , a1_(3) , a2_(3) , a3_(3)
       INTEGER, OPTIONAL, INTENT(IN) :: id_loc_ (:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: sic_
       REAL(dbl), OPTIONAL, INTENT(IN) :: sic_epsilon_
@@ -214,9 +219,63 @@
       ALLOCATE( if_pos( 3, nat ) )
 
       ityp( 1:nat )      = ityp_ ( 1:nat )
-      tau( : , 1:nat )   = tau_ ( : , 1:nat )
       vel( : , 1:nat )   = vel_ ( : , 1:nat )
       if_pos( :, 1:nat ) = if_pos_ ( : , 1:nat )
+
+
+      SELECT CASE ( tau_units )
+         !
+         !  convert input atomic positions to internally used format:
+         !  tau in atomic units
+         !
+         CASE ('alat')
+            !
+            !  input atomic positions are divided by a0
+            !
+            tau( :, 1:nat ) = tau_ ( :, 1:nat ) * alat_
+            vel( :, 1:nat ) = vel_ ( :, 1:nat ) * alat_
+            !
+         CASE ('bohr')
+            !
+            !  input atomic positions are in a.u.: do nothing
+            !
+            tau( : , 1:nat )   = tau_ ( : , 1:nat )
+            vel( : , 1:nat )   = vel_ ( : , 1:nat )
+            !
+         CASE ('crystal')
+            !
+            !  input atomic positions are in crystal axis ("scaled"):
+            !
+            do ia = 1, nat
+              do i = 1, 3
+                tau ( i, ia ) = a1_ (i) * tau_( 1, ia ) &
+                              + a2_ (i) * tau_( 2, ia ) &
+                              + a3_ (i) * tau_( 3, ia )
+               end do
+            end do
+            !
+            do ia = 1, nat
+              do i = 1, 3
+                vel ( i, ia ) = a1_ (i) * vel_( 1, ia ) &
+                              + a2_ (i) * vel_( 2, ia ) &
+                              + a3_ (i) * vel_( 3, ia )
+               end do
+            end do
+            !
+         CASE ('angstrom')
+            !
+            !  atomic positions in A
+            !
+            tau( :, 1:nat ) = tau_ ( :, 1:nat ) / 0.529177
+            vel( :, 1:nat ) = vel_ ( :, 1:nat ) / 0.529177
+            !
+         CASE DEFAULT
+            !
+            CALL errore(' ions_base_init ',' tau_units='//TRIM(tau_units)// &
+              ' not implemented ', 1 )
+            !
+      END SELECT
+
 
 ! ...     tau_srt : atomic species are ordered according to
 ! ...     the ATOMIC_SPECIES input card. Within each specie atoms are ordered
@@ -645,6 +704,8 @@
       REAL(dbl) :: tau0(3,natx), taum(3,natx),  taup(3,natx)
       REAL(dbl) :: taus(3,natx), tausm(3,natx), tausp(3,natx)
       REAL(dbl) :: vels(3,natx), velsm(3,natx), velsp(3,natx)
+
+      INTEGER :: iforce(3,natx)
 
 !------------------------------------------------------------------------------!
   CONTAINS 

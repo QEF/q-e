@@ -97,6 +97,10 @@ MODULE io_files
   INTEGER :: iunxyz      = 24 ! unit for saving coordinates ( xyz format )
   INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
   !
+  ! ... Y. Kanai combined smd/cp method
+  !
+  INTEGER :: smwout = 20 ! base value to compute index for replica files
+  !
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!

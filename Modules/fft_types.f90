@@ -27,7 +27,8 @@ MODULE fft_types
     INTEGER :: nnp      ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
     INTEGER :: nnr      ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
     INTEGER :: ngt      ! total number of non zero elemets (number of G-vec)
-    INTEGER, POINTER :: ngl(:)   ! per processor number of non zero elemets 
+    INTEGER, POINTER :: ngl(:)   ! per proc. no. of non zero charge density/potential components
+    INTEGER, POINTER :: nwl(:)   ! per proc. no. of non zero wave function plane components
     INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor
     INTEGER, POINTER :: ipp(:)   ! index of the first "Z" plane on each proc
     INTEGER, POINTER :: iss(:)   ! index of the first stick on each proc
@@ -50,6 +51,7 @@ CONTAINS
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
+    ALLOCATE( desc%nwl( nproc ) )
     ALLOCATE( desc%npp( nproc ) )
     ALLOCATE( desc%ipp( nproc ) )
     ALLOCATE( desc%iss( nproc ) )
@@ -75,6 +77,7 @@ CONTAINS
     IF ( ASSOCIATED( desc%nsp ) )    DEALLOCATE( desc%nsp )
     IF ( ASSOCIATED( desc%nsw ) )    DEALLOCATE( desc%nsw )
     IF ( ASSOCIATED( desc%ngl ) )    DEALLOCATE( desc%ngl )
+    IF ( ASSOCIATED( desc%nwl ) )    DEALLOCATE( desc%nwl )
     IF ( ASSOCIATED( desc%npp ) )    DEALLOCATE( desc%npp )
     IF ( ASSOCIATED( desc%ipp ) )    DEALLOCATE( desc%ipp )
     IF ( ASSOCIATED( desc%iss ) )    DEALLOCATE( desc%iss )
@@ -179,6 +182,7 @@ CONTAINS
     END IF
 
     desc%ngl( 1:nproc )  = ngp( 1:nproc )
+    desc%nwl( 1:nproc )  = ngpw( 1:nproc )
 
     IF( SIZE( desc%isind ) < ( nr1x * nr2x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions, isind ', 5 )

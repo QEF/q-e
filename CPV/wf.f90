@@ -538,7 +538,7 @@
 
        total = 0   
    do proc=1,nproc
-      ngpwpp(proc)=(ngpw__(proc)+1)/2
+      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
            total=total+ngpwpp(proc)
 !           nstat=ns(proc)
         if(iprsta.gt.4) then
@@ -1649,7 +1649,7 @@ end subroutine wf
 #ifdef __PARA
    ntot=0
    do i=1,nproc
-         ngppp(i)=(ngpw__(i)+1)/2
+         ngppp(i)=(dfftp%nwl(i)+1)/2
    end do
    
    do proc=1,nproc
@@ -2670,8 +2670,8 @@ end subroutine wf
 
    do ir3=1,nr3s
 #ifdef __PARA
-   ibig3=ir3-n3s(me)
-   if(ibig3.gt.0.and.ibig3.le.npps(me)) then
+   ibig3 = ir3 - dffts%ipp( me )
+   if(ibig3.gt.0.and.ibig3.le.dffts%npp(me)) then
 #else
    ibig3=ir3
 #endif
@@ -2837,8 +2837,8 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 
         do ir3=1,nr3
 #ifdef __PARA
-        ibig3=ir3-n3me(me)
-        if(ibig3.gt.0.and.ibig3.le.npp(me)) then
+        ibig3 = ir3 - dfftp%ipp( me )
+        if(ibig3.gt.0.and.ibig3.le.dfftp%npp(me)) then
 #else
         ibig3=ir3
 #endif
@@ -2888,8 +2888,8 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
          ibig3=irb(3)+ir3-1
          ibig3=1+mod(ibig3-1,nr3)
 #ifdef __PARA
-         ibig3=ibig3-n3me(me)
-         if (ibig3.gt.0.and.ibig3.le.npp(me)) then
+         ibig3 = ibig3 - dfftp%ipp( me )
+         if (ibig3.gt.0.and.ibig3.le.dfftp%npp(me)) then
 #endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
@@ -2952,7 +2952,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 #ifdef __PARA
     ntot=0
     do i=1,nproc
-        ngdens(i)=(ngp__(i)+1)/2
+        ngdens(i)=(dfftp%ngl(i)+1)/2
     end do
 
     do proc=1,nproc
@@ -3104,7 +3104,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 #ifdef __PARA
     ntot=0
     do i=1,nproc
-        ngdens(i)=(ngp__(i)+1)/2
+        ngdens(i)=(dfftp%ngl(i)+1)/2
     end do
 
     do proc=1,nproc
@@ -4000,7 +4000,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 
 
         do proc=1,nproc
-          ngpwpp(proc)=(ngpw__(proc)+1)/2
+          ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
           ntot=ntot+ngpwpp(proc)
         end do
 

@@ -26,12 +26,20 @@
           SAVE
           PRIVATE
 
+          REAL(dbl) :: frice  = 0.0d0   !  friction parameter for electronic 
+                                        !  damped dynamics
+          REAL(dbl) :: grease = 0.0d0   !  friction parameter for electronic 
+                                        !  damped dynamics
+
           PUBLIC :: dotp, hpsi, rande_base, gram_kp_base, gram_gamma_base
           PUBLIC :: converg_base, rande_base_s, scalw
 
           PUBLIC :: wave_steepest
           PUBLIC :: wave_verlet
           PUBLIC :: wave_speed2
+
+          PUBLIC :: frice, grease
+          PUBLIC :: wave_base_init
 
           INTERFACE dotp
             MODULE PROCEDURE dotp_gamma, dotp_kp, dotp_gamma_n, dotp_kp_n
@@ -47,6 +55,17 @@
 
 !==----------------------------------------------==!
         CONTAINS
+!==----------------------------------------------==!
+
+      SUBROUTINE wave_base_init( frice_inp )
+
+        REAL(dbl), intent(in) :: frice_inp
+
+        frice      = frice_inp
+
+        RETURN
+      END SUBROUTINE wave_base_init
+
 !==----------------------------------------------==!
 
       SUBROUTINE gram_kp_base(wf, gid)

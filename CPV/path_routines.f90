@@ -57,7 +57,7 @@ MODULE path_routines
       USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
       USE control_flags, ONLY : lpath, lneb
       USE parser,        ONLY : int_to_char
-      USE cell_base,     ONLY : cell_base_init
+      USE cell_base,     ONLY : cell_base_init, a1, a2, a3
       USE ions_base,     ONLY : ions_base_init
       USE check_stop,    ONLY : check_stop_init
       !
@@ -124,7 +124,8 @@ MODULE path_routines
                            rd_ht, a, b, c, cosab, cosac, cosbc, alat_ )
 
       CALL ions_base_init( ntyp, nat, na_inp, sp_pos, rd_pos, rd_vel, &
-                           atom_mass, atom_label, if_pos, atomic_positions  )
+                           atom_mass, atom_label, if_pos, atomic_positions, &
+                           alat_ , a1, a2, a3  )
       !
       CALL check_stop_init( max_seconds )
       !

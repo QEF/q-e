@@ -2165,7 +2165,9 @@
       use constants, only: scmass
       use cell_base, only: omega, alat
       use io_global, only: stdout
-      USE grid_subroutines, ONLY: realspace_grids_init
+      USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
+      USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
+      USE stick_base, ONLY: pstickset
 
       implicit none
 ! 
@@ -2176,7 +2178,7 @@
       real(kind=8) gcut, gcutw, gcuts, ecutw, dual, fsum, ocp, ddum
       real(kind=8) qk(3), rat1, rat2, rat3
       real(kind=8) b1(3), b2(3), b3(3)
-      integer :: ng_ , ngs_ 
+      integer :: ng_ , ngs_ , ngm_ , ngw_
 
 !
 !     ==============================================================
@@ -2240,9 +2242,12 @@
 !
 
 
-      call set_fft_para ( b1, b2, b3, gcut, gcuts, gcutw,               &
-     &                   nr1, nr2, nr3, nr1s, nr2s, nr3s,  nnr,         &
-     &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx, nnrsx )
+      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gcutw, gcuts, &
+        nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &
+        nr3sx, ngw_ , ngm_ , ngs_ )
+
+!
+      CALL realspace_grids_para( dfftp, dffts )
 !
 !
 !     ==============================================================
@@ -8501,7 +8506,7 @@ end function pseudo_type
         do ix=1,3
         ir=1
 !
-        do k = dfftp%ipp(me)+1, dfftp%ipp(me)+ npp(me)
+        do k = dfftp%ipp(me)+1, dfftp%ipp(me)+ dfftp%npp(me)
          do j=1,nr2x
           do i=1,nr1x
             X=XG0+(i-1)*pass1
@@ -8545,7 +8550,7 @@ end function pseudo_type
         do ix=1,6
 !
          ir=1
-         do k=dfftp%ipp(me)+1, dfftp%ipp(me) + npp(me)
+         do k=dfftp%ipp(me)+1, dfftp%ipp(me) + dfftp%npp(me)
           do j=1,nr2x
            do i=1,nr1x
 !
