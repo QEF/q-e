@@ -335,7 +335,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/scala_utils.o  \
 ../PW/scale_h.o  \
 ../PW/scatter.o  \
-../PW/scnds.o  \
 ../PW/scopy_t3e.o  \
 ../PW/seqopn.o  \
 ../PW/set_fft_dim.o  \

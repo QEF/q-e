@@ -121,7 +121,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/saveall.o \
 ../PW/scale_h.o \
 ../PW/swap.o \
-../PW/scnds.o \
 ../PW/scopy_t3e.o \
 ../PW/seqopn.o \
 ../PW/set_fft_dim.o \

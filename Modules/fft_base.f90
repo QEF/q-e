@@ -301,7 +301,6 @@
             nsx_l = MAXVAL( dfft%nsp( : ) )
           END IF
 
-          WRITE(6, fmt = "( 'DEBUG fft_transpose: ', 5I5 ) " ) me, nproc, iopt, nz_l, ns_l
           
 
           ALLOCATE( sndbuf( nsx_l * nz_l, npz ), ishand( npz ) )
@@ -468,12 +467,26 @@
           INTEGER, INTENT(IN) :: iopt
 
           INTEGER :: i, j, k, is, nz, ns
+          INTEGER, SAVE :: dfft_id = -1
+
 !
 ! ... SUBROUTINE BODY
 !
+
+          IF( iopt == 0 ) THEN
+            CALL transpose_setup( dfft, me, nproc )
+            dfft_id = dfft%id
+            RETURN
+          END IF
+
+          IF( dfft_id /= dfft%id ) THEN
+            CALL transpose_setup( dfft, me, nproc )
+            dfft_id = dfft%id
+          END IF
+
           nz = dfft%npp( me )
 
-          IF ( iopt > 0 ) THEN
+          IF ( iopt < 0 ) THEN
 
             r = CMPLX(0.0d0,0.0d0)
 
@@ -491,7 +504,7 @@
               END DO
             END DO
 
-          ELSE IF ( iopt < 0 ) THEN
+          ELSE IF ( iopt > 0 ) THEN
 
             IF( iopt == -2 ) THEN
               ns = dfft%nsw( me )
