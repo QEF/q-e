@@ -6,11 +6,10 @@ INFM (http://www.democritos.it). It includes all or part of the following:
   Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi (Scuola Normale,
   Pisa) and others: see http://www.pwscf.org for more information
 
-- the CPV code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
+- the CP code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
   Kari Laasonen (Oulu), Andrea Trave (UCBerkeley), Roberto Car
   (Princeton), Paolo Giannozzi and others, for Car-Parrinello
-  variable-cell molecular dynamics using Ultrasoft (Vanderbilt)
-  pseudopotentials
+  variable-cell molecular dynamics 
 
 - the FPMD code, developed by Carlo Cavazzoni (CINECA, Bologna),
   Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 
@@ -48,16 +47,16 @@ pwtools/   Source files for post-processing of ph.x results,
 pwdoc/     documentation for PWscf, ChangeLog, etc
 pw_examples/ contains sample input and output files
 
-Directory structure of the CPV code:
+Directory structure of the CP code:
 
-CPV/       Source file for Car-Parrinello-Vanderbilt code
-cpdocs/    documentation for CPV, ChangeLog, etc
+CPV/       Source files
+cpdocs/    documentation, ChangeLog, etc
 cp_examples/ contains sample input and output files
 
 Directory structure of the FPMD code:
 
-FPMD/      Source file for First-Principle Molecular Dynamics code
-cp_examples/ contains sample input and output files (common with CPV)
+FPMD/      Source files
+cp_examples/ contains sample input and output files (common with CP)
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

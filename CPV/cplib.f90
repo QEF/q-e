@@ -6287,27 +6287,7 @@
 !
 !   new version: fill the q(r) here
 !
-         do iv=1,nbeta(is)
-            do jv=iv,nbeta(is)
-               lmin=lll(jv,is)-lll(iv,is)+1
-               lmax=lmin+2*lll(iv,is)
-               do l=lmin,lmax
-                  do ir=1,kkbeta(is)
-                     if (r(ir,is).ge.rinner(l,is)) then
-                        qrl(ir,iv,jv,l,is)=qfunc(ir,iv,jv,is)
-                     else
-                        qrl(ir,iv,jv,l,is)=qfcoef(1,l,iv,jv,is)
-                        do i = 2, nqf(is)
-                           qrl(ir,iv,jv,l,is)=qrl(ir,iv,jv,l,is) +      &
-     &                          qfcoef(i,l,iv,jv,is)*r(ir,is)**(2*i-2)
-                        end do
-                        qrl(ir,iv,jv,l,is) = qrl(ir,iv,jv,l,is) *       &
-     &                                       r(ir,is)**(l+1)
-                     end if
-                  end do
-               end do
-            end do
-         end do
+         call fill_qrl(is)
       end if
 !
 !    Here we write on output informations on the read pseudopotential
@@ -6354,6 +6334,41 @@
       return
 100   call error('readvan','error reading pseudo file', abs(ios) )
       end
+!
+!-----------------------------------------------------------------------
+      subroutine fill_qrl(is)
+!-----------------------------------------------------------------------
+! 
+! for compatibility with old Vanderbilt formats
+!
+      use ncprm
+!
+      implicit none
+      integer :: is
+!
+      integer :: iv, jv, lmin, lmax, l, ir, i
+!
+      do iv=1,nbeta(is)
+         do jv=iv,nbeta(is)
+            lmin=lll(jv,is)-lll(iv,is)+1
+            lmax=lmin+2*lll(iv,is)
+            do l=lmin,lmax
+               do ir=1,kkbeta(is)
+                  if (r(ir,is).ge.rinner(l,is)) then
+                     qrl(ir,iv,jv,l,is)=qfunc(ir,iv,jv,is)
+                  else
+                     qrl(ir,iv,jv,l,is)=qfcoef(1,l,iv,jv,is)
+                     do i = 2, nqf(is)
+                        qrl(ir,iv,jv,l,is)=qrl(ir,iv,jv,l,is) +      &
+                             qfcoef(i,l,iv,jv,is)*r(ir,is)**(2*i-2)
+                     end do
+                     qrl(ir,iv,jv,l,is) = qrl(ir,iv,jv,l,is) * r(ir,is)**(l+1)
+                  end if
+               end do
+            end do
+         end do
+      end do
+    end subroutine fill_qrl
 !
 !-----------------------------------------------------------------------
       subroutine rdiag (n,h,ldh,e,v)

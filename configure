@@ -67,7 +67,7 @@ then
 		echo $PWD/Modules/work.pc >> $PWD/flib/intel.pcl
 	fi
 
-        if [ "$1" = "cpv.lnx.intel" ]
+        if [ "$1" = "cp.lnx.intel" ]
         then
                 echo creating the library file
                 echo work.pc > $PWD/Modules/intel.pcl
@@ -87,12 +87,12 @@ then
           alpha  | alphaMPI| hitachi | \
           fpmd.origin | fpmd.irix | fpmd.ibmsp | fpmd.aix | fpmd.t3e | fpmd.qsw | \
           fpmd.lnx.alpha | fpmd.alphasc | fpmd.lnx.intel | fpmd.alpha | \
-          cpv.aix | cpv.alpha | cpv.alphasc | cpv.ibmsp | cpv.irix | cpv.lnx.intel | \
-          cpv.origin | cpv.qsw | cpv.sx5 | cpv.t3e )
+          cp.aix | cp.alpha | cp.alphasc | cp.ibmsp | cp.irix | cp.lnx.intel | \
+          cp.origin | cp.qsw | cp.sx5 | cp.t3e )
             cp install/Make.rules_nocpp make.rules
           ;;
           pc_pgi | pc_abs | beowulf | fujitsu | sun   | sunmpi | \
-          fpmd.lnx.pgi | fpmd.lnx.absoft | cpv.lnx.pgi | cpv.lnx.absoft )
+          fpmd.lnx.pgi | fpmd.lnx.absoft | cp.lnx.pgi | cp.lnx.absoft )
             cp install/Make.rules_cpp make.rules
           ;;
         esac

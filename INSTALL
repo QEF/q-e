@@ -16,7 +16,7 @@ From the root directory (the one where this file is), give the command:
 ./configure "your-system"
 
 "./configure" with no argument will yield a list of valid arguments.
-Temporarily there are different installation files for PWscf, CPV, FPMD.
+Temporarily there are different installation files for PWscf, CP, FPMD.
 
 For PWscf, select one of the following as "your-system" :
 
@@ -36,23 +36,23 @@ sun     : Sun workstations, Sun compiler
 fujitsu : Fujitsu vector machines, Fujitsu compiler
 hitachi : Hitachi SR8000
 
-For CPV:
+For CP:
 
-cpv.ibmsp   : IBM SP2/3/4, IBM compiler
-cpv.t3e     : Cray T3E, Cray compiler
-cpv.origin  : SGI Origin 2000/3000, SGI compiler
-cpv.alphasc : Compaq alpha parallel machines, Compaq compiler
-cpv.aix     : IBM RS6000 workstations, IBM compiler
-cpv.alpha   : Compaq alpha workstations, Compaq compiler
-cpv.irix    : SGI workstations running IRIX, SGI compiler
-cpv.lnx.alpha  : Linux Alphas, Compaq compiler
-cpv.qsw        : Linux Alpha QSW cluster, Compaq compiler
-cpv.lnx.absoft : Linux PCs (also beowulf), Absoft compiler
-cpv.lnx.pgi    : Linux PCs (also beowulf), Portland compiler
-cpv.lnx.inteli : Linux PCs (alos beowulf), Intel compiler
-cpv.sx5        : NEC SX-5
+cp.ibmsp   : IBM SP2/3/4, IBM compiler
+cp.t3e     : Cray T3E, Cray compiler
+cp.origin  : SGI Origin 2000/3000, SGI compiler
+cp.alphasc : Compaq alpha parallel machines, Compaq compiler
+cp.aix     : IBM RS6000 workstations, IBM compiler
+cp.alpha   : Compaq alpha workstations, Compaq compiler
+cp.irix    : SGI workstations running IRIX, SGI compiler
+cp.lnx.alpha  : Linux Alphas, Compaq compiler
+cp.qsw        : Linux Alpha QSW cluster, Compaq compiler
+cp.lnx.absoft : Linux PCs (also beowulf), Absoft compiler
+cp.lnx.pgi    : Linux PCs (also beowulf), Portland compiler
+cp.lnx.inteli : Linux PCs (also beowulf), Intel compiler
+cp.sx5        : NEC SX-5
 
-For FPMD: as above, with "cpv" replaced by "fpmd"
+For FPMD: as above, with "cp" replaced by "fpmd"
 
 This will generate dependencies and produce a file "make.sys"
 in the root directory. 
@@ -81,7 +81,8 @@ make gamma  produces Gamma/pwg.x and Gamma/phcg.x
 make upf    produces utilities for pseudopotential conversion in upftools/
 make tools  produces miscellaneous tools for data analysis, in pwtools/
 make fpmd   produces FPMD/par2.x code for Car-Parrinello MD
-make cpv    produces CPV/cp.x code for CP MD with ultrasoft pseudopotentials
+make cpv    produces CP/cp.x code for Car-Parrinello MD
+            (works with ultrasoft pseudopotentials)
 
 make links  creates links to all executables in bin/
             (required to run the examples)

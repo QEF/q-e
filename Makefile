@@ -15,7 +15,7 @@ what:
 	@echo '   clean     (remove executables and objects)'
 	@echo '   veryclean (revert distribution to the original status)'
 	@echo '   fpmd      (FPMD code for Car-Parrinello MD)'
-	@echo '   cpv       (CPV code: CP MD with ultrasoft pseudopotentials)'
+	@echo '   cpv       (CP code: CP MD with ultrasoft pseudopotentials)'
 	@echo '   links     (creates links to executables in bin/)'
 
 tools:

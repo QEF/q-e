@@ -92,9 +92,13 @@ subroutine read_pseudo (is, iunps, ierr)
   end if
   ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   ! lloc(is) = 1
-  !!! TEMP: compatibility with Vanderbilt, Vloc => r*Vloc
+  !
+  ! compatibility with Vanderbilt format: Vloc => r*Vloc
   rucore(1:upf%mesh, 1,is) = upf%vloc(1:upf%mesh) * upf%r  (1:upf%mesh)
-  !!!
+  !
+  ! compatibility with old Vanderbilt formats
+  call fill_qrl(is)
+  !
   CALL deallocate_pseudo_upf( upf )
 
 end subroutine read_pseudo
