@@ -35,7 +35,7 @@ implicit none
                        llapack
                                                                                 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
+  INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 
   nd_nmbr=nodenumber

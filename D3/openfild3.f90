@@ -92,7 +92,6 @@ subroutine openfild3
   if (me.ne.1.or.mypool.ne.1) then
      iudyn = 6
      goto 100
-     return
   endif
 #endif
   iudyn = 26
@@ -101,8 +100,6 @@ subroutine openfild3
 110 call errore ('openfild3', 'opening file'//fildyn, abs (ios) )
   rewind (iudyn)
 #ifdef __PARA
-
-
 
 100 continue
 #endif
