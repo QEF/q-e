@@ -9,7 +9,8 @@ atomic calculations and pseudo-potentials generation.
 - Two new features are implemented:
   a) Generation and test of norm-conserving and ultrasoft 
      pseudo-potentials with the RRKJ3 recipe.
-  b) Generation of spin-orbit splitted pseudo-potentials.
+  b) Generation of fully relativistic pseudo-potentials including 
+     spin-orbit coupling.
 
 - Some features, present in the pseudo-potential code of P. Giannozzi, are
   not available in this package. The most relevant missing feature

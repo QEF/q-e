@@ -134,7 +134,6 @@ enddo
                '<r> =',f9.4,2x,'<r2> =',f10.4,2x,'r(max) =',f9.4)
 1401 format(5x,'s(',a2,'/',a2,') =',f10.6)
 
-write(6,*) file_wavefunctions
 if (file_wavefunctions.ne.' ') then
    open(unit=15,file=file_wavefunctions,status='unknown',  &
         err=1110, iostat=ios,form='formatted')

@@ -24,9 +24,9 @@
 use ld1inc
 implicit none
 
-integer :: &
-      ik,  &    ! the point corresponding to rc
-      ikus,&    ! the point corresponding to rc ultrasoft
+integer ::   &
+      ik,    &  ! the point corresponding to rc
+      ikus,  &  ! the point corresponding to rc ultrasoft
       ikloc, &  ! the point corresponding to rc locale
       ns,    &  ! counter on pseudo functions
       ns1,   &  ! counter on pseudo functions
@@ -34,12 +34,12 @@ integer :: &
       nnode, &  ! the number of nodes of phi
       lam       ! the angualar momentum
 
-real(kind=dp) :: &
-      xc(8),     & ! parameters of bessel functions
-      gi(ndm,2), & ! auxiliary to compute the integrals
-      sum,       & ! the integral
-      int_0_inf_dr, &! the integral function
-      work(nwfsx)   ! work space
+real(kind=dp) ::    &
+      xc(8),        & ! parameters of bessel functions
+      gi(ndm,2),    & ! auxiliary to compute the integrals
+      sum,          & ! the integral
+      int_0_inf_dr, & ! the integral function
+      work(nwfsx)     ! work space
      
 real(kind=dp) :: &
       binv(nwfsx,nwfsx)  ! the inverse B matrix
@@ -47,6 +47,8 @@ real(kind=dp) :: &
 integer :: &
       m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
       is, nbf, nc, ios
+
+character(len=5) :: ind
 
 logical :: &
       lbes4     ! 4 Bessel functions expansion
@@ -70,7 +72,6 @@ call pseudovloc
 !   if nlcc is true compute here the core charge
 !
 if (nlcc) call set_rho_core
-!
 !
 !   set the appropriate energies and the correspondence all-electron
 !   pseudo
@@ -316,39 +317,53 @@ endif
 !     print the main functions on files
 !
 if (file_wavefunctionsps .ne. ' ') then
-   open(unit=19,file=file_wavefunctionsps, status='unknown', iostat=ios, &
-                        err=300 )
-300      call errore('gener_pseudo','opening file '//file_core,abs(ios))
+  open(unit=19,file=file_wavefunctionsps, status='unknown', iostat=ios,err=300)
+300      call errore('gener_pseudo','opening file '//file_wavefunctionsps,&
+                     abs(ios))
 
    do n=1,mesh
       write(19,'(i5,7e13.5)') n,r(n), (phis(n,ns), ns=1,nwfs)
    enddo
    close(19)
 endif
-if (.false.) then
-do n=1,mesh
-   if (pseudotype.eq.1)  &
-      write(17,'(i5,6e12.4)') n,r(n), (vnl(n,lls(ns)), ns=1,nbeta)
-enddo
-do n=1,mesh
-   write(18,'(i5,7e12.3)') n,r(n), (chis(n,ns), ns=1,nwfs)
-enddo
-do n=1,mesh
-   write(16,'(i5,7e12.3)') n,r(n), (betas(n,ns), ns=1,nbeta)
-enddo
-do n=1,mesh
-   if (pseudotype.eq.3) &
-      write(17,'(i5,7e10.3)') n,r(n), (psipsus(n,ns), ns=1,nbeta)
-enddo
-!   do ns1=1,nbeta
-!      write(31+ns1,'(8f10.6)') r(n), (qvan(n,ns,ns1), &
-!                                           ns=1,nbeta)
-!   enddo
+if (file_beta .ne. ' ') then
+  open(unit=19,file=file_beta, status='unknown', iostat=ios, err=400)
+400    call errore('gener_pseudo','opening file '//file_beta,abs(ios))
+   do n=1,mesh
+      write(19,'(8f12.6)') r(n), (betas(n,ns), ns=1,nbeta)
+   enddo
+   close(19)
+endif
+if (file_chi .ne. ' ') then
+  open(unit=19,file=file_chi, status='unknown', iostat=ios, err=600)
+600    call errore('gener_pseudo','opening file '//file_chi,abs(ios))
+   do n=1,mesh
+      write(19,'(8f12.6)') r(n), (chis(n,ns), ns=1,nbeta)
+   enddo
+   close(19)
+endif
+if (file_qvan .ne. ' ') then
+  do ns1=1,nbeta
+     ind=' '
+     if (ns1.lt.10) then
+        write(ind,'(".",i1)') ns1
+     elseif (ns1.lt.100) then
+        write(ind,'(".",i2)') ns1
+     else
+        write(ind,'(".",i3)') ns1
+     endif
+     open(unit=19,file=TRIM(file_qvan)//TRIM(ind), status='unknown', &
+                  iostat=ios, err=700)
+700    call errore('gener_pseudo','opening file '//file_qvan,abs(ios))
+     do n=1,mesh
+        write(19,'(8f12.6)') r(n), (qvan(n,ns,ns1), ns=1,ns1)
+     enddo
+     close(19)
+  enddo
 endif
 
 write(6, &
      & '(/,5x,12(''-''),'' End of pseudopotential generation '',20(''-''),/)')
-
 
 return
 end

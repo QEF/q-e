@@ -1,3 +1,7 @@
+19/06/2004  Update of the output files. Added the possibility to write on file
+            the beta functions (file_beta), the qvan functions (file_qvan),
+            the chi functions (file_chi). (ADC)
+
 20/05/2004  Tests, examples, documentation added in directory atomic_doc
 
 19/05/2004  Atomic number can be replaced by atom name in input, as in

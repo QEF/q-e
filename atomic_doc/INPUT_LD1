@@ -151,6 +151,9 @@ only in mode 3
     file_pseudopw*80,        & ! the file with output pseudo-potential
     file_wavefunctions*80,   & ! the file with output wavefunctions
     file_wavefunctionsps*80, & ! the file with output pseudo-wavefunctions
+    file_chi*80,             & ! the file with the chi functions
+    file_beta*80,            & ! the file with the beta functions
+    file_qvan*80,            & ! the file with the qvan functions
     file_logderae*80,        & ! the file with all-electron log der 
     file_logderps*80,        & ! the file with pseudo-potential log der 
     file_tests*80,           & ! the file with the tests

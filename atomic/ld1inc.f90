@@ -188,7 +188,7 @@ module ld1inc
   !
   real(kind=dp) :: &
        rcore,      &  ! the points where core charge is smooth
-       rhoc(ndm)    ! the core charge
+       rhoc(ndm)      ! the core charge
 
   logical :: &
        nlcc    ! if true nlcc pseudopotential
@@ -210,6 +210,9 @@ module ld1inc
        file_wavefunctions*80,   & ! the file with output wavefunctions
        file_wavefunctionsps*80, & ! the file with output pseudowavefunctions
        file_pseudopw*80,        & ! the file with output pseudopotential
+       file_chi*80,             & ! the file with the chi-functions
+       file_beta*80,            & ! the file with the beta-functions
+       file_qvan*80,            & ! the file with the qvan-functions
        file_logderae*80,        & ! the file with all-electron log der 
        file_logderps*80,        & ! the file with pseudo log der 
        file_screen*80,          & ! the file with the screening potential

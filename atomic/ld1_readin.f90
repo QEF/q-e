@@ -73,6 +73,9 @@ subroutine ld1_readin
        rcloc, &    ! the local cut-off for pseudo
        file_screen,   & ! file with screening potential
        file_core,     & ! file with total and core charge
+       file_beta,     & ! file with the beta functions
+       file_chi,      & ! file with the chi functions
+       file_qvan,     & ! file with the qvan functions
        file_pseudopw, & ! the file where to write pseudopotential
        file_logderps    ! file with the pseudo log derivatives
   !
@@ -352,6 +355,9 @@ subroutine ld1_readin
      file_pseudopw=' '
      file_screen=' '
      file_core=' '
+     file_chi=' '
+     file_beta=' '
+     file_qvan=' '
      zval=0.d0
      lloc=-1
      rcloc=1.5d0
