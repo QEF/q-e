@@ -356,17 +356,19 @@ help lda_plus_u     -vartype logical -helpfmt txt2html -helptext "$_hubbard\n   
 help Hubbard_U      -vartype real -helpfmt txt2html -helptext "$_hubbard\n             (default: 0.0 for all species)"
 help Hubbard_alpha  -vartype real -helpfmt txt2html -helptext "$_hubbard\n             (default: 0.0 for all species)"
 help U_projector_type -vartype character -helpfmt txt2html -helptext {
-               Only active when lda_plus_U is .true., specifies the type
-               of projector on localized orbital to be used in the LDA+U
-               scheme.
-               Currently available choices:
-               'atomic': use atomic wfc's (as they are) to build the projector 
-               'ortho-atomic': use Lowdin orthogonalized atomic wfc's
-               'file': use the information from file "prefix".atwfc that must
-                       have been generated previously, for instance by pmw.x
-                       (see PP/poormanwannier.f90 for details)
-               NB: forces and stress currently implemented only for the
-                   'atomic' choice.
+    Only active when lda_plus_U is .true., specifies the type
+    of projector on localized orbital to be used in the LDA+U
+    scheme.
+
+    Currently available choices:
+    'atomic': use atomic wfc's (as they are) to build the projector 
+    'ortho-atomic': use Lowdin orthogonalized atomic wfc's
+    'file': use the information from file "prefix".atwfc that must
+        have been generated previously, for instance by pmw.x
+        (see PP/poormanwannier.f90 for details)
+
+    NB: forces and stress currently implemented only for the
+    'atomic' choice.
 }
 
 help edir         -vartype integer -helpfmt txt2html -helptext { 
