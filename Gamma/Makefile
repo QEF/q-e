@@ -303,4 +303,4 @@ phcg.x : $(PWOBJS) $(CGOBJS)
 clean :
 	- /bin/rm -f *.x *.o *.d *.i *~ *.F90 *.mod work.pc
 
-include .dependencies
+include make.depend

@@ -406,4 +406,4 @@ nmr.x : $(NMROBJ)
 clean :
 	- /bin/rm -f nmr.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
-include .dependencies
+include make.depend

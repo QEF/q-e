@@ -270,4 +270,4 @@ pwcond.x : $(PWCONDOBJS)
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.a work.pc
 
-include .dependencies
+include make.depend

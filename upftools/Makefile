@@ -45,4 +45,4 @@ virtual.x : virtual.o nclib.o $(OBJS) $(SPLINE)
 clean :
 	- /bin/rm -f  *.x *.o *~ *.F90 *.mod *.d *.i work.pc
 
-include .dependencies
+include make.depend

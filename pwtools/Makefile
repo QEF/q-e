@@ -91,4 +91,4 @@ q2r.x : q2r.o rigid.o
 clean :
 	- /bin/rm -f pwi2xsf pwi2xsf_old *.x *.o *~ *.F90 *.mod *.d *.i work.pc
 
-include .dependencies
+include make.depend

@@ -383,4 +383,4 @@ d3.x : $(D3OBJS)
 clean :
 	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod work.pc
 
-include .dependencies
+include make.depend

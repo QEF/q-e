@@ -99,4 +99,4 @@ clean :
 		blas_and_lapack blas lapack lapack_ibm lapack_t3e \
 		lapack_mkl eispack lapack_atlas
 
-include .dependencies
+include make.depend

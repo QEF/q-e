@@ -317,4 +317,4 @@ pw_export.x : pw_export.o $(EXOBJS) $(PPOBJS)
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
-include .dependencies
+include make.depend

@@ -1,0 +1,14 @@
+matdyn.o : ../Modules/kind.o
+matdyn.o : ../Modules/mp.o
+matdyn.o : ../Modules/mp_global.o
+path_int.o : ../Modules/basic_algebra_routines.o
+path_int.o : ../Modules/constants.o
+path_int.o : ../Modules/io_files.o
+path_int.o : ../Modules/kind.o
+path_int.o : ../Modules/path_formats.o
+path_int.o : ../Modules/splinelib.o
+path_int.o : ../Modules/supercell.o
+q2r.o : ../Modules/fft_scalar.o
+q2r.o : ../Modules/kind.o
+q2r.o : ../Modules/mp.o
+q2r.o : ../Modules/mp_global.o

@@ -71,4 +71,4 @@ iotk : $(IOTK)
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc
 
-include .dependencies
+include make.depend

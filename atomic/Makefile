@@ -99,4 +99,4 @@ ld1.x: $(LD1OBJS) ld1.o
 clean:
 	- /bin/rm -f *.o *.x $(LIB) *~ *.d *.mod *.tmp.* make.* work.pc
 
-include .dependencies
+include make.depend

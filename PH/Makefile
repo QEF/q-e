@@ -400,4 +400,4 @@ ph.x : $(PHOBJS)
 clean :
 	- /bin/rm -f ph.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
-include .dependencies
+include make.depend

@@ -41,4 +41,4 @@ cp.x : $(FOBJS)
 clean :
 	- /bin/rm -f *.o *.i core* fort* *.mod *.s *.d work.pc cp.x
 
-include .dependencies
+include make.depend

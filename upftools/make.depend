@@ -1,0 +1,15 @@
+any2upf.o : write_upf.o
+cpmd2upf.o : write_upf.o
+fhi2upf.o : write_upf.o
+fpmd2upf.o : ../Modules/kind.o
+fpmd2upf.o : ../Modules/parameters.o
+fpmd2upf.o : ../Modules/parser.o
+fpmd2upf.o : ../Modules/pseudo_types.o
+fpmd2upf.o : write_upf.o
+ncpp2upf.o : write_upf.o
+oldcp2upf.o : write_upf.o
+rrkj2upf.o : write_upf.o
+vanderbilt.o : write_upf.o
+virtual.o : ../Modules/splinelib.o
+virtual.o : read_upf.o
+virtual.o : write_upf.o

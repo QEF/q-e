@@ -302,4 +302,4 @@ pw.x : pwscf.o $(PWOBJS)
 clean :
 	- /bin/rm -f pw.x memory.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
-include .dependencies
+include make.depend

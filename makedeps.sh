@@ -21,11 +21,11 @@ do
     if test -d $TOPDIR/$DIR
     then
 	cd $TOPDIR/$DIR
-	$TOPDIR/moduledep.sh $DEPENDS > .dependencies
+	$TOPDIR/moduledep.sh $DEPENDS > make.depend
     fi
 
     # check for missing dependencies
-    if grep @ .dependencies
+    if grep @ make.depend
     then
 	echo WARNING: modules not found in directory $DIR
     fi

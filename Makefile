@@ -82,20 +82,20 @@ bindir :
 # remove object files and executables
 clean :
 	touch make.rules make.sys 
-	# make complains if they aren't there; same with .dependencies below
+	# make complains if they aren't there; same with make.depend below
 	for dir in \
 		CPV D3 FPMD Gamma Modules PH PP PW PWCOND PWNC Raman \
 		atomic clib flib pwtools upftools \
 	; do \
 	    if test -d $$dir ; then \
-		( cd $$dir ; touch .dependencies ; $(MAKE) $(MFLAGS) clean ) \
+		( cd $$dir ; touch make.depend ; $(MAKE) $(MFLAGS) clean ) \
 	    fi \
 	done
 	- /bin/rm -rf bin/*.x
 
 # remove configuration files too
 veryclean : clean
-	- /bin/rm -rf make.rules make.sys */.dependencies \
+	- /bin/rm -rf make.rules make.sys \
 		      config.log config.status autom4te.cache \
 		      pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
@@ -106,7 +106,8 @@ tar :
 	tar cvf pw.tar \
 	    License README* */README* Makefile */Makefile \
 	    configure configure.ac config.guess config.sub install-sh \
-	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure.old \
+	    makedeps.sh moduledep.sh make.rules.in make.sys.in \
+	    configure.old */make.depend \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs
