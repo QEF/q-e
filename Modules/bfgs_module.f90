@@ -1214,11 +1214,11 @@ MODULE bfgs_module
        !
        WRITE( UNIT = stdout, &
             & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
-            &         I3," bfgs steps",/)' ) scf_iter, bfgs_iter
+            &         I3," bfgs steps")' ) scf_iter, bfgs_iter
        WRITE( UNIT = stdout, &
               FMT = '(/,5X,"End of BFGS geometry calculation")' )
        WRITE( UNIT = stdout, &
-            & FMT = '(5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
+            & FMT = '(/,5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
        !
        IF ( lbfgs_ndim == 1 ) THEN
           !
