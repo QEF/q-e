@@ -12,6 +12,7 @@ inv3.o \
 latgen.o \
 ngnr_set.o \
 recips.o \
+rranf.o \
 scnds.o \
 simpsn.o \
 sort.o \

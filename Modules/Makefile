@@ -44,6 +44,7 @@ smallbox.o \
 splinelib.o \
 stick_base.o \
 version.o \
+wave_base.o \
 wavefunctions.o
 
 all : $(MODULES)

@@ -101,6 +101,7 @@
       use dqrad_mod, only: deallocate_dqrad_mod
       use betax, only: deallocate_betax
       use input_parameters, only: outdir
+      use wave_base, only: wave_steepest, wave_verlet
 
 ! wavefunctions
 !
@@ -163,6 +164,8 @@
 !  mass preconditioning
 !
       real(kind=8), allocatable:: ema0bg(:)
+      real(kind=8), allocatable:: emadt2(:)
+      real(kind=8), allocatable:: emaver(:)
       real(kind=8)  emaec
 !
 !  constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
@@ -512,15 +515,18 @@
 !
 !     if n is odd => c(*,n+1)=0
 !
+         ALLOCATE( emadt2( ngw ) )
+         ccc = dt2hbe
+         if(tsde) ccc = dt2bye
+         emadt2 = ccc * ema0bg
+
          do i=1,n,2
             call dforce(bec,deeq,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
-            ccc=dt2hbe
-            if(tsde) ccc=dt2bye
-            do j=1,ngw
-               c0(j,i,1,1)  =cm(j,i,1,1)  +ccc*ema0bg(j)*c2(j)
-               c0(j,i+1,1,1)=cm(j,i+1,1,1)+ccc*ema0bg(j)*c3(j)
-            end do
+            call wave_steepest( c0(:,i,1,1), cm(:,i,1,1), emadt2, c2 )
+            call wave_steepest( c0(:,i+1,1,1), cm(:,i+1,1,1), emadt2, c3 )
          end do
+
+         DEALLOCATE( emadt2 )
          WRITE( stdout,*) ' out from dforce'
 !
 !     buffer for wavefunctions is unit 21
@@ -808,44 +814,44 @@
 !
 !==== set friction ====
 !
-      verl1=2./(1.+frice) 
-      verl2=1.-verl1
-      verl3=1./(1.+frice)
+      if( tnosee ) then
+        verl1 = 2.0d0 * fccc
+        verl2 = 1.0d0 - verl1
+        verl3 = 1.0d0 * fccc
+      else
+        verl1=2./(1.+frice) 
+        verl2=1.-verl1
+        verl3=1./(1.+frice)
+      end if
 !
 !==== start loop ====
 !
+
+      ALLOCATE( emadt2( ngw ) )
+      ALLOCATE( emaver( ngw ) )
+      emadt2 = dt2bye * ema0bg
+      emaver = emadt2 * verl3
+
       do i=1,n,2
          call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
          if(tsde) then
-            do j=1,ngw
-               cm(j,  i,1,1)=c0(j,  i,1,1)+dt2bye*ema0bg(j)*c2(j)
-               cm(j,i+1,1,1)=c0(j,i+1,1,1)+dt2bye*ema0bg(j)*c3(j)
-            end do
-         else if (tnosee) then
-            do j=1,ngw
-               cm(j,  i,1,1)=cm(j,  i,1,1)                                      &
-     &          +2.*fccc*(c0(j,  i,1,1)-cm(j,  i,1,1)                           &
-     &                    +0.5*dt2bye*ema0bg(j)*c2(j))
-               cm(j,i+1,1,1)=cm(j,i+1,1,1)                                      &
-     &          +2.*fccc*(c0(j,i+1,1,1)-cm(j,i+1,1,1)                           &
-     &                    +0.5*dt2bye*ema0bg(j)*c3(j))
-            end do
-         else
-            do j=1,ngw
-               cm(j,  i,1,1) = verl1*c0(j,  i,1,1)                              &
-     &                   + verl2*cm(j,  i,1,1)                              &
-     &                   + verl3*dt2bye*ema0bg(j)*c2(j)
-               cm(j,i+1,1,1) = verl1*c0(j,i+1,1,1)                              &
-     &                   + verl2*cm(j,i+1,1,1)                              &
-     &                   + verl3*dt2bye*ema0bg(j)*c3(j)
-            end do
+            CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
+            CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
+         else 
+            CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
+                 verl1, verl2, emaver, c2 )
+            CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
+                 verl1, verl2, emaver, c3 )
          endif
          if (ng0.eq.2) then
             cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
             cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
          end if
       end do
-      ccc=fccc*dt2bye
+
+      ccc = fccc * dt2bye
+      DEALLOCATE( emadt2 )
+      DEALLOCATE( emaver )
 !
 !==== end of loop which updates electronic degrees of freedom
 !
