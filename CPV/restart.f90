@@ -89,7 +89,7 @@ CONTAINS
       INTEGER :: natomwfc
       LOGICAL :: doublegrid, tupf
       REAL(kind=8) :: gcutm, gcuts, dual
-      INTEGER :: modenum, kunit
+      INTEGER :: modenum
       REAL(kind=8) :: alat
       REAL(kind=8) :: ef, rnel, wfc_scal_cp90
       character(len=4) :: atom_label(nsp)
