@@ -194,9 +194,9 @@ subroutine summary
   enddo
 
   if (calc.eq.'cd' .or. calc.eq.'cm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " UMA ")') cmass/amconv
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amconv
   if (calc.eq.'nd' .or. calc.eq.'nm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " UMA/(a.u.)^2 ")') cmass/amconv
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amconv
 
   if (lsda) then
      WRITE( stdout, '(/5x,"Starting magnetic structure ", &
