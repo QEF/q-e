@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 FPMD & PWSCF group
+! Copyright (C) 2002-2004 FPMD & PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -221,28 +221,14 @@ MODULE read_namelists_module
        twall  = .FALSE.
        IF ( prog == 'PW' ) THEN
           !
-          IF ( restart_mode == "from_scratch" ) THEN
-             !
-             startingwfc = 'atomic'
-             startingpot = 'atomic'
-             !
-          ELSE
-             !
-             startingwfc = 'file'
-             startingpot = 'file'             
-             !
-          END IF
-          !
-          IF ( calculation == 'nscf' .OR. &
-               calculation == 'phonon' ) THEN
-             !
-             startingpot = 'file'
-             !
-          END IF   
+          startingwfc = 'atomic'
+          startingpot = 'atomic'          
           !      
        ELSE
+          !
           startingwfc = 'random'
           startingpot = ' '
+          !
        END IF
        conv_thr = 1.D-6
        empty_states_nbnd = 0
@@ -302,9 +288,9 @@ MODULE read_namelists_module
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' )
        ! ... ( 'constrained-verlet' | 'bfgs' | 'constrained-damp' | 'beeman' )
        !
-       ion_dynamics = 'none'  
-       ion_radius = 0.5D0
-       ion_damping = 0.1
+       ion_dynamics = 'none'
+       ion_radius   = 0.5D0
+       ion_damping  = 0.1
        !
        ! ... ( 'default' | 'from_input' )
        !
@@ -316,16 +302,16 @@ MODULE read_namelists_module
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
        !
-       ion_temperature = 'not_controlled'
-       tempw = 300.0D0
-       fnosep = 1.0D0
-       tranp = .FALSE.
-       amprp = 0.0D0
-       greasp = 1.0D0
-       tolp = 100.D0
-       ion_nstepe = 1
-       ion_maxstep = 100
-       upscale = 10
+       ion_temperature         = 'not_controlled'
+       tempw                   = 300.0D0
+       fnosep                  = 1.0D0
+       tranp                   = .FALSE.
+       amprp                   = 0.0D0
+       greasp                  = 1.0D0
+       tolp                    = 100.D0
+       ion_nstepe              = 1
+       ion_maxstep             = 100
+       upscale                 = 10
        potential_extrapolation = 'default'
        !
        ! ... NEB defaults ( C.S. 17/10/2003 )
@@ -1119,7 +1105,7 @@ MODULE read_namelists_module
        !
        !
        IF( prog == 'PW' ) startingpot = 'atomic'
-       !
+       !       
        SELECT CASE ( TRIM(calculation) )
           CASE ('scf')
              IF( prog == 'FP' ) THEN
@@ -1189,16 +1175,39 @@ MODULE read_namelists_module
           ! 
           CASE ( 'neb' )
              IF( prog == 'PW' ) startingpot  = 'atomic'
-             IF( prog == 'PW' ) startingwfc  = 'random'
+             IF( prog == 'PW' ) startingwfc  = 'atomic'
              IF( prog == 'FP' ) THEN
                  electron_dynamics = 'sd'
-                 ion_dynamics = 'none'
-                 cell_dynamics = 'none'
+                 ion_dynamics      = 'none'
+                 cell_dynamics     = 'none'
              END IF
           CASE DEFAULT
              CALL errore( sub_name,' calculation '// & 
                           & calculation//' not implemented ',1)
        END SELECT
+       !              
+       IF ( prog == 'PW' ) THEN
+          !       
+          IF ( restart_mode == "from_scratch" ) THEN
+             !
+             startingwfc = 'atomic'
+             startingpot = 'atomic'
+             !
+          ELSE
+             !
+             startingwfc = 'file'
+             startingpot = 'file'             
+             !
+          END IF
+          !
+          IF ( calculation == 'nscf' .OR. &
+               calculation == 'phonon' ) THEN
+             !
+             startingpot = 'file'
+             !
+          END IF   
+          !      
+       END IF                   
        !
        RETURN
        !
@@ -1246,6 +1255,15 @@ MODULE read_namelists_module
        IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'FP' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
+       ! ... default settings for all namelists
+       !
+       CALL control_defaults( prog )       
+       CALL system_defaults( prog )
+       CALL electrons_defaults( prog )
+       CALL ions_defaults( prog )
+       CALL cell_defaults( prog )
+       CALL phonon_defaults( prog )
+       !
        ! ... Here start reading standard input file
        !
        ! ... CONTROL namelist
@@ -1265,12 +1283,12 @@ MODULE read_namelists_module
        CALL control_bcast( )
        CALL control_checkin( prog )
        !
+       ! ... defaults values are changed according to the CONTROL namelist
+       !
        CALL fixval( prog )
        !
        ! ... SYSTEM namelist
-       !
-       CALL system_defaults( prog )       
-       ! 
+       !       
        ios = 0
        IF( ionode ) THEN
           READ( 5, system, iostat = ios ) 
@@ -1286,8 +1304,6 @@ MODULE read_namelists_module
        !
        ! ... ELECTRONS namelist
        !
-       CALL electrons_defaults( prog )       
-       !
        ios = 0
        IF( ionode ) THEN
           READ( 5, electrons, iostat = ios ) 
@@ -1301,9 +1317,7 @@ MODULE read_namelists_module
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
        !
-       ! ... IONS namelist 
-       !
-       CALL ions_defaults( prog )       
+       ! ... IONS namelist   
        !
        ios = 0
        IF( ionode ) THEN
@@ -1328,8 +1342,6 @@ MODULE read_namelists_module
        !
        ! ... CELL namelist
        !
-       CALL cell_defaults( prog )       
-       !
        ios = 0
        IF( ionode ) THEN
           IF( TRIM( calculation ) == 'vc-relax' .OR. &
@@ -1349,8 +1361,6 @@ MODULE read_namelists_module
        CALL cell_checkin( prog )
        !
        ! ... PHONON namelist
-       !
-       CALL phonon_defaults( prog )       
        !
        ios = 0
        IF( ionode ) THEN
