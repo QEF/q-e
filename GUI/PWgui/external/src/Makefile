@@ -55,10 +55,17 @@ INCS = $(TCL_INCDIR) $(TK_INCDIR) $(ITCL_INCDIR) $(ITK_INCDIR)
 .c.o:
 	$(CC) $(CFLAGS) $(INCS) -c $<
 
-all: tkAppInit.o
+default: itkwish
+
+all: itkwish install
+
+itkwish: tkAppInit.o
 	$(CC) $(CFLAGS) tkAppInit.o -o itkwish \
 		$(TK_LIB) $(TCL_LIB) $(ITK_LIB) $(ITCL_LIB) \
 		$(X_LIB) $(MATH) $(LDLIB)
+
+install:
+	if test -d ../../bin; then mv itkwish ../../bin; fi
 
 clean:
 	-rm *.o itkwish *~
