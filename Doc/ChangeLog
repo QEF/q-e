@@ -1,4 +1,9 @@
- 2 Sep 2004 Bug fix: The dipole correction was not working with a 
+ 2 Sep 2004 Wrong format in cp fixed (PG).
+            INPUT_PW updated, GUI updated to new pwscf version,
+            example 17 updated, minor changes to string method dynamics (C.S.)
+            added support for efc (alias ifort); README,install updated [GB]
+            Examples 12, 13, 22 updated (SF)
+            Bug fix: The dipole correction was not working with a 
             non-tetragonal cell. (Contributed by N. Bonini).
 
  1 Sep 2004 The error message is no longer written on /dev/stderr 
@@ -6,6 +11,8 @@
             missing ZSYRK and ZSYR2K subroutines added to the 
             local copy of blas (PC)
             Small configure fix for Mac; examples, minor fix (GB)
+            Makefile makes links as well - documentation updated.
+            dynmat.x may calculate Raman cross sections as well (PG)
 
 30 Aug 2004 Some cleanup of the path code, fixed a small bug in the prefix.dat 
             file. (C.S.)
