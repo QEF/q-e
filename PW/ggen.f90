@@ -20,8 +20,8 @@ SUBROUTINE ggen()
   USE cell_base,          ONLY : at, bg
   USE reciprocal_vectors, ONLY : ig_l2g
   USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, nr1, nr2, nr3, &
-                                 gcutm, nrx1, nrx3, nl, ig1, ig2, ig3,    &
-                                 gstart, gl, ngl, igtongl
+                                 gcutm, nrx1, nrx2, nrx3, ig1, ig2, ig3,  &
+                                 nl, gstart, gl, ngl, igtongl
   USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nr1s, nr2s, nr3s, &
                                  nrx1s, nrx3s, nls
   USE wvfct,              ONLY : gamma_only
@@ -332,21 +332,21 @@ SUBROUTINE ggen()
      DEALLOCATE( g2sort_g )
      DEALLOCATE( mill_g )
 
-     CALL index_minusg
+     CALL index_minusg()
 
      RETURN
    END SUBROUTINE ggen
 
 !
 !-----------------------------------------------------------------------
-SUBROUTINE index_minusg
+SUBROUTINE index_minusg()
   !----------------------------------------------------------------------
   !
   !     compute indices nlm and nlms giving the correspondence
   !     between the fft mesh points and -G (for gamma-only calculations)
   !
   USE gvect,   ONLY : ngm, nr1, nr2, nr3, &
-                      nrx1, nrx3, nlM, ig1, ig2, ig3
+                      nrx1, nrx2, nrx3, nlM, ig1, ig2, ig3
   USE gsmooth, ONLY : nr1s, nr2s, nr3s, nrx1s, nrx3s, nlsm, ngms
   USE wvfct,   ONLY : gamma_only
   USE sticks,  ONLY : dfftp, dffts
