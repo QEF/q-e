@@ -132,7 +132,8 @@ implicit none
             do n=1,mesh
                f1(n,1) = f1(n,1) * vnl(n,lam)
             end do
-            epseu = epseu + int_0_inf_dr(f1,r,r2,dx,ikk(ns),2*(lam+1))
+            if (ikk(ns) > 0) &
+                epseu = epseu + int_0_inf_dr(f1,r,r2,dx,ikk(ns),2*(lam+1))
          enddo
       elseif ((pseudotype.eq.2).or.(pseudotype.eq.3)) then
          do ns=1,nwfts

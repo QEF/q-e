@@ -1,9 +1,9 @@
 !
-      subroutine lschps(mode,z,amesh,al,mmax,nin,mch, &
+      subroutine lschps(mode,z,ammax,al,mmax,nin,mch, &
                         n,l,e,u,r,v)
 !
 ! integrates radial pauli-type scalar-relativistic equation
-! on a logarithmic mesh
+! on a logarithmic grid
 ! modified routine to be used in finding norm-conserving
 ! pseudopotential
 !
@@ -18,8 +18,9 @@
       implicit none
       integer,parameter :: dp = kind(1.d0)
       real(kind=dp),parameter:: e2=2.d0
-      real(kind=dp):: aei, aeo, aii, aio, al, als, amesh,  cn
-      real(kind=dp):: dabs, de, dmax1, dmin1, e, emax, emin
+      real(kind=dp), external:: aei, aeo, aii, aio
+      real(kind=dp):: al, als, ammax,  cn
+      real(kind=dp):: de, e, emax, emin
       real(kind=dp):: eps, fss, gamma, ro, sc
       real(kind=dp):: sls, sn, tfapot, uld, uout,  upin, upout
       real(kind=dp):: xkap, z
@@ -102,10 +103,14 @@
       dv(2)=(-6.d0*v(1)-20.d0*v(2)+36.d0*v(3)-12.d0*v(4) &
              +2.d0*v(5))/(24.d0*al*r(2))
 !
-      do i=3,mmax
+      do i=3,mmax-2
          dv(i)=(2.d0*v(i-2)-16.d0*v(i-1)+16.d0*v(i+1) &
                -2.d0*v(i+2))/(24.d0*al*r(i))
       end do
+      dv(mmax-1)=( 3.d0*v(mmax)+10.d0*v(mmax-1)-18.d0*v(mmax-2)+ &
+                   6.d0*v(mmax-3)-     v(mmax-4))/(12.d0*al*r(mmax-1))
+      dv(mmax)=( 25.d0*v(mmax)  -48.d0*v(mmax-1)+36.d0*v(mmax-2)-&
+                 16.d0*v(mmax-3)+3.d0*v(mmax-4))/(12.d0*al*r(mmax))
 !
 !  relativistic coefficient arrays for u (fr) and up (frp).
       do i=1,mmax
@@ -206,7 +211,7 @@
 !
 ! perform normalization sum
 !
-       ro=r(1)/dsqrt(amesh)
+       ro=r(1)/dsqrt(ammax)
        sn=ro**(2.0d0*gamma+1.0d0)/(2.0d0*gamma+1.0d0)
 !
        do i=1,nin-3
@@ -286,10 +291,9 @@
 !
       implicit none
       integer,parameter :: dp=kind(1.d0)
-      real(kind=dp):: y, aei
       integer j
+      real(kind=dp):: y(j+3), aei
 !
-      dimension y(600)
       aei=-(4.16666666667d-2)*(55.0d0*y(j)-59.0d0*y(j+1) &
        +37.0d0*y(j+2)-9.0d0*y(j+3))
       return
@@ -302,10 +306,9 @@
 !
       implicit none
       integer,parameter :: dp=kind(1.d0)
-      real(kind=dp):: y, aeo
       integer:: j   
+      real(kind=dp):: y(j), aeo
 !
-      dimension y(600)
       aeo=(4.16666666667d-2)*(55.0d0*y(j)-59.0d0*y(j-1) &
        +37.0d0*y(j-2)-9.0d0*y(j-3))
       return
@@ -315,10 +318,9 @@
 !
       implicit none
       integer,parameter :: dp=kind(1.d0)
-      real(kind=dp) :: y, aii
       integer:: j
+      real(kind=dp) :: y(j+2), aii
 !
-      dimension y(600)
       aii=-(4.16666666667d-2)*(9.0d0*y(j-1)+19.0d0*y(j) &
        -5.0d0*y(j+1)+y(j+2))
       return
@@ -328,10 +330,9 @@
 !
       implicit none
       integer,parameter :: dp=kind(1.d0)
-      real(kind=dp):: y,aio
       integer :: j
+      real(kind=dp):: y(j+1), aio
 !
-      dimension y(600)
       aio=(4.16666666667d-2)*(9.0d0*y(j+1)+19.0d0*y(j) &
        -5.0d0*y(j-1)+y(j-2))
       return
