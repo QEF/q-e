@@ -1,10 +1,16 @@
+Mon Feb 21 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding external/lib/Makefile
+	* adding _create_bin target to ./Makefile
+	* improving tarball targets of ./Makefile
+	* adding Tcl-related http's to ./INSTALL file
+	
 Mon Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding the defaultPager and defaultEditor. i.e., internal editor
 	and pager (better porting to non-unix systems)
 
 Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
-	* package was renamed from TkPWscf to PWgui * porting the package
-	to MS-Windows
+	* package was renamed from TkPWscf to PWgui 
+	* porting the package to MS-Windows
 
 Wed Feb 18 2004 Anton Kokalj (tone.kokalj@ijs.si)	
 	* src-tcl/ directory renamed to src/

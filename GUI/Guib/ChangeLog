@@ -1,3 +1,8 @@
+Mon Feb 24 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* updating doc/usage.tex file and doc/usage/diagrams
+	* adding doc/usage/diagrams/Makefile
+	* renaming doc/usage/diagrams/TkPWscf.* to PWgui.*
+
 Mon Feb 23 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* tclUtils.tcl: fixing tempFile routine to work also for MS-Windows
 	* guib.bat: adding a batch file for MS-DOS/Windows
@@ -8,7 +13,7 @@ Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* porting the package to MS-Windows
 
 Tue Feb 17 2004 Anton Kokalj (tone.kokalj@ijs.si)
-        * adding help button component to table widget
+	* adding help button component to table widget
 	* ChangeLog: the beginning of the ChangeLog
 	
 ChangeLog ends here
