@@ -37,8 +37,8 @@ subroutine allocate_nlpot
   USE wvfct,      ONLY : npwx, npw, igk, igk_l2g, g2kin
   USE us,         ONLY : qrad, tab, tab_at, dq, nqx, nqxq
   USE uspp,       ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
-                         nhtoj, becsum, qq_so, dvan_so, deeq_nc
-  USE uspp_param, ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm
+                         nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
+  USE uspp_param, ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, tvanp
   USE spin_orb,   ONLY : lspinorb, fcoef
   !
   implicit none
@@ -81,8 +81,9 @@ subroutine allocate_nlpot
   nkb = 0
   nkbus = 0
   do na = 1, nat
-     nkb = nkb + nh (ityp(na))
-     if (tvanp(ityp(na)) nkbus = nkbus + nh (ityp(na))
+     nt = ityp(na)
+     nkb = nkb + nh (nt)
+     if (tvanp(nt)) nkbus = nkbus + nh (nt)
   enddo
   !
   allocate (indv( nhm, ntyp))    
