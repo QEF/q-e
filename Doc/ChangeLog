@@ -1,3 +1,46 @@
+25 Oct 2004  removed call to check()
+             workarounds for g95 bug [Gerardo]
+             Print correct CPU time for runs of more than 100h (PG)
+
+19 Oct 2004  Minor format changes: examples updated (GB)
+
+15 Oct 2004  - small cleanup in FPMD
+             - added XML-like library module (iotk_module version 2.4) 
+               written by Giovanni Bussi
+             - added pw_export PP utility to convert restart/punch file
+               to portable XML format, still experimental, to compile it: 
+               make export (for the time being is not included among the 
+               "all", make all does not compile it) 
+             - memory usage optimized when using SIC       
+             - bug fix in SIC calculation
+             (CC)
+
+14 Oct 2004  - ncpp2upf.f90 and cpmd2upf.f90: patch from Axel applied 
+             - newd.f90 in the PWNC moved to PW. The merging was already done.
+               (AdC)
+             - work on FPMD for the merging with CP ( grid dimension )
+             - bug fix ( ion randomization )
+             - SIC updated (CC)
+
+13 Oct 2004  - small manual fixes (AdC)
+             - small output changes (CS)
+             - Several improvements of the string dynamics.
+               Added a use_multistep input variable that allows fourier 
+               modes to be gradually included.
+               Added a langevin opt_scheme in which the string performs
+               a langevin dynamics in the path space.
+               In the langevin scheme a canonical sampling of the initial
+               and final configurations can also be done "on the fly"
+               setting first_last_opt=.TRUE.  (C.S.)
+             - Fixed some small bugs in the reset history procedure (C.S.)
+
+11 Oct 2004  bug fix for projected-DOS calculation in lda+U case (SF)
+             BUG FIXED in NON COLLINEAR case: in non collinear case the 
+             inversion symmetry is not always present because of the
+             presence of magnetic field in the Hamiltonian. So in case 
+             of nosym the generation of points in -K (recipr. space)
+             must not be excluded (AMC)
+
 10 Oct 2004  - Add an extra input variable rc for PAW calculation (in efg.x)
              to be able to specify the radius of the augmentation region for
              atom type i and orbital momentum l rc(i,l)
@@ -21,6 +64,8 @@
              do not exist. 
              In the present status it require both V(excited) and V(GS) 
              to be defined in the preceeding SCF calculation.  (SdG)
+
+06 Oct 2004  confuigure: revert default to dynamic linking [Gerardo]
 
 28 Sep 2004  release.sh script updated: Raman/ added (PG)
              SUN compilation problem in mp.f90 (PG)

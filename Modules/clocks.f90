@@ -186,7 +186,7 @@ SUBROUTINE print_this_clock( n )
   REAL(KIND=DP) :: scnds
   INTEGER       :: n
   REAL(KIND=DP) :: elapsed_cpu_time, nsec
-  INTEGER       :: nhour, nmin
+  INTEGER       :: nday, nhour, nmin
   !
   !
   IF ( t0(n) == notrunning ) THEN
@@ -216,12 +216,18 @@ SUBROUTINE print_this_clock( n )
 #endif
 #endif
   IF ( n == 1 ) THEN
-     ! ... The first clock is written as hour/min/sec
-     nhour = elapsed_cpu_time / 3600
-     nmin  = ( elapsed_cpu_time - 3600 * nhour ) / 60
-     nsec  = ( elapsed_cpu_time - 3600 * nhour ) - 60 * nmin
+     ! ... The first clock is written as days/hour/min/sec
+     nday  = elapsed_cpu_time / 86400
+     nsec  = elapsed_cpu_time - 86400 * nday
+     nhour = nsec / 3600 
+     nsec  = nsec - 3600 * nhour
+     nmin  = nsec / 60
+     nsec  = nsec - 60 * nmin
      !
-     IF ( nhour > 0 ) THEN
+     IF ( nday > 0 ) THEN
+        WRITE( stdout, '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU time"/)')&
+             clock_label(n), nday, nhour, nmin
+     ELSE IF ( nhour > 0 ) THEN
         WRITE( stdout, '(5X,A12," : ",3X,I2,"h",I2,"m CPU time"/)') &
              clock_label(n), nhour, nmin
      ELSE IF ( nmin > 0 ) THEN
