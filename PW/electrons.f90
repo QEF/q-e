@@ -61,7 +61,7 @@ SUBROUTINE electrons()
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE noncollin_module,     ONLY : noncolin, npol, magtot_nc
   USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
-                                   i_cons, lambda, vtcon, report
+                                   i_cons, bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
@@ -102,6 +102,7 @@ SUBROUTINE electrons()
                        ! iteration 
   LOGICAL :: &
       exst
+  REAL (KIND=DP) :: dr2old, lambda0
   !
   ! ... external functions
   !
@@ -112,6 +113,11 @@ SUBROUTINE electrons()
   !
   iter = 0
   ik_  = 0
+  if (i_cons==3) then
+     dr2old=0.d0
+     lambda0=lambda
+     lambda=0.003
+  endif
   !
   IF ( restart ) THEN
      !
@@ -452,6 +458,12 @@ SUBROUTINE electrons()
         !
         CALL vpack( NRXX, nrxx, nspin, vnew, vr, -1 )
         !
+        if (i_cons.eq.3) then
+           if (dr2*5.d0.lt.dr2old.or.dr2<tr2*1.d2) then
+              lambda=min(lambda*2.d0,lambda0)
+           endif
+           dr2old=dr2
+        endif
      END IF
      !
      ! ... On output vnew contains V(out)-V(in). Used to correct the forces
@@ -657,6 +669,13 @@ SUBROUTINE electrons()
      IF ( noncolin .AND. domag ) &
         WRITE( stdout, 9018 ) ( magtot_nc(i), i = 1, 3 ), absmag
      !
+     IF ( i_cons == 3 .OR. i_cons == 4 )  WRITE(stdout, 9071) bfield(1), &
+                                                    bfield(2),bfield(3)
+     IF ( i_cons == 5 )  WRITE(stdout, 9072) bfield(3)
+     IF (i_cons.ne.0.and.i_cons.lt.4) WRITE( stdout,9073) lambda
+
+
+     !
      IF ( lpath ) THEN
         !
         CALL flush( stdout )
@@ -741,6 +760,10 @@ SUBROUTINE electrons()
 9061 FORMAT( '     electric field correction =',  F15.8,' ryd' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd')
 9070 FORMAT( '     correction for metals     =',F15.8,' ryd')
+9071 FORMAT( '     Magnetic field          =',3F12.8,' ryd')
+9072 FORMAT( '     Magnetic field            =',F14.7,' ryd')
+9073 FORMAT( '     lambda                  = ',F10.2,' ryd')
+
 9080 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',0PF15.8,' ryd')
 9081 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &

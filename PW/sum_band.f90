@@ -37,7 +37,7 @@ SUBROUTINE sum_band()
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : nh, tvanp, nhm
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, bfield, npol
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE control_flags,        ONLY : wg_set
@@ -102,6 +102,7 @@ SUBROUTINE sum_band()
         CALL gweights( nks, wk, nbnd, neldw, degauss, ngauss, et, ef_dw, &
                        demet_dw, wg, 2, isk)
         demet = demet_up + demet_dw
+        bfield(3)=(ef_up-ef_dw)*0.5d0
      else
         CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, &
                        demet,    wg, 0, isk)

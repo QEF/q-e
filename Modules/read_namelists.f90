@@ -1090,7 +1090,7 @@ MODULE read_namelists_module
           IF ( diagonalization == 'diis' ) &
              CALL errore( sub_name ,' diis not allowed with noncolin ', 1 )
           !
-          IF ( i_cons < 0 .OR. i_cons > 2 ) &
+          IF ( i_cons < 0 .OR. i_cons > 4 ) &
              CALL errore( sub_name ,' wrong i_cons ', 1 )
           !
        END IF       

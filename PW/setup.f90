@@ -74,7 +74,7 @@ SUBROUTINE setup()
   USE mp_global,        ONLY : nimage, kunit
   USE spin_orb,         ONLY : lspinorb, domag
   USE noncollin_module, ONLY : noncolin, npol, m_loc, i_cons, mcons, &
-                               angle1, angle2
+                               angle1, angle2, bfield
   !
   IMPLICIT NONE
   !
@@ -143,6 +143,30 @@ SUBROUTINE setup()
      !
   END DO
   !
+  ! ... Compute the ionic charge for each atom type
+  !
+  zv(1:ntyp) = zp(1:ntyp)
+  !
+  ! ... Set the number of electrons equal to the total ionic charge
+  !
+  IF ( nelec == 0.D0 ) THEN
+     !
+#if defined (__PGI)
+     !     
+     DO na = 1, nat
+        nelec = nelec + zv( ityp(na) )
+     END DO
+     !
+#else
+     !
+     nelec = SUM( zv(ityp(1:nat)) )
+     !
+#endif
+     !
+  END IF
+  !
+  ! ... If the occupations are from input, check the consistency with the
+  ! ... number of electrons
   IF ( noncolin ) THEN
      !
      ! ... wavefunctions are spinors with 2 components
@@ -187,6 +211,9 @@ SUBROUTINE setup()
                       COS( angle1(ityp(na)) )
      END DO
      !
+     bfield=0.d0
+     if (i_cons.ne.0.and.imix>=0) &
+        call errore('setup','use potential mixing with constraints',1)
      IF ( i_cons == 2 ) THEN    
         !
         ! ... angle theta between the magnetic moments and the z-axis is
@@ -198,6 +225,8 @@ SUBROUTINE setup()
            !
         END DO
         !
+     ELSE IF (i_cons == 4) THEN
+         bfield(:)=mcons(:,1)
      END IF
      !
   ELSE
@@ -206,32 +235,14 @@ SUBROUTINE setup()
      !
      npol = 1
      !
+     IF (i_cons==5) THEN
+        nelup= (nelec+mcons(3,1))*0.5d0
+        neldw= (nelec-mcons(3,1))*0.5d0
+     ENDIF
+
+     IF (i_cons==5.AND.nspin.NE.2) &
+        call errore('setup','i_cons can be 5 only with nspin=2',1)
   END IF
-  !
-  ! ... Compute the ionic charge for each atom type
-  !
-  zv(1:ntyp) = zp(1:ntyp)
-  !
-  ! ... Set the number of electrons equal to the total ionic charge
-  !
-  IF ( nelec == 0.D0 ) THEN
-     !
-#if defined (__PGI)
-     !     
-     DO na = 1, nat
-        nelec = nelec + zv( ityp(na) )
-     END DO
-     !
-#else
-     !
-     nelec = SUM( zv(ityp(1:nat)) )
-     !
-#endif
-     !
-  END IF
-  !
-  ! ... If the occupations are from input, check the consistency with the
-  ! ... number of electrons
   !
   IF ( tfixed_occ ) THEN
      !

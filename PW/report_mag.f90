@@ -22,8 +22,6 @@
 !
       call get_locals(r_loc,m_loc)
       
-      if (i_cons.ne.0) WRITE( stdout,1016) lambda
-
       do iat = 1,nat
 !
 !    norm is the length of the magnetic moment vector
@@ -82,6 +80,5 @@
  1018 format (5x,'magnetization/charge:',3f12.6)
  1015 format (5x,'constrained moment : ',3f12.6) 
  1017 format (5x,'constrained theta [deg] : ',f12.6) 
- 1016 format (5x,'lambda = ',f10.2)
 
       end

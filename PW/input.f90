@@ -359,7 +359,7 @@ SUBROUTINE iosys()
   !
   lsda = ( nspin == 2 )
 
-  IF ( (nelup ==0) .and. (neldw ==  0) ) THEN
+  IF ( (nelup ==0.d0) .and. (neldw ==  0.d0) ) THEN
      two_fermi_energies = .false.
   ELSE
      two_fermi_energies = .true.
@@ -370,6 +370,7 @@ SUBROUTINE iosys()
         CALL errore( ' iosys ', ' nelup + neldw must be equal to nelec ', 1 )
      END IF
   END IF
+  IF (i_cons==5) two_fermi_energies=.TRUE.
   !
   ! ... starting_magnetization(ia) = -2.D0 means "not set" -- set it to 0
   !

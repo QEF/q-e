@@ -373,6 +373,31 @@ i_cons         INTEGER
 
     - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - mcons(1,ityp) )**2
 
+               #if i_cons = 3; there is a penalty functional added to the
+               total energy to constrain each component of the
+               magnetization:
+
+    - LAMBDA * SUM_{i} ( magnetization(i) - mcons(i,1) )**2
+               where the sum over i runs over the three components of
+               the magnetization. NB: LAMBDA is reduced in the first iterations
+               and is increased slowly up to the input value.
+
+               #if i_cons = 4; then a fixed magnetic field is added to the
+               exchange and correlation magnetic field. The three components
+               of the magnetic field are given in Ry in the array mcons(i,1).
+
+               #if i_cons = 5; Fix the magnetization as in the 
+               constrained-moment approach using two Fermi energies. 
+               This option works only with lsda
+               mcons(3,1) fix the value of the magnetization.
+
+NB: i_cons=3,4 (works only with mixing_mode='potential').
+    In all calculations with a finite magnetic field,
+    we print the total energy WITHOUT the B dot M term.
+    In the calculations with the penalty functional we write
+    only the total energy, NOT the penalty functional.
+
+
 lambda         REAL
                see I_CONS
 

@@ -22,6 +22,7 @@ subroutine v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !
   !
   USE kinds, only: DP
+  USE noncollin_module, ONLY : magtot_nc, bfield
   implicit none
   !
   !    first the dummy variables
@@ -95,34 +96,34 @@ subroutine v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
 ! "constraining B-field" and add it to v(ir,2..4)
 
 ! vtcon is the contribution of the constraining field to the total
-! energy
+! energy 
 
-      vtcon = 0.d0
-
-      if (i_cons.ne.0) then
+  vtcon = 0.d0
+  if (i_cons.ne.0) then
 
 ! get the actual values of the local integrated quantities
-         call get_locals(r_loc, m_loc)
+     if (i_cons.lt.3) then
+        call get_locals(r_loc, m_loc)
 
-         do na = 1,ntyp
-            nt = ityp(na)
+        do na = 1,ntyp
+           nt = ityp(na)
 
-            ! i_cons = 1 means that the 3 components of the magnetization
-            ! are constrained, they are given in the input-file
-            if (i_cons.eq.1) then
-               do ipol = 1,3
-                  m1(ipol) = m_loc(ipol,nt) - mcons(ipol,nt)
-               enddo
-            else if (i_cons.eq.2) then
-               ! i_cons = 2 means that the angle theta between the local
-               ! magn. moment and the z-axis is constrained
-               ! mcons (1,nt) is the cos of the constraining angle theta
-               ! the penalty functional in this case is
-               ! lambda*(acos(m_loc(z)/|m_loc|) - theta )^2
-               ma = dsqrt(m_loc(1,nt)**2.+m_loc(2,nt)**2.+m_loc(3,nt)**2.)
+          ! i_cons = 1 means that the 3 components of the magnetization
+          ! are constrained, they are given in the input-file
+           if (i_cons.eq.1) then
+              do ipol = 1,3
+                 m1(ipol) = m_loc(ipol,nt) - mcons(ipol,nt)
+              enddo
+           else if (i_cons.eq.2) then
+           ! i_cons = 2 means that the angle theta between the local
+           ! magn. moment and the z-axis is constrained
+           ! mcons (1,nt) is the cos of the constraining angle theta
+           ! the penalty functional in this case is
+           ! lambda*(acos(m_loc(z)/|m_loc|) - theta )^2
+               ma = dsqrt(m_loc(1,nt)**2+m_loc(2,nt)**2+m_loc(3,nt)**2)
                xx = m_loc(3,nt)/ma
                if (abs(xx - 1.d0).gt.1.d-10) then
-                  xxx = - (acos(xx) - mcons(1,nt))/sqrt(1. - xx*xx)
+                  xxx = - (acos(xx) - mcons(1,nt))/sqrt(1.d0 - xx*xx)
                else
                   xxx = -1.d0
                endif
@@ -135,22 +136,38 @@ subroutine v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
 
             do ir =1,pointnum(na)
                fact = 2.d0*lambda*factlist(ir,na)*omega/(nr1*nr2*nr3)
-
                do ipol = 1,3
                   v(pointlist(ir,na),ipol+1) = v(pointlist(ir,na) &
                          ,ipol+1) +fact*m1(ipol)
-                  vtcon = vtcon + fact*m1(ipol)*rho(pointlist(ir,na),ipol+1)
+!                  vtcon = vtcon + fact*m1(ipol)*rho(pointlist(ir,na),ipol+1)
                enddo            ! ipol
-
             enddo               ! points
-
-         enddo ! na
-
-
-         call reduce(1,vtcon)
-         vtcon = omega*vtcon/(nr1*nr2*nr3)
-
-      endif  ! end penalty functional calculation
+        enddo ! na
+!        call reduce(1,vtcon)
+!        vtcon = omega*vtcon/(nr1*nr2*nr3)
+     else if (i_cons==3) then
+        fact = 2.d0*lambda
+        do ipol=1,3
+           bfield(ipol)=-fact*(magtot_nc(ipol)-mcons(ipol,1))
+        enddo
+        do ipol = 2,4
+           fact=bfield(ipol-1)
+           do ir =1,nrxx
+              v(ir,ipol) = v(ir,ipol)-fact
+           enddo            
+        enddo              
+     else if (i_cons==4) then
+        bfield(:)=mcons(:,1)
+        do ipol = 2,4
+           fact=bfield(ipol-1)
+           do ir =1,nrxx
+              v(ir,ipol) = v(ir,ipol)-fact
+           enddo            
+        enddo              
+     else
+        call errore('v_of_rho_nc','i_cons not programmed',1)
+     endif
+  endif  ! end penalty functional calculation
 
 
   allocate (aux(2,nrxx),aux1(2,ngm) )
@@ -233,6 +250,7 @@ subroutine v_xc_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !     Exchange-Correlation potential Vxc(r) from n(r)
   !
   USE io_global,  ONLY : stdout
+  USE spin_orb,   ONLY : domag
   USE kinds, only : DP
   implicit none
   !
@@ -293,101 +311,61 @@ subroutine v_xc_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   etxc = 0.d0
   vtxc = 0.d0
   v(:,:) = 0.d0
-
-  if (nspin.eq.1) then
-     !
-     ! spin-unpolarized case
-     !
-     do ir = 1, nrxx
-        rhox = rho (ir, nspin) + rho_core (ir)
-        arhox = abs (rhox)
-        if (arhox.gt.1.d-30) then
-           call xc (arhox, ex, ec, vx, vc)
-           v(ir,nspin) = e2 * (vx(1) + vc(1) )
-           etxc = etxc + e2 * (ex + ec) * rhox
-           vtxc = vtxc + v(ir,nspin) * rho(ir,nspin)
-        endif
-     enddo
-
-  else if(nspin.eq.2) then
-     !
-     ! spin-polarized case
-     !
-     neg (1) = 0
-     neg (2) = 0
-     neg (3) = 0
-     do ir = 1, nrxx
-        rhox = rho(ir,1) + rho(ir,2) + rho_core(ir)
+  !
+  ! case of noncollinear magnetism
+  !
+  neg=0
+  if (domag) then
+     do ir = 1,nrxx
+        amag = sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
+        rhox = rho(ir,1) + rho_core(ir)
         arhox = abs(rhox)
         if (arhox.gt.1.d-30) then
-           zeta = ( rho(ir,1) - rho(ir,2) ) / arhox
-           if (abs(zeta) .gt.1.d0) then
-              neg(3) = neg(3) + 1
-              zeta = sign(1.d0,zeta)
+           zeta = amag / arhox
+           if(abs(zeta).gt.1.d0) then
+               neg(3)=neg(3)+1
+               zeta=sign(1.d0,zeta)
            endif
-           if (rho(ir,1) .lt.0.d0) neg(1) = neg(1) + 1
-           if (rho(ir,2) .lt.0.d0) neg(2) = neg(2) + 1
-           call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
-           do is = 1, nspin
-              v(ir,is) = e2 * (vx(is) + vc(is) )
-           enddo
-           etxc = etxc + e2 * (ex + ec) * rhox
-           vtxc = vtxc + v(ir,1) * rho(ir,1) + v(ir,2) * rho(ir,2)
+           call xc_spin(arhox,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
+           vs=0.5d0*(vx(1)+vc(1)-vx(2)-vc(2))
+           v(ir,1) = e2*(0.5d0*(vx(1)+vc(1)+vx(2)+vc(2)))
+           !               WRITE( stdout,'(4f18.8)') arhox,zeta,vs,v(ir,1)
+           if (amag.gt.1.d-20) then
+              do ipol=2,4
+                 v(ir,ipol) = e2*vs*rho(ir,ipol)/amag
+              enddo
+           endif
+           etxc= etxc + e2*(ex+ec)*rhox
+           vtxc= vtxc + v(ir,1)*rho(ir,1)
         endif
      enddo
-
   else
-
-     !
-     ! case of noncollinear magnetism
-     !
-
-         neg(1)=0
-         neg(2)=0
-         neg(3)=0
-         do ir = 1,nrxx
-            amag = sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
-            rhox = rho(ir,1) + rho_core(ir)
-            arhox = abs(rhox)
-            if (arhox.gt.1.d-30) then
-               zeta = amag / arhox
-               if(abs(zeta).gt.1.d0) then
-                   neg(3)=neg(3)+1
-                   zeta=sign(1.d0,zeta)
-               endif
-               call xc_spin(arhox,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
-               vs=0.5d0*(vx(1)+vc(1)-vx(2)-vc(2))
-               v(ir,1) = e2*(0.5d0*(vx(1)+vc(1)+vx(2)+vc(2)))
-               !               WRITE( stdout,'(4f18.8)') arhox,zeta,vs,v(ir,1)
-               if (amag.gt.1.d-20) then
-                  do ipol=2,4
-                     v(ir,ipol) = e2*vs*rho(ir,ipol)/amag
-                  enddo
-               endif
-               etxc= etxc + e2*(ex+ec)*rhox
-               vtxc= vtxc + v(ir,1)*rho(ir,1)
-            endif
-         enddo
-
-   endif
+     do ir = 1, nrxx
+        rhox = rho (ir, 1) + rho_core (ir)
+        arhox = abs (rhox)
+        if (arhox > 1.d-30) then
+           call xc (arhox, ex, ec, vx, vc)
+           v(ir,1) = e2 * (vx(1) + vc(1) )
+           etxc = etxc + e2 * (ex + ec) * rhox
+           vtxc = vtxc + v(ir,1) * rho(ir,1)
+        endif
+     enddo
+  endif
 
 #ifdef __PARA
-     call ireduce (3, neg)
+  call ireduce (3, neg)
 #endif
 
-  if( nspin > 1 ) then
+  if (neg(3).gt.0) WRITE( stdout,'(/,4x," npt with |zeta| > 1: ",i8, &
+       &  ", npt tot ",i8, ",",f10.2, " %" )') neg(3), &
+       &  nr1*nr2*nr3, float(neg(3)*100) / real(nr1*nr2*nr3)
+  if (neg(1).gt.0) WRITE( stdout,'(/,4x," npt with rhoup < 0: ",i8, &
+       &  ", npt tot ",i8, ",",f10.2, " %" )') neg(1), &
+       &  nr1*nr2*nr3, float(neg(1)*100) / real(nr1*nr2*nr3)
+  if (neg(2).gt.0) WRITE( stdout,'(/,4x," npt with rhodw < 0: ",i8, &
+       &  ", npt tot ",i8, ",",f10.2, " %" )') neg(2), &
+       &  nr1*nr2*nr3, float(neg(2)*100) / real(nr1 * nr2 * nr3)
 
-     if (neg(3).gt.0) WRITE( stdout,'(/,4x," npt with |zeta| > 1: ",i8, &
-          &  ", npt tot ",i8, ",",f10.2, " %" )') neg(3), &
-          &  nr1*nr2*nr3, float(neg(3)*100) / real(nr1*nr2*nr3)
-     if (neg(1).gt.0) WRITE( stdout,'(/,4x," npt with rhoup < 0: ",i8, &
-          &  ", npt tot ",i8, ",",f10.2, " %" )') neg(1), &
-          &  nr1*nr2*nr3, float(neg(1)*100) / real(nr1*nr2*nr3)
-     if (neg(2).gt.0) WRITE( stdout,'(/,4x," npt with rhodw < 0: ",i8, &
-          &  ", npt tot ",i8, ",",f10.2, " %" )') neg(2), &
-          &  nr1*nr2*nr3, float(neg(2)*100) / real(nr1 * nr2 * nr3)
-
-  endif
   !
   ! energy terms, local-density contribution
   !
