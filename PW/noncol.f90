@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 !
-MODULE noncollin
+MODULE noncollin_module
   USE parameters, ONLY :  DP, ntypx
   !
   SAVE
@@ -45,4 +45,4 @@ MODULE noncollin
       m_loc(:,:)            ! local integrated magnetization
      ! mcons(:,:),           ! constrained values for local variables
   !
-END MODULE noncollin
+END MODULE noncollin_module
