@@ -15,7 +15,7 @@
 
 BIN_DIR=$HOME/O-sesame/bin
 PSEUDO_DIR=$HOME/O-sesame/pseudo
-TMP_DIR=$HOME/tmp
+TMP_DIR=$HOME/tmp/intel
 
 # To run the PWscf programs on a parallel machine, you may have to add
 # the appropriate commands (poe, mpirun, mpprun...) and/or options

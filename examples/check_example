@@ -6,7 +6,7 @@ if test $# = 0 ; then args="." ; else args="$@"; fi
 # pwdiff.sh must be in the same directory as this script
 dir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 pwdiff=$dir/pwdiff.sh
-if ! test -x "$pwdiff"
+if test ! -x "$pwdiff"
 then
     echo error: file pwdiff.sh not found or not executable
     exit -1
@@ -26,7 +26,7 @@ do
     echo checking directory $EXAMPLEDIR...
 
     # look for output files in reference
-    if ! test -d $EXAMPLEDIR/reference
+    if test ! -d $EXAMPLEDIR/reference
     then
 	echo error: reference directory not found in $EXAMPLEDIR
 	exit -1
