@@ -23,6 +23,7 @@ para.o \
 read_pseudo.o \
 restart.o \
 which_dft.o \
+neb_routines.o \
 $(WRAPPERS)
 
 all : cp.x

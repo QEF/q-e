@@ -43,7 +43,8 @@
 #  define ROUND2 ROUND2
 #  define MYUNITNAME MYUNITNAME
 #  define CP_ITOA CP_ITOA
-#  define C_MKDIR c_mkdir
+#  define C_MKDIR C_MKDIR
+#  define CCLOCK CCLOCK
 
 #endif
 

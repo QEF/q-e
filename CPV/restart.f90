@@ -665,4 +665,33 @@ CONTAINS
       return
       end subroutine
 
+!=----------------------------------------------------------------------------=!
+
+        LOGICAL FUNCTION check_restartfile( scradir, ndr )
+
+          USE io_global, ONLY: ionode, ionode_id
+          USE mp, ONLY: mp_bcast
+          USE parser, ONLY: int_to_char
+
+          IMPLICIT NONE
+
+          INTEGER, INTENT(IN) :: ndr
+          CHARACTER(LEN=*) :: scradir
+          CHARACTER(LEN=256) :: filename
+          LOGICAL :: lval
+          INTEGER :: strlen
+
+          IF ( ionode ) THEN
+            filename = 'fort.' // int_to_char( ndr )
+            strlen  = INDEX( scradir, ' ' ) - 1
+            filename = scradir( 1 : strlen ) // '/' // filename
+            INQUIRE( FILE = TRIM( filename ), EXIST = lval )
+            ! WRITE(6,*) '  checking file ', lval, ' ', TRIM( filename )
+          END IF
+          CALL mp_bcast( lval, ionode_id )
+          check_restartfile = lval
+          RETURN
+        END FUNCTION
+
+
 END MODULE restart

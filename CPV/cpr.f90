@@ -103,6 +103,7 @@
       use input_parameters, only: outdir
       use wave_base, only: wave_steepest, wave_verlet
       use wave_base, only: wave_speed2
+      USE control_flags, ONLY : conv_elec
 
 ! wavefunctions
 !
@@ -286,7 +287,6 @@
       dt2bye = dt2/emass
       dt2hbe = dt2by2/emass
 
-      
       if (ionode) then
 
          dirlen = index(outdir,' ') - 1
@@ -295,6 +295,7 @@
            filename = outdir(1:dirlen) // '/' // filename
          end if
          strlen  = index(filename,' ') - 1
+         WRITE( stdout, * ) ' UNIT8 = ', filename
          OPEN(unit=8, file=filename(1:strlen), status='unknown')
 
          filename = 'fort.77'
@@ -337,6 +338,7 @@
          WRITE( stdout,*) ' tau0 '
          WRITE( stdout,'(3f14.8)') (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
       endif
+
 !
 !     ==================================================================
 !     allocate and initialize nonlocal potentials
@@ -345,6 +347,7 @@
       call nlinit
 
       WRITE( stdout,*) ' out from nlinit'
+
 !
 !     ==================================================================
 !     allocation of all arrays not already allocated in init and nlinit
@@ -428,6 +431,11 @@
          ema0bg(i)=1./max(1.d0,tpiba2*ggp(i)/emaec)
          if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
       end do
+
+      !WRITE( stdout, * ) 'NBEG = ', nbeg
+      !fion_out(1:3,1:nat) = 0.0d0
+      !etot_out = 0.0d0
+      !RETURN
 !
       if ( nbeg < 0 ) then
 
@@ -1525,6 +1533,10 @@
             end do
          end do
       endif
+      conv_elec = .TRUE.
+
+
+
  1970 format(1x,'ibrav :',i4,'  alat : ',f10.4,/)
  1971 format(1x,'lattice vectors',/)
  1972 format(1x,3f10.4)

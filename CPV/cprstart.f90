@@ -82,7 +82,11 @@
 
       call iosys_pseudo( psfile, pseudo_dir, ipp, nsp )
 
-      call cpr_loop( 1 )
+      IF( lneb ) THEN
+        call neb_loop( 1 )
+      ELSE
+        call cpr_loop( 1 )
+      END IF
 
       call mp_end()
 
@@ -123,3 +127,46 @@
 
       RETURN
     END SUBROUTINE
+
+
+   SUBROUTINE neb_loop( iloop )
+
+     USE kinds
+     USE io_global,        ONLY: ionode, stdout
+     USE neb_variables,    ONLY: conv_neb
+     USE neb_variables,    ONLY: neb_deallocation
+     USE neb_routines,     ONLY: initialize_neb, search_mep, iosys_neb
+     USE io_routines,      ONLY: write_output
+
+     IMPLICIT NONE
+
+     INTEGER :: iloop
+
+     ! ... stdout is connected to a file ( specific for each image )
+     ! ... via unit 17
+
+     IF( ionode ) THEN
+       !
+       stdout = 17
+       !
+     END IF
+
+     CALL iosys_neb()
+
+     CALL initialize_neb( 'FP' )
+     !
+     ! ... this routine does all the NEB job
+     !
+     CALL search_mep()
+     !
+     ! ... output is written
+     !
+     CALL write_output()
+     !
+     ! ... stdout is reconnected to standard output
+     !
+     stdout = 6
+     !
+
+     RETURN
+   END SUBROUTINE neb_loop
