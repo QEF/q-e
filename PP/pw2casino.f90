@@ -1,26 +1,53 @@
-! #include "machine.h"
+! Copyright (C) 2004 PWSCF group 
+! This file is distributed under the terms of the 
+! GNU General Public License. See the file `License' 
+! in the root directory of the present distribution, 
+! or http://www.gnu.org/copyleft/gpl.txt . 
+! 
+!----------------------------------------------------------------------- 
+program pw2casino
+  !----------------------------------------------------------------------- 
 
 ! This subroutine writes the file pwfn.data containing the plane wave
 ! coefficients and other stuff needed by the QMC code CASINO. 
-program pw2casino
+
+! #include "machine.h"
 
   use io_files, only: nd_nmbr,prefix
-
+#ifdef __PARA 
+  use para,       only : me 
+  use mp, only: mp_bcast
+#endif 
   implicit none
-  integer :: ios
+  integer :: ios, ionode_id = 0
  
   namelist / inputpp / prefix
 
+  call start_postproc(nd_nmbr)
+  ! 
+  !   set default values for variables in namelist 
+  ! 
+  prefix = 'pwscf'
+#ifdef __PARA 
+  if (me == 1)  then 
+#endif 
   read (5, inputpp, err=200, iostat=ios)
 200 call errore('pw2casino', 'reading inputpp namelist', abs(ios))
-  call start_postproc(nd_nmbr)
+#ifdef __PARA 
+  end if 
+  ! 
+  ! ... Broadcast variables 
+  ! 
+  CALL mp_bcast( prefix, ionode_id ) 
+#endif 
+  !
   call read_file
   call openfil
-
+  !
   call compute_casino
-
- call stop_pp
- stop
+  !
+  call stop_pp
+  stop
 
 end program pw2casino
 
@@ -42,8 +69,8 @@ subroutine compute_casino
   integer :: ios
   REAL (KIND=DP), EXTERNAL :: ewald
 
- call init_us_1
- call newd
+  call init_us_1
+  call newd
   io = 77
 
   write (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
