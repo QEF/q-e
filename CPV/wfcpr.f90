@@ -122,6 +122,10 @@
 !
       use wavefunctions_module, only: c0, cm, phi => cp
       use wavefunctions_module, only: deallocate_wavefunctions
+
+      use wannier_module
+      use wannier_subroutines
+      use electric_field_module
 !
 !
       implicit none
@@ -238,26 +242,8 @@
       character(len=256) :: dirname
       integer :: strlen, dirlen
 
-!  WANNIER FINCTION AND ELECTRIC FIELD VARIABLES (M.S)
-        logical what1, wann_calc, field_tune, ft
-        integer :: ir, ierr
-        real(kind=8), allocatable :: utwf(:,:)
-        real(kind=8), allocatable :: wfc(:,:)
-        real(kind=8), allocatable :: rhos1(:,:), rhos2(:,:)
-!N.B:      In the presence of an electric field every wannier state feels a different
-!          potantial, which depends on the position of its center. RHOS is read in as
-!          the charge density in subrouting vofrho and overwritten to be the potential.
-!                                                                        -M.S
-        real(kind=8) :: wfx, wfy, wfz, ionx, iony, ionz
-        real(kind=8) :: efe_elec, efe_ion, prefactor, e_tuned(3)
-!        real(kind=8) :: taui(3,nax,nsx), tt(3), cdmm(3), tt2(3)
-        real(kind=8) ::  tt(3), cdmm(3), tt2(3)
-        real(kind=8) :: par, alen, blen, clen, rel1(3), rel2(3)
-        real(kind=8) :: b1(3), b2(3), b3(3)
-        complex(kind=8), allocatable :: rhogdum(:,:)
-!
-!   END OF WANNIER FUNCTION AND ELECTRIC FIELD VARIABLES
-!
+      integer :: ir, ierr
+      real(kind=8) :: b1(3), b2(3), b3(3)
 
 !
 !     CP loop starts here
@@ -304,67 +290,9 @@
       ispin( :   ) = 0.0d0
       ispin( 1:n ) = ispin_( 1:n )
 
-!     ==================================================================
 
+      call read_efwan_param( nbeg )
 
-
-       what1=.false.
-              write(6,*) wann_calc
-        wann_calc=.false.
-        INQUIRE (file='WANNIER', EXIST=wann_calc)
-          IF(wann_calc) then
-!              write(6,*) wann_calc
-             OPEN(unit=1,file='WANNIER', status='old')
-                read(1,*) efield, switch
-                read(1,*) sw_len
-                if(sw_len.le.0) sw_len=1
-                read(1,*) efx0, efy0, efz0
-                read(1,*) efx1, efy1, efz1
-                read(1,*) wfsd
-                read(1,*) wfdt, maxwfdt, nit, nsd
-                read(1,*) q, dt, friction, nsteps
-                read(1,*) tolw
-                read(1,*) adapt
-                read(1,*) calwf, nwf, wffort
-                if(nwf.gt.0) allocate(iplot(nwf))
-                do i=1,nwf
-                     read(1,*) iplot(i)
-                end do
-                read(1,*) writev
-             CLOSE(1)
-           if(nbeg.eq.-2.and.(efield)) then
-            WRITE(6,*) "ERROR! ELECTRIC FIELD MUST BE SWITCHED ON ONLY AFTER OBTAINING THE GROUND STATE"
-            WRITE(6,*) "-------------------------THE PROGRAM WILL STOP---------------------------------"
-#ifdef __PARA
-            call mpi_finalize(ierr)
-#endif
-            STOP
-           end if
-       end if
-       field_tune=.false.
-       ft=.false.
-       INQUIRE(file='FIELD_TUNE', EXIST=ft)
-         if(ft) then
-           OPEN(unit=1, file='FIELD_TUNE', status='old')
-           read(1,*) field_tune
-             if(field_tune) then
-              efx0=0.d0
-              efy0=0.d0
-              efz0=0.d0
-              efx1=0.d0
-              efy1=0.d0
-              efz1=0.d0
-             end if
-           read(1,*) shift, start
-           read(1,*) npts, av0, av1
-           read(1,*) zdir, alpha,b
-         end if
-       CLOSE(1)
-
-
-!                          -M.S
-!=====================================
-!
 !     general variables
 !
       tfirst = .true.
@@ -423,26 +351,7 @@
 
       WRITE( stdout,*) ' out from init'
 
-!---------------------
-!some more electric field stuff
-!             - M.S
-!
-         IF(EFIELD) THEN
-             IF(SWITCH) THEN
-               WRITE(6,*) "!-------------------------------------------------------!"
-               WRITE(6,*) "!                                                       !"
-               WRITE(6,*) "! NBEG IS SET TO 0 FOR ADIABATIC SWITCHING OF THE FIELD !"
-               WRITE(6,*) "!                                                       !"
-               WRITE(6,*) "!-------------------------------------------------------!"
-               nbeg=0
-             END IF
-        END IF
-!
-! end more electric field stuff
-!                   - M.S
-
-
-
+      call clear_nbeg( nbeg )
 !
 !     more initialization requiring atomic positions
 !
@@ -501,13 +410,8 @@
       allocate(drhog(ng,nspin,3,3))
       allocate(drhor(nnr,nspin,3,3))
       allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
-! WANNIER FUNCTION AND ELECTRIC FIELD VARIABLES (M.S)
-      allocate(utwf(n,n))
-      allocate(wfc(3,n))
-      allocate(rhos1(nnrsx, nspin))
-      allocate(rhos2(nnrsx, nspin))
-      allocate(rhogdum(ng,nspin))
-! END WANNIER AND FIELD VARIABLE ALLOCATION (M.S)
+
+      call allocate_wannier(  n, nnrsx, nspin, ng )
 #ifdef __PARA
       allocate(aux(nnr))
 #endif
@@ -549,84 +453,8 @@
          ema0bg(i)=1./max(1.d0,tpiba2*ggp(i)/emaec)
          if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
       end do
-!-------------------------------------------------------------------
-!More Wannier and Field Initialization
-!                               - M.S
-!-------------------------------------------------------------------
-     if (calwf.gt.1) then
-        if(calwf.eq.3) then
-          write(6,*) "------------------------DYNAMICS IN THE WANNIER BASIS--------------------------"
-          write(6,*) "                             DYNAMICS PARAMETERS "
-        if(wfsd) then
-          write(6,12132) wfdt
-          write(6,12133) maxwfdt
-          write(6,*) nsd,"STEPS OF STEEPEST DESCENT FOR OPTIMIZATION OF THE SPREAD"
-          write(6,*) nit-nsd,"STEPS OF CONJUGATE GRADIENT FOR OPTIMIZATION OF THE SPREAD"
-        else
-          write(6,12125) q
-          write(6,12126) dt
-          write(6,12124) friction
-          write(6,*) nsteps,"STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD"
-        end if
-          write(6,*) "AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24"
-          write(6,*) "INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  FORT.25"
-          write(6,*) "WANNIER CENTERS WRITTEN TO                     FORT.26"
-          write(6,*) "SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27"
-          write(6,*) "-------------------------------------------------------------------------------"
-          write(6,*)
-12124   format(' DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION = ',f10.7)
-12125   format(' FICTITIOUS MASS PARAMETER USED FOR SPREAD OPTIMIZATION            = ',f7.1)
-12126   format(' TIME STEP USED FOR DAMPED DYNAMICS                                = ',f10.7)
-!
-12132   format(' SMALLEST TIMESTEP IN THE SD / CG DIRECTION FOR SPREAD OPTIMIZATION= ',f10.7)
-12133   format(' LARGEST TIMESTEP IN THE SD / CG DIRECTION FOR SPREAD OPTIMIZATION = ',f10.7)
-        end if
-        WRITE(6,*) "IBRAV SELECTED:",ibrav
 
-        call recips( a1, a2, a3, b1, b2, b3 )
-        b1 = b1 * alat
-        b2 = b2 * alat
-        b3 = b3 * alat
-
-        call wfunc_init( calwf, b1, b2, b3, ibrav)
-        write (6,*) "out from wfunc_init"
-        write(6,*)
-        utwf=0.d0
-         do i=1, n
-            utwf(i, i)=1.d0
-         end do
-      end if
-      if(efield) then
-        call grid_map
-        write(6,*) "GRID MAPPING DONE"
-        write(6,*) "DYNAMICS IN THE PRESENCE OF AN EXTERNAL ELECTRIC FIELD"
-        write(6,*)
-        write(6,*) "POLARIZATION CONTRIBUTION OUTPUT TO FORT.28 IN THE FOLLOWING FORMAT"
-        write(6,*)
-        write(6,*) "EFX, EFY, EFZ, ELECTRIC ENTHANLPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)"
-        write(6,*)
-        write(6,12121) efx0
-        write(6,12122) efy0
-        write(6,12123) efz0
-        write(6,12128) efx1
-        write(6,12129) efy1
-        write(6,12130) efz1
-        if(switch) then
-            write(6,12127) sw_len
-        end if
-        write(6,*)
-12121   format(' E0(x) = ',f10.7)
-12122   format(' E0(y) = ',f10.7)
-12123   format(' E0(z) = ',f10.7)
-12128   format(' E1(x) = ',f10.7)
-12129   format(' E1(y) = ',f10.7)
-12130   format(' E1(z) = ',f10.7)
-12131   format(' Efield Now ' ,3(f12.8,1x))
-12127   format(' FIELD WILL BE TURNED ON ADIBATICALLY OVER ',i5,' STEPS')
-        end if
-!--------------------------------------------------------------------------
-!               End of more initialization - M.S
-!--------------------------------------------------------------------------
+      call wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
 !
       if ( nbeg < 0 ) then
 
@@ -806,23 +634,9 @@
          endif
 !
          if( tfor ) then
-!------------------------------------------------------
-!  Electric Feild for ions here
-!                         - M.S
-!------------------------------------------------------
-     if(efield) then
-        do is=1,nsp
-           do ia=1,na(is)
-               fion(1,ia,is)=fion(1,ia,is)+efx*zv(is)
-               fion(2,ia,is)=fion(2,ia,is)+efy*zv(is)
-               fion(3,ia,is)=fion(3,ia,is)+efz*zv(is)
-           end do
-        end do
-      end if
-!-------------------------------------------------------
-!   End Electric field for ions
-!                           - M.S
-!---------------------------------------------------
+
+            call ef_force( fion, na, nsp, zv )
+
             do is=1,nsp
                do ia=1,na(is)
                   do i=1,3
@@ -1003,19 +817,8 @@
 !
       nfi=nfi+1
       tlast=(nfi.eq.nomore)
-!--------------------------------------------------------------------------
-!Get Wannier centers for the first step if efield=true
-!--------------------------------------------------------------------------
-        if(efield) then
-          if(tfirst) then
-            what1=.true.
-            jwf=1
-            call wf (calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
-            write(6,*) "WFC Obtianed"
-            what1=.false.
-          end if
-        end if
-!-----------------------------------------------------------------------------------
+
+      call get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, ibrav, b1, b2, b3 )
 !
       call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !
@@ -1029,87 +832,16 @@
 !
       if ( ANY( nlcc ) ) call set_cc(irb,eigrb,rhoc)
 
-!-------------------------------------------------------------------
-!     Write chargedensity in g-space    - M.S
-!-------------------------------------------------------------------
-      if (writev) then
-         call write_rho_g(rhog)
-#ifdef __PARA
-      call MPI_finalize(i)
-#endif
-      STOP
-      end if
+      call write_charge_and_exit( rhog )
 
-!-------------------------------------------------------------------
-!     End Write chargedensity in g-space    - M.S
-!-------------------------------------------------------------------
-
-!-------------------------------------------------------------------
-!     Tune the Electric field               - M.S
-!-------------------------------------------------------------------
-      if (field_tune) then
-         rhogdum=rhog
-         call macroscopic_average(rhogdum,tau0,e_tuned)
-      end if
-!-------------------------------------------------------------------
-!     End Tune the Electric field           - M.S
-!-------------------------------------------------------------------
+      call ef_tune( rhog, tau0 )
 !
       call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
      &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
 
-!-------------------------------------------------------------------
-! Wannier Function options            - M.S
-!-------------------------------------------------------------------
-        jwf=1
-         if (calwf.eq.1) then
-
-            do i=1, nwf
-               iwf=iplot(i)
-               j=wffort+i-1
-!               call rhoiofr (nfi,iprint,tbuff,trhor,.true.,             &
-!     &             cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos,j)
-
-               call rhoiofr (nfi,cm, irb, eigrb,bec,            &
-     &             rhovan,rhor,rhog,rhos,enl,ekin,j)
-               if(iprsta.gt.0) write(6,*) 'Out from rhoiofr'
-               if(iprsta.gt.0) write(6,*) 
-            end do
-#ifdef __PARA
-        call mpi_finalize(i)
-#endif
-           STOP
-         end if
-!---------------------------------------------------------------------
-         if (calwf.eq.2) then
-
-!           calculate the overlap matrix
-!
-            jwf=1
-            call wf (calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
-
-#ifdef __PARA
-        call MPI_finalize(i)
-#endif
-        STOP
-         end if
-!---------------------------------------------------------------------
-        if (calwf.eq.5) then
-
-!
-            jwf=iplot(1)
-            call wf (calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
-
-#ifdef __PARA
-        call MPI_finalize(i)
-#endif
-        STOP
-        end if
-!----------------------------------------------------------------------
-! End Wannier Function options - M.S
-!
-!=======================================================================
+      call wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, irb, &
+           ibrav, b1, b2, b3, rhor, rhog, rhos, enl, ekin  )
 
       do i=1,3
          do j=1,3
@@ -1153,111 +885,7 @@
       emadt2 = dt2bye * ema0bg
       emaver = emadt2 * verl3
 !
-!    Potential for electric field
-!                    - M.S
-!===================
-        if(efield) then
-         if(field_tune) then
-           efx=e_tuned(1)
-           efy=e_tuned(2)
-           efz=e_tuned(3)
-           write(6,12131) efx, efy,efz
-         else
-          if(switch) then
-          par=0.d0
-          if(nfi.le.sw_len) then
-            sw_step=1./dfloat(sw_len)
-            par=nfi*sw_step
-             if(efx1.lt.efx0) then
-               efx=efx0-(efx0-efx1)*par**5*(70*par**4-315*par**3+540*par**2-420*par+126)
-             else
-               efx=efx0+(efx1-efx0)*par**5*(70*par**4-315*par**3+540*par**2-420*par+126)
-             end if
-             if(efy1.lt.efy0) then
-               efy=efy0-(efy0-efy1)*par**5*(70*par**4-315*par**3+540*par**2-420*par+126)
-             else
-               efy=efy0+(efy1-efy0)*par**5*(70*par**4-315*par**3+540*par**2-420*par+126)
-             end if
-             if(efz1.lt.efz0) then
-               efz=efz0-(efz0-efz1)*par**5*(70*par**4-315*par**3+540*par**2-420*par+126)
-             else
-               efz=efz0+(efz1-efz0)*par**5*(70*par**4-315*par**3+540*par**2-420*par+126)
-             end if
-          end if
-        else
-            efx=efx1
-            efy=efy1
-            efz=efz1
-        end if
-      end if
-!       write(6,*) "Efield Now" ,efz, nnrsx
-      end if
-         do i=1,n,2
-            if(efield) then
-                  rhos1=0.d0
-                  rhos2=0.d0
-              do ir=1,nnrsx
-                  rel1(1)=xdist(ir)*a1(1)+ydist(ir)*a2(1)+zdist(ir)*a3(1)-wfc(1,i)
-                  rel1(2)=xdist(ir)*a1(2)+ydist(ir)*a2(2)+zdist(ir)*a3(2)-wfc(2,i)
-                  rel1(3)=xdist(ir)*a1(3)+ydist(ir)*a2(3)+zdist(ir)*a3(3)-wfc(3,i)
-!  minimum image convention
-                  call pbc(rel1,a1,a2,a3,ainv,rel1)
-               if(nspin.eq.2) then
-                 if(i.le.nupdwn(1)) then
-                  rhos1(ir,1)=rhos(ir,1)+efx*rel1(1)+efy*rel1(2)+efz*rel1(3)
-                 else
-                  rhos1(ir,2)=rhos(ir,2)+efx*rel1(1)+efy*rel1(2)+efz*rel1(3)
-                 end if
-               else
-                  rhos1(ir,1)=rhos(ir,1)+efx*rel1(1)+efy*rel1(2)+efz*rel1(3)
-               end if
-               if(i.ne.n) then
-                  rel2(1)=xdist(ir)*a1(1)+ydist(ir)*a2(1)+zdist(ir)*a3(1)-wfc(1,i+1)
-                  rel2(2)=xdist(ir)*a1(2)+ydist(ir)*a2(2)+zdist(ir)*a3(2)-wfc(2,i+1)
-                  rel2(3)=xdist(ir)*a1(3)+ydist(ir)*a2(3)+zdist(ir)*a3(3)-wfc(3,i+1)
-!  minimum image convention
-                  call pbc(rel2,a1,a2,a3,ainv,rel2)
-               if(nspin.eq.2) then
-                 if(i+1.le.nupdwn(1)) then
-                  rhos2(ir,1)=rhos(ir,1)+efx*rel2(1)+efy*rel2(2)+efz*rel2(3)
-                 else
-                  rhos2(ir,2)=rhos(ir,2)+efx*rel2(1)+efy*rel2(2)+efz*rel2(3)
-                 end if
-              else
-                  rhos2(ir,1)=rhos(ir,1)+efx*rel2(1)+efy*rel2(2)+efz*rel2(3)
-              end if
-               else
-                  rhos2(ir,:)=rhos1(ir,:)
-               end if
-               end do
-!            write(6,*) "calling dforce_field"
-            call dforce_field                                           &
-     &         (bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos1,rhos2)
-            else
-!            write(6,*) "out from dforce_field"
-            call dforce                                                 &
-     &         (bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
-            end if
-!===================
-!  End Potential for Electric Feild
-!                         - M.S
-!
-!      do i=1,n,2
-!         call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
-         if(tsde) then
-            CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
-            CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
-         else 
-            CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
-                 verl1, verl2, emaver, c2 )
-            CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
-                 verl1, verl2, emaver, c3 )
-         endif
-         if (ng0.eq.2) then
-            cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
-            cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
-         end if
-      end do
+      call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
 
       ccc = fccc * dt2bye
       DEALLOCATE( emadt2 )
@@ -1392,24 +1020,8 @@
 !
 !======================================================================
       if( tfor ) then
-!-----------------------------------------------------------------
-!Electric Field Implementation here for Ionic Part
-!                                        - M.S
-!-----------------------------------------------------------------
-      if(efield) then
-        do is=1,nsp
-           do ia=1,na(is)
-               fion(1,ia,is)=fion(1,ia,is)+efx*zv(is)
-               fion(2,ia,is)=fion(2,ia,is)+efy*zv(is)
-               fion(3,ia,is)=fion(3,ia,is)+efz*zv(is)
-           end do
-        end do
-      end if
-!-----------------------------------------------------------------
-!End Electric Field Implementation for Ionic Part
-!                                         - M.S
-!-----------------------------------------------------------------
 
+        call ef_force( fion, na, nsp, zv )
 !
 !==== set friction ====
 !
@@ -1696,59 +1308,7 @@
          WRITE( stdout,*)
       endif
 !
-!--------------------------------------------------------------------
-!Electric Field Implementation for Electric Enthalpy
-!                                              - M.S
-!--------------------------------------------------------------------
-        if(efield) then
-!Electronic Contribution First
-          wfx=0.d0
-          wfy=0.d0
-          wfz=0.d0
-          efe_elec=0.d0
-          do i=1,n
-             tt2(1)=wfc(1,i)
-             tt2(2)=wfc(2,i)
-             tt2(3)=wfc(3,i)
-             call pbc(tt2,a1,a2,a3,ainv,tt2)
-             wfx=wfx+f(i)*tt2(1)
-             wfy=wfy+f(i)*tt2(2)
-             wfz=wfz+f(i)*tt2(3)
-          end do
-        efe_elec=efe_elec+efx*wfx+efy*wfy+efz*wfz
-!Then Ionic Contribution
-          ionx=0.d0
-          iony=0.d0
-          ionz=0.d0
-          efe_ion=0.d0
-          do is=1,nsp
-             do ia=1,na(is)
-                tt(1)=tau0(1,ia,is)
-                tt(2)=tau0(2,ia,is)
-                tt(3)=tau0(3,ia,is)
-                call pbc(tt,a1,a2,a3,ainv,tt)
-                ionx=ionx+zv(is)*tt(1)
-                iony=iony+zv(is)*tt(2)
-                ionz=ionz+zv(is)*tt(3)
-             end do
-          end do
-        efe_ion=efe_ion+efx*ionx+efy*iony+efz*ionz
-!        etot=etot+efe_elec-efe_ion
-#ifdef __PARA
-        if(me.eq.1) then
-#endif
-        write(28,'(f12.9,1x,f12.9,1x,f12.9,1x,f20.15,1x,f20.15)') efx, efy, efz, efe_elec,-efe_ion
-#ifdef __PARA
-        end if
-#endif
-        end if
-
-
-        enthal=enthal+efe_elec-efe_ion
-!--------------------------------------------------------------------
-!End Electric Field Implementation for Electric Enthalpy
-!                                                  - M.S
-!--------------------------------------------------------------------
+      call ef_enthalpy( enthal, tau0 )
 
       epot=eht+epseu+exc
 !
@@ -2132,6 +1692,7 @@
       CALL deallocate_betax()
       CALL deallocate_para_mod()
       CALL deallocate_wavefunctions()
+      CALL deallocate_wannier()
 
       if( ionode ) then
         CLOSE( 8 )

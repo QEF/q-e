@@ -31,6 +31,7 @@ smlam.o \
 smd_modules.o \
 wf.o \
 wfcpr.o \
+wannier.o \
 $(WRAPPERS)
 
 all : cp.x
