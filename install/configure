@@ -1,6 +1,6 @@
 #!/bin/sh
 
-lista=`ls install | sed -e '/Make/!d' -e 's/^Make.//'`
+lista=`ls install | sed -e '/Make\./!d' -e 's/^Make.//'`
 
 
 if [ "$#" != 1 ]
