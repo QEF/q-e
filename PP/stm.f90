@@ -41,7 +41,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   logical :: uguale
 
   integer :: istates, igs, npws, ir, ir1, irx, iry, irz, ig, ibnd, &
-       ik, nbnd_ocp
+       ik, nbnd_ocp, first_band, last_band
   ! the number of states to compute the image
   ! counter on surface G vectors
   ! number of surfac g-vectors
@@ -49,9 +49,12 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   ! counter on g vectors
   ! counter on bands
   ! counter on k points
+  ! number of occupied bands
+  ! first band close enough to the specified energy range [down1:up1]
+  ! last  band close enough to the specified energy range [down1:up1]
 
   real(kind=DP) :: emin, emax, fac, wf, wf1, x, y, zz, &
-       w1 , w0gauss, up, up1, down, down1, t0, scnds
+       w1, w2, w0gauss, up, up1, down, down1, t0, scnds
   complex(kind=DP), parameter :: i= (0.d0, 1.d0)
 
   real(kind=DP), allocatable :: gs (:,:)
@@ -77,6 +80,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
           &       " eV")') sample_bias * rytoev
   else 
      call errore('stm','option stm_wfc_matching does not work',1)
+     if (gamma_only) call errore('stm','option stm_wfc_matching at GAMMA not implemented',1)
      z = z * alat
      dz = dz * alat
      WRITE( stdout, '(5x,"Matching plane at z  =",f6.2, &
@@ -124,16 +128,14 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
   if (sample_bias.gt.0) then
      up = ef + sample_bias
-     up1 = ef + 3 * sample_bias
      down = ef
-     down1 = ef - 2 * sample_bias
   else
      up = ef
-     up1 = ef - 2 * sample_bias
      down = ef + sample_bias
-     down1 = ef + 3 * sample_bias
-
   endif
+  up1   = up   + 3.d0 * degauss
+  down1 = down - 3.d0 * degauss
+
   do ik = 1, nks
      do ibnd = 1, nbnd
         if (et (ibnd, ik) > down .and. et (ibnd, ik) < up) then
@@ -154,6 +156,12 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     of the wavefunctions to the stm dos
   !
   do ik = 1, nks
+     DO ibnd = 1, nbnd
+        if (et(ibnd,ik) < down1) first_band= ibnd+1
+        if (et(ibnd,ik) < up1)   last_band = ibnd
+     END DO
+     istates = istates +  (last_band - first_band + 1)
+
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
      !
@@ -186,18 +194,19 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
         enddo
      endif
      !
-     do ibnd = 1, nbnd
-        w1 = wg (ibnd, ik) / omega
-        if (et (ibnd, ik) > up1 .or. et (ibnd, ik) < down1) goto 10
-        WRITE( stdout, * ) w1, ibnd, ik
-        !
-        !     istates is a counter on the states used to compute the image
-        !
-        istates = istates + 1
-        !
-        !     find the coefficients of the matching wfcs
-        !
-        if (stm_wfc_matching) then
+
+     !
+     !     Now compute the contribution to the image
+     !
+     if (stm_wfc_matching) then
+        do ibnd = first_band, last_band
+
+           w1 = wg (ibnd, ik) / omega
+           WRITE( stdout, * ) w1, ibnd, ik
+
+           !
+           !     find the coefficients of the matching wfcs
+           !
            !     for this state the work function is modified accordingly
            !     to its energy
            wf1 = wf - (et (ibnd, ik) - ef - sample_bias)
@@ -269,23 +278,73 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               enddo
            enddo
            WRITE( stdout, * ) 'end of if (1)'
+        end do
+     else
+        !
+        !     do not match
+        !
+        if (gamma_only) then
+           !
+           !     gamma only version of STM. Two bands computed in a single FT as in the main (PW) code
+           !
+           DO ibnd = first_band, last_band, 2
+              w1 = wg (ibnd, ik) / omega
+              WRITE( stdout, * ) w1, ibnd, ik
+
+              IF ( ibnd < last_band ) THEN
+                 w2 = wg (ibnd+1, ik) / omega
+                 WRITE( stdout, * ) w2, ibnd+1, ik
+              ELSE
+                 w2= 0.d0
+              END IF
+              !
+              !     Compute the contribution of these states only if needed
+              !
+              psic(:) = (0.d0, 0.d0)
+              IF ( ibnd < last_band ) THEN
+                 do ig = 1, npw
+                    psic(nl(igk(ig)))  = &
+                                evc(ig,ibnd) + (0.D0,1.D0) * evc(ig,ibnd+1)
+                    psic(nlm(igk(ig))) = &
+                         CONJG( evc(ig,ibnd) - (0.D0,1.D0) * evc(ig,ibnd+1) )
+                 enddo
+              ELSE
+                 do ig = 1, npw
+                    psic(nl (igk(ig))) =        evc(ig,ibnd)
+                    psic(nlm(igk(ig))) = CONJG( evc(ig,ibnd) )
+                 end do
+              END IF
+
+              call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+              do ir = 1, nrxx
+                 rho (ir, 1) = rho (ir, 1) + w1 * real ( psic(ir) ) **2 + &
+                                             w2 * DIMAG( psic(ir) ) **2
+              enddo
+           END DO
         else
            !
-           !     do not match
+           !     k-point version of STM.
            !
-           psic(:) = (0.d0, 0.d0)
-           do ig = 1, npw
-              psic (nl (igk (ig) ) ) = evc (ig, ibnd)
-           enddo
+           DO ibnd = first_band, last_band
 
-           call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-           do ir = 1, nrxx
-              rho (ir, 1) = rho (ir, 1) + w1 * (real (psic (ir) ) **2 + &
-                   DIMAG (psic (ir) ) **2)
-           enddo
+              w1 = wg (ibnd, ik) / omega
+              WRITE( stdout, * ) w1, ibnd, ik
+              !
+              !     Compute the contribution of this state only if needed
+              !
+              psic(:) = (0.d0, 0.d0)
+              do ig = 1, npw
+                 psic(nl(igk(ig)))  = evc(ig,ibnd)
+              end do
+
+              call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+              do ir = 1, nrxx
+                 rho (ir, 1) = rho (ir, 1) + w1 *(real (psic (ir) ) **2 + &
+                                                  DIMAG(psic (ir) ) **2)
+              enddo
+           END DO
         endif
-10      continue
-     enddo
+     end if
   enddo
   !
   !     symmetrization of the stm dos

@@ -17,11 +17,6 @@ subroutine start_postproc (nodenumber)
   character(len=3) :: nodenumber
   character(len=9) :: code = 'POST-PROC'
   !
-  ! presently no postprocessing code is expected to work with
-  ! half G-vector sphere
-  !
-  gamma_only = .FALSE.
-  !
   call startup (nodenumber, code, version_number)
 #ifdef __PARA
   call init_pool

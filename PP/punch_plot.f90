@@ -65,6 +65,8 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
+  if (plot_num /= 5 .AND. gamma_only) call errore('punch_plot', &
+      ' gamma_only not tested for this plot_num ',1)
   !
   allocate (raux( nrxx))    
   !

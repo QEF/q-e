@@ -25,7 +25,7 @@ subroutine saveall (iun, iflag)
   USE atom
   USE pseud
   USE nl_c_c, ONLY : a_nlcc, b_nlcc, alpha_nlcc, nlcc
-  USE wvfct, ONLY: nbnd, npwx, nbndx
+  USE wvfct, ONLY: nbnd, npwx, nbndx, gamma_only
   USE ener, ONLY: ef
   USE force_mod, ONLY: lforce
   USE varie, ONLY: iswitch, istep, modenum, noinv, newpseudo
@@ -48,7 +48,7 @@ subroutine saveall (iun, iflag)
   if (iflag == 1) then
      write (iun) celldm, at, bg, alat, omega, tpiba, tpiba2, ibrav, symm_type
      write (iun) iswitch, istep, modenum
-     write (iun) nat, ntyp, nbnd, npwx, nbndx, natomwfc
+     write (iun) nat, ntyp, nbnd, npwx, nbndx, natomwfc, gamma_only
      write (iun) nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gcutm, ecutwfc, dual
      write (iun) nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
           doublegrid, gcutms
@@ -73,7 +73,8 @@ subroutine saveall (iun, iflag)
      read (iun, err = 100, iostat = ios) celldm, at, bg, alat, &
           omega, tpiba, tpiba2, ibrav, symm_type
      read (iun, err = 100, iostat = ios) iswitch, istep, modenum
-     read (iun, err = 100, iostat = ios) nat, ntyp, nbnd, npwx, nbndx, natomwfc
+     read (iun, err = 100, iostat = ios) nat, ntyp, nbnd, npwx, nbndx, &
+                                         natomwfc, gamma_only
      read (iun, err = 100, iostat = ios) nr1, nr2, nr3, nrx1, nrx2, &
           nrx3, nrxx, gcutm, ecutwfc, dual
      read (iun, err = 100, iostat = ios) nr1s, nr2s, nr3s, nrx1s, &
@@ -103,6 +104,7 @@ subroutine saveall (iun, iflag)
      !
 100  call errore ('saveall', 'reading file', abs (ios) )
   endif
+
   return
 end subroutine saveall
 
