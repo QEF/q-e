@@ -5,64 +5,69 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-
-subroutine psymdvscf (nper, irr, dvtosym)
+SUBROUTINE psymdvscf (nper, irr, dvtosym)
   !-----------------------------------------------------------------------
+  !
   !  p-symmetrize the charge density.
   !
-#include "f_defs.h"
-#ifdef __PARA
+#if defined (__PARA)
 
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-  use para
-  implicit none
+  USE pwcom
+  USE kinds,     ONLY : DP
+  USE phcom
+  USE mp_global, ONLY : me_pool
+  USE pfft,      ONLY : npp, ncplane
 
-  integer :: nper, irr
+  IMPLICIT NONE
+
+  INTEGER :: nper, irr
   ! the number of perturbations
   ! the representation under consideration
 
 
-  complex(kind=DP) :: dvtosym (nrxx, nspin, nper)
+  COMPLEX(kind=DP) :: dvtosym (nrxx, nspin, nper)
   ! the potential to symmetrize
   !-local variable
 
-  integer :: i, is, iper, npp0
+  INTEGER :: i, is, iper, npp0
 
-  complex(kind=DP), allocatable :: ddvtosym (:,:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: ddvtosym (:,:,:)
   ! the potential to symm
 
 
-  if (nsymq.eq.1.and. (.not.minus_q) ) return
-  call start_clock ('psymdvscf')
+  IF (nsymq.EQ.1.AND. (.NOT.minus_q) ) RETURN
+  CALL start_clock ('psymdvscf')
 
-  allocate (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, nper))    
+  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, nper))    
   npp0 = 1
-  do i = 1, me-1
+  DO i = 1, me_pool
      npp0 = npp0 + npp (i) * ncplane
 
-  enddo
-  do iper = 1, nper
-     do is = 1, nspin
-        call cgather_sym (dvtosym (1, is, iper), ddvtosym (1, is, iper) )
-     enddo
+  ENDDO
+  DO iper = 1, nper
+     DO is = 1, nspin
+        CALL cgather_sym (dvtosym (1, is, iper), ddvtosym (1, is, iper) )
+     ENDDO
 
-  enddo
+  ENDDO
 
-  call symdvscf (nper, irr, ddvtosym)
-  do iper = 1, nper
-     do is = 1, nspin
-        call ZCOPY (npp (me) * ncplane, ddvtosym (npp0, is, iper), &
+  CALL symdvscf (nper, irr, ddvtosym)
+  DO iper = 1, nper
+     DO is = 1, nspin
+        CALL ZCOPY (npp (me_pool+1) * ncplane, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
-     enddo
+     ENDDO
 
-  enddo
-  deallocate (ddvtosym)
+  ENDDO
+  DEALLOCATE (ddvtosym)
 
-  call stop_clock ('psymdvscf')
+  CALL stop_clock ('psymdvscf')
+
 #endif
-  return
-end subroutine psymdvscf
+
+  RETURN
+
+END SUBROUTINE psymdvscf

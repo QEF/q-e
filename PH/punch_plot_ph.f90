@@ -5,10 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-
-subroutine punch_plot_ph
+SUBROUTINE punch_plot_ph()
   !-----------------------------------------------------------------------
   !
   !     This subroutine writes on output the change of the charge density,
@@ -18,19 +18,15 @@ subroutine punch_plot_ph
   !     or selects a line for a usual line plot. The routine produces
   !     a file with the name in the variable fildrho# given in input.
   !
-#include "f_defs.h"
-  !
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
-  USE io_global,  ONLY : stdout
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-#ifdef __PARA
-  use para
-#endif
-  implicit none
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
+  USE io_global,  ONLY : stdout, ionode
+  USE pwcom
+  USE kinds,      ONLY : DP
+  USE phcom
 
-  integer :: iunplot, ios, ipert, irr, na, ir, nt, imode0, plot_num, jpol
+  IMPLICIT NONE
+
+  INTEGER :: iunplot, ios, ipert, irr, na, ir, nt, imode0, plot_num, jpol
   ! unit of the plot file
   ! integer variable for I/O contr
   ! counter on polarizations
@@ -42,105 +38,103 @@ subroutine punch_plot_ph
   ! compatibility variable
   ! counter on polarization
 
-  character(len=80) :: filin
+  CHARACTER(len=80) :: filin
   ! complete name of the file
 
-  real(kind=DP), allocatable :: raux (:)
+  REAL(kind=DP), ALLOCATABLE :: raux (:)
   ! auxiliary vector
 
-  complex(kind=DP) :: ps, ZDOTC
-  complex(kind=DP), allocatable :: aux (:,:,:), aux1 (:,:)
+  COMPLEX(kind=DP) :: ps, ZDOTC
+  COMPLEX(kind=DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:)
   ! the scalar product
   ! scalar product function
   ! auxiliary space to rotate the
   ! induced charge
-#ifdef __PARA
+#if defined (__PARA)
   ! auxiliary vector
-  real(kind=DP), allocatable :: raux1 (:)
+  REAL(kind=DP), ALLOCATABLE :: raux1 (:)
 #endif
 
-  if (fildrho.eq.' ') return
+  IF (fildrho.EQ.' ') RETURN
   WRITE( stdout, '(/5x,"Calling punch_plot_ph" )')
   WRITE( stdout, '(5x,"Writing on file  ",a)') fildrho
   !
   !    reads drho from the file
   !
-  allocate (aux  (  nrxx,nspin,npertx))    
-  allocate (aux1 (  nrxx,nspin))    
-  allocate (raux (  nrxx))    
+  ALLOCATE (aux  (  nrxx,nspin,npertx))    
+  ALLOCATE (aux1 (  nrxx,nspin))    
+  ALLOCATE (raux (  nrxx))    
   !
   !
   !     reads the delta_rho on the aux variable
   !
   aux1(:,:) = (0.d0, 0.d0)
   imode0 = 0
-  do irr = 1, nirr
-     if (comp_irr (irr) .eq.1) then
-        do ipert = 1, npert (irr)
-           call davcio_drho (aux (1, 1, ipert), lrdrho, iudrho, imode0 + &
+  DO irr = 1, nirr
+     IF (comp_irr (irr) .EQ.1) THEN
+        DO ipert = 1, npert (irr)
+           CALL davcio_drho (aux (1, 1, ipert), lrdrho, iudrho, imode0 + &
                 ipert, - 1)
-        enddo
-#ifdef __PARA
-        call psymdvscf (npert (irr), irr, aux)
+        ENDDO
+#if defined (__PARA)
+        CALL psymdvscf (npert (irr), irr, aux)
 #else
-        call symdvscf (npert (irr), irr, aux)
+        CALL symdvscf (npert (irr), irr, aux)
 #endif
-        do ipert = 1, npert (irr)
+        DO ipert = 1, npert (irr)
            ps = ZDOTC (3 * nat, ubar, 1, u (1, imode0 + ipert), 1)
-           call ZAXPY (nrxx * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
-        enddo
-     endif
+           CALL ZAXPY (nrxx * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
+        ENDDO
+     ENDIF
      imode0 = imode0 + npert (irr)
-  enddo
+  ENDDO
   !
   !     write on output the change of the charge
   !
   iunplot = 4
-  filin = trim(fildrho)
-#ifdef __PARA
-  if (me.eq.1.and.mypool.eq.1) then
-#endif
-     open (unit = iunplot, file = filin, status = 'unknown', err = &
+  filin = TRIM(fildrho)
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN (unit = iunplot, file = filin, status = 'unknown', err = &
           100, iostat = ios)
 
-100  call errore ('plotout', 'opening file'//filin, abs (ios) )
-     rewind (iunplot)
+100  CALL errore ('plotout', 'opening file'//filin, ABS (ios) )
+     REWIND (iunplot)
      !
      !       Here we write some information quantity which are always necessa
      !
      plot_num = 0
-     write (iunplot, '(a)') title
-     write (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, &
+     WRITE (iunplot, '(a)') title
+     WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, &
           ntyp
-     write (iunplot, '(i6,6f12.8)') ibrav, celldm
-     write (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
-     write (iunplot, '(i4,3x,a2,3x,f5.2)') &
+     WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
+     WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
+     WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') &
                                 (nt, atm (nt), zv (nt), nt=1, ntyp)
-     write (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
+     WRITE (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
           (tau (jpol, na), jpol = 1, 3), ityp (na), na = 1, nat)
-
-#ifdef __PARA
-  endif
-#endif
+     !
+  ENDIF
   !
   !      plot of the charge density
   !
-  call DCOPY (nrxx, aux1 (1, 1), 2, raux, 1)
+  CALL DCOPY (nrxx, aux1 (1, 1), 2, raux, 1)
 
-  if (lsda) call DAXPY (nrxx, 1.d0, aux1 (1, 2), 2, raux, 1)
-#ifdef __PARA
-  allocate (raux1( nrx1 * nrx2 * nrx3))    
-  call gather (raux, raux1)
-  if (me.eq.1.and.mypool.eq.1) write (iunplot, * ) (raux1 (ir), &
-       ir = 1, nrx1 * nrx2 * nrx3)
-  deallocate (raux1)
+  IF (lsda) CALL DAXPY (nrxx, 1.d0, aux1 (1, 2), 2, raux, 1)
+
+#if defined (__PARA)
+  ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    
+  CALL gather (raux, raux1)
+  IF ( ionode ) WRITE (iunplot, * ) (raux1 (ir), ir = 1, nrx1 * nrx2 * nrx3)
+  DEALLOCATE (raux1)
 #else
-  write (iunplot, * ) (raux (ir), ir = 1, nrxx)
+  WRITE (iunplot, * ) (raux (ir), ir = 1, nrxx)
 #endif
 
-  close (unit = iunplot)
-  deallocate (raux)
-  deallocate (aux1)
-  deallocate (aux)
-  return
-end subroutine punch_plot_ph
+  CLOSE (unit = iunplot)
+  DEALLOCATE (raux)
+  DEALLOCATE (aux1)
+  DEALLOCATE (aux)
+  RETURN
+END SUBROUTINE punch_plot_ph

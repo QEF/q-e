@@ -6,53 +6,47 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-subroutine io_pattern (fildrho,nirr,npert,u,iflag)
+SUBROUTINE io_pattern (fildrho,nirr,npert,u,iflag)
 !---------------------------------------------------------------------
   !
   USE ions_base, ONLY : nat
   USE io_global,  ONLY : stdout
-  use pwcom
-  USE kinds, only : DP
-#ifdef __PARA
-  use para
-#endif
-  implicit none
+  USE pwcom
+  USE kinds, ONLY : DP
+  
+  IMPLICIT NONE
 !
 !   the i/o variables first
 !
-  integer :: nirr, npert(3*nat), iflag
-  complex(kind=DP) :: u(3*nat,3*nat)
-  character (len=*)  ::  fildrho   ! name of the file
-  character (len=256)::  filname   ! complete name of the file
+  INTEGER :: nirr, npert(3*nat), iflag
+  COMPLEX(kind=DP) :: u(3*nat,3*nat)
+  CHARACTER (len=*)  ::  fildrho   ! name of the file
+  CHARACTER (len=256)::  filname   ! complete name of the file
 !
 !   here the local variables
 !
-  integer :: i,iunit
-  logical :: exst
+  INTEGER :: i,iunit
+  LOGICAL :: exst
 
-  if (abs(iflag).ne.1) call errore('io_pattern','wrong iflag',1+abs(iflag))
-
-#ifdef __PARA
-!  if (iflag.eq.+1 .and. (me.ne.1.or.mypool.ne.1)) return
-#endif
+  IF (ABS(iflag).NE.1) CALL errore('io_pattern','wrong iflag',1+ABS(iflag))
 
   iunit = 4
-  filname = trim(fildrho) //".pat"
-  call seqopn(iunit,filname,'formatted',exst)
+  filname = TRIM(fildrho) //".pat"
+  CALL seqopn(iunit,filname,'formatted',exst)
 
-  if (iflag.gt.0) then
+  IF (iflag.GT.0) THEN
      WRITE( stdout,*) 'WRITING PATTERNS ON FILE ', TRIM(filname)
-     write(iunit,*) nirr
-     write(iunit,*) (npert(i),i=1,nirr)
-     write(iunit,*) u
-  else
+     WRITE(iunit,*) nirr
+     WRITE(iunit,*) (npert(i),i=1,nirr)
+     WRITE(iunit,*) u
+  ELSE
      WRITE( stdout,*) 'READING PATTERNS FROM FILE ', TRIM(filname)
-     read(iunit,*) nirr
-     read(iunit,*) (npert(i),i=1,nirr)
-     read(iunit,*) u
-  end if
+     READ(iunit,*) nirr
+     READ(iunit,*) (npert(i),i=1,nirr)
+     READ(iunit,*) u
+  END IF
 
-  close (iunit)
+  CLOSE (iunit)
 
-  return
-end subroutine io_pattern
+  RETURN
+END SUBROUTINE io_pattern

@@ -1,85 +1,92 @@
+!
+! Copyright (C) 2001-2004 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!  
+#include "f_defs.h"
+!
 !------------------------------------------------
-subroutine addnlcc_zstar_eu_us (drhoscf) 
+SUBROUTINE addnlcc_zstar_eu_us( drhoscf ) 
 !----------===================-------------------
 
-#include "f_defs.h"
-
-  use funct
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-#ifdef __PARA
-  use para
-#endif
-  implicit none
+  USE funct
+  USE pwcom
+  USE kinds, ONLY : DP
+  USE phcom
+  USE mp_global, ONLY : my_pool_id
   
-  complex(kind=DP) :: drhoscf (nrxx,nspin,3)
-
-
-  integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
-  integer :: imode0, npe, ipol
-
-  real(kind=DP) :: fac
   
-  complex(kind=DP), dimension(nrxx) :: drhoc
-  complex(kind=DP), dimension(nrxx,nspin) :: dvaux
-
-  if (.not.nlcc_any) return
-#ifdef __PARA
-  if (mypool.ne.1) return
-#endif
+  IMPLICIT NONE
   
-  do ipol = 1, 3
+  COMPLEX(kind=DP) :: drhoscf (nrxx,nspin,3)
+
+
+  INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
+  INTEGER :: imode0, npe, ipol
+
+  REAL(kind=DP) :: fac
+  
+  COMPLEX(kind=DP), DIMENSION(nrxx) :: drhoc
+  COMPLEX(kind=DP), DIMENSION(nrxx,nspin) :: dvaux
+
+  IF (.NOT.nlcc_any) RETURN
+
+  IF ( my_pool_id /= 0 ) RETURN
+
+  
+  DO ipol = 1, 3
      imode0 = 0
-     do irr = 1, nirr
+     DO irr = 1, nirr
         npe = npert(irr)
         !
         !  compute the exchange and correlation potential for this mode
         !
         nrtot = nr1 * nr2 * nr3
         fac = 1.d0 / float (nspin)
-        do ipert = 1, npe
+        DO ipert = 1, npe
            mode = imode0 + ipert
            
            dvaux = (0.0_dp,0.0_dp)
-           call addcore (mode, drhoc)
+           CALL addcore (mode, drhoc)
            
-           do is = 1, nspin
+           DO is = 1, nspin
               rho(:,is) = rho(:,is) + fac * rho_core
-           end do
+           END DO
 
-           do is = 1, nspin
-              do is1 = 1, nspin
-                 do ir = 1, nrxx
+           DO is = 1, nspin
+              DO is1 = 1, nspin
+                 DO ir = 1, nrxx
                     dvaux (ir, is) = dvaux (ir, is) +     &
                          dmuxc (ir, is, is1) *            &
                          drhoscf (ir, is1, ipol)
-                 enddo
-              enddo
-           end do
+                 ENDDO
+              ENDDO
+           END DO
            !
            ! add gradient correction to xc, NB: if nlcc is true we need to add here
            ! its contribution. grho contains already the core charge
            !
 
-           if (igcx.ne.0.or.igcc.ne.0) &
-                call dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+           IF (igcx.NE.0.OR.igcc.NE.0) &
+                CALL dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
                 drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                 nspin, nl, ngm, g, alat, omega, dvaux)
         
-           do is = 1, nspin
+           DO is = 1, nspin
               rho(:,is) = rho(:,is) - fac * rho_core
-           end do
+           END DO
            
-           do is = 1, nspin
+           DO is = 1, nspin
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
-                   omega * fac / real(nrtot, kind = dp) *         &
-                   dot_product(dvaux(1:nrxx,is),drhoc(1:nrxx)) 
-           end do
-        end do
+                   omega * fac / REAL(nrtot, kind = dp) *         &
+                   DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx)) 
+           END DO
+        END DO
         imode0 = imode0 + npe
-     end do
-  end do
+     END DO
+  END DO
 
-  return
-end subroutine addnlcc_zstar_eu_us
+  RETURN
+END SUBROUTINE addnlcc_zstar_eu_us
