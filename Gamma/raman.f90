@@ -18,15 +18,19 @@ program cg_raman
   use mp,             ONLY : mp_end
   use global_version
   use para
+  USE check_stop,    ONLY : check_stop_init
 
   implicit none
 
   real(kind=DP), allocatable :: deps_dtau(:,:,:,:), dynout(:,:)
   real(kind=DP), allocatable :: w2(:)
+  real(kind=DP):: max_seconds = 1.D+6
   character(len=9) :: cdate, ctime, code = 'RAMAN'
   logical :: exst
   integer :: i
-  external date_and_tim
+  !
+  !
+  call check_stop_init ( max_seconds ) 
   !
   call init_clocks(.true.)
   call start_clock('raman')
