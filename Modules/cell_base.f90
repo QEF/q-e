@@ -87,11 +87,11 @@
         END INTERFACE
 
         INTERFACE s_to_r
-          MODULE PROCEDURE s_to_r1, s_to_r3
+          MODULE PROCEDURE s_to_r1, s_to_r1b, s_to_r3
         END INTERFACE
 
         INTERFACE r_to_s
-          MODULE PROCEDURE r_to_s1, r_to_s3
+          MODULE PROCEDURE r_to_s1, r_to_s1b, r_to_s3
         END INTERFACE
 
 !
@@ -180,17 +180,19 @@
         END SUBROUTINE R_TO_S1
 
         SUBROUTINE R_TO_S3 ( R, S, na, nsp, hinv )
-          REAL(dbl), intent(out) ::  S(:,:,:)
+          REAL(dbl), intent(out) ::  S(:,:)
           INTEGER, intent(in) ::  na(:), nsp
-          REAL(dbl), intent(in) :: R(:,:,:)
+          REAL(dbl), intent(in) :: R(:,:)
           REAL(dbl), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
-          integer :: i, j, ia, is
+          integer :: i, j, ia, is, isa
+          isa = 0
           DO is = 1, nsp
             DO ia = 1, na(is)
+              isa = isa + 1
               DO I=1,3
-                S(I,ia,is) = 0.D0
+                S(I,isa) = 0.D0
                 DO J=1,3
-                  S(I,ia,is) = S(I,ia,is) + R(J,ia,is)*hinv(i,j)
+                  S(I,isa) = S(I,isa) + R(J,isa)*hinv(i,j)
                 END DO
               END DO
             END DO
@@ -198,9 +200,24 @@
           RETURN
         END SUBROUTINE R_TO_S3
 
+        SUBROUTINE R_TO_S1B ( R, S, hinv )
+          REAL(dbl), intent(out) ::  S(:)
+          REAL(dbl), intent(in) :: R(:)
+          REAL(dbl), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
+          integer :: i, j
+          DO I=1,3
+            S(I) = 0.D0
+            DO J=1,3
+              S(I) = S(I) + R(J)*hinv(i,j)
+            END DO
+          END DO
+          RETURN
+        END SUBROUTINE R_TO_S1B
+
+
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE S_TO_R1 (S,R,box)
+        SUBROUTINE s_to_r1 (S,R,box)
           REAL(dbl), intent(in) ::  S(3)
           REAL(dbl), intent(out) :: R(3)
           type (boxdimensions), intent(in) :: box
@@ -212,26 +229,42 @@
             END DO
           END DO
           RETURN
-        END SUBROUTINE S_TO_R1
+        END SUBROUTINE s_to_r1
 
-        SUBROUTINE S_TO_R3 ( S, R, na, nsp, h )
-          REAL(dbl), intent(in) ::  S(:,:,:)
-          INTEGER, intent(in) ::  na(:), nsp
-          REAL(dbl), intent(out) :: R(:,:,:)
+        SUBROUTINE s_to_r1b (S,R,h)
+          REAL(dbl), intent(in) ::  S(3)
+          REAL(dbl), intent(out) :: R(3)
           REAL(dbl), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
-          integer :: i, j, ia, is
+          integer i,j
+          DO I=1,3
+            R(I) = 0.D0
+            DO J=1,3
+              R(I) = R(I) + S(J)*h(I,j)
+            END DO
+          END DO
+          RETURN
+        END SUBROUTINE s_to_r1b
+
+        SUBROUTINE s_to_r3 ( S, R, na, nsp, h )
+          REAL(dbl), intent(in) ::  S(:,:)
+          INTEGER, intent(in) ::  na(:), nsp
+          REAL(dbl), intent(out) :: R(:,:)
+          REAL(dbl), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
+          integer :: i, j, ia, is, isa
+          isa = 0
           DO is = 1, nsp
             DO ia = 1, na(is)
+              isa = isa + 1
               DO I = 1, 3
-                R(I,ia,is) = 0.D0
+                R(I,isa) = 0.D0
                 DO J = 1, 3
-                  R(I,ia,is) = R(I,ia,is) + S(J,ia,is) * h(I,j)
+                  R(I,isa) = R(I,isa) + S(J,isa) * h(I,j)
                 END DO
               END DO
             END DO
           END DO
           RETURN
-        END SUBROUTINE S_TO_R3
+        END SUBROUTINE s_to_r3
 
 
 !

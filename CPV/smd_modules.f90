@@ -54,7 +54,7 @@ MODULE smd_variables
  !--- TYPE pointer ------------
  !
  TYPE ptr
-  real(kind=8), pointer :: d3(:,:,:)
+  real(kind=8), pointer :: d3(:,:)
  END TYPE ptr
  !
  !
@@ -72,17 +72,17 @@ MODULE smd_rep
  !--- For ionic variables ---------
  !
  TYPE ION
-  real(kind=8) :: tau0(3,natx,nsx)
-  real(kind=8) :: taup(3,natx,nsx)
-  real(kind=8) :: taum(3,natx,nsx)
-  real(kind=8) :: taus(3,natx,nsx)
-  real(kind=8) :: tausp(3,natx,nsx)
-  real(kind=8) :: tausm(3,natx,nsx)
-  real(kind=8) :: fion(3,natx,nsx)
-  real(kind=8) :: fionm(3,natx,nsx)
-  real(kind=8) :: vels(3,natx,nsx)
-  real(kind=8) :: velsm(3,natx,nsx)
-  real(kind=8) :: tan(3,natx,nsx)
+  real(kind=8) :: tau0(3,natx)
+  real(kind=8) :: taup(3,natx)
+  real(kind=8) :: taum(3,natx)
+  real(kind=8) :: taus(3,natx)
+  real(kind=8) :: tausp(3,natx)
+  real(kind=8) :: tausm(3,natx)
+  real(kind=8) :: fion(3,natx)
+  real(kind=8) :: fionm(3,natx)
+  real(kind=8) :: vels(3,natx)
+  real(kind=8) :: velsm(3,natx)
+  real(kind=8) :: tan(3,natx)
   real(kind=8) :: cdm0(3)
   real(kind=8) :: cdmvel(3)
   real(kind=8) :: acc(nacx)

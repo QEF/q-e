@@ -436,81 +436,6 @@
 !
       return
       end
-!-------------------------------------------------------------------------
-      subroutine gcal(b1,b2,b3,nr1,nr2,nr3,gmax)
-!-----------------------------------------------------------------------
-!   calculates the values of g-vectors to be assigned to the lattice
-!   points generated in subroutine ggen. these values are derived
-!   from the actual values of lattice parameters, with fixed number
-!   of plane waves and a cut-off function to keep energy cut-off fixed.
-!
-!      g=i*b1+j*b2+k*b3,
-!
-!   where b1,b2,b3 are the vectors defining the reciprocal lattice,
-!   i go from 1 to +(nr-1) and j,k go from -(nr-1) to +(nr-1).
-!
-!   the g's are in units of 2pi/a.
-!
-      use control_flags, only: iprint
-      use gvec
-      use gvecw, only: ngw
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      implicit none
-!
-      integer nr1, nr2, nr3
-      real(kind=8) b1(3),b2(3),b3(3), gmax
-      real(kind=8), external :: erf
-!
-      integer i1,i2,i3,ig
-!
-!     calculation of gx(3,ng)
-!
-      gmax=0.
-      do ig=1,ng
-         i1=in1p(ig)
-         i2=in2p(ig)
-         i3=in3p(ig)
-         gx(1,ig)=i1*b1(1)+i2*b2(1)+i3*b3(1)
-         gx(2,ig)=i1*b1(2)+i2*b2(2)+i3*b3(2)
-         gx(3,ig)=i1*b1(3)+i2*b2(3)+i3*b3(3)
-         g(ig)=gx(1,ig)**2 + gx(2,ig)**2 + gx(3,ig)**2
-         if(g(ig).gt.gmax) gmax=g(ig)
-      enddo
-!
-      do ig=1,ngw
-         ggp(ig) = g(ig) +                                              &
-     &             (agg/tpiba2)*(1.0+erf((tpiba2*g(ig)-e0gg)/sgg))
-      enddo
-! 
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine gcalb(b1b,b2b,b3b,nr1b,nr2b,nr3b)
-!-----------------------------------------------------------------------
-!
-      use control_flags, only: iprint
-      use gvecb
-!
-      implicit none
-      integer nr1b,nr2b,nr3b
-      real(kind=8) b1b(3),b2b(3),b3b(3)
-!
-      integer i, i1,i2,i3,ig
-!
-!     calculation of gxb(3,ngbx)
-!
-      do ig=1,ngb
-         i1=in1pb(ig)
-         i2=in2pb(ig)
-         i3=in3pb(ig)
-         gxb(1,ig)=i1*b1b(1)+i2*b2b(1)+i3*b3b(1)
-         gxb(2,ig)=i1*b1b(2)+i2*b2b(2)+i3*b3b(2)
-         gxb(3,ig)=i1*b1b(3)+i2*b2b(3)+i3*b3b(3)
-         gb(ig)=gxb(1,ig)**2 + gxb(2,ig)**2 + gxb(3,ig)**2
-      enddo
-!
-      return
-      end
 !______________________________________________________________________
       subroutine gradh(nspin,gradr,rhog,rhor,dexc)
 !     _________________________________________________________________
@@ -625,7 +550,7 @@
       end
 !-----------------------------------------------------------------------
       subroutine init (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
-                       tfirst,twmass,thdiag,iforceh,tau0,taus,delt)
+                       tfirst,tau0,taus,delt,tps,iforce)
 !-----------------------------------------------------------------------
 !
 !     initialize G-vectors and related quantities
@@ -635,11 +560,11 @@
       use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
-      use ions_base, only: na, pmass, nsp
-      use cell_base, only: ainv, a1, a2, a3
+      use ions_base, only: na, pmass, nsp, randpos
+      use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
       use elct
       use constants, only: pi, fpi
-      use cell_base, only: wmass, hold, h
+      use cell_base, only: hold, h
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
       use restart
@@ -647,21 +572,22 @@
 
       implicit none
 ! input/output
-      integer ibrav, ndr, nbeg, iforceh(3,3)
-      logical tranp(nsx), tfirst, twmass, thdiag
-      real(kind=8) tau0(3,natx,nsx), taus(3,natx,nsx), amprp(nsx)
+      integer ibrav, ndr, nbeg
+      logical tranp(nsx), tfirst
+      real(kind=8) tau0(3,natx), taus(3,natx), amprp(nsx)
+      integer iforce(3,natx)
       real(kind=8) celldm(6), ecut, ecutw
       real(kind=8) delt
 ! local
       real(kind=8) randy
-      integer i, j, ia, is, nfi
+      integer i, j, ia, is, nfi, isa, isat
 ! present in the call to read(p)file, not actually used
       complex(kind=8) c0(1,1),cm(1,1)
-      real(kind=8) taum(1,1,1),vel(1,1,1),velm(1,1,1),acc(nacx)
+      real(kind=8) taum(1,1),vel(1,1),velm(1,1),acc(nacx)
       real(kind=8) lambda(1,1),lambdam(1,1)
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      real(kind=8) fion(1,1,1)
+      real(kind=8) fion(1,1), tps
 !
 !
 !     ==============================================================
@@ -672,29 +598,10 @@
 !
 ! taus = scaled, tau0 = alat units
 !
-      do is=1,nsp
-         do ia=1,na(is)
-            do i=1,3
-               taus(i,ia,is)=ainv(i,1)*tau0(1,ia,is)                 &
-                            +ainv(i,2)*tau0(2,ia,is)                 &
-                            +ainv(i,3)*tau0(3,ia,is)
-            end do
-         end do
-      end do
+      CALL r_to_s( tau0, taus, na, nsp, ainv )
 !
       refg=1.0*ecut/(mmx-1)
       WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
-!
-      if(thdyn) then
-         if(thdiag) then
-            iforceh=0
-            do i=1,3
-               iforceh(i,i)=1
-            enddo
-         else
-            iforceh=1
-         endif
-      endif
 !
       if( nbeg >= 0 ) then
 !
@@ -703,7 +610,7 @@
          call readfile_new                                              &
      &     (-1,ndr,h,hold,nfi,c0,cm,tau0,taum,vel,velm,acc,             &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 !
          WRITE( stdout,344) ibrav
          do i=1,3
@@ -733,38 +640,11 @@
 !
       call newinit( ibrav )
 !
-      do is=1,nsp
-         if(tranp(is)) then
-            do ia=1,na(is)
-               do i=1,3
-                  taus(i,ia,is)=taus(i,ia,is)+amprp(is)*(randy()-0.5)
-               end do
-            end do
-!
-!     true tau (tau0) from scaled tau (taus)
-!
-            do ia=1,na(is)
-               do i=1,3
-                  tau0(i,ia,is) = h(i,1)*taus(1,ia,is) &
-                                + h(i,2)*taus(2,ia,is) &
-                                + h(i,3)*taus(3,ia,is)
-               end do
-            end do
-         end if
-      end do
+      IF( ANY( tranp( 1:nsp ) ) ) THEN
+        call randpos(taus, na, nsp, tranp, amprp, ainv, iforce )
+        call s_to_r( taus, tau0, na, nsp, h )
+      END IF
       !
-      if(.not. twmass) then
-         WRITE( stdout,998) wmass
-      else
-         wmass=0.
-         do is=1,nsp
-            wmass=wmass+na(is)*pmass(is)
-         enddo
-         wmass=wmass*0.75/pi/pi
-         WRITE( stdout,999) wmass
-      endif
- 998  format(' wmass (read from input) = ',f15.2,/)
- 999  format(' wmass (calculated) = ',f15.2,/)
  344  format(' ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))
       return
@@ -799,52 +679,36 @@
       real(kind=8) ddum
 !
 !
-      alat=sqrt(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))
+      alat = sqrt( h(1,1)*h(1,1) + h(2,1)*h(2,1) + h(3,1)*h(3,1) )
+
 !     ==============================================================
-      tpiba=2.d0*pi/alat
-      tpiba2=tpiba*tpiba
+      tpiba  = 2.d0 * pi / alat
+      tpiba2 = tpiba * tpiba
+
 !     ==============================================================
 !     ==== generate g-space                                     ==== 
 !     ==============================================================
       call invmat (3, h, ainv, deth)
-      omega=deth
+      omega = deth
 !
-      do i=1,3
-         a1(i)=h(i,1)
-         a2(i)=h(i,2)
-         a3(i)=h(i,3)
+      do i = 1, 3
+         a1(i) = h(i,1)
+         a2(i) = h(i,2)
+         a3(i) = h(i,3)
       enddo
 !
-      call recips(a1,a2,a3,b1,b2,b3)
+      call recips( a1, a2, a3, b1, b2, b3 )
       b1 = b1 * alat
       b2 = b2 * alat
       b3 = b3 * alat
-      call gcal(b1,b2,b3,nr1,nr2,nr3,gmax)
+      call gcal( b1, b2, b3, gmax )
 !
 !     ==============================================================
 !     generation of little box g-vectors
 !     ==============================================================
 !
-      alatb=alat/nr1*nr1b
-      tpibab=2.d0*pi/alatb
-      do i=1,3
-        a1b(i)=a1(i)/nr1*nr1b
-        a2b(i)=a2(i)/nr2*nr2b
-        a3b(i)=a3(i)/nr3*nr3b
-      enddo
-      omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
-!
-      call recips(a1b,a2b,a3b,b1b,b2b,b3b)
-      b1b = b1b * alatb
-      b2b = b2b * alatb
-      b3b = b3b * alatb
-      call gcalb(b1b,b2b,b3b,nr1b,nr2b,nr3b)
-!
-      do i=1,3
-         ainvb(1,i)=b1b(i)/alatb
-         ainvb(2,i)=b2b(i)/alatb
-         ainvb(3,i)=b3b(i)/alatb
-      end do
+      call newgb( a1, a2, a3, omega, alat )
+
 !     ==============================================================
       if(iprsta.ge.4)then
          WRITE( stdout,34) ibrav,alat,omega
@@ -873,10 +737,11 @@
 !
       use control_flags, only: iprint, tpre, iprsta
       use io_global, only: stdout
-      use gvec
+      !use gvec
       use gvecw, only: ngw
+      use reciprocal_vectors, only: g, gx
       use reciprocal_vectors, only: gstart
-      use cell_base, only: omega
+      use cell_base, only: omega, tpiba2, tpiba
       use cell_base, only: ainv
       use cvan, only: nvb
       use uspp, only: qq, nhtolm, beta

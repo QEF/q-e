@@ -156,9 +156,7 @@
             nr1x, nr2x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
-#ifdef __PARA
       use para_mod
-#endif
       implicit none
       integer, intent(in):: nfft, irb(3)
       real(kind=8), intent(in):: qv(2,nnrb)
@@ -173,10 +171,8 @@
          ibig3=1+mod(ibig3-1,nr3)
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
      &        call errore('box2grid','ibig3 wrong',ibig3)
-#ifdef __PARA
          ibig3=ibig3-dfftp%ipp(me)
          if (ibig3.gt.0.and.ibig3.le. ( dfftp%npp(me) ) ) then
-#endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
                ibig2=1+mod(ibig2-1,nr2)
@@ -192,9 +188,7 @@
                   vr(ibig) = vr(ibig)+qv(nfft,ir)
                end do
             end do
-#ifdef __PARA
          end if
-#endif
       end do
 !
       return
@@ -213,9 +207,7 @@
             nr1x, nr2x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
-#ifdef __PARA
       use para_mod
-#endif
       implicit none
       integer, intent(in):: irb(3)
       complex(kind=8), intent(in):: qv(nnrb)
@@ -228,10 +220,8 @@
          ibig3=1+mod(ibig3-1,nr3)
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
      &        call errore('box2grid2','ibig3 wrong',ibig3)
-#ifdef __PARA
          ibig3=ibig3-dfftp%ipp(me)
          if (ibig3.gt.0.and.ibig3.le. dfftp%npp(me) ) then
-#endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
                ibig2=1+mod(ibig2-1,nr2)
@@ -247,9 +237,7 @@
                   v(ibig) = v(ibig)+qv(ir)
                end do
             end do
-#ifdef __PARA
          end if
-#endif
       end do
 
       return
@@ -271,9 +259,7 @@
             nr1x, nr2x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
-#ifdef __PARA
       use para_mod
-#endif
       implicit none
       integer, intent(in):: nfft, irb(3)
       real(kind=8), intent(in):: qv(2,nnrb), vr(nnr)
@@ -288,10 +274,8 @@
       do ir3=1,nr3b
          ibig3=irb(3)+ir3-1
          ibig3=1+mod(ibig3-1,nr3)
-#ifdef __PARA
          ibig3=ibig3-dfftp%ipp(me)
          if (ibig3.gt.0.and.ibig3.le. dfftp%npp(me) ) then
-#endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
                ibig2=1+mod(ibig2-1,nr2)
@@ -303,9 +287,7 @@
                   boxdotgrid = boxdotgrid + qv(nfft,ir)*vr(ibig)
                end do
             end do
-#ifdef __PARA
          endif
-#endif
       end do
 
       return
@@ -378,6 +360,7 @@
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
+      use mp, only: mp_sum
 !
       implicit none
       complex(kind=8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
@@ -427,9 +410,9 @@
             end do
          end do
          emtot=emtot/n
-#ifdef __PARA
-         call reduce(1,emtot)
-#endif      
+
+         call mp_sum( emtot )
+
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
          WRITE( stdout,*)
          do is=1,nsp
@@ -450,36 +433,6 @@
 !
       return
       end
-!-------------------------------------------------------------------------
-      subroutine cofmass(tau,cdm)
-!-----------------------------------------------------------------------
-!
-      use ions_base, only: na, nsp, pmass
-      use parameters, only: natx
-!
-      implicit none
-      real(kind=8) tau(3,natx,nsp), cdm(3)
-! local variables
-      real(kind=8) tmas
-      integer is,i,ia
-!
-      tmas=0.0
-      do is=1,nsp
-         tmas=tmas+na(is)*pmass(is)
-      end do
-!
-      do i=1,3
-         cdm(i)=0.0
-         do is=1,nsp
-            do ia=1,na(is)
-               cdm(i)=cdm(i)+tau(i,ia,is)*pmass(is)
-            end do
-         end do
-         cdm(i)=cdm(i)/tmas
-      end do
-!
-      return
-      end
 !-----------------------------------------------------------------------
       real(kind=8) function cscnorm(bec,cp,i)
 !-----------------------------------------------------------------------
@@ -492,6 +445,7 @@
       use cvan, only: ish, nvb
       use uspp_param, only: nh
       use uspp, only: nhsa=>nkb, nhsavb=>nkbus, qq
+      use mp, only: mp_sum
 !
       implicit none
       integer i
@@ -509,9 +463,9 @@
       end do
       rsum=2.*SUM(temp)
       if (gstart == 2) rsum=rsum-temp(1)
-#ifdef __PARA
-      call reduce(1,rsum)
-#endif
+
+      call mp_sum( rsum )
+
       deallocate(temp)
 !
       do is=1,nvb
@@ -545,6 +499,7 @@
       use cell_base, only: ainv
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use gvec
+      use mp, only: mp_sum
 !
       implicit none
 ! input
@@ -579,9 +534,8 @@
          end do
       end do
       deallocate (gtmp)
-#ifdef __PARA
-      call reduce(9,dekin)
-#endif
+
+      call mp_sum( dekin( 1:3, 1:3 ) )
 !
       return
       end
@@ -610,6 +564,8 @@
       !use parm
       use pseu
       use dpseu
+      use mp, only: mp_sum
+
       implicit none
 ! input
       complex(kind=8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
@@ -644,9 +600,9 @@
             dh(i,j)=fpi*omega*real(SUM(vtemp))*wz
          enddo
       enddo
-#ifdef __PARA
-      call reduce(9,dh)
-#endif
+
+      call mp_sum( dh( 1:3, 1:3 ) )
+
       do i=1,3
          do j=1,3
             dh(i,j)=dh(i,j)+omega*eh*ainv(j,i)
@@ -741,6 +697,8 @@
       use cell_base, only: ainv
       use pseu
       use dpseu
+      use mp, only: mp_sum
+
       implicit none
 ! input
       complex(kind=8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
@@ -772,9 +730,9 @@
             if (gstart == 2) dps(i,j)=dps(i,j)-omega*real(vtemp(1))
          enddo
       enddo
-#ifdef __PARA
-      call reduce(9,dps)
-#endif
+
+      call mp_sum( dps( 1:3, 1:3 ) )
+
       return
       end
 !
@@ -981,6 +939,7 @@
       use cvan, only: ish, nvb
       use uspp, only: nhsa=>nkb, qq
       use uspp_param, only: nh
+      use mp, only: mp_sum
 !
       implicit none
 !
@@ -1008,9 +967,9 @@
             csc(k)=2.*real(SUM(temp))
             if (gstart == 2) csc(k)=csc(k)-real(temp(1))
          end do
-#ifdef __PARA
-         call reduce(kmax,csc)
-#endif
+
+         call mp_sum( csc( 1:kmax ) )
+
          do k=1,kmax
             rsum=0.
             do is=1,nvb
@@ -1064,9 +1023,7 @@
       use qgb_mod
       use work, only: wrk1
       use work_box
-#ifdef __PARA
       use para_mod
-#endif
       use cdvan
       use derho
       use dqgb_mod
@@ -1336,6 +1293,7 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use mp, only: mp_sum
 
       implicit none
 ! input
@@ -1351,9 +1309,9 @@
             sk(i)=sk(i)+real(conjg(c(ig,i))*c(ig,i))*ggp(ig)
          end do
       end do
-#ifdef __PARA
-      call reduce(n,sk)
-#endif
+
+      call mp_sum( sk(1:n) )
+
       enkin=0.0
       do i=1,n
          enkin=enkin+f(i)*sk(i)
@@ -1426,6 +1384,7 @@
 !       rhor contains rho(r) on input, vxc(r) on output
 !
       use constants, only: pi, fpi
+      use mp, only: mp_sum
 !
       implicit none
 !
@@ -1530,9 +1489,9 @@
  20         continue
          end do
       end if
-#ifdef __PARA
-      call reduce(1,exc)
-#endif
+
+      call mp_sum( exc )
+
       return
       end
 !
@@ -1559,18 +1518,16 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use atom, only: nlcc
       use work_box
-#ifdef __PARA
       use para_mod
-#endif
       implicit none
 ! input
       integer, intent(in)        :: irb(3,natx,nsx)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
       real(kind=8), intent(in)   :: vxc(nnr,nspin)
 ! output
-      real(kind=8), intent(inout):: fion1(3,natx,nsx)
+      real(kind=8), intent(inout):: fion1(3,natx)
 ! local
-      integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3
+      integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3, isa
       real(kind=8) fcc(3,natx,nsx), fac, boxdotgrid
       complex(kind=8) ci, facg
       external  boxdotgrid
@@ -1631,7 +1588,13 @@
 10       continue
       end do
 !
-      call DAXPY(3*natx*nsp,1.d0,fcc,1,fion1,1)
+      isa = 0
+      do is = 1, nsp
+        do ia = 1, na(is)
+          isa = isa + 1
+          fion1(:,isa) = fion1(:,isa) + fcc(:,ia,is)
+        end do
+      end do
 !
       call stop_clock( 'forcecc' )
       return
@@ -1650,11 +1613,11 @@
       use ions_base, only: nsp, na, rcmax, zv
       implicit none
 ! input
-      real(kind=8) tau0(3,natx,nsx)
+      real(kind=8) tau0(3,natx)
 ! output
-      real(kind=8) fion(3,natx,nsx), dsr(3,3), esr
+      real(kind=8) fion(3,natx), dsr(3,3), esr
 ! local variables
-      integer i,j,k,l,m, ii, lax, inf
+      integer i,j,k,l,m, ii, lax, inf, isak, isaj
       real(kind=8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
       real(kind=8), external :: erfc
 !
@@ -1662,7 +1625,12 @@
       esr=0.d0
       if(tpre) dsr=0.d0
 !
+      isak = 0
       do k=1,nsp
+         isaj = 0
+         do j = 1, k-1
+           isaj = isaj + na(j)
+         end do
          do j=k,nsp
             rckj=sqrt(rcmax(k)**2+rcmax(j)**2)
             lax=na(k)
@@ -1673,9 +1641,9 @@
                if(k.eq.j) inf=l+1
 !
                do m=inf,na(j)
-                  rlm(1)=tau0(1,l,k)-tau0(1,m,j)
-                  rlm(2)=tau0(2,l,k)-tau0(2,m,j)
-                  rlm(3)=tau0(3,l,k)-tau0(3,m,j)
+                  rlm(1) = tau0(1,l + isak) - tau0(1,m + isaj)
+                  rlm(2) = tau0(2,l + isak) - tau0(2,m + isaj)
+                  rlm(3) = tau0(3,l + isak) - tau0(3,m + isaj)
                   call pbc(rlm,a1,a2,a3,ainv,rlm)
 !
                   rlmn=sqrt(rlm(1)**2+rlm(2)**2+rlm(3)**2)
@@ -1688,8 +1656,8 @@
 !
                   do i=1,3
                      fxx=repand*rlm(i)
-                     fion(i,l,k)=fion(i,l,k)+fxx
-                     fion(i,m,j)=fion(i,m,j)-fxx
+                     fion(i,l+isak)=fion(i,l+isak)+fxx
+                     fion(i,m+isaj)=fion(i,m+isaj)-fxx
                      if(tpre)then
                         do ii=1,3
                            dsr(i,ii)=dsr(i,ii)-                         &
@@ -1701,7 +1669,9 @@
                   end do
                end do
             end do
+            isaj = isaj + na(j)
          end do
+         isak = isak + na(k)
       end do
 
       return
@@ -1731,9 +1701,10 @@
      &           ei2(-nr2:nr2,nas,nsp),                                 &
      &           ei3(-nr3:nr3,nas,nsp)
 ! output
-      real(kind=8) fion1(3,natx,nsx)
+      real(kind=8) fion1(3,natx)
 ! local
       integer ig, is, isa, ism, ia, ix, iss, isup, isdw
+      integer i, j, k
       real(kind=8)  wz
       complex(kind=8) eigrx, vcgs, cnvg, cvn
 !
@@ -1755,8 +1726,10 @@
                      vcgs=conjg(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
                      cvn=vps(ig,is)*conjg(rhog(ig,iss))
-                     eigrx=ei1(in1p(ig),ia,is)*ei2(in2p(ig),ia,is)      &
-     &                                        *ei3(in3p(ig),ia,is)
+                     i = mill_l(1,ig)
+                     j = mill_l(2,ig)
+                     k = mill_l(3,ig)
+                     eigrx=ei1(i,ia,is)*ei2(j,ia,is)*ei3(k,ia,is)
                      vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
                   end do
                else
@@ -1768,12 +1741,14 @@
                      cnvg=rhops(ig,is)*vcgs
                      cvn=vps(ig,is)*conjg(rhog(ig,isup)                 &
      &                                   +rhog(ig,isdw))
-                     eigrx=ei1(in1p(ig),ia,is)*ei2(in2p(ig),ia,is)      &
-     &                                        *ei3(in3p(ig),ia,is)
+                     i = mill_l(1,ig)
+                     j = mill_l(2,ig)
+                     k = mill_l(3,ig)
+                     eigrx=ei1(i,ia,is)*ei2(j,ia,is)*ei3(k,ia,is)
                      vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
                   end do
                endif
-               fion1(ix,ia,is) = fion1(ix,ia,is) + tpiba*omega*         &
+               fion1(ix,isa) = fion1(ix,isa) + tpiba*omega*         &
      &                             wz*real(SUM(vtemp))
             end do
          end do
@@ -1957,764 +1932,7 @@
       return
       end
 !            
-!-------------------------------------------------------------------------
-      subroutine ggen                                                   &
-     &     ( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s,               &
-     &      nr1x, nr2x, nr3x, nr1sx, nr2sx, nr3sx, gcut, gcuts, gcutw )
-!-----------------------------------------------------------------------
-!   generates the reciprocal lattice vectors (g>) with length squared 
-!   less than gcut and returns them in order of increasing length.
-!      g=i*b1+j*b2+k*b3,
-!   where b1,b2,b3 are the vectors defining the reciprocal lattice
-!
-!   Only half of the g vectors (g>) are stored:
-!   if g is present, -g is not (with the exception of g=0)
-!   The set g> is defined by
-!          g> = line(i=j=0,k>0)+plane(i=0,j>0)+space(i>0)
-!
-!   n1p,n2p, and n3p are the fast-fourier transform indexes of g> :
-!      n1p=i+1      if i.ge.0
-!      n1p=i+1+nr1  if i.lt.0
-!   and the similar definitions for n2p and n3p.
-!
-!   n1m,n2m, and n3m are the fft indexes for g<, that is, the set
-!   of vectors g=-i*b1-j*b2-k*b3 . These can be shown to be:
-!      n1m=1          if i.eq.0 (or n1p.eq.1)
-!      n1m=nr1-n1p+2  if i.ne.0
-!   and the similar definitions for n2m and n3m.
-!
-!   the indexes (n1p,n2p,n3p) are collapsed into a one-dimensional
-!   index np, and the same applies to negative vectors indexes
-!
-!   The fft indices are displaced by one unit so that g=0 corresponds
-!   to element (1,1,1) (and not (0,0,0)) for purely historical reasons.
-!   Negative coefficients are refolded to positive coefficients,
-!   introducing a factor  exp(m*2pi*i)=1 in the fourier transform.
-!
-!   For a transform length n and for a single axis, if n odd:
-!   -n-1                       n-1 n+1
-!   ----, ..., -1, 0, 1, ...., ---,---,....,n-1  is the "true" index i,
-!     2         |  |  |         2   2
-!     |         |  |  |         |
-!     |         |  V  V         V
-!     |         |              n+1 n+3
-!     |         |  1, 2, ...., ---,---,....,n    is the fft index n1 of G
-!     |         |               2   2  
-!     | folding  \_________________ | ______|
-!     |_____________________________|
-!
-! so: if (n1.le.(n+1)/2) i=n1-1 , otherwise, i=n1-n-1
-! 
-! If n is even:
-!     n                         n  n
-!    -- , ..., -1, 0, 1, ....,  - ,-+1,....,n-1  is the "real" index i,
-!     2         |  |  |         2  2
-!     |         |  |  |         |
-!     |         |  V  V         V
-!     |         |              n   n 
-!     |         |  1, 2, ...., -+1,-+2,....,n    is the fft index n1 of G
-!     |         |              2   2  
-!     | folding  \_____________ | __________|
-!     |_________________________|   
-!
-! so: if (n1.le.n/2+1) i=n1-1 ; if(n1.gt.n/2+1) i=n1-n-1 ;
-!     if (n1.eq.n/2+1) i=n1-1 or i=n1-n-1, depending on how
-!     the G vectors are refolded
-!
-!   The indices in1p, in2p, in3p are the i,j,k values.
-!   They are used to quickly calculate the structure factors 
-!      eigt=exp(-i*g*tau)        (i=imaginary unit!)
-!   by decomposing eigt into products of exponentials:
-!      eigt=ei1(i)*ei2(j)*ei3(k) (i=index, see above!).
-!
-!   ng is the total number of vectors with length squared less than gcut.   
-!
-!   The smooth grid of g with length squared less than gcuts 
-!   (gcuts.le.gcut) is calculated in this routine.
-!   Smooth grid variables have an "s" appended.
-!
-!   ngw is the total number of vectors with length squared less than gcutw
-!   (gcutw.le.gcut).
-!
-!   the g's are in units of 2pi/a.
-!
-      use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
-      use reciprocal_vectors, only: mill_l, ig_l2g
-      use recvecs_indexes, only: in1p, in2p, in3p, nm, np
-      use gvecs, only: ngs, nms, ngsl, nps
-      use gvecw, only: ngw, ngwl, ngwt
-      use reciprocal_vectors, only: gstart
-      use io_global, only: stdout
-      use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
-      use para_mod, only: dfftp, dffts
-      use mp, ONLY: mp_sum
-      use io_global, only: ionode
-      use constants, only: eps8
 
-      implicit none
-
-      integer nr1,nr2,nr3, nr1s,nr2s,nr3s
-      integer nr1x,nr2x,nr3x, nr1sx,nr2sx,nr3sx
-      real(kind=8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
-      integer n1p, n2p, n3p, n1m, n2m, n3m
-      integer n1ps, n2ps, n3ps, n1ms, n2ms, n3ms
-!       cray:
-!      integer jwork(257)
-      integer, allocatable:: index(:)
-      integer it, icurr, nr1m1, nr2m1, nr3m1, nrefold, ir, ig, i,j,k
-      integer mill(3)
-      real(kind=8) t(3), g2
-!
-
-!
-      if( gcut < gcuts ) call errore('ggen','gcut .lt. gcuts',1)
-
-      ng  = 0
-      ngs = 0
-      ngw = 0
-
-!
-! NOTA BENE: these limits are larger than those actually needed
-! (-nr/2,..,+nr/2  for nr even; -(nr-1)/2,..,+(nr-1)/2  for nr odd).
-! This allows to use a slightly undersized fft grid, with some degree 
-! of G-vector refolding, at your own risk
-!
-      nr1m1=nr1-1
-      nr2m1=nr2-1
-      nr3m1=nr3-1
-!
-!     first step : count the number of vectors with g2 < gcut
-!
-!     exclude space with x<0
-!
-      do i= 0,nr1m1
-         do j=-nr2m1,nr2m1
-!
-!     exclude plane with x=0, y<0
-!
-            if(i.eq.0.and.j.lt.0) go to 10
-!
-            do k=-nr3m1,nr3m1
-!
-!     exclude line with x=0, y=0, z<0
-!
-               if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 20
-#ifdef __PARA
-!
-!     consider only columns that belong to this node
-!
-               n1p = i + 1
-               if (n1p.lt.1) n1p = n1p + nr1
-               n2p = j + 1
-               if (n2p.lt.1) n2p = n2p + nr2
-               if ( dfftp%isind(n1p+(n2p-1)*dfftp%nr1x).eq.0) go to 20
-#endif
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = dble(i)*b1(ir) + dble(j)*b2(ir) + dble(k)*b3(ir)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2.gt.gcut) go to 20
-               ng=ng+1
-               if(g2.lt.gcutw) ngw=ngw+1
-               if(g2.lt.gcuts) ngs=ngs+1
- 20            continue
-            end do
- 10         continue
-         end do
-      end do
-!
-!     Second step. Compute and sort all G vectors, and build non
-!     distributed reciprocal space vectors arrays (ng_g = global
-!     number og Gs )
-!
-      ng_g = ng
-      ngwt = ngw
-
-      CALL mp_sum( ng_g )
-      CALL mp_sum( ngwt )
-
-      allocate(g2_g(ng_g))
-      allocate(mill_g(3,ng_g))
-      ng_g = 0
-!
-!     exclude space with x<0
-!
-      loopx: do i= 0,nr1m1
-         loopy: do j=-nr2m1,nr2m1
-! ...       exclude plane with x=0, y<0
-            if(i.eq.0.and.j.lt.0) cycle loopy
-            loopz: do k=-nr3m1,nr3m1
-! ...          exclude line with x=0, y=0, z<0
-               if(i.eq.0.and.j.eq.0.and.k.lt.0) cycle loopz
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = dble(i)*b1(ir)+dble(j)*b2(ir)+dble(k)*b3(ir)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2 <= gcut) then 
-                 ng_g=ng_g+1
-                 g2_g(ng_g)=g2
-                 mill_g(1,ng_g)=i
-                 mill_g(2,ng_g)=j
-                 mill_g(3,ng_g)=k
-               end if
-            end do loopz
-         end do loopy
-      end do loopx
-
-      CALL sort_gvec( ng_g, g2_g, mill_g )
-
-! ... Uncomment to make tests and comparisons with other codes
-!      IF ( ionode ) THEN
-!        DO ig=1,ng_g
-!          WRITE( 201, fmt="( I6, 3I4, 2D25.16 )" ) &
-!            ig, mill_g(1,ig), mill_g(2,ig), mill_g(3,ig), g2_g( ig ), g2sort_g( ig )
-!        END DO
-!        CLOSE( 201 )
-!      END IF
-
-!
-!     third step: allocate space
-!     ng is the number of Gs local to this processor
-!
-      allocate(gx(3,ng))
-      allocate(g(ng))
-      allocate(np(ng))
-      allocate(nm(ng))
-      allocate(igl(ng))
-      allocate(in1p(ng))
-      allocate(in2p(ng))
-      allocate(in3p(ng))
-      allocate(index(ng))
-
-      allocate(ig_l2g(ng))
-      allocate(mill_l(3,ng))
-
-!
-!     fourth step : find the vectors with g2 < gcut
-!      local to each processor 
-!
-      ng=0
-      loop_allg: do ig = 1, ng_g
-        i = mill_g(1,ig)
-        j = mill_g(2,ig)
-        k = mill_g(3,ig)
-#ifdef __PARA
-        n1p = i + 1
-        if (n1p.lt.1) n1p = n1p + nr1
-        n2p = j + 1
-        if (n2p.lt.1) n2p = n2p + nr2
-        ! if (ipc(n1p+(n2p-1)*nr1x).eq.0) cycle loop_allg
-        if (dfftp%isind(n1p+(n2p-1)*dfftp%nr1x).eq.0) cycle loop_allg
-#endif
-        ng=ng+1
-        g(ng)=g2_g(ig)
-        ig_l2g(ng) = ig
-        mill_l(:,ng) = mill_g(:,ig)
-        in1p(ng)=i
-        in2p(ng)=j
-        in3p(ng)=k
-      end do loop_allg
-
-      deallocate(g2_g)
-      deallocate(mill_g)
-
-      WRITE( stdout,*)
-      WRITE( stdout,150) ng
- 150  format(' ggen:  # of g vectors < gcut   ng= ',i6)
-      WRITE( stdout,160) ngs
- 160  format(' ggen:  # of g vectors < gcuts ngs= ',i6)
-      WRITE( stdout,170) ngw
- 170  format(' ggen:  # of g vectors < gcutw ngw= ',i6)
-!
-!     reorder the g's in order of increasing magnitude.
-!
-!     cray:
-!     call orders (2,jwork,g,index,ng,1,8,1)
-!     generic:
-      call kb07ad_cp90(g,ng,index)  
-!
-      do ig=1,ng-1
-         icurr=ig
- 30      if(index(icurr).ne.ig) then
-!     comment if not using cray orders from here
-!     g2=g(icurr)
-!        g(icurr)=g(index(icurr))
-!        g(index(icurr))=g2
-!     to here.
-            it=in1p(icurr)
-            in1p(icurr)=in1p(index(icurr))
-            in1p(index(icurr))=it
-            it=in2p(icurr)
-            in2p(icurr)=in2p(index(icurr))
-            in2p(index(icurr))=it
-            it=in3p(icurr)
-            in3p(icurr)=in3p(index(icurr))
-            in3p(index(icurr))=it
-
-            it=ig_l2g(icurr)
-            ig_l2g(icurr)=ig_l2g(index(icurr))
-            ig_l2g(index(icurr))=it
-
-            mill=mill_l(:,icurr)
-            mill_l(:,icurr)=mill_l(:,index(icurr))
-            mill_l(:,index(icurr))=mill
-!
-            it=icurr
-            icurr=index(icurr)
-            index(it)=it
-            if(index(icurr).eq.ig) then
-               index(icurr)=icurr
-               goto 35
-            endif
-            goto 30
-         endif
- 35      continue
-      end do
-!
-! check for the presence of refolded G-vectors (dense grid)
-!
-      nrefold=0
-      if (mod(nr1,2).eq.0) then
-         nr1m1=nr1/2-1
-      else
-         nr1m1=(nr1-1)/2
-      end if
-      if (mod(nr2,2).eq.0) then
-         nr2m1=nr2/2-1
-      else
-         nr2m1=(nr2-1)/2
-      end if
-      if (mod(nr3,2).eq.0) then
-         nr3m1=nr3/2-1
-      else
-         nr3m1=(nr3-1)/2
-      end if
-      do ig=1,ng
-         if ( in1p(ig).lt.-nr1m1.or.in1p(ig).gt.nr1m1 .or.              &
-     &        in2p(ig).lt.-nr2m1.or.in2p(ig).gt.nr2m1 .or.              &
-     &        in3p(ig).lt.-nr3m1.or.in3p(ig).gt.nr3m1      )            &
-     &        nrefold=nrefold+1
-      end do
-      if (nrefold.ne.0) WRITE( stdout, '('' WARNING: '',i6,                   &
-     &     '' G-vectors refolded into dense FFT grid'')') nrefold
-!
-! costruct fft indexes (n1,n2,n3) for the dense grid
-!
-      do ig=1,ng
-         i=in1p(ig)
-         j=in2p(ig)
-         k=in3p(ig)
-!
-! n1p,n2p,n3p: indexes of G
-! negative indexes are refolded (note that by construction i.ge.0)
-!
-         n1p=i+1
-         n2p=j+1
-         n3p=k+1
-         if(i.lt.0) n1p=n1p+nr1
-         if(j.lt.0) n2p=n2p+nr2
-         if(k.lt.0) n3p=n3p+nr3
-!
-! n1m,n2m,n3m: indexes of -G
-!
-         if(i.eq.0) then
-            n1m=1
-         else
-            n1m=nr1-n1p+2
-         end if
-         if(j.eq.0) then
-            n2m=1
-         else
-            n2m=nr2-n2p+2
-         end if
-         if(k.eq.0) then
-            n3m=1
-         else
-            n3m=nr3-n3p+2
-         end if
-#ifdef __PARA
-!
-! conversion from (i,j,k) index to combined 1-d ijk index
-! for the parallel case: columns along z are stored contiguously
-!
-         ! np(ig) = n3p + (ipc(n1p+(n2p-1)*nr1x)-1)*nr3x
-         np(ig) = n3p + (dfftp%isind(n1p+(n2p-1)*dfftp%nr1x)-1)*dfftp%nr3x
-         ! nm(ig) = n3m + (ipc(n1m+(n2m-1)*nr1x)-1)*nr3x
-         nm(ig) = n3m + (dfftp%isind(n1m+(n2m-1)*dfftp%nr1x)-1)*dfftp%nr3x
-#else
-!
-! conversion from (i,j,k) index to combined 1-d ijk index:
-! ijk = 1 + (i-1)+(j-1)*ix+(k-1)*ix*jx
-! where the (i,j,k) array is assumed to be dimensioned (ix,jx,kx)
-!
-         np(ig) = n1p + (n2p-1)*nr1x + (n3p-1)*nr1x*nr2x
-         nm(ig) = n1m + (n2m-1)*nr1x + (n3m-1)*nr1x*nr2x
-#endif
-      end do
-!
-! check for the presence of refolded G-vectors (smooth  grid)
-!
-      nrefold=0
-      if (mod(nr1s,2).eq.0) then
-         nr1m1=nr1s/2-1
-      else
-         nr1m1=(nr1s-1)/2
-      end if
-      if (mod(nr2s,2).eq.0) then
-         nr2m1=nr2s/2-1
-      else
-         nr2m1=(nr2s-1)/2
-      end if
-      if (mod(nr3s,2).eq.0) then
-         nr3m1=nr3s/2-1
-      else
-         nr3m1=(nr3s-1)/2
-      end if
-      do ig=1,ngs
-         if ( in1p(ig).lt.-nr1m1.or.in1p(ig).gt.nr1m1 .or.              &
-     &        in2p(ig).lt.-nr2m1.or.in2p(ig).gt.nr2m1 .or.              &
-     &        in3p(ig).lt.-nr3m1.or.in3p(ig).gt.nr3m1      )            &
-     &        nrefold=nrefold+1
-      end do
-      if (nrefold.ne.0) WRITE( stdout, '('' WARNING: '',i6,                   &
-     &     '' G-vectors refolded into smooth FFT grid'')') nrefold
-!
-! costruct fft indexes (n1s,n2s,n3s) for the small grid
-!
-      allocate(nps(ngs))
-      allocate(nms(ngs))
-!
-      do ig=1,ngs
-         i=in1p(ig)
-         j=in2p(ig)
-         k=in3p(ig)
-!
-! n1ps,n2ps,n3ps: indexes of G
-! negative indexes are refolded (note that by construction i.ge.0)
-!
-         n1ps=i+1
-         n2ps=j+1
-         n3ps=k+1
-         if(i.lt.0) n1ps=n1ps+nr1s
-         if(j.lt.0) n2ps=n2ps+nr2s
-         if(k.lt.0) n3ps=n3ps+nr3s
-!
-! n1ms,n2ms,n3ms: indexes of -G
-!
-         if(i.eq.0) then
-            n1ms=1
-         else
-            n1ms=nr1s-n1ps+2
-         end if
-         if(j.eq.0) then
-            n2ms=1
-         else
-            n2ms=nr2s-n2ps+2
-         end if
-         if(k.eq.0) then
-            n3ms=1
-         else
-            n3ms=nr3s-n3ps+2
-         end if
-#ifdef __PARA
-!
-! conversion from (i,j,k) index to combined 1-d ijk index
-! for the parallel case: columns along z are stored contiguously
-!
-         ! nps(ig) = n3ps + (ipcs(n1ps+(n2ps-1)*nr1sx)-1)*nr3sx
-         nps(ig) = n3ps + (dffts%isind(n1ps+(n2ps-1)*dffts%nr1x)-1)*dffts%nr3x
-         ! nms(ig) = n3ms + (ipcs(n1ms+(n2ms-1)*nr1sx)-1)*nr3sx
-         nms(ig) = n3ms + (dffts%isind(n1ms+(n2ms-1)*dffts%nr1x)-1)*dffts%nr3x
-#else
-!
-! conversion from (i,j,k) index to combined 1-d ijk index:
-!
-         nps(ig) = n1ps+(n2ps-1)*nr1sx+(n3ps-1)*nr1sx*nr2sx
-         nms(ig) = n1ms+(n2ms-1)*nr1sx+(n3ms-1)*nr1sx*nr2sx
-#endif
-      end do
-! 
-! shells of G - first calculate their number and position
-!
-      ngl=1
-      igl(1)=ngl
-      do ig=2,ng
-         if(abs(g(ig)-g(ig-1)).gt.1.e-6)then
-            ngl=ngl+1
-            if (g(ig).lt.gcuts) ngsl=ngl
-            if (g(ig).lt.gcutw) ngwl=ngl
-         endif
-         igl(ig)=ngl
-      end do
-! 
-! then allocate the array gl
-!
-      allocate(gl(ngl))
-! 
-! and finally fill gl with the values of the shells
-!
-      gl(igl(1))=g(1)
-      do ig=2,ng
-         if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=g(ig)
-      end do
-!
-! gstart is the index of the first nonzero G-vector
-! needed in the parallel case (G=0 is found on one node only!)
-!
-      if (g(1).lt.1.e-6) then
-         gstart=2
-      else
-         gstart=1
-      end if
-!
-      WRITE( stdout,180) ngl
- 180  format(' ggen:  # of g shells  < gcut  ngl= ',i6)
-      WRITE( stdout,*)
-!
-! calculation of G-vectors
-!
-      do ig=1,ng
-         i=in1p(ig)
-         j=in2p(ig)
-         k=in3p(ig)
-         gx(1,ig)=i*b1(1)+j*b2(1)+k*b3(1)
-         gx(2,ig)=i*b1(2)+j*b2(2)+k*b3(2)
-         gx(3,ig)=i*b1(3)+j*b2(3)+k*b3(3)
-      end do
-
-      IF( ALLOCATED( index ) ) deallocate( index )
-!
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine ggenb (b1b, b2b, b3b,                                  &
-     &                  nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
-!-----------------------------------------------------------------------
-!
-! As ggen, for the box grid. A "b" is appended to box variables.
-! The documentation for ggen applies
-!
-      use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
-      use gvecb, only: iglb, in1pb, in2pb, in3pb
-      use io_global, only: stdout
-
-!
-      implicit none
-!
-      integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-      real(kind=8) b1b(3), b2b(3), b3b(3), gcutb
-!
-      integer, allocatable:: index(:)
-      integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
-      integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k
-!       cray:
-!      integer jwork(257)
-      real(kind=8) t(3), g2
-!
-      nr1m1=nr1b-1
-      nr2m1=nr2b-1
-      nr3m1=nr3b-1
-      ngb=0
-!
-!     first step : count the number of vectors with g2 < gcutb
-!
-!     exclude space with x<0
-!
-      do i= 0,nr1m1
-         do j=-nr2m1,nr2m1
-!
-!     exclude plane with x=0, y<0
-!
-            if(i.eq.0.and.j.lt.0) go to 10
-!
-            do k=-nr3m1,nr3m1
-!
-!     exclude line with x=0, y=0, z<0
-!
-               if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 20
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = dble(i)*b1b(ir) + dble(j)*b2b(ir) + dble(k)*b3b(ir)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2.gt.gcutb) go to 20
-               ngb=ngb+1
- 20            continue
-            end do
- 10         continue
-         end do
-      end do
-!
-!     second step: allocate space
-!
-      allocate(gxb(3,ngb))
-      allocate(gb(ngb))
-      allocate(npb(ngb))
-      allocate(nmb(ngb))
-      allocate(iglb(ngb))
-      allocate(in1pb(ngb))
-      allocate(in2pb(ngb))
-      allocate(in3pb(ngb))
-      allocate(index(ngb))
-!
-!     third step : find the vectors with g2 < gcutb
-!
-      ngb=0
-!
-!     exclude space with x<0
-!
-      do i= 0,nr1m1
-         do j=-nr2m1,nr2m1
-!
-!     exclude plane with x=0, y<0
-!
-            if(i.eq.0.and.j.lt.0) go to 15
-!
-            do k=-nr3m1,nr3m1
-!
-!     exclude line with x=0, y=0, z<0
-!
-               if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 25
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = dble(i)*b1b(ir) + dble(j)*b2b(ir) + dble(k)*b3b(ir)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2.gt.gcutb) go to 25
-               ngb=ngb+1
-               gb(ngb)=g2
-               in1pb(ngb)=i
-               in2pb(ngb)=j
-               in3pb(ngb)=k
- 25            continue
-            end do
- 15         continue
-         end do
-      end do
-!
-      WRITE( stdout,*)
-      WRITE( stdout,170) ngb
- 170  format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
-!
-!   reorder the g's in order of increasing magnitude.
-!       cray:
-!       call orders (2,jwork,gb,index,ngb,1,8,1)
-!       generic:
-      call kb07ad_cp90 (gb,ngb,index)  
-      do ig=1,ngb-1
-         icurr=ig
- 30      if(index(icurr).ne.ig) then
-!     comment if not using cray orders from here 
-!         g2=gb(icurr)
-!         gb(icurr)=gb(index(icurr))
-!         gb(index(icurr))=g2
-!       to here.
-            it=in1pb(icurr)
-            in1pb(icurr)=in1pb(index(icurr))
-            in1pb(index(icurr))=it
-            it=in2pb(icurr)
-            in2pb(icurr)=in2pb(index(icurr))
-            in2pb(index(icurr))=it
-            it=in3pb(icurr)
-            in3pb(icurr)=in3pb(index(icurr))
-            in3pb(index(icurr))=it
-!
-            it=icurr
-            icurr=index(icurr)
-            index(it)=it
-            if(index(icurr).eq.ig) then
-               index(icurr)=icurr
-               goto 35
-            endif
-            goto 30
-         endif
- 35      continue
-      end do
-!
-      deallocate(index)
-!
-! costruct fft indexes (n1b,n2b,n3b) for the box grid
-!
-      do ig=1,ngb
-         i=in1pb(ig)
-         j=in2pb(ig)
-         k=in3pb(ig)
-         n1pb=i+1
-         n2pb=j+1
-         n3pb=k+1
-!
-! n1pb,n2pb,n3pb: indexes of G
-! negative indexes are refolded (note that by construction i.ge.0)
-!
-         if(i.lt.0) n1pb=n1pb+nr1b
-         if(j.lt.0) n2pb=n2pb+nr2b
-         if(k.lt.0) n3pb=n3pb+nr3b
-!
-! n1mb,n2mb,n3mb: indexes of -G
-!
-         if(i.eq.0) then
-            n1mb=1
-         else
-            n1mb=nr1b-n1pb+2
-         end if
-         if(j.eq.0) then
-            n2mb=1
-         else
-            n2mb=nr2b-n2pb+2
-         end if
-         if(k.eq.0) then
-            n3mb=1
-         else
-            n3mb=nr3b-n3pb+2
-         end if
-!
-! conversion from (i,j,k) index to combined 1-d ijk index:
-! ijk = 1 + (i-1)+(j-1)*ix+(k-1)*ix*jx
-! where the (i,j,k) array is assumed to be dimensioned (ix,jx,kx)
-!
-         npb(ig) = n1pb+(n2pb-1)*nr1bx+(n3pb-1)*nr1bx*nr2bx
-         nmb(ig) = n1mb+(n2mb-1)*nr1bx+(n3mb-1)*nr1bx*nr2bx
-      end do
-! 
-! shells of G - first calculate their number and position
-!
-      ngbl=1
-      iglb(1)=ngbl
-      do ig=2,ngb
-         if(abs(gb(ig)-gb(ig-1)).gt.1.e-6)then
-            ngbl=ngbl+1
-         endif
-         iglb(ig)=ngbl
-      end do
-      WRITE( stdout,180) ngbl
- 180  format(' ggenb: # of gb shells  < gcutb ngbl= ',i6)
-! 
-! then allocate the array glb
-!
-      allocate(glb(ngbl))
-! 
-! and finally fill glb with the values of the shells
-!
-      glb(iglb(1))=gb(1)
-      do ig=2,ngb
-         if(iglb(ig).ne.iglb(ig-1)) glb(iglb(ig))=gb(ig)
-      end do
-!
-! calculation of G-vectors
-!
-      do ig=1,ngb
-         i=in1pb(ig)
-         j=in2pb(ig)
-         k=in3pb(ig)
-         gxb(1,ig)=i*b1b(1)+j*b2b(1)+k*b3b(1)
-         gxb(2,ig)=i*b1b(2)+j*b2b(2)+k*b3b(2)
-         gxb(3,ig)=i*b1b(3)+j*b2b(3)+k*b3b(3)
-      end do
-!
-      return
-      end
 !-------------------------------------------------------------------------
       subroutine gracsc(bec,betae,cp,i,csc)
 !-----------------------------------------------------------------------
@@ -2728,6 +1946,7 @@
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
+      use mp, only: mp_sum
 !
       implicit none
 !
@@ -2751,9 +1970,9 @@
             if (gstart == 2) csc(k)=csc(k)-temp(1)
          endif
       end do
-#ifdef __PARA
-      call reduce(kmax,csc)
-#endif
+
+      call mp_sum( csc( 1:kmax ) )
+
 !
 !     calculate bec(i)=<cp(i)|beta>
 !
@@ -2765,9 +1984,8 @@
          bec(inl,i)=2.*SUM(temp)
          if (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
       end do
-#ifdef __PARA
-      call reduce(nhsavb,bec(1,i))
-#endif
+
+      call mp_sum( bec( 1:nhsavb, i ) )
 !
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
@@ -2942,6 +2160,7 @@
       use control_flags, only: iprint
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use gvecb, only: gvecb_set, gcutb
+      USE reciprocal_vectors, ONLY : mill_g, g2_g
       use fft_scalar, only: good_fft_dimension, good_fft_order
       use constants, only: scmass
       use cell_base, only: omega, alat
@@ -2950,9 +2169,9 @@
       implicit none
 ! 
       integer ibrav
-      real(kind=8) tau(3,natx,nsx), celldm(6), ecut
+      real(kind=8) tau(3,natx), celldm(6), ecut
 !
-      integer idum, ik, k, iss, i, in, is, ia
+      integer idum, ik, k, iss, i, in, is, ia, isat
       real(kind=8) gcut, gcutw, gcuts, ecutw, dual, fsum, ocp, ddum
       real(kind=8) qk(3), rat1, rat2, rat3
       real(kind=8) b1(3), b2(3), b3(3)
@@ -3005,12 +2224,12 @@
 !     ==== set parameters and cutoffs                           ==== 
 !     ==============================================================
 !
-      dual = 4.d0
-      tpiba=2.d0*pi/alat
-      tpiba2=tpiba*tpiba
-      gcutw=ecutw/tpiba/tpiba
-      gcuts=dual*gcutw
-      gcut =ecut/tpiba/tpiba
+      dual   = 4.d0
+      tpiba  = 2.d0 * pi/alat
+      tpiba2 = tpiba*tpiba
+      gcutw  = ecutw/tpiba/tpiba
+      gcuts  = dual*gcutw
+      gcut   = ecut/tpiba/tpiba
 !
 !     ===================================================
 !     ==== initialization for fft                    ====
@@ -3018,7 +2237,6 @@
 !
 !     dense grid
 !
-      ! call set_fft_grid(a1,a2,a3,alat,gcut,nr1,nr2,nr3)
       qk = 0.0d0
       CALL ngnr_set( alat, a1, a2, a3, gcut, qk, ndum, nr1, nr2, nr3 )
       nr1=good_fft_order(nr1)
@@ -3027,23 +2245,17 @@
 !
 !     smooth grid
 !
-      ! call set_fft_grid(a1,a2,a3,alat,gcuts,nr1s,nr2s,nr3s)
       CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ndum, nr1s, nr2s, nr3s )
       nr1s=good_fft_order(nr1s)
       nr2s=good_fft_order(nr2s)
       nr3s=good_fft_order(nr3s)
 
-      if (nr1s.gt.nr1.or.nr2s.gt.nr2.or.nr3s.gt.nr3)                    &
+      if ( nr1s.gt.nr1 .or. nr2s.gt.nr2 .or. nr3s.gt.nr3 )                    &
      &     call errore('init1','smooth grid larger than dense grid?',1)
 
-#ifdef __PARA
       call set_fft_para ( b1, b2, b3, gcut, gcuts, gcutw,               &
      &                   nr1, nr2, nr3, nr1s, nr2s, nr3s,  nnr,         &
      &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx, nnrsx )
-#else
-      call set_fft_dim ( nr1, nr2, nr3, nr1s, nr2s, nr3s, nnr,          &
-     &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrsx ) 
-#endif
 !
 !     box grid
 !
@@ -3054,7 +2266,7 @@
       nr2bx = nr2b
       nr3bx = nr3b
 !
-      if (nr1b.gt.nr1.or.nr2b.gt.nr2.or.nr3b.gt.nr3)                    &
+      if ( nr1b.gt.nr1 .or. nr2b.gt.nr2 .or. nr3b.gt.nr3 )                    &
      &     call errore('init1','box grid larger than dense grid ?',1)
 !
       nnrb = nr1bx * nr2bx * nr3bx
@@ -3062,9 +2274,14 @@
 !     ==============================================================
 !     ==== generate g-space                                     ==== 
 !     ==============================================================
-      call ggen                                                         &
+      call ggencp                                                       &
      &     ( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s,               &
-     &      nr1x, nr2x, nr3x, nr1sx, nr2sx, nr3sx, gcut, gcuts, gcutw )
+     &       gcut, gcuts, gcutw, .TRUE. )
+
+      !  global arrays are no more needed
+
+      if( allocated( g2_g ) )   deallocate( g2_g )
+      if( allocated( mill_g ) ) deallocate( mill_g )
 !
 !     ==============================================================
 !     generation of little box g-vectors
@@ -3091,7 +2308,7 @@
      &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
 !
       WRITE( stdout,38) dft
-      WRITE( stdout,334) ecutw,dual*ecutw,ecut
+      WRITE( stdout,334) ecutw, dual * ecutw, ecut
 !
       if(nspin.eq.1)then
          WRITE( stdout,6) nel(1),n
@@ -3107,22 +2324,17 @@
          WRITE( stdout,77) (f(i),i=iupdwn(2),iupdwn(2)-1+nupdwn(2))
       endif
       WRITE( stdout,878) nsp
+      isat = 0
       do is=1,nsp
-         WRITE( stdout,33) is, na(is), pmass(is), rcmax(is)
+         WRITE( stdout,33) is, na(is), pmass(is)/scmass, rcmax(is)
          WRITE( stdout,9)
-         do ia=1,na(is),3
-            WRITE( stdout,555) ((tau(k,ik,is),k=1,3),ik=ia,min(ia+2,na(is)) )
+         do ia = ( 1 + isat ), ( na(is) + isat )
+            WRITE( stdout,555) ( tau(k,ia), k = 1, 3 )
          end do
- 555     format(3(4x,3(1x,f6.2)))
+         isat = isat + na(is)
+ 555     format((4x,3(1x,f6.2)))
       end do
 !
-!  ewald coeff. are transformed into cut-off radii
-!  masses are brought to au
-!
-      do is=1,nsp
-         ! .. rcmax(is)=1.d0/rcmax(is)**0.5d0  Raggio from input do not need conversion
-         pmass(is)=pmass(is)*scmass
-      end do
 !
    33 format(' is=',i3,/,'  na=',i4,                                    &
      &       '  atomic mass=',f6.2,' gaussian rcmax=',f6.2)
@@ -3174,13 +2386,13 @@
 
       implicit none
 ! input
-      real(kind=8), intent(in):: tau0(3,natx,nsx)
+      real(kind=8), intent(in):: tau0(3,natx)
 ! output
       integer, intent(out):: irb(3,natx,nsx)
-      real(kind=8), intent(out):: taub(3,natx,nsx)
+      real(kind=8), intent(out):: taub(3,natx)
 ! local
       real(kind=8) x(3), xmod
-      integer nr(3), nrb(3), xint, is, ia, i
+      integer nr(3), nrb(3), xint, is, ia, i, isa
 !
       nr (1)=nr1
       nr (2)=nr2
@@ -3189,16 +2401,18 @@
       nrb(2)=nr2b
       nrb(3)=nr3b
 !
+      isa = 0
       do is=1,nsp
          do ia=1,na(is)
+           isa = isa + 1
 !
             do i=1,3
 !
 ! bring atomic positions to crystal axis
 !
-               x(i) = ainv(i,1)*tau0(1,ia,is) +                         &
-     &                ainv(i,2)*tau0(2,ia,is) +                         &
-     &                ainv(i,3)*tau0(3,ia,is)
+               x(i) = ainv(i,1)*tau0(1,isa) +                         &
+     &                ainv(i,2)*tau0(2,isa) +                         &
+     &                ainv(i,3)*tau0(3,isa)
 !
 ! bring x in the range between 0 and 1
 !
@@ -3237,7 +2451,7 @@
 ! bring back taub in cartesian coordinates
 !
             do i=1,3
-               taub(i,ia,is)= x(1)*a1(i) + x(2)*a2(i) + x(3)*a3(i)
+               taub(i,isa)= x(1)*a1(i) + x(2)*a2(i) + x(3)*a3(i)
             end do
          end do
       end do
@@ -3390,9 +2604,8 @@
       use elct
       use control_flags, only: iprint, thdyn, tfor, tprnfor
       use work_box
-#ifdef __PARA
       use para_mod
-#endif
+      use mp, only: mp_sum
 !
       implicit none
 ! input
@@ -3401,7 +2614,7 @@
       complex(kind=8) eigrb(ngb,nas,nsp)
       real(kind=8)  vr(nnr,nspin)
 ! output
-      real(kind=8)  fion(3,natx,nsp)
+      real(kind=8)  fion(3,natx)
 ! local
       integer isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
       integer irb3, imin3, imax3
@@ -3475,9 +2688,9 @@
   15        isa=isa+nfft
          end do
       end do
-#ifdef __PARA
+
       call reduce(nat*nhm*nhm*nspin,deeq)
-#endif
+
       if (.not.( tfor .or. thdyn .or. tprnfor ) ) go to 10
 !
 ! calculation of fion_i = \int V_eff(r) \sum_lm rho_lm (dq_i,lm(r)/dR_i) dr
@@ -3604,10 +2817,16 @@
             end do
          end do
       end if
-#ifdef __PARA
+
       call reduce(3*natx*nvb,fvan)
-#endif
-      call DAXPY(3*natx*nvb,-1.d0,fvan,1,fion,1)
+
+      isa = 0
+      DO is = 1, nvb
+        DO ia = 1, na(is)
+          isa = isa + 1
+          fion(:,isa) = fion(:,isa) - fvan(:,ia,is)
+        END DO
+      END DO
 !
   10  call stop_clock( 'newd' )
 !
@@ -3631,15 +2850,17 @@
 !
       implicit none
       real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
-      real(kind=8) fion(3,natx,nsp)
+      real(kind=8) fion(3,natx)
 !
-      integer k, is, ia, iv, jv, i, j, inl
+      integer k, is, ia, iv, jv, i, j, inl, isa
       real(kind=8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
 !
       call start_clock( 'nlfl' )
       do k=1,3
+         isa = 0
          do is=1,nvb
             do ia=1,na(is)
+               isa = isa + 1
 !
                tmpbec = 0.d0
                tmpdr  = 0.d0
@@ -3675,7 +2896,7 @@
                      end do
                   end do
 !
-                  fion(k,ia,is)=fion(k,ia,is)+2.*SUM(temp)
+                  fion(k,isa)=fion(k,isa)+2.*SUM(temp)
                endif
 !
             end do
@@ -3706,7 +2927,7 @@
       implicit none
       real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), c(2,ngw,n)
       complex(kind=8) eigr(ngw,nas,nsp)
-      real(kind=8) fion(3,natx,nsx)
+      real(kind=8) fion(3,natx)
 !
       integer k, is, ia, isa, iss, inl, iv, jv, i
       real(kind=8) tmpbec(nhm,n), tmpdr(nhm,n) ! automatic arrays
@@ -3751,7 +2972,7 @@
                   end do
                end do
 !
-               fion(k,ia,is)=fion(k,ia,is)-2.*SUM(tmpdr)
+               fion(k,isa)=fion(k,isa)-2.*SUM(tmpdr)
 !
             end do
          end do
@@ -3838,12 +3059,14 @@
             call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becp(inl,1),1,nhsa,       &
      &           na(is),2*ngw,n)
          end do
+
 #ifdef __PARA
          inl=ish(is)+1
          do i=1,n
             call reduce(na(is)*nh(is),becp(inl,i))
          end do
 #endif
+
       end do
       call stop_clock( 'nlsm1' )
       return
@@ -3934,9 +3157,9 @@
             end do
          end do
       end do
-#ifdef __PARA
+
       call reduce(3*nhsa*n,becdr)
-#endif
+
       deallocate(gk)
       call stop_clock( 'nlsm2' )
 !
@@ -4217,11 +3440,11 @@
       use control_flags, only: iprint, iprsta
 !
       implicit none
-      real(kind=8) taub(3,natx,nsx)
-      complex(kind=8) eigrb(ngb,nas,nsp)
+      real(kind=8) :: taub(3,natx)
+      complex(kind=8) :: eigrb(ngb,nas,nsp)
 ! local
-      integer i,j,k, is, ia, ig
-      real(kind=8) taup(3),sum,ar1,ar2,ar3
+      integer :: i,j,k, is, ia, ig, isa
+      real(kind=8) taup(3),s,ar1,ar2,ar3
       complex(kind=8), allocatable:: ei1b(:,:,:), ei2b(:,:,:), ei3b(:,:,:)
       complex(kind=8) ctep1,ctep2,ctep3,ctem1,ctem2,ctem3
 !
@@ -4235,16 +3458,18 @@
 !
       if(iprsta.gt.3) then 
          WRITE( stdout,*) ' phbox: taub '
-         WRITE( stdout,*)  (((taub(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, SUM(na(1:nsp)) ) 
       endif
+      isa = 0 
       do is=1,nsp
          do ia=1,na(is)
+            isa = isa + 1
             do i=1,3
-               sum=0.d0
+               s=0.d0
                do j=1,3
-                  sum=sum+ainvb(i,j)*taub(j,ia,is)
+                  s = s + ainvb(i,j)*taub(j,isa)
                end do
-               taup(i)=sum
+               taup(i)=s
             end do
 !
             ar1=2.d0*pi*taup(1)
@@ -4288,9 +3513,10 @@
       do is=1,nsp
          do ia=1,na(is)
             do ig=1,ngb
-               eigrb(ig,ia,is) = ei1b(in1pb(ig),ia,is) *                 &
-     &                           ei2b(in2pb(ig),ia,is) *                 &
-     &                           ei3b(in3pb(ig),ia,is)
+               i = mill_b(1,ig)
+               j = mill_b(2,ig)
+               k = mill_b(3,ig)
+               eigrb(ig,ia,is) = ei1b(i,ia,is) * ei2b(j,ia,is) * ei3b(k,ia,is)
             end do
          end do
       end do
@@ -4332,7 +3558,7 @@
 !     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
 !  and similar definitions for ei2 and ei3 ; and :
 !     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
-!  The value of n1,n2,n3 for a vector g is supplied by arrays in1p,in2p,in3p
+!  The value of n1,n2,n3 for a vector g is supplied by arrays mill_l
 !  calculated in ggen .
 !
       use ions_base, only: nas => nax, nsp, na
@@ -4346,13 +3572,13 @@
       use control_flags, only: iprint, iprsta
 !
       implicit none
-      real(kind=8) tau0(3,natx,nsx)
+      real(kind=8) tau0(3,natx)
 !
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),      &
      &                ei3(-nr3:nr3,nas,nsp), eigr(ngw,nas,nsp)
 !
-      integer i,j,k, ia, is, ig
-      real(kind=8) taup(3), sum, ar1,ar2,ar3
+      integer i,j,k, ia, is, ig, isa
+      real(kind=8) taup(3), s, ar1,ar2,ar3
       complex(kind=8) ctep1,ctep2,ctep3,ctem1,ctem2,ctem3
 !
       if(nr1.lt.3) call errore(' phfac ',' nr1 too small ',nr1)
@@ -4361,16 +3587,18 @@
 !
       if(iprsta.gt.3) then
          WRITE( stdout,*) ' phfac: tau0 '
-         WRITE( stdout,*) (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+         WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, SUM(na(1:nsp)) )
       endif
+      isa = 0
       do is=1,nsp
          do ia=1,na(is)
+            isa = isa + 1
             do i=1,3
-               sum=0.d0
+               s=0.d0
                do j=1,3
-                  sum=sum+ainv(i,j)*tau0(j,ia,is)
+                  s=s+ainv(i,j)*tau0(j,isa)
                end do
-               taup(i)=sum
+               taup(i)=s
 !
 ! tau0=x1*a1+x2*a2+x3*a3 => taup(1)=x1=tau0*b1 and so on
 !
@@ -4440,9 +3668,10 @@
       do is=1,nsp
          do ia=1,na(is)
             do ig=1,ngw
-               eigr(ig,ia,is) = ei1(in1p(ig),ia,is)                     &
-     &                        * ei2(in2p(ig),ia,is)                     &
-     &                        * ei3(in3p(ig),ia,is)
+               i = mill_l(1,ig)
+               j = mill_l(2,ig)
+               k = mill_l(3,ig)
+               eigr(ig,ia,is) = ei1(i,ia,is) * ei2(j,ia,is) * ei3(k,ia,is)
             end do
          end do
       end do
@@ -4546,9 +3775,9 @@
 !
       call MXMA(wfc,2*ngw,1,swfc,1,2*ngw,overlap,1,                     &
      &          n_atomic_wfc,n_atomic_wfc,2*ngw,n_atomic_wfc)
-#ifdef __PARA
+
       call reduce(n_atomic_wfc**2,overlap)
-#endif
+
       overlap=overlap*2.d0
       if (gstart == 2) then
          do l=1,n_atomic_wfc
@@ -4599,9 +3828,9 @@
          end do
       end do
       deallocate(temp)
-#ifdef __PARA
+
       call reduce(n*n_atomic_wfc,proj)
-#endif
+
       i=0
       WRITE( stdout,'(/''Projection on atomic states:'')')
       do is=1,nsp
@@ -4711,86 +3940,7 @@
 !
       return
       end
-!-----------------------------------------------------------------------
-      subroutine readfile                                               &
-     &     ( flag,ndr,h,hold,nfi,c0,cm,tau0,taum,vel,velm,acc,          &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh)
-!-----------------------------------------------------------------------
-! iflag=-1 : read only h and hold (for use in variable-cell)
-! iflag= 0 : read h, hold, c0
-! iflag=+1 : read everything
-!
-      use elct, only: n, nx
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use ions_base, only: nsp, na
-      use parameters, only: nacx, natx
-      use io_global, only: stdout
-!
-      implicit none
-      integer flag, ndr, nfi
-      real(kind=8) h(3,3), hold(3,3)
-      complex(kind=8) c0(ngw,n), cm(ngw,n)
-      real(kind=8) taum(3,natx,nsp),tau0(3,natx,nsp)
-      real(kind=8) vel(3,natx,nsp), velm(3,natx,nsp)
-      real(kind=8) acc(nacx),lambda(nx,nx), lambdam(nx,nx)
-      real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
-      real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-!
-      integer i, ia, is, ig, j, ngwr, nr
-      real(kind=8) ampre
-      complex(kind=8) dummy
-!
-#ifdef __INTEL
-      rewind (unit=ndr)
-#else
-      ! for some mysterious reason the Intel compiler does not
-      ! seem to like the following instruction
-      open (unit=ndr,form='unformatted',status='old')
-#endif
-      if (flag.eq.-1) then
-         WRITE( stdout,'((a,i3,a))') ' ### reading from file ',ndr,' only h  ##'
-      else if (flag.eq.0) then
-         WRITE( stdout,'((a,i3,a))') ' ## reading from file ',ndr,' only c0  ##'
-      else
-         WRITE( stdout,'((a,i3))') ' ## reading from file ',ndr
-      end if
-      read(ndr) h, hold
-      if (flag.eq.-1) go to 10
-      read(ndr) nfi,ngwr,nr
-      if(flag.eq.0) then
-         if(ngwr.gt.ngw) WRITE( stdout,*) ' ## warning ## ngwr.gt.ngw  ',ngwr,ngw
-      else
-         if(ngwr.gt.ngw) call errore('readfile','ngwr.ne.ngw',ngwr)
-      endif
-      if(ngwr.le.ngw) then
-         read(ndr) ((c0(ig,i),ig=1,ngwr),i=1,min(nr,n))
-      else
-         read(ndr) ((c0(ig,i),ig=1,ngw),(dummy,ig=ngw+1,ngwr),i=1,min(nr,n))
-      endif
-      if (nr.lt.n) then
-         WRITE( stdout,*) ' ## warning ## nr.lt.n  ',nr,n
-         ampre=0.01
-         call randin(nr+1,n,gstart,ngw,ampre,c0)
-      end if
-      if (flag.eq.0) go to 10
-!
-      read(ndr) ((cm(ig,i),ig=1,ngwr),i=1,min(nr,n))
-      read(ndr) (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      read(ndr) (((taum(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      read(ndr) (((vel (i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      read(ndr) (((velm(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      read(ndr) acc
-      read(ndr) ((lambda(i,j),i=1,n),j=1,n)
-      read(ndr) ((lambdam(i,j),i=1,n),j=1,n)
-      read(ndr) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
-      read(ndr) xnhh0,xnhhm,vnhh,velh
-!
-10    close(unit=ndr)
-      return
-      end
-!
+
 !---------------------------------------------------------------------
       subroutine readpp
 !---------------------------------------------------------------------
@@ -5718,45 +4868,6 @@ end function pseudo_type
       end
 !
 !-----------------------------------------------------------------------
-      subroutine fill_qrl(is)
-!-----------------------------------------------------------------------
-! 
-! for compatibility with old Vanderbilt formats
-!
-      use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
-                       kkbeta
-      use qrl_mod, only: qrl
-      use atom, only: r
-      ! the above module variables has no dependency from iosys
-!
-      implicit none
-      integer :: is
-!
-      integer :: iv, jv, lmin, lmax, l, ir, i
-!
-      do iv=1,nbeta(is)
-         do jv=iv,nbeta(is)
-            lmin=lll(jv,is)-lll(iv,is)+1
-            lmax=lmin+2*lll(iv,is)
-            do l=lmin,lmax
-               do ir=1,kkbeta(is)
-                  if (r(ir,is).ge.rinner(l,is)) then
-                     qrl(ir,iv,jv,l,is)=qfunc(ir,iv,jv,is)
-                  else
-                     qrl(ir,iv,jv,l,is)=qfcoef(1,l,iv,jv,is)
-                     do i = 2, nqf(is)
-                        qrl(ir,iv,jv,l,is)=qrl(ir,iv,jv,l,is) +      &
-                             qfcoef(i,l,iv,jv,is)*r(ir,is)**(2*i-2)
-                     end do
-                     qrl(ir,iv,jv,l,is) = qrl(ir,iv,jv,l,is) * r(ir,is)**(l+1)
-                  end if
-               end do
-            end do
-         end do
-      end do
-    end subroutine fill_qrl
-!
-!-----------------------------------------------------------------------
       subroutine rdiag (n,h,ldh,e,v)
 !-----------------------------------------------------------------------
 !
@@ -6134,9 +5245,8 @@ end function pseudo_type
             end do
          end do
       end if
-#ifdef __PARA
+
       call reduce(nx*nss,rho)
-#endif
 !
       if(nvb.gt.0)then
          tmp1 (:,:) = 0.d0
@@ -6182,9 +5292,7 @@ end function pseudo_type
       use qgb_mod
       use work, only: wrk1
       use work_box
-#ifdef __PARA
       use para_mod
-#endif
 !
       implicit none
 !
@@ -6298,9 +5406,9 @@ end function pseudo_type
 !
          if(iprsta.gt.2) then
             ca = SUM(v)
-#ifdef __PARA
+
             call reduce(2,ca)
-#endif
+
             WRITE( stdout,'(a,2f12.8)')                                  &
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
          endif
@@ -6393,9 +5501,7 @@ end function pseudo_type
 !
          if(iprsta.gt.2) then
             ca = SUM(v)
-#ifdef __PARA
             call reduce(2,ca)
-#endif
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
          endif
 !
@@ -6451,9 +5557,7 @@ end function pseudo_type
       use core
       use work, only: wrk1
       use work_box
-#ifdef __PARA
       use para_mod
-#endif
       implicit none
 ! input
       integer, intent(in)        :: irb(3,natx,nsx)
@@ -6573,44 +5677,7 @@ end function pseudo_type
 !
       return
       end
-!-----------------------------------------------------------------------
-      subroutine set_fft_dim ( nr1, nr2, nr3, nr1s, nr2s, nr3s, nnr,    &
-     &                         nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrsx ) 
-!-----------------------------------------------------------------------
-!
-! Set the dimensions of fft arrays (for the scalar case).
-! These may differ from fft transform lenghts for computational
-! efficiency, thus avoiding or minimizing memory conflicts.
-! See machine-dependent function "good_fft_dimension".
-! fft arrays are effectively stored as one-dimensional arrays,
-! but their memory layout is the same as that of a 3d array
-! having dimensions (nr1x,nr2x,nr3x) and the like for smooth grid
-!
-      use fft_scalar, only: good_fft_dimension
 
-      implicit none
-! input
-      integer nr1, nr2, nr3, nr1s, nr2s, nr3s
-! output 
-      integer nnr, nr1x, nr2x, nr3x, nr1sx, nr2sx, nr3sx, nnrsx
-! local
-!
-!     dense grid
-!
-      nr1x = good_fft_dimension(nr1 )
-      nr2x = nr2
-      nr3x = nr3
-      nnr  = nr1x*nr2x*nr3x
-!
-!     smooth grid
-!
-      nr1sx= good_fft_dimension(nr1s)
-      nr2sx= nr2s
-      nr3sx= nr3s
-      nnrsx = nr1sx*nr2sx*nr3sx
-!
-      return
-      end
 !
 !-------------------------------------------------------------------------
       subroutine sigset(cp,becp,qbecp,nss,ist,sig)
@@ -6659,9 +5726,7 @@ end function pseudo_type
             end do
          end do
       end if
-#ifdef __PARA
       call reduce(nx*nss,sig)
-#endif
       do i=1,nss
          sig(i,i) = sig(i,i)+1.
       end do
@@ -6765,9 +5830,7 @@ end function pseudo_type
       do ir=1,nnr
          spin1 = spin1 - min(rhor(ir,1),rhor(ir,2))
       end do
-#ifdef __PARA
       call reduce(1,spin1)
-#endif
       spin1 = spin0 + omega/(nr1*nr2*nr3)*spin1
       if (frac) then
          WRITE( stdout,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Becke) '',&
@@ -6792,9 +5855,7 @@ end function pseudo_type
          end do
       end do
       deallocate (temp)
-#ifdef __PARA
       call reduce(nup*ndw,overlap)
-#endif
       do j=1,ndw
          jj=j+iupdwn(2)-1
          do i=1,nup
@@ -6849,7 +5910,7 @@ end function pseudo_type
       implicit none
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),          &
      &           ei3(-nr3:nr3,nas,nsp), sfac(ngs,nsp)
-      integer is, ig, ia
+      integer is, ig, ia, i, j, k
 !
       call start_clock( 'strucf' ) 
       do is=1,nsp
@@ -6857,10 +5918,11 @@ end function pseudo_type
             sfac(ig,is)=(0.,0.)
          end do
          do ia=1,na(is)
-            do ig=1,ngs
-               sfac(ig,is)=sfac(ig,is) + ei1(in1p(ig),ia,is)            &
-     &                                  *ei2(in2p(ig),ia,is)            &
-     &                                  *ei3(in3p(ig),ia,is)
+            do ig=1,ngs 
+               i = mill_l( 1, ig )
+               j = mill_l( 2, ig )
+               k = mill_l( 3, ig )
+               sfac(ig,is)=sfac(ig,is) + ei1(i,ia,is) *ei2(j,ia,is) *ei3(k,ia,is)
             end do
          end do
       end do
@@ -6913,9 +5975,7 @@ end function pseudo_type
             end do
          end do
       end if
-#ifdef __PARA
       call reduce(nx*nss,tau)
-#endif
 !
       if(nvb.gt.0)then
          tmp1 = 0.d0
@@ -7068,14 +6128,14 @@ end function pseudo_type
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx,nsx)
-      real(kind=8)  rhoc(nnr), tau0(3,natx,nsp)
+      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
+      real(kind=8)  rhoc(nnr), tau0(3,natx)
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
      &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh
+      real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
       complex(kind=8), pointer:: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
@@ -7094,14 +6154,8 @@ end function pseudo_type
 !
 !     first routine in which fion is calculated: annihilation
 !
-      do is=1,nsp
-         do ia=1,natx
-            do i=1,3
-               fion (i,ia,is)=0.d0
-               fion1(i,ia,is)=0.d0
-            end do
-         end do
-      end do
+      fion =0.d0
+      fion1=0.d0
 !
 !     ===================================================================
 !     forces on ions, ionic term in real space
@@ -7153,9 +6207,7 @@ end function pseudo_type
 !
       epseu=wz*real(SUM(vtemp))
       if (gstart == 2) epseu=epseu-vtemp(1)
-#ifdef __PARA
       call reduce(1,epseu)
-#endif
       epseu=epseu*omega
 !
       if(tpre) call denps(rhotmp,drhotmp,sfac,vtemp,dps)
@@ -7174,9 +6226,7 @@ end function pseudo_type
       end do
 !
       eh=real(SUM(vtemp))*wz*0.5*fpi/tpiba2
-#ifdef __PARA
       call reduce(1,eh)
-#endif
       if(tpre) call denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       if(tpre) deallocate(drhotmp)
 !     ===================================================================
@@ -7250,19 +6300,12 @@ end function pseudo_type
 !
       if( tprnfor .or. tfor ) then
          if (nlcc_any) call force_cc(irb,eigrb,rhor,fion1)
-#ifdef __PARA
-         call reduce(3*natx*nsp,fion1)
-#endif
+         call reduce(3*natx,fion1)
 !
 !    add g-space ionic and core correction contributions to fion
 !
-         do is=1,nsp
-            do ia=1,na(is)
-               do k=1,3
-                  fion(k,ia,is) = fion(k,ia,is) + fion1(k,ia,is)
-               end do
-            end do
-         end do
+         fion = fion + fion1
+
       end if
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
@@ -7305,9 +6348,7 @@ end function pseudo_type
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
      &        /2.0/dble(nr1*nr2*nr3)
       endif
-#ifdef __PARA
       call reduce(1,vave)
-#endif
 !     ===================================================================
 !     fourier transform of total potential to r-space (smooth grid)
 !     -------------------------------------------------------------------
@@ -7404,47 +6445,7 @@ end function pseudo_type
 !
       return
       end
-!-----------------------------------------------------------------------
-      subroutine writefile                                              &
-     &     ( ndw,h,hold,nfi,c0,cm,tau0,taum,vel,velm,acc,               &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh)
-!-----------------------------------------------------------------------
-      use elct, only: n, nx
-      use gvecw, only: ngw
-      use ions_base, only: nsp, na
-      use parameters, only: nacx, natx
-!
-      implicit none
-      integer ndw, nfi
-      real(kind=8) h(3,3), hold(3,3)
-      complex(kind=8) c0(ngw,n), cm(ngw,n)
-      real(kind=8) taum(3,natx,nsp),tau0(3,natx,nsp)
-      real(kind=8) vel(3,natx,nsp), velm(3,natx,nsp)
-      real(kind=8) acc(nacx),lambda(nx,nx), lambdam(nx,nx)
-      real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
-      real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-!
-      integer i, ia, is, ig,j
-!
-      open(unit=ndw,form='unformatted',status='unknown')
-      write(ndw) h, hold
-      write(ndw) nfi,ngw,n
-      write(ndw) ((c0(ig,i),ig=1,ngw),i=1,n)
-      write(ndw) ((cm(ig,i),ig=1,ngw),i=1,n)
-      write(ndw) (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      write(ndw) (((taum(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      write(ndw) (((vel (i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      write(ndw) (((velm(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-      write(ndw) acc
-      write(ndw) ((lambda(i,j),i=1,n),j=1,n)
-      write(ndw) ((lambdam(i,j),i=1,n),j=1,n)
-      write(ndw) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
-      write(ndw) xnhh0,xnhhm,vnhh,velh
-      close (unit=ndw)
-!
-      return
-      end
+
 !=====================================================================
 ! exchange-correlation section
 !=====================================================================
@@ -7818,9 +6819,7 @@ end function pseudo_type
  100     continue
       end do
 !
-#ifdef __PARA
       call reduce(1,exc)
-#endif
       return
       end
 !
@@ -7951,9 +6950,7 @@ end function pseudo_type
 !
       end do
 !
-#ifdef __PARA
       call reduce(1,excrho)
-#endif
 !
       return
       end
@@ -8298,9 +7295,7 @@ end function pseudo_type
  100     continue
       end do
 !
-#ifdef __PARA
       call reduce(1,exc)
-#endif
 !
       return
       end
@@ -8843,10 +7838,8 @@ end function pseudo_type
             rmin=min(rmin,roe)
          end do
       end do
-#ifdef __PARA
       call reduce(1,rsum)
       call reduce(1,rnegsum)
-#endif
       return
       end
 !______________________________________________________________________
@@ -9032,9 +8025,7 @@ end function pseudo_type
  100     continue
       end do
 !
-#ifdef __PARA
       call reduce(1,exc)
-#endif
       return
       end
 
@@ -9088,14 +8079,14 @@ end function pseudo_type
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx,nsx)
-      real(kind=8)  rhoc(nnr), tau0(3,natx,nsp)
+      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
+      real(kind=8)  rhoc(nnr), tau0(3,natx)
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
      &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh
+      real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
       complex(kind=8), pointer:: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
@@ -9128,14 +8119,8 @@ end function pseudo_type
 !
 !     first routine in which fion is calculated: annihilation
 !
-      do is=1,nsp
-         do ia=1,natx
-            do i=1,3
-               fion (i,ia,is)=0.d0
-               fion1(i,ia,is)=0.d0
-            end do
-         end do
-      end do
+      fion =0.d0
+      fion1=0.d0
 
 !      write(6,*) 'Annihilation'
 !
@@ -9190,9 +8175,7 @@ end function pseudo_type
 !
       epseu=wz*real(SUM(vtemp(1:ngs)))
       if (ng0.eq.2) epseu=epseu-vtemp(1)
-#ifdef __PARA
       call reduce(1,epseu)
-#endif
       epseu=epseu*omega
 !
       if(tpre) call denps(rhotmp,drhotmp,sfac,vtemp,dps)
@@ -9213,9 +8196,7 @@ end function pseudo_type
       end do
 !
       eh=real(SUM(vtemp(1:ng)))*wz*0.5*fpi/tpiba2
-#ifdef __PARA
       call reduce(1,eh)
-#endif
       if(tpre) call denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       if(tpre) deallocate(drhotmp)
 !      write(6,*) 'Hartree Energy'
@@ -9343,19 +8324,11 @@ end function pseudo_type
 
       if( tprnfor .or. tfor ) then
          if ( ANY( nlcc ) ) call force_cc(irb,eigrb,rhor,fion1)
-#ifdef __PARA
-         call reduce(3*natx*nsp,fion1)
-#endif
+         call reduce(3*natx,fion1)
 !
 !    add g-space ionic and core correction contributions to fion
 !
-         do is=1,nsp
-            do ia=1,na(is)
-               do k=1,3
-                  fion(k,ia,is) = fion(k,ia,is) + fion1(k,ia,is)
-               end do
-            end do
-         end do
+          fion = fion + fion1
       end if
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
@@ -9400,9 +8373,7 @@ end function pseudo_type
          vave=(SUM(rhor(1:nnr,isup))+SUM(rhor(1:nnr,isdw)))       &
      &        /2.0/dfloat(nr1*nr2*nr3)
       endif
-#ifdef __PARA
       call reduce(1,vave)
-#endif
 !     ===================================================================
 !     fourier transform of total potential to r-space (smooth grid)
 !     -------------------------------------------------------------------
@@ -9517,9 +8488,7 @@ end function pseudo_type
       subroutine poles(rhortot,dipole,quadrupole)
 !------------------------------------------------------------------------
 !
-#ifdef __PARA
       use para_mod
-#endif
       use gvec
 !      use parm
       use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr=> nnrx
@@ -9558,12 +8527,7 @@ end function pseudo_type
         do ix=1,3
         ir=1
 !
-#ifdef __PARA
-!        do k=n3me(me)+1,n3me(me)+npp(me) ! original
-        do k=dfftp%ipp(me)+1, dfftp%ipp(me) + npp(me)
-#else
-        do k=1,nr3
-#endif
+        do k = dfftp%ipp(me)+1, dfftp%ipp(me)+ npp(me)
          do j=1,nr2x
           do i=1,nr1x
             X=XG0+(i-1)*pass1
@@ -9582,9 +8546,7 @@ end function pseudo_type
 !
          end do !!!!!!! ix
 !
-#ifdef __PARA
          call reduce(3,mu)
-#endif
 !
         do ix=1,3
          mu(ix)=mu(ix)*omega/dfloat(nr1*nr2*nr3)
@@ -9609,12 +8571,7 @@ end function pseudo_type
         do ix=1,6
 !
          ir=1
-#ifdef __PARA
-!        do k=n3me(me)+1,n3me(me)+npp(me) ! original
-        do k=dfftp%ipp(me)+1, dfftp%ipp(me) + npp(me)
-#else
-        do k=1,nr3
-#endif
+         do k=dfftp%ipp(me)+1, dfftp%ipp(me) + npp(me)
           do j=1,nr2x
            do i=1,nr1x
 !
@@ -9639,9 +8596,8 @@ end function pseudo_type
         quad(ix)=SUM(dip(1:nnr))
         end do
 !
-#ifdef __PARA
          call reduce(6,quad)
-#endif
+
         do ix=1,6
          quad(ix)=quad(ix)*omega/dfloat(nr1*nr2*nr3)
         end do

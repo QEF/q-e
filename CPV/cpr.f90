@@ -56,7 +56,7 @@
 !     dt2bye         = 2*delt/emass
 !***********************************************************************
 !
-      use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
+      use control_flags, only: iprint, isave, thdyn, tpre, tbuff, iprsta, trhor, &
             tfor, tvlocw, trhow, taurdr, tprnfor
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
@@ -79,7 +79,8 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
-      use ions_base, only: ind_srt
+      use ions_base, only: ind_srt, ions_cofmass, ions_kinene, ions_temp, ions_thermal_stress
+      use ions_base, only: ions_vrescal
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
@@ -103,7 +104,7 @@
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use restart
       use parameters, only: nacx, natx, nsx, nbndxx
-      use constants, only: pi, factem, au_kb
+      use constants, only: pi, factem, au_kb, au_ps
       use io_files, only: psfile, pseudo_dir
       use input_cp, only: iosys
       use qgb_mod, only: deallocate_qgb_mod
@@ -111,7 +112,7 @@
       use qradb_mod, only: deallocate_qradb_mod
       use dqrad_mod, only: deallocate_dqrad_mod
       use betax, only: deallocate_betax
-      use input_parameters, only: outdir
+      use input_parameters, only: outdir, prefix
       use wave_base, only: wave_steepest, wave_verlet
       use wave_base, only: wave_speed2
       USE control_flags, ONLY : conv_elec, tconvthrs
@@ -131,6 +132,9 @@
 
       use wannier_module, only: allocate_wannier, deallocate_wannier
       use wannier_subroutines
+      USE printout_base, ONLY: printout_base_setup, printout_base_open, printout_base_close, &
+            printout_pos, printout_cell, printout_stress
+
 
 !
 !
@@ -165,7 +169,7 @@
 ! indexes, positions, and structure factors for the box grid
 !
       integer irb(3,natx,nsx)
-      real(kind=8) taub(3,natx,nsx)
+      real(kind=8) taub(3,natx)
       complex(kind=8), allocatable:: eigrb(:,:,:)
 ! 
 ! charge densities and potentials
@@ -199,17 +203,16 @@
 !
 !  ionic positions, center of mass position
 !
-      real(kind=8) tau0(3,natx,nsx), taum(3,natx,nsx), taup(3,natx,nsx)
-      real(kind=8) cdm0(3),cdmvel(3)
+      real(kind=8) tau0(3,natx), taum(3,natx), taup(3,natx)
+      real(kind=8) cdm0(3)
+      real(kind=8) taus(3,natx), tausm(3,natx), tausp(3,natx)
+      real(kind=8) vels(3,natx), velsm(3,natx), velsp(3,natx)
 !
 !  forces on ions
 !
-      real(kind=8) fion(3,natx,nsx), fionm(3,natx,nsx)
-      integer iforce(3,natx,nsx)
+      real(kind=8) :: fion(3,natx), fionm(3,natx)
+      integer :: iforce(3,natx)
 !
-! for variable cell dynamics: scaled tau
-!
-      real(kind=8) taus(3,natx,nsx)
       real(kind=8) f_(nbndxx)
       real(kind=8) ispin_(nbndxx)
       integer iforceh(3,3)
@@ -230,12 +233,11 @@
      &       frice,  grease, delt, ccc, bigr, dt2,               &
      &       dt2by2, twodel, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
-      integer nnn, is, nacc, ia, j, iter, nfi, i, isa, ipos
+      real(kind=8) temps(nsx)
+      integer is, nacc, ia, j, iter, nfi, i, isa, ipos
 !
 ! work variables, 2
 !
-      real(kind=8) tausm(3,natx,nsx),tausp(3,natx,nsx)
-      real(kind=8) vels(3,natx,nsx),velsm(3,natx,nsx),velsp(3,natx,nsx)
       real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3)
       real(kind=8) cdm(3)
       real(kind=8) xnhh0(3,3),xnhhm(3,3),xnhhp(3,3),vnhh(3,3),temphh(3,3)
@@ -245,18 +247,22 @@
      &     factp, temp1, temp2, temph, greash, qnh, randy
       real(kind=8) ftmp
 
-      logical :: twmass
       character(len=256) :: filename
       character(len=256) :: dirname
       integer :: strlen, dirlen
       real(kind=8) :: b1(3), b2(3), b3(3)
-      real(kind=8) :: stress_kb(3,3)
+      real(kind=8) :: stress_kb(3,3), thstress(3,3)
+
+      logical :: ttprint    !  logical variable used to control printout
+      real(kind=8), allocatable :: tauw( :, : )  ! temporary array used 
+                            !  to printout positions
 !
 !     CP loop starts here
 !
-      call start_clock( 'initialize' )
-      etot_out = 0.0d0
 
+      call start_clock( 'initialize' )
+
+      etot_out = 0.0d0
 !
 !     ==================================================================
 !     ====  units and constants                                     ====
@@ -273,17 +279,18 @@
 !     ==================================================================
 
       factp   = 3.3989 * 0.00001
+      tps     = 0.0d0
 !
 !     ==================================================================
 !     read input from standard input (unit 5)
 !     ==================================================================
 
-      call iosys( nbeg , ndr , ndw , nomore , iprint                       &
+      call iosys( nbeg , ndr , ndw , nomore , iprint, isave                 &
      & , delt , emass , emaec  , tsde , frice , grease , twall              &
      & , tortho , eps , maxit , trane , ampre , tranp , amprp                &
      & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
      & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
-     & , tpre , thdyn , thdiag , twmass , wmass , frich , greash , press   &
+     & , tpre , thdyn , thdiag , iforceh , wmass , frich , greash , press   &
      & , tnoseh , qnh , temph , celldm , ibrav , tau0 , ecutw , ecut , iforce &
      & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
      & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
@@ -316,38 +323,8 @@
       dt2bye = dt2/emass
       dt2hbe = dt2by2/emass
 
-      if (ionode) then
 
-         dirlen = index(outdir,' ') - 1
-         filename = 'fort.8'
-         if( dirlen >= 1 ) then
-           filename = outdir(1:dirlen) // '/' // filename
-         end if
-         strlen  = index(filename,' ') - 1
-         OPEN(unit=8, file=filename(1:strlen), status='unknown')
-
-         filename = 'fort.77'
-         if( dirlen >= 1 ) then
-           filename = outdir(1:dirlen) // '/' // filename
-         end if
-         strlen  = index(filename,' ') - 1
-         OPEN(unit=77, file=filename(1:strlen), status='unknown')
-
-         filename = 'fort.78'
-         if( dirlen >= 1 ) then
-           filename = outdir(1:dirlen) // '/' // filename
-         end if
-         strlen  = index(filename,' ') - 1
-         OPEN(unit=78, file=filename(1:strlen), status='unknown')
-
-         filename = 'fort.79'
-         if( dirlen >= 1 ) then
-           filename = outdir(1:dirlen) // '/' // filename
-         end if
-         strlen  = index(filename,' ') - 1
-         OPEN(unit=79, file=filename(1:strlen), status='unknown')
-
-      end if
+      CALL printout_base_setup( outdir, prefix )
 
 !
 !     ==================================================================
@@ -355,7 +332,7 @@
 !     ==================================================================
 
       call init( ibrav, celldm, ecut, ecutw, tranp, amprp, ndr, nbeg, tfirst,  &
-           twmass, thdiag, iforceh, tau0, taus, delt )
+           tau0, taus, delt, tps, iforce )
 
       WRITE( stdout,*) ' out from init'
 
@@ -437,20 +414,16 @@
       temp2=tempw-tolp
       gkbt = 3.*nat*tempw/factem
       press = press*factp
+
 !     ==========================================================
-      do is=1,nsp
-         do ia=1,na(is)
-            do i=1,3
-               tausm(i,ia,is)=taus(i,ia,is)
-               tausp(i,ia,is)=0.
-               taum(i,ia,is)=tau0(i,ia,is)
-               taup(i,ia,is)=0.
-               vels(i,ia,is)=0.
-               velsm(i,ia,is)=0.
-               velsp(i,ia,is)=0.
-            end do
-         end do
-      enddo
+
+      taum  = tau0
+      taup  = 0.0d0
+      tausm = taus
+      tausp = 0.0d0
+      vels  = 0.0d0
+      velsm = 0.0d0
+      velsp = 0.0d0
 !
       hnew=h
 !
@@ -474,7 +447,7 @@
            call readfile_new                                            &
      &     ( 0, ndr,h,hold,nfi,cm(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
          endif
 !     
          call phfac( tau0, ei1, ei2, ei3, eigr )
@@ -578,19 +551,11 @@
          if ( tfor .or. tprnfor ) call nlfl(bec,becdr,lambda,fion)
          WRITE( stdout,*) ' out from nlfl'
 !
-         if(iprsta.ge.3) then
-            nnn=min(12,n)
-            WRITE( stdout,*) 'from main:'
-            do i=1,nnn
-               WRITE( stdout,'(12f8.5)') (lambda(i,j)*ccc,j=1,nnn)
-            end do
-            WRITE( stdout,*)
-         endif
+         if ( iprsta >= 3 ) call print_lambda( lambda, n, 9, ccc )
 !
          if(tpre) then
             call nlfh(bec,dbec,lambda)
             WRITE( stdout,*) ' out from nlfh'
-            call print_cell_var( stress, ' internal stress tensor:' )
          end if
 !
          if(tortho) then
@@ -624,7 +589,7 @@
          xnhp0=0.
          xnhpm=0.
          vnhp =0.
-         fionm(:,:,:)=0.
+         fionm=0.
          CALL ions_vel( vels, taus, tausm, na, nsp, delt )
          xnhh0(:,:)=0.
          xnhhm(:,:)=0.
@@ -652,9 +617,9 @@
             call readfile_new                                           &
      &     ( 1, ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 !
-         CALL s_to_r( taus, tau0, na, nsp, h )
+         IF( .NOT. ANY( tranp(1:nsp) ) ) CALL s_to_r( taus, tau0, na, nsp, h )
 !
          if(trane.and.trhor) then
             call prefor(eigr,betae)
@@ -685,7 +650,7 @@
 !       Fix. Center of Mass - M.S
 !
       if( lwf ) then
-        call cofmass(tau0,cdm0)
+        call ions_cofmass(tau0, pmass, na, nsp, cdm0)
       end if
 
       if( nbeg <= 0 ) then
@@ -694,7 +659,7 @@
       end if
 !
       if( ( .not. tfor ) .and. ( .not. tprnfor ) ) then
-         fion (:,:,:) = 0.d0
+         fion = 0.d0
       end if
 !
       if( .not. tpre ) then
@@ -705,7 +670,7 @@
       !
       nomore = nomore + nfi
 !
-      call cofmass( taus, cdm0 )
+      call ions_cofmass(taus, pmass, na, nsp, cdm0)
 !
 !======================================================================
 !
@@ -721,12 +686,13 @@
 !
 !     calculation of velocity of nose-hoover variables
 !
-      if(.not.tsde) fccc=1./(1.+frice)
+      if( .not. tsde ) fccc = 1.0d0 / ( 1.0d0 + frice )
+
       if(tnosep)then
          call ions_nosevel( vnhp, xnhp0, xnhpm, delt )
       endif
       if(tnosee)then
-         call elec_nosevel( vnhe,xnhe0,xnhem,delt, fccc )
+         call elec_nosevel( vnhe, xnhe0, xnhem, delt, fccc )
       endif
       if(tnoseh) then
          call cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
@@ -734,7 +700,7 @@
 ! 
       if ( tfor .or. thdyn .or. tfirst ) then 
          call initbox ( tau0, taub, irb )
-         call phbox(taub,eigrb)
+         call phbox( taub, eigrb )
       endif
 !
       if( tfor .or. thdyn ) call phfac(tau0,ei1,ei2,ei3,eigr) 
@@ -744,8 +710,9 @@
       call strucf(ei1,ei2,ei3,sfac)
       if (thdyn) call formf(tfirst,eself)
 !
-      nfi=nfi+1
-      tlast=(nfi.eq.nomore)
+      nfi = nfi + 1
+      tlast   = nfi == nomore
+      ttprint = MOD(nfi, iprint) == 0
 
       if( lwf ) then
         call get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, ibrav, b1, b2, b3 )
@@ -778,7 +745,7 @@
 
       call compute_stress( stress, detot, h, omega )
 !
-      enthal=etot+press*omega
+      enthal = etot + press * omega
 !
 !=======================================================================
 !
@@ -872,24 +839,8 @@
 !
       if ( tfor .or. tprnfor ) call nlfl(bec,becdr,lambda,fion)
       if(tpre) then
-         if(iprsta.ge.4) then
-            if((nfi.eq.0).or.tfirst.or.tlast                            &
-     &                   .or.(mod(nfi-1,iprint).eq.0)) then
-               call print_cell_var( stress, ' internal stress tensor (before nlfh):' )
-            endif
-         endif
          call nlfh(bec,dbec,lambda)
-         if(iprsta.ge.4) then
-            if((nfi.eq.0).or.tfirst.or.tlast                            &
-     &                   .or.(mod(nfi-1,iprint).eq.0)) then
-               call print_cell_var( stress, ' internal stress tensor (after nlfh):' )
-            endif
-         endif
-         call add_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
-         if((nfi.eq.0).or.tfirst.or.tlast.or.(mod(nfi-1,iprint).eq.0)) then
-            stress_kb = stress * au_kb
-            call print_cell_var( stress_kb, ' internal stress tensor (KBar):' )
-         endif
+         call ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
       endif
 !
 !=======================================================================
@@ -926,9 +877,9 @@
                         fricp, hgamma, vels, tsdp, tnosep, fionm, vnhp, velsp, velsm )
 
 !cc   call cofmass(velsp,cdmvel)
-!cc   velsp(i,ia,is)=velsp(i,ia,is)-cdmvel(i)
+!cc   velsp(i,isa)=velsp(i,isa)-cdmvel(i)
 
-         call cofmass(tausp,cdm)
+         call ions_cofmass(tausp, pmass, na, nsp, cdm)
 
          call ions_cofmsub( tausp, na, nsp, cdm, cdm0 )
 
@@ -944,6 +895,7 @@
 !  the new cell parameters
 !
       if ( tfor .or. thdyn ) then
+
          if( thdyn ) then
             hold = h
             h = hnew
@@ -978,13 +930,7 @@
 !                   correction to displacement of ions
 !---------------------------------------------------------------------------
 !
-      if(iprsta.ge.3) then
-         nnn=min(12,n)
-         do i=1,nnn
-            WRITE( stdout,*)' main lambda  = ',(lambda(i,k),k=1,nnn)
-         end do
-         WRITE( stdout,*)
-      endif
+      if( iprsta >= 3 ) CALL print_lambda( lambda, n, 9, 1.0d0 )
 !
       if(tortho) call updatc(ccc,lambda,phi,bephi,becp,bec,cm)
       call calbec (nvb+1,nsp,eigr,cm,bec)
@@ -1009,10 +955,8 @@
 !
 !     ionic temperature
 !
-      call cofmass(vels,cdmvel)
-
       if( tfor ) then
-         CALL ions_temp( tempp, ekinpr, vels, na, nsp, hold, pmass, cdmvel )
+         CALL ions_temp( tempp, temps, ekinpr, vels, na, nsp, hold, pmass )
       endif
 !
 !     fake electronic kinetic energy
@@ -1099,51 +1043,78 @@
          WRITE( stdout,1947)
       end if
 !
-      tps=nfi*delt*2.4189d-5
+      tps = tps + delt * AU_PS
       WRITE( stdout,1948) nfi,ekinc,int(temphc),int(tempp),enthal,econs,      &
      &              econt,                                              &
      &              vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
-      write(8,2948) tps,ekinc,int(temphc),int(tempp),enthal,econs,      &
-     &              econt,                                              &
-     &              vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
-!     c              frice,frich,fricp
-! 
+
  1947 format(2x,'nfi',4x,'ekinc',2x,'temph',1x,'tempp',6x,'enthal',     &
      &       7x,'econs',7x,'econt',4x,'vnhh',3x,'xnhh0',4x,'vnhp',      &
      &       3x,'xnhp0')
-!cc     f       7x,'econs',7x,'econt',3x,'frice',2x,'frich',2x,'fricp')
  1948 format(i5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5),4(1x,f7.4))
- 2948 format(f8.5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5),4(1x,f7.4))
 !
+
+      IF ( ionode .AND. ttprint ) THEN
+        ! ...  Open units 30, 31, ... 40 for simulation output
+        CALL printout_base_open()
+        WRITE( stdout, 10 )
+        CALL printout_cell( stdout, nfi, hold, tps )
+        CALL printout_cell( 36, nfi, hold, tps )
+        WRITE( stdout, 17 )
+        stress_kb = stress * au_kb
+        CALL printout_stress( stdout, nfi, stress_kb, tps )
+        CALL printout_stress( 38, nfi, stress_kb, tps )
+
+        WRITE( stdout,11)
+        CALL printout_pos( stdout, nfi, tau0     , nat, tps )
+        CALL printout_pos( 35    , nfi, tau0     , nat, tps )
+
+        ALLOCATE( tauw( 3, natx ) )
+        isa = 0 
+        DO is = 1, nsp
+          DO ia = 1, na(is)
+            isa = isa + 1
+            CALL s_to_r( vels(:,isa), tauw(:,isa), hold )
+          END DO
+        END DO
+        WRITE( stdout,12)
+        CALL printout_pos( stdout, nfi, tauw     , nat, tps )
+        CALL printout_pos( 34    , nfi, tauw     , nat, tps )
+
+        WRITE( stdout,13)
+        CALL printout_pos( stdout, nfi, fion     , nat, tps )
+        CALL printout_pos( 37    , nfi, fion     , nat, tps )
+
+        DEALLOCATE( tauw )
+
+        WRITE(33,2948) tps, ekinc,int(temphc),int(tempp),enthal,econs,econt
+        WRITE(39,2948) tps, vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
+
+        ! ...   Close and flush unit 30, ... 40
+        CALL printout_base_close()
+      END IF
+
+ 10  FORMAT(/,3X,'Cell Variables (AU)',/)
+ 11  FORMAT(/,3X,'Atomic Positions (AU)',/)
+ 12  FORMAT(/,3X,'Atomic Velocities (AU)',/)
+ 13  FORMAT(/,3X,'Atomic Forces (AU)',/)
+ 17  FORMAT(/,3X,'Total Stress (KB)',/)
+ 2948 format(f8.5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5))
+ 2949 format(f8.5,1x,4(1x,f7.4))
+
+
+
       if( tfor ) then
-        if ( ionode ) then
-          call  print_cell_var( h, iunit = 77)
-          call  print_atomic_var( taus, na, nsp, iunit = 77 )
-          call  print_atomic_var( fion, na, nsp, iunit = 78 )
-          call  print_cell_var( stress, iunit = 79)
 
-#if defined (__AIX) || defined (__ABSOFT) || defined (__ORIGIN) || defined (__T3E)
-          call flush(77)
-          call flush(78)
-          call flush(79)
-#endif
-
-        endif
 !
 !     new variables for next step
 !
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  tausm(i,ia,is)=taus(i,ia,is)
-                  taus(i,ia,is)=tausp(i,ia,is)
-                  taum(i,ia,is)=tau0(i,ia,is)
-                  tau0(i,ia,is)=taup(i,ia,is)
-                  velsm(i,ia,is)=vels(i,ia,is)
-                  vels(i,ia,is)=velsp(i,ia,is)
-               end do
-            end do
-         end do
+         tausm = taus
+         taus  = tausp
+         taum  = tau0
+         tau0  = taup
+         velsm = vels
+         vels  = velsp
          if(tnosep) then
             xnhpm = xnhp0
             xnhp0 = xnhpp
@@ -1177,14 +1148,14 @@
 !
       tfirst=.false.
 !
-!     write on file ndw each iprint
+!     write on file ndw each isave
 !
-      if( ( mod( nfi, iprint ) == 0 ) .and. ( nfi < nomore ) ) then
+      if( ( mod( nfi, isave ) == 0 ) .and. ( nfi < nomore ) ) then
 
          call writefile_new                                         &
      &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 
       endif
 !
@@ -1250,7 +1221,7 @@
         CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
              ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
              xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
-             ecut, ecutw, delt, celldm, fion )
+             ecut, ecutw, delt, celldm, fion, tps )
       end if
 
       if( (nfi >= nomore) .OR. tstop ) EXIT MAIN_LOOP
@@ -1261,137 +1232,94 @@
 !=============================end of main loop of molecular dynamics====
 !
 
-      ! 
-      !  Here copy relevant physical quantities into the output arrays/variables
-      !
+    ! 
+    !  Here copy relevant physical quantities into the output arrays/variables
+    !
 
-      etot_out = etot
-      isa = 0
-      do is = 1, nsp
-        do ia = 1, na(is)
-          isa = isa + 1
-          ipos = ind_srt( isa )
-          tau( 1, ipos ) = tau0( 1, ia, is )
-          tau( 2, ipos ) = tau0( 2, ia, is )
-          tau( 3, ipos ) = tau0( 3, ia, is )
-          ! ftmp = ainv(1,1)*fion(1,ia,is)+ainv(1,2)*fion(2,ia,is)+ainv(1,3)*fion(3,ia,is)
-          fion_out( 1, ipos ) = fion( 1, ia, is )
-          ! ftmp = ainv(2,1)*fion(1,ia,is)+ainv(2,2)*fion(2,ia,is)+ainv(2,3)*fion(3,ia,is)
-          fion_out( 2, ipos ) = fion( 2, ia, is )
-          ! ftmp = ainv(3,1)*fion(1,ia,is)+ainv(3,2)*fion(2,ia,is)+ainv(3,3)*fion(3,ia,is)
-          fion_out( 3, ipos ) = fion( 3, ia, is )
-        end do
+    etot_out = etot
+    isa = 0
+    do is = 1, nsp
+      do ia = 1, na(is)
+        isa = isa + 1
+        ipos = ind_srt( isa )
+        tau( 1, ipos ) = tau0( 1, isa )
+        tau( 2, ipos ) = tau0( 2, isa )
+        tau( 3, ipos ) = tau0( 3, isa )
+        fion_out( 1, ipos ) = fion( 1, isa )
+        fion_out( 2, ipos ) = fion( 2, isa )
+        fion_out( 3, ipos ) = fion( 3, isa )
       end do
+    end do
 
-      !  Calculate statistics
+    !  Calculate statistics
 
-      do i=1,nacc
-         acc(i)=acc(i) / dble( nfi )
-      end do
+    acc = acc / dble( nfi )
 !
-      if( ionode ) then
-        WRITE( stdout,1949)
-        WRITE( stdout,1950) (acc(i),i=1,nacc)
-      end if
+    if( ionode ) then
+      WRITE( stdout,1949)
+      WRITE( stdout,1950) (acc(i),i=1,nacc)
+    end if
+
  1949 format(//'              averaged quantities :',/,                 &
      &       9x,'ekinc',10x,'ekin',10x,'epot',10x,'etot',5x,'tempp')
  1950 format(4f14.5,f10.1)
 !
-      call print_clock( 'initialize' )
-      call print_clock( 'total_time' )
-      call print_clock( 'formf' )
-      call print_clock( 'rhoofr' )
-      call print_clock( 'vofrho' )
-      call print_clock( 'dforce' )
-      call print_clock( 'calphi' )
-      call print_clock( 'ortho' )
-      call print_clock( 'updatc' )
-      call print_clock( 'graham' )
-      call print_clock( 'newd' )
-      call print_clock( 'calbec' )
-      call print_clock( 'prefor' )
-      call print_clock( 'strucf' )
-      call print_clock( 'nlfl' )
-      call print_clock( 'nlfq' )
-      call print_clock( 'set_cc' )
-      call print_clock( 'rhov' )
-      call print_clock( 'nlsm1' )
-      call print_clock( 'nlsm2' )
-      call print_clock( 'forcecc' )
-      call print_clock( 'fft' )
-      call print_clock( 'ffts' )
-      call print_clock( 'fftw' )
-      call print_clock( 'fftb' )
-      call print_clock( 'rsg' )
-      call print_clock( 'setfftpara' )
-      call print_clock( 'reduce' )
+    call print_clock( 'initialize' )
+    call print_clock( 'total_time' )
+    call print_clock( 'formf' )
+    call print_clock( 'rhoofr' )
+    call print_clock( 'vofrho' )
+    call print_clock( 'dforce' )
+    call print_clock( 'calphi' )
+    call print_clock( 'ortho' )
+    call print_clock( 'updatc' )
+    call print_clock( 'graham' )
+    call print_clock( 'newd' )
+    call print_clock( 'calbec' )
+    call print_clock( 'prefor' )
+    call print_clock( 'strucf' )
+    call print_clock( 'nlfl' )
+    call print_clock( 'nlfq' )
+    call print_clock( 'set_cc' )
+    call print_clock( 'rhov' )
+    call print_clock( 'nlsm1' )
+    call print_clock( 'nlsm2' )
+    call print_clock( 'forcecc' )
+    call print_clock( 'fft' )
+    call print_clock( 'ffts' )
+    call print_clock( 'fftw' )
+    call print_clock( 'fftb' )
+    call print_clock( 'rsg' )
+    call print_clock( 'setfftpara' )
+    call print_clock( 'reduce' )
 
 !
-         call writefile_new                                         &
-     &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
+    call writefile_new ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc, &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 
 !
-      if(iprsta.gt.1) then
-         if( ionode ) then
-           WRITE( stdout,*)
-           WRITE( stdout,3370)'    lambda   n = ',n
-           do i=1,n
-              WRITE( stdout,3380) (lambda(i,j),j=1,n)
-           end do
-         end if
-3370     format(26x,a,i4)
-3380     format(9f8.4)      
-      endif
+    if( iprsta >= 1 ) CALL print_lambda( lambda, n, n, 1.0d0 )
 !
-      if( tfor .or. tprnfor ) then
-         if( ionode ) then
-           WRITE( stdout,1970) ibrav, alat
-           WRITE( stdout,1971)
-           do i=1,3
-              WRITE( stdout,1972) (h(i,j),j=1,3)
-           enddo
-           WRITE( stdout,1973)
-           do is=1,nsp
-              do ia=1,na(is)
-                 WRITE( stdout,1974) is,ia,(tau0(i,ia,is),i=1,3),               &
-     &              ((ainv(j,1)*fion(1,ia,is)+ainv(j,2)*fion(2,ia,is)+    &
-     &                ainv(j,3)*fion(3,ia,is)),j=1,3)
-              end do
-           end do
-           WRITE( stdout,1975)
-           do is=1,nsp
-              do ia=1,na(is)
-                 WRITE( stdout,1976) is,ia,(taus(i,ia,is),i=1,3)
-              end do
-           end do
-         end if
-      endif
-      conv_elec = .TRUE.
+    conv_elec = .TRUE.
 
 
-
- 1970 format(1x,'ibrav :',i4,'  alat : ',f10.4,/)
- 1971 format(1x,'lattice vectors',/)
- 1972 format(1x,3f10.4)
- 1973 format(/1x,'Cartesian coordinates (a.u.)              forces' &
-     &       /1x,'species',' atom #', &
-     &           '   x         y         z      ', &
-     &           '   fx        fy        fz'/)
+! 1970 format(1x,'ibrav :',i4,'  alat : ',f10.4,/)
+! 1971 format(1x,'lattice vectors',/)
+! 1972 format(1x,3f10.4)
+! 1973 format(/1x,'Cartesian coordinates (a.u.)              forces' &
+!     &       /1x,'species',' atom #', &
+!     &           '   x         y         z      ', &
+!     &           '   fx        fy        fz'/)
  1974 format(1x,2i5,3f10.4,2x,3f10.4)
  1975 format(/1x,'Scaled coordinates '/1x,'species',' atom #')
  1976 format(1x,2i5,3f10.4)
 
       if( ionode ) WRITE( stdout,1977) 
-
-!
- 600  continue
 !
       call memory
 !      
- 1977 format(5x,//'====================== end cprvan ',                 &
-     &            '======================',//)
+ 1977 format(5x,//'====================== end cprvan ======================',//)
 
       IF( ALLOCATED( ei1 ) ) DEALLOCATE( ei1 )
       IF( ALLOCATED( ei2 ) ) DEALLOCATE( ei2 )
@@ -1433,13 +1361,6 @@
       CALL deallocate_wavefunctions()
       if( lwf ) then
         CALL deallocate_wannier()
-      end if
-
-      if( ionode ) then
-        CLOSE( 8 )
-        CLOSE( 77 )
-        CLOSE( 78 )
-        CLOSE( 79 )
       end if
 
 !

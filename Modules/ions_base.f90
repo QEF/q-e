@@ -68,6 +68,10 @@
       INTERFACE ions_vel
          MODULE PROCEDURE ions_vel3, ions_vel2
       END INTERFACE
+
+      INTERFACE ions_cofmass
+         MODULE PROCEDURE cofmass1, cofmass2
+      END INTERFACE
 !
 
 !------------------------------------------------------------------------------!
@@ -314,19 +318,22 @@
       RETURN
     END SUBROUTINE
 
+!------------------------------------------------------------------------------!
 
     SUBROUTINE ions_vel3( vel, taup, taum, na, nsp, dt )
       IMPLICIT NONE
-      REAL(dbl) :: vel(:,:,:), taup(:,:,:), taum(:,:,:)
+      REAL(dbl) :: vel(:,:), taup(:,:), taum(:,:)
       INTEGER :: na(:), nsp
       REAL(dbl) :: dt
-      INTEGER :: ia, is, i
+      INTEGER :: ia, is, i, isa
       REAL(dbl) :: fac
       fac  = 1.0d0 / ( dt * 2.0d0 )
+      isa = 0
       DO is = 1, nsp
         DO ia = 1, na(is)
+          isa = isa + 1
           DO i = 1, 3
-            vel(i,ia,is) = ( taup(i,ia,is) - taum(i,ia,is) ) * fac
+            vel(i,isa) = ( taup(i,isa) - taum(i,isa) ) * fac
           END DO
         END DO
       END DO
@@ -349,7 +356,275 @@
       END DO
       RETURN
     END SUBROUTINE
- 
+
+!------------------------------------------------------------------------------!
+
+    SUBROUTINE cofmass1( tau, pmass, na, nsp, cdm )
+      IMPLICIT NONE
+      REAL(dbl), INTENT(IN) :: tau(:,:,:), pmass(:)
+      REAL(dbl), INTENT(OUT) :: cdm(3)
+      INTEGER, INTENT(IN) :: na(:), nsp
+
+      REAL(dbl) :: tmas
+      INTEGER :: is, i, ia
+!
+      tmas=0.0
+      do is=1,nsp
+         tmas=tmas+na(is)*pmass(is)
+      end do
+!
+      do i=1,3
+         cdm(i)=0.0
+         do is=1,nsp
+            do ia=1,na(is)
+               cdm(i)=cdm(i)+tau(i,ia,is)*pmass(is)
+            end do
+         end do
+         cdm(i)=cdm(i)/tmas
+      end do
+!
+      RETURN
+    END SUBROUTINE
+
+    SUBROUTINE cofmass2( tau, pmass, na, nsp, cdm )
+      IMPLICIT NONE
+      REAL(dbl), INTENT(IN) :: tau(:,:), pmass(:)
+      REAL(dbl), INTENT(OUT) :: cdm(3)
+      INTEGER, INTENT(IN) :: na(:), nsp
+
+      REAL(dbl) :: tmas
+      INTEGER :: is, i, ia, isa
+!
+      tmas=0.0
+      do is=1,nsp
+         tmas=tmas+na(is)*pmass(is)
+      end do
+!
+      do i=1,3
+         cdm(i)=0.0
+         isa = 0
+         do is=1,nsp
+            do ia=1,na(is)
+               isa = isa + 1
+               cdm(i)=cdm(i)+tau(i,isa)*pmass(is)
+            end do
+         end do
+         cdm(i)=cdm(i)/tmas
+      end do
+!
+      RETURN
+    END SUBROUTINE
+
+!------------------------------------------------------------------------------!
+
+
+!  BEGIN manual -------------------------------------------------------------
+
+      SUBROUTINE randpos(tau, na, nsp, tranp, amprp, hinv, ifor )
+
+!  Randomize ionic position
+!  --------------------------------------------------------------------------
+!  END manual ---------------------------------------------------------------
+
+         USE cell_base, ONLY: r_to_s
+         USE io_global, ONLY: stdout
+
+         IMPLICIT NONE
+         REAL(dbl) :: hinv(3,3)
+         REAL(dbl) :: tau(:,:)
+         INTEGER, INTENT(IN) :: ifor(:,:), na(:), nsp
+         LOGICAL, INTENT(IN) :: tranp(:)
+         REAL(dbl), INTENT(IN) :: amprp(:)
+         REAL(dbl) :: oldp(3), rand_disp(3), rdisp(3)
+         INTEGER :: k, is, isa, isa_s, isa_e, isat
+
+         WRITE( stdout, 600 )
+
+         isat = 0
+         DO is = 1, nsp
+           isa_s = isat + 1
+           isa_e = isat + na(is) - 1
+           IF( tranp(is) ) THEN
+             WRITE( stdout,610) is, na(is)
+             WRITE( stdout,615)
+             DO isa = isa_s, isa_e
+               oldp = tau(:,isa)
+               CALL RANDOM_NUMBER( rand_disp )
+               rand_disp = amprp(is) * ( rand_disp - 0.5d0 )
+               rdisp     = rand_disp
+               CALL r_to_s( rdisp(:), rand_disp(:), hinv )
+               DO k = 1, 3
+                 tau(k,isa) = tau(k,isa) + rand_disp(k) * ifor(k,isa)
+               END DO
+               WRITE( stdout,620) (oldp(k),k=1,3), (tau(k,isa),k=1,3)
+             END DO
+           END IF
+           isat = isat + 1
+         END DO
+
+ 600     FORMAT(//,3X,'Randomization of SCALED ionic coordinates')
+ 610     FORMAT(   3X,'Species ',I3,' atoms = ',I4)
+ 615     FORMAT(   3X,'     Old Positions               New Positions')
+ 620     FORMAT(   3X,3F10.6,2X,3F10.6)
+       RETURN
+       END SUBROUTINE randpos
+
+
+  SUBROUTINE ions_kinene( ekinp, vels, na, nsp, h, pmass )
+    IMPLICIT NONE
+    real( kind=8 ), intent(out) :: ekinp     !  ionic kinetic energy
+    real( kind=8 ), intent(in) :: vels(:,:)  !  scaled ionic velocities
+    real( kind=8 ), intent(in) :: pmass(:)   !  ionic masses
+    real( kind=8 ), intent(in) :: h(:,:)     !  simulation cell
+    integer, intent(in) :: na(:), nsp
+    integer :: i, j, is, ia, ii, isa
+    ekinp = 0.0d0
+    isa = 0
+    do is=1,nsp
+      do ia=1,na(is)
+        isa = isa + 1
+        do j=1,3
+          do i=1,3
+            do ii=1,3
+              ekinp=ekinp+pmass(is)* h(j,i)*vels(i,isa)* h(j,ii)*vels(ii,isa)
+            end do
+          end do
+        end do
+      end do
+    end do
+    ekinp=0.5d0*ekinp
+    return
+  END SUBROUTINE
+
+!------------------------------------------------------------------------------!
+
+  subroutine ions_temp( tempp, temps, ekinpr, vels, na, nsp, h, pmass )
+    use constants, only: factem
+    implicit none
+    real( kind=8 ), intent(out) :: ekinpr, tempp
+    real( kind=8 ), intent(out) :: temps(:)
+    real( kind=8 ), intent(in) :: vels(:,:)
+    real( kind=8 ), intent(in) :: pmass(:)
+    real( kind=8 ), intent(in) :: h(:,:)
+    integer, intent(in) :: na(:), nsp
+    integer :: nat, i, j, is, ia, ii, isa
+    real( kind=8 ) :: cdmvel(3), eks
+    call ions_cofmass( vels, pmass, na, nsp, cdmvel )
+    nat = SUM( na(1:nsp) )
+    ekinpr = 0.0d0
+    temps( 1:nsp ) = 0.0d0
+    do i=1,3
+      do j=1,3
+        do ii=1,3
+          isa = 0
+          do is=1,nsp
+            eks = 0.0d0
+            do ia=1,na(is)
+              isa = isa + 1
+              eks=eks+pmass(is)*h(j,i)*(vels(i,isa)-cdmvel(i))*h(j,ii)*(vels(ii,isa)-cdmvel(ii))
+            end do
+            ekinpr    = ekinpr    + eks
+            temps(is) = temps(is) + eks
+          end do
+        end do
+      end do
+    end do
+    do is = 1, nsp
+      temps( is ) = temps( is ) * 0.5d0
+      temps( is ) = temps( is ) * factem / ( 1.5d0 * na(is) )
+    end do
+    ekinpr = 0.5 * ekinpr
+    tempp  = ekinpr * factem / ( 1.5d0 * nat )
+    return
+  end subroutine
+
+!------------------------------------------------------------------------------!
+
+  subroutine ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
+    real(kind=8), intent(inout) :: stress(3,3)
+    real(kind=8), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
+    integer, intent(in) :: nsp, na(:)
+    integer :: i, j, is, ia, isa
+    isa    = 0
+    do is = 1, nsp
+      do ia = 1, na(is)
+        isa = isa + 1
+        do i = 1, 3
+          do j = 1, 3
+            stress(i,j) = stress(i,j) + pmass(is) / omega *           &
+     &        (  (h(i,1)*vels(1,isa)+h(i,2)*vels(2,isa)+h(i,3)*vels(3,isa)) *  &
+                 (h(j,1)*vels(1,isa)+h(j,2)*vels(2,isa)+h(j,3)*vels(3,isa))  )
+          enddo
+        enddo
+      enddo
+    enddo
+    return
+  end subroutine
+
+!------------------------------------------------------------------------------!
+
+  subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
+                           pmass, delt )
+    use constants, only: pi, factem
+    implicit none
+    logical, intent(in) :: tcap
+    real(kind=8), intent(inout) :: taup(:,:)
+    real(kind=8), intent(in) :: tau0(:,:), taum(:,:), fion(:,:)
+    real(kind=8), intent(in) :: delt, pmass(:), tempw, tempp
+    integer, intent(in) :: na(:), nsp
+    integer, intent(in) :: iforce(:,:)
+
+    real(kind=8) :: alfap, qr(3), alfar, gausp
+    real(kind=8) :: dt2by2, ftmp
+    real(kind=8) :: randy
+    integer :: i, ia, is, nat, isa
+
+    dt2by2 = .5d0 * delt * delt
+    gausp = delt * sqrt( tempw / factem )
+    nat = SUM( na( 1:nsp ) )
+
+    if(.not.tcap) then
+      alfap=.5d0*sqrt(tempw/tempp)
+      isa = 0
+      do is=1,nsp
+        do ia=1,na(is)
+          isa = isa + 1
+          do i=1,3
+            taup(i,isa) = tau0(i,isa) +                 &
+     &                      alfap*(taup(i,isa)-taum(i,isa)) +      &
+     &                      dt2by2/pmass(is)*fion(i,isa)*iforce(i,isa)
+          end do
+        end do
+      end do
+    else
+      do i=1,3
+        qr(i)=0.d0
+        isa = 0
+        do is=1,nsp
+          do ia=1,na(is)
+            isa = isa + 1
+            alfar=gausp/sqrt(pmass(is))*cos(2.d0*pi*randy())*sqrt(-2.d0*log(randy()))
+            taup(i,isa)=alfar
+            qr(i)=qr(i)+alfar
+          end do
+        end do
+        qr(i)=qr(i)/nat
+      end do
+      isa = 0
+      do is=1,nsp
+        do ia=1,na(is)
+          isa = isa + 1
+          do i=1,3
+            alfar=taup(i,isa)-qr(i)
+            taup(i,isa)=tau0(i,isa)+iforce(i,isa)*     &
+     &                    (alfar+dt2by2/pmass(is)*fion(i,isa))
+          end do
+        end do
+      end do
+    end if
+    return
+  end subroutine
+
 
 !------------------------------------------------------------------------------!
   END MODULE ions_base

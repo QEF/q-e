@@ -23,7 +23,7 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
   IMPLICIT NONE
 
-  integer :: i,j,is,ia,a,ite
+  integer :: i,j,is,ia,a,ite, isa
   integer :: sm_k,smpm
 
   integer :: n_const,exit_sign
@@ -36,7 +36,7 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   type(ptr) :: state(0:sm_p)
   type(ptr) :: tan(0:sm_p)
 
-  real(kind=8) :: mov(3,natx,nsx,0:sm_p) 
+  real(kind=8) :: mov(3,natx,0:sm_p) 
   real(kind=8) :: lambda(0:sm_p), dotp1, dotp2
   real(kind=8) :: dalpha(0:sm_p),t_alpha
 
@@ -64,10 +64,12 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   ! ... Copy ... 
 
   DO sm_k=0,sm_p
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
-              mov(i,ia,is,sm_k) = statep(sm_k)%d3(i,ia,is)
+              mov(i,isa,sm_k) = statep(sm_k)%d3(i,isa)
            ENDDO
         ENDDO
      ENDDO
@@ -115,13 +117,15 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
         dotp1 = 0.d0
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
 
                  dotp1 = dotp1 & 
-                      &    + (statep(a+1)%d3(i,ia,is)-statep(a)%d3(i,ia,is)) &
-                      &    * tan(a)%d3(i,ia,is) 
+                      &    + (statep(a+1)%d3(i,isa)-statep(a)%d3(i,isa)) &
+                      &    * tan(a)%d3(i,isa) 
 
               ENDDO
            ENDDO
@@ -132,13 +136,15 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
         dotp2 = 0.d0
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
 
                  dotp2 = dotp2 &
-                      &    + (statep(a+1)%d3(i,ia,is)-statep(a)%d3(i,ia,is)) &
-                      &    * tan(a+1)%d3(i,ia,is)
+                      &    + (statep(a+1)%d3(i,isa)-statep(a)%d3(i,isa)) &
+                      &    * tan(a+1)%d3(i,isa)
 
               ENDDO
            ENDDO
@@ -154,10 +160,12 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
         ! ... Update ...
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
-                 mov(i,ia,is,a+1) = statep(a+1)%d3(i,ia,is) + lambda(a+1)*tan(a+1)%d3(i,ia,is)
+                 mov(i,isa,a+1) = statep(a+1)%d3(i,isa) + lambda(a+1)*tan(a+1)%d3(i,isa)
               ENDDO
            ENDDO
         ENDDO
@@ -178,10 +186,12 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   ENDIF
 
   DO sm_k=1,smpm
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
-              statep(sm_k)%d3(i,ia,is) = mov(i,ia,is,sm_k) 
+              statep(sm_k)%d3(i,isa) = mov(i,isa,sm_k) 
            ENDDO
         ENDDO
      ENDDO
@@ -207,14 +217,14 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
 
   IMPLICIT NONE
 
-  integer :: i,is,ia,sm_k,sm_kk,smpm,ace
+  integer :: i,is,ia,sm_k,sm_kk,smpm,ace, isa
   integer, intent(out) :: exit_sign
   integer, intent(in) :: n_const
 
   real(kind=8), intent(out) :: err_const(sm_p)
   real(kind=8), intent(out) :: cons
 
-  real(kind=8) :: state(3,natx,nsx,0:sm_p),temp(3,natx,nsx)
+  real(kind=8) :: state(3,natx,0:sm_p),temp(3,natx)
   real(kind=8) :: dalpha(0:sm_p),t_alpha,alpha(0:sm_p)
   real(kind=8) :: diff, total
 
@@ -229,18 +239,22 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
 
      dalpha(sm_k) = 0.d0
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
-              temp(i,ia,is) = state(i,ia,is,sm_k) - state(i,ia,is,sm_k-1)
+              temp(i,isa) = state(i,isa,sm_k) - state(i,isa,sm_k-1)
            ENDDO
         ENDDO
      ENDDO
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
-              dalpha(sm_k) = dalpha(sm_k) + temp(i,ia,is)*temp(i,ia,is)
+              dalpha(sm_k) = dalpha(sm_k) + temp(i,isa)*temp(i,isa)
            ENDDO
         ENDDO
      ENDDO

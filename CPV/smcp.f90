@@ -54,7 +54,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !     dt2bye         = 2*delt/emass
   !***********************************************************************
   !
-  use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
+  use control_flags, only: iprint, isave, thdyn, tpre, tbuff, iprsta, trhor, &
        tfor, tvlocw, trhow, taurdr, tprnfor
   use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
        tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
@@ -75,11 +75,12 @@ subroutine smdmain( tau, fion_out, etot_out )
   use gvecw, only: ngw
   use reciprocal_vectors, only: ng0 => gstart
   use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
-  use ions_base, only: ind_srt
+  use ions_base, only: ind_srt, ions_vel, ions_cofmass, ions_kinene, ions_temp
+  use ions_base, only: ions_thermal_stress, ions_vrescal
   use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
-  use cell_base, only: ainv, a1, a2, a3
+  use cell_base, only: ainv, a1, a2, a3, r_to_s
   use cell_base, only: omega, alat
-  use cell_base, only: h, hold, deth, wmass
+  use cell_base, only: h, hold, deth, wmass, s_to_r
   use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
   use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
   use pseu, only: vps, rhops
@@ -116,6 +117,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   USE smd_variables
   USE smd_rep
   USE smd_ene
+  USE cpr_subroutines
   !
   !
   implicit none
@@ -148,7 +150,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   ! indexes, positions, and structure factors for the box grid
   !
   integer irb(3,natx,nsx)
-  real(kind=8) taub(3,natx,nsx)
+  real(kind=8) taub(3,natx)
   complex(kind=8), allocatable:: eigrb(:,:,:)
   ! 
   ! charge densities and potentials
@@ -181,12 +183,12 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
   !  ionic positions, center of mass position
   !
-  real(kind=8) tau0(3,natx,nsx)
+  real(kind=8) tau0(3,natx)
 
   !
   !  iforce, 
   ! 
-  integer iforce(3,natx,nsx)
+  integer :: iforce(3,natx)
   !
   ! for variable cell dynamics: scaled tau
   !
@@ -208,29 +210,30 @@ subroutine smdmain( tau, fion_out, etot_out )
        &       epot(smx), xnhpp(smx), xnhep(smx), epre(smx), enow(smx),   &
        &       econs(smx), econt(smx),                                    &
        &       ccc(smx)
+  real(kind=8) temps(nsx) 
   real(kind=8) verl1, verl2, verl3, anor, saveh, press, tps,        &
        &       eps, qnp, tempw, qne, emass, delt, bigr, dt2,              &
        &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe, fricp, greasp,&
        &        frice, grease, savee, savep
   real(kind=8) ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
        &       ekinc(smx), pre_ekinc(smx), enthal(smx),ekincw
-  integer nnn, is, nacc, ia, j, iter, nfi, i, isa, ipos
+  integer is, nacc, ia, j, iter, nfi, i, isa, ipos
   !
   !
   ! work variables, 2
   !
-  real(kind=8) velsp(3,natx,nsx)
+  real(kind=8) velsp(3,natx)
   real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3)
   real(kind=8) cdm(3)
   real(kind=8) qr(3)
   real(kind=8) xnhh0(3,3),xnhhm(3,3),xnhhp(3,3),vnhh(3,3),temphh(3,3)
+  real(kind=8) thstress(3,3) 
   !
   integer ibrav, k, ii, l, m
   real(kind=8) ekinh, alfar, temphc, alfap, frich, tolp,    &
        &     factp, temp1, temp2, temph, greash, qnh, randy
   real(kind=8) ftmp
 
-  logical :: twmass
   character(len=256) :: filename
   character(len=256) :: dirname
   integer :: strlen, dirlen
@@ -278,17 +281,19 @@ subroutine smdmain( tau, fion_out, etot_out )
   !     ==================================================================
 
   factp   = 3.3989 * 0.00001
+  tps     = 0.0d0
+
   !
   !     ==================================================================
   !     read input from standard input (unit 5)
   !     ==================================================================
 
-  call iosys( nbeg , ndr , ndw , nomore , iprint                       &
+  call iosys( nbeg , ndr , ndw , nomore , iprint, isave                  &
        & , delt , emass , emaec  , tsde , frice , grease , twall         &
        & , tortho , eps , maxit , trane , ampre , tranp , amprp          &
        & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
        & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
-       & , tpre , thdyn , thdiag , twmass , wmass , frich , greash , press   &
+       & , tpre , thdyn , thdiag , iforceh , wmass , frich , greash , press   &
        & , tnoseh , qnh , temph , celldm , ibrav , tau0, ecutw , ecut , iforce &
        & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
        & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
@@ -439,13 +444,13 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
 
   call sminit( ibrav, celldm, ecut, ecutw, tranp, amprp, ndr, nbeg, tfirst,  &
-       twmass, thdiag, iforceh, delt )
+       delt, tps, iforce )
 
   !
   !
 
-  call r_to_s(rep(0)%tau0,rep(0)%taus)
-  call r_to_s(rep(sm_p)%tau0,rep(sm_p)%taus)
+  call r_to_s(rep(0)%tau0,rep(0)%taus, na, nsp, ainv)
+  call r_to_s(rep(sm_p)%tau0,rep(sm_p)%taus, na, nsp, ainv)
 
   !
   !
@@ -459,7 +464,7 @@ subroutine smdmain( tau, fion_out, etot_out )
      sm_file = smwout + sm_k
      if( iprsta > 1 ) then
         if(ionode) WRITE( sm_file,*) ' tau0 '
-        if(ionode) WRITE( sm_file,'(3f14.8)') (((rep(sm_k)%tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+        if(ionode) WRITE( sm_file,'(3f14.8)') ((rep(sm_k)%tau0(i,ia),i=1,3),ia=1,SUM(na(1:nsp)))
      endif
   ENDDO
 
@@ -609,20 +614,14 @@ subroutine smdmain( tau, fion_out, etot_out )
   etot_ar(sm_p) = ene_fin
 
   DO sm_k=0,sm_p
-     do is=1,nsp
-        do ia=1,na(is)
-           do i=1,3
-              rep(sm_k)%tausm(i,ia,is)=rep(sm_k)%taus(i,ia,is)
-              rep(sm_k)%tausp(i,ia,is)=0.
-              rep(sm_k)%taum(i,ia,is)=rep(sm_k)%tau0(i,ia,is)
-              rep(sm_k)%taup(i,ia,is)=0.
-              rep(sm_k)%vels(i,ia,is)=0.
-              rep(sm_k)%velsm(i,ia,is)=0.
-              velsp(i,ia,is)=0.
-           end do
-        end do
-     enddo
+     rep(sm_k)%tausm=rep(sm_k)%taus
+     rep(sm_k)%tausp=0.
+     rep(sm_k)%taum=rep(sm_k)%tau0
+     rep(sm_k)%taup=0.
+     rep(sm_k)%vels  = 0.0d0
+     rep(sm_k)%velsm = 0.0d0
   ENDDO
+  velsp = 0.
   !
   hnew=h
   !
@@ -679,7 +678,8 @@ subroutine smdmain( tau, fion_out, etot_out )
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
                 &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
                 &       ekincm(sm_k),                           &
-                &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion)
+                &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
+                &       tps)
         endif
 
 
@@ -763,9 +763,12 @@ subroutine smdmain( tau, fion_out, etot_out )
         !
         !
 
+
         call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
              &        ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
+        !WRITE( stdout, * ) 'debug 1, rcmax: ', rcmax(1:nsp) 
+        !WRITE( stdout, * ) 'debug 1, esr  : ', esr, eself
 
         !
         etot_ar(sm_k) = etot
@@ -774,20 +777,11 @@ subroutine smdmain( tau, fion_out, etot_out )
         exc_ar(sm_k) = exc
         !
         !
-        do i=1,3
-           do j=1,3
-              stress(i,j)=-1.d0/omega*(detot(i,1)*h(j,1)+              &
-                   &                      detot(i,2)*h(j,2)+detot(i,3)*h(j,3))
-           enddo
-        enddo
+        call compute_stress( stress, detot, h, omega )
         !
         !
         if(iprsta.gt.0 .AND. ionode) WRITE( sm_file,*) ' out from vofrho'
-        if(iprsta.gt.2) then
-           if(ionode) WRITE( sm_file,*) ' fion '
-           if(ionode) WRITE( sm_file,'(3f14.8)')                                         &
-                &                   (((rep(sm_k)%fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-        end if
+        if(iprsta.gt.2) call print_atomic_var( rep(sm_k)%fion, na, nsp, ' fion ', iunit = sm_file )
         ! 
         !     forces for eigenfunctions
         !
@@ -862,25 +856,12 @@ subroutine smdmain( tau, fion_out, etot_out )
         !
         if((tfor .or. tprnfor) .AND. ionode) WRITE( sm_file,*) ' out from nlfl'
         !
-        if(iprsta.ge.3) then
-           nnn=min(12,n)
-           if(ionode) WRITE( sm_file,*) 'from main:'
-           do i=1,nnn
-              if(ionode) WRITE( sm_file,'(12f8.5)') (rep_el(sm_k)%lambda(i,j)*ccc(sm_k),j=1,nnn)
-           end do
-           if(ionode) WRITE( sm_file,*)
-        endif
+        if(iprsta.ge.3) CALL print_lambda( rep_el(sm_k)%lambda, n, 9, ccc(sm_k), iunit = sm_file )
         !
         if(tpre) then
            call nlfh(rep_el(sm_k)%bec,dbec,rep_el(sm_k)%lambda)
            WRITE( stdout,*) ' out from nlfh'
-           WRITE( stdout,*) 
-           WRITE( stdout,*) ' internal stress tensor:'
-           WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
         endif
-5555    format(1x,f12.5,1x,f12.5,1x,f12.5/                             &
-             &          1x,f12.5,1x,f12.5,1x,f12.5/                             &
-             &          1x,f12.5,1x,f12.5,1x,f12.5//)
         !
         if(tortho) then
            call updatc(ccc(sm_k),rep_el(sm_k)%lambda,rep_el(sm_k)%phi, &
@@ -899,13 +880,7 @@ subroutine smdmain( tau, fion_out, etot_out )
         if(iprsta.ge.3) call dotcsc(eigr,rep_el(sm_k)%c0)
         !     
         if(thdyn) then
-           do i=1,3
-              do j=1,3
-                 h(i,j)=hold(i,j)+dt2by2/wmass*omega*iforceh(i,j)*     &
-                      &                  (stress(i,1)*ainv(j,1)+stress(i,2)*ainv(j,2)+   &
-                      &                   stress(i,3)*ainv(j,3)-press*ainv(j,i))
-              end do
-           end do
+           call cell_hmove( h, hold, delt, omega, press, iforceh, stress, ainv )
            call invmat( 3, h, ainv, deth )
         endif
         !
@@ -913,26 +888,9 @@ subroutine smdmain( tau, fion_out, etot_out )
 
            if(smlm) call PERP(rep(sm_k)%fion,rep(sm_k)%tan,paraforce(sm_k)) 
 
-           do is=1,nsp
-              do ia=1,na(is)
-                 do i=1,3
-                    rep(sm_k)%taus(i,ia,is)=rep(sm_k)%tausm(i,ia,is) + &
-                         &                    iforce(i,ia,is)*dt2by2/pmass(is) *            &
-                         &                    (rep(sm_k)%fion(1,ia,is)*ainv(i,1) +          &
-                         &                     rep(sm_k)%fion(2,ia,is)*ainv(i,2) +          &
-                         &                     rep(sm_k)%fion(3,ia,is)*ainv(i,3) )
-                 end do
-              end do
-           end do
-           do is=1,nsp
-              do ia=1,na(is)
-                 do i=1,3
-                    rep(sm_k)%tau0(i,ia,is)=h(i,1)*rep(sm_k)%taus(1,ia,is) &
-                         &                           +h(i,2)*rep(sm_k)%taus(2,ia,is)            &
-                         &                           +h(i,3)*rep(sm_k)%taus(3,ia,is)
-                 end do
-              end do
-           end do
+           CALL ions_hmove( rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, rep(sm_k)%fion, ainv, delt, na, nsp )
+           CALL s_to_r( rep(sm_k)%taus, rep(sm_k)%tau0, na, nsp, h )
+
         endif
         !
         !     
@@ -949,19 +907,13 @@ subroutine smdmain( tau, fion_out, etot_out )
              &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                   &
              &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
              &       ekincm(sm_k),                                                         &
-             &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion)
+             &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
+             &       tps)
 
 
         !
-        do is=1,nsp
-           do ia=1,na(is)
-              do i=1,3
-                 rep(sm_k)%tau0(i,ia,is)=h(i,1)*rep(sm_k)%taus(1,ia,is) & 
-                      &                         +h(i,2)*rep(sm_k)%taus(2,ia,is)           &
-                      &                         +h(i,3)*rep(sm_k)%taus(3,ia,is)
-              end do
-           end do
-        end do
+        CALL s_to_r(  rep(sm_k)%taus,  rep(sm_k)%tau0, na, nsp, h )
+
         !
         if(trane.and.trhor) then
            call prefor(eigr,betae)
@@ -970,8 +922,7 @@ subroutine smdmain( tau, fion_out, etot_out )
         endif
         !
         if(iprsta.gt.2) then
-           WRITE( stdout,*) ' read: taus '
-           WRITE( stdout,'(3f14.8)')  (((rep(sm_k)%taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+           call print_atomic_var( rep(sm_k)%taus, na, nsp, ' read: taus ' )
            WRITE( stdout,*) ' read: cell parameters h '
            WRITE( stdout,*)  (h(1,j),j=1,3)
            WRITE( stdout,*)  (h(2,j),j=1,3)
@@ -1001,7 +952,7 @@ subroutine smdmain( tau, fion_out, etot_out )
      end if
      !
      if( ( .not. tfor ) .and. ( .not. tprnfor ) ) then
-        rep(sm_k)%fion (:,:,:) = 0.d0
+        rep(sm_k)%fion = 0.d0
      end if
      !
      if( .not. tpre ) then
@@ -1040,7 +991,7 @@ subroutine smdmain( tau, fion_out, etot_out )
      ! 
 
      DO sm_k =1,smpm
-        call r_to_s(rep(sm_k)%tau0,rep(sm_k)%taus)
+        call r_to_s(rep(sm_k)%tau0,rep(sm_k)%taus, na, nsp, ainv)
      ENDDO
 
      !
@@ -1066,14 +1017,8 @@ subroutine smdmain( tau, fion_out, etot_out )
      xnhp0(sm_k)=0.
      xnhpm(sm_k)=0.
      vnhp(sm_k) =0.
-     rep(sm_k)%fionm(:,:,:)=0.d0
-     do is=1,nsp
-        do ia=1,na(is)
-           do i=1,3
-              rep(sm_k)%vels(i,ia,is)=(rep(sm_k)%taus(i,ia,is)-rep(sm_k)%tausm(i,ia,is))/delt
-           end do
-        end do
-     end do
+     rep(sm_k)%fionm=0.d0
+     CALL ions_vel(  rep(sm_k)%vels,  rep(sm_k)%taus,  rep(sm_k)%tausm, na, nsp, delt )
      xnhh0(:,:)=0.
      xnhhm(:,:)=0.
      vnhh (:,:) =0.
@@ -1083,22 +1028,8 @@ subroutine smdmain( tau, fion_out, etot_out )
      !     kinetic energy of the electrons
      !     ======================================================
      !
-     ALLOCATE( emainv( ngw ) )
-
-     emainv = 1.0d0 / ema0bg
-     ftmp = 1.0d0
-     if( ng0 == 2 ) ftmp = 0.5d0
-
      ekincm(sm_k)=0.0
-     do i=1,n
-        ekincm(sm_k) = ekincm(sm_k) + 2.0d0 * &
-             wave_speed2( rep_el(sm_k)%c0(:,i), rep_el(sm_k)%cm(:,i), emainv, ftmp )
-     end do
-     ekincm(sm_k) = ekincm(sm_k) * emass / dt2
-
-     CALL mp_sum( ekincm(sm_k) )
-
-     DEALLOCATE( emainv )
+     CALL elec_fakekine2( ekincm(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, n, delt )
 
      xnhe0(sm_k)=0.
      xnhem(sm_k)=0.
@@ -1112,8 +1043,8 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
   ! ... Copying the init and final state.
   !
-  rep(0)%taup(:,:,:) = rep(0)%tau0(:,:,:)
-  rep(sm_p)%taup(:,:,:) = rep(sm_p)%tau0(:,:,:)
+  rep(0)%taup = rep(0)%tau0
+  rep(sm_p)%taup = rep(sm_p)%tau0
 
   ! ... Center of mass
   !
@@ -1121,7 +1052,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   WRITE(stdout,*) " Center of mass "
   WRITE(stdout,*) " "
   DO sm_k=0,sm_p
-     call cofmass( rep(sm_k)%tau0, rep(sm_k)%cdm0 )
+     call ions_cofmass( rep(sm_k)%tau0, pmass, na, nsp, rep(sm_k)%cdm0)
      WRITE(stdout,'(i4,1x,3f8.5)') sm_k, (rep(sm_k)%cdm0(i),i=1,3)
   ENDDO
   WRITE(stdout,*) " "
@@ -1131,10 +1062,10 @@ subroutine smdmain( tau, fion_out, etot_out )
   IF(ionode) THEN
      IF(nbeg < 0) THEN
         WRITE(unico,'(9(1x,f9.5))') &
-             & ((((rep(j)%taum(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp),j=0,sm_p)
+             & (((rep(j)%taum(i,ia),i=1,3),ia=1,SUM(na(1:nsp))),j=0,sm_p)
      ELSE
         WRITE(unico,'(9(1x,f9.5))') &
-             & ((((rep(j)%tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp),j=0,sm_p)
+             & (((rep(j)%tau0(i,ia),i=1,3),ia=1,SUM(na(1:nsp))),j=0,sm_p)
      ENDIF
      !
 #if defined (__ORIGIN) || defined (__T3E)
@@ -1180,15 +1111,13 @@ subroutine smdmain( tau, fion_out, etot_out )
         !
         if(.not.tsde) fccc(sm_k)=1./(1.+frice)
         if(tnosep)then
-           vnhp(sm_k)=2.*(xnhp0(sm_k)-xnhpm(sm_k))/delt-vnhp(sm_k)
+           CALL ions_nosevel( vnhp(sm_k), xnhp0(sm_k), xnhpm(sm_k), delt )
         endif
         if(tnosee)then
-           vnhe(sm_k)=2.*(xnhe0(sm_k)-xnhem(sm_k))/delt-vnhe(sm_k)
-           fccc(sm_k)=1./(1.+0.5*delt*vnhe(sm_k))
+           CALL elec_nosevel( vnhe(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, fccc(sm_k) )
         endif
         if(tnoseh) then
-           vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
-           velh(:,:)=2.*(h(:,:)-hold(:,:))/delt-velh(:,:)
+           CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
         endif
         ! 
         !
@@ -1250,6 +1179,8 @@ subroutine smdmain( tau, fion_out, etot_out )
         call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
              &            ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
+        !WRITE( stdout, * ) 'debug 2, rcmax: ', rcmax(1:nsp) 
+        !WRITE( stdout, * ) 'debug 2, esr  : ', esr, eself
 
         !
         etot_ar(sm_k)  = etot
@@ -1260,12 +1191,8 @@ subroutine smdmain( tau, fion_out, etot_out )
         IF(tfirst) esr_ar(sm_k) = esr
         !
         !
-        do i=1,3
-           do j=1,3
-              stress(i,j)=-1.d0/omega*(detot(i,1)*h(j,1)+                 &
-                   &              detot(i,2)*h(j,2)+detot(i,3)*h(j,3))
-           enddo
-        enddo
+        call compute_stress( stress, detot, h, omega )
+
         !
         enthal(sm_k)=etot+press*omega
         !
@@ -1369,41 +1296,9 @@ subroutine smdmain( tau, fion_out, etot_out )
         !     This part is not compatible with SMD.
         !
         if(tpre) then
-           if(iprsta.ge.4) then
-              if((nfi.eq.0).or.tfirst.or.tlast                            &
-                   &                   .or.(mod(nfi-1,iprint).eq.0)) then
-                 WRITE( stdout,*) 
-                 WRITE( stdout,*) ' internal stress tensor (before nlfh):'
-                 WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
-              endif
-           endif
            call nlfh(rep_el(sm_k)%bec,dbec,rep_el(sm_k)%lambda)
-           if(iprsta.ge.4) then
-              if((nfi.eq.0).or.tfirst.or.tlast                            &
-                   &                   .or.(mod(nfi-1,iprint).eq.0)) then
-                 WRITE( stdout,*) 
-                 WRITE( stdout,*) ' internal stress tensor (after nlfh):'
-                 WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
-              endif
-           endif
-           do i=1,3
-              do j=1,3
-                 do is=1,nsp
-                    do ia=1,na(is)
-                       stress(i,j)=stress(i,j)+pmass(is)/omega*           &
-                            &                  ((h(i,1)*rep(sm_k)%vels(1,ia,is)+h(i,2)*rep(sm_k)%vels(2,ia,is)+    &
-                            &                    h(i,3)*rep(sm_k)%vels(3,ia,is))*(h(j,1)*rep(sm_k)%vels(1,ia,is)+  &
-                            &                    h(j,2)*rep(sm_k)%vels(2,ia,is)+h(j,3)*rep(sm_k)%vels(3,ia,is)))
-                    enddo
-                 enddo
-              enddo
-           enddo
-           if((nfi.eq.0).or.tfirst.or.tlast.or.(mod(nfi-1,iprint).eq.0))  &
-                &        then
-              WRITE( stdout,*) 
-              WRITE( stdout,*) ' internal stress tensor:'
-              WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
-           endif
+           call ions_thermal_stress( thstress, pmass, omega, h, rep(sm_k)%vels, nsp, na )
+           stress = stress + thstress
         endif
 
         !
@@ -1428,14 +1323,16 @@ subroutine smdmain( tau, fion_out, etot_out )
         DO sm_k=1,smpm 
 
            deviation(sm_k) = 0.d0
+           isa = 0
            DO is=1,nsp
               DO ia=1,na(is)
+                 isa = isa + 1
                  DO i=1,3
 
-                    deviation(sm_k) = deviation(sm_k) + (rep(sm_k)%fion(i,ia,is)* &
-                         &    iforce(i,ia,is))**2.d0   
+                    deviation(sm_k) = deviation(sm_k) + (rep(sm_k)%fion(i,isa)* &
+                         &    iforce(i,isa))**2.d0   
 
-                    workvec(i,ia,is) = rep(sm_k)%fion(i,ia,is)*iforce(i,ia,is)
+                    workvec(i,ia,is) = rep(sm_k)%fion(i,isa)*iforce(i,isa)
 
                  ENDDO
               ENDDO
@@ -1491,47 +1388,14 @@ subroutine smdmain( tau, fion_out, etot_out )
      !
      hgamma(:,:) = 0.d0
      if(thdyn) then
-        verl1=2./(1.+frich)
-        verl2=1.-verl1
-        verl3=dt2/(1.+frich)
-        !     
-        if (tnoseh) then
-           do j=1,3
-              do i=1,3
-                 hnew(i,j) = h(i,j) +                                  &
-                      &                 (h(i,j) - hold(i,j) + dt2/wmass*omega*           &
-                      &           (ainv(j,1)*stress(i,1) + ainv(j,2)*stress(i,2) +       &
-                      &            ainv(j,3)*stress(i,3) - ainv(j,i)*press) -            &
-                      &            dt2*vnhh(i,j)*velh(i,j))*iforceh(i,j)
-              enddo
-           enddo
-        else
-           do j=1,3
-              do i=1,3
-                 hnew(i,j) = h(i,j) + ((verl1-1.)*h(i,j)               &
-                      &                + verl2*hold(i,j)                                 &
-                      &                + verl3/wmass*omega                               &
-                      &                *(ainv(j,1)*stress(i,1)+ainv(j,2)*stress(i,2)     &
-                      &                + ainv(j,3)*stress(i,3)-ainv(j,i)*press))         &
-                      &                * iforceh(i,j)
-              enddo
-           enddo
-        endif
-        !
-        velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
-        !
-        do i=1,3
-           do j=1,3
-              do k=1,3
-                 do l=1,3
-                    do m=1,3
-                       hgamma(i,j)=hgamma(i,j)+ainv(i,l)*ainv(k,l)*    &
-                            &                       (velh(m,k)*h(m,j)+h(m,k)*velh(m,j))
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
+
+         call cell_move( hnew, h, hold, delt, omega, press, iforceh, stress, ainv, &
+                        frich, tnoseh, vnhh, velh )
+         !
+         velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
+         !
+         call cell_gamma( hgamma, ainv, h, velh )
+
      endif
      !
      !======================================================================
@@ -1540,67 +1404,10 @@ subroutine smdmain( tau, fion_out, etot_out )
 
         ION_REP_LOOP : DO sm_k=1,smpm  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !
 
-           !
-           !
-           !==== set friction ====
-           !
-           verl1=2./(1.+fricp)
-           verl2=1.-verl1
-           verl3=dt2/(1.+fricp)
-           !
-           if(tsdp) then
-              do is=1,nsp
-                 do ia=1,na(is)
-                    do i=1,3
-                       rep(sm_k)%tausp(i,ia,is) = rep(sm_k)%taus(i,ia,is) +           &
-                            &                    iforce(i,ia,is)*dt2by2/pmass(is)*                         &
-                            &        (ainv(i,1)*rep(sm_k)%fion(1,ia,is)+ainv(i,2)*rep(sm_k)%fion(2,ia,is)+ &
-                            &         ainv(i,3)*rep(sm_k)%fion(3,ia,is) ) -                                &
-                            &                    pmass(is)*(hgamma(i,1)*rep(sm_k)%vels(1,ia,is)+           &
-                            &         hgamma(i,2)*rep(sm_k)%vels(2,ia,is)+hgamma(i,3)*rep(sm_k)%vels(3,ia,is))
-                    end do
-                 end do
-              end do
-           else if (tnosep) then
-              do is=1,nsp
-                 do ia=1,na(is)
-                    do i=1,3
-                       rep(sm_k)%fionm(i,ia,is)= (ainv(i,1)*rep(sm_k)%fion(1,ia,is)  &
-                            &                                          +ainv(i,2)*rep(sm_k)%fion(2,ia,is)  &
-                            &                                          +ainv(i,3)*rep(sm_k)%fion(3,ia,is)) &
-                            &                              - vnhp(sm_k)*rep(sm_k)%vels(i,ia,is)*pmass(is)        &
-                            &                    - pmass(is)*(hgamma(i,1)*rep(sm_k)%vels(1,ia,is)          &
-                            &                                +hgamma(i,2)*rep(sm_k)%vels(2,ia,is)          &
-                            &                                +hgamma(i,3)*rep(sm_k)%vels(3,ia,is))
-                       rep(sm_k)%tausp(i,ia,is)=-rep(sm_k)%tausm(i,ia,is)+2.*rep(sm_k)%taus(i,ia,is)+   &
-                            &                   iforce(i,ia,is)*dt2*rep(sm_k)%fionm(i,ia,is)/pmass(is)
-                       velsp(i,ia,is) = rep(sm_k)%velsm(i,ia,is) +                  &
-                            &                    twodel*rep(sm_k)%fionm(i,ia,is)/pmass(is)
-                    end do
-                 end do
-              end do
-           else 
-              do is=1,nsp
-                 do ia=1,na(is)
-                    do i=1,3
-                       rep(sm_k)%tausp(i,ia,is) = verl1*rep(sm_k)%taus(i,ia,is)     &
-                            &                    + verl2*rep(sm_k)%tausm(i,ia,is)                        &
-                            &        + verl3/pmass(is)*iforce(i,ia,is) * (ainv(i,1)*rep(sm_k)%fion(1,ia,is)&
-                            &        + ainv(i,2)*rep(sm_k)%fion(2,ia,is) + ainv(i,3)*rep(sm_k)%fion(3,ia,is))      &
-                            &        - verl3*iforce(i,ia,is) * (hgamma(i,1)*rep(sm_k)%vels(1,ia,is)      &
-                            &        + hgamma(i,2)*rep(sm_k)%vels(2,ia,is) + hgamma(i,3)*rep(sm_k)%vels(3,ia,is))
-                       !
-                       !
-                       velsp(i,ia,is)=rep(sm_k)%velsm(i,ia,is)                      &
-                            &        - 4.*fricp*rep(sm_k)%vels(i,ia,is)                                  &
-                            &        + twodel/pmass(is)*iforce(i,ia,is)*(ainv(i,1)*rep(sm_k)%fion(1,ia,is) &
-                            &        + ainv(i,2)*rep(sm_k)%fion(2,ia,is) + ainv(i,3)*rep(sm_k)%fion(3,ia,is))      &
-                            &        - twodel*iforce(i,ia,is) * (hgamma(i,1)*rep(sm_k)%vels(1,ia,is)     &
-                            &        + hgamma(i,2)*rep(sm_k)%vels(2,ia,is) + hgamma(i,3)*rep(sm_k)%vels(3,ia,is))
-                    end do
-                 end do
-              end do
-           endif
+
+           CALL ions_move( rep(sm_k)%tausp, rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, rep(sm_k)%fion, &
+             ainv, delt, na, nsp, fricp, hgamma, rep(sm_k)%vels, tsdp, tnosep, rep(sm_k)%fionm, vnhp(sm_k), velsp, &
+             rep(sm_k)%velsm )
 
            !
            !cc   call cofmass(velsp,rep(sm_k)%cdmvel)
@@ -1618,14 +1425,7 @@ subroutine smdmain( tau, fion_out, etot_out )
            !
            !  ... taup is obtained from tausp ...
            !
-           do is=1,nsp
-              do ia=1,na(is)
-                 do i=1,3
-                    rep(sm_k)%taup(i,ia,is) = hnew(i,1)*rep(sm_k)%tausp(1,ia,is)+         &
-                         &                 hnew(i,2)*rep(sm_k)%tausp(2,ia,is)+hnew(i,3)*rep(sm_k)%tausp(3,ia,is)
-                 enddo
-              enddo
-           enddo
+           CALL  s_to_r( rep(sm_k)%tausp, rep(sm_k)%taup, na, nsp, hnew )
 
         ENDDO ION_REP_LOOP             ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
 
@@ -1661,7 +1461,7 @@ subroutine smdmain( tau, fion_out, etot_out )
      !     
 
      DO sm_k=1,smpm 
-        call r_to_s(rep(sm_k)%taup,rep(sm_k)%tausp)
+        call r_to_s(rep(sm_k)%taup,rep(sm_k)%tausp, na, nsp, ainv)
      ENDDO
 
      !
@@ -1723,13 +1523,7 @@ subroutine smdmain( tau, fion_out, etot_out )
         !                   correction to displacement of ions
         !---------------------------------------------------------------------------
         !
-        if(iprsta.ge.3) then
-           nnn=min(12,n)
-           do i=1,nnn
-              WRITE( stdout,*)' main lambda  = ',(rep_el(sm_k)%lambda(i,k),k=1,nnn)
-           end do
-           WRITE( stdout,*)
-        endif
+        if(iprsta.ge.3) CALL print_lambda( rep_el(sm_k)%lambda, n, 9, 1.0d0 )
         !
         if(tortho) call updatc(ccc(sm_k),rep_el(sm_k)%lambda,rep_el(sm_k)%phi,bephi, &
              & becp,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
@@ -1749,71 +1543,19 @@ subroutine smdmain( tau, fion_out, etot_out )
         !     ionic kinetic energy 
         !
         if( tfor ) then
-           do is=1,nsp
-              do ia=1,na(is)
-                 do i=1,3
-                    rep(sm_k)%vels(i,ia,is)=(rep(sm_k)%tausp(i,ia,is)-rep(sm_k)%tausm(i,ia,is))/twodel
-                 enddo
-                 do i=1,3
-                    do j=1,3
-                       do ii=1,3
-                          ekinp(sm_k)=ekinp(sm_k)+pmass(is)*                          &
-                               &                       hold(j,i)*rep(sm_k)%vels(i,ia,is)*                   &
-                               &                       hold(j,ii)*rep(sm_k)%vels(ii,ia,is)
-                       end do
-                    end do
-                 end do
-              end do
-           end do
+         CALL ions_vel( rep(sm_k)%vels, rep(sm_k)%tausp, rep(sm_k)%tausm, na, nsp, delt )
+         CALL ions_kinene( ekinp(sm_k), rep(sm_k)%vels, na, nsp, hold, pmass )
         endif
-        ekinp(sm_k)=0.5*ekinp(sm_k)
         !
         !     ionic temperature
         !
-        call cofmass(rep(sm_k)%vels,rep(sm_k)%cdmvel)
-        !
         if( tfor ) then
-           do i=1,3
-              do j=1,3
-                 do ii=1,3
-                    do is=1,nsp
-                       do ia=1,na(is)
-
-                          !
-                          !    Velocity is readjusted for cdmvel ..
-                          !
-                          ekinpr(sm_k)=ekinpr(sm_k)+pmass(is)*hold(j,i)*              &
-                               &                       (rep(sm_k)%vels(i,ia,is)-rep(sm_k)%cdmvel(i))*         &
-                               &                       hold(j,ii)*(rep(sm_k)%vels(ii,ia,is)-rep(sm_k)%cdmvel(ii))
-                          !
-                          !
-                       end do
-                    end do
-                 end do
-              end do
-           end do
+          CALL ions_temp( tempp(sm_k), temps, ekinpr(sm_k), rep(sm_k)%vels, na, nsp, hold, pmass )
         endif
-        ekinpr(sm_k)=0.5*ekinpr(sm_k)
-        tempp(sm_k)=ekinpr(sm_k)*factem/(1.5d0*nat)
         !
         !     fake electronic kinetic energy
         !
-        ekinc0(sm_k) = 0.0d0
-
-        ALLOCATE( emainv( ngw ) )
-
-        emainv = 1.0d0 / ema0bg
-        ftmp = 1.0d0
-        if( ng0 == 2 ) ftmp = 0.5d0
-
-        do i=1,n
-           ekinc0(sm_k) = ekinc0(sm_k) + 2.0d0 * &
-                wave_speed2( rep_el(sm_k)%cm(:,i), rep_el(sm_k)%c0(:,i), emainv, ftmp )
-        end do
-
-        CALL mp_sum( ekinc0(sm_k) )
-
-        ekinc0(sm_k) = ekinc0(sm_k) * emass / dt2
+        call elec_fakekine2( ekinc0(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, n, delt )
 
         !     ... previous ekinc
         !
@@ -1821,19 +1563,13 @@ subroutine smdmain( tau, fion_out, etot_out )
 
         ekinc(sm_k) = 0.5 * ( ekinc0(sm_k) + ekincm(sm_k) )
 
-        DEALLOCATE( emainv )
         !
         !
         !     fake cell-parameters kinetic energy
         !
         ekinh=0.
         if(thdyn) then
-           do j=1,3 
-              do i=1,3
-                 ekinh=ekinh+0.5*wmass*velh(i,j)*velh(i,j)
-                 temphh(i,j)=factem*wmass*velh(i,j)*velh(i,j)
-              end do
-           end do
+          call cell_kinene( ekinh, temphh, velh )
         endif
         if(thdiag) then
            temphc=2.*factem*ekinh/3.
@@ -1844,61 +1580,21 @@ subroutine smdmain( tau, fion_out, etot_out )
         !     udating nose-hoover friction variables
         !
         if(tnosep)then
-           xnhpp(sm_k)=2.*xnhp0(sm_k)-xnhpm(sm_k)+2.*(dt2/qnp)*(ekinpr(sm_k)-gkbt/2.)
-           vnhp(sm_k) =(xnhpp(sm_k)-xnhpm(sm_k))/twodel
+           CALL ions_noseupd( xnhpp(sm_k), xnhp0(sm_k), xnhpm(sm_k), delt, qnp, ekinpr(sm_k), gkbt, vnhp(sm_k) )
         endif
         if(tnosee)then
-           xnhep(sm_k)=2.*xnhe0(sm_k)-xnhem(sm_k)+2.*(dt2/qne)*(ekinc(sm_k)-ekincw)
-           vnhe(sm_k) =(xnhep(sm_k)-xnhem(sm_k))/twodel
+           call elec_noseupd( xnhep(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, qne, ekinc(sm_k), ekincw, vnhe(sm_k) )
         endif
         if(tnoseh)then
-           do j=1,3
-              do i=1,3
-                 xnhhp(i,j)=2.*xnhh0(i,j)-xnhhm(i,j)+                     &
-                      &              (dt2/qnh)/factem*(temphh(i,j)-temph)
-                 vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/twodel
-              end do
-           end do
+           call cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
         endif
         !
         ! warning! thdyn and tcp/tcap are not compatible yet!!!
         !
         if(tcp.or.tcap.and.tfor.and.(.not.thdyn)) then
            if(tempp(sm_k).gt.temp1.or.tempp(sm_k).lt.temp2.and.tempp(sm_k).ne.0.d0) then
-              if(.not.tcap) then
-                 alfap=.5d0*sqrt(tempw/tempp(sm_k))
-                 do is=1,nsp
-                    do ia=1,na(is)
-                       do i=1,3
-                          rep(sm_k)%taup(i,ia,is) = rep(sm_k)%tau0(i,ia,is) +                 &
-                               &                       alfap*(rep(sm_k)%taup(i,ia,is)-rep(sm_k)%taum(i,ia,is)) +      &
-                               &                      dt2by2/pmass(is)*rep(sm_k)%fion(i,ia,is)*iforce(i,ia,is)
-                       end do
-                    end do
-                 end do
-              else
-                 do i=1,3
-                    qr(i)=0.d0
-                    do is=1,nsp
-                       do ia=1,na(is)
-                          alfar=gausp/sqrt(pmass(is))*cos(2.d0*pi*randy())&
-                               &                       *sqrt(-2.d0*log(randy()))
-                          rep(sm_k)%taup(i,ia,is)=alfar
-                          qr(i)=qr(i)+alfar
-                       end do
-                    end do
-                    qr(i)=qr(i)/nat
-                 end do
-                 do is=1,nsp
-                    do ia=1,na(is)
-                       do i=1,3
-                          alfar=rep(sm_k)%taup(i,ia,is)-qr(i)
-                          rep(sm_k)%taup(i,ia,is)=rep(sm_k)%tau0(i,ia,is)+iforce(i,ia,is)*     &
-                               &                             (alfar+dt2by2/pmass(is)*rep(sm_k)%fion(i,ia,is))
-                       end do
-                    end do
-                 end do
-              end if
+             call  ions_vrescal( tcap, tempw, tempp(sm_k), rep(sm_k)%taup, rep(sm_k)%tau0, rep(sm_k)%taum, &
+               na, nsp, rep(sm_k)%fion, iforce, pmass, delt )
            end if
         end if
         !
@@ -1996,12 +1692,12 @@ subroutine smdmain( tau, fion_out, etot_out )
               IF(tlast .OR. (mod(nfi,codfreq) == 0)) THEN
                  write(unico,*) "== COORD ==  rep : ", sm_k
                  write(unico,3340) ((h(i,j),i=1,3),j=1,3)
-                 write(unico,'(3f12.8)') (((rep(sm_k)%tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+                 write(unico,'(3f12.8)') ((rep(sm_k)%tau0(i,ia),i=1,3),ia=1,SUM(na(1:nsp)))
               ENDIF
               !
               IF(tlast .OR. (mod(nfi,forfreq) == 0)) THEN
                  write(unifo,*) "== FORCE ==  rep : ", sm_k
-                 write(unifo,'(3f12.8)') (((rep(sm_k)%fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+                 write(unifo,'(3f12.8)') ((rep(sm_k)%fion(i,ia),i=1,3),ia=1,SUM(na(1:nsp)))
               ENDIF
               !
               IF(tlast) THEN
@@ -2020,18 +1716,12 @@ subroutine smdmain( tau, fion_out, etot_out )
            !
            !     new variables for next step
            !
-           do is=1,nsp
-              do ia=1,na(is)
-                 do i=1,3
-                    rep(sm_k)%tausm(i,ia,is)=rep(sm_k)%taus(i,ia,is)
-                    rep(sm_k)%taus(i,ia,is)=rep(sm_k)%tausp(i,ia,is)
-                    rep(sm_k)%taum(i,ia,is)=rep(sm_k)%tau0(i,ia,is)
-                    rep(sm_k)%tau0(i,ia,is)=rep(sm_k)%taup(i,ia,is)
-                    rep(sm_k)%velsm(i,ia,is)=rep(sm_k)%vels(i,ia,is)
-                    rep(sm_k)%vels(i,ia,is)=velsp(i,ia,is)
-                 end do
-              end do
-           end do
+           rep(sm_k)%tausm=rep(sm_k)%taus
+           rep(sm_k)%taus=rep(sm_k)%tausp
+           rep(sm_k)%taum=rep(sm_k)%tau0
+           rep(sm_k)%tau0=rep(sm_k)%taup
+           rep(sm_k)%velsm = rep(sm_k)%vels
+           rep(sm_k)%vels  = velsp
            if(tnosep) then
               xnhpm(sm_k) = xnhp0(sm_k)
               xnhp0(sm_k) = xnhpp(sm_k)
@@ -2067,9 +1757,9 @@ subroutine smdmain( tau, fion_out, etot_out )
         !
         IF(sm_k == smpm) tfirst=.false.
         !
-        !     write on file ndw each iprint
+        !     write on file ndw each isave
         !
-        if( ( mod( nfi, iprint ) == 0 ) .and. ( nfi < nomore ) ) then
+        if( ( mod( nfi, isave ) == 0 ) .and. ( nfi < nomore ) ) then
 
            call writefile_new                                                    &
                 &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
@@ -2077,7 +1767,7 @@ subroutine smdmain( tau, fion_out, etot_out )
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
                 &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
                 &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,         &
-                &       rep(sm_k)%fion)
+                &       rep(sm_k)%fion, tps)
 
         endif
         !
@@ -2174,18 +1864,18 @@ subroutine smdmain( tau, fion_out, etot_out )
      do ia = 1, na(is)
         isa = isa + 1
         ipos = ind_srt( isa )
-        tau( 1, ipos , 0 ) = rep(0)%tau0( 1, ia, is )
-        tau( 2, ipos , 0 ) = rep(0)%tau0( 2, ia, is )
-        tau( 3, ipos , 0 ) = rep(0)%tau0( 3, ia, is )
-        tau( 1, ipos , sm_p) = rep(sm_p)%tau0( 1, ia, is )
-        tau( 2, ipos , sm_p) = rep(sm_p)%tau0( 2, ia, is )
-        tau( 3, ipos , sm_p) = rep(sm_p)%tau0( 3, ia, is )
-        fion_out( 1, ipos, 0 ) = rep(0)%fion( 1, ia, is )
-        fion_out( 2, ipos, 0 ) = rep(0)%fion( 2, ia, is )
-        fion_out( 3, ipos, 0 ) = rep(0)%fion( 3, ia, is )
-        fion_out( 1, ipos, sm_p ) = rep(sm_p)%fion( 1, ia, is )
-        fion_out( 2, ipos, sm_p ) = rep(sm_p)%fion( 2, ia, is )
-        fion_out( 3, ipos, sm_p ) = rep(sm_p)%fion( 3, ia, is )
+        tau( 1, ipos , 0 ) = rep(0)%tau0( 1, isa )
+        tau( 2, ipos , 0 ) = rep(0)%tau0( 2, isa )
+        tau( 3, ipos , 0 ) = rep(0)%tau0( 3, isa )
+        tau( 1, ipos , sm_p) = rep(sm_p)%tau0( 1, isa )
+        tau( 2, ipos , sm_p) = rep(sm_p)%tau0( 2, isa )
+        tau( 3, ipos , sm_p) = rep(sm_p)%tau0( 3, isa )
+        fion_out( 1, ipos, 0 ) = rep(0)%fion( 1, isa )
+        fion_out( 2, ipos, 0 ) = rep(0)%fion( 2, isa )
+        fion_out( 3, ipos, 0 ) = rep(0)%fion( 3, isa )
+        fion_out( 1, ipos, sm_p ) = rep(sm_p)%fion( 1, isa )
+        fion_out( 2, ipos, sm_p ) = rep(sm_p)%fion( 2, isa )
+        fion_out( 3, ipos, sm_p ) = rep(sm_p)%fion( 3, isa )
      end do
   end do
 
@@ -2206,15 +1896,12 @@ subroutine smdmain( tau, fion_out, etot_out )
         do ia = 1, na(is)
            isa = isa + 1
            ipos = ind_srt( isa )
-           tau( 1, ipos , sm_k) = rep(sm_k)%tau0( 1, ia, is )
-           tau( 2, ipos , sm_k) = rep(sm_k)%tau0( 2, ia, is )
-           tau( 3, ipos , sm_k) = rep(sm_k)%tau0( 3, ia, is )
-           ! ftmp = ainv(1,1)*fion(1,ia,is)+ainv(1,2)*fion(2,ia,is)+ainv(1,3)*fion(3,ia,is)
-           fion_out( 1, ipos, sm_k ) = rep(sm_k)%fion( 1, ia, is )
-           ! ftmp = ainv(2,1)*fion(1,ia,is)+ainv(2,2)*fion(2,ia,is)+ainv(2,3)*fion(3,ia,is)
-           fion_out( 2, ipos, sm_k ) = rep(sm_k)%fion( 2, ia, is )
-           ! ftmp = ainv(3,1)*fion(1,ia,is)+ainv(3,2)*fion(2,ia,is)+ainv(3,3)*fion(3,ia,is)
-           fion_out( 3, ipos, sm_k ) = rep(sm_k)%fion( 3, ia, is )
+           tau( 1, ipos , sm_k) = rep(sm_k)%tau0( 1, isa )
+           tau( 2, ipos , sm_k) = rep(sm_k)%tau0( 2, isa )
+           tau( 3, ipos , sm_k) = rep(sm_k)%tau0( 3, isa )
+           fion_out( 1, ipos, sm_k ) = rep(sm_k)%fion( 1, isa )
+           fion_out( 2, ipos, sm_k ) = rep(sm_k)%fion( 2, isa )
+           fion_out( 3, ipos, sm_k ) = rep(sm_k)%fion( 3, isa )
         end do
      end do
 
@@ -2278,20 +1965,12 @@ subroutine smdmain( tau, fion_out, etot_out )
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
           &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
           &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,         &
-          &       rep(sm_k)%fion)
+          &       rep(sm_k)%fion, tps)
 
      !
      !
      !
-     if(iprsta.gt.1) then
-        if(ionode) WRITE( sm_file,*)
-        if(ionode) WRITE( sm_file,3370)'    lambda   n = ',n
-        do i=1,n
-           if(ionode) WRITE( sm_file,3380) (rep_el(sm_k)%lambda(i,j),j=1,n)
-        end do
-3370    format(26x,a,i4)
-3380    format(9f8.4)      
-     endif
+     if(iprsta.gt.1) CALL print_lambda( rep_el(sm_k)%lambda, n, n, 1.0d0, iunit = sm_file )
      !
      if( tfor .or. tprnfor ) then
         if(ionode) WRITE( sm_file,1970) ibrav, alat
@@ -2300,17 +1979,21 @@ subroutine smdmain( tau, fion_out, etot_out )
            if(ionode) WRITE( sm_file,1972) (h(i,j),j=1,3)
         enddo
         if(ionode) WRITE( sm_file,1973)
+        isa = 0
         do is=1,nsp
            do ia=1,na(is)
-              if(ionode) WRITE( sm_file,1974) is,ia,(rep(sm_k)%tau0(i,ia,is),i=1,3),       &
-                   &            ((ainv(j,1)*rep(sm_k)%fion(1,ia,is)+ainv(j,2)*rep(sm_k)%fion(2,ia,is)+    &
-                   &              ainv(j,3)*rep(sm_k)%fion(3,ia,is)),j=1,3)
+              isa = isa + 1
+              if(ionode) WRITE( sm_file,1974) is,ia,(rep(sm_k)%tau0(i,isa),i=1,3),       &
+                   &            ((ainv(j,1)*rep(sm_k)%fion(1,isa)+ainv(j,2)*rep(sm_k)%fion(2,isa)+    &
+                   &              ainv(j,3)*rep(sm_k)%fion(3,isa)),j=1,3)
            end do
         end do
         if(ionode) WRITE( sm_file,1975)
+        isa = 0
         do is=1,nsp
            do ia=1,na(is)
-              if(ionode) WRITE( sm_file,1976) is,ia,(rep(sm_k)%taus(i,ia,is),i=1,3)
+              isa = isa + 1
+              if(ionode) WRITE( sm_file,1976) is,ia,(rep(sm_k)%taus(i,isa),i=1,3)
            end do
         end do
      endif

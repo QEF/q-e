@@ -29,19 +29,6 @@ contains
   end subroutine
 end module core
 
-module cvan
-  !     ionic pseudo-potential variables
-  use parameters, only: nsx
-  implicit none
-  save
-  integer nvb, ish(nsx), ipp(nsx)
-  !     nvb    = number of species with Vanderbilt PPs
-  !     ipp(is)= pseudopotential type - to be removed
-  !     ish(is)= used for indexing the nonlocal projectors betae
-  !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
-  !              where "is" is the species and iv=1,nh(is)
-end module cvan
-
 module elct
   use electrons_base, only: nspin, nel, nupdwn, iupdwn
   use electrons_base, only: n => nbnd, nx => nbndx
@@ -77,7 +64,7 @@ module gvec
   use reciprocal_vectors, only: &
         gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
   use reciprocal_vectors, only: deallocate_recvecs
-  use recvecs_indexes, only: np, nm, in1p, in2p, in3p, deallocate_recvecs_indexes
+  use recvecs_indexes, only: np, nm, deallocate_recvecs_indexes
   use gvecp, only: &
         ng => ngm, &
         ngl => ngml, &
@@ -103,7 +90,7 @@ module gvec
   !
   !     np      = fft index for G>
   !     nm      = fft index for G<
-  !     in1p,in2p,in3p = G components in crystal axis
+  !     mill_l  = G components in crystal axis
   !
   implicit none
   save
@@ -141,20 +128,6 @@ end module gvec
 !  qfcoef   coefficients to pseudize qfunc for different total
 !              angular momentum (for r<rinner)
 !  vloc_at  local potential for each atom
-
-module qrl_mod
-
-  use parameters, only: nsx, ndmx, nbrx, lqmax
-  implicit none
-  save
-!
-! qrl       q(r) functions (old format)
-! cmesh     used only for Herman-Skillman mesh (old format)
-!
-  real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
-  real(kind=8) :: cmesh(nsx)
-
-end module qrl_mod
 
 module pseu
   implicit none

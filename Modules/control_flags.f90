@@ -61,6 +61,7 @@
 
         PUBLIC :: twfcollect
         
+        PUBLIC :: tuspp
 
 
 ! ...   declare execution control variables
@@ -98,6 +99,7 @@
         LOGICAL :: tatomicwfc= .FALSE.  ! Use atomic wavefunctions as starting guess for ch. density
         LOGICAL :: tscreen   = .FALSE.  ! Use screened coulomb potentials for cluster calculations
         LOGICAL :: twfcollect = .FALSE. ! Collect wave function in the restart file at the end of run.
+        LOGICAL :: tuspp = .FALSE.      ! Ultra-soft pseudopotential are being used
 
 ! ...   Force pairing
         LOGICAL :: force_pairing

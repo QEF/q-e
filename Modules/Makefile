@@ -13,6 +13,7 @@ clocks.o \
 constants.o \
 control_flags.o \
 cp_emass.o \
+cp_fpmd.o \
 descriptors.o \
 electrons_base.o \
 energies.o \
@@ -43,6 +44,7 @@ parser.o \
 pseudodata.o \
 pseudo_types.o \
 ptoolkit.o \
+printout_base.o \
 read_cards.o \
 read_namelists.o \
 readpseudo.o \

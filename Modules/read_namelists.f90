@@ -139,7 +139,6 @@ MODULE read_namelists_module
        occupations = 'fixed'
        smearing = 'gaussian'
        degauss = 0.D0
-       ngauss  = 0
        nelup = 0.D0
        neldw = 0.D0
        nspin = 1
@@ -557,7 +556,6 @@ MODULE read_namelists_module
        CALL mp_bcast( occupations, ionode_id  )    ! not used in fpmd
        CALL mp_bcast( smearing, ionode_id  )       ! not used in fpmd
        CALL mp_bcast( degauss, ionode_id  )        ! not used in fpmd
-       CALL mp_bcast( ngauss, ionode_id )          ! not used in fpmd
        CALL mp_bcast( nelup, ionode_id )
        CALL mp_bcast( neldw, ionode_id )
        CALL mp_bcast( nspin, ionode_id )
@@ -994,8 +992,6 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' nr3b is not used in FPMD ', nr3b)
           IF( degauss /= 0.0d0 ) &
              CALL infomsg( sub_name ,' degauss is not used in FPMD ',-1)
-          IF( ngauss /= 0 ) &
-             CALL infomsg( sub_name ,' ngauss is not used in FPMD ',-1)
        END IF
        !
        IF( nelup < 0.d0 .OR. nelup > nelec ) &

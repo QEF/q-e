@@ -345,12 +345,9 @@ MODULE input_parameters
           !               ( see card 'OCCUPATIONS' )
 
         CHARACTER(LEN=80) :: smearing = 'gaussian'
+          ! smearing = 'gaussian', 'methfessel-paxton', 'marzari-vanderbilt', 'fermi-dirac'
 
         REAL(dbl) :: degauss = 0.0d0
-          ! parameter for the smearing functions
-          ! NOT used in FPMD-N
-
-        INTEGER :: ngauss = 0
           ! parameter for the smearing functions
           ! NOT used in FPMD-N
 
@@ -475,7 +472,7 @@ MODULE input_parameters
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat,&
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
              nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
-             occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
+             occupations, degauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
              U_projection_type, noncolin, &

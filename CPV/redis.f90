@@ -29,7 +29,7 @@ SUBROUTINE REDIS(state)
   IMPLICIT NONE
 
   integer :: a,i,is,ia,sm_k,smpm
-  integer :: info,md
+  integer :: info,md,isa
 
   type(ptr) :: state(0:sm_p)
 
@@ -55,10 +55,12 @@ SUBROUTINE REDIS(state)
 
      dis(sm_k) = 0.d0
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
-              dis(sm_k) = dis(sm_k) + (state(sm_k)%d3(i,ia,is)-state(sm_k-1)%d3(i,ia,is))**2.d0
+              dis(sm_k) = dis(sm_k) + (state(sm_k)%d3(i,isa)-state(sm_k-1)%d3(i,isa))**2.d0
            ENDDO
         ENDDO
      ENDDO
@@ -128,11 +130,13 @@ SUBROUTINE REDIS(state)
 
      a = 1
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              t_state(a,sm_k) = state(sm_k)%d3(i,ia,is)
+              t_state(a,sm_k) = state(sm_k)%d3(i,isa)
 
               a = a+1
 
@@ -156,11 +160,13 @@ SUBROUTINE REDIS(state)
 
      a = 1
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              state(sm_k)%d3(i,ia,is) = state_out(a,sm_k)
+              state(sm_k)%d3(i,isa) = state_out(a,sm_k)
 
               a = a+1
 

@@ -101,17 +101,19 @@ contains
 
   subroutine ef_force( fion, na, nsp, zv )
     implicit none
-    real(kind=8) :: fion( :, :, : ), zv(:)
+    real(kind=8) :: fion( :, : ), zv(:)
     integer :: na(:), nsp
-    integer :: is, ia
+    integer :: is, ia, isa
     !  Electric Feild for ions here
     !                         - M.S
      if(efield) then
+        isa = 0
         do is=1,nsp
            do ia=1,na(is)
-               fion(1,ia,is)=fion(1,ia,is)+efx*zv(is)
-               fion(2,ia,is)=fion(2,ia,is)+efy*zv(is)
-               fion(3,ia,is)=fion(3,ia,is)+efz*zv(is)
+               isa = isa + 1
+               fion(1,isa)=fion(1,isa)+efx*zv(is)
+               fion(2,isa)=fion(2,isa)+efy*zv(is)
+               fion(3,isa)=fion(3,isa)+efz*zv(is)
            end do
         end do
       end if
@@ -364,7 +366,7 @@ SUBROUTINE get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, i
   real(kind=8) :: bec(:,:), becdr(:,:,:)
   complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
   integer :: irb(:,:,:)
-  real(kind=8) :: taub(:,:,:)
+  real(kind=8) :: taub(:,:)
   integer :: ibrav
   real(kind=8) :: b1(:), b2(:), b3(:)
   !--------------------------------------------------------------------------
@@ -388,7 +390,7 @@ SUBROUTINE ef_tune( rhog, tau0 )
   use wannier_module, only: rhogdum
   IMPLICIT NONE
   complex(kind=8) :: rhog(:,:)
-  real(kind=8) :: tau0(:,:,:)
+  real(kind=8) :: tau0(:,:)
 !-------------------------------------------------------------------
 !     Tune the Electric field               - M.S
 !-------------------------------------------------------------------
@@ -435,7 +437,7 @@ SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, i
   real(kind=8) :: rhovan(:,:,:)
   complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
   integer :: irb(:,:,:)
-  real(kind=8) :: taub(:,:,:)
+  real(kind=8) :: taub(:,:)
   integer :: ibrav
   real(kind=8) :: b1(:), b2(:), b3(:)
   complex(kind=8) :: rhog(:,:)
@@ -632,8 +634,8 @@ SUBROUTINE ef_enthalpy( enthal, tau0 )
 
   IMPLICIT NONE
 
-  real(kind=8) :: enthal, tau0(:,:,:)
-  integer :: i, is, ia
+  real(kind=8) :: enthal, tau0(:,:)
+  integer :: i, is, ia, isa
 
   if(efield) then
     !  Electronic Contribution First
@@ -656,11 +658,13 @@ SUBROUTINE ef_enthalpy( enthal, tau0 )
     iony=0.d0
     ionz=0.d0
     efe_ion=0.d0
+    isa = 0
     do is=1,nsp
       do ia=1,na(is)
-        tt(1)=tau0(1,ia,is)
-        tt(2)=tau0(2,ia,is)
-        tt(3)=tau0(3,ia,is)
+        isa = isa + 1
+        tt(1)=tau0(1,isa)
+        tt(2)=tau0(2,isa)
+        tt(3)=tau0(3,isa)
         call pbc(tt,a1,a2,a3,ainv,tt)
         ionx=ionx+zv(is)*tt(1)
         iony=iony+zv(is)*tt(2)
@@ -681,7 +685,7 @@ END SUBROUTINE
 SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
            ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
            xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
-           ecut, ecutw, delt, celldm, fion )
+           ecut, ecutw, delt, celldm, fion, tps )
 
   use efcalc, only: efield
   use wfparm, only: nwf, calwf, jwf, wffort, iplot, iwf
@@ -704,17 +708,17 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
   real(kind=8) :: bec(:,:), becdr(:,:,:)
   complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
   integer :: irb(:,:,:)
-  real(kind=8) :: taub(:,:,:)
+  real(kind=8) :: taub(:,:)
   integer :: ibrav
   real(kind=8) :: b1(:), b2(:), b3(:)
-  real(kind=8) :: taus(:,:,:), tausm(:,:,:), vels(:,:,:), velsm(:,:,:)
+  real(kind=8) :: taus(:,:), tausm(:,:), vels(:,:), velsm(:,:)
   real(kind=8) :: acc(:)
   real(kind=8) :: lambda(:,:), lambdam(:,:)
   real(kind=8) :: xnhe0, xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm
   real(kind=8) :: velh(:,:)
   real(kind=8) :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
   real(kind=8) :: ecut, ecutw, delt, celldm(:)
-  real(kind=8) :: fion(:,:,:)
+  real(kind=8) :: fion(:,:), tps
 
 !=============================================================
 ! More Wannier Function Options
@@ -732,7 +736,7 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
 
     call writefile_new( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,   &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps)
 
 
     write(6,*) 'Wannier Functions Written to unit',ndw

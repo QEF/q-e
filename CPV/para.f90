@@ -154,7 +154,6 @@ end module para_mod
       return
       end
 
-#if defined __PARA
 
 !
 !----------------------------------------------------------------------
@@ -193,11 +192,13 @@ end module para_mod
 !
 ! distribute the charge density to the other nodes
 !
+#if defined __PARA
          call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         call mpi_scatterv(rhodist, sendcount, displs, MPI_REAL8,       &
-     &                     rhor(1,is),sendcount(me),   MPI_REAL8,       &
+         call mpi_scatterv(rhodist, sendcount, displs, MPI_DOUBLE_PRECISION,       &
+     &                     rhor(1,is),sendcount(me),   MPI_DOUBLE_PRECISION,       &
      &                     root, MPI_COMM_WORLD, ierr)
          if (ierr.ne.0) call errore('mpi_scatterv','ierr<>0',ierr)
+#endif
 !
 ! just in case: set to zero unread elements (if any)
 !
@@ -245,11 +246,14 @@ end module para_mod
 !
 ! gather the charge density on the first node
 !
+
+#if defined __PARA
          call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         call mpi_gatherv (rhor(1,is), recvcount(me), MPI_REAL8,        &
-     &                     rhodist,recvcount, displs, MPI_REAL8,        &
+         call mpi_gatherv (rhor(1,is), recvcount(me), MPI_DOUBLE_PRECISION,        &
+     &                     rhodist,recvcount, displs, MPI_DOUBLE_PRECISION,        &
      &                     root, MPI_COMM_WORLD, ierr)
          if (ierr.ne.0) call errore('mpi_gatherv','ierr<>0',ierr)
+#endif
 !
 ! write the charge density to unit "unit" from first node only
 !
@@ -267,6 +271,14 @@ end module para_mod
      &                        nr1, nr2, nr3, nr1s, nr2s, nr3s, nnr,     &
      &                        nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx,nnrs )
 !-----------------------------------------------------------------------
+!
+! Set the dimensions of fft arrays (for the scalar case).
+! These may differ from fft transform lenghts for computational
+! efficiency, thus avoiding or minimizing memory conflicts.
+! See machine-dependent function "good_fft_dimension".
+! fft arrays are effectively stored as one-dimensional arrays,
+! but their memory layout is the same as that of a 3d array
+! having dimensions (nr1x,nr2x,nr3x) and the like for smooth grid
 !
 ! distribute columns to processes for parallel fft
 ! based on code written by Stefano de Gironcoli for PWSCF
@@ -577,6 +589,7 @@ end module para_mod
 !
 !  syncronize processes
 !
+#if defined __PARA
       call mpi_barrier(MPI_COMM_WORLD,ierr)
       if (ierr.ne.0) call errore('reduce','error in barrier',ierr)
 !
@@ -584,7 +597,7 @@ end module para_mod
 !
       do n=1,nbuf
          call mpi_allreduce (ps(1+(n-1)*MAXB), buff, MAXB,              &
-     &        MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
+     &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
          if (ierr.ne.0)                                                 &
      &        call errore('reduce','error in allreduce1',ierr)
          call DCOPY(MAXB,buff,1,ps(1+(n-1)*MAXB),1)
@@ -594,18 +607,20 @@ end module para_mod
 !
       if (size-nbuf*MAXB.gt.0) then
           call mpi_allreduce (ps(1+nbuf*MAXB), buff, size-nbuf*MAXB,    &
-     &          MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
+     &          MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
           if (ierr.ne.0)                                                &
      &         call errore('reduce','error in allreduce2',ierr)
           call DCOPY(size-nbuf*MAXB,buff,1,ps(1+nbuf*MAXB),1)
       endif
+#endif
+
       call stop_clock( 'reduce' )
 !
       return
       end
 !
 !----------------------------------------------------------------------
-      subroutine nrbounds(ngw,nr1s,nr2s,nr3s,in1p,in2p,in3p,nmin,nmax)
+      subroutine nrbounds(ngw,nr1s,nr2s,nr3s,mill,nmin,nmax)
 !----------------------------------------------------------------------
 !
 ! find the bounds for (i,j,k) indexes of all wavefunction G-vectors
@@ -613,9 +628,10 @@ end module para_mod
 ! where g(1), g(2), g(3) are basis vectors of the reciprocal lattice
 !
       use parallel_include
+      use mp, only: mp_min, mp_max
       implicit none
 ! input
-      integer ngw,nr1s,nr2s,nr3s,in1p(ngw),in2p(ngw),in3p(ngw)
+      integer ngw,nr1s,nr2s,nr3s,mill(3,*)
 ! output
       integer nmin(3), nmax(3)
 ! local
@@ -630,24 +646,20 @@ end module para_mod
       nmax0(3)= -nr3s
 !
       do ig=1,ngw
-         nmin0(1) = min(nmin0(1),in1p(ig))
-         nmin0(2) = min(nmin0(2),in2p(ig))
-         nmin0(3) = min(nmin0(3),in3p(ig))
-         nmax0(1) = max(nmax0(1),in1p(ig))
-         nmax0(2) = max(nmax0(2),in2p(ig))
-         nmax0(3) = max(nmax0(3),in3p(ig))
+         nmin0(1) = min(nmin0(1),mill(1,ig))
+         nmin0(2) = min(nmin0(2),mill(2,ig))
+         nmin0(3) = min(nmin0(3),mill(3,ig))
+         nmax0(1) = max(nmax0(1),mill(1,ig))
+         nmax0(2) = max(nmax0(2),mill(2,ig))
+         nmax0(3) = max(nmax0(3),mill(3,ig))
       end do
 !
 ! find minima and maxima for the FFT box across all nodes
 !
-      call mpi_barrier( MPI_COMM_WORLD, ierr )
-      if (ierr.ne.0) call errore('nrbounds','mpi_barrier 1',ierr)
-      call mpi_allreduce (nmin0, nmin, 3, MPI_INTEGER, MPI_MIN,         &
-     &           MPI_COMM_WORLD, ierr)
-      if (ierr.ne.0) call errore('nrbounds','mpi_allreduce min',ierr)
-      call mpi_allreduce (nmax0, nmax, 3, MPI_INTEGER, MPI_MAX,         &
-     &           MPI_COMM_WORLD, ierr)
-      if (ierr.ne.0) call errore('nrbounds','mpi_allreduce max',ierr)
+      CALL mp_min( nmin0 )
+      CALL mp_max( nmax0 )
+      nmin = nmin0
+      nmax = nmax0
 
       return
       end subroutine nrbounds
@@ -689,11 +701,13 @@ end module para_mod
 !      do is=1,nspin
 !
 ! gather the charge density on the first node
+#if defined __PARA
          call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         call mpi_gatherv (rhos2, recvcount(me), MPI_REAL8,        &
-     &                     rhodist,recvcount, displs, MPI_REAL8,        &
+         call mpi_gatherv (rhos2, recvcount(me), MPI_DOUBLE_PRECISION,        &
+     &                     rhodist,recvcount, displs, MPI_DOUBLE_PRECISION,        &
      &                     root, MPI_COMM_WORLD, ierr)
          if (ierr.ne.0) call errore('mpi_gatherv','ierr<>0',ierr)
+#endif
 !
 ! write the charge density to unit "unit" from first node only
 !
@@ -703,7 +717,3 @@ end module para_mod
 !
       return
       end subroutine write_pot
-
-
-#endif
-

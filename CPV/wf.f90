@@ -41,7 +41,7 @@
 !  integer, intent(in) :: irb(3,nax,nsx),jw, ibrav
 !  integer :: irb(3,nax,nsx),jw, ibrav
   real(kind=8), intent(inout) :: bec(nhsa,n), becdr(nhsa,n,3)
-  real(kind=8), intent(in) :: b1(3),b2(3),b3(3),taub(3,nas,nsx)
+  real(kind=8), intent(in) :: b1(3),b2(3),b3(3),taub(3,nas)
   real(kind=8) :: becwf(nhsa,n) , becdrwf(nhsa,n), temp3(nhsa,n)
   complex(kind=8), intent(inout) :: c(ngw,nx)
   complex(kind=8), intent(in) :: eigr(ngw,nas,nsp),eigrb(ngb,nas,nsp)
@@ -1597,7 +1597,7 @@ end subroutine wf
  subroutine wfunc_init(clwf,b1,b2,b3,ibrav)
 !-----------------------------------------------------------------------
 
-   use gvec, only: gx, in1p, in2p, in3p
+   use gvec, only: gx, mill_l
    use gvecw, only : ngw, ng0
    use elct
    use wfparm
@@ -1645,9 +1645,9 @@ end subroutine wf
              gnx(1,i)=gx(i,1)
              gnx(2,i)=gx(i,2)
              gnx(3,i)=gx(i,3)
-        gnn(1,i)=in1p(i)
-        gnn(2,i)=in2p(i)
-        gnn(3,i)=in3p(i)
+        gnn(1,i)=mill_l(1,i)
+        gnn(2,i)=mill_l(2,i)
+        gnn(3,i)=mill_l(3,i)
    end do
 #ifdef __PARA
    ntot=0
@@ -2922,7 +2922,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !-----------------------------------------------------------------------
 
       use gvecp, only: ng=>ngm
-      use gvec, only: gx, in1p, in2p, in3p
+      use gvec, only: gx, mill_l
       use elct
 #ifdef __PARA 
       use para_mod
@@ -3085,7 +3085,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       complex(kind=8),allocatable :: bigrho(:)
       complex(kind=8) :: rhotmp_g(ng)
       complex(kind=8),parameter :: zero=(0.d0,0.d0), ci=(0.d0,1.d0)
-      integer ntot, i, j, ngz, l
+      integer ntot, i, j, ngz, l, isa
       integer ,allocatable :: g_red(:,:)
 #ifdef __PARA
       integer proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
@@ -3093,7 +3093,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 #endif
        real(kind=8) zlen,vtot, pos(3,nax,nsx), a_direct(3,3),a_trans(3,3), e_slp, e_int
        real(kind=8), intent(out) :: e_tuned(3)
-       real(kind=8), intent(in) :: tau0(3,nax,nsp)
+       real(kind=8), intent(in) :: tau0(3,nax)
        real(kind=8),allocatable :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)
        real(kind=8), allocatable:: cdion(:), cdel(:), v_line(:), dist(:)
        complex(kind=8),allocatable :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
@@ -3271,16 +3271,13 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !       e_tuned=0.d0
 !       return
 
-!       if(atom_unit.eq.1) pos(:,:,:)=tau0(:,:,:)
-!       if(atom_unit.eq.2) pos(:,:,:)=tau0(:,:,:)*0.529177d0
-!       if(atom_unit.eq.3) then
-!         do i=1,nsp
-!           do j=1,na(i)
-!               pos(:,j,i)=matmul(cmat(:,:),tau0(:,j,i))
-!           end do
-!         end do
-!       end if
-         pos=tau0
+       isa = 0
+       do i=1,nsp
+         do j=1,na(i)
+            isa = isa + 1
+            pos(:,j,i)=tau0(:,isa)
+         end do
+       end do
 
        !--- Construct the ionic Charge density in G-space
 
@@ -4002,7 +3999,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !
 ! nmin, nmax are the bounds on (i,j,k) indexes of wavefunction G-vectors
 !
-      call nrbounds(ngw,nr1s,nr2s,nr3s,in1p,in2p,in3p,nmin,nmax)
+      call nrbounds(ngw,nr1s,nr2s,nr3s,mill_l,nmin,nmax)
 !
 ! nzx is the maximum length of a column along z
 !

@@ -66,12 +66,12 @@ CONTAINS
 
 
 !-----------------------------------------------------------------------
-      subroutine iosys( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_                       &
+      subroutine iosys( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , isave_                    &
      & , delt_ , emass_ , emaec_  , tsde_ , frice_ , grease_ , twall_                        &
      & , tortho_ , eps_ , max_ , trane_ , ampre_ , tranp_ , amprp_                           &
      & , tfor_ , tsdp_ , fricp_ , greasp_ , tcp_ , tcap_ , tolp_ , trhor_ , trhow_ , tvlocw_ &
      & , tnosep_ , qnp_ , tempw_ , tnosee_ , qne_ , ekincw_                                &
-     & , tpre_ , thdyn_ , thdiag_ , twmass_ , wmass_ , frich_ , greash_ , press_           &
+     & , tpre_ , thdyn_ , thdiag_ , iforceh_ , wmass_ , frich_ , greash_ , press_           &
      & , tnoseh_ , qnh_ , temph_ , celldm_ , ibrav_ , tau0_ , ecutw_ , ecut_ , iforce_ &
      & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , f_ , nel_ , nspin_ , nupdwn_  &
      & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
@@ -88,7 +88,7 @@ CONTAINS
            nr1, nr2, nr3, greash, press, nr2s, nr3s, nr1s, tolp, temph, grease, &
            tempw, fnoseh, amprp, greasp, twall, tranp, atomic_positions, nelec, &
            if_pos, rd_ht, nelup, neldw, occupations, f_inp, pos, nr3b, pseudo_dir, &
-           nr1b, nr2b, sp_pos, atom_mass, atom_pfile, iprint, orthogonalization, &
+           nr1b, nr2b, sp_pos, atom_mass, atom_pfile, iprint, isave, orthogonalization, &
            electron_velocities, startingwfc, ndr, ndw, ion_dynamics, ion_damping, &
            cell_velocities, electron_dynamics, electron_damping, ion_velocities, &
            celldm, nbnd, nspin, calculation, ntyp, ibrav, restart_mode, ion_positions, &
@@ -104,14 +104,14 @@ CONTAINS
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
 
-      use constants, only: pi, scmass, factem, eps8
+      use constants, only: pi, scmass, factem, eps8, uma_au
       use parameters, only: nsx, natx, nbndxx
       use io_global, only: ionode, stdout
       use control_flags, only: taurdr, tprnfor_ => tprnfor
       use mp, only: mp_bcast
       USE control_flags, ONLY: tconvthrs, lneb, lsmd 
       USE check_stop, ONLY: check_stop_init
-       USE ions_base, ONLY: ions_base_init
+      USE ions_base, ONLY: ions_base_init
       !
       implicit none
       !
@@ -119,17 +119,19 @@ CONTAINS
       real(kind=8) :: ampre_ , delt_ , ekincw_ , emass_ , emaec_ , eps_ ,       &
      &       frice_ , fricp_ , frich_ , grease_ , greasp_ , greash_ ,        &
      &       press_ , qnp_ , qne_ , qnh_ , tempw_ , temph_ , tolp_ , wmass_ ,    &
-             amprp_ ( nsx ), celldm_ ( 6 ), tau0_ ( 3, natx, nsx ), ecut_ , ecutw_
+             amprp_ ( nsx ), celldm_ ( 6 ), tau0_ ( 3, natx ), ecut_ , ecutw_ 
 
-      integer :: nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , max_ , iforce_( 3, natx, nsx )
+      integer :: nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , max_ , iforce_( 3, natx )
+      integer :: isave_
 
       logical :: trane_ , tsde_ , twall_ , tortho_ , tnosee_ , tfor_ , tsdp_ , tcp_ , &
            tcap_ , tnosep_ , trhor_ , trhow_ , tvlocw_ , tpre_ , thdyn_ , thdiag_ ,   &
-           twmass_ , tnoseh_ , tranp_ ( nsx )
+           tnoseh_ , tranp_ ( nsx )
 
       integer :: nat_ , nsp_ , na_ ( nsx ), nel_ ( 2 ), nspin_ , &
      &     nupdwn_ ( 2 ), iupdwn_ ( 2 ), n_ , nx_ , nr1_ , nr2_ , nr3_ , &
-     &     nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , ibrav_, iprsta_
+     &     nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , ibrav_, iprsta_, &
+           iforceh_( 3, 3 )
 
       real(kind=8) :: pmass_ ( nsx ), rcmax_ ( nsx ), f_ ( nbndxx ), ispin_ ( nbndxx ), &
      &     omega_ , alat_ , a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 ), agg_ , sgg_ , e0gg_
@@ -142,7 +144,7 @@ CONTAINS
       !
 
       real(kind=8), parameter:: terahertz = 2.418D-5
-      real(kind=8) :: taus( 3, natx, nsx ), ocp, fsum
+      real(kind=8) :: taus( 3, natx ), ocp, fsum
       integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in, isa, smpm
 
       integer, intent(out) :: sm_p, kwnp_, codfreq_, forfreq_, smwfreq_, &
@@ -444,6 +446,17 @@ CONTAINS
       CASE DEFAULT
          CALL errore(' iosys ',' unknown cell_dofree '//trim(cell_dofree), 1 )
       END SELECT
+      if(thdyn_) then
+         if(thdiag_) then
+            iforceh_=0
+            do i=1,3
+               iforceh_(i,i)=1
+            enddo
+         else
+            iforceh_=1
+         endif
+      endif
+
 
 
       ! ...  radii, masses
@@ -468,7 +481,7 @@ CONTAINS
         tconvthrs%nstep  = 1
       END IF
 
-      iprint_ = isave 
+      isave_ = isave 
       tprnfor_ = tprnfor
       if ( trim( verbosity ) == 'high' ) then
          iprsta_ = 3
@@ -483,9 +496,8 @@ CONTAINS
       e0gg_= ecfixed
       eps_ = ortho_eps
       max_ = ortho_max
-      ! wmass is calculated in "init"
-      wmass_ = wmass
-      twmass_ = ( wmass == 0.d0 )
+
+
       if ( tstress ) tpre_ = .true.
       trhow_ = ( trim( disk_io ) == 'high' )
       tvlocw_ = .false. ! temporaneo
@@ -535,7 +547,9 @@ CONTAINS
       a2_    = 0.0
       a3_    = 0.0
 
-      pmass_ ( 1:nsp_ ) = atom_mass( 1:nsp_ )
+      !  masses are brought to au
+
+      pmass_ ( 1:nsp_ )  = atom_mass( 1:nsp_ ) * scmass
       psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
 
       ! ... Getting  'na
@@ -549,13 +563,9 @@ CONTAINS
                 isa = isa + 1 
                 if( na_(is) > natx ) call errore(' cards',' na > natx', na_ (is) )
                 IF( .NOT. lsmd ) THEN
-                  DO i=1,3
-                     tau0_ (i, na_ (is), is ) = rd_pos(i, ia)
-                  ENDDO
+                  tau0_ (:, isa ) = rd_pos(:, ia)
                 END IF
-                DO i=1,3
-                   iforce_(i,na_(is),is) = if_pos(i,ia)
-                ENDDO
+                iforce_(:, isa ) = if_pos(:, ia)
              end if
           end do
        end do
@@ -628,12 +638,14 @@ CONTAINS
                !  input atomic positions are in crystal axis ("scaled"):
                !
                taus = tau0_
+               isa  = 0
                do is = 1, nsp_
                   do ia = 1, na_(is)
+                     isa = isa + 1
                      do i = 1, 3
-                        tau0_ ( i, ia, is ) = a1_ (i) * taus( 1, ia, is) &
-                                         + a2_ (i) * taus( 2, ia, is) &
-                                         + a3_ (i) * taus( 3, ia, is)
+                        tau0_ ( i, isa ) = a1_ (i) * taus( 1, isa ) &
+                                         + a2_ (i) * taus( 2, isa ) &
+                                         + a3_ (i) * taus( 3, isa )
                      end do
                   end do
                end do
@@ -648,6 +660,18 @@ CONTAINS
          END SELECT
 
       END IF
+
+! ... Set the default value for the cell mass
+      wmass_ = wmass
+      IF( wmass_ == 0.d0 ) THEN
+        wmass_ = 3.d0 / (4.d0 * pi**2 ) * SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
+        wmass_ = wmass_ * UMA_AU
+        WRITE( stdout,999) wmass_
+      ELSE
+        WRITE( stdout,998) wmass_
+      END IF
+ 998  format('   wmass (read from input) = ',f15.2,/)
+ 999  format('   wmass (calculated) = ',f15.2,/)
 
 
       !

@@ -52,6 +52,7 @@ MODULE constants
   REAL(dbl), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! THz
   REAL(dbl), PARAMETER :: TERAHERTZ        = 2.418D-5    ! from au to THz
   REAL(dbl), PARAMETER :: AU_SEC           = 2.4189D-17  ! sec
+  REAL(dbl), PARAMETER :: AU_PS            = 2.4189D-5   ! sec
   !     
   !
   PARAMETER( pi        = 3.14159265358979323846_dbl )

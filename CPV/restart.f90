@@ -10,7 +10,8 @@ CONTAINS
       subroutine writefile_new                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,  &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
+     &       fion, tps)
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
@@ -45,20 +46,20 @@ CONTAINS
       integer :: ndw, nfi
       real(kind=8) :: h(3,3), hold(3,3)
       complex(kind=8) :: c0(:,:), cm(:,:)
-      real(kind=8) :: tausm(:,:,:),taus(:,:,:), fion(:,:,:)
-      real(kind=8) :: vels(:,:,:), velsm(:,:,:)
+      real(kind=8) :: tausm(:,:),taus(:,:), fion(:,:)
+      real(kind=8) :: vels(:,:), velsm(:,:)
       real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
       real(kind=8) :: xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8), INTENT(in) :: ecut, ecutw, delt
       real(kind=8), INTENT(in) :: pmass(:)
       real(kind=8), INTENT(in) :: celldm(:)
+      real(kind=8), INTENT(in) :: tps
       integer, INTENT(in) :: ibrav
       integer :: nk = 1
       integer :: ngwkg(1), nbnd, nelt, nelu, neld, ntyp, nb_g
       integer :: nat = 0
       integer :: nacx = 10
-      real(kind=8) :: trutime = 0.0d0
       real(kind=8) :: ecutwfc, ecutrho
 
       REAL(kind=8), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
@@ -177,7 +178,7 @@ CONTAINS
       emaxpos_ = 0.0d0
       eopreg_ = 0.0d0
       eamp_ = 0.0d0
-      CALL write_restart_header(ndw, nfi, iswitch, trutime, nr1, nr2, nr3, &
+      CALL write_restart_header(ndw, nfi, iswitch, tps, nr1, nr2, nr3, &
         nr1s, nr2s, nr3s, ng_g, nk, ngwkg, nspin, nbnd, rnel, nelu, &
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
@@ -220,12 +221,12 @@ CONTAINS
       DO i = 1, nsp
         DO j = 1, na(i)
           ia = ia + 1
-          stau0(:,ia) = taus(:,j,i)
-          staum(:,ia) = tausm(:,j,i)
-          svel0(:,ia) = vels(:,j,i)
-          svelm(:,ia) = velsm(:,j,i)
-          CALL s_to_r( taus(:,j,i), tautmp(:,ia), box )
-          fiontmp(:,ia) = fion(:,j,i)
+          stau0(:,ia) = taus(:,ia)
+          staum(:,ia) = tausm(:,ia)
+          svel0(:,ia) = vels(:,ia)
+          svelm(:,ia) = velsm(:,ia)
+          CALL s_to_r( taus(:,ia), tautmp(:,ia), box )
+          fiontmp(:,ia) = fion(:,ia)
           ityp(ia) = i
         END DO
         mass(i) = pmass(i)
@@ -365,7 +366,8 @@ CONTAINS
       subroutine readfile_new                                         &
      &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm, &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
+     &       fion, tps)
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
@@ -401,8 +403,8 @@ CONTAINS
       integer :: ndr, nfi, flag
       real(kind=8) :: h(3,3), hold(3,3)
       complex(kind=8) :: c0(:,:), cm(:,:)
-      real(kind=8) :: tausm(:,:,:),taus(:,:,:), fion(:,:,:)
-      real(kind=8) :: vels(:,:,:), velsm(:,:,:)
+      real(kind=8) :: tausm(:,:),taus(:,:), fion(:,:)
+      real(kind=8) :: vels(:,:), velsm(:,:)
       real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
       real(kind=8) :: xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
@@ -410,10 +412,10 @@ CONTAINS
       real(kind=8), INTENT(in) :: pmass(:)
       real(kind=8), INTENT(in) :: celldm(6)
       integer, INTENT(in) :: ibrav
+      real(kind=8) :: tps
 
       integer :: nx_, nbnd_, nelt, nb_g
       integer :: nacx = 10
-      real(kind=8) :: trutime_
       real(kind=8) :: ecutwfc, ecutrho
 
       REAL(kind=8), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
@@ -504,7 +506,7 @@ CONTAINS
 !     ==  READ HEADER INFORMATION                                     ==
 !     ==--------------------------------------------------------------==
 
-      CALL read_restart_header( ndr, nfi_, iswitch_, trutime_, &
+      CALL read_restart_header( ndr, nfi_, iswitch_, tps, &
         nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, nk_, ngwkg_, nspin_, nbnd_, &
         rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
         alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
@@ -575,15 +577,15 @@ CONTAINS
             DO j = 1, na(i)
               ia = ia + 1
               IF( tscal ) THEN
-                taus(:,j,i) = stau0(:,ia)
-                tausm(:,j,i) = staum(:,ia)
-                vels(:,j,i) = svel0(:,ia)
-                velsm(:,j,i) = svelm(:,ia)
+                taus(:,ia) = stau0(:,ia)
+                tausm(:,ia) = staum(:,ia)
+                vels(:,ia) = svel0(:,ia)
+                velsm(:,ia) = svelm(:,ia)
               ELSE
-                CALL r_to_s( stau0(:,ia), taus(:,j,i), box )
-                CALL r_to_s( staum(:,ia), tausm(:,j,i), boxm )
-                CALL r_to_s( svel0(:,ia), vels(:,j,i), box )
-                CALL r_to_s( svelm(:,ia), velsm(:,j,i), boxm )
+                CALL r_to_s( stau0(:,ia), taus(:,ia), box )
+                CALL r_to_s( staum(:,ia), tausm(:,ia), boxm )
+                CALL r_to_s( svel0(:,ia), vels(:,ia), box )
+                CALL r_to_s( svelm(:,ia), velsm(:,ia), boxm )
               END IF
             END DO
           END DO

@@ -19,13 +19,12 @@
 ! sub. tran
 ! sub. distatoms
 ! sub. init_path
-! sub. r_to_s
 !
 !
 !
 !-----------------------------------------------------------------------
 subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
-     tfirst,twmass,thdiag,iforceh,delt)
+     tfirst,delt,tps, iforce)
   !-----------------------------------------------------------------------
   !
   !     initialize G-vectors and related quantities
@@ -35,11 +34,11 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   use io_global, only: stdout
   !use gvec
   use gvecw, only: ngw
-  use ions_base, only: na, pmass, nsp
-  use cell_base, only: ainv, a1, a2, a3
+  use ions_base, only: na, pmass, nsp, randpos
+  use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
   use elct
   use constants, only: pi, fpi
-  use cell_base, only: wmass, hold, h
+  use cell_base, only: hold, h
   use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
   use betax, only: mmx, refg
   !use restartsm
@@ -50,14 +49,14 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
 
   implicit none
   ! input/output
-  integer ibrav, ndr, nbeg, iforceh(3,3)
-  logical tranp(nsx), tfirst, twmass, thdiag
+  integer ibrav, ndr, nbeg, iforce(3,natx)
+  logical tranp(nsx), tfirst
   real(kind=8) amprp(nsx)
   real(kind=8) celldm(6), ecut, ecutw
   real(kind=8) delt
   ! local
   real(kind=8) randy
-  integer i, j, ia, is, nfi
+  integer i, j, ia, is, nfi, isa, isat
 
 
   ! YK
@@ -71,11 +70,11 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
 
   ! YK
   complex(kind=8) c0(ngw,nx),cm(ngw,nx)
-  real(kind=8) taum(3,natx,nsx),vel(3,natx,nsx),velm(3,natx,nsx),acc(nacx)
+  real(kind=8) taum(3,natx),vel(3,natx),velm(3,natx),acc(nacx)
   real(kind=8) lambda(nx,nx),lambdam(nx,nx)
   real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
   real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-  real(kind=8) fion(3,natx,nsx)
+  real(kind=8) fion(3,natx),tps
   !
 
 
@@ -99,31 +98,12 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   !
 
   DO sm_k=0, sm_p
-     do is=1,nsp
-        do ia=1,na(is)
-           do i=1,3
-              rep(sm_k)%taus(i,ia,is)=ainv(i,1)*rep(sm_k)%tau0(1,ia,is)       &
-                   +ainv(i,2)*rep(sm_k)%tau0(2,ia,is)                 &
-                   +ainv(i,3)*rep(sm_k)%tau0(3,ia,is)
-           end do
-        end do
-     end do
+     call r_to_s( rep(sm_k)%tau0, rep(sm_k)%taus, na, nsp, ainv )
   ENDDO
   !
   !
   refg=1.0*ecut/(mmx-1)
   WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
-  !
-  if(thdyn) then
-     if(thdiag) then
-        iforceh=0
-        do i=1,3
-           iforceh(i,i)=1
-        enddo
-     else
-        iforceh=1
-     endif
-  endif
   !
   if( nbeg >= 0 ) then
      !
@@ -132,7 +112,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
      call readfile_new                                              &
           &     (-1,ndr+1,h,hold,nfi,c0,cm,rep(0)%tau0,taum,vel,velm,acc,   &
           &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-          &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+          &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps)
      !
      WRITE( stdout,344) ibrav
      do i=1,3
@@ -165,41 +145,14 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   !
   DO sm_k = 0,sm_p
      !
-     do is=1,nsp
-        if(tranp(is)) then
-           do ia=1,na(is)
-              do i=1,3
-                 rep(sm_k)%taus(i,ia,is)=rep(sm_k)%taus(i,ia,is)+amprp(is)*(randy()-0.5)
-              end do
-           end do
-           !
-           !     true tau (tau0) from scaled tau (taus)
-           !
-           do ia=1,na(is)
-              do i=1,3
-                 rep(sm_k)%tau0(i,ia,is) = h(i,1)*rep(sm_k)%taus(1,ia,is) &
-                      + h(i,2)*rep(sm_k)%taus(2,ia,is) &
-                      + h(i,3)*rep(sm_k)%taus(3,ia,is)
-              end do
-           end do
-        end if
-     end do
-     !
+     IF( ANY( tranp( 1:nsp ) ) ) THEN
+        call randpos(rep(sm_k)%taus, na, nsp, tranp, amprp, ainv, iforce )
+        call s_to_r( rep(sm_k)%taus, rep(sm_k)%tau0, na, nsp, h )
+     END IF
+
   ENDDO
   !
   !
-  if(.not. twmass) then
-     WRITE( stdout,998) wmass
-  else
-     wmass=0.
-     do is=1,nsp
-        wmass=wmass+na(is)*pmass(is)
-     enddo
-     wmass=wmass*0.75/pi/pi
-     WRITE( stdout,999) wmass
-  endif
-998 format(' wmass (read from input) = ',f15.2,/)
-999 format(' wmass (calculated) = ',f15.2,/)
 344 format(' ibrav = ',i4,'       cell parameters ',/)
 345 format(3(4x,f10.5))
 
@@ -229,7 +182,7 @@ SUBROUTINE TANGENT(state,tan)
 
   IMPLICIT NONE
 
-  integer :: i,j,is,ia,sm_k,smpm
+  integer :: i,j,is,ia,sm_k,smpm, isa
 
   type(ptr) :: state(0:sm_p)
   type(ptr) :: tan(0:sm_p)
@@ -240,8 +193,8 @@ SUBROUTINE TANGENT(state,tan)
   ! ---------------------------- !
 
 
-  tan(0)%d3(:,:,:) = 0.d0
-  tan(sm_p)%d3(:,:,:) = 0.d0   
+  tan(0)%d3(:,:) = 0.d0
+  tan(sm_p)%d3(:,:) = 0.d0   
 
   smpm = sm_p -1
 
@@ -252,11 +205,13 @@ SUBROUTINE TANGENT(state,tan)
      IF((etot_ar(sm_k+1) >= etot_ar(sm_k)) .AND. &
           &  (etot_ar(sm_k) >= etot_ar(sm_k-1))) THEN
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
-                 tan(sm_k)%d3(i,ia,is)=state(sm_k+1)%d3(i,ia,is) & 
-                      & -state(sm_k)%d3(i,ia,is)
+                 tan(sm_k)%d3(i,isa)=state(sm_k+1)%d3(i,isa) & 
+                      & -state(sm_k)%d3(i,isa)
               ENDDO
            ENDDO
         ENDDO
@@ -264,11 +219,13 @@ SUBROUTINE TANGENT(state,tan)
      ELSE IF((etot_ar(sm_k+1) <= etot_ar(sm_k)) .AND. &
           & (etot_ar(sm_k) <= etot_ar(sm_k-1))) THEN
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
-                 tan(sm_k)%d3(i,ia,is)=state(sm_k)%d3(i,ia,is) &
-                      & -state(sm_k-1)%d3(i,ia,is)
+                 tan(sm_k)%d3(i,isa)=state(sm_k)%d3(i,isa) &
+                      & -state(sm_k-1)%d3(i,isa)
               ENDDO
            ENDDO
         ENDDO
@@ -282,14 +239,16 @@ SUBROUTINE TANGENT(state,tan)
 
         IF(etot_ar(sm_k+1) >= etot_ar(sm_k-1)) THEN
 
+           isa = 0
            DO is=1,nsp
               DO ia=1,na(is)
+                 isa = isa + 1
                  DO i=1,3
 
-                    tan(sm_k)%d3(i,ia,is) = ene1*(state(sm_k+1)%d3(i,ia,is) & 
-                         & -state(sm_k)%d3(i,ia,is)) &
-                         & + ene2*(state(sm_k)%d3(i,ia,is)  &
-                         & -state(sm_k-1)%d3(i,ia,is))
+                    tan(sm_k)%d3(i,isa) = ene1*(state(sm_k+1)%d3(i,isa) & 
+                         & -state(sm_k)%d3(i,isa)) &
+                         & + ene2*(state(sm_k)%d3(i,isa)  &
+                         & -state(sm_k-1)%d3(i,isa))
 
                  ENDDO
               ENDDO
@@ -297,14 +256,16 @@ SUBROUTINE TANGENT(state,tan)
 
         ELSE
 
+           isa = 0
            DO is=1,nsp
               DO ia=1,na(is)
+                 isa = isa + 1
                  DO i=1,3
 
-                    tan(sm_k)%d3(i,ia,is) = ene2*(state(sm_k+1)%d3(i,ia,is) &
-                         & -state(sm_k)%d3(i,ia,is)) &
-                         & + ene1*(state(sm_k)%d3(i,ia,is)  &
-                         & -state(sm_k-1)%d3(i,ia,is))
+                    tan(sm_k)%d3(i,isa) = ene2*(state(sm_k+1)%d3(i,isa) &
+                         & -state(sm_k)%d3(i,isa)) &
+                         & + ene1*(state(sm_k)%d3(i,isa)  &
+                         & -state(sm_k-1)%d3(i,isa))
 
                  ENDDO
               ENDDO
@@ -319,11 +280,13 @@ SUBROUTINE TANGENT(state,tan)
 
      tmp1=0.d0
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              tmp1 = tmp1 + tan(sm_k)%d3(i,ia,is)**2.d0
+              tmp1 = tmp1 + tan(sm_k)%d3(i,isa)**2.d0
 
            ENDDO
         ENDDO
@@ -332,14 +295,16 @@ SUBROUTINE TANGENT(state,tan)
 
      tmp1 = SQRT(tmp1)
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              IF(ABS(tan(sm_k)%d3(i,ia,is)) >= zero ) THEN
-                 tan(sm_k)%d3(i,ia,is) = tan(sm_k)%d3(i,ia,is)/tmp1
+              IF(ABS(tan(sm_k)%d3(i,isa)) >= zero ) THEN
+                 tan(sm_k)%d3(i,isa) = tan(sm_k)%d3(i,isa)/tmp1
               ELSE
-                 tan(sm_k)%d3(i,ia,is)=0.d0
+                 tan(sm_k)%d3(i,isa)=0.d0
               ENDIF
 
            ENDDO
@@ -374,9 +339,9 @@ SUBROUTINE PERP(vec,tan,paraforce)
 
   IMPLICIT NONE
 
-  integer :: i,is,ia
+  integer :: i,is,ia,isa
 
-  real(kind=8) :: vec(3,natx,nsx),tan(3,natx,nsx)
+  real(kind=8) :: vec(3,natx),tan(3,natx)
   real(kind=8) :: paraforce
   real(kind=8) :: dotp
 
@@ -387,10 +352,12 @@ SUBROUTINE PERP(vec,tan,paraforce)
 
   dotp = 0.d0
 
+  isa = 0
   DO is=1,nsp
      DO ia=1,na(is)
+        isa = isa + 1
         DO i=1,3
-           dotp = dotp + vec(i,ia,is)*tan(i,ia,is)
+           dotp = dotp + vec(i,isa)*tan(i,isa)
         ENDDO
      ENDDO
   ENDDO
@@ -400,10 +367,12 @@ SUBROUTINE PERP(vec,tan,paraforce)
 
   ! calculate PERP of the vec  -----------
 
+  isa = 0
   DO is=1,nsp
      DO ia=1,na(is)
+        isa = isa + 1
         DO i=1,3
-           vec(i,ia,is) = vec(i,ia,is) - dotp*tan(i,ia,is)
+           vec(i,isa) = vec(i,isa) - dotp*tan(i,isa)
         ENDDO
      ENDDO
   ENDDO
@@ -433,7 +402,7 @@ SUBROUTINE LINEARP(state)
 
   IMPLICIT NONE
 
-  integer :: i,j,is,ia,sm_k,smpm
+  integer :: i,j,is,ia,sm_k,smpm,isa
 
   type(ptr) :: state(0:sm_p)
 
@@ -448,12 +417,14 @@ SUBROUTINE LINEARP(state)
 
      ratio = DBLE(sm_k)/DBLE(sm_p)
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              state(sm_k)%d3(i,ia,is) = state(0)%d3(i,ia,is)*(1.d0-ratio) &
-                   & + state(sm_p)%d3(i,ia,is)*ratio
+              state(sm_k)%d3(i,isa) = state(0)%d3(i,isa)*(1.d0-ratio) &
+                   & + state(sm_p)%d3(i,isa)*ratio
            ENDDO
         ENDDO
      ENDDO
@@ -487,13 +458,13 @@ SUBROUTINE ARC(state,alpha,t_alpha,key)
 
   IMPLICIT NONE
 
-  integer :: i,j,is,ia,sm_k,smpm
+  integer :: i,j,is,ia,sm_k,smpm, isa
   integer, intent(in) :: key
 
   type(ptr) :: state(0:sm_p)
 
   real(kind=8), intent(out) :: alpha(0:sm_p),t_alpha 
-  real(kind=8) :: tmp(3,natx,nsx), dalpha(0:sm_p) 
+  real(kind=8) :: tmp(3,natx), dalpha(0:sm_p) 
 
   ! -------------------------------------------------
 
@@ -509,21 +480,25 @@ SUBROUTINE ARC(state,alpha,t_alpha,key)
 
   DO sm_k=1,sm_p
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              tmp(i,ia,is) = state(sm_k)%d3(i,ia,is)-state(sm_k-1)%d3(i,ia,is)
+              tmp(i,isa) = state(sm_k)%d3(i,isa)-state(sm_k-1)%d3(i,isa)
 
            ENDDO
         ENDDO
      ENDDO
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
 
-              dalpha(sm_k) = dalpha(sm_k) + tmp(i,ia,is)**2.d0
+              dalpha(sm_k) = dalpha(sm_k) + tmp(i,isa)**2.d0
 
            ENDDO
         ENDDO
@@ -591,18 +566,20 @@ SUBROUTINE ABSVEC(vec,norm)
 
   IMPLICIT NONE
 
-  integer :: i,is,ia
-  real(kind=8),intent(in) :: vec(3,natx,nsx)
+  integer :: i,is,ia,isa
+  real(kind=8),intent(in) :: vec(3,natx)
   real(kind=8),intent(out) :: norm 
 
 
   norm = 0.d0
 
+  isa = 0
   DO is=1,nsp
      DO ia=1,na(is)
+        isa = isa + 1
         DO i=1,3
 
-           norm = norm + vec(i,ia,is)**2.d0
+           norm = norm + vec(i,isa)**2.d0
 
         ENDDO
      ENDDO
@@ -625,7 +602,7 @@ END SUBROUTINE ABSVEC
 !
 !============================================================
 
-SUBROUTINE IMPOSECD(state,al,als,be,bes,ch,chs)
+SUBROUTINE IMPOSECD(state,als,bes,chs)
 
 
   use ions_base, ONLY: na, nsp
@@ -635,19 +612,19 @@ SUBROUTINE IMPOSECD(state,al,als,be,bes,ch,chs)
   IMPLICIT NONE
 
   integer :: i,is,ia
-  integer,intent(in) :: al,be,ch,als,bes,chs
-  real(kind=8) :: state(3,natx,nsx)
+  integer,intent(in) :: als,bes,chs
+  real(kind=8) :: state(3,natx)
   real(kind=8) :: dotp,theta,mag1,mag2
 
 
-  write(stdout,*) " STARTCOORD used : ",al,als,be,bes,ch,chs
+  write(stdout,*) " STARTCOORD used : ",als,bes,chs
 
 
   ! Translate --------------
 
-  call tran(state,-state(1,al,als),'x')
-  call tran(state,-state(2,al,als),'y')
-  call tran(state,-state(3,al,als),'z')
+  call tran(state,-state(1,als),'x')
+  call tran(state,-state(2,als),'y')
+  call tran(state,-state(3,als),'z')
 
 
   ! Rotate to 2(X,0,0) ---------
@@ -655,17 +632,17 @@ SUBROUTINE IMPOSECD(state,al,als,be,bes,ch,chs)
   ! to rotate around Z axis set y = 0
   ! find theta which is between (1,0,0) and XY proj of 2(x,y,z)
 
-  mag1 = DSQRT(state(1,be,bes)**2.d0+state(2,be,bes)**2.d0)
-  theta = ACOS(state(1,be,bes)/mag1)
+  mag1 = DSQRT(state(1,bes)**2.d0+state(2,bes)**2.d0)
+  theta = ACOS(state(1,bes)/mag1)
 
-  if(state(1,be,bes) >= 0.d0) then
-     if(state(2,be,bes) >= 0.d0) then
+  if(state(1,bes) >= 0.d0) then
+     if(state(2,bes) >= 0.d0) then
         theta = -theta
      else
         theta = theta
      endif
   else
-     if(state(2,be,bes) >= 0.d0) then
+     if(state(2,bes) >= 0.d0) then
         theta = -theta
      else
         theta = theta
@@ -680,17 +657,17 @@ SUBROUTINE IMPOSECD(state,al,als,be,bes,ch,chs)
   ! find theta which is between (1,0,0) and XZ proj of 2(x,0,z)
 
 
-  mag1 = DSQRT(state(1,be,bes)**2.d0+state(3,be,bes)**2.d0)
-  theta = ACOS(state(1,be,bes)/mag1)
+  mag1 = DSQRT(state(1,bes)**2.d0+state(3,bes)**2.d0)
+  theta = ACOS(state(1,bes)/mag1)
 
-  if(state(1,be,bes) >= 0.d0) then
-     if(state(3,be,bes) >= 0.d0) then
+  if(state(1,bes) >= 0.d0) then
+     if(state(3,bes) >= 0.d0) then
         theta = theta
      else
         theta = -theta
      endif
   else
-     if(state(3,be,bes) >= 0.d0) then
+     if(state(3,bes) >= 0.d0) then
         theta = -theta
      else
         theta = theta
@@ -706,17 +683,17 @@ SUBROUTINE IMPOSECD(state,al,als,be,bes,ch,chs)
   ! to rotate around x set z = 0
   ! find theta which is between (0,1,0) and YZ proj of 3(x,y,z)
 
-  mag1 = DSQRT(state(2,ch,chs)**2.d0+state(3,ch,chs)**2.d0)
-  theta = ACOS(state(2,ch,chs)/mag1)
+  mag1 = DSQRT(state(2,chs)**2.d0+state(3,chs)**2.d0)
+  theta = ACOS(state(2,chs)/mag1)
 
-  if(state(2,ch,chs) >= 0.d0) then
-     if(state(3,ch,chs) >= 0.d0) then
+  if(state(2,chs) >= 0.d0) then
+     if(state(3,chs) >= 0.d0) then
         theta = -theta
      else
         theta = theta
      endif
   else
-     if(state(3,ch,chs) >= 0.d0) then
+     if(state(3,chs) >= 0.d0) then
         theta = -theta
      else
         theta = theta
@@ -746,11 +723,11 @@ subroutine rot(state,phi,direction)
 
   IMPLICIT NONE
 
-  integer :: i,j,k
+  integer :: i,j,k,isa
   integer :: ia,is,nat
   integer :: a,b,c
   real(kind=8) :: rotm(3,3,3)
-  real(kind=8) :: state(3,natx,nsx)
+  real(kind=8) :: state(3,natx)
   real(kind=8), allocatable :: cd(:,:)
   real(kind=8), allocatable :: newcd(:,:)
   real(kind=8) :: tmp
@@ -761,10 +738,7 @@ subroutine rot(state,phi,direction)
 
   write(stdout,*) "ROT : ", direction
 
-  nat=0
-  DO is=1,nsp
-     nat=nat+na(is)
-  ENDDO
+  nat = SUM( na(1:nsp) )
 
   allocate(cd(3,nat))
   allocate(newcd(3,nat))
@@ -775,7 +749,7 @@ subroutine rot(state,phi,direction)
      DO ia=1,na(is)
         j = j+1
         DO i=1,3
-           cd(i,j) = state(i,ia,is) 
+           cd(i,j) = state(i,j) 
         ENDDO
      ENDDO
   ENDDO
@@ -849,13 +823,12 @@ subroutine rot(state,phi,direction)
      ENDDO
   ENDDO
 
-
   j=0
   DO is=1,nsp
      DO ia=1,na(is)
         j = j+1
         DO i=1,3
-           state(i,ia,is) = newcd(i,j)
+           state(i,j) = newcd(i,j)
         ENDDO
      ENDDO
   ENDDO
@@ -877,8 +850,8 @@ SUBROUTINE TRAN(state,dist,direction)
 
   IMPLICIT NONE
 
-  integer :: i,j,k,is,ia
-  real(kind=8) :: state(3,natx,nsx)
+  integer :: i,j,k,is,ia,isa
+  real(kind=8) :: state(3,natx)
   real(kind=8),intent(in) :: dist 
   character,intent(in) :: direction
 
@@ -888,9 +861,11 @@ SUBROUTINE TRAN(state,dist,direction)
   if(direction=='y') k=2
   if(direction=='z') k=3
 
+  isa = 0
   DO is=1,nsp
      DO ia=1,na(is)
-        state(k,ia,is) = state(k,ia,is) + dist 
+        isa = isa + 1
+        state(k,isa) = state(k,isa) + dist 
      ENDDO
   ENDDO
 
@@ -904,37 +879,37 @@ END SUBROUTINE TRAN
 !
 !==================================================
 
-SUBROUTINE DISTATOMS(state,mindist,is1,ia1,is2,ia2)
+SUBROUTINE DISTATOMS(state,mindist,isa1,isa2)
 
   use ions_base, ONLY: na, nsp
   use parameters, only: nsx,natx
   use cell_base, only: ainv, a1, a2, a3
 
-  integer :: i,is,ia
-  real(kind=8),intent(in) :: state(3,natx,nsx)
+  real(kind=8),intent(in) :: state(3,natx)
   real(kind=8),intent(out) :: mindist
+  integer,intent(out) :: isa1, isa2
   real(kind=8) :: dist, in(3), out(3) 
-  integer,intent(out) :: is1,ia1,is2,ia2
+  integer :: is, ia, iis, iia, isa, iisa
 
   mindist  = 1.d10
 
+  isa = 0
   DO is=1,nsp
      DO ia=1,na(is) 
+        isa = isa + 1
+        iisa = 0
         DO iis=is+1,nsp
            DO iia=1,na(iis)
+              iisa = iisa + 1
               dist = 0.d0
-              DO i=1,3
-                 in(i) = state(i,ia,is)-state(i,iia,iis)
-              ENDDO
+              in(:) = state(:,isa)-state(:,iisa)
               call pbc(in,a1,a2,a3,ainv,out)
               dist = out(1)**2.d0 + out(2)**2.d0 + out(3)**2.d0 
               dist = SQRT(dist)
               IF(dist < mindist) THEN
                  mindist = dist 
-                 is1 = is
-                 ia1 = ia
-                 is2 = iis
-                 ia2 = iia
+                 isa1 = isa
+                 isa2 = iisa
               ENDIF
            ENDDO
         ENDDO
@@ -965,15 +940,15 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
   INTEGER,intent(in) :: sm_p, kwnp,nsp, nat, nbeg, key 
   INTEGER :: sm_k, isa, na( nsx )
-  INTEGER :: index(2,3), ai, ia, is
-  INTEGER :: al,als,bl,bls,cl,cls
+  INTEGER :: index(2,3), ia, is
+  INTEGER :: als,bls,cls
   INTEGER :: i,j,k,redismi
 
   LOGICAL, intent(in) :: stcd
 
   TYPE(ptr), allocatable :: p_tau0(:) 
-  real (kind=8), allocatable :: guess(:,:,:,:)
-  real (kind=8), allocatable :: guess2(:,:,:,:)
+  real (kind=8), allocatable :: guess(:,:,:)
+  real (kind=8), allocatable :: guess2(:,:,:)
   real (kind=8), allocatable :: arc_in(:)
   real (kind=8), allocatable :: arc_out(:)
   real (kind=8), allocatable :: darc(:)
@@ -987,51 +962,51 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
   ! key = 4  : read all 
 
 
-
   ALLOCATE(rep(0:sm_p))
   ALLOCATE(rep_el(1:sm_p-1))
 
 
+  ! compute na(is)
+
+  na = 0
+  DO is = 1, nsp
+    na( is ) = COUNT( sp_pos(1:nat) == is )
+  END DO
+
 
   SELECT CASE ( key )
-
-
 
   CASE(1)  !  ... SMOPT --------
 
 
      IF(sm_p /= 3) call errore('path_smopt', ' sm_p /=3 with smopt', sm_p) 
 
-     na = 0
-     isa = 0
-     ai = 0
-
      rep(0)%tau0 = 0.d0
      rep(3)%tau0 = 0.d0
 
-     DO sm_k=1,2
+     DO sm_k = 1, 2
+
+        isa = 0
         DO is=1,nsp
            DO ia=1,nat
-              ai = ai +1
-
-              IF(ai==stcd1) THEN
-                 al = ia
-                 als = is 
-              ELSEIF(ai==stcd2) THEN
-                 bl = ia
-                 bls = is
-              ELSEIF(ai==stcd3) THEN
-                 cl = ia
-                 cls = is
-              ENDIF
 
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),sm_k)
-              IF( sp_pos(ia) == is) THEN 
-                 na(is) = na(is) + 1 
-                 if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-                 DO i=1,3
-                    rep(sm_k)%tau0(i,na(is),is) = rd_pos(i, ia) 
-                 ENDDO
+
+              IF( sp_pos(ia) == is ) THEN 
+
+                 isa    = isa + 1
+                 if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+
+                 rep(sm_k)%tau0(:,isa) = rd_pos(:, ia) 
+
+                 IF(ia==stcd1) THEN
+                    als = isa 
+                 ELSEIF(ia==stcd2) THEN
+                    bls = isa
+                 ELSEIF(ia==stcd3) THEN
+                    cls = isa
+                 ENDIF
+
               ENDIF
 
            ENDDO
@@ -1039,8 +1014,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      ENDDO
 
      IF(stcd) THEN
-        CALL imposecd(rep(1)%tau0,al,als,bl,bls,cl,cls)
-        CALL imposecd(rep(2)%tau0,al,als,bl,bls,cl,cls)
+        CALL imposecd(rep(1)%tau0,als,bls,cls)
+        CALL imposecd(rep(2)%tau0,als,bls,cls)
      ENDIF
 
 
@@ -1056,47 +1031,36 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      ENDDO
 
 
-     na = 0
      isa = 0
-     ai = 0
-
-
      DO is=1,nsp
         DO ia=1,nat
-           ai = ai +1
-
-           IF(ai==stcd1) THEN
-              al = ia
-              als = is
-           ELSEIF(ai==stcd2) THEN
-              bl = ia
-              bls = is
-           ELSEIF(ai==stcd3) THEN
-              cl = ia
-              cls = is
-           ENDIF
-
 
            ! ... the 1st replica
 
            rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),1)
-           IF( sp_pos(ia) == is) THEN
-              na(is) = na(is) + 1
-              if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-              DO i=1,3
-                 rep(0)%tau0(i,na(is),is) = rd_pos(i, ia)
-              ENDDO
-           ENDIF
 
+           IF( sp_pos(ia) == is ) THEN
+              isa = isa + 1
+              if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+              rep(0)%tau0(:,isa) = rd_pos(:, ia)
+           ENDIF
 
            ! ... the last replica 
 
            rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),2)
-           IF( sp_pos(ia) == is) THEN
-              if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-              DO i=1,3
-                 rep(sm_p)%tau0(i,na(is),is) = rd_pos(i, ia)
-              ENDDO
+
+           IF( sp_pos(ia) == is ) THEN
+
+              rep(sm_p)%tau0(:,isa) = rd_pos(:, ia)
+
+              IF(ia==stcd1) THEN
+                 als = isa
+              ELSEIF(ia==stcd2) THEN
+                 bls = isa
+              ELSEIF(ia==stcd3) THEN
+                 cls = isa
+              ENDIF
+
            ENDIF
 
         ENDDO
@@ -1104,8 +1068,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
 
      IF(stcd) THEN
-        CALL imposecd(rep(0)%tau0,al,als,bl,bls,cl,cls)
-        CALL imposecd(rep(sm_p)%tau0,al,als,bl,bls,cl,cls)
+        CALL imposecd(rep(0)%tau0,als,bls,cls)
+        CALL imposecd(rep(sm_p)%tau0,als,bls,cls)
      ENDIF
 
 
@@ -1132,8 +1096,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
 
      ALLOCATE(p_tau0(0:sm_p))
-     ALLOCATE(guess(3,natx,nsx,0:kwnp-1))
-     ALLOCATE(guess2(3,natx,nsx,0:sm_p))
+     ALLOCATE(guess(3,natx,0:kwnp-1))
+     ALLOCATE(guess2(3,natx,0:sm_p))
      ALLOCATE(arc_in(0:kwnp-1))
      ALLOCATE(arc_out(0:sm_p))
      ALLOCATE(darc(0:kwnp-1))
@@ -1145,34 +1109,24 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      ENDDO
 
 
-
-     na = 0
-     isa = 0
-
      DO j=1,kwnp
-        ai = 0
+        isa = 0
         DO is=1,nsp
            DO ia=1,nat
-              ai = ai +1
-
-              IF(ai==stcd1) THEN
-                 al = ia
-                 als = is
-              ELSEIF(ai==stcd2) THEN
-                 bl = ia
-                 bls = is
-              ELSEIF(ai==stcd3) THEN
-                 cl = ia
-                 cls = is
-              ENDIF
 
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),j)
               IF( sp_pos(ia) == is) THEN
-                 na(is) = na(is) + 1
-                 if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-                 DO i=1,3
-                    guess(i,na(is),is,j-1) = rd_pos(i, ia)
-                 ENDDO
+                 isa = isa + 1
+                 if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                 guess(:,isa,j-1) = rd_pos(:, ia)
+                 IF(ia==stcd1) THEN
+                    als = isa
+                 ELSEIF(ia==stcd2) THEN
+                    bls = isa
+                 ELSEIF(ia==stcd3) THEN
+                    cls = isa
+                 ENDIF
+
               ENDIF
 
            ENDDO
@@ -1185,7 +1139,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
      IF(stcd) THEN
         DO j=0,kwnp-1
-           CALL imposecd(guess(:,:,:,j),al,als,bl,bls,cl,cls)
+           CALL imposecd(guess(:,:,j),als,bls,cls)
         ENDDO
      ENDIF
 
@@ -1207,10 +1161,12 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      DO j=1,kwnp-1
         darc(j) = 0.d0
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
-                 darc(j) = darc(j) + (guess(i,ia,is,j) - guess(i,ia,is,j-1))**2.d0
+                 darc(j) = darc(j) + (guess(i,isa,j) - guess(i,isa,j-1))**2.d0
               ENDDO
            ENDDO
         ENDDO
@@ -1233,14 +1189,16 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
 
      DO sm_k=1,sm_p-1
+        isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
+              isa = isa + 1
               DO i=1,3
 
-                 call INTPOL_POLINT(arc_in(0:kwnp-1),guess(i,ia,is,0:kwnp-1), &
-                      & kwnp, arc_out(sm_k), guess2(i,ia,is,sm_k),trashd)
+                 call INTPOL_POLINT(arc_in(0:kwnp-1),guess(i,isa,0:kwnp-1), &
+                      & kwnp, arc_out(sm_k), guess2(i,isa,sm_k),trashd)
 
-                 rep(sm_k)%tau0(i,ia,is) = guess2(i,ia,is,sm_k)
+                 rep(sm_k)%tau0(i,isa) = guess2(i,isa,sm_k)
 
               ENDDO
            ENDDO
@@ -1250,11 +1208,13 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
      ! ...  initial and final
 
+     isa = 0
      DO is=1,nsp
         DO ia=1,na(is)
+           isa = isa + 1
            DO i=1,3
-              rep(0)%tau0(i,ia,is) = guess(i,ia,is,0)
-              rep(sm_p)%tau0(i,ia,is) = guess(i,ia,is,kwnp-1)
+              rep(0)%tau0(i,isa) = guess(i,isa,0)
+              rep(sm_p)%tau0(i,isa) = guess(i,isa,kwnp-1)
            ENDDO
         ENDDO
      ENDDO
@@ -1309,28 +1269,22 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      nbeg_selection : IF(nbeg < 0) THEN 
 
         DO sm_k=0,sm_p
+           isa = 0
            DO is=1,nsp
               DO ia=1,nat
-                 ai = ai +1
-
-                 IF(ai==stcd1) THEN
-                    al = ia
-                    als = is
-                 ELSEIF(ai==stcd2) THEN
-                    bl = ia
-                    bls = is
-                 ELSEIF(ai==stcd3) THEN
-                    cl = ia
-                    cls = is
-                 ENDIF
 
                  rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),sm_k+1)
                  IF( sp_pos(ia) == is) THEN
-                    na(is) = na(is) + 1
-                    if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-                    DO i=1,3
-                       rep(sm_k)%tau0(i,na(is),is) = rd_pos(i, ia)
-                    ENDDO
+                    isa = isa + 1
+                    if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                    rep(sm_k)%tau0(i,isa) = rd_pos(i, ia)
+                    IF(ia==stcd1) THEN
+                       als = isa
+                    ELSEIF(ia==stcd2) THEN
+                       bls = isa
+                    ELSEIF(ia==stcd3) THEN
+                       cls = isa
+                    ENDIF
                  ENDIF
 
               ENDDO
@@ -1343,43 +1297,32 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
         IF(stcd) THEN
            DO sm_k=0,sm_p
-              CALL imposecd(rep(sm_k)%tau0,al,als,bl,bls,cl,cls)
+              CALL imposecd(rep(sm_k)%tau0,als,bls,cls)
            ENDDO
         ENDIF
 
 
      ELSE
 
+        isa = 0
         DO is=1,nsp
            DO ia=1,nat
-              ai = ai +1
-
-              IF(ai==stcd1) THEN
-                 al = ia
-                 als = is
-              ELSEIF(ai==stcd2) THEN
-                 bl = ia
-                 bls = is
-              ELSEIF(ai==stcd3) THEN
-                 cl = ia
-                 cls = is
-              ENDIF
-
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),1)
               IF( sp_pos(ia) == is) THEN
-                 na(is) = na(is) + 1
-                 if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-                 DO i=1,3
-                    rep(0)%tau0(i,na(is),is) = rd_pos(i, ia)
-                 ENDDO
+                 isa = isa + 1
+                 if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                 rep(0)%tau0(:,isa) = rd_pos(:, ia)
               ENDIF
-
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),sm_p+1)
               IF( sp_pos(ia) == is) THEN
-                 if( na(is) > natx) call errore(' cards',' na > natx', na(is) )
-                 DO i=1,3
-                    rep(sm_p)%tau0(i,na(is),is) = rd_pos(i, ia)
-                 ENDDO
+                 rep(sm_p)%tau0(:,isa) = rd_pos(:, ia)
+                 IF(ia==stcd1) THEN
+                   als = isa
+                 ELSEIF(ia==stcd2) THEN
+                   bls = isa
+                 ELSEIF(ia==stcd3) THEN
+                   cls = isa
+                 ENDIF
               ENDIF
 
            ENDDO
@@ -1387,8 +1330,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
 
         IF(stcd) THEN
-           CALL imposecd(rep(0)%tau0,al,als,bl,bls,cl,cls)
-           CALL imposecd(rep(sm_p)%tau0,al,als,bl,bls,cl,cls)
+           CALL imposecd(rep(0)%tau0,als,bls,cls)
+           CALL imposecd(rep(sm_p)%tau0,als,bls,cls)
         ENDIF
 
 
@@ -1443,39 +1386,3 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
   return
 
 end subroutine init_path
-
-
-!===============================================================================!
-! 
-!
-
-subroutine r_to_s(tau,taus)
-
-  use cell_base, only: ainv
-  use ions_base, only: na, nsp
-  use parameters, only: natx, nsx
-
-  implicit none
-
-  integer :: is,ia,i
-  real (kind=8), intent(out) :: taus(3,natx,nsx)
-  real (kind=8), intent(in)  :: tau(3,natx,nsx)
-
-  do is=1,nsp
-     do ia=1,na(is)
-        do i=1,3
-           taus(i,ia,is)=ainv(i,1)*tau(1,ia,is)       &
-                +ainv(i,2)*tau(2,ia,is)       &
-                +ainv(i,3)*tau(3,ia,is)
-        end do
-     end do
-  end do
-
-  return
-
-end subroutine r_to_s
-
-
-!===============================================================================
-!
-!
