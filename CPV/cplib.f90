@@ -2244,14 +2244,18 @@
 !
       use fft_cp, only: cfft_cp
       use para_mod, only: dfftp
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1x*nr2x*nr3x)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
       call tictac(22,0)
 #ifdef __PARA
-      ! call cfftp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
       call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+# else
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+# endif
 #endif
       call tictac(22,1)
       return
@@ -2264,14 +2268,18 @@
 !
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(23,0)
 #ifdef __PARA
-      ! call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# endif
 #endif
       call tictac(23,1)
       return
@@ -2284,14 +2292,18 @@
 !
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(24,0)
 #ifdef __PARA
-      ! call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2)
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2,dffts)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# endif
 #endif
       call tictac(24,1)
       return
@@ -3766,13 +3778,21 @@
 ! inverse fourier transform of potentials and charge density 
 ! on the dense grid . On output, f is overwritten
 !
-      complex(kind=8) f(*)
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dfftp
+      use fft_scalar, only: cfft3d
+
+      complex(kind=8) f(nr1x*nr2x*nr3x)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
       call tictac(22,0)
 #ifdef __PARA
-      call cfftp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+      call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dfftp)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+# else
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+# endif
 #endif
       call tictac(22,1)
 !
@@ -3784,13 +3804,18 @@
 ! inverse fourier transform of Q functions (Vanderbilt pseudopotentials)
 ! on the  box grid . On output, f is overwritten
 !
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
       call tictac(25,0)
 #ifdef __PARA
       call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
+# else
       call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
+# endif
 #endif
       call tictac(25,1)
 !
@@ -3804,14 +3829,18 @@
 !
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(23,0)
 #ifdef __PARA
-      !call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# endif 
 #endif
       call tictac(23,1)
 !
@@ -3825,14 +3854,18 @@
 !
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(24,0)
 #ifdef __PARA
-      !call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2)
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2,dffts)
 #else
+# if defined __AIX
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# endif
 #endif
       call tictac(24,1)
 !

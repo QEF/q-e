@@ -50,7 +50,7 @@ CONTAINS
       use mp_global, only: mpime, nproc
       use work_fft
       use fft_base, only: fft_scatter
-      use fft_scalar, only: cft_1z
+      use fft_scalar, only: cft_1z, cft_2xy
 !
       implicit none
       integer, intent(in) :: nr1,nr2,nr3,nr1x,nr2x,nr3x,sign
@@ -81,13 +81,7 @@ CONTAINS
 
       if ( sign > 0 ) then
          if ( sign /= 2 ) then
-            if( dfft%tptr == 1 ) then
-              ! call cft_1( f, dfft%nsp(me), nr3, nr3x, sign, aux)
-              call cft_1z( f, dfft%nsp(me), nr3, nr3x, sign, aux)
-            else if ( dfft%tptr == 2 ) then
-              ! call cft_1s( f, dfft%nsp(me), nr3, nr3x, sign, aux)
-              call cft_1z( f, dfft%nsp(me), nr3, nr3x, sign, aux)
-            endif
+            call cft_1z( f, dfft%nsp(me), nr3, nr3x, sign, aux)
             call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsp, dfft%npp, sign)
             call zero(2*dfft%nnr,f)
             do i = 1, dfft%nst
@@ -98,13 +92,7 @@ CONTAINS
             end do
             planes = dfft%iplp
          else
-            if( dfft%tptr == 1 ) then
-              ! call cft_1( f, dfft%nsw(me), nr3, nr3x, sign, aux)
-              call cft_1z( f, dfft%nsw(me), nr3, nr3x, sign, aux)
-            else if ( dfft%tptr == 2 ) then
-              ! call cft_1s( f, dfft%nsw(me), nr3, nr3x, sign, aux)
-              call cft_1z( f, dfft%nsw(me), nr3, nr3x, sign, aux)
-            endif
+            call cft_1z( f, dfft%nsw(me), nr3, nr3x, sign, aux)
             call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, sign)
             call zero( 2*dfft%nnr, f )
             ii = 0
@@ -120,11 +108,7 @@ CONTAINS
             planes = dfft%iplw
          end if
 !
-         if( dfft%tptr == 1 ) then
-           call cft_2( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign)
-         else if ( dfft%tptr == 2 ) then
-           call cft_2s( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
-         endif
+         call cft_2xy( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
 !
       else
 !
@@ -134,11 +118,7 @@ CONTAINS
             planes = dfft%iplw
          endif
 !
-         if( dfft%tptr == 1 ) then
-           call cft_2( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign)
-         else if ( dfft%tptr == 2 ) then
-           call cft_2s( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
-         endif
+         call cft_2xy( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
 !
          if (sign.ne.-2) then
             do i=1,dfft%nst
@@ -148,13 +128,7 @@ CONTAINS
                end do
             end do
             call fft_scatter(aux,nr3x,dfft%nnr,f,dfft%nsp,dfft%npp,sign)
-            if( dfft%tptr == 1 ) then
-              ! call cft_1( aux, dfft%nsp(me), nr3, nr3x, sign, f)
-              call cft_1z( aux, dfft%nsp(me), nr3, nr3x, sign, f)
-            else if ( dfft%tptr == 2 ) then
-              ! call cft_1s( aux, dfft%nsp(me), nr3, nr3x, sign, f)
-              call cft_1z( aux, dfft%nsp(me), nr3, nr3x, sign, f)
-            endif
+            call cft_1z( aux, dfft%nsp(me), nr3, nr3x, sign, f)
          else
             ii = 0
             do proc=1,nproc
@@ -167,13 +141,7 @@ CONTAINS
                end do
             end do
             call fft_scatter(aux,nr3x,dfft%nnr,f,dfft%nsw,dfft%npp,sign)
-            if( dfft%tptr == 1 ) then
-              ! call cft_1(aux,dfft%nsw(me),nr3,nr3x,sign,f)
-              call cft_1z(aux,dfft%nsw(me),nr3,nr3x,sign,f)
-            else if ( dfft%tptr == 2 ) then
-              ! call cft_1s(aux,dfft%nsw(me),nr3,nr3x,sign,f)
-              call cft_1z(aux,dfft%nsw(me),nr3,nr3x,sign,f)
-            endif
+            call cft_1z(aux,dfft%nsw(me),nr3,nr3x,sign,f)
          end if
       end if
 !

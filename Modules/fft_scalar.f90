@@ -23,7 +23,7 @@
 
         PRIVATE
         PUBLIC :: initialize_tables, fft_x, fft_y, fft_z, tabmesh
-        PUBLIC :: cft_1z
+        PUBLIC :: cft_1z, cft_2xy, cft_b, cfft3d
 
 ! ...   Local Parameter
 
@@ -645,7 +645,7 @@
 
           IF( ip == -1 ) THEN
 
-            WRITE(6, fmt="('DEBUG fft_z, reinitializing tables ', I3)" ) icurrent
+            WRITE(6, fmt="('DEBUG cft_1z, reinitializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -743,6 +743,426 @@
 
           RETURN
         END SUBROUTINE cft_1z
+
+!
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
+!         FFT along "x" and "y" direction
+!
+!
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
+
+        SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, sgn, pl2ix)
+
+!     driver routine for nzl 2d complex fft's of lengths nx and ny
+!     (sparse grid, both charge and wavefunctions) 
+!     on input, sgn=+/-1 for charge density, sgn=+/-2 for wavefunctions
+!     ldx is the actual dimension of f (may differ from n)
+!     for compatibility: ldy is not used
+!     A separate initialization is stored for each combination of input parameters
+
+          IMPLICIT NONE
+
+          INTEGER, INTENT(IN) :: sgn, pl2ix(:), ldx, ldy, nx, ny, nzl
+          COMPLEX (dbl) :: r(:)
+          COMPLEX (dbl) :: yt(ny)
+          INTEGER :: i, k, j, err, idir, ip, isign
+          REAL(dbl) :: tscale
+          INTEGER, SAVE :: icurrent = 1
+          INTEGER, SAVE :: dims(4,ndims) = -1
+
+          isign = - sgn
+
+          !
+          !   Here initialize table only if necessary
+          !
+
+          ip = -1
+          DO i = 1, ndims
+            
+            !   first check if there is already a table initialized
+            !   for this combination of parameters
+
+            IF( ( ny == dims(1,i) ) .and. ( ldx == dims(2,i) ) .and. &
+                ( nx == dims(3,i) ) .and. ( nzl == dims(4,i) ) ) THEN
+              ip = i
+              EXIT
+            END IF
+          END DO
+
+          IF( ip == -1 ) THEN
+
+            !   no table exist for these parameters
+            !   initialize a new one 
+
+            WRITE(6, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
+
+#if defined __FFTW
+
+            IF( fw_plan_y(icurrent) /= 0 )   CALL DESTROY_PLAN( fw_plan_y(icurrent) )
+            IF( bw_plan_y(icurrent) /= 0 )   CALL DESTROY_PLAN( bw_plan_y(icurrent) )
+            idir = -1; CALL CREATE_PLAN( fw_plan_y(icurrent), ny, idir)
+            idir =  1; CALL CREATE_PLAN( bw_plan_y(icurrent), ny, idir)
+
+            IF( fw_plan_x(icurrent) /= 0 ) CALL DESTROY_PLAN( fw_plan_x(icurrent) )
+            IF( bw_plan_x(icurrent) /= 0 ) CALL DESTROY_PLAN( bw_plan_x(icurrent) )
+            idir = -1; CALL CREATE_PLAN( fw_plan_x(icurrent), nx, idir) 
+            idir =  1; CALL CREATE_PLAN( bw_plan_x(icurrent), nx, idir) 
+
+#elif defined __T3E
+
+            CALL CCFFT (0, ny, 1.0d0, yt, yt, tabley(1,icurrent), work(1), isys)
+            CALL CCFFT (0, nx, 1.0d0, r(1), r(1), tablex(1,icurrent), work(1), isys)
+
+#elif defined __AIX
+
+            CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0d0, &
+               fw_tabley(1,icurrent), ltabl, work(1), lwork)
+            CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1, -1, 1.0d0, &
+               bw_tabley(1,icurrent), ltabl, work(1), lwork)
+            CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl,  1, &
+               1.0d0, fw_tablex(1,icurrent), ltabl, work(1), lwork)
+            CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl, -1, &
+               1.0d0, bw_tablex(1,icurrent), ltabl, work(1), lwork)
+
+#elif defined __SGI
+
+            CALL ZFFT1DI( ny, tabley(1, icurrent) )
+            CALL ZFFT1DI( nx, tablex(1, icurrent) )
+
+
+#else
+
+            CALL errore(' fft_y ',' no scalar fft driver specified ', 1)
+
+#endif
+
+            dims(1,icurrent) = ny; dims(2,icurrent) = ldx; 
+            dims(3,icurrent) = nx; dims(4,icurrent) = nzl;
+            ip = icurrent
+            icurrent = MOD( icurrent, ndims ) + 1
+
+          END IF
+
+          !
+          !   Now perform the FFTs using machine specific drivers
+          !
+
+#if defined __FFTW
+
+          IF( isign > 0 ) THEN
+
+            CALL FFT_X_STICK( fw_plan_x(ip), r(1), nx, ny, nzl, ldx, ldy ) 
+            do i = 1, nx
+              do k = 1, nzl
+                IF( pl2ix( i ) > 0 ) THEN
+                  j = i + ldx*ldy * ( k - 1 )
+                  call FFT_Y_STICK(fw_plan_y(ip), r(j), ny, ldx) 
+                END IF
+              end do
+            end do
+            tscale = 1.0d0 / ( nx * ny )
+            CALL zdscal(SIZE(r), tscale, r(1), 1)
+
+          ELSE IF( isign < 0 ) THEN
+
+            do i = 1, nx
+              do k = 1, nzl
+                IF( pl2ix( i ) > 0 ) THEN
+                  j = i + ldx*ldy * ( k - 1 )
+                  call FFT_Y_STICK(bw_plan_y(ip), r(j), ny, ldx) 
+                END IF
+              end do
+            end do
+            CALL FFT_X_STICK( bw_plan_x(ip), r(1), nx, ny, nzl, ldx, ldy ) 
+
+          END IF
+
+#elif defined __AIX
+
+          IF( isign > 0 ) THEN
+
+            idir = 1
+            CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, nzl*ny, idir, &
+                1.0d0, fw_tablex( 1, ip ), ltabl, work, lwork)
+            do i = 1, nx
+              do k = 1, nzl
+                IF( pl2ix( i ) > 0 ) THEN
+                  j = i + ldx*ldy * ( k - 1 )
+                  call DCFT ( 0, r(j), ldx, 1, r(j), ldx, 1, ny, 1, &
+                      idir, 1.0d0, fw_tabley(1,ip), ltabl, work, lwork)
+                END IF
+              end do
+            end do
+            tscale = 1.0d0 / ( nx * ny )
+            CALL zdscal(SIZE(r), tscale, r(1), 1)
+
+          ELSE IF( isign < 0 ) THEN
+
+            idir = -1
+            do i = 1, nx
+              do k = 1, nzl
+                IF( pl2ix( i ) > 0 ) THEN
+                  j = i + ldx*ldy * ( k - 1 )
+                  call DCFT ( 0, r(j), ldx, 1, r(j), ldx, 1, ny, 1, &
+                    idir, 1.0d0, bw_tabley(1,ip), ltabl, work, lwork)
+                END IF
+              end do
+            end do
+            CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl, idir, &
+              1.0d0, bw_tablex(1,ip), ltabl, work, lwork)
+         
+          END IF
+
+
+#elif defined __T3E
+
+          IF( isign > 0 ) THEN
+            DO i = 1, nzl
+              DO j = 1, ny
+                call CCFFT (isign, nx, 1.0, r(1), r(1), tablex(1,ip), work, isys)
+              END DO
+            END DO
+
+            do i=1,nx
+              do k=1,nzl
+                IF( pl2ix( i ) > 0 ) THEN
+                  do j=1,ny
+                    yt(j) = r(i,j,k)
+                  end do
+                  call CCFFT ( isign, ny, 1.0, yt, yt, tabley(ip), work, isys)
+                  do j=1,ny
+                    r(i,j,k) = yt(j)
+                  end do
+                END IF
+              end do
+            end do
+            tscale = 1.0d0 / ( nx * ny )
+            CALL csscal(SIZE(r), tscale, r(1), 1)
+
+          ELSE IF( isign < 0 ) THEN
+            do i=1,nxl
+              do k=1,nzl
+                IF( pl2ix( i ) > 0 ) THEN
+                  do j=1,ny
+                    yt(j) = r(i,j,k)
+                  end do
+                  call CCFFT ( isign, ny, 1.0, yt, yt, tabley(ip), work, isys)
+                  do j=1,ny
+                    r(i,j,k) = yt(j)
+                  end do
+                END IF
+              end do
+            end do
+            DO i = 1, nzl
+              DO j = 1, ny
+                call CCFFT (isign, nx, 1.0, r(1), r(1), tablex(1,ip), work, isys)
+              END DO
+            END DO
+
+          END IF
+
+#elif defined __SGI
+
+          IF( isign > 0 ) THEN
+            DO i = 1, nzl
+              k = 1 + ( i - 1 ) * ldx * ldy
+              call zfftm1d( isign, nx, ny, r(k), 1, ldx, tablex(1,ip) )
+            END DO
+            do i = 1, nx
+              IF( pl2ix( i ) > 0 ) THEN
+                call zfftm1d( isign, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
+              END IF
+            end do
+            tscale = 1.0d0 / ( nx * ny )
+            CALL zdscal(SIZE(r), tscale, r(1), 1)
+          ELSE IF( isign < 0 ) THEN
+            do i = 1, nx
+              IF( pl2ix( i ) > 0 ) THEN
+                call zfftm1d( isign, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
+              END IF
+            end do
+            DO i = 1, nzl
+              k = 1 + ( i - 1 ) * ldx * ldy
+              call zfftm1d( isign, nx, ny, r(k), 1, ldx, tablex(1,ip) )
+            END DO
+          END IF
+
+#else
+
+          CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
+
+#endif
+
+          return
+        end subroutine cft_2xy
+
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
+!         3D scalar FFTs 
+!
+!
+!
+!=----------------------------------------------------------------------=!
+!
+
+        SUBROUTINE cfft3d( f, nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn )
+          IMPLICIT NONE
+
+          INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn 
+          COMPLEX (dbl) :: f(:)
+          INTEGER :: i, k, j, err, idir, ip, isign
+          REAL(dbl) :: tscale
+          INTEGER, SAVE :: icurrent = 1
+          INTEGER, SAVE :: dims(3,ndims) = -1
+
+          isign = -sgn
+
+          !
+          !   Here initialize table only if necessary
+          !
+
+          ip = -1
+          DO i = 1, ndims
+
+            !   first check if there is already a table initialized
+            !   for this combination of parameters
+
+            IF ( ( nr1 == dims(1,i) ) .and. ( nr2 == dims(2,i) ) .and. ( nr3 == dims(3,i) ) ) THEN
+              ip = i
+              EXIT
+            END IF
+          END DO
+
+          IF( ip == -1 ) THEN
+
+            !   no table exist for these parameters
+            !   initialize a new one
+
+            dims(1,icurrent) = nr1; dims(2,icurrent) = nr2; dims(3,icurrent) = nr3
+            ip = icurrent
+            icurrent = MOD( icurrent, ndims ) + 1
+
+          END IF
+
+
+#if defined __FFTW
+#elif defined __AIX
+
+          if ( isign > 0 ) then
+            scale = 1.0d0 / (nr1*nr2*nr3)
+          else
+            scale=1.0d0
+          end if
+!
+          call dcft3( f(1), nr1x, nr1x*nr2x, f(1), nr1x, nr1x*nr2x, nr1, nr2, nr3,  &
+            isign, scale, work(1), lwork)
+!
+#endif
+      
+          RETURN
+        END SUBROUTINE
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
+!         3D parallel FFT on sub-grids
+!
+!
+!
+!=----------------------------------------------------------------------=!
+!
+!----------------------------------------------------------------------
+      subroutine cft_b (f,n1,n2,n3,n1x,n2x,n3x,imin3,imax3,sgn)
+!     ===============
+!     driver routine for 3d complex fft's on box grid - ibm essl
+!     fft along xy is done only on planes that correspond to
+!     dense grid planes on the current processor, i.e. planes
+!     with imin3 .le. n3 .le. imax3
+!----------------------------------------------------------------------
+!
+      implicit none
+      integer n1,n2,n3,n1x,n2x,n3x,imin3,imax3,sgn
+      complex(kind=8) :: f(:)
+
+#ifdef __AIX
+!
+! initialization variables
+!
+      logical first(2)
+      data first /.true., .true./
+      integer naux1
+      parameter (naux1=20000)
+      real(kind=8) aux3(naux1,2), aux2(naux1,2), aux1(naux1,2)
+      save first, aux1, aux2, aux3
+!
+! work variables
+!
+      integer isign, naux, ibid, nplanes, nstart, k
+      parameter (naux=15000)
+      real(kind=8) aux(naux), scale
+!
+!
+      isign = -sgn
+      if (isign.eq.-1) then
+         ibid =1
+         scale=1.d0
+      else if (isign.eq.1) then
+         call errore('cft_b','not implemented',isign)
+      end if
+!
+      if (first(ibid)) then
+!
+! initialization for the z-direction...
+!
+         call dcft(1,f,n1x*n2x,1,f,n1x*n2x,1,n3,n1x*n2x,isign,          &
+     &        scale,aux3(1,ibid),naux1,aux,naux)
+         first(ibid)=.false.
+      end if
+!
+! fft in the z-direction...
+!
+      call dcft(0,f,n1x*n2x,1,f,n1x*n2x,1,n3,n1x*n2x,isign,             &
+     &        scale,aux3(1,ibid),naux1,aux,naux)
+!
+! 2d fft on xy planes - only needed planes are transformed
+! note that all others are left in an unusable state
+!
+      nplanes=imax3-imin3+1
+      nstart =(imin3-1)*n1x*n2x+1
+!
+! x-direction  - Inizialization must be done every time because it depends
+! on nplanes that may vary from call to call !!!! sigh
+!
+      call dcft(1,f,1,n1x,f,1,n1x,n1,n2x*nplanes,isign,                  &
+     &        scale,aux1(1,ibid),naux1,aux,naux)
+      call dcft(0,f(nstart),1,n1x,f(nstart),1,n1x,n1,n2x*nplanes,isign,  &
+     &        scale,aux1(1,ibid),naux1,aux,naux)
+!
+! y-direction
+!
+      call dcft(1,f,n1x,1,f,n1x,1,n2,n1x,isign,                          &
+     &        scale,aux2(1,ibid),naux1,aux,naux)
+!
+      do k= imin3,imax3
+        nstart=(k-1)*n1x*n2x+1
+        call dcft(0,f(nstart),n1x,1,f(nstart),n1x,1,n2,n1x,isign,        &
+     &        scale,aux2(1,ibid),naux1,aux,naux)
+     end do
+#endif
+      return
+      end subroutine
 
 
 !=----------------------------------------------------------------------=!
