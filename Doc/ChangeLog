@@ -1,3 +1,10 @@
+14 Sep 2004 Allocation of evc when starting from atomic wavefunctions 
+            modified so that evc contain only the real number bands and 
+            not all the atomic wfcs (they can be much more than the
+            number of bands). 
+            unified setup.f90 for both collinear and noncollinear case.
+            (CS)
+
 13 Sep 2004 Merge of cell dynamics (CC): 
             - same cell dynamics subroutines used in CP and FPMD
             - input pressure in GPa ( both code )
@@ -13,7 +20,7 @@
             DIIS: small bug-fix and general clean-up of the code.
             ionode substituted by meta_ionode (this because in neb and 
             smd all images have an ionode, but only one image, the one
-            identified by meta_ionode, can check stop). (C.S.)
+            identified by meta_ionode, can check stop). (CS)
 
  8 Sep 2004 configure.old, documentation for configure updated [Gerardo]
             moved install/README.install to README.install_old [Gerardo]
