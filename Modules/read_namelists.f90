@@ -232,6 +232,13 @@ MODULE read_namelists_module
              startingpot = 'file'             
              !
           END IF
+          !
+          IF ( calculation == 'nscf' .OR. &
+               calculation == 'phonon' ) THEN
+             !
+             startingpot = 'file'
+             !
+          END IF   
           !      
        ELSE
           startingwfc = 'random'
