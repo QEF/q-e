@@ -15,21 +15,21 @@
 !
 !  Input data (namelist "input")
 !
-!  flmat  character  input file containing the dynamical matrix
-!                    (default: flmat='dynmat')
+!  fildyn  character input file containing the dynamical matrix
+!                    (default: fildyn='matdyn')
 !  q(3)      real    calculate LO modes (add nonanalytic terms) along
 !                    the direction q (default: q=(0,0,0) )
 !  amass(nt) real    mass for atom type nt, a.u.
-!                    (default: amass is read from file flmat)
-!  asr    logical    impose Acoustic Sum Rule (default:asr=.true.)
-!  flout  character  output file containing frequencies and modes
-!                    (default: flle='dynout')
-!  flmol  character  as above, in a format suitable for 'molden'
-!                    (default: flmol='moldout') 
+!                    (default: amass is read from file fildyn)
+!  asr     logical   impose Acoustic Sum Rule (default:asr=.true.)
+!  filout  character output file containing frequencies and modes
+!                    (default: filout='dynmat.out')
+!  filmol  character as above, in a format suitable for 'molden'
+!                    (default: filmol='molden.out') 
 !
       implicit none
       integer, parameter :: nax=30
-      character(len=50):: flmat, flout, flmol
+      character(len=50):: fildyn, filout, filmol
       character(len=3) :: atm(nax)
       logical :: asr, lread, gamma
       complex(kind=8) :: dyn(3,3,nax,nax), z(3*nax,3*nax)
@@ -37,13 +37,13 @@
            eps0(3,3), a0, omega, amconv, q(3), q_(3), w2(3*nax)
       real(kind=8) :: dchi_dtau(3,3,3,nax)
       integer :: ityp(nax), itau(nax), nat, na, nt, ntyp, nu, iout
-      namelist /input/ amass, asr, flmat, flout, flmol, q
+      namelist /input/ amass, asr, fildyn, filout, filmol, q
 !
 !
       asr  =.true.
-      flmat='dynmat'
-      flout='dynout'
-      flmol='moldout'
+      fildyn='matdyn'
+      filout='dynmat.out'
+      filmol='molden.out'
       amass(:)=0.0
       q(1)=0.0
       q(2)=0.0
@@ -51,16 +51,16 @@
 !
       read (5,input)
 !
-      inquire(file=flmat,exist=lread)
+      inquire(file=fildyn,exist=lread)
       if (lread) then
          write(6,'(/5x,a,a)') 'Reading Dynamical Matrix from file ',&
-              & flmat
+              & fildyn
       else
-         write(6,'(/5x,a)') 'file not found', flmat
+         write(6,'(/5x,a)') 'file not found', fildyn
          stop
       end if
 !
-      call readmat (flmat,asr,nax,nat,ntyp,ityp,atm,a0,omega, amass_&
+      call readmat (fildyn,asr,nax,nat,ntyp,ityp,atm,a0,omega, amass_&
            &,tau,zstar,eps0,dyn,dchi_dtau,q_)
 !
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0e-8
@@ -82,16 +82,16 @@
 !
       call dyndiag(nax,nat,amass,ityp,dyn,w2,z)
 !
-      if (flout.eq.' ') then
+      if (filout.eq.' ') then
          iout=6
       else
          iout=4
-         open (unit=iout,file=flout,status='unknown',form='formatted')
+         open (unit=iout,file=filout,status='unknown',form='formatted')
       end if
       call writemodes(nax,nat,q_,w2,z,iout)
       if(iout .ne. 6) close(unit=iout)
 !
-      call writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
+      call writemolden(nax,nat,atm,a0,tau,ityp,w2,z,filmol)
 !
       if (gamma) call RamanIR &
            (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
@@ -100,12 +100,12 @@
       end
 !
 !-----------------------------------------------------------------------
-      subroutine readmat (flmat,asr,nax,nat,ntyp,ityp,atm,a0,           &
+      subroutine readmat (fildyn,asr,nax,nat,ntyp,ityp,atm,a0,           &
            omega,amass,tau,zstar,eps0,dynr,dchi_dtau,q)
 !-----------------------------------------------------------------------
 !
       implicit none
-      character(len=*) flmat
+      character(len=*) fildyn
       integer nax, nat, ntyp, ityp(nax)
       character(len=3) atm(ntyp)
       real(kind=8) amass(ntyp), tau(3,nax), a0, omega
@@ -120,7 +120,7 @@
 !
 !
       noraman=.true.
-      open (unit=1,file=flmat,status='old',form='formatted')
+      open (unit=1,file=fildyn,status='old',form='formatted')
       read(1,'(a)') line
       read(1,'(a)') line
       read(1,*) ntyp,nat,ibrav,celldm
