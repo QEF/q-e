@@ -123,8 +123,10 @@ SUBROUTINE iosys()
                                angle2_    => angle2, &
                                report_    => report
 
-  USE spin_orb, ONLY : lspinorb_ => lspinorb   
-
+  USE spin_orb, ONLY : lspinorb_ => lspinorb
+  
+  USE constraints_module, ONLY : nconstr, constr_tol, constr, target
+  
   USE bfgs_module,   ONLY : bfgs_xlf_bug, &
                             lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -196,7 +198,8 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : pos 
   !
-  USE read_namelists_module, ONLY: read_namelists
+  USE basic_algebra_routines, ONLY : norm
+  USE read_namelists_module,  ONLY : read_namelists
   !
   IMPLICIT NONE
   !
@@ -204,8 +207,9 @@ SUBROUTINE iosys()
   !
   INTEGER             :: unit = 5, &! standard input unit
                          i, iiarg, nargs, ia, ios, ierr, ilen, is, image, nt
-  INTEGER, EXTERNAL   :: iargc                 
+  INTEGER, EXTERNAL   :: iargc
   CHARACTER (LEN=80)  :: input_file
+  LOGICAL             :: ltest
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
@@ -962,7 +966,33 @@ SUBROUTINE iosys()
         !
      END SELECT
      !
-  END IF        
+  END IF
+  !
+  ! ... set constraints
+  !
+  IF ( lconstrain ) THEN
+     !
+     ! ... target value of the constrain ( in bohr )
+     !
+     DO ia = 1, nconstr
+        !
+        target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) )
+        !
+        ltest = if_pos(1,constr(1,ia)) == 0 .OR. &
+                if_pos(1,constr(2,ia)) == 0 .OR. &
+                if_pos(2,constr(1,ia)) == 0 .OR. &
+                if_pos(2,constr(2,ia)) == 0 .OR. &
+                if_pos(3,constr(1,ia)) == 0 .OR. &
+                if_pos(3,constr(2,ia)) == 0
+                
+        !
+        IF ( ltest ) &
+           CALL errore( ' cards ', &
+                      & ' constraints cannot be set on fixed atoms', 1 )
+        !
+     END DO
+     !
+  END IF
   !
   ! ... set default value of wmass
   !
@@ -1223,24 +1253,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      !
      constr(:,:) = constr_inp(:,1:nconstr)
      !
-     ! ... target value of the constrain ( in bohr )
-     !
-     DO ia = 1, nconstr
-        !
-        target(ia) = norm( tau(:,constr(1,ia)) - &
-                           tau(:,constr(2,ia)) ) * celldm(1)
-        !
-     END DO    
-     !
-     ! ... "if_pos" constrains are not compatible with other constrains
-     !
-     if_pos_ = 1
-     !
-     IF ( fixatom > 0 ) &
-       CALL errore( ' cards ', &
-                  & ' constrains are not compatible with fixed atoms', 1 ) 
-     !
-  END IF   
+  END IF
   !
   RETURN 
   !

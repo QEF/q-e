@@ -5,14 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !----------------------------------------------------------------------------
 MODULE constraints_module
   !----------------------------------------------------------------------------
   ! 
-#include "f_defs.h"
   ! ... variables and methods for constraint Molecular Dynamics and
-  ! ... constraint ionic relaxations (based on a penalty function) are 
-  ! ... defined here.
+  ! ... constraint ionic relaxations (based on a penalty function or lagrange
+  ! ... multipliers) are defined here.
   !
   ! ... Written by Carlo Sbraccia ( 24/02/2004 )
   !
@@ -109,7 +110,7 @@ MODULE constraints_module
        ! ... the actual distance between the two atoms ( in bohr )
        !
        dist0 = SQRT( ( x1 - x2 )**2 + ( y1 - y2 )**2 + ( z1 - z2 )**2 )
-       !    
+       !
        g = ( dist0 - target(index) )
        !
        IF ( dist0 > eps32 ) THEN
@@ -170,7 +171,7 @@ MODULE constraints_module
              !
              ! ... check if g = 0
              !
-#if defined (__DEBUG_CONSTRAINS)
+#if defined (__DEBUG_CONSTRAINTS)
              WRITE( stdout, * ) i, index, ABS( g )
 #endif
              !             
@@ -197,6 +198,8 @@ MODULE constraints_module
             !
           END DO
           !
+          ! ... all constraints are satisfied
+          !
           IF ( global_test ) EXIT outer_loop
           !
        END DO outer_loop
@@ -210,13 +213,9 @@ MODULE constraints_module
        !
        IF ( i > 1 ) THEN
           !
-          WRITE( stdout, '(/5X,"Corrected atomic positions:",/)')
+          WRITE( stdout, '(/5X,"Corrected atomic positions:")')
           !
-          DO na = 1, nat
-             !
-             WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), tau(:,na)
-             !
-          END DO
+          CALL output_tau( .FALSE. )
           !
        END IF
        !
@@ -246,7 +245,7 @@ MODULE constraints_module
        !
        USE io_global, ONLY : stdout
        USE constants, ONLY : eps16, eps32
-       USE ions_base, ONLY : nat
+       USE ions_base, ONLY : nat, if_pos
        USE cell_base, ONLY : at, bg
        USE force_mod, ONLY : force
        USE symme,     ONLY : s, nsym, irt
@@ -316,6 +315,10 @@ MODULE constraints_module
              END DO
              !
           END IF
+          !
+          ! ... forces on fixed coordinates are set to zero
+          !
+          force = force * REAL( if_pos )
           !
        END IF
        !

@@ -289,6 +289,7 @@ SUBROUTINE move_ions()
        !-----------------------------------------------------------------------
        !
        USE constraints_module, ONLY : nconstr
+       USE ions_base,          ONLY : ityp
        !
        IMPLICIT NONE
        !
@@ -327,15 +328,18 @@ SUBROUTINE move_ions()
              !
           END DO
           !
-          WRITE( stdout, '(/5x,"Constrained forces")')
+          WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
           !
           DO na = 1, nat
              !
-             WRITE( stdout, '(3F14.8)') force(:,na)
+             WRITE( UNIT = stdout, &
+                   FMT = 9000 ) na, ityp(na), force(:,na)
              !
           END DO
           !   
-       END IF       
+       END IF
+       !
+9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8) 
        !
      END SUBROUTINE impose_constrains
      !
