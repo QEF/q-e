@@ -527,13 +527,13 @@ FUNCTION rho_dot_product( rho1, rho2 )
   !
   ! ... this function evaluates the dot product between two input densities
   !
-  USE kinds, ONLY : DP
-  USE constants,  ONLY : e2, tpi, fpi
-  USE cell_base,      ONLY : omega, tpiba2
-  USE gvect,      ONLY : gstart, gg
-  USE lsda_mod,   ONLY : nspin
-  USE control_flags,      ONLY : ngm0
-  USE wvfct,      ONLY : gamma_only
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : e2, tpi, fpi
+  USE cell_base,     ONLY : omega, tpiba2
+  USE gvect,         ONLY : gstart, gg
+  USE lsda_mod,      ONLY : nspin
+  USE control_flags, ONLY : ngm0
+  USE wvfct,         ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -624,7 +624,7 @@ FUNCTION ns_dot_product( ns1, ns2 )
   !
   ! ... this function evaluates the dot product between two input densities
   !
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
                          Hubbard_alpha
   USE basis,      ONLY : nat, ityp
@@ -688,13 +688,13 @@ FUNCTION fn_dehar( drho )
   !
   ! ... this function evaluates the residual hartree energy of drho
   !
-  USE kinds, ONLY : DP
-  USE constants,  ONLY : e2, fpi
+  USE kinds,          ONLY : DP
+  USE constants,      ONLY : e2, fpi
   USE cell_base,      ONLY : omega, tpiba2
-  USE gvect,      ONLY : gstart, gg
-  USE lsda_mod,   ONLY : nspin
-  USE control_flags,      ONLY : ngm0
-  USE wvfct,      ONLY : gamma_only
+  USE gvect,          ONLY : gstart, gg
+  USE lsda_mod,       ONLY : nspin
+  USE control_flags,  ONLY : ngm0
+  USE wvfct,          ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -764,13 +764,13 @@ SUBROUTINE approx_screening( drho )
   !
   ! ... apply an average TF preconditioning to drho
   !
-  USE kinds, ONLY : DP
-  USE constants,  ONLY : e2, pi, fpi
+  USE kinds,          ONLY : DP
+  USE constants,      ONLY : e2, pi, fpi
   USE cell_base,      ONLY : omega, tpiba2
-  USE gvect,      ONLY : gstart, gg
-  USE klist,      ONLY : nelec
-  USE lsda_mod,   ONLY : nspin
-  USE control_flags,      ONLY : ngm0
+  USE gvect,          ONLY : gstart, gg
+  USE klist,          ONLY : nelec
+  USE lsda_mod,       ONLY : nspin
+  USE control_flags,  ONLY : ngm0
   !
   IMPLICIT NONE  
   !
@@ -787,7 +787,7 @@ SUBROUTINE approx_screening( drho )
     is, ig
   !
   !
-  rs = ( 3.D0 * omega / fpi / nelec)**( 1.D0 / 3.D0 )
+  rs = ( 3.D0 * omega / fpi / nelec )**( 1.D0 / 3.D0 )
   !
   agg0 = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / rs
   !
@@ -818,14 +818,14 @@ END SUBROUTINE approx_screening
 !
 !
 !----------------------------------------------------------------------------
-  SUBROUTINE approx_screening2( drho, rhobest )
+SUBROUTINE approx_screening2( drho, rhobest )
   !----------------------------------------------------------------------------
   !
   ! ... apply a local-density dependent TF preconditioning to drho
   !
-  USE kinds,           ONLY : DP
-  USE constants,            ONLY : e2, pi, tpi, fpi, eps8
-  USE cell_base,                ONLY : omega, tpiba2
+  USE kinds,                ONLY : DP
+  USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
+  USE cell_base,            ONLY : omega, tpiba2
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, nlm, gg
   USE klist,                ONLY : nelec
@@ -922,11 +922,16 @@ END SUBROUTINE approx_screening
   DO ir = 1, nrxx
      !
      alpha(ir) = ABS( alpha(ir) )
-     rs        = ( 3.D0 / fpi / alpha(ir) )**( 1.D0 /3.D0 )
-     min_rs    = MIN( min_rs, rs )
-     avg_rsm1  = avg_rsm1 + 1.D0 / rs
-     max_rs    = MAX( max_rs, rs )
-     alpha(ir) = rs
+     !
+     IF ( alpha(ir) > eps32 ) THEN
+        !
+        rs        = ( 3.D0 / fpi / alpha(ir) )**( 1.D0 /3.D0 )
+        min_rs    = MIN( min_rs, rs )
+        avg_rsm1  = avg_rsm1 + 1.D0 / rs
+        max_rs    = MAX( max_rs, rs )
+        alpha(ir) = rs
+        !
+     END IF   
      !
   END DO
   !
@@ -984,7 +989,11 @@ END SUBROUTINE approx_screening
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
      !
-     psic(:) = psic(:) * fpi * e2 / alpha(:)
+     WHERE( alpha(:) > eps32 )
+        !
+        psic(:) = psic(:) * fpi * e2 / alpha(:)
+        !
+     END WHERE
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1 )
      !
@@ -1035,7 +1044,7 @@ END SUBROUTINE approx_screening
      !
      cbest = ccc
      !
-     DO i=1,m
+     DO i = 1, m
         cbest = cbest - bb(i) * vec(i)
      END DO
      !
@@ -1043,11 +1052,7 @@ END SUBROUTINE approx_screening
      !
      IF ( target == 0.D0 ) target = 1.D-6 * dr2_best
      !
-     !WRITE( stdout,*) m, dr2_best, cbest
-     !
      IF ( dr2_best < target ) THEN
-        !
-        !WRITE( stdout,*) ' last', dr2_best/target * 1.d-6
         !
         psic(:) = ( 0.D0, 0.D0 )
         !
@@ -1058,7 +1063,11 @@ END SUBROUTINE approx_screening
         !
         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
         !
-        psic(:) = psic(:) / alpha(:)
+        WHERE( alpha(:) > eps32 )
+           !
+           psic(:) = psic(:) / alpha(:)
+           !
+        END WHERE
         !
         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1 )
         !
@@ -1080,8 +1089,6 @@ END SUBROUTINE approx_screening
         EXIT repeat_loop
         !
      ELSE IF ( m >= mmx ) THEN
-        !
-        !WRITE( stdout,*) m, dr2_best, cbest
         !
         m = 1
         !
