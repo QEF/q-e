@@ -46,7 +46,12 @@
      CHARACTER(LEN=2 ), PARAMETER :: ks_file       = 'KS'
      CHARACTER(LEN=6 ), PARAMETER :: ks_emp_file   = 'KS_EMP'
      CHARACTER(LEN=16), PARAMETER :: sfac_file     = 'STRUCTURE_FACTOR'
-
+     CHARACTER (LEN=80) :: &
+       dat_file  = 'os.dat',   &! file containing the enegy profile
+       int_file  = 'os.int',   &! file containing the interpolated energy profile
+       neb_file  = 'os.neb',   &! file containing informations needed to restart a neb simulation
+       xyz_file  = 'os.xyz',   &! file containing coordinates of all images in xyz format
+       axsf_file = 'os.axsf'    ! file containing coordinates of all images in axsf format
   !
   ! ... The units where various variables are saved
   !
@@ -59,17 +64,26 @@
      INTEGER :: sfacunit    = 20
      INTEGER :: pseudounit  = 10
 
-     INTEGER :: iunpun      =  4  ! unit for saving the final results
-     INTEGER :: iunwfc      = 10  ! unit with wavefunctions
+     INTEGER :: iunpun      =  4 ! unit for saving the final results
+     INTEGER :: iunwfc      = 10 ! unit with wavefunctions
      INTEGER :: iunat       = 13 ! unit for saving orthogonal atomic wfcs
      INTEGER :: iunocc      = 14 ! unit for saving the atomic n_{ij}
      INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions (molecular dynamics)
      INTEGER :: iunoldwfc2  = 12 ! as above at step -2
      INTEGER :: iunigk      = 16 ! unit for saving indices
      INTEGER :: iunres      =  1 ! unit for the restart of the run
-     INTEGER :: iunneb      = 20 ! unit for NEB output ( sdtout or what else )
+     !
      INTEGER :: nwordwfc    =  2 ! lenght of record in wavefunction file
      INTEGER :: nwordatwfc  =  2 ! lenght of record in atomic wfc file
+     !
+     ! ... NEB specific
+     !
+     INTEGER :: iunneb      =  6 ! unit for NEB output ( stdout or what else )
+     INTEGER :: iunrestart  = 21 ! unit for saving the restart file ( neb_file )
+     INTEGER :: iundat      = 22 ! unit for saving the enegy profile
+     INTEGER :: iunint      = 23 ! unit for saving the interpolated energy profile
+     INTEGER :: iunxyz      = 24 ! unit for saving coordinates ( xyz format )
+     INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
 
 !=----------------------------------------------------------------------------=!
    END MODULE io_files
