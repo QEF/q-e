@@ -1,13 +1,13 @@
 !
 ! ------------------------------------------------------------------
-function atomic_number(atom)
+function atomic_number(atm)
   ! ------------------------------------------------------------------
   !
   implicit none
-  character(len=2) :: atom
+  character(len=*) :: atm
   integer :: atomic_number
 
-  character(len=2) :: elements(103) 
+  character(len=2) :: elements(103), atom 
   data elements/' H',                              'He', &
                 'Li','Be',' B',' C',' N',' O',' F','Ne', &
                 'Na','Mg','Al','Si',' P',' S','Cl','Ar', &
@@ -27,14 +27,14 @@ function atomic_number(atom)
   character(len=1), external :: capital, lowercase
   integer :: n
 
-  if (len_trim(atom) == 1) then
-     atom(2:2)=capital(atom(1:1))
-     atom(1:1)=' '
-  else if (atom(1:1) == ' ') then
-     atom(2:2)=capital(atom(2:2))
+  atom='  '
+  if (len_trim(atm) == 1) then
+     atom(2:2)=capital(atm(1:1))
+  else if (atm(1:1) == ' ') then
+     atom(2:2)=capital(atm(2:2))
   else
-     atom(1:1)=capital(atom(1:1))
-     atom(2:2)=lowercase(atom(2:2))
+     atom(1:1)=capital(atm(1:1))
+     atom(2:2)=lowercase(atm(2:2))
   end if
       
   do n=1, 103
