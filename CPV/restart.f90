@@ -639,18 +639,18 @@ CONTAINS
 !       ==  WAVEFUNCTIONS                                               ==
 !       ==--------------------------------------------------------------==
 
-        tigl = .FALSE.
-        IF( flag == -1 ) THEN
-          tw0 = .FALSE.
-          twm = .FALSE.
-        ELSE IF( flag == 0 ) THEN
-          tw0 = .TRUE.
-          twm = .FALSE.
-        ELSE
-          tw0 = .TRUE.
-          twm = .TRUE.
-        END IF
         DO j = 1, nspin
+          tigl = .FALSE.
+          IF( flag == -1 ) THEN
+            tw0 = .FALSE.
+            twm = .FALSE.
+          ELSE IF( flag == 0 ) THEN
+            tw0 = .TRUE.
+            twm = .FALSE.
+          ELSE
+            tw0 = .TRUE.
+            twm = .TRUE.
+          END IF
           DO i = 1, nk
             CALL read_restart_wfc(ndr, ik_, nk_, kunit_, ispin_, nspin_, &
               wfc_scal, c0, tw0, cm, twm, ngwt_, nbnd_, ig_l2g, ngw )
