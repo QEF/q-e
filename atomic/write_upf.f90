@@ -8,7 +8,7 @@
 !
 subroutine write_upf(ounps)
 
-  use ld1inc, only: nlcc
+  use ld1inc, only: nlcc, rel
 
   integer :: ounps
 
@@ -20,7 +20,7 @@ subroutine write_upf(ounps)
   call write_pseudo_nl(ounps)  
   call write_pseudo_pswfc(ounps)
   call write_pseudo_rhoatom(ounps)  
-  call write_pseudo_addinfo(ounps)  
+  if (rel > 2) call write_pseudo_addinfo(ounps)  
   !
   !
 end subroutine write_upf
@@ -116,7 +116,7 @@ end subroutine write_upf
     endif
     write (ounps, '(l5,t24,a)', err = 100, iostat = ios) nlcc , &
          "Nonlinear Core Correction"
-    call dftname (iexch, icorr, igcx, igcc, dft, shortname)
+    call dft_name (iexch, icorr, igcx, igcc, dft, shortname)
     write (ounps, '(a,t24,a4,a)', err = 100, iostat = ios) &
          dft, shortname," Exchange-Correlation functional"
     write (ounps, '(f17.11,t24,a)') zval , "Z valence"  
@@ -373,7 +373,7 @@ end subroutine write_upf
 end subroutine write_pseudo_addinfo
 
   !---------------------------------------------------------------------
-  subroutine dftname(iexch, icorr, igcx, igcc, longname, shortname)
+  subroutine dft_name(iexch, icorr, igcx, igcc, longname, shortname)
   !---------------------------------------------------------------------
   implicit none
   integer iexch, icorr, igcx, igcc
@@ -410,5 +410,5 @@ end subroutine write_pseudo_addinfo
   write(longname,'(4a5)') exc(iexch),corr(icorr),gradx(igcx),gradc(igcc)
 
   return
-end subroutine dftname
+end subroutine dft_name
 

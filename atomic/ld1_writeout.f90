@@ -12,48 +12,83 @@ subroutine ld1_writeout
   implicit none
 
   integer :: &
-       nb,mb, &  ! counters on beta functions
-       ir,    &  ! counters on mesh points
        ios,   &  ! I/O control
-       n,     &  ! counter on mesh points
-       nch,   &  ! counter on chi functions
-       l,     &  ! counter on angular momenta
        iunps     ! the unit with the pseudopotential
 
-  real(kind=dp) :: int_0_inf_dr, aux(ndm)
-
-  logical :: matches
-
+  logical, external :: matches
+  logical :: oldformat
   
-  if (file_pseudopw.eq.' ') return
+  if (file_pseudopw == ' ') return
 
-  if (nconf.gt.1) &
+  if (nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
 
-  if (rel.eq.2.and..not.matches('UPF',file_pseudopw)) &
-       file_pseudopw=trim(file_pseudopw)//'.UPF'
+  if (rel == 2 .and. .not. matches('UPF',file_pseudopw) &
+               .and. .not. matches('upf',file_pseudopw) ) then
+     file_pseudopw=trim(file_pseudopw)//'.UPF'
+  end if
 
-  if (matches('UPF',file_pseudopw).or.matches('upf',file_pseudopw)) goto 201
+  oldformat = .not. matches('UPF',file_pseudopw) .and. &
+              .not. matches('upf',file_pseudopw)
 
   iunps=28
-  open(unit=iunps, file=file_pseudopw, status='unknown',  &
+  open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
        form='formatted', err=50, iostat=ios)
 50 call errore('ld1_writeout','opening file_pseudopw',abs(ios))
 
-  if (pseudotype.eq.1) then
-     call write_pseudo &
-          (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
-          dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-          rhoc,vnl,phis,vpsloc,llts,octs,etots,nwfts)
-
-     close(iunps)
-     return
+  if (oldformat) then
+     !
+     if (pseudotype == 1) then
+        call write_pseudo &
+             (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+             dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+             rhoc,vnl,phis,vpsloc,llts,octs,etots,nwfts)
+     else
+        call write_rrkj ( iunps )
+     end if
+     !
+  else
+     !
+     if (pseudotype == 1) then
+        !
+        !  prepare for writing UPF file 
+        !
+        if (rel == 2 ) then
+           call copy_ncpp_so ()
+        else
+           call copy_ncpp ()
+        end if
+        !
+     endif
+     !
+     call write_upf(iunps)
+     !
   endif
+  !
+  close(iunps)
+  !
+  return
+end subroutine ld1_writeout
 
+!---------------------------------------------------------------------
+subroutine write_rrkj (iunps)
+  !---------------------------------------------------------------------
+  !
+  use ld1inc
+  use funct
+  implicit none
+  !
+  integer, intent(in):: iunps ! I/O unit
+  !
+  integer :: nb, mb, & ! counters on beta functions
+             ios,    & ! I/O control
+             ir        ! counter on mesh points
+  !
+  !
   write( iunps, '(a75)', err=100, iostat=ios ) title
-
+  !
   write( iunps, '(i5)',err=100, iostat=ios ) pseudotype
-  if (rel.gt.0) then
+  if (rel > 0) then
      write( iunps, '(2l5)',err=100, iostat=ios ) .true., nlcc
   else
      write( iunps, '(2l5)',err=100, iostat=ios ) .false., nlcc
@@ -81,11 +116,11 @@ subroutine ld1_writeout
      do mb=1,nb
         write( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
              bmat(nb,mb)
-        if (pseudotype.eq.3) then
+        if (pseudotype == 3) then
            write(iunps,'(1p4e19.11)',err=100,iostat=ios) &
                 qq(nb,mb)
            write(iunps,'(1p4e19.11)',err=100,iostat=ios) & 
-                (qvan(n,nb,mb),n=1,mesh)
+                (qvan(ir,nb,mb),ir=1,mesh)
         endif
      enddo
   enddo
@@ -112,95 +147,135 @@ subroutine ld1_writeout
   write( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
        ((phis(ir,nb),ir=1,mesh),nb=1,nwfs)
 100 call errore('ld1_writeout','Writing pseudopw file',abs(ios))
-  close(iunps)
+  !
+end subroutine write_rrkj
 
-201 continue
-
-
-  if (matches('UPF',file_pseudopw).or.matches('upf',file_pseudopw)) then
-     if (rel.eq.2.and.pseudotype.eq.1) then
-        !
-        !  prepare for writing UPF file 
-        !
-        if (iswitch.eq.2) then 
-           if (lloc.ne.-1) then
-              if (lloc==0) then
-                 do ir=1,mesh
-                    vpsloc(ir)=vnlo(ir,lloc,1)
-                 enddo
-              else
-                 do ir=1,mesh
-                    vpsloc(ir)=((lloc+1.0_dp)*vnlo(ir,lloc,2)+lloc*vnlo(ir,lloc,1))/&
-                         (2.0_dp*lloc + 1.0_dp)
-                 enddo
-              endif
+!---------------------------------------------------------------------
+subroutine copy_ncpp_so ()
+  !---------------------------------------------------------------------
+  !
+  use ld1inc
+  implicit none
+  !
+  integer :: n,     & ! counter on wavefunctions
+             nch,   & ! counter on chi functions
+             l,     & ! counter on angular momentum
+             ir       ! counter on mesh points
+  real(kind=dp), external :: int_0_inf_dr
+  real(kind=dp) :: aux(ndm)
+  !
+  if ( lloc > -1) then
+     do ir=1,mesh
+        vpsloc(ir)=vnlo(ir,lloc,1)
+     enddo
+  else if ( lloc > 0 ) then
+     do ir=1,mesh
+        vpsloc(ir) = ((lloc+1.0_dp)*vnlo(ir,lloc,2) + &
+             lloc*vnlo(ir,lloc,1)) / (2.0_dp*lloc + 1.0_dp)
+     enddo
+  endif
+  nbeta=0
+  do l=0,lmax
+     if (l /= lloc) then
+        nbeta=nbeta+1
+        nch=0
+        do n=1,nwfts
+           if (llts(n) == l .and. abs(jjts(n)-l+0.5_dp) < 1e-3_dp) nch=n
+        enddo
+        if (l==0) nch=1
+        if (nch == 0) call errore('convert','jj not found',1)
+        do ir=1,mesh
+           betas(ir,nbeta) = (vnlo(ir,l,1)-vpsloc(ir)) * phis(ir,nch) 
+        enddo
+        lls(nbeta)=llts(nch)
+        jjs(nbeta)=jjts(nch)
+        ikk(nbeta)=mesh
+        do ir=mesh-1,1,-1
+           if (abs(betas(ir,nbeta)) < 1.e-11_dp)then
+              ikk(nbeta)=ir
+           else
+              goto 203
            endif
-           nbeta=0
-           do l=0,lmax
-              if (l.ne.lloc) then
-                 nbeta=nbeta+1
-                 nch=0
-                 do n=1,nwfts
-                    if (llts(n).eq.l.and.abs(jjts(n)-l+0.5_dp).lt.1e-3_dp) nch=n
-                 enddo
-                 if (l==0) nch=1
-                 if (nch.eq.0) call errore('convert','jj not found',1)
-                 do ir=1,mesh
-                    betas(ir,nbeta) = (vnlo(ir,l,1)-vpsloc(ir)) * phis(ir,nch) 
-                 enddo
-                 lls(nbeta)=llts(nch)
-                 jjs(nbeta)=jjts(nch)
-                 ikk(nbeta)=mesh
-                 do ir=mesh-1,1,-1
-                    if (abs(betas(ir,nbeta)).lt.1.e-11_dp)then
-                       ikk(nbeta)=ir
-                    else
-                       goto 203
-                    endif
-                 enddo
-203              continue
-                 do ir = 1, mesh
-                    aux (ir) = phis(ir, nch) * betas (ir, nbeta)
-                 enddo
-                 bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
-                 if (l.ne.0) then
-                    nbeta=nbeta+1
-                    nch=0
-                    do n=1,nwfts
-                       if (llts(n).eq.l.and.abs(jjts(n)-l-0.5_dp).lt.1e-3_dp) nch=n
-                    enddo
-                    if (nch.eq.0) call errore('convert','jj not found',1)
-                    do ir=1,mesh
-                       betas(ir,nbeta) = (vnlo(ir,l,2)-vpsloc(ir)) * phis(ir,nch) 
-                    enddo
-                    lls(nbeta)=llts(nch)
-                    jjs(nbeta)=jjts(nch)
-                    ikk(nbeta)=mesh
-                    do ir=mesh-1,1,-1
-                       if (abs(betas(ir,nbeta)).lt.1.e-11_dp) then
-                          ikk(nbeta)=ir
-                       else
-                          goto 204
-                       endif
-                    enddo
-204                 continue
-                    do ir = 1, mesh
-                       aux(ir) = phis(ir,nch)*betas(ir,nbeta)
-                    enddo
-                    bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
-                 endif
+        enddo
+203     continue
+        do ir = 1, mesh
+           aux (ir) = phis(ir, nch) * betas (ir, nbeta)
+        enddo
+        bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
+        if (l /= 0) then
+           nbeta=nbeta+1
+           nch=0
+           do n=1,nwfts
+              if (llts(n) == l.and.abs(jjts(n)-l-0.5_dp) < 1e-3_dp) nch=n
+           enddo
+           if (nch == 0) call errore('convert','jj not found',1)
+           do ir=1,mesh
+              betas(ir,nbeta) = (vnlo(ir,l,2)-vpsloc(ir)) * phis(ir,nch) 
+           enddo
+           lls(nbeta)=llts(nch)
+           jjs(nbeta)=jjts(nch)
+           ikk(nbeta)=mesh
+           do ir=mesh-1,1,-1
+              if (abs(betas(ir,nbeta)) < 1.e-11_dp) then
+                 ikk(nbeta)=ir
+              else
+                 goto 204
               endif
            enddo
+204        continue
+           do ir = 1, mesh
+              aux(ir) = phis(ir,nch)*betas(ir,nbeta)
+           enddo
+           bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
         endif
      endif
+  end do
 
-     iunps=28
-     open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
-          form='formatted', err=51, iostat=ios)
-51   call errore('ld1_writeout','opening file_pseudopw',abs(ios))
-
-     call write_upf(iunps)
-     close(iunps)
-  endif
   return
-end subroutine ld1_writeout
+end subroutine copy_ncpp_so
+
+!---------------------------------------------------------------------
+subroutine copy_ncpp ()
+  !---------------------------------------------------------------------
+  !
+  use ld1inc
+  implicit none
+  !
+  integer :: n,     & ! counter on wavefunctions
+             nch,   & ! counter on chi functions
+             l,     & ! counter on angular momentum
+             ir       ! counter on mesh points
+  real(kind=dp), external :: int_0_inf_dr
+  real(kind=dp) :: aux(ndm)
+  !
+  if ( lloc > -1) then
+     do ir=1,mesh
+        vpsloc(ir)=vnl (ir,lloc)
+     enddo
+  endif
+  nbeta=0
+  do l=0,lmax
+     if (l /= lloc) then
+        nbeta=nbeta+1
+        do ir=1,mesh
+           betas(ir,nbeta) = (vnl(ir,l)-vpsloc(ir)) * phis(ir, l+1)
+        enddo
+        lls(nbeta)=l
+        ikk(nbeta)=mesh
+        do ir=mesh-1,1,-1
+           if (abs(betas(ir,nbeta)) < 1.e-11_dp)then
+              ikk(nbeta)=ir
+           else
+              goto 203
+           endif
+        enddo
+203     continue
+        do ir = 1, mesh
+           aux (ir) = phis(ir, l+1) * betas (ir, nbeta)
+        enddo
+        bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
+     endif
+  end do
+
+  return
+end subroutine copy_ncpp
