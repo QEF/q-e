@@ -81,7 +81,7 @@ subroutine new_ns
   do ik = 1, nks
      if (lsda) current_spin = isk(ik)
      if (nks.gt.1) read (iunigk) npw, igk
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     if (nks.gt.1) call davcio (evc, nwordwfc, iunwfc, ik, - 1)
 
      call davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
      !
