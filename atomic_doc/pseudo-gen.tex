@@ -1,0 +1,939 @@
+\documentstyle[12pt]{article}
+\pagestyle{empty}
+\textwidth = 15.5 cm
+\textheight = 23.5 cm
+\topmargin =-1.0 cm
+\oddsidemargin = 0.5 cm
+\listparindent=0pt
+\itemsep=5pt
+\def\r{{\bf r}}
+\begin{document} 
+\title{Notes on pseudopotential generation}
+\author{\em Paolo Giannozzi, DEMOCRITOS and Scuola Normale Superiore di Pisa\\
+e-mail: {\tt giannozz@nest.sns.it}\\
+URL: {\tt http://www.sns.it/\~{}giannozz}}
+\maketitle
+
+\section{Introduction} 
+
+When I started to do my first first-principle calculation
+(that is, my first$^2$-principle calculation) with S. Baroni
+on CsI under pressure (1985), it became quickly evident that
+available pseudopotentials (PP's) couldn't do the job. So we 
+generated our own PP's. Since that first experience I have 
+generated a large number of PP's and people keep asking me 
+new PP's from time to time. I am happy that "my" PP's are 
+appreciated and used by other people. I don't think however 
+that the generation of PP's is such a hard task that it requires 
+an official (or unofficial) PP wizard to do this. For this reason 
+I want to share here my (little) experience.
+
+These notes were originally written having in mind my version
+of the PP generation code and of the various related utilities
+(still available on the web from my home page, but no longer 
+maintained). I am in the process of adapting them to cover the
+extended capabilities of the improved version {\tt atomic}, 
+packaged with PWscf ({\tt http://www.pwscf.org}). If you remark 
+any inconsistencies, please let me know.
+
+The {\tt atomic} code, written in large part by A. Dal Corso
+(Democritos and Sissa Trieste) can generate both 
+Norm-Conserving (NC) \cite{NC} and Ultrasoft (US) \cite{van} PP's.
+It allows for multiple projectors, full relativistic calculations,
+spin-split PP's for spin-orbit calculations.
+
+\subsection{Who needs to generate a pseudopotential?}
+
+There are at least three well-known published sets of NC-PP's:
+those of Bachelet, Hamann, and Schl\"uter \cite{BHS},
+those of Gonze, Stumpf, and Scheffler \cite{Gonze}, and
+those of Goedecker, Teter, and Hutter \cite{Goedecker}. 
+Moreover, all major packages for electronic-structure calculations
+include a downloadable table of PP's. One could then wonder 
+what a PP generation code is useful for. The problem is that 
+sometimes published PP's will not suit your needs. For instance,
+you may need:
+\begin{enumerate}
+ \item[--] a better accuracy than what is provided 
+     by PP's in the published PP tables;
+ \item[--] PP's generated with an exchange-correlation
+     functional that is not available in the tables;
+ \item[--] a distinction between "valence" and "core"
+     electrons that is different from the one chosen in the tables.
+ \item[--] ``softer'' PP's than those in the tables.
+ \item[--] PP's with a core hole for calculations of
+     XPS or NEXAFS
+ \item[--] all-electron and pseudo atomic orbitats for
+     all-electron wavefunction reconstruction
+ \item[--] ...
+\end{enumerate}
+...or you may simply need to know how to produce a PP!
+
+\subsection{About similar work}
+
+There are other PP generation packages available on-line.
+Those I am aware of include:
+\begin{itemize}
+\item the code by Jos\'e-Lu{\'\i}s Martins {\em et al.}\cite{TM}:\\
+{\tt http://bohr.inesc-mn.pt/\~{}jlm/pseudo.html}
+\item the {\tt fhi98PP} package\cite{fhi98PP}:\\
+{\tt http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP}
+\item the OPIUM code by Andrew Rappe {\em et al.}\cite{RRKJ}:\\
+{\tt http://opium.sourceforge.net/}
+\item David Vanderbilt's US-PP package \cite{van}:\\
+{\tt http://www.physics.rutgers.edu/\~{}dhv/uspp/index.html}.
+\end{itemize}
+Other codes may be available upon request from the authors 
+(I have heard of codes by Hamann and by Bachelet).
+
+Years ago, it occurred to me that a web-based PP generation
+tool would have been nice. Being too lazy and too ignorant 
+in web-based applications, I did nothing. 
+I recently discovered that Miguel Marques {\em et al.} have
+implemented something like this: see
+{\tt http://www.tddft.org/programs/octopus/pseudo.php}.
+
+\section{Pseudopotential generation, in general} 
+
+In the following I am assuming that the basic PP theory 
+is known to the reader. Otherwise, see 
+Refs.\cite{NC,BHS,TM,fhi98PP,RRKJ} and references quoted 
+therein for NC-PP's; Refs.\cite{van,PAW} for US-PP's. 
+I am also assuming that the generated PP's are to be used
+with a plane-wave (PW) basis set.
+
+The PP generation is a three-step process. First, one generates
+atomic levels and wavefunctions with Density-functional theory (DFT). 
+Second, from atomic results one generates the PP. Third, one checks 
+whether what he got is actually working. If not, one tries again in 
+a different way.
+
+The first step is invariably done assuming a spherically symmetric
+self-consistent Hamiltonian, so that all elementary quantum mechanics 
+results for the atom apply. The atomic state is defined by the
+"electronic configuration", one-electron states are defined by a
+principal quantum number and by the angular momentum and are obtained
+by solving a self-consistent radial Schr\"odinger-like (Kohn-Sham)
+equation.
+
+The second step exists in many variants. One can generate ``traditional'' 
+single-projector NC-PP's; multiple-projector NC-PP's; or US-PP's.
+In the following we will consider mostly the case of ``traditional'' 
+NC-PP's. The crucial step is the generation of smooth, nodeless
+``pseudo-orbitals'' from atomic all-electron orbitals. Two popular 
+methods are presently implemented: Troullier-Martins \cite{TM}
+and Rappe-Rabe-Kaxiras-Joannopoulos \cite{RRKJ} (RRKJ).
+
+The third step is closer to cooking than to science. There is a
+large arbitrariness in the preceding step that one would like to 
+exploit in order to get the "best" PP, but there is no well-defined
+way to do this. Moreover one is often forced to strike a compromise
+between accuracy and computer time. This step is the main focus of
+these notes.
+
+\section{Step-by-step Pseudopotential generation} 
+
+If you want to generate a PP for a given atom, the checklist is the
+following:
+
+\begin{enumerate}
+\item choose the exchange-correlation functional
+\item choose the electronic reference configuration
+\item choose the valence-core partition
+\item choose which reference states to pseudize, and at which energies
+\item choose the type of pseudization
+\item choose the matching radii
+\item choose the parameters for the ``nonlinear core correction''
+\item choose the local potential
+\item generate the pseudopotential
+\item check its transferability
+\item check the required cutoff
+\end{enumerate}
+
+\subsection{Choosing the exchange-correlation functional}
+
+A large number of exchange-correlation functionals, both 
+in the Local-Density Approximation (LDA) or in the Generalized
+Gradient Approximation (GGA), are implemented.
+Most of them have been extensively tested, but beware: 
+some exotic or seldom-used functionals might contain bugs.
+
+PP's must be generated with the SAME functional that will
+be later used in calculations. The use of, for instance,
+GGA functionals with LDA PP's is inconsistent. This is why
+the PP contain information on the DFT level used in their
+generation: if you or your code ignore it, you do it at your
+own risk.
+
+NOTE THAT GGA functionals may present numerical problems
+when the charge density goes to zero. For instance, the Becke
+gradient correction to the exchange may diverge for 
+$\rho \rightarrow 0$. This does not happen in a free atom
+if the charge density behaves as it should, that is, as
+$\rho(r)\rightarrow exp(-\alpha r)$ for $r \rightarrow \infty$.
+However in a pseudoatom a weird behavior may arise 
+around the core region, $r\rightarrow 0$, because the 
+pseudocharge in that region is very small or sometimes 
+vanishing (if there are no filled $s$ states). As a consequence,
+nasty-looking ``spikes'' appear in the unscreened pseudopotential
+very close to the nucleus. This is not nice at all but it is
+usually harmless, because the interested region is really 
+very small. However in some unfortunate cases there can be 
+convergence problems. If you do not want to see those horrible 
+spikes, or if you experience problems, you have the following
+choices:
+\begin{enumerate}
+\item[--] Use a better-behaved GGA, such as PBE
+\item[--] Use the ``nonlinear core correction'' (see below; 
+it ensures the presence of some charge close to the nucleus).
+% \item[--] cut out the gradient correction for small $r$
+% (set variable {\tt rcut} to $\sim 0.001$ or so).
+\end{enumerate}
+
+
+\subsection{Choosing the electronic reference configuration}
+
+This may be any reasonable configuration not too far away from
+the expected configuration in solids or molecules. As a first
+choice, use the atomic ground state. Use the ground state if you 
+do not have a good reason to do otherwise, such as for instance:
+\begin{enumerate}
+\item[--]
+   You do not want to deal with unbound states.
+   Very often states with highest angular momentum $l$ are not bound
+   in the atom (an example: the $3d$ state in Si is not bound on the
+   ground state $3s^23p^2$, at least with LDA or GGA). In such a case 
+   one has the choice between 
+   \begin{enumerate} 
+      \item[--] using different configurations for higher and lower $l$, 
+                as in Refs.\cite{BHS,Gonze};
+      \item[--] choosing a single, more ionic configuration for which 
+                all desired states are bound;
+      \item[--] generate PP's on unbound states: requires to choose
+                a suitable reference energy.
+   \end{enumerate}
+\item[--]
+   The results of your PP are very sensitive to the chosen configuration.
+   This is something that in principle should not happen, but
+   I have encountered in my career at least one remarkable case
+   in which it does. In III-V zincblende semiconductors, the 
+   equilibrium lattice parameter is rather sensitive to the form
+   of the $d$ potential of the cation (due to the presence of $p-d$ 
+   coupling between anion $p$ states and cation $d$ states 
+   \cite{Zunger}). By varying the reference configuration, one 
+   can change the equilibrium lattice parameter by as much as $1-2\%$. 
+   The problem arises if you want to calculate accurate dynamical
+   properties of GaAs/AlAs alloys and superlattices: you need to
+   get a good theoretical lattice matching between GaAs and AlAs,
+   or otherwise unpleasant spurious effects may arise. When I was 
+   confronted with this problem, I didn't find any better solution
+   than to tweak the $4d$ reference configuration for Ga until I got
+   the observed lattice-matching.
+\item[--]
+   You know that the atom will be in a given configuration in the
+   system you are interested in and you try to stay close to it.
+   This is not very elegant but sometimes it is useful: in transition
+   metals, with semicore states in the core, it is probably better to
+   chose a reasonable configuration for $d$ states and not to use it
+   for systems with very different $d$ configuration. The problem is that
+   the $(n+1)s$ and $(n+1)p$ PP have a hard time in reproducing the true
+   potential if the $nd$ state changes a lot with respect to the
+   starting configuration (consider this no more than a hand-waiving 
+   argument). In Rare-Earth compounds, leaving the $4f$ electrons in the 
+   core with the correct occupancy (if known) may be a quick and dirty way 
+   to avoid the well-known problems of DFT yielding the wrong occupancy 
+   in highly correlated materials.
+\item[--]
+   You don't manage to build a decent PP with the ground state configuration, 
+   for whatever reason.
+\end{enumerate}
+
+NOTE 1: you can calculate PP for a $l$ as high as you want, but you
+are not obliged to use all of them in PW calculations. The general
+rule is that if your atom has states up to $l=l_c$ in the core, you
+need a PP with angular momenta up to $l=l_c+1$. Angular momenta
+$l>l_c+1$ will feel the same potential as $l=l_c+1$, because
+for all of them there is no orthogonalization to core states.
+As a consequence a PP should have projectors on angular momenta up to
+$l_c$ and $l=l_c+1$ should be the local reference state for PW
+calculations. This rule is not very strict and may be relaxed: high
+angular momenta are seldom important (but be careful if they are). 
+Moreover separable PP pose serious constraints on local reference $l$
+(see below) and the choice is sometimes obliged. Note also that the
+highest the $l$ in the PP, the more expensive the PW calculation will 
+be.
+
+NOTE 2: a completely empty configuration ($s^0p^0d^0$) or
+a configuration with fractional occupation numbers are both
+perfectly acceptable. Even if fractional occupation numbers do
+not correspond to a physical state, they correspond to a
+perfectly defined mathematical object.
+
+NOTE 3: if you generate a single-projector PP using a configuration
+with semicore states in the valence, remember that for each $l$
+only the state with lowest $n$can be used to generate the PP, 
+and that the state with same $l$ and higher $n$ MUST BE EMPTY.
+
+NOTE 4: PP could in principle be generated on a spin-polarized
+configuration, but a spin-unpolarized one is typically used.
+Since PP are constructed to be transferrable, they can describe
+spin-polarized configurations as well. The "nonlinear core correction" 
+is typically needed if you plan to use PP in spin-polarized (magnetic)
+systems.
+
+\subsubsection{Generating all-electron results}
+
+You may now generate all-electron (AE) wavefunctions and one-electron
+levels for the reference configuration. This is done by using program
+{\tt ld1.x}. You must specify in the input data: atomic symbol, what
+you choose as exchange-correlation functional (not needed if you stick 
+to LDA), electronic reference configuration.
+A complete description of the input is contained in file
+{\tt INPUT\_LD1}. If you want accurate AE results for heavy atoms,
+you may want to specify a denser grid in $r$-space than the default
+one. The defaults one should be good enough for PP generation, though.
+
+Before you proceed, it is a good idea to verify that the atomic data
+you just produced actually make sense. Some kind souls have posted on
+the web a complete set of reference atomic data :
+
+{\tt http://physics.nist.gov/PhysRefData/DFTdata/ }
+\par\noindent
+These data have been obtained with the Vosko-Wilk-Nusair functional,
+that for the unpolarized case is very similar to the Perdew-Zunger 
+functional.
+
+\subsection{Choosing the valence-core partition}
+
+This seems a trivial step, and often it is: valence states are those
+that contribute to bonding, core states are those that do not
+contribute. Things may sometimes be more complicated than this.
+For instance:
+\begin{enumerate}
+\item[--] in transition metals, whose typical outer electronic
+configuration is $nd^i(n+1)s^j(n+1)p^k$ ($n=$main quantum number), 
+it is not
+always evident that the $ns$ and $np$ states can be safely put into
+the core. The problem is that $nd$ states are localized in the same
+spatial region as $ns$ and $np$ states, deeper than $(n+1)s$ and
+$(n+1)p$ states. This may lead to intolerable loss of transferability.
+\item[--] Heavy alkali metals (Rb, Cs, maybe also K) have a large
+polarizable core. PP's with just one electron may not work properly
+(even with ``nonlinear core correction'', see below) 
+\item[--] In some II-VI and III-V semiconductors, such as ZnSe and
+GaN, the contribution of the $d$ states of the cation to the bonding 
+is not negligible and may require explicit inclusion of those $d$ 
+states into the valence.
+\end{enumerate}
+In all these cases, promoting the highest core states $ns$ and $np$,
+or $nd$ (the "semicore" states) into valence may be a computationally
+expensive but obliged way to improve poor transferability. It may
+happen that the same atom that works great with the "natural" valence
+in a solid with weak or metallic bonding does not work well at all in
+another compound with a different (stronger) type of bonding. This
+happens for many transition and noble metals.
+Note that including semicore states into valence could make your
+PP harder, will increase the number of electrons, and may require
+more than one projector per angular momentum, or lead to slightly
+worse results for those cases in which such inclusion is not needed. 
+Include semicore states into valence only if it is really needed.
+
+\subsection{Choosing reference states to pseudize, reference energies}
+
+With single-projector PP's (one potential per angular momentum $l$, 
+i.e. one projector per $l$ in the separable form), the choice of the 
+electronic configuration automatically determines the reference states
+to pseudize: for each $l$, the bound valence eigenstate is pseudized
+at the corresponding eigenvalue.
+It is however possible to generate PP's by pseudizing atomic waves,
+i.e. regular solutions of the radial Kohn-Sham equation, at any
+energy. More than one such atomic waves at the same $l$ can be 
+pseudized, resulting in a PP with more than one projector per $l$. 
+This possibility considerably extends the number of ``degrees of 
+freedom'' in the generation of a PP. As a rule of thumb: start first 
+with one projector per $l$, at the energy of the bound state. For
+atoms having semicore states in the valence, an obvious choice is 
+to include two projectors, using both bound states. If you are not 
+happy, experiment a bit with more projectors, different pseudization 
+energies, etc.
+
+\subsection{Choosing the type of pseudization}
+
+Two possible types of pseudization are implemented, both claiming
+to yield optimally smooth PP's:
+\begin{itemize}
+\item Troullier-Martins \cite{TM} (TM) 
+\item Rappe-Rabe-Kaxiras-Joannopoulos \cite{RRKJ} (RRKJ).
+\end{itemize}
+Both pseudizations replace atomic orbitals in the core region 
+with smooth nodeless pseudo-orbitals. The TM method uses an
+exponential of a polynomial; the RRKJ method uses three or four
+Bessel functions. The former is very robust. The latter may 
+occasionally fail to produce the required nodeless pseudo-orbital.
+If this happens, there is an option to set a small nonzero value of 
+the charge density at the origin: this forces the use of four Bessel 
+functions.
+
+\subsection{Choosing the matching radii}
+
+At the matching radius $r_c$ the AE and PP wavefunction
+of angular momentum $l$ match, with at least continuous first
+derivative. The choice of the $r_c$ is very important and must be
+guided by the following criteria: 
+\begin{enumerate}
+\item[--] the $r_c$ must be larger than the outermost node (if any)
+of the wavefunction for any given $l$
+\item[--] a typical $r_c$ is the outermost peak, beyond if needed
+(see following point)
+\item[--] the larger the $r_c$, the softer the potential (less PW
+needed), but also the less transferable
+\item[--] usually there is one $l$ that is harder than the others
+(in transition metals, the $d$ state, in second-row elements N, O, F, 
+the $p$ state). One should concentrate on this one and push outwards 
+its $r_c$ as much as possible.
+\item[--] this is not very important, and usually impossible to
+achieve: one should try to have not too different $r_c$'s for
+different angular momenta
+\end{enumerate}
+To make a long story short: the difficult question is ``how much
+should I push $r_c$ outwards in order to have reasonable results for
+unreasonable hard atoms''. There is no well-defined answer. A typical
+wavefunction maximum for hard atoms is 0.7-0.8 a.u (in general, the
+outermost peak, but hard atoms are those with $2p$, $3d$, $4f$ valence
+states, with no orthogonalization to core states of the same $l$ and
+no nodes) (this is why they are hard, anyway). $r_c=0.8$ a.u. will
+yield unacceptably hard PP's. With a little bit of experience one can
+say that for second-row ($2p$) elements $r_c=1.1-1.2$ will yield
+reasonably good results for 50-70 Ry PW kinetic energy cutoff; for
+$3d$ transition metals, the same $r_c$ will require $> 80$ Ry cutoff
+(highest $l$ have slower convergence for the same $r_c$).
+
+Note that it is the hardest atom that determines the PW cutoff in a
+solid or molecule. Do not waste time trying to find optimally soft 
+PP's if you have harder atoms around.
+
+\subsection{Choosing the parameters for the ``nonlinear core correction''}
+
+The core correction accounts at least partially for the nonlinearity
+in the exchange-correlation potential. In the generation of a PP one
+first produces a potential with the desired pseudowavefunctions and
+pseudoenergies. In order to separate a ``bare'' PP from the screening
+part, one removes the screening potential generated by the valence
+charge only. This introduces an error because the XC potential is not
+linear in the charge density. With the core correction one keeps a  
+smoothed core charge to be added to the valence charge both at the
+unscreening step and when using the PP.
+
+The core correction is a must for alkali atoms (especially in
+ionic compounds) and for PP's to be used in spin-polarized 
+(magnetic) systems. It is recommended whenever there is a large 
+overlap between valence and core charge: for instance, in transition 
+metals if the semicore states are kept into the core. It is never 
+harmful but sometimes it may be of little help.
+
+The smoothing works by replacing the true core charge with a fake,
+smoother, core charge for $r<r_{cc}$. The parameter $r_{cc}$ is
+provided on input. If not, it is chosen as the point at which
+the core charge $\rho_c(r_{cc})$ is twice as big as the valence
+charge $\rho_v(r_{cc})$. In fact the effect of nonlinearity is 
+important only in regions where $\rho_c(r)\sim\rho_v(r)$. Note 
+that the smaller $r_{cc}$, the more accurate the core correction, 
+but also the harder the smoothened core charge, and vice versa.
+
+\subsection{Choosing the local potential}
+
+
+\subsection{Generating the pseudopotential}
+
+The generation step is also done by program {\tt ld1.x}.
+One has to supply, in addition to AE data: a list of 
+orbitals to be used in the pseudization (in increasing
+order of angular momentum), the pseudization energies, 
+the matching radii, the filename where the newly generated
+PP, is written, plus a number of other optional parameters, 
+fully described in file {\tt INPUT\_LD1}.
+
+\subsection{Checking for transferability}
+
+A simple way to check for correctness and to get a feeling for 
+the transferability of a PP, with little effort, is to test the 
+results of PP and AE atomic calculations on atomic configurations 
+differing from the starting one. The error on total energy 
+differences between PP and AE results gives a feeling on how 
+good the PP is. Just to give an idea: an error $\sim 0.001$ Ry 
+is very good, $\sim 0.01$ Ry may still be acceptable.
+The code {\tt ld1.x} has a ``testing'' mode in which it does
+exactly the above operation. You provide the input PP file and
+a number of test configurations.
+
+% It is very important to check that the pseudowavefunction match the
+% atomic wavefunction as accurately as possible beyond $r_c$.
+% Very primitive plotting programs, producing postscript output,
+% are available for plotting and comparing pseudo and atomic
+% wavefunctions ({\tt wfcgraf}) and for plotting the pseudopotential in
+% real space ({\tt psrgraf}). 
+
+% NOTE: in order to use the plotting programs, the labeling of
+% states of the PP calculation should be the same as for the AE
+% calculations without core states. The appropriate principal
+% quantum numbers for valence electrons (i.e. the lowest $s$ state
+% must have $n=1$, the lowest $p$ and second $s$ states must have 
+% $n=2$ and so on) are automagically generated from wavefunctions
+% labels (please check!). Labels are used to identify the AE-PP
+% wavefunction correspondence.
+
+Another way to check for transferability is to compare AE and PS 
+logarithmic derivatives, also calculated by {\tt ld1.x}. Typically 
+this comparison is done on the reference configuration,
+but not necessarily. You should supply on input:
+\begin{enumerate}
+\item[--] the radius $r_d$ at which logarithmic derivatives are 
+          calculated ($r_d$ should be of the order of the
+          ionic or covalent radius, and larger than any of the $r_c$'s)
+\item[--] the energy range $E_{min}, E_{max}$ and the number 
+          of points for the plot. The energy range
+          should cover the typical valence one-electron energy 
+          range expected in the targeted application of the PP. 
+\item[--] output file names (one fro AE, one for PP) where results 
+          are written.
+\end{enumerate}
+The file containing logarithmic derivatives can be easily read and 
+plotted using for instance the plotting program {\tt xmgrace}. 
+Sizable discrepancies between AE and PS logarithmic derivatives 
+are a sign of trouble (unless your energy range is too large or 
+not centered around the range of pseudization energies, of course).
+
+Note that 
+\subsection{Checking for required cutoff}
+
+One can have a feeling of the hardness of the potential from the
+following indicators:
+\begin{enumerate}
+\item[--] the value of $r_c$ (see above)
+\item[--] the behavior of the Fourier transform $V_l(q)$. A very
+          primitive plotting program {\tt psqgraf} can be used to plot
+          $V_l(q)$ on a postscript file. Note that $q^2$ is the energy
+          in Ry.
+\item[--] an atomic calculation with a basis set of spherical 
+          Bessel functions $j_l(qr)$ (equivalent to projecting PW's
+          on states with given $l$).
+\end{enumerate}
+The latter is performed by program {\tt ldb}. It requires on input
+a PP file, the energy cutoff in Ry, and the electronic configuration.
+The first set of
+numbers, under ``Semilocal orbital energies:'', shows the one-electron
+levels. At convergence they should be, within numerical accuracy,
+equal to those of program {\tt ld1} with the same PP and electronic
+configuration. The behavior of the energy levels as a function of the
+cutoff will be very close to what one will get in a PW calculation.
+
+NOTE: the above does not replace the usual cutoff checks in
+solid-state or molecular calculations. Direct checks on the quantity
+of interest in your system are still needed.
+
+\subsection{Checking for separable form}
+
+The separable (KB) form of PP's is exceedingly convenient in
+electronic structure calculations, unless you are doing exceedingly
+simple systems (crystalline silicon...). In the KB formalism, one
+rewrites the PP's as projectors. An arbitrary function can be
+added to the local ($l$-independent) part of the PP and subtracted to
+all $l$ components. Generally one exploits this arbitrariness to
+remove one $l$ component using it as local part.
+
+Unfortunately the KB projection can lead to loss of transferability
+(often negligible, sometimes not) or even to the appearance of
+``ghost states'' -- states with the wrong number of nodes that are
+absent in the all-electron atom -- that make the PP completely
+useless.  For practical use, one has to check
+carefully whether KB PP are useful or not. In particular one must
+exploit the freedom in choosing the ``local part'' in order avoid
+ghosts.
+
+For PW calculations it is convenient to choose as local part the
+highest $l$, because this removes more projectors ($2l+1$ per atom)
+than for low $l$. This is the default choice done by program {\tt trou}.
+According to Murphy's law, this is also the choice that
+more often gives raise to problems.
+
+% There are three methods to check for ghosts:
+% \begin{itemize}
+% \item[--] use known criteria for  the appearance of
+% ``ghosts''\cite{Gonze} (not implemented).
+% \item[--] compare the all-electron (or PP) logarithmic derivative with
+% the KB logarithmic derivative (see above). The former are written by
+% program {\tt ld1} to a file with suffix {\tt .pp}. The latter (calculated 
+% using the KB form for PP but keeping the same SCF potential of semilocal 
+% PP) are written to a file with suffix {\tt .kb}. Plot the two, for
+% instance using {\tt xmgr}. Any sizable discrepancy between the two 
+% is a sign of trouble. Note that for {\tt l=lloc} you must obtain exactly 
+% the same values. Use the value of {\tt lloc} that seems to yield better 
+% results: edit the PP file to change it (see above).
+% \item[--] use program {\tt ldb}. Atomic codes using the integration of
+% radial wavefunction (like {\tt ld1}) are unable to find spurious states,
+% because their algorithm discards states with wrong number of
+% nodes. However if a basis set is used the spurious states will show
+% up. The self-consistent calculation is performed first on the PP in the
+% normal form. Then a KB Hamiltonian is constructed, using the atomic
+% pseudowavefunction and the screening potential just calculated,
+% and diagonalized on the spherical Bessel basis set (without
+% redoing the self-consistency, it is not needed for our purposes). 
+% The results are written in the right-hand part of the output, after 
+% ``KB orbital energies:'', and should match as exactly as possible the
+% results of the left-hand part. This must be tried at least on the
+% reference configuration, for a few occupied and unoccupied 
+% (pseudo)states, for all possible local parts.
+% \end{itemize}
+
+% A very unfortunate case may sometimes occur: you generate
+% a marvelous PP but, no matter what you choose as local reference
+% state, ghosts appear. You have to retry with a different reference
+% configuration  or matching radii. Good luck.
+\appendix
+
+\section{Atomic Calculations}
+
+\subsection{Nonrelativistic case}
+
+Let us assume that the charge density $n(r)$ and the potential $V(r)$
+are spherically symmetric. The Kohn-Sham (KS) equation:
+\begin{equation}
+\left(-{\hbar^2\over 2m}\nabla^2 + V(r)-\epsilon\right) \psi(\r)=0
+\end{equation}
+can be written in spherical coordinates. We write the wavefunctions as
+\begin{equation}
+\psi(\r)=\left({R_{nl}(r)\over r}\right)Y_{lm}(\hat\r),
+\end{equation}
+where $n$ is the main quantum 
+number $l=n-1,n-2,\dots,0$ is angular momentum, $m=l,l-1,\dots,-l+1,-l$
+is the projection of the angular momentum on some axis. 
+The radial KS equation becomes:
+\begin{eqnarray}
+\left(-{\hbar^2\over 2m} {1\over r} {d^2 R_{nl}(r)\over dr^2}
+      +(V(r)-\epsilon) {1\over r} R_{nl}(r)
+\right) Y_{lm}(\hat\r) \hskip 4cm \nonumber \\ \mbox{} - 
+{\hbar^2\over 2m} \left({1\over\mbox{sin}\theta}{\partial\over\partial\theta}
+                        \left(\mbox{sin}\theta{\partial Y_{lm}(\hat\r)
+                                               \over\partial\theta}\right)
+                      + {1\over\mbox{sin}^2\theta}
+                           {\partial^2Y_{lm}(\hat\r)\over\partial\phi^2}
+                  \right) {1\over r^3} R_{nl}(r) = 0.
+\end{eqnarray}
+This yields an angular equation for the spherical harmonics $Y_{lm}(\hat\r)$:
+\begin{equation}
+-\left({1\over\mbox{sin}\theta}{\partial\over\partial\theta}
+       \left(\mbox{sin}\theta{\partial Y_{lm}(\hat\r)\over\partial\theta}
+       \right)
+     + {1\over\mbox{sin}^2\theta}
+                           {\partial^2Y_{lm}(\hat\r)\over\partial\phi^2}
+\right) = l(l+1)Y_{lm}(\hat\r)
+\end{equation}
+and a radial equation for the radial part $R_{nl}(r)$:
+\begin{equation}
+-{\hbar^2\over 2m} {d^2 R_{nl}(r)\over dr^2}
++\left( {\hbar^2\over 2m} {l(l+1)\over r^2} + V(r)-\epsilon
+\right) R_{nl}(r) = 0.
+\end{equation}
+The charge density is given by
+\begin{equation}
+n(r) = \sum_{nlm} \Theta_{nl}\left |{R_{nl}(r)\over r}Y_{lm}(\hat r)\right|^2 
+     = \sum_{nl} \Theta_{nl}{R^2_{nl}(r)\over 4\pi r^2}
+\end{equation}
+where $\Theta_{nl}$ are the occupancies ($\Theta_{nl}\le 2l+1$)
+and it is assumed that the occupancies of $m$ are such as to yield
+a spherically symmetric charge density (which is true only for closed
+shell atoms).
+\subsubsection{Useful formulae} 
+
+Gradient in spherical coordinates $(r,\theta,\phi)$:
+\begin{equation}
+\nabla\psi = \left({\partial\psi\over\partial r},
+                   {1\over r}{\partial\psi\over\partial\theta},
+                   {1\over r \mbox{sin}\theta}
+                              {\partial\psi\over\partial\phi}
+             \right)
+\end{equation}
+Laplacian in spherical coordinates:
+\begin{equation}
+\nabla^2\psi = {1\over r} {\partial^2\over\partial r^2}(r\psi)
+             + {1\over r^2\mbox{sin}\theta} {\partial\over\partial\theta}
+               \left(\mbox{sin}\theta{\partial\psi\over\partial\theta}\right)
+             + {1\over r^2\mbox{sin}^2\theta}
+                {\partial^2\psi\over\partial\phi^2}
+\end{equation}
+
+\subsection{Fully relativistic case} 
+
+The relativistic KS equations are
+Dirac-like equations for a spinor with a ``large'' $R_{nlj}(r)$ and
+a ``small'' $S_{nlj}(r)$ component:
+\begin{eqnarray}
+c\left({d \over dr} + {\kappa\over r}\right)R_{nlj}(r) & = & 
+       \left(2mc^2 - V(r) + \epsilon \right)S_{nlj}(r)\\
+c\left({d \over dr} - {\kappa\over r}\right)S_{nlj}(r) & = & 
+       \left( V(r) + \epsilon \right)       R_{nlj}(r)
+\end{eqnarray}
+where $j$ is the total angular momentum ($j=1/2$ if $l=0$, 
+$j=l+1/2,l-1/2$ otherwise); $\kappa=-2(j-l)(j+1/2)$ is the Dirac 
+quantum number ($\kappa=-1$ is $l=0$, $\kappa=-l-1,l$ otherwise);
+and the charge density is given by
+\begin{equation}
+  n(r) = \sum_{nlj} \Theta_{nlj}{R^2_{nlj}(r)+S^2_{nlj}(r)\over 4\pi r^2}.
+\end{equation}
+
+
+\subsection{Scalar-relativistic case} 
+
+The full relativistic KS equations
+is be transformed into an equation for the large component only
+and averaged over spin-orbit components. In atomic units
+(Rydberg: $\hbar=1, m=1/2, e^2=2$):
+\begin{eqnarray}
+-{d^2 R_{nl}(r)\over dr^2}
++\left( {l(l+1)\over r^2} + M(r)\left(V(r)-\epsilon\right)
+\right) R_{nl}(r) \qquad \nonumber \\ \mbox{} -
+ {\alpha^2\over 4M(r)} {dV(r)\over dr} 
+                    \left({dR_{nl}(r)\over dr} +
+                          \langle\kappa\rangle {R_{nl}(r)\over r}\right)= 0,
+\end{eqnarray}
+where $\alpha=1/137.036$ is the fine-structure constant,
+$\langle\kappa\rangle=-1$ is the degeneracy-weighted average value 
+of the Dirac's $\kappa$ for the two spin-orbit-split levels, $M(r)$ is
+defined as
+\begin{equation}
+M(r)= 1 - {\alpha^2\over 4} \left(V(r)-\epsilon\right).
+\end{equation}
+The charge density is defined as in the nonrelativistic case:
+\begin{equation}
+n(r) = \sum_{nl} \Theta_{nl}{R^2_{nl}(r)\over 4\pi r^2}.
+\end{equation}
+
+\subsection{Numerical solution} 
+
+The radial (scalar-relativistic) KS equation is integrated 
+on a radial grid. It is convenient to
+have a denser grid close to the nucleus and a coarser one far
+away. Traditionally a logarithmic grid is used: 
+$r_i=r_0\mbox{exp}(i\Delta x)$. With this grid, one has
+\begin{equation}
+\int_0^\infty f(r) d r = \int_0^\infty f(x) r(x) dx
+\end{equation}
+and
+\begin{equation}
+{d f(r)\over d r}={1\over r} {d f(x)\over d x},\qquad
+{d^2 f(r)\over d r^2}=-{1\over r^2} {d f(x)\over d x}
++ {1\over r^2} {d^2 f(x)\over d x^2}.
+\end{equation}
+We start with a given self-consistent potential $V$ and
+a trial eigenvalue $\epsilon$. The equation is integrated
+from $r=0$ outwards to $r_t$, the outermost classical 
+(nonrelativistic for simplicity) turning point, defined
+by $ {l(l+1) /r_t^2} + \left(V(r_t)-\epsilon\right)=0$.
+In a logarithmic grid (see above) the equation to solve becomes:
+\begin{eqnarray}
+{1\over r^2} {d^2 R_{nl}(x)\over d x^2} & = & 
+  {1\over r^2} {d R_{nl}(x)\over d x} + 
+  \left( {l(l+1)\over r^2} + 
+  M(r)\left(V(r)-\epsilon\right) \right) R_{nl}(r) \nonumber \\
+ & & \mbox{} - {\alpha^2\over 4M(r)} {dV(r)\over dr} 
+      \left({1\over r} {dR_{nl}(x)\over dx} +
+            \langle\kappa\rangle {R_{nl}(r)\over r}\right).
+\end{eqnarray}
+This determines ${d^2 R_{nl}(x)/d x^2}$ which is used to
+determine ${d R_{nl}(x)/ dx}$ which in turn is used to
+determine $R_{nl}(r)$, using predictor-corrector or whatever
+classical integration method. ${dV(r)/dr}$ is evaluated
+numerically from any finite difference method. The series
+is started using the known (?) asymptotic behavior of $R_{nl}(r)$ 
+close to the nucleus (with ionic charge $Z$)
+\begin{equation}
+R_{nl}(r)\simeq r^\gamma,\qquad \gamma={l\sqrt{l^2-\alpha^2 Z^2}+
+(l+1)\sqrt{(l+1)^2-\alpha^2 Z^2}\over 2l+1}.
+\end{equation}
+The number of nodes is counted. If there are too few (many)
+nodes, the trial eigenvalue is increased (decreased) and
+the procedure is restarted until the correct number $n-l-1$
+of nodes is reached. Then a second integration is started 
+inward, starting from a suitably large $r\sim 10r_t$ down 
+to $r_t$, using as a starting point the asymptotic behavior 
+of $R_{nl}(r)$ at large $r$: 
+\begin{equation}
+R_{nl}(r)\simeq e^{-k(r)r},\qquad 
+k(r)=\sqrt{{l(l+1)\over r^2} + \left(V(r)-\epsilon\right)}.
+\end{equation}
+The two pieces are continuously joined at $r_t$ and a correction to the trial 
+eigenvalue is estimated using perturbation theory (see below). The procedure 
+is iterated to self-consistency.
+
+The perturbative estimate of correction to trial eigenvalues is described in
+the following for the nonrelativistic case (it is not worth to make relativistic
+corrections on top of a correction). The trial eigenvector $R_{nl}(r)$ will have 
+a cusp at $r_t$ if the trial eigenvalue is not a true eigenvalue:
+\begin{equation}
+A = {d R_{nl}(r_t^+)\over dr} - {d R_{nl}(r_t^-)\over dr} \ne 0.
+\end{equation}
+Such discontinuity in the first derivative translates into a
+$\delta(r_t)$ in the second derivative:
+\begin{equation}
+{d^2  R_{nl}(r)\over dr^2} = {d^2 \widetilde R_{nl}(r)\over dr^2}
+  + A \delta(r-r_t)
+\end{equation}
+where the tilde denotes the function obtained by matching the
+second derivatives in the $r< r_t$ and $r> r_t$ regions.
+This means that we are actually solving a different problem in which 
+$V(r)$ is replaced by $V(r)+\Delta V(r)$, 
+given by
+\begin{equation}
+ \Delta V(r) = -{\hbar^2 \over 2m} {A\over R_{nl}(r_t)}\delta(r-r_t).
+\end{equation}
+The energy difference between the solution to such fictitious potential 
+and the solution to the real potential can be estimated from
+perturbation theory:
+\begin{equation}
+ \Delta\epsilon_{nl} = - \langle\psi|\Delta V |\psi\rangle
+                     =   {\hbar^2 \over 2m} R_{nl}(r_t) A.
+\end{equation}
+
+\section{Equations for the Troullier-Martins method}
+
+We assume a pseudowavefunction $R^{ps}$ having the following form:
+\begin{eqnarray}
+R^{ps}(r)&=&r^{l+1}e^{p(r)} \quad r\le r_c \\
+R^{ps}(r)&=&R(r)         \quad r\ge r_c
+\end{eqnarray}
+where
+\begin{equation}
+p(r)=c_0+c_2r^2+c_4r^4+c_6r^6+c_8r^8+c_{10}r^{10}+c_{12}r^{12}.
+\end{equation}
+On this pseudowavefunction we impose the norm conservation
+condition:
+\begin{equation}
+\int_{r<r_c} (R^{ps}(r))^2 dr=\int_{r<r_c} (R(r))^2 dr
+\end{equation}
+and continuity conditions on the wavefunction and its derivatives up
+to order four at the matching point:
+\begin{equation}
+{d^nR^{ps}(r_c)\over dr^n}={d^nR(r_c)\over dr^n}, \quad n=0,...,4
+\end{equation}
+
+\noindent$\bullet$ Continuity of the wavefunction:
+\begin{equation}
+R^{ps}(r_c)=r_c^{l+1}e^{p(r_c)}=R(r_c)
+\end{equation}
+\begin{equation}
+p(r_c) = \mbox{log}{R(r_c)\over r_c^{l+1}} 
+\end{equation}
+
+\noindent$\bullet$ Continuity of the first derivative of the wavefunction:
+\begin{equation}
+{dR^{ps}(r)\over dr} = (l+1)r^le^{p(r)} + r^{l+1}e^{p(r)}p'(r)
+                         ={l+1\over r}R^{ps}(r) + p'(r)R^{ps}(r)
+\end{equation}
+that is
+\begin{equation}
+ p'(r_c) = {dR(r_c)\over dr} {1\over R^{ps}(r_c)} -
+           {l+1\over r_c}.
+\end{equation}
+
+\noindent$\bullet$ Continuity of the second  derivative of the wavefunction:
+\begin{eqnarray}
+{d^2R^{ps}(r)\over d^2r} 
+   & = &
+     {d\over dr}\left((l+1)r^le^{p(r)} + r^{l+1}e^{p(r)}p'(r)\right) 
+\nonumber \\ & = &
+     l(l+1)r^{l-1}e^{p(r)} + 2(l+1)r^le^{p(r)}p'(r) +
+     r^{l+1}e^{p(r)}\left[p'(r)\right]^2 + r^{l+1}e^{p(r)}p''(r)
+\nonumber\\ & = &
+     \left( {l(l+1)\over r^2}+ {2(l+1)\over r}p'(r) +
+            \left[p'(r)\right]^2 + p''(r) \right) r^{l+1}e^{p(r)}.
+\end{eqnarray}
+From the radial Schr\"odinger equation:
+\begin{equation}
+ {d^2R^{ps}(r)\over dr^2} = 
+    \left ( {l(l+1)\over r^2} +{2m\over\hbar^2}(V(r)-\epsilon)\right)R^{ps}(r)
+\end{equation}
+that is
+\begin{equation}
+p''(r_c) = {2m\over\hbar^2}(V(r_c)-\epsilon) - 2 {l+1\over r_c}p'(r_c)
+         -\left[p'(r_c)\right]^2 
+\end{equation}
+
+\noindent$\bullet$ Continuity of the third and fourth derivatives of the
+wavefunction. This is assured if the third and fourth derivatives of
+$p(r)$ are continuous. By direct derivation of the expression of
+$p''(r)$:
+\begin{equation}
+p'''(r_c) = {2m\over\hbar^2}V'(r_c) + 2 {l+1\over r^2_c}p'(r_c)
+          - 2{l+1\over r_c}p''(r_c) -2 p'(r_c)p''(r_c)
+\end{equation}
+
+\begin{eqnarray}
+p''''(r_c) & = & {2m\over\hbar^2}V''(r_c) - 4 {l+1\over r^3_c}p'(r_c)
+                 + 4{l+1\over r^2_c}p''(r) \nonumber \\ & & \mbox{} 
+            - 2{l+1\over r_c}p'''(r_c)
+           - 2 \left[p''(r_c)p''(r_c)\right]^2 -2 p'(r_c)p'''(r_c)
+\end{eqnarray}
+
+The additional condition: $V''(0)=0$ is imposed. 
+The screened potential is
+\begin{eqnarray}
+V(r)&=&{\hbar^2\over2m}\left({1\over R^{ps}(r)}{d^2R^{ps}(r)\over dr^2} 
+     - {l(l+1)\over r^2}\right)+\epsilon \\
+    &=&{\hbar^2\over2m}\left( 2{l+1\over r} p'(r)+\left[p(r)\right]^2+p''(r)
+       \right)+\epsilon
+\end{eqnarray}
+
+Keeping only lower-order terms in $r$:
+\begin{eqnarray}
+V(r) &\simeq&{\hbar^2\over2m}\left( 2{l+1\over r} (2c_2r + 4c_4r^3) 
+               + 4c_2^2r^2 + 2c_2 + 12c_4r^2\right) + \epsilon \\
+     &   =  & {\hbar^2\over2m}\left( 2c_2(2l+3) + 
+              \left((2l+5)c_4+c_2^2\right) r^2\right)+ \epsilon .
+\end{eqnarray}
+The additional constraint is:
+\begin{equation}
+(2l+5)c_4+c_2^2=0.
+\end{equation}
+
+
+
+\begin{thebibliography}{10}
+
+\bibitem{NC} 
+D.R. Hamann, M. Schl\"uter, and C. Chiang, 
+Phys. Rev. Lett. {\bf 43}, 1494 (1979).
+
+\bibitem{van} D. Vanderbilt, Phys. Rev. B  {\bf 47}, 10142 (1993).
+
+\bibitem{BHS} 
+G.B. Bachelet, D.R. Hamann and M. Schl\"uter, Phys. Rev. B {\bf 26},
+4199 (1982). 
+
+\bibitem{Gonze} 
+X. Gonze, R. Stumpf, and M. Scheffler, Phys. Rev. B {\bf 44}, 8503 (1991).
+
+\bibitem{Goedecker} 
+S. Goedecker, M. Teter, and J. Hutter, Phys. Rev. B {\bf 54}, 1703 (1996).
+
+\bibitem{TM} N. Troullier and J.L. Martins, Phys. Rev. B {\bf 43},
+1993 (1991).
+
+\bibitem{fhi98PP} 
+M.Fuchs and M. Scheffler, Comput. Phys. Commun. {\bf 119}, 67 (1999).
+
+\bibitem{RRKJ} A. M. Rappe, K. M. Rabe, E. Kaxiras, and J. D. Joannopoulos, 
+Phys. Rev. B {\bf 41}, 1227 (1990) 
+(erratum: Phys. Rev. B {\bf 44}, 13175 (1991)).
+
+\bibitem{PAW} P.~E. Bl\"ochl, Phys. Rev. B {\bf 50}, 17953 (1994).
+
+\bibitem{KB} L. Kleinman and D.M. Bylander, Phys. Rev. Lett. 48, 1425 (1982).
+
+\bibitem{CoreCorr} 
+S.G. Louie, S. Froyen, and M.L. Cohen, Phys. Rev. B {\bf 26}, 1738 (1982).
+
+\bibitem{Zunger} S.H. Wei and A. Zunger, Phys. Rev. B {\bf 37}, 8958 (1987).
+
+\end{thebibliography}
+
+\end{document}

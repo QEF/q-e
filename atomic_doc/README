@@ -1,7 +1,7 @@
 This is the distribution of the ld1 code for electronic structure 
 atomic calculations and pseudo-potentials generation.
 
-- the LD1 package, mantained by Andrea Dal Corso (SISSA, Trieste) 
+- the LD1 package, maintained by Andrea Dal Corso (SISSA, Trieste) 
   is the result of several additions to the original 
   P. Giannozzi ld1 code for pseudopotentials generation
   (See http://www.sns.it/~giannozz/software.html).

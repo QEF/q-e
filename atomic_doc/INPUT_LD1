@@ -37,9 +37,10 @@ Needed for PP generation only:
      
       rel =  0 non relativistic calculation     (default for Z <= 18)
              1 scalar relativistic calculation  (default for Z >  18)
-             2 full relativistic calculation
+             2 full relativistic calculation with spin-orbit
       lsd  = 1 spin-polarized calculation   (default: 0, no spin pol.)
-               not allowed if iswitch=3 (PP generation) or with rel
+               not allowed if iswitch=3 (PP generation) or with full
+               relativistic calculation
       dft = exchange-correlation functional. Examples:
            'PZ'    Perdew and Zunger formula for LDA (default)
            'PW91'  Perdew and Wang GGA
@@ -57,12 +58,17 @@ Needed for PP generation only:
              contains output all-electron logarithmic derivatives
 
       config = a string with the electronic configuration. Example:
-               '[Ar] 3d10 4s2.1 3p2.9'               (default: ' ')
-               If lsd=1, spin-up and spin-down state appear twice
-               with the respective occupancy: 3p4 3p2 = 4 up, 2 down
-	       Not implemented for rel=2
-      if config is empty the electronic configuration is read from
-      the following cards
+                  '[Ar] 3d10 4s2 3p2.5'              (default: ' ')
+               If lsd=1, spin-up and spin-down state may appear twice
+                  with the respective occupancy: 3p4 3p2 = 4 up, 
+                  2 down. Otherwise, the Hund's rule is assumed.
+               If rel=2, states with jj=l-1/2 are filled first.
+                  If a state appears twice, the first one has jj=l-1/2, 
+                  the second one jj=l+1/2 (except S states)
+              Negative occupancies are used to flag unbound states;
+                  they are not actually used
+      If config is empty the electronic configuration is read from
+      the following cards:
 
   2) optional cards for all-electron calculation
 
@@ -76,8 +82,8 @@ Needed for PP generation only:
       n,l= principal and angular quantum numbers
       oc= occupation number
       isw = the spin index (1-2) used only in the lsda case
-      jj = the total angular momentum (0.0 is allowed for complete shell
-           the codes splits the two states)
+      jj = the total angular momentum (0.0 is allowed for complete shells:
+           the codes fills 2l states with jj=l-1/2, 2l+2 with jj=l+1/2)
 
   3) namelist &test (optional, read only if iswitch=2 or 3)
 
@@ -87,7 +93,7 @@ Needed for PP generation only:
            1    norm-conserving, single-projector PP (old format)
            2    norm-conserving, multiple-projector PP in separable format
            3    ultrasoft PP
-      file_pseudo = file containing the PPWindowscrash.com.
+      file_pseudo = file containing the PP
                 If a PP is tested, the PP is read from file_pseudo
                 (note that the acceptable format depend on pseudotype).
                 If a PP is generated, it is written to file_pseudo.
