@@ -592,6 +592,16 @@ MODULE bfgs_module
            iteration
        WRITE( stdout, '(/,5X,"Final energy: ",F14.10," ryd"/)' ) energy
        !
+       WRITE( stdout, '(/,5X,"Saving the approssimate hessian")' )
+       !
+       OPEN( UNIT = iunbfgs, FILE = TRIM( scratch )//TRIM( prefix )//'.hess', &
+             STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
+       !
+       WRITE( iunbfgs, * ) SHAPE( inverse_hessian )
+       WRITE( iunbfgs, * ) inverse_hessian
+       ! 	     
+       CLOSE( UNIT = iunbfgs )       
+       !
        OPEN( UNIT = iunbfgs, &
              FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs' )
        CLOSE( UNIT = iunbfgs, STATUS = 'DELETE' )
