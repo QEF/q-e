@@ -1770,12 +1770,6 @@ MODULE read_cards_module
                    climbing(i) = .TRUE.
                 !
              END DO
-             !    
-             DO i = 1, num_of_images
-                !
-                IF ( climbing(i) ) PRINT *, "Image ",i, " recognized"
-                !
-             END DO             
              !
           END IF
           !   

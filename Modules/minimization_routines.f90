@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF group
+! Copyright (C) 2003-2004 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -98,7 +98,7 @@ MODULE minimization_routines
      SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE neb_variables, ONLY : pos_old, grad_old, vel, mass, dim
+       USE neb_variables, ONLY : pos_old, grad_old, vel, mass, dim, new_step
        !
        IMPLICIT NONE
        !
@@ -106,10 +106,9 @@ MODULE minimization_routines
        REAL (KIND=DP)              :: force_versor(dim)
        REAL (KIND=DP)              :: vel_component
        REAL (KIND=DP), ALLOCATABLE :: y(:), s(:)
-       LOGICAL, SAVE               :: new_step = .FALSE.
        !
        !        
-       ds(index) = optimal_time_step( index )
+      ! ds(index) = optimal_time_step( index )
        !
        vel(:,index) = vel(:,index) - &
                       ds(index) / 2.D0 * grad(:,index) / mass(:)               
@@ -120,19 +119,19 @@ MODULE minimization_routines
           !
           vel_component = ( vel(:,index) .dot. force_versor )
           !
-          IF ( vel_component > 0.D0 .OR. new_step ) THEN
+          IF ( vel_component > 0.D0 .OR. new_step(index) ) THEN
              ! 
              vel(:,index) = vel_component * force_versor
              !
-             new_step = .FALSE.
+             new_step(index) = .FALSE.
              !
           ELSE
              !
             ! PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
              !
-             ! ... an approximate newton-raphson step is performed
-             !
              vel(:,index) = 0.D0
+             !             
+             ! ... an approximate newton-raphson step is performed
              !
              ALLOCATE( y( dim ), s( dim ) )
              !
@@ -149,7 +148,7 @@ MODULE minimization_routines
              !             
             ! PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
              !
-             new_step = .TRUE.
+             new_step(index) = .TRUE.
              !
              DEALLOCATE( y, s )
              !
@@ -241,7 +240,7 @@ MODULE minimization_routines
        INTEGER, PARAMETER         :: steps_at_fixed_ds = 10
          ! for the first "steps_at_fixed_ds" steps the update of the time
          ! step is disabled
-       REAL(KIND=DP), PARAMETER   :: ds_min = 0.4D0, &
+       REAL(KIND=DP), PARAMETER   :: ds_min = 0.1D0, &
                                      ds_max = 4.0D0
          ! minimum and maximum allowed time-steps
        !
@@ -262,9 +261,12 @@ MODULE minimization_routines
              projection = ( s .dot. grad(:,index) ) / &
                           ( norm( s ) * norm_grad(index) )
              !
-            ! PRINT '(5X,"projection = ",F7.4)', projection
+             PRINT '(5X,"projection = ",F7.4)', projection
              !
-             optimal_time_step = ABS( projection ) * &
+             ! ... to avoid numerical instabilities we take the 30 %
+             ! ... of the optimal time step
+             !
+             optimal_time_step = 0.3D0 * ABS( projection ) * &
                                  SQRT( 2.D0 * ( s .dot. s ) / ABS( y .dot. s ) )
              !
           ELSE
@@ -273,12 +275,10 @@ MODULE minimization_routines
              !
           END IF
           !
-         ! PRINT '(5X,"before:  ",F12.8)', optimal_time_step
-          !
           optimal_time_step = MAX( ds_min, optimal_time_step )
           optimal_time_step = MIN( ds_max, optimal_time_step )
           !
-         ! PRINT '(5X,"after:   ",F12.8)', optimal_time_step
+          PRINT '(5X,"optimal_time_step = ",F12.8)', optimal_time_step
           !
        END IF
        !

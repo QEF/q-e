@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2003-2004 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,8 @@ MODULE neb_variables
                                   ! achieved
   LOGICAL, ALLOCATABLE :: &
        climbing(:),              &!  
-       free_minimization(:)       !
+       free_minimization(:),     &!
+       new_step(:)                !
   CHARACTER (LEN=20) :: &
        CI_scheme,                &! Climbing Image scheme
        VEC_scheme                 ! Variable Elastic Constant scheme
@@ -101,6 +102,7 @@ MODULE neb_variables
        ALLOCATE( error( num_of_images ) )
        ALLOCATE( climbing( num_of_images ) )
        ALLOCATE( free_minimization( num_of_images ) )
+       ALLOCATE( new_step( num_of_images ) )
        !           
      END SUBROUTINE neb_dyn_allocation     
      !
@@ -128,6 +130,7 @@ MODULE neb_variables
        IF ( ALLOCATED( error ) )             DEALLOCATE( error )
        IF ( ALLOCATED( climbing ) )          DEALLOCATE( climbing )
        IF ( ALLOCATED( free_minimization ) ) DEALLOCATE( free_minimization )
+       IF ( ALLOCATED( new_step ) )          DEALLOCATE( new_step )
        !
      END SUBROUTINE neb_deallocation
      !

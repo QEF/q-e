@@ -49,12 +49,13 @@ MODULE neb_base
                                    error, mass, free_minimization, CI_scheme,  &
                                    optimization, k, k_min, k_max,  Emax_index, &
                                    VEC_scheme, neb_thr, lquick_min, lmol_dyn,  &
-                                   ldamped_dyn, nstep_neb, istep_neb
+                                   ldamped_dyn, nstep_neb, istep_neb, new_step
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
       USE formats,          ONLY : stringfmt   
       USE io_global,        ONLY : ionode
+      USE basic_algebra_routines
       !
       IMPLICIT NONE
       !
@@ -64,9 +65,11 @@ MODULE neb_base
         ! ... specify the calling program
       !
       ! ... local variables
-      !
+      !      
       INTEGER                     :: i
+      REAL (KIND=DP)              :: path_length, inter_image_distance
       REAL (KIND=DP), ALLOCATABLE :: d_R(:)
+      CHARACTER (LEN=20)          :: num_of_images_char, i_char
       !
       !    
       ! ... NEB internal variables are set
@@ -117,6 +120,7 @@ MODULE neb_base
       error            = 0.D0
       mass             = 1.D0
       k                = k_min
+      new_step         = .FALSE.
       !
       IF ( ALLOCATED( climbing ) ) THEN
          !
@@ -180,9 +184,13 @@ MODULE neb_base
          !
          ALLOCATE( d_R(dim) )        
          !
-         d_R = ( pos_(:,num_of_images) - pos_(:,1) )
-         ! 
-         d_R = d_R / REAL( ( num_of_images - 1 ), KIND = DP )
+         d_R(:) = ( pos_(:,num_of_images) - pos_(:,1) )
+         !
+         path_length = norm( d_R(:) )
+         !
+         d_R(:) = d_R(:) / REAL( num_of_images - 1  )
+         !
+         inter_image_distance = norm( d_R(:) )
          !
          DO i = 2, ( num_of_images - 1 )
             !
@@ -206,6 +214,8 @@ MODULE neb_base
       !
       IF ( ionode ) THEN
          !
+         num_of_images_char = int_to_char( num_of_images )
+         !
          WRITE( UNIT = iunneb, FMT = stringfmt ) &
              "calculation", TRIM( calculation )
          WRITE( UNIT = iunneb, FMT = stringfmt ) &
@@ -216,18 +226,42 @@ MODULE neb_base
              "VEC_scheme", TRIM( VEC_scheme )
          WRITE( UNIT = iunneb, FMT = stringfmt ) &
              "minimization_scheme", TRIM( minimization_scheme )
+         WRITE( UNIT = iunneb, FMT = stringfmt ) &
+             "num_of_images", TRIM( num_of_images_char )
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"optimization",T35," = ",L1))' ) optimization
          WRITE( UNIT = iunneb, &
-                FMT = '(5X,"num_of_images",T35," = ",I3)' ) num_of_images
+                FMT = '(5X,"ds",T35," = ",F6.4," a.u.")' ) ds
          WRITE( UNIT = iunneb, &
-                FMT = '(5X,"ds",T35," = ",F6.4)' ) ds
+                FMT = '(5X,"k_max",T35," = ",F6.4," a.u.")' ) k_max
          WRITE( UNIT = iunneb, &
-                FMT = '(5X,"k_max",T35," = ",F6.4)' ) k_max
+                FMT = '(5X,"k_min",T35," = ",F6.4," a.u.")' ) k_min
          WRITE( UNIT = iunneb, &
-                FMT = '(5X,"k_min",T35," = ",F6.4)' ) k_min
+                FMT = '(5X,"neb_thr",T35," = ",F6.4," eV / A")' ) neb_thr
          WRITE( UNIT = iunneb, &
-                FMT = '(5X,"neb_thr",T35," = ",F6.4)' ) neb_thr     
+                FMT = '(5X,"initial path length",&
+                      & T35," = ",F6.4," bohr")' ) path_length   
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"initial inter-image distance", &
+                      & T35," = ",F6.4," bohr")' ) inter_image_distance
+         !
+         IF ( CI_scheme == "manual" ) THEN
+            !
+            DO i = 1, num_of_images
+               !
+               IF ( climbing(i) ) THEN
+                  !
+                  i_char = int_to_char( i )
+                  !
+                  WRITE( UNIT = iunneb, &
+                         FMT = stringfmt ) "climbing image", TRIM( i_char )
+                  !
+               END IF       
+               !
+            END DO
+            !
+         END IF
+         !
          WRITE( UNIT = iunneb, FMT = '(/)' )
          !
       END IF
@@ -279,10 +313,10 @@ MODULE neb_base
       INTEGER                  :: i
       REAL(KIND=DP)            :: F_ortho_max, F_ortho_max_i, &
                                   F_para_max_i, F_para_max, rescale_coeff
-      REAL(KIND=DP), PARAMETER :: rescale_coeff_min = 0.3D0, &
-                                  rescale_coeff_mAX = 3.D0
-        ! minimum allowed rescaling coefficient ( 30% )
-        ! maximum allowed rescaling coefficient ( 300% )
+      REAL(KIND=DP), PARAMETER :: rescale_coeff_min = 0.5D0, &
+                                  rescale_coeff_max = 2.0D0
+        ! minimum allowed rescaling coefficient (  50% )
+        ! maximum allowed rescaling coefficient ( 200% )
       REAL(KIND=DP)            :: delta_E
       REAL(KIND=DP)            :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
       !
@@ -340,33 +374,38 @@ MODULE neb_base
          F_ortho_max_i = MAXVAL( ABS( PES_gradient(:,i) - tangent(:,i) * &
                                     ( PES_gradient(:,i) .dot. tangent(:,i) ) ) )
          !
-         elastic_gradient = tangent(:,i) * &
+         elastic_gradient(:) = tangent(:,i) * &
                 ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
                   ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
          !
          F_para_max_i = MAXVAL( ABS( elastic_gradient(:) ) )
          !
          IF ( F_ortho_max_i > F_ortho_max ) F_ortho_max = F_ortho_max_i
-         !
-         IF ( F_para_max_i > F_para_max ) F_para_max = F_para_max_i
+         IF ( F_para_max_i  > F_para_max  ) F_para_max  = F_para_max_i
          !
       END DO
       !
       rescale_coeff = MAX( ( F_ortho_max / F_para_max ), rescale_coeff_min )
       rescale_coeff = MIN( rescale_coeff, rescale_coeff_max )
       !
-#if defined (DEBUG_ELASTIC_CONSTANTS)
-      !
-      PRINT '(/5X,"F_ortho_max = ",F10.6)', F_ortho_max
-      PRINT '( 5X,"F_para_max  = ",F10.6)', F_para_max
-      PRINT '( 5X,"ALPHA       = ",F10.6)', rescale_coeff
-      !
-#endif      
-      !
       k     = k * rescale_coeff
       k_max = k_max * rescale_coeff
       k_min = k_min * rescale_coeff
-      !      
+      !
+#if defined (DEBUG_ELASTIC_CONSTANTS)
+      !
+      PRINT '(/5X,"F_ortho_max = ",F10.6 )', F_ortho_max
+      PRINT '( 5X,"F_para_max  = ",F10.6 )', F_para_max
+      PRINT '( 5X,"ALPHA       = ",F10.6/)', rescale_coeff
+      !
+      DO i = 1, num_of_images
+         !
+         PRINT '(F8.4)', k(i)
+         !
+      END DO
+      !
+#endif      
+      !
       RETURN
       !
     END SUBROUTINE elastic_constants
@@ -498,7 +537,7 @@ MODULE neb_base
       !-----------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, optimization, &
-                                error, norm_grad
+                                error, norm_grad, deg_of_freedom
       !
       IMPLICIT NONE
       !
@@ -508,8 +547,8 @@ MODULE neb_base
       !
       ! ... local variables
       !
-      INTEGER                      :: N_in, N_fin
-      INTEGER                      :: i
+      INTEGER :: N_in, N_fin
+      INTEGER :: i
       !
       !
       err = 0.D0
@@ -526,14 +565,15 @@ MODULE neb_base
          !   
       END IF   
       !
-      DO i = N_in, N_fin
+      DO i = 1, num_of_images
          !
-         ! ... the error is given by the norm of the 
-         ! ... gradient ( PES + SPRINGS ).
+         ! ... the error is given by the norm of the gradient ( PES + SPRINGS )
+         ! ... divided by square root of the number of degrees of freedom
          !
-         error(i) = norm_grad(i)
+         error(i) = norm_grad(i) / SQRT( REAL( deg_of_freedom ) )
          !
-         IF ( error(i) > err ) err = error(i)
+         IF ( ( error(i) > err ) .AND. &
+              ( i >= N_in .AND. i <= N_fin ) ) err = error(i)
          !
       END DO
       !
@@ -817,17 +857,17 @@ MODULE neb_base
             !
          END IF
          !
-         ! ... istep_neb is updated after a self-consistency step
-         !
-         istep_neb = istep_neb + 1         
-         !
          IF ( .NOT. stat ) THEN
             !
             conv_neb = .FALSE.
             !
             EXIT minimization
             !
-         END IF
+         END IF         
+         !
+         ! ... istep_neb is updated after a self-consistency step
+         !
+         istep_neb = istep_neb + 1         
          !
          IF ( CI_scheme == "highest-TS" ) THEN
             !
@@ -869,9 +909,11 @@ MODULE neb_base
          !
          CALL compute_error( err )
          !
+         ! ... information is written on the files
+         !
          CALL write_dat_files()
          !
-         ! ... informations are written on the standard output
+         ! ... information is written on the standard output
          !
          IF ( ionode ) THEN
             !
