@@ -25,7 +25,7 @@ subroutine poten
   integer, allocatable :: ipiv(:) 
 
   real(kind=DP), parameter :: eps = 1.d-8
-  real(kind=DP) :: zlen, dz, arg, bet   
+  real(kind=DP) :: arg, bet   
   real(kind=DP), allocatable :: gz(:), auxr(:)
 
   complex(kind=DP), parameter :: cim = (0.d0,1.d0)
@@ -137,21 +137,17 @@ subroutine poten
 ! set up the matrix for the linear system
 !
 
-
-  zlen = z(nrz+1)-z(1)
-  dz = z(2)-z(1)
-
-  do n = 1, nrz
-    bet = gz(n)*dz*tpi
-    if (abs(gz(n)).gt.eps) then
-      caux = cim*(CMPLX(cos(bet),-sin(bet))-(1.d0,0.d0))  &
-                                  /(zlen*gz(n)*tpi)
-    else
-      caux = dz/zlen
-    endif
-    do p = 1, nrz
-      arg = gz(n)*z(p)*tpi
-      amat(n,p) = CMPLX(cos(arg),-sin(arg))*caux
+  do n=1,nrz
+    do p=1,nrz
+      arg=gz(n)*z(p)*tpi
+      bet=gz(n)*(z(p+1)-z(p))*tpi
+      if (abs(gz(n)).gt.eps) then
+        caux=cim*(CMPLX(cos(bet),-sin(bet))-(1.d0,0.d0))  &
+                                    /zl/gz(n)/tpi
+      else
+        caux=(z(p+1)-z(p))/zl
+      endif
+      amat(n,p)=CMPLX(cos(arg),-sin(arg))*caux
     enddo
   enddo
 

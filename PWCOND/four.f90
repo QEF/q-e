@@ -105,11 +105,19 @@ implicit none
             endif
          enddo
          call simpson(nmeshs-iz+1,x1(iz),rab(iz,itp),fx1(kz))  
-         dr=r(iz,itp)-r(iz-1,itp)
+         if (iz.eq.1) then
+            dr=r(iz,itp)
+         else
+            dr=r(iz,itp)-r(iz-1,itp)
+         endif
          zr=r(iz,itp)-abs(zsl(kz))
          if (lb.eq.0) then 
-            x1(iz-1)=betar(iz,nbb,itp)-                   &
-               (betar(iz,nbb,itp)-betar(iz-1,nbb,itp))/dr*zr 
+            if (iz.eq.1) then
+               x1(iz-1)=betar(iz,nbb,itp)-betar(iz,nbb,itp)/dr*zr 
+            else
+               x1(iz-1)=betar(iz,nbb,itp)-                   &
+                  (betar(iz,nbb,itp)-betar(iz-1,nbb,itp))/dr*zr 
+            endif
             fx1(kz)=fx1(kz)+(x1(iz-1)+x1(iz))*0.5d0*zr
          else
             fx1(kz)=fx1(kz)+x1(iz)*0.5d0*zr
@@ -130,12 +138,13 @@ implicit none
             call simpson(nmeshs-iz+1,x4(iz),rab(iz,itp),fx4(kz)) 
             if(iz.eq.1) then
                x3(iz-1)=0.d0
+               x4(iz-1)=0.d0
             else          
                x3(iz-1)=(betar(iz,nbb,itp)-(betar(iz,nbb,itp)-   &
                          betar(iz-1,nbb,itp))/dr*zr)/abs(zsl(kz))**2
+               x4(iz-1)=betar(iz,nbb,itp)-(betar(iz,nbb,itp)-       &
+                         betar(iz-1,nbb,itp))/dr*zr
             endif
-            x4(iz-1)=betar(iz,nbb,itp)-(betar(iz,nbb,itp)-       &
-                      betar(iz-1,nbb,itp))/dr*zr
             fx3(kz)=fx3(kz)+(x3(iz-1)+x3(iz))*0.5d0*zr
             fx4(kz)=fx4(kz)+(x4(iz-1)+x4(iz))*0.5d0*zr
          endif
