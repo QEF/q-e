@@ -99,6 +99,10 @@ subroutine do_chdens
         idpol=0
         call errore("chdens","dipole computed only if iflag=3",-1)
      endif
+     if (output_format.eq.3) then
+        idpol=0
+        call errore("chdens","dipole not available with output_format=3",-1)
+     endif
      if (plot_out /= 1) then
         idpol=0
         call errore("chdens","dipole computed only if plot_out=1",-1)
@@ -135,11 +139,8 @@ subroutine do_chdens
           e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3) > 1d-6 )    &
          call errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
 
-     if (output_format < 3 .and. output_format > 4) then
-        
-        call errore ('chdens', 'incompatibly iflag/output_format', 1)
-
-     endif
+     if ((iflag.eq.3) .and.(output_format < 3 .or. output_format > 4)) &
+        call errore ('chdens', 'incompatible iflag/output_format', 1)
 
   else if (iflag  == 4) then
 
@@ -351,7 +352,7 @@ subroutine do_chdens
           ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
           ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0) 
 
-     if (output_format == 300) then
+     if (output_format == 3) then
         !
         ! XCRYSDEN FORMAT
         !
@@ -368,6 +369,9 @@ subroutine do_chdens
                 nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
                 bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol(0))
         else
+           if (nx<=0 .or. ny <=0 .or. nz <=0) &
+               call errore("chdens","nx,ny,nz, required",1)
+
            call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog, &
                 nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
                 dipol(0))
