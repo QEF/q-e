@@ -543,10 +543,10 @@ SUBROUTINE c_phase
                ENDDO
 
 !              --- Calculate matrix determinant ---
-               CALL zgefa(mat,nbnd,nbnd,ivpt,info)
+               CALL ZGEFA(mat,nbnd,nbnd,ivpt,info)
                CALL errore('c_phase','error in zgefa',abs(info))
                job=10
-               CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
+               CALL ZGEDI(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
                det=cdet(1)*10.d0**cdet(2)
 
 !              --- Multiply by the already calculated determinants ---

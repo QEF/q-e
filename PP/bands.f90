@@ -8,6 +8,7 @@
 !-----------------------------------------------------------------------
 program bands
   !-----------------------------------------------------------------------
+#include "machine.h"
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para, only: me, npool
@@ -97,7 +98,6 @@ subroutine punch_band (filband)
   !    method works in many, but not in all the cases.
   !
   !
-#include "machine.h"
 #ifdef __PARA
   use para, only: me
 #endif

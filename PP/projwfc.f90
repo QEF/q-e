@@ -24,6 +24,7 @@ program projwfc
   !   DeltaE      ...in steps of DeltaE (eV, default: 0.01) 
   !   smoothing   gaussian broadening (eV, default: DeltaE) 
   ! 
+#include "machine.h" 
   USE io_global,  ONLY : stdout 
   USE kinds, only : DP 
   use io_files,   only : nd_nmbr, prefix, tmp_dir 
@@ -121,7 +122,6 @@ end program projwfc
 subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing) 
   !----------------------------------------------------------------------- 
   ! 
-#include "machine.h" 
   USE io_global,  ONLY : stdout 
   use atom 
   USE ions_base, ONLY : nat, ityp, atm, ntyp => nsp

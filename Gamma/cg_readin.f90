@@ -10,6 +10,7 @@
 subroutine cg_readin
   !-----------------------------------------------------------------------
   !
+#include "machine.h"
   USE ions_base, ONLY : nat
   use pwcom
   use cgcom
@@ -130,7 +131,6 @@ end subroutine cg_readin
 subroutine cg_readmodes(iunit)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
   USE ions_base, ONLY : nat
   USE kinds, only: DP
   use pwcom

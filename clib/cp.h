@@ -7,7 +7,7 @@
 */
 
 
-#if defined __T3E | defined __ABSOFT
+#if defined __T3E || defined __ABSOFT
 
 #  define FFTW_INPLACE_DRV_1D FFTW_INPLACE_DRV_1D
 #  define FFTW_INPLACE_DRV_2D FFTW_INPLACE_DRV_2D
@@ -34,7 +34,7 @@
 
 #endif
 
-#if defined __SGI | defined __FUJITSU | defined __SX4 | defined __INTEL | defined __LAHEY | defined __SX6 | defined SUN | defined __ALTIX
+#if defined __SGI || defined __FUJITSU || defined __SX4 || defined __INTEL || defined __LAHEY || defined __SX6 || defined SUN || defined __ALTIX
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
 #  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
@@ -158,7 +158,7 @@
 
 #endif
 
-#if defined __AIX | defined __HP
+#if defined __AIX || defined __HP
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d
 #  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d

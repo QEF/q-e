@@ -1,5 +1,6 @@
 
 program read_bands
+#include "machine.h"
 
   USE io_global,  ONLY : stdout
 
