@@ -50,6 +50,7 @@ splinelib.o \
 stick_base.o \
 supercell.o \
 version.o \
+uspp.o \
 wave_base.o \
 wavefunctions.o
 

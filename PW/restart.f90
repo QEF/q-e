@@ -492,7 +492,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !     programs.
   !
   !
-  USE parameters, only: npk, nchix, ndm, nbrx, lqmax, nqfm
+  USE parameters, only: npk, nchix, ndm, nbrx, lqmax, nqfx
   USE constants, ONLY: pi
   USE io_files,  ONLY : iunwfc, nwordwfc, prefix, tmp_dir
   USE kinds, ONLY: DP
@@ -817,7 +817,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
             upf%r( 0:ndm ), upf%rab( 0:ndm ), upf%rho_atc( 0:ndm ), upf%vloc( 0:ndm ), &
             upf%lll( 1:nbrx ), upf%kkbeta( 1:nbrx ), upf%beta( 0:ndm, 1:nbrx ), &
             upf%dion( 1:nbrx, 1:nbrx ), upf%rinner( 1:lqmax ), upf%qqq( 1:nbrx, 1:nbrx ), &
-            upf%qfunc( 0:ndm, 1:nbrx, 1:nbrx ), upf%qfcoef( 1:nqfm, 1:lqmax, 1:nbrx, 1:nbrx ), &
+            upf%qfunc( 0:ndm, 1:nbrx, 1:nbrx ), upf%qfcoef( 1:nqfx, 1:lqmax, 1:nbrx, 1:nbrx ), &
             upf%chi( 0:ndm, nchix ), upf%rho_at( 0:ndm ) )
 
          CALL read_restart_pseudo( ndr, &

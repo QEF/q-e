@@ -135,11 +135,11 @@ MODULES = \
 ../Modules/pseudo_types.o \
 ../Modules/recvec.o \
 ../Modules/stick_base.o \
+../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o
 
 PWOBJS = \
-../PW/aainit.o \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
 ../PW/addusdens.o \
@@ -233,7 +233,6 @@ PWOBJS = \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
 ../PW/interpolate.o \
-../PW/invmat.o \
 ../PW/io_pot.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
@@ -260,7 +259,6 @@ PWOBJS = \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
-../PW/random.o \
 ../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_file.o \
@@ -339,8 +337,7 @@ PWOBJS = \
 ../PW/wgauss.o \
 ../PW/which_dft.o \
 ../PW/write_ns.o \
-../PW/wsweight.o \
-../PW/ylmr2.o
+../PW/wsweight.o
 
 all : ph.x
 

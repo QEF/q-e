@@ -4,7 +4,6 @@ include ../make.rules
 include ../make.sys
 
 PWOBJS = \
-aainit.o \
 add_efield.o \
 add_vuspsi.o \
 addusdens.o \
@@ -119,7 +118,6 @@ init_at_1.o \
 init_vloc.o \
 input.o \
 interpolate.o \
-invmat.o \
 io_pot.o \
 ions.o \
 irrek.o \
@@ -152,7 +150,6 @@ punch.o \
 pw_gemm.o \
 pwcom.o \
 qvan2.o \
-random.o \
 rbecmod.o \
 rdiaghg.o \
 read_conf_from_file.o \
@@ -247,8 +244,7 @@ wgauss.o \
 which_dft.o \
 write_config_to_file.o \
 write_ns.o \
-wsweight.o \
-ylmr2.o
+wsweight.o
 
 MODULES = \
 ../Modules/basic_algebra_routines.o \
@@ -286,6 +282,7 @@ MODULES = \
 ../Modules/recvec.o \
 ../Modules/stick_base.o \
 ../Modules/supercell.o \
+../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o
 

@@ -28,7 +28,7 @@ MODULE parameters
   INTEGER, PARAMETER :: &
        nbrx = 8,           &! max number of beta functions
        lqmax= 2*lmaxx+1,   &! max number of angular momenta of Q
-       nqfm = 8             ! max number of coefficients in Q smoothing
+       nqfx = 8             ! max number of coefficients in Q smoothing
 
   !
   ! ...   More parameter for the CP codes

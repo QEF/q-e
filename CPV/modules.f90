@@ -6,16 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-module van_parameters
-  implicit none
-  save
-  !     nlx = combined angular momentum (for s,p,d states: nlx=9)
-  !     lix = max angular momentum l+1 (lix=3 if s,p,d are included)
-  !     lx  = max 2*l+1
-  !     mx  = 2*lx-1
-  integer, parameter:: lix=3, nlx=9, lx=2*lix-1, mx=2*lx-1
-end module van_parameters
-
 module bhs
   !     analytical BHS pseudopotential parameters
   use parameters, only: nsx
@@ -42,14 +32,8 @@ end module core
 module cvan
   !     ionic pseudo-potential variables
   use parameters, only: nsx
-  use van_parameters
   implicit none
   save
-  !     ap  = Clebsch-Gordan coefficients (?)
-  !     lpx = max number of allowed Y_lm
-  !     lpl = composite lm index of Y_lm
-  real(kind=8) ap(25,nlx,nlx)
-  integer lpx(nlx,nlx),lpl(nlx,nlx,mx)
   !     nvb    = number of species with Vanderbilt PPs
   !     nh(is) = number of beta functions, including Y_lm, for species is
   !     ish(is)= used for indexing the nonlocal projectors betae
@@ -162,12 +146,11 @@ end module gvec
 
 module ncprm
 
-  use parameters, only: nsx, mmaxx, nqfx=>nqfm, nbrx, lqx=>lqmax
-  use van_parameters
+  use parameters, only: nsx, mmaxx, nqfx, nbrx, lqmax
   implicit none
   save
 !
-!  lqx  :  maximum angular momentum of Q (Vanderbilt augmentation charges)
+!  lqmax:  maximum angular momentum of Q (Vanderbilt augmentation charges)
 !  nqfx :  maximum number of coefficients in Q smoothing
 !  nbrx :  maximum number of distinct radial beta functions
 !  mmaxx:  maximum number of points in the radial grid
@@ -200,11 +183,11 @@ module ncprm
   real(kind=8) :: rscore(mmaxx,nsx), dion(nbrx,nbrx,nsx), &
        betar(mmaxx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
        qfunc(mmaxx,nbrx,nbrx,nsx), rucore(mmaxx,nbrx,nsx), &
-       qfcoef(nqfx,lqx,nbrx,nbrx,nsx), rinner(lqx,nsx)
+       qfcoef(nqfx,lqmax,nbrx,nbrx,nsx), rinner(lqmax,nsx)
 !
 ! qrl       q(r) functions
 !
-  real(kind=8) :: qrl(mmaxx,nbrx,nbrx,lx,nsx)
+  real(kind=8) :: qrl(mmaxx,nbrx,nbrx,lqmax,nsx)
 
 !  mesh     number of radial mesh points
 !  r        logarithmic radial mesh

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 CP group
+! Copyright (C) 2002-2004 PWSCF-CP-FPMD group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -74,4 +74,86 @@
 #endif
       return
       end
+!
+function rndm ()
+  !
+  !   RANDOM NUMBER GENERATOR equivalent to ran1 of Num.Rec.
+  !
+  USE kinds
+  implicit none
+  integer :: irand
+  common/random_number/ irand
+  real(kind=DP) :: rndm, shuffle (32)
+  real(kind=DP), external :: rndx
+  integer :: i
+  logical :: first
+  data first / .true. /
+  save first, shuffle, i
+  !
+  if (first.or.irand.lt.0) then
+     irand = - irand
+     if (first) irand=1 ! starting seed, must be not be 0
+     do i = 32 + 8, 1, - 1
+        shuffle (min (i, 32) ) = rndx (irand)
+     enddo
+     i = 32 * shuffle (1) + 1
+     first = .false.
+  endif
+  rndm = shuffle (i)
+  shuffle (i) = rndx (irand)
+
+  i = 32 * rndm + 1
+  return
+
+end function rndm
+
+function rndx (irand)
+  !
+  !   RANDOM NUMBER GENERATOR equivalent to ran0 of Num.Rec.
+  !
+  USE kinds
+  implicit none
+  integer :: im, ia, iq, ir, irand, is, it
+  real(kind=DP) :: rndx, obm
+  logical :: first
+  data first / .true. /
+  save im, ia, iq, ir, obm, first
+  !
+  if (first) then
+     ! this is 2**31-1 avoiding overflow
+     im = 2 * (2**30 - 1) + 1
+     obm = 1.0 / im
+     ia = 7**5
+     iq = im / ia
+     ir = im - ia * iq
+     ! starting seed, must be not be 0
+!     irand = 1
+     first = .false.
+  endif
+  is = irand / iq
+  it = irand-is * iq
+  irand = ia * it - is * ir
+  if (irand.lt.0) irand = irand+im
+  rndx = irand * obm
+  return
+end function rndx
+
+
+subroutine set_rndm_seed(iseed)
+!
+! this subroutine initialize the random number with the given seed
+!
+  USE kinds
+  implicit none
+  integer :: irand,iseed
+  common/random_number/ irand
+  real(kind=DP) :: dummy, rndm
+  if (iseed.le.0) call errore('set_rndm_seed', &
+                  'seed should be a positive integer',1)
+! make sure rndm() has been called already once !
+  dummy = rndm()
+  irand = - iseed
+
+  return
+end subroutine set_rndm_seed
 

@@ -47,7 +47,7 @@ subroutine d_matrix (dy1, dy2, dy3)
         yl1 (m, n) = ylm (n, 1+m)
      end do
   end do
-  call invmat (yl1, yl1_inv, 3)
+  call invmat (3, yl1, yl1_inv, capel)
   !
   !  l = 2 block
   !
@@ -56,7 +56,7 @@ subroutine d_matrix (dy1, dy2, dy3)
         yl2 (m, n) = ylm (n, 4+m)
      end do
   end do
-  call invmat (yl2, yl2_inv, 5)
+  call invmat (5, yl2, yl2_inv, capel)
   !
   !  l = 3 block
   !
@@ -65,7 +65,7 @@ subroutine d_matrix (dy1, dy2, dy3)
         yl3 (m, n) = ylm (n, 9+m)
      end do
   end do
-  call invmat (yl3, yl3_inv, 7)  
+  call invmat (7, yl3, yl3_inv, capel)
   !
   ! now for each symmetry operation of the point-group ...
   !

@@ -492,13 +492,10 @@ MODULE us
   ! ... These parameters are needed with the US pseudopotentials
   !  
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lmaxx, lqmax, nbrx, npsx, nqfm, ndm
+  USE parameters, ONLY : lmaxx, lqmax, nbrx, npsx, nqfx, ndm
   !
   SAVE
   !
-  INTEGER, PARAMETER :: &
-       nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
-       mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
   REAL(KIND=DP), PARAMETER:: &
        dq = 0.01D0           ! space between points in the pseudopotential tab.
   REAL(KIND=DP) :: &
@@ -509,7 +506,7 @@ MODULE us
                                            !  atomic case)
        qfunc(0:ndm,nbrx,nbrx,npsx),       &! Q_{mu,nu}(|r|) function for 
                                            !  |r|> r_L
-       qfcoef(nqfm,lqmax,nbrx,nbrx,npsx), &! coefficients for Q in region 
+       qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q in region 
                                            !  |r|<r_L
        rinner(lqmax,npsx)                  ! values of r_L
   INTEGER :: &
@@ -525,8 +522,6 @@ MODULE us
        nhm,              &! max number of different beta functions per atom
        nkb,              &! total number of beta functions, with struct.fact.
        nqxq,             &! size of interpolation table
-       lpx(nlx,nlx),     &! for each limi,ljmj gives the maximum LM
-       lpl(nlx,nlx,mx),  &! for each limi,ljmj gives the list of LM
        lmaxkb,           &! max angular momentum
        lqx,              &! max angular momentum + 1 for Q functions
        nqx                ! number of interpolation points
@@ -545,8 +540,6 @@ MODULE us
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
-  REAL(KIND=DP) :: &
-       ap(lqmax*lqmax,nlx,nlx) ! Clebsch-Gordan coefficients for spher.harm.
   LOGICAL :: &
        tvanp(npsx),           &! if .TRUE. the atom is of Vanderbilt type
        newpseudo(npsx),       &! if .TRUE. RRKJ3 US pseudopotentials

@@ -19,7 +19,8 @@ subroutine init_paw_1
   use cell_base , only : omega
   use basis , only : ntyp, nat, ityp
   use constants , only : fpi
-  use us , only : nqx, mx , nlx, ap, lpx, lpl, dq
+  use us , only : nqx, dq
+  use uspp, only : ap, aainit
   use paw , only : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, paw_iltonh, &
        paw_tab, aephi, paw_betar, psphi, paw_indv, paw_nhtom, paw_nhtol, &
        paw_nbeta 
@@ -74,8 +75,6 @@ subroutine init_paw_1
   allocate (paw_tab(nqx, nbrx, ntyp))
   allocate (paw_nl(0:paw_lmaxkb, ntyp))
   allocate (paw_iltonh(0:paw_lmaxkb,paw_nhm, ntyp))
-
-  ap (:,:,:)   = 0.d0
 
   ! calculate the number of beta functions of the solid
   !
@@ -139,8 +138,7 @@ subroutine init_paw_1
                  call simpson (msh (nt), aux, rab (1, nt), s(ih,jh))
               enddo
            enddo
-           call invmat (s, sinv,paw_nl(l,nt)) 
-
+           call invmat (paw_nl(l,nt), s, sinv, norm) 
 
            do ih=1,paw_nl(l,nt)
               n1=paw_iltonh(l,ih,nt)
@@ -183,7 +181,7 @@ subroutine init_paw_1
   !  compute Clebsch-Gordan coefficients
   !
 
-  call aainit (lmaxx+1 , lqmax, mx, nlx, ap, lpx,lpl)
+  call aainit (lmaxx+1)
 
   !
   !     fill the interpolation table tab

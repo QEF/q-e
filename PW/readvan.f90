@@ -18,7 +18,7 @@ subroutine readvan (is, iunps)
   !     It assume multiple rinner values.
   !
   USE kinds, only: dp
-  USE parameters, ONLY: nchix, lmaxx, nbrx, ndm, npsx, nqfm, lqmax
+  USE parameters, ONLY: nchix, lmaxx, nbrx, ndm, npsx, nqfx, lqmax
   use atom,  only: zmesh, mesh,dx, r, rab, vnl, chi, oc, nchi, lchi, &
        rho_at, rho_atc
   use char,  only: psd
@@ -152,7 +152,7 @@ subroutine readvan (is, iunps)
   if (lloc (is) .eq. - 1) lloc (is) = lmax (is) + 1
   if (lloc (is) .gt.lmax (is) + 1.or.lloc (is) .lt.0) call errore ( &
        'readvan', 'wrong lloc', is)
-  if (nqf (is) .gt.nqfm.or.nqf (is) .lt.0) call errore (' readvan', &
+  if (nqf (is) > nqfx .or. nqf (is) < 0) call errore (' readvan', &
        'Wrong nqf', nqf (is) )
   if (ifqopt (is) .lt.0) call errore ('readvan', 'wrong ifqopt', is)
   !

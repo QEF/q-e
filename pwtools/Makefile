@@ -12,12 +12,10 @@ PWOBJS = \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/hexsym.o \
-../PW/invmat.o \
 ../PW/irrek.o \
 ../PW/kpoint_grid.o \
 ../PW/mode_group.o \
 ../PW/multable.o \
-../PW/random.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \

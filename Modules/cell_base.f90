@@ -111,7 +111,7 @@
           REAL(dbl) :: delt
           type (boxdimensions), intent(in) :: box_tm2, box_tm1, box_t0
           REAL(dbl) :: DUM
-            CALL invmat3(box_t0%G,GCM1,DUM)
+            CALL invmat(3,box_t0%G,GCM1,DUM)
             GCDOT = (3.D0*box_t0%G - 4.D0*box_tm1%G + box_tm2%G)/ (2.0d0 * delt )
           RETURN
         END SUBROUTINE DGCELL
@@ -215,7 +215,7 @@
         hmati(3,2) = (hmat(3,1)*hmat(1,2)-hmat(3,2)*hmat(1,1))*odet
         box%h_inv = hmati
 
-        CALL invmat3(box%a,box%m1,box%omega)
+        CALL invmat(3,box%a,box%m1,box%omega)
 
         IF(abs(box%omega-box%deth)/abs(box%omega+box%deth).gt.1.0d-12) THEN
           CALL errore('gethinv', 'box determinants are different',2)

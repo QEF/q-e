@@ -203,7 +203,7 @@
       else
          call errore('exc-cor','no such exch-corr',dft)
       end if
-      exc=exc*omega/dfloat(nr1*nr2*nr3)
+      exc=exc*omega/dble(nr1*nr2*nr3)
 !
 ! exchange-correlation contribution to pressure
 !
@@ -862,7 +862,7 @@
 !     ==============================================================
 !     ==== generate g-space                                     ==== 
 !     ==============================================================
-      call invmat3(h,ainv,deth)
+      call invmat (3, h, ainv, deth)
       omega=deth
 !
       do i=1,3
@@ -957,7 +957,7 @@
       real(kind=8), external :: ylmr, dylmr
 !
 !
-      allocate(dqradb(ngb,nbrx,nbrx,lx,nsp))
+      allocate(dqradb(ngb,nbrx,nbrx,lqmax,nsp))
       allocate(dqgbs(ngb,3,3))
       allocate(qgbs(ngb))
 !
@@ -1277,10 +1277,10 @@
 !
 !     initialize array ap
 !
-      call aainit(lmax,ap,lpx,lpl)
+      call aainit(lmax)
 !
       allocate(beta(ngw,nhx,nsp))
-      allocate(qradb(ngb,nbrx,nbrx,lx,nsp))
+      allocate(qradb(ngb,nbrx,nbrx,lqmax,nsp))
       allocate(qgb(ngb,nhx*(nhx+1)/2,nsp))
       allocate(qq(nhx,nhx,nsp))
       allocate(dvan(nhx,nhx,nsp))
@@ -1289,13 +1289,13 @@
       allocate(indv (nhx,nsp))
       allocate(indlm(nhx,nsp))
 !
-      allocate(dqrad(ngb,nbrx,nbrx,lx,nsp,3,3))
+      allocate(dqrad(ngb,nbrx,nbrx,lqmax,nsp,3,3))
       allocate(dqgb(ngb,nhx*(nhx+1)/2,nsp,3,3))
       allocate(dbeta(ngw,nhx,nsp,3,3))
       allocate(betagx(mmx,nhx,nsp))
       allocate(dbetagx(mmx,nhx,nsp))
-      allocate(qradx(mmx,nbrx,nbrx,lx,nsp))
-      allocate(dqradx(mmx,nbrx,nbrx,lx,nsp))
+      allocate(qradx(mmx,nbrx,nbrx,lqmax,nsp))
+      allocate(dqradx(mmx,nbrx,nbrx,lqmax,nsp))
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
@@ -1562,6 +1562,7 @@
       use control_flags, only: iprint, tpre
       use qradb_mod
       use cvan
+      use uspp, only: nlx, lpx, lpl, ap
       use gvecb
       use dqrad_mod
       use cdvan

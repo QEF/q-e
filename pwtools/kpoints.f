@@ -45,7 +45,7 @@
 ! 
       celldm(1)=1.d0
       do i=1,3
-	 nshift(i)=0
+         nshift(i)=0
       enddo
 !
       write(*,'(5x,a,$)') 'bravais lattice  >> '
@@ -124,7 +124,7 @@
       if(ibrav.eq.4.or.ibrav.eq.5) then
          call hexsym  (at, is, sname, nrot)
       else
-	 call cubicsym(at, is, sname, nrot)
+         call cubicsym(at, is, sname, nrot)
       endif
       write(2,'(//,1x,i3,2x,a19)') nrot,'symmetry operations' 
       do n6=0,(nrot-1)/6
@@ -132,7 +132,7 @@
          write(2,'(1x)')
          do i=1,3
             write(2,'(6(3i3,2x))')  
-     +	         ((is(i,j,n6*6+n), j=1,3), n=1,nf)
+     +           ((is(i,j,n6*6+n), j=1,3), n=1,nf)
          end do
       end do
 !
@@ -141,47 +141,47 @@
 ! shifted grid
          if(nshift(i).eq.1) then
             nshift(i)=2
-	    nmax(i)=nshift(i)*nmax(i)
-	    nstart(i)=1
+            nmax(i)=nshift(i)*nmax(i)
+            nstart(i)=1
             sflag=.true.
          else
 ! unshifted grid
-	    nstart(i)=0
+            nstart(i)=0
             nshift(i)=1
          end if
       enddo
 !
       n=0
       do n3=nstart(3),nmax(3)-1,nshift(3)
-	 do n2=nstart(2),nmax(2)-1,nshift(2)
-	    do n1=nstart(1),nmax(1)-1,nshift(1)
-	       n=n+1
-	       k(1,n)=n1
-	       k(2,n)=n2
-	       k(3,n)=n3
-	       kw(n)=1
-	       ieq(n)=0
-	       call check(n,k,kw,ieq,is,nrot,nmax) 
-	    enddo
-	 enddo
+         do n2=nstart(2),nmax(2)-1,nshift(2)
+            do n1=nstart(1),nmax(1)-1,nshift(1)
+               n=n+1
+               k(1,n)=n1
+               k(2,n)=n2
+               k(3,n)=n3
+               kw(n)=1
+               ieq(n)=0
+               call check(n,k,kw,ieq,is,nrot,nmax) 
+            enddo
+         enddo
       enddo
 !
       nk=0
       write(2,'(/)')
       do j=1,n
-	 if(kw(j).gt.0.or.aflag) then
-	    nk=nk+1
+         if(kw(j).gt.0.or.aflag) then
+            nk=nk+1
             xkw(nk)=kw(j)
             do l=1,3
-	       xk(l,nk)=0.d0
+               xk(l,nk)=0.d0
                do i=1,3
-	          xk(l,nk)=xk(l,nk)+k(i,j)*bg(l,i)/nmax(i)
-	       enddo
+                  xk(l,nk)=xk(l,nk)+k(i,j)*bg(l,i)/nmax(i)
+               enddo
             end do
             write(2,2) j,k(1,j),k(2,j),k(3,j),kw(j),ieq(j)
- 2	    format('  k(',i3,')=( ',i2,' ',i2,' ',i2,' ) --- weight=',
+ 2          format('  k(',i3,')=( ',i2,' ',i2,' ',i2,' ) --- weight=',
      +             i3,' |folds in point #',i3)
-	 endif
+         endif
       enddo
 !
       write(*,'(/5x,a,$)') '# of k-points   == '
@@ -218,38 +218,38 @@
 !
       integer k(3,n),kw(n),is(3,3,nrot),kr(3),ieq(n),nmax(3)
       logical flag
-!	
+!
       irot=1
       flag=.true.
       do while(irot.le.nrot.and.flag)
          kr(1)=0
-	 kr(2)=0
-	 kr(3)=0
-	 call ruotaijk
+         kr(2)=0
+         kr(3)=0
+         call ruotaijk
      +       (is(1,1,irot),k(1,n),k(2,n),k(3,n),kr(1),kr(2),kr(3))
-	 do j=1,3		
-	    do while(kr(j).ge.nmax(j)) 
-	       kr(j)=kr(j)-nmax(j)
-	    enddo
+         do j=1,3
+            do while(kr(j).ge.nmax(j)) 
+               kr(j)=kr(j)-nmax(j)
+            enddo
             do while(kr(j).le.-1) 
-	       kr(j)=kr(j)+nmax(j)
-	    enddo
-	 enddo
-	 np=1
-	 do while(flag.and.np.le.n-1)
-	    if(kr(1).eq.k(1,np).and.kr(2).eq.k(2,np).and.kr(3).
+               kr(j)=kr(j)+nmax(j)
+            enddo
+         enddo
+         np=1
+         do while(flag.and.np.le.n-1)
+            if(kr(1).eq.k(1,np).and.kr(2).eq.k(2,np).and.kr(3).
      +         eq.k(3,np)) then
-	       kw(n)=0
-	       naux =np
-	       do while(kw(naux).eq.0)
-		  naux=ieq(naux)
-	       enddo
-	       ieq(n)=naux
-	       kw(naux)=kw(naux)+1
-	       flag=.false. 
-	    endif
-	    np=np+1
-	 enddo
+               kw(n)=0
+               naux =np
+               do while(kw(naux).eq.0)
+                  naux=ieq(naux)
+               enddo
+               ieq(n)=naux
+               kw(naux)=kw(naux)+1
+               flag=.false. 
+            endif
+            np=np+1
+         enddo
          irot=irot+1
       enddo
 !

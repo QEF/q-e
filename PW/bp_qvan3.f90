@@ -6,8 +6,9 @@
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
       USE kinds, ONLY: DP
       USE basis, ONLY: ntyp
-      USE us, ONLY: lqx, dq, nbrx, nlx, indv, qrad, lpl, lpx, ap, &
-             nhtol, nhtom
+      USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtol, nhtom
+      USE uspp, ONLY: nlx, lpl, lpx, ap
+
       implicit none
       integer :: iv,jv,is
       complex(DP) :: qg,sig

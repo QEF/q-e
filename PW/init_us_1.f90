@@ -36,9 +36,10 @@ subroutine init_us_1
   USE gvect, ONLY: g, gg
   USE pseud, ONLY: lloc, lmax
   USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
-       kkbeta, nqf, nqlc, lll, tvanp, okvan, newpseudo, lmaxkb, mx, &
-       nlx, ap, lpx, lpl, nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, &
+       kkbeta, nqf, nqlc, lll, tvanp, okvan, newpseudo, lmaxkb, &
+       nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, &
        nhtom, qrad, indv, nhm
+  USE uspp, ONLY : ap, aainit
   implicit none
   !
   !     here a few local variables
@@ -158,7 +159,7 @@ subroutine init_us_1
   !
   !  compute Clebsch-Gordan coefficients
   !
-  if (okvan) call aainit (lmaxkb + 1, lqmax, mx, nlx, ap, lpx,lpl)
+  if (okvan) call aainit (lmaxkb + 1)
   !
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
@@ -234,7 +235,7 @@ subroutine init_us_1
   !   q are the g=0 components of Q.
   !
 #ifdef __PARA
-  if (gg (1) .gt.1.0d-8) goto 100
+  if (gg (1) > 1.0d-8) goto 100
 #endif
   call ylmr2 (lqx * lqx, 1, g, gg, ylmk0)
   do nt = 1, ntyp

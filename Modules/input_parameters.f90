@@ -425,7 +425,7 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: sic = 'none'
           ! sic = 'none' | 'sic_pz' | 'sic_mac' | 'only_sich' | 'only_sicxc_pz' | 'only_sicxc_mac' |
                
-	 ! Where:   
+         ! Where:   
          ! 'none'          => self_interaction == 0   -> no USIC 
          ! 'sic_pz'        => self_interaction == 1   -> USIC = Exc[rhoup-rhodown,0] + Uhartree[rhoup-rhodown] 
                                                !! proposed by Perdew, Zunger, PRB 23 (1981) 5048

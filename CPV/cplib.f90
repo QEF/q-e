@@ -9,25 +9,25 @@
 #include "../include/machine.h"
 
 !-----------------------------------------------------------------------
-      subroutine aainit(lli,ap,lpx,lpl)
+      subroutine aainit(lli)
 !-----------------------------------------------------------------------
 !
-      use van_parameters
+      use parameters, only: lmaxx, lqmax
+      use uspp, only: nlx, mx, lpx, lpl, ap
       use constants, only: pi, fpi
       use io_global, only: stdout
 !
       implicit none
 ! 
-!     25 = combined angular momentum for 2*lli-1 (for s,p and d states)
-!
+      integer, parameter :: lix = lmaxx + 1
+      !     lix = max angular momentum + 1 (e.g. lix=3 if s,p,d are included)
       integer lli
-      real(kind=8) ap(25,nlx,nlx)
-      integer lpx(nlx,nlx), lpl(nlx,nlx,mx)
 ! local variables
       integer k, l, ll, li, mi, lj, mj, lp, mp, np, m, n, p, ik, il, ii,&
      &        mpp, ilp
-      real(kind=8)    cc(lix,lx,lix,lx,lx), f, y, t, s, fs, ss, fts, ts
-      complex(kind=8) aa(lx,mx,lix,lx,lix,lx), u(lx,mx,mx), csum
+      real(kind=8)    cc(lix,lqmax,lix,lqmax,lqmax), &
+           f, y, t, s, fs, ss, fts, ts
+      complex(kind=8) aa(lqmax,mx,lix,lqmax,lix,lqmax), u(lqmax,mx,mx), csum
 !
 !      cc = < lm | limi | ljmj > = sqrt(2l+1/4pi) (-1)^mj c^l(li-mi,ljmj)
 !
@@ -218,7 +218,7 @@
          end do
       end do
 !
-      call DSCAL(lix*lx*lix*lx*lx,sqrt(1./fpi),cc,1)
+      cc = cc / sqrt(fpi)
 !
 !     transform between real spherical harmonics and the original ones
 !                (  y^r_lm = sum_n u(l,m,n) y_ln )
@@ -1942,7 +1942,7 @@
 !
       call start_clock( 'forcecc' )
       ci = (0.d0,1.d0)
-      fac = omega/dfloat(nr1*nr2*nr3*nspin)
+      fac = omega/dble(nr1*nr2*nr3*nspin)
       fcc = 0.d0
       do is=1,nsp
          if (ifpcor(is).eq.0) go to 10
@@ -2477,9 +2477,9 @@
 #endif
                g2=0.d0
                do ir=1,3
-                  t(ir) = dfloat(i)*b1(ir)                              &
-     &                   +dfloat(j)*b2(ir)                              &
-     &                   +dfloat(k)*b3(ir)
+                  t(ir) = dble(i)*b1(ir)                              &
+     &                   +dble(j)*b2(ir)                              &
+     &                   +dble(k)*b3(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcut) go to 20
@@ -2521,7 +2521,7 @@
                if(i.eq.0.and.j.eq.0.and.k.lt.0) cycle loopz
                g2=0.d0
                do ir=1,3
-                  t(ir) = dfloat(i)*b1(ir)+dfloat(j)*b2(ir)+dfloat(k)*b3(ir)
+                  t(ir) = dble(i)*b1(ir)+dble(j)*b2(ir)+dble(k)*b3(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2 <= gcut) then 
@@ -2939,9 +2939,7 @@
                if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 20
                g2=0.d0
                do ir=1,3
-                  t(ir) = dfloat(i)*b1b(ir)                             &
-     &                  + dfloat(j)*b2b(ir)                             &
-     &                  + dfloat(k)*b3b(ir)
+                  t(ir) = dble(i)*b1b(ir) + dble(j)*b2b(ir) + dble(k)*b3b(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcutb) go to 20
@@ -2985,9 +2983,7 @@
                if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 25
                g2=0.d0
                do ir=1,3
-                  t(ir) = dfloat(i)*b1b(ir)                             &
-     &                  + dfloat(j)*b2b(ir)                             &
-     &                  + dfloat(k)*b3b(ir)
+                  t(ir) = dble(i)*b1b(ir) + dble(j)*b2b(ir) + dble(k)*b3b(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcutb) go to 25
@@ -5421,7 +5417,7 @@
 !     Output parameters in module "ncprm"
 !     info on DFT level in module "dft"
 !
-      use parameters, only: nsx, natx, lqx=>lqmax
+      use parameters, only: nsx, natx, lqmax
       use ncprm, only: rscore, nqlc, qfunc, rucore, r, rab, rinner, &
                        qrl, qqq, nbeta, nbrx, ifpcor, mesh, betar,  &
                        dion, lll, kkbeta
@@ -5582,7 +5578,7 @@
 !    code
 !
       nqlc(is)=2*lmax+1
-      if ( nqlc(is).gt.lqx .or. nqlc(is).lt.0 )                         &
+      if ( nqlc(is) > lqmax .or. nqlc(is) < 0 )                         &
      &     call errore(' readAdC', 'Wrong  nqlc', nqlc(is) )
       do l=1,nqlc(is)
          rinner(l,is)=0.d0
@@ -5688,7 +5684,7 @@
 !
 !
       use io_global, only: stdout
-      use parameters, only: nqfx=>nqfm, lqx=>lqmax
+      use parameters, only: nqfx, lqmax
       use ncprm, only: qfunc, qfcoef, qqq, betar, dion, rucore, cmesh, &
                        qrl, rab, rscore, r, mesh, ifpcor, nbrx,  &
                        rinner, kkbeta, lll, nbeta, nqf, nqlc
@@ -5875,7 +5871,7 @@
          nqlc(is) = 2*nang - 1
       end if
 !
-      if ( nqlc(is).gt.lqx )                                            &
+      if ( nqlc(is) > lqmax )                                           &
      &     call errore(' readvan', 'Wrong  nqlc', nqlc(is) )
 !
       read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
@@ -6358,7 +6354,7 @@
          if(iprsta.ge.3)then
             do iss=1,nspin
                rsumg(iss)=omega*real(rhog(1,iss))
-               rsumr(iss)=SUM(rhor(:,iss))*omega/dfloat(nr1*nr2*nr3)
+               rsumr(iss)=SUM(rhor(:,iss))*omega/dble(nr1*nr2*nr3)
             end do
 #ifdef __PARA
             if (ng0.ne.2) then
@@ -6393,8 +6389,8 @@
 !
       if(iprsta.ge.2) then
          call checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
-         rnegsum=rnegsum*omega/dfloat(nr1*nr2*nr3)
-         rsum=rsum*omega/dfloat(nr1*nr2*nr3)
+         rnegsum=rnegsum*omega/dble(nr1*nr2*nr3)
+         rsum=rsum*omega/dble(nr1*nr2*nr3)
          WRITE( stdout,'(a,4(1x,f12.6))')                                     &
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
       end if
@@ -6402,7 +6398,7 @@
       if(nfi.eq.0.or.mod(nfi-1,iprint).eq.0) then
          do iss=1,nspin
             rsumg(iss)=omega*real(rhog(1,iss))
-            rsumr(iss)=SUM(rhor(:,iss),1)*omega/dfloat(nr1*nr2*nr3)
+            rsumr(iss)=SUM(rhor(:,iss),1)*omega/dble(nr1*nr2*nr3)
          end do
 #ifdef __PARA
          if (ng0.ne.2) then
@@ -7629,7 +7625,7 @@
 !
 !     calculation of average potential
 !
-         vave=SUM(rhor(:,iss))/dfloat(nr1*nr2*nr3)
+         vave=SUM(rhor(:,iss))/dble(nr1*nr2*nr3)
       else
          isup=1
          isdw=2
@@ -7647,7 +7643,7 @@
 !     calculation of average potential
 !
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
-     &        /2.0/dfloat(nr1*nr2*nr3)
+     &        /2.0/dble(nr1*nr2*nr3)
       endif
 #ifdef __PARA
       call reduce(1,vave)
@@ -7829,6 +7825,9 @@
       return
       end
 !
+      subroutine ylmr2 ( )
+      return
+      end
 !-------------------------------------------------------------------------
       subroutine ylmr2b(l,ngy,ngb,gxnb,ylm)
 !-----------------------------------------------------------------------

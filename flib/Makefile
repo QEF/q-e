@@ -8,7 +8,7 @@ avrec.o \
 erf.o \
 iceil.o \
 iglocal.o \
-inv3.o \
+invmat.o \
 latgen.o \
 ngnr_set.o \
 recips.o \
@@ -19,7 +19,8 @@ sort.o \
 sph_bes.o \
 transto.o \
 date_and_tim.o \
-volume.o
+volume.o \
+ylmr2.o
 
 POBJS = \
 blockset.o \

@@ -6,7 +6,7 @@
 ! 
 !----------------------------------------------------------------------- 
 program efg
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   use kinds, only: DP
   use io_files, only: nd_nmbr,prefix, outdir, tmp_dir
   use parameters, only: ntypx
@@ -35,14 +35,14 @@ program efg
   if (me == 1)  then 
 #endif 
 
-  read (5, inputpp, err=200, iostat=ios)
-200 call errore('efg.x', 'reading inputpp namelist', abs(ios))
+     read (5, inputpp, err=200, iostat=ios)
+200  call errore('efg.x', 'reading inputpp namelist', abs(ios))
 
-  tmp_dir = trim(outdir)
+     tmp_dir = trim(outdir)
 
 #ifdef __PARA 
   end if
-  
+
   ! 
   ! ... Broadcast variables 
   ! 
@@ -51,11 +51,11 @@ program efg
   CALL mp_bcast(filerec, ionode_id )
   CALL mp_bcast(      Q, ionode_id )   
 #endif 
-  
+
   call read_file
 
   call openfil
-  
+
   call read_recon(filerec)
 
   call do_efg(Q) 
@@ -85,7 +85,7 @@ subroutine read_recon(filerec)
      call scan_end(14,'PAW')
      close(14)
   enddo
-     nbetam=maxval(paw_nbeta)
+  nbetam=maxval(paw_nbeta)
   allocate( psphi(ntyp,nbetam) )
   allocate( aephi(ntyp,nbetam) )
 
@@ -123,7 +123,7 @@ subroutine read_recon(filerec)
      end do recphi_loop
      close(14)
   end do recphi_read
-  
+
 end subroutine read_recon
 
 subroutine do_efg(Q)
@@ -161,17 +161,17 @@ subroutine do_efg(Q)
   allocate(efg(3,3,nat))
 
 
-!  e2 = 2.d0 ! rydberg
+  !  e2 = 2.d0 ! rydberg
   e2 = 1.d0  ! hartree
   fac= fpi * e2
   aux(:)= rho(:,1)
   efgg_el(:,:,:)=(0.d0,0.d0)
-  
+
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
 
-!
-!calculation of the electic field gradient in the G-space
-!
+  !
+  !calculation of the electic field gradient in the G-space
+  !
   do ig= gstart, ngm
      trace = 1.d0/3.d0 * gg(ig)
      do alpha=1,3
@@ -185,29 +185,29 @@ subroutine do_efg(Q)
      enddo
   enddo
 
-! 
-!fourier transform on the atomic position
-!
+  ! 
+  !fourier transform on the atomic position
+  !
 
-efgr_el=(0.d0,0.d0)
+  efgr_el=(0.d0,0.d0)
   do alpha=1,3
      do beta=1,3
         do na=1,nat
            do ig= gstart, ngm
-           arg=(tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
-           efgr_el(na,alpha,beta)=efgr_el(na,alpha,beta)+ &
-                efgg_el(ig,alpha,beta) * cmplx(cos(arg),sin(arg))
+              arg=(tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
+              efgr_el(na,alpha,beta)=efgr_el(na,alpha,beta)+ &
+                   efgg_el(ig,alpha,beta) * cmplx(cos(arg),sin(arg))
            enddo
         enddo
-     enddo 
+     enddo
   enddo
 
 #ifdef __PARA
-     call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
+  call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
 #endif
 
   write (stdout,*)
-  
+
   do na=1,nat
      do beta=1,3
 
@@ -221,12 +221,12 @@ efgr_el=(0.d0,0.d0)
 
 1000 FORMAT(1x,a,i3,2x,a,3(1x,f9.6))
 
-!
-! Ionic contribution
-!
+  !
+  ! Ionic contribution
+  !
 
   call ewald_dipole (efg_io, zv)
-  
+
   do na=1,nat
      do beta=1,3
 
@@ -240,7 +240,7 @@ efgr_el=(0.d0,0.d0)
   call efg_correction(efg_corr_tens)
 
 
-!symmetrize efg_tensor
+  !symmetrize efg_tensor
 
 
   do na = 1,nat
@@ -251,16 +251,16 @@ efgr_el=(0.d0,0.d0)
      call trntns (efg_corr_tens(:,:,na),at, bg, 1)
   enddo
 
-!
-! print results
-!
+  !
+  ! print results
+  !
 
   do na=1,nat
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efg_corr", &
              (2*real(efg_corr_tens(alpha,beta,1)) , alpha =1,3 )
-        
+
      enddo
      write (stdout,*)
   enddo
@@ -271,52 +271,52 @@ efgr_el=(0.d0,0.d0)
      do beta=1,3
         write (stdout,1000) atm(ityp(na)),na,"efg",&
              (efg(alpha,beta,na),alpha=1,3)
-        
+
      enddo
      write (stdout,*)
 
-  do alpha=1,3
-     do beta=1,3
-        work(beta,alpha)=cmplx(efg(alpha,beta,1),0.d0)
+     do alpha=1,3
+        do beta=1,3
+           work(beta,alpha)=cmplx(efg(alpha,beta,1),0.d0)
+        enddo
      enddo
-  enddo
 
-!
-! diagonalise the tensor to extract the quadrupolar parameters Cq and eta
-!
+     !
+     ! diagonalise the tensor to extract the quadrupolar parameters Cq and eta
+     !
 
-  call cdiagh(3,work,3,efg_eig,efg_vect)
+     call cdiagh(3,work,3,efg_eig,efg_vect)
 
 
-  v(2)=efg_eig(2)
-  if (abs(efg_eig(1))>abs(efg_eig(3))) then
-     v(1)=efg_eig(1)
-     v(3)=efg_eig(3)
-  else
-     v(1)=efg_eig(3)
-     v(3)=efg_eig(1)
-  endif
+     v(2)=efg_eig(2)
+     if (abs(efg_eig(1))>abs(efg_eig(3))) then
+        v(1)=efg_eig(1)
+        v(3)=efg_eig(3)
+     else
+        v(1)=efg_eig(3)
+        v(3)=efg_eig(1)
+     endif
 
-  if (abs(v(1))<1e-5) then
-     eta=0.d0
-  else
-     eta=(v(2)-v(3))/v(1)
-  endif
+     if (abs(v(1))<1e-5) then
+        eta=0.d0
+     else
+        eta=(v(2)-v(3))/v(1)
+     endif
 
-  Cq=v(1)*Q(ityp(na))*rytoev*2.d0*ANGSTROM_AU**2*ELECTRONVOLT_SI*1.e18/6.6262d0
+     Cq=v(1)*Q(ityp(na))*rytoev*2.d0*ANGSTROM_AU**2*ELECTRONVOLT_SI*1.e18/6.6262d0
 
-  write (stdout,1200) atm(ityp(na)), na, Q(ityp(na)),Cq,eta
-  write (stdout,*)
+     write (stdout,1200) atm(ityp(na)), na, Q(ityp(na)),Cq,eta
+     write (stdout,*)
   enddo
 1200 FORMAT(1x,a,1x,i3,5x,'Q= ',f6.3,5x,' Cq= ',f9.6,' MHz',5x,' eta= ',f9.6)
 
 end subroutine do_efg
- 
+
 subroutine efg_correction(efg_corr_tens)
 
   use io_files ,only: nwordwfc, iunwfc
   use kinds , only: dp
-  use us ,only: ap
+  use uspp ,only: ap
   use parameters, only: lmaxx, ntypx
   use atom , only: r,rab,msh
   use gvect, only: g,ngm,ecutwfc
@@ -345,29 +345,29 @@ subroutine efg_correction(efg_corr_tens)
   efg_corr=0.d0
   kkpsi=aephi(1,1)%kkpsi
   allocate (work(kkpsi))
- 
+
   call init_paw_1
 
   allocate (at_efg(paw_nkb,paw_nkb,ntypx)) 
   allocate (paw_vkb( npwx,  paw_nkb))
   allocate (paw_becp(paw_nkb, nbnd))
 
-rc=1.6d0
-nrc=count(r(1:msh(1),1).le.rc)
+  rc=1.6d0
+  nrc=count(r(1:msh(1),1).le.rc)
 
   !
   ! calculate radial integration on atom site 
   ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
   !
 
-at_efg=0.d0
+  at_efg=0.d0
   do nt=1,ntyp
      do il1=1,paw_nbeta(nt)
         do il2=1,paw_nbeta(nt)
            work=0.d0
            do j = 2,nrc
-           work(j)=(aephi(nt,il1)%psi(j)*aephi(nt,il2)%psi(j)-&
-                psphi(nt,il1)%psi(j)*psphi(nt,il2)%psi(j))/r(j,nt)**3
+              work(j)=(aephi(nt,il1)%psi(j)*aephi(nt,il2)%psi(j)-&
+                   psphi(nt,il1)%psi(j)*psphi(nt,il2)%psi(j))/r(j,nt)**3
            enddo
            work(1)=0.d0
            call simpson(nrc,work,rab(:,nt),at_efg(il1,il2,nt))
@@ -375,52 +375,52 @@ at_efg=0.d0
      enddo
   enddo
 
-!
-!  calculation of the reconstruction part
-!
+  !
+  !  calculation of the reconstruction part
+  !
 
-do ik = 1, nks
-   call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-   call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-   call init_paw_2 (npw, igk, xk (1, ik), paw_vkb)
-   call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
+  do ik = 1, nks
+     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     call init_paw_2 (npw, igk, xk (1, ik), paw_vkb)
+     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
 
-   do ibnd = 1, nbnd
-      ijkb0 = 0
-      do nt = 1, ntyp
-         do na = 1, nat
-            if (ityp (na) .eq.nt) then
-               do ih = 1, paw_nh (nt)
-                  ikb = ijkb0 + ih
-                  nbs1=paw_indv(ih,nt)
-                  l1=paw_nhtol(ih,nt)
-                  m1=paw_nhtom(ih,nt)
-                  lm1=m1+l1**2
-                  do jh = 1, paw_nh (nt) 
-                     jkb = ijkb0 + jh
-                     nbs2=paw_indv(jh,nt)
-                     l2=paw_nhtol(jh,nt)
-                     m2=paw_nhtom(jh,nt)
-                     lm2=m2+l2**2 
-                     do lm=5,9
-                        efg_corr(lm,na) =  efg_corr(lm,na) + &
-                          (paw_becp(jkb,ibnd) * conjg(paw_becp(ikb,ibnd))) &
-                          * at_efg(nbs1,nbs2,nt) * &
-                          ap(lm,lm1,lm2) * wk(ik) / 2.d0
-                     enddo
-                  enddo
-               enddo
-               ijkb0 = ijkb0 + paw_nh (nt)
-            endif
-         enddo
-      enddo
-   enddo
- 
-enddo
+     do ibnd = 1, nbnd
+        ijkb0 = 0
+        do nt = 1, ntyp
+           do na = 1, nat
+              if (ityp (na) .eq.nt) then
+                 do ih = 1, paw_nh (nt)
+                    ikb = ijkb0 + ih
+                    nbs1=paw_indv(ih,nt)
+                    l1=paw_nhtol(ih,nt)
+                    m1=paw_nhtom(ih,nt)
+                    lm1=m1+l1**2
+                    do jh = 1, paw_nh (nt) 
+                       jkb = ijkb0 + jh
+                       nbs2=paw_indv(jh,nt)
+                       l2=paw_nhtol(jh,nt)
+                       m2=paw_nhtom(jh,nt)
+                       lm2=m2+l2**2 
+                       do lm=5,9
+                          efg_corr(lm,na) =  efg_corr(lm,na) + &
+                               (paw_becp(jkb,ibnd) * conjg(paw_becp(ikb,ibnd))) &
+                               * at_efg(nbs1,nbs2,nt) * &
+                               ap(lm,lm1,lm2) * wk(ik) / 2.d0
+                       enddo
+                    enddo
+                 enddo
+                 ijkb0 = ijkb0 + paw_nh (nt)
+              endif
+           enddo
+        enddo
+     enddo
 
-!
-!  transforme in cartesian coordinates
-!
+  enddo
+
+  !
+  !  transforme in cartesian coordinates
+  !
 
   efg_corr_tens(1,1,:)=real(sqrt(3.d0)*efg_corr(8,:) &
        - efg_corr(5,:))
@@ -437,10 +437,10 @@ enddo
   efg_corr_tens=-sqrt(4.d0*pi/5.d0)*efg_corr_tens
 
 
-deallocate(work)
-deallocate(efg_corr)
-deallocate(at_efg)
-deallocate(paw_vkb)
- 
+  deallocate(work)
+  deallocate(efg_corr)
+  deallocate(at_efg)
+  deallocate(paw_vkb)
+
 end subroutine efg_correction
 

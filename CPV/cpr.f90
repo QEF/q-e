@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 CP90 group
+! Copyright (C) 2002-2004 CP90 group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -206,9 +206,9 @@
       complex(kind=8)  speed
       real(kind=8)                                                      & 
      &       tempp, xnhe0, vnhp, xnhp0, xnhpm, verl1, verl2, verl3,     &
-     &       fccc, xnhem, vnhe, anor, savee, saveh, savep, press,       &
+     &       fccc, xnhem, vnhe, savee, saveh, savep, press,             &
      &       enthal, epot, xnhpp, xnhep, epre, enow, tps, econs, econt, &
-     &       fricp, greasp, eps, qnp, tempw, qne,               &
+     &       fricp, greasp, eps, qnp, tempw, qne,                       &
      &       frice,  grease, emass, delt, ccc, bigr, dt2,               &
      &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
@@ -613,7 +613,7 @@
      &                   stress(i,3)*ainv(j,3)-press*ainv(j,i))
                end do
             end do
-            call invmat3( h, ainv, deth )
+            call invmat( 3, h, ainv, deth )
          endif
 !
          if( tfor ) then
@@ -1503,9 +1503,8 @@
 
       !  Calculate statistics
 
-      anor=1.d0/dfloat(nfi)
       do i=1,nacc
-         acc(i)=acc(i)*anor
+         acc(i)=acc(i)/dble(nfi)
       end do
 !
       WRITE( stdout,1949)

@@ -4,7 +4,6 @@ include ../make.rules
 include ../make.sys
 
 PWOBJS = \
-../PW/aainit.o \
 ../PW/add_efield.o \
 ../PW/addusdens.o \
 ../PW/addusforce.o \
@@ -108,7 +107,6 @@ PWOBJS = \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
 ../PW/interpolate.o \
-../PW/invmat.o \
 ../PW/io_pot.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
@@ -136,7 +134,6 @@ PWOBJS = \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
-../PW/random.o \
 ../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
@@ -221,8 +218,7 @@ PWOBJS = \
 ../PW/which_dft.o \
 ../PW/write_config_to_file.o \
 ../PW/write_ns.o \
-../PW/wsweight.o \
-../PW/ylmr2.o
+../PW/wsweight.o 
 
 MODULES = \
 ../Modules/basic_algebra_routines.o \
@@ -255,6 +251,7 @@ MODULES = \
 ../Modules/recvec.o \
 ../Modules/stick_base.o \
 ../Modules/supercell.o \
+../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../PW/error_handler.o \

@@ -29,11 +29,11 @@
 !     C           QFUNC(0:ndm,NBRX,NBRX,NPSX),
 !     C           NBETA(NPSX),KKBETA(NPSX),NVALES(NPSX),lll(nbrx,npsx),
 !     C           iver(3,npsx),nqf(npsx),ifqopt(npsx),nqlc(npsx),
-!     C           qfcoef(nqfm,lqx,NBRX,NBRX,npsx),rinner(lqx,npsx)
+!     C           qfcoef(nqfx,lqx,NBRX,NBRX,npsx),rinner(lqx,npsx)
 !      common/ncprm/dion(nbrx,nbrx,npsx),
 !     +           betar(0:ndm,nbrx,npsx), qqq(nbrx,nbrx,npsx),
 !     +           qfunc(0:ndm,nbrx,nbrx,npsx),
-!     +           qfcoef(nqfm,lqx,nbrx,nbrx,npsx), rinner(lqx,npsx),
+!     +           qfcoef(nqfx,lqx,nbrx,nbrx,npsx), rinner(lqx,npsx),
 !     +           nbeta(npsx), kkbeta(npsx),
 !     +           nqf(npsx), nqlc(npsx), ifqopt(npsx), lll(nbrx,npsx),
 !     +           iver(3,npsx)
