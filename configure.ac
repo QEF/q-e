@@ -1,5 +1,18 @@
 AC_INIT(ESPRESSO, 2.1, , espresso)
 
+# -----------------------------
+# application-specific settings
+
+# default choices
+# set each variable to 0 (false) or 1 (true)
+use_parallel=1
+use_shared=1
+use_lapack=1
+use_fft=1
+use_mass=1
+
+# -----------------------------
+
 # store variables from the environment (may be set or not)
 topdir=$TOPDIR
 arch=$ARCH
@@ -24,9 +37,10 @@ includefftw=$INCLUDEFFTW
 # command-line arguments
 for arg in $*
 do
-	if   test "$arg" = "--disable-parallel" ; then no_parallel=1
-	elif test "$arg" = "--disable-shared"   ; then no_shared=1
-	elif test "$arg" = "--enable-shared"    ; then yes_shared=1
+	if   test "$arg" = "--enable-parallel"  ; then use_parallel=1
+	elif test "$arg" = "--disable-parallel" ; then use_parallel=0
+	elif test "$arg" = "--enable-shared"    ; then use_shared=1
+	elif test "$arg" = "--disable-shared"   ; then use_shared=0
 	fi
 done
 
@@ -44,9 +58,9 @@ AC_CANONICAL_BUILD
 if test "$host" = "" ; then host=$build ; fi
 cross_compiling=yes
 
+# identify architecture
 if test "$arch" = ""
 then
-	# identify architecture
 	case $host in
 		ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
 		*-pc-linux-gnu )                        arch=linux32 ;;
@@ -134,7 +148,7 @@ mac )
 	try_arflags="ruv"
 	;;
 esac
-if ! test $no_parallel ; then try_f90="$try_f90_parallel $try_f90" ; fi
+if test "$use_parallel" -ne 0 ; then try_f90="$try_f90_parallel $try_f90" ; fi
 
 # check Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
@@ -252,7 +266,7 @@ mac:mpxlf* )
 	try_f77_parallel="mpxlf mpf77"
 	;;
 esac
-if ! test $no_parallel
+if test "$use_parallel" -ne 0
 then
 	try_f77="$try_f77_parallel $try_f77"
 	try_cc="$try_cc_parallel $try_cc"
@@ -328,6 +342,9 @@ sparc:cc:f90 )                      ;;
 esac
 
 # check Fortran compiler flags
+have_cpp=0
+xlf_flags=0
+
 case "$arch:$f90_id" in
 linux64:ifort )
 	try_fflags="-O2 -assume byterecl"
@@ -507,7 +524,8 @@ mac:* )
 	try_ldflags=""
 	;;
 esac
-if test $no_shared ; then try_ldflags="$try_ldflags $try_ldflags_static" ; fi
+if test "$use_shared" -eq 0 ; then
+try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
@@ -599,7 +617,7 @@ echo setting ARFLAGS... $arflags
 # compilation rules
 AC_PROG_MAKE_SET
 echo $ECHO_N "checking whether Fortran files must be preprocessed... $ECHO_C"
-if test $have_cpp
+if test "$have_cpp" -ne 0
 then
 	f90rule="\$(F90) \$(F90FLAGS) -c \$<"
 	echo "${ECHO_T}no"
@@ -626,6 +644,14 @@ AC_LANG_PUSH(Fortran 77)
 F77=$f90 # use Fortran 90 actually (autoconf only knows Fortran 77!)
 
 # search for libraries (unless LIBS has been set from the environment)
+have_blas=0
+have_lapack=0
+have_essl=0
+have_fft=0
+have_fftw=0
+have_fftw_h=0
+have_mpi=0
+
 if test "$libs" = ""
 then
 	# build list of directories to search
@@ -691,122 +717,255 @@ then
 		try_libdirs="$try_libdirs $ld_library_path"
 	fi
 
-	# use vendor libraries if available
-	case "$arch" in
-	linux64 )
-		# check for mkl (in several directories)
-		for dir in none $try_libdirs
-		do
+	# check for blas and lapack
+	# supported vendor replacements:
+	#   mkl on linux
+	#   essl on aix
+	#   complib.sgimath on mips
+	#   cxml on alpha
+	#   SUNperf on sparc
+	# atlas is used over blas if available
+	# internal version is used if none is found
+	if test "$use_lapack" -ne 0
+	then
+		case "$arch" in
+		linux64 )
+			# check for mkl (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_zggev # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(zggev, mkl_lapack,
+					       have_blas=1 have_lapack=1, ,
+					       -lmkl_ipf -lguide)
+				if test "$ac_cv_search_zggev" = "-lmkl_lapack"
+				then libs="$try_loption -lmkl_lapack \
+-lmkl_ipf -lguide $libs" ; fi
+				if test "$ac_cv_search_zggev" != "no"
+				then break ; fi
+			done
+			;;
+		linux32 )
+			# check for mkl (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_zggev # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(zggev, mkl_lapack,
+					       have_blas=1 have_lapack=1, ,
+					       -lmkl_ia32 -lguide -lpthread)
+				if test "$ac_cv_search_zggev" = "-lmkl_lapack"
+				then libs="$try_loption -lmkl_lapack \
+-lmkl_ia32 -lguide -lpthread $libs" ; fi
+				if test "$ac_cv_search_zggev" != "no"
+				then break ; fi
+			done
+			;;
+		aix )
+			# check for essl
+			unset ac_cv_search_dgemm # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dgemm, essl, have_essl=1 have_blas=1
+				       libs="$LIBS")
+			;;
+		mips )
+			# check for complib.sgimath
+			unset ac_cv_search_dgemm # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dgemm, complib.sgimath, have_blas=1
+				       libs="$LIBS")
+			;;
+		alinux )
+			# check for cxml
+			unset ac_cv_search_dgemm # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
+				       libs="$LIBS")
+			;;
+		alpha )
+			# check for cxml
+			unset ac_cv_search_dgemm # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
+				       libs="$LIBS")
+			;;
+		sparc )
+			# check for SUNperf library
 			unset ac_cv_search_zggev # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
+			LDFLAGS="$test_ldflags"
 			LIBS="$libs"
-			AC_SEARCH_LIBS(zggev, mkl_lapack,
-				       have_blas=1 have_lapack=1, ,
-				       -lmkl_ipf -lguide)
-			if test "$ac_cv_search_zggev" = "-lmkl_lapack"
-			then libs="$try_loption -lmkl_lapack -lmkl_ipf \
--lguide $libs" ; fi
-			if test "$ac_cv_search_zggev" != "no"
-			then break ; fi
-		done
-		;;
-	linux32 )
-		# check for mkl (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_zggev # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(zggev, mkl_lapack,
-				       have_blas=1 have_lapack=1, ,
-				       -lmkl_ia32 -lguide -lpthread)
-			if test "$ac_cv_search_zggev" = "-lmkl_lapack"
-			then libs="$try_loption -lmkl_lapack -lmkl_ia32 \
--lguide -lpthread $libs" ; fi
-			if test "$ac_cv_search_zggev" != "no"
-			then break ; fi
-		done
-		;;
-	aix )
-		# check for mass (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_vexp # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(vexp, massvp4 massv, , , -lmass)
-			if test "$ac_cv_search_vexp" = "-lmassvp4" -or \
-			    "$ac_cv_search_vexp" = "-lmassv"
-			then libs="$try_loption $ac_cv_search_vexp -lmass \
-$libs"
-			fi
-			if test "$ac_cv_search_vexp" != "no"
-			then break ; fi
-		done
+			AC_SEARCH_LIBS(zggev, sunperf,
+				       have_blas=1 have_lapack=1
+				       libs="-xlic_lib=sunperf $LIBS")
+			;;
+		esac
 
-		# check for essl
-		unset ac_cv_search_dcft # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(dcft, essl, have_fft=1 have_essl=1 have_blas=1
-			       libs="$LIBS")
-		;;
-	mips )
-		# check for complib.sgimath
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(dgemm, complib.sgimath, have_blas=1
-			       libs="$LIBS")
-		;;
-	alinux )
-		# check for cxml on linux alpha
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
-			       libs="$LIBS")
-               ;;
-
-	alpha )
-		# check for cxml (old dxml)
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
-			       libs="$LIBS")
-
-		# check for parallel libraries
-		if ! test $no_parallel
+		if test "$have_blas" -eq 0
 		then
+			# check for atlas (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_dgemm # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1, ,
+					       -latlas -lg2c)
+				if test "$ac_cv_search_dgemm" = "-lf77blas"
+				then libs="$try_loption -lf77blas -latlas \
+-lg2c $libs" ; fi
+				if test "$ac_cv_search_dgemm" != "no"
+				then break ; fi
+			done
+		fi
+
+		if test "$have_blas" -eq 0
+		then
+			# check for blas (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_dgemm # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(dgemm, blas, have_blas=1
+					       libs="$try_loption $LIBS")
+				if test "$ac_cv_search_dgemm" != "no"
+				then break ; fi
+			done
+		fi
+
+		if test "$have_lapack" -eq 0
+		then
+			# check for lapack (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_zggev # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(zggev, lapack, have_lapack=1
+					       libs="$try_loption $LIBS")
+				if test "$ac_cv_search_zggev" != "no"
+				then break ; fi
+			done
+		fi
+		# essl must precede lapack (if present)
+		if test "$have_essl" -ne 0 && test "$have_lapack" -ne 0
+		then libs="-lessl $libs" ; fi
+	fi
+
+	# check for fftw
+	# supported vendor replacements:
+	#   essl on aix
+	#   SUNperf on sparc
+	# internal version is used if none is found
+	if test "$use_fft" -ne 0
+	then
+		case "$arch" in
+		aix )
+			# check for essl
+			unset ac_cv_search_dcft # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dcft, essl, have_fft=1 libs="$LIBS")
+			;;
+		sparc )
+			# check for SUNperf library
+			unset ac_cv_search_zfft3i # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(zfft3i, sunperf, have_fft=1
+				       libs="-xlic_lib=sunperf $LIBS")
+			;;
+		esac
+
+		if test "$have_fft" -eq 0
+		then
+			AC_LANG_PUSH(C)
+
+			# check for fftw (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_fftwnd # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				CFLAGS="$test_cflags"
+				CPPFLAGS="$test_cppflags"
+				LDFLAGS="$c_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(fftwnd, fftw, have_fftw=1
+					       libs="$try_loption $LIBS", ,
+					       -lm)
+				if test "$ac_cv_search_fftwnd" != "no"
+				then break ; fi
+			done
+
+			AC_LANG_POP(C)
+		fi
+	fi
+
+	# check for mpi
+	# some architectures require to link some libraries
+	if test "$use_parallel" -ne 0
+	then
+		case "$arch" in
+		alpha )
 			AC_LANG_PUSH(C)
 			CFLAGS="$test_cflags"
 			CPPFLAGS="$test_cppflags"
@@ -821,129 +980,50 @@ $libs"
 
 			LIBS="$libs"
 			AC_SEARCH_LIBS(pmpi_init, pmpi, libs="$LIBS")
+			;;
+		esac
+
+		if test "$have_mpi" -eq 0
+		then
+			# check for mpi
+			unset ac_cv_search_mpi_init # clear cached value
+			LDFLAGS="$test_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(mpi_init, mpi, have_mpi=1 libs="$LIBS")
 		fi
-		;;
-	sparc)
-		# check for SUNperf library
-		unset ac_cv_search_zfft3i # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(zfft3i, sunperf, have_fft=1 have_blas=1
-			       have_lapack=1 libs="-xlic_lib=sunperf $LIBS")
-		;;
-	esac
-
-	if ! test $have_fft
-	then
-		AC_LANG_PUSH(C)
-
-		# check for fftw (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_fftwnd # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			CFLAGS="$test_cflags"
-			CPPFLAGS="$test_cppflags"
-			LDFLAGS="$c_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(fftwnd, fftw, have_fftw=1
-				       libs="$try_loption $LIBS", , -lm)
-			if test "$ac_cv_search_fftwnd" != "no"
-			then break ; fi
-		done
-
-		AC_LANG_POP(C)
 	fi
 
-	if ! test $have_blas
+	# check for mass on aix
+	if test "$use_mass" -ne 0
 	then
-		# check for atlas (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_dgemm # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1, ,
-				       -latlas -lg2c)
-			if test "$ac_cv_search_dgemm" = "-lf77blas"
-			then libs="$try_loption -lf77blas -latlas -lg2c \
-$libs" ; fi
-			if test "$ac_cv_search_dgemm" != "no"
-			then break ; fi
-		done
-	fi
-
-	if ! test $have_blas
-	then
-		# check for blas (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_dgemm # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(dgemm, blas, have_blas=1
-				       libs="$try_loption $LIBS")
-			if test "$ac_cv_search_dgemm" != "no"
-			then break ; fi
-		done
-	fi
-
-	if ! test $have_lapack
-	then
-		# check for lapack (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_zggev # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(zggev, lapack, have_lapack=1
-				       libs="$try_loption $LIBS")
-			if test "$ac_cv_search_zggev" != "no"
-			then break ; fi
-		done
-	fi
-	# essl must precede lapack (if present)
-	if test $have_essl && test $have_lapack
-	then libs="-lessl $libs" ; fi
-
-	if ! test $no_parallel && ! test $have_mpi
-	then
-		# check for mpi
-		unset ac_cv_search_mpi_init # clear cached value
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(mpi_init, mpi, have_mpi=1 libs="$LIBS")
+		case "$arch" in
+		aix )
+			# check for mass (in several directories)
+			for dir in none $try_libdirs
+			do
+				unset ac_cv_search_vexp # clear cached value
+				if test "$dir" = "none"
+				then
+					try_loption=
+				else
+					echo $ECHO_N "in $dir: " $ECHO_C
+					try_loption="-L$dir"
+				fi
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags $try_loption"
+				LIBS="$libs"
+				AC_SEARCH_LIBS(vexp, massvp4 massv, , ,
+					       -lmass)
+				if test "$ac_cv_search_vexp" = "-lmassvp4" \
+					-or "$ac_cv_search_vexp" = "-lmassv"
+				then libs="$try_loption $ac_cv_search_vexp \
+-lmass $libs"
+				fi
+				if test "$ac_cv_search_vexp" != "no"
+				then break ; fi
+			done
+			;;
+		esac
 	fi
 fi
 echo setting LIBS... $libs
@@ -952,85 +1032,99 @@ echo setting LIBS... $libs
 FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 LIBS="$libs"
+parallel=0
 
-if ! test $no_parallel
+if test "$use_lapack" -ne 0
+then
+	if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
+	AC_SEARCH_LIBS(zggev, "", , mylib="blas_and_lapack")
+fi
+
+if test "$use_mass" -ne 0
+then
+	AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
+fi
+
+if test "$use_fft" -ne 0 && test "$arch" = "aix"
+then
+	AC_SEARCH_LIBS(dcft, "", have_fft=1)
+fi
+
+if test "$use_fft" -ne 0 && test "$have_fft" -eq 0
+then
+	AC_LANG_PUSH(C)
+
+	if test "$have_fft" -eq 0
+	then
+		try_dflags="$try_dflags -D__FFTW"
+
+		CFLAGS="$test_cflags"
+		LDFLAGS="$c_ldflags"
+		AC_SEARCH_LIBS(fftwnd, "", have_fft=1 have_fftw=1)
+	fi
+
+	# find location of fftw.h (if needed)
+	if test "$have_fftw" -ne 0
+	then
+		if test "$includefftw" = ""
+		then
+			# if libfftw is in /some/path/lib, then fftw.h is
+			# probably in /some/path/include
+			includefftw=`echo $libs |
+				sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
+				     s/lib/include/'`
+		fi
+		try_includedirs="$includefftw /usr/local/include \
+				 /cineca/lib/fftw-2.1.3/fftw"
+		for dir in none $try_includedirs
+		do
+			unset ac_cv_header_fftw_h # clear cached value
+			if test "$dir" = "none"
+			then
+				try_ioption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_ioption="-I$dir"
+			fi
+			CFLAGS="$test_cflags $try_ioption"
+			CPPFLAGS="$test_cppflags $try_ioption"
+			LDFLAGS="$c_ldflags"
+			LIBS="$libs"
+			AC_CHECK_HEADER(fftw.h, have_fftw_h=1
+					ifftw="$try_ioption")
+			if test "$ac_cv_header_fftw_h" != "no"
+			then break ; fi
+		done
+	fi
+
+	# if no valid FFT library was found, use our implementation
+	if test "$have_fft" -eq 0
+	then
+		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
+	fi
+
+	if test "$have_fftw" -ne 0 && test "$have_fftw_h" -eq 0
+	then
+		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
+		AC_MSG_WARN([fftw library detected, but fftw.h not found])
+	fi
+
+	AC_LANG_POP(C)
+fi
+
+if test "$use_parallel" -ne 0
 then
 	AC_SEARCH_LIBS(mpi_init, "", parallel=1
 		       try_dflags="$try_dflags -D__MPI -D__PARA")
 fi
 
-if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
-AC_SEARCH_LIBS(zggev, "", , mylib="blas_and_lapack")
-
-if test "$arch" = "aix"
-then
-	AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
-	AC_SEARCH_LIBS(dcft, "", have_fft=1)
-fi
-
-AC_LANG_PUSH(C)
-
-if ! test $have_fft
-then
-	try_dflags="$try_dflags -D__FFTW"
-
-	CFLAGS="$test_cflags"
-	LDFLAGS="$c_ldflags"
-	AC_SEARCH_LIBS(fftwnd, "", have_fft=1 have_fftw=1)
-fi
-
-# find location of fftw.h (if needed)
-if test $have_fftw
-then
-	if test "$includefftw" = ""
-	then
-		# if libfftw is in /some/path/lib, then fftw.h is
-		# probably in /some/path/include
-		includefftw=`echo $libs |
-			sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
-			     s/lib/include/'`
-	fi
-	try_includedirs="$includefftw /usr/local/include \
-			 /cineca/lib/fftw-2.1.3/fftw"
-	for dir in none $try_includedirs
-	do
-		unset ac_cv_header_fftw_h # clear cached value
-		if test "$dir" = "none"
-		then
-			try_ioption=
-		else
-			echo $ECHO_N "in $dir: " $ECHO_C
-			try_ioption="-I$dir"
-		fi
-		CFLAGS="$test_cflags $try_ioption"
-		CPPFLAGS="$test_cppflags $try_ioption"
-		LDFLAGS="$c_ldflags"
-		LIBS="$libs"
-		AC_CHECK_HEADER(fftw.h, have_fftw_h=1 ifftw="$try_ioption")
-		if test "$ac_cv_header_fftw_h" != "no" ; then break ; fi
-	done
-fi
-
-# if no valid FFT library was found, use our implementation
-if ! test $have_fft
-then
-	try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-fi
-
-if test $have_fftw && ! test $have_fftw_h
-then
-	try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-	AC_MSG_WARN([fftw library detected, but fftw.h not found])
-fi
-
-AC_LANG_POP(C)
 AC_LANG_POP(Fortran 77)
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
 
 # xlf compilers (AIX and powerpc) want comma-separated -D directives
-if test $xlf_flags
+if test "$xlf_flags" -ne 0
 then
 	fdflags="`echo $dflags | sed 's/  */,/g'`"
 else
@@ -1087,7 +1181,8 @@ echo
 echo The following libraries have been found:
 echo "  LIBS=$libs"
 
-if test $have_fft && test $have_fftw && ! test $have_fftw_h
+if test "$have_fft" -ne 0 && test "$have_fftw" -ne 0 &&
+   test "$have_fftw_h" -eq 0
 then
 	echo "  WARNING: fftw library detected, but fftw.h not found"
 fi
@@ -1100,7 +1195,7 @@ echo
 echo For more information, read README.install or the ESPRESSO User\'s Guide.
 echo -----------------------------------------------------------------
 
-if ! test $no_parallel && ! test $parallel
+if test "$use_parallel" -ne 0 && test "$parallel" -eq 0
 then
 	echo ----------------------------------------------
 	echo parallel environment not detected
