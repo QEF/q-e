@@ -18,10 +18,8 @@ atomic_wfc.o \
 bachel.o \
 becmod.o \
 bfgs.o \
-bp_bess.o \
 bp_c_phase.o \
 bp_calc_btq.o \
-bp_dbess.o \
 bp_qvan3.o \
 bp_radin.o \
 bp_strings.o \

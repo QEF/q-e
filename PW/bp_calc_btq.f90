@@ -58,11 +58,15 @@
                          ,nqf(np),l,i)
 
                         if (idbes .eq. 1) then
-                           call dbess(ql,l+1,msh_bp,r(1,np), &
-                               jl)
+                           !
+                           CALL sph_dbes( msh_bp, r(1,np), ql, l+1, jl )                          
+                          ! call dbess(ql,l+1,msh_bp,r(1,np), jl)
+                           !
                         else
-                           call bess(ql,l+1,msh_bp,r(1,np), &
-                               jl)
+                           !
+                           CALL sph_bes( msh_bp, r(1,np), ql, l+1, jl )
+                          ! call bess(ql,l+1,msh_bp,r(1,np), jl)
+                           !
                         endif
 
 ! jl is the Bessel function (or its derivative) calculated at ql
