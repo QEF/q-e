@@ -744,7 +744,7 @@
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
            atomic_positions, id_loc, sic, sic_epsilon, sic_rloc, ecutwfc,     &
-           ecutrho, ecfixed, qcutz, q2sigma, tk_inp, nkstot, xk, dt, wmass,   &
+           ecutrho, ecfixed, qcutz, q2sigma, tk_inp, dt, wmass,               &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
            tturbo_inp, nturbo_inp, outdir, prefix, xc_type, woptical,         &
@@ -772,7 +772,7 @@
      !
      USE printout_base,    ONLY: title_ => title
      !
-     USE cell_base,        ONLY: cell_base_init, a1, a2, a3
+     USE cell_base,        ONLY: cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY: cell_nose_init
      USE ions_base,        ONLY: ions_base_init, greasp_ => greasp
      USE ions_nose,        ONLY: ions_nose_init
@@ -810,7 +810,6 @@
      USE brillouin,                ONLY: kpoint_setup
      USE optical_properties,       ONLY: optical_setup
      USE pseudopotential,          ONLY: pseudopotential_setup
-     USE cell_base,                ONLY: a1, a2, a3, cell_alat
      USE guess,                    ONLY: guess_setup
      USE ions_module,              ONLY: ions_setup
      USE empty_states,             ONLY: empty_init
