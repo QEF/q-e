@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib-keywords-def.tcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: guib-keywords-def.tcl,v 1.2 2004-09-04 07:54:20 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -94,6 +94,11 @@ set standard_var_options {
 
 set options(var)      $standard_var_options
 set options(auxilvar) $standard_var_options
+
+set options(scriptvar) {
+    { value.arg     {}    {Allowed values for the variable} }
+    { textvalue.arg {}	  {Allowed values for the variable that will be diplayed in a widget like radiobutton} }
+}
 
 #------------------------------------------------------------------------
 # DEFINITION of additional dimension options

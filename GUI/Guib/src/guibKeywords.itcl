@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guibKeywords.itcl,v 1.2 2004-04-05 13:39:11 kokalj Exp $ 
+# $Id: guibKeywords.itcl,v 1.3 2004-09-04 07:55:10 kokalj Exp $ 
 #
 
 
@@ -443,6 +443,34 @@ body ::guib::moduleObj::auxilvar {ident args} {
     #	::tclu::ERROR "keyword \"auxilvar\" is allowed only inside namelist or line"
     #}
     _manageKeyword $obj auxilvar $ident $code
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/scriptvar
+#  NAME
+#    ::guib::moduleObj::scriptvar -- the scriptvar GUIB keyword
+#  USAGE
+#    scriptvar ident {option value ?...?} 
+#  or
+#    scriptvar ident ?option value?   ?...?
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "scriptvar" is provided for defining a script variables,
+# i.e. a variables that can be set/queried for the scripting purpuses,
+# but have otherwise no relevance to the the input-syntax whatsoever.
+#
+#  EXAMPLE
+#    scriptvar myVar1 
+#    
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::scriptvar {ident args} {
+    set code [_expandArgs $args]
+    set obj  [_getCurrentObj] 
+    _manageKeyword $obj scriptvar $ident $code
 }
 
 
@@ -917,9 +945,10 @@ body ::guib::moduleObj::tableref {ident i1 i2} {
 #  DESCRIPTION
 # -- GUIB keyword !!!
 #    Keyword "varset" is meant for setting the "GUIB" variables.
-#    Namely, the variable names as specified by the -variable option of the
-#    GUIB keywords are only symbolic names. The actual names are the one of the
-#    the _guibVar array (e.g. _guibVar(varIdent)).
+#    Namely, the variable names as specified by identifier or the
+#    -variable option of the GUIB keywords are only symbolic names. The
+#    actual names are the one of the the _guibVar array
+#    (e.g. _guibVar(varIdent)).
 #
 #  ARGUMENTS
 #    var   -- a symbolic name of the variable

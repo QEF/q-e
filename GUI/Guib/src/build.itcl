@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: build.itcl,v 1.2 2004-02-19 11:18:20 kokalj Exp $ 
+# $Id: build.itcl,v 1.3 2004-09-04 07:53:47 kokalj Exp $ 
 #
 
 
@@ -268,7 +268,10 @@ body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
     array set _cmd [$obj getOptions $id *]	    
     set _packSide  [_packSide $objLevel]
 
-    if { $key == "separator" } {
+    if { $key == "scriptvar" } {
+	# ignore
+	;
+    } elseif { $key == "separator" } {
 	#
 	# SEPARATOR
 	#
@@ -346,7 +349,7 @@ body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
 	tclu::DEBUG _build: after _addVaridentWidget
     } else {
 	#
-	# VAR & DIMENSION
+	# VAR & AUXILVAR & DIMENSION
 	#
 	foreach elem { 
 	    ident variable text label value textvalue default fmt      
