@@ -18,7 +18,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : npool, me_pool, root_pool, intra_pool_comm, my_image_id
+  USE mp_global, ONLY : npool, me_pool, root_pool, intra_pool_comm
   USE mp,        ONLY : mp_bcast  
   !
   IMPLICIT NONE

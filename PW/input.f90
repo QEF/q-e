@@ -1302,7 +1302,7 @@ SUBROUTINE verify_tmpdir()
         ! ... files needed by parallelization among images are removed
         !               
         CALL delete_if_present( TRIM( file_path ) // '.BLOCK' )
-        CALL delete_if_present( TRIM( file_path ) // '.para' )
+        CALL delete_if_present( TRIM( file_path ) // '.newimage' )
         !
      END IF   
      !

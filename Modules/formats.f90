@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2003-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,6 +9,8 @@
 !--------------------------------------------------------------------------
 MODULE formats
   !---------------------------------------------------------------------------
+  !
+  ! ... this module contains the I/O formats used by all NEB-routines
   !
   CHARACTER (LEN=*), PARAMETER :: &
     lattice_vectors  = "(3(2X,F14.10),/,3(2X,F14.10),/,3(2X,F14.10))"
@@ -32,12 +34,12 @@ MODULE formats
                        & "';  self-consistency for image ', I3)", &
     scf_fmt_para       = "(5X,'cpu = ',I2,'; tcpu = ',F8.2," // &
                        & "';  self-consistency for image ', I3)", &                   
-    run_output         = "(/,5X,'iteration: ',I3,5X,'E activation ='," // &
-                       & " F10.6,5X,'error =',F10.6,/)", &
-    run_output_T_const = "(/,5X,'iteration: ',I3,5X,'temperature ='," // &
-                       & " F10.2,5X,'forces =',F10.6)", &  
-    final_output       = "(5X,'image: ',I2,'   Energy = ',F16.8," // &
-                       & "'   Error = ',F8.5)"
+    run_output         = "(/,5X,'iteration:',I4,4X,'E activation ='," // &
+                       & " F6.3,' eV',4X,'error =',F8.4,' eV / bohr'/)", &
+    run_output_T_const = "(/,5X,'iteration:',I4,4X,'temperature ='," // &
+                       & " F8.2,' K',4X,'forces =',F8.4,' eV / bohr')", &  
+    final_output       = "(5X,'image: ',I2,'   E tot = ',F16.8," // &
+                       & "' eV   error = ',F8.4,' eV / bohr')"
   !
   CHARACTER (LEN=*), PARAMETER :: &
     stringfmt = "(5X,A,T35,' = ',A)"      

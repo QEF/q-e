@@ -47,7 +47,7 @@ MODULE check_stop
        !
        IF( tinit ) &
          WRITE( UNIT = stdout, &
-                FMT = '("WARNING: check_stop already initialized *** ")' )
+                FMT = '(/,5X,"WARNING: check_stop already initialized")' )
        !
        IF ( val > 0.D0 ) max_seconds = val
        !

@@ -86,7 +86,7 @@
      !
      INTEGER :: iunexit     = 26 ! unit for a soft exit  
      INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
-     INTEGER :: iunpara     = 28 ! unit for parallelization among images
+     INTEGER :: iunnewimage = 28 ! unit for parallelization among images
      INTEGER :: iunblock    = 29 ! as above (blocking file)
      !
      ! ... NEB specific

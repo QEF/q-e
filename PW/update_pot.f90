@@ -21,27 +21,28 @@ SUBROUTINE update_pot()
   ! ...                 atomic one,
   !
   ! ... order = 2       extrapolate the wavefunctions:
+  !
   ! ...                   |psi(t+dt)> = 2*|psi(t)> - |psi(t-dt)>
   !
   ! ... order = 3       extrapolate the wavefunctions with the second-order
   ! ...                 formula:
+  !
   ! ...                   |psi(t+dt)> = |psi(t) +
-  ! ...                               + alpha0*(|psi(t)> -    |psi(t-dt)>
-  ! ...                               + beta0* (|psi(t-dt)> - |psi(t-2*dt)>
+  ! ...                               + alpha0*( |psi(t)> - |psi(t-dt)> )
+  ! ...                               + beta0* ( |psi(t-dt)> - |psi(t-2*dt)> )
   !
-  ! ...                 where alpha0 and beta0 are calculated in "move_ions" so
-  ! ...                 that |tau'-tau(t+dt)| is minimum; tau' and tau(t+dt)
-  ! ...                 are respectively the atomic positions at time t+dt
-  ! ...                 and  the extrapolated one:
+  ! ...                 where alpha0 and beta0 are calculated in
+  ! ...                 "find_alpha_and_beta()" so that |tau'-tau(t+dt)| is 
+  ! ...                 minimum; 
+  ! ...                 tau' and tau(t+dt) are respectively the atomic positions
+  ! ...                 at time t+dt and the extrapolated one:
   !
-  ! ...                   tau(t+dt) = tau(t) +
-  ! ...                                      + alpha0*( tau(t) - tau(t-dt) )
+  ! ...                   tau(t+dt) = tau(t) + alpha0*( tau(t) - tau(t-dt) )
   ! ...                                      + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
   USE control_flags, ONLY : order, history
   USE io_files,      ONLY : prefix, tmp_dir
- ! USE mp_global, ONLY : mpime
   !
   IMPLICIT NONE
   !
@@ -106,14 +107,7 @@ SUBROUTINE update_pot()
   !
   CALL extrapolate_charge( rho_order )
   !
- ! PRINT *, "HISTORY   = ", HISTORY  
- ! PRINT *, "ORDER     = ", ORDER
- ! PRINT *, "RHO_ORDER = ", RHO_ORDER
- ! PRINT *, "WFC_ORDER = ", WFC_ORDER
-  !
   IF ( order >= 2 ) CALL extrapolate_wfcs( wfc_order )
-  !
- ! PRINT *, "mpime = ", mpime, "EXTRAPOLATION COMPLETED"
   !
   CALL stop_clock( 'update_pot' )
   !
@@ -275,7 +269,7 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
   ! ... of the basis of the t-dt and t time steps, according to a recipe
   ! ... by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.29
   !
-#define ONE (1.D0,0.D0)
+#define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)  
   !
   USE io_global,            ONLY : stdout
@@ -336,6 +330,7 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
   ELSE IF ( wfc_order == 2 ) THEN
      !
      CALL diropn( iunoldwfc, TRIM( prefix ) // '.oldwfc', nwordwfc, exst )
+     !
      IF ( order > 2 ) &
         CALL diropn( iunoldwfc2, TRIM( prefix ) // '.oldwfc2', nwordwfc, exst )
      !
@@ -381,7 +376,7 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
         ! ... becomes u_m * w_m
         !
         CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, nbnd, &
-                    w_m, nbnd, work, lwork, rwork, info )
+                     w_m, nbnd, work, lwork, rwork, info )
         !
         ! ... check on eigenvalues
         !

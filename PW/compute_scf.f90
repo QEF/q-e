@@ -10,7 +10,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !----------------------------------------------------------------------------
   !
   ! ... this subroutine is the main scf-driver for NEB 
-  ! ... ( called by Modules/neb_base.f90, born_oppenheimer() subroutine ) 
+  ! ... ( called by Modules/neb_base.f90/born_oppenheimer() subroutine ) 
   !
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot, &
@@ -27,7 +27,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE relax,            ONLY : if_pos_ => if_pos
   USE extfield,         ONLY : tefield, forcefield
   USE io_files,         ONLY : prefix, tmp_dir, &
-                               iunneb, iunupdate
+                               iunneb, iunupdate, exit_file, iunexit
   USE io_global,        ONLY : stdout
   USE formats,          ONLY : scf_fmt, scf_fmt_para
   USE neb_variables,    ONLY : pos, PES, PES_gradient, num_of_images, &
@@ -68,7 +68,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   CALL mp_barrier( intra_image_comm )
   CALL mp_barrier( inter_image_comm )  
   !
-  istep = istep_neb
+  istep = istep_neb + 1
   istat = 0 
   !
   ! ... only the first cpu on each image needs the tauold vector
@@ -86,7 +86,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( ionode ) CALL para_file_init()
+  IF ( ionode ) CALL new_image_init()
   !
   image = N_in + my_image_id
   ! 
@@ -150,6 +150,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      if_pos_(:,:) = if_pos(:,1:nat) 
      ityp(:)      = sp_pos(1:nat)
      !
+     ! ... initialization of the scf calculation
+     !
      CALL init_run()
      !
      IF ( me_image == root_image ) THEN 
@@ -198,9 +200,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      CALL electrons()
      !
      IF ( .NOT. conv_elec ) THEN
-        !
-        WRITE( iunneb, '(/,5X,"WARNING :  scf convergence NOT achieved",/, &
-                         & 5X,"stopping in compute_scf()...",/)' )
         !   
         istat = 1
         !
@@ -291,6 +290,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      stat = .FALSE.
      !
      CALL mp_min( suspended_image, inter_image_comm )
+     !
+     OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
+     CLOSE( UNIT = iunexit, STATUS = 'DELETE' )     
      !     
   END IF      
   !
@@ -301,28 +303,28 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      ! ... internal procedures
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE para_file_init()
+     SUBROUTINE new_image_init()
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine initializes the file needed for the 
        ! ... parallelization among images
        !
-       USE io_files,  ONLY : iunpara
+       USE io_files,  ONLY : iunnewimage
        USE mp_global, ONLY : nimage
        !
        IMPLICIT NONE       
        !
        !
-       OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
-           & TRIM( prefix ) // '.para' , STATUS = 'UNKNOWN' )
+       OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+           & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
        !
-       WRITE( iunpara, * ) N_in + nimage
+       WRITE( iunnewimage, * ) N_in + nimage
        ! 
-       CLOSE( UNIT = iunpara, STATUS = 'KEEP' )       
+       CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )       
        !
        RETURN
        !
-     END SUBROUTINE para_file_init
+     END SUBROUTINE new_image_init
      !
      !-----------------------------------------------------------------------
      SUBROUTINE get_new_image( image )
@@ -332,7 +334,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        ! ... the *.BLOCK file is needed to avoid (when present) that 
        ! ... other jobs try to read/write on file "para" 
        !
-       USE io_files,  ONLY : iunpara, iunblock
+       USE io_files,  ONLY : iunnewimage, iunblock
        !
        IMPLICIT NONE
        !
@@ -348,28 +350,28 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
           !
           IF ( ioerr > 0 ) CYCLE open_loop
           !
-          INQUIRE( UNIT = iunpara, OPENED = opened )
+          INQUIRE( UNIT = iunnewimage, OPENED = opened )
           !
           IF ( .NOT. opened ) THEN
              !
              INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.para', EXIST = exists )
+                    & TRIM( prefix ) // '.newimage', EXIST = exists )
              !
              IF ( exists ) THEN
                 !
-                OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.para' , STATUS = 'OLD' )
+                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
                 !
-                READ( iunpara, * ) image
+                READ( iunnewimage, * ) image
                 !
-                CLOSE( UNIT = iunpara, STATUS = 'DELETE' )
+                CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
                 !
-                OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.para' , STATUS = 'NEW' )
+                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
                 !
-                WRITE( iunpara, * ) image + 1
+                WRITE( iunnewimage, * ) image + 1
                 ! 
-                CLOSE( UNIT = iunpara, STATUS = 'KEEP' )
+                CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
                 !
                 EXIT open_loop
                 !
@@ -390,49 +392,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to send a stop signal to other images
-       ! ... the *.BLOCK file is needed to avoid (when present) that 
-       ! ... other jobs try to read/write on file "para" 
        !
-       USE io_files,  ONLY : iunpara, iunblock
+       USE io_files,  ONLY : iunexit, exit_file
        !
        IMPLICIT NONE
        !
-       INTEGER              :: ioerr
-       LOGICAL              :: opened, exists
        !
-       !
-       open_loop: DO
-          !          
-          OPEN( UNIT = iunblock, FILE = TRIM( tmp_dir_saved ) // &
-              & TRIM( prefix ) // '.BLOCK' , IOSTAT = ioerr, STATUS = 'NEW' )
-          !
-          IF ( ioerr > 0 ) CYCLE open_loop
-          !
-          INQUIRE( UNIT = iunpara, OPENED = opened )
-          !
-          IF ( .NOT. opened ) THEN
-             !
-             INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.para', EXIST = exists )
-             !
-             IF ( exists ) THEN
-                !
-                OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.para' , STATUS = 'UNKNOWN' )
-                !
-                WRITE( iunpara, * ) N_fin + 1
-                ! 
-                CLOSE( UNIT = iunpara, STATUS = 'KEEP' )
-                !
-                EXIT open_loop
-                !
-             END IF
-             !
-          END IF
-          !
-       END DO open_loop
-       !
-       CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+       OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
+       CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               
        !
        RETURN       
        !

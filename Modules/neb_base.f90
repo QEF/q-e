@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2003-2004 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -170,6 +170,8 @@ MODULE neb_base
          !
       ELSE
          !
+         ! ... linear interpolation
+         !
          ALLOCATE( d_R(dim) )        
          !
          d_R = ( pos_(:,num_of_images) - pos_(:,1) )
@@ -185,6 +187,8 @@ MODULE neb_base
          DEALLOCATE( d_R )
          !
       END IF
+      !
+      ! ... the actual number of degrees of freedom is computed
       !
       CALL compute_deg_of_freedom()
       !
@@ -222,7 +226,7 @@ MODULE neb_base
       !
       CONTAINS
          !
-         SUBROUTINE compute_deg_of_freedom 
+         SUBROUTINE compute_deg_of_freedom()
            !
            USE ions_base,        ONLY :  nat
            USE input_parameters, ONLY :  if_pos
@@ -230,7 +234,7 @@ MODULE neb_base
            !
            IMPLICIT NONE
            !
-           INTEGER    :: ia
+           INTEGER :: ia
            !
            !
            deg_of_freedom = 0
@@ -246,43 +250,6 @@ MODULE neb_base
          END SUBROUTINE compute_deg_of_freedom
          !
     END SUBROUTINE initialize_neb
-    !
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE compute_action( langevin_action )
-      !------------------------------------------------------------------------
-      !
-      USE neb_variables,          ONLY : num_of_images, pos, PES_gradient
-      USE basic_algebra_routines, ONLY : norm
-      !
-      IMPLICIT NONE
-      !
-      ! ... I/O variables
-      !
-      REAL (KIND=DP), INTENT(OUT) :: langevin_action(:)
-      !
-      ! ... local variables
-      !
-      INTEGER          :: image
-      !
-      ! ... end of local variables
-      !  
-      !
-      langevin_action = 0.D0
-      !
-      DO image = 2, ( num_of_images - 1 )  
-         !  
-         !langevin_action(image) = norm( pos(:,(image+1)) - pos(:,image) ) * &
-         !                         ( norm( PES_gradient(:,image+1) ) + &
-         !                           norm( PES_gradient(:,image) ) )
-         langevin_action(image) =                              &
-           0.5D0 * ( norm( pos(:,image+1) - pos(:,image) ) +   &
-                     norm( pos(:,image) - pos(:,image-1) ) ) * &
-           ( norm( PES_gradient(:,image+1) ) + norm( PES_gradient(:,image-1) ) )                           
-         !
-      END DO
-      !
-    END SUBROUTINE compute_action
     !
     !
     !------------------------------------------------------------------------
@@ -325,16 +292,19 @@ MODULE neb_base
       !------------------------------------------------------------------------
       ! 
       USE constants,              ONLY : pi, eps32
-      USE neb_variables,          ONLY : num_of_images, Emax, Emin, &
+      USE neb_variables,          ONLY : pos, num_of_images, Emax, Emin, &
                                          k_max, k_min, k, PES, PES_gradient, &
-                                         VEC_scheme
-      USE basic_algebra_routines, ONLY : norm
+                                         VEC_scheme, elastic_gradient, tangent
+      USE supercell,              ONLY : pbc
+      USE basic_algebra_routines
       !
       IMPLICIT NONE
       !
       ! ... local variables
       !
-      INTEGER        :: image      
+      INTEGER        :: i
+      REAL (KIND=DP) :: F_ortho_max, F_ortho_max_i, &
+                        F_para_max_i, F_para_max
       REAL (KIND=DP) :: delta_E
       REAL (KIND=DP) :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
       !
@@ -353,10 +323,10 @@ MODULE neb_base
             !
          END IF
          !
-         DO image = 1, num_of_images 
+         DO i = 1, num_of_images 
             !
-            k(image) = 0.25D0 * ( ( k_max + k_min ) -  ( k_max - k_min ) * &
-                       COS( pi * ( PES(image) - Emin ) / delta_E ) )
+            k(i) = 0.25D0 * ( ( k_max + k_min ) -  ( k_max - k_min ) * &
+                   COS( pi * ( PES(i) - Emin ) / delta_E ) )
             !
          END DO
          !
@@ -365,27 +335,55 @@ MODULE neb_base
          norm_grad_V_min = + 1.0D32
          norm_grad_V_max = - 1.0D32
          !
-         DO image = 1, num_of_images 
+         DO i = 1, num_of_images 
             !  
-            norm_grad_V = norm( PES_gradient(:,image) )
+            norm_grad_V = norm( PES_gradient(:,i) )
             !
             IF ( norm_grad_V < norm_grad_V_min ) norm_grad_V_min = norm_grad_V
             IF ( norm_grad_V > norm_grad_V_max ) norm_grad_V_max = norm_grad_V
             !
          END DO   
          !    
-         DO image = 1, num_of_images 
+         DO i = 1, num_of_images 
             !
-            norm_grad_V = norm( PES_gradient(:,image) )
+            norm_grad_V = norm( PES_gradient(:,i) )
             !
-            k(image) = 0.25D0 * ( ( k_max + k_min ) - ( k_max - k_min ) * &
-                       COS( pi * ( norm_grad_V - norm_grad_V_min ) / & 
-                       ( norm_grad_V_max - norm_grad_V_min ) ) )
+            k(i) = 0.25D0 * ( ( k_max + k_min ) - ( k_max - k_min ) * &
+                   COS( pi * ( norm_grad_V - norm_grad_V_min ) / & 
+                   ( norm_grad_V_max - norm_grad_V_min ) ) )
             !
          END DO      
          !
       END IF
       !
+      F_ortho_max = 0.D0
+      F_para_max  = 0.D0
+      !
+      DO i = 2, ( num_of_images - 1 )
+         !
+         F_ortho_max_i = MAXVAL( ABS( PES_gradient(:,i) - tangent(:,i) * &
+                                    ( PES_gradient(:,i) .dot. tangent(:,i) ) ) )
+         !
+         elastic_gradient = tangent(:,i) * &
+                ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
+                  ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
+         !
+         F_para_max_i = MAXVAL( ABS( elastic_gradient(:) ) )
+         !
+         IF ( F_ortho_max_i > F_ortho_max ) F_ortho_max = F_ortho_max_i
+         !
+         IF ( F_para_max_i > F_para_max ) F_para_max = F_para_max_i
+         !
+      END DO
+      !
+      PRINT '(/5X,"F_ortho_max = ",F10.6)', F_ortho_max
+      PRINT '(5X,"F_para_max  = ",F10.6)', F_para_max
+      PRINT '(5X,"ALPHA       = ",F10.6)', F_ortho_max / F_para_max
+      !
+      k     = k * F_ortho_max / F_para_max
+      k_max = k_max * F_ortho_max / F_para_max
+      k_min = k_min * F_ortho_max / F_para_max
+      !      
       RETURN
       !
     END SUBROUTINE elastic_constants
@@ -400,7 +398,7 @@ MODULE neb_base
                                          elastic_gradient, PES_gradient, k, &
                                          num_of_images, free_minimization,  &
                                          climbing, tangent, lmol_dyn
-      USE basic_algebra_routines, ONLY : norm   
+      USE basic_algebra_routines
       !
       IMPLICIT NONE
       !
@@ -410,7 +408,8 @@ MODULE neb_base
       !
       ! ... end of local variables
       !
-      CALL elastic_constants
+      !
+      CALL elastic_constants()
       !
       gradient_loop: DO i = 1, num_of_images
          !
@@ -447,13 +446,13 @@ MODULE neb_base
          IF ( climbing(i) ) THEN
             !
             grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
-                        DOT_PRODUCT( PES_gradient(:,i) , tangent(:,i) ) 
+                                    ( PES_gradient(:,i) .dot. tangent(:,i) ) 
             ! 
          ELSE IF ( ( .NOT. free_minimization(i) ) .AND. &
                    ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
             !
-            grad(:,i) = grad(:,i) + elastic_gradient - tangent(:,i) * &
-                        DOT_PRODUCT( PES_gradient(:,i) , tangent(:,i) )
+            grad(:,i) = elastic_gradient + PES_gradient(:,i) - &
+                        tangent(:,i) * ( PES_gradient(:,i) .dot. tangent(:,i) )
             !      
          END IF
          ! 
@@ -896,7 +895,7 @@ MODULE neb_base
             IF ( ionode ) &
                WRITE( UNIT = iunneb, &
                       FMT = '(/,5X,"NEB: convergence achieved in ",I3, &
-                             &     " iterations" )' )
+                             &     " iterations" )' ) istep_neb
             !
             conv_neb = .TRUE.
             !
