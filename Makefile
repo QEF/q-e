@@ -26,10 +26,10 @@ default :
 pw : bindir mods libs
 	if test -d PW   ; then ( cd PW   ; $(MAKE) $(MFLAGS) all ) ; fi
 
-fpmd : bindir mods libs
+fpmd : bindir mods libs iotk
 	if test -d FPMD ; then ( cd FPMD ; $(MAKE) $(MFLAGS) all ) ; fi
 
-cp : bindir mods libs
+cp : bindir mods libs iotk
 	if test -d CPV  ; then ( cd CPV  ; $(MAKE) $(MFLAGS) all ) ; fi
 
 ph : bindir mods libs pw

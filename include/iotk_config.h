@@ -40,6 +40,7 @@
 #   define __IOTK_REAL2    8
 #   define __IOTK_REAL3    16
 #   define __IOTK_AVOID_EMPTY_FILES
+#   define __IOTK_MAXRANK 4
 #   undef __IOTK_GENERIC_ARCHITECTURE
 #endif
 
@@ -58,6 +59,7 @@
 #         define __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
 #         define __IOTK_REAL3    16
+#         define __IOTK_MAXRANK 4
 #         define __IOTK_AVOID_EMPTY_FILES
 #         undef __IOTK_GENERIC_ARCHITECTURE
 #   endif
@@ -73,6 +75,7 @@
 #         define __IOTK_INTEGER4 8
 #         define __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
+#         define __IOTK_MAXRANK 4
 #         define __IOTK_AVOID_EMPTY_FILES
 #         undef __IOTK_GENERIC_ARCHITECTURE
 #   endif
@@ -89,6 +92,7 @@
 #    define __IOTK_INTEGER1 4
 #    define __IOTK_REAL1    8
 #    define __IOTK_MAXRANK 5
+#    define __IOTK_AVOID_EMPTY_FILES
 #    undef __IOTK_GENERIC_ARCHITECTURE
 #endif
 
@@ -106,6 +110,7 @@
 #    define __IOTK_REAL1    4
 #    define __IOTK_REAL2    8
 #    define __IOTK_REAL3    16
+#    define __IOTK_MAXRANK 5
 #    define __IOTK_AVOID_EMPTY_FILES
 #    undef __IOTK_GENERIC_ARCHITECTURE
 #endif
@@ -125,6 +130,7 @@
 #    define __IOTK_REAL1    8
 #    define __IOTK_REAL2    4
 #    define __IOTK_MAXRANK 5
+#    define __IOTK_AVOID_EMPTY_FILES
 #endif
 
 
