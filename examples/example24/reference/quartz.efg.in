@@ -1,0 +1,8 @@
+&inputpp
+  filerec(1)='/u/cm/profeta/PW/O-sesame/pseudo/Si.recon'
+  filerec(2)='/u/cm/profeta/PW/O-sesame/pseudo/O.recon'
+  prefix='quartz'
+  outdir='/u/cm/profeta/tmp/'
+  Q(1)=0.0
+  Q(2)=2.55
+/

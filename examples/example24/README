@@ -1,0 +1,21 @@
+
+This example shows how to use pw.x, efg.x and nmr.x to calculate the nmr 
+parameters (chemical shift and quadrupolar parameters) on quartz.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for the willing structure
+   (input=quartz.scf.in, output=quartz.scf.out).
+   for further examples, see example01
+
+2) for the quadrupolar parameters, extracted from the electric field gradient
+   tensor, you should use the post-processing code efg.x which will use the 
+   charge density computed in 1) to perform the calculation.
+   In order to reconstruct the all-electron response from a pseudo-potential 
+   calculation, you need extra files corresponding to the all-electron and 
+   pseudo- atomic wavefunctions produced during the generation of the 
+   pseudopotential. (see file_recon in atomic code).
+   (input=quartz.efg.in, output=quartz.efg.out).
+   NB: this calculation is possible only for norm-conserving pseudopotential
+   for the moment.

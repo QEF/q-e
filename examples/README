@@ -199,3 +199,8 @@ example23:
     This example shows how to use cp.x to calculate Wannier functions
     and to perform dynamics with an external electric field.
     (contributed by Manu Sharma)
+
+example24:
+    This example shows how to use efg.x to calculate de electric field 
+    gradient, and to obtain the quadrupolar parameters of an NMR experiment.
+    The solid in example is quartz. 
