@@ -18,11 +18,10 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
   USE kinds,     ONLY : DP
-#if defined (__PARA)
-  USE para,      ONLY : me, npool, MPI_COMM_POOL
+  USE para,      ONLY : me, npool
   USE io_global, ONLY : ionode_id
+  USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_bcast  
-#endif
   !
   IMPLICIT NONE
   !
@@ -54,10 +53,10 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   COMPLEX(KIND=DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
   LOGICAL :: all_eigenvalues
   !
+  !
   CALL start_clock( 'cdiaghg' )
   !
-#if defined (__PARA)
-#if defined (__T3E)
+#if defined (__PARA) && defined (__T3E)
   !
   ! ... NB: 150 has been determined empirically on the T3E as the point
   ! ...     where it is convenient to use a parallel routines.
@@ -72,7 +71,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
   END IF
   !
-#endif
 #endif
   !
   all_eigenvalues = ( m == n )
@@ -115,13 +113,10 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   sdum = s
   !
-#if defined (__PARA)
-  !
   ! ... only the first processor diagonalize the matrix
   !
   IF ( me == 1 ) THEN
      !
-#endif
      IF ( all_eigenvalues ) THEN
         !
         ! ... calculate all eigenvalues
@@ -145,16 +140,12 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL errore( 'cdiaghg', 'info =/= 0', ABS( info ) )
      !
-#if defined (__PARA)
-     !
   END IF
   !
   ! ... broadcast the eigenvectors and the eigenvalues
   !
-  CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
-  CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )
-  !
-#endif
+  CALL mp_bcast( e, ionode_id, intra_pool_comm )
+  CALL mp_bcast( v, ionode_id, intra_pool_comm )
   !
   ! ... deallocate workspace
   !

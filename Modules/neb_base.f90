@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,7 +28,8 @@ MODULE neb_base
   !   
   CONTAINS
     !
-    !    
+    ! ... module procedures    
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE initialize_neb( prog )
       !-----------------------------------------------------------------------
@@ -681,7 +682,7 @@ MODULE neb_base
       !
     END SUBROUTINE born_oppenheimer_PES
     !
-
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
@@ -935,6 +936,5 @@ MODULE neb_base
       RETURN
       !
     END SUBROUTINE search_mep
-    !
     !
 END MODULE neb_base

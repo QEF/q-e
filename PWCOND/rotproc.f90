@@ -27,10 +27,12 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 #include "machine.h"
   USE kinds, only : DP
 #ifdef __PARA
+  USE mp_global, ONLY: nproc
   use para
+  USE parallel_include
+  
   implicit none 
 
-  include 'mpif.h'
 
   integer :: k, ig, n, lam, lam1, iorb, iorb1, norbf, norbnow, n2d,  &
              ibound, numb, ninsl, ib, icolor, ikey, new_comm, info

@@ -38,7 +38,7 @@ SUBROUTINE update_pot()
   !                                    + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-  USE control_flags, ONLY : lbfgs, lneb, order
+  USE control_flags, ONLY : order
   !
   IMPLICIT NONE
   !
@@ -51,16 +51,9 @@ SUBROUTINE update_pot()
      !
      RETURN
      !
-  END IF
+  END IF 
   !
-  IF ( order > 2 .AND. lneb ) THEN
-     !
-     order = 2
-     CALL errore( 'update_pot', 'order > 2 not allowed in neb', -1 )
-     !
-  END IF
-  !
-  CALL extrapolate_charge()
+  CALL extrapolate_charge()     
   !
   IF ( order >= 2 ) CALL extrapolate_wfcs()
   !

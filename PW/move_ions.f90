@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "machine.h"
-!
 !----------------------------------------------------------------------------
 SUBROUTINE move_ions()
   !----------------------------------------------------------------------------
@@ -50,11 +48,10 @@ SUBROUTINE move_ions()
                             lmd, conv_ions, alpha0, beta0, tr2
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,        ONLY : lmovecell, calc
-#if defined (__PARA)
-  USE para,          ONLY : me, mypool, MPI_COMM_POOL, MPI_COMM_ROW, npool
+  USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm
+  USE para,          ONLY : me, mypool, npool
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
-#endif
   !
   ! ... external procedures
   !
@@ -75,13 +72,9 @@ SUBROUTINE move_ions()
   REAL(KIND=DP), ALLOCATABLE :: pos(:), gradient(:)
   !
   !
-#if defined (__PARA)
-  !
   ! ... only one node does the calculation in the parallel case
   !
   IF ( me == 1 .AND. mypool == 1 ) THEN 
-     !
-#endif     
      !
      conv_ions = .FALSE.
      !
@@ -211,8 +204,6 @@ SUBROUTINE move_ions()
      !  
      DEALLOCATE( tauold )
      !
-#if defined (__PARA)
-     !
   END IF
   !  
   ! ... broadcast calculated quantities to all nodes
@@ -223,16 +214,12 @@ SUBROUTINE move_ions()
   CALL mp_bcast( tr2,       ionode_id )
   CALL mp_bcast( conv_ions, ionode_id )
   !
-  IF ( me == 1 .AND. npool /=1 ) &
-	CALL mp_bcast( alpha0, ionode_id, MPI_COMM_ROW )
-  IF ( me == 1 .AND. npool /=1 ) &
-	CALL mp_bcast( beta0,  ionode_id, MPI_COMM_ROW )
+  IF ( me == 1 ) CALL mp_bcast( alpha0, ionode_id, inter_pool_comm )
+  IF ( me == 1 ) CALL mp_bcast( beta0,  ionode_id, inter_pool_comm )
   !
-  CALL mp_bcast( alpha0, ionode_id, MPI_COMM_POOL )
-  CALL mp_bcast( beta0,  ionode_id, MPI_COMM_POOL )
+  CALL mp_bcast( alpha0, ionode_id, intra_pool_comm )
+  CALL mp_bcast( beta0,  ionode_id, intra_pool_comm )
   ! 
-#endif     
-  !
   RETURN
   !
   CONTAINS
@@ -347,103 +334,105 @@ SUBROUTINE move_ions()
        !
      END SUBROUTINE compute_lambda
      !
+END SUBROUTINE move_ions     
+!
+! ... this routine is used also by compute_scf (NEB)
+!
+!----------------------------------------------------------------------------
+SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine finds the best coefficients alpha0 and beta0 so that
+  !
+  ! ...    | tau(t+dt) - tau' | is minimum, where
+  !
+  ! ...    tau' = alpha0 * ( tau(t) - tau(t-dt) ) +
+  ! ...            beta0 * ( tau(t-dt) - tau(t-2*dt) )
+  !
+  USE constants, ONLY : eps8
+  USE kinds,     ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER       :: nat, na, ipol
+  REAL(KIND=DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
+  REAL(KIND=DP) :: a11, a12, a21, a22, b1, b2, c, det
+  !
+  ! ... solution of the linear system
+  !
+  a11 = 0.D0
+  a12 = 0.D0
+  a21 = 0.D0
+  a22 = 0.D0 + eps8
+  b1  = 0.D0
+  b2  = 0.D0
+  c   = 0.D0
+  !
+  DO na = 1, nat
      !
-     !-----------------------------------------------------------------------
-     SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
-       !-----------------------------------------------------------------------
-       !
-       ! ... This routine finds the best coefficients alpha0 and beta0 so that
-       !
-       ! ...    | tau(t+dt) - tau' | is minimum, where
-       !
-       ! ...    tau' = alpha0 * ( tau(t) - tau(t-dt) ) +
-       ! ...            beta0 * ( tau(t-dt) - tau(t-2*dt) )
-       !
-       USE constants, ONLY : eps8
-       !
-       IMPLICIT NONE
-       !
-       INTEGER       :: nat, na, ipol
-       REAL(KIND=DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
-       REAL(KIND=DP) :: a11, a12, a21, a22, b1, b2, c, det
-       !
-       ! ... solution of the linear system
-       !
-       a11 = 0.D0
-       a12 = 0.D0
-       a21 = 0.D0
-       a22 = 0.D0 + eps8
-       b1  = 0.D0
-       b2  = 0.D0
-       c   = 0.D0
-       !
-       DO na = 1, nat
-          !
-          DO ipol = 1, 3
-             !
-             a11 = a11 + ( tauold(ipol,na,1) - tauold(ipol,na,2) )**2
-             !
-             a12 = a12 + ( tauold(ipol,na,1) - tauold(ipol,na,2) ) * &
-                         ( tauold(ipol,na,2) - tauold(ipol,na,3) )
-             !
-             a22 = a22 + ( tauold(ipol,na,2) - tauold(ipol,na,3) )**2
-             !
-             b1 = b1 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
-                       ( tauold(ipol,na,1) - tauold(ipol,na,2) )
-             !
-             b2 = b2 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
-                       ( tauold(ipol,na,2) - tauold(ipol,na,3) )
-             !
-             c = c + ( tauold(ipol,na,1) - tau(ipol,na) )**2
-             !
-          END DO
-          !
-       END DO
-       !
-       a21 = a12
-       !
-       det = a11 * a22 - a12 * a21
-       !
-       IF ( det < 0.D0 ) CALL errore( 'find_alpha_and_beta', ' det < 0', 1 )
-       !
-       ! ... case det > 0:  a well defined minimum exists
-       !
-       IF ( det > 0.D0 ) THEN
-          !
-          alpha0 = ( b1 * a22 - b2 * a12 ) / det
-          beta0  = ( a11 * b2 - a21 * b1 ) / det
-          !
-       ELSE
-          !
-          ! ... case det = 0 : the two increments are linearly dependent, 
-          ! ...                chose solution with beta = 0 
-          ! ...                ( discard oldest configuration )
-          !
-          alpha0 = 1.D0
-          beta0  = 0.D0
-          !
-          IF ( a11 > 0.D0 ) alpha0 = b1 / a11
-          !
-       END IF
-       !
-       chi = 0.D0
-       !
-       DO na = 1, nat
-          !
-          DO ipol = 1, 3
-             !
-             chi = chi + ( ( 1.D0  + alpha0 ) * tauold(ipol,na,1) + &
-                           ( beta0 - alpha0 ) * tauold(ipol,na,2) - & 
-                           beta0 * tauold(ipol, na, 3) - tau(ipol,na) )**2
-             !
-          END DO
-          !
-       END DO
-       !
-       !WRITE( stdout, * ) chi, alpha0, beta0
-       !
-       RETURN
-       !
-     END SUBROUTINE find_alpha_and_beta     
+     DO ipol = 1, 3
+        !
+        a11 = a11 + ( tauold(ipol,na,1) - tauold(ipol,na,2) )**2
+        !
+        a12 = a12 + ( tauold(ipol,na,1) - tauold(ipol,na,2) ) * &
+                    ( tauold(ipol,na,2) - tauold(ipol,na,3) )
+        !
+        a22 = a22 + ( tauold(ipol,na,2) - tauold(ipol,na,3) )**2
+        !
+        b1 = b1 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
+                  ( tauold(ipol,na,1) - tauold(ipol,na,2) )
+        !
+        b2 = b2 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
+                  ( tauold(ipol,na,2) - tauold(ipol,na,3) )
+        ! 
+        c = c + ( tauold(ipol,na,1) - tau(ipol,na) )**2
+        !
+     END DO
      !
-END SUBROUTINE move_ions
+  END DO
+  !
+  a21 = a12
+  !
+  det = a11 * a22 - a12 * a21
+  !
+  IF ( det < 0.D0 ) CALL errore( 'find_alpha_and_beta', ' det < 0', 1 )
+  !
+  ! ... case det > 0:  a well defined minimum exists
+  !
+  IF ( det > 0.D0 ) THEN
+     !
+     alpha0 = ( b1 * a22 - b2 * a12 ) / det
+     beta0  = ( a11 * b2 - a21 * b1 ) / det
+     !
+  ELSE
+     !
+     ! ... case det = 0 : the two increments are linearly dependent, 
+     ! ...                chose solution with beta = 0 
+     ! ...                ( discard oldest configuration )
+     !
+     alpha0 = 1.D0
+     beta0  = 0.D0
+     !
+     IF ( a11 > 0.D0 ) alpha0 = b1 / a11
+     !
+  END IF
+  !
+  chi = 0.D0
+  !
+  DO na = 1, nat
+     !
+     DO ipol = 1, 3
+        !
+        chi = chi + ( ( 1.D0  + alpha0 ) * tauold(ipol,na,1) + &
+                      ( beta0 - alpha0 ) * tauold(ipol,na,2) - & 
+                      beta0 * tauold(ipol, na, 3) - tau(ipol,na) )**2
+        !
+     END DO
+     !
+  END DO
+  !
+  !WRITE( stdout, * ) chi, alpha0, beta0
+  !
+  RETURN
+  !
+END SUBROUTINE find_alpha_and_beta

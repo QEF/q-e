@@ -11,17 +11,16 @@
 SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !----------------------------------------------------------------------------
   !
-  !   calculates eigenvalues and eigenvectors of the generalized problem
-  !   Hv=eSv, with H symmetric matrix, S overlap matrix .
-  !   On output both matrix are unchanged
-  !   Uses LAPACK routines
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix .
+  ! ... On output both matrix are unchanged
+  ! ... Uses LAPACK routines
   !
   USE kinds,     ONLY : DP
-#if defined (__PARA)
-  USE para,      ONLY : me, MPI_COMM_POOL
+  USE para,      ONLY : me
   USE mp,        ONLY : mp_bcast
   USE io_global, ONLY : ionode_id
-#endif
+  USE mp_global, ONLY : intra_pool_comm
   !
   IMPLICIT NONE
   !
@@ -63,9 +62,13 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   nb = ILAENV( 1, 'DSYTRD', 'U', n, -1, -1, -1 )
   !
   IF ( nb < 1 .OR. nb >= n ) THEN
+     !
      lwork = 8 * n
+     !
   ELSE
+     !
      lwork = ( nb + 3 ) * n
+     !
   END IF
   !
   ! ... allocate workspace
@@ -76,7 +79,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   IF ( .NOT. all_eigenvalues ) THEN
      !
      ALLOCATE( hdum( ldh, n ) )    
-     ALLOCATE( iwork( 5 * n ) )    
+     ALLOCATE( iwork( 5*n ) )    
      ALLOCATE( ifail( n ) )    
      !
   END IF
@@ -85,16 +88,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   sdum = s
   !
-#if defined (__PARA)
-  !
   ! ... only the first processor diagonalize the matrix
   !
   IF ( me == 1 ) THEN
      !
-#endif
-#if defined (HAS_DSYGVX)
      IF ( all_eigenvalues ) THEN
-#endif
         !
         ! ... calculate all eigenvalues
         !
@@ -111,8 +109,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
 #else
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, sdum, ldh, e, work, &
                     lwork, info )
+        !
 #endif
-#if defined (HAS_DSYGVX)
      ELSE
         !
         ! ... calculate only m lowest eigenvalues
@@ -124,19 +122,15 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
                      iwork, ifail, info )
         !             
      END IF
-#endif
      !
      CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
      !
-#if defined (__PARA)
   END IF
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
-  CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )
-  !
-#endif
+  CALL mp_bcast( e, ionode_id, intra_pool_comm )
+  CALL mp_bcast( v, ionode_id, intra_pool_comm )
   !
   ! ... deallocate workspace
   !

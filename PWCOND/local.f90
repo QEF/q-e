@@ -17,12 +17,13 @@ subroutine local
   use io_files
   use cond
 #ifdef __PARA
+  USE mp_global, ONLY: nproc
   use para
+  USE parallel_include
 #endif      
+
   implicit none 
-#ifdef __PARA
-  include 'mpif.h'
-#endif  
+
   integer :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
              ios, index, number, nprob, nteam, nteamnow,     &
              status, info, kin, kfin
