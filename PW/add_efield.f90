@@ -18,7 +18,7 @@
 #include "f_defs.h"
 !
 !--------------------------------------------------------------------------
-SUBROUTINE add_efield(rho,vpoten,etotefield)
+SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   !--------------------------------------------------------------------------
   !
   !   This routine adds an electric field to the local potential. The
@@ -60,6 +60,8 @@ SUBROUTINE add_efield(rho,vpoten,etotefield)
   REAL(KIND=DP) :: rho(nrxx,nspin) ! the density whose dipole is computed
   REAL(KIND=DP) :: vpoten(nrxx) ! the ef is added to this potential
   REAL(KIND=DP) :: etotefield   ! the contribution to etot due to ef
+
+  INTEGER :: iflag
   !
   ! local variables
   !
@@ -78,7 +80,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield)
 
 
   IF (.NOT.tefield) RETURN
-  IF ((.NOT.dipfield).AND. (.NOT.first)) RETURN
+  IF ((.NOT.dipfield).AND. (.NOT.first).and. (iflag.EQ.0)) RETURN
 
   bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
   IF(edir.EQ.1) THEN

@@ -53,7 +53,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   CHARACTER(len=*) :: filplot
   INTEGER :: kpoint, kband, spin_component, plot_num
   LOGICAL :: stm_wfc_matching, lsign
-  REAL(kind=DP) :: sample_bias, z, dz
+  REAL(kind=DP) :: sample_bias, z, dz, dummy
   REAL(kind=DP) :: emin, emax, wf, charge
 
   INTEGER :: is, ik, ibnd, ir, ninter, nspin_eff
@@ -202,11 +202,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      if (noncolin) nspin_eff=1
      CALL v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, gg, gstart, nspin_eff, alat, omega, ehart, charge, raux)
-     IF (tefield.AND.dipfield) CALL add_efield(raux)
+     IF (tefield.AND.dipfield) CALL add_efield(rho,raux,dummy,1)
   ELSEIF (plot_num == 12) THEN
      raux=0.d0
      IF (tefield) THEN
-         CALL add_efield(raux)
+         CALL add_efield(rho,raux,dummy,1)
      ELSE
          CALL errore('punch_plot','e_field is not calculated',-1)
      ENDIF

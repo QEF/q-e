@@ -71,7 +71,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !  add an electric field
   ! 
   do is=1,nspin
-     call add_efield(rho,v(1,is),etotefield)
+     call add_efield(rho,v(1,is),etotefield,0)
   enddo
   call stop_clock ('v_of_rho')
   return
