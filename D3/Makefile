@@ -62,9 +62,11 @@ write_igk.o
 PHOBJS = ../PH/phcom.o  \
 ../PH/addcore.o  \
 ../PH/adddvscf.o  \
+../PH/adddvepsi_us.o  \
 ../PH/addnlcc.o  \
 ../PH/addusdbec.o  \
 ../PH/addusddens.o  \
+../PH/addusddense.o  \
 ../PH/addusdynmat.o  \
 ../PH/addusldos.o  \
 ../PH/add_zstar_ue.o  \
@@ -82,6 +84,7 @@ PHOBJS = ../PH/phcom.o  \
 ../PH/compute_drhous.o  \
 ../PH/compute_dvloc.o  \
 ../PH/compute_nldyn.o  \
+../PH/compute_qdipol.o  \
 ../PH/compute_weight.o  \
 ../PH/d2ionq.o  \
 ../PH/davcio_drho.o  \

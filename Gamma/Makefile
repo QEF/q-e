@@ -6,7 +6,13 @@ include ../make.sys
 #
 # targets
 #
-PWOBJS=../PW/aainit.o \
+PWOBJS=../PW/pwcom.o \
+../PW/para.o \
+../PW/pencils.o \
+../PW/io.o \
+../PW/funct.o \
+../PW/g_psi_mod.o \
+../PW/aainit.o \
 ../PW/addusforce.o \
 ../PW/addusstress.o \
 ../PW/allocate_locpot.o \
@@ -21,6 +27,9 @@ PWOBJS=../PW/aainit.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \
 ../PW/cfts_3.o \
+../PW/cft_fftw.o \
+../PW/cft_sgi.o \
+../PW/cft_sp.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/clocks.o \
@@ -80,6 +89,7 @@ PWOBJS=../PW/aainit.o \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
 ../PW/lsda_functionals.o \
+../PW/maximum.o \
 ../PW/mix_pot.o \
 ../PW/mode_group.o \
 ../PW/move_ions.o \
@@ -168,7 +178,21 @@ PWOBJS=../PW/aainit.o \
 ../PW/ylmr2.o \
 ../PW/input.o \
 ../PW/write_config_to_file.o \
-../PW/read_conf_from_file.o
+../PW/read_conf_from_file.o  \
+../PW/startup.o \
+../PW/reduce.o \
+../PW/poolreduce.o \
+../PW/broadcast.o \
+../PW/poolrecover.o \
+../PW/poolscatter.o \
+../PW/psymrho.o \
+../PW/poolbcast.o \
+../PW/fft_scatter.o \
+../PW/poolextreme.o \
+../PW/check.o   \
+../PW/gather.o  \
+../PW/scatter.o \
+../PW/init_pool.o
 
 MODULES = ../Modules/*.o ../PW/allocate.o ../PW/error_handler.o \
           ../PW/restart.o ../PW/upf_to_internal.o

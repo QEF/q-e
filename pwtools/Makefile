@@ -10,8 +10,9 @@ PWOBJS = ../PW/error.o ../PW/latgen.o ../PW/volume.o ../PW/recips.o \
          ../PW/sgam_ph.o ../PW/coset.o ../PW/multable.o \
          ../PW/smallg_q.o ../PW/dsum.o ../PW/trnvecc.o ../PW/invmat.o \
          ../PW/checksym.o ../PW/eqvect.o ../PW/setv.o  \
-         ../PW/irrek.o ../PW/mode_group.o ../PW/hpsort.o ../PW/invmat.o \
+         ../PW/irrek.o ../PW/mode_group.o ../PW/hpsort.o  \
          ../PW/cft_3.o ../PW/allocate.o ../PW/error_handler.o
+MODULES = ../Modules/*.o
 #
 # Targets
 #
@@ -21,13 +22,13 @@ band_plot.x:  band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LFLAGS)
 
 q2r.x: q2r.o rigid.o
-	$(LD) -o q2r.x q2r.o rigid.o $(PWOBJS) $(LFLAGS)
+	$(LD) -o q2r.x q2r.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
 
 matdyn.x: matdyn.o rigid.o
-	$(LD) -o matdyn.x matdyn.o rigid.o $(PWOBJS) $(LFLAGS)
+	$(LD) -o matdyn.x matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
 
 dynmat.x: dynmat.o rigid.o
-	$(LD) -o dynmat.x dynmat.o rigid.o $(PWOBJS) $(LFLAGS)
+	$(LD) -o dynmat.x dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
 
 dos.x:  dos.o
 	$(LD) -o dos.x dos.o  $(LFLAGS)
