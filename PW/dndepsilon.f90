@@ -135,6 +135,11 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    CALL poolreduce(ldim*ldim*nspin*nat,dns)
 #endif
    !
+   ! In nspin.eq.1 k-point weight wg is normalized to 2 el/band 
+   ! in the whole BZ but we are interested in dns of one spin component
+   !
+   IF (nspin.EQ.1) dns = 0.5d0 * dns
+   !
    ! impose hermeticity of dn_{m1,m2}
    !
    DO na = 1,nat
