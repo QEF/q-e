@@ -1925,8 +1925,8 @@ linux* )
 	g95_version=`$f90 -v 2>&1 | grep "g95"`
 	if test "$ifort_version" != ""
 	then
-		version=`$f90 -V 2>&1 | grep -o "Version[^,]*" |
-			 awk '{print $2}'`
+		version=`$f90 -V 2>&1 | grep Version |
+			 sed 's/.*Version//' | awk '{print $1}'`
 		if test `echo $version | sed 's/\..*//'` -lt 8
 		then
 			f90_id=ifc
@@ -2793,8 +2793,8 @@ linux* )
 	if test "$icc_version" != ""
 	then
 		cc_id=icc
-		cversion=`$cc -V 2>&1 | grep -o "Version[^,]*" |
-			  awk '{print $2}'`
+		cversion=`$cc -V 2>&1 | grep Version |
+			  sed 's/.*Version//' | awk '{print $1}'`
 		echo "${ECHO_T}icc $cversion"
 	elif test "$pgcc_version" != ""
 	then
