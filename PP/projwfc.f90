@@ -80,7 +80,7 @@ PROGRAM projwfc
   INTEGER :: ngauss1, ios
   !
   NAMELIST / inputpp / outdir, prefix, ngauss, degauss,&
-             Emin, Emax, DeltaE, io_choice, smoothing
+             Emin, Emax, DeltaE, io_choice, smoothing, filpdos
 
   CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
