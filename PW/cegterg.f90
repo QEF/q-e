@@ -282,21 +282,27 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      nbase = nbase + notcnv
      !
-     FORALL( n = 1 : nbase )
+! workaround for Intel bug
+!     FORALL( n = 1 : nbase )
+     DO n = 1, nbase
         !
         ! ... the diagonal of hc and sc must be strictly real 
         !
         hc(n,n) = DCMPLX( DREAL( hc(n,n) ), 0.D0 )
         sc(n,n) = DCMPLX( DREAL( sc(n,n) ), 0.D0 )
         !
-        FORALL(  m = n + 1 : nbase )
+! workaround for Intel bug
+!        FORALL(  m = n + 1 : nbase )
+        DO m = n + 1, nbase
            !
            hc(m,n) = CONJG( hc(n,m) )
            sc(m,n) = CONJG( sc(n,m) )
            !
-        END FORALL
+        END DO
+!        END FORALL
         !
-     END FORALL
+     END DO
+!     END FORALL
      !
      ! ... diagonalize the reduced hamiltonian
      !
@@ -380,13 +386,16 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
         sc(:,1:nbase) = ZERO
         vc(:,1:nbase) = ZERO
         !
-        FORALL( n = 1 : nbase )
+! workaround for Intel bug
+!        FORALL( n = 1 : nbase )
+        DO n = 1, nbase
            !
            hc(n,n) = e(n)
            sc(n,n) = ONE
            vc(n,n) = ONE
            !
-        END FORALL
+        END DO
+!        END FORALL
         !
         CALL stop_clock( 'last' )
         !
