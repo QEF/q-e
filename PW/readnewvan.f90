@@ -52,6 +52,7 @@ subroutine readnewvan (is, iunps)
 
   character (len=75) :: titleps
   ! the title of the pseudo
+  character (len=2) :: adum
 
   if (is.lt.0.or.is.gt.npsx) call errore ('readnewvan', 'Wrong is number', 1)
   read (iunps, '(a75)', err = 100, iostat = ios) titleps
@@ -86,7 +87,7 @@ subroutine readnewvan (is, iunps)
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) (rdum, nb = 1, nwfs)
   do nb = 1, nwfs
      read (iunps, '(a2,2i3,f6.2)', err = 100, iostat = ios) &
-          rdum, ndum, lchi (nb, is) , oc (nb, is)
+          adum, ndum, lchi (nb, is) , oc (nb, is)
      lll (nb, is) = lchi (nb, is)
      !
      ! workaround to distinguish bound states from unbound states

@@ -327,7 +327,7 @@ MODULE io_routines
              DO i = 1, num_of_images
                 !
                 WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
+                WRITE( UNIT = iunrestart, FMT = '(2(L1,1X))' ) frozen(i), &
                                                               vel_zeroed(i)
                 !
                 DO j = 1, dim, 3
@@ -418,7 +418,7 @@ MODULE io_routines
                 DO i = 1, num_of_images
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
+                   WRITE( UNIT = iunrestart, FMT = '(2(L1,1X))' ) frozen(i), &
                                                                  vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
