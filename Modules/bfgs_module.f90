@@ -55,6 +55,8 @@ MODULE bfgs_module
   !
   ! ... global variables
   !
+  SAVE
+  !
   REAL(KIND=DP), ALLOCATABLE :: &
       pos_old(:,:),             &! list of m old positions ( m = 1 for 
                                  ! standard BFGS algorithm )
@@ -74,7 +76,8 @@ MODULE bfgs_module
   INTEGER :: &
       scf_iter,                 &! number of scf iterations
       bfgs_iter,                &! number of bfgs iterations
-      lin_iter                   ! number of line search iterations    
+      lin_iter,                 &! number of line search iterations
+      old_steps                  ! number of available old bfgs steps
   REAL(KIND=DP)  :: &
       trust_radius_max = 0.5D0, &! maximum allowed displacement
       trust_radius_min = 1.D-5, &! minimum allowed displacement
@@ -147,7 +150,7 @@ MODULE bfgs_module
        ! ... lbfgs_ndim is forced to be equal to 1 ( the complete inverse 
        ! ... hessian  matrix is stored )
        !
-       lbfgs_ndim  = 1
+       lbfgs_ndim = 1
        !
        ALLOCATE( pos_old( dim, lbfgs_ndim ) )
        ALLOCATE( inverse_hessian( dim, dim ) )
@@ -172,11 +175,6 @@ MODULE bfgs_module
           !
        END DO       
        !
-       ! ... as long as the first two scf iterations have been performed the 
-       ! ... error on the energy is redefined as a "large" number.
-       !
-       IF ( scf_iter < 2 ) energy_error = 1000.D0
-       !
        IF ( conv_bfgs ) THEN
           !
           CALL terminate_bfgs( energy, stdout, scratch )
@@ -199,7 +197,7 @@ MODULE bfgs_module
        !
        ! ... the bfgs algorithm starts here
        !
-       IF ( energy > energy_old ) THEN
+       IF ( ( energy > energy_old ) .AND. ( scf_iter > 1 ) ) THEN
           !
           ! ... the previous step is rejected, line search goes on
           !
@@ -222,7 +220,7 @@ MODULE bfgs_module
           IF ( ABS( denominator ) > eps16 ) THEN
              !
              trust_radius = - 0.5D0 / denominator * trust_radius_old * &
-                            ( gradient_old(:,1) .dot. bfgs_step_old )
+                              ( gradient_old(:,1) .dot. bfgs_step_old )
              !
           ELSE
              !
@@ -236,7 +234,7 @@ MODULE bfgs_module
                & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
               trust_radius
           !
-          ! ... values of the last succeseful bfgs step are restored
+          ! ... values from the last succeseful bfgs step are restored
           !
           pos      = pos_old(:,1)
           energy   = energy_old
@@ -288,12 +286,12 @@ MODULE bfgs_module
           !
           ! ... a new bfgs step is done
           !
-          step_accepted = .TRUE.
-          !
           lin_iter  = 1
           bfgs_iter = bfgs_iter + 1
           !
           IF ( bfgs_iter > 1 ) THEN
+             !
+             step_accepted = .TRUE.
              !
              WRITE( UNIT = stdout, &
                   & FMT = '(5X,"CASE: energy_new < energy_old",/)' )
@@ -314,6 +312,10 @@ MODULE bfgs_module
              !
              CALL update_inverse_hessian( gradient, dim, stdout )
              !
+          ELSE
+             !
+             step_accepted = .FALSE.
+             !   
           END IF
           !
           ! ... bfgs direction ( not normalized ) 
@@ -439,8 +441,9 @@ MODULE bfgs_module
        !
        ! ... local variables
        !
-       INTEGER   :: dim, i
-       LOGICAL   :: lwolfe
+       INTEGER       :: dim, i
+       LOGICAL       :: lwolfe
+       REAL(KIND=DP) :: denominator       
        !
        !
        dim = SIZE( pos )
@@ -469,11 +472,6 @@ MODULE bfgs_module
           !
        END DO       
        !
-       ! ... as long as the first two scf iterations have been performed the 
-       ! ... error on the energy is redefined as a "large" number.
-       !
-       IF ( scf_iter < 2 ) energy_error = 1000.D0
-       !
        IF ( conv_bfgs ) THEN
           !
           ! ... convergence has been achieved
@@ -498,7 +496,7 @@ MODULE bfgs_module
        !
        ! ... the bfgs algorithm starts here
        !
-       IF ( energy > energy_old ) THEN
+       IF ( ( energy > energy_old ) .AND. ( scf_iter > 1 )  ) THEN
           !
           ! ... the previous step is rejected, line search goes on
           !
@@ -509,9 +507,27 @@ MODULE bfgs_module
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"CASE: energy_new > energy_old",/)' )
           !
-          ! ... the old trust radius is reduced by a factor 2
+          ! ... the new trust radius is obtained with a quadratic interpolation
           !
-          trust_radius = 0.5D0 * trust_radius_old
+          ! ... E(s) = a*s*s + b*s + c      ( we use E(0), dE(0), E(s') )
+          !
+          ! ... s_min = - 0.5 * ( dE(0)*s'*s' ) / ( E(s') - E(0) - dE(0)*s' )
+          !
+          denominator = energy - energy_old - &
+                        ( gradient_old(:,1) .dot. bfgs_step_old )
+          !              
+          IF ( ABS( denominator ) > eps16 ) THEN
+             !
+             trust_radius = - 0.5D0 / denominator * trust_radius_old * &
+                              ( gradient_old(:,1) .dot. bfgs_step_old )
+             !
+          ELSE
+             !
+             ! ... no quadratic interpolation is possible
+             !
+             trust_radius = 0.5D0 * trust_radius_old
+             !
+          END IF   
           !
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
@@ -544,11 +560,11 @@ MODULE bfgs_module
              !
           ELSE 
              !
-             ! ... values of the last succeseful bfgs step are restored
+             ! ... values from the last succeseful bfgs step are restored
              !
-             pos       = pos_old(:,lbfgs_ndim)
+             pos       = pos_old(:,1)
              energy    = energy_old
-             gradient  = gradient_old(:,lbfgs_ndim)
+             gradient  = gradient_old(:,1)
              !
              ! ... old bfgs direction ( normalized ) is recovered
              !
@@ -560,22 +576,16 @@ MODULE bfgs_module
           !
           ! ... a new bfgs step is done
           !
-          step_accepted = .TRUE.
-          !
           lin_iter  = 1
           bfgs_iter = bfgs_iter + 1
+          old_steps = old_steps + 1
           !
-          WRITE( UNIT = stdout, &
-               & FMT = '(5X,"CASE: energy_new < energy_old",/)' )
-          !
-          ! ... Wolfe conditions and hessian update are needed after
-          ! ... the first bfgs iteration
-          !
-          IF ( bfgs_iter == 1 ) THEN
+          IF ( bfgs_iter > 1 ) THEN
              !
-             bfgs_step = - gradient
+             step_accepted = .TRUE.
              !
-          ELSE
+             WRITE( UNIT = stdout, &
+                  & FMT = '(5X,"CASE: energy_new < energy_old",/)' )
              !
              CALL check_wolfe_conditions( lwolfe, energy, gradient )
              !
@@ -589,11 +599,17 @@ MODULE bfgs_module
                 WRITE( UNIT = stdout, &
                      & FMT = '(5X,"Wolfe conditions not satisfied",/)' )
                 !
-             END IF
+             END IF     
              !
              CALL lbfgs_update( pos, gradient, dim )
              !
-          END IF   
+          ELSE
+             !
+             step_accepted = .FALSE.
+             !
+             bfgs_step = - gradient
+             !
+          END IF          
           !
           IF ( ( gradient .dot. bfgs_step ) > 0.D0 ) THEN
              !  
@@ -607,6 +623,7 @@ MODULE bfgs_module
              !     
              WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
              !
+             old_steps    = 0
              pos_old      = 0.D0
              gradient_old = 0.D0
              !
@@ -800,6 +817,7 @@ MODULE bfgs_module
           READ( iunbfgs, * ) scf_iter
           READ( iunbfgs, * ) bfgs_iter
           READ( iunbfgs, * ) lin_iter
+          READ( iunbfgs, * ) old_steps
           READ( iunbfgs, * ) pos_old(:,1:lbfgs_ndim)
           READ( iunbfgs, * ) energy_old
           READ( iunbfgs, * ) gradient_old(:,1:lbfgs_ndim)
@@ -815,6 +833,7 @@ MODULE bfgs_module
           scf_iter         = 0
           bfgs_iter        = 0
           lin_iter         = 0
+          old_steps        = 0
           pos_old          = 0.D0
           energy_old       = energy
           gradient_old     = 0.D0
@@ -878,9 +897,10 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) scf_iter
        WRITE( iunbfgs, * ) bfgs_iter
        WRITE( iunbfgs, * ) lin_iter
-       WRITE( iunbfgs, * ) pos_old(:,2:lbfgs_ndim), pos
+       WRITE( iunbfgs, * ) old_steps
+       WRITE( iunbfgs, * ) pos, pos_old(:,1:(lbfgs_ndim-1))
        WRITE( iunbfgs, * ) energy
-       WRITE( iunbfgs, * ) gradient_old(:,2:lbfgs_ndim), gradient
+       WRITE( iunbfgs, * ) gradient, gradient_old(:,1:(lbfgs_ndim-1))
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
        ! 
@@ -948,25 +968,27 @@ MODULE bfgs_module
        !
        ! ... local variables
        !
-       INTEGER       :: i       
+       INTEGER       :: i, k
        REAL(KIND=DP) :: s(dim,lbfgs_ndim), y(dim,lbfgs_ndim)
        REAL(KIND=DP) :: alpha(lbfgs_ndim), sdoty(lbfgs_ndim)
        REAL(KIND=DP) :: preconditioning
        !
        !
+       k = MIN( lbfgs_ndim, old_steps )
+       !
        bfgs_step = gradient
        !
-       s(:,lbfgs_ndim) = pos - pos_old(:,lbfgs_ndim) 
-       y(:,lbfgs_ndim) = gradient - gradient_old(:,lbfgs_ndim) 
+       s(:,1) = pos - pos_old(:,1) 
+       y(:,1) = gradient - gradient_old(:,1) 
        !
-       DO i = ( lbfgs_ndim - 1 ), 1, -1
+       DO i = 2, k
           !
-          s(:,i) = pos_old(:,i+1) - pos_old(:,i)
-          y(:,i) = gradient_old(:,i+1) - gradient_old(:,i)
+          s(:,i) = pos_old(:,i-1) - pos_old(:,i)
+          y(:,i) = gradient_old(:,i-1) - gradient_old(:,i)
           !
        END DO
        !
-       DO i = lbfgs_ndim, 1, -1
+       DO i = 1, k
           !
           sdoty(i) = ( s(:,i) .dot. y(:,i) )
           !
@@ -984,15 +1006,15 @@ MODULE bfgs_module
           !
        END DO 
        !
-       preconditioning = ( s(:,lbfgs_ndim) .dot. s(:,lbfgs_ndim) )
+       preconditioning = ( s(:,1) .dot. s(:,1) )
        !
        IF ( preconditioning > eps16 ) THEN
           !
-          bfgs_step =  sdoty(lbfgs_ndim) / preconditioning * bfgs_step
+          bfgs_step =  sdoty(1) / preconditioning * bfgs_step
           !
        END IF        
        !
-       DO i = 1, lbfgs_ndim
+       DO i = k, 1, -1
           !
           IF ( sdoty(i) > eps16 ) THEN
              !
@@ -1095,6 +1117,7 @@ MODULE bfgs_module
              !
           ELSE
              !
+             old_steps    = 0
              pos_old      = 0.D0
              gradient_old = 0.D0
              !     

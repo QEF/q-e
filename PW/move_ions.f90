@@ -37,7 +37,7 @@ SUBROUTINE move_ions()
   USE io_files,      ONLY : tmp_dir, prefix, iunupdate
   USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
   USE kinds,         ONLY : DP
-  USE cell_base,         ONLY : alat, at, bg
+  USE cell_base,     ONLY : alat, at, bg
   USE basis,         ONLY : nat, ityp, tau, atm
   USE gvect,         ONLY : nr1, nr2, nr3
   USE klist,         ONLY : nelec
@@ -400,9 +400,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      alpha0 = 0.D0
      beta0  = 0.D0
      !
-     PRINT *, "WARNING IN find_alpha_and_beta:  det < 0"
-     !
-     !CALL errore( 'find_alpha_and_beta', ' det < 0', 1 )
+     CALL errore( 'find_alpha_and_beta', ' det < 0', -1 )
      !
   END IF   
   !
