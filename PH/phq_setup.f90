@@ -153,7 +153,7 @@ subroutine phq_setup
      !
      if (ngauss.eq. - 99) then  
         fac = 1.d0 / sqrt (small)  
-        xmax = 2.d0 * log (0.5 * (fac + sqrt (fac * fac - 4.0) ) )  
+        xmax = 2.d0 * log (0.5d0 * (fac + sqrt (fac * fac - 4.d0) ) )  
 
      endif
      target = ef + xmax * degauss  

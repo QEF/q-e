@@ -53,7 +53,11 @@ subroutine dvpsi_e (kpoint, ipol)
   !
   !
   call start_clock ('dvpsi_e')  
-  call mallocate(work , npwx, nkb)  
+  if (nkb.gt.0) then
+     call mallocate(work , npwx, nkb)  
+  else
+     call mallocate(work , npwx, 1)  
+  endif
   call mallocate(gk , 3, npwx)  
   call mallocate(h_diag, npwx , nbnd)  
   call mallocate(ps , 2 , nbnd)  
