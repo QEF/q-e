@@ -1,21 +1,17 @@
 
      Program POST-PROC v.2.1    starts ...
-     Today is  2Sep2004 at 11:52:31 
+     Today is 28Jan2005 at 11:27:47 
 
-     Reading file al.save ... 
+     Reading file al.save ...      only dimensions
      read complete
 
-     Reading file al.save ... 
+     Reading file al.save ...      all except wavefuctions
      read complete
 
      nbndx  =     7  nbnd   =     7  natomwfc =    18  npwx   =     212
      nelec  =    6.00 nkb   =     8  ngl    =     155
-         PWCOND calculation is now starting...
-
-  CBS calculation (ikind=0)
-
-  left  boundary is    0.0000
-  right boundary is    1.4140
+ 
+===== INPUT FILE containing the left lead =====
 
      GEOMETRY:
 
@@ -35,8 +31,8 @@
    Cartesian axes
 
      site n.     atom                  positions (a_0 units)
-         1           Al  tau( 1)=(  0.0000  0.0000  1.4140  )
-         2           Al  tau( 2)=(  0.5000  0.5000  0.7070  )
+          1           Al  tau(  1)=(  0.0000  0.0000  1.4140  )
+          2           Al  tau(  2)=(  0.5000  0.5000  0.7070  )
 
      nr1s                      =           15
      nr2s                      =           15
@@ -50,10 +46,6 @@
      nrx1                      =           15
      nrx2                      =           15
      nrx3                      =           20
-     nrx                       =           15
-     nry                       =           15
-     nrz                       =           21
-     nz1                       =           11
 
  _______________________________
   Radii of nonlocal spheres: 
@@ -61,36 +53,43 @@
      type       ibeta     ang. mom.          radius (a_0 units)
           Al      1         0                    0.5116
           Al      2         1                    0.5798
+----- General information -----
+ 
+----- Complex band structure calculation -----
 
-     norb                      =           12
-     norbf                     =           12
-     nocrosl                   =            4
-     noinsl                    =            4
-     noinss                    =            0
-     nocrosr                   =            0
-     noinsr                    =            0
+     nrx                       =           15
+     nry                       =           15
+     nz1                       =           11
 
-     iorb  type   ibeta   ang. mom.   m       position (a_0)
-       1       Al   1        0        1   taunew(  1)=(  0.0000  0.0000  0.0000)
-       2       Al   2        1        1   taunew(  2)=(  0.0000  0.0000  0.0000)
-       3       Al   2        1        2   taunew(  3)=(  0.0000  0.0000  0.0000)
-       4       Al   2        1        3   taunew(  4)=(  0.0000  0.0000  0.0000)
-       5       Al   1        0        1   taunew(  5)=(  0.5000  0.5000  0.7070)
-       6       Al   2        1        1   taunew(  6)=(  0.5000  0.5000  0.7070)
-       7       Al   2        1        2   taunew(  7)=(  0.5000  0.5000  0.7070)
-       8       Al   2        1        3   taunew(  8)=(  0.5000  0.5000  0.7070)
-       9       Al   1        0        1   taunew(  9)=(  0.0000  0.0000  1.4140)
-      10       Al   2        1        1   taunew( 10)=(  0.0000  0.0000  1.4140)
-      11       Al   2        1        2   taunew( 11)=(  0.0000  0.0000  1.4140)
-      12       Al   2        1        3   taunew( 12)=(  0.0000  0.0000  1.4140)
 
-     energy0               =         7.0E+00
+     energy0               =         1.0E+01
      denergy               =        -4.0E-01
-     nenergy               =         50
+     nenergy               =         60
      ecut2d                =         1.5E+01
      ewind                 =         1.0E+00
      epsproj               =         1.0E-03
 
+----- Information about left lead ----- 
+
+     nocros                   =            4
+     noins                    =            4
+     norb                     =           12
+     norbf                    =           12
+     nrz                      =           21
+
+      iorb      type   ibeta   ang. mom.   m       position (a_0)
+        1        1       1        0        1   taunew(   1)=(  0.0000  0.0000  0.0000)
+        2        1       2        1        1   taunew(   2)=(  0.0000  0.0000  0.0000)
+        3        1       2        1        2   taunew(   3)=(  0.0000  0.0000  0.0000)
+        4        1       2        1        3   taunew(   4)=(  0.0000  0.0000  0.0000)
+        5        1       1        0        1   taunew(   5)=(  0.5000  0.5000  0.7070)
+        6        1       2        1        1   taunew(   6)=(  0.5000  0.5000  0.7070)
+        7        1       2        1        2   taunew(   7)=(  0.5000  0.5000  0.7070)
+        8        1       2        1        3   taunew(   8)=(  0.5000  0.5000  0.7070)
+        9        1       1        0        1   taunew(   9)=(  0.0000  0.0000  1.4140)
+       10        1       2        1        1   taunew(  10)=(  0.0000  0.0000  1.4140)
+       11        1       2        1        2   taunew(  11)=(  0.0000  0.0000  1.4140)
+       12        1       2        1        3   taunew(  12)=(  0.0000  0.0000  1.4140)
     k slab    z(k)  z(k+1)     crossing(iorb=1,norb)
     1   0.0000 0.0673 0.0673   111100000000
     2   0.0673 0.1347 0.0673   111101110000
@@ -114,112 +113,164 @@
    20   1.2793 1.3467 0.0673   000001111111
    21   1.3467 1.4140 0.0673   000000001111
  ngper, shell number =           37           8
- ngper, n2d =           37          24
+ ngper, n2d =           37          25
+ Nchannels of the left tip =            5
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+  -0.2448818   0.0000000  10.0000000
+  -0.2448818   0.0000000  10.0000000
+  -0.2591369   0.0000000  10.0000000
+   0.3045582   0.0000000  10.0000000
+  -0.4299739   0.0000000  10.0000000
+ Nchannels of the left tip =            5
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.2068474   0.0000000   9.6000000
+  -0.2801966   0.0000000   9.6000000
+  -0.2801966   0.0000000   9.6000000
+  -0.2908106   0.0000000   9.6000000
+  -0.4455693   0.0000000   9.6000000
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.4251427   0.0000000   7.0000000
-   0.4251427   0.0000000   7.0000000
-   0.4498759   0.0000000   7.0000000
-   0.4637345   0.0000000   7.0000000
+  -0.3172256   0.0000000   9.2000000
+  -0.3172277   0.0000000   9.2000000
+  -0.3234955   0.0000000   9.2000000
+  -0.4612823   0.0000000   9.2000000
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3587583   0.0000000   6.6000000
-   0.3587583   0.0000000   6.6000000
-   0.4143030   0.0000000   6.6000000
-   0.4332522   0.0000000   6.6000000
+  -0.3563200   0.0000000   8.8000000
+  -0.3563223   0.0000000   8.8000000
+  -0.3574615   0.0000000   8.8000000
+  -0.4771191   0.0000000   8.8000000
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2766962   0.0000000   6.2000000
-   0.2766962   0.0000000   6.2000000
-   0.3583019   0.0000000   6.2000000
-   0.4164655   0.0000000   6.2000000
+  -0.3930100   0.0000000   8.4000000
+  -0.3979195   0.0000000   8.4000000
+  -0.3979221   0.0000000   8.4000000
+  -0.4930857   0.0000000   8.4000000
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1558469   0.0000000   5.8000000
-   0.1558469   0.0000000   5.8000000
-   0.2919423   0.0000000   5.8000000
-   0.3995088   0.0000000   5.8000000
+  -0.4305042   0.0000000   8.0000000
+  -0.4426181   0.0000000   8.0000000
+  -0.4426209   0.0000000   8.0000000
+   0.4908120   0.0000000   8.0000000
+ Nchannels of the left tip =            4
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+  -0.4704107   0.0000000   7.6000000
+   0.4745682   0.0000000   7.6000000
+  -0.4912636   0.0000000   7.6000000
+  -0.4912668   0.0000000   7.6000000
+ Nchannels of the left tip =            4
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.4548601   0.0000000   7.2000000
+   0.4548637   0.0000000   7.2000000
+   0.4581770   0.0000000   7.2000000
+   0.4866345   0.0000000   7.2000000
+ Nchannels of the left tip =            4
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.3935755   0.0000000   6.8000000
+   0.3935755   0.0000000   6.8000000
+   0.4396969   0.0000000   6.8000000
+   0.4416321   0.0000000   6.8000000
+ Nchannels of the left tip =            4
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.3206355   0.0000000   6.4000000
+   0.3206408   0.0000000   6.4000000
+   0.3873000   0.0000000   6.4000000
+   0.4249275   0.0000000   6.4000000
+ Nchannels of the left tip =            4
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.2249356   0.0000000   6.0000000
+   0.2249434   0.0000000   6.0000000
+   0.3267953   0.0000000   6.0000000
+   0.4080567   0.0000000   6.0000000
  Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2053813   0.0000000   5.4000000
-   0.3823754   0.0000000   5.4000000
+   0.2523838   0.0000000   5.6000000
+   0.3910126   0.0000000   5.6000000
+ Nchannels of the left tip =            2
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.1438551   0.0000000   5.2000000
+   0.3737880   0.0000000   5.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3650574   0.0000000   5.0000000
+   0.3563750   0.0000000   4.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3475471   0.0000000   4.6000000
+   0.3387655   0.0000000   4.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3298355   0.0000000   4.2000000
+   0.3209501   0.0000000   4.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3119132   0.0000000   3.8000000
+   0.3029190   0.0000000   3.6000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2937696   0.0000000   3.4000000
+   0.2846608   0.0000000   3.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2753928   0.0000000   3.0000000
+   0.2661630   0.0000000   2.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2567692   0.0000000   2.6000000
+   0.2474110   0.0000000   2.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2378831   0.0000000   2.2000000
+   0.2283875   0.0000000   2.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2187157   0.0000000   1.8000000
+   0.2090717   0.0000000   1.6000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1992434   0.0000000   1.4000000
+   0.1894371   0.0000000   1.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1794359   0.0000000   1.0000000
+   0.1694485   0.0000000   0.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1592520   0.0000000   0.6000000
+   0.1490566   0.0000000   0.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1386309   0.0000000   0.2000000
+   0.1281854   0.0000000   0.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1174749   0.0000000  -0.2000000
+   0.1067056   0.0000000  -0.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0956056   0.0000000  -0.6000000
+   0.0843614   0.0000000  -0.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0726330   0.0000000  -1.0000000
+   0.0605157   0.0000000  -1.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0473900   0.0000000  -1.4000000
- Nchannels of the left tip =            1
-        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
- 
-   0.0097579   0.0000000  -1.8000000
+   0.0326187   0.0000000  -1.6000000
  Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
@@ -232,87 +283,91 @@
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.0365032   0.0000000  -3.4000000
+  -0.0152847   0.0000000  -3.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.0664632   0.0000000  -3.8000000
+  -0.0521107   0.0000000  -3.6000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.0936282   0.0000000  -4.2000000
+  -0.0801135   0.0000000  -4.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.1203078   0.0000000  -4.6000000
+  -0.1069135   0.0000000  -4.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.1471355   0.0000000  -5.0000000
+  -0.1336178   0.0000000  -4.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.1744012   0.0000000  -5.4000000
+  -0.1606362   0.0000000  -5.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.2022863   0.0000000  -5.8000000
+  -0.1881905   0.0000000  -5.6000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.2309350   0.0000000  -6.2000000
+  -0.2164383   0.0000000  -6.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.2604830   0.0000000  -6.6000000
+  -0.2455173   0.0000000  -6.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.2910734   0.0000000  -7.0000000
+  -0.2755651   0.0000000  -6.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.3228686   0.0000000  -7.4000000
+  -0.3067330   0.0000000  -7.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.3560619   0.0000000  -7.8000000
+  -0.3391972   0.0000000  -7.6000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.3908929   0.0000000  -8.2000000
+  -0.3731718   0.0000000  -8.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.4276687   0.0000000  -8.6000000
+  -0.4089267   0.0000000  -8.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.4667982   0.0000000  -9.0000000
+  -0.4468145   0.0000000  -8.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.4911521   0.0000000  -9.4000000
+  -0.4873133   0.0000000  -9.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.4453495   0.0000000  -9.8000000
+   0.4688961   0.0000000  -9.6000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3944875   0.0000000 -10.2000000
+   0.4207834   0.0000000 -10.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3362744   0.0000000 -10.6000000
+   0.3666480   0.0000000 -10.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.2659229   0.0000000 -11.0000000
+   0.3032786   0.0000000 -10.8000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1688866   0.0000000 -11.4000000
+   0.2229323   0.0000000 -11.2000000
+ Nchannels of the left tip =            1
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+   0.0871351   0.0000000 -11.6000000
  Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
@@ -322,5 +377,25 @@
  Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-     cond         :    20.79s CPU time
+ Nchannels of the left tip =            0
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+ Nchannels of the left tip =            0
+        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
+ 
+ 
+     PWCOND       :    11.22s CPU time
 
+     init         :     0.05s CPU
+     poten        :     0.00s CPU
+     local        :     0.09s CPU
+ 
+     scatter_forw :     8.96s CPU (      60 calls,   0.149 s avg)
+     integrals    :     5.14s CPU (      60 calls,   0.086 s avg)
+     rotatef      :     1.13s CPU (    1200 calls,   0.001 s avg)
+     rotateb      :     0.77s CPU (    1200 calls,   0.001 s avg)
+     scatter_back :     1.59s CPU (      60 calls,   0.026 s avg)
+ 
+     compbs       :     2.10s CPU (      60 calls,   0.035 s avg)
+     compbs_2     :     1.96s CPU (      60 calls,   0.033 s avg)
+ 

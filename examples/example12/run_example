@@ -110,31 +110,29 @@ K_POINTS (automatic)
  4 4 4 1 1 1                
 EOF
 $ECHO "  running the scf calculation for Al...\c"
-$PW_COMMAND < al.scf.in > al.scf.out
+$PW_COMMAND < al.scf.in | tee al.scf.out 
 $ECHO " done"
 
 # complex bands of Al along the 001 direction K_perp=0
 cat > al.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/'     
-    prefix='al'
+    prefixl='al'
     band_file ='bands.al'
     ikind=0  
-    bdl1=0.0d0
-    bdl2=1.414d0
-    energy0=7.d0
+    energy0=10.d0
     denergy=-0.4d0
     ewind=1.d0
-    llapack=.true.
     epsproj=1.d-3
+    delgep = 1.d-12
     cutplot = 3.d0
  /
     1
     0.0 0.0 1.0
-    50
+    60
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Al...\c"
-$PWCOND_COMMAND < al.cond.in > al.cond.out 
+$PWCOND_COMMAND < al.cond.in | tee al.cond.out 
 $ECHO " done"
 
 # self-consistent calculation for Al monatomic wire
@@ -144,7 +142,7 @@ cat > alwire.scf.in << EOF
     restart_mode='from_scratch',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
-    prefix='al'
+    prefix='alw'
  /
  &system
     ibrav = 6, 
@@ -153,7 +151,6 @@ cat > alwire.scf.in << EOF
     nat= 1, 
     ntyp= 1,
     nspin = 1,  
-    starting_magnetization(1)=0.7,
     ecutwfc = 15.0, 
     occupations='smearing', 
     smearing='methfessel-paxton', 
@@ -171,31 +168,29 @@ K_POINTS (automatic)
  1 1 15 0 0 0                
 EOF
 $ECHO "  running the scf calculation for Al monatomic wire...\c"
-$PW_COMMAND < alwire.scf.in > alwire.scf.out 
+$PW_COMMAND < alwire.scf.in | tee alwire.scf.out 
 $ECHO " done"
 
 # complex bands of the Al monatomic wire
 cat > alwire.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/'     
-    prefix='al'
+    prefixl='alw'
     band_file='bands.alwire'
     ikind=0  
-    bdl1=0.0d0
-    bdl2=0.375d0
     energy0=7.0d0
-    denergy=-0.4d0
+    denergy=-0.2d0
     ewind=1.d0
-    llapack=.true.,
     epsproj=1.d-3
+    nz1=3
     cutplot = 1.d0 
  /
     1
     0. 0. 1.0 
-    35
+    71
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Al wire...\c"
-$PWCOND_COMMAND < alwire.cond.in > alwire.cond.out 
+$PWCOND_COMMAND < alwire.cond.in | tee alwire.cond.out 
 $ECHO " done"
 
 # self-consistent calculation for bulk Ni 
@@ -234,33 +229,68 @@ K_POINTS (automatic)
  4 4 3 1 1 1                
 EOF
 $ECHO "  running the scf calculation for Ni bulk...\c"
-$PW_COMMAND < ni.scf.in > ni.scf.out
+$PW_COMMAND < ni.scf.in | tee ni.scf.out 
 $ECHO " done"
 
 # complex bands of Ni
 cat > ni.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/'     
-    prefix='ni'
+    prefixl='ni'
     band_file = 'bands.ni_down'
     ikind=0  
     iofspin = 2
-    bdl1=0.0d0
-    bdl2=1.414d0
     energy0=1.d0
-    denergy=-1.0d0
-    ewind=2.d0
-    llapack=.true.
-    epsproj=1.d-3
-    cutplot=2.d0
+    denergy=-0.2d0
+    ewind=3.d0
+    epsproj=1.d-4
+    nz1=3
  /
     1
     0.0 0.0 1.0
-    3
+    30
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Ni...\c"
-$PWCOND_COMMAND < ni.cond.in > ni.cond.out 
+$PWCOND_COMMAND < ni.cond.in | tee ni.cond.out 
 $ECHO " done"
+
+# self-consistent calculation for Al monatomic wire
+cat > alwire1.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='alw'
+ /
+ &system
+    ibrav = 6,
+    celldm(1) =12.0,
+    celldm(3) =0.375,
+    nat= 1,
+    ntyp= 1,
+    nspin = 1,
+    ecutwfc = 25.0,
+    ecutrho = 150.0
+    occupations='smearing',
+    smearing='methfessel-paxton',
+    degauss=0.01
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Al 26.98 Al.vbc.UPF
+ATOMIC_POSITIONS
+ Al 0.0 0.0 0.000
+K_POINTS (automatic)
+ 2 2 24 1 1 1
+EOF
+$ECHO "  running the scf calculation for Al monatomic wire...\c"
+$PW_COMMAND < alwire1.scf.in | tee alwire1.scf.out 
+$ECHO " done"
+
 
 # self-consistent calculation for  Al-H-Al system
 cat > AlwireH.scf.in << EOF
@@ -274,8 +304,8 @@ cat > AlwireH.scf.in << EOF
  &system
     ibrav = 6,
     celldm(1) =12.0,
-    celldm(3) =2.25,
-    nat= 7,
+    celldm(3) =1.875,
+    nat= 6,
     ntyp= 2,
     ecutwfc = 25.0,
     ecutrho = 150.0
@@ -291,41 +321,80 @@ ATOMIC_SPECIES
  Al 26.98 Al.vbc.UPF
  H  1.0   H.vbc.UPF
 ATOMIC_POSITIONS
-Al     0.00000000     0.00000000     0.00000000
-Al     0.00000000     0.00000000     0.37500000
-Al     0.00000000     0.00000000     0.75000000
-Al    -0.02779870     0.00000000     1.13037515
-H      0.19269012     0.00000000     1.31250000
-Al    -0.02779870     0.00000000     1.49462485
-Al     0.00000000     0.00000000     1.87500000
+Al     0.00000000     0.00000000     0.0000
+Al     0.00000000     0.00000000     0.375
+Al    -0.02779870     0.00000000     .75537515
+H      0.19269012     0.00000000     .93750000
+Al    -0.02779870     0.00000000     1.11962485
+Al     0.00000000     0.00000000     1.5
 K_POINTS (automatic)
- 1 1 3 0 0 0
+ 2 2 2 1 1 1
 EOF
 $ECHO "  running the scf calculation for Al wire with H impurity...\c"
-$PW_COMMAND < AlwireH.scf.in > AlwireH.scf.out
+$PW_COMMAND < AlwireH.scf.in | tee AlwireH.scf.out 
+$ECHO " done"
+
+# transmission calculation for the perfect Al wire 
+cat > AlwireAl.cond.in << EOF
+ &inputcond
+    outdir='$TMP_DIR/',
+    prefixl='alw',
+    prefixs='alw',
+    tran_file='trans.alwire',
+    ikind=1,
+    energy0=2.95d0,
+    denergy=-0.1d0,
+    ewind=1.d0,
+    llapack=.true.
+    epsproj=1.d-3,
+    nz1 = 1
+ /
+    1
+    0.0  0.0  1.0
+    100
+EOF
+$ECHO "  running pwcond.x to calculate transmission of a perfect Al wire ...\c"
+$PWCOND_COMMAND < AlwireAl.cond.in | tee AlwireAl.cond.out 
 $ECHO " done"
 
 # transmission calculation for the Al-C-Al
 cat > AlwireH.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/',
-    prefix='alh',
+    prefixl='alw',
+    prefixs='alh',
     tran_file='trans.alwireh',
-    ikind=1,
-    bdl1=0.0d0,
-    bdl2=0.375d0,
+    ikind = 1,
     energy0=3.d0,
-    denergy=-3.0d0,
-    llapack=.true.
+    denergy=0.d0,
     ewind=1.d0,
     epsproj=1.d-3,
+    nz1 = 1,
  /
     1
     0.0  0.0  1.0
-    3
+18
+  3.0
+  2.7
+  2.5
+  1.6
+  1.0
+  0.9
+  0.1
+ -0.1
+ -0.25
+ -1.15
+ -1.45
+ -1.9
+ -3.0
+ -4.0
+ -5.0
+ -6.0
+ -6.2
+ -6.45
 EOF
 $ECHO "  running pwcond.x to calculate transmission of an Al wire with H...\c"
-$PWCOND_COMMAND < AlwireH.cond.in > AlwireH.cond.out 
+$PWCOND_COMMAND < AlwireH.cond.in | tee AlwireH.cond.out 
 $ECHO " done"
 
 $ECHO

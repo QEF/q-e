@@ -9,7 +9,7 @@ In this example four systems are calculated:
 
 3) The complex band structure of Ni bulk along the (001) direction.
 
-4) The transmittance of an Al wire with an H impurity.
+4) The transmittance of an Al wire without and with an H impurity.
 
 NB: In order to make the tests faster, these calculations are not fully 
     converged with respect to k points, cut-off and size of the cell.
@@ -38,7 +38,10 @@ The calculation proceeds in this way:
      correspond to those energies.
 
 4.a) A pw.x calculation provides the self-consistent potential of 
-     an Al wire (6 atoms long) with an H atom impurity.
+     a perfect Al wire and of a wire (5 atoms long) with an H atom impurity.
 
 4.b) A pwcond.x calculation gives for every energy in the chosen region 
-     the transmittance at that energy. 
+     the transmittance at that energy for a perfect Al wire and for a wire
+     with an H impurity.
+
+ 
