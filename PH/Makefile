@@ -392,6 +392,7 @@ all : ph.x
 
 ph.x : $(PHOBJS)
 	$(LD) -o ph.x $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 
 clean :
 	- /bin/rm -f ph.x *.o *~ *.F90 *.d *.mod *.i work.pc

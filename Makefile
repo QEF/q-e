@@ -25,72 +25,44 @@ default :
 
 pw : bindir mods libs
 	if test -d PW   ; then ( cd PW   ; make all ) ; fi
-	( cd bin/ ; ln -fs ../PW/pw.x . ;  ln -fs ../PW/memory.x )
 
 fpmd : bindir mods libs
 	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
-	( cd bin/ ; ln -fs ../FPMD/par2.x . ; ln -fs ../FPMD/fpmdpp.x . )
 
 cp : bindir mods libs
 	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
-	( cd bin/ ; ln -fs ../CPV/cp.x . )
 
-ph : pw
+ph : bindir mods libs pw
 	if test -d PH ; then ( cd PH ; make all ) ; fi
-	( cd bin/ ; ln -fs ../PH/ph.x . )
 
-pp : pw
+pp : bindir mods libs pw
 	if test -d PP ; then ( cd PP ; make all ) ; fi
-	( cd bin/ ; \
-	  for exe in \
-	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
-	      ../PP/efg.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
-	      ../PP/plotband.x ../PP/pmw.x ../PP/pw2casino.x \
-	      ../PP/pw2wan.x ../PP/voronoy.x \
-	  ; do \
-	      if test -f $$exe ; then ln -fs $$exe . ; fi \
-	  done \
-	)
 
-gamma : pw
+gamma : bindir mods libs pw
 	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
-	( cd bin/ ; ln -fs ../Gamma/phcg.x . )
 
-nc : pw
+nc : bindir mods libs pw
 	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
-	( cd bin/ ; ln -fs ../PWNC/pwnc.x . )
 
-pwcond : pp
+pwcond : bindir mods libs pw pp
 	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
-	( cd bin/ ; ln -fs ../PWCOND/pwcond.x . )
 
-d3 : ph
+d3 : bindir mods libs pw ph
 	if test -d D3 ; then ( cd D3 ; make all ) ; fi
-	( cd bin/ ; ln -fs ../D3/d3.x . )
 
-raman : ph
+raman : bindir mods libs pw ph
 	if test -d Raman ; then ( cd Raman ; make all ) ; fi
-	( cd bin/ ; ln -fs ../Raman/ram.x . )
 
-tools : pw
+tools : bindir mods libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
-	( cd bin/ ; \
-	  for exe in \
-	      ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
-	      ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
-	      ../pwtools/ev.x ../pwtools/kpoints.x ../pwtools/path_int.x \
-	  ; do \
-	      if test -f $$exe ; then ln -fs $$exe . ; fi \
-	  done \
-	)
+
+ld1 : bindir mods libs pw
+	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
 upf : bindir mods libs
 	if test -d upftools ; then ( cd upftools ; make all ) ; fi
-ld1 : pw
-	if test -d atomic ; then ( cd atomic ; make all ) ; fi
-	( cd bin/ ; ln -fs ../atomic/ld1.x . )
 
-pwall : pp gamma nc pwcond d3 raman tools
+pwall : pw ph pp gamma nc pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
 mods :
@@ -133,6 +105,18 @@ tar :
 		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
 	gzip pw.tar
 
+#links :
+#	test -d bin || mkdir bin
+#	( cd bin/ ; \
+#	  for exe in \
+#	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
+#	      ../PP/efg.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
+#	      ../PP/plotband.x ../PP/pmw.x ../PP/pw2casino.x \
+#	      ../PP/pw2wan.x ../PP/voronoy.x \
+#	  ; do \
+#	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+#	  done \
+#	)
 
 # TAR-GUI works only if we have CVS-sources !!!
 tar-gui :

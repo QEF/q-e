@@ -295,6 +295,7 @@ all : phcg.x
 
 phcg.x : $(PWOBJS) $(CGOBJS)
 	$(LD) -o phcg.x $(CGOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
 
 clean :
 	- /bin/rm -f *.x *.o *.d *.i *~ *.F90 *.mod work.pc

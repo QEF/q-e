@@ -396,6 +396,7 @@ all : d3.x
 
 d3.x : $(D3OBJS)
 	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../D3/d3.x . )
 
 clean :
 	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod work.pc

@@ -259,48 +259,29 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-all : pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x \
-      bands.x plotband.x pw2wan.x pw2casino.x efg.x pmw.x
+all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
+      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x
 
-pp.x : $(PPOBJS) postproc.o
-	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+# dependencies
+average.x : average.o $(PPOBJS)
+bands.x : bands.o $(PPOBJS)
+chdens.x : chdens.o $(PPOBJS)
+dos.x : dos.o $(PPOBJS)
+efg.x : efg.o $(PPOBJS)
+plotband.x : plotband.o $(PPOBJS)
+plotrho.x : plotrho.o $(PPOBJS)
+pmw.x : poormanwannier.o $(PPOBJS)
+pp.x : postproc.o $(PPOBJS)
+projwfc.x : projwfc.o $(PPOBJS)
+pw2casino.x : pw2casino.o $(PPOBJS)
+pw2wan.x : pw2wan.o $(PPOBJS)
+voronoy.x : voronoy.o $(PPOBJS)
 
-projwfc.x : $(PPOBJS) projwfc.o
-	$(LD) -o projwfc.x projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-pmw.x : $(PPOBJS) poormanwannier.o
-	$(LD) -o pmw.x poormanwannier.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-chdens.x : $(PPOBJS) chdens.o
-	$(LD) -o chdens.x chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-average.x : $(PPOBJS) average.o
-	$(LD) -o average.x average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-voronoy.x : $(PPOBJS) voronoy.o
-	$(LD) -o voronoy.x voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-dos.x : $(PPOBJS) dos.o
-	$(LD) -o dos.x dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-bands.x : $(PPOBJS) bands.o
-	$(LD) -o bands.x bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-plotband.x : $(PPOBJS) plotband.o
-	$(LD) -o plotband.x plotband.o  $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-plotrho.x : $(PPOBJS) plotrho.o
-	$(LD) -o plotrho.x plotrho.o  $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-pw2wan.x : $(PPOBJS) pw2wan.o
-	$(LD) -o pw2wan.x pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-pw2casino.x : $(PPOBJS) pw2casino.o
-	$(LD) -o pw2casino.x pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-efg.x: $(PWOBJS) $(PPOBJS) efg.o
-	$(LD) -o efg.x efg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
+# compilation rule
+average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x pmw.x \
+pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x :
+	$(LD) -o $@ $< $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc

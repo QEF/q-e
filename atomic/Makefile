@@ -97,8 +97,9 @@ all: ld1.x
 
 ld1.x: $(LD1OBJS) ld1.o
 	$(LD) -o ld1.x ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../atomic/ld1.x . )
 
 clean:
-	-/bin/rm -f *.o *.x $(LIB) *~ *.d *.mod *.tmp.* make.* work.pc
+	- /bin/rm -f *.o *.x $(LIB) *~ *.d *.mod *.tmp.* make.* work.pc
 
 include .dependencies

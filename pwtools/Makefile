@@ -41,41 +41,36 @@ MODULES = \
 ../Modules/supercell.o \
 ../Modules/splinelib.o
 
-all : band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x \
-      kpoints.x pwi2xsf.x path_int.x
+all : band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
+      path_int.x pwi2xsf.x q2r.x
 
+# dependencies
 band_plot.x : band_plot.o
-	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
+fqha.x : fqha.o
 
 dist.x : dist.o
-	$(LD) -o dist.x dist.o $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-q2r.x : q2r.o rigid.o
-	$(LD) -o q2r.x q2r.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-matdyn.x : matdyn.o rigid.o
-	$(LD) -o matdyn.x matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+ev.x : ev.o
+kpoints.x : kpoints.o
+lambda.x : lambda.o
+path_int.x : path_int.o
+pwi2xsf.x : pwi2xsf.o
 
 dynmat.x : dynmat.o rigid.o
-	$(LD) -o dynmat.x dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+matdyn.x : matdyn.o rigid.o
+q2r.x : q2r.o rigid.o
 
-fqha.x : fqha.o
-	$(LD) -o fqha.x fqha.o  $(LDFLAGS)
+# compilation rules
+band_plot.x fqha.x :
+	$(LD) -o $@ $<  $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-lambda.x : lambda.o
-	$(LD) -o lambda.x lambda.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+dist.x ev.x kpoints.x lambda.x path_int.x pwi2xsf.x :
+	$(LD) -o $@ $< $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-ev.x : ev.o
-	$(LD) -o ev.x ev.o $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-kpoints.x : kpoints.o
-	$(LD) -o kpoints.x kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-pwi2xsf.x : pwi2xsf.o
-	$(LD) -o pwi2xsf.x pwi2xsf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-path_int.x : path_int.o
-	$(LD) -o path_int.x path_int.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+dynmat.x matdyn.x q2r.x :
+	$(LD) -o $@ $< rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 clean :
 	- /bin/rm -f pwi2xsf pwi2xsf_old *.x *.o *~ *.F90 *.mod *.d *.i work.pc

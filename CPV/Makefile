@@ -3,8 +3,6 @@
 include	../make.sys
 include ../make.rules
 
-# CODEDIR = CPV
-
 WRAPPERS = wrapper.o
 
 FOBJS = \
@@ -36,9 +34,8 @@ $(WRAPPERS)
 all : cp.x
 
 cp.x : $(FOBJS)
-	$(LD) -o cp.x $(FOBJS) ../Modules/*.o \
-        ../flib/eispack.o $(LDFLAGS)
-	chmod a+rx cp.x
+	$(LD) -o cp.x $(FOBJS) ../Modules/*.o ../flib/eispack.o $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 clean :
 	- /bin/rm -f *.o *.i core* fort* *.mod *.s *.d work.pc cp.x

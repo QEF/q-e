@@ -271,6 +271,7 @@ all : pwcond.x
 
 pwcond.x : $(PWCONDOBJS) 
 	$(LD) -o pwcond.x $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PWCOND/pwcond.x . )
  
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.a work.pc
