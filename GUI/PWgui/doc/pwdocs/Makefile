@@ -1,4 +1,4 @@
-PW_DOC_DIR = ../../../../pwdocs
+PW_DOC_DIR = ../../../../Doc
 
 INPUT_FILES = \
 	INPUT_PW \
