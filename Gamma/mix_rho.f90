@@ -263,9 +263,9 @@ end if
      end do
   end do
   !
-  call DSYTRF ('u',iter_used,betamix,maxmix,iwork,work,maxmix,info)
+  call DSYTRF ('U',iter_used,betamix,maxmix,iwork,work,maxmix,info)
   call errore('broyden','factorization',info)
-  call DSYTRI ('u',iter_used,betamix,maxmix,iwork,work,info)
+  call DSYTRI ('U',iter_used,betamix,maxmix,iwork,work,info)
   call errore('broyden','DSYTRI',info)
   !
   do i=1,iter_used
@@ -666,9 +666,9 @@ end subroutine approx_screening
   ! - solve it -> vec
   !
   call DCOPY (mmx*mmx,aa,1,invaa,1)
-  call DSYTRF ('u',m,invaa,mmx,iwork,work,mmx,info)
+  call DSYTRF ('U',m,invaa,mmx,iwork,work,mmx,info)
   call errore('BROYDEN','factorization',info)
-  call DSYTRI ('u',m,invaa,mmx,iwork,work,info)
+  call DSYTRI ('U',m,invaa,mmx,iwork,work,info)
   call errore('broyden','DSYTRI',info)
   !
   do i=1,m

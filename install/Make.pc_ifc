@@ -56,12 +56,15 @@ CCFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
 # Loader:
 #
 # The following is for Intel MKL libraries v. 5.1 on Pentium-3
-# !!! DO NOT USE MKL v. 5.2 or 6beta !!!
 # Use libmkl_p3.a for Pentium-3, libmkl_p4.a for Pentium-4 machines 
 # (MKL will not work for other CPUs like Athlon)
 #
 LIBS= -L$(FFTW_LIB_DIR) -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
       /opt/intel/mkl/lib/32/libmkl_p3.a -lpthread
+# For MKL v. 5.2 add "-lguide"
+# For MKL v. 6 use
+# LIBS= -L$(FFTW_LIB_DIR) -lfftw -L/opt/intel/mkl/lib/32/ \
+#        -lmkl_lapack -lmkl_ia32 -lguide -lpthread
 MYLIB=lapack_mkl
 #
 # The following is for Atlas optimized blas/lapack libraries

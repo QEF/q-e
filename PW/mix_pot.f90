@@ -171,9 +171,9 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      beta (i, i) = w0**2 + w (i) **2
   enddo
   !
-  call DSYTRF ('u', iter_used, beta, maxter, iwork, work, maxter, info)
+  call DSYTRF ('U', iter_used, beta, maxter, iwork, work, maxter, info)
   call errore ('broyden', 'factorization', info)
-  call DSYTRI ('u', iter_used, beta, maxter, iwork, work, info)
+  call DSYTRI ('U', iter_used, beta, maxter, iwork, work, info)
   call errore ('broyden', 'DSYTRI', info)
   !
   do i = 1, iter_used
