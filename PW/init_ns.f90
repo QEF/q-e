@@ -52,7 +52,7 @@ subroutine init_ns
             if (totoc.gt.2*Hubbard_l(nt)+1) then  
                do m1 = 1, 2*Hubbard_l(nt)+1  
                   ns (m1, m1, majs, na) = 1.d0  
-                  ns (m1, m1, mins, na) = (totoc - 2*Hubbard_l(nt)+1 ) / &
+                  ns (m1, m1, mins, na) = (totoc -(2*Hubbard_l(nt)+1) ) / &
                                                   (2*Hubbard_l(nt)+1)  
                enddo  
             else  
