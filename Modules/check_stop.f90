@@ -73,7 +73,7 @@ MODULE check_stop
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION check_stop_now()
+     FUNCTION check_stop_now( inunit )
        !-----------------------------------------------------------------------
        !
        USE mp,        ONLY : mp_bcast
@@ -83,10 +83,12 @@ MODULE check_stop
        !
        IMPLICIT NONE
        !
-       LOGICAL   :: check_stop_now, tex
-       REAL(dbl) :: seconds
-       REAL(dbl) :: elapsed_seconds
-       EXTERNAL     elapsed_seconds
+       INTEGER, OPTIONAL, INTENT(IN) :: inunit
+       INTEGER                       :: unit
+       LOGICAL                       :: check_stop_now, tex
+       REAL(dbl)                     :: seconds
+       REAL(dbl)                     :: elapsed_seconds
+       EXTERNAL                         elapsed_seconds
        !
        !
        ! ... elapsed_seconds is a C function returning the elapsed solar 
@@ -94,6 +96,9 @@ MODULE check_stop
        !
        IF( .NOT. tinit ) &
           CALL errore( 'check_stop_now', 'check_stop not initialized', 1 )
+       !
+       unit = stdout
+       IF ( PRESENT( inunit ) ) unit = inunit
        !
        check_stop_now = .FALSE.
        !  
@@ -105,8 +110,8 @@ MODULE check_stop
              !     
              check_stop_now = .TRUE.
              !
-             WRITE( UNIT = stdout, &
-                    FMT = '(" *** Program stopped by user request *** ")' )
+             WRITE( UNIT = unit, &
+                    FMT = '(/,5X,"Program stopped by user request")' )
              !
              OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
              CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
@@ -119,12 +124,12 @@ MODULE check_stop
              !
              check_stop_now = .TRUE.
              !
-             WRITE( UNIT = stdout, &
-                    FMT = '(" *** Maximum CPU time exceeded ***")' )
-             WRITE( UNIT = stdout, &
-                    FMT = '(" *** max_seconds     = ",D10.2," ***")' ) max_seconds
-             WRITE( UNIT = stdout, &
-                    FMT = '(" *** elapsed seconds = ",D10.2," ***")' ) seconds
+             WRITE( UNIT = unit, &
+                    FMT = '(/,5X,"Maximum CPU time exceeded")' )
+             WRITE( UNIT = unit, &
+                    FMT = '(/,5X,"max_seconds     = ",F10.2)' ) max_seconds
+             WRITE( UNIT = unit, &
+                    FMT = '(5X,"elapsed seconds = ",F10.2)' ) seconds
              !
           END IF
           !

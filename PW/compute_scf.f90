@@ -36,7 +36,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE io_global,        ONLY : ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, me_image, root_image, nimage
-  USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum
+  USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   !
   IMPLICIT NONE
   !
@@ -265,8 +265,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   tmp_dir = tmp_dir_saved
   !
-  suspended_image = 0
-  !
   CALL mp_barrier( intra_image_comm )
   CALL mp_barrier( inter_image_comm )
   !
@@ -282,10 +280,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      stat = .TRUE.
      !
+     suspended_image = 0
+     !
   ELSE
      !
      stat = .FALSE.
      !
+     CALL mp_min( suspended_image, inter_image_comm )
+     !     
   END IF      
   !
   RETURN
@@ -319,8 +321,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      SUBROUTINE get_new_image( image )
        !
        ! ... this subroutine is used to get the new image to work on
-       ! ... the *.BLOCK file is other needed to avoid that other jobs
-       ! ... try to read/write on file "para" 
+       ! ... the *.BLOCK file is needed to avoid (when present) that 
+       ! ... other jobs try to read/write on file "para" 
        !
        USE io_files,  ONLY : iunpara, iunblock
        USE mp_global, ONLY : my_image_id

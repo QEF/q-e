@@ -43,7 +43,6 @@ SUBROUTINE electrons()
                                    niter, nmix, imix, iprint, istep, iswitch, &
                                    lscf, lneb, lmd, conv_elec, restart, &
                                    reduce_io  
-  USE check_stop,           ONLY : check_stop_now, max_seconds
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunneb, &
                                    output_drho, iunexit, exit_file
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
@@ -245,12 +244,9 @@ SUBROUTINE electrons()
      END IF
      !
      ! ... the program checks if the maximum CPU time has been exceeded
+     ! ... or if the user has required a soft exit
      !
-     CALL check_cpu_time()
-     !
-     ! ... the program checks if the user has required a soft exit
-     !
-     CALL check_soft_exit()
+     IF ( check_stop_now() ) RETURN
      !
      CALL sum_band()
      !
@@ -313,12 +309,9 @@ SUBROUTINE electrons()
            CALL c_bands( iter, ik_, dr2 )
            !
            ! ... the program checks if the maximum CPU time has been exceeded
+           ! ... or if the user has required a soft exit
            !
-           CALL check_cpu_time()
-           !
-           ! ... the programs checks if the user has required a soft exit
-           !
-           CALL check_soft_exit()
+           IF ( check_stop_now() ) RETURN
            !
            CALL sum_band()
            !
@@ -618,48 +611,30 @@ SUBROUTINE electrons()
      END SUBROUTINE compute_magnetization
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_cpu_time()
+     FUNCTION check_stop_now()
        !-----------------------------------------------------------------------
+       !
+       USE check_stop, ONLY : global_check_stop_now => check_stop_now
        !
        IMPLICIT NONE
        !
-       !     
-       tcpu = get_clock( 'PWSCF' )
+       LOGICAL :: check_stop_now
+       INTEGER :: unit
        !
-       IF ( check_stop_now( ) ) THEN
+       !
+       IF ( lneb ) THEN  
           !
-          IF ( lneb ) THEN  
-             WRITE( iunneb, '(5X,"Maximum CPU time exceeded",1F15.2)' ) &
-                 tcpu, max_seconds
-          ELSE
-             WRITE( stdout, '(5X,"Maximum CPU time exceeded",1F15.2)' ) &
-                 tcpu, max_seconds
-          END IF       
+          unit = iunneb
+          !  
+       ELSE
           !
-          conv_elec = .FALSE.
-          !
-          RETURN
-          !
+          unit = stdout
+          !   
        END IF
        !
-     END SUBROUTINE check_cpu_time
-     !       
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE check_soft_exit()
-       !-----------------------------------------------------------------------
+       check_stop_now = global_check_stop_now( unit )
        !
-       IMPLICIT NONE
-       !
-       IF ( check_stop_now( ) ) THEN
-          !
-          IF ( lneb ) THEN  
-             WRITE( iunneb, '(/,5X,"WARNING :  soft exit required",/, &
-                              & 5X,"stopping in electrons ...",/)' )  
-          ELSE
-             WRITE( stdout, '(/,5X,"WARNING :  soft exit required",/, &
-                              & 5X,"stopping in electrons ...",/)' )  
-          END IF
+       IF ( check_stop_now ) THEN
           !  
           conv_elec = .FALSE.
           !
@@ -667,6 +642,6 @@ SUBROUTINE electrons()
           !
        END IF              
        !
-     END SUBROUTINE check_soft_exit 
+     END FUNCTION check_stop_now
      !
 END SUBROUTINE electrons
