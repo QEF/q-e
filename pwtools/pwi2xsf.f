@@ -21,10 +21,12 @@ c     ------------------------------------------------------------------------
 
 c maxtyp : maximum number of types of atoms
 c maxatom: maximum number of atoms
+c maximage: maximum number of images
 
       integer
-     $     maxtyp,
-     $     maxatom,
+     $     maxtyp,      
+     $     maxatom,     
+     $     maximage,    
      $     ALAT_UNIT,
      $     BOHR_UNIT,
      $     ANGSTROM_UNIT,
@@ -36,6 +38,7 @@ c maxatom: maximum number of atoms
       parameter (
      $     maxtyp  = 100,
      $     maxatom = 10000,
+     $     maximage = 50,
      $     bohr    = 0.529177d0,
      $
      $     ALAT_UNIT     = 1,
@@ -48,6 +51,7 @@ c maxatom: maximum number of atoms
      $     nat,                 ! number of atoms
      $     ntyp,                ! number of pseudopotentials
      $     num_of_images,       ! number of NEB images
+     $     inp_num_of_images,   ! number of NEB images in the input
      $     atomic_posunit       ! length-unit of atomic positions
 
       real*8
@@ -60,25 +64,28 @@ c maxatom: maximum number of atoms
      $     calculation*80,      ! type of calculation
      $     line*120             ! line of input
       character*3
-     $     atm(maxatom)       ! atomic symbols
+     $     atm(maxatom,maximage) ! atomic symbols
 
       integer
      $     ityp,                ! type of PP
-     $     ounit,               ! output unit
-     $     i, j,                ! dummies
-     $     inat, iim, m,        ! counters
+     $     ounit,               ! output unit     
+     $     i, j, ipol,          ! dummies
+     $     inat, iim, iim_old,  ! counters
      $     i_trimleft_white_space, ! string whitespace-triming function
      $     len                  ! length of string
 
       real*8
-     $     x,y,z,w1,w2,         ! Cartesian coordinates & weights
-     $     tau(3,maxatom),      ! atomic coordinates
-     $     tau2(3,maxatom),     ! atomic coordinates (2nd image)
+     $     x,y,z,               ! Cartesian coordinates & weights
+     $     w1,w2,               ! linear interpolation weights
+     $     dx, dy, dz,          ! auxiliary
+     $     tau(3,maxatom,maximage), ! atomic coordinates
      +     pv( 3,3 ),           ! lattice vectors (PRIMITIVE)
-     +     cv( 3,3 )            ! lattice vectors (CONVENTIONAL)
+     +     cv( 3,3 ),           ! lattice vectors (CONVENTIONAL)
+     $     old_total_dist, old_dist(maximage), ! old(=input) inter-image distances
+     $     new_total_dist, new_dist ! new(=output) inter-image distances
 
       logical
-     $     ltaucry
+     $     ltaucry, matches, last_image
 
       namelist/system/
      $     ibrav, nat, celldm, a, b, c, cosab, cosac, cosbc,
@@ -102,7 +109,7 @@ c
 c     read namelist system
 c
       read (5,system)
-      if ( nat.eq.0 .or. celldm(1).eq.0.0d0 ) then
+      if ( nat.eq.0 ) then
          print *,'ERROR: while reading INPUT !!!'
          STOP
       endif
@@ -145,13 +152,13 @@ c     find out the length-unit
          len  = i_trimleft_white_space(line)
          atomic_posunit = ALAT_UNIT         
          if (len.gt.0 ) then
-            if ( line(1:4) .eq. 'ALAT' ) then
+            if ( matches('ALAT',line) ) then
                atomic_posunit = ALAT_UNIT
-            elseif ( line(1:4) .eq. 'BOHR' ) then
+            elseif ( matches('BOHR',line) ) then
                atomic_posunit = BOHR_UNIT
-            elseif ( line(1:7) .eq. 'CRYSTAL' ) then
+            elseif ( matches('CRYSTAL',line) ) then
                atomic_posunit = CRYSTAL_UNIT
-            elseif ( line(1:8) .eq.'ANGSTROM') then
+            elseif ( matches('ANGSTROM',line) ) then
                atomic_posunit = ANGSTROM_UNIT
             endif
          endif
@@ -159,22 +166,34 @@ c     find out the length-unit
 c     
 c     read atoms
 c     
-         if ( calculation(1:3) .ne. 'NEB' )  then
-            call read_atoms(nat,atm,tau)
+         if ( (calculation(1:3) .ne. 'NEB') .and.
+     $        (calculation(1:3) .ne. 'SMD') )  then
+            iim = 1
+            call read_atoms(nat,atm(1,1),tau(1,1,1))
          else
-c
-c     NEB: read atoms
-c
-            if (num_of_images.lt.2) num_of_images=2
-            read (5,'(a120)') line ! line: first_image
-            call read_atoms(nat,atm,tau)
-            read (5,'(a120)') line ! line: second_image
-            call read_atoms(nat,atm,tau2)            
+c     
+c     path calculation (NEB or SMD): read atoms
+c     
+            iim = 0
+            last_image = .false.
+            do while(.not.last_image)               
+               iim = iim + 1
+               read (5,'(a120)') line ! line: first_image
+               if ( matches('LAST_IMAGE',line) ) last_image = .true.
+               call read_atoms(nat,atm(1,iim),tau(1,1,iim))
+            enddo
          endif
       endif
+      inp_num_of_images = iim
       goto 990
       
  999  continue
+      
+      if ( celldm(1).eq.0.0d0 ) then
+         print *,'ERROR while reading INPUT: celldm(1)==0.0d0 !!!'
+         STOP
+      endif
+
       
       if ( ibrav.ne.0 ) then
          call latgen( ibrav, celldm,
@@ -193,53 +212,98 @@ c
       alat = bohr*celldm(1)
       call write_XSF_header (num_of_images,alat, pv, cv, nat, ounit)
       
-      do inat=1,nat
-         if     ( atomic_posunit .eq. BOHR_UNIT ) then            
-            tau(1,inat) = bohr * tau(1,inat)
-            tau(2,inat) = bohr * tau(2,inat)
-            tau(3,inat) = bohr * tau(3,inat)
-            tau2(1,inat) = bohr * tau2(1,inat)
-            tau2(2,inat) = bohr * tau2(2,inat)
-            tau2(3,inat) = bohr * tau2(3,inat)
-            
-         elseif ( atomic_posunit .eq. ALAT_UNIT ) then
-            tau(1,inat) = alat * tau(1,inat)
-            tau(2,inat) = alat * tau(2,inat)
-            tau(3,inat) = alat * tau(3,inat)
-            tau2(1,inat) = alat * tau2(1,inat)
-            tau2(2,inat) = alat * tau2(2,inat)
-            tau2(3,inat) = alat * tau2(3,inat)
-            
-         elseif ( atomic_posunit .eq. CRYSTAL_UNIT ) then
-            call cryst_to_cart(1, tau(1,inat), pv, 1)
-            call cryst_to_cart(1, tau2(1,inat),pv, 1)
-            
-            tau(1,inat) = alat * tau(1,inat)
-            tau(2,inat) = alat * tau(2,inat)
-            tau(3,inat) = alat * tau(3,inat)
-            tau2(1,inat) = alat * tau2(1,inat)
-            tau2(2,inat) = alat * tau2(2,inat)
-            tau2(3,inat) = alat * tau2(3,inat)
-         endif
-         if ( num_of_images .lt. 2 ) then
-            write(ounit,'(a3,2x,3f15.10)')
-     $           atm(inat), tau(1,inat), tau(2,inat), tau(3,inat)
-         endif
+c     coordinates to ANGSTROMs
+
+      do iim=1,inp_num_of_images
+         do inat=1,nat
+            if     ( atomic_posunit .eq. BOHR_UNIT ) then            
+               tau(1,inat,iim) = bohr * tau(1,inat,iim)
+               tau(2,inat,iim) = bohr * tau(2,inat,iim)
+               tau(3,inat,iim) = bohr * tau(3,inat,iim)
+               
+            elseif ( atomic_posunit .eq. ALAT_UNIT ) then
+               tau(1,inat,iim) = alat * tau(1,inat,iim)
+               tau(2,inat,iim) = alat * tau(2,inat,iim)
+               tau(3,inat,iim) = alat * tau(3,inat,iim)
+               
+            elseif ( atomic_posunit .eq. CRYSTAL_UNIT ) then
+               call cryst_to_cart(1, tau(1,inat,iim), pv, 1)
+            endif
+         enddo
       enddo
 
-      if ( num_of_images .ge. 2 ) then
-         m = num_of_images - 1         
-         do iim=1,num_of_images            
-            w1 = dble(m-(iim-1))/dble(m)
-            w2 = dble(iim-1)/dble(m)
-            write(ounit,'('' PRIMCOORD '',i5)') iim
-            write(ounit,*) nat, 1
+      IF ( num_of_images .lt. 2 ) then
+c     write atoms for non-PATH calculation
+         do inat=1,nat
+            write(ounit,'(a3,2x,3f15.10)') atm(inat,1),
+     $           tau(1,inat,1), tau(2,inat,1), tau(3,inat,1)
+         enddo
+
+      ELSE
+
+c     calculate intermediate images for PATH calculation
+
+         old_total_dist = 0.0d0;
+         old_dist(1)    = 0.0d0;
+         do iim = 2, inp_num_of_images
+            old_dist(iim) = 0.0
             do inat=1,nat
-               x = w1*tau(1,inat) + w2*tau2(1,inat)
-               y = w1*tau(2,inat) + w2*tau2(2,inat)
-               z = w1*tau(3,inat) + w2*tau2(3,inat)
-               write(ounit,'(a3,2x,3f15.10)') atm(inat), x, y, z
+               dx = tau(1,inat,iim) - tau(1,inat,iim-1)
+               dy = tau(2,inat,iim) - tau(2,inat,iim-1)
+               dz = tau(3,inat,iim) - tau(3,inat,iim-1)
+               old_dist(iim) = old_dist(iim) + dx*dx + dy*dy + dz*dz
             enddo
+            old_dist(iim) = sqrt( old_dist(iim) )
+            
+            old_total_dist = old_total_dist + old_dist(iim)
+            old_dist(iim)   = old_total_dist
+         enddo
+         
+         new_dist = old_total_dist / dble(num_of_images-1)
+     
+c     --------------------------------------------------
+c     perform INTERPOLATION
+c     --------------------------------------------------
+         
+         new_total_dist = 0.0
+         do iim=1,num_of_images-1
+            do iim_old=1,inp_num_of_images-1            
+               if ( new_total_dist .ge. old_dist(iim_old)
+     $              .and.
+     $              new_total_dist .lt. old_dist(iim_old+1) + 1d-10 )
+     $              then
+               
+                  w1 = ( old_dist(iim_old+1) - new_total_dist )
+     $                 /
+     $                 ( old_dist(iim_old+1) - old_dist(iim_old) )
+                  w2 = 1.0d0 - w1
+                  
+                  write(ounit,'('' PRIMCOORD '',i5)') iim
+                  write(ounit,*) nat, 1
+
+                  do inat=1,nat
+                     x = w1*tau(1,inat,iim_old)+w2*tau(1,inat,iim_old+1)
+                     y = w1*tau(2,inat,iim_old)+w2*tau(2,inat,iim_old+1)
+                     z = w1*tau(3,inat,iim_old)+w2*tau(3,inat,iim_old+1)
+                     write(ounit,'(a3,2x,3f15.10)')
+     $                    atm(inat,iim_old), x, y, z
+                  enddo
+                  goto 11
+               endif
+            enddo
+ 11         continue
+            new_total_dist = new_total_dist + new_dist
+         enddo
+      
+c     print last image
+         write(ounit,'('' PRIMCOORD '',i5)') iim
+         write(ounit,*) nat, 1
+         do inat=1,nat
+            x = tau(1,inat,inp_num_of_images)
+            y = tau(2,inat,inp_num_of_images)
+            z = tau(3,inat,inp_num_of_images)
+            write(ounit,'(a3,2x,3f15.10)')
+     $           atm(inat,inp_num_of_images), x, y, z
          enddo
       endif
       END
@@ -358,9 +422,8 @@ c     ------------------------------------------------------------------------
 c     an empty line, read again
             goto 10
          endif
-         atm(inat) = line(1:3)
-         line      = line(3:len)
-         read (line,*) (coor(ipol,inat),ipol=1,3)
+
+         read (line,*) atm(inat),(coor(ipol,inat),ipol=1,3)
       enddo
       return
       end
@@ -425,3 +488,25 @@ c     -------------------------------------------------
       word=auxword(1:i_trimleft_white_space)
       return
       END
+
+
+c     -----------------------------------------------------------------------
+      logical function matches (str1, str2)  
+c     .true. if str1 is contained in str2, .false. otherwise
+c     This function is taken from PWscf package (www.pwscf.org).
+c     -----------------------------------------------------------------------
+      implicit none  
+      character str1*(*), str2*(*)  
+      integer len1, len2, l  
+      
+      len1 = len(str1)  
+      len2 = len(str2)  
+      do l = 1, len2 - len1 + 1  
+         if ( str1(1:len1) .eq. str2(l:l + len1 - 1) ) then  
+            matches = .true.
+            return
+         endif
+      enddo
+      matches = .false.  
+      return  
+      end
