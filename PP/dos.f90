@@ -5,8 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !--------------------------------------------------------------------
-program dos
+PROGRAM dos
   !--------------------------------------------------------------------
   !
   ! Calculates the Density of States (DOS),
@@ -46,161 +48,156 @@ program dos
   !      there is no value of degauss and of ngauss in the input data
   !      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
   !
-#include "f_defs.h"
-  USE io_global,  ONLY : stdout, ionode_id
+  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE constants,  ONLY : rytoev
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
   USE ktetra,     ONLY : ntetra, tetra, ltetra
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : nspin
-#ifdef __PARA
-  use para,       ONLY : me
-  use mp,         ONLY : mp_bcast
-#endif
-  implicit none
-  character(len=256) :: fildos
-  character(len=256) :: outdir
-  real(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
-       degauss1
-  integer :: nrot, ik, n, ndos, ngauss1, ios
-  namelist /inputpp/ outdir, prefix, fildos, degauss, ngauss, &
+  USE mp,         ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  CHARACTER(len=256) :: fildos
+  CHARACTER(len=256) :: outdir
+  REAL(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
+                   degauss1
+  INTEGER :: nrot, ik, n, ndos, ngauss1, ios
+  NAMELIST /inputpp/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
-  logical :: minus_q
+  LOGICAL :: minus_q
                                                     
   CHARACTER (LEN=256) :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ilen
+  INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
   !
-  call start_postproc (nd_nmbr)
-#ifdef __PARA
-  if (me == 1) then
-#endif
+  CALL start_postproc (nd_nmbr)
   !
-  !   set default values for variables in namelist
-  !
-  outdir='./'
-  prefix ='pwscf'
-  fildos =' '
-  Emin   =-1000000.
-  Emax   = 1000000.
-  DeltaE = 0.01
-  ngauss = 0
-  degauss= 0.d0
-  !
-  !
-  ! ... Input from file ?
-  !
-  nargs = iargc()
-  !
-  DO iiarg = 1, ( nargs - 1 )
+  IF ( ionode ) THEN
      !
-     CALL getarg( iiarg, input_file )
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
-        !
-        CALL getarg( ( iiarg + 1 ) , input_file )
-        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
-        !
-     END IF
+     !   set default values for variables in namelist
      !
-  END DO
+     outdir='./'
+     prefix ='pwscf'
+     fildos =' '
+     Emin   =-1000000.
+     Emax   = 1000000.
+     DeltaE = 0.01
+     ngauss = 0
+     degauss= 0.d0
+     !
+     !
+     ! ... Input from file ?
+     !
+     nargs = iargc()
+     !
+     DO iiarg = 1, ( nargs - 1 )
+        !
+        CALL getarg( iiarg, input_file )
+        IF ( TRIM( input_file ) == '-input' .OR. &
+             TRIM( input_file ) == '-inp'   .OR. &
+             TRIM( input_file ) == '-in' ) THEN
+           !
+           CALL getarg( ( iiarg + 1 ) , input_file )
+           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+                STATUS = 'OLD', IOSTAT = ierr )
+           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                & ' not found' , ierr )
+           !
+        END IF
+        !
+     END DO
 
-  read (5, inputpp, err=200, iostat=ios )
-200 call errore('dos','reading inputpp namelist',abs(ios))
-  !
-  tmp_dir = trim(outdir)
-  ! save the value of degauss and ngauss: they are read from file
-  degauss1 = degauss
-  ngauss1  = ngauss
-#ifdef __PARA
-  end if
+     READ (5, inputpp, err=200, iostat=ios )
+200  CALL errore('dos','reading inputpp namelist',ABS(ios))
+     !
+     tmp_dir = TRIM(outdir)
+     ! save the value of degauss and ngauss: they are read from file
+     degauss1 = degauss
+     ngauss1  = ngauss
+     !
+  END IF
   !
   ! ... Broadcast variables
   !
   CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
-#endif
   !
-  call read_file( )
+  CALL read_file( )
   !
-#ifdef __PARA
-  if (me == 1) then
-#endif
-  if (nks.ne.nkstot) call errore ('dos', 'not implemented', 1)
-  !
-  if (degauss1.ne.0.d0) then
-     degauss=degauss1
-     ngauss =ngauss1
-     WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
-          &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-     ltetra=.false.
-     lgauss=.true.
-  else if (ltetra) then
-     WRITE( stdout,'(/5x,"Tetrahedra used"/)')
-  else if (lgauss) then
-     WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
-          &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-  else
-     degauss=DeltaE/rytoev
-     ngauss =0
-     WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
-          &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-     ltetra=.false.
-     lgauss=.true.
-  end if
-  !
-  ! find band extrema
-  !
-  Elw = et (1, 1)
-  Eup = et (nbnd, 1)
-  do ik = 2, nks
-     Elw = min (Elw, et (1, ik) )
-     Eup = max (Eup, et (nbnd, ik) )
-  enddo
-  if (degauss.ne.0.d0) then
-     Eup = Eup + 3d0 * degauss
-     Elw = Elw - 3d0 * degauss
-  endif
-  !
-  Emin=max(Emin/rytoev,Elw)
-  Emax=min(Emax/rytoev,Eup)
-  DeltaE = DeltaE / rytoev
-  ndos = nint ( (Emax - Emin) / DeltaE+0.500001)
-  DOSint = 0.0
-  !
-  if ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
-  open (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
-  if (nspin.eq.1) then
-     write(4,'("#  E (eV)   dos(E)     Int dos(E)")')
-  else
-     write(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)")')
-  end if
-  do n= 1, ndos
-     E = Emin + (n - 1) * DeltaE
-     if (ltetra) then
-        call dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
-     else
-        call dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
-     endif
-     if (nspin.eq.1) then
-        DOSint = DOSint + DOSofE (1) * DeltaE
-        write (4, '(f7.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
-     else
-        DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
-        write (4, '(f7.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
-     endif
-  enddo
+  IF ( ionode ) THEN
+     !
+     IF (nks.NE.nkstot) CALL errore ('dos', 'not implemented', 1)
+     !
+     IF (degauss1.NE.0.d0) THEN
+        degauss=degauss1
+        ngauss =ngauss1
+        WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
+             &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+        ltetra=.FALSE.
+        lgauss=.TRUE.
+     ELSE IF (ltetra) THEN
+        WRITE( stdout,'(/5x,"Tetrahedra used"/)')
+     ELSE IF (lgauss) THEN
+        WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
+             &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+     ELSE
+        degauss=DeltaE/rytoev
+        ngauss =0
+        WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
+             &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+        ltetra=.FALSE.
+        lgauss=.TRUE.
+     END IF
+     !
+     ! find band extrema
+     !
+     Elw = et (1, 1)
+     Eup = et (nbnd, 1)
+     DO ik = 2, nks
+        Elw = MIN (Elw, et (1, ik) )
+        Eup = MAX (Eup, et (nbnd, ik) )
+     ENDDO
+     IF (degauss.NE.0.d0) THEN
+        Eup = Eup + 3d0 * degauss
+        Elw = Elw - 3d0 * degauss
+     ENDIF
+     !
+     Emin=MAX(Emin/rytoev,Elw)
+     Emax=MIN(Emax/rytoev,Eup)
+     DeltaE = DeltaE / rytoev
+     ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)
+     DOSint = 0.0
+     !
+     IF ( fildos == ' ' ) fildos = TRIM(prefix)//'.dos'
+     OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
+     IF (nspin.EQ.1) THEN
+        WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)")')
+     ELSE
+        WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)")')
+     END IF
+     DO n= 1, ndos
+        E = Emin + (n - 1) * DeltaE
+        IF (ltetra) THEN
+           CALL dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
+        ELSE
+           CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
+        ENDIF
+        IF (nspin.EQ.1) THEN
+           DOSint = DOSint + DOSofE (1) * DeltaE
+           WRITE (4, '(f7.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
+        ELSE
+           DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
+           WRITE (4, '(f7.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
+        ENDIF
+     ENDDO
 
-  close (unit = 4)
-#ifdef __PARA
-  end if
-#endif
-  call stop_pp
-end program dos
+     CLOSE (unit = 4)
+     !
+  END IF
+  !
+  CALL stop_pp
+  !
+END PROGRAM dos
 

@@ -5,10 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 #include "f_defs.h"
+!
 !--------------------------------------------------------------------
-program voronoy
+PROGRAM voronoy
   !--------------------------------------------------------------------
   !
   !  Calculates charges on atoms by dividing the space into Voronoy
@@ -24,236 +24,233 @@ program voronoy
   USE constants,  ONLY : pi
   USE io_global,  ONLY : stdout
   USE kinds
-  USE char,       only : title
-  USE cell_base,  only : ibrav, celldm, at, bg, alat, omega, tpiba, tpiba2
-  USE ions_base,  only : atm, zv, nat, tau, ityp, ntyp=>nsp
+  USE char,       ONLY : title
+  USE cell_base,  ONLY : ibrav, celldm, at, bg, alat, omega, tpiba, tpiba2
+  USE ions_base,  ONLY : atm, zv, nat, tau, ityp, ntyp=>nsp
   USE lsda_mod,   ONLY : nspin
   USE gvect,      ONLY : ecutwfc, nr1, nr2, nr3, nrxx, gcutm, ngm, g, nl, &
-       dual, nrx1, nrx2, nrx3
+                         dual, nrx1, nrx2, nrx3
   USE scf,        ONLY : rho
-  use fft_scalar, only : good_fft_dimension
-  use io_files,   only : nd_nmbr
-#ifdef __PARA
-  use para,       only : me
-#endif
-  implicit none
-  integer :: nr1big, nr2big, nr3big, nrx1big
-  integer :: n, i, j, ng, na, plot_num
-  real(kind=DP) :: total_charge, rhodum
-  integer, allocatable :: nlbig (:)
-  real(kind=DP), allocatable :: partial_charge (:)
-  complex(kind=DP), allocatable :: rhobig (:)
-  character(len=256) :: filename
+  USE fft_scalar, ONLY : good_fft_dimension
+  USE io_files,   ONLY : nd_nmbr
+  USE mp_global,  ONLY : mpime, root
+
+  IMPLICIT NONE
+  INTEGER :: nr1big, nr2big, nr3big, nrx1big
+  INTEGER :: n, i, j, ng, na, plot_num
+  REAL(kind=DP) :: total_charge, rhodum
+  INTEGER, ALLOCATABLE :: nlbig (:)
+  REAL(kind=DP), ALLOCATABLE :: partial_charge (:)
+  COMPLEX(kind=DP), ALLOCATABLE :: rhobig (:)
+  CHARACTER(len=256) :: filename
   !
-  call start_postproc (nd_nmbr)
-#ifdef __PARA
+  CALL start_postproc (nd_nmbr)
   !
   ! Works for parallel machines but only for one processor !!!
   !
-  if (me == 1) then
-#endif
-  !
-  print '(" Input file > ",$)'
-  read (5, '(a)') filename
-  !
-  ! read file header and allocate objects
-  !
-  call read_io_header (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, &
-                       ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
-  !
-  allocate(tau(3, nat))
-  allocate(ityp(nat))
-  alat = celldm (1)
-  tpiba = 2.d0 * pi / alat
-  tpiba2 = tpiba**2
-  if (ibrav.gt.0) then
-    call latgen (ibrav, celldm, at (1, 1), at (1, 2), at (1, 3), omega )
-    at = at / alat !  bring at in units of alat
-  end if
-  call recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
-       , bg (1, 3) )
-  call volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
-  call set_fft_dim
-  nrxx = nrx1 * nrx2 * nrx3
-  nspin = 1
-  call allocate_fft
-  !
-  ! read data from file
-  !
-  call plot_io (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-       nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
-       atm, ityp, zv, tau, rho, - 1)
-  !
-  ! calculate g-vectors
-  !
-  call ggen
-  !
-  ! interpolate on a larger grid
-  !
-  print '(" nr1big, nr2big, nr3big (min: ",3i4," ) > ",$)', nr1, &
-       nr2, nr3
+  IF ( mpime == root ) THEN
+     !
+     PRINT '(" Input file > ",$)'
+     READ (5, '(a)') filename
+     !
+     ! read file header and allocate objects
+     !
+     CALL read_io_header (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, &
+          ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
+     !
+     ALLOCATE(tau(3, nat))
+     ALLOCATE(ityp(nat))
+     alat = celldm (1)
+     tpiba = 2.d0 * pi / alat
+     tpiba2 = tpiba**2
+     IF (ibrav.GT.0) THEN
+        CALL latgen (ibrav, celldm, at (1, 1), at (1, 2), at (1, 3), omega )
+        at = at / alat !  bring at in units of alat
+     END IF
+     CALL recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
+          , bg (1, 3) )
+     CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
+     CALL set_fft_dim
+     nrxx = nrx1 * nrx2 * nrx3
+     nspin = 1
+     CALL allocate_fft
+     !
+     ! read data from file
+     !
+     CALL plot_io (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+          nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
+          atm, ityp, zv, tau, rho, - 1)
+     !
+     ! calculate g-vectors
+     !
+     CALL ggen
+     !
+     ! interpolate on a larger grid
+     !
+     PRINT '(" nr1big, nr2big, nr3big (min: ",3i4," ) > ",$)', nr1, &
+          nr2, nr3
 
-  read (5, * ) nr1big, nr2big, nr3big
+     READ (5, * ) nr1big, nr2big, nr3big
 
-  nrx1big = good_fft_dimension (nr1big)
+     nrx1big = good_fft_dimension (nr1big)
 
-  allocate (nlbig( ngm))    
+     ALLOCATE (nlbig( ngm))    
 
-  call get_fftindex (g, ngm, nr1big, nr2big, nr3big, nrx1big, &
-       nr2big, nr3big, at, nlbig)
+     CALL get_fftindex (g, ngm, nr1big, nr2big, nr3big, nrx1big, &
+          nr2big, nr3big, at, nlbig)
 
-  allocate (rhobig(nrx1big * nr2big * nr3big))    
+     ALLOCATE (rhobig(nrx1big * nr2big * nr3big))    
 
-  call rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, nr1big, &
-       nr2big, nr3big, nrx1big, nlbig, rhobig)
+     CALL rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, nr1big, &
+          nr2big, nr3big, nrx1big, nlbig, rhobig)
 
-  allocate (partial_charge(nat))
+     ALLOCATE (partial_charge(nat))
 
-  call calculate_partial_charges (nat, tau, at, bg, nrx1big, nr1big, &
-       nr2big, nr3big, rhobig, partial_charge)
+     CALL calculate_partial_charges (nat, tau, at, bg, nrx1big, nr1big, &
+          nr2big, nr3big, rhobig, partial_charge)
 
-  WRITE( stdout, '(" nr1, nr2, nr3 = ",3i4)') nr1big, nr2big, nr3big
-  total_charge = 0.0
-  do na = 1, nat
-     partial_charge (na) = partial_charge (na) * omega / (nr1big * &
-          nr2big * nr3big)
-     WRITE( stdout, '(" Atom # ",i2," tau = ",3f8.4, &
-          &       "  charge: ",f8.4) ') na,  (tau (i, na) , i = 1, 3) , &
-          partial_charge (na)
-     total_charge = total_charge+partial_charge (na)
-  enddo
+     WRITE( stdout, '(" nr1, nr2, nr3 = ",3i4)') nr1big, nr2big, nr3big
+     total_charge = 0.0
+     DO na = 1, nat
+        partial_charge (na) = partial_charge (na) * omega / (nr1big * &
+             nr2big * nr3big)
+        WRITE( stdout, '(" Atom # ",i2," tau = ",3f8.4, &
+             &       "  charge: ",f8.4) ') na,  (tau (i, na) , i = 1, 3) , &
+             partial_charge (na)
+        total_charge = total_charge+partial_charge (na)
+     ENDDO
 
-  WRITE( stdout, '(" Check: total charge = ",f8.4)') total_charge
-#ifdef __PARA
-  end if
-#endif
-  call stop_pp
-end program voronoy
+     WRITE( stdout, '(" Check: total charge = ",f8.4)') total_charge
+
+  END IF
+
+  CALL stop_pp
+  !
+END PROGRAM voronoy
+!
 !-----------------------------------------------------------------------
-
-subroutine get_fftindex (g, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-     at, nl)
+SUBROUTINE get_fftindex (g, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, nl)
   !-----------------------------------------------------------------------
-  USE kinds, only: DP
-  implicit none
-  integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, ngm
-  real(kind=DP) :: g (3, ngm), at (3, 3)
-  integer :: nl (ngm)
-  integer :: n1, n2, n3, ng
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, ngm
+  REAL(kind=DP) :: g (3, ngm), at (3, 3)
+  INTEGER :: nl (ngm)
+  INTEGER :: n1, n2, n3, ng
   !
-  do ng = 1, ngm
-     n1 = nint (g (1, ng) * at (1, 1) + g (2, ng) * at (2, 1) + g (3, &
+  DO ng = 1, ngm
+     n1 = NINT (g (1, ng) * at (1, 1) + g (2, ng) * at (2, 1) + g (3, &
           ng) * at (3, 1) ) + 1
-     if (n1.lt.1) n1 = n1 + nr1
-     n2 = nint (g (1, ng) * at (1, 2) + g (2, ng) * at (2, 2) + g (3, &
+     IF (n1.LT.1) n1 = n1 + nr1
+     n2 = NINT (g (1, ng) * at (1, 2) + g (2, ng) * at (2, 2) + g (3, &
           ng) * at (3, 2) ) + 1
-     if (n2.lt.1) n2 = n2 + nr2
-     n3 = nint (g (1, ng) * at (1, 3) + g (2, ng) * at (2, 3) + g (3, &
+     IF (n2.LT.1) n2 = n2 + nr2
+     n3 = NINT (g (1, ng) * at (1, 3) + g (2, ng) * at (2, 3) + g (3, &
           ng) * at (3, 3) ) + 1
-     if (n3.lt.1) n3 = n3 + nr3
-     if (n1.le.nr1.and.n2.le.nr2.and.n3.le.nr3) then
+     IF (n3.LT.1) n3 = n3 + nr3
+     IF (n1.LE.nr1.AND.n2.LE.nr2.AND.n3.LE.nr3) THEN
         nl (ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
-     else
-        stop ' Mesh too small '
-     endif
-  enddo
+     ELSE
+        STOP ' Mesh too small '
+     ENDIF
+  ENDDO
   !
-  return
+  RETURN
 
-end subroutine get_fftindex
+END SUBROUTINE get_fftindex
 !-----------------------------------------------------------------------
-subroutine rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, &
+SUBROUTINE rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, &
      nr1big, nr2big, nr3big, nrx1big, nlbig, rhobig)
   !-----------------------------------------------------------------------
-  USE kinds, only: DP
-  implicit none
-  integer :: ngm, nr1, nr2, nr3, nrx1, nl (ngm), nr1big, nr2big, &
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  INTEGER :: ngm, nr1, nr2, nr3, nrx1, nl (ngm), nr1big, nr2big, &
        nr3big, nrx1big, nlbig (ngm)
-  real(kind=DP) :: rho (nrx1 * nr2 * nr3)
-  complex(kind=DP) :: rhobig (nrx1big * nr2big * nr3big)
-  complex(kind=DP), allocatable :: aux (:)
-  integer :: nr, ng
+  REAL(kind=DP) :: rho (nrx1 * nr2 * nr3)
+  COMPLEX(kind=DP) :: rhobig (nrx1big * nr2big * nr3big)
+  COMPLEX(kind=DP), ALLOCATABLE :: aux (:)
+  INTEGER :: nr, ng
 
-  allocate (aux(nrx1 * nr2 * nr3))    
-  do nr = 1, nrx1 * nr2 * nr3
+  ALLOCATE (aux(nrx1 * nr2 * nr3))    
+  DO nr = 1, nrx1 * nr2 * nr3
      aux (nr) = rho (nr)
-  enddo
+  ENDDO
 
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nr2, nr3, - 1)
+  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nr2, nr3, - 1)
 
-  do nr = 1, nrx1big * nr2big * nr3big
+  DO nr = 1, nrx1big * nr2big * nr3big
      rhobig (nr) = 0.0
-  enddo
-  do ng = 1, ngm
+  ENDDO
+  DO ng = 1, ngm
      rhobig (nlbig (ng) ) = aux (nl (ng) )
-  enddo
+  ENDDO
 
-  deallocate(aux)
+  DEALLOCATE(aux)
 
-  call cft3 (rhobig, nr1big, nr2big, nr3big, nrx1big, nr2big, &
+  CALL cft3 (rhobig, nr1big, nr2big, nr3big, nrx1big, nr2big, &
        nr3big, 1)
-  return
+  RETURN
 
-end subroutine rhor_to_rhobig
+END SUBROUTINE rhor_to_rhobig
 !-----------------------------------------------------------------------
-subroutine calculate_partial_charges (nat, tau, at, bg, nrx1big, &
+SUBROUTINE calculate_partial_charges (nat, tau, at, bg, nrx1big, &
      nr1big, nr2big, nr3big, rhobig, partial_charge)
   !-----------------------------------------------------------------------
-  USE kinds, only: DP
-  implicit none
-  integer :: nat, nrx1big, nr1big, nr2big, nr3big
-  real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge(nat)
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  INTEGER :: nat, nrx1big, nr1big, nr2big, nr3big
+  REAL(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge(nat)
 
-  complex(kind=DP) :: rhobig (nrx1big, nr2big, nr3big)
-  integer :: atom (nat), equidistant, n1, n2, n3, na, i
-  real(kind=DP) :: r (3), dr (3), distance (nat), relative_distance
+  COMPLEX(kind=DP) :: rhobig (nrx1big, nr2big, nr3big)
+  INTEGER :: atom (nat), equidistant, n1, n2, n3, na, i
+  REAL(kind=DP) :: r (3), dr (3), distance (nat), relative_distance
   !
   !
-  do na = 1, nat
+  DO na = 1, nat
      partial_charge (na) = 0.0
-  enddo
-  do n3 = 1, nr3big
-     do n2 = 1, nr2big
-        do n1 = 1, nr1big
+  ENDDO
+  DO n3 = 1, nr3big
+     DO n2 = 1, nr2big
+        DO n1 = 1, nr1big
            ! r is the position of point (n1,n2,n3) on the grid
-           do i = 1, 3
+           DO i = 1, 3
               r (i) = (n1 - 1) * at (i, 1) / nr1big + (n2 - 1) * at (i, 2) &
                    / nr2big + (n3 - 1) * at (i, 3) / nr3big
-           enddo
-           do na = 1, nat
+           ENDDO
+           DO na = 1, nat
               ! dr is the distance between r and this atom, in crystal axis
-              do i = 1, 3
+              DO i = 1, 3
                  dr (i) = (r (1) - tau (1, na) ) * bg (1, i) + &
                           (r (2) - tau (2, na) ) * bg (2, i) + &
                           (r (3) - tau (3, na) ) * bg (3, i)
                  ! this brings dr back into the unit cell
-                 dr (i) = dr (i) - nint (dr (i) )
-              enddo
+                 dr (i) = dr (i) - NINT (dr (i) )
+              ENDDO
               ! distance is in cartesioan axis
               distance (na) = (dr (1) * at (1, 1) + dr (2) * at (1, 2) + dr (3) &
                    * at (1, 3) ) **2 + (dr (1) * at (2, 1) + dr (2) * at (2, 2) &
                    + dr (3) * at (2, 3) ) **2 + (dr (1) * at (3, 1) + dr (2) * at (3, &
                    2) + dr (3) * at (3, 3) ) **2
-           enddo
+           ENDDO
            ! initialization needed by hpsort
            atom (1) = 0
            ! sort distances in increasing order
-           call hpsort (nat, distance, atom)
+           CALL hpsort (nat, distance, atom)
            ! find if some atoms are equidistant
            equidistant = 1
-           do na = 2, nat
+           DO na = 2, nat
               relative_distance = distance (na) - distance (1)
-              if (relative_distance.gt.1.0e-4) goto 10
+              IF (relative_distance.GT.1.0e-4) GOTO 10
               equidistant = equidistant + 1
-           enddo
-10         continue
+           ENDDO
+10         CONTINUE
            ! the charge is assigned to the closest atom or shared among equidistant
-           do na = 1, equidistant
+           DO na = 1, equidistant
               partial_charge (atom (na) ) = partial_charge (atom (na) ) + &
-                 real ( rhobig (n1, n2, n3) ) / equidistant
-           enddo
-        enddo
-     enddo
-  enddo
-  return
-end subroutine calculate_partial_charges
+                 REAL ( rhobig (n1, n2, n3) ) / equidistant
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
+  RETURN
+END SUBROUTINE calculate_partial_charges

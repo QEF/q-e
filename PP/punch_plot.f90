@@ -5,10 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-
-subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
+SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
   !-----------------------------------------------------------------------
   !
@@ -34,223 +34,220 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !
   !     The output quantity is written (formatted) on file filplot.
   !
-#include "f_defs.h"
-  !
-  USE kinds, ONLY: DP
-  USE constants, ONLY: rytoev
-  USE cell_base, ONLY: at, bg, omega, alat, celldm, ibrav
-  USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau, zv, atm
-  USE char, ONLY: title
-  USE extfield, ONLY: tefield, dipfield
+  USE kinds,            ONLY : DP
+  USE constants,        ONLY : rytoev
+  USE cell_base,        ONLY : at, bg, omega, alat, celldm, ibrav
+  USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
+  USE char,             ONLY : title
+  USE extfield,         ONLY : tefield, dipfield
   USE gvect
-  USE klist, ONLY: nks, nkstot, xk
-  USE lsda_mod, ONLY: nspin, current_spin
-  USE ener, ONLY: ehart
-  USE io_global,  ONLY : stdout
-  USE scf, ONLY: rho, vltot, vr
-  USE wvfct, ONLY: npw, nbnd, wg, igk, gamma_only
+  USE klist,            ONLY : nks, nkstot, xk
+  USE lsda_mod,         ONLY : nspin, current_spin
+  USE ener,             ONLY : ehart
+  USE io_global,        ONLY : stdout, ionode
+  USE scf,              ONLY : rho, vltot, vr
+  USE wvfct,            ONLY : npw, nbnd, wg, igk, gamma_only
   USE noncollin_module, ONLY : noncolin
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-  character(len=*) :: filplot
-  integer :: kpoint, kband, spin_component, plot_num
-  logical :: stm_wfc_matching, lsign
-  real(kind=DP) :: sample_bias, z, dz
-  real(kind=DP) :: emin, emax, wf, charge
 
-  integer :: is, ik, ibnd, ir, ninter
+  IMPLICIT NONE
+  CHARACTER(len=*) :: filplot
+  INTEGER :: kpoint, kband, spin_component, plot_num
+  LOGICAL :: stm_wfc_matching, lsign
+  REAL(kind=DP) :: sample_bias, z, dz
+  REAL(kind=DP) :: emin, emax, wf, charge
+
+  INTEGER :: is, ik, ibnd, ir, ninter
 #ifdef __PARA
   ! auxiliary vector (parallel case)
-  real(kind=DP), allocatable :: raux1 (:)
+  REAL(kind=DP), ALLOCATABLE :: raux1 (:)
 
 #endif
   ! auxiliary vector
-  real(kind=DP), allocatable :: raux (:)
-  real(kind=DP), allocatable :: averag (:,:,:), plan (:,:,:)
+  REAL(kind=DP), ALLOCATABLE :: raux (:)
+  REAL(kind=DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
 
 
-  if (filplot == ' ') return
+  IF (filplot == ' ') RETURN
 #ifdef __PARA
-  allocate (raux1( nrx1 * nrx2 * nrx3))    
+  ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
-  if ( ( plot_num == 8 .OR. plot_num == 9 ) .AND. gamma_only) &
-       call errore('punch_plot', &
+  IF ( ( plot_num == 8 .OR. plot_num == 9 ) .AND. gamma_only) &
+       CALL errore('punch_plot', &
       ' gamma_only not implemented for this plot ',1)
   !
-  allocate (raux( nrxx))    
+  ALLOCATE (raux( nrxx))    
   !
   !     Here we decide which quantity to plot
   !
-  if (plot_num == 0) then
+  IF (plot_num == 0) THEN
      !
      !      plot of the charge density
      !
-     if (spin_component == 0) then
-        call DCOPY (nrxx, rho (1, 1), 1, raux, 1)
-        do is = 2, nspin
-           call DAXPY (nrxx, 1.d0, rho (1, is), 1, raux, 1)
-        enddo
-     else
-        if (nspin == 2) current_spin = spin_component
-        call DCOPY (nrxx, rho (1, current_spin), 1, raux, 1)
-        call DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
-     endif
+     IF (spin_component == 0) THEN
+        CALL DCOPY (nrxx, rho (1, 1), 1, raux, 1)
+        DO is = 2, nspin
+           CALL DAXPY (nrxx, 1.d0, rho (1, is), 1, raux, 1)
+        ENDDO
+     ELSE
+        IF (nspin == 2) current_spin = spin_component
+        CALL DCOPY (nrxx, rho (1, current_spin), 1, raux, 1)
+        CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
+     ENDIF
 
-  elseif (plot_num == 1) then
+  ELSEIF (plot_num == 1) THEN
      !
      !       The total self-consistent potential V_H+V_xc on output
      !
-     if (spin_component == 0) then
-        call DCOPY (nrxx, vr (1, 1), 1, raux, 1)
-        do is = 2, nspin
-           call DAXPY (nrxx, 1.0d0, vr (1, is), 1, raux, 1)
-        enddo
-        call DSCAL (nrxx, 1.d0 / nspin, raux, 1)
-     else
-        if (nspin == 2) current_spin = spin_component
-        call DCOPY (nrxx, vr (1, current_spin), 1, raux, 1)
-     endif
-     call DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
+     IF (spin_component == 0) THEN
+        CALL DCOPY (nrxx, vr (1, 1), 1, raux, 1)
+        DO is = 2, nspin
+           CALL DAXPY (nrxx, 1.0d0, vr (1, is), 1, raux, 1)
+        ENDDO
+        CALL DSCAL (nrxx, 1.d0 / nspin, raux, 1)
+     ELSE
+        IF (nspin == 2) current_spin = spin_component
+        CALL DCOPY (nrxx, vr (1, current_spin), 1, raux, 1)
+     ENDIF
+     CALL DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
 
-  elseif (plot_num == 2) then
+  ELSEIF (plot_num == 2) THEN
      !
      !       The local pseudopotential on output
      !
-     call DCOPY (nrxx, vltot, 1, raux, 1)
+     CALL DCOPY (nrxx, vltot, 1, raux, 1)
 
-  elseif (plot_num == 3) then
+  ELSEIF (plot_num == 3) THEN
      !
      !       The local density of states at e_fermi on output
      !
-     call local_dos (1, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (1, lsign, kpoint, kband, emin, emax, raux)
 
-  elseif (plot_num == 4) then
+  ELSEIF (plot_num == 4) THEN
      !
      !       The local density of electronic entropy on output
      !
-     call local_dos (2, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (2, lsign, kpoint, kband, emin, emax, raux)
 
-  elseif (plot_num == 5) then
+  ELSEIF (plot_num == 5) THEN
 
-     call work_function (wf)
+     CALL work_function (wf)
 #ifdef __PARA
-     call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
+     CALL stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
 #else
-     call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux)
+     CALL stm (wf, sample_bias, z, dz, stm_wfc_matching, raux)
 #endif
-     if (stm_wfc_matching) then
-        write (title, '("Matching z = ",f4.2," dz in a.u. = ", &
+     IF (stm_wfc_matching) THEN
+        WRITE (title, '("Matching z = ",f4.2," dz in a.u. = ", &
              &       f4.2," Bias in eV = ",f10.4," # states",i4)') &
-             z, dz * alat, sample_bias * rytoev, nint (wf)
-     else
-        write (title, '("No matching, scf wave-functions. ", &
+             z, dz * alat, sample_bias * rytoev, NINT (wf)
+     ELSE
+        WRITE (title, '("No matching, scf wave-functions. ", &
              &       " Bias in eV = ",f10.4," # states",i4)') &
-             sample_bias * rytoev, nint (wf)
-     endif
+             sample_bias * rytoev, NINT (wf)
+     ENDIF
 
-  elseif (plot_num == 6) then
+  ELSEIF (plot_num == 6) THEN
      !
      !      plot of the spin polarisation
      !
-     if (nspin == 2) then
-        call DCOPY (nrxx, rho (1, 1), 1, raux, 1)
-        call DAXPY (nrxx, - 1.d0, rho (1, 2), 1, raux, 1)
-     else
+     IF (nspin == 2) THEN
+        CALL DCOPY (nrxx, rho (1, 1), 1, raux, 1)
+        CALL DAXPY (nrxx, - 1.d0, rho (1, 2), 1, raux, 1)
+     ELSE
         raux(:) = 0.d0
-     endif
+     ENDIF
 
-  elseif (plot_num == 7) then
+  ELSEIF (plot_num == 7) THEN
 
-     call local_dos (0, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
 
-  elseif (plot_num == 8) then
+  ELSEIF (plot_num == 8) THEN
 
-     call do_elf (raux)
+     CALL do_elf (raux)
 
-  elseif (plot_num == 9) then
+  ELSEIF (plot_num == 9) THEN
 
-     allocate (averag( nat, nbnd, nkstot))    
-     allocate (plan(nr3, nbnd, nkstot))    
-     call plan_avg (averag, plan, ninter)
+     ALLOCATE (averag( nat, nbnd, nkstot))    
+     ALLOCATE (plan(nr3, nbnd, nkstot))    
+     CALL plan_avg (averag, plan, ninter)
 
-  elseif (plot_num == 10) then
+  ELSEIF (plot_num == 10) THEN
 
-     call local_dos (3, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (3, lsign, kpoint, kband, emin, emax, raux)
 
-  elseif (plot_num == 11) then
+  ELSEIF (plot_num == 11) THEN
 
      raux(:) = vltot(:) 
-     if (nspin == 2) then
+     IF (nspin == 2) THEN
         rho(:,1) =  rho(:,1) +  rho(:,2)
         nspin = 1
-     end if
-     call v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+     END IF
+     CALL v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, raux)
-     if (tefield.and.dipfield) call add_efield(raux)
-  elseif (plot_num == 12) then
+     IF (tefield.AND.dipfield) CALL add_efield(raux)
+  ELSEIF (plot_num == 12) THEN
      raux=0.d0
-     if (tefield) then
-         call add_efield(raux)
-     else
-         call errore('punch_plot','e_field is not calculated',-1)
-     endif
-  elseif (plot_num == 13) then
-     if (noncolin) then
-        if (spin_component==0) then
-           raux(:) = sqrt(rho(:,2)**2 + rho(:,3)**2 + rho(:,4)**2 )
-        elseif (spin_component >= 1 .or. spin_component <=3) then
+     IF (tefield) THEN
+         CALL add_efield(raux)
+     ELSE
+         CALL errore('punch_plot','e_field is not calculated',-1)
+     ENDIF
+  ELSEIF (plot_num == 13) THEN
+     IF (noncolin) THEN
+        IF (spin_component==0) THEN
+           raux(:) = SQRT(rho(:,2)**2 + rho(:,3)**2 + rho(:,4)**2 )
+        ELSEIF (spin_component >= 1 .OR. spin_component <=3) THEN
            raux(:) = rho(:,spin_component+1)
-        else
-           call errore('punch_plot','spin_component not allowed',1)
-        endif
-     else
-        call errore('punch_plot','noncollinear spin required',1)
-     endif
-  else
+        ELSE
+           CALL errore('punch_plot','spin_component not allowed',1)
+        ENDIF
+     ELSE
+        CALL errore('punch_plot','noncollinear spin required',1)
+     ENDIF
+  ELSE
 
-     call errore ('punch_plot', 'plot_num not implemented', - 1)
+     CALL errore ('punch_plot', 'plot_num not implemented', - 1)
 
-  endif
+  ENDIF
 #ifdef __PARA
-  if (.not. (plot_num == 5 .or. plot_num == 9) ) &
-       call gather (raux, raux1)
-  if (me == 1.and.mypool == 1) call plot_io (filplot, title, nrx1, &
-       nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
-       dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
-  deallocate (raux1)
+  IF (.NOT. (plot_num == 5 .OR. plot_num == 9) ) &
+       CALL gather (raux, raux1)
+  IF ( ionode ) &
+     CALL plot_io (filplot, title, nrx1, &
+         nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
+         dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
+  DEALLOCATE (raux1)
 #else
 
-  call plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+  CALL plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
        nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
        atm, ityp, zv, tau, raux, + 1)
 #endif
-  if (plot_num == 9) then
-#ifdef __PARA
-     if (me == 1.and.mypool == 1) then
-#endif
-        write (4, '(3i8)') ninter, nkstot, nbnd
-        do ik = 1, nkstot
-           do ibnd = 1, nbnd
-              write (4, '(3f15.9,i5)') xk (1, ik) , xk (2, ik) , xk (3, &
+  IF (plot_num == 9) THEN
+     !
+     IF ( ionode ) THEN
+        !
+        WRITE (4, '(3i8)') ninter, nkstot, nbnd
+        DO ik = 1, nkstot
+           DO ibnd = 1, nbnd
+              WRITE (4, '(3f15.9,i5)') xk (1, ik) , xk (2, ik) , xk (3, &
                    ik) , ibnd
-              write (4, '(4(1pe17.9))') (averag (ir, ibnd, ik) , ir = 1, &
+              WRITE (4, '(4(1pe17.9))') (averag (ir, ibnd, ik) , ir = 1, &
                    ninter)
-              do ir = 1, nr3
-                 write (4, * ) ir, plan (ir, ibnd, ik)
-              enddo
-           enddo
-        enddo
-#ifdef __PARA
-     endif
-#endif
-     deallocate (plan)
-     deallocate (averag)
-  endif
+              DO ir = 1, nr3
+                 WRITE (4, * ) ir, plan (ir, ibnd, ik)
+              ENDDO
+           ENDDO
+        ENDDO
+        !
+     ENDIF
+     !
+     DEALLOCATE (plan)
+     DEALLOCATE (averag)
+  ENDIF
 
-  deallocate (raux)
-  return
-end subroutine punch_plot
+  DEALLOCATE (raux)
+  RETURN
+END SUBROUTINE punch_plot

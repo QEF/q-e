@@ -5,7 +5,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt . 
 ! 
 !----------------------------------------------------------------------- 
-program initial_state
+PROGRAM initial_state
   !----------------------------------------------------------------------- 
   ! 
   !  compute forces on atoms as a post-process
@@ -14,7 +14,7 @@ program initial_state
   !   prefix      prefix of input files saved by program pwscf 
   !   outdir      temporary directory where files resides 
   ! 
-  USE io_global,  ONLY : stdout 
+  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE kinds,      ONLY : DP 
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, iunwfc, nwordwfc
   USE ions_base,  ONLY : nat
@@ -23,16 +23,14 @@ program initial_state
   USE uspp,       ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
   USE parameters, ONLY : ntypx
-#ifdef __PARA 
-  use para,       only : me 
-  use mp 
-#endif 
-  implicit none 
-  character(len=256) :: outdir 
-  integer :: ios, ionode_id = 0 , ik, excite(ntypx)
-  namelist / inputpp / outdir, prefix, excite
+  USE mp,         ONLY : mp_bcast
+  !
+  IMPLICIT NONE 
+  CHARACTER(len=256) :: outdir 
+  INTEGER :: ios, ik, excite(ntypx)
+  NAMELIST / inputpp / outdir, prefix, excite
   ! 
-  call start_postproc (nd_nmbr) 
+  CALL start_postproc (nd_nmbr) 
   ! 
   !   set default values for variables in namelist 
   ! 
@@ -40,40 +38,36 @@ program initial_state
   prefix = 'pwscf' 
   outdir = './' 
   ! 
-#ifdef __PARA 
-  if (me == 1)  then 
-#endif 
-  read (5, inputpp, err = 200, iostat = ios) 
-200 call errore ('postforces', 'reading inputpp namelist', abs (ios) ) 
-  ! 
-  tmp_dir = trim(outdir) 
-  ! 
-#ifdef __PARA 
-  end if 
+  IF ( ionode )  THEN 
+     !
+     READ (5, inputpp, err = 200, iostat = ios) 
+200  CALL errore ('postforces', 'reading inputpp namelist', ABS (ios) ) 
+     ! 
+     tmp_dir = TRIM(outdir) 
+     !  
+  END IF 
   ! 
   ! ... Broadcast variables 
   ! 
   CALL mp_bcast( tmp_dir, ionode_id ) 
   CALL mp_bcast( prefix, ionode_id ) 
   CALL mp_bcast( excite, ionode_id )
-#endif 
   ! 
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
-  call read_file 
-  call openfil_pp
-  call hinit0 
-  call hinit1 
+  CALL read_file 
+  CALL openfil_pp
+  CALL hinit0 
+  CALL hinit1 
   IF ( nks == 1 ) THEN
      ik = 1
      CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
   END IF
-  call sum_band 
+  CALL sum_band 
   ! 
-  call do_initial_state (excite)
+  CALL do_initial_state (excite)
   ! 
-  call stop_pp 
+  CALL stop_pp 
   ! 
-end program initial_state
- 
+END PROGRAM initial_state

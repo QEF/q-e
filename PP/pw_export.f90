@@ -259,20 +259,17 @@ program pp_punch
   
 
   use pwcom
-  use io_global, ONLY : stdout, ionode
+  use io_global, ONLY : stdout, ionode, ionode_id
   use io_files
   use iotk_module
-#ifdef __PARA
-  use mp_global, ONLY : mpime
-  use para,      ONLY : kunit, me, mypool
-  use mp
-#endif
+
+  use mp_global, ONLY : kunit
+  use mp,        ONLY : mp_bcast
 
 
   !
   implicit none
   integer :: ik, i, kunittmp, ios
-  integer :: ionode_id = 0
 
   character(len=256) :: pp_file
   character(len=iotk_attlenx) :: attr
@@ -293,13 +290,12 @@ program pp_punch
   !
   !    Reading input file
   !
-#ifdef __PARA
-  IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif
-  READ(5,inputpp,IOSTAT=ios)
-  IF (ios /= 0) CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
-
-#ifdef __PARA
+  IF ( ionode ) THEN
+     !
+     READ(5,inputpp,IOSTAT=ios)
+     IF ( ios /= 0 ) &
+        CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
+     !
   ENDIF
   !
   ! ... Broadcasting variables
@@ -309,7 +305,6 @@ program pp_punch
   CALL mp_bcast( pp_file, ionode_id )
   CALL mp_bcast( uspp_spsi, ionode_id )
   CALL mp_bcast( ascii, ionode_id )
-#endif
 
   tmp_dir = outdir
 
@@ -323,11 +318,7 @@ program pp_punch
   call openfil_pp
   !
 
-#if defined __PARA
   kunittmp = kunit
-#else
-  kunittmp = 1
-#endif
 
   call write_export (pp_file, kunittmp, uspp_spsi, ascii)
 

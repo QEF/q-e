@@ -7,20 +7,18 @@
 !----------------------------------------------------------------------- 
 program efg
   !-----------------------------------------------------------------------
-  use kinds, only: DP
-  use io_files, only: nd_nmbr,prefix, outdir, tmp_dir
-  use parameters, only: ntypx, lmaxx
-  use paw , only :read_recon, paw_nbeta, aephi, psphi
-  USE ions_base, ONLY : ntyp => nsp
-#ifdef __PARA 
-  use para,       only : me 
-  use mp, only: mp_bcast
-#endif 
+  use kinds,      only : DP
+  use io_files,   only : nd_nmbr,prefix, outdir, tmp_dir
+  use parameters, only : ntypx, lmaxx
+  use paw,        only : read_recon, paw_nbeta, aephi, psphi
+  USE ions_base,  ONLY : ntyp => nsp
+  USE io_global,  ONLY : ionode, ionode_id
+  use mp,         only : mp_bcast
 
   implicit none
   character (len=256) :: filerec(ntypx)
   real(kind=DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
-  integer :: ios , ionode_id = 0
+  integer :: ios
   integer :: nt, il
 
   namelist / inputpp / prefix, filerec, Q, outdir, rc
@@ -35,18 +33,14 @@ program efg
   Q=1.d0
   rc = 1.6d0
 
-#ifdef __PARA 
-  if (me == 1)  then 
-#endif 
-
+  if ( ionode )  then  
+     !
      read (5, inputpp, err=200, iostat=ios)
 200  call errore('efg.x', 'reading inputpp namelist', abs(ios))
 
      tmp_dir = trim(outdir)
 
-#ifdef __PARA 
   end if
-
   ! 
   ! ... Broadcast variables 
   ! 
@@ -54,7 +48,6 @@ program efg
   CALL mp_bcast(tmp_dir, ionode_id ) 
   CALL mp_bcast(filerec, ionode_id )
   CALL mp_bcast(      Q, ionode_id )   
-#endif 
 
   call read_file
 

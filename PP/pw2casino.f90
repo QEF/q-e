@@ -5,7 +5,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt . 
 ! 
 !----------------------------------------------------------------------- 
-program pw2casino
+PROGRAM pw2casino
   !----------------------------------------------------------------------- 
 
   ! This subroutine writes the file pwfn.data containing the plane wave
@@ -13,110 +13,108 @@ program pw2casino
 
   ! #include "f_defs.h"
 
-  use io_files, only: nd_nmbr, prefix, outdir, tmp_dir
-#ifdef __PARA 
-  use para,       only : me 
-  use mp, only: mp_bcast
-#endif 
-  implicit none
-  integer :: ios, ionode_id = 0
+  USE io_files,  ONLY : nd_nmbr, prefix, outdir, tmp_dir
+  USE io_global, ONLY : ionode, ionode_id
+  USE mp,        ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  INTEGER :: ios
 
-  namelist / inputpp / prefix, outdir
+  NAMELIST / inputpp / prefix, outdir
 
-  call start_postproc(nd_nmbr)
+  CALL start_postproc(nd_nmbr)
   ! 
   !   set default values for variables in namelist 
   ! 
   prefix = 'pwscf'
   outdir = './'
-#ifdef __PARA 
-  if (me == 1)  then 
-#endif 
-     read (5, inputpp, err=200, iostat=ios)
-200  call errore('pw2casino', 'reading inputpp namelist', abs(ios))
-  tmp_dir = trim(outdir)
-#ifdef __PARA 
-  end if
+
+  IF ( ionode )  THEN 
+     !
+     READ (5, inputpp, err=200, iostat=ios)
+200  CALL errore('pw2casino', 'reading inputpp namelist', ABS(ios))
+  tmp_dir = TRIM(outdir)
+     !
+  END IF
   ! 
   ! ... Broadcast variables 
   ! 
   CALL mp_bcast( prefix, ionode_id ) 
   CALL mp_bcast(tmp_dir, ionode_id ) 
-#endif 
   !
-  call read_file
-  call openfil_pp
+  CALL read_file
+  CALL openfil_pp
   !
-  call compute_casino
+  CALL compute_casino
   !
-  call stop_pp
-  stop
+  CALL stop_pp
+  STOP
 
-end program pw2casino
+END PROGRAM pw2casino
 
 
-subroutine compute_casino
+SUBROUTINE compute_casino
 
-  use kinds, ONLY: DP
-  use atom, only: zmesh
+  USE kinds, ONLY: DP
+  USE atom, ONLY: zmesh
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv
-  use cell_base, only: omega, alat, tpiba2, at, bg
-  use char, only: title
-  use constants, only: tpi
-  use ener, only: ewld, ehart, etxc, vtxc, etot, etxcc
-  use gvect, only: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  USE cell_base, ONLY: omega, alat, tpiba2, at, bg
+  USE char, ONLY: title
+  USE constants, ONLY: tpi
+  USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc
+  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
-  use klist , only: nks, nelec, xk
-  use lsda_mod, only: lsda, nspin
-  use scf, only: rho, rho_core
-  use vlocal, only: vloc, vnew, strf
-  use wvfct, only: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
-  use uspp, only: nkb, vkb, dvan
-  use uspp_param, only: nh
-  use becmod,   only: becp 
-  use io_global, only: stdout
-  use io_files, only: nd_nmbr, nwordwfc, iunwfc
+  USE klist , ONLY: nks, nelec, xk
+  USE lsda_mod, ONLY: lsda, nspin
+  USE scf, ONLY: rho, rho_core
+  USE vlocal, ONLY: vloc, vnew, strf
+  USE wvfct, ONLY: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
+  USE uspp, ONLY: nkb, vkb, dvan
+  USE uspp_param, ONLY: nh
+  USE becmod,   ONLY: becp 
+  USE io_global, ONLY: stdout
+  USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
-  implicit none
-  integer :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
+  IMPLICIT NONE
+  INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb 
-  integer, allocatable :: index(:), igtog(:)
-  logical :: exst, found
-  real(kind=DP) :: ek, eloc, enl,charge
-  complex(kind=DP), allocatable :: aux(:), hpsi(:,:)
-  integer :: ios
+  INTEGER, ALLOCATABLE :: INDEX(:), igtog(:)
+  LOGICAL :: exst, found
+  REAL(kind=DP) :: ek, eloc, enl,charge
+  COMPLEX(kind=DP), ALLOCATABLE :: aux(:), hpsi(:,:)
+  INTEGER :: ios
   REAL (KIND=DP), EXTERNAL :: ewald
 
-  call init_us_1
-  call newd
+  CALL init_us_1
+  CALL newd
   io = 77
 
-  write (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
+  WRITE (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
 
-  call seqopn( 77, 'pwfn.data', 'formatted',exst)  
+  CALL seqopn( 77, 'pwfn.data', 'formatted',exst)  
 
-  allocate (hpsi(npwx, nbnd))
-  allocate (aux(nrxx))
-  allocate (becp (nkb,nbnd))
+  ALLOCATE (hpsi(npwx, nbnd))
+  ALLOCATE (aux(nrxx))
+  ALLOCATE (becp (nkb,nbnd))
   ! four times npwx should be enough
-  allocate (index (4*npwx) )
-  allocate (igtog (4*npwx) )
+  ALLOCATE (INDEX (4*npwx) )
+  ALLOCATE (igtog (4*npwx) )
 
   hpsi (:,:) = (0.d0, 0.d0)
-  index(:) = 0
+  INDEX(:) = 0
   igtog(:) = 0
 
-  if( lsda ) then
+  IF( lsda ) THEN
      nbndup = nbnd
      nbnddown = nbnd
      nk = nks/2
      !     nspin = 2
-  else
+  ELSE
      nbndup = nbnd
      nbnddown = 0
      nk = nks
      !     nspin = 1
-  endif
+  ENDIF
 
   !  if(nks > 1) rewind(iunigk)
   !  do ik=1,nks
@@ -126,88 +124,88 @@ subroutine compute_casino
   ek  = 0.d0
   eloc= 0.d0
   enl = 0.d0
-  do ispin = 1, nspin 
+  DO ispin = 1, nspin 
      !
      !     calculate the local contribution to the total energy
      !
      !      bring rho to G-space
      !
      aux(:) = DCMPLX ( rho(:,ispin), 0.d0)
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+     CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      !
-     do nt=1,ntyp
-        do ig = 1, ngm
+     DO nt=1,ntyp
+        DO ig = 1, ngm
            eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
-                * conjg(aux(nl(ig)))
-        enddo
-     enddo
+                * CONJG(aux(nl(ig)))
+        ENDDO
+     ENDDO
 
-     do ik = 1, nk
+     DO ik = 1, nk
         ikk = ik + nk*(ispin-1)
-        call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-        call davcio (evc, nwordwfc, iunwfc, ikk, - 1)
-        call init_us_2 (npw, igk, xk (1, ikk), vkb)
-        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+        CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+        CALL davcio (evc, nwordwfc, iunwfc, ikk, - 1)
+        CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
+        CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
 
-        do ig =1, npw
-           if( igk(ig) > 4*npwx ) & 
-                call errore ('pw2casino','increase allocation of index', ig)
-           index( igk(ig) ) = 1
-        enddo
+        DO ig =1, npw
+           IF( igk(ig) > 4*npwx ) & 
+                CALL errore ('pw2casino','increase allocation of index', ig)
+           INDEX( igk(ig) ) = 1
+        ENDDO
         !
         ! calculate the kinetic energy
         !
-        do ibnd = 1, nbnd
-           do j = 1, npw
+        DO ibnd = 1, nbnd
+           DO j = 1, npw
               hpsi(j,ibnd) =  g2kin(j) * evc(j,ibnd)
-              ek = ek +  conjg(evc(j,ibnd))*hpsi(j,ibnd) * wg(ibnd,ikk)
-           end do
+              ek = ek +  CONJG(evc(j,ibnd))*hpsi(j,ibnd) * wg(ibnd,ikk)
+           END DO
 
            !
            ! Calculate Non-local energy
            !
            ijkb0 = 0
-           do nt = 1, ntyp
-              do na = 1, nat
-                 if (ityp (na) .eq.nt) then
-                    do ih = 1, nh (nt)
+           DO nt = 1, ntyp
+              DO na = 1, nat
+                 IF (ityp (na) .EQ.nt) THEN
+                    DO ih = 1, nh (nt)
                        ikb = ijkb0 + ih
-                       enl=enl+conjg(becp(ikb,ibnd))*becp(ikb,ibnd) &
+                       enl=enl+CONJG(becp(ikb,ibnd))*becp(ikb,ibnd) &
                             *wg(ibnd,ikk)* dvan(ih,ih,nt)
                        DO jh = ( ih + 1 ), nh(nt)
                           jkb = ijkb0 + jh
                           enl=enl + &
-                               (conjg(becp(ikb,ibnd))*becp(jkb,ibnd)+&
-                               conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
+                               (CONJG(becp(ikb,ibnd))*becp(jkb,ibnd)+&
+                               CONJG(becp(jkb,ibnd))*becp(ikb,ibnd))&
                                * wg(ibnd,ikk) * dvan(ih,jh,nt)
 
                        END DO
 
-                    enddo
+                    ENDDO
                     ijkb0 = ijkb0 + nh (nt)
-                 endif
-              enddo
-           enddo
-        enddo
-     enddo
-  enddo
+                 ENDIF
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
 
 #ifdef __PARA
-  call reduce(1,eloc)
-  call reduce(1,ek)
-  call poolreduce(1,ek)
-  call poolreduce(1,enl)
+  CALL reduce(1,eloc)
+  CALL reduce(1,ek)
+  CALL poolreduce(1,ek)
+  CALL poolreduce(1,enl)
 #endif
   eloc = eloc * omega 
   ek = ek * tpiba2
 
   ngtot = 0
-  do ig = 1, 4*npwx
-     if( index(ig) == 1 ) then
+  DO ig = 1, 4*npwx
+     IF( INDEX(ig) == 1 ) THEN
         ngtot = ngtot + 1
         igtog(ngtot) = ig
-     endif
-  enddo
+     ENDIF
+  ENDDO
   !
   ! compute ewald contribution
   !
@@ -222,116 +220,116 @@ subroutine compute_casino
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   !
-  write(io,'(a)') title
-  write(io,'(a)')
-  write(io,'(a)') ' BASIC INFO'
-  write(io,'(a)') ' ----------'
-  write(io,'(a)') ' Generated by:'
-  write(io,'(a)') ' PWSCF'                    
-  write(io,'(a)') ' Method:'
-  write(io,'(a)') ' DFT'
-  write(io,'(a)') ' DFT Functional:'         
-  write(io,'(a)') ' unknown'
-  write(io,'(a)') ' Pseudopotential'
-  write(io,'(a)') ' unknown'
-  write(io,'(a)') ' Plane wave cutoff (au)'              
-  write(io,*) ecutwfc/2
-  write(io,'(a)') ' Spin polarized:'
-  write(io,*)lsda 
-  write(io,'(a)') ' Total energy (au per primitive cell)' 
-  write(io,*)etot/2                
-  write(io,'(a)') ' Kinetic energy (au per primitive cell)' 
-  write(io,*)ek/2              
-  write(io,'(a)') ' Local potential energy (au per primitive cell)' 
-  write(io,*)eloc/2 
-  write(io,'(a)') ' Non local potential energy(au per primitive cel)'
-  write(io,*)enl/2
-  write(io,'(a)') ' Electron electron energy (au per primitive cell)' 
-  write(io,*)ehart/2    
-  write(io,'(a)') ' Ion ion energy (au per primitive cell)' 
-  write(io,*)ewld/2
-  write(io,'(a)') ' Number of electrons per primitive cell'                 
-  write(io,*)nint(nelec)
-  write(io,'(a)') ' '                 
-  write(io,'(a)') ' GEOMETRY'
-  write(io,'(a)') ' -------- '
-  write(io,'(a)') ' Number of atoms per primitive cell '
-  write(io,*) nat
-  write(io,'(a)')' Atomic number and position of the atoms(au) '
-  do na = 1, nat
-     write(io,'(i6,3f20.14)') int(zmesh(ityp(na))), (alat*tau(j,na),j=1,3)
-  enddo
-  write(io,'(a)') ' Primitive lattice vectors (au) '
-  write(io,100) alat*at(1,1), alat*at(2,1), alat*at(3,1)
-  write(io,100) alat*at(1,2), alat*at(2,2), alat*at(3,2)
-  write(io,100) alat*at(1,3), alat*at(2,3), alat*at(3,3)
-  write(io,'(a)') ' '
-  write(io,'(a)') ' G VECTORS'
-  write(io,'(a)') ' ---------'
-  write(io,'(a)') ' Number of G-vectors'
-  write(io,*) ngtot
-  write(io,'(a)') ' Gx Gy Gz (au)'
-  do ig = 1, ngtot
-     write(io,100) tpi/alat*g(1,igtog(ig)), tpi/alat*g(2,igtog(ig)), &
+  WRITE(io,'(a)') title
+  WRITE(io,'(a)')
+  WRITE(io,'(a)') ' BASIC INFO'
+  WRITE(io,'(a)') ' ----------'
+  WRITE(io,'(a)') ' Generated by:'
+  WRITE(io,'(a)') ' PWSCF'                    
+  WRITE(io,'(a)') ' Method:'
+  WRITE(io,'(a)') ' DFT'
+  WRITE(io,'(a)') ' DFT Functional:'         
+  WRITE(io,'(a)') ' unknown'
+  WRITE(io,'(a)') ' Pseudopotential'
+  WRITE(io,'(a)') ' unknown'
+  WRITE(io,'(a)') ' Plane wave cutoff (au)'              
+  WRITE(io,*) ecutwfc/2
+  WRITE(io,'(a)') ' Spin polarized:'
+  WRITE(io,*)lsda 
+  WRITE(io,'(a)') ' Total energy (au per primitive cell)' 
+  WRITE(io,*)etot/2                
+  WRITE(io,'(a)') ' Kinetic energy (au per primitive cell)' 
+  WRITE(io,*)ek/2              
+  WRITE(io,'(a)') ' Local potential energy (au per primitive cell)' 
+  WRITE(io,*)eloc/2 
+  WRITE(io,'(a)') ' Non local potential energy(au per primitive cel)'
+  WRITE(io,*)enl/2
+  WRITE(io,'(a)') ' Electron electron energy (au per primitive cell)' 
+  WRITE(io,*)ehart/2    
+  WRITE(io,'(a)') ' Ion ion energy (au per primitive cell)' 
+  WRITE(io,*)ewld/2
+  WRITE(io,'(a)') ' Number of electrons per primitive cell'                 
+  WRITE(io,*)NINT(nelec)
+  WRITE(io,'(a)') ' '                 
+  WRITE(io,'(a)') ' GEOMETRY'
+  WRITE(io,'(a)') ' -------- '
+  WRITE(io,'(a)') ' Number of atoms per primitive cell '
+  WRITE(io,*) nat
+  WRITE(io,'(a)')' Atomic number and position of the atoms(au) '
+  DO na = 1, nat
+     WRITE(io,'(i6,3f20.14)') INT(zmesh(ityp(na))), (alat*tau(j,na),j=1,3)
+  ENDDO
+  WRITE(io,'(a)') ' Primitive lattice vectors (au) '
+  WRITE(io,100) alat*at(1,1), alat*at(2,1), alat*at(3,1)
+  WRITE(io,100) alat*at(1,2), alat*at(2,2), alat*at(3,2)
+  WRITE(io,100) alat*at(1,3), alat*at(2,3), alat*at(3,3)
+  WRITE(io,'(a)') ' '
+  WRITE(io,'(a)') ' G VECTORS'
+  WRITE(io,'(a)') ' ---------'
+  WRITE(io,'(a)') ' Number of G-vectors'
+  WRITE(io,*) ngtot
+  WRITE(io,'(a)') ' Gx Gy Gz (au)'
+  DO ig = 1, ngtot
+     WRITE(io,100) tpi/alat*g(1,igtog(ig)), tpi/alat*g(2,igtog(ig)), &
           tpi/alat* g(3,igtog(ig))
-  enddo
+  ENDDO
 
 100 FORMAT (3(1x,f20.15))
 
-  write(io,'(a)') ' '
-  write(io,'(a)') ' WAVE FUNCTION'
-  write(io,'(a)') ' -------------'
-  write(io,'(a)') ' Number of k-points'
-  write(io,*) nk
+  WRITE(io,'(a)') ' '
+  WRITE(io,'(a)') ' WAVE FUNCTION'
+  WRITE(io,'(a)') ' -------------'
+  WRITE(io,'(a)') ' Number of k-points'
+  WRITE(io,*) nk
   !  if(nks > 1) rewind(iunigk)
   
-  do ik = 1, nk
-     write(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
+  DO ik = 1, nk
+     WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
           &           k-point coords (au)'
-     write(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
+     WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
           (tpi/alat*xk(j,ik),j=1,3)
-     do ispin = 1, nspin 
+     DO ispin = 1, nspin 
         ikk = ik + nk*(ispin-1)
-        if( nks > 1 ) then
-           call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-           call davcio(evc,nwordwfc,iunwfc,ikk,-1)
-        endif
-        do ibnd = 1, nbnd
-           write(io,'(a)') ' Band, spin, eigenvalue (au)'
-           write(io,*) ibnd, ispin, et(ibnd,ikk)/2 
-           write(io,'(a)') ' Eigenvectors coefficients'
-           do ig=1, ngtot
+        IF( nks > 1 ) THEN
+           CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+           CALL davcio(evc,nwordwfc,iunwfc,ikk,-1)
+        ENDIF
+        DO ibnd = 1, nbnd
+           WRITE(io,'(a)') ' Band, spin, eigenvalue (au)'
+           WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/2 
+           WRITE(io,'(a)') ' Eigenvectors coefficients'
+           DO ig=1, ngtot
               ! now for all G vectors find the PW coefficient for this k-point
-              found = .false.
-              do ig7 = 1, npw
-                 if( igk(ig7) == igtog(ig) )then
-                    write(io,*) evc(ig7,ibnd)
-                    found = .true.
-                    goto 17
-                 endif
-              enddo
+              found = .FALSE.
+              DO ig7 = 1, npw
+                 IF( igk(ig7) == igtog(ig) )THEN
+                    WRITE(io,*) evc(ig7,ibnd)
+                    found = .TRUE.
+                    GOTO 17
+                 ENDIF
+              ENDDO
               ! if can't find the coefficient this is zero
-17            if( .not. found ) write(io,*) (0.d0, 0.d0)
-           enddo
-        enddo
-     enddo
-  enddo
-  close(io)
+17            IF( .NOT. found ) WRITE(io,*) (0.d0, 0.d0)
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
+  CLOSE(io)
 
-  write (stdout,*) 'Kinetic energy   '  , ek/2
-  write (stdout,*) 'Local energy     ', eloc/2
-  write (stdout,*) 'Non-Local energy ', enl/2
-  write (stdout,*) 'Ewald energy     ', ewld/2
-  write (stdout,*) 'xc contribution  ',(etxc-etxcc)/2
-  write (stdout,*) 'hartree energy   ', ehart/2
-  write (stdout,*) 'Total energy     ', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
+  WRITE (stdout,*) 'Kinetic energy   '  , ek/2
+  WRITE (stdout,*) 'Local energy     ', eloc/2
+  WRITE (stdout,*) 'Non-Local energy ', enl/2
+  WRITE (stdout,*) 'Ewald energy     ', ewld/2
+  WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/2
+  WRITE (stdout,*) 'hartree energy   ', ehart/2
+  WRITE (stdout,*) 'Total energy     ', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
 
-  deallocate (igtog)
-  deallocate (index)
-  deallocate (becp)
-  deallocate (aux)
-  deallocate (hpsi)
+  DEALLOCATE (igtog)
+  DEALLOCATE (index)
+  DEALLOCATE (becp)
+  DEALLOCATE (aux)
+  DEALLOCATE (hpsi)
 
-end subroutine compute_casino
+END SUBROUTINE compute_casino
 
 
