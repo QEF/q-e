@@ -23,6 +23,14 @@ subroutine output_tau (plot_lattice)
   !
   allocate (tau_out(3,nat))
   tau_out(:,:) = tau(:,:)
+  !
+  ! print cell parameters if required
+  !
+  IF (plot_lattice) THEN
+     WRITE( stdout, '("CELL_PARAMETERS (alat)")') 
+     WRITE( stdout, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
+  END IF
+  !
   SELECT CASE ( atomic_positions )
      !
      !  convert output atomic positions from internally used format
@@ -48,10 +56,6 @@ subroutine output_tau (plot_lattice)
      WRITE( stdout, '("ATOMIC_POSITIONS")')
   END SELECT
   !
-  IF (plot_lattice) THEN
-     WRITE( stdout, '("CELL_PARAMETERS (alat)")') 
-     WRITE( stdout, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
-  END IF
   do na = 1, nat
      WRITE( stdout,'(a3,3x,3f14.9)') atm(ityp(na)), (tau_out(i,na), i=1,3)
   enddo
