@@ -5,7 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-      MODULE global_version
-        character (len=6) :: version_number = '1.3.0'
-      END MODULE global_version
+!----------------------------------------------------------------------------
+MODULE global_version
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  CHARACTER (LEN=6) :: version_number = '1.3.0'
+  !
+END MODULE global_version

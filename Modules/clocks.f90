@@ -12,6 +12,8 @@ MODULE mytime
   !
   IMPLICIT NONE
   !
+  SAVE
+  !
   INTEGER, PARAMETER                      :: maxclock = 100
   REAL (KIND=DP), PARAMETER               :: notrunning = - 1.D0 
   REAL (KIND=DP), DIMENSION(maxclock)     :: myclock, t0

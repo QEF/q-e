@@ -22,8 +22,8 @@
       MODULE shmem_include
 
         USE kinds
-        implicit none
-        save
+        IMPLICIT NONE
+        SAVE
 
          LOGICAL TSHMEM
 
@@ -31,7 +31,7 @@
 !
 !     Include file for SHMEM Library
 !
-         include 'mpp/shmem.fh'
+         INCLUDE 'mpp/shmem.fh'
          INTEGER, PARAMETER :: mp_shmem_bufsize = &
            MAX(524288,SHMEM_REDUCE_MIN_WRKDATA_SIZE)
          INTEGER PSYNCB(SHMEM_BARRIER_SYNC_SIZE)
