@@ -323,10 +323,12 @@
 !
       use ions_base, only: na, nas => nax
       use io_global, only: stdout
+      use cvan, only: ish
       use elct
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
-      use cvan
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb
 !
       implicit none
       integer nspmn, nspmx
@@ -369,7 +371,9 @@
 !
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use cvan
+      use cvan, only: ish, nhsavb, nvb
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb, qq
       use elct
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -485,7 +489,9 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use elct
-      use cvan
+      use cvan, only: ish, nhsavb, nvb
+      use uspp_param, only: nh
+      use uspp, only: nhsa=>nkb, qq
 !
       implicit none
       integer i
@@ -654,7 +660,9 @@
       subroutine dennl(bec,denl)
 !-----------------------------------------------------------------------
 !
-      use cvan
+      use cvan, only: ish
+      use uspp_param, only: nh
+      use uspp, only: nhsa=>nkb, dvan
       use cdvan
       use elct
       use reciprocal_vectors, only: gstart
@@ -703,7 +711,7 @@
                      enddo
                   end do
                   if(iv.ne.jv) dsum=2.d0*dsum
-                  denl = denl + dsum*dvan(jv,iv,is)
+                  denl = denl + dsum*dvan(jv,iv,1,is)
                end do
             end do
          end do
@@ -784,7 +792,9 @@
       use gvec
       use gvecs
       use gvecw, only: ngw
-      use cvan
+      use cvan, only: ish
+      use uspp, only: nhsa=>nkb, dvan
+      use uspp_param, only: nhm, nh
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
       use elct
@@ -796,7 +806,7 @@
       implicit none
 !
       complex(kind=8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      real(kind=8) bec(nhsa,n), deeq(nat,nhx,nhx,nspin), v(nnrsx,nspin)
+      real(kind=8) bec(nhsa,n), deeq(nat,nhm,nhm,nspin), v(nnrsx,nspin)
       integer i
 ! local variables
       integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
@@ -894,9 +904,9 @@
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      isa=isa+1
-                     dd = deeq(isa,iv,jv,iss1)+dvan(iv,jv,is)
+                     dd = deeq(isa,iv,jv,iss1)+dvan(iv,jv,1,is)
                      af(inl)=af(inl)-  f(i)*dd*bec(jnl,  i)
-                     dd = deeq(isa,iv,jv,iss2)+dvan(iv,jv,is)
+                     dd = deeq(isa,iv,jv,iss2)+dvan(iv,jv,1,is)
                      if (i.ne.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
                   end do
                end do
@@ -968,7 +978,9 @@
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use cvan
+      use cvan, only: ish, nvb
+      use uspp, only: nhsa=>nkb, qq
+      use uspp_param, only: nh
 !
       implicit none
 !
@@ -1041,6 +1053,7 @@
       use ions_base, only: na, nsp, nat, nas => nax
       use gvec
       use cvan
+      use uspp_param, only: nhm, nh
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use elct
@@ -1060,7 +1073,7 @@
       implicit none
 ! input
       integer, intent(in) ::  irb(3,natx,nsx)
-      real(kind=8), intent(in)::  rhovan(nat,nhx*(nhx+1)/2,nspin),      &
+      real(kind=8), intent(in)::  rhovan(nat,nhm*(nhm+1)/2,nspin),      &
      &                            rhor(nnr,nspin)
       complex(kind=8), intent(in)::  eigrb(ngb,nas,nsp), rhog(ng,nspin)
 ! local
@@ -1356,12 +1369,14 @@
 !
 ! calculation of nonlocal potential energy term
 !
-      use cvan
+      use cvan, only: ish
+      use uspp_param, only: nhm, nh
+      use uspp, only :nhsa=>nkb, dvan
       use elct
       use ions_base, only: nsp, nat, na
       implicit none
 ! input
-      real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
+      real(kind=8) bec(nhsa,n), rhovan(nat,nhm*(nhm+1)/2,nspin)
 ! local
       real(kind=8) sum, sums(2)
       integer is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
@@ -1392,7 +1407,7 @@
                      sum=sum+sums(iss)
                   end do
                   if(iv.ne.jv) sum=2.d0*sum
-                  ennl=ennl+sum*dvan(jv,iv,is)
+                  ennl=ennl+sum*dvan(jv,iv,1,is)
                end do
             end do
          end do
@@ -2706,7 +2721,9 @@
 !     on output: bec(i) is recalculated
 !
       use ions_base, only: na
-      use cvan
+      use cvan, only :nhsavb, nvb, ish
+      use uspp, only :nhsa=>nkb, qq
+      use uspp_param, only:  nh
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -2790,7 +2807,8 @@
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
-      use cvan
+      use uspp, only :nhsa=>nkb
+      use cvan, only: nhsavb
       use elct
       use gvecw, only: ngw
 !
@@ -3342,7 +3360,8 @@
 !     where
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
-      use cvan, only:nh, nhx, nvb
+      use uspp_param, only: nh, nhm
+      use cvan, only: nvb
       use ions_base, only: nas => nax, nat, nsp, na
       use parameters, only: natx, nsx
       use constants, only: pi, fpi
@@ -3363,9 +3382,9 @@
 ! input
       integer irb(3,natx,nsx)
       complex(kind=8) eigrb(ngb,nas,nsp)
-      real(kind=8)  vr(nnr,nspin), rhovan(nat,nhx*(nhx+1)/2,nspin)
+      real(kind=8)  vr(nnr,nspin), rhovan(nat,nhm*(nhm+1)/2,nspin)
 ! output
-      real(kind=8)  deeq(nat,nhx,nhx,nspin), fion(3,natx,nsp)
+      real(kind=8)  deeq(nat,nhm,nhm,nspin), fion(3,natx,nsp)
 ! local
       integer isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
       integer irb3, imin3, imax3
@@ -3440,7 +3459,7 @@
          end do
       end do
 #ifdef __PARA
-      call reduce(nat*nhx*nhx*nspin,deeq)
+      call reduce(nat*nhm*nhm*nspin,deeq)
 #endif
       if (.not.( tfor .or. thdyn .or. tprnfor ) ) go to 10
 !
@@ -3587,7 +3606,9 @@
       use ions_base, only: na, nsp
       use parameters, only: natx
       use gvec
-      use cvan
+      use uspp, only :nhsa=>nkb, qq
+      use uspp_param, only: nhm, nh
+      use cvan, only: ish, nvb
       use elct
       use constants, only: pi, fpi
 !
@@ -3596,7 +3617,7 @@
       real(kind=8) fion(3,natx,nsp)
 !
       integer k, is, ia, iv, jv, i, j, inl
-      real(kind=8) temp(nx,nx), tmpbec(nhx,nx),tmpdr(nx,nhx) ! automatic arrays
+      real(kind=8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
 !
       call start_clock( 'nlfl' )
       do k=1,3
@@ -3629,7 +3650,7 @@
                   temp = 0.d0
 !
                   call MXMA                                             &
-     &                 (tmpdr,1,nx,tmpbec,1,nhx,temp,1,nx,n,nh(is),n)
+     &                 (tmpdr,1,nx,tmpbec,1,nhm,temp,1,nx,n,nh(is),n)
 !
                   do j=1,n
                      do i=1,n
@@ -3655,7 +3676,9 @@
 !     contribution to fion due to nonlocal part
 !
       use gvec
-      use cvan
+      use uspp, only :nhsa=>nkb, dvan
+      use uspp_param, only: nhm, nh
+      use cvan, only: ish, nvb
       use ions_base, only: nas => nax, nat, nsp, na
       use parameters, only: natx, nsx
       use elct
@@ -3664,13 +3687,13 @@
       !use parm
 ! 
       implicit none
-      real(kind=8) deeq(nat,nhx,nhx,nspin), bec(nhsa,n), becdr(nhsa,n,3),&
+      real(kind=8) deeq(nat,nhm,nhm,nspin), bec(nhsa,n), becdr(nhsa,n,3),&
      &       c(2,ngw,n)
       complex(kind=8) eigr(ngw,nas,nsp)
       real(kind=8) fion(3,natx,nsx)
 !
       integer k, is, ia, isa, iss, inl, iv, jv, i
-      real(kind=8) tmpbec(nhx,n), tmpdr(nhx,n) ! automatic arrays
+      real(kind=8) tmpbec(nhm,n), tmpdr(nhm,n) ! automatic arrays
       real(kind=8) temp
 !
 !     nlsm2 fills becdr
@@ -3693,7 +3716,7 @@
                      inl=ish(is)+(jv-1)*na(is)+ia
                      do i=1,n
                         iss=ispin(i)
-                        temp=dvan(iv,jv,is)+deeq(isa,jv,iv,iss)
+                        temp=dvan(iv,jv,1,is)+deeq(isa,jv,iv,iss)
                         tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i)
                      end do
                   end do
@@ -3741,7 +3764,9 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
-      use cvan
+      use uspp, only :nhsa=>nkb, nhtol, beta
+      use cvan, only: ish
+      use uspp_param, only: nh
       use work, only: wrk2
 !
       implicit none
@@ -3824,7 +3849,9 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
-      use cvan
+      use uspp, only :nhsa=>nkb, nhtol, beta
+      use cvan, only: ish
+      use uspp_param, only: nh
       use work, only: wrk2
 !
       implicit none
@@ -3915,7 +3942,9 @@
 !     for vanderbilt pseudo pot - kl & ap
 !
       use ions_base, only: na, nsp, nas => nax
-      use cvan
+      use cvan, only: ish, nvb
+      use uspp, only :nhsa=>nkb, qq
+      use uspp_param, only: nh
       use elct
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
@@ -4414,7 +4443,9 @@
 !
       use ions_base, only: nas => nax, nsp, na
       use gvecw, only: ngw
-      use cvan 
+      use cvan, only: ish
+      use uspp, only :nhsa=>nkb, beta, nhtol
+      use uspp_param, only: nh
       use elct
 !
       implicit none
@@ -4452,7 +4483,7 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na, nas => nax
-      use cvan, only: nhsa
+      use uspp, only: nhsa => nkb
       use atom
 !
       implicit none
@@ -4758,35 +4789,15 @@
 !
       character(len=256) :: filename
       integer :: is, ierr, iexch_, icorr_, igcx_, igcc_, iunit=14
+      integer, external :: pseudo_type
 !
 !     -----------------------------------------------------------------
 !     first vanderbilt species , then norm-conserving are read !!
 !
-!     ipp=-2 UPF format, vanderbilt (TEMP)
-!     ipp=-1 ultrasoft vanderbilt pp , AdC format
-!     ipp= 0 ultrasoft vanderbilt pp , old format
-!     ipp= 1 ultrasoft vanderbilt pp
-!     ipp= 2 norm-conserving hsc pp
-!     ipp= 3 norm-conserving bhs pp
-!     ipp= 4 UPF format, non-vanderbilt (TEMP)
-!     -----------------------------------------------------------------
 !
       nvb=0
 !
       do is=1,nsp
-!
-!     check on ipp value and input order
-!
-         if(is.ge.2)then
-            if(ipp(is).lt.ipp(is-1))then
-               call errore('readpp', 'first vdb, then nnc',10)
-            endif
-         endif
-!
-!     ------------------------------------------------------
-!     counting of u-s vanderbilt species 
-!     ------------------------------------------------------
-         if(ipp(is).le.1) nvb=nvb+1
 !
          if (trim(pseudo_dir) == ' ' ) then
              filename=trim(psfile(is))
@@ -4796,28 +4807,35 @@
          WRITE( stdout,"('reading ppot for species # ',i2, &
         &          ' from file ',a)") is, trim(filename)
          open (unit=iunit,file=filename,status='old',form='formatted')
-!
-         select case (ipp(is))
-!     =================================================================
-!     ultrasoft and hsc species  
-!     =================================================================
-            case (-2)
-               call read_pseudo(is,iunit,ierr)
-            case (-1)
+         !
+         ! try first with UPF format
+         !
+         call read_pseudo(is,iunit,ierr)
+         
+         if (ierr /= 0) then
+            !
+            ! UPF not found, pseudopotential format determined by file name:
+            ! *.vdb or *.van  Vanderbilt US pseudopotential code  pseudo_type=1
+            ! *.RRKJ3         Andrea's   US new code              pseudo_type=2
+            ! none of the above: old CPV norm-conserving format   pseudo_type=0
+            !
+            if ( pseudo_type (psfile (is) ) == 1 ) then
+               call readvan(is,iunit)
+            else if ( pseudo_type (psfile (is) ) == 2 ) then
                call readAdC(is,iunit)
-            case ( 0, 1, 2)
-               call readvan(is,ipp(is),iunit)
-!     ==================================================================
-!     bhs species  
-!     ==================================================================
-            case ( 3)
+            else
                call readbhs(is,iunit)
-            case ( 4)
-               call read_pseudo(is,iunit,ierr)
-            case default
-               call errore('readpp', 'wrong pseudo type',ipp(is))
-         end select
+            end if
+         end if
          close (unit=iunit)
+!
+!     ipp=-2 UPF format, vanderbilt (TEMP)
+!     ipp=-1 ultrasoft vanderbilt pp , AdC format
+!     ipp= 0 ultrasoft vanderbilt pp , old format
+!     ipp= 1 ultrasoft vanderbilt pp
+!     ipp= 2 norm-conserving hsc pp
+!     ipp= 3 norm-conserving bhs pp
+!     ipp= 4 UPF format, non-vanderbilt (TEMP)
 !
 ! check for consistency of DFT
 !
@@ -4832,10 +4850,42 @@
                CALL errore( 'readpp','inconsistent DFT read',is)
             end if
          end if
+!
+!     check on ipp value and input order
+!
+         if(is > 1) then
+!!!            if (tvanp(is) .and. .not. tvanp(is-1)) then
+           if ( ipp(is) < ipp(is-1) ) then
+               call errore('readpp', 'first vdb, then nnc',10)
+            endif
+         endif
+!
+!     count u-s vanderbilt species 
+!!!         if(tvanp(is)) nvb=nvb+1
+         if (ipp(is) <= 1) nvb=nvb+1
       end do
 !
       return
       end
+!-----------------------------------------------------------------------
+integer function pseudo_type (psfile)
+  !-----------------------------------------------------------------------
+  implicit none
+  character (len=*) :: psfile
+  integer :: l
+  !
+  l = len_trim (psfile)
+  pseudo_type = 0
+  if (psfile (l - 3:l) .eq.'.vdb'.or.psfile (l - 3:l) .eq.'.van') &
+       pseudo_type = 1
+  if (l > 5) then
+     if (psfile (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
+  end if
+  !
+  return
+
+end function pseudo_type
+
 !     
 !---------------------------------------------------------------------
       subroutine readbhs( is, iunps )
@@ -4846,7 +4896,7 @@
       use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: dft, which_dft
-      use ions_base, only: zv
+      use ions_base, only: zv, ipp
       use io_global, only: stdout
 
 !
@@ -4860,6 +4910,7 @@
 !
 ! nlcc is unfortunately not read from file
 !
+      ipp(is) = 3
       nlcc(is)=.false.
       read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
       if (zv(is) < 1 .or. zv(is) > 100 ) then
@@ -5028,7 +5079,7 @@
                        qqq, nbeta, nbrx, betar, dion, lll, kkbeta
       use qrl_mod, only: qrl
       use funct, only: dft, iexch, icorr, igcx, igcc
-      use ions_base, only: zv
+      use ions_base, only: zv, ipp
       use io_global, only: stdout
 !
       ! the above module variables has no dependency from iosys
@@ -5075,6 +5126,7 @@
       if (is.lt.0 .or. is.gt.nsx)                                       &
      &   call errore('readAdC','Wrong is number', 1)
 !
+      ipp(is) = -1
       read( iunps, '(a75)', err=100, iostat=ios ) titleps
 !
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
@@ -5218,11 +5270,10 @@
       end
 !     
 !---------------------------------------------------------------------
-      subroutine readvan( is, ipp, iunps )
+      subroutine readvan( is, iunps )
 !---------------------------------------------------------------------
 !
-!     Read Vanderbilt pseudopotential of type "ipp" for species "is" 
-!     from unit "iunps"
+!     Read Vanderbilt pseudopotential for species "is" from unit "iunps"
 !     Output parameters in module "uspp_param"
 !     info on DFT level in module "funct"
 !
@@ -5282,7 +5333,7 @@
       use qrl_mod, only: cmesh, qrl
       use funct, only: dft, which_dft
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
-      use ions_base, only: zv
+      use ions_base, only: zv, ipp
       use io_global, only: stdout
 !
       implicit none
@@ -5291,7 +5342,6 @@
 !
       integer                                                           &
      &      is,        &! The number of the pseudopotential
-     &      ipp,       &! The type of pseudopotential
      &      iunps       ! The unit of the pseudo file
 !
 !   The local variables which are used to read the Vanderbilt file.
@@ -5343,17 +5393,12 @@
       if (is.lt.0 .or. is.gt.nsx)                                       &
      &   call errore('readvan','Wrong is number', 1)
 !
-      if (ipp.lt.0 .or. ipp.gt.2)                                       &
-     &   call errore('readvan','Wrong pseudopotential type', 1)
-!
       read(iunps, *, err=100 )                                          &
      &     (iver(i),i=1,3), (idmy(i),i=1,3)
       if ( iver(1).gt.7 .or. iver(1).lt.1 .or.                          &
      &     iver(2).gt.9 .or. iver(2).lt.0 .or.                          &
      &     iver(3).gt.9 .or. iver(3).lt.0      )                        &
      &   call errore('readvan','wrong version numbers',1)
-      if ( iver(1).gt.1 .and. ipp.eq.0)                                 &
-     &   call errore('readvan','use ipp=0 only for old US format',1)
 !
       read( iunps, '(a20,3f15.9)', err=100, iostat=ios )                &
      &     title, z(is), zv(is), exfact 
@@ -5394,10 +5439,11 @@
          call errore('readvan','wrong keyps',keyps)
       else if (keyps.eq.4) then
          call errore('readvan','keyps not implemented',keyps)
-      else if (keyps.lt.3 .and. ipp.lt.2) then
-         call errore('readvan','HSC read, ultrasoft expected',keyps)
-      else if (keyps.eq.3 .and. ipp.eq.2) then
-         call errore('readvan','ultrasoft read, HSC expected',keyps)
+      end if
+      if (keyps == 3) then
+         ipp(is) = 1
+      else
+         ipp(is) = 2
       end if
 !
 !     Read information on the angular momenta, and on Q pseudization
@@ -5445,7 +5491,7 @@
 !       set the number of angular momentum terms in q_ij to read in
 !
       if (iver(1).eq.1) then
-         ipp  = 0
+         ipp(is) = 0
 ! old format: no distinction between nang and nchi
          nang = nchi(is)
 ! old format: no optimization of q_ij => 3-term taylor series
@@ -5730,8 +5776,8 @@
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use cvan
-      !use parm
+      use uspp, only: nhsa => nkb
+      use uspp_param, only: nh, nhm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base, only: omega
@@ -5747,7 +5793,7 @@
       use io_global, only: stdout
 !
       implicit none
-      real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
+      real(kind=8) bec(nhsa,n), rhovan(nat,nhm*(nhm+1)/2,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
       real(kind=8) enl, ekin
       complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
@@ -6028,7 +6074,8 @@
       use parameters, only: nsx, natx
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use cvan
+      use uspp, only: nhsa => nkb
+      use cvan, only: nvb, nhsavb
       use elct
 !
       implicit none
@@ -6098,7 +6145,8 @@
       use io_global, only: stdout
       use parameters, only: natx, nsx
       use gvec
-      use cvan
+      use cvan, only: nvb
+      use uspp_param, only: nh, nhm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use elct
@@ -6118,7 +6166,7 @@
       implicit none
 !
       integer, intent(in) :: irb(3,natx,nsx)
-      real(kind=8), intent(in):: rhovan(nat,nhx*(nhx+1)/2,nspin)
+      real(kind=8), intent(in):: rhovan(nat,nhm*(nhm+1)/2,nspin)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
       real(kind=8), intent(inout):: rhor(nnr,nspin)
       complex(kind=8),  intent(inout):: rhog(ng,nspin)
@@ -6454,7 +6502,9 @@
 !     output: swfc=S|wfc>
 !
       use ions_base, only: na
-      use cvan
+      use cvan, only: nvb, ish, nhsavb
+      use uspp, only: nhsa => nkb, qq
+      use uspp_param, only: nh
       use elct
       use gvecw, only: ngw
       !use parm
@@ -6549,7 +6599,8 @@
 !     routine makes use of c(-q)=c*(q)
 !
       use parameters, only: natx, nsx
-      use cvan
+      use uspp, only: nhsa => nkb
+      use cvan, only : nvb, nhsavb
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -6642,7 +6693,9 @@
       use grid_dimensions, only: nr1, nr2, nr3, &
             nnr => nnrx
       use cell_base, only: omega
-      use cvan
+      use cvan, only: nhsavb, nvb, ish
+      use uspp, only: nhsa => nkb, qq
+      use uspp_param, only: nh
       use ions_base, only: na
 !
       implicit none
@@ -6802,7 +6855,8 @@
 !     routine makes use of c(-q)=c*(q)
 !
       use parameters, only: nsx, natx
-      use cvan
+      use cvan, only: nhsavb, nvb
+      use uspp, only: nhsa => nkb
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -6869,7 +6923,9 @@
 !
       use ions_base, only: nsp, na
       use io_global, only: stdout
-      use cvan
+      use cvan, only: nhsavb, nvb, ish
+      use uspp, only: nhsa => nkb
+      use uspp_param, only: nh
       use gvecw, only: ngw
       use elct
       use work, only: wrk2

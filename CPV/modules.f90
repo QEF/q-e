@@ -34,32 +34,12 @@ module cvan
   use parameters, only: nsx
   implicit none
   save
+  integer nvb, nhsavb, ish(nsx)
   !     nvb    = number of species with Vanderbilt PPs
-  !     nh(is) = number of beta functions, including Y_lm, for species is
   !     ish(is)= used for indexing the nonlocal projectors betae
   !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
   !              where "is" is the species and iv=1,nh(is)
-  !     nhx    = max value of nh(np)
   !     nhsavb = total number of Vanderbilt nonlocal projectors
-  !     nhsa   = total number of nonlocal projectors for all atoms
-  integer nvb, nhsavb, ish(nsx), nh(nsx), nhsa, nhx
-  !     indv  : indv(  ind,is)=beta function (without Y_lm) for projector ind
-  !     nhtol : nhtol( ind,is)=value of l for projector ind of species is
-  !     nhtolm: nhtolm(ind,is)=cobined lm index in Y_lm for projector ind
-  integer, allocatable:: nhtol(:,:), indv(:,:), nhtolm(:,:)
-  !     beta = nonlocal projectors in g space without e^(-ig.r) factor
-  !     qq   = ionic Q_ij for each species (Vanderbilt only)
-  !     dvan = ionic D_ij for each species (Vanderbilt only)
-  real(kind=8), allocatable:: beta(:,:,:), qq(:,:,:), dvan(:,:,:)
-contains
-  subroutine deallocate_cvan()
-      IF( ALLOCATED( nhtol ) ) DEALLOCATE( nhtol )
-      IF( ALLOCATED( indv ) ) DEALLOCATE( indv )
-      IF( ALLOCATED( nhtolm ) ) DEALLOCATE( nhtolm )
-      IF( ALLOCATED( beta ) ) DEALLOCATE( beta )
-      IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
-      IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
-  end subroutine
 end module cvan
 
 module elct
@@ -149,7 +129,7 @@ end module gvec
 !  nqf      coefficients in Q smoothing
 !  nqlc     angular momenta present in Q smoothing
 !  lll      lll(j) is l quantum number of j'th beta function
-!  lqx      highest angular momentum that is present in Q functions
+!  lmaxq      highest angular momentum that is present in Q functions
 !  lmaxkb   highest angular momentum that is present in beta functions
 !  dion     bare pseudopotential D_{\mu,\nu} parameters
 !              (ionic and screening parts subtracted out)

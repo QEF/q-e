@@ -22,7 +22,9 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
-      use cvan
+      use cvan, only: ish
+      use uspp, only: nhtol, nhsa => nkb
+      use uspp_param, only: nh, nhm
       use cdvan
       use work, only: wrk2
 !
@@ -261,6 +263,7 @@
 !     ==================================================================
       do is=1,nsp
          if(ipp(is).ne.3) then
+!!!        if (numeric(is)) then
 !     ==================================================================
 !     local potential given numerically on logarithmic mesh 
 !     ==================================================================
@@ -287,6 +290,7 @@
                vscr(ir)=0.0
                f(ir)=0.0
             end do
+!!!         if (oldpseudo(is)) then
             if (ipp(is).eq.0) then
                call herman_skillman_int(mesh(is),cmesh(is),f,fint)
             else
@@ -315,6 +319,7 @@
                      df(ir)=vscr(ir)*cos(r(ir,is)*xg)*.5*r(ir,is)/xg
                   endif
                end do
+!!!         if (oldpseudo(is)) then
                if (ipp(is).eq.0) then
                   call herman_skillman_int                              &
      &                 (mesh(is),cmesh(is),f,figl(ig))
@@ -872,12 +877,14 @@
       use reciprocal_vectors, only: gstart
       use cell_base, only: omega
       use cell_base, only: ainv
-      use cvan
+      use cvan, only: nvb
+      use uspp, only: qq, nhtolm, beta
+      use uspp_param, only: nh
       use core
       use constants, only: pi, fpi
       use ions_base, only: nsp
       use elct
-      use uspp_param, only: lqx, nqlc, lmaxkb, kkbeta, nbrx, nbeta
+      use uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbrx, nbeta
       use atom, only: nlcc, r, rab, mesh, rho_atc
       use qradb_mod
       use qgb_mod
@@ -897,10 +904,10 @@
       real(kind=8) xg, c, betagl, dbetagl, gg
 !
 ! 
-      allocate(ylmb(ngb,lqx*lqx))
+      allocate(ylmb(ngb,lmaxq*lmaxq))
 !
       qradb(:,:,:,:,:) = 0.d0
-      call ylmr2 (lqx*lqx, ngb, gxb, gb, ylmb)
+      call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
 !     ===============================================================
 !     initialization for vanderbilt species
@@ -957,12 +964,12 @@
 !     ---------------------------------------------------------------
 !     arrays required for stress calculation, variable-cell dynamics
 !     ---------------------------------------------------------------
-         allocate(dqradb(ngb,nbrx,nbrx,lqx,nsp))
-         allocate(dylmb(ngb,lqx*lqx,3,3))
+         allocate(dqradb(ngb,nbrx,nbrx,lmaxq,nsp))
+         allocate(dylmb(ngb,lmaxq*lmaxq,3,3))
          allocate(dqgbs(ngb,3,3))
          dqrad(:,:,:,:,:,:,:) = 0.d0
          !
-         call dylmr2_(lqx*lqx, ngb, gxb, gb, ainv, dylmb)
+         call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
          !
          do is=1,nvb
             !
@@ -1137,7 +1144,9 @@
 !     contribution to the internal stress tensor due to the constraints
 !
       use gvec
-      use cvan
+      use cvan, only: nvb, ish
+      use uspp, only: nhsa => nkb, qq
+      use uspp_param, only: nh, nhm
       use ions_base, only: na
       use elct
       use cell_base, only: omega, h
@@ -1148,7 +1157,7 @@
       real(kind=8) bec(nhsa,n), dbec(nhsa,n,3,3), lambda(nx,nx)
 !
       integer i, j, ii, jj, inl, iv, jv, ia, is
-      real(kind=8) fpre(3,3), tmpbec(nhx,nx), tmpdh(nx,nhx), temp(nx,nx)
+      real(kind=8) fpre(3,3), tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx)
 !
       fpre(:,:) = 0.d0
       do ii=1,3
@@ -1182,7 +1191,7 @@
                      temp(:, 1:n) = 0.d0
 !
                      call MXMA                                          &
-     &                    (tmpdh,1,nx,tmpbec,1,nhx,temp,1,nx,n,nh(is),n)
+     &                    (tmpdh,1,nx,tmpbec,1,nhm,temp,1,nx,n,nh(is),n)
 !
                      do j=1,n
                         do i=1,n
@@ -1231,13 +1240,14 @@
       use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
-      use cvan
+      use cvan, only: nhsavb, ish, nvb
       use core
       use constants, only: pi, fpi
       use ions_base, only: ipp, na, nsp
       use elct
-      use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lqx, dion, nbeta, &
-           lmaxkb, lll
+      use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, nhsa => nkb
+      use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &
+           nbeta, lmaxkb, lll, nhm, nh
       use qrl_mod, only: qrl, cmesh
       use atom, only: mesh, r, rab, nlcc
       use qradb_mod
@@ -1247,7 +1257,6 @@
       use dqrad_mod
       use dqgb_mod
       use betax
-      use uspp, only: aainit
 !
       implicit none
 !
@@ -1260,7 +1269,7 @@
 !     total number of beta functions (all and Vanderbilt only)
 !     ------------------------------------------------------------------
       lmaxkb=-1
-      nhx=0
+      nhm=0
       nhsa=0
       nhsavb=0
       nlcc_any=.false.
@@ -1271,41 +1280,42 @@
             ind=ind+2*lll(iv,is)+1
          end do
          nh(is)=ind
-         nhx=max(nhx,nh(is))
+         nhm=max(nhm,nh(is))
          ish(is)=nhsa
          nhsa=nhsa+na(is)*nh(is)
          if(ipp(is).le.1) nhsavb=nhsavb+na(is)*nh(is)
+         !!! if(tvanp(is)) nhsavb=nhsavb+na(is)*nh(is)
          nlcc_any = nlcc_any .OR. nlcc(is)
       end do
       if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
-      lqx = 2*lmaxkb + 1
+      lmaxq = 2*lmaxkb + 1
       if (nhsa.le.0) call errore('nlinit ','not implemented ?',nhsa)
 !
 !     initialize array ap
 !
       call aainit(lmaxkb+1)
 !
-      allocate(beta(ngw,nhx,nsp))
-      allocate(qradb(ngb,nbrx,nbrx,lqx,nsp))
-      allocate(qgb(ngb,nhx*(nhx+1)/2,nsp))
-      allocate(qq(nhx,nhx,nsp))
-      allocate(dvan(nhx,nhx,nsp))
+      allocate(beta(ngw,nhm,nsp))
+      allocate(qradb(ngb,nbrx,nbrx,lmaxq,nsp))
+      allocate(qgb(ngb,nhm*(nhm+1)/2,nsp))
+      allocate(qq(nhm,nhm,nsp))
+      allocate(dvan(nhm,nhm,1,nsp))
       if (nlcc_any) allocate(rhocb(ngb,nsp))
-      allocate(nhtol(nhx,nsp))
-      allocate(indv (nhx,nsp))
-      allocate(nhtolm(nhx,nsp))
+      allocate(nhtol(nhm,nsp))
+      allocate(indv (nhm,nsp))
+      allocate(nhtolm(nhm,nsp))
 !
-      allocate(dqrad(ngb,nbrx,nbrx,lqx,nsp,3,3))
-      allocate(dqgb(ngb,nhx*(nhx+1)/2,nsp,3,3))
-      allocate(dbeta(ngw,nhx,nsp,3,3))
-      allocate(betagx(mmx,nhx,nsp))
-      allocate(dbetagx(mmx,nhx,nsp))
-      allocate(qradx(mmx,nbrx,nbrx,lqx,nsp))
-      allocate(dqradx(mmx,nbrx,nbrx,lqx,nsp))
+      allocate(dqrad(ngb,nbrx,nbrx,lmaxq,nsp,3,3))
+      allocate(dqgb(ngb,nhm*(nhm+1)/2,nsp,3,3))
+      allocate(dbeta(ngw,nhm,nsp,3,3))
+      allocate(betagx(mmx,nhm,nsp))
+      allocate(dbetagx(mmx,nhm,nsp))
+      allocate(qradx(mmx,nbrx,nbrx,lmaxq,nsp))
+      allocate(dqradx(mmx,nbrx,nbrx,lmaxq,nsp))
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
-      dvan(:,:,:) =0.d0
+      dvan(:,:,:,:) =0.d0
       if(tpre) dqrad(:,:,:,:,:,:,:) = 0.d0
 !
 !     ------------------------------------------------------------------
@@ -1343,7 +1353,7 @@
 !     ---------------------------------------------------------------
 !     calculation of array qradx(igb,iv,jv,is)
 !     ---------------------------------------------------------------
-         WRITE( stdout,*) ' nlinit  nh(is),ngb,is,kkbeta,lqx = ',             &
+         WRITE( stdout,*) ' nlinit  nh(is),ngb,is,kkbeta,lmaxq = ',             &
      &        nh(is),ngb,is,kkbeta(is),nqlc(is)
          do l=1,nqlc(is)
             do il=1,mmx
@@ -1384,6 +1394,7 @@
                      do ir=1,kkbeta(is)
                         fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
                      end do
+!!!         if (oldpseudo(is)) then
                      if (ipp(is).eq.0) then
                         call herman_skillman_int                        &
      &                    (kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
@@ -1397,6 +1408,7 @@
                         do ir=1,kkbeta(is)
                            dfint(ir)=qrl(ir,iv,jv,l,is)*djl(ir)
                         end do
+!!!         if (oldpseudo(is)) then
                         if (ipp(is).eq.0) then
                            call herman_skillman_int                     &
      &                          (kkbeta(is),cmesh(is),dfint,            &
@@ -1434,6 +1446,7 @@
 !     initialization that is common to all species
 !     ===============================================================
       do is=1,nsp
+!!!         if (.not.numeric(is)) then
          if (ipp(is).eq.3) then
             fac=1.0
          else
@@ -1489,6 +1502,7 @@
                do ir=1,kkbeta(is)
                   fint(ir)=r(ir,is)*betar(ir,indv(iv,is),is)*jl(ir)
                end do
+!!!         if (oldpseudo(is)) then
                if (ipp(is).eq.0) then
                   call herman_skillman_int                              &
      &                 (kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
@@ -1501,6 +1515,7 @@
                   do ir=1,kkbeta(is)
                      dfint(ir)=r(ir,is)*betar(ir,indv(iv,is),is)*djl(ir)
                   end do
+!!!         if (oldpseudo(is)) then
                   if (ipp(is).eq.0) then
                      call herman_skillman_int                           &
      &                 (kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
@@ -1519,7 +1534,7 @@
          do iv=1,nh(is)
             do jv=1,nh(is)
                if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
-                  dvan(iv,jv,is)=fac*dion(indv(iv,is),indv(jv,is),is)
+                  dvan(iv,jv,1,is)=fac*dion(indv(iv,is),indv(jv,is),is)
                endif 
             end do
          end do
@@ -1559,11 +1574,10 @@
 !
       use control_flags, only: iprint, tpre
       use qradb_mod
-      use cvan
-      use uspp, only: nlx, lpx, lpl, ap
+      use uspp, only: nlx, lpx, lpl, ap, indv, nhtolm
       use gvecb
       use cdvan
-      use uspp_param, only: lqx
+      use uspp_param, only: lmaxq
 ! 
       implicit none
       integer ngy, iv, jv, is
@@ -1571,7 +1585,7 @@
 !
       integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
       complex(kind=8) sig
-      real(kind=8) :: ylm(ngb,lqx*lqx), dylm(ngb,lqx*lqx,3,3)
+      real(kind=8) :: ylm(ngb,lmaxq*lmaxq), dylm(ngb,lmaxq*lmaxq,3,3)
 ! 
 !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
 !       ivs = 1..4     s_1 s_2 p_1 p_2
@@ -1591,7 +1605,7 @@
 !
       do i=1,lpx(ivl,jvl)
          lp=lpl(ivl,jvl,i)
-         if (lp > lqx*lqx) call errore(' qvan2b ',' lp out of bounds ',lp)
+         if (lp > lmaxq*lmaxq) call errore(' qvan2b ',' lp out of bounds ',lp)
 !
 !     extraction of angular momentum l from lp:  
 !     l = int ( sqrt( float(l-1) + epsilon) ) + 1
@@ -1634,12 +1648,11 @@
 !
       use control_flags, only: iprint, tpre
       use qradb_mod
-      use cvan
-      use uspp, only: nlx, lpx, lpl, ap
+      use uspp, only: nlx, lpx, lpl, ap, indv, nhtolm
       use gvecb
       use dqrad_mod
       use cdvan
-      use uspp_param, only: lqx
+      use uspp_param, only: lmaxq
 ! 
       implicit none
       integer ngy, iv, jv, is
@@ -1647,7 +1660,7 @@
 !
       integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
       complex(kind=8) sig
-      real(kind=8) :: ylm(ngb,lqx*lqx), dylm(ngb,lqx*lqx,3,3)
+      real(kind=8) :: ylm(ngb,lmaxq*lmaxq), dylm(ngb,lmaxq*lmaxq,3,3)
 ! 
 !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
 !       ivs = 1..4     s_1 s_2 p_1 p_2
@@ -1667,7 +1680,7 @@
 !
       do i=1,lpx(ivl,jvl)
          lp=lpl(ivl,jvl,i)
-         if (lp > lqx*lqx) call errore(' dqvan2b ',' lp out of bounds ',lp)
+         if (lp > lmaxq*lmaxq) call errore(' dqvan2b ',' lp out of bounds ',lp)
 !
 !     extraction of angular momentum l from lp:  
 !     l = int ( sqrt( float(l-1) + epsilon) ) + 1

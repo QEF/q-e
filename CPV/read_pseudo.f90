@@ -12,7 +12,7 @@ subroutine read_pseudo (is, iunps, ierr)
   use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
-  use ions_base, only: zv
+  use ions_base, only: zv, ipp
   use funct, only: dft, which_dft
   !
   use pseudo_types
@@ -38,6 +38,11 @@ subroutine read_pseudo (is, iunps, ierr)
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
   ! tvanp(is)=upf%tvanp
+  if (upf%tvanp) then
+     ipp(is) = -2
+  else
+     ipp(is) = +4     
+  end if
   nlcc(is) = upf%nlcc
   !
   dft = upf%dft

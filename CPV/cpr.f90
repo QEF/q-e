@@ -57,8 +57,10 @@
 
       use core, only: nlcc_any
       use core, only: deallocate_core
-      use cvan, only: nvb, nhx, nhsa
-      use cvan, only: deallocate_cvan
+      use uspp_param, only: nhm
+      use cvan, only: nvb
+      use uspp, only : nhsa=> nkb
+      use uspp, only: deallocate_uspp
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
       use elct, only: deallocate_elct
@@ -265,7 +267,7 @@
      & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
      & , tpre , thdyn , thdiag , twmass , wmass , frich , greash , press   &
      & , tnoseh , qnh , temph , celldm , ibrav , tau0 , ecutw , ecut , iforce &
-     & , nat , nsp , na , pmass , rcmax , ipp , f_ , nel , nspin , nupdwn  &
+     & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
      & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
      & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &
      & , psfile , pseudo_dir, iprsta, ispin_ )
@@ -386,14 +388,14 @@
       allocate(bec  (nhsa,n))
       allocate(bephi(nhsa,n))
       allocate(becp (nhsa,n))
-      allocate(deeq(nat,nhx,nhx,nspin))
-      allocate(rhovan(nat,nhx*(nhx+1)/2,nspin))
+      allocate(deeq(nat,nhm,nhm,nspin))
+      allocate(rhovan(nat,nhm*(nhm+1)/2,nspin))
       allocate(dbec (nhsa,n,3,3))
       allocate(dvps(ngs,nsp))
       allocate(drhops(ngs,nsp))
       allocate(drhog(ng,nspin,3,3))
       allocate(drhor(nnr,nspin,3,3))
-      allocate(drhovan(nat,nhx*(nhx+1)/2,nspin,3,3))
+      allocate(drhovan(nat,nhm*(nhm+1)/2,nspin,3,3))
 #ifdef __PARA
       allocate(aux(nnr))
 #endif
@@ -1632,7 +1634,7 @@
 
       CALL deallocate_elct()
       CALL deallocate_core()
-      CALL deallocate_cvan()
+      CALL deallocate_uspp()
       CALL deallocate_gvec()
       CALL deallocate_pseu()
       CALL deallocate_qgb_mod()

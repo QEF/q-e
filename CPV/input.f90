@@ -53,7 +53,7 @@ CONTAINS
      & , tnosep_ , qnp_ , tempw_ , tnosee_ , qne_ , ekincw_                                &
      & , tpre_ , thdyn_ , thdiag_ , twmass_ , wmass_ , frich_ , greash_ , press_           &
      & , tnoseh_ , qnh_ , temph_ , celldm_ , ibrav_ , tau0_ , ecutw_ , ecut_ , iforce_ &
-     & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , ipp_ , f_ , nel_ , nspin_ , nupdwn_  &
+     & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , f_ , nel_ , nspin_ , nupdwn_  &
      & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
      & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , agg_ , sgg_ , e0gg_ &
      & , psfile_ , pseudo_dir_, iprsta_, ispin_ )
@@ -66,7 +66,7 @@ CONTAINS
            nr1, nr2, nr3, greash, press, nr2s, nr3s, nr1s, tolp, temph, grease, &
            tempw, fnoseh, amprp, greasp, twall, tranp, atomic_positions, nelec, &
            if_pos, rd_ht, nelup, neldw, occupations, f_inp, rd_pos, nr3b, pseudo_dir, &
-           nr1b, nr2b, atom_ptyp, sp_pos, atom_mass, atom_pfile, iprint, orthogonalization, &
+           nr1b, nr2b, sp_pos, atom_mass, atom_pfile, iprint, orthogonalization, &
            electron_velocities, startingwfc, ndr, ndw, ion_dynamics, ion_damping, &
            cell_velocities, electron_dynamics, electron_damping, ion_velocities, &
            celldm, nbnd, nspin, calculation, ntyp, ibrav, restart_mode, ion_positions, &
@@ -104,7 +104,7 @@ CONTAINS
            tcap_ , tnosep_ , trhor_ , trhow_ , tvlocw_ , tpre_ , thdyn_ , thdiag_ ,   &
            twmass_ , tnoseh_ , tranp_ ( nsx )
 
-      integer :: nat_ , nsp_ , na_ ( nsx ), ipp_ ( nsx ), nel_ ( 2 ), nspin_ , &
+      integer :: nat_ , nsp_ , na_ ( nsx ), nel_ ( 2 ), nspin_ , &
      &     nupdwn_ ( 2 ), iupdwn_ ( 2 ), n_ , nx_ , nr1_ , nr2_ , nr3_ , &
      &     nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , ibrav_, iprsta_
 
@@ -439,7 +439,6 @@ CONTAINS
 
       tau0_  = 0.0
       iforce_= 0
-      ipp_   = 0
       psfile_= ' '
       a1_    = 0.0
       a2_    = 0.0
@@ -447,7 +446,6 @@ CONTAINS
 
       pmass_ ( 1:nsp_ ) = atom_mass( 1:nsp_ )
       psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
-      ipp_ ( 1:nsp_ ) = atom_ptyp( 1:nsp_ )
 
       na_ = 0
       isa = 0
@@ -782,16 +780,14 @@ CONTAINS
       end subroutine
 !
 
-      subroutine iosys_pseudo( psfile_ , pseudo_dir_ , ipp_ , nsp_ )
-        use input_parameters, only: atom_ptyp, atom_pfile, pseudo_dir, ntyp
+      subroutine iosys_pseudo( psfile_ , pseudo_dir_ , nsp_ )
+        use input_parameters, only:  atom_pfile, pseudo_dir, ntyp
         use parameters, only: nsx
         implicit none
         character(len=80) :: psfile_ ( nsx ) , pseudo_dir_
-        integer :: ipp_ ( nsx ), nsp_
+        integer :: nsp_
         nsp_ = ntyp
-        ipp_ = 0
         psfile_= ' '
-        ipp_ ( 1:nsp_ ) = atom_ptyp( 1:nsp_ )
         psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
         pseudo_dir_ = pseudo_dir
         !

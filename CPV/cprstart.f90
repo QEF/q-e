@@ -82,7 +82,7 @@
       !  and read in pseudopotentials and wavefunctions files
       !
 
-      call iosys_pseudo( psfile, pseudo_dir, ipp, nsp )
+      call iosys_pseudo( psfile, pseudo_dir, nsp )
 
       IF( lneb ) THEN
         call neb_loop( 1 )
