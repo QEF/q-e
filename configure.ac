@@ -500,7 +500,7 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 			       libs="$LIBS")
 
 		# check for parallel libraries
-		if test $no_parallel
+		if ! test $no_parallel
 		then
 			AC_LANG_PUSH(C)
 			CFLAGS="$test_cflags"

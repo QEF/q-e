@@ -3470,7 +3470,7 @@ fi
 
 
 		# check for parallel libraries
-		if test $no_parallel
+		if ! test $no_parallel
 		then
 			ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
