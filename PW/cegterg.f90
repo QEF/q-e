@@ -212,8 +212,11 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
         !
      END IF
      !
-     FORALL( np = 1: notcnv ) &
+! workaround for g95 bug
+!     FORALL( np = 1: notcnv ) &
+     DO np = 1, notcnv
         psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+     END DO
      !
      CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, hpsi, &
                  ndmx, vc, nvecx, ONE, psi(1,nbase+1), ndmx )
@@ -236,11 +239,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      CALL reduce( notcnv, ew )
      !
-     FORALL( n = 1 : notcnv )
+! workaround for g95 bug
+!     FORALL( n = 1 : notcnv )
+     DO n = 1, notcnv
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
-     END FORALL
+     END DO
+!     END FORALL
      !
      ! ... here compute the hpsi and spsi of the new functions
      !

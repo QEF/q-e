@@ -222,8 +222,11 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
-     FORALL( np = 1: notcnv ) &
+! workaround for g95 bug
+!     FORALL( np = 1: notcnv ) &
+     DO np = 1, notcnv
         psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+     END DO
      !
      CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, hpsi, &
                  ndmx2, vr, nvecx, 1.D0, psi(1,nbase+1), ndmx2 )
@@ -248,11 +251,14 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL reduce( notcnv, ew )
      !
-     FORALL( n = 1 : notcnv )
+! workaround for g95 bug
+!     FORALL( n = 1 : notcnv )
+     DO n = 1, notcnv
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
-     END FORALL
+!     END FORALL
+     END DO
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
