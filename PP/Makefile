@@ -43,7 +43,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/allocate_locpot.o  \
 ../PW/allocate_nlpot.o  \
 ../PW/allocate_wfc.o  \
-../PW/allowed.o  \
 ../PW/atomic_rho.o  \
 ../PW/atomic_wfc.o  \
 ../PW/bachel.o  \

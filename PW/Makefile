@@ -16,7 +16,6 @@ allocate_fft.o  \
 allocate_locpot.o  \
 allocate_nlpot.o  \
 allocate_wfc.o  \
-allowed.o  \
 atomic_rho.o  \
 atomic_wfc.o  \
 bachel.o  \

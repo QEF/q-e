@@ -15,12 +15,11 @@ subroutine set_fft_dim
   !     given as input parameters. Input values are kept otherwise.
   !
   use pwcom
+  use fft_scalar, only: allowed
   implicit none
 
   integer, parameter :: nmax = 1000
   ! an unreasonably big number for a FFT grid
-  logical :: allowed
-  ! external function which sets the allowed fft dimension
   !
   ! the values of nr1, nr2, nr3 are computed only if they are not given
   ! as input parameters

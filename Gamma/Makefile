@@ -17,7 +17,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/addusstress.o \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
-../PW/allowed.o \
 ../PW/atomic_wfc.o \
 ../PW/bachel.o \
 ../PW/bfgs.o \
