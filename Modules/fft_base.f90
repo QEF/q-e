@@ -29,11 +29,12 @@
 
         USE fft_types, ONLY: fft_dlay_descriptor
 
+
+        IMPLICIT NONE
+        
         TYPE ( fft_dlay_descriptor ) :: dfftp  ! fft descriptor for potentials
         TYPE ( fft_dlay_descriptor ) :: dffts  ! fft descriptor for potentials
 
-
-        IMPLICIT NONE
         SAVE
 
         PRIVATE

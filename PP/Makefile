@@ -159,7 +159,6 @@ PWOBJS = \
 ../PW/mode_group.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
-../PW/neb_variables.o \
 ../PW/new_ns.o \
 ../PW/ns_adj.o \
 ../PW/newd.o \
