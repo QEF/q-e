@@ -41,6 +41,7 @@
 #  define FPMD_ZDOTU   CDOTU
 #  define FPMD_ZDOTC   CDOTC
 #  define FPMD_DDOT   SDOT
+#  define FPMD_IZAMAX   ICAMAX
 
 #else
 
@@ -73,6 +74,7 @@
 #  define FPMD_ZDOTU   ZDOTU
 #  define FPMD_ZDOTC   ZDOTC
 #  define FPMD_DDOT   DDOT
+#  define FPMD_IZAMAX   IZAMAX
 
 #endif
 

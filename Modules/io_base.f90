@@ -491,6 +491,7 @@
         nfi          = nfi_
         ekinc        = ekinc_
         tupf         = tupf_
+        gamma_only   = gamma_only_
  
         IF( tovrw ) THEN
           nfi = nfi_
@@ -545,7 +546,6 @@
           title = t_
           crystal = c_
           tmp_dir = tmp_dir_
-          gamma_only = gamma_only_
         END IF
 
       ELSE
