@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE sum_band()
   ! ... eigenvalues.
   ! ... this version works also for metals (gaussian spreading technique)  
   !
-  USE kinds,           ONLY : DP
+  USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
   USE brilz,                ONLY : omega
   USE basis,                ONLY : nat, ntyp, ityp
@@ -35,15 +35,88 @@ SUBROUTINE sum_band()
   USE us,                   ONLY : okvan, tvanp, becsum, nh, nkb, vkb
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
-#ifdef __PARA
+#if defined (__PARA)
   USE para,                 ONLY : me, mypool
 #endif
   !
   IMPLICIT NONE
   !
+  ! ... local variables
+  !
+  INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
+    ! counters on beta functions, atoms, pseudopotentials  
+  INTEGER :: ir, is, ig, ibnd, ik
+    ! counter on 3D r points
+    ! counter on spin polarizations
+    ! counter on g vectors
+    ! counter on bands
+    ! counter on k points  
+  !
   !
   CALL start_clock( 'sum_band' )
-  !    
+  !
+  becsum(:,:,:) = 0.D0
+  rho(:,:)      = 0.D0
+  eband         = 0.D0
+  demet         = 0.D0
+  !
+  ! ... calculate weights for the insulator case
+  !
+  IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
+     !
+     CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
+     !
+     ! ... calculate weights for the metallic case
+     !
+  ELSE IF ( ltetra ) THEN
+     !
+#if defined (__PARA)
+     CALL poolrecover( et, nbnd, nkstot, nks )
+     !
+     IF ( me == 1 .AND. mypool == 1 ) THEN
+        !
+#endif
+        CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg )
+#if defined (__PARA)
+        !
+     END IF
+     !
+     CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+     !
+     IF ( me == 1 ) CALL poolbcast( 1, ef )
+     !
+     CALL broadcast( 1, ef )
+     !
+#endif
+  ELSE IF ( lgauss ) THEN
+     !
+     CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, demet, wg )
+     !
+  ELSE IF ( tfixed_occ ) THEN
+     !
+     ef = - 1.0D+20
+     !
+     wg = f_inp
+     !
+     DO is = 1, nspin
+        !
+        DO ibnd = 1, nbnd
+           !
+           IF ( wg(ibnd,is) > 0.D0 ) ef = MAX( ef, et(ibnd,is) )
+           !
+        END DO
+        !
+     END DO
+     !
+  END IF
+  !
+  ! ... Needed for LDA+U
+  !
+  IF ( lda_plus_u ) CALL new_ns()  
+  !     
+  ! ... specific routines are called to sum for each k point the contribution
+  ! ... of the wavefunctions to the charge
+  !
   IF ( gamma_only ) THEN
      !
      CALL sum_band_gamma()
@@ -54,15 +127,64 @@ SUBROUTINE sum_band()
      !
   END IF    
   !
+  ! ... If a double grid is used, interpolate onto the fine grid
+  !
+  IF ( doublegrid ) THEN
+     !
+     DO is = 1, nspin
+        !
+        CALL interpolate( rho(1,is), rho(1,is), 1 )
+        !
+     END DO
+     !
+  END IF
+  !
+  ! ... Here we add the Ultrasoft contribution to the charge
+  !
+  IF ( okvan ) CALL addusdens()
+  !
+#if defined (__PARA)
+  !
+  CALL poolreduce( 1, eband )
+  CALL poolreduce( 1, demet )
+  !
+#endif
+  !
+  ! ... symmetrization of the charge density (and local magnetization)
+  !
+#if defined (__PARA)
+  !
+  ! ... reduce charge density across pools
+  !
+  CALL poolreduce( nspin * nrxx, rho )
+  !
+  DO is = 1, nspin
+     !
+     CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+     !
+  END DO
+  !
+#else
+  !
+  DO is = 1, nspin
+     !
+     CALL symrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+     !
+  END DO
+  !
+#endif
+  !  
   CALL stop_clock( 'sum_band' )      
   !
   RETURN
   !
   CONTAINS
      !
-     !--------------------------------------------------------------------------
+     ! ... internal procedures
+     !
+     !-----------------------------------------------------------------------
      SUBROUTINE sum_band_gamma()
-       !--------------------------------------------------------------------------
+       !-----------------------------------------------------------------------
        !
        ! ... gamma version
        !
@@ -70,82 +192,13 @@ SUBROUTINE sum_band()
        !
        ! ... local variables
        !
-       INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
-         ! counters on beta functions, atoms, pseudopotentials
-       INTEGER :: ir, is, ig, ibnd, ik
-         ! counter on 3D r points
-         ! counter on spin polarizations
-         ! counter on g vectors
-         ! counter on bands
-         ! counter on k points
        REAL(KIND=DP) :: w1, w2
-         ! weight
+         ! weights
        REAL(KIND=DP), ALLOCATABLE :: becp(:,:)
          ! contains <beta|psi>
        !
        !
        ALLOCATE( becp( nkb, nbnd ) )
-       !
-       becsum(:,:,:) = 0.D0
-       rho(:,:)      = 0.D0
-       eband         = 0.D0
-       demet         = 0.D0
-       !
-       ! ... calculate weights for the insulator case
-       !
-       IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
-          !
-          CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
-          !
-          ! ... calculate weights for the metallic case
-          !
-       ELSE IF ( ltetra ) THEN
-          !
-#ifdef __PARA
-          CALL poolrecover( et, nbnd, nkstot, nks )
-          !
-          IF ( me == 1 .AND. mypool == 1 ) THEN
-             !
-#endif
-             CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, &
-                            tetra, et, ef, wg )
-#ifdef __PARA
-             !
-          END IF
-          !
-          CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-          !
-          IF ( me == 1 ) CALL poolbcast( 1, ef )
-          !
-          CALL broadcast( 1, ef )
-          !
-#endif
-       ELSE IF ( lgauss ) THEN
-          !
-          CALL gweights( nks, wk, nbnd, nelec, &
-                         degauss, ngauss, et, ef, demet, wg )
-          !
-       ELSE IF ( tfixed_occ ) THEN
-          !
-          ef = - 1.0D+20
-          !
-          DO is = 1, nspin
-             !
-             DO ibnd = 1, nbnd
-                !
-                wg(ibnd,is) = f_inp(ibnd,is)
-                !
-                IF ( wg(ibnd,is) > 0.D0 ) ef = MAX( ef, et(ibnd,is) )
-                !
-             END DO
-             !
-          END DO
-          !
-       END IF
-       !
-       ! ... Needed for LDA+U
-       !
-       IF ( lda_plus_u ) CALL new_ns()
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -170,11 +223,11 @@ SUBROUTINE sum_band()
           !
           DO ibnd = 1, nbnd
              !
-             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
-             !
              ! ... the sum of eband and demet is the integral for  
              ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of 
              ! ... the eigenvalues.
+             !
+             eband = eband + et(ibnd,ik) * wg(ibnd,ik)
              !
           END DO
           !
@@ -301,58 +354,14 @@ SUBROUTINE sum_band()
        !
        DEALLOCATE( becp )
        !
-       ! ... If a double grid is used, interpolate onto the fine grid
-       !
-       IF ( doublegrid ) THEN
-          !
-          DO is = 1, nspin
-             !
-             CALL interpolate( rho(1,is), rho(1,is), 1 )
-             !
-          END DO
-          !
-       END IF
-       !
-       ! ... Here we add the Ultrasoft contribution to the charge
-       !
-       IF ( okvan ) CALL addusdens()
-       !
-#ifdef __PARA
-       CALL poolreduce( 1, eband )
-       CALL poolreduce( 1, demet )
-#endif
-       !
-       ! ... symmetrization of the charge density (and local magnetization)
-       !
-#ifdef __PARA
-       !
-       ! ... reduce charge density across pools
-       !
-       CALL poolreduce( nspin * nrxx, rho )
-       !
-       DO is = 1, nspin
-          !
-          CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, &
-                        nr1, nr2, nr3, nsym, s, ftau )
-          !
-       END DO
-#else
-       DO is = 1, nspin
-          !
-          CALL symrho( rho(1,is), nrx1, nrx2, nrx3, &
-                       nr1, nr2, nr3, nsym, s, ftau )
-          !
-       END DO
-#endif
-       !
        RETURN
        !
      END SUBROUTINE sum_band_gamma
      !
      !
-     !--------------------------------------------------------------------
+     !-----------------------------------------------------------------------
      SUBROUTINE sum_band_k()
-       !--------------------------------------------------------------------
+       !-----------------------------------------------------------------------
        !
        ! ... k-points version
        !
@@ -362,78 +371,9 @@ SUBROUTINE sum_band()
        !
        ! ... local variables
        !
-       INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
-         ! counters on beta functions, atoms, pseudopotentials
-       INTEGER :: ir, is, ig, ibnd, ik
-         ! counter on 3D r points
-         ! counter on spin polarizations
-         ! counter on g vectors
-         ! counter on bands
-         ! counter on k points
        REAL(KIND=DP) :: w1
          ! weight
        !
-       !
-       becsum(:,:,:) = 0.D0
-       rho(:,:)      = 0.D0
-       eband         = 0.D0
-       demet         = 0.D0
-       !
-       ! ... calculate weights for the insulator case
-       !
-       IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
-          !
-          CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
-          !
-          ! ... calculate weights for the metallic case
-          !
-       ELSE IF ( ltetra ) THEN
-#ifdef __PARA
-          !
-          CALL poolrecover( et, nbnd, nkstot, nks )
-          !
-          IF ( me == 1 .AND. mypool == 1 ) THEN
-             !
-#endif
-             CALL tweights( nkstot, nspin, nbnd, &
-                            nelec, ntetra, tetra, et, ef, wg )
-#ifdef __PARA
-             !
-          ENDIF
-          !
-          CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-          !
-          IF ( me == 1 ) CALL poolbcast( 1, ef )
-          !
-          CALL broadcast( 1, ef )
-#endif
-          !
-       ELSE IF ( lgauss ) THEN
-          !
-          CALL gweights( nks, wk, nbnd, nelec, &
-                         degauss, ngauss, et, ef, demet, wg )
-          !
-       ELSE IF ( tfixed_occ ) THEN
-          !
-          ef = - 1.0D+20
-          !
-          DO is = 1, nspin
-             !
-             DO ibnd = 1, nbnd
-                !
-                wg(ibnd,is) = f_inp(ibnd,is)
-                !
-                IF ( wg(ibnd,is) > 0.D0 ) ef = MAX( ef, et(ibnd,is) )
-               !
-             END DO
-             !
-          END DO
-          !
-       END IF
-       !
-       ! ... Needed for LDA+U
-       !
-       IF ( lda_plus_u ) CALL new_ns()
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -558,50 +498,6 @@ SUBROUTINE sum_band()
           CALL stop_clock( 'sumbec' )
           !
        END DO k_loop
-       !
-       ! ... If a double grid is used, interpolate onto the fine grid
-       !
-       IF ( doublegrid ) THEN
-          !
-          DO is = 1, nspin
-             !
-             CALL interpolate( rho(1,is), rho(1,is), 1 )
-             !
-          END DO
-          !
-       END IF
-       !
-       ! ... Here we add the Ultrasoft contribution to the charge
-       !
-       IF ( okvan ) CALL addusdens()
-       !
-#ifdef __PARA
-       CALL poolreduce( 1, eband )
-       CALL poolreduce( 1, demet )
-#endif
-       !
-       ! ... symmetrization of the charge density (and local magnetization)
-       !
-#ifdef __PARA
-       !
-       ! ... reduce charge density across pools
-       !
-       CALL poolreduce( nspin * nrxx, rho )
-       !
-       DO is = 1, nspin
-          !
-          CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, &
-                        nr1, nr2, nr3, nsym, s, ftau )
-          !
-       END DO
-#else
-       DO is = 1, nspin
-          !
-          CALL symrho( rho(1,is), nrx1, nrx2, nrx3, &
-                       nr1, nr2, nr3, nsym, s, ftau )
-          !             
-       END DO
-#endif
        !
        RETURN
        !

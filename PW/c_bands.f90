@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,14 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... this is a wrapper to specific calls
   !
-  USE kinds,           ONLY : DP
+  ! ... internal procedures :
+  !
+  ! ... c_bands_gamma()   : for gamma sampling of the BZ (optimized algorithms)
+  ! ... c_bands_k()       : for arbitrary BZ sampling (general algorithm)
+  ! ... test_exit_cond()  : the test on the iterative diagonalization
+  !
+  !
+  USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
@@ -24,13 +31,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                                    nr1, nr2, nr3  
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
-  USE control_flags,                ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
+  USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
                                    diis_ethr_cg, isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc  
-  USE g_psi_mod
+  USE g_psi_mod,            ONLY : h_diag, s_diag
   !
   IMPLICIT NONE
   !
@@ -40,10 +47,42 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
     ! k-point already done
     ! current iterations
   REAL(KIND=DP) :: dr2
-    ! current accuracy of self-consistency  
+    ! current accuracy of self-consistency
+  !
+  ! ... local variables
+  !
+  REAL(KIND=DP) :: avg_iter, v_of_0
+    ! average number of iterations
+    ! the average of the potential
+  INTEGER :: ik, ig, ibnd, dav_iter, ntry, notconv
+    ! counter on k points
+    ! counter on G vectors
+    ! counter on bands
+    ! number of iterations in Davidson
+    ! number or repeated call to diagonalization in case of non convergence
+    ! number of notconverged elements
+  !
+  ! ... external functions
+  !
+  REAL(KIND=DP), EXTERNAL :: dsum, erf
+    ! summation function
+    ! error function  
   !
   !
   CALL start_clock( 'c_bands' )
+  !
+  IF ( ik_ == nks ) THEN
+     !
+     ik_ = 0
+     !
+     RETURN
+     !
+  END IF
+  !
+  ! ... allocate arrays
+  !
+  ALLOCATE( h_diag( npwx ) )    
+  ALLOCATE( s_diag( npwx ) )      
   !
   IF ( gamma_only ) THEN
      !
@@ -55,11 +94,18 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF  
   !
+  ! ... deallocate arrays
+  !
+  DEALLOCATE( s_diag )
+  DEALLOCATE( h_diag )
+  !       
   CALL stop_clock( 'c_bands' )  
   !
   RETURN
   !
   CONTAINS
+     !
+     ! ... internal procedures
      !
      !-----------------------------------------------------------------------
      SUBROUTINE c_bands_gamma()
@@ -75,33 +121,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        IMPLICIT NONE
        !
-       ! ... here the local variables
-       !
-       REAL(KIND=DP) :: avg_iter, v_of_0, dsum, erf
-         ! average number of iterations
-         ! the average of the potential
-         ! summation function
-         ! error function
-       INTEGER :: ik, ig, ibnd, ntrt, ntry, notconv
-         ! counter on k points
-         ! counter on G vectors
-         ! counter on bands
-         ! number of iterations in Davidson
-         ! number of repeated call to REGTERG
-         ! number of notconverged elements
-       LOGICAL :: ltest
-         ! .TRUE. if there are too many not converged bands
-       !
-       !
-       IF ( ik_ == nks ) THEN
-          ik_ = 0
-          RETURN
-       END IF
-       !
-       ! ... allocate arrays
-       !
-       ALLOCATE( h_diag( npwx ) )    
-       ALLOCATE( s_diag( npwx ) )    
        !
        ! ... becp, becp_ contain <beta|psi> - used in h_psi and s_psi
        ! ... they are allocate once here in order to reduce overhead
@@ -119,9 +138,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = DSUM( nrxx, vltot, 1 ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = dsum( nrxx, vltot, 1 ) / REAL( nr1 * nr2 * nr3 )
        !
-#ifdef __PARA
+#if defined (__PARA)
        CALL reduce( 1, v_of_0 )
 #endif
        !
@@ -163,17 +182,15 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... sets the kinetic energy
           !
-          DO ig = 1, npw
-             g2kin (ig) = ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
-                            ( xk(2,ik) + g(2,igk(ig)) )**2 + &
-                            ( xk(3,ik) + g(3,igk(ig)) )**2 ) * tpiba2
-          END DO
+          g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk(1:npw)) )**2 + &
+                           ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
+                           ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2
           !
           IF ( qcutz > 0.D0 ) THEN
              !
              DO ig = 1, npw
                 g2kin(ig) = g2kin(ig) + qcutz * &
-                            ( 1.D0 + ERF( (g2kin(ig) - ecfixed ) / q2sigma ) )
+                            ( 1.D0 + erf( (g2kin(ig) - ecfixed ) / q2sigma ) )
              END DO
              !
           END IF
@@ -182,9 +199,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... hamiltonian used in g_psi to evaluate the correction 
           ! ... to the trial eigenvectors
           !
-          DO ig = 1, npw
-              h_diag(ig) = g2kin(ig) + v_of_0
-          END DO
+          h_diag(1:npw) = g2kin(1:npw) + v_of_0
           !
           CALL usnldiag( h_diag, s_diag )
           !
@@ -193,9 +208,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           david_loop: DO
              !
              CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, gstart, &
-                           et(1,ik), notconv, ntrt )
+                           et(1,ik), notconv, dav_iter )
              !
-             avg_iter = avg_iter + ntrt
+             avg_iter = avg_iter + dav_iter
              !
              ! ... save wave-functions to be used as input for the
              ! ... iterative diagonalization of the next scf iteration 
@@ -206,15 +221,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !  
              ntry = ntry + 1
              !
-             !
              ! ... exit condition
              !
-             ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                             ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                               (       lscf .AND. ( notconv > 5 ) .AND.  &
-                                                  ( iter > 1 ) ) ) )
-             !
-             IF ( ltest ) EXIT david_loop
+             IF ( test_exit_cond() ) EXIT  david_loop
              !
           END DO david_loop
           !
@@ -237,7 +246,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ik_ = 0
        !
-#ifdef __PARA
+#if defined (__PARA)
        CALL poolreduce( 1, avg_iter )
 #endif
        !
@@ -250,8 +259,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... deallocate work space
        !
        DEALLOCATE( becp, becp_ )
-       DEALLOCATE( s_diag )
-       DEALLOCATE( h_diag )
        !
        RETURN
        !
@@ -276,36 +283,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... here the local variables
        !
-       REAL(KIND=DP) :: avg_iter, cg_iter, diis_iter, v_of_0, dsum, erf
-         ! average number of iterations
+       REAL(KIND=DP) :: cg_iter, diis_iter
          ! number of iteration in CG
          ! number of iteration in DIIS
-         ! the average of the potential
-         ! summation function
-         ! error function
-       INTEGER :: ik, ig, ibnd, dav_iter, ntry, notconv
-         ! counter on k points
-         ! counter on G vectors
-         ! counter on bands
-         ! number of iterations in Davidson
-         ! number or repeated call to diagonalization in case of non convergence
-         ! number of notconverged elements
        INTEGER, ALLOCATABLE :: btype(:)
          ! type of band: conduction (1) or valence (0)
-       LOGICAL :: ltest
-         ! .TRUE. if there are too many not converged bands       
        !
        !
-       IF ( ik_ == nks ) THEN
-          ik_ = 0
-          RETURN
-       END IF
+       ! ... allocate specific array for DIIS
        !
-       ! ... allocate arrays
-       !
-       ALLOCATE( btype(  nbnd ) )    
-       ALLOCATE( h_diag( npwx ) )
-       ALLOCATE( s_diag( npwx ) )    
+       IF ( isolve == 2 ) &
+          ALLOCATE( btype(  nbnd ) )    
        !
        IF ( isolve == 0 ) THEN
           !
@@ -331,9 +319,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = DSUM( nrxx, vltot, 1 ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = dsum( nrxx, vltot, 1 ) / REAL( nr1 * nr2 * nr3 )
        !
-#ifdef __PARA
+#if defined (__PARA)
        CALL reduce( 1, v_of_0 )
 #endif
        !
@@ -375,16 +363,15 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... sets the kinetic energy
           !
-          DO ig = 1, npw
-             g2kin(ig) = ( (xk(1,ik) + g(1,igk(ig)) )**2 + &
-                           (xk(2,ik) + g(2,igk(ig)) )**2 + &
-                           (xk(3,ik) + g(3,igk(ig)) )**2 ) * tpiba2
-          END DO
+          g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk(1:npw)) )**2 + &
+                           ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
+                           ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2          
+          !
           !
           IF ( qcutz > 0.D0 ) THEN
              DO ig = 1, npw
                 g2kin (ig) = g2kin(ig) + qcutz * &
-                             ( 1.D0 + ERF( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+                             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
              END DO
           END IF
           !
@@ -396,11 +383,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              ! ... h_diag is the precondition matrix
              !
-             DO ig = 1, npw
-                 !
-                 h_diag(ig) = MAX( 1.D0, g2kin(ig) )
-                 !
-             END DO
+             h_diag(1:npw) = MAX( 1.D0, g2kin(1:npw) )
              !
              ntry = 0
              !
@@ -409,6 +392,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
                    !
                    CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+                   !
                    avg_iter = avg_iter + 1.D0
                    !
                 END IF
@@ -429,12 +413,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 ! ... exit condition
                 !
-                ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                  (       lscf .AND. ( notconv > 5 ) .AND.  &
-                                                     ( iter > 1 ) ) ) )
-                !
-                IF ( ltest ) EXIT CG_loop
+                IF ( test_exit_cond() ) EXIT  CG_loop
                 !
              END DO CG_loop
              !
@@ -442,11 +421,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              ! ... when ethr <= diis_ethr_cg  start the RMM-DIIS method
              !
-             DO ig = 1, npw
-                !
-                h_diag(ig) = g2kin(ig) + v_of_0
-                !
-             END DO
+             h_diag(1:npw) = g2kin(1:npw) + v_of_0
              !
              CALL usnldiag( h_diag, s_diag )
              !
@@ -455,11 +430,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              btype(:) = 0
              !
-             IF ( iter > 1 ) THEN
-                DO ibnd = 1, nbnd
-                   IF ( wg(ibnd,ik) < 1.0D-4 ) btype(ibnd) = 1
-                END DO
-             END IF
+             IF ( iter > 1 ) &
+                WHERE( wg(:,ik) < 1.0D-4 ) btype(:) = 1
              !
              RMMDIIS_loop: DO
                 !
@@ -479,12 +451,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 ! ... exit condition
                 !
-                ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                  (       lscf .AND. ( notconv > 5 ) .AND.  &
-                                                     ( iter > 1 ) ) ) )
-                !
-                IF ( ltest ) EXIT RMMDIIS_loop
+                IF ( test_exit_cond() ) EXIT  RMMDIIS_loop
                 !
              END DO RMMDIIS_loop
              !
@@ -496,11 +463,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              ! ... hamiltonian used in g_psi to evaluate the correction 
              ! ... to the trial eigenvectors
              !
-             DO ig = 1, npw
-                !
-                h_diag(ig) = g2kin(ig) + v_of_0
-                !
-             END DO
+             h_diag(1:npw) = g2kin(1:npw) + v_of_0
              !
              CALL usnldiag( h_diag, s_diag )
              !
@@ -524,12 +487,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 ! ... exit condition
                 !
-                ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                  (       lscf .AND. ( notconv > 5 ) .AND.  &
-                                                     ( iter > 1 ) ) ) )
-                !
-                IF ( ltest ) EXIT david_loop                
+                IF ( test_exit_cond() ) EXIT david_loop                
                 !
              END DO david_loop
              !
@@ -554,7 +512,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ik_ = 0
        !
-#ifdef __PARA
+#if defined (__PARA)
        CALL poolreduce( 1, avg_iter )
 #endif
        !
@@ -564,14 +522,30 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
               '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
            ethr, avg_iter
        !
-       ! ... deallocate work space
-       !
-       DEALLOCATE( s_diag )
-       DEALLOCATE( h_diag )
-       DEALLOCATE( btype )
+       IF ( isolve == 2 ) &
+          DEALLOCATE( btype )
        !
        RETURN
        !
      END SUBROUTINE c_bands_k
+     !
+     !
+     !-----------------------------------------------------------------------
+     FUNCTION test_exit_cond()
+       !-----------------------------------------------------------------------
+       !
+       ! ... this logical function is .TRUE. when iterative diagonalization
+       ! ... is converged
+       !
+       IMPLICIT NONE
+       !
+       LOGICAL :: test_exit_cond
+       !
+       !
+       test_exit_cond = .NOT. ( ( ntry <= 5 ) .AND. &
+                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                  (       lscf .AND. ( notconv > 5 ) ) ) )
+       !                          
+     END FUNCTION test_exit_cond
      !     
 END SUBROUTINE c_bands
