@@ -123,6 +123,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              method with 3 Bessel functions fails, specifying rho0 /= 0
              may allow to override the problem (using 4 Bessel functions)
              (default rho0 = 0.0)
+      lpaw =.true. : produce a PAW dataset, experimental feature
+             only for pseudotype=3 (default .false.)
       file_chi   =   file containing output PP chi functions       (' ')
       file_beta  =   file containing output PP beta functions      (' ')
       file_qvan  =   file containing output PP qvan functions      (' ')
