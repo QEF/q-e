@@ -43,8 +43,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   integer :: kpoint, kband, spin_component, plot_num
   logical :: stm_wfc_matching, lsign
   real(kind=DP) :: sample_bias, z, dz
-
-  real(kind=DP) :: emin, emax, wf
+  real(kind=DP) :: emin, emax, wf, charge
 
   integer :: is, ik, ibnd, ir, ninter
 #ifdef __PARA
@@ -57,7 +56,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   real(kind=DP), allocatable :: averag (:,:,:), plan (:,:,:)
 
 
-  if (filplot.eq.' ') return
+  if (filplot == ' ') return
 #ifdef __PARA
   allocate (raux1( nrx1 * nrx2 * nrx3))    
 #endif
@@ -68,57 +67,57 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !
   !     Here we decide which quantity to plot
   !
-  if (plot_num.eq.0) then
+  if (plot_num == 0) then
      !
      !      plot of the charge density
      !
-     if (spin_component.eq.0) then
+     if (spin_component == 0) then
         call DCOPY (nrxx, rho (1, 1), 1, raux, 1)
         do is = 2, nspin
            call DAXPY (nrxx, 1.d0, rho (1, is), 1, raux, 1)
         enddo
      else
-        if (nspin.eq.2) current_spin = spin_component
+        if (nspin == 2) current_spin = spin_component
         call DCOPY (nrxx, rho (1, current_spin), 1, raux, 1)
         call DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
-
      endif
-  elseif (plot_num.eq.1) then
+
+  elseif (plot_num == 1) then
      !
      !       The total self-consistent potential V_H+V_xc on output
      !
-     if (spin_component.eq.0) then
+     if (spin_component == 0) then
         call DCOPY (nrxx, vr (1, 1), 1, raux, 1)
         do is = 2, nspin
            call DAXPY (nrxx, 1.0d0, vr (1, is), 1, raux, 1)
         enddo
         call DSCAL (nrxx, 1.d0 / nspin, raux, 1)
      else
-        if (nspin.eq.2) current_spin = spin_component
+        if (nspin == 2) current_spin = spin_component
         call DCOPY (nrxx, vr (1, current_spin), 1, raux, 1)
      endif
-
      call DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
-  elseif (plot_num.eq.2) then
+
+  elseif (plot_num == 2) then
      !
      !       The local pseudopotential on output
      !
-
      call DCOPY (nrxx, vltot, 1, raux, 1)
 
-  elseif (plot_num.eq.3) then
+  elseif (plot_num == 3) then
      !
      !       The local density of states at e_fermi on output
      !
-
      call local_dos (1, lsign, kpoint, kband, emin, emax, raux)
-  elseif (plot_num.eq.4) then
+
+  elseif (plot_num == 4) then
      !
      !       The local density of electronic entropy on output
      !
-
      call local_dos (2, lsign, kpoint, kband, emin, emax, raux)
-  elseif (plot_num.eq.5) then
+
+  elseif (plot_num == 5) then
+
      call work_function (wf)
 #ifdef __PARA
      call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
@@ -133,45 +132,57 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
              &       " Bias in eV = ",f6.4," # states",i4)') sample_bias * &
              rytoev, nint (wf)
      endif
-  elseif (plot_num.eq.6) then
+
+  elseif (plot_num == 6) then
      !
      !      plot of the spin polarisation
      !
-     if (nspin.eq.2) then
+     if (nspin == 2) then
         call DCOPY (nrxx, rho (1, 1), 1, raux, 1)
         call DAXPY (nrxx, - 1.d0, rho (1, 2), 1, raux, 1)
      else
         raux(:) = 0.d0
      endif
 
-  elseif (plot_num.eq.7) then
+  elseif (plot_num == 7) then
 
      call local_dos (0, lsign, kpoint, kband, emin, emax, raux)
 
-  elseif (plot_num.eq.8) then
+  elseif (plot_num == 8) then
 
      call do_elf (raux)
-  elseif (plot_num.eq.9) then
+
+  elseif (plot_num == 9) then
+
      allocate (averag( nat, nbnd, nkstot))    
      allocate (plan(nr3, nbnd, nkstot))    
      call plan_avg (averag, plan, ninter)
 
-  elseif (plot_num.eq.10) then
+  elseif (plot_num == 10) then
 
      call local_dos (3, lsign, kpoint, kband, emin, emax, raux)
-  elseif (plot_num.eq.11) then
-     call subtract_vxc (raux, spin_component)
-     call DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
+
+  elseif (plot_num == 11) then
+
+     raux(:) =  vltot(:) 
+     if (nspin == 2) then
+        rho(:,1) =  rho(:,1) +  rho(:,2)
+        nspin = 1
+     end if
+     call v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+       nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, raux)
+
   else
+
      call errore ('punch_plot', 'plot_num not implemented', - 1)
 
   endif
 #ifdef __PARA
-  if (.not. (plot_num.eq.5.or.plot_num.eq.9) ) call gather (raux, &
-       raux1)
-  if (me.eq.1.and.mypool.eq.1) call plot_io (filplot, title, nrx1, &
-       nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
-       ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
+  if (.not. (plot_num == 5 .or. plot_num == 9) ) &
+       call gather (raux, raux1)
+  if (me == 1.and.mypool == 1) call plot_io (filplot, title, nrx1, &
+       nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
+       dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
   deallocate (raux1)
 #else
 
@@ -179,9 +190,9 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
        nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
        atm, ityp, zv, tau, raux, + 1)
 #endif
-  if (plot_num.eq.9) then
+  if (plot_num == 9) then
 #ifdef __PARA
-     if (me.eq.1.and.mypool.eq.1) then
+     if (me == 1.and.mypool == 1) then
 #endif
         write (4, '(3i8)') ninter, nkstot, nbnd
         do ik = 1, nkstot

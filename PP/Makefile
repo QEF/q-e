@@ -26,7 +26,6 @@ start_postproc.o  \
 do_postproc.o  \
 stm.o  \
 stop_pp.o  \
-subtract_vxc.o  \
 voronoy.o  \
 work_function.o \
 wsweight.o
