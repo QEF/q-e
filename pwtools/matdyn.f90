@@ -103,7 +103,7 @@ program matdyn
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
+  INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
   !
   ! set namelist default

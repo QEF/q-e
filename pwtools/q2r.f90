@@ -37,7 +37,7 @@ program q2r
   namelist / input / nr1,nr2,nr3,fild, zasr
                                                                                 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
+  INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 
   !

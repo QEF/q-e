@@ -50,6 +50,8 @@
          read(5,'(a)',end=20,err=20)  filename
       else if(i.eq.1) then
          call getarg(1,filename)
+!!! T3E: replace the above line with
+!!!         call pxfgetarg(1,filename,n,i)
       else
          print '(''   usage: dist  [input file] '')'
       end if
