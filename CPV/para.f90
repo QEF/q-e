@@ -13,7 +13,7 @@ module para_mod
   integer maxproc, ncplanex
   parameter (maxproc=64, ncplanex=37000)
   
-  character*3 node
+  character(len=3) :: node
 ! node:    node number, useful for opening files
   integer nproc, me, mygroup
 ! nproc:   number of processors

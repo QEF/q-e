@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,13 +12,12 @@ subroutine bfgs
   ! ionic relaxation through broyden-fletcher-goldfarb-shanno minimization
   ! this version saves data at each iteration
   !
-  ! etxcc is added to the energy in order to have consistency with forces
-  !
 #include "machine.h"
   use pwcom
   use io, only : prefix
 #ifdef __PARA
-  use para
+  use para, only : me, mypool
+  use mp
 #endif
   implicit none
 
@@ -46,8 +45,7 @@ subroutine bfgs
 
 
 #ifdef __PARA
-  include 'mpif.h'
-  integer :: root, errcode
+  integer :: root =0
   !
   ! only one node does the calculation in the parallel case
   !
@@ -100,8 +98,7 @@ subroutine bfgs
         !
         ! line minimization with 3rd order interpolation formula
         !
-        call linmin (xold, eold, deold, x, etot + etxcc, detot, &
-             xnew, minimum_ok)
+        call linmin (xold, eold, deold, x, etot, detot, xnew, minimum_ok)
         !
         ! xnew close to x: line minimization already achieved
         !
@@ -117,7 +114,7 @@ subroutine bfgs
            ! the starting point of the line minimization to the present position
            !
            xold = x
-           eold = etot + etxcc
+           eold = etot
            deold = detot
            call DCOPY (nat3, force, 1, oldforce, 1)
 
@@ -127,7 +124,7 @@ subroutine bfgs
            !
            ! We (hopefully) are at the line minimum: convergence check
            !
-           conv_ions = eold- (etot + etxcc) .lt.epse
+           conv_ions = eold - etot .lt.epse
            do i = 1, 3
               do na = 1, nat1
                  conv_ions = conv_ions.and.abs (force (i, na) ) .lt.epsf
@@ -146,7 +143,7 @@ subroutine bfgs
         !
         x = 0.d0
         minimum_ok = .false.
-        call setv (nat3, 0.d0, dtau, 1)
+        dtau(:,:) = 0.d0
         call DGEMV ('n', nat3, nat3, 1.d0, hessm1, nax3, force, 1, &
              0.d0, dtau, 1)
         xnew = sqrt (DDOT (nat3, dtau, 1, dtau, 1) )
@@ -172,7 +169,7 @@ subroutine bfgs
         ! save values of variables at line minimum for later use
         !
         xold = x
-        eold = etot + etxcc
+        eold = etot
         deold = detot
         call DCOPY (nat3, force, 1, oldforce, 1)
         !
@@ -236,11 +233,10 @@ subroutine bfgs
   !
   ! broadcast calculated quantities to all nodes
   !
-  root = 0
-  call MPI_bcast (conv_ions, 1, MPI_LOGICAL, root, MPI_COMM_WORLD, errcode)
-  call MPI_bcast (tau, 3 * nat, MPI_REAL8, root, MPI_COMM_WORLD, errcode)
-  call MPI_bcast (ethr, 1, MPI_REAL8, root, MPI_COMM_WORLD, errcode)
-  call MPI_bcast (tr2, 1, MPI_REAL8, root, MPI_COMM_WORLD, errcode)
+  call mp_bcast (conv_ions, root)
+  call mp_bcast (tau, root)
+  call mp_bcast (ethr, root)
+  call mp_bcast (tr2, root)
 #endif
   return
 end subroutine bfgs

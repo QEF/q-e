@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -56,18 +56,9 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
   logical :: numeric
   ! input: if true the pseudo is numeric
   !
-  !   here the parameters
-  !
-
-  real(kind=DP) :: pi, fpi, e2, eps
-  ! pi
-  ! four times pi
-  ! the square of the charge
-  ! a small number
-  parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi, e2 = 2.d0, &
-       eps = 1.d-8)
-  !
-  !    and the local variables
+  real(kind=DP), parameter :: pi = 3.14159265358979d0, fpi= 4.d0 * pi, &
+                              e2 = 2.d0, eps= 1.d-8
+  !    local variables
   !
   real(kind=DP) :: vlcp, fac, den1, den2, g2a, erf, gx
   real(kind=DP), allocatable :: aux (:), aux1 (:)
@@ -81,7 +72,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
 
   if (.not.numeric) then
 
-     call setv (ngl, 0.d0, vloc, 1)
+     vloc(:) = 0.d0
      do i = 1, nlc
         if (gl (1) .lt.eps) then
            !
@@ -103,7 +94,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
         enddo
      enddo
      den1 = zp * e2 * fpi / tpiba2 / omega
-     call DSCAL (ngl, den1, vloc, 1)
+     vloc(:) = vloc (:) * den1
      !
      ! Add the local part l=lloc term (only if l <= lmax)
      !
@@ -112,7 +103,6 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
         do i = 1, nnl
            fac = (pi / alps (i, l) ) **1.5d0 * e2 / omega
            den1 = aps (i + 3, l) / alps (i, l)
-
            den2 = 0.25d0 * tpiba2 / alps (i, l)
            if (gl (1) .lt.eps) then
               !
@@ -148,7 +138,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
            aux (ir) = r (ir) * (r (ir) * vnl (ir) + zp * e2)
         enddo
         call simpson (msh, aux, rab, vlcp)
-        vloc (1) = vlcp
+        vloc (1) = vlcp        
         igl0 = 2
      else
         igl0 = 1
@@ -178,7 +168,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
              / gl (igl)
         vloc (igl) = vlcp
      enddo
-     call DSCAL (ngl, fpi / omega, vloc, 1)
+     vloc (:) = vloc(:) * fpi / omega
      deallocate (aux, aux1)
   endif
   return

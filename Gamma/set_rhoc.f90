@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@
 subroutine set_rhoc
   !-----------------------------------------------------------------------
   !
-  !    This routine compute the core charge on the real space 3D mesh
+  !    This routine computes the core charge on the real space 3D mesh
   !
   !
 #include "machine.h"
@@ -21,23 +21,21 @@ subroutine set_rhoc
   real(kind=DP), parameter :: eps = 1.d-10
 
   complex(kind=DP) , allocatable :: aux (:)
-  ! work space used for the fft of the core charge
+  ! used for the fft of the core charge
 
   real(kind=DP) , allocatable ::  rhocg(:)
   ! the radial fourier trasform
   real(kind=DP) ::  rhoima, rhoneg, rhorea
   ! used to check the core charge
-  real(kind=DP) , allocatable ::  dum(:,:)
-  ! work array containing rho=0
   real(kind=DP) ::  vtxcc
   ! dummy xc energy term
+  real(kind=DP) , allocatable ::  dum(:,:)
+  ! dummy array containing rho=0
+
   integer :: ir, nt, ng
   ! counter on mesh points
   ! counter on atomic types
   ! counter on g vectors
-
-  logical :: no_core_only
-  ! if .f. subtract etxcc from etot
 
   etxcc = 0.d0
   do nt = 1, ntyp
@@ -49,7 +47,7 @@ subroutine set_rhoc
 10 continue
   allocate (aux( nrxx))    
   allocate (rhocg(  ngl))    
-  call setv (2 * nrxx, 0.d0, aux, 1)
+  aux (:) = 0.d0
   !
   !    the sum is on atom types
   !
@@ -65,7 +63,7 @@ subroutine set_rhoc
         !     multiply by the structure factor and sum
         !
         do ng = 1, ngm
-           aux (nl (ng) ) = aux (nl (ng) ) + strf (ng, nt) * rhocg (igtongl(ng))
+           aux (nl (ng) ) = aux (nl (ng) ) + strf (ng, nt) * rhocg (igtongl (ng) )
         enddo
      endif
   enddo
@@ -84,7 +82,6 @@ subroutine set_rhoc
   do ir = 1, nrxx
      rhoneg = rhoneg + min (0.d0, DREAL (aux (ir) ) )
      rhoima = rhoima + abs (DIMAG (aux (ir) ) )
-     rhorea = max (DREAL (aux (ir) ), eps)
      rho_core(ir) = DREAL (aux(ir))
      !
      ! NOTE: Core charge is computed in reciprocal space and brought to real
@@ -96,8 +93,9 @@ subroutine set_rhoc
      ! is large. The error disappears for sufficiently high cut-off, but may
      ! rather large and it is better to leave the core charge as it is.
      ! If you insist to have it positive definite (with the possible problems
-     ! mentioned above) uncomment the following line.  SdG, Oct 15 1999
+     ! mentioned above) uncomment the following lines.  SdG, Oct 15 1999
      !
+     !         rhorea = max (DREAL (aux (ir) ), eps)
      !         rho_core(ir) = rhorea
      !
   enddo
@@ -111,23 +109,18 @@ subroutine set_rhoc
        write (6, '("  warning: negative or imaginary core charge ",2f12.6)')&
        rhoneg, rhoima
   !
-  no_core_only = .true.
-  if (no_core_only) then
-     etxcc = 0.d0
-  else
-     !
-     ! calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
-     ! This term is present only for compatibility with previous versions
-     !
-     allocate (dum(nrxx , nspin))    
-     call setv (nspin * nrxx, 0.d0, dum, 1)
-     call v_xc (dum, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-          nrxx, nl, ngm, g, nspin, alat, omega, etxcc, vtxcc, aux)
-     deallocate(dum)
-     write (6, 9000) etxcc
-     write (6,  * ) 'BEWARE it will be subtracted from total energy !'
-
-  endif
+  ! calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
+  ! The term was present in previous versions of the code but it shouldn't
+  !
+  !   allocate (dum(nrxx , nspin))    
+  !   dum(:,:) = 0.d0
+  !   call v_xc (dum, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  !        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+  !        ehart, etxcc, vtxcc, aux)
+  !   deallocate(dum)
+  !   write (6, 9000) etxcc
+  !   write (6,  * ) 'BEWARE it will be subtracted from total energy !'
+  !
   deallocate (rhocg)
   deallocate (aux)
   !
