@@ -33,7 +33,7 @@ PROGRAM images_interpolator
   USE kinds,                  ONLY : DP
   USE io_files,               ONLY : iunrestart
   USE constants,              ONLY : eps16
-  USE formats
+  USE path_formats
   USE basic_algebra_routines, ONLY : norm
   USE supercell,              ONLY : pbc, at, alat
   USE int_global_variables
@@ -131,13 +131,17 @@ PROGRAM images_interpolator
   READ( UNIT = iunrestart, FMT = * ) suspended_image 
   READ( UNIT = iunrestart, FMT = * ) ! conv_elec
   !
-  ! read either "ELASTIC CONSTANTS" or "ENERGIES, POSITIONS AND GRADIENTS"
-  READ( UNIT = iunrestart, FMT = '(256A)' ) input_line 
+  ! ... read either "ELASTIC CONSTANTS" or "ENERGIES, POSITIONS AND GRADIENTS"
+  !
+  READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+  !
   IF ( matches( "ELASTIC CONSTANTS", input_line ) ) THEN
+     !
      READ( UNIT = iunrestart, FMT = * ) ! kmin
      READ( UNIT = iunrestart, FMT = * ) ! kmax
      READ( UNIT = iunrestart, FMT = '(256A)' ) input_line ! "ENERGIES, POSITIONS AND GRADIENTS"
-  ENDIF
+     !
+  END IF
   !
   READ( UNIT = iunrestart, FMT = * ) ! Image:
   !
