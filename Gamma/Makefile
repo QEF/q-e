@@ -37,6 +37,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
 ../PW/d_matrix.o \
+../PW/data_structure.o \
 ../PW/date_and_tim.o \
 ../PW/davcio.o \
 ../PW/delta_e.o \
@@ -215,8 +216,6 @@ atomic_rho.o \
 c_bands.o \
 rdiaghg.o \
 regterg.o \
-data_structure_para.o \
-data_structure_scal.o \
 force_us.o \
 gradcorr.o \
 h_psi.o \
