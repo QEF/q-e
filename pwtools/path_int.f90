@@ -48,6 +48,8 @@ PROGRAM images_interpolator
   LOGICAL             :: no_interpolation
   LOGICAL, EXTERNAL   :: matches 
   CHARACTER (LEN=20)  :: cell_parameters
+  CHARACTER (LEN=256) :: input_line
+
   !
   !
   ! ... the input file is read
@@ -95,7 +97,7 @@ PROGRAM images_interpolator
      WRITE(*, FMT = lattice_vectors ) at    
      STOP
      !   
-  END IF  
+  END IF
   !
   dim = 3 * N
   !
@@ -119,71 +121,81 @@ PROGRAM images_interpolator
   ! ... the old restart file is read
   !
   OPEN( UNIT = iunrestart, FILE = old_restart_file, STATUS = "OLD", &
-        ACTION = "READ" )
-    !
-    no_interpolation = .FALSE.
-    !
-    READ( UNIT = iunrestart, FMT = * )
-    READ( UNIT = iunrestart, FMT = * ) istep
-    READ( UNIT = iunrestart, FMT = * ) nstep
-    READ( UNIT = iunrestart, FMT = * ) suspended_image 
-    !
-    READ( UNIT = iunrestart, FMT = * )
-    !
-    READ( UNIT = iunrestart, FMT = * )
-    READ( UNIT = iunrestart, FMT = * ) old_V(1)
-    !
-    ia = 0  
-    !
-    DO j = 1, dim, 3 
-       !
-       ia = ia + 1
-       !
-       READ( UNIT = iunrestart, FMT = * ) &
-            old_pos(j,1),                 &
-            old_pos((j+1),1),             &
-            old_pos((j+2),1),             &
-            old_PES_gradient(j,1),        &
-            old_PES_gradient((j+1),1),    & 
-            old_PES_gradient((j+2),1),    &
-            fix_atom(j),                  &
-            fix_atom((j+1)),              &
-            fix_atom((j+2))
-       !
-       old_PES_gradient(:,1) = old_PES_gradient(:,1) * fix_atom
-       !
-    END DO
-    !
-    DO i = 2, old_num_of_images
-       !
-       READ( UNIT = iunrestart, FMT = * )
-       READ( UNIT = iunrestart, FMT = * ) old_V(i)
-       !
-       DO j = 1, dim, 3 
-          !
-          READ( UNIT = iunrestart, FMT = * ) &
-               old_pos(j,i),                 &
-               old_pos((j+1),i),             &
-               old_pos((j+2),i),             &
-               old_PES_gradient(j,i),        &
-               old_PES_gradient((j+1),i),    &
-               old_PES_gradient((j+2),i)
-          !
-       END DO
-       !
-       old_PES_gradient(:,i) = old_PES_gradient(:,i) * fix_atom 
-       !
-       IF ( ( norm( old_PES_gradient(:,i) ) <= eps16 ) .AND. &
-            ( i < old_num_of_images ) ) THEN
-          !
-          no_interpolation = .TRUE.
-          !
-          WRITE( * , '("norm of gradient number ",I3," is zero")' ) i
-          !
-       END IF               
-       !
-    END DO    
-    !
+       ACTION = "READ" )
+  !
+  no_interpolation = .FALSE.
+  !
+  READ( UNIT = iunrestart, FMT = * ) ! RESTART INFORMATION
+  READ( UNIT = iunrestart, FMT = * ) istep
+  READ( UNIT = iunrestart, FMT = * ) nstep
+  READ( UNIT = iunrestart, FMT = * ) suspended_image 
+  READ( UNIT = iunrestart, FMT = * ) ! conv_elec
+  !
+  ! read either "ELASTIC CONSTANTS" or "ENERGIES, POSITIONS AND GRADIENTS"
+  READ( UNIT = iunrestart, FMT = '(256A)' ) input_line 
+  IF ( matches( "ELASTIC CONSTANTS", input_line ) ) THEN
+     READ( UNIT = iunrestart, FMT = * ) ! kmin
+     READ( UNIT = iunrestart, FMT = * ) ! kmax
+     READ( UNIT = iunrestart, FMT = '(256A)' ) input_line ! "ENERGIES, POSITIONS AND GRADIENTS"
+  ENDIF
+  !
+  READ( UNIT = iunrestart, FMT = * ) ! Image:
+  !
+  READ( UNIT = iunrestart, FMT = * ) ! convergance flag (T/F)
+  READ( UNIT = iunrestart, FMT = * ) old_V(1)
+  !
+  ia = 0  
+  !
+  DO j = 1, dim, 3 
+     !
+     ia = ia + 1
+     !
+     READ( UNIT = iunrestart, FMT = * ) &
+          old_pos(j,1),                 &
+          old_pos((j+1),1),             &
+          old_pos((j+2),1),             &
+          old_PES_gradient(j,1),        &
+          old_PES_gradient((j+1),1),    & 
+          old_PES_gradient((j+2),1),    &
+          fix_atom(j),                  &
+          fix_atom((j+1)),              &
+          fix_atom((j+2))
+     !
+     old_PES_gradient(:,1) = old_PES_gradient(:,1) * fix_atom
+     !
+  END DO
+  !
+  DO i = 2, old_num_of_images
+     !
+     READ( UNIT = iunrestart, FMT = * ) ! Image:       
+     READ( UNIT = iunrestart, FMT = * ) ! convergance flag (T/F)
+     READ( UNIT = iunrestart, FMT = * ) old_V(i)
+     !
+     DO j = 1, dim, 3 
+        !
+        READ( UNIT = iunrestart, FMT = * ) &
+             old_pos(j,i),                 &
+             old_pos((j+1),i),             &
+             old_pos((j+2),i),             &
+             old_PES_gradient(j,i),        &
+             old_PES_gradient((j+1),i),    &
+             old_PES_gradient((j+2),i)
+        !
+     END DO
+     !
+     old_PES_gradient(:,i) = old_PES_gradient(:,i) * fix_atom 
+     !
+     IF ( ( norm( old_PES_gradient(:,i) ) <= eps16 ) .AND. &
+          ( i < old_num_of_images ) ) THEN
+        !
+        no_interpolation = .TRUE.
+        !
+        WRITE( * , '("norm of gradient number ",I3," is zero")' ) i
+        !
+     END IF
+     !
+  END DO
+  !
   CLOSE( UNIT = iunrestart )
   !      
   IF ( no_interpolation ) THEN
@@ -208,9 +220,9 @@ PROGRAM images_interpolator
         ! ... tangent to the path ( normalized )
         !
         tangent(:) = 0.5D0 * ( ( old_pos(:,i+1) - old_pos(:,i) ) /     &
-                               norm( old_pos(:,i+1) - old_pos(:,i) ) + &
-                               ( old_pos(:,i) - old_pos(:,i-1) ) /     &
-                               norm( old_pos(:,i) - old_pos(:,i-1) ) )
+             norm( old_pos(:,i+1) - old_pos(:,i) ) + &
+             ( old_pos(:,i) - old_pos(:,i-1) ) /     &
+             norm( old_pos(:,i) - old_pos(:,i-1) ) )
         !
         tangent = tangent / norm( tangent )
         !
@@ -229,10 +241,10 @@ PROGRAM images_interpolator
         old_mesh(i+1) = old_mesh(i) + R
         !
         a(i) = 2.D0 * ( old_V(i) - old_V(i+1) ) / R**(3) - &
-               ( F(i) + F(i+1) ) / R**(2)
+             ( F(i) + F(i+1) ) / R**(2)
         !   
         b(i) = 3.D0 * ( old_V(i+1) - old_V(i) ) / R**(2) + &
-               ( 2.D0 * F(i) + F(i+1) ) / R
+             ( 2.D0 * F(i) + F(i+1) ) / R
         !
         c(i) = - F(i)
         !
@@ -243,7 +255,7 @@ PROGRAM images_interpolator
      i = first_image
      !
      delta_R = ( old_mesh(last_image) - &
-                 old_mesh(first_image) ) / REAL( new_num_of_images - 1 )
+          old_mesh(first_image) ) / REAL( new_num_of_images - 1 )
      ! 
      DO j = 0, ( new_num_of_images - 1 )
         !
@@ -262,7 +274,7 @@ PROGRAM images_interpolator
               !
               EXIT check_index
               !
-           END IF      
+           END IF
            !
         END DO check_index
         !
@@ -283,74 +295,60 @@ PROGRAM images_interpolator
   ! ... the new restart file is written
   !
   OPEN( UNIT = iunrestart, FILE = new_restart_file, STATUS = "UNKNOWN", &
-        ACTION = "WRITE" )
-    !
-    WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATIONS")' )
-    !
-    ! ... by default istep and nstep are set to zero
-    !
-    WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
-    WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
-    WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
-    !
-    WRITE( UNIT = iunrestart, FMT = '("ENERGY, POSITIONS AND GRADIENTS")' )
-    !
-    DO i = 1, new_num_of_images
-       !
-       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-       WRITE( UNIT = iunrestart, FMT = energy ) new_V(i)
-       !
-       ia = 0
-       !
-       DO j = 1, dim, 3
-          !
-          ia = ia + 1
-          !
-          IF ( i == 1 ) THEN
-             !
-             WRITE( UNIT = iunrestart, FMT = restart_first ) &
-                   new_pos(j,i),                             &
-                   new_pos((j+1),i),                         &
-                   new_pos((j+2),i),                         &
-                   new_PES_gradient(j,i),                    &
-                   new_PES_gradient((j+1),i),                & 
-                   new_PES_gradient((j+2),i),                &
-                   fix_atom(j),                              &
-                   fix_atom((j+1)),                          &
-                   fix_atom((j+2))
-             !
-          ELSE
-             !
-             WRITE( UNIT = iunrestart, FMT = restart_others ) &
-                   new_pos(j,i),                              &
-                   new_pos((j+1),i),                          &
-                   new_pos((j+2),i),                          &
-                   new_PES_gradient(j,i),                     &
-                   new_PES_gradient((j+1),i),                 & 
-                   new_PES_gradient((j+2),i)
-              !
-           END IF
+       ACTION = "WRITE" )
+  !
+  WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATIONS")' )
+  !
+  ! ... by default istep and nstep are set to zero
+  !
+  WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
+  WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
+  WRITE( UNIT = iunrestart, FMT = '(I4)' ) 0
+  WRITE( UNIT = iunrestart, FMT = '(A4)' ) 'F'
+  !
+  WRITE( UNIT = iunrestart, FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
+  !
+  DO i = 1, new_num_of_images
+     !
+     WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+     WRITE( UNIT = iunrestart, FMT = '("F")' )       
+     WRITE( UNIT = iunrestart, FMT = energy ) new_V(i)
+     !
+     ia = 0
+     !
+     DO j = 1, dim, 3
+        !
+        ia = ia + 1
+        !
+        IF ( i == 1 ) THEN
            !
-       END DO
-       !
-    END DO
-    !
-    ! ... zero velocities are set
-    !
-    WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' )
-    !
-    DO i = 1, new_num_of_images
-       !
-       WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-       !
-       DO j = 1, dim, 3
-          !
-          WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' ) 0.D0, 0.D0, 0.D0
-          !
-       END DO
-       !
-    END DO
-    !
+           WRITE( UNIT = iunrestart, FMT = restart_first ) &
+                new_pos(j,i),                             &
+                new_pos((j+1),i),                         &
+                new_pos((j+2),i),                         &
+                new_PES_gradient(j,i),                    &
+                new_PES_gradient((j+1),i),                & 
+                new_PES_gradient((j+2),i),                &
+                fix_atom(j),                              &
+                fix_atom((j+1)),                          &
+                fix_atom((j+2))
+           !
+        ELSE
+           !
+           WRITE( UNIT = iunrestart, FMT = restart_others ) &
+                new_pos(j,i),                              &
+                new_pos((j+1),i),                          &
+                new_pos((j+2),i),                          &
+                new_PES_gradient(j,i),                     &
+                new_PES_gradient((j+1),i),                 & 
+                new_PES_gradient((j+2),i)
+           !
+        END IF
+        !
+     END DO
+     !
+  END DO
+  WRITE( UNIT = iunrestart, FMT = '("END")' )
   CLOSE( UNIT = iunrestart )   
   !
   IF ( ALLOCATED( old_pos ) )             DEALLOCATE( old_pos )
