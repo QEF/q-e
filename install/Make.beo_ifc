@@ -70,7 +70,7 @@ LIBS= $(FFTW_LIB) /opt/intel/mkl/lib/32/libmkl_lapack.a \
      /opt/intel/mkl/lib/32/libmkl_p3.a -lpthread
 # For MKL v. 5.2 add "-lguide"
 # For MKL v. 6 use
-# LIBS= $(FFTW_LIB) -lfftw -L/opt/intel/mkl/lib/32/ \
+# LIBS= $(FFTW_LIB) -L/opt/intel/mkl/lib/32/ \
 #        -lmkl_lapack -lmkl_ia32 -lguide -lpthread
 MYLIB=lapack_mkl
 # The following is for Atlas optimized blas/lapack libraries
