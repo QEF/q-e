@@ -1095,7 +1095,7 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
       real(kind=8), save :: bw_coeffz( ltabl,  ndims )
       real(kind=8), save :: bw_coeffy( ltabl,  ndims )
       real(kind=8), save :: bw_coeffx( ltabl,  ndims )
-      complex(kind=8)    :: fy(n1x + n2*n1x*n2x), fz(2*(n1x*n2x)+n3*n3)
+      complex(kind=8)    :: fy(n2 + n1x * n2), fz(n3 + n1x * n2x * n3)
       INTEGER            :: j
 
 #endif
