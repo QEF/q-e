@@ -125,18 +125,21 @@ program pw2casino
                  if (ityp (na) .eq.nt) then
                     do ih = 1, nh (nt)
                        ikb = ijkb0 + ih
-                       enl=enl+abs(becp(ikb,ibnd))**2*wg(ibnd,ikk)* &
-                            (deeq(ih,ih,na,ispin) - &
-                              et(ibnd,ikk) * qq(ih,ih,nt))
-!                            dvan(ih,ih,nt)
-                       print *,deeq(ih,ih,na,ispin),et(ibnd,ikk), qq(ih,ih,nt)
+                       enl=enl+conjg(becp(ikb,ibnd))*becp(ikb,ibnd) &
+                       *wg(ibnd,ikk)* &
+!                            (deeq(ih,ih,na,ispin) - &
+!                              et(ibnd,ikk) * qq(ih,ih,nt))
+                            dvan(ih,ih,nt)
+!                       print *,deeq(ih,ih,na,ispin),et(ibnd,ikk), qq(ih,ih,nt)
                        DO jh = ( ih + 1 ), nh(nt)
                             jkb = ijkb0 + jh
                             enl=enl+ &
                                  (conjg(becp(ikb,ibnd))*becp(jkb,ibnd)+&
                                  conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
-                                 * wg(ibnd,ikk) * (deeq(ih,jh,na,ispin) - &
-                                 et(ibnd,ikk) * qq(ih,jh,nt))
+                                 * wg(ibnd,ikk) * &
+                                 dvan(ih,jh,nt)
+!                                 (deeq(ih,jh,na,ispin) - &
+!                                 et(ibnd,ikk) * qq(ih,jh,nt))
                             
                          END DO
 
