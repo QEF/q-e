@@ -57,9 +57,8 @@ subroutine addusdens1d (plan, prho)
      qmod (ig) = sqrt (gg1d (ig) )
   enddo
 
-  call setv (2 * nrx3, 0.d0, aux, 1)
-  if (ngm1d.gt.0) then
-
+  aux(:) = (0.d0, 0.d0)
+  if (ngm1d > 0) then
      call ylmr2 (lqx * lqx, ngm1d, g1d, gg1d, ylmk0)
      do nt = 1, ntyp
         if (tvanp (nt) ) then
@@ -76,11 +75,11 @@ subroutine addusdens1d (plan, prho)
                        !
                        do ig = 1, ngm1d
 
-                          skk = eigts1 (ig1 (ig1dto3d (ig) ), na) * eigts2 (ig2 ( &
-                               ig1dto3d (ig) ), na) * eigts3 (ig3 (ig1dto3d (ig) ), &
-                               na)
-                          aux (ig) = aux (ig) + qgm (ig) * skk * becsum (ijh, na, &
-                               current_spin)
+                          skk = eigts1 (ig1 (ig1dto3d (ig) ), na) * &
+                                eigts2 (ig2 (ig1dto3d (ig) ), na) * &
+                                eigts3 (ig3 (ig1dto3d (ig) ), na)
+                          aux (ig) = aux (ig) + qgm (ig) * skk * &
+                               becsum (ijh, na, current_spin)
                        enddo
                     endif
                  enddo
@@ -91,36 +90,24 @@ subroutine addusdens1d (plan, prho)
      !
      !     adds to the charge density and converts to real space
      !
-     call setv (2 * nrx3, 0.d0, qg, 1)
+     qg(:) = (0.d0, 0.d0)
      do ig = 1, ngm1d
         qg (nl1d (ig) ) = aux (ig) + prho (nl (ig1dto3d (ig) ) )
      enddo
   else
-     call setv (2 * nrx3, 0.d0, qg, 1)
+     qg(:) = (0.d0, 0.d0)
   endif
 #ifdef __PARA
   call reduce (2 * nrx3, qg)
 #endif
   dimz = alat * celldm (3)
-#ifdef __PARA
   !
-  ! NB1: cft_1 is present only in the parallel case
-  ! NB2: cft_1 is no longer in-place
+  ! NB: cft_1 is no longer in-place
   !
   call cft_1 (qg, 1, nr3, nrx3, 1, aux)
   do ig = 1, nr3
      plan (ig) = real (aux (ig) ) * omega / dimz
   enddo
-#else
-  do ig = 1, nr3
-     qgr (ig) = real (qg (ig) )
-     qgi (ig) = DIMAG (qg (ig) )
-  enddo
-  call cft (qgr, qgi, nr3, nr3, nr3, 1)
-  do ig = 1, nr3
-     plan (ig) = qgr (ig) * omega / dimz
-  enddo
-#endif
 
   return
 end subroutine addusdens1d

@@ -1,5 +1,5 @@
-
-! Copyright (C) 2001 PWSCF group
+!
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -58,18 +58,15 @@ subroutine average
   ! counter on mesh points
   ! counter on directions
 
-  real(kind=DP) :: rhodum, awin, deltaz, weight (nfilemax), gre(npixmax), &
-       gim(npixmax), macros(npixmax)
+  real(kind=DP) :: rhodum, awin, deltaz, weight (nfilemax), macros(npixmax)
   ! length of the window
   ! the delta on the thick mesh
   ! the weight of each file
-  ! the function to average in thick mesh (real part)
-  ! the function to average in thick mesh (im. part)
   ! the macroscopic average
-  real(kind=DP), allocatable :: funcr (:), funci (:)
-  ! the function to average (real part)
-  ! the function to average (im. part)
-
+  complex(kind=DP) gr(npixmax), grout(npixmax)
+  ! the function to average in thick mesh
+  complex(kind=DP), allocatable :: func (:), funcout(:)
+  ! the function to average
   real(kind=DP) :: celldms (6), gcutmsa, duals, ecuts, zvs (ntypx), ats(3,3)
   real(kind=DP), allocatable :: taus (:,:)
   integer, allocatable :: ityps (:)
@@ -175,69 +172,60 @@ subroutine average
   !
   !   compute the direct and reciprocal lattices
   !
-  allocate (funcr(nrx3))    
-  allocate (funci(nrx3))    
+  allocate (func(nrx3))    
+  allocate (funcout(nrx3))    
   !
   !     At this point we start the calculations, first we compute the
   !     planar averages
   !
   do k = 1, nr3
-     funcr (k) = 0.d0
-     funci (k) = 0.d0
+     func (k) = (0.d0, 0.d0)
      do j = 1, nr2
         do i = 1, nr1
            ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-           funcr (k) = funcr (k) + real (psic (ir) )
+           func (k) = func (k) + real (psic (ir) )
         enddo
      enddo
-     funcr (k) = funcr (k) / (float (nr1 * nr2) )
+     func (k) = func (k) / (float (nr1 * nr2) )
   enddo
   do k = 1, nr3
-     write (6, * ) k, funcr (k)
+     write (6, * ) k, func (k)
   enddo
   !
   !     add more points to compute the macroscopic average
   !
-  call cft (funcr, funci, nr3, nr3, nr3, - 1)
-  call DSCAL (nr3, 1.d0 / nr3, funcr, 1)
-  call DSCAL (nr3, 1.d0 / nr3, funci, 1)
+  ! NB: cft_1 is no longer in-place
+  !
+  call cft_1 (func, 1, nr3, nrx3, -1, funcout)
+  func(:) = funcout(:) /nr3
   do k = 1, npt
      if (k.le.nr3 / 2) then
-        gre (k) = funcr (k)
-        gim (k) = funci (k)
+        gr (k) = func (k)
      elseif (k.gt.npt - nr3 / 2) then
-        gre (k) = funcr (k - npt + nr3)
-        gim (k) = funci (k - npt + nr3)
+        gr (k) = func (k - npt + nr3)
      else
-        gre (k) = 0.d0
-        gim (k) = 0.d0
+        gr (k) = (0.d0, 0.d0)
      endif
   enddo
-  if (mod (nr3, 2) .eq.0) then
-     gre (nr3 / 2 + 1) = 0.5d0 * funcr (nr3 / 2 + 1)
-     gim (nr3 / 2 + 1) = 0.5d0 * funci (nr3 / 2 + 1)
-     gre (npt - nr3 / 2 + 1) = gre (nr3 / 2 + 1)
-     gim (npt - nr3 / 2 + 1) = - gim (nr3 / 2 + 1)
+  if (mod (nr3, 2) == 0) then
+     gr (nr3 / 2 + 1) = 0.5d0 * func (nr3 / 2 + 1)
+     gr (npt - nr3 / 2 + 1) = DCONJG(gr (nr3 / 2 + 1))
   else
-     gre (nr3 / 2 + 1) = funcr (nr3 / 2 + 1)
-     gim (nr3 / 2 + 1) = funci (nr3 / 2 + 1)
+     gr (nr3 / 2 + 1) = func (nr3 / 2 + 1)
   endif
-
-
-  call cft (gre, gim, npt, npt, npt, 1)
+  call cft_1 (gr, 1, npt, npt, 1, grout)
   !
   !     compute the macroscopic average
   !
   nmacro = npt * (awin / (alat * celldm (3) ) )
-  if (nmacro.le.0) call errore ('average ', 'nmacro is too small ', &
-       1)
+  if (nmacro.le.0) call errore ('average ', 'nmacro is too small ', 1)
   do i = 1, npt
      macros (i) = 0.d0
      do j = - nmacro / 2, nmacro / 2
         k = i + j
         if (k.le.0) k = k + npt
         if (k.gt.npt) k = k - npt
-        macros (i) = macros (i) + gre (k)
+        macros (i) = macros (i) + REAL(grout (k))
      enddo
      if (mod (nmacro, 2) .eq.0) then
         macros (i) = macros (i) / float (nmacro + 1)
@@ -250,10 +238,9 @@ subroutine average
   !
   deltaz = alat * celldm (3) / float (npt - 1)
 
-
-  write (6, '(3f15.9)') (deltaz * (i - 1) , gre (i) , macros (i) , &
+  write (6, '(3f15.9)') (deltaz * (i - 1) , REAL (grout (i)) , macros (i) , &
        i = 1, npt)
-  deallocate(funci)
-  deallocate(funcr)
+  deallocate(funcout)
+  deallocate(func)
   return
 end subroutine average
