@@ -66,7 +66,7 @@ subroutine ld1_setup
      isws=1
      nwf0=nwfs
      if (rel==2) &
-          &   call occ_spinorbps(nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws)
+          call occ_spinorbps(nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws)
      do n=1,nwf
         core_state(n)=.true.
      enddo
@@ -110,8 +110,8 @@ subroutine ld1_setup
         nbeta=nwfs
      endif
      !
-     !     test the occupations: for a pseudopotential generation all-electron
-     !     and pseudopotential must match
+     !     test the occupations: for pseudopotential generation
+     !     all-electron and pseudopotential occupations must match
      !
      do n=1,nwfs
         if (.not.new(n)) then
@@ -208,7 +208,7 @@ end subroutine occ_spinorb
 
 subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
   !
-  ! This subruotine splits the states according to their j as needed to
+  ! This subroutine splits the states according to their j as needed to
   ! make a spin orbit calculation.
   !
   implicit none

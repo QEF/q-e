@@ -205,7 +205,30 @@ subroutine ld1_readin
      enddo
   else
      call el_config(config,.true.,nwf,el,nn,ll,oc,isw)
-  endif
+     !
+     ! check same labels corresponding to different spin or j value
+     !
+     do n=1,nwf  
+        do i=n+1,nwf  
+           if (el(i) == el(n)) then
+              if ( lsd==0 ) then
+                 call errore('ld1_readin',el(i)//' appears twice',i)
+              else if (rel == 2) then
+                 if (ll(n) > 0) then
+                    jj(n) = ll(n) + (isw(n)-1.5)
+                    jj(i) = ll(i) + (isw(i)-1.5)
+                    if ( oc(n) > (2.d0*jj(n)+1.d0) ) &
+                         call errore('ld1_readin','occupation wrong',n)
+                    if ( oc(i) > (2.d0*jj(i)+1.d0) ) &
+                         call errore('ld1_readin','occupation wrong',i)
+                 else
+                    call errore('ld1_readin',el(i)//' appears twice',i)
+                 end if
+              end if
+           end if
+        end do
+     end do
+  end if
 
   if (iswitch /= 2) then
      call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,sqr)
@@ -374,8 +397,6 @@ subroutine ld1_readin
           call errore('ld1_readin','iswitch=3 and file_pseudopw?',1)
      if (rcloc <=0.d0) &
           call errore('ld1_readin','rcloc is negative',1)
-     if (nlcc .and. rcore == 0.d0) &
-          call errore('ld1_readin','must give a core radius',1)
 
      read(5,*,err=600,iostat=ios) nwfs
 600  call errore('ld1_readin','reading nwfs',abs(ios))
