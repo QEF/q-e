@@ -795,12 +795,25 @@ $ac_cv_search_dgemm -latlas $libs", , -latlas)
 
 	if ! test $have_blas
 	then
-		# check for blas
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$libs"
-		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 libs="$LIBS")
+		# check for blas (in several directories)
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dgemm, blas, have_blas=1
+				       libs="$try_loption $LIBS")
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+		done
 	fi
 
 	if ! test $have_lapack
