@@ -1,4 +1,4 @@
-This is the distribution of the ESPRESSO suite of codes (ESPRESSO: 
+This is the distribution of the Quantum-ESPRESSO suite of codes (ESPRESSO: 
 opEn-Source Package for Research in Electronic Structure, Simulation, 
 and Optimization), promoted by the DEMOCRITOS National Simulation Center 
 of the Italian INFM (http://www.democritos.it). It contains the following 
@@ -10,7 +10,7 @@ based on plane waves and pseudopotentials:
   Pisa) and others: see http://www.pwscf.org for more information
 
 - the CP code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
-  Kari Laasonen (Oulu), Andrea Trave (UCBerkeley), Roberto Car
+  Kari Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car
   (Princeton), Paolo Giannozzi, Nicola Marzari (MIT) and others,
   for Car-Parrinello variable-cell molecular dynamics 
 

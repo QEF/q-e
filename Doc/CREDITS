@@ -1,6 +1,6 @@
-The ESPRESSO package (opEn-Source Package for Research in Electronic 
-Structure, Simulation, and Optimization) is the result of the merge
-of several pre-existing packages for electronic-structure
+The Quantum-ESPRESSO package (opEn-Source Package for Research in 
+Electronic Structure, Simulation, and Optimization) is the result 
+of the merge of several pre-existing packages for electronic-structure
 calculations:
 - the PWscf package
 - the FPMD code
@@ -9,7 +9,7 @@ and of several utilities, in particular:
 - the PWgui graphical user interface for generating input data files
 - a pseudopotential generation code.
 
-The maintenance and further development of the ESPRESSO code is
+The maintenance and further development of the Quantum-ESPRESSO code is
 promoted by the DEMOCRITOS National Simulation Center of the Italian
 INFM (http://www.democritos.it/), under the coordination of Paolo
 Giannozzi (p.giannozzi@sns.it) (Scuola Normale Superiore, Pisa), with
@@ -33,7 +33,7 @@ Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA), Paolo
 Focher, and others.
 
 CP was developed by Alfredo Pasquarello (IRRMA, Lausanne), Kari
-Laasonen (Oulu), Andrea Trave (UCBerkeley), Roberto Car (Princeton),
+Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car (Princeton),
 Nicola Marzari (MIT), Paolo Giannozzi, and others.
 
 PWgui was written by Anton Kokalj (IJS) and is based on his GUIB

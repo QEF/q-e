@@ -9,8 +9,8 @@ procedure.
 
 ----------------------------------------------------------------------
 
-To install ESPRESSO, you need working C and f95 compilers (f90 is not
-sufficient, but most "f90" compilers are actually f95-compliant).
+To install Quantum-ESPRESSO, you need working C and f95 compilers (f90 
+is not sufficient, but most "f90" compilers are actually f95-compliant).
 You will also need basic unix facilities: a shell, the "make" and 
 "awk" utilities. Installation is a three-step procedure:
 

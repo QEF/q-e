@@ -38,9 +38,9 @@ HOW TO ADD SUPPORT FOR A NEW ARCHITECTURE
 
 In order to support a previously unsupported architecture, first you
 have to figure out which compilers, compilation flags, libraries
-etc. should be used for compiling ESPRESSO on that architecture.
+etc. should be used for compiling Quantum-ESPRESSO on that architecture.
 In other words, you have to write a "make.sys" that works: use the
-manual configuration procedure for that (see the ESPRESSO User's
+manual configuration procedure for that (see the Quantum-ESPRESSO User's
 Guide).  Then, you have to modify "configure" so that it can generate
 that "make.sys" automatically.
 
@@ -97,7 +97,7 @@ values for several variables:
   otherwise, the default of "ranlib=echo" will be used (i.e., don't
   use ranlib).
 
-- you should define "try_dflags" if the ESPRESSO codes contain any
+- you should define "try_dflags" if the Quantum-ESPRESSO codes contain any
   "#ifdef" specific to your machine: for instance "try_dflags=-D__AIX"
   (on IBM machines) or "try_dflags=-D__LINUX" (on 32-bit PCs with
   Linux) or "try_dflags=-D__LINUX64" (Linux on Itanium and Opteron).

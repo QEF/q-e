@@ -1,4 +1,4 @@
-The most current development version of ESPRESSO is publicly
+The most current development version of Quantum-ESPRESSO is publicly
 accessible via anonymous CVS (Concurrent Version System).
 
 *** PLEASE NOTE ***
@@ -20,7 +20,7 @@ To download the CVS tree from scratch, you will need "cvs" and "ssh"
       cvs login
    The password is: cvsanon
 
-3) Download the complete ESPRESSO source tree:
+3) Download the complete Quantum-ESPRESSO source tree:
       cvs checkout espresso
    (the code appears in directory espresso).
 

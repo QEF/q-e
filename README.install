@@ -2,16 +2,16 @@
 INSTALLATION INSTRUCTIONS
 ----------------------------------------------------------------------
 
-More detailed instructions can be found in the ESPRESSO User's Guide:
-you can find it in the "Doc/" directory of the ESPRESSO source
-distribution, or download it from http://www.pwscf.org/guide.htm
+More detailed instructions can be found in the Quantum-ESPRESSO User's
+Guide: you can find it in the "Doc/" directory of the Quantum-ESPRESSO
+source distribution, or download it from http://www.pwscf.org/guide.htm
 
 ----------------------------------------------------------------------
 
-To install ESPRESSO, you need working C and f95 compilers (f90 is not
-sufficient, but most "f90" compilers are actually f95-compliant).
+To install Quantum-ESPRESSO, you need working C and f95 compilers (f90 is
+not sufficient, but most "f90" compilers are actually f95-compliant).
 You will also need basic unix facilities: a shell, the "make" and
-"awk" utilities. To install ESPRESSO, you must:
+"awk" utilities. To install Quantum-ESPRESSO, you must:
 
 1. configure the source package for your system, compilers and
    libraries;
@@ -32,9 +32,9 @@ the detailed instructions below.
 CONFIGURE
 ----------------------------------------------------------------------
 
-To configure the ESPRESSO source package, run the "configure" script.
-It will (try to) detect compilers and libraries available on your
-machine, and set up things accordingly.
+To configure the Quantum-ESPRESSO source package, run the "configure" 
+script. It will (try to) detect compilers and libraries available on
+your machine, and set up things accordingly.
 Presently it is expected to work on most Linux 32- and 64-bit (Itanium
 and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
 HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
@@ -59,8 +59,8 @@ Specifically, "configure" generates the following files:
 script, that "configure" invokes.  If you modify the program sources,
 you might have to rerun it.
 
-You should always be able to compile the ESPRESSO suite of programs
-without having to edit any of the generated files.  However you may
+You should always be able to compile the Quantum-ESPRESSO suite of 
+programs without having to edit any of the generated files. You may
 have to tune "configure" by specifying appropriate environment
 variables and/or command-line options.
 Usually the most tricky part is to get external libraries recognized
@@ -134,7 +134,7 @@ For more information, see "README.configure".
 ----------------------------------------------------------------------
 LIBRARIES
 
-ESPRESSO makes use of the following external libraries:
+Quantum-ESPRESSO makes use of the following external libraries:
 
   BLAS (http://www.netlib.org/blas/) and LAPACK
     (http://www.netlib.org/lapack/) for linear algebra
@@ -144,11 +144,12 @@ A copy of the needed routines is provided with the distribution.
 However, when available, optimized vendor-specific libraries can be
 used instead: this often yields huge performance gains.
 
-ESPRESSO can use the following architecture-specific replacements for
-BLAS and LAPACK:
+Quantum-ESPRESSO can use the following architecture-specific replacements
+for BLAS and LAPACK:
 
   essl for IBM machines
   complib.sgimath for SGI Origin
+  SCSL for SGI Altix
   scilib for Cray/T3e
   sunperf for Sun
   MKL for Intel Linux PCs
@@ -207,7 +208,7 @@ variable.  For example:
   ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
 
 If everything else fails, you'll have to write the "make.sys" file
-manually: see the ESPRESSO User's Guide for instructions.
+manually: see the Quantum-ESPRESSO User's Guide for instructions.
 
 *** Please note ***
 If you change any settings after a previous (successful or failed)
@@ -224,7 +225,7 @@ The present values will work for most cases.  All other variables are
 dynamically allocated: you do not need to recompile your code for a
 different system.
 
-At your option, you may compile the complete ESPRESSO suite of
+At your option, you may compile the complete Quantum-ESPRESSO suite of
 programs (with "make all"), or only some specific programs.
 
 "make" with no arguments yields a list of valid compilation targets.
@@ -255,4 +256,4 @@ Here is a list:
   make veryclean    remove configuration files too
   make tar          build a tarball of the current source tree
 
-For more detailed information, see the ESPRESSO User's Guide.
+For more detailed information, see the Quantum-ESPRESSO User's Guide.
