@@ -22,8 +22,8 @@ else
     exit 1
 fi
 
-GUI_VERSION=`cat GUI/TkPWscf/VERSION`
-GUI=TkPWscf-$GUI_VERSION
+GUI_VERSION=`cat GUI/PWgui/VERSION`
+GUI=PWgui-$GUI_VERSION
 make veryclean
 find . -type f -name *~ -exec /bin/rm {} \;
 find . -type f -name .#* -exec /bin/rm {} \;

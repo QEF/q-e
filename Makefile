@@ -108,10 +108,10 @@ tar :
 
 # TAR-GUI works only if we have CVS-sources !!!
 tar-gui :
-	@if test -d GUI/TkPWscf ; then \
-		cd GUI/TkPWscf; \
-		$(MAKE) clean cvsinit tkpwscf-source-notcl; \
-		mv TkPWscf-*.tgz ../../; \
+	@if test -d GUI/PWgui ; then \
+		cd GUI/PWgui; \
+		$(MAKE) clean cvsinit pwgui-source-notcl; \
+		mv PWgui-*.tgz ../../; \
 	else \
 		echo ""; \
 		echo "  Sorry tar-gui works only for CVS-sources !!!"; \
