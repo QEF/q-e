@@ -2,10 +2,10 @@
 .SUFFIXES : .o .c .f .f90
 
 .f90.o:
-	$(F90) $(F90FLAGS) $(MODULEFLAG) -c $<
+	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
 	$(F77) $(F77FLAGS) -c $<
 
 .c.o:
-	$(CC) $(CCFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $<

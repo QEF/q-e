@@ -1,13 +1,13 @@
 # @configure_input@
 @SET_MAKE@
 CC             = @cc@
-CCFLAGS        = @cflags@ $(DFLAGS) $(IFLAGS)
+CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
 # See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
 DFLAGS         = @dflags@
 FDFLAGS        = @fdflags@
 IFLAGS         = -I../include @ifftw@
-MODFLAGS       = @imodule@. @imodule@../Modules @imodule@../PW @imodule@../PH
+MODFLAGS       = @imod@. @imod@../Modules @imod@../PW @imod@../PH
 CPP            = @cpp@
 CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 F77            = @f77@

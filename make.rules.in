@@ -9,4 +9,4 @@
 	$(F77) $(F77FLAGS) -c $<
 
 .c.o:
-	$(CC) $(CCFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $<

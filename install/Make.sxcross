@@ -32,10 +32,6 @@ DEBUGOPT= -Wf" -init stack=zero heap=zero"
 AR = sxar
 ARFLAGS = rv
 
-# This is needed to tell the compiler where modules are
-#
-MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
-
 #
 # Fortran compiler:
 #
@@ -47,7 +43,7 @@ FFLAGS = $(BASIC) $(MISC) $(OPT) $(DEBUGOPT)
 #$(FTRACE)
 #FFLAGS = $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
 #FCAUTIOUS=$(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
-F90FLAGS=$(FFLAGS)
+F90FLAGS=$(FFLAGS) -I../Modules -I../PW -I../PH
 F77FLAGS=-f3 $(FFLAGS)
 
 #
@@ -57,7 +53,7 @@ F77FLAGS=-f3 $(FFLAGS)
 #CFLAGS = -DLANGUAGE_C -DNEC -DSX -I$(INC_DIR) -hfloat0,0,acct
 CC = sxcc
 CCLOCAL=cc
-CCFLAGS = -D__SX6 -I$(INC_DIR)  
+CFLAGS = -D__SX6 -I$(INC_DIR)  
 
 #
 # Libraries:
@@ -67,7 +63,7 @@ LIBS = -llapack -lblas -lasl
 # With libfft (Mathkeisan) libraries
 # be careful, versions <= 1.4 are buggy (zzfft3d), 
 #wait for 1.5 (expected end of 2003) 
-#LIBS = -llapack -lblas $(OSHOME)/zzfft3d.o -lfft
+#LIBS = -llapack -lblas ../zzfft3d.o -lfft
 # You can find the jmfft Cray compatible library written
 # by Jean-Marie Teuler on www.idris.fr (search for jmfft)
 #LIBS = -llapack -lblas -L$(HOME)/mylocal/lib -ljmfft
@@ -77,7 +73,7 @@ LIBS = -llapack -lblas -lasl
 #
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 
-LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/ptools.a \
-          $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a \
+LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) ../flib/ptools.a \
+          ../flib/flib.a ../clib/clib.a \
           -p -Wl" -f zero " $(LIBS)
 RANLIB         = echo
