@@ -76,7 +76,7 @@ NAMELIST &CONTROL
 calculation    CHARACTER
                a string describing the task to be performed:
                'scf', 'nscf', 'phonon', 'relax', 'md', 'vc-relax', 
-	       'vc-md', 'neb'
+	       'vc-md', 'neb', 'smd'
                (vc = variable-cell). Default: 'scf'
 
 title          CHARACTER
@@ -87,16 +87,17 @@ verbosity      CHARACTER
 
 restart_mode   CHARACTER
                'from_scratch'  : from scratch ( default )
-	                         NEB only: the starting path is a linear 
-				 interpolation between the first and the last 
-				 image. Note that in the linear interpolation
+	                         NEB and SMD only: the starting path is obtained
+                                 with a linear interpolation between the images
+                                 specified in the ATOMIC_POSITIONS card.
+				 Note that in the linear interpolation
                                  periodic boundary conditions ARE NON USED.
                'restart'       : from previous interrupted run
 
 nstep          INTEGER                         
                number of ionic + electronic steps
                default: 1 if calculation = 'scf', 'nscf'
-	                0 if calculation = 'neb'
+	                0 if calculation = 'neb', 'smd'
                        50 for the other cases
 
 iprint         INTEGER
@@ -110,7 +111,7 @@ tprnfor        LOGICAL
                print forces. Set to .TRUE. if calculation='relax','md','vc-md'
             
 dt             REAL
-               time step for molecular dynamics, in Rydberg atomic units 
+               time step for molecular dynamics, in Rydberg atomic units
                (1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
                 Hartree atomic units, half that much!!!)
 
@@ -377,15 +378,9 @@ diago_diis_ndim
                INTEGER ( default = 3 )
                For DIIS: dimension of the reduced space.
 
-diago_diis_ethr  
-               INTEGER
-               For DIIS: Conjugate Gradient diagonalization is repeated
-               until the convergence threshold for eigenvalues ( ethr ) is
-               smaller than diago_diis_ethr
-
 startingpot    CHARACTER
                'atomic': starting potential from atomic charge superposition
-                         ( default for scf, *relax, *md, neb )
+                         ( default for scf, *relax, *md, neb, smd )
                'file'  : start from existing "prefix".pot file
                          ( default and only possibility for nscf and phonon )
 
@@ -510,15 +505,10 @@ CI_scheme      CHARACTER. ( default = "no-CI" )
                "highest-TS" : original CI scheme. The image highest in energy 
 	                      does not feel the effect of springs and is 
 			      allowed to climb along the path
-               "all-SP"     : CI is used on all the saddle points identified 
-	                      along the path. Moreover all local minima 
-			      identified along the path are optimized without 
-			      being affected by springs (see also optimization)
                "manual"     : images that have to climb are manually selected. 
 	                      See also CLIMBING_IMAGES card 
-               use CI only when the shape of the MEP is clear
 
-optimization   LOGICAL ( default = .FALSE. )
+first_last_opt LOGICAL ( default = .FALSE. )
                also the first and the last configurations are optimized
                "on the fly" 
 	       these images do not feel the effect of the springs
@@ -556,7 +546,7 @@ k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
 	       elastic constants are in the range [ k_min, k_max ] 
 	       this is useful to rise the resolution around the saddle point
 
-neb_thr        REAL ( default = 0.05D0 eV / Angstrom )
+path_thr       REAL ( default = 0.05D0 eV / Angstrom )
                the simulation stops when the error ( the norm of the force 
 	       orthogonal to the path in eV/A ) is less than neb_thr.
                

@@ -1,3 +1,13 @@
+18 Aug 2004  NEB code reorganization. All the routines involved in "path" 
+             optimization are grouped into modules starting with "path_". 
+             The output has been slightly restyled. 
+             In the pwscf code (only) has been implemented a version of the 
+             string method (calculation='smd') in which the path is represented 
+             in Fourier components and the optimization procedure is done on 
+             these components (still to be optimized, but working).
+             BFGS: Interpolation of the "accepted" bfgs step disabled 
+             (not yet safe). (CS)
+
 17 Aug 2004  Initialization of startingpot in the "raman" case fixed 
              Documentation update (PG)
 
