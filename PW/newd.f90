@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,20 +13,18 @@ subroutine newd
   !   This routine computes the integral of the effective potential with
   !   the Q function and adds it to the bare ionic D term which is used
   !   to compute the non-local term in the US scheme.
-  !   LSDA case allowed: nspin = 2
   !
 #include "machine.h"
 
   use pwcom
   implicit none
-  integer :: ig, ir, nt, ih, jh, na, is
-  ! counters on g vectors, mesh points, atom type, beta functions x 2, atoms
-  ! and spin polarizations
-  complex(kind=DP), allocatable :: aux (:,:), & ! used to contain the potential
-                                   vg (:)       ! used to contain the structure
-  real(kind=DP), allocatable  :: ylmk0 (:,:), & ! the spherical harmonics
-                                 qmod (:)       ! the  modulus of G
-  real(kind=DP) ::  DDOT
+  integer :: ig, nt, ih, jh, na, is
+  ! counters on g vectors, atom type, beta functions x 2, atoms, spin
+  complex(kind=DP), allocatable :: aux (:,:), vg (:)
+  ! work space
+  real(kind=DP), allocatable  :: ylmk0 (:,:), qmod (:)
+  ! spherical harmonics, modulus of G
+  real(kind=DP) :: fact, DDOT
   !
   !
   if (.not.okvan) then
@@ -45,13 +43,16 @@ subroutine newd
      return
   end if
 
+  if (gamma_only) then
+     fact = 2.d0
+  else
+     fact = 1.d0
+  end if
   call start_clock ('newd')
   allocate ( aux(ngm,nspin), vg(nrxx), qmod(ngm), ylmk0(ngm, lqx*lqx) )
   !
-  ! set deeq to zero
-  !
   deeq(:,:,:,:) = 0.d0
-
+  !
   call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
@@ -60,9 +61,7 @@ subroutine newd
   ! fourier transform of the total effective potential
   !
   do is = 1, nspin
-     do ir = 1, nrxx
-        vg (ir) = vltot (ir) + vr (ir, is)
-     enddo
+     vg (:) = vltot (:) + vr (:, is)
      call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
         aux (ig, is) = vg (nl (ig) )
@@ -91,8 +90,11 @@ subroutine newd
                        !
                        !    and the product with the Q functions
                        !
-                       deeq (ih, jh, na, is) = omega * &
+                       deeq (ih, jh, na, is) = fact * omega * &
                             DDOT (2 * ngm, vg, 1, qgm, 1)
+                       if (gamma_only .and. gstart==2) &
+                            deeq (ih, jh, na, is) = &
+                            deeq (ih, jh, na, is) - omega*real(vg(1)*qgm(1))
                     enddo
                  endif
               enddo

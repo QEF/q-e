@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,24 +24,21 @@ subroutine force_corr (forcescc)
   real(kind=DP) :: forcescc (3, nat)
   !
   real(kind=DP), allocatable :: rhocgnt (:), aux (:)
+  ! work space
   real(kind=DP) ::  gx, arg, fact
-  integer :: ir, is, ig, igl0, nt, na, ipol
-  ! counter on mesh points
-  ! counter on spin polarizations
-  ! counter on G vectors
-  ! index of first shell with G != 0
-  ! counter on atom types
-  !    "    "  atoms
-  !    "    "  cartesians components
-  !
-  !
-  call setv (2 * nrxx, 0.d0, psic, 1)
+  ! temp factors
+  integer :: ir, isup, isdw, ig, igl0, nt, na, ipol
+  ! counters
   !
   ! vnew is V_out - V_in, psic is the temp space
   !
-  do is = 1, nspin
-     call DAXPY (nrxx, 1.d0 / nspin, vnew (1, is), 1, psic, 2)
-  enddo
+  if (nspin == 1) then
+     psic(:) = vnew (:, 1)
+  else
+     isup = 1
+     isdw = 2
+     psic(:) = (vnew (:, isup) + vnew (:, isdw)) * 0.5d0
+  end if
   !
   allocate ( aux(ndm), rhocgnt(ngl) )
 
@@ -70,9 +67,9 @@ subroutine force_corr (forcescc)
         enddo
         call simpson (msh (nt), aux, rab (1, nt), rhocgnt (ig) )
      enddo
-     do ig = gstart, ngm
-        do na = 1, nat
-           if (nt.eq.ityp (na) ) then
+     do na = 1, nat
+        if (nt.eq.ityp (na) ) then
+           do ig = gstart, ngm
               arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
                    + g (3, ig) * tau (3, na) ) * tpi
               do ipol = 1, 3
@@ -80,8 +77,8 @@ subroutine force_corr (forcescc)
                       rhocgnt (igtongl(ig) ) * DCMPLX(sin(arg),cos(arg)) * &
                       g(ipol,ig) * tpiba * conjg(psic(nl(ig)))
               enddo
-           endif
-        enddo
+           enddo
+        endif
      enddo
   enddo
 #ifdef __PARA

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,15 +20,8 @@ subroutine addusdens
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ijh, ir, is
-  ! counter on G vectors
-  ! counter on atoms
-  ! the atom type
-  ! counter on beta functions
-  ! counter on beta functions
-  ! composite index ih jh
-  ! counter on mesh points
-  ! counter on spin polarization
+  integer :: ig, na, nt, ih, jh, ijh, is
+  ! counters
 
   real(kind=DP), allocatable :: qmod (:), ylmk0 (:,:)
   ! the modulus of G
@@ -39,15 +32,15 @@ subroutine addusdens
   ! work space for FFT
   ! work space for rho(G,nspin)
 
+  if (.not.okvan) return
 
   call start_clock ('addusdens')
 
   allocate (aux ( ngm, nspin))    
-  allocate (qg( nrxx))    
   allocate (qmod( ngm))    
   allocate (ylmk0( ngm, lqx * lqx))    
 
-  call setv (2 * ngm * nspin, 0.d0, aux, 1)
+  aux (:,:) = (0.d0, 0.d0)
   call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
@@ -79,24 +72,20 @@ subroutine addusdens
      endif
   enddo
   !
-  !     convert aux to real space and add to the charge density
-  !
-  if (okvan) then
-     do is = 1, nspin
-        call setv (2 * nrxx, 0.d0, qg, 1)
-        do ig = 1, ngm
-           qg (nl (ig) ) = aux (ig, is)
-        enddo
-
-        call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        do ir = 1, nrxx
-           rho (ir, is) = rho (ir, is) + DREAL (qg (ir) )
-        enddo
-     enddo
-  endif
-
   deallocate (ylmk0)
   deallocate (qmod)
+  !
+  !     convert aux to real space and add to the charge density
+  !
+  allocate (qg( nrxx))    
+  do is = 1, nspin
+     qg(:) = (0.d0, 0.d0)
+     do ig = 1, ngm
+        qg (nl (ig) ) = aux (ig, is)
+     enddo
+     call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     rho (:, is) = rho (:, is) + DREAL (qg (:) )
+  enddo
   deallocate (qg)
   deallocate (aux)
 

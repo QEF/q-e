@@ -1,0 +1,92 @@
+TODO LIST - 2 Apr 2003
+
+INSTALLATION
+
+- compile fftw by default on request for PW and CP as well
+
+COMMON
+
+- fix shift in eigenvalues between CP/FPMD and PW
+  The eigenvalues must be the same!!!
+
+- fix shift in total energy between CP, FPMD and PW
+  for charged systems. Total energies for charged systems
+  must be the same!!!
+
+- merge diagonalization routines, use parallel diag everywhere
+
+- start merge of input routines
+
+- merge spherical harmonics, bessel, integration routines, etc
+
+- variable declarations : real(kind=DP) etc everywhere
+
+- real vs dreal, cmplx vs dcmplx, dfloat etc
+
+PW
+
+- bfgs, md : atomic positions should be written in the same
+  format as they are read (but this should not spoil scripts
+  that extract coordinates from output file)
+
+- remove analytical pps and related variables
+
+- remove residual direct calls to MPI routines
+  use routines in mp.f90 instead
+  merge with existing wrapper if needed
+
+- remove potential mixing, save and start from rho instead of V
+
+- remove all calls to setv and to blas copy, scal
+
+- save rho and/or V in G-space instead of R-space
+
+- remove old punch, use new punch, add possibility to save
+  wavefunctions either 'distributed' or 'collected' in
+  parallel execution (requires identifier in the first line
+  of the file) 
+
+- add possibility to read atomic positions from file
+
+- read a, b, c, cosab, cosbc, cosac instead of celldm
+  Use more standard choices for crystal axis
+
+- fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
+
+- memory estimator tool, or memory report 
+
+POSTPROCESSING
+
+- bands.x must either be finished or removed
+
+- postprocessing in the parallel case and with new_punch
+  must be verified
+
+- stm in non-scf calculations to be verified
+
+- add more scripts that process output file
+
+- dos, projected dos, etc: input data should be more uniform
+
+PH
+
+- Tone: ntyp in input needed for phonon GUI ?
+
+- better algorithm for electron-phonon (Malgorzata?)
+
+DOCUMENTATION
+
+- expand, update, verify, etc
+
+- add a list of FAQ, or AAQ (Already Answered Questions)
+
+CPV: 
+
+- find reason for differences in empty states between CP and PW
+  with ultrasoft pps and box grids. If it is a bug, it is serious.
+
+- check on input ipp and pp type. Even better: remove ipp
+
+- remove eispack routines, replace with lapack or parallel diag
+
+- remove all calls to zero and to blas copy, scal

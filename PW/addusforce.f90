@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,16 +35,6 @@ subroutine addusforce (forcenl)
      fact = 1.d0
   end if
   allocate (aux(ngm,nspin))    
-  allocate (aux1(ngm,3))    
-  allocate (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin))    
-  allocate (qmod( ngm))    
-  allocate (ylmk0(ngm,lqx*lqx))    
-  !
-  ddeeq(:,:,:,:) = 0.d0
-  !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
-  !
-  qmod (:) = sqrt (gg (:) )
   !
   ! fourier transform of the total effective potential
   !
@@ -55,6 +45,17 @@ subroutine addusforce (forcenl)
      aux (:, is) = vg (nl (:) ) * tpiba * (0.d0, - 1.d0)
   enddo
   deallocate (vg)
+  !
+  allocate (aux1(ngm,3))    
+  allocate (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin))    
+  allocate (qmod( ngm))    
+  allocate (ylmk0(ngm,lqx*lqx))    
+  !
+  ddeeq(:,:,:,:) = 0.d0
+  !
+  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  !
+  qmod (:) = sqrt (gg (:) )
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*

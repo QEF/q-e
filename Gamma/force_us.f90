@@ -107,7 +107,7 @@ subroutine force_us (forcenl)
   !
   call addusforce (forcenl)
 #ifdef __PARA
-  ! collect contributions across pool
+  ! collect contributions across pools
   call poolreduce (3 * nat, forcenl)
 #endif
   !

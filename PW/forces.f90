@@ -48,7 +48,6 @@ subroutine forces
   !
   !    The local contribution
   !
-
   call force_lc (nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
        nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho, nl, nspin, &
        gstart, gamma_only, vloc, forcelc)
@@ -69,7 +68,6 @@ subroutine forces
   !    The SCF contribution
   !
   call force_corr (forcescc)
-
   !
   !  here we sum all the contributions and compute the total force acting
   !  on the crstal

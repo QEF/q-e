@@ -94,6 +94,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
 ../PW/new_ns.o \
+../PW/newd.o \
 ../PW/openfil.o \
 ../PW/potinit.o \
 ../PW/print_clock_pw.o \
@@ -214,7 +215,6 @@ h_psi.o \
 init_run.o \
 interpolate.o \
 mix_rho.o \
-newd.o \
 pw_gemm.o \
 read_file.o \
 rotate_wfc.o \

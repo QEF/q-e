@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,36 +23,21 @@ subroutine force_us (forcenl)
   real(kind=DP) :: forcenl (3, nat)
   ! output: the nonlocal contribution
 
-  complex(kind=DP), allocatable :: dbecp (:,:,:), work1 (:,:), aux1 (:)
+  complex(kind=DP), allocatable :: dbecp (:,:,:)
   ! auxiliary variable contains <dbeta|psi>
-  ! auxiliary variable contains g*psi
-  ! auxiliary variable contains beta(k+g)
-  complex(kind=DP) ::  fact, ZDOTC
-  ! a multiplicative factor
-  ! the scalar product function
-
-  real(kind=DP) :: fac, ps
-
-  integer :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, jkb2, &
-       ijkb0
-  ! counter on k points
-  ! counter on polarization
-  ! counter on bands
-  ! counter on G vectors
-  ! counters on atomic beta functions
-  ! counter on atoms
-  ! counter on type of atoms
-  ! counters on beta functions
+  complex(kind=DP), allocatable :: vkb1 (:,:)
+  ! auxiliary variable contains g*|beta>
+  real(kind=DP) :: ps
+  integer :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
+  ! counters
   !
   forcenl(:,:) = 0.d0
-  allocate (dbecp(  nkb,  3, nbnd))    
-  allocate (work1(  npwx,  3))    
-  allocate (aux1(  npwx))    
+  allocate (dbecp(  nkb, nbnd, 3))    
+  allocate (vkb1(  npwx, nkb))    
   if (nks.gt.1) rewind iunigk
   !
   !   the forces are a sum over the K points and the bands
   !
-  fact = DCMPLX (0.d0, tpiba)
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      if (nks.gt.1) then
@@ -60,29 +45,19 @@ subroutine force_us (forcenl)
         call davcio (evc, nwordwfc, iunwfc, ik, - 1)
         call init_us_2 (npw, igk, xk (1, ik), vkb)
      endif
+     !
      call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
-     jkb2 = 0
-     do nt = 1, ntyp
-        do na = 1, nat
-           if (ityp (na) .eq.nt) then
-              do ih = 1, nh (nt)
-                 jkb2 = jkb2 + 1
-                 do ig = 1, npw
-                    do ipol = 1, 3
-                       work1 (ig, ipol) = vkb(ig,jkb2)* g(ipol,igk(ig) )
-                    enddo
-                 enddo
-                 do ibnd = 1, nbnd
-                    do ipol = 1, 3
-                       dbecp (jkb2, ipol, ibnd) = fact * &
-                            ZDOTC (npw,work1(1, ipol),1,evc(1,ibnd),1)
-                    enddo
-                 enddo
-              enddo
-           endif
+     !
+     do ipol = 1, 3
+        do jkb = 1,nkb
+           do ig = 1, npw
+              vkb1 (ig, jkb) = vkb(ig,jkb) *(0.d0,-1.d0)*g(ipol,igk(ig) )
+           enddo
         enddo
-
-     enddo
+        !
+        call ZGEMM ('C', 'N', nkb, nbnd, npw, (1.d0, 0.d0), vkb1, npwx, &
+             evc, npwx, (0.d0, 0.d0), dbecp(1,1,ipol), nkb)
+     end do
      !
      ijkb0 = 0
      do nt = 1, ntyp
@@ -93,11 +68,10 @@ subroutine force_us (forcenl)
                  do ibnd = 1, nbnd
                     ps = deeq (ih, ih, na, current_spin) - &
                          et (ibnd, ik) * qq (ih,ih, nt)
-                    fac = wg (ibnd, ik)
                     do ipol = 1, 3
                        forcenl (ipol, na) = forcenl (ipol, na) - &
-                            ps * fac * 2.d0 * &
-                            DREAL (conjg (dbecp (ikb, ipol, ibnd) ) &
+                            ps * wg (ibnd, ik) * 2.d0 * tpiba * &
+                            DREAL (conjg (dbecp (ikb, ibnd, ipol) ) &
                                    * becp (ikb, ibnd) )
                     enddo
                  enddo
@@ -110,15 +84,14 @@ subroutine force_us (forcenl)
                     do jh = ih + 1, nh (nt)
                        jkb = ijkb0 + jh
                        do ibnd = 1, nbnd
-                          fac = wg (ibnd, ik)
                           ps = deeq (ih, jh, na, current_spin) - &
                                et (ibnd, ik) * qq (ih, jh, nt)
                           do ipol = 1, 3
                              forcenl (ipol, na) = forcenl (ipol, na) - &
-                                  ps * fac * 2.d0 * &
-                                  DREAL (conjg (dbecp (ikb, ipol, ibnd) ) * &
+                                  ps * wg (ibnd, ik) * 2.d0 * tpiba * &
+                                  DREAL (conjg (dbecp (ikb, ibnd, ipol) ) * &
                                          becp (jkb, ibnd) + &
-                                         dbecp (jkb, ipol, ibnd) * &
+                                         dbecp (jkb, ibnd, ipol) * &
                                          conjg (becp (ikb, ibnd) ) )
                           enddo
                        enddo
@@ -133,14 +106,17 @@ subroutine force_us (forcenl)
 #ifdef __PARA
   call reduce (3 * nat, forcenl)
 #endif
+  deallocate (vkb1)
+  deallocate (dbecp)
   !
-  ! The total D matrix depends on the ionic position due to the augmentati
+  ! The total D matrix depends on the ionic position via the augmentation
   ! part \int V_eff Q dr, the term deriving from the derivative of Q
   ! is added in the routine addusforce
   !
   call addusforce (forcenl)
+  !
 #ifdef __PARA
-  ! collect contributions across poo
+  ! collect contributions across pools
   call poolreduce (3 * nat, forcenl)
 #endif
   !
@@ -161,11 +137,7 @@ subroutine force_us (forcenl)
   !
   do na = 1, nat
      call trnvect (forcenl (1, na), at, bg, 1)
-
   enddo
-  deallocate (aux1)
-  deallocate (work1)
-  deallocate (dbecp)
   return
 end subroutine force_us
 
