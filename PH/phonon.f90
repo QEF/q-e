@@ -69,13 +69,19 @@ program phonon
   filname = trim(tmp_dir) // trim(prefix) //'.stat'
   inquire(file=filname, exist= exst)
   if(exst) then
-     open (unit = iustat, file = filname)
-     read(iustat, *) iq_start
-     write(stdout, "(//5x' STARTING FROM AND OLD RUN')")
-     write(stdout, "(5x' Doing now the calculation for q point nr',i3)")  &
+     open (unit = iustat, file = filname, form='formatted', status='old')
+     read(iustat, *, end=10, err=10) iq_start
+     if (iq_start < 0) go to 10
+     write(stdout, "(//5x,' STARTING FROM AN OLD RUN')")
+     write(stdout, "(5x,' Doing now the calculation for q point nr',i3)")  &
           iq_start
+     go to 20
+10   close (unit = iustat, status='delete')
+     open (unit = iustat, file = filname, form='formatted', status='new')
+     iq_start = 1
+20   continue
   else
-     open (unit = iustat, file = filname)
+     open (unit = iustat, file = filname, form='formatted', status='new')
      iq_start = 1
   end if
   !
