@@ -51,7 +51,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... I/O variables
   !
   INTEGER, INTENT(IN)  :: N_in, N_fin
-  LOGICAL, INTENT(OUT) :: stat      
+  LOGICAL, INTENT(OUT) :: stat
   !
   ! ... local variables definition
   !
@@ -297,11 +297,11 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
            CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
            !
-           ! ... the save file is written ( if required )
-           !
-           IF ( write_save ) CALL punch()
-           !
         END IF
+        !
+        ! ... the save file is written ( if required )
+        !
+        IF ( write_save ) CALL punch()
         !
      END IF
      !
