@@ -1,6 +1,11 @@
- 7 Sep 2004 File diis_module splitted in three separate files, each 
+ 8 Sep 2004 configure.old, documentation for configure updated [Gerardo]
+            moved install/README.install to README.install_old [Gerardo]
+
+ 7 Sep 2004 File diis_module split into three separate files, each 
             containing a module with the same name.
             Fixed some severe bugs. (CS)
+            Changed name par2.x to fpmd.x in examples (PG)
+            configure: don't try f77 as f90, won't work anyway [Gerardo]
 
  6 Sep 2004 Example 9 updated (PG)
             changed name par2.x to fpmd.x, documentation updated [Gerardo]
