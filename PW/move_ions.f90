@@ -53,7 +53,6 @@ SUBROUTINE move_ions()
   USE mp_global,     ONLY : intra_image_comm
   USE io_global,     ONLY : ionode_id, ionode
   USE mp,            ONLY : mp_bcast
-  USE bfgs_module
   !
   ! ... external procedures
   !
