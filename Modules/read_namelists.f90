@@ -84,7 +84,6 @@ MODULE read_namelists_module
        pseudo_dir    = './'  
        max_seconds   = 1.D+6
        ekin_conv_thr = 1.D-6
-       IF( prog == 'PW' ) ekin_conv_thr = -1.0d0
        etot_conv_thr = 1.D-4
        forc_conv_thr = 1.D-3
        disk_io  = 'default'
