@@ -20,6 +20,7 @@ subroutine bcast_d3_input
   use d3com
   use mp, only: mp_bcast
   use io_files, only: prefix, tmp_dir
+  use control_flags, only: iverbosity
 
   implicit none
   integer :: root = 0

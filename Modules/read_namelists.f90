@@ -908,7 +908,7 @@ MODULE read_namelists_module
            CALL errore( sub_name, &
                        & ' invalid sic_epsilon, less than 0 ',-1)
 
-          IF ( force_pairing == .false.) &
+          IF ( .NOT. force_pairing ) &
            CALL errore( sub_name, &
                        & ' invalid force_pairing with sic activated', -1)
           IF ( nspin /= 2) &

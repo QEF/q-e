@@ -20,6 +20,8 @@ subroutine bcast_ph_input
   use phcom
   use mp, only: mp_bcast
   use io_files
+  USE control_flags, only: iverbosity
+  USE control_flags, ONLY : reduce_io
 
   implicit none
   integer :: root = 0
