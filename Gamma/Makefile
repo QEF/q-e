@@ -243,10 +243,10 @@ include .dependencies
 all: pwg.x phcg.x
 
 pwg.x:  $(GAMMA) $(PWOBJS) pwscf.o
-	$(LD) -o pwg.x $(FFLAGS) pwscf.o $(GAMMA) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	$(LD) -o pwg.x pwscf.o $(GAMMA) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 phcg.x: $(GAMMA) $(PWOBJS) $(CGOBJS)
-	$(LD) -o phcg.x $(FFLAGS) $(CGOBJS) $(GAMMA) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	$(LD) -o phcg.x $(CGOBJS) $(GAMMA) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean_:
 	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod work.pc

@@ -3,10 +3,9 @@
 # Edit according to your needs
 #
 # Macros for conditional compilation
+# If the mass library is available, use
+# CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-DHAS_ZHEGVX
 #
-# CP and FPMD macro
-# CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-D__MASS
-# PW macro
 CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
 #
 # Fortran compiler:
@@ -24,13 +23,17 @@ F77 = $(F90)
 # Fortran compiler flags
 #
 # CP and FPMD flags
-# FFLAGS = -qdpc -qfree=f90 -qalias=noaryovrlp \
-#          -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
-#          -qsuffix=cpp=f90 -Q
+# FFLAGS = -qfree=f90 -qalias=noaryovrlp -I../include \
+#          -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+#          -qdpc -Q
 # PW flags
-FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
-         -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
-         -qsuffix=cpp=f90
+FFLAGS =  -qfree=f90 -qalias=noaryovrlp -I../include \
+          -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+          -qdpc=e -qalias=nointptr -qinit=f90ptr -qddim -qnosave
+#
+# Fortran77 compiler flags
+#
+F77FLAGS = $(FFLAGS)
 #
 # Fortran90 compiler flags
 #
@@ -55,7 +58,6 @@ MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/
 #
 # For Cineca machines:
 # LIBS = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass -lmassvp4 -lmass
-# LIBS = -lessl -L/cineca/lib/ -llapack 
 #
 LIBS = -lessl  -L/usr/local/lib -llapack
 #
