@@ -1,16 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------
-!    Structure of commons
-!
-!    statically  allocated variables are dimensioned in commons
-!    dynamically allocated variables are dimensioned in type declaration
-!
 !
 module brilz
   use parameters
@@ -408,7 +403,7 @@ module varie
        newpseudo(npsx),  &! if true done with the new pseudopotentials
        noinv,            &! if true eliminates inversion symmetry
        diis_wfc_keep,    &! if true keeps old wfc for starting
-       restart,          &! if true start for a given configuration
+       restart,          &! if true restart from results of a preceding run
        reduce_io         ! if true reduce the I/O to the strict minimum
   !
 end module varie
@@ -420,6 +415,8 @@ module relax
   !
   integer     :: &
        fixatom           ! last "fixatom" are kept fixed
+  logical     :: &       ! if true tart the structural optimization
+       restart_bfgs      ! from the results of a previous run
   real(kind=DP)   :: &
        epse,             &! threshold on total energy
        epsf,             &! threshold on forces

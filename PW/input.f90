@@ -21,7 +21,7 @@ subroutine iosys
        niter, tr2, ethr, mixing_beta, nmix,&
        isolve, max_cg_iter, david, loverlap, diis_buff, diis_wfc_keep, &
        diis_start_dav, startingwfc, startingpot, startingconfig, &
-       nstep, epse, epsf, amass, &
+       restart_bfgs, nstep, epse, epsf, amass, &
        temperature, lforce, ttol, delta_t, nraise, ntcheck, upscale, &
        press, cmass, calc, cell_factor, xqq, alat, ntypx, &
        lmovecell, imix, at, omega, ityp, tau, nks, xk, wk, uakbar, amconv, &
@@ -580,9 +580,11 @@ subroutine iosys
   SELECT CASE ( TRIM(restart_mode) )
   CASE ('from_scratch')
      restart = .false.
+     restart_bfgs = .false.
      startingconfig = 'input'
   CASE ('restart')
      restart = .true.
+     restart_bfgs = .true.
      startingpot = 'file'
      startingwfc = 'file'
      if (TRIM(ion_positions) .eq. 'from_input') then

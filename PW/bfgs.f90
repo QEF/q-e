@@ -67,6 +67,11 @@ subroutine bfgs
      !
      call seqopn (iunit, trim(prefix)//'.bfgs', 'unformatted', exst)
      !
+     ! exst flags whether restarting from preceding iterations
+     ! do not restart from existing data unless explicitely required
+     !
+     exst = exst .and. restart_bfgs
+     !
      if (.not.exst) then
         !
         ! file not found: starting iteration
