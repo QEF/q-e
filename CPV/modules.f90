@@ -164,9 +164,11 @@ module ncprm
 !  nqf      coefficients in Q smoothing
 !  nqlc     angular momenta present in Q smoothing
 !  lll      lll(j) is l quantum number of j'th beta function
+!  lqx      highest angular momentum that is present in Q functions
+!  lmaxkb   highest angular momentum that is present in beta functions
 
   integer :: ifpcor(nsx), nbeta(nsx), kkbeta(nsx), &
-       nqf(nsx), nqlc(nsx), lll(nbrx,nsx)
+       nqf(nsx), nqlc(nsx), lll(nbrx,nsx), lqx, lmaxkb
 
 !  rscore   partial core charge (Louie, Froyen, Cohen)
 !  dion     bare pseudopotential D_{\mu,\nu} parameters

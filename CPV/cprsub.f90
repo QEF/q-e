@@ -952,18 +952,26 @@
       implicit none
       integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj
       real(kind=8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
+      real(kind=8), allocatable:: ylmb(:,:), ylm(:,:), gxn(:,:)
       complex(kind=8), allocatable:: qgbs(:), dqgbs(:,:,:)
       real(kind=8) xg, c, betagl, dbetagl, gg
       real(kind=8), external :: ylmr, dylmr
 !
-!
-      allocate(dqradb(ngb,nbrx,nbrx,lqmax,nsp))
+! 
+      allocate(dqradb(ngb,nbrx,nbrx,lqx,nsp))
+      allocate(ylmb(ngb,lqx*lqx))
       allocate(dqgbs(ngb,3,3))
       allocate(qgbs(ngb))
 !
       qradb(:,:,:,:,:) = 0.d0
       dqrad(:,:,:,:,:,:,:) = 0.d0
-!
+      allocate(gxn(3,ngb))
+      do i=1,3
+         gxn(i,1:ngb) = gxb(1:ngb,i)
+      end do
+      call ylmr2 (lqx*lqx, ngb, gxn, gb, ylmb)
+      deallocate (gxn)
+
 !     ===============================================================
 !     initialization for vanderbilt species
 !     ===============================================================
@@ -1030,7 +1038,7 @@
 !       ijv :   1  2  3 ...  
 !
                ijv=ijv+1
-               call qvan2b(ngb,iv,jv,is,qgbs,dqgbs)
+               call qvan2b(ngb,iv,jv,is,ylmb,qgbs,dqgbs)
                do ig=1,ngb
                   qgb(ig,ijv,is)=qgbs(ig)
                end do
@@ -1050,10 +1058,23 @@
             end do
          end do
       end do
+      deallocate(qgbs)
+      deallocate(dqgbs)
+      deallocate(ylmb)
+      deallocate(dqradb)
 !
 !     ===============================================================
 !     initialization that is common to all species
 !     ===============================================================
+!
+!
+      allocate(ylm(ngw,(lmaxkb+1)**2))
+      allocate(gxn(3,ngw))
+      do i=1,3
+         gxn(i,1:ngw) = gx(1:ngw,i)
+      end do
+      call ylmr2 ((lmaxkb+1)**2, ngw, gxn, g, ylm)
+      deallocate (gxn)
 !
       do is=1,nsp
 !     ---------------------------------------------------------------
@@ -1064,7 +1085,7 @@
          do iv=1,nh(is)
             lp=indlm(iv,is)
             betagl=betagx(1,iv,is)
-            beta(1,iv,is)=c*ylmr(lp,1)*betagl
+            beta(1,iv,is)=c*ylm(1,lp)*betagl
             if (tpre) then
                do i=1,3
                   do j=1,3
@@ -1078,7 +1099,7 @@
                jj=int(gg)+1
                betagl=betagx(jj+1,iv,is)*(gg-real(jj-1))+               &
      &              betagx(jj,iv,is)*(real(jj)-gg)
-               beta(ig,iv,is)=c*ylmr(lp,ig)*betagl
+               beta(ig,iv,is)=c*ylm(ig,lp)*betagl
                if (tpre) then
                   dbetagl=dbetagx(jj+1,iv,is)*(gg-real(jj-1))+          &
      &                    dbetagx(jj,iv,is)*(real(jj)-gg)
@@ -1087,7 +1108,7 @@
                         dbeta(ig,iv,is,i,j)=                            &
      &                    -0.5*beta(ig,iv,is)*ainv(j,i)                 &
      &                    +c*dylmr(lp,ig,i,j)*betagl                    &
-     &                    -c*ylmr(lp,ig)*dbetagl*gx(ig,i)/g(ig)         &
+     &                    -c*ylm (ig,lp)*dbetagl*gx(ig,i)/g(ig)         &
      &                    *(gx(ig,1)*ainv(j,1)+                         &
      &                      gx(ig,2)*ainv(j,2)+                         &
      &                      gx(ig,3)*ainv(j,3))
@@ -1110,10 +1131,10 @@
                do ir=1,kkbeta(is)
                   fint(ir)=r(ir,is)**2*rscore(ir,is)*jl(ir)
                end do
-               call simpson_cp90(kkbeta(is),fint,rab(1,is),qgbs(ig))
+               call simpson_cp90(kkbeta(is),fint,rab(1,is),rhocb(ig,is))
             end do
             do ig=1,ngb
-               rhocb(ig,is)=c*qgbs(ig)
+               rhocb(ig,is)=c*rhocb(ig,is)
             end do
             if(iprsta.ge.4) WRITE( stdout,'(a,f12.8)')                     &
      &              ' integrated core charge= ',omegab*rhocb(1,is)
@@ -1124,9 +1145,7 @@
 !     ---------------------------------------------------------------
       end do
 !
-      deallocate(qgbs)
-      deallocate(dqgbs)
-      deallocate(dqradb)
+      deallocate(ylm)
 !
       return
       end
@@ -1225,6 +1244,7 @@
 !     (betax, qradx) then calculated on the box grid by interpolation
 !     (this is done in routine newnlinit)
 !     
+      use parameters, only: lmaxx
       use control_flags, only: iprint, tpre
       use io_global, only: stdout
       use gvec
@@ -1242,10 +1262,11 @@
       use dqrad_mod
       use dqgb_mod
       use betax
+      use uspp, only: aainit
 !
       implicit none
 !
-      integer  lmax, is, il, l, ir, iv, jv, lm, ind, ltmp, i0
+      integer  is, il, l, ir, iv, jv, lm, ind, ltmp, i0
       real(kind=8), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
      &              dfint(:)
       real(kind=8) xg, xrg, fac
@@ -1253,7 +1274,7 @@
 !     find  number of beta functions per species, max dimensions,
 !     total number of beta functions (all and Vanderbilt only)
 !     ------------------------------------------------------------------
-      lmax=0
+      lmaxkb=-1
       nhx=0
       nhsa=0
       nhsavb=0
@@ -1261,7 +1282,7 @@
       do is=1,nsp
          ind=0
          do iv=1,nbeta(is)
-            lmax =max(lmax,lll(iv,is))
+            lmaxkb = max(lmaxkb,lll(iv,is))
             ind=ind+2*lll(iv,is)+1
          end do
          nh(is)=ind
@@ -1271,16 +1292,16 @@
          if(ipp(is).le.1) nhsavb=nhsavb+na(is)*nh(is)
          nlcc=nlcc+ifpcor(is)
       end do
-      lmax=lmax+1
-      if (lmax.gt.3) call errore('nlinit ',' l > 3 ,l= ',lmax)
+      if (lmaxkb > lmaxx) call errore('nlinit ',' l > 3 ,l= ',lmaxkb)
+      lqx = 2*lmaxkb + 1
       if (nhsa.le.0) call errore('nlinit ','not implemented ?',nhsa)
 !
 !     initialize array ap
 !
-      call aainit(lmax)
+      call aainit(lmaxkb+1)
 !
       allocate(beta(ngw,nhx,nsp))
-      allocate(qradb(ngb,nbrx,nbrx,lqmax,nsp))
+      allocate(qradb(ngb,nbrx,nbrx,lqx,nsp))
       allocate(qgb(ngb,nhx*(nhx+1)/2,nsp))
       allocate(qq(nhx,nhx,nsp))
       allocate(dvan(nhx,nhx,nsp))
@@ -1289,13 +1310,13 @@
       allocate(indv (nhx,nsp))
       allocate(indlm(nhx,nsp))
 !
-      allocate(dqrad(ngb,nbrx,nbrx,lqmax,nsp,3,3))
+      allocate(dqrad(ngb,nbrx,nbrx,lqx,nsp,3,3))
       allocate(dqgb(ngb,nhx*(nhx+1)/2,nsp,3,3))
       allocate(dbeta(ngw,nhx,nsp,3,3))
       allocate(betagx(mmx,nhx,nsp))
       allocate(dbetagx(mmx,nhx,nsp))
-      allocate(qradx(mmx,nbrx,nbrx,lqmax,nsp))
-      allocate(dqradx(mmx,nbrx,nbrx,lqmax,nsp))
+      allocate(qradx(mmx,nbrx,nbrx,lqx,nsp))
+      allocate(dqradx(mmx,nbrx,nbrx,lqx,nsp))
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
@@ -1553,7 +1574,7 @@
       end
 
 !-------------------------------------------------------------------------
-      subroutine qvan2b(ngy,iv,jv,is,qg,dqg)
+      subroutine qvan2b(ngy,iv,jv,is,ylm,qg,dqg)
 !--------------------------------------------------------------------------
 !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
 !
@@ -1566,6 +1587,7 @@
       use gvecb
       use dqrad_mod
       use cdvan
+      use ncprm, only: lqx
 ! 
       implicit none
       integer ngy, iv, jv, is
@@ -1573,7 +1595,8 @@
 !
       integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
       complex(kind=8) sig
-      real(kind=8), allocatable:: ylm(:), dylm(:,:,:)
+      real(kind=8) :: ylm(ngb,lqx*lqx)
+      real(kind=8), allocatable:: dylm(:,:,:)
 ! 
 !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
 !       ivs = 1..4     s_1 s_2 p_1 p_2
@@ -1587,7 +1610,6 @@
       if(jvl.gt.nlx)  call errore(' qvan ',' jvl.gt.nlx  ',jvl)
 !
       qg(:) = (0.d0, 0.d0)
-      allocate(ylm(ngb))
       if(tpre) then
          allocate(dylm(ngb,3,3))
          dqg(:,:,:) = (0.d0, 0.d0)
@@ -1618,10 +1640,9 @@
 !       sig= (-i)^l
 !
          sig=(0.,-1.)**(l-1)
-         call ylmr2b(lp,ngy,ngb,gxnb,ylm)
          sig=sig*ap(lp,ivl,jvl)
          do ig=1,ngy
-            qg(ig)=qg(ig)+sig*ylm(ig)*qradb(ig,ivs,jvs,l,is)
+            qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ivs,jvs,l,is)
          end do
          if(tpre)then
             call dylmr2b(lp,ngy,ngb,gxnb,dylm)
@@ -1629,7 +1650,7 @@
                do ii=1,3
                   do ig=1,ngy
                      dqg(ig,ii,ij)=dqg(ig,ii,ij)+sig*                   &
-     &                    ( ylm(ig)      *dqrad(ig,ivs,jvs,l,is,ii,ij)+ &
+     &                    ( ylm(ig,lp)  *dqrad(ig,ivs,jvs,l,is,ii,ij)+ &
      &                    dylm(ig,ii,ij)*qradb(ig,ivs,jvs,l,is)       )
                   end do
                end do
@@ -1638,7 +1659,6 @@
       end do
 !
       if (tpre) deallocate(dylm)
-      deallocate(ylm)
 !
       return
       end
