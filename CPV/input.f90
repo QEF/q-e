@@ -13,8 +13,36 @@ MODULE input_cp
    PRIVATE
 
    PUBLIC :: iosys
+   PUBLIC :: read_input_file
 
 CONTAINS
+
+!  subroutines
+!  ----------------------------------------------
+!  ----------------------------------------------
+
+      SUBROUTINE read_input_file( lneb )
+        USE read_namelists_module, ONLY: read_namelists
+        USE read_cards_module, ONLY: read_cards
+        USE input_parameters, ONLY: calculation
+        IMPLICIT NONE
+
+        LOGICAL, INTENT(OUT) :: lneb
+
+! . Read NAMELISTS ..................................................!
+
+        CALL read_namelists( 'CP' )
+
+! . Read CARDS ......................................................!
+
+        CALL read_cards( 'CP' )
+
+        lneb = ( TRIM( calculation ) == 'neb' )
+
+        RETURN
+      END SUBROUTINE
+
+
 
 !-----------------------------------------------------------------------
       subroutine iosys( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_                       &
@@ -87,10 +115,6 @@ CONTAINS
       real(kind=8) :: taus( 3, natx, nsx ), ocp, fsum
       integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in
 
-
-      CALL read_namelists( 'CP' )
-
-      CALL read_cards( 'CP' )
 
       IF( TRIM( calculation ) == 'nscf' ) trhor_ = .true.
      

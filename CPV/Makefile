@@ -11,6 +11,7 @@ FOBJS = \
 cplib.o \
 cpr.o \
 cpr_mod.o \
+cprstart.o \
 cprsub.o \
 crayfft.o \
 errore.o \

@@ -11,7 +11,7 @@
 !
 !=======================================================================
 !
-                        program main
+   subroutine cprmain()
 !
 !=======================================================================
 !***  Molecular Dynamics using Density-Functional Theory   ****
@@ -200,14 +200,9 @@
 
       logical :: twmass
 !
-!     program starts here
+!     CP loop starts here
 !
       call tictac(2,0)
-
-!     Initialize processors IDs
-      call startup()
-      call io_global_start( (me-1), 0 )
-      call mp_global_start(0, (me-1), mygroup, nproc )
 
 !
 !     ==================================================================
@@ -1451,10 +1446,5 @@
      &            '======================',//)
 
 !
-! ...  Now stop the message passing environment and terminate the execution
-!
-
-      call mp_end()
-
-      stop
-      end
+      return
+      end subroutine
