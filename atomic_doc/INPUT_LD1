@@ -98,7 +98,13 @@ Needed for PP generation only:
                 (note that the acceptable format depend on pseudotype).
                 If a PP is generated, it is written to file_pseudo.
       file_pseudopw= file where the PP read from file_pseudo is 
-                     written in UPF format, readable by PWscf (default: ' ')
+                     written in a format readable by PWscf.
+                     If the file name ends with "upf" or "UPF",
+                     or in any case for spin-orbit PP (rel=2),
+                     the file is written in UPF format; otherwise,
+                     in the old "NC" format if pseudotype=1,
+                     in the old RRKJ format if  pseudotype=2 or 3
+                     (default: ' ')
       file_tests =   file containing the results of transferability tests
       file_recon =   file containing data needed for PAW reconstruction 
                      of all-electron wavefunctions from PP results

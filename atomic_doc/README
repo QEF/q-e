@@ -1,20 +1,16 @@
 This is the distribution of the ld1 code for electronic structure 
 atomic calculations and pseudo-potentials generation.
 
-- the LD1 package, maintained by Andrea Dal Corso (SISSA, Trieste) 
-  is the result of several additions to the original 
-  P. Giannozzi ld1 code for pseudopotentials generation
-  (See http://www.sns.it/~giannozz/software.html).
+The ld1 code, maintained by Andrea Dal Corso (SISSA, Trieste) 
+is the result of several additions to the original code by
+P. Giannozzi (http://web1.sns.it/~giannozz/software.html) for 
+pseudopotential generation. The major additions are:
 
-- Two new features are implemented:
-  a) Generation and test of norm-conserving and ultrasoft pseudo-potentials
-     with the Rappe-Rabe-Kaxiras-Joannopoulos (RRKJ) recipe
-     ( Phys. Rev. B41, 1227 (1990); Phys. Rev. B 44, 13175 (1991) )
-  b) Generation of fully relativistic pseudo-potentials including 
-     spin-orbit coupling.
-
-- Some features, present in the pseudo-potential code of P. Giannozzi, 
-  are not available in this package. 
+a) Generation and test of norm-conserving and ultrasoft pseudo-potentials
+   with the Rappe-Rabe-Kaxiras-Joannopoulos (RRKJ) recipe
+   ( Phys. Rev. B41, 1227 (1990); Phys. Rev. B 44, 13175 (1991) )
+b) Generation of fully relativistic pseudo-potentials including 
+   spin-orbit coupling.
 
 Input variables are described in file INPUT_LD1.
 Directories all-electron/, pseudo-gen/, pseudo-test/, 
