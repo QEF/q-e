@@ -10,7 +10,7 @@ program bands
   !-----------------------------------------------------------------------
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
-  use para, only: me
+  use para, only: me, npool
   use io_global, only: ionode_id
   use mp, only: mp_bcast
 #endif
@@ -30,6 +30,7 @@ program bands
   filband = 'bands.out'
   !
 #ifdef __PARA
+  if (npool /= 1) call errore('bands','pools not implemented',npool)
   if (me == 1)  then
 #endif
   read (5, inputpp, err = 200, iostat = ios)
@@ -78,6 +79,7 @@ subroutine punch_band (filband)
   use brilz
   use constants, only: rytoev
   use gvect
+  use lsda_mod, only: nspin
   use klist
   use io_files, only: iunpun, nwordwfc, iunwfc
   use wvfct
@@ -117,6 +119,7 @@ subroutine punch_band (filband)
  ! scalar product with the S matrix
 
   if (filband == ' ') return
+  if (nspin == 2) call errore('bands','LSDA bands not implemented',-nspin)
   iunpun = 18
 #ifdef __PARA
   if (me == 1) then
