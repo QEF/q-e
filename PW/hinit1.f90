@@ -12,7 +12,7 @@ subroutine hinit1
   !  Atomic configuration dependent hamiltonian initialization
   !
   USE basis, ONLY: nat, ntyp, ityp, tau, startingconfig
-  USE brilz, ONLY: at, bg, omega, tpiba2
+  USE cell_base, ONLY: at, bg, omega, tpiba2
   USE cellmd, ONLY: lmovecell 
   USE gvect, ONLY: nr1, nr2, nr3, nrxx, ngm, g, eigts1, eigts2, eigts3
   USE gsmooth, ONLY: doublegrid

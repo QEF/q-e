@@ -16,7 +16,7 @@ SUBROUTINE force_us( forcenl )
   !
   USE kinds,           ONLY : DP
   USE wvfct,                ONLY : gamma_only
-  USE brilz,                ONLY : at, bg, tpiba
+  USE cell_base,                ONLY : at, bg, tpiba
   USE basis,                ONLY : nat, ntyp, ityp
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g

@@ -13,7 +13,7 @@ subroutine stres_har (sigmahar)
 #include "machine.h"
   USE kinds, ONLY : DP
   USE constants, ONLY : e2, fpi
-  USE brilz, ONLY: omega, tpiba2
+  USE cell_base, ONLY: omega, tpiba2
   USE ener, ONLY: ehart
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx , nl, g, gg

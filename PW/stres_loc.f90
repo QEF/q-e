@@ -14,7 +14,7 @@ subroutine stres_loc (sigmaloc)
   USE kinds, ONLY : DP
   USE atom, ONLY : msh, mesh, r, rab, vnl, numeric
   USE basis, ONLY: ntyp
-  USE brilz, ONLY: omega, tpiba2
+  USE cell_base, ONLY: omega, tpiba2
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod, ONLY: nspin

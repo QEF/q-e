@@ -37,7 +37,7 @@ SUBROUTINE move_ions()
   USE io_files,      ONLY : tmp_dir, prefix, iunupdate
   USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
   USE kinds,         ONLY : DP
-  USE brilz,         ONLY : alat, at, bg
+  USE cell_base,         ONLY : alat, at, bg
   USE basis,         ONLY : nat, ityp, tau, atm
   USE gvect,         ONLY : nr1, nr2, nr3
   USE klist,         ONLY : nelec

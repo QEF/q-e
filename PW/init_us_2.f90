@@ -16,7 +16,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
 #include "machine.h"
   USE kinds, ONLY: DP
   USE basis, ONLY: nat, tau, ntyp, ityp
-  USE brilz, ONLY: tpiba
+  USE cell_base, ONLY: tpiba
   USE constants, ONLY: tpi
   USE gvect, ONLY: eigts1, eigts2, eigts3, ig1, ig2, ig3, g
   USE wvfct, ONLY: npw, npwx, igk

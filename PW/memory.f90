@@ -45,7 +45,7 @@ subroutine setup2()
   !-----------------------------------------------------------------------
   USE kinds, only: DP
   USE basis, ONLY: nat, ntyp, ityp
-  USE brilz, ONLY: omega
+  USE cell_base, ONLY: omega
   USE cellmd, ONLY: cell_factor
   USE constants, ONLY :tpi, fpi
   USE gvect, ONLY: ecutwfc, gcutm, ngl, ngm

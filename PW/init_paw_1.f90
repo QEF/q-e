@@ -16,7 +16,7 @@ subroutine init_paw_1
 #include "machine.h"
   USE kinds , only: dp
   use parameters , only : lqmax , nbrx, lmaxx, ndm
-  use brilz , only : omega
+  use cell_base , only : omega
   use basis , only : ntyp, nat, ityp
   use constants , only : fpi
   use us , only : nqx, mx , nlx, ap, lpx, lpl, dq

@@ -17,7 +17,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
-  USE brilz,                ONLY : omega
+  USE cell_base,                ONLY : omega
   USE basis,                ONLY : nat, ntyp, ityp
   USE ener,                 ONLY : eband, demet, ef
   USE fixed_occ,            ONLY : f_inp, tfixed_occ

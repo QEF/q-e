@@ -21,7 +21,7 @@ subroutine summary
   USE kinds, ONLY: DP
   USE constants, ONLY: amconv
   USE atom
-  USE brilz
+  USE cell_base
   USE basis
   USE char, ONLY: title, sname, psd
   USE cellmd, ONLY: calc, cmass

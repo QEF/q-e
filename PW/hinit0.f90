@@ -14,7 +14,7 @@ subroutine hinit0
   USE parameters, ONLY: ndm, lmaxx
   USE atom, ONLY: numeric, mesh, r, vnl
   USE basis, ONLY: nat, ntyp, ityp, tau, startingconfig
-  USE brilz, ONLY: at, bg, omega, tpiba2
+  USE cell_base, ONLY: at, bg, omega, tpiba2
   USE cellmd, ONLY: omega_old, at_old, lmovecell
   USE klist, ONLY: nks, xk
   USE gvect, ONLY: nr1, nr2, nr3, ngm, ecutwfc, ig_l2g, &

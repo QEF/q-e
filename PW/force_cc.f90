@@ -15,7 +15,7 @@ subroutine force_cc (forcecc)
   USE constants, ONLY: tpi
   USE atom, ONLY: rho_atc, numeric, mesh, r, rab
   USE basis, ONLY: nat, ntyp, ityp, tau
-  USE brilz, ONLY: alat, omega, tpiba, tpiba2
+  USE cell_base, ONLY: alat, omega, tpiba, tpiba2
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc

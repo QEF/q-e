@@ -26,7 +26,7 @@ subroutine allocate_nlpot
   USE parameters, ONLY: nbrx, nchix
   USE pseud, ONLY: lmax, lloc
   USE basis, ONLY: ntyp, nat, ityp
-  USE brilz, ONLY: tpiba2
+  USE cell_base, ONLY: tpiba2
   USE cellmd,ONLY: cell_factor
   USE gvect, ONLY: ngm, gcutm, ecutwfc, g
   USE klist, ONLY: xk, wk, ngk, nks, nkstot, xqq

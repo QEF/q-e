@@ -133,7 +133,7 @@ subroutine do_efg(Q)
   use scf, only: rho              !rho
   use gvect, only: nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,&
        g,gg,nl,gstart,ngm         !gvectors and parameters for the FFT
-  use brilz , only: at,bg         !parameters of the cell
+  use cell_base , only: at,bg         !parameters of the cell
   use basis , only : nat, atm, tau, ityp         !coordinates of the atoms
   use symme , only: nsym, s, irt
   use pseud, only : zv !valence charge

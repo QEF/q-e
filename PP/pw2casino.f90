@@ -60,7 +60,7 @@ subroutine compute_casino
   use kinds, ONLY: DP
   use atom, only: zmesh
   use basis, only: nat, ntyp, ityp, tau
-  use brilz, only: omega, alat, tpiba2, at, bg
+  use cell_base, only: omega, alat, tpiba2, at, bg
   use char, only: title
   use constants, only: tpi
   use ener, only: ewld, ehart, etxc, vtxc, etot, etxcc

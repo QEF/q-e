@@ -39,7 +39,7 @@
     USE constants, ONLY: fpi
     USE pseud, ONLY : zv
     USE basis, ONLY : nat, ityp
-    USE brilz, ONLY : alat, bg, omega
+    USE cell_base, ONLY : alat, bg, omega
     USE extfield, ONLY: tefield, dipfield, edir, eamp, emaxpos, eopreg, &
          etotefield, forcefield
     USE force_mod, ONLY: lforce

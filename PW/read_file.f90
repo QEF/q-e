@@ -19,7 +19,7 @@ subroutine read_file
 #include "machine.h"
   USE kinds, ONLY: dp
   USE basis, ONLY: nat, ntyp, tau, ityp, natomwfc
-  USE brilz, ONLY: tpiba2, bg
+  USE cell_base, ONLY: tpiba2, bg
   USE force_mod, ONLY: force
   USE klist, ONLY: nkstot, nks, xk, wk
   USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
@@ -175,7 +175,7 @@ subroutine read_file
 #include "machine.h"
   USE kinds, ONLY: dp
   USE basis, ONLY: nat, ntyp, tau, ityp, natomwfc
-  USE brilz, ONLY: tpiba2, bg
+  USE cell_base, ONLY: tpiba2, bg
   USE force_mod, ONLY: lforce, force
   USE klist, ONLY: nkstot, nks, xk, wk
   USE lsda_mod, ONLY: lsda, nspin, current_spin, isk

@@ -23,7 +23,7 @@ subroutine force_corr (forcescc)
   USE constants, ONLY: tpi
   USE atom, ONLY: rho_at, msh, r, rab
   USE basis, ONLY: nat, ntyp, ityp, tau
-  USE brilz, ONLY: tpiba
+  USE cell_base, ONLY: tpiba
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod, ONLY: nspin

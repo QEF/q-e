@@ -16,7 +16,7 @@ subroutine compute_dip(dip, dipion, z0)
   USE kinds, ONLY: DP
   USE constants, ONLY: fpi
   USE basis, ONLY : nat, ityp, tau
-  USE brilz, ONLY : alat, at, bg, omega
+  USE cell_base, ONLY : alat, at, bg, omega
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho

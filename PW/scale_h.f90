@@ -16,7 +16,7 @@ subroutine scale_h
   !
   USE io_global,  ONLY: stdout
   USE basis, ONLY: ntyp
-  USE brilz, ONLY: bg, omega
+  USE cell_base, ONLY: bg, omega
   USE cellmd, ONLY : at_old, omega_old
   USE gvect, ONLY: g, gg, ngm
   USE klist, ONLY: xk, wk, nkstot

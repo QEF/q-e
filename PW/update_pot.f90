@@ -122,7 +122,7 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE brilz,         ONLY : omega, bg, alat
+  USE cell_base,         ONLY : omega, bg, alat
   USE basis,         ONLY : nat, tau, ntyp, ityp
   USE gvect,         ONLY : nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
                             eigts1, eigts2, eigts3, nrx1, nrx2, nrx3

@@ -23,7 +23,7 @@ SUBROUTINE forces
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE brilz,      ONLY : at, bg, alat, omega  
+  USE cell_base,      ONLY : at, bg, alat, omega  
   USE basis,      ONLY : nat, ntyp, ityp, tau
   USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                          ngl, nl, igtongl, g, gg, gcutm

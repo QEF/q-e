@@ -42,7 +42,7 @@ SUBROUTINE setup()
   USE parameters,    ONLY : npsx, nchix, npk
   USE io_global,     ONLY : stdout
   USE constants,     ONLY : pi
-  USE brilz,         ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE cell_base,         ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
   USE basis,         ONLY : nat, tau, ntyp, ityp, startingwfc, startingpot, &
                             natomwfc
   USE gvect,         ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3

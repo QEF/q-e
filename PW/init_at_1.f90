@@ -19,7 +19,7 @@ subroutine init_at_1
   USE kinds, ONLY: dp
   USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
   USE constants, ONLY: fpi
-  USE brilz, ONLY: omega
+  USE cell_base, ONLY: omega
   USE basis, ONLY: ntyp
   USE us, ONLY: tab_at, nqx, dq, newpseudo
   implicit none

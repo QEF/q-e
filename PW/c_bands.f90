@@ -24,7 +24,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
-  USE brilz,                ONLY : tpiba2 
+  USE cell_base,                ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, xk
   USE us,                   ONLY : okvan, vkb, nkb
   USE gvect,                ONLY : g, gstart, ecfixed, qcutz, q2sigma, nrxx, &

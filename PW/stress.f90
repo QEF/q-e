@@ -14,7 +14,7 @@ subroutine stress
   !
   USE io_global,  ONLY : stdout
   USE kinds, ONLY: DP
-  USE brilz, ONLY: omega, alat, at, bg
+  USE cell_base, ONLY: omega, alat, at, bg
   USE basis, ONLY: nat, ntyp, ityp, tau
   USE constants, ONLY: uakbar
   USE ener, ONLY: etxc, vtxc

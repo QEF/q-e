@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine write_config_to_file_old
   !-----------------------------------------------------------------------
-  USE brilz, ONLY : ibrav, alat, at
+  USE cell_base, ONLY : ibrav, alat, at
   USE basis, ONLY : nat, tau
   USE control_flags, ONLY : lscf
   USE io_files, ONLY : prefix, iunres

@@ -32,7 +32,7 @@ subroutine init_us_1
   USE constants, ONLY: fpi
   USE atom, ONLY: r, rab, vnl, chi, msh
   USE basis, ONLY: ntyp
-  USE brilz, ONLY: omega, tpiba
+  USE cell_base, ONLY: omega, tpiba
   USE gvect, ONLY: g, gg
   USE pseud, ONLY: lloc, lmax
   USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &

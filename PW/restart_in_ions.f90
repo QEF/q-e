@@ -11,7 +11,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunwfc, nwordwfc, iunres
   USE kinds, ONLY: DP
-  USE brilz, ONLY: omega, alat
+  USE cell_base, ONLY: omega, alat
   USE ener,  ONLY: etot, ehart, etxc, vtxc
   USE gvect, ONLY: gstart, g, gg, nl, ngm, nr1,nr2,nr3, nrx1,nrx2,nrx3, &
        nrxx

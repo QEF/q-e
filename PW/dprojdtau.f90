@@ -18,7 +18,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    USE kinds, ONLY: DP
    USE atom, ONLY: nchi, lchi, oc
    USE basis, ONLY: nat, natomwfc, ntyp, ityp
-   USE brilz, ONLY: tpiba
+   USE cell_base, ONLY: tpiba
    USE gvect, ONLY: g
    USE klist, ONLY: nks, xk
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha

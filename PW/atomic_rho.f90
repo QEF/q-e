@@ -27,7 +27,7 @@ subroutine atomic_rho (rhoa, nspina)
   USE io_global,  ONLY : stdout
   USE atom, ONLY: r, rab, msh, rho_at
   USE basis, ONLY: ntyp
-  USE brilz, ONLY: tpiba, omega
+  USE cell_base, ONLY: tpiba, omega
   USE gvect, ONLY: ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        gstart, nl, nlm, gl, igtongl
   USE lsda_mod, ONLY: starting_magnetization

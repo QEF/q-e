@@ -27,7 +27,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !
   USE kinds, ONLY: DP
   USE basis, ONLY: nat, ntyp, ityp, tau, natomwfc, atm
-  USE brilz, ONLY: at, bg, ibrav, celldm, alat, symm_type
+  USE cell_base, ONLY: at, bg, ibrav, celldm, alat, symm_type
   USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
        ngk, nks, nkstot
   USE ktetra,ONLY: tetra, ntetra, ltetra, k1, k2, k3, nk1, nk2, nk3
@@ -497,7 +497,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE io_files,  ONLY : iunwfc, nwordwfc, prefix, tmp_dir
   USE kinds, ONLY: DP
   USE basis, ONLY: nat, ntyp, ityp, tau, natomwfc, atm
-  USE brilz, ONLY: at, bg, ibrav, celldm, alat, tpiba, tpiba2, omega, &
+  USE cell_base, ONLY: at, bg, ibrav, celldm, alat, tpiba, tpiba2, omega, &
        symm_type
   USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
        ngk, nks, nkstot

@@ -96,7 +96,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   USE io_global,  ONLY : stdout 
   use atom 
   use basis 
-  use brilz 
+  use cell_base 
   use constants, only: rytoev 
   use gvect 
   use klist 

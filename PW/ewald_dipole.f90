@@ -19,7 +19,7 @@ subroutine ewald_dipole (tens,dipole)
   USE kinds , only : dp
   use gvect , only : gcutm, gstart, ngm, g, gg
   use constants , only: tpi, e2, fpi, pi
-  use brilz , only: tpiba2, omega, alat, at, bg
+  use cell_base , only: tpiba2, omega, alat, at, bg
   use basis , only : ntyp, nat, tau, ityp
   use vlocal , only: strf
   implicit none

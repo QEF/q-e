@@ -17,7 +17,7 @@ program chdens
 #include "machine.h"
   USE io_global,  ONLY : stdout
   use constants, only:  pi, fpi
-  use brilz
+  use cell_base
   use basis
   use char
   use lsda_mod, only: nspin

@@ -16,7 +16,7 @@ SUBROUTINE bfgs()
   ! ... this version saves data at each iteration
   !
   USE kinds,  ONLY : DP
-  USE brilz,       ONLY : alat
+  USE cell_base,       ONLY : alat
   USE basis,       ONLY : nat, tau
   USE force_mod,   ONLY : force
   USE control_flags,       ONLY : conv_ions, upscale, imix, tr2, ethr, istep

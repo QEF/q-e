@@ -13,7 +13,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
 #include "machine.h"
   USE kinds,           ONLY: DP
   USE constants,            ONLY: pi, e2
-  USE brilz,                ONLY: omega, alat, at, bg, tpiba
+  USE cell_base,                ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: qcutz, ecfixed, q2sigma, g
   USE klist,                ONLY: nks, xk
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk

@@ -15,7 +15,7 @@ subroutine addcore (mode, drhoc)
 
   USE kinds, only : DP
   use basis, only: nat, ityp
-  use brilz, only: tpiba
+  use cell_base, only: tpiba
   use gvect, only: ngm, nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
        ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   use modes, only: u

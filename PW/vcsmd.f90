@@ -30,7 +30,7 @@ SUBROUTINE vcsmd()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE constants,     ONLY : e2, uakbar
-  USE brilz,         ONLY : omega, alat, at, bg
+  USE cell_base,         ONLY : omega, alat, at, bg
   USE basis,         ONLY : tau, nat, ntyp, ityp, atm
   USE cellmd,        ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                             cmass, ttol, ntcheck, lmovecell

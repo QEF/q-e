@@ -18,7 +18,7 @@ subroutine force_hub(forceh)
 #include "machine.h"
    USE kinds, ONLY: DP
    USE basis, ONLY: nat, ityp
-   USE brilz, ONLY: at, bg
+   USE cell_base, ONLY: at, bg
    USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns
    USE lsda_mod, ONLY: nspin
    USE symme,    ONLY: s, nsym, irt

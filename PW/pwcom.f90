@@ -7,26 +7,6 @@
 !
 !--------------------------------------------------------------------------
 !
-MODULE brilz
-  USE kinds, ONLY: DP
-  !
-  ! ... The variables needed to describe the lattice
-  !
-  USE cell_base, ONLY: &
-       celldm,   & ! dimensions of the unit cell
-       at,       &! direct lattice vectors
-       bg,       &! reciprocal lattice vectors
-       alat,     &! cell parameter
-       omega,    &! volume of the unit cell
-       tpiba,    &! 2 times pi / alat
-       tpiba2,   &! the square of tpiba
-       ibrav,    &! index of the bravais lattice
-       symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
-  SAVE
-  !
-END MODULE brilz
-!
-!
 MODULE basis
   USE kinds, ONLY: DP
   USE parameters, ONLY: ntypx
@@ -708,7 +688,8 @@ END MODULE fixed_occ
 !
 MODULE pwcom
   USE constants, ONLY : e2, rytoev, amconv, uakbar, pi, tpi, fpi
-  USE brilz
+  USE cell_base, ONLY : celldm, at, bg, alat, omega, tpiba, tpiba2, &
+                        ibrav, symm_type
   USE basis
   USE dynam
   USE gvect

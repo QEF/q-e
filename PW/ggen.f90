@@ -16,7 +16,7 @@ subroutine ggen
   !
 #include "machine.h"
   USE kinds, only: DP
-  use brilz
+  use cell_base
   use gvect
   use gsmooth
   use wvfct, only : gamma_only

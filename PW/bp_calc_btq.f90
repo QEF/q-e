@@ -8,7 +8,7 @@
 !
       use atom, only: r, rab, dx
       use basis, only: ntyp
-      use brilz, only: omega
+      use cell_base, only: omega
       USE parameters, only:  ndm, nbrx
       USE kinds, only: DP
       use constants, only: fpi

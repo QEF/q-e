@@ -17,7 +17,7 @@ subroutine addusforce (forcenl)
 #include "machine.h"
   USE kinds, ONLY: DP
   USE basis, ONLY : nat, ntyp, ityp
-  USE brilz, ONLY: omega, tpiba
+  USE cell_base, ONLY: omega, tpiba
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin

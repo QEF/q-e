@@ -529,7 +529,7 @@ FUNCTION rho_dot_product( rho1, rho2 )
   !
   USE kinds, ONLY : DP
   USE constants,  ONLY : e2, tpi, fpi
-  USE brilz,      ONLY : omega, tpiba2
+  USE cell_base,      ONLY : omega, tpiba2
   USE gvect,      ONLY : gstart, gg
   USE lsda_mod,   ONLY : nspin
   USE control_flags,      ONLY : ngm0
@@ -690,7 +690,7 @@ FUNCTION fn_dehar( drho )
   !
   USE kinds, ONLY : DP
   USE constants,  ONLY : e2, fpi
-  USE brilz,      ONLY : omega, tpiba2
+  USE cell_base,      ONLY : omega, tpiba2
   USE gvect,      ONLY : gstart, gg
   USE lsda_mod,   ONLY : nspin
   USE control_flags,      ONLY : ngm0
@@ -766,7 +766,7 @@ SUBROUTINE approx_screening( drho )
   !
   USE kinds, ONLY : DP
   USE constants,  ONLY : e2, pi, fpi
-  USE brilz,      ONLY : omega, tpiba2
+  USE cell_base,      ONLY : omega, tpiba2
   USE gvect,      ONLY : gstart, gg
   USE klist,      ONLY : nelec
   USE lsda_mod,   ONLY : nspin
@@ -825,7 +825,7 @@ END SUBROUTINE approx_screening
   !
   USE kinds,           ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8
-  USE brilz,                ONLY : omega, tpiba2
+  USE cell_base,                ONLY : omega, tpiba2
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, nlm, gg
   USE klist,                ONLY : nelec

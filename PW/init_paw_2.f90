@@ -17,7 +17,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   use kinds , only : dp
   use constants , only :tpi
   use wvfct , only : npwx
-  use brilz , only : tpiba
+  use cell_base , only : tpiba
   use basis , only : ntyp, nat, ityp, tau
   use gvect , only : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
   use us, only : dq

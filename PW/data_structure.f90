@@ -16,7 +16,7 @@ subroutine data_structure( lgamma )
   USE io_global,  ONLY : stdout
   USE sticks, ONLY: dfftp, dffts
   USE kinds, ONLY: DP
-  USE brilz, ONLY: bg,  tpiba
+  USE cell_base, ONLY: bg,  tpiba
   USE klist, ONLY: xk, nks
   USE gvect, ONLY:  nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        ngm, ngm_l, ngm_g, gcutm, ecutwfc

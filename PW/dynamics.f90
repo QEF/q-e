@@ -37,7 +37,7 @@ SUBROUTINE dynamics()
   USE kinds,         ONLY : DP
   USE constants,     ONLY : amconv, eps8
   USE basis,         ONLY : nat, ntyp, tau, ityp, atm
-  USE brilz,         ONLY : alat
+  USE cell_base,         ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force

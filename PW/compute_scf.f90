@@ -18,7 +18,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, istep, history, alpha0, beta0, ethr
   USE check_stop,       ONLY : check_stop_now
-  USE brilz,            ONLY : alat
+  USE cell_base,            ONLY : alat
   USE basis,            ONLY : tau, ityp, nat, &
                                startingwfc_ => startingwfc, &
                                startingpot_ => startingpot    

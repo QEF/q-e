@@ -19,7 +19,7 @@ subroutine atomic_wfc (ik, wfcatom)
   USE parameters, ONLY: ndm, nchix
   USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
   USE constants, ONLY: tpi, fpi
-  USE brilz, ONLY: omega, tpiba
+  USE cell_base, ONLY: omega, tpiba
   USE basis, ONLY: nat, ntyp, natomwfc, ityp, tau
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE klist, ONLY: xk

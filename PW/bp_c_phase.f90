@@ -153,7 +153,7 @@ SUBROUTINE c_phase
    USE io_global,        ONLY : stdout
    USE io_files, ONLY: iunwfc, nwordwfc
    USE basis, ONLY: nat, ntyp, ityp, tau, atm
-   USE brilz, ONLY: at, alat, tpiba, omega, tpiba2
+   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE pseud, ONLY: zv
    USE constants, ONLY: pi, tpi
    USE gvect, ONLY: ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, ecutwfc, &

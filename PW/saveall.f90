@@ -14,7 +14,7 @@ subroutine saveall (iun, iflag)
   !      iun all quantities needed in subsequent calculations that are not
   !      i) dynamically allocated, ii) distributed in parallel execution
   !
-  USE brilz
+  USE cell_base
   USE basis
   USE gvect
   USE gsmooth

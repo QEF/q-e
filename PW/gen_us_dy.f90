@@ -18,7 +18,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE io_global,  ONLY :  stdout
   USE constants, ONLY: tpi
   USE basis, ONLY: nat, ntyp, tau, ityp
-  USE brilz, ONLY: tpiba
+  USE cell_base, ONLY: tpiba
   USE klist, ONLY: xk
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct, ONLY: npw, npwx, igk

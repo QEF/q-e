@@ -17,7 +17,7 @@ subroutine newd
 #include "machine.h"
   USE kinds, ONLY: DP
   USE basis, ONLY: nat, ntyp, ityp
-  USE brilz, ONLY: omega
+  USE cell_base, ONLY: omega
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, g, gg, ngm, &
        gstart, ig1, ig2, ig3, eigts1, eigts2, eigts3, nl
   USE lsda_mod, ONLY: nspin

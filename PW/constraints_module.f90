@@ -72,7 +72,7 @@ MODULE constraints_module
        ! ... Dario Alfe 1997  and  Carlo Sbraccia 2004
        !
        USE constants, ONLY : eps32
-       USE brilz,     ONLY : alat
+       USE cell_base,     ONLY : alat
        USE basis,     ONLY : nat, tau
        !
        IMPLICIT NONE
@@ -145,7 +145,7 @@ MODULE constraints_module
        !
        USE io_global,  ONLY : stdout
        USE constants,  ONLY : eps16
-       USE brilz,      ONLY : alat
+       USE cell_base,      ONLY : alat
        USE basis,      ONLY : nat, ityp, tau, atm       
        !
        IMPLICIT NONE
@@ -246,7 +246,7 @@ MODULE constraints_module
        USE io_global, ONLY : stdout
        USE constants, ONLY : eps16, eps32
        USE basis,     ONLY : nat
-       USE brilz,     ONLY : at, bg
+       USE cell_base,     ONLY : at, bg
        USE force_mod, ONLY : force
        USE symme,     ONLY : s, nsym, irt
        !
@@ -338,7 +338,7 @@ MODULE constraints_module
        ! ... square modulus.
        !
        USE constants, ONLY : eps32
-       USE brilz,     ONLY : alat
+       USE cell_base,     ONLY : alat
        USE basis,     ONLY : nat, tau
        !
        IMPLICIT NONE

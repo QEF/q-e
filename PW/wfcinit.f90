@@ -17,7 +17,7 @@ SUBROUTINE wfcinit()
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only   
   USE constants,            ONLY : tpi, rytoev
-  USE brilz,                ONLY : tpiba2
+  USE cell_base,                ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, nks, nkstot
