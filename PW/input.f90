@@ -115,7 +115,8 @@ SUBROUTINE iosys()
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
-  USE bfgs_module,   ONLY : lbfgs_ndim_       => lbfgs_ndim, &
+  USE bfgs_module,   ONLY : bfgs_xlf_bug, &
+                            lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &

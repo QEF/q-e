@@ -89,7 +89,11 @@ MODULE bfgs_module
   ! ... trust_radius_end, w_1, w_2 have a default value, but can also be 
   ! ... assigned in input
   !  
+  ! Workaround for IBM xlf compiler bug
   !
+
+  INTEGER, PUBLIC :: bfgs_xlf_bug
+
   CONTAINS
      !
      !
