@@ -5,104 +5,105 @@
 
 tracevar calculation w {
 
+    set nat    [varvalue nat]
     set calc   [varvalue calculation]
     set widget [getWidgetFromVarident ion_dynamics]
     
-     groupwidget ions   disable
-     groupwidget cell   disable
-     groupwidget phonon disable
-     groupwidget vc_md  disable
-     groupwidget path   disable
-     groupwidget neb    disable
-     
-     switch -exact -- $calc {
-	 'scf' - 
-	 'nscf' {
-	     groupwidget ions   disable
-             groupwidget cell   disable
-             groupwidget phonon disable
-             groupwidget vc_md  disable
-             groupwidget path   disable
-             groupwidget neb    disable
-	 }
-	 'phonon' {
-	     groupwidget ions   disable
-             groupwidget cell   disable
-             groupwidget phonon enable
-             groupwidget vc_md  disable
-             groupwidget path   disable
-             groupwidget neb    disable
-	 }
-	 'relax' {
-	     groupwidget ions   enable
-             groupwidget cell   disable
-             groupwidget phonon disable
-             groupwidget vc_md  disable
-             groupwidget path   disable
-             groupwidget neb    disable         
-	     groupwidget ions enable
-	     widget ion_dynamics enable
-	     widgetconfigure ion_dynamics -textvalues {
-		 "BFGS quasi-newton method for structural optimization (based on the trust radius procedure) <bfgs>"
-		 "old BFGS quasi-newton method for structural optimization (based on line minimization) <old-bfgs>"
-		 "damped dynamics (quick-min velocity Verlet) for structural optimization <damp>"
-                 "damped dynamics (quick-min velocity Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
-	     }
-	 }
-	 'vc-relax' {
-	     groupwidget ions   enable
-             groupwidget cell   enable
-             groupwidget phonon disable
-             groupwidget vc_md  enable
-             groupwidget path   disable
-             groupwidget neb    disable
-	     widget ion_dynamics enable
-	     widgetconfigure ion_dynamics -textvalues {
-                 "Beeman algorithm for variable cell damped dynamics <damp>"
-	     }
-	 }
-	 'md' {
-	     groupwidget ions   enable
-             groupwidget cell   disable
-             groupwidget phonon disable
-             groupwidget vc_md  disable
-             groupwidget path   disable
-             groupwidget neb    disable
-	     widget ion_dynamics enable
-	     widgetconfigure ion_dynamics -textvalues {
-		 "Velocity-Verlet algorithm for Molecular dynamics <verlet>"
-		 "Velocity-Verlet-MD with the CONSTRAINT <constrained-verlet>"
-	     }
-	 }
-	 'vc-md' {
-	     groupwidget ions   enable
-             groupwidget cell   enable
-             groupwidget phonon disable
-             groupwidget vc_md  enable
-             groupwidget path   disable
-             groupwidget neb    disable
-	     widget ion_dynamics enable
-	     widgetconfigure ion_dynamics -textvalues {
-		 "Beeman algorithm for variable cell MD <beeman>"
-	     }
-	 }
-	 'neb' {
-	     groupwidget ions   enable
-             groupwidget cell   disable
-             groupwidget phonon disable
-             groupwidget vc_md  disable
-             groupwidget path   enable
-             groupwidget neb    enable
-	 }
-         'smd' {
-	     groupwidget ions   enable
-             groupwidget cell   disable
-             groupwidget phonon disable
-             groupwidget vc_md  disable
-             groupwidget path   enable
-             groupwidget neb    disable
-	 }
-     }
+    groupwidget ions   disable
+    groupwidget cell   disable
+    groupwidget phonon disable
+    groupwidget vc_md  disable
+    groupwidget path   disable
+    groupwidget neb    disable
+    
+    switch -exact -- $calc {
+	'scf' - 
+	'nscf' {
+	    groupwidget ions   disable
+	    groupwidget cell   disable
+	    groupwidget phonon disable
+	    groupwidget vc_md  disable
+	    groupwidget path   disable
+	    groupwidget neb    disable
+	}
+	'phonon' {
+	    groupwidget ions   disable
+	    groupwidget cell   disable
+	    groupwidget phonon enable
+	    groupwidget vc_md  disable
+	    groupwidget path   disable
+	    groupwidget neb    disable
+	}
+	'relax' {
+	    groupwidget ions   enable
+	    groupwidget cell   disable
+	    groupwidget phonon disable
+	    groupwidget vc_md  disable
+	    groupwidget path   disable
+	    groupwidget neb    disable         
+	    groupwidget ions enable
+	    widget ion_dynamics enable
+	    widgetconfigure ion_dynamics -textvalues {
+		"BFGS quasi-newton method for structural optimization (based on the trust radius procedure) <bfgs>"
+		"old BFGS quasi-newton method for structural optimization (based on line minimization) <old-bfgs>"
+		"damped dynamics (quick-min velocity Verlet) for structural optimization <damp>"
+		"damped dynamics (quick-min velocity Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
+	    }
+	}
+	'vc-relax' {
+	    groupwidget ions   enable
+	    groupwidget cell   enable
+	    groupwidget phonon disable
+	    groupwidget vc_md  enable
+	    groupwidget path   disable
+	    groupwidget neb    disable
+	    widget ion_dynamics enable
+	    widgetconfigure ion_dynamics -textvalues {
+		"Beeman algorithm for variable cell damped dynamics <damp>"
+	    }
+	}
+	'md' {
+	    groupwidget ions   enable
+	    groupwidget cell   disable
+	    groupwidget phonon disable
+	    groupwidget vc_md  disable
+	    groupwidget path   disable
+	    groupwidget neb    disable
+	    widget ion_dynamics enable
+	    widgetconfigure ion_dynamics -textvalues {
+		"Velocity-Verlet algorithm for Molecular dynamics <verlet>"
+		"Velocity-Verlet-MD with the CONSTRAINT <constrained-verlet>"
+	    }
+	}
+	'vc-md' {
+	    groupwidget ions   enable
+	    groupwidget cell   enable
+	    groupwidget phonon disable
+	    groupwidget vc_md  enable
+	    groupwidget path   disable
+	    groupwidget neb    disable
+	    widget ion_dynamics enable
+	    widgetconfigure ion_dynamics -textvalues {
+		"Beeman algorithm for variable cell MD <beeman>"
+	    }
+	}
+	'neb' {
+	    groupwidget ions   enable
+	    groupwidget cell   disable
+	    groupwidget phonon disable
+	    groupwidget vc_md  disable
+	    groupwidget path   enable
+	    groupwidget neb    enable
+	}
+	'smd' {
+	    groupwidget ions   enable
+	    groupwidget cell   disable
+	    groupwidget phonon disable
+	    groupwidget vc_md  disable
+	    groupwidget path   enable
+	    groupwidget neb    disable
+	}
+    }
 
     # force the update of the state of new_bfgs group widgets
     varset ion_dynamics -value [varvalue ion_dynamics]
@@ -110,19 +111,38 @@ tracevar calculation w {
     # force the update of the state of the CLIMBING_IMAGES card
     varset CI_scheme -value [varvalue CI_scheme]
 
+
     # take care of NEB || SMD coordinates
-    if { $calc == "'neb'" || $calc == "'smd'" } {
-	keywordconfigure first_image enable
-	keywordconfigure last_image  enable
-	widget atomic_coordinates2   create
 
-	widgetconfigure atomic_coordinates -caption "Enter atomic coordinates for 1st image:"
+    #update
+    set ni [varvalue  path_inter_nimages]; if { $ni == "" } { set ni 0 }
+    
+    if { $calc == "'neb'" || $calc == "'smd'" } {    	
+    	widget path_inter_nimages  enable
+    	widgetconfigure atomic_coordinates -caption "Enter atomic coordinates for the FIRST image:"
+    	
+    	keywordconfigure first_image  enable
+    	keywordconfigure last_image   enable
+    	
+	for {set i 1} {$i <= $ni} {incr i} {
+    	    keywordconfigure intermediate_image_$i  enable
+    	    widget           atomic_coordinates_${i}_inter  create
+	    widgetconfigure  atomic_coordinates_${i}_inter -rows $nat
+    	}
+    	widget atomic_coordinates_last  create
+    	
     } else {
-	keywordconfigure first_image disable
-	keywordconfigure last_image  disable
-	widget atomic_coordinates2   forget
-
-	widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"
+	widget path_inter_nimages  disable
+    	widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"
+    	
+    	keywordconfigure first_image  disable
+    	keywordconfigure last_image   disable
+		
+	for {set i 1} {$i <= $ni} {incr i} {
+	    keywordconfigure intermediate_image_$i  disable
+	    widget   atomic_coordinates_${i}_inter  forget
+	}
+	widget atomic_coordinates_last  forget	
     }
 }
 
@@ -152,17 +172,17 @@ tracevar ibrav w {
 	"Cubic P (sc)"             -
 	"Cubic F (fcc)"            -
 	"Cubic I (bcc)"           { set uses 1 }
-	
+
 	"Hexagonal and Trigonal P" -
 	"Tetragonal P (st)"        -       
 	"Tetragonal I (bct)"      { set uses {1 3} }
 	"Trigonal R"              { set uses {1 4} }
-	
+
 	"Orthorhombic P"                  -
 	"Orthorhombic base-centered(bco)" - 
 	"Orthorhombic face-centered"      -
 	"Orthorhombic body-centered"     { set uses {1 2 3} }
-	
+
 	"Monoclinic P"              -
 	"Monoclinic base-centered" { set uses {1 2 3 4} }
 	"Triclinic P" { set uses { 1 2 3 4 5 6 } }
@@ -172,9 +192,9 @@ tracevar ibrav w {
     }
     for {set i 1} {$i <= 6} {incr i} {
 	if { [lsearch -exact $uses $i] < 0 } {		
-	    
+
 	    # the lattice doesn't need the $i-th parameter
-	    
+
 	    widget celldm($i) disable 
 	} else {
 	    widget celldm($i) enable 
@@ -191,7 +211,14 @@ tracevar ibrav w {
 tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
-    widgetconfigure atomic_coordinates2 -rows $nat
+    widgetconfigure atomic_coordinates_last -rows $nat
+
+    set ni [varvalue path_inter_nimages]
+    if { $ni == "" } { set ni 0 }
+    for {set i 1} {$i <= $ni} {incr i} {
+	widgetconfigure atomic_coordinates_${i}_inter -rows $nat
+    }
+    widgetconfigure starting_magnetization -end [varvalue nat]
 }
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
@@ -215,7 +242,7 @@ tracevar tefield w {
 	default { groupwidget tefield_group disable }
     }
 }
-	    
+
 tracevar lda_plus_u w {
     switch -- [vartextvalue lda_plus_u] {
 	Yes     { widget mixing_fixed_ns enable;  groupwidget hubbard enable }
@@ -272,19 +299,19 @@ tracevar ion_dynamics w {
 
     # MD
     switch -exact -- $calc {
-    	'scf' - 'nscf' - 'phonon' - 'neb' - 'smd' {
-    	    groupwidget md disable
-    	}
-    	'relax' - 'vc-relax' - 'md' - 'vc-md' {	    
-    	    switch -exact -- $iond {
-    	    	'damp' - 'verlet' - 'constrained-verlet' - 'beeman' {
-    	    	    groupwidget md enable
-    	    	} 
-    	    	default {
-    	    	    groupwidget md disable
-    	    	}
-    	    }
-    	}
+	'scf' - 'nscf' - 'phonon' - 'neb' - 'smd' {
+	    groupwidget md disable
+	}
+	'relax' - 'vc-relax' - 'md' - 'vc-md' {	    
+	    switch -exact -- $iond {
+		'damp' - 'verlet' - 'constrained-verlet' - 'beeman' {
+		    groupwidget md enable
+		} 
+		default {
+		    groupwidget md disable
+		}
+	    }
+	}
     }
 
     # NEW-BFGS
@@ -293,6 +320,14 @@ tracevar ion_dynamics w {
     } else {
 	groupwidget new_bfgs disable
     }
+
+    # CONSTRAINTS
+    if { ( $iond == "'constrained-damp'" && $calc == "'relax'" ) \
+	     || ( $iond == "'constrained-verlet'" && $calc == "'md'" ) } {
+	groupwidget constraints_card enable
+    } else {
+	groupwidget constraints_card disable
+    }	     
 }
 
 tracevar CI_scheme w {
@@ -302,35 +337,77 @@ tracevar CI_scheme w {
 	groupwidget climbing_images disable
     }
 }
+
+# ------------------------------------------------------------------------
+# Page: CELL_PARAMETERS, ATOMIC_SPECIES, ATOMIC_POSITIONS
+# ------------------------------------------------------------------------
+
+tracevar path_inter_nimages w {
+    # Note: this is a bit complicated ...
+    
+
+    set nat     [varvalue nat]
+    set ni      [varvalue path_inter_nimages] 
+    set ni_old  [varvalue old_path_inter_nimages]
+    if { $nat == ""    } { set nat 1 }
+    if { $ni == ""     } { set ni 0 }
+    if { $ni_old == "" } { set ni_old 0 }
+    
+    if { $ni_old > $ni } {
+	# delete tables ...
+
+	for {set i $ni_old} { $i > $ni } {incr i -1} {
+	    keywordconfigure intermediate_image_$i  disable
+	    widget atomic_coordinates_${i}_inter    forget
+	}
+    } elseif { $ni_old < $ni } {
+	# create tables ...
+	
+	widget atomic_coordinates_last  forget ; # this forces the right pack-order
+
+	for {set i 1} {$i <= $ni} {incr i} {
+	    keywordconfigure intermediate_image_$i  enable
+	    widget           atomic_coordinates_${i}_inter  create
+	    widgetconfigure  atomic_coordinates_${i}_inter -rows $nat
+	}
+
+    	widget atomic_coordinates_last  create
+    }
 	
 
+    # remember current value of path_inter_nimages
+    varset old_path_inter_nimages -value $ni
+}
+
+
+#
 # ------------------------------------------------------------------------
 #  Page: K-POINT DATA
 # ------------------------------------------------------------------------
 
 tracevar kpoint_type w {
     switch -exact -- [varvalue kpoint_type] {
-    	tpiba -	crystal {
-    	    #widget nks enable
+	tpiba -	crystal {
+	    #widget nks enable
 	    groupwidget nks_line   enable
-    	    groupwidget kmesh_line disable
-    	    widget kpoints enable
-    	    widgetconfigure kpoints -cols 4 -rows [varvalue nks]    
-    	}
-    	    
-    	automatic {
+	    groupwidget kmesh_line disable
+	    widget kpoints enable
+	    widgetconfigure kpoints -cols 4 -rows [varvalue nks]    
+	}
+
+	automatic {
 	    groupwidget nks_line   disable
-    	    groupwidget kmesh_line enable
-    	    widget kpoints disable
-    	    widgetconfigure kpoints -cols 4 -rows 0
-    	}
-    
-    	gamma {
+	    groupwidget kmesh_line enable
+	    widget kpoints disable
+	    widgetconfigure kpoints -cols 4 -rows 0
+	}
+
+	gamma {
 	    groupwidget nks_line   disable
-    	    groupwidget kmesh_line disable
-    	    widget kpoints disable
-    	    widgetconfigure kpoints -cols 4 -rows 0
-    	}
+	    groupwidget kmesh_line disable
+	    widget kpoints disable
+	    widgetconfigure kpoints -cols 4 -rows 0
+	}
     }
 }
 
@@ -344,16 +421,29 @@ tracevar nks w {
 # ------------------------------------------------------------------------
 
 # incoming in next PWscf version
-#tracevar nconstr w {
-#    widgetconfigure constraints_table -rows [varvalue nconstr]
-#}
+tracevar nconstr w {
+    set nc [varvalue nconstr]
+
+    widgetconfigure constraints_table -rows $nc
+
+    # so far the only constraint-type is "1". Fill in the "1"
+    # values
+    for {set i 1} {$i <= $nc} {incr i} {
+	tableset constraints_table $i 1 -value 1
+    }
+}
 
 
 # ------------------------------------------------------------------------
-# POST-PROCESSING: assign default values for "traced" variables
+# POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
 postprocess {
-    varset calculation     -value 'scf'
+    # BEWARE: it is assumed that 50 intermediate images is the
+    # largest allowed number (this is dirty)
+    varset old_path_inter_nimages -value 50
+    varset path_inter_nimages     -value 0
+    
+    varset calculation    -value 'scf'
     varset how_lattice     -value celldm
     varset ibrav           -value {}
     varset nspin           -value {}
@@ -365,4 +455,10 @@ postprocess {
     varset kpoint_type     -value tpiba
     varset lattice_type    -value cubic
     varset ion_dynamics    -value {}
+
+    # so far the only constraint-type is "1"
+    tableset constraints_table 1 1 -value 1
+
+    # unused variables
+    groupwidget unused_1 disable
 }
