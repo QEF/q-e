@@ -24,6 +24,8 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   real(kind=DP), allocatable :: grho (:,:,:), h (:,:,:), dh (:)
   real(kind=DP) :: grho2 (2), sx, sc, v1x, v2x, v1c, v2c, v1xup, v1xdw, &
        v2xup, v2xdw, v1cup, v1cdw , etxcgc, vtxcgc, segno, arho, fac
+  real(kind=DP) :: v2cup, v2cdw,  v2cud, rup, rdw, grhoup, grhodw, grhoud, &
+       grup, grdw
   real(kind=DP), parameter :: e2 = 2.d0, epsr = 1.0d-6, epsg = 1.0d-10
 
   if (igcx == 0 .and. igcc == 0) return
@@ -76,17 +78,35 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
              sx, v1xup, v1xdw, v2xup, v2xdw)
         rh = rho (k, 1) + rho (k, 2)
         if (rh.gt.epsr) then
-           zeta = (rho (k, 1) - rho (k, 2) ) / rh
-           !
-           grh2 = (grho (1, k, 1) + grho (1, k, 2) ) **2 + &
-                  (grho (2, k, 1) + grho (2, k, 2) ) **2 + &
-                  (grho (3, k, 1) + grho (3, k, 2) ) **2
-           call gcc_spin (rh, zeta, grh2, sc, v1cup, v1cdw, v2c)
+           if ( igcc == 3 ) then
+              rup = rho (k, 1)
+              rdw = rho (k, 2)
+              grhoup = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+              grhodw = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
+              grhoud = grho(1,k,1) * grho(1,k,2) + &
+                       grho(2,k,1) * grho(2,k,2) + &
+                       grho(3,k,1) * grho(3,k,2)
+              call gcc_spin_more(rup, rdw, grhoup, grhodw, grhoud, sc, &
+                                 v1cup, v1cdw, v2cup, v2cdw, v2cud)
+           else
+              zeta = (rho (k, 1) - rho (k, 2) ) / rh
+              !
+              grh2 = (grho (1, k, 1) + grho (1, k, 2) ) **2 + &
+                     (grho (2, k, 1) + grho (2, k, 2) ) **2 + &
+                     (grho (3, k, 1) + grho (3, k, 2) ) **2
+              call gcc_spin (rh, zeta, grh2, sc, v1cup, v1cdw, v2c)
+              v2cup = v2c
+              v2cdw = v2c
+              v2cud = v2c
+           end if
         else
            sc = 0.d0
            v1cup = 0.d0
            v1cdw = 0.d0
            v2c = 0.d0
+           v2cup = 0.0d0
+           v2cdw = 0.0d0
+           v2cud = 0.0d0
         endif
         !
         ! first term of the gradient correction : D(rho*Exc)/D(rho)
@@ -97,10 +117,10 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
         ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
         do ipol = 1, 3
-           h (ipol, k, 1) = e2 * ( (v2xup + v2c) * grho (ipol, k, 1) &
-                + v2c * grho (ipol, k, 2) )
-           h (ipol, k, 2) = e2 * ( (v2xdw + v2c) * grho (ipol, k, 2) &
-                + v2c * grho (ipol, k, 1) )
+           grup = grho (ipol, k, 1)
+           grdw = grho (ipol, k, 2)
+           h (ipol, k, 1) = e2 * ( (v2xup + v2cup) * grup + v2cud * grdw )
+           h (ipol, k, 2) = e2 * ( (v2xdw + v2cdw) * grdw + v2cud * grup )
         enddo
         vtxcgc = vtxcgc + e2 * (v1xup + v1cup) * (rho (k, 1) - &
              rho_core (k) * fac)
