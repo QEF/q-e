@@ -369,10 +369,7 @@ MODULE relax
   !
   ! ... The variables used to control ionic relaxations
   !  
-  USE kinds,     ONLY : DP
-  USE ions_base, ONLY : &
-       if_pos,                  &! if 0 that coordinate will be kept fixed
-       fixatom                   ! last "fixatom" are kept fixed
+  USE kinds, ONLY : DP
   !
   SAVE
   !

@@ -23,7 +23,7 @@ SUBROUTINE forces
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE cell_base,      ONLY : at, bg, alat, omega  
+  USE cell_base,  ONLY : at, bg, alat, omega  
   USE basis,      ONLY : nat, ntyp, ityp, tau, zv
   USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                          ngl, nl, igtongl, g, gg, gcutm
@@ -33,7 +33,7 @@ SUBROUTINE forces
   USE wvfct,      ONLY : gamma_only
   USE force_mod,  ONLY : force, lforce
   USE scf,        ONLY : rho
-  USE relax,      ONLY : if_pos
+  USE ions_base,  ONLY : if_pos
   USE ldaU,       ONLY : lda_plus_u
   USE extfield,   ONLY : tefield, forcefield
   !

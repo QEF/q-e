@@ -210,6 +210,7 @@
        order              ! type of potential updating ( see update_pot )
   !
   LOGICAL, PUBLIC :: &
+       lfixatom,         &! if .TRUE. some atom is kept fixed
        lscf,             &! if .TRUE. the calculation is selfconsistent
        lbfgs,            &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
        loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme

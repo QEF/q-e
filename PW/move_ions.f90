@@ -513,17 +513,6 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      !
   END DO
   !
-#if defined (__DEBUG_EXTR)  
-  PRINT *, ""
-  PRINT *, "chi   = ", chi,    "  det  = ", det
-  PRINT *, "alpha = ", alpha0, "  beta = ", beta0
-  PRINT *, ""
-  PRINT *, "PREDICTED POSITIONS:"
-  PRINT *, tauold(1,:,1) + alpha0 * ( tauold(1,:,1) - tauold(1,:,2) ) + &
-                            beta0 * ( tauold(1,:,2) - tauold(1,:,3) )
-  PRINT *, ""
-#endif  
-  !
   RETURN
   !
 END SUBROUTINE find_alpha_and_beta

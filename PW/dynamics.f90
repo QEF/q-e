@@ -37,14 +37,15 @@ SUBROUTINE dynamics()
   USE kinds,         ONLY : DP
   USE constants,     ONLY : amconv, eps8
   USE basis,         ONLY : nat, ntyp, tau, ityp, atm
-  USE cell_base,         ONLY : alat
+  USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
   USE klist,         ONLY : nelec
-  USE relax,         ONLY : if_pos, fixatom, epse, epsf
-  USE control_flags, ONLY : ethr, upscale, tr2, imix, alpha0, beta0, istep, &
-                            lconstrain, ldamped, conv_ions
+  USE ions_base,     ONLY : if_pos
+  USE relax,         ONLY : epse, epsf
+  USE control_flags, ONLY : alpha0, beta0, istep, nstep, conv_ions, &
+                            lconstrain, ldamped, lfixatom
   USE io_files,      ONLY : prefix
   !
   IMPLICIT NONE
@@ -61,7 +62,7 @@ SUBROUTINE dynamics()
   REAL(KIND=DP) :: total_mass, temp_new, elapsed_time, norm_of_dtau
   REAL(KIND=DP) :: ml(3), mlt
     ! total linear momentum and its modulus
-  INTEGER :: i, na, it 
+  INTEGER :: i, na
     ! counters
   LOGICAL :: exst
   REAL(KIND=DP), PARAMETER :: convert_E_to_temp = 315642.28D0 * 0.5D0
@@ -96,7 +97,7 @@ SUBROUTINE dynamics()
      WRITE( stdout, '(5X,"Time step = ",F6.2," a.u.,   ",F6.4, &
                        & " femto-seconds")' ) dt, ( dt * 0.0484D0 )
      !
-     !...  masses in atomic rydberg units
+     ! ...  masses in atomic rydberg units
      !
      total_mass = 0.D0
      !
@@ -115,24 +116,23 @@ SUBROUTINE dynamics()
      !
      temp_new = temperature
      !
-     it = 0
+     istep = 0
      !
   ELSE
      !
      READ( UNIT = 4, FMT = * ) &
-        etotold, temp_new, mass, total_mass, elapsed_time, it, tau, vel, accold
-        
-     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+        etotold, temp_new, mass, total_mass, &
+        elapsed_time, istep, tau, vel, accold
      !
-     istep = it + 1
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !
   END IF
   !
   elapsed_time = elapsed_time + dt * 0.0000484D0
   !
-  it = it + 1
+  istep = istep + 1
   !
-  IF ( MOD( it, nraise ) == 0 .AND. delta_T < 0 ) THEN
+  IF ( MOD( istep, nraise ) == 0 .AND. delta_T < 0 ) THEN
      !
      WRITE( stdout, '(/,5X,"Thermalization: delta_T = ",F6.3, &
                          & ", T = ",F6.1)' )  - delta_T, ( temp_new - delta_T )
@@ -164,7 +164,7 @@ SUBROUTINE dynamics()
         !
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"Damped Dynamics: convergence achieved in ",I3, &
-                          & " steps")' ) it
+                          & " steps")' ) istep
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"Efinal = ",F15.8,/)' ) etot                 
         !
@@ -174,10 +174,14 @@ SUBROUTINE dynamics()
         !
      END IF     
      !
+  ELSE
+     !
+     IF ( istep == nstep ) conv_ions = .TRUE.
+     !   
   END IF
   !
   WRITE( stdout, '(/,5X,"Entering Dynamics;  it = ",I5,"   time = ", &
-                  &F8.5," pico-seconds",/)' ) it, elapsed_time
+                  &F8.5," pico-seconds",/)' ) istep, elapsed_time
   !
   ! ... calculate accelerations in a.u. units / alat
   !
@@ -190,7 +194,7 @@ SUBROUTINE dynamics()
   !
   vel = vel + 0.5D0 * dt * ( accold + acc )
   !
-  IF ( ldamped ) CALL projec_velocity()  
+  IF ( ldamped ) CALL project_velocity()  
   !
   ! ... constrains ( atoms kept fixed ) are reinforced 
   !
@@ -218,28 +222,30 @@ SUBROUTINE dynamics()
   CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED',  exst )
   !
   WRITE( UNIT = 4, FMT = * ) &
-      etot, temp_new, mass, total_mass, elapsed_time, it, tau, vel, acc
+      etot, temp_new, mass, total_mass, &
+      elapsed_time, istep, tau, vel, acc
   !
   CLOSE( UNIT = 4, STATUS = 'KEEP' )
   !
-  DO na = 1, nat
-     !
-     WRITE( stdout, '(A3,3F12.7)') atm(ityp(na)), tau(:,na)
-     !
-  END DO
+  CALL output_tau( .FALSE. )
   !
-  IF ( it == 1 ) THEN
+  IF ( istep == 1 ) THEN
      !
-     WRITE( stdout, '(/,5X,"Ekin = ",F14.8," Ryd   T = ",F6.1," K ", &
-                         & " Etot = ",F14.8)' ) &
-         temperature * 3.D0 / 2.D0 * nat / convert_E_to_temp, temperature, &
-         ( temperature * 3.D0 / 2.D0 * nat / convert_E_to_temp + etot )  
+     WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/, &
+                    & 5X,"temperature           = ",F14.8," K", /, &
+                    & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
+         temperature * 3.D0 / 2.D0 * nat / convert_E_to_temp, &
+         temperature, &
+         temperature * 3.D0 / 2.D0 * nat / convert_E_to_temp + etot
      !
   ELSE
      !        
-     WRITE( stdout, '(/,5X,"Ekin = ",F14.8," Ryd   T = ",F6.1," K ", &
-                         & " Etot = ",F14.8)' ) &
-         ekin*alat**2, temp_new, ( ekin*alat**2 + etot )
+     WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/, &
+                    & 5X,"temperature           = ",F14.8," K", /, &
+                    & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
+         ekin*alat**2, &
+         temp_new, &
+         ekin*alat**2 + etot
       !
   END IF    
   !
@@ -247,11 +253,11 @@ SUBROUTINE dynamics()
   !
   mlt = ABS( ml(1) ) + ABS( ml(2) ) + ABS( ml(3) )
   !
-  IF ( .NOT. ( ldamped .OR. lconstrain  ) .AND. &
-       ( fixatom == 0 ) .AND. ( mlt > eps8 ) ) &
+  IF ( ( mlt > eps8 ) .AND. &
+       .NOT. ( ldamped .OR. lconstrain .OR. lfixatom ) ) &
      CALL errore( 'dynamics', 'Total linear momentum <> 0', - 1 )
   !
-  WRITE( stdout, '(5X,"Linear momentum: ",3F18.14)' ) ml
+  WRITE( stdout, '(/,5X,"Linear momentum :",3(2XF14.10))' ) ml
   !
   DEALLOCATE( mass )
   DEALLOCATE( vel )         
@@ -265,7 +271,7 @@ SUBROUTINE dynamics()
      ! ... internal procedure
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE projec_velocity()
+     SUBROUTINE project_velocity()
        !-----------------------------------------------------------------------
        !
        USE constants,             ONLY : eps32
@@ -295,7 +301,7 @@ SUBROUTINE dynamics()
           !
        END IF       
        !
-     END  SUBROUTINE projec_velocity 
+     END SUBROUTINE project_velocity 
      !
      !
      !-----------------------------------------------------------------------
@@ -363,9 +369,7 @@ SUBROUTINE dynamics()
           !
           ! ... put total linear momentum equal zero if all atoms move
           !
-          PRINT *, "FIXATOM = ", FIXATOM
-          
-          IF ( fixatom == 0 ) THEN
+          IF ( .NOT. lfixatom ) THEN
              !
              total_mass = 0.D0
              !

@@ -24,7 +24,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                startingpot_ => startingpot    
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
-  USE relax,            ONLY : if_pos_ => if_pos
+  USE ions_base,        ONLY : if_pos_ => if_pos
   USE extfield,         ONLY : tefield, forcefield
   USE io_files,         ONLY : prefix, tmp_dir, &
                                iunneb, iunupdate, exit_file, iunexit

@@ -22,7 +22,6 @@ SUBROUTINE clean_pw()
   USE wvfct,                ONLY : igk, igk_l2g, g2kin, et, wg, gamma_only
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, rho_save,vr, vltot, rho_core, vrs
-  USE relax,                ONLY : if_pos
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at
   USE uspp,                 ONLY : deallocate_uspp
@@ -45,11 +44,11 @@ SUBROUTINE clean_pw()
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
   CALL deallocate_ions_base( )
+  !
   IF ( ALLOCATED( force ) )      DEALLOCATE( force )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
   IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
   IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
-  IF ( ALLOCATED( if_pos ) )     DEALLOCATE( if_pos )   
   !
   ! ... arrays allocated in ggen.f90
   !

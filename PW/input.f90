@@ -31,7 +31,8 @@ SUBROUTINE iosys()
   USE cell_base,     ONLY : at, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav
-  USE ions_base,     ONLY : ntyp_ => nsp                            
+  USE ions_base,     ONLY : if_pos, &
+                            ntyp_ => nsp                              
   USE basis,         ONLY : nat_  => nat, &
                             ityp, tau, atomic_positions, atm, &
                             startingwfc_ => startingwfc, &
@@ -89,7 +90,7 @@ SUBROUTINE iosys()
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             psfile
-  USE relax,         ONLY : if_pos, epsf, starting_scf_threshold, &
+  USE relax,         ONLY : epsf, starting_scf_threshold, &
                             restart_bfgs, epse
   USE control_flags, ONLY : diis_ethr_cg, diis_ndim, diis_wfc_keep, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
@@ -1049,10 +1050,10 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  wk_    => wk
   USE fixed_occ,          ONLY : tfixed_occ, &
                                  f_inp_ => f_inp
-  USE relax,              ONLY : fixatom, &
+  USE ions_base,          ONLY : fixatom, &
                                  if_pos_ =>  if_pos
   USE dynam,              ONLY : amass
-  USE control_flags,      ONLY : lconstrain
+  USE control_flags,      ONLY : lconstrain, lfixatom
   USE constraints_module, ONLY : nconstr, constr_tol, constr, target
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, &
                                  taspc, tapos, rd_pos, &
@@ -1098,9 +1099,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      ityp(ia)  = sp_pos(ia)
   END DO
   !
-  ! ... TEMP: calculate fixatom (to be removed)
+  ! ... TEMP: calculate fixatom
   !
   fixatom = 0
+  !
+  IF ( ANY( if_pos(:,1:nat) == 0 ) ) lfixatom = .TRUE.
+  !
   fix1: DO ia = nat, 1, -1
     IF ( if_pos(1,ia) /= 0 .OR. &
          if_pos(2,ia) /= 0 .OR. &
