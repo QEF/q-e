@@ -83,27 +83,27 @@ MODULE neb_routines
       !
       ! ... coordinates must be in bohr ( pwscf uses alat units )
       !
-      pos_   = pos(1:dim,:) * alat   
+      pos_ = pos(1:dim,:) * alat   
       !
       ! ... all other arrays are initialized 
       !
-      PES               = 0.D0
-      PES_gradient      = 0.D0
-      elastic_gradient  = 0.D0
-      tangent           = 0.D0
-      grad              = 0.D0
-      norm_grad         = 0.D0
-      error             = 0.D0
-      mass              = 1.D0
-      k                 = k_min
+      PES              = 0.D0
+      PES_gradient     = 0.D0
+      elastic_gradient = 0.D0
+      tangent          = 0.D0
+      grad             = 0.D0
+      norm_grad        = 0.D0
+      error            = 0.D0
+      mass             = 1.D0
+      k                = k_min
       !
       IF ( ALLOCATED( climbing ) ) THEN
          !
-         climbing_      = climbing(:)
+         climbing_ = climbing(:)
          !
       ELSE
          !
-         climbing_      = .FALSE.
+         climbing_ = .FALSE.
          !
       END IF  
       !
@@ -689,13 +689,15 @@ MODULE neb_routines
     SUBROUTINE compute_error( err )
       !-----------------------------------------------------------------------
       !
-      USE neb_variables,   ONLY :  num_of_images, error, norm_grad
+      USE neb_variables,   ONLY :  num_of_images, optimization, &
+                                   error, norm_grad
       !
       IMPLICIT NONE
       !
       ! ... local variables
       !
-      REAL (KIND=DP), INTENT(OUT)  :: err   
+      REAL (KIND=DP), INTENT(OUT)  :: err
+      INTEGER                      :: N_in, N_fin
       INTEGER                      :: i
       !
       ! ... end of local variables
@@ -703,7 +705,19 @@ MODULE neb_routines
       !
       err = 0.D0
       !
-      DO i = 1, num_of_images
+      IF ( optimization ) THEN
+         !
+         N_in  = 1
+         N_fin = num_of_images
+         !
+      ELSE
+         !
+         N_in  = 2
+         N_fin = ( num_of_images - 1 )      
+         !   
+      END IF   
+      !
+      DO i = N_in, N_fin
          !
          ! ... the error is given by the norm of the 
          ! ... gradient ( PES + SPRINGS ).
@@ -1025,4 +1039,4 @@ MODULE neb_routines
       !
     END SUBROUTINE compute_scf  
     !
-END MODULE neb_routines 
+END MODULE neb_routines
