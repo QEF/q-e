@@ -236,7 +236,7 @@ module units_ph
 
   integer :: iuwfc, lrwfc, iuvkb, iubar, lrbar, iudwf, iupsir, &
        lrdwf, iudrhous, lrdrhous, iudyn, iupdyn, iunrec, iudvscf, iudrho, &
-       lrdrho
+       lrdrho, iucom, lrcom
   ! iunit with the wavefunctions
   ! the length of wavefunction record
   ! unit with vkb
@@ -253,6 +253,8 @@ module units_ph
   ! the unit where the delta Vscf is written
   ! the unit where the delta rho is written
   ! the length of the deltarho files
+  ! the unit of the bare commutator in US case
+  ! the length  of the bare commutator in US case
 
 end module units_ph
 !

@@ -46,6 +46,15 @@ subroutine add_zstar_ue (imode0, npe)
         ! recalculate DeltaV*psi(bare) for electric field
         !
         call dvpsi_e (ik, jpol)
+        !
+        ! In the case of USPP we save dvpsi on disc
+        ! We need this later for the aditional term.
+        !
+        if (okvan) then
+           nrec = (jpol-1) * nksq + ik
+           call davcio (dvpsi, lrbar, iubar, nrec, 1)
+        end if
+        !
         do ipert = 1, npe
            mode = imode0 + ipert
            nrec = (ipert - 1) * nksq + ik

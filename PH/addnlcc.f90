@@ -63,33 +63,27 @@ subroutine addnlcc (imode0, drhoscf, npe)
      call addcore (mode, drhoc)
      do is = 1, nspin
         call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
-        call DAXPY (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), &
-             1)
-
+        call DAXPY (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      do is = 1, nspin
         do is1 = 1, nspin
            do ir = 1, nrxx
-              dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * drhoscf ( &
-                   ir, is1, ipert)
+              dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * &
+                                                drhoscf ( ir, is1, ipert)
            enddo
         enddo
-
      enddo
      !
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-
      if (igcx.ne.0.or.igcc.ne.0) &
        call dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
           nspin, nl, ngm, g, alat, omega, dvaux)
      do is = 1, nspin
         call DAXPY (nrxx, - fac, rho_core, 1, rho (1, is), 1)
-        call DAXPY (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), &
-             1)
-
+        call DAXPY (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      mode1 = 0
      do irr = 1, nirr

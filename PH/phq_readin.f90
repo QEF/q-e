@@ -160,11 +160,6 @@ subroutine phq_readin
   !
   if (tfixed_occ) &
      call errore('phq_readin','phonon with arbitrary occupations not tested',1)
-
-  if ( (zue) .and.okvan) then
-     call errore ('phq_readin', 'No effective charges in US case', -1)
-     zue = .false.
-  endif
   !
   if (elph.and.degauss.eq.0.0) call errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)

@@ -25,7 +25,7 @@ subroutine dvpsi_e (kpoint, ipol)
   implicit none
   !
   integer :: ipol, ig, na, ibnd, jbnd, ikb, jkb, nt, lter, kpoint, &
-                   ih, jh, ijkb0
+                   ih, jh, ijkb0, nrec
   ! input: the polarization
   ! counter on G vectors
   ! counter on atoms
@@ -200,11 +200,22 @@ subroutine dvpsi_e (kpoint, ipol)
   call flush (6)
 #endif
 !
+!
+! we have now obtained P_c x |psi>.
+! In the case of USPP this quantity is needed for the Born 
+! effective charges, so we save it to disc
+!
 ! In the US case we obtain P_c x |psi>, but we need P_c^+ x | psi>,
 ! therefore we apply S again, and then subtract the additional term
 ! furthermore we add the term due to dipole of the augmentation charges.
 !
   if (okvan) then
+     !
+     ! for effective charges
+     !
+     nrec = (ipol - 1) * nksq + kpoint
+     call davcio (dvpsi, lrcom, iucom, nrec, 1)
+     !
      call ccalbec(nkb,npwx,npw,nbnd,becp,vkb,dvpsi)
      call s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call DCOPY(2*npwx*nbnd,spsi,1,dvpsi,1)

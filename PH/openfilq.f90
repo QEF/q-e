@@ -99,7 +99,7 @@ subroutine openfilq
   !
   !   open a file with the static change of the charge
   !
-  if (okvan.and.trans) then
+  if (okvan) then
      iudrhous = 25
      lrdrhous = 2 * nrxx * nspin
      filint = trim(prefix) //'.prd'
@@ -157,7 +157,20 @@ subroutine openfilq
      iudvscf = 27
      call seqopn (iudvscf, fildvscf, 'unformatted', exst)
      rewind (iudvscf)
-
+  end if
+  !
+  !    In the USPP case we need two files for the Commutator, the first is
+  !    given by filbar and a second which just contains P_c x |psi>,
+  !    which is required for the calculation of the Born effective carges
+  !
+  if (okvan .and. (epsil .or. zue)) then
+     iucom = 28
+     lrcom = 2 * nbnd * npwx
+     filint = trim(prefix) //'.com'
+     call diropn (iucom, filint, lrcom, exst)
+     if (recover.and..not.exst) call errore ('openfilq', 'file com not f &
+          &ound', 1)
   endif
+  
   return
 end subroutine openfilq

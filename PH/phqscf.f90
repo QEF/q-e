@@ -81,6 +81,7 @@ subroutine phqscf
            !   to the effective charges Z(Us,E) (Us=scf,E=bare)
            !
            if (zue) call add_zstar_ue (imode0, npert (irr) )
+           if (zue.and. okvan) call add_zstar_ue_us(imode0, npert (irr) )
 
         endif
         if (convt) then

@@ -108,7 +108,7 @@ subroutine dynmatrix
   !   Writes (if the case) results for quantities involving electric field
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
-  if (zue.and..not.okvan) call sym_and_write_zue
+  if (zue) call sym_and_write_zue
   !
   !   Diagonalizes the dynamical matrix at q
   !

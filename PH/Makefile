@@ -103,7 +103,13 @@ trntnsc.o  \
 write_dyn_on_file.o  \
 write_epsilon_and_zeu.o  \
 write_matrix.o  \
-zstar_eu.o 
+zstar_eu.o \
+psidspsi.o \
+add_zstar_ue_us.o \
+zstar_eu_us.o \
+add_for_charges.o \
+add_dkmds.o \
+addnlcc_zstar_eu_us.o
 
 MODULES = ../Modules/*.o
 

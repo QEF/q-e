@@ -42,11 +42,6 @@ subroutine zstar_eu
   call setv (2 * 9 * nat, 0.d0, zstareu0, 1)
   call setv (9 * nat, 0.d0, zstareu, 1)
 
-  if (okvan) then
-     call errore('zstar_eu', 'Effective charges not implemented',-1)
-     return
-  endif
-
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
      if (nksq.gt.1) read (iunigk) npw, igk
@@ -62,7 +57,7 @@ subroutine zstar_eu
            !
            ! recalculate  DeltaV*psi(ion) for mode nu
            !
-           call dvqpsi_us (ik, mode, u (1, mode),.true. )
+           call dvqpsi_us (ik, mode, u (1, mode), .not.okvan)
            do jpol = 1, 3
               nrec = (jpol - 1) * nksq + ik
               !
@@ -78,9 +73,13 @@ subroutine zstar_eu
         imode0 = imode0 + npert (irr)
      enddo
   enddo
+  !
+  ! Now we add the terms which are due to the USPP
+  !
+  if (okvan) call zstar_eu_us
+
 #ifdef __PARA
   call reduce (18 * nat, zstareu0)
-
   call poolreduce (18 * nat, zstareu0)
 #endif
   !
@@ -111,9 +110,8 @@ subroutine zstar_eu
            enddo
         enddo
      enddo
-
-
   enddo
+
   !      write(6,'(/,10x,"Effective charges E-U in crystal axis ",/)')
   !      do na=1,nat
   !         write(6,'(10x," atom ",i6)') na
@@ -124,21 +122,19 @@ subroutine zstar_eu
   call symz (work, nsym, s, nat, irt)
   do na = 1, nat
      call trntns (work (1, 1, na), at, bg, 1)
-
   enddo
+
   call DCOPY (9 * nat, work, 1, zstareu, 1)
   !
   ! add the diagonal part
   !
   do ipol = 1, 3
      do na = 1, nat
-        zstareu (ipol, ipol, na) = zstareu (ipol, ipol, na) + zv (ityp ( &
-             na) )
+        zstareu (ipol, ipol, na) = zstareu (ipol, ipol, na) + zv (ityp ( na) )
      enddo
 
   enddo
-  write (6, '(/,10x,"Effective charges E-U in cartesian axis ",/)' &
-       &)
+  write (6, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
   do na = 1, nat
      write (6, '(10x," atom ",i6)') na
      write (6, '(10x,"(",3f15.5," )")') ( (zstareu (ipol, jpol, na) &

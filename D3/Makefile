@@ -157,7 +157,13 @@ PHOBJS = ../PH/phcom.o  \
 ../PH/write_dyn_on_file.o  \
 ../PH/write_epsilon_and_zeu.o  \
 ../PH/write_matrix.o  \
-../PH/zstar_eu.o 
+../PH/zstar_eu.o \
+../PH/psidspsi.o \
+../PH/add_zstar_ue_us.o \
+../PH/zstar_eu_us.o \
+../PH/add_for_charges.o \
+../PH/add_dkmds.o \
+../PH/addnlcc_zstar_eu_us.o
 
 MODULES = ../Modules/*.o
 
