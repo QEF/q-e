@@ -51,14 +51,14 @@ places throughout "configure.ac":
 
 Look for these lines:
 
-if test "$arch" = ""
-then
-        # identify architecture
-        case $build in
-                ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
-                *-pc-linux-gnu )                        arch=linux32 ;;
-                *-ibm-aix* )                            arch=aix     ;;
-                etc.
+  if test "$arch" = ""
+  then
+          # identify architecture
+          case $build in
+                  ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
+                  *-pc-linux-gnu )                        arch=linux32 ;;
+                  *-ibm-aix* )                            arch=aix     ;;
+                  etc.
 
 Here you must add an entry corresponding to your architecture and
 operating system.  Run "config.guess" to obtain the string identifying
