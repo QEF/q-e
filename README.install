@@ -235,7 +235,6 @@ Here is a list:
   make ph           compile PH/ph.x (phonons)
   make pp           compile postprocessing codes in the PP directory
   make gamma        compile Gamma/phcg.x (Gamma-only version of ph.x)
-  make nc           compile PWNC/pwnc.x (non-colinear magnetism)
   make pwcond       compile PWCOND/pwcond.x (ballistic conductance)
   make d3           compile D3/d3.x (third-order energy derivatives)
   make raman        compile Raman/ram.x (Raman cross-section calculation)

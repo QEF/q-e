@@ -393,7 +393,7 @@ linux32:ifc )
 		echo $ECHO_N "setting up ifc environment... $ECHO_C"
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
 		pcl_ph="D3"
-		pcl_pw="PH PP Gamma PWNC PWCOND pwtools $pcl_ph"
+		pcl_pw="PH PP Gamma PWCOND pwtools $pcl_ph"
 		pcl_modules="PW CPV flib upftools $pcl_pw"
 		pcl_dot=". Modules $pcl_modules"
 		for dir in $pcl_dot

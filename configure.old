@@ -41,10 +41,6 @@ then
 		echo $PWD/Modules/work.pc >> $PWD/Gamma/intel.pcl
 		echo $PWD/PW/work.pc >> $PWD/Gamma/intel.pcl
 
-		echo work.pc > $PWD/PWNC/intel.pcl
-		echo $PWD/Modules/work.pc >> $PWD/PWNC/intel.pcl
-		echo $PWD/PW/work.pc >> $PWD/PWNC/intel.pcl
-
 		echo work.pc > $PWD/D3/intel.pcl
 		echo $PWD/Modules/work.pc >> $PWD/D3/intel.pcl
 		echo $PWD/PW/work.pc >> $PWD/D3/intel.pcl

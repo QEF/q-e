@@ -119,7 +119,6 @@ Here is a list of available compilation targets:
   make tools        compile pwtools/* (miscellaneous tools for data
                       analysis)
   make pwcond       compile PWCOND/pwcond.x (for ballistic conductance)
-  make nc           compile PWNC/pw.x (non-colinear magnetism)
   make raman        compile Raman/ram.x (Raman cross-section calculation)
 
   make pwall        same as "make pw ph pp d3 raman pwcond gamma tools"

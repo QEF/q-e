@@ -55,7 +55,6 @@ PP/        Source files for post-processing of pw.x data file
 Gamma/     Source files for Gamma-only phonon calculation (phcg.x)
 D3/        Source files for third-order derivative calculations (d3.x)
 PWCOND/    Source files for conductance calculations (pwcond.x)
-PWNC/      Source files for scf calculations with noncolinear magnetism (pwnc.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
 
