@@ -21,10 +21,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                diago_thr_init
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : lneb, lsmd, conv_elec, istep, &
-                               history, alpha0, beta0, ethr
+                               history, alpha0, beta0, ethr, order
   USE check_stop,       ONLY : check_stop_now
-  USE cell_base,        ONLY : alat
-  USE ions_base,        ONLY : tau, ityp, nat
+  USE vlocal,           ONLY : strf
+  USE cell_base,        ONLY : bg, alat
+  USE gvect,            ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
+  USE ions_base,        ONLY : tau, ityp, nat, nsp
   USE basis,            ONLY : startingwfc_ => startingwfc, &
                                startingpot_ => startingpot    
   USE ener,             ONLY : etot
@@ -73,9 +75,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   CALL flush( iunpath )
   !
-  ! ... only the first cpu on each image needs the tauold vector
-  !
-  IF ( ionode ) ALLOCATE( tauold( 3, nat, 3 ) )  
+  ALLOCATE( tauold( 3, nat, 3 ) )  
   !
   tmp_dir_saved = tmp_dir
   !
@@ -150,7 +150,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
         END IF
         !
-        CALL clean_pw(.true.)
+        CALL clean_pw( .TRUE. )
         !
         CALL close_files()
         !
@@ -211,11 +211,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         END IF
         !
         CALL mp_bcast( history, ionode_id, intra_image_comm )
+        CALL mp_bcast( tauold,  ionode_id, intra_image_comm )
         !
-        IF ( conv_elec ) THEN
+        IF ( conv_elec .AND. order > 0 .AND. history > 0 ) THEN
            !
            ! ... potential and wavefunctions are extrapolated only if
-           ! ... scf on the previous image was achieved :
+           ! ... we are starting a new self-consistency (scf on the 
+           ! ... previous image was achieved)
            !
            IF ( ionode ) THEN 
               !
@@ -228,6 +230,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
            CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
            CALL mp_bcast( beta0,  ionode_id, intra_image_comm )                
+           !
+           ! ... structure factors of the old positions are computed 
+           ! ... (needed for the old atomic charge)
+           !
+           CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
+                            nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
            !
            CALL update_pot()
            !
@@ -271,7 +279,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         IF ( ionode ) THEN
            !
            ! ... save the previous two steps 
-           ! ... ( a total of three steps is saved )
+           ! ... ( a total of three ionic steps is saved )
            !
            tauold(:,:,3) = tauold(:,:,2)
            tauold(:,:,2) = tauold(:,:,1)
@@ -307,13 +315,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      startingpot_ = startingpot
      startingwfc_ = startingwfc
      !
-     ethr = diago_thr_init     
+     ethr = diago_thr_init
      !
      CALL reset_k_points()
      !
   END DO scf_loop
   !
-  IF ( ionode ) DEALLOCATE( tauold )
+  DEALLOCATE( tauold )
   !
   tmp_dir = tmp_dir_saved
   !
@@ -352,7 +360,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
   END IF
   !
-  ! ... afetr the first call to compute_scf the input values of startingpot
+  ! ... after the first call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
   !
   startingpot = 'file'
