@@ -22,9 +22,11 @@ MODULE neb_variables
        conv_neb                   ! .TRUE. if NEB convergence has been
                                   ! achieved
   LOGICAL, ALLOCATABLE :: &
-       climbing(:),              &!  
-       free_minimization(:),     &!
-       new_step(:)                !
+       climbing(:),              &! .TRUE. if the image is required to climb
+       free_minimization(:),     &! .TRUE. if the image is required to be
+                                  !       optimized (no springs, no projections)
+       frozen(:),                &! .TRUE. if the image is not optimized
+       new_step(:)                ! .TRUE. after velocity has been reset
   CHARACTER (LEN=20) :: &
        CI_scheme,                &! Climbing Image scheme
        VEC_scheme                 ! Variable Elastic Constant scheme
@@ -81,7 +83,8 @@ MODULE neb_variables
        !
        !
        ALLOCATE( ds( num_of_images ) )
-       ALLOCATE( pos( dim, num_of_images ) )
+       !
+       ALLOCATE( pos(     dim, num_of_images ) )
        ALLOCATE( pos_old( dim, num_of_images ) )
        !
        IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
@@ -90,19 +93,22 @@ MODULE neb_variables
           !
        END IF
        !
-       ALLOCATE( grad( dim, num_of_images ) )
-       ALLOCATE( grad_old( dim, num_of_images ) )
-       ALLOCATE( norm_grad( num_of_images ) )
-       ALLOCATE( PES( num_of_images ) )
-       ALLOCATE( PES_gradient( dim, num_of_images ) )       
-       ALLOCATE( k( num_of_images ) )
-       ALLOCATE( elastic_gradient( dim ) )
-       ALLOCATE( tangent( dim, num_of_images ) ) 
-       ALLOCATE( mass( dim ) )              
-       ALLOCATE( error( num_of_images ) )
-       ALLOCATE( climbing( num_of_images ) )
+       ALLOCATE( grad(         dim, num_of_images ) )
+       ALLOCATE( grad_old(     dim, num_of_images ) )
+       ALLOCATE( PES_gradient( dim, num_of_images ) )
+       ALLOCATE( tangent(      dim, num_of_images ) )
+       !
+       ALLOCATE( norm_grad(         num_of_images ) )
+       ALLOCATE( PES(               num_of_images ) )
+       ALLOCATE( k(                 num_of_images ) )
+       ALLOCATE( error(             num_of_images ) )
+       ALLOCATE( climbing(          num_of_images ) )
        ALLOCATE( free_minimization( num_of_images ) )
-       ALLOCATE( new_step( num_of_images ) )
+       ALLOCATE( frozen(            num_of_images ) )
+       ALLOCATE( new_step(          num_of_images ) )
+       !
+       ALLOCATE( elastic_gradient( dim ) )
+       ALLOCATE( mass(             dim ) )
        !           
      END SUBROUTINE neb_dyn_allocation     
      !
@@ -130,6 +136,7 @@ MODULE neb_variables
        IF ( ALLOCATED( error ) )             DEALLOCATE( error )
        IF ( ALLOCATED( climbing ) )          DEALLOCATE( climbing )
        IF ( ALLOCATED( free_minimization ) ) DEALLOCATE( free_minimization )
+       IF ( ALLOCATED( frozen ) )            DEALLOCATE( frozen )
        IF ( ALLOCATED( new_step ) )          DEALLOCATE( new_step )
        !
      END SUBROUTINE neb_deallocation

@@ -43,7 +43,7 @@ MODULE neb_base
       USE neb_variables,    ONLY : ds_       => ds, &
                                    pos_      => pos, &
                                    climbing_ => climbing, &
-                                   pos_old, grad_old, &
+                                   pos_old, grad_old, frozen, &
                                    vel, num_of_images, dim, PES, PES_gradient, &
                                    elastic_gradient, tangent, grad, norm_grad, &
                                    error, mass, free_minimization, CI_scheme,  &
@@ -120,6 +120,7 @@ MODULE neb_base
       error            = 0.D0
       mass             = 1.D0
       k                = k_min
+      frozen           = .FALSE.
       new_step         = .FALSE.
       !
       IF ( ALLOCATED( climbing ) ) THEN
@@ -537,7 +538,7 @@ MODULE neb_base
       !-----------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, optimization, &
-                                error, norm_grad, deg_of_freedom
+                                error, norm_grad, deg_of_freedom, frozen
       !
       IMPLICIT NONE
       !
@@ -577,6 +578,11 @@ MODULE neb_base
          !
       END DO
       !
+      ! ... an image is "frozen" if the error is less than 50% of the
+      ! ... largest error
+      !
+      frozen(:) = ( error(:) < 0.5D0 * err )
+      !
       RETURN
       !
     END SUBROUTINE compute_error
@@ -602,9 +608,9 @@ MODULE neb_base
          !
          ! ... tangent to the path ( normalized )
          !
-         !!! tangent(:,image) = path_tangent( image )
+         tangent(:,image) = path_tangent( image )
          !!! workaround for ifc8 compiler internal error
-         CALL path_tangent_( image, tangent(:,image) )
+         !!!CALL path_tangent_( image, tangent(:,image) )
          !
          tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
          !
@@ -616,9 +622,9 @@ MODULE neb_base
     !
     !    
     !-----------------------------------------------------------------------
-    !!! FUNCTION path_tangent( index )
+    FUNCTION path_tangent( index )
     !!! workaround for ifc8 compiler internal error
-    SUBROUTINE path_tangent_( index, path_tangent )
+    !!!SUBROUTINE path_tangent_( index, path_tangent )
       !-----------------------------------------------------------------------
       !
       USE supercell,     ONLY : pbc
@@ -681,9 +687,9 @@ MODULE neb_base
       !
       RETURN
       !
-    !!! END FUNCTION path_tangent
+    END FUNCTION path_tangent
     !!! workaround for ifc8 compiler internal error
-    END SUBROUTINE path_tangent_
+    !!!END SUBROUTINE path_tangent_
     !
     !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_PES( flag, stat )
@@ -751,10 +757,10 @@ MODULE neb_base
       !
       USE io_files,      ONLY : iunneb
       USE formats,       ONLY : run_output, run_output_T_const
-      USE neb_variables, ONLY : num_of_images, dim, pos, PES, error,       &
-                                climbing, optimization,  CI_scheme,        &
-                                Emax_index, temp, Emax, neb_thr, conv_neb, &
-                                suspended_image, lsteep_des, lquick_min ,  &
+      USE neb_variables, ONLY : num_of_images, dim, pos, PES, error,        &
+                                climbing, optimization,  CI_scheme, frozen, &
+                                Emax_index, temp, Emax, neb_thr, conv_neb,  &
+                                suspended_image, lsteep_des, lquick_min ,   &
                                 ldamped_dyn, lmol_dyn, istep_neb, nstep_neb
       USE io_routines,   ONLY : write_restart, write_dat_files, write_output
       USE check_stop,    ONLY : check_stop_now
@@ -821,6 +827,8 @@ MODULE neb_base
             !
             first_minimization_loop: DO image = N_in, N_fin
                !
+               IF ( frozen(image) ) CYCLE first_minimization_loop
+               !
                IF ( lsteep_des ) THEN
                   !
                   CALL steepest_descent( image )
@@ -883,6 +891,7 @@ MODULE neb_base
          !
          CALL compute_tangent()
          CALL gradient()
+         CALL compute_error( err )
          !
          ! ... a second minimization step is needed for those algorithms
          ! ... based on a velocity Verlet scheme
@@ -890,6 +899,8 @@ MODULE neb_base
          IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
             !
             second_minimization_loop: DO image = N_in, N_fin
+               !
+               IF ( frozen(image) ) CYCLE second_minimization_loop
                !
                IF ( lquick_min ) THEN
                   !
@@ -906,8 +917,6 @@ MODULE neb_base
             IF ( lmol_dyn ) CALL thermalization( N_in , N_fin   )
             !
          END IF
-         !
-         CALL compute_error( err )
          !
          ! ... information is written on the files
          !
