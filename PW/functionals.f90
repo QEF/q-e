@@ -11,7 +11,7 @@ subroutine xc (rho, ex, ec, vx, vc)
   !-----------------------------------------------------------------------
   !     lda exchange and correlation functionals - Hartree a.u.
   !
-  !     exchange   :  Slater (alpha=2/3)
+  !     exchange   :  Slater, relativistic Slater
   !     correlation:  Ceperley-Alder (Perdew-Zunger parameters)
   !                   Vosko-Wilk-Nusair
   !                   Lee-Yang-Parr
@@ -35,13 +35,11 @@ subroutine xc (rho, ex, ec, vx, vc)
 
   real(kind=DP) :: rho, ec, vc, ex, vx
   !
-  real(kind=DP) :: small, pi34, third
-  parameter (small = 1.d-10)
-  parameter (pi34 = 0.6203504908994d0, third = 1.d0 / 3.d0)
-  ! pi34=(3/4pi)^(1/3)
+  real(kind=DP), parameter :: small = 1.d-10,  third = 1.d0 / 3.d0, &
+       pi34 = 0.6203504908994d0  ! pi34=(3/4pi)^(1/3)
   real(kind=DP) :: rs
   !
-  if (rho.le.small) then
+  if (rho <= small) then
      ec = 0.0d0
      vc = 0.0d0
      ex = 0.0d0
@@ -52,32 +50,34 @@ subroutine xc (rho, ex, ec, vx, vc)
      ! rs as in the theory of metals: rs=(3/(4pi rho))^(1/3)
   endif
   !..exchange
-  if (iexch.eq.1) then
+  if (iexch == 1) then
      call slater (rs, ex, vx)
   ELSEIF (iexch == 2) THEN
-     CALL slater_rxc(rho, ex, vx)
+     call slater1(rs, ex, vx)
+  ELSEIF (iexch == 3) THEN
+     CALL slater_rxc(rs, ex, vx)
   else
      ex = 0.0d0
      vx = 0.0d0
   endif
   !..correlation
-  if (icorr.eq.1) then
+  if (icorr == 1) then
      call pz (rs, 1, ec, vc)
-  elseif (icorr.eq.2) then
+  elseif (icorr == 2) then
      call vwn (rs, ec, vc)
-  elseif (icorr.eq.3) then
+  elseif (icorr == 3) then
      call lyp (rs, ec, vc)
-  elseif (icorr.eq.4) then
+  elseif (icorr == 4) then
      call pw (rs, 1, ec, vc)
-  elseif (icorr.eq.5) then
+  elseif (icorr == 5) then
      call wigner (rs, ec, vc)
-  elseif (icorr.eq.6) then
+  elseif (icorr == 6) then
      call hl (rs, ec, vc)
-  elseif (icorr.eq.7) then
+  elseif (icorr == 7) then
      call pz (rs, 2, ec, vc)
-  elseif (icorr.eq.8) then
+  elseif (icorr == 8) then
      call pw (rs, 2, ec, vc)
-  elseif (icorr.eq.9) then
+  elseif (icorr == 9) then
      call gl (rs, ec, vc)
   else
      ec = 0.0d0
@@ -112,22 +112,25 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   implicit none
 
   real(kind=DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
-  real(kind=DP) :: small
+  real(kind=DP), parameter:: small = 1.d-10
 
-  parameter (small = 1.d-10)
   ! exchange
-  if (rho.le.small) then
+  if (rho <= small) then
      sx = 0.0d0
      v1x = 0.0d0
      v2x = 0.0d0
-  elseif (igcx.eq.1) then
+  elseif (igcx == 1) then
      call becke88 (rho, grho, sx, v1x, v2x)
-  elseif (igcx.eq.2) then
+  elseif (igcx == 2) then
      call ggax (rho, grho, sx, v1x, v2x)
-  elseif (igcx.eq.3) then
+  elseif (igcx == 3) then
      call pbex (rho, grho, 1, sx, v1x, v2x)
-  elseif (igcx.eq.4) then
+  elseif (igcx == 4) then
      call pbex (rho, grho, 2, sx, v1x, v2x)
+  elseif (igcx == 5 .and. igcc == 5) then
+     call hcth(rho, grho, sx, v1x, v2x)
+  elseif (igcx == 6) then
+     call optx (rho, grho, sx, v1x, v2x)
   else
      sx = 0.0d0
      v1x = 0.0d0
@@ -138,15 +141,16 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      sc = 0.0d0
      v1c = 0.0d0
      v2c = 0.0d0
-  elseif (igcc.eq.1) then
+  elseif (igcc == 1) then
      call perdew86 (rho, grho, sc, v1c, v2c)
-  elseif (igcc.eq.2) then
+  elseif (igcc == 2) then
      call ggac (rho, grho, sc, v1c, v2c)
-  elseif (igcc.eq.3) then
+  elseif (igcc == 3) then
      call glyp (rho, grho, sc, v1c, v2c)
-  elseif (igcc.eq.4) then
+  elseif (igcc == 4) then
      call pbec (rho, grho, sc, v1c, v2c)
   else
+     ! note that if igcc == 5 the hcth functional is called above
      sc = 0.0d0
      v1c = 0.0d0
      v2c = 0.0d0
@@ -163,10 +167,8 @@ subroutine slater (rs, ex, vx)
   USE kinds
   implicit none
   real(kind=DP) :: rs, ex, vx
-  real(kind=DP) :: f, alpha
-  parameter (f = -0.687247939924714d0)
+  real(kind=DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
   ! f = -9/8*(3/2pi)^(2/3)
-  parameter (alpha = 2.0d0 / 3.0d0)
   !
   ex = f * alpha / rs
   vx = 4.d0 / 3.d0 * f * alpha / rs
@@ -175,44 +177,59 @@ subroutine slater (rs, ex, vx)
 end subroutine slater
 !
 !-----------------------------------------------------------------------
-subroutine slater_rxc (D, EX, VX)
+subroutine slater1(rs, ex, vx)
+  !-----------------------------------------------------------------------
+  !        Slater exchange with alpha=1, corresponding to -1.374/r_s Ry
+  !        used to recover old results
+  !
+  USE kinds
+  implicit none
+  real(kind=DP) :: rs, ex, vx
+  real(kind=DP), parameter  :: f= -0.687247939924714d0, alpha = 1.0d0
+  !
+  ex = f * alpha / rs
+  vx = 4.d0 / 3.d0 * f * alpha / rs
+  !
+  return
+end subroutine slater1
+!
+!-----------------------------------------------------------------------
+subroutine slater_rxc (rs, ex, vx)
   !-----------------------------------------------------------------------
   !        Slater exchange with alpha=2/3 and Relativistic exchange
   !
   USE kinds
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      PARAMETER (ZERO=0.D0,ONE=1.D0,PFIVE=.5D0,OPF=1.5D0,C014=0.014D0)
-
-       PI=4*ATAN(ONE)
-       TRD = ONE/3
-       FTRD = 4*TRD
-       TFTM = 2**FTRD-2
-       A0 = (4/(9*PI))**TRD
-
-!      X-alpha parameter:
-       ALP = 2 * TRD
-
-         IF (D .LE. ZERO) THEN
-           EX = ZERO
-           VX = ZERO
-           RETURN
-         ENDIF
-         Z = ZERO
-         FZ = ZERO
-         FZP = ZERO
-
-       RS = (3 / (4*PI*D) )**TRD
-       VXP = -3*ALP/(2*PI*A0*RS)
-       EXP = 3*VXP/4
-         BETA = C014/RS
-         SB = SQRT(1+BETA*BETA)
-         ALB = LOG(BETA+SB)
-         VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
-         EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
-       VXF = 2**TRD*VXP
-       EXF = 2**TRD*EXP
-         VX = VXP
-         EX    = EXP
+  IMPLICIT none
+  real (kind=DP):: rs, ex, vx
+  !
+  real(kind=DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
+       OPF=1.5D0, C014=0.014D0, pi = 3.14159265358979d0
+  real (kind=DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
+       beta, sb, alb
+  !
+  TRD = ONE/3
+  FTRD = 4*TRD
+  TFTM = 2**FTRD-2
+  A0 = (4/(9*PI))**TRD
+  
+  !      X-alpha parameter:
+  ALP = 2 * TRD
+  
+  Z = ZERO
+  FZ = ZERO
+  FZP = ZERO
+  
+  VXP = -3*ALP/(2*PI*A0*RS)
+  EXP = 3*VXP/4
+  BETA = C014/RS
+  SB = SQRT(1+BETA*BETA)
+  ALB = LOG(BETA+SB)
+  VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
+  EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
+  !  VXF = 2**TRD*VXP
+  !  EXF = 2**TRD*EXP
+  VX = VXP
+  EX = EXP
 END SUBROUTINE slater_rxc
 
 !
@@ -724,3 +741,180 @@ subroutine pbec (rho, grho, sc, v1c, v2c)
   !
   return
 end subroutine pbec
+
+!     ==================================================================
+subroutine hcth(rho,grho,sx,v1x,v2x)
+  !     ==================================================================
+  !     HCTH/120, JCP 109, p. 6264 (1998)
+  !     Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
+  !     Present release: Mauro Boero, Tsukuba, 11/05/2004
+  !--------------------------------------------------------------------------
+  !     rhoa = rhob = 0.5 * rho
+  !     grho is the SQUARE of the gradient of rho! --> gr=sqrt(grho)
+  !     sx  : total exchange correlation energy at point r
+  !     v1x : d(sx)/drho  (eq. dfdra = dfdrb in original)
+  !     v2x : 1/gr*d(sx)/d(gr) (eq. 0.5 * dfdza = 0.5 * dfdzb in original)
+  !--------------------------------------------------------------------------
+  USE kinds
+  implicit none
+  real(kind=DP) :: rho, grho, sx, v1x, v2x
+
+  real(kind=DP), parameter :: pi=3.141592653589793d0, o3=1.0d0/3.0d0,&
+       o34=4.0d0/3.0d0, fr83=8.d0/3.d0
+  real(kind=DP) :: cg0(6), cg1(6), caa(6), cab(6), cx(6)
+  real(kind=DP) :: r3q2, r3pi, gr, rho_o3, rho_o34, xa, xa2, ra, rab, &
+       dra_drho, drab_drho, g, dg, era1, dera1_dra, erab0, derab0_drab, &
+       ex, dex_drho, uaa, uab, ux, ffaa, ffab,  dffaa_drho, dffab_drho,&
+       denaa, denab, denx, f83rho, bygr, gaa, gab, gx, taa, tab, txx, &
+       dgaa_drho, dgab_drho, dgx_drho, dgaa_dgr, dgab_dgr, dgx_dgr
+  !
+  r3q2=2.d0**(-o3)
+  r3pi=(3.d0/pi)**o3
+  !.....coefficients for pw correlation......................................
+  cg0(1)= 0.031091d0
+  cg0(2)= 0.213700d0
+  cg0(3)= 7.595700d0
+  cg0(4)= 3.587600d0
+  cg0(5)= 1.638200d0
+  cg0(6)= 0.492940d0
+  cg1(1)= 0.015545d0
+  cg1(2)= 0.205480d0
+  cg1(3)=14.118900d0
+  cg1(4)= 6.197700d0
+  cg1(5)= 3.366200d0
+  cg1(6)= 0.625170d0
+  !......hcth-19-4.....................................
+  caa(1)=  0.489508d+00
+  caa(2)= -0.260699d+00
+  caa(3)=  0.432917d+00
+  caa(4)= -0.199247d+01
+  caa(5)=  0.248531d+01
+  caa(6)=  0.200000d+00
+  cab(1)=  0.514730d+00
+  cab(2)=  0.692982d+01
+  cab(3)= -0.247073d+02
+  cab(4)=  0.231098d+02
+  cab(5)= -0.113234d+02
+  cab(6)=  0.006000d+00
+  cx(1) =  0.109163d+01
+  cx(2) = -0.747215d+00
+  cx(3) =  0.507833d+01
+  cx(4) = -0.410746d+01
+  cx(5) =  0.117173d+01
+  cx(6)=   0.004000d+00
+  !...........................................................................
+  gr=DSQRT(grho)
+  rho_o3=rho**(o3)
+  rho_o34=rho**(o34)
+  xa=1.25992105d0*gr/rho_o34
+  xa2=xa*xa
+  ra=0.781592642d0/rho_o3
+  rab=r3q2*ra
+  dra_drho=-0.260530881d0/rho_o34
+  drab_drho=r3q2*dra_drho
+  call pwcorr(ra,cg1,g,dg)
+  era1=g
+  dera1_dra=dg
+  call pwcorr(rab,cg0,g,dg)
+  erab0=g
+  derab0_drab=dg
+  ex=-0.75d0*r3pi*rho_o34
+  dex_drho=-r3pi*rho_o3
+  uaa=caa(6)*xa2
+  uaa=uaa/(1.0d0+uaa)
+  uab=cab(6)*xa2
+  uab=uab/(1.0d0+uab)
+  ux=cx(6)*xa2
+  ux=ux/(1.0d0+ux)
+  ffaa=rho*era1
+  ffab=rho*erab0-ffaa
+  dffaa_drho=era1+rho*dera1_dra*dra_drho
+  dffab_drho=erab0+rho*derab0_drab*drab_drho-dffaa_drho
+  ! mb-> i-loop removed
+  denaa=1.d0/(1.0d0+caa(6)*xa2)
+  denab=1.d0/(1.0d0+cab(6)*xa2)
+  denx =1.d0/(1.0d0+cx(6)*xa2)
+  f83rho=fr83/rho
+  bygr=2.0d0/gr
+  gaa=caa(1)+uaa*(caa(2)+uaa*(caa(3)+uaa*(caa(4)+uaa*caa(5))))
+  gab=cab(1)+uab*(cab(2)+uab*(cab(3)+uab*(cab(4)+uab*cab(5))))
+  gx=cx(1)+ux*(cx(2)+ux*(cx(3)+ux*(cx(4)+ux*cx(5))))
+  taa=denaa*uaa*(caa(2)+uaa*(2.d0*caa(3)+uaa &
+      *(3.d0*caa(4)+uaa*4.d0*caa(5))))
+  tab=denab*uab*(cab(2)+uab*(2.d0*cab(3)+uab &
+       *(3.d0*cab(4)+uab*4.d0*cab(5))))
+  txx=denx*ux*(cx(2)+ux*(2.d0*cx(3)+ux &
+       *(3.d0*cx(4)+ux*4.d0*cx(5))))
+  dgaa_drho=-f83rho*taa
+  dgab_drho=-f83rho*tab
+  dgx_drho=-f83rho*txx
+  dgaa_dgr=bygr*taa
+  dgab_dgr=bygr*tab
+  dgx_dgr=bygr*txx
+  ! mb
+  sx=ex*gx+ffaa*gaa+ffab*gab
+  v1x=dex_drho*gx+ex*dgx_drho &
+       +dffaa_drho*gaa+ffaa*dgaa_drho &
+       +dffab_drho*gab+ffab*dgab_drho
+  v2x=(ex*dgx_dgr+ffaa*dgaa_dgr+ffab*dgab_dgr)/gr
+  return
+end subroutine hcth
+!-------------------------------------------------------------------=
+subroutine pwcorr(r,c,g,dg)
+  USE kinds
+  implicit none
+  real(kind=DP) :: r, g, dg, c(6)
+  real(kind=DP) :: r12, r32, r2, rb, drb, sb
+
+  r12=dsqrt(r)
+  r32=r*r12
+  r2=r*r
+  rb=c(3)*r12+c(4)*r+c(5)*r32+c(6)*r2
+  sb=1.0d0+1.0d0/(2.0d0*c(1)*rb)
+  g=-2.0d0*c(1)*(1.0d0+c(2)*r)*dlog(sb)
+  drb=c(3)/(2.0d0*r12)+c(4)+1.5d0*c(5)*r12+2.0d0*c(6)*r
+  dg=(1.0d0+c(2)*r)*drb/(rb*rb*sb)-2.0d0*c(1)*c(2)*dlog(sb)
+
+  return
+end subroutine pwcorr
+!-----------------------------------------------------------------------------
+!     ==================================================================
+subroutine optx(rho,grho,sx,v1x,v2x)
+!     OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
+!     Present release: Mauro Boero, Tsukuba, 10/9/2002
+!--------------------------------------------------------------------------
+!     rhoa = rhob = 0.5 * rho in LDA implementation
+!     grho is the SQUARE of the gradient of rho! --> gr=sqrt(grho)
+!     sx  : total exchange correlation energy at point r
+!     v1x : d(sx)/drho
+!     v2x : 1/gr*d(sx)/d(gr)
+!--------------------------------------------------------------------------
+  use kinds, only: DP
+  implicit none
+  real(kind=DP) :: rho, grho, sx, v1x, v2x
+
+  real(kind=DP), parameter :: small=1.D-30, smal2=1.D-10
+!.......coefficients and exponents....................
+  real(kind=DP), parameter :: o43=4.0d0/3.0d0, two13=1.259921049894873D0, &
+       two53=3.174802103936399D0, gam=0.006D0, a1cx=0.9784571170284421D0,&
+       a2=1.43169D0 
+  real(kind=DP) :: gr, rho43, xa, gamx2, uden, uu
+  !.......OPTX in compact form..........................
+  if(rho <= small) then
+     sx=0.0D0
+     v1x=0.0D0
+     v2x=0.0D0
+  else
+     gr = max(grho,SMAL2)
+     rho43=rho**o43
+     xa=two13*DSQRT(gr)/rho43
+     gamx2=gam*xa*xa
+     uden=1.d+00/(1.d+00+gamx2)
+     uu=a2*gamx2*gamx2*uden*uden
+     uden=rho43*uu*uden
+     sx=-rho43*(a1cx+uu)/two13
+     v1x=o43*(sx+two53*uden)/rho
+     v2x=-two53*uden/gr
+  endif
+  return
+end subroutine optx

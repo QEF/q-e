@@ -13,9 +13,10 @@ default :
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
 	@echo '  tools        misc tools for data analysis'
+	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  pwall        same as "make pw ph pp gamma nc pwcond d3 tools"'
-	@echo '  all          same as "make pwall fpmd cp upf"'
+	@echo '  all          same as "make pwall fpmd cp ld1 upf"'
 	@echo '  links        creates links to executables in bin/'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
@@ -46,9 +47,11 @@ tools : modules libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
 upf : modules libs
 	if test -d upftools ; then ( cd upftools ; make all ) ; fi
+ld1 : modules libs
+	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 tools
-all   : pwall fpmd cp upf 
+all   : pwall fpmd cp ld1 upf 
 
 modules :
 	( cd Modules; make all )
@@ -80,7 +83,7 @@ links :
 clean :
 	touch make.rules make.sys # make complains if they aren't there
 	#                         # same with .dependencies below
-	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools \
+	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools atomic \
 		   Modules install clib flib FPMD CPV ; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch .dependencies ; make clean ) \

@@ -24,13 +24,11 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
 
   real(kind=DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
   !
-  real(kind=DP) :: small, pi34, third
-  parameter (small = 1.d-10)
-  parameter (pi34 = 0.6203504908994d0, third = 1.d0 / 3.d0)
-  ! pi34=(3/4pi)^(1/3)
+  real(kind=DP), parameter :: small= 1.d-10, third = 1.d0/3.d0, &
+       pi34= 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
   real(kind=DP) :: rs
   !
-  if (rho.le.small) then
+  if (rho <= small) then
      ec = 0.0d0
      vcup = 0.0d0
      vcdw = 0.0d0
@@ -42,23 +40,25 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
      rs = pi34 / rho**third
   endif
   !..exchange
-  if (iexch.eq.1) then
+  if (iexch == 1) then
      call slater_spin (rho, zeta, ex, vxup, vxdw)
-  ELSEIF (iexch == 2) THEN
-     call slater_xc_rel ( rho, zeta, ex, vxup, vxdw )
+  elseif (iexch == 2) then
+     call slater1_spin (rho, zeta, ex, vxup, vxdw)
+  ELSEIF (iexch == 3) THEN
+     call slater_rxc_spin ( rho, zeta, ex, vxup, vxdw )
   else
      ex = 0.0d0
      vxup = 0.0d0
      vxdw = 0.0d0
   endif
   !..correlation
-  if (icorr.eq.0) then
+  if (icorr == 0) then
      ec = 0.0d0
      vcup = 0.0d0
      vcdw = 0.0d0
-  elseif (icorr.eq.1) then
+  elseif (icorr == 1) then
      call pz_spin (rs, zeta, ec, vcup, vcdw)
-  elseif (icorr.eq.4) then
+  elseif (icorr == 4) then
      call pw_spin (rs, zeta, ec, vcup, vcdw)
   else
      call errore ('lsda_functional', 'not implemented', icorr)
@@ -88,30 +88,28 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
   ! derivatives of exchange wr. rho
   ! derivatives of exchange wr. grho
   !
-
-  real(kind=DP) :: small
-  parameter (small = 1.d-10)
+  real(kind=DP), parameter :: small = 1.d-10
   real(kind=DP) :: rho, sxup, sxdw
   integer :: iflag
   !
   !
   ! exchange
   rho = rhoup + rhodw
-  if (rho.le.small.or.igcx.eq.0) then
+  if (rho <= small .or. igcx == 0) then
      sx = 0.0d0
      v1xup = 0.0d0
      v2xup = 0.0d0
      v1xdw = 0.0d0
      v2xdw = 0.0d0
-  elseif (igcx.eq.1) then
-     if (rhoup.gt.small.and.sqrt (abs (grhoup2) ) .gt.small) then
+  elseif (igcx == 1) then
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
      else
         sxup = 0.d0
         v1xup = 0.d0
         v2xup = 0.d0
      endif
-     if (rhodw.gt.small.and.sqrt (abs (grhodw2) ) .gt.small) then
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
         call becke88_spin (rhodw, grhodw2, sxdw, v1xdw, v2xdw)
      else
         sxdw = 0.d0
@@ -119,15 +117,15 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
         v2xdw = 0.d0
      endif
      sx = sxup + sxdw
-  elseif (igcx.eq.2) then
-     if (rhoup.gt.small.and.sqrt (abs (grhoup2) ) .gt.small) then
+  elseif (igcx == 2) then
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call ggax (2.d0 * rhoup, 4.d0 * grhoup2, sxup, v1xup, v2xup)
      else
         sxup = 0.d0
         v1xup = 0.d0
         v2xup = 0.d0
      endif
-     if (rhodw.gt.small.and.sqrt (abs (grhodw2) ) .gt.small) then
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
         call ggax (2.d0 * rhodw, 4.d0 * grhodw2, sxdw, v1xdw, v2xdw)
      else
         sxdw = 0.d0
@@ -137,24 +135,22 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
      sx = 0.5d0 * (sxup + sxdw)
      v2xup = 2.d0 * v2xup
      v2xdw = 2.d0 * v2xdw
-  elseif (igcx.eq.3.or.igcx.eq.4) then
+  elseif (igcx == 3 .or. igcx == 4) then
      ! igcx=3: PBE  igcx=4: revised PBE
-     if (igcx.eq.3) then
+     if (igcx == 3) then
         iflag = 1
      else
         iflag = 2
      endif
-     if (rhoup.gt.small.and.sqrt (abs (grhoup2) ) .gt.small) then
-        call pbex (2.d0 * rhoup, 4.d0 * grhoup2, iflag, sxup, v1xup, &
-             v2xup)
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call pbex (2.d0 * rhoup, 4.d0 * grhoup2, iflag, sxup, v1xup, v2xup)
      else
         sxup = 0.d0
         v1xup = 0.d0
         v2xup = 0.d0
      endif
-     if (rhodw.gt.small.and.sqrt (abs (grhodw2) ) .gt.small) then
-        call pbex (2.d0 * rhodw, 4.d0 * grhodw2, iflag, sxdw, v1xdw, &
-             v2xdw)
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call pbex (2.d0 * rhodw, 4.d0 * grhodw2, iflag, sxdw, v1xdw, v2xdw)
      else
         sxdw = 0.d0
         v1xdw = 0.d0
@@ -190,20 +186,18 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! derivatives of correlation wr. rho
   ! derivatives of correlation wr. grho
 
-  real(kind=DP) :: small
-  parameter (small = 1.d-10)
+  real(kind=DP), parameter :: small = 1.d-10
   !
   !
-  if (rho.le.small.or.abs (zeta) .gt.1.d0.or.sqrt (abs (grho) ) &
-       .le.small) then
+  if (rho <= small .or. abs(zeta) > 1.d0 .or. sqrt(abs(grho)) <= small) then
      sc = 0.0d0
      v1cup = 0.0d0
      v1cdw = 0.0d0
      v2c = 0.0d0
-  elseif (igcc.eq.1) then
+  elseif (igcc == 1) then
      call perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
-  elseif (igcc.eq.2) then
-     if (abs (zeta) .lt.1.d0) then
+  elseif (igcc == 2) then
+     if (abs (zeta) < 1.d0) then
         call ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
      else
         sc = 0.0d0
@@ -211,10 +205,10 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
         v1cdw = 0.0d0
         v2c = 0.0d0
      endif
-  elseif (igcc.eq.3) then
+  elseif (igcc == 3 .or. igcc > 4) then
      call errore ('lsda_functionals', 'not implemented', igcc)
-  elseif (igcc.eq.4) then
-     if (abs (zeta) .lt.1.d0) then
+  elseif (igcc == 4) then
+     if (abs (zeta) < 1.d0) then
         call pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
      else
         sc = 0.0d0
@@ -238,9 +232,7 @@ subroutine pz_polarized (rs, ec, vc)
   !     J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     spin-polarized energy and potential
   !
-  use funct
   USE kinds
-  USE noncollin_module, ONLY: noncolin
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: a, b, c, d, gc, b1, b2
@@ -282,7 +274,6 @@ subroutine pz_spin (rs, zeta, ec, vcup, vcdw)
   !-----------------------------------------------------------------------
   !     J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rs, zeta, ec, vcup, vcdw
@@ -314,7 +305,6 @@ subroutine pw_spin (rs, zeta, ec, vcup, vcdw)
   !-----------------------------------------------------------------------
   !     J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rs, zeta, ec, vcup, vcdw
@@ -412,7 +402,6 @@ subroutine becke88_spin (rho, grho, sx, v1x, v2x)
   !-----------------------------------------------------------------------
   ! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sx, v1x, v2x
@@ -448,7 +437,6 @@ subroutine perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! Perdew gradient correction on correlation: PRB 33, 8822 (1986)
   ! spin-polarized case
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
@@ -500,7 +488,6 @@ subroutine ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !-----------------------------------------------------------------------
   ! Perdew-Wang GGA (PW91) correlation part - spin-polarized
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
@@ -581,7 +568,6 @@ subroutine pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! PBE correlation (without LDA part) - spin-polarized
   ! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
@@ -641,7 +627,6 @@ subroutine slater_spin (rho, zeta, ex, vxup, vxdw)
   !-----------------------------------------------------------------------
   !     Slater exchange with alpha=2/3, spin-polarized case
   !
-  use funct
   USE kinds
   implicit none
   real(kind=DP) :: rho, zeta, ex, vxup, vxdw
@@ -663,50 +648,75 @@ subroutine slater_spin (rho, zeta, ex, vxup, vxdw)
 end subroutine slater_spin
 
 !-----------------------------------------------------------------------
-SUBROUTINE slater_xc_rel ( rho, Z, ex, vxup, vxdw )
+SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
   !-----------------------------------------------------------------------
   !     Slater exchange with alpha=2/3, relativistic exchange case
   !
-  use funct
   USE kinds
+  IMPLICIT none
+  real (kind=DP):: rho, ex, vxup, vxdw
+  !
+  real(kind=DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
+       OPF=1.5D0, C014=0.014D0, pi = 3.14159265358979d0
+  real (kind=DP):: rs, trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
+       beta, sb, alb, vxf, exf
 
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      PARAMETER (ZERO=0.D0,ONE=1.D0,PFIVE=.5D0,OPF=1.5D0,C014=0.014D0)
-      !DIMENSION rho, zeta, vxup, vxdw, ex
+  TRD = ONE/3
+  FTRD = 4*TRD
+  TFTM = 2**FTRD-2
+  A0 = (4/(9*PI))**TRD
+  
+  !      X-alpha parameter:
+  ALP = 2 * TRD
+  
+  IF (rho <=  ZERO) THEN
+     EX = ZERO
+     vxup  = ZERO
+     vxdw  = ZERO
+     RETURN
+  ELSE
+     FZ = ((1+Z)**FTRD+(1-Z)**FTRD-2)/TFTM
+     FZP = FTRD*((1+Z)**TRD-(1-Z)**TRD)/TFTM
+  ENDIF
+  RS = (3 / (4*PI*rho) )**TRD
+  VXP = -3*ALP/(2*PI*A0*RS)
+  EXP = 3*VXP/4
+  
+  BETA = C014/RS
+  SB = SQRT(1+BETA*BETA)
+  ALB = LOG(BETA+SB)
+  VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
+  EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
+  
+  VXF = 2**TRD*VXP
+  EXF = 2**TRD*EXP
+  vxup  = VXP + FZ*(VXF-VXP) + (1-Z)*FZP*(EXF-EXP)
+  vxdw  = VXP + FZ*(VXF-VXP) - (1+Z)*FZP*(EXF-EXP)
+  EX    = EXP + FZ*(EXF-EXP)
+       
+END SUBROUTINE slater_rxc_spin
 
-       PI=4*ATAN(ONE)
-       TRD = ONE/3
-       FTRD = 4*TRD
-       TFTM = 2**FTRD-2
-       A0 = (4/(9*PI))**TRD
 
-!      X-alpha parameter:
-       ALP = 2 * TRD
-
-       IF (rho .LE. ZERO) THEN
-         EX = ZERO
-         vxup  = ZERO
-         vxdw  = ZERO
-         RETURN
-       ELSE
-          FZ = ((1+Z)**FTRD+(1-Z)**FTRD-2)/TFTM
-          FZP = FTRD*((1+Z)**TRD-(1-Z)**TRD)/TFTM
-       ENDIF
-       RS = (3 / (4*PI*rho) )**TRD
-       VXP = -3*ALP/(2*PI*A0*RS)
-       EXP = 3*VXP/4
-
-         BETA = C014/RS
-         SB = SQRT(1+BETA*BETA)
-         ALB = LOG(BETA+SB)
-         VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
-         EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
-
-       VXF = 2**TRD*VXP
-       EXF = 2**TRD*EXP
-       vxup  = VXP + FZ*(VXF-VXP) + (1-Z)*FZP*(EXF-EXP)
-       vxdw  = VXP + FZ*(VXF-VXP) - (1+Z)*FZP*(EXF-EXP)
-       EX    = EXP + FZ*(EXF-EXP)
-
-  END SUBROUTINE slater_xc_rel
-
+!-----------------------------------------------------------------------
+subroutine slater1_spin (rho, zeta, ex, vxup, vxdw)
+  !-----------------------------------------------------------------------
+  !     Slater exchange with alpha=2/3, spin-polarized case
+  !
+  use kinds, only: dp
+  implicit none
+  real(kind=DP) :: rho, zeta, ex, vxup, vxdw
+  real(kind=DP), parameter :: f = - 1.10783814957303361d0, alpha = 1.0d0, &
+       third = 1.d0 / 3.d0, p43 = 4.d0 / 3.d0
+  ! f = -9/8*(3/pi)^(1/3)
+  real(kind=DP) :: exup, exdw, rho13
+  !
+  rho13 = ( (1.d0 + zeta) * rho) **third
+  exup = f * alpha * rho13
+  vxup = p43 * f * alpha * rho13
+  rho13 = ( (1.d0 - zeta) * rho) **third
+  exdw = f * alpha * rho13
+  vxdw = p43 * f * alpha * rho13
+  ex = 0.5d0 * ( (1.d0 + zeta) * exup + (1.d0 - zeta) * exdw)
+  !
+  return
+end subroutine slater1_spin

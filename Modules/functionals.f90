@@ -19,8 +19,8 @@ module funct
   !
   ! Exchange:    "nox"    none                           iexch=0
   !              "sla"    Slater (alpha=2/3)             iexch=1 (default)
-  !              "rxc"    Relativistic Slater (?)        iexch=2
-  !
+  !              "sl1"    Slater (alpha=1.0)             iexch=2
+  !              "rxc"    Relativistic Slater            iexch=3
   ! Correlation: "noc"    none                           icorr=0
   !              "pz"     Perdew-Zunger                  icorr=1 (default)
   !              "vwn"    Vosko-Wilk-Nusair              icorr=2
@@ -37,18 +37,40 @@ module funct
   !              "ggx"    Perdew-Wang 91                 igcx =2
   !              "pbx"    Perdew-Burke-Ernzenhof exch    igcx =3
   !              "rpb"    revised PBE by Zhang-Yang      igcx =4
+  !              "hcth"   Cambridge exch, Handy et al    igcx =5
+  !              "optx"   Handy's exchange functional    igcx =6
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
   !              "p86"    Perdew86                       igcc =1
   !              "ggc"    Perdew-Wang 91 corr.           igcc =2
-  !              "blyp"   Becke88 + Lee-Yang-Parr        igcc =3
+  !              "blyp"   Lee-Yang-Parr                  igcc =3
   !              "pbx"    Perdew-Burke-Ernzenhof corr    igcc =4
+  !              "hcth"   Cambridge corr, Handy et al    igcc =5
   !
-  ! Special cases: "bp" = "b88+p86"        = Becke-Perdew grad.corr
-  !              "pw91" = "pw +ggx+ggc"    = PW91 (aka GGA)
-  !              "pbe"  = "sla+pw+pbx+pbc" = PBE
-  !              "revpbe"="sla+pw+rpb+pbc" = revPBE (Zhang-Yang)
+  ! Special cases:
+  !              "bp"   = "b88+p86"         = Becke-Perdew grad.corr.
+  !              "pw91" = "pw +ggx+ggc"     = PW91 (aka GGA)
+  !              "blyp" = "sla+b88+lyp+blyp"= BLYP
+  !              "pbe"  = "sla+pw+pbx+pbc"  = PBE
+  !              "revpbe"="sla+pw+rpb+pbc"  = revPBE (Zhang-Yang)
+  !              "hcth" = "nox+noc+hcth+hcth"=HCTH/120
+  !              "olyp" = "nox+lyp+optx+blyp" !!! UNTESTED !!!
   !
+  ! References:
+  !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
+  !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
+  !              pw      J.P.Perdew and Y.Wang, PRB 45, 13244 (1992) 
+  !              obpz    G.Ortiz and P.Ballone, PRB 50, 1391 (1994) 
+  !              obpw    as above
+  !              b88     A.D.Becke, PRA 38, 3098 (1988)
+  !              p86     J.P.Perdew, PRB 33, 8822 (1986)
+  !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
+  !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
+  !              blyp     C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
+  !              hcth    Handy et al, JCP 109, 6264 (1998)
+  !              olyp    Handy et al, JCP 116, 5411 (2002)
+  !              revPBE  Zhang and Yang, PRL 80, 809 (1998)
+
   integer :: iexch, icorr, igcx, igcc
   !
   ! internal indices for exchange-correlation
@@ -74,7 +96,7 @@ CONTAINS
     character (len=*) :: dft_
     ! data
     integer :: nxc, ncc, ngcx, ngcc
-    parameter (nxc = 2, ncc = 9, ngcx = 4, ngcc = 4)
+    parameter (nxc = 3, ncc = 9, ngcx = 6, ngcc = 5)
     character (len=3) :: exc, corr
     character (len=4) :: gradx, gradc
     dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -82,11 +104,11 @@ CONTAINS
     integer :: len, l, i
     integer, parameter:: notset = -1
     character (len=50):: dftout * 50
-    data exc / 'NOX', 'SLA', 'RXC' /
+    data exc / 'NOX', 'SLA', 'SL1', 'RXC' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
          'OBW', 'GL' /
-    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB' /
-    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC' /
+    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH','OPTX' /
+    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH'/
     !
     ! convert to uppercase
     len = len_trim(dft)
@@ -149,6 +171,30 @@ CONTAINS
        call set_dft_value (igcc, 2)
     endif
 
+    ! special case : HCTH already contains LDA exchange and correlation
+
+    if (matches('HCTH',dftout)) then
+       call set_dft_value(iexch,0)
+       call set_dft_value(icorr,0)
+    end if
+
+    ! special case : OPTX already contains LDA exchange
+     
+    if (matches('OPTX',dftout)) then
+       call set_dft_value(iexch,0)
+    end if
+
+    ! special case : OLYP = OPTX + LYP
+
+    if (matches('OLYP',dftout)) then
+       call set_dft_value(iexch,0)
+       call set_dft_value(icorr,3)
+       call set_dft_value(igcx,6)
+       call set_dft_value(igcc,3)
+    end if
+
+    if (igcx == 6) &
+         call errore('which_dft','OPTX untested! please test',-igcx)
     ! Default value: Slater exchange
     if (iexch == notset) call set_dft_value (iexch, 1)
 
