@@ -3,6 +3,7 @@
 
 MODULES = \
 berry_phase.o \
+bfgs_module.o \
 cell_base.o  \
 clocks.o \
 constants.o \
