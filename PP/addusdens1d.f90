@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,8 +35,8 @@ subroutine addusdens1d (plan, prho)
   ! the correspondence 1D with the 3D shells
   ! correspondence 1D FFT mesh G with array G
 
-  real(kind=DP) :: plan (nr3), dimz, g1d (3, nr3), gg1d (nr3), qmod (nr3) &
-       , qgr (nr3), qgi (nr3), ylmk0 (nr3, lqx * lqx)
+  real(kind=DP) :: plan (nr3), dimz, g1d (3, nr3), gg1d (nr3), qmod (nr3), &
+       qgr (nr3), qgi (nr3), ylmk0 (nr3, lqx * lqx)
   !  the planar average
   !  dimension along z
   !  ngm1d 3D vectors with the 1D G of this proc
@@ -52,12 +52,14 @@ subroutine addusdens1d (plan, prho)
   ! auxiliary variable for FFT
   ! auxiliary variable for rho(G,nspin)
 
+
   call ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   do ig = 1, ngm1d
      qmod (ig) = sqrt (gg1d (ig) )
   enddo
 
   aux(:) = (0.d0, 0.d0)
+
   if (ngm1d > 0) then
      call ylmr2 (lqx * lqx, ngm1d, g1d, gg1d, ylmk0)
      do nt = 1, ntyp
@@ -69,7 +71,7 @@ subroutine addusdens1d (plan, prho)
                  ijh = ijh + 1
                  do na = 1, nat
 
-                    if (ityp (na) .eq.nt) then
+                    if (ityp (na) == nt) then
                        !
                        !  Multiply becsum and qg with the correct structure factor
                        !
@@ -101,12 +103,13 @@ subroutine addusdens1d (plan, prho)
   call reduce (2 * nrx3, qg)
 #endif
   dimz = alat * celldm (3)
-  !
-  ! NB: cft_1 is no longer in-place
-  !
-  call cft_1 (qg, 1, nr3, nrx3, 1, aux)
   do ig = 1, nr3
-     plan (ig) = real (aux (ig) ) * omega / dimz
+     qgr (ig) = real (qg (ig) )
+     qgi (ig) = DIMAG (qg (ig) )
+  enddo
+  call cft (qgr, qgi, nr3, nr3, nr3, 1)
+  do ig = 1, nr3
+     plan (ig) = qgr (ig) * omega / dimz
   enddo
 
   return

@@ -231,38 +231,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
 
 end subroutine cft_3
 #endif
-#if defined(__T3E)
-#define PRESENT
-!----------------------------------------------------------------------
-subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
-  !----------------------------------------------------------------------
-  !
-  use parameters, only : DP
-  implicit none
-  integer :: n1, n2, n3, nm1, nm2, nm3, igrid, iopt
-  real(kind=DP) :: ac (2, nm1 * nm2 * nm3), fac
-  external DSCAL
-  !
-  if (n1.ne.nm1.or.n2.ne.nm2) call errore ('cft_3', 'no longer implemented', 1)
-  !     &    call mcpack(ac,nm1,nm2,nm3,ac,n1,n2,n3,1)
-  !
-  call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n1, n1, 2 * iopt)
-  call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n2, n1 * n2, 2 * &
-       iopt)
-  call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n3, n1 * n2 * n3, 2 * iopt)
-  !
-  if (iopt.lt.0) then
-     fac = 1.0 / (n1 * n2 * n3)
-     call DSCAL (2 * n1 * n2 * n3, fac, ac, 1)
-  endif
-  !
-  !      if( n1.ne.nm1 .or. n2.ne.nm2 )
-  !     &    call mcpack(ac,nm1,nm2,nm3,ac,n1,n2,n3,-1)
-  !
-  return
 
-end subroutine cft_3
-#endif
 #ifdef __SX4
 #define PRESENT
 !----------------------------------------------------------------------

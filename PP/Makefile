@@ -6,6 +6,7 @@ include ../make.sys
 #
 PPOBJS = addusdens1d.o  \
 average.o  \
+cft.o \
 cgracsc.o  \
 chdens.o  \
 xsf.o \

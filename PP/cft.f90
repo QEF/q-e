@@ -1,10 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
+! (C) Copyright CERN except where explicitly stated otherwise. 
+!     Permission to use and/or redistribute this work is granted
+!     under the terms of the GNU General Public License, The software
+!     and documentation made available under the terms of this license
+!     are provided with no warranty. 
 !
+! Slightly modified version of routine D702 of CERN lib
 !
 !----------------------------------------------------------------------
 subroutine cft (a, b, ntot, n, nspan, isn)
@@ -12,7 +13,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   !
   !     multivariate complex fourier transform, computed in place
   !     using mixed-radix fast fourier transform algorithm.
-  !     by r. c. singleton, stanford research institute, oct. 1968
+  !     by R. C. Singleton, Stanford Research Institute, oct. 1968
   !     arrays a and b originally hold the real and imaginary
   !     components of the data, and return the real and
   !     imaginary components of the resulting fourier coefficients.
@@ -577,5 +578,4 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   print*,'Array bounds exceeded within subroutine cft'
   stop
 !999 format(44h0array bounds exceeded within subroutine cft)
-!EH NO EH!!! le costanti di hollerith no!!!AF
   end subroutine cft
