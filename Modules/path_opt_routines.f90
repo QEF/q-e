@@ -21,6 +21,7 @@ MODULE path_opt_routines
   USE path_variables, ONLY : ds
   USE path_variables, ONLY : pos, grad, norm_grad, frozen
   USE path_variables, ONLY : ft_pos, ft_grad, norm_ft_grad, ft_frozen
+  !
   USE basic_algebra_routines
   !  
   IMPLICIT NONE
@@ -40,12 +41,8 @@ MODULE path_opt_routines
        !
        IF ( frozen(index) ) RETURN
        !
-       IF ( norm_grad(index) > eps32 ) THEN
-          !
-          pos(:,index) = pos(:,index) - ds(1) * grad(:,index)
-          !
-       END IF
-       !      
+       pos(:,index) = pos(:,index) - ds(1) * grad(:,index)
+       !
        RETURN
        !
      END SUBROUTINE r_steepest_descent 
@@ -215,6 +212,8 @@ MODULE path_opt_routines
      SUBROUTINE ft_steepest_descent( mode )
        !----------------------------------------------------------------------
        !
+       USE path_variables, ONLY : llangevin, ft_lang
+       !
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: mode
@@ -222,18 +221,17 @@ MODULE path_opt_routines
        !
        IF ( ft_frozen(mode) ) RETURN
        !
-       IF ( norm_ft_grad(mode) > eps32 ) THEN
-          !
-          ft_pos(:,mode) = ft_pos(:,mode) - ds(mode) * ft_grad(:,mode)
-          !
-       END IF
+       ft_pos(:,mode) = ft_pos(:,mode) - ds(mode) * ft_grad(:,mode)
+       !
+       IF ( llangevin ) &
+          ft_pos(:,mode) = ft_pos(:,mode) + SQRT( ds(mode) ) * ft_lang(:,mode)
        !      
        RETURN
        !
      END SUBROUTINE ft_steepest_descent 
      !
      ! ... Molecular Dynamics based algorithms 
-     ! ... velocity Verlet and quick min       
+     ! ... velocity Verlet and quick min
      !
      !----------------------------------------------------------------------
      SUBROUTINE ft_velocity_Verlet_first_step( mode )

@@ -17,7 +17,10 @@ MODULE path_io_routines
   ! ... Written by Carlo Sbraccia ( 2003-2004 )
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : au, bohr_radius_angs
+  USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
+  !
+  USE parser
+  USE basic_algebra_routines
   !
   IMPLICIT NONE
   !
@@ -142,9 +145,31 @@ MODULE path_io_routines
              !
              CALL errore( 'read_restart()', 'RESTART INFORMATION missing', 1 )
              !
-          END IF   
+          END IF
           !
           READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+          !
+          IF( matches( "NUMBER OF IMAGES", input_line ) ) THEN
+             !
+             ! ... optional field
+             !
+             READ( UNIT = iunrestart, FMT = * ) num_of_images
+             !
+             IF ( lsmd ) THEN
+                !
+                ! ... fourier dimensions updated
+                !
+                Nft = ( num_of_images - 1 )
+                !
+                num_of_modes = ( Nft - 1 )
+                !
+                ft_coeff = 2.D0 / DBLE( Nft )
+                !
+             END IF
+             !
+             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+             !
+          END IF
           !
           IF ( lneb .AND. matches( "ELASTIC CONSTANTS", input_line ) ) THEN
              !
@@ -155,23 +180,7 @@ MODULE path_io_routines
              !
              READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
              !
-          ELSE IF( lsmd .AND. matches( "SMD MULTIGRID", input_line ) ) THEN
-             !
-             ! ... optional fields
-             !
-             READ( UNIT = iunrestart, FMT = * ) num_of_images
-             !
-             ! ... fourier dimensions updated
-             !
-             Nft = ( num_of_images - 1 )
-             !
-             num_of_modes = ( Nft - 1 )
-             !
-             ft_coeff = 2.D0 / DBLE( Nft )
-             !
-             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
-             !
-          END IF          
+          END IF
           !
           IF ( .NOT. ( matches( "ENERGIES, POSITIONS AND GRADIENTS", &
                                  input_line ) ) ) THEN
@@ -422,6 +431,8 @@ MODULE path_io_routines
        CALL mp_bcast( pes,      meta_ionode_id )
        CALL mp_bcast( grad_pes, meta_ionode_id )
        !
+       CALL mp_bcast( num_of_images, meta_ionode_id )
+       !
        IF ( lneb ) THEN
           !
           CALL mp_bcast( k_max, meta_ionode_id )
@@ -432,8 +443,7 @@ MODULE path_io_routines
           CALL mp_bcast( Emax_index, meta_ionode_id )
           !
        ELSE IF ( lsmd ) THEN
-          !
-          CALL mp_bcast( num_of_images, meta_ionode_id )
+          !          
           CALL mp_bcast( num_of_modes, meta_ionode_id )
           CALL mp_bcast( Nft,          meta_ionode_id )
           CALL mp_bcast( ft_coeff,     meta_ionode_id )
@@ -500,7 +510,6 @@ MODULE path_io_routines
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : meta_ionode
-       USE parser,           ONLY : int_to_char
        !
        IMPLICIT NONE
        !
@@ -572,18 +581,16 @@ MODULE path_io_routines
            WRITE( UNIT = in_unit, FMT = '(I4)' ) suspended_image
            WRITE( UNIT = in_unit, FMT = '(L1)' ) conv_elec
            !
+           WRITE( UNIT = in_unit, FMT = '("NUMBER OF IMAGES")' )
+           !
+           WRITE( UNIT = in_unit, FMT = '(I4)' ) num_of_images
+           !
            IF ( lneb ) THEN
               !
               WRITE( UNIT = in_unit, FMT = '("ELASTIC CONSTANTS")' )
               !
               WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_max
               WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_min
-              !
-           ELSE IF ( lsmd ) THEN
-              !
-              WRITE( UNIT = in_unit, FMT = '("SMD MULTIGRID")' )
-              !
-              WRITE( UNIT = in_unit, FMT = '(I4)' ) num_of_images
               !
            END IF
            !
@@ -790,24 +797,22 @@ MODULE path_io_routines
        USE ions_base,        ONLY : ityp, nat
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
-                                    activation_energy, path_length, react_coord
+                                    path_length, react_coord
        USE path_variables,   ONLY : tangent, dim, Emax_index, error
        USE path_variables,   ONLY : num_of_modes, Nft, Nft_smooth, ft_pes
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
        USE supercell,        ONLY : pbc
-       USE parser
-       USE basic_algebra_routines
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       REAL (KIND=DP)              :: R, delta_R, x
+       REAL (KIND=DP)              :: R, delta_R, x, delta_x
        REAL (KIND=DP), ALLOCATABLE :: d_R(:)
        REAL (KIND=DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
-       REAL (KIND=DP)              :: E, E_0, delta_E
+       REAL (KIND=DP)              :: ener, ener_0, delta_e
        INTEGER                     :: i, j, n, atom, image
        INTEGER, PARAMETER          :: max_i = 100
        !
@@ -875,24 +880,24 @@ MODULE path_io_routines
           !
           image = 1
           !
-          delta_R = react_coord(num_of_images) / DBLE(max_i)
+          delta_R = react_coord(num_of_images) / DBLE( max_i )
           !
           DO j = 0, max_i
              !
-             R = DBLE(j) * delta_R 
+             R = DBLE( j ) * delta_R 
              !
              IF ( ( R > react_coord(image+1) ) .AND. &
                   ( image < ( num_of_images - 1 ) ) ) image = image + 1
              !
              x = R - react_coord(image)
              !
-             E = a(image)*(x**3) + b(image)*(x**2) + c(image)*x + d(image) 
+             ener = a(image)*(x**3) + b(image)*(x**2) + c(image)*x + d(image) 
              !
-             IF ( j == 0 ) E_0 = E
+             IF ( j == 0 ) ener_0 = ener
              !
              WRITE( UNIT = iunint, FMT = int_fmt ) &
                  ( R / react_coord(num_of_images) ), &
-                 ( E - E_0 ) * au
+                 ( ener - ener_0 ) * au
              !
           END DO
           !
@@ -906,42 +911,36 @@ MODULE path_io_routines
           !
        ELSE IF ( lsmd ) THEN
           !
-          DO image = 1, num_of_images
-             !
-             WRITE( UNIT = iundat, FMT = dat_fmt ) &
-                 ( DBLE( image - 1 ) / DBLE( num_of_images - 1 ) ), &
-                 ( pes(image) - pes(1) ) * au
-             !
-          END DO          
+          delta_e = pes(num_of_images) - pes(1)
           !
-          delta_E = pes(num_of_images) - pes(1)
+          delta_x = 1.D0 / DBLE( Nft_smooth * Nft )
           !
-          DO i = 1, ( num_of_images - 1 )
+          WRITE( UNIT = iundat, FMT = dat_fmt ) 0.D0, 0.D0
+          !
+          DO i = 1, Nft
              !
-             DO j = 0, ( Nft_smooth - 1 )
+             DO j = 1, Nft_smooth
                 !
-                x = DBLE( Nft_smooth * ( i - 1 ) + j ) / &
-                    DBLE( Nft_smooth * ( num_of_images - 1 ) )
+                x = delta_x * DBLE( Nft_smooth * ( i - 1 ) + j )
                 !
-                E = x * delta_E
+                ener = x * delta_e
                 !
                 DO n = 1, num_of_modes
                    !
-                   E = E + ft_pes(n) * SIN( DBLE( n ) * pi * x )
+                   ener = ener + ft_pes(n) * SIN( DBLE( n ) * pi * x )
                    !
                 END DO
                 !
-                E = E * au
-                !
-                activation_energy = MAX( E, activation_energy )
-                !
-                WRITE( UNIT = iunint, FMT = int_fmt ) x, E
+                WRITE( UNIT = iunint, FMT = int_fmt ) x, ener * au
                 !
              END DO
              !
+             WRITE( UNIT = iundat, FMT = dat_fmt ) &
+                 x, ( pes(i+1) - pes(1) ) * au
+             !
           END DO
           !
-          WRITE( UNIT = iunint, FMT = int_fmt ) 1.D0, delta_E * au
+          WRITE( UNIT = iunint, FMT = int_fmt ) 1.D0, delta_e * au
           !
        END IF
        !
@@ -1028,7 +1027,6 @@ MODULE path_io_routines
                                   ft_error, first_last_opt
        USE path_formats,   ONLY : neb_run_output, smd_run_output
        USE io_global,      ONLY : meta_ionode
-       USE basic_algebra_routines
        !
        IMPLICIT NONE
        !

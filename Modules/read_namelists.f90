@@ -325,21 +325,26 @@ MODULE read_namelists_module
        !
        ! ... general input variables
        !
-       num_of_images       = 0
-       first_last_opt      = .FALSE.
-       reset_vel           = .FALSE.
-       write_save          = .FALSE.
-       minimization_scheme = 'quick-min'
-       damp                = 1.D0
-       temp_req            = 0.D0
-       ds                  = 1.5D0
-       path_thr            = 0.05D0
+       num_of_images   = 0
+       first_last_opt  = .FALSE.
+       reset_vel       = .FALSE.
+       use_multistep   = .FALSE.
+       write_save      = .FALSE.
+       opt_scheme      = 'quick-min'
+       damp            = 1.D0
+       temp_req        = 0.D0
+       ds              = 1.5D0
+       path_thr        = 0.05D0
        !
        ! ... NEB specific
        !
        CI_scheme = 'no-CI'
        k_max     = 0.1D0
        k_min     = 0.1D0
+       !
+       ! ... Fourier-SMD specific
+       !
+       
        !
        ! ... BFGS defaults
        !
@@ -700,9 +705,10 @@ MODULE read_namelists_module
        CALL mp_bcast( num_of_images, ionode_id )
        CALL mp_bcast( first_last_opt, ionode_id )
        CALL mp_bcast( reset_vel, ionode_id )
+       CALL mp_bcast( use_multistep, ionode_id )
        CALL mp_bcast( write_save, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
-       CALL mp_bcast( minimization_scheme, ionode_id )
+       CALL mp_bcast( opt_scheme, ionode_id )
        CALL mp_bcast( damp, ionode_id )
        CALL mp_bcast( temp_req, ionode_id )
        CALL mp_bcast( ds, ionode_id )
@@ -1165,13 +1171,13 @@ MODULE read_namelists_module
        IF ( temp_req < 0.D0 ) &
           CALL errore( sub_name,' temp_req out of range ',1)
        !
-       DO i = 1, SIZE( minimization_scheme_allowed )
-          IF ( TRIM( minimization_scheme ) == &
-               minimization_scheme_allowed(i) ) allowed = .TRUE.
+       DO i = 1, SIZE( opt_scheme_allowed )
+          IF ( TRIM( opt_scheme ) == &
+               opt_scheme_allowed(i) ) allowed = .TRUE.
        END DO
        IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' minimization_scheme '''// &
-                       & TRIM( minimization_scheme )//''' not allowed ', 1 )
+          CALL errore( sub_name, ' opt_scheme '''// &
+                     & TRIM( opt_scheme )//''' not allowed ', 1 )
        !
        ! ... NEB specific checkin
        !

@@ -879,11 +879,13 @@ MODULE input_parameters
         
         LOGICAL :: first_last_opt = .FALSE.
         
-        LOGICAL :: reset_vel = .FALSE.
+        LOGICAL :: reset_vel      = .FALSE.
         
-        LOGICAL :: write_save = .FALSE.
+        LOGICAL :: use_multistep  = .FALSE.
         
-        CHARACTER(LEN=80) :: minimization_scheme = 'quick-min' 
+        LOGICAL :: write_save     = .FALSE.
+        
+        CHARACTER(LEN=80) :: opt_scheme = 'quick-min' 
           ! minimization_scheme = 'quick-min' | 'damped-dyn' | 
           !                       'mol-dyn'   | 'sd'
           ! set the minimization algorithm
@@ -891,10 +893,11 @@ MODULE input_parameters
           ! 'damped-dyn'  damped molecular dynamics
           ! 'mol-dyn'     constant temperature molecular dynamics
           ! 'sd'          steepest descent
+          ! 'langevin'    langevin dynamics
 
-        CHARACTER(LEN=80) :: minimization_scheme_allowed(4)
-        DATA minimization_scheme_allowed / 'quick-min', 'damped-dyn', &
-                                           'mol-dyn', 'sd' /  
+        CHARACTER(LEN=80) :: opt_scheme_allowed(5)
+        DATA opt_scheme_allowed / 'quick-min', 'damped-dyn', &
+                                  'mol-dyn', 'sd', 'langevin' /  
 
         REAL (KIND=DP)  :: damp = 1.D0
           ! meaningful only when minimization_scheme = 'damped-verlet'
@@ -982,7 +985,7 @@ MODULE input_parameters
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
-          num_of_images, CI_scheme, minimization_scheme, first_last_opt, &
+          num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
           reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr, &
           trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
           w_1, w_2, lbfgs_ndim, sic_rloc, &

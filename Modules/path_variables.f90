@@ -19,12 +19,14 @@ MODULE path_variables
   ! ... "general" variables :
   !
   LOGICAL :: &
-       first_last_opt,           &! if .TRUE. the first and the last image
-                                  ! will be optimized
-       conv_path,                &! .TRUE. if NEB convergence has been
-                                  ! achieved
+       first_last_opt,           &! .TRUE. if the first and the last image
+                                  !        have to be optimized
+       conv_path,                &! .TRUE. if "path" convergence has been
+                                  !        achieved
        reset_vel,                &! .TRUE. if velocities have to be reset at
-                                  ! restart time
+                                  !        restart time
+       use_multistep,            &! .TRUE. if multistep has to be used in smd
+                                  !        optimization
        write_save                 ! .TRUE. if the save file has to be written
   INTEGER :: &
        dim,                      &! dimension of the configuration space
@@ -36,7 +38,6 @@ MODULE path_variables
   REAL (KIND=DP) :: &
        path_thr,                 &! convergence threshold
        damp,                     &! damp coefficient
-       temp,                     &! actual temperature ( average over images )
        temp_req,                 &! required temperature
        activation_energy,        &! forward activatation energy
        err_max,                  &! the largest error
@@ -45,19 +46,22 @@ MODULE path_variables
        lsteep_des,               &! .TRUE. if minimization_scheme = "sd"
        lquick_min,               &! .TRUE. if minimization_scheme = "quick-min"
        ldamped_dyn,              &! .TRUE. if minimization_scheme = "damped-dyn"
-       lmol_dyn                   ! .TRUE. if minimization_scheme = "mol-dyn"
-  INTEGER :: &
+       lmol_dyn,                 &! .TRUE. if minimization_scheme = "mol-dyn"
+       llangevin                  ! .TRUE. if minimization_scheme = "langevin"
+  INTEGER :: &                   
        istep_path,               &! iteration in the optimization procedure
-       nstep_path                 ! maximum number of iterations
+       nstep_path,               &! maximum number of iterations
+       av_counter                 ! number of steps used to compute averages
   !
   ! ... "general" real space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &
        ds(:),                    &! the minimization step 
        pes(:),                   &! the potential enrgy along the path
+       norm_tangent(:),          &!
        error(:)                   ! the error from the true MEP
   REAL (KIND=DP), ALLOCATABLE :: &
-       pos(:,:),                 &!
+       pos(:,:),                 &! 
        grad_pes(:,:),            &!
        tangent(:,:)               !
   LOGICAL, ALLOCATABLE :: &
@@ -112,15 +116,18 @@ MODULE path_variables
   REAL (KIND=DP), ALLOCATABLE :: &
        pos_star(:,:),            &!
        pes_star(:),              &!
+       grad_proj(:,:),           &!
+       lang_proj(:,:),           &! langevin random force
        grad_proj_star(:,:),      &!
-       grad_proj(:,:)             !
+       lang_proj_star(:,:)        ! langevin random force
   !
   ! ... reciprocal space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &
        ft_pos(:,:),              &!
-       ft_pes(:)  ,              &!
+       ft_pes(:),                &!
        ft_grad(:,:),             &!
+       ft_lang(:,:),             &! langevin random force
        norm_ft_grad(:),          &!
        ft_vel(:,:),              &!
        ft_pos_old(:,:),          &!
@@ -133,12 +140,6 @@ MODULE path_variables
   LOGICAL, ALLOCATABLE :: &
        ft_vel_zeroed(:)           ! .TRUE. if the velocity of this mode has
                                   !        been reset
-  !
-  ! ... precomputed values of sin(n*pi*j/N) and n*pi*cos(n*pi*j/N)
-  !
-  REAL (KIND=DP), ALLOCATABLE :: &
-       ft_sin(:,:),              &!
-       ft_cos(:,:)                !
   !
   CONTAINS
      !
@@ -182,23 +183,21 @@ MODULE path_variables
           !
           ! ... real space arrays
           !       
-          ALLOCATE( ds(          num_of_images ) )
-          ALLOCATE( pes(         num_of_images ) )
+          ALLOCATE( ds(           num_of_images ) )
+          ALLOCATE( pes(          num_of_images ) )
+          ALLOCATE( norm_tangent( num_of_images ) )
           !
           ALLOCATE( pos(       dim, num_of_images ) )       
           ALLOCATE( grad_pes(  dim, num_of_images ) )
           ALLOCATE( grad_proj( dim, num_of_images ) )
-          ALLOCATE( tangent(   dim, num_of_images ) )
+          ALLOCATE( tangent(   dim, num_of_images ) )          
           !
           ! ... real space "0:( Nft - 1 )" arrays
           !
           ALLOCATE( pes_star( 0:( Nft - 1 ) ) )
           !       
           ALLOCATE( pos_star(       dim, 0:( Nft - 1 ) ) )
-          ALLOCATE( grad_proj_star( dim, 0:( Nft - 1 ) ) )
-          !
-          ALLOCATE( ft_sin( ( Nft - 1 ), 0:( Nft - 1 ) ) )
-          ALLOCATE( ft_cos( ( Nft - 1 ), 0:( Nft - 1 ) ) )
+          ALLOCATE( grad_proj_star( dim, 0:( Nft - 1 ) ) )          
           !
           ! ... reciprocal space arrays
           !
@@ -209,7 +208,7 @@ MODULE path_variables
           ALLOCATE( ft_vel_zeroed( ( Nft - 1 ) ) )
           !
           ALLOCATE( ft_pos(      dim, ( Nft - 1 ) ) )
-          ALLOCATE( ft_grad(     dim, ( Nft - 1 ) ) )
+          ALLOCATE( ft_grad(     dim, ( Nft - 1 ) ) )          
           ALLOCATE( ft_vel(      dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_pos_old(  dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_grad_old( dim, ( Nft - 1 ) ) )
@@ -225,6 +224,16 @@ MODULE path_variables
              ALLOCATE( grad(     dim, num_of_images ) )
              ALLOCATE( pos_old(  dim, num_of_images ) )
              ALLOCATE( grad_old( dim, num_of_images ) )             
+             !
+          END IF
+          !
+          IF ( llangevin ) THEN
+             !
+             ALLOCATE( lang_proj( dim, num_of_images ) )
+             !
+             ALLOCATE( lang_proj_star( dim, 0:( Nft - 1 ) ) )
+             !
+             ALLOCATE( ft_lang( dim, ( Nft - 1 ) ) )
              !
           END IF
           !
@@ -269,6 +278,7 @@ MODULE path_variables
           !       
           IF ( ALLOCATED( ds ) )             DEALLOCATE( ds )
           IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )
+          IF ( ALLOCATED( norm_tangent ) )   DEALLOCATE( norm_tangent )
           !
           IF ( ALLOCATED( pos ) )            DEALLOCATE( pos )
           IF ( ALLOCATED( grad_pes ) )       DEALLOCATE( grad_pes )
@@ -280,7 +290,7 @@ MODULE path_variables
           IF ( ALLOCATED( pes_star ) )       DEALLOCATE( pes_star )
           !
           IF ( ALLOCATED( pos_star ) )       DEALLOCATE( pos_star )
-          IF ( ALLOCATED( grad_proj_star ) ) DEALLOCATE( grad_proj_star )
+          IF ( ALLOCATED( grad_proj_star ) ) DEALLOCATE( grad_proj_star )          
           !       
           ! ... reciprocal space arrays
           !
@@ -291,23 +301,28 @@ MODULE path_variables
           IF ( ALLOCATED( ft_vel_zeroed ) )  DEALLOCATE( ft_vel_zeroed )
           !
           IF ( ALLOCATED( ft_pos ) )         DEALLOCATE( ft_pos )       
-          IF ( ALLOCATED( ft_grad ) )        DEALLOCATE( ft_grad )
+          IF ( ALLOCATED( ft_grad ) )        DEALLOCATE( ft_grad )          
           IF ( ALLOCATED( ft_vel ) )         DEALLOCATE( ft_vel )
           IF ( ALLOCATED( ft_pos_old ) )     DEALLOCATE( ft_pos_old )
           IF ( ALLOCATED( ft_grad_old ) )    DEALLOCATE( ft_grad_old )
           !
-          IF ( ALLOCATED( ft_sin ) )         DEALLOCATE( ft_sin )
-          IF ( ALLOCATED( ft_cos ) )         DEALLOCATE( ft_cos )
-          !
           IF ( first_last_opt ) THEN
              !
-             IF ( ALLOCATED( pos_old ) )        DEALLOCATE( pos_old )
-             IF ( ALLOCATED( vel ) )            DEALLOCATE( vel )
-             IF ( ALLOCATED( grad ) )           DEALLOCATE( grad )
-             IF ( ALLOCATED( grad_old ) )       DEALLOCATE( grad_old )
-             IF ( ALLOCATED( norm_grad ) )      DEALLOCATE( norm_grad )
-             IF ( ALLOCATED( error ) )          DEALLOCATE( error )
-             IF ( ALLOCATED( frozen ) )         DEALLOCATE( frozen )
+             IF ( ALLOCATED( pos_old ) )     DEALLOCATE( pos_old )
+             IF ( ALLOCATED( vel ) )         DEALLOCATE( vel )
+             IF ( ALLOCATED( grad ) )        DEALLOCATE( grad )
+             IF ( ALLOCATED( grad_old ) )    DEALLOCATE( grad_old )
+             IF ( ALLOCATED( norm_grad ) )   DEALLOCATE( norm_grad )
+             IF ( ALLOCATED( error ) )       DEALLOCATE( error )
+             IF ( ALLOCATED( frozen ) )      DEALLOCATE( frozen )
+             !
+          END IF
+          !
+          IF ( llangevin ) THEN
+             !
+             IF ( ALLOCATED( lang_proj ) )      DEALLOCATE( lang_proj )
+             IF ( ALLOCATED( lang_proj_star ) ) DEALLOCATE( lang_proj_star )
+             IF ( ALLOCATED( ft_lang ) )        DEALLOCATE( ft_lang )
              !
           END IF
           !

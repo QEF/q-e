@@ -127,9 +127,11 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : twfcollect 
   !
-  USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
+  USE path_variables, ONLY : lsteep_des, lquick_min , &
+                             ldamped_dyn, lmol_dyn, llangevin, &
                              write_save_     => write_save, &
                              reset_vel_      => reset_vel, &
+                             use_multistep_  => use_multistep, &
                              CI_scheme_      => CI_scheme, &
                              k_max_          => k_max, & 
                              k_min_          => k_min, &
@@ -198,9 +200,9 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
                                tempw, tolp, upscale, potential_extrapolation, &
-                               CI_scheme, minimization_scheme, reset_vel, &
-                               num_of_images, first_last_opt, damp, temp_req, &
-                               k_max, k_min, path_thr, write_save, &
+                               num_of_images, path_thr, CI_scheme, opt_scheme, &
+                               reset_vel, use_multistep, first_last_opt, damp, &
+                               temp_req, k_max, k_min, write_save, &
                                trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, &
                                w_1, w_2, lbfgs_ndim
@@ -681,21 +683,48 @@ SUBROUTINE iosys()
      ldamped_dyn = .FALSE.
      lmol_dyn    = .FALSE.     
      !
-     SELECT CASE ( minimization_scheme )
-     CASE ( "sd" )
-        lsteep_des  = .TRUE.
-     CASE ( "quick-min" )
-        lquick_min  = .TRUE.
-     CASE ( "damped-dyn" )
+     SELECT CASE ( opt_scheme )
+     CASE( "sd" )
+        !
+        lsteep_des = .TRUE.
+        !
+     CASE( "quick-min" )
+        !
+        lquick_min = .TRUE.
+        !
+     CASE( "damped-dyn" )
+        !
         ldamped_dyn = .TRUE.
-     CASE ( "mol-dyn" )
-        lmol_dyn    = .TRUE.
-        IF ( temp_req == 0 ) &
-           WRITE( stdout,'(/,T2,"WARNING: tepm_req has not been set" )')
-        temp_req = temp_req / ( eV_to_kelvin * AU )
+        !
+     CASE( "mol-dyn" )
+        !
+        lmol_dyn = .TRUE.
+        !
+     CASE( "langevin" )
+        !
+        llangevin = .TRUE.
+        !
+        IF ( lneb ) &
+           CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
+                      & ' langevin dynamics not implemented', 1 )
+        !
+        temp_req = temp_req / ( eV_to_kelvin * au )
+        !
+        IF ( temp_req <= 0.D0 ) &
+           CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
+                      & ' tepm_req has not been set', 1 )
+        !
+        IF ( use_multistep ) &
+           WRITE( UNIT = stdout, &
+                  FMT = '(5X,"warning: multistep cannot be used in langevin")' )
+        !
+        use_multistep = .FALSE.
+        !
      CASE default
+        !
         CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
-                   & ': unknown minimization_scheme', 1 )  
+                   & ': unknown opt_scheme', 1 )  
+        !
      END SELECT             
      !
   END IF
@@ -844,6 +873,10 @@ SUBROUTINE iosys()
   CI_scheme_ = CI_scheme
   k_max_     = k_max 
   k_min_     = k_min
+  !
+  ! ... Fourier-SMD specific
+  !
+  use_multistep_ = use_multistep
   !
   ! ... new BFGS specific
   !
