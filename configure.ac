@@ -20,6 +20,7 @@ libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
 mylib=$MYLIB
+includefftw=$INCLUDEFFTW
 
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
@@ -68,15 +69,14 @@ esac
 
 # check Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
-unset F77 # otherwise it may interfere with the check
 AC_PROG_F77($f90)
 f90=$F77
 
 case "$build:$f90" in
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
-	try_cc="pgcc gcc cc icc"
-	try_f77="pgf77 $f90"
+	try_cc="mpicc pgcc gcc cc icc"
+	try_f77="mpif77 pgf77 $f90"
 	;;
 *-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
@@ -375,6 +375,7 @@ then
 	then
 		try_libdirs="/usr/local/lib
 			     /opt/intel/mkl/mkl61/lib/32 /opt/intel/mkl/lib/32
+			     /opt/intel/mkl61/lib/32
 			     /cineca/lib /cineca/prod/intel/lib"
 	elif test $is_linux && test $is_pgi
 	then
@@ -487,11 +488,35 @@ $ac_cv_search_zhegv -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 
 	if ! test $have_blas
 	then
+		# check for atlas (in several directories)
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1
+				       libs="$try_loption \
+$ac_cv_search_dgemm -latlas $libs", , -latlas)
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+		done
+	fi
+
+	if ! test $have_blas
+	then
 		# check for blas
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
-		AC_SEARCH_LIBS(dgemm, atlas blas, have_blas=1 libs="$LIBS")
+		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 libs="$LIBS")
 	fi
 
 	if ! test $have_lapack
@@ -554,14 +579,23 @@ then
 
 	CFLAGS="$test_cflags"
 	LDFLAGS="$c_ldflags"
-	AC_SEARCH_LIBS(fftwnd, "", have_fft=1 want_fftw_h=1)
+	AC_SEARCH_LIBS(fftwnd, "", have_fft=1 have_fftw=1)
 fi
 
 # find location of fftw.h (if needed)
-if test $want_fftw_h
+if test $have_fftw
 then
-	includepath="/usr/local/include /cineca/lib/fftw-2.1.3/fftw"
-	for dir in none $includepath
+	if test "$includefftw" = ""
+	then
+		# if libfftw is in /some/path/lib, then fftw.h is
+		# likely to be in /some/path/include
+		includefftw=`echo $libs |
+			sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
+			     s/lib/include/'`
+	fi
+	try_includedirs="$includefftw /usr/local/include \
+			 /cineca/lib/fftw-2.1.3/fftw"
+	for dir in none $try_includedirs
 	do
 		unset ac_cv_header_fftw_h # clear cached value
 		if test "$dir" = "none"
@@ -575,15 +609,18 @@ then
 		CPPFLAGS="$test_cppflags $try_ioption"
 		LDFLAGS="$c_ldflags"
 		LIBS="$libs"
-		AC_CHECK_HEADER(fftw.h, unset want_fftw_h
-				ifftw="$try_ioption")
+		AC_CHECK_HEADER(fftw.h, have_fftw_h=1 ifftw="$try_ioption")
 		if test "$ac_cv_header_fftw_h" != "no" ; then break ; fi
 	done
 fi
 
-if ! test $have_fft || test $want_fftw_h
+if test $have_fftw && ! test $have_fftw_h
 then
 	try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
+	if test $have_fft
+	then
+		AC_MSG_WARN([fftw library detected, but fftw.h not found])
+	fi
 fi
 
 AC_LANG_POP(C)
@@ -643,20 +680,26 @@ AC_CONFIG_FILES(make.sys make.rules)
 AC_OUTPUT
 
 # final warnings
-echo -------------------------------------------------------------------
+echo -----------------------------------------------------------------
 echo PWscf can take advantage of several optimized numerical libraries
 echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
 echo but may fail if they have been installed in non-standard locations.
 echo
 echo The following libraries have been found:
 echo "  LIBS=$libs"
+
+if test $have_fft && test $have_fftw && ! test $have_fftw_h
+then
+	echo "  WARNING: fftw library detected, but fftw.h not found"
+fi
+
 echo
 echo If any libraries are missing, you may specify a list of directories
 echo to search and retry, as follows:
 echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
 echo
-echo \(For more information, read the INSTALL file or the PWscf manuals.\)
-echo -------------------------------------------------------------------
+echo For more information, read the INSTALL file or the PWscf manuals.
+echo -----------------------------------------------------------------
 
 if ! test $parallel
 then

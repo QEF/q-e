@@ -80,10 +80,10 @@ PWscf can take advantage of several optimized numerical libraries:
 - ATLAS (freely downloadable from http://math-atlas.sourceforge.net/)
 - FFTW (freely downloadable from http://www.fftw.org/)
 
-A source implementation of all required libraries is bundled with the
-PWscf distribution, which means that you'll always be able to compile
-the programs at least; but using optimized libraries can often provide
-huge performance increases.
+A reference implementation of all required external libraries is
+bundled with the PWscf distribution, which means that you'll always be
+able to compile the programs at least; but using optimized libraries
+can often provide huge performance increases.
 
 The configuration script attempts to find those libraries, but may
 fail if they have been installed in non-standard locations.  You
@@ -104,12 +104,15 @@ manually and retry.  For example:
   ./configure LIBS="-L/cineca/prod/intel/lib -lfftw -llapack -lblas"
 
 Beware that in this case, you must specify *all* the libraries that
-you want to link to.  "configure" will blindly accept the specified
-value, and will *not* search for any extra libraries.
+you want to link to.  The configuration script will blindly accept the
+specified value, and will *not* search for any extra libraries.
 
-If you want to use the FFTW library, you must also specify the
-location of its include files (that is, "fftw.h").  *** I haven't
-added support for this yet, must do as soon as possible. ***
+If you want to use the FFTW library, the "fftw.h" include file is also
+required.  If the configuration script wasn't able to find it, you can
+specify the correct directory in the INCLUDEFFTW environment variable.
+For example:
+
+  ./configure INCLUDEFFTW="/cineca/lib/fftw-2.1.3/fftw"
 
 ----------------------------------------------------------------------
 Second step : compiling
@@ -141,11 +144,13 @@ Here is a list of available compilation targets:
   make veryclean    remove configuration files too
   make tar          build a tarball of the current source tree
 
-PLEASE NOTE: if you change any compilation or precompilation options
+*** IMPORTANT ***
+If you change any compilation or precompilation options
 after a previous (successful or failed) compilation, you must run
 "make clean" before recompiling, unless you know exactly which
 routines are affected by the changed options and how to force their
 recompilation.
+*** IMPORTANT ***
 
 
 ----------------------------------------------------------------------
