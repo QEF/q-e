@@ -25,13 +25,16 @@ program dos
   ! if degauss1, ngauss1 are specified they override what is
   ! specified in the input file wrt summation method
   !
-  ! Parallel case implemented only for one processor!
-  !
-  USE io_global,  ONLY : stdout
-  use pwcom
-  use io_files,   only : nd_nmbr, prefix, tmp_dir
+  USE io_global,  ONLY : stdout, ionode_id
+  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
+  USE parameters, ONLY : DP
+  USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
+  USE ktetra,     ONLY : ntetra, tetra, ltetra
+  USE wvfct,      ONLY : nbnd, et
+  USE lsda_mod,   ONLY : nspin
 #ifdef __PARA
-  use para,       only : me
+  use para,       ONLY : me
+  use mp,         ONLY : mp_bcast
 #endif
   implicit none
   character(len=80) :: fildos
@@ -45,9 +48,6 @@ program dos
   !
   call start_postproc (nd_nmbr)
 #ifdef __PARA
-  !
-  ! Works for parallel machines but only for one processor !!!
-  !
   if (me == 1) then
 #endif
   !
@@ -66,9 +66,20 @@ program dos
 200 call errore('dos','reading inputpp namelist',abs(ios))
   !
   tmp_dir = trim(outdir)
+#ifdef __PARA
+  end if
+  !
+  ! ... Broadcast variables
+  !
+  CALL mp_bcast( tmp_dir, ionode_id )
+  CALL mp_bcast( prefix, ionode_id )
+#endif
   !
   call read_file
   !
+#ifdef __PARA
+  if (me == 1) then
+#endif
   if (nks.ne.nkstot) call errore ('dos', 'not implemented', 1)
   !
   if (degauss1.ne.0.d0) then
