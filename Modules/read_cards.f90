@@ -250,6 +250,12 @@ MODULE read_cards_module
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
+       ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
+          !
+          CALL card_climbing_images( input_line )
+          IF ( ( prog == 'FPMD' .OR. prog == 'CP' ) .AND. ionode ) &
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+          !	  
        ELSE
           !
           IF ( ionode ) &
@@ -1686,6 +1692,75 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
+     ! 
+     ! CLIMBING_IMAGES
+     !
+     !   Needed to explicitly specify which images have to climb 
+     !
+     ! Syntax:
+     !
+     !   CLIMBING_IMAGES
+     !     index1, ..., indexN
+     !
+     ! Where:
+     !
+     !   index1, ..., indexN are indeces of the images that have to climb
+     !
+     !
+     !
+     !------------------------------------------------------------------------
+     !    BEGIN manual
+     !----------------------------------------------------------------------
+     !
+     SUBROUTINE card_climbing_images( input_line )
+       !
+       USE parser,            ONLY :  matches
+       USE miscellany,        ONLY :  int_to_char
+       !
+       IMPLICIT NONE
+       ! 
+       CHARACTER(LEN=256) :: input_line
+       LOGICAL, SAVE      :: tread = .FALSE.
+       INTEGER            :: i
+       CHARACTER (LEN=5)  :: i_char 
+       !
+       !
+       IF ( tread ) THEN
+          CALL errore( ' card_climbing_images ', ' two occurrence ', 2 )
+       END IF
+       !
+       IF ( ( calculation == 'neb' ) .AND. ( CI_scheme == 'manual' ) ) THEN
+          !
+          CALL read_line( input_line )
+          !
+          ALLOCATE( climbing(num_of_images) )
+          !
+          DO i = 1, num_of_images
+             !
+             i_char = int_to_char( i ) 
+             !
+             IF ( matches( ' ' // TRIM( i_char ) // ',' , & 
+                           ' ' // TRIM( input_line ) // ',' ) ) &
+                climbing(i) = .TRUE.
+             !
+          END DO
+          !    
+          DO i = 1, num_of_images
+             !
+             IF ( climbing(i) ) PRINT *, "Image ",i, " recognized"
+             !
+          END DO             
+          !
+       END IF
+       ! 
+       tread   = .TRUE.
+       CI_flag = .TRUE.
+       !
+       RETURN
+       !
+     END SUBROUTINE card_climbing_images   
+     !
+     !
      !
      ! TEMPLATE
      !

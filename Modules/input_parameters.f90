@@ -1152,6 +1152,17 @@ MODULE input_parameters
 
       LOGICAL   :: tprnrho = .FALSE.
 
+!
+!   CLIMBING_IMAGES
+!
+
+      !
+      ! ... variable added for NEB  ( C.S. 20/11/2003 )
+      !
+      
+      LOGICAL              :: CI_flag
+      LOGICAL, ALLOCATABLE :: climbing(:) 
+
 
 !  END manual
 ! ----------------------------------------------------------------------
@@ -1164,6 +1175,7 @@ MODULE input_parameters
        !
        !
        IF ( ALLOCATED( pos ) )       DEALLOCATE( pos )
+       IF ( ALLOCATED( climbing ) )  DEALLOCATE( climbing )
        !  
      END SUBROUTINE deallocate_input_parameters
      !
