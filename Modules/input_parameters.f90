@@ -722,11 +722,11 @@ MODULE input_parameters
 !
 
         CHARACTER(LEN=80) :: ion_dynamics = 'none' 
-          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'none'*  
+          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 'old-bfgs' | 'none'*  
           ! set how ions shold be moved
           ! 'none'     ions are kept fixed 
-          ! 'bfgs'     BFGS algorithm is used to minimize ionic configuration
-          ! 'new-bfgs' a new BFGS algorithm is used to minimize ionic configuration
+          ! 'bfgs'     a new BFGS algorithm is used to minimize ionic configuration
+          ! 'old-bfgs' old BFGS algorithm is used to minimize ionic configuration
           ! 'sd'       steepest descent algorithm is used to minimize ionic configuration
           ! 'cg'       conjugate gradient algorithm is used to minimize ionic configuration
           ! 'damp'     damped dynamics is used to propagate ions
@@ -734,7 +734,7 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: ion_dynamics_allowed(10)
         DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none', &
-          'bfgs', 'new-bfgs', 'constrained-bfgs', 'constrained-verlet', 'beeman' /
+          'bfgs', 'old-bfgs', 'constrained-bfgs', 'constrained-verlet', 'beeman' /
 
         REAL(dbl) :: ion_radius(nsx) = 0.5d0
           ! pseudo-atomic radius of the i-th atomic species

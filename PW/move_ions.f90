@@ -11,58 +11,58 @@
 SUBROUTINE move_ions()
   !----------------------------------------------------------------------------
   !
-  !     This routine moves the ions according to the requested scheme:
+  ! ... This routine moves the ions according to the requested scheme:
   !
-  !     iswitch = 1      bfgs minimizations or conjugate gradient
-  !     iswitch = 2      constrained bfgs minimization:
-  !                      the user must supply the routine 'constrain' which
-  !                      defines the constraint equation and the gradient
-  !                      the constraint function gv(tau), dgv(i,tau) such
-  !                      that:
+  ! ... iswitch = 1      bfgs minimizations or conjugate gradient
+  ! ... iswitch = 2      constrained bfgs minimization:
+  ! ...                  the user must supply the routine 'constrain' which
+  ! ...                  defines the constraint equation and the gradient
+  ! ...                  the constraint function gv(tau), dgv(i,tau) such
+  ! ...                  that:
   !
-  !                                gv({tau}) - target = 0,
+  ! ...                            gv({tau}) - target = 0,
   !
-  !                      and
+  ! ...                  and
   !
-  !                                             D gv( {tau} )
-  !                                dgv(i,na) = ---------------.
-  !                                             D tau(i,na)
+  ! ...                                         D gv( {tau} )
+  ! ...                            dgv(i,na) = ---------------.
+  ! ...                                         D tau(i,na)
   !
-  !     iswitch = 3      molecular dynamics, (verlet of vcsmd)
-  !     iswitch = 4      molecular dynamics with one constraint,
-  !                      the same conventions as iswitch = 2
+  ! ... iswitch = 3      molecular dynamics, (verlet of vcsmd)
+  ! ... iswitch = 4      molecular dynamics with one constraint,
+  ! ...                  the same conventions as iswitch = 2
   !
-  USE io_global,   ONLY : stdout
-  USE io_files,    ONLY : tmp_dir
-  USE bfgs_module, ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
-  USE kinds,       ONLY : DP
-  USE brilz,       ONLY : alat, at, bg
-  USE basis,       ONLY : nat, ityp, tau, atm
-  USE gvect,       ONLY : nr1, nr2, nr3
-  USE klist,       ONLY : nelec
-  USE symme,       ONLY : s, ftau, nsym, irt
-  USE ener,        ONLY : etot
-  USE force_mod,   ONLY : force
-  USE control_flags,       ONLY : tr2, upscale, iswitch, lbfgs, lnewbfgs, &
-                          conv_ions
-  USE relax,       ONLY : epse, epsf, starting_scf_threshold
-  USE cellmd,      ONLY : lmovecell, calc
+  USE io_global,     ONLY : stdout
+  USE io_files,      ONLY : tmp_dir
+  USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
+  USE kinds,         ONLY : DP
+  USE brilz,         ONLY : alat, at, bg
+  USE basis,         ONLY : nat, ityp, tau, atm
+  USE gvect,         ONLY : nr1, nr2, nr3
+  USE klist,         ONLY : nelec
+  USE symme,         ONLY : s, ftau, nsym, irt
+  USE ener,          ONLY : etot
+  USE force_mod,     ONLY : force
+  USE control_flags, ONLY : tr2, upscale, iswitch, lbfgs, loldbfgs, &
+                            conv_ions
+  USE relax,         ONLY : epse, epsf, starting_scf_threshold
+  USE cellmd,        ONLY : lmovecell, calc
 #if defined (__PARA)
-  USE para,        ONLY : me, mypool
-  USE io_global,   ONLY : ionode_id
-  USE mp,          ONLY : mp_bcast
+  USE para,          ONLY : me, mypool
+  USE io_global,     ONLY : ionode_id
+  USE mp,            ONLY : mp_bcast
 #endif
   !
   IMPLICIT NONE
   !
   REAL(KIND=DP)              :: dummy, gv
-  REAL(KIND=DP), ALLOCATABLE :: dgv (:,:)
+  REAL(KIND=DP), ALLOCATABLE :: dgv(:,:)
   REAL(KIND=DP)              :: dgv2, theta0
-  ! auxiliar variable :
-  ! gv=0 defines the constrain
-  ! the gradient of gv
-  ! its square modulus
-  ! the value of the one-dimensional const
+    ! auxiliar variable :
+    ! gv=0 defines the constrain
+    ! the gradient of gv
+    ! its square modulus
+    ! the value of the one-dimensional const
   REAL(KIND=DP)              :: energy_error, gradient_error
   LOGICAL                    :: step_accepted
   REAL(KIND=DP), ALLOCATABLE :: pos(:), gradient(:)
@@ -96,7 +96,9 @@ SUBROUTINE move_ions()
      CALL errore( 'move_ions', &
                 & 'variable cell and constrain not implemented', 1 )
   !
-  IF ( lnewbfgs ) THEN
+  ! ... BFGS algorithm is used to minimize ionic configuration
+  !
+  IF ( lbfgs ) THEN
      !
      ! ... the new bfgs procedure is used
      !
@@ -115,12 +117,13 @@ SUBROUTINE move_ions()
         !
         IF ( lbfgs_ndim == 1 ) THEN
            !
-           CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
-                      energy_error, gradient_error, step_accepted, conv_ions )
+           CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
+                          epsf, energy_error, gradient_error, step_accepted, &
+                          conv_ions )
            !
         ELSE
            ! 
-           CALL lin_bfgs( pos, etot, gradient, tmp_dir, stdout, epse, &
+           CALL lin_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
                           epsf, energy_error, gradient_error, step_accepted, &
                           conv_ions )
            !
@@ -162,11 +165,15 @@ SUBROUTINE move_ions()
      CALL mp_bcast( conv_ions, ionode_id )
 #endif 
      !
-  ELSE
+  ELSE IF ( loldbfgs ) THEN
     !
-    IF ( iswitch == 1 .OR. iswitch == 2 ) CALL bfgs()
+    ! ... the old bfgs scheme is used
+    !
+    CALL bfgs()
     !   
-  END IF   
+  END IF
+  !
+  ! ... molecular dynamics schemes are used
   !
   IF ( iswitch == 3 .OR.iswitch == 4 ) THEN
      !
@@ -214,7 +221,7 @@ SUBROUTINE new_force( dg, dg2 )
   !     where dg is the gradient of the constraint function
   !
   USE io_global,  ONLY : stdout
-  USE kinds,      ONLY: DP
+  USE kinds,      ONLY : DP
   USE basis,      ONLY : nat
   USE brilz,      ONLY : at, bg
   USE force_mod,  ONLY : force
@@ -223,7 +230,7 @@ SUBROUTINE new_force( dg, dg2 )
   IMPLICIT NONE
   !
   INTEGER       :: na, i, ipol
-  REAL(KIND=DP) :: dg (3, nat), lambda, dg2, sum
+  REAL(KIND=DP) :: dg(3, nat), lambda, dg2, sum
   REAL(KIND=DP) :: DDOT
   EXTERNAL         DDOT
   !
@@ -300,17 +307,17 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
   !     the very first iteration.
   !
   USE io_global,  ONLY : stdout
-  USE kinds
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : eps16
   !
   IMPLICIT NONE
   !
-  INTEGER                    :: ityp(:), nat, na, i, maxiter
+  INTEGER                    :: ityp(:), nat, na, i
   CHARACTER(LEN=3)           :: atm(:)
-  REAL(KIND=DP)              :: tau (3,nat)
-  REAL(KIND=DP), ALLOCATABLE :: dg (:,:)
+  REAL(KIND=DP)              :: tau(3,nat)
+  REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
   REAL(KIND=DP)              :: alat, dg2, g, theta0, dummy, eps
-  !
-  PARAMETER ( eps = 1.D-15, maxiter = 250 )
+  INTEGER, PARAMETER         :: maxiter = 250
   !
   !
   ALLOCATE( dg(3,nat) )
@@ -323,7 +330,7 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
      !
      ! ... check if g=0
      !
-     IF ( ABS( g ) < eps ) GO TO 14
+     IF ( ABS( g ) < eps16 ) GO TO 14
      !
      ! ... if g<>0 find new tau = tau - g*dg/dg2 and check again
      !
@@ -339,7 +346,6 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
   !
 14 CONTINUE
   !
-  !     WRITE( stdout,'(5x,"G = ",1pe9.2)')g
   WRITE( stdout, '(5X,"Number of step(s): ",I3)') i - 1
   !
   ! ... if the atomic positions have been corrected write them on output

@@ -81,7 +81,7 @@ SUBROUTINE iosys()
                             psfile
   USE relax,         ONLY : if_pos, epsf, starting_scf_threshold, &
                             restart_bfgs, epse
-  USE control_flags,         ONLY : diis_ethr_cg, diis_ndim, diis_wfc_keep, isolve, &
+  USE control_flags, ONLY : diis_ethr_cg, diis_ndim, diis_wfc_keep, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
                             iverbosity, tr2, niter, order, iswitch, &
                             upscale_     => upscale, &
@@ -91,7 +91,7 @@ SUBROUTINE iosys()
                             nosym_       => nosym, &
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
-                            noinv, time_max, restart, lnewbfgs
+                            noinv, time_max, restart, loldbfgs
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
@@ -503,7 +503,7 @@ SUBROUTINE iosys()
      CASE ( 'bfgs' )
         iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
         lbfgs    = .TRUE.
-        lnewbfgs = .FALSE.
+        loldbfgs = .FALSE.
         epse    = etot_conv_thr
         epsf    = forc_conv_thr
         !
@@ -511,10 +511,10 @@ SUBROUTINE iosys()
            CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
         !
-     CASE ( 'new-bfgs' )
+     CASE ( 'old-bfgs' )
         iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
         lbfgs    = .FALSE.
-        lnewbfgs = .TRUE.
+        loldbfgs = .TRUE.
         epse    = etot_conv_thr
         epsf    = forc_conv_thr
         !

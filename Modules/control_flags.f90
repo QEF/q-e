@@ -208,8 +208,8 @@
   !
   LOGICAL, PUBLIC :: &
        lscf,             &! if .TRUE. the calculation is selfconsistent
-       lbfgs,            &! if .TRUE. the calculation is a bfgs-type relaxation
-       lnewbfgs,         &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
+       lbfgs,            &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
+       loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme
        lmd,              &! if .TRUE. the calculation is a dynamics
        lneb,             &! if .TRUE. the calculation is neb
        lphonon,          &! if .TRUE. the calculation is phonon
