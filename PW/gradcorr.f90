@@ -7,7 +7,7 @@
 !
 !--------------------------------------------------------------------
 subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
-     nrx3, nrxx, nl, ngm, g, alat, omega, e2, etxc, vtxc, v, nspin)
+     nrx3, nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
   !     ===================
   !--------------------------------------------------------------------
 #include "machine.h"
@@ -19,12 +19,12 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
        nspin
 
   real(kind=DP) :: rho (nrxx, nspin), rho_core (nrxx), v (nrxx, nspin), &
-       g (3, ngm), vtxc, etxc, e2, alat, omega, zeta, rh, grh2
+       g (3, ngm), vtxc, etxc, alat, omega, zeta, rh, grh2
   integer :: k, ipol, is
   real(kind=DP), allocatable :: grho (:,:,:), h (:,:,:), dh (:)
   real(kind=DP) :: grho2 (2), sx, sc, v1x, v2x, v1c, v2c, v1xup, v1xdw, &
        v2xup, v2xdw, v1cup, v1cdw , etxcgc, vtxcgc, segno, arho, fac
-  real(kind=DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
+  real(kind=DP), parameter :: e2 = 2.d0, epsr = 1.0d-6, epsg = 1.0d-10
 
   if (igcx.eq.0.and.igcc.eq.0) return
   etxcgc = 0.d0

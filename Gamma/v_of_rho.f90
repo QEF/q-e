@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,6 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   ! input: the number of G vectors
   ! input: correspondence G <-> FFT
   ! input: first nonzero G-vector
-
   real(kind=DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
        gg (ngm), alat, omega, vtxc, etxc, ehart, charge, v (nrxx, nspin)
   ! input: the valence charge
@@ -65,7 +64,6 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   do is=1,nspin
      call add_efield(v(1,is))
   enddo
-  !
   call stop_clock ('v_of_rho')
   return
 end subroutine v_of_rho
@@ -77,18 +75,15 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !     Exchange-Correlation potential Vxc(r) from n(r)
   !
-#include "machine.h"
   use parameters, only : DP
-  use gvect, only: nlm
   implicit none
   !
   ! input
   !
 
   integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
-       nl(ngm)
-
-  ! nspin=1 :unpolarized, =2 :spin-polarized
+       nl (ngm)
+  !  nspin=1 :unpolarized, =2 :spin-polarized
   ! the FFT indices
   ! the true FFT array dimensions
   ! the total dimension
@@ -128,6 +123,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   ! counter on G vectors
   ! number of points with wrong zeta/charge
   !
+  !
   !      call start_clock('vxc')
   !
   ! initialization
@@ -145,9 +141,9 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         arhox = abs (rhox)
         if (arhox.gt.1.d-30) then
            call xc (arhox, ex, ec, vx, vc)
-           v (ir, nspin) = e2 * (vx (1) + vc (1) )
+           v(ir,nspin) = e2 * (vx(1) + vc(1) )
            etxc = etxc + e2 * (ex + ec) * rhox
-           vtxc = vtxc + v (ir, nspin) * rho (ir, nspin)
+           vtxc = vtxc + v(ir,nspin) * rho(ir,nspin)
         endif
      enddo
   else
@@ -158,22 +154,22 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      neg (2) = 0
      neg (3) = 0
      do ir = 1, nrxx
-        rhox = rho (ir, 1) + rho (ir, 2) + rho_core (ir)
-        arhox = abs (rhox)
+        rhox = rho(ir,1) + rho(ir,2) + rho_core(ir)
+        arhox = abs(rhox)
         if (arhox.gt.1.d-30) then
-           zeta = (rho (ir, 1) - rho (ir, 2) ) / arhox
-           if (abs (zeta) .gt.1.d0) then
-              neg (3) = neg (3) + 1
-              zeta = sign (1.d0, zeta)
+           zeta = ( rho(ir,1) - rho(ir,2) ) / arhox
+           if (abs(zeta) .gt.1.d0) then
+              neg(3) = neg(3) + 1
+              zeta = sign(1.d0,zeta)
            endif
-           if (rho (ir, 1) < 0.d0) neg (1) = neg (1) + 1
-           if (rho (ir, 2) < 0.d0) neg (2) = neg (2) + 1
-           call xc_spin (arhox, zeta, ex, ec, vx (1), vx (2), vc (1), vc (2) )
+           if (rho(ir,1) < 0.d0) neg(1) = neg(1) + 1
+           if (rho(ir,2) < 0.d0) neg(2) = neg(2) + 1
+           call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
            do is = 1, nspin
-              v (ir, is) = e2 * (vx (is) + vc (is) )
+              v(ir,is) = e2 * (vx(is) + vc(is) )
            enddo
            etxc = etxc + e2 * (ex + ec) * rhox
-           vtxc = vtxc + v (ir, 1) * rho (ir, 1) + v (ir, 2) * rho (ir, 2)
+           vtxc = vtxc + v(ir,1) * rho(ir,1) + v(ir,2) * rho(ir,2)
         endif
      enddo
 #ifdef __PARA
@@ -197,6 +193,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   ! add gradient corrections (if any)
   !
+
   call gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
 #ifdef __PARA
@@ -207,7 +204,6 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   return
 end subroutine v_xc
-
 !
 !--------------------------------------------------------------------
 subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
@@ -216,8 +212,9 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !     Hartree potential VH(r) from n(r)
   !
-  use parameters, only: DP
-  use gvect, only: nlm
+  USE parameters,  ONLY: DP
+  USE gvect, ONLY: nlm
+  USE wvfct, ONLY: gamma_only
   implicit none
   !
   !    input
@@ -239,8 +236,8 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   integer :: ir, is, ig
   !
   !      call start_clock('vh')
-
-  allocate (aux(2,nrxx),aux1(2,ngm) )
+  !
+  allocate (aux(2,nrxx), aux1(2,ngm) )
   tpiba2 = (fpi / 2.d0 / alat) **2
   !
   !  copy total rho in aux
@@ -251,10 +248,9 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !  bring rho (aux) to G space
   !
-
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   charge = 0.d0
-  if (gstart == 2) charge = omega * aux (1, nl (1) )
+  if (gstart == 2) charge = omega * aux(1,nl(1))
 #ifdef __PARA
   call reduce (1, charge)
 #endif
@@ -265,21 +261,29 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   aux1(:,:) = 0.d0
   do ig = gstart, ngm
      fac = e2 * fpi / (tpiba2 * gg (ig) )
-     ehart = ehart + (aux(1, nl(ig))**2 + aux(2,nl(ig))**2) * fac
-     aux1 (1, ig) = fac * aux (1, nl (ig) )
-     aux1 (2, ig) = fac * aux (2, nl (ig) )
+     ehart = ehart + (aux(1,nl(ig))**2 + aux(2,nl(ig))**2) * fac
+     aux1(1,ig) = fac * aux(1,nl(ig))
+     aux1(2,ig) = fac * aux(2,nl(ig))
   enddo
-  ehart = ehart * omega
+  if (gamma_only) then
+     ehart = ehart * omega
+  else
+     ehart = ehart * omega / 2.d0
+  end if
 #ifdef __PARA
   call reduce (1, ehart)
 #endif
   aux(:,:) = 0.d0
   do ig = 1, ngm
-     aux (1, nl (ig) ) = aux1 (1, ig)
-     aux (2, nl (ig) ) = aux1 (2, ig)
-     aux (1, nlm(ig) ) = aux1 (1, ig)
-     aux (2, nlm(ig) ) =-aux1 (2, ig)
+     aux(1,nl(ig)) = aux1(1,ig)
+     aux(2,nl(ig)) = aux1(2,ig)
   enddo
+  if (gamma_only) then
+     do ig = 1, ngm
+        aux(1,nlm(ig)) =   aux1(1,ig)
+        aux(2,nlm(ig)) = - aux1(2,ig)
+     enddo
+  end if
   !
   !      transform hartree potential to real space
   !
@@ -289,11 +293,13 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   do is = 1, nspin
      do ir = 1, nrxx
-        v (ir, is) = v (ir, is) + aux (1, ir)
+        v(ir,is) = v(ir,is) + aux(1,ir)
      enddo
   enddo
 
+
   deallocate (aux,aux1)
+  !
   !      call stop_clock('vh')
   !
   return

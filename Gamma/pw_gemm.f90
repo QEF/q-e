@@ -17,7 +17,7 @@ subroutine pw_gemm (sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc)
   !
 #include "machine.h"
   use parameters, only: DP
-  use pwcom, only: gstart
+  use gvect, only: gstart
   implicit none
   ! input
   integer :: na, nb, n, lda, ldb, ldc

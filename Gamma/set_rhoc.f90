@@ -41,11 +41,12 @@ subroutine set_rhoc
      if (nlcc (nt) ) goto 10
   enddo
   rho_core(:) = 0.d0
+
   return
 
 10 continue
   allocate (aux( nrxx))    
-  allocate (rhocg(  ngl))    
+  allocate (rhocg( ngl))    
   aux (:) = 0.d0
   !
   !    the sum is on atom types
@@ -62,13 +63,15 @@ subroutine set_rhoc
         !     multiply by the structure factor and sum
         !
         do ng = 1, ngm
-           aux (nl (ng) ) = aux (nl (ng) ) + strf (ng, nt) * rhocg (igtongl (ng) )
+           aux(nl(ng)) = aux(nl(ng)) + strf(ng,nt) * rhocg(igtongl(ng))
         enddo
      endif
   enddo
-  do ng = 1, ngm
-     aux(nlm(ng)) = conjg(aux(nl (ng)))
-  end do
+  if (gamma_only) then
+     do ng = 1, ngm
+        aux(nlm(ng)) = conjg(aux(nl (ng)))
+     end do
+  end if
   !
   !   the core charge in real space
   !
@@ -89,8 +92,8 @@ subroutine set_rhoc
      ! Up to October 1999 the core charge was forced to be positive definite.
      ! This induces an error in the force, and probably stress, calculation if
      ! the number of grid points where the core charge would be otherwise neg
-     ! is large. The error disappears for sufficiently high cut-off, but may
-     ! be rather large and it is better to leave the core charge as it is.
+     ! is large. The error disappears for sufficiently high cut-off, but may be
+     ! rather large and it is better to leave the core charge as it is.
      ! If you insist to have it positive definite (with the possible problems
      ! mentioned above) uncomment the following lines.  SdG, Oct 15 1999
      !

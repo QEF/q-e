@@ -381,7 +381,7 @@ function rho_dot_product (rho1,rho2)
   integer  :: is, ig
 
   rho_dot_product = 0.d0
-  if (nspin.eq.1) then
+  if (nspin == 1) then
      is=1
      do ig = gstart,ngm0
         fac = e2*fpi / (tpiba2*gg(ig))
@@ -450,7 +450,7 @@ function ns_dot_product (ns1,ns2)
         ns_dot_product = ns_dot_product + 0.5d0*Hubbard_U(nt) * sum
      endif
   end do
-  if (nspin.eq.1) ns_dot_product = 2.d0 * ns_dot_product
+  if (nspin == 1) ns_dot_product = 2.d0 * ns_dot_product
 
   return
 end function ns_dot_product

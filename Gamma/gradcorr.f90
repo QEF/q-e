@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   real(kind=DP), allocatable :: grho (:,:,:), h (:,:,:), dh (:)
   real(kind=DP) :: grho2 (2), sx, sc, v1x, v2x, v1c, v2c, v1xup, v1xdw, &
        v2xup, v2xdw, v1cup, v1cdw , etxcgc, vtxcgc, segno, arho, fac
-  real(kind=DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10, e2=2.d0
+  real(kind=DP), parameter :: e2 = 2.d0, epsr = 1.0d-6, epsg = 1.0d-10
 
   if (igcx.eq.0.and.igcc.eq.0) return
   etxcgc = 0.d0
@@ -143,10 +143,10 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   ! Calculates ga = \grad a in R-space (a is also in R-space)
   use parameters
   use gvect, only: nlm
+  use wvfct, only: gamma_only
   implicit none
 
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, &
-       nl (ngm)
+  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   real(kind=DP) :: a (nrxx), g (3, ngm), ga (3, nrxx), alat
   integer :: n, ipol
   real(kind=DP), allocatable :: aux (:,:), gaux (:,:)
@@ -160,36 +160,40 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !
   ! copy a(r) to complex array...
   !
-  aux(1,:) = a(:)
   aux(2,:) = 0.d0
+  call DCOPY (nrxx, a, 1, aux, 2)
   !
   ! bring a(r) to G-space, a(G) ...
   !
-  call cft3 (aux(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   ! multiply by (iG) to get (\grad_ipol a)(G) ...
   !
-  ga = 0.0d0
+  ga(:,:) = 0.d0
 
   do ipol = 1, 3
-     gaux = 0.0d0
+     gaux(:,:) = 0.d0
      do n = 1, ngm
         gaux (1, nl (n) ) = - g (ipol, n) * aux (2, nl (n) )
-        gaux (1, nlm(n) ) = - g (ipol, n) * aux (2, nl (n) )
         gaux (2, nl (n) ) =   g (ipol, n) * aux (1, nl (n) )
-        gaux (2, nlm(n) ) = - g (ipol, n) * aux (1, nl (n) )
      enddo
+     if (gamma_only) then
+        do n = 1, ngm
+           gaux (1, nlm(n) ) =   gaux (1, nl(n) )
+           gaux (2, nlm(n) ) = - gaux (2, nlm(n) )
+        enddo
+     end if
      !
      ! bring back to R-space, (\grad_ipol a)(r) ...
      !
-     call cft3 (gaux(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
 
-     call DAXPY (nrxx, tpiba, gaux(1,1), 2, ga (ipol, 1), 3)
-  enddo
+     call DAXPY (nrxx, tpiba, gaux, 2, ga (ipol, 1), 3)
 
+  enddo
   deallocate (gaux)
   deallocate (aux)
   return
@@ -204,9 +208,9 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   ! Calculates da = \sum_i \grad_i a_i in R-space
   use parameters
   use gvect, only: nlm
+  use wvfct, only: gamma_only
   implicit none
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, &
-       nl (ngm)
+  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   real(kind=DP) :: a (3, nrxx), g (3, ngm), da (nrxx), alat
   integer :: n, ipol
   real(kind=DP), allocatable :: aux (:,:), gaux (:,:)
@@ -221,8 +225,8 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
      !
      ! copy a(ipol,r) to a complex array...
      !
-     aux(1,:) = a(ipol,:)
      aux(2,:) = 0.d0
+     call DCOPY (nrxx, a (ipol, 1), 3, aux, 2)
      !
      ! bring a(ipol,r) to G-space, a(G) ...
      !
@@ -233,10 +237,14 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
      do n = 1, ngm
         gaux (1, nl (n) ) = gaux (1, nl (n) ) - g (ipol, n) * aux (2,nl(n))
         gaux (2, nl (n) ) = gaux (2, nl (n) ) + g (ipol, n) * aux (1,nl(n))
-        gaux (1, nlm(n) ) = gaux (1, nl (n) )
-        gaux (2, nlm(n) ) =-gaux (2, nl (n) )
      enddo
   enddo
+  if (gamma_only) then
+     do n = 1, ngm
+        gaux (1, nlm(n) ) =   gaux (1, nl (n) )
+        gaux (2, nlm(n) ) = - gaux (2, nl (n) )
+     enddo
+  end if
   !
   !  bring back to R-space, (\grad_ipol a)(r) ...
   !

@@ -14,7 +14,7 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   !
 #include "machine.h"
   use parameters, only: DP
-  use pwcom, only: gstart
+  use gvect, only: gstart
   implicit none
   ! input
   integer :: n, m, lda, ldb

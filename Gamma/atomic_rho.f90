@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,47 +17,35 @@ subroutine atomic_rho (rhoa, nspina)
   !               calculated assuming an uniform atomic spin-polarization
   !               equal to starting_magnetization(nt)
   !
-  ! NB: nspina may not be equal to nspin because in some cases (as in upda
+  ! NB: nspina may not be equal to nspin because in some cases (as in update)
   ! the total charge only could be needed, even in a LSDA calculation.
   !
   !
 #include "machine.h"
 
   use pwcom
-  USE wavefunctions,  ONLY: psic
+  USE wavefunctions,    ONLY : psic
   implicit none
   integer :: nspina
   ! the number of spin polarizations
-
-  real(kind=DP) :: rhoa (nrxx, nspina), rhoneg, rhorea, rhoima, gx
-  real(kind=DP), allocatable :: rhocgnt (:), aux (:)
+  real(kind=DP) :: rhoa (nrxx, nspina)
   ! the output atomic charge
-  ! negative charge
-  ! real charge
-  ! imaginary charge
-  ! the modulus of G
-  ! the value of the integral
-  ! the integrand function
-
-  complex(kind=DP), allocatable :: rhocg (:,:)
-  ! auxiliary var: charge dens. in G space
-
-  integer :: ir, is, ig, igl, igl0, nt
-  ! counter on mesh points
-  ! counter on spin polarizations
-  ! counter on G vectors
-  ! counter on G vectors shells
-  ! index of first shell with G != 0
-  ! counter on atom types
-
   !
-  ! superposition of atomic charges contained in the array rho_at and
-  ! already set in readin-readvan
+  ! local variables
+  !
+  real(kind=DP) :: rhoneg, rhorea, rhoima, gx
+  real(kind=DP), allocatable :: rhocgnt (:), aux (:)
+  complex(kind=DP), allocatable :: rhocg (:,:)
+  integer :: ir, is, ig, igl, nt
+  !
+  ! superposition of atomic charges contained in the array rho_at
+  ! (read from pseudopotential files)
+  !
+  ! allocate work space (psic must already be allocated)
   !
   allocate (rhocg(  ngm, nspina))    
   allocate (aux( ndm))    
   allocate (rhocgnt( ngl))    
-
   rhoa(:,:) = 0.d0
   rhocg(:,:) = (0.d0,0.d0)
 
@@ -65,26 +53,22 @@ subroutine atomic_rho (rhoa, nspina)
      !
      ! Here we compute the G=0 term
      !
-     if (gl (1) .lt.1.0d-8) then
+     if (gstart == 2) then
         do ir = 1, msh (nt)
            aux (ir) = rho_at (ir, nt)
         enddo
         call simpson (msh (nt), aux, rab (1, nt), rhocgnt (1) )
-        igl0 = 2
-     else
-        igl0 = 1
      endif
      !
      ! Here we compute the G<>0 term
      !
-     do igl = igl0, ngl
+     do igl = gstart, ngl
         gx = sqrt (gl (igl) ) * tpiba
         do ir = 1, msh (nt)
            if (r (ir, nt) .lt.1.0d-8) then
-              aux (ir) = rho_at (ir, nt)
+              aux(ir) = rho_at(ir,nt)
            else
-              aux (ir) = rho_at (ir, nt) * sin (gx * r (ir, nt) ) / &
-                   (r (ir, nt) * gx)
+              aux(ir) = rho_at(ir,nt) * sin(gx*r(ir,nt)) / (r(ir,nt)*gx)
            endif
         enddo
         call simpson (msh (nt), aux, rab (1, nt), rhocgnt (igl) )
@@ -92,36 +76,32 @@ subroutine atomic_rho (rhoa, nspina)
      !
      ! we compute the 3D atomic charge in reciprocal space
      !
-     if (nspina.eq.1) then
+     if (nspina == 1) then
         do ig = 1, ngm
-           rhocg (ig, 1) = rhocg (ig, 1) + strf (ig, nt) * &
-                rhocgnt ( igtongl (ig) ) / omega
+           rhocg(ig,1) = rhocg(ig,1) + &
+                         strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
         enddo
      else
-
         do ig = 1, ngm
-           rhocg (ig, 1) = rhocg (ig, 1) + 0.5d0 * (1.d0 + &
-                starting_magnetization (nt) ) * strf (ig, nt) * &
-                rhocgnt ( igtongl (ig) ) / omega
-
-           rhocg (ig, 2) = rhocg (ig, 2) + 0.5d0 * (1.d0 - &
-                starting_magnetization (nt) ) * strf (ig, nt) * &
-                rhocgnt ( igtongl (ig) ) / omega
+           rhocg(ig,1) = rhocg(ig,1) + &
+                         0.5d0 * ( 1.d0 + starting_magnetization(nt) ) * &
+                         strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
+           rhocg(ig,2) = rhocg(ig,2) + &
+                         0.5d0 * ( 1.d0 - starting_magnetization(nt) ) * &
+                         strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
         enddo
      endif
   enddo
   deallocate (rhocgnt)
-
   deallocate (aux)
+
   do is = 1, nspina
      !
      ! and we return to real space
      !
-     psic(:) = (0.d0, 0.d0)
-     do ig = 1, ngm
-        psic (nl (ig) ) = rhocg (ig, is)
-        psic (nlm(ig) ) = conjg( rhocg (ig, is)  )
-     enddo
+     psic(:) = (0.d0,0.d0)
+     psic (nl (:) ) = rhocg (:, is)
+     if (gamma_only) psic ( nlm(:) ) = conjg( rhocg (:, is) )
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      !
      ! we check that everything is correct
@@ -140,7 +120,7 @@ subroutine atomic_rho (rhoa, nspina)
      call reduce (1, rhoneg)
      call reduce (1, rhoima)
 #endif
-     if (rhoneg.lt. - 1.0d-4.or.rhoima.gt.1.0d-4) &
+     if ( rhoneg < -1.0d-4 .or. rhoima > 1.0d-4 ) &
           write (6,'(/"  Warning: negative or imaginary starting charge ",&
           &2f12.6,i3)') rhoneg, rhoima, is
   enddo

@@ -195,7 +195,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
 
   call gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, ngm, g, alat, omega, e2, etxc, vtxc, v, nspin)
+       nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
 #ifdef __PARA
   call reduce (1, vtxc)
   call reduce (1, etxc)
