@@ -41,6 +41,7 @@ program projwfc
                                                                                 
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
+  INTEGER, EXTERNAL   :: iargc
                                                                                 
 
   ! 

@@ -52,6 +52,7 @@ program dos
                                                                                 
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
+  INTEGER, EXTERNAL   :: iargc
                                                                                 
   !
   call start_postproc (nd_nmbr)

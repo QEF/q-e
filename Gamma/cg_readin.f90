@@ -26,7 +26,7 @@ subroutine cg_readin
                                                                                 
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
-                                                                                
+  INTEGER, EXTERNAL   :: iargc
 
   !
   call start_clock('cg_readin')

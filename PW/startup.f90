@@ -58,13 +58,14 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CHARACTER (LEN=9)  :: code, cdate, ctime
   CHARACTER (LEN=80) :: np
   INTEGER            :: gid
-  EXTERNAL              date_and_tim
-  INTEGER            :: ierr = 0, ilen, iargc, nargs, iiarg
+  INTEGER            :: ierr = 0, ilen, nargs, iiarg
+  INTEGER, EXTERNAL  :: iargc
+
   !
   !
 #if defined (__PARA)
   !
-  ! ... prallel case setup :  MPI environment is initialized
+  ! ... parallel case setup :  MPI environment is initialized
   !  
 #  if defined (__T3E)
   !

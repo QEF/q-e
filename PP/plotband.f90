@@ -7,7 +7,8 @@ program read_bands
   real, allocatable :: e(:,:), k(:,:), e_in(:), kx(:)
   real :: k1(3), k2(3), xk1, xk2, ps
   integer, allocatable :: npoints(:)
-  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,ni,nf,nl, iargc
+  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,ni,nf,nl
+  integer, external :: iargc
   logical, allocatable :: high_symmetry(:), is_in_range(:)
   character(len=80) :: filename, prgname
   namelist /plot/ nks, nbnd

@@ -204,8 +204,7 @@ SUBROUTINE iosys()
   !
   INTEGER             :: unit = 5, &! standard input unit
                          i, iiarg, nargs, ia, ios, ierr, ilen, is, image, nt
-  INTEGER             :: iargc
-  EXTERNAL               iargc                 
+  INTEGER, EXTERNAL   :: iargc                 
   CHARACTER (LEN=80)  :: input_file
   !
   !

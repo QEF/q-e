@@ -38,7 +38,7 @@ program q2r
                                                                                 
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
-                                                                                
+  INTEGER, EXTERNAL   :: iargc
 
   !
   nr1=0
