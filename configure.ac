@@ -22,6 +22,18 @@ arflags=$ARFLAGS
 mylib=$MYLIB
 includefftw=$INCLUDEFFTW
 
+# command-line arguments
+for arg in $*
+do
+	if test "$arg" = "--disable-parallel"
+	then
+		no_parallel=1
+	elif test "$arg" = "--disable-shared"
+	then
+		no_shared=1
+	fi
+done
+
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
 
@@ -32,14 +44,16 @@ AC_CANONICAL_BUILD
 case $build in
 *-pc-linux-* )
 	is_linux=1
-	try_f90="mpif90 ifort ifc pgf90 f90 mpif77 pgf77 f77 g77"
+	try_f90_parallel="mpif90"
+	try_f90="ifort ifc pgf90 f90 pgf77 f77 g77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
 	;;
 *-ibm-aix* )
 	is_aix=1
-	try_f90="mpxlf90_r mpxlf90 xlf90 f90 xlf f77 g77"
+	try_f90_parallel="mpxlf90_r mpxlf90"
+	try_f90="xlf90 f90 xlf f77 g77"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX"
@@ -58,7 +72,8 @@ alphaev*-dec-osf* )
 	;;
 sparc-sun-* )
 	is_sparc=1
-	try_f90="mpf90 f90 mpf77 f77 g77"
+	try_f90_parallel="mpf90"
+	try_f90="f90 f77 g77"
 	try_ar="ar"
 	try_arflags="ruv"
 	;;
@@ -72,6 +87,7 @@ sparc-sun-* )
 	try_arflags="ruv"
 	;;
 esac
+if ! test $no_parallel ; then try_f90="$try_f90_parallel $try_f90" ; fi
 
 # check Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
@@ -191,6 +207,7 @@ case "$build:$f90" in
 		try_fflags_noopt="-O0"
 		try_cpp="cpp"
 		try_ldflags=""
+		try_ldflags_static="-Bstatic"
 		try_dflags="$try_dflags -D__PGI"
 	elif test $is_ifc
 	then
@@ -229,6 +246,7 @@ case "$build:$f90" in
 		try_fflags="-Vaxlib -O2 -tpp6"
 		try_fflags_noopt="-O0"
 		try_ldflags="-Vaxlib"
+		try_ldflags_static="-static"
 		try_dflags="$try_dflags -D__INTEL"
 		pre_f_dflags="-fpp "
 		have_cpp=1
@@ -240,6 +258,7 @@ case "$build:$f90" in
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
 	try_ldflags="-q64"
+	# try_ldflags_static="-bstatic"
 	pre_f_dflags="-WF,"
 	aix_flags=1
 	have_cpp=1
@@ -283,6 +302,8 @@ sparc-sun-*:mpf90 | sparc-sun-*:f90 )
 	try_ldflags=""
 	;;
 esac
+if test $no_shared ; then try_ldflags="$try_ldflags $try_ldflags_static" ; fi
+
 if test "$fflags" = ""       ; then fflags=$try_fflags             ; fi
 if test "$f90flags" = ""     ; then f90flags=$try_f90flags         ; fi
 if test "$fflags_noopt" = "" ; then fflags_noopt=$try_fflags_noopt ; fi
