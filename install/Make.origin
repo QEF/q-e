@@ -8,6 +8,8 @@
 # Add -D__SGI64 if you are going to compile in 64 bit mode
 #
 # flags for CP code
+FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
+FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
 # CPPFLAGS = -D__FFTW -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA -I$(OSHOME)/include
 #
 CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA -I$(OSHOME)/include

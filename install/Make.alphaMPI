@@ -6,10 +6,20 @@
 # Use -D__FFTW instead of -DDXML if you use fft routines from fftw library
 # Add -DNOPENCILS if you do not want to use the FFT with pencils
 # (in some cases it is slower than the full 3d FFT)
+# if you use -D__FFTW you should specify also the directories for the
+# libfftw.a library and for the fftw.h include file
 #
 CPPFLAGS = -DDEC -D__FFTW -D__PARA -D__MPI -I$(OSHOME)/include
+
+# Preset values for FFTW
+# FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
+# FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
+# Use this for PW
+# CPPFLAGS = -DDEC -D__FFTW -D__PARA -D__MPI -D__TRU64 -I$(OSHOME)/include \
+#  -I$(FFTW_INC_DIR)
 # Use this flags for FPMD
-# CPPFLAGS = -D__QSW -D__FFTW -D__PARA -D__MPI -D__TRU64 -I$(OSHOME)/include
+# CPPFLAGS = -D__QSW -D__FFTW -D__PARA -D__MPI -D__TRU64 -I$(OSHOME)/include \
+# -I$(FFTW_INC_DIR)
 
 #
 # Fortran compiler:
@@ -41,12 +51,12 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 #
 # Libraries (mpi + cxml + fftw) :
 #
-LIBS = -lfmpi -lpmpi -lmpi -lelan -lcxml -L/usr/local/fftw-2.1.3/lib/ -lfftw
+LIBS = -lfmpi -lpmpi -lmpi -lelan -lcxml -L$(FFTW_LIB_DIR) -lfftw
 #
 # Loader:
 # 
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
 
 AR = ar
 ARFLAGS = rv

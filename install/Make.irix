@@ -9,7 +9,10 @@
 #
 # flags for CP code
 #
-CPPFLAGS = -D__FFTW -D__SGI -D__SGI64 -I$(OSHOME)/include
+FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
+FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
+#
+CPPFLAGS = -D__FFTW -D__SGI -D__SGI64 -I$(OSHOME)/include -I$(FFTW_INC_DIR)
 #
 # flags for PW and FPMD
 #
@@ -46,13 +49,13 @@ CCFLAGS=  -mips4 -64 -O2 $(INCLUDEFFTW) $(CPPFLAGS)
 #
 # LIBS = -lcomplib.sgimath -L/cineca/lib -lfftw64
 #
-LIBS = -lcomplib.sgimath -L/usr/local/lib -lfftw
+LIBS = -lcomplib.sgimath -L$(FFTW_LIB_DIR) -lfftw
 #
 # Loader:
 #
 LD=$(F90)
 #
-LDFLAGS = $(FFLAGS) $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(FFLAGS) $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
 #
 #
 # ar:

@@ -1,16 +1,21 @@
 # System-dependent definitions for Hitachi SR8000
 # contributed by Noejung Park
 #
+FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
+FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
+#
 CPPFLAGS =-DHITACHI -D__PARA -D__MPI -D__FFTW
 #
 # Fortran compiler:
 #
 F90 = f90
 F77 = f77
+CC = cc
 FFLAGS = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
          -I$(OSHOME)/include -I/usr/mpi/include
 F77FLAGS = $(FFLAGS)
 F90FLAGS = $(FFLAGS) $(CPPFLAGS)
+CCFLAGS = -D__FFTW -I$(FFTW_INC_DIR)
 #
 # This is needed to tell the compiler where modules are
 #
@@ -18,15 +23,14 @@ MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/
 #
 # Libraries:
 LAPACKdir = /usr/lib/LAPACK/lib32
-FFTWdir = /home/a0a023/ParkSan/SRC/LIBS
 MPIdir = /usr/mpi/lib/lib32
 LIBS= -L$(LAPACKdir) -llapack_sc -lblas_sc \
       -L$(MPIdir) -lfmpi -lmpi \
-      -L$(FFTWdir) -lfftw -lm
+      -L$(FFTW_LIB_DIR) -lfftw -lm
 
 # 
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
 #
 # ar:
 #

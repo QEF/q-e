@@ -12,11 +12,15 @@ CPP = /lib/cpp
 # blas/lapack library names contain resp. one or two underscores at the end
 # Define FFTW library names exactly as they appear in the library
 #
+FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
+FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
+#
 CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -DABSOFT -D__FFTW \
            -D"FFTW_F77=fftw_f77__" \
            -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan__" \
            -D"FFTWND_F77_ONE=fftwnd_f77_one__" \
-           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan__"
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan__"  \
+           -I$(FFTW_INC_DIR)
 
 #
 # Fortran compiler
@@ -58,14 +62,14 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 # for precompiled blas/lapack, use the following
 # (some precompiled blas/lapack libraries may need -lg2c)
 #
-LIBS= -llapack -lblas -lfftw -lU77 -lm
+LIBS= -llapack -lblas -L(FFTW_LIB_DIR) -lfftw -lU77 -lm
 #
 # The following is to use blas and lapack from the source code
 # LIBS= -lfftw -lU77 -lm
 # MYLIB=blas_and_lapack
 #
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
 
 #
 # ar:

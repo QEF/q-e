@@ -13,6 +13,9 @@ CPP = /lib/cpp
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
+FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
+FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
+#
 CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -D__PGI -D__FFTW  \
            -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan" \
            -D"FFTW_F77=fftw_f77"  \
@@ -31,7 +34,7 @@ F90FLAGS =  -fast -r8
 # C compiler
 #
 CC = pgcc
-CCFLAGS  =  -fast -D__LINUX -D__PGI -D__FFTW
+CCFLAGS  =  -fast -D__LINUX -D__PGI -D__FFTW -I$(FFTW_INC_DIR)
 
 #
 # This is needed to tell the compiler where modules are
@@ -46,12 +49,12 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 # we assume that fftw is placed in /usr/local/lib
 # 
 LD=$(F90)
-LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw 
+LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L$(FFTW_LIB_DIR) -lfftw 
 #
 # For CINECA machines use:
-# LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L/cineca/lib -lfftw
+# LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L$(FFTW_INC_DIR) -lfftw
 #
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
+LDFLAGS = $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS) $(MODULEFLAG)
 
 #
 # ar:
