@@ -254,11 +254,11 @@ REAL(dbl) :: emass_cutoff
 CHARACTER(LEN=80) :: orthogonalization   
 ! orthogonalization = 'Gram-Schmidt' | 'ortho'*
 ! selects the orthonormalization method for electronic wave functions
-!  'Gram-Schmidt'  use Gram-Schmidt algorithm
-!  'ortho'         use iterative algorithm 
-
-INTEGER :: electron_maxstep
-! max number of electronic steps per
+!  'ortho'         use iterative algorithm - if it doesn't converge, reduce
+!                  the timestep, or use options ortho_max and ortho_eps,
+!                  or use Gram-Schmidt instead just to start the simulation
+!  'Gram-Schmidt'  use Gram-Schmidt algorithm - to be used ONLY in the first
+!                  few steps. YIELDS INCORRECT ENERGIES AND EIGENVALUES.
 
 REAL(dbl) :: ortho_eps
 ! meaningful only if orthogonalization = 'ortho'
@@ -267,6 +267,9 @@ REAL(dbl) :: ortho_eps
 INTEGER   :: ortho_max
 ! meaningful only if orthogonalization = 'ortho'
 ! maximum number of iterations for orthonormalization
+
+INTEGER :: electron_maxstep
+! max number of electronic steps in electronic minimization
 
 CHARACTER(LEN=80) :: electron_dynamics   
 ! electron_dynamics = 'sd'* | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' 
