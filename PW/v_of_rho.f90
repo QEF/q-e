@@ -112,20 +112,17 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   ! the square of the e charge
   real(kind=DP), parameter :: e2 = 2.d0
 
-  real(kind=DP) :: rhox, arhox, zeta, ex, ec, vx (2), vc (2)
-  ! the total charge in each point
-  ! the absolute value of the charge
-  ! the absolute value of the charge
-  ! local exchange energy
-  ! local correlation energy
-  ! local exchange potential
-  ! local correlation potential
-  integer :: ir, is, ig, neg (3)
+  real(kind=DP) :: rhox, arhox, zeta, ex, ec, vx (2), vc (2), rhoneg(2)
+  ! rhox: total (valence+pseudocore if present) charge in each point
+  ! arhox: abs(rhox)
+  ! zeta: spin polarization ( -1 <= zeta <= 1)
+  ! ex, ec: local exchange and correlation energies
+  ! vx, vc: local exchange and correlation potentials
+  ! rhoneg: integral of the negative charge
+  integer :: ir, is, ig
   ! counter on mesh points
   ! counter on spin polarizations
   ! counter on G vectors
-  ! number of points with wrong zeta/charge
-  !
   !
   !      call start_clock('vxc')
   !
@@ -134,6 +131,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   etxc = 0.d0
   vtxc = 0.d0
   v(:,:) = 0.d0
+  rhoneg(:)=0.d0
 
   if (nspin == 1) then
      !
@@ -148,25 +146,20 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            etxc = etxc + e2 * (ex + ec) * rhox
            vtxc = vtxc + v(ir,nspin) * rho(ir,nspin)
         endif
+        if (rho(ir,nspin) < 0.d0) rhoneg(1) = rhoneg(1) - rho(ir,nspin)
      enddo
   else
      !
      ! spin-polarized case
      !
-     neg (1) = 0
-     neg (2) = 0
-     neg (3) = 0
      do ir = 1, nrxx
         rhox = rho(ir,1) + rho(ir,2) + rho_core(ir)
         arhox = abs(rhox)
         if (arhox.gt.1.d-30) then
            zeta = ( rho(ir,1) - rho(ir,2) ) / arhox
            if (abs(zeta) .gt.1.d0) then
-              neg(3) = neg(3) + 1
               zeta = sign(1.d0,zeta)
            endif
-           if (rho(ir,1) < 0.d0) neg(1) = neg(1) + 1
-           if (rho(ir,2) < 0.d0) neg(2) = neg(2) + 1
            call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
            do is = 1, nspin
               v(ir,is) = e2 * (vx(is) + vc(is) )
@@ -174,20 +167,17 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            etxc = etxc + e2 * (ex + ec) * rhox
            vtxc = vtxc + v(ir,1) * rho(ir,1) + v(ir,2) * rho(ir,2)
         endif
+        if (rho(ir,1) < 0.d0) rhoneg(1) = rhoneg(1) - rho(ir,1) 
+        if (rho(ir,2) < 0.d0) rhoneg(2) = rhoneg(2) - rho(ir,2) 
      enddo
-#ifdef __PARA
-     call ireduce (3, neg)
-#endif
-     if (neg(3).gt.0) WRITE( stdout,'(/,4x," npt with |zeta| > 1: ",i8, &
-          &  ", npt tot ",i8, ",",f10.2, " %" )') neg(3), &
-          &  nr1*nr2*nr3, dble(neg(3)*100) / dble(nr1*nr2*nr3)
-     if (neg(1).gt.0) WRITE( stdout,'(/,4x," npt with rhoup < 0: ",i8, &
-          &  ", npt tot ",i8, ",",f10.2, " %" )') neg(1), &
-          &  nr1*nr2*nr3, dble(neg(1)*100) / dble(nr1*nr2*nr3)
-     if (neg(2).gt.0) WRITE( stdout,'(/,4x," npt with rhodw < 0: ",i8, &
-          &  ", npt tot ",i8, ",",f10.2, " %" )') neg(2), &
-          &  nr1*nr2*nr3, dble(neg(2)*100) / dble(nr1 * nr2 * nr3)
   endif
+#ifdef __PARA
+  call reduce (2, rhoneg)
+#endif
+  rhoneg(:) = rhoneg(:) * omega / (nr1 * nr2 * nr3)
+  if (rhoneg(1) > 1.0d-8 .OR. rhoneg(2) > 1.0d-8 ) then
+     WRITE( stdout,'(/,4x," negative rho (up, down): ",2e10.3)') rhoneg
+  end if
   !
   ! energy terms, local-density contribution
   !
