@@ -105,7 +105,7 @@ veryclean : clean
 	- if test -d GUI ; then ( cd GUI; $(MAKE) $(MFLAGS) veryclean ) ; fi
 
 tar :
-	tar cvf pw.tar \
+	tar cvf espresso.tar \
 	    License README* */README* Makefile */Makefile \
 	    configure configure.ac config.guess config.sub install-sh \
 	    makedeps.sh moduledep.sh make.rules.in make.sys.in \
@@ -114,8 +114,8 @@ tar :
 	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs
 	find install Doc atomic_doc examples pseudo -type f \
-		| grep -v -e /CVS/ -e /results | xargs tar rvf pw.tar
-	gzip pw.tar
+		| grep -v -e /CVS/ -e /results | xargs tar rvf espresso.tar
+	gzip espresso.tar
 
 # TAR-GUI works only if we have CVS-sources !!!
 tar-gui :
