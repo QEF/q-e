@@ -28,7 +28,7 @@ subroutine sum_band
   USE lsda_mod,ONLY: lsda, nspin, current_spin, isk
   USE scf,    ONLY: rho
   USE symme,  ONLY: nsym, s, ftau
-  USE units,  ONLY: iunwfc, nwordwfc, iunigk
+  USE io_files,ONLY: iunwfc, nwordwfc, iunigk
   USE us,     ONLY: okvan, tvanp, becsum, nh, nkb, vkb
   USE wavefunctions_module, ONLY: evc, psic
   USE wvfct, ONLY: nbnd, npwx, npw, igk, wg, et

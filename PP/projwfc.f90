@@ -106,10 +106,9 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use symme, only: nsym, irt
   use varie, only: newpseudo
   use wvfct
-  use units
   use us
   use becmod
-  use io_files, only: nd_nmbr, prefix, tmp_dir
+  use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
   use wavefunctions_module, only: evc
 #ifdef __PARA
   use para

@@ -15,8 +15,8 @@ SUBROUTINE stop_pw( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE varie,             ONLY :  order
-  USE units,             ONLY :  iunwfc, iunoldwfc, iunoldwfc2, iunigk, iunres
-  USE io_files,          ONLY :  prefix
+  USE io_files,          ONLY :  prefix, iunwfc, iunoldwfc, iunoldwfc2, &
+                                 iunigk, iunres
 #ifdef __PARA
   USE mp,                ONLY :  mp_barrier, mp_end
 #endif  

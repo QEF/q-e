@@ -79,7 +79,7 @@ subroutine punch_band (filband)
   use constants, only: rytoev
   use gvect
   use klist
-  use units
+  use io_files, only: iunpun, nwordwfc, iunwfc
   use wvfct
   use us
   use wavefunctions_module, only: evc
