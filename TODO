@@ -1,18 +1,15 @@
-TODO LIST - 20 Dec 2004
+TODO LIST - 23 Dec 2004
 
 BUGS
 
 - fourfold degenerate phonons (Nicolas Mounet)
 - Zr hcp (Nathalie)
-- variable-cell minimization hanging (Lysenkov)
 
 NEW DEVELOPMENTS TO MERGE
 
-- ensemble-DFT dynamics (Nicola)
-- finite electric field (Umari)
-  support for FFTW3 (partly working) by Pascal Thibadeau
-- porting/opimization for Altix by Martin Hilgeman (coming)
-- porting/opimization for SX6 from CASPUR (hopefully coming)
+- porting/optimization for Altix by Martin Hilgeman
+- support for FFTW3 (partly working) by Pascal Thibadeau
+- porting/optimization for SX6 from CASPUR (hopefully coming)
 - META-GGA (when finished/tested)
 
 INSTALLATION/PORTING
