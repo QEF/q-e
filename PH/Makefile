@@ -233,6 +233,7 @@ PWOBJS = \
 ../PW/interpolate.o \
 ../PW/invmat.o \
 ../PW/io_pot.o \
+../PW/io_routines.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
 ../PW/kpoint_grid.o \
@@ -245,6 +246,7 @@ PWOBJS = \
 ../PW/mode_group.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
+../PW/neb_variables.o \
 ../PW/new_ns.o \
 ../PW/newd.o \
 ../PW/openfil.o \
@@ -261,8 +263,10 @@ PWOBJS = \
 ../PW/psymrho.o \
 ../PW/punch.o \
 ../PW/pwcom.o \
+../PW/pw_gemm.o \
 ../PW/qvan2.o \
 ../PW/random.o \
+../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
@@ -272,6 +276,7 @@ PWOBJS = \
 ../PW/readvan.o \
 ../PW/reduce.o \
 ../PW/remove_atomic_rho.o \
+../PW/regterg.o \
 ../PW/restart.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
@@ -279,6 +284,7 @@ PWOBJS = \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
 ../PW/rotate_wfc.o \
+../PW/rotate_wfc_gamma.o \
 ../PW/ruotaijk.o \
 ../PW/s_1psi.o \
 ../PW/s_axis_to_ca.o \
@@ -326,6 +332,7 @@ PWOBJS = \
 ../PW/sumkg.o \
 ../PW/sumkt.o \
 ../PW/summary.o \
+../PW/supercell.o \
 ../PW/swap.o \
 ../PW/symrho.o \
 ../PW/symtns.o \
@@ -342,6 +349,7 @@ PWOBJS = \
 ../PW/v_of_rho.o \
 ../PW/vhpsi.o \
 ../PW/vloc_of_g.o \
+../PW/vloc_psi.o \
 ../PW/vpack.o \
 ../PW/w0gauss.o \
 ../PW/w1gauss.o \
