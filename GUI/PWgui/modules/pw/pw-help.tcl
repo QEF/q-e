@@ -312,6 +312,19 @@ help starting_magnetization -vartype real -helpfmt txt2html -helptext {
              magnetization will be obtained.
 }
 
+help angle1  -vartype real -helpfmt txt2html -helptext {
+             for each atomic type it defines the  angle, expressed in
+             degrees, between the initial magnetization and the z-axis.
+             I.e. the azimutal (Theta) angle in polar coordinates
+}
+
+help angle2  -vartype real -helpfmt txt2html -helptext {
+             for each atomic type it defines the  angle, expressed in
+             degrees, between the projection of the initial magnetization 
+             on x-y plane and the x-axis. 
+             I.e. the Phi angle in polar coordinates.
+}
+
 help occupations  -vartype character -helpfmt txt2html -helptext { 
              'smearing':    gaussian smearing for metals
                             requires a value for degauss
