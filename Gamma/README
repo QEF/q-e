@@ -1,0 +1,30 @@
+2003-01-10
+
+This directory contains a Gamma-only (k=0) version of pw.x,
+using only half G-vectors and performing two fft's at the
+same time whenever possible. It is faster and leaner than
+the ordinary pw.x version, but it can be used only for k=0 
+sampling of the Brillouin Zone. Only Davidson diagonalization 
+is implemented (CG and DIIS are not). It should have otherwise 
+all the functionality of the normal version.
+
+This directory contains also a Gamma-only, q=0 version of
+the phonon code, called "raman". It works in conjunction
+with the Gamma-only version of pw.x. Uses a conjugate-
+gradient algorithm for the solution of linear-response
+equation. Hopefully useful for normal mode calculations in
+molecules. Does not work with ultrasoft pseudopotentials.
+
+The "raman" code can also calculate Raman coefficients with 
+finite differences (experimental). 
+
+Installation:
+  compile pw.x first
+  cd Gamma
+  make lib
+  make pw.x
+  make raman (if desired)
+Usage:
+  Input data for the ordinary versions of pw.x and ph.x should
+  work also for pw.x and raman in this directory
+

@@ -1,0 +1,112 @@
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!-----------------------------------------------------------------------
+subroutine sym_and_write_zue  
+  !-----------------------------------------------------------------------
+  !
+  !  symmetrize the effective charges in the U-E case (Us=scf,E=bare)
+  !  and write them on iudyn and standard output
+  !
+#include "machine.h"
+
+
+  use pwcom 
+  use allocate 
+  use parameters, only : DP 
+  use phcom  
+  implicit none 
+
+  integer :: ipol, jpol, icart, jcart, na, nu, mu  
+  ! counter on polarization
+  ! counter on cartesian coordinates
+  ! counter on atoms and modes
+  ! counter on modes
+
+
+  real(kind=DP) :: work (3, 3, nat)  
+  ! auxiliary space (note the index order
+  call setv (9 * nat, 0.d0, work, 1)  
+#ifdef PARA
+  call reduce (18 * nat, zstarue0)  
+  call poolreduce (18 * nat, zstarue0)  
+#endif
+  !
+  call setv (9 * nat, 0.d0, zstarue, 1)  
+  do jcart = 1, 3  
+     do mu = 1, 3 * nat  
+        na = (mu - 1) / 3 + 1  
+        icart = mu - 3 * (na - 1)  
+        do nu = 1, 3 * nat  
+           zstarue (icart, na, jcart) = zstarue (icart, na, jcart) + u (mu, &
+                nu) * zstarue0 (nu, jcart)
+        enddo
+     enddo
+
+  enddo
+  !
+  ! copy to work (a vector with E-U index order) and transform to crystal
+  ! NOTA BENE: the E index is already in crystal axis
+  !
+  do na = 1, nat  
+     do icart = 1, 3  
+        do jcart = 1, 3  
+           work (jcart, icart, na) = at (1, icart) * zstarue (1, na, jcart) &
+                + at (2, icart) * zstarue (2, na, jcart) + at (3, icart) * &
+                zstarue (3, na, jcart)
+        enddo
+     enddo
+  enddo
+  !
+  ! symmetrize
+  !
+  call symz (work, nsym, s, nat, irt)  
+  !
+  ! back to cartesian axis and U-E ordering
+  !
+  do na = 1, nat  
+     call trntns (work (1, 1, na), at, bg, 1)  
+     do icart = 1, 3  
+        do jcart = 1, 3  
+           zstarue (icart, na, jcart) = work (jcart, icart, na)  
+        enddo
+     enddo
+  enddo
+  !
+  ! add the diagonal part
+  !
+  do ipol = 1, 3  
+     do na = 1, nat  
+        zstarue (ipol, na, ipol) = zstarue (ipol, na, ipol) + zv (ityp ( &
+             na) )
+     enddo
+
+  enddo
+  !
+  ! write Z_{s,alpha}{beta} on iudyn
+  !
+  write (iudyn, '(/5x, &
+       &               "Effective Charges U-E: Z_{s,alpha}{beta}",/)')
+  do na = 1, nat  
+     write (iudyn, '(5x,"atom # ",i4)') na  
+     write (iudyn, '(3e24.12)') ( (zstarue (ipol, na, jpol) , jpol = 1, &
+          3) , ipol = 1, 3)
+  enddo
+  !
+  ! write Z_{s,alpha}{beta} on standard output
+  !
+  write (6, '(/,10x,"Effective charges U-E in cartesian axis ",/)' &
+       &)
+  write (6, '(10x,  "          Z_{s,alpha}{beta} ",/)')  
+  do na = 1, nat  
+     write (6, '(10x," atom ",i6)') na  
+     write (6, '(10x,"(",3f15.5," )")') ( (zstarue (ipol, na, jpol) &
+          , jpol = 1, 3) , ipol = 1, 3)
+
+  enddo
+  return  
+end subroutine sym_and_write_zue

@@ -1,0 +1,143 @@
+!
+!-----------------------------------------------------------------------
+subroutine A_h(e,h,ah)
+  !-----------------------------------------------------------------------
+#include "machine.h"
+  use parameters, only: DP
+  use pwcom
+  use gamma
+  use rbecmod
+  use cgcom
+  use funct
+  !
+  implicit none
+  integer :: j, jkb, ibnd, na,nt,ih
+  real(kind=DP) :: e(nbnd)
+  complex(kind=DP) :: h(npwx,nbnd), ah(npwx,nbnd)
+  !
+  complex(kind=DP) :: fp, fm
+  complex(kind=DP), pointer:: dpsic(:), drhoc(:), dvxc(:)
+  real(kind=DP), pointer :: dv(:), drho(:)
+  !
+  call start_clock('a_h')
+  !
+  drho  => auxr
+  dpsic => aux2
+  drhoc => aux3
+  !
+  call setv(nrxx,0.d0,drho,1)
+  !
+  ! [(k+G)^2 - e ]psi
+  do ibnd = 1,nbnd
+     ! set to zero the imaginary part of h at G=0 
+     ! needed for numerical stability
+     if (gstart==2) h(1,ibnd) = cmplx(DREAL(h(1,ibnd)),0.d0)
+     do j = 1,npw
+        ah(j,ibnd) = (g2kin(j)-e(ibnd)) * h(j,ibnd)
+     end do
+  end do
+  !     V_Loc psi
+  do ibnd = 1,nbnd, 2
+     call setv(2*nrxx,0.d0,dpsic,1)
+     call setv(2*nrxx,0.d0, psic,1)
+     if (ibnd.lt.nbnd) then
+        ! two ffts at the same time
+        do j = 1,npw
+           psic (nl (igk(j))) = evc(j,ibnd) + (0.0,1.d0)* evc(j,ibnd+1)
+           dpsic(nl (igk(j))) =   h(j,ibnd) + (0.0,1.d0)*   h(j,ibnd+1)
+           psic (nlm(igk(j)))= conjg(evc(j,ibnd)-(0.0,1.d0)* evc(j,ibnd+1))
+           dpsic(nlm(igk(j)))= conjg(  h(j,ibnd)-(0.0,1.d0)*   h(j,ibnd+1))
+        end do
+     else
+        do j = 1,npw
+           psic (nl (igk(j))) = evc(j,ibnd)
+           dpsic(nl (igk(j))) =   h(j,ibnd)
+           psic (nlm(igk(j))) = conjg( evc(j,ibnd))
+           dpsic(nlm(igk(j))) = conjg(   h(j,ibnd))
+        end do
+     end if
+     call cft3s( psic,nr1,nr2,nr3,nrx1,nr2,nr3,2)
+     call cft3s(dpsic,nr1,nr2,nr3,nrx1,nr2,nr3,2)
+     do j = 1,nrxx
+        drho(j) = drho(j) - 2.0*degspin/omega *   &
+             DREAL(psic(j)*conjg(dpsic(j)))
+        dpsic(j) = dpsic(j) * vrs(j,current_spin)
+     end do
+     call cft3s(dpsic,nr1,nr2,nr3,nrx1,nr2,nr3,-2)
+     if (ibnd.lt.nbnd) then
+        ! two ffts at the same time
+        do j = 1,npw
+           fp = (dpsic (nl(igk(j))) + dpsic (nlm(igk(j))))*0.5d0
+           fm = (dpsic (nl(igk(j))) - dpsic (nlm(igk(j))))*0.5d0
+           ah(j,ibnd  ) = ah(j,ibnd)  +cmplx(DREAL(fp), DIMAG(fm))
+           ah(j,ibnd+1) = ah(j,ibnd+1)+cmplx(DIMAG(fp),-DREAL(fm))
+        end do
+     else
+        do j = 1,npw
+           ah(j,ibnd) = ah(j,ibnd)  + dpsic (nl(igk(j)))
+        end do
+     end if
+  end do
+  !
+  nullify(dpsic)
+  ! V_NL psi
+  call pw_gemm ('Y', nkb, nbnd, npw, vkb, npwx, h, npwx, becp, nkb)
+  if (nkb.gt.0) call add_vuspsi (npwx, npw, nbnd, h, ah)
+  !
+  do j = 1,nrxx
+     drhoc(j) = DCMPLX(drho(j),0.d0)
+  end do
+  call cft3(drhoc,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
+  !
+  ! drho is deltarho(r), drhoc is deltarho(g) 
+  !
+  !  mu'(n(r)) psi(r) delta psi(r)
+  !
+  dvxc  => aux2
+  do j = 1,nrxx
+     dvxc(j) = drho(j)*dmuxc(j)
+  end do
+  !
+  !  add gradient correction contribution (if any) 
+  !
+  call start_clock('dgradcorr')
+  if (igcx.ne.0.or.igcc.ne.0) call dgradcor1  &
+       (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
+        drho, drhoc, nr1,nr2,nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
+        nl, nlm, ngm, g, alat, omega, dvxc)
+  call stop_clock('dgradcorr')
+  nullify (drho)
+  !
+  !  1/|r-r'| * psi(r') delta psi(r')
+  !
+  ! gstart is the first nonzero G vector (needed for parallel execution)
+  !
+  if (gstart==2) drhoc(nl(1)) = 0.d0
+  !
+  do j = gstart,ngm
+     drhoc(nl (j)) = e2*fpi*drhoc(nl(j))/ (tpiba2*gg(j))
+     drhoc(nlm(j)) = conjg(drhoc(nl (j)))
+  end do
+  call cft3(drhoc,nr1,nr2,nr3,nrx1,nr2,nr3,+1)
+  !
+  ! drhoc now contains deltaV_hartree
+  !
+  dv => auxr
+  do j = 1,nrxx
+     dv(j) = - DREAL(dvxc(j)) - DREAL(drhoc(j))
+  end do
+  !
+  call vloc_psi(npwx, npw, nbnd, evc, dv, ah) 
+  !
+  ! set to zero the imaginary part of ah at G=0
+  ! needed for numerical stability
+  if (gstart.eq.2) then
+     do ibnd = 1, nbnd
+        ah(1,ibnd) = cmplx(DREAL(ah(1,ibnd)),0.d0)
+     end do
+  end if
+  !
+  call stop_clock('a_h')
+  !
+  return
+end subroutine A_h

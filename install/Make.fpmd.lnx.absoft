@@ -1,0 +1,66 @@
+######################################################################
+# LINUX ABSOFT Compilers
+#
+# --- Architecture ---
+  ARCH=lnx.absoft
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+#  ** Preprocessor Macro **
+# Parallel MPI
+  CPMACRO=-D__LINUX -D__PARA -D__MPI -D__ABSOFT -D__FFTWDRV
+# Serial Code
+  CPMACRO=-D__LINUX -D__ABSOFT -D__FFTWDRV
+#
+# ** Scientific Libraries **
+  SCILIB=
+  MYLIB=blas_and_lapack 
+#
+# ** Communication Libraries **
+  COMMLIB=
+  INCLUDE=
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# --- Flag for the compilation of the fortran source files ---
+  OPTIMIZATIONS   = -O
+  NOOPTIMIZATIONS =
+  DEBUGFLAGS      =
+  FREEFORM        = -ffree
+  ARCHFLAGS       =
+  ARFLAGS         = rv
+  F77FLAGS        = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)   -N109
+  F77FLAGS_NOOPT  = $(ARCHFLAGS) $(DEBUGFLAGS) $(NOOPTIMIZATIONS) -N109
+  F90FLAGS        = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) $(FREEFORM) $(INCLUDE)
+  LNKFLAGS        = $(ARCHFLAGS)
+#
+# --- Flag for the compilation of the C source files ---
+  CCFLAGS   = $(INCLUDEPATH) $(ARCHFLAGS) $(CPMACRO) -O
+#
+# --- Preprocessor ---
+  CPP       = cpp
+  CPP_FLAG  = -P -C -traditional
+  CPP_MACRO = $(CPMACRO)
+#
+# --- Name of the fortran compiler and linker ---
+  F77 = f90
+  FC = f90
+  F90 = f90
+  LNK = $(F90)
+#
+# --- Name of the C compiler ---
+  CC = cc
+#
+# --- Libraries and modules ---
+  LIB     = $(SCILIB) $(COMMLIB) -lm
+  MODULEFLAG = -p $(OSHOME)/Modules -p $(OSHOME)/FPMD/
+#
+# --- OTHER settings ---
+  RANLIB=echo
+  .SUFFIXES :
+  .SUFFIXES : .out .a .ln .o .c .cc .C .cpp .p .f .F .r .y .l .s .S .h .f90
+######################################################################

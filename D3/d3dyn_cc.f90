@@ -1,0 +1,265 @@
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
+
+subroutine d3dyn_cc  
+  !-----------------------------------------------------------------------
+  !
+  ! It calculates contribution due to non-linear-core-correction
+  ! The variation of the density with respect to the perturbation must
+  ! be corrected before calling this routine:
+  ! while reading the variation of the density on unit iudrho and iud0rho
+  ! it assumes it is the total density, i.e. sum of valence + core.
+  !
+#include "machine.h"
+  use pwcom
+  use phcom
+  use d3com
+  use allocate
+  implicit none
+  integer :: na, nta, ig, ir, i_cart, j_cart, k_cart, na_i, na_j, &
+       na_k, nu_i, nu_j, nu_k, na_icart, nb_jcart, nc_kcart
+
+  real (8) :: rhox, arhox, ex, ec, vx, vc, arg  
+  ! the total charge in each point
+  ! the absolute value of the charge
+  ! local exchange energy
+  ! local correlation energy
+  ! local exchange potential
+  ! local correlation potential
+  ! argument of the phase factor
+
+  complex (8) ::  exc, work, work0, work1, work2, work3
+  complex (8), pointer :: drc_exp (:,:), aux (:), d3dyn0 (:,:,:), &
+       d3dyn1 (:,:,:), d3dyn2 (:,:,:), d3dyn3 (:,:,:), d3dyn4 (:,:,:)
+
+  if (.not.nlcc_any) return  
+  call mallocate (aux , nrxx)  
+  call mallocate (drc_exp , ngm, nat)  
+  call mallocate (d3dyn0 , 3 * nat, 3 * nat, 3 * nat)  
+  call mallocate (d3dyn1 , 3 * nat, 3 * nat, 3 * nat)   
+  call mallocate (d3dyn2 , 3 * nat, 3 * nat, 3 * nat)
+  call mallocate (d3dyn3 , 3 * nat, 3 * nat, 3 * nat)
+  call mallocate (d3dyn4 , 3 * nat, 3 * nat, 3 * nat)
+
+  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn0, 1)  
+  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn1, 1)  
+  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn2, 1)  
+  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn3, 1)  
+  call setv (2 * ngm * nat, 0.d0, drc_exp, 1)  
+
+  do na = 1, nat  
+     nta = ityp (na)  
+     do ig = 1, ngm  
+        arg = - tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
+             + g (3, ig) * tau (3, na) )
+        exc = DCMPLX (cos (arg), sin (arg) )  
+        drc_exp (ig, na) = d0rc (ig, nta) * exc  
+     enddo
+  enddo
+  call setv (2 * nrxx, 0.d0, aux, 1)  
+  do ir = 1, nrxx  
+     rhox = rho (ir, 1) + rho_core (ir)  
+     arhox = abs (rhox)  
+     if (arhox.gt.1.0e-30) then  
+        call xc (arhox, ex, ec, vx, vc)  
+        aux (ir) = DCMPLX (e2 * (vx + vc), 0.d0)  
+     endif
+  enddo
+
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+  do na_i = npert_i, npert_f  
+     na = (na_i - 1) / 3 + 1  
+     i_cart = na_i - 3 * (na - 1)  
+     do j_cart = 1, 3  
+        na_j = j_cart + 3 * (na - 1)  
+        do k_cart = 1, 3  
+
+           na_k = k_cart + 3 * (na - 1)  
+           work = DCMPLX (0.d0, 0.d0)  
+           do ig = 1, ngm  
+              work = work + DCMPLX (0.d0, 1.d0) * g (i_cart, ig) * g (j_cart, ig) &
+                   * g (k_cart, ig) * conjg (aux (nl (ig) ) ) * drc_exp (ig, na)
+
+           enddo
+
+           d3dyn0 (na_i, na_j, na_k) = work * omega * tpiba2 * tpiba  
+        enddo
+     enddo
+
+  enddo
+#ifdef PARA
+  do nu_i = 1, 3 * nat  
+     call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)  
+
+  enddo
+  do nu_i = 1, npert_i - 1  
+     call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)  
+  enddo
+#endif
+  do nu_i = npert_i, npert_f  
+     call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)  
+     do ir = 1, nrxx  
+        aux (ir) = aux (ir) * dmuxc (ir, 1, 1)  
+     enddo
+
+     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+     do na = 1, nat  
+        do i_cart = 1, 3  
+           na_i = i_cart + 3 * (na - 1)  
+           do j_cart = 1, 3  
+
+              na_j = j_cart + 3 * (na - 1)  
+              work = DCMPLX (0.d0, 0.d0)  
+              do ig = 1, ngm  
+                 work = work - conjg (aux (nl (ig) ) ) * g (i_cart, ig) * g ( &
+                      j_cart, ig) * drc_exp (ig, na)
+
+              enddo
+
+              d3dyn1 (nu_i, na_i, na_j) = work * tpiba2 * omega  
+           enddo
+        enddo
+     enddo
+
+  enddo
+#ifdef PARA
+  do nu_i = npert_f + 1, 3 * nat  
+     call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)  
+
+  enddo
+#endif
+  call setv (2 * ngm * nat, 0.d0, drc_exp, 1)  
+  do na = 1, nat  
+     nta = ityp (na)  
+     do ig = 1, ngm  
+        arg = - tpi * ( (g (1, ig) + xq (1) ) * tau (1, na) + (g (2, ig) &
+             + xq (2) ) * tau (2, na) + (g (3, ig) + xq (3) ) * tau (3, na) )
+        exc = DCMPLX (cos (arg), sin (arg) )  
+        drc_exp (ig, na) = drc (ig, nta) * exc  
+     enddo
+
+  enddo
+#ifdef PARA
+  do nu_i = 1, 3 * nat  
+     call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)  
+
+  enddo
+  do nu_i = 1, npert_i - 1  
+     call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)  
+  enddo
+#endif
+  do nu_i = npert_i, npert_f  
+     call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)  
+     do ir = 1, nrxx  
+        aux (ir) = aux (ir) * dmuxc (ir, 1, 1)  
+     enddo
+
+     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+     do na = 1, nat  
+        do i_cart = 1, 3  
+           na_i = i_cart + 3 * (na - 1)  
+           do j_cart = 1, 3  
+
+              na_j = j_cart + 3 * (na - 1)  
+              work = DCMPLX (0.d0, 0.d0)  
+              do ig = 1, ngm  
+                 work = work - conjg (aux (nl (ig) ) ) * drc_exp (ig, na) * &
+                      (g (i_cart, ig) + xq (i_cart) ) * (g (j_cart, ig) + xq (j_cart) )
+
+              enddo
+              d3dyn2 (na_i, nu_i, na_j) = work * omega * tpiba2  
+              d3dyn3 (na_i, na_j, nu_i) = conjg (work) * omega * tpiba2  
+           enddo
+        enddo
+     enddo
+
+  enddo
+#ifdef PARA
+  do nu_i = npert_f + 1, 3 * nat  
+     call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)  
+
+  enddo
+  call reduce (2 * 27 * nat * nat * nat, d3dyn0)  
+  call reduce (2 * 27 * nat * nat * nat, d3dyn1)  
+  call reduce (2 * 27 * nat * nat * nat, d3dyn2)  
+
+  call reduce (2 * 27 * nat * nat * nat, d3dyn3)  
+  call poolreduce (2 * 27 * nat * nat * nat, d3dyn0)  
+  call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)  
+  call poolreduce (2 * 27 * nat * nat * nat, d3dyn2)  
+  call poolreduce (2 * 27 * nat * nat * nat, d3dyn3)  
+#endif
+  !
+  !   The dynamical matrix was computed in cartesian axis and now we put
+  !   it on the basis of the modes
+  !
+  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn4, 1)  
+  do nu_k = npert_i, npert_f  
+     if (q0mode (nu_k) ) then  
+        do nu_i = 1, 3 * nat  
+
+           do nu_j = 1, 3 * nat  
+              work0 = (0.d0, 0.d0)  
+              do nc_kcart = 1, 3 * nat  
+                 do na_icart = 1, 3 * nat  
+                    do nb_jcart = 1, 3 * nat  
+                       work0 = work0 + ug0 (nc_kcart, nu_k) * conjg (u (na_icart, &
+                            nu_i) ) * d3dyn0 (nc_kcart, na_icart, nb_jcart) * u (nb_jcart, &
+                            nu_j)
+                    enddo
+                 enddo
+
+              enddo
+              work1 = (0.d0, 0.d0)  
+              do na_icart = 1, 3 * nat  
+                 do nb_jcart = 1, 3 * nat  
+                    work1 = work1 + conjg (u (na_icart, nu_i) ) * d3dyn1 (nu_k, &
+                         na_icart, nb_jcart) * u (nb_jcart, nu_j)
+                 enddo
+
+              enddo
+              work2 = (0.d0, 0.d0)  
+              do nc_kcart = 1, 3 * nat  
+                 do nb_jcart = 1, 3 * nat  
+                    work2 = work2 + ug0 (nc_kcart, nu_k) * d3dyn2 (nc_kcart, nu_i, &
+                         nb_jcart) * u (nb_jcart, nu_j)
+                 enddo
+
+              enddo
+              work3 = (0.d0, 0.d0)  
+              do nc_kcart = 1, 3 * nat  
+                 do na_icart = 1, 3 * nat  
+                    work3 = work3 + ug0 (nc_kcart, nu_k) * conjg (u (na_icart, &
+                         nu_i) ) * d3dyn3 (nc_kcart, na_icart, nu_j)
+                 enddo
+
+              enddo
+
+              d3dyn4 (nu_k, nu_i, nu_j) = work0 + work1 + work2 + work3  
+           enddo
+        enddo
+     endif
+  enddo
+#ifdef PARA
+  call poolreduce (2 * 27 * nat * nat * nat, d3dyn4)  
+#endif
+  call DAXPY (2 * 27 * nat * nat * nat, 1.d0, d3dyn4, 1, d3dyn, 1)  
+  call ZCOPY (27 * nat * nat * nat, d3dyn4, 1, d3dyn_aux8, 1)  
+
+  call mfree (aux)  
+  call mfree (drc_exp)  
+  call mfree (d3dyn0)  
+  call mfree (d3dyn1)  
+  call mfree (d3dyn2)  
+  call mfree (d3dyn3)
+  call mfree (d3dyn4)
+  
+  return  
+end subroutine d3dyn_cc

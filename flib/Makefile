@@ -1,0 +1,48 @@
+
+include ../make.sys
+
+all: flib.a ptools.a eispack $(MYLIB)
+
+OBJS = cp_oneover_v.o error.o \
+       forceconv.o inv3.o itoa.o \
+       sort.o miller.o simpsn.o \
+       geninv.o enthropy.o adjef.o \
+       indices.o transto.o cgedi.o cgefa.o dgemul.o iceil.o \
+       erf.o
+
+POBJS = gridsetup.o blockset.o hangup.o reduce.o \
+       matmul.o localindex.o localdim.o ownerof.o \
+       ilcm.o indxg2l.o indxg2p.o indxl2g.o infog1l.o infog2l.o \
+       numroc.o npreroc.o
+
+
+flib.a : $(OBJS)
+	ar $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+
+blas_and_lapack : blas.o dlamch.o
+	ar $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
+
+lapack : lapack.o dlamch.o
+	ar $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
+
+lapack_t3e : lapack_t3e.o 
+	ar $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
+
+eispack : eispack.o
+
+
+dlamch.o : dlamch.f
+	$(F77) $(F77FLAGS_NOOPT) -c $<
+
+ptools.a : $(POBJS)
+	ar $(ARFLAGS) $@ $?
+
+include .dependencies
+include ../make.rules
+
+clean:
+	- rm -f ptools.a *.o *.mod *.i core* work.pc flib.a

@@ -1,0 +1,581 @@
+!
+! Copyright (C) 2002 FPMD group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+!
+! Copyright (C) 2002 CP90 group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+    MODULE mp_wave
+
+      IMPLICIT NONE
+      SAVE
+
+    CONTAINS
+
+      SUBROUTINE mergewf ( pw, pwt, ngwl, ig_l2g, mpime, nproc, root, comm )
+
+! ... This subroutine merges the pieces of a wave functions (pw) splitted across 
+! ... processors into a total wave function (pwt) containing al the components
+! ... in a pre-defined order (the same as if only one processor is used)
+
+      USE kinds
+      USE parallel_include
+
+      IMPLICIT NONE
+
+      COMPLEX(dbl), intent(in) :: PW(:)
+      COMPLEX(dbl), intent(out) :: PWT(:)
+      INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc     ! number of processors
+      INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
+      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: ig_l2g(:)
+      INTEGER, INTENT(IN) :: ngwl
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+      COMPLEX(dbl), ALLOCATABLE :: pw_ip(:)
+
+      INTEGER :: ierr, i, ip, ngw_ip, ngw_lmax, itmp, igwx, gid
+
+#if defined __MPI
+      INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+
+!
+! ... Subroutine Body
+!
+
+      igwx = MAXVAL( ig_l2g(1:ngwl) )
+
+#if defined __MPI
+
+      gid = MPI_COMM_WORLD
+      IF( PRESENT( comm ) ) gid = comm
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE( ngwl, ngw_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      CALL MPI_ALLREDUCE( igwx, itmp, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      igwx = itmp
+
+#endif
+
+      IF( igwx > SIZE( pwt ) ) &
+        CALL error(' mergewf ',' wrong size for pwt ',SIZE(pwt) )
+
+#if defined __MPI
+
+      DO ip = 1, nproc
+
+        IF( (ip-1) /= root ) THEN
+
+! ...     In turn each processors send to root the wave components and their indexes in the 
+! ...     global array
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ig_l2g, ngwl, MPI_INTEGER, ROOT, IP, gid, IERR )
+            CALL MPI_SEND( pw(1), ngwl, MPI_DOUBLE_COMPLEX, ROOT, IP+NPROC, gid, IERR )
+          END IF
+          IF ( mpime == root) THEN
+            ALLOCATE(ig_ip(ngw_lmax))
+            ALLOCATE(pw_ip(ngw_lmax))
+            CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
+            CALL MPI_RECV( pw_ip, ngw_lmax, MPI_DOUBLE_COMPLEX, (ip-1), IP+NPROC, gid, istatus, IERR )
+            CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ngw_ip, ierr ) 
+            DO I = 1, ngw_ip
+              PWT(ig_ip(i)) = pw_ip(i)
+            END DO
+            DEALLOCATE(ig_ip)
+            DEALLOCATE(pw_ip)
+          END IF
+
+        ELSE
+
+          IF(mpime == root) THEN
+            DO I = 1, ngwl
+              PWT(ig_l2g(i)) = pw(i)
+            END DO
+          END IF
+
+        END IF
+
+        CALL MPI_BARRIER( gid, IERR )
+
+      END DO
+
+#elif ! defined __PARA
+
+      DO I = 1, ngwl
+        ! write(6,*) 'MW ', ig_l2g(i), i
+        PWT( ig_l2g(i) ) = pw(i)
+      END DO
+
+#else
+
+      CALL error(' MERGEWF ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+      END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+      SUBROUTINE splitwf ( pw, pwt, ngwl, ig_l2g, mpime, nproc, root, comm )
+
+! ... This subroutine splits a total wave function (pwt) containing al the components
+! ... in a pre-defined order (the same as if only one processor is used), across 
+! ... processors (pw).
+
+      USE kinds
+      USE parallel_include
+      IMPLICIT NONE
+
+      COMPLEX(dbl), INTENT(OUT) :: PW(:)
+      COMPLEX(dbl), INTENT(IN) :: PWT(:)
+      INTEGER, INTENT(IN) :: mpime, nproc, root
+      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: ig_l2g(:)
+      INTEGER, INTENT(IN) :: ngwl
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+      COMPLEX(dbl), ALLOCATABLE :: pw_ip(:)
+
+      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, ngw_g, gid, igwx, itmp
+
+#if defined __MPI
+      integer istatus(MPI_STATUS_SIZE)
+#endif
+
+!
+! ... Subroutine Body
+!
+
+      igwx = MAXVAL( ig_l2g(1:ngwl) )
+
+#if defined __MPI
+
+      gid = MPI_COMM_WORLD
+      IF( PRESENT( comm ) ) gid = comm
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE(ngwl, ngw_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      CALL MPI_ALLREDUCE(igwx, itmp    , 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      igwx = itmp
+
+#endif
+
+      IF( igwx > SIZE( pwt ) ) &
+        CALL error(' splitwf ',' wrong size for pwt ',SIZE(pwt) )
+
+#if defined __MPI
+
+      DO ip = 1, nproc
+! ...   In turn each processor send to root the the indexes of its wavefunction conponents
+! ...   Root receive the indexes and send the componens of the wavefunction read from the disk (pwt)
+        IF ( (ip-1) /= root ) THEN
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ig_l2g, ngwl, MPI_INTEGER, ROOT, IP, gid,IERR)
+            CALL MPI_RECV( pw(1), ngwl, MPI_DOUBLE_COMPLEX, ROOT, IP+NPROC, gid, istatus, IERR )
+          END IF
+          IF ( mpime == root ) THEN
+            ALLOCATE(ig_ip(ngw_lmax))
+            ALLOCATE(pw_ip(ngw_lmax))
+            CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
+            CALL MPI_GET_COUNT(istatus, MPI_INTEGER, ngw_ip, ierr)
+            DO i = 1, ngw_ip
+              pw_ip(i) = PWT(ig_ip(i))
+            END DO
+            CALL MPI_SEND( pw_ip, ngw_ip, MPI_DOUBLE_COMPLEX, (ip-1), IP+NPROC, gid, IERR )
+            DEALLOCATE(ig_ip)
+            DEALLOCATE(pw_ip)
+          END IF
+        ELSE
+          IF ( mpime == root ) THEN
+            DO i = 1, ngwl
+              pw(i) = PWT(ig_l2g(i)) 
+            END DO
+          END IF
+        END IF
+        CALL MPI_BARRIER(gid, IERR)
+      END DO
+
+#elif ! defined __PARA
+
+      DO I = 1, ngwl
+        pw(i) = pwt( ig_l2g(i) )
+      END DO
+
+#else
+
+      CALL error(' SPLITWF ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+      END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+      SUBROUTINE mergerho(rho, rhot, ngl, ig_l2g, mpime, nproc, root)
+
+! ... This subroutine merges the pieces of a charge density (rho) splitted across 
+! ... processors into a total charge (rhot) containing al the components
+! ... in a pre-defined order (the same as if only one processor is used)
+
+      USE kinds
+      USE parallel_include
+
+      IMPLICIT NONE
+
+      REAL(dbl), INTENT(IN) :: rho(:)
+      REAL(dbl), INTENT(OUT) :: rhot(:)
+      INTEGER, INTENT(IN) :: mpime, nproc, root
+      INTEGER, INTENT(IN) :: ig_l2g(:)
+      INTEGER, INTENT(IN) :: ngl
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+      REAL(dbl), ALLOCATABLE :: rho_ip(:)
+
+      INTEGER :: ierr, i, ip, ng_ip, ng_lmax, ng_g
+
+#if defined __MPI
+      INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+
+#if defined __MPI
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
+      IF( ng_g > SIZE( rhot ) ) THEN
+        CALL ERROR(' mergerho ',' wrong size for rho ',1 )
+      END IF
+
+      DO ip = 1, nproc
+
+        IF( (ip-1) /= root ) THEN
+
+! ...     In turn each processors send to root the rho components and their indexes in the 
+! ...     global array
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ig_l2g, ngl, MPI_INTEGER, root, ip, MPI_COMM_WORLD, ierr)
+            CALL MPI_SEND( rho(1), ngl, MPI_DOUBLE_PRECISION, root, ip+nproc, MPI_COMM_WORLD,ierr)
+          END IF
+          IF ( mpime == root ) THEN
+            ALLOCATE( ig_ip(ng_lmax) )
+            ALLOCATE( rho_ip(ng_lmax) )
+            CALL MPI_RECV( ig_ip, ng_lmax, MPI_INTEGER, (ip-1), ip, MPI_COMM_WORLD, istatus, ierr )
+            CALL MPI_RECV( rho_ip, ng_lmax, MPI_DOUBLE_PRECISION, (ip-1), ip+nproc, MPI_COMM_WORLD, istatus, ierr )
+            CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, ng_ip, ierr)
+            DO I = 1, ng_ip
+              rhot(ig_ip(i)) = rho_ip(i)
+            END DO
+            DEALLOCATE(ig_ip)
+            DEALLOCATE(rho_ip)
+          END IF
+
+        ELSE
+
+          IF(mpime == root) THEN
+            DO I = 1, ngl
+              rhot(ig_l2g(i)) = rho(i)
+            END DO
+          END IF
+
+        END IF
+
+        CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
+
+      END DO
+
+#elif ! defined __PARA
+
+      DO I = 1, ngl
+        rhot( ig_l2g(i) ) = rho(i)
+      END DO
+
+#else
+
+      CALL error(' mergerho ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+      END SUBROUTINE
+
+
+      SUBROUTINE splitrho(rho, rhot, ngl, ig_l2g, mpime, nproc, root)
+
+! ... This subroutine splits rho containing al the G-vecs components
+! ... in a pre-defined order (the same as if only one processor is used), across 
+! ... processors (rho).
+
+      USE kinds
+      USE parallel_include
+      IMPLICIT NONE
+
+      REAL(dbl), INTENT(OUT) :: rho(:)
+      REAL(dbl), INTENT(IN) :: rhot(:)
+      INTEGER, INTENT(IN) :: mpime, nproc, root
+      INTEGER, INTENT(IN) :: ig_l2g(:)
+      INTEGER, INTENT(IN) :: ngl
+
+      INTEGER :: ierr, i, ng_ip, ip, ng_lmax, ng_g
+
+#if defined __MPI
+      INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+      COMPLEX(dbl), ALLOCATABLE :: rho_ip(:)
+
+#if defined __MPI
+
+! ... Get local and global rho dimensions
+      CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
+      IF( ng_g > SIZE( rhot ) ) THEN
+        CALL error(' splitrho ',' wrong size for rhot ', 1 )
+      END IF
+
+      DO ip = 1, nproc
+! ...   In turn each processor send to root the the indexes of its rho conponents
+! ...   Root receive the indexes and send the componens of the rho read from the disk (rhot)
+        IF ( (ip-1) /= root ) THEN
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ig_l2g, ngl, MPI_INTEGER, root, ip, MPI_COMM_WORLD, ierr)
+            CALL MPI_RECV( rho(1), ngl, MPI_DOUBLE_PRECISION, root, ip+nproc, MPI_COMM_WORLD, istatus, ierr )
+          END IF
+          IF ( mpime == root ) THEN
+            ALLOCATE(ig_ip(ng_lmax))
+            ALLOCATE(rho_ip(ng_lmax))
+            CALL MPI_RECV( ig_ip, ng_lmax, MPI_INTEGER, (ip-1), IP, MPI_COMM_WORLD, istatus, ierr )
+            CALL MPI_GET_COUNT(istatus, MPI_INTEGER, ng_ip, ierr)
+            DO i = 1, ng_ip
+              rho_ip(i) = rhot(ig_ip(i))
+            END DO
+            CALL MPI_SEND( rho_ip, ng_ip, MPI_DOUBLE_PRECISION, (ip-1), ip+nproc, MPI_COMM_WORLD, ierr)
+            DEALLOCATE(ig_ip)
+            DEALLOCATE(rho_ip)
+          END IF
+        ELSE
+          IF ( mpime == root ) THEN
+            DO i = 1, ngl
+              rho(i) = rhot(ig_l2g(i)) 
+            END DO
+          END IF
+        END IF
+        CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
+      END DO
+
+#elif ! defined __PARA
+
+      DO i = 1, ngl
+         rho(i) = rhot( ig_l2g(i) ) 
+      END DO
+
+#else
+
+      CALL error(' splitrho ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+      END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+
+      SUBROUTINE mergeig(igl, igtot, ngl, mpime, nproc, root, comm)
+
+! ... This subroutine merges the pieces of a vector splitted across 
+! ... processors into a total vector (igtot) containing al the components
+! ... in a pre-defined order (the same as if only one processor is used)
+
+      USE kinds
+      USE parallel_include
+
+      IMPLICIT NONE
+
+      INTEGER, intent(in)  :: igl(:)
+      INTEGER, intent(out) :: igtot(:)
+      INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc     ! number of processors
+      INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
+      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: ngl
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+
+      INTEGER :: ierr, i, ip, ng_ip, ng_lmax, ng_g, gid, igs
+
+#if defined __MPI
+      INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+
+#if defined __MPI
+
+      gid = MPI_COMM_WORLD
+      IF( PRESENT( comm ) ) gid = comm
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE( ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      CALL MPI_ALLREDUCE( ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, gid, IERR )
+      IF( ng_g > SIZE( igtot ) ) THEN
+        CALL ERROR(' mergeig ',' wrong size for igtot ',SIZE(igtot) )
+      END IF
+
+      igs = 1
+
+      DO ip = 1, nproc
+
+        IF( (ip-1) /= root ) THEN
+
+! ...     In turn each processors send to root the wave components and their indexes in the 
+! ...     global array
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( igl(1), ngl, MPI_INTEGER, ROOT, IP, gid, IERR )
+          END IF
+          IF ( mpime == root) THEN
+            ALLOCATE( ig_ip(ng_lmax) )
+            CALL MPI_RECV( ig_ip, ng_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
+            CALL MPI_GET_COUNT( istatus, MPI_INTEGER, ng_ip, ierr ) 
+            DO i = 1, ng_ip
+              igtot( igs + i - 1 ) = ig_ip( i )
+            END DO
+            DEALLOCATE(ig_ip)
+          END IF
+
+        ELSE
+
+          IF(mpime == root) THEN
+            ng_ip = ngl
+            DO i = 1, ngl
+              igtot( igs + i - 1 ) = igl( i )
+            END DO
+          END IF
+
+        END IF
+
+        IF(mpime == root) THEN
+          igs = igs + ng_ip
+        END IF
+
+        CALL MPI_BARRIER( gid, IERR )
+
+      END DO
+
+#elif ! defined __PARA
+
+      igtot( 1:ngl ) = igl( 1:ngl )
+
+#else
+
+      CALL error(' mergeig ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+      END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+      SUBROUTINE splitig(igl, igtot, ngl, mpime, nproc, root, comm)
+
+! ... This subroutine splits a replicated vector (igtot) stored on the root proc
+! ... across processors (igl).
+
+      USE kinds
+      USE parallel_include
+      IMPLICIT NONE
+
+      INTEGER, INTENT(OUT) :: igl(:)
+      INTEGER, INTENT(IN)  :: igtot(:)
+      INTEGER, INTENT(IN)  :: mpime, nproc, root
+      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: ngl
+
+      INTEGER ierr, i, ng_ip, ip, ng_lmax, ng_g, gid, igs
+
+#if defined __MPI
+      integer istatus(MPI_STATUS_SIZE)
+#endif
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+
+#if defined __MPI
+
+      gid = MPI_COMM_WORLD
+      IF( PRESENT( comm ) ) gid = comm
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      CALL MPI_ALLREDUCE(ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, gid, IERR )
+      IF( ng_g > SIZE( igtot ) ) THEN
+        CALL ERROR(' splitig ',' wrong size for igtot ', SIZE(igtot) )
+      END IF
+
+      igs = 1
+
+      DO ip = 1, nproc
+
+! ...   In turn each processor send to root the the indexes of its wavefunction conponents
+! ...   Root receive the indexes and send the componens of the wavefunction read from the disk (pwt)
+
+        IF ( (ip-1) /= root ) THEN
+
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ngl, 1  , MPI_INTEGER, ROOT, IP, gid,IERR)
+            CALL MPI_RECV( igl, ngl, MPI_INTEGER, ROOT, IP+NPROC, gid, istatus, IERR )
+          END IF
+
+          IF ( mpime == root ) THEN
+            ALLOCATE(ig_ip(ng_lmax))
+            CALL MPI_RECV( ng_ip, 1, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
+            DO i = 1, ng_ip
+              ig_ip(i) = igtot( igs + i - 1)
+            END DO
+            CALL MPI_SEND( ig_ip, ng_ip, MPI_INTEGER, (ip-1), IP+NPROC, gid, IERR )
+            DEALLOCATE(ig_ip)
+          END IF
+
+        ELSE
+
+          IF ( mpime == root ) THEN
+            ng_ip = ngl
+            DO i = 1, ng_ip
+              igl(i) = igtot( igs + i - 1)
+            END DO
+          END IF
+
+        END IF
+
+        IF( mpime == root ) igs = igs + ng_ip
+
+        CALL MPI_BARRIER(gid, IERR)
+
+      END DO
+
+#elif ! defined __PARA
+
+      igl( 1:ngl ) = igtot( 1:ngl )
+
+#else
+
+      CALL error(' splitig ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+      END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+    END MODULE

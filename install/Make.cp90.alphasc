@@ -1,0 +1,64 @@
+######################################################################
+# Machine file for alpha workstation
+#
+  ARCH=alphasc
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+ CPUTYPE=ev67
+
+# ** Preprocessor Macro **
+ CPMACRO=-D__QSW -D__MPI -D__PARA -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -D__TRU64
+#
+# ** Communication Libraries **
+ MPIINCLUDE= -I/usr/lib/mpi/include/
+ COMMLIB=  -L/usr/lib/ -lmpi -lelan -lelan3 -lrmscall
+#
+# ** Scientific Libraries **
+  FFT=fftw.o
+  SCILIB=  -lcxml
+  MYLIB=
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# General Flags
+  ARCHFLAGS= -arch $(CPUTYPE)
+  ARFLAGS   = rv
+  PRECISION= -double_size 64 -fpconstant -real_size 64 
+  DEBUGFLAGS=
+  PREPROCESSING= -cpp $(CPMACRO) $(MPIINCLUDE)
+  OPTIMIZATIONS= -fast -math_library fast -tune $(CPUTYPE)
+  FREEFORM= -free
+#
+# Flag for the compilation of the fortran source files
+  F77FLAGS= $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  F77FLAGS= $(ARCHFLAGS) 
+  F90FLAGS= $(ARCHFLAGS) $(PRECISION) $(FREEFORM) $(PREPROCESSING) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  LNKFLAGS=  $(ARCHFLAGS) -non_shared
+  LNKFLAGS=  $(ARCHFLAGS) 
+#
+# Flag for the compilation of the c source files
+  CFLAGS=   $(CARCHFLAGS) $(CPMACRO) -tune $(CPUTYPE) -fast
+#
+# Libraries
+  LIB=  $(COMMLIB) $(SCILIB)
+#
+  MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
+#
+# Name of the fortran compiler
+  FC= f90
+  F77= f90
+  F90= f90
+  LNK= f90
+#
+# Name of the c compiler
+  CC=cc
+#
+# Other
+  RANLIB=echo
+  .SUFFIXES:
+  .SUFFIXES: .F .f90 .c .o .f

@@ -1,0 +1,149 @@
+!
+!-----------------------------------------------------------------------
+subroutine solve_ph
+  !-----------------------------------------------------------------------
+  !
+#include "machine.h"
+  use allocate
+  use pwcom
+  use cgcom
+#ifdef PARA
+  use para
+#endif
+  integer :: nu, i, ibnd, jbnd, info, iter, mode_done, kpoint
+  real(kind=DP), pointer ::  diag(:)
+  complex(kind=DP), pointer :: gr(:,:), h(:,:), work(:,:)
+  real(kind=DP), pointer :: overlap(:,:)
+  logical :: orthonormal, precondition, startwith0
+  external A_h
+  !
+  call start_clock('solve_ph')
+  !
+  call mallocate ( diag, npwx)
+  call mallocate ( overlap, nbnd, nbnd)
+  call mallocate ( work, npwx, nbnd)
+  call mallocate ( gr  , npwx, nbnd)
+  call mallocate ( h   , npwx, nbnd)
+  !
+  kpoint = 1
+  do i = 1,npw
+     g2kin(i) = ( (xk(1,kpoint)+g(1,igk(i)))**2 +                   &
+                  (xk(2,kpoint)+g(2,igk(i)))**2 +                   &
+                  (xk(3,kpoint)+g(3,igk(i)))**2 ) * tpiba2
+  end do
+  !
+  orthonormal = .false.
+  precondition= .true.
+  !
+  if (precondition) then
+     do i = 1,npw
+        diag(i) = 1.0/max(1.d0,g2kin(i))
+     end do
+     call zvscal(npw,npwx,nbnd,diag,evc,work)
+     call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
+     call DPOTRF('U',nbnd,overlap,nbnd,info)
+     if (info.ne.0) call error('solve_ph','cannot factorize',info)
+  end if
+  !
+  write (6,'(/'' ***  Starting Conjugate Gradient minimization'',   &
+       &            9x,''***'')')
+  !
+  !  check if a restart file exists
+  !
+  open (unit=iunres,file='restartph',form='formatted',status='unknown')
+  read (iunres,*,err=1,end=1) mode_done
+  read (iunres,*,err=1,end=1) dyn
+  close(unit=iunres)
+  print '(''  Phonon: modes up to mode '',i3,'' are done'')',       &
+       &     mode_done
+  go to 2
+1 close(unit=iunres)
+  !  restart failed or file not found
+  call  dynmat_init
+  mode_done=0
+2 continue
+  !
+  do nu = 1, nmodes
+     if ( has_equivalent((nu-1)/3+1).eq.1) then
+        ! calculate only independent modes
+        write (6,'('' ***  mode # '',i3,'' : using symmetry'')') nu
+        goto 10
+     end if
+     if ( nu.le.mode_done) then
+        ! do not recalculate modes already done
+        write (6,'('' ***  mode # '',i3,'' : using previous run'')') nu
+        goto 10
+     end if
+     if ( asr .and. (nu-1)/3+1.eq.nasr ) then
+        ! impose ASR on last atom instead of calculating mode
+        write (6,'('' ***  mode # '',i3,'' : using asr'')') nu
+        goto 10
+     end if
+     ! calculate |b> = dV/dtau*psi
+     call dvpsi_kb(kpoint,nu)
+     ! initialize delta psi
+     startwith0=.true.
+     call setv(2*nbnd*npwx,0.d0,dpsi,1)
+     ! solve the linear system
+     ! NB: dvpsi is used also as work space and is destroyed by cgsolve
+     call cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
+                   orthonormal,precondition,diag,      &
+                   startwith0,et(1,kpoint),dvpsi,gr,h, &
+                   dvpsi,work,niter_ph,tr2_ph,iter,dpsi)
+     ! < DeltaPsi | DeltaV | Psi > contribution to the dynamical matrix
+     call drhodv(nu)
+     ! save partial result
+#ifdef PARA
+     if (me.eq.1) then
+#endif
+        open (unit=iunres,file='restartph',form='formatted',status='unknown')
+        write(iunres,*) nu
+        write(iunres,*) dyn
+        close(unit=iunres)
+#ifdef PARA
+     end if
+#endif
+     write (6,'('' ***  mode # '',i3,'' : '',i3,'' iterations'')')  &
+          &          nu, iter
+10   continue
+  end do
+  !
+  call mfree(h)
+  call mfree(gr)
+  call mfree(overlap)
+  call mfree(work)
+  call mfree(diag)
+  !
+  call stop_clock('solve_ph')
+  !
+  return
+end subroutine solve_ph
+
+subroutine set_asr(nat,nasr,dyn)
+  !
+  ! Impose Acoustic Sum Rule on the dynamical matrix
+  ! We assume that (3*nat-1) columns have been calculated
+  ! and that the missing column corresponds to atom nasr
+  !
+  implicit none
+  integer nat, nasr
+  real(kind=8) :: dyn(3*nat,3*nat)
+  !
+  integer na, nb, i,j
+  real(kind=8) :: sum
+
+  if (nasr.le.0 .or. nasr.gt.nat) return
+  do j=1,3
+     do i=1,3
+        do nb=1,nat
+           sum=0.d0
+           do na=1,nat
+              if (na.ne.nasr) sum = sum + dyn(3*(na-1)+i,3*(nb-1)+j)
+           end do
+           dyn(3*(nasr-1)+i,3*(nb-1)+j)= -sum
+        end do
+     end do
+  end do
+  
+  return
+end subroutine set_asr

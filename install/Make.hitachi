@@ -1,0 +1,33 @@
+# Hitachi SR8000(Noejung Park) 
+#
+# Precompiler
+#
+#CPP = /usr/lib/cpp
+CPP = cat 
+#
+CPPFLAGS =
+#
+# Fortran compiler:
+# Hitachi Fortran compiler  invokes Cpreprocess to compile *.F90
+#
+FC = f90
+FFLAGS = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
+         -I../include -I/usr/mpi/include \
+         -DHITACHI -DPARA -DFFTW
+#
+# Libraries:
+LAPACKdir = /usr/lib/LAPACK/lib32
+FFTWdir = /home/a0a023/ParkSan/SRC/LIBS
+MPIdir = /usr/mpi/lib/lib32
+LIBS= -L$(LAPACKdir) -llapack_sc -lblas_sc \
+      -L$(MPIdir) -lfmpi -lmpi \
+      -L$(FFTWdir) -lfftw -lm
+
+# 
+LD=$(FC)
+LFLAGS = $(LIBS)
+#
+# ar:
+#
+AR = ar
+ARFLAGS = rv

@@ -1,0 +1,90 @@
+!
+! Copyright (C) 2002 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!----------------------------------------------------------------------
+subroutine force_hub(forceh)
+   !----------------------------------------------------------------------
+   !
+   ! This routine computes the Hubbard contribution to the force. It gives
+   ! in output the product (dE_{hub}/dn_{ij}^{alpha})(dn_{ij}^{alpha}
+   ! /du(alpha,ipol)) which is the force acting on the atom at tau_{alpha} 
+   ! (in the unit ceel) along the direction ipol.
+   !
+#include "machine.h"
+   use pwcom
+   use becmod
+   use io, only : prefix
+#ifdef PARA
+   use para
+#endif
+   implicit none
+   real (kind=DP) :: forceh(3,nat)  ! output: the Hubbard forces
+
+   integer :: alpha, na, nt, is, m1, m2, ipol
+
+   logical ::  exst
+
+   real (kind=DP), allocatable :: dns(:,:,:,:)
+   !       dns(nat,nspin,5,5) ! the derivative of the atomic occupations
+
+   allocate(dns(nat,nspin,5,5))
+   forceh(:,:) = 0.d0
+   dns(:,:,:,:) = 0.d0
+
+#ifdef PARA
+   if (me.eq.1.and.mypool.eq.1) then
+#endif
+      call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
+      read(iunocc,*) ns
+      close(unit=iunocc,status='keep')
+#ifdef PARA
+   end if
+#endif
+
+   do alpha = 1,nat                    ! the displaced atom
+      do ipol = 1,3
+         call dndtau(dns,alpha,ipol)
+         do na = 1,nat                 ! the Hubbard atom
+            nt = ityp(na)
+            if (Hubbard_U(nt).ne.0.d0.or. Hubbard_alpha(nt).ne.0.d0) then
+               do is = 1,nspin
+                  do m2 = 1,5
+                     forceh(ipol,alpha) = forceh(ipol,alpha) -  &
+                           Hubbard_U(nt) * 0.5d0           * dns(na,is,m2,m2)
+                     do m1 = 1,5
+                        forceh(ipol,alpha) = forceh(ipol,alpha) +    &
+                           Hubbard_U(nt) * ns(na,is,m2,m1) * dns(na,is,m1,m2)
+                     end do
+                  end do
+               end do
+            end if
+         end do
+      end do
+   end do
+
+   deallocate(dns)
+   !
+   ! The symmetry matrices are in the crystal basis so...                      
+   ! Transform to crystal axis...
+   !
+   do na=1, nat
+      call trnvect(forceh(1,na),at,bg,-1)
+   end do
+   !
+   ! ...symmetrize...
+   !
+   call symvect(nat,forceh,nsym,s,irt)
+   !
+   ! ... and transform back to cartesian axis
+   !
+   do na=1, nat
+      call trnvect(forceh(1,na),at,bg, 1)
+   end do
+
+   return
+end subroutine force_hub

@@ -1,0 +1,26 @@
+#
+# System-dependent Make definitions, sun parallel mpi
+# 
+# To use fftw instead of the sunperf library fft subroutine
+# add -DFFTW to CPPFLAGS
+#
+CPP = fpp
+CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -DHAS_ZHEGVX -I$(INCL_DIR)
+# Fortran compiler:
+FC = mpf90
+#
+FFLAGS = -fast -xchip=ultra3 -xarch=v8plusb \
+         -M$(INCL_DIR) \
+         -stackvar \
+         -xlic_lib=sunperf
+#
+LIBS = -L/usr/opt/SUNWhpc/lib \
+       -R/opt/SUNWhpc/lib -lmvec -lmpi
+#
+LD=$(FC)
+LFLAGS = $(PWLIBS) $(LIBS)
+#
+# ar:
+#
+AR = ar
+ARFLAGS = ruv

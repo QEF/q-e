@@ -1,0 +1,42 @@
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
+subroutine drho_cc (iflag)  
+  !-----------------------------------------------------------------------
+  !
+  !   Used when non_linear_core_correction are present to change the files
+  !   containing the variation of the charge
+  !   iflag = +1 :
+  !       adds the variation of the core charge to the variation of the
+  !       valence charge ( both for xq.eq.0 and xq.ne.0 )
+  !
+  !   iflag = -1 :
+  !       subtracts the variation of the core charge to the variation of
+  !       the total charge --used to set drho and d0rho as they were
+  !       before the first call of drho_cc--
+  !
+#include "machine.h"
+  use pwcom
+  use phcom
+  use d3com
+
+  implicit none
+  integer :: iflag  
+  real (8) :: xq0 (3), scale  
+
+  if (.not.nlcc_any) return  
+  scale = 1.d0  
+
+  if (iflag.eq. - 1) scale = - 1.d0  
+  call setv (3, 0.d0, xq0, 1)  
+  call drho_drc (iud0rho, ug0, xq0, d0rc, scale)  
+
+  if (.not.lgamma) call drho_drc (iudrho, u, xq, drc, scale)  
+  return  
+end subroutine drho_cc

@@ -1,0 +1,83 @@
+######################################################################
+# LINUX PORTLAND Compilers
+#
+# Architecture
+  ARCH=lnx.pgi
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+#  ** Preprocessor Macro **
+# Parallel MPI
+  CPMACRO=-D__LINUX -D__MPI -D__PARA -D__PORTLAND -D__FFTWDRV 
+# Serial Code
+#  CPMACRO=-D__LINUX -D__PORTLAND -D__FFTWDRV 
+#
+# ** Communication Libraries **
+  MPICH = /usr/local/mpich/current/
+  INCLUDE = -I/$(MPICH)/include
+  LIBMPI=-L$(MPICH)/lib -lfmpich -lmpich
+  LIBGM=-L/usr/gm/lib -lgm
+#
+# ** Scientific Libraries **
+# Uncomment to Use blas and lapack from the source code
+#  MYLIB=blas_and_lapack
+#
+# Uncomment to Use system lapack and blas
+#  MYLIB=
+#  LAPACK= -L/cineca/lib/pgi -llapack -lblas
+#
+# Uncomment to Use Atlas and system lapack
+  MYLIB=
+  ATLAS=/cineca/lib/ATLAS
+  LAPACK= -L/cineca/lib -llapack -L$(ATLAS) -lf77blas -latlas
+#
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# Flag for the compilation of the fortran source files
+  OPTIMIZATIONS = -O2 -tp p6 -Munroll -Mnoframe
+#  OPTIMIZATIONS = -O2 -tp p6 -Mnoframe
+#  OPTIMIZATIONS = 
+  DEBUGFLAGS =
+  PREPROCESSING = $(CPMACRO)
+  FREEFORM  = -Mfreeform 
+# to link -lfmpich compiled with GNU compiler
+  PGIFLAG = -Msecond_underscore -r8 -Mr8intrinsics 
+# to link -lfmpich compiled with PGI compiler
+  PGIFLAG = -r8 -Mr8intrinsics 
+  ARCHFLAGS = 
+  ARFLAGS   = rv
+  F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  F90FLAGS  = $(ARCHFLAGS) ${PGIFLAG} $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) ${INCLUDE}
+  LNKFLAGS = $(ARCHFLAGS)
+#
+# Flag for the compilation of the c source files
+  CCFLAGS   = $(INCLUDEPATH) $(ARCHFLAGS) $(CPMACRO) -O3 -fomit-frame-pointer 
+#
+# --- Preprocessor ---
+  CPP= /lib/cpp
+  CPP_FLAG=-P -C -traditional
+  CPP_MACRO=$(CPMACRO)
+#
+# --- Name of the fortran compiler ---
+  F77= pgf90
+  F90= pgf90
+  CC= gcc
+  LNK= pgf90
+#
+# --- Library ---
+# to link -lfmpich compiled with PGI compiler
+  LIB= $(LAPACK) ${LIBMPI} ${LIBGM} -lm -lc 
+#
+# --- Modules --
+  MODULEFLAG=-module $(OSHOME)/Modules $(OSHOME)/FPMD
+#
+# OTHER settings
+  RANLIB=echo
+  .SUFFIXES :
+  .SUFFIXES : .out .a .ln .o .c .cc .C .cpp .p .f .F .r .y .l .s .S .h .f90
+######################################################################

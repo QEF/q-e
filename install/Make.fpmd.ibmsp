@@ -1,0 +1,65 @@
+######################################################################
+# IBM SP
+#
+# Architecture (choose yours)
+#  ARCH=sp2
+#  ARCH=sp3
+  ARCH=sp4
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+# ** Preprocessor Macro **
+# Add -D__LIBMASS to use IBM mass
+# Add -D__FFTDRW  to use fftw
+  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS
+#
+# ** Uncomment to Use IBM mass **
+# Substitute -lmassvp4 with -lmassvp3 or -lmassvp2 depending on your arch
+  MASS= -L /cineca/lib/mass -lmassvp4 -lmass
+#
+# ** Scientific Libraries **
+# Uncomment to use system Lapack and IBM ESSL
+#  LAPACK= -L /cineca/lib -llapack
+#  MYLIB=
+#  ESSL= -lpessl -lessl
+# Uncomment to compile Lapack subset from the source code and use IBM ESSL
+  MYLIB=lapack
+  ESSL= -lpessl -lessl
+# Uncomment to use blas and lapack subset from the source code
+#  MYLIB=blas_and_lapack
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# Flag for the compilation of the fortran source files
+  OPTIMIZATIONS = -O3 -qstrict -qtune=auto -qalias=noaryovrlp -Q 
+  DEBUGFLAGS = 
+  PREPROCESSING = -qsuffix=cpp=f90 -WF,$(CPMACRO)
+  FREEFORM  = -qfree=f90
+  ARCHFLAGS = -qarch=auto -qdpc
+  ARFLAGS   = rv
+  F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  F90FLAGS  = $(ARCHFLAGS) $(PREPROCESSING) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  LNKFLAGS = $(ARCHFLAGS) -bmaxdata:0x70000000
+#
+# Flag for the compilation of the c source files
+  CCFLAGS   = $(INCLUDEPATH) -Wp,$(CPMACRO) -O2
+#
+# Name of the fortran compiler
+  FC= mpxlf
+  F90= mpxlf90
+  F77= mpxlf
+  LNK= mpxlf90
+
+# Libraries
+  LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
+  MODULEFLAG=-I $(OSHOME)/Modules/ -I $(OSHOME)/FPMD/
+#
+# OTHER settings
+  RANLIB=echo
+  .SUFFIXES:
+  .SUFFIXES: .F .f90 .c .f .o
+######################################################################

@@ -1,0 +1,78 @@
+######################################################################
+# LINUX PORTLAND Compilers
+#
+# Architecture
+  ARCH=lnx.pgi
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+#  ** Preprocessor Macro **
+# Serial Code
+# undefine __PARA __MPI
+# Parallel MPI
+CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf
+#
+# ** Communication Libraries **
+  MPICH = /usr/local/mpich/current/
+  INCLUDE = -I/$(MPICH)/include
+  LIBMPI=-L$(MPICH)/lib -lfmpich -lmpich
+  LIBGM=-L/usr/gm/lib -lgm
+#
+# ** Scientific Libraries **
+  FFT=fftw.o
+  MYLIB=
+  ATLAS=/cineca/lib/ATLAS
+  LAPACK= -L/cineca/lib/pgi -llapack -L$(ATLAS) -lf77blas -latlas
+  INCLUDEFFTW= -I/cineca/lib/fftw-2.1.3/fftw
+  LIBFFTW=-L/cineca/lib/ -lfftw
+#
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# Flag for the compilation of the fortran source files
+  OPTIMIZATIONS = -O2 -tp p6 -Munroll -Mnoframe
+#  OPTIMIZATIONS = -O2 -tp p6 -Mnoframe
+#  OPTIMIZATIONS = 
+  DEBUGFLAGS =
+  PREPROCESSING = $(CPMACRO)
+  FREEFORM  = -Mfreeform 
+# to link -lfmpich compiled with GNU compiler
+  PGIFLAG = -Msecond_underscore -r8 -Mr8intrinsics 
+# to link -lfmpich compiled with PGI compiler
+  PGIFLAG = -r8 -Mr8intrinsics 
+  ARCHFLAGS = 
+  ARFLAGS   = rv
+  F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  F90FLAGS  = $(ARCHFLAGS) ${PGIFLAG} $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) ${INCLUDE}
+  LNKFLAGS = $(ARCHFLAGS)
+#
+# Flag for the compilation of the c source files
+  CCFLAGS   = $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) -O3 -fomit-frame-pointer 
+#
+# --- Preprocessor ---
+  CPP= /lib/cpp
+  CPP_FLAG=-P -C -traditional
+  CPP_MACRO=$(CPMACRO)
+#
+# --- Name of the fortran compiler ---
+  F77= pgf90
+  F90= pgf90
+  CC= gcc
+  LNK= pgf90
+#
+# --- Library ---
+# to link -lfmpich compiled with PGI compiler
+  LIB= $(LAPACK) $(LIBFFTW) $(LIBMPI) $(LIBGM) -lm -lc 
+#
+# --- Modules --
+  MODULEFLAG=-module $(OSHOME)/CPV -module $(OSHOME)/Modules
+#
+# OTHER settings
+  RANLIB=echo
+  .SUFFIXES :
+  .SUFFIXES : .out .a .ln .o .c .cc .C .cpp .p .f .F .r .y .l .s .S .h .f90
+######################################################################

@@ -1,0 +1,133 @@
+!
+!----------------------------------------------------------------------
+subroutine dvpsi_kb(kpoint,nu)
+  !----------------------------------------------------------------------
+  ! calculates dVion/dtau * psi and stores it in dvpsi
+  !
+#include "machine.h"
+  use parameters, only: DP
+  use allocate
+  use pwcom
+  use gamma
+  use cgcom
+  !
+  implicit none
+  integer :: ibnd, ir, ih, jkb, ik, na, nu, ng, mu, nt, kpoint
+  complex(kind=DP), pointer:: work(:,:), workcc(:), dvloc(:), dvb_cc(:)
+  complex(kind=DP) :: exc
+  real(kind=DP), pointer:: bec1(:,:), bec2(:,:), dv(:)
+  real(kind=DP) :: gu, gtau
+  logical :: has_nlcc 
+ !
+  call start_clock('dvpsi_kb')
+  !
+  has_nlcc=.false.
+  workcc => psic
+  dv     => auxr
+  dvloc  => aux2
+  dvb_cc => aux3
+  call setv(2*nrxx,0.d0,dvloc,1)
+  call setv(2*nrxx,0.d0,dvb_cc,1)
+  do na = 1,nat
+     mu = 3*(na-1)
+     if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2.gt. 1.0e-12) then
+        nt=ityp(na)
+        if (nlcc(nt)) call drhoc (ngm,gg,omega,tpiba2,numeric(nt),&
+                                  a_nlcc(nt),b_nlcc(nt),alpha_nlcc(nt), &
+                                  mesh(nt),dx(nt),r(1,nt),rho_atc(1,nt),workcc)
+        has_nlcc = has_nlcc .or. nlcc(nt)
+        do ng = 1,ngm
+           gtau = tpi * ( g(1,ng)*tau(1,na) + &
+                          g(2,ng)*tau(2,na) + &
+                          g(3,ng)*tau(3,na)   )
+           gu = tpiba*( g(1,ng)*u(mu+1,nu) + &
+                        g(2,ng)*u(mu+2,nu) + &
+                        g(3,ng)*u(mu+3,nu)   )
+           exc = gu * cmplx(-sin(gtau),-cos(gtau))
+           dvloc (nl(ng))=dvloc (nl(ng)) + vloc(igtongl(ng),nt)*exc
+           if (nlcc(nt)) dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + workcc(ng) * exc
+        end do
+     end if
+  end do
+  do ng = gstart,ngm
+     dvloc (nlm(ng))=conjg(dvloc(nl(ng)))
+  end do
+  !
+  !   dVloc/dtau in real space
+  !
+  call cft3(dvloc, nr1,nr2,nr3,nrx1,nr2,nr3,+1)
+  do ir = 1,nrxx
+     dv(ir) = DREAL(dvloc(ir))
+  end do
+  if (has_nlcc) then
+     do ng = gstart,ngm
+        dvb_cc (nlm(ng))=conjg(dvb_cc(nl(ng)))
+     end do
+     call cft3(dvb_cc,nr1,nr2,nr3,nrx1,nr2,nr3,+1)
+     do ir = 1,nrxx
+        dv(ir) = dv(ir) + DREAL(dvb_cc(ir)) * dmuxc(ir)
+     end do
+  end if
+  !
+  !   vloc_psi calculates dVloc/dtau*psi(G)
+  !
+  call setv(2*npwx*nbnd,0.d0,dvpsi,1)
+  call vloc_psi(npwx, npw, nbnd, evc, dv, dvpsi) 
+  !
+  !   nonlocal (Kleinman-Bylander) contribution.
+  !
+  call mallocate(work, npwx, nhm)
+  jkb=0
+  do nt = 1,ntyp
+     ! bec1 and bec2 are allocated with first dimension nh(nt) :
+     ! maybe obsolete ? 
+     call mallocate(bec1, nh(nt), nbnd)
+     call mallocate(bec2, nh(nt), nbnd)
+     do na = 1,nat
+        if (ityp(na).eq.nt) then
+           mu =3*(na-1)
+           if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2 .gt. 1.0e-12) then
+              !
+              !  first term: sum_l sum_G' [ i V_l(G) V^*_l(G') (G'*u) psi(G')
+              !  second term: sum_l sum_G' [-i (G*u) V_l(G) V^*_l(G') psi(G')
+              !
+              do ih = 1,nh(nt)
+                 do ik = 1,npw
+                    work(ik,ih) = vkb(ik,jkb+ih) * &
+                         cmplx(0.d0,-tpiba*( g(1,igk(ik))*u(mu+1,nu) +  &
+                                             g(2,igk(ik))*u(mu+2,nu) +  &
+                                             g(3,igk(ik))*u(mu+3,nu) ) )
+                 end do
+              end do
+              !
+              call pw_gemm ('Y', nh(nt), nbnd, npw, work        , npwx, &
+                   evc, npwx, bec1, nh(nt))
+              call pw_gemm ('Y', nh(nt), nbnd, npw, vkb(1,jkb+1), npwx, &
+                   evc, npwx, bec2, nh(nt))
+              !
+              do ibnd = 1,nbnd
+                 do ih = 1,nh(nt)
+                    bec1(ih,ibnd) = dvan(ih,ih,nt) * bec1(ih,ibnd)
+                    bec2(ih,ibnd) = dvan(ih,ih,nt) * bec2(ih,ibnd)
+                 end do
+              end do
+              !
+              call DGEMM ('N', 'N', 2*npw, nbnd, nh(nt), 1.d0, vkb(1,jkb+1), &
+                   2*npwx, bec1, max(nh(nt),1), 1.d0, dvpsi, 2*npwx)
+              call DGEMM ('N', 'N', 2*npw, nbnd, nh(nt), 1.d0, work, &
+                   2*npwx, bec2, max(nh(nt),1), 1.d0, dvpsi, 2*npwx)
+           end if
+           jkb = jkb + nh(nt)
+        end if
+     end do
+     call mfree(bec2)
+     call mfree(bec1)
+  end do
+  if (jkb.ne.nkb) call error('dvpsi_kb','unexpected error',1)
+  !
+  call mfree(work)
+  !
+  call stop_clock('dvpsi_kb')
+  !
+  return
+end subroutine dvpsi_kb

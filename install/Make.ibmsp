@@ -1,0 +1,49 @@
+#
+# System-dependent definitions for IBM AIX (RISC6000) parallel machines
+# Edit according to your needs
+#
+# try to add -DHAS_ZHEGVX if you have a recent lapack library
+#
+CPPFLAGS = -DAIX,-DPARA,-D__MPI
+
+#
+# Fortran compiler:
+# Use -g -C without -s in LFLAGS for debugging
+# Use -O            for optimization
+# Use -O3 -qstrict  for higher optimization (may not go faster)
+# Use -qarch=auto -qtune=auto for processor-specific optimization
+# Older compilers may not recognize "auto". Specify for instance
+#     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
+F90 = mpxlf
+FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
+         -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
+         -qsuffix=cpp=f90
+F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
+
+MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
+# Libraries:
+# We assume that essl is installed and that lapack is in /usr/local/lib
+# NOTA BENE: essl must be loaded BEFORE lapack in order to load the correct
+#            version of diagonalization routines
+#            use esslp2 if available on power2 machines
+#
+# For Cineca machines:
+# LIBS = -lessl -L/cineca/lib/ -llapack
+#
+LIBS = -lessl  -L/usr/local/lib -llapack
+
+#
+# Loader: use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
+#         use -bnso -bI:/usr/lib/syscalls.exp for static linking
+#         use -s for stripped executable (smaller file but no debugging)
+#
+LD=$(F90)
+LFLAGS = $(LIBS) -s
+#LFLAGS = $(LIBS) -s -bmaxdata:512000000
+
+#
+# ar:
+#
+AR = ar
+ARFLAGS = ruv
+

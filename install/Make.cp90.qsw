@@ -1,0 +1,62 @@
+######################################################################
+# QSW Linux-alpha cluster
+#
+  ARCH=qsw
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+# Macro
+  CPMACRO=-D__MPI -D__PARA -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
+#  CPMACRO=-D__QSW -D__FFTWDRV
+#
+  CPUTYPE=ev67
+#
+  MPIINCLUDE= -I/usr/lib/mpi/include/
+  COMMLIB=  -L/usr/lib/mpi/lib/ -lmpi -lmpif -lelan -lelan3 -lrmscall 
+#
+  FFT= fftw.o
+  MYLIB=
+  SCILIB= -lfftw -lcxml
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# General Flags
+  ARCHFLAGS= -arch $(CPUTYPE)
+  ARFLAGS   = rv
+  PRECISION= -double_size 64 -fpconstant -real_size 64 
+  DEBUGFLAGS=
+  PREPROCESSING= -cpp $(CPMACRO) $(MPIINCLUDE)
+  OPTIMIZATIONS= -fast -math_library fast -tune $(CPUTYPE)
+  FREEFORM= -free
+#
+# Flag for the compilation of the fortran source files
+  F77FLAGS= $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  F77FLAGS= $(ARCHFLAGS) 
+  F90FLAGS= $(ARCHFLAGS) $(PRECISION) $(FREEFORM) $(PREPROCESSING) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  LNKFLAGS=  $(ARCHFLAGS) -non_shared
+  LNKFLAGS=  $(ARCHFLAGS) 
+#
+# Flag for the compilation of the c source files
+  CFLAGS=   $(CARCHFLAGS) $(CPMACRO) -tune $(CPUTYPE) -fast
+#
+# Libraries
+  LIB=  $(COMMLIB) $(SCILIB)
+  MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
+#
+# Name of the fortran compiler
+  FC= fort
+  F77= fort
+  F90= fort
+  LNK= fort
+#
+# Name of the c compiler
+  CC=ccc
+#
+# Other
+  RANLIB=echo
+  .SUFFIXES:
+  .SUFFIXES: .F .f90 .c .o .f

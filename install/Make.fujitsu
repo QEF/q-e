@@ -1,0 +1,32 @@
+#
+# System-dependent definitions for Fujitsu VPP (contributed by Guido Roma)
+# Edit according to your needs
+#
+# Precompiler
+#
+CPP = /usr/lib/cpp
+#
+# -DLANGUAGE_FORTRAN avoids that // is considered as a C++ comment
+#
+CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I $(INCL_DIR) 
+
+#
+# Fortran compiler:
+#
+FC = frt
+#FFLAGS = -O4 -X9 -AU -AR -Am -Kalign9 -Kfreealloc -KA64 -M$(INCL_DIR)
+#FFLAGS = -O4 -X9 -AU -AR -Am -Kalign9  -M$(INCL_DIR)
+#FFLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am -M$(INCL_DIR)
+FFLAGS = -g -Ad -AR -Am -M$(INCL_DIR)
+#
+# Libraries:
+LIBS= -L/usr/lang/lib -llapackvp -lblasvp -lssl2vp  -L/usr/local/lib/lib64/ -lfftvp_news  -lmp
+
+# 
+LD=$(FC)
+LFLAGS = $(LIBS)
+#
+# ar:
+#
+AR = ar
+ARFLAGS = rv

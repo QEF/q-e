@@ -1,0 +1,30 @@
+!-----------------------------------------------------------------------
+subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
+!-----------------------------------------------------------------------
+  !
+  !  calculate m dot products c_i = real( a^*_ij b_ji )
+  !  using half G vectors or half PWs
+  !
+#include "machine.h"
+  use parameters, only: DP
+  use pwcom, only: gstart
+  implicit none
+  ! input
+  integer :: n, m, lda, ldb
+  character(len=1) sum_over_nodes
+  complex(kind=DP) :: a(lda,m), b(ldb,m)
+  ! output
+  real(kind=DP) :: c(m)
+  ! local
+  integer i
+  real(kind=DP) :: DDOT
+  !
+  do i= 1,m
+     c(i) = 2.d0*DDOT(2*n,a(1,i),1,b(1,i),1)
+     if (gstart==2) c(i) = c(i) - real(a(1,i))*real(b(1,i))
+  end do
+#ifdef PARA
+  if (sum_over_nodes.eq.'y'.or.sum_over_nodes.eq.'Y') call reduce(m,c)
+#endif
+  return
+end subroutine pw_dot

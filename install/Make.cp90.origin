@@ -1,0 +1,60 @@
+######################################################################
+# SGI ORIGIN 2000 and 3000
+#
+  ARCH=origin
+#
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+# ** Preprocessor Macro **
+  CPMACRO=-D__SGI -D__ORIGIN -D__MPI -D__PARA -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
+
+CPUTYPE=-r14000
+
+# ** Communication Libraries **
+  COMMLIB= -lmpi
+
+# ** Scientific Libraries **
+  FFT=fftw.o
+  SCILIB= -L /cineca/lib -lfftw -lcomplib.sgimath
+  INCLUDEFFTW= -I/a/acv0/fftw-2.1.3/fftw
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# General Flags
+  ARCHFLAGS= -mips4 -n32 $(CPUTYPE) -r8
+  ARFLAGS   = rv
+  DEBUGFLAGS=
+  PREPROCESSING= -cpp $(CPMACRO)
+  OPTIMIZATIONS= -O3 -OPT:ALIAS=RESTRICT 
+  FREEFORM= -freeform
+#
+# Flag for the compilation of the fortran source files
+  F77FLAGS= $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  F90FLAGS= $(ARCHFLAGS) $(FREEFORM) $(PREPROCESSING) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  LNKFLAGS=  $(ARCHFLAGS)  
+#
+# Flag for the compilation of the c source files
+  CCFLAGS=    $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) $(OPTIMIZATIONS)
+#
+
+# Libraries
+  LIB=  $(COMMLIB) $(SCILIB) 
+  MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
+#
+# Name of the fortran compiler
+  FC= f90
+  F77= f90
+  F90= f90
+  LNK= f90
+#
+# Name of the c compiler
+  CC=cc
+#
+# Other
+  RANLIB=echo
+  .SUFFIXES: .F .f90

@@ -1,0 +1,105 @@
+#!/bin/sh
+
+lista=`ls install | sed -e '/Make/!d' -e 's/^Make.//'`
+
+
+if [ "$#" != 1 ]
+then
+	echo "The architecture name is not specified"
+        echo "Valid architectures are : "
+        for i in $lista
+        do
+          echo - $i
+        done
+	exit 1
+fi
+
+result=`echo $lista | grep "$1"`
+
+if [ "$result" ]
+then
+	PWD=`pwd`
+	echo OSHOME=$PWD > make.sys 
+	if [ "$1" = "pc_ifc" ]
+	then
+                echo creating the library file
+		echo work.pc > $PWD/Modules/intel.pcl
+
+		echo work.pc > $PWD/PW/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/PW/intel.pcl
+
+		echo work.pc > $PWD/PH/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/PH/intel.pcl
+		echo $PWD/PW/work.pc >> $PWD/PH/intel.pcl
+
+		echo work.pc > $PWD/PP/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/PP/intel.pcl
+		echo $PWD/PW/work.pc >> $PWD/PP/intel.pcl
+
+		echo work.pc > $PWD/Gamma/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/Gamma/intel.pcl
+		echo $PWD/PW/work.pc >> $PWD/Gamma/intel.pcl
+
+		echo work.pc > $PWD/D3/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/D3/intel.pcl
+		echo $PWD/PW/work.pc >> $PWD/D3/intel.pcl
+		echo $PWD/PH/work.pc >> $PWD/D3/intel.pcl
+
+		echo work.pc > $PWD/pwtools/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/pwtools/intel.pcl
+		echo $PWD/PW/work.pc >> $PWD/pwtools/intel.pcl
+	fi
+
+	if [ "$1" = "fpmd.lnx.intel" ]
+	then
+                echo creating the library file
+		echo work.pc > $PWD/Modules/intel.pcl
+
+		echo work.pc > $PWD/FPMD/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/FPMD/intel.pcl
+
+		echo work.pc > $PWD/flib/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/flib/intel.pcl
+	fi
+
+        if [ "$1" = "cp90.lnx.intel" ]
+        then
+                echo creating the library file
+                echo work.pc > $PWD/Modules/intel.pcl
+
+                echo work.pc > $PWD/CPV/intel.pcl
+                echo $PWD/Modules/work.pc >> $PWD/CPV/intel.pcl
+
+                echo work.pc > $PWD/flib/intel.pcl
+                echo $PWD/Modules/work.pc >> $PWD/flib/intel.pcl
+        fi
+
+        
+	cat install/Make.$1 >> make.sys
+
+        case "$1" in
+          pc_ifc | beo_ifc | ibm    | ibmsp | origin | nec | t3e | \
+          alpha  | alphaMPI| beowulf| fujitsu| sun   | sunmpi | hitachi | \
+          fpmd.origin | fpmd.irix | fpmd.ibmsp | fpmd.aix | fpmd.t3e | fpmd.qsw | \
+          fpmd.lnx.alpha | fpmd.alphasc | fpmd.lnx.intel | fpmd.alpha | \
+          cp90.aix | cp90.alpha | cp90.alphasc | cp90.ibmsp | cp90.irix | cp90.lnx.intel | \
+          cp90.origin | cp90.qsw | cp90.sx5 | cp90.t3e )
+            cp install/Make.rules_nocpp make.rules
+          ;;
+          pc_pgi | pc_abs | fpmd.lnx.pgi | fpmd.lnx.absoft | cp90.lnx.pgi | cp90.lnx.absoft )
+            cp install/Make.rules_cpp make.rules
+          ;;
+        esac
+
+        cd install; make
+        ./sizeof.x
+        ./shdep
+	exit 0
+else
+        echo "Valid architectures are : "
+        for i in $lista
+        do
+          echo - $i
+        done
+	exit 1
+fi

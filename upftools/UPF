@@ -1,0 +1,227 @@
+
+Unified Pseudopotential File (UPF) Specifications - 2002-01-03
+
+1) general structure
+
+- The file is formatted
+
+- The file contains "fields". A field whose name is "FOO" is delimited
+  by a starting line containing <FOO> and an ending line containing
+  </FOO>, as in the example below:
+<FOO>
+(content of field FOO)
+</FOO>
+  <FOO> and </FOO> are "delimiters" of field FOO. Note that
+  - a field name is case-insensitive
+  - a field name can contain only letters and digits
+  - spaces are not allowed between the <> and the field name
+  - a delimiter may not start at the beginning of a line
+  - trailing characters in the line after the > of a delimiter
+    are ignored
+
+- fields may contain numeric data, comments (a character strings),
+  or other fields ("subfields")
+  Blank lines in a field are ignored.
+  Maximum line length is 80 characters
+  Data in fields must be readable using fortran free format
+
+2) Defined fields:
+     PP_INFO
+     PP_HEADER
+     PP_MESH
+     PP_NLCC
+     PP_LOCAL
+     PP_NONLOCAL
+     PP_PSWFC
+     PP_PSRHOATOM
+   PP_INFO should be the first field, but only for human readers:
+   it is meant to contain info that would allow to generate again
+   the pseudopotential, not data to be read
+   PP_HEADER must precede PP_MESH that must precede all the others.
+   (PP_INFO excepted). Fields PP_NLCC, PP_PSWFC, PP_PSRHOATOM are optional.
+
+   Fields that are not defined are ignored
+
+3) Field specifications:
+   In the following, comments are enclosed in quotes to distinguish
+   them from the rest, but quotes are not actually written to file
+   The max length of a comment is 80 characters
+   The meaning of variables is explained at the end of each field
+   Long do loops, indicated by lines with ..., can be written
+   with any numbers per line (in the limit of 80 characters)
+   All quantities are in atomic Rydberg units: e^2=2, m=1/2, hbar=1.
+   Lengths are in Bohr (0.529177 A), energies in Ry (13.6058 eV)
+   Potentials are multiplied by e so they have the units of energy.
+
+<PP_INFO>
+   "generating program"
+   "date, author"
+   "whatever comment you have about the PP"
+   rel "non/scalar/full relativistic calculation" 
+Any info that may be useful to reconstruct the PP, such as:
+   "nl, pn, l, occ, Rcut, Rcut US, E pseu"
+   els(1),  nns(1),  lchi(1),  oc(1),  rcut(1),  rcutus(1),  epseu(1)
+   ...
+   els(n),  nns(n),  lchi(n),  oc(n),  rcut(n),  rcutus(n),  epseu(n)
+   rcloc "Local Potential cutoff radius"
+</PP_INFO>
+-------------------------------------------------------------------
+rel      : rel=0 if calculation is non relativistic
+           rel=1 if calculation is scalar relativistic
+           rel=2 if calculation is full relativistic
+n        : the number of states used in the generation of the PP
+els(i)   : label for i-th pseudo-state (4s, 4p, etc)
+nns(i)   : principal quantum number
+lchi(i)  : angular momentum (l, not l+1)
+oc(i)    : occupancy (non-integer values allowed)
+rcut(i)  : matching radius (norm-conserving, NC)
+rcutus(i): matching radius (ultra-soft, US)
+epseu(i) : energy of the pseudo-orbital
+-------------------------------------------------------------------
+<PP_HEADER>
+   n        "Version Number"
+   psd      "Element"
+   US|NC    "Ultrasoft|Norm conserving pseudopotentials"
+   nlcc     "Nonlinear Core Correction"
+   dft      "Exch-Corr"
+   zp       "Z valence"
+   etotps   "Total Energy"
+   ecutwfc, ecutrho     "Suggested Cutoff for wfc and rho"
+   lmax     "Max angular momentum component"
+   mesh     "Number of points in mesh"
+   natwfc, nbeta   "Number of wavefunctions, projectors"
+   "Wavefunctions   nl   l   occ"
+                  els(1)      lchi(1)      oc(1)
+                      ...
+                  els(natwfc) lchi(natwfc) oc(natwfc)
+</PP_HEADER>
+-------------------------------------------------------------------
+n : version number of the UPF file
+    This document refers to version 0.
+dft (character(len=20)) :  
+   four space-separated strings identifying the exch-corr functional
+   exch  correlations  exch-grad.corr.  correlations-grad.corr.
+   The last lines are the list of atomic pseudo-orbitals included
+   in field PP_PSWFC (not necessarily the same used in the
+   construction of the PP)
+ecutwfc, ecutrho: 
+   set to 0 if no cutoff is suggested
+natwfc:
+   is the number of atomic (pseudo-)orbitals in section PP_PSWFC
+   and may not coincide with the number of atomic states used
+   in the generation of the PP (n in PP_INFO)
+els(i) : 
+   label for the i-th atomic orbital (4s, 4p, etc)
+lchi(i):
+   angular momentum of the i-th atomic orbital (l, not l+1)
+oc(i)  :
+   occupancy of the i-th atomic orbital (non-integer values allowed)
+------------------------------------------------------------------
+<PP_MESH>
+   <PP_R>
+      r(1) r(2) ...  r(mesh)
+   </PP_R>
+   <PP_RAB>
+      rab(1) rab(2) ... rab(mesh)
+   </PP_RAB>
+</PP_MESH>
+-------------------------------------------------------------------
+r  (mesh) : radial mesh points (a.u.)
+rab(mesh) : rab(i) = (dr(x)/dx)_{x=i}
+            This is the factor required for discrete integration:
+            \int f(r) dr => \sum_i f_i rab_i
+-------------------------------------------------------------------
+<PP_NLCC>
+  rho_atc(1) rho_atc(2) ... rho_atc(mesh)
+</PP_NLCC>
+-------------------------------------------------------------------
+rho_atc(mesh) : core charge for nonlinear core correction
+               (true charge, not 4*pi*r^2*charge)
+-------------------------------------------------------------------
+<PP_LOCAL>
+    vloc(1) vloc(2) ... vloc(mesh)
+</PP_LOCAL>
+-------------------------------------------------------------------
+vloc(mesh) : local potential (Ry a.u.)
+-------------------------------------------------------------------
+<PP_NONLOCAL>
+   <PP_BETA>
+     1 lll(1)   "Beta  L"
+     kkbeta(1)
+     beta(1,1) beta(2,1) ... beta(kkbeta(1),1)
+   </PP_BETA>
+      ...
+   <PP_BETA>
+     nbeta lll(nbeta)   "Beta  L"
+     kkbeta(nbeta)
+     beta(1,nbeta) beta(2,nbeta) ... beta(kkbeta(nbeta),nbeta)
+   </PP_BETA>
+   <PP_DIJ>
+      nd, "Number of nonzero Dij"
+do nb=1,nbeta
+   do mb=nb,nbeta
+      if (abs (dion (nb, mb) ) > 0) then  
+               nb  mb  dion(nb,mb)    "Q_int"
+      end if
+   end do
+end do
+   </PP_DIJ>
+
+   <PP_QIJ>
+      nqf   "nqf"
+      <PP_RINNER>
+         rinner(0) rinner(1) ... rinner(2*lmax)
+      </PP_RINNER>
+do nb=1,nbeta
+   do mb=nb,nbeta
+            nb  mb  lll(mb)   "i  j  (l)"
+            qqq(nb,mb)    "Q_int"
+            qfunc(1, nb,mb) qfunc(2, nb,mb) ... qfunc(mesh, nb,mb) 
+      <PP_QFCOEF>
+            do l=0,2*lmax
+               do i=1,nqf
+                  qfcoef(i,l,nb,mb)
+               end do
+            end do
+      </PP_QFCOEF>
+         end do
+      end do
+
+   </PP_QIJ>
+
+</PP_NONLOCAL>
+-------------------------------------------------------------------
+lll(i)      : angular momentum of projector i
+kkbeta(i)   : number of mesh points for projector i (must be .le.mesh )
+beta(i)     : projector |\beta_i> (Ry a.u.) multiplied by r
+dion(i,j)   : the D_ij factors (Ry^{-1}) of the nonlocal PP:
+              V_NL = \sum_{i,j} D_{i,j} |\beta_i><\beta_j|
+nqf         : number of expansion coefficients for  q_{ij}
+              (may be zero)
+rinner(i)   : for r < rinner(i) Q functions are pseudized
+              (not read if nqf=0)
+qqq(i,j)    : Q_{ij} = \int q_{ij}(r) dr
+qfunc       : q_{ij}(r) for r > rinner(i)
+qfcoef      : expansion coefficients of q_{ij}(r) for r < rinner(i)
+             (not read if nqf=0)
+-------------------------------------------------------------------
+<PP_PSWFC>
+   els(1) lchi(1) oc(1)  "Wavefunction"
+   chi(1,1) chi(2,1) ...  chi(mesh,1)
+   ..........
+   els(natwfc) lchi(natwfc) oc(natwfc)  "Wavefunction"
+   chi(1,natwfc) chi(2,natwfc) ... chi(mesh,natwfc)
+</PP_PSWFC>
+-------------------------------------------------------------------
+chi(mesh,i) : i-th radial atomic (pseudo-)orbital
+              (radial part of the KS equation, multiplied by r)
+els(natwf), lchi(natwf), oc(natwf) : as in PP_HEADER
+-------------------------------------------------------------------
+<PP_RHOATOM>
+   rho_at(1) rho_at(2) ... rho_at(mesh)
+</PP_RHOATOM>
+-------------------------------------------------------------------
+rho_at(mesh) : radial atomic (pseudo-)charge
+               rho_at(:) = \sum_i oc(i) * chi(:,i)**2
+               This is 4pi*r^2 times the true charge
+-------------------------------------------------------------------

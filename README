@@ -1,0 +1,50 @@
+Directory  Content:
+
+PW/        Source files for scf calculations (pw.x)
+PH/        Source files for phonon calculations (ph.x)
+           (depends on PW/)
+PP/        Source files for post-processing of pw.x data file
+           (depends on PW)
+Gamma/     Source files for experimental Gamma-only scf (pw.x) 
+           and phonon calculation (raman)
+           (depends on PW/)
+D3/        Source files for third-order derivatives calculation (d3.x)
+           (depends on PW/ and PH/)
+pwtools/    Source files for post-processing of ph.x results and of
+           miscellaneous analysis programs
+           (depends on PW/)
+upftools/  Source files for converters to unified pseudopotential
+           format (UPF)
+pwdoc/     documentation for PWscf, ChangeLog, etc
+pw_examples/ 
+
+Modules/   Source file for modules that are common to all programs
+include/   files *.h included by fortran source files
+clib/      external libraries written in C
+flib/      external libraries written in Fortran
+install/   contains machine-dependent makefiles and tools for compilation
+           and installation
+pseudo/    pseudopotential files used by examples
+
+CPV/       Source file for Car-Parrinello-Vanderbilt code
+cpdoc/     documentation for CPV, ChangeLog, etc
+cp_examples/
+
+FPMD/      Source file for First-Principle Molecular Dynamics code
+FPMD-doc/  documentation for FPMD, ChangeLog, etc
+FPMD-examples/
+
+Installation:
+
+./configure "machine"
+edit make.sys to adjust to your configuration
+make pw pp ph d3 gamma tools
+make cpv
+make fpmd
+
+Executables are created into the corresponding directory where
+sources resides: that is, pw.x into PW/, ph.x into PH/, and so on.
+If you want to have executables in bin/, use "make links"
+
+
+

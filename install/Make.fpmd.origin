@@ -1,0 +1,66 @@
+######################################################################
+# ORIGIN 2000 and 3000
+#
+# Architecture (choose yours)
+#  ARCH=o2k
+  ARCH=o3k
+#
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+# ** Preprocessor Macro **
+# Add -D__FFTWDRV if you want to use fftw 
+  CPMACRO=-D__SGI -D__MPI -D__PARA
+
+CPUTYPE=-r10000
+
+# ** Communication Libraries **
+  COMMLIB= -lmpi
+
+# ** Scientific Libraries **
+# Uncomment to Use system library
+  MYLIB=
+  SCILIB= -lcomplib.sgimath
+# Uncomment to Use blas and lapack from the source code
+#  MYLIB=blas_and_lapack
+#  SCILIB=
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# General Flags
+  ARCHFLAGS= -mips4 -n32 $(CPUTYPE) -r8
+  ARFLAGS   = rv
+  DEBUGFLAGS=
+  PREPROCESSING= -cpp $(CPMACRO)
+  OPTIMIZATIONS= -O3 -OPT:ALIAS=RESTRICT 
+  FREEFORM= -freeform
+#
+# Flag for the compilation of the fortran source files
+  F77FLAGS= $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  F90FLAGS= $(ARCHFLAGS) $(FREEFORM) $(PREPROCESSING) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  LNKFLAGS=  $(ARCHFLAGS)  
+#
+# Flag for the compilation of the c source files
+  CCFLAGS=  $(INCLUDEPATH)   $(ARCHFLAGS) $(CPMACRO) $(OPTIMIZATIONS)
+#
+
+# Libraries
+  LIB=  $(COMMLIB) $(SCILIB) 
+  MODULEFLAG=-I $(OSHOME)/Modules -I$(OSHOME)/FPMD
+#
+# Name of the fortran compiler
+  FC= f90
+  F77= f90
+  F90= f90
+  LNK= f90
+#
+# Name of the c compiler
+  CC=cc
+#
+# Other
+  RANLIB=echo
+  .SUFFIXES: .F .f90

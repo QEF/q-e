@@ -1,0 +1,54 @@
+######################################################################
+# IBM SP2, SP3 and SP4
+#
+# Architecture
+  ARCH=ibmsp
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+# ** Preprocessor Macro **
+  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL,-DSWAP=dswap,-DAXPY=daxpy,-DSCAL=dscal,-DCOPY=dcopy,-DGEMM=dgemm
+#
+# Uncomment to Use IBM mass
+  MASS= -L /cineca/lib/mass -lmassvp4 -lmass
+#
+# ** Scientific Libraries **
+  MYLIB=
+  FFT=ibmfft.o
+  ESSL= -lpessl -lessl
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# Flag for the compilation of the fortran source files
+  OPTIMIZATIONS = -O3 -qstrict -qtune=auto -qalias=noaryovrlp -Q 
+  DEBUGFLAGS = 
+  PREPROCESSING = -qsuffix=cpp=f90 -WF,$(CPMACRO)
+  FREEFORM  = -qfree=f90
+  ARCHFLAGS = -qarch=auto -qdpc
+  ARFLAGS   = rv
+  F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  F90FLAGS  = $(ARCHFLAGS) $(PREPROCESSING) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS)
+  LNKFLAGS = $(ARCHFLAGS) -bmaxdata:0x70000000
+#
+# Flag for the compilation of the c source files
+  CFLAGS   = -Wp,$(CPMACRO) -O2
+#
+# Name of the fortran compiler
+  FC= mpxlf
+  F90= mpxlf90
+  F77= mpxlf
+  LNK= mpxlf90
+
+# Libraries
+  LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
+  MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
+#
+# OTHER settings
+  RANLIB=echo
+  .SUFFIXES:
+  .SUFFIXES: .F .f90 .c .f .o
+######################################################################

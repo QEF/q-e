@@ -1,0 +1,49 @@
+#
+# System-dependent definitions for COMPAQ alpha, Tru64
+# Edit according to your needs
+#
+# Precompiler
+CPP = /lib/cpp
+#
+# -DLANGUAGE_FORTRAN avoids that // is considered as a C++ comment.
+# if you use GNU cpp, use -traditional instead
+#
+# Use -DDXML if you use fft routines from the dxml or cxml library
+# (add -DNOPENCILS if you do not want to use the FFT with pencils:
+#  in some cases it is slower than the full 3d FFT)
+# Use -DFFTW instead of -DDXML if you use fft routines from fftw library
+#
+CPPFLAGS = -P -DDEC -DLANGUAGE_FORTRAN -DDXML -DNOPENCILS -I$(INCL_DIR)
+
+#
+# Fortran compiler:
+#
+FC = f90
+#
+# options suggested by Ph. Baranek:
+# FFLAGS =-O5 -fast -big_endian  -fpe0 -check underflow -real_size 64 \
+#        -align dcommons -align records -I. -I$(INCL_DIR)
+#  -big_endian allows to read files generated on other (big endian) machines
+# FFLAGS = -O -real_size 64 -align dcommons -align records -I. -I$(INCL_DIR)
+
+#
+# Libraries:
+# If you have dxml or cxml libraries, use
+ LIBS = -ldxml
+# BEWARE: if you have a dxml version with buggy blas/lapack, use
+# LIBS -llapack -lblas -ldxml
+# instead
+#
+# Loader:
+# $(PWLIBS) are defined in main/Makefile and automatically loaded.
+# The loader of some machines is unable to resolve the few existing
+# cross-references between libraries in $(PWLIBS). Reloading them
+# once again should fix the problem
+# 
+LD=$(FC)
+LFLAGS = $(PWLIBS) $(LIBS)
+#
+# ar:
+#
+AR = ar
+ARFLAGS = rv

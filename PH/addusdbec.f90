@@ -1,0 +1,119 @@
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!----------------------------------------------------------------------
+subroutine addusdbec (ik, wgt, psi, dbecsum)  
+  !----------------------------------------------------------------------
+  !
+  !  This routine adds to the dbecsum the term which correspond to this
+  !  k point. After the accumulation the additional part of the charge
+  !  is computed in addusddens.
+  !
+#include "machine.h"
+
+  use pwcom 
+  use allocate 
+  use parameters, only : DP 
+  use phcom
+  implicit none 
+  !
+  !   the dummy variables
+  !
+  complex(kind=DP) :: dbecsum (nhm*(nhm+1)/2, nat), psi(npwx,nbnd)
+  ! inp/out: the sum kv of bec *
+  ! input  : contains delta psi
+  integer :: ik  
+  ! input: the k point
+  real(kind=DP) :: wgt 
+  ! input: the weight of this k point
+  !
+  !     here the local variables
+  !
+  integer :: na, nt, ih, jh, ibnd, ikk, ikb, jkb, ijh, startb, &
+       lastb, ijkb0
+  ! counter on atoms
+  ! counter on atomic type
+  ! counter on solid beta functions
+  ! counter on solid beta functions
+  ! counter on the bands
+  ! the real k point
+  ! counter on solid becp
+  ! counter on solid becp
+  ! composite index for dbecsum
+  ! divide among processors the sum
+  ! auxiliary variable for counting
+
+  real(kind=DP) :: w  
+  ! the weight of the k point
+
+  complex(kind=DP), pointer :: dbecq (:,:)
+  ! the change of becq
+
+  if (.not.okvan) return  
+
+  call start_clock ('addusdbec')  
+
+  call mallocate(dbecq, nkb, nbndx)  
+  w = 0.5d0 * wgt * omega  
+  if (lgamma) then  
+     ikk = ik  
+  else  
+     ikk = 2 * ik - 1  
+  endif
+  !
+  !     First compute the product of psi and vkb
+  !
+  call ccalbec (nkb, npwx, npwq, nbnd, dbecq, vkb, psi)  
+  !
+  !  And then we add the product to becsum
+  !
+  call divide (nbnd_occ (ikk), startb, lastb)  
+  ijkb0 = 0  
+  do nt = 1, ntyp  
+     if (tvanp (nt) ) then  
+        do na = 1, nat  
+           if (ityp (na) .eq.nt) then  
+              !
+              !  And qgmq and becp and dbecq
+              !
+              ijh = 1  
+              do ih = 1, nh (nt)  
+                 ikb = ijkb0 + ih  
+                 do ibnd = startb, lastb  
+                    dbecsum (ijh, na) = dbecsum (ijh, na) + &
+                         w * (conjg (becp1 (ikb, ibnd, ik) ) * &
+                         dbecq (ikb, ibnd) )
+                 enddo
+                 ijh = ijh + 1  
+                 do jh = ih + 1, nh (nt)  
+                    jkb = ijkb0 + jh  
+                    do ibnd = startb, lastb  
+                       dbecsum (ijh, na) = dbecsum (ijh, na) + &
+                            w * (conjg (becp1 (ikb, ibnd, ik) ) * &
+                            dbecq (jkb, ibnd) + &
+                            conjg (becp1 (jkb, ibnd, ik) ) * &
+                            dbecq (ikb, ibnd) )
+                    enddo
+                    ijh = ijh + 1  
+                 enddo
+              enddo
+              ijkb0 = ijkb0 + nh (nt)  
+           endif
+        enddo
+     else  
+        do na = 1, nat  
+           if (ityp (na) .eq.nt) ijkb0 = ijkb0 + nh (nt)  
+        enddo
+     endif
+  enddo
+
+  call mfree (dbecq)
+
+  call stop_clock ('addusdbec')  
+  return  
+end subroutine addusdbec

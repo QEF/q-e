@@ -1,0 +1,120 @@
+!
+!-----------------------------------------------------------------------
+subroutine generate_dynamical_matrix   &
+     (nat,nsym,s,irt,at,bg,n_diff_sites,equiv_atoms,                  &
+     has_equivalent,dyn)
+  !-----------------------------------------------------------------------
+  !
+  !  generate the complete dynamical matrix from independent modes only
+  !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
+  !
+#include "machine.h"
+  use parameters, only : DP
+  use allocate
+  implicit none
+  integer :: nat, nsym, n_diff_sites, irt(48,nat), &
+       equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
+  real(kind=DP) :: dyn(3*nat,3*nat), at(3,3), bg(3,3)
+  !
+  integer :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
+       i, j, k, l, mu_k, mu_l
+  integer table(48,48), invs(3,3,48)
+  real(kind=DP), pointer :: irreducible_dyn(:,:)
+  real(kind=DP) :: work(3,3)
+  logical :: no_equivalent_atoms
+  integer, pointer ::done(:,:)
+  !
+  no_equivalent_atoms=.true.
+  do na = 1,nat
+     no_equivalent_atoms = no_equivalent_atoms .and. has_equivalent(na).eq.0
+  end do
+  if (no_equivalent_atoms) return
+  !
+  call mallocate ( irreducible_dyn, 3*nat, 3*nat)
+  call DCOPY(3*nat*3*nat,dyn,1,irreducible_dyn,1)
+  !
+  ! recalculate S^-1 (once again)
+  !
+  call multable (nsym,s,table) 
+  call inverse_s(nsym,s,table,invs)
+  !
+  do na = 1,nat
+     if (has_equivalent(na).eq.0 ) then
+        do nb = 1,nat
+           do i = 1,3
+              do j = 1,3
+                 work(i,j) = irreducible_dyn(3*(na-1)+i,3*(nb-1)+j)
+              end do
+           end do
+           !
+           !  transform to crystal axis
+           !
+           call trntns(work,at,bg,-1)
+           do i = 1,3
+              do j = 1,3
+                 irreducible_dyn(3*(na-1)+i,3*(nb-1)+j) = work(i,j)
+              end do
+           end do
+        end do
+     end if
+  end do
+  !
+  call mallocate (done, 3*nat, 3*nat)
+  do smu_i = 1,3*nat
+     do smu_j = 1,3*nat
+        dyn(smu_i,smu_j) = 0.0
+        done(smu_i,smu_j)= 0
+     end do
+  end do
+  !
+  do isym = 1,nsym
+     do na = 1,n_diff_sites
+        ni = equiv_atoms(na,1)
+        sni = irt(isym,ni)
+        do i = 1,3
+           smu_i = 3*(sni-1)+i
+           do nj = 1,nat
+              snj = irt(isym,nj)
+              do j = 1,3
+                 smu_j = 3*(snj-1)+j
+                 if (done(smu_i,smu_j).eq.0) then
+                    do k = 1,3
+                       mu_k = 3*(ni-1)+k
+                       do l = 1,3
+                          mu_l = 3*(nj-1)+l
+                          dyn(smu_i,smu_j) = dyn(smu_i,smu_j) + &
+                               invs(i,k,isym) * invs(j,l,isym) * &
+                               irreducible_dyn(mu_k,mu_l)
+                          !  rotation matrices are S^-1
+                       end do
+                    end do
+                    done(smu_i,smu_j)=1
+                 end if
+              end do
+           end do
+        end do
+     end do
+  end do
+  !
+  call mfree(done)
+  call mfree(irreducible_dyn)
+  !
+  do na = 1,nat
+     do nb = 1,nat
+        do i = 1,3
+           do j = 1,3
+              work(i,j) = dyn(3*(na-1)+i,3*(nb-1)+j)
+           end do
+        end do
+        !  back to cartesian axes
+        call trntns(work,at,bg, 1)
+        do i = 1,3
+           do j = 1,3
+              dyn(3*(na-1)+i,3*(nb-1)+j) = work(i,j)
+           end do
+        end do
+     end do
+  end do
+  !
+  return
+end subroutine generate_dynamical_matrix

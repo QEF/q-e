@@ -1,0 +1,17 @@
+- Make.pc_ifc e Make.ibmsp sono per ora i soli che funzionino
+- Il compilatore IBM non gradisce i commenti del C in machine.h
+- il cercamoduli non funziona per pwcom, ppara, phcom e affini:
+  le dipendenze non funzionano
+- la dipendenza da machine.h e' sparita: se si cambia qualcosa
+  bisogna ricompilare (poco male)
+- intel.pcl deve contenere tutte le directory con i moduli
+  (poco male)
+- bisogna specificare tutti i files che servono nei makefiles,
+  uno per uno. Non si puo' usare *.o perche' molti loader si
+  incasinano se trovano piu' di un main. (poco male ma e' una
+  rottura di scatole). Soluzioni: spostare main altrove?
+  usare librerie come si faceva prima?
+- Makefile, install/shdep molto clumsy (poco male)
+- bisogna fare in modo che se qualche directory e' assente
+  il make non si incasini (va messo a posto)
+
