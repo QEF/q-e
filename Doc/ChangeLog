@@ -3,6 +3,9 @@
        of the distribution to produce a detailed ChangeLog
 ---------------------------------------------------------------------------
 
+08 Feb 2005 Added to the atomic code the generation of Projector Augmented
+            Wave setups. Experimental. (GF)
+
 13 Dec 2004 sph_bes.f90 in flib was incorrect for some high value of l (SdG)
 
  1 Dec 2004 Hubbard forces were wrong in the case npsin.eq.1 (SdG)
