@@ -13,7 +13,20 @@ subroutine stress
 #include "machine.h"
   !
   USE io_global,  ONLY : stdout
-  use pwcom
+  USE parameters, ONLY: DP
+  USE brilz, ONLY: omega, alat, at, bg
+  USE basis, ONLY: nat, ntyp, ityp, tau
+  USE constants, ONLY: uakbar
+  USE ener, ONLY: etxc, vtxc
+  USE force_mod, ONLY: sigma
+  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx, nl, g, gg, gcutm
+  USE ldaU, ONLY: lda_plus_u
+  USE lsda_mod, ONLY: nspin
+  USE pseud, ONLY: zv
+  USE scf, ONLY: rho, rho_core
+  USE varie, only: iverbosity
+  USE wvfct, ONLY: gamma_only
   implicit none
   !
   real(kind=DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &

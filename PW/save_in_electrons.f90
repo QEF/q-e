@@ -8,8 +8,13 @@
 !-----------------------------------------------------------------------
 subroutine save_in_electrons (iter, dr2)
   !-----------------------------------------------------------------------
-  use pwcom
-  use io_files, only: iunres
+  USE parameters, ONLY: DP
+  USE io_files, ONLY: iunres
+  USE ener,  ONLY: etot
+  USE klist, ONLY: nks
+  USE varie, ONLY: reduce_io, conv_elec, tr2, ethr
+  USE wvfct, ONLY: nbnd, et
+  USE vlocal, ONLY: vnew
   implicit none
   character :: where * 20
   ! are we in the right place?

@@ -15,7 +15,9 @@ subroutine set_fft_dim
   !     given as input parameters. Input values are kept otherwise.
   !
   USE io_global,  ONLY : stdout
-  use pwcom
+  USE brilz, ONLY: at
+  USE gvect, ONLY: gcutm, nr1, nr2, nr3
+  USE gsmooth, ONLY: doublegrid, gcutms, nr1s, nr2s, nr3s
   use fft_scalar, only: allowed
   implicit none
 

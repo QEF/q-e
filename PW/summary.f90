@@ -18,8 +18,25 @@ subroutine summary
   !
 #include "machine.h"
   USE io_global,  ONLY :  stdout
-  use pwcom
-  use funct
+  USE parameters, ONLY: DP
+  USE constants, ONLY: amconv
+  USE atom
+  USE brilz
+  USE basis
+  USE char, ONLY: title, sname, psd
+  USE cellmd, ONLY: calc, cmass
+  USE dynam, ONLY: amass
+  USE gvect
+  USE gsmooth
+  USE lsda_mod, ONLY: lsda, starting_magnetization
+  USE klist
+  USE ktetra
+  USE nl_c_c, ONLY: nlcc, a_nlcc, b_nlcc, alpha_nlcc
+  USE pseud, ONLY: zv, zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc
+  USE symme, ONLY: nsym, invsym, s, ftau
+  USE varie
+  USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll
+  USE funct
   implicit none
   !
   !     declaration of the local variables

@@ -15,8 +15,13 @@ subroutine stres_hub ( sigmah )
    ! the quantity -(1/\Omega)dE_{h}/d\epsilon_{i,j}
    !
 #include "machine.h"
-   use pwcom
-   use io_files, only : prefix, iunocc
+  USE parameters, ONLY: DP
+  USE basis, ONLY: nat, ityp
+  USE brilz, ONLY: omega, at, bg
+  USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns
+  USE lsda_mod, ONLY: nspin
+  USE symme,    ONLY: s, nsym
+  USE io_files, ONLY : prefix, iunocc
 #ifdef __PARA
    use para
 #endif

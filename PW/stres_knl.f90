@@ -11,9 +11,15 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom
-  use io_files, only: iunwfc, nwordwfc, iunigk
-  USE wavefunctions_module,    ONLY : evc
+  USE parameters,           ONLY: DP
+  USE constants,            ONLY: pi, e2
+  USE brilz,                ONLY: omega, alat, at, bg, tpiba
+  USE gvect,                ONLY: qcutz, ecfixed, q2sigma, g
+  USE klist,                ONLY: nks, xk
+  USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
+  USE symme,                ONLY: s, nsym
+  USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
+  USE wavefunctions_module, ONLY: evc
   implicit none
   real(kind=DP) :: sigmanlc (3, 3), sigmakin (3, 3)
   real(kind=DP), allocatable :: gk (:,:), kfac (:)

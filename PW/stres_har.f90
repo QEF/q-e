@@ -7,12 +7,19 @@
 !
 !
 !----------------------------------------------------------------------
-
 subroutine stres_har (sigmahar)
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom
+  USE parameters, ONLY : DP
+  USE constants, ONLY : e2, fpi
+  USE brilz, ONLY: omega, tpiba2
+  USE ener, ONLY: ehart
+  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx , nl, g, gg
+  USE lsda_mod, ONLY: nspin
+  USE scf, ONLY: rho
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
   !

@@ -187,7 +187,6 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   call init_us_1
   !
   do ik = 1, nks
-     npw = npwx
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
 

@@ -12,8 +12,10 @@ subroutine s_1psi (lda, n, psi, spsi)
   !    spsi = S*psi for one wavefunction
   !    Wrapper routine - calls ccalbec and s_psi
   !
-  use pwcom
-  use becmod
+  use parameters, only: DP
+  use becmod, only: becp
+  use wvfct, only: npwx
+  use us, only: vkb, nkb
   implicit none
   !
   integer :: lda, n

@@ -129,8 +129,6 @@ SUBROUTINE phq_init()
      !
      ! ... g2kin is used here as work space
      !
-     npw = npwx
-     !
      CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
      !
      ! ... if there is only one k-point evc, evq, npw, igk stay in memory
@@ -142,8 +140,6 @@ SUBROUTINE phq_init()
         npwq = npw
         !
      ELSE   
-        !
-        npwq = npwx
         !
         CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), &
                       npwq, igkq, g2kin )

@@ -253,7 +253,6 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
   allocate ( kisort( npwx ) )
   do ik = 1, nks
      kisort = 0
-     npw = npwx
      call gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, kisort(1), g2kin)
      call gk_l2gmap (ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
      ngk (ik) = npw

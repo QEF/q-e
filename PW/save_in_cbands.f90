@@ -8,9 +8,12 @@
 !-----------------------------------------------------------------------
 subroutine save_in_cbands (iter, ik_, dr2)
   !-----------------------------------------------------------------------
-  use pwcom
-  use io_files, only: iunres
-  implicit none
+  USE parameters, ONLY: DP
+  USE io_files, ONLY: iunres
+  USE klist, ONLY: nks
+  USE varie, ONLY: reduce_io, tr2, ethr
+  USE wvfct, ONLY: nbnd, et
+   implicit none
   character :: where * 20
   ! are we in the right place?
   integer :: ik, ibnd, ik_, iter

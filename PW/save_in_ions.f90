@@ -8,8 +8,11 @@
 !-----------------------------------------------------------------------
 subroutine save_in_ions
   !-----------------------------------------------------------------------
-  use pwcom
-  use io_files, only: iunres
+  USE parameters, ONLY: DP
+  USE io_files, ONLY: iunres
+  USE klist, ONLY: nks
+  USE varie, ONLY: reduce_io, lscf, tr2, ethr
+  USE wvfct, ONLY: nbnd, et
   implicit none
   character :: where * 20
   ! are we in the right place?

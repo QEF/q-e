@@ -11,9 +11,19 @@ subroutine stres_loc (sigmaloc)
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom
+  USE parameters, ONLY : DP
+  USE atom, ONLY : msh, mesh, r, rab, vnl, numeric
+  USE basis, ONLY: ntyp
+  USE brilz, ONLY: omega, tpiba2
+  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx, nl, g, ngl, gl, igtongl
+  USE lsda_mod, ONLY: nspin
+  USE pseud, ONLY : aps, alps,alpc, cc, lloc, lmax, nlc, nnl, zp
+  USE scf, ONLY: rho
+  USE vlocal, ONLY : strf, vloc
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
-  implicit none  !
+  implicit none
   real(kind=DP) :: sigmaloc (3, 3)
   real(kind=DP) , allocatable :: dvloc(:)
   real(kind=DP) :: evloc, fact

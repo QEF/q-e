@@ -1,5 +1,5 @@
 
-! This module is used, for the time being, as an interface
+! This module is USEd, for the time being, as an interface
 ! between the UPF pseudo type and the pseudo variables internal representation
 
 !=----------------------------------------------------------------------------=!
@@ -24,11 +24,15 @@ subroutine set_pseudo (is, upf, ierr)
   !
   ! PWSCF modules
   !
-  use pwcom
-  use funct
+  USE pseud, ONLY: zv, lloc, lmax, zp
+  USE char, ONLY: psd
+  USE nl_c_c, ONLY: nlcc
+  USE atom
+  USE us
+  USE funct
   !
-  use pseudo_types
-  use read_pseudo_module
+  USE pseudo_types
+  USE read_pseudo_module
   !
   implicit none
   !

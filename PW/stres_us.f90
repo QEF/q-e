@@ -13,10 +13,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   ! nonlocal (separable pseudopotential) contribution to the stress
   !
+  USE basis,                ONLY : nat, ntyp, ityp
   USE constants,            ONLY : eps8
   USE parameters,           ONLY : DP
-  USE wvfct,                ONLY : gamma_only 
-  USE pwcom
+  USE klist,                ONLY : nks, xk
+  USE lsda_mod,             ONLY : current_spin, lsda, isk
+  USE wvfct,                ONLY : gamma_only, npw, npwx, nbnd, igk, wg, et
+  USE us,                   ONLY : nkb, vkb, lmaxkb, nh, qq, deeq, tvanp
+  USE varie,                ONLY : newpseudo
   USE wavefunctions_module, ONLY : evc
 #ifdef __PARA
   USE para,                 ONLY : me
