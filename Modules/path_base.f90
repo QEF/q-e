@@ -1090,7 +1090,8 @@ MODULE path_base
       !
       USE control_flags,  ONLY : lneb
       USE path_variables, ONLY : num_of_images, suspended_image, istep_path, &
-                                 pes, first_last_opt, Emin , Emax, Emax_index
+                                 pes, first_last_opt, Emin , Emax, Emax_index, &
+                                 frozen
       !
       IMPLICIT NONE
       !
@@ -1103,14 +1104,23 @@ MODULE path_base
       INTEGER  :: N_in, N_fin
       !
       !
-      IF ( first_last_opt .OR. ( istep_path == 0 ) ) THEN
+      IF ( istep_path == 0 ) THEN
          !
-         N_in = 1
+         N_in  = 1
          N_fin = num_of_images
+         !
+      ELSE IF ( first_last_opt ) THEN
+         !
+         N_in  = 1
+         N_fin = num_of_images
+         !
+         IF ( frozen(1) ) N_in = 2
+         !
+         IF ( frozen(num_of_images) ) N_fin = ( num_of_images - 1 )
          !
       ELSE
          !
-         N_in = 2
+         N_in  = 2
          N_fin = ( num_of_images - 1 )
          !
       END IF
