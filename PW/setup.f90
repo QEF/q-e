@@ -241,12 +241,12 @@ SUBROUTINE setup()
 #if defined (__PGI)
         !                 
         DO ibnd = 1, nbnd
-           iocc = iocc + f_inp(ibnd,is)
+           iocc = iocc + f_inp(ibnd,1)
         END DO
         !
 #else
         !
-        iocc = SUM( f_inp(:,is) )
+        iocc = SUM( f_inp(:,1) )
         !
 #endif        
         !
@@ -683,7 +683,8 @@ SUBROUTINE setup()
   !
   ! ... non scf calculation: do not change the number of k-points
   !
-  ltest = ( .NOT. lscf ) .AND. ( .NOT. ( lphonon .OR. lraman ) )
+  ltest = ( nks /= input_nks ) .AND. &
+          ( .NOT. lscf ) .AND. ( .NOT. ( lphonon .OR. lraman ) )
   !
   IF ( ltest ) THEN
      !
