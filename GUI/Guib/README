@@ -1,0 +1,82 @@
+
+ ==============================================================================
+                   * * * README file for GUIB * * *
+ ==============================================================================
+
+This is the GUIB software. The name "GUIB" stands for Graphical User
+Interface Builder. Unfortunately, the name is misleading. The GUIB is
+NOT a general-purpose Graphical User Interface Builder.
+
+THE GUIB IS A UTILITY LIBRARY THAT FACILITATE THE CREATION OF
+GRAPHICAL-USER-INTERFACES (GUI) AIMED AT CREATING AND MANIPULATING
+INPUT FILES FOR NUMERICAL SIMULATION PROGRAMS.
+
+The idea behind the GUIB project is to construct a special
+meta-language with two purposes:
+
+   (i)  define the syntax of the input file of a given numerical program
+   (ii) provide simultaneously automatic construction of the GUI on the 
+        basis of this definition.
+
+This is achieved by providing a definition file which defines the two
+entities (input syntax and the GUI). In the following text the term
+input file stands for an input file of a given numerical program,
+while the term definition file is a file that describes the syntax of
+the input file. For an example of how to construct a simple GUI see:
+http://www-k3.ijs.si/kokalj/guib/description.html.
+
+For further description see the GUIB web-page:
+http://www-k3.ijs.si/kokalj/guib/
+
+
+Directory structure of GUIB:
+     
+     lib/ 	auxiliary Tcl/Tk routines, i.e., tclUtils.tcl, tkUtils.tcl
+     doc/ 	programming documentation generated from source-code
+     examples/ 	a few examples (definition files: *.tcl; input files: *.inp)
+     external/ 	external cmdline package (from Tcllib library)
+     images/ 	some icons 
+     src/ 	GUIB source code directory
+
+Description of some guib-src/ files:
+     
+     moduleObj.itcl 	   implementation of moduleObj class
+     keywordObj.itcl 	   implementation of keywordObj class
+     guibKeywords.itcl 	   implementation of all GUIB keywords
+     build.itcl 	   build Tk-based GUI defined by module definition file
+     open.itcl 		   open an input file
+     save.itcl 		   save edited input file
+     gui.itcl 		   application GUI: procs for "simple-GUI" and
+      			   implementation of more elaborate GUI class
+     guib-keywords-def.tcl definition of options of GUIB-keywords
+
+
+COPYING
+-------
+
+The GUIB is covered by the GNU General Public License. Note that the
+GUIB uses also the cmdline package from Tcllib library. The source
+code of cmdline is included verbatim. The Tcllib is covered by other
+free software license, see file external/lib/cmdline/license.terms.
+
+For the material included in the directory images/ see the file
+images/icons.license.
+
+All the material included in this distribution is free software; you
+can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later
+version.
+
+These programs are distributed in the hope that they will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+--
+Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 12:52:58 CET 2004

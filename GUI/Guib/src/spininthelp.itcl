@@ -1,0 +1,454 @@
+#
+# $RCSfile: spininthelp.itcl,v $ --
+#
+#      This file contains contains the spininthelp megawidget.
+#
+# Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: spininthelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+# ------------------------------------------------------------------------ 
+#  Description:
+#   Below is the modified iwidgets::Spinint code, which is called 
+#   ::guib::widgets::Spinint
+#
+#  Patches:
+#   1.) If the value of entry is "", then upon increasing/decreasing the value
+#   of zero is implicitly assumed
+#   3.) the dafault of -warp option is set to false
+#   2.) Adding new validation functions like (posint, negint, nonposint, ...)
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+# iwidgets::Spinint 
+# ----------------------------------------------------------------------
+# Implements an integer spinner widget.  It inherits basic spinner
+# functionality from Spinner and adds specific features to create 
+# an integer-only spinner. 
+# Arrows may be placed horizontally or vertically.
+# User may specify an integer range and step value.
+# Spinner may be configured to wrap when min or max value is reached.
+#
+# NOTE:
+# Spinint integer values should not exceed the size of a long integer.
+# For a 32 bit long the integer range is -2147483648 to 2147483647.
+#
+# ----------------------------------------------------------------------
+#   AUTHOR:  Sue Yockey               Phone: (214) 519-2517
+#                                     E-mail: syockey@spd.dsccc.com
+#                                             yockey@acm.org
+#
+#   @(#) $Id: spininthelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $
+# ----------------------------------------------------------------------
+#            Copyright (c) 1995 DSC Technologies Corporation
+# ======================================================================
+# Permission to use, copy, modify, distribute and license this software 
+# and its documentation for any purpose, and without fee or written 
+# agreement with DSC, is hereby granted, provided that the above copyright 
+# notice appears in all copies and that both the copyright notice and 
+# warranty disclaimer below appear in supporting documentation, and that 
+# the names of DSC Technologies Corporation or DSC Communications 
+# Corporation not be used in advertising or publicity pertaining to the 
+# software without specific, written prior permission.
+# 
+# DSC DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING 
+# ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, AND NON-
+# INFRINGEMENT. THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE
+# AUTHORS AND DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, 
+# SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS. IN NO EVENT SHALL 
+# DSC BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR 
+# ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
+# WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTUOUS ACTION,
+# ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
+# SOFTWARE.
+# ======================================================================
+
+# ------------------------------------------------------------------------
+# SPININT "usual" options.
+# ------------------------------------------------------------------------
+itk::usual Spinint {
+    keep -background -borderwidth -cursor -foreground -highlightcolor \
+	 -highlightthickness -insertbackground  -insertborderwidth \
+	 -insertofftime -insertontime -insertwidth -labelfont \
+	 -selectbackground -selectborderwidth -selectforeground \
+	 -textbackground -textfont -width
+}
+
+# ------------------------------------------------------------------
+#                            SPININT
+# ------------------------------------------------------------------
+#****f* widgets/spinint
+#  NAME
+#    ::guib::widgets::spinint -- spinint megawidget
+#  USAGE
+#    spinint pathName ?option value? ?...?
+#  DESCRIPTION
+#    The spinint is a megawidget with label on the left, entry on
+# the middle, and up&down spinners on the right
+#  OPTIONS
+#    Special OPTIONS
+#      -range
+#      -step 
+#      -wrap 
+#      -validate -- the validate command for the spinint widget (must be 
+#                   nonnegint, posint, nonposint, or negint)
+#  RETURN VALUE
+#    Returns the path of the spinint, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::iwidgets::spinint {pathName args} {
+    uplevel ::guib::widgets::Spinint $pathName $args
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Spinint
+# NAME
+#    ::guib::widgets::Spinint -- a class for spinint megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Spinint {
+    inherit iwidgets::Spinner 
+
+    constructor {args} {
+	# deafult validation is "numeric"
+	Spinner::constructor -validate numeric
+    } {
+	#usual
+    }
+
+    itk_option define -range range Range "" 
+    itk_option define -step step Step 1 
+    itk_option define -wrap wrap Wrap false 
+    itk_option define -validate validate Command {}
+
+    public method up {}
+    public method down {}
+}
+
+# ------------------------------------------------------------------
+#                        CONSTRUCTOR
+# ------------------------------------------------------------------
+body ::guib::widgets::Spinint::constructor {args} {
+    eval itk_initialize $args
+    
+    $itk_component(entry) delete 0 end
+    
+    if {[lindex $itk_option(-range) 0] == ""} {
+	$itk_component(entry) insert 0 "0"
+    } else { 
+	$itk_component(entry) insert 0 [lindex $itk_option(-range) 0] 
+    }
+}
+
+# ------------------------------------------------------------------
+#                         OPTIONS
+# ------------------------------------------------------------------
+
+# ------------------------------------------------------------------
+# OPTION: -validate
+#
+# Sets the validation function for spinner.
+# ------------------------------------------------------------------
+configbody ::guib::widgets::Spinint::validate {
+    # 1. allowed validations are of integer type: numeric, integer,
+    # posint, negint, nonposint, nonnegint
+    switch -glob -- $itk_option(-validate) {
+	{} - *numeric* - *integer* - *posint* - *negint* - *nonposint* - *nonnegint* {
+	    # validation function is OK
+	}
+	default {
+	    error "invalid validation function \"$itk_option(-validate)\", should be one of numeric, integer, posinteger, neginteger, nonposinteger, or nonneginteger"
+	    return
+	}
+    }
+	
+    # 2. validation for spinner-arrow mechanism
+    set maxint 2147483647
+    switch -glob -- $itk_option(-validate) {
+	nonnegint* {
+	    set itk_option(-range) "0 $maxint"
+	}
+	posint* {
+	    set itk_option(-range) "1 $maxint"
+	}
+	nonposint* {
+	    set itk_option(-range) "-$maxint 0"
+	}
+	negint* {
+	    set itk_option(-range) "-$maxint -1"
+	}
+    }
+
+    # 3. keyboard validation 
+    ::guib::widgets::validate_functions
+}
+
+# ------------------------------------------------------------------
+# OPTION: -range
+#
+# Set min and max values for spinner.
+# ------------------------------------------------------------------
+configbody ::guib::widgets::Spinint::range {
+    if {$itk_option(-range) != ""} {
+	if {[llength $itk_option(-range)] != 2} {
+	    error "wrong # args: should be\
+		    \"$itk_component(hull) configure -range {begin end}\""
+    	}
+
+    	set min [lindex $itk_option(-range) 0]
+    	set max [lindex $itk_option(-range) 1]
+
+    	if {![regexp {^-?[0-9]+$} $min]} {
+    	    error "bad range option \"$min\": begin value must be\
+		    an integer"
+    	}
+    	if {![regexp {^-?[0-9]+$} $max]} {
+    	    error "bad range option \"$max\": end value must be\
+		    an integer"
+    	}
+    	if {$min > $max} {
+    	    error "bad option starting range \"$min\": must be less\
+		    than ending: \"$max\""
+    	}
+    } 
+}
+
+# ------------------------------------------------------------------
+# OPTION: -step
+#
+# Increment spinner by step value.
+# ------------------------------------------------------------------
+configbody ::guib::widgets::Spinint::step {
+}
+
+# ------------------------------------------------------------------
+# OPTION: -wrap
+#
+# Specify whether spinner should wrap value if at min or max.
+# ------------------------------------------------------------------
+configbody ::guib::widgets::Spinint::wrap {
+}
+
+# ------------------------------------------------------------------
+#                            METHODS
+# ------------------------------------------------------------------
+
+# ------------------------------------------------------------------
+# METHOD: up
+#
+# Up arrow button press event.  Increment value in entry.
+# ------------------------------------------------------------------
+body ::guib::widgets::Spinint::up {} {
+    set min_range [lindex $itk_option(-range) 0]
+    set max_range [lindex $itk_option(-range) 1]
+    
+    set val [$itk_component(entry) get]
+    if { $val == "" } { 
+	# implicitly assume the value 0
+	set val 0
+	# for some validations value 0 is not allowed; check
+	if { $min_range > 0 } {
+	    set val $min_range
+	} elseif { $max_range < 0 } {
+	    set val $max_range
+	}
+	$itk_component(entry) delete 0 end
+	$itk_component(entry) insert 0 $val
+	return
+    }
+
+    if {[lindex $itk_option(-range) 0] != ""} {
+	
+	#
+	# Check boundaries.
+	#
+	if {$val >= $min_range && $val < $max_range} {
+	    incr val $itk_option(-step)
+	    
+	    #
+	    # Re-check boundaries.
+	    #
+	    if {$val >= $min_range && $val <= $max_range} {
+		$itk_component(entry) delete 0 end
+		$itk_component(entry) insert 0 $val
+	    } else {
+		
+		#
+		# This is wrap when -step > 1.
+		#
+		if {$itk_option(-wrap)} {
+		    if {$val > $max_range} {
+			$itk_component(entry) delete 0 end
+			$itk_component(entry) insert 0 $min_range
+		    } else {
+			uplevel #0 $itk_option(-invalid)
+		    }
+		} else {
+		    uplevel #0 $itk_option(-invalid)
+		}
+	    }
+	    
+	} else {
+	    if {$itk_option(-wrap)} {
+		if {$val == $max_range} {
+		    $itk_component(entry) delete 0 end
+		    $itk_component(entry) insert 0 $min_range 
+		} else {
+		    uplevel #0 $itk_option(-invalid)
+		}
+	    } else {
+		uplevel #0 $itk_option(-invalid)
+	    }
+	}
+    } else {
+	
+	#
+	# No boundaries.
+	#
+	incr val $itk_option(-step)
+	$itk_component(entry) delete 0 end
+	$itk_component(entry) insert 0 $val
+    }
+}
+
+# ------------------------------------------------------------------
+# METHOD: down 
+#
+# Down arrow button press event.  Decrement value in entry.
+# ------------------------------------------------------------------
+body ::guib::widgets::Spinint::down {} {
+    ::tclu::DEBUG range: $itk_option(-range)
+    set min_range [lindex $itk_option(-range) 0]
+    set max_range [lindex $itk_option(-range) 1]
+    
+    set val [$itk_component(entry) get]
+    if { $val == "" } { 
+	# implicitly assume the value 0
+	set val 0
+    }
+
+    if {[lindex $itk_option(-range) 0] != ""} {
+	
+	#
+	# Check boundaries.
+	#
+	if {$val > $min_range && $val <= $max_range} {
+	    incr val -$itk_option(-step)
+	    
+	    #
+	    # Re-check boundaries.
+	    #
+	    if {$val >= $min_range && $val <= $max_range} {
+		$itk_component(entry) delete 0 end
+		$itk_component(entry) insert 0 $val
+	    } else {
+		
+		#
+		# This is wrap when -step > 1.
+		#
+		if {$itk_option(-wrap)} {
+		    if {$val < $min_range} {
+			$itk_component(entry) delete 0 end
+			$itk_component(entry) insert 0 $max_range
+		    } else {
+			uplevel #0 $itk_option(-invalid)
+		    }
+		} else {
+		    uplevel #0 $itk_option(-invalid)
+		}
+	    }
+	    
+	} else {
+	    if {$itk_option(-wrap)} {
+		if {$val == $min_range} {
+		    $itk_component(entry) delete 0 end
+		    $itk_component(entry) insert 0 $max_range
+		} else {
+		    uplevel #0 $itk_option(-invalid)
+		}
+	    } else {
+		uplevel #0 $itk_option(-invalid)
+	    }
+	}
+    } else {
+	
+	#
+	# No boundaries.
+	#
+	incr val -$itk_option(-step)
+	$itk_component(entry) delete 0 end
+	$itk_component(entry) insert 0 $val
+    }
+}
+
+
+
+# ------------------------------------------------------------------------
+#  SPININTHELP
+# ------------------------------------------------------------------------
+#****f* widgets/spininthelp
+#  NAME
+#    ::guib::widgets::spininthelp -- spininthelp megawidget
+#  USAGE
+#    spininthelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    spininthelp = spinint + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -validate    -- the validate command for the spinint widget (must be 
+#                      nonnegint, posint, nonposint, or negint)
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  METHODS
+#    Widget METHODS
+#      (see Spininthelp documentation)
+#  RETURN VALUE
+#    Returns the path of the spininthelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::spininthelp {pathName args} { 
+    uplevel ::guib::widgets::Spininthelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Spininthelp
+# NAME
+#    ::guib::widgets::Spininthelp -- a class for spininthelp megawidget
+# METHODS
+#   Public METHODS
+#    (See the Spinint documentation)
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Spininthelp {
+    inherit ::guib::widgets::Spinint
+
+    constructor {args} {
+	variable ::guib::widgets::helpOptions
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args
+	grid $itk_component(help) -row 0 -rowspan 2 -column 2 \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+    eval $::guib::widgets::def(helpCommand)
+
+}

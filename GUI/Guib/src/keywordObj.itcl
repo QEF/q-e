@@ -1,0 +1,520 @@
+#
+# $RCSfile: keywordObj.itcl,v $ --
+#
+#      This file contains the implementation of the ::guib::keywordObj
+# class. The ::guib::keywordObj is the base class for the GUIB
+# objects.  There are several ::guib::keywordObj classes. The highest
+# super-class derived from super-class is the ::guib::moduleObj
+# class. Namely, the construction of the GUI is embedded inside the
+# "module" keyword, for example:
+#
+# module #auto -title "Simple GUI -script {
+#    ...
+# }
+#
+# The "module" keyword construct the moduleObj object, which holds the
+# whole GUI. The "moduleObj" IS-A "keywordObj" class. Inside the
+# module's script are GUIB keywords, the two main types being
+# item-keywords (var, dimension, table, keyword, ...) and
+# object-keywords (page, line, group, namelist, ...). These latest are
+# derived from keywordObj base-class. Currently, there are
+# ::guib::keywordObj::nameObj and ::guib::keywordObj::voidObj
+# derived-classes. The first is used for the object-keyword which have
+# the "-name" option (page, line, namelist), while the latter is used
+# for optional and required object-keywords.
+#
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: keywordObj.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****c* ::guib/keywordObj
+#  NAME
+#    ::guib::keywordObj -- a base class for the GUIB
+#
+#  DESCRIPTION 
+#    This is a base class for the GUIB. All the GUIB objects (i.e. 
+# moduleObj, nameObj, and voidObj) inherit it.
+#    
+#    The GUIB script is a Tcl script which is encapsulated inside the
+# "module" keyword and contains GUIB keywords (plus all Tcl
+# stuff). These keywords are methods of moduleObj class (expect
+# "module" which is a proc). Some of this keywords create new objects
+# (page, namelist, optional, required, line, group) and then the
+# script belonging to such a keyword is executed within that object
+# scope (i.e. this is how the nesting of the object-keywords is
+# managed). The keywords belonging to a given keywordObj's object are
+# sequentially labeled with an ID. Here an example of how the
+# hierarchy of keywordObj is handled. Consider the following script:
+# 
+# module \#auto -title "Testing" -script {
+#     page p1 -name "Page No.1" {
+# 	line l1st -name "1st line" {
+# 	    var title -label "Title:"
+# 	    var code  -label "Code:"
+# 	}
+# 	line l2nd -name "2nd line" {
+# 	    var description -label "Description:"
+# 	}
+#     }
+#     line llast -name "last line" {
+# 	var conclusion -label "Conclusion:"
+#     }
+# }
+# 
+# The corresponding hierarchy tree is the following:
+# 
+# moduleObj[module]
+#    |
+#    +--(ID=0)--keywordObj[page] (p1)
+#    |          |
+#    |          +--ID=0--keywordObj[line] (l1st)
+#    |          |        |
+#    |          |        +--ID=0--item[var] (title)
+#    |          |        +--ID=1--item[var] (code)
+#    |          |
+#    |          +--ID=1--keywordObj[line] (l2nd)
+#    |                   |
+#    |                   +--ID=0--item[var] (description)
+#    |
+#    +--(ID=1)--keywordObj[line] (llast)    
+#               |
+#               +--ID=0--item[var] (conclusion)
+# 
+#
+#  METHODS
+#    getID          -- keywords within a keywordObj object are sequentially 
+#                      labeled (1st item's ID==0), this method returns the 
+#                      current value of the counter, which equals to the 
+#                      number of items within a given keywordObj object
+#    incrID         -- increases the current counter value and returns its 
+#                      new value 
+#    setKey         -- stores the current keyword   
+#    setChild       -- stores the name of the newly created keywordObj object 
+#    setOptions     -- merges a default and parsed option values of a keyword
+#                      and stores them
+#    getKey         -- returns the keyword which has the requested ID
+#    getChild       -- returns the child keywordObj object which has the requested ID
+#    getOptions     -- returns all the options of the ID-th keyword 
+#                      (i.e. result has the form of [arrey get arrayName])
+#    getOptionValue -- return the ID-th option value
+#    getIdFromVarname  -- returns the ID of the keyword which contains the 
+#                         requested variable (i.e. -variable option)
+#    getIdFromVarident -- returns the ID of the keyword which contains the 
+#                         requested variable's identifier (i.e. -variable option)
+#    getOutFmt      -- returns the output-format
+#    getInFmt       -- returns the input-format
+#
+#******
+# ------------------------------------------------------------------------
+
+class ::guib::keywordObj {    
+    public variable parent  {}
+    public variable widget  {}
+    public variable type    {}
+
+    protected variable cmd    
+    protected variable child   
+    protected variable itemID -1
+
+    method getID              {}
+    method incrID             {}
+    method setKey             {id key {ident ""}}
+    method setChild           {id childObj}
+    method setOptions         {id opts}
+    method getKey             {id}
+    method getChild           {id}
+    method getOptions         {id {pattern *}}
+    method getOptionValue     {id option}
+    method getIdFromVarname   {varName} 
+    method getIdFromVarident  {varIdent} 
+    method getOutFmt          {id}
+    method getInFmt           {id}
+}
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getID
+#  NAME
+#    ::guib::keywordObj::getID -- returns the current counter ID value
+#  USAGE
+#    getID
+#  DESCRIPTION
+#    Keywords within a keywordObj object are sequentially labeled (1st
+# item's ID==0). This method returns the current value of the counter,
+# which equals to the number of items within a given keywordObj object.
+#  RETURN VALUE
+#    The current ID number.
+#  EXAMPLE
+#    set id [$obj getID]
+#  SOURCE
+
+body ::guib::keywordObj::getID {} { return $itemID }    
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/incrID
+#  NAME
+#    ::guib::keywordObj::incrID -- increases the counter ID's value by +1    
+#  USAGE
+#    incrID
+#  RETURN VALUE
+#    The increased ID number.
+#  EXAMPLE
+#    set id [$obj incrID]
+#  SOURCE
+
+body ::guib::keywordObj::incrID {} { return [incr itemID] }
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/setKey
+#  NAME
+#    ::guib::keywordObj::setKey -- stores the name of the ID-th keyword (item)
+#  USAGE
+#    setKey id key
+#  ARGUMENTS
+#    id  -- the ID number
+#    key -- the name of the keyword
+#  RETURN VALUE
+#    The value of argument key.
+#  EXAMPLE
+#    $obj setKey $id line
+#  SOURCE
+
+body ::guib::keywordObj::setKey {id key {ident ""}} { 
+    if { $ident != "" } {
+	# I should check if ident already exists !!!
+	set cmd($id,ident) $ident
+
+	# the default value of cmd($id,variable) is $cmd($id,ident)
+	#set cmd($id,variable) $ident
+    }
+    return [set cmd($id,key) $key] 
+}
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/setChild
+#  NAME
+#    ::guib::keywordObj::setChild -- stores the child keywordObj object name of the ID-th item
+#  USAGE
+#    setChild id childObj
+#  DESCRIPTION
+#    Some of the GUIB keywords creates new keywordObj objects (i.e. child objects).
+#    This method stores the name of the child objects. These objects have
+#    a sequential ID like the rest of the GUIB keywords items.
+#  ARGUMENTS
+#    id       -- the ID number
+#    childObj -- the name of the child keywordObj object
+#  RETURN VALUE
+#    The name of the child keywordObj object.
+#  EXAMPLE
+#    $obj setChild $id $childObj
+#  SOURCE
+
+body ::guib::keywordObj::setChild {id childObj} { return [set child($id) $childObj] }
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/setOptions
+#  NAME
+#    ::guib::keywordObj::setOptions -- stores the options of the ID-th keyword
+#  USAGE
+#    setOptions id opts
+#  ARGUMENTS
+#    id   -- the ID number
+#    opts -- the list of option-value pairs in the "array get" style
+#  RETURN VALUE
+#    The option-value pairs of the ID-th keyword.
+#  EXAMPLE
+#    $obj setOptions [array get $options]
+#  SOURCE
+
+body ::guib::keywordObj::setOptions {id opts} {	
+    foreach {elem value} $opts {
+	set cmd($id,$elem) $value
+    }
+    return $opts
+}
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getKey
+#  NAME
+#    ::guib::keywordObj::getKey -- returns the name of the ID-th keyword (item)
+#  USAGE
+#    getKey id
+#  RETURN VALUE
+#    The name of the ID-th keyword.
+#  EXAMPLE
+#    set key [$obj getKey $id]
+#  SOURCE
+
+body ::guib::keywordObj::getKey {id} { return [lindex [array get cmd $id,key] 1] }
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getChild
+#  NAME
+#    ::guib::keywordObj::getChild -- returns the child keywordObj object name of the ID-th keyword
+#  USAGE
+#    getChild id
+#  RETURN VALUE
+#    The name of the child object.
+#  EXAMPLE
+#    set childObj [$obj getChild $id]
+#  SOURCE
+
+body ::guib::keywordObj::getChild {id} { return [lindex [array get child $id] 1] }
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getOptions
+#  NAME
+#    ::guib::keywordObj::getOptions -- returns the options of the ID-th keyword
+#  USAGE
+#    getOptions id ?pattern?
+#  ARGUMENTS
+#    id     -- the ID number
+#    patern -- the glob pattern for the option retrival (default value of pattern is *)
+#  RETURN VALUE
+#    The option-value pairs of the ID-th keyword that match pattern
+#  EXAMPLE
+#    set opts [$obj getOptions var*]
+#  SOURCE
+
+body ::guib::keywordObj::getOptions {id {pattern *}} { return [array get cmd $id,$pattern] }
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getOptionValue
+#  NAME
+#    ::guib::keywordObj::getOptionValue -- returns the value of a given ID-th keyword option
+#  USAGE
+#    getOptionValue id option
+#  ARGUMENTS
+#    id     -- the ID number
+#    option -- the name of the querying option
+#  RETURN VALUE
+#    The value of the querying ID-th keyword option
+#  EXAMPLE
+#    set value [$obj getOptionvalue $id textvalue]
+#  SOURCE
+
+body ::guib::keywordObj::getOptionValue {id option} { return [lindex [array get cmd $id,$option] 1] }
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getIdFromVarname
+#  NAME
+#    ::guib::keywordObj::getIdFromVarname -- returns the ID of a keyword which contain the specified variable
+#  USAGE
+#    getIdFromVarname varName
+#  DESCRIPTION 
+#    The method returns the ID of a keyword which contain the specified
+# variable, that is, the value of the keywords -variable option.
+#  RETURN VALUE
+#    Returns the ID of a keyword which contain the specified variable or -1
+#    if the variable is not found.
+#  EXAMPLE
+#    set id [$obj getIdFromVarname varName]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::keywordObj::getIdFromVarname {varName} {
+    for {set id 0} {$id <= $itemID} {incr id} {
+	if { [info exists cmd($id,variable)] } {
+	    #if { $varName == $cmd($id,variable) } {
+	    #	return $id
+	    #}
+	    if { [::tclu::stringMatch $varName $cmd($id,variable) $::guib::settings(NAMELIST.varname_nocase)]} {
+		return $id
+	    }
+	}
+    }
+    return -1
+}
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getIdFromVarident
+#  NAME
+#    ::guib::keywordObj::getIdFromVarident -- returns the ID of a keyword which contain the specified GUIB's variable identifier
+#  USAGE
+#    getIdFromVarident VarIdent
+#  DESCRIPTION
+
+#    This method is used to get the ID of the keyword containing the
+# specified identifier. This is used, for example, by the "help"
+# keyword where the help associated with some variable's idenifier is
+# specified. For this purpose an ID (and keywordObj' object pointer)
+# of the corresponding keyword is needed in order to set the help data
+# via the "$obj setOptions $id "help $help".
+
+#  RETURN VALUE
+#    Returns the ID of a keyword which contain the specified identifier or -1
+#    if the keyword is not found.
+#  EXAMPLE
+#    set id [$obj getIdFromVarident varIdent]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::keywordObj::getIdFromVarident {varIdent} {
+    for {set id 0} {$id <= $itemID} {incr id} {
+	if { [info exists cmd($id,ident)] } {
+	    if { $varIdent == $cmd($id,ident) } {
+		return $id
+	    }
+	}
+    }
+    return -1
+}
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getOutFmt
+#  NAME
+#    ::guib::keywordObj::getOutFmt
+#  USAGE
+#    getOutFmt id     
+#  DESCRIPTION
+#    This method returns the output format. It first queries the
+#    "outfmt" GUIB option, if it is not set then it queries the "fmt"
+#    option.
+#  RETURN VALUE
+#    Returns the output-format string.
+#  EXAMPLE
+#    set outFmt [$obj getOutFmt $id]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::keywordObj::getOutFmt {id} {
+    set _fmt [getOptionValue $id outfmt]
+    if { $_fmt == {} } {
+	set _fmt [getOptionValue $id fmt]
+    }
+    if { $_fmt == {} } {
+	# if $_fmt is still {} return %S
+	return %S
+    } else {
+	return $_fmt
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****m* keywordObj/getInFmt
+#  NAME
+#    ::guib::keywordObj::getInFmt
+#  USAGE
+#    getInFmt id     
+#  DESCRIPTION
+#    This method returns the input format. It first queries the
+#    "outfmt" GUIB option, if it is not set then it queries the "fmt"
+#    option.
+#  RETURN VALUE
+#    Returns the input-format string.
+#  EXAMPLE
+#    set inFmt [$obj getInFmt $id]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::keywordObj::getInFmt {id} {
+    set _fmt [getOptionValue $id infmt]
+    if { $_fmt == {} } {
+	set _fmt [getOptionValue $id fmt]
+    }
+    #if { $_fmt == {} } {
+    #	# if $_fmt is still {} return %S
+    #	return %S
+    #} else {
+    #	return $_fmt
+    #}
+    return $_fmt
+}
+
+
+
+# ------------------------------------------------------------------------
+#****c* keywordObj/nameObj
+#  NAME
+#    ::guib::keywordObj::nameObj -- a class for the name GUIB objects (e.g. page, namelist)
+#  PURPOSE
+#    This is the class for the "name" GUIB object. The name object are those,
+#    whose corresponding keywords have -name option (e.g. page, namelist)
+#  IS-A
+#    ::guib::keywordObj
+#  METHODS
+#    None.
+#********
+# ------------------------------------------------------------------------
+
+class ::guib::keywordObj::nameObj {
+    inherit keywordObj
+    
+    public variable name {}
+    
+    constructor {args} {
+	eval configure $args
+    } 
+}
+
+# ------------------------------------------------------------------------
+#****c* keywordObj/voidObj
+#  NAME
+#    ::guib::keywordObj::voidObj -- a class for the void GUIB objects (e.g. optional, required)
+#  PURPOSE
+#    This is the class for the "void" GUIB object. The void object are those,
+#    whose corresponding keywords don't have -name option (e.g. page, namelist)
+#  IS-A
+#    ::guib::keywordObj
+#  METHODS
+#    None.
+#********
+# ------------------------------------------------------------------------
+
+class ::guib::keywordObj::voidObj {
+    inherit keywordObj
+        
+    constructor {args} {
+	eval configure $args
+    }
+}
+

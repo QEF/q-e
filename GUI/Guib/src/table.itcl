@@ -1,0 +1,532 @@
+# $RCSfile: table.itcl,v $ --
+#
+#      This file contains the implementation of the "table" widget.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: table.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+#
+# NOTE: the documentation of this file yet to be build
+#
+
+#table pathName \
+#    -caption {caption-text} \
+#    -head {head list} \
+#    -cols \# \
+#    -rows \# \
+#    -validate {validate list} \
+#    -variname  arrayVariableName \
+#    -varident  arrayVariableIdent \
+
+option add *Table*Message.foreground	\#000000	widgetDefault
+option add *Table*Message.background	\#ffffff	widgetDefault
+option add *Table*Message.relief	solid   	widgetDefault
+option add *Table*Message.borderWidth	1   	        widgetDefault
+option add *Table*Message.anchor        c   	        widgetDefault
+option add *Table*Entry.width           10              widgetDefault
+
+# ------------------------------------------------------------------------
+#****f* keywidgets/table
+#  NAME
+#    ::guib::keywidgets::table -- the "table" keywidget
+#  USAGE
+#    table pathName ?-option value? ?-option value? ?...?
+#  RETURN VALUE
+#    The pathName of the table widget.
+#  SOURCE
+
+proc ::guib::keywidgets::table {pathName args} { 
+    uplevel ::guib::keywidgets::Table $pathName $args 
+}
+#********
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****c* keywidgets/Table
+# NAME
+#    ::guib::keywidgets::Table -- a class for managing keywidget associated with "table" GUIB keyword
+# METHODS
+#    ...insert...
+#****
+# ------------------------------------------------------------------------
+
+class ::guib::keywidgets::Table {
+    inherit ::itk::Widget
+    
+    private variable col
+    private variable row
+    private variable nRows 0
+    private variable nCols 0
+    private variable head  
+    private variable validate
+    #private variable _loadDataVar  {}
+    private variable _loadDataCmd  {}
+    private variable _loadDataText {}
+    private variable _moduleObj
+
+    itk_option define -widgets    widgets   Widgets  entry
+    itk_option define -onvalues   onvalues  Value    1
+    itk_option define -offvalues  offvalues Value    0
+    itk_option define -caption    caption   Caption  {}
+    itk_option define -head       head      Head     {}
+    itk_option define -rows       rows      Rows     0
+    itk_option define -cols       cols      Cols     0
+    itk_option define -varname    varname   Varname  _dummyName {}
+    itk_option define -varident   varident  Varident _dummyVar {}
+    itk_option define -validate   validate  Command  {}
+    itk_option define -state      state     State    {}
+    
+    constructor {moduleObj args} {
+	set _moduleObj $moduleObj
+	#itk_component add -- topframe {
+	#    frame $itk_interior.topframe -bd 0 -highlightthickness 0
+	#}
+	itk_component add -- caption {
+	    # this will be for table caption !!!
+	    message $itk_interior.caption
+	} {
+	    #usual
+	    #eval $::guib::keywidgets::def(tableCaptionOptions)
+	    rename -background -captionbackground captionBackground Background
+	}
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {	    
+	    keep -width
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	itk_component add -- body {
+	    frame $itk_interior.body
+	} {
+	    keep -background
+	    #usual
+	    #eval $::guib::keywidgets::def(tableBodyOptions)
+	}
+
+	eval itk_initialize $args
+	#pack $itk_component(topframe) -side top -fill x -expand 1
+	#pack $itk_component(caption)  -in  $itk_component(topframe) -side left -fill x  -padx 15 -pady 15
+	#pack $itk_component(help)     -in  $itk_component(topframe) -side left -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+	#pack $itk_component(body)     -side top -fill x  -padx 3 -pady 2
+	grid $itk_component(caption) -row 0 -column 0 -columnspan 2 -sticky ew -padx 15 -pady 15
+	grid $itk_component(help)    -row 1 -column 1 -sticky e -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+	grid $itk_component(body)    -row 2 -column 0 -columnspan 2 -sticky ew -padx 3  -pady 2
+	grid propagate $itk_interior 1
+
+	set LoaddataInfo [$_moduleObj loaddataGetInfo $itk_option(-varident)]
+	if { $LoaddataInfo != "" } {
+	    #set _loadDataVar  [lindex $LoaddataInfo 0]
+	    set _loadDataCmd  [lindex $LoaddataInfo 1]
+	    set _loadDataText [lindex $LoaddataInfo 2]
+
+	    if { [info commands $_loadDataCmd] == "" } {
+		tclu::ERROR "loaddata command $_loadDataCmd not found"
+	    }
+
+	    itk_component add loaddata {
+		button $itk_interior.loaddata -text $_loadDataText \
+		    -command [list $_loadDataCmd $_moduleObj]
+	    } {
+		rename -background -buttonbackground buttonBackground Background
+	    }
+
+	    set bg [option get $itk_component(loaddata) background *Table*Button.background]
+	    catch {$itk_component(loaddata) config -bg $bg}		
+	    #pack $itk_component(loaddata) -before $itk_component(body) \
+	    #	-side top -padx 15 -pady 2 -ipadx 15
+	    grid $itk_component(loaddata) -row 1 -column 0 -columnspan 1 -sticky ew -padx 15 -pady 2 -ipadx 15
+	}
+    }
+    eval $::guib::widgets::def(helpCommand)
+
+    private method _addCol    {index}
+    private method _addRow    {index}
+    private method _deleteCol {index}
+    private method _deleteRow {index}
+    private method _widget    {ir ic}
+    private method _checkbuttonText {cb var}
+}
+
+
+# ------------------------------------------------------------------------
+#                           OPTIONS
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+# OPTION: -caption
+#
+# This option is displays the table caption
+# ------------------------------------------------------------------------
+configbody ::guib::keywidgets::Table::caption {
+    if { $itk_option(-caption) != {} } {
+	$itk_component(caption) configure \
+	    -text "$itk_option(-caption)" \
+	    -aspect [expr int(2 * [string length $itk_option(-caption)])]
+	bind $itk_component(caption) <Configure> {
+	    ::guib::widgets::messageAspect %W
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
+# OPTION: -head
+#
+# This option is used for the creation of table head
+# ------------------------------------------------------------------------
+configbody ::guib::keywidgets::Table::head {
+    if { $itk_option(-head) != {} } {
+	set ind 1
+	foreach label $itk_option(-head) {
+	    if { ! [info exists head($ind)] } {		    
+		# ind-th head's label does not yet exists
+		set l [label $itk_component(body).0_$ind -text $label -background \#ffffff \
+			   -width [expr [string length $label] + 4]]
+		grid $l -row 0 -column $ind -sticky ewns \
+		    -padx 1 -pady 1 -ipadx 0 -ipady 0
+		set head($ind) 1 ; # ind-th head's label exists
+	    } else {
+		set l [grid slaves $itk_component(body) -row 0 -column $ind]
+		$l configure -text $label
+	    }
+	    incr ind
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
+# OPTION: -cols
+#
+# This option is used for specifying the number of tables's columns
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::cols {
+    if { $itk_option(-cols) < 1 } {
+	::tclu::ERROR "number of columns lower than 1"
+    }
+    if { $itk_option(-cols) > $nCols } {
+	#
+	# create new cols
+	#
+	set nc [expr $nCols + 1]
+	for {set ic $nc} {$ic <= $itk_option(-cols)} {incr ic} {
+	    _addCol $ic
+	}
+    } elseif { $itk_option(-cols) < $nCols } {
+	#
+	# delete existing cols
+	#
+	for {set ir $nCols} {$ir > $itk_option(-cols)} {incr ir -1} {
+	    _deleteCol $ir
+	}
+    }	
+    set nCols $itk_option(-cols)
+}
+
+
+# ------------------------------------------------------------------------
+# OPTION: -rows
+#
+# This option is used for specifying the number of tables's rows
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::rows {
+
+    if { $itk_option(-rows) == {} } {
+	# this happens when user deleted the number from the entry
+	return
+    }
+    if { $itk_option(-rows) < 0 } {
+	::tclu::ERROR "number of rows lower than 0"
+    }
+    if { $itk_option(-rows) > $nRows } {
+	#
+	# create new rows
+	#
+	set nr [expr $nRows + 1]
+	for {set ir $nr} {$ir <= $itk_option(-rows)} {incr ir} {
+	    _addRow $ir
+	}
+    } elseif { $itk_option(-rows) < $nRows } {
+	#
+	# delete existing rows
+	#
+	for {set ir $nRows} {$ir > $itk_option(-rows)} {incr ir -1} {
+	    _deleteRow $ir
+	}
+    }	
+    set nRows $itk_option(-rows)
+}
+
+# ------------------------------------------------------------------------
+# OPTION: -validate
+#
+# This option is used for specifying the validation of the table's columns
+# TODO: implement the option
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::validate {
+    if { $itk_option(-validate) != {} } {
+	set ind 1
+	foreach item $itk_option(-validate) {
+	    set validate($ind) $item
+	    #TODO: make something like:
+	    #set validate($ind) "::tclu::validate::numeric %c|%P"
+	}
+    }
+}
+
+# ------------------------------------------------------------------------
+# OPTION: -state
+#
+# This option is used for setting the state of the table
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::state {
+    if { $itk_option(-state) == "normal" } {
+	::tku::enableAll $itk_interior
+    } elseif { $itk_option(-state) == "disabled" } {
+	::tku::disableAll $itk_interior	
+    }
+}
+
+
+# ------------------------------------------------------------------------
+# OPTION: -widgets
+#
+# This option is used for setting the widgets/per-columns of the table
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::widgets {
+}
+
+# ------------------------------------------------------------------------
+# OPTION: -onvalues
+#
+# This option is used for setting the on-values for the table cell widgets
+# like checkbutton
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::onvalues {
+}
+
+# ------------------------------------------------------------------------
+# OPTION: -offvalues
+#
+# This option is used for setting the off-value for the table cell widgets
+# like checkbutton
+# ------------------------------------------------------------------------
+
+configbody  ::guib::keywidgets::Table::offvalues {
+}
+
+
+
+# ------------------------------------------------------------------------
+#                           METHODS
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+# METHOD: _addRow (private)
+#
+# This private method handles the additon of a row
+# ------------------------------------------------------------------------
+
+body ::guib::keywidgets::Table::_addRow {ir} {
+    #
+    # add row's label
+    #
+    set l [label $itk_component(body).${ir}_0 -text $ir -background \#ffffff]
+    grid $l -row $ir -column 0 -sticky ewns -padx 1 -pady 1 -ipadx 0 -ipady 0
+    
+    #
+    # add row's columns
+    #
+    for {set ic 1} {$ic <= $nCols} {incr ic} {
+	set e [_widget $ir $ic]
+	grid $e -row $ir -column $ic -sticky ewns \
+	    -padx 0 -pady 0 -ipadx 0 -ipady 0
+	set col($ic) 1 ; # column $ic exists now
+    }
+    
+    set row($ir) 1 ; # row $ir exists now
+}
+
+
+# ------------------------------------------------------------------------
+# METHOD: _addCol (private)
+#
+# This private method handles the additon of a column
+# ------------------------------------------------------------------------
+
+body ::guib::keywidgets::Table::_addCol {ic} {
+    #
+    # add column $ic to all rows !!!
+    #
+    for {set ir 1} {$ic <= $nRows} {incr ir} {
+	set e [entry $itk_component(body).${ir}_${ic} \
+		   -textvariable $itk_option(-varident)($ir,$ic)]
+	grid $e -row $ir -column $ic -sticky ewns \
+	    -padx 0 -pady 0 -ipadx 0 -ipady 0
+    }
+    set col($ic) 1 ; # column $ic exists now
+}
+
+
+# ------------------------------------------------------------------------
+# METHOD: _deleteRow (private)
+#
+# This private method handles the deletion of a row
+# ------------------------------------------------------------------------
+
+body ::guib::keywidgets::Table::_deleteRow {ir} {
+    #
+    # delete row's label
+    #
+    set l [grid slaves $itk_component(body) -row $ir -column 0]
+    #grid remove $l
+    destroy $l
+    
+    #
+    # delete row's columns
+    #
+    for {set ic 1} {$ic <= $nCols} {incr ic} {
+	set e [grid slaves $itk_component(body) -row $ir -column $ic]
+	#grid remove $e
+	destroy $e
+    }
+    
+    unset row($ir) ; # row $ir does not exist
+}
+
+# ------------------------------------------------------------------------
+# METHOD: _deleteRow (private)
+#
+# This private method handles the deletion of column
+# ------------------------------------------------------------------------
+
+body ::guib::keywidgets::Table::_deleteCol {ic} {
+    #
+    # delete column $ic for all rows !!!
+    #
+    for {set ir 0} {$ic <= $nRows} {incr ir} {
+	set e [grid slaves $itk_component(body) -row $ir -column $ic]
+	if { $ir == 0 } {
+	    #
+	    # This is table's HEAD. 
+	    #
+	    unset head($ic)
+	}
+	    
+	#
+	# The HEAD labels might be missing!!! In this case the 
+	# $e == {} and grid remove {} would cause an error.
+	#
+	if { $e != {} } {
+	    #grid remove $e
+	    destroy $e
+	}
+    }
+    unset col($ic) ; # column $ic does not exist
+}
+
+# ------------------------------------------------------------------------
+# METHOD: _widget (private)
+#
+# This private method handles the table widgets creation
+# ------------------------------------------------------------------------
+
+body ::guib::keywidgets::Table::_widget {ir ic} {
+
+    set lw  [expr [llength $itk_option(-widgets)] - 1]
+    set ind [expr { $ic > $lw ? $lw : [expr $ic - 1]}]
+    set widtxtcmd [lindex $itk_option(-widgets) $ind]
+
+    set lon [expr [llength $itk_option(-onvalues)] - 1]
+    set ind [expr { $ic > $lon ? $lon : [expr $ic - 1]}]
+    set on  [lindex $itk_option(-onvalues) $ind]
+
+    set lof [expr [llength $itk_option(-offvalues)] - 1]
+    set ind [expr { $ic > $lof ? $lof : [expr $ic - 1]}]
+    set off [lindex $itk_option(-offvalues) $ind]
+
+    # syntax: widget.buttontext.buttoncommand
+    set wid [lindex $widtxtcmd 0]
+    set txt [lindex $widtxtcmd 1]
+    set cmd [lindex $widtxtcmd 2]
+
+    set textVar [$_moduleObj tableref $itk_option(-varident) $ir $ic]
+    #new
+    set $textVar {}
+    #/
+
+    ::tclu::DEBUG --table-- OnValue:   $on OffValue: $off
+    ::tclu::DEBUG --table-- OnValues:  $itk_option(-onvalues)
+    ::tclu::DEBUG --table-- OffValues: $itk_option(-offvalues)
+
+    switch -exact -- $wid {
+	entry -
+	entryfileselect {
+	    if { $wid == "entryfileselect" } {
+		set wid ::guib::widgets::entryfileselect
+	    }
+	    set result [$wid $itk_component(body).${ir}_${ic} \
+			    -background seashell \
+			    -textvariable $textVar]
+	}
+
+	entrybutton {
+	    if { [llength $widtxtcmd] != 3 } {
+		::tclu::ERROR "expected \"widget buttontext buttoncommand\" elements, but got: $widtxtcmd\""
+	    }
+	    set result [::guib::widgets::entrybutton $itk_component(body).${ir}_${ic} \
+			    -background seashell \
+			    -textvariable $textVar \
+			    -buttontext $txt \
+			    -buttoncommand [list eval $cmd $ir $ic]]
+	}
+	    
+	checkbutton {
+	    upvar $textVar value
+
+	    set textVar [$_moduleObj tableref $itk_option(-varident) $ir $ic]
+	    set cb      $itk_component(body).${ir}_${ic}
+	    set result  [checkbutton $cb \
+			     -variable $textVar \
+			     -command [code $this _checkbuttonText $cb $textVar] \
+			     -onvalue  $on \
+			     -offvalue $off]
+	}
+
+	default {
+	    ::tclu::ERROR "widget type \"$wid\" not supported"
+	}
+    }
+    return $result
+}
+		    
+		    
+	    
+body ::guib::keywidgets::Table::_checkbuttonText {cb var} {
+    upvar $var varValue
+    $cb configure -text $varValue
+}

@@ -1,0 +1,897 @@
+# $RCSfile: widgets.itcl,v $ --
+#
+#      This file contains mega-widgets designed specially
+#      for the GUIB. The new mega-widgets are build using the 
+#      [Incr Tk] and Iwidgets  framework.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: widgets.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+
+# ------------------------------------------------------------------------
+#****h* ::guib/widgets
+#  FUNCTION
+#    The widgets module is used for managing the GUIB widgets. The GUIB
+# widgets are mega-widgets built by using the [Incr Tk] and Iwidgets framework.
+# 
+# We have the following GUIB mega-widget:
+# 
+#     ::guib::widgets::toplevel                 pathName ?option value?  ?...?
+#     ::guib::widgets::entrybutton              pathName ?option value?  ?...? 
+#     ::guib::widgets::entryfileselect          pathName ?option value?  ?...? 
+#     ::guib::widgets::entryfileselectquote     pathName ?option value?  ?...?
+#     ::guib::widgets::entrydirselect           pathName ?option value?  ?...? 
+#     ::guib::widgets::entrydirselectquote      pathName ?option value?  ?...? 
+#     ::guib::widgets::entryhelp                pathName ?option value?  ?...? 
+#     ::guib::widgets::entrybuttonhelp          pathName ?option value?  ?...? 
+#     ::guib::widgets::entryfileselecthelp      pathName ?option value?  ?...? 
+#     ::guib::widgets::entryfileselectquotehelp pathName ?option value?  ?...? 
+#     ::guib::widgets::entrydirselecthelp       pathName ?option value?  ?...? 
+#     ::guib::widgets::entrydirselectquotehelp  pathName ?option value?  ?...? 
+#     ::guib::widgets::comboboxhelp             pathName ?option value?  ?...? 
+#     ::guib::widgets::optionmenuhelp           pathName ?option value?  ?...? 
+#     ::guib::widgets::radioboxhelp             pathName ?option value?  ?...? 
+#     ::guib::widgets::texthelp                 pathName ?option value?  ?...?
+#     ::guib::widgets::displayhelp              varName helpFmt helpText
+#
+#****
+# ------------------------------------------------------------------------
+
+
+option add *textBackground   seashell   widgetDefault
+option add *helpText         Help       widgetDefault
+option add *helpRelief       raised     widgetDefault
+option add *helpBorderWidth  1          widgetDefault
+option add *helpPadX         5          widgetDefault
+option add *helpPadY         0          widgetDefault
+#option add *helpState        disabled   widgetDefault
+
+option add *fileselectBackground   Gray    widgetDefault
+option add *dirselectBackground    Gray    widgetDefault
+option add *buttonBackground       Gray    widgetDefault
+option add *Entry*width            5       widgetDefault
+
+
+namespace eval ::guib::widgets {
+    variable def
+}
+
+
+
+# ------------------------------------------------------------------------
+#****f* widgets/messageAspect 
+#  NAME
+#    ::guib::widgets::messageAspec -- configures message-widgets using a "reasonable" width vs. height aspect
+#  USAGE
+#    messageAspect widget
+#  RETURN VALUE
+#    None.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::messageAspect {path} {
+    set aspect [expr int(100 * (0.93 * double([winfo width $path]) / double([winfo height $path])))]
+    $path configure -aspect $aspect
+}
+
+
+# ------------------------------------------------------------------------
+#  common options for ****help megawidgets
+# ------------------------------------------------------------------------
+set ::guib::widgets::def(helpOptions) {
+    keep -activebackground -activeforeground -disabledforeground
+    keep -background -cursor -foreground -font
+    keep -highlightcolor -highlightthickness -state
+    
+    rename -text         -helptext         helpText         Text
+    rename -textvariable -helptextvariable helpTextVariable Variable
+    rename -relief       -helprelief       helpRelief       Relief
+    rename -borderwidth  -helpborderwidth  helpBorderWidth  BorderWidth
+    rename -state        -helpstate        helpState        State
+    rename -width        -helpwidth        helpWidth        Width
+
+}
+
+
+# ------------------------------------------------------------------------
+#  common new options (i.e. commands) for **** help widgets
+# ------------------------------------------------------------------------
+set ::guib::widgets::def(helpCommand) {
+    itk_option define -helpcommand helpCommand Command "" {
+	if { $itk_option(-helpcommand) == "" } {
+	    set itk_option(-helpstate) disabled
+	    $itk_component(help) configure -state disabled
+	} else {
+	    set itk_option(-helpstate) normal
+	    $itk_component(help) configure -state normal -command $itk_option(-helpcommand)
+	}
+    }
+
+    itk_option define -helppadx helpPadX Pad 5 {}
+    itk_option define -helppady helpPadY Pad 5 {}
+}
+
+
+set ::guib::widgets::def(validateCommand) {
+    itk_option define -validate validate Command {} {
+	::guib::widgets::validate_functions
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#  TOPLEVEL (i.e. modified itk::Toplevel widget)
+# ------------------------------------------------------------------------
+#****f* widgets/toplevel
+#  NAME
+#    ::guib::widgets::toplevel -- toplevel widget
+#  USAGE
+#    toplevel pathName ?option value?  ?...?
+#  OPTIONS
+#    -title     -- title of toplevel
+#    -iconname  -- name of icon, i.e,  the window manager should display 
+#                  the name inside the icon associated with toplevel-window
+#    -geometry  -- geometry of toplevel in format of "wm geometry", i.e., 
+#                  widthxheight±x±y
+#    -transient -- make a transient toplevel (0|1)
+#    -class     -- class of the toplevel-window
+#
+#  RETURN VALUE
+#    Returns the path of a toplevel, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::toplevel {pathName args} {
+    uplevel ::guib::widgets::Toplevel $pathName $args
+}
+
+# ------------------------------------------------------------------------
+#****c* widgets/Toplevel
+# NAME
+#    ::guib::widgets::Toplevel -- a class for toplevel widget
+# PURPOSE
+#    This is a class for toplevel widget. Is is more convinient to use
+# than generic Tk's toplevel widget, as it has additional options,
+# such as "-title", "-geometry", ...
+#****
+# ------------------------------------------------------------------------
+
+class ::guib::widgets::Toplevel {
+    inherit itk::Archetype
+    
+    itk_option define -title title Title "" {
+	if { [winfo exists $itk_hull] } {
+	    wm title $itk_hull $itk_option(-title)
+	}
+    }
+    itk_option define -iconname iconName IconName "" {
+	if { [winfo exists $itk_hull] } {
+	    wm iconname  $itk_hull $itk_option(-iconname)
+	}
+    }
+    itk_option define -geometry geometry Geometry "" {	
+	if { [winfo exists $itk_hull] && $itk_option(-geometry) != "" } {
+	    wm geometry  $itk_hull $itk_option(-geometry)	
+	}
+    }
+    itk_option define -transient transient Transient 0 {	
+	if { [winfo exists $itk_hull] } {
+	    if { $itk_option(-transient) } {
+		wm transient $itk_hull [winfo toplevel [winfo parent $itk_hull]]
+	    } else {
+		wm transient $itk_hull
+	    }
+	}
+    }
+    itk_option define -class class Class Toplevel {}
+
+    constructor {args} {
+        eval itk_initialize $args
+
+        #
+        #  Create a toplevel window with the same name as this object
+        #
+        set itk_hull [namespace tail $this]
+        set itk_interior $itk_hull
+
+        itk_component add hull {
+            toplevel $itk_hull \
+		-class $itk_option(-class)
+        } {
+            keep -background -cursor -takefocus
+        }
+
+	wm title     $itk_hull $itk_option(-title)
+	wm iconname  $itk_hull $itk_option(-iconname)
+	wm geometry  $itk_hull $itk_option(-geometry)	
+	if { $itk_option(-transient) } {
+	    wm transient $itk_hull [winfo toplevel [winfo parent $itk_hull]]
+	} else {
+	    wm transient $itk_hull
+	}
+
+        bind itk-delete-$itk_hull <Destroy> "itcl::delete object $this"
+
+        set tags [bindtags $itk_hull]
+        bindtags $itk_hull [linsert $tags 0 itk-delete-$itk_hull]
+    }
+
+    destructor {
+        if {[winfo exists $itk_hull]} {
+            set tags [bindtags $itk_hull]
+            set i [lsearch $tags itk-delete-$itk_hull]
+            if {$i >= 0} {
+                bindtags $itk_hull [lreplace $tags $i $i]
+            }
+            destroy $itk_hull
+        }
+    }
+    
+    private variable itk_hull ""
+}
+#class ::guib::widgets::Toplevel {
+#    inherit ::itk::Toplevel
+#    
+#    constructor {args} { eval itk_initialize $args }    
+#    
+#    itk_option define -iconname iconName IconName "" {
+#	#::tclu::DEBUG "Iconname: $itk_option(-iconname)"
+#	wm iconname  $itk_interior $itk_option(-iconname)
+#    }
+#    itk_option define -geometry geometry Geometry "" {	
+#	wm geometry  $itk_interior $itk_option(-geometry)	
+#    }
+#    itk_option define -transient transient Transient 0 {
+#	if { $itk_option(-transient) } {
+#	    wm transient $itk_interior [winfo toplevel [winfo parent $itk_interior]]
+#	}
+#    }
+#}
+
+
+
+
+# ------------------------------------------------------------------------
+#  ENTRYBUTTON
+# ------------------------------------------------------------------------
+#****f* widgets/entrybutton
+#  NAME
+#    ::guib::widgets::entrybutton -- entrybutton megawidget
+#  USAGE
+#    entrybutton pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entrybutton is a megawidget with label on the left, entry on
+# the middle, and command button on the right.
+#  OPTIONS
+#    Special OPTIONS
+#      -buttoncommand -- the command for the "button" widget 
+#      -validate      -- the validate command for the entry widget (choose
+#                        among supported validate_functions)
+#  RETURN VALUE
+#    Returns the path of the entrybutton, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+
+#usual ::guib::widgets::Entrybutton {
+#    keep -activebackground -activeborderwidth -activeforeground \
+#	-background -borderwidth -cursor -disabledforeground -font \
+#	-foreground -highlightcolor -highlightthickness -highlightbackground \
+#	-labelfont -popupcursor
+#}
+
+proc ::guib::widgets::entrybutton {pathName args} { 
+    uplevel ::guib::widgets::Entrybutton $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entrybutton
+# NAME
+#    ::guib::widgets::Entrybutton -- a class for entrybutton megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entrybutton {
+    inherit ::iwidgets::Entryfield
+        
+    constructor {args} {
+	itk_component add -- button {
+	    button $itk_interior.button
+	} {
+	    usual
+	    rename  -text       -buttontext        buttonText       Text
+	    rename  -background -buttonbackground  buttonBackground Background
+	    rename  -highlightbackground -buttonhighlightbackground buttonHighlightbackground Background
+	}
+	eval itk_initialize $args
+	pack $itk_component(button) -side left
+    }
+
+    itk_option define -buttoncommand buttonCommand Command "" {
+	bind $itk_component(button) <B1-ButtonRelease> \
+	    +[code eval $itk_option(-buttoncommand)]
+    }
+    eval $::guib::widgets::def(validateCommand)
+}
+
+
+
+# ------------------------------------------------------------------------
+#  ENTRYFILESELECT
+# ------------------------------------------------------------------------
+#****f* widgets/entryfileselect
+#  NAME
+#    ::guib::widgets::entryfileselect -- entryfileselect megawidget
+#  USAGE
+#    entryfileselect pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entryfileselect is a megawidget with left aligned label,
+# entry, and fileselect button. This megawidget is meant for
+# specifying filenames.
+#  OPTIONS
+#    Special OPTIONS
+#      -quote -- quote the selected filename (0|1); (example: 'myfile')
+#  RETURN VALUE
+#    Returns the path of the entryfileselect, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entryfileselect {pathName args} { 
+    uplevel ::guib::widgets::Entryfileselect $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****f* widgets/entryfileselectquote
+#  NAME
+#    ::guib::widgets::entryfileselectquote -- entryfileselectquote megawidget
+#  USAGE
+#    entryfileselectquote pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entryfileselectquote is a entryfileselect-type megawidget,
+# but the selected filename will be quoted (i.e. -quote 1).
+#  RETURN VALUE
+#    Returns the path of the entryfileselectquote, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entryfileselectquote {pathName args} {
+    append args " -quote 1"
+    uplevel ::guib::widgets::Entryfileselect $pathName $args
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entryfileselect
+# NAME
+#    ::guib::widgets::Entryfileselect -- a class for entryfileselect megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entryfileselect {
+    inherit ::iwidgets::Entryfield
+    
+    private method _fileSelect {}
+    
+    constructor {args} {
+	itk_component add -- fileBtn {
+	    button $itk_interior.fileBtn -text "File ..." \
+		-command [code $this ::guib::widgets::Entryfileselect::_fileSelect]
+	} {
+	    usual
+	    rename  -background  -fileselectbackground  fileselectBackground  Background
+	}
+	#itk_component add -- extfileselect {
+	#    iwidgets::extfileselectiondialog [::tku::widgetName] -modality application
+	#}
+	eval itk_initialize $args
+	pack $itk_component(fileBtn) -side left
+    }
+    itk_option define -quote quote Quote 0 {}
+}
+body ::guib::widgets::Entryfileselect::_fileSelect {} {
+    #$itk_component(extfileselect) activate
+    #set file [$itk_component(extfileselect) get]
+
+    # using tk_getOpenFile instead
+    set file [tk_getOpenFile -title "Select a File"]
+
+    if { $file != "" } {
+	switch -- $::guib::settings(FILENAME.only_tail) {
+	    1 - yes - on {
+		set file [file tail $file]
+	    }
+	}
+	if { $itk_option(-quote) == 0 } {
+	    set $itk_option(-textvariable) $file
+	} else {
+	    set $itk_option(-textvariable) '${file}'
+	}
+    }
+}
+
+
+
+# ------------------------------------------------------------------------
+#  ENTRYDIRSELECT
+# ------------------------------------------------------------------------
+#****f* widgets/entrydirselect
+#  NAME
+#    ::guib::widgets::entrydirselect -- entrydirselect megawidget
+#  USAGE
+#    entrydirselect pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entrydirselect is a megawidget with left aligned label,
+# entry, and dirselect button. This megawidget is meant for specifying
+# directory names.
+#  OPTIONS
+#    Special OPTIONS
+#      -quote -- quote the selected dirname (0|1); (example: 'mydir')
+#  RETURN VALUE
+#    Returns the path of the entrydirselect, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entrydirselect {pathName args} { 
+    uplevel ::guib::widgets::Entrydirselect $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****f* widgets/entrydirselectquote
+#  NAME
+#    ::guib::widgets::entrydirselectquote -- entrydirselectquote megawidget
+#  USAGE
+#    entrydirselectquote pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entrydirselectquote is a entrydirselect-type megawidget,
+# but the selected dirname will be quoted (i.e. -quote 1).
+#  RETURN VALUE
+#    Returns the path of the entrydirselectquote, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entrydirselectquote {pathName args} { 
+    append args " -quote 1"
+    uplevel ::guib::widgets::Entrydirselect $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entrydirselect
+# NAME
+#    ::guib::widgets::Entrydirselect -- a class for entrydirselect megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entrydirselect {
+    inherit ::iwidgets::Entryfield
+    
+    private method _dirselect {}
+    
+    constructor {args} {
+	itk_component add -- fileBtn {
+	    button $itk_interior.fileBtn -text "Directory ..." \
+		-command [code $this ::guib::widgets::Entrydirselect::_dirselect]
+	} {
+	    usual
+	    rename  -background  -dirselectbackground  dirselectBackground  Background
+	}
+	eval itk_initialize $args
+	pack $itk_component(fileBtn) -side left
+    }
+    itk_option define -quote quote Quote 0 {}
+}
+body ::guib::widgets::Entrydirselect::_dirselect {} {    
+    if { $itk_option(-textvariable) != {} } {
+	upvar $itk_option(-textvariable) varValue
+	if { $varValue != "" } {
+	    set IniDir $varValue
+	}
+    }
+
+    if { ! [info exists IniDir] } {
+	global env
+	set IniDir $env(HOME)
+    }
+	
+    set dir [tk_chooseDirectory -initialdir $IniDir \
+		 -title "Choose directory" -mustexist 0]	
+    if { $dir == "" } {
+	return
+    }
+
+    # do we need to add a trailing slash to dirname ???
+    switch -- $::guib::settings(DIRNAME.trailing_slash) {
+	1 - on - yes {
+	    set dir [string trimright $dir /]/
+	}
+    }
+    
+    if { $dir != "" } {
+	if { $itk_option(-quote) == 0 } {
+	    set $itk_option(-textvariable) $dir
+	} else {
+	    set $itk_option(-textvariable) '${dir}'
+	}
+    }
+}
+
+
+
+# ------------------------------------------------------------------------
+#  ENTRYHELP
+# ------------------------------------------------------------------------
+#****f* widgets/entryhelp
+#  NAME
+#    ::guib::widgets::entryhelp -- entryhelp megawidget
+#  USAGE
+#    entryhelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entryhelp is a megawidget with left aligned label,
+# entry, and help button.
+#  OPTIONS
+#    Special OPTIONS
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#      -validate    -- the validate command for the entry widget (choose
+#                      among supported validate_functions)
+#  RETURN VALUE
+#    Returns the path of the entryhelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::entryhelp {pathName args} { 
+    uplevel ::guib::widgets::Entryhelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entryhelp
+# NAME
+#    ::guib::widgets::Entryhelp -- a class for entryhelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entryhelp {
+    inherit ::iwidgets::Entryfield
+
+    constructor {args} {
+	#variable ::guib::widgets::helpOptions
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {	    
+	    keep -width
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args	
+	pack $itk_component(help) -side left \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+    eval $::guib::widgets::def(helpCommand)
+    eval $::guib::widgets::def(validateCommand)
+}
+
+
+# ------------------------------------------------------------------------
+#  ENTRYBUTTONHELP
+# ------------------------------------------------------------------------
+#****f* widgets/entrybuttonhelp
+#  NAME
+#    ::guib::widgets::entrybuttonhelp -- entrybuttonhelp megawidget
+#  USAGE
+#    entrybuttonhelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    entrybuttonhelp = entrybutton + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -buttoncommand -- the command for the "button" widget 
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#      -validate    -- the validate command for the entry widget (choose
+#                      among supported validate_functions)
+#  RETURN VALUE
+#    Returns the path of the entrybuttonhelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::entrybuttonhelp {pathName args} { 
+    uplevel ::guib::widgets::Entrybuttonhelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entrybuttonhelp
+# NAME
+#    ::guib::widgets::Entrybuttonhelp -- a class for entrybuttonhelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entrybuttonhelp {
+    inherit ::guib::widgets::Entrybutton 
+    
+    constructor {args} {
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args
+	pack $itk_component(help) -side left \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+
+    eval $::guib::widgets::def(helpCommand)
+    eval $::guib::widgets::def(validateCommand)
+}
+
+
+# ------------------------------------------------------------------------
+#  ENTRYFILESELECTHELP
+# ------------------------------------------------------------------------
+#****f* widgets/entryfileselecthelp
+#  NAME
+#    ::guib::widgets::entryfileselecthelp -- entryfileselecthelp megawidget
+#  USAGE
+#    entryfileselecthelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    entryfileselecthelp = entryfileselect + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -quote       -- quote the selected filename (0|1); (example: 'myfile')
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  RETURN VALUE
+#    Returns the path of the entryfileselecthelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entryfileselecthelp {pathName args} { 
+    uplevel ::guib::widgets::Entryfileselecthelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****f* widgets/entryfileselectquotehelp
+#  NAME
+#    ::guib::widgets::entryfileselectquotehelp -- entryfileselectquotehelp megawidget
+#  USAGE
+#    entryfileselectquotehelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entryfileselectquotehelp is a entryfileselecthelp-type megawidget,
+# but the selected filename will be quotehelpd (i.e. -quote 1).
+#  RETURN VALUE
+#    Returns the path of the entryfileselectquotehelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entryfileselectquotehelp {pathName args} { 
+    append args " -quote 1"
+    uplevel ::guib::widgets::Entryfileselecthelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entryfileselecthelp
+# NAME
+#    ::guib::widgets::Entryfileselecthelp -- a class for entryfileselecthelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entryfileselecthelp {
+    inherit ::guib::widgets::Entryfileselect
+    
+    constructor {args} {
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args
+	pack $itk_component(help) -side left \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+
+    eval $::guib::widgets::def(helpCommand)
+}
+
+
+# ------------------------------------------------------------------------
+#  ENTRYDIRSELECTHELP
+# ------------------------------------------------------------------------
+#****f* widgets/entrydirselecthelp
+#  NAME
+#    ::guib::widgets::entrydirselecthelp -- entrydirselecthelp megawidget
+#  USAGE
+#    entrydirselecthelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    entrydirselecthelp = entrydirselect + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -quote       -- quote the selected dirname (0|1); (example: 'mydir')
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  RETURN VALUE
+#    Returns the path of the entrydirselecthelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entrydirselecthelp {pathName args} { 
+    uplevel ::guib::widgets::Entrydirselecthelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****f* widgets/entrydirselectquotehelp
+#  NAME
+#    ::guib::widgets::entrydirselectquotehelp -- entrydirselectquotehelp megawidget
+#  USAGE
+#    entrydirselectquotehelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The entrydirselectquotehelp is a entrydirselecthelp-type megawidget,
+# but the selected dirname will be quotehelpd (i.e. -quote 1).
+#  RETURN VALUE
+#    Returns the path of the entrydirselectquotehelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::entrydirselectquotehelp {pathName args} { 
+    append args " -quote 1"
+    uplevel ::guib::widgets::Entrydirselecthelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Entrydirselecthelp
+# NAME
+#    ::guib::widgets::Entrydirselecthelp -- a class for entrydirselecthelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Entrydirselecthelp {
+    inherit ::guib::widgets::Entrydirselect
+   
+    constructor {args} {
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args
+	pack $itk_component(help) -side left \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+    eval $::guib::widgets::def(helpCommand)
+}
+
+
+# ------------------------------------------------------------------------
+#  COMBOBOXHELP
+# ------------------------------------------------------------------------
+#****f* widgets/comboboxhelp
+#  NAME
+#    ::guib::widgets::comboboxhelp -- comboboxhelp megawidget
+#  USAGE
+#    comboboxhelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    comboboxhelp = combobox + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  METHODS
+#    Widget METHODS
+#      (see [Incr Tcl]'s Combobox documentation)
+#  RETURN VALUE
+#    Returns the path of the comboboxhelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::comboboxhelp {pathName args} { 
+    uplevel ::guib::widgets::Comboboxhelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Comboboxhelp
+# NAME
+#    ::guib::widgets::Comboboxhelp -- a class for comboboxhelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Comboboxhelp {
+    inherit ::iwidgets::Combobox
+    
+    constructor {args} {
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args
+	grid $itk_component(help) -row 0 -rowspan 2 -column 2 \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+    
+    itk_option define -textvalues textvalues TextValues {}
+    
+    eval $::guib::widgets::def(helpCommand)
+}
+configbody ::guib::widgets::Comboboxhelp::textvalues {   
+    if { $itk_option(-textvalues) != "" } {
+	#$this delete list 0 end
+	eval {$this insert list end} $itk_option(-textvalues)    
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#  TEXTHELP
+# ------------------------------------------------------------------------
+#****f* widgets/texthelp
+#  NAME
+#    ::guib::widgets::texthelp -- texthelp megawidget
+#  USAGE
+#    texthelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    The texthelp is a megawidget with left aligned label,
+# text, and help button.
+#  OPTIONS
+#    Special OPTIONS
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  RETURN VALUE
+#    Returns the path of the texthelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::texthelp {pathName args} { 
+    uplevel ::guib::widgets::Texthelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Texthelp
+# NAME
+#    ::guib::widgets::Texthelp -- a class for texthelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Texthelp {
+    inherit ::iwidgets::Scrolledtext
+
+    public     {
+    	method delete {start end}
+    	method get    {index text}
+    	method insert {index text}
+    }
+
+    #protected  {
+    #	#variable _textvariable
+    #
+    #	#method   _keyPress {}
+    #}    
+    #itk_option define   -textvariable textvariable TextVariable _textvariable
+
+    constructor {args} {
+	#variable ::guib::widgets::helpOptions	
+	
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {	    
+	    keep -width
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	
+	#bind $itk_component(text) <KeyPress> +[code $this _keyPress]
+
+	eval itk_initialize $args	
+	
+	grid $itk_component(help) -row 0 -column 3 \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+	
+	#if { $itk_option(-textvariable) != {} } {
+	#    upvar $itk_option(-textvariable) textvarValue
+	#    $itk_component(text) insert 1.0 $textvarValue
+	#}
+    }
+
+    eval $::guib::widgets::def(helpCommand)
+}
+
+body ::guib::widgets::Texthelp::delete {start end} {
+    $itk_component(text) delete $start $end
+    #set $itk_option(-textvariable) [$itk_component(text) get 1.0 end]
+}
+body ::guib::widgets::Texthelp::get {start end} {
+    set result [$itk_component(text) get 1.0 end]
+    #set $itk_option(-textvariable) $result
+    return $result
+}
+body ::guib::widgets::Texthelp::insert {index text} {
+    $itk_component(text) insert 1.0 $text
+    #set $itk_option(-textvariable) [$itk_component(text) get 1.0 end]
+}
+
+#body ::guib::widgets::Texthelp::_keyPress {} {
+#    set $itk_option(-textvariable) [$itk_component(text) get 1.0 end]
+#}

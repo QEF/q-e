@@ -1,0 +1,13 @@
+water molecule   
+ &Parameters
+              type = 'Structural optimization' ,
+        functional = 'B3LYP' ,
+             basis = '6-311G*' ,
+            natoms = 3 ,
+ &end
+ATOMIC_COORDINATES
+  H    0.0000000000    0.2000000000   -1.0000000000 
+  O    0.0000000000    0.0000000000    0.0000000000 
+  H    0.0000000000    0.2000000000    1.0000000000 
+END
+

@@ -1,0 +1,10 @@
+ &DIMENSION
+           howmany = 3 ,
+         myDim1(1) = 1,
+         myDim1(2) = 2,
+         myDim1(3) = 3,
+   textvalue-test(1) = 3rd,
+   textvalue-test(2) = 2nd,
+   textvalue-test(3) = 1st,
+ &end
+

@@ -1,0 +1,140 @@
+#
+# $RCSfile: guib.itcl,v $ --
+#
+#      This file contains the definition of the ::guib namespace ...
+#      For more detailed description see the texts below.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: guib.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+# ------------------------------------------------------------------------
+#****h* GUIB/::guib
+#  NAME
+#    GUIB == Graphical User Interface Builder
+#
+#  DESCRIPTION
+#    All GUIB implementation (i.e. classes and other fuctions) are 
+# done inside the ::guib namespace.
+# 
+#    GUIB is mented for creating GUIs for management of input files
+# for ab-initio programs aimed at atomistic simulations, which are
+# written in FORTAN and their input files follow more or less
+# particular logic. GUIB fits well to these needs, but probably can
+# also meet a requirements for other purposes.
+#
+#  COPYRIGHT
+#    Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#    This file is distributed under the terms of the GNU General Public
+#    License. See the file `COPYING' in the root directory of the present
+#    distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+#  AUTHOR
+#    Anton Kokalj
+#
+#  CREATION DATE
+#    Starting on Fri Dec 29 08:32:59 CET 2001
+#******
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+# loads a module definition.
+#
+# In the definition file, we have:
+# 
+#     module moduleName -title title -script { ... }
+#
+#
+# THEREFORE: when sourcing the definiton file, the ::guib::module proc
+#            will be called (see below)
+# ------------------------------------------------------------------------
+
+proc ::guib::loadModule {moduleFile} {
+    if { [file pathtype $moduleFile] != "absolute" } {
+	set moduleFile [file join [pwd] $moduleFile]
+    }
+
+    set dir  [file dirname $moduleFile]
+    set file [file tail    $moduleFile]
+    
+    set pwd [pwd]
+    cd $dir
+    set obj [source $file]
+    cd $pwd
+    
+    $obj setModuleFile $moduleFile
+    return $obj
+}
+
+
+# ------------------------------------------------------------------------
+#****f* ::guib/module
+#  NAME
+#    ::guib::module -- creates a new GUI module
+#
+#  USAGE
+#    module nameName -title title -script script
+#
+#  DESCRIPTION 
+# -- GUIB keyword !!! 
+#    It is used for creating a GUIs module.
+#
+#  ARGUMENTS
+#    moduleName - identifier of a module (technically is an object name)
+#    args       - the args comprises the "-title title -script script"
+#                 where the title is a human-readable module title and the 
+#                 script is the module definition script.
+#  RETURN VALUE
+#    None.
+#
+#  EXAMPLE
+#    module myModule -title {This is a Test Module} -script { ...Tcl/GUIB code...}
+#******
+# ------------------------------------------------------------------------
+
+proc ::guib::module {moduleName args} {    
+    variable module
+    variable options
+
+    array set opt [cmdline::getoptions args $::guib::options(module)]    
+    ::tclu::ifincr ::guib::module($opt(title))    
+    return [moduleObj $moduleName -title $opt(title) -script $opt(script)]
+}
+
+
+proc ::guib::exitApp {} {
+    set button [tk_messageBox -message "Really quit?" \
+		    -type yesno -icon question]
+    if { $button == "yes" } {
+	# (TODO): save everything ... 
+
+	# delete all temporary files ...
+	::tclu::tempFile delete all
+	exit
+    }
+}
+
+
+##---------------------
+## testing:
+##---------------------
+#source guibBase.itcl
+#source guibModule.itcl
+#----------------------
+

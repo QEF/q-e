@@ -1,0 +1,15 @@
+#!/bin/sh
+# \
+exec itclsh $0
+
+puts "\n Creating the tclIndex file ..."
+if { [glob -nocomplain -- *.itcl] != {} } {
+	auto_mkindex [pwd] *.itcl
+	puts "   tclIndex file created !!!"
+	puts "   Size of tclIndex file:  [exec wc tclIndex]"
+} else {
+	puts "\n Can't create tclIndex file: no *.itcl files found !!!"
+}
+
+puts " DONE.\n"
+exit

@@ -1,0 +1,20 @@
+ &VALIDATION
+          whatever = bla..bla ,
+         nonnegint = 111 ,
+            posint = +111 ,
+         nonposint = 000 ,
+            negint = -123 ,
+        nonnegreal = 000 ,
+           posreal = 1.2e34 ,
+        nonposreal = -1.2e30 ,
+           negreal = -1.2e+34 ,
+       fortranreal = 1.0d12 ,
+   fortrannonnegreal = 1.0d12 ,
+    fortranposreal = 1.0d45 ,
+   fortrannonposreal = -1.0d12 ,
+    fortrannegreal = -1.0d56 ,
+
+	var1 = 'tone-kokalj' ,
+	variable2 = 'katarina-kokalj' ,
+ &end
+

@@ -1,0 +1,330 @@
+#
+# $RCSfile: validate.itcl,v $ --
+#
+#      This file contains ...
+#
+# Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: validate.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+# ------------------------------------------------------------------
+# PROCEDURE: validate_functions
+#
+# The nonnegint string procedure is meant for mapping the -validate option
+# value to appropriate validation functions and is used inside guib-widgets.
+# ------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+#****f* widgets/validate_functions
+#  NAME
+#    ::guib::widgets::validate_functions -- driver routine for validation mechanism connected with entry widget
+#  USAGE
+#    validate_functions
+#  DESCRIPTION
+#    This is the driver routine for the validation widget mechanism
+# (i.e. -validate option). The following validations are supported:
+# 
+#       whatever          --
+#       posint 		  --
+#       nonposint 	  --
+#       negint 		  --
+#       nonnegint 	  --
+#       posreal 	  --
+#       nonposreal 	  --
+#       negreal 	  --
+#       nonnegreal 	  --
+#       fortranreal 	  --
+#       fortranposreal 	  --
+#       fortrannonposreal --
+#       fortrannegreal 	  --
+#       fortrannonnegreal --
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::validate_functions {} {
+    uplevel 1 {
+	switch -glob -- $itk_option(-validate) {
+	    whatever {
+		set itk_option(-validate) "::guib::widgets::whatever %P"
+	    }
+	    posint* {
+		set itk_option(-validate) "::guib::widgets::posint %P"
+	    }
+	    nonposint* {
+		set itk_option(-validate) "::guib::widgets::nonposint %P"
+	    }
+	    negint* {
+		set itk_option(-validate) "::guib::widgets::negint %P"
+	    }
+	    nonnegint* {
+		set itk_option(-validate) "::guib::widgets::nonnegint %P"
+	    }
+	    posreal { 
+		set itk_option(-validate) "::guib::widgets::posreal %P"
+	    }
+	    nonposreal { 
+		set itk_option(-validate) "::guib::widgets::nonposreal %P"
+	    }
+	    negreal { 
+		set itk_option(-validate) "::guib::widgets::negreal %P"
+	    }
+	    nonnegreal { 
+		set itk_option(-validate) "::guib::widgets::nonnegreal %P"
+	    }
+	    fortranreal {
+		set itk_option(-validate) "::guib::widgets::fortranreal %P"
+	    }
+	    fortranposreal {
+		set itk_option(-validate) "::guib::widgets::fortranposreal %P"
+	    }
+	    fortrannonposreal {
+		set itk_option(-validate) "::guib::widgets::fortrannonposreal %P"
+	    }
+	    fortrannegreal {
+		set itk_option(-validate) "::guib::widgets::fortrannegreal %P"
+	    }
+	    fortrannonnegreal {
+		set itk_option(-validate) "::guib::widgets::fortrannonnegreal %P"
+	    }
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: whatever string
+#
+# The whatever procedure validates character input for a given
+# Entryfield to be whatever and is always accepted.
+# ------------------------------------------------------------------
+proc ::guib::widgets::whatever {string} {
+    return 1
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: posint string
+#
+# The positive-integer procedure validates character input for a given
+# Entryfield to be positive-integer and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::posint {string} {
+    set result [regexp {^[+]?[0-9]*$} $string]
+    if { $result == 1 } {
+	if { $string == "+" } {
+	    return 1
+	} else {
+	    return [expr $string > 0]
+	}
+    } else {
+	return $result
+    }
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: nonposint string
+#
+# The non-positive-integer procedure validates character input for a given
+# Entryfield to be non-positive-integer and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::nonposint {string} {
+    set result [regexp {^[-]?[0-9]*$} $string]
+    if { $result == 1 } {
+	return [expr ${string}0 <= 0]
+    } else {
+	return $result
+    }
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: negint string
+#
+# The negative-integer procedure validates character input for a given
+# Entryfield to be negative-integer and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::negint {string} {
+    set result [regexp {^-[0-9]*$} $string]     
+    if { $result == 1 } {
+	if { $string == "-" } {
+	    return 1
+	} else {
+	    return [expr ${string} < 0]
+	}
+    } else {
+	return $result
+    }
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: nonnegint string
+#
+# The non-negative-integer procedure validates character input for a given
+# Entryfield to be non-negative-integer and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::nonnegint {string} {
+    return [regexp {^[+]?[0-9]*$} $string]
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: posreal string
+#
+# The posreal procedure validates character input for a given Entryfield
+# to be positive-real and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::posreal {string} {
+    set result [nonnegreal $string]
+    return $result
+    # BEWARE: see fortranposreal !!!
+    #if { $result == 1 } {
+    #	return [expr ${string}0 > 0.0]
+    #} else {
+    #	return $result
+    #}
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: nonposreal string
+#
+# The nonposreal procedure validates character input for a given Entryfield
+# to be non-positive-real and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::nonposreal {string} {
+    set result [regexp {^[-]?[0-9]*\.?[0-9]*([0-9]\.?[eE][-+]?[0-9]*)?$} $string]
+    if { $result == 1 } {
+	if { $string == "-" } {
+	    return 1
+	} else {
+	    return [expr ${string} <= 0.0]
+	}
+    } else {
+	return $result
+    }
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: negreal string
+#
+# The negreal procedure validates character input for a given Entryfield
+# to be negative-real and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::negreal {string} {
+    set result [regexp {^-[0-9]*\.?[0-9]*([0-9]\.?[eE][-+]?[0-9]*)?$} $string]
+    return $result
+    # BEWARE: see fortranposreal !!!
+    #if { $result == 1 } {
+    #	return [expr ${string}0 < 0.0]
+    #} else {
+    #	return $result
+    #}
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: nonnegreal string
+#
+# The nonnegreal procedure validates character input for a given Entryfield
+# to be non-negative-real and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::nonnegreal {string} {
+    return [regexp {^[+]?[0-9]*\.?[0-9]*([0-9]\.?[eE][-+]?[0-9]*)?$} $string]
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: fortranreal string
+#
+# The fortran-real procedure validates character input for a given
+# Entryfield to be real (i.e. allows the numbers of type 1.2d+01) and
+# returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::fortranreal {string} {
+    return [regexp {^[-+]?[0-9]*\.?[0-9]*([0-9]\.?[eEdD][-+]?[0-9]*)?$} $string]
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: fortranposreal string
+#
+# The fortranposreal procedure validates character input for a given
+# Entryfield to be positive-real (i.e. allows the "d" exponent) and
+# returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::fortranposreal {string} {
+    set result [fortrannonnegreal $string]
+    return $result
+    #if { $result == 1 } {
+    #	regsub -nocase d $string e string
+    #	# BEWARE:
+    #	# allow the folowing strings:
+    #	# + or . or 0
+    #	# +0 or +. or +0.0001 --> must be the same as NONNEG ....
+    #	#...if { [regexp {^[+.0]} $string] ... } fix this
+    #	return [expr ${string}0 > 0.0]
+    #} else {
+    #	return $result
+    #}
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: fortrannonposreal string
+#
+# The fortrannonposreal procedure validates character input for a
+# given Entryfield to be non-positive-real (i.e. allows the "d"
+# exponent) and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::fortrannonposreal {string} {
+    set result [regexp {^[-]?[0-9]*\.?[0-9]*([0-9]\.?[eEdD][-+]?[0-9]*)?$} $string]
+    if { $result == 1 } {
+	regsub -nocase d $string e string
+	return [expr ${string}0 <= 0.0]
+    } else {
+	return $result
+    }
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: fortrannegreal string
+#
+# The fortrannegreal procedure validates character input for a given
+# Entryfield to be negative-real (i.e. allows the "d" exponent) and
+# returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::fortrannegreal {string} {
+    set result [regexp {^-[0-9]*\.?[0-9]*([0-9]\.?[eEdD][-+]?[0-9]*)?$} $string]
+    return $result    
+}
+
+
+# ------------------------------------------------------------------
+# PROCEDURE: fortrannonnegreal string
+#
+# The fortrannonnegreal procedure validates character input for a
+# given Entryfield to be non-negative-real (i.e. allows the "d"
+# exponent) and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::fortrannonnegreal {string} {
+    return [regexp {^[+]?[0-9]*\.?[0-9]*([0-9]\.?[eEdD][-+]?[0-9]*)?$} $string]
+}

@@ -1,0 +1,71 @@
+# Example robodoc.rc
+items:
+	IS-A
+	HAS-A
+	NAME
+	COPYRIGHT
+	USAGE
+	FUNCTION
+	DESCRIPTION
+	PURPOSE
+	AUTHOR
+	CREATION DATE
+	MODIFICATION HISTORY
+	HISTORY
+	INPUTS
+	ARGUMENTS
+	OPTIONS
+	PARAMETERS
+	SWITCHES
+	OUTPUT
+	SIDE EFFECTS
+	RESULT
+	RETURN VALUE
+	EXAMPLE
+	NOTES
+	DIAGNOSTICS
+	WARNINGS
+	ERRORS
+	BUGS
+	TODO
+	IDEAS
+	PORTABILITY
+	SEE ALSO
+	METHODS
+	NEW METHODS
+	ATTRIBUTES
+	NEW ATTRIBUTES
+	TAGS
+	COMMANDS
+	USES
+	CHILDREN
+	USED BY
+	PARENTS
+	SOURCE
+
+ignore items:
+	DERIVED FROM
+	DERIVED BY
+
+options:
+	--src 
+		./../src-guib 
+	--doc 
+		./html 
+	--multidoc 
+	--internal
+	--index 
+	--html
+	--sections
+	--toc
+	
+extensions:
+	.bck
+	~
+	.backup
+	index
+	file
+	.xrefs
+        ntries
+	epository
+	oot

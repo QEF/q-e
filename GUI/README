@@ -1,0 +1,30 @@
+ ==============================================================================
+             * * * README file for O-sesame/GUI directory * * *
+ ==============================================================================
+
+
+This directory contains the Graphical-User-Interface (GUI) for PWscf.
+
+This directory hosts two subdirectories:
+
+  1. TkPWscf/ -- the GUI itself
+  2. Guib/    -- the engine that the TkPWscf uses
+
+The TkPWscf GUI is based on Guib engine (see
+http://www-k3.ijs.si/kokalj/guib/guib.html). Currently, the Guib
+engine is also included in O-sesame repository (O-sesame/GUI/Guib
+directory). 
+
+
+IMPORTANT: 
+**********
+
+	1. Enter the TkPWscf/ directory and read the following files:
+			INSTALL.cvs      (REQUIRED)
+			INSTALL          (optional)
+			README           (optional)
+			README.developer (optional)
+
+	2. The Guib/ directory can be treated as "technicalities", and
+	   except you want to develop Guib, you do not need to enter ever
+	   in that directory 

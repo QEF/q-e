@@ -1,0 +1,227 @@
+#
+# $RCSfile: optionmenuhelp.itcl,v $ --
+#
+#      This file contains the "optionmenuhelp megawidget implementation.
+#
+# Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: optionmenuhelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+option add *Optionmenuhelp.menubackground    Gray    widgetDefault
+
+# ------------------------------------------------------------------------
+#  USUAL options.
+# ------------------------------------------------------------------------
+itk::usual ::guib::widgets::Optionmenuhelp {
+    keep -activebackground -activeborderwidth -activeforeground \
+	 -background -borderwidth -cursor -disabledforeground -font \
+	 -foreground -highlightcolor -highlightthickness -labelfont \
+	 -popupcursor
+}
+
+
+# ------------------------------------------------------------------
+#  OPTIONMENUHELP
+# ------------------------------------------------------------------
+#****f* widgets/optionmenuhelp
+#  NAME
+#    ::guib::widgets::optionmenuhelp -- optionmenuhelp megawidget
+#  USAGE
+#    optionmenuhelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    optionmenuhelp = optionmenu + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -textvariable
+#      -textvalues   
+#      -state        
+#      -width 
+#      -borderwidth 
+#      -highlightthickness 
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  METHODS
+#    Widget METHODS
+#      (see Optionmenuhelp documentation)
+#  RETURN VALUE
+#    Returns the path of the optionmenuhelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::optionmenuhelp {pathName args} {
+    uplevel ::guib::widgets::Optionmenuhelp $pathName $args
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Optionmenuhelp
+# NAME
+#    ::guib::widgets::Optionmenuhelp -- a class for optionmenuhelp megawidget
+# METHODS
+#   Public METHODS
+#    insert
+#    selected
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Optionmenuhelp {
+    inherit iwidgets::Labeledwidget
+    
+    private variable _textvariable
+    private variable _items
+
+    constructor {args} {}
+    destructor {}
+
+    # define methods ...
+    public method insert   {index string args}
+    public method selected {}
+
+    private   method _additems   {items}
+    protected method _selectitem {item} 
+    protected method _traceTextvariable {name1 name2 op}
+
+    itk_option define -textvariable textvariable TextVariable _textvariable
+    itk_option define -textvalues   textvalues   Textvalues   {}
+    itk_option define -state        state        State        normal
+    itk_option define -width        width        Width        0
+    itk_option define -borderwidth  borderWidth  BorderWidth  2
+    itk_option define -highlightthickness highlightThickness HighlightThickness 1 
+    #itk_option define -font font Font -Adobe-Helvetica-Bold-R-Normal--*-120-*
+
+    eval $::guib::widgets::def(helpCommand)
+}
+
+
+# ------------------------------------------------------------------
+#                        CONSTRUCTOR
+# ------------------------------------------------------------------
+body ::guib::widgets::Optionmenuhelp::constructor {args} {
+    global tcl_platform
+
+    component hull configure -highlightthickness 0
+
+    itk_component add menuBtn {
+	menubutton $itk_interior.menuBtn \
+	    -menu         $itk_interior.menuBtn.menu \
+	    -indicatoron  1 \
+	    -relief       raised
+    } {
+	usual
+	rename -background   -menubackground   menuBackground   Background
+    }
+    itk_component add popupMenu {
+	menu $itk_interior.menuBtn.menu -tearoff no
+    } {
+	usual
+	rename -background   -menubackground   menuBackground   Background
+	ignore -tearoff
+    }
+    itk_component add help {
+	button $itk_interior.help
+    } {
+	usual
+	eval $::guib::widgets::def(helpOptions)
+    }
+
+    #
+    # Initialize the widget based on the command line options.
+    #
+    eval itk_initialize $args
+    pack $itk_component(menuBtn) -side left -fill x -expand 1
+    pack $itk_component(help) -side left \
+	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+
+    if { $itk_option(-textvariable) != {} } {
+	upvar $itk_option(-textvariable) textvarValue
+	set _textvariable $textvarValue
+	$itk_component(menuBtn) configure -textvariable $itk_option(-textvariable)
+    }
+}
+
+# ------------------------------------------------------------------
+# METHOD: insert index string ?string?
+#
+# Insert an item in the popup menu.
+# ------------------------------------------------------------------
+body ::guib::widgets::Optionmenuhelp::insert {index string args} {
+    set args  [linsert $args 0 $string]
+    _additems $args
+    return ""
+}
+body ::guib::widgets::Optionmenuhelp::selected {} {
+    return $_textvariable
+}
+
+body ::guib::widgets::Optionmenuhelp::_additems {items} {
+    foreach item $items {
+	$itk_component(popupMenu) add command -label $item \
+	    -command [code $this _selectitem $item]
+    }
+}
+
+body ::guib::widgets::Optionmenuhelp::_selectitem {item} {
+    set $itk_option(-textvariable) $item
+    set _textvariable $item
+}
+
+body ::guib::widgets::Optionmenuhelp::_traceTextvariable {name1 name2 op} {
+    upvar $itk_option(-textvariable) textVarname
+    #trace vdelete $itk_option(-textvariable) w [code $this _traceTextvariable]
+    set _textvariable $textVarname
+    #trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]
+}
+
+configbody ::guib::widgets::Optionmenuhelp::textvariable {
+    trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]
+}
+
+configbody ::guib::widgets::Optionmenuhelp::textvalues {
+    upvar $itk_option(-textvariable) textvarValue
+    
+    # by this option we delete the previous optionmenu entries
+    # and add new one ...
+    $itk_component(popupMenu) delete 0 end
+
+    # check if $_textvariable has allowed value
+    #if { [lsearch -exact $itk_option(-textvalues) $textvarValue] < 0 } {
+    #	value is not allowed
+    #	$this _selectitem ""
+    #}
+
+    _additems $itk_option(-textvalues)
+}
+
+configbody ::guib::widgets::Optionmenuhelp::state {   
+    switch -exact -- $itk_option(-state) {
+	active -
+	normal {
+	    #::tku::enableAll $itk_component(hull)
+	    #::tku::enableAll $itk_component(label)
+	    ::tku::enableAll $itk_component(menuBtn)
+	    ::tku::enableAll $itk_component(popupMenu) 
+	}
+	disabled {
+	    #::tku::disableAll $itk_component(hull)
+	    #::tku::disableAll $itk_component(label)
+	    ::tku::disableAll $itk_component(menuBtn)
+	    ::tku::disableAll $itk_component(popupMenu) 
+	}
+	default {
+	    error "wrong value of -state option \"$itk_option(-state)\", should be normal, active, or disabled"
+	}
+    }
+}

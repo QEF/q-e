@@ -1,0 +1,256 @@
+#
+# $RCSfile: radioboxhelp.itcl,v $ --
+#
+#      This file contains the "radioboxhelp megawidget implementation.
+#
+# Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: radioboxhelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+#
+# Use option database to override default resources of base classes.
+#
+option add *Radioboxhelp.labelMargin	10	widgetDefault
+option add *Radioboxhelp.labelPos	wn	widgetDefault
+option add *Radioboxhelp.borderWidth	0	widgetDefault
+option add *Radioboxhelp.relief		flat	widgetDefault
+#option add *Radioboxhelp.labelFont     \
+#      "-Adobe-Helvetica-Bold-R-Normal--*-120-*-*-*-*-*-*"  widgetDefault
+
+
+# ------------------------------------------------------------------------
+#  USUAL options.
+# ------------------------------------------------------------------------
+
+itk::usual ::guib::widgets::Radioboxhelp {
+    keep -background -borderwidth -cursor -disabledforeground \
+	-foreground -labelfont -font -selectcolor
+}
+
+
+# ------------------------------------------------------------------
+#  RADIOBOXHELP
+# ------------------------------------------------------------------
+#****f* widgets/radioboxhelp
+#  NAME
+#    ::guib::widgets::radioboxhelp -- radioboxhelp megawidget
+#  USAGE
+#    radioboxhelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    radioboxhelp = radiobox + help-button
+#  OPTIONS
+#    Special OPTIONS
+#      -textvariable
+#      -textvalues   
+#      -state        
+#      -width 
+#      -borderwidth 
+#      -highlightthickness 
+#      -helpcommand -- command for the help button
+#      -helppadx    -- "padx" for the help button
+#      -helppady    -- "pady" for the help button
+#  METHODS
+#    Widget METHODS
+#      (see Radioboxhelp documentation)
+#  RETURN VALUE
+#    Returns the path of the radioboxhelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::radioboxhelp {pathName args} {
+    uplevel ::guib::widgets::Radioboxhelp $pathName $args
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Radioboxhelp
+# NAME
+#    ::guib::widgets::Radioboxhelp -- a class for radioboxhelp megawidget
+# METHODS
+#   Public METHODS
+#    insert
+#    selected
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Radioboxhelp {
+    inherit iwidgets::Labeledwidget
+    
+    protected variable _textvariable
+    private   variable _items
+    private   variable _rb 0
+
+    constructor {args} {}
+    destructor {}
+
+    # define methods ...
+    public method insert   {index string args}
+    #public method invoke   {}
+    public method selected {}
+    
+
+    private   method _additems   {items}
+    protected method _selectitem {}
+    protected method _traceTextvariable {name1 name2 op}
+
+    itk_option define -textvariable textvariable TextVariable _textvariable
+    itk_option define -textvalues   textvalues   Textvalues   {}
+    itk_option define -state        state        State        normal
+    itk_option define -width width Width 0
+    itk_option define -borderwidth borderWidth BorderWidth 2
+    itk_option define -highlightthickness highlightThickness HighlightThickness 1
+    #itk_option define -font font Font -Adobe-Helvetica-Bold-R-Normal--*-120-*
+
+    eval $::guib::widgets::def(helpCommand)
+}
+
+
+# ------------------------------------------------------------------
+#                        CONSTRUCTOR
+# ------------------------------------------------------------------
+body ::guib::widgets::Radioboxhelp::constructor {args} {
+    global tcl_platform
+
+    #component hull configure -highlightthickness 0
+
+    itk_component add radioFrame {
+	frame $itk_interior.radioFrame -bd 0 -relief flat
+    } {
+	keep -background
+    }
+    itk_component add help {
+	#frame $itk_interior.hf -bd 0 -relief flat -highlightthickness 0
+	#pack $itk_interior.hf -side left -fill both -padx 0 -pady 0
+	button $itk_interior.help
+    } {
+	usual
+	eval $::guib::widgets::def(helpOptions)
+    }
+    pack $itk_component(radioFrame) -side left -fill x -expand 1
+
+    #
+    # Initialize the widget based on the command line options.
+    #
+    eval itk_initialize $args
+    pack $itk_component(help) -side top \
+	-padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    
+    if { $itk_option(-textvariable) != {} } {
+	upvar $itk_option(-textvariable) textvarValue
+	set _textvariable $textvarValue
+    }
+}
+
+# ------------------------------------------------------------------
+# METHOD: insert index string ?string?
+#
+# Insert an item in the radiobox.
+# ------------------------------------------------------------------
+body ::guib::widgets::Radioboxhelp::insert {index string args} {
+    set args  [linsert $args 0 $string]
+    _additems $args
+    return ""
+}
+body ::guib::widgets::Radioboxhelp::selected {} {
+    return $_textvariable
+}
+#body ::guib::widgets::Radioboxhelp::invoke {} {
+#    if { $itk_option(-textvariable) != {} } {
+#	for {set i 1} {$i <= $_rb} {incr i} {
+#	    ::tclu::DEBUG invoke ----> [$itk_component(rb$_rb) cget -value] == $_textvariable
+#	    if { [$itk_component(rb$_rb) cget -value] == $_textvariable } {
+#		$itk_component(rb$_rb) invoke
+#	    }
+#	}
+#    }
+#    return $_textvariable
+#}
+
+body ::guib::widgets::Radioboxhelp::_additems {items} {
+    foreach item $items {
+	incr _rb
+	itk_component add rb$_rb {
+	    radiobutton $itk_component(radioFrame).rb$_rb -highlightthickness 0 \
+		-variable $itk_option(-textvariable) \
+		-anchor   w \
+		-justify  left \
+		-value $item \
+		-text  $item \
+		-command [code $this _selectitem]
+	} {
+	    usual
+	    ignore -highlightthickness -highlightcolor
+	    rename -font -labelfont labelFont Font
+	}
+	pack $itk_component(rb$_rb) -side top -fill x -expand 1
+    }
+    return ""
+}
+
+body ::guib::widgets::Radioboxhelp::_selectitem {} {
+    set $itk_option(-textvariable) $_textvariable
+    return $_textvariable
+}
+
+body ::guib::widgets::Radioboxhelp::_traceTextvariable {name1 name2 op} {
+    upvar $itk_option(-textvariable) textVarname
+    trace vdelete $itk_option(-textvariable) w [code $this _traceTextvariable]
+    set _textvariable $textVarname    
+    trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]
+}
+
+configbody ::guib::widgets::Radioboxhelp::textvariable {
+    trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]
+}
+
+configbody ::guib::widgets::Radioboxhelp::textvalues {
+    # by this option we delete the previous radiobuttons and add
+    # new one ...
+    set comps [component]
+    foreach comp $comps {
+	if { [string match rb* $comp] } {
+	    itk_component delete $comp	    
+	}
+    }
+    set _rb 0
+
+    # check if $_textvariable has allowed value
+    #if { [lsearch -exact $itk_option(-textvalues) $itk_option(-textvariable)] < 0 } {
+    #	# value is not allowed
+    #	set _textvariable ""
+    #	$this _selectitem 
+    #}
+
+    _additems $itk_option(-textvalues) 
+}
+
+configbody ::guib::widgets::Radioboxhelp::state {   
+    switch -exact -- $itk_option(-state) {
+	active -
+	normal {
+	    ::tku::enableAll $itk_component(label)
+	    ::tku::enableAll $itk_component(radioFrame)
+	}
+	disabled {
+	    ::tku::disableAll $itk_component(label)
+	    ::tku::disableAll $itk_component(radioFrame)
+	}
+	default {
+	    error "wrong value of -state option \"$itk_option(-state)\", should be normal, active, or disabled"
+	}
+    }
+}
+

@@ -1,0 +1,67 @@
+
+ ==============================================================================
+             * * * INSTALLATION instructions for GUIB * * *
+ ==============================================================================
+
+Because GUIB is written in [incr Tcl]---an extension of Tcl scripting
+language----no compilation is needed.
+
+*** HOWEVER *** the package depends on the [incr Tcl] and related
+software (see SOFTWARE REQUIREMENTS section below).
+
+
+VERY SHORT INSTALLATION INSTRUCTIONS:
+-------------------------------------
+
+ 1. untar the GUIB archive,
+ 2. define the GUIB environmental variable,
+
+
+A BIT LONGER INSTALLATION INSTRUCTIONS:
+---------------------------------------
+
+To install the GUIB package do the following:
+
+   1.) untar the *.tgz archive. use one of the following:
+
+	gunzip -c guib.tgz | tar xvf -
+     or
+	gunzip guib.tgz; tar xvf guib.tar
+     or 
+        tar zxvf guib.tgz (for GNU tar program only)
+
+   2.) define the GUIB environmental variable to point to the package
+       root directory
+
+     *  for Bourne compatible shells: GUIB=/guib/root/dir; export GUIB
+     *  for Csh compatible shells:    setenv GUIB /guib/root/dir
+
+SOFTWARE REQUIREMENTS FOR SOURCE PACKAGE
+----------------------------------------
+
+The GUIB package depends on the following Tcl-related software:
+
+	Tcl + Tk   >= 8.3
+	Itcl + Itk >= 3.1
+	Iwidgets   >= 3.0
+
+The Itcl, Itk, and Iwidgets stand for: [incr Tcl], [incr Tk], and
+[incr Widgets]. All these packages are usually already present on
+modern Linux distributions, otherwise their RPMs (DEBs) can be easily
+found on the WEB. 
+
+See for example: http://incrtcl.sourceforge.net/
+
+
+Troubleshooting
+***************
+
+For some RedHat distributions the "itkwish" package used to be broken,
+while for some Debian distributions the tkpwscf used to crash if it
+was called with "wish" package. If you experience such kind of
+troubles then replace the call to "wish" ("itkwish") with "itkwish"
+("wish") in file "guib".
+
+
+--
+Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 12:27:54 CET 2004

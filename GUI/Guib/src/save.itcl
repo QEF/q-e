@@ -1,0 +1,480 @@
+#
+# $RCSfile: save.itcl,v $ --
+#
+#      This file contains methods connected to saving the input-content.
+#
+# Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: save.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/saveAs
+#  NAME
+#    ::guib::moduleObj::saveAs -- saves the input-file into a given filename
+#  USAGE
+#    saveAs ?filetypes?
+#  DESCRIPTION
+#    This method quieries for a filename and saves the input-file into it.
+#  ARGUMENTS
+#    filetypes -- specification of filetypes in the save form as for
+#                 tk_getOpenFile, tk_getSaveFile
+#  RETURN VALUE
+#    The name of the saved file.
+#  EXAMPLE
+#    $this saveAs { {{Input File} {*.inp}}  {{Output File} {.out}} }
+#******
+# ------------------------------------------------------------------------
+body ::guib::moduleObj::saveAs {{filetypes {}}} {    
+    
+    if { $filetypes == "" } {
+	set filetypes {
+	    {{Input  File}              {.inp} }
+	    {{Output File}              {.out} }
+	    {{All Files}                *      }
+	}
+    }
+    set defExt [string trim [lindex [lindex $filetypes 0] 1] *]
+    set sfile [tk_getSaveFile -initialdir [pwd] \
+                   -title                 "Save Input File" \
+                   -defaultextension      $defExt \
+                   -initialfile           sample$defExt \
+                   -filetypes             $filetypes]
+    if { $sfile == {} } {
+        return {}
+    }
+    save $sfile
+    return $sfile
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/save
+#  NAME
+#    ::guib::moduleObj::save -- saves input-content into "file"
+#  USAGE
+#    save file ?nocomplain?
+#  DESCRIPTION
+#    This proc saves input-content into "file". The format of the saved file
+#  is according to the specification of the GUIB module definition file
+#  ARGUMENTS
+#    file       -- name of file to save the input
+#    nocomplain -- don't complain about unset variables (0|1)
+#  RETURN VALUE
+#    Returns the name of the "file".
+#  EXAMPLE
+#    $this save myfile
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::save {file {nocomplain 0}} {
+    set OutputContent [_manageSave $nocomplain]
+    ::tclu::writeFile $file $OutputContent w    
+    # DEBUG
+    ::tclu::DEBUG $OutputContent
+    #/
+    return $file
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/print
+#  NAME
+#    ::guib::moduleObj::print -- prints input-content to stdout
+#  USAGE
+#    print ?nocomplain?
+#  DESCRIPTION
+#    This proc prints input-content to stdout. The format of the saved file
+#  is according to the specification of the GUIB module definition file
+#  ARGUMENTS
+#    nocomplain -- don't complain about unset variables (0|1)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $this print
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::print {{nocomplain 0}} {
+    set OutputContent [_manageSave $nocomplain]
+    puts stdout $OutputContent
+    #return $OutputContent
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/getOutput
+#  NAME
+#    ::guib::moduleObj::getOutput -- returns the input-content
+#  USAGE
+#    getOutput
+#  DESCRIPTION
+#    This proc returns the input-content without any complain about
+# the unset variables.
+#  RETURN VALUE
+#    The input-content.
+#  EXAMPLE
+#    set output [$this getOutput]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::getOutput {} {
+    return [_manageSave 1]
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_manageSave
+#  NAME
+#    ::guib::moduleObj::_manageSave -- wrapper for the _save method
+#  USAGE
+#    _manageSave nocomplain
+#  ARGUMENTS
+#    nocomplain -- don't complain about unset variables (0|1)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    set outputContent [_manageSave 1]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_manageSave {nocomplain} {    
+    _clearOutput
+    _save $this
+
+    if { $unsetVars != {} && ! $nocomplain } {
+	# reduce the size of unsetVars to 10 lines 
+	if { [llength $unsetVars] > 10 } {
+	    set unsetVars "[lrange $unsetVars 0 9] ..."
+	}	    
+	set answer [tk_messageBox -icon warning -title "WARNING" -message "Some variables are not set. List of unset variables: $unsetVars\n\nDou you still want to save a file?" -type yesno]
+	if { $answer == "no" } {
+	    return -code return {}
+	}
+    }
+
+    if { $writeFilter != "" } {
+	set OutputContent [$writeFilter $this [_getOutput]]
+    } else {
+	set OutputContent [_getOutput]
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_save
+#  NAME
+#    ::guib::moduleObj::_save -- stores the input-content into the "output" variable recursively
+#  USAGE
+#    _save keywordObj
+#  DESCRIPTION
+#    This proc does all the job for "save" method, that is, stores the
+# output into the "output" variable recursively
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $this _save $obj
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_save {obj} {
+
+    if { $saveError == 1 } {
+	# an error has occured; return
+	return
+    }
+    set NItem [$obj getID]
+    
+    for {set id 0} {$id <= $NItem} {incr id} {
+	
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+	    #------------------------------------------------------------
+	    #
+	    # we have new child object
+	    #
+	    #------------------------------------------------------------
+	    # object types are: 
+	    #           page, namelist, optional, required, line, group
+	    #------------------------------------------------------------
+	    
+	    if { [::tclu::isElementInList disabledNameObjList $childObj] } {
+		# object is disabled --> skip-it
+		continue
+	    }
+
+	    if { $key == "namelist" } {
+		set namelist 1
+		set name [$obj getOptionValue $id name]
+		if { ! [::tclu::isElementInList disabledNameObjList $childObj] } {
+		    _appendOutput [format " &$name\n"]
+		}
+	    }
+	    #new
+	    set _line 0
+	    if { $key == "line" } {
+		set _line 1
+	    }
+	    #/new
+
+	    _save $childObj
+	    #new
+	    if { $_line == 1 } {
+		set _line 0
+		if { ! [::tclu::isElementInList disabledNameObjList $childObj] } {
+		    _appendOutput "\n"
+		}
+	    } 
+	    #/new
+	} else {
+	    #------------------------------------------------------------
+	    #
+	    # we have a new key 
+	    #
+	    #------------------------------------------------------------
+	    # input-content keys are: var, dimension, table, keyword
+	    #------------------------------------------------------------
+
+	    # check if the key is disabled ...
+	    _isDisabledKey $obj $id [$obj getOptionValue $id ident]
+
+	    set varValueList {}
+	    set varNameList  {}
+	    set fmt          {}
+	    set makeFmt      0
+
+	    switch -exact -- [$obj getKey $id] {
+		"keyword" {
+		    #
+		    # OUTSIDE namelist 
+		    #
+		    set keyword [$obj getOptionValue $id keyword]
+		    if { [string match "*\n" $keyword] } {
+			_appendOutput $keyword
+		    } else {
+			_appendOutput "$keyword "
+		    }
+		}
+		
+		"text" {
+		    #
+		    # OUTSIDE namelist 
+		    #
+		    set varIdent  [$obj getOptionValue $id ident]	    
+		    set widget    [getWidgetFromVarident $varIdent]
+		    set text      [$widget getText]
+		    _appendOutput $text\n
+		}
+
+		"var" {
+		    set varName   [$obj getOptionValue $id variable]	    
+		    set varIdent  [$obj getOptionValue $id ident]	    
+		    set varValue  [varvalue $varIdent]
+		    set widget    [getWidgetFromVarident $varIdent]
+		    
+		    if { [isNotDisabledWidget $widget] } {
+			set fmt [$obj getOutFmt $id]
+			if { $fmt == "%S" || $varValue == {} } {
+			    set fmt "%s "
+			}
+			
+			if { [_findKeywordObjType $obj namelist] == 0 } {
+			    #
+			    # OUTSIDE NAMELIST
+			    #
+			    if { $varValue == {} } {
+				#tk_messageBox -icon warning -title "WARNING" -message "Variable \"$varName\" is not set !!!" -type ok
+				lappend unsetVars $varName
+			    } else {
+				set string [_validateFmtString $fmt [list $varValue] "could not write a variable. Please check the entry connected with the $varName variable"]
+				if { $saveError == 0 } {
+				    _appendOutput $string
+				}
+			    }
+			} else {
+			    #
+			    # INSIDE NAMELIST
+			    #			
+			    if { [_findKeywordObjType $obj required] == 1 \
+				     && $varValue == {} } {
+				# variable is required but missing
+				# TODO: error variable is required !!!
+				#tk_messageBox -icon warning -title "WARNING" -message "Variable \"$varName\" is required namelist variable, but is not set !!!" -type ok
+				lappend unsetVars $varName
+			    }
+			    if { $varValue != {} } {
+				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
+						[list $varName $varValue] \
+						"could not write a variable. Please check the entry connected with the $varName variable"]
+				if { $saveError == 0 } {
+				    _appendOutput $string
+				}
+			    }
+			}
+		    }
+		}
+		
+		"dimension"  {
+		    #
+		    # INSIDE namelist 
+		    #		    
+		    set fmt [$obj getOutFmt $id]
+		    if { $fmt == "%S" } {
+			set fmt "%s"
+		    }
+
+		    set dimName  [$obj getOptionValue $id variable]
+		    set dimIdent [$obj getOptionValue $id ident]
+		    set dimWid   [getWidgetFromVarident $dimIdent]
+		    set start    [$dimWid cget -start]
+		    set end      [$dimWid cget -end]
+		    
+		    for {set i $start} {$i <= $end} {incr i} {
+			# TODO: a validation against the format-string
+			set varIdent ${dimIdent}($i)
+			set varName  ${dimName}($i)
+			set varValue [dimvalue $dimIdent $i]
+			set widget   [getWidgetFromVarident $varIdent]
+			
+			if { [isNotDisabledWidget $widget] } {
+			    if { [_findKeywordObjType $obj required] == 1 \
+				     && $varValue == {} } {
+				# variable is required but missing
+				#tk_messageBox -icon warning -title "WARNING" -message "Variable \"$varName\" is a required namelist variable, but is not set !!!" -type ok
+				lappend unsetVars $varName
+			    }
+			    if { $varValue != {} } {
+				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
+						[list $varName $varValue] \
+						"could not write a variable. Please check the entry connected with the $varName variable"]
+				if { $saveError == 0 } {
+				    _appendOutput $string
+				}
+			    }
+			}
+		    }
+		}
+		
+		"table" { 
+		    #----------------------------------------------------------
+		    # INSIDE/OUTSIDE namelist 
+		    # TODO: make special handlers for dimensions and tables
+
+		    # format
+		    set _fmt [$obj getOutFmt $id]
+		    if { $_fmt == "%S" } {
+			set makeFmt 1 
+		    }
+		    
+		    set tableName  [$obj  getOptionValue  $id variable]
+		    set tableIdent [$obj  getOptionValue  $id ident]
+		    set tableWid   [getWidgetFromVarident $tableIdent]
+		    set nrow       [$tableWid cget -rows]
+		    set ncol       [$tableWid cget -cols]
+
+		    if { [_findKeywordObjType $obj namelist] == 0 } {
+			if { ![isNotDisabledWidget $tableWid]} {
+			    continue
+			}
+			#
+			# OUTSIDE NAMELIST
+			#
+			for {set ir 1} {$ir <= $nrow} {incr ir} {
+			    set varValueList {}			
+			    set varNameList  {}	
+			    set fmt          {}
+			    for {set ic 1} {$ic <= $ncol} {incr ic} {
+				set varName  ${tableName}($ir,$ic)
+				set varValue [tablevalue $tableIdent $ir $ic]
+				if { $varValue == {} } {
+				    lappend unsetVars $varName
+				}
+				# take care of format
+				if { $makeFmt || $varValue == {} } {
+				    append fmt "%s "
+				} else {
+				    append fmt "[lindex $_fmt [expr $ic - 1]] "
+				}
+				lappend varValueList $varValue
+				lappend varNameList  $varName
+			    }
+			    set string [_validateFmtString $fmt\n $varValueList "could not write a line of output. Please check the entries connected to the following variables: $varNameList"]
+			    if { $saveError == 0 } {
+				_appendOutput $string
+			    }			    
+			}
+		    } else {
+			#
+			# INSIDE NAMELIST
+			#
+			for {set ir 1} {$ir <= $nrow} {incr ir} {
+			    for {set ic 1} {$ic <= $ncol} {incr ic} {
+				set varName  ${tableName}($ir,$ic)
+				set varValue [tablevalue $tableIdent $ir $ic]
+
+				if { [isNotDisabledWidget $widget] } {
+				    if { [_findKeywordObjType $obj required] == 1 \
+					     && $varValue == {} } {
+					# variable is required but missing
+					#tk_messageBox -icon warning -title "WARNING" -message "Variable \"$varName\" is a required namelist variable, but is not set !!!" -type ok
+					lappend unsetVars $varName
+				    }
+				    if { $makeFmt } {
+					set fmt "%s"
+				    } else {
+					set fmt [lindex $_fmt [expr $ic - 1]]
+				    }
+				    if { $varValue != {} } {
+					set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
+							[list $varName $varValue] "could not write a variable. Please check the entry connected with the $varName variable"]
+					if { $saveError == 0 } {
+					    _appendOutput $string
+					}
+				    }
+				}
+			    }
+			} 
+		    } ; # if-else
+		}
+		
+		default {
+		    # do nothing
+		}
+	    } ; # switch
+	} ; # if-else
+    } ; # for
+    
+    #
+    # check if we need to close the namelist
+    #
+    # BEWARE: we can have required {...} or optional {...} inside namelist,
+    #         and can come here, and the namelist is not yet finished ...
+    #         Check that the object-type is namelist !!!
+    if { $namelist == 1 } {
+	if { [$obj cget -type] == "namelist" } {
+	    # we are really at the end of namelist
+	    set namelist 0
+	    if { ! [::tclu::isElementInList disabledNameObjList $obj] } {
+		_appendOutput [format $::guib::settings(NAMELIST.end_string)\n]
+	    }
+	}
+    }
+}
+
+
+

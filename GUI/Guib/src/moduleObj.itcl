@@ -1,0 +1,1732 @@
+#
+# $RCSfile: moduleObj.itcl,v $ --
+#
+#     This file contains the implementation of the ::guib::moduleObj
+# class. The construction of the GUI is embedded inside the "module"
+# keyword, for example:
+# 
+# module #auto -title "Simple GUI -script {
+#    ...
+# }
+# 
+# The "module" keyword construct the moduleObj object, which holds the
+# whole GUI. The "moduleObj" is an extension of "keywordObj" class,
+# that is, moduleObj-class is-a keywordObj. In other words moduleObj
+# class inherit the keywordObj class. See file keywordObj.itcl for the
+# definition of keywordObj class.
+# 
+# The implementation of GUIB keywords, which are public methods of
+# moduleObj class, is contained in file guibKeywords.itcl.
+#
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: moduleObj.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+# ------------------------------------------------------------------------
+#****h* ::guib/moduleObj
+#  FUNCTION
+#    The moduleObj is a class for the GUIB module. See the documentation
+#  on the ::guib::moduleObj class.
+#****
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****c* ::guib/moduleObj
+# NAME
+#    ::guib::moduleObj -- a class for the GUIB module 
+# PURPOSE
+#    It is the class for the GUIB module. The GUI constructed by the
+#    GUIB is embedded inside the "module" keyword, for example:
+# 
+# module #auto -title "Simple GUI -script {
+#    ...
+# }
+# 
+#    The "module" keyword construct the moduleObj object, which holds the
+#    whole GUI. 
+#
+# IS-A
+#    ::guib::keywordObj
+#
+# METHODS
+#   1. GUIB-KEYWORDS::
+#      1.1 object keywords:
+#        page        
+#        namelist    
+#        group       
+#        optional    
+#        required    
+#        line        
+# 
+#      1.2 item keywords:
+#        var 
+#        auxilvar       
+#        dimension  
+#        text
+#        table      
+#        keyword   
+#        help      
+# 
+#      1.3 event-driven keywords:
+#        tracevar        
+#        widget          
+#        groupwidget     
+#        widgetconfigure 
+#        widgetcget
+#        keywordconfigure
+# 
+#      1.4 getsets keywords, i.e. keyword associated with the variables:
+#        varvalue   
+#        vartextvalue
+#        varref    
+#        varset     
+#        dimvalue   
+#        dimtextvalue
+#        dimref    
+#        dimset     
+#        tablevalue 
+#        tabletextvalue
+#        tableref  
+#        tableset   
+# 
+#      1.5 special keywords:
+#        readfilter  
+#        writefilter 
+#        postprocess 
+#        this        
+#        loaddata    
+#        valueToTextvalue 
+#        textvalueToValue 
+#        
+#      1.6 decoration keywords:
+#        packwidgets 
+#        separator   
+# 
+#   2. PUBLIC METHODS
+#        setModuleFile       -- stores the full pathname of a module-definition file
+#        getModuleFile       -- gets the full pathname of a module-definition file
+#        loaddataGetInfo     -- return the value _loaddata array for a give variable
+#        makeSimpleTplwGUI   -- constructs a simple toplevel standalone GUI with File menu
+#        makeEmbedGUI        -- make a non-standalone GUI into a given contained widget
+#        saveAs              -- query for file and save the input into it queried file
+#        save                -- save the input into current file
+#        print               -- similar to "save" but instead prints to stdout
+#        getOutput           -- similar to "print" but instead returns the content
+#        saveToVar           -- store the value of all GUIB-variables into GUIB-variables
+#        openFile            -- opens an input-file and calls readFile
+#        readFile            -- reads an input-file from a given file-channel
+#        isNotDisabledWidget -- checks is a given widget associated with a particular input-variable is not disabled
+#        getWidgetFromVarident -- returns a widget-pathname of a given input-variable
+#        varnameToVarident     -- tries to return a GUIB-variable's identifier on the basis of "varName"
+#        indentinfo            -- returns a queried information for a given keyword (i.e. based on identifier)
+#        optionSetDefault      -- ...
+#        loadFromVar           -- inverse of saveToVar, i.e., it varsets GUIB-variables from the variables
+#        getAllVar           -- returns all defined GUIB_variables
+# 
+#   3. PROTECTED/PRIVATE METHDOS
+#      3.1 methods connected to guib::keywordObj class
+#        _setCurrentObj      -- stores a current object and its type into currentObj, currentObjType variables
+#        _getCurrentObj      -- gets current object
+#        _getCurrentObjType  -- gets current object's type
+# 
+#      3.2 methods connected to input variables
+#        _addVaridentWidget  -- adds a variable & widget pair to varidentWidgetList variable
+#        _addVaridentObj     -- adds a variable and the object to whome the variable belong to to varidentObjList variable
+#        _getObjFromVarident -- returns the object associated with a given variable's identifier
+# 
+#      3.3 auxiliary methods for GUIB keywords
+#        _manageNameObj  -- manages all the job for name-object type keywords
+#        _manageVoidObj  -- manages all the job for void-object type keywords
+#        _manageKeyword  -- manages all the job for item type keywords
+#        _separator      -- manages all the job for "separator" keyword
+#        _widget         -- manages all the job for the "widget" keyword
+#        _groupwidget    -- manages all the job for the "groupwidget" keyword
+#        _groupwidget__disableAll -- disables all given widgets
+#        _groupwidget__enableAll  -- enables all given widgets     
+#        _tracevar  --    {varIdent mode}
+#        _traceCmd  -- these two methods manage the job for "tracevar" keyword
+# 
+#      3.4 methods for manipulating variable's widgets
+#        _getAfterWidget    -- returns the variables' widgets that follows after a given variable's widget
+#        _deleteDisabledWid -- removes the widget from the disabledWidList list
+#        _addDisabledWid    -- add a given variable's widget to disabledWidList 
+#     
+#      3.5 methods for building the GUI's widgets
+#        _buildGUI               -- recursively builds the GUI
+#        _buildGUI_constructItem -- subroutine of _buildGUI for managing the widgets of item's keyword 
+#        _configurePage          -- configures the pages of tabnotebooks
+#        _packSide               -- returns the pack-side of a given widget
+# 
+#      3.6 methods connected with the "Open" menu
+#        _open                  -- recursively reads the input file
+#        _openCompareStr        -- reads a string from input-line and compares it to a given string according to "-nocase" status
+#        _openReadNamelistVar   -- reads the next name of a variable in the namelist
+#        _openReadNamelistValue -- reads the next value of a variable in the namelist
+#        _openReadKeyword       -- reads keyword from the input according to "-nocase" status
+#   
+#      3.7 methods connected with the "Save" menu    
+#        _manageSave   -- wrapper for "_save" method
+#        _save         -- does the job for "save" method, that is, stores the output into the "output" variable recursively
+#        _clearOutput  -- clears the output (must be used before constructing the output)
+#        _appendOutput -- append a given string to the output, that is, to the "output" variable
+#        _getOutput    -- returns the value of the "output" variable, which holds the content of the output
+#        _saveToVar    -- does the job for "saveToVar" method
+#
+#      3.8 methods connected to GUIB keyword identifier
+#        _makeIdent       -- makes a unique GUIB-variables identifier (used for undefined-variables)
+#        _isUniqueIdent   -- checks if ident is unique
+#        _addIdent        -- adds (registers) identifier
+#        _checkIdentChars -- checks if identifier string contains only ^[[:alnum:]_.:]+$ type characters
+# 
+#      3.9 other options
+#        optionSetDefault   -- set dafule value for a given option
+#        _loadFromVar       -- ...
+#
+# COMMANDS
+#   _validateFmtString  -- construct the formated string and check it against the format specifiers
+#   _comafy             -- transforms the strings of type array(elem) to array,elem
+#   _openGets           -- read a line of input (skips all the empty lines)
+#   _expandArgs         -- returns option-value pairs in a non-listed form, i.e. opt1 val1 opt2 val2 ..., and not {op1 val1 opt2 val2 ...}
+#   _findKeywordObjType -- checks if a given object-type is present in the stack
+#
+#******
+#------------------------------------------------------------------------
+
+class ::guib::moduleObj {
+    # moduleObj IS-A keywordObj, namely, it is a toplevel keywordObj
+    inherit keywordObj
+
+    # _guibVar array contains the "textvalues" of GUIB-variables
+    # (example of GUIB variable: var $ident ?option value? ?...?),
+    # that is, _guibVar($ident) is a real variable for the
+    # $ident-variable and contain its "textvalue" !!!
+    public variable _guibVar
+
+    #
+    # VARIABLES
+    #
+
+    public variable title   {}
+    public variable script  {}
+    public variable toplevel {}
+    public variable toplevelTitle {}
+
+    private variable options
+
+    private variable _moduleFile {}
+
+    private variable currentObj     {}
+    private variable currentObjType {}
+
+    private variable traceVaridentList   {}
+    private variable traceVaridentModeScriptList {}
+
+    private variable varidentWidgetList {}
+    private variable objWidgetArray
+
+    private variable varidentObjList    {}
+
+    private variable disabledWidList     {}
+    private variable disabledKeywordidentList {}
+    private variable widgetPackInfo
+
+    private variable nameObjList         {}
+    private variable disabledNameObjList {}
+
+    private variable _loadData
+    private variable _identInfo
+
+    private variable _allVar; # used by getAllVar method
+
+    #
+    # variables associated with _buildGUI method
+    private variable objLevel 
+    private variable pageLevel 
+    private variable lineEntryList
+    private variable packSide 
+
+    #
+    # variables for "save" method
+    #
+    private variable writeFilter {}
+    private variable output    {}
+    private variable namelist  {}
+    private variable unsetVars {}
+    private variable saveError 0
+    
+    #
+    # variables for "open" method
+    #
+    private variable readFilter  {}
+    private variable readError   0
+    private variable readline    {}
+    private variable readNewLine 1
+
+    # postprocessScript: variable holding postprocess script that
+    # will be executed after the Tk-GUI is build. Typical usage is
+    # setting the default values, so that variable traces will be
+    # executed. This can be used for enabling/disabling the keywidgets
+    
+    private variable postprocessScript
+
+
+    #
+    # METHODS
+    #
+
+    constructor {args} {
+	set currentObj     $this
+	set currentObjType module
+
+	array set options [array get ::guib::options]
+	::tclu::DEBUG options: [array get options]
+
+	set _loadData(varlist)  {}
+	set _loadData(cmdlist)  {}
+	set _loadData(textlist) {}
+
+	set _identInfo(identlist) {}
+
+	eval configure $args
+	eval $script	
+    }
+    
+    # ==============================================================
+    # definition of all GUIB script KEYWORDS (they are methods) !!!
+    # ==============================================================
+
+    # 1.) object keywords:
+    public method page        {ident args}
+    public method namelist    {ident args} 
+    public method group       {ident args} 
+    public method line        {ident args} 
+    public method optional    {code}
+    public method required    {code}
+
+    # 2.) item keywords:
+    public method var       {ident args} 
+    public method auxilvar  {ident args} 
+    public method dimension {ident args} 
+    public method text      {ident args} 
+    public method table     {ident args} 
+    public method keyword   {ident args}
+    public method help      {ident args}
+
+    # 3.) event-driven keywords:
+    public method tracevar           {varIdent mode script} 
+    public method widget             {varIdent action}
+    public method groupwidget        {name action} 
+    public method widgetconfigure    {varIdent args}
+    public method widgetcget         {varIdent option}
+    public method keywordconfigure   {keyIdent state}
+
+    # 4.) getsets keywords, i.e. keyword associated with the variables:
+    public method varvalue       {ident}  
+    public method vartextvalue   {ident}  
+    public method varref         {ident}  
+    public method varset         {ident what value {usage {usage: varset $ident -value|-textvalue $value}}}
+    public method dimvalue       {ident i1}  
+    public method dimtextvalue   {ident i1}  
+    public method dimref         {ident i1}  
+    public method dimset         {ident i1 what value}
+    public method tablevalue     {ident i1 i2}  
+    public method tabletextvalue {ident i1 i2}  
+    public method tableref       {ident i1 i2}  
+    public method tableset       {ident i1 i2 what value}
+
+    # 5.) special keywords:
+    public method readfilter       {cmd}
+    public method writefilter      {cmd}
+    public method postprocess      {script}
+    public method this             {}      
+    public method loaddata         {varIdent cmd {buttonText "Load from file ..."}}
+    public method valueToTextvalue {varIdent value}
+    public method textvalueToValue {varIdent textvalue}
+
+    # 6.) decoration keywords:
+    public method packwidgets {side}
+    public method separator   {args}
+
+
+    #
+    # public METHODS
+    #
+    public method setModuleFile         {file}
+    public method getModuleFile         {} 
+    public method loaddataGetInfo       {varIdent}
+    public method makeSimpleTplwGUI     {}
+    public method makeEmbedGUI          {wid}
+    public method saveAs                {{filetypes {}}}
+    public method save                  {file {nocomplain 0}} 
+    public method saveToVar             {{namespace_scope ::}}
+    public method print                 {{nocomplain 0}} ; # same as save but prints to stdout
+    public method getOutput             {} ; # similar to print but instead returns the content
+    public method openFile              {fileName}
+    public method readFile              {fileChannel {fileName {}}}
+    public method isNotDisabledWidget   {widget}
+    public method getWidgetFromVarident {varIdent} 
+    public method varnameToVarident     {obj varName {nocase 0}}  
+    public method identinfo             {ident what}  
+    public method optionSetDefault      {key option defaultValue}
+    public method loadFromVar           {}
+    public method getAllVar             {types}
+
+    # --------------------------------------------------
+    # methods connected to guib::keywordObj class
+    # --------------------------------------------------
+    private method _setCurrentObj       {obj types}
+    private method _getCurrentObj       {}
+    private method _getCurrentObjType   {}
+
+
+    # --------------------------------------------------
+    # methods connected to input variables
+    # --------------------------------------------------
+    private method _addVaridentWidget        {varIdent widgetName} 
+    private method _addVaridentObj           {varIdent obj} 
+    private method _getObjFromVarident       {varIdent} 
+
+
+    #
+    # methods connected to GUIB keyword identifier
+    #
+    private method _makeIdent       {string}
+    private method _isUniqueIdent   {ident}
+    private method _addIdent        {ident}
+    private method _checkIdentChars {ident {allowComma 0}}
+
+    #
+    # private METHODS connected to GUIB keywords
+    #
+    private method _manageNameObj      {key ident args}
+    private method _manageVoidObj      {key code}
+    private method _manageKeyword      {obj key ident code}
+    private method _separator          {obj code}
+    private method _widget             {action varIdent}
+    private method _groupwidget {obj action}
+    private method _groupwidget__disableAll {wlist}
+    private method _groupwidget__enableAll  {wlist}
+
+    protected method _tracevar    {varIdent mode}
+    private   method _traceCmd    {name1 name2 op}
+
+    private method _getAfterWidget     {widget} 
+    private method _deleteDisabledWid  {widget} 
+    private method _addDisabledWid     {widget}
+
+
+    #
+    # BUILD private methods (build.itcl)
+    #
+    private method _buildGUI               {obj wid}
+    private method _buildGUI_constructItem {id obj wid key {elist {}}}
+    private method _configurePage          {page tabnotebook tabpos}
+    private method _packSide               {objLevel}
+
+    #
+    # OPEN methods
+    #
+    private method _open                  {obj fileChannel} 
+    private method _openCompareStr        {args}
+    private method _openReadNamelistVar   {obj fileChannel}
+    private method _openReadNamelistValue {} 
+    private method _openReadKeyword       {keyword}
+    private method _isDisabledKey         {obj id ident}
+
+    #
+    # methods for managing the OUTPUT (i.e. connected to SAVE menu)
+    #
+    private method _save          {obj}
+    private method _manageSave    {nocomplain} 
+    private method _clearOutput   {}
+    private method _appendOutput  {string}
+    private method _getOutput     {}
+    private method _saveToVar     {obj namespace_scope}
+
+    private method _loadFromVar   {obj}
+    private method _getAllVar     {obj type}
+
+    #
+    # functions
+    #
+    private proc _validateFmtString  {fmt valuesList errorMessage}   
+    private proc _comafy             {var} 
+    private proc _openGets           {fileChannel} 
+    private proc _expandArgs         {code}
+
+    # although this proc operates on keywordObj, it makes sense to be
+    # defined in moduleObj class, since moduleObj class organizes
+    # keywordObj hierarchically. The keywordObjects do not know for
+    # one another.
+    private proc _findKeywordObjType {obj type}; 
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/setModuleFile
+#  NAME
+#    ::guib::moduleObj::setModuleFile -- stores the full pathname of the module-file
+#  USAGE
+#    setModuleFile file
+#  DESCRIPTION
+#    This method stores the full pathname of the file that holds the
+#    module definition. The path of the filename is stored in as 
+#    absolute pathname.
+#  ARGUMENTS
+#    file -- file-name of module-file
+#  EXAMPLE
+#    $moduleObj setModuleFile $moduleFile
+#******
+# ------------------------------------------------------------------------
+body ::guib::moduleObj::setModuleFile {file} { 
+    if { [file pathtype $file] != "absolute" } {
+	set file [file join [pwd] $file]
+    }
+    set _moduleFile $file 
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/getModuleFile
+#  NAME
+#    ::guib::moduleObj::getModuleFile -- returns the absolute pathname of the module-file
+#  ARGUMENTS
+#    None.
+#  RETURN VALUE
+#    Absolute pathname of the module-file.
+#  EXAMPLE
+#    set moduleFile [$moduleObj getModuleFile]
+#******
+# ------------------------------------------------------------------------
+body ::guib::moduleObj::getModuleFile {} { return $_moduleFile }
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_setCurrentObj
+#  NAME
+#    ::guib::moduleObj::_setCurrentObj -- set the current GUIB object
+#  USAGE
+#    _setCurrentObj obj type
+#  DESCRIPTION
+#    Some keywords of module GUIB definition script define the new objects.
+#    This is how the nesting of keywords is implemented. This method stores
+#    the newly created object (name and type) as a current one.
+#  ARGUMENTS
+#    obj  -- keywordObj's object name
+#    type -- keywordObj's object type (e.g. page, namelist, ...)
+#  RETURN VALUE
+#    The object name
+#  EXAMPLE
+#    $moduleObj _setCurrentObj $childObj $key
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_setCurrentObj {obj type} {	
+    set currentObj     $obj
+    set currentObjType $type
+    return $obj
+}
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_getCurrentObj
+#  NAME
+#    ::guib::moduleObj::_getCurrentObj -- returns the current keywordObj's object name
+#  ARGUMENTS
+#    None.
+#  RETURN VALUE
+#    The current object name
+#  EXAMPLE
+#    set childObj [$moduleObj _getCurrentObj]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_getCurrentObj {} { return $currentObj }
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_getCurrentObjType
+#  NAME
+#    ::guib::moduleObj::_getCurrentObjType -- returns the current object type
+#  ARGUMENTS
+#    None.
+#  RETURN VALUE
+#    The current object type
+#  EXAMPLE
+#    set childObjType [$moduleObj _getCurrentObjType]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_getCurrentObjType {} { return $currentObjType }
+	
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_addVaridentWidget
+#  NAME
+#    ::guib::moduleObj::_addVaridentWidget -- adds a new variable-widget pair to a list
+#  USAGE
+#    _addVaridentWidget varIdent widgetName
+#  ARGUMENTS
+#    varIdent   -- the GUIB-variable's identifier
+#    widgetName -- the path of the variable's widget
+#  RETURN VALUE
+#    The added variable-widget pair.
+#  EXAMPLE
+#    $moduleObj _addVaridentWidget $varIdent $widgetPath
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_addVaridentWidget {varIdent widgetName} {
+    lappend varidentWidgetList [list $varIdent $widgetName]
+    return [list $varIdent $widgetName]
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_addVaridentObj 
+#  NAME
+#    ::guib::moduleObj::_addVaridentObj -- adds a new variable-object pair to a list
+#  USAGE
+#    _addVaridentObj varIdent obj
+#  ARGUMENTS
+#    varIdent -- the GUIB-variable's identifier
+#    obj      -- the associated keywordObj's object
+#  RETURN VALUE
+#    The added variable-object pair.
+#  EXAMPLE
+#    $moduleObj _addVaridentObj $varIdent $obj
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_addVaridentObj {varIdent obj} {
+    lappend varidentObjList [list $varIdent $obj]
+    return [list $varIdent $obj]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/getWidgetFromVarident
+#  NAME
+#    ::guib::moduleObj::getWidgetFromVarident -- returns the widget pathname which is associated with a variable
+#  USAGE 
+#    getWidgetFromVarident varIdent
+#  ARGUMENTS
+#    varIdent -- the GUIB-variable's identifier
+#  RETURN VALUE
+#    The widget pathname associated with the variable.
+#  EXAMPLE
+#    set widget [$moduleObj getWidgetFromVarident $varIdent]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::getWidgetFromVarident {varIdent} {
+    set i [lsearch -glob $varidentWidgetList [list $varIdent *]]
+    if { $i == -1 } {
+	return {}
+    } else {
+	return [lindex  [lindex $varidentWidgetList $i]  1] 
+    }
+}
+
+	
+# ------------------------------------------------------------------------
+#****m* moduleObj/varnameToVarident
+#  NAME
+#    ::guib::moduleObj::varnameToVarident -- tries to return a GUIB-variable's identifier on the basis of "varName" 
+#  USAGE 
+#    varnameToVarident obj varName ?nocase?
+#  ARGUMENTS
+#    obj     -- keywordObj object pointer
+#    varName -- the name of the variable (i.e. value of -variable option of a given obj's keyword)
+#    nocase  -- compare the varName-ident case sensitively/insensitively (must be 0|1)
+#  RETURN VALUE
+#    The identifier of a GUIB's variable
+#  EXAMPLE
+#    set ident [$moduleObj varnameToVarident $obj $varName 1]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::varnameToVarident {obj varName {nocase 0}} {
+    
+    set result  ""
+    set NItem   [$obj getID]
+    
+    for {set id 0} {$id <= $NItem} {incr id} {		
+	
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != "" } {
+	    # an object; search it
+	    set result [varnameToVarident $childObj $varName $nocase]
+	    if { $result != "" } {
+		return $result
+	    }
+	} else {
+	    # a key
+	    set ident [$obj getOptionValue $id ident]	    
+	    set var   [$obj getOptionValue $id variable]
+	    if { [::tclu::stringMatch $varName $var $nocase] } {
+		return $ident
+	    }
+	}
+    }
+    # if we come here, the identifier of given varName wasn't found
+    return ""
+}
+
+
+body ::guib::moduleObj::identinfo {ident what} {
+    # check id ident is an identifier !!!
+    if { [lsearch -exact $_identInfo(identlist) $ident] < 0 } {
+	set exists 0
+    } else {
+	set exists 1
+    }    
+
+    if { $what == "exists" } {
+	return $exists
+    }
+    if { ! $exists } {
+	::tclu::ERROR "identifier $ident does not exists"
+    }
+
+    switch -exact -- $what {
+	keywordObj { return $_identInfo(keywordObj,$ident) }
+	id         { return $_identInfo(id,$ident) }
+	default {
+	    ::tclu::ERROR "wrong mode of ideninfo method (usage: indentinfo ident mode), should be one of keywordObj, id"
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_getObjFromVarident
+#  NAME
+#    ::guib::moduleObj::_getObjFromVarident -- returns the object associated with a given variable's identifier
+#  USAGE 
+#    _getObjFromVarident varIdent
+#  ARGUMENTS
+#    varIdent -- the GUIB-variable's identifier
+#  RETURN VALUE
+#    The keywordObj's object-name that holds the variable.
+#  EXAMPLE
+#    set obj [$moduleObj _getObjFromVarident $varIdent]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_getObjFromVarident {varIdent} {    
+    set i [lsearch -glob $varidentObjList [list $varIdent *]]
+    if { $i == -1 } {
+	# maybe varIdent corresponds to dimension, 
+	# i.e. var(x), but we need just "var"	
+	set varIdent [lindex [split $varIdent "("] 0]
+	set i [lsearch -glob $varidentObjList [list $varIdent *]]
+	if { $i == -1 } {
+	    # check for comafied dimension name
+	    set varIdent [lindex [split $varIdent ","] 0]
+	    set i [lsearch -glob $varidentObjList [list $varIdent *]]
+	}
+    }
+    
+    if { $i == -1 } {
+	return {}
+    } else {
+	return [lindex  [lindex $varidentObjList $i]  1] 
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_getAfterWidget
+#  NAME
+#    ::guib::moduleObj::_getAfterWidget -- returns the widget after the specified one
+#  USAGE
+#     _getAfterWidget widget
+#  ARGUMENTS
+#     widget -- path-name of the widget
+#  RETURN VALUE
+#    The widget-pathname of the widget which is after the specified one
+#  EXAMPLE
+#    set widget [$moduleObj _getAfterWidget $thisWidgetName]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_getAfterWidget {widget} {
+    set i [lsearch -glob $varidentWidgetList [list * $widget]]
+    if { $i == -1 } {
+	return {} 
+    } else { 
+	return [lindex  [lindex $varidentWidgetList [expr $i + 1]]  1] 
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_manageKeyword
+#  NAME
+#    ::guib::moduleObj::_manageKeyword -- does all for the GUIB item-type kewyords 
+#  USAGE 
+#     _manageKeyword obj key ident code
+#  DESCRIPTION
+#    This is a kernel method for processing the GUIB item-type
+#    keywordslike var, dimension, keyword. This proc is called from
+#    "var", "keyword", "dimension", etc. methods.
+#  ARGUMENTS
+#    obj  -- the keywordObj's object to whom the current item-keyword belong
+#    key  -- the type (name) of the item-keyword (i.e. var, dimension, ...)
+#    code -- code of the keyword
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    _manageKeyword obj key code
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_manageKeyword {obj key ident code} {
+
+    _addIdent $ident
+
+    set id [$obj incrID]    
+	 
+    if { $key == "text" } {
+	tclu::DEBUG code    == $code
+	tclu::DEBUG options == $options($key)
+    }
+
+    # set the key and parse the options and add them to the "list"
+    
+    $obj setKey     $id $key $ident
+    $obj setOptions $id [cmdline::getoptions code $options($key)]
+
+    # if the value of -variable option is "", then set it to $ident
+    
+    if { $key == "var" || $key == "dimension" || $key == "table" } {
+	if { [$obj getOptionValue $id variable] == "" } {
+	    $obj setOptions $id [list variable $ident]
+	}
+    }
+    if { $key == "text" } {
+	$obj setOptions $id [list variable $ident]
+    }
+
+    # manage identinfo
+    set _identInfo(keywordObj,$ident) $obj
+    set _identInfo(id,$ident)         $id
+
+    _addVaridentObj $ident $obj    
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_manageNameObj
+#  NAME
+#    ::guib::moduleObj::_manageNameObj -- manages all the job for name-object type keywords
+#  USAGE
+#    _manageNameObj key ident args
+#     
+#  DESCRIPTION
+#    This is a kernel method for processing the GUIB name-object like
+#    page and namelist. The nameobject are the one whose keyword
+#    has the -name option (e.g. page -name "Page #.1" {...script...}).
+#    This method is called inside "page" or "namelist" methods and then it 
+#    manages the keywords content and stores it.
+#  ARGUMENTS
+#    key  -- the type (name) of the object-keyword (i.e. namelist, group, ...)
+#    args -- the code of the object-keyword
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    _manageNameObj page $args
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_manageNameObj {key ident args} {
+
+    _addIdent $ident
+	
+    set parentObj  [_getCurrentObj]    
+    set parentType [_getCurrentObjType]
+    
+    # parse the object's "-name" option    
+    #if { [cmdline::getopt args {name.arg} opt value] < 0 } {
+    #	::tclu::ERROR "an error occured while parsing the $key option: $opt"
+    #}    
+    array set opts [cmdline::getoptions args $options($key)]
+    
+    set id [$parentObj incrID]    
+    $parentObj setKey      $id $key $ident
+    $parentObj setOptions  $id [array get opts]
+    #$parentObj setOptions  $id [list $opt $value]
+
+    # cmdline::getopts takes as args: -name name {script} and then it drops
+    # -name name and it returns {{script}}, but we want just {script},
+    # therefore below we will use [lindex $args 0] !!!
+    set code [lindex $args 0] 
+
+    
+    # manage identinfo
+
+    set _identInfo(keywordObj,$ident) $parentObj
+    set _identInfo(id,$ident)         $id
+
+    # make a nameObj; its is a child object of parent object (parentObj))
+
+    set childObj [::guib::keywordObj::nameObj $ident\#auto \
+		      -name $opts(name) -type $key -parent $parentObj]
+    $parentObj setChild $id $childObj
+    lappend nameObjList [list $ident $childObj]
+    
+    # set the current object to the childObj, and execute a script. Then
+    # reassign the current object to the parentObj
+
+    _setCurrentObj $childObj $key
+    eval $code
+    _setCurrentObj $parentObj $parentType
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_manageVoidObj
+#  NAME
+#    ::guib::moduleObj::_manageVoidObj -- manages all the job for void-object type keywords
+#  USAGE
+#    _manageVoidObj key code
+#     
+#  DESCRIPTION
+#    This is a kernel method for processing the GUIB void-objects like
+#    "optional" and "required". The void-objects are the one whose keyword
+#    doesn't have the -name option (e.g. required {...script...}).
+#    This method is called inside "optional" or "required" methods and then it 
+#    manages the keywords content and stores it.
+#  ARGUMENTS
+#    key  -- the type (name) of the object-keyword (i.e. namelist, group, ...)
+#    args -- the code of the object-keyword
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    _manageVoidObj required $code
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_manageVoidObj {key code} {
+
+    set parentObj  [_getCurrentObj]    
+    set parentType [_getCurrentObjType]
+
+    set id [$parentObj incrID]    
+    $parentObj setKey $id $key
+    
+    set childObj [::guib::keywordObj::voidObj "${key}#auto" -type $key -parent $parentObj]
+    $parentObj setChild $id $childObj
+
+    # set the current object to the childObj, and execute a script. Then
+    # reassign the current object to the parentObj
+
+    _setCurrentObj $childObj $key
+    eval $code
+    _setCurrentObj $parentObj $parentType
+}
+
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/loaddataGetInfo
+#  NAME
+#    ::guib::moduleObj::loaddataGetInfo -- return the value _loaddata array for a give variable
+#  USAGE
+#    loaddataGetInfo varIdent
+#     
+#  DESCRIPTION
+#    We would like to load a GUIB table from file. Hence in a module
+# file a "loaddata" keyword was specified as "loaddata varIdent cmd
+# buttonText". Then kind of "Load from file" button-widget will appear
+# in the GUI.  The "loaddataGetInfo" method is used to retrieve the
+# "cmd" and "buttonText" of a given varIdent.
+#
+#  ARGUMENTS
+#    varIdent -- identifier of the GUIB variable for which to load data
+#  RETURN VALUE
+#    Returns the loaddata's "varIdent cmd buttonText", where "cmd" is
+# the "Load from file" command, and "buttonText" is the text that
+# appear in the "Load from file" button.
+#
+#  EXAMPLE
+#    set info [loaddataGetInfo $myTable]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::loaddataGetInfo {varIdent} {
+    set i [lsearch -glob $_loadData(varlist) $varIdent]
+    if { $i == -1 } {
+	return {}
+    } else {
+	return [list \
+		    [lindex $_loadData(varlist) $i] \
+		    [lindex $_loadData(cmdlist) $i] \
+		    [lindex $_loadData(textlist) $i]]
+    }
+}
+
+
+
+# ========================================================================
+# "save" GUI methods
+# ========================================================================
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_clearOutput
+#  NAME
+#    ::guib::moduleObj::_clearOutput -- clears the output (must be used before constructing the output)
+#  USAGE
+#    _clearOutput
+#  DESCRIPTION
+#    The _clearOutput prepares everything for making a new output. The
+# output is constructed in such a way that it is appended by pieces to
+# "output" variable. At the end the content of the "output" variable
+# can be saved to file (save,saveAs) or printed to stdout (print).
+#  RETURN VALUE
+#    None.
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_clearOutput {} { 
+    set saveError 0
+    set output    {} 
+    set unsetVars {}
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_appendOutput
+#  NAME
+#    ::guib::moduleObj::_appendOutput -- append a given text to the output, that is, to the "output" variable
+#  USAGE
+#    _appendOutput text
+#  DESCRIPTION
+#    The _appendOutput method is used during the construction of the
+# output with the recursive _save method.
+#  RETURN VALUE
+#    None.
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_appendOutput {string}   { append output $string }
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_getOutput
+#  NAME
+#    ::guib::moduleObj::_getOutput -- returns the value of the "output" variable
+#  USAGE
+#    _getOutput 
+#  RETURN VALUE
+#     The value of the "output" variable.
+#  EXAMPLE
+#     set outputContent [_getOutput]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_getOutput  {}         { return $output }
+
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_makeIdent
+#  NAME
+#    ::guib::moduleObj::_makeIdent -- makes a unique GUIB-variables identifier
+#  USAGE
+#    _makeIdent string
+#  DESCRIPTION
+#    Makes a unique GUIB-variables identifier (used for undefined-variables).
+#  RETURN VALUE
+#    The unique identifier.
+#  EXAMPLE
+#    set ident [_makeIdent myVar]
+#  SOURCE
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_makeIdent {string} {
+
+    set string [_comafy $string]
+    # let's allow the comma
+    _checkIdentChars $string 1
+
+    set _string $string
+    set counter -1    
+    while {1} {
+	if { [lsearch -exact $_identInfo(identlist) $string] < 0 } {
+	    return $string
+	} else {
+	    # attempt to make a unique identifier
+	    incr counter
+	    set string var_${counter}_${_string}
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_isUniqueIdent
+#  NAME
+#    ::guib::moduleObj::_isUniqueIdent -- checks if ident is unique
+#  USAGE
+#    _makeIdent ident
+#  ARGUMENTS
+#    ident -- the identifier (of GUIB keyword)
+#  RETURN VALUE
+#    Returns 1 if ident is unique, and 0 otherwise.
+#  EXAMPLE
+#    set unique [_isUniqueIdent myIdent]
+#  SOURCE
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_isUniqueIdent {ident} {
+    # let's allow the comma
+    _checkIdentChars $ident 1
+    if { [lsearch -exact $_identInfo(identlist) $ident] < 0 } {
+	return 1
+    } else {
+	return 0
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_addIdent
+#  NAME
+#    ::guib::moduleObj::_addIdent -- add (register) identifier
+#  USAGE
+#    _addIdent ident
+#  ARGUMENTS
+#    ident -- the identifier (of GUIB keyword)
+#  RETURN VALUE
+#    Value of ident.
+#  EXAMPLE
+#    _addIdentt myIdent
+#  SOURCE
+#********
+# ------------------------------------------------------------------------
+body ::guib::moduleObj::_addIdent {ident} {
+    
+    # t.k.
+    #set ident [_comafy $ident]
+    #/
+
+    # let's allow the comma
+    _checkIdentChars $ident 1
+
+    # check if ident is unique
+    if { ! [_isUniqueIdent $ident] } {
+    	::tclu::ERROR "identifier $ident is not unique."
+    }
+    lappend _identInfo(identlist) $ident
+    return $ident
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_checkIdentChars
+#  NAME
+#    ::guib::moduleObj::_checkIdentChars -- checks if identifier string contains only ^[[:alnum:]_.:]+$ type characters
+#  USAGE
+#    _checkIdentChars ident ?allowComma?
+#  ARGUMENTS
+#    ident -- the identifier (of GUIB keyword)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    _checkIdentChars myIdent
+#  SOURCE
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_checkIdentChars {ident {allowComma 0}} {
+    if { $allowComma } {
+	set match [regexp {^[[:alnum:]_.:,]+$} $ident]
+    } else {
+	set match [regexp {^[[:alnum:]_.:]+$} $ident]
+    }
+    if { ! $match } {
+	::tku::errorDialog "identifier \"$ident\" is composed from non-allowed characters. Due to this the program might behave erratically"
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/isNotDisabledWidget
+#  NAME
+#    ::guib::moduleObj::isNotDisabledWidget -- checks if widget is in a not present in disabledWidList list
+#  USAGE
+#    isNotDisabledWidget widget
+#  DESCRIPTION
+#    The "disabledWidList" list is used by "_widget" method to keep a
+# record on disabled widgets. This method checks if a given widget is not present
+# on the list of disabled widgets.
+#  RETURN VALUE
+#    Returns 1 when widget is not found in disabledWidList, otherwise returns 0.
+#  EXAMPLE
+#    set widgetState [$moduleObj isNotDisabledWidget $widget]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::isNotDisabledWidget {widget} {
+    set ind [lsearch -exact $disabledWidList $widget]
+    if { $ind < 0 } {
+	return 1
+    } else {
+	return 0
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_deleteDisabledWid
+#  NAME
+#    ::guib::moduleObj::_deleteDisabledWid -- removes the widget from the disabledWidList list
+#  USAGE
+#    _deleteDisabledWid widget
+#  DESCRIPTION
+#    The "disabledWidList" list is used by "_widget" method to keep a
+# record on disabled widgets. This method removes a given widget from
+# the list of disabled widgets.
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $moduleObj _deleteDisabledWid $widget
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_deleteDisabledWid {widget} {
+    set ind [lsearch -exact $disabledWidList $widget]
+    if { $ind > -1 } {
+	set l1 [lrange $disabledWidList 0 [expr $ind - 1]]
+	set l2 [lrange $disabledWidList [expr $ind + 1] end]
+	set disabledWidList [concat $l1 $l2]
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_addDisabledWid
+#  NAME
+#    ::guib::moduleObj::_addDisabledWid -- adds the widget to the disabledWidList list
+#  USAGE
+#    _addDisabledWid widget
+#  DESCRIPTION
+#    The "disabledWidList" list is used by "_widget" method to keep a
+# record on disabled widgets. This method adds a given widget to
+# the list of disabled widgets.
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $moduleObj _addDisabledWid $widget
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_addDisabledWid {widget} {
+    if { [lsearch -exact $disabledWidList $widget] < 0 } {
+	lappend disabledWidList $widget
+    }
+}
+
+
+# ========================================================================
+#
+# Auxiliary functions
+#
+# ========================================================================
+
+# ------------------------------------------------------------------------
+#****if* moduleObj/_validateFmtString
+#  NAME
+#    ::guib::moduleObj::_validateFmtString -- construct the formated string and check it against the format specifiers
+#  PURPOSE
+#    This proc constructs formated string and checks it against the
+#    format specifiers. The possible format errors are caught. If format
+#    error occurs then the saveError variable is set to 1 and an error
+#    message is raised in tk_messageBox for notification.
+#  RETURN VALUE
+#    The format string.
+#  EXAMPLE
+#    set string [_validateFmtString [list format "%s %s" $value1 $value2]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_validateFmtString {fmt valuesList errorMsg} {
+    if { [catch {set string [eval {format $fmt} $valuesList]} fmtError] } {
+	tk_messageBox -icon error -title "Typing ERROR" -message "Typing ERROR: $errorMsg\n\nFormat error: $fmtError" -type ok
+	set saveError 1
+	return
+    }
+    return $string
+}
+
+
+# ------------------------------------------------------------------------
+#****if* moduleObj/_comafy
+#  NAME
+#    ::guib::moduleObj::_comafy -- tranforms the strings of type a(1) to a,1
+#  USAGE
+#    _comafy var
+#  RETURN VALUE
+#    The transformed string, i.e. a(1) is transformed to a,1
+#  EXAMPLE
+#    set a3 [_comafy a(3)]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_comafy {var} {
+    set var [string trimright $var ")"]    
+    regsub -all -- {\(} $var {,} newvar
+    return $newvar
+}
+
+
+# ------------------------------------------------------------------------
+#****if* moduleObj/_findKeywordObjType
+#  NAME
+#    ::guib::moduleObj::_findKeywordObjType
+#  USAGE
+#    ::guib::moduleObj::_findKeyowrdObjType obj key
+#     
+#  DESCRIPTION
+#    This proc search for the requested object in the
+#    nesting-stack. It returns 1 if the object was found and 0 otherwise.
+#  RETURN VALUE
+#    Returns 1 if the object was found and 0 otherwise.
+#  EXAMPLE
+#    _findKeywordObjType $obj $key
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_findKeywordObjType {obj key} {    
+    # i.e. key == type
+    while { $obj != {} } {
+	if { [$obj cget -type] == $key } {
+	    return 1
+	}	
+	set obj [$obj cget -parent]
+    }
+    return 0
+}
+
+
+# ------------------------------------------------------------------------
+#****if* moduleObj/_expandArgs
+#  NAME
+#    ::guib::moduleObj::_expandArgs -- expands the args arument
+#  USAGE
+#    _expandArgs code
+#  DESCRIPTION
+#    Some GUIB keywords can have the two forms:
+#
+#       var varIdent -variable varName -label "VarName:"
+#    or
+#       var varIdent { -variable varName -label "VarName:" }
+#
+# Hence this proc is used to axpand the second form of args, which is
+# the transformed to first form.
+#  RETURN VALUE
+#    The transformed string, i.e. a(1) si transformed to a,1
+#  EXAMPLE
+#    set a3 [_expandArgs a(3)]
+#  SOURCE
+
+body ::guib::moduleObj::_expandArgs {code} {
+    if { [llength $code] == 1 } {
+	# syntax: var { -option value -option value }
+	return [lindex $code 0]
+    } else {
+	# syntax: var -option value -option value 
+	return $code
+    }
+}
+#********
+# ------------------------------------------------------------------------
+
+
+
+
+# ========================================================================
+#
+#  Auxiliary methods for GUIB keywords
+#
+# ========================================================================
+
+#
+# auxiliary methods for "tracevar" GUIB keyword
+#
+body ::guib::moduleObj::_tracevar {varIdent mode} {
+    trace variable [varref $varIdent] $mode [code $this _traceCmd]
+}
+body ::guib::moduleObj::_traceCmd {name1 name2 op} {
+    # IMPORTANT: name1 is _guibVar, while name2 is a name of a
+    # guib variable, therefore ...
+
+    set ind [lsearch -exact $traceVaridentList [varref $name2]]
+
+    if { $ind >= 0 } {
+	set scriptMode [lindex $traceVaridentModeScriptList $ind]	
+	if { [lindex $scriptMode 0] == $op } {	    
+	    eval [lindex $scriptMode 1]
+	}
+    }
+}
+
+
+#
+# auxiliary method for "widget" GUIB keyword
+#
+body ::guib::moduleObj::_widget {action varIdent} {
+
+    set widget [getWidgetFromVarident $varIdent]
+
+    if { $widget == {} } { 
+	return 
+    }
+    
+    switch -exact $action {
+	forget  { 
+	    if { [winfo exists $widget] } {
+		catch {
+		    set widgetPackInfo($widget) [pack info $widget]
+		    pack forget $widget
+		}
+	    }
+	    _addDisabledWid $widget
+	}
+	create  { 
+	    set afterWidget [_getAfterWidget $widget]
+	    if { $afterWidget != {} } {
+		if { [winfo parent $widget] != [winfo parent $afterWidget] } {
+		    # widget doesn't belong to the same parent
+		    set afterWidget {}
+		}
+	    }
+	    
+	    if { ! [winfo ismapped $widget] } {
+		# TODO: I should remember the side and other options
+		if { [info exists widgetPackInfo($widget)] } {
+		    eval pack $widget $widgetPackInfo($widget)
+		} else {
+		    pack $widget -side top -fill x -padx 3 -pady 2
+		}
+		if { $afterWidget != {} && [winfo ismapped $afterWidget] } {
+		    pack configure -before $afterWidget		
+		}
+	    }
+	    _deleteDisabledWid $widget
+	}
+	enable  { 
+	    $widget configure -state normal
+	    _deleteDisabledWid $widget
+	}
+	disable { 
+	    $widget configure -state disabled 
+	    _addDisabledWid $widget
+	}
+	default {
+	    ::tclu::ERROR "unknown widget action, must be one of: create, forget, enable, or disable"
+	}
+    }
+}
+
+
+#
+# auxiliary method for "separator" GUIB keyword
+#
+body ::guib::moduleObj::_separator {obj code} {    
+    set id [$obj incrID]
+    if { [cmdline::getopt code {label.arg} opt value] < 0 } {
+	::tclu::ERROR "an error occured while parsing the separator option: $opt"
+    }   
+    $obj setKey     $id separator
+    $obj setOptions $id [list $opt $value]
+}
+
+
+#
+# auxiliary method for "groupwidget" GUIB keyword
+#
+body ::guib::moduleObj::_groupwidget {obj action} {
+
+    switch -exact -- $action {
+	enable {
+	    ::tclu::removeElementFromList disabledNameObjList $obj
+	}
+	disable {
+	    ::tclu::addElementToList disabledNameObjList $obj
+	}
+	default {
+	    ::tclu::ERROR "unknown action \"$action\", must be enable or disable"
+	}
+    }
+
+    set NItem [$obj getID]
+    for {set id 0} {$id <= $NItem} {incr id} {
+	
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+	    ::tclu::DEBUG -->NItem: $NItem
+	    ::tclu::DEBUG -->Obj,childObj: $obj , $childObj
+	    # we have new object; handle it recursively
+	    _groupwidget $childObj $action
+
+	} else {
+	    #
+	    # TODO: disabling/enabling of dimension does not work
+	    #       because of variable vs. variable(1) mismatch
+	    #
+	    #       check also for tables ...
+	    #
+	    set varIdent [$obj getOptionValue $id ident]
+	    if { $varIdent == {} } {
+		continue
+	    }
+	    
+	    set widget [getWidgetFromVarident $varIdent]
+	    if { $widget == {} } { 
+		continue
+	    }
+	    #set table [getTableFromVar $varIdent]
+	       
+	    switch -exact $action {
+
+		enable  { 
+		    if { [lsearch -exact $disabledWidList $widget] < 0 } {
+			catch {$widget config -state normal}
+		    }
+		}
+		
+		disable { 
+		    catch {$widget config -state disabled}
+		}
+
+		default {
+		    ::tku:ERROR "unknown groupwidget action, must be one of: enable, or disable"
+		}
+	    }
+	}
+    }
+}
+
+#========================================================================
+#
+# INCOMING
+#
+# ========================================================================
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/saveToVar
+#  NAME
+#    ::guib::moduleObj::saveToVar -- store the value of all GUIB-variables into GUIB-variables
+#  USAGE
+#    saveToVar ?namespace_scope?
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $this saveToVar ::myNamespace
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::saveToVar {{namespace_scope ::}} {
+    _saveToVar $this $namespace_scope
+}
+body ::guib::moduleObj::_saveToVar {obj namespace_scope} {
+    
+    set NItem [$obj getID]
+    for {set id 0} {$id <= $NItem} {incr id} {
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+	    # we have new keywordObj object, goes down the stack
+	    _saveToVar $childObj $namespace_scope
+	} else {
+	    # we have new keyword
+	    switch -exact -- $key {
+		"var" { 
+		    set varName  [$obj getOptionValue $id variable]
+		    set varIdent [$obj getOptionValue $id ident]
+		    set varValue [varvalue $varIdent]
+		    ::tclu::DEBUG saveToVar: [namespace current]
+		    namespace eval $namespace_scope "set $varName [list $varValue]"
+		}
+		"dimension" {		     
+		    set dimName  [$obj getOptionValue $id variable]
+		    set dimIdent [$obj getOptionValue $id ident]
+		    set start    [$obj getOptionValue $id start]
+		    set end      [$obj getOptionValue $id end]
+		    for {set i $start} {$i <= $end} {incr i} {
+			set varValue [dimvalue $dimIdent $i]
+			namespace eval $namespace_scope "set $varName [list $varValue]"
+		    }
+		}
+		"table" {
+		    set tableName  [$obj getOptionValue $id variable]
+		    set tableIdent [$obj getOptionValue $id ident]
+		    set rows [$obj getOptionValue $id rows]
+		    set cols [$obj getoptionValue $id cols]
+		    for {set ir 1} {$ir <= $rows} {incr ir} {
+			for {set ic 1} {$ic <= $cols} {incr ic} {
+			    set varValue [tablevalue $tableIdent $ir $ic]
+			    namespace eval $namespace_scope "set ${varName}($ir,$ic) [list $varValue]"
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+    
+
+body ::guib::moduleObj::loadFromVar {} {
+    _loadFromVar $this
+}
+body ::guib::moduleObj::_loadFromVar {obj} {
+    
+    set NItem [$obj getID]
+    for {set id 0} {$id <= $NItem} {incr id} {
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+	    # we have new keywordObj object, goes down the stack
+	    _loadFromVar $childObj
+	} else {
+	    # we have new keyword
+	    switch -exact -- $key {
+		"var" { 
+		    set varName  [$obj getOptionValue $id variable]
+		    set varIdent [$obj getOptionValue $id ident]
+		    upvar \#0 $varName varValue
+		    if { [info exists varValue] } {
+			varset $varIdent -value $varValue
+		    }
+		}
+		"dimension" {		     
+		    set dimName  [$obj getOptionValue $id variable]
+		    set dimIdent [$obj getOptionValue $id ident]
+		    set start    [$obj getOptionValue $id start]
+		    set end t    [$obj getOptionValue $id end]
+		    for {set i $start} {$i <= $end} {incr i} {
+			upvar \#0 ${dimName}($i) varValue
+			if { [info exists varValue] } {
+			    dimset $dimIdent $i -value $varValue
+			}
+		    }
+		}
+		"table" {
+		    set tableName  [$obj getOptionValue $id variable]
+		    set tableIdent [$obj getOptionValue $id ident]
+		    set rows [$obj getOptionValue $id rows]
+		    set cols [$obj getoptionValue $id cols]
+		    for {set ir 1} {$ir <= $rows} {incr ir} {
+			for {set ic 1} {$ic <= $cols} {incr ic} {
+			    upvar \#0 ${tableName}($ir,$ic) varValue
+			    tableset $tableIdent $ir $ic -value $varValue
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+body ::guib::moduleObj::getAllVar {types} {
+    set _allVar ""
+    _getAllVar $this $types
+    ::tclu::DEBUG getAllVar: vars == $_allVar
+    return $_allVar
+}
+body ::guib::moduleObj::_getAllVar {obj types} {
+    
+    set NItem [$obj getID]
+    for {set id 0} {$id <= $NItem} {incr id} {
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+	    # we have new keywordObj object, goes down the stack
+	    _getAllVar $childObj $types
+	} else {
+	    ::tclu::DEBUG _getAllVar: $types $key [regexp $types $key]
+	    # we have new keyword
+	    switch -exact -- $key {
+		"var" { 
+		    ::tclu::DEBUG _getAllVar.2: $types $key [regexp $types $key]
+		    if { [regexp $types $key] } {
+			::tclu::DEBUG _getAllVar: var == [$obj getOptionValue $id variable]
+			lappend _allVar [$obj getOptionValue $id variable]
+		    }
+		}
+		"dimension" {		     
+		    if { [regexp $types $key] } {
+			set dimName  [$obj getOptionValue $id variable]
+			for {set i $start} {$i <= $end} {incr i} {
+			    lappend _allVar ${dimName}($i)
+			}
+		    }
+		}
+		"table" {
+		    if { [regexp $types $key] } {
+			set tableName  [$obj getOptionValue $id variable]
+			for {set ir 1} {$ir <= $rows} {incr ir} {
+			    for {set ic 1} {$ic <= $cols} {incr ic} {
+				lappend _allVar ${tableName}($ir,$ic)
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+#   optionSetDefault    -- set dafule value for a given option
+body ::guib::moduleObj::optionSetDefault {key option defaultValue} {
+    ::tclu::DEBUG options: [array get options]
+    
+    if { ! [info exists options($key)] } {
+	::tclu::ERROR "either unknown keyword \"$key\", or keyword \"$key\" does not have adjustable options"
+    }
+
+    regsub -- ^- $option {} option
+    
+    foreach _option $options($key) {
+	foreach {_opt _defVal _text} $_option {
+	    if { [regsub -- .arg$ $_opt {} opt] && [string equal $opt $option] } {
+		lappend optlist [list $_opt $defaultValue $_text]		
+	    } else {
+		lappend optlist [list $_opt $_defVal $_text]
+	    }
+	}
+    }
+    set options($key) $optlist
+    ::tclu::DEBUG options: $options($key)
+}
+	    
+

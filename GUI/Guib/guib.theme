@@ -1,0 +1,85 @@
+*Guib*Entry.width:					10
+*Guib*Entryfield.width:				        10
+*Guib*Spinint.width:					10
+*Guib*Spininthelp.width:				10
+*Guib*Entryhelp.width:                                  10
+*Guib*Spinner.width:					10
+
+*Scrolledframe.hscrollMode:                        dynamic
+*Scrolledframe.vscrollMode:                        dynamic
+*Scrolledframe.relief:                             sunken
+*Scrolledframe.borderWidth:                        1
+*Scrolledframe*Frame*background:                   White
+*Scrolledframe*Canvas*background:                  White
+*Scrolledframe.width:                              700
+*Scrolledframe.height:                             600
+
+#*Guib*Scrolledframe.activeBackground:  red
+#*Guib*Scrolledframe.selectBackground:  blue
+#*Guib*Scrolledframe.selectForeground:  green
+#*Guib*Scrolledframe*Frame.background:  White
+#*Guib*Scrolledframe*Canvas.background: White
+
+
+*Guib*Tabnotebook.width:                                750
+*Guib*Tabnotebook.tabPos:                               n
+*Guib*Tabnotebook.auto:                                 1
+*Guib*Tabnotebook.angle:                                0
+*Guib*Tabnotebook.background:                           #336699
+*Guib*Tabnotebook.tabBackground:                        #ffffee
+*Guib*Tabnotebook.tabForeground:                        #0000ff
+*Guib*Tabnotebook.foreground:                           #ffffff
+*Guib*Tabnotebook.bevelAmount:                          4
+*Guib*Tabnotebook.gap:                                  2
+*Guib*Tabnotebook.margin:                               5
+*Guib*Tabnotebook.tabBorders:                           true
+*Guib*Tabnotebook.raiseSelect:                          true
+*Guib*Tabnotebook.borderWidth:                          2
+*Guib*Tabnotebook.backdrop:                             #999999
+*Guib*Tabnotebook.equalTabs:                            false
+
+*Guib*Background.background:                            #336699
+
+*Guib*Var*background:                                   #eeeeff
+*Guib*Var*captionForeground:				#000000
+*Guib*Var*captionBackground:				#ffffff
+
+*Guib*Dimension*background:                             #eeeeff
+*Guib*Dimension*captionForeground:				#000000
+*Guib*Dimension*captionBackground:				#ffffff
+
+*Guib*Table.background:                                 #eeeeff
+*Guib*Table*Entry.background:                           seashell
+*Guib*Table*Entry.relief:                               sunken
+*Guib*Table*Entry.borderWidth:                          1
+*Guib*Table*Entry.highlightThickness:                   1
+*Guib*Table*Entry.width:                                10
+*Guib*Table*captionForeground:				#000000
+*Guib*Table*captionBackground:				#ffffff
+*Guib*Table*Message.relief:				solid
+*Guib*Table*Message.borderWidth:			1
+*Guib*Table*Message.anchor:			        c
+*Guib*Table*Label.relief:                               sunken
+*Guib*Table*Label.borderWidth:                          1
+*Guib*Table*Checkbutton.background:                     Gray
+*Guib*Table*Button.background:                          Gray
+*Guib*Table*Entryfileselect.borderWidth:                1
+*Guib*Table*Entryfileselect.highlightThickness:         1
+*Guib*Table*buttonHighlightbackground:                  #eeeeff
+
+*Guib*Labeledframe.background:                          #ffffaa
+*Guib*Labeledframe.labelPos:                            nw
+*Guib*Labeledframe.relief:                              ridge
+*Guib*Labeledframe.borderWidth:                         2
+
+*Guib*Combobox*Button*background:                       Gray
+
+*Guib*Entryfield*background:                            #eeeeff
+*Guib*Entryfield*highlightBackground:                   #eeeeff
+*Guib*buttonBackground:                                 Gray
+*fileselectBackground:                             	Gray
+*dirselectBackground:                              	Gray
+*Guib*menuBackground:                                   Gray
+
+*Scrolledhtml.fontname: 				helvetica
+*Scrolledhtml.fontsize: 				large

@@ -1,0 +1,345 @@
+* TODO: this "TODO" file is out-of-date. Check the items below,
+several of them must have been implemented already.
+
+------------------------------------------------------------------------
+-- BELOW TEXT IS OUT-OF-DATE:
+------------------------------------------------------------------------
+
+x.) add a silent save method (no complain). Enhance the save
+method. Currently, there is too much complains...
+
+x.) there is a mass with _comafy $ident now. Some procs expects
+dim(elem), while the other dim,elem. Check that.
+
+x.) optionmenuhelp widget: menubbuton does not disable upon disable
+request
+
+x.) make also "widgetcget" GUIB keyword !!!
+
+x.) keyword widgetconfigure bypass the keywordObj cmd() array, hence
+    it become out of date. FIX this synchronization.
+DONE; check it
+
+x.) make a public method that will assign all _guibVar elements to
+cooresponding variables, i.e., set $varName $_guibVar($ident) !!!
+
+x.) should we allow () chars in indentifier. In principle, this is possible,
+    by always _comafy the $ident!!!
+
+x.) varvalue should return value, not textvalue, while vartextvalue
+should return textvalue (create a vartextvalue routine and adapt the
+code accordingly)
+(Partly DONE; checking needed)
+
+x.) make some mechanism which will enable/disable the GUIB-widget
+decoration (i.e. Line:, Namelist:, ...), and also chenge the themes on
+the fly (NOTE: there is already a -noframe option)
+
+x.) CONSIDER: in moduleObj constructor all the variables and array
+elements should be defined in order to avoid variable does not exists
+errors !!!
+
+x.) check all Varident strings (fastly DONE)
+
+x.) when testing, test also the namelist "undefined variable"
+    test also help for different stacking
+
+x.) getIdFromVarident: the names should be getIdFromVariable & getIdFromIdent.
+
+
+x.) consider the -textvalue -value -default ... options for dimension & tables.
+
+Usually, the dimensions are used for some numeric values, and above
+options are not significant. We can simplify and common -textvalue
+-value -default for all the dimension elements. Moreover, the
+varObjList list stores only the root of dimension variable (i.e. if we
+have dim(10), only the root "dim" is stored. Also the routines
+valueToTextvalue and textvalueToValue only takes the root-name into
+account !!!
+
+The only expection to the common treatment of the above value is for
+-default for dimension, which supposes every element can have
+different default-value. Here is the code:
+
+#t.k.
+# INCOMING: SYNTAX of -default for the dimension:
+# -default { elem1-default elem2-default elem3-default ... }
+if { ! [info exists $textVar] } {
+    set default [lindex $itk_option(-default) $icount]
+    if { $default == "" } {
+	set default [lindex $itk_option(-default) end]
+    }
+    $_moduleObj dimset $var $idim $default
+}
+#/
+
+x.) implement the cardlist:
+	
+	cardlist -name **** {
+	   card ATOMIC_POSITIONS {
+	      var { .... }; var { .... } 
+              keyword xxxx; var { .... } 
+              newline
+              line -name "XXXX" {
+		....
+	      }		
+	      line -name "XXXX" {
+		....
+	      }
+           }
+	   card BLA_BLA 
+           card WHATEVER
+			
+        }	
+
+
+0.) I should rename the nomenclature !!!
+
+There are seven types of guib keywords: 
+ 
+	1. objects -- these create the guib::base object 
+                      (page, line, namelist, optional, required, group)
+
+        2. items   -- these are: var, dimension, table, keyword, help
+
+	4. events -- event driven keywords (tracevar, widget,
+                     groupwidget, widgetconfigure, keywordconfigure)
+
+        5. getsets -- keywords associated with querying and setting input variables
+                     (varvalue, varname, varset, dimvalue, dimname, dimset,
+	              tablevalue, tablename, tableset)                     
+
+        6. specials -- special keywords (readfilter, writefilter,
+                       postprocess, this, loaddata)
+
+        7. decorations -- these are void, and only create some guib widget 
+                          decorations (separator)
+
+Thre are two levels of objects:
+
+    moduleObj  --> this is the top object holding the everything 
+                   (i.e. module name -title title -script {...})
+
+    keywordObj --> this are keyword objects (constructed by keywords: 
+                   page, line, namelist, optional, required, group)
+
+Hence, I should rename the classes as:
+
+guib::moduleObj
+guib::keywordObj
+
+
+2.) construct the "separator" magewidget 
+
+
+
+DONE ------------------------------------------------------------------------
+DONE ------------------------------------------------------------------------
+DONE ------------------------------------------------------------------------
+DONE ------------------------------------------------------------------------
+DONE ------------------------------------------------------------------------
+DONE ------------------------------------------------------------------------
+DONE ------------------------------------------------------------------------
+
+2.) the packwidgets should be stack-like, i.e., specifying packwidgets should
+    have effect on a current or a higher stacking levels !!! (DONE)
+
+x.) Transformations:
+
+moduleObj.itcl:
+
+variables:
+----------
+traceVarList 			--> traceVaridentList
+traceVarModeScriptList		--> traceVaridentModeScriptList
+varWidgetList			--> varidentWidgetList
+varObjList			--> varidentObjList
+
+methods:
+--------
+getWidgetFromVar --> getWidgetFromVarident
+_addVarWidget    --> _addVaridentWidget   
+_addVarObj       --> _addVaridentObj   
+_getObjFromVar   --> _getObjFromVarident
+    
+
+keywordObj.itcl:
+
+methods:
+--------
+getIdFromVar   --> getIdFromVarname
+getIdFromIdent --> getIdFromVarident
+
+Status: DONE
+
+x.) fix this in open.itcl:
+
+body ::guib::moduleObj::_openReadNamelistVar {obj} {
+    set ind [string first = $readline]
+    if { $ind <= 0 } {
+	::tku::errorDialog "syntax error in the input file. Error in the namelist"
+    }
+    scan [lindex [split $readline =] 0] %s result    
+
+    # do we have dimension/table var(1) or var(1,2) ???
+    set postfix [lindex [split $result ()] 1]
+    if { $postfix != "" } {
+	set postfix (${postfix})
+    }
+
+    ::tclu::DEBUG _openReadNamelistVar: postfix=$postfix
+    # If namelist's variable are case-insensitive, then try to find a
+    # registered variable (i.e. from varObjList) that matches in
+    # "-nocase" fashion !!!
+     
+    foreach {varobj} $varObjList {
+	#FIX.t.k.: map from varname --> varident !!!
+DONE
+
+x.) replace tablename with tableref, sma for dim*
+DONE
+
+x.) check for all *Var routines (_addVarWidget, _addVarObj). Check for
+everything that contain "Var"
+DONE.
+
+x.) check for all "getOptionValue $id variable" and replace with 
+"getOptionValue $id ident"
+DONE.
+
+x.) in save.itcl:
+		    for {set i $start} {$i <= $end} {incr i} {
+			# TODO: a validation against the format-string
+			set varName  ${dimName}($i)
+			#FIX.t.k.
+			#...
+DONE.
+
+x.) check for tableName and tableIdent !!! (same for dimName ...)
+DONE.
+
+x.) update the getIdFromVar (shoudl refer to ident !!!)
+DONE
+
+x.) in open.itcl:
+		    while { $readline != {} } {
+			set varName     [_openReadNamelistVar $childObj]
+			set varValue    [_openReadNamelistValue]
+			
+			# check if varName is defined; if NOT
+			# ... TODO: put it under "undefined" variables
+			# (only if undefined variables are supported,
+			# otherwise report an error in the input)
+
+------------------->	# TODO: map from varName to varIdent !!!
+DONE.
+
+x.) check this code (TODO mark):
+
+body ::guib::moduleObj::_getObjFromVar {varIdent} {
+    set i [lsearch -glob $varObjList [list $varIdent *]]
+    if { $i == -1 } {
+	# TODO: check this ... (I guess it is useless)
+	# maybe varIdent corresponds to dimension, 
+	# i.e. var(x), but we need just "var"	
+	set varIdent [lindex [split $varIdent "("] 0]
+	set i [lsearch -glob $varObjList [list $varIdent *]]
+    }
+    
+    if { $i == -1 } {
+	return {}
+    } else {
+	return [lindex  [lindex $varObjList $i]  1] 
+    }
+}
+DONE.
+
+x.) now I changed the syntax to
+
+var ident ?options?
+
+Before fully updating the code, make clear when we want the value of
+-variable and when ident!!! For example, ident is unique, the value of
+-variable is not (in general). For querying the widgets and other info
+of a given variable, the "ident" should be used, but when saving the
+file, the value of "-variable" should be used instead.
+
+Due to this, we have to adapt varname-varvalue-varset family of
+options. First the "varname" should be renamed to "varref" or
+"varpointer" or "var****"
+
+Replacements:
+
+varvalue var       --> varvalue ident
+varname  var       --> varref   ident
+varset   var value --> varset   ident value
+
+Then we should add an additional routine that returns -variable
+option-value of a given key on the basis of ident.
+
+Possible syntax could be:
+
+> keyinfo $ident option
+or
+> getFromIdent $ident pattern
+or
+> getFromIdent options $ident pattern
+> getFromIdent option  $ident option
+or
+> indentinfo $ident what (<-- THIS WAS SELECTED !!!)
+
+NOTE: this getFromIndent is not a GUIB keyword since it will probably
+be only used internally !!!
+DONE.
+
+
+x.) correct this error:
+body ::guib::moduleObj::_manageNameObj {key args} {
+
+    ....
+		 
+    # ERROR:
+    # make a unique name of nameObjList
+    # TODO: this is not OK, as later the searching by "gropuwidget"
+    # will be unsuccessful !!!
+    set _i 0
+    while { [lsearch $nameObjList $value] > -1 } {
+	set value "${value}~[incr _i]"
+    }
+    lappend nameObjList [list $value $childObj]
+    # END:
+
+    ...
+}
+
+SOLUTION: solution is the following syntax: namelist ident -name name { ... }
+CONSIDER: consider adapting such a syntax for items and objects, i.e., keyword ident -optionn value { ... }
+DONE.
+
+1.) check the validation procedures (nonnegint, nonposint, and alike) (DONE)
+
+3.) namelist variables should be case-insensitive, make a settings()
+    variable for specifying the case-insensitivity of the input. (DONE)
+
+4.) there was en error reading line {} do to nesting object possibility.
+    The reading was fixed, but writing is still erroneous !!! (DONE)
+    seems also writing works)
+
+x.) check what is going on with nameObjList
+DONE.
+
+x.) in build.itcl: check for -variable and -ident options !!!
+DONE.
+
+x.) table: open.save does not work !!!
+DONE.
+
+x.) it is not clear for keyword: 
+    keyword ident keyword (are we refering to keyword or to ident when enabling/disabling)!!!
+DONE.
+
+x.) make a method/proc for changing the default values of options()
+DONE.
+
+x.) handle the "!", i.e., comments in namelists
+DONE.

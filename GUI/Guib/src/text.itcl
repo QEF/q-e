@@ -1,0 +1,162 @@
+#
+# $RCSfile: text.itcl,v $ --
+#
+#      This file contains the text widget for the "text" GUIB keyword.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: text.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+# ------------------------------------------------------------------------
+#****f* keywidgets/text
+#  NAME
+#    ::guib::keywidgets::text -- the "text" keywidget
+#  USAGE
+#    text pathName ?-option value? ?-option value? ?...?
+#  RETURN VALUE
+#    The pathName of the text widget.
+#  SOURCE
+
+proc ::guib::keywidgets::text {pathName moduleObj args} {
+    uplevel ::guib::keywidgets::Text $pathName $moduleObj $args
+}
+#****
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+#****c* keywidgets/Text
+# NAME
+#    ::guib::keywidgets::Text -- a class for managing keywidget associated with "text" GUIB keyword
+# METHODS
+#    ...insert...
+#****
+# ------------------------------------------------------------------------
+class ::guib::keywidgets::Text {
+    #inherit ::guib::keywidgets::Options
+    inherit ::itk::Widget
+    
+    public {
+	method getText {}
+	method setText {text}
+    }
+
+    itk_option define -state     state     State      normal
+
+    itk_option define -caption   caption   Caption  {}
+    itk_option define -varname   varname   Varname  {} 
+    itk_option define -label     label     Label    {} 
+    itk_option define -readvar   readvar   Readvar  {} 
+    itk_option define -helptext  helptext  Helptext {} 
+    itk_option define -helpfmt   helpfmt   Helpfmt  {} 
+    itk_option define -vartype   vartype   Vartype  {} 
+
+    constructor {moduleObj args} {	
+
+	update; update idletask
+ 	tclu::DEBUG constructing KEYWIDGETS::TEXT
+
+	set keywidget text
+	set _moduleObj $moduleObj
+
+	# --------------------------------------------------
+	# add CAPTION component holding the value of the -caption option
+	#
+	itk_component add caption {
+	    message $itk_interior.caption -relief solid -bd 1 \
+		-background White -anchor w
+	} {
+	    #keep -text
+	    rename -background -captionbackground captionBackground Background
+	}
+	bind $itk_component(caption) <Configure> {::guib::widgets::messageAspect %W}
+	#--------------------------------------------------
+
+	update; update idletask
+ 	tclu::DEBUG itk_initialize
+
+	eval itk_initialize $args
+
+	# ------------------------------------------------------------------------
+	# add TEXT component
+	if { $itk_option(-helptext) == "" } {		    
+	    set helpCmd {}
+	} else {
+	    set helpCmd [list ::guib::widgets::displayhelp $itk_option(-varname) \
+			     $itk_option(-vartype) $itk_option(-helpfmt) $itk_option(-helptext)]
+	}		
+	
+	update; update idletask
+ 	tclu::DEBUG itk_component add texthelp
+	
+	#-textvariable $[$_moduleObj varref $itk_option(-varident)]
+	itk_component add text {	
+	    #::iwidgets::scrolledtext $itk_interior.text \
+	    #	-labeltext    $itk_option(-label) \
+	    #    -wrap         none
+	    ::guib::widgets::texthelp $itk_interior.text \
+		-labelpos     n \
+	    	-labeltext    $itk_option(-label) \
+	        -wrap         none \
+	        -helpcommand  $helpCmd
+	} {
+	    #keep -textvariable	    
+	    ;
+	}
+	pack $itk_component(text) -side top -fill x	
+	#------------------------------------------------------------------------
+    }
+}
+
+
+body ::guib::keywidgets::Text::setText {text} {
+    # delete existing text and insert new one
+    $itk_component(text) delete 1.0 end
+    $itk_component(text) insert 1.0 $text
+}
+
+body ::guib::keywidgets::Text::getText {} {
+    return [$itk_component(text) get 1.0 end]
+}
+
+
+configbody ::guib::keywidgets::Text::caption {
+    if { $itk_option(-caption) != "" } {
+	$itk_component(caption) configure -text $itk_option(-caption)
+	if { ! [winfo viewable $itk_component(caption)] } {
+	    pack $itk_component(caption) -side top -fill x -padx 3 -pady 2
+	}
+    } else {
+	pack forget $itk_component(caption)
+    }
+}
+
+
+configbody ::guib::keywidgets::Text::state {
+    switch -exact -- $itk_option(-state) {
+	active -
+	normal {
+	    ::tku::enableAll $itk_interior
+	}
+	disabled {
+	    ::tku::disableAll $itk_interior
+	}
+	default {
+	    error "wrong widget state \"$itk_option(-state)\", should be normal or disabled"
+	}
+    }
+}

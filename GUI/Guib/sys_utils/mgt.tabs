@@ -1,0 +1,8 @@
+#!/bin/sh
+
+DIR=$(pwd)
+
+multi-gnome-terminal -T --tname GUIB           -p "$DIR"
+multi-gnome-terminal -T --tname GUIB/src  -p "$DIR/src"
+multi-gnome-terminal -T --tname GUIB/examples  -p "$DIR/examples"
+multi-gnome-terminal -T --tname GUIB/doc       -p "$DIR/doc"

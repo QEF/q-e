@@ -1,0 +1,725 @@
+# $RCSfile: keywidgets.itcl,v $ --
+#
+#
+#      This file contains the keywidgets. The keywidgets are kind of
+# meta-widgets. Well, they are not really widgets, but keywidget
+# prepares everything for a given keyword-item to be displayed as a
+# requested widget. A requested widget is then constructed from a call
+# withing a given kewidget. 
+# 
+# We have the following keywidgets:
+# 
+#     ::guib::keywidgets::Var       -- keywidget for "var" keyword
+#     ::guib::keywidgets::Dimension -- keywidget for "dimension" keyword
+#     ::guib::keywidgets::Table     -- keywidget for "table" keyword (see file: table.itcl)
+#     ...
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: keywidgets.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+# ------------------------------------------------------------------------
+# TODO:
+# ------------------------------------------------------------------------
+# 1. method getWidpathWidtype {} {
+#	return $listWidpathWidtype
+#    }
+#
+#    method getVaridentWidpath {} {
+#	return $listVarWidpath
+#    } 	
+#
+#   instead of this I should make three lists: listVar, listWidpath, listWidtype, and
+#   corresponding methods
+#
+# 2. in ::guib::keywidgets::Options I have the following declaration
+#    protected variable keywidget          
+#    protected variable listWidpathWidtype {}
+#    protected variable listVarWidpath     {}
+#    protected variable _moduleObj
+#
+#   this is not very nice as only one starts with _, while the others don't
+
+
+
+
+# ------------------------------------------------------------------------
+#****h* ::guib/keywidgets
+#  FUNCTION
+#    The keywidgets module is used for managing the keywidgets. The
+# keywidgets are kind of meta-widgets. Well, they are not really
+# widgets, but keywidget prepares everything for a given keyword-item
+# to be displayed as a requested widget. A requested widget is then
+# constructed from a call withing a given kewidget.
+# 
+# We have the following keywidgets:
+# 
+#     ::guib::keywidgets::Var       -- keywidget for "var" keyword
+#     ::guib::keywidgets::Dimension -- keywidget for "dimension" keyword
+#     ::guib::keywidgets::Table     -- keywidget for "table" keyword (see file: table.itcl)
+#     ...
+#****
+# ------------------------------------------------------------------------
+
+namespace eval ::guib::keywidgets {}
+
+
+# ------------------------------------------------------------------------
+#****c* keywidgets/Options
+# NAME
+#    ::guib::keywidgets::Options -- a class for managing the options of keywidgets
+# PURPOSE
+#    This class is a base class used by the ::guib::keywidgets::*
+# classes. Its function is the management of keywidgets options.
+#
+# METHODS
+#   1. PUBLIC METHODS
+#      childsite         -- returns the child-site widget path of a given keywidget
+#      getWidpathWidtype  --
+#      getVaridentWidpath --
+# 
+#   2. PROTECTED/PRIVATE METHODS
+#      postConfigure     -- configures the keywidgets options posteriory
+#****
+# ------------------------------------------------------------------------
+
+class ::guib::keywidgets::Options {
+    inherit ::itk::Widget
+
+    itk_option define -state     state     State      normal
+
+    # Var and Dimension's options
+    itk_option define -varname   varname   Varname    {}; #OK
+    itk_option define -varident  varident  Varident   {}; #OK
+    itk_option define -text      text      Text       {}; #OK
+    itk_option define -label     label     Label      {}; #OK
+    itk_option define -value     value     Value      {}
+    itk_option define -textvalue textvalue Textvalue  {}
+    itk_option define -default   default   Default    {}; #OK
+    itk_option define -fmt       fmt       Fmt        {}
+    itk_option define -validate  validate  Validate   {}
+    itk_option define -infmt     infmt     Infmt      {}
+    itk_option define -outfmt    outfmt    Outfmt     {}
+    itk_option define -widget    widget    Widget     entry; #OK
+    itk_option define -helptext  helptext  Helptext   {}; #OK
+    itk_option define -helpfmt   helpfmt   Helpfmt    {}; #TODO
+    itk_option define -vartype   vartype   Vartype    {}
+
+    # Dimension's only options
+    itk_option define -noframe   noframe   Noframe  0
+    itk_option define -start     start     Start    0
+    itk_option define -end       end       End      0
+    itk_option define -pack      pack      Pack     top
+
+    protected variable keywidget          
+    protected variable listWidpathWidtype {}
+    protected variable listVarWidpath     {}
+    protected variable _moduleObj
+
+    constructor {args} {
+	eval itk_initialize $args
+    }
+
+    #
+    # PUBLIC METHODS
+    #
+    public method childsite {} {
+	return $itk_interior
+    }
+    public method getWidpathWidtype {} {
+	return $listWidpathWidtype
+    }
+
+    public method getVaridentWidpath {} {
+	return $listVarWidpath
+    } 	
+    
+    #
+    # PROTECTED METHOD
+    #
+    protected method postConfigure {} {
+	set ind 0
+	foreach elem $listWidpathWidtype {
+	    set path [lindex $elem 0]
+	    set type [lindex $elem 1]
+	    #puts "   postConfigure.type/path: $type / $path"
+
+	    switch -exact -- $keywidget {
+		var -
+		dimension {
+		    set validate  $itk_option(-validate)
+		    set textvalue $itk_option(-textvalue)
+		    if { $textvalue == {} } {
+			set textvalue $itk_option(-value)
+		    }
+		}
+		default {
+		    ::tclu::ERROR "key \"$keywidget\" is not supported"
+		}
+	    }
+	    #if { $validate == "" } {
+	    #	set validate {return 1}
+	    #}
+	    
+	    switch -exact -- $type {
+		entry -
+		spinint -
+		entryfileselect - entryfileselectquote -
+		entrydirselect - entrydirselectquote {
+		    if { $validate != "" } {
+			$path configure -validate $validate
+		    }
+		}		
+
+		combobox {
+		    $path configure -editable false
+		    foreach item $textvalue {
+			$path insert list end $item
+		    }		
+		}
+
+		optionmenu -
+		radiobox {
+		    foreach item $textvalue {
+			$path insert end $item
+		    }
+		}
+		
+		default {
+		    # check for entrybutton
+		    set wid [lindex $type 0]
+		    if { $wid != "entrybutton" } {
+			::tclu::ERROR "widget-type \"$type\" is not supported"
+		    }
+		}
+	    }
+	    incr ind
+	}
+    }    
+}
+
+
+# ------------------------------------------------------------------------
+# custom Mega-Widget associated associated with the "var" guib keyword
+# ------------------------------------------------------------------------
+
+itk::usual ::guib::keywidgets::Var {
+    keep \
+	-state     \
+	-varname   \
+	-varident  \
+	-text      \
+	-label     \
+	-value     \
+	-textvalue \
+	-default   \
+	-fmt       \
+	-validate  \
+	-infmt     \
+	-outfmt    \
+	-widget    \
+	-helptext  \
+	-helpfmt 
+
+    ignore \
+	-noframe   \
+	-start     \
+	-end       \
+	-pack
+}
+
+# ------------------------------------------------------------------------
+#****f* keywidgets/auxilvar
+#  NAME
+#    ::guib::keywidgets::auxilvar -- the "auxilvar" keywidget
+#  USAGE
+#    auxilvar pathName ?-option value? ?-option value? ?...?
+#  RETURN VALUE
+#    The pathName of the auxilvar widget.
+#  SOURCE
+
+proc ::guib::keywidgets::auxilvar {pathName moduleObj args} {
+    uplevel ::guib::keywidgets::Var $pathName $moduleObj $args
+}
+#****
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****f* keywidgets/var
+#  NAME
+#    ::guib::keywidgets::var -- the "var" keywidget
+#  USAGE
+#    var pathName ?-option value? ?-option value? ?...?
+#  RETURN VALUE
+#    The pathName of the var widget.
+#  SOURCE
+
+proc ::guib::keywidgets::var {pathName moduleObj args} {
+    uplevel ::guib::keywidgets::Var $pathName $moduleObj $args
+}
+#****
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+#****c* keywidgets/Var
+# NAME
+#    ::guib::keywidgets::Var -- a class for managing keywidget associated with "var" GUIB keyword
+# METHODS
+#    ...insert...
+#****
+# ------------------------------------------------------------------------
+class ::guib::keywidgets::Var {
+    inherit ::guib::keywidgets::Options
+    
+    constructor {moduleObj args} {	
+	set keywidget var
+	set _moduleObj $moduleObj
+
+	# --------------------------------------------------
+	# CAPTION widget holding the value of the -text option
+	#
+	itk_component add caption {
+	    message $itk_interior.caption -relief solid -bd 1 \
+		-background White -anchor w \
+		-aspect [expr int(2 * [string length $itk_option(-text)])]
+	} {
+	    #keep -text
+	    rename -background -captionbackground captionBackground Background
+	}
+	bind $itk_component(caption) <Configure> {::guib::widgets::messageAspect %W}
+	#--------------------------------------------------
+
+	eval itk_initialize $args
+
+	::tclu::DEBUG var: varident -- $itk_option(-varident)
+	::tclu::DEBUG var: varname  -- $itk_option(-varname)
+	
+	if { $itk_option(-helptext) == "" } {		    
+	    set helpCmd {}
+	} else {
+	    set helpCmd [list ::guib::widgets::displayhelp $itk_option(-varname) \
+			     $itk_option(-vartype) $itk_option(-helpfmt) $itk_option(-helptext)]
+	}
+	
+	$_moduleObj varset $itk_option(-varident) -textvalue $itk_option(-default)	
+
+	#
+	# VARIABLE widget
+	#
+	set wid [lindex $itk_option(-widget) 0]
+	set txt [lindex $itk_option(-widget) 1]
+	set cmd [lindex $itk_option(-widget) 2]
+	set textVar [$_moduleObj varref $itk_option(-varident)]
+
+	if { $wid != "entrybutton" } {
+	    itk_component add var {	    
+		::guib::widgets::${wid}help $itk_interior.var \
+		    -labeltext    $itk_option(-label) \
+		    -textvariable $textVar \
+		    -helpcommand  $helpCmd
+	    } {
+		keep -textvariable
+	    }
+	} else {
+	    # entrybutton
+	    if { [llength $itk_option(-widget)] != 3 } {
+		::tclu::ERROR "expected \"entrybutton buttontext buttoncommand\" elements, but got: $itk_option(-widget)\""
+	    }
+	    itk_component add var {	 
+		::guib::widgets::${wid}help $itk_interior.var \
+		    -labeltext    $itk_option(-label) \
+		    -textvariable $textVar \
+		    -helpcommand  $helpCmd \
+		    -buttontext   $txt \
+		    -buttoncommand [list eval $cmd]
+	    } {
+		keep -textvariable
+	    }
+	}
+	
+	pack $itk_component(var) -side top -fill x
+	
+	# register the widget for the "getWidpathWidtype" method
+	lappend listWidpathWidtype [list $itk_component(var) $itk_option(-widget)]	
+	lappend listVarWidpath     [list $itk_option(-varident) $itk_component(var)]
+	
+	#
+	# post-configuration (i.e. -validate options for entryfields, and
+	# item insertion for comboboxes and optionmenus
+	#
+	postConfigure
+    }
+}
+
+
+# ------------------------------------------------------------------------
+# custom Mega-Widget associated with the "dimension" guib keyword
+# ------------------------------------------------------------------------
+
+itk::usual Dimension {
+    keep \
+	-state \
+	-varname   \
+	-varident  \
+	-text      \
+	-label     \
+	-value     \
+	-textvalue \
+	-default   \
+	-fmt       \
+	-validate  \
+	-infmt     \
+	-outfmt    \
+	-widget    \
+	-helptext  \
+	-helpfmt   \
+	-noframe   \
+	-start     \
+	-end       \
+	-pack   
+}
+
+# ------------------------------------------------------------------------
+#****f* keywidgets/dimension
+#  NAME
+#    ::guib::keywidgets::dimension -- the "dimension" keywidget
+#  USAGE
+#    dimension pathName ?-option value? ?-option value? ?...?
+#  RETURN VALUE
+#    The pathName of the dimension widget.
+#  SOURCE
+
+proc ::guib::keywidgets::dimension {pathName moduleObj args} {
+    uplevel ::guib::keywidgets::Dimension $pathName $moduleObj $args
+}
+#****
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+#****c* keywidgets/Dimension
+# NAME
+#    ::guib::keywidgets::Dimension -- a class for managing keywidget associated with "dimension" GUIB keyword
+# METHODS
+#    ...insert...
+#****
+# ------------------------------------------------------------------------
+class ::guib::keywidgets::Dimension {
+    inherit ::guib::keywidgets::Options
+
+    # Dimension's only options
+    itk_option define -noframe   noframe   Noframe  0
+    itk_option define -start     start     Start    0
+    itk_option define -end       end       End      0
+    itk_option define -pack      pack      Pack     top
+
+    # _dim is the dimension holding the following elements: _dim(start) _dim(end)
+    #
+    private variable _dim
+    private variable _child
+    private variable _helpCmd
+
+    private method _manageDims {}
+
+    constructor {moduleObj args} {
+	set keywidget dimension
+	set _moduleObj $moduleObj
+
+	eval itk_initialize $args
+
+	if { $itk_option(-helptext) == "" } {		    
+	    set _helpCmd {}
+	} else {
+	    set _helpCmd [list ::guib::widgets::displayhelp $itk_option(-varname) \
+			      $itk_option(-vartype) $itk_option(-helpfmt) $itk_option(-helptext)]
+	}
+	
+	#
+	# Display the LABELED-FRAME which will hold the whole dimension
+	#
+	switch -exact -- $itk_option(-noframe) {
+	    1 - yes - true { 
+		itk_component add dimFrame {
+		    frame $itk_interior.dimFrame -relief flat -borderwidth 0 -class Background
+		} {
+		    #
+		}
+		set _child $itk_interior.dimFrame
+	    }   
+	    0 - no - false - {} { 
+		itk_component add dimFrame {
+		    iwidgets::labeledframe $itk_interior.dimFrame -labeltext "Dimension: $itk_option(-label)" -labelpos nw 
+		} {
+		    #
+		}
+		set _child [$itk_component(dimFrame) childsite]
+	    }
+	    default {
+		::tclu::ERROR "invalid value \"$noframe\" for -noframe option, should be one of: 1, yes, true, 0, no, false, or {}"
+	    }
+	}
+	pack $itk_component(dimFrame) -side top -fill x
+	
+	#
+	# Display the CAPTION widget holding the value of the -text option
+	#
+	itk_component add caption {
+	    message $_child.caption \
+		-text $itk_option(-text) -relief solid -bd 1 \
+		-background White  -anchor w \
+		-aspect [expr int(2 * [string length $itk_option(-text)])]
+	} {	    
+	    rename -background -captionbackground captionBackground Background   
+	}
+	if { $itk_option(-text) != {} } {
+	    pack $itk_component(caption) -side top -fill x -padx 3 -pady 2
+	}
+	bind $itk_component(caption) <Configure> {::guib::widgets::messageAspect %W}
+	
+	set _dim(start) $itk_option(-start)
+	set _dim(end)   $itk_option(-end)
+
+	#
+	# Display the necessary widgets for the DIMENSION
+	#
+	_manageDims
+	
+	#
+	# post-configuration (i.e. -validate option) for entryfields, and
+	# item insertion for comboboxes and optionmenus
+	#
+	postConfigure
+    }
+}
+
+
+body ::guib::keywidgets::Dimension::_manageDims {} {
+       
+    if { (! [info exists _child]) || \
+	     $itk_option(-start) == "" || $itk_option(-end) == ""} {
+	return
+    }
+
+    # RECIPE: delete the old ones; create the new ones
+    for {set idim $_dim(start)} {$idim <= $_dim(end)} {incr idim} {
+	if { [info exists itk_component(dim$idim) ] } {		
+	    destroy $itk_component(dim$idim)
+	}
+    }
+
+    unset listWidpathWidtype
+    unset listVarWidpath    
+
+    # for entrybutton we have: {entrybutton buttontext buttoncmd}
+    set wid [lindex $itk_option(-widget) 0]
+    set txt [lindex $itk_option(-widget) 1]
+    set cmd [lindex $itk_option(-widget) 2]
+    #/
+        
+    for {set idim $itk_option(-start); set icount 0} {$idim <= $itk_option(-end)} {incr idim; incr icount} {
+	set var       $itk_option(-varident)
+	set name      $itk_option(-varname)
+	set path      $_child.dim$idim
+	set labelText ${name}($idim)
+	set textVar   [$_moduleObj dimref $var $idim]
+	
+	#if { ! [info exists ::guib::moduleObj::guibVar($_moduleObj,$var)] } {
+	#    set ::guib::moduleObj::guibVar($_moduleObj,$var) $itk_option(-default)
+	#}
+
+	#t.k.
+	# INCOMING: SYNTAX of -default for the dimension:
+	# -default { elem1-default elem2-default elem3-default ... }
+	if { ! [info exists $textVar] } {
+	    set default [lindex $itk_option(-default) $icount]
+	    if { $default == "" } {
+		set default [lindex $itk_option(-default) end]
+	    }
+	    $_moduleObj dimset $var $idim -textvalue $default
+	}
+	#/
+	
+	if { $wid != "entrybutton" } {
+	    itk_component add dim$idim {
+		::guib::widgets::${wid}help $path \
+		    -labeltext    "${labelText}:" \
+		    -textvariable $textVar \
+		    -helpcommand  $_helpCmd
+	    } {
+		keep -textvariable
+	    }
+	} else {
+	    # entrybutton
+	    if { [llength $itk_option(-widget)] != 3 } {
+		::tclu::ERROR "expected \"entrybutton buttontext buttoncommand\" elements, but got: $itk_option(-widget)\""
+	    }
+	    itk_component add dim$idim {	 
+		::guib::widgets::${wid}help $path \
+		    -labeltext    "${labelText}:" \
+		    -textvariable $textVar  \
+		    -helpcommand  $_helpCmd \
+		    -buttontext   $txt \
+		    -buttoncommand [list eval $cmd $idim]
+	    } {
+		keep -textvariable
+	    }
+	}
+	
+	pack $path -side $itk_option(-pack) -fill x -padx 3 -pady 2
+	
+	lappend listWidpathWidtype [list $path $itk_option(-widget)]
+	lappend listVarWidpath     [list ${var}($idim)  $path]
+    }
+    set _dim(start) $itk_option(-start)
+    set _dim(end)   $itk_option(-end)
+}
+
+
+configbody ::guib::keywidgets::Options::state {
+    switch -exact -- $itk_option(-state) {
+	active -
+	normal {
+	    ::tku::enableAll $itk_interior
+	    
+	    if { $keywidget == "dimension" } {
+		# one should check if some of the dim(x) is on
+		# disabled list and should not enable it, and since it
+		# was enabled above, we should disable it
+		
+		for {set idim $itk_option(-start)} {$idim <= $itk_option(-end)} {incr idim} {
+		    set widget [lindex [lindex $listWidpathWidtype [expr $idim - $itk_option(-start)]] 0]
+		    if { ! [$_moduleObj isNotDisabledWidget $widget] } {
+			catch "$widget configure -state disabled"
+		    }
+		}
+	    }
+	}
+	disabled {
+	    ::tku::disableAll $itk_interior
+	}
+	default {
+	    error "wrong widget state \"$itk_option(-state)\", should be normal or disabled"
+	}
+    }
+}
+
+# ------------------------------------------------------------------------
+# CONFIGBODY -text
+#
+# -text options is used for displaying a text in the $itk_component(caption)
+# ------------------------------------------------------------------------
+configbody ::guib::keywidgets::Options::text {
+    if { [info exists itk_component(caption)] } {
+	if { $itk_option(-text) != "" } {
+	    $itk_component(caption) configure -text $itk_option(-text)
+	    if { ! [winfo viewable $itk_component(caption)] } {
+		pack $itk_component(caption) -side top -fill x -padx 3 -pady 2
+	    }
+	} else {
+	    pack forget $itk_component(caption)
+	}
+    }
+}
+
+# ------------------------------------------------------------------------
+# CONFIGBODY -label
+#
+# -label option is used for displaying a label on the left side of entry/optionmenu/...
+# ------------------------------------------------------------------------
+
+configbody ::guib::keywidgets::Options::label {
+    if { $keywidget == "var" } {
+	if { [info exists itk_component(var)] } {
+	    $itk_component(var) configure -labeltext $itk_option(-label)
+	}
+    } elseif { $keywidget == "dimension" } {
+	if { [info exists itk_component(dimFrame)] } {
+	    $itk_component(dimFrame) configure -labeltext "Dimension: $itk_option(-label)"
+	}
+    } else {
+	::tclu::ERROR "keywidget \"$keywidget\" not yet supported"
+    }
+}
+
+configbody ::guib::keywidgets::Options::value {
+    # check if itk_option(-textvalue) exists, if not one should replace
+    # the current "values" of the optionmenu/radiobox/combobox with the new values ...
+}
+
+configbody ::guib::keywidgets::Options::textvalue {
+    # replace the current "values" of the optionmenu/radiobox/combobox
+    # with the new values ...
+}
+
+configbody ::guib::keywidgets::Options::default {
+    # do nothing, since option -default is meant only at the beginning, 
+    # before user sets any value
+}
+
+configbody ::guib::keywidgets::Options::validate {
+    #TODO
+}
+
+configbody ::guib::keywidgets::Options::infmt {
+    # nothing to do
+}
+
+configbody ::guib::keywidgets::Options::outfmt {
+    # nothing to do
+}
+
+configbody ::guib::keywidgets::Options::widget {
+    # changing the widget-type after it was created is not allowed
+}
+
+configbody ::guib::keywidgets::Options::helptext {
+    # TODO
+}
+
+configbody ::guib::keywidgets::Options::helpfmt {
+    # probably this is not allowed, as the textformat determines the
+    # help-display widget type
+}
+
+configbody ::guib::keywidgets::Dimension::noframe {
+    # not allowed to change; do nothing
+}
+
+configbody ::guib::keywidgets::Dimension::start {
+    # TODO
+    if { $keywidget == "dimension" } {
+	::guib::keywidgets::Dimension::_manageDims
+    } else {
+	# TODO
+    }
+}
+
+configbody ::guib::keywidgets::Dimension::end {
+    # TODO
+    ::tclu::DEBUG "--end--"
+    if { $keywidget == "dimension" } {
+	::guib::keywidgets::Dimension::_manageDims
+    } else {
+	# TODO
+    }
+}
+
+configbody ::guib::keywidgets::Dimension::pack {
+    # think about this: is this a good idea or should it be forbidden ???
+}

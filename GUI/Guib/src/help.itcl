@@ -1,0 +1,222 @@
+# $RCSfile: help.itcl,v $ --
+#
+#      This file contains the routines for managing the display of
+#      the help for a given GUI-module. This help is accessed by pressing
+#      the "Help" button of a given ****help megawidget.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: help.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+#
+# NOTE: the documentation of this file is yet to be build
+#
+
+# ------------------------------------------------------------------------
+#  DISPLAYHELP
+# ------------------------------------------------------------------------
+#****f* widgets/displayhelp
+#  NAME
+#    ::guib::widgets::displayhelp -- displayhelp megawidget
+#  USAGE
+#    displayhelp varName helpFmt helpText
+#  DESCRIPTION
+#    Displayhelp megawidget display a help associated with a given
+# input variable defined in module definition file.
+#  ARGUMENTS
+#    varName  -- the GUIB input variable's identifier
+#    helpFmt  -- the format of the help-text, (html|txt2html|txt)
+#    helpText -- the help-text to be displayed
+#  RETURN VALUE
+#    Returns the path of the displayhelp's toplevel widget.
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::widgets::displayhelp {varName varType helpFmt helpText} {
+
+    set t [::guib::widgets::toplevel [::tku::widgetName] -title "Help console"]
+    set labelText "Description of the variable: $varName"
+
+    set HELP_FMT [string toupper $helpFmt]
+    
+    if { $HELP_FMT == "HTML" || $HELP_FMT == "TXT2HTML" } {
+#	set html_head {
+#<html> 
+#  <head>
+#    <title>Description of the variable: $varName</title>
+#  </head>
+#
+#  <body>
+#    <h1>Variable: $varName</h1>
+#	}
+	set html_head {
+<html> 
+  <head>
+    <title>Description of the variable: $varName</title>
+  </head>
+
+  <body>
+    <big><b>Variable:</b> $varName</big><p>
+	}
+	
+	if { $varType != "" } {
+	    #set html_vartype " <h2>Variable's type: $varType</h2>"	    
+	    set html_vartype " <big><b>Variable's type:</b> <i>$varType</i></big><br>"	    
+	} else {
+	    set html_vartype ""
+	}
+
+	set html_tail {
+  </body> 
+</html>
+	}
+
+	if { $HELP_FMT == "TXT2HTML" } {
+	    set helpText [format %s%s%s%s%s%s \
+			      [subst $html_head] [subst $html_vartype] \
+			      "<pre>\n" $helpText "</pre>" \
+			      [subst $html_tail]]
+	} else {
+	    set helpText [format %s%s%s%s \
+			      [subst $html_head] [subst $html_vartype] \
+			      $helpText \
+			      [subst $html_tail]]
+	}      
+	set wid [::iwidgets::scrolledhtml $t.html \
+		     -labeltext     $labelText \
+		     -linkcommand   [list $t.html import -link] \
+		     -vscrollmode   dynamic \
+		     -hscrollmode   dynamic]
+	$wid render $helpText
+    } elseif { $HELP_FMT == "TXT" } {
+	# format == TXT (in the FUTURE also add the support for LaTex)
+	
+	set wid [::iwidgets::scrolledtext $t.text \
+		     -labeltext     $labelText \
+		     -vscrollmode   dynamic \
+		     -hscrollmode   dynamic \
+		     -wrap none]
+	set txt_head {
+   Variable:        $varName
+   Variable's type: $varType
+
+	}
+	$wid insert end [format %s%s [subst $txt_head] $helpText]
+    } else {
+	::tclu::ERROR "unknown help format $helpFMT, must be html, txt2html, or txt"
+    }
+
+    $wid configure -width 700 -height 300 
+    
+    set bb  [::iwidgets::buttonbox $t.bb]
+    $bb add Close -text "Close" -command "destroy $t"
+    $bb default Close
+    pack $bb -side top -fill x
+    pack $wid -before $bb -side top -fill both -expand 1
+
+    ::tku::centerWindow $t
+
+    return $t
+}
+
+
+#proc ::guib::widgets::displaytext {path args} {
+#    uplevel ::guib::widgets::Displaytext $path $args
+#}
+#class ::guib::widgets::Displaytext {
+#    inherit ::guib::widgets::Toplevel
+#
+#    constructor {args} {
+#	itk_component add -- tone {
+#	    ::iwidgets::scrolledtext $itk_interior.tone
+#	} {
+#	    keep -labeltext -wrap -vscrollmode -hscrollmode 
+#	    keep -width     -height
+#
+#	    #rename -text  -displaytext  displayText  Text  {}
+#	    rename -state -displaystate displayState State
+#	}
+#
+#	itk_component add -- buttonbox {
+#	    ::iwidgets::buttonbox $itk_interior.buttonbox
+#	    $itk_interior.buttonbox add Close -text Close \
+#		-command "destroy [namespace tail $this]"
+#	    pack $itk_interior.buttonbox -side left -expand 1
+#	} { 
+#	    remove -width -height
+#	}
+#	eval itk_initialize $args
+#	
+#	pack $itk_component(tone) \
+#	    -side top -fill both -expand 1 -ipadx 5 -ipady 5
+#	pack $itk_component(buttonbox) -side top -fill x -expand 1
+#    }
+#
+#    itk_option define -displaytext  displayText Text {} {
+#	set tw [$itk_component(tone) childsite]
+#	$tw insert end $itk_option(-displaytext)
+#    }
+#    #itk_option define -default default Default active {
+#    #	[component buttonbox] configure -default $itk_option(default)
+#    #}
+#}
+#
+#
+#proc ::guib::widgets::displayhtml {path args} {
+#    uplevel ::guib::widgets::Displayhtml $path $args
+#}
+#class ::guib::widgets::Displayhtml {
+#    inherit ::guib::widgets::Toplevel
+#
+#    constructor {args} {
+#
+#	itk_component add -- scrolledhtml {
+#	    ::iwidgets::scrolledhtml $itk_interior.sh
+#	} {
+#	    keep -labeltext -wrap -vscrollmode -hscrollmode 
+#	    keep -width     -height
+#
+#	    #rename -text  -displaytext  displayText  Text  {}
+#	    rename -state -displaystate displayState State
+#	}
+#
+#	itk_component add -- buttonbox {
+#	    ::iwigets::buttonbox $itk_interior.bb
+#	    $itk_interior.bb add Close -text Close \
+#		-default active -command "destroy [namespace tail $this]"
+#	    pack $itk_interior.bb -side left -expand 1
+#	} { 
+#	    remove -width -height
+#	}
+#	eval itk_initialize $args
+#	
+#	pack $itk_component(scrolledhtml) \
+#	    -side top -fill both -expand 1 -ipadx 5 -ipady 5
+#	pack $itk_component(buttonbox) -side top -fill x -expand 1
+#    }
+#    itk_option define -displaytext  displayText Text {} {
+#	set tw [$itk_component(scrolledhtml) childsite]
+#	$tw insert end $itk_option(-displaytext)
+#    }
+#}
+
+
+#-fontname
+#-fontsize
+#-width
+#-labeltext

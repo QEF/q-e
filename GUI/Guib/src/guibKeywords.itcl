@@ -1,0 +1,1418 @@
+#
+# $RCSfile: guibKeywords.itcl,v $ --
+#
+#     This file contains the implementation of the GUIB keywords. GUIB
+# keywords are the public methods of moduleObj class, and are used in
+# GUIB module definition files (for more details see file:
+# moduleObj.itcl)
+#
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: guibKeywords.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+
+# ------------------------------------------------------------------------
+#
+#                    Implementation of GUIB Keywords METHODS
+#
+# ========================================================================
+
+
+	
+# ------------------------------------------------------------------------
+#****m* moduleObj/valueToTextvalue
+#  NAME
+#    ::guib::moduleObj::valueToTextvalue -- map value to textvalue
+#  USAGE
+#    valueToTextvalue varIdent value     
+#  DESCRIPTION
+#    This method maps from value to textvalue. Some variable might
+# have two sets of values: (i) human-readable (i.e. textvalue), which
+# can be mapped in combobox for user-friendliness and (ii) computer
+# readable code or digit (i.e. value). This routine is one of the two
+# routines that maps between the value and textvalue.  See also
+# textvalueToValue method.
+#  ARGUMENTS
+#    varIdent -- the GUIB-variable's identifier
+#    value    -- the value of the varIdent's variable
+#  RETURN VALUE
+#    Returns the mapped corresponding textvalue on the basis of value.
+#  EXAMPLE
+#    $obj valueToTextvalue $varIdent $value
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::valueToTextvalue {varIdent value} {
+
+    # tk_temp
+    if { $varIdent == "" } {
+	return
+    }
+    #/tk_temp
+
+    set obj [_getObjFromVarident $varIdent]
+    if { $obj == "" } { 
+	::tclu::ERROR "failed to locate object from identifier $varIdent"
+    }    
+
+    set id          [$obj getIdFromVarident $varIdent]   
+    set _textvalues [$obj getOptionValue $id textvalue]
+    set _values     [$obj getOptionValue $id value]
+    	    
+    foreach val $_values text $_textvalues {	
+	if { [::tclu::stringMatch $val $value $::guib::settings(INPUT.nocase)] } {
+	    if { $text != "" } {
+		return $text
+	    } else {
+		return $val
+	    }
+	}
+    }
+
+    return $value
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/textvalueToValue
+#  NAME
+#    ::guib::moduleObj::textvalueToValue -- map value to textvalue
+#  USAGE
+#    textvalueToValue varIdent textvalue
+#  DESCRIPTION
+#    This method maps from textvalue to value. Some variable might
+# have two sets of values: (i) human-readable (i.e. textvalue), which
+# can be mapped in combobox for user-friendliness and (ii) computer
+# readable code or digit (i.e. value). This routine is one of the two
+# routines that maps between the value and textvalue.  See also
+# valueToTextvalue method.
+#  ARGUMENTS
+#    varIdent  -- the GUIB-variable's identifier
+#    textvalue -- the textvalue of the varIdent's variable
+#  RETURN VALUE
+#    Returns the mapped corresponding value on the basis of textvalue.
+#  EXAMPLE
+#    $obj textvalueToValue $varIdent $textvalue
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::textvalueToValue {varIdent textvalue} {
+
+    # tk_temp
+    if { $varIdent == "" } {
+	return
+    }
+    #/tk_temp
+
+    set obj [_getObjFromVarident $varIdent]
+    if { $obj == "" } { 
+	::tclu::ERROR "failed to locate object from identifier $varIdent"
+    }    
+
+    set id          [$obj getIdFromVarident $varIdent]    
+    set _textvalues [$obj getOptionValue $id textvalue]
+    set _values     [$obj getOptionValue $id value]
+
+    foreach text $_textvalues val $_values {
+	# take care of case-insensitivity
+	::tclu::DEBUG +++varIdent=$varIdent : text=$text , textvalue=$textvalue
+	if { [::tclu::stringMatch $text $textvalue $::guib::settings(INPUT.nocase)] } {
+	    return $val
+	}
+    }
+    return $textvalue
+}
+
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/page
+#  NAME
+#    ::guib::moduleObj::page -- the "page" GUIB keyword
+#  USAGE
+#    page -name name { ...code... }  
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "page" groups the set of widgets and arranges them
+#    to appear on a separate page of the tab-notebook.
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    page -name name { 
+#            ...some code here ...
+#    }
+#********
+# ------------------------------------------------------------------------
+body ::guib::moduleObj::page {ident args} { eval _manageNameObj page $ident $args }
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/optional
+#  NAME
+#    ::guib::moduleObj::optional -- the "optional" GUIB keyword
+#  USAGE
+#    optional { ...code... } 
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "optional" marks the namelist's variables as
+# optional. The "optional" keyword can appear only inside namelist's code.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    optional { 
+#            ...some code here ...
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::optional {code} { _manageVoidObj optional $code  }
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/required
+#  NAME
+#    ::guib::moduleObj::required -- the "required" GUIB keyword
+#  USAGE
+#    required { ...code... } 
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "required" marks the namelist's variables as
+# required. The "required" keyword can appear only inside namelist's code.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    required { 
+#            ...some code here ...
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::required {code} { _manageVoidObj required $code  }
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/namelist
+#  NAME
+#    ::guib::moduleObj::namelist -- the namelist GUIB keyword
+#  USAGE
+#    namelist -name name { ...code...} 
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "namelist" is meant for marking the FORTRAN namelist. Code inside
+#    the namelist is meant as the namelist specification. Typical
+#    keyword used inside namelist is "var".
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    namelist -name name { 
+#            ...some code here ...
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::namelist {ident args} {
+
+    # check for the nesting of namelists, which is not allowed !!!
+
+    if { [_findKeywordObjType [$this _getCurrentObj] namelist] == 1 } {
+	::tclu::ERROR "\"namelists\" are nested"
+    }
+    if { [_findKeywordObjType [$this _getCurrentObj] namelist] == 1 } {
+	::tclu::ERROR "keyword \"namelist\" is allowed only outside line"
+    }
+    eval _manageNameObj namelist $ident $args
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/group
+#  NAME
+#    ::guib::moduleObj::group -- the group GUIB keyword
+#  USAGE
+#    group -name name { ...code...} 
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "group" is meant for grouping the bunch of input-entities
+# together.  For example, let say that upon some user-action we need
+# to disable/enable several input-entities. This would make a
+# "tracevar" scripts to be long as we would need to specify the
+# behavior for each variable separately.  However we can group these
+# variables together by sandwiching then by the "group" keyword, and
+# then simply enable/disable the whole group.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    group -name group1 { 
+#       line -name whatever1 {
+#             var { ... }
+#             var { ... }
+#       }
+#       line -name whatever2 {
+#             var { ... }
+#             var { ... }
+#       }
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::group {ident args} {
+    eval _manageNameObj group $ident $args
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/line
+#  NAME
+#    ::guib::moduleObj::line -- the line GUIB keyword
+#  USAGE
+#    line -name line-name { ...code... } 
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "line" is meant for processing a line of input. Typical
+#    keywords used inside line are "var" and "keyword".
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    line -name "K-point mesh" {
+#        var { -label "nk1:"  -variable nk1  -widget spinint  -validate posint  -default 1 }        
+#        var { -label "nk2:"  -variable nk2  -widget spinint  -validate posint  -default 1 }
+#        var { -label "nk3:"  -variable nk3  -widget spinint  -validate posint  -default 1 }
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::line {ident args} {
+    
+    # check for the nesting of lines, which is not allowed !!!
+
+    if { [_findKeywordObjType [$this _getCurrentObj] line] == 1 } {
+	::tclu::ERROR "\"lines\" are nested"
+    }
+    if { [_findKeywordObjType [$this _getCurrentObj] namelist] == 1 } {
+	::tclu::ERROR "keyword \"line\" is allowed only outside namelist"
+    }
+    eval _manageNameObj line $ident $args
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/text
+#  NAME
+#    ::guib::moduleObj::text -- the text GUIB keyword
+#  USAGE
+#    text ident {option value ?...?} 
+#  or
+#    text ident ?option value?   ?...?
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "text" is meant for processing a general text. For the
+# description of all "text" options see in the guib-keywords-def.tcl file
+# the definition of options(text) variable. 
+#  
+# The "text" possesses a special option: "-readvar", which specifies
+# the name of the variable, where the content of the text is stored
+# after the input-file has been read. The assignment of the variable
+# should be done in the "readfilter" command. Therefore this option
+# requires the "readfilter" routine. If readfilter routine in not
+# provided and if the -readvar's variable is not set in the
+# "readfilter" routine, then the content of the text will be void
+# after the input-file has been read.
+#   
+# The "text" keyword is standalone, i.e., it is allowed only outside
+# namelist and line.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    text text1 {
+#           -label    "Enter text1:"
+#           -readvar  ::myNamescape::myVar
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::text {ident args} {
+    set code [_expandArgs $args]
+    set obj  [_getCurrentObj]    
+    if { [_findKeywordObjType $obj namelist] == 1 \
+	     && [_findKeywordObjType $obj line] == 1} {
+	::tclu::ERROR "keyword \"text\" is allowed only outside namelist or line"
+    }
+    _manageKeyword $obj text $ident $code
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/var
+#  NAME
+#    ::guib::moduleObj::var -- the var GUIB keyword
+#  USAGE
+#    var ident {option value ?...?} 
+#  or
+#    var ident ?option value?   ?...?
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "var" is meant for processing a variable. For the
+# description of all var options see in the guib-keywords-def.tcl file
+# the definition of options(var) variable. The "var" keyword is not standalone, and 
+# should appear inside namelist or line.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    var var1 {
+#           -variable varName1 
+#           -text     "The varName1 variable stands for ..."
+#           -label    "Enter varName1:"
+#           -widget   spinint
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::var {ident args} {
+    set code [_expandArgs $args]
+    set obj  [_getCurrentObj]    
+    if { [_findKeywordObjType $obj namelist] == 0 \
+	     && [_findKeywordObjType $obj line] == 0} {
+	::tclu::ERROR "keyword \"var\" is allowed only inside namelist or line"
+    }
+    _manageKeyword $obj var $ident $code
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/auxilvar
+#  NAME
+#    ::guib::moduleObj::auxilvar -- the auxilvar GUIB keyword
+#  USAGE
+#    auxilvar ident {option value ?...?} 
+#  or
+#    auxilvar ident ?option value?   ?...?
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "auxilvar" is a dummy-variable and is provided for
+# auxiliary purposes. It is neither read nor saved to/from input, but
+# is there to help managing the state of a given set of widgets. For example,
+# lets say we can describe something by two possible ways and each way
+# uses different input-variables (exclusively). Then by using "auxilvar"
+# (and "tracevar"), we can enable one-possibility and disable the other.
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    auxilvar chooseVar1 {
+#           -label    "How would you like to pay:"
+#           -value    {"by cash" "by credit-card"}
+#           -widget   radiobox
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::auxilvar {ident args} {
+    set code [_expandArgs $args]
+    set obj  [_getCurrentObj] 
+    # NOTE: auxilvar can also be present outside namelist/line ...
+    #if { [_findKeywordObjType $obj namelist] == 0 \
+    #	     && [_findKeywordObjType $obj line] == 0} {
+    #	::tclu::ERROR "keyword \"auxilvar\" is allowed only inside namelist or line"
+    #}
+    _manageKeyword $obj auxilvar $ident $code
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/dimension
+#  NAME
+#    ::guib::moduleObj::dimension -- the dimension GUIB keyword
+#  USAGE
+#    dimension { ...options... } 
+#     
+#  DESCRIPTION 
+# -- GUIB keyword !!!
+#    Keyword "dimension" is meant for processing a 1D dimension (i.e. 1D
+#    array). The "dimension" is like a FORTRAN dimension 
+#    (i.e. a(1), a(2), ...). For the description of all dimension options 
+#    see in the guib-keywords-def.tcl file the definition of options(dimension)
+#    variables.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    dimension { 
+#       ...options...
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::dimension {ident args} {
+    set code [_expandArgs $args]
+    set obj  [_getCurrentObj]    
+    if { [_findKeywordObjType $obj namelist] == 0 } {
+	::tclu::ERROR "keyword \"dimension\" is allowed only inside namelist"
+    }
+    _manageKeyword $obj dimension $ident $code
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/table
+#  NAME
+#    ::guib::moduleObj::table -- the table GUIB keyword
+#  USAGE
+#    table { ...options... } 
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "table" is meant for processing a 2D dimension (i.e 2D
+# array). The "table" is like a FORTRAN 2D dimension (i.e. coor(1,1),
+# coor(1,2), ...). Typical usage of table is, for example, the
+# specification of atomic coordinates. For the description of all
+# dimension options see in the guib-keywords-def.tcl file the definition of
+# options(table) variables.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    table { 
+#       ...options...
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::table {ident args} {
+    set code [_expandArgs $args]
+    set obj  [_getCurrentObj]    
+    # table is allowed inside and outside the namelist !!!
+    _manageKeyword $obj table $ident $code
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/keyword
+#  NAME
+#    ::guib::moduleObj::keyword -- the keyword GUIB keyword
+#  USAGE
+#    keyword ident KEYWORD
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "keyword" is meant for specifying the input keywords.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    Let us suppose the following input:
+#
+#    ALPHA nalpha
+#    TEXT
+#    textvar
+#
+#    Then this can be specified as:
+#
+#    line alphaLine {
+#       keyword alpha ALPHA
+#       var nalpha -label "Specify a number (nalpha):"
+#    }
+#    line text {
+#       keyword text TEXT\n
+#       var textvar -label "Specify some text (textvar):"
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::keyword {ident keyword} {
+    set obj  [_getCurrentObj]
+    if { [_findKeywordObjType $obj namelist] == 1 } {
+	::tclu::ERROR "keyword \"dimension\" is allowed only outside namelist"
+    }
+    set id [$obj incrID]    
+    $obj setKey     $id keyword $ident
+    $obj setOptions $id [list keyword $keyword]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/help
+#  NAME
+#    ::guib::moduleObj::help -- the help GUIB keyword
+#  USAGE
+#    help varIdent { ...options... } 
+#  or
+#    help varIdent ...options...
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "help" is meant for specifying an extensible help about 
+#    some variable. A long help texts for each variable would make a
+#    GUIB script difficult to read, since they would be very long
+#    and one would have to search for the definitions among long
+#    help texts. Hence this keyword is meant as follows:
+#    at the top of the guib script one specifies the definition
+#    of the variables, ..., and when that is done then one can start 
+#    specifying the help texts for the variables. This way makes
+#    the guib scripts more readable.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    help varIdent1 { 
+#           -helpfmt  txt|html|txt2html
+#           -helptext {...here is the help of the variable...}
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::help {ident args} {
+   
+    set code [_expandArgs $args]
+
+    array set opt [cmdline::getoptions code $options(help)]
+
+    # find the object containing the variable
+    #if { $opt(variable) == {} } {
+    #return
+    #}
+    set obj [_getObjFromVarident $ident]
+    if { $obj == {} } {
+	return
+    }
+    set id [$obj getIdFromVarident $ident]
+    
+    # assign the parsed help options 
+    $obj setOptions $id [array get opt]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/tracevar
+#  NAME
+#    ::guib::moduleObj::tracevar -- the tracevar GUIB keyword
+#  USAGE
+#    tracevar varIdent mode script
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "tracevar" is meant for tracing the variables. It happens
+#    many times, that specifying some value for a particular variable
+#    makes some new widget to appear and others to disappear. The purpose 
+#    of the tracevar proc is just that. See also the "widget" and 
+#    "tableconfigure" as well as "varvalue", "varref" and "varset" procs.
+#
+#  ARGUMENTS
+#    varIdent -- the GUIB-variable's identifier
+#    mode     -- is the trace mode for the variable (r, w, or u).
+#                See also the manual of the Tcl trace command.
+#    script   -- this is a script to execute upon the trace event.
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#   tracevar myVarIdent1 w {
+#       if { [varvalue varIdent1] == "yes" } {
+#          widget enable  varIdent2a
+#          widget disable varIdent2b
+#       } else {
+#          widget disable varIdent2a
+#          widget enable  varIdent2b
+#       }
+#   }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::tracevar {varIdent mode script} {    
+    lappend traceVaridentList            [varref $varIdent]
+    lappend traceVaridentModeScriptList  [list $mode $script]
+    after idle [code $this _tracevar $varIdent $mode]
+}
+
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/varvalue
+#  NAME
+#    ::guib::moduleObj::varvalue -- the varvalue GUIB keyword
+#  USAGE
+#    varvalue varIdent
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "varvalue" is meant for querying the value of a particular
+#    GUIB variable. A typical usage of varvalue keyword is inside the 
+#    tracevar scripts.
+#
+#  RETURN VALUE
+#    The value of the queried variable.
+#  EXAMPLE
+#    set varValue [varvalue varIdent2a]
+#********
+# ------------------------------------------------------------------------
+    
+body ::guib::moduleObj::varvalue {ident} {
+    # transform var(a) to var,a and var(a,b) to var,a,b !!!
+    set ident [_comafy $ident]
+    if { [info exists _guibVar($ident)] } {
+	tclu::DEBUG +++ _guibVar($ident)=$_guibVar($ident)
+        return [textvalueToValue $ident $_guibVar($ident)]
+    } else {
+        return {}
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/vartextvalue
+#  NAME
+#    ::guib::moduleObj::vartextvalue -- the vartextvalue GUIB keyword
+#  USAGE
+#    vartextvalue varIdent
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "vartextvalue" is meant for querying the value of a particular
+#    GUIB variable. A typical usage of vartextvalue keyword is inside the 
+#    tracevar scripts.
+#
+#  RETURN VALUE
+#    The textvalue of the queried variable.
+#  EXAMPLE
+#    set varTextvalue [vartextvalue varIdent2a]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::vartextvalue {ident} {
+    # transform var(a) to var,a and var(a,b) to var,a,b !!!
+    set ident [_comafy $ident]
+    if { [info exists _guibVar($ident)] } {
+        return $_guibVar($ident)
+    } else {
+        return {}
+    }
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/dimvalue
+#  NAME
+#    ::guib::moduleObj::dimvalue -- the dimvalue GUIB keyword
+#  USAGE
+#    dimvalue dimIdent index
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "dimvalue" is meant for querying the value of a particular
+#    element of dimension. A typical usage of dimvalue keyword is inside the 
+#    tracevar scripts.
+#
+#  RETURN VALUE
+#    The value of the dimIdent(index).
+#  EXAMPLE
+#    set elem(3) [dimvalue mydim 3]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::dimvalue {ident i1} {
+    if { [info exists _guibVar($ident,$i1)] } {
+        return [textvalueToValue $ident $_guibVar($ident,$i1)]
+    } else {
+        return {}
+    }
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/dimtextvalue
+#  NAME
+#    ::guib::moduleObj::dimtextvalue -- the dimtextvalue GUIB keyword
+#  USAGE
+#    dimtextvalue dimIdent index
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "dimtextvalue" is meant for querying the value of a particular
+#    element of dimension. A typical usage of dimtextvalue keyword is inside the 
+#    tracevar scripts.
+#
+#  RETURN VALUE
+#    The textvalue of the dimIdent(index).
+#  EXAMPLE
+#    set elem(3) [dimtextvalue mydim 3]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::dimtextvalue {ident i1} {
+    if { [info exists _guibVar($ident,$i1)] } {
+        return $_guibVar($ident,$i1)
+    } else {
+        return {}
+    }
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/tablevalue
+#  NAME
+#    ::guib::moduleObj::tablevalue -- the tablevalue GUIB keyword
+#  USAGE
+#    tablevalue tableIdent irow icol
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "tablevalue" is meant for querying the value of a particular
+#    element of table. A typical usage of tablevalue keyword is inside the 
+#    tracevar scripts.
+#
+#  RETURN VALUE
+#    The value of the tableIdent(irow,icol).
+#  EXAMPLE
+#    set elem(3,1) [tablevalue mytable 3 1]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::tablevalue {ident i1 i2} {
+    if { [info exists _guibVar($ident,$i1,$i2)] } {
+        return [textvalueToValue $ident $_guibVar($ident,$i1,$i2)]
+    } else {
+        return {}
+    }
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/tabletextvalue
+#  NAME
+#    ::guib::moduleObj::tabletextvalue -- the tabletextvalue GUIB keyword
+#  USAGE
+#    tabletextvalue tableIdent irow icol
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "tabletextvalue" is meant for querying the textvalue of a particular
+#    element of table. A typical usage of tabletextvalue keyword is inside the 
+#    tracevar scripts.
+#
+#  RETURN VALUE
+#    The textvalue of the tableIdent(irow,icol).
+#  EXAMPLE
+#    set elem(3,1) [tabletextvalue mytable 3 1]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::tabletextvalue {ident i1 i2} {
+    if { [info exists _guibVar($ident,$i1,$i2)] } {
+        return $_guibVar($ident,$i1,$i2)
+    } else {
+        return {}
+    }
+}
+
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/varref
+#  NAME
+#    ::guib::moduleObj::varref -- the varref GUIB keyword
+#  USAGE
+#    varref varIdent
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "varref" is meant for querying the real name of the variable.
+#    Namely, the variable names as specified by the -variable option of the
+#    GUIB keywords are only symbolic names. The actual names are the one of the
+#    the _guibVar array (e.g. _guibVar(varIdent)).
+#
+#  RETURN VALUE
+#    The real name of a variable.
+#  EXAMPLE
+#    set realName [varref varIdent]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::varref {ident} {
+    set ident [_comafy $ident]
+    return [scope "_guibVar($ident)"]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/dimref
+#  NAME
+#    ::guib::moduleObj::dimref -- the dimref GUIB keyword
+#  USAGE
+#    dimref dimIdent index
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "dimref" is meant for querying the real name of the dimension's variable.
+#    Namely, the variable names as specified by the -variable option of the
+#    GUIB keywords are only symbolic names. The actual names are the one of the
+#    the _guibVar array (e.g. _guibVar(dimIdent,$index)).
+#
+#  RETURN VALUE
+#    The real name of a dimIdent(index).
+#  EXAMPLE
+#    set realName($index) [dimref dimIdent $index]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::dimref {ident i1} {
+    return [scope "_guibVar($ident,$i1)"]
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/tableref
+#  NAME
+#    ::guib::moduleObj::tableref -- the tableref GUIB keyword
+#  USAGE
+#    tableref tableIdent irow icol
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "tableref" is meant for querying the real name of table's variable.
+#    Namely, the variable names as specified by the -variable option of the
+#    GUIB keywords are only symbolic names. The actual names are the one of the
+#    the _guibVar array (e.g. _guibVar(tableIdent,$irow,$icol)).
+#
+#  RETURN VALUE
+#    The real name of a tableIdent(irow,icol).
+#  EXAMPLE
+#    set realName($irow,$icol) [tableref tableIdent $irow $icol]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::tableref {ident i1 i2} {
+    return [scope "_guibVar($ident,$i1,$i2)"]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/varset
+#  NAME
+#    ::guib::moduleObj::varset -- the varset GUIB keyword
+#  USAGE
+#    varset varIdent what value ?usage?
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "varset" is meant for setting the "GUIB" variables.
+#    Namely, the variable names as specified by the -variable option of the
+#    GUIB keywords are only symbolic names. The actual names are the one of the
+#    the _guibVar array (e.g. _guibVar(varIdent)).
+#
+#  ARGUMENTS
+#    var   -- a symbolic name of the variable
+#    what  -- what to set -value|-textvalue
+#    value -- value or textvalue (according to what) to set to the $ident variable
+#    usage -- used only internally (error message upon wrong usage)
+#  RETURN VALUE
+#    The textvalue of the set variable.
+#  EXAMPLE
+#    varset varIdent -textvalue "yes"
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::varset {ident what value {usage {usage: varset $ident -value|-textvalue $value}}} {
+    set ident [_comafy $ident]
+    switch -exact -- $what {
+	-value     - value     { set _guibVar($ident) [valueToTextvalue $ident $value] }
+	-textvalue - textvalue { set _guibVar($ident) $value }
+	default   { ::tclu::ERROR $usage }
+    }
+    return $_guibVar($ident)
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/dimset
+#  NAME
+#    ::guib::moduleObj::dimset -- the dimset GUIB keyword
+#  USAGE
+#    dimset dimIdent index what value
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "dimset" is meant for setting the "GUIB" dimension's variables.
+#    Namely, the variable names as specified by the -variable option of the
+#    GUIB keywords are only symbolic names. The actual names are the one of the
+#    the _guibVar array (e.g. _guibVar(dimIdent,$index)).
+#
+#  ARGUMENTS
+#    dimIdent -- the GUIB-dimensions's identifier
+#    index    -- the index'th element of the dimension
+#    what     -- what to set -value|-textvalue
+#    value    -- value or textvalue (according to what) to set to the $dimIdent($index) variable
+#  RETURN VALUE
+#     The textvalue of the set variable.
+#  EXAMPLE
+#    dimset dimIdent $index "yes"
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::dimset {ident i1 what value} {
+    set ident [_comafy $ident],$i1
+    return [varset $ident $what $value {usage: dimset $ident $index -value|-textvalue $value}]
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/tableset
+#  NAME
+#    ::guib::moduleObj::tableset -- the tableset GUIB keyword
+#  USAGE
+#    tableset tableIdent irow icol what value
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "tableset" is meant for setting the "GUIB" table's variables.
+#    Namely, the variable names as specified by the -variable option of the
+#    GUIB keywords are only symbolic names. The actual names are the one of the
+#    the _guibVar array (e.g. _guibVar(tableIdent,$irow,$icol)).
+#
+#  ARGUMENTS
+#    tableIdent -- the GUIB-table's identifier
+#    irow icol  -- the irow,icol'th element of the table
+#    what       -- what to set -value|-textvalue
+#    value      -- value to assign to the $tableIdent($irow,$icol) variable
+#  RETURN VALUE
+#    The textvalue of the set variable.
+#  EXAMPLE
+#    tableset tableIdent $irow $icol -textvalue "yes"
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::tableset {ident i1 i2 what value} {
+    set ident [_comafy $ident],$i1,$i2
+    return [varset $ident $what $value {usage: tableset $ident $irow $icol -value|-textvalue $value}]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/widget
+#  NAME
+#    ::guib::moduleObj::widget -- the widget GUIB keyword
+#  USAGE
+#    widget varIdent action
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "widget" is meant for setting the state of the widget
+# associated with the GUIB variable. A typical usage of widget keyword
+# is inside the tracevar scripts.
+#
+#  ARGUMENTS
+#    varIdent -- GUIB-variable's identifier (used for locating the corresponding widget)
+#    action   -- what to do (should be one of forget|create|enable|disable)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    widget myvar enable
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::widget {varIdent action} {
+    _widget $action $varIdent
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/widgetconfigure
+#  NAME
+#    ::guib::moduleObj::widgetconfigure -- the widgetconfigure GUIB keyword
+#  USAGE
+#    widgetconfigure varIdent option value ?option value? ...
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "widgetconfigure" is meant for configuring the widget
+# associated with the GUIB variable. A typical usage of widget keyword
+# is inside the tracevar scripts.
+#
+#  ARGUMENTS
+#  varIdent -- GUIB-variable's identifier (used for locating the corresponding widget)
+#  args     -- the option value pairs (allowed options are those accepted by the corresponding guib-widget)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    widgetconfigure myvar -text "Whatever ..."
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::widgetconfigure {varIdent args} {
+    # t.k.
+    # first try to update the keywordObj database according to args
+    #
+    if { [set obj [_getObjFromVarident $varIdent]] != "" } {
+	set id  [getIdFromVarident $varIdent]
+	set key [$obj getKey $id]
+	if { [info exists options($key)] } {
+	    set argvVar $args
+	    while { [::cmdline::getKnownOpt argvVar $options($key) opt value] > 0 } {
+		$obj setOptions $id [list $opt $value]
+	    }
+	}
+    }
+    #/t.k.
+
+    #
+    # now configure the widget
+    # 
+    set widget [getWidgetFromVarident $varIdent]
+    if { $widget == "" } {
+	#error "widget \"$widget\" not found"
+	return
+    }
+    eval $widget configure $args
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/widgetcget
+#  NAME
+#    ::guib::moduleObj::widgetcget -- the widgetcget GUIB keyword
+#  USAGE
+#    widgetcget varIdent option    
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "widgetcget" is meant for querying the current value of
+# the configuration option given by option. Option may have any of the
+# values accepted by the corresponding widget command.
+#  ARGUMENTS
+#  varIdent -- GUIB-variable's identifier (used for locating the corresponding widget)
+#  option   -- the querying option
+#  RETURN VALUE
+#    Returns the current value of the configuration option given by
+# option.
+#  EXAMPLE
+#    set value [widgetcget myvar -myoption]
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::widgetcget {varIdent option} {
+    set widget [getWidgetFromVarident $varIdent]
+    if { $widget == "" } {
+	#error "widget \"$widget\" not found"
+	return ""
+    }
+    return [$widget cget $option]
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/keywordconfigure
+#  NAME
+#    ::guib::moduleObj::keywordconfigure -- the keywordconfigure GUIB keyword
+#  USAGE
+#    keywordconfigure keyword state
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "keywordconfigure" is meant is meant for for setting the
+# state of the a given keyword. If a given keyword id disabled it will
+# be ignored when reading/writing the input/output files.
+#
+#  ARGUMENTS
+#  keyword -- the name of the keyword (used for locating the corresponding keyword)
+#  state   -- the state of the keyword (must be enable|disable)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    keywordconfigure MY_KEYWORD enable
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::keywordconfigure {keyIdent state} {
+    switch -exact -- $state {
+	enable {
+	    ::tclu::removeElementFromList disabledKeywordidentList $keyIdent
+	}
+	disable {
+	    ::tclu::addElementToList disabledKeywordidentList $keyIdent
+	}
+	default {
+	    ::tclu::ERROR "wrong state \"$state\", must be enable or disable"
+	}
+    }
+    ::tclu::DEBUG event: disabledKeywordidentList == $disabledKeywordidentList
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/packwidgets
+#  NAME
+#    ::guib::moduleObj::packwidgets -- the packwidgets GUIB keyword
+#  USAGE
+#    packwidgets top | bottom | left | right
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "packwidgets" is meant for manupulation the -side option
+# of the pack Tk command. The dafault value is "top", but if one wants
+# to pack widget as left, then this can be achieved via "packwidgets
+# left" command. Packwidget command is affective only on the current
+# or higher stack-levels.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    packwidgets left
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::packwidgets {side} {    
+    switch -exact -- $side {
+	top - bottom - left - right {
+	    set obj [_getCurrentObj]
+	    set id  [$obj incrID]
+	    $obj setKey     $id packwidgets
+	    $obj setOptions $id [list side $side]
+	}
+	default {
+	    ::tclu::ERROR "unknown side \"$dise\", must be one of top, bottom, left or right"
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/separator
+#  NAME
+#    ::guib::moduleObj::separator -- the "separator" GUIB keyword
+#  USAGE
+#    separator ?-label label?
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "separator" creates a separator widget. Separator can
+#    display a label as well. 
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    separator -label "Next variables:"
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::separator {args} {    
+    _separator [_getCurrentObj] $args
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/readfilter
+#  NAME
+#    ::guib::moduleObj::readfilter -- the "readfilter" GUIB keyword
+#  USAGE
+#    readfilter cmd
+#
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "readfilter" is used for telling the GUIB that when an
+# input-file is open, it should first be parsed by the proc specified
+# by "readfilter" keyword. A typical usage of readfilter keyword is in
+# situations where GUIB cannot handle well the input-file, and we need
+# some pre-processing of the input. Usually when the "readfilter" is
+# used for input pre-processing, then the "writefilter" should be used
+# for post-processing the outout.
+# 
+# The readfilter "cmd" proc should be of the following form:
+# 
+# proc myReadFilter {moduleObj channel} {
+#    ... code here ...
+#    return $myChannel
+# }
+# 
+# Where "moduleObj" is object-name of the moduleObj, and "channel" is
+# the input-file channel (i.e.  set channel [open $myInput r]). The
+# proc MUST return a file-channel of the pre-processed input.
+#
+#  RETURN VALUE
+#    Returns the "cmd".
+#  SOURCE
+
+body ::guib::moduleObj::readfilter  {cmd}    { set readFilter $cmd }
+#********
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/writefilter
+#  NAME
+#    ::guib::moduleObj::writefilter -- the "writefilter" GUIB keyword
+#  USAGE
+#    writefilter cmd
+#
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "writefilter" is used for telling the GUIB that when an
+# output is written, it should post-process by the proc specified by
+# "writefilter" keyword, before writting to a file or stdout. A
+# typical usage of writefilter keyword is in situations where GUIB
+# cannot handle well the input-file, and we need some pre-processing
+# of the input by "readfilter" proc. In such a case also the
+# "writefilter" is used for post-processing the outout.
+# 
+# The writefilter "cmd" proc should be of the following form:
+# 
+# proc myWriteFilter {moduleObj outputContent} {
+#    ... code here ...
+#    return $myOutputContent
+# }
+# 
+# Where "moduleObj" is object-name of the moduleObj, and
+# "outputContent" variable holds the output. The proc MUST return the
+# content of the processed output.
+#
+#  RETURN VALUE
+#    Returns the "cmd".
+#  SOURCE
+
+body ::guib::moduleObj::writefilter {cmd}    { set writeFilter $cmd }
+#********
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/postprocess
+#  NAME
+#    ::guib::moduleObj::postprocess -- executes a given script after the GUI is built
+#  USAGE
+#    postprocess script
+#
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "postprocess" is used for specifying a script that will
+# be executed after the Tk-GUI is built. A typical usage is setting
+# the default values of the variables, so that variable traces will be
+# executed. This can be used for enabling/disabling GUIB widgets.
+#
+#  RETURN VALUE
+#    Returns the content of the script.
+#  EXAMPLE
+#  postprocess {
+#     varset myVar -textvalue "default value"
+#  }
+#  SOURCE
+
+body ::guib::moduleObj::postprocess {script} { set postprocessScript $script }
+#********
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/this
+#  NAME
+#    ::guib::moduleObj::this -- returns the name of the moduleObj object
+#  USAGE
+#    this script
+#
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "this" returns the name of the moduleObj object. Namely,
+# under some circumstance, the name of the moduleObj object is
+# required in the GUIB module-definition files.
+#
+#  RETURN VALUE
+#    Returns the name of the moduleObj object, i.e., returns the value
+# of $this).
+#  SOURCE
+
+body ::guib::moduleObj::this        {}       { return $this }
+#********
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/loaddata
+#  NAME
+#    ::guib::moduleObj::loaddata -- the loaddata GUIB keyword
+#  USAGE
+#    loaddata varIdent cmd
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+# Keyword "loaddata" is meant for loading the large chuncks of data
+# for keywidgets. A typical usage is "loading the tables" from file.
+#
+#  ARGUMENTS
+#    varIdent -- GUIB-variable's identifier, i.e., identifier of table/dimension/var for which to load data
+#    cmd      -- routine for loading the data of the "proc cmd {moduleObj} {...}" form
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    loaddata myTable load_MyTable
+#
+#    The "load_MyTable" command must be of the form:
+#
+#    proc {moduleObj} { 
+#       ... code ...
+#    }
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::loaddata {varIdent cmd {buttonText "Load from file ..."}} {
+    lappend _loadData(varlist)  $varIdent
+    lappend _loadData(cmdlist)  $cmd
+    lappend _loadData(textlist) $buttonText
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/groupwidget
+#  NAME
+#    ::guib::moduleObj::groupwidget -- the groupwidget GUIB keyword
+#  USAGE
+#    groupwidget ident action
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Keyword "groupwidget" is meant for configuring the group of GUIB
+# widgets. This keyword is like a "widget" keyword, but instead to a
+# single widget acts on a group of widgets, that were encapsulated
+# inside a given group keyword. A typical usage of groupwidget keyword
+# is inside the tracevar scripts.
+#
+#  ARGUMENTS
+#  ident   -- the identifier of the object
+#  action  -- what to do (should be one of enable|disable)
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    groupwidget name enable
+#********
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::groupwidget {ident action} {        
+    # we could also do like this:
+    #-------------------------------------
+    #set obj [identinfo $ident keywordObj]
+    #set id  [identinfo $ident id]
+    #set nameObj [$obj getChild $id]
+    #if { $nameObj == "" < 0 } {
+    #	return
+    #}
+ 
+    set ind [lsearch -glob $nameObjList "$ident *"]
+    if { $ind < 0 } {
+	return
+    }
+    set nameObj [lindex [lindex $nameObjList $ind] 1]
+    _groupwidget $nameObj $action
+}

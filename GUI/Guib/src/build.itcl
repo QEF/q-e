@@ -1,0 +1,482 @@
+# $RCSfile: build.itcl,v $ --
+#
+#      This file contains the the Tk GUI builder. That is, on the basis
+#      of information as contained in the corresponding module definition
+#      file the GUI using the iwidgets mega-widget library is build.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: build.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+#
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/makeEmbedGUI
+#  NAME
+#    ::guib::moduleObj::makeEmbedGUI -- makes an embedded GUI into a container window
+#  USAGE
+#    makeEmbedGUI wid
+#  DESCRIPTION
+#    Makes an embedded GUI (based on moduleObj definition) into a
+# container window (NOT STAND-ALONE). This method is called by
+# ::guib::embedGUI and, ::guib::moduleObj::makeSimpleTplwGUI, ...
+#  ARGUMENTS
+#    wid -- container widget into which the GUI will be created
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $moduleObj makeEmbedGUI .mycontainer
+#****
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::makeEmbedGUI {wid} {
+    ::tclu::ifexists objLevel {
+	set   objLevel  0
+	set   pageLevel 0
+	unset lineEntryList
+	unset packSide
+	set   packSide(0) top
+    }	
+    #-- build GUI recursively
+    _buildGUI $this $wid
+    #--
+    foreach PackSide {top left} {
+	if { [info exists lineEntryList($PackSide)] } {
+	    eval ::iwidgets::Labeledwidget::alignlabels $lineEntryList($PackSide)
+	}
+    }
+    if { [info exists postprocessScript] } {
+	if { $postprocessScript != {} } {
+	    eval $postprocessScript
+	}
+    }
+}
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_buildGUI
+#  NAME
+#    ::guib::moduleObj::_buildGUI -- builds a Tcl/Tk based GUI recursively
+#
+#  USAGE
+#    _buildGUI masterObj obj wid 
+#
+#  DESCRIPTION
+#    This proc build the Tcl/Tk GUI recursively. Insert description ...
+#
+#  ARGUMENTS
+#    masterObj -
+#    obj       -
+#    wid       -
+#  RETURN VALUE
+#    None.
+#
+#  EXAMPLE
+#    _buildGUI $masterObj $currentObj $widget_container
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_buildGUI {obj wid} {
+
+    # BEWARE: do not call this proc directly, call the makeEmbedGUI instead !!!
+    #         The "makeEmbedGUI" makes some initialization, such as
+    #         setting the objLevel variable to 0 before calling the _buildGUI 
+    #         at the 0-th objLevel !!!
+
+    # just in case !!!
+    if { ! [info exists objLevel]            } { set objLevel 0 }    
+    if { ! [info exists pageLevel]           } { set pageLevel 0 }    
+
+    if { ! [info exists packSide($objLevel)] } { 
+	# default
+	for {set i $objLevel} {$i >= 0} {incr i -1} {
+	    if { [info exists packSide($i)] } {
+		set packSide($objLevel) $packSide($i)
+		break
+	    } 
+	}
+	::tclu::newset packSide($objLevel) top	
+    }    
+    
+    set NItem [$obj getID]
+    set objWidgetArray(WIDGET,$obj) $wid
+
+    for {set id 0} {$id <= $NItem} {incr id} {
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+
+	switch -exact -- $key {
+	    packwidgets {
+		set packSide($objLevel) [$obj getOptionValue $id side]
+		continue
+	    }
+
+	    keyword {
+		continue
+	    }
+	}
+		
+	if { $childObj != {} } {
+	    # we have new object
+	    incr objLevel
+	    
+	    switch -exact $key {
+		"page" - 
+		"required" - 
+		"optional" {
+		    incr pageLevel
+		    
+		    if { ![info exists page($pageLevel)] } {
+			set page($pageLevel,W) 0
+			set page($pageLevel,H) 0
+			set showPage 1
+			set tabpos n
+			if { $pageLevel >= 3 } {
+			    set tabpos w
+			}
+			set page($pageLevel) \
+			    [iwidgets::tabnotebook [::tku::widgetName $wid tnb] -tabpos $tabpos]
+			pack $page($pageLevel) -fill both -expand 1 -padx 5 -pady 5 -ipadx 5 -ipady 5
+		    }
+		    
+		    if { $key != "required" && $key != "optional" } {
+			set name [$childObj cget -name]
+		    } else {
+			set name "[string totitle $key] variables"
+		    }
+		    set wid [$page($pageLevel) add -label $name]
+		    set wid [frame $wid.f -background \#336699]
+		    pack $wid -fill both
+		    
+		    ##############################################
+		    # RECURSIVELY parse the content of this PAGE #
+		    ##############################################
+
+		    _buildGUI $childObj $wid
+		    
+		    ###################
+		    # POST-PROCESSING #
+		    ###################
+		    
+		    bind $wid <Visibility> [list after idle [code $this _configurePage %W $page($pageLevel) $tabpos]]
+		    bind $wid <Configure>  [list after idle [code $this _configurePage %W $page($pageLevel) $tabpos]]
+
+		    ::tclu::ifexists showPage {
+			$page($pageLevel) view $name
+			unset showPage
+		    }
+		    
+		    ###############################
+		    # we are done with this level #
+		    ###############################
+
+		    incr pageLevel -1
+		}
+		
+		"namelist" - 
+		"line" -
+		"group" {
+		    set decor [$obj getOptionValue $id decor]
+		    switch -glob -- $decor {
+			prefix* - normal {
+			    if { $decor == "normal" } {
+				set label "[$childObj cget -name]"
+			    } else {
+				set label "[string totitle $key]: [$childObj cget -name]"
+			    }
+			    set nml [iwidgets::labeledframe \
+					 [::tku::widgetName $wid f] \
+					 -labeltext $label]
+			    pack $nml -side top -fill x -expand 1 -padx 3 -pady 2
+			    set _wid [$nml childsite]
+			    set f [frame $_wid.f -class Background]
+			    pack $f -expand 1 -fill both -ipadx 0 -ipady 0 -padx 5 -pady 5
+			}
+			none {
+			    set f [frame [::tku::widgetName $wid f] -class Background]
+			    pack $f -side [_packSide $objLevel] \
+				-expand 1 -fill both -ipadx 0 -ipady 0 -padx 0 -pady 0
+			}
+			default {
+			    ::tclu::ERROR "wrong decor style, must be one of prefixed, normal or none"
+			}
+		    }
+		    
+		    ##################################################
+		    # RECURSIVELY parse the content of this childObj #
+		    ##################################################
+		    
+		    _buildGUI $childObj $f
+		}	
+		
+		#"group" {
+		#    set f [frame [::tku::widgetName $wid f] -class Background]
+		#    pack $f -side [_packSide $objLevel] \
+		#	-expand 1 -fill both -ipadx 0 -ipady 0 -padx 0 -pady 0
+		#
+		#    ##################################################
+		#    # RECURSIVELY parse the content of this childObj #
+		#    ##################################################
+		#
+		#    _buildGUI $childObj $f
+		#}
+
+		default { ::tclu::ERROR "the object-type \"$key\" is unknown" }
+	    }
+	    unset packSide($objLevel)
+	    incr objLevel -1	    
+	} else {
+	    ##################
+	    # BUILDING STAGE #
+	    ##################
+	    _buildGUI_constructItem $id $obj $wid $key e_list
+	}
+    }
+
+    foreach PackSide {top left} {
+    	if { [info exists e_list($PackSide)] } {
+    	    eval ::iwidgets::Labeledwidget::alignlabels $e_list($PackSide)
+    	}
+    }
+
+    # incoming
+    #::tclu::ifexists packSide($objLevel) {
+    #	unset packSide($objLevel)
+    #}
+}
+
+
+body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
+
+    if { $elist != "" } {
+	upvar $elist e_list
+    }
+    
+    array set _cmd [$obj getOptions $id *]	    
+    set _packSide  [_packSide $objLevel]
+
+    if { $key == "separator" } {
+	#
+	# SEPARATOR
+	#
+	# TODO: make a separator keywidget
+	set l [label [::tku::widgetName $wid] \
+		   -text   [$obj getOptionValue $id label] \
+		   -background \#336699 \
+		   -foreground \#ffffff \
+		   -anchor c]
+	pack $l -side $_packSide -fill x -padx 5 -pady 5
+
+    } elseif { $key == "table" } {
+	#
+	# TABLE
+	#
+	set helpCmd ""
+	set helptext [$obj getOptionValue $id helptext]
+	if { $helptext != "" } {
+	    set helpCmd [list ::guib::widgets::displayhelp \
+			     [$obj getOptionValue $id variable] \
+			     [$obj getOptionValue $id vartype] \
+			     [$obj getOptionValue $id helpfmt] \
+			     $helptext]
+	}
+	
+	set varIdent [$obj getOptionValue $id ident]
+	set t [::guib::keywidgets::table \
+		   [::tku::widgetName $wid] $this \
+		   -caption   [$obj getOptionValue $id caption] \
+		   -head      [$obj getOptionValue $id head] \
+		   -varname   [$obj getOptionValue $id variable] \
+		   -varident  $varIdent \
+		   -validate  [$obj getOptionValue $id validate] \
+		   -widgets   [$obj getOptionValue $id widgets] \
+		   -onvalues  [$obj getOptionValue $id onvalues] \
+		   -offvalues [$obj getOptionValue $id offvalues] \
+		   -cols      [$obj getOptionValue $id cols] \
+		   -rows      [$obj getOptionValue $id rows] \
+		   -helpcommand $helpCmd]
+	
+	pack $t -side $_packSide -fill x  -padx 3 -pady 2
+	#
+	# Register the table associated with the variable (needed for
+	# the variable->table retrieval)	
+	#
+	_addVaridentWidget $varIdent $t
+
+    } elseif { $key == "text" } {
+	#
+	# TEXT
+	#
+	set varIdent [$obj getOptionValue $id ident]
+	set t [::guib::keywidgets::text \
+		   [::tku::widgetName $wid] $this \
+		   -caption   [$obj getOptionValue $id caption] \
+		   -varname   [$obj getOptionValue $id variable] \
+		   -label     [$obj getOptionValue $id label] \
+		   -readvar   [$obj getOptionValue $id readvar] \
+		   -helptext  [$obj getOptionValue $id helptext] \
+		   -helpfmt   [$obj getOptionValue $id helpfmt] \
+		   -vartype   [$obj getOptionValue $id vartype]]
+	#           -varident  [$obj getOptionValue $id ident]
+
+	tclu::DEBUG _build: packing ::guib::keywidgets::text
+
+	pack $t -side $_packSide -fill x -padx 3 -pady 2 -expand 1
+	
+	tclu::DEBUG _build: _addVaridentWidget
+	#
+	# Register the text associated with the variable (needed for
+	# the variable->table retrieval)	
+	#
+	_addVaridentWidget $varIdent $t	
+
+	tclu::DEBUG _build: after _addVaridentWidget
+    } else {
+	#
+	# VAR & DIMENSION
+	#
+	foreach elem { 
+	    ident variable text label value textvalue default fmt      
+	    validate infmt outfmt widget helptext helpfmt vartype noframe
+	    start end pack
+	} {                                         
+	    if { [info exists _cmd($id,$elem)] } {
+		set _$elem $_cmd($id,$elem)
+	    } else {
+		set _$elem {}
+	    }
+	}
+	
+	set e [::guib::keywidgets::$key \
+		   [::tku::widgetName $wid] $this \
+		   -varident   $_ident      \
+		   -varname    $_variable   \
+		   -text       $_text       \
+		   -label      $_label      \
+		   -value      $_value      \
+		   -textvalue  $_textvalue  \
+		   -default    $_default    \
+		   -fmt        $_fmt        \
+		   -validate   $_validate   \
+		   -infmt      $_infmt      \
+		   -outfmt     $_outfmt     \
+		   -widget     $_widget     \
+		   -helptext   $_helptext   \
+		   -helpfmt    $_helpfmt    \
+		   -vartype    $_vartype    \
+		   -noframe    $_noframe    \
+		   -start      $_start 	    \
+		   -end        $_end        \
+		   -pack       $_pack]
+	pack $e -side $_packSide -fill x -padx 3 -pady 2 -expand 1
+	
+	#
+	# Register the widget associated with the variable (needed for
+	# the variable->widget retrieval)	
+	#
+	if { $key == "dimension" } {
+	    _addVaridentWidget $_ident $e
+	}
+	foreach elem [$e getVaridentWidpath] {
+	    set ident [lindex $elem 0]
+	    set path  [lindex $elem 1]
+	    _addVaridentWidget $ident $path
+	}		
+	
+	#
+	# register the labeledwidget derived widgets for the
+	# alignlabels
+	#
+	if { $key == "dimension" && $_pack != "" } {
+	    # entries in dimension should be aligned separately
+	    set Pack $_pack
+	} elseif { $_packSide == "top" || $_packSide == "bottom" } {
+	    set Pack top
+	} else {
+	    set Pack left
+	}
+	foreach elem [$e getWidpathWidtype] {
+	    set path [lindex $elem 0]
+	    set type [lindex $elem 1]
+	    switch -exact -- $type {
+		entry - optionmenu - spinint {
+		    lappend e_list($Pack) $path
+		}
+		default {
+		    lappend e_list($Pack) $path
+		}
+	    }
+	}
+
+	if { [$obj cget -type] == "line" } {
+	    ::tclu::ifexists e_list($Pack) {
+		if { ! [info exists lineEntryList($Pack)] } {
+		    set lineEntryList($Pack) {}
+		}
+		foreach elem $e_list($Pack) {
+		    ::tclu::addElementToList lineEntryList($Pack) $elem
+		}
+	    }
+	}
+    }
+    tclu::DEBUG exiting ::guib::moduleObj::_buildGUI_constructItem
+    update; update idletask
+    tclu::DEBUG exiting ::guib::moduleObj::_buildGUI_constructItem 2
+}
+
+
+body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {    
+
+    if { ! [winfo viewable $thisPage] } {
+	return
+    }
+    
+    update
+    
+    set tabset [$tabnotebook component tabset]
+
+    set W  [winfo reqwidth  $thisPage]
+    set H  [winfo reqheight $thisPage]
+    set Tw [winfo reqwidth  $tabset]
+    set Th [winfo reqheight $tabset]
+    
+    if { $tabpos == "w" || $tabpos == "e" } {    
+	set W [expr $W + $Tw]
+	if { $Th > $H } { 
+	    set H $Th 
+	}
+    } else {
+	set H [expr $H + $Th]
+	if { $Tw > $W } { 
+	    set W $Tw
+	}
+    }
+
+    set list  [pack info $tabnotebook]
+    set ind   [expr [lsearch -exact $list -ipadx] + 1]
+    set ipadx [expr 2 * [lindex $list $ind]]    
+    $tabnotebook configure -width [expr $W - $ipadx] -height $H    
+}
+
+
+body ::guib::moduleObj::_packSide {objLevel} {
+    for {set i $objLevel} {$i >= 0} {incr i -1} {
+	if { [info exists packSide($objLevel)] } {
+	    return $packSide($objLevel)
+	}
+    }    
+    return top
+}
