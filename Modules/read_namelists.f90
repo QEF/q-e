@@ -318,6 +318,8 @@ MODULE read_namelists_module
        tolp                    = 100.D0
        ion_nstepe              = 1
        ion_maxstep             = 100
+       delta_t                 = 1.D0
+       nraise                  = 100
        upscale                 = 10
        potential_extrapolation = 'default'
        !
@@ -697,6 +699,8 @@ MODULE read_namelists_module
        CALL mp_bcast( tolp, ionode_id )
        CALL mp_bcast( ion_nstepe, ionode_id )
        CALL mp_bcast( ion_maxstep, ionode_id )
+       CALL mp_bcast( delta_t, ionode_id )
+       CALL mp_bcast( nraise, ionode_id )
        CALL mp_bcast( upscale, ionode_id )
        CALL mp_bcast( potential_extrapolation, ionode_id )
        !

@@ -444,17 +444,22 @@ ion_dynamics   CHARACTER
              
 ion_temperature   
                CHARACTER
-               'nose'          : Nose' thermostat, not implemented
-               'rescaling'     : velocity rescaling (sort of implemented)
+               'rescaling'     : velocity rescaling
                'not_controlled': default
 
-tempw          REAL
+tempw          REAL ( default = 300.D0 )
                starting temperature (Kelvin) in MD runs 
 
-ttol           REAL ( default = 1.D-3 )
-               tolerance for velocity rescaling. Velocities are
-               not rescaled if the ratio of the run-averaged and 
-               target temperature differs from unit less than ttol
+delta_t        REAL ( default = 1.D0 )
+               delta_T = 1                 : nothing is done.
+               delta_T /= 1 && delta_T > 0 : at each step the temperature is 
+                                             multiplied by delta_t; this is 
+                                             done rescaling all the velocities.
+               delta_T < 0                 : every 'nraise' steps the temperature
+                                             is reduced by -delta_T
+
+nraise         INTEGER (default = 100 )
+               the temperature is reduced of -delta_T every 'nraise' steps.
 
 upscale        REAL ( default = 10.D0 )
                max reduction factor for conv_thr during structural optimization

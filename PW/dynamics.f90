@@ -35,16 +35,15 @@ SUBROUTINE dynamics()
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : amconv, eps8
+  USE constants,     ONLY : amconv, eps8, convert_E_to_temp
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
-  USE klist,         ONLY : nelec
   USE ions_base,     ONLY : if_pos
   USE relax,         ONLY : epse, epsf
-  USE control_flags, ONLY : alpha0, beta0, istep, nstep, conv_ions, &
+  USE control_flags, ONLY : istep, nstep, conv_ions, &
                             lconstrain, ldamped, lfixatom
   USE io_files,      ONLY : prefix
   !
@@ -55,7 +54,7 @@ SUBROUTINE dynamics()
   ! ... local variables
   !
   REAL(KIND=DP), ALLOCATABLE :: vel(:,:), acc(:,:), accold(:,:)
-    ! velocities, accelerations and accelerations of the previous step
+    ! velocities, accelerations and accelerations at the previous step
   REAL(KIND=DP), ALLOCATABLE :: mass(:)    
     ! masses of atoms
   REAL(KIND=DP) :: ekin, etotold
@@ -65,14 +64,13 @@ SUBROUTINE dynamics()
   REAL(KIND=DP) :: ml(3), mlt
     ! total linear momentum and its modulus
   INTEGER :: i, na
-    ! counters
   LOGICAL :: exst
-  REAL(KIND=DP), PARAMETER :: convert_E_to_temp = 315642.28D0 * 0.5D0
   !
   !
   ALLOCATE( mass( nat ) )
-  ALLOCATE( vel( 3, nat ) )         
-  ALLOCATE( acc( 3, nat ) )
+  !
+  ALLOCATE( vel(    3, nat ) )         
+  ALLOCATE( acc(    3, nat ) )
   ALLOCATE( accold( 3, nat ) )
   !
   vel    = 0.D0
@@ -80,13 +78,19 @@ SUBROUTINE dynamics()
   accold = 0.D0
   !
   IF ( istep == 1 ) THEN
+     !
      IF ( ldamped ) THEN
+        !
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"Damped Dynamics Calculation")' )
+        !
      ELSE
+        !
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"Molecular Dynamics Calculation")' )
+        !
      END IF
+     !
   END IF
   !
   ! ... one Ryd a.u. of time is 4.84*10^-17 seconds, i.e. 0.0484  femtoseconds
@@ -118,7 +122,8 @@ SUBROUTINE dynamics()
      !
      DO na = 1, nat
         !
-        mass(na)   = amass( ityp(na) ) * amconv
+        mass(na) = amass( ityp(na) ) * amconv
+        !
         total_mass = total_mass + mass(na)
         !
      END DO
@@ -135,6 +140,8 @@ SUBROUTINE dynamics()
      !
   ELSE
      !
+     ! ... the file is read
+     !
      READ( UNIT = 4, FMT = * ) &
         etotold, temp_new, mass, total_mass, &
         elapsed_time, istep, tau, vel, accold
@@ -142,6 +149,8 @@ SUBROUTINE dynamics()
      CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !
   END IF
+  !
+  ! ... elapsed_time is in picoseconds
   !
   elapsed_time = elapsed_time + dt * 0.0000484D0
   !
@@ -209,6 +218,8 @@ SUBROUTINE dynamics()
                 & T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
       istep, elapsed_time
   !
+  ! ... here starts the molecular dynamics :
+  !
   ! ... calculate accelerations in a.u. units / alat
   !
   FORALL( na = 1 : nat ) &
@@ -222,11 +233,15 @@ SUBROUTINE dynamics()
   !
   IF ( ldamped ) CALL project_velocity()
   !
-  ! ... constrains ( atoms kept fixed ) are reinforced 
+  ! ... constraints ( atoms kept fixed ) are reinforced 
   !
   vel = vel * DBLE( if_pos )
   !
+  ! ... positions are updated here
+  !
   tau = tau + dt * vel + 0.5D0 * dt**2 * acc
+  !
+  ! ... the linear momentum ant the kinetic energy are computed here
   !
   ml   = 0.D0
   ekin = 0.D0  
@@ -243,7 +258,7 @@ SUBROUTINE dynamics()
   !
   temp_new = 2.D0 / 3.D0 * ekin * alat**2 / nat * convert_E_to_temp
   !
-  ! ... save on file needed quantity
+  ! ... save on file all the needed quantities
   !
   CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED',  exst )
   !
@@ -252,6 +267,8 @@ SUBROUTINE dynamics()
       elapsed_time, istep, tau, vel, acc
   !
   CLOSE( UNIT = 4, STATUS = 'KEEP' )
+  !
+  ! ... infos are written on the standard output
   !
   CALL output_tau( .FALSE. )
   !
@@ -328,7 +345,6 @@ SUBROUTINE dynamics()
        END IF       
        !
      END SUBROUTINE project_velocity 
-     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE start_therm()
@@ -437,7 +453,6 @@ SUBROUTINE dynamics()
        RETURN
        !
      END SUBROUTINE start_therm 
-     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE thermalize( temp_old, temp_new )

@@ -857,7 +857,15 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: potential_extrapolation = 'default'
           !  This variable is used only by PWSCF
           ! NOT used in FPMD
-
+        
+        !
+        ! ... delta_T, nraise are used to change the temperature in PWscf
+        !
+        
+        REAL(KIND=DP) :: delta_t = 1.D0
+        
+        INTEGER :: nraise
+        
         !
         ! ... variables added for "path" calculations
         !
@@ -986,15 +994,16 @@ MODULE input_parameters
 
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
-          tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
-          num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
-          reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr, &
-          init_num_of_images, &
-          trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
-          w_1, w_2, lbfgs_ndim, sic_rloc, &
-          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, &
-          smd_codf, smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, &
-          smd_smopt, smd_smlm, smd_ene_ini, smd_ene_fin
+          tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation,      &
+          delta_t, nraise,                                                      &
+          num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep,  &
+          reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,    &
+          init_num_of_images,                                                   &
+          trust_radius_max, trust_radius_min, trust_radius_ini,                 &
+          trust_radius_end, w_1, w_2, lbfgs_ndim, sic_rloc,                     &
+          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2,         &
+          smd_stcd3, smd_codf, smd_forf, smd_smwf, smd_lmfreq, smd_tol,         &
+          smd_maxlm, smd_smcp, smd_smopt, smd_smlm, smd_ene_ini, smd_ene_fin
 
 
 !

@@ -40,7 +40,6 @@ SUBROUTINE move_ions()
   USE cell_base,     ONLY : alat, at, bg
   USE ions_base,     ONLY : nat, ityp, tau, atm
   USE gvect,         ONLY : nr1, nr2, nr3
-  USE klist,         ONLY : nelec
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
@@ -58,18 +57,17 @@ SUBROUTINE move_ions()
   !
   USE bfgs_module,            ONLY : new_bfgs => bfgs, lin_bfgs, terminate_bfgs
   USE constraints_module,     ONLY : dist_constrain, check_constrain, &
-                                     new_force, compute_penalty
+                                     new_force
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  LOGICAL, SAVE              :: lcheck_mag
+  LOGICAL, SAVE              :: lcheck_mag = .TRUE.
     ! .TRUE. if the check of zero absolute magnetization is required
   REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
-    ! previous positions of atoms  
-  REAL(KIND=DP), SAVE        :: lambda = 0.5D0    
+    ! previous positions of atoms
   INTEGER                    :: na  
   REAL(KIND=DP)              :: energy_error, gradient_error
   LOGICAL                    :: step_accepted, exst
@@ -84,9 +82,9 @@ SUBROUTINE move_ions()
      !
      ALLOCATE( tauold( 3, nat, 3 ) )   
      !
-     ! ... constrains are imposed here
+     ! ... constraints are imposed here
      !  
-     IF ( lconstrain ) CALL impose_constrains()
+     IF ( lconstrain ) CALL impose_constraints()
      !
      ! ... the file containing old positions is opened 
      ! ... ( needed for extrapolation )
@@ -128,7 +126,7 @@ SUBROUTINE move_ions()
         !
         ! ... the new bfgs procedure is used
         !  
-        ALLOCATE( pos( 3 * nat ) )
+        ALLOCATE( pos(      3 * nat ) )
         ALLOCATE( gradient( 3 * nat ) )
         !
         pos      =   RESHAPE( SOURCE = tau,   SHAPE = (/ 3 * nat /) ) * alat
@@ -285,7 +283,7 @@ SUBROUTINE move_ions()
      ! ... internal procedures   
      !  
      !-----------------------------------------------------------------------
-     SUBROUTINE impose_constrains()
+     SUBROUTINE impose_constraints()
        !-----------------------------------------------------------------------
        !
        USE constraints_module, ONLY : nconstr
@@ -304,97 +302,29 @@ SUBROUTINE move_ions()
          ! its square modulus       
        !
        !
-       IF ( lbfgs ) THEN
+       ! ... molecular dynamics: lagrange multipliers are used
+       !
+       ! ... find the constrained forces
+       !
+       DO index = 1, nconstr
           !
-          ! ... BFGS case: a penalty function is used
+          CALL dist_constrain( index, gv, dgv, dgv2 )
           !
-          CALL compute_penalty( gv, dgv, dgv2 )
+          CALL new_force( dgv, dgv2 )
           !
-          etot = etot + lambda * gv**2
+       END DO
+       !
+       WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+       !
+       DO na = 1, nat
           !
-          force(:,:) = force(:,:) - 2.D0 * lambda * gv * dgv(:,:)
+          WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
           !
-       ELSE IF ( lmd ) THEN
-          !
-          ! ... molecular dynamics case: lagrange multipliers are used
-          !
-          ! ... find the constrained forces
-          !
-          DO index = 1, nconstr
-             !
-             CALL dist_constrain( index, gv, dgv, dgv2 )
-             !
-             CALL new_force( dgv, dgv2 )
-             !
-          END DO
-          !
-          WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-          !
-          DO na = 1, nat
-             !
-             WRITE( UNIT = stdout, &
-                   FMT = 9000 ) na, ityp(na), force(:,na)
-             !
-          END DO
-          !   
-       END IF
+       END DO
        !
 9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8) 
        !
-     END SUBROUTINE impose_constrains
-     !
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE compute_lambda()
-       !-----------------------------------------------------------------------
-       !
-       USE constraints_module, ONLY : constr_tol
-       !
-       IMPLICIT NONE
-       !
-       ! ... local variables
-       !
-       LOGICAL       :: ltest       
-       REAL(KIND=DP) :: gv
-       REAL(KIND=DP) :: dgv(3,nat)
-       REAL(KIND=DP) :: dgv2
-         ! gv = 0 defines the constrain
-         ! the gradient of gv
-         ! its square modulus             
-       !
-       !
-       CALL compute_penalty( gv, dgv, dgv2 )
-       !
-       IF ( step_accepted ) THEN
-          !
-          lambda_loop: DO
-             !
-             IF ( ABS( gv ) > constr_tol ) lambda = lambda * 1.1D0        
-             !
-             ltest = .TRUE. 
-             !
-             DO na = 1, nat
-                !
-                IF ( 2.D0 * lambda * gv * norm( dgv(:,na) ) > 0.05D0 ) &
-                   ltest = .FALSE.
-                !
-             END DO
-             !
-             IF ( ltest ) EXIT lambda_loop 
-             !
-             lambda = lambda * 0.5D0
-             !
-          END DO lambda_loop
-          !
-       END IF
-       !
-       WRITE( stdout, '("LAMBDA  = ",F14.10)' ) lambda
-       WRITE( stdout, '("GV      = ",F14.10)' ) gv 
-       WRITE( stdout, '("PENALTY = ",F14.10)' ) lambda * gv**2       
-       !
-       RETURN
-       !
-     END SUBROUTINE compute_lambda
+     END SUBROUTINE impose_constraints
      !
 END SUBROUTINE move_ions     
 !

@@ -35,8 +35,7 @@ MODULE constraints_module
   !
   PUBLIC :: dist_constrain,  &
             check_constrain, &
-            new_force,       &
-            compute_penalty
+            new_force
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
   !
@@ -325,80 +324,5 @@ MODULE constraints_module
        RETURN
        !
      END SUBROUTINE new_force 
-     !
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE compute_penalty( g, dg, dg2 )
-       !-----------------------------------------------------------------------
-       ! 
-       ! ... this routine defines the penalty equation:
-       !
-       ! ...  g(tau,dist) = 0
-       !
-       ! ... where tau are the atomic positions ( in alat units ) and dist is
-       ! ... the distance of two atoms ( in this case atom 1 and atom 2 ) which 
-       ! ... is, in this case, a one dimensional constrain. 
-       ! ... dg is in output the value of the gradient of g and dg2 is its 
-       ! ... square modulus.
-       !
-       USE constants, ONLY : eps32
-       USE cell_base, ONLY : alat
-       USE ions_base, ONLY : nat, tau
-       !
-       IMPLICIT NONE
-       !
-       REAL(KIND=DP), INTENT(OUT):: dg(3,nat), dg2, g
-         ! constrain terms ( in bohr )
-       !
-       ! ... local variables
-       !
-       REAL(KIND=DP) :: x1, x2, y1, y2, z1, z2
-       REAL(KIND=DP) :: dist0
-       INTEGER       :: ia1, ia2, index
-       !
-       ! ... external function
-       !
-       REAL(KIND=DP), EXTERNAL :: DDOT
-       !
-       !
-       dg(:,:) = 0.D0
-       g       = 0.D0
-       !
-       DO index = 1, nconstr
-          !
-          ia1 = constr(1,index)
-          ia2 = constr(2,index)
-          !
-          x1 = tau(1,ia1) * alat
-          y1 = tau(2,ia1) * alat
-          z1 = tau(3,ia1) * alat
-          x2 = tau(1,ia2) * alat
-          y2 = tau(2,ia2) * alat
-          z2 = tau(3,ia2) * alat
-          !
-          ! ... the actual distance between the two atoms ( in bohr )
-          !
-          dist0 = SQRT( ( x1 - x2 )**2 + ( y1 - y2 )**2 + ( z1 - z2 )**2 )
-          !    
-          g = g + ( dist0 - target(index) )
-          !
-          IF ( dist0 > eps32 ) THEN
-             !           
-             dg(1,ia1) = dg(1,ia1) + ( x1 - x2 ) / dist0
-             dg(1,ia2) = dg(1,ia2) + ( x2 - x1 ) / dist0
-             dg(2,ia1) = dg(2,ia1) + ( y1 - y2 ) / dist0
-             dg(2,ia2) = dg(2,ia2) + ( y2 - y1 ) / dist0
-             dg(3,ia1) = dg(3,ia1) + ( z1 - z2 ) / dist0
-             dg(3,ia2) = dg(3,ia2) + ( z2 - z1 ) / dist0
-             !
-          END IF   
-          !
-       END DO
-       !
-       dg2 = DDOT( 3 * nat, dg, 1, dg, 1 )
-       !
-       RETURN
-       !
-     END SUBROUTINE compute_penalty
      !
 END MODULE constraints_module

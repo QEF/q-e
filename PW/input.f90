@@ -47,15 +47,17 @@ SUBROUTINE iosys()
   USE char,          ONLY : title_ => title, &
                             crystal
   !
-  USE cellmd,        ONLY : cmass, ttol, omega_old, at_old, ntcheck, &
+  USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
                             press_       => press, &
                             calc, lmovecell
   !
   USE constants,     ONLY : pi, rytoev, uakbar, amconv, bohr_radius_angs
   !
-  USE dynam,         ONLY : dt_ => dt, &
-                            temperature, amass, delta_t, nraise
+  USE dynam,         ONLY : temperature, amass, &
+                            dt_      => dt, &
+                            delta_t_ => delta_t, &
+                            nraise_  => nraise
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -200,7 +202,8 @@ SUBROUTINE iosys()
   ! IONS namelist
   !
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
-                               tempw, tolp, upscale, potential_extrapolation, &
+                               tempw, delta_t, nraise, upscale,                &
+                               potential_extrapolation,                        &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
                                init_num_of_images, temp_req, k_max, k_min, ds, &
@@ -268,9 +271,6 @@ SUBROUTINE iosys()
   ! ... all namelists are read
   !
   CALL read_namelists( 'PW' )
-  !
-  nraise  = 100
-  delta_t = 1.D0
   !
   ! ... translate from input to internals of PWscf, various checks
   !
@@ -716,7 +716,6 @@ SUBROUTINE iosys()
      CONTINUE
   CASE ( 'rescaling' )
      temperature = tempw
-     ttol        = tolp
   CASE DEFAULT
      CALL errore( ' iosys ', ' unknown ion_temperature ' // &
                 & TRIM( ion_temperature ), 1 )
@@ -832,6 +831,8 @@ SUBROUTINE iosys()
   mixing_beta_ = mixing_beta
   !
   upscale_     = upscale
+  delta_t_     = delta_t
+  nraise_      = nraise
   press_       = press
   cell_factor_ = cell_factor
   modenum_     = modenum

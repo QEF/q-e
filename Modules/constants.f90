@@ -9,7 +9,7 @@
 MODULE constants
   !----------------------------------------------------------------------------
   !
-  USE kinds
+  USE kinds, ONLY : dbl
   !
   ! ... The constants needed everywhere
   !
@@ -45,8 +45,6 @@ MODULE constants
   REAL(dbl), PARAMETER :: KB_AU            = 1.0D0/294210.0D0 ! au
   REAL(dbl), PARAMETER :: AU_GPA           = 29421.0D0      ! GPa
   REAL(dbl), PARAMETER :: GPA_AU           = 1.0D0/29421.0D0  ! au
-  ! REAL(dbl), PARAMETER :: AU               = 27.212D0    ! eV
-  ! REAL(dbl), PARAMETER :: RY               = 13.606D0    ! eV
   REAL(dbl), PARAMETER :: AU               = 27.211652D0    ! eV
   REAL(dbl), PARAMETER :: RY               = 13.605826D0    ! eV
   REAL(dbl), PARAMETER :: SCMASS           = 1822.89D0   ! uma to au ( mass of a proton )
@@ -74,7 +72,7 @@ MODULE constants
   !
   ! ... mass conversion: a.m.u to a.u. (Ry)
   !
-  REAL(dbl), PARAMETER :: amconv= 1.66042d-24/9.1095d-28*0.5d0 
+  REAL(dbl), PARAMETER :: amconv= 1.66042D-24 / 9.1095D-28 * 0.5D0 
   !
   ! ... pressure conversion from Ry/(a.u)^3 to K
   !
@@ -87,6 +85,7 @@ MODULE constants
   REAL(dbl), PARAMETER :: eps16 = 1.0D-16
   REAL(dbl), PARAMETER :: eps32 = 1.0D-32
   !
-  REAL(dbl), PARAMETER :: eV_to_kelvin = 1.1604D4  ! from eV to Kelvin
+  REAL(dbl), PARAMETER :: eV_to_kelvin      = 1.1604D4            ! from eV to Kelvin
+  REAL(dbl), PARAMETER :: convert_E_to_temp = 315642.28D0 * 0.5D0 ! from Ry to Kelvin
   !
 END MODULE constants
