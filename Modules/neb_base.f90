@@ -36,7 +36,8 @@ MODULE neb_base
       !-----------------------------------------------------------------------
       !
       USE input_parameters, ONLY : pos, restart_mode, calculation, &
-                                   minimization_scheme, climbing, nstep, ds
+                                   minimization_scheme, climbing, nstep, ds, &
+                                   input_images
       USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : nat                                   
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
@@ -69,13 +70,13 @@ MODULE neb_base
       !
       ! ... local variables
       !      
-      INTEGER                     :: i
-      REAL (KIND=DP)              :: path_length, inter_image_distance
-      REAL (KIND=DP), ALLOCATABLE :: d_R(:)
+      INTEGER                     :: i, j
+      REAL (KIND=DP)              :: s, inter_image_dist
+      REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), path_length(:)
       CHARACTER (LEN=20)          :: num_of_images_char, i_char
       !
       !    
-      ! ... NEB internal variables are set
+      ALLOCATE( path_length( input_images - 1 ) )
       !
       ! ... output files are set
       !
@@ -98,18 +99,6 @@ MODULE neb_base
       ! ... dynamical allocation of arrays      
       !
       CALL neb_dyn_allocation()
-      !
-      ! ... coordinates must be in bohr ( pwscf uses alat units )
-      !
-      IF( prog == 'PW' ) THEN
-        !
-        pos_ = pos(1:dim,:) * alat   
-        !
-      ELSE
-        !
-        pos_ = pos(1:dim,:)
-        !
-      END IF
       !
       ! ... all other arrays are initialized 
       !
@@ -151,10 +140,6 @@ MODULE neb_base
          !
       END IF
       !
-      ! ... pos_old is initialized
-      !
-      pos_old = pos_      
-      !
       ! ... initial path is read ( restart_mode == "restart" ) 
       ! ... or generated ( restart_mode = "from_scratch" )
       !
@@ -188,15 +173,13 @@ MODULE neb_base
          !
          ! ... path length is computed here
          !
-         path_length = 0.D0
-         !
-         DO i = 2, num_of_images
+         DO i = 1, ( input_images - 1 )
             !
-            path_length = path_length + norm( pos_(:,i) - pos_(:,( i - 1 )) )
+            path_length(i) = norm( pos_(:,i+1) - pos_(:,i) )
             !
          END DO
          !
-         inter_image_distance = path_length / REAL( num_of_images - 1 )
+         inter_image_dist = SUM( path_length(:) ) / REAL( num_of_images - 1 )
          !
          IF ( suspended_image == 0 ) THEN
             !
@@ -211,21 +194,63 @@ MODULE neb_base
          !
          ! ... linear interpolation
          !
-         ALLOCATE( d_R(dim) )
+         ALLOCATE( d_R( dim, ( input_images - 1 ) ) )
          !
-         d_R(:) = ( pos_(:,num_of_images) - pos_(:,1) )
-         !
-         path_length = norm( d_R(:) )
-         !
-         d_R(:) = d_R(:) / REAL( num_of_images - 1  )
-         !
-         inter_image_distance = norm( d_R(:) )
-         !
-         DO i = 2, ( num_of_images - 1 )
+         DO i = 1, ( input_images - 1 )
             !
-            pos_(:,i) = pos_(:,( i - 1 )) + d_R(:)
+            d_R(:,i) = ( pos(1:dim,i+1) - pos(1:dim,i) )
+            !
+            path_length(i) = norm( d_R(:,i) )
+            !
+         END DO   
+         !
+         inter_image_dist = SUM( path_length(:) ) / REAL( num_of_images - 1  )
+         !
+         FORALL( i = 1: ( input_images - 1 ) )
+            !
+            d_R(:,i) = d_R(:,i) / path_length(i)
+            !
+         END FORALL   
+         !
+         pos_(:,1) = pos(1:dim,1)
+         !
+         i = 1
+         s = 0.D0
+         !
+         DO j = 2, ( num_of_images - 1 )
+            !
+            s = s + inter_image_dist
+            !
+            IF ( s > path_length(i) ) THEN
+               !
+               s = s - path_length(i)
+               !
+               i = i + 1
+               !
+            END IF   
+            !
+            IF ( i >= input_images ) &
+               CALL errore( 'initialize_neb', ' i >= input_images ', i )
+            !
+            pos_(:,j) = pos(1:dim,i) + s * d_R(:,i)
             !
          END DO
+         !
+         pos_(:,num_of_images) = pos(1:dim,input_images)
+         !
+         ! ... coordinates must be in bohr ( pwscf uses alat units )
+         !
+         IF ( prog == 'PW' ) THEN
+            !
+            path_length(:) = path_length(:) * alat
+            !
+            inter_image_dist = inter_image_dist * alat
+            !
+            pos_(:,:) = pos_(:,:) * alat
+            !
+         END IF
+         !
+         pos_old(:,:) = pos_(:,:)
          !
          DEALLOCATE( d_R )
          !
@@ -267,10 +292,10 @@ MODULE neb_base
                 FMT = '(5X,"neb_thr",T35," = ",F6.4," eV / A")' ) neb_thr
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"initial path length",&
-                      & T35," = ",F6.3," bohr")' ) path_length   
+                      & T35," = ",F6.3," bohr")' ) SUM( path_length(:) )   
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"initial inter-image distance", &
-                      & T35," = ",F6.3," bohr")' ) inter_image_distance
+                      & T35," = ",F6.3," bohr")' ) inter_image_dist
          !
          IF ( CI_scheme == "manual" ) THEN
             !
@@ -292,6 +317,8 @@ MODULE neb_base
          WRITE( UNIT = iunneb, FMT = '(/)' )
          !
       END IF
+      !
+      DEALLOCATE( path_length )
       !
       RETURN
       !

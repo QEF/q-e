@@ -189,6 +189,14 @@ MODULE io_routines
                    !
                 END DO
                 !
+             ELSE
+                !
+                ! ... a default initialization is provided
+                !
+                vel(:,:)      = 0.D0
+                pos_old(:,:)  = pos(:,:)
+                grad_old(:,:) = PES_gradient(:,:)
+                !   
              END IF
              !
           END IF

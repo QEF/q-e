@@ -862,6 +862,8 @@ MODULE input_parameters
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
         
+        INTEGER   :: input_images = 0
+        
         INTEGER   :: num_of_images = 0
 
         CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 

@@ -450,100 +450,49 @@ MODULE read_cards_module
           CALL read_line( input_line )
           !
           IF ( matches( "first_image", input_line ) ) THEN
+             !                
+             input_images = 1
              !
-             DO ia = 1, nat
-                !
-                index = 3 * ( ia - 1 )
-                !
-                CALL read_line( input_line )
-                CALL field_count( nfield, input_line )
-                !
-                IF ( nfield == 4 ) THEN
-                   !
-                   READ(input_line,*) lb_pos, ( pos(k+index,1), k = 1, 3 )
-                   !
-                ELSE IF ( nfield == 7 ) THEN
-                   !
-                   READ(input_line,*) lb_pos, pos((index+1),1), &
-                                              pos((index+2),1), &
-                                              pos((index+3),1), &
-                                              if_pos(1,ia), &
-                                              if_pos(2,ia), &
-                                              if_pos(3,ia)
-                   !
-                ELSE
-                   ! 
-                   CALL errore( ' read_cards ', &
-                              & ' wrong number of columns  in' // &
-                              & ' ATOMIC_POSITIONS, first_image ', sp_pos(ia) )
-                   !           
-                END IF
-                !
-                lb_pos = ADJUSTL( lb_pos )
-                !
-                match_label_neb: DO is = 1, ntyp
-                   !
-                   IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
-                      !
-                      sp_pos(ia) = is
-                      EXIT match_label_neb
-                      !
-                   END IF
-                   !
-                END DO match_label_neb
-                !
-                IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
-                   !     
-                   CALL errore( ' read_cards ', &
-                              & ' wrong index in ATOMIC_POSITIONS ', ia )
-                   !    
-                END IF
-                !
-                is  =  sp_pos(ia)
-                na_inp( is ) = na_inp( is ) + 1
-                !
-             END DO
-             !
-          ELSE IF ( matches( "last_image", input_line ) ) THEN
-             CALL errore( ' read_cards ', &
-                        & ' missing first_image in ATOMIC_POSITION', 1 )
-          ELSE
-             CALL errore( ' read_cards ', &
-                        & ' missing image identifier in ATOMIC_POSITION', 1 )
-          END IF
-          !
-          CALL read_line( input_line )
-          !
-          IF ( matches( "first_image", input_line ) ) THEN
-             CALL errore( ' read_cards ', &
-                        & ' image identifier wrong in ATOMIC_POSITION', 1 )
-          ELSE IF ( matches( "last_image", input_line ) ) THEN
-             !
-             DO ia = 1, nat
-                !
-                index = 3 * ( ia - 1 )
-                !
-                CALL read_line( input_line )
-                CALL field_count( nfield, input_line )
-                !
-                IF ( nfield == 4 ) THEN
-                   !
-                   READ(input_line,*) &
-                       lb_pos, ( pos(k+index,num_of_images), k = 1, 3 )
-                   !    
-                ELSE
-                   !     
-                   CALL errore( ' read_cards ', &
-                              & ' wrong number of columns  in' // &
-                              & ' ATOMIC_POSITIONS, last_image ', sp_pos(ia) )
-                   !           
-                END IF
-                !
-             END DO
+             CALL neb_read_images( input_images )
              !
           ELSE
-             CALL errore( ' read_cards ', ' missing or wrong image' // &
-                        & ' identifier in ATOMIC_POSITION', 1 )
+             !
+             CALL errore( ' read_cards ', &
+                        & ' first_image missing in ATOMIC_POSITION', 1 )
+             !
+          END IF      
+          !
+          read_conf_loop: DO 
+             !
+             CALL read_line( input_line )
+             !
+             input_images = input_images + 1             
+             !
+             IF ( input_images > num_of_images ) &
+                CALL errore( ' read_cards ', &
+                           & ' too many images in ATOMIC_POSITION', 1 )
+             !
+             IF ( matches( "intermediate_image", input_line )  ) THEN
+                !
+                CALL neb_read_images( input_images )
+                !
+             ELSE
+                !
+                EXIT read_conf_loop
+                !
+             END IF
+             !
+          END DO read_conf_loop
+          !
+          IF ( matches( "last_image", input_line ) ) THEN
+             !
+             CALL neb_read_images( input_images )
+             !
+          ELSE
+             !
+             CALL errore( ' read_cards ', &
+                        & ' last_image missing in ATOMIC_POSITION', 1 )
+             !
           END IF
           !
        ELSE
@@ -613,31 +562,94 @@ MODULE read_cards_module
           !
        END IF      
        !
-       !IF ( prog /= 'PW' ) THEN
-       !   tscal = .TRUE.
-       !   IF ( atomic_positions == 'bohr' ) THEN
-       !      tscal = .FALSE.
-       !   ELSE IF( atomic_positions == 'angstrom' ) THEN
-       !      IF ( calculation == 'neb' ) pos = pos * angstrom_au
-       !      rd_pos = rd_pos * angstrom_au
-       !      tscal = .FALSE.
-       !   ELSE IF( atomic_positions == 'alat' ) THEN
-       !      IF ( calculation == 'neb' ) pos = pos * celldm(1)
-       !      rd_pos = rd_pos * celldm(1)  ! Remember celldm(i) = alat
-       !      tscal = .FALSE.
-       !   ELSE
-       !      IF ( calculation == 'neb' ) THEN
-       !        CALL errore( ' read_cards ', ' scaled coordinate not allowed with neb dynamics ', 1 )
-       !      END IF
-       !      tscal = .TRUE.
-       !   END IF
-       !END IF
-       !
        tapos = .TRUE.
        tread = .TRUE.
        !
        RETURN
        !
+       CONTAINS
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE neb_read_images( image )
+           !-------------------------------------------------------------------
+           !
+           IMPLICIT NONE
+           !
+           INTEGER, INTENT(IN) :: image
+           !
+           !
+           DO ia = 1, nat
+              !
+              index = 3 * ( ia - 1 )
+              !
+              CALL read_line( input_line )
+              CALL field_count( nfield, input_line )
+              !
+              IF ( nfield == 4 ) THEN
+                 !
+                 READ( input_line, * ) lb_pos, pos((index+1),image), &
+                                               pos((index+2),image), &
+                                               pos((index+3),image)
+                 !
+              ELSE IF ( nfield == 7 ) THEN
+                 !
+                 IF ( image /= 1 ) THEN
+                    !
+                    CALL errore( ' read_cards ', &
+                               & ' wrong number of columns  in' // &
+                               & ' ATOMIC_POSITIONS', sp_pos(ia) )                    
+                    !
+                 END IF
+                 !
+                 READ( input_line, * ) lb_pos, pos((index+1),image), &
+                                               pos((index+2),image), &
+                                               pos((index+3),image), &
+                                               if_pos(1,ia), &
+                                               if_pos(2,ia), &
+                                               if_pos(3,ia)
+                 !
+              ELSE
+                 ! 
+                 CALL errore( ' read_cards ', &
+                            & ' wrong number of columns  in' // &
+                            & ' ATOMIC_POSITIONS', sp_pos(ia) )
+                 !           
+              END IF
+              !
+              IF ( image == 1 ) THEN
+                 !
+                 lb_pos = ADJUSTL( lb_pos )
+                 !
+                 match_label_neb: DO is = 1, ntyp
+                    !
+                    IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
+                       !
+                       sp_pos(ia) = is
+                       !
+                       EXIT match_label_neb
+                       !
+                    END IF
+                    !
+                 END DO match_label_neb
+                 !
+                 IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
+                    !     
+                    CALL errore( ' read_cards ', &
+                               & ' wrong index in ATOMIC_POSITIONS ', ia )
+                    !    
+                 END IF
+                 !
+                 is  =  sp_pos(ia)
+                 na_inp( is ) = na_inp( is ) + 1
+                 !
+              END IF     
+              !
+           END DO
+           !
+           RETURN
+           !
+         END SUBROUTINE neb_read_images
+         !
      END SUBROUTINE
      !
      !
