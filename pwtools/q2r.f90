@@ -352,15 +352,28 @@ subroutine trasl (phi,phiq,nq,nrx1,nrx2,nrx3,nat,m1,m2,m3,nax)
   !
   return 
 end subroutine trasl
+
+# if defined __AIX || defined __FFTW || defined __SGI
+#  define __FFT_MODULE_DRV
+# endif
+
 !-------------------------------------------------------------------
 subroutine tolerant_cft3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg)
   !-------------------------------------------------------------------
   !
   !  cft3 called for vectors with arbitrary maximal dimensions
   !
+
+#if defined __FFT_MODULE_DRV
+  use fft_scalar, only : cfft3d
+#endif
+
   implicit none
   integer :: nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg
   complex(kind=8) :: f(nrx1,nrx2,nrx3)
+#if defined __FFT_MODULE_DRV
+  complex(kind=8) :: ftmp(nrx1*nrx2*nrx3)
+#endif
   integer :: i0,i1,i2,i3
   !
   i0=0
@@ -368,23 +381,36 @@ subroutine tolerant_cft3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg)
      do i2=1,nr2
         do i1=1,nr1
            i0 = i0 + 1
+#if defined __FFT_MODULE_DRV
+           ftmp(i0) = f(i1,i2,i3)
+#else
            f(i0,1,1) = f(i1,i2,i3)
+#endif
         enddo
      enddo
   enddo
   !
   if (nr1.ne.1 .or. nr2.ne.1 .or. nr3.ne.1)                         &
+#if defined __FFT_MODULE_DRV
+       &    call cfft3d(ftmp,nr1,nr2,nr3,nr1,nr2,nr3,1)
+#else
        &    call cft_3(f,nr1,nr2,nr3,nr1,nr2,nr3,1,iflg)
+#endif
   !
   i0=nr1*nr2*nr3
   do i3=nr3,1,-1
      do i2=nr2,1,-1
         do i1=nr1,1,-1
+#if defined __FFT_MODULE_DRV
+           f(i1,i2,i3) = ftmp(i0)
+#else
            f(i1,i2,i3) = f(i0,1,1)
+#endif
            i0 = i0 - 1
         enddo
      enddo
   enddo
+
   !
   return
 end subroutine tolerant_cft3
