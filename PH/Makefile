@@ -355,7 +355,7 @@ PWOBJS = ../PW/pwcom.o  \
 include .dependencies
 
 all: $(PHOBJS)
-	$(LD) -o ph.x $(PHOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o ph.x $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 clean_:
 	-/bin/rm -f ph.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #

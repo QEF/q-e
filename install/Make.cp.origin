@@ -35,7 +35,7 @@ CPUTYPE=-r14000
 # Flag for the compilation of the fortran source files
   F77FLAGS= $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)
   F90FLAGS= $(ARCHFLAGS) $(FREEFORM) $(PREPROCESSING) $(DEBUGFLAGS) $(OPTIMIZATIONS)
-  LNKFLAGS=  $(ARCHFLAGS)  
+  LDFLAGS=  $(ARCHFLAGS)  
 #
 # Flag for the compilation of the c source files
   CCFLAGS=    $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) $(OPTIMIZATIONS)
@@ -49,7 +49,7 @@ CPUTYPE=-r14000
   FC= f90
   F77= f90
   F90= f90
-  LNK= f90
+  LD= f90
 #
 # Name of the c compiler
   CC=cc

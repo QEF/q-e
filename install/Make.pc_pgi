@@ -40,7 +40,7 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 LD=$(F90)
 LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw 
 #
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
 
 #
 # ar:

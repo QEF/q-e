@@ -39,7 +39,7 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 # Loader:
 # 
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 #
 # ar:
 #

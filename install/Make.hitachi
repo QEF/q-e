@@ -26,7 +26,7 @@ LIBS= -L$(LAPACKdir) -llapack_sc -lblas_sc \
 
 # 
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 #
 # ar:
 #

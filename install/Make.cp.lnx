@@ -47,7 +47,7 @@ CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -D
   ARFLAGS   = rv
   F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   F90FLAGS  = $(ARCHFLAGS) ${PGIFLAG} $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) ${INCLUDE}
-  LNKFLAGS = $(ARCHFLAGS)
+  LDFLAGS = $(ARCHFLAGS)
 #
 # Flag for the compilation of the c source files
   CCFLAGS   = $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) -O3 -fomit-frame-pointer 
@@ -61,7 +61,7 @@ CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -D
   F77= pgf90
   F90= pgf90
   CC= gcc
-  LNK= pgf90
+  LD= pgf90
 #
 # --- Library ---
 # to link -lfmpich compiled with PGI compiler

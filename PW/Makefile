@@ -255,7 +255,7 @@ MODULES = ../Modules/*.o
 include .dependencies
 
 all: $(PWOBJS)
-	$(LD) -o pw.x $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o pw.x $(PWOBJS) $(MODULES) $(LDFLAGS)
 clean_:
 	-/bin/rm -f pw.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #

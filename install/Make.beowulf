@@ -45,7 +45,7 @@ LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw
 #LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L/cineca/lib -lfftw 
 #
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
 
 #
 # ar:

@@ -19,19 +19,19 @@ MODULES = ../Modules/parameters.o
 all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x
 
 band_plot.x:  band_plot.o
-	$(LD) -o band_plot.x band_plot.o  $(LFLAGS)
+	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
 
 q2r.x: q2r.o rigid.o
-	$(LD) -o q2r.x q2r.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o q2r.x q2r.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 matdyn.x: matdyn.o rigid.o
-	$(LD) -o matdyn.x matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o matdyn.x matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 dynmat.x: dynmat.o rigid.o
-	$(LD) -o dynmat.x dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o dynmat.x dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 fqha.x:  fqha.o
-	$(LD) -o fqha.x fqha.o  $(LFLAGS)
+	$(LD) -o fqha.x fqha.o  $(LDFLAGS)
 
 clean_:
 	rm -f *.x *.o *~ *.F90 *.mod *.d *.i work.pc

@@ -21,7 +21,7 @@ LIBS = -L/usr/opt/SUNWhpc/lib \
        -R/opt/SUNWhpc/lib -lmvec -lmpi
 #
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a -fast -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a -fast -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf $(LIBS)
 #
 # ar:
 #

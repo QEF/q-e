@@ -33,7 +33,7 @@
   FFLAG=    $(FARCHFLAG) $(FMISC) $(FOPTIM)
   MAINFLAG= $(FARCHFLAG) $(FMISC) $(FREEFORM) $(PRECOMP) $(CPMACRO)
   F90FLAG=  $(FARCHFLAG) $(FMISC) $(FREEFORM) $(PRECOMP) $(CPMACRO) $(FOPTIM)
-  LNKFLAG=  $(FARCHFLAG)  
+  LDFLAG=  $(FARCHFLAG)  
 #
 # Flag for the compilation of the c source files
   CFLAG=    $(CARCHFLAG) $(CPMACRO) $(COPTIM)
@@ -47,7 +47,7 @@
   FC= f90
   F90= f90
   F77= f90
-  LNK= f90
+  LD= f90
 #
 # Name of the c compiler
   CC= cc

@@ -57,7 +57,7 @@ LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
 # LIBS = -lfftw -L$(HOME)/Linux_ATHLON256/ -llapack -lf77blas -lcblas -latlas
 #
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a -Vaxlib $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a -Vaxlib $(LIBS)
 
 #
 # ar:

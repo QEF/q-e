@@ -6,7 +6,7 @@ CPPFLAGS = -DAIX,-DHAS_ZHEGVX
 
 #
 # Fortran compiler:
-# Use -g -C without -s in LFLAGS for debugging
+# Use -g -C without -s in LDFLAGS for debugging
 # Use -O            for optimization
 # Use -O3 -qstrict  for higher optimization (may not go faster)
 # Use -qarch=auto -qtune=auto for processor-specific optimization
@@ -40,8 +40,8 @@ LIBS = -lessl -L/usr/local/lib -llapack
 #         use -bnso -bI:/usr/lib/syscalls.exp for static linking
 #
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
-#LFLAGS = $(LIBS) -s -bmaxdata:512000000
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
+#LDFLAGS = $(LIBS) -s -bmaxdata:512000000
 
 #
 # ar:

@@ -65,7 +65,7 @@ LIBS = -llapack -lblas -lasl
 #
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 
-LFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/flib.a $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)
+LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/flib.a $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)
 
 #
 # ranlib:

@@ -36,7 +36,7 @@ LIBS = -lfmpi -lpmpi -lmpi -lelan -lcxml -L/usr/local/fftw-2.1.3/lib/ -lfftw
 # Loader:
 # 
 LD=$(F90)
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 AR = ar
 ARFLAGS = rv

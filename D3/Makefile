@@ -409,7 +409,7 @@ PWOBJS = ../PW/pwcom.o  \
 include .dependencies
 
 all: $(D3OBJS)
-	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 clean_:
 	-/bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod work.pc
 #

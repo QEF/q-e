@@ -29,7 +29,7 @@
   ARFLAGS   = rv
   F77FLAGS = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   F90FLAGS = $(ARCHFLAGS) $(PREPROCESSING) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
-  LNKFLAGS = $(ARCHFLAGS)
+  LDFLAGS = $(ARCHFLAGS)
 #
 # Flag for the compilation of the c source files
   CCFLAGS= -O2 $(CPMACRO)
@@ -42,7 +42,7 @@
   FC= f90
   F90= f90
   F77= f90
-  LNK= f90
+  LD= f90
 #
 #
 # Other

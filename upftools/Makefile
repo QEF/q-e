@@ -8,33 +8,33 @@ OBJS =	write_upf.o
 all: rrkj2upf ncpp2upf vdb2upf uspp2upf fhi2upf cpmd2upf oldcp2upf
 
 rrkj2upf:  rrkj2upf.o $(OBJS)
-	$(LD) -o $@  rrkj2upf.o $(OBJS) $(LFLAGS)
+	$(LD) -o $@  rrkj2upf.o $(OBJS) $(LDFLAGS)
 
 ncpp2upf:  ncpp2upf.o $(OBJS) nclib.o
-	$(LD) -o $@  ncpp2upf.o nclib.o $(OBJS) $(LFLAGS)
+	$(LD) -o $@  ncpp2upf.o nclib.o $(OBJS) $(LDFLAGS)
 
 vdb2upf:  vdb2upf.o $(OBJS) vanderbilt.o
-	$(LD) -o $@  vdb2upf.o  vanderbilt.o write_upf.o $(LFLAGS)
+	$(LD) -o $@  vdb2upf.o  vanderbilt.o write_upf.o $(LDFLAGS)
 
 uspp2upf:  uspp2upf.o $(OBJS) vanderbilt.o
-	$(LD) -o $@  uspp2upf.o vanderbilt.o write_upf.o $(LFLAGS)
+	$(LD) -o $@  uspp2upf.o vanderbilt.o write_upf.o $(LDFLAGS)
 
 fhi2upf:  fhi2upf.o $(OBJS) nclib.o
-	$(LD) -o $@  fhi2upf.o nclib.o write_upf.o $(LFLAGS)
+	$(LD) -o $@  fhi2upf.o nclib.o write_upf.o $(LDFLAGS)
 
 cpmd2upf:  cpmd2upf.o $(OBJS) nclib.o
-	$(LD) -o $@  cpmd2upf.o nclib.o write_upf.o $(LFLAGS)
+	$(LD) -o $@  cpmd2upf.o nclib.o write_upf.o $(LDFLAGS)
 
 oldcp2upf:  oldcp2upf.o $(OBJS) nclib.o
-	$(LD) -o $@  oldcp2upf.o nclib.o write_upf.o $(LFLAGS)
+	$(LD) -o $@  oldcp2upf.o nclib.o write_upf.o $(LDFLAGS)
 
 fpmd2upf.x : fpmd2upf.o
-	$(LNK) -o $@ $(LNKFLAGS) fpmd2upf.o \
+	$(LD) -o $@ $(LDFLAGS) fpmd2upf.o \
         ../Modules/*.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIB)
 
 
 read_upf:
-	$(LD) -o $@  read_upf.o $(LFLAGS)
+	$(LD) -o $@  read_upf.o $(LDFLAGS)
 
 clean_:
 	rm -f  *2upf *.o *~ *.F90 *.mod *.d *.i work.pc

@@ -25,7 +25,7 @@ default:
 	make $(PROGNAME)
 
 cp90 : $(FOBJS) cpflush.o
-	$(LNK) -o $(PROGNAME) $(LNKFLAGS) $(FOBJS) ../Modules/*.o cpflush.o \
+	$(LD) -o $(PROGNAME) $(LDFLAGS) $(FOBJS) ../Modules/*.o cpflush.o \
           ../flib/flib.a ../flib/eispack.o $(LIB)
 	chmod a+r $(PROGNAME)
 	chmod a+x $(PROGNAME)

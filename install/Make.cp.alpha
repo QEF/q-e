@@ -33,8 +33,8 @@
   F77FLAGS= $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   F77FLAGS= $(ARCHFLAGS) 
   F90FLAGS= $(ARCHFLAGS) $(PRECISION) $(FREEFORM) $(PREPROCESSING) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
-  LNKFLAGS=  $(ARCHFLAGS) -non_shared
-  LNKFLAGS=  $(ARCHFLAGS) 
+  LDFLAGS=  $(ARCHFLAGS) -non_shared
+  LDFLAGS=  $(ARCHFLAGS) 
 #
 # Flag for the compilation of the c source files
   CCFLAGS=   $(INCLUDEPATH) $(CARCHFLAGS) $(CPMACRO) -tune $(CPUTYPE) -fast
@@ -45,7 +45,7 @@
   FC= f90
   F77= f90
   F90= f90
-  LNK= f90
+  LD= f90
 #
 # Name of the c compiler
   CC=cc

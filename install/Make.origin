@@ -31,7 +31,7 @@ LIBS = -lmpi -lcomplib.sgimath
 # Loader:
 LD=$(F90)
 
-LFLAGS = $(FFLAGS) $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(FFLAGS) $(OSHOME)/flib/flib.a $(LIBS)
 
 #
 # ar:

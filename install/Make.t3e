@@ -38,7 +38,7 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 #
 LD=$(F90)
 LIBS = -lfftw -lmpi
-LFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
 
 #
 # ar:

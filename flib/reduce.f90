@@ -8,6 +8,19 @@
 
 #include"../include/fpmd.h"
 
+#if defined __LINUX
+#  define MESSAGE_MAX_SIZE         262144
+#  define INTEGER_MESSAGE_MAX_SIZE  65536
+#  define REAL_MESSAGE_MAX_SIZE     32768
+#  define COMPLEX_MESSAGE_MAX_SIZE  16384
+#else
+#  define MESSAGE_MAX_SIZE          20000000
+#  define INTEGER_MESSAGE_MAX_SIZE   5000000
+#  define REAL_MESSAGE_MAX_SIZE      2500000
+#  define COMPLEX_MESSAGE_MAX_SIZE   1250000
+#endif
+
+
       SUBROUTINE PARALLEL_SUM_REAL(ARRAY,N, gid)
         IMPLICIT NONE
         INTEGER N, ERR, I, gid
@@ -19,7 +32,7 @@
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         INTEGER msgsiz_max
         REAL*8 ARRAY_TMP(N)
-        msgsiz_max = FPMD_REAL_MESSAGE_MAX_SIZE
+        msgsiz_max = REAL_MESSAGE_MAX_SIZE
 
         IF( n .LT. msgsiz_max ) THEN
           CALL MPI_ALLREDUCE(ARRAY, ARRAY_TMP, N, MPI_DOUBLE_PRECISION,  &
@@ -55,7 +68,7 @@
         INTEGER msgsiz_max
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         COMPLEX*16 ARRAY_TMP(N)
-        msgsiz_max = FPMD_COMPLEX_MESSAGE_MAX_SIZE 
+        msgsiz_max = COMPLEX_MESSAGE_MAX_SIZE 
 
         IF( n .LT. msgsiz_max ) THEN
           CALL MPI_ALLREDUCE(ARRAY, ARRAY_TMP, N, MPI_DOUBLE_COMPLEX,  &
@@ -92,7 +105,7 @@
         INTEGER msgsiz_max
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         INTEGER ARRAY_TMP(N)
-        msgsiz_max = FPMD_INTEGER_MESSAGE_MAX_SIZE 
+        msgsiz_max = INTEGER_MESSAGE_MAX_SIZE 
         IF( n .LT. msgsiz_max ) THEN
           CALL MPI_ALLREDUCE(ARRAY, ARRAY_TMP, N, MPI_INTEGER,  &
      &       MPI_SUM, gid, ERR)
@@ -127,7 +140,7 @@
         INTEGER nblk, blksiz, msgsiz, iblk, istart
 #if defined __MPI 
         INCLUDE 'mpif.h'
-        msgsiz_max = FPMD_REAL_MESSAGE_MAX_SIZE 
+        msgsiz_max = REAL_MESSAGE_MAX_SIZE 
 
         IF( n .LT. msgsiz_max) THEN
           CALL MPI_ALLREDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_PRECISION,  &
@@ -166,7 +179,7 @@
 #if defined __MPI 
 
         INCLUDE 'mpif.h'
-        msgsiz_max = FPMD_REAL_MESSAGE_MAX_SIZE 
+        msgsiz_max = REAL_MESSAGE_MAX_SIZE 
 
         IF( n .LT. msgsiz_max) THEN
           CALL MPI_REDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_PRECISION,  &
@@ -207,7 +220,7 @@
         INTEGER nblk, blksiz, msgsiz, iblk, istart
 #if defined __MPI
         INCLUDE 'mpif.h'
-        msgsiz_max = FPMD_COMPLEX_MESSAGE_MAX_SIZE
+        msgsiz_max = COMPLEX_MESSAGE_MAX_SIZE
 
         IF( n .LT. msgsiz_max ) THEN
           CALL MPI_ALLREDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_COMPLEX,  &
@@ -244,7 +257,7 @@
         INTEGER msgsiz_max
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         INTEGER IWORK(N)
-        msgsiz_max = FPMD_INTEGER_MESSAGE_MAX_SIZE 
+        msgsiz_max = INTEGER_MESSAGE_MAX_SIZE 
         IF( n .GT. msgsiz_max ) THEN
           WRITE(6,*) ' *** WARNING PARALLEL_MAX_INTEGER: MSGSIZ > MSGSIZ_MAX '
         END IF
@@ -265,7 +278,7 @@
         INTEGER msgsiz_max
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         INTEGER IWORK(N)
-        msgsiz_max = FPMD_INTEGER_MESSAGE_MAX_SIZE 
+        msgsiz_max = INTEGER_MESSAGE_MAX_SIZE 
         IF( n .GT. msgsiz_max ) THEN
           WRITE(6,*) ' *** WARNING PARALLEL_MIN_INTEGER: MSGSIZ > MSGSIZ_MAX '
         END IF
@@ -286,7 +299,7 @@
         INTEGER msgsiz_max
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         REAL*8  RWORK(N)
-        msgsiz_max = FPMD_REAL_MESSAGE_MAX_SIZE
+        msgsiz_max = REAL_MESSAGE_MAX_SIZE
         IF( n .GT. msgsiz_max ) THEN
           WRITE(6,*) ' *** WARNING PARALLEL_MAX_REAL: MSGSIZ > MSGSIZ_MAX '
         END IF
@@ -308,7 +321,7 @@
         INTEGER msgsiz_max
         INTEGER nblk, blksiz, msgsiz, iblk, istart
         REAL*8  RWORK(N)
-        msgsiz_max = FPMD_REAL_MESSAGE_MAX_SIZE
+        msgsiz_max = REAL_MESSAGE_MAX_SIZE
         IF( n .GT. msgsiz_max ) THEN
           WRITE(6,*) ' *** WARNING PARALLEL_MIN_REAL: MSGSIZ > MSGSIZ_MAX '
         END IF

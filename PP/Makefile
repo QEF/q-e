@@ -281,31 +281,31 @@ include .dependencies
 all: pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x bands.x
 
 pp.x: $(PPOBJS) postproc.o
-	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 projwfc.x:  $(PPOBJS) projwfc.o
-	$(LD) -o projwfc.x projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o projwfc.x projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 chdens.x: $(PPOBJS) chmain.o
-	$(LD) -o chdens.x chmain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o chdens.x chmain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 average.x: $(PPOBJS) avmain.o
-	$(LD) -o average.x avmain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o average.x avmain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 voronoy.x:  $(PPOBJS) voromain.o
-	$(LD) -o voronoy.x voromain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o voronoy.x voromain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 dos.x:  $(PPOBJS) dos.o
-	$(LD) -o dos.x dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o dos.x dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 projdos.x:  $(PPOBJS) projected_dos.o
-	$(LD) -o projdos.x projected_dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o projdos.x projected_dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 bands.x: $(PPOBJS) bands.o
-	$(LD) -o bands.x bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
+	$(LD) -o bands.x bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 plotrho.x: $(PPOBJS) plotrho.o
-	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LFLAGS)
+	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LDFLAGS)
 
 clean_:
 	-/bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
