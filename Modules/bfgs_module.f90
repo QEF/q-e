@@ -11,8 +11,9 @@ MODULE bfgs_module
   !
   ! ... ionic relaxation through Broyden-Fletcher-Goldfarb-Shanno 
   ! ... minimization and a "trust radius" line search based on 
-  ! ... Wolfe conditions ( bfgs subroutine )
-  ! ... A linear scaling BFGS is also implemented ( lin_bfgs subroutine )
+  ! ... Wolfe conditions ( bfgs() subroutine )
+  ! ... A linear scaling BFGS is also implemented ( lin_bfgs() subroutine )
+  ! ... Both subroutines are called with the same list of arguments
   !
   ! ... references :  
   !
@@ -49,7 +50,7 @@ MODULE bfgs_module
       gradient_old(:,:)          ! list of m old gradients ( m = 1 for 
                                  ! standard BFGS algorithm )
   INTEGER :: &
-      m                          ! dimension of the subspace for L-BFGS
+      m = 4                      ! dimension of the subspace for L-BFGS
                                  ! m = 1 for standard BFGS algorithm
   REAL(KIND=DP) :: &   
       trust_radius,             &! displacement along the bfgs direction
@@ -59,15 +60,19 @@ MODULE bfgs_module
       scf_iter,                 &! number of scf iterations
       bfgs_iter,                &! number of bfgs iterations
       lin_iter                   ! number of line search iterations    
-  REAL(KIND=DP), PARAMETER  :: &
+  REAL(KIND=DP)  :: &
       trust_radius_max = 0.5D0, &! maximum allowed displacement
       trust_radius_min = 1.D-5, &! minimum allowed displacement
       trust_radius_ini = 0.5D0, &! initial displacement
       trust_radius_end = 1.D-7   ! bfgs stops when trust_radius is less than
                                  ! this value
-  REAL(KIND=DP), PARAMETER  :: &
+  REAL(KIND=DP)  :: &
       w_1 = 0.5D-1,             &! parameters for Wolfe conditions
       w_2 = 0.5D0                ! parameters for Wolfe conditions
+  !
+  ! ... Note that m, trust_radius_max, trust_radius_min, trust_radius_ini,
+  ! ... trust_radius_end, w_1, w_2 have a default value, but can also be 
+  ! ... assigned in input
   !  
   !
   CONTAINS
@@ -77,28 +82,53 @@ MODULE bfgs_module
      !
      !-----------------------------------------------------------------------
      SUBROUTINE bfgs( pos, energy, gradient, scratch, stdout, energy_thr, &
-                      gradient_thr, energy_error, gradient_error, &
+                      gradient_thr, energy_error, gradient_error,         &
                       step_accepted, conv_bfgs )
        !-----------------------------------------------------------------------
+       !
+       ! ... list of input/output arguments : 
+       !  
+       !  pos            : vector containing 3N coordinates of the system ( x )
+       !  energy         : energy of the system ( V(x) )
+       !  gradient       : vector containing 3N components of ( grad( V(x) ) ) 
+       !  scratch        : scratch diercotry
+       !  stdout         : unit for standard output
+       !  energy_thr     : treshold on energy difference for BFGS convergence
+       !  gradient_thr   : treshold on gradient difference for BFGS convergence
+       !                    the largest component of grad( V(x) ) is considered
+       !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
+       !  gradient_error : the largest component of 
+       !                    | grad(V(x_i)) - grad(V(x_i-1)) | 
+       !  step_accepted  : .TRUE. if a new BFGS step is done
+       !  conv_bfgs      : .TRUE. if BFGS convergence has been achieved
        !
        USE constants,  ONLY : eps16
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(INOUT)   :: pos(:)
-       REAL(KIND=DP), INTENT(INOUT)   :: energy       
-       REAL(KIND=DP), INTENT(INOUT)   :: gradient(:)
-       CHARACTER (LEN=*), INTENT(IN)  :: scratch
-       INTEGER, INTENT(IN)            :: stdout   
-       REAL(KIND=DP), INTENT(IN)      :: energy_thr, gradient_thr  
-       REAL(KIND=DP), INTENT(OUT)     :: energy_error, gradient_error       
-       LOGICAL, INTENT(OUT)           :: step_accepted, conv_bfgs
-       INTEGER                        :: dim, i
-       LOGICAL                        :: lwolfe
+       ! ... input/output arguments
+       !
+       REAL(KIND=DP),     INTENT(INOUT) :: pos(:)
+       REAL(KIND=DP),     INTENT(INOUT) :: energy       
+       REAL(KIND=DP),     INTENT(INOUT) :: gradient(:)
+       CHARACTER (LEN=*), INTENT(IN)    :: scratch
+       INTEGER,           INTENT(IN)    :: stdout   
+       REAL(KIND=DP),     INTENT(IN)    :: energy_thr, gradient_thr  
+       REAL(KIND=DP),     INTENT(OUT)   :: energy_error, gradient_error       
+       LOGICAL,           INTENT(OUT)   :: step_accepted, conv_bfgs
+       !
+       ! ... local variables
+       !
+       INTEGER  :: dim, i
+       LOGICAL  :: lwolfe
        !
        !
        dim = SIZE( pos )
-       m   = 1
+       !
+       ! ... m is forced to be equal to 1 ( the complete inverse hessian 
+       ! ... matrix is stored )
+       !
+       m  = 1
        !
        ALLOCATE( pos_old( dim, m ) )
        ALLOCATE( inverse_hessian( dim, dim ) )
@@ -280,31 +310,49 @@ MODULE bfgs_module
      !
      !-----------------------------------------------------------------------
      SUBROUTINE lin_bfgs( pos, energy, gradient, scratch, stdout, energy_thr, &
-                          gradient_thr, energy_error, gradient_error, &
+                          gradient_thr, energy_error, gradient_error,         &
                           step_accepted, conv_bfgs )
        !-----------------------------------------------------------------------
+       !
+       ! ... list of input/output arguments : 
+       !  
+       !  pos            : vector containing 3N coordinates of the system ( x )
+       !  energy         : energy of the system ( V(x) )
+       !  gradient       : vector containing 3N components of ( grad( V(x) ) ) 
+       !  scratch        : scratch diercotry
+       !  stdout         : unit for standard output
+       !  energy_thr     : treshold on energy difference for BFGS convergence
+       !  gradient_thr   : treshold on gradient difference for BFGS convergence
+       !                    the largest component of grad( V(x) ) is considered
+       !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
+       !  gradient_error : the largest component of 
+       !                    | grad(V(x_i)) - grad(V(x_i-1)) | 
+       !  step_accepted  : .TRUE. if a new BFGS step is done
+       !  conv_bfgs      : .TRUE. if BFGS convergence has been achieved       
        !
        USE constants,  ONLY : eps16       
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(INOUT)   :: pos(:)
-       REAL(KIND=DP), INTENT(INOUT)   :: energy       
-       REAL(KIND=DP), INTENT(INOUT)   :: gradient(:)
-       CHARACTER (LEN=*), INTENT(IN)  :: scratch
-       INTEGER, INTENT(IN)            :: stdout   
-       REAL(KIND=DP), INTENT(IN)      :: energy_thr, gradient_thr  
-       REAL(KIND=DP), INTENT(OUT)     :: energy_error, gradient_error       
-       LOGICAL, INTENT(OUT)           :: step_accepted, conv_bfgs
+       !
+       ! ... input/output arguments
+       !
+       REAL(KIND=DP),     INTENT(INOUT) :: pos(:)
+       REAL(KIND=DP),     INTENT(INOUT) :: energy       
+       REAL(KIND=DP),     INTENT(INOUT) :: gradient(:)
+       CHARACTER (LEN=*), INTENT(IN)    :: scratch
+       INTEGER,           INTENT(IN)    :: stdout   
+       REAL(KIND=DP),     INTENT(IN)    :: energy_thr, gradient_thr  
+       REAL(KIND=DP),     INTENT(OUT)   :: energy_error, gradient_error       
+       LOGICAL,           INTENT(OUT)   :: step_accepted, conv_bfgs
        !
        ! ... local variables
        !
-       INTEGER                        :: dim, i
-       LOGICAL                        :: lwolfe
+       INTEGER  :: dim, i
+       LOGICAL  :: lwolfe
        !
        !
        dim = SIZE( pos )
-       m   = 6
        !
        ALLOCATE( pos_old( dim, m ) )
        ALLOCATE( gradient_old( dim, m ) )       
