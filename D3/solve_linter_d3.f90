@@ -300,8 +300,8 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 #endif
 
   if (lmetq0) call set_efsh (drhoscf, imode0, irr, npe)
-  aux_avg (1) = dfloat (ltaver)
-  aux_avg (2) = dfloat (lintercall)
+  aux_avg (1) = dble (ltaver)
+  aux_avg (2) = dble (lintercall)
   call poolreduce (2, aux_avg)
 
   averlt = aux_avg (1) / aux_avg (2)

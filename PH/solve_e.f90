@@ -323,7 +323,7 @@ subroutine solve_e
 
      call newdq(dvscfin,3)
 
-     averlt = dfloat (ltaver) / dfloat (lintercall)
+     averlt = dble (ltaver) / dble (lintercall)
   
      tcpu = get_clock ('PHONON')
      WRITE( stdout, '(//,5x," iter # ",i3," total cpu time : ",f7.1, &

@@ -26,8 +26,6 @@ bp_qvan3.o \
 bp_radin.o \
 bp_strings.o \
 bp_ylm_q.o \
-bp_zgedi.o \
-bp_zgefa.o \
 c_bands.o \
 c_gemm.o \
 ccalbec.o \

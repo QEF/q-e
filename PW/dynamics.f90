@@ -192,7 +192,7 @@ SUBROUTINE dynamics()
   END IF
   !
   WRITE( UNIT = stdout, &
-         FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37" = ",I5,/, &
+         FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",I5,/, &
                 & T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
       istep, elapsed_time
   !

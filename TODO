@@ -1,4 +1,4 @@
-TODO LIST - 8 May 2004
+TODO LIST - 2 Jul 2004
 (does not include new developments!)
 
 INSTALLATION/PORTING
@@ -26,9 +26,7 @@ COMMON
 
 - variable declarations : real(kind=DP), or real(dbl), everywhere
 
-- real vs dreal, cmplx vs dcmplx, dfloat vs dble vs float etc
-
-- calculation of <psi|exp(iGr)|psi'>
+- real vs dreal, cmplx vs dcmplx, float vs dble, etc
 
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds   
@@ -36,7 +34,7 @@ COMMON
 - replace calls to level-1 blas copy, scal, axpy, with f90 syntax
 
 - cleanup and merge of routines reading and processing PPs;
-  merge uspp-related stuff of CP and PW
+  merge uspp-related stuff ("small box") of CP into PW
 
 PW
 
@@ -44,10 +42,6 @@ PW
 
 - remove iswitch, replace with existing (minus_q, lscf)
   or new logical variables
-
-- the assignment of correct weights to k-points must be done
-  in a more general and less obscure way (needed for better
-  support of noncolinear stuff)
 
 - maximize merge of colinear (PW) and with noncolinear (PWNC) code
 
@@ -71,8 +65,6 @@ PW
 
 - fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
 
-- ultrasoft PP: import "small boxes" from CP 
-
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)
   - shift structure factor from beta to psi when computing becp (reduce memory)
@@ -93,8 +85,6 @@ POSTPROCESSING
 - complete postprocessing in Gamma case
 
 - stm_wfc_matching not working
-
-- dos, projected dos, etc: input data should be more uniform
 
 - the dynamical matrix written by the phonon code does not contain
   the information on lattice basis vectors if ibrav=0.

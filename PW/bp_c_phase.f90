@@ -27,8 +27,6 @@
 !#   * ../PW/bp_radin.f                                                       #!
 !#   * ../PW/bp_strings.f90                                                   #!
 !#   * ../PW/bp_ylm_q.f                                                       #!
-!#   * ../PW/bp_zgedi.f                                                       #!
-!#   * ../PW/bp_zgefa.f                                                       #!
 !#                                                                            #!
 !#   The PWSCF files that needed (minor) modifications were:                  #!
 !#   * ../PW/electrons.f90                                                    #!
@@ -544,7 +542,8 @@ SUBROUTINE c_phase
 
 !              --- Calculate matrix determinant ---
                CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-               CALL errore('c_phase','error in zgefa',abs(info))
+               !!! CALL ZGETRF (nbnd,nbnd,mat,nbnd,ivpt,info)
+               CALL errore('c_phase','error in factorization',abs(info))
                job=10
                CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
                det=cdet(1)*10.d0**cdet(2)

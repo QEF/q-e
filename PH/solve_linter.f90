@@ -467,12 +467,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      call newdq (dvscfin, npe)
 #ifdef __PARA
-     aux_avg (1) = dfloat (ltaver)
-     aux_avg (2) = dfloat (lintercall)
+     aux_avg (1) = dble (ltaver)
+     aux_avg (2) = dble (lintercall)
      call poolreduce (2, aux_avg)
      averlt = aux_avg (1) / aux_avg (2)
 #else
-     averlt = dfloat (ltaver) / lintercall
+     averlt = dble (ltaver) / lintercall
 #endif
      tcpu = get_clock ('PHONON')
 

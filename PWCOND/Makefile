@@ -99,8 +99,6 @@ PWOBJS = \
 ../PW/bp_radin.o \
 ../PW/bp_strings.o \
 ../PW/bp_ylm_q.o \
-../PW/bp_zgedi.o \
-../PW/bp_zgefa.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
 ../PW/ccgdiagg.o \

@@ -1,7 +1,7 @@
 # @configure_input@
 CC             = @cc@
 CCFLAGS        = @cflags@ @pre_dflags@$(DFLAGS) $(IFLAGS)
-# See include/machine.h.README for a list of precompilation options
+# See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
 DFLAGS         = @dflags@
 IFLAGS         = -I. -I../include -I../Modules -I../PW -I../PH @ifftw@

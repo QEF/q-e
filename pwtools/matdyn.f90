@@ -83,10 +83,9 @@ program matdyn
                   amass_blk(nax_blk),         &! original atomic masses
                   q(3,nqx),                   &! list of q-points
                   w2(3*nax,nqx),              &! frequencies (square)
-                  freq(3*nax,nqx),            &! frequencies
                   atws(3,3),      &! lattice vector for WS initialization
                   rws(0:3,nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
-  real(kind=8), allocatable:: tetra(:,:)
+  real(kind=8), allocatable:: tetra(:,:), freq(:,:)
   !
   integer :: nat, nat_blk,                 & 
              ityp_blk(nax_blk), ityp(nax), &
@@ -198,9 +197,9 @@ program matdyn
   if (SUM(abs(at(:,:))) == 0.d0) then
      if (l1.le.0 .or. l2.le.0 .or. l3.le.0) call                    &
           &             errore ('matdyn',' wrong l1,l2 or l3',1)
-     at(:,1) = at_blk(:,1)*dfloat(l1)
-     at(:,2) = at_blk(:,2)*dfloat(l2)
-     at(:,3) = at_blk(:,3)*dfloat(l3)
+     at(:,1) = at_blk(:,1)*dble(l1)
+     at(:,2) = at_blk(:,2)*dble(l2)
+     at(:,3) = at_blk(:,3)*dble(l3)
   end if
   !
   call check_at(at,bg_blk,alat,omega)
@@ -230,9 +229,9 @@ program matdyn
   !
   ! build the WS cell corresponding to the force constant grid
   !
-  atws(:,1) = at_blk(:,1)*dfloat(nr1)
-  atws(:,2) = at_blk(:,2)*dfloat(nr2)
-  atws(:,3) = at_blk(:,3)*dfloat(nr3)
+  atws(:,1) = at_blk(:,1)*dble(nr1)
+  atws(:,2) = at_blk(:,2)*dble(nr2)
+  atws(:,3) = at_blk(:,3)*dble(nr3)
   ! initialize WS r-vectors
   call wsinit(rws,nrwsx,nrws,atws)
   !
@@ -305,6 +304,7 @@ program matdyn
   !
   if(iout .ne. 6) close(unit=iout)
   !
+  allocate (freq(3*nat, nq))
   do n=1,nq
      ! freq(i,n) = frequencies in cm^(-1)
      !             negative sign if omega^2 is negative
@@ -337,7 +337,7 @@ program matdyn
      open (unit=2,file=fldos,status='unknown',form='formatted')
      do n= 1, ndos  
         E = Emin + (n - 1) * DeltaE  
-        call dos_t(freq, 1, 3*nax, 3*nat, nq, ntetra, tetra, E, DOSofE)
+        call dos_t(freq, 1, 3*nat, nq, ntetra, tetra, E, DOSofE)
         write (2, '(2e12.4)') E, DOSofE (1)
      end do
      close(unit=2)
@@ -903,68 +903,3 @@ subroutine gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   return
 end subroutine gen_qpoints
-!
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
-!--------------------------------------------------------------------
-subroutine dos_t (et, nspin, nbndx, nbnd, nks, ntetra, tetra, e, dost)
-  !------------------------------------------------------------------
-  !
-  use kinds, only : DP
-  implicit none  
-  integer :: nspin, nbndx, nbnd, nks, ntetra, tetra (4, ntetra)  
-
-  real(kind=DP) :: et (nbndx, nks), e, dost (2)  
-  integer :: itetra (4), nk, ns, nt, ibnd, i  
-
-  real(kind=DP) :: etetra (4), e1, e2, e3, e4  
-  do ns = 1, nspin  
-     dost (ns) = 0.0  
-     !
-     ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
-     !
-     if (ns.eq.1) then  
-        nk = 0  
-     else  
-        nk = nks / 2  
-
-     endif
-     do nt = 1, ntetra  
-        do ibnd = 1, nbnd  
-           ! these are the energies at the vertexes of the nt-th tetrahedron
-           do i = 1, 4  
-              etetra (i) = et (ibnd, tetra (i, nt) + nk)  
-           enddo
-           itetra (1) = 0  
-           call hpsort (4, etetra, itetra)  
-           e1 = etetra (1)  
-           e2 = etetra (2)  
-           e3 = etetra (3)  
-           e4 = etetra (4)  
-           if (e.lt.e4.and.e.ge.e3) then  
-              dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0 * (e4 - e) **2 / &
-                   (e4 - e1) / (e4 - e2) / (e4 - e3) )
-           elseif (e.lt.e3.and.e.ge.e2) then  
-              dost (ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
-                   * (3.0 * (e2 - e1) + 6.0 * (e-e2) - 3.0 * (e3 - e1 + e4 - e2) &
-                   / (e3 - e2) / (e4 - e2) * (e-e2) **2)
-           elseif (e.lt.e2.and.e.gt.e1) then  
-              dost (ns) = dost (ns) + 1.d0 / ntetra * 3.0 * (e-e1) **2 / &
-                   (e2 - e1) / (e3 - e1) / (e4 - e1)
-           endif
-        enddo
-
-
-     enddo
-     ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
-
-     dost (ns) = dost (ns) * 2.d0 / nspin  
-
-  enddo
-  return  
-end subroutine dos_t
