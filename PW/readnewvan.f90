@@ -117,7 +117,7 @@ subroutine readnewvan (is, iunps)
         else
            qqq (nb, mb, is) = 0.d0
            qqq (mb, nb, is) = 0.d0
-           do n = 0, mesh (is)
+           do n = 1, mesh (is)
               qfunc (n, nb, mb, is) = 0.d0
               qfunc (n, mb, nb, is) = 0.d0
            enddo
