@@ -195,7 +195,8 @@ PWOBJS=../PW/pwcom.o \
 ../PW/bp_zgedi.o \
 ../PW/bp_zgefa.o \
 ../PW/ggen.o \
-../PW/ccalbec.o 
+../PW/ccalbec.o \
+../PW/becmod.o 
 
 
 MODULES = ../Modules/*.o ../PW/error_handler.o \
