@@ -8,10 +8,12 @@
 #include "machine.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE bfgs
+SUBROUTINE bfgs()
   !-----------------------------------------------------------------------
-  ! ionic relaxation through broyden-fletcher-goldfarb-shanno minimization
-  ! this version saves data at each iteration
+  !
+  ! ... ionic relaxation through broyden-fletcher-goldfarb-shanno 
+  ! ... minimization
+  ! ... this version saves data at each iteration
   !
   USE parameters,  ONLY : DP
   USE brilz,       ONLY : alat
@@ -26,15 +28,14 @@ SUBROUTINE bfgs
   USE io_files,    ONLY : prefix
 #ifdef __PARA
   USE para,        ONLY : me, mypool
-  USE mp
+  USE io_global,   ONLY : ionode_id
+  USE mp,          ONLY : mp_bcast
 #endif
   !
   IMPLICIT NONE
   !
   INTEGER :: iunit          ! unit for file containing bfgs info
-  INTEGER :: nat1,        & ! number of moving atoms
-             nat3,        & ! 3 times the above
-             nax3,        & ! 3 times the total number of atoms (nat)
+  INTEGER :: nax3,        & ! 3 times the total number of atoms (nat)
              na, i          ! counters
   REAL(KIND=DP), ALLOCATABLE :: &
              hessm1 (:,:),& ! current estimate of hessian^-1
@@ -54,25 +55,22 @@ SUBROUTINE bfgs
   REAL(KIND=DP) :: DDOT
   !
 #ifdef __PARA
-  INTEGER :: root = 0
   !
   !
   ! ... only one node does the calculation in the parallel case
   !
   IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif
-     ALLOCATE( hessm1(3*nat,3*nat), dtau(3,nat), oldforce(3,nat) )
-     !
-     iunit = 4
      !
      ! ... the constrain on fixed coordinates is implemented setting to zero
      ! ... the forces in forces.f90  ( C.S. 15/10/2003 )
      !
-     ! nat1 = nat - fixatom
-     nat1 = nat
      nax3 = 3 * nat
-     nat3 = 3 * nat1
      conv_ions = .FALSE.
+     !
+     ALLOCATE( hessm1(nax3,nax3), dtau(3,nat), oldforce(3,nat) )
+     !
+     iunit = 4
      !
      CALL seqopn( iunit, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
      !
@@ -87,29 +85,34 @@ SUBROUTINE bfgs
         !
         CLOSE( UNIT = iunit, STATUS = 'DELETE' )
         minimum_ok = .FALSE.
-        CALL estimate( hessm1, nax3, nat, nat3 )
+        !
+        CALL estimate( hessm1, nax3, nat, nax3 )
+        !
         WRITE( stdout, '(/5X,"EPSE = ",E9.2,"    EPSF = ",E9.2, &
-       &               "    UPSCALE = ",F6.2)') epse, epsf, upscale
+                           & "    UPSCALE = ",F6.2)') epse, epsf, upscale
+        !
      ELSE
         !
         ! ... file found: restart from preceding iterations
         !
-        READ( iunit ) minimum_ok, xnew, starting_scf_threshold, &
-             starting_diag_threshold
+        READ( iunit ) &
+            minimum_ok, xnew, starting_scf_threshold, starting_diag_threshold
         READ( iunit ) dtau
         READ( iunit ) hessm1
         READ( iunit ) xold, eold, deold, oldforce
+        !
         CLOSE( UNIT = iunit, STATUS = 'KEEP' )
+        !
      END IF
      !
 20   CONTINUE
      !
-     IF (exst.and..not.minimum_ok) then
+     IF ( exst .AND. .NOT. minimum_ok ) THEN
         !
         ! ... Search for a new line minimum
         !
         x = xnew
-        detot = - DDOT( nat3, force, 1, dtau, 1 )
+        detot = - DDOT( nax3, force, 1, dtau, 1 )
         !
         ! ... line minimization with 3rd order interpolation formula
         !
@@ -118,10 +121,11 @@ SUBROUTINE bfgs
         ! ... xnew close to x: line minimization already achieved
         !
         IF ( ABS( ( xnew - x ) / x ) < 0.05D0 .AND. minimum_ok ) GOTO 20
-             !
-             ! new positions ( hopefully close to the line minimum ) :
-             !
-        CALL DAXPY( nat3, ( xnew - x ) / alat, dtau, 1, tau, 1 )
+        !
+        ! ... new positions ( hopefully close to the line minimum ) :
+        !
+        CALL DAXPY( nax3, ( xnew - x ) / alat, dtau, 1, tau, 1 )
+        !
         IF ( .NOT. minimum_ok ) THEN
            !
            ! ... line minimum was not found take another step and reset the 
@@ -131,17 +135,20 @@ SUBROUTINE bfgs
            eold  = etot
            deold = detot
            !
-           CALL DCOPY( nat3, force, 1, oldforce, 1 )
+           CALL DCOPY( nax3, force, 1, oldforce, 1 )
            !
         END IF
+        !
      ELSE
+        !
         IF ( exst ) THEN
            !
            ! ... We (hopefully) are at the line minimum: convergence check
            !
            conv_ions = ( ( eold - etot ) < epse )
+           !
            DO i = 1, 3
-              DO na = 1, nat1
+              DO na = 1, nat
                  conv_ions = ( conv_ions .AND. ( ABS( force(i,na) ) < epsf ) )
               END DO
            END DO
@@ -149,8 +156,9 @@ SUBROUTINE bfgs
            ! ... update the inverse hessian
            ! ... set dtau to the true displacements from previous to present LM
            !
-           CALL DSCAL( nat3, ( xnew - xold ), dtau, 1 )
-           CALL updathes( nax3, nat3, oldforce, force, hessm1, dtau )
+           CALL DSCAL( nax3, ( xnew - xold ), dtau, 1 )
+           CALL updathes( nax3, nax3, oldforce, force, hessm1, dtau )
+           !
         END IF
         !
         ! ... find new minimization direction dtau
@@ -159,28 +167,30 @@ SUBROUTINE bfgs
         minimum_ok = .FALSE.
         dtau(:,:)  = 0.D0
         !
-        CALL DGEMV( 'N', nat3, nat3, 1.D0, hessm1, nax3, force, 1, &
+        CALL DGEMV( 'N', nax3, nax3, 1.D0, hessm1, nax3, force, 1, &
                      0.D0, dtau, 1 )
-        xnew = SQRT( DDOT( nat3, dtau, 1, dtau, 1 ) )
-        CALL DSCAL( nat3, 1.D0 / xnew, dtau, 1 )
+        xnew = SQRT( DDOT( nax3, dtau, 1, dtau, 1 ) )
+        CALL DSCAL( nax3, 1.D0 / xnew, dtau, 1 )
         !
         ! ... and the gradient along the minimization direction dtau
         !
-        detot = - DDOT( nat3, force, 1, dtau, 1 )
+        detot = - DDOT( nax3, force, 1, dtau, 1 )
         !
         IF ( detot > 0.D0 ) THEN
+           !
            WRITE( stdout, '("uphill direction! de/dx =",E10.4)') detot
            WRITE( stdout, '("try steepest descent direction instead!")')
            !
-           CALL DCOPY( nat3, force, 1, dtau, 1 )
-           xnew = SQRT( DDOT( nat3, dtau, 1, dtau, 1 ) )
-           CALL DSCAL( nat3, 1.D0 / xnew, dtau, 1 )
-           detot = - DDOT( nat3, force, 1, dtau, 1 )
+           CALL DCOPY( nax3, force, 1, dtau, 1 )
+           xnew = SQRT( DDOT( nax3, dtau, 1, dtau, 1 ) )
+           CALL DSCAL( nax3, 1.D0 / xnew, dtau, 1 )
+           detot = - DDOT( nax3, force, 1, dtau, 1 )
+           !
         END IF
         !
         ! ... update atomic positions. NB: tau in units of alat!
         !
-        CALL DAXPY( nat3, ( xnew - x ) / alat, dtau, 1, tau, 1 )
+        CALL DAXPY( nax3, ( xnew - x ) / alat, dtau, 1, tau, 1 )
         !
         ! ... save values of variables at line minimum for later use
         !
@@ -188,7 +198,7 @@ SUBROUTINE bfgs
         eold  = etot
         deold = detot
         !
-        CALL DCOPY( nat3, force, 1, oldforce, 1 )
+        CALL DCOPY( nax3, force, 1, oldforce, 1 )
         !
      END IF
      !
@@ -221,9 +231,10 @@ SUBROUTINE bfgs
      ! ... save all quantities needed at the following iterations
      !
      IF ( .NOT. conv_ions ) THEN
+        !
         CALL seqopn( iunit, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
-        WRITE( iunit ) minimum_ok, xnew, starting_scf_threshold, &
-             starting_diag_threshold
+        WRITE( iunit ) &
+            minimum_ok, xnew, starting_scf_threshold, starting_diag_threshold
         WRITE( iunit ) dtau
         WRITE( iunit ) hessm1
         WRITE( iunit ) xold, eold, deold, oldforce
@@ -232,6 +243,7 @@ SUBROUTINE bfgs
         ! ... at next iteration read from file
         !
         restart_bfgs = .TRUE.
+        !
      END IF
      !
      DEALLOCATE( hessm1, dtau, oldforce )
@@ -241,10 +253,10 @@ SUBROUTINE bfgs
   !
   ! ... broadcast calculated quantities to all nodes
   !
-  CALL mp_bcast( conv_ions, root )
-  CALL mp_bcast( tau, root )
-  CALL mp_bcast( ethr, root )
-  CALL mp_bcast( tr2, root )
+  CALL mp_bcast( conv_ions, ionode_id )
+  CALL mp_bcast( tau, ionode_id )
+  CALL mp_bcast( ethr, ionode_id )
+  CALL mp_bcast( tr2, ionode_id )
 #endif
   !
   RETURN
