@@ -6391,7 +6391,7 @@
       wrk1 (:) = (0.d0, 0.d0)
 !
       do is=1,nsp
-         if (nlcc(is)) go to 10
+         if (.not.nlcc(is)) go to 10
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
