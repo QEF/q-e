@@ -150,7 +150,7 @@ MODULE path_base
          !
          ! ... mode dependent time step
          !
-         FORALL( mode = 1 : ( Nft - 1 ) )
+         FORALL( mode = 1 : num_of_modes )
             !
             ds_(mode) = ds
             !
@@ -586,7 +586,7 @@ MODULE path_base
     SUBROUTINE compute_fourier_sin_and_cos()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : Nft, ft_sin, ft_cos
+      USE path_variables, ONLY : Nft, num_of_modes, ft_sin, ft_cos
       !
       IMPLICIT NONE
       !
@@ -598,7 +598,7 @@ MODULE path_base
       !
       DO j = 0, Nft
          !
-         DO n = 1, ( Nft - 1 )
+         DO n = 1, num_of_modes
             !
             x = pi_over_Nft * REAL( n * j )
             !
@@ -618,7 +618,7 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE path_variables, ONLY : dim, path_length, pos, ft_pos, &
-                                 num_of_images, num_of_modes, Nft_smooth
+                                 num_of_images, num_of_modes, Nft, Nft_smooth
       USE basic_algebra_routines
       !
       IMPLICIT NONE
@@ -638,12 +638,11 @@ MODULE path_base
       !
       r_h(:) = pos(:,1)
       !
-      DO i = 1, ( num_of_images - 1 )
+      DO i = 1, Nft
          !
          DO j = 0, ( Nft_smooth - 1 )
             !
-            x = REAL( Nft_smooth * ( i - 1 ) + j ) / &
-                REAL( Nft_smooth * ( num_of_images - 1 ) )
+            x = REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * Nft )
             !
             r_n(:) = pos(:,1) + x * delta_pos(:)
             !
@@ -678,13 +677,13 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE path_variables, ONLY : num_of_images, num_of_modes, path_length, &
-                                 dim, pos, ft_pos, pos_star, Nft_smooth
+                                 dim, pos, ft_pos, pos_star, Nft, Nft_smooth
       USE basic_algebra_routines
       !
       IMPLICIT NONE
       !
       INTEGER                     :: i, j, n, image
-      REAL (KIND=DP)              :: x, ds      
+      REAL (KIND=DP)              :: x, arc_length, scale
       REAL (KIND=DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
       !
       !
@@ -696,16 +695,17 @@ MODULE path_base
       !
       delta_pos(:) = ( pos(:,num_of_images) - pos(:,1) )
       !
-      ds = 0.D0
+      arc_length = 0.D0
+      !
+      scale = path_length / REAL( Nft )
       !
       r_h(:) = pos(:,1)
       !
-      DO i = 1, ( num_of_images - 1 )
+      DO i = 1, Nft
          !
          DO j = 0, ( Nft_smooth - 1 )
             !
-            x = REAL( Nft_smooth * ( i - 1 ) + j ) / &
-                REAL( Nft_smooth * ( num_of_images - 1 ) )
+            x = REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * Nft )
             !
             r_n(:) = pos(:,1) + x * delta_pos(:)
             !
@@ -715,9 +715,9 @@ MODULE path_base
                !
             END DO
             !
-            ds = ds + norm( r_n - r_h )
+            arc_length = arc_length + norm( r_n - r_h )
             !
-            IF ( ds > image * path_length / ( num_of_images - 1 ) ) THEN
+            IF ( arc_length > REAL( image ) * scale ) THEN
                !
                image = image + 1
                !
@@ -1067,6 +1067,87 @@ MODULE path_base
       !
     END FUNCTION path_tangent
     !
+    !-----------------------------------------------------------------------
+    SUBROUTINE find_saddle()
+      !-----------------------------------------------------------------------
+      !
+      ! ... the transition state configuration and the forward activation 
+      ! ... energy are computed here
+      !
+      USE control_flags,    ONLY : lneb, lsmd
+      USE path_variables,   ONLY : dim, num_of_images, num_of_modes, Nft, &
+                                   Nft_smooth, pes, ft_pes, pos, ft_pos,  &
+                                   activation_energy, Emax_index
+      USE path_io_routines, ONLY : write_ts_config
+      !
+      IMPLICIT NONE
+      !
+      INTEGER                     :: i, j, n
+      REAL (KIND=DP)              :: E, delta_E, x, x_ts
+      REAL (KIND=DP), ALLOCATABLE :: pos_ts(:)
+      !
+      !
+      IF ( lneb ) THEN
+         !
+         activation_energy = ( pes(Emax_index) - pes(1) ) * au
+         !
+      ELSE IF ( lsmd ) THEN
+         !
+         ALLOCATE( pos_ts( dim ) )
+         !
+         delta_E = pes(num_of_images) - pes(1)
+         !
+         activation_energy = 0.D0
+         !
+         x_ts = 0.D0
+         !
+         DO i = 1, Nft
+            !
+            DO j = 0, ( Nft_smooth - 1 )
+               !
+               x = REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * Nft )
+               !
+               E = x * delta_E
+               !
+               DO n = 1, num_of_modes
+                  !
+                  E = E + ft_pes(n) * SIN( REAL( n ) * pi * x )
+                  !
+               END DO
+               !
+               E = E * au
+               !
+               IF ( E > activation_energy ) THEN
+                  !
+                  activation_energy = E
+                  !
+                  x_ts = x
+                  !
+               END IF
+               !
+            END DO
+            !
+         END DO
+         !
+         pos_ts(:) = pos(:,1) + &
+                     x_ts * ( pos(:,num_of_images) - pos(:,1) )
+         !
+         DO n = 1, num_of_modes
+            !
+            pos_ts(:) = pos_ts(:) + ft_pos(:,n) * SIN( REAL( n ) * pi * x_ts )
+            !
+         END DO
+         !
+         CALL write_ts_config( pos_ts )
+         !
+         DEALLOCATE( pos_ts )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE find_saddle
+    !
     !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
@@ -1233,6 +1314,11 @@ MODULE path_base
             !
          END IF
          !
+         ! ... the transition state configuration and the forward activation 
+         ! ... energy are computed here
+         !
+         CALL find_saddle()
+         !
          ! ... the error is computed here
          !
          CALL compute_error( err_max )
@@ -1246,8 +1332,7 @@ MODULE path_base
             !
          END IF
          !
-         ! ... information is written on the files ( activation energy is
-         ! ... computed in this routine )
+         ! ... information is written on the files
          !
          CALL write_dat_files()
          !

@@ -23,7 +23,8 @@ MODULE path_io_routines
   PRIVATE
   !
   PUBLIC :: io_path_start, io_path_stop
-  PUBLIC :: read_restart, write_restart, write_dat_files, write_output
+  PUBLIC :: read_restart
+  PUBLIC :: write_restart, write_dat_files, write_output, write_ts_config
   !
   CONTAINS
      !
@@ -735,7 +736,7 @@ MODULE path_io_routines
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     activation_energy, path_length, react_coord
        USE path_variables,   ONLY : tangent, dim, Emax_index, error
-       USE path_variables,   ONLY : Nft, Nft_smooth, ft_pes
+       USE path_variables,   ONLY : num_of_modes, Nft, Nft_smooth, ft_pes
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
@@ -775,10 +776,6 @@ MODULE path_io_routines
           ALLOCATE( c( num_of_images - 1 ) )
           ALLOCATE( d( num_of_images - 1 ) )
           ALLOCATE( F( num_of_images ) )
-          !
-          ! ... the forward activation energy is computed here
-          !
-          activation_energy = ( pes(Emax_index) - pes(1) ) * au
           !
           F = 0.D0
           !
@@ -861,10 +858,6 @@ MODULE path_io_routines
              !
           END DO          
           !
-          ! ... the forward activation energy is computed here
-          !
-          activation_energy = 0.D0
-          !
           delta_E = pes(num_of_images) - pes(1)
           !
           DO i = 1, ( num_of_images - 1 )
@@ -876,7 +869,7 @@ MODULE path_io_routines
                 !
                 E = x * delta_E
                 !
-                DO n = 1, ( Nft - 1 )
+                DO n = 1, num_of_modes
                    !
                    E = E + ft_pes(n) * SIN( REAL( n ) * pi * x )
                    !
@@ -1048,5 +1041,33 @@ MODULE path_io_routines
        END IF
        !
      END SUBROUTINE write_output
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE write_ts_config( pos_ts )
+       !-----------------------------------------------------------------------
+       !
+       USE io_files,       ONLY : iunpath
+       USE path_variables, ONLY : dim
+       USE ions_base,      ONLY : nat, ityp, atm
+       !
+       IMPLICIT NONE
+       !
+       REAL (KIND=DP), INTENT(IN) :: pos_ts(3,nat)
+       !
+       INTEGER :: na
+       !
+       !
+       WRITE( iunpath, '(/,5X,"transition-state coordinates (bohr)",/)' )
+       !
+       DO na = 1, nat
+          !
+          WRITE( iunpath,'(A3,3X,3F14.9)') &
+              atm(ityp(na)), pos_ts(:,na)
+          !
+       END DO
+       !
+       RETURN
+       !
+     END SUBROUTINE write_ts_config
      !
 END MODULE path_io_routines
