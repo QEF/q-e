@@ -514,9 +514,9 @@ end module para_mod
 ! ipc  is the processor for this column in the dense grid
 ! ipcs is the same, for the smooth grid
 !
-      write(6,'(                                                        &
-     & '' Proc  planes cols    G   planes cols    G    columns  G''/    &
-     & ''       (dense grid)     (smooth grid)   (wavefct grid)'')')
+      write(6,"(                                                      &
+       ' Proc  planes cols    G   planes cols    G    columns  G',/,  &
+       '       (dense grid)     (smooth grid)   (wavefct grid)' )" )
       do i=1,nproc
          write(6,'(i3,2x,3(i5,2i7))') i, npp(i),ncp(i),ngp(i),          &
      &        npps(i),ncps(i),ngps(i), ncpw(i), ngpw(i)
