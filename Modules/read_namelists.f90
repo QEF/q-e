@@ -61,7 +61,10 @@ MODULE read_namelists_module
        IF( prog == 'PW' ) iprint = 100000
        IF( prog == 'CP' ) iprint = 10
        IF( prog == 'FP' ) iprint = 10
-       isave  = 100
+       IF( prog == 'PW' ) isave = 0
+       IF( prog == 'CP' ) isave = 100
+       IF( prog == 'FP' ) isave = 100
+
        tstress = .FALSE.
        tprnfor = .FALSE.
        dt  = 1.0D0
@@ -81,6 +84,7 @@ MODULE read_namelists_module
        pseudo_dir    = './'  
        max_seconds   = 1.D+6
        ekin_conv_thr = 1.D-6
+       IF( prog == 'PW' ) ekin_conv_thr = -1.0d0
        etot_conv_thr = 1.D-4
        forc_conv_thr = 1.D-3
        disk_io  = 'default'
@@ -768,6 +772,7 @@ MODULE read_namelists_module
        CALL mp_bcast( cell_temperature, ionode_id )
        CALL mp_bcast( temph, ionode_id )
        CALL mp_bcast( fnoseh, ionode_id )
+       CALL mp_bcast( greash, ionode_id )
        CALL mp_bcast( cell_factor, ionode_id )
        CALL mp_bcast( cell_nstepe, ionode_id )
        CALL mp_bcast( cell_damping, ionode_id )
@@ -863,14 +868,28 @@ MODULE read_namelists_module
           CALL errore( sub_name,' nstep out of range ', 1 )
        IF( iprint < 1 ) &
           CALL errore( sub_name,' iprint out of range ', 1 )
-       IF( isave < 1 ) &
-          CALL errore( sub_name,' isave out of range ', 1 )
+
+       IF( prog == 'PW' ) THEN
+         IF( isave > 0 ) &
+           CALL infomsg( sub_name,' isave not used in PW ', 1 )
+       ELSE
+         IF( isave < 1 ) &
+           CALL errore( sub_name,' isave out of range ', 1 )
+       END IF
+ 
        IF( dt < 0.0d0 ) &
           CALL errore( sub_name,' dt out of range ', 1 )
        IF( max_seconds < 0.0d0 ) &
           CALL errore( sub_name,' max_seconds out of range ', 1 )
-       IF( ekin_conv_thr < 0.0d0 ) &
-          CALL errore( sub_name,' ekin_conv_thr out of range ', 1 )
+
+       IF( ekin_conv_thr < 0.0d0 ) THEN
+          IF( prog == 'PW' ) THEN
+            CALL infomsg( sub_name,' ekin_conv_thr not used in PW ', 1 )
+          ELSE 
+            CALL errore( sub_name,' ekin_conv_thr out of range ', 1 )
+          END IF
+       END IF
+
        IF( etot_conv_thr < 0.0d0 ) &
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
        IF( forc_conv_thr < 0.0d0 ) &
@@ -882,12 +901,22 @@ MODULE read_namelists_module
              CALL infomsg( sub_name,' dipfield not implemented yet ',-1)
           IF( lberry ) & 
              CALL infomsg( sub_name,' lberry not implemented yet ',-1)
+          IF( disk_io /= 'default' ) &
+             CALL infomsg( sub_name,' disk_io not used ',-1)
+          IF( gdir /= 0 ) &
+             CALL infomsg( sub_name,' gdir not used ',-1)
+          IF( nppstr /= 0 ) &
+             CALL infomsg( sub_name,' nppstr not used ',-1)
        END IF
-       !  For SMD (Y.K 04/15/2004)
        !
        IF( calculation == 'smd' .AND. prog /= 'CP' ) THEN
-             CALL errore( sub_name,' SMD implemented only with CP ',-1)
+         CALL errore( sub_name,' SMD implemented only with CP ',-1)
        END IF
+
+       IF( prog == 'PW' .AND. TRIM( restart_mode ) == 'reset_counters' ) THEN
+         CALL errore( sub_name,' restart_mode == reset_counters not implemented in PW  ',-1)
+       END IF
+       
 
        !
        RETURN

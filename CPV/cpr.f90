@@ -103,7 +103,7 @@
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use restart
       use parameters, only: nacx, natx, nsx, nbndxx
-      use constants, only: pi, factem
+      use constants, only: pi, factem, au_kb
       use io_files, only: psfile, pseudo_dir
       use input_cp, only: iosys
       use qgb_mod, only: deallocate_qgb_mod
@@ -248,6 +248,7 @@
       character(len=256) :: dirname
       integer :: strlen, dirlen
       real(kind=8) :: b1(3), b2(3), b3(3)
+      real(kind=8) :: stress_kb(3,3)
 !
 !     CP loop starts here
 !
@@ -881,9 +882,9 @@
             endif
          endif
          call add_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
-         if((nfi.eq.0).or.tfirst.or.tlast.or.(mod(nfi-1,iprint).eq.0))  &
-     &        then
-            call print_cell_var( stress, ' internal stress tensor:' )
+         if((nfi.eq.0).or.tfirst.or.tlast.or.(mod(nfi-1,iprint).eq.0)) then
+            stress_kb = stress * au_kb
+            call print_cell_var( stress_kb, ' internal stress tensor (KBar):' )
          endif
       endif
 !

@@ -140,11 +140,14 @@ MODULE input_parameters
         INTEGER :: iprint = 10
           ! number of steps between successive writings of relevant physical 
           ! quantities to standard output and to files "fort.3?" or "prefix.???"
-          ! depending on "prefix" parameter
+          ! depending on "prefix" parameter.
+          ! In PW iprint is compared also with convergence iterations, and
+          ! physical quantities are written every iprint iterations
 
         INTEGER :: isave = 100
           ! number of steps between successive savings of
           ! information needed to restart the run (see "ndr", "ndw")
+          ! relevant only for CP and FPMD
 
         LOGICAL :: tstress = .TRUE.
           ! This flag controls the printing of the stress, its value is overwritten
@@ -163,6 +166,9 @@ MODULE input_parameters
           ! in atomic units ( 1 a.u. of time = 2.4189 * 10^-17 s ),
           ! for non CP calculations, this represents the time advancing parameter.
           ! Note: typical values for CP simulations are between 1 and 10 a.u. 
+          ! In PW dt is used for Born-Oppenheimer molecular dynamics, and
+          ! its value is usually larger than for CP dynamics, since it is related
+          ! only to the mass of ions.
 
         INTEGER :: ndr = 50
           ! Fortran unit from which the code read the restart file
@@ -212,14 +218,23 @@ MODULE input_parameters
           ! Specify the amount of I/O activities ( not used in FPMD )
 
         LOGICAL :: tefield  = .FALSE. 
+          ! if .TRUE. a finite electric field is added to the local potential
+          ! only used in PW
 
         LOGICAL :: dipfield = .FALSE. 
+          ! if .TRUE. the dipole field is subtracted
+          ! only used in PW
 
         LOGICAL :: lberry = .FALSE. 
+          ! if .TRUE., calculate polarization
 
         INTEGER :: gdir = 0
+          ! G-vector for polarization calculation ( related to lberry )
+          ! only used in PW
 
         INTEGER :: nppstr = 0
+          ! number of k-points (parallel vector) ( related to lberry )
+          ! only used in PW
 
         LOGICAL :: wf_collect = .FALSE.
           ! This flag is effective only with PW code, and controls the way 
@@ -1285,7 +1300,7 @@ MODULE input_parameters
 !   SCRATCH DIRECTORY
 !
       LOGICAL   :: tscra_inp = .FALSE.
-      CHARACTER(LEN=256) :: tscradir_inp = './'
+      CHARACTER(LEN=256) :: scradir = './'
 
 !
 !   RHOOUT 

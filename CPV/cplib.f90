@@ -3120,7 +3120,7 @@
 !  masses are brought to au
 !
       do is=1,nsp
-         rcmax(is)=1.d0/rcmax(is)**0.5d0
+         ! .. rcmax(is)=1.d0/rcmax(is)**0.5d0  Raggio from input do not need conversion
          pmass(is)=pmass(is)*scmass
       end do
 !

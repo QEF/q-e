@@ -1,0 +1,247 @@
+!=========================================================================!
+!		            README.WANNIER				  !
+!						Author: Manu Sharma	  !
+!						mmanu@Princeton.EDU	  !
+!=========================================================================!
+! This file explains in some detail (i have tried to make it as complete  !
+! as possible)  the structure of the input file for Wannier Function      !
+! calculations within Open Sesame. 					  !
+! If you need to modify any part of wf.f90, read the comments in the code !
+! for an understanding of the logic of the parallel reciprocal space      !
+! implementation.                                                         !
+! wf.f90 contains all the wannier function and electric field subroutines.!
+! Note that other parts of the  code i.e. cplib.f90, cpv.f90/cpr.f90      !
+! para.f90 and modules.f90 have also been modified for Wannier Function   !
+! and Electric Field calculations. To see where the exact parts have been !
+! modified, look for M.S in the source code.                              !
+!									  !
+!=========================================================================!
+!	THE INPUT FILE : STRUCTURE AND INPUT OPTIONS			  !
+!=========================================================================!
+!                                                                         !
+! This Program is now capable of treating finite Homogeneous Electric     !
+! Fields and can do CP Dynamics with Wannier Functions.			  !
+! The input is in a file called WANNIER. The program will look for this   !
+! file in the current directory and if it is there, will read the         !
+! following input. If not, then will simply carry on with a regular       !
+! CP run.								  !
+! NOTE: Before doing a production run of CP with Wannier Functions, you   !
+!       will need to decide what parameters to use for damped dynamics.   !
+!       The program wfdd.x is provided for such tests. It is a post -     !
+!       processing program and requires the Overlap matrix.               !
+!       This can be generated from a CP wavefunction by using the option  !
+!       CALWF = 2. See below for the input format for wfdd.x 	          !	
+! Here is the sample input for WANNIER  				  !
+!                                                                         !
+!                                                                         !
+!        .true. .false.                         EFIELD  SWITCH            !
+!        500                                    SW_LEN                    !
+!        0.d0 0.d0 0.0d                         EFX0 EFY0 EFZ0            !
+!        0.d0 0.d0 0.1d-2                       EFX1 EFY1 EFZ1            !
+!        .false.                                WFSD                      !
+!        0.1 0.3 10 10                          WFDT MAXWFDT NIT NSD      !
+!	 1500. 5. 0.3 100		        Q DT FRIC NSTEPS	  !
+!        1.d-8                                  TOLW			  !
+!        .true.                                 ADAPT                     !
+!	 3   1  40			        CALWF  NWF WFFORT	  !
+!	 21				  	IWF			  !
+!        .false.                                WRITEV                    !
+!                                                                         !
+! EFIELD   : If dynamics will be done in the presence of a field          !
+! SWITCH   : Whether to turn on the field adiabatically (adiabatic switch)!
+!            if true, then nbeg is set to 0.				  !
+! SW_LEN   : No. of iterations over which the field will be turned on     !
+!            to its final value. Starting value is 0.0                    ! 
+!            If SW_LEN .le. 0, then it is set to 1. 			  !
+!	     If you want to just optimize structures on the presence of a !
+!	     field, then you may set this to 1 and run a regular geometry !
+! 	     optimization.						  !
+! EFX0 EFY0 EFZ0 :Initial values of the field along x y and z directions  !
+! EFX1 EFY1 EFZ1 : Final values of the field along x y and z directions   !
+! WFSD     : Whether to do Steepest descent / Conjugate gradient          !
+!            localization for the Wannier function calculation            !
+!            if TRUE, then yes, else damped dynamics.                     !
+!            Remember, this is consistent with all the CALWF options      !
+!            as well as the TOLW (see below) .                            !
+!            Not a good idea to Wannier dynamics with this if you are     !
+!            using restart='from_scratch' option, since the spreads       !
+!            converge fast in the beginning and ortho goes bananas.       !            
+! WFDT     : The minimum step size to take in the SD/CG direction         !
+! MAXWFDT  : The maximum step size to take in the SD/CG direction         !
+!            The code calculates an optimum step size, but that may be    !
+!            either too small (takes forever to converge)  or too large   !
+!            (code goes crazy) . This option keeps the step size between  !
+!            WFDT and MAXWFDT. In my experience 0.1 and 0.5 work quite    !
+!            well. (but dont blame me if it doesnt work for you !         ! 
+! NIT      : Number of iterations to do for Wannier Convergence           !
+! NSD      : Out of a total of NIT iteratons, NSD will be Steepest        !
+!            Descent and NIT-NSD will be Conjugate gradient               !
+! Q	   : Fictitious Mass of the A matrix used for obtaining 	  !
+!	     Maximally localized Wannier Functions. The Unitary		  !
+!	     transformation matrux U is written as exp(A) where 	  !
+!	     A is a hermitian matrix. The Damped Dynamics is performed    !
+!	     in terms of the A matrix, and then U is computed from A.	  !
+!	     Usually a value between 1500 and 2500 works fine, but should !
+!	     be tested.							  !
+! DT	   : Time step to be taken for Damped Dynamics.         	  ! 
+! FRIC	   : Damping coefficient for Damped dynamics.			  !
+! NSTEPS   : Number of Damped Dynamics steps to be performed per CP       !
+!            iteration.							  !
+! TOLW     : Convergence criterion for Localization                       !
+! ADAPT    : Whether to adapt the damping parameter dynamically           !
+! CALWF    : Wannier Function Options, can be 1,2,3,4,5			  !
+!                                                                         !
+!          1. Output the Wannier function density, NWF, WFFORT and IWF    !
+!             are used for this option. see below.		          !
+!          2. Output the Overlap matrix O_i,j=<w_i|exp{iGr}|w_j>. O is    !
+!	      written to unit 38. For details on how O is constructed,    !
+!             see below.						  !
+!          3. Perform NSTEPS of Wannier Dynamics per CP iteration, the    !
+!	      orbitals are now Wannier Functions, not Kohn-Sham orbitals. !
+!	      This is a Unitary transformation of the occupied subspace   !
+!             and doesnot leave the CP Lagrangian invariant. Expectation  !
+!	      values remain the same. So you will **NOT** have a constant !
+!	      of motion during the run. Don't freak out, its normal.      !
+!          4. This option starts for the KS states and does 1 CP iteration!
+!             and NSTEPS of damped dynamics to generate Maximally         !
+! 	      Localized Wannier functions. Its useful when you have the   !
+!	      converged KS groundstate and want to get to the converged   !
+!	      Wannier Function Groundstate in 1 CP Iteration. 		  !
+!          5. This option is similar to CALWF 1, except that the output is!
+!	      the Wannier Function/wafefunction, and not the orbital      !
+!             density. See NWF and IWF below.				  !
+!	   ANY OTHER NUMBER does a regular CP Dynamics and doesen't do    !
+!             anything with the Wannier Functions.			  !
+!									  !
+! NWF     :  This option is used with CALWF 1 and CALWF 5. with CALWF=1,  !
+!	     it tells the code how many Orbital densities are to be       !
+! 	     output. With CALWF=5, set this to 1(i.e CALWF=5 only writes  !
+!	     one state during one run. so if you want 10 states, you have !
+!	     to run the code 10 times). With CALWF=1, you can print many  !
+!	     orbital densities in a singel run.				  !
+! WFFORT :   This tells the code where to dump the orbital densities. Used!
+!            only with CALWF=1. for e.g. if you want to print 2 orbital   !
+!            densities, set CALWF=1, NWF=2 and WFFORT to an appropriate   !
+!            number (e.g. 40) then the first orbital density will be      !
+!            output to fort.40, the second to fort.41 and so on. Note that!
+!            in the current implementation, the following units are used  !
+!            21,22,24,25,26,27,28,38,39,77,78 and whatever you define as  !
+!            ndr and ndw. so use number other than these.                 !
+! IWF    :   These are the indices of the state that you want to output.  !
+!	     Also used with CALWF=1 and 5. If CALWF=1, then you need NWF  !
+!	     indices here (each in a new line). If CALWF=5, then just one !
+!            index in needed.     					  !
+! WRITEV :   Outout the charge density (g-space) and the list of g-vectors!
+!            This is useful if you want to reconstruct the electrostatic  !
+!            potential using the poisson equation. If .true. then the     !
+!	     code will output the g-space charge density and the list     !
+!            if G-vectors, and STOP.                                      !
+!            Charge density is written to : CH_DEN_G_PARA.ispin (1 or 2   !
+!            depending on the number of spin types) or CH_DEN_G_SERL.ispin!
+!            depending on if the code is being run in parallel or serial  !
+!            G-vectors are written to G_PARA or G_SERL.                   !
+!                                                                         !
+! Nota Bene 1: For CALWF = 5, WFFORT is not used. The 			  !
+!	       Wannier/Wave(function) coefficients are written to unit 22 !
+!	       and the corresponding g-vectors (basis vectors) are        !
+! 	       written to unit 21. This option gives the g-vecs and       !
+!	       their coeffs. in reciprocal space, and the coeffs. are     !
+!              complex. You will have to convert them to real space       !
+!              if you want to plot them for visualization. CALWF=1 gives  !
+!	       the orbital densities in real space, and this is usually   !
+!              good enough for visualization.				  !
+!									  !
+! Nota Bene 2: Even if you are using CALWF .ne. 1 or 5, note that NWF and !
+!	       WFFORT must be a part if the input file and depending on   !
+!	       what NWF is, the appropriate IWFs must follow.             !
+!									  !
+! Nota Bene 3: Before doing a production run of CP with Wannier Functions,!
+!              you will need to decide what parameters to use for damped  !
+!              dynamics. The program wfdd.x is provided for such tests.   !
+!              It is a post-processing program and requires the Overlap   !
+!              matrix. See below for the input format for wfdd.x          !
+!									  !
+! Units used by Wannier Function options are the following 		  !
+! 								          !	
+!      fort.21: Used only when CALWF=5, contains the full list of g-vecs. !
+!      fort.22: Used Only when CALWF=5, contains the coeffs. corresponding!
+!               to the g-vectors in fort.21				  !
+!      fort.24: Used with CALWF=3,contains the average spread 	          !
+!      fort.25: Used with CALWF=3, contains the individual Wannier        !
+!               Function Spread of each state 		                  !
+!      fort.26: Used with CALWF=3, contains the wannier centers along a   !
+!               trajectory. **NOTE** that the centers are in Angstroms    !
+!               and are in a box -L/2 to L/2. So you will have to         !
+! 	        periodize then appropriately to do anything useful with   !
+!               them.                                                     !
+!      fort.27: Used with CALWF=3 and 4,  contains some general runtime   !
+!               information from ddyn, the subroutine that actually       !
+!               does the localization of the orbitals.                    !
+!      fort.28: Used only if EFIELD=.true. , contains the polarization    !
+!               contribution to the total energy.			  !
+!									  !
+! Also, The center of mass is fixed during the Molecular Dynamics.        !
+!									  !
+! BEWARE : THIS WILL ONLY WORK IF THE NUMBER OF PROCESSORS IS LESS THAN OR!
+!          EQUAL TO THE NUMBER OF STATES.                                 !
+!                                                                         !
+!                                                       Manu Sharma       !
+!                                                       March 18, 2004    !
+!=========================================================================! 		
+!                       INPUT FORMAT FOR WFDD.X                           !
+!=========================================================================!
+! This code was originally written by Yudong Wu and later modified by     !
+! Manu Sharma. This was intended to be a post-processing code, but        !
+! has more functionality in the sense that the search for the appropriate !
+! Unitary transformation can be done using not only damped-dynamics, but  !
+! also Steepest descent and conjugate gradient algorithms. The advantage  !
+! is that SD/CG can serve as benchmarks to make sure that the DD is       !
+! converging to the correct values (in deciding the parameters Q and DT   !
+! for the DD). The disadvantage is that SD/CG schemes are slower than     !
+! the DD. It is useful however, before using DD in production runs, to    !
+! make sure that the parameters (Q and DT) give the same answer as the SD !
+! or CG. This code requires as input, the overlap matrix. This can be     !
+! calculated from the CP code by setting CALWF to 2. This option outputs  !
+! the overlap matrix to unit 38, and wfdd.x reads it from the same file.  !
+! In addition to that, you need an input file of the following form.      !
+!									  !
+!									  !
+! 1       0.3    0.5    100  10       CGORDD  WFDT MAXWFDT  NIT  NSD      !    
+! 1500 5.0  0.3 .true.  100  1.0d-8   Q   DT   FRIC  ADAPT  NSTEPS   TOLW !
+! .true.                              RESTART				  !
+!									  !
+! CGORDD : Whether to do SD/CG optimization of damped dynamics            !
+!          Can take the values 1 or 2. 1 means SD/CG and 2 means DD       !
+! WFDT   : Used when GCORDD=1. This is the step length you take in the    !
+!          direction of steepest descent.                                 !
+! MAXWFDT: Used when CGORDD=1. This is the maximum step length you take   !
+!          in the direction if steepest descent. if WFDT or MAXWFDT are   !
+!          large, the calculation will not converge. The code uses the    !
+!          parabolic approximation to estimate the appropriate step length!
+!          and if it is less than WFDT, then WFDT is taken as the step    !
+!          length and if more than MAXWFDT then MAXWFDT is taken as the   !
+!          Step length.                                                   !
+! NIT    : Used when CGORDD=1. This is the maxumum number of iterations   !
+!          to do.							  !
+! NSD    : Used whdn CGORDD=1. This is the number of Steepest descent     !
+!          steps to do. If NSD = NIT then it is a pure SD optimization    !
+!          If NSD < NIT, then the code first does NSD Steepest descent    !
+!          steps and then NIT-NSD Conjugate gradient steps.               !
+! RESTART: Use this option to continue a SD/CG/DD optimization. This      !
+!          option reads the Unitray transform from fort.39, written at the!
+!          end of the last run and continues from there.                  !
+!									  !
+! The other parameters are used for the Damped dynamics and are  defined  !
+! above in the WANNIER Section.                                           !
+!								  	  !
+! The program may be compiled by make wfdd.x and then run as follows      !
+!       ./wfdd.x < [input-filename] > [output-filename] &                 !
+! The output file will contain the inverse spread (which is the functional!
+! that is actually maximized in the code rather than minimizing the       !
+! spread) at each step of the optimization.                               !
+!  									  !
+!                                                      Manu Sharma        !
+!                                                      October 16th, 2003 !
+!=========================================================================!
+!      COPYRIGHT MANU SHARMA/YUDONG WU/NICOLA MARZARI/ROBERTO CAR	  !
+!=========================================================================!

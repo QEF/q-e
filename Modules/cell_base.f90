@@ -455,6 +455,42 @@
   END SUBROUTINE
       
 
+
+  SUBROUTINE cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
+    REAL(kind=8), INTENT(OUT) :: hnew(3,3)
+    REAL(kind=8), INTENT(IN) :: h(3,3), hold(3,3), hnos(3,3), fcell(3,3)
+    INTEGER,      INTENT(IN) :: iforceh(3,3)
+    REAL(kind=8), INTENT(IN) :: frich, delt
+    LOGICAL,      INTENT(IN) :: tnoseh
+
+    REAL(kind=8) :: htmp(3,3)
+    REAL(kind=8) :: verl1, verl2, verl3, dt2, ftmp
+    INTEGER      :: i, j
+  
+    dt2 = delt * delt
+
+    IF( tnoseh ) THEN
+      ftmp = 0.0d0
+      htmp = hnos
+    ELSE
+      ftmp = frich
+      htmp = 0.0d0
+    END IF
+
+    verl1 = 2. / ( 1. + ftmp )
+    verl2 = 1. - verl1
+    verl3 = dt2 / ( 1. + ftmp )
+  
+    DO j=1,3
+      DO i=1,3
+        hnew(i,j) = h(i,j) + ( ( verl1 - 1.0d0 ) * h(i,j)               &
+     &     + verl2 * hold(i,j) + &
+             verl3 * ( fcell(i,j) - htmp(i,j) ) ) * iforceh(i,j)
+      ENDDO
+    ENDDO
+    RETURN
+  END SUBROUTINE
+
 !
 !------------------------------------------------------------------------------!
    END MODULE cell_base

@@ -172,7 +172,7 @@ contains
 
   subroutine cell_move( hnew, h, hold, delt, omega, press, iforceh, stress, ainv, &
                         frich, tnoseh, vnhh, velh )
-    use cell_base, only: wmass
+    use cell_base, only: wmass, cell_verlet
     real(kind=8), intent(out) :: hnew(3,3)
     real(kind=8), intent(in) :: h(3,3), hold(3,3), stress(3,3), ainv(3,3)
     real(kind=8), intent(in) :: omega, press
@@ -181,36 +181,29 @@ contains
     real(kind=8), intent(in) :: frich, delt
     logical,      intent(in) :: tnoseh
 
-    real(kind=8) :: verl1, verl2, verl3, dt2
+    real(kind=8) :: hnos(3,3), fcell(3,3)
     integer      :: i, j
    
-    dt2 = delt * delt
-    verl1=2./(1.+frich)
-    verl2=1.-verl1
-    verl3=dt2/(1.+frich)
+    if( tnoseh ) then
+      hnos = vnhh * velh
+    else
+      hnos = 0.0d0
+    end if
+
+    do j=1,3
+      do i=1,3
+        fcell(i,j) = ainv(j,1)*stress(i,1) + ainv(j,2)*stress(i,2) + ainv(j,3)*stress(i,3)
+      end do
+    end do
+    do j=1,3
+      do i=1,3
+        fcell(i,j) = fcell(i,j) - ainv(j,i) * press
+      end do
+    end do
+    fcell = omega * fcell / wmass
 !
-         if (tnoseh) then
-            do j=1,3
-               do i=1,3
-                  hnew(i,j) = h(i,j) +                                  &
-     &                 (h(i,j) - hold(i,j) + dt2/wmass*omega*           &
-     &           (ainv(j,1)*stress(i,1) + ainv(j,2)*stress(i,2) +       &
-     &            ainv(j,3)*stress(i,3) - ainv(j,i)*press) -            &
-     &            dt2*vnhh(i,j)*velh(i,j))*iforceh(i,j)
-               enddo
-            enddo
-         else
-            do j=1,3
-               do i=1,3
-                  hnew(i,j) = h(i,j) + ((verl1-1.)*h(i,j)               &
-     &                + verl2*hold(i,j)                                 &
-     &                + verl3/wmass*omega                               &
-     &                *(ainv(j,1)*stress(i,1)+ainv(j,2)*stress(i,2)     &
-     &                + ainv(j,3)*stress(i,3)-ainv(j,i)*press))         &
-     &                * iforceh(i,j)
-               enddo
-            enddo
-         endif
+    call cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
+
     return
   end subroutine
 
