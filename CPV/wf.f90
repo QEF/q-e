@@ -2696,8 +2696,9 @@ end subroutine wf
 ! inverse fourier transform of Q functions (Vanderbilt pseudopotentials)
 ! on the  box grid . On output, f is overwritten
 !
-      complex(kind=8) f(*)
+      use fft_scalar, only: cfft3d
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
+      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
       call start_clock(' ivfftbold ' )
 
 #ifdef __PARA

@@ -365,6 +365,7 @@ end module para_mod
          n3s(i)=n3s(i-1)+npps(i-1)
          n3me(i)=n3me(i-1)+npp(i-1)
       end do
+
 !----------------------------
 !       End Wannier function and Electric Field
 !                                    - M.S

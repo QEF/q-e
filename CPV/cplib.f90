@@ -3274,8 +3274,8 @@
 ! on the  box grid . On output, f is overwritten
 !
       use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
+      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
 
 !     in a parallel execution, not all processors calls this routine
 !     then we should avoid clocks, otherwise the program hangs in print_clock 
@@ -9080,11 +9080,10 @@ end function pseudo_type
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh, SSUM
-      complex(kind=8)  fp, fm, ci, CSUM
+      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh
+      complex(kind=8)  fp, fm, ci
       complex(kind=8), pointer:: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
-      external SSUM, CSUM
 
 ! Makov Payne Variables
 !
@@ -9174,7 +9173,7 @@ end function pseudo_type
          end do
       end do
 !
-      epseu=wz*real(CSUM(ngs,vtemp,1))
+      epseu=wz*real(SUM(vtemp(1:ngs)))
       if (ng0.eq.2) epseu=epseu-vtemp(1)
 #ifdef __PARA
       call reduce(1,epseu)
@@ -9198,7 +9197,7 @@ end function pseudo_type
          vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
-      eh=real(CSUM(ng,vtemp,1))*wz*0.5*fpi/tpiba2
+      eh=real(SUM(vtemp(1:ng)))*wz*0.5*fpi/tpiba2
 #ifdef __PARA
       call reduce(1,eh)
 #endif
@@ -9234,7 +9233,7 @@ end function pseudo_type
 !     ===================================================================
 !     fourier transform of total density to r-space (dense grid)
 !     -------------------------------------------------------------------
-      call zero(2*nnr,v)
+      v(:) = (0.d0, 0.d0)
          do ig=1,ng
             v(nm(ig))=conjg(rhotmp(ig))
             v(np(ig))=rhotmp(ig)
@@ -9271,7 +9270,7 @@ end function pseudo_type
 !      that the electron density is assumed to be positive.
 !
       end if
-! END of Makov-Payne corrections, writen by Filippo
+! END of Makov-Payne corrections, written by Filippo
 !
 !
 !     ===================================================================
@@ -9346,7 +9345,7 @@ end function pseudo_type
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
-      call zero(2*nnr,v)
+      v(:) = (0.d0, 0.d0)
       if(nspin.eq.1) then
          iss=1
          do ig=1,ng
@@ -9364,7 +9363,7 @@ end function pseudo_type
 !
 !     calculation of average potential
 !
-         vave=SSUM(nnr,rhor(1,iss),1)/dfloat(nr1*nr2*nr3)
+         vave=SUM(rhor(1:nnr,iss))/dfloat(nr1*nr2*nr3)
       else
          isup=1
          isdw=2
@@ -9383,7 +9382,7 @@ end function pseudo_type
 !
 !     calculation of average potential
 !
-         vave=(SSUM(nnr,rhor(1,isup),1)+SSUM(nnr,rhor(1,isdw),1))       &
+         vave=(SUM(rhor(1:nnr,isup))+SUM(rhor(1:nnr,isdw)))       &
      &        /2.0/dfloat(nr1*nr2*nr3)
       endif
 #ifdef __PARA
@@ -9392,7 +9391,7 @@ end function pseudo_type
 !     ===================================================================
 !     fourier transform of total potential to r-space (smooth grid)
 !     -------------------------------------------------------------------
-      call zero(2*nnrsx,vs)
+      vs (:) = (0.d0, 0.d0)
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
@@ -9508,21 +9507,20 @@ end function pseudo_type
 #endif
       use gvec
 !      use parm
-      use grid_dimensions, only : nr1, nr2, nr3, nnr=> nnrx
-      use cell_base, only : a1, a2, a3
+      use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr=> nnrx
+      use cell_base, only : a1, a2, a3, omega
       use elct
 !
-      parameter (debye=1./0.39344,angs=1./0.52917726)
+      implicit none
+      real(kind=8), parameter :: debye=1./0.39344, angs=1./0.52917726
 !
       real(kind=8)  dipole,quadrupole,mu(3),quad(6)
       real(kind=8)  ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,s,rzero,x0,y0,z0
-      real(kind=8)  en1,en2
+      real(kind=8)  en1,en2, pass1, pass2, pass3
       real(kind=8)  rhortot(nnr)
 !     real(kind=8), allocatable:: x(:),y(:),z(:)
       real(kind=8), allocatable:: dip(:)
-      integer (kind=4) ix,ir
-!
-      external SSUM
+      integer (kind=4) ix,ir, i, j, k
 !
       allocate(dip(nnr))
 
@@ -9545,7 +9543,12 @@ end function pseudo_type
         do ix=1,3
         ir=1
 !
-        do k=n3me(me)+1,n3me(me)+npp(me)!!!!!!!!!!!!!!!!!!!!!!111,nr3
+#ifdef __PARA
+!        do k=n3me(me)+1,n3me(me)+npp(me) ! original
+        do k=dfftp%ipp(me)+1, dfftp%ipp(me) + npp(me)
+#else
+        do k=1,nr3
+#endif
          do j=1,nr2x
           do i=1,nr1x
             X=XG0+(i-1)*pass1
@@ -9560,7 +9563,7 @@ end function pseudo_type
           end do
          end do
 !
-         mu(ix)=ssum(nnr,dip(1),1)
+         mu(ix)=sum(dip(1:nnr))
 !
          end do !!!!!!! ix
 !
@@ -9591,7 +9594,12 @@ end function pseudo_type
         do ix=1,6
 !
          ir=1
-         do k=n3me(me)+1,n3me(me)+npp(me)
+#ifdef __PARA
+!        do k=n3me(me)+1,n3me(me)+npp(me) ! original
+        do k=dfftp%ipp(me)+1, dfftp%ipp(me) + npp(me)
+#else
+        do k=1,nr3
+#endif
           do j=1,nr2x
            do i=1,nr1x
 !
@@ -9599,19 +9607,12 @@ end function pseudo_type
             Y=YG0+(j-1)*pass2
             Z=ZG0+(k-1)*pass3
 !
-            XX=X*X
-            YY=Y*Y
-            ZZ=Z*Z
-            XY=X*Y
-            XZ=X*Z
-            YZ=Y*Z
-!
-            if (ix.eq.1) D=XX
-            if (ix.eq.2) D=YY
-            if (ix.eq.3) D=ZZ
-            if (ix.eq.4) D=XY
-            if (ix.eq.5) D=XZ
-            if (ix.eq.6) D=YZ
+            if (ix.eq.1) D=X*X
+            if (ix.eq.2) D=Y*Y
+            if (ix.eq.3) D=Z*Z
+            if (ix.eq.4) D=X*Y
+            if (ix.eq.5) D=X*Z
+            if (ix.eq.6) D=Y*Z
 !
             dip(ir)=D*rhortot(ir)
 !
@@ -9620,7 +9621,7 @@ end function pseudo_type
           end do
          end do
 !
-        quad(ix)=SSUM(nnr,dip(1),1)
+        quad(ix)=SUM(dip(1:nnr))
         end do
 !
 #ifdef __PARA
