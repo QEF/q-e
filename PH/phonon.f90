@@ -33,7 +33,7 @@ program phonon
 
   call init_clocks (.true.)
   call start_clock ('PHONON')
-  version = 'PHONON 1.2.0'
+  version = 'PHONON 1.2.1'
   call startup (nd_nmbr, version)
   write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   !

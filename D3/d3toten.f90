@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,12 +16,9 @@ program d3toten
   use d3com
   use io
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
   character :: cdate * 9, ctime * 9, version * 12
   integer :: nu_i, nu_i0, irecv
-  real (8) :: t0, t1, get_clock
+  real (kind=DP) :: t0, t1, get_clock
 
   external date_and_tim
   !      call sigcatch( )
@@ -31,7 +28,7 @@ program d3toten
 
   call init_clocks (.true.)
   call start_clock ('D3TOTEN')
-  version = 'D3TOTEN1.2.0'
+  version = 'D3TOTEN1.2.1'
   call startup (nd_nmbr, version)
   write (6, '(/5x,"UltraSoft (Vanderbilt) ", &
        &                "Pseudopotentials")')
@@ -52,8 +49,8 @@ program d3toten
   !
   if (wraux) call write_aux (1)
 
-  call setv (54 * nat * nat * nat, 0.d0, d3dyn, 1)
-  !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  d3dyn(:,:,:) = (0.d0, 0.d0)
+  !
   nu_i0 = 1
   if (recv) then
      !

@@ -63,8 +63,6 @@ PW
 
 - output should be more informative and less confused
 
-- merge "scalar pencils" with "sticks"
-
 POSTPROCESSING
 
 - bands.x must either be finished or removed

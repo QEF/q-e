@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,12 @@ subroutine ggen
   !     between the fft mesh points and the array of g vectors.
   !
 #include "machine.h"
-  use pwcom
+  use parameters, only: DP
+  use brilz
+  use gvect
+  use gsmooth
+  use wvfct, only : gamma_only
+  use cellmd, only: lmovecell
 #ifdef __PARA
   use para
 #endif
@@ -34,7 +39,8 @@ subroutine ggen
   real(kind=DP), allocatable :: g2sort_g(:)
   ! array containing all g vectors, on all processors: replicated data
   integer, allocatable :: mill_g(:,:)
-  ! array containing all g vectors generators, on all processors: replicated data
+  ! array containing all g vectors generators, on all processors:
+  !     replicated data
   integer, allocatable :: igsrt(:)
   !
 #ifdef __PARA
@@ -50,8 +56,6 @@ subroutine ggen
   !    vectors after computing them.
   !
   gg(:) = gcutm + 1.d0
-  allocate(esort(ngm) )
-  esort(:) = 1.0d20
   !
   !     set d vector for unique ordering
   !
@@ -82,33 +86,50 @@ subroutine ggen
   ngm = 0
   ngms = 0
   do i = - n1, n1
-    do j = - n2, n2
-      do k = - n3, n3
-        tt = 0.d0
-        do ipol = 1, 3
-          t (ipol) = i * bg (ipol, 1) + j * bg (ipol, 2) + k * bg (ipol, 3)
-          tt = tt + t (ipol) * t (ipol)
+     !
+     ! Gamma-only: exclude space with x < 0
+     !
+     if ( gamma_only .and. i < 0) go to 10
+     do j = - n2, n2
+        !
+        ! exclude plane with x = 0, y < 0
+        !
+        if ( gamma_only .and. i == 0 .and. j < 0) go to 11
+        do k = - n3, n3
+           !
+           ! exclude line with x = 0, y = 0, z < 0
+           !
+           if ( gamma_only .and. i == 0 .and. j == 0 .and. k < 0) go to 12
+           tt = 0.d0
+           do ipol = 1, 3
+              t (ipol) = i * bg (ipol, 1) + j * bg (ipol, 2) + k * bg (ipol, 3)
+              tt = tt + t (ipol) * t (ipol)
+           enddo
+           if (tt <= gcutm) then
+              ngm = ngm + 1
+              if (tt <= gcutms) ngms = ngms + 1
+              if (ngm > ngm_g) call errore ('ggen', 'too many g-vectors', ngm)
+              mill_g( 1, ngm ) = i
+              mill_g( 2, ngm ) = j
+              mill_g( 3, ngm ) = k
+              if ( tt > eps ) then
+                 g2sort_g(ngm) = 1.d4 * tt + &
+                      (t(1) * d(1) + t(2) * d(2) + t(3) * d(3) ) / sqrt (tt)
+              else
+                 g2sort_g(ngm) = 0.d0
+              endif
+           end if
+12         continue
         enddo
-        if (tt <= gcutm) then
-          ngm = ngm + 1
-          if (tt <= gcutms) ngms = ngms + 1
-          if (ngm > ngm_g) call errore ('ggen', 'too many g-vectors', ngm)
-          mill_g( 1, ngm ) = i
-          mill_g( 2, ngm ) = j
-          mill_g( 3, ngm ) = k
-          if ( tt > eps ) then
-             g2sort_g(ngm) = 1.d4 * tt + &
-               (t (1) * d (1) + t (2) * d (2) + t (3) * d (3) ) / sqrt (tt)
-          else
-             g2sort_g(ngm) = 0.d0
-          endif
-        end if
-      enddo
-    enddo
+11      continue
+     enddo
+10   continue
   enddo
 
-  if (ngm  /= ngm_g ) call errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_g))
-  if (ngms /= ngms_g) call errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
+  if (ngm  /= ngm_g ) &
+       call errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_g))
+  if (ngms /= ngms_g) &
+       call errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
 
   igsrt(1) = 0
   call hpsort(ngm_g, g2sort_g, igsrt)
@@ -131,10 +152,12 @@ subroutine ggen
     END IF
   END DO
 
-#ifndef __OLD_GGEN_LOOP
+  deallocate( igsrt )
 
   ! write(6, fmt="(//,' --- Executing new GGEN Loop ---',//)" )
 
+  allocate(esort(ngm) )
+  esort(:) = 1.0d20
   ngm = 0
   ngms = 0
   do ng = 1, ngm_g
@@ -158,7 +181,7 @@ subroutine ggen
     enddo
 
     ngm = ngm + 1
-    if (tt.le.gcutms) ngms = ngms + 1
+    if (tt <= gcutms) ngms = ngms + 1
     if (ngm > ngmx) call errore ('ggen', 'too many g-vectors', ngm)
     !
     !  Here map local and global g index !!!
@@ -168,7 +191,7 @@ subroutine ggen
     g (1:3, ngm) = t (1:3)
     gg (ngm) = tt
 
-    if (tt.gt.eps) then
+    if (tt > eps) then
       esort (ngm) = 1.d4 * tt + (t (1) * d (1) + t (2) * d (2) &
       + t (3) * d (3) ) / sqrt (tt)
     else
@@ -178,66 +201,8 @@ subroutine ggen
 1   continue
   enddo
 
-! ... Uncomment to make tests and comparisons with other codes
-!  DO ng=1,ngm_g
-!    WRITE( 202, fmt="( I6, 3I4, 2D25.16 )" ) &
-!      ng, mill_g(1,ng), mill_g(2,ng), mill_g(3,ng), gg( ng ), g2sort_g( ng )
-!  END DO
-!  CLOSE( 202 )
-
-#else
-  !
-  !    and computes all the g vectors inside a sphere
-  !
-  n1 = nr1 + 1
-  n2 = nr2 + 1
-  n3 = nr3 + 1
-  ngmx = ngm
-  ngm = 0
-  ngms = 0
-
-  do i = - n1, n1
-#ifdef __PARA
-     m1 = mod (i, nr1) + 1
-     if (m1.lt.1) m1 = m1 + nr1
-     do j = - n2, n2
-        m2 = mod (j, nr2) + 1
-        if (m2.lt.1) m2 = m2 + nr2
-        mc = m1 + (m2 - 1) * nrx1
-        if (ipc (mc) .eq.0) goto 1
-#else
-        do j = - n2, n2
-#endif
-           do k = - n3, n3
-              tt = 0.d0
-              do ipol = 1, 3
-                 t (ipol) = i * bg (ipol, 1) + j * bg (ipol, 2) + k * bg (ipol, 3)
-                 tt = tt + t (ipol) * t (ipol)
-              enddo
-              if (tt.le.gcutm) then
-                 ngm = ngm + 1
-                 if (tt.le.gcutms) ngms = ngms + 1
-                 if (ngm.gt.ngmx) call errore ('ggen', 'too many g-vectors', ngm)
-                 do ipol = 1, 3
-                    g (ipol, ngm) = t (ipol)
-                 enddo
-                 gg (ngm) = tt
-                 if (tt.gt.eps) then
-                    esort (ngm) = 1.d4 * tt + (t (1) * d (1) + t (2) * d (2) &
-                         + t (3) * d (3) ) / sqrt (tt)
-                 else
-                    esort (ngm) = 0.d0
-                 endif
-              endif
-           enddo
-1          continue
-        enddo
-
-     enddo
-
-#endif
-
-     if (ngm.ne.ngmx) call errore ('ggen', 'g-vectors missing !', abs(ngm - ngmx))
+     if (ngm.ne.ngmx) &
+          call errore ('ggen', 'g-vectors missing !', abs(ngm - ngmx))
      !
      !   reorder the g's in order of increasing magnitude. On exit
      !   from hpsort esort is ordered, and nl contains the new order.
@@ -246,6 +211,8 @@ subroutine ggen
 
      nl (1) = 0
      call hpsort (ngm, esort, nl)
+     !
+     deallocate( esort  )
      !
      !   reorder also the g vectors, and nl
      !
@@ -261,7 +228,6 @@ subroutine ggen
            gg (indsw) = gg (nl (indsw) )
            gg (nl (indsw) ) = swap
 
-#ifndef __OLD_GGEN_LOOP
           !
           !  Remember: ig_l2g is the index of a given G vectors in the
           !  sorted global array containing all G vectors, it is used to
@@ -270,7 +236,6 @@ subroutine ggen
           iswap = ig_l2g( indsw )
           ig_l2g( indsw ) = ig_l2g( nl(indsw) )
           ig_l2g( nl(indsw) ) = iswap
-#endif
 
            iswap = nl (ng)
            nl (ng) = nl (indsw)
@@ -345,7 +310,7 @@ subroutine ggen
         ngl = 1
         igtongl (1) = 1
         do ng = 2, ngm
-           if (gg (ng) .gt.gg (ng - 1) + eps) then
+           if (gg (ng) > gg (ng - 1) + eps) then
               ngl = ngl + 1
            endif
            igtongl (ng) = ngl
@@ -356,7 +321,7 @@ subroutine ggen
         gl (1) = gg (1)
         igl = 1
         do ng = 2, ngm
-           if (gg (ng) .gt.gg (ng - 1) + eps) then
+           if (gg (ng) > gg (ng - 1) + eps) then
               igl = igl + 1
               gl (igl) = gg (ng)
            endif
@@ -368,10 +333,8 @@ subroutine ggen
      endif
 
 
-     deallocate( esort  )
      deallocate( g2sort_g )
      deallocate( mill_g )
-     deallocate( igsrt )
 
      return
    end subroutine ggen

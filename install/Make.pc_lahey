@@ -17,7 +17,7 @@ CPP = /usr/local/lf9560/lib/cpp
 FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
 FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
 #
-CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -DLAHEY -D__FFTW \
+CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -D__LAHEY -D__FFTW \
            -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
            -D"FFTW_F77=fftw_f77_" \
@@ -30,7 +30,7 @@ F90 = lf95
 F90FLAGS = --staticlink --dbl -O -I$(OSHOME)
 F77 = lf95
 
-CCFLAGS = -O -I$(FFTW_INC_DIR)
+CCFLAGS = -O -$(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #
