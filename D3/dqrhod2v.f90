@@ -15,6 +15,7 @@ subroutine dqrhod2v (ipert, drhoscf)
   ! perturbation at a generic q
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : iunigk
@@ -25,7 +26,7 @@ subroutine dqrhod2v (ipert, drhoscf)
 #endif
   implicit none
   integer :: ipert
-  complex (8) :: drhoscf (nrxx)
+  complex (kind = dp) :: drhoscf (nrxx)
   ! the variation of the charge density
   !
   ! local variables
@@ -52,12 +53,12 @@ subroutine dqrhod2v (ipert, drhoscf)
   ! record position of dwfc
   ! integer variable for I/O control
 
-  real (8) :: gtau, wgg
+  real (kind = dp) :: gtau, wgg
   ! the product G*\tau_s
   ! the weight of a K point
 
-  complex (8) :: ZDOTC, fac, alpha (8), work
-  complex (8), allocatable :: d3dywrk (:,:), work0 (:), &
+  complex (kind = dp) :: ZDOTC, fac, alpha (8), work
+  complex (kind = dp), allocatable :: d3dywrk (:,:), work0 (:), &
        work1 (:), work2 (:), work3 (:), work4 (:), work5 (:), work6 (:)
   ! work space
 

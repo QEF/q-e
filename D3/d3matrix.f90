@@ -14,6 +14,7 @@ subroutine d3matrix
   ! of the dynamical matrix at q and in the star of q.
   ! The result is written on a iudyn file
   !
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -27,7 +28,7 @@ subroutine d3matrix
   ! counter on atomic type
   ! generic counter
 
-  real (8) :: sxq (3, 48)
+  real (kind = dp) :: sxq (3, 48)
   ! list of vectors in the star of q
   !
   ! Symmetrizes the dynamical matrix w.r.t. the small group of q

@@ -18,6 +18,7 @@ subroutine gen_dpdvp
   !  iudpdvp_3 :   < Pc dpsi_{k+q}/du(0) | dH/du(q) |   psi_k >
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : iunigk
@@ -28,9 +29,9 @@ subroutine gen_dpdvp
 
   integer :: ik, ikk, ikq, ig, nrec, nu_i, nu_j, ibnd, jbnd, ios
 
-  real (8) :: zero (3)
-  complex (8) :: ZDOTC
-  complex (8), allocatable :: dvloc (:), dpsidvpsi (:,:)
+  real (kind = dp) :: zero (3)
+  complex (kind = dp) :: ZDOTC
+  complex (kind = dp), allocatable :: dvloc (:), dpsidvpsi (:,:)
 
 
   if (degauss.eq.0.d0) return
@@ -38,7 +39,7 @@ subroutine gen_dpdvp
   allocate (dpsidvpsi( nbnd, nbnd))    
   rewind (unit = iunigk)
 
-  call setv (3, 0.d0, zero, 1)
+  zero = 0.0_dp
 
   do ik = 1, nksq
      read (iunigk, err = 100, iostat = ios) npw, igk

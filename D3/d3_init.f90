@@ -22,11 +22,17 @@ subroutine d3_init
 #endif
   integer :: nt, irr, irr1, ipert, imode0, errcode
 ! counter on atom types
-  real (8) :: work (3)                 ! working area
+#ifdef DEBUG
+  integer :: i, j, k
+#endif
 
-  complex (8), allocatable :: drhoscf (:,:)
+  real (kind = dp) :: work (3)                 ! working area
+
+  complex (kind = dp), allocatable :: drhoscf (:,:)
+  complex (kind = dp), allocatable :: drhoscf2 (:,:,:)
 
   allocate (drhoscf( nrxx, 3))    
+! allocate (drhoscf2( nrxx, 1, 1))
 !
 !  the fourier trasform of the core charge both for q=0 and q.ne.0
 !
@@ -83,7 +89,7 @@ subroutine d3_init
 #ifdef __PARA
      call psymd0rho (npertg0(irr), irr, drhoscf)
 #else
-     call symd0rho (npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
+     call symd0rho (max_irr_dim, npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
           irgq, tg0, nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
 #endif
      do ipert = 1, npertg0 (irr)
@@ -95,24 +101,31 @@ subroutine d3_init
 ! Reads the variation of the charge --drho-- and symmetrizes it
 !
   if (.not.lgamma) then
+     imode0 = 0
      do irr = 1, nirr
         imode0 = 0
         do irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
         enddo
+
+        allocate (drhoscf2( nrxx, nspin,npert(irr) ))
+
         do ipert = 1, npert (irr)
-           call davcio_drho2 (drhoscf(1,ipert), lrdrho, iudrho, &
+           call davcio_drho (drhoscf2(1,1,ipert), lrdrho, iudrho, &
                               imode0+ipert, -1)
         enddo
 #ifdef __PARA
-        call psymdvscf (npert(irr), irr, drhoscf)
+        call psymdvscf (npert(irr), irr, drhoscf2)
 #else
-        call symdvscf (npert(irr), irr, drhoscf)
+        call symdvscf (npert(irr), irr, drhoscf2)
 #endif
         do ipert = 1, npert(irr)
-           call davcio_drho2 (drhoscf(1,ipert), lrdrho, iudrho, &
+           call davcio_drho (drhoscf2(1,1,ipert), lrdrho, iudrho, &
                               imode0+ipert, +1)
         enddo
+        deallocate (drhoscf2)
+
+!        imode0 = imode0 + npert(irr)
      enddo
   endif
 #ifdef __PARA
@@ -123,6 +136,7 @@ subroutine d3_init
 #endif
 
   deallocate(drhoscf)
+!  deallocate(drhoscf2)
   return
 
 end subroutine d3_init

@@ -17,6 +17,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
   ! is given by:   Sum_{k,nu} 2 * | dpsi > < psi |
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -29,7 +30,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
   ! counter on bands
   ! counter on bands
 
-  real (8) :: wfshift, wgauss, w0gauss, deltae, wg1, wg2, wwg
+  real (kind = dp) :: wfshift, wgauss, w0gauss, deltae, wg1, wg2, wwg
   ! the shift coefficent for the wave function
   ! function computing the theta function
   ! function computing the derivative of theta
@@ -38,7 +39,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
   ! weight for metals
   ! weight for metals
 
-  complex (8) :: evcq (npwx, nbnd), psidvpsi_x (nbnd, nbnd), &
+  complex (kind = dp) :: evcq (npwx, nbnd), psidvpsi_x (nbnd, nbnd), &
        psidvpsi
   ! k+q point wavefunction
   ! < psi_{k+q} | V(q) | psi_k >

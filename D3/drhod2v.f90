@@ -20,14 +20,15 @@ subroutine drhod2v
   ! --this last option is to be used for testing pourposes--
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
   !
   implicit none
   integer :: irr, irr1, imode0, ipert, ir
-  real (8) :: xq0 (3)
-  complex (8), allocatable :: drhoscf (:)
+  real (kind = dp) :: xq0 (3)
+  complex (kind = dp), allocatable :: drhoscf (:)
   ! the change of density due to perturbations
 
   allocate  (drhoscf( nrxx))    

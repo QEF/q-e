@@ -8,20 +8,22 @@
 !
 !---------------------------------------------------------------------
 
-subroutine symd0rho (nper, irr, d0rho, s, ftau, nsymq, irgq, t, &
+subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, irgq, t, &
      nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   !---------------------------------------------------------------------
   !  symmetrizes q=0 drho
   !
 #include"machine.h"
   !
+  USE kinds, only : DP
   implicit none
   integer :: nper, irr, s (3, 3, 48), ftau (3, 48), nsymq, irgq (48) &
-       , nat, nr1, nr2, nr3, nrx1, nrx2, nrx3
+       , nat, nr1, nr2, nr3, nrx1, nrx2, nrx3, max_irr_dim
   ! the number of perturbations
   ! the representation under consideration
 
-  complex (8) :: d0rho (nrx1, nrx2, nrx3, nper), t (3, 3, 48, 3 * nat)
+  complex (kind = dp) :: d0rho (nrx1, nrx2, nrx3, nper),        &
+       t (max_irr_dim, max_irr_dim, 48, 3 * nat)
   ! charge variation to symmetrize
 
   integer :: ri, rj, rk, i, j, k, ipert, jpert, isym, irot
@@ -33,7 +35,7 @@ subroutine symd0rho (nper, irr, d0rho, s, ftau, nsymq, irgq, t, &
   ! counter on symmetries
   ! the rotation
 
-  complex (8), allocatable :: aux1 (:,:,:,:)
+  complex (kind = dp), allocatable :: aux1 (:,:,:,:)
   ! the symmetrized charge
 
 

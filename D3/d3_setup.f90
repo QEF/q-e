@@ -44,6 +44,7 @@ subroutine d3_setup
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
+  USE kinds, only : DP
   use pwcom
   USE constants,  ONLY : degspin
   use phcom
@@ -52,7 +53,7 @@ subroutine d3_setup
   use para
 #endif
   implicit none
-  real (8) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &
+  real (kind = dp) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &
        emax, dmxc, wrk
   ! total charge
   ! total up charge
@@ -203,18 +204,18 @@ subroutine d3_setup
   ! if such a symmetry has been found
   if (iswitch.eq. - 4) then
      call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-          irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, gimq, &
-          iverbosity, modenum)
+          irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
+          npert, nirr, gi, gimq, iverbosity, modenum)
   else
      if (nsym.gt.1) then
         call io_pattern(fildrho,nirr,npert,u,-1)
         call set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, &
-             gimq, iverbosity)
+             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,   &
+             npert, nirr, gi, gimq, iverbosity)
      else
         call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-             irt, irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, &
-             gi, gimq, iverbosity)
+             irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, & 
+             npert, nirr, gi, gimq, iverbosity)
      endif
   endif
   !

@@ -12,6 +12,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !   and stores it in the variable ef_sh
   !
 #include "machine.h"
+  USE kinds, only : DP
   USE io_global,  ONLY : stdout
   use pwcom
   use phcom
@@ -26,11 +27,11 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   ! counter on k_points
   ! counter on bands
 
-  complex (8) :: drhoscf (nrxx, npe), delta_n, def (3)
+  complex (kind = dp) :: drhoscf (nrxx, npe), delta_n, def (3)
   ! input: variation of the charge density
   ! the change in electron number
   ! the change of the Fermi energy for each per
-  real (8) :: dos_ef, weight, w0gauss, wdelta
+  real (kind = dp) :: dos_ef, weight, w0gauss, wdelta
   ! density of states at Ef
   ! kpoint weight
   ! delta function

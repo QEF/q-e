@@ -15,6 +15,7 @@ subroutine sym_def1 (def, irr)
   ! Used in the q=0 metallic case only.
   !
 #include"machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -22,7 +23,7 @@ subroutine sym_def1 (def, irr)
   integer :: irr
   ! input: the representation under consideration
 
-  complex (8) :: def (3)
+  complex (kind = dp) :: def (3)
   ! inp/out: the fermi energy changes
 
   integer :: ipert, jpert, isym, irot
@@ -31,7 +32,7 @@ subroutine sym_def1 (def, irr)
   ! counter on symmetries
   ! the rotation
 
-  complex (8) :: w_def (3)
+  complex (kind = dp) :: w_def (3)
   ! the fermi energy changes (work array)
   do ipert = 1, npertg0 (irr)
      def (ipert) = DREAL (def (ipert) )

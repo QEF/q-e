@@ -15,15 +15,16 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
 #include"machine.h"
+  USE kinds, only : DP
   implicit none
 
   integer :: iflg
   ! input: gives the versus of the trans.
 
-  complex (8) :: phi (3, 3, 3)
+  complex (kind = dp) :: phi (3, 3, 3)
   ! inp/out: the matrix to transform
 
-  real (8) :: at (3, 3), bg (3, 3)
+  real (kind = dp) :: at (3, 3), bg (3, 3)
   ! input: the direct lattice vectors
   ! input: the reciprocal lattice
 
@@ -31,7 +32,7 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
   !
   !  counters on polarizations
   !
-  complex (8) :: wrk (3, 3, 3)
+  complex (kind = dp) :: wrk (3, 3, 3)
   ! a work array
 
   if (iflg.gt.0) then

@@ -23,6 +23,7 @@ subroutine set_d3irr
   ! routine does not work.
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -32,27 +33,27 @@ subroutine set_d3irr
   ! work array
   ! work array
 
-  real (8) :: zero (3), w_gi (3, 48), w_gimq (3)
+  real (kind = dp) :: zero (3), w_gi (3, 48), w_gimq (3)
   ! a null vector
   ! work array
-  complex (8) :: w_tmq (3, 3, 3 * nat)
+  complex (kind = dp) :: w_tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! work array
 
   logical :: w_minus_q
   ! work array
 
-  call setv (3, 0.d0, zero, 1)
+  zero = 0.0_dp
 
   w_minus_q = .true.
   if (nsymg0.gt.1) then
      call io_pattern(fild0rho,nirrg0,npertg0,ug0,-1)
      call set_sym_irr (nat, at, bg, zero, s, invs, nsymg0, rtau, irt, &
-          irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, ug0, npertg0, &
-          nirrg0, w_gi, w_gimq, iverbosity)
+          irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, max_irr_dim, &
+          ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
   else
      call set_irr_nosym (nat, at, bg, zero, s, invs, nsymg0, rtau, &
-          irt, irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, ug0, &
-          npertg0, nirrg0, w_gi, w_gimq, iverbosity)
+          irt, irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq,     &
+          max_irr_dim, ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
   endif
 
   return

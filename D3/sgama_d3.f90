@@ -26,7 +26,7 @@ subroutine sgama_d3 (nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, &
 !  b) the first nsymq matrices are symmetries for the small group of q
 !
 #include "machine.h"
-
+USE kinds, only : DP
 implicit none
 
 integer :: nsymq, nat, s (3, 3, 48), ityp (nat), nr1, nr2, nr3, &
@@ -42,7 +42,7 @@ integer :: nsymq, nat, s (3, 3, 48), ityp (nat), nr1, nr2, nr3, &
                            ! output: for each atom gives the rotated ato
                            ! output: fractionary translation of each sym
 
-real (8) :: at (3, 3), bg (3, 3), tau (3, nat)
+real (kind = dp) :: at (3, 3), bg (3, 3), tau (3, nat)
                            ! input: direct lattice vectors
                            ! input: reciprocal lattice vectors
                            ! input: coordinates of atomic positions

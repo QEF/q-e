@@ -18,6 +18,7 @@ subroutine d3dyn_cc
   ! it assumes it is the total density, i.e. sum of valence + core.
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -25,7 +26,7 @@ subroutine d3dyn_cc
   integer :: na, nta, ig, ir, i_cart, j_cart, k_cart, na_i, na_j, &
        na_k, nu_i, nu_j, nu_k, na_icart, nb_jcart, nc_kcart
 
-  real (8) :: rhox, arhox, ex, ec, vx, vc, arg
+  real (kind = dp) :: rhox, arhox, ex, ec, vx, vc, arg
   ! the total charge in each point
   ! the absolute value of the charge
   ! local exchange energy
@@ -34,8 +35,8 @@ subroutine d3dyn_cc
   ! local correlation potential
   ! argument of the phase factor
 
-  complex (8) ::  exc, work, work0, work1, work2, work3
-  complex (8), allocatable :: drc_exp (:,:), aux (:), d3dyn0 (:,:,:), &
+  complex (kind = dp) ::  exc, work, work0, work1, work2, work3
+  complex (kind = dp), allocatable :: drc_exp (:,:), aux (:), d3dyn0 (:,:,:), &
        d3dyn1 (:,:,:), d3dyn2 (:,:,:), d3dyn3 (:,:,:), d3dyn4 (:,:,:)
 
   if (.not.nlcc_any) return

@@ -15,6 +15,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   ! to a vector h. The result is given in Ah.
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use becmod
   use phcom
@@ -25,10 +26,10 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   ! input: the number of bands
   ! input: the k point
 
-  real (8) :: e (m)
+  real (kind = dp) :: e (m)
   ! input: the eigenvalue
 
-  complex (8) :: h (npwx, m), ah (npwx, m)
+  complex (kind = dp) :: h (npwx, m), ah (npwx, m)
   ! input: the vector
   ! output: the operator applied to the vector
   !
@@ -40,7 +41,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   ! the point k+q
   ! counter on G vetors
 
-  complex (8), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
+  complex (kind = dp), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h

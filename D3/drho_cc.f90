@@ -22,13 +22,14 @@ subroutine drho_cc (iflag)
   !       before the first call of drho_cc--
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
 
   implicit none
   integer :: iflag
-  real (8) :: xq0 (3), scale
+  real (kind = dp) :: xq0 (3), scale
 
   if (.not.nlcc_any) return
   scale = 1.d0

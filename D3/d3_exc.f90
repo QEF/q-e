@@ -14,6 +14,7 @@ subroutine d3_exc
   !    matrix due to the third derivative of the exchange and correlation
   !    energy
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -22,10 +23,10 @@ subroutine d3_exc
 #endif
   implicit none
   integer :: errcode, ir, ipert, jpert, kpert, npert1, npert2
-  real (8) :: d2mxc, rhotot, xq0 (3)
-  real (8), allocatable :: d2muxc (:)
-  complex (8) :: aux
-  complex (8), allocatable :: work1 (:), work2 (:), work3 (:), d3dyn1 (:,:,:)
+  real (kind = dp) :: d2mxc, rhotot, xq0 (3)
+  real (kind = dp), allocatable :: d2muxc (:)
+  complex (kind = dp) :: aux
+  complex (kind = dp), allocatable :: work1 (:), work2 (:), work3 (:), d3dyn1 (:,:,:)
 
   allocate (d2muxc( nrxx))    
   allocate (work1 ( nrxx))    

@@ -31,6 +31,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 #include "machine.h"
   USE io_global,      ONLY : stdout
   USE io_files,      ONLY : iunigk
+  USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY : evc
   use phcom
@@ -43,7 +44,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! input: the position of the modes
   ! input: a switch
 
-  real (8) :: thresh, wg1, wg2, wwg, deltae, theta, anorm, averlt, &
+  real (kind = dp) :: thresh, wg1, wg2, wwg, deltae, theta, anorm, averlt, &
        eprec, aux_avg (2), w0gauss, wgauss, tcpu, get_clock, xq_ (3)
   ! the convergence threshold
   ! weight for metals
@@ -59,15 +60,16 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! function computing the theta function
   ! cpu time
 
-  complex (8) ::  ps (nbnd), ZDOTC, dbecsum, psidvpsi
+  complex (kind = dp) ::  ps (nbnd), ZDOTC, dbecsum, psidvpsi
   ! the scalar products
   ! the scalar product function
   ! dummy variable
   ! auxiliary dpsi dV matrix element between k+q  and  k wavefunctions
 
-  real (8), allocatable :: h_diag (:,:)
+  real (kind = dp), allocatable :: h_diag (:,:)
   ! the diagonal part of the Hamiltonian
-  complex (8), allocatable :: drhoscf (:,:), dvloc (:,:), spsi (:), auxg (:), &
+  complex (kind = dp), allocatable :: drhoscf (:,:), dvloc (:,:),  &
+       spsi (:), auxg (:), &
        dpsiaux (:,:)
   ! the variation of the charge
   ! variation of local part of the potenti

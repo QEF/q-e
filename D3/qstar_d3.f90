@@ -12,6 +12,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE kinds, only : DP
   implicit none
   !
   ! input variables
@@ -29,10 +30,10 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! index of -q in the star (0 if nont present)
   ! unit number
 
-  complex (8) :: d3dyn (3 * nat, 3 * nat, 3 * nat)
+  complex (kind = dp) :: d3dyn (3 * nat, 3 * nat, 3 * nat)
   ! the dynmatrix derivative
 
-  real (8) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
+  real (kind = dp) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
   ! direct lattice vectors
   ! reciprocal lattice vectors
   ! for eaxh atom and rotation gives the
@@ -56,7 +57,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! cartesian coordinate counters
   ! generic counters
 
-  complex (8), allocatable :: phi (:,:,:,:,:,:), phi2 (:,:,:,:,:,:)
+  complex (kind = dp), allocatable :: phi (:,:,:,:,:,:), phi2 (:,:,:,:,:,:)
   ! an auxiliary dyn. matrix.
   ! another one
 

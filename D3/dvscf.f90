@@ -15,6 +15,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 !   K-S potential.
 !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -22,9 +23,9 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   implicit none
   integer :: nu_i
   ! input: mode under consideration
-  real (8) :: xq_x (3)
+  real (kind = dp) :: xq_x (3)
   ! input: coordinates of the q point
-  complex (8) :: dvloc (nrxx)
+  complex (kind = dp) :: dvloc (nrxx)
   ! output: local part of the variation
   !         of the K_S potential
   !
@@ -49,14 +50,14 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   real (kind=DP), pointer :: vloc_x (:,:)
   ! the local potential at G+q
   complex (kind=DP), pointer :: u_x(:,:), drc_x (:,:)
-  complex (kind=DP), allocatable :: aux1 (:), aux2 (:)
+  complex (kind=DP), allocatable :: aux1 (:), aux2 (:,:)
   ! the transformation modes patterns
   ! contain drho_core for all atomic types
   logical :: q_eq_zero
   ! true if xq equal zero
 
   allocate  (aux1( nrxx))    
-  allocate  (aux2( nrxx))    
+  allocate  (aux2( nrxx,1))    
 
   q_eq_zero = xq_x(1).eq.0.d0 .and. xq_x(2).eq.0.d0 .and. xq_x(3).eq.0.d0
   if (q_eq_zero) then
@@ -71,19 +72,28 @@ subroutine dvscf (nu_i, dvloc, xq_x)
      iudrho_x = iudrho
   endif
 
-  call davcio_drho (aux2, lrdrho, iudrho_x, nu_i, - 1)
+  call davcio_drho (aux2(:,1), lrdrho, iudrho_x, nu_i, - 1)
+
+!  call dv_of_drho (nu_i, aux2(1,1), .true.)
+
+!  dvloc = aux2(:,1)
+
+!  deallocate (aux1, aux2)
+
+!  return
+
+
   do ir = 1, nrxx
-     dvloc (ir) = aux2(ir) * dmuxc(ir,1,1)
+     dvloc (ir) = aux2(ir,1) * dmuxc(ir,1,1)
   enddo
 
-  call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  call cft3 (aux2(:,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   call setv (2 * nrxx, 0.d0, aux1, 1)
   do ig = 1, ngm
      qg2 = (g(1,ig)+xq_x(1))**2 + (g(2,ig)+xq_x(2))**2 + (g(3,ig)+xq_x(3))**2
      if (qg2.gt.1.d-8) then
-        aux1(nl(ig)) = e2 * fpi * aux2(nl(ig)) / (tpiba2 * qg2)
+        aux1(nl(ig)) = e2 * fpi * aux2(nl(ig),1) / (tpiba2 * qg2)
      endif
-
   enddo
 
   if (nlcc_any) call setv (2 * nrxx, 0.d0, aux2, 1)
@@ -103,7 +113,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
                              (g(3,ig) + xq_x(3)) * u_x(mu+3,nu_i) ) * &
                    DCMPLX(0.d0,-1.d0) * DCMPLX(cos(gtau),-sin(gtau))
            aux1 (nl(ig)) = aux1 (nl(ig)) + vloc_x (ig,nt) * guexp
-           if (nlcc(nt)) aux2 (nl(ig)) = aux2 (nl(ig)) + drc_x(ig,nt) * guexp
+           if (nlcc(nt)) aux2 (nl(ig),1) = aux2 (nl(ig),1) + drc_x(ig,nt) * guexp
         enddo
      endif
 
@@ -112,11 +122,11 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 
   call DAXPY (2 * nrxx, 1.d0, aux1, 1, dvloc, 1)
   if (nlcc_any) then
-     call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+     call cft3 (aux2(:,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
      do ir = 1, nrxx
-        aux2 (ir) = aux2 (ir) * dmuxc(ir,1,1)
+        aux2 (ir,1) = aux2 (ir,1) * dmuxc(ir,1,1)
      enddo
-     call DAXPY (2 * nrxx, 1.d0, aux2, 1, dvloc, 1)
+     call DAXPY (2 * nrxx, 1.d0, aux2(:,1), 1, dvloc, 1)
 
   endif
 

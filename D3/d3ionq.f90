@@ -20,6 +20,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !
 #include "machine.h"
   !
+  USE kinds, only : DP
   USE io_global,  ONLY : stdout
   !
   implicit none
@@ -34,7 +35,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! input: the type of each atom
   ! input: the number of modes
 
-  real (8) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real (kind = dp) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm, q (3)
   ! input: the positions of the atoms
   ! input: the coordinates of g vectors
@@ -47,7 +48,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! input: cut-off of g vectors
   ! input: the q vector
 
-  complex (8) :: d3dyn (3 * nat, nmodes, 3 * nat), &
+  complex (kind = dp) :: d3dyn (3 * nat, nmodes, 3 * nat), &
        u (3 * nat, nmodes), ug0 (3 * nat, nmodes)
   ! output: derivative of the dyn. matrix
   ! input: the pattern of the modes
@@ -61,11 +62,11 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   integer :: mxr
   ! the maximum number of r shells
 
-  real (8) :: e2, tpi
+  real (kind = dp) :: e2, tpi
   ! the electron charge
   ! twp times pi
 
-  parameter (mxr = 100, e2 = 2.d0, tpi = 2.d0 * 3.14159265358979d0)
+  parameter (mxr = 100, e2 = 2.0_dp, tpi = 2.0_dp * 3.14159265358979_dp)
 
   integer :: nu_i, nu_j, nu_k, na, nb, nta, ntb, ng, nrm, nr, icart, &
        jcart, kcart, na_icart, nb_jcart, nc_kcart
@@ -81,7 +82,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! counter on r shells
   ! counters on cartesian coordinates
 
-  real (8) :: arg, fpi, argq, tpiba2, tpiba3, alpha, erfc, &
+  real (kind = dp) :: arg, fpi, argq, tpiba2, tpiba3, alpha, erfc, &
        upperbound, charge, fac, gtq2, gt2, facq, d2f, d3f, rmax, r (3, &
        mxr), r2 (mxr), dtau (3), rr, ar, qrg
   ! the argument of the phase
@@ -102,11 +103,11 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! the R_i-\tau_s-\tau_s' parameter
   ! the square of this parameter
 
-  complex (8), allocatable :: d3dy1 (:,:,:), d3dy2 (:,:,:), d3dy3 (:,:,:)
+  complex (kind = dp), allocatable :: d3dy1 (:,:,:), d3dy2 (:,:,:), d3dy3 (:,:,:)
   ! first term dynamical matrix
   ! second term dynamical matrix
   ! third term dynamical matrix
-  complex (8) :: facg, fnat,  work
+  complex (kind = dp) :: facg, fnat,  work
   ! a phase with g
   ! a phase with the atoms
   ! working space

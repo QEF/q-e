@@ -11,18 +11,19 @@ subroutine d3_valence
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
   implicit none
   integer :: ik, ikk, ikq, nu_i, nu_j, nu_k, ibnd, jbnd, kbnd, nrec
 
-  real (8) :: de1, de2, de3, wg1, wg2, wg3, wwg1, wwg2, d_dos, wrk, &
+  real (kind = dp) :: de1, de2, de3, wg1, wg2, wg3, wwg1, wwg2, d_dos, wrk, &
        wgauss, wga (nbnd), wgq (nbnd), w0gauss, w0g (nbnd), w1g (nbnd), &
        w_1gauss
 
-  complex (8) :: wrk1, aux (3 * nat)
-  complex (8), allocatable :: pdvp_i (:,:), pdvp_j (:,:),  dpsidvpsi (:,:),  &
+  complex (kind = dp) :: wrk1, aux (3 * nat)
+  complex (kind = dp), allocatable :: pdvp_i (:,:), pdvp_j (:,:),  dpsidvpsi (:,:),  &
        pdvp_k (:,:), aux1 (:,:,:), aux2 (:,:,:), aux3 (:,:,:), aux4 (:,:,:)
 
   if (degauss.eq.0.d0) return

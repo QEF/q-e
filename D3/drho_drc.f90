@@ -14,6 +14,7 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   !  It is used by drho_cc. Have a look there for more explanation
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -27,17 +28,17 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 
   integer :: iudrho_x
   !input: the unit containing the charge variation
-  real (8) :: xq_x (3), scale
+  real (kind = dp) :: xq_x (3), scale
   !input: q point
   !input: drhocore will be added to the valence charge scaled by this factor
-  complex (8) :: u_x (3 * nat, 3 * nat), drc_x (ngm, ntyp)
+  complex (kind = dp) :: u_x (3 * nat, 3 * nat), drc_x (ngm, ntyp)
   !input: the transformation modes patterns
   !input: contain the rhoc (without structu
 
   integer :: ipert, na, mu, nt, ig, errcode
-  real (8) :: gtau
-  complex (8) :: guexp
-  complex (8), allocatable :: drhoc (:), drhov (:), uact (:)
+  real (kind = dp) :: gtau
+  complex (kind = dp) :: guexp
+  complex (kind = dp), allocatable :: drhoc (:), drhov (:), uact (:)
 
 
   allocate  (drhoc( nrxx))    

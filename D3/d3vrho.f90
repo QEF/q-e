@@ -15,6 +15,7 @@ subroutine d3vrho
   !  of the third order dynamical matrix.
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : iunigk
@@ -43,13 +44,13 @@ subroutine d3vrho
   ! counter on g
   ! counter on index permutation
 
-  real (8) :: gtau, fac, wgg
+  real (kind = dp) :: gtau, fac, wgg
   ! the product G*\tau_s
   ! auxiliary variable
   ! the true weight of a K point
 
-  complex (8) :: alpha (8), ZDOTC, work
-  complex (8), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), rhog (:), &
+  complex (kind = dp) :: alpha (8), ZDOTC, work
+  complex (kind = dp), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), rhog (:), &
        work1 (:,:), work2 (:,:), work3 (:)
 
   allocate  (rhog( nrxx))    

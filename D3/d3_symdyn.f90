@@ -15,6 +15,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   !
   !
 #include "machine.h"
+  USE kinds, only : DP
   implicit none
   integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &
        nsymq, npert_i, npert_f, irotmq
@@ -26,7 +27,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   ! input: the order of the small gro
   ! input: the symmetry q -> -q+G
 
-  real (8) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)
+  real (kind = dp) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)
   ! input: the coordinates of q
   ! input: the R associated at each r
   ! input: direct lattice vectors
@@ -35,7 +36,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   logical :: minus_q
   ! input: if true symmetry sends q->
 
-  complex (8) :: d3dyn (3 * nat, 3 * nat, 3 * nat), &
+  complex (kind = dp) :: d3dyn (3 * nat, 3 * nat, 3 * nat), &
        ug0 (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
   ! inp/out: matrix to symmetr
   ! input: the q=0 patterns
@@ -55,9 +56,9 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   ! counter on modes
   ! counter on modes
 
-  complex (8) :: work, wrk (3, 3)
+  complex (kind = dp) :: work, wrk (3, 3)
   ! auxiliary variables
-  complex (8), allocatable :: phi (:,:,:,:,:,:)
+  complex (kind = dp), allocatable :: phi (:,:,:,:,:,:)
   ! the dynamical matrix
 
   allocate  (phi( 3, 3, 3, nat, nat, nat))    

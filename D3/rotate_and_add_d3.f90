@@ -14,6 +14,7 @@ subroutine rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
 !  to phi2.   phi is left unmodified.
 !
 #include "machine.h"
+  USE kinds, only : DP
   implicit none
   !
   ! input variables
@@ -26,12 +27,12 @@ subroutine rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
   ! index of the inverse operations
   ! index of the rotated atom
 
-  complex (8) :: phi (3, 3, 3, nat, nat, nat), phi2 (3, 3, 3, nat, nat, nat)
+  complex (kind = dp) :: phi (3, 3, 3, nat, nat, nat), phi2 (3, 3, 3, nat, nat, nat)
   ! the input d3dyn.mat.
   ! in crystal coordinates
   ! the rotated d3dyn.mat
   ! in crystal coordinates
-  real (8) :: rtau (3, 48, nat), sxq (3)
+  real (kind = dp) :: rtau (3, 48, nat), sxq (3)
   ! for each atom and rotation gives
   ! the R vector involved
   ! the rotated q involved in this sym.op
@@ -45,13 +46,13 @@ subroutine rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
   ! index of the inverse symm.op.
   ! generic counters
 
-  real (8) :: arg
+  real (kind = dp) :: arg
   ! argument of the phase
 
-  complex (8) :: phase, work
+  complex (kind = dp) :: phase, work
   ! auxiliary variable
-  real (8) :: tpi
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  real (kind = dp) :: tpi
+  parameter (tpi = 2.0_dp * 3.14159265358979_dp)
 
 
   ism1 = invs(isym)

@@ -16,6 +16,7 @@ subroutine d0rhod2v (ipert, drhoscf)
 #include "machine.h"
   USE io_global,      ONLY : stdout
   USE io_files,      ONLY : iunigk
+  USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY : evc
   use phcom
@@ -25,7 +26,7 @@ subroutine d0rhod2v (ipert, drhoscf)
 #endif
   implicit none
   integer :: ipert              ! index of the perturbation associated with drho
-  complex (8) :: drhoscf (nrxx) ! the variation of the charge density
+  complex (kind = dp) :: drhoscf (nrxx) ! the variation of the charge density
 !
   integer :: icart,           & ! counter on polarizations
              jcart,           & ! counter on polarizations
@@ -45,11 +46,11 @@ subroutine d0rhod2v (ipert, drhoscf)
              nrec,            & ! record position of dwfc
              ios                ! integer variable for I/O control
 
-  real (8) :: gtau,           & ! the product G*\tau_s
+  real (kind = dp) :: gtau,           & ! the product G*\tau_s
               wgg               ! the weight of a K point
 
-  complex (8) :: ZDOTC, d3dywrk (3*nat,3*nat), fac, alpha(8), work
-  complex (8), allocatable :: work0 (:), work1 (:), work2 (:), work3 (:), &
+  complex (kind = dp) :: ZDOTC, d3dywrk (3*nat,3*nat), fac, alpha(8), work
+  complex (kind = dp), allocatable :: work0 (:), work1 (:), work2 (:), work3 (:), &
                           work4 (:), work5 (:), work6 (:)
   ! auxiliary space
 

@@ -10,16 +10,17 @@
 subroutine dpsidpsidv
   !-----------------------------------------------------------------------
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
 
   implicit none
   integer :: ik, ikk, ikq, ibnd, jbnd, nu_i, nu_j, nu_z, nrec
-  real (8) :: wgauss, wga (nbnd), wgq (nbnd), w0gauss, w0g (nbnd), &
+  real (kind = dp) :: wgauss, wga (nbnd), wgq (nbnd), w0gauss, w0g (nbnd), &
        deltae, wg1, wg2, wwg
-  complex (8) :: wrk, wrk0, ZDOTC
-  complex (8), allocatable :: dqpsi (:,:), ps1_ij (:,:),  ps1_ji (:,:), &
+  complex (kind = dp) :: wrk, wrk0, ZDOTC
+  complex (kind = dp), allocatable :: dqpsi (:,:), ps1_ij (:,:),  ps1_ji (:,:), &
        ps3_ij (:,:), ps2_ji (:,:), d3dyn1 (:,:,:), d3dyn2 (:,:,:),&
        d3dyn3 (:,:,:)
 

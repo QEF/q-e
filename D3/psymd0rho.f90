@@ -14,6 +14,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   !
 #include "machine.h"
 #ifdef __PARA
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -24,13 +25,13 @@ subroutine psymd0rho (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under consideration
 
-  complex (8) :: dvtosym (nrxx, nper)
+  complex (kind = dp) :: dvtosym (nrxx, nper)
   ! the potential to symmetrize
 
   ! local variables
 
   integer :: i, iper, npp0
-  complex (8),pointer  :: ddvtosym (:,:)
+  complex (kind = dp),pointer  :: ddvtosym (:,:)
   ! the potential to symmetrize
 
 !  if (nsymq.eq.1.and. (.not.minus_q) ) return
@@ -48,7 +49,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
      call cgather_sym (dvtosym (1, iper), ddvtosym (1, iper) )
   enddo
 
-  call symd0rho (nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
+  call symd0rho (max_irr_dim, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
        nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   do iper = 1, nper
      call ZCOPY (npp (me) * ncplane, ddvtosym (npp0, iper), 1, dvtosym &

@@ -12,6 +12,7 @@ program d3toten
   !
 #include "machine.h"
   USE io_global,      ONLY : stdout
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -68,11 +69,17 @@ program d3toten
      endif
   endif
   !
+  !  Non-selfconsistent calculation of the wavefunctions
+  !
+  write( stdout, '(/,5x,"Nscf calculating of the perturbed wavefunctions")')
+  !
   ! It calculates the variation of wavefunctions | d/du(q) psi(k) >
   !
   t0 = get_clock ('D3TOTEN')
   if (.not.lgamma) then
-     WRITE( stdout, '(/,5x,"calling gen_dwfc(1)")')
+!     WRITE( stdout, '(/,5x,"calling gen_dwfc(1)")')
+     write( stdout, '(/,5x,"Calculating for the wavevector q")')
+
      call gen_dwfc (1)
      call d3_recover (1, + 1)
      t1 = get_clock ('D3TOTEN') - t0
@@ -85,7 +92,9 @@ program d3toten
   ! It calculates the variation of wavefunctions | d/du(q=0) psi(k) >
   !
 301 continue
-  WRITE( stdout, '(/,5x,"calling gen_dwfc(3)")')
+!  WRITE( stdout, '(/,5x,"calling gen_dwfc(3)")')
+  write( stdout, '(/,5x,"Calculating for the wavevector q=0 at the original k-points")')
+
   call gen_dwfc (3)
   call d3_recover (2, + 1)
   t1 = get_clock ('D3TOTEN') - t0
@@ -99,7 +108,9 @@ program d3toten
   !
 302 continue
   if (.not.lgamma) then
+     write( stdout, '(/,5x,"Calculating for the wavevector q=0 at the (k+q)-points")')
      WRITE( stdout, '(/,5x,"calling gen_dwfc(2)")')
+
      call gen_dwfc (2)
      call d3_recover (3, + 1)
      t1 = get_clock ('D3TOTEN') - t0
@@ -107,6 +118,9 @@ program d3toten
      WRITE( stdout, '(5x,"gen_dwfc(2)   time: ",f12.2, &
           &          " sec    Total time:",f12.2," sec")') t1, t0
   endif
+
+  write( stdout, '(/,5x,"Finished the ncf calculation of the perturbed wavefunctions")')
+
   if (istop.eq.3) stop
   !
   ! It writes on files terms of the type: <dpsi| dH | psi>, that
@@ -125,6 +139,8 @@ program d3toten
   ! It calculates the term < dpsi| dH | dpsi >
   !
 304 continue
+
+  WRITE( stdout, '(/,5x,"Calculating the matrix elements <dpsi |dH |dpsi>")')
   do nu_i = nu_i0, 3 * nat
      if (q0mode (nu_i) ) then
         WRITE( stdout, '(/,5x,"calling dpsidvdpsi:",i3)') nu_i
@@ -145,6 +161,7 @@ program d3toten
   ! It calculates the term < dpsi| dpsi > < psi | dH | psi>
   !
 305 continue
+  WRITE( stdout, '(/,5x,"Calculating the matrix elements <dpsi|dpsi>< psi|dH|psi> ")')
   WRITE( stdout, '(/,5x,"calling dpsidpsidv")')
   call dpsidpsidv
   call d3_recover (6, + 1)
@@ -157,6 +174,7 @@ program d3toten
   ! It calculates the term   drho * d2V
   !
 306 continue
+  WRITE( stdout, '(/,5x,"Calculating the matrix elements <psi |d^2 v |dpsi>")')
   WRITE( stdout, '(/,5x,"calling drhod2v")')
   call drhod2v
   call d3_recover (7, + 1)
@@ -169,6 +187,7 @@ program d3toten
   ! It calculates the term   rho * d3V
   !
 307 continue
+  WRITE( stdout, '(/,5x,"Calculating the matrix elements <psi |d^3v |psi>")')
   WRITE( stdout, '(/,5x,"calling d3vrho")')
   call d3vrho
   call d3_recover (8, + 1)
@@ -181,6 +200,7 @@ program d3toten
   ! It calculates the contribution due to ionic term
   !
 308 continue
+  WRITE( stdout, '(/,5x,"Calculating the Ewald contribution")')
   WRITE( stdout, '(/,5x,"calling d3ionq")')
   call d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, xq, at, bg, g, &
        gg, ngm, gcutm, nmodes, u, ug0, npert_i, npert_f, q0mode, d3dyn)
@@ -194,6 +214,7 @@ program d3toten
   ! In the metallic case some additional terms are needed
   !
 309 continue
+  WRITE( stdout, '(/,5x,"Calculating the valence contribution")')
   WRITE( stdout, '(/,5x,"calling d3_valence")')
   call d3_valence
   call d3_recover (10, + 1)
@@ -222,6 +243,7 @@ program d3toten
   ! Kohn-Sham-Energy term depending on the charge density.
   !
 311 continue
+  WRITE( stdout, '(/,5x,"Calculating the exchange-correlation contribution")')
   WRITE( stdout, '(/,5x,"calling d3_exc")')
   call d3_exc
   call d3_recover (12, + 1)
@@ -233,6 +255,7 @@ program d3toten
   ! It calculates additional terms due to non_linear-core-corrections
   !
 312 continue
+  WRITE( stdout, '(/,5x,"Calculating the core-correction contribution")')
   WRITE( stdout, '(/,5x,"calling d3dyn_cc")')
   call d3dyn_cc
   call d3_recover (13, + 1)
@@ -256,6 +279,7 @@ program d3toten
   ! for every q on a file.
   !
 313 continue
+  WRITE( stdout, '(/,5x,"Symmetrizing and writing the tensor to disc")')
   WRITE( stdout, '(/,5x,"calling d3matrix")')
   call d3matrix
   t1 = get_clock ('D3TOTEN') - t0

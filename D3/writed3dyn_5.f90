@@ -14,6 +14,7 @@ subroutine writed3dyn_5 (d3dyn_x, filename, isw)
   !     isw = -1  :  rotates d3dyn_x from the basis of pattern to
   !                      cartesian axis
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -31,9 +32,9 @@ subroutine writed3dyn_5 (d3dyn_x, filename, isw)
   ! index on modes
   ! index on modes
 
-  complex (8) :: d3dyn_x (3 * nat, 3 * nat, 3 * nat), work
+  complex (kind = dp) :: d3dyn_x (3 * nat, 3 * nat, 3 * nat), work
   ! input: the third derivative of the dynamical matrix
-  complex (8), allocatable :: aux (:,:,:)
+  complex (kind = dp), allocatable :: aux (:,:,:)
   ! auxiliary space
 
   character (len=*) :: filename

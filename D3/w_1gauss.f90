@@ -14,8 +14,9 @@ function w_1gauss (x, n)
 !
 ! --> (n=-99): second derivative of Fermi-Dirac function
 !
+USE kinds, only : DP
 implicit none
-real (8) :: w_1gauss, x
+real (kind = dp) :: w_1gauss, x
                        ! output: the value of the function
                       ! input: the point where to compute the function
 
@@ -24,7 +25,7 @@ integer :: n
 !
 !    here the local variables
 !
-real (8) :: a, arg, hp, hd, pi, aux1, aux2
+real (kind = dp) :: a, arg, hp, hd, pi, aux1, aux2
                       ! the coefficients a_n
                       ! the argument of the exponential
                       ! the hermite function

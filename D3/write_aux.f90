@@ -21,15 +21,15 @@ subroutine write_aux (isw)
   integer :: isw
 !
   if (isw.eq.1) then
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux1, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux2, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux3, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux4, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux5, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux6, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux7, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux8, 1)
-     call setv (54 * nat * nat * nat, 0.d0, d3dyn_aux9, 1)
+     d3dyn_aux1 = (0.0_dp,0.0_dp)
+     d3dyn_aux2 = (0.0_dp,0.0_dp)
+     d3dyn_aux3 = (0.0_dp,0.0_dp)
+     d3dyn_aux4 = (0.0_dp,0.0_dp)
+     d3dyn_aux5 = (0.0_dp,0.0_dp)
+     d3dyn_aux6 = (0.0_dp,0.0_dp)
+     d3dyn_aux7 = (0.0_dp,0.0_dp)
+     d3dyn_aux8 = (0.0_dp,0.0_dp)
+     d3dyn_aux9 = (0.0_dp,0.0_dp)
   elseif (isw.eq.2) then
      call ZCOPY (27 * nat * nat * nat, d3dyn, 1, d3dyn_aux4, 1)
      call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux5, 1, &

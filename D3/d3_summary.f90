@@ -18,6 +18,7 @@ subroutine d3_summary
   !
 #include"machine.h"
   USE io_global,  ONLY : stdout
+  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
@@ -41,7 +42,7 @@ subroutine d3_summary
   ! counter on irreducible representation
   ! the first mode
 
-  real (8) :: ft1, ft2, ft3, sr (3, 3), xkg (3)
+  real (kind = dp) :: ft1, ft2, ft3, sr (3, 3), xkg (3)
   ! fractionary translation
   ! fractionary translation
   ! fractionary translation

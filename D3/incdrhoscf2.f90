@@ -16,6 +16,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   !
   !
 #include "machine.h"
+  USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   use phcom
@@ -24,9 +25,9 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   integer :: ik
   ! input: the k point
 
-  real (8) :: weight
+  real (kind = dp) :: weight
   ! input: the weight of the k point
-  complex (8) :: drhoscf (nrxxs), dbecsum (nhm * (nhm + 1) / 2, nat)
+  complex (kind = dp) :: drhoscf (nrxxs), dbecsum (nhm * (nhm + 1) / 2, nat)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
   integer :: mode, flag
@@ -36,10 +37,10 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   !   here the local variable
   !
 
-  real (8) :: wgt
+  real (kind = dp) :: wgt
   ! the effective weight of the k point
 
-  complex (8), allocatable :: psi (:), dpsic (:)
+  complex (kind = dp), allocatable :: psi (:), dpsic (:)
   ! the wavefunctions in real space
   ! the change of wavefunctions in real sp
 
