@@ -3,33 +3,28 @@ A Raman/nonlinear susceptibility calculation requires the following steps:
 
   - a simple scf calculation with pw.x
 
-  - a calculation of electric-field response with ph.x:
-    trans=.false., epsil=.true.
-    The output delta rho must be saved to a file, let us say 
-    fildrho='delta.rhoE'
-
-  - a phonon calculation at q=0 and no electric fields with ph.x:
-    trans=.true., epsil=.false.
-    The output delta rho must be saved to a file, let us say
-    fildrho='delta.rhoU' (must differ from fildrho of the previous step)
+  - a calculation with ph.x for both electric-field response
+    and phonon modes: trans=.epsil., epsil=.true.
+    The output delta rho must be saved to a file, by specifying
+    let us say fildrho='delta.rho'. Two files, 'delta.rho.E' and
+    'delta.rho.U' will actually be written in the scratch directory
 
   - a non-scf calculation with option calculation='raman' and with
     appropriate values of b_length, lcart set in namelist &raman,
     that follows all other namelists (see below for their meaning)
 
   - finally, a calculation with ram.x
-    The setting of variables fildrho, fildrhou, b_length, lcart 
-    depends on the settings of the preceding step. 
-
-Variables outdir and prefix must be the same in all steps.
+    Variables fildrho, b_length, lcart should be the same as in
+    the preceding steps.  Variables outdir and prefix must be 
+    the same in all steps.
 
 The input data for ram.x is the same as for a phonon calculation,
 followed by a namelist "&inputram".
 
   See file INPUT_PH for the first part of the input.
   Note that fildrho, in namelist &inputph, must be the same as
-  specified in the ph.x electric field step (in the example above,
-  'delta.rhoE'), and xq must be set to 0.
+  specified in the ph.x calculation (in the example above, 'delta.rho'),
+  and xq must be set to 0.
 
   namelist inputram
            ========
@@ -66,11 +61,6 @@ followed by a namelist "&inputram".
                 atomic displacement and the original grid for the electric 
                 field.
                 default: .false.
- 
-  fildrhou :    File with the perturbed charge density with respect to an 
-                atomic displacement. Must be the same as spedified in the
-                ph.x phonon step (in the example above, 'delta.rhoU')
-                Default: ' ' 
  
   filsus :      File for the nonlinear susceptibility
                 Default: 'nonl_suscept'

@@ -331,7 +331,8 @@ recompilation.
 
 \subsubsection{Libraries}
 
-ESPRESSO uses the linear algebra BLAS/LAPACK libraries.
+ESPRESSO uses the well-known linear algebra BLAS (Basic Linear Algebra 
+Subroutines) and LAPACK (Linear Algebra PACKage) libraries.
 A copy of the needed routines is provided with the distribution.
 It is however very convenient to use optimized BLAS/LAPACK contained
 in vendor-specific mathematical libraries, such as:
@@ -347,13 +348,19 @@ in vendor-specific mathematical libraries, such as:
 \end{quote}
 
 Otherwise, it is a good idea to use optimized ATLAS libraries instead
-of plain BLAS/LAPACK.
-If these are not installed or not satisfactory on your system,
-download the appropriate binaries from
+of plain BLAS/LAPACK. Download the appropriate binaries from:\\
 \htmladdnormallink{\texttt{http://www.netlib.org/}}%
-                  {http://www.netlib.org/}
-or download and compile the sources.
-This may take some time and effort.
+                  {http://www.netlib.org/},
+or download and compile the sources (this  may take some time and effort). 
+Note that ATLAS is not a complete replacement for LAPACK: ATLAS contains 
+all of the BLAS, plus the LU code, plus the full storage Cholesky code.
+Follow the instructions in the ATLAS distributions to produce a full 
+LAPACK replacement.
+
+Sergei Lisenkov reported success and good performances with
+optimized BLAS by Kazushige Goto:
+\htmladdnormallink{\texttt{http://www.cs.utexas.edu/users/flame/goto}}
+{http://www.cs.utexas.edu/users/flame/goto}.
 
 ESPRESSO uses the Fast Fourier Transform from the FFTW library
 (\htmladdnormallink{\texttt{http://www.fftw.org/}}%
@@ -364,10 +371,11 @@ distribution (this is the default configuration) or link to a
 precompiled FFTW library.
 In the latter case, follow the instructions in the files
 \texttt{Install/Make.*}, and remember that only FFTW v.~$<3$ is
-supported: FFTW v.~3 requires changes in the code.
+supported: FFTW v.~3 requires changes in the code. 
 
-If you want to use external precompiled libraries, you need to
-correctly specify their location in the \texttt{make.sys} file.
+In general, if you want to use external precompiled libraries, 
+you need to correctly specify their location in the 
+\texttt{make.sys} file.
 The \texttt{configure} scripts tries to guess where your libraries
 are, but it cannot find libraries in nonstandard places.
 
@@ -716,7 +724,7 @@ Note that each major release of the Intel compiler differs a lot from
 the previous one. Do not mix compiled objects from different releases: 
 they are incompatible. Intel compiler v.~7 and later use a different 
 method to locate where modules are with respect to v.~$< 7$: if you
-are using the manual configuration, bchoose the appropriate line
+are using the manual configuration, choose the appropriate line
 \texttt{MODULEFLAG=...} in \texttt{make.sys}.
 
 Some releases of Intel compiler v.~7 and 8 yield ``Compiler Internal 
@@ -780,12 +788,21 @@ A workaround is available: see
 
 AMD Athlon CPUs can be basically treated like Intel Pentium CPUs.
 You can use the Intel compiler and MKL with Pentium-3 optimization.
-The best results have been reported with ATLAS optimized BLAS/LAPACK
-libraries, and AMD Core Math Library (ACML) for the missing libraries:
-load first ATLAS, then ACML, then \texttt{-lg2c}.
-ACML can be freely downloaded from AMD web site.
-This info was contributed by Konstantin Kudin.
 
+Konstantin Kudin reports that the best results in terms of
+performances are obtained with ATLAS optimized BLAS/LAPACK 
+libraries, using AMD Core Math Library (ACML) for the missing 
+libraries. ACML can be freely downloaded from AMD web site.
+Beware: some versions of ACML -- i.e. the GCC version with SSE2 -- 
+crash PWscf. The ``\_nosse2'' version appears to be stable. 
+Load first ATLAS, then ACML, then \texttt{-lg2c}, as in the 
+following example (replace what follows \texttt{-L} with 
+something appropriate to your configuration):
+\begin{verbatim}
+ -L/location/of/fftw/lib/ -lfftw \
+ -L/location/of/atlas/lib -lf77blas -llapack -lcblas -latlas \
+ -L/location/of/gnu32_nosse2/lib -lacml -lg2c }
+\end{verbatim}
 AMD Opteron CPUs should run in 64-bit mode with the Portland compiler:
 \texttt{-D\_\_LINUX64} is needed among the preprocessing flags.
 It is also known to run with the Intel compiler in 32-bit emulation.

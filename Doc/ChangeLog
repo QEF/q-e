@@ -1,4 +1,15 @@
-26 Aug 2004  Example 16 updated, cleanup (PG)
+27 Aug 2004  Misc Alpha fixes (C.S.)
+             Z* are  written on output in a consistent way (Gernot)
+             More merging between CP and FPMD:
+             - initialization (both code uses the same ggen)
+             - now FPMD initializes the small-boxes too (required for USPP)
+             - print out
+             (CC)
+
+26 Aug 2004  Example 16 updated, misc cleanup, dynmat updated (PG)
+             Changes to use of "fildrho" in phonon, d3, Raman calculationi
+             calculation of nonlinear susceptibility fixed, example 15
+             updated (Gernot)
 
 25 Aug 2004  Fixed some errors in constrained dynamics. "Fixed atoms" and
              explicit constraints are now compatible when they do not involve

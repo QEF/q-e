@@ -1,16 +1,16 @@
-TODO LIST - 2 Jul 2004
+TODO LIST - 27 Aug 2004
 (does not include new developments!)
 
 INSTALLATION/PORTING
 
-- expand new configure to cover as many configurations as possible
+- expand configure to cover as many configurations as possible
 
 - too many options for SGI machines
 
 COMMON
 
 - fix shift in eigenvalues between CP/FPMD and PW
-  The eigenvalues must be the same!!!
+  The eigenvalues should be the same!!!
 
 - fix shift in total energy between CP, FPMD and PW
   for charged systems. 
@@ -25,7 +25,12 @@ COMMON
 
 - variable declarations : real(kind=DP), or real(dbl), everywhere
 
-- real vs dreal, cmplx vs dcmplx, float vs dble, etc
+- clean up intrinsic functions mess:
+     real, dreal, float, dfloat, dble
+     cmplx, dcmplx
+     conjg, dconjg
+     imag, aimag, dimag
+  with and without preprocessing!
 
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds   
@@ -34,6 +39,8 @@ COMMON
 
 - cleanup and merge of routines reading and processing PPs;
   merge uspp-related stuff ("small box") of CP into PW
+
+- restart file compatibility between PW and CP/FPMD
 
 PW
 
@@ -78,10 +85,12 @@ PW
   the printout with UPF PP is incomplete or misleading (lloc=0)
 
 - write explicitly and unambiguosly the units of output quantities
+  and also what are exactly the output quantites!
 
 POSTPROCESSING
 
 - complete postprocessing in Gamma case
+- postprocessing with CP/FPMD
 
 - stm_wfc_matching not working
 
@@ -91,7 +100,12 @@ POSTPROCESSING
 
 - reconstruction of all-electron wavefunctions
 
-PH, D3, Gamma
+PH, D3, Gamma, Raman
+
+- simplified phonon dispersion: phonon might read the same input as PWi
+  and read specific input data in the &phonon namelist
+
+- same input for Gamma and PH; Gamma output compatible with Raman
 
 - better algorithm for electron-phonon (Malgorzata?)
 
@@ -108,15 +122,57 @@ DOCUMENTATION
 
 - complete the developer's (technical) guide
 
-FPMD:
+CP/FPMD:
+
+
+- CP: check on small box size
+
+- CP: the output is horrible
 
 - Documentation needs serious improvements
 
-CPV: 
-
-- Documentation needs serious improvements
-
-- check on small box size
-
-- the output is horrible
+- Proposals from Princeton:
+  * just one name for CP and FPMD
+  * default set up for molecular calculations
+  * default cutoff values as well as radii of augmented charge
+    from pseudopotential files
+  * default choice for spin restricted and spin unrestricted configurations
+    for neutral systems (maybe already there?)
+  * automatic FFT grids from cutoff
+  * automatic box grid for USPP from radii of augmented charge
+  * default values for emass(emass=300), for dt (dt=7), for preconditioning
+    cutoff (3)
+  * the code should consider a common error:
+      dt^2/emass too large does not allow ortho to converge
+      or cause energy to increase as time step evolve
+  * Electronic minimization: SD should be discouraged: use damp as default,
+    introduce an automatic default schedule, something as:
+    1st step sd followed by 5 steps with with damp= 0.8,
+                followed by 5 steps with damp=0.5,
+                followed by 10 steps with damp=0.3,
+                followed by 10 steps with damp=0.2,
+                followed by as many steps as necessary
+                to achieve the required convergence with damp=0.1
+   A max number of steps should be included to ensure program termination
+   The other option allowed should be conjugate gradients: 
+   see Nicola - eventually it could become the default
+  * Ionic minimization: again SD should be discouraged
+    A default scheme for simultaneous damped dynamics should be given
+    (to be tested) for example: zero damp on ions and start with damp=0.5
+    on electrons to become then 0.1 or perhaps the values should be set
+    given the forces on the ions
+    When moving ions and electrons simultaneously an important parameter
+    is the ratio between electron and ion masses - For minimization it 
+    is better to set up all the ion masses equal - A default value for
+    the ion masses (considering the defaults for emass and dt) is perhaps
+    10 AMU (we should do some test to see if 20 AMU is s a safer value)
+  * Default values for randomization should be given
+    amprp=0.1 is a decent value - amprp=0.01 is too small
+  * Car-Parrinello dynamics: the proper masses for the ions, an optimal value
+    for emass and dt should be set up by the code, based on the smaller atomic
+    mass and the default value used in the minimizationi
+    e.g. Amass_default=10 AMU. If the minimum physical AMASS is 20 then
+    dt=sqrt(2) dt_default and emass should be increased so to keep
+    emass^2/dt constant
+  * defaults for the Nose thermostat, introduction of Nose' chains
 

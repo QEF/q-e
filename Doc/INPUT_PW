@@ -727,7 +727,7 @@ CLIMBING_IMAGES
   
    index1, index2, ..., indexN
   
-  where index1, index2, ..., indexN are the indeces of the images to which 
+  where index1, index2, ..., indexN are the indices of the images to which 
   apply the Climbing Image procedure. If more than an image is specified they
   must be separated by a comma
        
@@ -749,13 +749,13 @@ CONSTRAINTS
       constr_tol                REAL,    tolerance for keeping the constraints 
                                          satisfied
       constr_type(.)            INTEGER, type of constrain
-      constr(1,.) constr(2,.)   INTEGER, atoms indeces object of the constraint.
+      constr(1,.) constr(2,.)   INTEGER, atoms indices object of the constraint.
                                         
                           I.E.: 1 ia1 ia2 "1" is the constrain type 
                                 (fixed distance) "ia1 ia2" are the 
-                                indeces of the atoms (as they appear 
+                                indices of the atoms (as they appear 
                                 in the 'ATOMIC_POSITION' CARD) whose 
-                                distancehas to be kept constant
+                                distance has to be kept constant
 
 -------------------------------------------------------------------------------
 
