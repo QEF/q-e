@@ -78,42 +78,50 @@ subroutine punch_band (filband)
 
   implicit none
   character (len=*) :: filband
-  real(kind=DP) :: proold, modulo
+  real(kind=DP) :: proold
   ! the best overlap product
-  ! the x coordinate in k space
   complex(kind=DP) :: pro
   ! the product of wavefunctions
 
-  complex(kind=DP), allocatable :: psiold (:,:), old (:), actual (:), &
+  complex(kind=DP), allocatable :: psiold (:,:), old (:), new (:), &
        becpold (:,:)
-  ! the space used to save the eigenfunctions
-  ! the old testing wavefunction
-  ! the testing wavefunction
-  ! products of wavefunctions and beta
+  ! psiold: eigenfunctions at previous k-point, ordered
+  ! old, new: contain one band resp. at previous and current k-point
+  ! becpold: <psi|beta> at previous k-point
 
   integer :: ibnd, jbnd, ik, ikb, ig, npwold, ios
   ! counters
-  integer, allocatable :: ok (:), igkold (:), il (:), ilm (:)
-  complex(kind=DP), external :: ZDOTC,  cgracsc
-  ! scalar product function
-  ! scalar product with the S matrix
+  integer, allocatable :: ok (:), igkold (:), il (:)
+  ! ok: keeps track of which bands have been already ordered
+  ! igkold: indices of k+G at previous k-point
+  ! il: band ordering
+  integer, parameter :: maxdeg = 4
+  ! maxdeg: max allowed degeneracy
+  integer :: ndeg, deg, nd
+  ! ndeg : number of degenerate states
+  integer, allocatable :: degeneracy(:), degbands(:,:), index(:)
+  ! degbands keeps track of which states are degenerate
+  real(kind=DP), allocatable:: edeg(:)
+  real(kind=DP), parameter :: eps = 0.001
+  ! threshold (Ry) for degenerate states 
+  complex(kind=DP), external :: cgracsc
+ ! scalar product with the S matrix
 
 
-  if (filband.eq.' ') return
+  if (filband == ' ') return
   iunpun = 18
   open (unit = iunpun, file = filband, status = 'unknown', form = &
        'formatted', err = 100, iostat = ios)
 100 call errore ('punch_band', 'Opening filband file', abs (ios) )
   rewind (iunpun)
   allocate (psiold( npwx, nbnd))    
-  allocate (old(   ngm))    
-  allocate (actual(ngm))    
-  allocate (becpold (nkb , nbnd))    
-  allocate (igkold( npwx))    
-  allocate (ok ( nbnd))    
-  allocate (il ( nbnd))    
-  allocate (ilm( nbnd))    
-
+  allocate (old(ngm), new(ngm))    
+  allocate (becpold(nkb, nbnd))    
+  allocate (igkold (npwx))    
+  allocate (ok (nbnd), il (nbnd))    
+  allocate (degeneracy(nbnd), degbands(nbnd,maxdeg))
+  allocate (index(maxdeg), edeg(maxdeg))
+  !
   do ik = 1, nks
      !
      !    prepare the indices of this k point
@@ -121,47 +129,31 @@ subroutine punch_band (filband)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
           igk, g2kin)
      !
-     !   reads the eigenfunctions
+     !   read eigenfunctions
      !
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     if (ik.eq.1) then
+     !
+     ! calculate becp = <psi|beta> 
+     ! 
+     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     !
+     if (ik == 1) then
         !
-        !     The first eigenfunctions are saved as they are
+        !  first k-point in the list:
+        !  save eigenfunctions in the current order (increasing energy)
         !
         do ibnd = 1, nbnd
-           !
-           !     the order is the increasing energy in this case
-           !
            il (ibnd) = ibnd
-           do ig = 1, npw
-              psiold (ig, ibnd) = evc (ig, ibnd)
-           enddo
-        enddo
-        do ig = 1, npw
-           igkold (ig) = igk (ig)
-        enddo
-        npwold = npw
-        modulo = wk (ik) * nks / 2.d0
-        write(iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
-        write (iunpun, '(8f9.4)')  (et (il (ibnd) , ik) &
-             * rytoev, ibnd = 1, nbnd)
-        !
-        !   The bec function for this k point are computed
-        !
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
-
-        call ccalbec (nkb, npwx, npw, nbnd, becpold, vkb, evc)
+        end do
      else
         !
-        !    here we are at a generic step, not the first, no eigenfunction
-        !    has been already chosen
+        !  following  k-points in the list:
+        !  determine eigenfunction order in array il
         !
         do ibnd = 1, nbnd
            ok (ibnd) = 0
         enddo
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
-
-        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
         do ibnd = 1, nbnd
            old(:) = (0.d0, 0.d0)
            do ig = 1, npwold
@@ -169,61 +161,97 @@ subroutine punch_band (filband)
            enddo
            proold = 0.d0
            do jbnd = 1, nbnd
-              if (ok (jbnd) .eq.0) then
-                 actual (:) = (0.d0, 0.d0)
+              if (ok (jbnd) == 0) then
+                 new (:) = (0.d0, 0.d0)
                  do ig = 1, npw
-                    actual (igk (ig) ) = evc (ig, jbnd)
+                    new (igk (ig) ) = evc (ig, jbnd)
                  enddo
                  pro = cgracsc (nkb, becp (1, jbnd), becpold (1, ibnd), &
-                      nhm, ntyp, nh, qq, nat, ityp, ngm, actual, old, tvanp)
-                 if (abs (pro) .gt.proold) then
-                    ilm (ibnd) = jbnd
+                      nhm, ntyp, nh, qq, nat, ityp, ngm, new, old, tvanp)
+                 if (abs (pro) > proold) then
+                    il (ibnd) = jbnd
                     proold = abs (pro)
                  endif
               endif
            enddo
-           ok (ilm (ibnd) ) = 1
+           ok (il (ibnd) ) = 1
         enddo
         !
-        !   Now the order of the new eigenfunctions has been established,
-        !   prepare the next k point
+        !  if there were bands crossing at degenerate eigenvalues
+        !  at previous k-point, re-order those bands so as to keep
+        !  lower band indices corresponding to lower bands
         !
-        do ibnd = 1, nbnd
-           il (ibnd) = ilm (ibnd)
-           do ig = 1, npw
-              psiold (ig, ibnd) = evc (ig, il (ibnd) )
-           enddo
-           !
-           !   copy the becp in the becpold
-           !
-           do ikb = 1, nkb
-              becpold (ikb, ibnd) = becp (ikb, il (ibnd) )
-           enddo
-        enddo
+        do nd = 1, ndeg
+           do deg = 1, degeneracy (nd)
+              index(deg) = il(degbands(nd,deg))
+              edeg (deg) = et(il(degbands(nd,deg)), ik)
+           end do
+           call hpsort(degeneracy (nd), edeg, index)
+           do deg = 1, degeneracy (nd)
+              il(degbands(nd,deg)) = index(deg)
+           end do
+        end do
+     end if
+     !
+     !   Now the order of eigenfunctions has been established
+     !   for this k-point -- prepare data for next k point
+     !
+     do ibnd = 1, nbnd
         do ig = 1, npw
-           igkold (ig) = igk (ig)
+           psiold (ig, ibnd) = evc (ig, il (ibnd) )
         enddo
-        npwold = npw
-        !
-        !     When a band calculation is performed the weight of the k point is
-        !     used as the coordinate in k space
-        !
-        modulo = wk (ik) * nks / 2.d0
-
-        write(iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
-        write (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
+        do ikb = 1, nkb
+           becpold (ikb, ibnd) = becp (ikb, il (ibnd) )
+        enddo
+     enddo
+     do ig = 1, npw
+        igkold (ig) = igk (ig)
+     enddo
+     npwold = npw
+     !
+     !  find degenerate eigenvalues
+     !
+     deg  = 0
+     ndeg = 0
+     do ibnd = 2, nbnd
+        if ( abs (et(ibnd, ik) - et(ibnd-1, ik)) < eps ) then
+           if ( deg == 0 ) then
+              ndeg = ndeg + 1
+              edeg (ndeg) = et(ibnd, ik)
+           end if
+           deg = 1
+        else
+           deg = 0
+        end if
+     end do
+     !
+     !  locate band crossings at degenerate eigenvalues
+     !
+     do nd = 1, ndeg
+        deg = 0
+        do ibnd = 1, nbnd
+           if ( abs (et(il(ibnd), ik) - edeg (nd)) < eps ) then
+              deg = deg + 1
+              if (deg > maxdeg) call errore ('punch_band', &
+                   ' increase maxdeg', deg)
+              degbands(nd,deg) = ibnd
+           end if
+        end do
+        degeneracy (nd) = deg
+     end do
+     !
+     write (iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
+     write (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
              * rytoev, ibnd = 1, nbnd)
-     endif
-
   enddo
-  deallocate(ilm)
-  deallocate(il)
-  deallocate(ok)
-  deallocate(igkold)
-  deallocate(becpold)
-  deallocate(actual)
-  deallocate(old)
-  deallocate(psiold)
+
+  deallocate (edeg, index)
+  deallocate (degbands, degeneracy)
+  deallocate (il, ok)
+  deallocate (igkold)
+  deallocate (becpold)
+  deallocate (new, old)
+  deallocate (psiold)
 
   close (iunpun)
   return

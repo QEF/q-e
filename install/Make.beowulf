@@ -11,6 +11,8 @@ CPP = /lib/cpp -P -traditional
 # Add -DADD_BLAS_ONE_UNDERSCORE if your blas/lapack library names contain 
 # two underscores at the end
 
+# Add -D__LAM if using the LAM version of MPI
+
 # Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
 #
 # In this case, specify also  how to load the fftw library (FFTW_LIB)

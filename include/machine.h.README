@@ -21,6 +21,7 @@
                    may be needed depending on how blas/lapack are
                    compiled and how they are called by the compiler
       __BENCHLIB   t3e machines with benchlib library
+      __LAM        LAM-MPI version
 
    Output Definitions:
 

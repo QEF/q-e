@@ -539,12 +539,12 @@ SUBROUTINE c_phase
          END DO 
 
 !        --- Calculate the phase for this string ---
-         phik(istring)=IMAG(LOG(zeta))
+         phik(istring)=DIMAG(LOG(zeta))
          cphik(istring)=COS(phik(istring))*(1.0_dp,0.0_dp) &
                      +SIN(phik(istring))*(0.0_dp,1.0_dp)
 
 !        --- Calculate the localization for current kort ---
-         zeta_mod=dreal(conjg(zeta)*zeta)
+         zeta_mod=DREAL(conjg(zeta)*zeta)
          loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd *log(zeta_mod)
 
 !     --- End loop over orthogonal k-points ---
@@ -581,7 +581,7 @@ SUBROUTINE c_phase
       END DO
 
 !     --- Get the angle corresponding to the complex numbers average ---
-      theta0=atan2(IMAG(cave),REAL(cave))
+      theta0=atan2(DIMAG(cave),DREAL(cave))
 
 !     --- Assign this angle to the corresponding spin phase average ---
       IF (nspin == 1) THEN
@@ -597,7 +597,7 @@ SUBROUTINE c_phase
 
 !     --- Put the phases in an around theta0 ---
       cphik(istring)=cphik(istring)/cave
-      dtheta=atan2(IMAG(cphik(istring)),REAL(cphik(istring)))
+      dtheta=atan2(DIMAG(cphik(istring)),DREAL(cphik(istring)))
       phik(istring)=theta0+dtheta
 
 !  --- End loop over spins
@@ -785,16 +785,16 @@ SUBROUTINE c_phase
    rmod=alat*rmod
 !  --- Give polarization in units of (e/Omega).bohr ---
    fac=rmod
-   WRITE(6,"(/,11X'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
-        fac*pdl_tot,fac*REAL(mod_tot)
+   WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
+        fac*pdl_tot,fac*DREAL(mod_tot)
 !  --- Give polarization in units of e.bohr ---
    fac=rmod/omega
-   WRITE(6,"(/,11X'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
-        fac*pdl_tot,fac*REAL(mod_tot)
+   WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
+        fac*pdl_tot,fac*DREAL(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
    fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
-   WRITE(6,"(/,11X'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
-        fac*pdl_tot,fac*REAL(mod_tot)
+   WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
+        fac*pdl_tot,fac*DREAL(mod_tot)
 !  --- Write polarization direction ---
    WRITE(6,"(/,8X,'The polarization direction is:  ( ', &
        &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
