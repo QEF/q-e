@@ -343,7 +343,9 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   complex(kind=DP), dimension(:), allocatable :: cw2   
 
   !     allocate auxp at the first call (independently of the grid)
-  if (.not.allocated(auxp)) allocate(auxp(100+2*(nr1+nr2+nr3),ngrid))
+  if (.not.allocated(auxp)) then
+     allocate(auxp(195+2*(nr1+nr2+nr3),ngrid))
+  end if
 
   !
   !    test the sign and put the correct normalization on f
@@ -359,7 +361,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 #ifdef ASL
   allocate(cw2(nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
 #else
-  allocate(cw2(3*nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
+  allocate(cw2(6*nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
 #endif
   allocate(f1(nrz1(igrid),nrz2(igrid),nrz3(igrid)))
 
@@ -410,8 +412,8 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 #endif
   endif
 
-  isw=sign
 #ifdef ASL
+  isw=-sign
 #if defined MICRO
   call hfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
        &            isw,iw,cw1,cw2,nbtasks,ierr)
@@ -421,6 +423,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 #endif
   if (ierr.ne.0) call errore('cft_3','ierr=',ierr)
 #else
+  isw=sign
   call ZZFFT3D(isw,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
        &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
 #endif
