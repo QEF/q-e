@@ -21,6 +21,7 @@ program phonon
   use io_files
   USE io_global, ONLY: ionode_id
   USE mp, ONLY: mp_bcast
+  use para
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
   USE parser,           ONLY : int_to_char
@@ -66,10 +67,12 @@ program phonon
   !  Checking the status of the calculation
   !
   iustat = 98
-  filname = trim(tmp_dir) // trim(prefix) //'.stat'
-  inquire(file=filname, exist= exst)
+#ifdef __PARA
+  if (me  /= 1 .or. mypool /= 1) goto 100
+#endif  
+  filname = trim(prefix) //'.stat'
+  call seqopn (iustat, filname, 'formatted', exst)
   if(exst) then
-     open (unit = iustat, file = filname, form='formatted', status='old')
      read(iustat, *, end=10, err=10) iq_start
      if (iq_start < 0) go to 10
      write(stdout, "(//5x,' STARTING FROM AN OLD RUN')")
@@ -81,9 +84,13 @@ program phonon
      iq_start = 1
 20   continue
   else
-     open (unit = iustat, file = filname, form='formatted', status='new')
      iq_start = 1
   end if
+  close (unit = iustat, status = 'keep')
+#ifdef __PARA
+100 continue
+#endif
+  call mp_bcast (iq_start, ionode_id)
   !
   if (ldisp) then
      !
@@ -114,8 +121,16 @@ program phonon
 
   do iq = iq_start, nqs
 
+#ifdef __PARA
+  if (me  /= 1 .or. mypool /= 1) goto 200
+#endif  
+     call seqopn (iustat, filname, 'formatted', exst)
      REWIND (IUSTAT)
      write(iustat,*) iq
+     close(unit = iustat, status = 'keep')
+#ifdef __PARA
+200 continue
+#endif
 
      if (ldisp) then
         !
@@ -267,7 +282,14 @@ program phonon
 
   end do
 
+#ifdef __PARA
+  if (me  /= 1 .or. mypool /= 1) goto 300
+#endif  
+  call seqopn (iustat, filname, 'formatted', exst)
   close (unit = iustat, status='delete')
+#ifdef __PARA
+300 continue
+#endif
 
   if (allocated(xk_start)) deallocate (xk_start)
   if (allocated(wk_start)) deallocate (wk_start)
