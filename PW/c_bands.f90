@@ -34,13 +34,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
   USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
-                                   diis_ethr_cg, isolve, reduce_io
+                                   isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc  
   USE g_psi_mod,            ONLY : h_diag, s_diag
-  USE diis_module,          ONLY : cdiisg, rdiisg
   !
   IMPLICIT NONE
   !
@@ -131,12 +130,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... a) Davidson algorithm (all-band)
        ! ... c) DIIS algorithm (all-band) 
        !
-       USE becmod, ONLY: rbecp
+       USE becmod,           ONLY : rbecp
+       USE real_diis_module, ONLY : rdiisg
        !
        IMPLICIT NONE
        !     
        !
-       ! ... rbecp contains <beta|psi> - used in h_psi and s_psi
+       ! ... becp contains <beta|psi> - used in h_psi and s_psi
        !
        ALLOCATE( rbecp( nkb, nbnd ) )
        !
@@ -222,11 +222,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              CALL usnldiag( h_diag, s_diag )
              !
              ntry = 0
-             diis_iter = 0.D0
              !
              btype(:) = 1
              !
-             IF ( iter == 1 ) THEN
+             IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
                 !
                 ! ... at the first iteration a static criterium is used to
                 ! ... define whether or not a band is occupied
@@ -245,8 +244,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              RMMDIIS_loop: DO
                 !
-                CALL rdiisg( npw, npwx, nbnd, diis_ndim, evc, &
-                             et(:,ik), ethr, btype, notconv, diis_iter, iter )
+                CALL rdiisg( npw, npwx, nbnd, evc, &
+                             et(1,ik), btype, notconv, diis_iter, iter )
                 !  
                 avg_iter = avg_iter + diis_iter
                 !
@@ -349,7 +348,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... b) Conjugate Gradient (band-by-band)
        ! ... c) DIIS algorithm
        !
-       USE becmod, ONLY: becp
+       USE becmod,              ONLY : becp
+       USE complex_diis_module, ONLY : cdiisg
        !
        IMPLICIT NONE
        !
@@ -491,11 +491,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              CALL usnldiag( h_diag, s_diag )
              !
              ntry = 0
-             diis_iter = 0.D0
              !
              btype(:) = 1
              !
-             IF ( iter == 1 ) THEN
+             IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
                 !
                 ! ... at the first iteration a static criterium is used to
                 ! ... define whether or not a band is occupied
@@ -514,8 +513,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              RMMDIIS_loop: DO
                 !
-                CALL cdiisg( npw, npwx, nbnd, diis_ndim, evc, &
-                             et(:,ik), ethr, btype, notconv, diis_iter, iter )
+                CALL cdiisg( npw, npwx, nbnd, evc, &
+                             et(1,ik), btype, notconv, diis_iter, iter )
                 !  
                 avg_iter = avg_iter + diis_iter
                 !

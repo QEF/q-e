@@ -724,11 +724,6 @@ MODULE input_parameters
           ! buffer for diis diagonalization 
           ! NOT used in FPMD
 
-        REAL(dbl) :: diago_diis_ethr = 1.0d-3
-          ! threshold for switching from CG to DIIS diagonalization
-          ! NOT used in FPMD
-
-
         LOGICAL :: diago_diis_keep = .FALSE.
           ! .....
           ! NOT used in FPMD
@@ -754,7 +749,7 @@ MODULE input_parameters
           diis_achmix, diis_g0chmix, diis_g1chmix, diis_nchmix, diis_nrot, &
           diis_rothr, diis_ethr, diis_chguess, mixing_mode, &
           mixing_beta, mixing_ndim, mixing_fixed_ns, diago_cg_maxiter, diago_david_ndim, &
-          diago_diis_buff, diago_diis_ethr, diago_diis_keep, diagonalization, &
+          diago_diis_buff, diago_diis_keep, diagonalization, &
           startingpot, startingwfc , conv_thr, diago_diis_ndim, diago_thr_init
 
 !

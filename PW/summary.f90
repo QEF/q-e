@@ -348,7 +348,6 @@ subroutine summary
 
   if (isolve.eq.2) then
      WRITE( stdout, * )
-     WRITE( stdout, '(5x,"threshold for starting DIIS:   ",f10.4)') diis_ethr_cg
      WRITE( stdout, '(5x,"reduced basis size: ",1i5)') diis_ndim
   endif
 

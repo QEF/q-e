@@ -187,9 +187,8 @@
        upscale,          &! maximum reduction of convergence threshold
        ethr,             &! the convergence threshold for eigenvalues
        alpha0,           &! the mixing parameters for the extrapolation
-       beta0,            &! of the starting potential
-       diis_ethr_cg       ! threshold in eigval for starting DIIS
-
+       beta0              ! of the starting potential
+  !
   INTEGER, PUBLIC :: &
        ngm0,             &! used in mix_rho
        niter,            &! the maximum number of iteration

@@ -6,31 +6,354 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !#define DIIS_DEBUG
-#undef  DIIS_DEBUG
+!#define HOLES_FILLER_DEBUG
 !
-!#define CG_STEP
-#undef CG_STEP
+#define WINDOW_ORTHO
+!#define SHOW_OVERLAP
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
+#include "f_defs.h"
+! 
+! ... Iterative solution of the eigenvalue problem:
+!
+!     ( H - e S ) |psi> = 0
+!
+! ... where H is an symmetric operator, e is a real scalar,
+! ... S is an overlap matrix, |psi> is a complex vector.
+!
+! ... The following variant of the DIIS Residual Minimization Method, based
+! ... on three steps, is used :
+!
+! ... 1) At the first "scf" step of the first "ionic" step, the diagonalization
+! ...    starts with an initialization procedure. Two (or more) sweeps on all
+! ...    the bands are performed. A sweep consists in two (or more if required)
+! ...    unconstrained trial steps (steepest descent steps) followed by a
+! ...    subspace rotation. If convergence is not achieved in this phase a
+! ...    final trial step is done.
+! ...    In all the other cases the initialization procedure consists in a 
+! ...    subspace rotation followed by a trial step.
+!
+! ... 2) Diagonalization based on the DIIS algorithm is performed on the lowest
+! ...    nbnd2 bands. Orthogonalization of the eigenvectors is done at
+! ...    each step. The possibility of orthogonalizing a given band only to
+! ...    those inside an energy window is also implemented.
+!
+! ... 3) The topmost two bands are converged using a standard 
+! ...    conjugate-gradient procedure. This ensures that eventual holes
+! ...    left by the DIIS algorithm can be identified and filled.
+! ...    If two holes have been found this procedure is repeated on the 
+! ...    topmost two bands (previously optimized with the DIIS algorithm).
+!
+! ... written by Carlo Sbraccia ( 08/06/2004 )
+!  
+!
 !----------------------------------------------------------------------------
-MODULE diis_module
+MODULE diis_base
   !----------------------------------------------------------------------------
   !
-#include "f_defs.h"
-  ! ... iterative solution of the eigenvalue problem:
+  USE constants, ONLY : eps32
+  USE kinds,     ONLY : DP
   !
-  !     ( H - e S ) |psi> = 0
+  IMPLICIT NONE  
   !
-  ! ... where H is an hermitean operator, e is a real scalar,
-  ! ... S is an overlap matrix, |psi> is a complex vector.  
+  SAVE
   !
-  ! ... a variant of the DIIS Residual Minimization Method is used
+  ! ... control parameters
   !
-  ! ... written by Carlo Sbraccia ( 25/04/2004 )
+  INTEGER,        PARAMETER :: maxter = 10
+    ! maximum number of iterations
+  INTEGER,        PARAMETER :: max_sweeps = 2
+    ! max number of sweeps
+  INTEGER,        PARAMETER :: max_trial_steps = 2
+    ! number of trial steps per sweep
+  REAL (KIND=DP), PARAMETER :: lambda = 1.D0
+    ! step length  
+  REAL (KIND=DP), PARAMETER :: ortho_win_min = 0.05D0
+    ! minimum energy window (Ry) for orthogonalization
   !
-  USE kinds, ONLY : DP
+  ! ... module variables
+  !
+  REAL (KIND=DP) :: ortho_win
+    ! energy window (Ry) for orthogonalization
+  REAL (KIND=DP) :: empty_ethr 
+    ! threshold for empty bands
+  COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), aux(:,:)
+    ! the product of H and psi
+    ! the product of S and psi
+    ! auxiliary work-space
+  COMPLEX (KIND=DP), ALLOCATABLE :: psi_old(:,:,:), hpsi_old(:,:,:), &
+                                    spsi_old(:,:,:)
+    ! DIIS-workspace: old eigenvectors
+    ! DIIS-workspace: old product of H and psi
+    ! DIIS-workspace: old product of S and psi
+  REAL (KIND=DP), ALLOCATABLE :: e_old(:,:)
+    ! DIIS-workspace: old eigenvalues
+  REAL (KIND=DP), ALLOCATABLE :: e_ref(:)
+    ! eigenvalues of the previous iteration  
+  INTEGER :: nbase
+    ! counter on the reduced basis vectors
+  LOGICAL, ALLOCATABLE :: conv(:)
+    ! .TRUE. if the band is converged  
+  INTEGER, ALLOCATABLE :: mask(:)
+    ! array used to reorder bands
+  INTEGER :: cnv, ndim2, ndmx2, nbnd2, diis_ndim1
+    ! number of converged bands
+    ! 2 * ndim
+    ! 2 * ndmx
+    ! nbnd - 2
+    ! diis_ndim - 1
+  !
+  CONTAINS
+    !
+    ! ... allocation/deallocation procedures
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE allocate_base( ndmx, nbnd )
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: ndmx, nbnd
+      !
+      ALLOCATE( psi_old(  ndmx, diis_ndim1, nbnd2 ) )
+      ALLOCATE( hpsi_old( ndmx, diis_ndim1, nbnd2 ) )
+      ALLOCATE( spsi_old( ndmx, diis_ndim1, nbnd2 ) )
+      ALLOCATE( e_old( diis_ndim1, nbnd2 ) )
+      ALLOCATE( e_ref( nbnd ) )
+      ALLOCATE( hpsi( ndmx, nbnd ) )
+      ALLOCATE( spsi( ndmx, nbnd ) )
+      ALLOCATE( aux(  ndmx, nbnd ) )
+      ALLOCATE( conv( nbnd ) )
+      ALLOCATE( mask( nbnd ) )       
+      !
+    END SUBROUTINE allocate_base
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE deallocate_base()
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      IF ( ALLOCATED( mask ) )     DEALLOCATE( mask )
+      IF ( ALLOCATED( conv ) )     DEALLOCATE( conv )
+      IF ( ALLOCATED( aux ) )      DEALLOCATE( aux )
+      IF ( ALLOCATED( hpsi ) )     DEALLOCATE( hpsi )
+      IF ( ALLOCATED( spsi ) )     DEALLOCATE( spsi )
+      IF ( ALLOCATED( e_ref ) )    DEALLOCATE( e_ref )
+      IF ( ALLOCATED( e_old ) )    DEALLOCATE( e_old )
+      IF ( ALLOCATED( psi_old ) )  DEALLOCATE( psi_old )
+      IF ( ALLOCATED( hpsi_old ) ) DEALLOCATE( hpsi_old )
+      IF ( ALLOCATED( spsi_old ) ) DEALLOCATE( spsi_old )
+      !
+    END SUBROUTINE deallocate_base
+    !
+    ! ... other procedures
+    !
+    !------------------------------------------------------------------------
+    FUNCTION no_holes( ndmx, nbnd, btype, psi, e )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags, ONLY : ethr
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL                          :: no_holes
+      INTEGER,           INTENT(IN)    :: ndmx, nbnd
+      INTEGER,           INTENT(INOUT) :: btype(nbnd)
+      REAL (KIND=DP),    INTENT(INOUT) :: e(nbnd)
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      !
+      INTEGER                        :: ib, i, j, moved, btype_tmp
+      REAL (KIND=DP)                 :: e_tmp, local_ethr
+      COMPLEX (KIND=DP), ALLOCATABLE :: psi_tmp(:), hpsi_tmp(:), spsi_tmp(:)
+      !
+      !
+      ALLOCATE( psi_tmp(  ndmx ) )
+      ALLOCATE( hpsi_tmp( ndmx ) )
+      ALLOCATE( spsi_tmp( ndmx ) )
+      !
+      no_holes = .TRUE.
+      !
+      moved = 0
+      !
+#if defined (HOLES_FILLER_DEBUG)
+      PRINT *, "OLD SPECTRUM:"
+      PRINT *, E(:)
+#endif      
+      !
+      DO ib = 2, nbnd
+         !
+         ! ... reorder eigenvalues if they are not in the right order
+         ! ... ( this can and will happen in not-so-special cases )
+         !
+         IF ( btype(ib) == 1 ) THEN
+            !
+            local_ethr = 0.5D0 * ethr
+            !
+         ELSE
+            !
+            local_ethr = 0.5D0 * empty_ethr
+            !
+         END IF
+         !
+         IF ( e(ib) < ( e(ib-1) - local_ethr ) ) THEN
+            !
+            ! ... if the last calculated eigenvalue is not the largest...
+            !
+            DO i = ( ib - 2 ), 1, - 1
+               !
+               IF ( e(ib) > e(i) ) EXIT
+               !
+            END DO
+            !
+            i = i + 1
+            !
+            moved = moved + 1
+            !
+            ! ... last calculated eigenvalue should be 
+            ! ... in the i-th position: reorder
+            !
+            e_tmp       = e(ib)
+            btype_tmp   = btype(ib) 
+            psi_tmp(:)  = psi(:,ib) 
+            hpsi_tmp(:) = hpsi(:,ib)
+            spsi_tmp(:) = spsi(:,ib) 
+            !
+            DO j = ib, ( i + 1 ), - 1
+               !
+               e(j)      = e(j-1)
+               btype(j)  = btype(j-1)
+               psi(:,j)  = psi(:,j-1)
+               hpsi(:,j) = hpsi(:,j-1)
+               spsi(:,j) = spsi(:,j-1)
+               !
+            END DO
+            !
+            e(i)      = e_tmp
+            btype(i)  = btype_tmp
+            psi(:,i)  = psi_tmp(:)
+            hpsi(:,i) = hpsi_tmp(:)
+            spsi(:,i) = spsi_tmp(:)
+            !
+            ! ... this procedure should be good if only a few inversions 
+            ! ... occur, extremely inefficient if eigenvectors are often 
+            ! ... in bad order (but this should not happen)
+            !
+         END IF
+         !
+      END DO
+      !
+#if defined (HOLES_FILLER_DEBUG)
+      !
+      PRINT *, "NEW SPECTRUM:"
+      PRINT *, E(:)
+      !
+      IF ( moved == 1 ) THEN
+         !
+         PRINT *, "ONE HOLE FOUND AND FILLED"
+         !
+      ELSE IF ( moved == 2 ) THEN
+         !
+         PRINT *, "TWO HOLES FOUND AND FILLED"
+         PRINT *, "SEARCHING FOR OTHERS..."
+         !
+      END IF  
+#endif       
+      !
+      IF ( moved == 2 ) no_holes = .FALSE.
+      !
+      DEALLOCATE( psi_tmp )
+      DEALLOCATE( hpsi_tmp )
+      DEALLOCATE( spsi_tmp )
+      !
+      RETURN
+      !
+    END FUNCTION no_holes 
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE reorder_bands( psi, notcnv, nbnd, order )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine is used to reorder the bands :
+      ! ... converged bands come first.
+      ! ... for this pourpose an auxiliary vector is used
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,           INTENT(IN)    :: order  
+      INTEGER,           INTENT(IN)    :: nbnd
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(:,:)
+      INTEGER,           INTENT(OUT)   :: notcnv
+      !
+      INTEGER :: ib
+      !
+      !
+      cnv    = 0
+      notcnv = nbnd
+      !
+      ! ... return if no eigenvector is converged
+      !
+      IF ( .NOT. ANY( conv(1:nbnd) ) ) RETURN
+      !
+      IF ( order > 0 ) THEN
+         !
+         DO ib = 1, nbnd
+            !
+            IF ( conv(ib) ) THEN
+               !
+               cnv = cnv + 1
+               !
+               mask(ib) = cnv
+               !
+               aux(:,cnv) = psi(:,ib)
+               !
+               IF ( cnv == ib ) CYCLE
+               !
+               hpsi(:,cnv) = hpsi(:,ib)
+               spsi(:,cnv) = spsi(:,ib)              
+               !
+            ELSE
+               !
+               mask(ib) = notcnv
+               !
+               aux(:,notcnv) = psi(:,ib)
+               !
+               notcnv = notcnv - 1
+               !
+            END IF
+            !
+         END DO
+         !
+         notcnv = nbnd - notcnv
+         !
+         psi(:,1:nbnd) = aux(:,1:nbnd)             
+         !
+      ELSE
+         !
+         psi(:,1:nbnd)  = psi(:,mask(1:nbnd))
+         hpsi(:,1:nbnd) = hpsi(:,mask(1:nbnd))
+         spsi(:,1:nbnd) = spsi(:,mask(1:nbnd))
+         !
+      END IF
+      !
+      RETURN      
+      !
+    END SUBROUTINE reorder_bands         
+     !
+END MODULE diis_base
+!  
+!
+!----------------------------------------------------------------------------
+MODULE real_diis_module
+  !----------------------------------------------------------------------------
+  !
+  ! ... real hamiltonian case
+  !
+  USE gvect, ONLY : gstart
+  USE diis_base
   !
   IMPLICIT NONE
   !
@@ -38,237 +361,443 @@ MODULE diis_module
   !
   ! ... public methods
   !
-  PUBLIC :: cdiisg, rdiisg
+  PUBLIC :: rdiisg
   !
-  ! ... internal DIIS variables
+  ! ... specific real DIIS variables :
   !
-  INTEGER        :: maxter      = 20       ! maximum number of iterations
-  INTEGER        :: sd_maxter_0 = 2        ! initial number of trial iterations 
-  REAL (KIND=DP) :: lambda_0    = 1.0D0    ! initial trial steps
+  SAVE
+  !
+  REAL (KIND=DP), ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
+    ! H matrix on the reduced basis
+    ! S matrix on the reduced basis
+    ! the eigenvectors of the Hamiltonian
+  !
+  ! ... external functions
+  !
+  REAL (KIND=DP), EXTERNAL :: DDOT
   !
   ! ... module procedures :
-  !  
+  !
   CONTAINS
     !
-    ! ... real routines
-    !
     !------------------------------------------------------------------------
-    SUBROUTINE rdiisg( ndim, ndmx, nbands, diis_ndim, psi, &
-                       e, ethr, btype, notcnv, diis_iter, iter )
+    SUBROUTINE rdiisg( ndim, ndmx, nbnd, psi, e, &
+                       btype, notcnv, diis_iter, iter )
       !------------------------------------------------------------------------
       !
-      ! ... gamma version of the diis algorithm :
-      ! ...    real wavefunctions with only half plane waves stored  
+      ! ... gamma_only version of the DIIS algorithm
       !
-      USE gvect, ONLY : gstart
+      USE g_psi_mod,     ONLY : h_diag
+      USE control_flags, ONLY : diis_ndim, ethr, istep
       !
       IMPLICIT NONE
       !
-      ! ... on INPUT
+      ! ... I/O variables
       !
-      INTEGER :: ndim, ndmx, nbands, diis_ndim, btype(nbands), iter
+      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd, iter
         ! dimension of the matrix to be diagonalized
         ! leading dimension of matrix psi, as declared in the calling pgm unit
         ! integer number of searched low-lying roots
-        ! maximum dimension of the reduced basis set :
-        !   the basis set is refreshed when its dimension would exceed diis_ndim
-        ! band type ( 1 = occupied, 0 = empty )
         ! scf iteration
-      REAL (KIND=DP) :: ethr
-        ! energy threshold for convergence :
-        !   eigenvector improvement is stopped, when two consecutive estimates 
-        !   of the eigenvalue differ by less than ethr.
-      !
-      ! ... on OUTPUT
-      !
-      COMPLEX (KIND=DP) :: psi(ndmx,nbands)
+      INTEGER, INTENT(INOUT) :: btype(nbnd)
+        ! band type ( 1 = occupied, 0 = empty )
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
         !  psi contains the refined estimates of the eigenvectors
-      REAL (KIND=DP) :: e(nbands)
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
         ! contains the estimated eigenvalues
-      INTEGER :: diis_iter  
+      INTEGER, INTENT(OUT) :: diis_iter
         ! average number of iterations performed per band
-      INTEGER :: notcnv
+      INTEGER , INTENT(OUT):: notcnv
         ! number of unconverged bands
       !
-      ! ... LOCAL variables
+      ! ... local variables
       !
-      INTEGER :: kter, ib, cnv, n, m
-        ! counter on iterations
+      INTEGER :: ib
         ! counter on bands
-        ! number of converged bands
-        ! do-loop counters
-      REAL :: empty_ethr
-        ! threshold for empty bands    
-      REAL (KIND=DP), ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
-        ! H matrix on the reduced basis
-        ! S matrix on the reduced basis
-        ! the eigenvectors of the Hamiltonian
-      COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), aux(:,:)
-        ! the product of H and psi
-        ! the product of S and psi
-        ! work space, contains the residual vector
-      COMPLEX (KIND=DP), ALLOCATABLE :: psi_old(:,:,:), hpsi_old(:,:,:), &
-                                        spsi_old(:,:,:)
-        ! diis-workspace: old eigenvectors
-        ! diis-workspace: old product of H and psi
-        ! diis-workspace: old product of S and psi
-      REAL (KIND=DP), ALLOCATABLE :: e_old(:,:)
-        ! eigenvalues of the previous iteration
-      REAL (KIND=DP), ALLOCATABLE :: lambda(:)
-        ! trial step length 
-      INTEGER, ALLOCATABLE :: nbase(:), sd_maxter(:)
-        ! counter on the reduced basis vectors
-        ! maximum number of trial steps (different for each band)
-      LOGICAL, ALLOCATABLE :: conv(:), frozen(:)
-        ! .TRUE. if the band is converged
-        ! .TRUE. if the band was converged at the previous step
       !
       !
       CALL start_clock( 'diis' )
       !
-      ! ... work-space allocation
-      !
-      ALLOCATE( psi_old(  ndmx, diis_ndim , nbands ) )
-      ALLOCATE( hpsi_old( ndmx, diis_ndim , nbands ) )
-      ALLOCATE( spsi_old( ndmx, diis_ndim , nbands ) )
-      ALLOCATE( e_old( diis_ndim, nbands ) )
-      ALLOCATE( hpsi( ndmx, nbands ) )
-      ALLOCATE( spsi( ndmx, nbands ) )
-      ALLOCATE( aux(  ndmx, nbands ) )
-      ALLOCATE( hr(   nbands, nbands ) )
-      ALLOCATE( sr(   nbands, nbands ) )
-      ALLOCATE( vr(   nbands, nbands ) )
-      ALLOCATE( lambda( nbands ) )
-      ALLOCATE( nbase(     nbands ) )
-      ALLOCATE( sd_maxter( nbands ) )
-      ALLOCATE( conv(      nbands ) )
-      ALLOCATE( frozen(    nbands ) )
-      !
       ! ... initialization of control variables
       !
-      kter      = 0
-      conv      = .FALSE.
-      cnv       = 0
-      notcnv    = nbands
-      nbase     = 0 
-      lambda    = lambda_0
-      sd_maxter = sd_maxter_0
+      nbase      = 0
+      diis_iter  = 0
+      ndim2      = 2 * ndim
+      ndmx2      = 2 * ndmx
+      nbnd2      = ( nbnd - 2 )
+      diis_ndim1 = ( diis_ndim - 1 )
       !
-      ! ... threshold for empty bands
+      ! ... work-space allocation
       !
-      empty_ethr = MAX( ( ethr * 50.D0 ), 1.D-3 )
+      CALL allocate_base( ndmx, nbnd )
       !
-      IF ( iter > 1 ) THEN
-         !
-         ! ... after the first scf iteration one SD step is supposed to
-         ! ... be sufficient. 
-         !
-         sd_maxter = 1
-         !
-      END IF
+      ALLOCATE( hr( nbnd, nbnd ) )
+      ALLOCATE( sr( nbnd, nbnd ) )
+      ALLOCATE( vr( nbnd, nbnd ) )
+      !
+      ! ... again control arrays
+      !
+      conv = .FALSE.
       !
       ! ... initialization of the work-space
       !
-      e_old      = 0.D0
-      e_old(1,:) = e(:)
-      psi_old    = ZERO
-      hpsi_old   = ZERO
-      spsi_old   = ZERO
+      e_old    = 0.D0
+      psi_old  = ZERO
+      hpsi_old = ZERO
+      spsi_old = ZERO
       !
-      ! ... diagonalization loop
+      ! ... threshold for empty bands
       !
-      iterate: DO
-         !
-         kter = kter + 1
-         !
-         IF ( kter > maxter ) EXIT iterate
-         !
+      empty_ethr = MAX( ( ethr * 10.D0 ), 1.D-4 )
+      !
 #if defined (DIIS_DEBUG)
-         PRINT *, ""
-         PRINT *, "kter = ", kter
-         PRINT *, ""
-#endif
+      PRINT *, "input eigenvalues :"
+      PRINT *, e(:)
+#endif            
+      !
+      ! ... initialization
+      !
+      IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
          !
-         ! ... the size of the history-subspace is increased ( different for 
-         ! ... for each band )
+         ! ... some sweeps over bands are performed at the first scf
+         ! ... iteration of the first ionic step :  
+         ! ... this to reduce the amount of holes in the energy spectrum
          !
-         WHERE ( .NOT. conv(:) )
-            !
-            nbase(:) = MIN( ( nbase(:) + 1 ), diis_ndim )
-            !
-         END WHERE        
+         CALL init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
          !
-         ! ... bands are reordered so that converged bands come first
+      ELSE
          !
-! work around an ifort bug
-!         CALL reorder_bands()
-         CALL reorder_bands_( notcnv, ndmx, nbands, kter, conv, &
-                              psi, hpsi, spsi, aux )
+         ! ... initialization step for DIIS
          !
-         ! ... here we compute H|psi> and S|psi> for not converged bands
+         ! ... here we compute H|psi> and S|psi> for all the bands
          !
-         CALL h_psi( ndmx, ndim, notcnv, psi(:,cnv+1), hpsi(:,cnv+1) )
-         CALL s_psi( ndmx, ndim, notcnv, psi(:,cnv+1), spsi(:,cnv+1) )
+         CALL h_psi( ndmx, ndim, nbnd, psi(1,1), hpsi(1,1) )
+         CALL s_psi( ndmx, ndim, nbnd, psi(1,1), spsi(1,1) )
          !
-         ! ... here we set up the hamiltonian and overlap matrix 
+         ! ... here we set up the hamiltonian and overlap matrix
          ! ... on the subspace :
          !
-         ! ...    hc_ij = <psi_i|H|psi_j>  and  sc_ij = <psi_i|S|psi_j>
+         ! ...    hr_ij = <psi_i|H|psi_j>  and  sr_ij = <psi_i|S|psi_j>
          !
-         CALL DGEMM( 'T', 'N', nbands, nbands, 2*ndim, 2.D0, &
-                     psi, 2*ndmx, hpsi, 2*ndmx, 0.D0, hr, nbands )
-         CALL DGEMM( 'T', 'N', nbands, nbands, 2*ndim, 2.D0, &
-                     psi, 2*ndmx, spsi, 2*ndmx, 0.D0, sr, nbands )
+         CALL DGEMM( 'T', 'N', nbnd, nbnd, ndim2, 2.D0, &
+                     psi, ndmx2, hpsi, ndmx2, 0.D0, hr, nbnd )
+         CALL DGEMM( 'T', 'N', nbnd, nbnd, ndim2, 2.D0, &
+                     psi, ndmx2, spsi, ndmx2, 0.D0, sr, nbnd )
          !
          IF ( gstart == 2 ) THEN
             !
-            CALL DGER( nbands, nbands, -1.D0, psi, &
-                       2*ndmx, hpsi, 2*ndmx, hr, nbands )
-            CALL DGER( nbands, nbands, -1.D0, psi, &
-                       2*ndmx, spsi, 2*ndmx, sr, nbands )
+            CALL DGER( nbnd, nbnd, -1.D0, psi, ndmx2, hpsi, ndmx2, hr, nbnd )
+            CALL DGER( nbnd, nbnd, -1.D0, psi, ndmx2, spsi, ndmx2, sr, nbnd )
             !
          END IF              
          !
-         CALL reduce( nbands * nbands, hr )
-         CALL reduce( nbands * nbands, sr )
+         CALL reduce( nbnd * nbnd, hr )
+         CALL reduce( nbnd * nbnd, sr )
          !
-         ! ... the subspace rotation is performed by solving the eigenvalue 
+         ! ... the subspace rotation is performed by solving the eigenvalue
          ! ... problem on the subspace :
-         !     
-         ! ...    ( hr - e * sr ) |phi> = 0
          !
-         CALL rdiaghg( nbands, nbands, hr, sr, nbands, e, vr )
+         ! ...    ( hc - e * sc ) |phi> = 0
          !
-         ! ... convergence is checked here
-         !
-         frozen = conv
-         !
-         WHERE( btype(:) == 1 )
-            !
-            conv(:) = ( ( kter > 1 ) .AND. &
-                        ( ABS( e(:) - e_old(1,:) ) < ethr ) )
-            !
-         ELSEWHERE
-            !
-            conv(:) = ( ( kter > 1 ) .AND. &
-                        ( ABS( e(:) - e_old(1,:) ) < empty_ethr ) )
-            !
-         END WHERE
+         CALL rdiaghg( nbnd, nbnd, hr, sr, nbnd, e, vr )
          !
          ! ... |psi>,  H|psi>  and  S|psi>  are rotated
          !
-         CALL DGEMM( 'N', 'N', 2*ndim, nbands, nbands, 1.D0, &
-                     psi, 2*ndmx, vr, nbands, 0.D0, aux, 2*ndmx ) 
-         !     
+         CALL DGEMM( 'N', 'N', ndim2, nbnd, nbnd, 1.D0, &
+                     psi, ndmx2, vr, nbnd, 0.D0, aux, ndmx2 )
+         !
          psi(:,:) = aux(:,:)
          !
-         CALL DGEMM( 'N', 'N', 2*ndim, nbands, nbands, 1.D0, &
-                     hpsi, 2*ndmx, vr, nbands, 0.D0, aux, 2*ndmx ) 
+         CALL DGEMM( 'N', 'N', ndim2, nbnd, nbnd, 1.D0, &
+                     hpsi, ndmx2, vr, nbnd, 0.D0, aux, ndmx2 )
+         !
+         hpsi(:,:) = aux(:,:)
+         !
+         CALL DGEMM( 'N', 'N', ndim2, nbnd, nbnd, 1.D0, &
+                     spsi, ndmx2, vr, nbnd, 0.D0, aux, ndmx2 )
+         !
+         spsi(:,:) = aux(:,:)
+         !
+         ! ... the first step in the DIIS history is saved
+         !
+         FORALL( ib = 1: nbnd2 )
+            !
+            e_old(1,ib)      = e(ib)
+            psi_old(:,1,ib)  = psi(:,ib)
+            hpsi_old(:,1,ib) = hpsi(:,ib)
+            spsi_old(:,1,ib) = spsi(:,ib)
+            !
+         END FORALL
+         !
+         nbase = 1
+         !
+         ! ... new residual vectors
+         !
+         FORALL( ib = 1 : nbnd )
+            !
+            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+            !
+         END FORALL
+         !
+         ! ... preconditioning of all the residual vecotrs
+         !
+         CALL g_psi( ndmx, ndim, nbnd, aux, e )
+         !
+         ! ... new trial wavefunctions
+         !
+         FORALL( ib = 1 : nbnd )
+            !
+            psi(:,ib) = psi(:,ib) - aux(:,ib)
+            !
+         END FORALL
+         !
+         diis_iter = diis_iter + 1
+         !
+      END IF
+      !
+      ! ... first check on convergence
+      !
+      IF ( ALL( conv(:) ) ) THEN
+         !
+#if defined (DIIS_DEBUG)
+         PRINT *, "final eigenvalues :"
+         PRINT *, e(:)
+         PRINT *, "variation :"
+         PRINT *, ABS( e(:) - e_ref(:) )
+         PRINT *, conv(:)
+#endif
+         !
+         notcnv = 0
+         !
+         ! ... work-space deallocation
+         !
+         CALL deallocate_base()
+         !
+         DEALLOCATE( vr )
+         DEALLOCATE( sr )
+         DEALLOCATE( hr )
+         !
+         CALL stop_clock( 'diis' )
+         !
+         RETURN
+         !
+      END IF
+      !
+      ! ... then DIIS-diagonalization is performed only on the
+      ! ... lowest nbnd2 bands
+      !
+      CALL diis_with_ortho( ndim, ndmx, nbnd2, psi, e, btype, diis_iter )
+      !
+      ! ... finally, all eventual holes left by the DIIS-diagonalization are
+      ! ... filled with a CG-based diagonalization of the topmost two bands
+      !
+      holes_sniffer: DO
+         !
+         CALL holes_filler( ndmx, ndim, nbnd, psi, e, h_diag, diis_iter )
+         !
+         IF ( no_holes( ndmx, nbnd, btype, psi, e ) ) EXIT holes_sniffer
+         ! 
+      END DO  holes_sniffer
+      !
+#if defined (DIIS_DEBUG)
+      PRINT *, "final eigenvalues :"
+      PRINT *, e(:)
+      PRINT *, "variation :"
+      PRINT *, ABS( e(:) - e_ref(:) )
+      PRINT *, conv(:)
+#endif
+      !
+      ! ... the number of not-converged bands is computed
+      !
+      notcnv = count( .NOT. conv(:) )
+      !
+      ! ... work-space deallocation
+      !
+      CALL deallocate_base()
+      !
+      DEALLOCATE( vr )
+      DEALLOCATE( sr )
+      DEALLOCATE( hr )
+      !
+      CALL stop_clock( 'diis' )
+      !
+      RETURN
+      !
+    END SUBROUTINE rdiisg
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags, ONLY : ethr
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd
+        ! dimension of the matrix to be diagonalized
+        ! leading dimension of matrix psi, as declared in the calling pgm unit
+        ! integer number of searched low-lying roots
+      INTEGER, INTENT(INOUT) :: btype(nbnd)
+        ! band type ( 1 = occupied, 0 = empty )
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+        !  psi contains the refined estimates of the eigenvectors
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+        ! contains the estimated eigenvalues
+      INTEGER, INTENT(INOUT) :: diis_iter  
+        ! average number of iterations performed per band         
+      !
+      ! ... local variables
+      !
+      INTEGER :: sweep, trial_step
+        ! counters on iterations
+      INTEGER :: ib
+        ! counter on bands
+      INTEGER :: notcnv
+        ! number of unconverged bands  
+      REAL (KIND=DP) :: psiSpsi
+        ! squared normalization of psi
+      !
+      !
+      ! ... initialization of control variables
+      !
+      sweep = 0
+      !
+      CALL h_psi( ndmx, ndim, nbnd, psi(1,1), hpsi(1,1) )
+      CALL s_psi( ndmx, ndim, nbnd, psi(1,1), spsi(1,1) )
+      !
+      iterate: DO
+         !
+         sweep = sweep + 1
+         !
+         IF ( sweep > max_sweeps ) EXIT iterate
+         !
+#if defined (DIIS_DEBUG)
+         WRITE( *, '(/"sweep = ",I3/)') sweep
+#endif
+         !
+         ! ... old eigenvalues are saved
+         !
+         e_ref(:) = e(:)
+         !
+         DO trial_step = 1, max_trial_steps
+            !
+            ! ... residual vectors
+            !
+            DO ib = 1, nbnd
+               !
+               IF ( conv(ib) ) CYCLE
+               !
+               psiSpsi = 2.D0 * DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+               !
+               IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
+               !
+               CALL reduce( 1, psiSpsi )
+               !
+               psiSpsi = 1.D0 / psiSpsi
+               !
+               psi(1,ib)  = psi(1,ib)  * psiSpsi
+               hpsi(1,ib) = hpsi(1,ib) * psiSpsi
+               spsi(1,ib) = spsi(1,ib) * psiSpsi
+               !
+               e(ib) = 2.D0 * DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+               !
+               IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
+               !
+               CALL reduce( 1, e(ib) )
+               !
+               aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+               !
+               ! ... preconditioning of the residual vecotr
+               !
+               CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )               
+               !
+            END DO
+            !           
+            ! ... trial step
+            !
+            FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
+               !
+               psi(:,ib) = psi(:,ib) - aux(:,ib)
+               !
+            END FORALL
+            !
+            ! ... bands are reordered so that converged bands come first
+            !
+            CALL reorder_bands( psi, notcnv, nbnd, +1 )
+            !
+            ! ... here we compute H|psi> and S|psi> for not converged bands
+            !
+            CALL h_psi( ndmx, ndim, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
+            CALL s_psi( ndmx, ndim, notcnv, psi(1,cnv+1), spsi(1,cnv+1) ) 
+            !
+            ! ... bands are back-ordered
+            !
+            CALL reorder_bands( psi, notcnv, nbnd, -1 )                       
+            !
+         END DO
+         !
+         ! ... here we set up the hamiltonian and overlap matrix
+         ! ... on the subspace :
+         !
+         ! ...    hr_ij = <psi_i|H|psi_j>  and  sr_ij = <psi_i|S|psi_j>
+         !
+         CALL DGEMM( 'T', 'N', nbnd, nbnd, ndim2, 2.D0, &
+                     psi, ndmx2, hpsi, ndmx2, 0.D0, hr, nbnd )
+         CALL DGEMM( 'T', 'N', nbnd, nbnd, ndim2, 2.D0, &
+                     psi, ndmx2, spsi, ndmx2, 0.D0, sr, nbnd )
+         !
+         IF ( gstart == 2 ) THEN
+            !
+            CALL DGER( nbnd, nbnd, -1.D0, psi, ndmx2, hpsi, ndmx2, hr, nbnd )
+            CALL DGER( nbnd, nbnd, -1.D0, psi, ndmx2, spsi, ndmx2, sr, nbnd )
+            !
+         END IF              
+         !
+         CALL reduce( nbnd * nbnd, hr )
+         CALL reduce( nbnd * nbnd, sr )
+         !
+         ! ... the subspace rotation is performed by solving the eigenvalue
+         ! ... problem on the subspace :
+         !
+         ! ...    ( hc - e * sc ) |phi> = 0
+         !
+         CALL rdiaghg( nbnd, nbnd, hr, sr, nbnd, e, vr )         
+         !
+         ! ... |psi>  are rotated
+         !
+         CALL DGEMM( 'N', 'N', ndim2, nbnd, nbnd, 1.D0, &
+                     psi, ndmx2, vr, nbnd, 0.D0, aux, ndmx2 )
+         !
+         psi(:,:) = aux(:,:)
+         !
+         ! ... convergence is checked here
+         !
+         WHERE( btype(:) == 1 )
+            !
+            conv(:) = ( ( ABS( e(:) - e_ref(:) ) < ethr ) )
+            !
+         ELSEWHERE
+            !
+            conv(:) = ( ( ABS( e(:) - e_ref(:) ) < empty_ethr ) )
+            !
+         END WHERE
+         !
+         ! ... exit if all bands are converged
+         !
+         IF ( ALL( conv(:) ) ) EXIT iterate
+         !
+         ! ... H|psi>  and  S|psi>  are rotated
+         !
+         CALL DGEMM( 'N', 'N', ndim2, nbnd, nbnd, 1.D0, &
+                     hpsi, ndmx2, vr, nbnd, 0.D0, aux, ndmx2 )
          !     
          hpsi(:,:) = aux(:,:)
          !
-         CALL DGEMM( 'N', 'N', 2*ndim, nbands, nbands, 1.D0, &
-                     spsi, 2*ndmx, vr, nbands, 0.D0, aux, 2*ndmx ) 
+         CALL DGEMM( 'N', 'N', ndim2, nbnd, nbnd, 1.D0, &
+                     spsi, ndmx2, vr, nbnd, 0.D0, aux, ndmx2 )
          !     
          spsi(:,:) = aux(:,:)
          !
@@ -276,731 +805,97 @@ MODULE diis_module
          PRINT *, "eigenvalues :"
          PRINT *, e(:)
          PRINT *, "variation :"
-         PRINT *, ABS( e(:) - e_old(1,:) )
+         PRINT *, ABS( e(:) - e_ref(:) )
          PRINT *, conv(:)
 #endif
          !
-         ! ... exit if all bands are converged
-         !
-         IF ( ALL( conv(:) ) ) EXIT iterate
-         !
-         ! ... a new step is performed
-         !
-         bands_loop: DO ib = 1, nbands
-            !
-            ! ... the two highest bands are always optimized 
-            ! ... ( even if converged )
-            !
-            IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) CYCLE bands_loop
-            !
-            ! ... holes-sniffer
-            !
-            IF ( ( ib <= ( nbands - 2 ) ) .AND.  &
-                 frozen(ib) .AND. ( kter > sd_maxter(ib) ) ) THEN
-               !
-               ! ... an hole has been detected :  the work-space is cleaned
-               !
-#if defined (DIIS_DEBUG)               
-               PRINT *, "HOLES-SNIFFER: ", &
-                        "an hole has been detected near band ", ib
-#endif               
-               !
-               nbase(ib) = 1
-               !
-               e_old(:,ib)      = 0.D0
-               psi_old(:,:,ib)  = ZERO
-               hpsi_old(:,:,ib) = ZERO
-               spsi_old(:,:,ib) = ZERO
-               !
-               sd_maxter(ib) = kter + sd_maxter_0               
-               !
-               maxter = MAX( maxter, sd_maxter(ib) )
-               !
-            END IF
-            !
-            ! ... the two highest bands are never optimized with the 
-            ! ... DIIS procedure
-            !
-            IF ( ( kter <= sd_maxter(ib) ) .OR. ( ib > ( nbands - 2 ) ) ) THEN
-               !
-               ! ... trial step :
-               !     
-               IF ( ( e(ib) < e_old(1,ib) ) .OR. ( kter == 1 ) ) THEN
-                  !
-                  IF ( kter == 1 ) THEN
-                     !
-                     ! ... first step :  lambda is kept fixed
-                     !
-                  ELSE
-                     !
-                     ! ... step accepted :  lambda is increased
-                     !
-                     lambda(ib) = lambda(ib) * 1.25D0
-                     !
-                  END IF   
-                  !
-               ELSE
-                  !
-                  ! ... step rejected :  lambda is decreased
-                  !
-                  lambda(ib) = 0.75D0 * lambda(ib)
-                  !
-               END IF
-               !
-               ! ... here we compute the residual vector ( stored in aux ) :
-               !
-               ! ...    |res> = ( H - e * S ) |psi>           
-               !
-               aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
-               !
-            ELSE   
-               !
-               ! ... DIIS step :  the best eigenvector and residual vector 
-               ! ...              are computed
-               !
-! work around an ifort bug
-!               CALL diis_step( ib )           
-               CALL diis_step_( ndmx, diis_ndim, nbands, ndim, nbase, &
-                                psi, hpsi, spsi, aux, e, &
-                                psi_old, hpsi_old, spsi_old, e_old, ib )
-               !
-            END IF
-            !
-            ! ... DIIS work-space is refreshed ( for not converged bands only )
-            !
-            DO n = ( diis_ndim - 1 ), 2, -1
-               !
-               e_old(n,ib)      = e_old(n-1,ib)
-               psi_old(:,n,ib)  = psi_old(:,n-1,ib)
-               hpsi_old(:,n,ib) = hpsi_old(:,n-1,ib)                 
-               spsi_old(:,n,ib) = spsi_old(:,n-1,ib)
-               !
-            END DO
-            !
-            e_old(1,ib)      = e(ib)
-            psi_old(:,1,ib)  = psi(:,ib)   
-            hpsi_old(:,1,ib) = hpsi(:,ib)
-            spsi_old(:,1,ib) = spsi(:,ib)
-            !
-         END DO bands_loop
-         !
-#if defined (CG_STEP)
-         !
-         CALL cg_step()
-         !
-#else         
-         !
-         ! ... preconditioning of all residual vecotrs
-         !
-         CALL g_psi( ndmx, ndim, nbands, aux, e )           
-         !
-#endif         
-         !           
-         ! ... here we compute the new eigenvectors for non converged bands 
-         ! ... only 
-         ! ... ( the highest two bands are always optimized, even if converged )
-         !
-! work around a g95 bug
-!         FORALL( ib = 1: nbands, .NOT. conv(ib) .OR. ib > ( nbands - 2 ) )
-!            !
-!            psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
-!            !
-!         END FORALL   
-!         !
-          DO ib = 1, nbands
-             IF (.NOT. conv(ib) .OR. ib > ( nbands - 2 ) ) THEN
-                psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
-             END IF
-          END DO
-         !
       END DO iterate
       !
-      ! ... this is an overestimate of the real number of iterations
+      ! ... if some band is not yet coverged a final trial-step is done
       !
-      diis_iter = MIN( kter, maxter )
-      !
-      ! ... the number of not-converged bands is computed
-      !
-      notcnv = nbands
-      !
-      DO ib = 1, nbands
+      IF ( ANY( .NOT. conv(:) ) ) THEN
          !
-         IF ( conv(ib) ) notcnv = notcnv - 1
+         nbase = 1
          !
-      END DO
-      !
-      ! ... work-space deallocation
-      !
-      DEALLOCATE( frozen )
-      DEALLOCATE( conv )
-      DEALLOCATE( sd_maxter )
-      DEALLOCATE( nbase )
-      DEALLOCATE( lambda )
-      DEALLOCATE( vr )
-      DEALLOCATE( sr )
-      DEALLOCATE( hr )
-      DEALLOCATE( aux )
-      DEALLOCATE( hpsi )
-      DEALLOCATE( spsi )
-      DEALLOCATE( e_old )
-      DEALLOCATE( psi_old )
-      DEALLOCATE( hpsi_old )
-      DEALLOCATE( spsi_old )
-      !
-      CALL stop_clock( 'diis' )
-      !
-      RETURN
-      !
-#if defined (CG_STEP)
-      !      
-      CONTAINS
-        !
-        ! ... internal procedures
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE cg_step()
-          !--------------------------------------------------------------------
-          !
-          IMPLICIT NONE
-          !
-          REAL (KIND=DP)              :: gamma, num, den
-          REAL (KIND=DP), ALLOCATABLE :: res_old(:), pres(:), pres_old(:)
-          !
-          REAL (KIND=DP), EXTERNAL :: DDOT      
-          !
-          !
-          IF ( kter >= 2 ) THEN
-             !
-             ! ... preconditioned conjugate gradients step
-             !
-             ALLOCATE( res_old(  ndmx ) )
-             ALLOCATE( pres(     ndmx ) )
-             ALLOCATE( pres_old( ndmx ) )
-             !
-             bands_loop: DO ib = 1, nbands
-                !
-                IF ( conv(ib) ) CYCLE bands_loop
-                !
-                pres    = ( hpsi_old(:,1,ib) - e_old(1,ib) * spsi_old(:,1,ib) )
-                res_old = ( hpsi_old(:,2,ib) - e_old(2,ib) * spsi_old(:,2,ib) )
-                !
-                pres_old = res_old
-                !
-                CALL g_psi( ndmx, ndim, 1, pres,     e_old(1,ib) )
-                CALL g_psi( ndmx, ndim, 1, pres_old, e_old(2,ib) )
-                !
-                num = 2.D0 * DDOT( 2*ndim, pres, 1, aux(:,ib), 1 )
-                !
-                IF ( gstart == 2 ) num = num - pres(1) * aux(1,ib)
-                !
-                den = 2.D0 * DDOT( 2*ndim, pres_old, 1, res_old, 1 )
-                !
-                IF ( gstart == 2 ) den = den - pres_old(1) * res_old(1)
-                !
-                gamma = num / den
-                !
-                aux(:,ib) = pres - gamma * ( psi_old(:,1,ib) - psi_old(:,2,ib) )
-                !
-             END DO bands_loop 
-             !
-             DEALLOCATE( res_old )
-             DEALLOCATE( pres )
-             DEALLOCATE( pres_old )             
-             !
-          ELSE
-             !
-             ! ... standard preconditioned steepest descent step
-             !
-             CALL g_psi( ndmx, ndim, nbands, aux, e )
-             !
-          END IF
-          !
-          RETURN
-          !
-        END SUBROUTINE cg_step
-        !
-#endif
-        !      
-! work around an ifort bug
-!      !      
-!      CONTAINS
-!        !
-!        !--------------------------------------------------------------------
-!        SUBROUTINE reorder_bands()
-!          !--------------------------------------------------------------------
-!          !
-!          ! ... this routine is used to reorder the bands :
-!          ! ... converged bands come first.
-!          ! ... for this purpose an auxiliary vector is used
-!          !
-!          IMPLICIT NONE
-!          !
-!          !
-!          cnv    = 0
-!          notcnv = nbands
-!          !
-!          IF ( ( kter <= 2 ) .OR. ( .NOT. ANY( conv(:) ) ) ) RETURN
-!          !
-!          DO ib = 1, nbands
-!             !
-!             IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) THEN
-!                !
-!                cnv = cnv + 1
-!                !
-!                aux(:,cnv) = psi(:,ib)
-!                !
-!                hpsi(:,cnv) = hpsi(:,ib)
-!                spsi(:,cnv) = spsi(:,ib)              
-!                !
-!             ELSE
-!                !
-!                aux(:,notcnv) = psi(:,ib)
-!                !
-!                notcnv = notcnv - 1
-!                !
-!             END IF
-!             !
-!          END DO
-!          !
-!          notcnv = nbands - notcnv
-!          !
-!          psi(:,:) = aux(:,:)
-!          !
-!          RETURN
-!          !
-!        END SUBROUTINE reorder_bands
-!        !          
-!        !--------------------------------------------------------------------
-!        SUBROUTINE diis_step( ib )
-!          !--------------------------------------------------------------------
-!          !
-!          IMPLICIT NONE
-!          !
-!          INTEGER, INTENT(IN)            :: ib
-!          INTEGER                        :: dim, n
-!          REAL (KIND=DP)                 :: psiSpsi
-!          REAL (KIND=DP), ALLOCATABLE    :: e_small(:)
-!          REAL (KIND=DP), ALLOCATABLE    :: rr_small(:,:), &
-!                                            sr_small(:,:), &
-!                                            vr_small(:,:)
-!          COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:),  &
-!                                            all_hpsi(:,:), &
-!                                            all_spsi(:,:), &
-!                                            all_res(:,:)
-!          !
-!          REAL (KIND=DP), EXTERNAL :: DDOT
-!          !
-!          !
-!          dim = nbase(ib)
-!          !
-!          ! ... internal work-space allocation
-!          !
-!          ALLOCATE( e_small( dim ) )
-!          ALLOCATE( rr_small( dim, dim ) )
-!          ALLOCATE( sr_small( dim, dim ) )
-!          ALLOCATE( vr_small( dim, dim ) )
-!          ALLOCATE( all_psi(  ndmx, dim ) )
-!          ALLOCATE( all_hpsi( ndmx, dim ) )
-!          ALLOCATE( all_spsi( ndmx, dim ) )
-!          ALLOCATE( all_res(  ndmx, dim ) )
-!          !
-!          ! ... the history of this band is recostructed
-!          !
-!          !
-!          ! ... the history of this band is reconstructed
-!          !
-!          all_psi(:,1)  = psi(:,ib)
-!          all_hpsi(:,1) = hpsi(:,ib)
-!          all_spsi(:,1) = spsi(:,ib)
-!          e_small(1)    = e(ib)
-!          !
-!          all_psi(:,2:dim)  = psi_old(:,:,ib)
-!          all_hpsi(:,2:dim) = hpsi_old(:,:,ib)
-!          all_spsi(:,2:dim) = spsi_old(:,:,ib)
-!          e_small(2:dim)    = e_old(:,ib)
-!          !
-!          ! ... orthogonalization
-!          !
-!          CALL cgramg1( ndmx, dim, ndim, 1, dim, all_psi, all_spsi, all_hpsi )
-!          !
-!          FORALL( n = 1: dim ) &
-!             all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
-!          !   
-!          ! ... here we construct the matrices :
-!          ! ...    rr_ij = <res_i|res_j>  and  sr_ij = <psi_i|S|psi_j>
-!          !
-!          CALL DGEMM( 'T', 'N', dim, dim, 2*ndim, 2.D0, all_res(:,:), &
-!                      2*ndmx, all_res(:,:), 2*ndmx, 0.D0, rr_small, dim )
-!          !
-!          IF ( gstart == 2 ) &
-!             CALL DGER( dim, dim, -1.D0, all_res(:,:), &
-!                        2*ndmx, all_res(:,:), 2*ndmx, rr_small, dim )
-!          !
-!          CALL reduce( dim * dim, rr_small )
-!          !
-!          sr_small(n,n) = 0.D0
-!          !
-!          FORALL( n = 1: dim ) sr_small(n,n) = 1.D0
-!          ! 
-!          ! ... diagonalize the reduced hamiltonian
-!          !
-!          CALL rdiaghg( dim, 1, rr_small, sr_small, dim, e_small, vr_small )
-!          !
-!          ! ... here we compute the best estimate of the |psi>, H|psi>, S|psi>
-!          !
-!          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_psi(:,:), &
-!                      2*ndmx, vr_small(:,1), dim, 0.D0, psi(:,ib), 2*ndmx )
-!          !
-!          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_hpsi(:,:), &
-!                      2*ndmx, vr_small(:,1), dim, 0.D0, hpsi(:,ib), 2*ndmx )
-!          !
-!          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_spsi(:,:), &
-!                      2*ndmx, vr_small(:,1), dim, 0.D0, spsi(:,ib), 2*ndmx )
-!          !
-!          psiSpsi = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, spsi(:,ib), 1 )
-!          !
-!          IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
-!          !
-!          CALL reduce( 1, psiSpsi )
-!          !          
-!          e(ib) = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, hpsi(:,ib), 1 )
-!          !
-!          IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
-!          !
-!          CALL reduce( 1, e(ib) )          
-!          !
-!          e(ib) = e(ib) / psiSpsi
-!          !
-!          ! ... here we compute the best estimate of the residual vector
-!          !
-!          aux(:,ib) = ( hpsi(:,ib) - e(ib) * spsi(:,ib) ) / psiSpsi
-!          !
-!          ! ... internal work-space deallocation
-!          !
-!          DEALLOCATE( e_small )
-!          DEALLOCATE( rr_small )
-!          DEALLOCATE( sr_small )
-!          DEALLOCATE( vr_small )
-!          DEALLOCATE( all_psi )
-!          DEALLOCATE( all_hpsi )
-!          DEALLOCATE( all_spsi )
-!          DEALLOCATE( all_res )
-!          !   
-!          RETURN
-!          !
-!        END SUBROUTINE diis_step
-        !
-    END SUBROUTINE rdiisg    
-    !
-    !--------------------------------------------------------------------
-    SUBROUTINE reorder_bands_( notcnv, ndmx, nbands, kter, conv, &
-                               psi, hpsi, spsi, aux )
-      !--------------------------------------------------------------------
-      !
-      ! ... this routine is used to reorder the bands :
-      ! ... converged bands come first.
-      ! ... for this purpose an auxiliary vector is used
-      !
-      IMPLICIT NONE
-      !
-      INTEGER :: notcnv, ndmx, nbands, kter
-      LOGICAL :: conv(nbands)
-      COMPLEX (KIND=DP) :: psi(ndmx,nbands)
-      COMPLEX (KIND=DP) :: hpsi(ndmx,nbands), spsi(ndmx,nbands), &
-                           aux(ndmx,nbands)
-      !
-      ! local variables
-      INTEGER :: cnv, ib
-      !
-      cnv    = 0
-      notcnv = nbands
-      !
-      IF ( ( kter <= 2 ) .OR. ( .NOT. ANY( conv(:) ) ) ) RETURN
-      !
-      DO ib = 1, nbands
-         !
-         IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) THEN
+         DO ib = 1, nbnd
             !
-            cnv = cnv + 1
+            IF ( conv(ib) ) CYCLE
             !
-            aux(:,cnv) = psi(:,ib)
+            IF ( ib <= nbnd2 ) THEN
+               !
+               ! ... the first step in the DIIS history is saved
+               !
+               e_old(1,ib)      = e(ib)
+               psi_old(:,1,ib)  = psi(:,ib)
+               hpsi_old(:,1,ib) = hpsi(:,ib)
+               spsi_old(:,1,ib) = spsi(:,ib)
+               !
+            END IF   
             !
-            hpsi(:,cnv) = hpsi(:,ib)
-            spsi(:,cnv) = spsi(:,ib)              
+            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
             !
-         ELSE
+            CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
             !
-            aux(:,notcnv) = psi(:,ib)
+            psi(:,ib) = psi(:,ib) - aux(:,ib)
             !
-            notcnv = notcnv - 1
-            !
-         END IF
-         !
-      END DO
-      !
-      notcnv = nbands - notcnv
-      !
-      psi(:,:) = aux(:,:)
-      !
-      RETURN
-      !
-    END SUBROUTINE reorder_bands_
-    !      
-    !--------------------------------------------------------------------
-    SUBROUTINE diis_step_( ndmx, diis_ndim, nbands, ndim, nbase, &
-                           psi, hpsi, spsi, aux, e, &
-                           psi_old, hpsi_old, spsi_old, e_old, ib )
-    !--------------------------------------------------------------------
-    !
-    USE gvect, ONLY : gstart
-    !
-    IMPLICIT NONE
-    !
-    INTEGER           :: ndmx, diis_ndim, nbands, ndim
-    INTEGER           :: nbase(nbands)
-    COMPLEX (KIND=DP) :: psi(ndmx,nbands)
-    COMPLEX (KIND=DP) :: hpsi(ndmx,nbands), spsi(ndmx,nbands), &
-                         aux(ndmx,nbands)
-    REAL (KIND=DP)    :: e(nbands)
-    COMPLEX (KIND=DP) :: psi_old(ndmx,diis_ndim,nbands), &
-                         hpsi_old(ndmx,diis_ndim,nbands), &
-                         spsi_old(ndmx,diis_ndim,nbands)
-    REAL (KIND=DP)    :: e_old(diis_ndim,nbands)
-
-    INTEGER, INTENT(IN)            :: ib
-    INTEGER                        :: dim, n
-    REAL (KIND=DP)                 :: psiSpsi
-    REAL (KIND=DP), ALLOCATABLE    :: e_small(:)
-    REAL (KIND=DP), ALLOCATABLE    :: rr_small(:,:), sr_small(:,:), &
-                                      vr_small(:,:)
-    COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:), all_hpsi(:,:), &
-                                      all_spsi(:,:), all_res(:,:)
-    !
-    REAL (KIND=DP), EXTERNAL :: DDOT
-    !
-    !
-    dim = nbase(ib)
-    !
-    ! ... internal work-space allocation
-    !
-    ALLOCATE( e_small( dim ) )
-    ALLOCATE( rr_small( dim, dim ) )
-    ALLOCATE( sr_small( dim, dim ) )
-    ALLOCATE( vr_small( dim, dim ) )
-    ALLOCATE( all_psi(  ndmx, dim ) )
-    ALLOCATE( all_hpsi( ndmx, dim ) )
-    ALLOCATE( all_spsi( ndmx, dim ) )
-    ALLOCATE( all_res(  ndmx, dim ) )
-    !
-    ! ... the history of this band is recostructed
-    !
-    !
-    ! ... the history of this band is reconstructed
-    !
-    all_psi(:,1)  = psi(:,ib)
-    all_hpsi(:,1) = hpsi(:,ib)
-    all_spsi(:,1) = spsi(:,ib)
-    e_small(1)    = e(ib)
-    !
-    all_psi(:,2:dim)  = psi_old(:,:,ib)
-    all_hpsi(:,2:dim) = hpsi_old(:,:,ib)
-    all_spsi(:,2:dim) = spsi_old(:,:,ib)
-    e_small(2:dim)    = e_old(:,ib)
-    !
-    ! ... orthogonalization
-    !
-    CALL cgramg1( ndmx, dim, ndim, 1, dim, all_psi, all_spsi, all_hpsi )
-    !
-    FORALL( n = 1: dim ) &
-       all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
-    !   
-    ! ... here we construct the matrices :
-    ! ...    rr_ij = <res_i|res_j>  and  sr_ij = <psi_i|S|psi_j>
-    !
-    CALL DGEMM( 'T', 'N', dim, dim, 2*ndim, 2.D0, all_res(:,:), &
-                2*ndmx, all_res(:,:), 2*ndmx, 0.D0, rr_small, dim )
-    !
-    IF ( gstart == 2 ) &
-       CALL DGER( dim, dim, -1.D0, all_res(:,:), &
-                  2*ndmx, all_res(:,:), 2*ndmx, rr_small, dim )
-    !
-    CALL reduce( dim * dim, rr_small )
-    !
-    sr_small(n,n) = 0.D0
-    !
-    FORALL( n = 1: dim ) sr_small(n,n) = 1.D0
-    ! 
-    ! ... diagonalize the reduced hamiltonian
-    !
-    CALL rdiaghg( dim, 1, rr_small, sr_small, dim, e_small, vr_small )
-    !
-    ! ... here we compute the best estimate of the |psi>, H|psi>, S|psi>
-    !
-    CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_psi(:,:), &
-                2*ndmx, vr_small(:,1), dim, 0.D0, psi(:,ib), 2*ndmx )
-    !
-    CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_hpsi(:,:), &
-                2*ndmx, vr_small(:,1), dim, 0.D0, hpsi(:,ib), 2*ndmx )
-    !
-    CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_spsi(:,:), &
-                2*ndmx, vr_small(:,1), dim, 0.D0, spsi(:,ib), 2*ndmx )
-    !
-    psiSpsi = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, spsi(:,ib), 1 )
-    !
-    IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
-    !
-    CALL reduce( 1, psiSpsi )
-    !          
-    e(ib) = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, hpsi(:,ib), 1 )
-    !
-    IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
-    !
-    CALL reduce( 1, e(ib) )          
-    !
-    e(ib) = e(ib) / psiSpsi
-    !
-    ! ... here we compute the best estimate of the residual vector
-    !
-    aux(:,ib) = ( hpsi(:,ib) - e(ib) * spsi(:,ib) ) / psiSpsi
-    !
-    ! ... internal work-space deallocation
-    !
-    DEALLOCATE( e_small )
-    DEALLOCATE( rr_small )
-    DEALLOCATE( sr_small )
-    DEALLOCATE( vr_small )
-    DEALLOCATE( all_psi )
-    DEALLOCATE( all_hpsi )
-    DEALLOCATE( all_spsi )
-    DEALLOCATE( all_res )
-    !   
-    RETURN
-    !
-  END SUBROUTINE diis_step_
-    !
-    ! ... complex routines
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE cdiisg( ndim, ndmx, nbands, diis_ndim, psi, &
-                       e, ethr, btype, notcnv, diis_iter, iter )
-      !------------------------------------------------------------------------
-      !
-      ! ... k-points version of the diis algorithm
-      !
-      IMPLICIT NONE
-      !
-      ! ... on INPUT
-      !
-      INTEGER :: ndim, ndmx, nbands, diis_ndim, btype(nbands), iter
-        ! dimension of the matrix to be diagonalized
-        ! leading dimension of matrix psi, as declared in the calling pgm unit
-        ! integer number of searched low-lying roots
-        ! maximum dimension of the reduced basis set :
-        !   the basis set is refreshed when its dimension would exceed diis_ndim
-        ! band type ( 1 = occupied, 0 = empty )
-        ! scf iteration
-      REAL (KIND=DP) :: ethr
-        ! energy threshold for convergence :
-        !   eigenvector improvement is stopped, when two consecutive estimates 
-        !   of the eigenvalue differ by less than ethr.
-      !
-      ! ... on OUTPUT
-      !
-      COMPLEX (KIND=DP) :: psi(ndmx,nbands)
-        !  psi contains the refined estimates of the eigenvectors
-      REAL (KIND=DP) :: e(nbands)
-        ! contains the estimated eigenvalues
-      INTEGER :: diis_iter  
-        ! average number of iterations performed per band
-      INTEGER :: notcnv
-        ! number of unconverged bands
-      !
-      ! ... LOCAL variables
-      !
-      INTEGER :: kter, ib, cnv, n, m
-        ! counter on iterations
-        ! counter on bands
-        ! number of converged bands
-        ! do-loop counters
-      REAL :: empty_ethr
-        ! threshold for empty bands  
-      COMPLEX (KIND=DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
-        ! H matrix on the reduced basis
-        ! S matrix on the reduced basis
-        ! the eigenvectors of the Hamiltonian
-      COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), aux(:,:)
-        ! the product of H and psi
-        ! the product of S and psi
-        ! work space, contains the residual vector
-      COMPLEX (KIND=DP), ALLOCATABLE :: psi_old(:,:,:), hpsi_old(:,:,:), &
-                                        spsi_old(:,:,:)
-        ! diis-workspace: old eigenvectors
-        ! diis-workspace: old product of H and psi
-        ! diis-workspace: old product of S and psi
-      REAL (KIND=DP), ALLOCATABLE :: e_old(:,:)
-        ! eigenvalues of the previous iteration
-      REAL (KIND=DP), ALLOCATABLE :: lambda(:)      
-        ! trial step length 
-      INTEGER, ALLOCATABLE :: nbase(:), sd_maxter(:)
-        ! counter on the reduced basis vectors
-        ! maximum number of trial steps (different for each band)
-      LOGICAL, ALLOCATABLE :: conv(:), frozen(:)
-        ! .TRUE. if the band is converged
-        ! .TRUE. if the band was converged at the previous step
-      !
-      !
-      CALL start_clock( 'diis' )
-      !
-      ! ... work-space allocation
-      !
-      ALLOCATE( psi_old(  ndmx, ( diis_ndim - 1 ) , nbands ) )
-      ALLOCATE( hpsi_old( ndmx, ( diis_ndim - 1 ) , nbands ) )
-      ALLOCATE( spsi_old( ndmx, ( diis_ndim - 1 ) , nbands ) )
-      ALLOCATE( e_old( ( diis_ndim - 1 ), nbands ) )
-      ALLOCATE( hpsi( ndmx, nbands ) )
-      ALLOCATE( spsi( ndmx, nbands ) )
-      ALLOCATE( aux(  ndmx, nbands ) )
-      ALLOCATE( hc(   nbands, nbands ) )
-      ALLOCATE( sc(   nbands, nbands ) )
-      ALLOCATE( vc(   nbands, nbands ) )
-      ALLOCATE( lambda( nbands ) )
-      ALLOCATE( nbase(     nbands ) )
-      ALLOCATE( sd_maxter( nbands ) )
-      ALLOCATE( conv(      nbands ) )
-      ALLOCATE( frozen(    nbands ) )
-      !
-      ! ... initialization of control variables
-      !
-      kter      = 0
-      conv      = .FALSE.
-      cnv       = 0
-      notcnv    = nbands
-      nbase     = 0 
-      lambda    = lambda_0
-      sd_maxter = sd_maxter_0
-      !
-      ! ... threshold for empty bands
-      !
-      empty_ethr = MAX( ( ethr * 50.D0 ), 1.D-3 )
-      !
-      IF ( iter > 1 ) THEN
-         !
-         ! ... after the first scf iteration one trial step is supposed to
-         ! ... be sufficient. 
-         !
-         sd_maxter = 1
+         END DO   
          !
       END IF
       !
-      ! ... initialization of the work-space
+      ! ... this is an overestimate of the real number of iterations
       !
-      e_old      = 0.D0
-      e_old(1,:) = e(:)
-      psi_old    = ZERO
-      hpsi_old   = ZERO
-      spsi_old   = ZERO
+      diis_iter = diis_iter + MIN( sweep, max_sweeps ) * 2
       !
-      ! ... diagonalization loop
+      RETURN
+      !
+    END SUBROUTINE init_steps
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE diis_with_ortho( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags, ONLY : diis_ndim, ethr
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd
+        ! dimension of the matrix to be diagonalized
+        ! leading dimension of matrix psi, as declared in the calling pgm unit
+        ! integer number of searched low-lying roots
+      INTEGER, INTENT(INOUT) :: btype(nbnd)
+        ! band type ( 1 = occupied, 0 = empty )
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+        !  psi contains the refined estimates of the eigenvectors
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+        ! contains the estimated eigenvalues
+      INTEGER, INTENT(INOUT) :: diis_iter  
+        ! average number of iterations performed per band                 
+      !
+      ! ... local variables
+      !
+      INTEGER :: kter, ib, jb
+        ! counter on iterations
+        ! counters on bands
+      INTEGER :: notcnv
+        ! number of unconverged bands        
+      REAL (KIND=DP) :: psi_norm, overlap
+      !
+      !
+      ! ... initialization of control variables
+      !
+      kter = 0
+      !
+#if defined (WINDOW_ORTHO)
+      !
+      ortho_win = MAX( ortho_win_min, &
+                       0.05D0 * ( MAXVAL( e(:) - MINVAL( e(:) ) ) ) )
+      !
+#endif
+      !
+      ! ... DIIS loop
       !
       iterate: DO
          !
@@ -1009,80 +904,1154 @@ MODULE diis_module
          IF ( kter > maxter ) EXIT iterate
          !
 #if defined (DIIS_DEBUG)
-         PRINT *, ""
-         PRINT *, "kter = ", kter
-         PRINT *, ""
+         WRITE( *, '(/"kter = ",I3/)') kter
 #endif
          !
-         ! ... the size of the history-subspace is increased ( different for 
-         ! ... for each band )
+         ! ... reference eigenvalues are saved
          !
-         WHERE ( .NOT. conv(:) )
-            !
-            nbase(:) = MIN( ( nbase(:) + 1 ), diis_ndim )
-            !
-         END WHERE        
+         e_ref(1:nbnd) = e(1:nbnd)
+         !
+         ! ... the size of the history-subspace is increased
+         !
+         nbase = MIN( ( nbase + 1 ), diis_ndim )
          !
          ! ... bands are reordered so that converged bands come first
          !
-         CALL reorder_bands()
+         CALL reorder_bands( psi, notcnv, nbnd, +1 )
          !
          ! ... here we compute H|psi> and S|psi> for not converged bands
          !
-         CALL h_psi( ndmx, ndim, notcnv, psi(:,cnv+1), hpsi(:,cnv+1) )
-         CALL s_psi( ndmx, ndim, notcnv, psi(:,cnv+1), spsi(:,cnv+1) )
+         CALL h_psi( ndmx, ndim, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
+         CALL s_psi( ndmx, ndim, notcnv, psi(1,cnv+1), spsi(1,cnv+1) )
          !
-         ! ... here we set up the hamiltonian and overlap matrix 
+         ! ... bands are back-ordered
+         !
+         CALL reorder_bands( psi, notcnv, nbnd, -1 )
+         !
+         ! ... DIIS step : the best |psi>, H|psi> and S|spi> are computed here
+         !
+         CALL diis_step()
+         !
+         ! ... orthogonalization step of all the best eigenvectors ( an energy 
+         ! ... window "ortho_win" is used here )
+         !
+#if defined (WINDOW_ORTHO)         
+         !
+         CALL start_clock( 'cgramg1' )
+         !
+         DO ib = 1, nbnd
+            !
+#if defined (SHOW_OVERLAP)
+            WRITE( 999, '(//"VECTOR = ",I3)' ) ib
+#endif
+            !          
+            DO jb = 1, ( ib - 1 )
+               !
+               IF ( ( e(ib) - e(jb) ) > ortho_win ) CYCLE 
+               !
+               overlap = 2.D0 * DDOT( ndim2, psi(1,jb), 1, spsi(1,ib), 1 )
+               !
+               IF ( gstart == 2 ) overlap = overlap - psi(1,jb) * spsi(1,ib)
+               !
+               CALL reduce( 1, overlap )
+               !
+#if defined (SHOW_OVERLAP)
+               WRITE( 999, '("OVERLAP(",I3,",",I3,") = ",2(2X,F14.10))' ) &
+                   jb, ib, overlap, ( e(ib) - e(jb) )
+#endif
+               !
+               psi(:,ib)  = psi(:,ib)  - overlap * psi(:,jb)
+               hpsi(:,ib) = hpsi(:,ib) - overlap * hpsi(:,jb)
+               spsi(:,ib) = spsi(:,ib) - overlap * spsi(:,jb)
+               !
+            END DO
+            !
+            psi_norm = 2.D0 * DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+            !
+            IF ( gstart == 2 ) psi_norm = psi_norm - psi(1,ib) * spsi(1,ib)
+            !
+            CALL reduce( 1, psi_norm )
+            !
+            IF ( psi_norm < eps32 ) THEN
+               !
+               PRINT *, psi_norm
+               !
+               CALL errore( 'diis_step', ' negative norm in S ', 1 )
+               !
+            END IF
+            !
+            psi_norm = 1.D0 / SQRT( psi_norm )
+            !
+            psi(:,ib)  = psi_norm * psi(:,ib)
+            hpsi(:,ib) = psi_norm * hpsi(:,ib)
+            spsi(:,ib) = psi_norm * spsi(:,ib)
+            !
+         END DO
+         !
+         CALL stop_clock( 'cgramg1' )
+         !
+#else
+         !
+         CALL cgramg1( ndmx, nbnd, ndim, 1, nbnd, psi, spsi, hpsi )
+         !
+#endif
+         !         
+         ! ... convergence is checked here
+         !
+         WHERE( btype(1:nbnd) == 1 )
+            !
+            conv(1:nbnd) = ( ABS( e(1:nbnd) - e_ref(1:nbnd) ) < ethr )
+            !
+         ELSEWHERE
+            !
+            conv(1:nbnd) = ( ABS( e(1:nbnd) - e_ref(1:nbnd) ) < empty_ethr )
+            !
+         END WHERE
+         !
+#if defined (DIIS_DEBUG)
+         PRINT *, "eigenvalues :"
+         PRINT *, e(1:nbnd)
+         PRINT *, "variation :"
+         PRINT *, ABS( e(1:nbnd) - e_ref(1:nbnd) )
+         PRINT *, conv(1:nbnd)
+#endif         
+         !
+         ! ... exit if all bands are converged
+         !
+         IF ( ALL( conv(1:nbnd) ) ) EXIT iterate
+         !
+         ! ... new preconditioned residual vectors
+         !
+         DO ib = 1, nbnd
+            !
+            IF ( conv(ib) ) CYCLE
+            !
+            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+            !
+            CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
+            !
+         END DO
+         !           
+         ! ... here we compute the new eigenvectors for not converged
+         ! ... bands only 
+         !
+         FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
+            !
+            psi(:,ib) = psi(:,ib) - lambda * aux(:,ib)
+            !
+         END FORALL
+         !
+      END DO iterate
+      !
+#if defined (SHOW_OVERLAP)
+      !
+      WRITE( 999, '(//"FINAL CHECK ON ORTHOGONALIZATION ")' )
+      !
+      DO ib = 1, nbnd
+         !
+         WRITE( 999, '(//"VECTOR = ",I3)' ) ib
+         !          
+         DO jb = 1, ib
+            !
+            overlap = 2.D0 * DDOT( ndim2, psi(1,jb), 1, spsi(1,ib), 1 )
+            !
+            IF ( gstart == 2 ) overlap = overlap - psi(1,jb) * spsi(1,ib)
+            !
+            CALL reduce( 1, overlap )
+            !
+            WRITE( 999, '("OVERLAP(",I3,",",I3,") = ",3(2X,F14.10))' ) &
+                jb, ib, overlap, ( e(ib) - e(jb) )
+            !
+         END DO
+         !
+      END DO
+#endif
+      !
+      ! ... this is an overestimate of the real number of iterations
+      !
+      diis_iter = diis_iter + MIN( kter, maxter )
+      !
+      RETURN
+      !
+      CONTAINS
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE diis_step()
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          INTEGER                        :: ib, n, dim
+          REAL (KIND=DP)                 :: psiSpsi
+          REAL (KIND=DP),    ALLOCATABLE :: e_small(:)
+          REAL (KIND=DP),    ALLOCATABLE :: rr_small(:,:), &
+                                            sr_small(:,:), &
+                                            vr_small(:,:)
+          COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:),  &
+                                            all_hpsi(:,:), &
+                                            all_spsi(:,:), &
+                                            all_res(:,:)
+          REAL (KIND=DP),    ALLOCATABLE :: ps(:)
+          !
+          !
+          dim = MIN( nbase, diis_ndim1 )
+          !
+          ! ... internal work-space allocation
+          !
+          ALLOCATE( e_small( nbase ) )
+          ALLOCATE( rr_small( nbase, nbase ) )
+          ALLOCATE( sr_small( nbase, nbase ) )
+          ALLOCATE( vr_small( nbase, nbase ) )
+          ALLOCATE( all_psi(  ndmx, nbase ) )
+          ALLOCATE( all_hpsi( ndmx, nbase ) )
+          ALLOCATE( all_spsi( ndmx, nbase ) )
+          ALLOCATE( all_res(  ndmx, nbase ) )
+          ALLOCATE( ps( nbase ) )
+          !
+          ! ... initialization
+          !
+          e_small  = 0.D0
+          rr_small = 0.D0
+          sr_small = 0.D0
+          vr_small = 0.D0
+          all_psi  = ZERO
+          all_hpsi = ZERO
+          all_spsi = ZERO
+          all_res  = ZERO
+          !
+          bands_loop: DO ib = 1, nbnd
+             !
+             IF ( conv(ib) ) CYCLE bands_loop
+             !
+             ! ... the history of this band is reconstructed
+             !
+             all_psi(:,1)  = psi(:,ib)
+             all_hpsi(:,1) = hpsi(:,ib)
+             all_spsi(:,1) = spsi(:,ib)
+             !
+             all_psi(:,2:nbase)  = psi_old(:,:,ib)
+             all_hpsi(:,2:nbase) = hpsi_old(:,:,ib)
+             all_spsi(:,2:nbase) = spsi_old(:,:,ib)
+             !
+             ! ... orthogonalization of the new wavefunction to the history
+             !
+             DO n = 1, nbase
+                ! 
+                ps(n) = 2.D0 * DDOT( ndim2, all_psi(1,1), 1, all_spsi(1,n), 1 )
+                !
+                IF ( gstart == 2 ) ps(n) = ps(n) - all_psi(1,1) * all_spsi(1,n)
+                !
+             END DO
+             !
+             CALL reduce( nbase, ps )
+             !
+             DO n = 2, nbase
+                !
+                all_psi(:,1)  = all_psi(:,1)  - ps(n) * all_psi(:,n)
+                all_hpsi(:,1) = all_hpsi(:,1) - ps(n) * all_hpsi(:,n)
+                all_spsi(:,1) = all_spsi(:,1) - ps(n) * all_spsi(:,n)
+                !
+             END DO
+             !
+             psiSpsi = 2.D0 * DDOT( ndim2, all_psi(1,1), 1, all_spsi(1,1), 1 )
+             !
+             IF ( gstart == 2 ) psiSpsi = psiSpsi - all_psi(1,1) * all_spsi(1,1)
+             !
+             CALL reduce( 1, psiSpsi )
+             !
+             IF ( psiSpsi < eps32 ) THEN
+                !
+                PRINT *, psiSpsi
+                !
+                CALL errore( 'diis_step', ' negative norm in S ', 1 )
+                !
+             END IF
+             !
+             psiSpsi = 1.D0 / SQRT( psiSpsi )
+             ! 
+             all_psi(:,1)  = psiSpsi * all_psi(:,1)
+             all_hpsi(:,1) = psiSpsi * all_hpsi(:,1)
+             all_spsi(:,1) = psiSpsi * all_spsi(:,1)
+             !
+             ! ... the enrgy of the new wavefunction is computed here
+             !
+             e(ib) = 2.D0 * DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+             !
+             IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
+             !
+             CALL reduce( 1, e(ib) )
+             !
+             ! ... the "energy" history of this band is reconstructed
+             !
+             e_small(1)       = e(ib)
+             e_small(2:nbase) = e_old(:,ib)
+             !
+             ! ... DIIS work-space is refreshed
+             !
+             psi_old(:,1:dim,ib)  = all_psi(:,1:dim)
+             hpsi_old(:,1:dim,ib) = all_hpsi(:,1:dim)
+             spsi_old(:,1:dim,ib) = all_spsi(:,1:dim)
+             e_old(1:dim,ib)      = e_small(1:dim)
+             !
+             ! ... residual vectors are finally computed
+             !
+             FORALL( n = 1: nbase ) 
+                !
+                all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
+                !
+             END FORALL             
+             !
+             ! ... here we construct the matrices :
+             ! ...    rr_ij = <res_i|res_j>  and  sr_ij = <psi_i|S|psi_j>
+             !
+             CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0, all_res, &
+                         ndmx2, all_res, ndmx2, 0.D0, rr_small, nbase )
+             !
+             IF ( gstart == 2 ) &
+                CALL DGER( nbase, nbase, -1.D0, all_res, &
+                           ndmx2, all_res, ndmx2, rr_small, nbase )
+             !
+             CALL reduce( nbase * nbase, rr_small )
+             !
+             sr_small(:,:) = 0.D0
+             !
+             FORALL( n = 1: nbase ) sr_small(n,n) = 1.D0
+             ! 
+             ! ... diagonalize the reduced hamiltonian
+             !
+             CALL rdiaghg( nbase, 1, rr_small, &
+                           sr_small, nbase, e_small, vr_small )
+             !
+             ! ... here we compute the best estimate of the |psi>, H|psi>
+             ! ... and S|psi>
+             !
+             CALL DGEMM( 'N', 'N', ndim2, 1, nbase, 1.D0, all_psi(1,1), &
+                         ndmx2, vr_small(1,1), nbase, 0.D0, psi(1,ib), ndmx2 )
+             !
+             CALL DGEMM( 'N', 'N', ndim2, 1, nbase, 1.D0, all_hpsi(1,1), &
+                         ndmx2, vr_small(1,1), nbase, 0.D0, hpsi(1,ib), ndmx2 )
+             !
+             CALL DGEMM( 'N', 'N', ndim2, 1, nbase, 1.D0, all_spsi(1,1), &
+                         ndmx2, vr_small(1,1), nbase, 0.D0, spsi(1,ib), ndmx2 )
+             !
+             psiSpsi = 2.D0 * DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+             !
+             IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
+             !
+             CALL reduce( 1, psiSpsi )
+             !
+             ! ... |psi>,  H|psi>  and  S|psi> are normalized
+             !
+             psiSpsi = 1.D0 / SQRT( psiSpsi )
+             !
+             psi(:,ib)  = psi(:,ib)  * psiSpsi
+             hpsi(:,ib) = hpsi(:,ib) * psiSpsi
+             spsi(:,ib) = spsi(:,ib) * psiSpsi
+             !             
+             e(ib) = 2.D0 * DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+             !
+             IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
+             !
+             CALL reduce( 1, e(ib) )
+             !
+          END DO bands_loop             
+          !
+          ! ... internal work-space deallocation
+          !
+          DEALLOCATE( e_small )
+          DEALLOCATE( rr_small )
+          DEALLOCATE( sr_small )
+          DEALLOCATE( vr_small )
+          DEALLOCATE( all_psi )
+          DEALLOCATE( all_hpsi )
+          DEALLOCATE( all_spsi )
+          DEALLOCATE( all_res )
+          DEALLOCATE( ps )
+          !   
+          RETURN
+          !
+        END SUBROUTINE diis_step
+        !
+    END SUBROUTINE diis_with_ortho
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE holes_filler( ndmx, ndim, nbnd, psi, e, precondition, diis_iter )
+      !------------------------------------------------------------------------
+      !
+      USE constants, ONLY : pi, tpi
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables 
+      !
+      INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd
+      REAL (KIND=DP),    INTENT(IN)    :: precondition(ndim)
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      REAL (KIND=DP),    INTENT(INOUT) :: e(nbnd)
+      INTEGER,           INTENT(INOUT) :: diis_iter  
+        ! average number of iterations performed per band                       
+      !
+      ! ... local variables
+      !
+      INTEGER                        :: i, j, ib
+      INTEGER                        :: cgter, holes_filler_iter
+      REAL (KIND=DP),    ALLOCATABLE :: lagrange(:)
+      COMPLEX (KIND=DP), ALLOCATABLE :: g(:), cg(:), scg(:), ppsi(:), g0(:)
+      REAL (KIND=DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, &
+                                        gg1, theta, cg0, e0, es(2)
+      REAL (KIND=DP)                 :: norm_res, arg, scale
+      !
+      REAL (KIND=DP), EXTERNAL :: rndm
+      !
+      !
+      ! ... work-space allocation
+      !
+      ALLOCATE( scg(  ndmx ) )    
+      ALLOCATE( g(    ndmx ) )    
+      ALLOCATE( cg(   ndmx ) )    
+      ALLOCATE( g0(   ndmx ) )    
+      ALLOCATE( ppsi( ndmx ) )    
+      ALLOCATE( lagrange( nbnd ) )    
+      !
+      holes_filler_iter = 0
+      !
+      ! ... every eigenfunction is calculated separately
+      !
+      DO ib = ( nbnd - 1 ), nbnd
+         !
+#if defined (DIIS_DEBUG)         
+         PRINT *, "CG: BAND = ", ib
+#endif
+         !
+         ! ... add some noise to |psi>
+         !
+         scale = 2.D0 * DDOT( ndim2, aux(1,ib), 1, aux(1,ib), 1 )
+         !
+         IF ( gstart == 2 ) scale = scale - aux(1,ib) * aux(1,ib)
+         !
+         DO i = 1, ndim
+            !
+            arg = tpi * rndm()
+            !
+            psi(i,ib) = psi(i,ib) + &
+                        SQRT( scale ) * CMPLX( COS( arg ), SIN( arg ) )
+            !
+         END DO
+         !
+         ! ... calculate S|psi>
+         !        
+         CALL s_1psi( ndmx, ndim, psi(1,ib), spsi(1,ib) )
+         !
+         ! ... orthogonalize starting eigenfunction to those already calculated
+         !
+         DO j = 1, ( ib - 1 )
+            !
+            lagrange(j) = 2.D0 * DDOT( ndim2, psi(1,j), 1, spsi(1,ib), 1 )
+            !
+            IF ( gstart == 2 ) lagrange(j) = lagrange(j) - psi(1,j) * spsi(1,ib)
+            !
+         END DO
+         !
+         CALL reduce( ( ib - 1 ), lagrange )
+         !
+         DO j = 1, ( ib - 1 )
+            !
+            psi(:,ib)  = psi(:,ib)  - lagrange(j) * psi(:,j)
+            spsi(:,ib) = spsi(:,ib) - lagrange(j) * spsi(:,j)
+            !
+         END DO
+         !
+         psi_norm = 2.D0 * DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+         !
+         IF ( gstart == 2 ) psi_norm = psi_norm - psi(1,ib) * spsi(1,ib)
+         !
+         CALL reduce( 1, psi_norm )
+         !
+         IF ( psi_norm < eps32 ) THEN
+            !
+            PRINT *, psi_norm
+            !
+            CALL errore( 'holes_filler', ' negative norm in S ', 1 )
+            !
+         END IF
+         !
+         psi_norm = 1.D0 / SQRT( psi_norm )
+         !
+         psi(:,ib)  = psi(:,ib)  * psi_norm
+         spsi(:,ib) = spsi(:,ib) * psi_norm
+         !
+         ! ... calculate starting gradient ( |hpsi> = H|psi> ) ...
+         !
+         CALL h_psi( ndmx, ndim, 1, psi(1,ib), hpsi(1,ib) )
+         !
+         ! ... and starting eigenvalue ( e = <y|PHP|y> = <psi|H|psi> )
+         !
+         e(ib) = 2.D0 * DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+         !
+         IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
+         !
+         CALL reduce( 1, e(ib) )
+         !
+#if defined (DIIS_DEBUG)                     
+         PRINT *, "INITIAL EIGENVALUE = ", e(ib)
+         PRINT *, "psi_norm           = ", psi_norm
+#endif
+         !
+         ! ... start iteration for this band
+         !
+         iterate: DO cgter = 1, maxter
+            !
+#if defined (DIIS_DEBUG)                     
+            PRINT *, "ITERATION = ", cgter
+#endif            
+            !
+            ! ... calculate  P (PHP)|y>
+            ! ... ( P = preconditioning matrix, assumed diagonal )
+            !
+            g(1:ndim)    = hpsi(1:ndim,ib) / precondition(:)
+            ppsi(1:ndim) = spsi(1:ndim,ib) / precondition(:)
+            !
+            ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
+            !
+            es(1) = 2.D0 * DDOT( ndim2, spsi(1,ib), 1, g(1), 1 )
+            es(2) = 2.D0 * DDOT( ndim2, spsi(1,ib), 1, ppsi(1), 1 )
+            !
+            IF ( gstart == 2 ) THEN
+               !
+               es(1) = es(1) - spsi(1,ib) * g(1)
+               es(2) = es(2) - spsi(1,ib) * ppsi(1)
+               !
+            END IF
+            !
+            CALL reduce( 2, es )
+            !
+            es(1) = es(1) / es(2)
+            !
+            g(:) = g(:) - es(1) * ppsi(:)
+            !
+            ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y> ensures that 
+            ! ... <g| S P^2|y> = 0
+            ! ... orthogonalize to lowest eigenfunctions (already calculated)
+            !
+            ! ... scg is used as workspace
+            !
+            CALL s_1psi( ndmx, ndim, g(1), scg(1) )
+            !
+            DO j = 1, ( ib - 1 )
+               !
+               lagrange(j) = 2.D0 * DDOT( ndim2, psi(1,j), 1, scg(1), 1 )
+               !
+               IF ( gstart == 2 ) lagrange(j) = lagrange(j) - psi(1,j) * scg(1)
+               !
+            END DO
+            !
+            CALL reduce( ( ib - 1 ), lagrange )
+            !
+            DO j = 1, ( ib - 1 )
+               !
+               g(:)   = g(:)   - lagrange(j) * psi(:,j)
+               scg(:) = scg(:) - lagrange(j) * psi(:,j)
+               !
+            END DO
+            !
+            IF ( cgter /= 1 ) THEN
+               !
+               ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
+               !
+               gg1 = 2.D0 * DDOT( ndim2, g(1), 1, g0(1), 1 )
+               !
+               IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
+               !
+               CALL reduce( 1, gg1 )
+               !
+            END IF
+            !
+            ! ... gg is <g(n+1)|S|g(n+1)>
+            !
+            g0(:) = scg(:)
+            !
+            g0(1:ndim) = g0(1:ndim) * precondition(:)
+            !
+            gg = 2.D0 * DDOT( ndim2, g(1), 1, g0(1), 1 )
+            !
+            IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
+            !
+            CALL reduce( 1, gg )
+            !
+            IF ( cgter == 1 ) THEN
+               !
+               ! ... starting iteration, the conjugate gradient |cg> = |g>
+               !
+               gg0 = gg
+               !
+               cg(:) = g(:)
+               !
+            ELSE
+               !
+               ! ... following iterations: |cg(n+1)> = |g(n+1)>+gamma(n)*|cg(n)>
+               ! ... This is Fletcher-Reeves formula for gamma
+               ! ...            gamma = gg/gg0
+               ! ... and this is Polak-Ribiere formula
+               !
+               gamma = ( gg - gg1 ) / gg0
+               gg0   = gg
+               !
+               cg(:) = cg(:) * gamma
+               cg(:) = g + cg(:)
+               !
+               ! ... The following is needed because <y(n+1)| S P^2 |cg(n+1)> 
+               ! ... is not 0. In fact :
+               ! ... <y(n+1)| S P^2 |cg(n)> = sin(theta)*<cg(n)|S|cg(n)>
+               !
+               psi_norm = gamma * cg0 * SIN( theta )
+               !
+               cg(:) = cg(:) - psi_norm * psi(:,ib)
+               !
+            END IF
+            !
+            ! ... |cg> contains now the conjugate gradient
+            !
+            ! ... |scg> is S|cg>
+            !
+            CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+            !
+            cg0 = 2.D0 * DDOT( ndim2, cg(1), 1, scg(1), 1 )
+            !
+            IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
+            !
+            CALL reduce( 1, cg0 )
+            !
+            cg0 = SQRT( cg0 )
+            !
+            ! ... |ppsi> contains now HP|cg>
+            ! ... minimize <y(t)|PHP|y(t)> , where :
+            ! ...                          |y(t)> = cos(t)|y> + sin(t)/cg0 |cg>
+            ! ... Note that  <y|P^2S|y> = 1, <y|P^2S|cg> = 0 ,
+            ! ...           <cg|P^2S|cg> = cg0^2
+            ! ... so that the result is correctly normalized :
+            ! ...                           <y(t)|P^2S|y(t)> = 1
+            !
+            a0 = 4.D0 * DDOT( ndim2, psi(1,ib), 1, ppsi(1), 1 )
+            !
+            IF ( gstart == 2 ) a0 = a0 - psi(1,ib) * ppsi(1)
+            !
+            a0 = a0 / cg0
+            !
+            CALL reduce( 1, a0 )
+            !
+            b0 = 2.D0 * DDOT( ndim2, cg(1), 1, ppsi(1), 1 )
+            !
+            IF ( gstart == 2 ) b0 = b0 - cg(1) * ppsi(1)
+            !
+            b0 = b0 / cg0**2
+            !
+            CALL reduce( 1, b0 )
+            !
+            e0 = e(ib)
+            !
+            theta = 0.5D0 * ATAN( a0 / ( e0 - b0 ) )
+            !
+            es(1) = 0.5D0 * ( ( e0 - b0 ) * COS( 2.D0 * theta ) + &
+                              a0 * SIN( 2.D0 * theta ) + e0 + b0 )       
+            es(2) = 0.5D0 * ( - ( e0 - b0 ) * COS( 2.D0 * theta ) - &
+                              a0 * SIN( 2.D0 * theta ) + e0 + b0 )
+            !
+            ! ... there are two possible solutions, choose the minimum
+            !
+            IF ( es(2) < es(1) ) theta = theta + 0.5D0 * pi
+            !
+            ! ... new estimate of the eigenvalue
+            !
+            e(ib) = MIN( es(1), es(2) )
+            !
+            ! ... upgrade |psi> ...
+            !
+            psi(:,ib) = COS( theta ) * psi(:,ib) + &
+                        SIN( theta ) / cg0 * cg(:)
+            !
+            ! ... here one could test convergence on the energy
+            !
+#if defined (DIIS_DEBUG)            
+            PRINT *, e(ib), ABS( e(ib) - e0 )
+#endif
+            !            
+            IF ( ABS( e(ib) - e0 ) < empty_ethr ) THEN
+               !
+               conv(ib) = .TRUE.
+               !
+               EXIT iterate
+               !
+            END IF   
+            !
+            ! ... S|psi> ...
+            !
+            spsi(:,ib) = COS( theta ) * spsi(:,ib) + &
+                         SIN( theta ) / cg0 * scg(:)
+            !
+            ! ... and H|psi>
+            !
+            hpsi(:,ib) = COS( theta ) * hpsi(:,ib) + &
+                         SIN( theta ) / cg0 * ppsi(:)
+            !
+         END DO iterate
+         !
+         holes_filler_iter = holes_filler_iter + MIN( cgter, maxter )
+         !
+      END DO
+      !
+      diis_iter = diis_iter + INT( REAL( holes_filler_iter ) / REAL( nbnd ) )
+      !
+      ! ... work-space deallocation
+      !
+      DEALLOCATE( lagrange )
+      DEALLOCATE( ppsi )
+      DEALLOCATE( g0 )
+      DEALLOCATE( cg )
+      DEALLOCATE( g )
+      DEALLOCATE( scg )
+      !
+      RETURN
+      !
+    END SUBROUTINE holes_filler
+    !
+END MODULE real_diis_module
+!
+!
+!----------------------------------------------------------------------------
+MODULE complex_diis_module
+  !----------------------------------------------------------------------------
+  !
+  ! ... complex hamiltonian case
+  !
+  USE diis_base
+  !
+  IMPLICIT NONE
+  !
+  PRIVATE
+  !
+  ! ... public methods
+  !
+  PUBLIC :: cdiisg
+  !
+  ! ... specific complex DIIS variables :
+  !
+  SAVE
+  !
+  COMPLEX (KIND=DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
+    ! H matrix on the reduced basis
+    ! S matrix on the reduced basis
+    ! the eigenvectors of the Hamiltonian
+  !
+  ! ... external functions
+  !
+  REAL (KIND=DP),    EXTERNAL :: DDOT
+  COMPLEX (KIND=DP), EXTERNAL :: ZDOTC  
+  !
+  ! ... module procedures :
+  !
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE cdiisg( ndim, ndmx, nbnd, psi, e, &
+                       btype, notcnv, diis_iter, iter )
+      !------------------------------------------------------------------------
+      !
+      ! ... k-points version of the DIIS algorithm
+      !
+      USE g_psi_mod,     ONLY : h_diag
+      USE control_flags, ONLY : diis_ndim, ethr, istep
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd, iter
+        ! dimension of the matrix to be diagonalized
+        ! leading dimension of matrix psi, as declared in the calling pgm unit
+        ! integer number of searched low-lying roots
+        ! scf iteration
+      INTEGER, INTENT(INOUT) :: btype(nbnd)
+        ! band type ( 1 = occupied, 0 = empty )
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+        !  psi contains the refined estimates of the eigenvectors
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+        ! contains the estimated eigenvalues
+      INTEGER, INTENT(OUT) :: diis_iter
+        ! average number of iterations performed per band
+      INTEGER, INTENT(OUT) :: notcnv
+        ! number of unconverged bands
+      !
+      ! ... local variables
+      !
+      INTEGER :: ib
+        ! counter on bands
+      !
+      !
+      CALL start_clock( 'diis' )
+      !
+      ! ... initialization of control variables
+      !
+      nbase      = 0
+      diis_iter  = 0
+      ndim2      = 2 * ndim
+      ndmx2      = 2 * ndmx
+      nbnd2      = ( nbnd - 2 )
+      diis_ndim1 = ( diis_ndim - 1 )
+      !
+      ! ... work-space allocation
+      !
+      CALL allocate_base( ndmx, nbnd )
+      !
+      ALLOCATE( hc( nbnd, nbnd ) )
+      ALLOCATE( sc( nbnd, nbnd ) )
+      ALLOCATE( vc( nbnd, nbnd ) )
+      !
+      ! ... again control arrays
+      !
+      conv = .FALSE.
+      !
+      ! ... initialization of the work-space
+      !
+      e_old    = 0.D0
+      psi_old  = ZERO
+      hpsi_old = ZERO
+      spsi_old = ZERO
+      !
+      ! ... threshold for empty bands
+      !
+      empty_ethr = MAX( ( ethr * 10.D0 ), 1.D-4 )
+      !
+#if defined (DIIS_DEBUG)
+      PRINT *, "input eigenvalues :"
+      PRINT *, e(:)
+#endif                  
+      !
+      ! ... initialization
+      !
+      IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
+         !
+         ! ... some sweeps over bands are performed at the first scf
+         ! ... iteration of the first ionic step :  
+         ! ... this to reduce the amount of holes in the energy spectrum
+         !
+         CALL init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+         !
+      ELSE
+         !
+         ! ... initialization step for DIIS
+         !
+         ! ... here we compute H|psi> and S|psi> for all the bands
+         !
+         CALL h_psi( ndmx, ndim, nbnd, psi(1,1), hpsi(1,1) )
+         CALL s_psi( ndmx, ndim, nbnd, psi(1,1), spsi(1,1) )
+         !
+         ! ... here we set up the hamiltonian and overlap matrix
          ! ... on the subspace :
          !
          ! ...    hc_ij = <psi_i|H|psi_j>  and  sc_ij = <psi_i|S|psi_j>
          !
-         CALL ZGEMM( 'C', 'N', nbands, nbands, ndim, ONE, &
-                     psi, ndmx, hpsi, ndmx, ZERO, hc, nbands )
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
+                     psi, ndmx, hpsi, ndmx, ZERO, hc, nbnd )
          !
-         CALL ZGEMM( 'C', 'N', nbands, nbands, ndim, ONE, &
-                     psi, ndmx, spsi, ndmx, ZERO, sc, nbands )
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
+                     psi, ndmx, spsi, ndmx, ZERO, sc, nbnd )
          !
-         CALL reduce( 2 * nbands * nbands, hc )
-         CALL reduce( 2 * nbands * nbands, sc )
+         CALL reduce( 2 * nbnd * nbnd, hc )
+         CALL reduce( 2 * nbnd * nbnd, sc )
+         !
+         ! ... the subspace rotation is performed by solving the eigenvalue
+         ! ... problem on the subspace :
+         !
+         ! ...    ( hc - e * sc ) |phi> = 0
+         !
+         CALL cdiaghg( nbnd, nbnd, hc, sc, nbnd, e, vc )
+         !
+         ! ... |psi>,  H|psi>  and  S|psi>  are rotated
+         !
+         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
+                     psi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         !
+         psi(:,:) = aux(:,:)
+         !
+         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
+                     hpsi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         !
+         hpsi(:,:) = aux(:,:)
+         !
+         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
+                     spsi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         !
+         spsi(:,:) = aux(:,:)
+         !
+         ! ... the first step in the DIIS history is saved
+         !
+         FORALL( ib = 1: nbnd2 )
+            !
+            e_old(1,ib)      = e(ib)
+            psi_old(:,1,ib)  = psi(:,ib)
+            hpsi_old(:,1,ib) = hpsi(:,ib)
+            spsi_old(:,1,ib) = spsi(:,ib)
+            !
+         END FORALL
+         !
+         nbase = 1
+         !
+         ! ... new residual vectors
+         !
+         FORALL( ib = 1 : nbnd )
+            !
+            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+            !
+         END FORALL
+         !
+         ! ... preconditioning of all the residual vecotrs
+         !
+         CALL g_psi( ndmx, ndim, nbnd, aux, e )
+         !
+         ! ... new trial wavefunctions
+         !
+         FORALL( ib = 1 : nbnd )
+            !
+            psi(:,ib) = psi(:,ib) - aux(:,ib)
+            !
+         END FORALL
+         !
+         diis_iter = diis_iter + 1
+         !
+      END IF
+      !
+      ! ... first check on convergence
+      !
+      IF ( ALL( conv(:) ) ) THEN
+         !
+#if defined (DIIS_DEBUG)
+         PRINT *, "final eigenvalues :"
+         PRINT *, e(:)
+         PRINT *, "variation :"
+         PRINT *, ABS( e(:) - e_ref(:) )
+         PRINT *, conv(:)
+#endif
+         !
+         notcnv = 0
+         !
+         ! ... work-space deallocation
+         !
+         CALL deallocate_base()
+         !
+         DEALLOCATE( vc )
+         DEALLOCATE( sc )
+         DEALLOCATE( hc )
+         !
+         CALL stop_clock( 'diis' )
+         !
+         RETURN
+         !
+      END IF
+      !
+      ! ... then DIIS-diagonalization is performed only on the
+      ! ... lowest nbnd2 bands
+      !
+      CALL diis_with_ortho( ndim, ndmx, nbnd2, psi, e, btype, diis_iter )
+      !
+      ! ... finally, all eventual holes left by the DIIS-diagonalization are
+      ! ... filled with a CG-based diagonalization of the topmost two bands
+      !
+      holes_sniffer: DO
+         !
+         CALL holes_filler( ndmx, ndim, nbnd, psi, e, h_diag, diis_iter )
+         !
+         IF ( no_holes( ndmx, nbnd, btype, psi, e ) ) EXIT holes_sniffer
+         !
+      END DO  holes_sniffer
+      !
+#if defined (DIIS_DEBUG)
+      PRINT *, "final eigenvalues :"
+      PRINT *, e(:)
+      PRINT *, "variation :"
+      PRINT *, ABS( e(:) - e_ref(:) )
+      PRINT *, conv(:)
+#endif
+      !
+      ! ... the number of not-converged bands is computed
+      !
+      notcnv = count( .NOT. conv(:) )
+      !
+      ! ... work-space deallocation
+      !
+      CALL deallocate_base()
+      !
+      DEALLOCATE( vc )
+      DEALLOCATE( sc )
+      DEALLOCATE( hc )
+      !
+      CALL stop_clock( 'diis' )
+      !
+      RETURN
+      !
+    END SUBROUTINE cdiisg
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags, ONLY : ethr     
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER :: ndim, ndmx, nbnd
+        ! dimension of the matrix to be diagonalized
+        ! leading dimension of matrix psi, as declared in the calling pgm unit
+        ! integer number of searched low-lying roots
+      INTEGER, INTENT(INOUT) :: btype(nbnd)
+        ! band type ( 1 = occupied, 0 = empty )
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+        !  psi contains the refined estimates of the eigenvectors
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+        ! contains the estimated eigenvalues
+      INTEGER, INTENT(INOUT) :: diis_iter  
+        ! average number of iterations performed per band         
+      !
+      ! ... local variables
+      !
+      INTEGER :: sweep, trial_step
+        ! counters on iterations
+      INTEGER :: ib
+        ! counter on bands
+      INTEGER :: notcnv
+        ! number of unconverged bands
+      REAL (KIND=DP) :: psiSpsi
+        ! squared normalization of psi
+      !
+      !
+      sweep = 0
+      !
+      CALL h_psi( ndmx, ndim, nbnd, psi(1,1), hpsi(1,1) )
+      CALL s_psi( ndmx, ndim, nbnd, psi(1,1), spsi(1,1) )
+      !
+      iterate: DO
+         !
+         sweep = sweep + 1
+         !
+         IF ( sweep > max_sweeps ) EXIT iterate
+         !
+#if defined (DIIS_DEBUG)
+         WRITE( *, '(/"sweep = ",I3/)') sweep
+#endif
+         !
+         ! ... old eigenvalues are saved
+         !
+         e_ref(:) = e(:)         
+         !
+         DO trial_step = 1, max_trial_steps
+            !
+            ! ... residual vectors
+            !
+            DO ib = 1, nbnd
+               !
+               IF ( conv(ib) ) CYCLE
+               !
+               psiSpsi = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+               !
+               CALL reduce( 1, psiSpsi )
+               !
+               psiSpsi = 1.D0 / psiSpsi
+               !
+               psi(1,ib)  = psi(1,ib)  * psiSpsi
+               hpsi(1,ib) = hpsi(1,ib) * psiSpsi
+               spsi(1,ib) = spsi(1,ib) * psiSpsi
+               !
+               e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+               !
+               CALL reduce( 1, e(ib) )
+               !
+               aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+               !
+               ! ... preconditioning of the residual vecotr
+               !
+               CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )               
+               !
+            END DO
+            !           
+            ! ... trial step
+            !
+            FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
+               !
+               psi(:,ib) = psi(:,ib) - aux(:,ib)
+               !
+            END FORALL
+            ! 
+            ! ... bands are reordered so that converged bands come first
+            !
+            CALL reorder_bands( psi, notcnv, nbnd, +1 )
+            !
+            ! ... here we compute H|psi> and S|psi> for not converged bands
+            !
+            CALL h_psi( ndmx, ndim, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
+            CALL s_psi( ndmx, ndim, notcnv, psi(1,cnv+1), spsi(1,cnv+1) ) 
+            !
+            ! ... bands are back-ordered
+            !
+            CALL reorder_bands( psi, notcnv, nbnd, -1 )                       
+            !
+         END DO   
+         !
+         ! ... here we set up the hamiltonian and overlap matrix
+         ! ... on the subspace :
+         !
+         ! ...    hc_ij = <psi_i|H|psi_j>   and   sc_ij = <psi_i|S|psi_j>
+         !
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
+                     psi, ndmx, hpsi, ndmx, ZERO, hc, nbnd )
+         !
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
+                     psi, ndmx, spsi, ndmx, ZERO, sc, nbnd )
+         !
+         CALL reduce( 2 * nbnd * nbnd, hc )
+         CALL reduce( 2 * nbnd * nbnd, sc )
          !
          ! ... the subspace rotation is performed by solving the eigenvalue 
          ! ... problem on the subspace :
          !     
          ! ...    ( hc - e * sc ) |phi> = 0
          !
-         CALL cdiaghg( nbands, nbands, hc, sc, nbands, e, vc )
+         CALL cdiaghg( nbnd, nbnd, hc, sc, nbnd, e, vc )
+         !
+         ! ... |psi>  are rotated
+         !
+         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
+                     psi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         !
+         psi(:,:) = aux(:,:)         
          !
          ! ... convergence is checked here
          !
-         frozen = conv
-         !
          WHERE( btype(:) == 1 )
             !
-            conv(:) = ( ( kter > 1 ) .AND. &
-                        ( ABS( e(:) - e_old(1,:) ) < ethr ) )
+            conv(:) = ( ( ABS( e(:) - e_ref(:) ) < ethr ) )
             !
          ELSEWHERE
             !
-            conv(:) = ( ( kter > 1 ) .AND. &
-                        ( ABS( e(:) - e_old(1,:) ) < empty_ethr ) )
+            conv(:) = ( ( ABS( e(:) - e_ref(:) ) < empty_ethr ) )
             !
          END WHERE
          !
-         ! ... |psi>,  H|psi>  and  S|psi>  are rotated
+         ! ... exit if all bands are converged
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbands, nbands, ONE, &
-                     psi, ndmx, vc, nbands, ZERO, aux, ndmx ) 
-         !     
-         psi(:,:) = aux(:,:)
+         IF ( ALL( conv(:) ) ) EXIT iterate
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbands, nbands, ONE, &
-                     hpsi, ndmx, vc, nbands, ZERO, aux, ndmx ) 
+         ! ... H|psi>  and  S|psi>  are rotated
+         !
+         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
+                     hpsi, ndmx, vc, nbnd, ZERO, aux, ndmx ) 
          !     
          hpsi(:,:) = aux(:,:)
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbands, nbands, ONE, &
-                     spsi, ndmx, vc, nbands, ZERO, aux, ndmx ) 
+         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
+                     spsi, ndmx, vc, nbnd, ZERO, aux, ndmx ) 
          !     
          spsi(:,:) = aux(:,:)
          !
@@ -1090,300 +2059,278 @@ MODULE diis_module
          PRINT *, "eigenvalues :"
          PRINT *, e(:)
          PRINT *, "variation :"
-         PRINT *, ABS( e(:) - e_old(1,:) )
+         PRINT *, ABS( e(:) - e_ref(:) )
          PRINT *, conv(:)
 #endif
          !
-         ! ... exit if all bands are converged
-         !
-         IF ( ALL( conv(:) ) ) EXIT iterate
-         !
-         ! ... a new step is performed
-         !
-         bands_loop: DO ib = 1, nbands
-            !
-            ! ... the two highest bands are always optimized 
-            ! ... ( even if converged )
-            !
-            IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) CYCLE bands_loop
-            !
-            ! ... holes-sniffer
-            !
-            IF ( ( ib <= ( nbands - 2 ) ) .AND.  &
-                 frozen(ib) .AND. ( kter > sd_maxter(ib) ) ) THEN
-               !
-               ! ... an hole has been detected :  the work-space is cleaned
-               !
-#if defined (DIIS_DEBUG)               
-               PRINT *, "HOLES-SNIFFER: ", &
-                        "an hole has been detected near band ", ib
-#endif               
-               !
-               nbase(ib) = 1
-               !
-               e_old(:,ib)      = 0.D0
-               psi_old(:,:,ib)  = ZERO
-               hpsi_old(:,:,ib) = ZERO
-               spsi_old(:,:,ib) = ZERO
-               !
-               sd_maxter(ib) = kter + sd_maxter_0               
-               !
-               maxter = MAX( maxter, sd_maxter(ib) )
-               !
-            END IF
-            !
-            ! ... the two highest bands are never optimized with the 
-            ! ... DIIS procedure
-            !
-            IF ( ( kter <= sd_maxter(ib) ) .OR. ( ib > ( nbands - 2 ) ) ) THEN
-               !
-               ! ... trial step :
-               !     
-               IF ( ( e(ib) < e_old(1,ib) ) .OR. ( kter == 1 ) ) THEN
-                  !
-                  IF ( kter == 1 ) THEN
-                     !
-                     ! ... first step :  lambda is kept fixed
-                     !
-                  ELSE
-                     !
-                     ! ... step accepted :  lambda is increased
-                     !
-                     lambda(ib) = lambda(ib) * 1.25D0
-                     !
-                  END IF   
-                  !
-               ELSE
-                  !
-                  ! ... step rejected :  lambda is decreased
-                  !
-                  lambda(ib) = 0.75D0 * lambda(ib)
-                  !
-               END IF
-               !
-               ! ... here we compute the residual vector ( stored in aux ) :
-               !
-               ! ...    |res> = ( H - e * S ) |psi>           
-               !
-               aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
-               !
-            ELSE   
-               !
-               ! ... DIIS step :  the best eigenvector and residual vector 
-               ! ...              are computed
-               !
-               CALL diis_step( ib )           
-               !
-            END IF
-            !
-            ! ... DIIS work-space is refreshed ( for not converged bands only )
-            !
-            DO n = ( diis_ndim - 1 ), 2, -1
-               !
-               e_old(n,ib)      = e_old(n-1,ib)
-               psi_old(:,n,ib)  = psi_old(:,n-1,ib)
-               hpsi_old(:,n,ib) = hpsi_old(:,n-1,ib)                 
-               spsi_old(:,n,ib) = spsi_old(:,n-1,ib)
-               !
-            END DO
-            !
-            e_old(1,ib)      = e(ib)
-            psi_old(:,1,ib)  = psi(:,ib)   
-            hpsi_old(:,1,ib) = hpsi(:,ib)
-            spsi_old(:,1,ib) = spsi(:,ib)
-            !
-         END DO bands_loop
-         !
-#if defined (CG_STEP)
-         !
-         CALL cg_step()
-         !
-#else         
-         !
-         ! ... preconditioning of all residual vecotrs
-         !
-         CALL g_psi( ndmx, ndim, nbands, aux, e )           
-         !
-#endif         
-         !           
-         ! ... here we compute the new eigenvectors for "non converged"
-         ! ... bands only 
-         ! ... ( the highest two bands are always optimized, even if converged )
-         !
-! work around a g95 bug
-!         FORALL( ib = 1: nbands, .NOT. conv(ib) .OR. ib > ( nbands - 2 ) )
-!            !
-!            psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
-!            !
-!         END FORALL   
-!         !
-          DO ib = 1, nbands
-             IF (.NOT. conv(ib) .OR. ib > ( nbands - 2 ) ) THEN
-                psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
-             END IF
-          END DO
-         !
       END DO iterate
+      !
+      ! ... if some band is not yet coverged a final trial-step is done
+      !
+      IF ( ANY( .NOT. conv(:) ) ) THEN
+         !
+         nbase = 1
+         !
+         DO ib = 1, nbnd
+            !
+            IF ( conv(ib) ) CYCLE
+            !
+            IF ( ib <= nbnd2 ) THEN
+               !
+               ! ... the first step in the DIIS history is saved
+               !
+               e_old(1,ib)      = e(ib)
+               psi_old(:,1,ib)  = psi(:,ib)
+               hpsi_old(:,1,ib) = hpsi(:,ib)
+               spsi_old(:,1,ib) = spsi(:,ib)
+               !
+            END IF   
+            !
+            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+            !
+            CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
+            !
+            psi(:,ib) = psi(:,ib) - aux(:,ib)
+            !
+         END DO   
+         !
+      END IF
       !
       ! ... this is an overestimate of the real number of iterations
       !
-      diis_iter = MIN( kter, maxter )
+      diis_iter = diis_iter + MIN( sweep, max_sweeps ) * 2
       !
-      ! ... the number of not-converged bands is computed
+      RETURN
       !
-      notcnv = nbands
+    END SUBROUTINE init_steps
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE diis_with_ortho( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+      !------------------------------------------------------------------------
       !
-      DO ib = 1, nbands
+      USE control_flags, ONLY : diis_ndim, ethr
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd
+        ! dimension of the matrix to be diagonalized
+        ! leading dimension of matrix psi, as declared in the calling pgm unit
+        ! integer number of searched low-lying roots
+      INTEGER, INTENT(INOUT) :: btype(nbnd)
+        ! band type ( 1 = occupied, 0 = empty )
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+        !  psi contains the refined estimates of the eigenvectors
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+        ! contains the estimated eigenvalues
+      INTEGER, INTENT(INOUT) :: diis_iter  
+        ! average number of iterations performed per band                 
+      !
+      ! ... local variables
+      !
+      INTEGER :: kter, ib, jb
+        ! counter on iterations
+        ! counters on bands
+      INTEGER :: notcnv
+        ! number of unconverged bands  
+      REAL (KIND=DP) :: psi_norm
+      COMPLEX (KIND=DP) :: overlap
+      !
+      !
+      ! ... initialization of control variables
+      !
+      kter = 0
+      !
+#if defined (WINDOW_ORTHO)
+      !
+      ortho_win = MAX( ortho_win_min, &
+                       0.05D0 * ( MAXVAL( e(:) - MINVAL( e(:) ) ) ) )
+      !
+#endif
+      !
+      ! ... DIIS loop
+      !
+      iterate: DO
          !
-         IF ( conv(ib) ) notcnv = notcnv - 1
+         kter = kter + 1
+         !
+         IF ( kter > maxter ) EXIT iterate
+         !
+#if defined (DIIS_DEBUG) 
+         WRITE( *, '(/"kter = ",I3/)') kter
+#endif
+         !
+         ! ... reference eigenvalues are saved
+         !
+         e_ref(1:nbnd) = e(1:nbnd)
+         !
+         ! ... the size of the history-subspace is increased
+         !
+         nbase = MIN( ( nbase + 1 ), diis_ndim )
+         !
+         ! ... bands are reordered so that converged bands come first
+         !
+         CALL reorder_bands( psi, notcnv, nbnd, +1 )
+         !
+         ! ... here we compute H|psi> and S|psi> for not converged bands
+         !
+         CALL h_psi( ndmx, ndim, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
+         CALL s_psi( ndmx, ndim, notcnv, psi(1,cnv+1), spsi(1,cnv+1) )
+         !
+         ! ... bands are back-ordered
+         !
+         CALL reorder_bands( psi, notcnv, nbnd, -1 )  
+         !
+         ! ... DIIS step : the best |psi>, H|psi> and S|spi> are computed here
+         !
+         CALL diis_step()
+         !
+         ! ... orthogonalization step of all the best eigenvectors ( an energy 
+         ! ... window "ortho_win" is used here )
+         !
+#if defined (WINDOW_ORTHO)
+         !
+         CALL start_clock( 'cgramg1' )
+         !
+         DO ib = 1, nbnd
+            !
+#if defined (SHOW_OVERLAP)
+            WRITE( 999, '(//"VECTOR = ",I3)' ) ib
+#endif
+            !          
+            DO jb = 1, ( ib - 1 )
+               !
+               IF ( ( e(ib) - e(jb) ) > ortho_win ) CYCLE 
+               !
+               overlap = ZDOTC( ndim, psi(1,jb), 1, spsi(1,ib), 1 )
+               !
+               CALL reduce( 2, overlap )
+               !
+#if defined (SHOW_OVERLAP)
+               WRITE( 999, '("OVERLAP(",I3,",",I3,") = ",3(2X,F14.10))' ) &
+                   jb, ib, overlap, ( e(ib) - e(jb) )
+#endif
+               !
+               psi(:,ib)  = psi(:,ib)  - overlap * psi(:,jb)
+               hpsi(:,ib) = hpsi(:,ib) - overlap * hpsi(:,jb)
+               spsi(:,ib) = spsi(:,ib) - overlap * spsi(:,jb)
+               !
+            END DO
+            !
+            psi_norm = DDOT( 2 * ndim, psi(1,ib), 1, spsi(1,ib), 1 )
+            !
+            CALL reduce( 1, psi_norm )
+            !
+            IF ( psi_norm < eps32 ) THEN
+               !
+               PRINT *, psi_norm
+               !
+               CALL errore( 'diis_step', ' negative norm in S ', 1 )
+               !
+            END IF
+            !
+            psi_norm = 1.D0 / SQRT( psi_norm )
+            !
+            psi(:,ib)  = psi_norm * psi(:,ib)
+            hpsi(:,ib) = psi_norm * hpsi(:,ib)
+            spsi(:,ib) = psi_norm * spsi(:,ib)
+            !
+         END DO
+         !
+         CALL stop_clock( 'cgramg1' )
+         !
+#else
+         !
+         CALL cgramg1( ndmx, nbnd, ndim, 1, nbnd, psi, spsi, hpsi )
+         !
+#endif                  
+         !
+         ! ... convergence is checked here
+         !
+         WHERE( btype(1:nbnd) == 1 )
+            !
+            conv(1:nbnd) = ( ABS( e(1:nbnd) - e_ref(1:nbnd) ) < ethr )
+            !
+         ELSEWHERE
+            !
+            conv(1:nbnd) = ( ABS( e(1:nbnd) - e_ref(1:nbnd) ) < empty_ethr )
+            !
+         END WHERE
+         !
+#if defined (DIIS_DEBUG)
+         PRINT *, "eigenvalues :"
+         PRINT *, e(1:nbnd)
+         PRINT *, "variation :"
+         PRINT *, ABS( e(1:nbnd) - e_ref(1:nbnd) )
+         PRINT *, conv(1:nbnd)
+#endif         
+         !
+         ! ... exit if all bands are converged
+         !
+         IF ( ALL( conv(1:nbnd) ) ) EXIT iterate
+         !
+         ! ... new preconditioned residual vectors
+         !
+         DO ib = 1, nbnd
+            !
+            IF ( conv(ib) ) CYCLE
+            !
+            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+            !
+            CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
+            !
+         END DO
+         !           
+         ! ... here we compute the new eigenvectors for not converged
+         ! ... bands only 
+         !
+         FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
+            !
+            psi(:,ib) = psi(:,ib) - lambda * aux(:,ib)
+            !
+         END FORALL
+         !
+      END DO iterate
+      !
+#if defined (SHOW_OVERLAP)
+      !
+      WRITE( 999, '(//"FINAL CHECK ON ORTHOGONALIZATION ")' )
+      !
+      DO ib = 1, nbnd
+         !
+         WRITE( 999, '(//"VECTOR = ",I3)' ) ib
+         !          
+         DO jb = 1, ib
+            !
+            overlap = ZDOTC( ndim, psi(1,jb), 1, spsi(1,ib), 1 )
+            !
+            CALL reduce( 2, overlap )
+            !
+            WRITE( 999, '("OVERLAP(",I3,",",I3,") = ",3(2X,F14.10))' ) &
+                jb, ib, overlap, ( e(ib) - e(jb) )
+            !
+         END DO
          !
       END DO
+#endif              
       !
-      ! ... work-space deallocation
+      ! ... this is an overestimate of the real number of iterations
       !
-      DEALLOCATE( frozen )
-      DEALLOCATE( conv )
-      DEALLOCATE( sd_maxter )
-      DEALLOCATE( nbase )
-      DEALLOCATE( lambda )
-      DEALLOCATE( vc )
-      DEALLOCATE( sc )
-      DEALLOCATE( hc )
-      DEALLOCATE( aux )
-      DEALLOCATE( hpsi )
-      DEALLOCATE( spsi )
-      DEALLOCATE( e_old )
-      DEALLOCATE( psi_old )
-      DEALLOCATE( hpsi_old )
-      DEALLOCATE( spsi_old )
-      !
-      CALL stop_clock( 'diis' )
+      diis_iter = diis_iter + MIN( kter, maxter )
       !
       RETURN
       !
       CONTAINS
         !
-        ! ... internal procedures
-        !
         !--------------------------------------------------------------------
-        SUBROUTINE reorder_bands()
-          !--------------------------------------------------------------------
-          !
-          ! ... this routine is used to reorder the bands :
-          ! ... converged bands come first.
-          ! ... for this pourpose an auxiliary vector is used
-          !
-          IMPLICIT NONE
-          !
-          !
-          cnv    = 0
-          notcnv = nbands
-          !
-          IF ( ( kter <= 2 ) .OR. ( .NOT. ANY( conv(:) ) ) ) RETURN
-          !
-          DO ib = 1, nbands
-             !
-             IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) THEN
-                !
-                cnv = cnv + 1
-                !
-                aux(:,cnv) = psi(:,ib)
-                !
-                hpsi(:,cnv) = hpsi(:,ib)
-                spsi(:,cnv) = spsi(:,ib)              
-                !
-             ELSE
-                !
-                aux(:,notcnv) = psi(:,ib)
-                !
-                notcnv = notcnv - 1
-                !
-             END IF
-             !
-          END DO
-          !
-          notcnv = nbands - notcnv
-          !
-          psi(:,:) = aux(:,:)
-          !
-          RETURN
-          !
-        END SUBROUTINE reorder_bands
-        !
-#if defined (CG_STEP)
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE cg_step()
+        SUBROUTINE diis_step()
           !--------------------------------------------------------------------
           !
           IMPLICIT NONE
           !
-          COMPLEX (KIND=DP)              :: gamma, num, den
-          COMPLEX (KIND=DP), ALLOCATABLE :: res_old(:), pres(:), pres_old(:)
-          !
-          COMPLEX (KIND=DP), EXTERNAL :: ZDOTC      
-          !
-          !
-          ALLOCATE( res_old(  ndmx ) )
-          ALLOCATE( pres(     ndmx ) )
-          ALLOCATE( pres_old( ndmx ) )          
-          !
-          bands_loop: DO ib = 1, nbands
-             !
-             IF ( nbase(ib) >= 2 ) THEN
-                !
-                ! ... preconditioned conjugate gradients step
-                !
-                IF ( conv(ib) ) CYCLE bands_loop
-                !
-                pres    = ( hpsi_old(:,1,ib) - e_old(1,ib) * spsi_old(:,1,ib) )
-                res_old = ( hpsi_old(:,2,ib) - e_old(2,ib) * spsi_old(:,2,ib) )
-                !
-                pres_old = res_old
-                !
-                CALL g_psi( ndmx, ndim, 1, pres,     e_old(1,ib) )
-                CALL g_psi( ndmx, ndim, 1, pres_old, e_old(2,ib) )
-                !
-                num = ZDOTC( ndim, pres, 1, aux(:,ib), 1 )
-                !
-                CALL reduce( 2, num )
-                !
-                den = ZDOTC( ndim, pres_old, 1, res_old, 1 )
-                !
-                CALL reduce( 2, den )
-                !
-                gamma = num / den
-                !
-                aux(:,ib) = pres - gamma * ( psi_old(:,1,ib) - psi_old(:,2,ib) )
-                !
-             ELSE
-                !
-                ! ... standard preconditioned steepest descent step
-                !
-                CALL g_psi( ndmx, ndim, 1, aux(:,ib), e(ib) )
-                !
-             END IF
-             !
-          END DO bands_loop 
-          !
-          DEALLOCATE( res_old )
-          DEALLOCATE( pres )
-          DEALLOCATE( pres_old )
-          !
-          RETURN
-          !
-        END SUBROUTINE cg_step
-        !
-#endif        
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE diis_step( ib )
-          !--------------------------------------------------------------------
-          !
-          IMPLICIT NONE
-          !
-          INTEGER, INTENT(IN)            :: ib
-          INTEGER                        :: dim, n, m
+          INTEGER                        :: ib, n, dim
           REAL (KIND=DP)                 :: psiSpsi
           REAL (KIND=DP),    ALLOCATABLE :: e_small(:)
           COMPLEX (KIND=DP), ALLOCATABLE :: rc_small(:,:), &
@@ -1392,74 +2339,148 @@ MODULE diis_module
                                             all_hpsi(:,:), &
                                             all_spsi(:,:), &
                                             all_res(:,:)
+          COMPLEX (KIND=DP), ALLOCATABLE :: ps(:)
           !
-          COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
           !
-          !
-          dim = nbase(ib)
+          dim = MIN( nbase, diis_ndim1 )
           !
           ! ... internal work-space allocation
           !
-          ALLOCATE( e_small( dim ) )
-          ALLOCATE( rc_small( dim, dim ) )
-          ALLOCATE( vc_small( dim, dim ) )
-          ALLOCATE( all_psi(  ndmx, dim ) )
-          ALLOCATE( all_hpsi( ndmx, dim ) )
-          ALLOCATE( all_spsi( ndmx, dim ) )
-          ALLOCATE( all_res(  ndmx, dim ) )
+          ALLOCATE( e_small( nbase ) )
+          ALLOCATE( rc_small( nbase, nbase ) )
+          ALLOCATE( vc_small( nbase, nbase ) )
+          ALLOCATE( all_psi(  ndmx, nbase ) )
+          ALLOCATE( all_hpsi( ndmx, nbase ) )
+          ALLOCATE( all_spsi( ndmx, nbase ) )
+          ALLOCATE( all_res(  ndmx, nbase ) )
+          ALLOCATE( ps( nbase ) )
           !
-          ! ... the history of this band is reconstructed
+          ! ... initialization
           !
-          all_psi(:,1)  = psi(:,ib)
-          all_hpsi(:,1) = hpsi(:,ib)
-          all_spsi(:,1) = spsi(:,ib)
-          e_small(1)    = e(ib)
+          e_small  = 0.D0
+          rc_small = ZERO
+          vc_small = ZERO
+          all_psi  = ZERO
+          all_hpsi = ZERO
+          all_spsi = ZERO
+          all_res  = ZERO
           !
-          all_psi(:,2:dim)  = psi_old(:,:,ib)
-          all_hpsi(:,2:dim) = hpsi_old(:,:,ib)
-          all_spsi(:,2:dim) = spsi_old(:,:,ib)
-          e_small(2:dim)    = e_old(:,ib)
-          !
-          ! ... orthogonalization
-          !
-          CALL cgramg1( ndmx, dim, ndim, 1, dim, all_psi, all_spsi, all_hpsi )
-          !
-          FORALL( n = 1: dim ) &
-             all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
-          !   
-          ! ... here we construct the matrix :  rc_ij = <res_i|res_j>
-          !
-          CALL ZGEMM( 'C', 'N', dim, dim, ndim, ONE, all_res(:,:), &
-                      ndmx, all_res(:,:), ndmx, ZERO, rc_small, dim )
-          !
-          CALL reduce( 2 * dim * dim, rc_small )
-          ! 
-          ! ... diagonalize the reduced hamiltonian
-          !
-          CALL cdiagh( dim, rc_small, dim, e_small, vc_small )
-          !
-          ! ... here we compute the best estimate of the |psi>, H|psi>, S|psi>
-          !
-          CALL ZGEMM( 'N', 'N', ndim, 1, dim, ONE, all_psi(:,:), &
-                      ndmx, vc_small(:,1), dim, ZERO, psi(:,ib), ndmx )
-          !
-          CALL ZGEMM( 'N', 'N', ndim, 1, dim, ONE, all_hpsi(:,:), &
-                      ndmx, vc_small(:,1), dim, ZERO, hpsi(:,ib), ndmx )
-          !
-          CALL ZGEMM( 'N', 'N', ndim, 1, dim, ONE, all_spsi(:,:), &
-                      ndmx, vc_small(:,1), dim, ZERO, spsi(:,ib), ndmx )
-          !
-          psiSpsi = REAL( ZDOTC( ndim, psi(:,ib), 1, spsi(:,ib), 1 ) )
-          !
-          CALL reduce( 1, psiSpsi )
-          !
-          e(ib) = REAL( ZDOTC( ndim, psi(:,ib), 1, hpsi(:,ib), 1 ) ) / psiSpsi
-          !
-          CALL reduce( 1, e(ib) )
-          !
-          ! ... here we compute the best estimate of the residual vector
-          !
-          aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+          bands_loop: DO ib = 1, nbnd
+             !
+             IF ( conv(ib) ) CYCLE bands_loop
+             !
+             ! ... the history of this band is reconstructed
+             !
+             all_psi(:,1)  = psi(:,ib)
+             all_hpsi(:,1) = hpsi(:,ib)
+             all_spsi(:,1) = spsi(:,ib)
+             !
+             all_psi(:,2:nbase)  = psi_old(:,:,ib)
+             all_hpsi(:,2:nbase) = hpsi_old(:,:,ib)
+             all_spsi(:,2:nbase) = spsi_old(:,:,ib)
+             !
+             ! ... orthogonalization of the new wavefunction to the history
+             !
+             DO n = 1, nbase
+                ! 
+                ps(n) = ZDOTC( ndim, all_psi(1,1), 1, all_spsi(1,n), 1 )
+                !
+             END DO
+             !
+             CALL reduce( 2 * nbase, ps )
+             ! 
+             DO n = 2, nbase
+                !
+                all_psi(:,1)  = all_psi(:,1)  - ps(n) * all_psi(:,n)
+                all_hpsi(:,1) = all_hpsi(:,1) - ps(n) * all_hpsi(:,n)
+                all_spsi(:,1) = all_spsi(:,1) - ps(n) * all_spsi(:,n)
+                !
+             END DO
+             !
+             psiSpsi = DDOT( ndim2, all_psi(1,1), 1, all_spsi(1,1), 1 )
+             !
+             CALL reduce( 1, psiSpsi )
+             !
+             IF ( psiSpsi < eps32 ) THEN
+                !
+                PRINT *, psiSpsi
+                !
+                CALL errore( 'diis_step', ' negative norm in S ', 1 )
+                !
+             END IF
+             !
+             psiSpsi = 1.D0 / SQRT( psiSpsi )
+             ! 
+             all_psi(:,1)  = psiSpsi * all_psi(:,1)
+             all_hpsi(:,1) = psiSpsi * all_hpsi(:,1)
+             all_spsi(:,1) = psiSpsi * all_spsi(:,1)
+             !
+             ! ... the enrgy of the new wavefunction is computed here
+             !
+             e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+             !
+             CALL reduce( 1, e(ib) )
+             !
+             ! ... the "energy" history of this band is reconstructed
+             !
+             e_small(1)       = e(ib)
+             e_small(2:nbase) = e_old(:,ib)
+             !
+             ! ... DIIS work-space is refreshed
+             !
+             psi_old(:,1:dim,ib)  = all_psi(:,1:dim)
+             hpsi_old(:,1:dim,ib) = all_hpsi(:,1:dim)
+             spsi_old(:,1:dim,ib) = all_spsi(:,1:dim)
+             e_old(1:dim,ib)      = e_small(1:dim)
+             !
+             ! ... residual vectors are finally computed
+             !
+             FORALL( n = 1: nbase ) 
+                !
+                all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
+                !
+             END FORALL
+             !
+             ! ... here we construct the matrix :  rc_ij = <res_i|res_j>
+             !
+             CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, all_res, &
+                         ndmx, all_res, ndmx, ZERO, rc_small, nbase )
+             !
+             CALL reduce( 2 * nbase * nbase, rc_small )
+             ! 
+             ! ... diagonalize the reduced hamiltonian
+             !
+             CALL cdiagh( nbase, rc_small, nbase, e_small, vc_small )
+             !
+             ! ... here we compute the best estimate of the |psi>, 
+             ! ... H|psi> and S|psi>
+             !
+             CALL ZGEMM( 'N', 'N', ndim, 1, nbase, ONE, all_psi(1,1), &
+                         ndmx, vc_small(1,1), nbase, ZERO, psi(1,ib), ndmx )
+             !
+             CALL ZGEMM( 'N', 'N', ndim, 1, nbase, ONE, all_hpsi(1,1), &
+                         ndmx, vc_small(1,1), nbase, ZERO, hpsi(1,ib), ndmx )
+             !
+             CALL ZGEMM( 'N', 'N', ndim, 1, nbase, ONE, all_spsi(1,1), &
+                         ndmx, vc_small(1,1), nbase, ZERO, spsi(1,ib), ndmx )
+             !
+             psiSpsi = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+             !
+             CALL reduce( 1, psiSpsi )
+             !
+             ! ... |psi>, H|psi> and S|psi> are normalized
+             !
+             psiSpsi = 1.D0 / SQRT( psiSpsi )
+             !
+             psi(:,ib)  = psi(:,ib)  * psiSpsi
+             hpsi(:,ib) = hpsi(:,ib) * psiSpsi
+             spsi(:,ib) = spsi(:,ib) * psiSpsi
+             !             
+             e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+             !
+             CALL reduce( 1, e(ib) )
+             !
+          END DO bands_loop             
           !
           ! ... internal work-space deallocation
           !
@@ -1470,11 +2491,323 @@ MODULE diis_module
           DEALLOCATE( all_hpsi )
           DEALLOCATE( all_spsi )
           DEALLOCATE( all_res )
-          !   
+          DEALLOCATE( ps )
+          !
           RETURN
           !
         END SUBROUTINE diis_step
         !
-    END SUBROUTINE cdiisg
+    END SUBROUTINE diis_with_ortho
     !
-END MODULE diis_module
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE holes_filler( ndmx, ndim, nbnd, psi, e, precondition, diis_iter )
+      !------------------------------------------------------------------------
+      !
+      USE constants, ONLY : pi, tpi
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables 
+      !
+      INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd
+      REAL (KIND=DP),    INTENT(IN)    :: precondition(ndim)
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      REAL (KIND=DP),    INTENT(INOUT) :: e(nbnd)
+      INTEGER,           INTENT(INOUT) :: diis_iter
+        ! average number of iterations performed per band                       
+      !
+      ! ... local variables
+      !
+      INTEGER                       :: i, j, ib
+      INTEGER                       :: cgter, holes_filler_iter
+      COMPLEX(KIND=DP), ALLOCATABLE :: lagrange(:), g(:), &
+                                       cg(:), scg(:), ppsi(:), g0(:)
+      REAL(KIND=DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, &
+                                       gg1, theta, cg0, e0, es(2)
+      REAL(KIND=DP)                 :: arg, scale
+      !
+      REAL(KIND=DP), EXTERNAL :: rndm
+      !
+      !
+      ! ... work-space allocation
+      !
+      ALLOCATE( scg(  ndmx ) )    
+      ALLOCATE( g(    ndmx ) )    
+      ALLOCATE( cg(   ndmx ) )    
+      ALLOCATE( g0(   ndmx ) )    
+      ALLOCATE( ppsi( ndmx ) )    
+      ALLOCATE( lagrange( nbnd ) )    
+      !
+      holes_filler_iter = 0
+      !
+      ! ... every eigenfunction is calculated separately
+      !
+      DO ib = ( nbnd - 1 ), nbnd
+         !
+#if defined (DIIS_DEBUG)         
+         PRINT *, "CG: BAND = ", ib
+#endif
+         !
+         ! ... add some noise to |psi>
+         !
+         scale = DDOT( ndim2, aux(1,ib), 1, aux(1,ib), 1 )
+         !
+         DO i = 1, ndim
+            !
+            arg = tpi * rndm()
+            !
+            psi(i,ib) = psi(i,ib) + &
+                        SQRT( scale ) * CMPLX( COS( arg ), SIN( arg ) )
+            !
+         END DO
+         !
+         ! ... calculate S|psi>
+         !
+         CALL s_1psi( ndmx, ndim, psi(1,ib), spsi(1,ib) )
+         !
+         ! ... orthogonalize starting eigenfunction to those already calculated
+         !
+         DO j = 1, ( ib - 1 )
+            !
+            lagrange(j) = ZDOTC( ndim, psi(1,j), 1, spsi(1,ib), 1 )
+            !
+         END DO
+         !
+         CALL reduce( 2*( ib - 1 ), lagrange )
+         !
+         DO j = 1, ( ib - 1 )
+            !
+            psi(:,ib)  = psi(:,ib)  - lagrange(j) * psi(:,j)
+            spsi(:,ib) = spsi(:,ib) - lagrange(j) * spsi(:,j)
+            !
+         END DO
+         !
+         psi_norm = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+         !
+         CALL reduce( 1, psi_norm )
+         !
+         IF ( psi_norm < eps32 ) THEN
+            !
+            PRINT *, "PSI_NORM = ", psi_norm
+            PRINT *, lagrange(1:ib)
+            !
+            CALL errore( 'holes_filler', ' negative norm in S ', 1 )
+            !
+         END IF
+         !
+         psi_norm = 1.D0 / SQRT( psi_norm )
+         !
+         psi(:,ib)  = psi(:,ib)  * psi_norm
+         spsi(:,ib) = spsi(:,ib) * psi_norm
+         !
+         ! ... calculate starting gradient ( |hpsi> = H|psi> ) ...
+         !
+         CALL h_psi( ndmx, ndim, 1, psi(1,ib), hpsi(1,ib) )
+         !
+         ! ... and starting eigenvalue ( e = <y|PHP|y> = <psi|H|psi> )
+         !
+         e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+         !
+         CALL reduce( 1, e(ib) )
+         !
+#if defined (DIIS_DEBUG)                     
+         PRINT *, "INITIAL EIGENVALUE = ", e(ib)
+         PRINT *, "psi_norm           = ", psi_norm
+#endif
+         !
+         ! ... start iteration for this band
+         !
+         iterate: DO cgter = 1, maxter
+            !
+#if defined (DIIS_DEBUG)                     
+            PRINT *, "ITERATION = ", cgter
+#endif            
+            !
+            ! ... calculate  P (PHP)|y>
+            ! ... ( P = preconditioning matrix, assumed diagonal )
+            !
+            g(1:ndim)    = hpsi(1:ndim,ib) / precondition(:)
+            ppsi(1:ndim) = spsi(1:ndim,ib) / precondition(:)
+            !
+            ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
+            !
+            es(1) = DDOT( ndim2, spsi(1,ib), 1, g(1), 1 )
+            es(2) = DDOT( ndim2, spsi(1,ib), 1, ppsi(1), 1 )
+            !
+            CALL reduce( 2, es )
+            !
+            es(1) = es(1) / es(2)
+            !
+            g(:) = g(:) - es(1) * ppsi(:)
+            !
+            ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y> ensures that 
+            ! ... <g| S P^2|y> = 0
+            ! ... orthogonalize to lowest eigenfunctions (already calculated)
+            !
+            ! ... scg is used as workspace
+            !
+            CALL s_1psi( ndmx, ndim, g(1), scg(1) )
+            !
+            DO j = 1, ( ib - 1 )
+               !
+               lagrange(j) = ZDOTC( ndim, psi(1,j), 1, scg(1), 1 )
+               !
+            END DO
+            !
+            CALL reduce( 2*ib - 2, lagrange )
+            !
+            DO j = 1, ( ib - 1 )
+               !
+               g(:)   = g(:)   - lagrange(j) * psi(:,j)
+               scg(:) = scg(:) - lagrange(j) * psi(:,j)
+               !
+            END DO
+            !
+            IF ( cgter /= 1 ) THEN
+               !
+               ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
+               !
+               gg1 = DDOT( ndim2, g(1), 1, g0(1), 1 )
+               !
+               CALL reduce( 1, gg1 )
+               !
+            END IF
+            !
+            ! ... gg is <g(n+1)|S|g(n+1)>
+            !
+            g0(:) = scg(:)
+            !
+            g0(1:ndim) = g0(1:ndim) * precondition(:)
+            !
+            gg = DDOT( ndim2, g(1), 1, g0(1), 1 )
+            !
+            CALL reduce( 1, gg )
+            !
+            IF ( cgter == 1 ) THEN
+               !
+               ! ... starting iteration, the conjugate gradient |cg> = |g>
+               !
+               gg0 = gg
+               !
+               cg(:) = g(:)
+               !
+            ELSE
+               !
+               ! ... following iterations: |cg(n+1)> = |g(n+1)>+gamma(n)*|cg(n)>
+               ! ... This is Fletcher-Reeves formula for gamma
+               ! ...            gamma = gg/gg0
+               ! ... and this is Polak-Ribiere formula
+               !
+               gamma = ( gg - gg1 ) / gg0
+               gg0   = gg
+               !
+               cg(:) = cg(:) * gamma
+               cg(:) = g + cg(:)
+               !
+               ! ... The following is needed because <y(n+1)| S P^2 |cg(n+1)> 
+               ! ... is not 0. In fact :
+               ! ... <y(n+1)| S P^2 |cg(n)> = sin(theta)*<cg(n)|S|cg(n)>
+               !
+               psi_norm = gamma * cg0 * SIN( theta )
+               !
+               cg(:) = cg(:) - psi_norm * psi(:,ib)
+               !
+            END IF
+            !
+            ! ... |cg> contains now the conjugate gradient
+            !
+            ! ... |scg> is S|cg>
+            !
+            CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+            !
+            cg0 = DDOT( ndim2, cg(1), 1, scg(1), 1 )
+            !
+            CALL reduce( 1, cg0 )
+            !
+            cg0 = SQRT( cg0 )
+            !
+            ! ... |ppsi> contains now HP|cg>
+            ! ... minimize <y(t)|PHP|y(t)> , where :
+            ! ...                         |y(t)> = cos(t)|y> + sin(t)/cg0 |cg>
+            ! ... Note that  <y|P^2S|y> = 1, <y|P^2S|cg> = 0 ,
+            ! ...           <cg|P^2S|cg> = cg0^2
+            ! ... so that the result is correctly normalized :
+            ! ...                           <y(t)|P^2S|y(t)> = 1
+            !
+            a0 = 2.D0 * DDOT( ndim2, psi(1,ib), 1, ppsi(1), 1 ) / cg0
+            !
+            CALL reduce( 1, a0 )
+            !
+            b0 = DDOT( ndim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
+            !
+            CALL reduce( 1, b0 )
+            !
+            e0 = e(ib)
+            !
+            theta = 0.5D0 * ATAN( a0 / ( e0 - b0 ) )
+            !
+            es(1) = 0.5D0 * ( ( e0 - b0 ) * COS( 2.D0 * theta ) + &
+                              a0 * SIN( 2.D0 * theta ) + e0 + b0 )
+            es(2) = 0.5D0 * ( - ( e0 - b0 ) * COS( 2.D0 * theta ) - &
+                              a0 * SIN( 2.D0 * theta ) + e0 + b0 )
+            !
+            ! ... there are two possible solutions, choose the minimum
+            !
+            IF ( es(2) < es(1) ) theta = theta + 0.5D0 * pi
+            !
+            ! ... new estimate of the eigenvalue
+            !
+            e(ib) = MIN( es(1), es(2) )
+            !
+            ! ... upgrade |psi> ...
+            !
+            psi(:,ib) = COS( theta ) * psi(:,ib) + &
+                        SIN( theta ) / cg0 * cg(:)
+            !
+            ! ... here one could test convergence on the energy
+            !
+#if defined (DIIS_DEBUG)            
+            PRINT *, e(ib), ABS( e(ib) - e0 )
+#endif
+            !            
+            IF ( ABS( e(ib) - e0 ) < empty_ethr ) THEN
+               !
+               conv(ib) = .TRUE.
+               !
+               EXIT iterate
+               !
+            END IF   
+            !
+            ! ... S|psi> ...
+            !
+            spsi(:,ib) = COS( theta ) * spsi(:,ib) + &
+                         SIN( theta ) / cg0 * scg(:)
+            !
+            ! ... and H|psi>
+            !
+            hpsi(:,ib) = COS( theta ) * hpsi(:,ib) + &
+                         SIN( theta ) / cg0 * ppsi(:)
+            !
+         END DO iterate
+         !
+         holes_filler_iter = holes_filler_iter + MIN( cgter, maxter )
+         !
+      END DO
+      !
+      diis_iter = diis_iter + INT( REAL( holes_filler_iter ) / REAL( nbnd ) )
+      !
+      ! ... work-space deallocation
+      !
+      DEALLOCATE( lagrange )
+      DEALLOCATE( ppsi )
+      DEALLOCATE( g0 )
+      DEALLOCATE( cg )
+      DEALLOCATE( g )
+      DEALLOCATE( scg )
+      !
+      RETURN
+      !
+    END SUBROUTINE holes_filler
+    !
+END MODULE complex_diis_module

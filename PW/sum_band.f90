@@ -275,8 +275,7 @@ SUBROUTINE sum_band()
           IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF ( nkb > 0 ) &
-             CALL pw_gemm( 'Y', nkb, nbnd, npw, &
-                           vkb, npwx, evc, npwx, becp, nkb )
+             CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
           !
           CALL start_clock( 'becsum' )
           !

@@ -578,7 +578,7 @@ SUBROUTINE electrons()
      !
      !CALL forces()
      !
-     IF ( imix >= 0 ) rho = rho_save
+     IF ( imix >= 0 ) rho = rho_save()
      !
   END DO
   !
@@ -597,7 +597,7 @@ SUBROUTINE electrons()
      !
   END IF
   !
-  IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+  IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   !
   CALL stop_clock( 'electrons' )
   !
