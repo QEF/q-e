@@ -360,7 +360,7 @@ SUBROUTINE punch_band (filband, spin_component)
      !
      IF ( ionode ) THEN
         !
-        IF (ik == 1) THEN
+        IF (ik == nks1) THEN
            WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
                 nbnd, nks2-nks1+1
         END IF
