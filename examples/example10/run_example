@@ -11,7 +11,7 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to calculate the polarization via Berry Phase"
-$ECHO "in PBTiO3 (contributed by the Vanderbilt Group in Rutgers University)."
+$ECHO "in PbTiO3 (contributed by the Vanderbilt Group in Rutgers University)."
 
 # set the needed environment variables
 . ../environment_variables
