@@ -74,7 +74,11 @@ subroutine punch_plot_e
   !
   !     symmetrize
   !
-  call syme (aux)
+#ifdef __PARA
+     call psyme (aux)
+#else
+     call syme (aux)
+#endif
   !
   !     rotate the charge and transform to cartesian coordinates
   !
