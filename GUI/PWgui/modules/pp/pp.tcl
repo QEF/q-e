@@ -43,7 +43,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    -fmt %d
 	}
 	var spin_component {
-	    -label    "Charge density/potential spin component (spin_component):"
+	    -label    "Charge/potential/magnetization spin component (spin_component):"
 	    -widget   optionmenu
 	    -textvalue {
 		"total charge/potential"

@@ -12,27 +12,37 @@ help  filplot  -vartype character -helpfmt txt2html -helptext {
 }
 
 help  plot_num -vartype integer -helpfmt txt2html -helptext {
-   selects what is saved in filplot:
-                 0=charge
-                 1=total potential V_bare+V_H + V_xc
-                 2=local ionic potential
-                 3=local density of states at e_fermi
-                 4=local density of electronic entropy
-                 5=STM images
-                 6=spin polarization (rho(up)-rho(down))
-                 7=|psi|^2
-                 8=electron localization function (ELF)
-                 9=planar average of all |psi|^2
-                10=integrated local density of states from
-                   emin to emax (emin, emax in eV)
-                   if emax is not specified, emax=E_fermi
-                11=the V_bare + V_H potential
+   Selects what is saved in filplot:
+                 0 = charge
+                 1 = total potential V_bare+V_H + V_xc
+                 2 = local ionic potential
+                 3 = local density of states at e_fermi
+                 4 = local density of electronic entropy
+                 5 = STM images
+                 6 = spin polarization (rho(up)-rho(down))
+                 7 = |psi|^2
+                 8 = electron localization function (ELF)
+                 9 = planar average of all |psi|^2
+                10 = integrated local density of states from
+                     emin to emax (emin, emax in eV)
+                     if emax is not specified, emax=E_fermi
+                11 = the V_bare + V_H potential
+                12 = the electric field potential
+                13 = the noncolinear magnetization.
 }
   
 help  spin_component -vartype integer -helpfmt txt2html -helptext {
-                 0=total charge/potential 
-                 1=spin up charge/potential,
-                 2=spin down charge/potential.
+   For charge and potential:
+                 0 = total charge/potential 
+                 1 = spin up charge/potential,
+                 2 = spin down charge/potential.
+
+   For noncolinear magnetization:
+                 0 = absolute value (default value)
+                 1 = x component of the magnetization
+                 2 = y component of the magnetization
+                 3 = z component of the magnetization
+
 <p> ( default = 0 )
 }
   
