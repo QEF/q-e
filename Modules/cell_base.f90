@@ -860,7 +860,8 @@ CONTAINS
   subroutine cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), intent(out) :: xnhhm(3,3), xnhh0(3,3)
+    real(kind=8), intent(out) :: xnhhm(3,3)
+    real(kind=8), intent(inout) :: xnhh0(3,3)
     real(kind=8), intent(in) :: xnhhp(3,3)
       xnhhm = xnhh0
       xnhh0 = xnhhp

@@ -955,7 +955,8 @@
   subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), intent(out) :: xnhpm, xnhp0
+    real(kind=8), intent(out) :: xnhpm
+    real(kind=8), intent(inout) :: xnhp0
     real(kind=8), intent(in) :: xnhpp
       !
       xnhpm = xnhp0

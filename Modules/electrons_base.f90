@@ -293,7 +293,8 @@
   subroutine electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), intent(out) :: xnhem, xnhe0
+    real(kind=8), intent(out) :: xnhem
+    real(kind=8), intent(inout) :: xnhe0
     real(kind=8), intent(in) :: xnhep
       !
       xnhem = xnhe0
