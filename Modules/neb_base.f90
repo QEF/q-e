@@ -17,7 +17,7 @@ MODULE neb_base
   !
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : AU, BOHR_RADIUS_ANGS, eV_to_kelvin
+  USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
   !
   PRIVATE
   !
@@ -697,7 +697,7 @@ MODULE neb_base
       ! ... largest error
       !
       frozen(:) = ( error(:) < MAX( 0.5D0 * err_max, &
-                                    neb_thr * BOHR_RADIUS_ANGS / AU ) )
+                                    neb_thr * bohr_radius_angs / au ) )
       !
       IF ( PRESENT( err_out ) ) err_out = err_max
       !
@@ -1035,15 +1035,15 @@ MODULE neb_base
                !
                WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
                    istep_neb,                    &
-                   temp * AU * eV_to_kelvin, &
-                   err * ( AU / BOHR_RADIUS_ANGS )
+                   temp * au * eV_to_kelvin, &
+                   err * ( au / bohr_radius_angs )
                !
             ELSE
                !
                WRITE( UNIT = iunneb, FMT = run_output ) &
                    istep_neb,                  &
-                   ( Emax - PES(1) ) * AU, &
-                   err * ( AU / BOHR_RADIUS_ANGS )
+                   ( Emax - PES(1) ) * au, &
+                   err * ( au / bohr_radius_angs )
                !
             END IF
             !
@@ -1053,7 +1053,7 @@ MODULE neb_base
          !   
          ! ... the program checks if the convergence has been achieved
          !
-         IF ( ( err * AU / BOHR_RADIUS_ANGS ) <= neb_thr )  THEN
+         IF ( ( err * au / bohr_radius_angs ) <= neb_thr )  THEN
             !
             IF ( ionode ) &
                WRITE( UNIT = iunneb, &

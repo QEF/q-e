@@ -11,7 +11,7 @@ MODULE io_routines
   !----------------------------------------------------------------------------
   !
   USE kinds,      ONLY :  DP
-  USE constants,  ONLY :  AU, BOHR_RADIUS_ANGS
+  USE constants,  ONLY :  au, bohr_radius_angs
   !      
   IMPLICIT NONE
   !
@@ -544,8 +544,8 @@ MODULE io_routines
              !
              WRITE( UNIT = iundat, FMT = dat_fmt ) &
                  ( react_coord(image) / react_coord(num_of_images) ), &
-                 ( PES(image) - PES(1) ) * AU, &
-                 error(image) * ( AU / BOHR_RADIUS_ANGS )
+                 ( PES(image) - PES(1) ) * au, &
+                 error(image) * ( au / bohr_radius_angs )
              !
           END DO
           !
@@ -573,7 +573,7 @@ MODULE io_routines
              !
              WRITE( UNIT = iunint, FMT = int_fmt ) &
                  ( R / react_coord(num_of_images) ), &
-                 ( E - E_0 ) * AU
+                 ( E - E_0 ) * au
              !
           END DO
           !
@@ -599,9 +599,9 @@ MODULE io_routines
                 !
                 WRITE( UNIT = iunxyz, FMT = xyz_fmt ) &
                     TRIM( atom_label( ityp( atom ) ) ), &
-                    pos((3*atom-2),image) * BOHR_RADIUS_ANGS, &
-                    pos((3*atom-1),image) * BOHR_RADIUS_ANGS, &
-                    pos((3*atom),image) * BOHR_RADIUS_ANGS
+                    pos((3*atom-2),image) * bohr_radius_angs, &
+                    pos((3*atom-1),image) * bohr_radius_angs, &
+                    pos((3*atom),image) * bohr_radius_angs
                 !
              END DO   
              !
@@ -616,17 +616,17 @@ MODULE io_routines
           WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
           WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
           WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-              at(1,1) * alat * BOHR_RADIUS_ANGS, &
-              at(2,1) * alat * BOHR_RADIUS_ANGS, &
-              at(3,1) * alat * BOHR_RADIUS_ANGS  
+              at(1,1) * alat * bohr_radius_angs, &
+              at(2,1) * alat * bohr_radius_angs, &
+              at(3,1) * alat * bohr_radius_angs  
           WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-              at(1,2) * alat * BOHR_RADIUS_ANGS, &
-              at(2,2) * alat * BOHR_RADIUS_ANGS, &
-              at(3,2) * alat * BOHR_RADIUS_ANGS
+              at(1,2) * alat * bohr_radius_angs, &
+              at(2,2) * alat * bohr_radius_angs, &
+              at(3,2) * alat * bohr_radius_angs
           WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-              at(1,3) * alat * BOHR_RADIUS_ANGS, &
-              at(2,3) * alat * BOHR_RADIUS_ANGS, &
-              at(3,3) * alat * BOHR_RADIUS_ANGS
+              at(1,3) * alat * bohr_radius_angs, &
+              at(2,3) * alat * bohr_radius_angs, &
+              at(3,3) * alat * bohr_radius_angs
           !
           DO image = 1, num_of_images
              !
@@ -637,12 +637,12 @@ MODULE io_routines
                 !
                 WRITE( UNIT = iunaxsf, FMT = axsf_fmt ) &
                     TRIM( atom_label(ityp(atom)) ), &
-                    pos((3*atom-2),image) * BOHR_RADIUS_ANGS,  &
-                    pos((3*atom-1),image) * BOHR_RADIUS_ANGS,  &
-                    pos((3*atom),image) * BOHR_RADIUS_ANGS,    &
-                    - grad((3*atom-2),image) / BOHR_RADIUS_ANGS, &
-                    - grad((3*atom-1),image) / BOHR_RADIUS_ANGS, &
-                    - grad((3*atom),image) / BOHR_RADIUS_ANGS
+                    pos((3*atom-2),image) * bohr_radius_angs,  &
+                    pos((3*atom-1),image) * bohr_radius_angs,  &
+                    pos((3*atom),image) * bohr_radius_angs,    &
+                    - grad((3*atom-2),image) / bohr_radius_angs, &
+                    - grad((3*atom-1),image) / bohr_radius_angs, &
+                    - grad((3*atom),image) / bohr_radius_angs
                 !
              END DO   
              !
@@ -683,8 +683,8 @@ MODULE io_routines
           !
           WRITE( UNIT = iunneb, FMT = final_output ) &
               image, &
-              PES(image) * AU, &
-              error(image) * ( AU / BOHR_RADIUS_ANGS )
+              PES(image) * au, &
+              error(image) * ( au / bohr_radius_angs )
           !
        END DO
        !
