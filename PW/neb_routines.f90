@@ -230,6 +230,9 @@ MODULE neb_routines
                                 suspended_image, lsteep_des, lquick_min ,  &
                                 ldamped_dyn, lmol_dyn 
       USE io_routines,   ONLY : write_restart, write_dat_files, write_output 
+#if defined (__LANGEVIN)   
+      USE parser,        ONLY : int_to_char
+#endif
 #if defined (__PARA)
       USE para,          ONLY : me, mypool
       USE mp,            ONLY : mp_barrier      
@@ -240,17 +243,29 @@ MODULE neb_routines
       !
       ! ... local variables
       !
-      REAL (KIND=DP)      :: err, tcpu, langevin_action
+      REAL (KIND=DP)      :: err, tcpu
       INTEGER             :: image
       LOGICAL             :: stat
       INTEGER             :: N_in, N_fin
       LOGICAL             :: file_exists
+#if defined (__LANGEVIN)
+      REAL (KIND=DP)      :: langevin_action( num_of_images )
+      INTEGER, PARAMETER  :: iunlangevin = 666
+      CHARACTER(LEN=20)   :: langevin_fmt
+#endif      
       !
-      ! ... end of local variables
       ! ... external functions
       !
       REAL (kind=DP), EXTERNAL :: get_clock
       !
+      !
+#if defined (__LANGEVIN)  
+      !
+      langevin_fmt = "(I3," // TRIM( int_to_char( num_of_images - 2 ) ) // &
+                   & "(F8.5))"   
+      !
+      OPEN( UNIT = iunlangevin, FILE = "langevin", STATUS = "UNKNOWN" )
+#endif
       !
       conv_neb = .FALSE.
       !
@@ -266,7 +281,7 @@ MODULE neb_routines
          !
          suspended_image = 0
          !
-         RETURN
+         RETURN 
          !  
       END IF 
       ! 
@@ -410,16 +425,34 @@ MODULE neb_routines
          !
          CALL write_dat_files()
          !
+#if defined (__LANGEVIN)         
          CALL compute_action( langevin_action )
+#endif                  
          !
          istep = istep + 1
          !
          ! ... informations are written on the standard output
          !
-         IF ( lmol_dyn ) THEN
+#if defined (__LANGEVIN)         
+         WRITE( UNIT = iunlangevin, FMT = langevin_fmt ) &
+             istep, &
+             langevin_action(2:num_of_images-1) * ( AU * BOHR_RADIUS_ANGS )
+         !
+         WRITE( UNIT = iunneb, FMT = '(/)' )
+         !
+         DO image = 2, ( num_of_images - 1 )
             !
-            WRITE( UNIT = iunneb, FMT = '(/,"langevin action = ",F16.8,/)' ) &
-                langevin_action
+            WRITE( UNIT = iunneb, &
+                   FMT = '(5X,"image = ", I2, "   action = ",F14.8)' ) &
+                image, langevin_action(image)  * ( AU * BOHR_RADIUS_ANGS )
+            !
+         END DO   
+         !
+         WRITE( UNIT = iunneb, FMT = '(/,5X,"langevin action = ",F14.8)' ) &
+             SUM( langevin_action )  * ( AU * BOHR_RADIUS_ANGS ) 
+#endif         
+         !
+         IF ( lmol_dyn ) THEN
             !
             WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
                 istep,                    &
@@ -427,9 +460,6 @@ MODULE neb_routines
                 err * ( AU / BOHR_RADIUS_ANGS ) 
             !
          ELSE
-            !
-            WRITE( UNIT = iunneb, FMT = '(/,"langevin action = ",F16.8,/)' ) &
-                langevin_action
             !            
             WRITE( UNIT = iunneb, FMT = run_output ) &
                 istep,                  &
@@ -465,6 +495,10 @@ MODULE neb_routines
          ! 
       END DO minimization
       !
+#if defined (__LANGEVIN)  
+      CLOSE( UNIT = iunlangevin )
+#endif      
+      !
       RETURN
       !
     END SUBROUTINE search_mep
@@ -481,23 +515,26 @@ MODULE neb_routines
       !
       ! ... I/O variables
       !
-      REAL (KIND=DP), INTENT(OUT) :: langevin_action
+      REAL (KIND=DP), INTENT(OUT) :: langevin_action(:)
       !
       ! ... local variables
       !
       INTEGER          :: image
       !
       ! ... end of local variables
-      !       
       !  
+      !
       langevin_action = 0.D0
       !
-      DO image = 1, ( num_of_images - 1 )  
+      DO image = 2, ( num_of_images - 1 )  
          !  
-	 langevin_action = langevin_action + &
-                           norm( pos(:,(image+1)) - pos(:,image) ) * &
-                           ( norm( PES_gradient(:,image+1) ) + &
-                             norm( PES_gradient(:,image) ) )
+         !langevin_action(image) = norm( pos(:,(image+1)) - pos(:,image) ) * &
+         !                         ( norm( PES_gradient(:,image+1) ) + &
+         !                           norm( PES_gradient(:,image) ) )
+         langevin_action(image) =                              &
+           0.5D0 * ( norm( pos(:,image+1) - pos(:,image) ) +   &
+                     norm( pos(:,image) - pos(:,image-1) ) ) * &
+           ( norm( PES_gradient(:,image+1) ) + norm( PES_gradient(:,image-1) ) )                           
          !
       END DO
       !
