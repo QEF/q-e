@@ -1,4 +1,4 @@
-TODO LIST - 22 Apr 2003
+TODO LIST - 24 Apr 2003
 
 INSTALLATION
 
@@ -19,7 +19,7 @@ COMMON
 
 - merge spherical harmonics, bessel, integration routines, etc
 
-- variable declarations : real(kind=DP) etc everywhere
+- variable declarations : real(kind=DP), or real(dbl), everywhere
 
 - real vs dreal, cmplx vs dcmplx, dfloat etc
 
@@ -63,14 +63,14 @@ PW
 
 - output should be more informative and less confused
 
-- remove scalar pencils ?
+- merge "scalar pencils" with "sticks"
 
 POSTPROCESSING
 
 - bands.x must either be finished or removed
 
-- postprocessing in the parallel case and with new_punch
-  must be verified
+- postprocessing/pwtools in the parallel case
+  and with new_punch must be verified
 
 - stm in non-scf calculations to be verified
 
@@ -102,7 +102,5 @@ CPV:
 
 - check on input ipp and pp type. Even better: remove ipp
   (leave either UPF or old-format Vanderbilt)
-
-- remove eispack routines, replace with lapack or parallel diag
 
 - remove all calls to zero and to blas copy, scal

@@ -18,7 +18,7 @@ subroutine stop_ph (flag)
   use pwcom
   use parameters, only : DP
   use phcom
-  use mp, only: mp_stop
+  use mp, only: mp_end
 #ifdef __PARA
   use para
 #endif
