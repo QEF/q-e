@@ -4,8 +4,10 @@
 !--------------------------------------------------------------------------
 !
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
-
-      use pwcom
+      USE parameters, ONLY: DP
+      USE basis, ONLY: ntyp
+      USE us, ONLY: lqx, dq, nbrx, nlx, indv, qrad, lpl, lpx, ap, &
+             nhtol, nhtom
       implicit none
       integer :: iv,jv,is
       complex(DP) :: qg,sig

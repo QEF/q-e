@@ -6,7 +6,13 @@
 !   of the augmented qrad charges at a given ql point.
 !   Rydberg atomic units are  used.
 !
-      use pwcom
+      use atom, only: r, rab, dx
+      use basis, only: ntyp
+      use brilz, only: omega
+      use parameters, only: DP, ndm, nbrx
+      use constants, only: fpi
+      use us, only: lqx, tvanp, qfunc, qfcoef, nqf, rinner, lll, nbeta, &
+           kkbeta
 !
       implicit none
       integer :: ik,  msh_bp, i, np, m, k, l

@@ -23,7 +23,20 @@ subroutine allocate_nlpot
   !
   !
 #include "machine.h"
-  use pwcom
+  USE parameters, ONLY: nbrx
+  USE pseud, ONLY: lmax, lloc
+  USE basis, ONLY: ntyp, nat, ityp
+  USE brilz, ONLY: tpiba2
+  USE cellmd,ONLY: cell_factor
+  USE gvect, ONLY: ngm, gcutm, ecutwfc, g
+  USE klist, ONLY: xk, wk, ngk, nks, nkstot, xqq
+  USE lsda_mod, ONLY: nspin
+  USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
+  USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
+  USE us, ONLY: nh, indv, nhtol, nhtom, qq, dvan, deeq, qrad, vkb, tab, &
+       dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
+       tvanp
+  USE varie, ONLY: newpseudo
   implicit none
   !
   !    a few local variables

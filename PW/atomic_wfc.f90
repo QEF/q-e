@@ -15,7 +15,15 @@ subroutine atomic_wfc (ik, wfcatom)
   !
 #include "machine.h"
 
-  use pwcom
+  use parameters, only: dp, ndm, nchix
+  USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
+  USE constants, ONLY: tpi, fpi
+  USE brilz, ONLY: omega, tpiba
+  USE basis, ONLY: nat, ntyp, natomwfc, ityp, tau
+  USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE klist, ONLY: xk
+  USE wvfct, ONLY: npwx, npw, nbnd, igk
+  USE varie, ONLY: newpseudo
   implicit none
   integer :: ik
   ! input: k-point

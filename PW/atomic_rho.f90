@@ -22,8 +22,16 @@ subroutine atomic_rho (rhoa, nspina)
   !
   !
 #include "machine.h"
-  USE io_global,        ONLY : stdout
-  use pwcom
+  USE io_global,  ONLY : stdout
+  USE parameters, ONLY: DP, ndm
+  USE atom, ONLY: r, rab, msh, rho_at
+  USE basis, ONLY: ntyp
+  USE brilz, ONLY: tpiba, omega
+  USE gvect, ONLY: ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       gstart, nl, nlm, gl, igtongl
+  USE lsda_mod, ONLY: starting_magnetization
+  USE vlocal, ONLY: strf
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
   integer :: nspina

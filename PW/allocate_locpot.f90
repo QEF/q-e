@@ -14,7 +14,9 @@ subroutine allocate_locpot
   ! local potential for each kind of atom, structure factor
   !
 #include "machine.h"
-  use pwcom
+  USE basis,  ONLY: ntyp, nat
+  USE vlocal, ONLY: vloc, strf
+  USE gvect,  ONLY: eigts1, eigts2, eigts3, nr1, nr2, nr3, ngm, ngl
   implicit none
 
   allocate (vloc( ngl, ntyp))    

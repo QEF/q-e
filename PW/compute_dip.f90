@@ -13,7 +13,15 @@ subroutine compute_dip(dip, dipion, z0)
   ! The direction is the reciprocal lattice vector bg(.,edir)
   !
   USE io_global,  ONLY : stdout
-  use pwcom
+  USE parameters, ONLY: DP
+  USE constants, ONLY: fpi
+  USE basis, ONLY : nat, ityp, tau
+  USE brilz, ONLY : alat, at, bg, omega
+  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
+  USE lsda_mod, ONLY: nspin
+  USE scf, ONLY: rho
+  USE pseud, ONLY: zv
+  USE extfield, ONLY: edir
 #ifdef __PARA
   use para
 #endif

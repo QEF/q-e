@@ -10,7 +10,9 @@ subroutine d_matrix (dy1, dy2, dy3)
   !---------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom
+  use parameters, only: DP
+  USE brilz, ONLY : at, bg
+  USE symme, ONLY:  nsym, s
   implicit none
   real(kind=DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   !

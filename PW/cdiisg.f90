@@ -23,7 +23,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   USE io_global,  ONLY : stdout
   use parameters, only : DP
   use g_psi_mod
-  use pwcom, only : nelec, lgauss, ltetra, okvan
+  use us, only:  okvan
 
   implicit none
   ! on INPUT

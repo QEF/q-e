@@ -150,9 +150,19 @@ SUBROUTINE c_phase
 !  --- Make use of the module with common information ---
    USE io_global,        ONLY : stdout
    USE io_files, ONLY: iunwfc, nwordwfc
-   USE pwcom
+   USE basis, ONLY: nat, ntyp, ityp, tau, atm
+   USE brilz, ONLY: at, alat, tpiba, omega, tpiba2
+   USE parameters, ONLY: DP, nbrx
+   USE pseud, ONLY: zv
+   USE constants, ONLY: pi, tpi
+   USE gvect, ONLY: ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, ecutwfc, &
+        g, gcutm
+   USE us, ONLY: lqx, nhm, nkb, vkb, nh
+   USE lsda_mod, ONLY: nspin
+   USE klist, ONLY: nelec, degauss, nks, xk, wk
+   USE wvfct, ONLY: npwx, npw, nbnd
    USE wavefunctions_module,    ONLY : evc
-
+   USE bp, ONLY: gdir, nppstr
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
