@@ -32,10 +32,9 @@
       use parms, only: nr1s,nr2s,nr3s 
       use pres_mod, only: agg, sgg, e0gg
       use psfiles, only: psfile
-#ifdef __PARA
-      use para_mod, only: me
-      use mp
-#endif
+      use io_global, only: ionode
+      use mp, only: mp_bcast
+
       !
       implicit none
       !
@@ -315,9 +314,7 @@
       modenum = 0
       xqq = 0.d0
 
-#ifdef __PARA
-      if (me == 1)  then
-#endif
+      if ( ionode )  then
 
      ios = 0
      READ (unit, control, iostat = ios ) 
@@ -362,7 +359,6 @@
         if (ios /= 0) call error ('reading','namelist &cell',5)
      end if
 
-#ifdef __PARA
      end if
 !
 ! ...   CONTROL Variables Broadcast
@@ -512,7 +508,6 @@
       CALL mp_bcast( modenum, ionode_id )
       CALL mp_bcast( xqq, ionode_id )
       !
-#endif
 
 ! translate from input to internals of CP, various checks
 
@@ -643,7 +638,6 @@
       CASE DEFAULT
          CALL error(' iosys ',' unknown electron_dynamics '//&
               trim(electron_dynamics),1)
-
       END SELECT
 
       ! Ion velocities
@@ -653,6 +647,8 @@
          tcap = .false.
       CASE ('random')
          tcap = .true.
+      CASE ('zero')
+         print '("Warning: ion_velocities = zero not yet implemented")'
       CASE DEFAULT
          CALL error(' iosys ',' unknown ion_velocities '//trim(ion_velocities),1)
       END SELECT
@@ -685,6 +681,8 @@
       SELECT CASE ( cell_velocities ) 
       CASE ('default')
          continue
+      CASE ('zero')
+         print '("Warning: cell_velocities = zero not yet implemented")'
       CASE DEFAULT
          CALL error(' iosys ',' unknown cell_velocities '//trim(cell_velocities),1)
       END SELECT

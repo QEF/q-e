@@ -65,7 +65,7 @@
           WRITE (15,100) mpime, a, b, n
           CLOSE(UNIT=15)
         ELSE IF ( n < 0 ) THEN
-          WRITE (6,200) mpime, a, b, n
+          IF( mpime == 0 ) WRITE (6,200) a, b
         END IF
 #if defined __MPI
         CALL mpi_barrier(mpi_comm_world,ierr)
@@ -91,11 +91,7 @@
               /,' *** error code : ',I5, &
               /,' *** aborting ***', /)
 
-200   FORMAT (/,' *** from PE      : ',I5, &
-              /,' *** in routine   : ',A, &
-              /,' *** warning msg. : ',A, &
-              /,' *** warning code : ',I5, &
-              /,' *** continuing ***', /)
+200   FORMAT (/,' * warning (', A, ') : ', A, /)
 
       IF( n > 0 ) THEN
         STOP 'CRASH'

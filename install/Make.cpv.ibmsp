@@ -1,5 +1,5 @@
 ######################################################################
-# IBM SP2, SP3 and SP4
+# IBM SP systems
 #
 # Architecture
   ARCH=ibmsp
@@ -9,9 +9,12 @@
 # --- Change Variables according to your system --- #
 
 # ** Preprocessor Macro **
+# Add -D__LIBMASS to use IBM mass
+# Add -D__FFTDRW  to use fftw
   CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL,-DSWAP=dswap,-DAXPY=daxpy,-DSCAL=dscal,-DCOPY=dcopy,-DGEMM=dgemm
 #
-# Uncomment to Use IBM mass
+# ** Uncomment to Use IBM mass **
+# Substitute -lmassvp4 with -lmassvp3 or -lmassvp2 depending on your arch
   MASS= -L /cineca/lib/mass -lmassvp4 -lmass
 #
 # ** Scientific Libraries **
@@ -35,7 +38,7 @@
   LNKFLAGS = $(ARCHFLAGS) -bmaxdata:0x70000000
 #
 # Flag for the compilation of the c source files
-  CFLAGS   = -Wp,$(CPMACRO) -O2
+  CCFLAGS   = $(INCLUDEPATH) -Wp,$(CPMACRO) -O2
 #
 # Name of the fortran compiler
   FC= mpxlf
@@ -45,7 +48,7 @@
 
 # Libraries
   LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
-  MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
+  MODULEFLAG=-I $(OSHOME)/Modules/ -I $(OSHOME)/$(CODEDIR)/
 #
 # OTHER settings
   RANLIB=echo

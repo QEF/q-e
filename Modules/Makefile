@@ -1,7 +1,8 @@
 #
 # Makefile for Modules
 #
-MODULES= kind.o \
+MODULES= constants.o \
+kind.o \
 parallel_include.o \
 shmem_include.o \
 parameters.o \

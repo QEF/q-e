@@ -92,6 +92,7 @@ CONTAINS
       INTEGER, ALLOCATABLE :: ityp(:)
       INTEGER :: isk, tetra(4)
       REAL(dbl) :: zmesh_, xmin_, dx_
+      REAL(dbl) :: ainv(3,3), deth
 
 !
 ! Only the first node writes
@@ -302,7 +303,8 @@ CONTAINS
       twm = .TRUE.
       twrite = .TRUE.
         
-      wfc_scal_cp90 = 1.0d0
+      call matinv(h,ainv,deth)
+      wfc_scal_cp90 = 1.0d0 / SQRT(ABS(deth))
       DO j = 1, nspin
         DO i = 1, nk
           nb_g = nx

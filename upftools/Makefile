@@ -28,10 +28,15 @@ cpmd2upf:  cpmd2upf.o $(OBJS) nclib.o
 oldcp2upf:  oldcp2upf.o $(OBJS) nclib.o
 	$(LD) -o $@  oldcp2upf.o nclib.o write_upf.o $(LFLAGS)
 
+fpmd2upf.x : fpmd2upf.o
+	$(LNK) -o $@ $(LNKFLAGS) fpmd2upf.o \
+        ../Modules/*.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIB)
+
+
 read_upf:
 	$(LD) -o $@  read_upf.o $(LFLAGS)
 
-clean:
+clean_:
 	rm -f  *2upf *.o *.mod *.d *.F90
 
 any2upf.o:  $(OBJS)

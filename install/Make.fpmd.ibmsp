@@ -1,10 +1,8 @@
 ######################################################################
-# IBM SP
+# IBM SP systems
 #
-# Architecture (choose yours)
-#  ARCH=sp2
-#  ARCH=sp3
-  ARCH=sp4
+# Architecture
+  ARCH=ibmsp
 #
 ######################################################################
 
@@ -13,7 +11,8 @@
 # ** Preprocessor Macro **
 # Add -D__LIBMASS to use IBM mass
 # Add -D__FFTDRW  to use fftw
-  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS
+  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL
+  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL,-DSWAP=dswap,-DAXPY=daxpy,-DSCAL=dscal,-DCOPY=dcopy,-DGEMM=dgemm
 #
 # ** Uncomment to Use IBM mass **
 # Substitute -lmassvp4 with -lmassvp3 or -lmassvp2 depending on your arch
@@ -22,10 +21,9 @@
 # ** Scientific Libraries **
 # Uncomment to use system Lapack and IBM ESSL
 #  LAPACK= -L /cineca/lib -llapack
-#  MYLIB=
-#  ESSL= -lpessl -lessl
 # Uncomment to compile Lapack subset from the source code and use IBM ESSL
   MYLIB=lapack
+  FFT=ibmfft.o
   ESSL= -lpessl -lessl
 # Uncomment to use blas and lapack subset from the source code
 #  MYLIB=blas_and_lapack
@@ -56,7 +54,7 @@
 
 # Libraries
   LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
-  MODULEFLAG=-I $(OSHOME)/Modules/ -I $(OSHOME)/FPMD/
+  MODULEFLAG=-I $(OSHOME)/Modules -I $(OSHOME)/$(CODEDIR)
 #
 # OTHER settings
   RANLIB=echo

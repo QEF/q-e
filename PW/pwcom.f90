@@ -11,22 +11,6 @@
 !    statically  allocated variables are dimensioned in commons
 !    dynamically allocated variables are dimensioned in type declaration
 !
-module constants
-  use parameters
-  !
-  !    The constants needed everywhere 
-  !
-  real(kind=DP), parameter :: &
-       e2 =2.d0,              &! the square of the electron charge 
-       degspin=2.d0,          &! the number of spins per level     
-       rytoev=13.6058d0,      &! conversion from Ry to eV         
-       amconv= 1.66042d-24/9.1095d-28*0.5d0, &! mass conversion: a.m.u to a.u. (Ry)  
-       uakbar= 147105.d0,     &! pressure conversion from Ry/(a.u)^3 to K
-       pi=3.14159265358979d0, &! pi                 
-       tpi=2.d0*pi,           &! 2 times pi         
-       fpi=4.d0*pi             ! 4 times pi
-
-end module constants
 !
 module brilz
   use parameters  
@@ -602,7 +586,7 @@ module ldaU
 end module ldaU
 
 module pwcom
-  use constants
+  use constants, only: e2, degspin, rytoev, amconv, uakbar, pi, tpi, fpi
   use brilz
   use basis
   use dynam

@@ -1,4 +1,6 @@
 
+CODEDIR=CPV
+
 include	../make.sys
 
 
