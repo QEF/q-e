@@ -167,14 +167,12 @@ subroutine phq_readin
      zue = .false.
   endif
   !
-  if (elph.and.degauss.eq.0.0) call errore ('phq_readin', 'Electron-p &
-       &honon only for metals', 1)
-  if (elph.and.okvan) call errore ('phq_readin', 'El-ph not implement &
-       &ed in US case', 1)
-  if (elph.and.lsda) call errore ('phq_readin', 'El-ph and spin not i &
-       &mplemented', 1)
-  if (elph.and.fildvscf.eq.' ') call errore ('phq_readin', 'El-ph nee &
-       &ds a DeltaVscf file', 1)
+  if (elph.and.degauss.eq.0.0) call errore ('phq_readin', 'Electron-&
+       &phonon only for metals', 1)
+  if (elph.and.lsda) call errore ('phq_readin', 'El-ph and spin not &
+       &implemented', 1)
+  if (elph.and.fildvscf.eq.' ') call errore ('phq_readin', 'El-ph needs &
+       &a DeltaVscf file', 1)
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here

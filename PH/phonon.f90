@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -88,6 +88,7 @@ program phonon
      if (fildrho.ne.' ') call punch_plot_ph
   endif
   if (elph) then
+     call dvanqq
      if (.not.trans) call elphon
      call elphsum
   endif

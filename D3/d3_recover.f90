@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,20 +17,16 @@ subroutine d3_recover (ilab, isw)
   use d3com
 #ifdef __PARA
   use para
+  use mp, only: mp_bcast
 #endif
   implicit none
-
-#ifdef __PARA
-  include 'mpif.h'
-#endif
-  integer :: ilab, isw, root, iaux, errcode
+  integer :: ilab, isw
+  integer :: root = 0
   logical :: exst
 
   iunrec = 98
   if (isw.eq.1) then
 #ifdef __PARA
-     call MPI_barrier (MPI_COMM_WORLD, errcode)
-     call errore ('d3_recover', 'at barrier', errcode)
      if (me.ne.1.or.mypool.ne.1) return
 #endif
 
@@ -45,8 +41,6 @@ subroutine d3_recover (ilab, isw)
      close (unit = iunrec, status = 'keep')
   elseif (isw.eq. - 1) then
 #ifdef __PARA
-     call MPI_barrier (MPI_COMM_WORLD, errcode)
-     call errore ('d3_recover', 'at barrier', errcode)
      if (me.ne.1.or.mypool.ne.1) goto 100
 #endif
 
@@ -62,18 +56,9 @@ subroutine d3_recover (ilab, isw)
 #ifdef __PARA
 
 100  continue
-     root = 0
-     call MPI_barrier (MPI_COMM_WORLD, errcode)
 
-     call errore ('d3_recover', 'at barrier2', errcode)
-     iaux = 2 * 27 * nat * nat * nat
-     call MPI_bcast (d3dyn, iaux, MPI_REAL8, root, MPI_COMM_WORLD, &
-          errcode)
-     call errore ('d3_recover', 'at bcast1', errcode)
-     call MPI_bcast (ilab, 1, MPI_INTEGER, root, MPI_COMM_WORLD, &
-          errcode)
-
-     call errore ('d3_recover', 'at bcast2', errcode)
+     call mp_bcast (d3dyn, root)
+     call mp_bcast (ilab, root)
 #endif
 
   endif

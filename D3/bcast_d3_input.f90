@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,71 +18,41 @@ subroutine bcast_d3_input
   use pwcom
   use phcom
   use d3com
-  use para
+  use mp, only: mp_bcast
   use io
 
   implicit none
-  include 'mpif.h'
-  integer :: root, errcode
-  character (len=512) :: buffer
-  integer :: buffer_t3d (64)
-
-  equivalence (buffer, buffer_t3d)
-  root = 0
-  call MPI_barrier (MPI_COMM_WORLD, errcode)
-  call errore ('bcast_ph_input', 'at barrier', errcode)
+  integer :: root = 0
+  !
   ! logicals
-  call MPI_bcast (lgamma, 1, MPI_LOGICAL, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_ph_input', 'at bcast1', errcode)
-  call MPI_bcast (wraux, 1, MPI_LOGICAL, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast51', errcode)
-  call MPI_bcast (recv, 1, MPI_LOGICAL, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast52', errcode)
-  call MPI_bcast (testflag, 50, MPI_LOGICAL, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast53', errcode)
+  !
+  call mp_bcast (lgamma, root)
+  call mp_bcast (wraux, root)
+  call mp_bcast (recv, root)
+  call mp_bcast (testflag,root)
   !
   ! integers
   !
-  call MPI_bcast (iverbosity, 1, MPI_INTEGER, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_ph_input', 'at bcast9', errcode)
-  call MPI_bcast (testint, 50, MPI_INTEGER, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast91', errcode)
-  call MPI_bcast (q0mode_todo, 300, MPI_INTEGER, root, &
-       MPI_COMM_WORLD, errcode)
-  call errore ('bcast_d3_input', 'at bcast92', errcode)
-  call MPI_bcast (istop, 1, MPI_INTEGER, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast93', errcode)
+  call mp_bcast (iverbosity, root)
+  call mp_bcast (testint, root)
+  call mp_bcast (q0mode_todo, root)
+  call mp_bcast (istop, root)
   !
   ! real*8
   !
-  call MPI_bcast (amass, ntypx, MPI_REAL8, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_ph_input', 'at bcast12', errcode)
-  call MPI_bcast (xq, 3, MPI_REAL8, root, MPI_COMM_WORLD, errcode)
-  call errore ('bcast_ph_input', 'at bcast14', errcode)
-  call MPI_bcast (ethr_ph, 1, MPI_REAL8, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast16', errcode)
-  call MPI_bcast (testreal, 50, MPI_REAL8, root, MPI_COMM_WORLD, &
-       errcode)
-  call errore ('bcast_d3_input', 'at bcast17', errcode)
+  call mp_bcast (amass, root)
+  call mp_bcast (xq, root)
+  call mp_bcast (ethr_ph, root)
+  call mp_bcast (testreal, root)
   !
   ! characters
   !
-  if (me.eq.1) write (buffer, '(a75,a14,3a50,a35)') title_ph, &
-       filpun, fildyn, fildrho, fild0rho, tmp_dir
-  call MPI_bcast (buffer_t3d, 512, MPI_CHARACTER, root, &
-       MPI_COMM_WORLD, errcode)
-  call errore ('bcast_ph_input', 'at bcast character', errcode)
-  if (me.ne.1) read (buffer, '(a75,a14,3a50,a35)') title_ph, filpun, &
-       fildyn, fildrho, fild0rho, tmp_dir
+  call mp_bcast (title_ph, root)
+  call mp_bcast (filpun, root)
+  call mp_bcast (fildyn, root)
+  call mp_bcast (fildrho, root)
+  call mp_bcast (fild0rho, root)
+  call mp_bcast (tmp_dir, root)
 #endif
   return
 end subroutine bcast_d3_input

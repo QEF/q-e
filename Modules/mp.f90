@@ -698,7 +698,7 @@
         IF( PRESENT( gid ) ) group = gid
 ! this is a workaround to avoid problems on the T3E
 ! at the moment we have a data alignment error when trying to
-! broadcats characters on the T3E (not always!)
+! broadcast characters on the T3E (not always!)
 ! JH 3/19/99 on galileo
 !       CALL mpi_bcast(msg,msglen,mpi_character,source,group,ierr)
         IF (ierr/=0) CALL mp_stop(8140)
