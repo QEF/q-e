@@ -1,0 +1,67 @@
+#
+# $RCSfile: init.itcl,v $ --
+#
+#      This file contains some initialization code for PWgui.
+#
+# Copyright (c) 2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `LICENCE' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: init.itcl,v 1.1 2004-02-23 12:19:48 kokalj Exp $ 
+#
+
+proc ::pwscf::init {} {
+    variable settings
+    global env
+
+    # check if settings(EDITOR) is OK 
+    checkCmd settings(EDITOR)   
+    # check for vi & vim, i.e, "xterm -e vi"
+    foreach editor {vi vim} {
+	if { [string match "* $editor" $settings(EDITOR)] } {
+	    # check if "less" cmd exists
+	    if { [auto_execok $editor] == "" } {
+		set settings(PAGER) PWgui
+	    }
+	}
+    }
+
+    # check if settings(PAGER) is OK
+    checkCmd settings(PAGER)
+    # check for less, i.e, "xterm -e less"
+    if { [string match {* less} $settings(PAGER)] } {
+	# check if "less" cmd exists
+	if { [auto_execok less] == "" } {
+	    set settings(PAGER) PWgui
+	}
+    }
+}
+
+
+proc ::pwscf::checkCmd {varName} {
+    upvar $varName var
+    
+    if { [string match -nocase "PWgui" $var] } {
+	if { [llength $var] > 1 } {
+	    set editor [lindex $var 0]
+	} else {
+	    set editor $var
+	}
+	if { [auto_execok $var] == "" } {
+	    # there is no $var command, revert to internal-editor
+	    set var PWgui
+	}
+    }
+}
