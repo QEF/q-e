@@ -30,7 +30,7 @@ program postproc
   implicit none
   character(len=80) :: filplot
 
-  integer :: n_atom_wfc, plot_num, kpoint, kband, spin_component, ios
+  integer :: plot_num, kpoint, kband, spin_component, ios
   logical :: stm_wfc_matching, lsign
   integer :: ionode_id = 0 
 
@@ -82,7 +82,6 @@ program postproc
   CALL mp_bcast( dz, ionode_id )
   CALL mp_bcast( emin, ionode_id )
   CALL mp_bcast( emax, ionode_id )
-  CALL mp_bcast( kpoint, ionode_id )
   CALL mp_bcast( kband, ionode_id )
   CALL mp_bcast( kpoint, ionode_id )
   CALL mp_bcast( filplot, ionode_id )
