@@ -7,7 +7,7 @@
 !
 #ifdef __PARA
 
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
 #  define __FFT_MODULE_DRV
 # endif
 
