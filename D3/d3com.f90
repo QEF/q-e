@@ -93,11 +93,11 @@ end module units_d3ph
 ! may be split betweem pools. npert_i and npert_f are the initial
 ! and final value for a counter on the modes to be split among pools
 !
-module npert
+module npert_mod
   integer :: &
        npert_i,    &! starting value for the mode counter
        npert_f      ! final value for the mode counter
-end module npert
+end module npert_mod
 !
 ! Variables used for computing and writing only selected modes at q=0
 ! --the first index of the dthird matrix--
@@ -121,6 +121,6 @@ module d3com
   use thirdorder
   use testvar
   use modesg0
-  use npert
+  use npert_mod
   use q0modes
 end module d3com

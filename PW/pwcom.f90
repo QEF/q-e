@@ -569,7 +569,7 @@ module ldaU
   !
   complex(kind=DP), pointer  :: &                                   
        swfcatom(:,:)! orthogonalized atomic wfcs
-  real(kind=DP), pointer     :: &
+  real(kind=DP), allocatable     :: &
        ns(:,:,:,:),   &! the occupation matrix used in h_psi 
        nsnew(:,:,:,:)  ! the occupation matrix computed by at
   real(kind=DP) :: &       

@@ -98,8 +98,8 @@ subroutine allocate_nlpot
   !     Allocate space for Hubbard potential
   !
   if (lda_plus_u) then  
-     call mallocate(ns,    nat, nspin, 5, 5)  
-     call mallocate(nsnew, nat, nspin, 5, 5) 
+     allocate( ns (nat, nspin, 5, 5) )
+     allocate( nsnew (nat, nspin, 5, 5) ) 
   endif
   !
   !     Calculate dimensions for array tab (including a possible factor
