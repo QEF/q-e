@@ -22,7 +22,7 @@ for DIR in $DIRS ; do
 done
 
 # directories that depend on Modules/, PW/
-DIRS="PP PWCOND PWNC Gamma PH NEB"
+DIRS="PP PWCOND PWNC Gamma PH NEB Raman"
 for DIR in $DIRS ; do
   if test -d ../$DIR ; then
      cd ../$DIR
