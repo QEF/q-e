@@ -2,30 +2,36 @@ c
 c-----------------------------------------------------------------------
       subroutine ylm_q(lmax,gx,g,ylm)
 c-----------------------------------------------------------------------
-c     REAL SPHERIcAL HARMONIcS,  L IS cOMBINED INDEX FOR LM (L=1,2...25)
+c     REAL SPHERICAL HARMONICS,  L IS COMBINED INDEX FOR LM (L=1,2...25)
 c     ORDER:  S, P_X, P_Y, P_Z, D_XY, D_XZ, D_Z^2, D_YZ, D_X^2-Y^2  ....
-c     THE REAL SPHERIcAL HARMONIcS USED HERE FORM BASES FOR THE
-c     IRRIDUcBLE REPRESENTATIONS OF THE gROUP O
+c     THE REAL SPHERICAL HARMONICS USED HERE FORM BASES FOR THE
+c     IRRIDUCBLE REPRESENTATIONS OF THE GROUP O
 c
-c     SEE WIESSBLUTH 'ATOMS AND MOLEcULES' PAgES 128-130
-c     ERRORS IN WEISSBLUTH HAVE BEEN cORREcTED:
+c     SEE WEISSBLUTH 'ATOMS AND MOLECULES' PAGES 128-130
+c     ERRORS IN WEISSBLUTH HAVE BEEN CORRECTED:
 c        1.) ELIMINATION OF THE 7'S FROM L=20
-c        2.) ADDITION OF THE FAcTOR 1./sqrt(12.) TO L=25
+c        2.) ADDITION OF THE FACTOR 1./sqrt(12.) TO L=25
 c
-      implicit real*8 (A-H,O-Z)
-      dimension  ylm(lmax),gx(3)
+      implicit none
+      integer lmax
+      real*8 ylm(lmax), gx(3), g
+      real*8 pi, fpi, eps, c
+      integer l
+
       PI=4.D0*DATAN(1.D0)
       fpi=4.D0*PI
       eps=1e-9
 
       if (lmax.ge.26) call errore
      &               (' ylm_q',' not programmed for L>',L)
-
+      if (lmax.le.0 .or. (lmax.ne.1 .and. lmax.ne.4 .and. lmax.ne.9
+     &                              .and. lmax.ne.16.and. lmax.ne.25))
+     &     call errore (' ylm_q',' wrong L^2 on input',1000)
 
 c   note :   ylm(q=0) = 1/sqrt(fpi)  WHEN L=0  AND  = 0  WHEN L>0
 
-
         ylm(1) = sqrt(1./fpi)
+      if (lmax .eq. 1) return
 
        if(g.lt.eps) then
            do l=2,lmax
@@ -42,6 +48,7 @@ c  p_x p_y p_z
           ylm(3) = c*gx(2)/sqrt(g)   !   Y
           ylm(4) = c*gx(3)/sqrt(g)   !   Z
 
+      if (lmax .eq. 4) return
 
 c d_xy d_xz d_yz
 
@@ -59,9 +66,11 @@ c d_xy d_xz d_yz
     
           ylm(9) = c*(gx(1)**2-gx(2)**2)/g  ! X*X-Y*Y
 
+      if (lmax .eq. 9) return
+
         c=sqrt(7./fpi)*5./2.
 
-          ylm(10) = c*gx(1)*(gx(1)**2-0.6*g)/(g*sqrt(g))  ! X(X^2-3R^2/5)
+          ylm(10) = c*gx(1)*(gx(1)**2-0.6*g)/(g*sqrt(g)) ! X(X^2-3R^2/5)
           ylm(11) = c*gx(2)*(gx(2)**2-0.6*g)/(g*sqrt(g))
 
         c=sqrt(7.*15./fpi)
@@ -77,6 +86,8 @@ c d_xy d_xz d_yz
           ylm(14) = c*gx(3)*(gx(1)**2-gx(2)**2)/(g*sqrt(g))
           ylm(15) = c*gx(2)*(gx(3)**2-gx(1)**2)/(g*sqrt(g))
           ylm(16) = c*gx(1)*(gx(2)**2-gx(3)**2)/(g*sqrt(g))
+
+      if (lmax .eq. 16) return
 
         c=sqrt(3.*7./fpi)*5./4.
         
