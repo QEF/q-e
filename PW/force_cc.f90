@@ -66,7 +66,7 @@ subroutine force_cc (forcecc)
   call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, g, nspin, alat, omega, etxc, vtxc, vxc)
   !
-  if (nspin.eq.1) then
+  if (nspin == 1 .or. nspin == 4) then
      do ir = 1, nrxx
         psic (ir) = vxc (ir, 1)
      enddo

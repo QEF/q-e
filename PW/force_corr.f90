@@ -42,7 +42,7 @@ subroutine force_corr (forcescc)
   !
   ! vnew is V_out - V_in, psic is the temp space
   !
-  if (nspin == 1) then
+  if (nspin == 1 .or. nspin == 4) then
      psic(:) = vnew (:, 1)
   else
      isup = 1
