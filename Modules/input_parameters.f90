@@ -1160,8 +1160,6 @@ MODULE input_parameters
       !
       ! ... variable added for NEB  ( C.S. 20/11/2003 )
       !
-      
-      LOGICAL              :: CI_flag
       LOGICAL, ALLOCATABLE :: climbing(:) 
 
 

@@ -15,6 +15,8 @@ MODULE bfgs_module
   ! ... A linear scaling BFGS is also implemented ( lin_bfgs() subroutine )
   ! ... Both subroutines are called with the same list of arguments
   !
+  ! ... Written by Carlo Sbraccia ( 5/12/2003 )
+  !
   ! ... references :  
   !
   ! ... 1) Roger Fletcher, Practical Methods of Optimization, John Wiley and 
@@ -36,7 +38,20 @@ MODULE bfgs_module
   !
   PRIVATE
   !
-  PUBLIC :: bfgs, lin_bfgs
+  ! ... public methods
+  !
+  PUBLIC :: bfgs,             &
+            lin_bfgs
+  !
+  ! ... public variables
+  !   
+  PUBLIC :: lbfgs_ndim,       &
+            trust_radius_max, &
+            trust_radius_min, &
+            trust_radius_ini, &
+            trust_radius_end, &
+            w_1,              &
+            w_2
   !
   ! ... global variables
   !
@@ -50,8 +65,8 @@ MODULE bfgs_module
       gradient_old(:,:)          ! list of m old gradients ( m = 1 for 
                                  ! standard BFGS algorithm )
   INTEGER :: &
-      m = 4                      ! dimension of the subspace for L-BFGS
-                                 ! m = 1 for standard BFGS algorithm
+      lbfgs_ndim = 4             ! dimension of the subspace for L-BFGS
+                                 ! fixed to 1 for standard BFGS algorithm
   REAL(KIND=DP) :: &   
       trust_radius,             &! displacement along the bfgs direction
       trust_radius_old,         &! old displacement along the bfgs direction
@@ -125,16 +140,16 @@ MODULE bfgs_module
        !
        dim = SIZE( pos )
        !
-       ! ... m is forced to be equal to 1 ( the complete inverse hessian 
-       ! ... matrix is stored )
+       ! ... lbfgs_ndim is forced to be equal to 1 ( the complete inverse 
+       ! ... hessian  matrix is stored )
        !
-       m  = 1
+       lbfgs_ndim  = 1
        !
-       ALLOCATE( pos_old( dim, m ) )
+       ALLOCATE( pos_old( dim, lbfgs_ndim ) )
        ALLOCATE( inverse_hessian( dim, dim ) )
        ALLOCATE( bfgs_step( dim ) )              
        ALLOCATE( bfgs_step_old( dim ) )
-       ALLOCATE( gradient_old( dim, m ) )
+       ALLOCATE( gradient_old( dim, lbfgs_ndim ) )
        !       
        CALL read_bfgs_file( pos, energy, gradient, scratch, dim )
        !
@@ -205,9 +220,9 @@ MODULE bfgs_module
              !
              ! ... values of the last succeseful bfgs step are restored
              !
-             pos       = pos_old(:,1)
-             energy    = energy_old
-             gradient  = gradient_old(:,1)
+             pos      = pos_old(:,1)
+             energy   = energy_old
+             gradient = gradient_old(:,1)
              !
              ! ... old bfgs direction ( normalized ) is recovered
              !
@@ -348,14 +363,14 @@ MODULE bfgs_module
        !
        ! ... local variables
        !
-       INTEGER  :: dim, i
-       LOGICAL  :: lwolfe
+       INTEGER   :: dim, i
+       LOGICAL   :: lwolfe
        !
        !
        dim = SIZE( pos )
        !
-       ALLOCATE( pos_old( dim, m ) )
-       ALLOCATE( gradient_old( dim, m ) )       
+       ALLOCATE( pos_old( dim, lbfgs_ndim ) )
+       ALLOCATE( gradient_old( dim, lbfgs_ndim ) )       
        ALLOCATE( bfgs_step( dim ) )              
        ALLOCATE( bfgs_step_old( dim ) )
        !       
@@ -433,9 +448,9 @@ MODULE bfgs_module
              !
              ! ... values of the last succeseful bfgs step are restored
              !
-             pos       = pos_old(:,m)
+             pos       = pos_old(:,lbfgs_ndim)
              energy    = energy_old
-             gradient  = gradient_old(:,m)
+             gradient  = gradient_old(:,lbfgs_ndim)
              !
              ! ... old bfgs direction ( normalized ) is recovered
              !
@@ -586,15 +601,15 @@ MODULE bfgs_module
           !
           ! ... bfgs initialization
           !
-          scf_iter          = 0
-          bfgs_iter         = 0
-          lin_iter          = 0
-          pos_old(:,m)      = pos
-          energy_old        = energy
-          gradient_old(:,m) = gradient
-          bfgs_step_old     = 0.D0
-          trust_radius_old  = trust_radius_ini
-          inverse_hessian   = identity(dim)
+          scf_iter                   = 0
+          bfgs_iter                  = 0
+          lin_iter                   = 0
+          pos_old(:,lbfgs_ndim)      = pos
+          energy_old                 = energy
+          gradient_old(:,lbfgs_ndim) = gradient
+          bfgs_step_old              = 0.D0
+          trust_radius_old           = trust_radius_ini
+          inverse_hessian            = identity(dim)
           !
        END IF    
        !
@@ -632,9 +647,9 @@ MODULE bfgs_module
           READ( iunbfgs, * ) scf_iter
           READ( iunbfgs, * ) bfgs_iter
           READ( iunbfgs, * ) lin_iter
-          READ( iunbfgs, * ) pos_old(:,1:m)
+          READ( iunbfgs, * ) pos_old(:,1:lbfgs_ndim)
           READ( iunbfgs, * ) energy_old
-          READ( iunbfgs, * ) gradient_old(:,1:m)
+          READ( iunbfgs, * ) gradient_old(:,1:lbfgs_ndim)
           READ( iunbfgs, * ) bfgs_step_old  
           READ( iunbfgs, * ) trust_radius_old
           !     
@@ -710,9 +725,9 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) scf_iter
        WRITE( iunbfgs, * ) bfgs_iter
        WRITE( iunbfgs, * ) lin_iter
-       WRITE( iunbfgs, * ) pos_old(:,2:m), pos
+       WRITE( iunbfgs, * ) pos_old(:,2:lbfgs_ndim), pos
        WRITE( iunbfgs, * ) energy
-       WRITE( iunbfgs, * ) gradient_old(:,2:m), gradient
+       WRITE( iunbfgs, * ) gradient_old(:,2:lbfgs_ndim), gradient
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
        ! 	     
@@ -736,7 +751,7 @@ MODULE bfgs_module
        REAL(KIND=DP)              :: sdoty
        !
        !
-       y(:) = gradient(:) - gradient_old(:,m)
+       y(:) = gradient(:) - gradient_old(:,lbfgs_ndim)
        !
        sdoty = bfgs_step_old(:) .dot. y(:) 
        !
@@ -776,24 +791,24 @@ MODULE bfgs_module
        REAL(KIND=DP), INTENT(IN)  :: gradient(:)         
        INTEGER, INTENT(IN)        :: dim       
        INTEGER                    :: i       
-       REAL(KIND=DP)              :: s(dim,m), y(dim,m)
-       REAL(KIND=DP)              :: alpha(m), sdoty(m)
+       REAL(KIND=DP)              :: s(dim,lbfgs_ndim), y(dim,lbfgs_ndim)
+       REAL(KIND=DP)              :: alpha(lbfgs_ndim), sdoty(lbfgs_ndim)
        REAL(KIND=DP)              :: preconditioning
        !
        !
        bfgs_step = gradient
        !
-       s(:,m) = pos - pos_old(:,m) 
-       y(:,m) = gradient - gradient_old(:,m) 
+       s(:,lbfgs_ndim) = pos - pos_old(:,lbfgs_ndim) 
+       y(:,lbfgs_ndim) = gradient - gradient_old(:,lbfgs_ndim) 
        !
-       DO i = m - 1, 1, -1
+       DO i = ( lbfgs_ndim - 1 ), 1, -1
           !
           s(:,i) = pos_old(:,i+1) - pos_old(:,i)
           y(:,i) = gradient_old(:,i+1) - gradient_old(:,i)
           !
        END DO
        !
-       DO i = m, 1, -1
+       DO i = lbfgs_ndim, 1, -1
           !
           sdoty(i) = ( s(:,i) .dot. y(:,i) )
           !
@@ -811,20 +826,20 @@ MODULE bfgs_module
           !
        END DO 
        !
-       preconditioning = ( y(:,m) .dot. y(:,m) )
+       preconditioning = ( y(:,lbfgs_ndim) .dot. y(:,lbfgs_ndim) )
        !
        IF ( preconditioning > eps16 ) THEN
           !
-          bfgs_step =  sdoty(m) / preconditioning * bfgs_step
+          bfgs_step =  sdoty(lbfgs_ndim) / preconditioning * bfgs_step
           !
        END IF        
        !
-       DO i = 1, m
+       DO i = 1, lbfgs_ndim
           !
           IF ( sdoty(i) > eps16 ) THEN
              !
-             bfgs_step = bfgs_step + s(:,i) * &
-                         ( alpha(i) - ( y(:,m) .dot. bfgs_step ) / sdoty(i) )
+             bfgs_step = bfgs_step + s(:,i) * ( alpha(i) - &
+                        ( y(:,lbfgs_ndim) .dot. bfgs_step ) / sdoty(i) )
              !
           END IF   
           !
@@ -847,11 +862,11 @@ MODULE bfgs_module
        !
        !
        lwolfe = ( energy - energy_old ) < & 
-                w_1 * ( gradient_old(:,m) .dot. bfgs_step_old )
+                w_1 * ( gradient_old(:,lbfgs_ndim) .dot. bfgs_step_old )
        !
        lwolfe = lwolfe .AND. &
                 ( ABS( gradient .dot. bfgs_step_old ) > &
-                  - w_2 * ( gradient_old(:,m) .dot. bfgs_step_old ) ) 
+                  - w_2 * ( gradient_old(:,lbfgs_ndim) .dot. bfgs_step_old ) ) 
        !
      END SUBROUTINE check_wolfe_conditions
      !
@@ -874,7 +889,7 @@ MODULE bfgs_module
        !
        !
        ltest = ( energy - energy_old ) < &
-               w_1 * ( gradient_old(:,m) .dot. bfgs_step_old )
+               w_1 * ( gradient_old(:,lbfgs_ndim) .dot. bfgs_step_old )
        !       
        ltest = ltest .AND. ( norm( bfgs_step ) > trust_radius_old )
        !
@@ -946,7 +961,7 @@ MODULE bfgs_module
        CHARACTER (LEN=*), INTENT(IN) :: scratch       
        !       
        !
-       WRITE( stdout, '(/,5X,"bfgs converged in ",I3," scf iterations, and", &
+       WRITE( stdout, '(/,5X,"bfgs converged in ",I3," scf iterations, and ", &
                         & I3," bfgs iterations" )' ) scf_iter, bfgs_iter
        WRITE( stdout, '(/,5X,"Final energy: ",F18.10," ryd"/)' ) energy
        !
