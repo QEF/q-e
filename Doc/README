@@ -3,8 +3,8 @@ This is the available documentation for the ESPRESSO package:
 MANUAL.FPMD-CP  User's Manual (sort of) for CP and FPMD
 manual.tex      User's Manual (sort of) for PWscf (applies in part to CP/FPMD
                 as well) - tex file, requires LaTeX and html.sty
-pwscf.png       Picture included in the manual
-democritos.png  as above
+pwscf.png, pwscf.ps, democritos.png, democritos.ps
+                Pictures included in the manual
 refman.tex      Reference (technical) manual for PWscf: little more than
                 a template at present
 

@@ -30,11 +30,20 @@
 This manual covers the installation and usage of PWscf (Plane-Wave
 Self-Consistent Field): a set of programs for electronic structure
 calculations within Density-Functional Theory and Density-Functional
-Perturbation Theory, using a Plane-Wave basis set and
-pseudopotentials.
+Perturbation Theory, using a Plane-Wave basis set and pseudopotentials.
 PWscf is a component of the ESPRESSO (opEn-Source Package for Research
 in Electronic Structure, Simulation, and Optimization) suite of codes,
 including, in addition to PWscf, the Car-Parrinello codes CP and FPMD.
+
+Other sources of documentation can be found in:
+\begin{quote}
+  the various \texttt{README} files found in the distribution;\\
+  the \texttt{Doc/} directory; \\
+  the PWscf \htmladdnormallink{web site}{http://www.pwscf.org/};\\
+  the mailing list \texttt{pw\_forum@pwscf.org}: see the PWscf web
+      site for instructions on how to register and how to search the 
+      archives of the mailing list.
+\end{itemize}
 
 PWscf can currently perform the following kind of calculations:
 
@@ -48,8 +57,9 @@ PWscf can currently perform the following kind of calculations:
   \item electron-phonon interaction coefficients for metals
   \item interatomic force constants in real space
   \item third-order anharmonic phonon lifetimes
+  \item Infrared and Raman (nonresonant) cross section
   \item macroscopic polarization via Berry Phase
-  \item calculation of energy barriers using NEB
+  \item Nudged Elastic Band (NEB) for energy barriers and reaction paths
 \end{itemize}
 
 All of the above work for both insulators and metals, in any crystal
@@ -98,10 +108,9 @@ responsibility of Carlo Cavazzoni
 \htmladdnormallink{(\texttt{c.cavazzoni@cineca.it})}%
 {mailto:c.cavazzoni@cineca.it}.
 \hyphenation{ge-rar-do}
-Currently active developers include Gerardo Ballabio (CINECA), Gernot
-Deinzer, Stefano Fabris, Adriano Mosca Conte, Mickael Profeta, Carlo
-Sbraccia (SISSA), Anton Kokalj (Jo\v{z}ef Stefan Institute,
-Ljubljana).
+Currently active developers include Gerardo Ballabio (CINECA), 
+Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA), 
+Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 Several other people, mostly but not exclusively former SISSA students, 
 contribute or have contributed to it. Among them we mention:
@@ -110,8 +119,8 @@ contribute or have contributed to it. Among them we mention:
 Dario Alf\`e, Francesco Antoniella, Mauro Boero, Claudia Bungaro,
 Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto Debernardi, 
 Guido Fratesi, Ralph Gebauer, Michele Lazzeri, Kurt M\"ader,
-Nicola Marzari, Francesco Mauri, Pasquale Pavone, Guido Roma, 
-Kurt Stokbro, Renata Wentzcovitch.
+Nicola Marzari, Francesco Mauri, Pasquale Pavone, Mickael Profeta,
+Guido Roma, Kurt Stokbro, Renata Wentzcovitch.
 \end{quote}
 
 \hyphenation{a-les-sio}
@@ -189,16 +198,18 @@ Presently it is expected to work for Linux PCs, IBM sp machines, SGI
 Origin, some HP-Compaq Alpha machines, Cray X1.
 See also the \texttt{README.install} file.
 
-If your configuration isn't recognized, read next section.
+If \texttt{configure} completes but it doesn't recognize your 
+configuration, you may either edit the \texttt{make.sys} file,
+or try to generate a new \texttt{configure} file following 
+the instructions in \texttt{README.configure} (please report 
+success to the developers). If \texttt{configure} stops with an error
+and the nontrivial task of configuring \texttt{configure} scares you,
+or if you don't know what to do with the \texttt{make.sys} file, 
+you may want to try the manual configuration, described in the next section.
 
 \subsection{Manual configuration}
 
-If \texttt{configure} doesn't recognize your configuration, you may
-follow the instructions in \texttt{README.configure} to generate a new
-\texttt{configure} file.
-Please report success to the developers.
-If the nontrivial task of configuring \texttt{configure} scares you,
-use instead:
+From the root directory, type:
 
 \texttt{./configure.old} \emph{your-system}
 
@@ -224,23 +235,16 @@ use instead:
   \texttt{hitachi}:   Hitachi SR8000 \\
   \texttt{sxcross}:   NEC SX-6 (+)
 \end{quote}
-
-Note that systems marked with (+) in the above list do not support (or
-did not in the past, or we don't know if they do) C-style
-preprocessing directives.
+and has a corresponding file \texttt{Make.}\emph{your-system}
+in the \texttt{install/} directory. Note that systems marked with (+) 
+in the above list do not support, or did not in the past, or we don't 
+know if they do, C-style preprocessing directives.
 
 If your machine/compiler combination is not in the list, choose what
 looks like the most similar combination.  You may need to define your
 own preprocessing flags and to delve into the code, but usually very
 minor changes are needed to port PWscf to an unsupported machine.
 See also the {\tt install/README.install} file.
-
-% Alternative procedure not using "configure.old":
-% copy {\tt install/Make.}{\em your-system} into {\tt make.sys},
-% If your f90 compiler supports C-style preprocessing 
-% directives ({\tt \#ifdef ..\#endif}), copy  
-% {\tt install/Make.rules.nocpp} into {\tt make.rules};
-% otherwise, copy {\tt install/Make.rules.cpp} into {\tt make.rules}.
 
 \textbf{Note for HP PA-RISC users:} 
 The Makefile for HP PA-RISC workstations and parallel machines is
@@ -565,6 +569,12 @@ You can compile the following codes:
     zone integration.
     It is faster and takes less memory than \texttt{ph.x}, but does
     not support Ultrasoft pseudopotentials.
+  \item
+    \texttt{make raman} produces \texttt{Raman/ram.x}.
+
+    \texttt{ra.x} calculates nonresonant Raman tensor coefficients
+    (derivatives f the polarizability wrt atomic displacements)
+    using the $(2n+1)$ theorem (written by Gernot Deinzer).
   \item
     \texttt{make pp} produces the following postprocessing codes in
     \texttt{PP/}:
@@ -1346,9 +1356,11 @@ the same motherboard.
 \section{Troubleshooting}
 
 Almost all problems in PWscf arise from incorrect input data and
-result in error stops.
-Error messages should be self-explanatory, but unfortunately this is
-not always true.
+result in error stops. Error messages should be self-explanatory, 
+but unfortunately this is not always true. If the code issues a
+warning messages and continues, pay attention to it but do not
+assume that something is necessarily wrong in your calculation:
+most warning messages signal harmless problems.
 
 Note for PC Linux clusters in parallel execution: in at least some 
 versions of MPICH, the current directory is set to the directory where
@@ -1419,13 +1431,14 @@ Possible reasons:
   \item
     a bad PP (for instance, with a ghost);
   \item
-    IBM SP3: under some circumstances (typically a large number of
-    k-points) we get an error in \texttt{cdiaghg} that is
-    reproducible, but disappears if we change anything in the
-    calculation.
-    We don't know what happens and why.
-    Try to use conjugate-gradient diagonalization
-    (\texttt{diagonalization='cg'}).
+    a failure of the algorithm performing subspace diagonalization. 
+    The LAPACK algorithms used by cdiagh or cdiaghg are very robust 
+    and extensively tested. Still, it may seldom happen that such
+    algorithms fail, for unclar reasons. The error is not reproducible
+    on a different architecture and usually disappears if the
+    calculation is repeated with even minimal changes in its
+    parameters. If this happen, use conjugate-gradient diagonalization
+   (\texttt{diagonalization='cg'}) and see what happens. 
   \item
     HP-Compaq alphas with \texttt{cxml} libraries: try to use compiled
     BLAS and LAPACK (or better, ATLAS) instead of those contained in
@@ -1602,18 +1615,30 @@ Note that in parallel execution, it is very convenient to have FFT
 grid dimensions along z that are a multiple of the number of
 processors.
 
-\paragraph{\texttt{pw.x} doesn't find all the symmetries you
-           expected.}
+\paragraph{``warning: symmetry operation \# N not allowed''.}
 
+This is not an error.
 \texttt{pw.x} determines first the symmetry operations (rotations)
 of the Bravais lattice; then checks which of these are symmetry
 operations of the system (including if needed fractional
 translations).
 This is done by rotating (and translating if needed) the atoms in
 the unit cell and verifying if the rotated unit cell coincides
-with the original one.
+with the original one. 
 
-You may miss symmetry operations because:
+If a symmetry operations contain a
+fractional translation that is incompatible with the FFT grid,
+it is discarded in order to prevent problems with symmetrization.
+Typical fractional translations are 1/2 or 1/3 of a lattice
+vector. If the FFT grid dimension along that direction is not 
+divisible respectively by 2 or by 3, the symmetry operation will 
+not transform the FFT grid into itself.
+
+\paragraph{\texttt{pw.x} doesn't find all the symmetries you
+           expected.}
+
+See above to learn how PWscf finds symmetry operations.
+Some of them might be missing because:
 \begin{itemize}
   \item
     the number of significant figures in the atomic positions is not
@@ -1638,17 +1663,7 @@ You may miss symmetry operations because:
     from inversion.
   \item
     they contain a fractional translation that is incompatible with
-    the FFT grid.
-    Typical fractional translations are 1/2 or 1/3 of a lattice
-    vector.
-    If the FFT grid dimension along that direction is not divisible
-    respectively by 2 or by 3, the symmetry operation will not
-    transform the FFT grid into itself.
-    Such symmetry operations are disabled to prevent problems with
-    symmetrization.
-    See above for a discussion on manually setting FFT grid
-    dimensions.
-
+    the FFT grid (see previous paragraph).
     Note that if you change cutoff or unit cell volume, the
     automatically computed FFT grid changes, and this may explain
     changes in symmetry (and in the number of k-points as a
@@ -1656,13 +1671,12 @@ You may miss symmetry operations because:
     fractional translations in the system, though).
   \item
     a fractional translation, without rotation, is a symmetry
-    operation of the system (meaning that the cell is actually a
-    supercell).
-    In this case, all symmetry operations containing fractional
-    translations are disabled.
-    The reason is that in this rather exotic case there is no (simple)
-    way to select those symmetry operations forming a group (in the
-    mathematical sense of the term).
+    operation of the system. This means that the cell is actually 
+    a supercell. In this case, all symmetry operations containing 
+    fractional translations are disabled.
+    The reason is that in this rather exotic case there is no simple
+    way to select those symmetry operations forming a true group, in
+    the mathematical sense of the term.
 \end{itemize}
 
 \paragraph{the CPU time is time-dependent!}
@@ -1684,6 +1698,15 @@ of processors to a more sensible value.
 In particular, both $N_3$ and $Nr_3$ must be $\geq N_{pr}$ (see the
 ``Performance Issues'' section, and in particular ``Parallelization
 issues'', for the meaning of these variables).
+
+\paragraph{``warning : N eigenvectors not converged ...''}
+
+This is a warning message that can be safely ignored if it
+is not present in the last steps of self-consistency. If it 
+is still present in the last steps of self-consistency, and
+if the number of unconverged eigevector is a significant 
+part of the total,it may signal serious trouble in self-consistency
+(see next point) or something badly wrong in input data.
 
 \paragraph{self-consistency is slow or does not converge.}
 

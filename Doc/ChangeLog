@@ -1,3 +1,11 @@
+17 Aug 2004  Initialization of startingpot in the "raman" case fixed 
+             Documentation update (PG)
+
+16 Aug 2004  The fix for the problem "PBE on hydrogen atom" (see commit 
+             10-05-2004) has been moved from gradcorr.f90 to 
+             lsda_functionals.f90 so that both pwscf and the atomic code
+             share the same fix (C.S.)
+
 13 Aug 2004  Documentation for Raman updated (PG)
 
 11 Aug 2004  Manual update and cleanup (GB, PG). 

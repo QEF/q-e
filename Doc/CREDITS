@@ -14,8 +14,7 @@ of the Italian INFM, under the coordination of Paolo Giannozzi, with the
 strong support of the CINECA National Supercomputing Center in Bologna, 
 under the responsability of Carlo Cavazzoni. Currently active developers 
 include Gerardo Ballabio (CINECA), Gernot Deinzer, Stefano Fabris, 
-Adriano Mosca Conte, Mickael Profeta, Carlo Sbraccia (SISSA), 
-Anton Kokalj (IJS).
+Adriano Mosca Conte, Carlo Sbraccia (SISSA), Anton Kokalj (IJS).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi
@@ -44,8 +43,8 @@ Dario Alfe', Francesco Antoniella, Mauro Boero, Claudia Bungaro,
 Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto Debernardi,
 Oswaldo Dieguez, Guido Fratesi, Ralph Gebauer, Michele Lazzeri, 
 Kurt Maeder, Nicola Marzari, Francesco Mauri, Pasquale Pavone, 
-Guido Roma, Kurt Stokbro, Renata Wentzcovitch, Yudong Wu,
-Xiaofei Wang, Yosuke Kanai, Antonio Tilocca, Konstantin Kudin,
+Mickael Profeta, Guido Roma, Kurt Stokbro, Renata Wentzcovitch, 
+Yudong Wu, Xiaofei Wang, Yosuke Kanai, Antonio Tilocca, Konstantin Kudin,
 and let us apologize to everybody we have forgotten.
 
 All the material included in this distribution is free software;
