@@ -430,6 +430,8 @@ subroutine newscf
   !
   ! these must be tuned for fast convergence
   !
+  david = 4
+  nbndx = max (nbndx, david*nbnd)
   max_cg_iter=20
   isolve=0
   tr2 =1.d-8

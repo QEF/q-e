@@ -53,8 +53,9 @@ subroutine plan_avg (averag, plan, ninter)
   ! minimum plane distance
   ! the average position of each plane
   ! auxiliary for coordinates
-  !  ! length in a.u. of the cell along z
+  ! length in a.u. of the cell along z
 
+  if ( celldm(3) == 0.d0 ) celldm(3) = celldm(1)
   zdim = alat * celldm (3)
   sp_min = 2.d0 / alat
   !
