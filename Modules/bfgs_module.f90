@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!#define OLDRECIPE
+!
 !----------------------------------------------------------------------------
 MODULE bfgs_module
   !----------------------------------------------------------------------------
@@ -82,8 +84,8 @@ MODULE bfgs_module
       trust_radius_end = 1.D-7   ! bfgs stops when trust_radius is less than
                                  ! this value
   REAL(KIND=DP)  :: &
-      w_1 = 0.5D-1,             &! parameters for Wolfe conditions
-      w_2 = 0.5D0                ! parameters for Wolfe conditions
+      w_1 = 1.0D-2,             &! parameters for Wolfe conditions
+      w_2 = 0.8D0                ! parameters for Wolfe conditions
   !
   ! ... Note that m, trust_radius_max, trust_radius_min, trust_radius_ini,
   ! ... trust_radius_end, w_1, w_2 have a default value, but can also be 
@@ -137,8 +139,9 @@ MODULE bfgs_module
        !
        ! ... local variables
        !
-       INTEGER  :: dim, i
-       LOGICAL  :: lwolfe
+       INTEGER       :: dim, i
+       LOGICAL       :: lwolfe
+       REAL(KIND=DP) :: denominator
        !
        !
        dim = SIZE( pos )
@@ -209,9 +212,36 @@ MODULE bfgs_module
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"CASE: energy_new > energy_old",/)' )
           !
+#if defined (OLDRECIPE)
+          !
           ! ... the old trust radius is reduced by a factor 2
           !
           trust_radius = 0.5D0 * trust_radius_old
+          !
+#else
+          !
+          ! ... the new trust radius is obtained with a quadratic interpolation
+          !
+          ! ... E(s) = a*s*s + b*s + c      ( we use E(0), dE(0), E(s') )
+          !
+          ! ... s_min = - 0.5 * ( dE(0)*s'*s' ) / ( E(s') - E(0) - dE(0)*s' )
+          !
+          denominator = energy - energy_old - &
+                        ( gradient_old(:,1) .dot. bfgs_step_old )
+          !              
+          IF ( ABS( denominator ) > eps16 ) THEN
+             !
+             trust_radius = - 0.5D0 / denominator * trust_radius_old * &
+                            ( gradient_old(:,1) .dot. bfgs_step_old )
+             !
+          ELSE
+             !
+             ! ... no quadratic interpolation is possible
+             !
+             trust_radius = 0.5D0 * trust_radius_old
+             !
+          END IF   
+#endif
           !
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
