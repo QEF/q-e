@@ -207,9 +207,9 @@ PROGRAM images_interpolator
         !
         ! ... tangent to the path ( normalized )
         !
-        tangent(:) = 0.5D0 * ( ( old_pos(:,i+1) - old_pos(:,i) ) /    &
-                               norm( old_pos(:,i+1) - old_pos(:,i) )+ &
-                               ( old_pos(:,i) - old_pos(:,i-1) ) /    &
+        tangent(:) = 0.5D0 * ( ( old_pos(:,i+1) - old_pos(:,i) ) /     &
+                               norm( old_pos(:,i+1) - old_pos(:,i) ) + &
+                               ( old_pos(:,i) - old_pos(:,i-1) ) /     &
                                norm( old_pos(:,i) - old_pos(:,i-1) ) )
         !
         tangent = tangent / norm( tangent )
@@ -251,8 +251,20 @@ PROGRAM images_interpolator
         !
         new_mesh(j+1) = R
         !
-        IF ( ( R > old_mesh(i+1) ) .AND. &
-             ( i < ( old_num_of_images - 1 ) ) ) i = i + 1
+        check_index: DO
+           !
+           IF ( ( R > old_mesh(i+1) ) .AND. &
+                ( i < ( old_num_of_images - 1 ) ) ) THEN
+              !
+              i = i + 1
+              !
+           ELSE
+              !
+              EXIT check_index
+              !
+           END IF      
+           !
+        END DO check_index
         !
         x = R - old_mesh( i )
         !
@@ -262,9 +274,9 @@ PROGRAM images_interpolator
      !
   END IF
   !
-  old_mesh = old_mesh / ( old_mesh(last_image) - old_mesh(first_image) ) 
-  new_mesh = new_mesh / ( new_mesh(new_num_of_images) - old_mesh(1) ) 
-  !
+  old_mesh = old_mesh / old_mesh(old_num_of_images)
+  new_mesh = new_mesh / new_mesh(new_num_of_images)
+  ! 
   CALL dosplineint( old_mesh , old_pos , new_mesh , new_pos )
   CALL dosplineint( old_mesh , old_PES_gradient , new_mesh , new_PES_gradient )
   !
