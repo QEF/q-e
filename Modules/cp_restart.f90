@@ -72,7 +72,7 @@
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE gvecp, ONLY: ngm, ecutp
       USE gvecs, ONLY: ngs
-      USE gvecw, ONLY: ngs, ecutw
+      USE gvecw, ONLY: ecutw
       USE electrons_base, ONLY: nspin, nbnd, nelt, nel, nupdwn, iupdwn
       USE cell_base, ONLY: ibrav, alat, celldm
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
