@@ -44,8 +44,8 @@ MODULE path_base
                                    opt_scheme, climbing, nstep, input_images
       USE control_flags,    ONLY : conv_elec, lneb, lsmd
       USE ions_base,        ONLY : nat, if_pos
-      USE io_files,         ONLY : prefix, path_file, dat_file, &
-                                   int_file, xyz_file, axsf_file
+      USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
+                                   int_file, xyz_file, axsf_file, broy_file
       USE cell_base,        ONLY : alat
       USE path_variables,   ONLY : pos_ => pos, &
                                    istep_path, nstep_path, dim, num_of_images, &
@@ -93,6 +93,8 @@ MODULE path_base
       int_file  = TRIM( prefix ) // ".int"
       xyz_file  = TRIM( prefix ) // ".xyz"
       axsf_file = TRIM( prefix ) // ".axsf"
+      !
+      broy_file = TRIM( tmp_dir ) // TRIM( prefix ) // ".broyden"
       !
       ! ... istep is initialised to zero
       !
@@ -143,11 +145,11 @@ MODULE path_base
          !
          IF ( free_energy) THEN
             !
-            fixed_tan = .TRUE.
-            !
-            use_multistep = .FALSE.
-            !
+            fixed_tan      = .TRUE.
             first_last_opt = .TRUE.
+            !
+            use_multistep  = .FALSE.
+            use_freezing   = .FALSE.
             !
          END IF
          !
@@ -437,7 +439,7 @@ MODULE path_base
         !
     END SUBROUTINE initialize_path
     !
-    ! ... neb specific routines
+    ! ... neb-specific routines
     !
     !-----------------------------------------------------------------------
     FUNCTION neb_tangent( index )
@@ -665,7 +667,7 @@ MODULE path_base
       !
     END SUBROUTINE neb_gradient
     !
-    ! ... smd specific routines
+    ! ... smd-specific routines
     !
     !-----------------------------------------------------------------------
     SUBROUTINE update_num_of_images()

@@ -1421,6 +1421,15 @@ SUBROUTINE verify_tmpdir()
         CALL delete_if_present( TRIM( file_path ) // '.BLOCK' )
         CALL delete_if_present( TRIM( file_path ) // '.newimage' )
         !
+        ! ... file containing the broyden's history
+        !
+        IF ( restart_mode == 'from_scratch' ) THEN
+           !
+           CALL delete_if_present( TRIM( tmp_dir ) // &
+                                 & TRIM( prefix ) // '.broyden' )
+           !
+        END IF
+        !
      END IF   
      !
      tmp_dir_saved = tmp_dir
@@ -1466,7 +1475,7 @@ SUBROUTINE verify_tmpdir()
               ! ... wfc-extrapolation file is removed
               !     
               CALL delete_if_present( TRIM( tmp_dir ) // &
-                                    & TRIM( prefix ) // '.update' )              
+                                    & TRIM( prefix ) // '.update' )
               !
               ! ... standard output of the self-consistency is removed
               !      

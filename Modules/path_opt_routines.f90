@@ -215,7 +215,7 @@ MODULE path_opt_routines
      SUBROUTINE broyden()
        !-----------------------------------------------------------------------
        !
-       USE io_files,       ONLY : prefix
+       USE io_files,       ONLY : broy_file, iunbroy
        USE path_variables, ONLY : dim, num_of_images, reset_broyden
        !
        IMPLICIT NONE
@@ -225,8 +225,8 @@ MODULE path_opt_routines
        INTEGER                     :: k
        REAL (KIND=DP)              :: s_norm
        LOGICAL                     :: exists
-       REAL (KIND=DP), PARAMETER   :: J0       = 4.0D0
-       REAL (KIND=DP), PARAMETER   :: step_max = 1.0D0
+       REAL (KIND=DP), PARAMETER   :: J0           = 4.0D0
+       REAL (KIND=DP), PARAMETER   :: step_max     = 1.0D0
        INTEGER,        PARAMETER   :: broyden_ndim = 32
        !
        !
@@ -239,18 +239,18 @@ MODULE path_opt_routines
        !
        ! ... open the file containing the old configurations of the path
        !
-       INQUIRE( FILE = TRIM( prefix ) // ".broyden", EXIST = exists )
+       INQUIRE( FILE = broy_file, EXIST = exists )
        !
        IF ( reset_broyden ) exists = .FALSE.
        !
        IF ( exists ) THEN
           !
-          OPEN( UNIT = 999, FILE = TRIM( prefix ) // ".broyden" )
+          OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "UNKNOWN" )
           !
-          READ( 999 , * ) k
-          READ( 999 , * ) s
+          READ( UNIT = iunbroy , FMT = * ) k
+          READ( UNIT = iunbroy , FMT = * ) s
           !
-          CLOSE( UNIT = 999 )
+          CLOSE( UNIT = iunbroy )
           !
           k = MIN( k + 1, broyden_ndim )
           !
@@ -313,12 +313,12 @@ MODULE path_opt_routines
        !
        ! ... save the file containing the history
        !
-       OPEN( UNIT = 999, FILE = TRIM( prefix ) // ".broyden" )
+       OPEN( UNIT = iunbroy, FILE = broy_file )
        !
-       WRITE( 999, * ) k
-       WRITE( 999, * ) s
+       WRITE( UNIT = iunbroy, FMT = * ) k
+       WRITE( UNIT = iunbroy, FMT = * ) s
        !
-       CLOSE( UNIT = 999 )
+       CLOSE( UNIT = iunbroy )
        !
        DEALLOCATE( g )
        DEALLOCATE( s )

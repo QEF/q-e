@@ -52,11 +52,12 @@ MODULE io_files
   CHARACTER(LEN=6 ), PARAMETER :: ks_emp_file   = 'KS_EMP'
   CHARACTER(LEN=16), PARAMETER :: sfac_file     = 'STRUCTURE_FACTOR'
   CHARACTER (LEN=256) :: &
-    dat_file  = 'os.dat',   &! file containing the enegy profile
-    int_file  = 'os.int',   &! file containing the interpolated energy profile
-    path_file = 'os.path',  &! file containing informations needed to restart a string simulation
-    xyz_file  = 'os.xyz',   &! file containing coordinates of all images in xyz format
-    axsf_file = 'os.axsf'    ! file containing coordinates of all images in axsf format
+    dat_file  = 'os.dat',    &! file containing the enegy profile
+    int_file  = 'os.int',    &! file containing the interpolated energy profile
+    path_file = 'os.path',   &! file containing informations needed to restart a path simulation
+    xyz_file  = 'os.xyz',    &! file containing coordinates of all images in xyz format
+    axsf_file = 'os.axsf',   &! file containing coordinates of all images in axsf format
+    broy_file = 'os.broyden'  ! file containing broyden's history
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
   CHARACTER (LEN=11), PARAMETER :: xmlpun = 'restart.xml'
@@ -102,6 +103,7 @@ MODULE io_files
   INTEGER :: iunint      = 23 ! unit for saving the interpolated energy profile
   INTEGER :: iunxyz      = 24 ! unit for saving coordinates ( xyz format )
   INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
+  INTEGER :: iunbroy     = 26 ! unit for saving broyden's history
   !
   ! ... Y. Kanai combined smd/cp method
   !
