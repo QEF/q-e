@@ -29,7 +29,7 @@ MODULE bfgs_module
   ! ...    Landscapes and Rare Events. 
   !
   !
-  USE kinds,  ONLY : DP
+  USE kinds,       ONLY : DP
   USE io_files,    ONLY : iunbfgs
   !
   USE basic_algebra_routines  
@@ -91,9 +91,8 @@ MODULE bfgs_module
   !  
   ! Workaround for IBM xlf compiler bug
   !
-
   INTEGER, PUBLIC :: bfgs_xlf_bug
-
+  !
   CONTAINS
      !
      !
@@ -173,10 +172,9 @@ MODULE bfgs_module
        END DO       
        !
        ! ... as long as the first two scf iterations have been performed the 
-       ! ... error on the energy is redefined as a large number.
+       ! ... error on the energy is redefined as a "large" number.
        !
-       IF ( scf_iter < 2 ) &
-          energy_error = 1000.D0
+       IF ( scf_iter < 2 ) energy_error = 1000.D0
        !
        IF ( conv_bfgs ) THEN
           !
@@ -223,7 +221,7 @@ MODULE bfgs_module
              !
              inverse_hessian = identity(dim)
              !
-             bfgs_step = - inverse_hessian .times. gradient
+             bfgs_step = - ( inverse_hessian .times. gradient )
              !
              trust_radius = trust_radius_min
              !
@@ -275,7 +273,7 @@ MODULE bfgs_module
           !
           ! ... bfgs direction ( not normalized ) 
           !
-          bfgs_step = - inverse_hessian .times. gradient
+          bfgs_step = - ( inverse_hessian .times. gradient )
           !
           IF ( ( gradient .dot. bfgs_step ) > 0.D0 ) THEN
              !  
@@ -427,10 +425,9 @@ MODULE bfgs_module
        END DO       
        !
        ! ... as long as the first two scf iterations have been performed the 
-       ! ... error on the energy is redefined as a large number.
+       ! ... error on the energy is redefined as a "large" number.
        !
-       IF ( scf_iter < 2 ) &
-          energy_error = 1000.D0
+       IF ( scf_iter < 2 ) energy_error = 1000.D0
        !
        IF ( conv_bfgs ) THEN
           !
@@ -627,13 +624,16 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(INOUT)  :: pos(:)
-       REAL(KIND=DP), INTENT(INOUT)  :: energy       
-       REAL(KIND=DP), INTENT(INOUT)  :: gradient(:)       
-       CHARACTER (LEN=*), INTENT(IN) :: scratch
-       INTEGER, INTENT(IN)           :: dim
-       CHARACTER (LEN=256)           :: bfgs_file
-       LOGICAL                       :: file_exists
+       REAL(KIND=DP),     INTENT(INOUT) :: pos(:)
+       REAL(KIND=DP),     INTENT(INOUT) :: energy       
+       REAL(KIND=DP),     INTENT(INOUT) :: gradient(:)       
+       CHARACTER (LEN=*), INTENT(IN)    :: scratch
+       INTEGER,           INTENT(IN)    :: dim
+       !
+       ! ... local variables
+       !
+       CHARACTER (LEN=256) :: bfgs_file
+       LOGICAL             :: file_exists
        !
        !
        bfgs_file = TRIM( scratch ) // TRIM( prefix ) //'.bfgs'
@@ -686,13 +686,16 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(INOUT)  :: pos(:)
-       REAL(KIND=DP), INTENT(INOUT)  :: energy       
-       REAL(KIND=DP), INTENT(INOUT)  :: gradient(:)       
-       CHARACTER (LEN=*), INTENT(IN) :: scratch
-       INTEGER, INTENT(IN)           :: dim
-       CHARACTER (LEN=256)           :: bfgs_file
-       LOGICAL                       :: file_exists
+       REAL(KIND=DP),     INTENT(INOUT) :: pos(:)
+       REAL(KIND=DP),     INTENT(INOUT) :: energy       
+       REAL(KIND=DP),     INTENT(INOUT) :: gradient(:)       
+       CHARACTER (LEN=*), INTENT(IN)    :: scratch
+       INTEGER,           INTENT(IN)    :: dim
+       !
+       ! ... local variables
+       !
+       CHARACTER (LEN=256) :: bfgs_file
+       LOGICAL             :: file_exists
        !
        !
        bfgs_file = TRIM( scratch ) // TRIM( prefix ) //'.bfgs'
@@ -743,9 +746,9 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN)     :: pos(:)       
-       REAL(KIND=DP), INTENT(IN)     :: energy       
-       REAL(KIND=DP), INTENT(IN)     :: gradient(:)       
+       REAL(KIND=DP),     INTENT(IN) :: pos(:)       
+       REAL(KIND=DP),     INTENT(IN) :: energy       
+       REAL(KIND=DP),     INTENT(IN) :: gradient(:)       
        CHARACTER (LEN=*), INTENT(IN) :: scratch
        !
        !
@@ -775,9 +778,9 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN)     :: pos(:)        
-       REAL(KIND=DP), INTENT(IN)     :: energy       
-       REAL(KIND=DP), INTENT(IN)     :: gradient(:)       
+       REAL(KIND=DP),     INTENT(IN) :: pos(:)        
+       REAL(KIND=DP),     INTENT(IN) :: energy       
+       REAL(KIND=DP),     INTENT(IN) :: gradient(:)       
        CHARACTER (LEN=*), INTENT(IN) :: scratch
        !
        !
@@ -807,15 +810,18 @@ MODULE bfgs_module
        IMPLICIT NONE
        !
        REAL(KIND=DP), INTENT(IN)  :: gradient(:)   
-       INTEGER, INTENT(IN)        :: dim       
-       INTEGER, INTENT(IN)        :: stdout                       
+       INTEGER,       INTENT(IN)  :: dim
+       INTEGER,       INTENT(IN)  :: stdout
+       !
+       ! ... local variables
+       !
        REAL(KIND=DP)              :: y(dim)
        REAL(KIND=DP)              :: sdoty
        !
        !
-       y(:) = gradient(:) - gradient_old(:,lbfgs_ndim)
+       y = gradient - gradient_old(:,lbfgs_ndim)
        !
-       sdoty = bfgs_step_old(:) .dot. y(:) 
+       sdoty = ( bfgs_step_old .dot. y )
        !
        IF ( ABS( sdoty ) < eps16 ) THEN
           !
@@ -825,18 +831,17 @@ MODULE bfgs_module
                               & "update_inverse_hessian")' )
           WRITE( stdout, '(5X,"         resetting bfgs history",/)' )
           !
-          inverse_hessian(:,:) = identity(dim)
+          inverse_hessian = identity(dim)
           !
           RETURN
           !
        END IF 
        !
-       inverse_hessian(:,:) = inverse_hessian(:,:) + &
-         ( 1.D0 + ( y(:) .dot. ( inverse_hessian(:,:) &
-                                 .times. y(:) ) ) / sdoty ) * &
-         matrix( bfgs_step_old(:), bfgs_step_old(:) ) / sdoty - &
-         ( matrix( bfgs_step_old(:), ( y .times. inverse_hessian(:,:) ) ) + &
-           matrix( ( inverse_hessian(:,:) .times. y ), bfgs_step_old ) ) / sdoty
+       inverse_hessian = inverse_hessian + &
+              ( 1.D0 + ( y .dot. ( inverse_hessian .times. y ) ) / sdoty ) * &
+              matrix( bfgs_step_old, bfgs_step_old ) / sdoty -               &
+              ( matrix( bfgs_step_old, ( y .times. inverse_hessian ) ) +     &
+                matrix( ( inverse_hessian .times. y ), bfgs_step_old ) ) / sdoty
        !
      END SUBROUTINE update_inverse_hessian
      !
@@ -851,11 +856,14 @@ MODULE bfgs_module
        !
        REAL(KIND=DP), INTENT(IN)  :: pos(:)
        REAL(KIND=DP), INTENT(IN)  :: gradient(:)         
-       INTEGER, INTENT(IN)        :: dim       
-       INTEGER                    :: i       
-       REAL(KIND=DP)              :: s(dim,lbfgs_ndim), y(dim,lbfgs_ndim)
-       REAL(KIND=DP)              :: alpha(lbfgs_ndim), sdoty(lbfgs_ndim)
-       REAL(KIND=DP)              :: preconditioning
+       INTEGER,       INTENT(IN)  :: dim
+       !
+       ! ... local variables
+       !
+       INTEGER       :: i       
+       REAL(KIND=DP) :: s(dim,lbfgs_ndim), y(dim,lbfgs_ndim)
+       REAL(KIND=DP) :: alpha(lbfgs_ndim), sdoty(lbfgs_ndim)
+       REAL(KIND=DP) :: preconditioning
        !
        !
        bfgs_step = gradient
@@ -876,7 +884,7 @@ MODULE bfgs_module
           !
           IF ( sdoty(i) > eps16 ) THEN
              !
-             alpha(i) = ( s(:,i) .dot. bfgs_step(:) ) / sdoty(i)
+             alpha(i) = ( s(:,i) .dot. bfgs_step ) / sdoty(i)
              !
           ELSE
              !   
@@ -918,9 +926,9 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN) :: energy       
-       REAL(KIND=DP), INTENT(IN) :: gradient(:)              
-       LOGICAL, INTENT(OUT)      :: lwolfe
+       REAL(KIND=DP), INTENT(IN)  :: energy       
+       REAL(KIND=DP), INTENT(IN)  :: gradient(:)              
+       LOGICAL,       INTENT(OUT) :: lwolfe
        !
        !
        lwolfe = ( energy - energy_old ) < & 
@@ -940,14 +948,17 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       LOGICAL, INTENT(IN)           :: lwolfe
-       REAL(KIND=DP), INTENT(IN)     :: energy    
-       REAL(KIND=DP), INTENT(IN)     :: gradient(:)                         
-       INTEGER, INTENT(IN)           :: dim   
-       INTEGER, INTENT(IN)           :: stdout
-       LOGICAL, INTENT(OUT)          :: conv_bfgs
-       REAL(KIND=DP)                 :: a
-       LOGICAL                       :: ltest
+       LOGICAL,       INTENT(IN)  :: lwolfe
+       REAL(KIND=DP), INTENT(IN)  :: energy    
+       REAL(KIND=DP), INTENT(IN)  :: gradient(:)                         
+       INTEGER,       INTENT(IN)  :: dim   
+       INTEGER,       INTENT(IN)  :: stdout
+       LOGICAL,       INTENT(OUT) :: conv_bfgs
+       !
+       ! ... local variables
+       !
+       REAL(KIND=DP) :: a
+       LOGICAL       :: ltest
        !
        !
        ltest = ( energy - energy_old ) < &
@@ -990,7 +1001,7 @@ MODULE bfgs_module
              !
              inverse_hessian = identity(dim)
              !
-             bfgs_step = - inverse_hessian .times. gradient
+             bfgs_step = - ( inverse_hessian .times. gradient )
              !
              trust_radius = trust_radius_min
              !
@@ -1018,8 +1029,8 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN)     :: energy  
-       INTEGER, INTENT(IN)           :: stdout         
+       REAL(KIND=DP),     INTENT(IN) :: energy  
+       INTEGER,           INTENT(IN) :: stdout         
        CHARACTER (LEN=*), INTENT(IN) :: scratch       
        !       
        !
