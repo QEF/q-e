@@ -10,12 +10,13 @@
 program pwmemory
   !-----------------------------------------------------------------------
   !
-  use pwcom
+  USE wvfct, ONLY : gamma_only
+  USE klist, ONLY : nkstot, xk
+  USE lsda_mod, ONLY: nspin
   use io_files
   use mp, only : mp_end
   use global_version
   implicit none
-  logical :: lgamma
   character(len=9) :: code = 'memory'
   !
   call startup (nd_nmbr, code, version_number)
@@ -23,23 +24,37 @@ program pwmemory
   call iosys
   call setup
   !
-  lgamma = (nkstot == 1) .and. &
-           ( xk(1,1)**2 + xk(2,1)**2 + xk(3,1)**2 < 1.0e-6 )
+  gamma_only = ( (nkstot == 1) .and. (nspin == 1) .and. &
+                 ( xk(1,1)**2 + xk(2,1)**2 + xk(3,1)**2 < 1.0e-6 ) ) &
+          .OR. ( (nkstot == 2) .and. (nspin == 2) .and. &
+                 ( xk(1,1)**2 + xk(2,1)**2 + xk(3,1)**2 < 1.0e-6 ) .AND. &
+                 ( xk(1,2)**2 + xk(2,2)**2 + xk(3,2)**2 < 1.0e-6 ) )
   !
-  call data_structure(lgamma)
+  call data_structure(gamma_only)
   !
-  call setup2
+  call setup2()
   !
-  call memory_estimate(lgamma)
+  call memory_estimate()
   !
   call mp_end ()
   stop
 end program pwmemory
 !
 !-----------------------------------------------------------------------
-subroutine setup2
+subroutine setup2()
   !-----------------------------------------------------------------------
-  use pwcom
+  USE parameters, only: DP
+  USE basis, ONLY: nat, ntyp, ityp
+  USE brilz, ONLY: omega
+  USE cellmd, ONLY: cell_factor
+  USE constants, ONLY :tpi, fpi
+  USE gvect, ONLY: ecutwfc, gcutm, ngl, ngm
+  USE klist, ONLY: xqq
+  USE pseud, ONLY: lmax, lloc
+  USE us, ONLY: lmaxkb, tvanp, nh, nbeta, lll, lqx, nqx, nqxq, nhm, nkb, &
+       dq
+  USE varie, ONLY: newpseudo
+  USE wvfct, ONLY: npwx
   implicit none
   !
   real(kind=DP) :: omegaBZ
@@ -96,14 +111,24 @@ end subroutine setup2
 
 !
 !-----------------------------------------------------------------------
-subroutine memory_estimate(lgamma)
+subroutine memory_estimate ( )
   !-----------------------------------------------------------------------
-  use pwcom
+  USE parameters, ONLY: DP, ndm, npsx, lmaxx, nchix, nbrx, nqfm, lqmax
+  USE basis, ONLY: nat, ntyp, natomwfc
+  USE cellmd,ONLY: lmovecell
+  USE klist, ONLY: npk, nks, nkstot
+  USE ktetra,ONLY: ntetra
+  USE gvect, ONLY: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngl, ngm, ngm_l
+  USE gsmooth,ONLY: ngms, doublegrid
+  USE ldaU,  ONLY: Hubbard_lmax, lda_plus_u
+  USE lsda_mod, ONLY: nspin
+  USE us,    ONLY: okvan, nkb, lqx, nqx, nqxq, nhm
+  USE varie, ONLY: nmix, isolve, diis_ndim
+  USE wvfct, ONLY: gamma_only, npwx, nbnd, nbndx
 #ifdef __PARA
   use para, only: nprocp, npool, nct, ncplane, ncts, ncplanes
 #endif
   implicit none
-  logical :: lgamma
   !
   integer, parameter :: real_size = 8, int_size = 4
   integer, parameter :: comp_size = 2*real_size
@@ -186,7 +211,7 @@ subroutine memory_estimate(lgamma)
 #ifdef __PARA
   print '(5x,"Number of processors/pools:",2i4)', nprocp, npool  
 #endif
-  if (lgamma) then
+  if (gamma_only) then
      print '(5x,"Estimated Max memory (Gamma-only code): ",f8.2,"Mb")', &
           total_mem/1024/1024
   else

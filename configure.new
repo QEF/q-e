@@ -4555,7 +4555,7 @@ echo setting MYLIBS... $mylibs
 if test -x $topdir/makedeps.sh
 then
 	echo $ECHO_N "checking module dependencies... $ECHO_C"
-	( cd $topdir ; makedeps.sh )
+	( cd $topdir ; ./makedeps.sh )
 	echo "${ECHO_T}done"
 fi
 
