@@ -961,8 +961,8 @@
             & 3X,'temperature required      = ', f10.5, ' (kelvin) ', /, &
             & 3X,'NH chain length           = ', i3, /, &
             & 3X,'active degrees of freedom = ', i3, /, &
-            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), /, & 
-            & 3X,'time steps per nose osc.  = ', i5, // )
+            & 3X,'time steps per nose osc.  = ', i5, /, &
+            & 3X,'nose` mass(es)            = ', 20(1X,f10.3),//) 
 
 
     RETURN

@@ -26,6 +26,8 @@
 #ifndef __IOTK_CONFIG_H
 #define __IOTK_CONFIG_H
 
+#  define __IOTK_MAXRANK 4
+
 #ifdef __AIX
 #   define __IOTK_LOGICAL1 1
 #   define __IOTK_LOGICAL2 2
@@ -95,6 +97,25 @@
 #         define __IOTK_REAL1 1
 #         define __IOTK_REAL2 2
 #         define __IOTK_WORKAROUND4
+#   endif
+#endif
+
+#ifdef __LINUX64
+#   ifdef __INTEL
+#         define __IOTK_LOGICAL1 1
+#         define __IOTK_LOGICAL2 2
+#         define __IOTK_LOGICAL3 4
+#         define __IOTK_LOGICAL4 8
+#         define __IOTK_INTEGER1 1
+#         define __IOTK_INTEGER2 2
+#         define __IOTK_INTEGER3 4
+#         define __IOTK_INTEGER4 8
+#         define __IOTK_REAL1    4
+#         define __IOTK_REAL2    8
+#         define __IOTK_REAL3    16
+#         define __IOTK_WORKAROUND1
+#         define __IOTK_WORKAROUND3
+#         define __IOTK_WORKAROUND5
 #   endif
 #endif
 

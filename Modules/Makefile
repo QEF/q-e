@@ -65,7 +65,8 @@ iotk_interface.o \
 iotk_external.o \
 iotk_multitype.o \
 iotk_multitype_character.o \
-iotk_multitype_complex.o \
+iotk_multitype_complex1.o \
+iotk_multitype_complex2.o \
 iotk_multitype_integer1.o \
 iotk_multitype_integer2.o \
 iotk_multitype_logical.o \
