@@ -30,7 +30,7 @@ implicit none
   complex(kind=DP) :: x1, x2
   complex(kind=DP), allocatable :: amat(:,:), vec1(:,:), &
                      tmat(:,:), veceig(:,:), zps_nc(:,:), &
-                     vec2(:,:)
+                     vec2(:,:), smat(:,:)
 
   eev = earr(ien)
   ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)
@@ -221,6 +221,27 @@ implicit none
     enddo
     WRITE( stdout,'(15x,f9.5)') tj
   enddo
+
+!
+! Check for S matrix unitarity
+!
+!
+! elements of S_ij = (r_ij, t_ij) and T_ij = (t_ij) matrices
+!
+  allocate( smat(nchanl+nchanr, nchanl) )
+  do n=1, nchanl
+    do ig=1, nchanl
+      smat(ig,n) = vec1(2*n2d+npol*norbs+ig,n)
+    enddo
+    do ig=1, nchanr
+      smat(nchanl+ig,n) = tmat(ig,n)
+    enddo
+  enddo
+  call sunitary(nchanl, nchanr, smat, info)
+  call errore('transmit','S matrix is not unitary', &
+                                     -abs(info))
+  deallocate( smat )
+
 !
 ! eigenchannel decomposition
 !

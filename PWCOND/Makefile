@@ -42,6 +42,7 @@ scatter_back.o \
 scatter_forw.o \
 summary_band.o \
 summary_tran.o \
+sunitary.o \
 transmit.o
 
 MODULES = \
