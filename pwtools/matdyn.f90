@@ -61,7 +61,7 @@ program matdyn
   ! variables *_blk refer to the original cell, other variables
   ! to the (super)cell (which may coincide with the original cell)
   !
-  integer, parameter:: nax=16, nax_blk=16, nrx=8, nqx=100, nrwsx=200, &
+  integer, parameter:: nax=16, nax_blk=16, nrx=8, nqx=500, nrwsx=200, &
                        nax3=3*nax
   real(kind=8), parameter :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
        amconv = 1.66042e-24/9.1095e-28*0.5
