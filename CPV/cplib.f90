@@ -448,7 +448,8 @@
 ! Compute atomic wavefunctions in G-space
 !
       use ncprm
-      use elct, only: ngw, ng0
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, nas
       use gvec
       use wfc_atomic
@@ -814,6 +815,7 @@
 !
       use ions_module
       use elct
+      use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
       use cvan
 !
@@ -859,6 +861,7 @@
       use ions_module
       use cvan
       use elct
+      use gvecw, only: ngw
       use parm
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
@@ -969,6 +972,8 @@
 !     requires in input the updated bec(i)
 !
       use ions_module
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use elct
       use cvan
 !
@@ -1019,6 +1024,8 @@
 !
       use constants, only: pi, fpi
       use elct
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use gvec
       use parm
       use pres_mod
@@ -1081,6 +1088,7 @@
       use ions_module
       use gvec
       use gvecs
+      use reciprocal_vectors, only: ng0 => gstart
       use parm
       use pseu
       use dpseu
@@ -1139,6 +1147,7 @@
       use cvan
       use cdvan
       use elct
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module
       implicit none
 ! input
@@ -1209,6 +1218,7 @@
       use ions_module
       use gvec
       use gvecs
+      use reciprocal_vectors, only: ng0 => gstart
       use parm
       use pseu
       use dpseu
@@ -1265,6 +1275,7 @@
       use control_flags, only: iprint, tbuff
       use gvec
       use gvecs
+      use gvecw, only: ngw
       use cvan
       use parm
       use parms
@@ -1435,6 +1446,8 @@
 !
       use ions_module
       use elct
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use cvan
 !
       implicit none
@@ -1783,6 +1796,8 @@
       use constants, only: pi, fpi
       use elct
       use gvec
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use parm
       use pres_mod
       implicit none
@@ -2009,9 +2024,10 @@
 !     the sum over node contributions is done in the calling routine
 !
       use core
-      use elct, only:ng0, nspin
+      use elct, only: nspin
       use gvec
       use gvecb
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module
       use parm
       use parmb
@@ -2175,6 +2191,7 @@
       use elct
       use gvec
       use gvecs
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module
       use parm
       use pseu
@@ -2316,7 +2333,8 @@
 ! initialize wavefunctions with gaussians - edit to fit your system
 !
       use ions_module
-      use elct, only: n, ngw
+      use elct, only: n
+      use gvecw, only: ngw
       use gvec
 !
       implicit none
@@ -2494,6 +2512,8 @@
 !
       use gvec
       use gvecs
+      use gvecw, only: ngw, ngwl, ngwt
+      use reciprocal_vectors, only: ng0 => gstart
       use elct
 #ifdef __PARA
       use para_mod
@@ -2594,10 +2614,10 @@
 !     number og Gs )
 !
       ng_g = ng
-      ngw_g = ngw
+      ngwt = ngw
 
       CALL mp_sum( ng_g )
-      CALL mp_sum( ngw_g )
+      CALL mp_sum( ngwt )
 
       allocate(g2_g(ng_g))
       allocate(mill_g(3,ng_g))
@@ -3180,20 +3200,20 @@
 ! 
 ! shells of G - first calculate their number and position
 !
-      nglb=1
-      iglb(1)=nglb
+      ngbl=1
+      iglb(1)=ngbl
       do ig=2,ngb
          if(abs(gb(ig)-gb(ig-1)).gt.1.e-6)then
-            nglb=nglb+1
+            ngbl=ngbl+1
          endif
-         iglb(ig)=nglb
+         iglb(ig)=ngbl
       end do
-      write(6,180) nglb
- 180  format(' ggenb: # of gb shells  < gcutb nglb= ',i6)
+      write(6,180) ngbl
+ 180  format(' ggenb: # of gb shells  < gcutb ngbl= ',i6)
 ! 
 ! then allocate the array glb
 !
-      allocate(glb(nglb))
+      allocate(glb(ngbl))
 ! 
 ! and finally fill glb with the values of the shells
 !
@@ -3231,6 +3251,8 @@
       use ions_module
       use cvan
       use elct
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
 !
       implicit none
 !
@@ -3314,6 +3336,7 @@
 !
       use cvan
       use elct
+      use gvecw, only: ngw
 !
       implicit none
 !
@@ -4401,6 +4424,7 @@
       use cvan
       use ions_module
       use elct
+      use gvecw, only: ngw
       use constants, only: pi, fpi
       use parm
 ! 
@@ -4481,7 +4505,8 @@
 !     output: becp as parameter
 !
       use ions_module, only: na, nas
-      use elct, only: ngw, ng0
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use constants, only: pi, fpi
       use cvan
       use work2
@@ -4558,6 +4583,8 @@
       use ions_module
       use elct
       use gvec
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use constants, only: pi, fpi
       use cvan
       use work2
@@ -4647,6 +4674,7 @@
       use ions_module
       use cvan
       use elct
+      use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
 !
       implicit none
@@ -5015,7 +5043,7 @@
 !  calculated in ggen .
 !
       use ions_module
-      use elct, only:ngw
+      use gvecw, only: ngw
       use parm
       use constants, only: pi, fpi
       use gvec
@@ -5134,6 +5162,7 @@
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
       use ions_module
+      use gvecw, only: ngw
       use cvan 
       use elct
 !
@@ -5189,7 +5218,9 @@
 ! Projection on atomic wavefunctions
 !
       use ncprm
-      use elct, only: ngw, ng0, n, nx
+      use elct, only: n, nx
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, nas
       use cvan, only: nhsa
       use wfc_atomic
@@ -5413,7 +5444,9 @@
 ! iflag= 0 : read h, hold, c0
 ! iflag=+1 : read everything
 !
-      use elct, only: n, nx, ngw, ng0
+      use elct, only: n, nx
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, natx
       use parameters, only: nacx
 !
@@ -6476,6 +6509,8 @@
       use gvec
       use gvecs
       use gvecb, only: ngb
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use cvan
       use parm
       use parms
@@ -6768,6 +6803,8 @@
 !     routine makes use of  c(-q)=c*(q)
 !
       use parameters, only: nsx, natx
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use cvan
       use elct
 !
@@ -7190,6 +7227,7 @@
       use ions_module
       use cvan
       use elct
+      use gvecw, only: ngw
       use parm
       use constants, only: pi, fpi
       implicit none
@@ -7326,6 +7364,8 @@
       use parameters, only: natx, nsx
       use cvan
       use elct
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
 !
       implicit none
 !
@@ -7409,6 +7449,8 @@
 !     Assumes real psi, with only half G vectors.
 !
       use elct
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use cvan
       use ions_module, only: na
       use parm
@@ -7571,6 +7613,8 @@
       use parameters, only: nsx, natx
       use cvan
       use elct
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
 !
       implicit none
       integer nss, ist
@@ -7634,6 +7678,7 @@
 !
       use ions_module
       use cvan
+      use gvecw, only: ngw
       use elct
       use work2
       use control_flags, only: iprint, iprsta
@@ -7725,6 +7770,7 @@
       use ions_module
       use gvec
       use gvecs
+      use reciprocal_vectors, only: ng0 => gstart
       use parm
       use parms
       use elct
@@ -8088,7 +8134,8 @@
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh)
 !-----------------------------------------------------------------------
-      use elct, only: n, nx, ngw
+      use elct, only: n, nx
+      use gvecw, only: ngw
       use ions_module, only: nsp, na, natx
       use parameters, only: nacx
 !

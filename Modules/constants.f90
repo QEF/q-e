@@ -15,8 +15,7 @@
         IMPLICIT NONE
         SAVE
 
-        REAL(dbl) :: ALAT
-        REAL(dbl) :: PI, tpi, FPI, TPIBA, TPIBA2
+        REAL(dbl) :: PI, tpi, FPI
         REAL(dbl) :: SQRTPI, SQRTPM1, sqrt2 
 
 ! ...   Physical constants
@@ -68,19 +67,5 @@
         REAL(dbl), parameter :: amconv= 1.66042d-24/9.1095d-28*0.5d0 
         !  pressure conversion from Ry/(a.u)^3 to K
         REAL(dbl), parameter :: uakbar= 147105.d0
-
-
-      CONTAINS
-
-        SUBROUTINE constants_setup(CELLDM)
-           REAL(dbl), INTENT(IN) :: celldm
-           If(celldm.le.0.0d0) THEN
-             CALL errore(' constants_setup ', ' zero or negative CELLDM ',0)
-           END IF
-           alat   = celldm
-           tpiba  = tpi / celldm       ! scaling constant: 2*pi/alat
-           tpiba2 = tpiba ** 2
-           RETURN
-        END SUBROUTINE constants_setup
 
       END MODULE constants

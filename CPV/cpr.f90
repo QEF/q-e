@@ -59,6 +59,8 @@
       use gvec
       use gvecs
       use gvecb
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module
       use parm
       use parms

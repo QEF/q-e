@@ -22,21 +22,6 @@ module bhs
   integer lloc(nsx)
 end module bhs
 
-!module control_module
-!  !     iprsta = output verbosity (increasing from 0 to infinity)
-!  !     iprint = print output every iprint step
-!  !              if true, do this:
-!  !     tfor   = ion dynamics (calculate forces)
-!  !     tpre   = calculate pressure
-!  !     thdyn  = variable-cell dynamics
-!  !     tvlocw = write potential to unit 46 (seldom used)
-!  !     trhor  = read rho from unit 47      (seldom used)
-!  !     trhow  = write rho to  unit 47      (seldom used)
-!  !     tbuff  = save wfc on unit 21        (never used)
-!  integer iprsta, iprint
-!  logical tfor, tpre, thdyn, tbuff, tvlocw, trhor, trhow
-!end module control_module
-
 module core
   !     nlcc = 0 no core correction on any atom
   !     rhocb = core charge in G space (box grid)
@@ -92,18 +77,26 @@ module elct
   !     n     = total number of electronic states
   !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
   !            nx is used only to dimension arrays
-  !     ngw   = number of plane waves for wavefunctions
-  !     ngwl  = number of G-vector shells up to ngw
-  !     ng0   = first G-vector with nonzero modulus
-  !             needed in the parallel case (G=0 is on one node only!)
-  !     ngw_g = in a parallel execution global number of plane waves for wavefunctions
   integer nel(2), nspin, nupdwn(2), iupdwn(2), n, nx
-  integer ngw, ngwl, ng0, ngw_g
   !     ispin = spin of each state
   integer, allocatable:: ispin(:)
+  !
 end module elct
 
 module gvec
+
+  use reciprocal_vectors, only: &
+        tpiba, &
+        tpiba2, &
+        ng => ngm, &
+        ngl => ngml, &
+        ng_g => ngmt
+
+  !     tpiba   = 2*pi/alat
+  !     tpiba2  = (2*pi/alat)**2
+  !     ng      = number of G vectors for density and potential
+  !     ngl     = number of shells of G
+
   !     G-vector quantities for the thick grid - see also doc in ggen 
   !     g       = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
   !     gl      = shells of G^2           ( "   "   "    "      "      )
@@ -120,34 +113,14 @@ module gvec
   !     ig_l2g  = "l2g" means local to global, this array convert a local
   !               G-vector index into the global index, in other words
   !               the index of the G-v. in the overall array of G-vectors
-  integer :: ng_g
-  !
-  !     tpiba   = 2*pi/alat
-  !     tpiba2  = (2*pi/alat)**2
-  real(kind=8) tpiba, tpiba2
   !     np      = fft index for G>
   !     nm      = fft index for G<
   !     in1p,in2p,in3p = G components in crystal axis
   integer,allocatable:: np(:), nm(:), in1p(:),in2p(:),in3p(:), igl(:)
-  !     ng      = number of G vectors for density and potential
-  !     ngl     = number of shells of G
-  integer ng, ngl
   real(kind=8) :: bi1(3), bi2(3), bi3(3)
   !     bi?     = base vector used to generate the reciprocal space
 end module gvec
 
-module gvecb
-  !          As above, for the box grid
-  real(kind=8), allocatable:: gb(:), gxb(:,:),gxnb(:,:), glb(:)
-  integer, allocatable:: npb(:),nmb(:),iglb(:),in1pb(:),in2pb(:),in3pb(:)
-  integer ngb, nglb
-end module gvecb
-
-module gvecs
-  !          As above, for the smooth grid
-  integer ngs, ngsl
-  integer, allocatable:: nps(:), nms(:)
-end module gvecs
 
 module ions_module
   use parameters, only: nsx, natx
@@ -217,9 +190,8 @@ module ncprm
 end module ncprm
 
 module parm
-  !      alat  = lattice parameter
-  !      omega = unit cell volume
-  real(kind=8) alat, omega
+  use cell_base, only: alat   !     alat  = lattice parameter
+  real(kind=8) :: omega       !     omega = unit cell volume
   !     nr1 ,nr2 ,nr3  = dense grid in real space (fft)
   !     nr1x,nr2x,nr3x = fft dimensions - may differ from fft transform 
   !                      lengths nr1,nr2,nr3 for efficiency reasons

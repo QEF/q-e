@@ -32,6 +32,10 @@
           INTEGER :: perd(3)
         END TYPE boxdimensions
 
+        REAL(dbl) :: alat    !  lattice parameter, often used to scale quantities
+                             !  or in combination to other parameters/constants
+                             !  to define new units
+
         INTERFACE cell_init
           MODULE PROCEDURE cell_init_ht, cell_init_a
         END INTERFACE
@@ -39,6 +43,7 @@
         INTERFACE pbcs
           MODULE PROCEDURE pbcs_components, pbcs_vectors
         END INTERFACE
+
 !
 !------------------------------------------------------------------------------!
   CONTAINS

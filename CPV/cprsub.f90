@@ -18,7 +18,9 @@
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
       use ions_module, only: na, nas
-      use elct, only: n, ngw, ng0
+      use elct, only: n
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use constants, only: pi, fpi
       use cvan
       use cdvan
@@ -257,7 +259,7 @@
       use parm
       use ions_module
       use pseu
-      use elct, only: ng0
+      use reciprocal_vectors, only: ng0 => gstart
       use ncprm
 !
       use dpseu
@@ -490,7 +492,7 @@
 !
       use control_flags, only: iprint
       use gvec
-      use elct, only: ngw
+      use gvecw, only: ngw
       use pres_mod
       implicit none
 !
@@ -675,6 +677,7 @@
 !
       use control_flags, only: iprint, thdyn
       use gvec
+      use gvecw, only: ngw
       use ions_module
       use parm
       use parms
@@ -913,6 +916,8 @@
 !
       use control_flags, only: iprint, tpre, iprsta
       use gvec
+      use gvecw, only: ngw
+      use reciprocal_vectors, only: ng0 => gstart
       use cvan
       use core
       use constants, only: pi, fpi
@@ -1214,6 +1219,7 @@
 !     
       use control_flags, only: iprint, tpre
       use gvec
+      use gvecw, only: ngw
       use cvan
       use core
       use constants, only: pi, fpi

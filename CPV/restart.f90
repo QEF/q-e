@@ -13,7 +13,9 @@ CONTAINS
 !
 ! read from file and distribute data calculated in preceding iterations
 !
-      use elct, only: n, nx, ngw, ng0, nspin, nel, ngw_g
+      use elct, only: n, nx, nspin, nel
+      use gvecw, only: ngw, ngwt
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, natx
       use parm, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
@@ -114,7 +116,7 @@ CONTAINS
 !       ==  WRITE HEADER INFORMATION                                    ==
 !       ==--------------------------------------------------------------==
 
-      ngwkg(1) = ngw_g
+      ngwkg(1) = ngwt
       ngwkl(1) = ngw 
       nbnd = n
       IF( nspin > 1 ) THEN
@@ -311,7 +313,7 @@ CONTAINS
         DO i = 1, nk
           nb_g = nx
           CALL write_restart_wfc(ndw, twrite, i, nk, kunit, j, nspin, &
-            wfc_scal_cp90, c0, tw0, cm, twm, ngw_g, nb_g, ig_l2g, ngw )
+            wfc_scal_cp90, c0, tw0, cm, twm, ngwt, nb_g, ig_l2g, ngw )
         END DO
       END DO
 
@@ -331,7 +333,9 @@ CONTAINS
 !
 ! read from file and distribute data calculated in preceding iterations
 !
-      use elct, only: n, nx, ngw, ng0, nspin, nel, ngw_g
+      use elct, only: n, nx, nspin, nel
+      use gvecw, only: ngw, ngwt
+      use reciprocal_vectors, only: ng0 => gstart
       use ions_module, only: nsp, na, natx
       use parm, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
@@ -436,7 +440,7 @@ CONTAINS
 !     ==--------------------------------------------------------------==
 
       ngwkl(1) = ngw 
-      ngwkg(1) = ngw_g
+      ngwkg(1) = ngwt
       nbnd = n
       IF( nspin > 1 ) THEN
         nelu = nel(1)
@@ -652,7 +656,7 @@ CONTAINS
             tread = .TRUE.
             tovrw = .FALSE.
             CALL read_restart_wfc(ndr, tovrw, tread, ik_, nk_, kunit, ispin_, nspin_, &
-              wfc_scal, c0, tw0, cm, twm, ngw_g, nb_g, ig_l2g, tigl, ngw )
+              wfc_scal, c0, tw0, cm, twm, ngwt, nb_g, ig_l2g, tigl, ngw )
           END DO
         END DO
 
