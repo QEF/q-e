@@ -47,19 +47,18 @@ that "make.sys" automatically.
 To do that, you have to add the case for your architecture in several
 places throughout "configure.ac":
 
-*** 1: Select compilers. ***
+*** 1: Detect architecture. ***
 
 Look for these lines:
 
-  # check compiling environment
-  case $build in
-  ia64-*-linux-gnu )
-        ...
-  x86_64-*-linux-gnu )
-        ...
-  *-pc-linux-gnu )
-  	...
-  etc.
+if test "$arch" = ""
+then
+        # identify architecture
+        case $build in
+                ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
+                *-pc-linux-gnu )                        arch=linux32 ;;
+                *-ibm-aix* )                            arch=aix     ;;
+                etc.
 
 Here you must add an entry corresponding to your architecture and
 operating system.  Run "config.guess" to obtain the string identifying
@@ -70,7 +69,22 @@ account for small variations of the string for different machines of
 the same family.  For instance, it could be "aix4.3" instead of
 "aix5.1", or "athlon" instead of "i686"...
 
-There you have to set the appropriate values for several variables:
+*** 2: Select compilers. ***
+
+Look for these lines:
+
+  # check compiling environment
+  case $arch in
+  linux64 )
+        ...
+  linux32 )
+        ...
+  aix )
+        ...
+  etc.
+
+Add an entry for your value of $arch, and set there the appropriate
+values for several variables:
 
 - "try_f90" should contain the list of candidate Fortran 90 compilers,
   in order of decreasing preference (i.e. configure will use the first
@@ -88,21 +102,16 @@ There you have to set the appropriate values for several variables:
   (on IBM machines) or "try_dflags=-D__LINUX" (on 32-bit PCs with
   Linux) or "try_dflags=-D__LINUX64" (Linux on Itanium and Opteron).
 
-- you may also define "is_arch=1" where "arch" is the architecture
-  name (i.e., is_linux, is_aix, is_mips...); but this is only needed
-  if you plan to use it later in order to select some library that is
-  specific to that architecture.
-
 For example, here's the entry for Mac OS X:
 
-  powerpc-apple-darwin* )
-	  is_mac=1
-	  try_f90="xlf90 f90"
-	  try_ar="ar"
-	  try_arflags="ruv"
-	  try_dflags="-D__MAC"
-	  ranlib="ranlib"
-	  ;;
+  mac )
+          try_f90_parallel="mpxlf90 mpf90"
+          try_f90="xlf90 f90"
+          try_ar="ar"
+          try_arflags="ruv"
+          try_dflags="-D__MAC"
+          ranlib="ranlib"
+          ;;
 
 Then look for these lines:
 
@@ -111,16 +120,16 @@ Then look for these lines:
   AC_PROG_F77($f90)
   ...
 
-  case "$build:$f90" in
-  ia64-*-linux-gnu:* | x86_64-*-linux-gnu:* | *-pc-linux-gnu:* )
+  case "$arch:$f90" in
+  linux* )
         ...
-  *-ibm-aix*:*xlf*_r )
+  aix:*xlf*_r )
         ...
   etc.
 
 and just below:
 
-  case "$build:$f90" in
+  case "$arch:$f90" in
   *:mpif90 )
         ....
   etc.
@@ -147,20 +156,20 @@ because different versions need different flags.
 
 For example, here are the entries for XL compilers on AIX:
 
-  *-ibm-aix*:*xlf*_r )
-	  try_cc="xlc_r cc gcc"
-	  try_f77="xlf_r f77 $f90"
-	  ;;
+  aix:*xlf*_r )
+          try_cc="xlc_r cc gcc"
+          try_f77="xlf_r f77 $f90"
+          ;;
 
-  *-ibm-aix*:mpxlf*_r )
-	  try_cc_parallel="mpcc_r"
-	  try_f77_parallel="mpxlf_r"
-	  ;;
+  aix:mpxlf*_r )
+          try_cc_parallel="mpcc_r"
+          try_f77_parallel="mpxlf_r"
+          ;;
 
 Finally, at this point:
 
   # check whether the C and Fortran compilers are compatible
-  case "$build:$cc:$f90" in
+  case "$arch:$cc:$f90" in
   	# list supported combinations here
   ...
 
@@ -179,15 +188,15 @@ message like this:
 
 which you may however ignore.
 
-*** 2: Specify compilation flags. ***
+*** 3: Specify compilation flags. ***
 
 Look for these lines:
 
   # check Fortran compiler flags
-  case "$build:$f90_id" in
-  ia64-*-linux-gnu:ifort | ia64-*-linux-gnu:efc )
+  case "$arch:$f90_id" in
+  linux64:ifort | linux64:efc )
         ...
-  x86_64-*-linux-gnu:pgf* )
+  linux64:pgf* )
   	...
   etc.
 
@@ -226,23 +235,23 @@ Add an entry for your case and define:
 
 For example, here's the entry for ifort on Linux PC:
 
-  *-pc-linux-gnu:ifort )
+  linux32:ifort )
           try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
-	  try_f90flags="\$(FFLAGS) -nomodule"
-	  try_fflags_noopt="-O0"
-	  try_ldflags="-Vaxlib"
-	  try_ldflags_static="-static"
-	  try_dflags="$try_dflags -D__INTEL"
-	  pre_fdflags="-fpp "
-	  have_cpp=1
-	  ;;
+          try_f90flags="\$(FFLAGS) -nomodule"
+          try_fflags_noopt="-O0"
+          try_ldflags="-Vaxlib"
+          try_ldflags_static="-static"
+          try_dflags="$try_dflags -D__INTEL"
+          pre_fdflags="-fpp "
+          have_cpp=1
+          ;;
 
 Then, look for these lines:
 
-  case "$build:$cc_id" in
-  ia64-*-linux-gnu:icc )
+  case "$arch:$cc_id" in
+  linux*:icc )
   	...
-  x86_64-*-linux-gnu:pgcc )
+  linux*:pgcc )
   	...
   etc.
 
@@ -258,10 +267,10 @@ Add an entry for your case and define:
 
 For example for XLC on AIX:
 
-  *-ibm-aix*:mpcc* | *-ibm-aix*:xlc* | *-ibm-aix*:cc )
-	  try_cflags="-q64 -O2"
-	  c_ldflags="-q64"
-	  ;;
+  aix:mpcc* | aix:xlc* | aix:cc )
+          try_cflags="-q64 -O2"
+          c_ldflags="-q64"
+          ;;
 
 Finally, if you have to use a nonstandard preprocessor, look for these
 lines:
@@ -279,20 +288,20 @@ lines:
 
 and set "try_cppflags" as appropriate.
 
-*** 3. Search for libraries. ***
+*** 4. Search for libraries. ***
 
 To instruct "configure" to search for libraries, you must tell it two
 things: the names of libraries it should search for, and where it
 should search.
 First, look for these lines:
 
-	# build list of directories to search
-	if test $is_linux64 && test $is_ifort
-	then
-		...
-	elif test $is_linux64 && test $is_pgf
-	then
-		...
+        # build list of directories to search
+        case "$arch" in
+        linux64 )
+                ...
+        linux32 )
+                ...
+        etc.
 
 insert an entry for your architecture (and your compiler, if the
 library to be searched for is compiler-specific), and define:
@@ -301,14 +310,13 @@ library to be searched for is compiler-specific), and define:
 
 Then, look for these lines:
 
-  	# use vendor libraries if available
-	if test $is_linux64 && test $is_ifort
-	then
-		...
-	elif test $is_linux && test $is_ifort
-	then
-  		...
-	etc.
+        # use vendor libraries if available
+        case "$arch" in
+        linux64 )
+                ...
+        linux32 )
+                ...
+        etc.
 
 If you want to search for a vendor-specific library, you'll have to
 add an entry for that library here.
