@@ -4917,7 +4917,7 @@ end function pseudo_type
          call errore('readpp','wrong potential read',15)
       endif
 
-      call dftname (exfact, dft)
+      call dftname (nint(exfact), dft)
       call which_dft (dft)
 !
       if(lloc(is).eq.2)then 
@@ -5120,7 +5120,6 @@ end function pseudo_type
      &        rsatom(ndmx)    ! charge density of pseudoatom
       integer mfxcx, mfxcc,   &!
      &        mgcx, mgcc,     &! exch-corr functional indices 
-     &        exfact,         &
      &        lmin, lmax       ! min and max l
 !
 !
@@ -5412,7 +5411,7 @@ end function pseudo_type
      &     call errore('readvan','Wrong xc in pseudopotential',1)
 ! convert from "our" conventions to Vanderbilt conventions
 !
-      call dftname (exfact, dft)
+      call dftname (nint(exfact), dft)
       call which_dft (dft)
 !
       read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &
