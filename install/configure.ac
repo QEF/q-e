@@ -322,7 +322,7 @@ alpha:cc:f90 )                      ;;
 mac:mpcc:mpf90 )                    ;;
 mac:gcc:xlf90 )                     ;;
 crayx1:cc:ftn )                     ;;
-# sparc:mpcc:mpf90 | sparc:cc:f90 )   ;;
+sparc:cc:f90 )                      ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)

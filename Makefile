@@ -1,5 +1,3 @@
-include make.sys
-
 default :
 	@echo 'to install, type at the shell prompt:'
 	@echo '  ./configure'
@@ -25,55 +23,86 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
 pw : bindir mods libs
-	if test -d PW   ; then ( cd PW   ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d PW ; then \
+	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 fpmd : bindir mods libs iotk
-	if test -d CPV ; then ( cd CPV ; $(MAKE) $(MFLAGS) fpmd ) ; fi
+	if test -d CPV ; then \
+	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) fpmd ; \
+	else $(MAKE) $(MFLAGS) fpmd ; fi ) ; fi
 
 cp : bindir mods libs iotk
-	if test -d CPV  ; then ( cd CPV  ; $(MAKE) $(MFLAGS) cp ) ; fi
+	if test -d CPV ; then \
+	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) cp ; \
+	else $(MAKE) $(MFLAGS) cp ; fi ) ; fi
 
 ph : bindir mods libs pw
-	if test -d PH ; then ( cd PH ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d PH ; then \
+	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 pp : bindir mods libs pw
-	if test -d PP ; then ( cd PP ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d PP ; then \
+	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 gamma : bindir mods libs pw
-	if test -d Gamma  ; then ( cd Gamma  ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d Gamma ; then \
+	( cd Gamma ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 pwcond : bindir mods libs pw pp
-	if test -d PWCOND ; then ( cd PWCOND ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d PWCOND ; then \
+	( cd PWCOND ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 d3 : bindir mods libs pw ph
-	if test -d D3 ; then ( cd D3 ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d D3 ; then \
+	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 raman : bindir mods libs pw ph
-	if test -d Raman ; then ( cd Raman ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d Raman ; then \
+	( cd Raman ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 tools : bindir mods libs pw
-	if test -d pwtools  ; then ( cd pwtools  ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d pwtools ; then \
+	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 ld1 : bindir mods libs pw
-	if test -d atomic ; then ( cd atomic ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d atomic ; then \
+	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 upf : mods libs
-	if test -d upftools ; then ( cd upftools ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d upftools ; then \
+	( cd upftools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
 iotk :
-	if test -d Modules ; then ( cd Modules ; $(MAKE) $(MFLAGS) iotk ) ; fi
+	if test -d Modules ; then \
+	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) iotk ; \
+	else $(MAKE) $(MFLAGS) iotk ; fi ) ; fi
 
 pw_export : iotk bindir mods libs pw
-	if test -d PP ; then ( cd PP ; $(MAKE) $(MFLAGS) pw_export.x ) ; fi
+	if test -d PP ; then \
+	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) pw_export.x ; \
+	else $(MAKE) $(MFLAGS) pw_export.x ; fi ) ; fi
 
 pwall : pw ph pp gamma pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
 mods :
-	( cd Modules; $(MAKE) $(MFLAGS) all )
+	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi )
 libs : mods
-	( cd clib ; $(MAKE) $(MFLAGS) all )
-	( cd flib ; $(MAKE) $(MFLAGS) all )
+	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi )
+	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi )
 bindir :
 	test -d bin || mkdir bin
 
@@ -86,7 +115,9 @@ clean :
 		atomic clib flib pwtools upftools \
 	; do \
 	    if test -d $$dir ; then \
-		( cd $$dir ; touch make.depend ; $(MAKE) $(MFLAGS) clean ) \
+		( cd $$dir ; touch make.depend ; \
+		if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
+		else $(MAKE) $(MFLAGS) clean ; fi )
 	    fi \
 	done
 	- /bin/rm -rf bin/*.x
@@ -98,7 +129,9 @@ veryclean : clean
 		      espresso.tar.gz CPV/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
-	- if test -d GUI ; then ( cd GUI; $(MAKE) $(MFLAGS) veryclean ) ; fi
+	- if test -d GUI ; then \
+	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) veryclean ; \
+		else $(MAKE) $(MFLAGS) veryclean ; fi )
 
 tar :
 	tar cvf espresso.tar \
@@ -117,7 +150,9 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
-	    $(MAKE) $(MFLAGS) clean cvsinit pwgui-source-notcl ; \
+	    if test "$(MAKE)" = "" ; then \
+		make $(MFLAGS) clean cvsinit pwgui-source-notcl; \
+	    else $(MAKE) $(MFLAGS) clean cvsinit pwgui-source-notcl; fi \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
