@@ -165,7 +165,33 @@ PHOBJS = \
 ../PH/zstar_eu.o \
 ../PH/zstar_eu_us.o
 
-MODULES = ../Modules/*.o
+MODULES = \
+../Modules/basic_algebra_routines.o \
+../Modules/cell_base.o \
+../Modules/clocks.o \
+../Modules/check_stop.o \
+../Modules/constants.o \
+../Modules/control_flags.o \
+../Modules/fft_base.o \
+../Modules/fft_scalar.o \
+../Modules/fft_types.o \
+../Modules/formats.o \
+../Modules/io_base.o \
+../Modules/io_files.o \
+../Modules/io_global.o \
+../Modules/ions_base.o \
+../Modules/kind.o \
+../Modules/mp_buffers.o \
+../Modules/mp_global.o \
+../Modules/mp_wave.o \
+../Modules/mp.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/pseudo_types.o \
+../Modules/recvec.o \
+../Modules/stick_base.o \
+../Modules/version.o \
+../Modules/wavefunctions.o
 
 PWOBJS = \
 ../PW/aainit.o \
@@ -182,17 +208,6 @@ PWOBJS = \
 ../PW/atomic_wfc.o \
 ../PW/bachel.o \
 ../PW/becmod.o \
-../PW/bp_bess.o \
-../PW/bp_c_phase.o \
-../PW/bp_calc_btq.o \
-../PW/bp_dbess.o \
-../PW/bp_qvan3.o \
-../PW/bp_radin.o \
-../PW/bp_strings.o \
-../PW/bp_ylm_q.o \
-../PW/bp_zgedi.o \
-../PW/bp_zgefa.o \
-../PW/c_bands.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
 ../PW/ccgdiagg.o \
@@ -213,10 +228,8 @@ PWOBJS = \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
-../PW/clean_pw.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
-../PW/compute_scf.o \
 ../PW/constraints_module.o \
 ../PW/conv_to_num.o \
 ../PW/coset.o \
@@ -242,7 +255,6 @@ PWOBJS = \
 ../PW/dylmr2.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
-../PW/electrons.o \
 ../PW/eqvect.o \
 ../PW/error.o \
 ../PW/error_handler.o \
@@ -275,12 +287,10 @@ PWOBJS = \
 ../PW/hinit1.o \
 ../PW/init_ns.o \
 ../PW/init_pool.o \
-../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
-../PW/input.o \
 ../PW/interpolate.o \
 ../PW/invmat.o \
 ../PW/io_pot.o \
@@ -306,27 +316,13 @@ PWOBJS = \
 ../PW/potinit.o \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
-../PW/punch.o \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
 ../PW/random.o \
 ../PW/rbecmod.o \
 ../PW/rdiaghg.o \
-../PW/read_conf_from_file.o \
 ../PW/read_file.o \
-../PW/read_ncpp.o \
-../PW/read_pseudo.o \
-../PW/readin.o \
-../PW/readnewvan.o \
-../PW/readvan.o \
-../PW/remove_atomic_rho.o \
-../PW/regterg.o \
-../PW/reset_k_points.o \
-../PW/restart.o \
-../PW/restart_from_file.o \
-../PW/restart_in_electrons.o \
-../PW/restart_in_ions.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
 ../PW/rotate_wfc.o \
@@ -354,7 +350,6 @@ PWOBJS = \
 ../PW/set_vrs.o \
 ../PW/setlocal.o \
 ../PW/setqf.o \
-../PW/setup.o \
 ../PW/setupkpt.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
@@ -362,7 +357,6 @@ PWOBJS = \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
 ../PW/startup.o \
-../PW/stop_pw.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
 ../PW/stres_gradcorr.o \
@@ -401,7 +395,6 @@ PWOBJS = \
 ../PW/wfcinit.o \
 ../PW/wgauss.o \
 ../PW/which_dft.o \
-../PW/write_config_to_file.o \
 ../PW/write_ns.o \
 ../PW/wsweight.o \
 ../PW/ylmr2.o

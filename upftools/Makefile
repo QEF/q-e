@@ -4,39 +4,40 @@ include ../make.rules
 include ../make.sys
 
 OBJS = write_upf.o
+MODS = ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
+       ../Modules/mp.o
 
-all : rrkj2upf ncpp2upf vdb2upf uspp2upf fhi2upf cpmd2upf oldcp2upf
+all : rrkj2upf.x ncpp2upf.x vdb2upf.x uspp2upf.x fhi2upf.x cpmd2upf.x oldcp2upf.x fpmd2upf.x
 
-rrkj2upf :  rrkj2upf.o $(OBJS)
+rrkj2upf.x :  rrkj2upf.o $(OBJS)
 	$(LD) -o $@  rrkj2upf.o $(OBJS) $(LDFLAGS)
 
-ncpp2upf :  ncpp2upf.o $(OBJS) nclib.o
+ncpp2upf.x :  ncpp2upf.o $(OBJS) nclib.o
 	$(LD) -o $@  ncpp2upf.o nclib.o $(OBJS) $(LDFLAGS)
 
-vdb2upf :  vdb2upf.o $(OBJS) vanderbilt.o
+vdb2upf.x :  vdb2upf.o $(OBJS) vanderbilt.o
 	$(LD) -o $@  vdb2upf.o  vanderbilt.o write_upf.o $(LDFLAGS)
 
-uspp2upf :  uspp2upf.o $(OBJS) vanderbilt.o
+uspp2upf.x :  uspp2upf.o $(OBJS) vanderbilt.o
 	$(LD) -o $@  uspp2upf.o vanderbilt.o write_upf.o $(LDFLAGS)
 
-fhi2upf :  fhi2upf.o $(OBJS) nclib.o
+fhi2upf.x :  fhi2upf.o $(OBJS) nclib.o
 	$(LD) -o $@  fhi2upf.o nclib.o write_upf.o $(LDFLAGS)
 
-cpmd2upf :  cpmd2upf.o $(OBJS) nclib.o
+cpmd2upf.x :  cpmd2upf.o $(OBJS) nclib.o
 	$(LD) -o $@  cpmd2upf.o nclib.o write_upf.o $(LDFLAGS)
 
-oldcp2upf :  oldcp2upf.o $(OBJS) nclib.o
+oldcp2upf.x :  oldcp2upf.o $(OBJS) nclib.o
 	$(LD) -o $@  oldcp2upf.o nclib.o write_upf.o $(LDFLAGS)
 
 fpmd2upf.x : fpmd2upf.o
-	$(LD) -o $@ $(LDFLAGS) fpmd2upf.o \
-        ../Modules/*.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+	$(LD) -o $@ fpmd2upf.o $(MODS)  $(LDFLAGS)
 
-read_upf :
-	$(LD) -o $@  read_upf.o $(LDFLAGS)
+read_upf.x :
+	$(LD) -o $@ read_upf.o $(LDFLAGS)
 
 clean :
-	- /bin/rm -f  *2upf *.o *~ *.F90 *.mod *.d *.i work.pc
+	- /bin/rm -f  *.x *.o *~ *.F90 *.mod *.d *.i work.pc
 
 any2upf.o: $(OBJS)
 cpmd2upf.o: $(OBJS)

@@ -43,7 +43,35 @@ summary_band.o \
 summary_tran.o \
 transmit.o
 
-MODULES = ../Modules/*.o
+MODULES = \
+../Modules/basic_algebra_routines.o \
+../Modules/cell_base.o \
+../Modules/clocks.o \
+../Modules/check_stop.o \
+../Modules/constants.o \
+../Modules/control_flags.o \
+../Modules/fft_base.o \
+../Modules/fft_scalar.o \
+../Modules/fft_types.o \
+../Modules/formats.o \
+../Modules/io_base.o \
+../Modules/io_files.o \
+../Modules/io_global.o \
+../Modules/ions_base.o \
+../Modules/kind.o \
+../Modules/mp_buffers.o \
+../Modules/mp_global.o \
+../Modules/mp_wave.o \
+../Modules/mp.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/pseudo_types.o \
+../Modules/readpseudo.o \
+../Modules/recvec.o \
+../Modules/stick_base.o \
+../Modules/version.o \
+../Modules/wavefunctions.o
+
 
 PWOBJS = \
 ../PW/aainit.o \
@@ -91,7 +119,6 @@ PWOBJS = \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
-../PW/clean_pw.o \
 ../PW/compute_dip.o \
 ../PW/constraints_module.o \
 ../PW/conv_to_num.o \
@@ -118,7 +145,6 @@ PWOBJS = \
 ../PW/dylmr2.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
-../PW/electrons.o \
 ../PW/eqvect.o \
 ../PW/error.o \
 ../PW/error_handler.o \
@@ -156,7 +182,6 @@ PWOBJS = \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
-../PW/input.o \
 ../PW/interpolate.o \
 ../PW/invmat.o \
 ../PW/io_pot.o \
@@ -189,7 +214,6 @@ PWOBJS = \
 ../PW/random.o \
 ../PW/rbecmod.o \
 ../PW/rdiaghg.o \
-../PW/read_conf_from_file.o \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
 ../PW/read_pseudo.o \
@@ -237,16 +261,6 @@ PWOBJS = \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
 ../PW/startup.o \
-../PW/stop_pw.o \
-../PW/stres_cc.o \
-../PW/stres_ewa.o \
-../PW/stres_gradcorr.o \
-../PW/stres_har.o \
-../PW/stres_hub.o \
-../PW/stres_knl.o \
-../PW/stres_loc.o \
-../PW/stres_us.o \
-../PW/stress.o \
 ../PW/struct_fact.o \
 ../PW/sum_band.o \
 ../PW/sumkg.o \
@@ -275,7 +289,6 @@ PWOBJS = \
 ../PW/wfcinit.o \
 ../PW/wgauss.o \
 ../PW/which_dft.o \
-../PW/write_config_to_file.o \
 ../PW/write_ns.o \
 ../PW/wsweight.o \
 ../PW/ylmr2.o

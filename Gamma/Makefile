@@ -111,10 +111,8 @@ PWOBJS = \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
-../PW/input.o \
 ../PW/interpolate.o \
 ../PW/invmat.o \
-../PW/ions.o \
 ../PW/io_pot.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
@@ -125,7 +123,6 @@ PWOBJS = \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \
-../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/newd.o \
 ../PW/new_ns.o \
@@ -148,10 +145,8 @@ PWOBJS = \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
-../PW/readin.o \
 ../PW/read_ncpp.o \
 ../PW/readnewvan.o \
-../PW/read_pseudo.o \
 ../PW/readvan.o \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
@@ -234,7 +229,38 @@ PWOBJS = \
 ../PW/ylmr2.o
 
 MODULES = \
-../Modules/*.o \
+../Modules/basic_algebra_routines.o \
+../Modules/berry_phase.o \
+../Modules/cell_base.o \
+../Modules/clocks.o \
+../Modules/check_stop.o \
+../Modules/constants.o \
+../Modules/control_flags.o \
+../Modules/fft_base.o \
+../Modules/fft_scalar.o \
+../Modules/fft_types.o \
+../Modules/formats.o \
+../Modules/input_parameters.o \
+../Modules/io_base.o \
+../Modules/io_files.o \
+../Modules/io_global.o \
+../Modules/io_routines.o \
+../Modules/ions_base.o \
+../Modules/kind.o \
+../Modules/mp_buffers.o \
+../Modules/mp_global.o \
+../Modules/mp_wave.o \
+../Modules/mp.o \
+../Modules/neb_variables.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/pseudo_types.o \
+../Modules/readpseudo.o \
+../Modules/recvec.o \
+../Modules/stick_base.o \
+../Modules/supercell.o \
+../Modules/version.o \
+../Modules/wavefunctions.o \
 ../PW/error_handler.o \
 ../PW/restart.o \
 ../PW/upf_to_internal.o
