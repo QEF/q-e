@@ -406,9 +406,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(OUT) :: image
-       INTEGER              :: ioerr
-       LOGICAL              :: opened, exists
+       INTEGER, INTENT(INOUT) :: image
+       INTEGER                :: ioerr
+       LOGICAL                :: opened, exists
        !
        !
        IF ( .NOT. ionode ) RETURN
