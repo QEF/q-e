@@ -53,6 +53,10 @@ MODULE paw
 CONTAINS
 
   subroutine paw_wfc_init(phi)
+    ! 
+    ! Initialize default values for labe end kkpsi
+    !
+
     type(at_wfc) :: phi(:,:)
 
     phi%label%na = 0
@@ -64,6 +68,72 @@ CONTAINS
 
     return
   end subroutine paw_wfc_init
+
+  subroutine read_recon(filerec)
+
+  !
+  ! Read all-electron and pseudo atomic wavefunctions 
+  !  needed for PAW reconstruction
+  !
+
+  use read_pseudo_module , only: scan_begin, scan_end
+  use basis, only:ntyp
+  use atom, only: mesh 
+  use kinds, only: DP
+  use parameters, only : ntypx
+  USE io_global,  ONLY : stdout
+  implicit none
+
+  character (len=80) :: filerec(ntypx)
+  integer :: l,j,i,jtyp,kkphi,nbetam
+
+  do jtyp=1,ntyp
+     open(14,file=filerec(jtyp))
+     call scan_begin(14,'PAW',.true.)
+     read(14,*) paw_nbeta(jtyp)
+     call scan_end(14,'PAW')
+     close(14)
+  enddo
+  nbetam=maxval(paw_nbeta)
+  allocate( psphi(ntyp,nbetam) )
+  allocate( aephi(ntyp,nbetam) )
+
+  call paw_wfc_init(psphi)
+  call paw_wfc_init(aephi)
+
+
+  recphi_read: do jtyp=1,ntyp
+     open(14,file=filerec(jtyp))
+     write (stdout,*) "N_AEwfc atom",jtyp,":",paw_nbeta(jtyp)
+     recphi_loop: do i=1,paw_nbeta(jtyp)
+        allocate(aephi(jtyp,i)%psi(maxval(mesh(1:ntyp))))
+        aephi(jtyp,i)%label%nt=jtyp
+        aephi(jtyp,i)%label%n=i
+        call scan_begin(14,'REC',.false.)
+        call scan_begin(14,'kkbeta',.false.)
+        read(14,*)  kkphi
+        call scan_end(14,'kkbeta')
+        aephi(jtyp,i)%kkpsi=kkphi
+        call scan_begin(14,'L',.false.)        
+        read(14,*)  aephi(jtyp,i)%label%l
+        call scan_end(14,'L')
+        call scan_begin(14,'REC_AE',.false.)
+        read(14,*) (aephi(jtyp,i)%psi(j),j=1,kkphi)
+        call scan_end(14,'REC_AE')
+        allocate (psphi(jtyp,i)%psi(maxval(mesh(1:ntyp))))
+        psphi(jtyp,i)%label%nt=jtyp
+        psphi(jtyp,i)%label%n=i
+        psphi(jtyp,i)%label%l=aephi(jtyp,i)%label%l
+        psphi(jtyp,i)%kkpsi=kkphi
+        call scan_begin(14,'REC_PS',.false.)
+        read(14,*) (psphi(jtyp,i)%psi(j),j=1,kkphi)
+        call scan_end(14,'REC_PS')
+        call scan_end(14,'REC')
+     end do recphi_loop
+     close(14)
+  end do recphi_read
+
+end subroutine read_recon
 
 
 END MODULE paw
