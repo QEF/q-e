@@ -82,7 +82,7 @@
       use work_box, only: qv, deallocate_work_box
       use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
-      use mp, ONLY: mp_end
+      use mp, ONLY: mp_sum
       use para_mod
       use dener
       use derho
@@ -102,6 +102,7 @@
       use betax, only: deallocate_betax
       use input_parameters, only: outdir
       use wave_base, only: wave_steepest, wave_verlet
+      use wave_base, only: wave_speed2
 
 ! wavefunctions
 !
@@ -166,6 +167,7 @@
       real(kind=8), allocatable:: ema0bg(:)
       real(kind=8), allocatable:: emadt2(:)
       real(kind=8), allocatable:: emaver(:)
+      real(kind=8), allocatable:: emainv(:)
       real(kind=8)  emaec
 !
 !  constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
@@ -219,6 +221,7 @@
       integer ibrav, k, ii, l, m
       real(kind=8) ekinh, alfar, temphc, alfap, frich, tolp,    &
      &     factp, temp1, temp2, temph, greash, qnh, randy
+      real(kind=8) ftmp
 
       logical :: twmass
       character(len=256) :: filename
@@ -646,21 +649,23 @@
 !     ======================================================
 !     kinetic energy of the electrons
 !     ======================================================
+         ALLOCATE( emainv( ngw ) )
+
+         emainv = 1.0d0 / ema0bg
+         ftmp = 1.0d0
+         if( ng0 == 2 ) ftmp = 0.5d0 
+         
          ekincm=0.0
          do i=1,n
-            do j=1,ngw
-               speed=c0(j,i,1,1)-cm(j,i,1,1) 
-               ekincm=ekincm+2.*real(conjg(speed)*speed)/ema0bg(j)
-            end do
-            if (ng0.eq.2) then
-               speed=c0(1,i,1,1)-cm(1,i,1,1) 
-               ekincm=ekincm-real(conjg(speed)*speed)
-            end if
+           ekincm = ekincm + 2.0d0 * &
+                    wave_speed2( c0(:,i,1,1), cm(:,i,1,1), emainv, ftmp )
          end do
-         ekincm=ekincm*emass/dt2
-#ifdef __PARA
-         call reduce(1,ekincm)
-#endif
+         ekincm = ekincm * emass / dt2
+         
+         CALL mp_sum( ekincm )
+
+         DEALLOCATE( emainv )
+
          xnhe0=0.
          xnhem=0.
          vnhe =0.
@@ -1168,22 +1173,25 @@
 !
 !     fake electronic kinetic energy
 !
-      ekinc0=0.0
+      ekinc0 = 0.0d0
+
+      ALLOCATE( emainv( ngw ) )
+
+      emainv = 1.0d0 / ema0bg
+      ftmp = 1.0d0
+      if( ng0 == 2 ) ftmp = 0.5d0
+
       do i=1,n
-         do j=1,ngw
-            speed=cm(j,i,1,1)-c0(j,i,1,1)
-            ekinc0=ekinc0+2.*real(conjg(speed)*speed)/ema0bg(j) 
-         end do
-         if(ng0.eq.2) then
-            speed=cm(1,i,1,1)-c0(1,i,1,1)
-            ekinc0=ekinc0-real(conjg(speed)*speed)
-         end if
+         ekinc0 = ekinc0 + 2.0d0 * &
+                  wave_speed2( cm(:,i,1,1), c0(:,i,1,1), emainv, ftmp )
       end do
-#ifdef __PARA
-      call reduce(1,ekinc0)
-#endif
-      ekinc0=ekinc0*emass/dt2
-      ekinc =0.5*(ekinc0+ekincm)
+
+      CALL mp_sum( ekinc0 )
+
+      ekinc0 = ekinc0 * emass / dt2
+      ekinc = 0.5 * ( ekinc0 + ekincm )
+
+      DEALLOCATE( emainv )
 !
 !     fake cell-parameters kinetic energy
 !

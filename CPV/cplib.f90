@@ -2407,18 +2407,15 @@
 !
 !   the g's are in units of 2pi/a.
 !
-      use gvec, only: g, gx, np, igl, nm, ng, ng_g, mill_g, g2_g, ngl, gl
-      use gvec, only: in1p, in2p, in3p, mill_l, ig_l2g
+      use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
+      use reciprocal_vectors, only: mill_l, ig_l2g
+      use recvecs_indexes, only: in1p, in2p, in3p, nm, np
       use gvecs, only: ngs, nms, ngsl, nps
       use gvecw, only: ngw, ngwl, ngwt
       use reciprocal_vectors, only: ng0 => gstart
       use io_global, only: stdout
-
-      use elct
-
-#ifdef __PARA
-      use para_mod
-#endif     
+      use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
+      use para_mod, only: dfftp, dffts
       use mp, ONLY: mp_sum
       use io_global, only: ionode
       use constants, only: eps8
@@ -2440,10 +2437,11 @@
       REAL(kind=8), ALLOCATABLE :: g2sort_g(:)
 
 !
-      if(gcut.lt.gcuts) call errore('ggen','gcut .lt. gcuts',1)
-      ng=0
-      ngs=0
-      ngw=0
+      if( gcut < gcuts ) call errore('ggen','gcut .lt. gcuts',1)
+
+      ng  = 0
+      ngs = 0
+      ngw = 0
 
 !
 ! NOTA BENE: these limits are larger than those actually needed
@@ -3336,7 +3334,7 @@
       end
 !
 !-----------------------------------------------------------------------
-      subroutine init1(tau,ibrav,celldm,ecutw,ecut)
+      subroutine init1( tau, ibrav, celldm, ecutw, ecut)
 !-----------------------------------------------------------------------
 !
 !     initialize G-vectors and related quantities
@@ -3351,11 +3349,13 @@
             nr1sx, nr2sx, nr3sx, nnrsx
       use elct
       use constants, only: pi, fpi
-      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab
+      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
+      use small_box, only: alatb, b1b, b2b, b3b
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecb, only: gvecb_set, gcutb
       use fft_scalar, only: good_fft_dimension, good_fft_order
       use constants, only: scmass
       use cell_base, only: omega, alat
@@ -3368,8 +3368,10 @@
 !
       character (len=20) xctype
       integer idum, ik, k, iss, i, in, is, ia
-      real(kind=8) gcut, gcutw, gcuts, gcutb, ecutw, dual, fsum,        &
-     &     b1(3), b2(3), b3(3), b1b(3),b2b(3),b3b(3), alatb, ocp, ddum
+      real(kind=8) gcut, gcutw, gcuts, ecutw, dual, fsum, ocp, ddum
+      real(kind=8) qk(3), rat1, rat2, rat3
+      real(kind=8) b1(3), b2(3), b3(3)
+      integer ndum
 !
 !     ===================================================
 !     ==== cell dimensions and lattice vectors      =====
@@ -3378,10 +3380,11 @@
 ! a1,a2,a3  are the crystal axis (the vectors generating the lattice)
 ! b1,b2,b3  are reciprocal crystal axis
 !
-      call recips(a1,a2,a3,b1,b2,b3)
+      call recips( a1, a2, a3, b1, b2, b3 )
       b1 = b1 * alat
       b2 = b2 * alat
       b3 = b3 * alat
+
       WRITE( stdout,*)
       WRITE( stdout,210) 
 210   format(' unit vectors of full simulation cell',/,                 &
@@ -3391,9 +3394,9 @@
       WRITE( stdout,'(3f10.4,10x,3f10.4)') a3,b3
 
 !     Store the base vectors used to generate the reciprocal space
-      bi1 = b1/alat
-      bi2 = b2/alat
-      bi3 = b3/alat
+      bi1 = b1 / alat
+      bi2 = b2 / alat
+      bi3 = b3 / alat
 
 !
 ! b1,b2,b3  are the 3 basis vectors generating the reciprocal lattice
@@ -3430,11 +3433,20 @@
 !
 !     dense grid
 !
-      call set_fft_grid(a1,a2,a3,alat,gcut,nr1,nr2,nr3)
+      ! call set_fft_grid(a1,a2,a3,alat,gcut,nr1,nr2,nr3)
+      qk = 0.0d0
+      CALL ngnr_set( alat, a1, a2, a3, gcut, qk, ndum, nr1, nr2, nr3 )
+      nr1=good_fft_order(nr1)
+      nr2=good_fft_order(nr2)
+      nr3=good_fft_order(nr3)
 !
 !     smooth grid
 !
-      call set_fft_grid(a1,a2,a3,alat,gcuts,nr1s,nr2s,nr3s)
+      ! call set_fft_grid(a1,a2,a3,alat,gcuts,nr1s,nr2s,nr3s)
+      CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ndum, nr1s, nr2s, nr3s )
+      nr1s=good_fft_order(nr1s)
+      nr2s=good_fft_order(nr2s)
+      nr3s=good_fft_order(nr3s)
 
       if (nr1s.gt.nr1.or.nr2s.gt.nr2.or.nr3s.gt.nr3)                    &
      &     call errore('init1','smooth grid larger than dense grid?',1)
@@ -3450,17 +3462,17 @@
 !
 !     box grid
 !
-      nr1b=good_fft_order(nr1b)
-      nr2b=good_fft_order(nr2b)
-      nr3b=good_fft_order(nr3b)
-      nr1bx=good_fft_dimension(nr1b)
-      nr2bx=nr2b
-      nr3bx=nr3b
+      nr1b  = good_fft_order(nr1b)
+      nr2b  = good_fft_order(nr2b)
+      nr3b  = good_fft_order(nr3b)
+      nr1bx = good_fft_dimension(nr1b)
+      nr2bx = nr2b
+      nr3bx = nr3b
 !
       if (nr1b.gt.nr1.or.nr2b.gt.nr2.or.nr3b.gt.nr3)                    &
      &     call errore('init1','box grid larger than dense grid ?',1)
 !
-      nnrb=nr1bx*nr2bx*nr3bx
+      nnrb = nr1bx * nr2bx * nr3bx
 !
 !     ==============================================================
 !     ==== generate g-space                                     ==== 
@@ -3473,35 +3485,18 @@
 !     generation of little box g-vectors
 !     ==============================================================
 !
-      alatb=alat/nr1*nr1b
-      tpibab=2.d0*pi/alatb
-      gcutb=ecut/tpibab/tpibab
-      do i=1,3
-         a1b(i)=a1(i)/nr1*nr1b
-         a2b(i)=a2(i)/nr2*nr2b
-         a3b(i)=a3(i)/nr3*nr3b
-      end do
-      omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
+      !  sets the small box parameters
+
+      rat1 = DBLE( nr1b ) / DBLE( nr1 )
+      rat2 = DBLE( nr2b ) / DBLE( nr2 )
+      rat3 = DBLE( nr3b ) / DBLE( nr3 )
+      CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
+
+      !  now set gcutb
+
+      gcutb = ecut / tpibab / tpibab
 !
-      call recips(a1b,a2b,a3b,b1b,b2b,b3b)
-      b1b = b1b * alatb
-      b2b = b2b * alatb
-      b3b = b3b * alatb
-      WRITE( stdout,*)
-      WRITE( stdout,220) 
-220   format(' unit vectors of box grid cell',/,                        &
-     &       ' in real space:',25x,'in reciprocal space:')
-      WRITE( stdout,'(3f10.4,10x,3f10.4)') a1b,b1b
-      WRITE( stdout,'(3f10.4,10x,3f10.4)') a2b,b2b
-      WRITE( stdout,'(3f10.4,10x,3f10.4)') a3b,b3b
-      do i=1,3
-         ainvb(1,i)=b1b(i)/alatb
-         ainvb(2,i)=b2b(i)/alatb
-         ainvb(3,i)=b3b(i)/alatb
-      end do
-!
-      call ggenb ( b1b, b2b, b3b,                                       &
-     &             nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb)
+      CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
 !
 !     ==============================================================
 !
@@ -6997,49 +6992,6 @@
       nr2sx= nr2s
       nr3sx= nr3s
       nnrsx = nr1sx*nr2sx*nr3sx
-!
-      return
-      end
-!
-!-------------------------------------------------------------------------
-      subroutine set_fft_grid(a1,a2,a3,alat,gcut,nr1,nr2,nr3)
-!-------------------------------------------------------------------------
-!
-      use fft_scalar, only: good_fft_order
-      use io_global, only: stdout
-
-      implicit none
-! input
-      real(kind=8) a1(3), a2(3), a3(3), alat, gcut
-! input/output
-      integer nr1, nr2, nr3
-! local
-      integer minr1, minr2, minr3
-      real(kind=8) a1n, a2n, a3n
-!
-!
-      a1n=sqrt(a1(1)**2+a1(2)**2+a1(3)**2)/alat
-      a2n=sqrt(a2(1)**2+a2(2)**2+a2(3)**2)/alat
-      a3n=sqrt(a3(1)**2+a3(2)**2+a3(3)**2)/alat
-!
-      minr1=int(2*sqrt(gcut)*a1n+1.)
-      minr2=int(2*sqrt(gcut)*a2n+1.)
-      minr3=int(2*sqrt(gcut)*a3n+1.)
-!
-      WRITE( stdout,1010) gcut,minr1,minr2,minr3
-1010  format(' set_fft_grid: gcut = ',f7.2,'  n1,n2,n3 min =',3i4)
-      if (nr1.le.0) nr1=minr1
-      if (nr2.le.0) nr2=minr2
-      if (nr3.le.0) nr3=minr3
-      nr1=good_fft_order(nr1)
-      nr2=good_fft_order(nr2)
-      nr3=good_fft_order(nr3)
-      if (minr1-nr1.gt.2)                                               &
-     &     call errore('set_fft_grid','n1 too small ?',nr1)
-      if (minr2-nr2.gt.2)                                               &
-     &     call errore('set_fft_grid','n2 too small ?',nr2)
-      if (minr3-nr3.gt.2)                                               &
-     &     call errore('set_fft_grid','n3 too small ?',nr3)
 !
       return
       end

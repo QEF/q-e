@@ -39,5 +39,41 @@
 !
 
 !------------------------------------------------------------------------------!
+  CONTAINS
+!------------------------------------------------------------------------------!
+
+    SUBROUTINE packtau( taup, tau, na, nsp )
+      IMPLICIT NONE
+      REAL(dbl), INTENT(OUT) :: taup( :, : )
+      REAL(dbl), INTENT(IN) :: tau( :, :, : )
+      INTEGER, INTENT(IN) :: na( : ), nsp
+      INTEGER :: is, ia, isa
+      isa = 0
+      DO is = 1, nsp
+        DO ia = 1, na( is )
+          isa = isa + 1
+          taup( :, isa ) = tau( :, ia, is )
+        END DO
+      END DO
+      RETURN
+    END SUBROUTINE
+
+    SUBROUTINE unpacktau( tau, taup, na, nsp )
+      IMPLICIT NONE
+      REAL(dbl), INTENT(IN) :: taup( :, : )
+      REAL(dbl), INTENT(OUT) :: tau( :, :, : )
+      INTEGER, INTENT(IN) :: na( : ), nsp
+      INTEGER :: is, ia, isa
+      isa = 0
+      DO is = 1, nsp
+        DO ia = 1, na( is )
+          isa = isa + 1
+          tau( :, ia, is ) = taup( :, isa )
+        END DO
+      END DO
+      RETURN
+    END SUBROUTINE
+
+!------------------------------------------------------------------------------!
   END MODULE ions_base
 !------------------------------------------------------------------------------!

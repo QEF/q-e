@@ -10,18 +10,26 @@
 
 module para_mod
 
-  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_deallocate, &
-                       fft_dlay_set
+  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
+     fft_dlay_deallocate, fft_dlay_set
+  USE fft_base, ONLY: dfftp, dffts
+
+  ! dfftp  ! fft descriptor for potentials
+  ! dffts  ! fft descriptor for smooth mesh
 
   integer maxproc, ncplanex
   parameter (maxproc=64, ncplanex=37000)
   
   character(len=3) :: node
+
 ! node:    node number, useful for opening files
+
   integer nproc, me, mygroup
+
 ! nproc:   number of processors
 ! me:      number of this processor
 !
+
 ! parallel fft information for the dense grid
 !
 ! npp:     number of plane per processor                      
@@ -68,14 +76,6 @@ module para_mod
 ! icpls -> dffts%ismap
 ! nnrs_ -> dffts%nnr
 !
-!  integer npps(maxproc), ncps(maxproc), ncpw(maxproc), ncp0s(maxproc), &
-!       ncplanes, ncts,  nnrs_, ipcs(ncplanex), icpls(ncplanex)
-
-  TYPE ( fft_dlay_descriptor ) :: dfftp  ! fft descriptor for potentials
-  TYPE ( fft_dlay_descriptor ) :: dffts  ! fft descriptor for smooth mesh
-
-!  PRIVATE :: ipcs, icpls, ipc, icpl, ncp0s, ncp0, npp, npps, ncp, ncps, &
-!    ncplane, ncplanes, n3, ncpw, nnr_, nnrs_, nct, ncts
 
 contains
 
@@ -285,36 +285,21 @@ end module para_mod
      &        ngcw(ncplanex),&! number of wavefct plane waves per colum
      &        in1(ncplanex),&! index i for column (i1,i2)
      &        in2(ncplanex),&! index j for column (i1,i2)
-     &        ic,           &! fft index for this column (dense grid)
-     &        ics,          &! as above for the smooth grid
-     &        icm,          &! fft index for column (-i1,-i2) (dense grid)
-     &        icms,         &! as above for the smooth grid
      &        index(ncplanex),&! used to order column
-     &        ncp_(maxproc),&! number of column per processor (work space)
      &        ngp(maxproc), &! number of g-vectors per proc (dense grid)
      &        ngps(maxproc),&! number of g-vectors per proc (smooth grid)
      &        ngpw(maxproc)  ! number of wavefct plane waves per proc
 !
       integer np, nps1,            &! counters on planes 
      &        nq, nqs,             &! counters on planes
-     &        max1,min1,max2,min2, &! aux. variables
-     &        m1, m2, n1, n2, i, mc,&! generic counter
-     &        idum, nct_,          &! check variables 
-     &        j,jj,                &! counters on processors
-     &        n1m1,n2m1,n3m1,      &! nr1-1 and so on
-     &        i1, i2, i3            ! counters on G space
-      real(kind=8)                                                      &
-     &        aux(ncplanex), &! used to order columns
-     &        amod            ! modulus of G vectors
+     &        n1m1,n2m1,n3m1        ! nr1-1 and so on
 !
-      integer  ncp0(maxproc), ipc(ncplanex), icpl(ncplanex)
-      integer  ncp0s(maxproc), ipcs(ncplanex), icpls(ncplanex)
       integer  npp(maxproc), npps(maxproc)
       integer  ncp(maxproc), ncps(maxproc)
-      integer  n3(maxproc)
-      integer  ncplane, ncplanes
       integer  ncpw(maxproc)
-      integer  nnr_, nnrs_, nct, ncts
+      integer  ncplane, ncplanes
+      integer  nct, ncts
+      integer  i
 !
       integer, allocatable :: st(:,:), stw(:,:), sts(:,:) ! sticks maps
       integer :: ub(3), lb(3)  ! upper and lower bounds for maps
@@ -325,19 +310,20 @@ end module para_mod
 !
 ! set the dimensions of fft arrays
 !
-      nr1x =good_fft_dimension(nr1 )
-      nr2x = nr2
-      nr3x =good_fft_dimension(nr3 )
+      nr1x  = good_fft_dimension(nr1 )
+      nr2x  = nr2
+      nr3x  = good_fft_dimension(nr3 )
 !
-      nr1sx=good_fft_dimension(nr1s)
-      nr2sx=nr2s
-      nr3sx=good_fft_dimension(nr3s)
+      nr1sx = good_fft_dimension(nr1s)
+      nr2sx = nr2s
+      nr3sx = good_fft_dimension(nr3s)
 !
 !     compute number of columns for each processor
 !
-      ncplane = nr1x*nr2x
-      ncplanes= nr1sx*nr2sx
-      if (ncplane.gt.ncplanex .or. ncplanes.gt.ncplanex)                &
+      ncplane  = nr1x  * nr2x
+      ncplanes = nr1sx * nr2sx
+
+      if ( ncplane > ncplanex .or. ncplanes > ncplanex )                &
      &     call errore('set_fft_para','ncplanex too small',ncplane)
 !
 ! set the number of plane per process
@@ -362,16 +348,6 @@ end module para_mod
             if (i.le.nqs) npps(i) = nps1 + 1
          end do
       end if
-      n3(1)= 0
-      do i = 2, nproc
-         n3(i)=n3(i-1)+npp(i-1)
-      end do
-!
-!     Now compute for each point of the big plane how many column have
-!     non zero vectors on the smooth and dense grid
-!
-      ipc  = 0
-      ipcs = 0
 !
       nct = 0
       ncts= 0
@@ -448,91 +424,16 @@ end module para_mod
       CALL sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
                 ncp, ncpw, ncps, ngp, ngpw, ngps, st, stw, sts )
 
-      ! WRITE(*,*) ' DEBUG : ', COUNT( st > 0 ), COUNT( sts > 0 ), COUNT( stw > 0 )
-
-
       CALL fft_dlay_allocate( dfftp, nproc, nr1x, nr2x )
       CALL fft_dlay_allocate( dffts, nproc, nr1sx, nr2sx )
-
 
       CALL fft_dlay_set( dfftp, tk, nct, nr1, nr2, nr3, nr1x, nr2x, nr3x, me, &
                 nproc, ub, lb, index, in1, in2, ncp, ncpw, ngp, ngpw, st, stw)
       CALL fft_dlay_set( dffts, tk, ncts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, me, &
                 nproc, ub, lb, index, in1, in2, ncps, ncpw, ngps, ngpw, sts, stw)
 
-
-      DO mc = 1, nct
-
-         i = index(mc)
-
-         i1 = in1(i)
-         i2 = in2(i)
-
-         if ( i1.lt.0.or.(i1.eq.0.and.i2.lt.0) ) go to 29
-!
-! only half of the columns, plus column (0,0), are scanned:
-! column (-i1,-i2) must be assigned to the same proc as column (i1,i2)
-!
-! ic  :  position, in fft notation, in dense grid, of column ( i1, i2)
-! icm :      "         "      "          "    "         "    (-i1,-i2)
-! ics :      "         "      "        smooth "         "    ( i1, i2)
-! icms:      "         "      "        smooth "         "    (-i1,-i2)
-!
-         m1 = i1 + 1
-         if (m1.lt.1) m1 = m1 + nr1
-         m2 = i2 + 1
-         if (m2.lt.1) m2 = m2 + nr2
-         ic = m1 + (m2-1)*nr1x
-!
-         n1 = -i1 + 1
-         if (n1.lt.1) n1 = n1 + nr1
-         n2 = -i2 + 1
-         if (n2.lt.1) n2 = n2 + nr2
-         icm = n1 + (n2-1)*nr1x
-!
-         m1 = i1 + 1
-         if (m1.lt.1) m1 = m1 + nr1s
-         m2 = i2 + 1
-         if (m2.lt.1) m2 = m2 + nr2s
-         ics = m1 + (m2-1)*nr1sx
-!
-         n1 =-i1 + 1
-         if (n1.lt.1) n1 = n1 + nr1s
-         n2 =-i2 + 1
-         if (n2.lt.1) n2 = n2 + nr2s
-         icms = n1 + (n2-1)*nr1sx
-
-         IF( st( i1, i2 ) > 0 .AND. stw( i1, i2 ) > 0 ) THEN
-           ipc( ic  ) = st(  i1,  i2 )
-           ipc( icm ) = st( -i1, -i2 )
-         ELSE IF( st( i1, i2 ) > 0 ) THEN
-           ipc( ic  ) = -st(  i1,  i2 )
-           ipc( icm ) = -st( -i1, -i2 )
-         END IF
-
-         IF( sts( i1, i2 ) > 0 .AND. stw( i1, i2 ) > 0 ) THEN
-           ipcs( ics  ) = sts(  i1,  i2 )
-           ipcs( icms ) = sts( -i1, -i2 )
-         ELSE IF( sts( i1, i2 ) > 0 ) THEN
-           ipcs( ics  ) = -sts(  i1,  i2 )
-           ipcs( icms ) = -sts( -i1, -i2 )
-         END IF
-
-29       CONTINUE
-
-      END DO
-      
       DEALLOCATE( st, stw, sts )
 
-      IF( .NOT. tk ) THEN
-        nct  = nct*2  - 1
-        ncts = ncts*2 - 1
-      END IF
-
-!
-! ipc  is the processor for this column in the dense grid
-! ipcs is the same, for the smooth grid
-!
       WRITE( stdout,"(                                                      &
        & ' Proc  planes cols    G   planes cols    G    columns  G',/,  &
        & '       (dense grid)     (smooth grid)   (wavefct grid)' )" )
@@ -544,154 +445,15 @@ end module para_mod
         SUM(ngp(1:nproc)), SUM(npps(1:nproc)), SUM(ncps(1:nproc)), &
         SUM(ngps(1:nproc)), SUM(ncpw(1:nproc)), SUM(ngpw(1:nproc))
 !
-! nnr_ and nnrs_ are copies of nnr and nnrs, the local fft data size,
-! to be stored in "parallel" commons. Not a very elegant solution.
-!
       if ( nproc == 1 ) then
-         nnr =nr1x*nr2x*nr3x
-         nnrs=nr1sx*nr2sx*nr3sx
+         nnr  = nr1x*nr2x*nr3x
+         nnrs = nr1sx*nr2sx*nr3sx
       else
-         nnr = max(nr3x*ncp(me), nr1x*nr2x*npp(me))
-         nnrs= max(nr3sx*ncps(me), nr1sx*nr2sx*npps(me))
+         nnr  = max(nr3x*ncp(me), nr1x*nr2x*npp(me))
+         nnrs = max(nr3sx*ncps(me), nr1sx*nr2sx*npps(me))
       end if
-      nnr_= nnr
-      nnrs_= nnrs
-!
-!   computing the starting column for each processor
-!
-      do i=1,nproc
-         if(ngpw(i).eq.0)                                               &
-     &        call errore('set_fft_para',                                &
-     &        'some processors have no pencils, not yet implemented',1)
-         if (i.eq.1) then 
-            ncp0(i) = 0
-            ncp0s(i)= 0
-         else
-            ncp0(i) = ncp0 (i-1) + ncp (i-1)
-            ncp0s(i)= ncp0s(i-1) + ncps(i-1)
-         endif
-      enddo
-!
-!  Now compute the arrays ipc and icpl (dense grid):
-!     ipc contain the number of the column for that processor.
-!         zero if the column do not belong to the processor.
-!         Note that input ipc is used and overwritten.
-!     icpl contains the point in the plane for each column
-!
-!- active columns first........
-!
-      do j=1,nproc
-         ncp_(j) = 0
-      end do
-      do mc =1,ncplane
-         if (ipc(mc).gt.0) then
-            j = ipc(mc)
-            ncp_(j) = ncp_(j) + 1
-            icpl(ncp_(j) + ncp0(j)) = mc 
-            if (j.eq.me) then
-               ipc(mc) = ncp_(j)
-            else
-               ipc(mc) = 0
-            end if 
-         end if
-      end do
-!
-!-..... ( intermediate check ) ....
-!
-      do j=1,nproc
-         if (ncp_(j).ne.ncpw(j))                                        &
-     &        call errore('set_fft_para','ncp_(j).ne.ncpw(j)',j)
-      end do
-!
-!- ........then the remaining columns
-!
-      do mc =1,ncplane
-         if (ipc(mc).lt.0) then
-            j = -ipc(mc)
-            ncp_(j) = ncp_(j) + 1
-            icpl(ncp_(j) + ncp0(j)) = mc 
-            if (j.eq.me) then
-               ipc(mc) = ncp_(j)
-            else
-               ipc(mc) = 0
-            end if 
-         end if
-      end do
-!
-!-... ( final check )
-!
-      nct_ = 0
-      do j=1,nproc
-         if (ncp_(j).ne.ncp(j))                                         &
-     &        call errore('set_fft_para','ncp_(j).ne.ncp(j)',j)
-         nct_ = nct_ + ncp_(j)
-      end do
-      if (nct_.ne.nct)                                                  &
-     &     call errore('set_fft_para','nct_.ne.nct',1)
-!
-!   now compute the arrays ipcs and icpls 
-!   (as ipc and icpls, for the smooth grid)
-!
-!   active columns first...
-!
-      do j=1,nproc
-         ncp_(j) = 0
-      end do
-      do mc =1,ncplanes
-         if (ipcs(mc).gt.0) then
-            j = ipcs(mc)
-            ncp_(j)=ncp_(j) + 1
-            icpls(ncp_(j) + ncp0s(j)) = mc
-            if (j.eq.me) then
-               ipcs(mc) = ncp_(j)
-            else
-               ipcs(mc) = 0
-            endif
-         endif
-      enddo
-!
-!-..... ( intermediate check ) ....
-!
-      do j=1,nproc
-         if (ncp_(j).ne.ncpw(j))                                        &
-     &        call errore('set_fft_para','ncp_(j).ne.ncpw(j)',j)
-      end do
-!
-!    and then all the others
-!
-      do mc =1,ncplanes
-         if (ipcs(mc).lt.0) then
-            j = -ipcs(mc)
-            ncp_(j) = ncp_(j) + 1
-            icpls(ncp_(j) + ncp0s(j)) = mc
-            if (j.eq.me) then
-               ipcs(mc) = ncp_(j)
-            else
-               ipcs(mc) = 0
-            end if
-         end if
-      end do
-!
-!-... ( final check )
-!
-      nct_ = 0
-      do j=1,nproc
-         if (ncp_(j).ne.ncps(j))                                        &
-     &        call errore('set_fft_para','ncp_(j).ne.ncps(j)',j)
-         nct_ = nct_ + ncp_(j)
-      end do
-      if (nct_.ne.ncts)                                                 &
-     &     call errore('set_fft_para','nct_.ne.ncts',1)
-      call tictac(27,1)
 
-!      do i = 1, nproc
-!        WRITE( stdout,fmt="('DEBUG fft_setup ',3I5 )" ) i, npp(i), dfftp%npp(i)
-!        WRITE( stdout,fmt="('DEBUG fft_setup ',3I5 )" ) i, npps(i), dffts%npp(i)
-!      end do
-!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) nnr_, dfftp%nnr
-!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) nnrs_, dffts%nnr
-!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) nct, dfftp%nst
-!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) ncts, dffts%nst
+      call tictac(27,1)
 !
       return
       end

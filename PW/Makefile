@@ -137,7 +137,6 @@ lchk_tauxk.o \
 linmin.o \
 lsda_functionals.o \
 maximum.o \
-minimization_routines.o \
 mix_pot.o \
 mix_rho.o \
 mode_group.o \
@@ -145,7 +144,6 @@ move_ions.o \
 multable.o \
 n_plane_waves.o \
 neb_routines.o \
-neb_variables.o \
 new_ns.o \
 ns_adj.o \
 newd.o \

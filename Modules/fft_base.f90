@@ -29,12 +29,17 @@
 
         USE fft_types, ONLY: fft_dlay_descriptor
 
+        TYPE ( fft_dlay_descriptor ) :: dfftp  ! fft descriptor for potentials
+        TYPE ( fft_dlay_descriptor ) :: dffts  ! fft descriptor for potentials
+
+
         IMPLICIT NONE
         SAVE
 
         PRIVATE
 
         PUBLIC :: fft_transpose, fft_scatter
+        PUBLIC :: dfftp, dffts
 
 
         INTEGER, ALLOCATABLE :: stmask(:)

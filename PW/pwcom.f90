@@ -12,21 +12,18 @@ MODULE brilz
   !
   ! ... The variables needed to describe the lattice
   !
+  USE cell_base, ONLY: &
+       celldm,   & ! dimensions of the unit cell
+       at,       &! direct lattice vectors
+       bg,       &! reciprocal lattice vectors
+       alat,     &! cell parameter
+       omega,    &! volume of the unit cell
+       tpiba,    &! 2 times pi / alat
+       tpiba2,   &! the square of tpiba
+       ibrav,    &! index of the bravais lattice
+       symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
   SAVE
   !
-  REAL(KIND=DP) :: &
-       celldm(6),      &! dimensions of the unit cell
-       at(3,3),        &! direct lattice vectors
-       bg(3,3),        &! reciprocal lattice vectors
-       alat,           &! cell parameter
-       omega,          &! volume of the unit cell
-       tpiba,          &! 2 times pi / alat
-       tpiba2           ! the square of tpiba
-  INTEGER :: &
-       ibrav            ! index of the bravais lattice
-  CHARACTER(LEN=9) :: &
-       symm_type        ! 'cubic' or 'hexagonal' when ibrav=0
-  !      
 END MODULE brilz
 !
 !

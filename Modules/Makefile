@@ -24,10 +24,12 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
+minimization_routines.o \
 mp.o \
 mp_global.o \
 mp_wave.o \
 mp_buffers.o \
+neb_variables.o \
 parallel_include.o \
 parallel_types.o \
 parameters.o \

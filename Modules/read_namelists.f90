@@ -827,12 +827,6 @@ MODULE read_namelists_module
              CALL errore( sub_name ,' nr2s is not used in FPMD ',-1)
           IF( nr3s /= 0 ) &
              CALL errore( sub_name ,' nr3s is not used in FPMD ',-1)
-          IF( nr1b /= 0 ) &
-             CALL errore( sub_name ,' nr1b is not used in FPMD ',-1)
-          IF( nr2b /= 0 ) &
-             CALL errore( sub_name ,' nr2b is not used in FPMD ',-1)
-          IF( nr3b /= 0 ) &
-             CALL errore( sub_name ,' nr3b is not used in FPMD ',-1)
           IF( degauss /= 0.0d0 ) &
              CALL errore( sub_name ,' degauss is not used in FPMD ',-1)
           IF( ngauss /= 0 ) &

@@ -121,6 +121,7 @@ module gvec
   use reciprocal_vectors, only: &
         gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
   use reciprocal_vectors, only: deallocate_recvecs
+  use recvecs_indexes, only: np, nm, in1p, in2p, in3p, deallocate_recvecs_indexes
   use gvecp, only: &
         ng => ngm, &
         ngl => ngml, &
@@ -150,16 +151,11 @@ module gvec
   !
   implicit none
   save
-  integer,allocatable:: np(:), nm(:), in1p(:),in2p(:),in3p(:)
 
 contains
   subroutine deallocate_gvec
-      IF( ALLOCATED( np ) ) DEALLOCATE( np )
-      IF( ALLOCATED( nm ) ) DEALLOCATE( nm )
-      IF( ALLOCATED( in1p ) ) DEALLOCATE( in1p )
-      IF( ALLOCATED( in2p ) ) DEALLOCATE( in2p )
-      IF( ALLOCATED( in3p ) ) DEALLOCATE( in3p )
       CALL deallocate_recvecs( )
+      CALL deallocate_recvecs_indexes( )
   end subroutine
 end module gvec
 

@@ -31,6 +31,7 @@
 
           PUBLIC :: wave_steepest
           PUBLIC :: wave_verlet
+          PUBLIC :: wave_speed2
 
           INTERFACE dotp
             MODULE PROCEDURE dotp_gamma, dotp_kp, dotp_gamma_n, dotp_kp_n
@@ -663,6 +664,31 @@
                    ver3( : ) * grad( : )
       RETURN
    END SUBROUTINE
+
+
+!==----------------------------------------------==!
+!==----------------------------------------------==!
+
+   FUNCTION wave_speed2( cp, cm, wmss, fact )
+     IMPLICIT NONE
+     COMPLEX(dbl), INTENT(IN) :: cp(:)
+     COMPLEX(dbl), INTENT(IN) :: cm(:)
+     REAL(dbl) :: wmss(:), fact
+     REAL(dbl) :: wave_speed2
+     REAL(dbl) :: ekinc
+     COMPLEX(dbl) :: speed
+     INTEGER :: j
+     speed  = ( cp(1) - cm(1) )
+     ekinc  = fact * wmss(1) * CONJG( speed ) * speed
+     DO j = 2, SIZE( cp )
+       speed  = ( cp(j) - cm(j) )
+       ekinc  = ekinc + wmss(j) * CONJG( speed ) * speed
+     END DO
+     wave_speed2 = ekinc
+     RETURN
+   END FUNCTION
+
+
 
 !==----------------------------------------------==!
        END MODULE wave_base

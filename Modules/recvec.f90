@@ -134,6 +134,14 @@
 
    CONTAINS
 
+     SUBROUTINE gvecb_set( ecut, tpibab )
+       IMPLICIT NONE
+       REAL(dbl), INTENT(IN) :: ecut, tpibab
+         ecutb = ecut
+         gcutb = ecut / tpibab / tpibab
+       RETURN
+     END SUBROUTINE
+
      SUBROUTINE deallocate_gvecb()
        IF( ALLOCATED( gb ) ) DEALLOCATE( gb )
        IF( ALLOCATED( gxb ) ) DEALLOCATE( gxb )
@@ -237,4 +245,32 @@
 
 !=----------------------------------------------------------------------------=!
    END MODULE reciprocal_vectors
+!=----------------------------------------------------------------------------=!
+
+
+!=----------------------------------------------------------------------------=!
+   MODULE recvecs_indexes
+!=----------------------------------------------------------------------------=!
+
+     IMPLICIT NONE
+     SAVE
+
+     !     np      = fft index for G>
+     !     nm      = fft index for G<
+     !     in1p,in2p,in3p = G components in crystal axis
+
+     INTEGER, ALLOCATABLE :: np(:), nm(:), in1p(:), in2p(:), in3p(:)
+
+   CONTAINS
+
+     SUBROUTINE deallocate_recvecs_indexes
+       IF( ALLOCATED( np ) ) DEALLOCATE( np )
+       IF( ALLOCATED( nm ) ) DEALLOCATE( nm )
+       IF( ALLOCATED( in1p ) ) DEALLOCATE( in1p )
+       IF( ALLOCATED( in2p ) ) DEALLOCATE( in2p )
+       IF( ALLOCATED( in3p ) ) DEALLOCATE( in3p )
+      END SUBROUTINE deallocate_recvecs_indexes
+
+!=----------------------------------------------------------------------------=!
+   END MODULE recvecs_indexes
 !=----------------------------------------------------------------------------=!
