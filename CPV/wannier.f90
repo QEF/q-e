@@ -678,4 +678,77 @@ SUBROUTINE ef_enthalpy( enthal, tau0 )
 END SUBROUTINE
 
 
+SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
+           ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
+           xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
+           ecut, ecutw, delt, celldm, fion )
+
+  use efcalc, only: efield
+  use wfparm, only: nwf, calwf, jwf, wffort, iplot, iwf
+  use wannier_module, only: what1, wfc, utwf
+  use mp, only: mp_end
+  use control_flags, only: iprsta
+  use elct, only: n
+  use gvecw, only: ngw
+  use control_flags, only: ndw
+  use cell_base, only: h, hold
+  use ions_base, only: pmass
+  use cvan, only: nvb
+  use restart
+
+  IMPLICIT NONE
+
+  integer :: nfi
+  complex(kind=8) :: c0(:,:,:,:)
+  complex(kind=8) :: cm(:,:,:,:)
+  real(kind=8) :: bec(:,:), becdr(:,:,:)
+  complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
+  integer :: irb(:,:,:)
+  real(kind=8) :: taub(:,:,:)
+  integer :: ibrav
+  real(kind=8) :: b1(:), b2(:), b3(:)
+  real(kind=8) :: taus(:,:,:), tausm(:,:,:), vels(:,:,:), velsm(:,:,:)
+  real(kind=8) :: acc(:)
+  real(kind=8) :: lambda(:,:), lambdam(:,:)
+  real(kind=8) :: xnhe0, xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm
+  real(kind=8) :: velh(:,:)
+  real(kind=8) :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
+  real(kind=8) :: ecut, ecutw, delt, celldm(:)
+  real(kind=8) :: fion(:,:,:)
+
+!=============================================================
+! More Wannier Function Options
+!                         - M.S
+!=============================================================
+
+  if(calwf.eq.4) then
+    jwf=1
+    call wf(calwf,c0(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+    if(nvb.eq.0) then
+      call wf(calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+    else
+        cm(1:n,1:ngw,1,1)=c0(1:n,1:ngw,1,1)
+    end if
+
+    call writefile_new( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,   &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
+
+
+    write(6,*) 'Wannier Functions Written to unit',ndw
+    call mp_end()
+    STOP 'wf_closing_options 4' 
+  end if
+
+!---------------------------------------------------------
+
+  if(calwf.eq.3) then
+!   construct overlap matrix and calculate spreads and do Localization
+    jwf=1
+    call wf (calwf,c0(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+  end if
+  RETURN
+END SUBROUTINE
+
+
 END MODULE

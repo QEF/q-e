@@ -23,6 +23,7 @@
 !***  using parallel FFT written for PWSCF by Stefano de Gironcoli
 !***  PBE added by Michele Lazzeri (2000)
 !***  variable-cell dynamics by Andrea Trave (1998-2000)
+!***  Makov Payne Correction for charged systems by Filippo De Angelis
 !***********************************************************************
 !***  appropriate citation for use of this code:
 !***  Car-Parrinello method    R. Car and M. Parrinello, PRL 55, 2471 (1985) 
@@ -32,6 +33,11 @@
 !***                           C. Lee, and D. Vanderbilt, PRB 47, 10142 (1993).
 !***  implementation gga       A. Dal Corso, A. Pasquarello, A. Baldereschi,
 !***                           and R. Car, PRB 53, 1180 (1996).
+!***  implementation Wannier   M. Sharma, Y. Wu and R. Car, Int. J. Quantum. Chem.
+!***  function dymanics        95, 821, (2003).
+!***
+!***  implementation           M. Sharma and R.Car, ???
+!***  Electric Field
 !***********************************************************************
 !***  
 !***  f90 version, with dynamical allocation of memory
@@ -54,6 +60,7 @@
             tfor, tvlocw, trhow, taurdr, tprnfor
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
+      use control_flags, only: lwf
 
       use core, only: nlcc_any
       use core, only: deallocate_core
@@ -108,11 +115,17 @@
       use wave_base, only: wave_speed2
       USE control_flags, ONLY : conv_elec, tconvthrs
       USE check_stop, ONLY : check_stop_now
+      use efcalc, ONLY: clear_nbeg, ef_force    !Electric Field (M.S)
+      use ions_base, only: zv           !
 
 ! wavefunctions
 !
       use wavefunctions_module, only: c0, cm, phi => cp
       use wavefunctions_module, only: deallocate_wavefunctions
+
+      use wannier_module, only: allocate_wannier, deallocate_wannier
+      use wannier_subroutines
+
 !
 !
       implicit none
@@ -233,10 +246,11 @@
       character(len=256) :: filename
       character(len=256) :: dirname
       integer :: strlen, dirlen
+      real(kind=8) :: b1(3), b2(3), b3(3)
 !
 !     CP loop starts here
 !
-      call start_clock( 'initialize' ) 
+      call start_clock( 'initialize' )
       etot_out = 0.0d0
 
 !
@@ -251,6 +265,7 @@
 !     ====  1 proton mass       = 1822.89 a.u.                      ====
 !     ====  1 tera              = 1.e+12                            ====
 !     ====  1 pico              = 1.e-12                            ====
+!     ====  1 Volt / meter      = 1/(5.1412*1.e+11) a.u.            ====
 !     ==================================================================
 
       factp   = 3.3989 * 0.00001
@@ -277,6 +292,10 @@
       ispin( :   ) = 0.0d0
       ispin( 1:n ) = ispin_( 1:n )
 
+      if( lwf ) then
+        call read_efwan_param( nbeg )
+      end if
+
 !     ==================================================================
 !
 !     general variables
@@ -300,7 +319,6 @@
            filename = outdir(1:dirlen) // '/' // filename
          end if
          strlen  = index(filename,' ') - 1
-         WRITE( stdout, * ) ' UNIT8 = ', filename
          OPEN(unit=8, file=filename(1:strlen), status='unknown')
 
          filename = 'fort.77'
@@ -335,6 +353,10 @@
            twmass, thdiag, iforceh, tau0, taus, delt )
 
       WRITE( stdout,*) ' out from init'
+
+      if( lwf ) then
+        call clear_nbeg( nbeg )
+      end if
 !
 !     more initialization requiring atomic positions
 !
@@ -370,7 +392,7 @@
       allocate(rhor(nnr,nspin))
       allocate(rhos(nnrsx,nspin))
       allocate(rhog(ng,nspin))
-      if (nlcc_any) allocate(rhoc(nnr))
+      if ( nlcc_any ) allocate(rhoc(nnr))
       allocate(wrk1(nnr))
       allocate(qv(nnrb))
       allocate(c2(ngw))
@@ -395,6 +417,9 @@
       allocate(drhog(ng,nspin,3,3))
       allocate(drhor(nnr,nspin,3,3))
       allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
+      if( lwf ) then
+        call allocate_wannier(  n, nnrsx, nspin, ng )
+      end if
 #ifdef __PARA
       allocate(aux(nnr))
 #endif
@@ -437,10 +462,9 @@
          if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
       end do
 
-      !WRITE( stdout, * ) 'NBEG = ', nbeg
-      !fion_out(1:3,1:nat) = 0.0d0
-      !etot_out = 0.0d0
-      !RETURN
+      if( lwf ) then
+        call wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
+      end if
 !
       if ( nbeg < 0 ) then
 
@@ -504,7 +528,7 @@
 !
 !     put core charge (if present) in rhoc(r)
 !
-         if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+         if ( nlcc_any ) call set_cc(irb,eigrb,rhoc)
 !
          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
      &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
@@ -618,6 +642,9 @@
          endif
 !
          if( tfor ) then
+            if( lwf ) then
+              call ef_force( fion, na, nsp, zv )
+            end if
             do is=1,nsp
                do ia=1,na(is)
                   do i=1,3
@@ -666,7 +693,7 @@
 
          emainv = 1.0d0 / ema0bg
          ftmp = 1.0d0
-         if( gstart == 2 ) ftmp = 0.5d0 
+         if( gstart == 2 ) ftmp = 0.5d0
          
          ekincm=0.0
          do i=1,n
@@ -733,6 +760,12 @@
 !     =================================================================
 !     restart with new averages and nfi=0
 !     =================================================================
+!       Fix. Center of Mass - M.S
+!
+      if( lwf ) then
+        call cofmass(tau0,cdm0)
+      end if
+
       if( nbeg <= 0 ) then
          acc = 0.0d0
          nfi=0
@@ -758,7 +791,7 @@
 !
 !======================================================================
 !
-    call stop_clock( 'initialize' ) 
+      call stop_clock( 'initialize' ) 
 
     MAIN_LOOP: DO
 
@@ -793,6 +826,10 @@
 !
       nfi=nfi+1
       tlast=(nfi.eq.nomore)
+
+      if( lwf ) then
+        call get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, ibrav, b1, b2, b3 )
+      end if
 !
       call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !
@@ -804,10 +841,21 @@
 !
 !     put core charge (if present) in rhoc(r)
 !
-      if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+      if ( nlcc_any ) call set_cc(irb,eigrb,rhoc)
+
+      if( lwf ) then
+        call write_charge_and_exit( rhog )
+        call ef_tune( rhog, tau0 )
+      end if
 !
       call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
      &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
+
+      if( lwf ) then
+        call wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, irb, &
+             ibrav, b1, b2, b3, rhor, rhog, rhos, enl, ekin  )
+      end if
+
       do i=1,3
          do j=1,3
             stress(i,j)=-1.d0/omega*(detot(i,1)*h(j,1)+                 &
@@ -850,22 +898,26 @@
       emadt2 = dt2bye * ema0bg
       emaver = emadt2 * verl3
 
-      do i=1,n,2
-         call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
-         if(tsde) then
-            CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
-            CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
-         else 
-            CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
-                 verl1, verl2, emaver, c2 )
-            CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
-                 verl1, verl2, emaver, c3 )
-         endif
-         if ( gstart == 2 ) then
-            cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
-            cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
-         end if
-      end do
+      if( lwf ) then
+        call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+      else
+        do i=1,n,2
+           call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+           if(tsde) then
+              CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
+              CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
+           else 
+              CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
+                   verl1, verl2, emaver, c2 )
+              CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
+                   verl1, verl2, emaver, c3 )
+           endif
+           if ( gstart == 2 ) then
+              cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
+              cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
+           end if
+        end do
+      end if
 
       ccc = fccc * dt2bye
       DEALLOCATE( emadt2 )
@@ -1000,6 +1052,10 @@
 !
 !======================================================================
       if( tfor ) then
+
+        if( lwf ) then
+          call ef_force( fion, na, nsp, zv )
+        end if
 !
 !==== set friction ====
 !
@@ -1289,6 +1345,10 @@
          WRITE( stdout,*)
       endif
 !
+      if( lwf ) then
+        call ef_enthalpy( enthal, tau0 )
+      end if
+
       epot=eht+epseu+exc
 !
       acc(1)=acc(1)+ekinc
@@ -1471,6 +1531,13 @@
 
       tstop = tstop .OR. tconv
 
+      if( lwf ) then
+        CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
+             ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
+             xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
+             ecut, ecutw, delt, celldm, fion )
+      end if
+
       if( (nfi >= nomore) .OR. tstop ) EXIT MAIN_LOOP
 
     END DO MAIN_LOOP
@@ -1504,7 +1571,7 @@
       !  Calculate statistics
 
       do i=1,nacc
-         acc(i)=acc(i)/dble(nfi)
+         acc(i)=acc(i) / dble( nfi )
       end do
 !
       WRITE( stdout,1949)
@@ -1642,6 +1709,9 @@
       CALL deallocate_betax()
       CALL deallocate_para_mod()
       CALL deallocate_wavefunctions()
+      if( lwf ) then
+        CALL deallocate_wannier()
+      end if
 
       if( ionode ) then
         CLOSE( 8 )

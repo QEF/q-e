@@ -247,7 +247,7 @@
       ! ... +your_position+ configuration
 
       DO iloop = 1, nloop
-        call cprmain_wf( tau(1,1), fion(1,1), etot)
+        call cprmain( tau(1,1), fion(1,1), etot)
         call memstat( 1 )
       END DO
 
