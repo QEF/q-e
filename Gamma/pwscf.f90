@@ -20,7 +20,6 @@ PROGRAM pwscf
   IMPLICIT NONE
   !
   CHARACTER (LEN=9) :: code = 'PWSCF'
-  EXTERNAL          :: date_and_tim
   !
   !
   ! use ".FALSE." to disable all clocks except the total cpu time clock
