@@ -21,7 +21,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: modutil.itcl,v 1.2 2004-02-23 12:15:50 kokalj Exp $ 
+# $Id: modutil.itcl,v 1.3 2004-04-06 13:33:24 kokalj Exp $ 
 #
 
 namespace eval ::pwscf::readFilter {}
@@ -80,9 +80,14 @@ proc ::pwscf::readFilter::amassIndex {line {maxIndex 0}} {
     return $maxIndex
 }
 
+
+# consider these variables:
+# Variable: exist_namelist -- namelists that must exist
+# Variable: exist_cards    -- cards that must exist
+
 proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replList {}}} {
 
-    # Default readfilter, which can have several possible modes:
+    # Default readfilter, which can have several possible modes:    
     #
     # Variable: filterMode
     # Description:
@@ -94,8 +99,7 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
     #
     # The value of filterMode is cumulative, i.e., "amass logical" is
     # allowed
-    #
-    #
+    #    
     # Variable: replList
     # Description: replList are double list of the form
     # { {replaceFromList1  replaceToItem1} {replaceFromList2  replaceToItem2} ... }
@@ -143,6 +147,130 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
     # rewind the newChannel
     seek $newChannel 0 start
     return $newChannel
+}
+
+
+proc ::pwscf::readFilter::findNamelists {moduleObj channel namelists errMsgVar} {
+    upvar $errMsgVar errMsg
+    # Purpose: find if given namelists exist in the input file
+    #
+    # Variable: namelists -- list of namelist (namelists names should be without "&" prefix)
+    #
+    #           errMsgVar -- contain the error message on output
+    #
+    # Returns:
+    #          1 -- if namelist is present
+    #          0 -- if namelist is not present
+
+    # init ...
+    set _errMsg "- the following namelists are missing:\n"
+    foreach name $namelists {
+	set exist($name) 0
+    }
+
+    # start from the beginning of input file
+    seek $channel 0 start
+
+    # search the file 
+    while { ! [eof $channel] } {
+	gets $channel _line
+	foreach name $namelists {
+	    if { [string match -nocase "*&${name}*" $_line] } {		
+		set exist($name) 1
+	    }
+	}
+    }
+    
+    # file position back to the start of file
+    seek $channel 0 start
+
+    # post-processing ...
+    set result 1
+    foreach name $namelists {
+	if { $exist($name) == 0 } {
+	    # should we make some info about the missing namelists	    
+	    append _errMsg "    &${name}\n"
+	    #lappend pwscf($moduleObj,missing.namelists) "&$name"
+	    set result 0
+	}
+    }
+    if { ! $result } {
+	set errMsg $_errMsg
+    }
+    return $result
+}
+
+
+proc ::pwscf::readFilter::findCards {moduleObj channel cardlists errMsgVar {nocase 0}} {
+    upvar $errMsgVar errMsg
+    # Purpose: find if given cards exist in the input file
+    #
+    # Variable: cardlist  -- list of cards to search for
+    #
+    #           errMsgVar -- contain the error message on output
+    #
+    # Returns:
+    #          1 -- if namelist is present
+    #          0 -- if namelist is not present
+
+    # init ...
+    set _errMsg "- the following cards are missing:\n"
+    foreach name $cardlists {
+	set exist($name) 0
+    }
+
+    # start from the beginning of input file
+    seek $channel 0 start
+
+    # search the file 
+    while { ! [eof $channel] } {
+	gets $channel _line
+	foreach name $cardlists {
+	    if { [::tclu::stringMatch "*${name}*" $_line $nocase] } {
+		set exist($name) 1
+	    }
+	}
+    }
+    
+    # file position back to the start of file
+    seek $channel 0 start
+
+    # post-processing ...
+    set result 1
+    foreach name $cardlists {
+	if { $exist($name) == 0 } {
+	    # should we make some info about the missing cardlists
+	    append _errMsg "    ${name}\n"
+	    #lappend pwscf($moduleObj,missing.cards) "$name"
+	    set result 0
+	}
+    }
+    if { ! $result } {
+	set errMsg $_errMsg
+    }
+    return $result
+}
+
+
+proc ::pwscf::readFilter::findNamelistsAndCards {moduleObj channel formatName namelists cards errMsgVar {cards_nocase 0}} {
+    upvar $errMsgVar errMsg
+    #
+    # Purpose: find if given namelists and cards exist in the input file
+
+    set nml_status  [::pwscf::readFilter::findNamelists $moduleObj $channel $namelists nml_errMsg]
+    set card_status [::pwscf::readFilter::findCards $moduleObj $channel $cards card_errMsg $cards_nocase]    
+
+    if { $nml_status == 0 || $card_status == 0 } {
+	#set errMsg "selected file is not a pw.x formatted or contains severe syntax errors.\n\nDiagnosis:\n"
+	if { $nml_status == 0  } { 
+	    append errMsg "  $nml_errMsg\n" 
+	}
+	if { $card_status == 0 } { 
+	    append errMsg "  $card_errMsg" 
+	}
+	return 0
+    }
+    return 1
 }
 
 
