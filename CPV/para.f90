@@ -14,9 +14,6 @@ module para_mod
      fft_dlay_deallocate, fft_dlay_set
   USE fft_base, ONLY: dfftp, dffts
 
-  ! dfftp  ! fft descriptor for potentials
-  ! dffts  ! fft descriptor for smooth mesh
-
   integer maxproc, ncplanex
   parameter (maxproc=64, ncplanex=37000)
   

@@ -200,7 +200,6 @@ PWOBJS = \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/eqvect.o \
-../PW/error.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \
 ../PW/ewald.o \

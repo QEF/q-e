@@ -12,7 +12,6 @@ PWOBJS = \
 ../PW/cubicsym.o \
 ../PW/dsum.o \
 ../PW/eqvect.o \
-../PW/error.o \
 ../PW/error_handler.o \
 ../PW/hexsym.o \
 ../PW/invmat.o \

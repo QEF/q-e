@@ -39,6 +39,9 @@
      CHARACTER(LEN=19), PARAMETER :: rho_name_down = 'CHARGE_DENSITY.DOWN'
      CHARACTER(LEN=14), PARAMETER :: rho_name_avg  = 'CHARGE_AVERAGE'
 
+     CHARACTER(LEN=4 ), PARAMETER :: chifile       = 'CHI2'
+     CHARACTER(LEN=4 ), PARAMETER :: dielecfile    = 'EPSILON'
+
      CHARACTER(LEN=15), PARAMETER :: empty_file    = 'EMPTY_STATES.WF'
      CHARACTER(LEN=5 ), PARAMETER :: crash_file    = 'CRASH'
      CHARACTER(LEN=7 ), PARAMETER :: stop_file     = '.cpstop'
@@ -64,6 +67,9 @@
      INTEGER :: ksunit      = 18
      INTEGER :: sfacunit    = 20
      INTEGER :: pseudounit  = 10
+     INTEGER :: chiunit     = 20
+     INTEGER :: dielecunit  = 20
+     INTEGER :: opt_unit    = 20 ! optional unit 
 
      INTEGER :: iunpun      =  4 ! unit for saving the final results
      INTEGER :: iunwfc      = 10 ! unit with wavefunctions

@@ -76,7 +76,6 @@ PWOBJS = \
 ../PW/efermit.o \
 ../PW/electrons.o \
 ../PW/eqvect.o \
-../PW/error.o \
 ../PW/estimate.o \
 ../PW/ewald.o \
 ../PW/force_cc.o \

@@ -15,7 +15,6 @@ cprstart.o \
 cprsub.o \
 compute_scf.o \
 crayfft.o \
-errore.o \
 fft_cp.o \
 input.o \
 macdep.o \

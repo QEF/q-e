@@ -81,7 +81,6 @@ efermig.o \
 efermit.o \
 electrons.o \
 eqvect.o \
-error.o \
 error_handler.o \
 estimate.o \
 ewald.o \

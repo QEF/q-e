@@ -36,6 +36,7 @@ matmul.o \
 npreroc.o \
 numroc.o \
 ownerof.o \
+error.o \
 reduce.o
 
 all: flib.a ptools.a eispack $(MYLIB)
