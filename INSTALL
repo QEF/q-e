@@ -206,6 +206,7 @@ Here is a list of supported architectures:
   ibmsp       IBM SP2/3/4, IBM compiler
   t3e         Cray T3E, Cray compiler
   origin      SGI Origin 2000/3000, SGI compiler
+  altix       SGI Altix 350/3000 with Linux, Intel compiler
   sunmpi      Sun parallel machines, Sun compiler
   alphaMPI    HP-Compaq alpha parallel machines, HP-Compaq compiler
   hp          HP PA-RISC workstations, HP compiler

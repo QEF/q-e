@@ -299,21 +299,21 @@
            filename = outdir(1:dirlen) // '/' // filename
          end if
          strlen  = index(filename,' ') - 1
-         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+         OPEN(unit=77, file=filename(1:strlen), status='unknown')
 
          filename = 'fort.78'
          if( dirlen >= 1 ) then
            filename = outdir(1:dirlen) // '/' // filename
          end if
          strlen  = index(filename,' ') - 1
-         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+         OPEN(unit=78, file=filename(1:strlen), status='unknown')
 
          filename = 'fort.79'
          if( dirlen >= 1 ) then
            filename = outdir(1:dirlen) // '/' // filename
          end if
          strlen  = index(filename,' ') - 1
-         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+         OPEN(unit=79, file=filename(1:strlen), status='unknown')
 
       end if
 

@@ -55,6 +55,12 @@
 
         !   see the ESSL manual ( DCFT ) for the workspace and table lenght formulas
 
+#elif defined __SCSL
+
+        INTEGER, PARAMETER :: nfftx = 1025
+        INTEGER, PARAMETER :: lwork = 2 * nfftx
+        INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
+
 #else
 
         INTEGER, PARAMETER :: nfftx = 1025
@@ -82,12 +88,23 @@
 
         !   Array containing FFT factors + workspace
 
-#elif defined __SGI 
+#elif defined __COMPLIB 
 
         REAL (dbl) :: work(lwork) 
         REAL (dbl) :: tablez(ltabl,ndims)
         REAL (dbl) :: tablex(ltabl,ndims)
         REAL (dbl) :: tabley(ltabl,ndims)
+
+        !   Array containing FFT factors + workspace
+
+#elif defined __SCSL
+
+        COMPLEX (dbl) :: work(lwork) 
+        REAL    (dbl) :: tablez(ltabl,ndims)
+        REAL    (dbl) :: tablex(ltabl,ndims)
+        REAL    (dbl) :: tabley(ltabl,ndims)
+        REAL (dbl)    :: DUMMY
+        INTEGER       :: isys(0:1)
 
         !   Array containing FFT factors + workspace
 
@@ -127,7 +144,6 @@
      INTEGER    :: i, j, err, idir, ip, isign
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
-     INTEGER :: isys = 0
 
 #if defined __HPM
             CALL f_hpmstart( 30 + ABS(sgn), 'cft_1z' )
@@ -136,6 +152,10 @@
      IF( nsl < 0 ) THEN
        CALL errore(" fft_scalar: cft_1 ", " nsl out of range ", nsl)
      END IF
+
+#if defined __SCSL
+      isys(0) = 1
+#endif
 
      isign = -sgn
 
@@ -170,9 +190,14 @@
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 3, icurrent), nz, idir) 
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 3, icurrent), nz, idir) 
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
        CALL ZFFT1DI( nz, tablez(1,icurrent) )
+
+#elif defined __SCSL
+
+       CALL ZZFFTM (0, nz, 0, 0.0D0, DUMMY, 1, DUMMY, 1, &
+                    tablez(1,icurrent), DUMMY, isys)
 
 #elif defined __AIX
 
@@ -208,7 +233,7 @@
        CALL FFT_Z_STICK(bw_plan( 3, ip), c(1), ldc, nsl)
      END IF
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
      IF (isign /= 0) THEN
        IF( isign < 0 ) idir = +1
@@ -218,6 +243,20 @@
          tscale = 1.0d0 / nz
          CALL ZDSCAL( ldc * nsl, tscale, c(1), 1)
        END IF
+     END IF
+
+#elif defined __SCSL
+
+     IF ( isign /= 0 ) THEN    
+        IF ( isign > 0 ) THEN
+           idir   = -1
+           tscale = 1.0d0 / nz
+        ELSE IF ( isign < 0 ) THEN
+           idir   = 1
+           tscale = 1.0d0
+        END IF
+        CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldc, cout(1), ldc,    &
+                    tablez(1,ip), work, isys)
      END IF
 
 #elif defined __AIX
@@ -240,7 +279,7 @@
 
 #endif
 
-#if ! defined __AIX
+#if defined __FFTW || defined __COMPLIB
      cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
 #endif
 
@@ -285,9 +324,18 @@
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx )
+     INTEGER, PARAMETER  :: stdout = 6
+#if defined __SCSL
+     INTEGER                :: index(nx), ndoX
+     COMPLEX(dbl)           :: XY(nx+nx*ny)
+#endif
 
 #if defined __HPM
       CALL f_hpmstart( 40 + ABS(sgn), 'cft_2xy' )
+#endif
+
+#if defined __SCSL
+     isys(0) = 1
 #endif
 
      isign = - sgn
@@ -352,10 +400,17 @@
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny, -1, &
           1.0d0, bw_table(1, 1, icurrent), ltabl, work(1), lwork)
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
        CALL ZFFT1DI( ny, tabley(1, icurrent) )
        CALL ZFFT1DI( nx, tablex(1, icurrent) )
+
+#elif defined __SCSL
+
+       CALL ZZFFTMR (0, ny, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
+                     tabley(1, icurrent), DUMMY, isys)
+       CALL ZZFFTM  (0, nx, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
+                     tablex(1, icurrent), DUMMY, isys)
 
 #else
 
@@ -441,7 +496,7 @@
          
      END IF
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
      IF( isign > 0 ) THEN
        idir =  -1
@@ -467,6 +522,79 @@
          k = 1 + ( i - 1 ) * ldx * ldy
          call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex(1,ip) )
        END DO
+     END IF
+
+#elif defined __SCSL
+
+      ndoX = 0
+      DO i = 1, nx
+         IF ( dofft(i) ) THEN
+            ndoX = ndoX + 1
+            index(ndoX) = i
+         END IF
+      END DO
+!
+      IF( isign > 0 ) THEN
+!
+       idir = -1
+       tscale = 1.0d0 / ( nx * ny )
+       DO k = 1, nzl
+          kk = 1 + ( k - 1 ) * ldx * ldy
+! FORWARD: first the X direction
+          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk), ldx, r(kk), ldx,   &
+                        tablex(1, ip), work(1), isys )
+! FORWARD: then the Y direction
+! Gather R -> XY
+          DO j = 1, ny
+             DO i = 1, ndoX
+                XY( i + ( j - 1 ) * nx ) = r( index( i ) + ( j - 1 ) *  &
+                   ldx + ( k - 1 ) * ldx * ldy )
+             END DO
+          END DO
+! ndoX FFTs in the Y direction
+          CALL ZZFFTMR ( idir, ny, ndoX, 1.0D0, XY, ldx, XY, ldx,       &
+                         tabley(1, ip), work(1), isys )
+! Scatter back XY -> R
+          DO j = 1, ny
+             DO i = 1, ndoX
+                r( index( i ) + ( j - 1 ) * ldx + ( k - 1 ) * ldx *     &
+                  ldy ) = XY( i + ( j - 1 ) * nx )
+             END DO
+          END DO
+       END DO
+!
+     END IF
+!
+     IF ( isign < 0 ) THEN
+!
+       idir = 1
+       tscale = 1.0d0
+       DO k = 1, nzl
+          kk = 1 + ( k - 1 ) * ldx * ldy
+! BACKWARD: first the Y direction
+! Gather R -> XY
+          DO j = 1, ny
+             DO i = 1, ndoX
+                XY( i + ( j - 1 ) * nx ) = r( index( i ) + ( j - 1 ) *  &
+                   ldx + ( k - 1 ) * ldx * ldy )
+             END DO
+          END DO
+!
+! ndoX FFTs in the Y direction
+          CALL ZZFFTMR ( idir, ny, ndoX, 1.0D0, XY, ldx, XY, ldx,       &
+                         tabley(1, ip), work(1), isys )
+! Scatter back XY -> R
+          DO j = 1, ny
+             DO i = 1, ndoX
+                r( index( i ) + ( j - 1 ) * ldx + ( k - 1 ) * ldx *     &
+                  ldy ) = XY( i + ( j - 1 ) * nx )
+             END DO
+          END DO
+! BACKWARD: then the X direction
+          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk), ldx, r(kk), ldx,   &
+                        tablex(1, ip), work(1), isys )
+       END DO
+!
      END IF
 
 #else
@@ -513,7 +641,7 @@
 
 #elif defined __AIX
 
-#elif defined __SGI
+#elif defined __COMPLIB || defined __SCSL
 
       real(kind=8), save :: table( 3 * ltabl,  ndims )
 
@@ -521,6 +649,10 @@
 
 #if defined __HPM
             CALL f_hpmstart( 50 + ABS(sgn), 'cfft3d' )
+#endif
+
+#if defined __SCSL
+      isys(0) = 1
 #endif
 
      isign = -sgn
@@ -558,9 +690,14 @@
 
 #elif defined __AIX
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
        CALL zfft3di( nr1, nr2, nr3, table(1,icurrent) )
+
+#elif defined __SCSL
+
+       CALL zzfft3d (0, nr1, nr2, nr3, 0.0D0, DUMMY, 1, 1, DUMMY, 1, 1, &
+                     table(1, icurrent), work(1), isys)
 
 #else
 
@@ -604,7 +741,7 @@
      call dcft3( f(1), nr1x, nr1x*nr2x, f(1), nr1x, nr1x*nr2x, nr1, nr2, nr3,  &
        isign, tscale, work(1), lwork)
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
      IF( isign > 0 ) idir = -1
      IF( isign < 0 ) idir = +1
@@ -613,6 +750,20 @@
      IF( isign > 0 ) THEN
        tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
        call ZDSCAL( nr1x * nr2x * nr3x, tscale, f(1), 1)
+     END IF
+
+#elif defined __SCSL
+
+     IF ( isign /= 0 ) THEN
+        IF ( isign > 0 ) THEN
+           idir = -1
+           tscale = 1.0D0 / DBLE( nr1 * nr2 * nr3 )
+        ELSE IF ( isign < 0 ) THEN
+           idir = 1
+           tscale = 1.0D0
+        END IF
+        CALL ZZFFT3D ( idir, nr1, nr2, nr3, tscale, f(1), nr1x, nr2x,   &
+                       f(1), nr1x, nr2x, table(1, ip), work(1), isys )
      END IF
 
 #endif
@@ -933,11 +1084,19 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
       real(kind=8), save :: aux2( ltabl, ndims )
       real(kind=8), save :: aux1( ltabl, ndims )
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
       real(kind=8), save :: bw_coeffz( ltabl,  ndims )
       real(kind=8), save :: bw_coeffy( ltabl,  ndims )
       real(kind=8), save :: bw_coeffx( ltabl,  ndims )
+
+#elif defined __SCSL
+
+      real(kind=8), save :: bw_coeffz( ltabl,  ndims )
+      real(kind=8), save :: bw_coeffy( ltabl,  ndims )
+      real(kind=8), save :: bw_coeffx( ltabl,  ndims )
+      complex(kind=8)    :: fy(n1x + n2*n1x*n2x), fz(2*(n1x*n2x)+n3*n3)
+      INTEGER            :: j
 
 #endif
 
@@ -999,11 +1158,20 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
      &        tscale, aux2(1,icurrent), ltabl, work(1), lwork)
          end if
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
          call zfft1di( n3, bw_coeffz( 1, icurrent ) )
          call zfft1di( n2, bw_coeffy( 1, icurrent ) )
          call zfft1di( n1, bw_coeffx( 1, icurrent ) )
+
+#elif defined __SCSL
+
+         CALL ZZFFT (0, n3, 0.0D0, DUMMY, 1, bw_coeffz(1, icurrent),    &
+                     work(1), isys)
+         CALL ZZFFT (0, n2, 0.0D0, DUMMY, 1, bw_coeffy(1, icurrent),    &
+                     work(1), isys)
+         CALL ZZFFT (0, n1, 0.0D0, DUMMY, 1, bw_coeffx(1, icurrent),    &
+                     work(1), isys)
 
 #else
 
@@ -1046,13 +1214,56 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
      &        tscale, aux2(1,ip), ltabl, work(1), lwork)
       END DO
 
-#elif defined __SGI
+#elif defined __COMPLIB
 
       call zfftm1d( 1, n3, n1x*n2x, f(1), n1x*n2x, 1, bw_coeffz(1, ip) )
       call zfftm1d( 1, n1, n2x*nplanes, f(nstart), 1, n1x, bw_coeffx(1, ip) )
       DO K = imin3, imax3
         nstart = ( k - 1 ) * n1x * n2x + 1
         call zfftm1d( 1, n2, n1x, f(nstart), n1x, 1, bw_coeffy(1, ip) )
+      END DO
+
+#elif defined __SCSL
+
+! Gather f -> fz
+      DO j = 1, n1x*n2x
+         DO i = 1, n3
+            fz( i + ( j - 1 ) * n3 ) = f( (( i - 1 ) * ( n1x *n2x ))    &
+               + j )
+         END DO
+      END DO
+! z-direction
+      CALL ZZFFTM (1, n3, n1x*n2x, tscale, fz(1), n3, fz(1), n3,        &
+                   bw_coeffz(1, ip), work(1), isys)
+! Scatter back fz -> f
+      DO j = 1, n1x*n2x
+         DO i = 1, n3
+            f( (( i - 1 ) * ( n1x *n2x )) + j ) = fz( i + ( j - 1 ) *   &
+              n3 )
+         END DO
+      END DO
+! x-direction
+      CALL ZZFFTM (1, n1, n2x*nplanes, tscale, f(nstart), n1x,          &
+                   f(nstart), n1x, bw_coeffx(1, ip), work(1), isys)
+! y-direction
+      DO k = imin3, imax3
+        nstart = ( k - 1 ) * n1x * n2x + 1
+! Gather f -> fy
+         DO j = 1, n1x
+            DO i = 1, n2
+                fy( i + ( j - 1 ) * n2 ) = f( (( i - 1 ) * n1x ) + j +  &
+                   ( k - 1 ) * n1x * n2x )
+            END DO
+         END DO
+         CALL ZZFFTM (1, n2, n1x, tscale, fy, n2, fy,                   &
+                      n2, bw_coeffy(1, ip), work(1), isys)
+! Scatter back fy -> f
+         DO j = 1, n1x
+            DO i = 1, n2
+               f( (( i - 1 ) * n1x ) + j + ( k - 1 ) * n1x * n2x ) =    &
+                 fy( i + ( j - 1 ) * n2 )
+            END DO
+         END DO
       END DO
 
 #endif

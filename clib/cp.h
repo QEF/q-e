@@ -47,7 +47,7 @@
 
 #endif
 
-#if defined __SGI | defined __FUJITSU | defined __SX4 | defined __INTEL | defined __LAHEY | defined __SX6 | defined SUN
+#if defined __SGI | defined __FUJITSU | defined __SX4 | defined __INTEL | defined __LAHEY | defined __SX6 | defined SUN | defined __ALTIX
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
 #  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_

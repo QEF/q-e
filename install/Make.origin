@@ -1,10 +1,24 @@
 #
-# System-dependent definitions for origin (parallel, MPI)
+# System-dependent definitions for SGI Origin 2000/3000 systems (parallel, MPI)
+# Modified by Martin Hilgeman <hilgeman@sgi.com>
+# IRIX >=6.5, SGI MIPSpro f90 and C compiler >=7.3.1.3m, SCSL >= 1.4.1.0
+# or CHALLENGEComplib 3.1.1
+#
 # Edit according to your needs
+#
+# You can either choose to use the old Complib library or the newer SGI
+# SCSL scientific library. The latter is recommended. FFTW is also
+# reported to work.
+
+# Use fft routines from the SCSL library (recommended):
+
+CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__SCSL -D__MPI -D__PARA \
+ -I$(OSHOME)/include
 
 # Use fft routines from complib library:
 
-# CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA -I$(OSHOME)/include
+# CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__COMPLIB -D__MPI -D__PARA \
+#  -I$(OSHOME)/include
 
 # Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
 #
@@ -17,8 +31,8 @@
 
 # Use the local copy of fftw
 #
-CPPFLAGS = -D__FFTW -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA \
-  -D__USE_INTERNAL_FFTW -I$(OSHOME)/include -I./
+# CPPFLAGS = -D__COMPLIB -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA \
+#  -I$(OSHOME)/include -I./
 
 #
 # Fortran compiler:
@@ -28,9 +42,10 @@ F77 = f90
 #
 # use -O3 only if you are sure that it actually works 
 #
-FFLAGS = -mips4 -64 -O2 -r10000 -r8
-F77FLAGS = $(FFLAGS)
-F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
+FFLAGS = -mips4 -64 -r8 -TARG:platform=ip35
+OFLAGS = -O3 -OPT:Olimit=0:IEEE_arithmetic=3:roundoff=3 -LNO:cs2=8m:fusion=0
+F77FLAGS = $(FFLAGS) $(OFLAGS)
+F90FLAGS = $(FFLAGS) $(OFLAGS) -cpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #
@@ -42,11 +57,17 @@ CC=cc
 #
 # Flags for the C compiler
 #
-CCFLAGS=  -mips4 -64 -O2 -r10000 $(CPPFLAGS) 
+CCFLAGS=  -mips4 -64 $(OFLAGS) $(CPPFLAGS) 
 #
 # Libraries:
 #
-LIBS = -lmpi -lcomplib.sgimath $(FFTW_LIB)
+# SCSL
+#
+LIBS = -lmpi -lscs
+#
+# use this for Complib
+#
+# LIBS = -lmpi -lcomplib.sgimath 
 #
 # Loader:
 #
