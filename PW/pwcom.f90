@@ -92,6 +92,7 @@ module gvect
 
   integer , allocatable, target :: &
        nl(:),          &! correspondence fft <-> array of G vectors
+       nlm(:),         &! same for gamma point calculation
        igtongl(:)       ! correspondence shells of G <-> G
   real(kind=DP) , allocatable, target  ::                                    &
        g(:,:),         &! coordinates of G vectors
@@ -136,7 +137,8 @@ module gsmooth
        nrx3s,      &! maximum dimension of the smooth grid
        nrxxs        ! the total dimension of the smooth grid
   integer, pointer :: &
-       &       nls(:)   ! the correspondence  G <-> smooth mesh
+       &       nls(:),   &! the correspondence  G <-> smooth mesh
+       &       nlsm(:)    ! the same for gamma point calculation
   !
   logical                                                          &
        doublegrid  ! true if we use a double grid

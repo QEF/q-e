@@ -2552,6 +2552,7 @@
 #endif     
       use mp, ONLY: mp_sum
       use io_global, only: ionode
+      use constants, only: eps8
 
       implicit none
 
@@ -2567,25 +2568,13 @@
       integer mill(3)
       real(kind=8) t(3), g2
 !
-      REAL(kind=8) :: t1, t2, t3, d1, d2, d3, dnorm
       REAL(kind=8), ALLOCATABLE :: g2sort_g(:)
-      REAL(kind=8), PARAMETER :: eps = 1.d-8
 
 !
       if(gcut.lt.gcuts) call errore('ggen','gcut .lt. gcuts',1)
       ng=0
       ngs=0
       ngw=0
-!
-! ... Set vectors for uniq ordering
-!
-      d1 = 0.25657642786d0
-      d2 = 0.35342818974d0
-      d3 = 0.56421652427d0
-      dnorm = sqrt (d1 * d1 + d2 * d2 + d3 * d3 )
-      d1 = d1 / dnorm
-      d2 = d2 / dnorm
-      d3 = d3 / dnorm
 
 !
 ! NOTA BENE: these limits are larger than those actually needed
@@ -2679,8 +2668,8 @@
                  mill_g(1,ng_g)=i
                  mill_g(2,ng_g)=j
                  mill_g(3,ng_g)=k
-                 IF ( g2 > eps ) THEN
-                   g2sort_g(ng_g) = 1.d4 * g2 + ( t(1) * d1 + t(2) * d2 + t(3) * d3 ) / sqrt(g2)
+                 IF ( g2 > eps8 ) THEN
+                   g2sort_g(ng_g) = g2 
                  ELSE
                    g2sort_g(ng_g) = 0.d0
                  END IF
@@ -2690,7 +2679,7 @@
       end do loopx
 
       index(1) = 0
-      call hpsort(ng_g, g2sort_g, index)
+      call hpsort_eps(ng_g, g2sort_g, index, eps8)
 
       DO ig = 1, ng_g-1
         icurr = ig

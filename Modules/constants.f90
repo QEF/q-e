@@ -68,4 +68,6 @@
         !  pressure conversion from Ry/(a.u)^3 to K
         REAL(dbl), parameter :: uakbar= 147105.d0
 
+        REAL(dbl), parameter :: eps8 = 1.0d-8
+
       END MODULE constants

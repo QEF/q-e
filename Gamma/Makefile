@@ -194,6 +194,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/bp_ylm_q.o \
 ../PW/bp_zgedi.o \
 ../PW/bp_zgefa.o \
+../PW/ggen.o \
 ../PW/ccalbec.o 
 
 
@@ -214,7 +215,6 @@ regterg.o \
 data_structure_para.o \
 data_structure_scal.o \
 force_us.o \
-ggen.o \
 gradcorr.o \
 h_psi.o \
 interpolate.o \

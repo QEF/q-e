@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
 subroutine ggen
   !----------------------------------------------------------------------
@@ -22,16 +21,15 @@ subroutine ggen
   use gsmooth
   use wvfct, only : gamma_only
   use cellmd, only: lmovecell
+  use constants, only: eps8
 #ifdef __PARA
   use para
 #endif
   implicit none
   !
-  real(kind=DP), parameter :: eps = 1.d-8
-  !
   !     here a few local variables
   !
-  real(kind=DP) ::  t (3), tt, swap, d (3), dnorm
+  real(kind=DP) ::  t (3), tt, swap, dnorm
   real(kind=DP), allocatable ::  esort (:)
   !
   integer :: ngmx, n1, n2, n3, n1s, n2s, n3s
@@ -58,14 +56,6 @@ subroutine ggen
   gg(:) = gcutm + 1.d0
   !
   !     set d vector for unique ordering
-  !
-  d (1) = 0.25657642786d0
-  d (2) = 0.35342818974d0
-  d (3) = 0.56421652427d0
-  dnorm = sqrt (d (1) * d (1) + d (2) * d (2) + d (3) * d (3) )
-  d (1) = d (1) / dnorm
-  d (2) = d (2) / dnorm
-  d (3) = d (3) / dnorm
   !
   !    and computes all the g vectors inside a sphere
   !
@@ -112,9 +102,8 @@ subroutine ggen
               mill_g( 1, ngm ) = i
               mill_g( 2, ngm ) = j
               mill_g( 3, ngm ) = k
-              if ( tt > eps ) then
-                 g2sort_g(ngm) = 1.d4 * tt + &
-                      (t(1) * d(1) + t(2) * d(2) + t(3) * d(3) ) / sqrt (tt)
+              if ( tt > eps8 ) then
+                 g2sort_g(ngm) = tt
               else
                  g2sort_g(ngm) = 0.d0
               endif
@@ -132,7 +121,7 @@ subroutine ggen
        call errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
 
   igsrt(1) = 0
-  call hpsort(ngm_g, g2sort_g, igsrt)
+  call hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
   DO ng = 1, ngm_g-1
     indsw = ng
 7   IF(igsrt(indsw) /= ng) THEN
@@ -191,9 +180,8 @@ subroutine ggen
     g (1:3, ngm) = t (1:3)
     gg (ngm) = tt
 
-    if (tt > eps) then
-      esort (ngm) = 1.d4 * tt + (t (1) * d (1) + t (2) * d (2) &
-      + t (3) * d (3) ) / sqrt (tt)
+    if (tt > eps8) then
+      esort (ngm) = tt 
     else
       esort (ngm) = 0.d0
     endif
@@ -210,7 +198,7 @@ subroutine ggen
      !   initialize the index inside sorting routine
 
      nl (1) = 0
-     call hpsort (ngm, esort, nl)
+     call hpsort_eps ( ngm, esort, nl, eps8 )
      !
      deallocate( esort  )
      !
@@ -248,7 +236,7 @@ subroutine ggen
      !
      !     determine first nonzero g vector
      !
-     if (gg(1).le.eps) then
+     if (gg(1).le.eps8) then
         gstart=2
      else
         gstart=1
@@ -310,7 +298,7 @@ subroutine ggen
         ngl = 1
         igtongl (1) = 1
         do ng = 2, ngm
-           if (gg (ng) > gg (ng - 1) + eps) then
+           if (gg (ng) > gg (ng - 1) + eps8) then
               ngl = ngl + 1
            endif
            igtongl (ng) = ngl
@@ -321,7 +309,7 @@ subroutine ggen
         gl (1) = gg (1)
         igl = 1
         do ng = 2, ngm
-           if (gg (ng) > gg (ng - 1) + eps) then
+           if (gg (ng) > gg (ng - 1) + eps8) then
               igl = igl + 1
               gl (igl) = gg (ng)
            endif
@@ -336,6 +324,60 @@ subroutine ggen
      deallocate( g2sort_g )
      deallocate( mill_g )
 
+     call index_minusg
+
      return
    end subroutine ggen
+
+!
+!-----------------------------------------------------------------------
+subroutine index_minusg
+  !----------------------------------------------------------------------
+  !
+  !     compute indices nlm and nlms giving the correspondence
+  !     between the fft mesh points and -G (for gamma-only calculations)
+  !
+#include "machine.h"
+  use gvect
+  use gsmooth
+  use wvfct, only :  gamma_only
+#ifdef __PARA
+  use para, only: ipc, ipcs
+#endif
+  implicit none
+  !
+  integer :: n1, n2, n3, n1s, n2s, n3s, ng
+  !
+  !
+  if (gamma_only) then
+     do ng = 1, ngm
+        n1 = -ig1 (ng) + 1
+        n1s = n1
+        if (n1 < 1) n1 = n1 + nr1
+        if (n1s < 1) n1s = n1s + nr1s
+        n2 = -ig2 (ng) + 1
+        n2s = n2
+        if (n2 < 1) n2 = n2 + nr2
+        if (n2s < 1) n2s = n2s + nr2s
+        n3 = -ig3 (ng) + 1
+        n3s = n3
+        if (n3 < 1) n3 = n3 + nr3
+        if (n3s < 1) n3s = n3s + nr3s
+        if (n1.le.nr1 .and. n2.le.nr2 .and. n3.le.nr3) then
+#ifdef __PARA
+           nlm(ng) = n3 + (ipc (n1 + (n2 - 1) * nrx1) - 1) * nrx3
+           if (ng.le.ngms) nlsm(ng) = n3s + (ipcs (n1s + (n2s - 1) &
+                * nrx1s) - 1) * nrx3s
+#else
+           nlm(ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
+           if (ng.le.ngms) nlsm(ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
+                * nrx1s * nr2s
+#endif
+        else
+           call errore('index_minusg','Mesh too small?',ng)
+        endif
+     enddo
+  end if
+  return
+end subroutine index_minusg
 

@@ -6,5 +6,5 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 module gamma
-  integer , pointer :: nlm(:), nlsm(:)
+  use pwcom, only: nlm, nlsm
 end module gamma

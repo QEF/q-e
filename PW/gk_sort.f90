@@ -15,6 +15,7 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
   !     and the same ordering in all machines
   !
   use parameters
+  use constants, only: eps8
   implicit none
   !
   !      Here the dummy variables
@@ -29,33 +30,19 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
   ! input: the cut-off energy
   ! output: the moduli of k+G
   !
-  !     one parameter
-  !
-  real(kind=DP) :: eps
-  ! a small number
-  parameter (eps = 1.d-8)
-  !
   !      here the local variables
   !
   integer :: ng, nk
   ! counter on   G vectors
   ! counter on k+G vectors
 
-  real(kind=DP) :: q, q2x, d (3), dnorm
+  real(kind=DP) :: q, q2x
   ! |k+G|^2
   ! upper bound for |G|
   ! d vector for ordering
   ! the norm of d
   !
   !    set the d vector for unique ordering
-  !
-  d (1) = 0.5465246754d0
-  d (2) = 0.8765365676d0
-  d (3) = 0.1524654376d0
-  dnorm = sqrt (d (1) * d (1) + d (2) * d (2) + d (3) * d (3) )
-  d (1) = d (1) / dnorm
-  d (2) = d (2) / dnorm
-  d (3) = d (3) / dnorm
   !
   !    first we count the number of k+G vectors inside the cut-off sphere
   !
@@ -73,10 +60,8 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
         !
         ! gk is a fake quantity giving the same ordering on all machines
         !
-        if (q.gt.eps) then
-           gk (ngk) = 1.d4 * q + ( (k (1) + g (1, ng) ) * d (1) &
-                + (k (2) + g (2, ng) ) * d (2) + (k (3) + g (3, ng) ) &
-                * d (3) ) / sqrt (q)
+        if ( q .gt. eps8 ) then
+           gk (ngk) = q 
         else
            gk (ngk) = 0.d0
         endif
@@ -92,7 +77,7 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
   !
   ! order vector gk keeping initial position in index
   !
-10 call hpsort (ngk, gk, igk)
+10 call hpsort_eps (ngk, gk, igk, eps8)
   !
   !    now order true |k+G|
   !

@@ -57,7 +57,7 @@
   IMPLICIT NONE
   SAVE
 
-  INTEGER, PARAMETER :: file_version = 200
+  INTEGER, PARAMETER :: file_version = 201
   INTEGER :: restart_module_verbosity = 0
 
   INTERFACE write_restart_header
@@ -224,6 +224,7 @@
       INTEGER :: i
       CHARACTER(LEN=80) :: t_, c_, tmp_dir_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_header '
+      CHARACTER(LEN=80) :: section_name = 'header'
 
       t_ = title
       c_ = crystal
@@ -240,7 +241,7 @@
 
       IF( ionode ) THEN
         IF( twrite ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) nfi, nbeg, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_l, ng_g, nk_l, nk_g, &
             nspin, nbnd, &
             nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
@@ -268,8 +269,9 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=80) :: section_name = 'header'
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -359,16 +361,28 @@
       CHARACTER(LEN=80) :: t_, c_, tmp_dir_
       LOGICAL :: tupf_, gamma_only_
 !
-      INTEGER :: i
+      INTEGER :: i, ierr
       INTEGER :: idum = 0
       LOGICAL :: twrite_
       CHARACTER(LEN=30) :: sub_name = ' read_restart_header '
+      CHARACTER(LEN=80) :: section_name = 'header'
+      CHARACTER(LEN=80) :: section_name_
 !
 ! ... Subroutine Body
 !
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
+        READ(iuni) twrite_, file_version_, section_name_
+        ierr = 0
+        IF( section_name_ /= section_name ) ierr = 1
+        IF( file_version_ /= file_version ) ierr = 2
       END IF
+
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr == 1 ) &
+        CALL errore(sub_name,' Wrong Data Section, '//section_name_//' instead of '//section_name, 1)
+      IF( ierr == 2 ) &
+        CALL errore(sub_name,' Restart file versions do not match ', 1)
+
       CALL mp_bcast( twrite_, ionode_id )
       CALL mp_bcast( file_version_, ionode_id )
 !
@@ -447,19 +461,6 @@
         IF( nacc_ > SIZE( acc ) ) &
           CALL errore(sub_name,' wrong size for acc ', nacc_ )
 !
-        IF( .NOT. tovrw ) THEN
-          IF( nat_ /= nat ) &
-            CALL errore(sub_name,' atoms numbers differ ',nat_)
-          IF( ntyp_ /= ntyp ) &
-            CALL errore(sub_name,' types numbers differ ',ntyp_)
-          IF( nkg_ /= nk_g ) &
-            CALL errore(sub_name,' k points numbers differ ',nkg_)
-          IF( nspin_ /= nspin ) &
-            CALL errore(sub_name,' nspin differs ',nspin_)
-          IF( nacc_ > nacc ) &
-            CALL errore(sub_name,' too many accumulators ',nacc_)
-        END IF
-
         IF( ionode ) THEN
           READ(iuni) (na_(i),i=1,ntyp_), (ngwkl_(i),i=1,nkg_), (ngwkg_(i),i=1,nkg_), (acc_(i),i=1,nacc_)
         END IF
@@ -468,13 +469,6 @@
         CALL mp_bcast( ngwkl_, ionode_id )
         CALL mp_bcast( ngwkg_, ionode_id )
         CALL mp_bcast( acc_, ionode_id )
-
-        IF( .NOT. tovrw ) THEN
-          DO i = 1, MIN( ntyp, ntyp_ )
-            IF( na_(i) /= na(i) ) &
-              CALL errore(' read_restart_header ',' inconsistent number of atoms ',na_(i))
-          END DO
-        END IF
 
         IF( ionode ) THEN
           READ(iuni) t_, c_, tmp_dir_
@@ -485,6 +479,7 @@
         CALL mp_bcast( tmp_dir_, ionode_id )
 
         !  Variables acc, trutim, nfi, ekinc, tupf are ALWAYS overwritten on output 
+
         acc(1:nacc_) = acc_(1:nacc_)
         trutim       = trutim_
         nfi          = nfi_
@@ -574,17 +569,29 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
       INTEGER :: file_version_
-      INTEGER :: idum
+      INTEGER :: idum, ierr
+      CHARACTER(LEN=30) :: sub_name = ' read_restart_header '
+      CHARACTER(LEN=80) :: section_name = 'header'
+      CHARACTER(LEN=80) :: section_name_
 !
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
+        READ(iuni) twrite_ , file_version_ , section_name_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
+        ierr = 0
+        IF( section_name_ /= section_name ) ierr = 1
+        IF( file_version_ /= file_version ) ierr = 2
       END IF
 !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr == 1 ) &
+        CALL errore( sub_name, ' Wrong Data Section, '//section_name_//' instead of '//section_name, 1)
+      IF( ierr == 2 ) &
+        CALL errore( sub_name, ' Restart file versions do not match ', 1)
+
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_header, xdim not read from restart ' )")
+        WRITE( 6, fmt = " (3X,'W: read_restart_header, header not read from restart ' ) " )
 !
       RETURN
     END SUBROUTINE
@@ -1913,11 +1920,11 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
-      LOGICAL, INTENT(INOUT) :: tmill
-      INTEGER, INTENT(INOUT) :: ng
-      REAL(dbl), INTENT(INOUT) :: b1(3), b2(3), b3(3)
-      REAL(dbl), INTENT(INOUT) :: bi1(3), bi2(3), bi3(3)
-      INTEGER, INTENT(INOUT) :: mill(:,:)
+      LOGICAL, INTENT(IN) :: tmill
+      INTEGER,   INTENT(OUT) :: ng
+      REAL(dbl), INTENT(OUT) :: b1(3), b2(3), b3(3)
+      REAL(dbl), INTENT(OUT) :: bi1(3), bi2(3), bi3(3)
+      INTEGER,   INTENT(OUT) :: mill(:,:)
 
       INTEGER :: i, j
       INTEGER :: ng_
@@ -1966,7 +1973,7 @@
             CALL errore(sub_name, ' mill array too small ', 1)
 
           IF( ionode ) THEN
-            READ(iuni) ((mill(i,j),i=1,3),j=1,ng_)
+            READ(iuni) ( ( mill( i, j ), i = 1, 3 ), j = 1, ng_ )
           END IF
           CALL mp_bcast( mill, ionode_id )
 
@@ -1978,38 +1985,6 @@
 
         END IF
   
-        IF( .NOT. tovrw ) THEN
-
-          IF( ng_ /= ng ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, ng changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") ng_, ng
-          END IF
-          IF( ANY( bi1_ /= bi1 ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, bi1 changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") bi1_, bi1
-          END IF
-          IF( ANY( bi2_ /= bi2 ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, bi2 changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") bi2_, bi2
-          END IF
-          IF( ANY( bi3_ /= bi3 ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, bi3 changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") bi3_, bi3
-          END IF
-          IF( ANY( b1_ /= b1 ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, b1 changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") b1_, b1
-          END IF
-          IF( ANY( b2_ /= b2 ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, b2 changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") b2_, b2
-          END IF
-          IF( ANY( b3_ /= b3 ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gvec, b3 changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") b3_, b3
-          END IF
-        END IF
-
         IF( tovrw ) THEN
           ng  = ng_
           bi1 = bi1_
@@ -2134,9 +2109,9 @@
       LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       ! ... INTEGER, INTENT(INOUT) :: igk(:)
-      INTEGER, INTENT(INOUT) :: ngwk, ik, nk, tetra(4), isk
-      REAL(dbl), INTENT(INOUT) :: xk(3)
-      REAL(dbl), INTENT(INOUT) :: wk
+      INTEGER,   INTENT(OUT) :: ngwk, ik, nk, tetra(4), isk
+      REAL(dbl), INTENT(OUT) :: xk(3)
+      REAL(dbl), INTENT(OUT) :: wk
 
       INTEGER :: i
       INTEGER :: ngwk_, ik_, nk_, tetra_(4), isk_
@@ -2163,8 +2138,8 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) ik_, nk_, ngwk_, tetra_(1:4), isk_
-          READ(iuni) (xk_(i),i=1,3), wk_
+          READ(iuni) ik_, nk_, ngwk_, tetra_( 1 : 4 ), isk_
+          READ(iuni) ( xk_ ( i ), i = 1, 3 ), wk_
         END IF
         CALL mp_bcast( ngwk_, ionode_id )
         CALL mp_bcast( tetra_, ionode_id )
@@ -2181,21 +2156,6 @@
         END IF
         ! .. CALL mp_bcast( igk_, ionode_id )
  
-        IF( .NOT. tovrw ) THEN
-          IF( ngwk_ /= ngwk ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gkvec, ngwk changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") ngwk_, ngwk
-          END IF
-          IF( ANY( xk_ /= xk ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gkvec, xk changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") xk_, xk
-          END IF
-          IF( wk_ /= wk ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_gkvec, wk changed' )")
-            WRITE(6,fmt="(3X,'W: old, new = ', 3F10.4, 2X, 3F10.4 )") wk_, wk
-          END IF
-        END IF
-
         IF( tovrw ) THEN
           ngwk = ngwk_
           ik   = ik_
@@ -2332,16 +2292,16 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
-      INTEGER, INTENT(INOUT) :: ibrav
-      REAL(dbl), INTENT(INOUT) :: celldm(6)
-      REAL(dbl), INTENT(INOUT) :: ht0(3,3)
-      REAL(dbl), INTENT(INOUT) :: htm(3,3)
-      REAL(dbl), INTENT(INOUT) :: htm2(3,3)
-      REAL(dbl), INTENT(INOUT) :: htvel(3,3)
-      REAL(dbl), INTENT(INOUT) :: xnosp(3,3)
-      REAL(dbl), INTENT(INOUT) :: xnos0(3,3)
-      REAL(dbl), INTENT(INOUT) :: xnosm(3,3)
-      REAL(dbl), INTENT(INOUT) :: xnosm2(3,3)
+      INTEGER,   INTENT(OUT) :: ibrav
+      REAL(dbl), INTENT(OUT) :: celldm(6)
+      REAL(dbl), INTENT(OUT) :: ht0(3,3)
+      REAL(dbl), INTENT(OUT) :: htm(3,3)
+      REAL(dbl), INTENT(OUT) :: htm2(3,3)
+      REAL(dbl), INTENT(OUT) :: htvel(3,3)
+      REAL(dbl), INTENT(OUT) :: xnosp(3,3)
+      REAL(dbl), INTENT(OUT) :: xnos0(3,3)
+      REAL(dbl), INTENT(OUT) :: xnosm(3,3)
+      REAL(dbl), INTENT(OUT) :: xnosm2(3,3)
 
       INTEGER :: i
       INTEGER :: ibrav_
@@ -2366,7 +2326,7 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) ibrav_, (celldm_(i), i=1,6)
+          READ(iuni) ibrav_, ( celldm_(i), i = 1, 6 )
           READ(iuni) ht0_, htm_, htm2_, htvel_
           READ(iuni) xnosp_, xnos0_, xnosm_, xnosm2_
         END IF
@@ -2381,29 +2341,17 @@
         CALL mp_bcast( xnosm_, ionode_id )
         CALL mp_bcast( xnosm2_, ionode_id )
 
-        IF( .NOT. tovrw ) THEN
-          IF( ibrav_ /= ibrav ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_cell, ibrav changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") ibrav_, ibrav
-          END IF
-          IF( ANY( celldm_ /= celldm ) ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_cell, celldm changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',6F14.8 )") celldm_
-            WRITE(6,fmt="(3X,'W: new = ',6F14.8 )") celldm
-          END IF
-        END IF
-
-        ht0 = ht0_
-        htm = htm_
-        htm2 = htm2_
-        htvel = htvel_
-        xnosp = xnosp_
-        xnos0 = xnos0_
-        xnosm = xnosm_
+        ht0    = ht0_
+        htm    = htm_
+        htm2   = htm2_
+        htvel  = htvel_
+        xnosp  = xnosp_
+        xnos0  = xnos0_
+        xnosm  = xnosm_
         xnosm2 = xnosm2_
 
         IF( tovrw ) THEN
-          ibrav = ibrav_
+          ibrav  = ibrav_
           celldm = celldm_
         END IF
 
@@ -2644,39 +2592,20 @@
         CALL mp_bcast(tscal_, ionode_id)
         tscal = tscal_
 
-        IF( ntyp_ > SIZE(na_) ) &
-            CALL errore(' read_restart_ions ',' too many types ',ntyp_)
-        IF( nat_ > SIZE(ityp_) ) &
-          CALL errore(' read_restart_ions ',' too many atoms ',nat_)
+        IF( ntyp_ > SIZE( na_ ) ) &
+            CALL errore( ' read_restart_ions ', ' too many types ', ntyp_ )
+        IF( nat_ > SIZE( ityp_ ) ) &
+          CALL errore( ' read_restart_ions ', ' too many atoms ', nat_ )
 
-        IF( .NOT. tovrw ) THEN
-          IF( nat_ /= nat ) &
-            CALL errore(' read_restart_ions ',' atoms numbers differ ',nat_)
-          IF( ntyp_ /= ntyp ) &
-            CALL errore(' read_restart_ions ',' types numbers differ ',ntyp_)
-        END IF
-       
         IF( ionode ) THEN
-          READ(iuni) (ityp_(i),i=1,nat_), (na_(i),i=1,ntyp_), (label_(i),i=1,ntyp_)
-          READ(iuni) (mass_(i),i=1,ntyp_)
+          READ(iuni) ( ityp_(i), i = 1, nat_  ), ( na_(i), i = 1, ntyp_ ), ( label_(i), i = 1, ntyp_ )
+          READ(iuni) ( mass_(i), i = 1, ntyp_ )
         END IF
-        CALL mp_bcast(ityp_, ionode_id)
-        CALL mp_bcast(na_, ionode_id)
-        CALL mp_bcast(label_, ionode_id)
-        CALL mp_bcast(mass_, ionode_id)
+        CALL mp_bcast( ityp_  , ionode_id )
+        CALL mp_bcast( na_    , ionode_id )
+        CALL mp_bcast( label_ , ionode_id )
+        CALL mp_bcast( mass_  , ionode_id )
  
-        IF( .NOT. tovrw ) THEN
-          DO i = 1, ntyp_
-            IF( na_(i) /= na(i) ) THEN
-              WRITE(6,fmt="(3X,'W: read_restart_ions, Number of atoms chenged' )")
-              WRITE(6,fmt="(3X,'W: is = ',I3,' old = ',I10,' new = ',I10 )") i, na_(i), na(i)
-            END IF
-            IF( mass_(i) /= mass(i) ) THEN
-              WRITE(6,fmt="(3X,'W: read_restart_ions, Atomic mass chenged' )")
-              WRITE(6,fmt="(3X,'W: is = ',I3,' old = ',F18.8,' new = ',F18.8 )") i, mass_(i), mass(i)
-            END IF
-          END DO
-        END IF
 
         IF( SIZE( label ) < ntyp_ ) &
           CALL errore( sub_name, ' wrong size ', 1 )
@@ -2703,17 +2632,17 @@
 
         ALLOCATE( stmp_( 3, nat_ ) )
         IF( ionode ) THEN
-          READ(iuni) ((stmp_(i,j),i=1,3),j=1,nat_)
+          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
           stau0 = stmp_
-          READ(iuni) ((stmp_(i,j),i=1,3),j=1,nat_)
+          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
           svel0 = stmp_
-          READ(iuni) ((stmp_(i,j),i=1,3),j=1,nat_)
+          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
           staum = stmp_
-          READ(iuni) ((stmp_(i,j),i=1,3),j=1,nat_)
+          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
           svelm = stmp_
-          READ(iuni) ((stmp_(i,j),i=1,3),j=1,nat_)
+          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
           taui = stmp_
-          READ(iuni) ((stmp_(i,j),i=1,3),j=1,nat_)
+          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
           fion = stmp_
         END IF
         CALL mp_bcast(stau0, ionode_id)
@@ -2725,7 +2654,7 @@
         DEALLOCATE( stmp_ )
 
         IF( ionode ) THEN
-          READ(iuni) (cdmi_(i),i=1,3)
+          READ(iuni) ( cdmi_(i), i = 1, 3 )
           READ(iuni) xnosp_, xnos0_, xnosm_, xnosm2_
         END IF
         CALL mp_bcast(cdmi_, ionode_id)
@@ -2743,10 +2672,10 @@
         IF( tovrw ) THEN
           nat = nat_
           ntyp = ntyp_
-          mass(1:ntyp) = mass_
-          na(1:ntyp) = na_
-          ityp(1:nat) = ityp_(1:nat)
-          label(1:ntyp) = label_
+          mass( 1:ntyp ) = mass_
+          na( 1:ntyp ) = na_
+          ityp( 1:nat ) = ityp_( 1:nat )
+          label( 1:ntyp ) = label_
         END IF
 
       ELSE
@@ -2980,21 +2909,21 @@
       REAL(dbl), INTENT(OUT) :: weig(:)
       REAL(dbl), INTENT(OUT) :: lambda(:,:)
       REAL(dbl), INTENT(OUT) :: lambdam(:,:)
-      INTEGER, INTENT(INOUT) :: ldim
-      INTEGER, INTENT(INOUT) :: nbnd
-      INTEGER, INTENT(INOUT) :: ispin
-      INTEGER, INTENT(INOUT) :: nspin
-      INTEGER, INTENT(INOUT) :: ik
-      INTEGER, INTENT(INOUT) :: nk
-      REAL(dbl), INTENT(INOUT) :: nel
-      INTEGER, INTENT(INOUT) :: nelu
-      INTEGER, INTENT(INOUT) :: neld
+      INTEGER, INTENT(OUT) :: ldim
+      INTEGER, INTENT(OUT) :: nbnd
+      INTEGER, INTENT(OUT) :: ispin
+      INTEGER, INTENT(OUT) :: nspin
+      INTEGER, INTENT(OUT) :: ik
+      INTEGER, INTENT(OUT) :: nk
+      REAL(dbl), INTENT(OUT) :: nel
+      INTEGER, INTENT(OUT) :: nelu
+      INTEGER, INTENT(OUT) :: neld
       REAL(dbl), INTENT(OUT) :: xnosp
       REAL(dbl), INTENT(OUT) :: xnos0
       REAL(dbl), INTENT(OUT) :: xnosm
       REAL(dbl), INTENT(OUT) :: xnosm2
       LOGICAL, INTENT(IN) :: tocc, tlam, teig
-      REAL(dbl), INTENT(INOUT) :: ef
+      REAL(dbl), INTENT(OUT) :: ef
 
       INTEGER :: i,j,k,l, nsiz
       LOGICAL :: tocc_, tlam_, teig_
@@ -3014,13 +2943,17 @@
       IF( ionode ) THEN
         READ(iuni) twrite_, file_version_
       END IF
+
       CALL mp_bcast( twrite_, ionode_id )
       CALL mp_bcast( file_version, ionode_id )
+
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_electrons ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
+
         IF( ionode ) READ(iuni) nbnd_, ispin_, nspin_, ik_, nk_, nel_, nelu_, neld_, ldim_
+
         CALL mp_bcast( nbnd_, ionode_id)
         CALL mp_bcast( ispin_, ionode_id)
         CALL mp_bcast( nspin_, ionode_id)
@@ -3031,14 +2964,6 @@
         CALL mp_bcast( neld_, ionode_id)
         CALL mp_bcast( ldim_, ionode_id)
 
-        IF( .NOT. tovrw ) THEN
-          IF( nbnd_ /= nbnd ) &
-            CALL errore( ' read_restart_electrons ',' number of bands differ ', 1)
-          IF( nspin_ /= nspin ) &
-            CALL errore( ' read_restart_electrons ',' number of spin differ ', 1)
-          IF( nk_ /= nk ) &
-            CALL errore( ' read_restart_electrons ',' number of k points differ ', 1)
-        END IF
 !
 ! ..    Manage occ and occm
 
@@ -3053,15 +2978,15 @@
           nsiz = MIN( nbnd_, SIZE( occ ) )
           ALLOCATE( otmp_( nbnd_) )
 
-          IF( ionode ) READ(iuni) (otmp_(i),i=1,nbnd_)
-          CALL mp_bcast( otmp_, ionode_id)
+          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
+          CALL mp_bcast( otmp_, ionode_id )
 
-          occ(1:nsiz) = otmp_(1:nsiz)
+          occ( 1 : nsiz ) = otmp_( 1 : nsiz )
 
-          IF( ionode ) READ(iuni) (otmp_(i),i=1,nbnd_)
-          CALL mp_bcast( otmp_, ionode_id)
+          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
+          CALL mp_bcast( otmp_, ionode_id )
 
-          occm(1:nsiz) = otmp_(1:nsiz)
+          occm( 1 : nsiz ) = otmp_( 1 : nsiz )
 
           DEALLOCATE( otmp_ )
 
@@ -3085,15 +3010,15 @@
           nsiz = MIN( ldim_, SIZE( lambda, 1 ) )
           ALLOCATE( ltmp_( ldim_, ldim_ ) )
 
-          IF( ionode ) READ(iuni) ((ltmp_(l,i),l=1,ldim_),i=1,ldim_)
+          IF( ionode ) READ(iuni) ( ( ltmp_(l,i), l = 1, ldim_ ), i = 1, ldim_ )
           CALL mp_bcast( ltmp_, ionode_id)
 
-          lambda(1:nsiz, 1:nsiz) = ltmp_(1:nsiz, 1:nsiz)
+          lambda( 1:nsiz, 1:nsiz ) = ltmp_( 1:nsiz, 1:nsiz )
 
-          IF( ionode ) READ(iuni) ((ltmp_(l,i),l=1,ldim_),i=1,ldim_)
+          IF( ionode ) READ(iuni) ( ( ltmp_(l,i), l = 1, ldim_ ), i = 1, ldim_ )
           CALL mp_bcast( ltmp_, ionode_id)
 
-          lambdam(1:nsiz, 1:nsiz) = ltmp_(1:nsiz, 1:nsiz)
+          lambdam( 1:nsiz, 1:nsiz ) = ltmp_( 1:nsiz, 1:nsiz )
 
           DEALLOCATE( ltmp_ )
 
@@ -3112,11 +3037,11 @@
         CALL mp_bcast( xnosm2_, ionode_id)
   
         IF( ionode ) READ(iuni) ef_
-        CALL mp_bcast( ef_, ionode_id)
+        CALL mp_bcast( ef_, ionode_id )
 
-        xnosp = xnosp_
-        xnos0 = xnos0_
-        xnosm = xnosm_
+        xnosp  = xnosp_
+        xnos0  = xnos0_
+        xnosm  = xnosm_
         xnosm2 = xnosm2_
 
         IF( ionode ) READ(iuni) teig_
@@ -3130,15 +3055,15 @@
           nsiz = MIN( nbnd_, SIZE( eig ) )
           ALLOCATE( otmp_( nbnd_ ) )
 
-          IF( ionode ) READ(iuni) (otmp_(i),i=1,nbnd_)
-          CALL mp_bcast( otmp_, ionode_id)
+          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
+          CALL mp_bcast( otmp_, ionode_id )
 
-          eig(1:nsiz) = otmp_(1:nsiz)
+          eig( 1:nsiz ) = otmp_( 1:nsiz )
 
-          IF( ionode ) READ(iuni) (otmp_(i),i=1,nbnd_)
-          CALL mp_bcast( otmp_, ionode_id)
+          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
+          CALL mp_bcast( otmp_, ionode_id )
 
-          weig(1:nsiz) = otmp_(1:nsiz)
+          weig( 1:nsiz ) = otmp_( 1:nsiz )
 
           DEALLOCATE( otmp_ )
 
@@ -3150,7 +3075,8 @@
         END IF
   
         IF( tovrw ) THEN
-          nbnd = nbnd_
+
+          nbnd  = nbnd_
           ispin = ispin_
           nspin = nspin_
           ik    = ik_
@@ -3160,6 +3086,7 @@
           neld  = neld_
           ldim  = ldim_
           ef    = ef_
+
         END IF
 
       ELSE
