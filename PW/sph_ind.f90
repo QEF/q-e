@@ -36,7 +36,7 @@ elseif (abs(j-l+0.5d0).lt.1.d-8) then
    endif
 else
    write(6,*) l, j
-   call errore('sph_ind','j and l not compatible',1)
+   call errore('sph_ind','l and j not compatible',1)
 endif
 if (sph_ind.lt.-l.or.sph_ind.gt.l) sph_ind=0
 

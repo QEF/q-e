@@ -111,7 +111,6 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   end do
   !
   deallocate(cost, phi, P)
-  return
   !
   return
 end subroutine ylmr2
