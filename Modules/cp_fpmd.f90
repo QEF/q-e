@@ -402,7 +402,7 @@ end module qrl_mod
       use gvecw, only: ngw, ngwl, ngwt
       use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
       use io_global, only: stdout
-      USE fft_base, ONLY: dfftp, dffts
+      USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp, ONLY: mp_sum
       use io_global, only: ionode
       use constants, only: eps8

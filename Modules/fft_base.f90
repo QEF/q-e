@@ -41,7 +41,7 @@
         PRIVATE
 
         PUBLIC :: fft_transpose, fft_scatter
-        PUBLIC :: dfftp, dffts
+        PUBLIC :: dfftp, dffts, fft_dlay_descriptor
 
 
         INTEGER, ALLOCATABLE :: stmask(:)
