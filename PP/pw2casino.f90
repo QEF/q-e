@@ -55,7 +55,8 @@ end program pw2casino
 subroutine compute_casino
  
   use kinds, ONLY: DP
-  use pwcom
+  use pwcom 
+  USE io_global,  ONLY : stdout
   use io_files, only: nd_nmbr,prefix,nwordwfc,iunwfc
   USE wavefunctions_module, ONLY : evc
   use becmod
@@ -180,12 +181,12 @@ subroutine compute_casino
            enddo
         enddo
 
-        call reduce(1,ek)
 
      enddo
   enddo
 
 
+  call reduce(1,ek)
   ek = ek * tpiba2
   ngtot = 0
   do ig = 1, 4*npwx
@@ -196,7 +197,7 @@ subroutine compute_casino
   enddo
 
 
-#ifdef PARA
+#ifdef __PARA
   call poolreduce(1,ek)
   call poolreduce(1,enl)
 #endif
@@ -309,13 +310,13 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
      enddo
   enddo
 
-  print *,'Kinetic energy', ek/2
-  print *,'Local energy', eloc/2
-  print *,'Non-Local energy', enl/2
-  print *,'Ewald energy', ewld/2
-  print *,'xc contribution',(etxc-etxcc)/2
-  print *,'hartree contribution', ehart/2
-  print *, 'Total energy', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
+  write(stdout,*) 'Kinetic energy', ek/2
+  write(stdout,*) 'Local energy', eloc/2
+  write(stdout,*) 'Non-Local energy', enl/2
+  write(stdout,*) 'Ewald energy', ewld/2
+  write(stdout,*) 'xc contribution',(etxc-etxcc)/2
+  write(stdout,*) 'hartree contribution', ehart/2
+  write(stdout,*)  'Total energy', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
 
 
 end subroutine compute_casino
