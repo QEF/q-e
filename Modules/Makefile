@@ -1,55 +1,54 @@
 #
 # Makefile for Modules
-#
-MODULES= constants.o \
-kind.o \
-parallel_include.o \
-shmem_include.o \
-parameters.o \
-io_base.o  \
-io_global.o  \
-mp.o  \
-mp_global.o  \
-mp_wave.o  \
-mp_buffers.o  \
-parser.o \
-readpseudo.o  \
-pseudodata.o  \
+
+MODULES = \
+berry_phase.o \
 cell_base.o  \
-pseudo_types.o \
-ptoolkit.o \
-stick_base.o \
-fft_types.o \
+clocks.o \
+constants.o \
+control_flags.o \
+descriptors.o \
+electrons_base.o \
+energies.o \
 fft_base.o \
 fft_scalar.o \
-clocks.o \
-parallel_types.o \
-descriptors.o \
-control_flags.o \
-recvec.o \
-smallbox.o \
+fft_types.o \
 griddim.o \
-ions_base.o \
-electrons_base.o \
 input_parameters.o \
-read_namelists.o \
-read_cards.o \
-berry_phase.o \
-energies.o \
+io_base.o \
 io_files.o \
-wavefunctions.o \
-version.o
-#
+io_global.o  \
+ions_base.o \
+kind.o \
+miscellany.o \
+mp.o \
+mp_global.o \
+mp_wave.o \
+mp_buffers.o \
+parallel_include.o \
+parallel_types.o \
+parameters.o \
+parser.o \
+pseudodata.o \
+pseudo_types.o \
+ptoolkit.o \
+read_cards.o \
+read_namelists.o \
+readpseudo.o \
+recvec.o \
+shmem_include.o \
+smallbox.o \
+stick_base.o \
+version.o \
+wavefunctions.o
+
 include ../make.rules
-#
 include ../make.sys
-#
+
 # targets
-#
 all: $(MODULES)
-#
+
 clean_:
 	-/bin/rm -f *.o *.d *~ *.F90 *.mod work.pc
-#
-include .dependencies
 
+include .dependencies
