@@ -29,12 +29,10 @@ end program efg
 
 subroutine read_recon(filerec)
 
-  use read_pseudo_module
-!  use wfc_utils
-  use basis
-!  use us
-  use paw
-  use atom
+  use read_pseudo_module , only: scan_begin, scan_end
+  use basis, only:ntyp
+  use paw , only: aephi, psphi, paw_nbeta
+  use atom, only: mesh  !!! to be remove I think
   use kinds, only: DP
   use parameters, only : ntypx
   USE io_global,  ONLY : stdout
@@ -104,11 +102,12 @@ subroutine do_efg(Q)
   use kinds ,only : DP 
   use parameters ,only: ntypx
   use constants, only: pi,tpi,fpi,ANGSTROM_AU,rytoev,ELECTRONVOLT_SI
-  use scf           !rho
-  use gvect         !gvectors and parameters fot the FFT
-  use brilz         !parameters of the cell
-  use basis         !coordinates of the atoms
-  use symme
+  use scf, only: rho              !rho
+  use gvect, only: nr1,nr2,nr3,nrx1,nrx1,nrx2,nrx3,nrxx,&
+       g,gg,nl,gstart,ngm         !gvectors and parameters for the FFT
+  use brilz , only: at,bg         !parameters of the cell
+  use basis , only : nat, atm, tau, ityp         !coordinates of the atoms
+  use symme , only: nsym, s, irt
   use pseud, only : zv !valence charge
   implicit none
 
@@ -222,14 +221,14 @@ efgr_el=(0.d0,0.d0)
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efg_corr", &
-             (real(efg_corr_tens(alpha,beta,1)) , alpha =1,3 )
+             (2*real(efg_corr_tens(alpha,beta,1)) , alpha =1,3 )
         
      enddo
      write (stdout,*)
   enddo
 
   do na=1,nat
-     efg(:,:,na)=real(efg_corr_tens(:,:,na)+efgr_el(na,:,:)+ &
+     efg(:,:,na)=real(2*efg_corr_tens(:,:,na)+efgr_el(na,:,:)+ &
           efg_io(na,:,:))
      do beta=1,3
         write (stdout,1000) atm(ityp(na)),na,"efg",&
@@ -268,26 +267,28 @@ efgr_el=(0.d0,0.d0)
   write (stdout,1200) atm(ityp(na)), na, Q(ityp(na)),Cq,eta
   write (stdout,*)
   enddo
-1200 FORMAT(1x,a,1x,i3,5x,'Q= ',f6.3,5x,' Cq= ',f9.6,5x,' eta= ',f9.6)
+1200 FORMAT(1x,a,1x,i3,5x,'Q= ',f6.3,5x,' Cq= ',f9.6,' MHz',5x,' eta= ',f9.6)
 
 end subroutine do_efg
  
 subroutine efg_correction(efg_corr_tens)
 
-  use io_files
+  use io_files ,only: nwordwfc, iunwfc
   use kinds , only: dp
-  use us
-  use atom
+  use us ,only: ap
+  use parameters, only: lmaxx, ntypx
+  use atom , only: r,rab,msh
 !  use becmod
-  use gvect
-  use klist
+  use gvect, only: g,ngm,ecutwfc
+  use klist, only: nks, xk
 !  use units
-  use brilz
-  use basis
-  use wvfct
+  use brilz, only: tpiba2
+  use basis, only: nat, ntyp,ityp
+  use wvfct, only:npwx, nbnd, npw, igk, g2kin
   use wavefunctions_module, only: evc
 !  use wfc_utils
-  use paw
+  use paw, only: paw_vkb, paw_becp, paw_nkb, aephi, psphi, paw_nh, paw_nhtol, &
+       paw_nhtom, paw_indv, paw_nbeta
   use constants, only: pi
 
   implicit none
@@ -298,7 +299,6 @@ subroutine efg_correction(efg_corr_tens)
   real(kind=dp), allocatable :: at_efg(:,:,:), work(:)
   real(kind=dp) ,intent(out):: efg_corr_tens(3,3,nat)
   complex(kind=dp) , allocatable :: efg_corr(:,:), u(:,:)
-  integer :: lmtonh(0:lmaxx-1,-lmaxx:lmaxx),mtom(lmaxx*2+1)
   real(kind=dp) :: sqrt2,rc
 
   allocate (efg_corr(lmaxx**2,nat))
@@ -307,27 +307,6 @@ subroutine efg_correction(efg_corr_tens)
   efg_corr=0.d0
   kkpsi=aephi(1,1)%kkpsi
   allocate (work(kkpsi))
-
-  lm=0
-  do l=0,lmaxx-1
-     lm=lm+1
-     lmtonh(l,0)=lm
-     do m=1,l
-        lm=lm+1
-        lmtonh(l,m)=lm
-        lm=lm+1
-        lmtonh(l,-m)=lm
-     enddo
-  enddo
-  mtom=0
-  mtom(1)=0
-  lm=1
-  do m=1,lmaxx 
-     lm=lm+1
-     mtom(lm)=m
-     lm=lm+1
-     mtom(lm)=-m
-  enddo
  
   call init_paw_1
 
@@ -425,7 +404,7 @@ do ibnd = 1, nbnd
                   enddo
                enddo
             enddo
-            ijkb0 = ijkb0 + nh (nt)
+            ijkb0 = ijkb0 + paw_nh (nt)
          endif
       enddo
    enddo

@@ -28,15 +28,17 @@ subroutine init_paw_1
   !
 #include "machine.h"
 !  use pwcom
-  USE kinds
-  use pseud
-!  use parameters
-  use brilz
-  use basis
-  use constants
-  use us
-  use paw
-  use atom
+  USE kinds , only: dp
+!  use pseud
+  use parameters , only : lqmax , nbrx, lmaxx, ndm
+  use brilz , only : omega
+  use basis , only : ntyp, nat, ityp
+  use constants , only : fpi
+  use us , only : nqx, mx , nlx, ap, lpx, lpl, dq
+  use paw , only : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, paw_iltonh, &
+       paw_tab, aephi, paw_betar, psphi, paw_indv, paw_nhtom, paw_nhtol, &
+       paw_nbeta 
+  use atom , only : r, rab, msh
   implicit none
   !
   !     here a few local variables
@@ -264,7 +266,7 @@ end subroutine init_paw_1
 
 subroutine step_f(f2,f,r,rs,rc,pow,mesh)
 
-  use kinds
+  use kinds , only : dp
  
   implicit none
   integer :: mesh

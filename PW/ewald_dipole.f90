@@ -16,12 +16,12 @@ subroutine ewald_dipole (tens,dipole)
   ! Determines optimal alpha. Should hopefully work for any structure.
   !
   !
-  USE kinds
-  use gvect
-  use constants
-  use brilz
-  use basis
-  use vlocal
+  USE kinds , only : dp
+  use gvect , only : gcutm, gstart, ngm, g, gg
+  use constants , only: tpi, e2, fpi, pi
+  use brilz , only: tpiba2, omega, alat, at, bg
+  use basis , only : ntyp, nat, tau, ityp
+  use vlocal , only: strf
   implicit none
   !
 

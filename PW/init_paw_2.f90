@@ -16,14 +16,15 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
 #include "machine.h"
 !  use pwcom
 !  use parameters
-  use kinds
-  use constants
-  use wvfct
-  use brilz
-  use basis
-  use gvect
-  use us
-  use paw
+  use kinds , only : dp
+  use constants , only :tpi
+  use wvfct , only : npwx
+  use brilz , only : tpiba
+  use basis , only : ntyp, nat, ityp, tau
+  use gvect , only : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
+  use us, only : dq
+  use paw, only : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
+       paw_nhtom, paw_indv, paw_tab, paw_nbeta
   implicit none
   !
   integer :: npw_, igk_ (npw_)

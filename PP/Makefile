@@ -314,7 +314,7 @@ pw2wan.x : $(PPOBJS) pw2wan.o
 pw2casino.x : $(PPOBJS) pw2casino.o
 	$(LD) -o pw2casino.x pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-efg.x: $(PPOBJS) efg.o
+efg.x: $(PWOBJS) $(PPOBJS) efg.o
 	$(LD) -o efg.x efg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 
