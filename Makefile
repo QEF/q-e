@@ -86,8 +86,8 @@ links :
 
 # remove object files and executables
 clean :
-	touch make.rules make.sys # make complains if they aren't there
-	#                         # same with .dependencies below
+	touch make.rules make.sys 
+        # make complains if they aren't there; same with .dependencies below
 	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools atomic \
 		   Modules install clib flib FPMD CPV Raman ; do \
 	    if test -d $$dir ; then \
