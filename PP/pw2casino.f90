@@ -282,19 +282,20 @@ subroutine compute_casino
   write(io,'(a)') ' Number of k-points'
   write(io,*) nk
   !  if(nks > 1) rewind(iunigk)
-  do ispin = 1, nspin 
-     do ik = 1, nk
+  
+  do ik = 1, nk
+     write(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
+          &           k-point coords (au)'
+     write(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
+          (tpi/alat*xk(j,ik),j=1,3)
+     do ispin = 1, nspin 
         ikk = ik + nk*(ispin-1)
         if( nks > 1 ) then
-           !           read(iunigk) npw, igk
            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
            call davcio(evc,nwordwfc,iunwfc,ikk,-1)
         endif
 
-        write(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
-             &           k-point coords (au)'
-        write(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
-             (tpi/alat*xk(j,ikk),j=1,3)
+
         do ibnd = 1, nbnd
            write(io,'(a)') ' Band, spin, eigenvalue (au)'
            write(io,*) ibnd, ispin, et(ibnd,ikk)/2 
