@@ -1,0 +1,136 @@
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!----------------------------------------------------------------------
+subroutine addusddense (drhoscf, dbecsum)  
+  !----------------------------------------------------------------------
+  !
+  !  This routine adds to the change of the charge density the part
+  !  which is due to the US augmentation.
+  !  It assumes that the array dbecsum has already accumulated the
+  !  change of the becsum term.
+  !
+#include "machine.h"
+
+  use pwcom 
+  use allocate 
+  use phcom  
+  use parameters, only : DP 
+  implicit none 
+  !
+  !   the dummy variables
+  !
+
+  ! input: if zero does not compute drho
+  ! input: the number of perturbations
+
+  complex(kind=DP) :: drhoscf(nrxx,nspin,3), dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
+
+  ! inp/out: change of the charge density
+  !input: sum over kv of bec
+  !
+  !     here the local variables
+  !
+
+  integer :: ig, na, nt, ih, jh, ir, mode, ipert, ijh, is  
+
+  ! counter on G vectors
+  ! counter on atoms
+  ! counter on atomic type
+  ! counter on beta functions
+  ! counter on beta functions
+  ! counter on r vectors
+  ! pointer on modes
+  ! pointer on the mode
+  ! counter on perturbations
+  ! counter on spin
+  ! counter on combined beta functions
+  
+  real(kind=DP), pointer  :: qmod(:), ylmk0(:,:)  
+  ! the modulus of q+G
+  ! the spherical harmonics
+
+  complex(kind=DP) :: zsum
+  complex(kind=DP), pointer ::  sk (:), qg (:), aux (:,:,:)
+  ! auxiliary variables
+  ! the structure factor
+  ! auxiliary variable for FFT
+  ! contain the charge of drho
+  ! auxiliary variable for drho(G)
+  
+  if (.not.okvan) return  
+  call start_clock ('addusddense')  
+  call mallocate(aux,  ngm, nspin, 3)  
+  call mallocate(sk ,  ngm)  
+  call mallocate(qg ,  nrxx)  
+  call mallocate(ylmk0,  ngm , lqx * lqx)  
+  call mallocate(qmod ,  ngm)  
+  !
+  !  And then we compute the additional charge in reciprocal space
+  !
+  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)  
+  do ig = 1, ngm  
+     qmod (ig) = sqrt (gg (ig) )  
+  enddo
+
+  call setv (6 * ngm, 0.d0, aux, 1)  
+  do nt = 1, ntyp  
+     if (tvanp (nt) ) then  
+        ijh = 0  
+        do ih = 1, nh (nt)  
+           do jh = ih, nh (nt)  
+              call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)  
+              ijh = ijh + 1  
+              do na = 1, nat  
+                 if (ityp (na) .eq.nt) then  
+                    !
+                    ! calculate the structure factor
+                    !
+                    do ig = 1, ngm  
+                       sk(ig)=eigts1(ig1(ig),na)*eigts2(ig2(ig),na) &
+                             *eigts3(ig3(ig),na)*eigqts(na)*qgm(ig)
+                    enddo
+                    !
+                    !  And qgmq and becp and dbecq
+                    !
+                    do is=1,nspin
+                       do ipert = 1, 3
+                          zsum = dbecsum (ijh, na, is,ipert)  
+                          call ZAXPY(ngm,zsum,sk,1,aux(1,is,ipert),1)
+                       enddo
+                    enddo
+                 endif
+              enddo
+           enddo
+        enddo
+     endif
+  enddo
+  !
+  !     convert aux to real space
+  !
+  do is=1,nspin
+     do ipert = 1, 3  
+        call setv (2 * nrxx, 0.d0, qg, 1)  
+        do ig = 1, ngm  
+           qg (nl (ig) ) = aux (ig, is, ipert)  
+        enddo
+        call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+        do ir = 1, nrxx  
+           drhoscf(ir,is,ipert)=drhoscf(ir,is,ipert)+2.d0*qg(ir)
+        enddo
+     enddo
+  enddo
+  call mfree (ylmk0)  
+  call mfree (qmod)  
+  call mfree (qg)  
+  call mfree (sk)  
+  call mfree (aux)  
+
+  call stop_clock ('addusddense')  
+  return  
+end subroutine addusddense
