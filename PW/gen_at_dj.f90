@@ -24,7 +24,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    USE klist, ONLY: xk
    USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
    USE wvfct, ONLY: npw, npwx, igk
-   USE us, ONLY: newpseudo
+   USE us, ONLY: tab_at, dq, newpseudo
   implicit none
    !
    !  I/O variables

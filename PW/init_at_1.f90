@@ -15,13 +15,13 @@ subroutine init_at_1
   !
 #include "machine.h"
 
-  use parameters, only: dp, ndm, nchix
+  USE parameters, ONLY: ndm, nchix
+  USE kinds, ONLY: dp
   USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
   USE constants, ONLY: fpi
   USE brilz, ONLY: omega
   USE basis, ONLY: ntyp
-  USE us, ONLY: tab_at, nqx, dq
-  USE varie, ONLY: newpseudo
+  USE us, ONLY: tab_at, nqx, dq, newpseudo
   implicit none
   !
   integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq
