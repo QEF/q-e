@@ -33,6 +33,8 @@
 !  END manual  
 
     USE io_global,  ONLY : stdout
+    USE parallel_include
+
 
     IMPLICIT NONE
     SAVE
@@ -72,9 +74,6 @@
 #if defined __PARA
 #  if defined __SHMEM
       include 'mpp/shmem.fh'
-#  endif
-#  if defined __MPI
-      include 'mpif.h'
 #  endif
 #endif
 
@@ -246,10 +245,6 @@
 
       IMPLICIT NONE
 
-#if defined __MPI
-      include 'mpif.h'
-#endif
-
       INTEGER   :: N
       REAL(dbl) :: A(N,*), C(N,*), B(N,*)
 
@@ -383,9 +378,6 @@
 #if defined __PARA
 #  if defined __SHMEM
       include 'mpp/shmem.fh'
-#  endif
-#  if defined __MPI
-      include 'mpif.h'
 #  endif
 #endif
 
@@ -600,9 +592,6 @@
       INTEGER, PARAMETER :: PTRED_WORK_SIZE = 2333
 
 #if defined __PARA
-#  if defined __MPI
-      INCLUDE 'mpif.h'
-#  endif 
 #  if defined __SHMEM
       include "mpp/shmem.fh"
       INTEGER PSYNC_BC(SHMEM_BCAST_SYNC_SIZE)
@@ -1242,10 +1231,6 @@
 
         USE kinds
         IMPLICIT NONE
-
-#if defined __MPI
-        INCLUDE 'mpif.h'
-#endif
         
         INTEGER, INTENT(IN) :: iopt, n, nproc, mpime
         REAL(dbl) :: a(n,n), d(n), ev(n,n)
@@ -1389,10 +1374,6 @@
 
         USE kinds     
         IMPLICIT NONE
-
-#if defined __MPI
-      INCLUDE 'mpif.h'
-#endif
 
         INTEGER, INTENT(IN) :: iflg, n, nproc, mpime
         REAL(dbl)    :: d(n)
@@ -1547,10 +1528,6 @@
 
       USE kinds
       IMPLICIT           NONE
-
-#if defined __MPI
-      INCLUDE 'mpif.h'
-#endif
 
 !     .. __SCALAR Arguments ..
       INTEGER            LDA, N, NRL, NPROC, ME
@@ -2017,10 +1994,6 @@
 
       USE kinds
       IMPLICIT NONE
-
-#if defined __MPI
-      INCLUDE 'mpif.h' 
-#endif
 
 !
 !     .. __SCALAR Arguments ..

@@ -26,6 +26,7 @@
 
         USE kinds, ONLY: dbl
         USE mp, ONLY: mp_max, mp_sum, mp_barrier
+        USE parallel_include
 
         USE fft_types, ONLY: fft_dlay_descriptor
 
@@ -99,8 +100,6 @@
             mp_p_snd_buffer, mp_p_rcv_buffer, mp_bufsize_msgmax
 
           IMPLICIT NONE
-
-          include 'mpif.h'
 
           COMPLEX (dbl) :: zstick( * )
           COMPLEX (dbl) :: r( * )
@@ -308,8 +307,6 @@
         SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
 
           IMPLICIT NONE
-
-          include 'mpif.h'
 
           COMPLEX (dbl) :: zstick( * )
           COMPLEX (dbl) :: r( * )
@@ -626,8 +623,6 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   complex (kind=DP) :: f_in (nxx_), f_aux (nxx_)
 
 #ifdef __PARA
-
-  include 'mpif.h'
 
   integer :: dest, from, k, offset1 (nproc), sendcount (nproc), &
        sdispls (nproc), recvcount (nproc), rdispls (nproc), &
