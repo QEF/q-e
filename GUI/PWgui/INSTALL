@@ -114,12 +114,15 @@ Tcl/Tk/Itcl/Itk/Iwidgets. See:  http://aspn.activestate.com/ASPN/Tcl
 Troubleshooting
 ***************
 
-For some RedHat distributions the "itkwish" package used to be broken,
-while for some Debian distributions the "pwgui" used to crash if it
-was called with "wish" package. If you experience such kind of
-troubles then replace the call to "wish" ("itkwish") with "itkwish"
-("wish") in file pwgui.
+Problem: Segmentation fault
+Solution: for some Linux distributions the "itkwish" package is
+sometimes broken, while for other the "pwgui" used to crash if it was
+called with "wish" package. If you experience such kind of troubles
+then replace in file pwgui the call to "wish" ("itkwish") with
+"itkwish" ("wish"). If that doesn't help, then install and use
+ActiveTcl (http://aspn.activestate.com/ASPN/Tcl) which--as far as my
+experience goes--always works.
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Mon Apr  5 10:34:59 CEST 2004
+Anton Kokalj (tone.kokalj@ijs.si), Sat Sep  4 10:35:52 CEST 2004

@@ -23,7 +23,7 @@ See the file "INSTALL" for installation instructions.
 CURRENT STATUS
 --------------
 
-This version of PWgui is compatible with PWscf v.2.0.
+This version of PWgui is compatible with PWscf 2.1.
 
 The aim of the PWgui GUI is to facilitate the creation and
 manipulation (editing) of input files for PWscf set of programs. The
@@ -103,4 +103,4 @@ following:
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 07:51:31 CET 2004
+Anton Kokalj (tone.kokalj@ijs.si), Sat Sep  4 10:35:52 CEST 2004
