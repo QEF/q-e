@@ -288,8 +288,8 @@ SUBROUTINE iosys()
   IF( nbnd < 1 ) THEN
      CALL errore( ' iosys ', ' nbnd less than 1 ', nbnd )
   END IF
-  IF (tfixed_occ .and. nbnd.eq.0) &
-     call errore( 'iosys','set the number of bands',1)
+  IF ( tfixed_occ .AND. nbnd == 0 ) &
+     CALL errore( 'iosys', 'set the number of bands', 1 )
   IF( nelec < 0 ) THEN
      CALL errore( ' iosys ', ' nelec less than 0 ', nelec )
   END IF

@@ -1,153 +1,231 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-subroutine cdiagh (n, h, ldh, e, v)
-!-----------------------------------------------------------------------
-!
-!   calculates all the eigenvalues and eigenvectors of a complex
-!   hermitean matrix H . On output, the matrix is unchanged
-!
 #include "machine.h"
-  use parameters
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-! on INPUT
-  integer :: n, &                 ! dimension of the matrix to be diagonalized
-             ldh                  ! leading dimension of h, as declared in
-                                  ! the calling pgm unit
-  complex(kind=DP) :: &
-           h (ldh, n)             ! matrix to be diagonalized
-! on OUTPUT
-  real(kind=DP) :: e (n)          ! eigenvalues
-  complex(kind=DP) :: v (ldh, n)  ! eigenvectors (column-wise)
-#ifdef __AIX
-! LOCAL variables (ESSL version)
-  integer :: naux, i, j, ij
-  external ZHPEV
-  complex(kind=DP), allocatable :: hp (:), aux (:)
-
-  call start_clock ('cdiagh')
-  naux = 4 * n
-
-  allocate (hp(  n * (n + 1) / 2))    
-  allocate (aux( naux))    
-
-! copy to upper triangular packed matrix
-  ij = 0
-  do j = 1, n
-     do i = 1, j
-        ij = ij + 1
-        hp (ij) = h (i, j)
-     enddo
-  enddo
-#ifdef __PARA
-!cc        call pcdiagh( n, h, ldh, e, v, ij )
-!cc        goto 10
 !
-!  only the first processor diagonalize the matrix
-!
-  if (me.eq.1) then
-#endif
-     call ZHPEV (21, hp, e, v, ldh, n, aux, naux)
-#ifdef __PARA
-  endif
-  call broadcast (n, e)
-  call broadcast (2 * ldh * n, v)
-#endif
-10 deallocate (aux)
-  deallocate (hp)
-#else
-#if defined(CRAYY)
-! LOCAL variables (Cray Eispack/Scilib version)
-
-  integer :: i, j, k, info
-!
-  real(kind=DP) :: ar (ldh, n), ai (ldh, n), zr (ldh, n), zi (ldh, n)
-  ! real and imaginary part of  h(ldh,n) and of  v(ldh,n)
-  ! (used as auxiliary arrays)
-  real(kind=DP) :: rwork (2, ldh), work (ldh)
+!----------------------------------------------------------------------------
+SUBROUTINE cdiagh( n, h, ldh, e, v )
+  !----------------------------------------------------------------------------
   !
-  call start_clock ('cdiagh')
-  do i = 1, n
-     do j = 1, ldh
-        ar (j, i) = DREAL (h (j, i) )
-        ai (j, i) = DIMAG (h (j, i) )
-     enddo
-  enddo
-  call ch (ldh, n, ar, ai, e, 1, zr, zi, work, work, rwork, info)
-  call errore ('cdiagh', 'info =/= 0', abs (info) )
-  do i = 1, n
-     do j = 1, ldh
-        v (j, i) = DCMPLX (zr (j, i), zi (j, i) )
-     enddo
-  enddo
-#else
-! LOCAL variables (LAPACK version)
-  integer :: lwork, ILAENV, nb, info
-! ILAENV returns optimal block size "nb"
-  real(kind=DP), allocatable :: rwork ( : )
-  complex(kind=DP), allocatable:: work(:)
-!
-  call start_clock ('cdiagh')
-!
-!     check for the block size
-!
-  nb = ILAENV (1, 'ZHETRD', 'U', n, - 1, - 1, - 1)
-  if (nb.lt.1) nb = max (1, n)
-  if (nb.eq.1.or.nb.ge.n) then
-     lwork = 2 * n - 1
-  else
-     lwork = (nb + 1) * n
-
-  endif
-#ifdef __PARA
-!
-!  if scalapack library is present and we have just one pool
-!  and the matrix is larger than 130 we use the scalapack driver
-!
-#ifdef __T3E
-  if (npool.eq.1.and.n.gt.130) then
-     call scala_cdiag (n, h, ldh, e, v, ldh)
-     goto 10
-
-  endif
+  ! ... calculates all the eigenvalues and eigenvectors of a complex
+  ! ... hermitean matrix H . On output, the matrix is unchanged
+  !
+  USE parameters, ONLY : DP
+#if defined (__PARA)
+  USE para,       ONLY : me, mypool, npool
 #endif
-!
-!  else only the first processor diagonalize the matrix
-!
-
-  if (me.eq.1) then
+  !
+  IMPLICIT NONE
+  !
+  ! ... on INPUT
+  !
+  INTEGER :: n, &               ! dimension of the matrix to be diagonalized
+             ldh                ! leading dimension of h, as declared in
+                                ! the calling pgm unit
+  COMPLEX(KIND=DP) :: &
+           h(ldh,n)             ! matrix to be diagonalized
+  !
+  ! ... on OUTPUT
+  !
+  REAL(KIND=DP)    :: e(n)      ! eigenvalues
+  COMPLEX(KIND=DP) :: v(ldh,n)  ! eigenvectors (column-wise)
+  !
+  !
+  CALL start_clock( 'cdiagh' )  
+  !
+#if defined (__AIX)
+  !
+  CALL cdiagh_aix()
+  !
+#else 
+# if defined (CRAYY)
+  !
+  CALL cdiagh_crayy() 
+  !
+# else
+  !
+  CALL cdiagh_lapack()
+  !
+# endif
 #endif
-!
-! allocate workspace
-!
-     call ZCOPY (n * ldh, h, 1, v, 1)
-     allocate (work( lwork))    
-     allocate (rwork( (3 * n - 2) ))    
-     call ZHEEV ('V', 'U', n, v, ldh, e, work, lwork, rwork, info)
-     call errore ('cdiagh', 'info =/= 0', abs (info) )
-! deallocate workspace
-     deallocate (rwork)
-     deallocate (work)
-#ifdef __PARA
-  endif
-  call broadcast (n, e)
-  call broadcast (2 * ldh * n, v)
+  !
+  CALL stop_clock( 'cdiagh' )
+  !
+  RETURN
+  !
+  CONTAINS  
+    !
+#if defined (__AIX)
+    ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE cdiagh_aix()
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      ! ... local variables (ESSL version)
+      !
+      INTEGER                       :: naux, i, j, ij
+      COMPLEX(KIND=DP), ALLOCATABLE :: hp(:), aux(:)
+      !
+      !
+      naux = 4 * n
+      !
+      ALLOCATE( hp(  n * (n + 1) / 2 ) )    
+      ALLOCATE( aux(naux) )    
+      !
+      ! ... copy to upper triangular packed matrix
+      !
+      ij = 0
+      DO j = 1, n
+         DO i = 1, j
+            ij = ij + 1
+            hp(ij) = h(i,j)
+         END DO
+      END DO
+      !
+# if defined (__PARA)
+      !
+      ! ... only the first processor diagonalize the matrix
+      !
+      IF ( me == 1 ) THEN
+# endif
+         !
+         CALL ZHPEV( 21, hp, e, v, ldh, n, aux, naux )
+         !
+# if defined (__PARA)
+      END IF
+      !
+      CALL broadcast( n, e )
+      CALL broadcast( 2 * ldh * n, v )
+# endif
+      !
+      DEALLOCATE( aux )
+      DEALLOCATE( hp )
+      !
+      RETURN
+      ! 
+    END SUBROUTINE cdiagh_aix 
+    !
+#else 
+# if defined (CRAYY)
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE cdiagh_crayy()
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      ! ... local variables (Cray Eispack/Scilib version)
+      !
+      INTEGER :: i, j, k, info
+      REAL(KIND=DP) :: ar(ldh,n), ai(ldh,n), zr(ldh,n), zi(ldh,n)
+        ! real and imaginary part of  h(ldh,n) and of  v(ldh,n)
+        ! (used as auxiliary arrays)
+      REAL(KIND=DP) :: rwork(2,ldh), work(ldh)
+      !
+      !
+      ar = DREAL( h )
+      ai = DIMAG( h )
+      !
+      CALL ch( ldh, n, ar, ai, e, 1, zr, zi, work, work, rwork, info )
+      !
+      CALL errore( 'cdiagh', 'info =/= 0', ABS( info ) )
+      !
+      v = CMPLX( zr, zi )      
+      !
+      RETURN      
+      !      
+    END SUBROUTINE cdiagh_crayy 
+    !
+# else        
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE cdiagh_lapack()
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      !
+      ! ... local variables (LAPACK version)
+      !
+      INTEGER :: lwork, nb, info
+      INTEGER :: ILAENV
+      EXTERNAL   ILAENV
+        ! ILAENV returns optimal block size "nb"
+      REAL(KIND=DP), ALLOCATABLE    :: rwork(:)
+      COMPLEX(KIND=DP), ALLOCATABLE :: work(:)
+      !
+      !
+      ! ... check for the block size
+      !
+      nb = ILAENV( 1, 'ZHETRD', 'U', n, - 1, - 1, - 1 )
+      !
+      IF ( nb < 1 ) nb = MAX( 1, n )
+      !
+      IF ( nb == 1 .OR. nb >= n ) THEN
+         !
+         lwork = 2 * n - 1
+         !
+      ELSE
+         !
+         lwork = ( nb + 1 ) * n
+         !
+      END IF
+#  if defined (__PARA)
+      !
+      ! ... if scalapack library is present and we have just one pool
+      ! ... and the matrix is larger than 130 we use the scalapack driver
+      !
+#   if defined (__T3E)
+      !
+      IF ( npool == 1 .AND. n > 130 ) THEN
+         !
+         CALL scala_cdiag( n, h, ldh, e, v, ldh )
+         !
+         RETURN
+         !
+      END IF
+      !
+#   endif
+      !
+      ! ... else only the first processor diagonalize the matrix
+      !
+      IF ( me == 1 ) THEN
+#  endif
+         !
+         ! ... allocate workspace
+         !
+         CALL ZCOPY( n * ldh, h, 1, v, 1 )
+         !
+         ALLOCATE( work( lwork ) )    
+         ALLOCATE( rwork( 3 * n - 2 ) )    
+         !
+         CALL ZHEEV( 'V', 'U', n, v, ldh, e, work, lwork, rwork, info )
+         !
+         CALL errore( 'cdiagh', 'info =/= 0', ABS( info ) )
+         !
+         ! ... deallocate workspace
+         !
+         DEALLOCATE( rwork )
+         DEALLOCATE( work )
+         !
+#  if defined (__PARA)
+      END IF
+      !
+      CALL broadcast( n, e )
+      CALL broadcast( 2 * ldh * n, v )
+#  endif
+      !
+      RETURN
+      !
+    END SUBROUTINE cdiagh_lapack
+    !
+# endif
 #endif
-
-10 continue
-#endif
-#endif
-
-  call stop_clock ('cdiagh')
-  return
-end subroutine cdiagh
-
+    !
+END SUBROUTINE cdiagh

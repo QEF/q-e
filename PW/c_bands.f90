@@ -37,10 +37,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   ! ... First the I/O variables
   !
   INTEGER :: ik_, iter
-  ! k-point already done
-  ! current iterations
+    ! k-point already done
+    ! current iterations
   REAL(KIND=DP) :: dr2
-  ! current accuracy of self-consistency  
+    ! current accuracy of self-consistency  
   !
   !
   CALL start_clock( 'c_bands' )
@@ -65,11 +65,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      SUBROUTINE c_bands_gamma()
        !-----------------------------------------------------------------------
        !  
-       !   This routine is a driver for the diagonalization routines of the
-       !   total Hamiltonian at Gammma point only
-       !   It reads the Hamiltonian and an initial guess of the wavefunctions
-       !   from a file and computes initialization quantities for Davidson
-       !   iterative diagonalization.
+       ! ... This routine is a driver for the diagonalization routines of the
+       ! ... total Hamiltonian at Gammma point only
+       ! ... It reads the Hamiltonian and an initial guess of the wavefunctions
+       ! ... from a file and computes initialization quantities for Davidson
+       ! ... iterative diagonalization.
        !
        USE rbecmod, ONLY: becp, becp_
        !
@@ -77,21 +77,20 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... here the local variables
        !
-       REAL(KIND=DP) :: avg_iter, cg_iter, v_of_0, dsum, erf
-       ! average number of iterations
-       ! number of iteration in CG
-       ! the average of the potential
-       ! summation function
-       ! error function
+       REAL(KIND=DP) :: avg_iter, v_of_0, dsum, erf
+         ! average number of iterations
+         ! the average of the potential
+         ! summation function
+         ! error function
        INTEGER :: ik, ig, ibnd, ntrt, ntry, notconv
-       ! counter on k points
-       ! counter on G vectors
-       ! counter on bands
-       ! number of iterations in Davidson
-       ! number or repeated call to EGTER
-       ! number of notconverged elements
+         ! counter on k points
+         ! counter on G vectors
+         ! counter on bands
+         ! number of iterations in Davidson
+         ! number of repeated call to REGTERG
+         ! number of notconverged elements
        LOGICAL :: ltest
-       ! .TRUE. if there are too many not converged bands
+         ! .TRUE. if there are too many not converged bands
        !
        !
        IF ( ik_ == nks ) THEN
@@ -113,7 +112,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           WRITE( stdout, '("     Davidson diagonalization with overlap")' )
        ELSE
           CALL errore( 'c_bands', &
-                       'CG and DIIS diagonalization not implemented', 1 )
+                     & 'CG and DIIS diagonalization not implemented', 1 )
        END IF
        !
        avg_iter = 0.D0
@@ -130,7 +129,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... For each k point diagonalizes the hamiltonian
        !
-       DO ik = 1, nks
+       k_loop: DO ik = 1, nks
           !
           IF ( lsda ) current_spin = isk(ik)
           !
@@ -140,7 +139,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... do not recalculate k-points if restored from a previous run
           !
-          IF ( ik <= ik_ ) GO TO 20
+          IF ( ik <= ik_ ) THEN
+             !
+             CALL save_in_cbands( iter, ik, dr2 )
+             !
+             CYCLE k_loop
+             !
+          END IF          
           !
           ! ... various initializations
           !
@@ -158,9 +163,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... sets the kinetic energy
           !
           DO ig = 1, npw
-             g2kin (ig) = ( ( xk(1,ik) + g(1,igk(ig)) ) **2 + &
-                            ( xk(2,ik) + g(2,igk(ig)) ) **2 + &
-                            ( xk(3,ik) + g(3,igk(ig)) ) **2 ) * tpiba2
+             g2kin (ig) = ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
+                            ( xk(2,ik) + g(2,igk(ig)) )**2 + &
+                            ( xk(3,ik) + g(3,igk(ig)) )**2 ) * tpiba2
           END DO
           !
           IF ( qcutz > 0.D0 ) THEN
@@ -184,27 +189,29 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ntry = 0
           !
-15        CONTINUE
-          !
-          CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, gstart, &
-                        et(1,ik), notconv, ntrt )
-          !
-          avg_iter = avg_iter + ntrt
-          !
-          ! ... save wave-functions to be used as input for the
-          ! ... iterative diagonalization of the next scf iteration 
-          ! ... and for rho calculation
-          !
-          IF ( nks > 1 .OR. .NOT. reduce_io ) &
-             CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-          !  
-          ntry = ntry + 1
-          !
-          ltest = ( ntry <= 5 ) .AND. &
-                  ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                    (       lscf .AND. ( notconv > 5 ) ) )
-          !
-          IF ( ltest ) GO TO 15
+          david_loop: DO
+             !
+             CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, gstart, &
+                           et(1,ik), notconv, ntrt )
+             !
+             avg_iter = avg_iter + ntrt
+             !
+             ! ... save wave-functions to be used as input for the
+             ! ... iterative diagonalization of the next scf iteration 
+             ! ... and for rho calculation
+             !
+             IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+             !  
+             ntry = ntry + 1
+             !
+             ltest = ( ntry <= 5 ) .AND. &
+                     ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                       (       lscf .AND. ( notconv > 5 ) ) )
+             !
+             IF ( .NOT. ltest ) EXIT david_loop
+             !
+          END DO david_loop
           !
           IF ( notconv /= 0 ) &
              WRITE( stdout, '(" warning : ",I3," eigenvectors not",&
@@ -212,13 +219,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           IF ( notconv > MAX( 5, nbnd / 4 ) ) STOP
           !
-20        CONTINUE
-          !
           ! ... save restart information
           !
           CALL save_in_cbands( iter, ik, dr2 )
           !
-       END DO
+       END DO k_loop
        !
        ik_ = 0
        !
@@ -244,41 +249,41 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      !     
      !-----------------------------------------------------------------------
-     subroutine c_bands_k()
+     SUBROUTINE c_bands_k()
        !-----------------------------------------------------------------------
        !
-       !   This routine is a driver for the diagonalization routines of the
-       !   total Hamiltonian at each k-point.
-       !   It reads the Hamiltonian and an initial guess of the wavefunctions
-       !   from a file and computes initialization quantities for the
-       !   diagonalization routines.
-       !   There are three types of iterative diagonalization:
-       !   a) Davidson algorithm (all-band)
-       !   b) Conjugate Gradient (band-by-band)
-       !   c) DIIS algorithm
+       ! ... This routine is a driver for the diagonalization routines of the
+       ! ... total Hamiltonian at each k-point.
+       ! ... It reads the Hamiltonian and an initial guess of the wavefunctions
+       ! ... from a file and computes initialization quantities for the
+       ! ... diagonalization routines.
+       ! ... There are three types of iterative diagonalization:
+       ! ... a) Davidson algorithm (all-band)
+       ! ... b) Conjugate Gradient (band-by-band)
+       ! ... c) DIIS algorithm
        !
        IMPLICIT NONE
        !
        ! ... here the local variables
        !
        REAL(KIND=DP) :: avg_iter, cg_iter, diis_iter, v_of_0, dsum, erf
-       ! average number of iterations
-       ! number of iteration in CG
-       ! number of iteration in DIIS
-       ! the average of the potential
-       ! summation function
-       ! error function
+         ! average number of iterations
+         ! number of iteration in CG
+         ! number of iteration in DIIS
+         ! the average of the potential
+         ! summation function
+         ! error function
        INTEGER :: ik, ig, ibnd, dav_iter, ntry, notconv
-       ! counter on k points
-       ! counter on G vectors
-       ! counter on bands
-       ! number of iterations in Davidson
-       ! number or repeated call to diagonalization in case of non convergence
-       ! number of notconverged elements
+         ! counter on k points
+         ! counter on G vectors
+         ! counter on bands
+         ! number of iterations in Davidson
+         ! number or repeated call to diagonalization in case of non convergence
+         ! number of notconverged elements
        INTEGER, ALLOCATABLE :: btype(:)
-       ! type of band: conduction (1) or valence (0)
+         ! type of band: conduction (1) or valence (0)
        LOGICAL :: ltest
-       ! .TRUE. if there are too many not converged bands       
+         ! .TRUE. if there are too many not converged bands       
        !
        !
        IF ( ik_ == nks ) THEN
@@ -305,7 +310,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           WRITE( stdout, '("     DIIS style diagonalization")')
           IF ( ethr > diis_ethr_cg ) &
              WRITE( stdout, '(6X,"use conjugate-gradient method ", &
-                             &   "until ethr <",1PE9.2)' ) diis_ethr_cg
+	                       & "until ethr <",1PE9.2)' ) diis_ethr_cg
        ELSE
           !
           CALL errore( 'c_bands', 'isolve not implemented', 1 )
@@ -326,7 +331,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... For each k point diagonalizes the hamiltonian
        !
-       DO ik = 1, nks
+       k_loop: DO ik = 1, nks
           !
           IF ( lsda ) current_spin = isk(ik)
           !
@@ -336,7 +341,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... do not recalculate k-points if restored from a previous run
           !
-          IF ( ik <= ik_ ) GO TO 20
+          IF ( ik <= ik_ ) THEN
+             !
+             CALL save_in_cbands( iter, ik, dr2 )
+             !
+             CYCLE k_loop
+             !
+          END IF
           !
           ! ... various initializations
           !
@@ -354,9 +365,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... sets the kinetic energy
           !
           DO ig = 1, npw
-             g2kin(ig) = ( (xk(1,ik) + g(1,igk(ig)) ) **2 + &
-                           (xk(2,ik) + g(2,igk(ig)) ) **2 + &
-                           (xk(3,ik) + g(3,igk(ig)) ) **2 ) * tpiba2
+             g2kin(ig) = ( (xk(1,ik) + g(1,igk(ig)) )**2 + &
+                           (xk(2,ik) + g(2,igk(ig)) )**2 + &
+                           (xk(3,ik) + g(3,igk(ig)) )**2 ) * tpiba2
           END DO
           !
           IF ( qcutz > 0.D0 ) THEN
@@ -366,7 +377,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              END DO
           END IF
           !
-          IF ( isolve == 1 .OR. &
+          IF ( ( isolve == 1 ) .OR. &
                ( isolve == 2 .AND. ethr > diis_ethr_cg ) ) THEN
              !
              ! ... Conjugate-Gradient diagonalization
@@ -381,33 +392,47 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              END DO
              !
              ntry = 0
-10           CONTINUE
              !
-             IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
+             CG_loop : DO
                 !
-                CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
-                avg_iter = avg_iter + 1.D0
+                IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
+                   !
+                   CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+                   avg_iter = avg_iter + 1.D0
+                   !
+                END IF
                 !
-             END IF
-             !
-             CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), h_diag, ethr, &
-                            max_cg_iter, .not.lscf, notconv, cg_iter )
-             avg_iter = avg_iter + cg_iter
-             !
-             ! ... save wave-functions to be used as input for the
-             ! ... iterative diagonalization of the next scf iteration 
-             ! ... and for rho calculation
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-             !
-             ntry = ntry + 1
-             !
-             ltest = ( ntry <= 5 ) .AND. &
-                     ( ( .NOT. lscf .AND. ( notconv > 0  ) ) .OR. &
-                       (       lscf .AND. ( notconv  > 5 ) ) )
-             !
-             IF ( ltest ) GO TO 10
+                CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), h_diag, ethr, &
+                               max_cg_iter, .not.lscf, notconv, cg_iter )
+                !
+                avg_iter = avg_iter + cg_iter
+                !
+                ! ... save wave-functions to be used as input for the
+                ! ... iterative diagonalization of the next scf iteration 
+                ! ... and for rho calculation
+                !
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                !
+                ! ... exit condition
+                !                
+                IF ( iter > 1 ) THEN
+                   !
+                   ntry = ntry + 1
+                   !
+                   ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                                   ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                     (       lscf .AND. ( notconv > 5 ) ) ) )
+                   !
+                ELSE
+                   !
+                   ltest = .TRUE.
+                   !
+                END IF                
+                !
+                IF ( ltest ) EXIT CG_loop
+                !
+             END DO CG_loop
              !
           ELSE IF ( isolve == 2 ) THEN
              !
@@ -432,30 +457,43 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 END DO
              END IF
              !
-12           CONTINUE
-             !
-             CALL cdiisg( npw, npwx, nbnd, diis_ndim, evc, et(1,ik), ethr, &
-                          btype, notconv, diis_iter, iter )
-             !  
-             avg_iter = avg_iter + diis_iter
-             ntry = ntry + 1
-             !
-             ! ... save wave-functions to be used as input for the
-             ! ... iterative diagonalization of the next scf iteration 
-             ! ... and for rho calculation
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-             !
-             ltest = ( ntry <= 5 ) .AND. &
-                     ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                       (       lscf .AND. ( notconv > 5 ) ) )
-             !
-             IF ( ltest ) GO TO 12
+             RMMDIIS_loop: DO
+                !
+                CALL cdiisg( npw, npwx, nbnd, diis_ndim, evc, et(1,ik), ethr, &
+                             btype, notconv, diis_iter, iter )
+                !	  
+                avg_iter = avg_iter + diis_iter
+                !
+                ! ... save wave-functions to be used as input for the
+                ! ... iterative diagonalization of the next scf iteration 
+                ! ... and for rho calculation
+                !
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                !
+                ! ... exit condition
+                !                
+                IF ( iter > 1 ) THEN
+                   !
+                   ntry = ntry + 1
+                   !
+                   ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                                   ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                     (       lscf .AND. ( notconv > 5 ) ) ) )
+                   !
+                ELSE
+                   !
+                   ltest = .TRUE.
+                   !
+                END IF                
+                !
+                IF ( ltest ) EXIT RMMDIIS_loop
+                !
+             END DO RMMDIIS_loop
              !
           ELSE
              !
-             ! ... Davidson
+             ! ... Davidson diagonalization
              !
              ! ... h_diag are the diagonal matrix elements of the
              ! ... hamiltonian used in g_psi to evaluate the correction 
@@ -468,33 +506,42 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              END DO
              !
              CALL usnldiag( h_diag, s_diag )
+             !
              ntry = 0
              !
-15           CONTINUE
-             !
-             CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                           et(1,ik), notconv, dav_iter )
-             !
-             avg_iter = avg_iter + dav_iter
-             !
-             ! ... save wave-functions to be used as input for the
-             ! ... iterative diagonalization of the next scf iteration 
-             ! ... and for rho calculation
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-             !
-             IF ( iter > 1 ) THEN
+             david_loop: DO
                 !
-                ntry = ntry + 1
+                CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
+                              et(1,ik), notconv, dav_iter )
                 !
-                ltest = ( ntry <= 5 ) .AND. &
-                        ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                          (       lscf .AND. ( notconv > 5 ) ) )
+                avg_iter = avg_iter + dav_iter
                 !
-                IF ( ltest )  GO TO 15
+                ! ... save wave-functions to be used as input for the
+                ! ... iterative diagonalization of the next scf iteration 
+                ! ... and for rho calculation
                 !
-             END IF
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                !
+                ! ... exit condition
+                !
+                IF ( iter > 1 ) THEN
+                   !
+                   ntry = ntry + 1
+                   !
+                   ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                                   ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                     (       lscf .AND. ( notconv > 5 ) ) ) )
+                   !
+                ELSE
+                   !
+                   ltest = .TRUE.
+                   !
+                END IF
+                !
+                IF ( ltest ) EXIT david_loop                
+                !
+             END DO david_loop
              !
           END IF
           !
@@ -504,13 +551,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           IF ( notconv > MAX( 5, nbnd / 4 ) ) STOP
           !
-20        CONTINUE
-          !
           ! ... save restart information
           !
           CALL save_in_cbands( iter, ik, dr2 )
           !
-       END DO
+       END DO k_loop
        !
        ik_ = 0
        !

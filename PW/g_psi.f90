@@ -6,63 +6,80 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!-----------------------------------------------------------------------
-subroutine g_psi (lda, n, m, psi, e)
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE g_psi( lda, n, m, psi, e )
+  !----------------------------------------------------------------------------
   !
-  !    This routine computes an estimate of the inverse Hamiltonian
-  !    and applies it to m wavefunctions
+  ! ... This routine computes an estimate of the inverse Hamiltonian
+  ! ... and applies it to m wavefunctions
   !
-  use parameters
-  use g_psi_mod
-  implicit none
-  integer :: lda, n, m
-  ! input: the leading dimension of psi
-  ! input: the real dimension of psi
-  ! input: the number of bands
-  real(kind=DP) :: e (m)
-  ! input: the eigenvectors
-  complex(kind=DP) :: psi (lda, m)
-  ! inp/out: the psi vector
+  USE parameters, ONLY : DP
+  USE g_psi_mod,  ONLY : h_diag, s_diag, test_new_preconditioning
   !
-  !    Local variables
+  IMPLICIT NONE
   !
-  real(kind=DP), parameter :: eps = 1.0d-4
-  ! a small number
-  real(kind=DP) :: x, scala, denm
-  integer :: k, i
-  ! counter on psi functions
-  ! counter on G vectors
+  INTEGER :: lda, n, m
+    ! input: the leading dimension of psi
+    ! input: the real dimension of psi
+    ! input: the number of bands
+  REAL(KIND=DP) :: e(m)
+    ! input: the eigenvectors
+  COMPLEX(KIND=DP) :: psi(lda,m)
+    ! inp/out: the psi vector
   !
-  call start_clock ('g_psi')
+  ! ... Local variables
   !
-  if (test_new_preconditioning) then
-     scala = 1.0
-     do k = 1, m
-        do i = 1, n
-           x = (h_diag(i) - e(k)*s_diag(i))*scala
-           denm = (1+x+sqrt(1+(x-1)*(x-1)))/scala
+  REAL(KIND=DP), PARAMETER :: eps4 = 1.D-4
+    ! a small number
+  REAL(KIND=DP) :: x, scala, denm
+  INTEGER :: k, i
+    ! counter on psi functions
+    ! counter on G vectors
+  !
+  !
+  CALL start_clock( 'g_psi' )
+  !
+  IF ( test_new_preconditioning ) THEN
+     !
+     scala = 1.D0
+     !
+     DO k = 1, m
+        DO i = 1, n
+           !
+           x = ( h_diag(i) - e(k) * s_diag(i) ) * scala
+           !
+           denm = ( 1.D0 + x + &
+                    SQRT( 1.D0 + ( x - 1.D0 )*( x - 1.D0 ) ) ) / scala
+           !
            !         denm = 1.d0 + 16*x*x*x*x/(27.d0+18*x+12*x*x+8*x*x*x)
-           psi (i, k) = psi (i, k) / denm
-        enddo
-     enddo
-  else
-
-     do k = 1, m
-        do i = 1, n
-           denm = h_diag (i) - e (k) * s_diag (i)
            !
-           ! denm = g2+v(g=0) - e(k)
+           psi(i,k) = psi(i,k) / denm
            !
-           if (abs (denm) .lt.eps) denm = sign (eps, denm)
+        END DO
+     END DO
+     !
+  ELSE
+     !
+     DO k = 1, m
+        DO i = 1, n
            !
-           ! denm = sign( max( abs(denm),eps ), denm )
+           denm = h_diag(i) - e(k) * s_diag(i)
            !
-           psi (i, k) = psi (i, k) / denm
-        enddo
-     enddo
-
-  end if
-  call stop_clock ('g_psi')
-  return
-end subroutine g_psi
+           ! ... denm = g2+v(g=0) - e(k)
+           !
+           IF ( ABS( denm ) < eps4 ) denm = SIGN( eps4, denm )
+           !
+           ! ... denm = sign( max( abs(denm),eps ), denm )
+           !
+           psi(i,k) = psi(i,k) / denm
+           !
+        END DO
+     END DO
+     !
+  END IF
+  !
+  CALL stop_clock( 'g_psi' )
+  !
+  RETURN
+  !
+END SUBROUTINE g_psi
