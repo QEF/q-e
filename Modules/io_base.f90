@@ -1424,7 +1424,7 @@
 
         IF( tovrw ) THEN
           zmesh     = zmesh_
-          xmin_     = xmin_
+          xmin      = xmin_
           dx        = dx_
           mesh      = mesh_
           msh       = msh_
