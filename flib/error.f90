@@ -91,7 +91,7 @@
               /,' *** error code : ',I5, &
               /,' *** aborting ***', /)
 
-200   FORMAT (/,' * warning (', A, ') : ', A, /)
+200   FORMAT ('   Warning (', A, ') : ', A)
 
       IF( n > 0 ) THEN
         STOP 'CRASH'
