@@ -256,7 +256,6 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../PW/error_handler.o \
-../PW/restart.o \
 ../PW/upf_to_internal.o
 
 CGOBJS = \
