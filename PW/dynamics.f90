@@ -79,6 +79,12 @@ SUBROUTINE dynamics()
   acc    = 0.D0
   accold = 0.D0
   !
+  IF ( istep == 1 ) THEN
+     IF ( ldamped ) THEN
+        WRITE( UNIT = stdout, FMT = '(/,5X,"Damped Dynamics Calculation")' )
+     END IF
+  END IF
+  !
   ! ... one Ryd a.u. of time is 4.84*10^-17 seconds, i.e. 0.0484  femtoseconds
   !
   CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
@@ -176,6 +182,8 @@ SUBROUTINE dynamics()
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"Damped Dynamics: convergence achieved in ",I3, &
                           & " steps")' ) istep
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"End of damped dynamics calculation")' )
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"Efinal = ",F15.8,/)' ) etot                 
         !

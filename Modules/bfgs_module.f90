@@ -170,6 +170,9 @@ MODULE bfgs_module
        CALL read_bfgs_file( pos, energy, gradient, scratch, dim, stdout )
        !
        scf_iter = scf_iter + 1       
+       IF (scf_iter == 1) THEN
+          WRITE( UNIT = stdout, FMT = '(/,5x,"BFGS Geometry Calculation")' )
+       END IF
        !       
        conv_bfgs = ( ( energy_old - energy ) < energy_thr )
        !
@@ -1142,10 +1145,12 @@ MODULE bfgs_module
        !       
        !
        WRITE( UNIT = stdout, &
-            & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
-            &         I3," bfgs steps",/)' ) scf_iter, bfgs_iter
+              FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
+                      I3," bfgs steps")' ) scf_iter, bfgs_iter
        WRITE( UNIT = stdout, &
-            & FMT = '(5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
+              FMT = '(/,5X,"End of BFGS geometry calculation")' )
+       WRITE( UNIT = stdout, &
+              FMT = '(/,5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
        !
        IF ( ALLOCATED( inverse_hessian ) ) THEN
           !

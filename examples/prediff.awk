@@ -97,6 +97,22 @@ function check_line()
       print_key("ITERATION");
       print "@CHECKPOINT@";
     }
+  else if (match($0, "Damped Dynamics Calculation"))
+    {
+      print_key("ITERATION");
+      while (getline && ! match($0, "End of damped dynamics calculation"))
+	print_key("ITERATION");
+      print_key("ITERATION");
+      print "@CHECKPOINT@";
+    }
+  else if (match($0, "BFGS Geometry Calculation"))
+    {
+      print_key("ITERATION");
+      while (getline && ! match($0, "End of BFGS geometry calculation"))
+	print_key("ITERATION");
+      print_key("ITERATION");
+      print "@CHECKPOINT@";
+    }
   else if (match($0, "band energies") || match($0, "bands"))
     {
       print;
@@ -209,6 +225,10 @@ function check_line()
       while (getline && NF == 4)
 	print_key("POSITIONS");
       print;
+    }
+  else if (match($0, "Efinal ="))
+    {
+      print_key("EFINAL");
     }
   else
     {

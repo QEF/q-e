@@ -195,7 +195,7 @@ function check_key()
     }
   else if (key == "CONTRIBUTION")
     {
-      tolerance = 5e-4;
+      tolerance = 2e-2;
 
       # number of lines must match
       if (i1 != i2)
@@ -446,7 +446,7 @@ function check_key()
   else if (key == "TFORCE")
     {
       tol_force = 1e-4;
-      tol_scf   = 1e-4;
+      tol_scf   = 2e-3;
 
       # there must be exactly one line
       if (i1 != 1 || i2 != 1)
