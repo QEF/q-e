@@ -319,7 +319,7 @@ MODULE neb_routines
          !
          IF ( file_exists ) THEN
             !
-#ifdef __PARA
+#if defined (__PARA)
             !
             ! ... all jobs are syncronized
             !
@@ -329,7 +329,7 @@ MODULE neb_routines
 #endif
                OPEN( UNIT = iunexit, FILE = TRIM( exit_file ), STATUS = "OLD" )
                CLOSE( UNIT = iunexit, STATUS = "DELETE" )
-#ifdef __PARA
+#if defined (__PARA)
             END IF
 #endif       
             !  
@@ -354,11 +354,11 @@ MODULE neb_routines
          !
          IF ( istep == 0 ) THEN
             !
-            CALL born_oppenheimer_PES( .TRUE., stat )
+            CALL born_oppenhimer_PES( .TRUE., stat )
             !
          ELSE
             !
-            CALL born_oppenheimer_PES( optimization, stat )
+            CALL born_oppenhimer_PES( optimization, stat )
             !
          END IF
          !
@@ -807,7 +807,7 @@ MODULE neb_routines
     !
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE born_oppenheimer_PES( flag, stat )
+    SUBROUTINE born_oppenhimer_PES( flag, stat )
       !-----------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
@@ -862,7 +862,7 @@ MODULE neb_routines
       !
       RETURN
       !
-    END SUBROUTINE born_oppenheimer_PES
+    END SUBROUTINE born_oppenhimer_PES
     !
     !
     !-----------------------------------------------------------------------
@@ -886,7 +886,7 @@ MODULE neb_routines
       USE neb_variables,    ONLY : pos, PES, PES_gradient, num_of_images, &
                                    dim, suspended_image
       USE miscellany,       ONLY : int_to_char
-#ifdef __PARA
+#if defined (__PARA)
       USE para,             ONLY : me, mypool
       USE mp,               ONLY : mp_barrier
 #endif        
@@ -925,7 +925,7 @@ MODULE neb_routines
          !
          IF ( file_exists ) THEN
             !
-#ifdef __PARA
+#if defined (__PARA)
             !
             ! ... all jobs are syncronized
             !
@@ -935,7 +935,7 @@ MODULE neb_routines
 #endif    
                OPEN( UNIT = iunexit, FILE = TRIM( exit_file ), STATUS = "OLD" )
                CLOSE( UNIT = iunexit, STATUS = "DELETE" )
-#ifdef __PARA
+#if defined (__PARA)
             END IF
 #endif       
             !  
@@ -968,14 +968,14 @@ MODULE neb_routines
          !
          ! ... unit stdout is connected to the appropriate file
          !
-#ifdef __PARA
+#if defined (__PARA)
          IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif  
             INQUIRE( UNIT = stdout, OPENED = opnd )
             IF ( opnd ) CLOSE( UNIT = stdout )
             OPEN( UNIT = stdout, FILE = TRIM( tmp_dir )//'PW.out', &
                   STATUS = 'UNKNOWN', POSITION = 'APPEND' )
-#ifdef __PARA    
+#if defined (__PARA)
          END IF 
 #endif 
          !

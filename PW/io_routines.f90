@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 PWSCF group
+! Copyright (C) 2002-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@
 MODULE io_routines
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY :  DP
+  USE kinds,      ONLY :  DP
   USE constants,  ONLY :  AU, BOHR_RADIUS_ANGS
   !      
   IMPLICIT NONE
@@ -21,13 +21,14 @@ MODULE io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,            ONLY : istep, nstep
+       USE control_flags,    ONLY : istep, nstep
        USE io_files,         ONLY : iunneb, iunrestart, neb_file   
        USE input_parameters, ONLY : if_pos
        USE neb_variables,    ONLY : pos, vel, num_of_images, dim, PES, &
-                                    PES_gradient, suspended_image, &
+                                    PES_gradient, suspended_image,     &
+                                    Emax, Emin, Emax_index,            &
                                     lquick_min , ldamped_dyn, lmol_dyn
-#ifdef __PARA
+#if defined (__PARA)
        USE para,             ONLY : me, mypool 
        USE io_global,        ONLY : ionode_id
        USE mp,               ONLY : mp_bcast
@@ -37,13 +38,13 @@ MODULE io_routines
        !
        ! ... local variables
        !    
-       INTEGER            :: i, j, ia
-       LOGICAL            :: file_exists
+       INTEGER :: i, j, ia
+       LOGICAL :: file_exists
        !
        ! ... end of local variables
        !
        !
-#ifdef __PARA
+#if defined (__PARA)
        IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif       
           WRITE( UNIT = iunneb, &
@@ -84,6 +85,10 @@ MODULE io_routines
              !
           END DO
           !
+          Emin       = PES(1)
+          Emax       = PES(1)
+          Emax_index = 1
+          !
           DO i = 2, num_of_images
              !
              READ( UNIT = iunrestart, FMT = * )
@@ -103,6 +108,16 @@ MODULE io_routines
              !
              PES_gradient(:,i) = PES_gradient(:,i) * &
                                  REAL( RESHAPE( if_pos, (/ dim /) ) ) 
+             !
+             IF ( PES(i) <= Emin ) Emin = PES(i)
+             !
+             IF ( PES(i) >= Emax ) THEN
+               !
+               Emax = PES(i)
+               !
+               Emax_index = i
+               !
+             END IF             
              !  
           END DO
           !
@@ -131,7 +146,7 @@ MODULE io_routines
           !
           CLOSE( iunrestart )
           !  
-#ifdef __PARA
+#if defined (__PARA)
        END IF
        !
        ! ... broadcast to all nodes
@@ -156,7 +171,7 @@ MODULE io_routines
      SUBROUTINE write_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,            ONLY : istep, nstep
+       USE control_flags,    ONLY : istep, nstep
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, neb_file 
        USE neb_variables,    ONLY : pos, vel, num_of_images, PES, &
@@ -164,7 +179,7 @@ MODULE io_routines
                                     lquick_min , ldamped_dyn, lmol_dyn
        USE formats,          ONLY : energy, restart_first, restart_others, &
                                     velocities
-#ifdef __PARA
+#if defined (__PARA)
        USE para,             ONLY : me, mypool
 #endif        
        !
@@ -177,7 +192,7 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-#ifdef __PARA
+#if defined (__PARA)
        IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif       
           OPEN( UNIT = iunrestart, FILE = neb_file, STATUS = "UNKNOWN", &
@@ -256,7 +271,7 @@ MODULE io_routines
           !
           CLOSE( iunrestart )
           !
-#ifdef __PARA
+#if defined (__PARA)
        END IF
 #endif 
        !
@@ -277,7 +292,7 @@ MODULE io_routines
                                     num_of_images, error, grad
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
-#ifdef __PARA
+#if defined (__PARA)
        USE para,             ONLY : me, mypool
 #endif     
        !
@@ -285,18 +300,18 @@ MODULE io_routines
        !
        ! ... local variables
        !
-       INTEGER                                   :: j, atom, image
-       REAL (KIND=DP)                            :: R, delta_R, x
-       REAL (KIND=DP), DIMENSION(:), ALLOCATABLE :: d_R
-       REAL (KIND=DP), DIMENSION(:), ALLOCATABLE :: a, b, c, d, F
-       REAL (KIND=DP), DIMENSION(:), ALLOCATABLE :: react_coord
-       REAL (KIND=DP)                            :: E, E_0
-       INTEGER, PARAMETER                        :: max_i = 1000 
+       INTEGER                     :: j, atom, image
+       REAL (KIND=DP)              :: R, delta_R, x
+       REAL (KIND=DP), ALLOCATABLE :: d_R(:)
+       REAL (KIND=DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
+       REAL (KIND=DP), ALLOCATABLE :: react_coord(:)
+       REAL (KIND=DP)              :: E, E_0
+       INTEGER, PARAMETER          :: max_i = 1000 
        !
        ! ... end of local variables
        !
        !
-#ifdef __PARA
+#if defined (__PARA)
        IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif  
           ALLOCATE( d_R( dim ) )
@@ -454,7 +469,7 @@ MODULE io_routines
           !     
           CLOSE( UNIT = iunaxsf )
           !
-#ifdef __PARA
+#if defined (__PARA)
        END IF
 #endif 
        !
