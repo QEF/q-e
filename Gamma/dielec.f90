@@ -45,21 +45,21 @@ subroutine dielec(do_zstar)
   ! pol. 1
   ipol=1
   iudwf=10+ipol
-  write(fildwf,'(''fildwx'',i1)') ipol
+  write(fildwf,'("fildwx",i1)') ipol
   call  seqopn (iudwf,fildwf,'unformatted',done)
   read (iudwf) dpsi
   close(unit=iudwf)
   ! pol. 2
   ipol=2
   iudwf=10+ipol
-  write(fildwf,'(''fildwx'',i1)') ipol
+  write(fildwf,'("fildwx",i1)') ipol
   call  seqopn (iudwf,fildwf,'unformatted',done)
   read (iudwf) dpsi2
   close(unit=iudwf)
   ! pol. 3
   ipol=3
   iudwf=10+ipol
-  write(fildwf,'(''fildwx'',i1)') ipol
+  write(fildwf,'("fildwx",i1)') ipol
   call  seqopn (iudwf,fildwf,'unformatted',done)
   read (iudwf) dpsi3
   close(unit=iudwf)
@@ -90,7 +90,7 @@ subroutine dielec(do_zstar)
   do jpol=1,3
      ! read DeltaV*Psi(elec) for polarization jpol
      iubar=jpol
-     write(filbar,'(''filbar'',i1)') iubar
+     write(filbar,'("filbar",i1)') iubar
      call  seqopn (iubar,filbar,'unformatted',done)
      read (iubar) dvpsi
      close(iubar)

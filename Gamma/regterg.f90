@@ -266,8 +266,8 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
 
 10 continue  
   do n = 1, nvec  
-     if (conv (n) .eq.0) write (6, '(''   WARNING: e('',i3,'') ='',&
-          & f10.5,'' is not converged to within '',1pe8.1)') n, e(n), ethr
+     if (conv (n) .eq.0) write (6, '("   WARNING: e(",i3,") =",&
+          & f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
   enddo
 
   call mfree (conv)  

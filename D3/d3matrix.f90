@@ -47,7 +47,7 @@ subroutine d3matrix
   write (iudyn, '(a)') title_ph  
   write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm  
   do nt = 1, ntyp  
-     write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amass (nt)  
+     write (iudyn, * ) nt, " '", atm (nt) , "' ", amass (nt)  
   enddo
   do na = 1, nat  
      write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = &

@@ -7,9 +7,10 @@ INFM (http://www.democritos.it). It includes all or part of the following:
   Pisa) and others: see http://www.pwscf.org for more information
 
 - the CPV code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
-  Andrea Trave (UCBerkeley), Roberto Car (Princeton), Paolo Giannozzi
-  and others, for Car-Parrinello variable-cell molecular dynamics
-  using UltraSoft (Vanderbilt) pseudopotentials
+  Kari Laasonen (Oulu), Andrea Trave (UCBerkeley), Roberto Car
+  (Princeton), Paolo Giannozzi and others, for Car-Parrinello
+  variable-cell molecular dynamics using Ultrasoft (Vanderbilt)
+  pseudopotentials
 
 - the FPMD code, developed by Carlo Cavazzoni (CINECA, Bologna),
   Sandr Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 

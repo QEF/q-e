@@ -68,7 +68,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      u_u = u_u + uu(ibnd)
   end do
   !
-  !      print '(''  iter # '',i3,''  u_u = '',e10.4)', 0, u_u
+  !      print '("  iter # ",i3,"  u_u = ",e10.4)', 0, u_u
   !
   !   main iteration loop
   !
@@ -122,13 +122,13 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      do ibnd=1,nbnd
         u_u = u_u + uu(ibnd)
      end do
-     !         print '(''  iter # '',i3,''  u_u = '',e10.4)', iter, u_u
+     !         print '("  iter # ",i3,"  u_u = ",e10.4)', iter, u_u
      !
      if( u_u .le. eps) go to 10
      if (iter.eq.niter) then
-        write(6,'(''   *** Conjugate Gradient minimization'',   &
-             &    '' not converged after '',i3,'' iterations''/ &
-             &    '' residual norm |Ax-b|^2 : '',e10.4)') iter,u_u
+        write(6,'("   *** Conjugate Gradient minimization",   &
+             &    " not converged after ",i3," iterations"/ &
+             &    " residual norm |Ax-b|^2 : ",e10.4)') iter,u_u
         go to 10
      end if
      !   update the conjugate gradient

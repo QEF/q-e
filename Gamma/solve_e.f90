@@ -53,14 +53,14 @@ subroutine solve_e
      if (info.ne.0) call error('solve_e','cannot factorize',info)
   end if
   !
-  write (6,'(/'' ***  Starting Conjugate Gradient minimization'',   &
-       &            9x,''***'')')
+  write (6,'(/" ***  Starting Conjugate Gradient minimization",   &
+       &            9x,"***")')
   nrec=0
   !
   do ipol = 1,3
      !  read |b> = dV/dtau*psi
      iubar=ipol
-     write(filbar,'(''filbar'',i1)') ipol
+     write(filbar,'("filbar",i1)') ipol
      call seqopn (iubar,filbar,'unformatted',here)
      if (.not.here) call error('solve_e','file '//filbar//          &
           &        'mysteriously vanished',ipol)
@@ -68,7 +68,7 @@ subroutine solve_e
      close(unit=iubar,status='keep')
      !
      iudwf=10+ipol
-     write(fildwf,'(''fildwx'',i1)') ipol
+     write(fildwf,'("fildwx",i1)') ipol
      call  seqopn (iudwf,fildwf,'unformatted',here)
 !!!         if (.not.here) then
      !  calculate Delta*psi  (if not already done)
@@ -87,7 +87,7 @@ subroutine solve_e
      write (iudwf) dpsi
      close(unit=iudwf)
      !
-     write (6,'('' ***  pol. # '',i3,'' : '',i3,'' iterations'')')  &
+     write (6,'(" ***  pol. # ",i3," : ",i3," iterations")')  &
           &              ipol, iter
   end do
   !

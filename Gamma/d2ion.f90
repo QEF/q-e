@@ -40,7 +40,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
   alpha=0.5
   ! appropriate for c60
-  write(6,'(''     d2ion: alpha = '',f6.2)') alpha
+  write(6,'("     d2ion: alpha = ",f6.2)') alpha
   !
   call setv(3*nat*nmodes,0.d0,dyn,1)
   !
@@ -93,8 +93,8 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      end do
 10   continue
   end do
-  print '(''   WARNING: G-sum not converged in d2ion '')'
-  print '(''   d2ion  : alpha = '',f6.2)', alpha
+  print '("   WARNING: G-sum not converged in d2ion ")'
+  print '("   d2ion  : alpha = ",f6.2)', alpha
   !
 20 continue
   !

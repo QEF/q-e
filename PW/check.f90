@@ -47,7 +47,7 @@ subroutine check (size, ps)
      !        call error('check','WARNING, using first proc. data',-1)
 
      write (6, * ) '*** WARNING, using first proc. data ***'  
-     write (6, '(5x,''chisq = '',1pe9.2)') chisq  
+     write (6, '(5x,"chisq = ",1pe9.2)') chisq  
      call mpi_bcast (ps, size, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
      call error ('check', 'at the first broadcast', info)  
 

@@ -145,10 +145,10 @@ subroutine cg_deps(deps_dtau)
   read(iunres,*,err=1,end=1) deps_dtau
   close(unit=iunres)
   if (na_.le.na) then
-     write(6,'(5x,''Restarting from atom '',i2,'',  pol '',i1,      &
-          &        '', nd='',i1)') na_,ipol_,nd_
+     write(6,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
+          &        ", nd=",i1)') na_,ipol_,nd_
   else
-     write(6,'(5x,''Reading saved data'')')
+     write(6,'(5x,"Reading saved data")')
   end if
   go to 2
 1 close(unit=iunres)
@@ -156,7 +156,7 @@ subroutine cg_deps(deps_dtau)
   ipol_=1
   nd_  =1
   call setv(3*3*3*nat,0.d0,deps_dtau,1)
-  write(6,'(5x,''Starting over from the beginning'')')
+  write(6,'(5x,"Starting over from the beginning")')
 2 continue
   !
   do na=na_,nat
@@ -223,16 +223,16 @@ subroutine cg_deps(deps_dtau)
   !
   iudyn = 20
   open(unit=iudyn,file=fildyn,form='formatted',status='old',position='append')
-  write (6,'(/5x, ''Raman tensors (atomic)''/)')
-  write (iudyn,'(/5x,''Raman: D eps_{alpha,beta}/D tau_{s,gamma}''/)')
+  write (6,'(/5x, "Raman tensors (atomic)"/)')
+  write (iudyn,'(/5x,"Raman: D eps_{alpha,beta}/D tau_{s,gamma}"/)')
   do na=1,nat
      do ipol=1,3
-        write(6,'(/5x,''D eps(i,j)'',5x,3e14.6     &
-             &    /5x,''----------  =  '',3e14.6   &
-             &    /5x,''D tau('',i2,'')_'',i1,4x,3e14.6)')             &
+        write(6,'(/5x,"D eps(i,j)",5x,3e14.6     &
+             &    /5x,"----------  =  ",3e14.6   &
+             &    /5x,"D tau(",i2,")_",i1,4x,3e14.6)')             &
              &  (( deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,2),&
              &     na,ipol, (deps_dtau(3,jpol,ipol,na), jpol=1,3)
-        write (iudyn,'(''atom # '',i4,''   pol. '',i2)') na, ipol
+        write (iudyn,'("atom # ",i4,"   pol. ",i2)') na, ipol
         write (iudyn,'(3e24.12)') &
              ( (deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,3)
      end do
@@ -294,9 +294,9 @@ subroutine cg_eps0dyn(w2,dynout)
      end if
 #endif
      !
-     write (6,'(/5x,''estimated dielectric constants ='',3f10.3,  &
+     write (6,'(/5x,"estimated dielectric constants =",3f10.3,  &
        &        /37x,3f10.3/37x,3f10.3)') ((epsilon0(i,j),j=1,3),i=1,3)
-     write (6,'(/5x,''z*('',i2,'')'',3f10.3,/11x,3f10.3/11x,3f10.3)') &
+     write (6,'(/5x,"z*(",i2,")",3f10.3,/11x,3f10.3/11x,3f10.3)') &
              (na, ((zstar(i,j,na),j=1,3),i=1,3), na=1,nat)
   end if
   !
@@ -388,10 +388,10 @@ subroutine cg_neweps
   !
   call dielec(.false.)
   !
-  write (6,'(/5x,''displaced atomic positions :'')')
+  write (6,'(/5x,"displaced atomic positions :")')
   write (6,'(5x,3f12.6)') ((tau(i,j),i=1,3),j=1,nat)
   !
-  write (6,'(/5x,''estimated dielectric constants ='',3f10.3,       &
+  write (6,'(/5x,"estimated dielectric constants =",3f10.3,       &
        &        /37x,3f10.3/37x,3f10.3)') ((epsilon0(i,j),j=1,3),i=1,3)
   write (6,*)
   !
@@ -472,7 +472,7 @@ subroutine raman_cs(dynout,deps_dtau)
   !
   !
   call mallocate ( raman_activity, 3, 3, nmodes)
-  write (6,'(/5x, ''Raman tensor for mode nu : dX_{alpha,beta}/d nu''/)')
+  write (6,'(/5x, "Raman tensor for mode nu : dX_{alpha,beta}/d nu"/)')
   do nu=1,nmodes
      !
      do jpol=1,3
@@ -531,17 +531,17 @@ subroutine raman_cs2(w2,dynout)
   read(iunres,*,err=1,end=1) raman_activity
   close(unit=iunres)
   if (nu_.le.nu) then
-     write(6,'(5x,''Restarting from mode '',i3,'', nd='',i1)') &
+     write(6,'(5x,"Restarting from mode ",i3,", nd=",i1)') &
           nu_,nd_
   else
-     write(6,'(5x,''Reading saved data'')')
+     write(6,'(5x,"Reading saved data")')
   end if
   go to 2
 1 close(unit=iunres)
   nu_=1
   nd_=1
   call setv(3*3*(last-first+1),0.d0,raman_activity,1)
-  write(6,'(5x,''Starting over from the beginning'')')
+  write(6,'(5x,"Starting over from the beginning")')
 2 continue
   !
   do nu=first,last
@@ -679,10 +679,10 @@ subroutine raman_cs2(w2,dynout)
      !
   end do
   !
-  write (6,'(/5x,''IR cross sections are in (D/A)^2/amu units'')')
-  write (6,'(/5x,''(e moltiplicate per 1000)'')')
-  write (6,'(5x,''Raman cross sections are in A^4/amu units'')')
-  write (6,'(/''#  mode   [cm-1]     [THz]       IR      Raman'')')
+  write (6,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
+  write (6,'(/5x,"(e moltiplicate per 1000)")')
+  write (6,'(5x,"Raman cross sections are in A^4/amu units")')
+  write (6,'(/"#  mode   [cm-1]     [THz]       IR      Raman")')
   !
   do nu = 1,3*nat
      !

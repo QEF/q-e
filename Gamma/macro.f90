@@ -22,7 +22,7 @@ subroutine macro
   do kpoint=1,nks
      ! NB: this version works only for nks = 1 !
      do ipol=1,3
-        write(filbar,'(''filbar'',i1)') ipol
+        write(filbar,'("filbar",i1)') ipol
         iubar=ipol
         call seqopn (iubar,filbar,'unformatted',here)
 !!!            if (.not.here) then

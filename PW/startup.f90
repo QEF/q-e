@@ -143,12 +143,12 @@ subroutine startup (nd_nmbr, version)
   if (me.eq.1) then  
      call date_and_tim (cdate, ctime)  
      write (6, 9000) version, cdate, ctime  
-     write (6, '(/5x,''Parallel version (MPI)'')')  
-     write (6, '(5x,''Number of processors in use:   '',i4)') nproc  
+     write (6, '(/5x,"Parallel version (MPI)")')  
+     write (6, '(5x,"Number of processors in use:   ",i4)') nproc  
      if (npool.ne.1) &
-          write (6, '(5x,''K-points division:    npool  = '',i4)') npool
+          write (6, '(5x,"K-points division:    npool  = ",i4)') npool
      if (nprocp.ne.1)& 
-          write (6, '(5x,''R & G space division: nprocp = '',i4/)') nprocp
+          write (6, '(5x,"R & G space division: nprocp = ",i4/)') nprocp
   endif
 
   !

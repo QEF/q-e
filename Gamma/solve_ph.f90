@@ -52,8 +52,8 @@ subroutine solve_ph
      if (info.ne.0) call error('solve_ph','cannot factorize',info)
   end if
   !
-  write (6,'(/'' ***  Starting Conjugate Gradient minimization'',   &
-       &            9x,''***'')')
+  write (6,'(/" ***  Starting Conjugate Gradient minimization",   &
+       &            9x,"***")')
   !
   !  check if a restart file exists
   !
@@ -61,7 +61,7 @@ subroutine solve_ph
   read (iunres,*,err=1,end=1) mode_done
   read (iunres,*,err=1,end=1) dyn
   close(unit=iunres)
-  print '(''  Phonon: modes up to mode '',i3,'' are done'')',       &
+  print '("  Phonon: modes up to mode ",i3," are done")',       &
        &     mode_done
   go to 2
 1 close(unit=iunres)
@@ -73,17 +73,17 @@ subroutine solve_ph
   do nu = 1, nmodes
      if ( has_equivalent((nu-1)/3+1).eq.1) then
         ! calculate only independent modes
-        write (6,'('' ***  mode # '',i3,'' : using symmetry'')') nu
+        write (6,'(" ***  mode # ",i3," : using symmetry")') nu
         goto 10
      end if
      if ( nu.le.mode_done) then
         ! do not recalculate modes already done
-        write (6,'('' ***  mode # '',i3,'' : using previous run'')') nu
+        write (6,'(" ***  mode # ",i3," : using previous run")') nu
         goto 10
      end if
      if ( asr .and. (nu-1)/3+1.eq.nasr ) then
         ! impose ASR on last atom instead of calculating mode
-        write (6,'('' ***  mode # '',i3,'' : using asr'')') nu
+        write (6,'(" ***  mode # ",i3," : using asr")') nu
         goto 10
      end if
      ! calculate |b> = dV/dtau*psi
@@ -110,7 +110,7 @@ subroutine solve_ph
 #ifdef PARA
      end if
 #endif
-     write (6,'('' ***  mode # '',i3,'' : '',i3,'' iterations'')')  &
+     write (6,'(" ***  mode # ",i3," : ",i3," iterations")')  &
           &          nu, iter
 10   continue
   end do
