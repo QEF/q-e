@@ -16,6 +16,7 @@ PWOBJS = \
 ../PW/kpoint_grid.o \
 ../PW/mode_group.o \
 ../PW/multable.o \
+../PW/noncol.o \
 ../PW/sgam_at.o \
 ../PW/sgam_at_mag.o \
 ../PW/sgam_ph.o \
