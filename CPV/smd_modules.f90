@@ -21,10 +21,8 @@ MODULE smd_variables
  !
  ! smx = max integer of sm_p
  ! smwout = index for replica files
- ! mi  = a parameter for 
- !       polynomial interpolation 
- !	 # of replicas used for 
- !	 interpolation
+ ! mi  = a parameter for  polynomial interpolation 
+ !       # of replicas used for interpolation
  ! 
  integer, parameter :: smx = 20
  integer, parameter :: smwout = 20
@@ -39,7 +37,7 @@ MODULE smd_variables
  ! polm = polynomial interpolation  
  ! kwnp = # of points used in polm
  ! tol  = tolrance on const in terms of 
- !	  [alpha(k) - alpha(k-1)] - 1/sm_P   
+ !        [alpha(k) - alpha(k-1)] - 1/sm_P   
  ! smfreq = frequency of calculating Lag. Mul 
  ! max_ite = # of such iteration allowed
  !

@@ -158,9 +158,9 @@ end module para_mod
 ! read from file rhor(nnr,nspin) on first node and distribute to other nodes
 !
       use para_mod
+      use parallel_include
       use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
       implicit none
-      include 'mpif.h'
       integer unit, nspin
       real(kind=8) rhor(nnr,nspin)
 !
@@ -211,9 +211,9 @@ end module para_mod
 ! collect rhor(nnr,nspin) on first node and write to file
 !
       use para_mod
+      use parallel_include
       use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
       implicit none
-      include 'mpif.h'
       integer unit, nspin
       real(kind=8) rhor(nnr,nspin)
 !
@@ -527,12 +527,12 @@ end module para_mod
 !     This version uses a fixed-length buffer of appropriate (?) size
 !
       use para_mod
+      use parallel_include
 !
       implicit none
       integer size
       real(kind=8)  ps(size)
 !
-      include 'mpif.h'
       integer ierr, n, nbuf
       integer, parameter:: MAXB=10000
       real(kind=8) buff(MAXB)
@@ -578,13 +578,13 @@ end module para_mod
 ! The (i,j,k) indexes are defined as: G=i*g(1)+j*g(2)+k*g(3)
 ! where g(1), g(2), g(3) are basis vectors of the reciprocal lattice
 !
+      use parallel_include
       implicit none
 ! input
       integer ngw,nr1s,nr2s,nr3s,in1p(ngw),in2p(ngw),in3p(ngw)
 ! output
       integer nmin(3), nmax(3)
 ! local
-      include 'mpif.h'
       integer nmin0(3), nmax0(3), ig, ierr
 !
 !

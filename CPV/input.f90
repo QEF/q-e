@@ -811,7 +811,7 @@ CONTAINS
      & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , f_ , nel_ , nspin_ , nupdwn_  &
      & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
      & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , agg_ , sgg_ , e0gg_ &
-     & , psfile_ , pseudo_dir_, iprsta_, ispin_	&
+     & , psfile_ , pseudo_dir_, iprsta_, ispin_ &
      & , sm_p, smcp_, smlm_, smopt_, linr_, polm_, kwnp_, codfreq_, forfreq_, smwfreq_ &
      & , tol_, lmfreq_, maxlm_ )
 
@@ -832,7 +832,7 @@ CONTAINS
            cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
            dt, emass, emass_cutoff, ion_radius, isave, verbosity, tprnfor, &
            ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, rd_pos, atom_label, rd_vel, &
-	   smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
+           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
            num_of_images, smd_ene_ini, smd_ene_fin
 
@@ -1253,7 +1253,7 @@ CONTAINS
           do ia = 1, nat_
              if ( sp_pos(ia) == is) then
                 na_(is) = na_(is) + 1
-		isa = isa + 1 
+                isa = isa + 1 
                 if( na_(is) > natx ) call errore(' cards',' na > natx', na_ (is) )
                  DO i=1,3
                   iforce_(i,na_(is),is) = if_pos(i,ia)

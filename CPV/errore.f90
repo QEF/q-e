@@ -11,12 +11,11 @@
 subroutine errore(a,b,n)
 !-----------------------------------------------------------------------
       use io_global, only: stdout
-      character(len=*) a,b
-      integer n
 #ifdef __PARA
-      include 'mpif.h'
-      integer ierr
+      use parallel_include
 #endif
+      character(len=*) a,b
+      integer n, ierr
 !
       WRITE( stdout,1) a,b,n
     1 format(//' program ',a,':',a,'.',8x,i8,8x,'stop')
