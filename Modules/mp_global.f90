@@ -21,16 +21,24 @@ MODULE mp_global
   INTEGER :: root  = 0  ! index of the absolute root processor
   INTEGER :: nproc = 1  ! absolute number of processor
   INTEGER :: group = 0  ! group communicator
-  INTEGER :: me_pool     = 0  ! index of the processor within a pool (starting from 0 !!! )
-  INTEGER :: me_image    = 0  ! index of the processor within an image (starting from 0 !!! )
-  INTEGER :: root_pool   = 0  ! index of the root processor within a pool (starting from 0 !!! )
-  INTEGER :: root_image  = 0  ! index of the root processor within an image (starting from 0 !!! )
-  INTEGER :: my_pool_id  = 0  ! index of my pool (starting from 0 !!! )
-  INTEGER :: my_image_id = 0  ! index of my image (starting from 0 !!! )
+  INTEGER :: kunit = 1  ! granularity of k-point distribution
+  !
+  ! ... indeces ( all starting from 0 !!! )
+  !
+  INTEGER :: me_pool     = 0  ! index of the processor within a pool 
+  INTEGER :: me_image    = 0  ! index of the processor within an image
+  INTEGER :: root_pool   = 0  ! index of the root processor within a pool
+  INTEGER :: root_image  = 0  ! index of the root processor within an image
+  INTEGER :: my_pool_id  = 0  ! index of my pool
+  INTEGER :: my_image_id = 0  ! index of my image
+  !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "neb-images"-pools
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
   INTEGER :: nproc_image = 1  ! number of processor within an image
+  !
+  ! ... communicators
+  !
   INTEGER :: inter_pool_comm  = 0  ! inter pool communicator
   INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
   INTEGER :: inter_image_comm = 0  ! inter image communicator

@@ -281,13 +281,10 @@ FUNCTION get_clock( label )
         ELSE
            get_clock = myclock(n) + scnds() - t0(n)
         END IF
-#ifdef __PARA
         !
         ! ... In the parallel case, use the maximum over all nodes and pools
         !
         CALL mp_max( get_clock, intra_image_comm )
-       ! CALL mp_max( get_clock, inter_pool_comm )
-#endif
         RETURN
      END IF
   END DO

@@ -58,7 +58,7 @@ MODULE path_base
                                    ft_vel, ft_grad, Nft, ft_coeff, ft_frozen,  &
                                    ft_error, norm_ft_grad, Nft_smooth
       USE path_formats,     ONLY : summary_fmt   
-      USE io_global,        ONLY : ionode
+      USE io_global,        ONLY : meta_ionode
       USE parser,           ONLY : int_to_char
       USE path_io_routines, ONLY : read_restart
       USE path_variables,   ONLY : path_allocation
@@ -298,7 +298,7 @@ MODULE path_base
       !
       ! ... details of the calculation are written on output (only by ionode)
       !
-      IF ( ionode ) THEN
+      IF ( meta_ionode ) THEN
          !
          num_of_images_char = int_to_char( num_of_images )
          !
@@ -953,6 +953,7 @@ MODULE path_base
       USE path_variables, ONLY : num_of_images, num_of_modes, grad, &
                                  first_last_opt, path_thr, error, ft_error, &
                                  ft_pes, ft_grad, frozen, ft_frozen
+      USE mp_global, ONLY : mpime
       !
       IMPLICIT NONE
       !

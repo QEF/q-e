@@ -36,12 +36,6 @@ MODULE pfft
       ncplane,          &!  number of columns in a plane
       nct,              &!  total number of non-zero columns
       nxx                !  local fft data dim
-  ! 
-  ! ... Warning these arrays moved to dfftp and dffts
-  !
-  ! INTEGER, POINTER :: &
-  !   ipc(:),           &!  index saying which proc owns columns in a plane
-  !   icpl(:)            !  index relating columns and pos. in the plan
   !
 END MODULE pfft
 !
@@ -65,12 +59,6 @@ MODULE pffts
        ncplanes,        &!  number of columns in a plane
        ncts,            &!  total number of non-zero columns
        nxxs              !  local fft data dim
-  ! 
-  ! ... Warning these arrays moved to dfftp and dffts
-  !       
-  ! INTEGER , POINTER :: &
-  !     ipcs(:),        &!  index saying which proc owns columns in a plane
-  !     icpls(:)         !  index relating columns and positions in the plan   
   !
 END MODULE pffts
 !
@@ -89,10 +77,6 @@ MODULE para
   SAVE
   !
   ! ... number of processors =  # of tasks
-  !
- ! INTEGER :: &
- !     MPI_COMM_POOL = 0,    &!  comunicator handle intra-pool
- !     MPI_COMM_ROW = 0       !       "        "    inter-pool
   !
   ! ... general parallel information
   !

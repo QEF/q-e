@@ -31,8 +31,9 @@ MODULE path_io_routines
      SUBROUTINE io_path_start()
        !-----------------------------------------------------------------------
        !
-       USE io_global, ONLY : stdout, io_global_start
-       USE mp_global, ONLY : me_image, my_image_id, root_image
+       USE io_global, ONLY : stdout
+       USE io_global, ONLY : ionode, ionode_id
+       USE mp_global, ONLY : me_image, root_image
        !
        IMPLICIT NONE
        !
@@ -41,7 +42,17 @@ MODULE path_io_routines
        ! ... images that have been required: for each parallel image there
        ! ... is only one node that does I/O
        !
-       CALL io_global_start( my_image_id, root_image )
+       IF ( me_image == root_image ) THEN
+          !
+          ionode = .TRUE.
+          !
+       ELSE
+          !
+          ionode = .FALSE.
+          !
+       END IF
+       !
+       ionode_id = root_image
        !
        ! ... stdout is connected to a file ( different for each image ) 
        ! ... via unit 17 ( only root_image performes I/O )
@@ -63,7 +74,7 @@ MODULE path_io_routines
        IMPLICIT NONE
        !
        !
-       ! ... the original I/O node set 
+       ! ... the original I/O node is set again 
        !
        CALL io_global_start( mpime, root )
        !
@@ -91,7 +102,7 @@ MODULE path_io_routines
                                     Emax, Emin, Emax_index, k_min, k_max
        USE path_variables,   ONLY : ft_vel, ft_pos_old, ft_grad_old, &
                                     ft_vel_zeroed, ft_frozen, Nft
-       USE io_global,        ONLY : ionode, ionode_id
+       USE io_global,        ONLY : meta_ionode, meta_ionode_id
        USE mp,               ONLY : mp_bcast
        !
        IMPLICIT NONE
@@ -105,7 +116,7 @@ MODULE path_io_routines
        ! ... end of local variables
        !
        !
-       IF ( ionode ) THEN
+       IF ( meta_ionode ) THEN
 
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"reading file ", A,/)') TRIM( path_file )
@@ -355,58 +366,58 @@ MODULE path_io_routines
        !
        ! ... broadcast to all nodes
        !
-       CALL mp_bcast( istep_path,      ionode_id )
-       CALL mp_bcast( nstep_path,      ionode_id )
-       CALL mp_bcast( suspended_image, ionode_id )
-       CALL mp_bcast( conv_elec,       ionode_id )
+       CALL mp_bcast( istep_path,      meta_ionode_id )
+       CALL mp_bcast( nstep_path,      meta_ionode_id )
+       CALL mp_bcast( suspended_image, meta_ionode_id )
+       CALL mp_bcast( conv_elec,       meta_ionode_id )
        !
-       CALL mp_bcast( pos,      ionode_id )  
-       CALL mp_bcast( if_pos,   ionode_id )  
-       CALL mp_bcast( pes,      ionode_id )
-       CALL mp_bcast( grad_pes, ionode_id )
+       CALL mp_bcast( pos,      meta_ionode_id )  
+       CALL mp_bcast( if_pos,   meta_ionode_id )  
+       CALL mp_bcast( pes,      meta_ionode_id )
+       CALL mp_bcast( grad_pes, meta_ionode_id )
        !
        IF ( lneb ) THEN
           !
-          CALL mp_bcast( k_max, ionode_id )
-          CALL mp_bcast( k_min, ionode_id )
+          CALL mp_bcast( k_max, meta_ionode_id )
+          CALL mp_bcast( k_min, meta_ionode_id )
           !
-          CALL mp_bcast( Emax,       ionode_id )  
-          CALL mp_bcast( Emin,       ionode_id )
-          CALL mp_bcast( Emax_index, ionode_id )
+          CALL mp_bcast( Emax,       meta_ionode_id )  
+          CALL mp_bcast( Emin,       meta_ionode_id )
+          CALL mp_bcast( Emax_index, meta_ionode_id )
           !
        END IF
        !
        IF ( .NOT. reset_vel .AND. &
             ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
           !
-          CALL mp_bcast( ft_frozen, ionode_id )
+          CALL mp_bcast( ft_frozen, meta_ionode_id )
           !
           IF ( lneb ) THEN
              !
-             CALL mp_bcast( frozen,     ionode_id )
-             CALL mp_bcast( vel_zeroed, ionode_id )
+             CALL mp_bcast( frozen,     meta_ionode_id )
+             CALL mp_bcast( vel_zeroed, meta_ionode_id )
              !
-             CALL mp_bcast( vel,        ionode_id )
-             CALL mp_bcast( pos_old,    ionode_id )
-             CALL mp_bcast( grad_old,   ionode_id )
+             CALL mp_bcast( vel,        meta_ionode_id )
+             CALL mp_bcast( pos_old,    meta_ionode_id )
+             CALL mp_bcast( grad_old,   meta_ionode_id )
              !
           ELSE IF ( lsmd ) THEN
              !
-             CALL mp_bcast( ft_frozen,     ionode_id )
-             CALL mp_bcast( ft_vel_zeroed, ionode_id )
+             CALL mp_bcast( ft_frozen,     meta_ionode_id )
+             CALL mp_bcast( ft_vel_zeroed, meta_ionode_id )
              !
-             CALL mp_bcast( ft_vel,        ionode_id )
-             CALL mp_bcast( ft_pos_old,    ionode_id )
-             CALL mp_bcast( ft_grad_old,   ionode_id )
+             CALL mp_bcast( ft_vel,        meta_ionode_id )
+             CALL mp_bcast( ft_pos_old,    meta_ionode_id )
+             CALL mp_bcast( ft_grad_old,   meta_ionode_id )
              !
              IF ( first_last_opt ) THEN
                 !
-                CALL mp_bcast( frozen,     ionode_id )
-                CALL mp_bcast( vel_zeroed, ionode_id )
+                CALL mp_bcast( frozen,     meta_ionode_id )
+                CALL mp_bcast( vel_zeroed, meta_ionode_id )
                 !
-                CALL mp_bcast( vel,        ionode_id )
-                CALL mp_bcast( pos_old,    ionode_id )
-                CALL mp_bcast( grad_old,   ionode_id )
+                CALL mp_bcast( vel,        meta_ionode_id )
+                CALL mp_bcast( pos_old,    meta_ionode_id )
+                CALL mp_bcast( grad_old,   meta_ionode_id )
                 !
              END IF
              !
@@ -436,7 +447,7 @@ MODULE path_io_routines
                                     ft_vel_zeroed, ft_frozen, Nft
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
-       USE io_global,        ONLY : ionode
+       USE io_global,        ONLY : meta_ionode
        USE parser,           ONLY : int_to_char
        !
        IMPLICIT NONE
@@ -449,7 +460,7 @@ MODULE path_io_routines
        ! ... end of local variables
        !
        !
-       IF ( ionode ) THEN
+       IF ( meta_ionode ) THEN
           !
           ! ... first the restart file is written in the working directory
           !
@@ -872,7 +883,7 @@ MODULE path_io_routines
        USE path_variables,   ONLY : Nft, Nft_smooth, ft_pes
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
-       USE io_global,        ONLY : ionode
+       USE io_global,        ONLY : meta_ionode
        USE supercell,        ONLY : pbc
        USE parser
        USE basic_algebra_routines
@@ -891,7 +902,7 @@ MODULE path_io_routines
        ! ... end of local variables
        !
        !
-       IF ( .NOT. ionode ) RETURN
+       IF ( .NOT. meta_ionode ) RETURN
        !
        ! ... the *.dat file is written here
        !
@@ -1109,7 +1120,7 @@ MODULE path_io_routines
                                   pos, ft_pos, ft_grad, frozen, ft_frozen, &
                                   ft_error, first_last_opt
        USE path_formats,   ONLY : neb_run_output, smd_run_output
-       USE io_global,      ONLY : ionode
+       USE io_global,      ONLY : meta_ionode
        USE basic_algebra_routines
        !
        IMPLICIT NONE
@@ -1122,7 +1133,7 @@ MODULE path_io_routines
        ! ... end of local variables
        !
        !
-       IF ( .NOT. ionode ) RETURN 
+       IF ( .NOT. meta_ionode ) RETURN 
        !
        WRITE( UNIT = iunpath, &
               FMT = '(/,5X,"activation energy (->) = ",F10.6," eV")' ) &

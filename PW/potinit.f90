@@ -37,7 +37,8 @@ SUBROUTINE potinit()
   USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
   USE io_files,      ONLY : prefix, iunocc, input_drho
   USE mp,            ONLY : mp_bcast
-  USE mp_global,     ONLY : intra_image_comm, me_image, root_image
+  USE mp_global,     ONLY : intra_image_comm
+  USE io_global,     ONLY : ionode, ionode_id
   !
   IMPLICIT NONE
   !
@@ -52,7 +53,7 @@ SUBROUTINE potinit()
   ! ... end of local variables
   !
   !
-  IF ( me_image == root_image ) THEN
+  IF ( ionode ) THEN
      !
      IF ( imix >= 0 .AND. lscf ) THEN
         CALL seqopn( 4, TRIM( prefix )//'.rho', 'UNFORMATTED', exst )
@@ -67,7 +68,7 @@ SUBROUTINE potinit()
      !
   END IF
   !
-  CALL mp_bcast( exst, root_image, intra_image_comm )
+  CALL mp_bcast( exst, ionode_id, intra_image_comm )
   !
   IF ( startingpot == 'file' .AND. exst ) THEN
      ! 
@@ -108,7 +109,7 @@ SUBROUTINE potinit()
         !
         ldim = 2 * Hubbard_lmax + 1
         !
-        IF ( me_image == root_image ) THEN
+        IF ( ionode ) THEN
            !
            CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'FORMATTED', exst )
            READ( UNIT = iunocc, FMT = * ) ns
@@ -136,7 +137,8 @@ SUBROUTINE potinit()
      IF ( startingpot == 'file' .AND. .NOT. exst ) &
         WRITE( stdout, '(5X,"Cannot read pot/rho file: not found")' )
      !
-     WRITE( stdout, '(/5X,"Initial potential from superposition of free atoms")' )
+     WRITE( UNIT = stdout, &
+            FMT = '(/5X,"Initial potential from superposition of free atoms")' )
      !
      ! ... in the lda+U case set the initial value of ns
      !
@@ -153,9 +155,13 @@ SUBROUTINE potinit()
      IF ( input_drho /= ' ' ) THEN
         !
         IF ( lsda ) CALL errore( 'potinit', ' lsda not allowed in drho', 1 )
+        !
         CALL io_pot( -1, input_drho, vr, nspin )
-        WRITE( stdout, '(/5X,"a scf correction to at. rho is read from", a14)' ) &
+        !
+        WRITE( UNIT = stdout, &
+               FMT = '(/5X,"a scf correction to at. rho is read from", A14)' ) &
             input_drho
+        !
         CALL DAXPY( nrxx, 1.D0, vr, 1, rho, 1 )
         !
      END IF

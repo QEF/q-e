@@ -503,63 +503,7 @@ MODULE read_cards_module
                   matches( "image", input_line )       .OR. &
                   matches( "last_image", input_line) ) THEN
                 !
-                DO ia = 1, nat
-                   !
-                   index = 3 * ( ia - 1 )
-                   !
-                   CALL read_line( input_line )
-                   CALL field_count( nfield, input_line )
-                   !
-                   IF ( nfield == 4 ) THEN
-                      !
-                      READ(input_line,*) lb_pos, ( pos(k+index,rep_i), k = 1, 3 )
-                      !
-                   ELSE IF ( nfield == 7 .AND. rep_i == 1 ) THEN
-                      !
-                      READ(input_line,*) lb_pos, pos((index+1),rep_i), &
-                                                 pos((index+2),rep_i), &
-                                                 pos((index+3),rep_i), &
-                                                 if_pos(1,ia), &
-                                                 if_pos(2,ia), &
-                                                 if_pos(3,ia)
-                      !
-                   ELSE
-                      !
-                      CALL errore( ' read_cards ', &
-                                 & ' wrong number of columns  in' // &
-                                 & ' ATOMIC_POSITIONS, image input ', sp_pos(ia) )
-                      !
-                   END IF
-                   !
-                   IF ( rep_i == 1 ) THEN
-                      !
-                      lb_pos = ADJUSTL( lb_pos )
-                      !
-                      match_label_smd: DO is = 1, ntyp
-                         !
-                         IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
-                            !
-                            sp_pos(ia) = is
-                            !
-                            EXIT match_label_smd
-                            !
-                         END IF
-                         !
-                      END DO match_label_smd
-                      !
-                      IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
-                         !
-                         CALL errore( ' read_cards ', &
-                                 & ' wrong index in ATOMIC_POSITIONS ', ia )
-                         !
-                      END IF
-                      !
-                      is  =  sp_pos(ia)
-                      na_inp( is ) = na_inp( is ) + 1
-                      !
-                   END IF
-                   !
-                END DO
+                CALL path_read_images( rep_i )
                 !
              ELSE
                 CALL errore( ' read_cards ', ' missing or wrong image' // &
@@ -712,7 +656,7 @@ MODULE read_cards_module
                     !    
                  END IF
                  !
-                 is  =  sp_pos(ia)
+                 is = sp_pos(ia)
                  !
                  na_inp( is ) = na_inp( is ) + 1
                  !

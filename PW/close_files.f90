@@ -19,25 +19,31 @@ SUBROUTINE close_files()
   !
   IMPLICIT NONE
   !
-  LOGICAL :: flag
-  LOGICAL :: exst
+  LOGICAL :: opnd
   !
   !  ... iunwfc contains wavefunctions and is kept open during
   !  ... the execution - close and save the file
   !
-  CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+  INQUIRE( UNIT = iunwfc, OPENED = opnd )
+  IF ( opnd ) CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
   !
   ! ... iunigk is kept open during the execution - close and remove
   !
-  CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+  INQUIRE( UNIT = iunigk, OPENED = opnd )
+  IF ( opnd ) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
   ! ... iunat contains the orthogonalized wfcs
-  !  
-  IF ( lda_plus_u ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
+  !
+  IF ( lda_plus_u ) THEN
+     !
+     INQUIRE( UNIT = iunat, OPENED = opnd )  
+     IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
+     !
+  END IF
   !
   CALL mp_barrier( intra_image_comm )  
   !
-#ifdef __T3E
+#if defined (__T3E)
   !
   ! ... set streambuffers off
   !

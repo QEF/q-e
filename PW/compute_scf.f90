@@ -10,7 +10,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !----------------------------------------------------------------------------
   !
   ! ... this subroutine is the main scf-driver for all "path" calculations
-  ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine ) 
+  ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine )
+  !
+  ! ... Written by Carlo Sbraccia (2003-2004)
   !
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot, &
@@ -35,9 +37,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                dim, suspended_image, istep_path,  &
                                first_last_opt, frozen
   USE parser,           ONLY : int_to_char
-  USE io_global,        ONLY : ionode, ionode_id
+  USE io_global,        ONLY : ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
-                               my_image_id, me_image, root_image, nimage
+                               my_image_id, nimage, root
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   !
   IMPLICIT NONE
@@ -65,28 +67,23 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... end of external functions definition
   !
   !
-  ! ... print-out
-  !
-  WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep_path + 1
-  !
-  ! ... all processes are syncronized (needed to have an ordered output)
-  !
-  CALL mp_barrier( intra_image_comm )
-  CALL mp_barrier( inter_image_comm )  
-  !
   istep = istep_path + 1
   istat = 0 
   !
+  IF ( meta_ionode ) WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep
+  !
+  CALL flush( stdout )
+  !
   ! ... only the first cpu on each image needs the tauold vector
   !
-  IF ( me_image == root_image ) ALLOCATE( tauold( 3, nat, 3 ) )  
+  IF ( ionode ) ALLOCATE( tauold( 3, nat, 3 ) )  
   !
   tmp_dir_saved = tmp_dir
   !
   ! ... vectors pes and grad_pes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
   !
-  IF ( ( my_image_id == root_image ) .AND. &
+  IF ( ( my_image_id == root ) .AND. &
        ( lneb .OR. ( lsmd .AND. first_last_opt ) ) ) THEN
      !
      FORALL( image = N_in:N_fin, ( .NOT. frozen(image) ) )
@@ -106,11 +103,19 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( ( nimage > 1 ) .AND. ionode ) CALL new_image_init()
+  IF ( ( nimage > 1 ) .AND. meta_ionode ) CALL new_image_init()
   !
   image = N_in + my_image_id
+  !
+  ! ... all processes are syncronized (needed to have an ordered output)
+  !
+  CALL mp_barrier()
   ! 
   scf_loop: DO
+     !
+     ! ... exit if available images are finished
+     !
+     IF ( image > N_fin ) EXIT scf_loop
      !     
      suspended_image = image
      !
@@ -129,8 +134,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... self-consistency ( for non-frozen images only, in neb case )
      !
-     IF ( lsmd .OR. &
-          lneb .AND. .NOT. frozen(image) ) THEN
+     IF ( lsmd .OR. lneb .AND. .NOT. frozen(image) ) THEN
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                   TRIM( int_to_char( image ) ) // "/"             
@@ -145,7 +149,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
            WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
            !
-        END IF   
+        END IF
         !
         CALL clean_pw(.true.)
         !
@@ -153,7 +157,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         ! ... unit stdout is connected to the appropriate file
         !
-        IF ( me_image == root_image ) THEN
+        IF ( ionode ) THEN
            !  
            INQUIRE( UNIT = stdout, OPENED = opnd )
            IF ( opnd ) CLOSE( UNIT = stdout )
@@ -180,7 +184,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         CALL init_run()
         !
-         IF ( ionode ) THEN 
+        IF ( ionode ) THEN 
            !     
            ! ... the file containing old positions is opened 
            ! ... ( needed for extrapolation )
@@ -265,7 +269,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         grad_pes(:,image) = - RESHAPE( SOURCE = force, SHAPE = (/ dim /) ) / e2 
         !
-        IF ( me_image == root_image ) THEN 
+        IF ( ionode ) THEN
            !
            ! ... save the previous two steps 
            ! ... ( a total of three steps is saved )
@@ -288,11 +292,11 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
      END IF
      !
-     ! ... the new image is obtained
+     ! ... the new image is obtained (by ionode only)
      !
-     IF ( me_image == root_image ) CALL get_new_image( image )
+     CALL get_new_image( image )
      !
-     CALL mp_bcast( image, root_image, intra_image_comm )
+     CALL mp_bcast( image, ionode_id, intra_image_comm )
      !        
      ! ... input values are restored at the end of each iteration ( they are
      ! ... modified in init_run )
@@ -304,23 +308,15 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      CALL reset_k_points()
      !
-     ! ... exit if finished
-     !
-     IF ( image > N_fin ) EXIT scf_loop     
-     !
   END DO scf_loop
   !
-  IF ( me_image == root_image ) DEALLOCATE( tauold )
+  IF ( ionode ) DEALLOCATE( tauold )
   !
   tmp_dir = tmp_dir_saved
   !
   IF ( nimage > 1 ) THEN
      !
-     WRITE( UNIT = iunpath, &
-            FMT = '(/"image ",I2," waiting at the barrier")' ) my_image_id
-     !
-     CALL mp_barrier( intra_image_comm )
-     CALL mp_barrier( inter_image_comm )
+     CALL mp_barrier()
      !
      ! ... pes and grad_pes are communicated among "image" pools
      !
@@ -349,9 +345,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
         CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
         !
-     END IF   
-     !     
-  END IF      
+     END IF
+     !
+  END IF
   !
   ! ... afetr the first call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
@@ -400,6 +396,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        ! ... other jobs try to read/write on file "prefix.newimage" 
        !
        USE io_files,  ONLY : iunnewimage, iunblock
+       USE io_global, ONLY : ionode
        !
        IMPLICIT NONE
        !
@@ -407,6 +404,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        INTEGER              :: ioerr
        LOGICAL              :: opened, exists
        !
+       !
+       IF ( .NOT. ionode ) RETURN
        !
        IF ( nimage > 1 ) THEN
           !
@@ -421,28 +420,21 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
              !
              IF ( .NOT. opened ) THEN
                 !
-                INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage', EXIST = exists )
+                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
                 !
-                IF ( exists ) THEN
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
-                   !
-                   READ( iunnewimage, * ) image
-                   !
-                   CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
-                   !
-                   WRITE( iunnewimage, * ) image + 1
-                   ! 
-                   CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
-                   !
-                   EXIT open_loop
-                   !
-                END IF
+                READ( iunnewimage, * ) image
+                !
+                CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
+                !
+                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
+                !
+                WRITE( iunnewimage, * ) image + 1
+                ! 
+                CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
+                !
+                EXIT open_loop
                 !
              END IF
              !
@@ -468,9 +460,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        ! ... this is done by creating the exit_file on the working directory
        !
        USE io_files,  ONLY : iunexit, exit_file
+       USE io_global, ONLY : ionode
        !
        IMPLICIT NONE
        !
+       !
+       IF ( .NOT. ionode ) RETURN
        !
        OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
        CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               

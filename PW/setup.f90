@@ -55,7 +55,7 @@ SUBROUTINE setup()
   USE pseud,            ONLY : zp, nlc, nnl, alps, aps, lmax
   USE wvfct,            ONLY : nbnd, nbndx
   USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, &
-                               lmd, lneb, lphonon, david, isolve, imix, &
+                               lmd, lpath, lphonon, david, isolve, imix, &
                                niter, noinv, restart, nosym, modenum, lraman
   USE relax,            ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,           ONLY : calc
@@ -112,7 +112,7 @@ SUBROUTINE setup()
   ! ... end of local variables
   !
   !
-  IF ( nimage > 1 .AND. .NOT. lneb ) &
+  IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
   !
   DO nt = 1, ntyp

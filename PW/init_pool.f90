@@ -11,14 +11,15 @@ SUBROUTINE init_pool()
   !
   ! ... This routine initialize the pool :  MPI division in pools and images
   !
-  USE para,      ONLY : me, mypool, npool, nprocp
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : mpime, me_image, my_image_id, nproc, nproc_image, &
-                        nproc_pool, nimage, me_pool, my_pool_id, &
+                        nproc_pool, npool, nimage, me_pool, my_pool_id, &
                         intra_image_comm, inter_image_comm, &
                         intra_pool_comm, inter_pool_comm
+  USE parallel_include
+  
   USE mp_global, ONLY : mp_global_group_start
-  USE parallel_include   
+  USE para,      ONLY : me, mypool, nprocp, npool_ => npool
   !
   IMPLICIT NONE
   !
@@ -27,11 +28,8 @@ SUBROUTINE init_pool()
   !
 #if defined (__PARA)
   !  
-  ! ... set "my_image_id", "mypool" and reset "me"
+  ! ... here we set all parallel indeces (defined in mp_global): 
   !
-  ! ... my_image_id = 0 : nimage 
-  ! ... mypool      = 1 : npool       ==>    nimage * npool * nprocp = nproc
-  ! ... me          = 1 : nprocp 
   !
   ! ... number of cpus per image
   !
@@ -40,65 +38,72 @@ SUBROUTINE init_pool()
   IF ( MOD( nproc, nimage ) /= 0 ) &
      CALL errore( 'startup', 'nproc /= nproc_image * nimage', 1 )  
   !
-  my_image_id = INT( REAL( mpime ) / REAL( nproc_image ) )  
-  me          = MOD( mpime, nproc_image )
-  me_image    = me
+  ! ... my_image_id  =  image index for this processor   ( 0 : nimage - 1 )
+  ! ... me_image     =  processor index within the image ( 0 : nproc_image - 1 )
+  !
+  my_image_id = mpime / nproc_image
+  me_image    = MOD( mpime, nproc_image )
   !
   CALL mp_barrier()
+  !
+  ! ... the intra_image_comm communicator is created
   !
   CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
                        my_image_id, mpime, intra_image_comm, ierr )
   !
   CALL errore( 'init_pool', 'intra_image_comm is wrong', ierr )
   !
-  CALL mp_barrier()                       
+  CALL mp_barrier()
+  !
+  ! ... the inter_image_comm communicator is created                     
   !     
-  CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, me, mpime, inter_image_comm, ierr )  
+  CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
+                       me_image, mpime, inter_image_comm, ierr )  
   !
   CALL errore( 'init_pool', 'inter_image_comm is wrong', ierr )
   !
-  ! ... number of cpus per pool
+  ! ... number of cpus per pool of k-points (they are created inside each image)
   !
   nproc_pool = nproc_image / npool
   !
   IF ( MOD( nproc, npool ) /= 0 ) &
      CALL errore( 'startup', 'nproc /= nproc_pool * npool', 1 )  
   !
-  mypool = INT( REAL( me ) / REAL( nproc_pool ) )    
-  me     = MOD( me, nproc_pool )
+  ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
+  ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
   !
-  ! ... This is added for compatibility with PVM notations
-  ! ... parent process (source) will have me=1 - child process me=2,...,NPROC
-  !
-  me     = me + 1
-  mypool = mypool + 1
+  my_pool_id = me_image / nproc_pool    
+  me_pool    = MOD( me_image, nproc_pool )
   !
   CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_COMM_SPLIT( intra_image_comm, mypool, &
-                       me_image, intra_pool_comm, ierr )
+  ! ... the intra_pool_comm communicator is created
+  !
+  CALL MPI_COMM_SPLIT( intra_image_comm, &
+                       my_pool_id, me_image, intra_pool_comm, ierr )
   !
   CALL errore( 'init_pool', 'intra_pool_comm is wrong', ierr )
   !
   CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_COMM_SPLIT( intra_image_comm, me, &
-                       me_image, inter_pool_comm, ierr )
+  ! ... the inter_pool_comm communicator is created
+  !
+  CALL MPI_COMM_SPLIT( intra_image_comm, &
+                       me_pool, me_image, inter_pool_comm, ierr )
   !
   call errore( 'init_pool', 'inter_pool_comm is wrong', ierr )
   !
   ! ... compatibility with old PWscf routines
   !
-  nprocp = nproc_pool
-  !  
-  ! ... Initialize globally accessible pool variables
-  !
   ! ... me      =>  me_pool + 1
   ! ... mypool  =>  my_pool_id + 1
   ! ... nprocp  =>  nproc_pool
-  ! 
-  CALL mp_global_group_start( ( me - 1 ), ( mypool - 1 ), nprocp, npool )
-  !                            
+  !
+  me     = me_pool + 1
+  mypool = my_pool_id + 1
+  nprocp = nproc_pool
+  npool_ = npool
+  !
 #endif
   !
   RETURN

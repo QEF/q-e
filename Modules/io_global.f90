@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD & PWSCF group
+! Copyright (C) 2002-2004 FPMD & PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,11 +15,13 @@ MODULE io_global
   SAVE
   !
   PUBLIC :: io_global_start, io_global_getionode
-  PUBLIC :: stdout, ionode, ionode_id
+  PUBLIC :: stdout, ionode, ionode_id, meta_ionode, meta_ionode_id
   !
-  INTEGER :: stdout = 6         ! unit connected to standard output
-  INTEGER :: ionode_id = 0
-  LOGICAL :: ionode = .TRUE.
+  INTEGER :: stdout = 6            ! unit connected to standard output
+  INTEGER :: ionode_id = 0         ! index of the i/o node
+  LOGICAL :: ionode = .TRUE.       ! identifies the i/o node
+  INTEGER :: meta_ionode_id = 0    ! index of the i/o node for meta-codes
+  LOGICAL :: meta_ionode = .TRUE.  ! identifies the i/o node for meta-codes
   LOGICAL :: first = .TRUE.
   !    
   CONTAINS
@@ -34,12 +36,20 @@ MODULE io_global
        !
        !
        IF ( mpime == ionode_set ) THEN
-          ionode = .TRUE.
+          !
+          ionode      = .TRUE.
+          meta_ionode = .TRUE.
+          !
        ELSE
-          ionode = .FALSE.
+          !
+          ionode      = .FALSE.
+          meta_ionode = .FALSE.
+          !
        END IF
        !
-       ionode_id = ionode_set
+       ionode_id      = ionode_set
+       meta_ionode_id = ionode_set
+       !
        first = .FALSE.
        !
        RETURN
@@ -59,7 +69,8 @@ MODULE io_global
        !
        IF ( first ) &
           CALL errore( ' get_ionode ', ' ionode not yet defined ', 1 )
-       ionode_out = ionode
+       !
+       ionode_out    = ionode
        ionode_id_out = ionode_id
        !
        RETURN

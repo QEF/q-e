@@ -104,6 +104,7 @@ SUBROUTINE iosys()
   USE fixed_occ,     ONLY : tfixed_occ
   USE control_flags, ONLY : twfcollect 
   USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
+                             reset_vel_      => reset_vel, &
                              CI_scheme_      => CI_scheme, &
                              k_max_          => k_max, & 
                              k_min_          => k_min, &
@@ -170,7 +171,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
                                tempw, tolp, upscale, potential_extrapolation, &
-                               CI_scheme, minimization_scheme, &
+                               CI_scheme, minimization_scheme, reset_vel, &
                                num_of_images, first_last_opt, damp, temp_req, &
                                k_max, k_min, path_thr, &
                                trust_radius_max, trust_radius_min, &
@@ -801,6 +802,7 @@ SUBROUTINE iosys()
   !
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
+  reset_vel_      = reset_vel
   damp_           = damp
   temp_req_       = temp_req
   path_thr_       = path_thr

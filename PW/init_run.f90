@@ -5,13 +5,14 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE init_run()
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   USE ions_base,   ONLY : nat, tau, ityp
   USE force_mod,   ONLY : force
   USE wvfct,       ONLY : gamma_only
+  USE mp_global, ONLY : MPIME
   !
   IMPLICIT NONE
   !
