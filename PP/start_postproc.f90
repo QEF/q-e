@@ -25,7 +25,7 @@ subroutine start_postproc (nodenumber)
 
 
   character :: filin * 14, nodenumber * 3, version * 12  
-  version = 'POSTPROC1.2-'  
+  version = 'POSTPROC-120'  
   filin = ' '  
   nodenumber = '   '  
   !

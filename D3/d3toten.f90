@@ -31,7 +31,7 @@ program d3toten
 
   call init_clocks (.true.)  
   call start_clock ('D3TOTEN')  
-  version = 'D3TOTEN1.2.-'  
+  version = 'D3TOTEN1.2.0'  
 #ifdef PARA
   call startup (nd_nmbr, version)  
 #else
