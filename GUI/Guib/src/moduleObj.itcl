@@ -35,7 +35,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: moduleObj.itcl,v 1.4 2004-09-03 07:51:25 kokalj Exp $ 
+# $Id: moduleObj.itcl,v 1.5 2004-09-04 07:56:29 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -114,6 +114,7 @@
 #        loaddata    
 #        valueToTextvalue 
 #        textvalueToValue 
+#        scriptvar
 #        
 #      1.6 decoration keywords:
 #        packwidgets 
@@ -167,6 +168,7 @@
 # 
 #      3.4 methods for manipulating variable's widgets
 #        _getAfterWidget    -- returns the variables' widgets that follows after a given variable's widget
+#        _getAfterMappedWidget -- 
 #        _deleteDisabledWid -- removes the widget from the disabledWidList list
 #        _addDisabledWid    -- add a given variable's widget to disabledWidList 
 #     
@@ -362,6 +364,7 @@ class ::guib::moduleObj {
     public method loaddata         {varIdent cmd {buttonText "Load from file ..."}}
     public method valueToTextvalue {varIdent value}
     public method textvalueToValue {varIdent textvalue}
+    public method scriptvar        {ident args} 
 
     # 6.) decoration keywords:
     public method packwidgets {side}
@@ -433,6 +436,7 @@ class ::guib::moduleObj {
     private   method _traceCmd    {name1 name2 op}
 
     private method _getAfterWidget     {widget} 
+    private method _getAfterMappedWidget {widget}
     private method _deleteDisabledWid  {widget} 
     private method _addDisabledWid     {widget}
 
@@ -780,7 +784,13 @@ body ::guib::moduleObj::_getAfterWidget {widget} {
 	return [lindex  [lindex $varidentWidgetList [expr $i + 1]]  1] 
     }
 }
-
+body ::guib::moduleObj::_getAfterMappedWidget {widget} {
+    # WARNING : this proc does not work: needs checking !!!
+    for {set aw [_getAfterWidget $widget]} { ! [winfo ismapped $aw] } {set aw [_getAfterWidget $aw]} {
+	if { $aw == "" } { return "" }
+    }
+    return $aw
+}
 
 # ------------------------------------------------------------------------
 #****im* moduleObj/_manageKeyword
@@ -821,7 +831,8 @@ body ::guib::moduleObj::_manageKeyword {obj key ident code} {
 
     # if the value of -variable option is "", then set it to $ident
     
-    if { $key == "var" || $key == "dimension" || $key == "table" } {
+    if { $key == "var" || $key == "auxilvar" || 
+	 $key == "dimension" || $key == "table" } {
 	if { [$obj getOptionValue $id variable] == "" } {
 	    $obj setOptions $id [list variable $ident]
 	}
