@@ -50,6 +50,7 @@ COMMON
 PW
 
 - cleanup of parallel stuff: removal of old-style variables
+  What about SHMEM ?
 
 - remove iswitch, replace with existing (minus_q, lscf)
   or new logical variables

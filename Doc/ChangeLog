@@ -1,3 +1,9 @@
+23 Sep 2004 "make tar" was not saving atomic_doc (PG)
+
+22 Sep 2004 chdens: fix/modifications in dipole moment calculation
+            and makov-payne correction (PC)
+            added case ifc7 on linux64 [Gerardo]
+
 -------------------------------------------------------------------
 Date: 20 Sep 2004    Version: pw-2-1
 -------------------------------------------------------------------
