@@ -934,7 +934,7 @@ MODULE input_parameters
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
           num_of_images, CI_scheme, VEC_scheme, minimization_scheme, &
-          optimization, damp, temp_req, ds, k_max, k_min, neb_thr, &
+          optimization, reset_vel, damp, temp_req, ds, k_max, k_min, neb_thr, &
           trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
           w_1, w_2, lbfgs_ndim, sic_rloc
 
