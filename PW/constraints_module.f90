@@ -9,6 +9,7 @@
 MODULE constraints_module
   !----------------------------------------------------------------------------
   ! 
+#include "machine.h"
   ! ... variables and methods for constraint Molecular Dynamics and
   ! ... constraint ionic relaxations (based on a penalty function) are 
   ! ... defined here.
