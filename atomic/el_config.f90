@@ -15,8 +15,8 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
   real(kind=dp) :: oc(nwfx)
   ! local variables
   integer ::  i, n, l, len, n0, first, start(nwfx), finish(nwfx)
-  character ::  occup*10, core*2, prev*1, curr*1, capital*1
-  external :: capital
+  character ::  occup*10, core*2, prev*1, curr*1
+  character(len=1), external :: capital
   ! core states
   character(len=2) :: elc(15)
   integer :: nwfc, nnc(15), llc(15)

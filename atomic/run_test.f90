@@ -16,6 +16,7 @@ subroutine run_test
        im,&  ! position of the maximum
        nc    ! counter on configurations
   integer :: ios
+  character(len=1) :: nch
   real(kind=dp) :: dum
 
   file_tests = trim(prefix)//'.test'
@@ -30,14 +31,16 @@ subroutine run_test
         file_logderps = trim(prefix)//'ps.dlog'
      else
         if (nc < 10) then
-           file_wavefunctions  = trim(prefix)//char(nc)//'.wfc'
-           file_wavefunctionsps= trim(prefix)//char(nc)//'ps.wfc'
-           file_logder   = trim(prefix)//char(nc)//'.dlog'
-           file_logderps = trim(prefix)//char(nc)//'ps.dlog'
+           write (nch, '(i1)') nc 
         else
+           nch='0'
            call errore ('run_test', &
                 'results for some configs not written to file',-1)
         endif
+        file_wavefunctions  = trim(prefix)//nch//'.wfc'
+        file_wavefunctionsps= trim(prefix)//nch//'ps.wfc'
+        file_logder   = trim(prefix)//nch//'.dlog'
+        file_logderps = trim(prefix)//nch//'ps.dlog'
      endif
      nwfts=nwftsc(nc)
      do n=1,nwf

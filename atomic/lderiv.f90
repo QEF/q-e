@@ -35,6 +35,9 @@ subroutine lderiv
   real(kind=dp), allocatable ::        &
        dlchi(:, :)         ! the logarithmic derivative
 
+  character(len=256) :: flld
+
+
   if (nld == 0 .or. file_logder == ' ') return
   if (nld > nwfsx) call errore('lderiv','nld is too large',1)
 
@@ -84,14 +87,17 @@ subroutine lderiv
            dlchi(ie, nc) = compute_log(aux(ikrld-3),r(ikrld),dx)
         enddo
      enddo
-     if (is == 2) then
-        open(unit=25, file=trim(file_logder)//'01', status='unknown', &
-             iostat=ios, err=300 )
+
+     if (nspin == 2 .and. is == 1) then
+        flld = trim(file_logder)//'up'
+     else if (nspin == 2 .and. is == 2) then
+        flld = trim(file_logder)//'dw'
      else
-        open(unit=25,file=trim(file_logder), status='unknown', &
-             iostat=ios, err=300 )
+        flld = trim(file_logder)
      end if
-300  call errore('lderiv','opening file '//trim(file_logder),abs(ios))
+     open(unit=25, file=flld, status='unknown', iostat=ios, err=300 )
+300  call errore('lderivps','opening file '//flld, abs(ios))
+
      do ie=1,npte
         e= eminld+deld*(ie-1)
         write(25,'(10f14.6)') e, (dlchi(ie,nc),nc=1,nld)
