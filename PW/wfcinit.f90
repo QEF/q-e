@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! or http://www.gnu.org/copyleft/gpl.txt .
@@ -86,7 +86,7 @@ SUBROUTINE wfcinit()
        !
        IF ( startingwfc == 'file' ) THEN
           !
-          WRITE( stdout, '(5X,A)' ) 'Starting wfc from file'
+          WRITE( stdout, '(5X,"Starting wfc from file")' )
           !
           ! ... read the wavefunction into memory (if it is not done in c_bands)
           !
@@ -100,17 +100,22 @@ SUBROUTINE wfcinit()
        IF ( startingwfc == 'atomic' ) THEN
           !
           IF ( natomwfc >= nbnd ) THEN
-             WRITE( stdout, '(5X,A)' ) 'Starting wfc are atomic'
+             !
+             WRITE( stdout, '(5X,"Starting wfc are atomic")' ) 
+             !
           ELSE
-             WRITE( stdout, '(5X,A,I3,A)' ) &
-                 'Starting wfc are atomic + ', nbnd-natomwfc, ' random wfc'
+             !
+             WRITE( stdout, &
+                  & '(5X,"Starting wfc are atomic + ",I3," random wfc")' ) &
+                 nbnd-natomwfc
+             !
           END IF
           !
           n_starting_wfc = MAX( natomwfc, nbnd )
           !
        ELSE
           !
-          WRITE( stdout, '(5X,A)' ) 'Starting wfc are random'
+          WRITE( stdout, '(5X,"Starting wfc are random")' )
           !
           n_starting_wfc = nbnd
           !
@@ -261,16 +266,20 @@ SUBROUTINE wfcinit()
        !
        IF ( startingwfc == 'file' ) THEN
           !
-          WRITE( stdout, '(5X,A)' ) 'Starting wfc from file'
+          WRITE( stdout, '(5X,"Starting wfc from file")' )
           !
           ! ... read the wavefunction into memory (if it is not done in c_bands)
           !
-          IF (noncolin) THEN
+          IF ( noncolin ) THEN
+             !
              IF ( nks == 1 .AND. reduce_io ) &
                  CALL davcio( evc_nc, nwordwfc, iunwfc, 1, -1 )
+             !
           ELSE
+             !
              IF ( nks == 1 .AND. reduce_io ) &
                  CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
+             !
           ENDIF
           !
           RETURN
@@ -281,12 +290,13 @@ SUBROUTINE wfcinit()
           !
           IF ( natomwfc >= nbnd ) THEN
              !
-             WRITE( stdout, '(5X,A)' ) 'Starting wfc are atomic'
+             WRITE( stdout, '(5X,"Starting wfc are atomic")' ) 
              !
           ELSE
              !
-             WRITE( stdout, '(5X,A,I3,A)') &
-                  'Starting wfc are atomic + ',nbnd-natomwfc, ' random wfc'
+             WRITE( stdout, &
+                  & '(5X,"Starting wfc are atomic + ",I3," random wfc")' ) &
+                 nbnd-natomwfc
              !
           END IF
           !
@@ -294,7 +304,7 @@ SUBROUTINE wfcinit()
           !
        ELSE
           !
-          WRITE( stdout, '(5X,A)' ) 'Starting wfc are random'
+          WRITE( stdout, '(5X,"Starting wfc are random")' )
           !
           n_starting_wfc = nbnd
           !
@@ -310,13 +320,18 @@ SUBROUTINE wfcinit()
        !
        ! ... becp contains <beta|psi> - used in h_psi and s_psi
        !
-       IF (noncolin) THEN
+       IF ( noncolin ) THEN
+          !
           ALLOCATE( becp_nc( nkb, npol, n_starting_wfc ) )
           ALLOCATE( wfcatom_nc( npwx, npol, n_starting_wfc ) )
+          !
        ELSE
+          !
           ALLOCATE( becp( nkb, n_starting_wfc ) )
           ALLOCATE( wfcatom( npwx,n_starting_wfc ) )
+          !
        END IF
+       !
        ALLOCATE( etatom( n_starting_wfc ) )
        !
        DO ik = 1, nks
@@ -339,19 +354,26 @@ SUBROUTINE wfcinit()
           !
           g2kin(:) = g2kin(:) * tpiba2
           !
-          IF (noncolin) THEN
-             IF (lda_plus_u) CALL davcio(swfcatom_nc,nwordatwfc,iunat,ik,-1)
+          IF ( noncolin ) THEN
+             !
+             IF ( lda_plus_u ) CALL davcio(swfcatom_nc,nwordatwfc,iunat,ik,-1)
+             !
           ELSE
+             !
              IF ( lda_plus_u ) CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+             !
           END IF
-
           !
           IF ( startingwfc == 'atomic' ) THEN
              !
-             IF (noncolin) THEN
+             IF ( noncolin ) THEN
+                !
                 CALL atomic_wfc_nc( ik, wfcatom_nc )
+                !
              ELSE
+                !
                 CALL atomic_wfc( ik, wfcatom )
+                !
              END IF
              !
              ! ... if not enough atomic wfc are available, complete 
@@ -359,29 +381,33 @@ SUBROUTINE wfcinit()
              !
              DO ibnd = ( natomwfc + 1 ), nbnd
                 !
-                IF (noncolin) THEN
+                IF ( noncolin ) THEN
+                   !
                    DO ipol = 1, npol
+                      !
                       DO ig = 1, npw
                          !
-                         rr = rndm ()
-                         arg = tpi * rndm ()
+                         rr  = rndm()
+                         arg = tpi * rndm()
                          !
-                         wfcatom_nc(ig,ipol,ibnd) = DCMPLX(rr*COS(arg),  &
-                                                           rr*SIN(arg) ) &
-                           / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 +    &
-                               (xk (2, ik) + g (2, igk (ig) ) ) **2 +    &
-                               (xk (3, ik) + g (3, igk (ig) ) ) **2 + 1.0D0)
+                         wfcatom_nc(ig,ipol,ibnd) = DCMPLX( rr*COS( arg ),    &
+                                                            rr*SIN( arg ) ) / &
+                                    ( ( xk(1,ik) + g(1,igk(ig) ) )**2 +       &
+                                      ( xk(2,ik) + g(2,igk(ig) ) )**2 +       &
+                                      ( xk(3,ik) + g(3,igk(ig) ) )**2 + 1.0D0 )
                       END DO
                       !
                    END DO
+                   !
                 ELSE
+                   !
                    DO ig = 1, npw
                       !
                       rr  = rndm()
                       arg = tpi * rndm()
                       !
-                      wfcatom(ig,ibnd) = CMPLX( rr*COS( arg ), &
-                                                rr*SIN( arg ) ) / &
+                      wfcatom(ig,ibnd) = DCMPLX( rr*COS( arg ), &
+                                                 rr*SIN( arg ) ) / &
                                       ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
                                         ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
@@ -396,31 +422,33 @@ SUBROUTINE wfcinit()
              !
              DO ibnd = 1, nbnd
                 !
-                IF (noncolin) THEN
+                IF ( noncolin ) THEN
+                   !
                    DO ipol = 1, npol
+                      !
                       DO ig = 1, npw
                          !
-                         rr = rndm ()
-                         arg = tpi * rndm ()
+                         rr  = rndm()
+                         arg = tpi * rndm()
                          !
-                         wfcatom_nc(ig,ipol,ibnd) = DCMPLX(rr*COS(arg),  &
-                                                           rr*SIN(arg) ) &
-                           / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 +    &
-                               (xk (2, ik) + g (2, igk (ig) ) ) **2 +    &
-                               (xk (3, ik) + g (3, igk (ig) ) ) **2 + 1.0D0)
+                         wfcatom_nc(ig,ipol,ibnd) = DCMPLX( rr*COS( arg ),    &
+                                                            rr*SIN( arg ) ) / &
+                                     ( ( xk(1,ik) + g(1,igk(ig)) )**2 +       &
+                                       ( xk(2,ik) + g(2,igk(ig)) )**2 +       &
+                                       ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
                       END DO
                       !
                    END DO
                    !
                 ELSE
-
+                   !
                    DO ig = 1, npw
                       !
                       rr  = rndm()
                       arg = tpi * rndm()
                       !
-                      wfcatom(ig,ibnd) = CMPLX( rr*COS( arg ),    &
-                                                rr*SIN( arg ) ) / &
+                      wfcatom(ig,ibnd) = DCMPLX( rr*COS( arg ),    &
+                                                 rr*SIN( arg ) ) / &
                                       ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
                                         ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
@@ -439,22 +467,30 @@ SUBROUTINE wfcinit()
           !
           IF ( isolve == 1 ) THEN
              !
-             IF (noncolin) THEN
-                CALL cinitcgg_nc( npwx, npw, n_starting_wfc, &
-                            nbnd, wfcatom_nc, wfcatom_nc, etatom, okvan, npol )
+             IF ( noncolin ) THEN
+                !
+                CALL cinitcgg_nc( npwx, npw, n_starting_wfc, nbnd, &
+                                  wfcatom_nc, wfcatom_nc, etatom, okvan, npol )
+                !
              ELSE
+                !
                 CALL cinitcgg( npwx, npw, n_starting_wfc, &
-                            nbnd, wfcatom, wfcatom, etatom )
+                               nbnd, wfcatom, wfcatom, etatom )
+                !
              END IF
              !
           ELSE
              !
-             IF (noncolin) THEN
-                CALL rotate_wfc_nc( npwx, npw, n_starting_wfc, &
-                         nbnd, wfcatom_nc, npol, okvan, wfcatom_nc, etatom )
+             IF ( noncolin ) THEN
+                !
+                CALL rotate_wfc_nc( npwx, npw, n_starting_wfc, nbnd, &
+                                   wfcatom_nc, npol, okvan, wfcatom_nc, etatom )
+                !
              ELSE
+                !
                 CALL rotate_wfc( npwx, npw, n_starting_wfc, &
                                  nbnd, wfcatom, okvan, wfcatom, etatom )
+                !
              END IF
              !
           END IF
@@ -462,31 +498,41 @@ SUBROUTINE wfcinit()
           ! ... the first nbnd wavefunctions and eigenvalues are copied
           !
           et(1:nbnd,ik) = etatom(1:nbnd)
-          IF (noncolin) THEN
+          !
+          IF ( noncolin ) THEN
+             !
              evc_nc(:,:,1:nbnd) = wfcatom_nc(:,:,1:nbnd)
              !
              evc_nc(npw+1:npwx,:,:) = ( 0.D0, 0.D0 )
              !
              IF ( nks > 1 .OR. .NOT. reduce_io ) &
                 CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
+             !
           ELSE
+             !
              evc(:,1:nbnd) = wfcatom(:,1:nbnd)
              !
              evc(npw+1:npwx,:) = ( 0.D0, 0.D0 )
              !
              IF ( nks > 1 .OR. .NOT. reduce_io ) &
                 CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+             !
           END IF
           !
        END DO
        !
-       IF (noncolin) THEN
+       IF ( noncolin ) THEN
+          !
           DEALLOCATE( becp_nc )
           DEALLOCATE( wfcatom_nc )
+          !
        ELSE
+          !
           DEALLOCATE( becp )
           DEALLOCATE( wfcatom )
+          !
        END IF
+       !
        DEALLOCATE( etatom )
        !
        RETURN

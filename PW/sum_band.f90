@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,7 +39,8 @@ SUBROUTINE sum_band()
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
-  USE mp_global,            ONLY : intra_image_comm, me_image, root_image
+  USE mp_global,            ONLY : intra_image_comm, me_image, &
+                                   root_image, npool, my_pool_id
   USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -91,9 +92,18 @@ SUBROUTINE sum_band()
      !
   ELSE IF ( tfixed_occ ) THEN
      !
-     ef = - 1.0D+20
+     IF ( npool == 1 ) THEN
+        !
+        wg = f_inp
+        !
+     ELSE
+        !
+        wg(:,1) = f_inp(:,my_pool_id+1)
+        wg(:,2) = f_inp(:,my_pool_id+1)
+        !
+     END IF
      !
-     wg = f_inp
+     ef = - 1.0D+20
      !
      DO is = 1, nspin
         !
@@ -139,7 +149,8 @@ SUBROUTINE sum_band()
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   IF ( okvan ) CALL addusdens()
-  IF (noncolin.AND..NOT.domag) rho(:,2:4)=0.d0
+  !
+  IF ( noncolin .AND. .NOT. domag ) rho(:,2:4)=0.D0
   !
   CALL poolreduce( 1, eband )
   CALL poolreduce( 1, demet )
@@ -151,18 +162,21 @@ SUBROUTINE sum_band()
   ! ... reduce charge density across pools
   !
   CALL poolreduce( nspin * nrxx, rho )
+  !
   IF ( noncolin ) THEN
      !
-     CALL psymrho(rho(1,1),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau)
+     CALL psymrho( rho(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
      !
-     IF (domag) &
-     CALL psymrho_mag(rho(1,2),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau,bg,at)
+     IF ( domag ) &
+        CALL psymrho_mag( rho(1,2), nrx1, nrx2, nrx3, &
+                          nr1, nr2, nr3, nsym, s, ftau, bg, at )
      !
   ELSE
      !
      DO is = 1, nspin
         !
-        CALL psymrho(rho(1,is),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau)
+        CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, &
+                      nr1, nr2, nr3, nsym, s, ftau )
         !
      END DO
      !
@@ -172,10 +186,11 @@ SUBROUTINE sum_band()
   !
   IF ( noncolin ) THEN
      !
-     CALL symrho(rho(1,1),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau)
+     CALL symrho( rho(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
      !
-     if (domag) &
-     CALL symrho_mag(rho(1,2),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau,bg,at)
+     IF ( domag ) &
+        CALL symrho_mag( rho(1,2), nrx1, nrx2, nrx3, &
+                         nr1, nr2, nr3, nsym, s, ftau, bg, at )
      !
   ELSE
      !
