@@ -131,8 +131,8 @@ program pw2casino
                  enl=enl+abs(becp(j,ibnd))**2*wg(ibnd,ikk)*dion(j,j,nt)
               enddo
            enddo
-
         enddo
+        ek = ek * tpiba2
 #ifdef PARA
         call reduce(1,ek)
 #endif
