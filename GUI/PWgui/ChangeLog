@@ -1,3 +1,7 @@
+Mon Jan 17 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* projwfc module updated (files: pwojwfc.tcl, projwfc-help.tcl)
+	* run.itcl: regsub syntax bug fixed
+	
 Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si) and Carlo Sbraccia (sbraccia@sissa.it)
 	* adding "Run" menubutton: added file: run.itcl; adapted files:
 	menustate.itcl (adding runnable support), pwscf.itcl, settings.itcl.
