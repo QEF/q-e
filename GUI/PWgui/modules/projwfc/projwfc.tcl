@@ -16,19 +16,29 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-widget   entrydirselectquote
 		-fmt      %S
 	    }
-	    
-	    var io_choice {
-		-label     "Type of the output (io_choice):"
-		-widget    optionmenu
-		-value     {'standard' 'files' 'both'}
-		-textvalue {
-		    "write output to stdout only"
-		    "write output to files only"
-		    "write output to stdout and files"
-		}
+
+	    var filpdos {
+		-label "Prefix for output files containing PDOS(E) (filpdos):"
 	    }
 
 	    separator -label "--- PDOS ploting options ---"
+
+	    var ngauss {
+		-label   "Type of gaussian broadening (ngauss):"
+		-widget  optionmenu
+		-value   {0 1 -1 99}
+		-textvalue {
+		    "Simple Gaussian (default)"
+		    "Methfessel-Paxton of order 1"
+		    " Marzari-Vanderbilt \"cold smearing\""
+		    "Fermi-Dirac function"
+		}
+	    }
+
+	    var degauss {
+		-label     "Gaussian broadening \[in Ry\] (degauss):"
+		-validate  fortranreal
+	    }
 
 	    var DeltaE {
 		-label    "Resolution of PDOS plots \[in eV\] (DeltaE):"
@@ -36,12 +46,6 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-default  0.01
 	    }
 	    
-	    var smoothing {
-		-label    "Gaussian smoothing for PDOS \[in eV\] (smoothing):"
-		-validate fortranreal
-		-default  0.15
-	    }
-
 	    separator -label "--- Energy window for PDOS ---"
 
 	    var Emin {

@@ -9,15 +9,17 @@ help outdir  -vartype character -helpfmt txt2html -helptext {
 <p> ( default = './' )
 }
 
-help io_choice  -vartype character -helpfmt txt2html -helptext { 
-            'standard' : write projections to standard output 
+help ngauss -vartype integer -helpfmt txt2html -helptext {
+     type of gaussian broadening (optional)    ( default = 0 )
+            =  0  Simple Gaussian (default)
+            =  1  Methfessel-Paxton of order 1
+            = -1  Marzari-Vanderbilt "cold smearing"
+            = 99  Fermi-Dirac function
+}
 
-            'file'     : write projected DOS, one file per atomic 
-                         wavefunction (those that have been read 
-                         from the pseudopotential file) 
-
-            'both'     : do both of the above things (DEFAULT)
-<p> ( default = 'both' )
+help degauss -vartype real -helpfmt txt2html -helptext {
+     gaussian broadening in Ry (not eV!)
+<p> ( default = 0.0 )
 }
 
 set _e {
@@ -31,7 +33,7 @@ foreach var {Emin Emax DeltaE} {
     help $var -vartype real -helpfmt txt2html -helptext $_e
 }
 
-help smoothing -vartype character -helpfmt txt2html -helptext {  
-     gaussian broadening (eV, DEFAULT: DeltaE)
+help filpdos -vartype character -helpfmt txt2html -helptext {  
+     prefix for output files containing PDOS(E)
+<p> ( default = using the value of <i>prefix</i> )
 }
-
