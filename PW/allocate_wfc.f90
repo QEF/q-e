@@ -15,7 +15,7 @@ subroutine allocate_wfc
 #include "machine.h"
   use pwcom
   USE io_global,        ONLY : stdout
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   use becmod
   implicit none
   !

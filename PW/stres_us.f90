@@ -13,7 +13,7 @@ subroutine stres_us (ik, gk, sigmanlc)
   !
 #include "machine.h"
   use pwcom
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   use becmod
 #ifdef __PARA
   use para

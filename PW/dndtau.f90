@@ -15,7 +15,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    !
 #include "machine.h"
    use pwcom
-   USE wavefunctions,    ONLY : evc
+   USE wavefunctions_module,    ONLY : evc
    use becmod
    use io_files
 #ifdef __PARA

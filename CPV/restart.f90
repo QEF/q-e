@@ -440,16 +440,16 @@ CONTAINS
          strlen  = index(filename,' ') - 1 
          OPEN(unit=ndr, file=filename(1:strlen), form='unformatted', status='old')
          REWIND (ndr)
-         WRITE(6,10)
+         WRITE( stdout,10)
  10      FORMAT(/,3X,'READING FROM RESTART FILE ...')
       end if
 
       if (flag.eq.-1) then
-         write(6,'((a,i3,a))') ' ### reading from file ',ndr,' only h  ##'
+         WRITE( stdout,'((a,i3,a))') ' ### reading from file ',ndr,' only h  ##'
       else if (flag.eq.0) then
-         write(6,'((a,i3,a))') ' ## reading from file ',ndr,' only c0  ##'
+         WRITE( stdout,'((a,i3,a))') ' ## reading from file ',ndr,' only c0  ##'
       else
-         write(6,'((a,i3))') ' ## reading from file ',ndr
+         WRITE( stdout,'((a,i3))') ' ## reading from file ',ndr
       end if
 
 !     ==--------------------------------------------------------------==

@@ -82,7 +82,7 @@ subroutine punch_band (filband)
   use units
   use wvfct
   use us
-  use wavefunctions, only: evc
+  use wavefunctions_module, only: evc
 
   implicit none
   character (len=*) :: filband

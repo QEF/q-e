@@ -10,6 +10,7 @@
 
 subroutine errore(a,b,n)
 !-----------------------------------------------------------------------
+      use io_global, only: stdout
       character(len=*) a,b
       integer n
 #ifdef __PARA
@@ -17,7 +18,7 @@ subroutine errore(a,b,n)
       integer ierr
 #endif
 !
-      write(6,1) a,b,n
+      WRITE( stdout,1) a,b,n
     1 format(//' program ',a,':',a,'.',8x,i8,8x,'stop')
 #ifdef __MPI
       call mpi_abort( MPI_COMM_WORLD, ierr, ierr)

@@ -8,7 +8,6 @@ PWOBJS = pwcom.o  \
 noncol.o  \
 para.o  \
 becmod.o  \
-wavefunctions.o  \
 clean_pw.o \
 aainit.o  \
 add_efield.o \

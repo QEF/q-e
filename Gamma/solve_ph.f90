@@ -13,7 +13,7 @@ subroutine solve_ph
 #include "machine.h"
   USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY : evc
+  USE wavefunctions_module,  ONLY : evc
   USE rbecmod,        ONLY : becp, becp_
   use cgcom
 #ifdef __PARA

@@ -19,7 +19,7 @@ subroutine c_bands (iter, ik_, dr2)
 #include "machine.h"
   USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   USE rbecmod, ONLY: becp, becp_
   USE g_psi_mod
   implicit none

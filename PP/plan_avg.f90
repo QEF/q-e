@@ -26,7 +26,7 @@ subroutine plan_avg (averag, plan, ninter)
 #include "machine.h"
 
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   use becmod
 
   implicit none

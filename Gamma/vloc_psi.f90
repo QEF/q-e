@@ -13,7 +13,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   USE parameters, only : DP
   USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE wvfct,   ONLY : igk
-  USE wavefunctions,  ONLY: psic
+  USE wavefunctions_module,  ONLY: psic
   !
   implicit none
   !

@@ -20104,3 +20104,3729 @@ CIBM           PREFER SCALAR
 *     End of DLARF
 *
       END
+      SUBROUTINE ZGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
+*
+*  -- LAPACK driver routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     March 31, 1993
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, LDB, N, NRHS
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      COMPLEX*16         A( LDA, * ), B( LDB, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGESV computes the solution to a complex system of linear equations
+*     A * X = B,
+*  where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
+*
+*  The LU decomposition with partial pivoting and row interchanges is
+*  used to factor A as
+*     A = P * L * U,
+*  where P is a permutation matrix, L is unit lower triangular, and U is
+*  upper triangular.  The factored form of A is then used to solve the
+*  system of equations A * X = B.
+*
+*  Arguments
+*  =========
+*
+*  N       (input) INTEGER
+*          The number of linear equations, i.e., the order of the
+*          matrix A.  N >= 0.
+*
+*  NRHS    (input) INTEGER
+*          The number of right hand sides, i.e., the number of columns
+*          of the matrix B.  NRHS >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the N-by-N coefficient matrix A.
+*          On exit, the factors L and U from the factorization
+*          A = P*L*U; the unit diagonal elements of L are not stored.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  IPIV    (output) INTEGER array, dimension (N)
+*          The pivot indices that define the permutation matrix P;
+*          row i of the matrix was interchanged with row IPIV(i).
+*
+*  B       (input/output) COMPLEX*16 array, dimension (LDB,NRHS)
+*          On entry, the N-by-NRHS matrix of right hand side matrix B.
+*          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, U(i,i) is exactly zero.  The factorization
+*                has been completed, but the factor U is exactly
+*                singular, so the solution could not be computed.
+*
+*  =====================================================================
+*
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZGETRF, ZGETRS
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      IF( N.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( NRHS.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGESV ', -INFO )
+         RETURN
+      END IF
+*
+*     Compute the LU factorization of A.
+*
+      CALL ZGETRF( N, N, A, LDA, IPIV, INFO )
+      IF( INFO.EQ.0 ) THEN
+*
+*        Solve the system A*X = B, overwriting B with X.
+*
+         CALL ZGETRS( 'No transpose', N, NRHS, A, LDA, IPIV, B, LDB,
+     $                INFO )
+      END IF
+      RETURN
+*
+*     End of ZGESV
+*
+      END
+      SUBROUTINE ZGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
+     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
+*
+*  -- LAPACK driver routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          JOBVL, JOBVR
+      INTEGER            INFO, LDA, LDB, LDVL, LDVR, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   RWORK( * )
+      COMPLEX*16         A( LDA, * ), ALPHA( * ), B( LDB, * ),
+     $                   BETA( * ), VL( LDVL, * ), VR( LDVR, * ),
+     $                   WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGGEV computes for a pair of N-by-N complex nonsymmetric matrices
+*  (A,B), the generalized eigenvalues, and optionally, the left and/or
+*  right generalized eigenvectors.
+*
+*  A generalized eigenvalue for a pair of matrices (A,B) is a scalar
+*  lambda or a ratio alpha/beta = lambda, such that A - lambda*B is
+*  singular. It is usually represented as the pair (alpha,beta), as
+*  there is a reasonable interpretation for beta=0, and even for both
+*  being zero.
+*
+*  The right generalized eigenvector v(j) corresponding to the
+*  generalized eigenvalue lambda(j) of (A,B) satisfies
+*
+*               A * v(j) = lambda(j) * B * v(j).
+*
+*  The left generalized eigenvector u(j) corresponding to the
+*  generalized eigenvalues lambda(j) of (A,B) satisfies
+*
+*               u(j)**H * A = lambda(j) * u(j)**H * B
+*
+*  where u(j)**H is the conjugate-transpose of u(j).
+*
+*  Arguments
+*  =========
+*
+*  JOBVL   (input) CHARACTER*1
+*          = 'N':  do not compute the left generalized eigenvectors;
+*          = 'V':  compute the left generalized eigenvectors.
+*
+*  JOBVR   (input) CHARACTER*1
+*          = 'N':  do not compute the right generalized eigenvectors;
+*          = 'V':  compute the right generalized eigenvectors.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A, B, VL, and VR.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA, N)
+*          On entry, the matrix A in the pair (A,B).
+*          On exit, A has been overwritten.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of A.  LDA >= max(1,N).
+*
+*  B       (input/output) COMPLEX*16 array, dimension (LDB, N)
+*          On entry, the matrix B in the pair (A,B).
+*          On exit, B has been overwritten.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of B.  LDB >= max(1,N).
+*
+*  ALPHA   (output) COMPLEX*16 array, dimension (N)
+*  BETA    (output) COMPLEX*16 array, dimension (N)
+*          On exit, ALPHA(j)/BETA(j), j=1,...,N, will be the
+*          generalized eigenvalues.
+*
+*          Note: the quotients ALPHA(j)/BETA(j) may easily over- or
+*          underflow, and BETA(j) may even be zero.  Thus, the user
+*          should avoid naively computing the ratio alpha/beta.
+*          However, ALPHA will be always less than and usually
+*          comparable with norm(A) in magnitude, and BETA always less
+*          than and usually comparable with norm(B).
+*
+*  VL      (output) COMPLEX*16 array, dimension (LDVL,N)
+*          If JOBVL = 'V', the left generalized eigenvectors u(j) are
+*          stored one after another in the columns of VL, in the same
+*          order as their eigenvalues.
+*          Each eigenvector will be scaled so the largest component
+*          will have abs(real part) + abs(imag. part) = 1.
+*          Not referenced if JOBVL = 'N'.
+*
+*  LDVL    (input) INTEGER
+*          The leading dimension of the matrix VL. LDVL >= 1, and
+*          if JOBVL = 'V', LDVL >= N.
+*
+*  VR      (output) COMPLEX*16 array, dimension (LDVR,N)
+*          If JOBVR = 'V', the right generalized eigenvectors v(j) are
+*          stored one after another in the columns of VR, in the same
+*          order as their eigenvalues.
+*          Each eigenvector will be scaled so the largest component
+*          will have abs(real part) + abs(imag. part) = 1.
+*          Not referenced if JOBVR = 'N'.
+*
+*  LDVR    (input) INTEGER
+*          The leading dimension of the matrix VR. LDVR >= 1, and
+*          if JOBVR = 'V', LDVR >= N.
+*
+*  WORK    (workspace/output) COMPLEX*16 array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,2*N).
+*          For good performance, LWORK must generally be larger.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  RWORK   (workspace/output) DOUBLE PRECISION array, dimension (8*N)
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*          =1,...,N:
+*                The QZ iteration failed.  No eigenvectors have been
+*                calculated, but ALPHA(j) and BETA(j) should be
+*                correct for j=INFO+1,...,N.
+*          > N:  =N+1: other then QZ iteration failed in DHGEQZ,
+*                =N+2: error return from DTGEVC.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D0, ONE = 1.0D0 )
+      COMPLEX*16         CZERO, CONE
+      PARAMETER          ( CZERO = ( 0.0D0, 0.0D0 ),
+     $                   CONE = ( 1.0D0, 0.0D0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            ILASCL, ILBSCL, ILV, ILVL, ILVR, LQUERY
+      CHARACTER          CHTEMP
+      INTEGER            ICOLS, IERR, IHI, IJOBVL, IJOBVR, ILEFT, ILO,
+     $                   IN, IRIGHT, IROWS, IRWRK, ITAU, IWRK, JC, JR,
+     $                   LWKMIN, LWKOPT
+      DOUBLE PRECISION   ANRM, ANRMTO, BIGNUM, BNRM, BNRMTO, EPS,
+     $                   SMLNUM, TEMP
+      COMPLEX*16         X
+*     ..
+*     .. Local Arrays ..
+      LOGICAL            LDUMMA( 1 )
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZGEQRF, ZGGBAK, ZGGBAL, ZGGHRD, ZHGEQZ,
+     $                   ZLACPY, ZLASCL, ZLASET, ZTGEVC, ZUNGQR, ZUNMQR
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      DOUBLE PRECISION   DLAMCH, ZLANGE
+      EXTERNAL           LSAME, ILAENV, DLAMCH, ZLANGE
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, DBLE, DIMAG, MAX, SQRT
+*     ..
+*     .. Statement Functions ..
+      DOUBLE PRECISION   ABS1
+*     ..
+*     .. Statement Function definitions ..
+      ABS1( X ) = ABS( DBLE( X ) ) + ABS( DIMAG( X ) )
+*     ..
+*     .. Executable Statements ..
+*
+*     Decode the input arguments
+*
+      IF( LSAME( JOBVL, 'N' ) ) THEN
+         IJOBVL = 1
+         ILVL = .FALSE.
+      ELSE IF( LSAME( JOBVL, 'V' ) ) THEN
+         IJOBVL = 2
+         ILVL = .TRUE.
+      ELSE
+         IJOBVL = -1
+         ILVL = .FALSE.
+      END IF
+*
+      IF( LSAME( JOBVR, 'N' ) ) THEN
+         IJOBVR = 1
+         ILVR = .FALSE.
+      ELSE IF( LSAME( JOBVR, 'V' ) ) THEN
+         IJOBVR = 2
+         ILVR = .TRUE.
+      ELSE
+         IJOBVR = -1
+         ILVR = .FALSE.
+      END IF
+      ILV = ILVL .OR. ILVR
+*
+*     Test the input arguments
+*
+      INFO = 0
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( IJOBVL.LE.0 ) THEN
+         INFO = -1
+      ELSE IF( IJOBVR.LE.0 ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      ELSE IF( LDVL.LT.1 .OR. ( ILVL .AND. LDVL.LT.N ) ) THEN
+         INFO = -11
+      ELSE IF( LDVR.LT.1 .OR. ( ILVR .AND. LDVR.LT.N ) ) THEN
+         INFO = -13
+      END IF
+*
+*     Compute workspace
+*      (Note: Comments in the code beginning "Workspace:" describe the
+*       minimal amount of workspace needed at that point in the code,
+*       as well as the preferred amount for good performance.
+*       NB refers to the optimal block size for the immediately
+*       following subroutine, as returned by ILAENV. The workspace is
+*       computed assuming ILO = 1 and IHI = N, the worst case.)
+*
+      LWKMIN = 1
+      IF( INFO.EQ.0 .AND. ( LWORK.GE.1 .OR. LQUERY ) ) THEN
+         LWKOPT = N + N*ILAENV( 1, 'ZGEQRF', ' ', N, 1, N, 0 )
+         LWKMIN = MAX( 1, 2*N )
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( LWORK.LT.LWKMIN .AND. .NOT.LQUERY )
+     $   INFO = -15
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGGEV ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      WORK( 1 ) = LWKOPT
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Get machine constants
+*
+      EPS = DLAMCH( 'E' )*DLAMCH( 'B' )
+      SMLNUM = DLAMCH( 'S' )
+      BIGNUM = ONE / SMLNUM
+      CALL DLABAD( SMLNUM, BIGNUM )
+      SMLNUM = SQRT( SMLNUM ) / EPS
+      BIGNUM = ONE / SMLNUM
+*
+*     Scale A if max element outside range [SMLNUM,BIGNUM]
+*
+      ANRM = ZLANGE( 'M', N, N, A, LDA, RWORK )
+      ILASCL = .FALSE.
+      IF( ANRM.GT.ZERO .AND. ANRM.LT.SMLNUM ) THEN
+         ANRMTO = SMLNUM
+         ILASCL = .TRUE.
+      ELSE IF( ANRM.GT.BIGNUM ) THEN
+         ANRMTO = BIGNUM
+         ILASCL = .TRUE.
+      END IF
+      IF( ILASCL )
+     $   CALL ZLASCL( 'G', 0, 0, ANRM, ANRMTO, N, N, A, LDA, IERR )
+*
+*     Scale B if max element outside range [SMLNUM,BIGNUM]
+*
+      BNRM = ZLANGE( 'M', N, N, B, LDB, RWORK )
+      ILBSCL = .FALSE.
+      IF( BNRM.GT.ZERO .AND. BNRM.LT.SMLNUM ) THEN
+         BNRMTO = SMLNUM
+         ILBSCL = .TRUE.
+      ELSE IF( BNRM.GT.BIGNUM ) THEN
+         BNRMTO = BIGNUM
+         ILBSCL = .TRUE.
+      END IF
+      IF( ILBSCL )
+     $   CALL ZLASCL( 'G', 0, 0, BNRM, BNRMTO, N, N, B, LDB, IERR )
+*
+*     Permute the matrices A, B to isolate eigenvalues if possible
+*     (Real Workspace: need 6*N)
+*
+      ILEFT = 1
+      IRIGHT = N + 1
+      IRWRK = IRIGHT + N
+      CALL ZGGBAL( 'P', N, A, LDA, B, LDB, ILO, IHI, RWORK( ILEFT ),
+     $             RWORK( IRIGHT ), RWORK( IRWRK ), IERR )
+*
+*     Reduce B to triangular form (QR decomposition of B)
+*     (Complex Workspace: need N, prefer N*NB)
+*
+      IROWS = IHI + 1 - ILO
+      IF( ILV ) THEN
+         ICOLS = N + 1 - ILO
+      ELSE
+         ICOLS = IROWS
+      END IF
+      ITAU = 1
+      IWRK = ITAU + IROWS
+      CALL ZGEQRF( IROWS, ICOLS, B( ILO, ILO ), LDB, WORK( ITAU ),
+     $             WORK( IWRK ), LWORK+1-IWRK, IERR )
+*
+*     Apply the orthogonal transformation to matrix A
+*     (Complex Workspace: need N, prefer N*NB)
+*
+      CALL ZUNMQR( 'L', 'C', IROWS, ICOLS, IROWS, B( ILO, ILO ), LDB,
+     $             WORK( ITAU ), A( ILO, ILO ), LDA, WORK( IWRK ),
+     $             LWORK+1-IWRK, IERR )
+*
+*     Initialize VL
+*     (Complex Workspace: need N, prefer N*NB)
+*
+      IF( ILVL ) THEN
+         CALL ZLASET( 'Full', N, N, CZERO, CONE, VL, LDVL )
+         CALL ZLACPY( 'L', IROWS-1, IROWS-1, B( ILO+1, ILO ), LDB,
+     $                VL( ILO+1, ILO ), LDVL )
+         CALL ZUNGQR( IROWS, IROWS, IROWS, VL( ILO, ILO ), LDVL,
+     $                WORK( ITAU ), WORK( IWRK ), LWORK+1-IWRK, IERR )
+      END IF
+*
+*     Initialize VR
+*
+      IF( ILVR )
+     $   CALL ZLASET( 'Full', N, N, CZERO, CONE, VR, LDVR )
+*
+*     Reduce to generalized Hessenberg form
+*
+      IF( ILV ) THEN
+*
+*        Eigenvectors requested -- work on whole matrix.
+*
+         CALL ZGGHRD( JOBVL, JOBVR, N, ILO, IHI, A, LDA, B, LDB, VL,
+     $                LDVL, VR, LDVR, IERR )
+      ELSE
+         CALL ZGGHRD( 'N', 'N', IROWS, 1, IROWS, A( ILO, ILO ), LDA,
+     $                B( ILO, ILO ), LDB, VL, LDVL, VR, LDVR, IERR )
+      END IF
+*
+*     Perform QZ algorithm (Compute eigenvalues, and optionally, the
+*     Schur form and Schur vectors)
+*     (Complex Workspace: need N)
+*     (Real Workspace: need N)
+*
+      IWRK = ITAU
+      IF( ILV ) THEN
+         CHTEMP = 'S'
+      ELSE
+         CHTEMP = 'E'
+      END IF
+      CALL ZHGEQZ( CHTEMP, JOBVL, JOBVR, N, ILO, IHI, A, LDA, B, LDB,
+     $             ALPHA, BETA, VL, LDVL, VR, LDVR, WORK( IWRK ),
+     $             LWORK+1-IWRK, RWORK( IRWRK ), IERR )
+      IF( IERR.NE.0 ) THEN
+         IF( IERR.GT.0 .AND. IERR.LE.N ) THEN
+            INFO = IERR
+         ELSE IF( IERR.GT.N .AND. IERR.LE.2*N ) THEN
+            INFO = IERR - N
+         ELSE
+            INFO = N + 1
+         END IF
+         GO TO 70
+      END IF
+*
+*     Compute Eigenvectors
+*     (Real Workspace: need 2*N)
+*     (Complex Workspace: need 2*N)
+*
+      IF( ILV ) THEN
+         IF( ILVL ) THEN
+            IF( ILVR ) THEN
+               CHTEMP = 'B'
+            ELSE
+               CHTEMP = 'L'
+            END IF
+         ELSE
+            CHTEMP = 'R'
+         END IF
+*
+         CALL ZTGEVC( CHTEMP, 'B', LDUMMA, N, A, LDA, B, LDB, VL, LDVL,
+     $                VR, LDVR, N, IN, WORK( IWRK ), RWORK( IRWRK ),
+     $                IERR )
+         IF( IERR.NE.0 ) THEN
+            INFO = N + 2
+            GO TO 70
+         END IF
+*
+*        Undo balancing on VL and VR and normalization
+*        (Workspace: none needed)
+*
+         IF( ILVL ) THEN
+            CALL ZGGBAK( 'P', 'L', N, ILO, IHI, RWORK( ILEFT ),
+     $                   RWORK( IRIGHT ), N, VL, LDVL, IERR )
+            DO 30 JC = 1, N
+               TEMP = ZERO
+               DO 10 JR = 1, N
+                  TEMP = MAX( TEMP, ABS1( VL( JR, JC ) ) )
+   10          CONTINUE
+               IF( TEMP.LT.SMLNUM )
+     $            GO TO 30
+               TEMP = ONE / TEMP
+               DO 20 JR = 1, N
+                  VL( JR, JC ) = VL( JR, JC )*TEMP
+   20          CONTINUE
+   30       CONTINUE
+         END IF
+         IF( ILVR ) THEN
+            CALL ZGGBAK( 'P', 'R', N, ILO, IHI, RWORK( ILEFT ),
+     $                   RWORK( IRIGHT ), N, VR, LDVR, IERR )
+            DO 60 JC = 1, N
+               TEMP = ZERO
+               DO 40 JR = 1, N
+                  TEMP = MAX( TEMP, ABS1( VR( JR, JC ) ) )
+   40          CONTINUE
+               IF( TEMP.LT.SMLNUM )
+     $            GO TO 60
+               TEMP = ONE / TEMP
+               DO 50 JR = 1, N
+                  VR( JR, JC ) = VR( JR, JC )*TEMP
+   50          CONTINUE
+   60       CONTINUE
+         END IF
+      END IF
+*
+*     Undo scaling if necessary
+*
+      IF( ILASCL )
+     $   CALL ZLASCL( 'G', 0, 0, ANRMTO, ANRM, N, 1, ALPHA, N, IERR )
+*
+      IF( ILBSCL )
+     $   CALL ZLASCL( 'G', 0, 0, BNRMTO, BNRM, N, 1, BETA, N, IERR )
+*
+   70 CONTINUE
+      WORK( 1 ) = LWKOPT
+*
+      RETURN
+*
+*     End of ZGGEV
+*
+      END
+      SUBROUTINE DLABAD( SMALL, LARGE )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      DOUBLE PRECISION   LARGE, SMALL
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLABAD takes as input the values computed by DLAMCH for underflow and
+*  overflow, and returns the square root of each of these values if the
+*  log of LARGE is sufficiently large.  This subroutine is intended to
+*  identify machines with a large exponent range, such as the Crays, and
+*  redefine the underflow and overflow limits to be the square roots of
+*  the values computed by DLAMCH.  This subroutine is needed because
+*  DLAMCH does not compensate for poor arithmetic in the upper half of
+*  the exponent range, as is found on a Cray.
+*
+*  Arguments
+*  =========
+*
+*  SMALL   (input/output) DOUBLE PRECISION
+*          On entry, the underflow threshold as computed by DLAMCH.
+*          On exit, if LOG10(LARGE) is sufficiently large, the square
+*          root of SMALL, otherwise unchanged.
+*
+*  LARGE   (input/output) DOUBLE PRECISION
+*          On entry, the overflow threshold as computed by DLAMCH.
+*          On exit, if LOG10(LARGE) is sufficiently large, the square
+*          root of LARGE, otherwise unchanged.
+*
+*  =====================================================================
+*
+*     .. Intrinsic Functions ..
+      INTRINSIC          LOG10, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+*     If it looks like we're on a Cray, take the square root of
+*     SMALL and LARGE to avoid overflow and underflow problems.
+*
+      IF( LOG10( LARGE ).GT.2000.D0 ) THEN
+         SMALL = SQRT( SMALL )
+         LARGE = SQRT( LARGE )
+      END IF
+*
+      RETURN
+*
+*     End of DLABAD
+*
+      END
+      DOUBLE PRECISION FUNCTION ZLANGE( NORM, M, N, A, LDA, WORK )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          NORM
+      INTEGER            LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   WORK( * )
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZLANGE  returns the value of the one norm,  or the Frobenius norm, or
+*  the  infinity norm,  or the  element of  largest absolute value  of a
+*  complex matrix A.
+*
+*  Description
+*  ===========
+*
+*  ZLANGE returns the value
+*
+*     ZLANGE = ( max(abs(A(i,j))), NORM = 'M' or 'm'
+*              (
+*              ( norm1(A),         NORM = '1', 'O' or 'o'
+*              (
+*              ( normI(A),         NORM = 'I' or 'i'
+*              (
+*              ( normF(A),         NORM = 'F', 'f', 'E' or 'e'
+*
+*  where  norm1  denotes the  one norm of a matrix (maximum column sum),
+*  normI  denotes the  infinity norm  of a matrix  (maximum row sum) and
+*  normF  denotes the  Frobenius norm of a matrix (square root of sum of
+*  squares).  Note that  max(abs(A(i,j)))  is not a  matrix norm.
+*
+*  Arguments
+*  =========
+*
+*  NORM    (input) CHARACTER*1
+*          Specifies the value to be returned in ZLANGE as described
+*          above.
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.  When M = 0,
+*          ZLANGE is set to zero.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.  When N = 0,
+*          ZLANGE is set to zero.
+*
+*  A       (input) COMPLEX*16 array, dimension (LDA,N)
+*          The m by n matrix A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(M,1).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (LWORK),
+*          where LWORK >= M when NORM = 'I'; otherwise, WORK is not
+*          referenced.
+*
+* =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, J
+      DOUBLE PRECISION   SCALE, SUM, VALUE
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           ZLASSQ
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, MAX, MIN, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+      IF( MIN( M, N ).EQ.0 ) THEN
+         VALUE = ZERO
+      ELSE IF( LSAME( NORM, 'M' ) ) THEN
+*
+*        Find max(abs(A(i,j))).
+*
+         VALUE = ZERO
+         DO 20 J = 1, N
+            DO 10 I = 1, M
+               VALUE = MAX( VALUE, ABS( A( I, J ) ) )
+   10       CONTINUE
+   20    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'O' ) ) .OR. ( NORM.EQ.'1' ) ) THEN
+*
+*        Find norm1(A).
+*
+         VALUE = ZERO
+         DO 40 J = 1, N
+            SUM = ZERO
+            DO 30 I = 1, M
+               SUM = SUM + ABS( A( I, J ) )
+   30       CONTINUE
+            VALUE = MAX( VALUE, SUM )
+   40    CONTINUE
+      ELSE IF( LSAME( NORM, 'I' ) ) THEN
+*
+*        Find normI(A).
+*
+         DO 50 I = 1, M
+            WORK( I ) = ZERO
+   50    CONTINUE
+         DO 70 J = 1, N
+            DO 60 I = 1, M
+               WORK( I ) = WORK( I ) + ABS( A( I, J ) )
+   60       CONTINUE
+   70    CONTINUE
+         VALUE = ZERO
+         DO 80 I = 1, M
+            VALUE = MAX( VALUE, WORK( I ) )
+   80    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'F' ) ) .OR. ( LSAME( NORM, 'E' ) ) ) THEN
+*
+*        Find normF(A).
+*
+         SCALE = ZERO
+         SUM = ONE
+         DO 90 J = 1, N
+            CALL ZLASSQ( M, A( 1, J ), 1, SCALE, SUM )
+   90    CONTINUE
+         VALUE = SCALE*SQRT( SUM )
+      END IF
+*
+      ZLANGE = VALUE
+      RETURN
+*
+*     End of ZLANGE
+*
+      END
+      SUBROUTINE ZGGBAL( JOB, N, A, LDA, B, LDB, ILO, IHI, LSCALE,
+     $                   RSCALE, WORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          JOB
+      INTEGER            IHI, ILO, INFO, LDA, LDB, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   LSCALE( * ), RSCALE( * ), WORK( * )
+      COMPLEX*16         A( LDA, * ), B( LDB, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGGBAL balances a pair of general complex matrices (A,B).  This
+*  involves, first, permuting A and B by similarity transformations to
+*  isolate eigenvalues in the first 1 to ILO$-$1 and last IHI+1 to N
+*  elements on the diagonal; and second, applying a diagonal similarity
+*  transformation to rows and columns ILO to IHI to make the rows
+*  and columns as close in norm as possible. Both steps are optional.
+*
+*  Balancing may reduce the 1-norm of the matrices, and improve the
+*  accuracy of the computed eigenvalues and/or eigenvectors in the
+*  generalized eigenvalue problem A*x = lambda*B*x.
+*
+*  Arguments
+*  =========
+*
+*  JOB     (input) CHARACTER*1
+*          Specifies the operations to be performed on A and B:
+*          = 'N':  none:  simply set ILO = 1, IHI = N, LSCALE(I) = 1.0
+*                  and RSCALE(I) = 1.0 for i=1,...,N;
+*          = 'P':  permute only;
+*          = 'S':  scale only;
+*          = 'B':  both permute and scale.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A and B.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the input matrix A.
+*          On exit, A is overwritten by the balanced matrix.
+*          If JOB = 'N', A is not referenced.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A. LDA >= max(1,N).
+*
+*  B       (input/output) COMPLEX*16 array, dimension (LDB,N)
+*          On entry, the input matrix B.
+*          On exit, B is overwritten by the balanced matrix.
+*          If JOB = 'N', B is not referenced.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B. LDB >= max(1,N).
+*
+*  ILO     (output) INTEGER
+*  IHI     (output) INTEGER
+*          ILO and IHI are set to integers such that on exit
+*          A(i,j) = 0 and B(i,j) = 0 if i > j and
+*          j = 1,...,ILO-1 or i = IHI+1,...,N.
+*          If JOB = 'N' or 'S', ILO = 1 and IHI = N.
+*
+*  LSCALE  (output) DOUBLE PRECISION array, dimension (N)
+*          Details of the permutations and scaling factors applied
+*          to the left side of A and B.  If P(j) is the index of the
+*          row interchanged with row j, and D(j) is the scaling factor
+*          applied to row j, then
+*            LSCALE(j) = P(j)    for J = 1,...,ILO-1
+*                      = D(j)    for J = ILO,...,IHI
+*                      = P(j)    for J = IHI+1,...,N.
+*          The order in which the interchanges are made is N to IHI+1,
+*          then 1 to ILO-1.
+*
+*  RSCALE  (output) DOUBLE PRECISION array, dimension (N)
+*          Details of the permutations and scaling factors applied
+*          to the right side of A and B.  If P(j) is the index of the
+*          column interchanged with column j, and D(j) is the scaling
+*          factor applied to column j, then
+*            RSCALE(j) = P(j)    for J = 1,...,ILO-1
+*                      = D(j)    for J = ILO,...,IHI
+*                      = P(j)    for J = IHI+1,...,N.
+*          The order in which the interchanges are made is N to IHI+1,
+*          then 1 to ILO-1.
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (6*N)
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*
+*  Further Details
+*  ===============
+*
+*  See R.C. WARD, Balancing the generalized eigenvalue problem,
+*                 SIAM J. Sci. Stat. Comp. 2 (1981), 141-152.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, HALF, ONE
+      PARAMETER          ( ZERO = 0.0D+0, HALF = 0.5D+0, ONE = 1.0D+0 )
+      DOUBLE PRECISION   THREE, SCLFAC
+      PARAMETER          ( THREE = 3.0D+0, SCLFAC = 1.0D+1 )
+      COMPLEX*16         CZERO
+      PARAMETER          ( CZERO = ( 0.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, ICAB, IFLOW, IP1, IR, IRAB, IT, J, JC, JP1,
+     $                   K, KOUNT, L, LCAB, LM1, LRAB, LSFMAX, LSFMIN,
+     $                   M, NR, NRP2
+      DOUBLE PRECISION   ALPHA, BASL, BETA, CAB, CMAX, COEF, COEF2,
+     $                   COEF5, COR, EW, EWC, GAMMA, PGAMMA, RAB, SFMAX,
+     $                   SFMIN, SUM, T, TA, TB, TC
+      COMPLEX*16         CDUM
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            IZAMAX
+      DOUBLE PRECISION   DDOT, DLAMCH
+      EXTERNAL           LSAME, IZAMAX, DDOT, DLAMCH
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DAXPY, DSCAL, XERBLA, ZDSCAL, ZSWAP
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, DBLE, DIMAG, INT, LOG10, MAX, MIN, SIGN
+*     ..
+*     .. Statement Functions ..
+      DOUBLE PRECISION   CABS1
+*     ..
+*     .. Statement Function definitions ..
+      CABS1( CDUM ) = ABS( DBLE( CDUM ) ) + ABS( DIMAG( CDUM ) )
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters
+*
+      INFO = 0
+      IF( .NOT.LSAME( JOB, 'N' ) .AND. .NOT.LSAME( JOB, 'P' ) .AND.
+     $    .NOT.LSAME( JOB, 'S' ) .AND. .NOT.LSAME( JOB, 'B' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGGBAL', -INFO )
+         RETURN
+      END IF
+*
+      K = 1
+      L = N
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+      IF( LSAME( JOB, 'N' ) ) THEN
+         ILO = 1
+         IHI = N
+         DO 10 I = 1, N
+            LSCALE( I ) = ONE
+            RSCALE( I ) = ONE
+   10    CONTINUE
+         RETURN
+      END IF
+*
+      IF( K.EQ.L ) THEN
+         ILO = 1
+         IHI = 1
+         LSCALE( 1 ) = ONE
+         RSCALE( 1 ) = ONE
+         RETURN
+      END IF
+*
+      IF( LSAME( JOB, 'S' ) )
+     $   GO TO 190
+*
+      GO TO 30
+*
+*     Permute the matrices A and B to isolate the eigenvalues.
+*
+*     Find row with one nonzero in columns 1 through L
+*
+   20 CONTINUE
+      L = LM1
+      IF( L.NE.1 )
+     $   GO TO 30
+*
+      RSCALE( 1 ) = 1
+      LSCALE( 1 ) = 1
+      GO TO 190
+*
+   30 CONTINUE
+      LM1 = L - 1
+      DO 80 I = L, 1, -1
+         DO 40 J = 1, LM1
+            JP1 = J + 1
+            IF( A( I, J ).NE.CZERO .OR. B( I, J ).NE.CZERO )
+     $         GO TO 50
+   40    CONTINUE
+         J = L
+         GO TO 70
+*
+   50    CONTINUE
+         DO 60 J = JP1, L
+            IF( A( I, J ).NE.CZERO .OR. B( I, J ).NE.CZERO )
+     $         GO TO 80
+   60    CONTINUE
+         J = JP1 - 1
+*
+   70    CONTINUE
+         M = L
+         IFLOW = 1
+         GO TO 160
+   80 CONTINUE
+      GO TO 100
+*
+*     Find column with one nonzero in rows K through N
+*
+   90 CONTINUE
+      K = K + 1
+*
+  100 CONTINUE
+      DO 150 J = K, L
+         DO 110 I = K, LM1
+            IP1 = I + 1
+            IF( A( I, J ).NE.CZERO .OR. B( I, J ).NE.CZERO )
+     $         GO TO 120
+  110    CONTINUE
+         I = L
+         GO TO 140
+  120    CONTINUE
+         DO 130 I = IP1, L
+            IF( A( I, J ).NE.CZERO .OR. B( I, J ).NE.CZERO )
+     $         GO TO 150
+  130    CONTINUE
+         I = IP1 - 1
+  140    CONTINUE
+         M = K
+         IFLOW = 2
+         GO TO 160
+  150 CONTINUE
+      GO TO 190
+*
+*     Permute rows M and I
+*
+  160 CONTINUE
+      LSCALE( M ) = I
+      IF( I.EQ.M )
+     $   GO TO 170
+      CALL ZSWAP( N-K+1, A( I, K ), LDA, A( M, K ), LDA )
+      CALL ZSWAP( N-K+1, B( I, K ), LDB, B( M, K ), LDB )
+*
+*     Permute columns M and J
+*
+  170 CONTINUE
+      RSCALE( M ) = J
+      IF( J.EQ.M )
+     $   GO TO 180
+      CALL ZSWAP( L, A( 1, J ), 1, A( 1, M ), 1 )
+      CALL ZSWAP( L, B( 1, J ), 1, B( 1, M ), 1 )
+*
+  180 CONTINUE
+      GO TO ( 20, 90 )IFLOW
+*
+  190 CONTINUE
+      ILO = K
+      IHI = L
+*
+      IF( ILO.EQ.IHI )
+     $   RETURN
+*
+      IF( LSAME( JOB, 'P' ) )
+     $   RETURN
+*
+*     Balance the submatrix in rows ILO to IHI.
+*
+      NR = IHI - ILO + 1
+      DO 200 I = ILO, IHI
+         RSCALE( I ) = ZERO
+         LSCALE( I ) = ZERO
+*
+         WORK( I ) = ZERO
+         WORK( I+N ) = ZERO
+         WORK( I+2*N ) = ZERO
+         WORK( I+3*N ) = ZERO
+         WORK( I+4*N ) = ZERO
+         WORK( I+5*N ) = ZERO
+  200 CONTINUE
+*
+*     Compute right side vector in resulting linear equations
+*
+      BASL = LOG10( SCLFAC )
+      DO 240 I = ILO, IHI
+         DO 230 J = ILO, IHI
+            IF( A( I, J ).EQ.CZERO ) THEN
+               TA = ZERO
+               GO TO 210
+            END IF
+            TA = LOG10( CABS1( A( I, J ) ) ) / BASL
+*
+  210       CONTINUE
+            IF( B( I, J ).EQ.CZERO ) THEN
+               TB = ZERO
+               GO TO 220
+            END IF
+            TB = LOG10( CABS1( B( I, J ) ) ) / BASL
+*
+  220       CONTINUE
+            WORK( I+4*N ) = WORK( I+4*N ) - TA - TB
+            WORK( J+5*N ) = WORK( J+5*N ) - TA - TB
+  230    CONTINUE
+  240 CONTINUE
+*
+      COEF = ONE / DBLE( 2*NR )
+      COEF2 = COEF*COEF
+      COEF5 = HALF*COEF2
+      NRP2 = NR + 2
+      BETA = ZERO
+      IT = 1
+*
+*     Start generalized conjugate gradient iteration
+*
+  250 CONTINUE
+*
+      GAMMA = DDOT( NR, WORK( ILO+4*N ), 1, WORK( ILO+4*N ), 1 ) +
+     $        DDOT( NR, WORK( ILO+5*N ), 1, WORK( ILO+5*N ), 1 )
+*
+      EW = ZERO
+      EWC = ZERO
+      DO 260 I = ILO, IHI
+         EW = EW + WORK( I+4*N )
+         EWC = EWC + WORK( I+5*N )
+  260 CONTINUE
+*
+      GAMMA = COEF*GAMMA - COEF2*( EW**2+EWC**2 ) - COEF5*( EW-EWC )**2
+      IF( GAMMA.EQ.ZERO )
+     $   GO TO 350
+      IF( IT.NE.1 )
+     $   BETA = GAMMA / PGAMMA
+      T = COEF5*( EWC-THREE*EW )
+      TC = COEF5*( EW-THREE*EWC )
+*
+      CALL DSCAL( NR, BETA, WORK( ILO ), 1 )
+      CALL DSCAL( NR, BETA, WORK( ILO+N ), 1 )
+*
+      CALL DAXPY( NR, COEF, WORK( ILO+4*N ), 1, WORK( ILO+N ), 1 )
+      CALL DAXPY( NR, COEF, WORK( ILO+5*N ), 1, WORK( ILO ), 1 )
+*
+      DO 270 I = ILO, IHI
+         WORK( I ) = WORK( I ) + TC
+         WORK( I+N ) = WORK( I+N ) + T
+  270 CONTINUE
+*
+*     Apply matrix to vector
+*
+      DO 300 I = ILO, IHI
+         KOUNT = 0
+         SUM = ZERO
+         DO 290 J = ILO, IHI
+            IF( A( I, J ).EQ.CZERO )
+     $         GO TO 280
+            KOUNT = KOUNT + 1
+            SUM = SUM + WORK( J )
+  280       CONTINUE
+            IF( B( I, J ).EQ.CZERO )
+     $         GO TO 290
+            KOUNT = KOUNT + 1
+            SUM = SUM + WORK( J )
+  290    CONTINUE
+         WORK( I+2*N ) = DBLE( KOUNT )*WORK( I+N ) + SUM
+  300 CONTINUE
+*
+      DO 330 J = ILO, IHI
+         KOUNT = 0
+         SUM = ZERO
+         DO 320 I = ILO, IHI
+            IF( A( I, J ).EQ.CZERO )
+     $         GO TO 310
+            KOUNT = KOUNT + 1
+            SUM = SUM + WORK( I+N )
+  310       CONTINUE
+            IF( B( I, J ).EQ.CZERO )
+     $         GO TO 320
+            KOUNT = KOUNT + 1
+            SUM = SUM + WORK( I+N )
+  320    CONTINUE
+         WORK( J+3*N ) = DBLE( KOUNT )*WORK( J ) + SUM
+  330 CONTINUE
+*
+      SUM = DDOT( NR, WORK( ILO+N ), 1, WORK( ILO+2*N ), 1 ) +
+     $      DDOT( NR, WORK( ILO ), 1, WORK( ILO+3*N ), 1 )
+      ALPHA = GAMMA / SUM
+*
+*     Determine correction to current iteration
+*
+      CMAX = ZERO
+      DO 340 I = ILO, IHI
+         COR = ALPHA*WORK( I+N )
+         IF( ABS( COR ).GT.CMAX )
+     $      CMAX = ABS( COR )
+         LSCALE( I ) = LSCALE( I ) + COR
+         COR = ALPHA*WORK( I )
+         IF( ABS( COR ).GT.CMAX )
+     $      CMAX = ABS( COR )
+         RSCALE( I ) = RSCALE( I ) + COR
+  340 CONTINUE
+      IF( CMAX.LT.HALF )
+     $   GO TO 350
+*
+      CALL DAXPY( NR, -ALPHA, WORK( ILO+2*N ), 1, WORK( ILO+4*N ), 1 )
+      CALL DAXPY( NR, -ALPHA, WORK( ILO+3*N ), 1, WORK( ILO+5*N ), 1 )
+*
+      PGAMMA = GAMMA
+      IT = IT + 1
+      IF( IT.LE.NRP2 )
+     $   GO TO 250
+*
+*     End generalized conjugate gradient iteration
+*
+  350 CONTINUE
+      SFMIN = DLAMCH( 'S' )
+      SFMAX = ONE / SFMIN
+      LSFMIN = INT( LOG10( SFMIN ) / BASL+ONE )
+      LSFMAX = INT( LOG10( SFMAX ) / BASL )
+      DO 360 I = ILO, IHI
+         IRAB = IZAMAX( N-ILO+1, A( I, ILO ), LDA )
+         RAB = ABS( A( I, IRAB+ILO-1 ) )
+         IRAB = IZAMAX( N-ILO+1, B( I, ILO ), LDA )
+         RAB = MAX( RAB, ABS( B( I, IRAB+ILO-1 ) ) )
+         LRAB = INT( LOG10( RAB+SFMIN ) / BASL+ONE )
+         IR = LSCALE( I ) + SIGN( HALF, LSCALE( I ) )
+         IR = MIN( MAX( IR, LSFMIN ), LSFMAX, LSFMAX-LRAB )
+         LSCALE( I ) = SCLFAC**IR
+         ICAB = IZAMAX( IHI, A( 1, I ), 1 )
+         CAB = ABS( A( ICAB, I ) )
+         ICAB = IZAMAX( IHI, B( 1, I ), 1 )
+         CAB = MAX( CAB, ABS( B( ICAB, I ) ) )
+         LCAB = INT( LOG10( CAB+SFMIN ) / BASL+ONE )
+         JC = RSCALE( I ) + SIGN( HALF, RSCALE( I ) )
+         JC = MIN( MAX( JC, LSFMIN ), LSFMAX, LSFMAX-LCAB )
+         RSCALE( I ) = SCLFAC**JC
+  360 CONTINUE
+*
+*     Row scaling of matrices A and B
+*
+      DO 370 I = ILO, IHI
+         CALL ZDSCAL( N-ILO+1, LSCALE( I ), A( I, ILO ), LDA )
+         CALL ZDSCAL( N-ILO+1, LSCALE( I ), B( I, ILO ), LDB )
+  370 CONTINUE
+*
+*     Column scaling of matrices A and B
+*
+      DO 380 J = ILO, IHI
+         CALL ZDSCAL( IHI, RSCALE( J ), A( 1, J ), 1 )
+         CALL ZDSCAL( IHI, RSCALE( J ), B( 1, J ), 1 )
+  380 CONTINUE
+*
+      RETURN
+*
+*     End of ZGGBAL
+*
+      END
+      SUBROUTINE ZGEQRF( M, N, A, LDA, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, LWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      COMPLEX*16         A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGEQRF computes a QR factorization of a complex M-by-N matrix A:
+*  A = Q * R.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the M-by-N matrix A.
+*          On exit, the elements on and above the diagonal of the array
+*          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+*          upper triangular if m >= n); the elements below the diagonal,
+*          with the array TAU, represent the unitary matrix Q as a
+*          product of min(m,n) elementary reflectors (see Further
+*          Details).
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  TAU     (output) COMPLEX*16 array, dimension (min(M,N))
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace/output) COMPLEX*16 array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,N).
+*          For optimum performance LWORK >= N*NB, where NB is
+*          the optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  The matrix Q is represented as a product of elementary reflectors
+*
+*     Q = H(1) H(2) . . . H(k), where k = min(m,n).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a complex scalar, and v is a complex vector with
+*  v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
+*  and tau in TAU(i).
+*
+*  =====================================================================
+*
+*     .. Local Scalars ..
+      LOGICAL            LQUERY
+      INTEGER            I, IB, IINFO, IWS, K, LDWORK, LWKOPT, NB,
+     $                   NBMIN, NX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZGEQR2, ZLARFB, ZLARFT
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      NB = ILAENV( 1, 'ZGEQRF', ' ', M, N, -1, -1 )
+      LWKOPT = N*NB
+      WORK( 1 ) = LWKOPT
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      ELSE IF( LWORK.LT.MAX( 1, N ) .AND. .NOT.LQUERY ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGEQRF', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      K = MIN( M, N )
+      IF( K.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NBMIN = 2
+      NX = 0
+      IWS = N
+      IF( NB.GT.1 .AND. NB.LT.K ) THEN
+*
+*        Determine when to cross over from blocked to unblocked code.
+*
+         NX = MAX( 0, ILAENV( 3, 'ZGEQRF', ' ', M, N, -1, -1 ) )
+         IF( NX.LT.K ) THEN
+*
+*           Determine if workspace is large enough for blocked code.
+*
+            LDWORK = N
+            IWS = LDWORK*NB
+            IF( LWORK.LT.IWS ) THEN
+*
+*              Not enough workspace to use optimal NB:  reduce NB and
+*              determine the minimum value of NB.
+*
+               NB = LWORK / LDWORK
+               NBMIN = MAX( 2, ILAENV( 2, 'ZGEQRF', ' ', M, N, -1,
+     $                 -1 ) )
+            END IF
+         END IF
+      END IF
+*
+      IF( NB.GE.NBMIN .AND. NB.LT.K .AND. NX.LT.K ) THEN
+*
+*        Use blocked code initially
+*
+         DO 10 I = 1, K - NX, NB
+            IB = MIN( K-I+1, NB )
+*
+*           Compute the QR factorization of the current block
+*           A(i:m,i:i+ib-1)
+*
+            CALL ZGEQR2( M-I+1, IB, A( I, I ), LDA, TAU( I ), WORK,
+     $                   IINFO )
+            IF( I+IB.LE.N ) THEN
+*
+*              Form the triangular factor of the block reflector
+*              H = H(i) H(i+1) . . . H(i+ib-1)
+*
+               CALL ZLARFT( 'Forward', 'Columnwise', M-I+1, IB,
+     $                      A( I, I ), LDA, TAU( I ), WORK, LDWORK )
+*
+*              Apply H' to A(i:m,i+ib:n) from the left
+*
+               CALL ZLARFB( 'Left', 'Conjugate transpose', 'Forward',
+     $                      'Columnwise', M-I+1, N-I-IB+1, IB,
+     $                      A( I, I ), LDA, WORK, LDWORK, A( I, I+IB ),
+     $                      LDA, WORK( IB+1 ), LDWORK )
+            END IF
+   10    CONTINUE
+      ELSE
+         I = 1
+      END IF
+*
+*     Use unblocked code to factor the last or only block.
+*
+      IF( I.LE.K )
+     $   CALL ZGEQR2( M-I+1, N-I+1, A( I, I ), LDA, TAU( I ), WORK,
+     $                IINFO )
+*
+      WORK( 1 ) = IWS
+      RETURN
+*
+*     End of ZGEQRF
+*
+      END
+      SUBROUTINE ZGGHRD( COMPQ, COMPZ, N, ILO, IHI, A, LDA, B, LDB, Q,
+     $                   LDQ, Z, LDZ, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          COMPQ, COMPZ
+      INTEGER            IHI, ILO, INFO, LDA, LDB, LDQ, LDZ, N
+*     ..
+*     .. Array Arguments ..
+      COMPLEX*16         A( LDA, * ), B( LDB, * ), Q( LDQ, * ),
+     $                   Z( LDZ, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGGHRD reduces a pair of complex matrices (A,B) to generalized upper
+*  Hessenberg form using unitary transformations, where A is a
+*  general matrix and B is upper triangular:  Q' * A * Z = H and
+*  Q' * B * Z = T, where H is upper Hessenberg, T is upper triangular,
+*  and Q and Z are unitary, and ' means conjugate transpose.
+*
+*  The unitary matrices Q and Z are determined as products of Givens
+*  rotations.  They may either be formed explicitly, or they may be
+*  postmultiplied into input matrices Q1 and Z1, so that
+*
+*       Q1 * A * Z1' = (Q1*Q) * H * (Z1*Z)'
+*       Q1 * B * Z1' = (Q1*Q) * T * (Z1*Z)'
+*
+*  Arguments
+*  =========
+*
+*  COMPQ   (input) CHARACTER*1
+*          = 'N': do not compute Q;
+*          = 'I': Q is initialized to the unit matrix, and the
+*                 unitary matrix Q is returned;
+*          = 'V': Q must contain a unitary matrix Q1 on entry,
+*                 and the product Q1*Q is returned.
+*
+*  COMPZ   (input) CHARACTER*1
+*          = 'N': do not compute Q;
+*          = 'I': Q is initialized to the unit matrix, and the
+*                 unitary matrix Q is returned;
+*          = 'V': Q must contain a unitary matrix Q1 on entry,
+*                 and the product Q1*Q is returned.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A and B.  N >= 0.
+*
+*  ILO     (input) INTEGER
+*  IHI     (input) INTEGER
+*          It is assumed that A is already upper triangular in rows and
+*          columns 1:ILO-1 and IHI+1:N.  ILO and IHI are normally set
+*          by a previous call to ZGGBAL; otherwise they should be set
+*          to 1 and N respectively.
+*          1 <= ILO <= IHI <= N, if N > 0; ILO=1 and IHI=0, if N=0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA, N)
+*          On entry, the N-by-N general matrix to be reduced.
+*          On exit, the upper triangle and the first subdiagonal of A
+*          are overwritten with the upper Hessenberg matrix H, and the
+*          rest is set to zero.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  B       (input/output) COMPLEX*16 array, dimension (LDB, N)
+*          On entry, the N-by-N upper triangular matrix B.
+*          On exit, the upper triangular matrix T = Q' B Z.  The
+*          elements below the diagonal are set to zero.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  Q       (input/output) COMPLEX*16 array, dimension (LDQ, N)
+*          If COMPQ='N':  Q is not referenced.
+*          If COMPQ='I':  on entry, Q need not be set, and on exit it
+*                         contains the unitary matrix Q, where Q'
+*                         is the product of the Givens transformations
+*                         which are applied to A and B on the left.
+*          If COMPQ='V':  on entry, Q must contain a unitary matrix
+*                         Q1, and on exit this is overwritten by Q1*Q.
+*
+*  LDQ     (input) INTEGER
+*          The leading dimension of the array Q.
+*          LDQ >= N if COMPQ='V' or 'I'; LDQ >= 1 otherwise.
+*
+*  Z       (input/output) COMPLEX*16 array, dimension (LDZ, N)
+*          If COMPZ='N':  Z is not referenced.
+*          If COMPZ='I':  on entry, Z need not be set, and on exit it
+*                         contains the unitary matrix Z, which is
+*                         the product of the Givens transformations
+*                         which are applied to A and B on the right.
+*          If COMPZ='V':  on entry, Z must contain a unitary matrix
+*                         Z1, and on exit this is overwritten by Z1*Z.
+*
+*  LDZ     (input) INTEGER
+*          The leading dimension of the array Z.
+*          LDZ >= N if COMPZ='V' or 'I'; LDZ >= 1 otherwise.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit.
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*
+*  Further Details
+*  ===============
+*
+*  This routine reduces A to Hessenberg and B to triangular form by
+*  an unblocked reduction, as described in _Matrix_Computations_,
+*  by Golub and van Loan (Johns Hopkins Press).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      COMPLEX*16         CONE, CZERO
+      PARAMETER          ( CONE = ( 1.0D+0, 0.0D+0 ),
+     $                   CZERO = ( 0.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            ILQ, ILZ
+      INTEGER            ICOMPQ, ICOMPZ, JCOL, JROW
+      DOUBLE PRECISION   C
+      COMPLEX*16         CTEMP, S
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZLARTG, ZLASET, ZROT
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          DCONJG, MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Decode COMPQ
+*
+      IF( LSAME( COMPQ, 'N' ) ) THEN
+         ILQ = .FALSE.
+         ICOMPQ = 1
+      ELSE IF( LSAME( COMPQ, 'V' ) ) THEN
+         ILQ = .TRUE.
+         ICOMPQ = 2
+      ELSE IF( LSAME( COMPQ, 'I' ) ) THEN
+         ILQ = .TRUE.
+         ICOMPQ = 3
+      ELSE
+         ICOMPQ = 0
+      END IF
+*
+*     Decode COMPZ
+*
+      IF( LSAME( COMPZ, 'N' ) ) THEN
+         ILZ = .FALSE.
+         ICOMPZ = 1
+      ELSE IF( LSAME( COMPZ, 'V' ) ) THEN
+         ILZ = .TRUE.
+         ICOMPZ = 2
+      ELSE IF( LSAME( COMPZ, 'I' ) ) THEN
+         ILZ = .TRUE.
+         ICOMPZ = 3
+      ELSE
+         ICOMPZ = 0
+      END IF
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      IF( ICOMPQ.LE.0 ) THEN
+         INFO = -1
+      ELSE IF( ICOMPZ.LE.0 ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( ILO.LT.1 ) THEN
+         INFO = -4
+      ELSE IF( IHI.GT.N .OR. IHI.LT.ILO-1 ) THEN
+         INFO = -5
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -9
+      ELSE IF( ( ILQ .AND. LDQ.LT.N ) .OR. LDQ.LT.1 ) THEN
+         INFO = -11
+      ELSE IF( ( ILZ .AND. LDZ.LT.N ) .OR. LDZ.LT.1 ) THEN
+         INFO = -13
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGGHRD', -INFO )
+         RETURN
+      END IF
+*
+*     Initialize Q and Z if desired.
+*
+      IF( ICOMPQ.EQ.3 )
+     $   CALL ZLASET( 'Full', N, N, CZERO, CONE, Q, LDQ )
+      IF( ICOMPZ.EQ.3 )
+     $   CALL ZLASET( 'Full', N, N, CZERO, CONE, Z, LDZ )
+*
+*     Quick return if possible
+*
+      IF( N.LE.1 )
+     $   RETURN
+*
+*     Zero out lower triangle of B
+*
+      DO 20 JCOL = 1, N - 1
+         DO 10 JROW = JCOL + 1, N
+            B( JROW, JCOL ) = CZERO
+   10    CONTINUE
+   20 CONTINUE
+*
+*     Reduce A and B
+*
+      DO 40 JCOL = ILO, IHI - 2
+*
+         DO 30 JROW = IHI, JCOL + 2, -1
+*
+*           Step 1: rotate rows JROW-1, JROW to kill A(JROW,JCOL)
+*
+            CTEMP = A( JROW-1, JCOL )
+            CALL ZLARTG( CTEMP, A( JROW, JCOL ), C, S,
+     $                   A( JROW-1, JCOL ) )
+            A( JROW, JCOL ) = CZERO
+            CALL ZROT( N-JCOL, A( JROW-1, JCOL+1 ), LDA,
+     $                 A( JROW, JCOL+1 ), LDA, C, S )
+            CALL ZROT( N+2-JROW, B( JROW-1, JROW-1 ), LDB,
+     $                 B( JROW, JROW-1 ), LDB, C, S )
+            IF( ILQ )
+     $         CALL ZROT( N, Q( 1, JROW-1 ), 1, Q( 1, JROW ), 1, C,
+     $                    DCONJG( S ) )
+*
+*           Step 2: rotate columns JROW, JROW-1 to kill B(JROW,JROW-1)
+*
+            CTEMP = B( JROW, JROW )
+            CALL ZLARTG( CTEMP, B( JROW, JROW-1 ), C, S,
+     $                   B( JROW, JROW ) )
+            B( JROW, JROW-1 ) = CZERO
+            CALL ZROT( IHI, A( 1, JROW ), 1, A( 1, JROW-1 ), 1, C, S )
+            CALL ZROT( JROW-1, B( 1, JROW ), 1, B( 1, JROW-1 ), 1, C,
+     $                 S )
+            IF( ILZ )
+     $         CALL ZROT( N, Z( 1, JROW ), 1, Z( 1, JROW-1 ), 1, C, S )
+   30    CONTINUE
+   40 CONTINUE
+*
+      RETURN
+*
+*     End of ZGGHRD
+*
+      END
+      SUBROUTINE ZHGEQZ( JOB, COMPQ, COMPZ, N, ILO, IHI, A, LDA, B, LDB,
+     $                   ALPHA, BETA, Q, LDQ, Z, LDZ, WORK, LWORK,
+     $                   RWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          COMPQ, COMPZ, JOB
+      INTEGER            IHI, ILO, INFO, LDA, LDB, LDQ, LDZ, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   RWORK( * )
+      COMPLEX*16         A( LDA, * ), ALPHA( * ), B( LDB, * ),
+     $                   BETA( * ), Q( LDQ, * ), WORK( * ), Z( LDZ, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZHGEQZ implements a single-shift version of the QZ
+*  method for finding the generalized eigenvalues w(i)=ALPHA(i)/BETA(i)
+*  of the equation
+*
+*       det( A - w(i) B ) = 0
+*
+*  If JOB='S', then the pair (A,B) is simultaneously
+*  reduced to Schur form (i.e., A and B are both upper triangular) by
+*  applying one unitary tranformation (usually called Q) on the left and
+*  another (usually called Z) on the right.  The diagonal elements of
+*  A are then ALPHA(1),...,ALPHA(N), and of B are BETA(1),...,BETA(N).
+*
+*  If JOB='S' and COMPQ and COMPZ are 'V' or 'I', then the unitary
+*  transformations used to reduce (A,B) are accumulated into the arrays
+*  Q and Z s.t.:
+*
+*       Q(in) A(in) Z(in)* = Q(out) A(out) Z(out)*
+*       Q(in) B(in) Z(in)* = Q(out) B(out) Z(out)*
+*
+*  Ref: C.B. Moler & G.W. Stewart, "An Algorithm for Generalized Matrix
+*       Eigenvalue Problems", SIAM J. Numer. Anal., 10(1973),
+*       pp. 241--256.
+*
+*  Arguments
+*  =========
+*
+*  JOB     (input) CHARACTER*1
+*          = 'E': compute only ALPHA and BETA.  A and B will not
+*                 necessarily be put into generalized Schur form.
+*          = 'S': put A and B into generalized Schur form, as well
+*                 as computing ALPHA and BETA.
+*
+*  COMPQ   (input) CHARACTER*1
+*          = 'N': do not modify Q.
+*          = 'V': multiply the array Q on the right by the conjugate
+*                 transpose of the unitary tranformation that is
+*                 applied to the left side of A and B to reduce them
+*                 to Schur form.
+*          = 'I': like COMPQ='V', except that Q will be initialized to
+*                 the identity first.
+*
+*  COMPZ   (input) CHARACTER*1
+*          = 'N': do not modify Z.
+*          = 'V': multiply the array Z on the right by the unitary
+*                 tranformation that is applied to the right side of
+*                 A and B to reduce them to Schur form.
+*          = 'I': like COMPZ='V', except that Z will be initialized to
+*                 the identity first.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A, B, Q, and Z.  N >= 0.
+*
+*  ILO     (input) INTEGER
+*  IHI     (input) INTEGER
+*          It is assumed that A is already upper triangular in rows and
+*          columns 1:ILO-1 and IHI+1:N.
+*          1 <= ILO <= IHI <= N, if N > 0; ILO=1 and IHI=0, if N=0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA, N)
+*          On entry, the N-by-N upper Hessenberg matrix A.  Elements
+*          below the subdiagonal must be zero.
+*          If JOB='S', then on exit A and B will have been
+*             simultaneously reduced to upper triangular form.
+*          If JOB='E', then on exit A will have been destroyed.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max( 1, N ).
+*
+*  B       (input/output) COMPLEX*16 array, dimension (LDB, N)
+*          On entry, the N-by-N upper triangular matrix B.  Elements
+*          below the diagonal must be zero.
+*          If JOB='S', then on exit A and B will have been
+*             simultaneously reduced to upper triangular form.
+*          If JOB='E', then on exit B will have been destroyed.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max( 1, N ).
+*
+*  ALPHA   (output) COMPLEX*16 array, dimension (N)
+*          The diagonal elements of A when the pair (A,B) has been
+*          reduced to Schur form.  ALPHA(i)/BETA(i) i=1,...,N
+*          are the generalized eigenvalues.
+*
+*  BETA    (output) COMPLEX*16 array, dimension (N)
+*          The diagonal elements of B when the pair (A,B) has been
+*          reduced to Schur form.  ALPHA(i)/BETA(i) i=1,...,N
+*          are the generalized eigenvalues.  A and B are normalized
+*          so that BETA(1),...,BETA(N) are non-negative real numbers.
+*
+*  Q       (input/output) COMPLEX*16 array, dimension (LDQ, N)
+*          If COMPQ='N', then Q will not be referenced.
+*          If COMPQ='V' or 'I', then the conjugate transpose of the
+*             unitary transformations which are applied to A and B on
+*             the left will be applied to the array Q on the right.
+*
+*  LDQ     (input) INTEGER
+*          The leading dimension of the array Q.  LDQ >= 1.
+*          If COMPQ='V' or 'I', then LDQ >= N.
+*
+*  Z       (input/output) COMPLEX*16 array, dimension (LDZ, N)
+*          If COMPZ='N', then Z will not be referenced.
+*          If COMPZ='V' or 'I', then the unitary transformations which
+*             are applied to A and B on the right will be applied to the
+*             array Z on the right.
+*
+*  LDZ     (input) INTEGER
+*          The leading dimension of the array Z.  LDZ >= 1.
+*          If COMPZ='V' or 'I', then LDZ >= N.
+*
+*  WORK    (workspace/output) COMPLEX*16 array, dimension (LWORK)
+*          On exit, if INFO >= 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,N).
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  RWORK   (workspace) DOUBLE PRECISION array, dimension (N)
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value
+*          = 1,...,N: the QZ iteration did not converge.  (A,B) is not
+*                     in Schur form, but ALPHA(i) and BETA(i),
+*                     i=INFO+1,...,N should be correct.
+*          = N+1,...,2*N: the shift calculation failed.  (A,B) is not
+*                     in Schur form, but ALPHA(i) and BETA(i),
+*                     i=INFO-N+1,...,N should be correct.
+*          > 2*N:     various "impossible" errors.
+*
+*  Further Details
+*  ===============
+*
+*  We assume that complex ABS works as long as its value is less than
+*  overflow.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      COMPLEX*16         CZERO, CONE
+      PARAMETER          ( CZERO = ( 0.0D+0, 0.0D+0 ),
+     $                   CONE = ( 1.0D+0, 0.0D+0 ) )
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D+0, ONE = 1.0D+0 )
+      DOUBLE PRECISION   HALF
+      PARAMETER          ( HALF = 0.5D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            ILAZR2, ILAZRO, ILQ, ILSCHR, ILZ, LQUERY
+      INTEGER            ICOMPQ, ICOMPZ, IFIRST, IFRSTM, IITER, ILAST,
+     $                   ILASTM, IN, ISCHUR, ISTART, J, JC, JCH, JITER,
+     $                   JR, MAXIT
+      DOUBLE PRECISION   ABSB, ANORM, ASCALE, ATOL, BNORM, BSCALE, BTOL,
+     $                   C, SAFMIN, TEMP, TEMP2, TEMPR, ULP
+      COMPLEX*16         ABI22, AD11, AD12, AD21, AD22, CTEMP, CTEMP2,
+     $                   CTEMP3, ESHIFT, RTDISC, S, SHIFT, SIGNBC, T,
+     $                   U12, X
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      DOUBLE PRECISION   DLAMCH, ZLANHS
+      EXTERNAL           LSAME, DLAMCH, ZLANHS
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZLARTG, ZLASET, ZROT, ZSCAL
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, DBLE, DCMPLX, DCONJG, DIMAG, MAX, MIN,
+     $                   SQRT
+*     ..
+*     .. Statement Functions ..
+      DOUBLE PRECISION   ABS1
+*     ..
+*     .. Statement Function definitions ..
+      ABS1( X ) = ABS( DBLE( X ) ) + ABS( DIMAG( X ) )
+*     ..
+*     .. Executable Statements ..
+*
+*     Decode JOB, COMPQ, COMPZ
+*
+      IF( LSAME( JOB, 'E' ) ) THEN
+         ILSCHR = .FALSE.
+         ISCHUR = 1
+      ELSE IF( LSAME( JOB, 'S' ) ) THEN
+         ILSCHR = .TRUE.
+         ISCHUR = 2
+      ELSE
+         ISCHUR = 0
+      END IF
+*
+      IF( LSAME( COMPQ, 'N' ) ) THEN
+         ILQ = .FALSE.
+         ICOMPQ = 1
+      ELSE IF( LSAME( COMPQ, 'V' ) ) THEN
+         ILQ = .TRUE.
+         ICOMPQ = 2
+      ELSE IF( LSAME( COMPQ, 'I' ) ) THEN
+         ILQ = .TRUE.
+         ICOMPQ = 3
+      ELSE
+         ICOMPQ = 0
+      END IF
+*
+      IF( LSAME( COMPZ, 'N' ) ) THEN
+         ILZ = .FALSE.
+         ICOMPZ = 1
+      ELSE IF( LSAME( COMPZ, 'V' ) ) THEN
+         ILZ = .TRUE.
+         ICOMPZ = 2
+      ELSE IF( LSAME( COMPZ, 'I' ) ) THEN
+         ILZ = .TRUE.
+         ICOMPZ = 3
+      ELSE
+         ICOMPZ = 0
+      END IF
+*
+*     Check Argument Values
+*
+      INFO = 0
+      WORK( 1 ) = MAX( 1, N )
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( ISCHUR.EQ.0 ) THEN
+         INFO = -1
+      ELSE IF( ICOMPQ.EQ.0 ) THEN
+         INFO = -2
+      ELSE IF( ICOMPZ.EQ.0 ) THEN
+         INFO = -3
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -4
+      ELSE IF( ILO.LT.1 ) THEN
+         INFO = -5
+      ELSE IF( IHI.GT.N .OR. IHI.LT.ILO-1 ) THEN
+         INFO = -6
+      ELSE IF( LDA.LT.N ) THEN
+         INFO = -8
+      ELSE IF( LDB.LT.N ) THEN
+         INFO = -10
+      ELSE IF( LDQ.LT.1 .OR. ( ILQ .AND. LDQ.LT.N ) ) THEN
+         INFO = -14
+      ELSE IF( LDZ.LT.1 .OR. ( ILZ .AND. LDZ.LT.N ) ) THEN
+         INFO = -16
+      ELSE IF( LWORK.LT.MAX( 1, N ) .AND. .NOT.LQUERY ) THEN
+         INFO = -18
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZHGEQZ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+*     WORK( 1 ) = CMPLX( 1 )
+      IF( N.LE.0 ) THEN
+         WORK( 1 ) = DCMPLX( 1 )
+         RETURN
+      END IF
+*
+*     Initialize Q and Z
+*
+      IF( ICOMPQ.EQ.3 )
+     $   CALL ZLASET( 'Full', N, N, CZERO, CONE, Q, LDQ )
+      IF( ICOMPZ.EQ.3 )
+     $   CALL ZLASET( 'Full', N, N, CZERO, CONE, Z, LDZ )
+*
+*     Machine Constants
+*
+      IN = IHI + 1 - ILO
+      SAFMIN = DLAMCH( 'S' )
+      ULP = DLAMCH( 'E' )*DLAMCH( 'B' )
+      ANORM = ZLANHS( 'F', IN, A( ILO, ILO ), LDA, RWORK )
+      BNORM = ZLANHS( 'F', IN, B( ILO, ILO ), LDB, RWORK )
+      ATOL = MAX( SAFMIN, ULP*ANORM )
+      BTOL = MAX( SAFMIN, ULP*BNORM )
+      ASCALE = ONE / MAX( SAFMIN, ANORM )
+      BSCALE = ONE / MAX( SAFMIN, BNORM )
+*
+*
+*     Set Eigenvalues IHI+1:N
+*
+      DO 10 J = IHI + 1, N
+         ABSB = ABS( B( J, J ) )
+         IF( ABSB.GT.SAFMIN ) THEN
+            SIGNBC = DCONJG( B( J, J ) / ABSB )
+            B( J, J ) = ABSB
+            IF( ILSCHR ) THEN
+               CALL ZSCAL( J-1, SIGNBC, B( 1, J ), 1 )
+               CALL ZSCAL( J, SIGNBC, A( 1, J ), 1 )
+            ELSE
+               A( J, J ) = A( J, J )*SIGNBC
+            END IF
+            IF( ILZ )
+     $         CALL ZSCAL( N, SIGNBC, Z( 1, J ), 1 )
+         ELSE
+            B( J, J ) = CZERO
+         END IF
+         ALPHA( J ) = A( J, J )
+         BETA( J ) = B( J, J )
+   10 CONTINUE
+*
+*     If IHI < ILO, skip QZ steps
+*
+      IF( IHI.LT.ILO )
+     $   GO TO 190
+*
+*     MAIN QZ ITERATION LOOP
+*
+*     Initialize dynamic indices
+*
+*     Eigenvalues ILAST+1:N have been found.
+*        Column operations modify rows IFRSTM:whatever
+*        Row operations modify columns whatever:ILASTM
+*
+*     If only eigenvalues are being computed, then
+*        IFRSTM is the row of the last splitting row above row ILAST;
+*        this is always at least ILO.
+*     IITER counts iterations since the last eigenvalue was found,
+*        to tell when to use an extraordinary shift.
+*     MAXIT is the maximum number of QZ sweeps allowed.
+*
+      ILAST = IHI
+      IF( ILSCHR ) THEN
+         IFRSTM = 1
+         ILASTM = N
+      ELSE
+         IFRSTM = ILO
+         ILASTM = IHI
+      END IF
+      IITER = 0
+      ESHIFT = CZERO
+      MAXIT = 30*( IHI-ILO+1 )
+*
+      DO 170 JITER = 1, MAXIT
+*
+*        Check for too many iterations.
+*
+         IF( JITER.GT.MAXIT )
+     $      GO TO 180
+*
+*        Split the matrix if possible.
+*
+*        Two tests:
+*           1: A(j,j-1)=0  or  j=ILO
+*           2: B(j,j)=0
+*
+*        Special case: j=ILAST
+*
+         IF( ILAST.EQ.ILO ) THEN
+            GO TO 60
+         ELSE
+            IF( ABS1( A( ILAST, ILAST-1 ) ).LE.ATOL ) THEN
+               A( ILAST, ILAST-1 ) = CZERO
+               GO TO 60
+            END IF
+         END IF
+*
+         IF( ABS( B( ILAST, ILAST ) ).LE.BTOL ) THEN
+            B( ILAST, ILAST ) = CZERO
+            GO TO 50
+         END IF
+*
+*        General case: j<ILAST
+*
+         DO 40 J = ILAST - 1, ILO, -1
+*
+*           Test 1: for A(j,j-1)=0 or j=ILO
+*
+            IF( J.EQ.ILO ) THEN
+               ILAZRO = .TRUE.
+            ELSE
+               IF( ABS1( A( J, J-1 ) ).LE.ATOL ) THEN
+                  A( J, J-1 ) = CZERO
+                  ILAZRO = .TRUE.
+               ELSE
+                  ILAZRO = .FALSE.
+               END IF
+            END IF
+*
+*           Test 2: for B(j,j)=0
+*
+            IF( ABS( B( J, J ) ).LT.BTOL ) THEN
+               B( J, J ) = CZERO
+*
+*              Test 1a: Check for 2 consecutive small subdiagonals in A
+*
+               ILAZR2 = .FALSE.
+               IF( .NOT.ILAZRO ) THEN
+                  IF( ABS1( A( J, J-1 ) )*( ASCALE*ABS1( A( J+1,
+     $                J ) ) ).LE.ABS1( A( J, J ) )*( ASCALE*ATOL ) )
+     $                ILAZR2 = .TRUE.
+               END IF
+*
+*              If both tests pass (1 & 2), i.e., the leading diagonal
+*              element of B in the block is zero, split a 1x1 block off
+*              at the top. (I.e., at the J-th row/column) The leading
+*              diagonal element of the remainder can also be zero, so
+*              this may have to be done repeatedly.
+*
+               IF( ILAZRO .OR. ILAZR2 ) THEN
+                  DO 20 JCH = J, ILAST - 1
+                     CTEMP = A( JCH, JCH )
+                     CALL ZLARTG( CTEMP, A( JCH+1, JCH ), C, S,
+     $                            A( JCH, JCH ) )
+                     A( JCH+1, JCH ) = CZERO
+                     CALL ZROT( ILASTM-JCH, A( JCH, JCH+1 ), LDA,
+     $                          A( JCH+1, JCH+1 ), LDA, C, S )
+                     CALL ZROT( ILASTM-JCH, B( JCH, JCH+1 ), LDB,
+     $                          B( JCH+1, JCH+1 ), LDB, C, S )
+                     IF( ILQ )
+     $                  CALL ZROT( N, Q( 1, JCH ), 1, Q( 1, JCH+1 ), 1,
+     $                             C, DCONJG( S ) )
+                     IF( ILAZR2 )
+     $                  A( JCH, JCH-1 ) = A( JCH, JCH-1 )*C
+                     ILAZR2 = .FALSE.
+                     IF( ABS1( B( JCH+1, JCH+1 ) ).GE.BTOL ) THEN
+                        IF( JCH+1.GE.ILAST ) THEN
+                           GO TO 60
+                        ELSE
+                           IFIRST = JCH + 1
+                           GO TO 70
+                        END IF
+                     END IF
+                     B( JCH+1, JCH+1 ) = CZERO
+   20             CONTINUE
+                  GO TO 50
+               ELSE
+*
+*                 Only test 2 passed -- chase the zero to B(ILAST,ILAST)
+*                 Then process as in the case B(ILAST,ILAST)=0
+*
+                  DO 30 JCH = J, ILAST - 1
+                     CTEMP = B( JCH, JCH+1 )
+                     CALL ZLARTG( CTEMP, B( JCH+1, JCH+1 ), C, S,
+     $                            B( JCH, JCH+1 ) )
+                     B( JCH+1, JCH+1 ) = CZERO
+                     IF( JCH.LT.ILASTM-1 )
+     $                  CALL ZROT( ILASTM-JCH-1, B( JCH, JCH+2 ), LDB,
+     $                             B( JCH+1, JCH+2 ), LDB, C, S )
+                     CALL ZROT( ILASTM-JCH+2, A( JCH, JCH-1 ), LDA,
+     $                          A( JCH+1, JCH-1 ), LDA, C, S )
+                     IF( ILQ )
+     $                  CALL ZROT( N, Q( 1, JCH ), 1, Q( 1, JCH+1 ), 1,
+     $                             C, DCONJG( S ) )
+                     CTEMP = A( JCH+1, JCH )
+                     CALL ZLARTG( CTEMP, A( JCH+1, JCH-1 ), C, S,
+     $                            A( JCH+1, JCH ) )
+                     A( JCH+1, JCH-1 ) = CZERO
+                     CALL ZROT( JCH+1-IFRSTM, A( IFRSTM, JCH ), 1,
+     $                          A( IFRSTM, JCH-1 ), 1, C, S )
+                     CALL ZROT( JCH-IFRSTM, B( IFRSTM, JCH ), 1,
+     $                          B( IFRSTM, JCH-1 ), 1, C, S )
+                     IF( ILZ )
+     $                  CALL ZROT( N, Z( 1, JCH ), 1, Z( 1, JCH-1 ), 1,
+     $                             C, S )
+   30             CONTINUE
+                  GO TO 50
+               END IF
+            ELSE IF( ILAZRO ) THEN
+*
+*              Only test 1 passed -- work on J:ILAST
+*
+               IFIRST = J
+               GO TO 70
+            END IF
+*
+*           Neither test passed -- try next J
+*
+   40    CONTINUE
+*
+*        (Drop-through is "impossible")
+*
+         INFO = 2*N + 1
+         GO TO 210
+*
+*        B(ILAST,ILAST)=0 -- clear A(ILAST,ILAST-1) to split off a
+*        1x1 block.
+*
+   50    CONTINUE
+         CTEMP = A( ILAST, ILAST )
+         CALL ZLARTG( CTEMP, A( ILAST, ILAST-1 ), C, S,
+     $                A( ILAST, ILAST ) )
+         A( ILAST, ILAST-1 ) = CZERO
+         CALL ZROT( ILAST-IFRSTM, A( IFRSTM, ILAST ), 1,
+     $              A( IFRSTM, ILAST-1 ), 1, C, S )
+         CALL ZROT( ILAST-IFRSTM, B( IFRSTM, ILAST ), 1,
+     $              B( IFRSTM, ILAST-1 ), 1, C, S )
+         IF( ILZ )
+     $      CALL ZROT( N, Z( 1, ILAST ), 1, Z( 1, ILAST-1 ), 1, C, S )
+*
+*        A(ILAST,ILAST-1)=0 -- Standardize B, set ALPHA and BETA
+*
+   60    CONTINUE
+         ABSB = ABS( B( ILAST, ILAST ) )
+         IF( ABSB.GT.SAFMIN ) THEN
+            SIGNBC = DCONJG( B( ILAST, ILAST ) / ABSB )
+            B( ILAST, ILAST ) = ABSB
+            IF( ILSCHR ) THEN
+               CALL ZSCAL( ILAST-IFRSTM, SIGNBC, B( IFRSTM, ILAST ), 1 )
+               CALL ZSCAL( ILAST+1-IFRSTM, SIGNBC, A( IFRSTM, ILAST ),
+     $                     1 )
+            ELSE
+               A( ILAST, ILAST ) = A( ILAST, ILAST )*SIGNBC
+            END IF
+            IF( ILZ )
+     $         CALL ZSCAL( N, SIGNBC, Z( 1, ILAST ), 1 )
+         ELSE
+            B( ILAST, ILAST ) = CZERO
+         END IF
+         ALPHA( ILAST ) = A( ILAST, ILAST )
+         BETA( ILAST ) = B( ILAST, ILAST )
+*
+*        Go to next block -- exit if finished.
+*
+         ILAST = ILAST - 1
+         IF( ILAST.LT.ILO )
+     $      GO TO 190
+*
+*        Reset counters
+*
+         IITER = 0
+         ESHIFT = CZERO
+         IF( .NOT.ILSCHR ) THEN
+            ILASTM = ILAST
+            IF( IFRSTM.GT.ILAST )
+     $         IFRSTM = ILO
+         END IF
+         GO TO 160
+*
+*        QZ step
+*
+*        This iteration only involves rows/columns IFIRST:ILAST.  We
+*        assume IFIRST < ILAST, and that the diagonal of B is non-zero.
+*
+   70    CONTINUE
+         IITER = IITER + 1
+         IF( .NOT.ILSCHR ) THEN
+            IFRSTM = IFIRST
+         END IF
+*
+*        Compute the Shift.
+*
+*        At this point, IFIRST < ILAST, and the diagonal elements of
+*        B(IFIRST:ILAST,IFIRST,ILAST) are larger than BTOL (in
+*        magnitude)
+*
+         IF( ( IITER / 10 )*10.NE.IITER ) THEN
+*
+*           The Wilkinson shift (AEP p.512), i.e., the eigenvalue of
+*           the bottom-right 2x2 block of A inv(B) which is nearest to
+*           the bottom-right element.
+*
+*           We factor B as U*D, where U has unit diagonals, and
+*           compute (A*inv(D))*inv(U).
+*
+            U12 = ( BSCALE*B( ILAST-1, ILAST ) ) /
+     $            ( BSCALE*B( ILAST, ILAST ) )
+            AD11 = ( ASCALE*A( ILAST-1, ILAST-1 ) ) /
+     $             ( BSCALE*B( ILAST-1, ILAST-1 ) )
+            AD21 = ( ASCALE*A( ILAST, ILAST-1 ) ) /
+     $             ( BSCALE*B( ILAST-1, ILAST-1 ) )
+            AD12 = ( ASCALE*A( ILAST-1, ILAST ) ) /
+     $             ( BSCALE*B( ILAST, ILAST ) )
+            AD22 = ( ASCALE*A( ILAST, ILAST ) ) /
+     $             ( BSCALE*B( ILAST, ILAST ) )
+            ABI22 = AD22 - U12*AD21
+*
+            T = HALF*( AD11+ABI22 )
+            RTDISC = SQRT( T**2+AD12*AD21-AD11*AD22 )
+            TEMP = DBLE( T-ABI22 )*DBLE( RTDISC ) +
+     $             DIMAG( T-ABI22 )*DIMAG( RTDISC )
+            IF( TEMP.LE.ZERO ) THEN
+               SHIFT = T + RTDISC
+            ELSE
+               SHIFT = T - RTDISC
+            END IF
+         ELSE
+*
+*           Exceptional shift.  Chosen for no particularly good reason.
+*
+            ESHIFT = ESHIFT + DCONJG( ( ASCALE*A( ILAST-1, ILAST ) ) /
+     $               ( BSCALE*B( ILAST-1, ILAST-1 ) ) )
+            SHIFT = ESHIFT
+         END IF
+*
+*        Now check for two consecutive small subdiagonals.
+*
+         DO 80 J = ILAST - 1, IFIRST + 1, -1
+            ISTART = J
+            CTEMP = ASCALE*A( J, J ) - SHIFT*( BSCALE*B( J, J ) )
+            TEMP = ABS1( CTEMP )
+            TEMP2 = ASCALE*ABS1( A( J+1, J ) )
+            TEMPR = MAX( TEMP, TEMP2 )
+            IF( TEMPR.LT.ONE .AND. TEMPR.NE.ZERO ) THEN
+               TEMP = TEMP / TEMPR
+               TEMP2 = TEMP2 / TEMPR
+            END IF
+            IF( ABS1( A( J, J-1 ) )*TEMP2.LE.TEMP*ATOL )
+     $         GO TO 90
+   80    CONTINUE
+*
+         ISTART = IFIRST
+         CTEMP = ASCALE*A( IFIRST, IFIRST ) -
+     $           SHIFT*( BSCALE*B( IFIRST, IFIRST ) )
+   90    CONTINUE
+*
+*        Do an implicit-shift QZ sweep.
+*
+*        Initial Q
+*
+         CTEMP2 = ASCALE*A( ISTART+1, ISTART )
+         CALL ZLARTG( CTEMP, CTEMP2, C, S, CTEMP3 )
+*
+*        Sweep
+*
+         DO 150 J = ISTART, ILAST - 1
+            IF( J.GT.ISTART ) THEN
+               CTEMP = A( J, J-1 )
+               CALL ZLARTG( CTEMP, A( J+1, J-1 ), C, S, A( J, J-1 ) )
+               A( J+1, J-1 ) = CZERO
+            END IF
+*
+            DO 100 JC = J, ILASTM
+               CTEMP = C*A( J, JC ) + S*A( J+1, JC )
+               A( J+1, JC ) = -DCONJG( S )*A( J, JC ) + C*A( J+1, JC )
+               A( J, JC ) = CTEMP
+               CTEMP2 = C*B( J, JC ) + S*B( J+1, JC )
+               B( J+1, JC ) = -DCONJG( S )*B( J, JC ) + C*B( J+1, JC )
+               B( J, JC ) = CTEMP2
+  100       CONTINUE
+            IF( ILQ ) THEN
+               DO 110 JR = 1, N
+                  CTEMP = C*Q( JR, J ) + DCONJG( S )*Q( JR, J+1 )
+                  Q( JR, J+1 ) = -S*Q( JR, J ) + C*Q( JR, J+1 )
+                  Q( JR, J ) = CTEMP
+  110          CONTINUE
+            END IF
+*
+            CTEMP = B( J+1, J+1 )
+            CALL ZLARTG( CTEMP, B( J+1, J ), C, S, B( J+1, J+1 ) )
+            B( J+1, J ) = CZERO
+*
+            DO 120 JR = IFRSTM, MIN( J+2, ILAST )
+               CTEMP = C*A( JR, J+1 ) + S*A( JR, J )
+               A( JR, J ) = -DCONJG( S )*A( JR, J+1 ) + C*A( JR, J )
+               A( JR, J+1 ) = CTEMP
+  120       CONTINUE
+            DO 130 JR = IFRSTM, J
+               CTEMP = C*B( JR, J+1 ) + S*B( JR, J )
+               B( JR, J ) = -DCONJG( S )*B( JR, J+1 ) + C*B( JR, J )
+               B( JR, J+1 ) = CTEMP
+  130       CONTINUE
+            IF( ILZ ) THEN
+               DO 140 JR = 1, N
+                  CTEMP = C*Z( JR, J+1 ) + S*Z( JR, J )
+                  Z( JR, J ) = -DCONJG( S )*Z( JR, J+1 ) + C*Z( JR, J )
+                  Z( JR, J+1 ) = CTEMP
+  140          CONTINUE
+            END IF
+  150    CONTINUE
+*
+  160    CONTINUE
+*
+  170 CONTINUE
+*
+*     Drop-through = non-convergence
+*
+  180 CONTINUE
+      INFO = ILAST
+      GO TO 210
+*
+*     Successful completion of all QZ steps
+*
+  190 CONTINUE
+*
+*     Set Eigenvalues 1:ILO-1
+*
+      DO 200 J = 1, ILO - 1
+         ABSB = ABS( B( J, J ) )
+         IF( ABSB.GT.SAFMIN ) THEN
+            SIGNBC = DCONJG( B( J, J ) / ABSB )
+            B( J, J ) = ABSB
+            IF( ILSCHR ) THEN
+               CALL ZSCAL( J-1, SIGNBC, B( 1, J ), 1 )
+               CALL ZSCAL( J, SIGNBC, A( 1, J ), 1 )
+            ELSE
+               A( J, J ) = A( J, J )*SIGNBC
+            END IF
+            IF( ILZ )
+     $         CALL ZSCAL( N, SIGNBC, Z( 1, J ), 1 )
+         ELSE
+            B( J, J ) = CZERO
+         END IF
+         ALPHA( J ) = A( J, J )
+         BETA( J ) = B( J, J )
+  200 CONTINUE
+*
+*     Normal Termination
+*
+      INFO = 0
+*
+*     Exit (other than argument error) -- return optimal workspace size
+*
+  210 CONTINUE
+      WORK( 1 ) = DCMPLX( N )
+      RETURN
+*
+*     End of ZHGEQZ
+*
+      END
+      SUBROUTINE ZTGEVC( SIDE, HOWMNY, SELECT, N, A, LDA, B, LDB, VL,
+     $                   LDVL, VR, LDVR, MM, M, WORK, RWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          HOWMNY, SIDE
+      INTEGER            INFO, LDA, LDB, LDVL, LDVR, M, MM, N
+*     ..
+*     .. Array Arguments ..
+      LOGICAL            SELECT( * )
+      DOUBLE PRECISION   RWORK( * )
+      COMPLEX*16         A( LDA, * ), B( LDB, * ), VL( LDVL, * ),
+     $                   VR( LDVR, * ), WORK( * )
+*     ..
+*
+*
+*  Purpose
+*  =======
+*
+*  ZTGEVC computes some or all of the right and/or left generalized
+*  eigenvectors of a pair of complex upper triangular matrices (A,B).
+*
+*  The right generalized eigenvector x and the left generalized
+*  eigenvector y of (A,B) corresponding to a generalized eigenvalue
+*  w are defined by:
+*
+*          (A - wB) * x = 0  and  y**H * (A - wB) = 0
+*
+*  where y**H denotes the conjugate tranpose of y.
+*
+*  If an eigenvalue w is determined by zero diagonal elements of both A
+*  and B, a unit vector is returned as the corresponding eigenvector.
+*
+*  If all eigenvectors are requested, the routine may either return
+*  the matrices X and/or Y of right or left eigenvectors of (A,B), or
+*  the products Z*X and/or Q*Y, where Z and Q are input unitary
+*  matrices.  If (A,B) was obtained from the generalized Schur
+*  factorization of an original pair of matrices
+*     (A0,B0) = (Q*A*Z**H,Q*B*Z**H),
+*  then Z*X and Q*Y are the matrices of right or left eigenvectors of
+*  A.
+*
+*  Arguments
+*  =========
+*
+*  SIDE    (input) CHARACTER*1
+*          = 'R': compute right eigenvectors only;
+*          = 'L': compute left eigenvectors only;
+*          = 'B': compute both right and left eigenvectors.
+*
+*  HOWMNY  (input) CHARACTER*1
+*          = 'A': compute all right and/or left eigenvectors;
+*          = 'B': compute all right and/or left eigenvectors, and
+*                 backtransform them using the input matrices supplied
+*                 in VR and/or VL;
+*          = 'S': compute selected right and/or left eigenvectors,
+*                 specified by the logical array SELECT.
+*
+*  SELECT  (input) LOGICAL array, dimension (N)
+*          If HOWMNY='S', SELECT specifies the eigenvectors to be
+*          computed.
+*          If HOWMNY='A' or 'B', SELECT is not referenced.
+*          To select the eigenvector corresponding to the j-th
+*          eigenvalue, SELECT(j) must be set to .TRUE..
+*
+*  N       (input) INTEGER
+*          The order of the matrices A and B.  N >= 0.
+*
+*  A       (input) COMPLEX*16 array, dimension (LDA,N)
+*          The upper triangular matrix A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of array A.  LDA >= max(1,N).
+*
+*  B       (input) COMPLEX*16 array, dimension (LDB,N)
+*          The upper triangular matrix B.  B must have real diagonal
+*          elements.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of array B.  LDB >= max(1,N).
+*
+*  VL      (input/output) COMPLEX*16 array, dimension (LDVL,MM)
+*          On entry, if SIDE = 'L' or 'B' and HOWMNY = 'B', VL must
+*          contain an N-by-N matrix Q (usually the unitary matrix Q
+*          of left Schur vectors returned by ZHGEQZ).
+*          On exit, if SIDE = 'L' or 'B', VL contains:
+*          if HOWMNY = 'A', the matrix Y of left eigenvectors of (A,B);
+*          if HOWMNY = 'B', the matrix Q*Y;
+*          if HOWMNY = 'S', the left eigenvectors of (A,B) specified by
+*                      SELECT, stored consecutively in the columns of
+*                      VL, in the same order as their eigenvalues.
+*          If SIDE = 'R', VL is not referenced.
+*
+*  LDVL    (input) INTEGER
+*          The leading dimension of array VL.
+*          LDVL >= max(1,N) if SIDE = 'L' or 'B'; LDVL >= 1 otherwise.
+*
+*  VR      (input/output) COMPLEX*16 array, dimension (LDVR,MM)
+*          On entry, if SIDE = 'R' or 'B' and HOWMNY = 'B', VR must
+*          contain an N-by-N matrix Q (usually the unitary matrix Z
+*          of right Schur vectors returned by ZHGEQZ).
+*          On exit, if SIDE = 'R' or 'B', VR contains:
+*          if HOWMNY = 'A', the matrix X of right eigenvectors of (A,B);
+*          if HOWMNY = 'B', the matrix Z*X;
+*          if HOWMNY = 'S', the right eigenvectors of (A,B) specified by
+*                      SELECT, stored consecutively in the columns of
+*                      VR, in the same order as their eigenvalues.
+*          If SIDE = 'L', VR is not referenced.
+*
+*  LDVR    (input) INTEGER
+*          The leading dimension of the array VR.
+*          LDVR >= max(1,N) if SIDE = 'R' or 'B'; LDVR >= 1 otherwise.
+*
+*  MM      (input) INTEGER
+*          The number of columns in the arrays VL and/or VR. MM >= M.
+*
+*  M       (output) INTEGER
+*          The number of columns in the arrays VL and/or VR actually
+*          used to store the eigenvectors.  If HOWMNY = 'A' or 'B', M
+*          is set to N.  Each selected eigenvector occupies one column.
+*
+*  WORK    (workspace) COMPLEX*16 array, dimension (2*N)
+*
+*  RWORK   (workspace) DOUBLE PRECISION array, dimension (2*N)
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit.
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D+0, ONE = 1.0D+0 )
+      COMPLEX*16         CZERO, CONE
+      PARAMETER          ( CZERO = ( 0.0D+0, 0.0D+0 ),
+     $                   CONE = ( 1.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            COMPL, COMPR, ILALL, ILBACK, ILBBAD, ILCOMP,
+     $                   LSA, LSB
+      INTEGER            I, IBEG, IEIG, IEND, IHWMNY, IM, ISIDE, ISRC,
+     $                   J, JE, JR
+      DOUBLE PRECISION   ACOEFA, ACOEFF, ANORM, ASCALE, BCOEFA, BIG,
+     $                   BIGNUM, BNORM, BSCALE, DMIN, SAFMIN, SBETA,
+     $                   SCALE, SMALL, TEMP, ULP, XMAX
+      COMPLEX*16         BCOEFF, CA, CB, D, SALPHA, SUM, SUMA, SUMB, X
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      DOUBLE PRECISION   DLAMCH
+      COMPLEX*16         ZLADIV
+      EXTERNAL           LSAME, DLAMCH, ZLADIV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLABAD, XERBLA, ZGEMV
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, DBLE, DCMPLX, DCONJG, DIMAG, MAX, MIN
+*     ..
+*     .. Statement Functions ..
+      DOUBLE PRECISION   ABS1
+*     ..
+*     .. Statement Function definitions ..
+      ABS1( X ) = ABS( DBLE( X ) ) + ABS( DIMAG( X ) )
+*     ..
+*     .. Executable Statements ..
+*
+*     Decode and Test the input parameters
+*
+      IF( LSAME( HOWMNY, 'A' ) ) THEN
+         IHWMNY = 1
+         ILALL = .TRUE.
+         ILBACK = .FALSE.
+      ELSE IF( LSAME( HOWMNY, 'S' ) ) THEN
+         IHWMNY = 2
+         ILALL = .FALSE.
+         ILBACK = .FALSE.
+      ELSE IF( LSAME( HOWMNY, 'B' ) .OR. LSAME( HOWMNY, 'T' ) ) THEN
+         IHWMNY = 3
+         ILALL = .TRUE.
+         ILBACK = .TRUE.
+      ELSE
+         IHWMNY = -1
+      END IF
+*
+      IF( LSAME( SIDE, 'R' ) ) THEN
+         ISIDE = 1
+         COMPL = .FALSE.
+         COMPR = .TRUE.
+      ELSE IF( LSAME( SIDE, 'L' ) ) THEN
+         ISIDE = 2
+         COMPL = .TRUE.
+         COMPR = .FALSE.
+      ELSE IF( LSAME( SIDE, 'B' ) ) THEN
+         ISIDE = 3
+         COMPL = .TRUE.
+         COMPR = .TRUE.
+      ELSE
+         ISIDE = -1
+      END IF
+*
+      INFO = 0
+      IF( ISIDE.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( IHWMNY.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -4
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -6
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -8
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZTGEVC', -INFO )
+         RETURN
+      END IF
+*
+*     Count the number of eigenvectors
+*
+      IF( .NOT.ILALL ) THEN
+         IM = 0
+         DO 10 J = 1, N
+            IF( SELECT( J ) )
+     $         IM = IM + 1
+   10    CONTINUE
+      ELSE
+         IM = N
+      END IF
+*
+*     Check diagonal of B
+*
+      ILBBAD = .FALSE.
+      DO 20 J = 1, N
+         IF( DIMAG( B( J, J ) ).NE.ZERO )
+     $      ILBBAD = .TRUE.
+   20 CONTINUE
+*
+      IF( ILBBAD ) THEN
+         INFO = -7
+      ELSE IF( COMPL .AND. LDVL.LT.N .OR. LDVL.LT.1 ) THEN
+         INFO = -10
+      ELSE IF( COMPR .AND. LDVR.LT.N .OR. LDVR.LT.1 ) THEN
+         INFO = -12
+      ELSE IF( MM.LT.IM ) THEN
+         INFO = -13
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZTGEVC', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      M = IM
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Machine Constants
+*
+      SAFMIN = DLAMCH( 'Safe minimum' )
+      BIG = ONE / SAFMIN
+      CALL DLABAD( SAFMIN, BIG )
+      ULP = DLAMCH( 'Epsilon' )*DLAMCH( 'Base' )
+      SMALL = SAFMIN*N / ULP
+      BIG = ONE / SMALL
+      BIGNUM = ONE / ( SAFMIN*N )
+*
+*     Compute the 1-norm of each column of the strictly upper triangular
+*     part of A and B to check for possible overflow in the triangular
+*     solver.
+*
+      ANORM = ABS1( A( 1, 1 ) )
+      BNORM = ABS1( B( 1, 1 ) )
+      RWORK( 1 ) = ZERO
+      RWORK( N+1 ) = ZERO
+      DO 40 J = 2, N
+         RWORK( J ) = ZERO
+         RWORK( N+J ) = ZERO
+         DO 30 I = 1, J - 1
+            RWORK( J ) = RWORK( J ) + ABS1( A( I, J ) )
+            RWORK( N+J ) = RWORK( N+J ) + ABS1( B( I, J ) )
+   30    CONTINUE
+         ANORM = MAX( ANORM, RWORK( J )+ABS1( A( J, J ) ) )
+         BNORM = MAX( BNORM, RWORK( N+J )+ABS1( B( J, J ) ) )
+   40 CONTINUE
+*
+      ASCALE = ONE / MAX( ANORM, SAFMIN )
+      BSCALE = ONE / MAX( BNORM, SAFMIN )
+*
+*     Left eigenvectors
+*
+      IF( COMPL ) THEN
+         IEIG = 0
+*
+*        Main loop over eigenvalues
+*
+         DO 140 JE = 1, N
+            IF( ILALL ) THEN
+               ILCOMP = .TRUE.
+            ELSE
+               ILCOMP = SELECT( JE )
+            END IF
+            IF( ILCOMP ) THEN
+               IEIG = IEIG + 1
+*
+               IF( ABS1( A( JE, JE ) ).LE.SAFMIN .AND.
+     $             ABS( DBLE( B( JE, JE ) ) ).LE.SAFMIN ) THEN
+*
+*                 Singular matrix pencil -- return unit eigenvector
+*
+                  DO 50 JR = 1, N
+                     VL( JR, IEIG ) = CZERO
+   50             CONTINUE
+                  VL( IEIG, IEIG ) = CONE
+                  GO TO 140
+               END IF
+*
+*              Non-singular eigenvalue:
+*              Compute coefficients  a  and  b  in
+*                   H
+*                 y  ( a A - b B ) = 0
+*
+               TEMP = ONE / MAX( ABS1( A( JE, JE ) )*ASCALE,
+     $                ABS( DBLE( B( JE, JE ) ) )*BSCALE, SAFMIN )
+               SALPHA = ( TEMP*A( JE, JE ) )*ASCALE
+               SBETA = ( TEMP*DBLE( B( JE, JE ) ) )*BSCALE
+               ACOEFF = SBETA*ASCALE
+               BCOEFF = SALPHA*BSCALE
+*
+*              Scale to avoid underflow
+*
+               LSA = ABS( SBETA ).GE.SAFMIN .AND. ABS( ACOEFF ).LT.SMALL
+               LSB = ABS1( SALPHA ).GE.SAFMIN .AND. ABS1( BCOEFF ).LT.
+     $               SMALL
+*
+               SCALE = ONE
+               IF( LSA )
+     $            SCALE = ( SMALL / ABS( SBETA ) )*MIN( ANORM, BIG )
+               IF( LSB )
+     $            SCALE = MAX( SCALE, ( SMALL / ABS1( SALPHA ) )*
+     $                    MIN( BNORM, BIG ) )
+               IF( LSA .OR. LSB ) THEN
+                  SCALE = MIN( SCALE, ONE /
+     $                    ( SAFMIN*MAX( ONE, ABS( ACOEFF ),
+     $                    ABS1( BCOEFF ) ) ) )
+                  IF( LSA ) THEN
+                     ACOEFF = ASCALE*( SCALE*SBETA )
+                  ELSE
+                     ACOEFF = SCALE*ACOEFF
+                  END IF
+                  IF( LSB ) THEN
+                     BCOEFF = BSCALE*( SCALE*SALPHA )
+                  ELSE
+                     BCOEFF = SCALE*BCOEFF
+                  END IF
+               END IF
+*
+               ACOEFA = ABS( ACOEFF )
+               BCOEFA = ABS1( BCOEFF )
+               XMAX = ONE
+               DO 60 JR = 1, N
+                  WORK( JR ) = CZERO
+   60          CONTINUE
+               WORK( JE ) = CONE
+               DMIN = MAX( ULP*ACOEFA*ANORM, ULP*BCOEFA*BNORM, SAFMIN )
+*
+*                                              H
+*              Triangular solve of  (a A - b B)  y = 0
+*
+*                                      H
+*              (rowwise in  (a A - b B) , or columnwise in a A - b B)
+*
+               DO 100 J = JE + 1, N
+*
+*                 Compute
+*                       j-1
+*                 SUM = sum  conjg( a*A(k,j) - b*B(k,j) )*x(k)
+*                       k=je
+*                 (Scale if necessary)
+*
+                  TEMP = ONE / XMAX
+                  IF( ACOEFA*RWORK( J )+BCOEFA*RWORK( N+J ).GT.BIGNUM*
+     $                TEMP ) THEN
+                     DO 70 JR = JE, J - 1
+                        WORK( JR ) = TEMP*WORK( JR )
+   70                CONTINUE
+                     XMAX = ONE
+                  END IF
+                  SUMA = CZERO
+                  SUMB = CZERO
+*
+                  DO 80 JR = JE, J - 1
+                     SUMA = SUMA + DCONJG( A( JR, J ) )*WORK( JR )
+                     SUMB = SUMB + DCONJG( B( JR, J ) )*WORK( JR )
+   80             CONTINUE
+                  SUM = ACOEFF*SUMA - DCONJG( BCOEFF )*SUMB
+*
+*                 Form x(j) = - SUM / conjg( a*A(j,j) - b*B(j,j) )
+*
+*                 with scaling and perturbation of the denominator
+*
+                  D = DCONJG( ACOEFF*A( J, J )-BCOEFF*B( J, J ) )
+                  IF( ABS1( D ).LE.DMIN )
+     $               D = DCMPLX( DMIN )
+*
+                  IF( ABS1( D ).LT.ONE ) THEN
+                     IF( ABS1( SUM ).GE.BIGNUM*ABS1( D ) ) THEN
+                        TEMP = ONE / ABS1( SUM )
+                        DO 90 JR = JE, J - 1
+                           WORK( JR ) = TEMP*WORK( JR )
+   90                   CONTINUE
+                        XMAX = TEMP*XMAX
+                        SUM = TEMP*SUM
+                     END IF
+                  END IF
+                  WORK( J ) = ZLADIV( -SUM, D )
+                  XMAX = MAX( XMAX, ABS1( WORK( J ) ) )
+  100          CONTINUE
+*
+*              Back transform eigenvector if HOWMNY='B'.
+*
+               IF( ILBACK ) THEN
+                  CALL ZGEMV( 'N', N, N+1-JE, CONE, VL( 1, JE ), LDVL,
+     $                        WORK( JE ), 1, CZERO, WORK( N+1 ), 1 )
+                  ISRC = 2
+                  IBEG = 1
+               ELSE
+                  ISRC = 1
+                  IBEG = JE
+               END IF
+*
+*              Copy and scale eigenvector into column of VL
+*
+               XMAX = ZERO
+               DO 110 JR = IBEG, N
+                  XMAX = MAX( XMAX, ABS1( WORK( ( ISRC-1 )*N+JR ) ) )
+  110          CONTINUE
+*
+               IF( XMAX.GT.SAFMIN ) THEN
+                  TEMP = ONE / XMAX
+                  DO 120 JR = IBEG, N
+                     VL( JR, IEIG ) = TEMP*WORK( ( ISRC-1 )*N+JR )
+  120             CONTINUE
+               ELSE
+                  IBEG = N + 1
+               END IF
+*
+               DO 130 JR = 1, IBEG - 1
+                  VL( JR, IEIG ) = CZERO
+  130          CONTINUE
+*
+            END IF
+  140    CONTINUE
+      END IF
+*
+*     Right eigenvectors
+*
+      IF( COMPR ) THEN
+         IEIG = IM + 1
+*
+*        Main loop over eigenvalues
+*
+         DO 250 JE = N, 1, -1
+            IF( ILALL ) THEN
+               ILCOMP = .TRUE.
+            ELSE
+               ILCOMP = SELECT( JE )
+            END IF
+            IF( ILCOMP ) THEN
+               IEIG = IEIG - 1
+*
+               IF( ABS1( A( JE, JE ) ).LE.SAFMIN .AND.
+     $             ABS( DBLE( B( JE, JE ) ) ).LE.SAFMIN ) THEN
+*
+*                 Singular matrix pencil -- return unit eigenvector
+*
+                  DO 150 JR = 1, N
+                     VR( JR, IEIG ) = CZERO
+  150             CONTINUE
+                  VR( IEIG, IEIG ) = CONE
+                  GO TO 250
+               END IF
+*
+*              Non-singular eigenvalue:
+*              Compute coefficients  a  and  b  in
+*
+*              ( a A - b B ) x  = 0
+*
+               TEMP = ONE / MAX( ABS1( A( JE, JE ) )*ASCALE,
+     $                ABS( DBLE( B( JE, JE ) ) )*BSCALE, SAFMIN )
+               SALPHA = ( TEMP*A( JE, JE ) )*ASCALE
+               SBETA = ( TEMP*DBLE( B( JE, JE ) ) )*BSCALE
+               ACOEFF = SBETA*ASCALE
+               BCOEFF = SALPHA*BSCALE
+*
+*              Scale to avoid underflow
+*
+               LSA = ABS( SBETA ).GE.SAFMIN .AND. ABS( ACOEFF ).LT.SMALL
+               LSB = ABS1( SALPHA ).GE.SAFMIN .AND. ABS1( BCOEFF ).LT.
+     $               SMALL
+*
+               SCALE = ONE
+               IF( LSA )
+     $            SCALE = ( SMALL / ABS( SBETA ) )*MIN( ANORM, BIG )
+               IF( LSB )
+     $            SCALE = MAX( SCALE, ( SMALL / ABS1( SALPHA ) )*
+     $                    MIN( BNORM, BIG ) )
+               IF( LSA .OR. LSB ) THEN
+                  SCALE = MIN( SCALE, ONE /
+     $                    ( SAFMIN*MAX( ONE, ABS( ACOEFF ),
+     $                    ABS1( BCOEFF ) ) ) )
+                  IF( LSA ) THEN
+                     ACOEFF = ASCALE*( SCALE*SBETA )
+                  ELSE
+                     ACOEFF = SCALE*ACOEFF
+                  END IF
+                  IF( LSB ) THEN
+                     BCOEFF = BSCALE*( SCALE*SALPHA )
+                  ELSE
+                     BCOEFF = SCALE*BCOEFF
+                  END IF
+               END IF
+*
+               ACOEFA = ABS( ACOEFF )
+               BCOEFA = ABS1( BCOEFF )
+               XMAX = ONE
+               DO 160 JR = 1, N
+                  WORK( JR ) = CZERO
+  160          CONTINUE
+               WORK( JE ) = CONE
+               DMIN = MAX( ULP*ACOEFA*ANORM, ULP*BCOEFA*BNORM, SAFMIN )
+*
+*              Triangular solve of  (a A - b B) x = 0  (columnwise)
+*
+*              WORK(1:j-1) contains sums w,
+*              WORK(j+1:JE) contains x
+*
+               DO 170 JR = 1, JE - 1
+                  WORK( JR ) = ACOEFF*A( JR, JE ) - BCOEFF*B( JR, JE )
+  170          CONTINUE
+               WORK( JE ) = CONE
+*
+               DO 210 J = JE - 1, 1, -1
+*
+*                 Form x(j) := - w(j) / d
+*                 with scaling and perturbation of the denominator
+*
+                  D = ACOEFF*A( J, J ) - BCOEFF*B( J, J )
+                  IF( ABS1( D ).LE.DMIN )
+     $               D = DCMPLX( DMIN )
+*
+                  IF( ABS1( D ).LT.ONE ) THEN
+                     IF( ABS1( WORK( J ) ).GE.BIGNUM*ABS1( D ) ) THEN
+                        TEMP = ONE / ABS1( WORK( J ) )
+                        DO 180 JR = 1, JE
+                           WORK( JR ) = TEMP*WORK( JR )
+  180                   CONTINUE
+                     END IF
+                  END IF
+*
+                  WORK( J ) = ZLADIV( -WORK( J ), D )
+*
+                  IF( J.GT.1 ) THEN
+*
+*                    w = w + x(j)*(a A(*,j) - b B(*,j) ) with scaling
+*
+                     IF( ABS1( WORK( J ) ).GT.ONE ) THEN
+                        TEMP = ONE / ABS1( WORK( J ) )
+                        IF( ACOEFA*RWORK( J )+BCOEFA*RWORK( N+J ).GE.
+     $                      BIGNUM*TEMP ) THEN
+                           DO 190 JR = 1, JE
+                              WORK( JR ) = TEMP*WORK( JR )
+  190                      CONTINUE
+                        END IF
+                     END IF
+*
+                     CA = ACOEFF*WORK( J )
+                     CB = BCOEFF*WORK( J )
+                     DO 200 JR = 1, J - 1
+                        WORK( JR ) = WORK( JR ) + CA*A( JR, J ) -
+     $                               CB*B( JR, J )
+  200                CONTINUE
+                  END IF
+  210          CONTINUE
+*
+*              Back transform eigenvector if HOWMNY='B'.
+*
+               IF( ILBACK ) THEN
+                  CALL ZGEMV( 'N', N, JE, CONE, VR, LDVR, WORK, 1,
+     $                        CZERO, WORK( N+1 ), 1 )
+                  ISRC = 2
+                  IEND = N
+               ELSE
+                  ISRC = 1
+                  IEND = JE
+               END IF
+*
+*              Copy and scale eigenvector into column of VR
+*
+               XMAX = ZERO
+               DO 220 JR = 1, IEND
+                  XMAX = MAX( XMAX, ABS1( WORK( ( ISRC-1 )*N+JR ) ) )
+  220          CONTINUE
+*
+               IF( XMAX.GT.SAFMIN ) THEN
+                  TEMP = ONE / XMAX
+                  DO 230 JR = 1, IEND
+                     VR( JR, IEIG ) = TEMP*WORK( ( ISRC-1 )*N+JR )
+  230             CONTINUE
+               ELSE
+                  IEND = 0
+               END IF
+*
+               DO 240 JR = IEND + 1, N
+                  VR( JR, IEIG ) = CZERO
+  240          CONTINUE
+*
+            END IF
+  250    CONTINUE
+      END IF
+*
+      RETURN
+*
+*     End of ZTGEVC
+*
+      END
+      SUBROUTINE ZGGBAK( JOB, SIDE, N, ILO, IHI, LSCALE, RSCALE, M, V,
+     $                   LDV, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          JOB, SIDE
+      INTEGER            IHI, ILO, INFO, LDV, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   LSCALE( * ), RSCALE( * )
+      COMPLEX*16         V( LDV, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGGBAK forms the right or left eigenvectors of a complex generalized
+*  eigenvalue problem A*x = lambda*B*x, by backward transformation on
+*  the computed eigenvectors of the balanced pair of matrices output by
+*  ZGGBAL.
+*
+*  Arguments
+*  =========
+*
+*  JOB     (input) CHARACTER*1
+*          Specifies the type of backward transformation required:
+*          = 'N':  do nothing, return immediately;
+*          = 'P':  do backward transformation for permutation only;
+*          = 'S':  do backward transformation for scaling only;
+*          = 'B':  do backward transformations for both permutation and
+*                  scaling.
+*          JOB must be the same as the argument JOB supplied to ZGGBAL.
+*
+*  SIDE    (input) CHARACTER*1
+*          = 'R':  V contains right eigenvectors;
+*          = 'L':  V contains left eigenvectors.
+*
+*  N       (input) INTEGER
+*          The number of rows of the matrix V.  N >= 0.
+*
+*  ILO     (input) INTEGER
+*  IHI     (input) INTEGER
+*          The integers ILO and IHI determined by ZGGBAL.
+*          1 <= ILO <= IHI <= N, if N > 0; ILO=1 and IHI=0, if N=0.
+*
+*  LSCALE  (input) DOUBLE PRECISION array, dimension (N)
+*          Details of the permutations and/or scaling factors applied
+*          to the left side of A and B, as returned by ZGGBAL.
+*
+*  RSCALE  (input) DOUBLE PRECISION array, dimension (N)
+*          Details of the permutations and/or scaling factors applied
+*          to the right side of A and B, as returned by ZGGBAL.
+*
+*  M       (input) INTEGER
+*          The number of columns of the matrix V.  M >= 0.
+*
+*  V       (input/output) COMPLEX*16 array, dimension (LDV,M)
+*          On entry, the matrix of right or left eigenvectors to be
+*          transformed, as returned by ZTGEVC.
+*          On exit, V is overwritten by the transformed eigenvectors.
+*
+*  LDV     (input) INTEGER
+*          The leading dimension of the matrix V. LDV >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit.
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*
+*  Further Details
+*  ===============
+*
+*  See R.C. Ward, Balancing the generalized eigenvalue problem,
+*                 SIAM J. Sci. Stat. Comp. 2 (1981), 141-152.
+*
+*  =====================================================================
+*
+*     .. Local Scalars ..
+      LOGICAL            LEFTV, RIGHTV
+      INTEGER            I, K
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZDSCAL, ZSWAP
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters
+*
+      RIGHTV = LSAME( SIDE, 'R' )
+      LEFTV = LSAME( SIDE, 'L' )
+*
+      INFO = 0
+      IF( .NOT.LSAME( JOB, 'N' ) .AND. .NOT.LSAME( JOB, 'P' ) .AND.
+     $    .NOT.LSAME( JOB, 'S' ) .AND. .NOT.LSAME( JOB, 'B' ) ) THEN
+         INFO = -1
+      ELSE IF( .NOT.RIGHTV .AND. .NOT.LEFTV ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( ILO.LT.1 ) THEN
+         INFO = -4
+      ELSE IF( IHI.LT.ILO .OR. IHI.GT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( M.LT.0 ) THEN
+         INFO = -6
+      ELSE IF( LDV.LT.MAX( 1, N ) ) THEN
+         INFO = -10
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGGBAK', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+      IF( M.EQ.0 )
+     $   RETURN
+      IF( LSAME( JOB, 'N' ) )
+     $   RETURN
+*
+      IF( ILO.EQ.IHI )
+     $   GO TO 30
+*
+*     Backward balance
+*
+      IF( LSAME( JOB, 'S' ) .OR. LSAME( JOB, 'B' ) ) THEN
+*
+*        Backward transformation on right eigenvectors
+*
+         IF( RIGHTV ) THEN
+            DO 10 I = ILO, IHI
+               CALL ZDSCAL( M, RSCALE( I ), V( I, 1 ), LDV )
+   10       CONTINUE
+         END IF
+*
+*        Backward transformation on left eigenvectors
+*
+         IF( LEFTV ) THEN
+            DO 20 I = ILO, IHI
+               CALL ZDSCAL( M, LSCALE( I ), V( I, 1 ), LDV )
+   20       CONTINUE
+         END IF
+      END IF
+*
+*     Backward permutation
+*
+   30 CONTINUE
+      IF( LSAME( JOB, 'P' ) .OR. LSAME( JOB, 'B' ) ) THEN
+*
+*        Backward permutation on right eigenvectors
+*
+         IF( RIGHTV ) THEN
+            IF( ILO.EQ.1 )
+     $         GO TO 50
+            DO 40 I = ILO - 1, 1, -1
+               K = RSCALE( I )
+               IF( K.EQ.I )
+     $            GO TO 40
+               CALL ZSWAP( M, V( I, 1 ), LDV, V( K, 1 ), LDV )
+   40       CONTINUE
+*
+   50       CONTINUE
+            IF( IHI.EQ.N )
+     $         GO TO 70
+            DO 60 I = IHI + 1, N
+               K = RSCALE( I )
+               IF( K.EQ.I )
+     $            GO TO 60
+               CALL ZSWAP( M, V( I, 1 ), LDV, V( K, 1 ), LDV )
+   60       CONTINUE
+         END IF
+*
+*        Backward permutation on left eigenvectors
+*
+   70    CONTINUE
+         IF( LEFTV ) THEN
+            IF( ILO.EQ.1 )
+     $         GO TO 90
+            DO 80 I = ILO - 1, 1, -1
+               K = LSCALE( I )
+               IF( K.EQ.I )
+     $            GO TO 80
+               CALL ZSWAP( M, V( I, 1 ), LDV, V( K, 1 ), LDV )
+   80       CONTINUE
+*
+   90       CONTINUE
+            IF( IHI.EQ.N )
+     $         GO TO 110
+            DO 100 I = IHI + 1, N
+               K = LSCALE( I )
+               IF( K.EQ.I )
+     $            GO TO 100
+               CALL ZSWAP( M, V( I, 1 ), LDV, V( K, 1 ), LDV )
+  100       CONTINUE
+         END IF
+      END IF
+*
+  110 CONTINUE
+*
+      RETURN
+*
+*     End of ZGGBAK
+*
+      END
+      SUBROUTINE ZGEQR2( M, N, A, LDA, TAU, WORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      COMPLEX*16         A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGEQR2 computes a QR factorization of a complex m by n matrix A:
+*  A = Q * R.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the m by n matrix A.
+*          On exit, the elements on and above the diagonal of the array
+*          contain the min(m,n) by n upper trapezoidal matrix R (R is
+*          upper triangular if m >= n); the elements below the diagonal,
+*          with the array TAU, represent the unitary matrix Q as a
+*          product of elementary reflectors (see Further Details).
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  TAU     (output) COMPLEX*16 array, dimension (min(M,N))
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace) COMPLEX*16 array, dimension (N)
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  The matrix Q is represented as a product of elementary reflectors
+*
+*     Q = H(1) H(2) . . . H(k), where k = min(m,n).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a complex scalar, and v is a complex vector with
+*  v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
+*  and tau in TAU(i).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      COMPLEX*16         ONE
+      PARAMETER          ( ONE = ( 1.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, K
+      COMPLEX*16         ALPHA
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZLARF, ZLARFG
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          DCONJG, MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGEQR2', -INFO )
+         RETURN
+      END IF
+*
+      K = MIN( M, N )
+*
+      DO 10 I = 1, K
+*
+*        Generate elementary reflector H(i) to annihilate A(i+1:m,i)
+*
+         CALL ZLARFG( M-I+1, A( I, I ), A( MIN( I+1, M ), I ), 1,
+     $                TAU( I ) )
+         IF( I.LT.N ) THEN
+*
+*           Apply H(i)' to A(i:m,i+1:n) from the left
+*
+            ALPHA = A( I, I )
+            A( I, I ) = ONE
+            CALL ZLARF( 'Left', M-I+1, N-I, A( I, I ), 1,
+     $                  DCONJG( TAU( I ) ), A( I, I+1 ), LDA, WORK )
+            A( I, I ) = ALPHA
+         END IF
+   10 CONTINUE
+      RETURN
+*
+*     End of ZGEQR2
+*
+      END
+      SUBROUTINE ZLARTG( F, G, CS, SN, R )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      DOUBLE PRECISION   CS
+      COMPLEX*16         F, G, R, SN
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZLARTG generates a plane rotation so that
+*
+*     [  CS  SN  ]     [ F ]     [ R ]
+*     [  __      ]  .  [   ]  =  [   ]   where CS**2 + |SN|**2 = 1.
+*     [ -SN  CS  ]     [ G ]     [ 0 ]
+*
+*  This is a faster version of the BLAS1 routine ZROTG, except for
+*  the following differences:
+*     F and G are unchanged on return.
+*     If G=0, then CS=1 and SN=0.
+*     If F=0, then CS=0 and SN is chosen so that R is real.
+*
+*  Arguments
+*  =========
+*
+*  F       (input) COMPLEX*16
+*          The first component of vector to be rotated.
+*
+*  G       (input) COMPLEX*16
+*          The second component of vector to be rotated.
+*
+*  CS      (output) DOUBLE PRECISION
+*          The cosine of the rotation.
+*
+*  SN      (output) COMPLEX*16
+*          The sine of the rotation.
+*
+*  R       (output) COMPLEX*16
+*          The nonzero component of the rotated vector.
+*
+*  Further Details
+*  ======= =======
+*
+*  3-5-96 - Modified with a new algorithm by W. Kahan and J. Demmel
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   TWO, ONE, ZERO
+      PARAMETER          ( TWO = 2.0D+0, ONE = 1.0D+0, ZERO = 0.0D+0 )
+      COMPLEX*16         CZERO
+      PARAMETER          ( CZERO = ( 0.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            FIRST
+      INTEGER            COUNT, I
+      DOUBLE PRECISION   D, DI, DR, EPS, F2, F2S, G2, G2S, SAFMIN,
+     $                   SAFMN2, SAFMX2, SCALE
+      COMPLEX*16         FF, FS, GS
+*     ..
+*     .. External Functions ..
+      DOUBLE PRECISION   DLAMCH, DLAPY2
+      EXTERNAL           DLAMCH, DLAPY2
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, DBLE, DCMPLX, DCONJG, DIMAG, INT, LOG,
+     $                   MAX, SQRT
+*     ..
+*     .. Statement Functions ..
+      DOUBLE PRECISION   ABS1, ABSSQ
+*     ..
+*     .. Save statement ..
+      SAVE               FIRST, SAFMX2, SAFMIN, SAFMN2
+*     ..
+*     .. Data statements ..
+      DATA               FIRST / .TRUE. /
+*     ..
+*     .. Statement Function definitions ..
+      ABS1( FF ) = MAX( ABS( DBLE( FF ) ), ABS( DIMAG( FF ) ) )
+      ABSSQ( FF ) = DBLE( FF )**2 + DIMAG( FF )**2
+*     ..
+*     .. Executable Statements ..
+*
+      IF( FIRST ) THEN
+         FIRST = .FALSE.
+         SAFMIN = DLAMCH( 'S' )
+         EPS = DLAMCH( 'E' )
+         SAFMN2 = DLAMCH( 'B' )**INT( LOG( SAFMIN / EPS ) /
+     $            LOG( DLAMCH( 'B' ) ) / TWO )
+         SAFMX2 = ONE / SAFMN2
+      END IF
+      SCALE = MAX( ABS1( F ), ABS1( G ) )
+      FS = F
+      GS = G
+      COUNT = 0
+      IF( SCALE.GE.SAFMX2 ) THEN
+   10    CONTINUE
+         COUNT = COUNT + 1
+         FS = FS*SAFMN2
+         GS = GS*SAFMN2
+         SCALE = SCALE*SAFMN2
+         IF( SCALE.GE.SAFMX2 )
+     $      GO TO 10
+      ELSE IF( SCALE.LE.SAFMN2 ) THEN
+         IF( G.EQ.CZERO ) THEN
+            CS = ONE
+            SN = CZERO
+            R = F
+            RETURN
+         END IF
+   20    CONTINUE
+         COUNT = COUNT - 1
+         FS = FS*SAFMX2
+         GS = GS*SAFMX2
+         SCALE = SCALE*SAFMX2
+         IF( SCALE.LE.SAFMN2 )
+     $      GO TO 20
+      END IF
+      F2 = ABSSQ( FS )
+      G2 = ABSSQ( GS )
+      IF( F2.LE.MAX( G2, ONE )*SAFMIN ) THEN
+*
+*        This is a rare case: F is very small.
+*
+         IF( F.EQ.CZERO ) THEN
+            CS = ZERO
+            R = DLAPY2( DBLE( G ), DIMAG( G ) )
+*           Do complex/real division explicitly with two real divisions
+            D = DLAPY2( DBLE( GS ), DIMAG( GS ) )
+            SN = DCMPLX( DBLE( GS ) / D, -DIMAG( GS ) / D )
+            RETURN
+         END IF
+         F2S = DLAPY2( DBLE( FS ), DIMAG( FS ) )
+*        G2 and G2S are accurate
+*        G2 is at least SAFMIN, and G2S is at least SAFMN2
+         G2S = SQRT( G2 )
+*        Error in CS from underflow in F2S is at most
+*        UNFL / SAFMN2 .lt. sqrt(UNFL*EPS) .lt. EPS
+*        If MAX(G2,ONE)=G2, then F2 .lt. G2*SAFMIN,
+*        and so CS .lt. sqrt(SAFMIN)
+*        If MAX(G2,ONE)=ONE, then F2 .lt. SAFMIN
+*        and so CS .lt. sqrt(SAFMIN)/SAFMN2 = sqrt(EPS)
+*        Therefore, CS = F2S/G2S / sqrt( 1 + (F2S/G2S)**2 ) = F2S/G2S
+         CS = F2S / G2S
+*        Make sure abs(FF) = 1
+*        Do complex/real division explicitly with 2 real divisions
+         IF( ABS1( F ).GT.ONE ) THEN
+            D = DLAPY2( DBLE( F ), DIMAG( F ) )
+            FF = DCMPLX( DBLE( F ) / D, DIMAG( F ) / D )
+         ELSE
+            DR = SAFMX2*DBLE( F )
+            DI = SAFMX2*DIMAG( F )
+            D = DLAPY2( DR, DI )
+            FF = DCMPLX( DR / D, DI / D )
+         END IF
+         SN = FF*DCMPLX( DBLE( GS ) / G2S, -DIMAG( GS ) / G2S )
+         R = CS*F + SN*G
+      ELSE
+*
+*        This is the most common case.
+*        Neither F2 nor F2/G2 are less than SAFMIN
+*        F2S cannot overflow, and it is accurate
+*
+         F2S = SQRT( ONE+G2 / F2 )
+*        Do the F2S(real)*FS(complex) multiply with two real multiplies
+         R = DCMPLX( F2S*DBLE( FS ), F2S*DIMAG( FS ) )
+         CS = ONE / F2S
+         D = F2 + G2
+*        Do complex/real division explicitly with two real divisions
+         SN = DCMPLX( DBLE( R ) / D, DIMAG( R ) / D )
+         SN = SN*DCONJG( GS )
+         IF( COUNT.NE.0 ) THEN
+            IF( COUNT.GT.0 ) THEN
+               DO 30 I = 1, COUNT
+                  R = R*SAFMX2
+   30          CONTINUE
+            ELSE
+               DO 40 I = 1, -COUNT
+                  R = R*SAFMN2
+   40          CONTINUE
+            END IF
+         END IF
+      END IF
+      RETURN
+*
+*     End of ZLARTG
+*
+      END
+      DOUBLE PRECISION FUNCTION ZLANHS( NORM, N, A, LDA, WORK )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          NORM
+      INTEGER            LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   WORK( * )
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZLANHS  returns the value of the one norm,  or the Frobenius norm, or
+*  the  infinity norm,  or the  element of  largest absolute value  of a
+*  Hessenberg matrix A.
+*
+*  Description
+*  ===========
+*
+*  ZLANHS returns the value
+*
+*     ZLANHS = ( max(abs(A(i,j))), NORM = 'M' or 'm'
+*              (
+*              ( norm1(A),         NORM = '1', 'O' or 'o'
+*              (
+*              ( normI(A),         NORM = 'I' or 'i'
+*              (
+*              ( normF(A),         NORM = 'F', 'f', 'E' or 'e'
+*
+*  where  norm1  denotes the  one norm of a matrix (maximum column sum),
+*  normI  denotes the  infinity norm  of a matrix  (maximum row sum) and
+*  normF  denotes the  Frobenius norm of a matrix (square root of sum of
+*  squares).  Note that  max(abs(A(i,j)))  is not a  matrix norm.
+*
+*  Arguments
+*  =========
+*
+*  NORM    (input) CHARACTER*1
+*          Specifies the value to be returned in ZLANHS as described
+*          above.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.  When N = 0, ZLANHS is
+*          set to zero.
+*
+*  A       (input) COMPLEX*16 array, dimension (LDA,N)
+*          The n by n upper Hessenberg matrix A; the part of A below the
+*          first sub-diagonal is not referenced.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(N,1).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (LWORK),
+*          where LWORK >= N when NORM = 'I'; otherwise, WORK is not
+*          referenced.
+*
+* =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, J
+      DOUBLE PRECISION   SCALE, SUM, VALUE
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           ZLASSQ
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, MAX, MIN, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+      IF( N.EQ.0 ) THEN
+         VALUE = ZERO
+      ELSE IF( LSAME( NORM, 'M' ) ) THEN
+*
+*        Find max(abs(A(i,j))).
+*
+         VALUE = ZERO
+         DO 20 J = 1, N
+            DO 10 I = 1, MIN( N, J+1 )
+               VALUE = MAX( VALUE, ABS( A( I, J ) ) )
+   10       CONTINUE
+   20    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'O' ) ) .OR. ( NORM.EQ.'1' ) ) THEN
+*
+*        Find norm1(A).
+*
+         VALUE = ZERO
+         DO 40 J = 1, N
+            SUM = ZERO
+            DO 30 I = 1, MIN( N, J+1 )
+               SUM = SUM + ABS( A( I, J ) )
+   30       CONTINUE
+            VALUE = MAX( VALUE, SUM )
+   40    CONTINUE
+      ELSE IF( LSAME( NORM, 'I' ) ) THEN
+*
+*        Find normI(A).
+*
+         DO 50 I = 1, N
+            WORK( I ) = ZERO
+   50    CONTINUE
+         DO 70 J = 1, N
+            DO 60 I = 1, MIN( N, J+1 )
+               WORK( I ) = WORK( I ) + ABS( A( I, J ) )
+   60       CONTINUE
+   70    CONTINUE
+         VALUE = ZERO
+         DO 80 I = 1, N
+            VALUE = MAX( VALUE, WORK( I ) )
+   80    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'F' ) ) .OR. ( LSAME( NORM, 'E' ) ) ) THEN
+*
+*        Find normF(A).
+*
+         SCALE = ZERO
+         SUM = ONE
+         DO 90 J = 1, N
+            CALL ZLASSQ( MIN( N, J+1 ), A( 1, J ), 1, SCALE, SUM )
+   90    CONTINUE
+         VALUE = SCALE*SQRT( SUM )
+      END IF
+*
+      ZLANHS = VALUE
+      RETURN
+*
+*     End of ZLANHS
+*
+      END

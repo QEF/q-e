@@ -150,7 +150,7 @@ SUBROUTINE c_phase
 !  --- Make use of the module with common information ---
    USE io_global,        ONLY : stdout
    USE pwcom
-   USE wavefunctions,    ONLY : evc
+   USE wavefunctions_module,    ONLY : evc
 
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE

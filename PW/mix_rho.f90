@@ -19,7 +19,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   use parameters, only : DP
   use pwcom
-  USE wavefunctions,    ONLY : psic
+  USE wavefunctions_module,    ONLY : psic
   !
   !   First the I/O variable
   !
@@ -571,7 +571,7 @@ end subroutine approx_screening
   !
   use parameters, only : DP
   use pwcom
-  USE wavefunctions,    ONLY : psic
+  USE wavefunctions_module,    ONLY : psic
   !
   ! I/O
   !

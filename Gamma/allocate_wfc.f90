@@ -20,7 +20,7 @@ subroutine allocate_wfc
   USE ldaU,           ONLY : swfcatom, lda_plus_u
   USE gvect,          ONLY : ngl
   USE us,             ONLY : nkb
-  USE wavefunctions,  ONLY : evc
+  USE wavefunctions_module,  ONLY : evc
   implicit none
   !
   ! Allocate memory

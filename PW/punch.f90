@@ -20,7 +20,7 @@ subroutine punch
   USE io_global, ONLY : stdout
   use pwcom, only: nks, filpun, reduce_io, nwordwfc, iunwfc, lscf, &
     rho, nspin, iunpun, et, wg, nbnd, nkstot
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   use io_files, only: prefix
 #ifdef __PARA
   use para
@@ -92,7 +92,7 @@ subroutine punch
   !
   USE io_global,        ONLY : stdout
   use pwcom
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   use io_files, only: prefix
 #ifdef __PARA
   use para

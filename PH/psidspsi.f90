@@ -19,7 +19,7 @@ subroutine psidspsi (ik, uact, pdsp)
 
   USE pwcom
   USE parameters, ONLY : DP
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   USE phcom
   implicit none
   !

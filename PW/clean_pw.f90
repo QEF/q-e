@@ -23,7 +23,7 @@ SUBROUTINE clean_pw
   USE force_mod,          ONLY : force
   USE scf,                ONLY : rho, rho_save,vr, vltot, rho_core, vrs
   USE relax,              ONLY : if_pos
-  USE wavefunctions,      ONLY : evc, psic
+  USE wavefunctions_module,      ONLY : evc, psic
   USE us,                 ONLY : indv, nhtol, nhtom, qq, dvan, deeq, qrad, &
                                  vkb, qgm, becsum, tab
   USE ldaU,               ONLY : ns, nsnew, swfcatom

@@ -31,7 +31,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 #include "machine.h"
   USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY : evc
+  USE wavefunctions_module,  ONLY : evc
   use phcom
   use d3com
 

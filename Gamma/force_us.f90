@@ -15,7 +15,7 @@ subroutine force_us (forcenl)
 #include "machine.h"
 
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   implicit none
   !
   real(kind=DP) :: forcenl (3, nat)

@@ -22,7 +22,7 @@ subroutine solve_e
 #include "machine.h"
   USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   use parameters, only : DP
   use becmod
   use phcom

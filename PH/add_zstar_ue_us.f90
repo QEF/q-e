@@ -12,7 +12,7 @@ subroutine add_zstar_ue_us(imode0,npe)
 
   USE pwcom
   USE parameters, ONLY : DP
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   USE phcom
   USE becmod
   implicit none

@@ -51,7 +51,7 @@ CONTAINS
 
       use constants, only: pi, scmass, factem, eps8
       use parameters, only: nsx, natx, nbndxx
-      use io_global, only: ionode
+      use io_global, only: ionode, stdout
       use mp, only: mp_bcast
 
       !
@@ -577,54 +577,54 @@ CONTAINS
 !     --------------------------------------------------------
 !     print out heading
 !
-      write(6,500) nbeg_ , nomore_ , iprint_ , ndr_ , ndw_
-      write(6,505) delt_
-      write(6,510) emass_ , emaec_
+      WRITE( stdout,500) nbeg_ , nomore_ , iprint_ , ndr_ , ndw_
+      WRITE( stdout,505) delt_
+      WRITE( stdout,510) emass_ , emaec_
 !
       if( tortho_ ) then
-         write(6,511) eps_ , max_
+         WRITE( stdout,511) eps_ , max_
       else
-         write(6,512)
+         WRITE( stdout,512)
       endif
 !
       if( tsde_ ) then
-         write(6,513)
+         WRITE( stdout,513)
       else
          if ( tnosee_ ) frice_ = 0.
-         write(6,509)
-         write(6,514) frice_ , grease_
+         WRITE( stdout,509)
+         WRITE( stdout,514) frice_ , grease_
       endif
 !
       if ( trhor_ ) then
-         write(6,720)
+         WRITE( stdout,720)
       endif
 !
       if( .not. trhor_ .and. trhow_ )then
-         write(6,721)
+         WRITE( stdout,721)
       endif
 !
       if( tvlocw_ )then
-         write(6,722)
+         WRITE( stdout,722)
       endif
 !
       if( trane_ ) then
-         write(6,515) ampre_
+         WRITE( stdout,515) ampre_
       endif
-      write(6,516)
+      WRITE( stdout,516)
       do is =1, nsp_
-         if(tranp_(is)) write(6,517) is, amprp_(is)
+         if(tranp_(is)) WRITE( stdout,517) is, amprp_(is)
       end do
 !
       if(tfor_) then
          if(tnosep_) fricp_ = 0.
-         write(6,520)
+         WRITE( stdout,520)
          if(tsdp_)then
-            write(6,521)
+            WRITE( stdout,521)
          else
-            write(6,522) fricp_ , greasp_
+            WRITE( stdout,522) fricp_ , greasp_
          endif
       else
-         write(6,518)
+         WRITE( stdout,518)
       endif
 !
       if( tfor_ ) then
@@ -632,7 +632,7 @@ CONTAINS
             call errore(' main',' t contr. for ions when tsdp=.t.',0)
          endif
          if(.not. tcp_ .and. .not. tcap_ .and. .not. tnosep_ ) then
-            write(6,550)
+            WRITE( stdout,550)
          else if(tcp_ .and. tcap_ ) then
             call errore(' main',' tcp and tcap both true',0)
          else if(tcp_ .and. tnosep_ ) then
@@ -640,35 +640,35 @@ CONTAINS
          else if(tcap_ .and. tnosep_ ) then
             call errore(' main',' tcap and tnosep both true',0)
          else if(tcp_ ) then
-            write(6,555) tempw_ , tolp_
+            WRITE( stdout,555) tempw_ , tolp_
          else if(tcap_) then
-            write(6,560) tempw_ , tolp_
+            WRITE( stdout,560) tempw_ , tolp_
          else if(tnosep_ ) then
-            write(6,562) tempw_ , qnp_
+            WRITE( stdout,562) tempw_ , qnp_
          end if
          if(tnosee_) then
-            write(6,566) ekincw_ , qne_
+            WRITE( stdout,566) ekincw_ , qne_
          end if
       end if
 !
       if(tpre_) then
-         write(6,600)
+         WRITE( stdout,600)
          if(thdyn_) then
-            if(thdiag_) write(6,608)
+            if(thdiag_) WRITE( stdout,608)
             if(tnoseh_) then
                frich_=0.
-               write(6,604) temph_,qnh_,press_
+               WRITE( stdout,604) temph_,qnh_,press_
             else
-               write(6,602) frich_,greash_,press_
+               WRITE( stdout,602) frich_,greash_,press_
             endif
          else
-            write(6,606)
+            WRITE( stdout,606)
          endif
       endif
       if ( agg_ .ne. 0.d0) then
-            write(6,650) agg_, sgg_, e0gg_
+            WRITE( stdout,650) agg_, sgg_, e0gg_
       end if
-      write(6,700) iprsta_
+      WRITE( stdout,700) iprsta_
 
 !     
  500  format(//                                                         &

@@ -18,7 +18,7 @@ subroutine new_ns
 #include "machine.h"
   USE io_global,        ONLY : stdout
   use pwcom
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   use io_files
 #ifdef __PARA
   use para

@@ -20,7 +20,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
 #include "machine.h"
   use parameters, only: DP
   use pwcom
-  USE wavefunctions,  ONLY: evc, psic
+  USE wavefunctions_module,  ONLY: evc, psic
 #ifdef __PARA
   use mp, only: mp_bcast
 #endif

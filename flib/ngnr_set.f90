@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-   SUBROUTINE ngng_set( alat, a1, a2, a3, gcut, qk, ng, nr1, nr2, nr3 )
+   SUBROUTINE ngnr_set( alat, a1, a2, a3, gcut, qk, ng, nr1, nr2, nr3 )
 
 !  this routine calculates the storage required for G vectors arrays
 !  ----------------------------------------------

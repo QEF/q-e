@@ -146,6 +146,7 @@
 #ifdef __PARA
       use para_mod, only: me
 #endif
+      use io_global, only: stdout
       implicit none
       character(len=80) command
       integer pid
@@ -155,7 +156,7 @@
       pid=getpid_()
       write(command,10) pid
  10   format('ps -lp ',i8,' | grep -v SZ | awk ''{print $10}'' ')
-      write(6,'(''Estimated size (kB) of each process: '',$)')
+      WRITE( stdout,'(''Estimated size (kB) of each process: '',$)')
       call system(command)
 #endif
 
@@ -164,7 +165,7 @@
       pid=getpid()
       write(command,10) pid
  10   format('ps -lp ',i8,'|grep -v SZ|awk ''{print $10}''|cut -f1 -d:')
-      write(6,'(''Total estimated size (pages) of each process: '',$)')
+      WRITE( stdout,'(''Total estimated size (pages) of each process: '',$)')
 #ifdef __PARA
       if(me.eq.1) &
 #endif

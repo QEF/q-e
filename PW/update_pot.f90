@@ -170,7 +170,7 @@ subroutine extrapolate_wfcs
 #include "machine.h"
   USE io_global,        ONLY : stdout
   use pwcom
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   implicit none
 #define ONE (1.d0,0.d0)
 #define ZERO (0.d0,0.d0)

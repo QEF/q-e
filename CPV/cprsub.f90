@@ -254,6 +254,7 @@
 !         g^2 (dvps)
 ! 
       use control_flags, only: iprint, tpre, iprsta
+      use io_global, only: stdout
       use bhs
       use gvec
       use gvecs
@@ -290,7 +291,7 @@
       end do
       eself=eself/sqrt(2.*pi)
       if(tfirst.or.iprsta.ge.4)then
-         write(6,1200) eself
+         WRITE( stdout,1200) eself
       endif
  1200 format(2x,'formf: eself=',f10.5)
 !
@@ -458,8 +459,8 @@
             call reduce(1,vpsum)
             call reduce(1,rhopsum)
 #endif
-            write(6,1250) vps(1,is),rhops(1,is)
-            write(6,1300) vpsum,rhopsum
+            WRITE( stdout,1250) vps(1,is),rhops(1,is)
+            WRITE( stdout,1300) vpsum,rhopsum
          endif
 !
       end do
@@ -496,7 +497,7 @@
       use control_flags, only: iprint
       use gvec
       use gvecw, only: ngw
-      use pres_mod
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       implicit none
 !
       integer nr1, nr2, nr3
@@ -682,6 +683,7 @@
 !     use ibrav=0 for generic cell vectors given by the matrix h(3,3)
 !
       use control_flags, only: iprint, thdyn
+      use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
       use ions_base, only: na, pmass, nsp
@@ -689,7 +691,7 @@
       use elct
       use constants, only: pi, fpi
       use cell_base, only: wmass, hold, h
-      use pres_mod
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
       use restart
       use parameters, only: nacx, nsx, natx
@@ -732,7 +734,7 @@
       end do
 !
       refg=1.0*ecut/(mmx-1)
-      write(6,*) '   NOTA BENE: refg, mmx = ',refg,mmx
+      WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
 !
       if(thdyn) then
          if(thdiag) then
@@ -763,11 +765,11 @@
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 !
-         write(6,344) ibrav
+         WRITE( stdout,344) ibrav
          do i=1,3
-            write(6,345) (h(i,j),j=1,3)
+            WRITE( stdout,345) (h(i,j),j=1,3)
          enddo
-         write(6,*)
+         WRITE( stdout,*)
       else
 !
 ! with variable-cell we use h to describe the cell
@@ -809,14 +811,14 @@
       end do
       !
       if(.not. twmass) then
-         write(6,998) wmass
+         WRITE( stdout,998) wmass
       else
          wmass=0.
          do is=1,nsp
             wmass=wmass+na(is)*pmass(is)
          enddo
          wmass=wmass*0.75/pi/pi
-         write(6,999) wmass
+         WRITE( stdout,999) wmass
       endif
  998  format(' wmass (read from input) = ',f15.2,/)
  999  format(' wmass (calculated) = ',f15.2,/)
@@ -834,6 +836,7 @@
 !     are recalculated according to the value of cell parameter h
 !
       use control_flags, only: iprint, iprsta
+      use io_global, only: stdout
       use gvec
       use grid_dimensions, only: nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
@@ -842,7 +845,7 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
       use small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
       use cell_base, only: h, deth
-      use pres_mod
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
 !
       implicit none
       integer ibrav
@@ -901,13 +904,13 @@
       end do
 !     ==============================================================
       if(iprsta.ge.4)then
-         write(6,34) ibrav,alat,omega
+         WRITE( stdout,34) ibrav,alat,omega
          if(ibrav.eq.0) then
-            write(6,344)
+            WRITE( stdout,344)
             do i=1,3
-               write(6,345) (h(i,j),j=1,3)
+               WRITE( stdout,345) (h(i,j),j=1,3)
             enddo
-            write(6,*)
+            WRITE( stdout,*)
          endif
       endif
 ! 
@@ -926,6 +929,7 @@
 !     See also comments in nlinit
 !
       use control_flags, only: iprint, tpre, iprsta
+      use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
@@ -968,7 +972,7 @@
 !     ---------------------------------------------------------------
 !     calculation of array qradb(igb,iv,jv,is)
 !     ---------------------------------------------------------------
-         if(iprsta.ge.4) write(6,*)  '  qradb  '
+         if(iprsta.ge.4) WRITE( stdout,*)  '  qradb  '
          c=fpi/omegab
 !
          do l=1,nqlc(is)
@@ -1056,7 +1060,7 @@
 !     ---------------------------------------------------------------
 !     calculation of array  beta(ig,iv,is)
 !     ---------------------------------------------------------------
-         if(iprsta.ge.4) write(6,*)  '  beta  '
+         if(iprsta.ge.4) WRITE( stdout,*)  '  beta  '
          c=fpi/sqrt(omega)
          do iv=1,nh(is)
             lp=indlm(iv,is)
@@ -1112,7 +1116,7 @@
             do ig=1,ngb
                rhocb(ig,is)=c*qgbs(ig)
             end do
-            if(iprsta.ge.4) write(6,'(a,f12.8)')                     &
+            if(iprsta.ge.4) WRITE( stdout,'(a,f12.8)')                     &
      &              ' integrated core charge= ',omegab*rhocb(1,is)
             deallocate(jl)
             deallocate(fint)
@@ -1226,6 +1230,7 @@
 !     (this is done in routine newnlinit)
 !     
       use control_flags, only: iprint, tpre
+      use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
       use cvan
@@ -1342,7 +1347,7 @@
 !     ---------------------------------------------------------------
 !     calculation of array qradx(igb,iv,jv,is)
 !     ---------------------------------------------------------------
-         write(6,*) ' nlinit  nh(is),ngb,is,kkbeta,lqx = ',             &
+         WRITE( stdout,*) ' nlinit  nh(is),ngb,is,kkbeta,lqx = ',             &
      &        nh(is),ngb,is,kkbeta(is),nqlc(is)
          do l=1,nqlc(is)
             do il=1,mmx
@@ -1412,12 +1417,12 @@
             end do
          end do
 !
-         write(6,*)
-         write(6,'(20x,a)') '    qqq '
+         WRITE( stdout,*)
+         WRITE( stdout,'(20x,a)') '    qqq '
          do iv=1,nbeta(is)
-            write(6,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
+            WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
          end do
-         write(6,*)
+         WRITE( stdout,*)
 !
          deallocate(jl)
          deallocate(fint)
@@ -1449,7 +1454,7 @@
 !     ---------------------------------------------------------------
 !     calculation of array  betagx(ig,iv,is)
 !     ---------------------------------------------------------------
-         write(6,*)  '  betagx  '
+         WRITE( stdout,*)  '  betagx  '
          do iv=1,nh(is)
             l=nhtol(iv,is)+1
             do il=1,mmx
@@ -1524,14 +1529,14 @@
          end do
 !
          do iv=1,nh(is)
-            write(6,901) iv,indv(iv,is),nhtol(iv,is)
+            WRITE( stdout,901) iv,indv(iv,is),nhtol(iv,is)
          end do
  901     format(2x,i2,'  indv= ',i2,'   ang. mom= ',i2)
 !
-         write(6,*)
-         write(6,'(20x,a)') '    dion '
+         WRITE( stdout,*)
+         WRITE( stdout,'(20x,a)') '    dion '
          do iv=1,nbeta(is)
-            write(6,'(8f9.4)') (fac*dion(iv,jv,is),jv=1,nbeta(is))
+            WRITE( stdout,'(8f9.4)') (fac*dion(iv,jv,is),jv=1,nbeta(is))
          end do
 !
          deallocate(jltmp)

@@ -26,7 +26,7 @@ program chdens
   use pseud, only: zv
   use scf, only: rho
   use workspace
-  USE wavefunctions,  ONLY: psic
+  USE wavefunctions_module,  ONLY: psic
   use io_files, only: nd_nmbr
 #ifdef __PARA
   use para, only: me

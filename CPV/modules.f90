@@ -322,10 +322,3 @@ module cdvan
                              drhovan(:,:,:,:,:)
 end module cdvan
 
-module pres_mod
-  use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
-  implicit none
-  save
-  real(kind=8),allocatable:: ggp(:)
-end module pres_mod
-

@@ -115,7 +115,6 @@ addnlcc_zstar_eu_us.o
 MODULES = ../Modules/*.o
 
 PWOBJS = ../PW/pwcom.o  \
-../PW/wavefunctions.o  \
 ../PW/aainit.o  \
 ../PW/add_efield.o  \
 ../PW/addusdens.o  \

@@ -12,7 +12,7 @@ subroutine A_h(e,h,ah)
 #include "machine.h"
   use parameters, only: DP
   use pwcom
-  USE wavefunctions,  ONLY: evc, psic
+  USE wavefunctions_module,  ONLY: evc, psic
   USE constants,  ONLY: degspin
   use rbecmod, only: becp
   use cgcom

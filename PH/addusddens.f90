@@ -18,7 +18,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
 #include "machine.h"
 
   use pwcom
-  USE wavefunctions,  ONLY: psic
+  USE wavefunctions_module,  ONLY: psic
   use phcom
   use parameters, only : DP
   implicit none

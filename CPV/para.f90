@@ -92,6 +92,7 @@ end module para_mod
 !
       use para_mod
       use mp, only: mp_start, mp_env
+      use io_global, only: stdout
       use global_version
 !
       implicit none
@@ -122,16 +123,16 @@ end module para_mod
 ! only the first processor writes
 !
       if ( me == 1 ) then
-         write(6,'(72("*"))')
-         write(6,'(4("*"),64x,4("*"))')
-         write(6,'(4("*"),"  CPV: variable-cell Car-Parrinello ", &
+         WRITE( stdout,'(72("*"))')
+         WRITE( stdout,'(4("*"),64x,4("*"))')
+         WRITE( stdout,'(4("*"),"  CPV: variable-cell Car-Parrinello ", &
               &  "molecular dynamics          ",4("*"))') 
-         write(6,'(4("*"),"  using ultrasoft Vanderbilt ", &
+         WRITE( stdout,'(4("*"),"  using ultrasoft Vanderbilt ", &
               &  "pseudopotentials - v.",a6,8x,4("*"))') version_number
-         write(6,'(4("*"),64x,4("*"))')
-         write(6,'(72("*"))')
-         write(6,'(/5x,''Parallel version (MPI)'')')
-         write(6,'(5x,''Number of processors in use:   '',i4)') nproc
+         WRITE( stdout,'(4("*"),64x,4("*"))')
+         WRITE( stdout,'(72("*"))')
+         WRITE( stdout,'(/5x,''Parallel version (MPI)'')')
+         WRITE( stdout,'(5x,''Number of processors in use:   '',i4)') nproc
       else
          open(6,file='/dev/null',status='unknown')
 !
@@ -264,6 +265,7 @@ end module para_mod
       use para_mod
       use stick_base
       use fft_scalar, only: good_fft_dimension
+      use io_global, only: stdout
 !
       implicit none
       real(kind=8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
@@ -523,14 +525,14 @@ end module para_mod
 ! ipc  is the processor for this column in the dense grid
 ! ipcs is the same, for the smooth grid
 !
-      write(6,"(                                                      &
+      WRITE( stdout,"(                                                      &
        & ' Proc  planes cols    G   planes cols    G    columns  G',/,  &
        & '       (dense grid)     (smooth grid)   (wavefct grid)' )" )
       do i=1,nproc
-         write(6,'(i3,2x,3(i5,2i7))') i, npp(i),ncp(i),ngp(i),          &
+         WRITE( stdout,'(i3,2x,3(i5,2i7))') i, npp(i),ncp(i),ngp(i),          &
      &        npps(i),ncps(i),ngps(i), ncpw(i), ngpw(i)
       end do
-      write(6,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc)), SUM(ncp(1:nproc)), &
+      WRITE( stdout,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc)), SUM(ncp(1:nproc)), &
         SUM(ngp(1:nproc)), SUM(npps(1:nproc)), SUM(ncps(1:nproc)), &
         SUM(ngps(1:nproc)), SUM(ncpw(1:nproc)), SUM(ngpw(1:nproc))
 !
@@ -675,13 +677,13 @@ end module para_mod
       call tictac(27,1)
 
 !      do i = 1, nproc
-!        write(6,fmt="('DEBUG fft_setup ',3I5 )" ) i, npp(i), dfftp%npp(i)
-!        write(6,fmt="('DEBUG fft_setup ',3I5 )" ) i, npps(i), dffts%npp(i)
+!        WRITE( stdout,fmt="('DEBUG fft_setup ',3I5 )" ) i, npp(i), dfftp%npp(i)
+!        WRITE( stdout,fmt="('DEBUG fft_setup ',3I5 )" ) i, npps(i), dffts%npp(i)
 !      end do
-!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) nnr_, dfftp%nnr
-!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) nnrs_, dffts%nnr
-!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) nct, dfftp%nst
-!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) ncts, dffts%nst
+!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) nnr_, dfftp%nnr
+!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) nnrs_, dffts%nnr
+!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) nct, dfftp%nst
+!      WRITE( stdout,fmt="('DEBUG fft_setup ',3I9 )" ) ncts, dffts%nst
 !
       return
       end
@@ -807,6 +809,7 @@ end module para_mod
 !
       use para_mod
       use timex_mod
+      use io_global, only: stdout
 !
       implicit none
       include 'mpif.h'
@@ -828,12 +831,12 @@ end module para_mod
       if (ierr.ne.0)                                                    &
      &     call errore('print_para_times','error in maximum',ierr)
 !
-      write(6,*)
-      write(6,*) ' routine     calls       cpu time        elapsed'
-      write(6,*) '             node0  node0,  min,  max     node0'
-      write(6,*)
+      WRITE( stdout,*)
+      WRITE( stdout,*) ' routine     calls       cpu time        elapsed'
+      WRITE( stdout,*) '             node0  node0,  min,  max     node0'
+      WRITE( stdout,*)
       do i=1, maxclock
-         if (ntimes(i).gt.0) write(6,30) routine(i),                    &
+         if (ntimes(i).gt.0) WRITE( stdout,30) routine(i),                    &
      &        ntimes(i), cputime(i), mincpu(i),maxcpu(i), elapsed(i)
       end do
  30   format(a10,i7,4f8.1)

@@ -16,7 +16,7 @@ subroutine wfcinit
 #include "machine.h"
   USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   USE rbecmod, only: becp, becp_
   implicit none
   !

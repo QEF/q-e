@@ -17,7 +17,7 @@ subroutine newd
 #include "machine.h"
 
   use pwcom
-  USE wavefunctions,    ONLY : psic
+  USE wavefunctions_module,    ONLY : psic
   implicit none
   integer :: ig, nt, ih, jh, na, is
   ! counters on g vectors, atom type, beta functions x 2, atoms, spin

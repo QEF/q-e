@@ -75,7 +75,7 @@
       use work1, only: wrk1
       use work_box, only: qv
       use work2, only: wrk2
-      use io_global, ONLY: io_global_start
+      use io_global, ONLY: io_global_start, stdout
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
       use para_mod
@@ -85,12 +85,17 @@
       use dpseu
       use cdvan
       use stre
-      use pres_mod
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use restart
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir
       use input_cp, only: iosys
+
+! wavefunctions
+!
+      use wavefunctions_module, only: c0, cm, phi => cp
+!
 !
       implicit none
 !
@@ -99,10 +104,6 @@
       logical twall, tbump
       logical thdiag
       logical tfirst, tlast
-!
-! wavefunctions
-!
-      complex(kind=8), allocatable:: c0(:,:), cm(:,:), phi(:,:)
 !
 ! structure factors e^{-ig*R}
 !
@@ -272,29 +273,29 @@
       call init( ibrav, celldm, ecut, ecutw, tranp, amprp, ndr, nbeg, tfirst,  &
            twmass, thdiag, iforceh, tau0, taus, delt )
 
-      write(6,*) ' out from init'
+      WRITE( stdout,*) ' out from init'
 !
 !     more initialization requiring atomic positions
 !
       nas = MAXVAL( na( 1 : nsp ) )
       if( iprsta > 1 ) then
-         write(6,*) ' tau0 '
-         write(6,'(3f14.8)') (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+         WRITE( stdout,*) ' tau0 '
+         WRITE( stdout,'(3f14.8)') (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
       endif
 !
 !     ==================================================================
 !     allocate and initialize nonlocal potentials
 !     ==================================================================
       call nlinit
-      write(6,*) ' out from nlinit'
+      WRITE( stdout,*) ' out from nlinit'
 !
 !     ==================================================================
 !     allocation of all arrays not already allocated in init and nlinit
 !     ==================================================================
 !
-      allocate(c0(ngw,nx))
-      allocate(cm(ngw,nx))
-      allocate(phi(ngw,nx))
+      allocate(c0(ngw,nx,1,1))
+      allocate(cm(ngw,nx,1,1))
+      allocate(phi(ngw,nx,1,1))
       allocate(wrk2(ngw,max(nas,n)))
       allocate(eigr(ngw,nas,nsp))
       allocate(eigrb(ngb,nas,nsp))
@@ -358,8 +359,8 @@
       hnew=h
 !
       lambda(:,:)=0.d0
-      cm(:,:) = (0.d0, 0.d0)
-      c0(:,:) = (0.d0, 0.d0)
+      cm(:,:,1,1) = (0.d0, 0.d0)
+      c0(:,:,1,1) = (0.d0, 0.d0)
 !
 !     mass preconditioning: ema0bg(i) = ratio of emass(g=0) to emass(g)
 !     for g**2>emaec the electron mass ema0bg(g) rises quadratically
@@ -376,7 +377,7 @@
 !
          if(nbeg.eq.-1) then
            call readfile_new                                            &
-     &     ( 0, ndr,h,hold,nfi,cm,cm,taus,tausm,vels,velsm,acc,         &
+     &     ( 0, ndr,h,hold,nfi,cm(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
          endif
@@ -389,9 +390,9 @@
 !
          if(iprsta.gt.2)then
             do is=1,nvb
-               write(6,'(/,2x,''species= '',i2)') is 
+               WRITE( stdout,'(/,2x,''species= '',i2)') is 
                do ia=1,na(is)
-                  write(6,2000) ia, (irb(i,ia,is),i=1,3)
+                  WRITE( stdout,2000) ia, (irb(i,ia,is),i=1,3)
  2000             format(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,      &
      &                 ' irb3= ',i3) 
                end do
@@ -425,7 +426,7 @@
          call calbec (1,nsp,eigr,cm,bec)
          if (tpre) call caldbec(1,nsp,eigr,cm)
          call rhoofr (nfi,cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
-         if(iprsta.gt.0) write(6,*) ' out from rhoofr'
+         if(iprsta.gt.0) WRITE( stdout,*) ' out from rhoofr'
 !
 !     put core charge (if present) in rhoc(r)
 !
@@ -439,10 +440,10 @@
      &                      detot(i,2)*h(j,2)+detot(i,3)*h(j,3))
             enddo
          enddo
-         if(iprsta.gt.0) write(6,*) ' out from vofrho'
+         if(iprsta.gt.0) WRITE( stdout,*) ' out from vofrho'
          if(iprsta.gt.2) then
-            write(6,*) ' fion '
-            write(6,'(3f14.8)')                                         &
+            WRITE( stdout,*) ' fion '
+            WRITE( stdout,'(3f14.8)')                                         &
      &                   (((fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
          end if
 ! 
@@ -451,21 +452,21 @@
 !     newd calculates deeq and a contribution to fion
 !
          call newd(rhor,irb,eigrb,rhovan,deeq,fion)
-         write(6,*) ' out from newd'
+         WRITE( stdout,*) ' out from newd'
          call prefor(eigr,betae)
 !
 !     if n is odd => c(*,n+1)=0
 !
          do i=1,n,2
-            call dforce(bec,deeq,betae,i,cm(1,i),cm(1,i+1),c2,c3,rhos)
+            call dforce(bec,deeq,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
             ccc=dt2hbe
             if(tsde) ccc=dt2bye
             do j=1,ngw
-               c0(j,i)  =cm(j,i)  +ccc*ema0bg(j)*c2(j)
-               c0(j,i+1)=cm(j,i+1)+ccc*ema0bg(j)*c3(j)
+               c0(j,i,1,1)  =cm(j,i,1,1)  +ccc*ema0bg(j)*c2(j)
+               c0(j,i+1,1,1)=cm(j,i+1,1,1)+ccc*ema0bg(j)*c3(j)
             end do
          end do
-         write(6,*) ' out from dforce'
+         WRITE( stdout,*) ' out from dforce'
 !
 !     buffer for wavefunctions is unit 21
 !
@@ -474,13 +475,13 @@
 !     nlfq needs deeq calculated in newd
 !
          if (tfor) call nlfq(cm,deeq,eigr,bec,becdr,fion)
-         write(6,*) ' out from nlfq'
+         WRITE( stdout,*) ' out from nlfq'
 ! 
 !     imposing the orthogonality
 !     ==========================================================
 !
          call calphi(cm,ema0bg,bec,betae,phi)
-         write(6,*) ' out from calphi'
+         WRITE( stdout,*) ' out from calphi'
 !     ==========================================================
 !
          if(tortho) then
@@ -488,29 +489,29 @@
      &                   bigr,iter,ccc,eps,maxit,delt,bephi,becp)
          else
             call graham(betae,bec,c0)
-            write(6,*) ' graham  c0 '
+            WRITE( stdout,*) ' graham  c0 '
          endif
 !
 !     nlfl needs lambda becdr and bec
 !
          if (tfor) call nlfl(bec,becdr,lambda,fion)
-         write(6,*) ' out from nlfl'
+         WRITE( stdout,*) ' out from nlfl'
 !
          if(iprsta.ge.3) then
             nnn=min(12,n)
-            write(6,*) 'from main:'
+            WRITE( stdout,*) 'from main:'
             do i=1,nnn
-               write(6,'(12f8.5)') (lambda(i,j)*ccc,j=1,nnn)
+               WRITE( stdout,'(12f8.5)') (lambda(i,j)*ccc,j=1,nnn)
             end do
-            write(6,*)
+            WRITE( stdout,*)
          endif
 !
          if(tpre) then
             call nlfh(bec,dbec,lambda)
-            write(6,*) ' out from nlfh'
-            write(6,*) 
-            write(6,*) ' internal stress tensor:'
-            write(6,5555) ((stress(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) ' out from nlfh'
+            WRITE( stdout,*) 
+            WRITE( stdout,*) ' internal stress tensor:'
+            WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
          endif
  5555    format(1x,f12.5,1x,f12.5,1x,f12.5/                             &
      &          1x,f12.5,1x,f12.5,1x,f12.5/                             &
@@ -518,11 +519,11 @@
 !
          if(tortho) then
             call updatc(ccc,lambda,phi,bephi,becp,bec,c0)
-            write(6,*) ' out from updatc'
+            WRITE( stdout,*) ' out from updatc'
          endif
          call calbec (nvb+1,nsp,eigr,c0,bec)
          if (tpre) call caldbec(1,nsp,eigr,cm)
-         write(6,*) ' out from calbec'
+         WRITE( stdout,*) ' out from calbec'
 !     ==============================================================
 !     cm now orthogonalized
 !     ==============================================================
@@ -587,11 +588,11 @@
          ekincm=0.0
          do i=1,n
             do j=1,ngw
-               speed=c0(j,i)-cm(j,i) 
+               speed=c0(j,i,1,1)-cm(j,i,1,1) 
                ekincm=ekincm+2.*real(conjg(speed)*speed)/ema0bg(j)
             end do
             if (ng0.eq.2) then
-               speed=c0(1,i)-cm(1,i) 
+               speed=c0(1,i,1,1)-cm(1,i,1,1) 
                ekincm=ekincm-real(conjg(speed)*speed)
             end if
          end do
@@ -611,7 +612,7 @@
 !======================================================================
 
             call readfile_new                                           &
-     &     ( 1, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,         &
+     &     ( 1, ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 !
@@ -628,16 +629,16 @@
          if(trane.and.trhor) then
             call prefor(eigr,betae)
             call graham(betae,bec,c0)
-            cm(:, 1:n)=c0(:, 1:n)
+            cm(:, 1:n,1,1)=c0(:, 1:n,1,1)
          endif
 !
          if(iprsta.gt.2) then
-            write(6,*) ' read: taus '
-            write(6,'(3f14.8)')  (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-            write(6,*) ' read: cell parameters h '
-            write(6,*)  (h(1,j),j=1,3)
-            write(6,*)  (h(2,j),j=1,3)
-            write(6,*)  (h(3,j),j=1,3)
+            WRITE( stdout,*) ' read: taus '
+            WRITE( stdout,'(3f14.8)')  (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+            WRITE( stdout,*) ' read: cell parameters h '
+            WRITE( stdout,*)  (h(1,j),j=1,3)
+            WRITE( stdout,*)  (h(2,j),j=1,3)
+            WRITE( stdout,*)  (h(3,j),j=1,3)
          endif
 !
          call phfac(tau0,ei1,ei2,ei3,eigr)
@@ -756,34 +757,34 @@
 !==== start loop ====
 !
       do i=1,n,2
-         call dforce(bec,deeq,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
+         call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
          if(tsde) then
             do j=1,ngw
-               cm(j,  i)=c0(j,  i)+dt2bye*ema0bg(j)*c2(j)
-               cm(j,i+1)=c0(j,i+1)+dt2bye*ema0bg(j)*c3(j)
+               cm(j,  i,1,1)=c0(j,  i,1,1)+dt2bye*ema0bg(j)*c2(j)
+               cm(j,i+1,1,1)=c0(j,i+1,1,1)+dt2bye*ema0bg(j)*c3(j)
             end do
          else if (tnosee) then
             do j=1,ngw
-               cm(j,  i)=cm(j,  i)                                      &
-     &          +2.*fccc*(c0(j,  i)-cm(j,  i)                           &
+               cm(j,  i,1,1)=cm(j,  i,1,1)                                      &
+     &          +2.*fccc*(c0(j,  i,1,1)-cm(j,  i,1,1)                           &
      &                    +0.5*dt2bye*ema0bg(j)*c2(j))
-               cm(j,i+1)=cm(j,i+1)                                      &
-     &          +2.*fccc*(c0(j,i+1)-cm(j,i+1)                           &
+               cm(j,i+1,1,1)=cm(j,i+1,1,1)                                      &
+     &          +2.*fccc*(c0(j,i+1,1,1)-cm(j,i+1,1,1)                           &
      &                    +0.5*dt2bye*ema0bg(j)*c3(j))
             end do
          else
             do j=1,ngw
-               cm(j,  i) = verl1*c0(j,  i)                              &
-     &                   + verl2*cm(j,  i)                              &
+               cm(j,  i,1,1) = verl1*c0(j,  i,1,1)                              &
+     &                   + verl2*cm(j,  i,1,1)                              &
      &                   + verl3*dt2bye*ema0bg(j)*c2(j)
-               cm(j,i+1) = verl1*c0(j,i+1)                              &
-     &                   + verl2*cm(j,i+1)                              &
+               cm(j,i+1,1,1) = verl1*c0(j,i+1,1,1)                              &
+     &                   + verl2*cm(j,i+1,1,1)                              &
      &                   + verl3*dt2bye*ema0bg(j)*c3(j)
             end do
          endif
          if (ng0.eq.2) then
-            cm(1,  i)=cmplx(real(cm(1,  i)),0.0)
-            cm(1,i+1)=cmplx(real(cm(1,i+1)),0.0)
+            cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
+            cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
          end if
       end do
       ccc=fccc*dt2bye
@@ -825,18 +826,18 @@
          if(iprsta.ge.4) then
             if((nfi.eq.0).or.tfirst.or.tlast                            &
      &                   .or.(mod(nfi-1,iprint).eq.0)) then
-               write(6,*) 
-               write(6,*) ' internal stress tensor (before nlfh):'
-               write(6,5555) ((stress(i,j),j=1,3),i=1,3)
+               WRITE( stdout,*) 
+               WRITE( stdout,*) ' internal stress tensor (before nlfh):'
+               WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
             endif
          endif
          call nlfh(bec,dbec,lambda)
          if(iprsta.ge.4) then
             if((nfi.eq.0).or.tfirst.or.tlast                            &
      &                   .or.(mod(nfi-1,iprint).eq.0)) then
-               write(6,*) 
-               write(6,*) ' internal stress tensor (after nlfh):'
-               write(6,5555) ((stress(i,j),j=1,3),i=1,3)
+               WRITE( stdout,*) 
+               WRITE( stdout,*) ' internal stress tensor (after nlfh):'
+               WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
             endif
          endif
          do i=1,3
@@ -853,9 +854,9 @@
          enddo
          if((nfi.eq.0).or.tfirst.or.tlast.or.(mod(nfi-1,iprint).eq.0))  &
      &        then
-            write(6,*) 
-            write(6,*) ' internal stress tensor:'
-            write(6,5555) ((stress(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) 
+            WRITE( stdout,*) ' internal stress tensor:'
+            WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
          endif
       endif
 !
@@ -1040,9 +1041,9 @@
       if(iprsta.ge.3) then
          nnn=min(12,n)
          do i=1,nnn
-            write(6,*)' main lambda  = ',(lambda(i,k),k=1,nnn)
+            WRITE( stdout,*)' main lambda  = ',(lambda(i,k),k=1,nnn)
          end do
-         write(6,*)
+         WRITE( stdout,*)
       endif
 !
       if(tortho) call updatc(ccc,lambda,phi,bephi,becp,bec,cm)
@@ -1106,11 +1107,11 @@
       ekinc0=0.0
       do i=1,n
          do j=1,ngw
-            speed=cm(j,i)-c0(j,i)
+            speed=cm(j,i,1,1)-c0(j,i,1,1)
             ekinc0=ekinc0+2.*real(conjg(speed)*speed)/ema0bg(j) 
          end do
          if(ng0.eq.2) then
-            speed=cm(1,i)-c0(1,i)
+            speed=cm(1,i,1,1)-c0(1,i,1,1)
             ekinc0=ekinc0-real(conjg(speed)*speed)
          end if
       end do
@@ -1200,7 +1201,7 @@
 !
       if(mod(nfi-1,iprint).eq.0 .or. (nfi.eq.(nomore))) then
          call eigs(nspin,nx,nupdwn,iupdwn,f,lambda)
-         write(6,*)
+         WRITE( stdout,*)
       endif
 !
       epot=eht+epseu+exc
@@ -1234,12 +1235,12 @@
       endif
 !
       if(mod(nfi-1,iprint).eq.0.or.tfirst)  then
-         write(6,*)
-         write(6,1947)
+         WRITE( stdout,*)
+         WRITE( stdout,1947)
       end if
 !
       tps=nfi*delt*2.4189d-5
-      write(6,1948) nfi,ekinc,int(temphc),int(tempp),enthal,econs,      &
+      WRITE( stdout,1948) nfi,ekinc,int(temphc),int(tempp),enthal,econs,      &
      &              econt,                                              &
      &              vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
       write(8,2948) tps,ekinc,int(temphc),int(tempp),enthal,econs,      &
@@ -1329,7 +1330,7 @@
       if(mod(nfi,iprint).eq.0) then
 !
          call writefile_new                                         &
-     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,               &
+     &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 
@@ -1343,10 +1344,10 @@
       tbump=.false.
       if (enow .gt. (epre+0.00002)) then
          if (tsde) then
-            write(6,'(''etot rising with tsde - program stopped'')')
+            WRITE( stdout,'(''etot rising with tsde - program stopped'')')
             delt = delt - 1.
-            write(6,'(''new delt = delt - 1. = '',f12.6)') delt       
-            write(6,*)
+            WRITE( stdout,'(''new delt = delt - 1. = '',f12.6)') delt       
+            WRITE( stdout,*)
             if (delt .le. 0.) stop
             if(nbeg.lt.0) goto 666
          endif
@@ -1382,10 +1383,10 @@
          acc(i)=acc(i)*anor
       end do
 !
-      write(6,1949)
+      WRITE( stdout,1949)
  1949 format(//'              averaged quantities :',/,                 &
      &       9x,'ekinc',10x,'ekin',10x,'epot',10x,'etot',5x,'tempp')
-      write(6,1950) (acc(i),i=1,nacc)
+      WRITE( stdout,1950) (acc(i),i=1,nacc)
  1950 format(4f14.5,f10.1)
 !
 #ifdef __PARA
@@ -1396,39 +1397,39 @@
 
 !
          call writefile_new                                         &
-     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,               &
+     &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 
 !
       if(iprsta.gt.1) then
-         write(6,*)
-         write(6,3370)'    lambda   n = ',n
+         WRITE( stdout,*)
+         WRITE( stdout,3370)'    lambda   n = ',n
          do i=1,n
-            write(6,3380) (lambda(i,j),j=1,n)
+            WRITE( stdout,3380) (lambda(i,j),j=1,n)
          end do
 3370     format(26x,a,i4)
 3380     format(9f8.4)      
       endif
 !
       if(tfor) then
-         write(6,1970) ibrav, alat
-         write(6,1971)
+         WRITE( stdout,1970) ibrav, alat
+         WRITE( stdout,1971)
          do i=1,3
-            write(6,1972) (h(i,j),j=1,3)
+            WRITE( stdout,1972) (h(i,j),j=1,3)
          enddo
-         write(6,1973)
+         WRITE( stdout,1973)
          do is=1,nsp
             do ia=1,na(is)
-               write(6,1974) is,ia,(tau0(i,ia,is),i=1,3),               &
+               WRITE( stdout,1974) is,ia,(tau0(i,ia,is),i=1,3),               &
      &            ((ainv(j,1)*fion(1,ia,is)+ainv(j,2)*fion(2,ia,is)+    &
      &              ainv(j,3)*fion(3,ia,is)),j=1,3)
             end do
          end do
-         write(6,1975)
+         WRITE( stdout,1975)
          do is=1,nsp
             do ia=1,na(is)
-               write(6,1976) is,ia,(taus(i,ia,is),i=1,3)
+               WRITE( stdout,1976) is,ia,(taus(i,ia,is),i=1,3)
             end do
          end do
       endif
@@ -1442,7 +1443,7 @@
  1974 format(1x,2i5,3f10.4,2x,3f10.4)
  1975 format(/1x,'Scaled coordinates '/1x,'species',' atom #')
  1976 format(1x,2i5,3f10.4)
-      write (6,1977) 
+      WRITE( stdout,1977) 
 !
       call memory
 !      

@@ -110,7 +110,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use us
   use becmod
   use io_files, only: nd_nmbr, prefix, tmp_dir
-  use wavefunctions, only: evc
+  use wavefunctions_module, only: evc
 #ifdef __PARA
   use para
 #endif

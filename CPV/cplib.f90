@@ -14,6 +14,7 @@
 !
       use van_parameters
       use constants, only: pi, fpi
+      use io_global, only: stdout
 !
       implicit none
 ! 
@@ -34,9 +35,9 @@
 !      cc(li,mi,lj,mj,l)  l  is free index, m=mj+mj   (input limi ljmj)
 !
       ll=2*lli-1
-      write(6,*)
-      write(6,*) ' aainit:  lli ll ',lli,ll
-      write(6,*)
+      WRITE( stdout,*)
+      WRITE( stdout,*) ' aainit:  lli ll ',lli,ll
+      WRITE( stdout,*)
       if (lli.gt.lix) call errore(' aainit ',' lli .gt. lix ',lli)
 !
       call zero(lix*lx*lix*lx*lx,cc)
@@ -375,7 +376,7 @@
                            ik =(k-1)*(k-1)+n
                            ilp=(lp-1)*(lp-1)+mp
                            if(abs(aimag(sum)).gt.0.001) then
-                              write(6,'(a,2f8.5,1x,3i3,2x,i3)')         &
+                              WRITE( stdout,'(a,2f8.5,1x,3i3,2x,i3)')         &
      &                        'ap(ilp,il,ik) =  ', sum,ilp,il,ik
                               call errore('aainit','see above',1)
                            endif
@@ -706,6 +707,7 @@
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
       use ions_base, only: na, nas => nax
+      use io_global, only: stdout
       use elct
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
@@ -723,16 +725,16 @@
       call nlsm1(n,nspmn,nspmx,eigr,c,bec)
 !
       if (iprsta.gt.2) then
-         write(6,*)
+         WRITE( stdout,*)
          do is=1,nspmx
             if(nspmx.gt.1) then
-               write(6,'(33x,a,i4)') ' calbec: bec (is)',is
-               write(6,'(8f9.4)')                                       &
+               WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is
+               WRITE( stdout,'(8f9.4)')                                       &
      &              ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
             else
                do ia=1,na(is)
-                  write(6,'(33x,a,i4)') ' calbec: bec (ia)',ia
-                  write(6,'(8f9.4)')                                    &
+                  WRITE( stdout,'(33x,a,i4)') ' calbec: bec (ia)',ia
+                  WRITE( stdout,'(8f9.4)')                                    &
      &             ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
                end do
             end if
@@ -751,6 +753,7 @@
 !     where s'=s(r(t))  
 !
       use ions_base, only: na, nsp
+      use io_global, only: stdout
       use cvan
       use elct
       use gvecw, only: ngw
@@ -808,17 +811,17 @@
 #ifdef __PARA
          call reduce(1,emtot)
 #endif      
-         write(6,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
-         write(6,*)
+         WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
+         WRITE( stdout,*)
          do is=1,nsp
             if(nsp.gt.1) then
-               write(6,'(33x,a,i4)') ' calphi: bec (is)',is
-               write(6,'(8f9.4)')                                       &
+               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
+               WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
             else
                do ia=1,na(is)
-                  write(6,'(33x,a,i4)') ' calphi: bec (ia)',ia
-                  write(6,'(8f9.4)')                                    &
+                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
+                  WRITE( stdout,'(8f9.4)')                                    &
      &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
                end do
             end if
@@ -919,8 +922,8 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use cell_base, only: ainv
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use gvec
-      use pres_mod
 !
       implicit none
 ! input
@@ -1166,7 +1169,6 @@
 !     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
-      use pres_mod
       use control_flags, only: iprint, tbuff
       use gvec
       use gvecs
@@ -1178,6 +1180,7 @@
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
       use work1
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
 !
       implicit none
 !
@@ -1340,6 +1343,7 @@
 !-----------------------------------------------------------------------
 !
       use ions_base, only: nas => nax, na, nsp
+      use io_global, only: stdout
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
@@ -1391,10 +1395,10 @@
             csc(k)=csc(k)+sum
          end do
 !
-         write(6,'(a,12f18.15)')' dotcsc = ',(csc(k),k=1,i)
+         WRITE( stdout,'(a,12f18.15)')' dotcsc = ',(csc(k),k=1,i)
 !
       end do
-      write(6,*)
+      WRITE( stdout,*)
 !
       deallocate(becp)
 !
@@ -1649,6 +1653,7 @@
 !     Note that lambda as calculated is multiplied by occupation numbers
 !     so empty states yield zero. Eigenvalues are printed out in eV
 !
+      use io_global, only: stdout
       implicit none
 ! input
       integer, intent(in) :: nspin, nx, nupdwn(nspin), iupdwn(nspin)
@@ -1676,12 +1681,12 @@
 !
 !     print out eigenvalues
 !
-         write(6,12) 0., 0., 0.
-         write(6,14) (wr(i),i=1,nupdwn(iss))
+         WRITE( stdout,12) 0., 0., 0.
+         WRITE( stdout,14) (wr(i),i=1,nupdwn(iss))
       end do
    12 format(//' eigenvalues at k-point: ',3f6.3)
    14 format(10f8.2)
-      write(6,*)
+      WRITE( stdout,*)
 !
       return
       end
@@ -1697,8 +1702,8 @@
       use gvec
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      !use parm
-      use pres_mod
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+
       implicit none
 ! input
       complex(kind=8) c(ngw,nx)
@@ -2402,6 +2407,7 @@
       use gvecs, only: ngs, nms, ngsl, nps
       use gvecw, only: ngw, ngwl, ngwt
       use reciprocal_vectors, only: ng0 => gstart
+      use io_global, only: stdout
 
       use elct
 
@@ -2619,12 +2625,12 @@
       deallocate(g2_g)
       deallocate(mill_g)
 
-      write(6,*)
-      write(6,150) ng
+      WRITE( stdout,*)
+      WRITE( stdout,150) ng
  150  format(' ggen:  # of g vectors < gcut   ng= ',i6)
-      write(6,160) ngs
+      WRITE( stdout,160) ngs
  160  format(' ggen:  # of g vectors < gcuts ngs= ',i6)
-      write(6,170) ngw
+      WRITE( stdout,170) ngw
  170  format(' ggen:  # of g vectors < gcutw ngw= ',i6)
 !
 !     reorder the g's in order of increasing magnitude.
@@ -2696,7 +2702,7 @@
      &        in3p(ig).lt.-nr3m1.or.in3p(ig).gt.nr3m1      )            &
      &        nrefold=nrefold+1
       end do
-      if (nrefold.ne.0) write(6, '('' WARNING: '',i6,                   &
+      if (nrefold.ne.0) WRITE( stdout, '('' WARNING: '',i6,                   &
      &     '' G-vectors refolded into dense FFT grid'')') nrefold
 !
 ! costruct fft indexes (n1,n2,n3) for the dense grid
@@ -2777,7 +2783,7 @@
      &        in3p(ig).lt.-nr3m1.or.in3p(ig).gt.nr3m1      )            &
      &        nrefold=nrefold+1
       end do
-      if (nrefold.ne.0) write(6, '('' WARNING: '',i6,                   &
+      if (nrefold.ne.0) WRITE( stdout, '('' WARNING: '',i6,                   &
      &     '' G-vectors refolded into smooth FFT grid'')') nrefold
 !
 ! costruct fft indexes (n1s,n2s,n3s) for the small grid
@@ -2868,9 +2874,9 @@
          ng0=1
       end if
 !
-      write(6,180) ngl
+      WRITE( stdout,180) ngl
  180  format(' ggen:  # of g shells  < gcut  ngl= ',i6)
-      write(6,*)
+      WRITE( stdout,*)
 !
 ! calculation of G-vectors
 !
@@ -2895,6 +2901,7 @@
 !
       use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, gxnb, glb, npb, nmb
       use gvecb, only: iglb, in1pb, in2pb, in3pb
+      use io_global, only: stdout
 
 !
       implicit none
@@ -2995,8 +3002,8 @@
          end do
       end do
 !
-      write(6,*)
-      write(6,170) ngb
+      WRITE( stdout,*)
+      WRITE( stdout,170) ngb
  170  format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
 !
 !   reorder the g's in order of increasing magnitude.
@@ -3089,7 +3096,7 @@
          endif
          iglb(ig)=ngbl
       end do
-      write(6,180) ngbl
+      WRITE( stdout,180) ngbl
  180  format(' ggenb: # of gb shells  < gcutb ngbl= ',i6)
 ! 
 ! then allocate the array glb
@@ -3341,10 +3348,11 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint
-      use pres_mod
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use fft_scalar, only: good_fft_dimension, good_fft_order
       use constants, only: scmass
       use cell_base, only: omega, alat
+      use io_global, only: stdout
 
       implicit none
 ! 
@@ -3367,13 +3375,13 @@
       b1 = b1 * alat
       b2 = b2 * alat
       b3 = b3 * alat
-      write(6,*)
-      write(6,210) 
+      WRITE( stdout,*)
+      WRITE( stdout,210) 
 210   format(' unit vectors of full simulation cell',/,                 &
      &       ' in real space:',25x,'in reciprocal space:')
-      write(6,'(3f10.4,10x,3f10.4)') a1,b1
-      write(6,'(3f10.4,10x,3f10.4)') a2,b2
-      write(6,'(3f10.4,10x,3f10.4)') a3,b3
+      WRITE( stdout,'(3f10.4,10x,3f10.4)') a1,b1
+      WRITE( stdout,'(3f10.4,10x,3f10.4)') a2,b2
+      WRITE( stdout,'(3f10.4,10x,3f10.4)') a3,b3
 
 !     Store the base vectors used to generate the reciprocal space
       bi1 = b1/alat
@@ -3472,13 +3480,13 @@
       b1b = b1b * alatb
       b2b = b2b * alatb
       b3b = b3b * alatb
-      write(6,*)
-      write(6,220) 
+      WRITE( stdout,*)
+      WRITE( stdout,220) 
 220   format(' unit vectors of box grid cell',/,                        &
      &       ' in real space:',25x,'in reciprocal space:')
-      write(6,'(3f10.4,10x,3f10.4)') a1b,b1b
-      write(6,'(3f10.4,10x,3f10.4)') a2b,b2b
-      write(6,'(3f10.4,10x,3f10.4)') a3b,b3b
+      WRITE( stdout,'(3f10.4,10x,3f10.4)') a1b,b1b
+      WRITE( stdout,'(3f10.4,10x,3f10.4)') a2b,b2b
+      WRITE( stdout,'(3f10.4,10x,3f10.4)') a3b,b3b
       do i=1,3
          ainvb(1,i)=b1b(i)/alatb
          ainvb(2,i)=b2b(i)/alatb
@@ -3490,34 +3498,34 @@
 !
 !     ==============================================================
 !
-      write(6,34) ibrav,alat,omega,gcut,gcuts,gcutw,1
-      write(6,81) nr1, nr2, nr3, nr1x, nr2x, nr3x,                      &
+      WRITE( stdout,34) ibrav,alat,omega,gcut,gcuts,gcutw,1
+      WRITE( stdout,81) nr1, nr2, nr3, nr1x, nr2x, nr3x,                      &
      &            nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,                     &
      &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
 !
       call dftname(xctype)
-      write(6,38) xctype
-      write(6,334) ecutw,dual*ecutw,ecut
+      WRITE( stdout,38) xctype
+      WRITE( stdout,334) ecutw,dual*ecutw,ecut
 !
       if(nspin.eq.1)then
-         write(6,6) nel(1),n
-         write(6,166) nspin
-         write(6,74)
-         write(6,77) (f(i),i=1,n)
+         WRITE( stdout,6) nel(1),n
+         WRITE( stdout,166) nspin
+         WRITE( stdout,74)
+         WRITE( stdout,77) (f(i),i=1,n)
       else
-         write(6,7) nel(1),nel(2), n
-         write(6,167) nspin,nupdwn(1),nupdwn(2)
-         write(6,75) 
-         write(6,77) (f(i),i=iupdwn(1),nupdwn(1))
-         write(6,76) 
-         write(6,77) (f(i),i=iupdwn(2),iupdwn(2)-1+nupdwn(2))
+         WRITE( stdout,7) nel(1),nel(2), n
+         WRITE( stdout,167) nspin,nupdwn(1),nupdwn(2)
+         WRITE( stdout,75) 
+         WRITE( stdout,77) (f(i),i=iupdwn(1),nupdwn(1))
+         WRITE( stdout,76) 
+         WRITE( stdout,77) (f(i),i=iupdwn(2),iupdwn(2)-1+nupdwn(2))
       endif
-      write(6,878) nsp
+      WRITE( stdout,878) nsp
       do is=1,nsp
-         write(6,33) is, na(is), pmass(is), rcmax(is)
-         write(6,9)
+         WRITE( stdout,33) is, na(is), pmass(is), rcmax(is)
+         WRITE( stdout,9)
          do ia=1,na(is),3
-            write(6,555) ((tau(k,ik,is),k=1,3),ik=ia,min(ia+2,na(is)) )
+            WRITE( stdout,555) ((tau(k,ik,is),k=1,3),ik=ia,min(ia+2,na(is)) )
          end do
  555     format(3(4x,3(1x,f6.2)))
       end do
@@ -3998,6 +4006,7 @@
 !     contribution to fion due to the orthonormality constraint
 ! 
 !
+      use io_global, only: stdout
       use ions_base, only: na, nsp
       use parameters, only: natx
       use gvec
@@ -4328,6 +4337,7 @@
       use elct
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
+      use io_global, only: stdout
 !
       implicit none
 !
@@ -4389,20 +4399,20 @@
          call tauset(phi,bephi,qbephi,nss,istart,tau)
 !
          if(iprsta.gt.4) then
-            write(6,*)
-            write(6,'(26x,a)') '    rho '
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    rho '
             do i=1,nss
-               write(6,'(7f11.6)') (rho(i,j),j=1,nss)
+               WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nss)
             end do
-            write(6,*)
-            write(6,'(26x,a)') '    sig '
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    sig '
             do i=1,nss
-               write(6,'(7f11.6)') (sig(i,j),j=1,nss)
+               WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nss)
             end do
-            write(6,*)
-            write(6,'(26x,a)') '    tau '
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    tau '
             do i=1,nss
-               write(6,'(7f11.6)') (tau(i,j),j=1,nss)
+               WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nss)
             end do
          endif
 !
@@ -4490,7 +4500,7 @@
             call MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
             call MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
          end do
-         write(6,*) ' diff= ',diff,' iter= ',iter
+         WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
          call errore('ortho','max number of iterations exceeded',iter)
 !
  20      continue
@@ -4498,15 +4508,15 @@
 !-----------------------------------------------------------------------
 !
          if(iprsta.gt.4) then
-            write(6,*)
-            write(6,'(26x,a)') '    lambda '
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    lambda '
             do i=1,nss
-               write(6,'(7f11.6)') (xloc(i,j)/f(i+istart-1),j=1,nss)
+               WRITE( stdout,'(7f11.6)') (xloc(i,j)/f(i+istart-1),j=1,nss)
             end do
          endif
 !     
          if(iprsta.gt.2) then
-            write(6,*) ' diff= ',diff,' iter= ',iter
+            WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
          endif
 !     
 !     lagrange multipliers
@@ -4569,6 +4579,7 @@
 !     eigrt=exp(-i*g*tau) .
 !     Uses the same logic for fast calculation as in phfac (see below)
 !
+      use io_global, only: stdout
       use ions_base, only: nas => nax, nsp, na
       use parameters, only: natx, nsx
       use gvecb
@@ -4596,8 +4607,8 @@
       allocate(ei3b(-nr3b:nr3b,nas,nsp))
 !
       if(iprsta.gt.3) then 
-         write(6,*) ' phbox: taub '
-         write(6,*)  (((taub(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+         WRITE( stdout,*) ' phbox: taub '
+         WRITE( stdout,*)  (((taub(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
       endif
       do is=1,nsp
          do ia=1,na(is)
@@ -4658,24 +4669,24 @@
       end do
 !
       if(iprsta.gt.4) then
-         write(6,*)
+         WRITE( stdout,*)
          if(nsp.gt.1) then
             do is=1,nsp
-               write(6,'(33x,a,i4)') ' ei1b, ei2b, ei3b (is)',is
+               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (is)',is
                do ig=1,4
-                  write(6,'(6f9.4)')                                    &
+                  WRITE( stdout,'(6f9.4)')                                    &
      &                 ei1b(ig,1,is),ei2b(ig,1,is),ei3b(ig,1,is)
                end do
-               write(6,*)
+               WRITE( stdout,*)
             end do
          else
             do ia=1,na(1)
-               write(6,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
+               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
                do ig=1,4
-                  write(6,'(6f9.4)')                                    &
+                  WRITE( stdout,'(6f9.4)')                                    &
      &                 ei1b(ig,ia,1),ei2b(ig,ia,1),ei3b(ig,ia,1)
                end do
-               write(6,*)
+               WRITE( stdout,*)
             end do
          endif
       endif
@@ -4698,6 +4709,7 @@
 !  calculated in ggen .
 !
       use ions_base, only: nas => nax, nsp, na
+      use io_global, only: stdout
       use parameters, only: natx, nsx
       use gvecw, only: ngw
       use cell_base, only: ainv
@@ -4721,8 +4733,8 @@
       if(nr3.lt.3) call errore(' phfac ',' nr1 too small ',nr3)
 !
       if(iprsta.gt.3) then
-         write(6,*) ' phfac: tau0 '
-         write(6,*) (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+         WRITE( stdout,*) ' phfac: tau0 '
+         WRITE( stdout,*) (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
       endif
       do is=1,nsp
          do ia=1,na(is)
@@ -4774,24 +4786,24 @@
       end do
 !
       if(iprsta.gt.4) then
-         write(6,*)
+         WRITE( stdout,*)
          if(nsp.gt.1) then
             do is=1,nsp
-               write(6,'(33x,a,i4)') ' ei1, ei2, ei3 (is)',is
+               WRITE( stdout,'(33x,a,i4)') ' ei1, ei2, ei3 (is)',is
                do ig=1,4
-                  write(6,'(6f9.4)')                                    &
+                  WRITE( stdout,'(6f9.4)')                                    &
      &                 ei1(ig,1,is),ei3(ig,1,is),ei3(ig,1,is)
                end do
-               write(6,*)
+               WRITE( stdout,*)
             end do
          else
             do ia=1,na(1)
-               write(6,'(33x,a,i4)') ' ei1, ei2, ei3 (ia)',ia
+               WRITE( stdout,'(33x,a,i4)') ' ei1, ei2, ei3 (ia)',ia
                do ig=1,4
-                  write(6,'(6f9.4)')                                    &
+                  WRITE( stdout,'(6f9.4)')                                    &
      &                 ei1(ig,ia,1),ei3(ig,ia,1),ei3(ig,ia,1)
                end do
-               write(6,*)
+               WRITE( stdout,*)
             end do
          endif
       endif
@@ -4852,14 +4864,15 @@
 !----------------------------------------------------------------------
 !
       use timex_mod
+      use io_global, only: stdout
 !
       implicit none
       integer i
 !
-      write(6,*) ' routine   calls  totcpu  avgcpu  tottime  avgtime' 
-      write(6,*)
+      WRITE( stdout,*) ' routine   calls  totcpu  avgcpu  tottime  avgtime' 
+      WRITE( stdout,*)
       do i=1, maxclock
-         if (ntimes(i).gt.0) write(6,30) routine(i), ntimes(i),         &
+         if (ntimes(i).gt.0) WRITE( stdout,30) routine(i), ntimes(i),         &
      &                          cputime(i), cputime(i)/ntimes(i),       &
      &                          elapsed(i), elapsed(i)/ntimes(i)
       end do
@@ -4875,6 +4888,7 @@
 ! Projection on atomic wavefunctions
 !
       use ncprm
+      use io_global, only: stdout
       use elct, only: n, nx
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
@@ -4983,14 +4997,14 @@
       call reduce(n*n_atomic_wfc,proj)
 #endif
       i=0
-      write(6,'(/''Projection on atomic states:'')')
+      WRITE( stdout,'(/''Projection on atomic states:'')')
       do is=1,nsp
          do nb = 1,nchi(is)
             l=lchi(nb,is)
             do m = -l,l
                do ia=1,na(is)
                   i=i+1
-                  write(6,'(''atomic state # '',i3,'': atom # '',i3,    &
+                  WRITE( stdout,'(''atomic state # '',i3,'': atom # '',i3,    &
      &                      ''  species # '',i2,''  wfc # '',i2,        &
      &                      '' (l='',i1,'' m='',i2,'')'')')             &
      &                 i, ia, is, nb, l, m
@@ -4999,14 +5013,14 @@
          end do
       end do
 
-      write(6,*)
+      WRITE( stdout,*)
       do m=1,n
          somma=0.d0
          do l=1,n_atomic_wfc
             somma=somma+proj(m,l)**2
          end do
-         write(6,'(''state # '',i4,''    sum c^2 ='',f7.4)') m,somma
-         write(6,'(10f7.4)') (abs(proj(m,l)),l=1,n_atomic_wfc)
+         WRITE( stdout,'(''state # '',i4,''    sum c^2 ='',f7.4)') m,somma
+         WRITE( stdout,'(10f7.4)') (abs(proj(m,l)),l=1,n_atomic_wfc)
       end do
 !
       deallocate(proj)
@@ -5061,7 +5075,7 @@
 !               wr(i)=0.0
 !            end if
 !         end do
-!         write(6,'(/10f8.2/)') (wr(i),i=1,nupdwn(iss))
+!         WRITE( stdout,'(/10f8.2/)') (wr(i),i=1,nupdwn(iss))
       end do
       return
       end
@@ -5106,6 +5120,7 @@
       use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: nsp, na
       use parameters, only: nacx, natx
+      use io_global, only: stdout
 !
       implicit none
       integer flag, ndr, nfi
@@ -5129,17 +5144,17 @@
       open (unit=ndr,form='unformatted',status='old')
 #endif
       if (flag.eq.-1) then
-         write(6,'((a,i3,a))') ' ### reading from file ',ndr,' only h  ##'
+         WRITE( stdout,'((a,i3,a))') ' ### reading from file ',ndr,' only h  ##'
       else if (flag.eq.0) then
-         write(6,'((a,i3,a))') ' ## reading from file ',ndr,' only c0  ##'
+         WRITE( stdout,'((a,i3,a))') ' ## reading from file ',ndr,' only c0  ##'
       else
-         write(6,'((a,i3))') ' ## reading from file ',ndr
+         WRITE( stdout,'((a,i3))') ' ## reading from file ',ndr
       end if
       read(ndr) h, hold
       if (flag.eq.-1) go to 10
       read(ndr) nfi,ngwr,nr
       if(flag.eq.0) then
-         if(ngwr.gt.ngw) write(6,*) ' ## warning ## ngwr.gt.ngw  ',ngwr,ngw
+         if(ngwr.gt.ngw) WRITE( stdout,*) ' ## warning ## ngwr.gt.ngw  ',ngwr,ngw
       else
          if(ngwr.gt.ngw) call errore('readfile','ngwr.ne.ngw',ngwr)
       endif
@@ -5149,7 +5164,7 @@
          read(ndr) ((c0(ig,i),ig=1,ngw),(dummy,ig=ngw+1,ngwr),i=1,min(nr,n))
       endif
       if (nr.lt.n) then
-         write(6,*) ' ## warning ## nr.lt.n  ',nr,n
+         WRITE( stdout,*) ' ## warning ## nr.lt.n  ',nr,n
          ampre=0.01
          call randin(nr+1,n,ng0,ngw,ampre,c0)
       end if
@@ -5179,6 +5194,7 @@
       use ions_base, only: ipp, nsp
       use io_files, only: psfile, pseudo_dir
       use dft_mod, only: dft
+      use io_global, only: stdout
 !
       implicit none
 !
@@ -5219,7 +5235,7 @@
          else
              filename=trim(pseudo_dir)//trim(psfile(is))
          end if
-         write(6,"('reading ppot for species # ',i2, &
+         WRITE( stdout,"('reading ppot for species # ',i2, &
         &          ' from file ',a)") is, trim(filename)
          open (unit=iunit,file=filename,status='old',form='formatted')
 !
@@ -5262,6 +5278,7 @@
       use bhs
       use dft_mod
       use ions_base, only: zv
+      use io_global, only: stdout
 !
       implicit none
 !
@@ -5386,43 +5403,43 @@
 !     ------------------------------------------------------------------
 !     output: pp info 
 !     ------------------------------------------------------------------
-      write(6,3000) z,zv(is)
+      WRITE( stdout,3000) z,zv(is)
 3000  format(2x,'bhs pp for z=',f3.0,2x,'zv=',f3.0)
       call dftname(xctype)
-      write(6,'(2x,a20)') xctype
-      write(6,3002) lloc(is)-1 
+      WRITE( stdout,'(2x,a20)') xctype
+      WRITE( stdout,3002) lloc(is)-1 
 3002  format(2x,'   local angular momentum: l=',i3)
-      write(6,3005) nbeta(is)
+      WRITE( stdout,3005) nbeta(is)
 3005  format(2x,'number of nl ang. mom. nbeta=',i3)
       do il=1,nbeta(is)
-         write(6,3010) lll(il,is)
+         WRITE( stdout,3010) lll(il,is)
 3010     format(2x,'nonlocal angular momentum: l=',i3)
       end do
-      write(6,3030) 
+      WRITE( stdout,3030) 
 3030  format(2x,'pseudopotential parameters:')
-      write(6,3035) wrc1(is),1.0/rc1(is)**2
+      WRITE( stdout,3035) wrc1(is),1.0/rc1(is)**2
 3035  format(2x,'core:',2x,'c1_c=',f7.4,' alpha1_c=',f7.4)
-      write(6,3036) wrc2(is),1.0/rc2(is)**2
+      WRITE( stdout,3036) wrc2(is),1.0/rc2(is)**2
 3036  format(2x,'     ',2x,'c2_c=',f7.4,' alpha2_c=',f7.4)
-      write(6,3038)
+      WRITE( stdout,3038)
 3038  format(2x,'other table parameters:')
       do il=1,3
-         write(6,3040) il-1
+         WRITE( stdout,3040) il-1
 3040     format(2x,'l=',i3)
          do i =1,3
             alpha=1.0/rcl(i,is,il)**2
-            write(6,3050) i,alpha,i,al(i,is,il),i+3,bl(i,is,il)
+            WRITE( stdout,3050) i,alpha,i,al(i,is,il),i+3,bl(i,is,il)
          end do
       end do
 3050  format(2x,'alpha',i1,'=',f6.2,'  a',i1,'=',f16.7,                 &
      &           '  a',i1,'=',f16.7)
-      write(6,*)
+      WRITE( stdout,*)
 !     
       return
       end
 !     
 !---------------------------------------------------------------------
-      subroutine readAdC( is, iunps )
+      subroutine readadc( is, iunps )
 !---------------------------------------------------------------------
 !
 !     This routine reads Vanderbilt pseudopotentials produced by the
@@ -5438,6 +5455,7 @@
       use dft_mod
       use wfc_atomic
       use ions_base, only: zv
+      use io_global, only: stdout
 !
       implicit none
 !
@@ -5487,9 +5505,9 @@
 !
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
       if (pseudotype.eq.3) then
-         write(6,'('' RRKJ3 Ultrasoft PP for '',a2)') titleps(7:8)
+         WRITE( stdout,'('' RRKJ3 Ultrasoft PP for '',a2)') titleps(7:8)
       else
-         write(6,'('' RRKJ3 norm-conserving PP for '',a2)') titleps(7:8)
+         WRITE( stdout,'('' RRKJ3 norm-conserving PP for '',a2)') titleps(7:8)
       endif
       read( iunps, '(2l5)',err=100, iostat=ios ) rel, nlcc
       if (nlcc) then
@@ -5694,6 +5712,7 @@
 !     ------------------------------------------------------
 !
 !
+      use io_global, only: stdout
       use ncprm
       use dft_mod
       use wfc_atomic
@@ -6030,41 +6049,41 @@
 !
       call dftname(xctype)
 !
-      write(6,200) is
+      WRITE( stdout,200) is
 200   format (/4x,60('=')/4x,'|  pseudopotential report',               &
      &        ' for atomic species:',i3,11x,'|')
-      write(6,300) 'pseudo potential version', iver(1),                 &
+      WRITE( stdout,300) 'pseudo potential version', iver(1),                 &
      &     iver(2), iver(3)
 300   format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
-      write(6,400) title, xctype
+      WRITE( stdout,400) title, xctype
 400   format (4x,'|  ',2a20,' exchange-corr  |')
-      write(6,500) z(is), is, zv(is), exfact
+      WRITE( stdout,500) z(is), is, zv(is), exfact
 500   format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
      &     f10.5, 9x,'|')
-      write(6,600) ifpcor(is), etotpseu
+      WRITE( stdout,600) ifpcor(is), etotpseu
  600  format (4x,'|  ifpcor = ',i2,10x,' atomic energy =',f10.5,        &
      &     ' Ry',6x,'|')
-      write(6,700)
+      WRITE( stdout,700)
 700   format(4x,'|  index    orbital      occupation    energy',14x,'|')
-      write(6,800) ( iv, nnlz(iv), wwnl(iv), ee(iv), iv=1,nchi(is) )
+      WRITE( stdout,800) ( iv, nnlz(iv), wwnl(iv), ee(iv), iv=1,nchi(is) )
 800   format(4x,'|',i5,i11,5x,f10.2,f12.2,15x,'|')
       if (iver(1).ge.3.and.nang.gt.0) then
          write(fmt,900) 2*nang-1, 40-8*(2*nang-2)
  900     format('(4x,''|  rinner ='',',i1,'f8.4,',i2,'x,''|'')')
-         write(6,fmt)  (rinner(lp,is),lp=1,2*nang-1)
+         WRITE( stdout,fmt)  (rinner(lp,is),lp=1,2*nang-1)
       end if
-      write(6,1000)
+      WRITE( stdout,1000)
 1000  format(4x,'|    new generation scheme:',32x,'|')
-      write(6,1100) nbeta(is),kkbeta(is),rcloc
+      WRITE( stdout,1100) nbeta(is),kkbeta(is),rcloc
 1100  format(4x,'|    nbeta = ',i2,5x,'kkbeta =',i5,5x,                 &
      &     'rcloc =',f10.4,4x,'|'/                                      &
      &     4x,'|    ibeta    l     epsilon   rcut',25x,'|')
       do iv = 1, nbeta(is)
          lp=lll(iv,is)+1
-         write(6,1200) iv,lll(iv,is),eee(iv),rc(lp)
+         WRITE( stdout,1200) iv,lll(iv,is),eee(iv),rc(lp)
 1200      format(4x,'|',5x,i2,6x,i2,4x,2f7.2,25x,'|')
       enddo
-      write(6,1300)
+      WRITE( stdout,1300)
 1300  format (4x,60('='))
 !
       return
@@ -6162,6 +6181,7 @@
 !
       use cdvan
       use dener
+      use io_global, only: stdout
 !
       implicit none
       real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
@@ -6369,9 +6389,9 @@
             call reduce(nspin,rsumr)
 #endif
             if (nspin.eq.1) then
-               write(6,1) rsumg(1),rsumr(1)
+               WRITE( stdout,1) rsumg(1),rsumr(1)
             else
-               write(6,2) (rsumg(iss),iss=1,nspin),(rsumr(iss),iss=1,nspin)
+               WRITE( stdout,2) (rsumg(iss),iss=1,nspin),(rsumr(iss),iss=1,nspin)
             endif
          endif
 !     ==================================================================
@@ -6393,7 +6413,7 @@
          call checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
          rnegsum=rnegsum*omega/dfloat(nr1*nr2*nr3)
          rsum=rsum*omega/dfloat(nr1*nr2*nr3)
-         write(6,'(a,4(1x,f12.6))')                                     &
+         WRITE( stdout,'(a,4(1x,f12.6))')                                     &
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
       end if
 !
@@ -6413,11 +6433,11 @@
          call reduce(nspin,rsumr)
 #endif
          if (nspin.eq.1) then
-            write(6,1) rsumg(1),rsumr(1)
+            WRITE( stdout,1) rsumg(1),rsumr(1)
          else
             if(iprsta.ge.3)                                             &
-     &          write(6,2) rsumg(1),rsumg(2),rsumr(1),rsumr(2)
-            write(6,1) rsumg(1)+rsumg(2),rsumr(1)+rsumr(2)
+     &          WRITE( stdout,2) rsumg(1),rsumg(2),rsumr(1),rsumr(2)
+            WRITE( stdout,1) rsumg(1)+rsumg(2),rsumr(1)+rsumr(2)
          endif
       endif
 !
@@ -6513,6 +6533,7 @@
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
       use ions_base, only: nas => nax, nat, na, nsp
+      use io_global, only: stdout
       use parameters, only: natx, nsx
       use gvec
       use cvan
@@ -6618,13 +6639,13 @@
                if(iprsta.gt.2) then
                   ra1= real(CSUM(nnrb,qv,1))
                   ra2=aimag(CSUM(nnrb,qv,1))
-                  write(6,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*real(qgbt(1,1))
-                  write(6,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
      &                 omegab*ra1/(nr1b*nr2b*nr3b)
-                  write(6,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*real(qgbt(1,2))
-                  write(6,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
      &                 omegab*ra2/(nr1b*nr2b*nr3b)
                endif
 !
@@ -6648,16 +6669,16 @@
 #ifdef __PARA
             call reduce(1,ra)
 #endif
-            write(6,'(a,f12.8)')                                        &
+            WRITE( stdout,'(a,f12.8)')                                        &
      &           ' rhov: int  n_v(r)  dr = ',omega*ra/(nr1*nr2*nr3)
          endif
 !
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          if(iprsta.gt.2) then
-            write(6,*) ' rhov: smooth ',omega*rhog(1,iss)
-            write(6,*) ' rhov: vander ',omega*v(1)
-            write(6,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
+            WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
+            WRITE( stdout,*) ' rhov: vander ',omega*v(1)
+            WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
          endif
 !
 !  rhog(g) = total (smooth + US) charge density in G-space
@@ -6666,7 +6687,7 @@
             rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
          end do
 !
-         if(iprsta.gt.1) write(6,'(a,2f12.8)')                          &
+         if(iprsta.gt.1) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) = ',omega*real(rhog(1,iss))
 !
       else
@@ -6716,13 +6737,13 @@
                if(iprsta.gt.2) then
                   ra1= real(CSUM(nnrb,qv,1))
                   ra2=aimag(CSUM(nnrb,qv,1))
-                  write(6,'(a,f12.8)') ' rhov: up   g-space = ',        &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
      &                 omegab*real(qgbt(1,1))
-                  write(6,'(a,f12.8)') ' rhov: up r-sp = ',             &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
      &                 omegab*ra1/(nr1b*nr2b*nr3b)
-                  write(6,'(a,f12.8)') ' rhov: dw g-space = ',          &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
      &                 omegab*real(qgbt(1,2))
-                  write(6,'(a,f12.8)') ' rhov: dw r-sp = ',             &
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
      &                 omegab*ra2/(nr1b*nr2b*nr3b)
                endif
 !
@@ -6744,19 +6765,19 @@
 #ifdef __PARA
             call reduce(1,ra2)
 #endif
-            write(6,'(a,f12.8)') 'rhov:in n_v  ',omega*ra2/(nr1*nr2*nr3)
+            WRITE( stdout,'(a,f12.8)') 'rhov:in n_v  ',omega*ra2/(nr1*nr2*nr3)
          endif
 !
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          if(iprsta.gt.2) then
-            write(6,*) 'rhov: smooth up',omega*rhog(1,isup)
-            write(6,*) 'rhov: smooth dw',omega*rhog(1,isdw)
-            write(6,*) 'rhov: vander up',omega*real(v(1))
-            write(6,*) 'rhov: vander dw',omega*aimag(v(1))
-            write(6,*) 'rhov: all up',                                  &
+            WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
+            WRITE( stdout,*) 'rhov: smooth dw',omega*rhog(1,isdw)
+            WRITE( stdout,*) 'rhov: vander up',omega*real(v(1))
+            WRITE( stdout,*) 'rhov: vander dw',omega*aimag(v(1))
+            WRITE( stdout,*) 'rhov: all up',                                  &
      &           omega*(rhog(1,isup)+real(v(1)))
-            write(6,*) 'rhov: all dw',                                  &
+            WRITE( stdout,*) 'rhov: all dw',                                  &
      &           omega*(rhog(1,isdw)+aimag(v(1)))
          endif
 !
@@ -6767,9 +6788,9 @@
             rhog(ig,isdw)=rhog(ig,isdw) + 0.5*cmplx(aimag(fp),-real(fm))
          end do
 !
-         if(iprsta.gt.2) write(6,'(a,2f12.8)')                          &
+         if(iprsta.gt.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) up   = ',omega*real (rhog(1,isup))
-         if(iprsta.gt.2) write(6,'(a,2f12.8)')                          &
+         if(iprsta.gt.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) down = ',omega*real(rhog(1,isdw))
 !
       endif
@@ -6964,6 +6985,7 @@
 !-------------------------------------------------------------------------
 !
       use fft_scalar, only: good_fft_order
+      use io_global, only: stdout
 
       implicit none
 ! input
@@ -6983,7 +7005,7 @@
       minr2=int(2*sqrt(gcut)*a2n+1.)
       minr3=int(2*sqrt(gcut)*a3n+1.)
 !
-      write(6,1010) gcut,minr1,minr2,minr3
+      WRITE( stdout,1010) gcut,minr1,minr2,minr3
 1010  format(' set_fft_grid: gcut = ',f7.2,'  n1,n2,n3 min =',3i4)
       if (nr1.le.0) nr1=minr1
       if (nr2.le.0) nr2=minr2
@@ -7098,6 +7120,7 @@
 !     Assumes real psi, with only half G vectors.
 !
       use elct
+      use io_global, only: stdout
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use grid_dimensions, only: nr1, nr2, nr3, &
@@ -7155,7 +7178,7 @@
 #endif
       spin1 = spin0 + omega/(nr1*nr2*nr3)*spin1
       if (frac) then
-         write(6,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Becke) '',&
+         WRITE( stdout,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Becke) '',&
      &                             f5.2,'' (expected)'')')              &
      &          spin1, abs(fup-fdw)/2.d0*(abs(fup-fdw)/2.d0+1.d0)
          return
@@ -7212,7 +7235,7 @@
 !
       deallocate (overlap)
 !
-      write(6,'(/" Spin contamination: s(s+1)=",f5.2," (Slater) ",  &
+      WRITE( stdout,'(/" Spin contamination: s(s+1)=",f5.2," (Slater) ",  &
      &          f5.2," (Becke) ",f5.2," (expected)")')              &
      &     spin2,spin1, abs(fup-fdw)/2.d0*(abs(fup-fdw)/2.d0+1.d0)
 !
@@ -7329,6 +7352,7 @@
 !     output bec: bec=becp+lambda*bephi
 !
       use ions_base, only: nsp, na
+      use io_global, only: stdout
       use cvan
       use gvecw, only: ngw
       use elct
@@ -7377,20 +7401,20 @@
       endif
 !
       if (iprsta.gt.2) then
-         write(6,*)
+         WRITE( stdout,*)
          do is=1,nsp
             if(nsp.gt.1) then
-               write(6,'(33x,a,i4)') ' updatc: bec (is)',is
-               write(6,'(8f9.4)')                                       &
+               WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
+               WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
             else
                do ia=1,na(is)
-                  write(6,'(33x,a,i4)') ' updatc: bec (ia)',ia
-                  write(6,'(8f9.4)')                                    &
+                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
+                  WRITE( stdout,'(8f9.4)')                                    &
      &            ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
                end do
             end if
-            write(6,*)
+            WRITE( stdout,*)
          end do
       endif
 !
@@ -7419,6 +7443,7 @@
 !     rhos output: total potential on smooth real space grid
 !
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor
+      use io_global, only: stdout
       use parameters, only: natx, nsx
       use ions_base, only: nas => nax, nsp, na
       use gvec
@@ -7744,7 +7769,7 @@
       if((nfi.eq.0).or.tfirst.or.tlast) goto 999
       if(mod(nfi-1,iprint).ne.0 ) return
 !
- 999  write(6,1) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
+ 999  WRITE( stdout,1) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
     1 format(//'                total energy = ',f14.5,' a.u.'/         &
      &         '              kinetic energy = ',f14.5,' a.u.'/         &
      &         '        electrostatic energy = ',f14.5,' a.u.'/         &
@@ -7756,27 +7781,27 @@
      &         '           average potential = ',f14.5,' a.u.'//)
 !
       if(tpre)then
-         write (6,*) "cell parameters h"
-         write (6,5555) (a1(i),a2(i),a3(i),i=1,3)
-         write (6,*)
-         write (6,*) "derivative of e(tot)"
-         write (6,5555) ((detot(i,j),j=1,3),i=1,3)
-         write (6,*)
+         WRITE( stdout,*) "cell parameters h"
+         WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
+         WRITE( stdout,*)
+         WRITE( stdout,*) "derivative of e(tot)"
+         WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
+         WRITE( stdout,*)
          if(tpre.and.iprsta.ge.2) then
-            write (6,*) "derivative of e(kin)"
-            write (6,5555) ((dekin(i,j),j=1,3),i=1,3)
-            write (6,*) "derivative of e(electrostatic)"
-            write (6,5555) (((dh(i,j)+dsr(i,j)),j=1,3),i=1,3)
-            write (6,*) "derivative of e(h)"
-            write (6,5555) ((dh(i,j),j=1,3),i=1,3)
-            write (6,*) "derivative of e(sr)"
-            write (6,5555) ((dsr(i,j),j=1,3),i=1,3)
-            write (6,*) "derivative of e(ps)"
-            write (6,5555) ((dps(i,j),j=1,3),i=1,3)
-            write (6,*) "derivative of e(nl)"
-            write (6,5555) ((denl(i,j),j=1,3),i=1,3)
-            write (6,*) "derivative of e(xc)"
-            write (6,5555) ((dxc(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(kin)"
+            WRITE( stdout,5555) ((dekin(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(electrostatic)"
+            WRITE( stdout,5555) (((dh(i,j)+dsr(i,j)),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(h)"
+            WRITE( stdout,5555) ((dh(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(sr)"
+            WRITE( stdout,5555) ((dsr(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(ps)"
+            WRITE( stdout,5555) ((dps(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(nl)"
+            WRITE( stdout,5555) ((denl(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(xc)"
+            WRITE( stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
          endif
       endif
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &

@@ -27,7 +27,7 @@ subroutine c_bands (iter, ik_, dr2)
  okvan, et, istep, ethr, lscf, max_cg_iter, vltot, nrxx, nr1, nr3, nr2, nbnd, &
  nks, npwx, diis_ethr_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, &
  current_spin, lsda, isk, igk, npw
-  USE wavefunctions,  ONLY : evc
+  USE wavefunctions_module,  ONLY : evc
   use g_psi_mod
   implicit none
   !

@@ -8,7 +8,7 @@ subroutine zstar_eu_us
 #include "machine.h"
 
   use parameters, only : DP
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   use pwcom
   use phcom
   use becmod

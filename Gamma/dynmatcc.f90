@@ -12,7 +12,7 @@ subroutine dynmatcc(dyncc)
   !
 #include "machine.h"
   use pwcom
-  USE wavefunctions,  ONLY: psic
+  USE wavefunctions_module,  ONLY: psic
   use cgcom
   implicit none
   real(kind=DP):: dyncc(3*nat,nmodes)

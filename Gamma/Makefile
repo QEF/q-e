@@ -7,7 +7,6 @@ include ../make.sys
 # targets
 #
 PWOBJS=../PW/pwcom.o \
-../PW/wavefunctions.o \
 ../PW/para.o \
 ../PW/funct.o \
 ../PW/g_psi_mod.o \

@@ -99,7 +99,7 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
 
   dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
        &//gradc (igcc)
-  !cc      write (6,'(a)') dftout
+  !cc      WRITE( stdout,'(a)') dftout
   return  
 end subroutine which_dft
 !

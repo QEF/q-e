@@ -24,7 +24,7 @@ subroutine atomic_rho (rhoa, nspina)
 #include "machine.h"
   USE io_global,        ONLY : stdout
   use pwcom
-  USE wavefunctions,    ONLY : psic
+  USE wavefunctions_module,    ONLY : psic
   implicit none
   integer :: nspina
   ! the number of spin polarizations

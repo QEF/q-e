@@ -41,6 +41,12 @@
      REAL(dbl) :: ekcut = 0.0d0  
      REAL(dbl) :: gkcut = 0.0d0
     
+     ! array of G vectors module plus penalty function for constant cut-off 
+     ! simulation.
+     !
+     ! ggp = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2 * g - e0gg ) / sgg ) )
+
+     REAL(dbl), ALLOCATABLE :: ggp(:)
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecw

@@ -46,7 +46,7 @@ SUBROUTINE electrons
                             Hubbard_lmax, lda_plus_u  
   USE extfield,      ONLY : tefield, etotefield  
   USE bp,            ONLY : lberry  
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions_module, ONLY : evc
   USE io_files,      ONLY : prefix
   !
   ! ... a few local variables

@@ -15,7 +15,7 @@ subroutine addusldos (ldos, becsum1)
   !
 #include "machine.h"
   use pwcom
-  USE wavefunctions,  ONLY: psic
+  USE wavefunctions_module,  ONLY: psic
   implicit none
   complex(kind=DP) :: ldos (nrxx, nspin)
   ! local density of states

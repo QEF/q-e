@@ -22,7 +22,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #include "machine.h"
   USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   USE constants,  ONLY: degspin
   use becmod
   use parameters, only : DP

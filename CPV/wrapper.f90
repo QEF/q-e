@@ -52,6 +52,8 @@
 !  nac=number of columns of a, number of rows of b
 !  nbc=number of columns of b and c
 !
+      use io_global, only: stdout
+
       implicit none
       integer na, iad, nb, ibd, nc, icd, nar, nac, nbc
       real(kind=8) a(iad,nac), b(ibd,nbc), c(icd,nbc)
@@ -76,9 +78,9 @@
 !
       if ( na.ne.1.and.iad.ne.1 .or.                                    &
      &     nb.ne.1.and.ibd.ne.1 .or. nc.ne.1 ) then
-         write (6,'(''MXMA : na,nb,nc,iad,ibd,icd,nar,nac,nbc =''/      &
+         WRITE( stdout,'(''MXMA : na,nb,nc,iad,ibd,icd,nar,nac,nbc =''/      &
      &                9i8)') na,nb,nc,iad,ibd,icd,nar,nac,nbc
-         write (6,'(''MXMA : not implemented'')')
+         WRITE( stdout,'(''MXMA : not implemented'')')
          stop
       end if
 !

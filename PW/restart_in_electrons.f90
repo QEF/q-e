@@ -10,7 +10,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   USE io_global,        ONLY : stdout
   use pwcom
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   implicit none
   character :: where * 20
   ! are we in the right place?

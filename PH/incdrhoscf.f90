@@ -17,7 +17,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
 #include "machine.h"
 
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc
   use parameters, only : DP
   use phcom
   implicit none

@@ -15,7 +15,7 @@ subroutine addusdens
   !
 #include "machine.h"
   use pwcom
-  USE wavefunctions,    ONLY : psic
+  USE wavefunctions_module,    ONLY : psic
   implicit none
   !
   !     here the local variables

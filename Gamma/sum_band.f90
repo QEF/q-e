@@ -30,7 +30,7 @@ subroutine sum_band
   USE symme,  ONLY: nsym, s, ftau
   USE units,  ONLY: iunwfc, nwordwfc, iunigk
   USE us,     ONLY: okvan, tvanp, becsum, nh, nkb, vkb
-  USE wavefunctions, ONLY: evc, psic
+  USE wavefunctions_module, ONLY: evc, psic
   USE wvfct, ONLY: nbnd, npwx, npw, igk, wg, et
 #ifdef __PARA
   use para

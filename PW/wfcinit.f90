@@ -16,7 +16,7 @@ subroutine wfcinit
 #include "machine.h"
   USE io_global,        ONLY : stdout
   use pwcom
-  USE wavefunctions,    ONLY : evc
+  USE wavefunctions_module,    ONLY : evc
   implicit none
   !
   integer :: ik, ibnd, ig, ipol, n_starting_wfc
