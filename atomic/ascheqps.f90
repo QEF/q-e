@@ -148,7 +148,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      !
      if (abs((eup-elw)/elw).lt.thresh) goto 900
      !
-     !     treatement of asintotes
+     !     treatement of asyntotes
      !
      if (abs(det).gt.1.0e4_dp) then 
         if (e.gt.eold) then

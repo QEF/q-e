@@ -3,7 +3,7 @@
 subroutine write_pseudo &
      (iunps,zed,xmin,dx,mesh,ndm,r,r2, &
      dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-     rhoc,vnl,phis,vpsloc,lls,ocs,etots,nwfs)
+     rhoc,vnl,phis,vpsloc,els,lls,ocs,etots,nwfs)
   !-----------------------------------------------------------------------
   !
   use kinds, only : DP
@@ -17,11 +17,12 @@ subroutine write_pseudo &
        alfa_core, dum, xdum, dxdum, rdum, vpsloc(ndm)
   logical nlcc, bhstype, numeric
   parameter(fourpi=4.0_dp*3.141592653589793_dp)
-  character(len=3)  title_pseudo*70, cdum
+  character(len=70) title_pseudo
+  character(len=2), external :: atom_name
+  character(len=2) :: els(nwfs)
   character(len=*) dft
   !
   !
-  cdum='cc'
   nlc=0
   nnl=0
   bhstype=.false.
@@ -31,8 +32,8 @@ subroutine write_pseudo &
      write( iunps, '(a)', err=300, iostat=ios ) dft
   endif
 
-  write ( iunps, '('''''''',a2,'''''''',f8.4,3i5,l4,i5,l4,e17.9)', &
-       err=300, iostat=ios ) cdum, &
+  write ( iunps, '("''",a2,"''",f8.4,3i5,l4,i5,l4,e17.9)', &
+       err=300, iostat=ios )  atom_name(nint(zed)), &
        zval, lmax, nlc, nnl, nlcc, &
        lloc, bhstype, etots
 
@@ -62,12 +63,12 @@ subroutine write_pseudo &
      !      pseudopotentials in numeric form
      !
      do l = 0, lmax
-        write( iunps, '(a)', err=300, iostat=ios )
+        write( iunps, "(' Pseudopot. l=',i1)") l
         write( iunps, '(4e19.11)', err=300, iostat=ios ) &
              (vnl(ir,l),ir=1,mesh)
      enddo
      if (lloc.eq.-1) then
-        write( iunps, '(a)', err=300, iostat=ios )
+        write( iunps, "(' Local PP')", err=300, iostat=ios )
         write( iunps, '(4e19.11)', err=300, iostat=ios ) &
              (vpsloc(ir),ir=1,mesh)
      endif
@@ -80,7 +81,7 @@ subroutine write_pseudo &
   do l=0,lmax
      do nb = 1, nwfs
         if (lls(nb).eq.l) then
-           write( iunps, '(a)', err=300, iostat=ios )
+           write( iunps, "(' Wavefunction ',a2)", err=300, iostat=ios ) els(nb)
            write( iunps, *, err=300, iostat=ios ) lls(nb), &
                 (abs(ocs(nb))+ ocs(nb))*0.5_dp 
            write( iunps, '(4e19.11)', err=300, iostat=ios ) &

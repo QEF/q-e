@@ -141,7 +141,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
 
   if (numeric) then
      !
-     !      pseudopotenzials in numerical form
+     !      pseudopotentials in numerical form
      !
      do l = 0, lmax
         if (rel.lt.2) then
@@ -149,6 +149,9 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
            read( iunps, *, err=300, iostat=ios )  &
                 (vnl(ir,l),ir=1,mesh)
         else
+           !
+           ! this case is not actually implemented 
+           !
            read( iunps, '(a)', err=300, iostat=ios ) cdum
            read( iunps, *, err=300, iostat=ios )  &
                 (vnlo(ir,l,1),ir=1,mesh)
@@ -181,12 +184,19 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
 300 call errore('read_pseudo','reading pseudofile',abs(ios))
   !
   !   all the components of the nonlocal potential beyond lmax are taken
-  !   equal to vnl of lmax
+  !   equal to vnl of lloc
   !
-  do l=lmax+1,3
-     vnl(:,l)=vnl(:,lmax)
-  enddo
-
+  if (lloc >= 0 .and. lloc <=3) then
+     do l=lmax+1,3
+        vnl(:,l)=vnl(:,lloc)
+     enddo
+  else
+     do l=lmax+1,3
+        ! uncomment once the case lloc=-1 is implemented
+        ! vnl(:,l)=vpsloc(:)
+        vnl(:,l)=vnl(:,lmax)
+     enddo
+  end if
   close(iunps)
   return
 end subroutine read_pseudo

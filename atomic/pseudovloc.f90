@@ -40,21 +40,21 @@ subroutine pseudovloc
        indi,rep, &  ! auxiliary
        nc           ! counter on bessel
 
-  write(6,'(/,5x,'' Generating local potential, lloc= '',i4)') lloc
-
   if (lloc.lt.0) then
      !
      !   Compute the potential by smoothing the AE potential
      !
      !   Compute the ik which correspond to this cutoff radius
      !
+     write(6,"(/,5x,' Generating local potential from pseudized AE ', &
+          & 'potential, matching radius rcloc = ',f8.4)") rcloc
      ik=0
      do n=1,mesh
         if (r(n).lt.rcloc) ik=n
      enddo
      if (mod(ik,2).eq.0) ik=ik+1
-     if (ik.gt.mesh) &
-          call errore('gener_rrkj3','ik is wrong ',1)
+     if (ik <= 1 .or. ik > mesh) &
+          call errore('pseudovloc','wrong matching point',1)
      !
      !    compute first and second derivative
      !
@@ -126,9 +126,17 @@ subroutine pseudovloc
            if (r(n).lt.rcut(nsloc+indi)) ik=n
         enddo
         if (mod(ik,2).eq.0) ik=ik+1
-        if (ik.eq.1.or.ik.gt.mesh) &
-             call errore('pseudovloc','ik is wrong ',1)
+        if (ik <= 1 .or. ik > mesh) &
+           call errore('pseudovloc','wrong matching point',1)
         rcloc=rcut(nsloc+indi)
+        if (rep == 0) then
+           write(6,"(/,5x,' Generating local potential: lloc=',i1, &
+                  ', matching radius rcloc = ',f8.4)") lloc, rcloc
+        else
+           write(6,"(/,5x,' Generating local potential: lloc=',i1, &
+                  &', spin=',i1,', matching radius rcloc = ',f8.4)") &
+                  lloc, indi+1, rcloc
+        endif
         !
         !   compute the phi functions
         !
@@ -137,10 +145,9 @@ subroutine pseudovloc
         !     set the local potential equal to the all-electron one at large r
         !
         do n=1,mesh
-           vaux(n,indi+1)=vpot(n,1)
-        enddo
-        do n=1,mesh
-           if (r(n).lt.9.0_dp) then
+           if (r(n) > rcloc) then
+              vaux(n,indi+1)=vpot(n,1)
+           else
               vaux(n,indi+1)=chis(n,nsloc+indi)/phis(n,nsloc+indi)
            endif
         enddo
