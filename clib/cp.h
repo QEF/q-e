@@ -117,6 +117,47 @@
 
 #endif
 
+#if defined __G95
+
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d__
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d__
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d__
+#  define CREATE_PLAN_1D create_plan_1d__
+#  define CREATE_PLAN_2D create_plan_2d__
+#  define CREATE_PLAN_3D create_plan_3d__
+#  define DESTROY_PLAN_1D destroy_plan_1d__
+#  define DESTROY_PLAN_2D destroy_plan_2d__
+#  define DESTROY_PLAN_3D destroy_plan_3d__
+#  define FFT_X_STICK fft_x_stick__
+#  define FFT_XY_STICK fft_xy_stick__
+#  define FFT_XY fft_xy__
+#  define FFT_Y_STICK fft_y_stick__
+#  define FFT_Y_STICK2 fft_y_stick2__
+#  define FFT_Z_STICK fft_z_stick__
+#  define FFT_Z fft_z__
+#  define FFT_STICK fft_stick__
+#  define CP_GETENV cp_getenv__
+#  define CP_DATE cp_date__
+#  define CPFLUSH cpflush_
+#  define CPTIMER cptimer__
+#  define ELAPSED_SECONDS elapsed_seconds__
+#  define CCLOCK cclock_
+#  define FACTOR235 factor235__
+#  define FACTOR2 factor2__
+#  define LN_ALLOC ln_alloc__
+#  define LN_DEALLOC ln_dealloc__
+#  define LN_SET ln_set__
+#  define LN_ACTIVATE ln_activate__
+#  define LN_IND ln_ind__
+#  define MEMSTAT memstat_
+#  define READOCC readocc_
+#  define ROUND2 round2_
+#  define MYUNITNAME myunitname_
+#  define CP_ITOA cp_itoa_
+#  define C_MKDIR c_mkdir__
+
+#endif
+
 #if defined __AIX | defined __HP
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d

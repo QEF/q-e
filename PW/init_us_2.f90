@@ -115,7 +115,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
            enddo
            do ih = 1, nh (nt)
               jkb = jkb + 1
-              pref = (0.d0, - 1.d0) **nhtol (ih, nt) * phase
+              pref = (0.d0, -1.d0) **nhtol (ih, nt) * phase
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
               enddo

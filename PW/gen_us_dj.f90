@@ -116,7 +116,7 @@ subroutine gen_us_dj (ik, dvkb)
               l = nhtol (ih, nt)
               lm= nhtolm(ih, nt)
               ikb = ikb + 1
-              pref = (0.d0, - 1.d0) **l
+              pref = (0.d0, -1.d0) **l
               !
               do ig = 1, npw
                  dvkb (ig, ikb) = djl (ig, nb, nt) * sk (ig) * ylm (ig, lm) &

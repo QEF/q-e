@@ -108,7 +108,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
      else
         call errore (' qvan ', ' lp > 49 ', lp)
      endif
-     sig = (0.d0, - 1.d0) ** (l - 1)
+     sig = (0.d0, -1.d0) ** (l - 1)
      sig = sig * ap (lp, ivl, jvl)
      do ig = 1, ngy
         !

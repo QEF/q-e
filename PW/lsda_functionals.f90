@@ -247,7 +247,7 @@ subroutine pz_polarized (rs, ec, vc)
   parameter (a = 0.01555d0, b = - 0.0269d0, c = 0.0007d0, d = &
        - 0.0048d0, gc = - 0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0)
   real(kind=DP) :: lnrs, rs12, ox, dox
-  LOGICAL(KIND=DP) :: xc_rel
+  LOGICAL       :: xc_rel
   REAL(KIND=DP), PARAMETER :: xcprefact = 0.022575584, pi34 = 0.6203504908994d0 
   REAL(KIND=DP) :: betha, etha, csi, prefact
   !

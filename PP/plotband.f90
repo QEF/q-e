@@ -153,7 +153,7 @@ program read_bands
   write (1,*) ' 90 rotate 0 21 neg 28.451 mul translate 1.5 1.5 scale'
   write (1,*) '% Landscape:   comment next line'
   write (1,*) '% 1.2 1.2 scale'
-  write (1,'(2(f8.3,x)," translate")') x0, y0
+  write (1,'(2(f8.3,1x)," translate")') x0, y0
   write (1,*) '0 setgray 0.5 setlinewidth'
   ! draw tics on axis
   ni=nint((eref-emin)/deltaE)+1
@@ -161,32 +161,32 @@ program read_bands
   do i=-ni,nf
      etic=eref+i*deltaE
      if (etic >= emin .and. etic <= emax) then
-        write (1,'(2(f8.3,x)," moveto -5 0 rlineto stroke")') &
+        write (1,'(2(f8.3,1x)," moveto -5 0 rlineto stroke")') &
              0.0,(etic-emin)*ydim/(emax-emin)
-        write (1,'(2(f8.3,x)," moveto (",f4.1,") show")')   &
+        write (1,'(2(f8.3,1x)," moveto (",f4.1,") show")')   &
              -30.,(etic-emin)*ydim/(emax-emin), etic-eref
      end if
   end do
   ! draw the Fermi Energy
   if (Ef > emin .and. Ef < emax) then
-     write (1,'("[2 4] 0 setdash newpath ",2(f8.3,x), " moveto ")') &
+     write (1,'("[2 4] 0 setdash newpath ",2(f8.3,1x), " moveto ")') &
           0.0, (Ef-emin)/(emax-emin)*ydim
-     write (1,'(2(f8.3,x)," lineto stroke [] 0 setdash")') &
+     write (1,'(2(f8.3,1x)," lineto stroke [] 0 setdash")') &
           xdim, (Ef-emin)/(emax-emin)*ydim
   end if
   ! draw axis and set clippping region
   write (1,*) '1 setlinewidth'
-  write (1,'(8(f8.3,x))') 0.0,0.0,0.0,ydim,xdim,ydim,xdim,0.0 
+  write (1,'(8(f8.3,1x))') 0.0,0.0,0.0,ydim,xdim,ydim,xdim,0.0 
   write (1,*) 'newpath moveto lineto lineto lineto closepath clip stroke'
   write (1,*) '0.5 setlinewidth'
   ! draw high-symmetry lines
   do n=1,nks
      if (high_symmetry(n)) then
-        write (1,'(4(f8.3,x)," riga")') &
+        write (1,'(4(f8.3,1x)," riga")') &
              kx(n)*xdim/kx(nks), 0.0, kx(n)*xdim/kx(nks), ydim
      end if
      do i=1,nbnd
-        if (is_in_range(i)) write (1,'(2(f8.3,x)," dot")' ) &
+        if (is_in_range(i)) write (1,'(2(f8.3,1x)," dot")' ) &
              kx(n)*xdim/kx(nks), (e(i,n)-emin)*ydim/(emax-emin)
      end do
   end do
@@ -195,7 +195,7 @@ program read_bands
   do i=1,nbnd
      if (is_in_range(i)) then
         ! No interpolation:
-        !         write (1,'(9(f8.3,x))') ( kx(n)*xdim/kx(nks), &
+        !         write (1,'(9(f8.3,1x))') ( kx(n)*xdim/kx(nks), &
         !             (e(i,n)-emin)*ydim/(emax-emin),n=nks,1,-1)
         !         write (1,'(i4," banda")' ) nks-1
         ! Spline interpolation with twice as many points:
@@ -214,7 +214,7 @@ program read_bands
            end do
            call spline_interpol ( kx(ni), e_in, nf-ni+1, &
                 k_interp, e_interp, n_interp )
-           write (1,'(9(f8.3,x))') ( k_interp(n)*xdim/kx(nks), &
+           write (1,'(9(f8.3,1x))') ( k_interp(n)*xdim/kx(nks), &
                 (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
            write (1,'(i4," banda")' ) n_interp-1
         end do

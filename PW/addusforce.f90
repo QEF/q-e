@@ -55,7 +55,7 @@ subroutine addusforce (forcenl)
         vg (:) = vltot (:) + vr (:, is)
      endif
      call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-     aux (:, is) = vg (nl (:) ) * tpiba * (0.d0, - 1.d0)
+     aux (:, is) = vg (nl (:) ) * tpiba * (0.d0, -1.d0)
   enddo
   deallocate (vg)
   !

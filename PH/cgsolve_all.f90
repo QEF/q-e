@@ -154,7 +154,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      if (iter.eq.1) then
         call h_psi (ndim, dpsi, g, e, ik, nbnd)
         do ibnd = 1, nbnd
-           call ZAXPY (ndim, ( - 1.d0, 0.d0), d0psi (1, ibnd), 1, g (1, &
+           call ZAXPY (ndim, (-1.d0, 0.d0), d0psi (1, ibnd), 1, g (1, &
                 ibnd), 1)
         enddo
      endif

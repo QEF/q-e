@@ -49,7 +49,7 @@ ia64-*-linux-gnu )
 *-pc-linux-gnu )
 	is_linux=1
 	try_f90_parallel="mpif90"
-	try_f90="ifort ifc pgf90 f90 pgf77 f77 g77"
+	try_f90="ifort ifc pgf90 g95 f90 pgf77 f77 g77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
@@ -126,6 +126,11 @@ ia64-*-linux-gnu:ifort )
 	is_pgi=1
 	try_cc="pgcc gcc cc"
 	try_f77="pgf77 $f90"
+	;;
+*-pc-linux-gnu:g95 )
+	is_g95=1
+	try_cc="gcc cc"
+	try_f77="$f90"
 	;;
 *-pc-linux-gnu:mpif* )
 	# which compiler is actually under the hood?
@@ -211,10 +216,11 @@ case "$build:$cc:$f90" in
 	# list supported combinations here
 ia64-*-linux-gnu:icc:ifort )                          ;;
 ia64-*-linux-gnu:gcc:ifort )                          ;;
+*-pc-linux-gnu:*cc:mpif90 )                           ;;
 *-pc-linux-gnu:icc:ifort | *-pc-linux-*:icc:ifc )     ;;
 *-pc-linux-gnu:gcc:ifort | *-pc-linux-*:gcc:ifc )     ;;
-*-pc-linux-gnu:*cc:mpif90 )                           ;;
 *-pc-linux-gnu:pgcc:pgf90 )                           ;;
+# *-pc-linux-gnu:gcc:g95 )                              ;;
 *-ibm-aix*:mpcc_r:mpxlf*_r | *-ibm-aix*:mpcc:mpxlf* ) ;;
 *-ibm-aix*:xlc:*xlf* | *-ibm-aix*:cc:*xlf* )          ;;
 mips-sgi-*:cc:f90 )                                   ;;
@@ -296,6 +302,15 @@ ia64-*-linux-gnu:ifort )
 		try_ldflags=""
 		try_ldflags_static="-Bstatic"
 		try_dflags="$try_dflags -D__PGI"
+	elif test $is_g95
+	then
+		try_fflags="-O3"
+		try_f90flags="\$(FFLAGS)"
+		try_fflags_noopt="-O0"
+		try_cpp="cpp"
+		try_ldflags=""
+		#try_ldflags_static="-static"
+		try_dflags="$try_dflags -D__G95"
 	fi
 	;;
 *-ibm-aix*:mpxlf* | *-ibm-aix*:xlf* )
@@ -378,6 +393,10 @@ ia64-*-linux-gnu:icc )
 	;;
 *-pc-linux-gnu:pgcc )
 	try_cflags="-fast"
+	c_ldflags=""
+	;;
+*-pc-linux-gnu:gcc )
+	try_cflags="-O3 -fomit-frame-pointer"
 	c_ldflags=""
 	;;
 *-ibm-aix*:mpcc_r | *-ibm-aix*:mpcc | *-ibm-aix*:xlc | *-ibm-aix*:cc )

@@ -41,7 +41,7 @@ subroutine compute_dvloc (mode, dvlocin)
   call start_clock ('com_dvloc')
   dvlocin (:) = (0.d0, 0.d0)
   do na = 1, nat
-     fact = tpiba * (0.d0, - 1.d0) * eigqts (na)
+     fact = tpiba * (0.d0, -1.d0) * eigqts (na)
      mu = 3 * (na - 1)
      if ( abs (u (mu + 1, mode) ) + abs (u (mu + 2, mode) ) + &
           abs (u (mu + 3, mode) ) > 1.0d-12) then

@@ -96,7 +96,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
                           ps2 (ikb, ibnd, ipol) = ps2 (ikb, ibnd, ipol) +&
                                (deeq (ih,jh, na, current_spin) - &
                                 et (ibnd, ikk) * qq (ih, jh, nt) ) * &
-                                (0.d0, - 1.d0) * becp1 (jkb, ibnd, ik) * &
+                                (0.d0, -1.d0) * becp1 (jkb, ibnd, ik) * &
                                 uact (mu + ipol) * tpiba
                           if (okvan) then
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) + &

@@ -117,7 +117,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
            enddo
            do ih = 1, paw_nh(nt)
               jkb = jkb + 1
-              pref = (0.d0, - 1.d0) ** paw_nhtol (ih, nt) * phase
+              pref = (0.d0, -1.d0) ** paw_nhtol (ih, nt) * phase
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
               enddo

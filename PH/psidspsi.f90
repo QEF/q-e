@@ -118,7 +118,7 @@ subroutine psidspsi (ik, uact, pdsp)
                                uact (mu + ipol)
                           ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                qq (ih, jh, nt) *                          &
-                               (0.d0, - 1.d0) *                           &
+                               (0.d0, -1.d0) *                            &
                                becp1 (jkb, ibnd, ik) *                    &
                                uact (mu + ipol) * tpiba
                        enddo

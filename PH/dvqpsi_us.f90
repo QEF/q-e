@@ -77,7 +77,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
   do na = 1, nat
-     fact = tpiba * (0.d0, - 1.d0) * eigqts (na)
+     fact = tpiba * (0.d0, -1.d0) * eigqts (na)
      mu = 3 * (na - 1)
      if (abs (uact (mu + 1) ) + abs (uact (mu + 2) ) + abs (uact (mu + &
           3) ) .gt.1.0d-12) then

@@ -31,7 +31,7 @@ subroutine hexsym (at, is, isname, nrot)
   ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -sin(pi/3)
   !
   real(kind=DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
-                             msin3 =-0.866025403784438597d0, mcos3 = - 0.5d0
+                             msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
   !
   !   and the local variables
   !
@@ -46,17 +46,18 @@ subroutine hexsym (at, is, isname, nrot)
   character :: sname (24) * 45
   ! full name of the rotation part of each symmetry operation
 
-  data s / 1.d0, 0.d0, 0.d0, 0.d0, 1.d0, 0.d0, 0.d0, 0.d0, 1.d0, &
-       - 1.d0, 0.d0, 0.d0, 0.d0, - 1.d0, 0.d0, 0.d0, 0.d0, 1.d0, - 1.d0, &
-       0.d0, 0.d0, 0.d0, 1.d0, 0.d0, 0.d0, 0.d0, - 1.d0, 1.d0, 0.d0, &
-       0.d0, 0.d0, - 1.d0, 0.d0, 0.d0, 0.d0, - 1.d0, cos3, sin3, 0.d0, &
-       msin3, cos3, 0.d0, 0.d0, 0.d0, 1.d0, cos3, msin3, 0.d0, sin3, &
-       cos3, 0.d0, 0.d0, 0.d0, 1.d0, mcos3, sin3, 0.d0, msin3, mcos3, &
-       0.d0, 0.d0, 0.d0, 1.d0, mcos3, msin3, 0.d0, sin3, mcos3, 0.d0, &
-       0.d0, 0.d0, 1.d0, cos3, msin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, &
-       0.d0, - 1.d0, cos3, sin3, 0.d0, sin3, mcos3, 0.d0, 0.d0, 0.d0, &
-       - 1.d0, mcos3, msin3, 0.d0, msin3, cos3, 0.d0, 0.d0, 0.d0, &
-       - 1.d0, mcos3, sin3, 0.d0, sin3, cos3, 0.d0, 0.d0, 0.d0, - 1.d0 /
+  data s / 1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
+          -1.d0,  0.d0, 0.d0,  0.d0, -1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
+          -1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0, -1.d0, &
+           1.d0,  0.d0, 0.d0,  0.d0, -1.d0, 0.d0, 0.d0, 0.d0, -1.d0, &
+           cos3,  sin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+           cos3, msin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+          mcos3,  sin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+          mcos3, msin3, 0.d0,  sin3, mcos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+           cos3, msin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, 0.d0, -1.d0, &
+           cos3,  sin3, 0.d0,  sin3, mcos3, 0.d0, 0.d0, 0.d0, -1.d0, &
+          mcos3, msin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0, &
+          mcos3,  sin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0 /
 
   data sname / 'identity                                     ',&
                '180 deg rotation - cryst. axis [0,0,1]       ',&

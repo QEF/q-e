@@ -115,7 +115,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
         call errore (' qvan ', ' lp.gt.49 ', lp)
      endif
 
-     sig = (0.d0, - 1.d0) ** (l - 1)
+     sig = (0.d0, -1.d0) ** (l - 1)
      sig = sig * ap (lp, ivl, jvl)
      do ig = 1, ngy
         !

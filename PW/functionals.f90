@@ -164,7 +164,7 @@ subroutine slater (rs, ex, vx)
   implicit none
   real(kind=DP) :: rs, ex, vx
   real(kind=DP) :: f, alpha
-  parameter (f = - 0.687247939924714d0)
+  parameter (f = -0.687247939924714d0)
   ! f = -9/8*(3/2pi)^(2/3)
   parameter (alpha = 2.0d0 / 3.0d0)
   !
@@ -231,9 +231,9 @@ subroutine pz (rs, iflag, ec, vc)
   real(kind=DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
   real(kind=DP) :: lnrs, rs12, ox, dox
   !
-  data a / 0.0311d0, 0.031091d0 /, b / - 0.048d0, - 0.046644d0 /, &
-       c / 0.0020d0, 0.00419d0 /, d / - 0.0116d0, - 0.00983d0 /
-  data gc / - 0.1423d0, - 0.103756d0 /, b1 / 1.0529d0, 0.56371d0 /, &
+  data a / 0.0311d0, 0.031091d0 /, b / -0.048d0, -0.046644d0 /, &
+       c / 0.0020d0, 0.00419d0 /, d / -0.0116d0, -0.00983d0 /
+  data gc / -0.1423d0, -0.103756d0 /, b1 / 1.0529d0, 0.56371d0 /, &
        b2 / 0.3334d0, 0.27358d0 /
   !
   if (rs.lt.1.0d0) then
@@ -266,8 +266,7 @@ subroutine vwn (rs, ec, vc)
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: a, b, c, x0
-  parameter (a = 0.0310907, b = 3.72744, c = 12.9352, x0 = - &
-       0.10498)
+  parameter (a = 0.0310907, b = 3.72744, c = 12.9352, x0 = -0.10498)
   real(kind=DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
   !
   q = sqrt (4.d0 * c - b * b)
@@ -328,7 +327,7 @@ subroutine pw (rs, iflag, ec, vc)
        d1 = 1.4408d0)
   real(kind=DP) :: lnrs, rs12, rs32, rs2, om, dom, olog
   real(kind=DP) :: a1 (2), b3 (2), b4 (2)
-  data a1 / 0.21370d0, 0.026481d0 /, b3 / 1.6382d0, - 0.46647d0 /, &
+  data a1 / 0.21370d0, 0.026481d0 /, b3 / 1.6382d0, -0.46647d0 /, &
        b4 / 0.49294d0, 0.13354d0 /
   !
   ! high- and low-density formulae implemented but not used in PW case
@@ -466,7 +465,7 @@ subroutine ggax (rho, grho, sx, v1x, v2x)
   parameter (f1 = 0.19645d0, f2 = 7.7956d0, f3 = 0.2743d0, f4 = &
        0.1508d0, f5 = 0.004d0)
   real(kind=DP) :: fp1, fp2
-  parameter (fp1 = - 0.019292021296426d0, fp2 = 0.161620459673995d0)
+  parameter (fp1 = -0.019292021296426d0, fp2 = 0.161620459673995d0)
   ! fp1 = -3/(16 pi)*(3 pi^2)^(-1/3)
   ! fp2 = (1/2)(3 pi^2)**(-1/3)
   real(kind=DP) :: rhom43, s, s2, s3, s4, exps, as, sa2b8, shm1, bs, das, &
@@ -574,8 +573,7 @@ subroutine ggac (rho, grho, sc, v1c, v2c)
   real(kind=DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
   parameter (al = 0.09d0, pa = 0.023266d0, pb = 7.389d-6, pc = &
        8.723d0, pd = 0.472d0)
-  parameter (cx = - 0.001667d0, cxc0 = 0.002568d0, cc0 = - cx + &
-       cxc0)
+  parameter (cx = -0.001667d0, cxc0 = 0.002568d0, cc0 = - cx + cxc0)
   real(kind=DP) :: third, pi34, nu, be, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (nu = 15.755920349483144d0, be = nu * cc0)

@@ -46,7 +46,7 @@ subroutine addcore (mode, drhoc)
   do na = 1, nat
      nt = ityp (na)
      if (nlcc (nt) ) then
-        fact = tpiba * (0.d0, - 1.d0) * eigqts (na)
+        fact = tpiba * (0.d0, -1.d0) * eigqts (na)
         mu = 3 * (na - 1)
         if ( abs (u (mu + 1, mode) ) + &
              abs (u (mu + 2, mode) ) + &
