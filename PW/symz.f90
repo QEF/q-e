@@ -32,12 +32,9 @@ subroutine symz (phi, nsym, s, nat, irt)
 
   real(kind=DP) :: work (3, 3, nat)
   ! auxiliary space
-
   !
-
-  if (nsym.eq.1) return
+  if (nsym == 1) return
   work = 0.d0      
-  ! call setv (9 * nat, 0.d0, work, 1)
   !
   do na = 1, nat
      do isym = 1, nsym
@@ -46,8 +43,8 @@ subroutine symz (phi, nsym, s, nat, irt)
            do j = 1, 3
               do k = 1, 3
                  do l = 1, 3
-                    work (i, j, na) = work (i, j, na) + s (i, k, isym) * s (j, l, &
-                         isym) * phi (k, l, sna)
+                    work (i, j, na) = work (i, j, na) + &
+                       s (i, k, isym) * s (j, l, isym) * phi (k, l, sna)
                  enddo
               enddo
            enddo
@@ -55,8 +52,7 @@ subroutine symz (phi, nsym, s, nat, irt)
      enddo
   enddo
   !
-  call DSCAL (9 * nat, 1.d0 / float (nsym), work, 1)
-  call DCOPY (9 * nat, work, 1, phi, 1)
+  phi(:, :, :) = work (:, :, :) / float (nsym)
   !
   return
 end subroutine symz

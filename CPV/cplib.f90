@@ -27,7 +27,7 @@
       integer k, l, ll, li, mi, lj, mj, lp, mp, np, m, n, p, ik, il, ii,&
      &        mpp, ilp
       real(kind=8)    cc(lix,lx,lix,lx,lx), f, y, t, s, fs, ss, fts, ts
-      complex(kind=8) aa(lx,mx,lix,lx,lix,lx), u(lx,mx,mx), sum
+      complex(kind=8) aa(lx,mx,lix,lx,lix,lx), u(lx,mx,mx), csum
 !
 !      cc = < lm | limi | ljmj > = sqrt(2l+1/4pi) (-1)^mj c^l(li-mi,ljmj)
 !
@@ -40,7 +40,7 @@
       WRITE( stdout,*)
       if (lli.gt.lix) call errore(' aainit ',' lli .gt. lix ',lli)
 !
-      call zero(lix*lx*lix*lx*lx,cc)
+      cc = 0.d0
 !
 !      limi  ljmj  -  lm    corresponding to each cc are given
 !
@@ -228,7 +228,7 @@
 !          1.)   i/2 has been changed to i/4 for u(4,6,*)      
 !          2.)  -i/4 has been changed to i/4 for u(5,8,*)
 !
-      call zero(2*lx*mx*mx,u)
+      u = 0.d0
 !     l=0
       u(1,1,1)=cmplx(1.,0.)
 !
@@ -330,7 +330,7 @@
       endif
 !
 !
-      call zero(2*lix*lx*lix*lx*lx*mx,aa)
+      aa = 0.d0
       do lp=1,ll
          do l=1,lli
             do m=1,(2*l-1)
@@ -366,21 +366,21 @@
                do m=1,(2*l-1)
                   do k=1,lli
                      do n=1,(2*k-1)
-                        sum=cmplx(0.,0.)
+                        csum=cmplx(0.,0.)
                         do mpp=1,(2*lp-1)
-                           sum = sum +                                  &
+                           csum = csum +                                &
      &                          conjg(u(lp,mp,mpp))*aa(lp,mpp,l,m,k,n)
                         end do
-                        if(abs(sum).gt.0.001) then
+                        if(abs(csum).gt.0.001) then
                            il =(l-1)*(l-1)+m
                            ik =(k-1)*(k-1)+n
                            ilp=(lp-1)*(lp-1)+mp
-                           if(abs(aimag(sum)).gt.0.001) then
+                           if(abs(aimag(csum)).gt.0.001) then
                               WRITE( stdout,'(a,2f8.5,1x,3i3,2x,i3)')         &
-     &                        'ap(ilp,il,ik) =  ', sum,ilp,il,ik
+     &                        'ap(ilp,il,ik) =  ', csum,ilp,il,ik
                               call errore('aainit','see above',1)
                            endif
-                           ap(ilp,il,ik)=real(sum)
+                           ap(ilp,il,ik)=real(csum)
                            lpx(il,ik)=lpx(il,ik)+1
                            lpl(il,ik,lpx(il,ik))=ilp
                         endif
@@ -773,14 +773,14 @@
       real(kind=8) qtemp(nhsavb,n) ! automatic array
 !
       call tictac(7,0)
-      call zero(2*ngw*n,phi)
+      phi(:,:) = (0.d0, 0.d0)
 !
       if (nvb.gt.0) then
-         call zero(nhsavb*n,qtemp)
+         qtemp (:,:) = 0.d0
          do is=1,nvb
             do iv=1,nh(is)
                do jv=1,nh(is)
-                  if(abs(qq(iv,jv,is)).gt.1.e-5) then
+                  if(abs(qq(iv,jv,is)) > 1.e-5) then
                      do ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
@@ -804,7 +804,7 @@
          end do
       end do
 !     =================================================================
-      if(iprsta.gt.2) then
+      if(iprsta > 2) then
          emtot=0.
          do j=1,n
             do i=1,ngw
@@ -819,7 +819,7 @@
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
          WRITE( stdout,*)
          do is=1,nsp
-            if(nsp.gt.1) then
+            if(nsp > 1) then
                WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
@@ -883,7 +883,7 @@
       complex(kind=8) cp(ngw,n)
 !
       integer ig, is, iv, jv, ia, inl, jnl
-      real(kind=8) sum, SSUM
+      real(kind=8) rsum
       real(kind=8), allocatable:: temp(:)
 !
 !
@@ -891,10 +891,10 @@
       do ig=1,ngw
          temp(ig)=real(conjg(cp(ig,i))*cp(ig,i))
       end do
-      sum=2.*SSUM(ngw,temp,1)
-      if (ng0.eq.2) sum=sum-temp(1)
+      rsum=2.*SUM(temp)
+      if (ng0.eq.2) rsum=rsum-temp(1)
 #ifdef __PARA
-      call reduce(1,sum)
+      call reduce(1,rsum)
 #endif
       deallocate(temp)
 !
@@ -905,7 +905,7 @@
                   do ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
-                     sum = sum +                                        &
+                     rsum = rsum +                                        &
      &                    qq(iv,jv,is)*bec(inl,i)*bec(jnl,i)
                   end do
                endif
@@ -913,7 +913,7 @@
          end do
       end do
 !
-      cscnorm=sqrt(sum)
+      cscnorm=sqrt(rsum)
 !
       return
       end
@@ -1003,8 +1003,6 @@
 ! local
       integer i, j, ig, is
       real(kind=8) wz
-      complex(kind=8) CSUM
-      external CSUM
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -1027,7 +1025,7 @@
      &                   gx(ig,2)*ainv(j,2)+gx(ig,3)*ainv(j,3)) +       &
      &                 conjg(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
             enddo
-            dh(i,j)=fpi*omega*real(CSUM(ng,vtemp,1))*wz
+            dh(i,j)=fpi*omega*real(SUM(vtemp))*wz
          enddo
       enddo
 #ifdef __PARA
@@ -1133,8 +1131,6 @@
 ! local
       integer i, j, ig, is
       real(kind=8) wz
-      complex(kind=8) CSUM
-      external CSUM
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -1154,7 +1150,7 @@
      &                    conjg(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
                enddo
             enddo
-            dps(i,j)=omega*real(wz*CSUM(ngs,vtemp,1))
+            dps(i,j)=omega*real(wz*SUM(vtemp))
             if (ng0.eq.2) dps(i,j)=dps(i,j)-omega*real(vtemp(1))
          enddo
       enddo
@@ -1216,7 +1212,7 @@
 !
       if (.not.tbuff) then
 !
-         call zero(2*nnrsx,psi)
+         psi (:) = (0.d0, 0.d0)
          do ig=1,ngw
             psi(nms(ig))=conjg(c(ig)-ci*ca(ig))
             psi(nps(ig))=c(ig)+ci*ca(ig)
@@ -1358,8 +1354,8 @@
 !
       complex(kind=8)  eigr(ngw,nas,nsp), cp(ngw,n)
 ! local variables
-      real(kind=8)  sum, csc(n) ! automatic array
-      complex(kind=8) CSUM, temp(ngw) ! automatic array
+      real(kind=8) rsum, csc(n) ! automatic array
+      complex(kind=8) temp(ngw) ! automatic array
  
       real(kind=8), allocatable::  becp(:,:)
       integer i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
@@ -1377,27 +1373,27 @@
             do ig=1,ngw
                temp(ig)=conjg(cp(ig,k))*cp(ig,i)
             end do
-            csc(k)=2.*real(CSUM(ngw,temp,1))
+            csc(k)=2.*real(SUM(temp))
             if (ng0.eq.2) csc(k)=csc(k)-real(temp(1))
          end do
 #ifdef __PARA
          call reduce(kmax,csc)
 #endif
          do k=1,kmax
-            sum=0.
+            rsum=0.
             do is=1,nvb
                do iv=1,nh(is)
                   do jv=1,nh(is)
                      do ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
-                        sum = sum +                                      &
+                        rsum = rsum +                                    &
      &                   qq(iv,jv,is)*becp(inl,i)*becp(jnl,k)
                      end do
                   end do
                end do
             end do
-            csc(k)=csc(k)+sum
+            csc(k)=csc(k)+rsum
          end do
 !
          WRITE( stdout,'(a,12f18.15)')' dotcsc = ',(csc(k),k=1,i)
@@ -1482,7 +1478,7 @@
          do i=1,3
             do j=1,3
 !
-               call zero(2*nnr,v)
+               v(:) = (0.d0, 0.d0)
 !
                iss=1
                isa=1
@@ -1497,8 +1493,7 @@
                   do ia=1,na(is),2
                      nfft=2
 #endif
-                     call zero(2*ngb,dqgbt(1,1))
-                     call zero(2*ngb,dqgbt(1,2))
+                     dqgbt(:,:) = (0.d0, 0.d0) 
                      if (ia.eq.na(is)) nfft=1
 !
 !  nfft=2 if two ffts at the same time are performed
@@ -1525,7 +1520,7 @@
 !     
 ! add structure factor
 !
-                     call zero(2*nnrb,qv)
+                     qv(:) = (0.d0, 0.d0)
                      if(nfft.eq.2) then
                         do ig=1,ngb
                            qv(npb(ig)) = eigrb(ig,ia  ,is)*dqgbt(ig,1)  &
@@ -1577,7 +1572,7 @@
          isdw=2
          do i=1,3
             do j=1,3
-               call zero(2*nnr,v)
+               v(:) = (0.d0, 0.d0)
                isa=1
                do is=1,nvb
                   do ia=1,na(is)
@@ -1587,7 +1582,7 @@
                      if (imax3-imin3+1.le.0) go to 25
 #endif
                      do iss=1,2
-                        call zero(2*ngb,dqgbt(1,iss))
+                        dqgbt(:,iss) = (0.d0, 0.d0)
                         ijv=0
                         do iv= 1,nh(is)
                            do jv=iv,nh(is)
@@ -1609,7 +1604,7 @@
 !     
 ! add structure factor
 !
-                     call zero(2*nnrb,qv)
+                     qv(:) = (0.d0, 0.d0)
                      do ig=1,ngb
                         qv(npb(ig))= eigrb(ig,ia,is)*dqgbt(ig,1)        &
      &                    + ci*      eigrb(ig,ia,is)*dqgbt(ig,2)
@@ -1948,7 +1943,7 @@
       call tictac(21,0)
       ci = (0.d0,1.d0)
       fac = omega/dfloat(nr1*nr2*nr3*nspin)
-      call zero(3*natx*nsp,fcc)
+      fcc = 0.d0
       do is=1,nsp
          if (ifpcor(is).eq.0) go to 10
 #ifdef __PARA
@@ -1966,7 +1961,7 @@
             if(ia.eq.na(is)) nfft=1
 #endif
             do ix=1,3
-               call zero(2*nnrb,qv)
+               qv(:) = (0.d0, 0.d0)
                if (nfft.eq.2) then
                   do ig=1,ngb
                      facg = tpibab*cmplx(0.d0,gxb(ig,ix))*rhocb(ig,is)
@@ -2104,7 +2099,7 @@
 ! local
       integer ig, is, isa, ism, ia, ix, iss, isup, isdw
       real(kind=8)  wz
-      complex(kind=8) eigrx, vcgs, cnvg, cvn, CSUM
+      complex(kind=8) eigrx, vcgs, cnvg, cvn
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -2143,7 +2138,7 @@
                   end do
                endif
                fion1(ix,ia,is) = fion1(ix,ia,is) + tpiba*omega*         &
-     &                             wz*real(CSUM(ngs,vtemp,1))
+     &                             wz*real(SUM(vtemp))
             end do
          end do
       end do
@@ -3154,8 +3149,7 @@
       real(kind=8)  bec(nhsa,n), cp(2,ngw,n)
       real(kind=8)  csc(nx)
       integer k, kmax,ig, is, iv, jv, ia, inl, jnl
-      real(kind=8) sum, SSUM
-      real(kind=8) temp(ngw) ! automatic array
+      real(kind=8) rsum, temp(ngw) ! automatic array
 !
 !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
 !
@@ -3166,7 +3160,7 @@
             do ig=1,ngw
                temp(ig)=cp(1,ig,k)*cp(1,ig,i)+cp(2,ig,k)*cp(2,ig,i)
             end do
-            csc(k)=2.*SSUM(ngw,temp,1)
+            csc(k)=2.*SUM(temp)
             if (ng0.eq.2) csc(k)=csc(k)-temp(1)
          endif
       end do
@@ -3181,7 +3175,7 @@
             temp(ig)=cp(1,ig,i)* real(betae(ig,inl))+             &
      &               cp(2,ig,i)*aimag(betae(ig,inl))
          end do
-         bec(inl,i)=2.*SSUM(ngw,temp,1)
+         bec(inl,i)=2.*SUM(temp)
          if (ng0.eq.2) bec(inl,i)= bec(inl,i)-temp(1)
       end do
 #ifdef __PARA
@@ -3192,7 +3186,7 @@
 !
       do k=1,kmax
          if (ispin(i).eq.ispin(k)) then
-            sum=0.
+            rsum=0.
             do is=1,nvb
                do iv=1,nh(is)
                   do jv=1,nh(is)
@@ -3200,13 +3194,13 @@
                         do ia=1,na(is)
                            inl=ish(is)+(iv-1)*na(is)+ia
                            jnl=ish(is)+(jv-1)*na(is)+ia
-                           sum = sum + qq(iv,jv,is)*bec(inl,i)*bec(jnl,k)
+                           rsum = rsum + qq(iv,jv,is)*bec(inl,i)*bec(jnl,k)
                         end do
                      endif
                   end do
                end do
             end do
-            csc(k)=csc(k)+sum
+            csc(k)=csc(k)+rsum
          endif
       end do
 !
@@ -3801,8 +3795,8 @@
       call tictac(11,0)
       ci=(0.d0,1.d0)
       fac=omegab/float(nr1b*nr2b*nr3b)
-      call zero(nat*nhx*nhx*nspin,deeq)
-      call zero(3*natx*nsx,fvan)
+      deeq (:,:,:,:) = 0.d0
+      fvan (:,:,:) = 0.d0
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
@@ -3826,7 +3820,7 @@
             do iv=1,nh(is)
                do jv=iv,nh(is)
                   ijv=ijv+1
-                  call zero(2*nnrb,qv)
+                  qv(:) = (0.d0, 0.d0)
                   if (nfft.eq.2) then
                      do ig=1,ngb
                         qv(npb(ig))= eigrb(ig,ia  ,is)*qgb(ig,ijv,is)   &
@@ -3891,7 +3885,7 @@
 #endif
                if( ia.eq.na(is)) nfft=1
                do ik=1,3
-                  call zero(2*nnrb,qv)
+                  qv(:) = (0.d0, 0.d0)
                   ijv=0
                   do iv=1,nh(is)
                      do jv=iv,nh(is)
@@ -3957,7 +3951,7 @@
                if (imax3-imin3+1.le.0) go to 25
 #endif
                do ik=1,3
-                  call zero(2*nnrb,qv)
+                  qv(:) = (0.d0, 0.d0)
                   ijv=0
 !
                   do iv=1,nh(is)
@@ -4021,7 +4015,6 @@
       real(kind=8) fion(3,natx,nsp)
 !
       integer k, is, ia, iv, jv, i, j, inl
-      real(kind=8) tt, SSUM
       real(kind=8) temp(nx,nx), tmpbec(nhx,nx),tmpdr(nx,nhx) ! automatic arrays
 !
       call tictac(15,0)
@@ -4029,8 +4022,8 @@
          do is=1,nvb
             do ia=1,na(is)
 !
-               call zero(nhx*n,tmpbec)
-               call zero(nhx*n,tmpdr)
+               tmpbec = 0.d0
+               tmpdr  = 0.d0
 !
                do iv=1,nh(is)
                   do jv=1,nh(is)
@@ -4052,7 +4045,7 @@
                end do
 !
                if(nh(is).gt.0)then
-                  call zero(nx*n,temp)
+                  temp = 0.d0
 !
                   call MXMA                                             &
      &                 (tmpdr,1,nx,tmpbec,1,nhx,temp,1,nx,n,nh(is),n)
@@ -4063,9 +4056,7 @@
                      end do
                   end do
 !
-                  tt=SSUM(nx*n,temp,1)
-!
-                  fion(k,ia,is)=fion(k,ia,is)+2.*tt
+                  fion(k,ia,is)=fion(k,ia,is)+2.*SUM(temp)
                endif
 !
             end do
@@ -4099,7 +4090,7 @@
 !
       integer k, is, ia, isa, iss, inl, iv, jv, i
       real(kind=8) tmpbec(nhx,n), tmpdr(nhx,n) ! automatic arrays
-      real(kind=8) temp, tt, SSUM
+      real(kind=8) temp
 !
 !     nlsm2 fills becdr
 !
@@ -4113,8 +4104,8 @@
             do ia=1,na(is)
                isa=isa+1
 !
-               call zero(nhx*n,tmpbec)
-               call zero(nhx*n,tmpdr )
+               tmpbec = 0.d0
+               tmpdr  = 0.d0
 !
                do iv=1,nh(is)
                   do jv=1,nh(is)
@@ -4140,9 +4131,7 @@
                   end do
                end do
 !
-               tt=SSUM(nhx*n,tmpdr,1)
-!     
-               fion(k,ia,is)=fion(k,ia,is)-2.*tt
+               fion(k,ia,is)=fion(k,ia,is)-2.*SUM(tmpdr)
 !
             end do
          end do
@@ -4260,7 +4249,7 @@
 !
       call tictac(20,0)
       allocate(gk(ngw))
-      call zero(3*nhsa*n,becdr)
+      becdr = 0.d0
 !
       do k=1,3
          do ig=1,ngw
@@ -4366,8 +4355,8 @@
 !
       allocate(qbephi(nhsa,n))
       allocate(qbecp (nhsa,n))
-      call zero(nhsa*n,qbephi)
-      call zero(nhsa*n,qbecp )
+      qbephi = 0.d0
+      qbecp  = 0.d0
 !
       do is=1,nvb
          do iv=1,nh(is)
@@ -4905,7 +4894,7 @@
       complex(kind=8), allocatable:: wfc(:,:), swfc(:,:), becwfc(:,:)
       real(kind=8), allocatable   :: overlap(:,:), e(:), z(:,:),        &
      &                               proj(:,:), temp(:)
-      real(kind=8)                :: somma, SSUM
+      real(kind=8)                :: somma
       integer n_atomic_wfc
       integer is, ia, nb, l, m, k, i
 !
@@ -4990,7 +4979,7 @@
       do m=1,n
          do l=1,n_atomic_wfc
             temp(:)=real(conjg(c(:,m))*wfc(:,l))
-            proj(m,l)=2.d0*SSUM(ngw,temp,1)
+            proj(m,l)=2.d0*SUM(temp)
             if (ng0.eq.2) proj(m,l)=proj(m,l)-temp(1)
          end do
       end do
@@ -6207,12 +6196,11 @@
       integer irb(3,natx,nsx), nfi
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
-      real(kind=8) rsumr(2), rsumg(2), sa1, sa2, SSUM
+      real(kind=8) rsumr(2), rsumg(2), sa1, sa2
       real(kind=8) rnegsum, rmin, rmax, rsum
-      real(kind=8) enkin, ennl
+      real(kind=8), external :: enkin, ennl
       complex(kind=8) ci,fp,fm
       complex(kind=8), pointer:: psi(:), psis(:)
-      external ennl, enkin, SSUM
 !
 !
       call tictac(4,0)
@@ -6220,9 +6208,9 @@
       psis=> wrk1
       ci=(0.0,1.0)
       do iss=1,nspin
-         call zero(nnr,rhor(1,iss))
-         call zero(nnrsx,rhos(1,iss))
-         call zero(2*ng,rhog(1,iss))
+         rhor(:,iss) = 0.d0
+         rhos(:,iss) = 0.d0
+         rhog(:,iss) = (0.d0, 0.d0)
       end do
 !
 !     ==================================================================
@@ -6288,7 +6276,7 @@
          endif
 !
          do i=1,n,2
-            call zero(2*nnrsx,psis)
+            psis (:) = (0.d0, 0.d0)
             do ig=1,ngw
                psis(nms(ig))=conjg(c(ig,i))+ci*conjg(c(ig,i+1))
                psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
@@ -6362,7 +6350,7 @@
 !     case nspin=1
 !     ------------------------------------------------------------------
             iss=1
-            call zero(2*nnr,psi)
+            psi (:) = (0.d0, 0.d0)
             do ig=1,ngs
                psi(nm(ig))=conjg(rhog(ig,iss))
                psi(np(ig))=      rhog(ig,iss)
@@ -6377,7 +6365,7 @@
 !     ------------------------------------------------------------------
             isup=1
             isdw=2
-            call zero(2*nnr,psi)
+            psi (:) = (0.d0, 0.d0)
             do ig=1,ngs
                psi(nm(ig))=conjg(rhog(ig,isup))+ci*conjg(rhog(ig,isdw))
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
@@ -6392,7 +6380,7 @@
          if(iprsta.ge.3)then
             do iss=1,nspin
                rsumg(iss)=omega*real(rhog(1,iss))
-               rsumr(iss)=SSUM(nnr,rhor(1,iss),1)*omega/dfloat(nr1*nr2*nr3)
+               rsumr(iss)=SUM(rhor(:,iss))*omega/dfloat(nr1*nr2*nr3)
             end do
 #ifdef __PARA
             if (ng0.ne.2) then
@@ -6436,7 +6424,7 @@
       if(nfi.eq.0.or.mod(nfi-1,iprint).eq.0) then
          do iss=1,nspin
             rsumg(iss)=omega*real(rhog(1,iss))
-            rsumr(iss)=SSUM(nnr,rhor(1,iss),1)*omega/dfloat(nr1*nr2*nr3)
+            rsumr(iss)=SUM(rhor(:,iss),1)*omega/dfloat(nr1*nr2*nr3)
          end do
 #ifdef __PARA
          if (ng0.ne.2) then
@@ -6493,7 +6481,7 @@
       integer i, j
       real(kind=8)    tmp1(nx,nx) ! automatic array
 !
-      call zero(nx*nss,rho)
+      rho (:,:) = 0.d0
 !
 !     <phi|cp>
 !
@@ -6524,7 +6512,7 @@
 #endif
 !
       if(nvb.gt.0)then
-         call zero(nx*nss,tmp1)
+         tmp1 (:,:) = 0.d0
 !
          call MXMA(bephi(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,               &
      &                                tmp1,1,nx,nss,nhsavb,nss)
@@ -6579,8 +6567,8 @@
 !
       integer isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
      &     isa, ia, ir, irb3, imin3, imax3
-      real(kind=8) ra, ra1, ra2, sum, SSUM
-      complex(kind=8) ci, fp, fm, CSUM
+      real(kind=8) sumrho
+      complex(kind=8) ci, fp, fm, ca
       complex(kind=8), allocatable::  qgbt(:,:)
       complex(kind=8), pointer:: v(:)
 !
@@ -6589,7 +6577,7 @@
       ci=(0.,1.)
 !
       v => wrk1
-      call zero(2*nnr,v)
+      v (:) = (0.d0, 0.d0)
       allocate(qgbt(ngb,2))
 !
       if(nspin.eq.1) then
@@ -6614,16 +6602,16 @@
 !  nfft=2 if two ffts at the same time are performed
 !
                do ifft=1,nfft
-                  call zero(2*ngb,qgbt(1,ifft))
+                  qgbt(:,ifft) = (0.d0, 0.d0)
                   ijv=0
                   do iv= 1,nh(is)
                      do jv=iv,nh(is)
                         ijv=ijv+1
-                        sum=rhovan(isa+ifft-1,ijv,iss)
-                        if(iv.ne.jv) sum=2.*sum
+                        sumrho=rhovan(isa+ifft-1,ijv,iss)
+                        if(iv.ne.jv) sumrho=2.*sumrho
                         do ig=1,ngb
                            qgbt(ig,ifft)=qgbt(ig,ifft) +                &
-      &                                  sum*qgb(ig,ijv,is)
+      &                                  sumrho*qgb(ig,ijv,is)
                         end do
                      end do
                   end do
@@ -6631,7 +6619,7 @@
 !
 ! add structure factor
 !
-               call zero(2*nnrb,qv)
+               qv(:) = (0.d0, 0.d0)
                if(nfft.eq.2)then
                   do ig=1,ngb
                      qv(npb(ig))=  eigrb(ig,ia  ,is)*qgbt(ig,1)         &
@@ -6653,16 +6641,15 @@
 !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
 !
                if(iprsta.gt.2) then
-                  ra1= real(CSUM(nnrb,qv,1))
-                  ra2=aimag(CSUM(nnrb,qv,1))
+                  ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*real(qgbt(1,1))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*ra1/(nr1b*nr2b*nr3b)
+     &                 omegab*real(ca)/(nr1b*nr2b*nr3b)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*real(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*ra2/(nr1b*nr2b*nr3b)
+     &                 omegab*aimag(ca)/(nr1b*nr2b*nr3b)
                endif
 !
 !  add qv(r) to v(r), in real space on the dense grid
@@ -6681,12 +6668,12 @@
          end do
 !
          if(iprsta.gt.2) then
-            ra =SSUM(2*nnr,v,1)
+            ca = SUM(v)
 #ifdef __PARA
-            call reduce(1,ra)
+            call reduce(2,ca)
 #endif
-            WRITE( stdout,'(a,f12.8)')                                        &
-     &           ' rhov: int  n_v(r)  dr = ',omega*ra/(nr1*nr2*nr3)
+            WRITE( stdout,'(a,2f12.8)')                                  &
+     &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
          endif
 !
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
@@ -6721,15 +6708,15 @@
                if (imax3-imin3+1.le.0) go to 25
 #endif
                do iss=1,2
-                  call zero(2*ngb,qgbt(1,iss))
+                  qgbt(:,iss) = (0.d0, 0.d0)
                   ijv=0
                   do iv=1,nh(is)
                      do jv=iv,nh(is)
                         ijv=ijv+1
-                        sum=rhovan(isa,ijv,iss)
-                        if(iv.ne.jv) sum=2.*sum
+                        sumrho=rhovan(isa,ijv,iss)
+                        if(iv.ne.jv) sumrho=2.*sumrho
                         do ig=1,ngb
-                           qgbt(ig,iss)=qgbt(ig,iss)+sum*qgb(ig,ijv,is)
+                           qgbt(ig,iss)=qgbt(ig,iss)+sumrho*qgb(ig,ijv,is)
                         end do
                      end do
                   end do
@@ -6737,7 +6724,7 @@
 !     
 ! add structure factor
 !
-               call zero(2*nnrb,qv)
+               qv(:) = (0.d0, 0.d0)
                do ig=1,ngb
                   qv(npb(ig)) =    eigrb(ig,ia,is)*qgbt(ig,1)           &
      &                  + ci*      eigrb(ig,ia,is)*qgbt(ig,2)
@@ -6751,16 +6738,15 @@
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
 !
                if(iprsta.gt.2) then
-                  ra1= real(CSUM(nnrb,qv,1))
-                  ra2=aimag(CSUM(nnrb,qv,1))
+                  ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
      &                 omegab*real(qgbt(1,1))
                   WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
-     &                 omegab*ra1/(nr1b*nr2b*nr3b)
+     &                 omegab*real(ca)/(nr1b*nr2b*nr3b)
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
      &                 omegab*real(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
-     &                 omegab*ra2/(nr1b*nr2b*nr3b)
+     &                 omegab*aimag(ca)/(nr1b*nr2b*nr3b)
                endif
 !
 !  add qv(r) to v(r), in real space on the dense grid
@@ -6777,11 +6763,11 @@
          end do
 !
          if(iprsta.gt.2) then
-            ra2 = SSUM(2*nnr,v,1)
+            ca = SUM(v)
 #ifdef __PARA
-            call reduce(1,ra2)
+            call reduce(2,ca)
 #endif
-            WRITE( stdout,'(a,f12.8)') 'rhov:in n_v  ',omega*ra2/(nr1*nr2*nr3)
+            WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
          endif
 !
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
@@ -6853,7 +6839,7 @@
       call tictac(17,0)
       ci=(0.,1.)
 !
-      call zero(2*nnr,wrk1)
+      wrk1 (:) = (0.d0, 0.d0)
 !
       do is=1,nsp
          if (ifpcor(is).eq.0) go to 10
@@ -6871,7 +6857,7 @@
 ! two ffts at the same time, on two atoms (if possible: nfft=2)
 !
 #endif
-            call zero(2*nnrb,qv)
+            qv(:) = (0.d0, 0.d0)
             if(nfft.eq.2)then
                do ig=1,ngb
                   qv(npb(ig))= eigrb(ig,ia  ,is)*rhocb(ig,is)          &
@@ -7020,7 +7006,7 @@
       integer i, j
       real(kind=8)    tmp1(nx,nx) ! automatic array
 !
-      call zero(nx*nss,sig )
+      sig = 0.d0
       call MXMA(cp(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                    &
      &                                  sig,1,nx,nss,2*ngw,nss)
 !
@@ -7050,7 +7036,7 @@
       end do
 !
       if(nvb.gt.0)then
-         call zero(nx*nss,tmp1)
+         tmp1 = 0.d0
 !
          call MXMA(becp(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,                &
      &                              tmp1,1,nx,nss,nhsavb,nss)
@@ -7108,7 +7094,7 @@
       complex(kind=8) c(ngw,nx)
 ! local variables
       integer nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
-      real(kind=8) spin0, spin1, spin2, fup, fdw, SSUM
+      real(kind=8) spin0, spin1, spin2, fup, fdw
       real(kind=8), allocatable:: overlap(:,:), temp(:)
       logical frac
 !
@@ -7168,7 +7154,7 @@
             do ig=1,ngw
                temp(ig)=real(conjg(c(ig,i))*c(ig,jj))
             end do
-            overlap(i,j) = 2.d0*SSUM(ngw,temp,1)
+            overlap(i,j) = 2.d0*SUM(temp)
             if (ng0.eq.2) overlap(i,j) = overlap(i,j) - temp(1)
          end do
       end do
@@ -7271,7 +7257,7 @@
       integer i, j
       real(kind=8)    tmp1(nx,nx) ! automatic array
 !
-      call zero(nx*nss,tau)
+      tau = 0.d0
       call MXMA(phi(1,ist),2*ngw,1,phi(1,ist),1,2*ngw,                  &
      &                                   tau,1,nx,nss,2*ngw,nss)
 !
@@ -7298,7 +7284,7 @@
 #endif
 !
       if(nvb.gt.0)then
-         call zero(nx*nss,tmp1)
+         tmp1 = 0.d0
 !
          call MXMA(bephi(1,ist),nhsa,1,qbephi(1,ist),1,nhsa,              &
      &                                     tmp1,1,nx,nss,nhsavb,nss)
@@ -7344,7 +7330,7 @@
 !     lagrange multipliers
 !
       call tictac(9,0)
-      call zero(2*ngw*n,wrk2)
+      wrk2 = (0.d0, 0.d0)
       do j=1,n
          call DSCAL(n,ccc,x0(1,j),1)
       end do
@@ -7455,11 +7441,10 @@
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh, SSUM
-      complex(kind=8)  fp, fm, ci, CSUM
+      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh
+      complex(kind=8)  fp, fm, ci
       complex(kind=8), pointer:: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
-      external SSUM, CSUM
 !
       call tictac(5,0)
       ci=(0.,1.)
@@ -7532,7 +7517,7 @@
          end do
       end do
 !
-      epseu=wz*real(CSUM(ngs,vtemp,1))
+      epseu=wz*real(SUM(vtemp))
       if (ng0.eq.2) epseu=epseu-vtemp(1)
 #ifdef __PARA
       call reduce(1,epseu)
@@ -7554,7 +7539,7 @@
          vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
-      eh=real(CSUM(ng,vtemp,1))*wz*0.5*fpi/tpiba2
+      eh=real(SUM(vtemp))*wz*0.5*fpi/tpiba2
 #ifdef __PARA
       call reduce(1,eh)
 #endif
@@ -7648,7 +7633,7 @@
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
-      call zero(2*nnr,v)
+      v(:) = (0.d0, 0.d0)
       if(nspin.eq.1) then
          iss=1
          do ig=1,ng
@@ -7666,7 +7651,7 @@
 !
 !     calculation of average potential
 !
-         vave=SSUM(nnr,rhor(1,iss),1)/dfloat(nr1*nr2*nr3)
+         vave=SUM(rhor(:,iss))/dfloat(nr1*nr2*nr3)
       else
          isup=1
          isdw=2
@@ -7683,7 +7668,7 @@
 !
 !     calculation of average potential
 !
-         vave=(SSUM(nnr,rhor(1,isup),1)+SSUM(nnr,rhor(1,isdw),1))       &
+         vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
      &        /2.0/dfloat(nr1*nr2*nr3)
       endif
 #ifdef __PARA
@@ -7692,7 +7677,7 @@
 !     ===================================================================
 !     fourier transform of total potential to r-space (smooth grid)
 !     -------------------------------------------------------------------
-      call zero(2*nnrsx,vs)
+      vs (:) = (0.d0, 0.d0)
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
@@ -8446,7 +8431,7 @@
 !______________________________________________________________________
       subroutine ggapbe(nspin,rhog,gradr,rhor,excrho)
 !     _________________________________________________________________
-!     Perdew-Burke-Ernzerof gga
+!     Perdew-Burke-Ernzerhof gga
 !     Perdew, et al. PRL 77, 3865, 1996
 !
       use gvec
@@ -8581,7 +8566,7 @@
       subroutine exchpbe(rho,agrad,ex,dexdrho,dexdg)
 !     _________________________________________________________________
 !
-! Perdew-Burke-Ernzerof gga, Exchange term:
+! Perdew-Burke-Ernzerhof gga, Exchange term:
 ! Calculates the exchange energy density and the two functional derivative
 ! that will be used to calculate the potential
 !
@@ -8805,17 +8790,6 @@
       return
       end
 !
-      subroutine zero(n,a)
-!
-      integer n,i
-      real(kind=8) a(n)
-!
-      do i=1,n
-         a(i)=0.0
-      end do
-!
-      return
-      end
 !______________________________________________________________________
       subroutine ggapw(nspin,rhog,gradr,rhor,exc)
 !     _________________________________________________________________

@@ -45,7 +45,7 @@
        USE constants, ONLY: pi
        USE io_global, ONLY: stdout
        IMPLICIT NONE
-       REAL(dbl), INTENT(IN) :: alat, omega, a1(:), a2(:), a3(:), rat1, rat2, rat3
+       REAL(dbl), INTENT(IN) :: alat, omega, a1(3), a2(3), a3(3), rat1, rat2, rat3
        INTEGER :: i
 
        alatb  = alat * rat1

@@ -592,7 +592,7 @@
 !
       complex(kind=8), pointer:: v(:)
       complex(kind=8), allocatable:: x(:), vtemp(:)
-      complex(kind=8)  ci, fp, fm, CSUM
+      complex(kind=8)  ci, fp, fm
       integer iss, ig, ir, i,j
 !
       v => wrk1
@@ -621,7 +621,7 @@
      &                    tpiba*(-rhog(ig,iss)*gx(ig,i)*ainv(j,1)+      &
      &                    gx(ig,1)*drhog(ig,iss,i,j))
                   end do
-                  dexc(i,j) = real(CSUM(ng,vtemp,1))*2.0
+                  dexc(i,j) = real(SUM(vtemp))*2.0
                end do
             end do
          endif
@@ -654,7 +654,7 @@
      &                    (-rhog(ig,iss)*gx(ig,i)*ainv(j,3)+            &
      &                    gx(ig,3)*drhog(ig,iss,i,j)))
                   end do
-                  dexc(i,j) = dexc(i,j) + 2.0*real(CSUM(ng,vtemp,1))
+                  dexc(i,j) = dexc(i,j) + 2.0*real(SUM(vtemp))
                end do
             end do
          endif
@@ -1147,8 +1147,7 @@
       real(kind=8) bec(nhsa,n), dbec(nhsa,n,3,3), lambda(nx,nx)
 !
       integer i, j, ii, jj, inl, iv, jv, ia, is
-      real(kind=8) fpre(3,3), tmpbec(nhx,nx), tmpdh(nx,nhx), temp(nx,nx),&
-     &       SSUM, tt
+      real(kind=8) fpre(3,3), tmpbec(nhx,nx), tmpdh(nx,nhx), temp(nx,nx)
 !
       fpre(:,:) = 0.d0
       do ii=1,3
@@ -1190,9 +1189,7 @@
                         end do
                      end do
 !
-                     tt=SSUM(nx*n,temp,1)
-!
-                     fpre(ii,jj)=fpre(ii,jj)+2.*tt
+                     fpre(ii,jj)=fpre(ii,jj)+2.*SUM(temp(1:n,1:n))
                   endif
 !
                end do
