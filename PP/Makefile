@@ -177,6 +177,7 @@ PWOBJS = \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
 ../PW/random.o \
+../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
@@ -297,10 +298,10 @@ bands.x : $(PPOBJS) bands.o
 	$(LD) -o bands.x bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 plotband.x : $(PPOBJS) plotband.o
-	$(LD) -o plotband.x plotband.o ../Modules/parameters.o $(LDFLAGS)
+	$(LD) -o plotband.x plotband.o  $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 plotrho.x : $(PPOBJS) plotrho.o
-	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LDFLAGS)
+	$(LD) -o plotrho.x plotrho.o  $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 pw2wan.x : $(PPOBJS) pw2wan.o
 	$(LD) -o pw2wan.x pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)

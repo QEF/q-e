@@ -9,7 +9,9 @@
 program wannier
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
+  USE mp_global,  ONLY : mpime
+  USE mp,  ONLY : mp_bcast
   use pwcom  
   use para,       only : kunit
   use io_files
@@ -18,8 +20,10 @@ program wannier
   integer , dimension(3):: nk
   real(kind=8), dimension(3):: s0
   integer :: ik, i, kunittmp
+  CHARACTER(LEN=4) :: spin_component
+  integer :: ispinw
 
-  namelist / inputpp / tmp_dir, nk, s0, prefix
+  namelist / inputpp / tmp_dir, nk, s0, prefix, spin_component
   !
   call start_postproc (nd_nmbr)
   !
@@ -27,6 +31,7 @@ program wannier
   !
   tmp_dir = './'
   prefix = ' '
+  spin_component = 'none'
   nk = 0
   s0 = 0.d0
   !
@@ -36,10 +41,21 @@ program wannier
   !
   !     Check of namelist variables
   !
+  SELECT CASE ( TRIM( spin_component ) )
+    CASE ( 'up' )
+      ispinw = 1
+    CASE ( 'down' )
+      ispinw = 2
+    CASE DEFAULT
+      ispinw = 0
+  END SELECT
+  !
   !   Now allocate space for pwscf variables, read and check them.
   !
   call read_file  
   call openfil  
+  !
+  call mp_bcast( isk, 0 )
   !
   if (nk(1)==0 .and. nk(2)==0 .and. nk(3) == 0) then
      nk(1) = nk1
@@ -50,32 +66,40 @@ program wannier
      s0(3) = k3/2d0
   end if
 
+  IF( nspin /= 1 .AND. nspin /= 2 ) THEN
+    CALL errore(' pw2wan ', ' nspin not allowed ', 1 )
+  END IF
+
 #if defined __PARA
   kunittmp = kunit
 #else
   kunittmp = 1
 #endif
 
-  call write_wannier (nk, s0, kunittmp)
+  call write_wannier (nk, s0, kunittmp, ispinw)
 
-  WRITE( stdout, * ) 'K-points (reciprocal lattice coordinates) '
-  do ik = 1, nkstot
-    WRITE( stdout,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
-  end do
-  !
-  call cryst_to_cart ( nkstot, xk, at, -1)
-  !
-  WRITE( stdout, * ) 'K-points in unit of 2PI/alat (cartesian coordinates) '
-  do ik = 1, nkstot
-    WRITE( stdout,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
-  end do
+  IF( ionode ) THEN
+    WRITE( stdout, * ) 'K-points (reciprocal lattice coordinates) '
+    do ik = 1, nkstot
+      WRITE( stdout,fmt="(' ik = ',I3,3F10.6,I2)" ) &
+        ik, xk(1,ik), xk(2,ik), xk(3,ik), isk(ik)
+    end do
+    !
+    call cryst_to_cart ( nkstot, xk, at, -1)
+    !
+    WRITE( stdout, * ) 'K-points in unit of 2PI/alat (cartesian coordinates) '
+    do ik = 1, nkstot
+      WRITE( stdout,fmt="(' ik = ',I3,3F10.6,I2)" ) &
+        ik, xk(1,ik), xk(2,ik), xk(3,ik), isk(ik)
+    end do
+  END IF
   !
   call stop_pp
   stop
 end program wannier
 !
 !-----------------------------------------------------------------------
-subroutine write_wannier (nk, s0, kunit)
+subroutine write_wannier (nk, s0, kunit, ispinw)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
@@ -85,7 +109,7 @@ subroutine write_wannier (nk, s0, kunit)
   use io_files,       only : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   use io_base,        only : write_restart_wfc
   use io_global,      only : ionode
-  use mp_global,      only : nproc, nproc_pool
+  use mp_global,      only : nproc, nproc_pool, mpime
   use mp_global,      only : my_pool_id, intra_pool_comm, inter_pool_comm
   use mp,             only : mp_sum, mp_max
 
@@ -94,21 +118,24 @@ subroutine write_wannier (nk, s0, kunit)
   integer , dimension(3):: nk
   real(kind=8), dimension(3):: s0
   integer :: kunit
+  integer :: ispinw
 
-  integer :: i, j, k, ig, ik, ibnd, na, ngg
+  integer :: i, j, k, ig, ik, ibnd, na, ngg, ikw
   integer, allocatable :: kisort(:)
   real(kind=8), allocatable :: ei_k(:,:)
+  real(kind=8), allocatable :: ei_kw(:,:)
   real(kind=8), allocatable :: rat(:,:,:)
   real(kind=8) :: hmat(3,3), rr(3)
   integer, allocatable :: natom(:)
   integer :: npool, nkbl, nkl, nkr, npwx_g
   integer :: ike, iks, npw_g, ispin
   integer, allocatable :: ngk_g( : )
+  integer, allocatable :: ngk_gw( : )
   integer, allocatable :: itmp( :, : )
   integer, allocatable :: igwk( : )
 
   real(kind=8) :: wfc_scal 
-  logical :: twf0, twfm
+  logical :: twf0, twfm, twrite_wfc
 
   IF( nkstot > 0 ) THEN
 
@@ -146,10 +173,12 @@ subroutine write_wannier (nk, s0, kunit)
   ngm_g = ngm
   call mp_sum( ngm_g , intra_pool_comm )
 
-  allocate ( ei_k( nbnd, nkstot ) )  ! eigenvectors
+  allocate ( ei_k ( nbnd, nkstot ) )  ! eigenvectors
+  allocate ( ei_kw( nbnd, nkstot/nspin ) )  ! eigenvectors
   allocate ( rat( 3, nat, ntyp ) )   ! atomic positions
   allocate ( natom( ntyp ) )         ! number of atoms
   ei_k   = 0.0d0
+  ei_kw  = 0.0d0
   rat    = 0.0d0
   natom  = 0 
 
@@ -233,14 +262,15 @@ subroutine write_wannier (nk, s0, kunit)
 
   ! compute the global number of G+k vectors for each k point
   allocate( ngk_g( nkstot ) )
+  allocate( ngk_gw( nkstot/2 ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
   CALL mp_sum( ngk_g )
 
   do ik = 1, nkstot
     if( ionode ) then
-      WRITE( stdout,fmt="(' k ',2I4,4F12.6)")  &
-        ik, ngk_g( ik), ecutwfc / tpiba2,  xk(1,ik), xk(2,ik), xk(3,ik)
+      WRITE( stdout,fmt="(' k ',2I4,4F12.6,I2)")  &
+        ik, ngk_g( ik), ecutwfc / tpiba2,  xk(1,ik), xk(2,ik), xk(3,ik), isk(ik)
     end if
   end do
 
@@ -252,8 +282,9 @@ subroutine write_wannier (nk, s0, kunit)
   npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
 
   if( ionode ) then
-    write (40) npwx_g, nbnd, nkstot
-    WRITE( stdout,*) 'Wave function dimensions ( npwx, nbnd, nkstot) = ', npwx_g, nbnd, nkstot
+    write (40) npwx_g, nbnd, nkstot/nspin
+    WRITE( stdout,*) 'Wave function dimensions ( npwx, nbnd, nkstot, nspin) = ', &
+      npwx_g, nbnd, nkstot, nspin
   end if
 
   ! for each k point build and write the global G+k indexes array
@@ -283,7 +314,9 @@ subroutine write_wannier (nk, s0, kunit)
     end if
     deallocate( itmp )
     if( ionode ) then
-      write (40)( igwk(ig), ig = 1, npwx_g )
+      IF( ( ispinw == 0 ) .OR. ( isk(ik) == ispinw ) ) THEN
+        write (40)( igwk(ig), ig = 1, npwx_g )
+      END IF 
     end if
   end do
 
@@ -297,14 +330,20 @@ subroutine write_wannier (nk, s0, kunit)
   ei_k(1:nbnd,:) = et(1:nbnd,:) / 2.0d0  !  Rydberg to Hartree conversion
 
   if( ionode ) then
-    write (40) ( ( ei_k( i, ik ), i = 1, nbnd ), ik = 1, nkstot )
-    write (40) ( ngk_g( ik ), ik = 1, nkstot )
-    write (40) ( nbnd, ik = 1, nkstot )
+    ikw = 0
+    DO ik = 1, nkstot
+      IF( ( ispinw == 0 ) .OR. ( isk(ik) == ispinw ) ) THEN
+        ikw = ikw + 1
+        ei_kw( :, ikw ) = ei_k( :, ik )
+        ngk_gw( ikw ) = ngk_g( ik )
+      END IF
+    END DO
+    write (40) ( ( ei_kw( i, ik ), i = 1, nbnd ), ik = 1, ikw )
+    write (40) ( ngk_gw( ik ), ik = 1, ikw )
+    write (40) ( nbnd, ik = 1, ikw )
     write (40) nr1, nr2, nr3, ngm_g, npw_g
     WRITE( stdout,*) 'Grid  ( nr1, nr2, nr3, ngm_g, npw_g ) = ', nr1, nr2, nr3, ngm_g, npw_g
   end if
-
-  
 
   wfc_scal = 1.0d0
   twf0 = .true.
@@ -315,15 +354,19 @@ subroutine write_wannier (nk, s0, kunit)
        call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
      END IF
      ispin = isk( ik )
-     !  ! WRITE( stdout,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
-     CALL write_restart_wfc(40, ik, nkstot, kunit, ispin, nspin, &
+     IF( ( ispinw == 0 ) .OR. ( isk(ik) == ispinw ) ) THEN
+       ! WRITE( stdout,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
+       CALL write_restart_wfc(40, ik, nkstot, kunit, ispin, nspin, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), ngk(ik-iks+1) )
+     END IF
   end do
 
   deallocate (ei_k)
+  deallocate (ei_kw)
   deallocate ( rat )
   deallocate ( natom )
   deallocate ( ngk_g )
+  deallocate ( ngk_gw )
 
   if( ionode ) then
     close ( unit = 40 )
