@@ -68,8 +68,6 @@ linux32 )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
-	# use static libraries unless explicitly asked
-	if test ! $yes_shared ; then no_shared=1 ; fi
 	;;
 aix )
 	try_f90_parallel="mpxlf90_r mpxlf90"
@@ -96,8 +94,6 @@ alinux )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__ALPHA -D__LINUX64"
-	# use static libraries unless explicitly asked
-	if test ! $yes_shared ; then no_shared=1 ; fi
 	;;
 sparc )
 	try_f90_parallel="mpf90"
@@ -326,10 +322,10 @@ esac
 # check Fortran compiler flags
 case "$arch:$f90_id" in
 linux64:ifort )
-	try_fflags="-Vaxlib -O2 -assume byterecl"
+	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
-	try_ldflags="-Vaxlib"
+	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
@@ -354,10 +350,10 @@ linux64:pgf* )
 	try_dflags="$try_dflags -D__PGI"
 	;;
 linux32:ifort )
-        try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
+        try_fflags="-O2 -tpp6 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
-	try_ldflags="-Vaxlib"
+	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
@@ -497,7 +493,7 @@ echo setting F90FLAGS... $f90flags
 case "$arch:$cc_id" in
 linux*:icc )
 	try_cflags="-O3"
-	c_ldflags="-Vaxlib"
+	c_ldflags=""
 	;;
 linux*:pgcc )
 	try_cflags="-fast"
