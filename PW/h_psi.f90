@@ -30,7 +30,6 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs  
   USE gvect,    ONLY : gstart
-  USE rbecmod,  ONLY : becp
   !
   IMPLICIT NONE
   !
@@ -65,6 +64,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! 
        ! ... gamma version
        !
+       USE rbecmod,  ONLY : becp
        !
        IMPLICIT NONE
        !
@@ -115,6 +115,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! ... k-points version
        !
        USE wavefunctions_module, ONLY : psic
+       USE becmod,  ONLY : becp
        !
        IMPLICIT NONE
        !
