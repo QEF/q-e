@@ -470,5 +470,5 @@ end module fftw_mod
 #else
       subroutine bidon_fftw
          stop 'fftw'
-      end subroutine bidon_sun
+      end subroutine bidon_fftw
 #endif
