@@ -13,11 +13,11 @@ if test -d $dir.save; then /bin/rm -r $dir.save; fi
 if test -d $dir; then mv $dir $dir.save; fi
 mkdir $dir
 
-if test -d O-sesame ; then
-    cd O-sesame
+if test -d espresso ; then
+    cd espresso
 else
     echo "
-   Ups. O-sesame/ does not exists. Aborting ...
+   Oops. espresso/ does not exist. Aborting ...
 "
     exit 1
 fi
@@ -36,13 +36,13 @@ tar -xzf ../O-sesame/pw.tar.gz
 tar -xzf ../O-sesame/$GUI.tgz
 find $GUI -name CVS -exec /bin/rm -r {} \;
 
-tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
-                      install-sh install/ moduledep.sh License upftools/ \
-                      include/ Doc/ examples/ Modules/ clib/ flib/ CPV/
+#tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
+#                      install-sh install/ moduledep.sh License upftools/ \
+#                      include/ Doc/ examples/ Modules/ clib/ flib/ CPV/
 
-tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
-                      install-sh install/ moduledep.sh License upftools/ \
-                      include/ Doc/ examples/ Modules/ clib/ flib/ FPMD/
+#tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
+#                      install-sh install/ moduledep.sh License upftools/ \
+#                      include/ Doc/ examples/ Modules/ clib/ flib/ FPMD/
 
 tar -czf ../$GUI.tar.gz $GUI
 
@@ -51,15 +51,13 @@ tar -czf ../pw.tar.gz bin/ config*  flib/ README* Make* make* \
                       include/ Doc/ Modules/ clib/ flib/ \
                       PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/
 
-tar -czf ../pw_examples.tar.gz examples/
+tar -czf ../examples.tar.gz examples/ pseudo/
 
-tar -czf ../ps_examples.tar.gz pseudo/
-
-tar -czf ../allpw.tar.gz bin/ config* README* Make* make* \
+tar -czf ../espresso.tar.gz    bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
-                      include/ Docs/ Modules/ PW/ PP/     \
+                      include/ Doc/ Modules/ PW/ PP/     \
                       PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/ clib/ flib/  \
-		      examples/ pseudo/ $GUI
+		      CPV/ FPMD/ atomic/ atomic_doc/ examples/ pseudo/ $GUI
 
 scp Doc/README Doc/ChangeLog Doc/BUGS Doc/manual.tex \
     Doc/*.png  Doc/manual.pdf ../*.tar.gz cibs:public_html/pw
