@@ -470,12 +470,13 @@ alpha:f90 )
 	try_f90flags="\$(FFLAGS) -free"
 	;;
 sparc:mpf90 | sparc:f90 )
-	try_fflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
--xlic_lib=sunperf"
+	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
+-xarch=v8plusb -xlic_lib=sunperf"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_f90flags_noopt="-O0"
 	try_ldflags=""
+	mflags="-M"
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 \
@@ -518,6 +519,7 @@ echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 echo setting FFLAGS_NOOPT... $fflags_noopt
 echo setting F90FLAGS_NOOPT... $f90flags_noopt
+if test "$mflags" = "" ; then mflags="-I" ; fi
 
 case "$arch:$cc_id" in
 linux*:icc )
@@ -1043,6 +1045,7 @@ AC_SUBST(f90flags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(f90flags_noopt)
 AC_SUBST(pre_fdflags)
+AC_SUBST(mflags)
 AC_SUBST(ifftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
@@ -1082,7 +1085,7 @@ echo -----------------------------------------------------------------
 if ! test $no_parallel && ! test $parallel
 then
 	echo ----------------------------------------------
-	echo Parallel environment not detected
+	echo parallel environment not detected
 	echo this program will run in single-processor mode
 	echo ----------------------------------------------
 fi

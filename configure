@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc cflags dflags fdflags cpp cppflags f77 f90 fflags f90flags fflags_noopt f90flags_noopt pre_fdflags ifftw ld ldflags libs mylib ar arflags ranlib f90rule LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc cflags dflags fdflags cpp cppflags f77 f90 fflags f90flags fflags_noopt f90flags_noopt pre_fdflags mflags ifftw ld ldflags libs mylib ar arflags ranlib f90rule LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -2989,12 +2989,13 @@ alpha:f90 )
 	try_f90flags="\$(FFLAGS) -free"
 	;;
 sparc:mpf90 | sparc:f90 )
-	try_fflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
--xlic_lib=sunperf"
+	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
+-xarch=v8plusb -xlic_lib=sunperf"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_f90flags_noopt="-O0"
 	try_ldflags=""
+	mflags="-M"
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 \
@@ -3037,6 +3038,7 @@ echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 echo setting FFLAGS_NOOPT... $fflags_noopt
 echo setting F90FLAGS_NOOPT... $f90flags_noopt
+if test "$mflags" = "" ; then mflags="-I" ; fi
 
 case "$arch:$cc_id" in
 linux*:icc )
@@ -6178,6 +6180,7 @@ fi
 
 
 
+
                     ac_config_files="$ac_config_files make.sys make.rules"
 
 
@@ -6846,6 +6849,7 @@ s,@f90flags@,$f90flags,;t t
 s,@fflags_noopt@,$fflags_noopt,;t t
 s,@f90flags_noopt@,$f90flags_noopt,;t t
 s,@pre_fdflags@,$pre_fdflags,;t t
+s,@mflags@,$mflags,;t t
 s,@ifftw@,$ifftw,;t t
 s,@ld@,$ld,;t t
 s,@ldflags@,$ldflags,;t t
@@ -7147,7 +7151,7 @@ echo -----------------------------------------------------------------
 if ! test $no_parallel && ! test $parallel
 then
 	echo ----------------------------------------------
-	echo Parallel environment not detected
+	echo parallel environment not detected
 	echo this program will run in single-processor mode
 	echo ----------------------------------------------
 fi
