@@ -119,6 +119,8 @@ tracevar plot_out w {
 	    } else {
 		widget idpol disable
 	    }
+	    widget epsilon disable
+	    widget filepol disable
 	}
 	default {
 	    widget epsilon disable

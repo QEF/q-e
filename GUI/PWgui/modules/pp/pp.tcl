@@ -36,8 +36,10 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		"planar average of all |psi|^2"
 		"integrated local density of states (ILDOS)"
 		"the V_bare + V_H potential"
+		"the electric field potential"
+		"the noncolinear magnetization"
 	    }
-	    -value { 0 1 2 3 4 5 6 7 8 9 10 11 }
+	    -value { 0 1 2 3 4 5 6 7 8 9 10 11 12 13 }
 	    -fmt %d
 	}
 	var spin_component {
@@ -47,8 +49,12 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		"total charge/potential"
 		"spin up charge/potential"
 		"spin down charge/potential"
+		"absolute value"
+		"x component of the magnetization"
+		"y component of the magnetization"
+		"z component of the magnetization"
 	    }
-	    -value { 0 1 2 }
+	    -value { 0 1 2  0 1 2 3 }
 	}	
 
 	group stm -name "STM" {

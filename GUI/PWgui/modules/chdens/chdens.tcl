@@ -145,6 +145,14 @@ module ChDens\#auto -title "PWSCF GUI: module ChDens.x" -script {
 	    -value {1 2} 
 	    -widget optionmenu
 	}
+
+	separator -label "--- Makov-Payne (MP) correction for charged supercells ---"
+	var makov {
+	    -label "Compute the 1st and 2d order MP corrections (makov):"
+	    -textvalue { Yes No }
+	    -value     { .true. .false. }
+	    -widget    radiobox
+	}
     }
     
     # ----------------------------------------------------------------------

@@ -150,3 +150,27 @@ help idpol -vartype integer -helpfmt txt2html -helptext {
       the Bravais lattice. The 3d box must contain this cell 
       otherwise meaningless numbers are printed.
 }
+
+
+help makov -vartype logical -helpfmt txt2html -helptext {
+      Makov-Payne correction for charged supercells (OPTIONAL)
+
+      makov     .true. the 1st and 2d order corrections are
+                computed (default: .false.)
+
+                WARNING: - not thoroughly tested
+                         - the correction works only for clusters
+                         embedded within a cubic supercell
+                         - the cluster MUST be CENTRED within the
+                         cell, otherwise meaningless results are
+                         printed
+                         - always check that the printed total charge
+                         is the right one
+                         - for impurities in bulk crystals the
+                         correction should work as well, but the
+                         Madelung constant of the considered lattice
+                         must be used and the correction has to be
+                         divided by the crystal dielectric constant.
+                Ref.: G. Makov and M.C. Payne, PRB 51, 4014 (1995).
+                Contributed by Giovanni Cantele
+}

@@ -7,6 +7,11 @@ tracevar plot_num w {
 	"total potential (= V_bare + V_H + V_xc)" -
 	"the V_bare + V_H potential" {
 	    widget spin_component enable
+	    widgetconfigure spin_component -textvalues {
+		"total charge/potential"
+		"spin up charge/potential"
+		"spin down charge/potential"		
+	    }
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable 
 	    groupwidget ildos disable
@@ -32,13 +37,21 @@ tracevar plot_num w {
 	    groupwidget psi2  disable  
 	    groupwidget ildos enable
 	}
+	"the noncolinear magnetization" {
+	    widget spin_component enable
+	    widgetconfigure spin_component -textvalues {
+		"absolute value"
+		"x component of the magnetization"
+		"y component of the magnetization"
+		"z component of the magnetization"
+	    }	
+	}
 	default {
 	    widget spin_component disable 
 	    groupwidget stm   disable 
 	    groupwidget ildos disable
 	    groupwidget psi2  disable 
-	}
-	    
+	}	    
     }
 }
 
