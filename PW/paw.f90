@@ -45,7 +45,9 @@ MODULE paw
           nt ,        &   ! Type
           n  ,        &   ! Chi index
           l  ,        &   ! l
-          m               ! m
+          m  ,        &   ! m
+          nrc             ! indice of core radius in mesh
+     real(kind=DP) :: rc  ! paw core radius
   end type wfc_label
 
   type at_wfc
@@ -71,6 +73,7 @@ CONTAINS
     phi%label%n  = 0
     phi%label%l  = -99
     phi%label%m  = -99
+    phi%label%nrc = 0
     phi%kkpsi    = 0
 
     return

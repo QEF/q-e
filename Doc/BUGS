@@ -1,3 +1,4 @@
+  *  init_paw_1 fails for atom without non-local part
 
   *  PWCOND + FFTW + parallel execution = not good
 

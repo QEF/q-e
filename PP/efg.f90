@@ -9,8 +9,9 @@ program efg
   !-----------------------------------------------------------------------
   use kinds, only: DP
   use io_files, only: nd_nmbr,prefix, outdir, tmp_dir
-  use parameters, only: ntypx
-  use paw , only :read_recon
+  use parameters, only: ntypx, lmaxx
+  use paw , only :read_recon, paw_nbeta, aephi, psphi
+  USE ions_base, ONLY : ntyp => nsp
 #ifdef __PARA 
   use para,       only : me 
   use mp, only: mp_bcast
@@ -18,10 +19,11 @@ program efg
 
   implicit none
   character (len=80) :: filerec(ntypx)
-  real(kind=DP) :: Q(ntypx)
+  real(kind=DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
   integer :: ios , ionode_id = 0
+  integer :: nt, il
 
-  namelist / inputpp / prefix, filerec, Q, outdir
+  namelist / inputpp / prefix, filerec, Q, outdir, rc
 
   call start_postproc(nd_nmbr)
 
@@ -31,6 +33,7 @@ program efg
   prefix = 'pwscf'
   outdir = './'
   Q=1.d0
+  rc = 1.6d0
 
 #ifdef __PARA 
   if (me == 1)  then 
@@ -58,6 +61,13 @@ program efg
   call openfil_pp
 
   call read_recon(filerec)
+
+  do nt=1,ntyp
+     do il = 1,paw_nbeta(nt)
+        psphi(nt,il)%label%rc = rc(nt,psphi(nt,il)%label%l)
+        aephi(nt,il)%label%rc = rc(nt,aephi(nt,il)%label%l)
+     enddo
+  enddo
 
   call do_efg(Q) 
 
@@ -291,9 +301,8 @@ subroutine efg_correction(efg_corr_tens)
   allocate (paw_vkb( npwx,  paw_nkb))
   allocate (paw_becp(paw_nkb, nbnd))
 
-  rc=1.6d0
-  nrc=count(r(1:msh(1),1).le.rc)
-
+!  rc=1.6d0
+!  nrc=count(r(1:msh(1),1).le.rc)
   !
   ! calculate radial integration on atom site 
   ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
@@ -302,6 +311,7 @@ subroutine efg_correction(efg_corr_tens)
   at_efg=0.d0
   do nt=1,ntyp
      do il1=1,paw_nbeta(nt)
+        nrc = psphi(nt,il1)%label%nrc
         do il2=1,paw_nbeta(nt)
            work=0.d0
            do j = 2,nrc

@@ -32,7 +32,7 @@ subroutine init_paw_1
   !
 
   integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
-       lastq, ilast,  na, j, n1, n2, ndm
+       lastq, ilast,  na, j, n1, n2, ndm, nrs, nrc
   ! various counters
   real(kind=DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
   ! various work space
@@ -106,13 +106,17 @@ subroutine init_paw_1
 
   ! Rescale the wavefunctions so that int_0^rc f|psi|^2=1
   ! 
-!        rc=2.0d0
+  !      rc=1.6d0
 
-        rc=1.6d0
-        rs=1.d0/3.d0*rc
         pow=1.d0
         do j = 1, paw_nbeta (nt)
-           call step_f(aux,psphi(nt,j)%psi**2,r(:,nt),rs,rc,pow,msh(nt))
+           rc=psphi(nt,j)%label%rc
+           rs=1.d0/3.d0*rc
+           nrc =  Count(r(1:msh(nt),nt).le.rc)
+           nrs =  Count(r(1:msh(nt),nt).le.rs)
+           psphi(nt,j)%label%nrc = nrc
+           aephi(nt,j)%label%nrc = nrc
+           call step_f(aux,psphi(nt,j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
            call simpson (msh (nt), aux, rab (1, nt), norm )
            
            psphi(nt,j)%psi = psphi(nt,j)%psi/ sqrt(norm)
@@ -126,6 +130,7 @@ subroutine init_paw_1
 
         aux=0.d0
         do l=0,paw_lmaxkb
+          if (paw_nl(l,nt)>0) then
            allocate (s(paw_nl(l,nt),paw_nl(l,nt)))
            allocate (sinv(paw_nl(l,nt),paw_nl(l,nt)))
            do ih=1,paw_nl(l,nt)
@@ -133,7 +138,7 @@ subroutine init_paw_1
               do jh=1,paw_nl(l,nt)
                  n2=paw_iltonh(l,jh,nt)
                  call step_f(aux,psphi(nt,n1)%psi(1:msh(nt)) * &
-                      psphi(nt,n2)%psi(1:msh(nt)),r(:,nt),rs,rc,pow,msh(nt))
+                      psphi(nt,n2)%psi(1:msh(nt)),r(:,nt),nrs,nrc,pow,msh(nt))
                  call simpson (msh (nt), aux, rab (1, nt), s(ih,jh))
               enddo
            enddo
@@ -148,13 +153,13 @@ subroutine init_paw_1
                       sinv(ih,jh) * psphi(nt,n2)%psi(1:msh(nt))
               enddo
               call step_f(aux, &
-                   paw_betar(1:msh(nt),n1,nt),r(:,nt),rs,rc,pow,msh(nt))
+                   paw_betar(1:msh(nt),n1,nt),r(:,nt),nrs,nrc,pow,msh(nt))
               paw_betar(:,n1,nt)=aux
            enddo
            deallocate (sinv)
            deallocate (s)
 
-
+          endif
         enddo
      enddo
 
@@ -216,7 +221,7 @@ subroutine init_paw_1
 
 end subroutine init_paw_1
 
-subroutine step_f(f2,f,r,rs,rc,pow,mesh)
+subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
 
   use kinds , only : dp
 
@@ -228,14 +233,12 @@ subroutine step_f(f2,f,r,rs,rc,pow,mesh)
   integer :: mesh
   real(kind=dp), Intent(out):: f2(mesh)
   real(kind=dp), Intent(in) :: f(mesh), r(mesh)
-  real(kind=dp), Intent(in) :: rs,rc,pow
+  real(kind=dp), Intent(in) :: pow
+  integer :: nrs, nrc 
 
-  Integer :: n,i,nrc,nrs
+  Integer :: n,i
   real(kind=dp) :: rcp, rsp
-  
-  nrc = Count(r(:).le.rc)
-  nrs = Count(r(:).le.rs)
-
+ 
   rcp = r(nrc)
   rsp = r(nrs)
 

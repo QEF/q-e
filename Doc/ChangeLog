@@ -1,3 +1,11 @@
+10 Oct 2004  - Add an extra input variable rc for PAW calculation (in efg.x)
+             to be able to specify the radius of the augmentation region for
+             atom type i and orbital momentum l rc(i,l)
+             Add the variable atomwfc%label%rc and label%nrc to store the 
+             radius and the indice of this radius in r() array
+             Correct a Bug when an atom has no non-local part in init_paw_1
+             that I forgot to submit (MP)
+
 07 Oct 2004  - a new utility virtual.x has been added to upftools 
              that can combine two pseudopotentials in UPF format to 
              produce a third one (in the same format) for the virtual 

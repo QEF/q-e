@@ -18,5 +18,8 @@
   !   Q(i)        REAL (Default = 1.0)
   !               Value of the nuclear quadrupolar momentum of each atom type
   !               units of 10^30 C/m^2
+  !   rc(i,l)     Real (Default 1.6)
+  !               Value of the augmentation region radius for atom type i and 
+  !               orbital momentum l
   !
   !-/             END of namelist &INPUTPP
