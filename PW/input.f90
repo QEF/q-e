@@ -44,7 +44,7 @@ SUBROUTINE iosys()
                             press_       => press, &
                             calc, lmovecell
   USE constants,     ONLY : pi, rytoev, uakbar, amconv, bohr_radius_angs
-  USE dynam,         ONLY : dt_ => dt, &
+  USE dynam,         ONLY : dt_ => dt, &  
                             temperature, amass, delta_t, nraise
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -120,6 +120,9 @@ SUBROUTINE iosys()
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
+
+  USE spin_orb, ONLY : lspinorb_ => lspinorb
+
   USE bfgs_module,   ONLY : bfgs_xlf_bug, &
                             lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -151,7 +154,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type, &
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, i_cons, mcons, angle1, &
-                               angle2, report
+                               angle2, report, lspinorb
   !
   ! ELECTRONS namelist
   !
@@ -558,7 +561,7 @@ SUBROUTINE iosys()
         epse    = etot_conv_thr
         epsf    = forc_conv_thr
         iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'mm'
+        calc    = 'mm' 
         ntcheck = nstep + 1
      CASE ( 'damp-pr' )
         epse    = etot_conv_thr
@@ -755,7 +758,7 @@ SUBROUTINE iosys()
   nr3_     = nr3
   ecutwfc_ = ecutwfc
   ecfixed_ = ecfixed
-  qcutz_   = qcutz
+  qcutz_   = qcutz 
   q2sigma_ = q2sigma
   nr1s_    = nr1s
   nr2s_    = nr2s
@@ -763,6 +766,7 @@ SUBROUTINE iosys()
   degauss_ = degauss
   nelec_   = nelec
   !
+  lspinorb_ = lspinorb
   noncolin_ = noncolin
   angle1_   = angle1
   angle2_   = angle2
@@ -775,7 +779,7 @@ SUBROUTINE iosys()
   Hubbard_alpha_( 1 : ntyp ) = hubbard_alpha( 1 : ntyp )
   lda_plus_u_                = lda_plus_u
   nspin_                     = nspin
-  starting_magnetization_    = starting_magnetization
+  starting_magnetization_    = starting_magnetization 
   starting_ns                = starting_ns_eigenvalue
   U_projection               = U_projection_type
   nosym_                     = nosym
@@ -983,7 +987,7 @@ SUBROUTINE iosys()
      lstres    = .TRUE.
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      IF ( cmass <= 0.D0 ) &
-        CALL errore( 'readin', &
+        CALL errore( 'iosys', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
   ELSE
      cell_factor_ = 1.D0

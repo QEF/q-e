@@ -7,7 +7,7 @@
 !
 !
 !=----------------------------------------------------------------------------=!
-!
+! 
 MODULE input_parameters
 !
 !=----------------------------------------------------------------------------=!
@@ -410,6 +410,8 @@ MODULE input_parameters
 
         LOGICAL :: noncolin = .FALSE.
 
+        LOGICAL :: lspinorb = .FALSE.
+
         REAL(dbl) :: lambda = 1.0D0
 
         INTEGER :: i_cons = 0
@@ -458,8 +460,8 @@ MODULE input_parameters
              occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
-             U_projection_type, &
-             noncolin, mcons, lambda, i_cons, angle1, angle2, report, &
+             U_projection_type, noncolin, &
+             lspinorb, mcons, lambda, i_cons, angle1, angle2, report, &
              sic, sic_epsilon, force_pairing
 
 
