@@ -119,10 +119,10 @@ subroutine dos (nodenumber)
      endif
      if (nspin.eq.1) then
         DOSint = DOSint + DOSofE (1) * DeltaE
-        write (4, '(f7.3,2e12.4)') E * 13.6058, DOSofE (1) , DOSint
+        write (4, '(f7.3,2e12.4)') E * 13.6058, DOSofE(1)/13.6058, DOSint
      else
         DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
-        write (4, '(f7.3,3e12.4)') E * 13.6058, DOSofE, DOSint
+        write (4, '(f7.3,3e12.4)') E * 13.6058, DOSofE/13.6058, DOSint
      endif
   enddo
 

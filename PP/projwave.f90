@@ -14,16 +14,17 @@ subroutine do_projwfc (nodenumber)
   ! input: namelist "&inputpp", with variables
   ! prefix      prefix of input files saved by program pwscf
   ! tmp_dir     temporary directory where files resides
-  ! filproj     output file containing the results
   !
   use pwcom
   use io
 
   implicit none
   character (len=3)  :: nodenumber
-  character (len=14) :: filproj
+  character (len=8)  :: io_choice
+  real (kind=DP)     :: Emin, Emax, DeltaE, smoothing
   integer :: ios
-  namelist / inputpp / tmp_dir, prefix, filproj
+  namelist / inputpp / tmp_dir, prefix, io_choice, &
+             Emin, Emax, DeltaE, smoothing
   !
   nd_nmbr = nodenumber
   !
@@ -31,9 +32,18 @@ subroutine do_projwfc (nodenumber)
   !
   prefix = 'pwscf'
   tmp_dir = './'
-  filproj = ' '
+  io_choice ='both'
+  Emin   =-1000000.
+  Emax   =+1000000.
+  DeltaE = 0.01
+  smoothing  = 0.d0
   !
   read (5, inputpp, err = 200, iostat = ios)
+  if ( smoothing .lt. DeltaE ) smoothing= DeltaE
+  if (io_choice.ne.'standard' .and. io_choice.ne.'files' .and.  &
+      io_choice.ne.'both') &
+      call errore ('projwave','io_choice definition is invalid',1)
+
 200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
   !
   !   Now allocate space for pwscf variables, read and check them.
@@ -41,13 +51,13 @@ subroutine do_projwfc (nodenumber)
   call read_file
   call openfil
   !
-  call projwave (filproj)
+  call projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !
   return
 end subroutine do_projwfc
 
 !-----------------------------------------------------------------------
-subroutine projwave (filproj)
+subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
@@ -59,6 +69,9 @@ subroutine projwave (filproj)
 #endif
   implicit none
   character (len=14) :: filproj
+  character (len=8)  :: io_choice
+  character (len=33) :: filextension
+  character (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   !
   type wfc_label
      integer na, n, l, m
@@ -66,18 +79,24 @@ subroutine projwave (filproj)
   type(wfc_label), allocatable :: nlmchi(:)
   !
   integer :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, nwfc,&
-       nwfc1, lmax_wfc
+       nwfc1, lmax_wfc, c_tab, ne, ie_mid, ie_delta, ie, is
   logical :: exst
-  real(kind=DP) :: psum, totcharge
-  real(kind=DP), allocatable :: e (:), proj (:,:,:), charges(:,:)
+  real(kind=DP) :: psum, totcharge, Emin, Emax, DeltaE, smoothing, etev, &
+             delta, w0gauss, Elw, Eup
+  real(kind=DP), allocatable :: e (:), proj (:,:,:), charges(:,:), pdos(:,:,:)
   complex(kind=DP), allocatable :: wfcatom (:,:),  overlap (:,:), &
        work (:,:), work1(:), proj0(:,:)
   integer, allocatable :: index(:)
+  external w0gauss
   !
   !
-  if (filproj.eq.' ') return
-  write (6, '(/5x,"Calling projwave .... ", &
-       &            /5x,"Projections are written on file ",a)') filproj
+  write (6, '(/5x,"Calling projwave .... ")')
+  if (io_choice.eq.'standard' ) &
+     write (6, '(5x,"Projections are written on standard output")')
+  if (io_choice.eq.'files' ) &
+     write (6, '(5x,"Projections are written on files")')
+  if (io_choice.eq.'both' ) &
+     write (6, '(5x,"Projections are written on both standard output and file")')
 
   !
   allocate(swfcatom (npwx , natomwfc ) )
@@ -238,57 +257,58 @@ subroutine projwave (filproj)
   if (me.eq.1.and.mypool.eq.1) then
 #endif
      !
-     ! write on the output file
+     ! write on the standard output file
      !
-     call seqopn (4, filproj, 'formatted', exst)
-     write(4,'(/"Projection on atomic states:"/)')
-     do nwfc = 1, natomwfc
-        write(4,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
-             &       " (l=",i1," m=",i2,")")') &
-             nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-             nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
-     end do
-     !
-     allocate(index (natomwfc) )
-     do ik = 1, nkstot
-        write (4, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
-        do ibnd = 1, nbnd
-           write (4, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev
-           !
-           ! sort projections by magnitude, in decreasing order
-           !
-           do nwfc = 1, natomwfc
-              index (nwfc) = 0
-              e (nwfc) = - proj (nwfc, ibnd, ik)
-           end do
-           call hpsort (natomwfc, e, index)
-           !
-           !  only projections that are larger than 0.001 are written
-           !
-           do nwfc = 1, natomwfc
-              e (nwfc) = - e(nwfc)
-              if ( abs (e(nwfc)).lt.0.001 ) go to 20
-           end do
-           nwfc = natomwfc + 1
-20         nwfc = nwfc -1
-           !
-           ! fancy (?!?) formatting
-           !
-           write (4, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') &
-               (e (i), index(i), i = 1, min(5,nwfc))
-           do j = 1, (nwfc-1)/5
-              write (4, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') &
-                (e (i), index(i), i = 5*j+1, min(5*(j+1),nwfc))
-           end do
-           psum = 0.d0
-           do nwfc = 1, natomwfc
-              psum = psum + proj (nwfc, ibnd, ik)
-           end do
-           write (4, '(4x,"|psi|^2 = ",f5.3)') psum
-           !
+     if (io_choice.eq.'standard' .or.io_choice.eq.'both' ) then 
+        write(6,'(/"Projection on atomic states:"/)')
+        do nwfc = 1, natomwfc
+           write(6,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
+                &       " (l=",i1," m=",i2,")")') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
+        end do
+        !
+        allocate(index (natomwfc) )
+        do ik = 1, nkstot
+           write (6, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
+           do ibnd = 1, nbnd
+              write (6, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev
+              !
+              ! sort projections by magnitude, in decreasing order
+              !
+              do nwfc = 1, natomwfc
+                 index (nwfc) = 0
+                 e (nwfc) = - proj (nwfc, ibnd, ik)
+              end do
+              call hpsort (natomwfc, e, index)
+              !
+              !  only projections that are larger than 0.001 are written
+              !
+              do nwfc = 1, natomwfc
+                 e (nwfc) = - e(nwfc)
+                 if ( abs (e(nwfc)).lt.0.001 ) go to 20
+              end do
+              nwfc = natomwfc + 1
+20            nwfc = nwfc -1
+              !
+              ! fancy (?!?) formatting
+              !
+              write (6, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') &
+                  (e (i), index(i), i = 1, min(5,nwfc))
+              do j = 1, (nwfc-1)/5
+                 write (6, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') &
+                   (e (i), index(i), i = 5*j+1, min(5*(j+1),nwfc))
+              end do
+              psum = 0.d0
+              do nwfc = 1, natomwfc
+                 psum = psum + proj (nwfc, ibnd, ik)
+              end do
+              write (6, '(4x,"|psi|^2 = ",f5.3)') psum
+              !
+           enddo
         enddo
-     enddo
-     deallocate (index)
+        deallocate (index)
+     end if
      !
      ! estimate partial charges (Loewdin) on each atom
      !
@@ -300,12 +320,12 @@ subroutine projwave (filproj)
               na= nlmchi(nwfc)%na
               l = nlmchi(nwfc)%l
               charges(na,l) = charges(na,l) + wg (ibnd,ik) * &
-                   proj (nwfc, ibnd, ik)
+                              proj (nwfc, ibnd, ik)
            enddo
         end do
      end do
      !
-     write (4, '(/"Lowdin Charges: "/)')
+     write (6, '(/"Lowdin Charges: "/)')
      !
      psum = 0.0
      do na = 1, nat
@@ -314,12 +334,12 @@ subroutine projwave (filproj)
            totcharge = totcharge + charges(na,l)
         end do
         psum = psum + totcharge
-        write (4, '(5x,"Atom # ",i3,": total charge = ",f8.4, &
+        write (6, '(5x,"Atom # ",i3,": total charge = ",f8.4, &
       &                ", s, p, d, f = ",4f8.4    )') &
              na, totcharge, ( charges(na,l), l= 0,lmax_wfc)
      end do
      psum = psum / nelec
-     write (4, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum
+     write (6, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
      ! The spilling parameter measures the ability of the basis provided by
@@ -327,8 +347,122 @@ subroutine projwave (filproj)
      ! by measuring how much of the subspace of the Hamiltonian
      ! eigenstates falls outside the subspace spanned by the atomic basis
      !
-     close (unit=4)
      deallocate (charges)
+
+     if (io_choice.eq.'files' .or. io_choice.eq.'both') then
+        !
+        ! find band extrema
+        !
+        Elw = et (1, 1)
+        Eup = et (nbnd, 1)
+        do ik = 2, nkstot
+           Elw = min (Elw, et (1, ik) )
+           Eup = max (Eup, et (nbnd, ik) )
+        enddo
+        Emin = max (Emin, Elw*rytoev - 5*smoothing )
+        Emax = min (Emax, Eup*rytoev + 5*smoothing )
+
+        ne = nint( (Emax-Emin)/DeltaE )
+        
+        allocate (pdos(0:ne,0:natomwfc+1,nspin))
+        pdos(:,:,:) = 0.d0
+        current_spin = 1
+        ie_delta = 5 * smoothing / DeltaE+1
+        do ik = 1,nkstot
+           if ( nspin.eq.2 ) current_spin = isk ( ik )
+           do ibnd = 1, nbnd
+              etev = et(ibnd,ik) * rytoev
+              ie_mid = nint( (etev-Emin)/DeltaE )
+              do ie = max(ie_mid-ie_delta, 0), min(ie_mid+ie_delta, ne)
+                 delta = w0gauss((Emin+DeltaE*ie-etev)/smoothing,0)/smoothing
+                 do nwfc = 1, natomwfc
+                    pdos(ie,nwfc,current_spin) = pdos(ie,nwfc,current_spin) + &
+                                 wk(ik) * delta * proj (nwfc, ibnd, ik) 
+                 end do
+                 pdos(ie,0,current_spin) = pdos(ie,0,current_spin) + &
+                                 wk(ik) * delta
+              end do
+           end do
+        end do
+
+        do is=1,nspin
+           do ie=0,ne
+              pdos(ie,natomwfc+1,is) = sum(pdos(ie,1:natomwfc,is))
+           end do
+        end do
+
+        do nwfc = 1, natomwfc
+           if (nlmchi(nwfc)%m .eq. 1) then
+              filextension='.pdos_atm#'
+        !                   12345678901
+
+              c_tab = 11
+              if (nlmchi(nwfc)%na.lt.10) then
+                 write (filextension( c_tab : c_tab ),'(i1)') nlmchi(nwfc)%na
+                 c_tab = c_tab + 1
+              else if (nlmchi(nwfc)%na.lt.100) then
+                 write (filextension( c_tab : c_tab+1 ),'(i2)') nlmchi(nwfc)%na
+                 c_tab = c_tab + 2
+              else if (nlmchi(nwfc)%na.lt.1000) then
+                 write (filextension( c_tab : c_tab+2 ),'(i3)') nlmchi(nwfc)%na
+                 c_tab = c_tab + 3
+              else
+                 call errore('projwave',&
+                             'file extension not supporting so many atoms', &
+                              nwfc)
+              endif
+              write (filextension(c_tab:c_tab+4),'(a1,a)') &
+                    '(',trim(atm(ityp(nlmchi(nwfc)%na)))
+              c_tab = c_tab + len_trim(atm(ityp(nlmchi(nwfc)%na))) + 1
+              if (nlmchi(nwfc)%n.ge.10) &
+                 call errore('projwave',&
+                             'file extension not supporting so many atmic wfc',&
+                              nwfc)
+              if (nlmchi(nwfc)%l.gt.3) &
+                 call errore('projwave',&
+                             'file extension not supporting so many l', &
+                              nwfc)
+              write (filextension(c_tab:),'(")_wfc#",i1,"(",a1,")")')  &
+                    nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l)
+              open (4,file=trim(prefix)//filextension,form='formatted', &
+                      status='unknown')
+
+              write (4,'("# E (eV) ",$)')
+              do m=1,2 * nlmchi(nwfc)%l + 1
+                 if (nspin.eq.1) then
+                    write(4,'(" dos(E)    ",$)') 
+                 else
+                    write(4,'(" dosup(E)  ",$)') 
+                    write(4,'(" dosdw(E)  ",$)') 
+                 end if
+              end do
+              write(4,*)
+
+              do ie= 0, ne
+                 etev = Emin + ie * DeltaE
+                 write (4,'(f7.3,14e11.3)') etev,  &
+                       ((pdos(ie,nwfc+m-1,is), is=1,nspin), &
+                                               m=1,2*nlmchi(nwfc)%l+1)
+              end do
+              close (4)
+           end if
+        end do
+        open (4,file=trim(prefix)//".pdos_tot",form='formatted', &
+                status='unknown')
+        if (nspin.eq.1) then
+           write (4,'("# E (eV)  dos(E)    pdos(E)")') 
+        else
+           write (4,'("# E (eV)  dosup(E)   dosdw(E)  pdosup(E)  pdosdw(E)")') 
+        end if
+        do ie= 0, ne
+           etev = Emin + ie * DeltaE
+           write (4,'(f7.3,4e11.3)') etev, (pdos(ie,0,is), is=1,nspin), &
+                 (pdos(ie,natomwfc+1,is), is=1,nspin)
+        end do
+        close (4)
+        deallocate (pdos)
+     end if
+
 #ifdef __PARA
   endif
 #endif
