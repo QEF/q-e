@@ -8,13 +8,13 @@
 int main()
 {
 #if defined __FFTW
-  printf("SIZEOF ( fftw_plan * ). . = %d\n",sizeof(fftw_plan *));
-  printf("SIZEOF ( FFTW_COMPLEX * ) = %d\n",sizeof(FFTW_COMPLEX *));
-  printf("SIZEOF ( FFTW_COMPLEX ) . = %d\n",sizeof(FFTW_COMPLEX));
+  printf("SIZEOF ( fftw_plan * ). . = %d\n",(int)sizeof(fftw_plan *));
+  printf("SIZEOF ( FFTW_COMPLEX * ) = %d\n",(int)sizeof(FFTW_COMPLEX *));
+  printf("SIZEOF ( FFTW_COMPLEX ) . = %d\n",(int)sizeof(FFTW_COMPLEX));
 #endif
-  printf("SIZEOF ( void * ) . . . . = %d\n",sizeof(void *));
-  printf("SIZEOF ( double ) . . . . = %d\n",sizeof(double));
-  printf("SIZEOF ( float ). . . . . = %d\n",sizeof(float));
-  printf("SIZEOF ( int ). . . . . . = %d\n",sizeof(int));
-  printf("SIZEOF ( char ) . . . . . = %d\n",sizeof(char));
+  printf("SIZEOF ( void * ) . . . . = %d\n",(int)sizeof(void *));
+  printf("SIZEOF ( double ) . . . . = %d\n",(int)sizeof(double));
+  printf("SIZEOF ( float ). . . . . = %d\n",(int)sizeof(float));
+  printf("SIZEOF ( int ). . . . . . = %d\n",(int)sizeof(int));
+  printf("SIZEOF ( char ) . . . . . = %d\n",(int)sizeof(char));
 }
