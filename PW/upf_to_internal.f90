@@ -1,4 +1,10 @@
-
+!
+! Copyright (C) 2004 Quantum-ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 ! This module is USEd, for the time being, as an interface
 ! between the UPF pseudo type and the pseudo variables internal representation
 
@@ -23,6 +29,7 @@ subroutine set_pseudo_upf (is, upf)
   !
   ! PWSCF modules
   !
+  USE parameters, ONLY: ndmx
   USE atom,  ONLY: zmesh, mesh, msh, dx, r, rab, &
        chi, oc, nchi, lchi, jchi, rho_at, rho_atc, nlcc
   USE pseud, ONLY: lloc, lmax, zp
@@ -52,6 +59,8 @@ subroutine set_pseudo_upf (is, upf)
   dft = upf%dft
   call which_dft (upf%dft)
   mesh(is) = upf%mesh
+  IF ( mesh(is) > ndmx ) &
+     CALL errore('upf_to_internals', 'too many grid points', 1)
   !
   nchi(is) = upf%nwfc
   lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
