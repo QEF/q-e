@@ -201,9 +201,9 @@ tracevar lda_plus_u w {
 
 tracevar occupations w {
     if { [varvalue occupations] == "'from_input'" } {
-	groupwidget occupations_group enable
+	groupwidget occupations_card enable
     } else {
-	groupwidget occupations_group disable
+	groupwidget occupations_card disable
     }
 }
 
@@ -313,6 +313,16 @@ tracevar kpoint_type w {
 tracevar nks w {
     widgetconfigure kpoints -rows [varvalue nks]    
 }
+
+
+# ------------------------------------------------------------------------
+# Page: Other cards
+# ------------------------------------------------------------------------
+
+# incoming in next PWscf version
+#tracevar nconstr w {
+#    widgetconfigure constraints_table -rows [varvalue nconstr]
+#}
 
 
 # ------------------------------------------------------------------------

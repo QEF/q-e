@@ -942,7 +942,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		}
 	    }
 	    table lattice {
-		-caption  "Enter Lattice Basis Vectors"
+		-caption  "Enter Lattice Basis Vectors:"
 		-head     {X-Component Y-Component Z-Component}
 		-validate {real real real}
 		-cols     3
@@ -1096,9 +1096,36 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}
 
+	# incoming in next PWscf version
+	# # CARD: CONSTRAINTS
+	# 
+	# group constraints_card -name "Card: CONSTRAINTS" -decor normal {
+	#     keyword constraints_key CONSTRAINTS\n
+	#     line constraints_line1 -decor none {
+	# 	var nconstr {
+	# 	    -label    "Number of constraints:"
+	# 	    -validate posint
+	# 	    -widget   spinint
+	# 	    -default  1
+	# 	}
+	# 	var constr_tol {
+	# 	    -label    "Tolerance for keeping the constraints satisfied:"
+	# 	    -validate fortranposreal
+	# 	}
+	# 	table constraints_table {
+	# 	    -caption  "Enter constraints data:"
+	# 	    -head     {constraint-type 1st-atom-index 2nd-atom-index}
+	# 	    -validate {posint posint posint}
+	# 	    -cols     3
+	# 	    -rows     1
+	# 	    -outfmt   {"  %d    " "%d " "%d "}
+	# 	}
+	#     }		    
+	# }
+
 	# CARD: OCCUPATIONS
 	
-	group occupations_group -name "Card: OCCUPATIONS" -decor normal {	    
+	group occupations_card -name "Card: OCCUPATIONS" -decor normal {	    
 	    keyword occupations_key OCCUPATIONS\n
 	    text occupations_text \
 		-caption "Syntax for NON-spin polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n\nSyntax for spin-polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n     d(1)   ....  ....   ....  d(10)\n     d(11) .... d(nbnd)" \
