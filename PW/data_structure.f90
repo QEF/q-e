@@ -18,7 +18,7 @@ subroutine data_structure
   use para
 #endif
   use mp, only: mp_sum
-  use mp_global, only: intra_pool_comm
+  use mp_global, only: intra_pool_comm, nproc_pool
   use stick_base
   !
   implicit none
@@ -288,9 +288,9 @@ subroutine data_structure
 
   write(6,*)
   write(6,'(                                                        &
-    & '' Proc  planes cols    G   planes cols    G    columns  G''/    &
-    & ''         (dense grid)      (smooth grid)   (wavefct grid)'')')
-  do i=1,nproc
+    & '' Proc/  planes cols    G   planes cols    G    columns  G''/    &
+    & '' Pool       (dense grid)      (smooth grid)   (wavefct grid)'')')
+  do i=1,nproc_pool
     write(6,'(i3,2x,3(i5,2i7))') i, npp(i), ncp(i), ngp(i),          &
       &        npps(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
   end do

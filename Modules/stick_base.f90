@@ -30,7 +30,7 @@
       SUBROUTINE  sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
 
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: mpime, nproc, group
+          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm
 
           LOGICAL, INTENT(IN) :: tk    !  if true use the full space grid
           INTEGER, INTENT(IN) :: ub(:) !  upper bounds for i-th grid dimension
@@ -59,7 +59,7 @@
           IF( .NOT. tk ) THEN
 
             kip = 0 + ABS(lb(3)) + 1
-            IF( MOD( kip, nproc ) == mpime ) THEN
+            IF( MOD( kip, nproc_pool ) == me_pool ) THEN
               st (0,0) = st (0,0) + 1
               stw(0,0) = stw(0,0) + 1
             END IF
@@ -68,7 +68,7 @@
               DO j= 0, 0 
                 DO k= 1, ub(3)
                   kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc ) == mpime ) THEN
+                  IF( MOD( kip, nproc_pool ) == me_pool ) THEN
                     gsq=    (REAL(i)*b1(1)+REAL(j)*b2(1)+REAL(k)*b3(1) )**2
                     gsq=gsq+(REAL(i)*b1(2)+REAL(j)*b2(2)+REAL(k)*b3(2) )**2
                     gsq=gsq+(REAL(i)*b1(3)+REAL(j)*b2(3)+REAL(k)*b3(3) )**2
@@ -90,7 +90,7 @@
               DO j = 1, ub(2)
                 DO k = lb(3), ub(3)
                   kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc) == mpime ) THEN
+                  IF( MOD( kip, nproc_pool) == me_pool ) THEN
                     gsq=    (REAL(i)*b1(1)+REAL(j)*b2(1)+REAL(k)*b3(1) )**2
                     gsq=gsq+(REAL(i)*b1(2)+REAL(j)*b2(2)+REAL(k)*b3(2) )**2
                     gsq=gsq+(REAL(i)*b1(3)+REAL(j)*b2(3)+REAL(k)*b3(3) )**2
@@ -112,7 +112,7 @@
               DO j = lb(2), ub(2)
                 DO k = lb(3), ub(3)
                   kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc) == mpime ) THEN
+                  IF( MOD( kip, nproc_pool) == me_pool ) THEN
                     gsq=    (REAL(i)*b1(1)+REAL(j)*b2(1)+REAL(k)*b3(1) )**2
                     gsq=gsq+(REAL(i)*b1(2)+REAL(j)*b2(2)+REAL(k)*b3(2) )**2
                     gsq=gsq+(REAL(i)*b1(3)+REAL(j)*b2(3)+REAL(k)*b3(3) )**2
@@ -136,7 +136,7 @@
               DO j= lb(2), ub(2)
                 DO k= lb(3), ub(3)
                   kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc ) == mpime ) THEN
+                  IF( MOD( kip, nproc_pool ) == me_pool ) THEN
                     gsq=    (REAL(i)*b1(1)+REAL(j)*b2(1)+REAL(k)*b3(1) )**2
                     gsq=gsq+(REAL(i)*b1(2)+REAL(j)*b2(2)+REAL(k)*b3(2) )**2
                     gsq=gsq+(REAL(i)*b1(3)+REAL(j)*b2(3)+REAL(k)*b3(3) )**2
@@ -156,9 +156,9 @@
 
           END IF
 
-          CALL mp_sum(st  ,group)
-          CALL mp_sum(stw ,group)
-          CALL mp_sum(sts ,group)
+          CALL mp_sum(st  ,intra_pool_comm)
+          CALL mp_sum(stw ,intra_pool_comm)
+          CALL mp_sum(sts ,intra_pool_comm)
 
 ! Test sticks
 !          write(6,*) 'testtesttesttesttesttesttesttesttesttest'
@@ -284,7 +284,7 @@
     SUBROUTINE sticks_dist1( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
                              ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
-      USE mp_global, ONLY: nproc
+      USE mp_global, ONLY: nproc_pool
 
       LOGICAL, INTENT(IN) :: tk
 
@@ -330,7 +330,7 @@
 ! this is an active sticks: find which processor has currently
 ! the smallest number of plane waves
 !
-            do j = 1, nproc
+            do j = 1, nproc_pool
                if ( ngpw(j) < ngpw(jj) ) then
                  jj = j
                else if ( ( ngpw(j) == ngpw(jj) ) .AND. ( ncpw(j) < ncpw(jj) ) ) then
@@ -343,7 +343,7 @@
 ! this is an inactive sticks: find which processor has currently
 ! the smallest number of G-vectors
 !
-            do j = 1, nproc
+            do j = 1, nproc_pool
                if ( ngp(j) < ngp(jj) ) jj = j
             end do
 
@@ -383,7 +383,7 @@
     SUBROUTINE sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
                              ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
-      USE mp_global, ONLY: nproc
+      USE mp_global, ONLY: nproc_pool
 
       LOGICAL, INTENT(IN) :: tk
 
