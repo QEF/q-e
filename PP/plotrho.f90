@@ -96,8 +96,8 @@ program plotrho
   xmax = xi (nxi)  
   do i = 0, nx  
      x (i) = (xi (nxi) - xi (0) ) * float (i) / float (nx)  
-
   enddo
+
   ymin = yi (0)  
   ymax = yi (nyi)  
   do i = 0, ny  
@@ -126,8 +126,8 @@ program plotrho
         rhoomin = min (rhoomin, rhoo (i, j) )  
         rhoomax = max (rhoomax, rhoo (i, j) )  
      enddo
-
   enddo
+
   print '("   Logarithmic scale (y/n)? > ",$)'  
   read (5, '(a)') ans  
   logarithmic_scale = ans.ne.'n'.and.ans.ne.'N'  
@@ -143,18 +143,15 @@ program plotrho
      enddo
   else  
      do k = 0, nlevels - 1  
-        z (k) = rhoomin + (rhoomax - rhoomin) * float (k) / (nlevels - &
-             1)
+        z (k) = rhoomin + (rhoomax - rhoomin) * float (k) / (nlevels - 1)
      enddo
   endif
 
   z (nlevels) = z (nlevels - 1)  
-  xdim = 15.0 * (xmax - xmin) / sqrt ( (xmax - xmin) **2 + (ymax - &
-       ymin) **2)
-  ydim = 15.0 * (ymax - ymin) / sqrt ( (xmax - xmin) **2 + (ymax - &
-       ymin) **2)
-  xs = 4.0  
+  xdim = 15.0 * (xmax - xmin) / sqrt ( (xmax - xmin) **2 + (ymax - ymin) **2)
+  ydim = 15.0 * (ymax - ymin) / sqrt ( (xmax - xmin) **2 + (ymax - ymin) **2)
 
+  xs = 4.0  
   ys = 3.0  
 
   call cplot (rhoo, nxmax, nymax, x, xmin, xmax, nx, y, ymin, ymax, &
@@ -587,14 +584,10 @@ subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
   use parameters, only: DP
   implicit none  
   integer :: nat, ityp (nat)  
-  real(kind=DP) :: tau (3, nat), at (3, 3), r0 (3), tau1 (3), tau2 (3), &
-       a0
-
+  real(kind=DP) :: tau (3, nat), at (3, 3), r0 (3), tau1 (3), tau2 (3), a0
   real(kind=DP) :: xdim, ydim  
   integer :: n1, n2, n3, i, n  
-  real(kind=DP) :: r (3), ri (3), tau1n, tau2n, delta, delta0, cm, r1, &
-       r2, r3
-
+  real(kind=DP) :: r (3), ri (3), tau1n, tau2n, delta, delta0, cm, r1, r2, r3
 
   parameter (delta = 1.0, cm = 28.453)  
   !  Soluzione piu' che provvisoria con algoritmo mongolissimo:
