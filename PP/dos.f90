@@ -29,7 +29,7 @@ program dos
   ! if degauss1, ngauss1 are specified they override what is
   ! specified in the input file wrt summation method
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout, ionode_id
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE kinds, ONLY : DP

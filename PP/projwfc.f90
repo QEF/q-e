@@ -24,7 +24,7 @@ program projwfc
   !   DeltaE      ...in steps of DeltaE (eV, default: 0.01) 
   !   smoothing   gaussian broadening (eV, default: DeltaE) 
   ! 
-#include "machine.h" 
+#include "f_defs.h" 
   USE io_global,  ONLY : stdout 
   USE kinds, only : DP 
   use io_files,   only : nd_nmbr, prefix, tmp_dir 

@@ -12,7 +12,7 @@ subroutine drhodv(nu_i)
   !
   !  calculate the electronic term <psi|dv|dpsi> of the dynamical matrix
   !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   use cgcom
   implicit none

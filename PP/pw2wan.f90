@@ -105,7 +105,7 @@ end program wannier
 subroutine write_wannier (nk, s0, kunit, ispinw)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,      ONLY : stdout
   USE cell_base, ONLY : at, bg, tpiba2, alat
   USE ions_base, ONLY : atm, nat

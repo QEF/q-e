@@ -7,7 +7,7 @@
 !
 program q2r
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   implicit none
   !

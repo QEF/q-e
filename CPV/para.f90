@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "../include/machine.h"
+#include "../include/f_defs.h"
 
 module para_mod
 

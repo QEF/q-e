@@ -15,7 +15,7 @@ subroutine generate_dynamical_matrix   &
   !  generate the complete dynamical matrix from independent modes only
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &

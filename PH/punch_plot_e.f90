@@ -19,7 +19,7 @@ subroutine punch_plot_e
   !     three cartesian directions. The names of the files are
   !     in the variable fildrho given in input.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout

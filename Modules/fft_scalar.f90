@@ -24,7 +24,7 @@
 #if defined __HPM
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
-#include "machine.h"
+#include "f_defs.h"
 
 
 !=----------------------------------------------------------------------=!
@@ -69,7 +69,7 @@
 
 #endif
 
-        !   C_POINTER is defined in include/machine.h
+        !   C_POINTER is defined in include/f_defs.h
         !   for 32bit executables, C_POINTER is integer(4)
         !   for 64bit executables, C_POINTER is integer(8)
 

@@ -13,7 +13,7 @@ subroutine addusldos (ldos, becsum1)
   !  This routine adds to the local DOS the part which is due to
   !  the US augmentation.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

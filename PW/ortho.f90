@@ -8,7 +8,7 @@
 !
 subroutine ortho
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   ! orthonormalize the old wavefunctions with the new S matrix, it must be
   ! after any move of atoms and only if the US problem is solved with

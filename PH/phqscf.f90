@@ -15,7 +15,7 @@ subroutine phqscf
   !     change of the self-consistent potential due to a phonon of
   !     a fixed q or to an electric field.
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE io_global,  ONLY : stdout
   USE check_stop, ONLY: time_max => max_seconds

@@ -21,7 +21,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     t3d/t3e version
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   implicit none
   integer :: m, n, nx, sgn
 
@@ -68,7 +68,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !     for compatibility: nx2=n2, nx2 is not used - t3d/t3e version
   !
   !----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   implicit none
   complex (kind=8) :: f (nx1 * nx2 * mplane)
   integer :: n1, n2, mplane, nx1, nx2, sgn

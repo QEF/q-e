@@ -12,7 +12,7 @@ subroutine elphon
   !
   ! Electron-phonon calculation from data saved in fildvscf
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
   use pwcom
@@ -69,7 +69,7 @@ subroutine readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
      amass, tau, q, w2, dyn)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   ! Input
@@ -163,7 +163,7 @@ subroutine elphel (npe, imode0, dvscfins)
   !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
   !      Original routine written by Francesco Mauri
   !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
@@ -294,7 +294,7 @@ subroutine elphsum
   !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
   !      Original routine written by Francesco Mauri
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat
   use pwcom
   USE kinds, only : DP

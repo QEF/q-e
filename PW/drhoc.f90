@@ -11,7 +11,7 @@ subroutine drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, b_nlcc, &
  alpha_nlcc, mesh, r, rab, rhoc, rhocg)
 !-----------------------------------------------------------------------
 !
-#include "machine.h"
+#include "f_defs.h"
 USE kinds
 implicit none
 !

@@ -13,7 +13,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
   ! to a vector h. The result is given in Ah.
   !
-#include "machine.h"
+#include "f_defs.h"
 
   use pwcom
   use becmod

@@ -14,7 +14,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   !    of the modes
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #undef SHMEM
-#include "machine.h"
+#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 MODULE para_const

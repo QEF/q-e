@@ -13,7 +13,7 @@ subroutine setup_dgc
   !  GGA+LSDA is allowed. AdC (September 1999).
   !  GGA+LSDA+NLCC is allowed. AdC (November 1999).
   !
-#include "machine.h"
+#include "f_defs.h"
 
   use pwcom
   USE kinds, only : DP

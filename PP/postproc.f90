@@ -16,7 +16,7 @@ program postproc
   !
   !    DESCRIPTION of the INPUT: see file pwdocs/INPUT_PP
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, ONLY: DP
   USE cell_base, ONLY: bg
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau

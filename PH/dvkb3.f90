@@ -5,7 +5,7 @@ subroutine dvkb3(kpoint,dvkb)
 ! This subdoutine adds to dvpsi the terms which depend on the augmentation
 ! charge. It assume that the variable dpqq, has been set.
 !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

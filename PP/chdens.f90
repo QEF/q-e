@@ -14,7 +14,7 @@ program chdens
   !
   !      DESCRIPTION of the INPUT: see file INPUT_CHDENS in pwdocs/
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE parameters, ONLY : ntypx
   USE constants,  ONLY :  pi, fpi

@@ -14,7 +14,7 @@ subroutine newdq (dvscf, npe)
   !     change of the potential to the known part of the linear
   !     system and adds it to dvpsi.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

@@ -12,7 +12,7 @@ subroutine psyme (dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the charge density.
   !
-#include "machine.h"
+#include "f_defs.h"
 #ifdef __PARA
 
   use pwcom

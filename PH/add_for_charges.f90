@@ -4,7 +4,7 @@ subroutine add_for_charges (ik, uact)
   !
   ! This subroutine calculates dS/du P_c [x, H-eS] |psi>
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

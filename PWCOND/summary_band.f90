@@ -10,7 +10,7 @@ subroutine summary_band(ik,ien)
 ! It gives a PWCOND summary and does some final transmittance
 ! calculations.
 ! 
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY :  stdout
   USE io_files, ONLY: band_file
   use pwcom

@@ -55,7 +55,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (extensively)       6 Apr 1997 by A. Dal Corso & F. Mauri
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

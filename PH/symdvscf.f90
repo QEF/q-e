@@ -12,7 +12,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! symmetrize the self-consistent potential of the perturbations
   ! belonging to an irreproducible representation
   !
-#include"machine.h"
+#include"f_defs.h"
 
   use pwcom
   USE kinds, only : DP

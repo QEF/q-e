@@ -12,7 +12,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
 ! so that <psi_k|I|psi_k'> = \delta_{kk'} I_k and does some
 ! rearrangements.   
 !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 

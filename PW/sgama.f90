@@ -35,7 +35,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !     Modified by SdG to include the "small group of q" stuff for the
   !     linear-response preparation run.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

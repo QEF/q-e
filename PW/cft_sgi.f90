@@ -21,7 +21,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     sgi origin-2000 version
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 
@@ -66,7 +66,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   !----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
 USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn

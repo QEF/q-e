@@ -12,7 +12,7 @@ subroutine dielec
   !
   !      calculates the dielectric tensor
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE io_global,  ONLY : stdout
   USE io_files, ONLY: iunigk

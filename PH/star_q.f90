@@ -18,7 +18,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! User is responsible for calling this routine with different array-name
   ! if information for both symmetry-groups needs to be kept
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none

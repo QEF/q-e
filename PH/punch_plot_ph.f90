@@ -18,7 +18,7 @@ subroutine punch_plot_ph
   !     or selects a line for a usual line plot. The routine produces
   !     a file with the name in the variable fildrho# given in input.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout

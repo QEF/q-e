@@ -13,7 +13,7 @@ subroutine add_zstar_ue (imode0, npe)
   !
   ! trans =.true. is needed for this calculation to be meaningful
   !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP

@@ -10,7 +10,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !     This routine adds a contribution to the dynamical matrix due
   !     to the NLCC
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE ions_base, ONLY : nat
   use funct

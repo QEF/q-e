@@ -27,7 +27,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   !    Last revision 5 oct. 1995 by Andrea Dal Corso
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only  : DP
   USE constants, ONLY : e2, fpi, pi
   !

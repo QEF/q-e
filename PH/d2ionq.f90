@@ -20,7 +20,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !    Revised 16 oct. 1995 by Andrea Dal Corso.
   !    April 1997: parallel stuff added (SdG)
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: e2, tpi, fpi

@@ -11,7 +11,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !  This routine calculates the FermiEnergy shift
   !   and stores it in the variable ef_sh
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   use pwcom

@@ -11,7 +11,7 @@
 subroutine symz (phi, nsym, s, nat, irt)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 

@@ -17,7 +17,7 @@ program plotrho
   !   if "psplot" is called:
   !                   - contour lines of various kinds (solid, dashed, etc)
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none

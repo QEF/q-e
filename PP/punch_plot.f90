@@ -34,7 +34,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !
   !     The output quantity is written (formatted) on file filplot.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE kinds, ONLY: DP
   USE constants, ONLY: rytoev

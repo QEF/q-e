@@ -14,7 +14,7 @@ subroutine scatter_forw(zin, zfin, orbin, orbfin)
 ! It computes also the integrals (intw1, intw2) of  Phi_n and 
 ! Phi_alpha over beta-functions inside the unit cell. 
 !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   use para
   use cond

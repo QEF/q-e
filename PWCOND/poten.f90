@@ -10,7 +10,7 @@ subroutine poten
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
 !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   use cond
 #ifdef __PARA

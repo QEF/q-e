@@ -16,7 +16,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !     q -> -q+G if present.
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   USE constants, ONLY: tpi
   implicit none

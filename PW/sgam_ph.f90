@@ -17,7 +17,7 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
 !
 !     revised layout 2 may 1995 by Andrea Dal Corso
 !
-#include "machine.h"
+#include "f_defs.h"
 USE kinds
 implicit none
 !

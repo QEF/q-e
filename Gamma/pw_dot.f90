@@ -12,7 +12,7 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   !  calculate m dot products c_i = real( a^*_ij b_ji )
   !  using half G vectors or half PWs
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   use gvect, only: gstart
   implicit none

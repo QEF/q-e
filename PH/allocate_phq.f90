@@ -13,7 +13,7 @@ subroutine allocate_phq
   ! dynamical allocation of arrays: quantities needed for the linear
   ! response problem
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE ions_base, ONLY : nat, ntyp => nsp
   use pwcom

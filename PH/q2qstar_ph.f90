@@ -14,7 +14,7 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! If there is a symmetry operation such that q -> -q +G then imposes on
   ! dynamical matrix those conditions related to time reversal symmetry.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   ! input variables

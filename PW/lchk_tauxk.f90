@@ -15,7 +15,7 @@ logical function lchk_tauxk (nvec, vec, trmat)
   !
   !     Last revision  15 June 1995  by A. Di Pomponio
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE kinds
   implicit none

@@ -12,7 +12,7 @@
 !               (See Bengtsson PRB 59, 12 301 (1999) and
 !                    Meyer and Vanderbilt, PRB 63, 205426 (2001).)
 !
-#include "machine.h"
+#include "f_defs.h"
 !
 !--------------------------------------------------------------------------
   subroutine add_efield(rho,vpoten,etotefield)

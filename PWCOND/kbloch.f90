@@ -11,7 +11,7 @@ subroutine kbloch(ntot, val)
 ! lambda=\exp{ikd}, d is the unit cell length.
 ! The result is in the units (2\pi/d)
 !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   use constants, only : tpi
   implicit none

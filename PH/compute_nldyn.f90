@@ -15,7 +15,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   !  the orthogonality constraint. Only the part which is due to
   !  the nonlocal terms is computed here
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

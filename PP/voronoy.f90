@@ -20,7 +20,7 @@ program voronoy
   !  On input: nr1big, nr2bug, nr3big are FFT grid dimensions larger than
   !  the original ones (the largest, the more accurate the integration)
   !
-#include "machine.h"
+#include "f_defs.h"
   USE constants,  ONLY : pi
   USE io_global,  ONLY : stdout
   USE kinds
@@ -165,7 +165,7 @@ end subroutine get_fftindex
 subroutine rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, &
      nr1big, nr2big, nr3big, nrx1big, nlbig, rhobig)
   !-----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   implicit none
   integer :: ngm, nr1, nr2, nr3, nrx1, nl (ngm), nr1big, nr2big, &
@@ -200,7 +200,7 @@ end subroutine rhor_to_rhobig
 subroutine calculate_partial_charges (nat, tau, at, bg, nrx1big, &
      nr1big, nr2big, nr3big, rhobig, partial_charge)
   !-----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   implicit none
   integer :: nat, nrx1big, nr1big, nr2big, nr3big

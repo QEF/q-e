@@ -12,7 +12,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      nspin, gstart, gamma_only, vloc, forcelc)
   !----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

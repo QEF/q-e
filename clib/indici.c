@@ -7,7 +7,7 @@
 */
 
 #include<stdio.h>
-#include"cp.h"
+#include"c_defs.h"
 
 #define MAX_INDEX 32768
 

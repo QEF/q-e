@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine H_h(e,h,Ah)
   !-----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   !
   USE kinds, only: DP
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk

@@ -11,7 +11,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   !    This routine takes care of the effects of a shift of Ef, due to the
   !    perturbation, that can take place in a metal at q=0
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout

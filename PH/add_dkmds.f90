@@ -5,7 +5,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   ! This subroutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assume that the variable dpqq, has been set.
   !
-#include "machine.h"
+#include "f_defs.h"
 
   use pwcom
   USE ions_base, ONLY : nat, ityp, ntyp => nsp

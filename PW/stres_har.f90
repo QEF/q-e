@@ -10,7 +10,7 @@
 subroutine stres_har (sigmahar)
   !----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, ONLY : DP
   USE constants, ONLY : e2, fpi
   USE cell_base, ONLY: omega, tpiba2

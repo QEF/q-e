@@ -29,7 +29,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !     Revised Oct. 1995 by Andrea Dal Corso.
 !     April 1997: parallel stuff added (SdG)
 !
-#include "machine.h"
+#include "f_defs.h"
 
   USE io_global,  ONLY : stdout
   USE kinds, only : DP

@@ -10,7 +10,7 @@
 program cg_raman
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat, tau
   use pwcom
   use io_files
@@ -114,7 +114,7 @@ subroutine cg_deps(deps_dtau)
   !
   !  calculate d eps0/d tau with finite differences
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat, tau
   USE io_global,  ONLY : stdout
   USE io_files,      ONLY : iunres
@@ -245,7 +245,7 @@ end subroutine cg_deps
 subroutine cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat, tau, ityp
   USE io_global,  ONLY : stdout
   USE io_files,      ONLY : iunres
@@ -356,7 +356,7 @@ end subroutine cg_eps0dyn
 subroutine cg_neweps
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY :  stdout
   USE ions_base, ONLY : nat, tau
   use pwcom
@@ -468,7 +468,7 @@ subroutine raman_cs(dynout,deps_dtau)
   !
   !  calculate Raman cross section
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat
   USE io_global,  ONLY : stdout
   use pwcom
@@ -509,7 +509,7 @@ subroutine raman_cs2(w2,dynout)
   !
   !  calculate d eps0/d u  (u=phonon mode) with finite differences
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat, tau
   USE io_global,  ONLY :  stdout
   USE io_files,      ONLY : iunres

@@ -20,7 +20,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     nx is the actual dimension of f (may differ from n)
   !     SUN (using sunperf library)
   !----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 
@@ -75,7 +75,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   !----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
 USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn

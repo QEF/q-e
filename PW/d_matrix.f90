@@ -9,7 +9,7 @@
 subroutine d_matrix (dy1, dy2, dy3)  
   !---------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg
   USE symme, ONLY:  nsym, s

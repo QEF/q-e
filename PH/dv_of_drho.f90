@@ -13,7 +13,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !     This routine computes the change of the self consistent potential
   !     due to the perturbation.
   !
-#include "machine.h"
+#include "f_defs.h"
   use funct
   use pwcom
   USE kinds, only : DP

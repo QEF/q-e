@@ -17,7 +17,7 @@ subroutine gen_dwfc (isw_sl)
   !  isw_sl = 2   : it calculates | d/du(0) psi_k+q >
   !  isw_sl = 3,4 : it calculates | d/du(0) psi_k >
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   use pwcom
   use phcom

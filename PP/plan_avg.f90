@@ -23,7 +23,7 @@ subroutine plan_avg (averag, plan, ninter)
   !    evaluated and given as output. The number of planes is
   !    computed starting from the atomic positions
   !
-#include "machine.h"
+#include "f_defs.h"
   USE cell_base, ONLY: celldm, omega, alat, tpiba2
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau
   USE gvect

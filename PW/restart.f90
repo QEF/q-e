@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "machine.h"
+#include "f_defs.h"
 module restart_module
 
   USE io_global,  ONLY : stdout

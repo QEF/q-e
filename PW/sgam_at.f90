@@ -20,7 +20,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     point group is true if this operation is also an operation of the
   !     total point group
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds
   implicit none

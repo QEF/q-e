@@ -16,7 +16,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   !  "operator" is the linear operator - diagonal preconditioning allowed
   !  x = solution, u = gradient, h = conjugate gradient, Ah = operator*h
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none

@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 #include <malloc.h>
-#include "cp.h"
+#include "c_defs.h"
 
 void MEMSTAT(int *me)
 {

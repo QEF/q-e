@@ -19,7 +19,7 @@ subroutine solve_e
   !     d) It calls linter to solve the linear system
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout

@@ -12,7 +12,7 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
 ! to the basis set and supplies the latter. It uses the 
 ! Gram-Schmidt method. 
 !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer ::         & 

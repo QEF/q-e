@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "machine.h"
+#include "f_defs.h"
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
                              psi, overlap, evc, e )

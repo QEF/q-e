@@ -15,7 +15,7 @@ subroutine symvect (nat, vect, nsym, s, irt)
    ! on an atomic position) in the crystal
    ! axis basis
    !
-#include "machine.h"
+#include "f_defs.h"
    USE kinds
    implicit none
    !

@@ -7,7 +7,7 @@
 */
 
 #include<stdio.h>
-#include"cp.h"
+#include"c_defs.h"
 
 
 int CPFLUSH(void)

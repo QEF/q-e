@@ -16,7 +16,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! For the moment it assume that the mode modenum displaces the atom
   ! modenum/3 in the direction mod(modenum,3)+1
   ! Also the minus_q operation is tested.
-#include"machine.h"
+#include"f_defs.h"
   !
   !  input-output variables
   !

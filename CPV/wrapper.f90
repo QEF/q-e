@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "../include/machine.h"
+#include "../include/f_defs.h"
 !
       subroutine mxma (a,na,iad,b,nb,ibd,c,nc,icd,nar,nac,nbc)
 !

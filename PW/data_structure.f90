@@ -12,7 +12,7 @@ subroutine data_structure( lgamma )
   ! In the parallel case distributes columns to processes, too
   ! This version computes also the smooth and hard mesh
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE sticks, ONLY: dfftp, dffts
   USE kinds, ONLY: DP

@@ -10,7 +10,7 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
      nrx3, nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
   !     ===================
   !--------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   use funct
   implicit none

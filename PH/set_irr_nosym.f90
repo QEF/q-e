@@ -15,7 +15,7 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !     The irreducible representations are all one dimensional and
   !     we set them to the displacement of a single atom in one direction
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

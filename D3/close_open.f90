@@ -13,7 +13,7 @@ subroutine close_open (isw)
   ! Close and open some units. It is useful in case of interrupted run
   !
   !
-#include"machine.h"
+#include"f_defs.h"
   use pwcom, only: degauss
   use phcom, only: iudwf, lrdwf, lgamma
   use io_files, only: prefix

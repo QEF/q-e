@@ -70,7 +70,7 @@ end program poormanwannier
 subroutine projection (first_band, last_band)
   !----------------------------------------------------------------------- 
   ! 
-#include "machine.h" 
+#include "f_defs.h" 
 #define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)  
 

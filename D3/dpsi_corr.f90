@@ -16,7 +16,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
   ! this routine corrects dpsi in such a way that the density matrix
   ! is given by:   Sum_{k,nu} 2 * | dpsi > < psi |
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   use pwcom
   use phcom

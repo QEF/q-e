@@ -14,7 +14,7 @@ subroutine phq_readin
   !    A second routine readfile reads the variables saved on a file
   !    by the self-consistent program.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base,     ONLY : nat, ntyp => nsp
   use pwcom

@@ -11,7 +11,7 @@ subroutine d3_recover (ilab, isw)
   !
   !  isw = +1 Writes d3dyn in a file for possible recover
   !  isw = -1 Starts a recover run
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   use phcom
   use d3com

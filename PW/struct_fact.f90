@@ -13,7 +13,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   !
   !   calculate the structure factors for each type of atoms in the unit
   !   cell
-#include "machine.h"
+#include "f_defs.h"
   !
   USE kinds
   implicit none

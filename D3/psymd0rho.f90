@@ -12,7 +12,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the charge density.
   !
-#include "machine.h"
+#include "f_defs.h"
 #ifdef __PARA
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat

@@ -13,7 +13,7 @@ subroutine rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
 !  to the specified symmetry operation and add the rotated matrix
 !  to phi2.   phi is left unmodified.
 !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

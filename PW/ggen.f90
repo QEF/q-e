@@ -14,7 +14,7 @@ subroutine ggen
   !     computes the indices nl which give the correspondence
   !     between the fft mesh points and the array of g vectors.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   use cell_base
   use gvect
@@ -343,7 +343,7 @@ subroutine index_minusg
   !     compute indices nlm and nlms giving the correspondence
   !     between the fft mesh points and -G (for gamma-only calculations)
   !
-#include "machine.h"
+#include "f_defs.h"
   use gvect
   use gsmooth
   use wvfct, only :  gamma_only

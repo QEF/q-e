@@ -12,7 +12,7 @@ subroutine set_drhoc (q)
   ! without structure factor and put it in drc, at q point
   ! used to calculate derivatives of the core charge
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp
   use pwcom
   USE parameters, ONLY: ndmx

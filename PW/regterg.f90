@@ -19,7 +19,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, gstart, &
   !     S is an overlap matrix, evc is a complex vector
   !     (real wavefunctions with only half plane waves stored)
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use g_psi_mod

@@ -10,7 +10,7 @@ subroutine eigenchnl(nchanl, nchanr, tchan, vec, eigen)
 ! It performs the eigenchannel decomposition, diagonalizing
 ! the matrix amat=T^+T, where T is a transmission matrix  
 !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
 implicit none
 

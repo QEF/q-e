@@ -15,7 +15,7 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
   !   less than rmax,and returns them in order of increasing length.
   !      r=i*a1+j*a2+k*a3-dtau,
   !   where a1,a2,a3 are the vectors defining the lattice
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

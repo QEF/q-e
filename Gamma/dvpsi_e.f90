@@ -13,7 +13,7 @@ subroutine dvpsi_e(kpoint,ipol)
   ! Calculates x * psi_k  for each k-points and for the 3 polarizations
   ! Requires on input: vkb, evc, igk
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE kinds, only: DP
   use pwcom

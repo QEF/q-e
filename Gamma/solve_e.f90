@@ -10,7 +10,7 @@
 subroutine solve_e
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY: evc

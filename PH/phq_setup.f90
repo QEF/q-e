@@ -42,7 +42,7 @@ subroutine phq_setup
   !  April   1997: parallel stuff added (SdG)
   !  Oct-Nov 1998: minor stuff added (SdG)
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base,     ONLY : tau, nat, ntyp => nsp
   USE io_global,     ONLY : stdout

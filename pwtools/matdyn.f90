@@ -56,7 +56,7 @@ program matdyn
   !  For low-symmetry crystals, specify twice q = 0 in the list
   !  if you want to have q = 0 results for two different directions
   !
-#include "machine.h"
+#include "f_defs.h"
   implicit none
   !
   ! variables *_blk refer to the original cell, other variables

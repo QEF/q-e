@@ -16,7 +16,7 @@ subroutine compute_becsum
   !   It implements Eq.12 of the notes.
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

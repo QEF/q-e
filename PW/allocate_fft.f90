@@ -13,7 +13,7 @@ subroutine allocate_fft
   !     grid and allocate memory for all the arrays which depend upon
   !     these dimensions
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : nr1, nr2, nr3, nrxx, ngm, g, gg, nl, nlm, &
        ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl

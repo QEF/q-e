@@ -14,7 +14,7 @@ subroutine adddvscf (ipert, ik)
   !     change of the potential to the known part of the linear
   !     system and adds it to dvpsi.
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : nh, tvanp

@@ -11,7 +11,7 @@ subroutine addcore (mode, drhoc)
   !    when the atoms moves along the given mode
   !
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE kinds, only : DP
   use atom, only: nlcc

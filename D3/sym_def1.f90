@@ -14,7 +14,7 @@ subroutine sym_def1 (def, irr)
   !
   ! Used in the q=0 metallic case only.
   !
-#include"machine.h"
+#include"f_defs.h"
   USE kinds, only : DP
   use pwcom
   use phcom

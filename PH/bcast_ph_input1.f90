@@ -11,7 +11,7 @@ subroutine bcast_ph_input1
   !-----------------------------------------------------------------------
   !
 #ifdef __PARA
-#include "machine.h"
+#include "f_defs.h"
 
   use pwcom
   use phcom

@@ -12,7 +12,7 @@ subroutine symtns (phi, nsym, s)
 !
 !     symmetrize a tensor in the basis of crystallographic axis
 !
-#include "machine.h"
+#include "f_defs.h"
 USE kinds
 implicit none
 integer :: nsym, s (3, 3, 48), isym, i, j, k, l

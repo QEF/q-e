@@ -10,7 +10,7 @@
 subroutine cg_setup
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
   use pwcom

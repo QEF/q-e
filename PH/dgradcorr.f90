@@ -14,7 +14,7 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !  ADD Gradient Correction contribution
   !  LSDA is allowed. AdC (September 1999)
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

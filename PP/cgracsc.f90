@@ -17,7 +17,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !     is in bec1, and the product of psi2 is in bec2.
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

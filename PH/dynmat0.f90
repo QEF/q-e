@@ -17,7 +17,7 @@ subroutine dynmat0
   !     the ionic part
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   use pwcom

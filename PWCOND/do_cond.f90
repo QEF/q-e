@@ -11,7 +11,7 @@ subroutine do_cond(nodenumber)
 !   It calculates the complex band structure, solves the
 !   scattering problem and calculates the transmission coefficient. 
 !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   use pwcom
   use cond 

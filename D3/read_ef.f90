@@ -11,7 +11,7 @@ subroutine read_ef
   !-----------------------------------------------------------------------
   ! Reads the shift of the Fermi Energy
   !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   use d3com
 #ifdef __PARA

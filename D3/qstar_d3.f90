@@ -10,7 +10,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
      nq, sxq, isq, imq, iudyn, wrmode)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

@@ -16,7 +16,7 @@ subroutine compute_alphasum
   !   It implements Eq.13 of the notes.
   !
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

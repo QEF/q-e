@@ -14,7 +14,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   !     to the displacement of the augmentation charge. Only the
   !     smooth part is computed here.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   use pwcom
   USE kinds, only : DP

@@ -7,7 +7,7 @@
 !-----------------------------------------------------------------------
 subroutine tra_write_matrix (alpha, adyn, u, nat)
   !-----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none

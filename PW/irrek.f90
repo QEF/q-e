@@ -15,7 +15,7 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   !  group, finds the equivalent special points in the IW of one of
   !  its subgroups.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

@@ -15,7 +15,7 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   !   the dynamical matrix of the system
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

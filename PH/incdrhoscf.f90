@@ -14,7 +14,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   !     change of the wavefunction for a given k point.
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat
   use pwcom
   USE wavefunctions_module,  ONLY: evc

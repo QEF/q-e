@@ -13,7 +13,7 @@ subroutine diropn (unit, filename, recl, exst)
   !     this routine opens a file in tmp_dir for direct I/O access
   !     If appropriate, the node number is added to the file name
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   use io_files
   use mp_global, only: mpime

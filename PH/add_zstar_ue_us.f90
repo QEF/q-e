@@ -8,7 +8,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   !
   ! trans =.true. is needed for this calculation to be meaningful
   !
-#include "machine.h"
+#include "f_defs.h"
 
   USE pwcom
   USE kinds, ONLY : DP

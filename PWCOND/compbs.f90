@@ -13,7 +13,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 ! Some variables needed for wave-function matching in transmission
 ! calculation are constructed and saved.
 !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   USE uspp_param, ONLY: tvanp
   use cond

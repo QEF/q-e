@@ -18,7 +18,7 @@
 MODULE diis_module
   !----------------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   ! ... iterative solution of the eigenvalue problem:
   !
   !     ( H - e S ) |psi> = 0

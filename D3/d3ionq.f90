@@ -17,7 +17,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !    Both the real and reciprocal space terms
   !    are included.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE kinds, only : DP
   USE io_global,  ONLY : stdout

@@ -14,7 +14,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !    <psi|dv|dpsi> of the dynamical matrix. It can be used both for KB
   !    and for US pseudopotentials.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat
   use pwcom

@@ -23,7 +23,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     The slab must be oriented with the main axis along celldm(3).
   !     It may not properly work if the slab has two symmetric surfaces.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, ONLY: DP
   USE constants, ONLY: tpi, rytoev
   USE io_global, ONLY : stdout

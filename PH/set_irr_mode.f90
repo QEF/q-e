@@ -18,7 +18,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   USE constants, ONLY: tpi
   implicit none

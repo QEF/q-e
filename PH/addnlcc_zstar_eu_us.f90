@@ -2,7 +2,7 @@
 subroutine addnlcc_zstar_eu_us (drhoscf) 
 !----------===================-------------------
 
-#include "machine.h"
+#include "f_defs.h"
 
   use funct
   use pwcom

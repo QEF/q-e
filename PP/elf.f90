@@ -26,7 +26,7 @@ subroutine do_elf (elf)
   !  t_Thomas-Fermi (r) =  (hbar**2/2m) * 3/5 * (3*pi**2)**(2/3) * rho**(5
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, ONLY: DP
   USE constants, ONLY: pi
   USE cell_base, ONLY: omega, tpiba, tpiba2

@@ -12,7 +12,7 @@ subroutine transmit(ik, ien)
 ! and the functions and integrals computed by scatter_forw in
 ! the scattering region.
 !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY :  stdout
   USE uspp_param, ONLY :  tvanp
   use pwcom

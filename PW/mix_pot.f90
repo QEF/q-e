@@ -28,7 +28,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    vin       mixed potential
   !    vout      vout-vin
   !    conv      true if dr2.le.tr2
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

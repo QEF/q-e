@@ -20,7 +20,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   !
   !     here the dummy variables
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, ONLY: DP
   USE parameters, ONLY: nbrx
   USE gvect, ONLY: g

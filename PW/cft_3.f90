@@ -17,7 +17,7 @@
 ! If a machine-specific routine is not available, a fake
 ! routine issuing an error message is compiled.
 !
-#include "machine.h"
+#include "f_defs.h"
 
 #undef PRESENT
 

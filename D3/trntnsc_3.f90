@@ -14,7 +14,7 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
   !(like the derivative of the dynamical matrix)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
-#include"machine.h"
+#include"f_defs.h"
   USE kinds, only : DP
   implicit none
 

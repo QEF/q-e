@@ -12,7 +12,7 @@
 #include<sys/types.h>
 #include<sys/time.h>
 
-#include"cp.h"
+#include"c_defs.h"
 
 
 double ELAPSED_SECONDS()

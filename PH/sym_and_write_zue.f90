@@ -12,7 +12,7 @@ subroutine sym_and_write_zue
   !  symmetrize the effective charges in the U-E case (Us=scf,E=bare)
   !  and write them on iudyn and standard output
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, zv, ityp
   USE io_global,  ONLY : stdout

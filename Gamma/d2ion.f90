@@ -14,7 +14,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !      calculate the ionic contribution to the dynamical matrix
   !      (both real- and reciprocal-space contributions are present)
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   implicit none

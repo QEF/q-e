@@ -16,7 +16,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
   ! Calls h_1psi and s_1psi to calculate H|psi> and S|psi>
   ! Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
 
 #ifdef DEBUG

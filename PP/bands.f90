@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 program bands
   !-----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para, only: me, npool

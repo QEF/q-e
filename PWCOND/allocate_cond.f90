@@ -9,7 +9,7 @@ subroutine allocate_cond
 !
 !  This subroutine allocates the variables for PWCOND  
 !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   use pwcom
   USE uspp_param, ONLY : nbrx, nbeta, lll, betar, tvanp

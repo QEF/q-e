@@ -14,7 +14,7 @@ subroutine dynmatrix
   ! It writes the result on a iudyn file and writes the eigenvalues on
   ! output.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE io_global,     ONLY : stdout

@@ -37,7 +37,7 @@ program average
   !                   ! the planes of the planar average
   !      awin         ! the size of the window for macroscopic averages.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE parameters, ONLY: ntypx
   USE constants, ONLY: pi

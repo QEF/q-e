@@ -13,7 +13,7 @@ subroutine generate_effective_charges &
   !
   ! generate all effective charges
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&

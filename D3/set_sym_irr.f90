@@ -29,7 +29,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !     Revised Oct. 1995 by Andrea Dal Corso.
 !     April 1997: parallel stuff added (SdG)
 !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
 #ifdef __PARA
   use para, only: me

@@ -10,7 +10,7 @@ subroutine rgd_blk (nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !-----------------------------------------------------------------------
   ! compute the rigid-ion (long-range) term for q 
   !
-#include "machine.h"
+#include "f_defs.h"
   implicit none
   real(kind=8), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
   integer ::  nax, nat         ! (maximum) number of atoms 

@@ -16,7 +16,7 @@ subroutine dvanqq
   ! only once. int4 and int5 are deallocated after use in
   ! addusdynmat, and int1 and int2 saved on disk by that routine.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

@@ -14,7 +14,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !    which is due to the orthogonalization constraint on wavefunctions
   !
   !
-#include"machine.h"
+#include"f_defs.h"
   !
   USE ions_base, ONLY : nat
   use pwcom

@@ -4,7 +4,7 @@
 ! GNU General Public License. See the file `License'
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "machine.h"
+#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE wfcinit()

@@ -15,7 +15,7 @@ subroutine addusdens1d (plan, prho)
   !  reciprocal space. The output of the routine is the planar average
   !  of the charge density.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp

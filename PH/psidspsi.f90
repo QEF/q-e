@@ -15,7 +15,7 @@ subroutine psidspsi (ik, uact, pdsp)
   ! The result is stored in pdsp. The routine is called for each k point
   ! and for each pattern u. It computes simultaneously all the bands.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE pwcom

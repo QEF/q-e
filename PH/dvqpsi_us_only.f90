@@ -15,7 +15,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   ! The result is stored in dvpsi. The routine is called for each k point
   ! and for each pattern u. It computes simultaneously all the bands.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

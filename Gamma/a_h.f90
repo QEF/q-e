@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine A_h(e,h,ah)
   !-----------------------------------------------------------------------
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base,ONLY : alat, omega, tpiba2
   USE uspp,     ONLY : vkb, nkb

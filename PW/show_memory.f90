@@ -9,7 +9,7 @@
 
 
 subroutine show_memory ()
-#include "machine.h"
+#include "f_defs.h"
   implicit none
   !      WRITE( stdout,'(5x,"Current number of allocated pointers:",i8)') nptr
 

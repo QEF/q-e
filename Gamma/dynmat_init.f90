@@ -12,7 +12,7 @@ subroutine dynmat_init
   !
   !  Calculate part of the terms appearing in the dynamical matrix
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, zv, tau
   use pwcom
   use cgcom

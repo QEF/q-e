@@ -25,7 +25,7 @@ subroutine sgama_d3 (nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, &
 !  a) the first nsymg0 matrices are symmetries of the crystal
 !  b) the first nsymq matrices are symmetries for the small group of q
 !
-#include "machine.h"
+#include "f_defs.h"
 USE kinds, only : DP
 implicit none
 

@@ -14,7 +14,7 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     it. Used in relaxation/MD runs to check that atomic motion is
   !     consistent with assumed symmetry.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

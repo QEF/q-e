@@ -13,7 +13,7 @@ subroutine dynmat_us
   !  This routine calculates the electronic term: <psi|V"|psi>
   !  of the dynamical matrix.
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp, tau
   use pwcom

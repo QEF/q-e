@@ -16,7 +16,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, evc, e)
   !   Minimal memory use - evc and psi may overlap
   !   Calls h_1psi to calculate H|psi>, S|psi
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

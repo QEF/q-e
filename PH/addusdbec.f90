@@ -14,7 +14,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !  k point. After the accumulation the additional part of the charge
   !  is computed in addusddens.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP

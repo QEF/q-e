@@ -13,7 +13,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !    This subroutine computes the electronic term
   !    <psi|dv|dpsi> of the dynamical matrix
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat
   use pwcom

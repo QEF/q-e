@@ -5,7 +5,7 @@ subroutine zstar_eu_us
   ! Calculates the additional part of the Born effective charges 
   ! in the case of USPP
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat
   USE kinds, only : DP

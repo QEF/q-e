@@ -10,7 +10,7 @@ subroutine allocate_cond_2
 ! This subroutine allocates the remaining variables 
 ! after reduction (ngper --> n2d) of XY basis set
 !
-#include "machine.h"
+#include "f_defs.h"
   use cond 
   implicit none
 

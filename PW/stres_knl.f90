@@ -10,7 +10,7 @@
 subroutine stres_knl (sigmanlc, sigmakin)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds,           ONLY: DP
   USE constants,            ONLY: pi, e2
   USE cell_base,                ONLY: omega, alat, at, bg, tpiba

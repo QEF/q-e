@@ -16,7 +16,7 @@ subroutine drho
   !    computed change.
   !
   !
-#include"machine.h"
+#include"f_defs.h"
   !
   USE ions_base, ONLY : nat
   use pwcom

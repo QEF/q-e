@@ -16,7 +16,7 @@ subroutine dvpsi_e (kpoint, ipol)
   ! dvpsi is READ from file if this_pcxpsi_is_on_file(kpoint,ipol)=.true. 
   ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set)
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE io_global,      ONLY : stdout

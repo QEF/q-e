@@ -11,7 +11,7 @@ subroutine dvpsi_kb(kpoint,nu)
   !----------------------------------------------------------------------
   ! calculates dVion/dtau * psi and stores it in dvpsi
   !
-#include "machine.h"
+#include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau
   USE kinds, only: DP
   use pwcom

@@ -15,7 +15,7 @@ subroutine addusddense (drhoscf, dbecsum)
   !  It assumes that the array dbecsum has already accumulated the
   !  change of the becsum term.
   !
-#include "machine.h"
+#include "f_defs.h"
   
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom

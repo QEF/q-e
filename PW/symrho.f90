@@ -13,7 +13,7 @@ subroutine symrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   !
   !     symmetrize the charge density.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

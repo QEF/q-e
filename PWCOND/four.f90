@@ -30,7 +30,7 @@ subroutine four(alpha, w0, k, dz)
 !                      z(k)< z <z(k+1) and 
 !                      g - 2D g-vector
 ! 
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   USE parameters, ONLY: ndmx
   USE uspp_param,    ONLY : betar

@@ -11,7 +11,7 @@ subroutine local
 ! the local potential in each slab and performs 2D reduction of 
 ! the plane wave basis set.
 !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY :  stdout
   use pwcom
   use io_files

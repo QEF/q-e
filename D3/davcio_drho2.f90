@@ -15,7 +15,7 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
   ! isw = +1 : gathers data from the nodes and writes on a single file
   ! isw = -1 : reads data from a single file and distributes them
   !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   USE kinds, only : DP
   use phcom

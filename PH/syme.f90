@@ -16,7 +16,7 @@ subroutine syme (dvsym)
   !     are on the basis of the crystal
   !
   !
-#include "machine.h"
+#include "f_defs.h"
 
   use pwcom
   USE kinds, only : DP

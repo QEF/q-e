@@ -13,7 +13,7 @@ subroutine trntnsc (phi, at, bg, iflg)
   ! trasforms a COMPLEX tensor (like the dynamical matrix)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
-#include"machine.h"
+#include"f_defs.h"
   USE kinds, only : DP
   implicit none
 

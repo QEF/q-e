@@ -16,7 +16,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !     q -> -q+G if present.
   !
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   USE constants, only : tpi
   implicit none

@@ -18,7 +18,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !     where H is an hermitean operator, e is a real scalar,
   !     S is an overlap matrix, evc is a complex vector
   !
-#include "machine.h"
+#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use g_psi_mod

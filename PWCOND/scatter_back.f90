@@ -11,7 +11,7 @@ subroutine scatter_back(app, bpp, an, bn, af, ci, di,       &
 ! This subroutine computes the second half of the local functions
 ! and their integrals.
 !
-#include "machine.h"
+#include "f_defs.h"
   use pwcom
   use cond
   implicit none  

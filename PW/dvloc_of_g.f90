@@ -12,7 +12,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
      dvloc)
   !----------------------------------------------------------------------
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !

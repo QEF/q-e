@@ -12,7 +12,7 @@ subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, &
   !---------------------------------------------------------------------
   !  symmetrizes q=0 drho
   !
-#include"machine.h"
+#include"f_defs.h"
   !
   USE kinds, only : DP
   implicit none

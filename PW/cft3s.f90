@@ -41,7 +41,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !   Note that if sign=+/-1 (fft on rho and pot.) all fft's are needed
   !   and all planes(i) are set to 1
   !
-#include "machine.h"
+#include "f_defs.h"
 
 #if defined __FFT_MODULE_DRV
   use fft_scalar, only: cft_1z, cft_2xy

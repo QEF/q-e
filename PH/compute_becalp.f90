@@ -12,7 +12,7 @@ subroutine compute_becalp (becq, alpq)
   !     This routine is used only if .not.lgamma and in this case
   !     computes the scalar product of vkb and psi_{k+q}
   !
-#include "machine.h"
+#include "f_defs.h"
 
 
   use pwcom

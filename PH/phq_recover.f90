@@ -13,7 +13,7 @@ subroutine phq_recover
   !    and writes the appropriate messages if the run starts from
   !    a given iteration of a given irreducible representation
   !
-#include "machine.h"
+#include "f_defs.h"
   !
   USE ions_base,     ONLY : nat
   USE io_global,     ONLY : stdout

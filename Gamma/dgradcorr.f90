@@ -13,7 +13,7 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
   !--------------------------------------------------------------------
   !  ADD Gradient Correction contibution to screening potential
   !  phonon calculation, half G-vectors
-#include "machine.h"
+#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 

@@ -23,7 +23,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   !    The local pseudopotential of the US case is always in
   !    numerical form, expressed in Ry units.
   !
-#include "machine.h"
+#include "f_defs.h"
   USE kinds
   implicit none
   !
