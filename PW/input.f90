@@ -112,7 +112,7 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
-                            iverbosity, tr2, niter, order, &
+                            iverbosity, tr2, niter, pot_order, wfc_order, &
                             upscale_     => upscale, &
                             mixing_beta_ => mixing_beta, &
                             nstep_       => nstep, &
@@ -203,7 +203,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature,   &
                                tolp, tempw, delta_t, nraise, upscale,          &
-                               potential_extrapolation,                        &
+                               pot_extrapolation,  wfc_extrapolation,          &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
                                init_num_of_images, temp_req, k_max, k_min, ds, &
@@ -604,18 +604,37 @@ SUBROUTINE iosys()
   tr2   = conv_thr
   niter = electron_maxstep
   !
-  SELECT CASE ( TRIM( potential_extrapolation ) )
+  SELECT CASE ( TRIM( pot_extrapolation ) )
   CASE ( 'none' )
-     order = 0
+     pot_order = 0
   CASE ( 'atomic' )
-     order = 1
-  CASE ( 'wfc' )
-     order = 2
-  CASE ( 'wfc2' )
-     order = 3
+     pot_order = 1
+  CASE ( 'first_order' )
+     pot_order = 2
+  CASE ( 'second_order' )
+     pot_order = 3
   CASE DEFAULT
-     order = 1
+     pot_order = 1
   END SELECT
+  !
+  SELECT CASE ( TRIM( wfc_extrapolation ) )
+  CASE ( 'none' )
+     wfc_order = 0
+  CASE ( 'first_order' )
+     wfc_order = 2
+  CASE ( 'second_order' )
+     wfc_order = 3
+  CASE DEFAULT
+     wfc_order = 0
+  END SELECT
+  !
+  IF ( wfc_order > 0 .AND. noncolin ) THEN
+     !
+     CALL errore( ' iosys ', &
+                & ' wfc extrapolation not implemented in the' // &
+                & ' noncollinear case', -1 )
+     !
+  END IF
   !
   IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
      CALL errore( ' iosys ', &

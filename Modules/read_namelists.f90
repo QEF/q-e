@@ -333,21 +333,22 @@ MODULE read_namelists_module
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
        !
-       ion_temperature         = 'not_controlled'
-       tempw                   = 300.D0
-       fnosep                  = 1.D0
-       tranp                   = .FALSE.
-       amprp                   = 0.D0
-       greasp                  = 1.D0
-       tolp                    = 100.D0
-       ion_nstepe              = 1
-       ion_maxstep             = 100
-       delta_t                 = 1.D0
-       nraise                  = 100
-       upscale                 = 10
-       potential_extrapolation = 'default'
+       ion_temperature   = 'not_controlled'
+       tempw             = 300.D0
+       fnosep            = 1.D0
+       tranp             = .FALSE.
+       amprp             = 0.D0
+       greasp            = 1.D0
+       tolp              = 100.D0
+       ion_nstepe        = 1
+       ion_maxstep       = 100
+       delta_t           = 1.D0
+       nraise            = 100
+       upscale           = 10
+       pot_extrapolation = 'atomic'
+       wfc_extrapolation = 'none'
        !
-       ! ... defaults for "path" optimizations
+       ! ... defaults for "path" optimisations
        !
        ! ... general input variables
        !
@@ -746,7 +747,8 @@ MODULE read_namelists_module
        CALL mp_bcast( delta_t, ionode_id )
        CALL mp_bcast( nraise, ionode_id )
        CALL mp_bcast( upscale, ionode_id )
-       CALL mp_bcast( potential_extrapolation, ionode_id )
+       CALL mp_bcast( pot_extrapolation, ionode_id )
+       CALL mp_bcast( wfc_extrapolation, ionode_id )
        !
        ! ... "path" variables broadcast
        !
@@ -1456,16 +1458,24 @@ MODULE read_namelists_module
              !
              ! ... "path" optimizations
              ! 
-             IF( prog == 'PW' ) startingpot  = 'atomic'
-             IF( prog == 'PW' ) startingwfc  = 'atomic'
+             IF ( prog == 'PW' ) THEN
+                !
+                startingpot  = 'atomic'
+                startingwfc  = 'atomic'
+                !
+             END IF
              IF( prog == 'FP' ) THEN
+                 !
                  electron_dynamics = 'sd'
                  ion_dynamics      = 'none'
                  cell_dynamics     = 'none'
+                 !
              END IF
              IF( prog == 'CP' ) THEN
+                !
                 electron_dynamics = 'damp'
                 ion_dynamics      = 'damp'
+                !
              END IF
           CASE DEFAULT
              CALL errore( sub_name,' calculation '// & 

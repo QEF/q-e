@@ -21,7 +21,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                diago_thr_init
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : lneb, lsmd, conv_elec, istep, &
-                               history, alpha0, beta0, ethr, order
+                               history, alpha0, beta0, ethr, pot_order
   USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
@@ -213,7 +213,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         CALL mp_bcast( history, ionode_id, intra_image_comm )
         CALL mp_bcast( tauold,  ionode_id, intra_image_comm )
         !
-        IF ( conv_elec .AND. order > 0 .AND. history > 0 ) THEN
+        IF ( conv_elec .AND. history > 0 ) THEN
            !
            ! ... potential and wavefunctions are extrapolated only if
            ! ... we are starting a new self-consistency (scf on the 
@@ -231,11 +231,15 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
            CALL mp_bcast( beta0,  ionode_id, intra_image_comm )                
            !
-           ! ... structure factors of the old positions are computed 
-           ! ... (needed for the old atomic charge)
-           !
-           CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
-                            nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+           IF ( pot_order > 0 ) THEN
+              !
+              ! ... structure factors of the old positions are computed 
+              ! ... (needed for the old atomic charge)
+              !
+              CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
+                               nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+              !
+           END IF
            !
            CALL update_pot()
            !

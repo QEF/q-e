@@ -192,7 +192,8 @@ cat > al001.mm.in << EOF
  /
  &ions
     ion_dynamics='damp',
-    potential_extrapolation='wfc2'
+    pot_extrapolation='second_order'
+    wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
  Al 26.98 Al.vbc.UPF

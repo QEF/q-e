@@ -18,7 +18,6 @@ SUBROUTINE openfil()
   USE io_global,        ONLY : stdout
   USE basis,            ONLY : natomwfc, startingwfc
   USE wvfct,            ONLY : nbnd, npwx
-  USE control_flags,    ONLY : order, lneb
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc

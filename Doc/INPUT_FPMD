@@ -692,13 +692,9 @@
         INTEGER :: upscale
           ! This variable is NOT used in FPMD
 
-        CHARACTER(LEN=80) :: potential_extrapolation
-          !  This variable is used only by PWSCF
-          ! NOT used in FPMD
-
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, tolp, &
-          ion_nstepe, ion_maxstep, upscale, potential_extrapolation
+          ion_nstepe, ion_maxstep, upscale, pot_extrapolation, wfc_extrapolation
 
 
 =----------------------------------------------------------------------------=!

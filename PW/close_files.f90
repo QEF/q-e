@@ -11,7 +11,6 @@ SUBROUTINE close_files()
   !
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
-  USE control_flags, ONLY : order
   USE ldaU,          ONLY : lda_plus_u
   USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat
   USE mp_global,     ONLY : intra_image_comm

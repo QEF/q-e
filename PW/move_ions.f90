@@ -355,7 +355,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   USE constants,     ONLY : eps16
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : order, history
+  USE control_flags, ONLY : history
   !
   IMPLICIT NONE
   !
@@ -364,11 +364,11 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   REAL(KIND=DP) :: a11, a12, a21, a22, b1, b2, c, det
   !
   !
-  IF ( MIN( history, order ) < 2 ) THEN
+  IF ( history < 2 ) THEN
      !
      RETURN
      !
-  ELSE IF ( MIN( history, order ) == 2 ) THEN  
+  ELSE IF ( history == 2 ) THEN  
      !
      alpha0 = 1.D0
      beta0  = 0.D0

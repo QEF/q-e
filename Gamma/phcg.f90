@@ -388,8 +388,8 @@ SUBROUTINE newscf
   USE funct
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
   USE control_flags, ONLY : restart, reduce_io, lscf, istep, iprint, &
-                            order, david, max_cg_iter, isolve, tr2,  &
-                            ethr, mixing_beta, nmix, niter
+                            pot_order, wfc_order, david, max_cg_iter, &
+                            isolve, tr2, ethr, mixing_beta, nmix, niter
   !
   IMPLICIT NONE
   INTEGER :: iter
@@ -408,7 +408,8 @@ SUBROUTINE newscf
   qcutz=0.0
   istep=1
   iprint=10000
-  order=1
+  pot_order=1
+  wfc_order=0
   input_drho=' '
   output_drho=' '
   !

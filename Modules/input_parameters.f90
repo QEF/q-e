@@ -907,8 +907,9 @@ MODULE input_parameters
         REAL(dbl) :: upscale = 0.0d0
           ! This variable is NOT used in FPMD
 
-        CHARACTER(LEN=80) :: potential_extrapolation = 'default'
-          !  This variable is used only by PWSCF
+        CHARACTER(LEN=80) :: pot_extrapolation = 'default', &
+                             wfc_extrapolation = 'default'
+          !  These variables are used only by PWSCF
           ! NOT used in FPMD
         
         !
@@ -1047,8 +1048,8 @@ MODULE input_parameters
 
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
-          tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation,      &
-          delta_t, nraise,                                                      &
+          tolp, ion_nstepe, ion_maxstep, upscale, pot_extrapolation,            &
+          wfc_extrapolation, delta_t, nraise,                                   &
           num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep,  &
           reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,    &
           init_num_of_images,                                                   &

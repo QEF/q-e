@@ -480,19 +480,23 @@ nraise         INTEGER (default = 100 )
                This keyword is NOT used in the case of variable cell
                calculations.
 
-potential_extrapolation     
-               CHARACTER
-               used to extrapolate the potential and the wave-functions 
-               from preceding ionic step(s)
+pot_extrapolation     
+               CHARACTER ( default = "atomic" )
+               used to extrapolate the potential from preceding ionic steps
+               'none'        :  no extrapolation
+               'atomic'      :  extrapolate the potential as if it was a sum of
+                                atomic-like orbitals 
+               'first_rder'  :  extrapolate the potential with first-order 
+                                formula
+               'second_order':  as above, with second order formula
 
-               'none':   no extrapolation
-               'atomic': extrapolate the potential as if it was a sum of
-                         atomic-like orbitals (default for calculation='relax')
-               'wfc':    extrapolate the potential as above
-                         extrapolate wave-functions with first-order formula
-                         (default for calcualtion='md' and calcualtion='neb')
-               'wfc2':   as above, with second order formula
-
+wfc_extrapolation     
+               CHARACTER ( default = "none" )
+               used to extrapolate the wavefunctions from preceding ionic steps
+               'none'        :  no extrapolation
+               'first_rder'  :  extrapolate the wave-functions with first-order
+                                formula
+               'second_order':  as above, with second order formula
 
 !
 ! ... keywords used only in BFGS calculations
