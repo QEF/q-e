@@ -29,13 +29,23 @@ subroutine set_rho_core
      rhov(n) = 0.0_dp
      rhoc(n) = 0.0_dp
      do ns=1,nwf
-        if (core_state(ns)) then
-           rhoc(n) = rhoc(n) + oc(ns)*psi(n,ns)**2
+        if (rel==2) then
+           if (core_state(ns)) then
+              rhoc(n)=rhoc(n)+oc(ns)*(psi_dir(n,1,ns)**2+psi_dir(n,2,ns)**2)
+           else
+              rhov(n)=rhov(n)+oc(ns)*(psi_dir(n,1,ns)**2+psi_dir(n,2,ns)**2)
+           endif
         else
-           rhov(n) = rhov(n) + oc(ns)*psi(n,ns)**2
+           if (core_state(ns)) then
+              rhoc(n) = rhoc(n) + oc(ns)*psi(n,ns)**2
+           else
+              rhov(n) = rhov(n) + oc(ns)*psi(n,ns)**2
+           endif
         endif
      enddo
   enddo
+!  totrho = int_0_inf_dr(rhoc,r,r2,dx,mesh,2)
+!  write(6,'("Integrated core charge",f15.10)') totrho
   rhoco(:) = rhoc(1:mesh)
   if (lpaw) aeccharge(1:mesh) = rhoc(1:mesh)
   !
