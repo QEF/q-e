@@ -203,7 +203,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
            !
            rho(:,is) = rho(:,is) / rho(:,1)
            !
-        ELSE WHERE
+        ELSEWHERE
            !
            rho(:,is) = 0.D0
            !
@@ -313,7 +313,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
            !
            rho(:,is) = rho(:,is) * rho(:,1)
            !
-        ELSE WHERE
+        ELSEWHERE
            !
            rho(:,is) = 0.D0
            !
