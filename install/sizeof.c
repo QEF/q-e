@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #if defined __FFTWDRV
-#include"fftw.h"
+#include"../clib/fftw.h"
 #endif
 
 
