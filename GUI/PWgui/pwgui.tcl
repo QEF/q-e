@@ -43,7 +43,7 @@ if { [info exists env(PWGUI)] } {
     exit
 }
 
-package require Guib 0.2.0
+package require Guib 0.3.0
 wm withdraw .
 bind . <Destroy> ::guib::exitApp
 

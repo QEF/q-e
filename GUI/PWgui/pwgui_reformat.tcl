@@ -73,7 +73,7 @@ if { $argc != 2 } {
     }
 }
     
-package require Guib 0.2.0
+package require Guib 0.3.0
 wm withdraw .
 option readfile [file join $::guib::library guib.theme] startupFile
 
