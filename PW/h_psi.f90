@@ -1,93 +1,190 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-subroutine h_psi (lda, n, m, psi, hpsi)
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE h_psi( lda, n, m, psi, hpsi )
+  !----------------------------------------------------------------------------
   !
-  !     This routine computes the product of the Hamiltonian
-  !     matrix with m wavefunctions contained in psi
-  ! input:
-  !     lda   leading dimension of arrays psi, spsi, hpsi
-  !     n     true dimension of psi, spsi, hpsi
-  !     m     number of states psi
-  !     psi
-  ! output:
-  !     hpsi  H*psi
+  ! ... This routine computes the product of the Hamiltonian
+  ! ... matrix with m wavefunctions contained in psi
   !
-  use us, only: vkb, nkb
-  use wvfct, only: igk, g2kin
-  use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-  use ldaU, only : lda_plus_u
-  use lsda_mod, only : current_spin
-  use scf, only: vrs
-  use becmod
-  use workspace
-  USE wavefunctions_module,  ONLY: psic
-  implicit none
+  ! ... input:
+  ! ...    lda   leading dimension of arrays psi, spsi, hpsi
+  ! ...    n     true dimension of psi, spsi, hpsi
+  ! ...    m     number of states psi
+  ! ...    psi
   !
-  integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, m), hpsi (lda, m)
+  ! ... output:
+  ! ...    hpsi  H*psi
   !
-  integer :: ibnd, j
-  ! counters
-
-  call start_clock ('h_psi')
-  call start_clock ('init')
-  call ccalbec (nkb, lda, n, m, becp, vkb, psi)
+  USE parameters, ONLY : DP
+  USE wvfct,      ONLY : gamma_only 
+  USE us,         ONLY : vkb, nkb
+  USE wvfct,      ONLY : igk, g2kin
+  USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE ldaU,       ONLY : lda_plus_u
+  USE lsda_mod,   ONLY : current_spin
+  USE scf,        ONLY : vrs  
+  USE workspace,  ONLY :
   !
-  ! Here we apply the kinetic energy (k+G)^2 psi
+  IMPLICIT NONE
   !
-  do ibnd = 1, m
-     do j = 1, n
-        hpsi (j, ibnd) = g2kin (j) * psi (j, ibnd)
-     enddo
-  enddo
-  call stop_clock ('init')
+  ! ... input/output arguments
   !
-  ! Here we add the Hubbard potential times psi
+  INTEGER          :: lda, n, m
+  COMPLEX(KIND=DP) :: psi(lda,m) 
+  COMPLEX(KIND=DP) :: hpsi(lda,m)   
   !
-  if (lda_plus_u) call vhpsi (lda, n, m, psi, hpsi)
   !
-  ! the local potential V_Loc psi. First the psi in real space
-  !
-  do ibnd = 1, m
-     call start_clock ('firstfft')
-     psic(1:nrxxs) = (0.d0,0.d0)
-     do j = 1, n
-        psic(nls(igk(j))) = psi(j,ibnd)
-     enddo
-     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-     call stop_clock ('firstfft')
+  CALL start_clock( 'h_psi' )
+  !  
+  IF ( gamma_only ) THEN
      !
-     !   product with the potential vrs = (vltot+vr) on the smooth grid
+     CALL h_psi_gamma()
      !
-     do j = 1, nrxxs
-        psic(j) = psic(j) * vrs(j,current_spin)
-     enddo
+  ELSE  
      !
-     !   back to reciprocal space
+     CALL h_psi_k()
      !
-     call start_clock ('secondfft')
-     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
-     !
-     !   addition to the total product
-     !
-     do j = 1, n
-        hpsi(j,ibnd) = hpsi(j,ibnd) + psic(nls(igk(j)))
-     enddo
-     call stop_clock ('secondfft')
-  enddo
+  END IF  
   !
-  !  Here the product with the non local potential V_NL psi
+  CALL stop_clock( 'h_psi' )
   !
-  if (nkb.gt.0) call add_vuspsi (lda, n, m, psi, hpsi)
-  call stop_clock ('h_psi')
-  return
-end subroutine h_psi
-
+  RETURN
+  !
+  CONTAINS
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE h_psi_gamma()
+       !-----------------------------------------------------------------------
+       ! 
+       ! ... gamma version
+       !
+       USE gvect,    ONLY : gstart
+       USE rbecmod,  ONLY : becp
+       !
+       IMPLICIT NONE
+       !
+       INTEGER :: ibnd, j
+       !
+       !
+       CALL start_clock( 'init' )
+       !
+       ! ... Here we apply the kinetic energy (k+G)^2 psi
+       !
+       DO ibnd = 1, m
+          !
+          ! ... set to zero the imaginary part of psi at G=0
+          ! ... absolutely needed for numerical stability
+          !
+          IF ( gstart == 2 ) psi(1,ibnd) = CMPLX( REAL( psi(1,ibnd) ), 0.D0 )
+          DO j = 1, n
+             hpsi(j,ibnd) = g2kin(j) * psi(j,ibnd)
+          END DO
+       END DO
+       !
+       CALL stop_clock( 'init' )
+       !
+       ! ... Here we add the Hubbard potential times psi
+       !
+       IF ( lda_plus_u ) CALL vhpsi( lda, n, m, psi, hpsi )
+       !
+       ! ... the local potential V_Loc psi
+       !
+       CALL vloc_psi( lda, n, m, psi, vrs(1,current_spin), hpsi )
+       !
+       ! ... Here the product with the non local potential V_NL psi
+       !
+       CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, becp, nkb )
+       !
+       IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
+       !
+       RETURN
+       !
+     END SUBROUTINE h_psi_gamma
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE h_psi_k()
+       !-----------------------------------------------------------------------
+       !
+       ! ... k-points version
+       !
+       USE becmod,               ONLY : becp
+       USE wavefunctions_module, ONLY : psic
+       !
+       IMPLICIT NONE
+       !
+       INTEGER :: ibnd, j
+       ! counters
+       !
+       !
+       CALL start_clock( 'init' )
+       !
+       CALL ccalbec( nkb, lda, n, m, becp, vkb, psi )   
+       !
+       ! ... Here we apply the kinetic energy (k+G)^2 psi
+       !
+       DO ibnd = 1, m
+          DO j = 1, n
+             hpsi(j,ibnd) = g2kin(j) * psi(j,ibnd)
+          END DO
+       END DO
+       !
+       CALL stop_clock( 'init' )
+       !
+       ! ... Here we add the Hubbard potential times psi
+       !
+       IF ( lda_plus_u ) CALL vhpsi( lda, n, m, psi, hpsi )
+       !
+       ! ... the local potential V_Loc psi. First the psi in real space
+       !
+       DO ibnd = 1, m
+          !
+          CALL start_clock( 'firstfft' )
+          !
+          psic(1:nrxxs) = (0.D0,0.D0)
+          !
+          DO j = 1, n
+             psic(nls(igk(j))) = psi(j,ibnd)
+          END DO
+          !
+          CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+          !
+          CALL stop_clock( 'firstfft' )
+          !
+          ! ... product with the potential vrs = (vltot+vr) on the smooth grid
+          !
+          DO j = 1, nrxxs
+             psic(j) = psic(j) * vrs(j,current_spin)
+          END DO
+          !
+          ! ... back to reciprocal space
+          !
+          CALL start_clock( 'secondfft' )
+          !
+          CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+          !
+          ! ... addition to the total product
+          !
+          DO j = 1, n
+             hpsi(j,ibnd) = hpsi(j,ibnd) + psic(nls(igk(j)))
+          END DO
+          !
+          CALL stop_clock( 'secondfft' )
+          !
+       END DO
+       !
+       ! ... Here the product with the non local potential V_NL psi
+       !
+       IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
+       !
+       RETURN
+       !
+     END SUBROUTINE h_psi_k     
+     !
+END SUBROUTINE h_psi

@@ -5,141 +5,318 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!----------------------------------------------------------------------
-
-subroutine force_us (forcenl)
-  !----------------------------------------------------------------------
-  !
-  ! nonlocal potential contribution to forces
-  !
 #include "machine.h"
-  use pwcom
-  USE wavefunctions_module,    ONLY : evc
-  USE io_files, ONLY: iunwfc, nwordwfc, iunigk
-  use becmod
-  implicit none
+!
+!----------------------------------------------------------------------------
+SUBROUTINE force_us( forcenl )
+  !----------------------------------------------------------------------------
   !
-  !   the dummy variable
+  ! ... nonlocal potential contribution to forces
+  ! ... wrapper
   !
-  real(kind=DP) :: forcenl (3, nat)
+  USE parameters,           ONLY : DP
+  USE wvfct,                ONLY : gamma_only
+  USE brilz,                ONLY : at, bg, tpiba
+  USE basis,                ONLY : nat, ntyp, ityp
+  USE klist,                ONLY : nks, xk
+  USE gvect,                ONLY : g
+  USE us,                   ONLY : nkb, vkb, nh, qq, deeq, tvanp
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE symme,                ONLY : irt, s, nsym
+  USE varie,                ONLY : newpseudo
+  USE wavefunctions_module, ONLY : evc
+  USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  !
+  IMPLICIT NONE
+  !
+  ! ... the dummy variable
+  !
+  REAL(KIND=DP) :: forcenl(3,nat)
   ! output: the nonlocal contribution
-
-  complex(kind=DP), allocatable :: dbecp (:,:,:)
-  ! auxiliary variable contains <dbeta|psi>
-  complex(kind=DP), allocatable :: vkb1 (:,:)
-  ! auxiliary variable contains g*|beta>
-  real(kind=DP) :: ps
-  integer :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
-  ! counters
   !
-  forcenl(:,:) = 0.d0
-  allocate (dbecp(  nkb, nbnd, 3))    
-  allocate (vkb1(  npwx, nkb))    
-  if (nks.gt.1) rewind iunigk
   !
-  !   the forces are a sum over the K points and the bands
+  IF ( gamma_only ) THEN
+     !
+     CALL force_us_gamma()
+     !
+  ELSE
+     !
+     CALL force_us_k()
+     !
+  END IF  
   !
-  do ik = 1, nks
-     if (lsda) current_spin = isk (ik)
-     if (nks.gt.1) then
-        read (iunigk) npw, igk
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
-     endif
+  RETURN
+  !
+  CONTAINS
      !
-     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
-     !
-     do ipol = 1, 3
-        do jkb = 1,nkb
-           do ig = 1, npw
-              vkb1 (ig, jkb) = vkb(ig,jkb) *(0.d0,-1.d0)*g(ipol,igk(ig) )
-           enddo
-        enddo
-        !
-        call ZGEMM ('C', 'N', nkb, nbnd, npw, (1.d0, 0.d0), vkb1, npwx, &
-             evc, npwx, (0.d0, 0.d0), dbecp(1,1,ipol), nkb)
-     end do
-     !
-     ijkb0 = 0
-     do nt = 1, ntyp
-        do na = 1, nat
-           if (ityp (na) .eq.nt) then
-              do ih = 1, nh (nt)
-                 ikb = ijkb0 + ih
-                 do ibnd = 1, nbnd
-                    ps = deeq (ih, ih, na, current_spin) - &
-                         et (ibnd, ik) * qq (ih,ih, nt)
-                    do ipol = 1, 3
-                       forcenl (ipol, na) = forcenl (ipol, na) - &
-                            ps * wg (ibnd, ik) * 2.d0 * tpiba * &
-                            DREAL (conjg (dbecp (ikb, ibnd, ipol) ) &
-                                   * becp (ikb, ibnd) )
-                    enddo
-                 enddo
-
-                 if (tvanp (nt) .or.newpseudo (nt) ) then
-                    !
-                    ! in US case there is a contribution for jh<>ih. We use
-                    ! here the symmetry in the interchange of ih and jh
-                    !
-                    do jh = ih + 1, nh (nt)
-                       jkb = ijkb0 + jh
-                       do ibnd = 1, nbnd
-                          ps = deeq (ih, jh, na, current_spin) - &
-                               et (ibnd, ik) * qq (ih, jh, nt)
-                          do ipol = 1, 3
-                             forcenl (ipol, na) = forcenl (ipol, na) - &
-                                  ps * wg (ibnd, ik) * 2.d0 * tpiba * &
-                                  DREAL (conjg (dbecp (ikb, ibnd, ipol) ) * &
-                                         becp (jkb, ibnd) + &
-                                         dbecp (jkb, ibnd, ipol) * &
-                                         conjg (becp (ikb, ibnd) ) )
-                          enddo
-                       enddo
-                    enddo
-                 endif
-              enddo
-              ijkb0 = ijkb0 + nh (nt)
-           endif
-        enddo
-     enddo
-  enddo
+     !-----------------------------------------------------------------------
+     SUBROUTINE force_us_gamma()
+       !-----------------------------------------------------------------------
+       !
+       ! ... calculation at gamma
+       !
+       IMPLICIT NONE
+       !
+       REAL(KIND=DP), ALLOCATABLE    :: becp(:,:), dbecp (:,:,:)
+       ! auxiliary variables contain <beta|psi> and <dbeta|psi>
+       COMPLEX(KIND=DP), ALLOCATABLE :: vkb1 (:,:)
+       ! auxiliary variable contains g*|beta>
+       REAL(KIND=DP) :: ps
+       INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
+       ! counters
+       !
+       !
+       forcenl(:,:) = 0.D0
+       !
+       ALLOCATE( becp( nkb, nbnd ), dbecp( nkb, nbnd, 3 ) )    
+       ALLOCATE( vkb1(  npwx, nkb ) ) 
+       !   
+       IF ( nks > 1 ) REWIND iunigk
+       !
+       ! ... the forces are a sum over the K points and the bands
+       !
+       DO ik = 1, nks
+          IF ( lsda ) current_spin = isk(ik)
+          !
+          IF ( nks > 1 ) THEN
+             READ( iunigk ) npw, igk
+             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL init_us_2( npw, igk, xk(1,ik), vkb )
+          END IF
+          !
+          CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb )
+          !
+          DO ipol = 1, 3
+             DO jkb = 1,nkb
+                DO ig = 1, npw
+                   vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk(ig))
+                END DO
+             END DO
+             !
+             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb1, npwx, evc, npwx, &
+                           dbecp(1,1,ipol), nkb )
+             !
+          END DO
+          !
+          ijkb0 = 0
+          DO nt = 1, ntyp
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) THEN
+                   DO ih = 1, nh(nt)
+                      ikb = ijkb0 + ih
+                      DO ibnd = 1, nbnd
+                         ps = deeq(ih,ih,na,current_spin) - &
+                              et(ibnd,ik) * qq(ih,ih,nt)
+                         DO ipol = 1, 3
+                            forcenl(ipol,na) = forcenl(ipol,na) - &
+                                       ps * wg(ibnd,ik) * 2.D0 * tpiba * &
+                                       dbecp(ikb,ibnd,ipol) * becp(ikb,ibnd)
+                         END DO
+                      END DO
+                      !
+                      IF ( tvanp(nt) .OR. newpseudo(nt) ) THEN
+                         !
+                         ! ... in US case there is a contribution for jh<>ih. 
+                         ! ... We use here the symmetry in the interchange 
+                         ! ... of ih and jh
+                         !
+                         DO jh = ( ih + 1 ), nh(nt)
+                            jkb = ijkb0 + jh
+                            DO ibnd = 1, nbnd
+                               ps = deeq(ih,jh,na,current_spin) - &
+                                    et(ibnd,ik) * qq(ih,jh,nt)
+                               DO ipol = 1, 3
+                                  forcenl(ipol,na) = forcenl(ipol,na) - &
+                                     ps * wg(ibnd,ik) * 2.d0 * tpiba * &
+                                     ( dbecp(ikb,ibnd,ipol) * becp(jkb,ibnd) + &
+                                       dbecp(jkb,ibnd,ipol) * becp(ikb,ibnd) )
+                               END DO
+                            END DO
+                         END DO
+                      END IF
+                   END DO
+                   ijkb0 = ijkb0 + nh(nt)
+                END IF
+             END DO
+          END DO
+       END DO
+       !
+       ! ... The total D matrix depends on the ionic position via the
+       ! ... augmentation part \int V_eff Q dr, the term deriving from the 
+       ! ... derivative of Q is added in the routine addusforce
+       !
+       CALL addusforce( forcenl )
+       !
 #ifdef __PARA
-  call reduce (3 * nat, forcenl)
+       !
+       ! ... collect contributions across pools
+       !
+       CALL poolreduce( 3 * nat, forcenl )
 #endif
-  deallocate (vkb1)
-  deallocate (dbecp)
-  !
-  ! The total D matrix depends on the ionic position via the augmentation
-  ! part \int V_eff Q dr, the term deriving from the derivative of Q
-  ! is added in the routine addusforce
-  !
-  call addusforce (forcenl)
-  !
+       !
+       ! ... Since our summation over k points was only on the irreducible 
+       ! ... BZ we have to symmetrize the forces. The symmetry matrices are 
+       ! ... in the crystal basis so...
+       ! ... Transform to crystal axis...
+       !
+       DO na = 1, nat
+          CALL trnvect( forcenl(1,na), at, bg, -1 )
+       END DO
+       !
+       ! ... symmetrize...
+       !
+       CALL symvect( nat, forcenl, nsym, s, irt )
+       !
+       ! ... and transform back to cartesian axis
+       !
+       DO na = 1, nat
+          CALL trnvect( forcenl(1,na), at, bg, 1 )
+       END DO
+       !
+       DEALLOCATE( vkb1 )
+       DEALLOCATE( becp, dbecp ) 
+       !
+       RETURN
+       !
+     END SUBROUTINE force_us_gamma
+     !     
+     !-----------------------------------------------------------------------
+     SUBROUTINE force_us_k()
+       !-----------------------------------------------------------------------
+       !  
+       USE becmod, ONLY : becp
+       !
+       IMPLICIT NONE
+       !
+       COMPLEX(KIND=DP), ALLOCATABLE :: dbecp(:,:,:)
+       ! auxiliary variable contains <dbeta|psi>
+       COMPLEX(KIND=DP), ALLOCATABLE :: vkb1(:,:)
+       ! auxiliary variable contains g*|beta>
+       REAL(KIND=DP) :: ps
+       INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
+       ! counters
+       !
+       !
+       forcenl(:,:) = 0.D0
+       !
+       ALLOCATE( dbecp( nkb, nbnd, 3 ) )    
+       ALLOCATE( vkb1( npwx, nkb ) )   
+       ! 
+       IF ( nks > 1 ) REWIND iunigk
+       !
+       ! ... the forces are a sum over the K points and the bands
+       !
+       DO ik = 1, nks
+          IF ( lsda ) current_spin = isk(ik)
+          !
+          IF ( nks > 1 ) THEN
+             READ( iunigk ) npw, igk
+             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL init_us_2( npw, igk, xk(1,ik), vkb )
+          END IF
+          !
+          CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+          !
+          DO ipol = 1, 3
+             DO jkb = 1,nkb
+                DO ig = 1, npw
+                   vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk(ig))
+                END DO
+             END DO
+             !
+             CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, (1.D0, 0.D0), vkb1, npwx, &
+                         evc, npwx, (0.D0, 0.D0), dbecp(1,1,ipol), nkb )
+          END DO
+          !
+          ijkb0 = 0
+          DO nt = 1, ntyp
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) THEN
+                   DO ih = 1, nh(nt)
+                      ikb = ijkb0 + ih
+                      DO ibnd = 1, nbnd
+                         ps = deeq(ih,ih,na,current_spin) - &
+                              et(ibnd,ik) * qq(ih,ih,nt)
+                         DO ipol = 1, 3
+                            forcenl(ipol,na) = forcenl(ipol,na) - &
+                                      ps * wg(ibnd,ik) * 2.D0 * tpiba * &
+                                      REAL( CONJG( dbecp(ikb,ibnd,ipol) ) * &
+                                            becp(ikb,ibnd) )
+                         END DO
+                      END DO
+                      !
+                      IF ( tvanp(nt) .OR. newpseudo(nt) ) THEN
+                         !
+                         ! ... in US case there is a contribution for jh<>ih. 
+                         ! ... We use here the symmetry in the interchange 
+                         ! ... of ih and jh
+                         !
+                         DO jh = ( ih + 1 ), nh(nt)
+                            jkb = ijkb0 + jh
+                            DO ibnd = 1, nbnd
+                               ps = deeq(ih,jh,na,current_spin) - &
+                                    et(ibnd,ik) * qq (ih,jh,nt)
+                               DO ipol = 1, 3
+                                  forcenl(ipol,na) = forcenl (ipol,na) - &
+                                       ps * wg(ibnd,ik) * 2.D0 * tpiba * &
+                                       REAL( CONJG( dbecp(ikb,ibnd,ipol) ) * &
+                                             becp(jkb,ibnd) + &
+                                             dbecp(jkb,ibnd,ipol) * &
+                                             CONJG( becp(ikb,ibnd) ) )
+                               END DO
+                            END DO
+                          END DO
+                      END IF
+                   END DO
+                   ijkb0 = ijkb0 + nh(nt)
+                END IF
+             END DO
+          END DO
+       END DO
+       !
 #ifdef __PARA
-  ! collect contributions across pools
-  call poolreduce (3 * nat, forcenl)
+       CALL reduce( 3 * nat, forcenl )
 #endif
-  !
-  ! Since our summation over k points was only on the irreducible BZ we
-  ! have to symmetrize the forces. The symmetry matrices are in the
-  ! crystal basis so...
-  ! Transform to crystal axis...
-  !
-  do na = 1, nat
-     call trnvect (forcenl (1, na), at, bg, - 1)
-  enddo
-  !
-  ! ...symmetrize...
-  !
-  call symvect (nat, forcenl, nsym, s, irt)
-  !
-  ! ... and transform back to cartesian axis
-  !
-  do na = 1, nat
-     call trnvect (forcenl (1, na), at, bg, 1)
-  enddo
-  return
-end subroutine force_us
+       !
+       DEALLOCATE( vkb1 )
+       DEALLOCATE( dbecp )
+       !
+       ! ... The total D matrix depends on the ionic position via the
+       ! ... augmentation part \int V_eff Q dr, the term deriving from the 
+       ! ... derivative of Q is added in the routine addusforce
+       !
+       CALL addusforce( forcenl )
+       !
+#ifdef __PARA
+       !
+       ! ... collect contributions across pools
+       !
+       CALL poolreduce( 3 * nat, forcenl )
+#endif
+       !
+       ! ... Since our summation over k points was only on the irreducible 
+       ! ... BZ we have to symmetrize the forces. The symmetry matrices are 
+       ! ... in the crystal basis so...
+       ! ... Transform to crystal axis...
+       !
+       DO na = 1, nat
+          CALL trnvect( forcenl(1,na), at, bg, -1 )
+       END DO
+       !
+       ! ... symmetrize...
+       !
+       CALL symvect( nat, forcenl, nsym, s, irt )
+       !
+       ! ... and transform back to cartesian axis
+       !
+       DO na = 1, nat
+          CALL trnvect( forcenl(1,na), at, bg, 1 )
+       END DO
+       !
+       RETURN
+       !
+     END SUBROUTINE force_us_k
+     !     
+END SUBROUTINE force_us
 

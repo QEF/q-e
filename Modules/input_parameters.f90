@@ -720,15 +720,17 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: ion_dynamics = 'none' 
           ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'none'*  
           ! set how ions shold be moved
-          ! 'none'   ions are kept fixed 
-          ! 'sd'     steepest descent algorithm is used to minimize ionic configuration
-          ! 'cg'     conjugate gradient algorithm is used to minimize ionic configuration
-          ! 'damp'   damped dynamics is used to propagate ions
-          ! 'verlet' standard Verlet algorithm is used to propagate ions
+          ! 'none'     ions are kept fixed 
+          ! 'bfgs'     BFGS algorithm is used to minimize ionic configuration
+          ! 'new-bfgs' a new BFGS algorithm is used to minimize ionic configuration
+          ! 'sd'       steepest descent algorithm is used to minimize ionic configuration
+          ! 'cg'       conjugate gradient algorithm is used to minimize ionic configuration
+          ! 'damp'     damped dynamics is used to propagate ions
+          ! 'verlet'   standard Verlet algorithm is used to propagate ions
 
-        CHARACTER(LEN=80) :: ion_dynamics_allowed(9)
+        CHARACTER(LEN=80) :: ion_dynamics_allowed(10)
         DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none', &
-          'bfgs', 'constrained-bfgs', 'constrained-verlet', 'beeman' /
+          'bfgs', 'new-bfgs', 'constrained-bfgs', 'constrained-verlet', 'beeman' /
 
         REAL(dbl) :: ion_radius(nsx) = 0.5d0
           ! pseudo-atomic radius of the i-th atomic species
@@ -860,12 +862,27 @@ MODULE input_parameters
 
         REAL (KIND=DP)  :: neb_thr = 0.05D0
 
+        !
+        ! ... variables added for new BFGS algorithm
+        !
+        
+        INTEGER ::  lbfgs_ndim = 1
+                            
+        REAL(KIND=DP)  :: trust_radius_max = 0.5D0
+        REAL(KIND=DP)  :: trust_radius_min = 1.D-5
+        REAL(KIND=DP)  :: trust_radius_ini = 0.5D0
+        REAL(KIND=DP)  :: trust_radius_end = 1.D-7
+                               
+        REAL(KIND=DP)  :: w_1 = 0.5D-1
+        REAL(KIND=DP)  :: w_2 = 0.5D0 	
 
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
           num_of_images, CI_scheme, VEC_scheme, minimization_scheme, &
-          optimization, damp, temp_req, ds, k_max, k_min, neb_thr
+          optimization, damp, temp_req, ds, k_max, k_min, neb_thr, &
+          trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
+          w_1, w_2, lbfgs_ndim
 
 !
 !=----------------------------------------------------------------------------=!  

@@ -14,9 +14,13 @@ SUBROUTINE stop_pw( flag )
   ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  USE varie,             ONLY :  order
-  USE io_files,          ONLY :  prefix, iunwfc, iunoldwfc, iunoldwfc2, &
-                                 iunigk, iunres
+  USE io_global,         ONLY :  stdout
+  USE varie,             ONLY :  order, lneb
+  USE io_files,          ONLY :  prefix, &
+                                 iunwfc, iunoldwfc, iunoldwfc2, iunigk, iunres
+  USE input_parameters,  ONLY :  deallocate_input_parameters
+  USE io_routines,       ONLY :  write_restart
+  USE neb_variables,     ONLY :  neb_deallocation
 #ifdef __PARA
   USE mp,                ONLY :  mp_barrier, mp_end
 #endif  
@@ -26,8 +30,13 @@ SUBROUTINE stop_pw( flag )
   LOGICAL, INTENT(IN) :: flag
   LOGICAL             :: exst
   !
-  !  ... iunwfc contains wavefunctions and is kept open during
-  !  ... the execution - close and save the file
+  !
+  ! ... in case of neb calculation stdout is reconnected to standard output
+  !
+  IF ( lneb ) stdout = 6
+  !
+  ! ... iunwfc contains wavefunctions and is kept open during
+  ! ... the execution - close and save the file
   !
   CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
   !
@@ -57,12 +66,16 @@ SUBROUTINE stop_pw( flag )
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   CALL print_clock_pw
   !
+  ! ... NEB specific
+  !
+  IF ( lneb ) CALL write_restart()
+  !
   CALL show_memory ()
   !
 #ifdef __PARA
   CALL mp_barrier()
   CALL mp_end()
-#endif  
+#endif
   !
 #ifdef __T3E
   !
@@ -71,7 +84,9 @@ SUBROUTINE stop_pw( flag )
   CALL set_d_stream( 0 )
 #endif
   !
-  CALL clean_pw
+  CALL clean_pw()
+  CALL deallocate_input_parameters()
+  CALL neb_deallocation()
   !
   IF ( flag ) THEN
      STOP
@@ -86,7 +101,7 @@ END SUBROUTINE stop_pw
 SUBROUTINE closefile
   !----------------------------------------------------------------------------
   !
-  USE io_global,         ONLY :  stdout
+  USE io_global,  ONLY :  stdout
   !
   ! ... Close all files and synchronize processes before stopping
   ! ... Called by "sigcatch" when it receives a signal
@@ -104,11 +119,9 @@ END SUBROUTINE closefile
 SUBROUTINE cpflush
   !----------------------------------------------------------------------------
   !
-  USE io_global,         ONLY :  stdout
-  !  
   ! TEMP: compatibility with Car-Parrinello code
   !
-  WRITE( stdout, '("what am i doing in cpflush ?")' )
+  PRINT *, "what am i doing in cpflush ?"
   !
   CALL stop_pw( .FALSE. )
   !

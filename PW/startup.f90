@@ -5,11 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 #include "machine.h"
-!-----------------------------------------------------------------------
-subroutine startup (nd_nmbr, code, version)
-  !-----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+SUBROUTINE startup( nd_nmbr, code, version )
+  !----------------------------------------------------------------------------
   !
   !  This subroutine initializes MPI
   !  Processes are organized in NPOOL pools each dealing with a subset of
@@ -23,8 +23,8 @@ subroutine startup (nd_nmbr, code, version)
   !  T3E :
   !  mpprun -n 16 pw.x -npool 8 < input
   !  IBM SP :
-  !  pw.x -procs 16 -npool 8 < input
-  !  ORIGIN (valid also on T3E):
+  !  poe pw.x -procs 16 -npool 8 < input
+  !  ORIGIN :
   !  mpirun -np 16 pw.x -npool 8 < input
   !  COMPAQ :
   !  prun -n 16 sh -c 'pw.x -npool 8 < input'
@@ -34,150 +34,154 @@ subroutine startup (nd_nmbr, code, version)
   !  of 2 processors each (in this case you must have at least 8 k-points)
   !-----------------------------------------------------------------------
   !
+  ! ... The following two modules hold global information about processors
+  ! ... number, IDs and communicators
+  !
+  USE io_global,  ONLY :  stdout, io_global_start, ionode_id
+  USE mp_global,  ONLY :  mp_global_start
+  USE mp,         ONLY :  mp_start, mp_env, mp_barrier, mp_bcast
 #ifdef __PARA
-  use para
-#endif
-
-  ! The following two modules hold global information about processors
-  ! number, IDs and communicators
-  use io_global, only: stdout, io_global_start
-  use mp_global, only: mp_global_start
-  use mp, only: mp_start, mp_env, mp_barrier, mp_bcast
-
-  implicit none
-  character :: nd_nmbr*3, code*9, version*6
-
-  integer :: gid
-
+  USE para_const, ONLY :  maxproc
+  USE para,       ONLY :  me, mypool, nproc, npool, nprocp 
+#endif  
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER :: nd_nmbr*3, code*9, version*6
+  INTEGER   :: gid
 #if ! defined __PARA
-  integer :: me, nproc
+  INTEGER   :: me, nproc
 #endif
-
-  character :: np*80, cdate * 9, ctime * 9
-  external date_and_tim
-
+  CHARACTER :: np*80, cdate * 9, ctime * 9
+  EXTERNAL     date_and_tim
 #ifdef __PARA
-
-  integer :: ierr, ilen, iargc, nargs, iiarg
-
+  INTEGER   :: ierr, ilen, iargc, nargs, iiarg
+  !
+  !
 #  ifdef __T3E
   !
-  ! set streambuffers on
+  ! ... set streambuffers on
   !
-  call set_d_stream (1)
+  CALL set_d_stream( 1 )
 #  endif
-
+  !
 #endif
-
-  call mp_start()
-
-  call mp_env( nproc, me, gid )
-
   !
-  ! This is added for compatibility with PVM notations
-  ! parent process (source) will have me=1 - child process me=2,...,NPROC
+  CALL mp_start()
   !
-
+  CALL mp_env( nproc, me, gid )
+  !
+  ! ... Set the I/O node
+  !
+  CALL io_global_start( me, 0 )
+  !
+  ! ... Set global coordinate for this processor
+  !
+  CALL mp_global_start( 0, me, gid, nproc )  
+  !
+  ! ... This is added for compatibility with PVM notations
+  ! ... parent process (source) will have me=1 - child process me=2,...,NPROC
+  !
   me = me + 1
-
+  !
 #ifdef __PARA
-
-  if (me == 1) then
+  !
+  IF ( me == 1 ) THEN
      !
-     ! How many pools?
+     ! ... How many pools ?
      !
      npool = 1
-     nargs = iargc () 
+     nargs = IARGC() 
      !
-     do iiarg=1,nargs-1
-        call getarg(iiarg, np)  
-        if (trim(np) == '-npool' .or. trim(np) == '-npools' ) then
-          call getarg(iiarg+1, np)  
-          read (np,*) npool  
-        end if
-     end do
-     npool = max (npool, 1)
-     npool = min (npool, nproc)
+     DO iiarg = 1, ( nargs - 1 )
+        CALL getarg( iiarg, np )  
+        IF ( TRIM( np ) == '-npool' .OR. TRIM( np ) == '-npools' ) THEN
+          CALL GETARG( ( iiarg + 1 ), np )  
+          READ(np,*) npool  
+        END IF
+     END DO
+     npool = MAX( npool, 1 )
+     npool = MIN( npool, nproc )
      !
-     ! set number of processes per pool (must be equal for all pools)
+     ! ... set number of processes per pool (must be equal for all pools)
      !
      nprocp = nproc / npool
-     if (nproc /= nprocp * npool) &
-          &call errore ('startup','nproc.ne.nprocp*npool', 1)
-
-  endif
-
-  call mp_barrier( gid ) 
-
+     IF ( nproc /= ( nprocp * npool ) ) &
+        CALL errore( 'startup', 'nproc /= nprocp*npool', 1 )
+     !
+  END IF
   !
-  ! transmit  nprocp and npool
+  CALL mp_barrier( gid ) 
   !
-
-  call mp_bcast ( nprocp, 0, gid )
-  call mp_bcast ( npool, 0, gid )
-
+  ! ... transmit nprocp and npool
   !
-  ! set the processor label for files
+  CALL mp_bcast( nprocp, ionode_id, gid )
+  CALL mp_bcast( npool, ionode_id, gid )
   !
-
-  if (nproc > maxproc) call errore ('startup', ' too many processors', nproc)
+  ! ... set the processor label for files
+  !
+  IF ( nproc > maxproc ) &
+     call errore( 'startup', ' too many processors', nproc )
   nd_nmbr = '   '
-  if (nproc < 10) then
-     write (nd_nmbr (1:1) , '(i1)') me
-  elseif (nproc < 100) then
-     if (me < 10) then
+  IF ( nproc < 10 ) THEN
+     WRITE( nd_nmbr(1:1) , '(I1)' ) me
+  ELSE IF ( nproc < 100 ) THEN
+     IF ( me < 10 ) THEN
         nd_nmbr = '0'
-        write (nd_nmbr (2:2) , '(i1)') me
-     else
-        write (nd_nmbr (1:2) , '(i2)') me
-     endif
-  else
-     if (me < 10) then
+        WRITE( nd_nmbr(2:2) , '(I1)' ) me
+     ELSE
+        WRITE( nd_nmbr(1:2) , '(I2)' ) me
+     END IF
+  ELSE
+     IF ( me < 10 ) THEN
         nd_nmbr = '00'
-        write (nd_nmbr (3:3) , '(i1)') me
-     elseif (me < 100) then
+        WRITE( nd_nmbr(3:3) , '(I1)' ) me
+     ELSE IF ( me < 100 ) THEN
         nd_nmbr = '0'
-        write (nd_nmbr (2:3) , '(i2)') me
-     else
-        write (nd_nmbr, '(i3)') me
-     endif
-  endif
+        WRITE( nd_nmbr(2:3) , '(I2)' ) me
+     ELSE
+        WRITE( nd_nmbr, '(I3)' ) me
+     END IF
+  END IF
+  !
+  ! ... pools are initialized
+  !
+  CALL init_pool()  
+  !
 #  ifdef DEBUG
-  if (me /= 1) open (6, file = './out_'//nd_nmbr, status = 'unknown')
+  IF ( me /= 1 .OR. mypool /= 1 ) &
+     OPEN( UNIT = stdout, FILE = './out_'//nd_nmbr, STATUS = 'UNKNOWN' )
 #  else
-  if (me /= 1) open (6, file = '/dev/null', status = 'unknown')
+  IF ( me /= 1 .OR. mypool /= 1 ) &
+     OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
 #  endif
-  if (me == 1) then
-     call date_and_tim (cdate, ctime)
-     WRITE( stdout, 9000) code, version, cdate, ctime
-     WRITE( stdout, '(/5x,"Parallel version (MPI)")')
-     WRITE( stdout, '(5x,"Number of processors in use:   ",i4)') nproc
-     if (npool /= 1) &
-          WRITE( stdout, '(5x,"K-points division:    npool  = ",i4)') npool
-     if (nprocp /= 1)&
-          WRITE( stdout, '(5x,"R & G space division: nprocp = ",i4/)') nprocp
-  endif
-
+  !
+  IF ( me == 1 ) THEN
+     !
+     CALL date_and_tim( cdate, ctime )
+     !
+     WRITE( stdout, 9000 ) code, version, cdate, ctime
+     WRITE( stdout, '(/5X,"Parallel version (MPI)")' )
+     WRITE( stdout, '(5X,"Number of processors in use:   ",I4)' ) nproc
+     IF ( npool /= 1 ) &
+        WRITE( stdout, '(5X,"K-points division:    npool  = ",i4)' ) npool
+     IF ( nprocp /= 1 ) &
+        WRITE( stdout, '(5X,"R & G space division: nprocp = ",i4/)' ) nprocp
+     !
+  END IF
+  !
 #else
-
+  !
   nd_nmbr = '   '
-  call date_and_tim (cdate, ctime)
-  WRITE( stdout, 9000) code, version, cdate, ctime
-
+  CALL date_and_tim( cdate, ctime )
+  WRITE( stdout, 9000 ) code, version, cdate, ctime
+  !
 #endif
-
-9000 format (/5x,'Program ',a9,' v.',a6,' starts ...',/5x, &
-       &            'Today is ',a9,' at ',a9)
-
   !
-  ! Set the I/O node
-   call io_global_start( (me-1), 0 )
-
+  RETURN
   !
-  ! Set global coordinate for this processor
-  !
-  call mp_global_start( 0, (me-1), gid, nproc )
-
-  return
-end subroutine startup
+9000 FORMAT( /5X,'Program ',A9,' v.',A6,' starts ...',/5X, &
+           &     'Today is ',A9,' at ',A9)
+  !     
+END SUBROUTINE startup
 

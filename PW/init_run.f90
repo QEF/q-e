@@ -6,11 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE init_run
+SUBROUTINE init_run()
   !-----------------------------------------------------------------------
   !
-  USE io_global,   ONLY : stdout
-  USE parameters,  ONLY : ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
+  USE basis,       ONLY : nat, tau, ityp
+  USE force_mod,   ONLY : force
   USE wvfct,       ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -18,49 +18,33 @@ SUBROUTINE init_run
   !
   CALL start_clock( 'init_run' )
   !
-  IF ( gamma_only ) THEN
-     WRITE( stdout, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials, ", &
-                 &  "Gamma point")')
-  ELSE
-     WRITE( stdout, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
-  END IF
-  !
-  WRITE( stdout, 9010) ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
-  !
-  CALL iosys
-  CALL setup
+  CALL setup()
   !
   ! ... allocate memory for G- and R-space fft arrays
   !
-  CALL allocate_fft
+  CALL allocate_fft()
   !
   ! ... generate reciprocal-lattice vectors and fft indices
   !
-  CALL ggen
-  CALL summary
-  CALL allocate_nlpot
-  CALL allocate_locpot
-  CALL allocate_wfc
+  CALL ggen()
+  CALL summary()
+  CALL allocate_nlpot()
+  CALL allocate_locpot()
+  CALL allocate_wfc()
   !
-  CALL openfil
+  CALL openfil()
   !
-  CALL hinit0
-  CALL potinit
+  CALL hinit0()
+  CALL potinit()
   !
-  CALL newd
+  CALL newd()
   !
-  CALL wfcinit
+  CALL wfcinit()
   !
   CALL stop_clock ( 'init_run' )
-  WRITE( stdout, * )
   !
   CALL show_memory()
   !
   RETURN
   !
-9010 FORMAT( /5X,'Current dimensions of program pwscf are:' &
-             /5X,'ntypx =',I2,'   npk =',I5,'  lmax =',I2   &
-             /5X,'nchix =',I2,'  ndim =',I5,'  nbrx =',I2,' nqfm =',I2 )
-  !
 END SUBROUTINE init_run
-

@@ -369,7 +369,6 @@ SUBROUTINE setup
   END IF
   IF ( nks > npk ) CALL errore( 'setup', 'too many k points', nks )
 #ifdef __PARA
-  CALL init_pool
   !
   ! ... set the granularity for k-point distribution
   !

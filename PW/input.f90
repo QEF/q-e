@@ -7,19 +7,21 @@
 ! 
 #include "machine.h"
 !
-!-----------------------------------------------------------------------
-SUBROUTINE iosys
-  !-----------------------------------------------------------------------
-  !   this subroutine reads input data from standard input (unit 5)
-  !     ------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE iosys()
+  !-----------------------------------------------------------------------------
   !
-  !    access the modules renaming the variables that have the same name 
-  !    as the input parameters, this is required in order to use a code-
-  !    independent input parser
+  ! ...  this subroutine reads input data from standard input ( unit 5 )
+  ! ...  ---------------------------------------------------------------
   !
+  ! ...  access the modules renaming the variables that have the same name 
+  ! ...  as the input parameters, this is required in order to use a code
+  ! ...  independent input parser
+  !
+  !
+  USE constants,     ONLY : AU, eV_to_kelvin
   !
   USE io_global,     ONLY : stdout
-  USE constants,     ONLY : AU, eV_to_kelvin
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
                             lberry_ => lberry
@@ -88,19 +90,38 @@ SUBROUTINE iosys
                             iprint_      => iprint, &
                             nosym_       => nosym, &
                             modenum_     => modenum, &
-                            reduce_io, ethr, lscf, noinv, time_max, restart
-  USE wvfct,         ONLY : ibm_baco2, nbnd_ => nbnd
+                            reduce_io, ethr, lscf, lbfgs, lmd, lneb, noinv, &
+                            time_max, restart, lnewbfgs
+  USE wvfct,         ONLY : ibm_baco2, &
+                            nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
   USE control_flags, ONLY : twfcollect 
-  USE noncollin_module,     ONLY : baco_ibm_xlf, &
-                            noncolin_  => noncolin, &
-                            lambda_    => lambda, &
-                            i_cons_    => i_cons, &
-                            mcons_     => mcons, &
-                            angle1_    => angle1, &
-                            angle2_    => angle2, &
-                            report_    => report
-
+  USE neb_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
+                            num_of_images_  => num_of_images, &
+                            CI_scheme_      => CI_scheme, &
+                            VEC_scheme_     => VEC_scheme, &
+                            optimization_   => optimization, &
+                            damp_           => damp, &
+                            temp_req_       => temp_req, &
+                            ds_             => ds, &
+                            k_max_          => k_max, & 
+                            k_min_          => k_min, &
+                            neb_thr_        => neb_thr
+  USE noncollin_module, ONLY : baco_ibm_xlf, &
+                               noncolin_  => noncolin, &
+                               lambda_    => lambda, &
+                               i_cons_    => i_cons, &
+                               mcons_     => mcons, &
+                               angle1_    => angle1, &
+                               angle2_    => angle2, &
+                               report_    => report
+  USE bfgs_module,   ONLY : lbfgs_ndim_       => lbfgs_ndim, &
+                            trust_radius_max_ => trust_radius_max, &
+                            trust_radius_min_ => trust_radius_min, &
+                            trust_radius_ini_ => trust_radius_ini, &
+                            trust_radius_end_ => trust_radius_end, &
+                            w_1_              => w_1, & 
+                            w_2_              => w_2 
   !
   ! CONTROL namelist
   !
@@ -137,7 +158,13 @@ SUBROUTINE iosys
   ! IONS namelist
   !
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
-                               tempw, tolp, upscale, potential_extrapolation
+                               tempw, tolp, upscale, potential_extrapolation, &
+                               CI_scheme, VEC_scheme, minimization_scheme, &
+                               num_of_images, optimization, damp, temp_req, &
+                               ds, k_max, k_min, neb_thr, &
+                               trust_radius_max, trust_radius_min, &
+                               trust_radius_ini, trust_radius_end, &
+                               w_1, w_2, lbfgs_ndim
   !
   ! CELL namelist
   !
@@ -149,18 +176,22 @@ SUBROUTINE iosys
   !
   USE input_parameters, ONLY : phonon, modenum, xqq
   !
+  ! ... NEB specific
+  !
+  USE input_parameters, ONLY : pos 
+  !
   USE read_namelists_module, ONLY: read_namelists
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER :: unit = 5, i, ia, ios, ierr, ilen, is
+  INTEGER :: unit = 5, i, ia, ios, ierr, ilen, is, image
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
   !
-  pseudo_dir = TRIM( pseudo_dir )//'/pw/pseudo/'
+  pseudo_dir = TRIM( pseudo_dir ) // '/pw/pseudo/'
   !
   CALL read_namelists( 'PW' )
   !
@@ -173,14 +204,16 @@ SUBROUTINE iosys
   !
   IF ( tefield .AND. ( .NOT. nosym ) ) THEN
      nosym = .TRUE.
-     WRITE( stdout,'(5x,"Presently no symmetry can be used with electric field",/)')
+     WRITE( stdout, &
+            '(5x,"Presently no symmetry can be used with electric field",/)' )
   END IF
-  IF ( tefield .AND. ( tstress ) ) THEN
+  IF ( tefield .AND. tstress ) THEN
      tstress = .FALSE.
-     WRITE( stdout,'(5x,"Presently stress not available with electric field",/)')
+     WRITE( stdout, &
+            '(5x,"Presently stress not available with electric field",/)' )
   END IF
   IF ( tefield .AND. ( nspin == 2 ) ) THEN
-     CALL errore('input','LSDA not available with electric field',1)
+     CALL errore( 'input', 'LSDA not available with electric field' , 1 )
   END IF
   !
   twfcollect = wf_collect
@@ -193,16 +226,16 @@ SUBROUTINE iosys
      CASE ( 'fixed' )
         ngauss = 0
         ltetra = .FALSE.
-        IF ( degauss /= 0.D0) THEN
-           CALL errore(' iosys ',&
-                       ' fixed occupations, gauss. broadening ignored',-1 )
+        IF ( degauss /= 0.D0 ) THEN
+           CALL errore( ' iosys ', &
+                      & ' fixed occupations, gauss. broadening ignored', -1 )
            degauss = 0.D0
         END IF
      CASE ( 'smearing' )
         ltetra = .FALSE.
         IF ( degauss == 0.D0 ) THEN
-           CALL errore(' iosys ',&
-                       ' smearing requires gaussian broadening', 1 )
+           CALL errore( ' iosys ', &
+                      & ' smearing requires gaussian broadening', 1 )
         END IF
         SELECT CASE ( TRIM( smearing ) )
         CASE ( 'gaussian' , 'gauss' )
@@ -222,31 +255,34 @@ SUBROUTINE iosys
         ltetra     = .FALSE.
         tfixed_occ = .TRUE.
      CASE DEFAULT
-        CALL errore(' iosys ',' occupations '//TRIM( occupations )// &
-                    'not implemented', 1 )
+        CALL errore( ' iosys ',' occupations ' // TRIM( occupations ) // &
+                   & 'not implemented', 1 )
   END SELECT
   !
   IF( nbnd < 1 ) THEN
-     CALL errore(' iosys ',' nbnd less than 1 ', nbnd )
+     CALL errore( ' iosys ', ' nbnd less than 1 ', nbnd )
   END IF
   IF( nelec < 0 ) THEN
-     CALL errore(' iosys ',' nelec less than 0 ', nelec )
+     CALL errore( ' iosys ', ' nelec less than 0 ', nelec )
   END IF
+  !
   lsda = ( nspin == 2 )
-  !noncolin = ( nspin == 4 )
+  !
   WRITE( stdout, '(/,5X,"noncolin = ",L1)' ) noncolin
-  !  starting_magnetization(ia) = -2.d0 means "not set" -- set it to 0
+  !
+  ! ... starting_magnetization(ia) = -2.D0 means "not set" -- set it to 0
+  !
   DO ia = 1, ntyp
-     IF (starting_magnetization(ia) == -2.d0) &
-          starting_magnetization(ia) = 0.d0 
-  END DO
+     IF ( starting_magnetization(ia) == -2.D0 ) &
+        starting_magnetization(ia) = 0.d0 
+  END DO  
   !
   IF ( ecutrho <= 0.D0 ) THEN
      dual = 4.D0
   ELSE
      dual = ecutrho / ecutwfc
      IF( dual <= 1.D0 ) THEN
-        CALL errore(' iosys ',' invalid dual? ', 1)
+        CALL errore( ' iosys ', ' invalid dual? ', 1 )
      END IF
   END IF
   !
@@ -256,17 +292,26 @@ SUBROUTINE iosys
      restart_bfgs   = .FALSE.
      startingconfig = 'input'
   CASE ( 'restart' )
-     restart      = .TRUE.
-     restart_bfgs = .TRUE.
-     startingpot  = 'file'
-     startingwfc  = 'file'
-     IF ( TRIM( ion_positions ) == 'from_input') THEN
-        startingconfig = 'input'
+     !
+     ! ... NEB specific
+     !       
+     IF ( calculation == 'neb' ) THEN
+        restart      = .FALSE.
+        restart_bfgs = .FALSE.     
      ELSE
-        startingconfig = 'file'
+        restart      = .TRUE.
+        restart_bfgs = .TRUE.
+        startingpot  = 'file'
+        startingwfc  = 'file'
+        IF ( TRIM( ion_positions ) == 'from_input' ) THEN
+           startingconfig = 'input'
+        ELSE
+           startingconfig = 'file'
+        END IF
      END IF
   CASE DEFAULT
-     CALL errore(' iosys ',' unknown restart_mode '//TRIM( restart_mode ), 1 )
+     CALL errore( ' iosys ', ' unknown restart_mode ' // &
+                & TRIM( restart_mode ), 1 )
   END SELECT
   !
   SELECT CASE ( TRIM( disk_io ) )
@@ -285,12 +330,18 @@ SUBROUTINE iosys
   SELECT CASE ( TRIM( calculation ) )
   CASE ( 'scf' )
      lscf      = .TRUE.
-     iswitch   = 0
+     lbfgs     = .FALSE.
+     lmd       = .FALSE.
+     lneb      = .FALSE.     
+     iswitch   = 0 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = tprnfor
      lmovecell = .FALSE.
      nstep     = 1
  CASE ( 'nscf' )
      lscf      = .FALSE.
+     lbfgs     = .FALSE.
+     lmd       = .FALSE.
+     lneb      = .FALSE.     
      iswitch   = -1
      lforce    = .FALSE.
      lmovecell = .FALSE.
@@ -302,48 +353,71 @@ SUBROUTINE iosys
      !
   CASE ( 'relax' )
      lscf      = .TRUE.
-     iswitch   = 1
+     lbfgs     = .TRUE.
+     lmd       = .FALSE.
+     lneb      = .FALSE.          
+     iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
      lmovecell = .FALSE.
   CASE ( 'md' )
      lscf      = .TRUE.
-     iswitch   = 3
+     lbfgs     = .FALSE.
+     lmd       = .TRUE.
+     lneb      = .FALSE.               
+     iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
      lmovecell = .FALSE.
   CASE ( 'vc-relax' , 'vc-md' )
      lscf      = .TRUE.
+     lbfgs     = .FALSE.
+     lmd       = .TRUE.
+     lneb      = .FALSE.     
      iswitch   = 3
      lmovecell = .TRUE.
      lforce    = .TRUE.
  CASE ( 'phonon' )
      lscf      = .FALSE.
+     lbfgs     = .FALSE.
+     lmd       = .FALSE.
+     lneb      = .FALSE.
      iswitch   = -2
      lforce    = .FALSE.
      lmovecell = .FALSE.
      nstep     = 1
+  !
+  ! ... NEB specific
+  !   
+  CASE ( 'neb' )
+     lscf      = .TRUE.
+     lbfgs     = .FALSE.
+     lmd       = .FALSE.     
+     lneb      = .TRUE.
+     iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+     lforce    = tprnfor
+     lmovecell = .FALSE.
   CASE DEFAULT
-     CALL errore(' iosys ',' calculation '//&
-                 TRIM( calculation )//' not implemented',1)
+     CALL errore( ' iosys ', ' calculation ' // &
+                & TRIM( calculation ) // ' not implemented', 1 )
   END SELECT
   !
   IF ( modenum /= 0 ) THEN
-     iswitch = -4
+     iswitch = - 4
   END IF
   !
   IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
-     CALL errore(' iosys','wrong startingpot: use default',-1)
-     IF (      lscf ) startingpot = 'atomic'
-     IF ( .NOT.lscf ) startingpot = 'file'
+     CALL errore( ' iosys', 'wrong startingpot: use default', -1 )
+     IF (       lscf ) startingpot = 'atomic'
+     IF ( .NOT. lscf ) startingpot = 'file'
   END IF
   !
   IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
-     CALL errore(' iosys','wrong startingpot: use default',-1)
+     CALL errore( ' iosys', 'wrong startingpot: use default', -1 )
      startingpot = 'file'
   END IF
   !
   IF ( startingwfc /= 'atomic' .AND. startingwfc /= 'random' .AND. &
        startingwfc /= 'file' ) THEN
-     CALL errore(' iosys','wrong startingwfc: use default',-1)
+     CALL errore( ' iosys', 'wrong startingwfc: use default', -1 )
      startingwfc = 'atomic'
   END IF
   !
@@ -351,8 +425,8 @@ SUBROUTINE iosys
   CASE ( 'none' )
      CONTINUE
   CASE DEFAULT
-     CALL errore(' iosys ',' unknown electron_dynamics '// &
-                 TRIM( electron_dynamics ),1)
+     CALL errore( ' iosys ',' unknown electron_dynamics '// &
+                & TRIM( electron_dynamics ), 1 )
   END SELECT
   !
   SELECT CASE ( TRIM( diagonalization ) )
@@ -391,8 +465,8 @@ SUBROUTINE iosys
   END SELECT
   !
   IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
-     CALL errore(' iosys ',&
-                 ' fixed occupations and lsda not implemented ', 1 )
+     CALL errore( ' iosys ', &
+                & ' fixed occupations and lsda not implemented ', 1 )
   END IF
   !
   calc = ' '
@@ -400,93 +474,182 @@ SUBROUTINE iosys
   IF ( TRIM( calculation ) == 'relax' ) THEN
      SELECT CASE ( TRIM( ion_dynamics ) )
      CASE ( 'bfgs' )
-        iswitch = 1
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
+        iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        lbfgs    = .TRUE.
+        lnewbfgs = .FALSE.
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
+        !
+        IF ( epse < ( tr2 / upscale ) ) &
+           CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
+                      & ' conv_thr must be reduced', 1 )   
+        !
+     CASE ( 'new-bfgs' )
+        iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        lbfgs    = .FALSE.
+        lnewbfgs = .TRUE.
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
+        !
+        IF ( epse < ( tr2 / upscale ) ) &
+           CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
+                      & ' conv_thr must be reduced', 1 )   
+        !
      CASE ( 'constrained-bfgs' )
-        iswitch = 2
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
+        iswitch = 2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        lbfgs   = .TRUE.
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
      CASE ( 'damp' )
-        iswitch = 3
-        calc = 'mm'
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
-        ntcheck=nstep+1
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        lbfgs   = .FALSE.
+        lmd     = .TRUE.
+        calc    = 'mm'
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
+        ntcheck = nstep + 1
      CASE DEFAULT
-        CALL errore(' iosys ','calculation='//TRIM( calculation )// &
-                  ': ion_dynamics='//TRIM( ion_dynamics )//' not supported', 1 )
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
      END SELECT
   END IF
   !
-  IF ( TRIM(calculation) == 'md' ) THEN
-     SELECT CASE ( TRIM(ion_dynamics) )
-     CASE ('verlet')
-        iswitch = 3
-     CASE ('constrained-verlet')
-        iswitch = 4
-     CASE ('beeman')
-        iswitch = 3
+  IF ( TRIM( calculation ) == 'md' ) THEN
+     SELECT CASE ( TRIM( ion_dynamics ) )
+     CASE ( 'verlet' )
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+     CASE ( 'constrained-verlet' )
+        iswitch = 4 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+     CASE ( 'beeman' )
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
         calc = 'md'
-        ntcheck=nstep+1
+        ntcheck = nstep + 1
      CASE DEFAULT
-        CALL errore(' iosys ','calculation='//TRIM( calculation )// &
-                 ': ion_dynamics='//TRIM( ion_dynamics )//' not supported', 1 )
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
      END SELECT
   END IF
   !
   IF ( TRIM( calculation ) == 'vc-relax' ) THEN
      SELECT CASE ( TRIM( cell_dynamics ) )
      CASE ( 'none' )
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
-        iswitch = 3
-        calc = 'mm'
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        calc    = 'mm'
         ntcheck = nstep + 1
      CASE ( 'damp-pr' )
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
-        iswitch = 3
-        calc = 'cm'
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        calc    = 'cm'
         ntcheck = nstep + 1
      CASE ( 'damp-w' )
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
-        iswitch = 3
-        calc = 'nm'
+        epse    = etot_conv_thr
+        epsf    = forc_conv_thr
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        calc    = 'nm'
         ntcheck = nstep + 1
      CASE DEFAULT
-        CALL errore(' iosys ','calculation='//TRIM( calculation )// &
-               ': cell_dynamics='//TRIM( cell_dynamics )//' not supported', 1 )
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': cell_dynamics=' // TRIM( cell_dynamics ) // &
+                   & ' not supported', 1 )
      END SELECT
      IF ( TRIM( ion_dynamics ) /= 'damp' ) THEN
-        CALL errore(' iosys ','calculation='//TRIM( calculation )// &
-                 ': ion_dynamics='//TRIM( ion_dynamics )//' not supported', 1 )
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
      END IF
   END IF
   !
   IF ( TRIM( calculation ) == 'vc-md' ) THEN
      SELECT CASE ( TRIM( cell_dynamics ) )
-     CASE ( 'none')
-        iswitch = 3
-        calc = 'md'
+     CASE ( 'none' )
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        calc    = 'md'
         ntcheck = nstep + 1
      CASE ( 'pr' )
-        iswitch = 3
-        calc = 'cd'
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        calc    = 'cd'
         ntcheck = nstep + 1
      CASE ( 'w' )
-        iswitch = 3
-        calc = 'nd'
+        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        calc    = 'nd'
         ntcheck = nstep + 1
      CASE DEFAULT
-        CALL errore(' iosys ','calculation='//TRIM( calculation )// &
-                 ': ion_dynamics='//TRIM( ion_dynamics )//' not supported', 1 )
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
      END SELECT
      IF ( TRIM( ion_dynamics ) /= 'beeman' ) THEN
-        CALL errore(' iosys ','calculation='//TRIM( calculation )// &
-                 ': ion_dynamics='//TRIM( ion_dynamics )//' not supported', 1 )
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
      END IF
+  END IF
+  !
+  ! ... NEB specific
+  !
+  IF ( TRIM( calculation ) == 'neb' ) THEN
+     !
+     IF ( num_of_images < 2 ) THEN
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': num_of_images must be at least 2', 1 )
+     END IF
+     !
+     IF ( ( CI_scheme /= "no-CI"      ) .AND. &
+          ( CI_scheme /= "highest-TS" ) .AND. &
+          ( CI_scheme /= "all-SP"     ) .AND. &
+          ( CI_scheme /= "manual"     ) ) THEN
+        !
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': unknown CI_scheme', 1 )  
+        !   
+     END IF
+     IF ( ( VEC_scheme /= "energy-weighted" )   .AND. &
+          ( VEC_scheme /= "gradient-weighted" ) ) THEN
+        !
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': unknown VEC_scheme', 1 )
+        !
+     END IF
+     !
+     SELECT CASE ( minimization_scheme )
+     !
+     CASE ( "sd" )
+        lsteep_des  = .TRUE.
+        lquick_min  = .FALSE.
+        ldamped_dyn = .FALSE.
+        lmol_dyn    = .FALSE.
+     CASE ( "quick-min" )
+        lsteep_des  = .FALSE.
+        lquick_min  = .TRUE.
+        ldamped_dyn = .FALSE.
+        lmol_dyn    = .FALSE.
+     CASE ( "damped-dyn" )
+        lsteep_des  = .FALSE.
+        lquick_min  = .FALSE.
+        ldamped_dyn = .TRUE.
+        lmol_dyn    = .FALSE.
+     CASE ( "mol-dyn" )
+        lsteep_des  = .FALSE.
+        lquick_min  = .FALSE.
+        ldamped_dyn = .FALSE.
+        lmol_dyn    = .TRUE.
+        IF ( temp_req == 0 ) &
+           WRITE( stdout,'(/,T2,"WARNING: tepm_req has not been set" )')
+        !
+        temp_req = temp_req / ( eV_to_kelvin * AU )
+        !    
+     CASE default
+        !
+        CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
+                   & ': unknown minimization_scheme', 1 )  
+        !
+     END SELECT             
+     !
   END IF
   !
   SELECT CASE ( TRIM( ion_temperature ) )
@@ -496,23 +659,24 @@ SUBROUTINE iosys
      temperature = tempw
      ttol        = tolp
   CASE DEFAULT
-     CALL errore(' iosys ',' unknown ion_temperature '//&
-          TRIM( ion_temperature ), 1 )
+     CALL errore( ' iosys ', ' unknown ion_temperature ' // &
+                & TRIM( ion_temperature ), 1 )
   END SELECT
   !
   SELECT CASE ( TRIM( cell_temperature ) )
   CASE ( 'not_controlled' )
      CONTINUE
   CASE DEFAULT
-     CALL errore(' iosys ',' unknown cell_temperature '//&
-          TRIM( cell_temperature ), 1 )
+     CALL errore( ' iosys ', ' unknown cell_temperature ' // &
+                & TRIM( cell_temperature ), 1 )
   END SELECT
   !
   SELECT CASE ( TRIM( cell_dofree ) )
   CASE ( 'all' )
      CONTINUE
   CASE DEFAULT
-     CALL errore(' iosys ',' unknown cell_dofree '//TRIM( cell_dofree ), 1 )
+     CALL errore( ' iosys ', &
+                & ' unknown cell_dofree ' // TRIM( cell_dofree ), 1 )
   END SELECT
   !
   SELECT CASE ( TRIM( mixing_mode ) )
@@ -527,9 +691,9 @@ SUBROUTINE iosys
      starting_scf_threshold = tr2
   CASE ( 'potential' )
      imix = -1
-     starting_scf_threshold = sqrt(tr2)
+     starting_scf_threshold = SQRT( tr2 )
   CASE DEFAULT
-     CALL errore(' iosys ',' unknown mixing '//TRIM( mixing_mode ), 1)
+     CALL errore( ' iosys ', ' unknown mixing ' // TRIM( mixing_mode ), 1 )
   END SELECT
   !
   nmix = mixing_ndim
@@ -542,8 +706,6 @@ SUBROUTINE iosys
      iverbosity = 0
   END SELECT
   !
-  IF ( ( lberry ) .AND. ( iswitch /= -1 ) ) CALL errore(" iosys", &
-       "calculation='nscf' is mandatory if lberry=.true.",1)
   tmp_dir = TRIM( outdir )
   lstres = ( tstress .AND. lscf )
   !
@@ -581,20 +743,20 @@ SUBROUTINE iosys
   nr3s_    = nr3s
   degauss_ = degauss
   nelec_   = nelec
+  !
   noncolin_ = noncolin
-  angle1_  = angle1
-  angle2_  = angle2
-  report_  = report
-  i_cons_  = i_cons
-  mcons_   = mcons
-  lambda_  = lambda
+  angle1_   = angle1
+  angle2_   = angle2
+  report_   = report
+  i_cons_   = i_cons
+  mcons_    = mcons
+  lambda_   = lambda
   !
   Hubbard_U_( 1 : ntyp )     = hubbard_u( 1 : ntyp )
   Hubbard_alpha_( 1 : ntyp ) = hubbard_alpha( 1 : ntyp )
   lda_plus_u_                = lda_plus_u
   nspin_                     = nspin
   starting_magnetization_    = starting_magnetization
-  
   nosym_                     = nosym
   nbnd_                      = nbnd
   !
@@ -608,6 +770,29 @@ SUBROUTINE iosys
   modenum_     = modenum
   xqq_         = xqq
   !
+  ! ... NEB specific
+  !
+  num_of_images_ = num_of_images
+  CI_scheme_     = CI_scheme
+  VEC_scheme_    = VEC_scheme
+  optimization_  = optimization
+  damp_          = damp
+  temp_req_      = temp_req
+  ds_            = ds
+  k_max_         = k_max 
+  k_min_         = k_min
+  neb_thr_       = neb_thr
+  !
+  ! ... new BFGS specific
+  !
+  lbfgs_ndim_       = lbfgs_ndim
+  trust_radius_max_ = trust_radius_max
+  trust_radius_min_ = trust_radius_min
+  trust_radius_ini_ = trust_radius_ini
+  trust_radius_end_ = trust_radius_end
+  w_1_              = w_1
+  w_2_              = w_2  
+  !
   ! ... read following cards
   !
   ALLOCATE( tau( 3, nat_ ) )
@@ -619,67 +804,122 @@ SUBROUTINE iosys
   !
   CALL read_cards( psfile, atomic_positions )
   !
-  ! set up atomic positions and crystal lattice
+  ! ... set up atomic positions and crystal lattice
   !
   IF ( celldm_(1) == 0.D0 .AND. a /= 0.D0 ) THEN
-     IF (ibrav_ == 0) ibrav = 14 
-     celldm_ (1) = a / bohr_radius_angs
-     celldm_ (2) = b / a
-     celldm_ (3) = c / a
-     celldm_ (4) = cosab
-     celldm_ (5) = cosac
-     celldm_ (6) = cosbc 
+     IF ( ibrav_ == 0 ) ibrav = 14 
+     celldm_(1) = a / bohr_radius_angs
+     celldm_(2) = b / a
+     celldm_(3) = c / a
+     celldm_(4) = cosab
+     celldm_(5) = cosac
+     celldm_(6) = cosbc 
   ELSE IF ( celldm_(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
-     CALL errore('input', ' do not specify both celldm and a,b,c!',1)
+     CALL errore( 'input', ' do not specify both celldm and a,b,c!', 1 )
   END IF
   !
   IF ( ibrav_ == 0 .AND. celldm_(1) /= 0.D0 ) THEN
-     ! input at are in units of alat
+     !
+     ! ... input at are in units of alat
+     !
      alat = celldm_(1)
   ELSE IF ( ibrav_ == 0 .AND. celldm_(1) == 0.D0 ) THEN
-     ! input at are in atomic units: define alat
+     !
+     ! ... input at are in atomic units: define alat
+     !
      celldm_(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
      alat = celldm_(1)
-     ! bring at to alat units
+     !
+     ! ... bring at to alat units
+     !
      at(:,:) = at(:,:) / alat
   ELSE
-     ! generate at (atomic units)
+     !
+     ! ... generate at (atomic units)
+     !
      CALL latgen( ibrav, celldm_, at(1,1), at(1,2), at(1,3), omega )
      alat = celldm_(1) 
-     ! bring at to alat units
+     !
+     ! ... bring at to alat units
+     !
      at(:,:) = at(:,:) / alat
   END IF
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
   !
-  SELECT CASE ( atomic_positions )
+  IF ( calculation == 'neb' ) THEN
      !
-     !  convert input atomic positions to internally used format:
-     !  tau in a0 units
+     ! ... NEB specific
      !
-  CASE ( 'alat' )
+     DO image = 1, num_of_images_
+        !
+        tau = RESHAPE( SOURCE = pos(1:3*nat_,image), SHAPE = (/ 3 , nat_ /) )
+        !
+        SELECT CASE ( atomic_positions )
+           !
+           ! ... convert input atomic positions to internally used format:
+           ! ... tau in a0 units
+           !
+        CASE ( 'alat' )
+           !
+           ! ... input atomic positions are divided by a0: do nothing
+           !
+        CASE ( 'bohr' )
+           !
+           ! ... input atomic positions are in a.u.: divide by alat
+           !
+           tau = tau / alat
+        CASE ( 'crystal' )
+           !
+           ! ... input atomic positions are in crystal axis
+           !
+           CALL cryst_to_cart( nat_, tau, at, 1 )
+        CASE ( 'angstrom' )
+           !
+           ! ... atomic positions in A: convert to a.u. and divide by alat
+           !
+           tau = tau / bohr_radius_angs / alat
+        CASE DEFAULT
+           CALL errore( ' iosys ',' atomic_positions=' // &
+                      & TRIM( atomic_positions ) // ' not implemented ', 1 )
+        END SELECT
+        !
+        pos(1:3*nat_,image) = RESHAPE( SOURCE = tau, SHAPE = (/ 3 * nat_ /) )
+        !
+     END DO 
      !
-     !  input atomic positions are divided by a0: do nothing
+  ELSE
      !
-  CASE ( 'bohr' )
+     SELECT CASE ( atomic_positions )
+        !
+        ! ... convert input atomic positions to internally used format:
+        ! ... tau in a0 units
+        !
+     CASE ( 'alat' )
+        !
+        ! ... input atomic positions are divided by a0: do nothing
+        !
+     CASE ( 'bohr' )
+        !
+        ! ... input atomic positions are in a.u.: divide by alat
+        !
+        tau = tau / alat
+     CASE ( 'crystal' )
+        !
+        ! ... input atomic positions are in crystal axis
+        !
+        CALL cryst_to_cart( nat_, tau, at, 1 )
+     CASE ( 'angstrom' )
+        !
+        ! ... atomic positions in A: convert to a.u. and divide by alat
+        !
+        tau = tau / bohr_radius_angs / alat
+     CASE DEFAULT
+        CALL errore( ' iosys ',' atomic_positions=' // &
+                   & TRIM( atomic_positions ) // ' not implemented ', 1 )
+     END SELECT
      !
-     !  input atomic positions are in a.u.: divide by alat
-     !
-     tau = tau / alat
-  CASE ( 'crystal' )
-     !
-     !  input atomic positions are in crystal axis
-     !
-     CALL cryst_to_cart( nat_, tau, at, 1)
-  CASE ( 'angstrom' )
-     !
-     !  atomic positions in A: convert to a.u. and divide by alat
-     !
-     tau = tau / bohr_radius_angs / alat
-  CASE DEFAULT
-     CALL errore(' iosys ',' atomic_positions='//TRIM( atomic_positions )// &
-          ' not implemented ', 1 )
-  END SELECT
+  END IF        
   !
   ! ... set default value of wmass
   !
@@ -688,13 +928,13 @@ SUBROUTINE iosys
         DO ia = 1, nat
            wmass = wmass + amass(ityp(ia))
         END DO
-        wmass =  0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
+        wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
      END IF
      IF ( calc == 'cd' .OR. calc == 'cm' ) THEN
         DO ia = 1, nat
            wmass = wmass + amass(ityp(ia))
         END DO
-        wmass =  0.75D0 * wmass / pi / pi
+        wmass = 0.75D0 * wmass / pi / pi
      END IF
   END IF
   !
@@ -705,7 +945,7 @@ SUBROUTINE iosys
   !
   ! ... read pseudopotentials
   !
-  CALL readpp
+  CALL readpp()
   !
   ! ... Renata's dynamics uses masses in atomic units
   !
@@ -722,20 +962,19 @@ SUBROUTINE iosys
      lstres    = .TRUE.
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      IF ( cmass <= 0.D0 ) &
-        CALL errore('readin',&
-                    'vcsmd: a positive value for cell mass is required',1)
+        CALL errore( 'readin', &
+                   & 'vcsmd: a positive value for cell mass is required', 1 )
   ELSE
      cell_factor_ = 1.D0
   END IF
   !
-  CALL verify_tmpdir
+  CALL verify_tmpdir()
   !
-!  WRITE( stdout,'(/5x,"current restart_mode = ",a)') TRIM( restart_mode )
-!  WRITE( stdout,'( 5x,"current disk_io mode = ",a)') TRIM( disk_io )
-  CALL restart_from_file
+  CALL restart_from_file()
   !
-  IF ( startingconfig == 'file' ) CALL read_config_from_file
-  CALL write_config_to_file
+  IF ( startingconfig == 'file' ) CALL read_config_from_file()
+  !
+  CALL write_config_to_file()
   !
   ! ... Files
   !
@@ -749,10 +988,11 @@ END SUBROUTINE iosys
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_cards ( psfile, atomic_positions_ )
+SUBROUTINE read_cards( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
   USE parser
+  USE wvfct,             ONLY : gamma_only
   USE brilz,             ONLY : at, ibrav, symm_type
   USE basis,             ONLY : nat, ntyp, ityp, tau, atm
   USE klist,             ONLY : nks
@@ -770,11 +1010,12 @@ SUBROUTINE read_cards ( psfile, atomic_positions_ )
   USE relax,             ONLY : fixatom, &
                                 if_pos_ =>  if_pos
   USE dynam,             ONLY : amass
-  USE input_parameters,  ONLY : atom_label, atom_pfile, atom_mass, atom_ptyp, &
-                                taspc, tapos, rd_pos, atomic_positions, &
-                                if_pos, sp_pos, k_points, xk, wk, &
-                                nk1, nk2, nk3, k1, k2, k3, nkstot, &
-                                cell_symmetry, rd_ht, trd_ht, f_inp
+  USE input_parameters,  ONLY : atom_label, atom_pfile, atom_mass, &
+                                atom_ptyp, taspc, tapos, rd_pos, &
+                                atomic_positions, if_pos, sp_pos, &
+                                k_points, xk, wk, nk1, nk2, nk3, &
+                                k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
+                                trd_ht, f_inp, calculation
   USE read_cards_module, ONLY : read_cards_base => read_cards
   !
   IMPLICIT NONE
@@ -791,30 +1032,30 @@ SUBROUTINE read_cards ( psfile, atomic_positions_ )
   CALL read_cards_base( 'PW' )
   !
   IF ( .NOT. taspc ) &
-       CALL errore(' cards ',' atomic species info missing', 1 )
+       CALL errore( ' cards ', ' atomic species info missing', 1 )
   IF ( .NOT. tapos ) &
-       CALL errore(' cards ',' atomic position info missing', 1 )
+       CALL errore( ' cards ', ' atomic position info missing', 1 )
   !
   DO is = 1, ntyp
     amass(is)  = atom_mass(is)
     psfile(is) = atom_pfile(is)
     atm(is)    = atom_label(is)
     IF( amass(is) <= 0.D0 ) THEN
-      CALL errore(' iosys ',' invalid  mass ', is)
+      CALL errore( ' iosys ', ' invalid  mass ', is )
     END IF
   END DO
   !
   DO ia = 1, nat
-    tau(:,ia) = rd_pos(:,ia)
-    ityp(ia)  = sp_pos(ia)
-  END do
+     tau(:,ia) = rd_pos(:,ia)
+     ityp(ia)  = sp_pos(ia)
+  END DO
   !
-  ! TEMP: calculate fixatom
+  ! ... TEMP: calculate fixatom (to be removed)
   !
   fixatom = 0
   fix1: DO ia = nat, 1, -1
-    IF ( if_pos(1,ia) /= 0 .or. &
-         if_pos(2,ia) /= 0 .or. &
+    IF ( if_pos(1,ia) /= 0 .OR. &
+         if_pos(2,ia) /= 0 .OR. &
          if_pos(3,ia) /= 0 ) EXIT fix1
     fixatom = fixatom + 1
   END DO fix1
@@ -829,44 +1070,61 @@ SUBROUTINE read_cards ( psfile, atomic_positions_ )
   atomic_positions_ = TRIM( atomic_positions )
   !
   IF ( k_points == 'automatic' ) THEN
-    !  automatic generation of k-points
-    lxkcry = .FALSE.
-    nks  = 0
-    nk1_ = nk1
-    nk2_ = nk2
-    nk3_ = nk3
-    k1_  = k1
-    k2_  = k2
-    k3_  = k3
+    !
+    ! ... automatic generation of k-points
+    !
+    gamma_only = .FALSE.
+    lxkcry     = .FALSE.
+    nks        = 0
+    nk1_       = nk1
+    nk2_       = nk2
+    nk3_       = nk3
+    k1_        = k1
+    k2_        = k2
+    k3_        = k3
   ELSE IF ( k_points == 'tpiba' ) THEN
-    !  input k-points are in 2pi/a units
-    lxkcry = .FALSE.
-    nks  = nkstot
+    !
+    ! ... input k-points are in 2pi/a units
+    !
+    gamma_only   = .FALSE.
+    lxkcry       = .FALSE.
+    nks          = nkstot
     xk_(:,1:nks) = xk(:,1:nks)
     wk_(1:nks)   = wk(1:nks)
   ELSE IF ( k_points == 'crystal' ) THEN
-    !  input k-points are in crystal (reciprocal lattice) axis
-    lxkcry = .TRUE.
-    nks  = nkstot
+    !
+    ! ... input k-points are in crystal (reciprocal lattice) axis
+    !
+    gamma_only   = .FALSE.
+    lxkcry       = .TRUE.
+    nks          = nkstot
     xk_(:,1:nks) = xk(:,1:nks)
     wk_(1:nks)   = wk(1:nks)
   ELSE IF ( k_points == 'gamma' ) THEN
-    !  Only Gamma (k=0) is used
-    lxkcry = .FALSE.
-    nks = 1
-    xk_(:,1) = 0.0
-    wk_(1)   = 1.0
+    !
+    ! ... Only Gamma (k=0) is used
+    ! ... specialized routines are used
+    !
+    gamma_only = .TRUE.
+    lxkcry     = .FALSE.
+    nks        = 1
+    xk_(:,1)   = 0.0
+    wk_(1)     = 1.0
   ELSE
-    !  default: input k-points are in 2pi/a units
-    lxkcry = .FALSE.
-    nks  = nkstot
+    !
+    ! ... default: input k-points are in 2pi/a units
+    !
+    gamma_only   = .FALSE.
+    lxkcry       = .FALSE.
+    nks          = nkstot
     xk_(:,1:nks) = xk(:,1:nks)
     wk_(1:nks)   = wk(1:nks)
   END IF
   !
   IF ( tfixed_occ ) THEN
      IF ( nks > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) &
-        CALL errore('read_cards','only one k point with fixed occupations',1)
+        CALL errore( 'read_cards', &
+                   & 'only one k point with fixed occupations', 1 )
      f_inp_ = f_inp
   ENDIF
   !
@@ -877,9 +1135,9 @@ SUBROUTINE read_cards ( psfile, atomic_positions_ )
   END IF
   !
   IF ( ibrav == 0 .AND. .NOT. tcell ) &
-       CALL errore(' cards ',' ibrav=0: must read cell parameters', 1 )
+     CALL errore( ' cards ', ' ibrav=0: must read cell parameters', 1 )
   IF ( ibrav /= 0 .AND. tcell ) &
-       CALL errore(' cards ',' redundant data for cell parameters', 2 )
+     CALL errore( ' cards ', ' redundant data for cell parameters', 2 )
   !
   RETURN
   !
@@ -887,14 +1145,26 @@ END SUBROUTINE read_cards
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE verify_tmpdir
+SUBROUTINE verify_tmpdir()
   !-----------------------------------------------------------------------
   !
-  USE io_files, ONLY: tmp_dir, nd_nmbr
+  USE input_parameters, ONLY : restart_mode
+  USE varie,            ONLY : lneb
+  USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr
+  USE neb_variables,    ONLY : num_of_images
+#if defined (__PARA)
+  USE para,             ONLY : me, mypool
+  USE mp,               ONLY : mp_barrier
+#endif  
+  !
+  USE miscellany,       ONLY : int_to_char
   !
   IMPLICIT NONE
   !
-  INTEGER :: l, ios
+  INTEGER            :: l, ios, image
+  CHARACTER (LEN=80) :: tmp_dir_saved
+  INTEGER            :: c_mkdir
+  EXTERNAL              c_mkdir
   !
   !
   ! ... verify if tmp_dir ends with /, add one if needed
@@ -904,15 +1174,108 @@ SUBROUTINE verify_tmpdir
      IF ( l > 0 .AND. l < LEN( tmp_dir ) ) THEN
         tmp_dir(l+1:l+1)='/'
      ELSE
-        CALL errore('reading',tmp_dir//' truncated or empty',1)
+        CALL errore( 'outdir: ', tmp_dir // ' truncated or empty', 1 )
      END IF
   END IF
+  !
   ios = 0
-  OPEN( UNIT = 4, FILE = TRIM( tmp_dir )//'pwscf'//nd_nmbr, &
+  !
+  OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'pwscf' // nd_nmbr, &
         STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
-  IF ( ios /= 0 ) CALL errore('reading',TRIM( tmp_dir )// &
-                              ' non existent or non writable',1)
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  !
+  IF ( ios /= 0 ) CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
+                             & ' non existent or non writable', 1 )
+  !
+  ! ... if starting from scratch all temporary files are removed
+  ! ... from tmp_dir ( only by the master node )  
+  !
+  IF ( restart_mode == 'from_scratch' ) THEN
+     !
+#if defined (__PARA)
+     IF ( me == 1 .AND. mypool == 1 ) THEN
+#endif        
+        !
+        ! ... BFGS rstart file is removed       
+        !     
+        OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs', &
+              STATUS = 'UNKNOWN' )
+        CLOSE( UNIT = 4, STATUS = 'DELETE' )
+        !
+#if defined (__PARA)
+     END IF
+#endif	      	
+     !
+  END IF    
+  !
+  ! ... NEB specific
+  ! ... in the scratch directory the tree of subdirectories needed by neb are
+  ! ... created
+  !
+  IF ( lneb ) THEN
+     !
+     tmp_dir_saved = tmp_dir
+     ! 
+     DO image = 1, num_of_images
+        !
+        ios = 0
+        tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
+                  TRIM( int_to_char( image ) ) // '/'
+        !
+#if defined (__PARA)
+        IF ( me == 1 .AND. mypool == 1 ) THEN
+#endif   
+           !
+           ! ... a scratch directory for this image of the elastic band is
+           ! ... created ( only by the master node )
+           !
+           ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
+           !
+#if defined (__PARA)
+        END IF
+        !
+        ! ... all jobs are syncronized
+        !
+        CALL mp_barrier()
+#endif          
+        !
+        ! ... each job checks whether the scratch directory is accessible
+        ! ... or not
+        ! 
+        OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'pwscf' // nd_nmbr, &
+              STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
+        CLOSE( UNIT = 4, STATUS = 'DELETE' ) 
+        ! 
+        IF ( ios /= 0 ) &
+           CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
+                      & ' non existent or non writable', 1 )
+        !
+        ! ... if starting from scratch all temporary files are removed 
+        ! ... from tmp_dir ( only by the master node )
+        !
+        IF ( restart_mode == 'from_scratch' ) THEN
+           !
+#if defined (__PARA)
+           IF ( me == 1 .AND. mypool == 1 ) THEN
+#endif                 
+              !
+              ! ... standard output of the self consistency is removed
+              !	      
+              OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'PW.out', &
+                    STATUS = 'UNKNOWN' )
+              CLOSE( UNIT = 4, STATUS = 'DELETE' )
+              !
+#if defined (__PARA)
+           END IF
+#endif	      
+           !
+        END IF  
+        !
+     END DO
+     !
+     tmp_dir = tmp_dir_saved 
+     !
+  END IF
   !
   RETURN
   !

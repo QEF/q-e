@@ -5,10 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
-!-----------------------------------------------------------------------
-subroutine update_pot
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE update_pot
+  !----------------------------------------------------------------------------
   !
   !     update potential, use the integer variable order to decide the way
   !
@@ -37,292 +38,344 @@ subroutine update_pot
   !                                    + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-
-  USE io_global,  ONLY : stdout
-
-  use pwcom
-  implicit none
-
-  call start_clock ('update_pot')
-  if (order.eq.0) return
-  if (order.gt.2.and.iswitch.le.2) then
+  USE varie,     ONLY : lbfgs, lneb, order
+  !
+  IMPLICIT NONE
+  !
+  !
+  CALL start_clock( 'update_pot' )
+  !
+  IF ( order == 0 ) RETURN
+  !
+  IF ( order > 2 .AND. ( lbfgs .OR. lneb ) ) THEN
+     !
      order = 2
-     call errore ('update_pot', 'order > 2 not allowed in bfgs', - 1)
-
-  endif
-  call extrapolate_charge
-
-  if (order.ge.2) call extrapolate_wfcs
-
-  call stop_clock ('update_pot')
-  return
-
-end subroutine update_pot
-!-----------------------------------------------------------------------
-subroutine extrapolate_charge
-  !-----------------------------------------------------------------------
+     CALL errore( 'update_pot', 'order > 2 not allowed in bfgs', -1 )
+     !
+  END IF
   !
-#include "machine.h"
+  CALL extrapolate_charge()
   !
-  USE io_global, ONLY : stdout
-  use pwcom
-  use io_files, only: prefix
-  implicit none
-  integer :: ir
+  IF ( order >= 2 ) CALL extrapolate_wfcs()
+  !
+  CALL stop_clock( 'update_pot' )
+  !
+  RETURN
+  !
+END SUBROUTINE update_pot
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE extrapolate_charge
+  !----------------------------------------------------------------------------
+  !
+  USE io_global,   ONLY :  stdout
+  USE parameters,  ONLY :  DP
+  USE brilz,       ONLY :  omega, bg, alat
+  USE basis,       ONLY :  nat, tau, ntyp, ityp
+  USE gvect,       ONLY :  nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
+                           eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
+  USE lsda_mod,    ONLY :  lsda, nspin
+  USE scf,         ONLY :  rho, rho_core, vr
+  USE varie,       ONLY :  lbfgs, istep, alpha0, beta0, imix
+  USE ener,        ONLY :  ehart, etxc, vtxc
+  USE cellmd,      ONLY :  lmovecell, omega_old
+  USE vlocal,      ONLY :  strf
+  USE io_files,    ONLY :  prefix
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ir
   ! do-loop variable on FFT grid
-
-  real(kind=DP), allocatable :: work (:), work1 (:)
+  !
+  REAL(KIND=DP), ALLOCATABLE :: work (:), work1 (:)
   ! work is the difference between charge density and atomic charge at time t
   ! work1 is the same thing at time t-dt
-  real(kind=DP) :: charge
-
-  allocate(work(nrxx))
-  work(:) = 0.d0
+  REAL(KIND=DP) :: charge
   !
-  !     if order = 1 update the potential subtracting to the charge density
-  !     the "old" atomic charge and summing the new one
   !
-  WRITE( stdout,'(/5x,"NEW-OLD atomic charge density approx. for the potential")')
+  IF ( istep == 0 ) RETURN 
   !
-  ! in the lsda case the magnetization will follow rigidly the density kee
-  ! fixed the value of zeta=mag/rho_tot. zeta is set here and put in rho(*
-  ! while rho(*,1) will contain the total valence charge
+  ALLOCATE( work(nrxx) )
+  work(:) = 0.D0
   !
-  if (lsda) call rho2zeta (rho, rho_core, nrxx, nspin, + 1)
+  ! ... if order = 1 update the potential subtracting to the charge density
+  ! ... the "old" atomic charge and summing the new one
   !
-  !     subtract the old atomic charge density
+  WRITE( stdout,'(/5X,"NEW-OLD atomic charge density approx. for the potential")' )
   !
-  call atomic_rho (work, 1)
-
-  call DAXPY (nrxx, - 1.0d0, work, 1, rho, 1)
-  if (lmovecell) call DSCAL (nrxx, omega_old, rho, 1)
+  ! ... in the lsda case the magnetization will follow rigidly the density kee
+  ! ... fixed the value of zeta=mag/rho_tot. zeta is set here and put in rho(*
+  ! ... while rho(*,1) will contain the total valence charge
   !
-  !     if dynamics extrapolate the difference between the atomic charge a
-  !     the self-consistent one
+  IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, +1 )
   !
-  if (iswitch.gt.2) then
-     if (istep.eq.1) then
-        call io_pot ( + 1,trim(prefix)//'.oldrho', rho, 1)
-     else
-        allocate(work1(nrxx))
+  ! ... subtract the old atomic charge density
+  !
+  CALL atomic_rho( work, 1 )
+  !
+  CALL DAXPY( nrxx, -1.0D0, work, 1, rho, 1 )
+  !
+  IF ( lmovecell ) CALL DSCAL( nrxx, omega_old, rho, 1 )
+  !
+  ! ... if dynamics extrapolate the difference between the atomic charge a
+  ! ... the self-consistent one
+  !
+  IF ( .NOT. lbfgs ) THEN
+     ! 
+     IF ( istep == 1 ) THEN
+        CALL io_pot( + 1, TRIM( prefix )//'.oldrho', rho, 1 )
+     ELSE
+        ALLOCATE( work1(nrxx) )
         work1(:) = 0.d0
-        call io_pot ( - 1,trim(prefix)//'.oldrho', work, 1)
-        call io_pot ( + 1,trim(prefix)//'.oldrho', rho, 1)
-        if (istep.eq.2) then
-           call io_pot ( + 1,trim(prefix)//'.oldrho2', work, 1)
-        endif
-        call io_pot ( - 1,trim(prefix)//'.oldrho2', work1, 1)
-        call io_pot ( + 1,trim(prefix)//'.oldrho2', work, 1)
+        CALL io_pot( - 1, TRIM( prefix )//'.oldrho', work, 1 )
+        CALL io_pot( + 1, TRIM( prefix )//'.oldrho', rho, 1 )
+        IF ( istep == 2 ) THEN
+           CALL io_pot( + 1, TRIM( prefix )//'.oldrho2', work, 1 )
+        END IF
+        CALL io_pot( - 1, TRIM( prefix )//'.oldrho2', work1, 1 )
+        CALL io_pot( + 1, TRIM( prefix )//'.oldrho2', work, 1 )
         !
-        ! alpha0 and beta0 have been calculated in dynamics or in vcsmd subs.
+        ! ... alpha0 and beta0 have been calculated in dynamics 
+        ! ... or in vcsmd subs.
         !
-        do ir = 1, nrxx
+        DO ir = 1, nrxx
            rho(ir,1) = rho(ir,1) + alpha0 * ( rho(ir,1) - work(ir) ) + &
                                     beta0 * ( work(ir) - work1(ir) )
-        enddo
-        deallocate(work1)
-     endif
-
-  endif
-  if (lmovecell) call DSCAL (nrxx, 1.0d0 / omega, rho, 1)
+        END DO
+        !
+        DEALLOCATE( work1 )
+        !
+     END IF
+     !
+  END IF
   !
-  !     calculate structure factors for the new positions
+  IF ( lmovecell ) CALL DSCAL( nrxx, 1.0D0 / omega, rho, 1 )
   !
-  if (lmovecell) call scale_h
-  call struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
-       strf, eigts1, eigts2, eigts3)
+  ! ... calculate structure factors for the new positions
   !
-  !     add atomic charges in the new positions
+  IF ( lmovecell ) CALL scale_h
   !
-  call atomic_rho (work, 1)
-  call DAXPY (nrxx, 1.0d0, work, 1, rho, 1)
-  call set_rhoc
+  CALL struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
+                    strf, eigts1, eigts2, eigts3 )
   !
-  ! reset up and down charge densities in the LSDA case
+  ! ... add atomic charges in the new positions
   !
-
-  if (lsda) call rho2zeta (rho, rho_core, nrxx, nspin, -1)
-
-  call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, charge, vr)
+  CALL atomic_rho( work, 1 )
+  CALL DAXPY( nrxx, 1.0d0, work, 1, rho, 1 )
+  CALL set_rhoc
   !
-  !     write potential (and rho) on file
+  ! ... reset up and down charge densities in the LSDA case
   !
-
-  if (imix.ge.0) call io_pot(+1,trim(prefix)//'.rho',rho,nspin)
-  call io_pot(+1,trim(prefix)//'.pot',vr,nspin)
-
-  deallocate(work)
-
-  return
-
-
-end subroutine extrapolate_charge
+  IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, -1 )
+  !
+  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                 ehart, etxc, vtxc, charge, vr )
+  !
+  ! ... write potential (and rho) on file
+  !
+  IF ( imix >= 0 ) CALL io_pot( + 1, TRIM( prefix )//'.rho', rho, nspin )
+  !
+  CALL io_pot( + 1, TRIM( prefix )//'.pot', vr, nspin )
+  !
+  DEALLOCATE( work )
+  !
+  RETURN
+  !
+END SUBROUTINE extrapolate_charge
+!
+!
 !-----------------------------------------------------------------------
 subroutine extrapolate_wfcs
   !-----------------------------------------------------------------------
   !
-  !     This routine extrapolate the wfc's after a "parallel alignment"
-  !     of the basis of the t-dt and t time steps, according to the Mead
-  !     recipe, see Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.2
+  ! ... This routine extrapolate the wfc's after a "parallel alignment"
+  ! ... of the basis of the t-dt and t time steps, according to the Mead
+  ! ... recipe, see Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.2
   !
   !
-#include "machine.h"
-  USE io_global,        ONLY : stdout
-  USE io_files, ONLY: iunoldwfc, iunoldwfc2, iunwfc, iunigk, nwordwfc
-  use pwcom
-  USE wavefunctions_module,    ONLY : evc
-  implicit none
-#define ONE (1.d0,0.d0)
-#define ZERO (0.d0,0.d0)
-
-  integer :: j, i, ik
+#define ONE (1.D0,0.D0)
+#define ZERO (0.D0,0.D0)  
+  !
+  USE io_global,             ONLY :  stdout
+  USE parameters,            ONLY :  DP
+  USE klist,                 ONLY :  nks
+  USE varie,                 ONLY :  isolve, istep, order, alpha0, beta0
+  USE basis,                 ONLY :  startingwfc
+  USE wvfct,                 ONLY :  nbnd, npw, npwx, igk
+  USE io_files,              ONLY :  nwordwfc, iunigk, iunwfc, iunoldwfc, &
+                                     iunoldwfc2
+  USE wavefunctions_module,  ONLY :  evc
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: j, i, ik
   ! do-loop variables
   ! counter on k-points
-
-  complex(kind=DP), allocatable:: u_m (:,:), s_m (:,:), sp_m (:,:), temp (:,:)
+  !
+  COMPLEX(KIND=DP), ALLOCATABLE :: u_m (:,:), s_m (:,:), sp_m (:,:), temp (:,:)
   ! the unitary matrix (eq. 3.21)
   ! the overlap matrix s (eq. 3.24)
   ! its dagger
   ! workspace
-  complex(kind=DP), allocatable:: evcold(:,:)
+  COMPLEX(KIND=DP), ALLOCATABLE :: evcold(:,:)
   ! wavefunctions at previous iteration
-
-  real(kind=DP), allocatable :: ew (:)
+  !
+  REAL(KIND=DP), ALLOCATABLE :: ew (:)
   ! the eigenvalues of sp_m*s_m
-
-  logical :: first
+  !
+  LOGICAL :: first
   ! Used for initialization
-  data first / .true. /
-
-
-  save first
-  if (first) then
-     first = .false.
-     if (isolve.eq.1.and.startingwfc.eq.'atomic') then
-        deallocate(evc)
-        allocate(evc(npwx,nbnd))
-     endif
-  endif
-  allocate(evcold(npwx,nbnd))
-  if (istep.eq.1) then
-     if (nks.gt.1) rewind (iunigk)
-     do ik = 1, nks
-        if (nks.gt.1) read (iunigk) npw, igk
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-        call ZCOPY (npwx * nbnd, evc, 1, evcold, 1)
-        call davcio (evcold, nwordwfc, iunoldwfc, ik, 1)
-     enddo
-  else
-     if (order.eq.2) then
-        WRITE( stdout, '(5x,"Extrapolating wave-functions (first order) ...")')
-     else
-        WRITE( stdout, '(5x,"Extrapolating wave-functions (second order) ...")')
-     endif
-
-     allocate ( u_m(nbnd,nbnd), s_m(nbnd,nbnd), sp_m(nbnd,nbnd), &
-                temp(nbnd,nbnd), ew(nbnd) )
-
-     if (nks.gt.1) rewind (iunigk)
-     do ik = 1, nks
-        if (nks.gt.1) read (iunigk) npw, igk
-        call davcio (evcold, nwordwfc, iunoldwfc, ik, - 1)
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-        if (istep.eq.2.and.order.gt.2) then
-           call davcio (evcold, nwordwfc, iunoldwfc2, ik, 1)
-        endif
+  DATA first / .TRUE. /
+  SAVE first
+  !
+  !
+  IF ( istep == 0 ) RETURN   
+  !
+  IF ( first ) THEN
+     first = .FALSE.
+     IF ( isolve == 1 .AND. startingwfc == 'atomic' ) THEN
+        DEALLOCATE( evc )
+        ALLOCATE( evc(npwx,nbnd) )
+     END IF
+  END IF
+  !
+  ALLOCATE( evcold(npwx,nbnd) )
+  !
+  IF ( istep == 1 ) THEN
+     !
+     IF ( nks > 1 ) REWIND( iunigk )
+     DO ik = 1, nks
+        IF ( nks > 1 ) READ( iunigk ) npw, igk
+        CALL davcio( evc, nwordwfc, iunwfc, ik, - 1 )
+        CALL ZCOPY( npwx * nbnd, evc, 1, evcold, 1 )
+        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, 1 )
+     END DO
+     !
+  ELSE
+     !
+     IF ( order == 2 ) THEN
+        WRITE( stdout, '(5X,"Extrapolating wave-functions (first order) ...")' )
+     ELSE
+        WRITE( stdout, '(5X,"Extrapolating wave-functions (second order) ...")' )
+     END IF
+     !
+     ALLOCATE( u_m(nbnd,nbnd), s_m(nbnd,nbnd), sp_m(nbnd,nbnd), &
+               temp(nbnd,nbnd), ew(nbnd) )
+     !
+     IF ( nks > 1 ) REWIND( iunigk )
+     DO ik = 1, nks
         !
-        !     construct s_m = <evcold|evc>
+        IF ( nks > 1 ) READ( iunigk ) npw, igk
         !
-        call ZGEMM ('c', 'n', nbnd, nbnd, npw, ONE, evcold, npwx, evc, &
-             npwx, ZERO, s_m, nbnd)
+        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
+        CALL davcio( evc, nwordwfc, iunwfc, ik, - 1 )
+        !
+        IF ( istep == 2 .AND. order > 2 ) THEN
+           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, 1 )
+        END IF
+        !
+        ! ... construct s_m = <evcold|evc>
+        !
+        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, evcold, npwx, evc, &
+                    npwx, ZERO, s_m, nbnd )
 #ifdef __PARA
-        call reduce (2 * nbnd * nbnd, s_m)
+        CALL reduce( 2 * nbnd * nbnd, s_m )
 #endif
         !
-        !     temp = sp_m*s_m
+        ! ... temp = sp_m * s_m
         !
-        call ZGEMM ('c', 'n', nbnd, nbnd, nbnd, ONE, s_m, nbnd, s_m, &
-             nbnd, ZERO, temp, nbnd)
+        CALL ZGEMM ( 'C', 'N', nbnd, nbnd, nbnd, ONE, s_m, nbnd, s_m, &
+                     nbnd, ZERO, temp, nbnd )
         !
-        !     diagonalize temp, use u_m as workspace to accomodate the eigenvect
-        !     matrix which diagonalizes temp, sp_m is its hermitean conjugate
+        ! ... diagonalize temp, use u_m as workspace to accomodate the eigenvect
+        ! ... matrix which diagonalizes temp, sp_m is its hermitean conjugate
         !
-        call cdiagh (nbnd, temp, nbnd, ew, u_m)
-        do i = 1, nbnd
-           do j = 1, nbnd
-              sp_m (j, i) = conjg (u_m (i, j) ) / sqrt (ew (j) )
-           enddo
-        enddo
-        call ZGEMM ('n', 'n', nbnd, nbnd, nbnd, ONE, u_m, nbnd, sp_m, &
-             nbnd, ZERO, temp, nbnd)
+        CALL cdiagh( nbnd, temp, nbnd, ew, u_m )
+        DO i = 1, nbnd
+           DO j = 1, nbnd
+              sp_m(j,i) = CONJG( u_m (i,j) ) / SQRT( ew(j) )
+           END DO
+        END DO
         !
-        !     temp = [ sp_m * s_m ]^(-1/2)
+        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, u_m, nbnd, sp_m, &
+                    nbnd, ZERO, temp, nbnd )
         !
-        call ZGEMM ('n', 'c', nbnd, nbnd, nbnd, ONE, temp, nbnd, s_m, &
-             nbnd, ZERO, u_m, nbnd)
+        ! ... temp = [ sp_m * s_m ]^(-1/2)
         !
-        !     and u_m is the unitary matrix [ sp_m * s_m ]^(-1/2)*sp_m (eq.3.29)
-        !     now use evcold as workspace to calculate
+        CALL ZGEMM( 'N', 'C', nbnd, nbnd, nbnd, ONE, temp, nbnd, s_m, &
+                    nbnd, ZERO, u_m, nbnd )
         !
-        !                        evcold_i = sum_j evc_j*u_m_ji
+        ! ... and u_m is the unitary matrix [ sp_m * s_m ]^(-1/2)*sp_m (eq.3.29)
+        ! ... now use evcold as workspace to calculate
         !
-        call ZGEMM ('n', 'n', npw, nbnd, nbnd, ONE, evc, npwx, u_m, &
-             nbnd, ZERO, evcold, npwx)
+        ! ... evcold_i = sum_j evc_j*u_m_ji
         !
-        !     and copy evcold in evc
+        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, evc, npwx, u_m, &
+                    nbnd, ZERO, evcold, npwx )
         !
-        call ZCOPY (npwx * nbnd, evcold, 1, evc, 1)
+        ! ... and copy evcold in evc
         !
-        !     save on file evc
+        CALL ZCOPY( npwx * nbnd, evcold, 1, evc, 1 )
         !
-        call davcio (evc, nwordwfc, iunwfc, ik, 1)
+        ! ... save on file evc
         !
-        !     re-read from file the right evcold
+        CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
         !
-        call davcio (evcold, nwordwfc, iunoldwfc, ik, - 1)
+        ! ... re-read from file the right evcold
         !
-        !     extrapolate the wfc's, if order=3 use the second order extrapolati
-        !     formula, alpha0 and beta0 are calculated in "dynamics"
+        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
         !
-        if (order.gt.2) then
-           do j = 1, nbnd
-              do i = 1, npw
-                 evc (i, j) = (1 + alpha0) * evc (i, j) + (beta0 - alpha0) &
-                      * evcold (i, j)
-              enddo
-           enddo
-           call davcio (evcold, nwordwfc, iunoldwfc2, ik, - 1)
-           do j = 1, nbnd
-              do i = 1, npw
-                 evc (i, j) = evc (i, j) - beta0 * evcold (i, j)
-              enddo
-           enddo
-        else
-           do j = 1, nbnd
-              do i = 1, npw
-                 evc (i, j) = 2 * evc (i, j) - evcold (i, j)
-              enddo
-           enddo
-        endif
+        ! ... extrapolate the wfc's, if order=3 use the second order extrapolati
+        ! ... formula, alpha0 and beta0 are calculated in "dynamics"
         !
-        !     move the files: "old" -> "old1" and "now" -> "old"
+        IF ( order > 2 ) THEN
+           DO j = 1, nbnd
+              DO i = 1, npw
+                 evc(i,j) = ( 1 + alpha0 ) * evc (i,j) + ( beta0 - alpha0 ) * &
+                            evcold(i,j)
+              END DO
+           END DO
+           !
+           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
+           !
+           DO j = 1, nbnd
+              DO i = 1, npw
+                 evc(i,j) = evc(i,j) - beta0 * evcold(i,j)
+              END DO
+           END DO
+        ELSE
+           DO j = 1, nbnd
+              DO i = 1, npw
+                 evc(i,j) = 2 * evc(i,j) - evcold(i,j)
+              END DO
+           END DO
+        END IF
         !
-        if (order.gt.2) then
-           call davcio (evcold, nwordwfc, iunoldwfc, ik, - 1)
-           call davcio (evcold, nwordwfc, iunoldwfc2, ik, 1)
-        endif
-        call davcio (evcold, nwordwfc, iunwfc, ik, - 1)
-        call davcio (evcold, nwordwfc, iunoldwfc, ik, 1)
+        ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
-        !     save evc on file iunwfc
+        IF ( order > 2 ) THEN
+           CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
+           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, 1 )
+        END IF
         !
-        call davcio (evc, nwordwfc, iunwfc, ik, 1)
-     enddo
-     deallocate(u_m, s_m, sp_m, temp, ew)
-  endif
-  deallocate (evcold)
-  return
-end subroutine extrapolate_wfcs
+        CALL davcio( evcold, nwordwfc, iunwfc, ik, - 1 )
+        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, 1 )
+        !
+        ! ... save evc on file iunwfc
+        !
+        CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+        !
+     END DO
+     !
+     DEALLOCATE( u_m, s_m, sp_m, temp, ew )
+     !
+  END IF
+  !
+  DEALLOCATE( evcold )
+  !
+  RETURN
+  !
+END SUBROUTINE extrapolate_wfcs
 

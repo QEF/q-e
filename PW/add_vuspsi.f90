@@ -1,14 +1,15 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
-!-----------------------------------------------------------------------
-subroutine add_vuspsi (lda, n, m, psi, hpsi )
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
+  !----------------------------------------------------------------------------
   !
   !    This routine applies the Ultra-Soft Hamiltonian to a
   !    vector psi and puts the result in hpsi.
@@ -22,52 +23,128 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
   ! output:
   !     hpsi  V_US*psi is added to hpsi
   !
-#include "machine.h"
-  use pwcom
-  use becmod
-  implicit none
   !
-  !     First the dummy variables
+  USE parameters, ONLY : DP
+  USE wvfct,      ONLY : gamma_only
+  USE pwcom  
   !
-  integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, m), hpsi (lda, m)
+  IMPLICIT NONE
+  !  
+  INTEGER,          INTENT(IN)  :: lda, n, m
+  COMPLEX(KIND=DP), INTENT(IN)  :: psi(lda,m) 
+  COMPLEX(KIND=DP), INTENT(OUT) :: hpsi(lda,m)  
   !
-  !    here the local variables
   !
-  integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
-  ! counters
-  complex(kind=DP), allocatable :: ps (:,:)
-  ! the product vkb and psi
+  CALL start_clock( 'add_vuspsi' )  
   !
-  if (nkb.eq.0) return
-  call start_clock ('add_vuspsi')
-
-  allocate (ps(  nkb, m))    
-  ps (:,:) = (0.d0, 0.d0)
-  ijkb0 = 0
-  do nt = 1, ntyp
-     do na = 1, nat
-        if (ityp (na) .eq.nt) then
-           do ibnd = 1, m
-              do jh = 1, nh (nt)
-                 jkb = ijkb0 + jh
-                 do ih = 1, nh (nt)
-                    ikb = ijkb0 + ih
-                    ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                         deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
-                 enddo
-              enddo
-           enddo
-           ijkb0 = ijkb0 + nh (nt)
-        endif
-     enddo
-  enddo
-
-  call ZGEMM ('N', 'N', n, m, nkb, (1.d0, 0.d0) , vkb, &
-       lda, ps, nkb, (1.d0, 0.d0) , hpsi, lda)
-
-  deallocate (ps)
-  call stop_clock ('add_vuspsi')
-  return
-end subroutine add_vuspsi
-
+  IF ( gamma_only ) THEN
+     !
+     CALL add_vuspsi_gamma()
+     !
+  ELSE
+     !
+     CALL add_vuspsi_k()
+     !
+  END IF
+  !
+  CALL stop_clock( 'add_vuspsi' )  
+  !
+  RETURN
+  !
+  CONTAINS
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE add_vuspsi_gamma()
+       !-----------------------------------------------------------------------
+       !
+       USE rbecmod,    ONLY: becp, becp_
+       !
+       IMPLICIT NONE
+       !
+       ! ... here the local variables
+       !
+       INTEGER :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
+       ! counters
+       !
+       !
+       IF ( nkb == 0 ) RETURN
+       !
+       becp_(:,:) = 0.D0
+       !
+       ijkb0 = 0
+       DO nt = 1, ntyp
+          DO na = 1, nat
+             IF ( ityp(na) == nt ) THEN
+                DO ibnd = 1, m
+                   DO jh = 1, nh(nt)
+                      jkb = ijkb0 + jh
+                      DO ih = 1, nh(nt)
+                         ikb = ijkb0 + ih
+                         becp_(ikb, ibnd) = becp_(ikb, ibnd) + &
+                                    deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
+                      END DO
+                   END DO
+                END DO
+                ijkb0 = ijkb0 + nh(nt)
+             END IF
+          END DO
+       END DO
+       !
+       CALL DGEMM( 'N', 'N', 2*n, m, nkb, 1.d0, vkb, &
+                   2*lda, becp_, nkb, 1.d0, hpsi, 2*lda )
+       !
+       RETURN
+       !
+     END SUBROUTINE add_vuspsi_gamma
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE add_vuspsi_k()
+       !-----------------------------------------------------------------------
+       !
+       USE becmod,     ONLY : becp
+       !
+       IMPLICIT NONE
+       !
+       ! ... here the local variables
+       !
+       INTEGER :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
+       ! counters
+       COMPLEX(KIND=DP), ALLOCATABLE :: ps (:,:)
+       ! the product vkb and psi
+       !
+       !
+       IF ( nkb == 0 ) RETURN
+       !
+       ALLOCATE( ps( nkb, m) )
+       !     
+       ps(:,:) = ( 0.D0, 0.D0 )
+       ijkb0 = 0
+       DO nt = 1, ntyp
+          DO na = 1, nat
+             IF ( ityp(na) == nt ) THEN
+                DO ibnd = 1, m
+                   DO jh = 1, nh(nt)
+                      jkb = ijkb0 + jh
+                      DO ih = 1, nh(nt)
+                         ikb = ijkb0 + ih
+                         ps(ikb, ibnd) = ps(ikb, ibnd) + &
+                                    deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
+                      END DO
+                   END DO
+                END DO
+                ijkb0 = ijkb0 + nh(nt)
+             END IF
+          END DO
+       END DO
+       !
+       CALL ZGEMM( 'N', 'N', n, m, nkb, (1.D0, 0.D0) , vkb, &
+                   lda, ps, nkb, (1.D0, 0.D0) , hpsi, lda )
+       !
+       DEALLOCATE( ps )
+       !
+       RETURN
+       !
+     END SUBROUTINE add_vuspsi_k     
+     !  
+END SUBROUTINE add_vuspsi 

@@ -1,14 +1,15 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
-!-----------------------------------------------------------------------
-subroutine s_psi (lda, n, m, psi, spsi )
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE s_psi( lda, n, m, psi, spsi )
+  !----------------------------------------------------------------------------
   !
   !    This routine applies the S matrix to m wavefunctions psi
   !    and puts the results in spsi.
@@ -22,70 +23,166 @@ subroutine s_psi (lda, n, m, psi, spsi )
   ! output:
   !     spsi  S*psi
   !
-#include "machine.h"
-  use us, only: vkb, nkb, okvan, nh, tvanp, qq
-  use wvfct, only: igk, g2kin
-  use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-  use ldaU, only : lda_plus_u
-  use basis, only : ntyp, ityp, nat
-  use becmod
-  use workspace
-  implicit none
+  USE parameters, ONLY : DP
+  USE wvfct,      ONLY : gamma_only 
+  USE us,         ONLY : vkb, nkb, okvan, nh, tvanp, qq
+  USE wvfct,      ONLY : igk, g2kin
+  USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE ldaU,       ONLY : lda_plus_u
+  USE basis,      ONLY : ntyp, ityp, nat 
+  use workspace,  ONLY :
   !
-  !     First the dummy variables
+  IMPLICIT NONE
   !
-  integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, m), spsi (lda, m)
+  ! ... First the dummy variables
   !
-  !    here the local variables
+  INTEGER          :: lda, n, m
+  COMPLEX(KIND=DP) :: psi(lda,m), spsi(lda,m)
   !
-  integer :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
-  ! counters
-  complex(kind=DP), allocatable :: ps (:,:)
-  ! the product vkb and psi
-  call start_clock ('s_psi')
+  CALL start_clock( 's_psi' )  
   !
-  !   initialize  spsi
+  IF ( gamma_only ) THEN
+     !
+     CALL s_psi_gamma()
+     !
+  ELSE
+     !
+     CALL s_psi_k()
+     !
+  END IF    
   !
-  call ZCOPY (lda * m, psi, 1, spsi, 1)
+  CALL stop_clock( 's_psi' )
   !
-  !  The product with the beta functions
+  RETURN
   !
-  if (nkb == 0 .or..not.okvan) goto 10
-  !
-  allocate (ps(nkb,m))    
-  ps(:,:) = (0.d0,0.d0)
-  !
-  ijkb0 = 0
-  do nt = 1, ntyp
-     if (tvanp (nt) ) then
-        do na = 1, nat
-           if (ityp (na) .eq.nt) then
-              do ibnd = 1, m
-                 do jh = 1, nh (nt)
-                    jkb = ijkb0 + jh
-                    do ih = 1, nh (nt)
-                       ikb = ijkb0 + ih
-                       ps(ikb,ibnd)=ps(ikb,ibnd) + qq(ih,jh,nt)*becp(jkb,ibnd)
-                    enddo
-                 enddo
-              enddo
-              ijkb0 = ijkb0 + nh (nt)
-           endif
-        enddo
-     else
-        do na = 1, nat
-           if (ityp (na) .eq.nt) ijkb0 = ijkb0 + nh (nt)
-        enddo
-     endif
-
-  enddo
-  call ZGEMM ('N', 'N', n, m, nkb, (1.d0, 0.d0) , vkb, &
-       lda, ps, nkb, (1.d0, 0.d0) , spsi, lda)
-
-  deallocate(ps)
-
-10 call stop_clock ('s_psi')
-  return
-end subroutine s_psi
-
+  CONTAINS
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE s_psi_gamma()
+       !-----------------------------------------------------------------------
+       ! 
+       ! ... gamma version
+       !
+       USE rbecmod, ONLY : becp
+       !
+       IMPLICIT NONE  
+       !
+       ! ... here the local variables
+       !
+       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
+       ! counters
+       REAL(KIND=DP), ALLOCATABLE :: ps(:,:)
+       ! the product vkb and psi
+       !
+       !
+       ! ... initialize  spsi
+       !
+       CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+       !
+       ! ... The product with the beta functions
+       !
+       IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
+       !
+       ALLOCATE( ps( nkb, m ) )
+       !    
+       ps(:,:) = 0.D0
+       !
+       ijkb0 = 0
+       DO nt = 1, ntyp
+          IF ( tvanp (nt) ) THEN
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) THEN
+                   DO ibnd = 1, m
+                      DO jh = 1, nh(nt)
+                         jkb = ijkb0 + jh
+                         DO ih = 1, nh(nt)
+                            ikb = ijkb0 + ih
+                            ps(ikb,ibnd) = ps(ikb,ibnd) + &
+                                           qq(ih,jh,nt) * becp(jkb,ibnd)
+                         END DO
+                      END DO
+                   END DO
+                   ijkb0 = ijkb0 + nh(nt)
+                END IF
+             END DO
+          ELSE
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
+             END DO
+          END IF
+       END DO
+       !
+       CALL DGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
+                   2 * lda, ps, nkb, 1.D0, spsi, 2 * lda )
+       !
+       DEALLOCATE( ps ) 
+       !
+       RETURN
+       !
+     END SUBROUTINE s_psi_gamma
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE s_psi_k()
+       !-----------------------------------------------------------------------
+       !
+       ! ... k-points version
+       !
+       USE becmod,  ONLY : becp
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
+       ! counters
+       COMPLEX(KIND=DP), ALLOCATABLE :: ps(:,:)
+       ! the product vkb and psi
+       !
+       !
+       ! ... initialize  spsi
+       !
+       CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+       !
+       ! ... The product with the beta functions
+       !
+       IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
+       !
+       ALLOCATE( ps( nkb, m ) )    
+       !
+       ps(:,:) = (0.D0,0.D0)
+       !
+       ijkb0 = 0
+       DO nt = 1, ntyp
+          IF ( tvanp(nt) ) THEN
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) THEN
+                   DO ibnd = 1, m
+                      DO jh = 1, nh(nt)
+                         jkb = ijkb0 + jh
+                         DO ih = 1, nh(nt)
+                            ikb = ijkb0 + ih
+                            ps(ikb,ibnd) = ps(ikb,ibnd) + &
+                                           qq(ih,jh,nt) * becp(jkb,ibnd)
+                         END DO
+                      END DO
+                   END DO
+                   ijkb0 = ijkb0 + nh(nt)
+                END IF
+             END DO
+          ELSE
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
+             END DO
+          END IF
+       END DO
+       !
+       CALL ZGEMM( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, &
+                   lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
+       !
+       DEALLOCATE( ps )
+       !
+       RETURN
+       !
+     END SUBROUTINE s_psi_k     
+     !
+END subroutine s_psi
