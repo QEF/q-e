@@ -22,9 +22,9 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... As a consequence an error not occurring on the first node
   ! ... will be invisible. For T3E and ORIGIN machines, this problem
   ! ... is solved by writing an error messagee to unit * instead of 6.
-  ! ... Whenever possible (IBM SP machines and LINUX clusters), we write
-  ! ... to the standard error, unit 0.
-  ! ... (the message will appear in the error files produced by loadleveler).
+  ! ... Whenever possible (IBM SP machines), we write to the standard error, 
+  ! ... unit 0 (the message will appear in the error files produced by 
+  ! ... loadleveler).
   !
   USE io_files,   ONLY : crashunit, crash_file
   USE parallel_include
@@ -64,35 +64,14 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
 #endif
   !
-#if defined (__PARA) && defined (__LINUX)
-  !
-  ! ... in the cas of linux machines it is also written on the "0" unit
-  ! ... proviously connected to /dev/stderr
-  !
-  INQUIRE( FILE = '/dev/stderr', EXIST = exists )
-  !
-  IF ( exists ) THEN
-     !
-     OPEN( UNIT = 0, FILE = '/dev/stderr' )
-     !
-     WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
-     WRITE( UNIT = 0, &
-            FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
-     WRITE( UNIT = 0, FMT = '(5X,A)' ) message
-     WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
-     !
-     CLOSE( UNIT = 0 )     
-     !
-  END IF
-  !
-#endif  
-  !
   IF ( ierr > 0 ) THEN
      !
      WRITE( *, '("     stopping ...")' )
      !
 #if defined (FLUSH)
+     !
      CALL flush( 6 )
+     !
 #endif
      !
 #if defined (__PARA) && defined (__MPI)
