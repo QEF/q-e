@@ -112,8 +112,6 @@ SUBROUTINE electrons()
         !
         conv_elec = .TRUE.
         !
-        ! ...jump to the end 
-        !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho
         !
         CALL stop_clock( 'electrons' )
@@ -124,24 +122,82 @@ SUBROUTINE electrons()
      !
   END IF
   !
-  IF ( lscf ) THEN
+  tcpu = get_clock( 'PWSCF' )
+  WRITE( stdout, 9000 ) tcpu
+  !
+#if defined (FLUSH)
+  CALL flush( stdout )
+#endif
+  !
+
+  IF ( .NOT. lscf ) THEN
      !
-     ! ... calculates the ewald contribution to total energy
+     WRITE( stdout, 9002 )
      !
-     ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
-                   g, gg, ngm, gcutm, gstart, gamma_only, strf )
-     !               
-     IF ( reduce_io ) THEN
-        !
-        flmix = ' '
-        !
-     ELSE
-        !
-        flmix = 'flmix'
-        !
-     END IF
+#if defined (FLUSH)
+     CALL flush( stdout )
+#endif
      !
-  END IF 
+     IF ( imix >= 0 ) rho_save = rho
+     !  
+     iter = iter + 1
+     !
+     ! ... diagonalization of the KS hamiltonian
+     !
+     CALL c_bands( iter, ik_, dr2 )
+     !
+     conv_elec = .TRUE.
+     !
+     CALL poolrecover( et, nbnd, nkstot, nks )
+     !
+     tcpu = get_clock( 'PWSCF' )
+     WRITE( stdout, 9000 ) tcpu
+     !
+     WRITE( stdout, 9102 )
+     !
+     ! ... write band eigenvalues
+     !
+     DO ik = 1, nkstot
+        !
+        IF ( lsda ) THEN
+           !   
+           IF ( ik == 1 ) WRITE( stdout, 9015 )
+           IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016 )
+           !
+        END IF
+        !
+        WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
+        WRITE( stdout, 9030 ) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
+        !
+     END DO
+     !
+#if defined (FLUSH)
+     CALL flush( stdout )
+#endif
+     !
+     ! ... do a Berry phase polarization calculation if required
+     !
+     IF ( lberry ) CALL c_phase()
+     !
+     IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
+     !
+     CALL stop_clock( 'electrons' )
+     !
+     RETURN
+     !
+  END IF
+
+  !
+  ! ... calculates the ewald contribution to total energy
+  !
+  ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
+                g, gg, ngm, gcutm, gstart, gamma_only, strf )
+  !               
+  IF ( reduce_io ) THEN
+     flmix = ' '
+  ELSE
+     flmix = 'flmix'
+  END IF
   !
   ! ... Convergence threshold for iterative diagonalization
   !
@@ -149,24 +205,18 @@ SUBROUTINE electrons()
   ! ... first) the threshold is fixed to a default value of 1.D-5
   !
   IF ( istep > 1 ) ethr = 1.D-5
+  !
   IF ( imix >= 0 ) ngm0 = ngm
   !
-  tcpu = get_clock( 'PWSCF' )
-  WRITE( stdout, 9002 ) tcpu
+  WRITE( stdout, 9001 )
+  !
+#if defined (FLUSH)
+  CALL flush( stdout )
+#endif
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  IF ( lscf ) THEN
-     WRITE( stdout, 9000 )
-  ELSE
-     WRITE( stdout, 9009 )
-  END IF
-  !
-#if defined (FLUSH)
-     CALL flush( stdout )
-#endif
   !
   DO idum = 1, niter
      !
@@ -174,9 +224,7 @@ SUBROUTINE electrons()
      !  
      iter = iter + 1
      !
-     IF ( lscf ) THEN
-        WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
-     END IF
+     WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
 #if defined (FLUSH)
      CALL flush( stdout )
@@ -185,7 +233,7 @@ SUBROUTINE electrons()
      ! ... Convergence threshold for iterative diagonalization
      ! ... is automatically updated during self consistency
      !
-     IF ( lscf .AND. iter > 1 .AND. ik_ == 0 ) THEN
+     IF ( iter > 1 .AND. ik_ == 0 ) THEN
         !
         IF ( imix >= 0 ) THEN
            !
@@ -203,50 +251,9 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     ! ... diagonalziation of the KS hamiltonian
+     ! ... diagonalization of the KS hamiltonian
      !
      CALL c_bands( iter, ik_, dr2 )
-     !
-     ! ... skip all the rest if not lscf
-     !
-     IF ( .NOT. lscf ) THEN
-        !
-        conv_elec = .TRUE.
-        !
-        CALL poolrecover( et, nbnd, nkstot, nks )
-        !
-        tcpu = get_clock( 'PWSCF' )
-        WRITE( stdout, 9002 ) tcpu
-        !
-        WRITE( stdout, 9102 )
-        !
-        DO ik = 1, nkstot
-           !
-           IF ( lsda ) THEN
-              !   
-              IF ( ik == 1 ) WRITE( stdout, 9015 )
-              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016 )
-              !
-           END IF
-           !
-           WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-           WRITE( stdout, 9030 ) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
-           !
-        END DO
-        !
-        ! ... do a Berry phase polarization calculation if required
-        !
-        IF ( lberry ) CALL c_phase()
-        !
-        ! ... jump to the end
-        !
-        IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
-        !
-        CALL stop_clock( 'electrons' )
-        !
-        RETURN
-        !
-     END IF
      !
      ! ... the program checks if the maximum CPU time has been exceeded
      ! ... or if the user has required a soft exit
@@ -285,14 +292,14 @@ SUBROUTINE electrons()
            ! ... for the first scf iteration ethr_min is set for a check 
            ! ... in mix_rho ( in mix_rho ethr_min = dr2 * ethr_min )
            !
-           ethr_min = 1.D0 / nelec
+           ethr_min = 1.d0 / nelec
            !
         ELSE
            !
            ! ... otherwise ethr_min is set to a negative number: 
            ! ... no check is needed
            !
-           ethr_min = - 1.D0
+           ethr_min = -1.d0
            !
         END IF      
         !
@@ -300,7 +307,7 @@ SUBROUTINE electrons()
                       ethr_min, iter, nmix, flmix, conv_elec )
         !
         ! ... for the first scf iteration it is controlled that the threshold 
-        ! ... is small enought for the diagonalization to be adequate
+        ! ... is small enough for the diagonalization to be adequate
         !
         IF ( iter == 1 .AND. ethr >= ethr_min ) THEN
            !
@@ -312,7 +319,7 @@ SUBROUTINE electrons()
            !
            CALL c_bands( iter, ik_, dr2 )
            !
-           ! ... the program checks if the maximum CPU time has been exceeded
+           ! ... check if the maximum CPU time has been exceeded
            ! ... or if the user has required a soft exit
            !
            IF ( check_stop_now() ) RETURN
@@ -342,7 +349,7 @@ SUBROUTINE electrons()
            ! ... ethr_min is set to a negative number: no check is needed
            !
            CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
-                         -1.D0, iter, nmix, flmix, conv_elec )
+                         -1.d0, iter, nmix, flmix, conv_elec )
            !
         END IF             
         !
@@ -359,10 +366,10 @@ SUBROUTINE electrons()
         !
         CALL vpack( NRXX, nrxx, nspin, vnew, vr, + 1 )
         !
-        CALL mix_potential( ( nspin * NRXX ), vnew, vr, mixing_beta, dr2, tr2, &
-                            iter, nmix, flmix, conv_elec )
+        CALL mix_potential( ( nspin * NRXX ), vnew, vr, mixing_beta, dr2, &
+                            tr2, iter, nmix, flmix, conv_elec )
         !
-        CALL vpack( NRXX, nrxx, nspin, vnew, vr, - 1 )
+        CALL vpack( NRXX, nrxx, nspin, vnew, vr, -1 )
         !
      END IF
      !
@@ -410,9 +417,13 @@ SUBROUTINE electrons()
      CALL save_in_electrons( iter, dr2 )
      !
      tcpu = get_clock( 'PWSCF' )
-     WRITE( stdout, 9002 ) tcpu
+     WRITE( stdout, 9000 ) tcpu
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
+     !
+#if defined (FLUSH)
+     CALL flush( stdout )
+#endif
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
           iswitch <= 2 ) THEN
@@ -467,7 +478,7 @@ SUBROUTINE electrons()
         !  
         IF ( imix >= 0 ) THEN
            !
-           if (dr2>1.d-8) then
+           if (dr2 > 1.d-8) then
               WRITE( stdout, 9081 ) etot, dr2
            else
               WRITE( stdout, 9083 ) etot, dr2
@@ -490,7 +501,7 @@ SUBROUTINE electrons()
         !
         IF ( imix >= 0 ) THEN
            !   
-           if (dr2>1.d-8) then
+           if (dr2 > 1.d-8) then
               WRITE( stdout, 9081 ) etot, dr2
            else
               WRITE( stdout, 9083 ) etot, dr2
@@ -506,7 +517,7 @@ SUBROUTINE electrons()
         !
         IF ( imix >=  0 ) THEN
            !   
-           if (dr2>1.d-8) then
+           if (dr2 > 1.d-8) then
               WRITE( stdout, 9080 ) etot, dr2
            else
               WRITE( stdout, 9082 ) etot, dr2
@@ -548,11 +559,12 @@ SUBROUTINE electrons()
      !
   END DO
   !
-  IF ( lscf ) WRITE( stdout, 9101 )
-  !
+  WRITE( stdout, 9101 )
   WRITE( stdout, 9120 )
   !
-  ! <------- jump here if not scf
+#if defined (FLUSH)
+  CALL flush( stdout )
+#endif
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho
   !
@@ -562,9 +574,9 @@ SUBROUTINE electrons()
   !
   ! ... formats
   !
-9000 FORMAT(/'     Self-consistent Calculation')
-9002 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
-9009 FORMAT(/'     Band Structure Calculation')
+9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
+9001 FORMAT(/'     Self-consistent Calculation')
+9002 FORMAT(/'     Band Structure Calculation')
 9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X, &
              'beta=',F4.2)
 9015 FORMAT(/' ------ SPIN UP ------------'/)
@@ -612,8 +624,8 @@ SUBROUTINE electrons()
        IMPLICIT NONE
        !
        !
-       magtot = 0.D0
-       absmag = 0.D0
+       magtot = 0.d0
+       absmag = 0.d0
        !
        DO ir = 1, nrxx
           !   
