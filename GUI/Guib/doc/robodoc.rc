@@ -49,7 +49,7 @@ ignore items:
 
 options:
 	--src 
-		./../src-guib 
+		./../src
 	--doc 
 		./html 
 	--multidoc 
