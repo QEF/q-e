@@ -43,7 +43,7 @@ end subroutine write_upf
 
     call date_and_tim(day,hour)
     generated='Generated using "atomic" code by A. Dal Corso &
-             & (quantum-espresso distribution)'
+             & (espresso distribution)'
     date_author='Author: anonymous   Generation date: '// day 
     comment=title
 
@@ -65,8 +65,8 @@ end subroutine write_upf
             & "The Pseudo was generated with a Non-Relativistic Calculation"
     endif
 
-    write (ounps, '(1pe19.11,t24,a)', err = 100, iostat = ios) &
-         rcloc, "Local Potential cutoff radius"
+    write (ounps, '(i5,1pe14.7,t24,a)', err = 100, iostat = ios) &
+         lloc, rcloc, "L component and cutoff radius for Local Potential"
 
     write (ounps, '(a2,2a3,a6,3a19)', err = 100, iostat = ios) "nl", &
          &" pn", "l", "occ", "Rcut", "Rcut US", "E pseu"

@@ -106,6 +106,10 @@ subroutine ld1_setup
         endif
         if (lls(nsloc).ne.lloc) &
              call errore('ld1_setup','no local wavefunctions?',1)
+        !do n=1, nwfs-1
+        !   if ( rcut(n) < rcut(nsloc) ) call errore ('ld1_setup', &
+        !        'some rcut is smaller than rcloc=rcut(lloc)',n)
+        !end do
      else
         nsloc=-1   
         nbeta=nwfs

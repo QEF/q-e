@@ -171,19 +171,6 @@ subroutine gener_pseudo
      enddo
   enddo
   !
-  !     NC potential with one projector per angular momentum:
-  !     construct the potential 
-  !
-  if (pseudotype == 1) then
-     vnl=0.0_dp
-     do ns=1,nbeta
-        lam=lls(ns)
-        do n=1,ikk(ns)
-           vnl(n,lam)=chis(n,ns)/phis(n,ns)
-        enddo
-     enddo
-  endif
-  !
   !     construct B_{ij}
   !
   bmat=0.0_dp
@@ -204,13 +191,23 @@ subroutine gener_pseudo
 
   if (pseudotype == 1) then
      !
+     !     NC potential with one projector per angular momentum:
+     !     construct the potential 
+     !
+     vnl=0.0_dp
+     do ns=1,nbeta
+        lam=lls(ns)
+        do n=1,ikk(ns)
+           vnl(n,lam)=chis(n,ns)/phis(n,ns)
+        enddo
+     enddo
+     !
      !    unscreen the local potential, add it to all channels
      !
      call descreening
-     do l=0,3
-        do n=1,mesh
-           vnl(n,l)=vnl(n,l)+vpsloc(n)
-        enddo
+     !
+     do n=1,mesh
+        vnl(n,:)=vnl(n,:)+vpsloc(n)
      enddo
      vpsloc=0.0_dp
      !
@@ -254,8 +251,6 @@ subroutine gener_pseudo
         enddo
      enddo
   enddo
-
-  deallocate (b, binv)
 
   qq=0.0_dp
   if (pseudotype == 3) then
@@ -316,7 +311,7 @@ subroutine gener_pseudo
   !
   call descreening
   !
-500 continue
+500 deallocate (b, binv)
   !
   !     print the main functions on files
   !

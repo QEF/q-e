@@ -218,7 +218,7 @@ subroutine ld1_readin
      !
      zval=0.0_dp
      lloc=-1
-     rcloc=1.5_dp
+     rcloc=-1_dp
      nlcc=.false.
      rcore=0.0_dp
      rho0=0.0_dp
@@ -229,7 +229,7 @@ subroutine ld1_readin
      read(5,inputp,err=500,iostat=ios)
 500  call errore('ld1_readin','reading inputp',abs(ios))
 
-     if (rcloc <=0.0_dp) &
+     if (lloc < 0 .and. rcloc <=0.0_dp) &
           call errore('ld1_readin','rcloc is negative',1)
      if (pseudotype < 1.or.pseudotype > 3) &
           call errore('ld1_readin','specify correct pseudotype',1)
