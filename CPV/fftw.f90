@@ -74,10 +74,10 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call fftw3d_f77_create_plan                                  &
+     &     call FFTW3D_F77_CREATE_PLAN                                  &
      &     (plan(ibid),nr1,nr2,nr3,isign,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
-      call fftwnd_f77_one(plan(ibid), f, 0)
+      call FFTWND_F77_ONE(plan(ibid), f, 0)
 !
       if (isign.eq.-1) then
          fac=1.0/float(nr1*nr2*nr3)
@@ -119,10 +119,10 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call fftw3d_f77_create_plan                                  &
+     &     call FFTW3D_F77_CREATE_PLAN                                  &
      &        (plan(ibid),nr1,nr2,nr3,isign,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
-      call fftwnd_f77_one(plan(ibid), f, 0)
+      call FFTWND_F77_ONE(plan(ibid), f, 0)
 !
       if (isign.eq.-1) then
          fac=1.0/dfloat(nr1*nr2*nr3)
@@ -164,10 +164,10 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call fftw3d_f77_create_plan                                  &
+     &     call FFTW3D_F77_CREATE_PLAN                                  &
      &        (plan(ibid),nr1,nr2,nr3,isign,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !     
-      call fftwnd_f77_one(plan(ibid), f, 0)
+      call FFTWND_F77_ONE(plan(ibid), f, 0)
 !
       if (isign.eq.-1) then
          fac=1.0/dfloat(nr1*nr2*nr3)
@@ -208,10 +208,10 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call fftw_f77_create_plan                                    &
+     &     call FFTW_F77_CREATE_PLAN                                    &
      &        (plan(ibid),n,isign,FFTW_ESTIMATE)
 !
-      call fftw_f77 (plan(ibid),m,f,1,nx,fout,1,nx)
+      call FFTW_F77 (plan(ibid),m,f,1,nx,fout,1,nx)
 !
       if (isign.eq.-1) then
          fac=1.0/float(n)
@@ -255,10 +255,10 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call fftw2d_f77_create_plan                                  &
+     &     call FFTW2D_F77_CREATE_PLAN
      &        (plan(ibid),n1,n2,isign,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
-      call fftwnd_f77 (plan(ibid),mplane,f,1,nx1*nx2,f,1,nx1*nx2)
+      call FFTWND_F77 (plan(ibid),mplane,f,1,nx1*nx2,f,1,nx1*nx2)
 !
       if (isign.eq.-1) then
          fac=1.0/float(n1*n2)
@@ -301,10 +301,10 @@ end module fftw_mod
       end if
 !
       if (plan(ibid).eq.0)                                              &
-     &     call fftw_f77_create_plan                                    &
+     &     call FFTW_F77_CREATE_PLAN
      &        (plan(ibid),n,isign1,FFTW_ESTIMATE)
 !
-      call fftw_f77 (plan(ibid),m,f,1,nx,fout,1,nx)
+      call FFTW_F77 (plan(ibid),m,f,1,nx,fout,1,nx)
 !
       if (isign.eq.-1.or.isign.eq.-2) then
          fac=1.0/float(n)
@@ -363,7 +363,7 @@ end module fftw_mod
       if (isign1.eq.1) then
 ! j-direction
          if (plan2(ibid).eq.0)                                          &
-     &        call fftw_f77_create_plan                                 &
+     &        call FFTW_F77_CREATE_PLAN                                 &
      &        (plan2(ibid),n2,isign1,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
          do i=1,n1
@@ -371,26 +371,26 @@ end module fftw_mod
 ! do only ffts on columns (i,*,k) resulting in nonzero components
 !
             if (planes(i).eq.1) then
-               call fftw_f77                                            &
+               call FFTW_F77 &
      &              (plan2(ibid),mplane,f(i),nx1,nx1*nx2,fout,0,0)
             end if
          end do
 ! i-direction
          if (plan1(ibid).eq.0)                                          &
-     &        call fftw_f77_create_plan                                 &
+     &        call FFTW_F77_CREATE_PLAN                                 &
      &        (plan1(ibid),n1,isign1,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
-         call fftw_f77 (plan1(ibid),n2*mplane,f,1,nx1,fout,1,nx1)
+         call FFTW_F77 (plan1(ibid),n2*mplane,f,1,nx1,fout,1,nx1)
       else
 ! i-direction
          if (plan1(ibid).eq.0)                                          &
-     &        call fftw_f77_create_plan                                 &
+     &        call FFTW_F77_CREATE_PLAN                                 &
      &        (plan1(ibid),n1,isign1,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
-         call fftw_f77 (plan1(ibid),n2*mplane,f,1,nx1,fout,1,nx1)
+         call FFTW_F77 (plan1(ibid),n2*mplane,f,1,nx1,fout,1,nx1)
 ! j-direction
          if (plan2(ibid).eq.0)                                          &
-     &        call fftw_f77_create_plan                                 &
+     &        call FFTW_F77_CREATE_PLAN                                 &
      &        (plan2(ibid),n2,isign1,FFTW_ESTIMATE+FFTW_IN_PLACE)
 !
          do i=1,n1
@@ -398,7 +398,7 @@ end module fftw_mod
 ! do only ffts on columns (i,*,k) resulting in nonzero components
 !
             if (planes(i).eq.1) then
-               call fftw_f77                                            &
+               call FFTW_F77                                            &
      &              (plan2(ibid),mplane,f(i),nx1,nx1*nx2,fout,0,0)
             end if
          end do
@@ -442,13 +442,13 @@ end module fftw_mod
       end if
 !
       if (planz(ibid).eq.0)                                             &
-     &     call fftw_f77_create_plan                                    &
+     &     call FFTW_F77_CREATE_PLAN                                    &
      &        (planz(ibid),n3,isign,FFTW_ESTIMATE)
 !
 ! the fortran fftw routine for 1d fft cannot do fft in-place
 !
       if (planxy(ibid).eq.0)                                            &
-     &     call fftw2d_f77_create_plan                                  &
+     &     call FFTW2D_F77_CREATE_PLAN                                  &
      &        (planxy(ibid),n1,n2,isign,FFTW_ESTIMATE)
 !
 ! for 2d fft it could be done, but it is not convenient
@@ -457,14 +457,14 @@ end module fftw_mod
 !
 ! 1d fft along z, output in faux
 !
-      call fftw_f77(planz(ibid),n1x*n2x,f,n1x*n2x,1,faux,n1x*n2x,1)
+      call FFTW_F77(planz(ibid),n1x*n2x,f,n1x*n2x,1,faux,n1x*n2x,1)
 !
 ! 2d fft on xy planes - only needed planes are transformed
 ! note that all others are left in an unusable state
 !
       nplanes=imax3-imin3+1
       nstart =(imin3-1)*n1x*n2x+1
-      call fftwnd_f77 (planxy(ibid),nplanes,faux(nstart),1,n1x*n2x,      &
+      call FFTWND_F77 (planxy(ibid),nplanes,faux(nstart),1,n1x*n2x,      &
      &                 f(nstart),1,n1x*n2x)
       deallocate(faux)
 #endif

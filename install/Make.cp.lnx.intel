@@ -11,17 +11,17 @@
 #  ** Preprocessor Macro **
 # Parallel MPI
   CPMACRO=-D__LINUX -D__MPI -D__PARA -D__INTEL -D__FFTW  \
-           -D"fftwnd_f77_one=fftwnd_f77_one_" \
-           -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
-           -D"fftw_f77=fftw_f77_" \
-           -D"fftw_f77_create_planefftw_f77_create_plan_"
+           -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
+           -D"FFTW_F77=fftw_f77_" \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan_"
 #
 # Serial Code
   CPMACRO=-D__LINUX -D__INTEL -D__FFTW \
-           -D"fftwnd_f77_one=fftwnd_f77_one_" \
-           -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
-           -D"fftw_f77=fftw_f77_" \
-           -D"fftw_f77_create_planefftw_f77_create_plan_"
+           -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
+           -D"FFTW_F77=fftw_f77_" \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan_"
 #
 # PentiumIII
   CPUTYPE=-tpp6
