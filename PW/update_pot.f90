@@ -86,23 +86,33 @@ SUBROUTINE update_pot()
   ! ... determines the maximum effective order of the extrapolation on the 
   ! ... basis of the files that are really available
   !
-  rho_extr = MIN( 1, history, pot_order )
+  ! ... for the charge density
   !
-  INQUIRE( FILE = TRIM( tmp_dir ) // &
-         & TRIM( prefix ) // '.oldrho', EXIST = exists )
-  !
-  IF ( exists ) THEN
+  IF ( ionode ) THEN
      !
-     rho_extr = MIN( 2, history, pot_order )
+     rho_extr = MIN( 1, history, pot_order )
      !
      INQUIRE( FILE = TRIM( tmp_dir ) // &
-            & TRIM( prefix ) // '.old2rho', EXIST = exists )     
+            & TRIM( prefix ) // '.oldrho', EXIST = exists )
      !
-     IF ( exists ) rho_extr = MIN( 3, history, pot_order )
+     IF ( exists ) THEN
+        !
+        rho_extr = MIN( 2, history, pot_order )
+        !
+        INQUIRE( FILE = TRIM( tmp_dir ) // &
+               & TRIM( prefix ) // '.old2rho', EXIST = exists )     
+        !
+        IF ( exists ) rho_extr = MIN( 3, history, pot_order )
+        !
+     END IF
      !
   END IF
   !
+  CALL mp_bcast( rho_extr, ionode_id, intra_image_comm )
+  !
   IF ( pot_order > 0 ) CALL extrapolate_charge( rho_extr )
+  !
+  ! ... for the wavefunctions
   !
   IF ( ionode ) THEN
      !
