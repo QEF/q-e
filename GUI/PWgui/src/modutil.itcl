@@ -21,7 +21,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: modutil.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+# $Id: modutil.itcl,v 1.2 2004-02-23 12:15:50 kokalj Exp $ 
 #
 
 namespace eval ::pwscf::readFilter {}
@@ -150,7 +150,6 @@ proc ::pwscf::selectFileRoot {moduleObj variable} {
     # Purpose: select the root of a filename and quote it
     # Example: file.ext --> 'file'
     variable pwscf
-    global env
 
     set _dir [string trim [$moduleObj varvalue outdir] "'"]
     
