@@ -21,8 +21,8 @@ CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DABSOFT -DFFTW \
 #
 # Fortran compiler:
 #
-#FC = /usr/absoft/bin/f90
-FC = f90
+#F90 = /usr/absoft/bin/f90
+F90 = f90
 #
 # fortran options: -s    for static allocation
 #                        (otherwise everything is allocated on the stack)
@@ -33,14 +33,14 @@ FC = f90
 #                  -B101 for Pentium    optimization
 #                  -N113 Promote REAL and COMPLEX data types to DOUBLE
 #
-FFLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS -p../include
+F90FLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS -p../include
 
 #
 # Loader:
 #
 # some precompiled blas/lapack libraries may need -lg2c
 #
-LD=$(FC)
+LD=$(F90)
 LIBS = -llapack -lblas -lfftw -lU77 -lm
 #
 LFLAGS = $(LIBS)

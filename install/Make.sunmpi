@@ -7,9 +7,9 @@
 CPP = fpp
 CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -DHAS_ZHEGVX -I$(INCL_DIR)
 # Fortran compiler:
-FC = mpf90
+F90 = mpf90
 #
-FFLAGS = -fast -xchip=ultra3 -xarch=v8plusb \
+F90FLAGS = -fast -xchip=ultra3 -xarch=v8plusb \
          -M$(INCL_DIR) \
          -stackvar \
          -xlic_lib=sunperf
@@ -17,7 +17,7 @@ FFLAGS = -fast -xchip=ultra3 -xarch=v8plusb \
 LIBS = -L/usr/opt/SUNWhpc/lib \
        -R/opt/SUNWhpc/lib -lmvec -lmpi
 #
-LD=$(FC)
+LD=$(F90)
 LFLAGS = $(PWLIBS) $(LIBS)
 #
 # ar:

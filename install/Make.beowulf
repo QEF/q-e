@@ -20,11 +20,11 @@ CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DPGI -DPARA -D__MPI -DFFTW \
            -D"FFTW_F77=fftw_f77"
 #
 # Fortran compiler:
-FC =mpif90
+F90 =mpif90
 #
 # Please note: -r8 is necessary for numerical stability ..
 #
-FFLAGS =  -fast -r8 -I$(INCL_DIR) 
+F90FLAGS =  -fast -r8 -I$(INCL_DIR) 
 
 #
 # Loader:
@@ -37,7 +37,7 @@ LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw
 #
 #LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L/cineca/lib -lfftw 
 #
-LD=$(FC)
+LD=$(F90)
 LFLAGS = $(LIBS) -I$(INCL_DIR)
 
 #

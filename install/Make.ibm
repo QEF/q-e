@@ -2,13 +2,9 @@
 # System-dependent definitions for IBM AIX (RISC6000)
 # Edit according to your needs
 #
-# Precompiler:
-#
-CPP = /lib/cpp
-#
 # try to add -DHAS_ZHEGVX if you have a recent lapack library
 #
-CPPFLAGS = -P  -DAIX  -I$(INCL_DIR)
+CPPFLAGS = -DAIX
 
 #
 # Fortran compiler:
@@ -18,10 +14,15 @@ CPPFLAGS = -P  -DAIX  -I$(INCL_DIR)
 # Use -qarch=auto -qtune=auto for processor-specific optimization
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
-FC = xlf
+F90 = xlf
 FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
          -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto \
-         -qsuffix=f=f90
+         -qsuffix=cpp=f90
+F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
 #
 # Libraries:
 # We assume that essl is installed and that lapack is in /usr/local/lib
@@ -36,7 +37,7 @@ LIBS = -lessl -L/usr/local/lib -llapack
 #         use -s for stripped executable (smaller file)
 #         use -bnso -bI:/usr/lib/syscalls.exp for static linking
 #
-LD=$(FC)
+LD=$(F90)
 LFLAGS = $(LIBS) -s
 #LFLAGS = $(LIBS) -s -bmaxdata:512000000
 

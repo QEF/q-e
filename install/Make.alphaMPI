@@ -19,8 +19,8 @@ CPPFLAGS = -P -E -traditional -DDEC -DFFTW -DPARA -D__MPI \
 #
 # Fortran compiler:
 #
-FC = f90
-FFLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
+F90 = f90
+F90FLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
 	-align records -I$(INCL_DIR)
 
 #
@@ -29,13 +29,9 @@ FFLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
 LIBS = -lfmpi -lpmpi -lmpi -lelan -lcxml -L/usr/local/fftw-2.1.3/lib/ -lfftw
 #
 # Loader:
-# $(PWLIBS) are defined in main/Makefile and automatically loaded.
-# The loader of some machines is unable to resolve the few existing
-# cross-references between libraries in $(PWLIBS). Reloading them
-# once again should fix the problem
 # 
-LD=$(FC)
-LFLAGS = $(PWLIBS) $(LIBS)
+LD=$(F90)
+LFLAGS = $(LIBS)
 
 AR = ar
 ARFLAGS = rv

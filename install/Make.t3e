@@ -15,13 +15,14 @@ CPPFLAGS = -P -N -I$(INCL_DIR) -DT3D -DPARA -D__MPI -DFFTW
 #
 # Fortran compiler:
 #
-FC = f90 
+F90 = f90 
 #
 # you may need to add -Idir, where "dir" is the directory where mpif.h resides
 # with -M1110 flag compiler does not issue warning messages for 
 # the use of DOUBLE PRECISION constants in the code. (SdG)
 #
 FFLAGS = -em -dp  -M1110 -p../include
+F90FLAGS = $(FFLAGS) 
 #
 # Loader:
 #
@@ -29,7 +30,7 @@ FFLAGS = -em -dp  -M1110 -p../include
 # and only fftw (if required) and mpi need to be specified
 # if you use -DT3D_BENCHLIB, load the benchlib as well
 #
-LD=$(FC)
+LD=$(F90)
 LIBS = -lfftw -lmpi
 LFLAGS = $(LIBS)
 

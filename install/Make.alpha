@@ -18,13 +18,13 @@ CPPFLAGS = -P -DDEC -DLANGUAGE_FORTRAN -DDXML -DNOPENCILS -I$(INCL_DIR)
 #
 # Fortran compiler:
 #
-FC = f90
+F90 = f90
 #
 # options suggested by Ph. Baranek:
-# FFLAGS =-O5 -fast -big_endian  -fpe0 -check underflow -real_size 64 \
+# F90FLAGS =-O5 -fast -big_endian  -fpe0 -check underflow -real_size 64 \
 #        -align dcommons -align records -I. -I$(INCL_DIR)
 #  -big_endian allows to read files generated on other (big endian) machines
-# FFLAGS = -O -real_size 64 -align dcommons -align records -I. -I$(INCL_DIR)
+# F90FLAGS = -O -real_size 64 -align dcommons -align records -I. -I$(INCL_DIR)
 
 #
 # Libraries:
@@ -35,13 +35,9 @@ FC = f90
 # instead
 #
 # Loader:
-# $(PWLIBS) are defined in main/Makefile and automatically loaded.
-# The loader of some machines is unable to resolve the few existing
-# cross-references between libraries in $(PWLIBS). Reloading them
-# once again should fix the problem
 # 
-LD=$(FC)
-LFLAGS = $(PWLIBS) $(LIBS)
+LD=$(F90)
+LFLAGS = $(LIBS)
 #
 # ar:
 #

@@ -1,19 +1,18 @@
-# Hitachi SR8000(Noejung Park) 
+# System-dependent definitions for Hitachi SR8000
+# contributed by Noejung Park
 #
-# Precompiler
-#
-#CPP = /usr/lib/cpp
-CPP = cat 
-#
-CPPFLAGS =
+CPPFLAGS =-DHITACHI -DPARA -DFFTW
 #
 # Fortran compiler:
-# Hitachi Fortran compiler  invokes Cpreprocess to compile *.F90
 #
-FC = f90
+F90 = f90
 FFLAGS = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
-         -I../include -I/usr/mpi/include \
-         -DHITACHI -DPARA -DFFTW
+         -I../include -I/usr/mpi/include
+F90FLAGS = $(FFLAGS) $(CPPFLAGS)
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
 #
 # Libraries:
 LAPACKdir = /usr/lib/LAPACK/lib32
@@ -24,7 +23,7 @@ LIBS= -L$(LAPACKdir) -llapack_sc -lblas_sc \
       -L$(FFTWdir) -lfftw -lm
 
 # 
-LD=$(FC)
+LD=$(F90)
 LFLAGS = $(LIBS)
 #
 # ar:

@@ -19,7 +19,9 @@ FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
          -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
          -qsuffix=cpp=f90
 F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
-
+#
+# This is needed to tell the compiler where modules are
+#
 MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
 # Libraries:
 # We assume that essl is installed and that lapack is in /usr/local/lib

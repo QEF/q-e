@@ -20,15 +20,15 @@ CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DPGI -DFFTW  \
 #
 # Fortran compilers:
 # Please note: -r8 is necessary for numerical stability ..
-FC =pgf90
-FFLAGS =  -fast -r8 -I$(INCL_DIR) 
+F90 =pgf90
+F90FLAGS =  -fast -r8 -I$(INCL_DIR) 
 
 #
 # Loader:
 # this below uses precompiled pgi libraries ( not very efficient but stable )
 # we assume that fftw is placed in /usr/local/lib
 # 
-LD=$(FC)
+LD=$(F90)
 LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw 
 #
 LFLAGS = $(LIBS) -I$(INCL_DIR)

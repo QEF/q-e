@@ -15,11 +15,11 @@ CPPFLAGS = -P -DORIGIN -DPARA -D__MPI -I$(INCL_DIR)
 #
 # Fortran compiler:
 #
-FC = f90
+F90 = f90
 #
 # use -O3 only if you are sure that it actually works 
 #
-FFLAGS = -mips4 -64 -O2 -r10000 -r8 -I/usr/include -I../include
+F90FLAGS = -mips4 -64 -O2 -r10000 -r8 -I/usr/include -I../include
 
 #
 # Libraries:
@@ -31,7 +31,7 @@ LIBS = -lmpi -lcomplib.sgimath
 # The loader of some machines is unable to resolve the few existing
 # cross-references between libraries in $(PWLIBS). Reloading them
 # once again should fix the problem
-LD=$(FC)
+LD=$(F90)
 
 LFLAGS = $(PWLIBS) $(LIBS)
 

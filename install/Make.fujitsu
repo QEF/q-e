@@ -13,17 +13,17 @@ CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I $(INCL_DIR)
 #
 # Fortran compiler:
 #
-FC = frt
-#FFLAGS = -O4 -X9 -AU -AR -Am -Kalign9 -Kfreealloc -KA64 -M$(INCL_DIR)
-#FFLAGS = -O4 -X9 -AU -AR -Am -Kalign9  -M$(INCL_DIR)
-#FFLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am -M$(INCL_DIR)
-FFLAGS = -g -Ad -AR -Am -M$(INCL_DIR)
+F90C = frt
+#F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9 -Kfreealloc -KA64 -M$(INCL_DIR)
+#F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9  -M$(INCL_DIR)
+#F90FLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am -M$(INCL_DIR)
+F90FLAGS = -g -Ad -AR -Am -M$(INCL_DIR)
 #
 # Libraries:
 LIBS= -L/usr/lang/lib -llapackvp -lblasvp -lssl2vp  -L/usr/local/lib/lib64/ -lfftvp_news  -lmp
 
 # 
-LD=$(FC)
+LD=$(F90)
 LFLAGS = $(LIBS)
 #
 # ar:

@@ -3,10 +3,6 @@
 # Based on info from N. Marzari and B.R. Sahu
 # Edit according to your needs
 #
-# Precompiler
-# we assume that the GNU precompiler is used. The option -traditional
-# prevent string concatenation '//' from being interpreted as a comment
-#
 CPP = /lib/cpp
 #
 # add -DMKL if using the Intel Mathematical Kernel Library
@@ -15,7 +11,7 @@ CPP = /lib/cpp
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DMKL -DPARA -D__MPI -DFFTW \
+CPPFLAGS = -I$(OSHOME)/include/ -DPC -DMKL -DPARA -D__MPI -DFFTW \
            -D"FFTWND_F77_ONE=fftwnd_f77_one" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan" \
            -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan" \
@@ -24,7 +20,7 @@ CPPFLAGS = -P -traditional -I$(INCL_DIR) -DPC -DMKL -DPARA -D__MPI -DFFTW \
 #
 # Fortran compiler:
 #
-FC = mpif90
+F90 = mpif90
 #
 # fortran options:
 # -cl,mywork.pcl  needed to tell the compiler where modules are
@@ -37,7 +33,12 @@ FC = mpif90
 # -tpp6           Pentium Pro, 2, 3  optimization
 # -tpp7           Pentium 4  optimization
 #
-FFLAGS =-cl,mywork.pcl -Vaxlib
+FFLAGS = -O2 -Vaxlib
+F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG= -cl,./intel.pcl
 
 #
 # Loader:
@@ -54,7 +55,7 @@ LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
 # on how to fix I/O incompatibility problems with ifc
 #
 # LIBS = -lfftw -L$(HOME)/Linux_ATHLON256/ -llapack -lf77blas -lcblas -latlas
-LD=$(FC)
+LD=$(F90)
 LFLAGS = $(LIBS)
 
 #
