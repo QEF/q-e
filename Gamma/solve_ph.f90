@@ -5,20 +5,24 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_ph
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
-  USE io_global,      ONLY : stdout
+  USE io_global,             ONLY : stdout
+   use io_files,             ONLY : iunres
   use pwcom
   USE wavefunctions_module,  ONLY : evc
-  USE rbecmod,        ONLY : becp, becp_
+  USE rbecmod,               ONLY : becp, becp_
   use cgcom
 #ifdef __PARA
   use para
 #endif
+
+  IMPLICIT NONE
+
   integer :: nu, i, ibnd, jbnd, info, iter, mode_done, kpoint
   real(kind=DP), allocatable ::  diag(:)
   complex(kind=DP), allocatable :: gr(:,:), h(:,:), work(:,:)
