@@ -48,7 +48,7 @@ program chdens
   integer, allocatable :: ityps (:)
   character (len=3) :: atms(ntypx)
   character (len=80) :: filepp(nfilemax)
-  real(kind=DP) :: rhodum, dipol(0:3)
+  real(kind=DP) :: rhodum, dipol(0:3), quadrupol, rhotot
   complex(kind=DP), allocatable:: rhog (:)
   ! rho or polarization in G space
   logical :: fast3d, makov
@@ -121,15 +121,21 @@ program chdens
   if (nfile.le.0.or.nfile.gt.nfilemax) &
        call errore ('chdens ', 'nfile is wrong ', 1)
 
+  ! check for makov
+  if ( makov .and. (idpol .ne. 1)) then
+     idpol=1
+     call errore("chdens","makov computed only if idpol=1",-1)
+  endif
+
   ! check for idpol
   if (idpol == 1 .or. idpol == 2) then
      if (iflag /= 3) then
         idpol=0
         call errore("chdens","dipole computed only if iflag=3",-1)
      endif
-     if (output_format.eq.3) then
+     if (output_format.ne.4) then
         idpol=0
-        call errore("chdens","dipole not available with output_format=3",-1)
+        call errore("chdens","dipole computed only if output_format=4",-1)
      endif
      if (plot_out /= 1) then
         idpol=0
@@ -407,21 +413,23 @@ program chdens
 
            call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
                 nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
-                bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol(0))
+                bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
+                dipol(0), quadrupol, rhotot)
         else
            if (nx<=0 .or. ny <=0 .or. nz <=0) &
                call errore("chdens","nx,ny,nz, required",1)
 
            call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog, &
                 nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
-                dipol(0))
+                dipol(0), quadrupol, rhotot)
         end if
      end if
 
      !   at this point we are ready to print the whole FFT mesh (density only)
 
-     if (idpol == 1 .or. idpol == 2) & 
-        call write_dipol(dipol(0),tau,nat,alat,zv,ntyp,ityp,idpol)
+     if (idpol == 1 .or. idpol == 2 ) & 
+        call write_dipol(dipol(0),quadrupol,tau,nat,alat,zv,ntyp,ityp,idpol, &
+             makov,ibrav, rhotot)
 
   elseif (iflag == 4) then
      radius = radius / alat
@@ -431,16 +439,12 @@ program chdens
      call errore ('chdens', 'wrong iflag', 1)
 
   endif
-
-  if ( makov ) then
-     call makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
-          nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor)
-  endif
  
   deallocate(rhor)
   deallocate(rhog)
+  deallocate(tau)
+  deallocate(ityp)
   call stop_pp
-1100 call errore ('chdens', 'reading input data', abs (ios) )
 end program chdens
 !
 !-----------------------------------------------------------------------
@@ -800,7 +804,8 @@ end subroutine plot_2ds
 !
 !-----------------------------------------------------------------------
 subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
-     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol)
+     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
+     dipol, quadrupol, rhotot)
   !-----------------------------------------------------------------------
   !
   USE kinds, only : DP
@@ -816,14 +821,15 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   character(len=3) :: atm(*)
 
   real(kind=DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
-                   e1(3), e2(3), e3(3), m1, m2, m3, dipol(0:3)
+                   e1(3), e2(3), e3(3), m1, m2, m3, dipol(0:3), quadrupol
   ! lattice parameter
   ! atomic positions
   ! lattice vectors
   ! G-vectors
-  ! vectors e1,e2,e3 defining the parallelepiped
   ! origin
+  ! vectors e1,e2,e3 defining the parallelepiped
   ! moduli of e1,e2,e3
+  ! electronic dipole & quadrupole moments
 
   complex(kind=DP) :: rhog (ngm)
   ! rho or polarization in G space
@@ -833,19 +839,18 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   ! min, max value of the charge, total charge, total absolute charge
   ! steps along e1, e2, e3
   complex(kind=DP), allocatable :: eigx (:), eigy (:), eigz (:)
-  real(kind=DP), allocatable :: carica (:,:,:), fact(:,:,:), rws(:,:)
-  real(kind=dp) :: wsweight, r(3), rijk, omega, suma
+  real(kind=DP), allocatable :: carica (:,:,:), rws(:,:)
+  real(kind=dp) :: wsweight, r(3), omega, fact
   integer :: ipol, na, nrwsx, nrws
 
   allocate (eigx(  nx))    
   allocate (eigy(  ny))    
   allocate (eigz(  nz))    
   allocate (carica( nx , ny , nz))    
-  allocate (fact( nx , ny , nz))    
 
-  deltax = m1 / (nx - 1)
-  deltay = m2 / (ny - 1)
-  deltaz = m3 / (nz - 1)
+  deltax = m1 / nx 
+  deltay = m2 / ny 
+  deltaz = m3 / nz 
 
   carica = 0.d0
   do ig = 1, ngm
@@ -880,57 +885,49 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   !    Here we check the value of the resulting charge
   !    and compute the dipole of the charge
   !
+
+  call volume(alat,e1(1),e2(1),e3(1),omega)
+
   nrwsx=125
   allocate(rws(0:3,nrwsx))
   call wsinit(rws,nrwsx,nrws,at) 
 
   fact=0.d0
-  suma=0.d0
+  rhomin = MAX ( MINVAL (carica), 1.d-10 )
+  rhomax = MAXVAL (carica)
+  rhotot = 0.d0
+  rhoabs = 0.d0
+  dipol=0.d0
+  quadrupol=0.d0
   do k = 1, nz
      do j = 1, ny
         do i = 1, nx
+           rhotot = rhotot + carica (i, j, k)
+           rhoabs = rhoabs + abs (carica (i, j, k) )
            do ipol=1,3
               r(ipol)=x0(ipol)+(i-1)*e1(ipol)*deltax + &
                                (j-1)*e2(ipol)*deltay + &
                                (k-1)*e3(ipol)*deltaz
            enddo
-           fact(i,j,k)=wsweight(r,rws,nrws)
-           suma=suma+fact(i,j,k)
-        enddo
-     enddo
-  enddo
-
-  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
-
-  rhomin = 1.0d10
-  rhomax =-1.0d10
-  rhotot = 0.d0
-  rhoabs = 0.d0
-  dipol = 0.d0
-  do k = 1, nz
-     do j = 1, ny
-        do i = 1, nx
-           rhomin = min (rhomin, carica (i, j, k) )
-           rhomax = max (rhomax, carica (i, j, k) )
-           rhotot = rhotot + carica (i, j, k)
-           rhoabs = rhoabs + abs (carica (i, j, k) )
-           dipol(0) = dipol(0) + fact(i,j,k)*carica (i, j, k)
+           fact=wsweight(r,rws,nrws)
+           dipol(0) = dipol(0) + fact*carica (i, j, k) 
            do ipol=1,3
-              rijk=x0(ipol)+(i-1)*e1(ipol)*deltax + &
-                            (j-1)*e2(ipol)*deltay + &
-                            (k-1)*e3(ipol)*deltaz
-              dipol(ipol)=dipol(ipol)+fact(i,j,k)*rijk*carica(i,j,k)
+              dipol(ipol)=dipol(ipol)+fact*r(ipol)*carica(i,j,k)
+              quadrupol=quadrupol + fact*carica (i, j, k)*r(ipol)**2
            enddo
         enddo
      enddo
   enddo
 
-  rhotot = rhotot / nx / ny / nz * m1 * m2 * m3 * alat**3
-  rhoabs = rhoabs / nx / ny / nz * m1 * m2 * m3 * alat**3
+  rhotot = rhotot * omega * deltax * deltay * deltaz
+  rhoabs = rhoabs * deltax * deltay * deltaz
+  dipol(0) = dipol(0)  * omega * deltax * deltay * deltaz
   do ipol=1,3
-     dipol(ipol)=dipol(ipol) / suma * omega * alat
+     dipol(ipol)=dipol(ipol)  * omega * deltax * deltay * deltaz * alat
   enddo
-  print '(/5x,"Min, Max, Total, Abs charge: ",2f10.6,2x,2f10.4)',&
+  quadrupol = quadrupol * omega * deltax * deltay * deltaz * alat**2 
+
+  print '(/5x,"Min, Max, Total, Abs charge: ",2f10.6,2x, 2f10.4)',&
      rhomin, rhomax, rhotot, rhoabs
 
   if (output_format == 4) then
@@ -953,7 +950,6 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   endif
 
   deallocate (carica)
-  deallocate (fact)
   deallocate (rws)
   deallocate (eigz)
   deallocate (eigy)
@@ -963,8 +959,8 @@ end subroutine plot_3d
 !
 !-----------------------------------------------------------------------
 subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
-     nrx1, nrx2, nrx3, nr1, nr2, nr3, rho, &
-     bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol)
+     nrx1, nrx2, nrx3, nr1, nr2, nr3, rho, bg, m1, m2, m3, &
+     x0, e1, e2, e3, output_format, ounit, dipol, quadrupol, rhotot)
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout
@@ -975,21 +971,22 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   character(len=3) :: atm(*)
 
   real(kind=DP) :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3), &
-       bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3, dipol(0:3)
+       bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3, dipol(0:3), &
+       quadrupol
 
   integer :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1
   real(kind=DP) :: rhomin, rhomax, rhotot, rhoabs
-  real(kind=DP), allocatable :: carica (:,:,:), fact(:,:,:), rws(:,:)
-  real(kind=DP) :: rijk, deltax, deltay, deltaz, debye
-  real(kind=dp) :: wsweight, r(3), omega, suma
+  real(kind=DP), allocatable :: carica (:,:,:), rws(:,:)
+  real(kind=DP) :: deltax, deltay, deltaz, debye
+  real(kind=dp) :: wsweight, r(3), omega, fact
   integer :: ipol, na, nrwsx, nrws
 
   ! find FFT grid point closer to X0 (origin of the parallelepiped)
   ! (add 1 because r=0 correspond to n=1)
 
-  nx0 = nint ( x0(1)*bg(1,1)*nr1 + x0(2)*bg(2,1)*nr1 + x0(3)*bg(3,1)*nr1 ) + 1
-  ny0 = nint ( x0(1)*bg(1,2)*nr2 + x0(2)*bg(2,2)*nr2 + x0(3)*bg(3,2)*nr2 ) + 1
-  nz0 = nint ( x0(1)*bg(1,3)*nr3 + x0(2)*bg(2,3)*nr3 + x0(3)*bg(3,3)*nr3 ) + 1
+  nx0 = nint ( (x0(1)*bg(1,1) + x0(2)*bg(2,1) + x0(3)*bg(3,1) )*nr1) + 1
+  ny0 = nint ( (x0(1)*bg(1,2) + x0(2)*bg(2,2) + x0(3)*bg(3,2) )*nr2) + 1
+  nz0 = nint ( (x0(1)*bg(1,3) + x0(2)*bg(2,3) + x0(3)*bg(3,3) )*nr3) + 1
   !
   if ( e1(2) .ne. 0.d0  .or.  e1(3) .ne. 0.d0 .or. &
        e2(1) .ne. 0.d0  .or.  e2(3) .ne. 0.d0 .or. &
@@ -999,26 +996,25 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   ! find FFT grid points closer to X0 + e1, X0 + e2, X0 + e3
   ! (the opposite vertex of the parallelepiped)
 
-  nx1 = nint ((x0(1)+m1)*bg(1,1)*nr1+x0(2)*bg(2,1)*nr1+x0(3)*bg(3,1)*nr1)+1
-  ny1 = nint (x0(1)*bg(1,2)*nr2+(x0(2)+m2)*bg(2,2)*nr2+x0(3)*bg(3,2)*nr2)+1
-  nz1 = nint (x0(1)*bg(1,3)*nr3+x0(2)*bg(2,3)*nr3+(x0(3)+m3)*bg(3,3)*nr3)+1
+  nx1 = nint ( ((x0(1)+m1)*bg(1,1)+x0(2)*bg(2,1)+x0(3)*bg(3,1) )*nr1)
+  ny1 = nint ( (x0(1)*bg(1,2)+(x0(2)+m2)*bg(2,2)+x0(3)*bg(3,2) )*nr2)
+  nz1 = nint ( (x0(1)*bg(1,3)+x0(2)*bg(2,3)+(x0(3)+m3)*bg(3,3) )*nr3)
 
   nx = nx1 - nx0 + 1
   ny = ny1 - ny0 + 1
   nz = nz1 - nz0 + 1
 
-  allocate (carica( nx, ny, nz))    
-  allocate (fact( nx, ny, nz))    
+  allocate ( carica(nx, ny, nz) )    
 
   carica = 0.d0
   do k = nz0, nz1
-     k1 = mod(k-1, nr3) + 1
+     k1 = mod(k, nr3)
      if (k1.le.0) k1 = k1 + nr3
      do j = ny0, ny1
-        j1 = mod(j-1, nr2) + 1
+        j1 = mod(j, nr2)
         if (j1.le.0) j1 = j1 + nr2
         do i = nx0, nx1
-           i1 = mod(i-1,nr1)+1
+           i1 = mod(i, nr1)
            if (i1.le.0) i1 = i1 + nr1
            carica (i-nx0+1, j-ny0+1, k-nz0+1) = rho(i1, j1, k1)
         enddo
@@ -1029,85 +1025,72 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   ! consistent with the FFT grid
   !
   WRITE( stdout,'(5x,"Requested parallelepiped sides : ",3f8.4)') m1, m2,m3
-  m1 = (nx-1) * sqrt (at(1, 1) **2 + at(2, 1) **2 + at(3, 1) **2) / nr1
-  m2 = (ny-1) * sqrt (at(1, 2) **2 + at(2, 2) **2 + at(3, 2) **2) / nr2
-  m3 = (nz-1) * sqrt (at(1, 3) **2 + at(2, 3) **2 + at(3, 3) **2) / nr3
+  m1 = nx * sqrt (at(1, 1) **2 + at(2, 1) **2 + at(3, 1) **2) / nr1
+  m2 = ny * sqrt (at(1, 2) **2 + at(2, 2) **2 + at(3, 2) **2) / nr2
+  m3 = nz * sqrt (at(1, 3) **2 + at(2, 3) **2 + at(3, 3) **2) / nr3
   WRITE( stdout,'(5x,"Redefined parallelepiped sides : ",3f8.4)') m1, m2,m3
   !
   ! recalculate x0 (the origin of the parallelepiped)
   ! consistent with the FFT grid
   !
   WRITE( stdout,'(5x,"Requested parallelepiped origin: ",3f8.4)') x0
-  x0(1) = (nx0-1)*at(1,1)/nr1+(ny0-1)*at(1,2)/nr2+(nz0-1)*at(1,3)/nr3
-  x0(2) = (nx0-1)*at(2,1)/nr1+(ny0-1)*at(2,2)/nr2+(nz0-1)*at(2,3)/nr3
-  x0(3) = (nx0-1)*at(3,1)/nr1+(ny0-1)*at(3,2)/nr2+(nz0-1)*at(3,3)/nr3
+  x0(1)=(nx0-1)*at(1,1)/ nr1 +(ny0-1)*at(1,2)/ nr2 +(nz0-1)*at(1,3)/ nr3
+  x0(2)=(nx0-1)*at(2,1)/ nr1 +(ny0-1)*at(2,2)/ nr2 +(nz0-1)*at(2,3)/ nr3
+  x0(3)=(nx0-1)*at(3,1)/ nr1 +(ny0-1)*at(3,2)/ nr2 +(nz0-1)*at(3,3)/ nr3
   WRITE( stdout,'(5x,"Redefined parallelepiped origin: ",3f8.4)') x0
 
-  deltax = m1/(nx - 1)
-  deltay = m2/(ny - 1)
-  deltaz = m3/(nz - 1)
+  deltax = m1/nx 
+  deltay = m2/ny 
+  deltaz = m3/nz 
   !
   !    Here we check the value of the resulting charge
   !    and compute the dipole 
   !
+  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
+
   nrwsx=125
   allocate(rws(0:3,nrwsx))
   call wsinit(rws,nrwsx,nrws,at) 
-
   fact=0.d0
-  suma=0.d0
-  do k = 1, nz
-     do j = 1, ny
-        do i = 1, nx
+  rhomin = MAX ( MINVAL (carica), 1.d-10 )
+  rhomax = MAXVAL (carica)
+  rhotot = 0.d0
+  rhoabs = 0.d0
+  dipol=0.d0
+  quadrupol=0.d0
+  do k = 1, nz  
+     do j = 1, ny  
+        do i = 1, nx  
+           rhotot = rhotot + carica (i, j, k)
+           rhoabs = rhoabs + abs (carica (i, j, k) )
            do ipol=1,3
               r(ipol)=x0(ipol)+(i-1)*e1(ipol)*deltax + &
                                (j-1)*e2(ipol)*deltay + &
                                (k-1)*e3(ipol)*deltaz
            enddo
-           fact(i,j,k)=wsweight(r,rws,nrws)
-           suma=suma+fact(i,j,k)
-        enddo
-     enddo
-  enddo
-
-  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
-
-  rhomin = 1.0d10
-  rhomax =-1.0d10
-  rhotot = 0.d0
-  rhoabs = 0.d0
-  dipol=0.d0
-  do k = 1, nz
-     do j = 1, ny
-        do i = 1, nx
-           rhomin = min (rhomin, carica (i, j, k) )
-           rhomax = max (rhomax, carica (i, j, k) )
-           rhotot = rhotot + carica (i, j, k)
-           rhoabs = rhoabs + abs (carica (i, j, k) )
-           dipol(0) = dipol(0) + fact(i,j,k)*carica (i, j, k) 
+           fact=wsweight(r,rws,nrws)
+           dipol(0) = dipol(0) + fact*carica (i, j, k) 
            do ipol=1,3
-              rijk=x0(ipol)+(i-1)*e1(ipol)*deltax + &
-                            (j-1)*e2(ipol)*deltay + &
-                            (k-1)*e3(ipol)*deltaz
-              dipol(ipol)=dipol(ipol)+fact(i,j,k)*rijk*carica(i,j,k)
+              dipol(ipol)=dipol(ipol)+fact*r(ipol)*carica(i,j,k)
+              quadrupol=quadrupol + fact*carica (i, j, k)*r(ipol)**2
            enddo
         enddo
      enddo
   enddo
 
-  rhotot = rhotot / (nx-1) / (ny-1) / (nz-1) * m1 * m2 * m3 * alat**3
-  rhoabs = rhoabs / (nx-1) / (ny-1) / (nz-1) * m1 * m2 * m3 * alat**3
-  dipol(0) = dipol(0) / suma * omega 
+  rhotot = rhotot * omega * deltax * deltay * deltaz
+  rhoabs = rhoabs * omega * deltax * deltay * deltaz
+  dipol(0) = dipol(0) * omega * deltax * deltay * deltaz 
+  do ipol=1,3
+     dipol(ipol)=dipol(ipol) * omega * deltax * deltay * deltaz * alat 
+  enddo
+  quadrupol = quadrupol * omega * deltax * deltay * deltaz * alat**2 
 
   if (omega > m1*m2*m3*alat**3) &
      WRITE( stdout,*) 'Warning: the box is too small to calculate dipole'
 
   print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
        rhomax, rhotot, rhoabs
-
-  do ipol=1,3
-     dipol(ipol)=dipol(ipol) / suma *omega*alat
-  enddo
 
   if (output_format == 4) then
      !
@@ -1125,13 +1108,12 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   endif
   !
   deallocate (carica)
-  deallocate (fact)
   deallocate (rws)
   return
 
 end subroutine plot_fast
+!
 !-----------------------------------------------------------------------
-
 subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
      m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
   !-----------------------------------------------------------------------
@@ -1214,85 +1196,24 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   !
   return
 end subroutine write_openmol_file
-
-subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
+!
+!------------------------------------------------------------
+subroutine write_dipol(dipol_el,quadrupol_el,tau,nat,alat,zv,ntyp,ityp,idpol, &
+           makov,ibrav, rhotot)
+  !-----------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE kinds, only : dp
+  USE constants,  ONLY :  pi, rytoev
   implicit none
 
-  integer :: nat, ntyp, ityp(nat), idpol
-  real(kind=dp) :: dipol(0:3), tau(3,nat), zv(ntyp), alat
+  integer :: nat, ntyp, ityp(nat), ibrav, idpol
+  real(kind=dp) :: dipol_el(0:3), quadrupol_el, tau(3,nat), zv(ntyp), alat
 
-  real(kind=dp) :: debye, dipol_ion(3)
+  real(kind=dp) :: debye, dipol_ion(3), quadrupol_ion, dipol(3), quadrupol
+  real(kind=DP) :: rhotot, zvtot, corr1, corr2, qq, AA, BB
 
   integer :: na, ipol
-  !
-  !   compute ion dipole moments
-  !
-  if (idpol.eq.1) then
-     dipol_ion=0.d0
-     do na=1,nat
-        do ipol=1,3
-           dipol_ion(ipol)=dipol_ion(ipol)+zv(ityp(na))*tau(ipol,na)*alat
-        enddo
-     enddo
-  endif
-  !
-  !  Charge inside the Wigner-Seitz cell
-  !
-  WRITE( stdout, '(/4x," Charge density inside the Wigner-Seitz cell:",3f14.8," el.")')  &
-       dipol(0)
-
-  !
-  !  print the electron dipole moment calculated by the plotting 3d routines
-  !  A positive dipole goes from the - charge to the + charge.
-  !
-  WRITE( stdout, '(/4x,"Electrons dipole moments",3f14.8," a.u.")')  &
-       (-dipol(ipol),ipol=1,3)
-  !
-  ! print the ionic and total dipole moment
-  !
-  if (idpol.eq.1) then
-     WRITE( stdout, '(4x,"     Ions dipole moments",3f14.8," a.u.")') &
-          (dipol_ion(ipol),ipol=1,3)
-     WRITE( stdout,'(4x,"    Total dipole moments",3f14.8," a.u.")') &
-          ((-dipol(ipol)+dipol_ion(ipol)),ipol=1,3)
-  endif
-  !
-  !   Print the same information in Debye
-  !
-  debye=2.54176d0
-
-  WRITE( stdout,'(/4x,"Electrons dipole moments",3f14.8," Debye")') &
-       (-dipol(ipol)*debye,ipol=1,3)
-  if (idpol.eq.1) then
-     WRITE( stdout,'(4x,"     Ions dipole moments",3f14.8," Debye")') &
-          (dipol_ion(ipol)*debye,ipol=1,3)
-     WRITE( stdout,'(4x,"    Total dipole moments",3f14.8," Debye")') &
-          ((-dipol(ipol)+dipol_ion(ipol))*debye,ipol=1,3)
-  endif
-
-end subroutine write_dipol
-!
-!-----------------------------------------------------------------------
-subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
-     nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor)
-  !-----------------------------------------------------------------------
-  !
-  USE io_global,  ONLY : stdout
-  USE kinds, only : DP
-  USE constants,  ONLY :  pi
-  implicit none
-  integer :: ibrav, nat, ntyp, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3
-
-  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rhor(nrx1*nrx2*nrx3), &
-       zv(ntyp), dipol_ions(3), dipol_el(3), quadrupol_ions, quadrupol_el, &
-       x0(3)
-
-  integer :: i, j, k, ipol, na
-  real(kind=DP) :: rhotot, dr, zvtot
-  real(kind=DP) :: rijk, deltax, deltay, deltaz, debye, omega, rhomin, rho_tmp
-  real(kind=DP) :: corr1, corr2, qq, dipol(3), quadrupol, AA, BB
+  logical :: makov
 
   !  Note that the definition of the Madelung constant used here
   !  differs from the "traditional" one found in the literature. See
@@ -1300,72 +1221,32 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
 
   real(kind=DP), parameter:: Madelung(3) = (/ 2.8373, 2.8883, 2.885/)
 
-  if (ibrav < 1 .or. ibrav > 3) then
-     WRITE(stdout,'("Makov-Payne correction only for cubic lattices")')
+  if (makov .and. (ibrav < 1 .or. ibrav > 3)) then
+     WRITE(stdout,'(/4x,"Makov-Payne correction only for cubic lattices")')
      return
-  else
-     WRITE(stdout,'("Makov-Payne correction with Madelung constant = ",f8.4)')&
-          Madelung(ibrav)
-  end if
-  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
-
-  deltax = 1.d0 / nr1
-  deltay = 1.d0 / nr2
-  deltaz = 1.d0 / nr3
-
-  dipol_ions = 0.d0
-  dipol_el = 0.d0
-  quadrupol_ions = 0.d0
-  quadrupol_el = 0.d0
-
-! Volume element in real space
-  dr = omega * deltax * deltay * deltaz
-
-  rhomin = MAX ( MINVAL (rhor), 1.d-10 )
-  rhotot = 0.d0
+  endif
   !
-  !   compute electronic total charge, dipole and quadrupole moments
+  !   compute ion dipole moments
   !
-  do k = 1, nr3
-     do j = 1, nr2
-        do i = 1, nr1
-           rho_tmp = rhor( i + (j-1)*nrx1 + (k-1)*nrx1*nrx2 )  / rhomin
-           rhotot = rhotot + rho_tmp
-           do ipol=1,3
-              rijk=x0(ipol)+(i-1)*at(ipol,1)*deltax + &
-                            (j-1)*at(ipol,2)*deltay + &
-                            (k-1)*at(ipol,3)*deltaz
-              dipol_el(ipol)=dipol_el(ipol)+rho_tmp*rijk*alat
-              quadrupol_el=quadrupol_el+rho_tmp*(rijk*alat)**2
-           enddo
+  if (idpol.eq.1) then
+     dipol_ion=0.d0
+     quadrupol_ion=0.d0
+     zvtot=0.d0
+     do na=1,nat
+        zvtot = zvtot+zv(ityp(na))
+        do ipol=1,3
+           dipol_ion(ipol)=dipol_ion(ipol)+zv(ityp(na))* tau(ipol,na)*alat
+           quadrupol_ion  =quadrupol_ion  +zv(ityp(na))*(tau(ipol,na)*alat)**2
         enddo
      enddo
-  enddo
-
-  rhotot = rhotot * dr * rhomin
-
-  dipol_el=dipol_el * dr * rhomin
-  quadrupol_el = quadrupol_el * dr * rhomin
-
-  !
-  !   compute ionic total charge, dipole and quadrupole moments
-  !
-  dipol_ions=0.d0
-  zvtot=0.d0
-  do na=1,nat
-     zvtot = zvtot+zv(ityp(na))
-     do ipol=1,3
-        dipol_ions(ipol)=dipol_ions(ipol)+zv(ityp(na))*tau(ipol,na)*alat
-        quadrupol_ions=quadrupol_ions+zv(ityp(na))*(tau(ipol,na)*alat)**2
-     enddo
-  enddo
+  endif
 
   !
   !   compute ionic+electronic total charge, dipole and quadrupole moments
   !
   qq = -rhotot+zvtot
-  dipol = -dipol_el+dipol_ions
-  quadrupol = -quadrupol_el+quadrupol_ions
+  dipol = -dipol_el(1:3)+dipol_ion
+  quadrupol = -quadrupol_el+quadrupol_ion
 
   !
   !  Makov-Payne correction, PRB 51, 43014 (1995)
@@ -1380,43 +1261,71 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   endif
 
   !
-  !  print the results
+  !  Charge inside the Wigner-Seitz cell
   !
-  WRITE( stdout, '(//8x,"************    MAKOV-PAYNE CORRECTION    ***********")')
-  WRITE( stdout, '(/,"----> Warning: results are meaningless if the cluster is &
-&not centred within the cell.")')
-  WRITE( stdout, '(/4x,"Electron charge: ",f15.8," el.")') -rhotot
-  WRITE( stdout, '(4x,"   Ionic charge: ",f15.8," el.")') zvtot
-  WRITE( stdout, '(4x,"   Total charge: ",f15.8," el.        <---- Check this value.")') qq
-
+  WRITE( stdout, '(/4x," Charge density inside the Wigner-Seitz cell:",3f14.8," el.")')  &
+       dipol_el(0)
   !
-  !  print the electron dipole moment
+  !  print the electron dipole moment calculated by the plotting 3d routines
   !  A positive dipole goes from the - charge to the + charge.
   !
-  WRITE( stdout, '(/4x,"Electrons dipole moments",3f17.8," a.u.")')  &
+  WRITE( stdout, '(/4x,"Electrons dipole moments",3f14.8," a.u.")')  &
        (-dipol_el(ipol),ipol=1,3)
   !
   ! print the ionic and total dipole moment
   !
-  WRITE( stdout, '(4x,"     Ions dipole moments",3f17.8," a.u.")') &
-      (dipol_ions(ipol),ipol=1,3)
-  WRITE( stdout,'(4x,"    Total dipole moments",3f17.8," a.u.")') &
-      (dipol(ipol),ipol=1,3)
+  if (idpol.eq.1) then
+     WRITE( stdout, '(4x,"     Ions dipole moments",3f14.8," a.u.")') &
+          (dipol_ion(ipol),ipol=1,3)
+     WRITE( stdout,'(4x,"    Total dipole moments",3f14.8," a.u.")') &
+          (-dipol(ipol),ipol=1,3)
+  endif
   !
-  ! print the electronic,ionic and total quadrupol moment
+  !   Print the same information in Debye
   !
-  WRITE( stdout, '(/4x,"Electrons quadrupole moment",f20.8," a.u.")')  &
-       -quadrupol_el
-  WRITE( stdout, '(4x,"     Ions quadrupole moment",f20.8," a.u.")') &
-      quadrupol_ions
-  WRITE( stdout,'(4x,"    Total quadrupole moment",f20.8," a.u.")') quadrupol
+  debye=2.54176d0
+
+  WRITE( stdout,'(/4x,"Electrons dipole moments",3f14.8," Debye")') &
+       (-dipol_el(ipol)*debye,ipol=1,3)
+  if (idpol.eq.1) then
+     WRITE( stdout,'(4x,"     Ions dipole moments",3f14.8," Debye")') &
+          (dipol_ion(ipol)*debye,ipol=1,3)
+     WRITE( stdout,'(4x,"    Total dipole moments",3f14.8," Debye")') &
+          (-dipol(ipol)*debye,ipol=1,3)
+  endif
   !
   ! print the Makov-Payne correction
   !
-  WRITE( stdout,'(/4x,"Makov-Payne correction is ",f14.8," Ry = ",f6.3," eV (first order, 1/a0)")') -corr1, (-corr1)*13.60569172d0
-  WRITE( stdout,'(4x,"                          ",f14.8," Ry = ",f6.3," eV (second order, 1/a0^3)")') -corr2, (-corr2)*13.60569172d0
-  WRITE( stdout,'(4x,"                          ",f14.8," Ry = ",f6.3," eV (total)")') -corr1-corr2, (-corr1-corr2)*13.60569172d0
+  if (makov) then
+
+     WRITE( stdout, '(//8x,"*********    MAKOV-PAYNE CORRECTION    ********")')
+     WRITE(stdout,'(/4x,"Makov-Payne correction with Madelung constant = ",f8.4)')&
+          Madelung(ibrav)
+     WRITE( stdout, '(/,"Warning: results are meaningless if the cluster is &
+    &not centered within the 3d box.")')
+     WRITE( stdout, '(/4x,"Electron charge: ",f15.8," el.")') -rhotot
+     WRITE( stdout, '(4x,"   Ionic charge: ",f15.8," el.")') zvtot
+     WRITE( stdout, '(4x,"   Total charge: ",f15.8," el.")') qq
+     !
+     ! print the electronic,ionic and total quadrupol moment
+     !
+     WRITE( stdout, '(/4x,"Electrons quadrupole moment",f20.8," a.u.")')  &
+          -quadrupol_el
+     WRITE( stdout, '(4x,"     Ions quadrupole moment",f20.8," a.u.")') &
+          quadrupol_ion
+     WRITE( stdout,'(4x,"    Total quadrupole moment",f20.8," a.u.")') &
+          quadrupol
+     !
+     !  print the results
+     !
+     WRITE( stdout,'(/4x,"Makov-Payne correction ",f14.8," Ry = ",f6.3," eV (1st order, 1/a0)")') &
+          -corr1, (-corr1)*rytoev
+     WRITE( stdout,'(4x,"                       ",f14.8," Ry = ",f6.3," eV (2nd order, 1/a0^3)")') &
+          -corr2, (-corr2)*rytoev
+     WRITE( stdout,'(4x,"                       ",f14.8," Ry = ",f6.3," eV (total)")') &
+          -corr1-corr2, (-corr1-corr2)*rytoev
+  endif
 
   return
 
-end subroutine makov_payne
+end subroutine write_dipol
