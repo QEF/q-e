@@ -62,6 +62,12 @@ ld1 : bindir mods libs pw
 upf : mods libs
 	if test -d upftools ; then ( cd upftools ; make all ) ; fi
 
+iotk : 
+	if test -d Modules ; then ( cd Modules ; make iotk ) ; fi
+
+export : iotk bindir mods libs pw
+	if test -d PP ; then ( cd PP ; make pw_export.x ) ; fi
+
 pwall : pw ph pp gamma nc pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
@@ -131,7 +137,7 @@ links : bindir
 	    ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
 	      ../PP/efg.x ../PP/plotband.x ../PP/plotrho.x ../PP/pmw.x \
 	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
-	      ../PP/voronoy.x \
+	      ../PP/voronoy.x ../PP/pw_export.x \
 	    ../PW/memory.x ../PW/pw.x \
 	    ../PWCOND/pwcond.x \
 	    ../PWNC/pwnc.x \

@@ -59,7 +59,13 @@ uspp.o \
 wave_base.o \
 wavefunctions.o
 
+IOTK=iotk_module.o
+
+$(IOTK): ../include/iotk_config.h
+
 all : $(MODULES)
+
+iotk : $(IOTK)
 
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc

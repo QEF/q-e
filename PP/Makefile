@@ -267,6 +267,8 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
+EXOBJS=../Modules/iotk_module.o
+
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x initial_state.x
 
@@ -324,6 +326,10 @@ voronoy.x : voronoy.o $(PPOBJS)
 
 initial_state.x : initial_state.o $(PPOBJS)
 	$(LD) -o $@ initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+pw_export.x : pw_export.o $(EXOBJS) $(PPOBJS)
+	$(LD) -o $@ pw_export.o $(EXOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 clean :
