@@ -895,7 +895,7 @@ MODULE read_cards_module
              CALL read_line( input_line )
              READ(input_line,*) ( f_inp(j,is), j = i, ( i + 9 ) )
           END DO
-          IF ( MOD( nbnd, 10 ) >= 0 ) THEN
+          IF ( MOD( nbnd, 10 ) > 0 ) THEN
              CALL read_line( input_line )
              READ(input_line,*) ( f_inp(j,is), j = ( nx10 + 1 ), nbnd)
           END IF
