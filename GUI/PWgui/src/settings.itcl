@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: settings.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+# $Id: settings.itcl,v 1.2 2004-02-23 12:19:39 kokalj Exp $ 
 #
 proc ::pwscf::settings {gui} {
 
@@ -28,10 +28,11 @@ proc ::pwscf::settings {gui} {
     set obj [_settingsModule]
     
     ::guib::widgets::dialogshell $t -title "PWgui Settings" -separator 1 -transient 0
-    $t add OK     -text OK     -command [list ::pwscf::_settingsOK    $t $obj]
-    $t add Apply  -text Apply  -command [list ::pwscf::_settingsApply $obj]
-    $t add Save   -text Save   -command [list ::pwscf::_settingsSave  $obj]
     $t add Close  -text Close  -command [list destroy $t]    
+    $t add Save   -text Save   -command [list ::pwscf::_settingsSave  $obj]
+    $t add Apply  -text Apply  -command [list ::pwscf::_settingsApply $obj]
+    $t add OK     -text "Apply & Close" -command [list ::pwscf::_settingsOK    $t $obj]
+    $t default OK
 
     #
     # build the GUI recursively
