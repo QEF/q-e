@@ -94,6 +94,14 @@ restart_mode   CHARACTER
                                  periodic boundary conditions ARE NON USED.
                'restart'       : from previous interrupted run
 
+wf_collect     LOGICAL ( default = .FALSE. )
+               This flag controls the way in which wave functions are stored
+               to disk :
+               .TRUE.  collect all wave functions and store them in the restart 
+                       file ( outdir/prefix.save )
+               .FALSE. do not collect wave function and leave them in temporary
+                       local files
+
 nstep          INTEGER                         
                number of ionic + electronic steps
                default: 1 if calculation = 'scf', 'nscf'
@@ -110,7 +118,7 @@ tstress        LOGICAL
 tprnfor        LOGICAL
                print forces. Set to .TRUE. if calculation='relax','md','vc-md'
             
-dt             REAL
+dt             REAL ( default = 20.D0 )
                time step for molecular dynamics, in Rydberg atomic units
                (1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
                 Hartree atomic units, half that much!!!)
@@ -596,8 +604,8 @@ reset_vel      LOGICAL ( default = .FALSE. )
                (sort of clean-up of the history)
                
 write_save     LOGICAL ( default = .FALSE. )
-               used to write the prefix.save file for each image needed for
-               post-processing
+               used to write the prefix.save file for each image ( needed for
+               post-processing )
 
 ===============================================================================
 NAMELIST &CELL ( only if calculation = 'vc-relax', 'vc-md' )

@@ -64,10 +64,14 @@ MODULE read_namelists_module
        IF( prog == 'PW' ) isave = 0
        IF( prog == 'CP' ) isave = 100
        IF( prog == 'FP' ) isave = 100
-
+       !
        tstress = .FALSE.
        tprnfor = .FALSE.
-       dt  = 1.D0
+       !
+       IF( prog == 'PW' ) dt  = 20.D0
+       IF( prog == 'CP' ) dt  =  1.D0
+       IF( prog == 'FP' ) dt  =  1.D0
+       !
        ndr = 50
        ndw = 50
        !
