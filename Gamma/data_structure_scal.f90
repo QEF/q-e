@@ -44,8 +44,8 @@ subroutine data_structure_scal
   nrx3s = nr3s
   nrxxs = nrx1s * nrx2s * nrx3s
 
-  CALL fft_dlay_allocate( dfftp, nproc_pool, MAX(nrx1, nrx3),  nrx2  )
-  CALL fft_dlay_allocate( dffts, nproc_pool, MAX(nrx1s, nrx3s) , nrx2s )
+  CALL fft_dlay_allocate( dfftp, nproc_pool, MAX(nrx1, nrx3),  nrx3  )
+  CALL fft_dlay_allocate( dffts, nproc_pool, MAX(nrx1s, nrx3s) , nrx3s )
 
   !
   !     compute the number of g necessary to the calculation
@@ -85,6 +85,7 @@ subroutine data_structure_scal
            if (amod.le.gcutms) ngms = ngms + 1
            if ( amod <= gkcut ) then
              stw(  i2,  i3 ) = 1
+             stw( -i2, -i3 ) = 1
            end if
 20         continue
         enddo

@@ -1072,9 +1072,14 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 
   tscale = 1.d0
   isign = - sign   !  here we follow ESSL convention
+
   !
   ! ESSL sign convention for fft's is the opposite of the "usual" one
   !
+
+  ! write(6, fmt="('DEBUG cfft3ds :',6I6)") nr1, nr2, nr3, nrx1, nrx2, nrx3
+  ! write(6, fmt="('DEBUG cfft3ds :',24I2)") do_fft_x
+  ! write(6, fmt="('DEBUG cfft3ds :',24I2)") do_fft_y
 
   IF( nr2 /= nrx2 ) &
     CALL errore(' cfft3ds ', ' wrong dimensions: nr2 /= nrx2 ', 1 )
@@ -1253,7 +1258,7 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
         enddo
 
 #if defined __AIX || defined __FFTW
-        call dscal (2 * nrx1 * nrx2 * nr3, 1d0 / (nr1 * nr2 * nr3), f( 1 ), 1)
+        call DSCAL (2 * nrx1 * nrx2 * nr3, 1.0d0 / (nr1 * nr2 * nr3), f( 1 ), 1)
 #endif
 
      END IF
