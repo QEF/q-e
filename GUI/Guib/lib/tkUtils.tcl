@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.2 2004-04-06 13:20:38 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -60,10 +60,12 @@ namespace eval ::tku:: {
     namespace export disableAll
     namespace export enableAll
     namespace export errorDialog
+    namespace export warningDialog
     namespace export centerWindow
     namespace export createFont
     namespace export setCursor
     namespace export resetCursor
+    namespace export watchExec
 }
 
 #proc ::tku::_init {} {
@@ -221,6 +223,14 @@ proc ::tku::errorDialog {text} {
 }
 
 # ------------------------------------------------------------------------
+#  print warning message and returns from the caller proc
+# ------------------------------------------------------------------------
+proc ::tku::warningDialog {text} {
+    tk_messageBox -title WARNING -message "WARNING: $text" -type ok -icon warning
+    return -code return ""
+}
+
+# ------------------------------------------------------------------------
 #  Centers the toplevel with respect to another widget or the screen
 #  as a whole. 
 # ------------------------------------------------------------------------
@@ -301,4 +311,35 @@ proc ::tku::resetCursor {{window .}} {
 }
 
 
-    
+#------------------------------------------------------------------------
+#****f* ::tku/::tku::watchExec
+#  NAME
+#    ::tku::watchExec -- execute a script and display a watch cursor
+#  USAGE
+#    ::tku::watchExec script
+#
+#  DESCRIPTION
+#    This proc executes a script and displays a watch cursor during exec. The
+#    content of the script is evaluated at the caller level (i.e. uplevel 1
+#
+#  ARGUMENTS
+#    parent   -- widget name of the parent widget
+#    lastName -- a prefix of the last-name of the widget (i.e. .a.a.lastname)
+#
+#  RETURN VALUE
+#    Returns the last return-value of the last command in the script.
+#
+#  EXAMPLE
+#    ::tku::watchExec { 
+#        do_whatever $a $b 
+#        do_this_and_that $c $d
+#    }
+#********
+#------------------------------------------------------------------------
+
+proc ::tku::watchExec {script} {
+    ::tku::setCursor watch
+    set result [uplevel 1 $script]
+    ::tku::resetCursor
+    return $result
+}
