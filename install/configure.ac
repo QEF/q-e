@@ -29,7 +29,7 @@ AC_CANONICAL_BUILD
 case $build in
 *-pc-linux-* )
 	is_linux=1
-	try_f90="mpif90 ifc pgf90 f90 mpif77 pgf77 f77 g77"
+	try_f90="mpif90 ifort ifc pgf90 f90 mpif77 pgf77 f77 g77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
@@ -75,7 +75,7 @@ case "$build:$f90" in
 	try_cc="mpicc pgcc gcc cc icc"
 	try_f77="mpif77 pgf77 $f90"
 	;;
-*-pc-linux-*:ifc )
+*-pc-linux-*:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
 	ifc_version=`$f90 -V 2>&1 1>/dev/null | grep Intel`
@@ -152,7 +152,8 @@ case "$build:$cc:$f90" in
 *-ibm-aix*:xlc:*xlf* | *-ibm-aix*:cc:*xlf* )            ;;
 *-pc-linux-*:*cc:mpif90 )                               ;;
 *-pc-linux-*:pgcc:pgf90 )                               ;;
-*-pc-linux-*:icc:ifc | *-pc-linux-*:gcc:ifc )           ;;
+*-pc-linux-*:icc:ifc | *-pc-linux-*:gcc:ifc | \
+*-pc-linux-*:icc:ifort | *-pc-linux-*:gcc:ifort )       ;;
 mips-sgi-*:cc:f90 )                                     ;;
 # sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )           ;;
 * )
@@ -412,7 +413,7 @@ then
 			AC_SEARCH_LIBS(zhegv, mkl_lapack,
 				       have_blas=1 have_lapack=1
 				       libs="$try_loption \
-$ac_cv_search_zhegv -lmkl_p3 -lguide $libs", , -lmkl_p3 -lguide)
+$ac_cv_search_zhegv -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 			if test "$ac_cv_search_zhegv" != "no"
 			then break ; fi
 		done
