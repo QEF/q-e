@@ -125,7 +125,7 @@ program read_bands
   nf=nint((emax-eref)/deltaE)+1
   do i=-ni,nf
      etic=eref+i*deltaE
-     if (etic <= emin .and. etic >= emax) then
+     if (etic >= emin .and. etic <= emax) then
         write (1,'(2(f8.3,x)," moveto -5 0 rlineto stroke")') &
              0.0,(etic-emin)*ydim/(emax-emin)
         write (1,'(2(f8.3,x)," moveto (",f4.1,") show")')   &
