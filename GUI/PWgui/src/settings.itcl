@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: settings.itcl,v 1.2 2004-02-23 12:19:39 kokalj Exp $ 
+# $Id: settings.itcl,v 1.3 2004-09-20 07:06:49 kokalj Exp $ 
 #
 proc ::pwscf::settings {gui} {
 
@@ -112,13 +112,13 @@ proc ::pwscf::_settingsModule {} {
 	optionSetDefault namelist decor normal
 
 	page syntax -name "Input-syntax settings" {
-	    line p2l1 -name "FORTRAN namelists" {
+	    line pIOl1 -name "FORTRAN namelists" {
 		# take care of GUIB's settings() array
 		var NAMELIST.end_regexp -variable ::guib::settings(NAMELIST.end_regexp) -label "Read-regexp for FORTRAN namelist end-marker:"
 		var NAMELIST.end_string -variable ::guib::settings(NAMELIST.end_string) -label "Write-string for FORTRAN namelist end-marker:"
 		var NAMELIST.varname_nocase {
 		    -variable  ::guib::settings(NAMELIST.varname_nocase)
-		    -label     "FORTRAN namelist variable's names are case insensitive:"
+		    -label     "FORTRAN namelist variable's names\nare case insensitive:"
 		    -textvalue {Yes No} -value {1 0}
 		    -widget    radiobox
 		}
@@ -133,7 +133,7 @@ proc ::pwscf::_settingsModule {} {
 		    -widget    radiobox
 		}
 	    }
-	    line p2l2 -name "Case sensitivity of input-files" {
+	    line pIOl2 -name "Case sensitivity of input-files" {
 		var INPUT.nocase {
 		    -variable  ::guib::settings(INPUT.nocase)
 		    -label     "Syntax of input-files is case-sensitive"
@@ -159,14 +159,29 @@ proc ::pwscf::_settingsModule {} {
 		}
 	    }
 	}
-	
+
+	page pwscf -name "PWscf settings" {
+	    line pwscf_fix -name "Prefix & postfix (i.e. Prefix = mpirun -np 2  &&  Postfix = -npool 2)" {
+		var RUN.prefix  -variable ::pwscf::settings(RUN.prefix)  -label "Prefix:"
+		var RUN.postfix -variable ::pwscf::settings(RUN.postfix) -label "Postfix:"
+	    }
+	    line pwscf_exe -name "Specify executables (i.e. /usr/local/bin/pw.x)" {
+		var PW -variable ::pwscf::settings(PW) -label "Executable \"pw.x\":" -widget entryfileselect
+		var PH -variable ::pwscf::settings(PH) -label "Executable \"ph.x\":" -widget entryfileselect
+		var PP -variable ::pwscf::settings(PP) -label "Executable \"pp.x\":" -widget entryfileselect
+		var CHDENS  -variable ::pwscf::settings(CHDENS)  -label "Executable \"chdens.x\":"  -widget entryfileselect
+		var PROJWFC -variable ::pwscf::settings(PROJWFC) -label "Executable \"projwfc.x\":" -widget entryfileselect
+		var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
+	    }
+	}
+
 	page general -name "PWgui settings" {    
-	    line p1l1 -name "Editors & Viewers" {
+	    line pwguil1 -name "Editors & Viewers" {
 		var EDITOR     -variable ::pwscf::settings(EDITOR)     -label "Text-file editor:" -widget combobox         
 		var PAGER      -variable ::pwscf::settings(PAGER)      -label "Text-file viewer program:" -widget combobox
 		var HTMLVIEWER -variable ::pwscf::settings(HTMLVIEWER) -label "HTML viewer program:" -widget combobox 
 	    }
-	    line p1l2 -name "XCrySDen" {
+	    line pwguil2 -name "XCrySDen" {
 		var XCRYSDEN.openAs {
 		    -variable  ::pwscf::settings(XCRYSDEN.openAs) 
 		    -label     "Launch XCRYSDEN:"
@@ -207,6 +222,7 @@ proc ::pwscf::_settingsModule {} {
 	    foreach elem {EDITOR PAGER} {
 		widgetconfigure $elem -editable true -textvalues $::pwscf::settings($elem.list)
 	    }
+	    widgetconfigure PW -width 50
 	}
     }]
     return $obj
