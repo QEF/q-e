@@ -42,7 +42,7 @@
         END TYPE
 
 
-        PUBLIC :: tbeg, htbeg, nomore, &
+        PUBLIC :: tbeg, nomore, &
                   nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, newnfi, tnewnfi, &
                   tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
                   ndw, tortho, tstress, tprnfor, prn, timing, &
@@ -144,7 +144,6 @@
 
 ! ...   Read the cell from standard input
         LOGICAL   :: tbeg = .FALSE.
-        REAL(dbl) :: htbeg(3,3) = 0.0d0
 
 ! ...   This flags control the calculation of the Dipole Moments
         LOGICAL :: tdipole = .FALSE.
