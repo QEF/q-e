@@ -13,8 +13,8 @@
  CPMACRO=-D__QSW -D__MPI -D__FFTWDRV -D__TRU64 -D__PARA
 #
 # ** Communication Libraries **
- MPIINCLUDE= -I/usr/lib/mpi/include/
- COMMLIB=  -L/usr/lib/ -lmpi -lelan -lelan3 -lrmscall
+ MPIINCLUDE= -I/usr/include
+ COMMLIB=  -L/usr/lib -lmpi -lelan -lelan3 -lrmscall
 #
 # ** Scientific Libraries **
 # Uncomment to Use Alpha cxml
@@ -49,7 +49,7 @@
 # Libraries
   LIB=  $(COMMLIB) $(SCILIB)
 #
-  MODULEFLAG=-I $(OSHOME)/Modules/ -I $(OSHOME)/FPMD/
+  MODULEFLAG=-I$(OSHOME)/Modules -I$(OSHOME)/FPMD
 #
 # Name of the fortran compiler
   FC= f90
