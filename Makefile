@@ -85,10 +85,20 @@ clean:
 clean_:
 
 veryclean: clean
-	/bin/rm -f make.rules make.sys */.dependencies */dum1 */dum2 bin/*
+	- /bin/rm -f make.rules make.sys */.dependencies */dum1 */dum2 bin/*
 
+# build list of files to archive and pass it to tar
+# don't archive CVS directories
+# use xargs because arguments list may exceed the shell's limits
+# must use tar rvf, NOT cvf because xargs may call tar multiple times
+# for the same reason can't pipe directly to gzip
 tar:
-	tar -cf - License Makefile configure README INSTALL */*.f90 \
-                  */*.c */*.f */README clib/*.h include/*.h* \
-                  install/* */Makefile \
-                  upftools/UPF *docs/ *_examples/ pseudo/ | gzip > pw.tar.gz
+	rm -f pw.tar pw.tar.gz
+	find License README */README INSTALL \
+	     configure makedeps.sh moduledep.sh Makefile */Makefile \
+	     */*.f90 */*.c */*.f clib/*.h include/*.h* \
+	     install upftools *docs *_examples pseudo \
+	     -type f | \
+	grep -v /CVS/ | xargs tar rvf pw.tar
+	gzip pw.tar
+
