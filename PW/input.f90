@@ -687,7 +687,6 @@ SUBROUTINE iosys()
      CASE( "broyden" )
         !
         lbroyden     = .TRUE.
-        use_freezing = .FALSE.
         !
      CASE( "damped-dyn" )
         !

@@ -216,12 +216,12 @@ MODULE path_opt_routines
        !-----------------------------------------------------------------------
        !
        USE io_files,       ONLY : broy_file, iunbroy
-       USE path_variables, ONLY : dim, num_of_images, reset_broyden
+       USE path_variables, ONLY : dim, num_of_images, reset_broyden, frozen
        !
        IMPLICIT NONE
        !
        REAL (KIND=DP), ALLOCATABLE :: g(:), s(:,:)
-       INTEGER                     :: j
+       INTEGER                     :: i, j, I_in, I_fin
        INTEGER                     :: k
        REAL (KIND=DP)              :: s_norm
        LOGICAL                     :: exists
@@ -233,7 +233,18 @@ MODULE path_opt_routines
        ALLOCATE( g( dim * num_of_images ) )
        ALLOCATE( s( dim * num_of_images, broyden_ndim ) )
        !
-       g(:) = RESHAPE( SOURCE = grad, SHAPE = (/ dim * num_of_images /) )
+       g = 0.D0
+       !
+       DO i = 1, num_of_images
+          !
+          IF ( frozen(i) ) CYCLE
+          !
+          I_in  = ( i - 1 ) * dim + 1
+          I_fin = i * dim
+          !
+          g(I_in:I_fin) = grad(:,i)
+          !
+       END DO
        !
        IF ( norm( g ) == 0.D0 ) RETURN
        !
