@@ -43,8 +43,8 @@
           REAL(dbl) :: zmesh            ! the nuclear charge used for mesh
           REAL(dbl) :: dx               ! the deltax of the linear mesh
           INTEGER, POINTER :: nn(:)      ! nn(nwfc)
-          REAL(dbl), POINTER :: rcut(:)  ! cut-off radius(nwfc)
-          REAL(dbl), POINTER :: rcutus(:)! cut-off ultrasoft radius (nwfc)
+          REAL(dbl), POINTER :: rcut(:)  ! cut-off radius(nbeta)
+          REAL(dbl), POINTER :: rcutus(:)! cut-off ultrasoft radius (nbeta)
           REAL(dbl), POINTER :: epseu(:) ! energy (nwfc)
           REAL(dbl), POINTER :: jchi(:)  ! jchi(nwfc)
           REAL(dbl), POINTER :: jjj(:)   ! jjj(nbeta)
@@ -55,6 +55,7 @@
           INTEGER :: nwfc               ! number of wavefunctions
           INTEGER :: nbeta              ! number of projectors
           CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc)
+          CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta)
           INTEGER, POINTER :: lchi(:)   ! lchi(nwfc)
           REAL(dbl), POINTER :: oc(:)   ! oc(nwfc)
           REAL(dbl), POINTER :: r(:)    ! r(mesh)
@@ -127,6 +128,7 @@
           NULLIFY( upf%r, upf%rab )  
           NULLIFY( upf%rho_atc, upf%vloc )  
           NULLIFY( upf%nn, upf%rcut)
+          NULLIFY( upf%els_beta)
           NULLIFY( upf%rcutus, upf%epseu)
           NULLIFY( upf%lll, upf%jjj, upf%kkbeta, upf%beta, upf%dion )  
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
@@ -144,6 +146,7 @@
           IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
           IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
           IF( ASSOCIATED( upf%nn ) ) DEALLOCATE( upf%nn )
+          IF( ASSOCIATED( upf%els_beta ) ) DEALLOCATE( upf%els_beta )
           IF( ASSOCIATED( upf%rcut ) ) DEALLOCATE( upf%rcut )
           IF( ASSOCIATED( upf%rcutus ) ) DEALLOCATE( upf%rcutus )
           IF( ASSOCIATED( upf%epseu ) ) DEALLOCATE( upf%epseu )

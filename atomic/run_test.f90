@@ -87,6 +87,10 @@ subroutine run_test
            elseif (ll(nstoae(n)).eq.1) then
               rcutts(n)=r(im)*1.6_dp
               rcutusts(n)=r(im)*1.7_dp
+              if (el(nstoae(n)).eq.'2P') then
+                 rcutts(n)=r(im)*1.7_dp
+                 rcutusts(n)=r(im)*1.8_dp
+              endif
            elseif (ll(nstoae(n)).eq.2) then
               rcutts(n)=r(im)*2.0_dp
               rcutusts(n)=r(im)*2.2_dp

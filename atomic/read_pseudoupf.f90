@@ -81,6 +81,9 @@ subroutine read_pseudoupf
   !
   do nb=1,nbeta
      ikk(nb)=upf%kkbeta(nb)
+     els(nb)=upf%els_beta(nb)
+     rcut(nb)=upf%rcut(nb)
+     rcutus(nb)=upf%rcutus(nb)
   end do
   betas(1:mesh, 1:nbeta) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   bmat(1:nbeta, 1:nbeta) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
@@ -108,6 +111,7 @@ subroutine read_pseudoupf
   lloc = -1
   vpsloc(1:mesh) = upf%vloc(1:upf%mesh)
   !!!
+
   CALL deallocate_pseudo_upf( upf )
 
 end subroutine read_pseudoupf

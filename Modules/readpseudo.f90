@@ -333,16 +333,26 @@ subroutine read_pseudo_nl (upf, iunps)
      ALLOCATE( upf%qqq   ( 1, 1 ) )
      ALLOCATE( upf%qfunc ( 0:upf%mesh, 1, 1 ) )
      ALLOCATE( upf%qfcoef( 1, 1, 1, 1 ) )
+     ALLOCATE( upf%rcut( 1 ) )
+     ALLOCATE( upf%rcutus( 1 ) )
+     ALLOCATE( upf%els_beta( 1 ) )
      return
   end if
   ALLOCATE( upf%kkbeta( upf%nbeta ) )
   ALLOCATE( upf%lll( upf%nbeta ) )
   ALLOCATE( upf%beta( 0:upf%mesh, upf%nbeta ) )
   ALLOCATE( upf%dion( upf%nbeta, upf%nbeta ) )
+  ALLOCATE( upf%rcut( upf%nbeta ) )
+  ALLOCATE( upf%rcutus( upf%nbeta ) )
+  ALLOCATE( upf%els_beta( upf%nbeta ) )
+
   upf%kkbeta = 0  
   upf%lll    = 0  
   upf%beta   = 0.0d0
   upf%dion   = 0.0d0
+  upf%rcut   = 0.0d0
+  upf%rcutus = 0.0d0
+  upf%els_beta = '  '
 
   do nb = 1, upf%nbeta 
      call scan_begin (iunps, "BETA", .false.)  
@@ -350,7 +360,11 @@ subroutine read_pseudo_nl (upf, iunps)
      read (iunps, '(i6)', err = 100, iostat = ios) ikk  
      upf%kkbeta(nb) = ikk
      read (iunps, *, err = 100, iostat = ios) (upf%beta(ir,nb), ir=1,ikk)
+
+     read (iunps, '(2x,2f6.2)', err=200,iostat=ios) upf%rcut(nb), upf%rcutus(nb)
+     read (iunps, '(2x,a2)', err=200,iostat=ios) upf%els_beta(nb)
      call scan_end (iunps, "BETA")  
+200  continue
   enddo
 
 
@@ -494,13 +508,11 @@ integer :: iunps
 TYPE (pseudo_upf), INTENT(INOUT) :: upf
 integer :: nb, ios
 
-ALLOCATE( upf%nn(upf%nwfc), upf%rcut(upf%nwfc), upf%rcutus(upf%nwfc) )
+ALLOCATE( upf%nn(upf%nwfc) )
 ALLOCATE( upf%epseu(upf%nwfc), upf%jchi(upf%nwfc) )
 ALLOCATE( upf%jjj(upf%nbeta) )
 
 upf%nn=0
-upf%rcut=0.d0
-upf%rcutus=0.d0
 upf%epseu=0.d0
 upf%jchi=0.d0
 do nb = 1, upf%nwfc
@@ -514,6 +526,7 @@ do nb = 1, upf%nbeta
 enddo
 
 read(iunps, '(4f15.8)') upf%xmin, upf%rmax, upf%zmesh, upf%dx
+
 
 return
 100 call errore ('read_pseudo_addinfo','Reading pseudo file', abs(ios))

@@ -253,6 +253,8 @@ end subroutine write_upf
        write (ounps, '(i6)', err=100, iostat=ios) ikk (nb)  
        write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
                                     ( betas(ir,nb), ir=1,ikk(nb) )
+       write (ounps, '(t3,2f6.2)', err=100,iostat=ios) rcut(nb), rcutus(nb)
+       write (ounps, '(t3,a2)', err=100, iostat=ios) els(nb)
        write (ounps, '(t3,a10)', err = 100, iostat = ios) "</PP_BETA>"  
     enddo
 
