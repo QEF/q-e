@@ -671,6 +671,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        title_, crystal_, tmp_dir_, tupf, lgamma, &
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
+     gamma_only = lgamma
      title = title_
      crystal = crystal_
 
