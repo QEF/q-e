@@ -99,6 +99,7 @@ subroutine write_wannier (nk, s0, kunit)
   integer, allocatable :: kisort(:)
   real(kind=8), allocatable :: ei_k(:,:)
   real(kind=8), allocatable :: rat(:,:,:)
+  real(kind=8) :: hmat(3,3), rr(3)
   integer, allocatable :: natom(:)
   integer :: npool, nkbl, nkl, nkr, npwx_g
   integer :: ike, iks, npw_g, ispin
@@ -152,12 +153,16 @@ subroutine write_wannier (nk, s0, kunit)
   rat    = 0.0d0
   natom  = 0 
 
+  hmat = alat * at
+
   do i = 1, nat
     if( ityp(i) > ntyp ) &
       call errore( ' write_wannier ', ' type index out of range ', 1 )
     natom( ityp( i ) ) = natom( ityp( i ) ) + 1
-    rat( :, natom( ityp( i ) ), ityp( i ) ) = tau( :, i )
-    call cryst_to_cart ( 1, rat( :, natom( ityp( i ) ), ityp( i ) ), at, -1)
+
+    rat( :, natom( ityp( i ) ), ityp( i ) ) = tau( :, i ) 
+
+    call cryst_to_cart ( 1, rat( :, natom( ityp( i ) ), ityp( i ) ), bg, -1)
   end do
 
   !  Open file launch.dat
@@ -188,6 +193,10 @@ subroutine write_wannier (nk, s0, kunit)
       do j = 1, natom( i )
         WRITE( stdout,fmt="(' tau(',I1,')',3F10.6)" ) j, ( rat( k, j, i ), k = 1, 3 )
       end do
+    end do
+    write(6,*) 'Atomic positions ( From PW )'
+    do i = 1, nat
+      write(6,fmt="(' tau(',I1,')',3F10.6)" ) i, ( tau( k, i ), k = 1, 3 )
     end do
   
   end if
