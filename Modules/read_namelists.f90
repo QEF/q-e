@@ -199,7 +199,7 @@
         diago_david_ndim = 4
         diago_diis_buff = 200
         diago_diis_ndim = 3
-        diago_diis_start = 2
+        diago_diis_ethr = 1.0d-3
         diago_diis_keep = .FALSE.
         RETURN
       END SUBROUTINE
@@ -424,7 +424,7 @@
         CALL mp_bcast( diago_david_ndim, ionode_id )
         CALL mp_bcast( diago_diis_buff, ionode_id )
         CALL mp_bcast( diago_diis_ndim, ionode_id )
-        CALL mp_bcast( diago_diis_start, ionode_id )
+        CALL mp_bcast( diago_diis_ethr, ionode_id )
         CALL mp_bcast( diago_diis_keep, ionode_id )
         RETURN
       END SUBROUTINE
