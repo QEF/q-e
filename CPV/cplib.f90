@@ -4823,21 +4823,20 @@
       subroutine readbhs( is, iunps )
 !---------------------------------------------------------------------
 !
-      use ncprm, only: ifpcor, rscore, betar, rab, dion, rucore, r, &
+      use ncprm, only: ifpcor, rscore, betar, rab, dion, vloc_at, r, &
                        lll, nbeta, mesh, kkbeta, cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: dft, which_dft
       use ions_base, only: zv
       use io_global, only: stdout
 
-      ! the above module variables has no dependency from iosys
 !
       implicit none
 !
       integer is, iunps
 !
       integer meshp, ir, ib, il, i, j, jj
-      real(kind=8), allocatable:: fint(:)
+      real(kind=8), allocatable:: fint(:), vnl(:)
       real(kind=8) rdum, alpha, z, zval, cmeshp, exfact
 !
 ! ifpcor is unfortunately not read from file
@@ -4921,10 +4920,13 @@
 !     local potential 
 !     ------------------------------------------------------------------
       lloc(is)=lloc(is)+1
+!
+! NB: the following is NOT the local potential: the -ze^2/r term is missing
+!
       do ir=1,mesh(is)
-         rucore(ir,lloc(is),is)=0.
+         vloc_at(ir,is)=0.
          do i=1,3
-            rucore(ir,lloc(is),is)=rucore(ir,lloc(is),is)               &
+            vloc_at(ir,is) = vloc_at(ir,is)                             &
      &            +(al(i,is,lloc(is))+bl(i,is,lloc(is))*r(ir,is)**2)    &
      &            *exp(-(r(ir,is)/rcl(i,is,lloc(is)))**2)
          end do
@@ -4934,24 +4936,22 @@
 !     nonlocal potentials: kleinman-bylander form 
 !     (1) definition of betar   (2) calculation of dion 
 !     ------------------------------------------------------------------
-      allocate(fint(mesh(is)))
+      allocate(fint(mesh(is)), vnl(mesh(is)))
       do il=1,nbeta(is)
          do ir=1,mesh(is)
-            rucore(ir,il,is)=0.
+            vnl(ir)=0.
             do i=1,3
-               rucore(ir,il,is)=rucore(ir,il,is)                        &
-     &                    +(al(i,is,il)+bl(i,is,il)*r(ir,is)**2)        &
-     &                    *exp(-(r(ir,is)/rcl(i,is,il))**2)
+               vnl(ir) = vnl(ir) + (al(i,is,il)+bl(i,is,il)*r(ir,is)**2)&
+     &                    * exp(-(r(ir,is)/rcl(i,is,il))**2)
             end do
-            rucore(ir,il,is) = rucore(ir,il,is)                         &
-     &                       - rucore(ir,lloc(is),is)
-            fint(ir)=betar(ir,il,is)**2*rucore(ir,il,is)
-            betar(ir,il,is)=rucore(ir,il,is)*betar(ir,il,is)
+            vnl(ir) = vnl(ir) - vloc_at(ir,is)
+            fint(ir)= betar(ir,il,is)**2*vnl(ir)
+            betar(ir,il,is)=vnl(ir)*betar(ir,il,is)
          end do
          call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
-         dion(il,il,is)=1.0/dion(il,il,is)
+         dion(il,il,is) = 1.0/dion(il,il,is)
       end do
-      deallocate(fint)
+      deallocate(vnl, fint)
 !     
 !     ------------------------------------------------------------------
 !     output: pp info 
@@ -5004,7 +5004,7 @@
 !     info on DFT level in module "dft"
 !
       use parameters, only: nsx, natx, lqmax, ndmx
-      use ncprm, only: rscore, nqlc, qfunc, rucore, r, rab, rinner, &
+      use ncprm, only: rscore, nqlc, qfunc, vloc_at, r, rab, rinner,&
                        qrl, qqq, nbeta, nbrx, ifpcor, mesh, betar,  &
                        dion, lll, kkbeta
       use funct, only: dft, iexch, icorr, igcx, igcc
@@ -5140,7 +5140,7 @@
 !   reads the local potential 
 !
       read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rdum,            &
-     &                       ( rucore(ir,1,is), ir=1,mesh(is) )
+     &                       ( vloc_at(ir,is), ir=1,mesh(is) )
 !
 !   reads the atomic charge
 !
@@ -5194,7 +5194,7 @@
 !    For compatibility with Vandebilt format
 !
       do ir = 1, mesh(is)
-         rucore(ir,1,is)= rucore(ir,1,is)*r(ir,is)
+         vloc_at (ir,is)= vloc_at(ir,is)*r(ir,is)
       end do
 !
 !     set rscore(r)=rho_core(r) without factors
@@ -5225,7 +5225,7 @@
 !     ------------------------------------------------------
 !     The order of all l-dependent objects is always s,p,d
 !     ------------------------------------------------------
-!     potentials, e.g. rucore, are really r*v(r)
+!     potentials, e.g. vloc_at, are really r*v(r)
 !     wave funcs, e.g. chi, are really proportional to r*psi(r)
 !     and are normalized so int (chi**2) dr = 1
 !     thus psi(r-vec)=(1/r)*chi(r)*y_lm(theta,phi)
@@ -5270,7 +5270,7 @@
 !
       use kinds, only: DP
       use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
-      use ncprm, only: qfunc, qfcoef, qqq, betar, dion, rucore, cmesh, &
+      use ncprm, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, cmesh,&
                        qrl, rab, rscore, r, mesh, ifpcor,  &
                        rinner, kkbeta, lll, nbeta, nqf, nqlc
       use funct, only: dft, which_dft
@@ -5509,13 +5509,10 @@
      &        npf, dummy
       end if
 !
-!   reads the local potential of the vanderbilt
-!   Note:    For consistency with HSC pseudopotentials etc., the
-!            program carries a bare local potential rucore for
-!            each l value. For keyps=3 they are all the same.
+!   read the local potential of the vanderbilt
 !
       read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rcloc,           &
-     &                       ( rucore(ir,1,is), ir=1,mesh(is) )
+     &                       ( vloc_at(ir,is), ir=1,mesh(is) )
 !
 !   If present reads the core charge rscore(r)=4*pi*r**2*rho_core(r)
 !
@@ -5556,14 +5553,6 @@
       rscore(1,is) = 0.0
       do ir=2,mesh(is)
          rscore(ir,is) = rscore(ir,is)/4.0/3.14159265/r(ir,is)**2
-      enddo
-!
-!     Copy the local potential on all the channels
-!
-      do iv = 2, nbeta(is)
-         do ir = 1, mesh(is)
-            rucore(ir,iv,is)=rucore(ir,1,is)
-         enddo
       enddo
 !
 !    Reads the wavefunctions of the atom

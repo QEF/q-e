@@ -9,7 +9,7 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   ! CP90 modules
   !
-  use ncprm, only: qfunc, qfcoef, rinner, qqq, rscore, rucore, r, rab, &
+  use ncprm, only: qfunc, qfcoef, rinner, qqq, rscore, vloc_at, r, rab, &
                    lll, nbeta, kkbeta, ifpcor, mesh, nqlc, nqf, &
                    betar, dion
   use wfc_atomic, only: chi, lchi, nchi
@@ -91,7 +91,7 @@ subroutine read_pseudo (is, iunps, ierr)
 
   !
   ! compatibility with Vanderbilt format: Vloc => r*Vloc
-  rucore(1:upf%mesh, 1,is) = upf%vloc(1:upf%mesh) * upf%r  (1:upf%mesh)
+  vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh) * upf%r  (1:upf%mesh)
   !
 
   ! compatibility with old Vanderbilt formats

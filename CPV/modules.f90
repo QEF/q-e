@@ -172,11 +172,11 @@ module ncprm
 !
 !  qfcoef   coefficients to pseudize qfunc for different total
 !              angular momentum (for r<rinner)
-!  rucore   bare local potential
+!  vloc_at  local potential for each atom
 
   real(kind=8) :: rscore(ndmx,nsx), dion(nbrx,nbrx,nsx), &
        betar(ndmx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
-       qfunc(ndmx,nbrx,nbrx,nsx), rucore(ndmx,nbrx,nsx), &
+       qfunc(ndmx,nbrx,nbrx,nsx), vloc_at(ndmx,nsx), &
        qfcoef(nqfx,lqmax,nbrx,nbrx,nsx), rinner(lqmax,nsx)
 !
 ! qrl       q(r) functions

@@ -279,7 +279,7 @@
             end do
 !
             do ir=1,irmax
-               vscr(ir)=0.5*rucore(ir,1,is) +                           &
+               vscr(ir)=0.5*vloc_at(ir,is) +                           &
      &                  zv(is)*erf(r(ir,is)/rcmax(is))
                f(ir)=vscr(ir)*r(ir,is)
             end do
