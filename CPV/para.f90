@@ -223,6 +223,7 @@ end module para_mod
 ! number of wavevectors
 !
       use para_mod
+      use stick_base
 !
       implicit none
       real(kind=8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
@@ -256,6 +257,10 @@ end module para_mod
       real(kind=8)                                                      &
      &        aux(ncplanex), &! used to order columns
      &        amod            ! modulus of G vectors
+!
+!
+      integer, allocatable :: st(:,:), stw(:,:), sts(:,:) ! sticks maps
+      integer :: ub(3), lb(3)  ! upper and lower bounds for maps
 !
       call tictac(27,0)
 !
@@ -325,90 +330,81 @@ end module para_mod
       n1m1=nr1/2
       n2m1=nr2/2
       n3m1=nr3/2
+
+      lb(1) = -n1m1
+      lb(2) = -n2m1
+      lb(3) = -n3m1
+      ub(1) =  n1m1
+      ub(2) =  n2m1
+      ub(3) =  n3m1
 !
-      do i1=-n1m1,n1m1
-         do i2=-n2m1,n2m1
+      ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
+      ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
+      ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
+
 !
-! nct counts columns containing G-vectors for the dense grid
+! ...     Fill in the stick maps, for given g-space base (b1,b2,b3)
+! ...     and cut-offs
+! ...     The value of the element (i,j) of the map ( st ) is equal to the
+! ...     number of G-vector belonging to the (i,j) stick.
 !
-            nct=nct+1
-            if (nct.gt.ncplane)                                         &
-     &           call errore('set_fft_para','too many columns',1)
-            ngc (nct) = 0
-            ngcs(nct) = 0
-            ngcw(nct) = 0
+
+      CALL sticks_maps( .TRUE., ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
+
+      nct  = COUNT( st  > 0 )
+      ncts = COUNT( sts > 0 )
+
+      if (nct.gt.ncplane)    &
+     &    call errore('set_fft_para','too many columns',1)
+
+      if (ncts.gt.ncplanes)  &
+     &    call errore('set_fft_para','too many columns',2)
+
+      if (nct .eq.0) & 
+     &    call errore('set_fft_para','number of column 0', 1)
+
+      if (ncts.eq.0) &
+     &    call errore('set_fft_para','number smooth column 0', 1)
+
 !
-            do i3 = -n3m1,n3m1
-               amod = (b1(1)*i1 + b2(1)*i2 + b3(1)*i3)**2 +             &
-     &                (b1(2)*i1 + b2(2)*i2 + b3(2)*i3)**2 +             &
-     &                (b1(3)*i1 + b2(3)*i2 + b3(3)*i3)**2 
-               if (amod.le.gcut )                                       &
-     &              ngc (nct)= ngc (nct)+ 1
-               if (amod.le.gcuts)                                       &
-     &              ngcs(nct)= ngcs(nct)+ 1
-               if (amod.le.gcutw)                                       &
-     &              ngcw(nct)= ngcw(nct)+ 1
-            enddo
-            if (ngc(nct).gt.0) then
+! ...     initialize the sticks indexes array ist
+! ...     nct counts columns containing G-vectors for the dense grid
+! ...     ncts counts columns contaning G-vectors for the smooth grid
 !
-! this column contains G-vectors
-!
-               in1(nct) = i1
-               in2(nct) = i2
-               if (ngcs(nct).gt.0) then
-!
-! ncts counts columns contaning G-vectors for the smooth grid
-!
-                  ncts=ncts+1
-                  if (ncts.gt.ncplanes)                                 &
-     &                 call errore('set_fft_para','too many columns',2)
-               end if
-            else
-!
-! this column has no G-vectors: reset the counter
-!
-               nct=nct-1
-            end if
-         enddo
-      end do
-!
-      if(nct .eq.0) call errore('set_fft_para','number of column 0', 1)
-      if(ncts.eq.0) call errore('set_fft_para',                          &
-     &                                     'number smooth column 0', 1)
+
+      CALL sticks_countg( ub, lb, st, stw, sts, in1, in2, ngc, ngcw, ngcs )
+
 !
 !   Sort the columns. First the column with the largest number of G
 !   vectors on the wavefunction sphere (active columns), 
 !   then on the smooth sphere, then on the big sphere. Dirty trick:
 !
-      do mc = 1,nct
-         aux(mc)=-(ngcw(mc)*nr3x**2 + ngcs(mc)*nr3x + ngc(mc))
-      end do
-      call kb07ad_cp90(aux,nct,index) 
+
+      CALL sticks_sort( ngc, ngcw, ngcs, nct, index )
+
+      st  = 0
+      stw = 0
+      sts = 0
+
 !
-! assign columns to processes
+!   assign columns to processes
 !
-      do j=1,nproc
-         ncp (j) = 0
-         ncps(j) = 0
-         ncpw(j) = 0
-         ngp (j) = 0
-         ngps(j) = 0
-         ngpw(j) = 0
-      end do
-!
-      do mc=1, nct
+
+      CALL sticks_dist1( ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+                ncp, ncpw, ncps, ngp, ngpw, ngps, st, sts )
+
+      DO mc = 1, nct
+
          i = index(mc)
-!
-! index contains the desired ordering of columns (see above)
-!
+
          i1=in1(i)
          i2=in2(i)
-!
-         if ( i1.lt.0.or.(i1.eq.0.and.i2.lt.0) ) go to 30
+
+         if ( i1.lt.0.or.(i1.eq.0.and.i2.lt.0) ) go to 29
 !
 ! only half of the columns, plus column (0,0), are scanned:
 ! column (-i1,-i2) must be assigned to the same proc as column (i1,i2)
-! 
+!
 ! ic  :  position, in fft notation, in dense grid, of column ( i1, i2)
 ! icm :      "         "      "          "    "         "    (-i1,-i2)
 ! ics :      "         "      "        smooth "         "    ( i1, i2)
@@ -437,66 +433,23 @@ end module para_mod
          n2 =-i2 + 1
          if (n2.lt.1) n2 = n2 + nr2s
          icms = n1 + (n2-1)*nr1sx
-!
-         jj=1
-         if (ngcw(i).gt.0) then
-!
-! this is an active column: find which processor has currently
-! the smallest number of plane waves 
-!
-            do j=1,nproc
-               if (ngpw(j).lt.ngpw(jj)) jj = j
-            end do     
-         else
-!
-! this is an inactive column: find which processor has currently
-! the smallest number of G-vectors
-!
-            do j=1,nproc
-               if (ngp(j).lt.ngp(jj)) jj = j
-            end do 
-         end if
-!
-! jj is the processor to which this column is assigned
-! use -jj for inactive columns, jj for active columns
-!
-         ipc(ic) = -jj
-         ncp(jj) = ncp(jj) + 1
-         ngp(jj) = ngp(jj) + ngc(i)
-         if (ngcs(i).gt.0) then
-            ncps(jj)=ncps(jj)+1
-            ngps(jj)=ngps(jj)+ngcs(i)
-            ipcs(ics)=-jj
-         endif
-         if (ngcw(i).gt.0) then
-            ipcs(ics)=jj
-            ipc(ic) = jj
-            ngpw(jj)= ngpw(jj) + ngcw(i)
-            ncpw(jj)= ncpw(jj) + 1
-         endif
-!
-! now assign the (-i1,-i2) column to the same processor
-!
-         if (i1.eq.0.and.i2.eq.0) go to 30
-!
-! do not count twice column (0,0) !
-!
-         ipc(icm) = -jj
-         ncp(jj) = ncp(jj) + 1
-         ngp(jj) = ngp(jj) + ngc(i)
-         if (ngcs(i).gt.0) then
-            ncps(jj)=ncps(jj)+1
-            ngps(jj)=ngps(jj)+ngcs(i)
-            ipcs(icms)=-jj
-         endif
-         if (ngcw(i).gt.0) then
-            ipcs(icms)=jj
-            ipc(icm) = jj
-            ngpw(jj)= ngpw(jj) + ngcw(i)
-            ncpw(jj)= ncpw(jj) + 1
-         endif
- 30      continue
-      enddo 
+
+         IF( st( i1, i2 ) /= 0 ) THEN
+           ipc( ic  ) = st(  i1,  i2 )
+           ipc( icm ) = st( -i1, -i2 )
+         END IF
+
+         IF( sts( i1, i2 ) /= 0 ) THEN
+           ipcs( ics  ) = sts(  i1,  i2 )
+           ipcs( icms ) = sts( -i1, -i2 )
+         END IF
+
+29       CONTINUE
+
+      END DO
+      
+      DEALLOCATE( st, stw, sts )
+
 !
 ! ipc  is the processor for this column in the dense grid
 ! ipcs is the same, for the smooth grid
