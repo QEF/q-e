@@ -99,7 +99,7 @@ subroutine sym_and_write_zue
   !
   WRITE( stdout, '(/,10x,"Effective charges U-E in cartesian axis ",/)' &
        &)
-  WRITE( stdout, '(10x,  "          Z_{s,alpha}{beta} ",/)')
+  ! WRITE( stdout, '(10x,  "          Z_{s,alpha}{beta} ",/)')
   do na = 1, nat
      WRITE( stdout, '(10x," atom ",i6)') na
      WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstarue (ipol, na, jpol) &
