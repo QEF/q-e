@@ -69,20 +69,19 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   ! input checks
   !
-  if (lsign .and.  (iflag /= 0)) call errore ('local_dos', &
-       'inconsistent flags', 1)
   if (noncolin.and. lsign) call errore('local_dos','not available yet',1)
   if (noncolin.and. iflag.ne. 0) call errore('local_dos','not available yet',1)
   if (noncolin.and. gamma_only) call errore('local_dos','not available yet',1)
-  if (lsign .and. (kpoint < 1) .or. (kpoint > nks)) &
-       call errore ('local_dos', 'wrong k-point specified', 1)
-  if (lsign .and. ( sqrt(xk(1,kpoint)**2 + xk(2,kpoint)**2 + &
-                         xk(3,kpoint)**2) > 1d-9 ) ) &
-       call errore ('local_dos', 'k must be zero', 1)
   !
-  if ( (iflag == 0) .and. ( ( kband < 1 .or. kband > nbnd ) .or. &
-        (kpoint < 1) .or. (kpoint > nks)) ) &
-       call errore ('local_dos', 'wrong kpoint or band specified', 1)
+  if ( (iflag == 0) .and. ( kband < 1 .or. kband > nbnd ) ) &
+       call errore ('local_dos', 'wrong band specified', 1)
+  if ( (iflag == 0) .and. ( kpoint < 1 .or. kpoint > nks ) ) &
+       call errore ('local_dos', 'wrong kpoint specified', 1)
+  if (lsign) then
+     if (iflag /= 0) call errore ('local_dos', 'inconsistent flags', 1)
+     if (sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2) > 1d-9 )  &
+        call errore ('local_dos', 'k must be zero', 1)
+  end if
   !
   if (gamma_only) then 
      allocate (rbecp(nkb,nbnd))
