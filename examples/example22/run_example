@@ -13,12 +13,14 @@ $ECHO
 $ECHO "This example shows how to use pwnc.x to calculate the total energy"
 $ECHO "and the band structure of fcc-Pt with a fully relativistic "
 $ECHO "pseudo-potential including spin-orbit coupling."
+$ECHO "pwcond.x is used to calculate the complex bands"
+$ECHO "including spin-orbit coupling."
 
 # set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pwnc.x"
+BIN_LIST="pwnc.x pwcond.x"
 PSEUDO_LIST="Ptrel.RRKJ3.UPF"
 
 $ECHO
@@ -67,8 +69,10 @@ $ECHO " done"
 
 # how to run executables
 PWNC_COMMAND="$PARA_PREFIX $BIN_DIR/pwnc.x $PARA_POSTFIX"
+PWCOND_COMMAND="$PARA_PREFIX $BIN_DIR/pwcond.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pwnc.x as: $PWNC_COMMAND"
+$ECHO "  running pwcond.x as: $PWCOND_COMMAND"
 $ECHO
  
 # clean TMP_DIR
@@ -161,6 +165,72 @@ K_POINTS
 EOF
 $ECHO "  running the non-scf calculation for Pt with spin-orbit coupling...\c"
 $PWNC_COMMAND < pt.nscf.in > pt.nscf.out
+$ECHO " done"
+
+# a self-consistent calculation of Pt in a tetragonal cell
+cat > pt.tet.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='ptt',
+ /
+ &system
+    ibrav = 6, 
+    celldm(1) =5.23, 
+    celldm(3) =1.4142, 
+    nat= 2, 
+    ntyp= 1,
+    noncolin=.true.,
+    lspinorb=.true.,
+    starting_magnetization(1)=0.0,
+    ecutwfc = 30.0, 
+    ecutrho = 250.0,
+    occupations='smearing', 
+    smearing='methfessel-paxton', 
+    degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Pt 58.69 Ptrel.RRKJ3.UPF 
+ATOMIC_POSITIONS
+ Pt 0.  0.  0. 
+ Pt 0.5 0.5 0.7071
+K_POINTS (automatic)
+ 4 4 3 1 1 1                
+EOF
+$ECHO "  running the scf calculation for Pt with tetragonal cell...\c"
+$PWNC_COMMAND < pt.tet.in > pt.tet.out
+$ECHO " done"
+
+# Calculation of the complex bands of Pt 
+cat > pt.cond.in << EOF
+ &inputcond
+    outdir='$TMP_DIR/'     
+    prefix='ptt'
+    band_file = 'bands.pt'
+    ikind=0  
+    bdl1=0.0d0
+    bdl2=1.4142d0
+    energy0=0.0d0
+    denergy=-0.2d0
+    ewind=4.d0
+    llapack=.true.
+    epsproj=1.d-7
+    cutplot=2.d0
+ /
+    1
+    0.0 0.0 1.0
+    1
+EOF
+$ECHO "  running the calculation of the complex bands of Pt...\c"
+$PWCOND_COMMAND < pt.cond.in > pt.cond.out
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

@@ -1,6 +1,8 @@
 This example shows how to use pwnc.x to calculate the total energy
 and the band structure of fcc-Pt with a fully relativistic US-PP
 which includes spin-orbit effects.
+It tests also pwcond.x for the calculation of complex bands of a 
+system with spin-orbit.
 
 The calculation proceeds as follows:
 
@@ -9,3 +11,9 @@ The calculation proceeds as follows:
 
 2) make a band structure calculation for Pt (input=pt.band.in,
    output=pt.band.out).
+
+3) make a self-consistent calculation for Pt in a tetragonal cell 
+   (input=pt.tet.in, output=pt.tet.out).
+
+4) make a calculation with pwcond for the complex bands at the Fermi
+   level (input=pt.cond.in, output=pt.cond.out).
