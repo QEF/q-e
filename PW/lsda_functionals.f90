@@ -44,6 +44,8 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   !..exchange
   if (iexch.eq.1) then
      call slater_spin (rho, zeta, ex, vxup, vxdw)
+  ELSEIF (iexch == 2) THEN
+     call slater_xc_rel ( rho, zeta, ex, vxup, vxdw )
   else
      ex = 0.0d0
      vxup = 0.0d0
@@ -238,12 +240,16 @@ subroutine pz_polarized (rs, ec, vc)
   !
   use funct
   USE kinds
+  USE noncollin_module, ONLY: noncolin
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: a, b, c, d, gc, b1, b2
   parameter (a = 0.01555d0, b = - 0.0269d0, c = 0.0007d0, d = &
        - 0.0048d0, gc = - 0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0)
   real(kind=DP) :: lnrs, rs12, ox, dox
+  LOGICAL(KIND=DP) :: xc_rel
+  REAL(KIND=DP), PARAMETER :: xcprefact = 0.022575584, pi34 = 0.6203504908994d0 
+  REAL(KIND=DP) :: betha, etha, csi, prefact
   !
   if (rs.lt.1.0d0) then
      ! high density formula
@@ -260,6 +266,14 @@ subroutine pz_polarized (rs, ec, vc)
      vc = ec * dox / ox
   endif
   !
+!  IF ( lxc_rel ) THEN
+!     betha = prefact * pi34 / rs
+!     etha = DSQRT( 1 + betha**2 )
+!     csi = betha + etha
+!     prefact = 1.0D0 - (3.0D0/2.0D0) * ( (betha*etha - log(csi))/betha**2 )**2
+!     ec = ec * prefact
+!     vc = vc * prefact
+!  ENDIF
   return
 end subroutine pz_polarized
 !
@@ -647,3 +661,52 @@ subroutine slater_spin (rho, zeta, ex, vxup, vxdw)
   !
   return
 end subroutine slater_spin
+
+!-----------------------------------------------------------------------
+SUBROUTINE slater_xc_rel ( rho, Z, ex, vxup, vxdw )
+  !-----------------------------------------------------------------------
+  !     Slater exchange with alpha=2/3, relativistic exchange case
+  !
+  use funct
+  USE kinds
+
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      PARAMETER (ZERO=0.D0,ONE=1.D0,PFIVE=.5D0,OPF=1.5D0,C014=0.014D0)
+      !DIMENSION rho, zeta, vxup, vxdw, ex
+
+       PI=4*ATAN(ONE)
+       TRD = ONE/3
+       FTRD = 4*TRD
+       TFTM = 2**FTRD-2
+       A0 = (4/(9*PI))**TRD
+
+!      X-alpha parameter:
+       ALP = 2 * TRD
+
+       IF (rho .LE. ZERO) THEN
+         EX = ZERO
+         vxup  = ZERO
+         vxdw  = ZERO
+         RETURN
+       ELSE
+          FZ = ((1+Z)**FTRD+(1-Z)**FTRD-2)/TFTM
+          FZP = FTRD*((1+Z)**TRD-(1-Z)**TRD)/TFTM
+       ENDIF
+       RS = (3 / (4*PI*rho) )**TRD
+       VXP = -3*ALP/(2*PI*A0*RS)
+       EXP = 3*VXP/4
+
+         BETA = C014/RS
+         SB = SQRT(1+BETA*BETA)
+         ALB = LOG(BETA+SB)
+         VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
+         EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
+
+       VXF = 2**TRD*VXP
+       EXF = 2**TRD*EXP
+       vxup  = VXP + FZ*(VXF-VXP) + (1-Z)*FZP*(EXF-EXP)
+       vxdw  = VXP + FZ*(VXF-VXP) - (1+Z)*FZP*(EXF-EXP)
+       EX    = EXP + FZ*(EXF-EXP)
+
+  END SUBROUTINE slater_xc_rel
+

@@ -54,6 +54,8 @@ subroutine xc (rho, ex, ec, vx, vc)
   !..exchange
   if (iexch.eq.1) then
      call slater (rs, ex, vx)
+  ELSEIF (iexch == 2) THEN
+     CALL slater_rxc(rho, ex, vx)
   else
      ex = 0.0d0
      vx = 0.0d0
@@ -171,6 +173,48 @@ subroutine slater (rs, ex, vx)
   !
   return
 end subroutine slater
+!
+!-----------------------------------------------------------------------
+subroutine slater_rxc (D, EX, VX)
+  !-----------------------------------------------------------------------
+  !        Slater exchange with alpha=2/3 and Relativistic exchange
+  !
+  USE kinds
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      PARAMETER (ZERO=0.D0,ONE=1.D0,PFIVE=.5D0,OPF=1.5D0,C014=0.014D0)
+
+       PI=4*ATAN(ONE)
+       TRD = ONE/3
+       FTRD = 4*TRD
+       TFTM = 2**FTRD-2
+       A0 = (4/(9*PI))**TRD
+
+!      X-alpha parameter:
+       ALP = 2 * TRD
+
+         IF (D .LE. ZERO) THEN
+           EX = ZERO
+           VX = ZERO
+           RETURN
+         ENDIF
+         Z = ZERO
+         FZ = ZERO
+         FZP = ZERO
+
+       RS = (3 / (4*PI*D) )**TRD
+       VXP = -3*ALP/(2*PI*A0*RS)
+       EXP = 3*VXP/4
+         BETA = C014/RS
+         SB = SQRT(1+BETA*BETA)
+         ALB = LOG(BETA+SB)
+         VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
+         EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
+       VXF = 2**TRD*VXP
+       EXF = 2**TRD*EXP
+         VX = VXP
+         EX    = EXP
+END SUBROUTINE slater_rxc
+
 !
 !-----------------------------------------------------------------------
 subroutine pz (rs, iflag, ec, vc)

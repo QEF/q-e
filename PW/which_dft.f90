@@ -19,7 +19,7 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
   integer :: iexch, icorr, igcx, igcc
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 1, ncc = 9, ngcx = 3, ngcc = 4)
+  parameter (nxc = 2, ncc = 9, ngcx = 3, ngcc = 4)
   character (len=3) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -27,7 +27,7 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
   integer :: len, l, i, notset
   character (len=50):: dftout * 50
   data notset / - 1 /
-  data exc / 'NOX', 'SLA' /
+  data exc / 'NOX', 'SLA', 'RXC' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
        'OBW', 'GL' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBE' /
