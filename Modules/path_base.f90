@@ -290,8 +290,10 @@ MODULE path_base
       !
       IF ( meta_ionode ) THEN
          !
-         nstep_path_char   = int_to_char( nstep_path )
+         nstep_path_char    = int_to_char( nstep_path )
          num_of_images_char = int_to_char( num_of_images )
+         !
+         ! ... general printout
          !
          WRITE( UNIT = iunpath, FMT = * )
          !
@@ -301,10 +303,6 @@ MODULE path_base
          WRITE( UNIT = iunpath, FMT = summary_fmt ) &
              "restart_mode", TRIM( restart_mode )
          !
-         IF ( lneb ) &
-            WRITE( UNIT = iunpath, FMT = summary_fmt ) &
-                "CI_scheme", TRIM( CI_scheme )
-         !
          WRITE( UNIT = iunpath, FMT = summary_fmt ) &
              "opt_scheme", TRIM( opt_scheme )
          !
@@ -312,27 +310,28 @@ MODULE path_base
              "num_of_images", TRIM( num_of_images_char )
          !
          WRITE( UNIT = iunpath, FMT = summary_fmt ) &
-             "nstep", TRIM( nstep_path_char )   
+             "nstep", TRIM( nstep_path_char )
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
-                
-         WRITE( UNIT = iunpath, &
-                FMT = '(5X,"fixed_tan",T35," = ",1X,L1))' ) fixed_tan
-                
-         WRITE( UNIT = iunpath, &
-                FMT = '(5X,"reset_vel",T35," = ",1X,L1))' ) reset_vel
          !
-         WRITE( UNIT = iunpath, &
-                FMT = '(5X,"use_multistep",T35," = ",1X,L1))' ) use_multistep
+         IF ( .NOT. lbroyden ) &
+            WRITE( UNIT = iunpath, &
+                   FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
          !
-         WRITE( UNIT = iunpath, &
-                FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
+         IF ( lquick_min ) &
+            WRITE( UNIT = iunpath, &
+                   FMT = '(5X,"reset_vel",T35," = ",1X,L1))' ) reset_vel
+         !
+         ! ... neb specific
          !
          IF ( lneb ) THEN
+            !
+            WRITE( UNIT = iunpath, FMT = summary_fmt ) &
+                "CI_scheme", TRIM( CI_scheme )
             !
             WRITE( UNIT = iunpath, &
                    FMT = '(5X,"k_max",T35," = ",1X,F6.4," a.u.")' ) k_max
@@ -341,10 +340,25 @@ MODULE path_base
             !
          END IF
          !
-         IF ( llangevin ) &
+         ! ... smd specific
+         !
+         IF ( lsmd ) THEN
+            !
             WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"required temperature",T35, &
-                          &" = ",F6.1," K")' ) temp_req * eV_to_kelvin * au
+                FMT = '(5X,"use_multistep",T35," = ",1X,L1))' ) use_multistep
+            !
+            WRITE( UNIT = iunpath, &
+                FMT = '(5X,"free_energy",T35," = ",1X,L1))' ) free_energy
+            !
+            WRITE( UNIT = iunpath, &
+                FMT = '(5X,"fixed_tan",T35," = ",1X,L1))' ) fixed_tan
+            !
+            IF ( llangevin ) &
+               WRITE( UNIT = iunpath, &
+                      FMT = '(5X,"required temperature",T35, &
+                             &" = ",F6.1," K")' ) temp_req * eV_to_kelvin * au
+            !
+         END IF
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"path_thr",T35," = ",1X,F6.4," eV / A")' ) path_thr
@@ -1162,7 +1176,7 @@ MODULE path_base
       !
       INTEGER        :: i, n
       INTEGER        :: N_in, N_fin, free_me, num_of_scf_images
-      REAL (KIND=DP) :: err_max, val      
+      REAL (KIND=DP) :: err_max
       !
       !
       IF ( first_last_opt ) THEN
@@ -1295,6 +1309,7 @@ MODULE path_base
       ! ... local variables
       !
       INTEGER        :: N_in, N_fin, i
+      REAL (KIND=DP) :: val
       !
       !
       IF ( istep_path == 0 .OR. first_last_opt ) THEN
