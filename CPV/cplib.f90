@@ -5196,8 +5196,7 @@
       subroutine readpp
 !---------------------------------------------------------------------
 !
-      use ncprm
-      use cvan
+      use cvan, only: nvb
       use ions_base, only: ipp, nsp
       use io_files, only: psfile, pseudo_dir
       use dft_mod, only: dft
@@ -5281,11 +5280,14 @@
       subroutine readbhs( is, iunps )
 !---------------------------------------------------------------------
 !
-      use ncprm
-      use bhs
-      use dft_mod
+      use ncprm, only: ifpcor, rscore, betar, rab, dion, rucore, r, &
+                       lll, nbeta, mesh, kkbeta, cmesh
+      use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
+      use dft_mod, only: dft
       use ions_base, only: zv
       use io_global, only: stdout
+
+      ! the above module variables has no dependency from iosys
 !
       implicit none
 !
@@ -5458,12 +5460,16 @@
 !     info on DFT level in module "dft"
 !
       use parameters, only: nsx, natx, lqx=>lqmax
-      use ncprm
-      use dft_mod
-      use wfc_atomic
+      use ncprm, only: rscore, nqlc, qfunc, rucore, r, rab, rinner, &
+                       qrl, qqq, nbeta, nbrx, ifpcor, mesh, betar,  &
+                       dion, lll, kkbeta
+      use dft_mod, only: dft
+      use wfc_atomic, only: lchi, chi, nchi, nchix, mmaxx
       use ions_base, only: zv
       use io_global, only: stdout
 !
+      ! the above module variables has no dependency from iosys
+
       implicit none
 !
 !    First the arguments passed to the subroutine
@@ -5721,10 +5727,14 @@
 !
       use io_global, only: stdout
       use parameters, only: nqfx=>nqfm, lqx=>lqmax
-      use ncprm
-      use dft_mod
-      use wfc_atomic
+      use ncprm, only: qfunc, qfcoef, qqq, betar, dion, rucore, cmesh, &
+                       qrl, rab, rscore, r, mesh, ifpcor, nbrx,  &
+                       rinner, kkbeta, lll, nbeta, nqf, nqlc
+      use dft_mod, only: dft, bp88, pw91
+      use wfc_atomic, only: nchi, chi, lchi, nchix, mmaxx, nsx
       use ions_base, only: zv
+
+      ! the above module variables has no dependency from iosys
 !
       implicit none
 !
@@ -6104,7 +6114,10 @@
 ! 
 ! for compatibility with old Vanderbilt formats
 !
-      use ncprm
+      use ncprm, only: qfunc, qrl, nqf, qfcoef, rinner, lll, nbeta, &
+                       r, kkbeta
+
+      ! the above module variables has no dependency from iosys
 !
       implicit none
       integer :: is

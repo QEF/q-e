@@ -21,9 +21,9 @@ module bhs
   use parameters, only: nsx
   implicit none
   save
-  real(kind=8) rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
+  real(kind=8) :: rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
        rcl(3,nsx,3), al(3,nsx,3), bl(3,nsx,3)
-  integer lloc(nsx)
+  integer :: lloc(nsx)
 end module bhs
 
 module core
@@ -81,9 +81,9 @@ end module cvan
 module dft_mod
   implicit none
   save
-  integer lda, blyp, becke, bp88, pw91, pbe
+  integer :: lda, blyp, becke, bp88, pw91, pbe
   parameter (lda=0, blyp=1, becke=2, bp88=3, pw91=4, pbe=5)
-  integer dft
+  integer :: dft
 end module dft_mod
 
 module elct
@@ -186,7 +186,7 @@ module ncprm
 !  nqlc     angular momenta present in Q smoothing
 !  lll      lll(j) is l quantum number of j'th beta function
 
-  integer ifpcor(nsx), nbeta(nsx), kkbeta(nsx), &
+  integer :: ifpcor(nsx), nbeta(nsx), kkbeta(nsx), &
        nqf(nsx), nqlc(nsx), lll(nbrx,nsx)
 
 !  rscore   partial core charge (Louie, Froyen, Cohen)
@@ -201,22 +201,22 @@ module ncprm
 !              angular momentum (for r<rinner)
 !  rucore   bare local potential
 
-  real(kind=8)    rscore(mmaxx,nsx), dion(nbrx,nbrx,nsx), &
+  real(kind=8) :: rscore(mmaxx,nsx), dion(nbrx,nbrx,nsx), &
        betar(mmaxx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
        qfunc(mmaxx,nbrx,nbrx,nsx), rucore(mmaxx,nbrx,nsx), &
        qfcoef(nqfx,lqx,nbrx,nbrx,nsx), rinner(lqx,nsx)
 !
 ! qrl       q(r) functions
 !
-  real(kind=8) qrl(mmaxx,nbrx,nbrx,lx,nsx)
+  real(kind=8) :: qrl(mmaxx,nbrx,nbrx,lx,nsx)
 
 !  mesh     number of radial mesh points
 !  r        logarithmic radial mesh
 !  rab      derivative of r(i) (used in numerical integration)
 !  cmesh    used only for Herman-Skillman mesh (old format)
 
-  integer mesh(nsx)
-  real(kind=8)    r(mmaxx,nsx), rab(mmaxx,nsx), cmesh(nsx)
+  integer :: mesh(nsx)
+  real(kind=8) :: r(mmaxx,nsx), rab(mmaxx,nsx), cmesh(nsx)
 end module ncprm
 
 module pseu
@@ -235,7 +235,7 @@ end module pseu
 module qgb_mod
   implicit none
   save
-  complex(kind=8), allocatable::  qgb(:,:,:)
+  complex(kind=8), allocatable :: qgb(:,:,:)
 contains
   subroutine deallocate_qgb_mod
       IF( ALLOCATED( qgb ) ) DEALLOCATE( qgb )
@@ -303,10 +303,10 @@ module wfc_atomic
   !  nchi =  number of atomic (pseudo-)wavefunctions
   !  lchi =  angular momentum of chi
   !  chi  =  atomic (pseudo-)wavefunctions
-  integer nchix
+  integer :: nchix
   parameter (nchix=6)
-  real(kind=8) chi(mmaxx,nchix,nsx)
-  integer lchi(nchix,nsx), nchi(nsx)
+  real(kind=8) :: chi(mmaxx,nchix,nsx)
+  integer :: lchi(nchix,nsx), nchi(nsx)
 end module wfc_atomic
 
 module work

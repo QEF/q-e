@@ -13,6 +13,7 @@ MODULE input_cp
    PRIVATE
 
    PUBLIC :: iosys
+   PUBLIC :: iosys_pseudo
    PUBLIC :: read_input_file
 
 CONTAINS
@@ -749,4 +750,20 @@ CONTAINS
       return
       end subroutine
 !
+
+      subroutine iosys_pseudo( psfile_ , pseudo_dir_ , ipp_ , nsp_ )
+        use input_parameters, only: atom_ptyp, atom_pfile, pseudo_dir, ntyp
+        use parameters, only: nsx
+        implicit none
+        character(len=80) :: psfile_ ( nsx ) , pseudo_dir_
+        integer :: ipp_ ( nsx ), nsp_
+        nsp_ = ntyp
+        ipp_ = 0
+        psfile_= ' '
+        ipp_ ( 1:nsp_ ) = atom_ptyp( 1:nsp_ )
+        psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
+        pseudo_dir_ = pseudo_dir
+        return
+      end subroutine
+
 END MODULE input_cp

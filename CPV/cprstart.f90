@@ -50,11 +50,13 @@
 !     dt2bye         = 2*delt/emass
 !***********************************************************************
 !
-      use input_cp, only: read_input_file
+      use input_cp, only: read_input_file, iosys_pseudo
       use io_global, ONLY: io_global_start
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
       use para_mod, ONLY: me, mygroup, nproc
+      use io_files, only: psfile, pseudo_dir
+      use ions_base, only: ipp, nsp
 !
       implicit none
 !
@@ -67,7 +69,23 @@
       call io_global_start( (me-1), 0 )
       call mp_global_start(0, (me-1), mygroup, nproc )
 
+      !
+      !  readin the input file
+      !
+
       call read_input_file( lneb )
+
+      !
+      !  copy pseudopotential input parameter into internal variables
+      !
+
+      call iosys_pseudo( psfile, pseudo_dir, ipp, nsp )
+
+      !
+      !  read in pseudopotentials and wavefunctions files
+      !
+
+      call readpp()
       
       call cpr_loop( 1 )
 
@@ -83,6 +101,7 @@
         INTEGER :: iloop
         DO iloop = 1, nloop
           call cprmain()
+          call memstat( 1 )
         END DO
         RETURN
       END SUBROUTINE

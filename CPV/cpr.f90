@@ -79,7 +79,7 @@
       use pseu, only: deallocate_pseu
       use work
       use work_box, only: qv, deallocate_work_box
-      use io_global, ONLY: io_global_start, stdout
+      use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
       use para_mod
@@ -99,6 +99,7 @@
       use qradb_mod, only: deallocate_qradb_mod
       use dqrad_mod, only: deallocate_dqrad_mod
       use betax, only: deallocate_betax
+      use input_parameters, only: outdir
 
 ! wavefunctions
 !
@@ -208,6 +209,9 @@
      &     factp, temp1, temp2, temph, greash, qnh, randy
 
       logical :: twmass
+      character(len=256) :: filename
+      character(len=256) :: dirname
+      integer :: strlen, dirlen
 !
 !     CP loop starts here
 !
@@ -266,10 +270,40 @@
       dt2bye = dt2/emass
       dt2hbe = dt2by2/emass
 
-! 
-!     read pseudopotentials and wavefunctions
-! 
-      call readpp
+      
+      if (ionode) then
+
+         dirlen = index(outdir,' ') - 1
+         filename = 'fort.8'
+         if( dirlen >= 1 ) then
+           filename = outdir(1:dirlen) // '/' // filename
+         end if
+         strlen  = index(filename,' ') - 1
+         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+
+         filename = 'fort.77'
+         if( dirlen >= 1 ) then
+           filename = outdir(1:dirlen) // '/' // filename
+         end if
+         strlen  = index(filename,' ') - 1
+         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+
+         filename = 'fort.78'
+         if( dirlen >= 1 ) then
+           filename = outdir(1:dirlen) // '/' // filename
+         end if
+         strlen  = index(filename,' ') - 1
+         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+
+         filename = 'fort.79'
+         if( dirlen >= 1 ) then
+           filename = outdir(1:dirlen) // '/' // filename
+         end if
+         strlen  = index(filename,' ') - 1
+         OPEN(unit=8, file=filename(1:strlen), status='unknown')
+
+      end if
+
 !
 !     ==================================================================
 !     initialize g-vectors, fft grids
@@ -1263,25 +1297,20 @@
  2948 format(f8.5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5),4(1x,f7.4))
 !
       if(tfor) then
-#ifdef __PARA
-! in parallel execution, only the first nodes writes
-         if (me.eq.1) then
-#endif
-         write(77,3340) ((h(i,j),i=1,3),j=1,3)
-         write(77,'(3f12.8)') (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-         write(78,'(3f12.8)') (((fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-         write(79,3340) ((stress(i,j),i=1,3),j=1,3)
+        if ( ionode ) then
+          write(77,3340) ((h(i,j),i=1,3),j=1,3)
+          write(77,'(3f12.8)') (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+          write(78,'(3f12.8)') (((fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+          write(79,3340) ((stress(i,j),i=1,3),j=1,3)
 #if defined (__ORIGIN) || defined (__T3E)
-         call flush(77)
-         call flush(78)
+          call flush(77)
+          call flush(78)
 #elif defined (__AIX) || defined (__ABSOFT)
-         call flush_(77)
-         call flush_(78)
+          call flush_(77)
+          call flush_(78)
 #endif
-#ifdef __PARA
-         endif
-#endif
- 3340    format(9(1x,f9.5))
+ 3340     format(9(1x,f9.5))
+        endif
 !
 !     new variables for next step
 !
@@ -1501,6 +1530,13 @@
       CALL deallocate_betax()
       CALL deallocate_para_mod()
       CALL deallocate_wavefunctions()
+
+      if( ionode ) then
+        CLOSE( 8 )
+        CLOSE( 77 )
+        CLOSE( 78 )
+        CLOSE( 79 )
+      end if
 
 !
       return

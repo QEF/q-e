@@ -9,9 +9,11 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   ! CP90 modules
   !
-  use ncprm
-  use dft_mod
-  use wfc_atomic
+  use ncprm, only: qfunc, qfcoef, rinner, qqq, rscore, rucore, r, rab, &
+                   lll, nbeta, kkbeta, ifpcor, mesh, nqlc, nqf, &
+                   betar, dion
+  use dft_mod, only: dft
+  use wfc_atomic, only: chi, lchi, nchi
   use ions_base, only: zv
   !
   use pseudo_types

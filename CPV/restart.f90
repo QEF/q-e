@@ -33,6 +33,7 @@ CONTAINS
       USE ncprm, ONLY: r, rab
       use control_flags, only: twfcollect
       USE parser, ONLY: int_to_char
+      use input_parameters, only: outdir
 !
       implicit none
       integer :: ndw, nfi
@@ -109,6 +110,10 @@ CONTAINS
       if (ionode) then
        !  open (unit=ndw,status='unknown',form='unformatted')
          filename = 'fort.'//int_to_char( ndw )
+         strlen  = index(outdir,' ') - 1 
+         if( strlen >= 1 ) then
+           filename = outdir(1:strlen) // '/' // filename
+         end if
          strlen  = index(filename,' ') - 1 
          OPEN(unit=ndw, file=filename(1:strlen), form='unformatted', status='unknown')
          REWIND ndw
@@ -355,6 +360,7 @@ CONTAINS
       use cell_base, only: boxdimensions, s_to_r, cell_init, r_to_s
       use control_flags, only: twfcollect
       USE parser, ONLY: int_to_char
+      use input_parameters, only: outdir
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -437,6 +443,10 @@ CONTAINS
       if (ionode) then
          ! open (unit=ndr, status='old', form='unformatted')
          filename = 'fort.'//int_to_char( ndr ) 
+         strlen  = index(outdir,' ') - 1 
+         if( strlen >= 1 ) then
+           filename = outdir(1:strlen) // '/' // filename
+         end if
          strlen  = index(filename,' ') - 1 
          OPEN(unit=ndr, file=filename(1:strlen), form='unformatted', status='old')
          REWIND (ndr)
