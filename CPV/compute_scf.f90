@@ -111,7 +111,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... perform an electronic minimization using CPMAIN
      !
-     IF( program_name == 'CPVC' ) THEN
+     IF( program_name == 'CP90' ) THEN
        CALL cprmain( tau, fion, etot )
      ELSE IF( program_name == 'FPMD' ) THEN
        CALL cpmain( tau, fion, etot )

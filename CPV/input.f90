@@ -16,6 +16,9 @@ MODULE input
 
    PUBLIC :: read_input_file
    PUBLIC :: iosys_pseudo
+   PUBLIC :: set_control_flags
+
+   LOGICAL :: has_been_read = .FALSE.
 
 CONTAINS
 
@@ -32,7 +35,7 @@ CONTAINS
         CHARACTER(LEN=2) :: prog
 
         IF( program_name == 'FPMD' ) prog = 'FP'
-        IF( program_name == 'CPVC' ) prog = 'CP'
+        IF( program_name == 'CP90' ) prog = 'CP'
 
         ! . Read NAMELISTS ..................................................!
 
@@ -52,33 +55,192 @@ CONTAINS
           lwf  = ( TRIM( calculation ) == 'cp-wf' )
         END IF
 
+         has_been_read = .TRUE.
+
         RETURN
    END SUBROUTINE
 
    !  ----------------------------------------------
 
-      subroutine iosys_pseudo( psfile_ , pseudo_dir_ , nsp_ )
+   subroutine iosys_pseudo( )
         use input_parameters, only:  atom_pfile, pseudo_dir, ntyp
         use control_flags, only:  program_name
         use parameters, only: nsx
-        use read_pseudo_module_fpmd, only: read_pseudo_fpmd
+        use read_pseudo_module_fpmd, only: readpp
+        USE io_files, ONLY: psfile_ => psfile , pseudo_dir_ => pseudo_dir
+        USE ions_base, ONLY: nsp_ => nsp
+
         implicit none
-        character(len=256) :: psfile_ ( nsx ) , pseudo_dir_
-        integer :: nsp_
-        nsp_ = ntyp
+
+        IF( .NOT. has_been_read ) &
+          CALL errore( ' iosys_pseudo ', ' input file has not been read yet! ', 1 )
+
+        nsp_   = ntyp
         psfile_= ' '
         psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
-        pseudo_dir_ = pseudo_dir
+        pseudo_dir_        = TRIM( pseudo_dir  )
         !
         !  read in pseudopotentials and wavefunctions files
         !
-        IF( program_name == 'CPVC' ) THEN
-          call readpp()
-        ELSE IF( program_name == 'FPMD' ) THEN
-          call read_pseudo_fpmd( pseudo_dir_ , psfile_ , nsp_ )
-        END IF
+        call readpp( )
+        !
         return
-      end subroutine
+   end subroutine
+
+   !  ----------------------------------------------
+
+   SUBROUTINE set_control_flags( )
+     !
+     USE kinds, ONLY: dbl
+     USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
+        tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
+        tnewnfi_card, newnfi_card, ampre, nstep, restart_mode, ion_positions, &
+        startingwfc 
+     USE control_flags, ONLY: &
+        ndr_     => ndr, &
+        ndw_     => ndw, &
+        iprint_  => iprint, &
+        isave_   => isave, &
+        tstress_ => tstress, &
+        tprnfor_ => tprnfor, &
+        tprnsfac_ => tprnsfac, &
+        toptical_ => toptical, &
+        ampre_   => ampre, &
+        trane_   => trane, &
+        newnfi_  => newnfi, &
+        tnewnfi_ => tnewnfi, &
+        rhoout_  => rhoout, &
+        tdipole_ => tdipole, &
+        nomore_  => nomore, &
+        memchk_  => memchk, &
+        tpre_    => tpre, &
+        prn_     => prn, &
+        timing_  => timing, &
+        iprsta_  => iprsta, &
+        taurdr_  => taurdr, &
+        nbeg_    => nbeg, &
+        gamma_only_ => gamma_only, &
+        tatomicwfc_ => tatomicwfc
+     !
+     IMPLICIT NONE
+
+     ndr_  = ndr
+     ndw_  = ndw
+     iprint_  = iprint
+     isave_   = isave
+     tstress_ = tstress
+     if ( tstress ) tpre_ = .true.
+     gamma_only_ = ( TRIM( k_points ) == 'gamma' )
+     tprnfor_ = tprnfor
+
+     !
+     !  set the level of output, the code verbosity 
+     !
+
+     iprsta_ = 1
+     prn_    = .FALSE.
+     timing_ = .FALSE.
+          ! The code write to files fort.8 fort.41 fort.42 fort.43
+          ! a detailed report of subroutines timing
+     rhoout_ = .false.
+          ! save charge density to file  CHARGEDENSITY if nspin = 1, and
+          ! CHARGEDENSITY.UP CHARGEDENSITY.DOWN if nspin = 2
+     memchk_ = .FALSE.
+          ! The code performs a memory check, write on standard
+          ! output the allocated memory at each step.
+          ! Architecture Dependent
+     tprnsfac_   = .FALSE.
+          ! Print on file STRUCTURE_FACTOR the structure factor
+          ! gvectors and charge density, in reciprocal space.
+
+     SELECT CASE ( TRIM(verbosity) )
+       CASE ('minimal')
+         prn_ = .FALSE.
+       CASE ('low', 'default')
+         prn_ = .FALSE.
+         timing_ = .TRUE.
+       CASE ('medium')
+         prn_ = .FALSE.
+         timing_ = .TRUE.
+         rhoout_ = .TRUE.
+         tprnsfac_ = .TRUE.
+       CASE ('high')
+         iprsta_ = 3
+         prn_ = .TRUE.
+         memchk_ = .TRUE.
+         timing_ = .TRUE.
+         rhoout_ = .TRUE.
+         tprnsfac_ = .TRUE.
+       CASE DEFAULT
+         CALL errore(' control_flags ',' unknown verbosity '//TRIM(verbosity), 1 )
+     END SELECT
+
+     ! ...   If explicitly requested force the charge density to be printed
+     IF( tprnrho ) rhoout_ = .TRUE.
+
+     tdipole_  = tdipole_card
+     toptical_ = toptical_card
+     newnfi_   = newnfi_card
+     tnewnfi_  = tnewnfi_card
+
+     !
+     !   set the restart flags
+     !
+
+     trane_ = .FALSE.
+     ampre_ = ampre
+     SELECT CASE ( TRIM( restart_mode ) )
+       CASE ('from_scratch')
+         nbeg_ = -2
+         if ( ion_positions == 'from_input' ) nbeg_ = -1
+         nomore_ = nstep
+         trane_  = ( startingwfc == 'random' )
+         if ( ampre_ == 0.d0 ) ampre_ = 0.02
+       CASE ('reset_counters')
+         nbeg_ = 0
+         nomore_ = nstep
+       CASE ('restart')
+         nbeg_ = 1
+         nomore_ = nstep
+         if ( ion_positions == 'from_input' ) then
+           taurdr_ = .TRUE.
+           nbeg_ = -1
+         end if
+       CASE DEFAULT
+         CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
+     END SELECT
+
+     ! ... Starting/Restarting Atomic positions
+     taurdr_ = .FALSE.
+     SELECT CASE ( TRIM(ion_positions) )
+       CASE ( 'from_input' )
+         taurdr_ = .TRUE.   ! Positions read from standard input
+       CASE ( 'default' )
+         taurdr_ = .FALSE.
+       CASE DEFAULT
+         CALL errore(' control_flags ',' unknown ion_positions '//TRIM(ion_positions), 1 )
+     END SELECT
+
+     ! ... Electronic randomization
+        
+     tatomicwfc_ = .FALSE.
+     SELECT CASE ( TRIM(startingwfc) )
+       CASE ('default','none')
+         trane_ = .FALSE.
+       CASE ('random')
+         trane_ = .TRUE.
+       CASE ('atomic')
+         tatomicwfc_ = .TRUE.
+       CASE DEFAULT
+         CALL errore(' control_flags ',' unknown startingwfc '//TRIM(startingwfc), 1 )
+     END SELECT
+     IF( ampre_ == 0 ) trane_ = .FALSE.
+
+
+
+     RETURN
+   END SUBROUTINE
+
 
    !  ----------------------------------------------
 
@@ -116,14 +278,14 @@ CONTAINS
            tempw, fnoseh, amprp, greasp, tranp, atomic_positions, nelec, &
            if_pos, rd_ht, trd_ht, a, b, c, cosab, cosac, cosbc, cell_symmetry, nelup, &
            neldw, occupations, f_inp, pos, nr3b, pseudo_dir, &
-           nr1b, nr2b, sp_pos, atom_mass, atom_pfile, iprint, isave, orthogonalization, &
-           electron_velocities, startingwfc, ndr, ndw, ion_dynamics, ion_damping, &
+           nr1b, nr2b, sp_pos, atom_mass, atom_pfile, orthogonalization, &
+           electron_velocities, startingwfc, ion_dynamics, ion_damping, &
            cell_velocities, electron_dynamics, electron_damping, ion_velocities, &
            celldm, nbnd, nspin, calculation, ntyp, ibrav, restart_mode, ion_positions, &
-           nstep, ecutwfc, ecutrho, ampre, ortho_eps, ortho_max, wmass, qcutz, q2sigma, &
-           ecfixed, ekincw, fnosep, nat, tstress, disk_io, fnosee, ion_temperature, &
+           ecutwfc, ecutrho, ortho_eps, ortho_max, wmass, qcutz, q2sigma, &
+           ecfixed, ekincw, fnosep, nat, disk_io, fnosee, ion_temperature, &
            cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
-           dt, emass, emass_cutoff, ion_radius, verbosity, tprnfor, &
+           dt, emass, emass_cutoff, ion_radius, &
            ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, rd_pos, atom_label, rd_vel, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
@@ -136,14 +298,12 @@ CONTAINS
       use io_global, only: ionode, stdout
 
       use control_flags, only:  &
-            tconvthrs, lneb, lsmd, taurdr, tzerop, tzeroe, tzeroc, nbeg,  &
-            tprnfor_ => tprnfor, &
+            tconvthrs, lneb, lsmd, tzerop, tzeroe, tzeroc, nbeg,  &
             ndr_ => ndr, &
             ndw_ => ndw, &
             nomore_ => nomore, &
             iprint_ => iprint, &
             iprsta_ => iprsta, &
-            isave_ => isave, &
             tortho_ => tortho, &
             ortho_eps_ => ortho_eps, &
             ortho_max_ => ortho_max, &
@@ -254,6 +414,8 @@ CONTAINS
            pseudo_dir_ => pseudo_dir , &
            psfile_     => psfile
 
+      USE input, ONLY: set_control_flags
+
       !
       implicit none
       !
@@ -270,6 +432,8 @@ CONTAINS
       !
 
       title_ = title   ! simulation title
+
+      CALL set_control_flags( )
 
       IF( TRIM( calculation ) == 'nscf' ) trhor_ = .true.
      
@@ -339,31 +503,7 @@ CONTAINS
 
       CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
 
-      ampre_ = ampre
-      SELECT CASE ( restart_mode ) 
-         CASE ('from_scratch')
-            nbeg = -2
-            nomore_ = nstep
-            trane_  = ( startingwfc == 'random' )
-            if ( ampre_ == 0.d0 ) ampre_ = 0.02
-         CASE ('reset_counters')
-            nbeg = 0
-            nomore_ = nstep
-         CASE ('restart')
-            nbeg = 1
-            nomore_ = nstep
-            if ( ion_positions == 'from_input' ) then
-              taurdr = .TRUE.
-              nbeg = -1
-            end if
-         CASE DEFAULT
-            CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
-      END SELECT
 
-
-      ndr_    = ndr
-      ndw_    = ndw
-      iprint_ = iprint
 
       IF( .NOT. lneb ) THEN
         CALL check_stop_init( max_seconds )
@@ -604,13 +744,6 @@ CONTAINS
         tconvthrs%nstep  = 1
       END IF
 
-      isave_ = isave 
-      tprnfor_ = tprnfor
-      if ( trim( verbosity ) == 'high' ) then
-         iprsta_ = 3
-      else
-         iprsta_ = 1
-      end if
       CALL set_time_step( dt ) 
       emass_ = emass
       emaec_ = emass_cutoff
@@ -618,7 +751,6 @@ CONTAINS
       ortho_max_ = ortho_max
 
 
-      if ( tstress ) tpre_ = .true.
       trhow_ = ( trim( disk_io ) == 'high' )
       tvlocw_ = .false. ! temporaneo
       !
@@ -970,13 +1102,6 @@ CONTAINS
 
 END MODULE input_cp
 
-!
-! Copyright (C) 2002 FPMD group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
 
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 !  ----------------------------------------------
@@ -985,7 +1110,7 @@ END MODULE input_cp
 !  ----------------------------------------------
 !  BEGIN manual
 
-      MODULE input_fpmd
+MODULE input_fpmd
 
 !  this module handles the reading of input data
 !  ----------------------------------------------
@@ -1021,7 +1146,7 @@ END MODULE input_cp
 
 ! . Set internal flags according to the input .......................!
 
-        CALL set_internal_flags()
+        CALL set_internal_flags_fpmd()
 
 ! . Fix values for dependencies .....................................!
 
@@ -1265,33 +1390,24 @@ END MODULE input_cp
 ! ----------------------------------------------------------------
 ! ----------------------------------------------------------------
 
-    SUBROUTINE set_internal_flags()
+    SUBROUTINE set_internal_flags_fpmd()
 
       USE input_parameters, ONLY: &
-        ndw, ndr, iprint, tstress, isave, k_points, cell_velocities, &
+        cell_velocities, &
         cell_dynamics, cell_parameters, cell_temperature, trd_ht, &
-        tapos, tavel, ecutwfc, emass_cutoff, taspc, tdipole_card, tprnfor, &
-        toptical_card, tnewnfi_card, newnfi_card, electron_temperature, &
-        electron_velocities, diis_rot, ampre, startingwfc, electron_dynamics, &
-        tprnrho, verbosity, nstep, orthogonalization, restart_mode, tranp, &
+        tapos, tavel, ecutwfc, emass_cutoff, taspc,  &
+        electron_temperature, &
+        electron_velocities, diis_rot, startingwfc, electron_dynamics, &
+        orthogonalization, restart_mode, tranp, &
         ion_velocities, amprp, cell_nstepe, ion_nstepe, ion_positions, &
         ekin_conv_thr, ion_dynamics, ion_maxstep, ion_temperature, &
         electron_maxstep, etot_conv_thr, forc_conv_thr, ibrav
-
       USE input_parameters, ONLY: force_pairing_ => force_pairing
 
+      USE input, ONLY: set_control_flags
+
       USE control_flags, ONLY: &
-        ampre_ => ampre, &
-        nbeg_  => nbeg, &
-        nomore_ => nomore, &
-        trane_  => trane, &
-        tortho_  => tortho, &
-        prn_     => prn, &
-        tprnsfac_ => tprnsfac, &
-        rhoout_   => rhoout, &
-        memchk_   => memchk, &
-        timing_   => timing, &
-        tatomicwfc_ => tatomicwfc
+        tortho_  => tortho
 
       USE control_flags, ONLY: &
         t_diis_simple_ => t_diis_simple, &
@@ -1305,19 +1421,6 @@ END MODULE input_cp
         tsteepdesc_ => tsteepdesc, &
         tzeroe_ => tzeroe, &
         tnosee_ => tnosee
-
-      USE control_flags, ONLY: &
-        ndr_     => ndr, &
-        ndw_     => ndw, &
-        iprint_  => iprint, &
-        isave_   => isave, &
-        tstress_ => tstress, &
-        tprnfor_ => tprnfor, &
-        tdipole_ => tdipole, &
-        toptical_ => toptical, &
-        newnfi_ => newnfi, &
-        tnewnfi_ => tnewnfi, &
-        gamma_only_ => gamma_only
 
       USE control_flags, ONLY: &
         tzeroc_ => tzeroc, &
@@ -1338,7 +1441,6 @@ END MODULE input_cp
 
       USE control_flags, ONLY: &
         tnosep_ => tnosep, &
-        taurdr_ => taurdr, &
         tcap_ => tcap, &
         tcp_ => tcp, &
         tzerop_ => tzerop, &
@@ -1354,83 +1456,7 @@ END MODULE input_cp
 
 ! . Set internal flags according to the input .......................!
 
-        ndr_     = ndr
-        ndw_     = ndw
-        iprint_  = iprint
-        isave_   = isave
-        tstress_ = tstress
-        tprnfor_ = tprnfor
-        tdipole_ = tdipole_card
-        toptical_ = toptical_card
-        newnfi_ = newnfi_card
-        tnewnfi_ = tnewnfi_card
-        gamma_only_ = ( k_points == 'gamma' )
-
-        !
-        !  set the level of output, the code verbosity 
-        !
-
-        prn_        = .FALSE.
-        tprnsfac_   = .FALSE.
-          ! Print on file STRUCTURE_FACTOR the structure factor
-          ! gvectors and charge density, in reciprocal space.
-        rhoout_ = .false.
-          ! save charge density to file  CHARGEDENSITY if nspin = 1, and
-          ! CHARGEDENSITY.UP CHARGEDENSITY.DOWN if nspin = 2
-        memchk_ = .FALSE.
-          ! The code performs a memory check, write on standard
-          ! output the allocated memory at each step.
-          ! Architecture Dependent
-        timing_ = .FALSE.
-          ! The code write to files fort.8 fort.41 fort.42 fort.43
-          ! a detailed report of subroutines timing
-
-        SELECT CASE ( TRIM(verbosity) )
-          CASE ('minimal')
-            prn_ = .FALSE.
-          CASE ('low', 'default')
-            prn_ = .FALSE.
-            timing_ = .TRUE.
-          CASE ('medium')
-            prn_ = .FALSE.
-            timing_ = .TRUE.
-            rhoout_ = .TRUE.
-            tprnsfac_ = .TRUE.
-          CASE ('high')
-            prn_ = .TRUE.
-            memchk_ = .TRUE.
-            timing_ = .TRUE.
-            rhoout_ = .TRUE.
-            tprnsfac_ = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown verbosity '//TRIM(verbosity), 1 )
-        END SELECT
-
-        ! ...   If explicitly requested force the charge density to be printed
-
-        IF( tprnrho ) rhoout_ = .TRUE.
-
-        !
-        !   set the restart flags
-        !
-
-        ampre_ = ampre
-        SELECT CASE ( TRIM( restart_mode ) )
-          CASE ('from_scratch')
-            nbeg_ = -2
-            if ( ion_positions == 'from_input' ) nbeg_ = -1
-            nomore_ = nstep
-            trane_  = ( startingwfc == 'random' )
-            if ( ampre_ == 0.d0 ) ampre_ = 0.02
-          CASE ('reset_counters')
-            nbeg_ = 0
-            nomore_ = nstep
-          CASE ('restart')
-            nbeg_ = 1
-            nomore_ = nstep
-          CASE DEFAULT
-            CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
-        END SELECT
+        CALL set_control_flags( )
 
         ! ...   TORTHO
 
@@ -1443,23 +1469,6 @@ END MODULE input_cp
            CALL errore(' iosys ',' unknown orthogonalization '//&
               trim(orthogonalization), 1 )
         END SELECT
-
-        ! ... Electronic randomization
-
-        trane_      = .FALSE.
-        tatomicwfc_ = .FALSE.
-        SELECT CASE ( TRIM(startingwfc) )
-          CASE ('default','none')
-            trane_ = .FALSE.
-          CASE ('random')
-            trane_ = .TRUE.
-          CASE ('atomic')
-            tatomicwfc_ = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown startingwfc '//TRIM(startingwfc), 1 )
-        END SELECT
-        ampre_ = ampre
-        IF( ampre == 0.0d0 ) trane_ = .FALSE.
 
         ! ... Electron dynamics
 
@@ -1588,16 +1597,6 @@ END MODULE input_cp
           CASE DEFAULT
             CALL errore(' control_flags ',' unknown ion_temperature '//TRIM(ion_temperature), 1 )
         END SELECT
-        ! ... Starting/Restarting Atomic positions
-        taurdr_ = .FALSE.
-        SELECT CASE ( TRIM(ion_positions) )
-          CASE ( 'from_input' )
-            taurdr_ = .TRUE.   ! Positions read from standard input
-          CASE ( 'default' )
-            taurdr_ = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown ion_positions '//TRIM(ion_positions), 1 )
-        END SELECT
         ! ... Starting/Restarting ionic velocities
         SELECT CASE ( TRIM(ion_velocities) )
           CASE ('default')
@@ -1712,7 +1711,7 @@ END MODULE input_cp
 
 
      RETURN
-   END SUBROUTINE set_internal_flags
+   END SUBROUTINE set_internal_flags_fpmd
 
 
 

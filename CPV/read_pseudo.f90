@@ -17,108 +17,6 @@
 
 !  this module handles the reading of pseudopotential data
 !  ----------------------------------------------
-!  routines in this module:
-!  SUBROUTINE readpseudo( psdir, psfile, nsp, nspnl)
-!  ----------------------------------------------
-!
-!  Description of the Native FPMD pseudopotential format
-!
-!  The format of the file must be as follows
-!  (lowercase text and }'s are comments):
-!
-!  When POTTYP = 'ANALYTIC' the layout is:
-!
-!    TCC      TMIX                additional stuff on each line is ignored
-!    POTTYP   LLOC LNL ( INDL(i), i = 1, LNL )
-!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
-!    ZV       IGAU                igau must be 1 or 3     }
-!    WRC(1) RC(1) WRC(2) RC(2)    this line if igau = 3   }
-!    RC(1)                        this one if igau = 1    }
-!    RCL(1,1)    AL(1,1)    BL(1,1)         }             }  this
-!     ...         ...        ...            }  l = 0      }  section
-!    RCL(IGAU,1) AL(IGAU,1) BL(IGAU,1)      }             }  only if
-!    RCL(1,2)    AL(1,2)    BL(1,2)      }                }  pottyp is
-!     ...         ...        ...         }     l = 1      }  'ANALYTIC'
-!    RCL(IGAU,2) AL(IGAU,2) BL(IGAU,2)   }                }
-!    RCL(1,3)    AL(1,3)    BL(1,3)         }             }
-!     ...         ...        ...            }  l = 2      }
-!    RCL(IGAU,3) AL(IGAU,3) BL(IGAU,3)      }             }
-!    NMESH NCHAN                                       }
-!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
-!     ...         ...              ...                 }
-!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
-!
-!  
-!  When POTTYP = 'NUMERIC' the layout is:
-!
-!    TCC      TMIX             additional stuff on each line is ignored
-!    POTTYP   LLOC LNL  ( INDL(i), i = 1, LNL )
-!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
-!    ZV                                             }
-!    NMESH NCHAN                                    }    this if
-!    RW( 1 )     ( VR( 1, j ), j = 1, NCHAN )       }    pottyp is
-!     ...       ...             ...                 }    'NUMERIC'
-!    RW( NMESH ) ( VR( NMESH, j ), j = 1, NCHAN )   }
-!    NMESH NCHAN                                       }
-!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
-!     ...         ...              ...                 }
-!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
-!
-!  DETAILED DESCRIPTION OF INPUT PARAMETERS:
-!
-!    TCC      (logical)   True if Core Correction are required for this 
-!                         pseudo
-!
-!    TMIX     (logical)   True if we want to mix nonlocal pseudopotential 
-!                         components 
-!
-!    WGV(i)   (real)      wheight of the nonlocal components in the 
-!                         pseudopotential mixing scheme 
-!                         These parameters are present only if TMIX = .TRUE.
-!                         1 <= i <= LNL
-!                           
-!    POTTYP   (character) pseudopotential type
-!                         pottyp = 'ANALYTIC' : use an analytic expression
-!                         pottyp = 'NUMERIC'  : read values from a table
-!
-!    ZV       (integer)   valence for each species
-!
-!    IGAU     (integer)   number of Gaussians in the pseudopotentials
-!                         expression used only if pottyp='ANALYTIC'
-!
-!  parameters from Bachelet-Hamann-Schluter's table:
-!
-!    WRC(2)   (real)      c1, c2 (core)  parameters
-!    RC(2)    (real)      alpha1, alpha2 parameters
-!
-!    RCL(i,3) (real)      alpha1, alpha2, alpha3 for each angular momentum
-!                         1 <= i <= IGAU
-!    AL(i,3)  (real)      parameters for each angular momentum
-!                         1 <= i <= IGAU
-!    BL(i,3)  (real)      parameters for each angular momentum
-!                         1 <= i <= IGAU
-!
-!  nonlocality
-!    IGAU     (integer)   number of Gaussians for analytic pseudopotentials
-!    LLOC     (integer)   index of the angular momentum component added to 
-!                          the local part  ( s = 1, p = 2, d = 3 )
-!    LNL      (integer)   number of non local component
-!    INDL(i)  (integer)   indices of non local components
-!                         1 <= i <= LNL
-!                         ( 1 3 means s and d taken as non local )
-!
-!  pseudo grids
-!    NMESH    (integer)   number of points in the mesh mesh
-!    NCHAN    (integer)   numbero of colums, radial components
-!    RW(i)    (real)      distance from the core in A.U. (radial mesh)
-!                         1 <= i <= NMESH
-!    RPS(i,j) (real)      Atomic pseudo - wavefunctions
-!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
-!    VP(i,j)  (real)      Atomic pseudo - potential
-!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
-!
-!  ----------------------------------------------
-!  END manual
 
 
 ! ...   declare modules
@@ -140,66 +38,178 @@
         TYPE (pseudo_ncpp), ALLOCATABLE, TARGET :: ap(:)
         TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
-        PUBLIC :: read_pseudo_fpmd, ap, upf, nspnl, l2ind
+        PUBLIC :: ap, upf, nspnl, l2ind, readpp
+        PUBLIC :: upf2internal, pseudo_filename, check_file_type
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
+!
+!  -----------
 !  subroutines
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-   SUBROUTINE read_pseudo_fpmd( psdir, psfile, nsp )
-
-!  this subroutine reads pseudopotential parameters from file
+!  -----------
 !
-!  Allowed format are:
-!  Native FPMD  ( 'NUMERIC' and 'ANALYTIC' )
-!  Native PWSCF ( 'GIANNOZ' )
-!  UPF          ( 'UPF' )
-!
-! INPUT:
-!  nsp       number of atomic species
-!  psdir     directori containing pseudopotentials
-!  psfile(i) pseudopotentials file name
-!            1 <= i <= nsp
-!
-! WHAT THIS ROUTINE SET:
-!  ap(i)     atomic pseudopotential structure
-!  upf(i)    atomic pseudopotential structure
-!            1 <= i <= nsp
-!  nspnl     number of atomic species  with non local pseudopotentials
-!  
-!  
-!  ----------------------------------------------
 
-      USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: mpime, root, group
-      USE io_global, ONLY: stdout
+CHARACTER(LEN=256) FUNCTION pseudo_filename( is )
+  USE io_files, ONLY: psfile, pseudo_dir
+  INTEGER, INTENT(IN) :: is
+  IF (TRIM(pseudo_dir) == ' ' ) then
+     pseudo_filename=TRIM(psfile(is))
+  ELSE
+     pseudo_filename=TRIM(pseudo_dir)//TRIM(psfile(is))
+  END IF
+  RETURN
+END FUNCTION pseudo_filename
+
+!=----------------------------------------------------------------------------=!
+
+INTEGER FUNCTION check_file_type( is )
+  !
+  ! ...   This sub. try to guess the pseudo type
+  ! on return:
+  !  0   file is unknow (guess: old CPV norm-conserving format) 
+  !  1   file is *.vdb or *.van  Vanderbilt US pseudopotential
+  !  2   file is *.RRKJ3         Andrea's   US new code 
+  ! 10   file is GIANNOZ (FPMD only)
+  ! 11   file is NUMERIC (FPMD only)
+  ! 12   file is ANALYTIC (FPMD only)
+  ! 20   file is UPF
+  !
+  INTEGER, INTENT(IN) :: is
+  CHARACTER(LEN=256) :: filename
+  CHARACTER(LEN=80) :: dummy
+  LOGICAL, EXTERNAL :: matches
+  INTEGER :: ios, info, l
+  !
+  info = 0  
+  ios  = 0
+  filename = pseudo_filename( is )
+  !
+  OPEN( UNIT = pseudounit, FILE = TRIM(filename), STATUS = 'OLD' )
+  header_loop: do while (ios == 0)
+    read ( pseudounit, *, iostat = ios, err = 200) dummy  
+    if (matches ("<PP_HEADER>", dummy) ) then
+      info = 20
+      exit header_loop
+    endif
+  enddo header_loop
+  200 continue
+
+  IF( info == 0 ) THEN
+    REWIND( pseudounit )
+    READ ( pseudounit, *, iostat = ios, err = 300)
+    dummy = ' ' 
+    READ ( pseudounit, *, iostat = ios, err = 300) dummy  
+    IF( matches( "GIANNOZ", dummy ) ) THEN
+      info = 10
+    ELSE IF( matches( "NUMERIC", dummy ) ) THEN
+      info = 11
+    ELSE IF( matches( "ANALYTIC", dummy ) ) THEN
+      info = 12
+    END IF
+  END IF
+  300 continue
+
+  CLOSE( pseudounit )
+
+  IF( info == 0 ) THEN
+    l = len_trim ( filename )
+    if (filename (l - 3:l) .eq.'.vdb'.or.filename (l - 3:l) .eq.'.van') &
+      info = 1
+    if (l > 5) then
+      if (filename (l - 5:l) .eq.'.RRKJ3') info = 2
+    end if
+  END IF
+
+  check_file_type = info
+
+  RETURN
+END FUNCTION check_file_type
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE check_types_order( )
+  USE ions_base, ONLY: nsp
+  IMPLICIT NONE
+  INTEGER :: is, il
+  LOGICAL :: tvanp
+  !
+  !   non-local species must be ahead the local one,
+  !
+  il = 0
+  DO is = 1, nsp
+    IF ( ap(is)%lnl == 0 ) THEN
+      il = 1
+    ELSE IF ( il == 1 ) THEN
+      CALL errore( &
+           ' check_types_order ', ' Local pseudopotentials should follow non local ones ', 1 )
+    END IF
+  END DO
+  !
+  !   With Vanderbilt, only UPF are allowed
+  !
+  IF( ANY( upf(1:nsp)%tvanp  ) ) THEN
+    DO is = 1, nsp
+      IF ( ap(is)%pottyp /= 'UPF' ) THEN
+        CALL errore( &
+           ' check_types_order ', ' With vanderbilt pseudo, only UPF format is allowed ', 1 )
+      END IF
+    END DO
+  END IF
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+REAL(dbl) FUNCTION calculate_dx( a, m )
+  REAL(dbl), INTENT(IN) :: a(:)
+  INTEGER, INTENT(IN) :: m 
+  INTEGER :: n
+  REAL(dbl) :: ra, rb 
+  n = MIN( SIZE( a ), m )
+  ra = a(1)
+  rb = a(n)
+  calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
+  RETURN
+END FUNCTION 
+
+!=----------------------------------------------------------------------------=!
+
+   SUBROUTINE readpp( )
+
+     !  this subroutine reads pseudopotential parameters from file
+     !
+     !  See check_file_type for Allowed format
+     !  
+     !  
+     !  ----------------------------------------------
+
+      USE mp, ONLY: mp_bcast, mp_sum
+      USE io_global, ONLY: stdout, ionode, ionode_id
+      use ions_base, only: nsp
+      use cvan, only: nvb, ipp
+      use read_pseudo_module, only: read_pseudo_upf
+      use control_flags, only: program_name, tuspp
+      use funct, only: iexch, icorr, igcx, igcc
 
       IMPLICIT NONE
-
-! ... declare subroutine arguments
-      INTEGER, INTENT(IN) :: nsp
-      CHARACTER(LEN=*), INTENT(IN) :: psfile(:)
-      CHARACTER(LEN=*), INTENT(IN) :: psdir
 
 ! ... declare other variables
       CHARACTER(LEN=20)  :: pottyp
       CHARACTER(LEN=80)  :: error_msg
       CHARACTER(LEN=256) :: filename
       INTEGER            :: is, ierr, info
-      LOGICAL            :: rdlocal
+      INTEGER            :: iexch_, icorr_, igcx_, igcc_
 
 !  end of declarations
 !  ----------------------------------------------
 
-      nspnl   = 0
-      rdlocal = .FALSE.
+      nspnl   = 0  ! number of non local pseudo
+      nvb     = 0  ! number of Vanderbilt pseudo
 
       IF( nsp < 1 ) THEN
-        CALL errore(' READPOT ',' nsp out of range ', MAX(1,ABS(nsp)) )
+        CALL errore(' READPOT ',' nsp less than one! ', 1 )
       END IF
 
       IF( ALLOCATED( ap  ) ) DEALLOCATE( ap )
@@ -218,152 +228,158 @@
       info = 0
       error_msg = 'none'
      
-      IF(mpime == root) THEN
-
+      IF( ionode ) THEN
         WRITE( stdout,4)
     4   FORMAT(//,3X,'Atomic Pseudopotentials Parameters',/, &
                   3X,'----------------------------------' )
-
-        DO is = 1, nsp
-
-          IF( psdir /= ' ' ) THEN
-            filename = TRIM( ADJUSTL( psdir ) ) // '/' // TRIM( ADJUSTL( psfile(is) ) ) 
-          ELSE
-            filename = TRIM( ADJUSTL( psfile(is) ) ) 
-          ENDIF
-
-          ap(is)%tnlcc  = .FALSE.
-          ap(is)%raggio = 0.5d0
-          CALL nullify_pseudo_upf( upf( is ) )
-
-          WRITE( stdout,6) is
-          WRITE( stdout,7) filename
-    6     FORMAT( /,3X,'ATOMIC PSEUDOPOTENTIAL for SPECIE : ',I2)
-    7     FORMAT(   3X,'Read from file ',A60)
-
-          OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
-          REWIND( pseudounit )
-
-          CALL check_file_type( pseudounit, info )
-          CLOSE( pseudounit )
-
-          OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
-          REWIND( pseudounit )
-
-          IF( info == 1 ) THEN
-
-!  ...      Pseudopotential form is UPF
-            ap(is)%pottyp = 'UPF'
-
-          ELSE
-
-!  ...      Read pseudopotential header
-            CALL read_head_pp( pseudounit, ap(is), error_msg, info)
-            IF( info /= 0 ) GO TO 200
-
-            IF ( ap(is)%lnl > 0) THEN
-              !   A non-local pseudopotential is being read, increase nspnl.
-              nspnl = nspnl + 1
-              !   non-local species must come before local one,
-              !   write an error message if a n-l pseudopotential follow a local one
-              IF( rdlocal ) THEN
-                info = 20
-                error_msg = ' Local pseudopotentials should follow non local ones '
-                GO TO 200
-              END IF
-            ELSE
-              !   now follow local potentials
-              rdlocal = .TRUE.
-            END IF
-
-          END IF
-
-          pottyp = ap(is)%pottyp
-
-          IF( pottyp == 'GIANNOZ' ) THEN
-
-            CALL read_giannoz(pseudounit, ap(is), info)
-            IF( info /= 0 ) GO TO 200
-
-          ELSE IF( pottyp == 'UPF' ) THEN
-
-            CALL read_pseudo(pseudounit, ap(is), upf(is), info)  
-            IF( info /= 0 ) GO TO 200
-            IF( ap(is)%lnl > 0 ) nspnl = nspnl + 1
-
-          ELSE IF( pottyp == 'NUMERIC' ) THEN
-
-            CALL read_numeric_pp( pseudounit, ap(is), error_msg, info)
-            IF( info /= 0 ) GO TO 200
-
-          ELSE IF( pottyp == 'ANALYTIC' ) THEN
-
-            CALL read_analytic_pp( pseudounit, ap(is), error_msg, info)
-            IF( info /= 0 ) GO TO 200
-
-          ELSE 
-
-            info = 1
-            error_msg = ' Pseudopotential type '//TRIM(pottyp)//' not implemented '
-            GO TO 200
-
-          END IF
-
-          CALL ap_info( ap(is) )
-
-          CLOSE(pseudounit)
-
-        END DO
-
-      END IF
-
-200   CONTINUE
-      CALL mp_bcast(info, root, group)
-
-      IF( info /= 0 ) THEN
-        ierr = 1000 * is + info
-        CALL errore(' readpseudo ', error_msg, ABS(ierr) )
       END IF
 
       DO is = 1, nsp
 
-        CALL mp_bcast(ap(is)%psd,root,group)
-        CALL mp_bcast(ap(is)%pottyp,root,group)
-        CALL mp_bcast(ap(is)%tmix,root,group)
-        CALL mp_bcast(ap(is)%tnlcc,root,group)
-        CALL mp_bcast(ap(is)%igau,root,group)
-        CALL mp_bcast(ap(is)%lloc,root,group)
-        CALL mp_bcast(ap(is)%lnl,root,group)
-        CALL mp_bcast(ap(is)%indl,root,group)
-        CALL mp_bcast(ap(is)%nchan,root,group)
-        CALL mp_bcast(ap(is)%mesh,root,group)
-        CALL mp_bcast(ap(is)%zv,root,group)
-        CALL mp_bcast(ap(is)%raggio,root,group)
-        CALL mp_bcast(ap(is)%dx,root,group)
-        CALL mp_bcast(ap(is)%rw,root,group)
-        CALL mp_bcast(ap(is)%rab,root,group)
-        CALL mp_bcast(ap(is)%vnl,root,group)
-        CALL mp_bcast(ap(is)%vrps,root,group)
-        CALL mp_bcast(ap(is)%vloc,root,group)
-        CALL mp_bcast(ap(is)%wgv,root,group)
-        CALL mp_bcast(ap(is)%rc,root,group)
-        CALL mp_bcast(ap(is)%wrc,root,group)
-        CALL mp_bcast(ap(is)%rcl,root,group)
-        CALL mp_bcast(ap(is)%al,root,group)
-        CALL mp_bcast(ap(is)%bl,root,group)
+        filename = TRIM( pseudo_filename( is ) )
+        !
+        CALL nullify_pseudo_upf( upf( is ) )
+        !
+        ap(is)%tnlcc  = .FALSE.
+        ap(is)%raggio = 0.5d0
+        ap(is)%lnl    = 0
+        upf(is)%tvanp = .FALSE.
+        !
 
-        CALL mp_bcast(ap(is)%nrps,root,group)
-        CALL mp_bcast(ap(is)%lrps,root,group)
-        CALL mp_bcast(ap(is)%oc,root,group)
-        CALL mp_bcast(ap(is)%rps,root,group)
-        CALL mp_bcast(ap(is)%rhoc,root,group)
+        IF( ionode ) THEN
+          WRITE( stdout,6) is, TRIM(filename)
+    6     FORMAT( /,3X,'Reading pseudopotential for specie # ',I2,' from file :',/,3X,A)
+        END IF
+
+        IF( ionode ) THEN
+          info = check_file_type( is )
+          WRITE( stdout, 7) info
+    7     FORMAT(   3X,'file type is ',I2)
+        END IF
+        CALL mp_bcast( info, ionode_id )
+
+        !  Now each processor read the pseudopotential file
+  
+        ierr = 0
+
+        OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
+
+        IF( info == 20 ) THEN
+           !
+           !  ...      Pseudopotential form is UPF
+           !
+           ap(is)%pottyp = 'UPF'
+           !
+           call read_pseudo_upf(pseudounit, upf(is), ierr)
+           !
+           IF ( ierr /= 0 ) THEN
+             CALL deallocate_pseudo_upf( upf(is) )
+           ELSE
+             call upf2internal( upf( is ), is, ierr )
+             !
+             IF( upf(is)%tvanp ) THEN
+               tuspp = .TRUE.
+             ELSE
+               tuspp = .FALSE.
+               CALL upf2ncpp( upf(is), ap(is) )
+             END IF
+             !
+           END IF
+
+        ELSE IF( info == 1 ) THEN
+
+           call readvan( is, pseudounit )
+
+        ELSE IF( info == 2 ) THEN
+
+           call readAdC( is, pseudounit )
+
+        ELSE IF( info == 10 ) THEN
+
+          CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
+          CALL read_giannoz(pseudounit, ap(is), ierr)
+
+        ELSE IF( info == 11 ) THEN
+
+          CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
+          CALL read_numeric_pp( pseudounit, ap(is), error_msg, ierr)
+
+        ELSE IF( info == 12 ) THEN
+
+          CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
+          CALL read_analytic_pp( pseudounit, ap(is), error_msg, ierr)
+
+        ELSE IF( info == 0 ) THEN
+
+          IF( program_name == 'FPMD' ) THEN
+            CALL errore(' readpp ', ' file format not supported ', 1 )
+          ELSE
+            call readbhs(is,pseudounit)
+          END IF
+
+        END IF
+
+        CLOSE( pseudounit )
+
+        CALL mp_sum( ierr )
+        IF( ierr /= 0 ) THEN
+          CALL errore(' readpseudo ', error_msg, ABS(ierr) )
+        END IF
+      
+        IF( program_name == 'FPMD' ) THEN
+          !
+          IF( ap(is)%lnl > 0 ) nspnl = nspnl + 1
+          IF( upf(is)%tvanp  ) nvb   = nvb + 1
+          IF( ionode ) THEN
+            CALL ap_info( ap(is) )
+          END IF
+          !
+        ELSE IF( program_name == 'CP90' ) THEN
+          !
+          !     ipp=-2 UPF format, vanderbilt (TEMP)
+          !     ipp=-1 ultrasoft vanderbilt pp , AdC format
+          !     ipp= 0 ultrasoft vanderbilt pp , old format
+          !     ipp= 1 ultrasoft vanderbilt pp
+          !     ipp= 2 norm-conserving hsc pp
+          !     ipp= 3 norm-conserving bhs pp
+          !     ipp= 4 UPF format, non-vanderbilt (TEMP)
+          !
+          ! check for consistency of DFT
+          !
+          if (is == 1) then
+            iexch_ = iexch
+            icorr_ = icorr
+            igcx_ = igcx
+            igcc_ = igcc
+          else
+            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
+                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
+               CALL errore( 'readpp','inconsistent DFT read',is)
+            end if
+          end if
+          !
+          !     check on ipp value and input order
+          !
+          if(is > 1) then
+            if ( ipp(is) < ipp(is-1) ) then
+               call errore('readpp', 'first vdb, then nnc',10)
+            endif
+          endif
+          !
+          !     count u-s vanderbilt species 
+          !
+          if (ipp(is) <= 1) nvb=nvb+1
+
+        END IF
 
       END DO
 
-      CALL mp_bcast( nspnl, root, group )
+      IF( program_name == 'FPMD' ) THEN
+        CALL check_types_order()
+      END IF
 
       RETURN
-      END SUBROUTINE read_pseudo_fpmd
+      END SUBROUTINE readpp
 
 !=----------------------------------------------------------------------------=!
 
@@ -385,32 +401,6 @@
 
         RETURN
       END FUNCTION l2ind
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE check_file_type( iunit, info )
-
-! ...   This sub. check if a given fortran unit 'iunit' contains a UPF pseudopot.
-
-        INTEGER, INTENT(IN) :: iunit
-        INTEGER, INTENT(OUT) :: info
-        CHARACTER(LEN=80) :: dummy
-        LOGICAL, EXTERNAL :: matches
-        INTEGER :: ios
-
-        info = 0
-        ios  = 0
-        header_loop: do while (ios == 0)
-          read (iunit, *, iostat = ios, err = 200) dummy  
-          if (matches ("<PP_HEADER>", dummy) ) then
-            info = 1
-            exit header_loop
-          endif
-        enddo header_loop
-
-200     continue
-        RETURN
-      END SUBROUTINE check_file_type
 
 !=----------------------------------------------------------------------------=!
 
@@ -719,20 +709,6 @@
 
 !=----------------------------------------------------------------------------=!
 
-      REAL(dbl) FUNCTION calculate_dx( a, m )
-        REAL(dbl), INTENT(IN) :: a(:)
-        INTEGER, INTENT(IN) :: m 
-        INTEGER :: n
-        REAL(dbl) :: ra, rb 
-          n = MIN( SIZE( a ), m )
-          ra = a(1)
-          rb = a(n)
-          calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
-        RETURN
-      END FUNCTION 
-
-!=----------------------------------------------------------------------------=!
-
 SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 
   USE pseudo_types, ONLY: pseudo_ncpp
@@ -894,65 +870,45 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
 END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
-
-subroutine read_pseudo (iunps, ap, upf, ierr)  
+!
+!
+!
+!---------------------------------------------------------------------
+subroutine upf2internal ( upf, is, ierr )
+  !---------------------------------------------------------------------
   !
-  !   read a pseudopotential in the Unified Pseudopotential Format
-  !   from unit "iunps" - convert and copy to internal FPMD variables
+  !   convert and copy "is"-th pseudopotential in the Unified Pseudopotential 
+  !   Format to internal PWscf variables
   !   return error code in "ierr" (success: ierr=0)
   !
-  use pseudo_types
-  use read_pseudo_module, only: read_pseudo_upf
-  use control_flags, only: tuspp
+  ! CP90 modules
   !
-  implicit none
-  !
-  integer :: is, iunps, ierr 
-  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-  TYPE (pseudo_upf ), INTENT(INOUT) :: upf
-  !
-  !
-  call read_pseudo_upf(iunps, upf, ierr)
-  !
-  if ( ierr /= 0 ) return
-  !
-  IF( upf%tvanp ) THEN
-    CALL upf2uspp( upf, is )
-    tuspp = .TRUE.
-  ELSE
-    CALL upf2ncpp( upf, ap )
-  END IF
-  !
-  RETURN
-  !
-end subroutine read_pseudo
-
-!=----------------------------------------------------------------------------=!
-
-SUBROUTINE upf2uspp( upf, is )
-  !
-  !   convert and copy upf ultra-soft pseudo to internal modules
-  !
-  use pseudo_types
   use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
   use ions_base, only: zv
   use cvan, only: ipp
   use funct, only: dft, which_dft
-
-  INTEGER, INTENT(INOUT) :: is
-  TYPE (pseudo_upf ), INTENT(INOUT) :: upf
-
+  !
+  use pseudo_types
+  !
+  implicit none
+  !
+  integer :: ierr 
+  INTEGER, INTENT(IN) :: is
+  TYPE (pseudo_upf), INTENT(INOUT) :: upf
+  !
+  !     Local variables
+  !
   integer :: nb, exfact
-
+  !
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
   ! tvanp(is)=upf%tvanp
   if (upf%tvanp) then
      ipp(is) = -2
   else
-     ipp(is) = +4
+     ipp(is) = +4     
   end if
   nlcc(is) = upf%nlcc
   !
@@ -997,18 +953,19 @@ SUBROUTINE upf2uspp( upf, is )
   else
      rho_atc (:,is) = 0.d0
   end if
+  !
   ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   ! lloc(is) = 1
-
   !
   vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh)
   !
-
   ! compatibility with old Vanderbilt formats
+  !
   call fill_qrl(is)
+  !
+  return
+end subroutine upf2internal
 
-  RETURN
-END SUBROUTINE
 
 
 !=----------------------------------------------------------------------------=!
@@ -1259,230 +1216,8 @@ END SUBROUTINE
 !=----------------------------------------------------------------------------=!
    END MODULE read_pseudo_module_fpmd
 !=----------------------------------------------------------------------------=!
-
 !
 !
-!---------------------------------------------------------------------
-subroutine read_pseudo (is, iunps, ierr)  
-  !---------------------------------------------------------------------
-  !
-  !   read "is"-th pseudopotential in the Unified Pseudopotential Format
-  !   from unit "iunps" - convert and copy to internal PWscf variables
-  !   return error code in "ierr" (success: ierr=0)
-  !
-  ! CP90 modules
-  !
-  use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
-                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
-  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
-  use ions_base, only: zv
-  use cvan, only: ipp
-  use funct, only: dft, which_dft
-  !
-  use pseudo_types
-  use read_pseudo_module
-  !
-  implicit none
-  !
-  integer :: is, iunps, ierr 
-  !
-  !     Local variables
-  !
-  integer :: nb, exfact
-  TYPE (pseudo_upf) :: upf
-  !
-  !
-  call read_pseudo_upf(iunps, upf, ierr)
-  !
-  if (ierr .ne. 0) then
-    CALL deallocate_pseudo_upf( upf )
-    return
-  end if
-  !
-  zv(is)  = upf%zp
-  ! psd (is)= upf%psd
-  ! tvanp(is)=upf%tvanp
-  if (upf%tvanp) then
-     ipp(is) = -2
-  else
-     ipp(is) = +4     
-  end if
-  nlcc(is) = upf%nlcc
-  !
-  dft = upf%dft
-  call which_dft (upf%dft)
-  !
-  mesh(is) = upf%mesh
-  if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
-  !
-  nchi(is) = upf%nwfc
-  lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
-  ! oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
-  chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
-
-  !
-  nbeta(is)= upf%nbeta
-  kkbeta(is)=0
-  do nb=1,upf%nbeta
-     kkbeta(is)=max(upf%kkbeta(nb),kkbeta(is))
-  end do
-  betar(1:upf%mesh, 1:upf%nbeta, is) = upf%beta(1:upf%mesh, 1:upf%nbeta)
-  dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
-  !
-
-  ! lmax(is) = upf%lmax
-  nqlc(is) = upf%nqlc
-  nqf (is) = upf%nqf
-  lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
-  rinner(1:upf%nqlc,is) = upf%rinner(1:upf%nqlc)
-  qqq(1:upf%nbeta,1:upf%nbeta,is) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-  qfunc (1:upf%mesh, 1:upf%nbeta, 1:upf%nbeta, is) = &
-       upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
-  qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
-       upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
-
-  !
-  r  (1:upf%mesh, is) = upf%r  (1:upf%mesh)
-  rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
-  !
-  if ( upf%nlcc) then
-     rho_atc (1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
-  else
-     rho_atc (:,is) = 0.d0
-  end if
-  ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
-  ! lloc(is) = 1
-
-  !
-  vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh)
-  !
-
-  ! compatibility with old Vanderbilt formats
-  call fill_qrl(is)
-
-  !
-  CALL deallocate_pseudo_upf( upf )
-
-  return
-
-end subroutine read_pseudo
-
-!
-!
-!---------------------------------------------------------------------
-      subroutine readpp
-!---------------------------------------------------------------------
-!
-      use cvan, only: nvb, ipp
-      use ions_base, only: nsp
-      use io_files, only: psfile, pseudo_dir
-      use funct, only: iexch, icorr, igcx, igcc
-      use io_global, only: stdout
-!
-      implicit none
-!
-      character(len=256) :: filename
-      integer :: is, ierr, iexch_, icorr_, igcx_, igcc_, iunit=14
-      integer, external :: pseudo_type
-!
-!     -----------------------------------------------------------------
-!     first vanderbilt species , then norm-conserving are read !!
-!
-!
-      nvb=0
-!
-      do is=1,nsp
-!
-         if (trim(pseudo_dir) == ' ' ) then
-             filename=trim(psfile(is))
-         else
-             filename=trim(pseudo_dir)//trim(psfile(is))
-         end if
-         WRITE( stdout,"('reading ppot for species # ',i2, &
-        &          ' from file ',a)") is, trim(filename)
-         open (unit=iunit,file=filename,status='old',form='formatted')
-         !
-         ! try first with UPF format
-         !
-         call read_pseudo(is,iunit,ierr)
-         
-         if (ierr /= 0) then
-            rewind ( iunit )
-            !
-            ! UPF not found, pseudopotential format determined by file name:
-            ! *.vdb or *.van  Vanderbilt US pseudopotential code  pseudo_type=1
-            ! *.RRKJ3         Andrea's   US new code              pseudo_type=2
-            ! none of the above: old CPV norm-conserving format   pseudo_type=0
-            !
-            if ( pseudo_type (psfile (is) ) == 1 ) then
-               call readvan(is,iunit)
-            else if ( pseudo_type (psfile (is) ) == 2 ) then
-               call readAdC(is,iunit)
-            else
-               call readbhs(is,iunit)
-            end if
-         end if
-         close (unit=iunit)
-!
-!     ipp=-2 UPF format, vanderbilt (TEMP)
-!     ipp=-1 ultrasoft vanderbilt pp , AdC format
-!     ipp= 0 ultrasoft vanderbilt pp , old format
-!     ipp= 1 ultrasoft vanderbilt pp
-!     ipp= 2 norm-conserving hsc pp
-!     ipp= 3 norm-conserving bhs pp
-!     ipp= 4 UPF format, non-vanderbilt (TEMP)
-!
-! check for consistency of DFT
-!
-         if (is == 1) then
-            iexch_ = iexch
-            icorr_ = icorr
-            igcx_ = igcx
-            igcc_ = igcc
-         else
-            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
-                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
-               CALL errore( 'readpp','inconsistent DFT read',is)
-            end if
-         end if
-!
-!     check on ipp value and input order
-!
-         if(is > 1) then
-!!!            if (tvanp(is) .and. .not. tvanp(is-1)) then
-           if ( ipp(is) < ipp(is-1) ) then
-               call errore('readpp', 'first vdb, then nnc',10)
-            endif
-         endif
-!
-!     count u-s vanderbilt species 
-!!!         if(tvanp(is)) nvb=nvb+1
-         if (ipp(is) <= 1) nvb=nvb+1
-      end do
-!
-      return
-      end subroutine
-!
-!
-!-----------------------------------------------------------------------
-integer function pseudo_type (psfile)
-  !-----------------------------------------------------------------------
-  implicit none
-  character (len=*) :: psfile
-  integer :: l
-  !   
-  l = len_trim (psfile)
-  pseudo_type = 0
-  if (psfile (l - 3:l) .eq.'.vdb'.or.psfile (l - 3:l) .eq.'.van') &
-       pseudo_type = 1
-  if (l > 5) then
-     if (psfile (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
-  end if
-  !   
-  return
-
-end function pseudo_type
-
 !
 !     
 !---------------------------------------------------------------------
@@ -2299,3 +2034,105 @@ end function pseudo_type
       return
 100   call errore('readvan','error reading pseudo file', abs(ios) )
       end
+
+
+!
+!  Description of the Native FPMD pseudopotential format
+!
+!  The format of the file must be as follows
+!  (lowercase text and }'s are comments):
+!
+!  When POTTYP = 'ANALYTIC' the layout is:
+!
+!    TCC      TMIX                additional stuff on each line is ignored
+!    POTTYP   LLOC LNL ( INDL(i), i = 1, LNL )
+!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
+!    ZV       IGAU                igau must be 1 or 3     }
+!    WRC(1) RC(1) WRC(2) RC(2)    this line if igau = 3   }
+!    RC(1)                        this one if igau = 1    }
+!    RCL(1,1)    AL(1,1)    BL(1,1)         }             }  this
+!     ...         ...        ...            }  l = 0      }  section
+!    RCL(IGAU,1) AL(IGAU,1) BL(IGAU,1)      }             }  only if
+!    RCL(1,2)    AL(1,2)    BL(1,2)      }                }  pottyp is
+!     ...         ...        ...         }     l = 1      }  'ANALYTIC'
+!    RCL(IGAU,2) AL(IGAU,2) BL(IGAU,2)   }                }
+!    RCL(1,3)    AL(1,3)    BL(1,3)         }             }
+!     ...         ...        ...            }  l = 2      }
+!    RCL(IGAU,3) AL(IGAU,3) BL(IGAU,3)      }             }
+!    NMESH NCHAN                                       }
+!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
+!     ...         ...              ...                 }
+!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
+!
+!  
+!  When POTTYP = 'NUMERIC' the layout is:
+!
+!    TCC      TMIX             additional stuff on each line is ignored
+!    POTTYP   LLOC LNL  ( INDL(i), i = 1, LNL )
+!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
+!    ZV                                             }
+!    NMESH NCHAN                                    }    this if
+!    RW( 1 )     ( VR( 1, j ), j = 1, NCHAN )       }    pottyp is
+!     ...       ...             ...                 }    'NUMERIC'
+!    RW( NMESH ) ( VR( NMESH, j ), j = 1, NCHAN )   }
+!    NMESH NCHAN                                       }
+!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
+!     ...         ...              ...                 }
+!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
+!
+!  DETAILED DESCRIPTION OF INPUT PARAMETERS:
+!
+!    TCC      (logical)   True if Core Correction are required for this 
+!                         pseudo
+!
+!    TMIX     (logical)   True if we want to mix nonlocal pseudopotential 
+!                         components 
+!
+!    WGV(i)   (real)      wheight of the nonlocal components in the 
+!                         pseudopotential mixing scheme 
+!                         These parameters are present only if TMIX = .TRUE.
+!                         1 <= i <= LNL
+!                           
+!    POTTYP   (character) pseudopotential type
+!                         pottyp = 'ANALYTIC' : use an analytic expression
+!                         pottyp = 'NUMERIC'  : read values from a table
+!
+!    ZV       (integer)   valence for each species
+!
+!    IGAU     (integer)   number of Gaussians in the pseudopotentials
+!                         expression used only if pottyp='ANALYTIC'
+!
+!  parameters from Bachelet-Hamann-Schluter's table:
+!
+!    WRC(2)   (real)      c1, c2 (core)  parameters
+!    RC(2)    (real)      alpha1, alpha2 parameters
+!
+!    RCL(i,3) (real)      alpha1, alpha2, alpha3 for each angular momentum
+!                         1 <= i <= IGAU
+!    AL(i,3)  (real)      parameters for each angular momentum
+!                         1 <= i <= IGAU
+!    BL(i,3)  (real)      parameters for each angular momentum
+!                         1 <= i <= IGAU
+!
+!  nonlocality
+!    IGAU     (integer)   number of Gaussians for analytic pseudopotentials
+!    LLOC     (integer)   index of the angular momentum component added to 
+!                          the local part  ( s = 1, p = 2, d = 3 )
+!    LNL      (integer)   number of non local component
+!    INDL(i)  (integer)   indices of non local components
+!                         1 <= i <= LNL
+!                         ( 1 3 means s and d taken as non local )
+!
+!  pseudo grids
+!    NMESH    (integer)   number of points in the mesh mesh
+!    NCHAN    (integer)   numbero of colums, radial components
+!    RW(i)    (real)      distance from the core in A.U. (radial mesh)
+!                         1 <= i <= NMESH
+!    RPS(i,j) (real)      Atomic pseudo - wavefunctions
+!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
+!    VP(i,j)  (real)      Atomic pseudo - potential
+!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
+!
+!  ----------------------------------------------
+!  END manual
+

@@ -54,8 +54,6 @@
       use io_global, ONLY: io_global_start, io_global_getionode
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end, mp_start, mp_env
-      use io_files, only: psfile, pseudo_dir
-      use ions_base, only: nsp
       use control_flags, only: lneb, lsmd, lwf, program_name
       use environment, ONLY: environment_start, environment_end
 !
@@ -80,7 +78,7 @@
 ! ... gid   = group index
 ! ... root  = index of the root processor
 
-      program_name = 'CPVC'
+      program_name = 'CP90'
 
 ! ... initialize input output
 
@@ -101,7 +99,7 @@
       !  and read in pseudopotentials and wavefunctions files
       !
 
-      call iosys_pseudo( psfile, pseudo_dir, nsp )
+      call iosys_pseudo( )
 
       IF( lneb ) THEN
         call neb_loop( 1 )

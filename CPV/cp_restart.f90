@@ -373,46 +373,26 @@
           DO ispin = 1, nspin
             call iotk_write_attr (attr, "spin",ispin,first=.true.)
             call iotk_write_begin(iunpun,"spin_component",attr)
-            filename = TRIM( wfc_filename( dirname, 'wf', i, ispin, '0' ) )
+            filename = TRIM( wfc_filename( ".", 'wf', i, ispin, '0' ) )
             call iotk_link(iunpun,"wfc_0",filename,create=.false.,binary=.not.ascii,raw=.true.)
-            filename = TRIM( wfc_filename( dirname, 'wf', i, ispin, 'm' ) )
+            filename = TRIM( wfc_filename( ".", 'wf', i, ispin, 'm' ) )
             call iotk_link(iunpun,"wfc_m",filename,create=.false.,binary=.not.ascii,raw=.true.)
-            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, '0' ) )
-            call iotk_link(iunpun,"occupations_0",filename,create=.false.,binary=.not.ascii,raw=.true.)
-            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, 'm' ) )
-            call iotk_link(iunpun,"occupations_m",filename,create=.false.,binary=.not.ascii,raw=.true.)
+
+            filename = TRIM( wfc_filename( ".", 'occ', i, ispin, '0' ) ) ! filename GIUSTO !!
+            call iotk_link(iunpun,"occupations_0",filename,create=.true.,binary=.not.ascii,raw=.true.)
+            call iotk_write_dat(iunpun,"occupations_0",occ0(:,i,ispin))
+            !
+            filename = TRIM( wfc_filename( ".", 'occ', i, ispin, 'm' ) ) ! filename GIUSTO !!
+            call iotk_link(iunpun,"occupations_m",filename,create=.true.,binary=.not.ascii,raw=.true.)
+            call iotk_write_dat(iunpun,"occupations_m",occm(:,i,ispin))
+            !
             call iotk_write_end(iunpun,"spin_component")
           END DO
-          filename = TRIM( kpoint_dir( dirname, i ) ) // '/occupations.dat'
           call iotk_write_end(iunpun,"Kpoint")
         END DO
         call iotk_write_end(iunpun,"K_POINTS")
         !
       END IF
-
-      !
-      !  K points dependent quantities stored in directory K00000
-      !
-      DO i = 1, nk
-        ! 
-        !  Occupation number
-        !
-        DO ispin = 1, nspin
-          IF( ionode ) THEN
-            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, '0' ) )
-            OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
-            WRITE( 10 ) ( occ0( j, i, ispin ), j=1, SIZE( occ0, 1 ) )
-            CLOSE( unit = 10 )
-            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, 'm' ) )
-            OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
-            WRITE( 10 ) ( occm( j, i, ispin ), j=1, SIZE( occm, 1 ) )
-            CLOSE( unit = 10 )
-          END IF
-          !
-        END DO
-        !
-      END DO
-
       !   
       !  Write G vectors (up to ecutrho) to file
       !   
@@ -739,6 +719,15 @@
           call iotk_scan_attr (attr, "ik",ik_ )
           ! call iotk_scan_attr (attr,"xyz",xk(:,i))
           ! call iotk_scan_attr (attr,"w",wk(i))
+          DO ispin = 1, nspin
+            call iotk_scan_begin(iunpun,"spin_component",attr)
+            !
+            call iotk_scan_dat(iunpun,"occupations_0",occ0(:,i,ispin))
+            call iotk_scan_dat(iunpun,"occupations_m",occm(:,i,ispin))
+            !
+            call iotk_scan_end(iunpun,"spin_component")
+          END DO
+
           call iotk_scan_end(iunpun,"Kpoint")
         END DO
         call iotk_scan_end(iunpun,"K_POINTS")
@@ -791,35 +780,12 @@
       !
       CALL mp_bcast(kunit, ionode_id)
 
+      CALL mp_bcast(occ0( :, :, :), ionode_id)
+      CALL mp_bcast(occm( :, :, :), ionode_id)
+
       IF( ionode ) THEN
         CALL iotk_close_read( iunpun )
       END IF
-
-      !
-      !  K points dependent quantities stored in directory K00000
-      !
-      DO i = 1, nk
-        ! 
-        !  Occupation number
-        !
-        DO ispin = 1, nspin
-          !
-          IF( ionode ) THEN
-            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, '0' ) )
-            OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
-            READ( 10 ) ( occ0( j, i, ispin ), j=1, SIZE( occ0, 1 ) )
-            CLOSE( unit = 10 )
-            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, 'm' ) )
-            OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
-            READ( 10 ) ( occm( j, i, ispin ), j=1, SIZE( occm, 1 ) )
-            CLOSE( unit = 10 )
-          END IF
-          !
-          CALL mp_bcast(occ0( :, i, ispin), ionode_id)
-          CALL mp_bcast(occm( :, i, ispin), ionode_id)
-        END DO
-        !
-      END DO
 
       !
       !  Read matrix lambda to file

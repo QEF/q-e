@@ -48,8 +48,6 @@
       USE mp_global, ONLY: mp_global_start
       USE io_global, ONLY: io_global_start, io_global_getionode
       USE control_flags, ONLY: lneb, program_name
-      USE io_files, ONLY: psfile, pseudo_dir
-      USE ions_base, ONLY: nsp
 
       IMPLICIT NONE      
       
@@ -93,7 +91,7 @@
       !  and read in pseudopotentials and wavefunctions files
       !
 
-      call iosys_pseudo( psfile, pseudo_dir, nsp )
+      call iosys_pseudo( )
 
 
       IF( lneb ) THEN

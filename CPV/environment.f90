@@ -78,7 +78,7 @@
             uname = 'out.' // int_to_char( mpime )
             nchar = INDEX(uname,' ') - 1
 
-            IF( program_name == 'CPVC' ) THEN
+            IF( program_name == 'CP90' ) THEN
               !
               ! useful for debugging purposes 
               !     open(6,file=file = uname(1:nchar),status='unknown')
@@ -104,7 +104,7 @@
              call errore('startup','wow, >1000 nodes !!',nproc)
           end if
 
-          IF( program_name == 'CPVC' ) THEN
+          IF( program_name == 'CP90' ) THEN
 
             if ( ionode ) then
               WRITE( stdout,'(72("*"))')
