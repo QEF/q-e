@@ -55,8 +55,7 @@ cinitcgg.o \
 clean_pw.o \
 close_files.o \
 compute_dip.o \
-constrain.o \
-constrains_module.o \
+constraints_module.o \
 conv_to_num.o \
 coset.o \
 cryst_to_car.o \

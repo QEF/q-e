@@ -1031,34 +1031,34 @@ END SUBROUTINE iosys
 SUBROUTINE read_cards( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
-  USE wvfct,             ONLY : gamma_only
-  USE brilz,             ONLY : at, ibrav, symm_type, celldm
-  USE basis,             ONLY : nat, ntyp, ityp, tau, atm
-  USE klist,             ONLY : nks
-  USE ktetra,            ONLY : nk1_   => nk1, &
-                                nk2_   => nk2, &
-                                nk3_   => nk3, &
-                                k1_    => k1,  &
-                                k2_    => k2,  &
-                                k3_    => k3
-  USE klist,             ONLY : lxkcry, &
-                                xk_    => xk, &
-                                wk_    => wk
-  USE fixed_occ,         ONLY : tfixed_occ, &
-                                f_inp_ => f_inp
-  USE relax,             ONLY : fixatom, &
-                                if_pos_ =>  if_pos
-  USE dynam,             ONLY : amass
-  USE control_flags,     ONLY : lconstrain
-  USE constrains_module, ONLY : nconstr, constr_tol, constr, target
-  USE input_parameters,  ONLY : atom_label, atom_pfile, atom_mass, &
-                                atom_ptyp, taspc, tapos, rd_pos, &
-                                atomic_positions, if_pos, sp_pos, &
-                                k_points, xk, wk, nk1, nk2, nk3, &
-                                k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                trd_ht, f_inp, calculation,&
-                                nconstr_inp, constr_tol_inp, constr_inp
-  USE read_cards_module, ONLY : read_cards_base => read_cards
+  USE wvfct,              ONLY : gamma_only
+  USE brilz,              ONLY : at, ibrav, symm_type, celldm
+  USE basis,              ONLY : nat, ntyp, ityp, tau, atm
+  USE klist,              ONLY : nks
+  USE ktetra,             ONLY : nk1_   => nk1, &
+                                 nk2_   => nk2, &
+                                 nk3_   => nk3, &
+                                 k1_    => k1,  &
+                                 k2_    => k2,  &
+                                 k3_    => k3
+  USE klist,              ONLY : lxkcry, &
+                                 xk_    => xk, &
+                                 wk_    => wk
+  USE fixed_occ,          ONLY : tfixed_occ, &
+                                 f_inp_ => f_inp
+  USE relax,              ONLY : fixatom, &
+                                 if_pos_ =>  if_pos
+  USE dynam,              ONLY : amass
+  USE control_flags,      ONLY : lconstrain
+  USE constraints_module, ONLY : nconstr, constr_tol, constr, target
+  USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, &
+                                 atom_ptyp, taspc, tapos, rd_pos, &
+                                 atomic_positions, if_pos, sp_pos, &
+                                 k_points, xk, wk, nk1, nk2, nk3, &
+                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
+                                 trd_ht, f_inp, calculation,&
+                                 nconstr_inp, constr_tol_inp, constr_inp
+  USE read_cards_module,  ONLY : read_cards_base => read_cards
   !
   USE parser
   USE basic_algebra_routines, ONLY : norm

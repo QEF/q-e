@@ -36,7 +36,7 @@ SUBROUTINE clean_pw()
   USE afftnec,              ONLY : auxp
 #endif  
   USE fft_types,            ONLY : fft_dlay_deallocate
-  USE constrains_module,    ONLY : constr, target
+  USE constraints_module,   ONLY : constr, target
   !
   IMPLICIT NONE
   !

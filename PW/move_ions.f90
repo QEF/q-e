@@ -58,7 +58,7 @@ SUBROUTINE move_ions()
   !
   ! ... external procedures
   !
-  USE constrains_module,      ONLY : dist_constrain, check_constrain, &
+  USE constraints_module,      ONLY : dist_constrain, check_constrain, &
                                      new_force, compute_penalty
   USE basic_algebra_routines, ONLY : norm
   !
@@ -241,7 +241,7 @@ SUBROUTINE move_ions()
      SUBROUTINE impose_constrains()
        !-----------------------------------------------------------------------
        !
-       USE constrains_module, ONLY : nconstr
+       USE constraints_module, ONLY : nconstr
        !
        IMPLICIT NONE
        !
@@ -297,7 +297,7 @@ SUBROUTINE move_ions()
      SUBROUTINE compute_lambda()
        !-----------------------------------------------------------------------
        !
-       USE constrains_module, ONLY : constr_tol
+       USE constraints_module, ONLY : constr_tol
        !
        IMPLICIT NONE
        !
