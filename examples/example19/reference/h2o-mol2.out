@@ -236,8 +236,8 @@ Warning: card  / ignored
    DISK READ FROM UNIT fort.51  COMPLETED IN    0.015 SEC.
 
 
-   MD PARAETERS READ FROM RESTART FILE
-   -----------------------------------
+   MD PARAMETERS READ FROM RESTART FILE
+   ------------------------------------
    Cell variables From RESTART file
    Ions positions From RESTART file
  
