@@ -69,7 +69,7 @@ subroutine dvpsi_e (kpoint, ipol)
      gk (1, ig) = (xk (1, kpoint) + g (1, igk (ig) ) ) * tpiba  
      gk (2, ig) = (xk (2, kpoint) + g (2, igk (ig) ) ) * tpiba  
      gk (3, ig) = (xk (3, kpoint) + g (3, igk (ig) ) ) * tpiba  
-!     g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2  
+     g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2  
   enddo
   !
   ! this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
