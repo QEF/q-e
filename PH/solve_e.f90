@@ -13,11 +13,11 @@ subroutine solve_e
   !    This routine is a driver for the solution of the linear system which
   !    defines the change of the wavefunction due to an electric field.
   !    It performs the following tasks:
-  !     a) It computes the kinetic energy
-  !     b) It adds the term Delta V_{SCF} | psi >
-  !     c) It applies P_c^+ to the known part
-  !     d) It calls linter to solve the linear system
-  !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
+  !     a) computes the bare potential term  x | psi >
+  !     b) adds to it the screening term Delta V_{SCF} | psi >
+  !     c) applies P_c^+ (orthogonalization to valence states)
+  !     d) calls cgsolve_all to solve the linear system
+  !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
 #include "f_defs.h"
   !
@@ -35,15 +35,14 @@ subroutine solve_e
   
   implicit none
 
-  real(kind=DP) ::  thresh, weight, anorm, averlt, dr2
+  real(kind=DP) ::  thresh, anorm, averlt, dr2
+  ! thresh: convergence threshold
+  ! anorm : the norm of the error
+  ! averlt: average number of iterations
+  ! dr2   : self-consistency error
   real(kind=DP), allocatable :: h_diag (:,:), eprec(:)
-  ! the diagonal part of the Hamiltonia
-  ! the convergence threshold
-  ! used for summation over k points
-  ! the norm of the error
-  ! average number of iterations
-  ! cut-off for preconditioning
-  ! convergence limit
+  ! h_diag: diagonal part of the Hamiltonian
+  ! eprec : array fo preconditioning
 
   complex(kind=DP) , pointer ::      &
                    dvscfin (:,:,:),  & ! change of the scf potential (input)
@@ -56,27 +55,12 @@ subroutine solve_e
   complex(kind=DP) :: ZDOTC      ! the scalar product function
 
   logical :: conv_root, exst
-  ! true if linter is converged
-  ! used to open the recover file
+  ! conv_root: true if linear system is converged
 
-  integer :: kter, ipol, ibnd, jbnd, iter, lter, ltaver, lintercall, &
+  integer :: kter, ipol, ibnd, jbnd, iter, lter, &
        ik, ig, irr, ir, is, nrec, nrec1, ios
-  ! counter on iterations
-  ! counter on perturbations
-  ! counter on bands
-  ! counter on bands
-  ! counter on iterations
-  ! counter on iterations of linter
-  ! average counter
-  ! average number of call to linter
-  ! counter on k points
-  ! counter on G vectors
-  ! the irreducible representation
-  ! counter on g vectors
-  ! counter on mesh points
-  ! the record number
-  ! the record number for dpsi
-  ! integer variable for I/O control
+  ! counters
+  integer :: ltaver, lintercall
 
   real(kind=DP) :: tcpu, get_clock
   ! timing variables
@@ -202,6 +186,7 @@ subroutine solve_e
                     dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)))
                  enddo
               enddo
+              !
               call adddvscf(ipol,ik)
               !
               ! starting value for  delta_psi is read from iudwf
@@ -262,7 +247,7 @@ subroutine solve_e
            ltaver = ltaver + lter
            lintercall = lintercall + 1
            if (.not.conv_root) WRITE( stdout, "(5x,'kpoint',i4,' ibnd',i4, &
-                &         ' linter: root not converged ',e10.3)") ik &
+                &         ' solve_e: root not converged ',e10.3)") ik &
                 &, ibnd, anorm
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,
@@ -273,15 +258,15 @@ subroutine solve_e
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
-           weight = wk (ik)
-           call incdrhoscf (dvscfout(1,current_spin,ipol), weight, &
+           call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
                             ik, dbecsum(1,1,current_spin,ipol), 1)
-        enddo   ! on perturbation
+        enddo   ! on polarizations
      enddo      ! on k points
 #ifdef __PARA
      !
-     !  The calculation of dbecsum is distributed across processors (see addusdbec)
-     !  Sum over processors the contributions coming from each slice of bands
+     !  The calculation of dbecsum is distributed across processors
+     !  (see addusdbec) - we sum over processors the contributions 
+     !  coming from each slice of bands
      !
      call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
 #endif
@@ -295,29 +280,28 @@ subroutine solve_e
      endif
 
      call addusddense (dvscfout, dbecsum)
-
      !
-     !   After the loop over the perturbations we have the change of the 
-     !   potential for all the modes of this representation. 
-     !   We symmetrize this potential
+     !   dvscfout contains the (unsymmetrized) linear charge response
+     !   for the three polarizations - symmetrize it
      !
 #ifdef __PARA
      call poolreduce (2 * 3 * nrxx *nspin, dvscfout)
-#endif
-     do ipol=1,3
-        if (fildrho.ne.' ') call davcio_drho(dvscfout(1,1,ipol),lrdrho, &
-             iudrho,ipol,+1)
-        call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
-     enddo
-#ifdef __PARA
      call psyme (dvscfout)
 #else
      call syme (dvscfout)
 #endif
      !
-     !   And we mix with the old potential
+     !   save the symmetrized linear charge response to file
+     !   calculate the corresponding linear potential response
      !
-
+     do ipol=1,3
+        if (fildrho.ne.' ') call davcio_drho(dvscfout(1,1,ipol),lrdrho, &
+             iudrho,ipol,+1)
+        call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
+     enddo
+     !
+     !   mix the new potential with the old 
+     !
      call mix_potential (2 * 3 * nrxx *nspin, dvscfout, dvscfin, alpha_mix ( &
           kter), dr2, 3 * tr2_ph, iter, nmix_ph, flmixdpot, convt)
      if (doublegrid) then

@@ -10,14 +10,14 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !-----------------------------------------------------------------------
   !
   !    Driver routine for the solution of the linear system which
-  !    defines the change of the wavefunction due to the perturbation.
+  !    defines the change of the wavefunction due to a lattice distorsion
   !    It performs the following tasks:
-  !     a) It computes the kinetic energy
-  !     b) It adds the term Delta V_{SCF} | psi > and the additional one
-  !        in the case of US pseudopotentials
-  !     c) It applies P_c^+ to the known part
-  !     d) It calls linter to solve the linear system
-  !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
+  !     a) computes the bare potential term Delta V | psi > 
+  !        and an additional term in the case of US pseudopotentials
+  !     b) adds to it the screening term Delta V_{SCF} | psi >
+  !     c) applies P_c^+ (orthogonalization to valence states)
+  !     d) calls cgsolve_all to solve the linear system
+  !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
 #include "f_defs.h"
   !
@@ -58,46 +58,36 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! output: the change of the scf charge
 
   real(kind=DP) , allocatable :: h_diag (:,:),eprec (:)
-  real(kind=DP) :: dos_ef,  thresh, wg1, w0g, wgp, &
-       wwg, weight, deltae, theta, anorm, averlt, aux_avg (2), &
-       dr2, w0gauss, wgauss
-  ! density of states at Ef
-  ! the diagonal part of the Hamiltonia
-  ! the convergence threshold
-  ! weight for metals
-  ! weight for metals
-  ! weight for metals
-  ! weight for metals
-  ! used for summation over k points
-  ! difference of energy
-  ! the theta function
-  ! the norm of the error
-  ! average number of iterations
-  ! cut-off for preconditioning
-  ! auxiliary variable for avg. iter. count
-  ! convergence limit
-  ! function computing the delta function
-  ! function computing the theta function
+  ! h_diag: diagonal part of the Hamiltonian
+  ! eprec : array for preconditioning
+  real(kind=DP) :: thresh, anorm, averlt, dr2
+  ! thresh: convergence threshold
+  ! anorm : the norm of the error
+  ! averlt: average number of iterations
+  ! dr2   : self-consistency error
+  real(kind=DP) :: dos_ef, wg1, w0g, wgp, wwg, weight, deltae, theta, &
+       aux_avg (2)
+  ! Misc variables for metals
+  ! dos_ef: density of states at Ef
+  real(kind=DP), external :: w0gauss, wgauss
+  ! functions computing the delta and theta function
 
   complex(kind=DP), pointer :: dvscfin(:,:,:), dvscfins (:,:,:)
-  complex(kind=DP), allocatable :: ldos (:,:), ldoss (:,:),&
-       drhoscfh (:,:,:), dvscfout (:,:,:),  &
-       dbecsum (:,:,:,:), spsi (:), auxg (:), aux1 (:), ps (:)
-  ! local density of states af Ef
-  ! local density of states af Ef (without augmentation charges)
-  ! change of scf potential (input)
-  ! change of scf potential (input, only smooth part)
+  ! change of the scf potential (input): complete, smooth part only
+  complex(kind=DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
+  ! change of rho / scf potential (output)
   ! change of scf potential (output)
-  ! change of scf potential (output, only smooth part)
-  ! the derivative of becsum
-  ! the function spsi
-  ! the function spsi
-  ! an auxiliary smooth mesh
-  ! the scalar products
+  complex(kind=DP), allocatable :: ldos (:,:), ldoss (:,:),&
+       dbecsum (:,:,:,:), spsi (:), auxg (:), aux1 (:), ps (:)
+  ! Misc work space
+  ! ldos : local density of states af Ef
+  ! ldoss: as above, without augmentation charges
+  ! dbecsum: the derivative of becsum
+  ! spsi: S*psi
   complex(kind=DP) :: ZDOTC
   ! the scalar product function
 
-  logical :: conv_root,  & ! true if linter is converged
+  logical :: conv_root,  & ! true if linear system is converged
              exst,       & ! used to open the recover file
              lmetq0        ! true if xq=(0,0,0) in a metal
 
@@ -105,10 +95,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              ipert,      & ! counter on perturbations
              ibnd, jbnd, & ! counter on bands
              iter,       & ! counter on iterations
-             lter,       & ! counter on iterations of linter
+             lter,       & ! counter on iterations of linear system
              ltaver,     & ! average counter
-             lintercall, & ! average number of call to linter
-             ik, ikk,    & !  ! counter on k points
+             lintercall, & ! average number of calls to cgsolve_all
+             ik, ikk,    & ! counter on k points
              ikq,        & ! counter on k+q points
              ig,         & ! counter on G vectors
              ir,         & ! counter on mesh points
@@ -381,7 +371,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            ltaver = ltaver + lter
            lintercall = lintercall + 1
            if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4,  &
-                &              " linter: root not converged ",e10.3)') &
+                &              " solve_linter: root not converged ",e10.3)') &
                 &              ik , ibnd, anorm
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,

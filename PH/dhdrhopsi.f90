@@ -117,9 +117,9 @@ subroutine dhdrhopsi
   d_test = .true.
 
   !
-  ! Symmetrizes the variation of the charge-density and calculates the
-  ! local part of first-order variation of the self-consistent Hamiltonian
-  ! on the smooth grid --kept in dvscfs(nrxxs,3)--
+  ! Read the variation of the charge-density and calculates the
+  ! local part of first-order variation of the self-consistent 
+  ! Hamiltonian on the smooth grid --kept in dvscfs(nrxxs,3)--
   !
   call set_dvscf(dvscfs)
 

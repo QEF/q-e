@@ -9,8 +9,8 @@
       subroutine set_dvscf (dvscfs)
   !-----------------------------------------------------------------------
   !
-  !   Symmetrizes the variation of the charge
-  !   Calculates the local part of the scf potential
+  !   Read the variation of the charge and 
+  !   calculates the local part of the scf potential
   !
 #include "f_defs.h"
 
@@ -20,48 +20,30 @@
   implicit none
 
   complex(kind=DP) :: dvscfs (nrxxs,3)
-  complex(kind=DP) , allocatable :: derho (:,:,:)
+  complex(kind=DP) , allocatable :: derho (:,:)
   integer :: ipl
   !  counter on the polarizations
 
-  allocate (derho ( nrxx, nspin, 3))
+  allocate (derho ( nrxx, nspin))
 
-  if ( fildrho.eq.' ') call errore ('set_dvscf','unexpected',1)
-!
-! Symmetrized the variation of the charge; and writes it on the file
-!
+  if ( fildrho.eq.' ') call errore ('set_dvscf','where is fildrho?',1)
+  !
   do ipl = 1, 3
-     call davcio_drho (derho (1, 1, ipl), lrdrho, iudrho, ipl, -1)
-  enddo
-#ifdef __PARA
-  call psyme (derho)
-#else
-  call syme (derho)
-#endif
-  do ipl = 1, 3
-     call davcio_drho (derho (1, 1, ipl), lrdrho, iudrho, ipl, +1)
-  enddo
-!
-! Calculates the local part of the scf potential
-!
-  do ipl = 1, 3
-     call dv_of_drho (0, derho (1, 1, ipl), .false.)
-  enddo
-#ifdef __PARA
-  call psyme (derho)
-#else
-  call syme (derho)
-#endif
-
-  if (doublegrid) then
-     do ipl = 1, 3
-        call cinterpolate (derho (1, 1, ipl), dvscfs (1, ipl), -1)
-     enddo
-  else
-     do ipl = 1, 3
-        call ZCOPY (nrxx, derho (1, 1, ipl), 1, dvscfs (1, ipl), 1)
-     enddo
-  endif
+     !
+     ! read from file the variation of the charge
+     !
+     call davcio_drho (derho (1, 1), lrdrho, iudrho, ipl, -1)
+     !
+     ! Calculates the local part of the scf potential
+     !
+     call dv_of_drho (0, derho (1, 1), .false.)
+     !
+     if (doublegrid) then
+        call cinterpolate (derho (1, 1), dvscfs (1, ipl), -1)
+     else
+        call ZCOPY (nrxx, derho (1, 1), 1, dvscfs (1, ipl), 1)
+     endif
+  end do
 
   deallocate (derho)
 

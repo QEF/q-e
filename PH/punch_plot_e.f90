@@ -68,14 +68,6 @@ SUBROUTINE punch_plot_e()
      CALL davcio_drho (aux (1, ipol), lrdrho, iudrho, ipol, - 1)
   ENDDO
   !
-  !     symmetrize
-  !
-#if defined (__PARA)
-     CALL psyme (aux)
-#else
-     CALL syme (aux)
-#endif
-  !
   !     rotate the charge and transform to cartesian coordinates
   !
   aux1(:,:) = (0.0d0, 0.0d0)
