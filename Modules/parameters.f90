@@ -24,10 +24,16 @@ module parameters
        npk    = 40000, &! maximum number of k-points               
        ndm    = 2000   ! maximum number of points in the radial mesh
   integer , parameter :: DP = kind(0.0d0)
+
+  integer, parameter  :: &
+       nbrx = 6,           &! maximum number of beta functions
+       lqmax= 2*lmaxx+1,   &! maximum number of angular momenta of Q
+       nqfm = 8             ! maximum number of coefficients in Q smoothing
+
   !
   ! ...   More parameter for the CP codes
   !
-  INTEGER, PARAMETER :: cp_mmax = 809   ! maximum mesh size for pseudo
+  INTEGER, PARAMETER :: mmaxx = 1301    ! maximum mesh size for pseudo
   INTEGER, PARAMETER :: cp_lmax = 4     ! maximum number of channels
                                         ! (s,p,d,f)
   INTEGER, PARAMETER :: nacx  = 10      ! maximum number of averaged 

@@ -649,7 +649,7 @@
 ! nfft=1  add      real part of qv(r) to real part of array vr(r) 
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r) 
 !
-      use ion_parameters
+      use parameters, only: natx, nsx
       use parm
       use parmb
 #ifdef __PARA
@@ -703,7 +703,7 @@
 ! add array qv(r) on box grid to array v(r) on dense grid
 ! irb   : position of the box in the dense grid
 !
-      use ion_parameters
+      use parameters, only: nsx, natx
       use parm
       use parmb
 #ifdef __PARA
@@ -758,7 +758,7 @@
 ! nfft=1 (2): use real (imaginary) part of qv(r)
 ! Parallel execution: remember to sum the contributions from other nodes
 !
-      use ion_parameters
+      use parameters, only: nsx, natx
       use parm
       use parmb
 #ifdef __PARA
@@ -940,7 +940,7 @@
       use ions_module
 !
       implicit none
-      real(kind=8) tau(3,nax,nsp), cdm(3)
+      real(kind=8) tau(3,natx,nsp), cdm(3)
 ! local variables
       real(kind=8) tmas
       integer is,i,ia
@@ -1521,7 +1521,7 @@
       use dqgb_mod
       implicit none
 ! input
-      integer, intent(in) ::  irb(3,nax,nsx)
+      integer, intent(in) ::  irb(3,natx,nsx)
       real(kind=8), intent(in)::  rhovan(nat,nhx*(nhx+1)/2,nspin),      &
      &                            rhor(nnr,nspin)
       complex(kind=8), intent(in)::  eigrb(ngb,nas,nsp), rhog(ng,nspin)
@@ -2021,14 +2021,14 @@
 #endif
       implicit none
 ! input
-      integer, intent(in)        :: irb(3,nax,nsx)
+      integer, intent(in)        :: irb(3,natx,nsx)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
       real(kind=8), intent(in)   :: vxc(nnr,nspin)
 ! output
-      real(kind=8), intent(inout):: fion1(3,nax,nsx)
+      real(kind=8), intent(inout):: fion1(3,natx,nsx)
 ! local
       integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3
-      real(kind=8) fcc(3,nax,nsx), fac, boxdotgrid
+      real(kind=8) fcc(3,natx,nsx), fac, boxdotgrid
       complex(kind=8) ci, facg
       external  boxdotgrid
 !
@@ -2036,7 +2036,7 @@
       call tictac(21,0)
       ci = (0.d0,1.d0)
       fac = omega/dfloat(nr1*nr2*nr3*nspin)
-      call zero(3*nax*nsp,fcc)
+      call zero(3*natx*nsp,fcc)
       do is=1,nsp
          if (ifpcor(is).eq.0) go to 10
 #ifdef __PARA
@@ -2088,7 +2088,7 @@
 10       continue
       end do
 !
-      call DAXPY(3*nax*nsp,1.d0,fcc,1,fion1,1)
+      call DAXPY(3*natx*nsp,1.d0,fcc,1,fion1,1)
 !
       call tictac(21,1)
       return
@@ -2100,15 +2100,16 @@
 !
 !     forces on ions, ionic term in real space (also stress if requested)
 !
+      use parameters, only: nsx, natx
       use control_module, only: tpre
       use cnst
       use ions_module
       use parm
       implicit none
 ! input
-      real(kind=8) tau0(3,nax,nsx)
+      real(kind=8) tau0(3,natx,nsx)
 ! output
-      real(kind=8) fion(3,nax,nsx), dsr(3,3), esr
+      real(kind=8) fion(3,natx,nsx), dsr(3,3), esr
 ! local variables
       integer i,j,k,l,m, ii, lax, inf
       real(kind=8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
@@ -2184,7 +2185,7 @@
      &           ei2(-nr2:nr2,nas,nsp),                                 &
      &           ei3(-nr3:nr3,nas,nsp)
 ! output
-      real(kind=8) fion1(3,nax,nsx)
+      real(kind=8) fion1(3,natx,nsx)
 ! local
       integer ig, is, isa, ism, ia, ix, iss, isup, isdw
       real(kind=8)  wz
@@ -3406,7 +3407,7 @@
       implicit none
 ! 
       integer ibrav
-      real(kind=8) tau(3,nax,nsx), celldm(6), ecut
+      real(kind=8) tau(3,natx,nsx), celldm(6), ecut
 !
       integer idum, ik, k, iss, i, in, is, ia
       integer good_fft_dimension, good_fft_order
@@ -3673,10 +3674,10 @@
       use parmb
       implicit none
 ! input
-      real(kind=8), intent(in):: tau0(3,nax,nsx)
+      real(kind=8), intent(in):: tau0(3,natx,nsx)
 ! output
-      integer, intent(out):: irb(3,nax,nsx)
-      real(kind=8), intent(out):: taub(3,nax,nsx)
+      integer, intent(out):: irb(3,natx,nsx)
+      real(kind=8), intent(out):: taub(3,natx,nsx)
 ! local
       real(kind=8) x(3), xmod
       integer nr(3), nrb(3), xint, is, ia, i
@@ -4044,15 +4045,15 @@
 !
       implicit none
 ! input
-      integer irb(3,nax,nsx)
+      integer irb(3,natx,nsx)
       complex(kind=8) eigrb(ngb,nas,nsp)
       real(kind=8)  vr(nnr,nspin), rhovan(nat,nhx*(nhx+1)/2,nspin)
 ! output
-      real(kind=8)  deeq(nat,nhx,nhx,nspin), fion(3,nax,nsp)
+      real(kind=8)  deeq(nat,nhx,nhx,nspin), fion(3,natx,nsp)
 ! local
       integer isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
       integer irb3, imin3, imax3
-      real(kind=8)  fvan(3,nax,nsx), fac, fac1, fac2, boxdotgrid
+      real(kind=8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
       complex(kind=8) ci, facg1, facg2
       external boxdotgrid
 !
@@ -4060,7 +4061,7 @@
       ci=(0.d0,1.d0)
       fac=omegab/float(nr1b*nr2b*nr3b)
       call zero(nat*nhx*nhx*nspin,deeq)
-      call zero(3*nax*nsx,fvan)
+      call zero(3*natx*nsx,fvan)
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
@@ -4252,9 +4253,9 @@
          end do
       end if
 #ifdef __PARA
-      call reduce(3*nax*nvb,fvan)
+      call reduce(3*natx*nvb,fvan)
 #endif
-      call DAXPY(3*nax*nvb,-1.d0,fvan,1,fion,1)
+      call DAXPY(3*natx*nvb,-1.d0,fvan,1,fion,1)
 !
   10  call tictac(11,1)
 !
@@ -4275,7 +4276,7 @@
 !
       implicit none
       real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
-      real(kind=8) fion(3,nax,nsp)
+      real(kind=8) fion(3,natx,nsp)
 !
       integer k, is, ia, iv, jv, i, j, inl
       real(kind=8) tt, SSUM
@@ -4350,7 +4351,7 @@
       real(kind=8) deeq(nat,nhx,nhx,nspin), bec(nhsa,n), becdr(nhsa,n,3),&
      &       c(2,ngw,n)
       complex(kind=8) eigr(ngw,nas,nsp)
-      real(kind=8) fion(3,nax,nsx)
+      real(kind=8) fion(3,natx,nsx)
 !
       integer k, is, ia, isa, iss, inl, iv, jv, i
       real(kind=8) tmpbec(nhx,n), tmpdr(nhx,n) ! automatic arrays
@@ -4838,7 +4839,7 @@
       use control_module
 !
       implicit none
-      real(kind=8) taub(3,nax,nsx)
+      real(kind=8) taub(3,natx,nsx)
       complex(kind=8) eigrb(ngb,nas,nsp)
 ! local
       integer i,j,k, is, ia, ig
@@ -4964,7 +4965,7 @@
       use control_module
 !
       implicit none
-      real(kind=8) tau0(3,nax,nsx)
+      real(kind=8) tau0(3,natx,nsx)
 !
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),      &
      &                ei3(-nr3:nr3,nas,nsp), eigr(ngw,nas,nsp)
@@ -5356,15 +5357,15 @@
 ! iflag=+1 : read everything
 !
       use elct, only: n, nx, ngw, ng0
-      use ions_module, only: nsp, na, nax
+      use ions_module, only: nsp, na, natx
       use parameters, only: nacx
 !
       implicit none
       integer flag, ndr, nfi
       real(kind=8) h(3,3), hold(3,3)
       complex(kind=8) c0(ngw,n), cm(ngw,n)
-      real(kind=8) taum(3,nax,nsp),tau0(3,nax,nsp)
-      real(kind=8) vel(3,nax,nsp), velm(3,nax,nsp)
+      real(kind=8) taum(3,natx,nsp),tau0(3,natx,nsp)
+      real(kind=8) vel(3,natx,nsp), velm(3,natx,nsp)
       real(kind=8) acc(nacx),lambda(nx,nx), lambdam(nx,nx)
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
@@ -5683,7 +5684,7 @@
 !     Output parameters in module "ncprm"
 !     info on DFT level in module "dft"
 !
-      use ion_parameters
+      use parameters, only: nsx, natx
       use ncprm
       use dft_mod
       use wfc_atomic
@@ -6481,7 +6482,7 @@
       real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrs,nspin)
       complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
-      integer irb(3,nax,nsx), nfi
+      integer irb(3,natx,nsx), nfi
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
       real(kind=8) rsumr(2), rsumg(2), sa1, sa2, SSUM
@@ -6762,7 +6763,7 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     routine makes use of  c(-q)=c*(q)
 !
-      use ion_parameters
+      use parameters, only: nsx, natx
       use cvan
       use elct
 !
@@ -6846,7 +6847,7 @@
 !
       implicit none
 !
-      integer, intent(in) :: irb(3,nax,nsx)
+      integer, intent(in) :: irb(3,natx,nsx)
       real(kind=8), intent(in):: rhovan(nat,nhx*(nhx+1)/2,nspin)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
       real(kind=8), intent(inout):: rhor(nnr,nspin)
@@ -7114,7 +7115,7 @@
 #endif
       implicit none
 ! input
-      integer, intent(in)        :: irb(3,nax,nsx)
+      integer, intent(in)        :: irb(3,natx,nsx)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
 ! output
       real(kind=8), intent(out)  :: rhoc(nnr)
@@ -7317,7 +7318,7 @@
 !     where s=s(r(t+dt)) 
 !     routine makes use of c(-q)=c*(q)
 !
-      use ion_parameters
+      use parameters, only: natx, nsx
       use cvan
       use elct
 !
@@ -7562,7 +7563,7 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     routine makes use of c(-q)=c*(q)
 !
-      use ion_parameters
+      use parameters, only: nsx, natx
       use cvan
       use elct
 !
@@ -7741,14 +7742,14 @@
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8)  rhor(nnr,nspin), rhos(nnrs,nspin), fion(3,nax,nsx)
-      real(kind=8)  rhoc(nnr), tau0(3,nax,nsp)
+      real(kind=8)  rhor(nnr,nspin), rhos(nnrs,nspin), fion(3,natx,nsx)
+      real(kind=8)  rhoc(nnr), tau0(3,natx,nsp)
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
      &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
-      integer irb(3,nax,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,nax,nsx), vave, ebac, wz, eh, SSUM
+      integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
+      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh, SSUM
       complex(kind=8)  fp, fm, ci, CSUM
       complex(kind=8), pointer:: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
@@ -7769,7 +7770,7 @@
 !     first routine in which fion is calculated: annihilation
 !
       do is=1,nsp
-         do ia=1,nax
+         do ia=1,natx
             do i=1,3
                fion (i,ia,is)=0.d0
                fion1(i,ia,is)=0.d0
@@ -7923,7 +7924,7 @@
       if(tfor) then
          if (nlcc.gt.0) call force_cc(irb,eigrb,rhor,fion1)
 #ifdef __PARA
-         call reduce(3*nax*nsp,fion1)
+         call reduce(3*natx*nsp,fion1)
 #endif
 !
 !    add g-space ionic and core correction contributions to fion
@@ -8083,15 +8084,15 @@
      &       xnhh0,xnhhm,vnhh,velh)
 !-----------------------------------------------------------------------
       use elct, only: n, nx, ngw
-      use ions_module, only: nsp, na, nax
+      use ions_module, only: nsp, na, natx
       use parameters, only: nacx
 !
       implicit none
       integer ndw, nfi
       real(kind=8) h(3,3), hold(3,3)
       complex(kind=8) c0(ngw,n), cm(ngw,n)
-      real(kind=8) taum(3,nax,nsp),tau0(3,nax,nsp)
-      real(kind=8) vel(3,nax,nsp), velm(3,nax,nsp)
+      real(kind=8) taum(3,natx,nsp),tau0(3,natx,nsp)
+      real(kind=8) vel(3,natx,nsp), velm(3,natx,nsp)
       real(kind=8) acc(nacx),lambda(nx,nx), lambdam(nx,nx)
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)

@@ -105,8 +105,8 @@
 !
 ! indexes, positions, and structure factors for the box grid
 !
-      integer irb(3,nax,nsx)
-      real(kind=8) taub(3,nax,nsx)
+      integer irb(3,natx,nsx)
+      real(kind=8) taub(3,natx,nsx)
       complex(kind=8), allocatable:: eigrb(:,:,:)
 ! 
 ! charge densities and potentials
@@ -141,17 +141,17 @@
 !
 !  ionic positions, center of mass position
 !
-      real(kind=8) tau0(3,nax,nsx), taum(3,nax,nsx), taup(3,nax,nsx)
+      real(kind=8) tau0(3,natx,nsx), taum(3,natx,nsx), taup(3,natx,nsx)
       real(kind=8) cdm0(3),cdmvel(3)
 !
 !  forces on ions
 !
-      real(kind=8) fion(3,nax,nsx), fionm(3,nax,nsx)
-      integer iforce(3,nax,nsx)
+      real(kind=8) fion(3,natx,nsx), fionm(3,natx,nsx)
+      integer iforce(3,natx,nsx)
 !
 ! for variable cell dynamics: scaled tau
 !
-      real(kind=8) taus(3,nax,nsx)
+      real(kind=8) taus(3,natx,nsx)
       integer iforceh(3,3)
 !
       integer ndr, ndw, nbeg, maxit, nomore
@@ -174,8 +174,8 @@
 !
 ! work variables, 2
 !
-      real(kind=8) tausm(3,nax,nsx),tausp(3,nax,nsx)
-      real(kind=8) vels(3,nax,nsx),velsm(3,nax,nsx),velsp(3,nax,nsx)
+      real(kind=8) tausm(3,natx,nsx),tausp(3,natx,nsx)
+      real(kind=8) vels(3,natx,nsx),velsm(3,natx,nsx),velsp(3,natx,nsx)
       real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3)
       real(kind=8) cdm(3)
       real(kind=8) qr(3)

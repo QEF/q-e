@@ -6,12 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-module ion_parameters
-  !     nsx = max number of different species
-  !     nax = max number of atoms in one particular species
-  integer, parameter:: nsx=5, nax=300
-end module ion_parameters
-
 module van_parameters
   !     nlx = combined angular momentum (for s,p,d states: nlx=9)
   !     lix = max angular momentum l+1 (lix=3 if s,p,d are included)
@@ -22,7 +16,7 @@ end module van_parameters
 
 module bhs
   !     analytical BHS pseudopotential parameters
-  use ion_parameters
+  use parameters, only: nsx
   real(kind=8) rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
        rcl(3,nsx,3), al(3,nsx,3), bl(3,nsx,3)
   integer lloc(nsx)
@@ -58,7 +52,7 @@ end module cnst
 
 module cvan
   !     ionic pseudo-potential variables
-  use ion_parameters
+  use parameters, only: nsx
   use van_parameters
   !     ap  = Clebsch-Gordan coefficients (?)
   !     lpx = max number of allowed Y_lm
@@ -166,7 +160,7 @@ module gvecs
 end module gvecs
 
 module ions_module
-  use ion_parameters
+  use parameters, only: nsx, natx
   !     nsp       = number of species
   !     na(is)    = number of atoms of species is
   !     nas       = max number of atoms of a given species
@@ -181,7 +175,7 @@ end module ions_module
 
 module ncprm
 
-  use ion_parameters
+  use parameters, only: nsx, mmaxx, nqfx=>nqfm, nbrx, lqx=>lqmax
   use van_parameters
 !
 !  lqx  :  maximum angular momentum of Q (Vanderbilt augmentation charges)
@@ -189,8 +183,6 @@ module ncprm
 !  nbrx :  maximum number of distinct radial beta functions
 !  mmaxx:  maximum number of points in the radial grid
 ! 
-  integer nqfx, lqx, nbrx, mmaxx
-  parameter (lqx=5, nqfx=8, nbrx=6, mmaxx=1301)
 
 !  ifpcor   1 if "partial core correction" of louie, froyen,
 !                 & cohen to be used; 0 otherwise
@@ -270,7 +262,7 @@ module pseu
 end module pseu
 
 module psfiles
-  use ion_parameters
+  use parameters, only: nsx
   !    psfile = name of files containing pseudopotential
   character(len=80) :: pseudo_dir, psfile(nsx)
 end module psfiles
@@ -324,7 +316,7 @@ module timex_mod
 end module timex_mod
 
 module wfc_atomic
-  use ion_parameters, only:nsx
+  use parameters, only:nsx
   use ncprm, only:mmaxx
   !  nchix=  maximum number of pseudo wavefunctions
   !  nchi =  number of atomic (pseudo-)wavefunctions

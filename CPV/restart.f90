@@ -14,7 +14,7 @@ CONTAINS
 ! read from file and distribute data calculated in preceding iterations
 !
       use elct, only: n, nx, ngw, ng0, nspin, nel, ngw_g
-      use ions_module, only: nsp, na, nax
+      use ions_module, only: nsp, na, natx
       use parm, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: write_restart_header, write_restart_ions, &
@@ -332,7 +332,7 @@ CONTAINS
 ! read from file and distribute data calculated in preceding iterations
 !
       use elct, only: n, nx, ngw, ng0, nspin, nel, ngw_g
-      use ions_module, only: nsp, na, nax
+      use ions_module, only: nsp, na, natx
       use parm, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: read_restart_header, read_restart_ions, &

@@ -72,17 +72,17 @@
           INTEGER :: igau
           INTEGER :: lloc
           INTEGER :: lnl 
-          INTEGER :: indl(cp_lmax)
+          INTEGER :: indl(mmaxx)
           INTEGER :: nchan
           INTEGER :: mesh
           REAL(dbl) ::  zv
           REAL(dbl) ::  raggio
           REAL(dbl) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
-          REAL(dbl) ::  rab(cp_mmax)
-          REAL(dbl) ::  rw(cp_mmax)
-          REAL(dbl) ::  vnl(cp_mmax, cp_lmax)
-          REAL(dbl) ::  vloc(cp_mmax)
-          REAL(dbl) ::  vrps(cp_mmax, cp_lmax)
+          REAL(dbl) ::  rab(mmaxx)
+          REAL(dbl) ::  rw(mmaxx)
+          REAL(dbl) ::  vnl(mmaxx, cp_lmax)
+          REAL(dbl) ::  vloc(mmaxx)
+          REAL(dbl) ::  vrps(mmaxx, cp_lmax)
           REAL(dbl) ::  wgv(cp_lmax)
           REAL(dbl) ::  rc(2)
           REAL(dbl) ::  wrc(2)
@@ -92,8 +92,8 @@
           INTEGER :: nrps                     ! number of atomic wave function
           INTEGER :: lrps(cp_lmax)            ! angular momentum
           REAL(dbl) :: oc(cp_lmax)            ! occupation for each rps
-          REAL(dbl) :: rps(cp_mmax, cp_lmax)  ! atomic pseudo wave function
-          REAL(dbl) :: rhoc(cp_mmax)          ! core charge
+          REAL(dbl) :: rps(mmaxx, cp_lmax)  ! atomic pseudo wave function
+          REAL(dbl) :: rhoc(mmaxx)          ! core charge
         END TYPE pseudo_ncpp
 
 !  ----------------------------------------------

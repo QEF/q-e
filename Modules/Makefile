@@ -11,11 +11,13 @@ io_global.o  \
 mp.o  \
 mp_global.o  \
 mp_wave.o  \
+mp_buffers.o  \
 parser.o \
 readpseudo.o  \
 pseudodata.o  \
 cell_base.o  \
-pseudo_types.o
+pseudo_types.o \
+ptoolkit.o
 #
 include ../make.rules
 #

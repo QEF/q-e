@@ -504,11 +504,9 @@ module us
   ! These parameters are needed with the US pseudopotentials
   !
   integer, parameter  :: &
-       nbrx = 6,           &! maximum number of beta functions
-       lqmax= 2*lmaxx+1,   &! maximum number of angular momenta of Q
        nlx  = (lmaxx+1)**2,&! maximum number of combined angular momentum
-       mx   = 2*lqmax-1,   &! maximum magnetic angular momentum of Q
-       nqfm = 8             ! maximum number of coefficients in Q smoothing
+       mx   = 2*lqmax-1     ! maximum magnetic angular momentum of Q
+
   real(kind=DP), parameter:: &
        dq = 0.01d0          ! space between points in the pseudopotential tab.
   !

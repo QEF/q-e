@@ -24,7 +24,7 @@
 !     ------------------------------------------------------------------
       use control_module, only: iprsta
       use cnst, only: pi, scmass
-      use ion_parameters, only: nsx, nax
+      use parameters, only: nsx, natx
       use ions_module, only : nat, nsp, na, zv, pmass, rcmax, ipp ! ipp TEMP
       use elct, only: f, nel, nspin, nupdwn, iupdwn, n, nx
       use parm,  only: nr1 ,nr2 ,nr3, alat, a1, a2, a3, omega
@@ -43,8 +43,8 @@
       real(kind=8) ampre, delt, ekincw, emass, emaec, eps,       &
      &       frice, fricp, frich, grease, greasp, greash,        &
      &       press, qnp, qne, qnh, tempw, temph, tolp, wmass,    &
-             amprp(nsx), celldm(6), tau0(3,nax,nsx), ecut, ecutw
-      integer :: nbeg, ndr,ndw,nomore, iprint, max, iforce(3,nax,nsx)
+             amprp(nsx), celldm(6), tau0(3,natx,nsx), ecut, ecutw
+      integer :: nbeg, ndr,ndw,nomore, iprint, max, iforce(3,natx,nsx)
 
       logical :: trane, tsde, twall, tortho, tnosee, tfor, tsdp, tcp, &
            tcap, tnosep, trhor, trhow, tvlocw, tpre, thdyn, thdiag,   &
@@ -53,7 +53,7 @@
       ! local variables
       !
       real(kind=8), parameter:: terahertz = 2.418D-5, factem = 315795.26D0
-      real(kind=8) :: taus(3,nax,nsx)
+      real(kind=8) :: taus(3,natx,nsx)
       character (len=30) :: atomic_positions
       integer :: unit = 5, ionode_id = 0, i, ia, ios, is
       !
@@ -1025,7 +1025,7 @@
       subroutine read_cards(ibrav, iforce, tau0, atomic_positions)
 !-----------------------------------------------------------------------
 !
-      use ion_parameters, only: nsx, nax
+      use parameters, only: nsx, natx
       use ions_module, only : na, nat, nsp, ipp, pmass ! ipp TEMP
       use elct, only: f, n
       use parm, only: a1, a2, a3
@@ -1033,8 +1033,8 @@
       use parser
 
       implicit none
-      integer :: ibrav, iforce(3, nax, nsp)
-      real(kind=8) :: tau0(3, nax, nsp)
+      integer :: ibrav, iforce(3, natx, nsp)
+      real(kind=8) :: tau0(3, natx, nsp)
       character(len=*) :: atomic_positions
       !      
       real(kind=8), allocatable :: tau_inp(:,:)
@@ -1115,7 +1115,7 @@
             do ia = 1, nat
                if (ityp_inp(ia) == is) then
                   na(is) = na(is) + 1
-                  if(na(is).gt.nax) call errore(' cards',' na > nax',na(is))
+                  if(na(is).gt.natx) call errore(' cards',' na > natx',na(is))
                   do i = 1, 3
                      tau0(i, na(is), is ) = tau_inp(i, ia)
                      iforce(i, na(is), is ) = iforce_inp(i, ia)

@@ -692,7 +692,7 @@
 ! input/output
       integer ibrav, ndr, nbeg, iforceh(3,3)
       logical tranp(nsx), tfirst, twmass, thdiag
-      real(kind=8) tau0(3,nax,nsx), taus(3,nax,nsx), amprp(nsx)
+      real(kind=8) tau0(3,natx,nsx), taus(3,natx,nsx), amprp(nsx)
       real(kind=8) celldm(6), ecut, ecutw
       real(kind=8) delt
 ! local

@@ -1525,15 +1525,15 @@ end module para_mod
       use para_mod
       use mp
       use elct, only: n, nx, ngw, ng0
-      use ions_module, only: nsp, na, nax
+      use ions_module, only: nsp, na, natx
       use parameters, only: nacx
 !
       implicit none
       integer flag, ndr, nfi
       real(kind=8) h(3,3), hold(3,3)
       complex(kind=8) c0(ngw,n), cm(ngw,n)
-      real(kind=8) taum(3,nax,nsp),tau0(3,nax,nsp)
-      real(kind=8) vel(3,nax,nsp), velm(3,nax,nsp)
+      real(kind=8) taum(3,natx,nsp),tau0(3,natx,nsp)
+      real(kind=8) vel(3,natx,nsp), velm(3,natx,nsp)
       real(kind=8) acc(nacx),lambda(nx,nx), lambdam(nx,nx)
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
@@ -1643,15 +1643,15 @@ end module para_mod
 !
       use para_mod
       use elct, only: n, nx, ngw, ng0
-      use ions_module, only: nsp, na, nax
+      use ions_module, only: nsp, na, natx
       use parameters, only: nacx
 !
       implicit none
       integer ndw, nfi
       real(kind=8) h(3,3), hold(3,3)
       complex(kind=8) c0(ngw,n), cm(ngw,n)
-      real(kind=8) taum(3,nax,nsp),tau0(3,nax,nsp)
-      real(kind=8) vel(3,nax,nsp), velm(3,nax,nsp)
+      real(kind=8) taum(3,natx,nsp),tau0(3,natx,nsp)
+      real(kind=8) vel(3,natx,nsp), velm(3,natx,nsp)
       real(kind=8) acc(nacx),lambda(nx,nx), lambdam(nx,nx)
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
