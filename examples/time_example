@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# check directories given as arguments, current directory if none
+if test $# = 0 ; then args="." ; else args="$@"; fi
+
+for dir in $args
+do
+    # check working directory
+    if test -d "$dir"
+    then
+	EXAMPLEDIR=`cd $dir; pwd`
+    else
+	echo error: directory $dir not found
+	exit -1
+    fi
+    echo checking directory $EXAMPLEDIR...
+
+    # look for output files in reference
+    if test ! -d $EXAMPLEDIR/reference
+    then
+	echo error: reference directory not found in $EXAMPLEDIR
+	exit -1
+    fi
+    output=`ls $EXAMPLEDIR/reference | grep ".out\$"`
+
+    # check output files
+    echo "                     reference   test   diff."
+    for file in $output
+    do
+        # extract CPU time statistics
+        # convert from "1h23m45.6s" to seconds
+	tref=`awk '/CPU time/ \
+                   { str = $3; h = m = s = 0;
+                     if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
+                     if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
+                     if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
+                     t += h * 3600 + m * 60 + s; }
+                   END { printf("%.2f\n", t); }' \
+                  $EXAMPLEDIR/reference/$file`
+	tres=`awk '/CPU time/ \
+                   { str = $3; h = m = s = 0;
+                     if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
+                     if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
+                     if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
+                     t += h * 3600 + m * 60 + s; }
+                   END { printf("%.2f\n", t); }' \
+                  $EXAMPLEDIR/results/$file`
+	echo $file $tref $tres |
+	awk '{printf("%20s: %7.2f %7.2f %+6.1f%%\n",
+                     $1, $2, $3, ($3/$2 - 1)*100)}'
+	totref=`echo $totref $tref | awk '{print $1+$2}'`
+	totres=`echo $totres $tres | awk '{print $1+$2}'`
+    done
+    echo "---------------------  ------  ------  ------"
+    echo $totref $totres |
+    awk '{printf("%20s: %7.2f %7.2f %+6.1f%%\n",
+                 "total", $1, $2, ($2/$1 - 1)*100)}'
+done
