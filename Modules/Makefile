@@ -24,7 +24,6 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
-miscellany.o \
 mp.o \
 mp_global.o \
 mp_wave.o \
