@@ -94,7 +94,8 @@ cat > si.md2.in << EOF
     mixing_beta = 0.7
  /
  &ions
-    potential_extrapolation='wfc2'
+    pot_extrapolation='second-order'
+    wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
@@ -135,7 +136,8 @@ cat > si.md8.in << EOF
     mixing_beta = 0.7
  /
  &ions
-    potential_extrapolation='wfc2'
+    pot_extrapolation='second-order'
+    wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
@@ -182,7 +184,8 @@ cat > si.md2_G3X.in << EOF
     mixing_beta = 0.7
  /
  &ions
-    potential_extrapolation='wfc2'
+    pot_extrapolation='second-order'
+    wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
