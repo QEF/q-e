@@ -221,7 +221,9 @@ PWOBJS = \
 ../PW/wgauss.o \
 ../PW/write_config_to_file.o \
 ../PW/write_ns.o \
-../PW/wsweight.o 
+../PW/wsweight.o \
+../PW/error_handler.o \
+../PW/upf_to_internal.o
 
 MODULES = \
 ../Modules/atom.o \
@@ -256,9 +258,7 @@ MODULES = \
 ../Modules/supercell.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/wavefunctions.o \
-../PW/error_handler.o \
-../PW/upf_to_internal.o
+../Modules/wavefunctions.o
 
 CGOBJS = \
 a_h.o \
