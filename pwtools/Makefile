@@ -16,7 +16,7 @@ MODULES = ../Modules/parameters.o
 #
 # Targets
 #
-all: band_plot.x q2r.x matdyn.x dynmat.x band_plot.x fqha.x
+all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x
 
 band_plot.x:  band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LFLAGS)
@@ -29,9 +29,6 @@ matdyn.x: matdyn.o rigid.o
 
 dynmat.x: dynmat.o rigid.o
 	$(LD) -o dynmat.x dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LFLAGS)
-
-dos.x:  dos.o
-	$(LD) -o dos.x dos.o  $(LFLAGS)
 
 fqha.x:  fqha.o
 	$(LD) -o fqha.x fqha.o  $(LFLAGS)

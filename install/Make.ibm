@@ -2,9 +2,7 @@
 # System-dependent definitions for IBM AIX (RISC6000)
 # Edit according to your needs
 #
-# try to add -DHAS_ZHEGVX if you have a recent lapack library
-#
-CPPFLAGS = -DAIX
+CPPFLAGS = -DAIX,-DHAS_ZHEGVX
 
 #
 # Fortran compiler:

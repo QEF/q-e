@@ -33,7 +33,7 @@ PP/        Source files for post-processing of pw.x data file
 Gamma/     Source files for experimental Gamma-only scf (pwg.x) 
            and phonon calculation (phcg.x)
 D3/        Source files for third-order derivatives calculation (d3.x)
-pwtools/   Source files for post-processing of ph.x results and of
+pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
 pwdoc/     documentation for PWscf, ChangeLog, etc
 pw_examples/ contains sample input and output files

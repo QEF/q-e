@@ -77,7 +77,7 @@ make ph     produces PH/ph.x (phonons)
 make pp     produces PP/pp.x (postprocessing) and other codes
 make d3     produces D3/d3.x (third-order energy derivatives)
 make gamma  produces Gamma/pwg.x and Gamma/phcg.x
-            (Gamma-only versions of pw,x and ph.x)
+            (Gamma-only versions of pw.x and ph.x)
 make upf    produces utilities for pseudopotential conversion in upftools/
 make tools  produces miscellaneous tools for data analysis, in pwtools/
 make fpmd   produces FPMD/par2.x code for Car-Parrinello MD
