@@ -14,6 +14,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/aainit.o \
 ../PW/addusforce.o \
 ../PW/addusstress.o \
+../PW/add_efield.o \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
 ../PW/atomic_wfc.o \
@@ -29,6 +30,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/clean_pw.o \
+../PW/compute_dip.o \
 ../PW/constrain.o \
 ../PW/conv_to_num.o \
 ../PW/coset.o \
@@ -64,6 +66,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/g_psi.o \
 ../PW/gen_us_dj.o \
 ../PW/gen_us_dy.o \
+../PW/ggen.o \
 ../PW/gk_sort.o \
 ../PW/gweights.o \
 ../PW/hexsym.o \
@@ -164,6 +167,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/w0gauss.o \
 ../PW/w1gauss.o \
 ../PW/wgauss.o \
+../PW/wsweight.o \
 ../PW/which_dft.o \
 ../PW/write_ns.o \
 ../PW/ylmr2.o \
@@ -194,9 +198,8 @@ PWOBJS=../PW/pwcom.o \
 ../PW/bp_ylm_q.o \
 ../PW/bp_zgedi.o \
 ../PW/bp_zgefa.o \
-../PW/ggen.o \
 ../PW/ccalbec.o \
-../PW/becmod.o 
+../PW/becmod.o
 
 
 MODULES = ../Modules/*.o ../PW/error_handler.o \

@@ -72,18 +72,18 @@
   elseif (edir.eq.3) then
      npoints=nr3
   else
-     call errore('setlocal',' wrong edir',1)
+     call errore('add_efield',' wrong edir',1)
   endif
   length=alat/bmod
   deltal=length/npoints
 
   nmax =int(real(npoints,dp)*(emaxpos-eps))+1
   if (nmax.lt.1.or.nmax.gt.npoints) &
-     call errore('setlocal','nmax out of range',1)
+     call errore('add_efield','nmax out of range',1)
 
   ndesc=int(real(npoints,dp)*(eopreg-eps))+1
   if (ndesc.lt.1.or.ndesc.gt.npoints) &
-     call errore('setlocal','ndesc out of range',1)
+     call errore('add_efield','ndesc out of range',1)
 
   dip=0.d0
   dipion=0.d0
@@ -234,7 +234,7 @@
       end do
     end do
   else
-     call errore('setlocal', 'wrong edir', 1)
+     call errore('add_efield', 'wrong edir', 1)
   endif
   first=.false.
   return

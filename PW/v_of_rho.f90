@@ -18,7 +18,6 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !     Hartree potential is computed in reciprocal space.
   !
   !
-#include "machine.h"
   use parameters, only: DP
   implicit none
   !

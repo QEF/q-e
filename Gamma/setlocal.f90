@@ -32,7 +32,7 @@ subroutine setlocal
   !
   !    here we compute the local potential in real space
   !
-  call setv (2 * nrxx, 0.d0, aux, 1)
+  aux(:)=(0.d0,0.d0)
   do nt = 1, ntyp
      do ng =1, ngm
         aux (nl(ng) ) = aux (nl(ng) ) + vloc (igtongl(ng), nt) * strf (ng, nt)
@@ -49,6 +49,13 @@ subroutine setlocal
      vltot (ir) = DREAL (aux (ir) )
   enddo
   deallocate(aux)
+  !
+  !  If required add an electric field to the local potential 
+  !
+  if (tefield.and.(.not.dipfield)) then
+     call add_efield(vltot)
+  endif
+  !
   return
 end subroutine setlocal
 

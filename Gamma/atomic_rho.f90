@@ -40,7 +40,7 @@ subroutine atomic_rho (rhoa, nspina)
   ! the integrand function
 
   complex(kind=DP), allocatable :: rhocg (:,:)
-  ! auxiliary var: charge dens. in G spac
+  ! auxiliary var: charge dens. in G space
 
   integer :: ir, is, ig, igl, igl0, nt
   ! counter on mesh points
@@ -58,10 +58,9 @@ subroutine atomic_rho (rhoa, nspina)
   allocate (aux( ndm))    
   allocate (rhocgnt( ngl))    
 
-  ! psic is the generic work space
-  call setv (nrxx, 0.d0, rhoa, 1)
+  rhoa(:,:) = 0.d0
+  rhocg(:,:) = (0.d0,0.d0)
 
-  call setv (2 * nspina * ngm, 0.d0, rhocg, 1)
   do nt = 1, ntyp
      !
      ! Here we compute the G=0 term
@@ -118,7 +117,7 @@ subroutine atomic_rho (rhoa, nspina)
      !
      ! and we return to real space
      !
-     call setv (2 * nrxx, 0.d0, psic, 1)
+     psic(:) = (0.d0, 0.d0)
      do ig = 1, ngm
         psic (nl (ig) ) = rhocg (ig, is)
         psic (nlm(ig) ) = conjg( rhocg (ig, is)  )

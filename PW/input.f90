@@ -415,7 +415,7 @@ subroutine iosys
         ntcheck=nstep+1
      CASE DEFAULT
         CALL errore(' iosys ','calculation='//trim(calculation)// &
-&             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
+&             ': ion_dynamics='//trim(ion_dynamics)//' not supported', 1 )
      END SELECT
   endif
   if ( TRIM(calculation) == 'md' ) then
@@ -430,7 +430,7 @@ subroutine iosys
         ntcheck=nstep+1
      CASE DEFAULT
         CALL errore(' iosys ','calculation='//trim(calculation)// &
-&             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
+&             ': ion_dynamics='//trim(ion_dynamics)//' not supported', 1 )
      END SELECT
   endif
   if ( TRIM(calculation) == 'vc-relax' ) then
@@ -455,11 +455,11 @@ subroutine iosys
         ntcheck=nstep+1
      CASE DEFAULT
         CALL errore(' iosys ','calculation='//trim(calculation)// &
-&             ': cell_dymanics='//trim(cell_dynamics)//' not supported', 1 )
+&             ': cell_dynamics='//trim(cell_dynamics)//' not supported', 1 )
      END SELECT
      if ( TRIM(ion_dynamics) .ne. 'damp' ) then
         CALL errore(' iosys ','calculation='//trim(calculation)// &
-&             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
+&             ': ion_dynamics='//trim(ion_dynamics)//' not supported', 1 )
      end if
   endif
   if ( TRIM(calculation) == 'vc-md' ) then
@@ -478,11 +478,11 @@ subroutine iosys
         ntcheck=nstep+1
      CASE DEFAULT
         CALL errore(' iosys ','calculation='//trim(calculation)// &
-&             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
+&             ': ion_dynamics='//trim(ion_dynamics)//' not supported', 1 )
      END SELECT
      if ( TRIM(ion_dynamics) .ne. 'beeman' ) then
         CALL errore(' iosys ','calculation='//trim(calculation)// &
-&             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
+&             ': ion_dynamics='//trim(ion_dynamics)//' not supported', 1 )
      end if
   endif
 

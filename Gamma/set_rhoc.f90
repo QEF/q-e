@@ -41,7 +41,7 @@ subroutine set_rhoc
   do nt = 1, ntyp
      if (nlcc (nt) ) goto 10
   enddo
-  call setv (nrxx, 0.d0, rho_core, 1)
+  rho_core(:) = 0.d0
   return
 
 10 continue
@@ -88,10 +88,10 @@ subroutine set_rhoc
      ! space by FFT. For non smooth core charges (or insufficient cut-off)
      ! this may result in negative values in some grid points.
      ! Up to October 1999 the core charge was forced to be positive definite.
-     ! This induces an error in the force, and probably stress, calculation i
+     ! This induces an error in the force, and probably stress, calculation if
      ! the number of grid points where the core charge would be otherwise neg
      ! is large. The error disappears for sufficiently high cut-off, but may
-     ! rather large and it is better to leave the core charge as it is.
+     ! be rather large and it is better to leave the core charge as it is.
      ! If you insist to have it positive definite (with the possible problems
      ! mentioned above) uncomment the following lines.  SdG, Oct 15 1999
      !

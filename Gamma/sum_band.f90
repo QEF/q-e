@@ -36,14 +36,14 @@ subroutine sum_band
   ! weight
   !
   call start_clock ('sum_band')
-  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum, 1)
-  call setv (nrxx * nspin, 0.0d0, rho, 1)
+  becsum(:,:,:) = 0.d0
+  rho(:,:) = 0.d0
   eband = 0.d0
   demet = 0.d0
   !
   !   calculate weights for the insulator case
   !
-  if (.not.lgauss.and..not.ltetra) then
+  if (.not.lgauss.and..not.ltetra.and..not.tfixed_occ) then
      call iweights (nks, wk, nbnd, nelec, wg)
      !
      !    calculate weights for the metallic case
@@ -64,6 +64,12 @@ subroutine sum_band
   elseif (lgauss) then
      call gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
           et, ef, demet, wg)
+  elseif (tfixed_occ) then
+     do is=1,nspin
+        do ibnd=1,nbnd
+           wg(ibnd,is)=f_inp(ibnd,is)
+        enddo
+     enddo
   endif
   !
   ! Needed for LDA+U
@@ -94,7 +100,7 @@ subroutine sum_band
         !
      end do
      do ibnd = 1, nbnd, 2
-        call setv (2 * nrxx, 0.d0, psic, 1)
+        psic(:) = (0.d0,0.d0)
         if (ibnd.lt.nbnd) then
            ! two ffts at the same time
            do ig = 1, npw

@@ -63,7 +63,6 @@ subroutine allocate_nlpot
         endif
      endif
   enddo
-  lqx = 2*lmaxkb+1
   !
   ! calculate the maximum number of beta functions
   !
@@ -88,8 +87,9 @@ subroutine allocate_nlpot
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
           / dq + 4) * cell_factor
+  lqx = 2*lmaxkb+1
   !
-  allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lqx, ntyp))    
+  if (lqx > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lqx, ntyp))    
   allocate (vkb( npwx,  nkb))    
   allocate (qgm( ngm))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    

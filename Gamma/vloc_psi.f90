@@ -27,8 +27,8 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   ! the local potential V_Loc psi. First bring psi to real space
   !
   do ibnd = 1, m, 2
-     call setv (2 * nrxxs, 0.d0, psic, 1)
-     if (ibnd.lt.m) then
+     psic(:) = (0.d0, 0.d0)
+     if (ibnd < m) then
         ! two ffts at the same time
         do j = 1, n
            psic (nls (igk(j))) =       psi(j, ibnd) + (0.0,1.d0)*psi(j, ibnd+1)
@@ -54,7 +54,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
      !
      !   addition to the total product
      !
-     if (ibnd.lt.m) then
+     if (ibnd < m) then
         ! two ffts at the same time
         do j = 1, n
            fp = (psic (nls(igk(j))) + psic (nlsm(igk(j))))*0.5d0
