@@ -14,6 +14,7 @@ subroutine dvpsi_kb(kpoint,nu)
 #include "machine.h"
   use parameters, only: DP
   use pwcom
+  USE wavefunctions,  ONLY: evc, psic
   use gamma
   use cgcom
   !

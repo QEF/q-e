@@ -21,6 +21,7 @@ subroutine electrons
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : evc
   use io_files, only: prefix
   !
   !     a few local variables

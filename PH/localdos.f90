@@ -20,6 +20,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 #include "machine.h"
 
   use pwcom
+  USE wavefunctions,  ONLY: evc, psic
   use becmod
   use parameters, only : DP
   use phcom

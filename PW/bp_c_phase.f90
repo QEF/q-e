@@ -149,6 +149,7 @@ SUBROUTINE c_phase
 
 !  --- Make use of the module with common information ---
    USE pwcom
+   USE wavefunctions,    ONLY : evc
 
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE

@@ -16,6 +16,7 @@ subroutine dqrhod2v (ipert, drhoscf)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use phcom
   use d3com
 #ifdef __PARA

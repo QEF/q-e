@@ -12,6 +12,7 @@ subroutine stres_loc (sigmaloc)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : psic
   implicit none  !
   real(kind=DP) :: sigmaloc (3, 3)
   real(kind=DP) , allocatable :: dvloc(:)

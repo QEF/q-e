@@ -30,6 +30,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use phcom
   use d3com
 

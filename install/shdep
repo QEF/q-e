@@ -25,6 +25,13 @@ ls *.f90 > dum1
 ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
 ../$DIR/moduledep.x dum1 dum2 >> .dependencies
 
+cd ../PWNC
+rm -f .dependencies
+touch .dependencies
+ls *.f90 > dum1
+ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
+../$DIR/moduledep.x dum1 dum2 >> .dependencies
+
 cd ../Gamma
 rm -f .dependencies
 touch .dependencies

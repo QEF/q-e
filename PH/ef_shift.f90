@@ -15,6 +15,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
 
 
 use pwcom
+USE wavefunctions,  ONLY: evc
 use parameters, only : DP
 use phcom
 implicit none

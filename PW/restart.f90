@@ -33,8 +33,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
    nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, kkbeta, &
    nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
-   nlcc, psd, lsda, bg, xk, wk, isk, evc, igk_l2g, nwordwfc, iunwfc, gamma_only, &
+   nlcc, psd, lsda, bg, xk, wk, isk, igk_l2g, nwordwfc, iunwfc, gamma_only, &
    tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp
+  USE wavefunctions,    ONLY : evc
   use control_flags, only: twfcollect
   use io_files, only: prefix, tmp_dir, pseudo_dir, psfile
   use funct, only: iexch, icorr, igcx, igcc
@@ -489,10 +490,11 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
    nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, kkbeta, &
    nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
-   nlcc, psd, lsda, bg, xk, wk, isk, tpiba, pi, omega, igk_l2g, nwordwfc, iunwfc, evc, &
+   nlcc, psd, lsda, bg, xk, wk, isk, tpiba, pi, omega, igk_l2g, nwordwfc, iunwfc, &
    ig_l2g, nbrx, lqmax, nqfm, gamma_only, &
    tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp
 
+  USE wavefunctions,    ONLY : evc
   USE pseudo_types, ONLY: pseudo_upf
   use control_flags, only: twfcollect
 

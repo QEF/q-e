@@ -5,6 +5,7 @@ what:
 	@echo 'Then: Edit the file make.sys , if necessary'
 	@echo 'Then: make "task", where task is one of the following:'
 	@echo '   pw        (basic code for scf, struct. optimization, MD)'
+	@echo '   nc        (non collinear magnetic version of pw code)'
 	@echo '   pp        (postprocessing programs)'
 	@echo '   ph        (phonon code)'
 	@echo '   d3        (third-order derivatives)'
@@ -18,6 +19,9 @@ what:
 	@echo '   fpmd      (FPMD code for Car-Parrinello MD)'
 	@echo '   cp        (CP code: CP MD with ultrasoft pseudopotentials)'
 	@echo '   links     (creates links to executables in bin/)'
+
+nc: pw
+	( cd PWNC;  make all )
 
 all: d3 pp pwcond gamma tools
 
@@ -63,6 +67,7 @@ links:
 
 clean:
 	( cd PW ; make clean_ ) ; \
+	( cd PWNC ; make clean_ ) ; \
 	( cd PH ; make clean_ ) ; \
 	( cd PP ; make clean_ ) ; \
 	( cd D3 ; make clean_ ) ; \

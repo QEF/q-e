@@ -21,6 +21,7 @@ subroutine solve_e
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use parameters, only : DP
   use becmod
   use phcom

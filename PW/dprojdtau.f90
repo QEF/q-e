@@ -16,6 +16,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    !
 #include "machine.h"
    use pwcom
+   USE wavefunctions,    ONLY : evc
    use becmod
 #ifdef __PARA
    use para

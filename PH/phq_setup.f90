@@ -46,6 +46,7 @@ subroutine phq_setup
 
 
   use pwcom
+  USE constants,  ONLY: degspin
   use parameters, only : DP
   use phcom
   implicit none

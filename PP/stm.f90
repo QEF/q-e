@@ -25,6 +25,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc, psic
+  USE constants,  ONLY: degspin
 !
   implicit none
   logical :: stm_wfc_matching

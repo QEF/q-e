@@ -12,6 +12,7 @@ subroutine solve_e
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use cgcom
   !
   implicit none

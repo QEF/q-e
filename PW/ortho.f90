@@ -15,6 +15,7 @@ subroutine ortho
   ! overlap=.false.
   !
   use pwcom
+  USE wavefunctions,    ONLY : evc
   use becmod
   implicit none
   integer :: ik

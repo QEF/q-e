@@ -14,6 +14,7 @@ subroutine local_dos1d (ik, kband, plan)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc, psic
   use becmod
   implicit none
   !

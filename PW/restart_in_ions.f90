@@ -9,6 +9,7 @@
 subroutine restart_in_ions (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   use pwcom
+  USE wavefunctions,    ONLY : evc, psic
   implicit none
   character :: where * 20
   ! are we in the right place?

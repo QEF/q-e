@@ -17,8 +17,9 @@ subroutine punch
   !     the information needed to the phonon program.
   !
   !
-  use pwcom, only: nks, filpun, reduce_io, evc, nwordwfc, iunwfc, lscf, &
+  use pwcom, only: nks, filpun, reduce_io, nwordwfc, iunwfc, lscf, &
     rho, nspin, iunpun, et, wg, nbnd, nkstot
+  USE wavefunctions,    ONLY : evc
   use io_files, only: prefix
 #ifdef __PARA
   use para
@@ -89,6 +90,7 @@ subroutine punch
   !
   !
   use pwcom
+  USE wavefunctions,    ONLY : evc
   use io_files, only: prefix
 #ifdef __PARA
   use para

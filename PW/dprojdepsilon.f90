@@ -16,6 +16,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    !
 #include "machine.h"
    use pwcom
+   USE wavefunctions,    ONLY : evc
    use becmod
    use io_files
 #ifdef __PARA

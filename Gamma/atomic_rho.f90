@@ -24,6 +24,7 @@ subroutine atomic_rho (rhoa, nspina)
 #include "machine.h"
 
   use pwcom
+  USE wavefunctions,  ONLY: psic
   use gamma
   implicit none
   integer :: nspina

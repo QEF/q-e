@@ -16,6 +16,7 @@ subroutine allocate_phq
 #include "machine.h"
 
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use parameters, only : DP
   use phcom
   use el_phon

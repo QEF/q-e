@@ -308,8 +308,6 @@ module wvfct
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band
        g2kin(:)           ! kinetic energy
-  complex(kind=DP) , allocatable, target :: &
-       evc(:,:)           ! wavefunctions in the PW basis
   logical :: &
        gamma_only         ! if .true. only half G vectors are used
 end module wvfct
@@ -364,8 +362,6 @@ module workspace
   !
   !   additional memory needed in h_psi
   !
-  complex(kind=DP) , allocatable, target :: &
-       psic(:)     ! additional memory for FFT
 end module workspace
 !
 module varie
@@ -633,7 +629,7 @@ end module fixed_occ
 
 
 module pwcom
-  use constants, only: e2, degspin, rytoev, amconv, uakbar, pi, tpi, fpi
+  use constants, only: e2, rytoev, amconv, uakbar, pi, tpi, fpi
   use brilz
   use basis
   use dynam

@@ -19,6 +19,7 @@ subroutine gen_dpdvp
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use phcom
   use d3com
 

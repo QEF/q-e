@@ -22,6 +22,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #include "machine.h"
 
   use pwcom
+  USE wavefunctions,  ONLY: evc
+  USE constants,  ONLY: degspin
   use becmod
   use parameters, only : DP
   use phcom

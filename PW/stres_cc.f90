@@ -10,6 +10,7 @@ subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : psic
   implicit none
   ! output
   real(kind=DP) :: sigmaxcc (3, 3)

@@ -13,6 +13,7 @@ subroutine stres_har (sigmahar)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : psic
   implicit none
   !
   real(kind=DP) :: sigmahar (3, 3), shart, g2

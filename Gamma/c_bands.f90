@@ -18,6 +18,7 @@ subroutine c_bands (iter, ik_, dr2)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use g_psi_mod
   implicit none
   !

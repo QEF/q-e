@@ -45,6 +45,7 @@ subroutine d3_setup
 #include "machine.h"
 
   use pwcom
+  USE constants, ONLY: degspin
   use phcom
   use d3com
 #ifdef __PARA

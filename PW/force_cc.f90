@@ -12,6 +12,7 @@ subroutine force_cc (forcecc)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : psic
   implicit none
   !
   !   first the dummy variable

@@ -7,6 +7,7 @@ include ../make.sys
 PWOBJS = pwcom.o  \
 para.o  \
 becmod.o  \
+wavefunctions.o  \
 clean_pw.o \
 aainit.o  \
 add_efield.o \

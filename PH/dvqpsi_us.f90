@@ -18,6 +18,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
 #include "machine.h"
 
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use parameters, only : DP
   use phcom
   implicit none

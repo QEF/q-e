@@ -28,6 +28,7 @@ subroutine h_psi (lda, n, m, psi, hpsi)
   use scf, only: vrs
   use becmod
   use workspace
+  USE wavefunctions,  ONLY: psic
   implicit none
   !
   integer :: lda, n, m

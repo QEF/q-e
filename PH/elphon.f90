@@ -163,6 +163,7 @@ subroutine elphel (npe, imode0, dvscfins)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use parameters, only : DP
   use phcom
   use el_phon

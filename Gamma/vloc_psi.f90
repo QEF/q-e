@@ -11,6 +11,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   !-----------------------------------------------------------------------
   !
   use pwcom
+  USE wavefunctions,  ONLY: psic
   use gamma
   implicit none
   !

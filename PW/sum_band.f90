@@ -17,6 +17,7 @@ subroutine sum_band
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : evc, psic
   use becmod
 #ifdef __PARA
   use para

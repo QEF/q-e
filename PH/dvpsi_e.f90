@@ -18,6 +18,7 @@ subroutine dvpsi_e (kpoint, ipol)
   !
 
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use parameters, only : DP
   use becmod
   use phcom

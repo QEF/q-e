@@ -31,6 +31,7 @@ subroutine do_elf (elf)
 #include "machine.h"
   use parameters
   use pwcom
+  USE wavefunctions,  ONLY: evc
   !
   ! I/O variables
   !

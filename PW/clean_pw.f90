@@ -8,10 +8,10 @@ SUBROUTINE clean_pw
   USE reciprocal_vectors, ONLY: ig_l2g
   USE symme,            ONLY : irt
   USE vlocal,           ONLY : strf, vloc, vnew
-  USE wvfct,            ONLY : igk, igk_l2g, g2kin, et, evc, wg, gamma_only
+  USE wvfct,            ONLY : igk, igk_l2g, g2kin, et, wg, gamma_only
   USE force_mod,        ONLY : force
   USE scf,              ONLY : rho, rho_save,vr, vltot, rho_core, vrs
-  USE workspace,        ONLY : psic
+  USE wavefunctions,    ONLY : evc, psic
   USE us,               ONLY : indv, nhtol, nhtom, qq, dvan, deeq, qrad, &
                                vkb, qgm, becsum, tab
   USE ldaU,             ONLY : ns, nsnew, swfcatom

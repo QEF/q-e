@@ -16,6 +16,7 @@ subroutine zstar_eu
 
 
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use parameters, only : DP
   use phcom
   implicit none

@@ -16,6 +16,7 @@ subroutine dvpsi_e(kpoint,ipol)
 #include "machine.h"
   use parameters, only: DP
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use rbecmod
   use cgcom
   !

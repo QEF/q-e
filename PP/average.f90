@@ -40,6 +40,7 @@ program average
 #include "machine.h"
   use parameters, only: DP
   use pwcom
+  USE wavefunctions,  ONLY: psic
   use io_files, only: nd_nmbr
 #ifdef __PARA
   use para, only: me

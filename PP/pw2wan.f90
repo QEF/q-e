@@ -79,6 +79,7 @@ subroutine write_wannier (nk, s0, kunit)
   !
 #include "machine.h"
   use pwcom  
+  USE wavefunctions,  ONLY: evc
   use io_files, only: nd_nmbr, tmp_dir, prefix
   use io_base, only: write_restart_wfc
   use io_global, only: ionode

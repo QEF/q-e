@@ -12,6 +12,7 @@ subroutine solve_ph
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,  ONLY: evc
   use cgcom
 #ifdef __PARA
   use para

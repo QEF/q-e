@@ -15,6 +15,7 @@ subroutine force_us (forcenl)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : evc
   use becmod
   implicit none
   !

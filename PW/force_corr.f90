@@ -19,6 +19,7 @@ subroutine force_corr (forcescc)
   !
 #include "machine.h"
   use pwcom
+  USE wavefunctions,    ONLY : psic
   implicit none
   !
   real(kind=DP) :: forcescc (3, nat)

@@ -24,8 +24,9 @@ subroutine c_bands (iter, ik_, dr2)
   use pwcom, ONLY: g, g2kin, tpiba2, ecfixed, qcutz, lda_plus_u, &
  iunwfc, swfcatom, iunat, nwordatwfc, q2sigma, diis_ndim, wg, nbndx, nkstot, &
  okvan, et, istep, ethr, lscf, max_cg_iter, vltot, nrxx, nr1, nr3, nr2, nbnd, &
- nks, npwx, diis_ethr_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, evc, &
+ nks, npwx, diis_ethr_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, &
  current_spin, lsda, isk, igk, npw
+  USE wavefunctions,  ONLY: evc
   use g_psi_mod
   implicit none
   !

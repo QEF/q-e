@@ -162,6 +162,7 @@ PHOBJS = ../PH/phcom.o  \
 MODULES = ../Modules/*.o
 
 PWOBJS = ../PW/pwcom.o  \
+../PW/wavefunctions.o  \
 ../PW/aainit.o  \
 ../PW/addusdens.o  \
 ../PW/addusforce.o  \
