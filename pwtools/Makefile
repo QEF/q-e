@@ -17,7 +17,8 @@ MODULES = ../Modules/parameters.o ../Modules/kind.o ../Modules/fft_scalar.o
 #
 # Targets
 #
-all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x kpoints.x
+all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x kpoints.x \
+     pwi2xsf pwi2xsf_new
 
 band_plot.x:  band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
@@ -42,6 +43,14 @@ ev.x:	ev.o
 
 kpoints.x: kpoints.o
 	$(LD) -o kpoints.x kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+
+pwi2xsf: pwi2xsf.o pwi2xsflib.o
+	$(LD) -o pwi2xsf pwi2xsf.o pwi2xsflib.o \
+../PW/cryst_to_car.o ../PW/error.o $(LDFLAGS)
+
+pwi2xsf_new: pwi2xsf_new.o pwi2xsflib.o
+	$(LD) -o pwi2xsf_new pwi2xsf_new.o pwi2xsflib.o \
+../PW/cryst_to_car.o  ../PW/error.o $(LDFLAGS)
 
 clean_:
 	rm -f *.x *.o *~ *.F90 *.mod *.d *.i work.pc
