@@ -146,7 +146,6 @@ PHOBJS = \
 ../PH/setlocq.o \
 ../PH/setqmod.o \
 ../PH/setup_dgc.o \
-../PH/setv.o \
 ../PH/smallgq.o \
 ../PH/solve_e.o \
 ../PH/solve_linter.o \
@@ -158,7 +157,6 @@ PHOBJS = \
 ../PH/symdyn_munu.o \
 ../PH/symdynph_gq.o \
 ../PH/syme.o \
-../PH/symz.o \
 ../PH/tra_write_matrix.o \
 ../PH/trntnsc.o \
 ../PH/write_dyn_on_file.o \
@@ -368,6 +366,7 @@ PWOBJS = \
 ../PW/setlocal.o \
 ../PW/setqf.o \
 ../PW/setup.o \
+../PW/setv.o \
 ../PW/setupkpt.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
@@ -395,6 +394,7 @@ PWOBJS = \
 ../PW/symrho.o \
 ../PW/symtns.o \
 ../PW/symvect.o \
+../PW/symz.o \
 ../PW/tabd.o \
 ../PW/trntns.o \
 ../PW/trnvecc.o \
