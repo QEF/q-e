@@ -947,6 +947,10 @@ MODULE input_parameters
         
         LOGICAL :: use_multistep  = .FALSE.
         
+        LOGICAL :: use_freezing   = .FALSE.
+        
+        LOGICAL :: fixed_tan      = .FALSE.
+                
         LOGICAL :: write_save     = .FALSE.
         
         CHARACTER(LEN=80) :: opt_scheme = 'quick-min' 
@@ -1046,17 +1050,17 @@ MODULE input_parameters
  
 
 
-        NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
-          ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
-          tolp, ion_nstepe, ion_maxstep, upscale, pot_extrapolation,            &
-          wfc_extrapolation, delta_t, nraise,                                   &
-          num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep,  &
-          reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,    &
-          init_num_of_images,                                                   &
-          trust_radius_max, trust_radius_min, trust_radius_ini,                 &
-          trust_radius_end, w_1, w_2, lbfgs_ndim, sic_rloc,                     &
-          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2,         &
-          smd_stcd3, smd_codf, smd_forf, smd_smwf, smd_lmfreq, smd_tol,         &
+        NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions,&
+          ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp,&
+          tolp, ion_nstepe, ion_maxstep, upscale, pot_extrapolation,           &
+          wfc_extrapolation, delta_t, nraise,                                  &
+          num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
+          reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,   &
+          init_num_of_images, fixed_tan, use_freezing,                         &
+          trust_radius_max, trust_radius_min, trust_radius_ini,                &
+          trust_radius_end, w_1, w_2, lbfgs_ndim, sic_rloc,                    &
+          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2,        &
+          smd_stcd3, smd_codf, smd_forf, smd_smwf, smd_lmfreq, smd_tol,        &
           smd_maxlm, smd_smcp, smd_smopt, smd_smlm, smd_ene_ini, smd_ene_fin
 
 

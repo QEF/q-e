@@ -31,8 +31,12 @@ MODULE path_variables
        use_multistep,            &! .TRUE. if multistep has to be used in smd
                                   !        optimization
        write_save,               &! .TRUE. if the save file has to be written
-       fixed_tan                  ! .TRUE. if the projection is done using the
+       fixed_tan,                &! .TRUE. if the projection is done using the
                                   !        tangent of the average path
+       use_freezing,             &! if .TRUE. images are optimised according
+                                  ! to they error (see frozen array)
+       tune_load_balance          ! if .TRUE. the load balance for image
+                                  ! parallelisation is tuned at runtime
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
@@ -58,9 +62,6 @@ MODULE path_variables
        lmol_dyn    = .FALSE.,    &! .TRUE. if opt_scheme = "mol-dyn"
        lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
-  LOGICAL :: &
-       tune_load_balance          ! if .TRUE. the load balance for image
-                                  ! parallelisation is tuned at runtime
   INTEGER :: &                   
        istep_path,               &! iteration in the optimization procedure
        nstep_path,               &! maximum number of iterations

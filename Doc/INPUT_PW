@@ -606,11 +606,11 @@ CI_scheme      CHARACTER. ( default = "no-CI" )
 	                      See also CLIMBING_IMAGES card 
 
 first_last_opt LOGICAL ( default = .FALSE. )
-               also the first and the last configurations are optimized
+               also the first and the last configurations are optimised
                "on the fly" 
 	       (these images do not feel the effect of the springs)
 
-minimization_scheme     
+opt_scheme     
                CHARACTER ( default = "quick-min" )
                specify the type of optimization scheme      
                "sd"         : steepest descent
@@ -622,21 +622,20 @@ minimization_scheme
 	                      also the keyword temp_req.
 	                      Note that, in order to perform such molecular 
 			      dynamics, spring forces are NOT projected 
-			      along the path. 
+			      along the path.
+               "langevin"   : finite temperature langevin dynamics of the 
+                              string (smd only). It is used to compute the
+                              average path and the free-energy profile.
 
 damp           REAL ( default = 1.D0 )
-               Damping coefficent. Ignored when "minimization_scheme"
-               is different from "damped-dyn"
+               Damping coefficent. Ignored when "opt_scheme" is different 
+               from "damped-dyn"
 
 temp_req       REAL ( default = 0.D0 Kelvin )
-               temperature associated to the elastic band. Each image has its 
-	       own thermostat. The temperature in the output is the average 
-	       temperature of the elastic band computed before the 
-	       thermalization
-               ignored when "minimization_scheme" is different from "mol-dyn"
+               temperature used for the langevin dynamics of the string.
 
 ds             REAL ( default = 1.5D0 )
-               optimization step length ( Hartree atomic units )
+               optimisation step length ( Hartree atomic units )
 	              
 k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
                set them to use a Variable Elastic Constants scheme 
@@ -646,7 +645,18 @@ k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
 path_thr       REAL ( default = 0.05D0 eV / Angstrom )
                the simulation stops when the error ( the norm of the force 
 	       orthogonal to the path in eV/A ) is less than path_thr.
-               
+
+use_freezing   LOGICAL ( default = .FALSE. )
+               if. TRUE. the images are optimised according to their error:
+               only those images with an error larger than half the largest one
+               are optimised. The other are kept forzen. 
+
+fixed_tan      LOGICAL ( default = .FALSE. )
+               if. TRUE. the projection is done using the tangent of the 
+               average path (the one written in the restart file).
+               used only for the estimate of the free-energy profile with
+               finite-temperature string dynamics
+
 reset_vel      LOGICAL ( default = .FALSE. )
                used to reset quick-min velocities at restart time
                (sort of clean-up of the history)

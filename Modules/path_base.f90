@@ -8,8 +8,6 @@
 #include "f_defs.h"
 !
 #define IPRINT 1
-#define USE_FROZEN
-!#define DEBUG_ELASTIC_CONSTANTS
 !
 !---------------------------------------------------------------------------
 MODULE path_base
@@ -52,7 +50,7 @@ MODULE path_base
                                    pes, grad_pes, tangent, error, path_length, &
                                    path_thr, deg_of_freedom, ds, react_coord,  &
                                    first_last_opt, reset_vel, llangevin,       &
-                                   temp_req
+                                   temp_req, use_freezing, tune_load_balance
       USE path_variables,   ONLY : climbing_ => climbing,                  &
                                    CI_scheme, vel, grad, elastic_grad,     &
                                    norm_grad, k, k_min, k_max, Emax_index, &
@@ -61,7 +59,8 @@ MODULE path_base
       USE path_variables,   ONLY : num_of_modes, pos_av_in, pos_av_fin, &
                                    ft_pos, ft_pos_av, Nft, fixed_tan,   &
                                    ft_coeff, Nft_smooth, use_multistep
-      USE path_formats,     ONLY : summary_fmt   
+      USE path_formats,     ONLY : summary_fmt
+      USE mp_global,        ONLY : nimage
       USE io_global,        ONLY : meta_ionode
       USE parser,           ONLY : int_to_char
       USE path_io_routines, ONLY : read_restart
@@ -99,6 +98,20 @@ MODULE path_base
       ! ... ( It corresponds to the dimension of the configurational space )
       !
       dim = 3 * nat
+      !
+      IF ( nimage > 1 ) THEN
+         !
+         ! ... the automatic tuning of the load balance in 
+         ! ... image-parallelisation is switched off
+         !
+         tune_load_balance = .FALSE.
+         !
+         ! ... freezing allowed only with the automatic tuning of 
+         ! ... the load balance
+         !
+         use_freezing = tune_load_balance
+         !
+      END IF
       !
       IF ( lneb .AND. &
            ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
@@ -281,6 +294,12 @@ MODULE path_base
                 FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
          !
          WRITE( UNIT = iunpath, &
+                FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
+                
+         WRITE( UNIT = iunpath, &
+                FMT = '(5X,"fixed_tan",T35," = ",1X,L1))' ) fixed_tan
+                
+         WRITE( UNIT = iunpath, &
                 FMT = '(5X,"reset_vel",T35," = ",1X,L1))' ) reset_vel
          !
          WRITE( UNIT = iunpath, &
@@ -432,16 +451,6 @@ MODULE path_base
       END IF
       !
       k(:) = 0.5D0 * k(:)
-      !
-#if defined (DEBUG_ELASTIC_CONSTANTS)
-      !
-      DO i = 1, num_of_images
-         !
-         PRINT '(F8.4)', k(i)
-         !
-      END DO
-      !
-#endif      
       !
       RETURN
       !
@@ -863,8 +872,6 @@ MODULE path_base
               !
            END DO
            !
-           tangent(:,image) = tangent(:,image) / path_length
-           !
            tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
            !
            RETURN
@@ -1011,8 +1018,11 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE path_variables, ONLY : num_of_images, grad, llangevin, &
-                                 first_last_opt, path_thr, error, frozen
-      USE mp_global,      ONLY : nimage
+                                 use_freezing, first_last_opt,   &
+                                 path_thr, error, frozen
+      USE mp_global,      ONLY : nimage, inter_image_comm
+      USE mp,             ONLY : mp_bcast
+      USE io_global,      ONLY : meta_ionode, meta_ionode_id
       !
       IMPLICIT NONE
       !
@@ -1050,42 +1060,44 @@ MODULE path_base
       !
       err_max = MAXVAL( error(N_in:N_fin), 1 )
       !
-#if defined (USE_FROZEN)
-      !
-      IF ( llangevin ) THEN
-         !
-         frozen = .FALSE.
-         !
-      ELSE
+      IF ( use_freezing ) THEN
          !
          frozen(:) = ( error(:) < MAX( 0.5D0 * err_max, path_thr ) )
          !
-      END IF
-      !
-      IF ( nimage > 1 ) THEN
+      ELSE
          !
-         ! ... in the case of image-parallelisation the number of images to
-         ! ... be optimised must be larger than nimage
-         !
-         IF ( nimage > ( N_fin - N_in ) ) &
-            CALL errore( 'search_MEP', &
-                       & 'nimage is larger than the number of images ', 1 )
-         !
-         find_scf_images: DO
-            !
-            num_of_scf_images = COUNT( .NOT. frozen )
-            !
-            IF ( num_of_scf_images >= nimage ) EXIT find_scf_images
-            !
-            free_me = MAXLOC( error, 1, frozen(N_in:N_fin) )
-            !
-            frozen(free_me) = .FALSE.
-            !
-         END DO find_scf_images
+         frozen = .FALSE.
          !
       END IF
       !
-#endif
+      IF ( nimage > 1 .AND. use_freezing ) THEN
+         !
+         IF ( meta_ionode ) THEN
+            !
+            ! ... in the case of image-parallelisation the number of images
+            ! ... to be optimised must be larger than nimage
+            !
+            IF ( nimage > ( N_fin - N_in + 1 ) ) &
+               CALL errore( 'search_MEP', &
+                          & 'nimage is larger than the number of images ', 1 )
+            !
+            find_scf_images: DO
+               !
+               num_of_scf_images = COUNT( .NOT. frozen )
+               !
+               IF ( num_of_scf_images >= nimage ) EXIT find_scf_images
+               !
+               free_me = MAXLOC( error, 1, frozen(N_in:N_fin) )
+               !
+               frozen(free_me) = .FALSE.
+               !
+            END DO find_scf_images
+            !
+         END IF
+         !
+         CALL mp_bcast( frozen, meta_ionode_id, inter_image_comm )
+         !
+      END IF
       !
       IF ( PRESENT( err_out ) ) err_out = err_max
       !

@@ -65,8 +65,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   REAL (KIND=DP), EXTERNAL :: get_clock
   !
   !
-  tune_load_balance = .FALSE.
-  !
   istep = istep_path + 1
   istat = 0
   !
@@ -147,8 +145,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         END IF
         !
         CALL clean_pw( .TRUE. )
-        !
-        CALL close_files()
         !
         ! ... unit stdout is connected to the appropriate file
         !
@@ -317,6 +313,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ethr = diago_thr_init
      !
+     CALL close_files()
+     !
      CALL reset_k_points()
      !
   END DO scf_loop
@@ -326,8 +324,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   tmp_dir = tmp_dir_saved
   !
   IF ( nimage > 1 ) THEN
-     !
-     CALL mp_barrier()
      !
      ! ... pes and grad_pes are communicated among "image" pools
      !

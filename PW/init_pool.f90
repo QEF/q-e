@@ -18,8 +18,6 @@ SUBROUTINE init_pool()
                         intra_pool_comm, inter_pool_comm
   USE parallel_include
   !
-  USE mp_global, ONLY : mp_global_group_start
-  !
   IMPLICIT NONE
   !
   INTEGER :: ierr = 0
@@ -34,8 +32,11 @@ SUBROUTINE init_pool()
   !
   nproc_image = nproc / nimage
   !
+  IF ( nproc < nimage ) &
+     CALL errore( 'startup', 'nproc < nimage', 1 )
+  !
   IF ( MOD( nproc, nimage ) /= 0 ) &
-     CALL errore( 'startup', 'nproc /= nproc_image * nimage', 1 )  
+     CALL errore( 'startup', 'nproc /= nproc_image * nimage', 1 ) 
   !
   ! ... my_image_id  =  image index for this processor   ( 0 : nimage - 1 )
   ! ... me_image     =  processor index within the image ( 0 : nproc_image - 1 )

@@ -138,6 +138,8 @@ SUBROUTINE iosys()
                              init_num_of_images_ => init_num_of_images, &
                              use_multistep_      => use_multistep, &
                              CI_scheme_          => CI_scheme, &
+                             fixed_tan_          => fixed_tan, &
+                             use_freezing_       => use_freezing, &
                              k_max_              => k_max, & 
                              k_min_              => k_min, &
                              num_of_images_      => num_of_images, &
@@ -208,6 +210,7 @@ SUBROUTINE iosys()
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
                                init_num_of_images, temp_req, k_max, k_min, ds, &
+                               use_freezing, fixed_tan,                        &
                                write_save, trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, w_1, w_2,   &
                                lbfgs_ndim
@@ -700,10 +703,15 @@ SUBROUTINE iosys()
            CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
                       & ' tepm_req has not been set', 1 )
         !
+        IF ( use_freezing ) &
+           WRITE( UNIT = stdout, &
+                  FMT = '(5X,"warning: freezing cannot be used in langevin")' )
+        !
         IF ( use_multistep ) &
            WRITE( UNIT = stdout, &
                   FMT = '(5X,"warning: multistep cannot be used in langevin")' )
         !
+        use_freezing  = .FALSE.
         use_multistep = .FALSE.
         !
      CASE default
@@ -853,6 +861,7 @@ SUBROUTINE iosys()
   first_last_opt_ = first_last_opt
   reset_vel_      = reset_vel
   write_save_     = write_save
+  use_freezing_   = use_freezing
   damp_           = damp
   temp_req_       = temp_req
   path_thr_       = path_thr
@@ -867,6 +876,7 @@ SUBROUTINE iosys()
   !
   init_num_of_images_ = init_num_of_images
   use_multistep_      = use_multistep
+  fixed_tan_          = fixed_tan
   !
   ! ... new BFGS specific
   !
