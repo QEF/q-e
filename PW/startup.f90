@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,8 +50,8 @@ subroutine startup (nd_nmbr, version)
   integer :: me, nproc
 #endif
 #ifdef __T3E
-#define iargc ipxfargc
-#define getarg(x,y) pxfgetarg(x,y, ilen, ierr)
+#  define iargc        ipxfargc
+#  define getarg(x,y)  pxfgetarg(x,y, ilen, ierr)
 #endif
 
   character :: np * 2, cdate * 9, ctime * 9
@@ -143,11 +143,11 @@ subroutine startup (nd_nmbr, version)
         write (nd_nmbr, '(i3)') me
      endif
   endif
-#ifdef DEBUG
+#  ifdef DEBUG
   if (me /= 1) open (6, file = './out_'//nd_nmbr, status = 'unknown')
-#else
+#  else
   if (me /= 1) open (6, file = '/dev/null', status = 'unknown')
-#endif
+#  endif
   if (me == 1) then
      call date_and_tim (cdate, ctime)
      write (6, 9000) version, cdate, ctime
@@ -169,7 +169,6 @@ subroutine startup (nd_nmbr, version)
 
 9000 format (/5x,'Program ',a12,' starts ...',/5x, &
        &            'Today is ',a9,' at ',a9)
-
 
   !
   ! Set the I/O node

@@ -4,6 +4,7 @@ INSTALLATION
 
 - compile fftw by default for PW and CP as well
   (a che serve FFTW_INC_DIR ?)
+- Make.irix ?
 
 COMMON
 
@@ -21,7 +22,7 @@ COMMON
 
 - start merge of input routines
 
-- merge spherical harmonics, bessel, integration routines, etc
+- merge spherical harmonics, integration routines, etc
 
 - variable declarations : real(kind=DP), or real(dbl), everywhere
 
@@ -118,6 +119,6 @@ CPV:
 
 - check on small box size
 
-- remove all calls to zero and to blas copy, scal
+- replace calls to zero, ssum, csum, blas copy, scal, with f90
 
 - version number

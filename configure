@@ -2,7 +2,6 @@
 
 lista=`ls install | sed -e '/Make\./!d' -e 's/^Make.//'`
 
-
 if [ "$#" != 1 ]
 then
 	echo "The architecture name is not specified"
@@ -70,10 +69,12 @@ then
           pc_ifc | beo_ifc | ibm    | ibmsp | origin | nec | t3e | \
           alpha  | alphaMPI| hitachi | \
           irix | cp.qsw | cp.sx5 )
+    # f90 compilers that support C-style preprocessing 
             cp install/Rules.nocpp make.rules
           ;;
           pc_pgi | pc_abs | beowulf | fujitsu | sun   | sunmpi | sxcross | \
           pc_lahey )
+    # f90 compilers that do not support C-style preprocessing
             cp install/Rules.cpp make.rules
           ;;
         esac

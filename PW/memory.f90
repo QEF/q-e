@@ -12,17 +12,25 @@ program pwmemory
   !
   use pwcom
   use io
+  use mp, only : mp_end
   implicit none
+  logical :: lgamma
+  !
+  call startup (nd_nmbr, 'memory 1.2.1')
   !
   call iosys
   call setup
   !
-  call data_structure( .FALSE. )
+  lgamma = (nkstot == 1) .and. &
+           ( xk(1,1)**2 + xk(2,1)**2 + xk(3,1)**2 < 1.0e-6 )
+  !
+  call data_structure(lgamma)
   !
   call setup2
   !
-  call memory_estimate
+  call memory_estimate(lgamma)
   !
+  call mp_end ()
   stop
 end program pwmemory
 !
@@ -86,13 +94,18 @@ end subroutine setup2
 
 !
 !-----------------------------------------------------------------------
-subroutine memory_estimate
+subroutine memory_estimate(lgamma)
   !-----------------------------------------------------------------------
   use pwcom
+#ifdef __PARA
+  use para, only: nprocp, npool, nct, ncplane, ncts, ncplanes
+#endif
   implicit none
+  logical :: lgamma
+  !
   integer, parameter :: real_size = 8, int_size = 4
   integer, parameter :: comp_size = 2*real_size
-  integer :: scalable_mem, nonscalable_mem
+  integer :: total_mem, scalable_mem, nonscalable_mem
   integer :: scalable_wspace, nonscalable_wspace
   integer :: wspace_diago, wspace_mix, diis_steps
   !
@@ -136,7 +149,7 @@ subroutine memory_estimate
   if (doublegrid) scalable_mem = scalable_mem + int_size * ngms ! nls
   if (lmovecell)  scalable_mem = scalable_mem + real_size * ngl !  gl
 
-#ifdef PARA
+#ifdef __PARA
   nonscalable_mem=nonscalable_mem + int_size * (ncplane + ncplanes) ! ipc, ipcs
   scalable_mem = scalable_mem + int_size * (nct + ncts ) ! icpl. icpls
 #endif
@@ -155,8 +168,8 @@ subroutine memory_estimate
      wspace_diago = comp_size * npwx * 4*diis_ndim
   end if
   nonscalable_wspace=comp_size * 3 * nbndx * nbndx  ! hc sc vc
-#ifdef PARA
-  nonscalable_wspace = nonscalable_wspace + real_size * nr1x*nr2x*nr3x
+#ifdef __PARA
+  nonscalable_wspace = nonscalable_wspace + real_size * nrx1*nrx2*nrx3
   ! psymrho, io_pot
 #endif
   !
@@ -166,13 +179,30 @@ subroutine memory_estimate
   !
   scalable_wspace = max (wspace_mix, wspace_diago)
   !
-  print '("nonscalable memory =",f8.2,"Mb")', float(nonscalable_mem)/1024/1024
-  print '("   scalable memory =",f8.2,"Mb")', float(scalable_mem)/1024/1024
-  print '("nonscalable wspace =",f8.2,"Mb")', float(nonscalable_wspace)/1024/1024
-  print '("   scalable wspace =",f8.2,"Mb  (diag:",f8.2,"Mb, mix:",f8.2,"Mb)")',&
-          float(scalable_wspace)/1024/1024, &
-          float(wspace_diago)/1024/1024,    &
-	  float(wspace_mix)/1024/1024
+  total_mem = scalable_mem + nonscalable_mem + &
+              scalable_wspace + nonscalable_wspace
+#ifdef __PARA
+  print '(5x,"Number of processors/pools:")', nprocp, npool  
+#endif
+  if (lgamma) then
+     print '(5x,"Estimated Max memory (Gamma-only code): ",f8.2,"Mb")', &
+          float(total_mem)/1024/1024
+  else
+     print '(5x,"Estimated Max memory (k-point code): ",f8.2,"Mb")', &
+          float(total_mem)/1024/1024
+  end if
+  !
+  print '(5x,"nonscalable memory =",f8.2,"Mb")', &
+       float(nonscalable_mem)/1024/1024
+  print '(5x,"   scalable memory =",f8.2,"Mb")', &
+       float(scalable_mem)/1024/1024
+  print '(5x,"nonscalable wspace =",f8.2,"Mb")', &
+       float(nonscalable_wspace)/1024/1024
+  print '(5x,"   scalable wspace =",f8.2,"Mb",   &
+      & "   (diag:",f8.2,"Mb, mix:",f8.2,"Mb)")', &
+       float(scalable_wspace)/1024/1024, &
+       float(wspace_diago)/1024/1024,    &
+       float(wspace_mix)/1024/1024
   !
   return
 end subroutine memory_estimate
