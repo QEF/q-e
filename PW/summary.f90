@@ -161,12 +161,23 @@ subroutine summary
      endif
 
   enddo
-  write (6, '(/5x, "atomic species       valence     pseudopotential")')
+  write (6, '(/5x, "atomic species   valence    mass     pseudopotential")')
   xp = 1.d0  
   do nt = 1, ntyp  
-     write (6, '(5x,a6,9x,f10.2,8x,5 (a2,"(",f5.2,")"))') &
-                atm(nt), zv(nt), psd(nt), xp
+     if (calc.eq.' ') then
+        write (6, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
+                   atm(nt), zv(nt), amass(nt), psd(nt), xp
+     else
+        write (6, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
+                   atm(nt), zv(nt), amass(nt)/amconv, psd(nt), xp
+     end if
   enddo
+
+  if (calc.eq.'cd' .or. calc.eq.'cm' ) &
+     write (6, '(/5x," cell mass =", f10.5, " UMA ")') cmass/amconv
+  if (calc.eq.'nd' .or. calc.eq.'nm' ) &
+     write (6, '(/5x," cell mass =", f10.5, " UMA/(a.u.)^2 ")') cmass/amconv
+
   if (lsda) then  
      write (6, '(/5x,"Starting magnetic structure ", &
           &      /5x,"atomic species   magnetization")')

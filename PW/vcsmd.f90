@@ -162,7 +162,7 @@ subroutine vcsmd
      end if
   end if
   if (calc.eq.'nm' .or. calc.eq.'cm') then
-     epsp = 1.0  ! kbar 
+     epsp = 0.5  ! kbar 
      conv_ions = eold - etot .lt. epse
      do i = 1, 3
         do na = 1, nat
@@ -209,16 +209,16 @@ subroutine vcsmd
 
   if (istep.eq.1 .and. calc.eq.'mm')  &
      write(6,'(/5x,"Damped Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2)') &
+             & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2)') &
                epse, epsf
   if (istep.eq.1 .and. calc.eq.'cm')  &
      write(6,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2,&
-             & "    EPSP = ",epsp ') epse, epsf, epsp
+             & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2,&
+             & "  EPSP = ",e8.2 )') epse, epsf, epsp
   if (istep.eq.1 .and. calc.eq.'nm')  &
      write(6,'(/5x,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2,&
-             & "    EPSP = ",epsp ') epse, epsf, epsp
+             & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2,&
+             & "  EPSP = ",e8.2 )') epse, epsf, epsp
 
   write (6, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
        &                          f8.5," pico-seconds"/)') istep, tempo

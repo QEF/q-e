@@ -938,7 +938,6 @@ subroutine iosys
         end do
         wmass =  0.75d0 * wmass / pi / pi 
      end if
-     write (6,*) ' default wmass set to ', wmass
   end if
   !
   !
