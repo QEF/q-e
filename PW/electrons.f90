@@ -402,7 +402,8 @@ SUBROUTINE electrons()
      !
      IF ( ( ABS( charge - nelec ) / charge ) > 1.0E-7 ) WRITE( stdout, 9050 ) charge
      !
-     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + eth
+     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
+     if (lda_plus_u) etot = etot + eth
      !
      IF ( tefield ) etot = etot + etotefield
      !

@@ -95,7 +95,7 @@ CONTAINS
     !
     IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
        !
-       CALL iweights( nks, wk, nbnd, nelec, wg )
+       CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
        !
        ! ... calculate weights for the metallic case
        !
@@ -124,9 +124,11 @@ CONTAINS
        CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, &
                       et, ef, demet, wg )
     ELSE IF ( tfixed_occ ) THEN
+       ef = - 1.0e+20
        DO is = 1, nspin
           DO ibnd = 1, nbnd
              wg(ibnd,is) = f_inp(ibnd,is)
+             if (wg(ibnd,is) > 0.d0) ef = MAX (ef, et (ibnd, is) )
           END DO
        END DO
     END IF
@@ -320,7 +322,7 @@ CONTAINS
     !
     IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
        !
-       CALL iweights( nks, wk, nbnd, nelec, wg )
+       CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
        !
        ! ... calculate weights for the metallic case
        !
@@ -350,12 +352,13 @@ CONTAINS
        !
     ELSE IF ( tfixed_occ ) THEN
        !
+       ef = - 1.0e+20
        DO is = 1, nspin
           DO ibnd = 1, nbnd
              wg(ibnd,is) = f_inp(ibnd,is)
+             if (wg(ibnd,is) > 0.d0) ef = MAX (ef, et (ibnd, is) )
           END DO
        END DO
-       !
     END IF
     !
     ! ... Needed for LDA+U

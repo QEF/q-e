@@ -14,9 +14,27 @@ subroutine saveall (iun, iflag)
   !      iun all quantities needed in subsequent calculations that are not
   !      i) dynamically allocated, ii) distributed in parallel execution
   !
-  use pwcom
-  use io_files
-  use funct
+  USE brilz
+  USE basis
+  USE gvect
+  USE gsmooth
+  USE klist
+  USE lsda_mod, ONLY: lsda
+  USE ktetra, ONLY: ntetra, ltetra, nk1, nk2, nk3, k1, k2, k3
+  USE symme, ONLY: s, ftau, nsym, invsym
+  USE atom
+  USE pseud
+  USE nl_c_c, ONLY : a_nlcc, b_nlcc, alpha_nlcc, nlcc
+  USE wvfct, ONLY: nbnd, npwx, nbndx
+  USE ener, ONLY: ef
+  USE force_mod, ONLY: lforce
+  USE varie, ONLY: iswitch, istep, modenum, noinv, newpseudo
+  USE char, ONLY : title, crystal, psd, sname
+  USE us
+  USE extfield
+  USE fixed_occ, ONLY: tfixed_occ
+  USE io_files
+  USE funct
   implicit none
 
   integer :: iun, iflag
@@ -27,7 +45,7 @@ subroutine saveall (iun, iflag)
   character (len=80) :: dummy_tmp_dir
   !
   !
-  if (iflag.eq.1) then
+  if (iflag == 1) then
      write (iun) celldm, at, bg, alat, omega, tpiba, tpiba2, ibrav, symm_type
      write (iun) iswitch, istep, modenum
      write (iun) nat, ntyp, nbnd, npwx, nbndx, natomwfc

@@ -20,7 +20,7 @@ MODULE mytime
   REAL (KIND=DP), DIMENSION(maxclock)     :: myclock, t0
   CHARACTER (LEN=12), DIMENSION(maxclock) :: clock_label
   INTEGER, DIMENSION(maxclock)            :: called 
-  INTEGER                                 :: nclock
+  INTEGER                                 :: nclock = 0
   LOGICAL                                 :: no
   !
 END MODULE mytime

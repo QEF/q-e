@@ -1088,7 +1088,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   ! ... The constrain on fixed coordinates is implemented using the array 
   ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1 
-  ! ... otherwise. fixatom is manteined for compatibility. ( C.S. 15/10/2003 )
+  ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
   !
   if_pos_ = 1
   if_pos_(:,:) = if_pos(:,1:nat)
@@ -1102,6 +1102,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     gamma_only = .FALSE.
     lxkcry     = .FALSE.
     nks        = 0
+    ! nk1,nk2,nk3 and k1,k2,k3 are initialized even when not used
     nk1_       = nk1
     nk2_       = nk2
     nk3_       = nk3
@@ -1117,6 +1118,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     nks          = nkstot
     xk_(:,1:nks) = xk(:,1:nks)
     wk_(1:nks)   = wk(1:nks)
+    nk1_       = 0
+    nk2_       = 0
+    nk3_       = 0
+    k1_        = 0
+    k2_        = 0
+    k3_        = 0
   ELSE IF ( k_points == 'crystal' ) THEN
     !
     ! ... input k-points are in crystal (reciprocal lattice) axis
@@ -1126,6 +1133,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     nks          = nkstot
     xk_(:,1:nks) = xk(:,1:nks)
     wk_(1:nks)   = wk(1:nks)
+    nk1_       = 0
+    nk2_       = 0
+    nk3_       = 0
+    k1_        = 0
+    k2_        = 0
+    k3_        = 0
   ELSE IF ( k_points == 'gamma' ) THEN
     !
     ! ... Only Gamma (k=0) is used
@@ -1136,6 +1149,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     nks        = 1
     xk_(:,1)   = 0.0
     wk_(1)     = 1.0
+    nk1_       = 0
+    nk2_       = 0
+    nk3_       = 0
+    k1_        = 0
+    k2_        = 0
+    k3_        = 0
   ELSE
     !
     ! ... default: input k-points are in 2pi/a units
@@ -1145,6 +1164,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     nks          = nkstot
     xk_(:,1:nks) = xk(:,1:nks)
     wk_(1:nks)   = wk(1:nks)
+    nk1_       = 0
+    nk2_       = 0
+    nk3_       = 0
+    k1_        = 0
+    k2_        = 0
+    k3_        = 0
   END IF
   !
   IF ( tfixed_occ ) THEN
