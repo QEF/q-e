@@ -77,6 +77,11 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
         rh = rho (k, 1) + rho (k, 2)
         if (rh.gt.epsr) then
            zeta = (rho (k, 1) - rho (k, 2) ) / rh
+           !
+           ! ... ( - 1.0 + epsr )  <  zeta  <  ( 1.0 - epsr )
+           !
+           zeta = SIGN( MIN( ABS( zeta ), ( 1.D0 - epsr ) ) , zeta )
+           !
            grh2 = (grho (1, k, 1) + grho (1, k, 2) ) **2 + &
                   (grho (2, k, 1) + grho (2, k, 2) ) **2 + &
                   (grho (3, k, 1) + grho (3, k, 2) ) **2
