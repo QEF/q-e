@@ -30,6 +30,7 @@ subroutine dynamics
   !
 #include "machine.h"
   use pwcom
+  use io, only : prefix
 #ifdef __PARA
   use para
 #endif
@@ -59,7 +60,7 @@ subroutine dynamics
   !
   !  one Ryd a.u. of time is 4.84*10^-17 seconds, i.e. 0.0484  femtosecond
   !
-  call seqopn (4, 'filemd', 'formatted', exst)
+  call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
   if (.not.exst) then
      close (unit = 4, status = 'delete')
      write (6, '(/5x,"Starting temperature = ",f8.2," K")') &
@@ -160,7 +161,7 @@ subroutine dynamics
   !
   ! save on file needed quantity
   !
-  call seqopn (4, 'filemd', 'formatted', exst)
+  call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
   write (4, * ) temp_new, mass, total_mass, tauold, tempo, it
   close (unit = 4, status = 'keep')
   do na = 1, nat

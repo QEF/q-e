@@ -16,12 +16,13 @@ subroutine bfgs
   !
 #include "machine.h"
   use pwcom
+  use io, only : prefix
 #ifdef __PARA
   use para
 #endif
   implicit none
 
-  integer :: iunit          ! unit for filebfgs
+  integer :: iunit          ! unit for file containing bfgs info
   integer :: nat1,        & ! number of moving atoms
              nat3,        & ! 3 times the above
              nax3,        & ! 3 times the total number of atoms (nat)
@@ -38,7 +39,7 @@ subroutine bfgs
              x,           & ! present position along dtau
              xnew           ! next position along dtau
 
-  logical :: exst,       & ! test variable on existence of filebfgs
+  logical :: exst,       & ! test variable on existence of bfgs file
              minimum_ok    ! true if linmin found a good line minimum
 
   real(kind=DP) :: DDOT
@@ -66,11 +67,11 @@ subroutine bfgs
      nat3 = 3 * nat1
      conv_ions = .false.
      !
-     call seqopn (iunit, 'filebfgs', 'unformatted', exst)
+     call seqopn (iunit, trim(prefix)//'.bfgs', 'unformatted', exst)
      !
      if (.not.exst) then
         !
-        ! file 'filebfgs' not found: starting iteration
+        ! file not found: starting iteration
         !
         close (unit = iunit, status = 'delete')
         minimum_ok = .false.
@@ -79,7 +80,7 @@ subroutine bfgs
              &"    UPSCALE = ",f6.2)') epse, epsf, upscale
      else
         !
-        ! file 'filebfgs' found: restart from preceding iterations
+        ! file found: restart from preceding iterations
         !
         read (iunit) minimum_ok, xnew, starting_scf_threshold, &
              starting_diag_threshold
@@ -218,7 +219,7 @@ subroutine bfgs
      ! save all quantities needed at the following iterations
      !
      if (.not.conv_ions) then
-        call seqopn (iunit, 'filebfgs', 'unformatted', exst)
+        call seqopn (iunit, trim(prefix)//'.bfgs', 'unformatted', exst)
         write (iunit) minimum_ok, xnew, starting_scf_threshold, &
              starting_diag_threshold
         write (iunit) dtau

@@ -41,7 +41,7 @@ double CCLOCK()
 /* Restituisce i secondi trascorsi dalla chiamata al timer rest */
 {
 
-#if defined __CRAY
+#if defined __T3E
 
 /*  return (double)(rtclock() * 3.333e-6 / 2.); */
     return (double)( ( _rtc() / (double)CLK_TCK ) );

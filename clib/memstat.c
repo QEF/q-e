@@ -18,7 +18,7 @@ void MEMSTAT(int *me)
 #if defined __LINUX
   printf("\n   MEMORY STATISTICS FROM PE(%d) : \n",*me);
 #endif
-#if defined __CRAY
+#if defined __T3E
   printf("\n   MEMORY STATISTICS FROM PE(%d) : \n",*me);
   malloc_stats (0);
 #endif
@@ -33,7 +33,7 @@ void MEMSTAT(int *me)
 #endif
 }
 
-#if defined __CRAY
+#if defined __T3E
 
 void MEMORY_STATISTICS(int *me)
 {

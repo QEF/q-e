@@ -14,7 +14,7 @@ subroutine stop_pw (flag)
   ! or during execution with flag=.false. (does not remove 'restart')
   !
   use pwcom
-  implicit none
+  use io, only : prefix
   logical :: flag
 #ifdef __PARA
   include 'mpif.h'
@@ -32,9 +32,9 @@ subroutine stop_pw (flag)
      !
      call seqopn (iunres, 'restart','unformatted',exst)
      close (unit=iunres,status='delete')
-     call seqopn (4, 'filebfgs','unformatted',exst)
+     call seqopn (4, trim(prefix)//'.bfgs','unformatted',exst)
      close (unit=4,status='delete')
-     call seqopn (4, 'filemd','formatted',exst)
+     call seqopn (4, trim(prefix)//'.md','formatted',exst)
      close (unit=4,status='delete')
   endif
   !

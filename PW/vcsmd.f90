@@ -27,6 +27,7 @@ subroutine vcsmd
   !
 #include "machine.h"
   use pwcom
+  use io, only : prefix
 #ifdef __PARA
   use para
 #endif
@@ -99,7 +100,7 @@ subroutine vcsmd
   !
   ! open MD history file (if not present this is a new run!)
   !
-  call seqopn (4, 'filemd', 'formatted', exst)
+  call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
   if (.not.exst) then
      close (unit = 4, status = 'delete')
      if (istep.ne.1) call errore ('vcsmd', ' previous MD history got lost', 1)
@@ -564,7 +565,7 @@ subroutine vcsmd
   !
   ! save MD history on file
   !
-  call seqopn (4, 'filemd', 'formatted', exst)
+  call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
   write (4, * ) rati, ratd, rat2d, rat2di, tauold
   write (4, * ) aveci, avecd, avec2d, avec2di
   write (4, * ) avec0, sig0, v0, e_start, etot

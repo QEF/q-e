@@ -222,7 +222,6 @@
       LOGICAL, INTENT(IN) :: gamma_only  
 
       INTEGER :: i
-      INTEGER :: idum
       CHARACTER(LEN=80) :: t_, c_, tmp_dir_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_header '
 
@@ -268,7 +267,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
         WRITE(iuni) idum
@@ -361,7 +360,7 @@
       LOGICAL :: tupf_, gamma_only_
 !
       INTEGER :: i
-      INTEGER :: idum
+      INTEGER :: idum = 0
       LOGICAL :: twrite_
       CHARACTER(LEN=30) :: sub_name = ' read_restart_header '
 !
@@ -602,7 +601,6 @@
 !
       IMPLICIT NONE
 !
-      INTEGER :: idum
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: twrite
       INTEGER, INTENT(IN) :: npwx, nbndx
@@ -631,7 +629,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
 !
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
@@ -768,7 +766,6 @@
       INTEGER, INTENT(IN) :: nat
       LOGICAL, INTENT(IN) :: invsym
       LOGICAL, INTENT(IN) :: noinv
-      INTEGER :: idum
       INTEGER :: i,j
       CHARACTER(LEN=30) :: sub_name = ' write_restart_symmetry '
 !
@@ -994,7 +991,6 @@
       LOGICAL, INTENT(IN) :: nlcc
       CHARACTER(LEN=2), INTENT(IN) :: psd
 !
-      INTEGER :: idum
       INTEGER :: mesh_, lloc_, nchi_, nbeta_, nqf_, nqlc_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_pseudo '
 !
@@ -1124,7 +1120,7 @@
       REAL(dbl) :: chi(:,:) !  chi(mesh,nwfc)
       REAL(dbl) :: rho_at(:) !  rho_at(mesh)
 !
-      INTEGER :: idum
+      INTEGER :: idum = 0
       CHARACTER(LEN=30) :: sub_name = ' write_restart_pseudo '
 !
 ! ... Subroutine Body
@@ -1205,7 +1201,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
         WRITE(iuni) idum
@@ -1850,7 +1846,7 @@
       REAL(dbl), INTENT(IN) :: b1(3), b2(3), b3(3)
       INTEGER, INTENT(IN) :: mill(:,:)
       LOGICAL, INTENT(IN) :: twrite, tmill
-      INTEGER :: idum
+      INTEGER :: idum = 0
       INTEGER :: i, j
       CHARACTER(LEN=30) :: sub_name = ' write_restart_gvec '
 !
@@ -1887,7 +1883,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
         WRITE(iuni) idum
@@ -2085,7 +2081,7 @@
       INTEGER, INTENT(IN) :: ik, nk, ngwk, tetra(4), isk
       REAL(dbl), INTENT(IN) :: xk(3)
       REAL(dbl), INTENT(IN) :: wk
-      INTEGER :: idum, i
+      INTEGER :: i, idum = 0
 
       IF( twrite ) THEN
         IF( ionode ) THEN
@@ -2108,7 +2104,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( twrite ) THEN
         IF( ionode ) THEN
           WRITE(iuni) twrite, file_version
@@ -2309,7 +2305,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
         WRITE(iuni) idum
@@ -2489,7 +2485,6 @@
 
       INTEGER :: i,j
       CHARACTER(LEN=4) :: label_(ntyp)
-      INTEGER :: idum
       CHARACTER(LEN=30) :: sub_name = ' write_restart_ions '
 !
 ! ... Subroutine Body
@@ -2555,7 +2550,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
         WRITE(iuni) idum
@@ -2846,7 +2841,7 @@
       REAL(dbl), INTENT(IN) :: xnosm2
       REAL(dbl), INTENT(IN) :: ef
 
-      INTEGER :: i, l, idum
+      INTEGER :: i, l, idum = 0
       CHARACTER(LEN=30) :: sub_name = ' write_restart_electrons '
 !
 ! ... Subroutine Body
@@ -2935,7 +2930,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
         WRITE(iuni) idum
@@ -3252,7 +3247,7 @@
       REAL(dbl), INTENT(IN) :: scal
       LOGICAL, INTENT(IN) :: t0, tm
 
-      INTEGER :: i, j, idum, ierr
+      INTEGER :: i, j, ierr, idum = 0
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER :: npool, ipmask( nproc ), ipsour
       COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
@@ -3757,7 +3752,7 @@
       LOGICAL, INTENT(IN) :: tr, tv
       INTEGER :: i, is
       COMPLEX(dbl), ALLOCATABLE :: vtmp(:)
-      INTEGER :: idum
+      INTEGER :: idum = 0
 !
 ! ... Subroutine Body
 !
@@ -3801,7 +3796,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       idum    = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
@@ -3961,7 +3956,6 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: twrite
-      INTEGER :: idum
       IF( twrite ) THEN
         IF( ionode ) THEN
           WRITE(iuni) twrite, file_version
@@ -3981,7 +3975,6 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version
       END IF
@@ -4000,7 +3993,6 @@
       LOGICAL, INTENT(IN) :: tread
       LOGICAL :: twrite_
       INTEGER :: file_version_
-      INTEGER :: idum
       IF( ionode ) THEN
         READ(iuni) twrite_, file_version_
       END IF
@@ -4031,7 +4023,6 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
       INTEGER :: file_version_
-      INTEGER :: idum
       IF( ionode ) THEN
         READ(iuni) twrite_, file_version_
       END IF

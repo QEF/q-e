@@ -8,7 +8,7 @@
 
 
 
-#if defined __CRAY | defined __ABSOFT
+#if defined __T3E | defined __ABSOFT
 
 #  define CREATE_PLAN CREATE_PLAN
 #  define CREATE_PLANX CREATE_PLANX

@@ -42,7 +42,7 @@ F77FLAGS_NOOPT = -O0
 #
 # C compiler flags
 #
-CCFLAGS  = $(CPPFLAGS) -O2
+CCFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
 #
 # This is needed to tell the compiler where modules are
 # use this for version < 7
