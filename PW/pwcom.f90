@@ -535,6 +535,7 @@ MODULE units
   SAVE
   !
   INTEGER :: &
+       iunstdout,        &! unit connected to standard output ( default is 6 )
        iunpun,           &! unit for saving the final results
        iunwfc,           &! unit with wavefunctions
        iunat,            &! unit for saving orthogonal atomic wfcs
@@ -543,6 +544,7 @@ MODULE units
        iunoldwfc2,       &! as above at step -2
        iunigk,           &! unit for saving indices
        iunres,           &! unit for the restart of the run
+       iunneb,           &! unit for NEB output ( sdtout or what else )
        nwordwfc,         &! lenght of record in wavefunction file
        nwordatwfc         ! lenght of record in atomic wfc file
   !
