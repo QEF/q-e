@@ -105,19 +105,6 @@ tar :
 		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
 	gzip pw.tar
 
-#links :
-#	test -d bin || mkdir bin
-#	( cd bin/ ; \
-#	  for exe in \
-#	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
-#	      ../PP/efg.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
-#	      ../PP/plotband.x ../PP/pmw.x ../PP/pw2casino.x \
-#	      ../PP/pw2wan.x ../PP/voronoy.x \
-#	  ; do \
-#	      if test -f $$exe ; then ln -fs $$exe . ; fi \
-#	  done \
-#	)
-
 # TAR-GUI works only if we have CVS-sources !!!
 tar-gui :
 	@if test -d GUI/PWgui ; then \
