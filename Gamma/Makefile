@@ -213,7 +213,6 @@ PWOBJS = \
 ../PW/w1gauss.o \
 ../PW/wfcinit.o \
 ../PW/wgauss.o \
-../PW/which_dft.o \
 ../PW/write_config_to_file.o \
 ../PW/write_ns.o \
 ../PW/wsweight.o 

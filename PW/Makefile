@@ -239,7 +239,6 @@ w0gauss.o \
 w1gauss.o \
 wfcinit.o \
 wgauss.o \
-which_dft.o \
 write_config_to_file.o \
 write_ns.o \
 wsweight.o
