@@ -100,7 +100,8 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !
   !    Here we find the true symmetries of the crystal
   !
-  call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
+  IF (.NOT. noncolin) &
+     call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
        irt, ftau)
   IF (noncolin) CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
                                    nr1, nr2, nr3, sym, irt, ftau, m_loc)
@@ -113,6 +114,15 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
 
   call smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
        sym, minus_q)
+  IF (noncolin) THEN
+     minus_q=.false.
+     IF ( ABS(DOT_PRODUCT(xq,xq)) > 1.0D-07 ) CALL errore ('sgama', &
+          'phonon not implemented with non collinear magnetism', 1)
+     ! If somebody want to implement phononic calculation in non 
+     ! collinear magnetic case he has to pay attention to the fact
+     ! that in non collinear case the symmetry k -> -k is not
+     ! always allowed as in collinear case. Adriano
+  ENDIF
   if (iswitch.eq. - 4) then
      call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)
      call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, rtau, &
@@ -135,11 +145,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !    here we set the k-points in the irreducible wedge of the point grou
   !    of the crystal
   !
-  if (noncolin) then
-     call irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, .false.)
-  else
-     call irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, minus_q)
-  end if
+  call irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, minus_q)
   !
   ! copy symm. operations in sequential order so that
   ! s(i,j,irot) , irot <= nsym          are the sym.ops. of the crystal
