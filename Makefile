@@ -47,7 +47,7 @@ tools : modules libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
 upf : modules libs
 	if test -d upftools ; then ( cd upftools ; make all ) ; fi
-ld1 : modules libs
+ld1 : modules libs pw
 	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 tools

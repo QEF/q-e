@@ -1,0 +1,84 @@
+!
+!---------------------------------------------------------------
+  subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
+                       nwf,enl,ll,lsd,nspin,oc,ndm,chi,vnl, &
+                       etot,ekin,encl,epseu,ehrt,ecxc,evxt)    
+!---------------------------------------------------------------
+!
+!   atomic total energy in the local-spin-density scheme
+!   atomic pseudopotentials with nonlinear core correction are allowed
+!   gradient correction allowed (A. Dal Corso fecit AD 1993)
+!
+use funct
+implicit none
+integer,parameter :: dp=kind(1.d0)
+integer:: ndm,mesh,nwf,i,n,ll(nwf),lam,lmax,lsd,nspin,is
+logical:: nlcc, gga
+real(kind=dp):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
+          etot,encl,epseu,ekin,ehrt,ecxc,evxt
+real(kind=dp):: enl(nwf),oc(nwf), rhotot, exc_t, &
+          r(ndm),r2(ndm),dx,chi(ndm,nwf),rho(ndm,2),zeta(ndm), &
+          vxt(ndm),vnl(ndm,0:3),vh(ndm)
+real(kind=dp),allocatable :: f1(:), f2(:), f3(:), f4(:)
+real(kind=dp),allocatable :: vgc(:,:), egc(:), rhoc(:)
+integer:: mgcx,mgcc,ierr
+real(kind=dp),parameter :: fourpi = 4.d0 * 3.141592653589793d+00  
+
+gga=igcx.ne.0.or.igcc.ne.0
+
+allocate(vgc(ndm,2),stat=ierr)
+allocate(rhoc(ndm),stat=ierr)
+allocate(egc(ndm),stat=ierr)
+allocate(f1(mesh),stat=ierr)
+allocate(f2(mesh),stat=ierr)
+allocate(f3(mesh),stat=ierr)
+allocate(f4(mesh),stat=ierr)
+
+rhoc=0.d0
+call vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
+
+rhc=0.d0
+do i=1,mesh
+   rhotot=rho(i,1)
+   if (lsd.eq.1) rhotot=rhotot+rho(i,2) 
+   f1(i)=-2.d0*zed/r(i) * rhotot
+   f4(i)= vxt(i)       * rhotot
+   vh(i)= vh (i)       * rhotot
+   do is=1, nspin
+      rh(is) = rho(i,is)/r2(i)/fourpi
+   enddo
+   call vxc_t(rh,rhc,lsd,vxcp)
+   if (gga) then
+       f2(i) =-(vxcp(1)+vgc(i,1))*rho(i,1)-f1(i)-vh(i)-f4(i)
+       f3(i) = exc_t(rh,rhc,lsd)*rhotot+egc(i)*r2(i)*fourpi
+       if (lsd.eq.1) f2(i)=f2(i)-(vxcp(2)+vgc(i,2))*rho(i,2)
+   else
+       f2(i) =-vxcp(1)*rho(i,1)-f1(i)-vh(i)-f4(i)
+       f3(i) = exc_t(rh,rhc,lsd) * rhotot
+       if (lsd.eq.1) f2(i) =f2(i)-vxcp(2)*rho(i,2)
+   endif
+enddo
+
+encl=    int_0_inf_dr(f1,r,r2,dx,mesh,1)
+ehrt=0.5d0*int_0_inf_dr(vh,r,r2,dx,mesh,2)
+ecxc=    int_0_inf_dr(f3,r,r2,dx,mesh,2)
+evxt=    int_0_inf_dr(f4,r,r2,dx,mesh,2)
+!
+epseu=0.d0
+ekin = int_0_inf_dr(f2,r,r2,dx,mesh,1)
+
+do n=1,nwf
+   ekin=ekin+oc(n)*enl(n)
+enddo
+etot= ekin + encl + ehrt + ecxc + evxt
+
+deallocate(f4)
+deallocate(f3)
+deallocate(f2)
+deallocate(f1)
+deallocate(egc)
+deallocate(vgc)
+deallocate(rhoc)
+
+return
+end

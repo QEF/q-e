@@ -1,0 +1,80 @@
+!--------------------------------------------------------------
+      subroutine write_paw_recon
+!--------------------------------------------------------------
+use ld1inc
+use funct
+implicit none
+
+      integer :: i, j, n, m, l, ios, iae, isign
+      real(kind=dp) ::  wmax
+
+      open(unit=51,file=file_recon,status='unknown', err=1111, &
+           iostat=ios,form='formatted')
+1111     call errore('write_result','opening 51',abs(ios))
+
+      iae=nwf
+
+      write (51,*) '<PP_PAW>'
+      write (51,*) nwfts
+      write (51,*) '</PP_PAW>'
+      do i=nwfts,1,-1
+         write (51,*) '<PP_REC>'
+         write (51,*) '<PP_kkbeta>'
+         write (51,*) mesh
+         write (51,*) '</PP_kkbeta>'
+         write (51,*) '<PP_L>'
+         write (51,*) llts(i)
+         write (51,*) '</PP_L>'
+         write (51,*) '<PP_REC_AE>'
+
+! Check sign of ae-wfct (max should be >0)
+
+         wmax=0.d0
+         do n=1,mesh
+            if(abs(psi(n,iae)).gt.wmax.and.r(n).lt.4.d0)then
+               wmax=abs(psi(n,iae))
+               if(psi(n,iae).lt.0.d0)then
+                  isign=-1
+               else
+                  isign=+1
+               endif
+            endif
+         enddo
+
+         write (51,'(1p4e19.11)') (isign*psi(n,iae) , n=1,mesh )
+         write (51,*) '</PP_REC_AE>'
+         write (51,*) '<PP_REC_PS>'
+
+! check sign of pseudo wfct (max should be >0)
+
+         wmax=0.d0
+         do n=1,mesh
+            if(abs(phis(n,i)).gt.wmax.and.r(n).lt.4.d0)then
+               wmax=abs(phis(n,i))
+               if(phis(n,i).lt.0.d0)then
+                  isign=-1
+               else
+                  isign=+1
+               endif
+            endif
+         enddo
+
+
+         write (51,'(1p4e19.11)') (isign*phis(n,i) , n=1,mesh )
+         write (51,*) '</PP_REC_PS>'
+         write (51,*) '</PP_REC>'
+         iae=iae-1
+      enddo
+      close(51)
+
+
+      return
+    end subroutine write_paw_recon
+
+
+
+
+
+
+
+

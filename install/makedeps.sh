@@ -10,8 +10,8 @@ for DIR in Modules PW FPMD CPV flib pwtools upftools PP PWCOND PWNC \
 do
     # set inter-directory dependencies
     case $DIR in
-	Modules | atomic )                DEPENDS=""                       ;;
-	PW | FPMD | CPV | flib | pwtools | upftools )
+	Modules )                         DEPENDS=""                       ;;
+	PW | FPMD | CPV | flib | pwtools | upftools | atomic )
 	                                  DEPENDS="../Modules"             ;;
 	PP | PWCOND | PWNC | Gamma | PH ) DEPENDS="../Modules ../PW"       ;;
 	D3 )                              DEPENDS="../Modules ../PW ../PH" ;;
