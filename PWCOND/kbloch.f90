@@ -35,7 +35,7 @@ subroutine kbloch(ntot, val)
      k1=k1-1.d0*INT(k1) 
      if (k1.gt.0.5d0) k1=k1-1.d0        
      val(in)=CMPLX(k1,k2) 
-  !   write(6,'(i5, 2f12.7)') in, DREAL(val(in)), DIMAG(val(in))
+  !   WRITE( stdout,'(i5, 2f12.7)') in, DREAL(val(in)), DIMAG(val(in))
   enddo          
 
   return

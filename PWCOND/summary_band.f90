@@ -11,6 +11,7 @@ subroutine summary_band(ik,ien)
 ! calculations.
 ! 
 #include "machine.h"
+  USE io_global,  ONLY :  stdout
   use pwcom
   use cond
   implicit none
@@ -74,20 +75,20 @@ subroutine summary_band(ik,ien)
 !
 ! Output of complex k onto common file
 !
-  write(6,*) 'Nchannels of the left tip = ', nchanl
-  write(6,'(7x, a10, 3x, a10, 6x, a10)') 'k1(2pi/a)',  &
+  WRITE( stdout,*) 'Nchannels of the left tip = ', nchanl
+  WRITE( stdout,'(7x, a10, 3x, a10, 6x, a10)') 'k1(2pi/a)',  &
                                'k2(2pi/a)', 'E-Ef (eV)'
-  write(6,*)
+  WRITE( stdout,*)
   do i=1, nchanl
-    write(6,'(3f12.7)') DREAL(kvall(i)), DIMAG(kvall(i)), eev
+    WRITE( stdout,'(3f12.7)') DREAL(kvall(i)), DIMAG(kvall(i)), eev
   enddo
   if(ikind.eq.2) then
-    write(6,*) 'Nchannels of the right tip = ', nchanr
-    write(6,'(7x, a10, 3x, a10, 6x, a10)') 'k1(2pi/a)',&
+    WRITE( stdout,*) 'Nchannels of the right tip = ', nchanr
+    WRITE( stdout,'(7x, a10, 3x, a10, 6x, a10)') 'k1(2pi/a)',&
                                'k2(2pi/a)', 'E-Ef (eV)'          
-    write(6,*)
+    WRITE( stdout,*)
     do i=1, nchanr
-      write(6,'(3f12.7)') DREAL(kvalr(i)), DIMAG(kvalr(i)), eev
+      WRITE( stdout,'(3f12.7)') DREAL(kvalr(i)), DIMAG(kvalr(i)), eev
     enddo         
   endif
 

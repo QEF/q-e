@@ -12,6 +12,7 @@ subroutine local
 ! the plane wave basis set.
 !
 #include "machine.h"
+  USE io_global,  ONLY :  stdout
   use pwcom
   use io_files
   use cond
@@ -48,7 +49,7 @@ subroutine local
 !   Allocate variables depending on n2d
     call allocate_cond_2
     read(4) ((newbg(ig,il), ig=1, ngper), il=1, n2d) 
-!    write(6,*) 'ngper, n2d = ', ngper, n2d
+!    WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
     read(4) (((psiper(ig,il,k),ig=1,n2d),il=1,n2d), &
                                                k=1,nrzp)
     read(4) ((zkr(il,k),il=1,n2d),k=1,nrzp)
@@ -165,7 +166,7 @@ subroutine local
 ! Allocate variables depending on n2d
 !
   call allocate_cond_2
-  write(6,*) 'ngper, n2d = ', ngper, n2d
+  WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
 
 !
 ! Construct components of basis vector set on G_per

@@ -11,6 +11,7 @@ subroutine init_gper(ik)
 ! - the number of shells (ngpsh) for them,
 !
 #include "machine.h"
+  USE io_global,  ONLY :  stdout 
   use pwcom
   use cond  
   implicit none
@@ -119,7 +120,7 @@ subroutine init_gper(ik)
   gnsh(1)=sqrt(gper(1,igper)**2+gper(2,igper)**2)*tpiba
   ninsh(1)=igper
 
-  write(6,*) 'ngper, shell number = ', ngper, ngpsh
+  WRITE( stdout,*) 'ngper, shell number = ', ngper, ngpsh
 
   deallocate(gnorm2) 
   deallocate(nshell) 

@@ -13,6 +13,7 @@ subroutine transmit(ik, ien)
 ! the scattering region.
 !
 #include "machine.h"
+  USE io_global,  ONLY :  stdout
   use pwcom
   use cond
 implicit none
@@ -31,7 +32,7 @@ implicit none
 
   if(nchanl*nchanr.eq.0) then
     tk = 0.d0
-    write(6,'(a20, 2f12.7)') 'E-Ef(ev), TOTAL T = ',   &
+    WRITE( stdout,'(a20, 2f12.7)') 'E-Ef(ev), TOTAL T = ',   &
                            eev, tk
     return
   endif
@@ -189,31 +190,31 @@ implicit none
 !
 ! transmission of each band
 !
-  write(6,*) 'T_ij for propagating states:'
+  WRITE( stdout,*) 'T_ij for propagating states:'
   do n=1, nchanl
     tj=0.d0
     do ig=1, nchanr
       tij=DREAL(tchan(ig,n))**2+DIMAG(tchan(ig,n))**2
       tj=tj+tij
-      write(6,'(i5,'' --> '',i5,f12.7)') n, ig, tij
+      WRITE( stdout,'(i5,'' --> '',i5,f12.7)') n, ig, tij
     enddo
-    write(6,'(15x,f9.5)') tj
+    WRITE( stdout,'(15x,f9.5)') tj
   enddo
 !
 ! eigenchannel decomposition
 !
   call eigenchnl(nchanl, nchanr, tchan, veceig, eigen)
-  write(6,*) 'Eigenchannel decomposition:'
+  WRITE( stdout,*) 'Eigenchannel decomposition:'
   tk=0
   do n=1, nchanl
-    write(6,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
+    WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
     do ig=1, nchanl
       tj=DREAL(veceig(ig,n))**2+DIMAG(veceig(ig,n))**2
-      write(6,'(20x, f9.5)') tj
+      WRITE( stdout,'(20x, f9.5)') tj
     enddo
     tk=tk+eigen(n)
   enddo
-  write(6,'(a20, 2f12.7)') 'E-Ef(ev), TOTAL T = ', eev, tk 
+  WRITE( stdout,'(a20, 2f12.7)') 'E-Ef(ev), TOTAL T = ', eev, tk 
 !
 ! To add to the total transmission 
 !

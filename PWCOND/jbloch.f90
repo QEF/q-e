@@ -98,7 +98,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
             conjg(vec(2*n2d+nocros+noins+iorb,ir))*kcoef(iorb,n)-     &
             vec(2*n2d+nocros+noins+iorb,il)*conjg(kcoef(iorb,k)))
       enddo
- !  write(6,'(2i5, 2f12.6)') k,n,DREAL(kcuroff(k,n)),DIMAG(kcuroff(k,n))  
+ !  WRITE( stdout,'(2i5, 2f12.6)') k,n,DREAL(kcuroff(k,n)),DIMAG(kcuroff(k,n))  
     enddo
   enddo
 
