@@ -91,14 +91,6 @@ PWOBJS = \
 ../PW/atomic_wfc.o \
 ../PW/bachel.o \
 ../PW/becmod.o \
-../PW/bp_bess.o \
-../PW/bp_c_phase.o \
-../PW/bp_calc_btq.o \
-../PW/bp_dbess.o \
-../PW/bp_qvan3.o \
-../PW/bp_radin.o \
-../PW/bp_strings.o \
-../PW/bp_ylm_q.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
 ../PW/ccgdiagg.o \
