@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guibKeywords.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: guibKeywords.itcl,v 1.2 2004-04-05 13:39:11 kokalj Exp $ 
 #
 
 
@@ -600,7 +600,8 @@ body ::guib::moduleObj::help {ident args} {
     #}
     set obj [_getObjFromVarident $ident]
     if { $obj == {} } {
-	return
+	::tclu::ERROR "syntax error in help-keyword; indent \"$ident\" does not exists"
+	#return
     }
     set id [$obj getIdFromVarident $ident]
     
