@@ -74,9 +74,11 @@ SRC_FILES = \
 	src/tclIndex \
 	src/*.itcl
 
+TEST_FILES = tests/run-tests.sh
+
 PWGUI_SRC_FILES = \
 	$(ROOT_FILES) $(DOC_FILES) $(EXAMPLES_FILES) \
-	$(IMAGES_FILES) $(MODULES_FILES) $(SRC_FILES)
+	$(IMAGES_FILES) $(MODULES_FILES) $(SRC_FILES) $(TEST_FILES)
 
 
 # nothing by default
@@ -98,6 +100,8 @@ veryclean:
 
 distclean: veryclean
 	cd lib/; rm -f *
+	cd external/lib; $(MAKE) clean
+	if test -d bin/ ; then rm -rf bin/ ; fi
 
 _GUIB_DIR      = $(shell cd ../Guib; pwd)
 _GUIB_VERSION  = $(shell GUIB=$(_GUIB_DIR); export GUIB; $(_GUIB_DIR)/guib -v)
@@ -135,8 +139,9 @@ pwgui-source-all:    \
 pwgui-linux-i386-bin: \
 	_message-bin \
 	_create_pwgui-notcl_tar \
-	_add_libs \
+	_create_bin \
 	_add_bin \
+	_add_libs \
 	_add_guib \
 	_repack_pwgui
 	mv $(PWGUI_TARNAME).tgz $(PWGUI_TARNAME)_linux-i386_static.tgz
@@ -149,8 +154,13 @@ _create_pwgui-notcl_tar:
 _add_bin:
 	tar rvf  pwgui.tar $(BIN_FILES)
 
+_create_bin:
+	if test ! -d bin/ ; then mkdir bin ; fi
+	cd external/src; $(MAKE) all
+
 _add_libs:
-	tar rvf  pwgui.tar $(EXTERNAL_FILES) $(LIB_DIRS)
+	tar rvfh  pwgui.tar $(EXTERNAL_FILES) 
+	tar rvf   pwgui.tar $(LIB_DIRS)
 
 _add_guib: _clean_scratch
 	cd $(_GUIB_DIR); $(MAKE) guib-archive-nodoc
@@ -177,7 +187,7 @@ _message-notcl: _check_guib
 	@echo "#"
 	@echo "# ------------------------------------------------------------"
 
-_message-all: _check_guib _lib-links
+_message-all: _check_guib _check_lib-links
 	@echo ""
 	@echo "# ------------------------------------------------------------"
 	@echo "#"
@@ -185,7 +195,7 @@ _message-all: _check_guib _lib-links
 	@echo "#"
 	@echo "# ------------------------------------------------------------"
 
-_message-bin: _check_guib _lib-links
+_message-bin: _check_guib _check_lib-links
 	@echo ""
 	@echo "# ------------------------------------------------------------"
 	@echo "#"
@@ -198,14 +208,14 @@ _check_guib:
 		echo ""; echo "WARNING: GUIB package not found ..."; echo ""; exit 1; \
 	fi	
 
-_lib-links:
-	@cd lib;	\
-	for dir in $(EXTERNAL_LIB_DIRS); do \
-		if test ! -d $$dir; then \
+_check_lib-links:
+	cd lib;	\
+	for link in $(EXTERNAL_LIB_DIRS); do \
+		if test ! -e ../external/lib/$$link; then \
 		echo ""; \
 		echo "WARNING: cannot create lib-links ..."; \
 		echo "         the creation of self-contained packages not possible ..."; echo ""; exit 1; \
-		else ln -sf ../external/lib/$$dir . ; fi \
+		else ln -sf ../external/lib/$$link . ; fi \
 	done
 
 _clean_lib-links:
