@@ -476,7 +476,7 @@ sparc:mpf90 | sparc:f90 )
 	try_fflags_noopt="-O0"
 	try_f90flags_noopt="-O0"
 	try_ldflags=""
-	mflags="-M"
+	imodule="-M"
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 \
@@ -519,7 +519,7 @@ echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 echo setting FFLAGS_NOOPT... $fflags_noopt
 echo setting F90FLAGS_NOOPT... $f90flags_noopt
-if test "$mflags" = "" ; then mflags="-I" ; fi
+if test "$imodule" = "" ; then imodule="-I" ; fi
 
 case "$arch:$cc_id" in
 linux*:icc )
@@ -1045,7 +1045,7 @@ AC_SUBST(f90flags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(f90flags_noopt)
 AC_SUBST(pre_fdflags)
-AC_SUBST(mflags)
+AC_SUBST(imodule)
 AC_SUBST(ifftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
