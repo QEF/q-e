@@ -38,6 +38,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
     ! the error flag
   INTEGER                      :: mpime
     ! the task id  
+  LOGICAL                      :: exists
   !
   !
   IF ( ierr == 0 ) RETURN
@@ -68,15 +69,21 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... in the cas of linux machines it is also written on the "0" unit
   ! ... proviously connected to /dev/stderr
   !
-  OPEN( UNIT = 0, FILE = '/dev/stderr' )
+  INQUIRE( FILE = '/dev/stderr', EXIST = exists )
   !
-  WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
-  WRITE( UNIT = 0, &
-         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
-  WRITE( UNIT = 0, FMT = '(5X,A)' ) message
-  WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
-  !
-  CLOSE( UNIT = 0 )
+  IF ( exists ) THEN
+     !
+     OPEN( UNIT = 0, FILE = '/dev/stderr' )
+     !
+     WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
+     WRITE( UNIT = 0, &
+            FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+     WRITE( UNIT = 0, FMT = '(5X,A)' ) message
+     WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
+     !
+     CLOSE( UNIT = 0 )     
+     !
+  END IF
   !
 #endif  
   !
