@@ -147,7 +147,7 @@ MODULE basic_algebra_routines
        END DO
 #else
        CALL DGEMV( 'T', dim, dim, 1.D0, matrix, dim, vector, 1, &
-                   0.D0, matrix_times_vector, 1 )       
+                   0.D0, vector_times_matrix, 1 )       
 #endif
        !
      END FUNCTION vector_times_matrix
