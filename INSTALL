@@ -33,6 +33,7 @@ pc_abs  : Linux PCs, Absoft compiler
 pc_pgi  : Linux PCs, Portland compiler
 pc_ifc  : Linux PCs, Intel compiler
 pc_lahey: Linux PCs, Lahey compiler
+cygwin  : Windows PC, Intel compiler (experimental)
 sun     : Sun workstations, Sun compiler
 sxcross : NEC SX-6, cross-compilation
 fujitsu : Fujitsu vector machines, Fujitsu compiler
@@ -63,8 +64,9 @@ make pp     produces PP/pp.x and other postprocessing codes
 make d3     produces D3/d3.x (third-order energy derivatives)
 make gamma  produces Gamma/pwg.x and Gamma/phcg.x
             (Gamma-only versions of pw.x and ph.x)
-make upf    produces utilities for pseudopotential conversion in upftools/
 make tools  produces miscellaneous tools for data analysis, in pwtools/
+make all    produces all of the above
+make upf    produces utilities for pseudopotential conversion in upftools/
 make fpmd   produces FPMD/par2.x code for Car-Parrinello MD
 make cp     produces CPV/cp.x code for Car-Parrinello MD
             (works with ultrasoft pseudopotentials)
