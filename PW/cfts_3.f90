@@ -51,7 +51,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   ! pencils on the plane
   ! the planes to transform
 
-#ifdef AIX
+#ifdef __AIX
   complex(kind=DP) :: f (nrx1, nr2, nr3)
   ! the fft array
   !

@@ -7,7 +7,7 @@
 !
 #ifdef T3D
 
-#ifdef AIX
+#ifdef __AIX
 #define CGERV2D zgerv2d
 #define CGESD2D zgesd2d
 #define CGEBR2D zgebr2d

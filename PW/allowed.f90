@@ -54,7 +54,7 @@ function allowed (nr)
      allowed = .true.
      ! specific (machine- and library-dependent cases
 #else
-#ifdef AIX
+#ifdef __AIX
      ! IBM machines with essl libraries
 
      allowed = pwr (1) .ge.1.and.pwr (2) .le.2.and.pwr (3) &

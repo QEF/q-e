@@ -103,7 +103,7 @@ program plotrho
   do i = 0, ny
      y (i) = (yi (nyi) - yi (0) ) * float (i) / float (ny)
   enddo
-#ifdef AIX
+#ifdef __AIX
   call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nximax + 1, x, y, nx &
        + 1, ny + 1, rhoo, nxmax + 1, wrk, nwrk)
 #else

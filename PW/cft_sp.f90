@@ -11,7 +11,7 @@ subroutine bidon_sp
   stop 'cft_sp'
 end subroutine bidon_sp
 #else
-#ifdef AIX
+#ifdef __AIX
 !----------------------------------------------------------------------
 
 subroutine cft_1 (f, m, n, nx, sgn, fout)

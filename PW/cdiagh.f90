@@ -28,7 +28,7 @@ subroutine cdiagh (n, h, ldh, e, v)
 ! on OUTPUT
   real(kind=DP) :: e (n)          ! eigenvalues
   complex(kind=DP) :: v (ldh, n)  ! eigenvectors (column-wise)
-#ifdef AIX
+#ifdef __AIX
 ! LOCAL variables (ESSL version)
   integer :: naux, i, j, ij
   external ZHPEV

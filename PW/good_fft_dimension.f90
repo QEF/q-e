@@ -17,7 +17,7 @@ integer function good_fft_dimension (n)
   integer :: n, nx
   ! this is the default: max dimension = fft dimension
   nx = n
-#if defined(AIX) || defined(DXML)
+#if defined(__AIX) || defined(DXML)
   if ( n==8 .or. n==16 .or. n==32 .or. n==64 .or. n==128 .or. n==256) &
        nx = n + 1
 #endif

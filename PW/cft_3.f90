@@ -554,7 +554,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   return
 #endif
 
-#ifdef AIX
+#ifdef __AIX
 #define PRESENT
 !----------------------------------------------------------------------
 

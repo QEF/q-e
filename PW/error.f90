@@ -41,7 +41,7 @@ subroutine errore (routin, messag, ierr)
   write ( * , '(5x,a)') messag
   write (6, '(1x,78("%"))')
 #ifdef __PARA
-#ifdef AIX
+#ifdef __AIX
   write (0, * ) ' '
   write (0, '(1x,78("%"))')
   write (0, '(5x,"from ",a," : error #",i10)') routin, ierr

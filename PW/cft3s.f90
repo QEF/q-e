@@ -52,7 +52,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #else
 #define CFT_1S cft_1
 #endif
-#if defined(__FFTW) || defined(AIX)
+#if defined(__FFTW) || defined(__AIX)
 #define CFT_2S cft_2s
 #else
 #define CFT_2S cft_2
@@ -164,7 +164,7 @@ end subroutine cft3s
 #endif
 
 #ifndef NOPENCILS
-#if defined(AIX) || defined(__SX4) || defined(DEC)
+#if defined(__AIX) || defined(__SX4) || defined(DEC)
 #define CFT_WITH_PENCILS cfts_3
 #endif
 #endif

@@ -87,7 +87,7 @@ subroutine rdiaghg (n, m, h, s, ldh, e, v)
         ! calculate all eigenvalues
         !
         call DCOPY (ldh * n, h, 1, v, 1)
-#ifdef AIX
+#ifdef __AIX
         !
         ! there is a name conflict between essl and lapack ...
         !

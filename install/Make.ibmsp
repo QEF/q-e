@@ -2,45 +2,72 @@
 # System-dependent definitions for IBM AIX (RISC6000) parallel machines
 # Edit according to your needs
 #
-CPPFLAGS = -DAIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
-
+# Macros for conditional compilation
+#
+# CP and FPMD macro
+# CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-D__ESSL
+# PW macro
+CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
 #
 # Fortran compiler:
+#
 # Use -g -C without -s in LDFLAGS for debugging
 # Use -O            for optimization
 # Use -O3 -qstrict  for higher optimization (may not go faster)
 # Use -qarch=auto -qtune=auto for processor-specific optimization
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
+#
 F90 = mpxlf
 F77 = $(F90)
+#
+# Fortran compiler flags
+#
+# CP and FPMD flags
+# FFLAGS = -qdpc -qfree=f90 -qalias=noaryovrlp \
+#          -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
+#          -qsuffix=cpp=f90 -Q
+# PW flags
 FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
          -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
          -qsuffix=cpp=f90
+#
+# Fortran90 compiler flags
+#
 F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
+#
+# C compiler flags
+#
+CCFLAGS  = -Wp,$(CPPFLAGS) -O2
 #
 # This is needed to tell the compiler where modules are
 #
+# MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/CPV
+# MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/FPMD
 MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
+#
 # Libraries:
+#
 # We assume that essl is installed and that lapack is in /usr/local/lib
 # NOTA BENE: essl must be loaded BEFORE lapack in order to load the correct
 #            version of diagonalization routines
 #            use esslp2 if available on power2 machines
 #
 # For Cineca machines:
-# LIBS = -lessl -L/cineca/lib/ -llapack
+# LIBS = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass -lmassvp4 -lmass
+# LIBS = -lessl -L/cineca/lib/ -llapack 
 #
 LIBS = -lessl  -L/usr/local/lib -llapack
-
+#
+# Linker flags
 #
 # Loader: use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
 #         use -bnso -bI:/usr/lib/syscalls.exp for static linking
 #         use -s for stripped executable (smaller file but no debugging)
 #
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
-#LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s -bmaxdata:512000000
+#LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s -bmaxdata:512000000
 #
 # ar:
 #
