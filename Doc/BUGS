@@ -1,4 +1,6 @@
 
+Fixed in version 2.1:
+
   *  various T3E compilation problems
 
   *  cpmd2upf was yielding incorrect DFT if converting BLYP PPs

@@ -848,9 +848,9 @@ are using the manual configuration, choose the appropriate line
 
 Some releases of Intel compiler v.~7 and 8 yield ``Compiler Internal 
 Error''.
-Update to the very latest versions (presently 7.1.41 and 8.0.046, 
-respectively), available via Intel Premier support (registration free
-of charge for Linux): 
+Update to the last version (presently 7.1.41, 8.0.046 or
+8.1.018, respectively), available via Intel Premier support 
+(registration free of charge for Linux): 
 \htmladdnormallink%
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}
@@ -858,9 +858,9 @@ of charge for Linux):
 Also note that \texttt{pwcond.x} does not work with some (but not all)
 releases of Intel compiler v.~7 and 8, for no apparent good reason.
 
-A warning ``size of symbol ... changed ...'' is produced by ifc 7.1 at
+Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
 the loading stage.
-This seems to be harmless, but it may cause the loader to stop,
+These seem to be harmless, but they may cause the loader to stop,
 depending on your system configuration.
 If this happens and no executable is produced, add the following to
 \texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
@@ -868,12 +868,16 @@ If this happens and no executable is produced, add the following to
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
 If \texttt{configure} doesn't find them, try
 \texttt{configure --enable-shared}.
-Note that MKL also contains optimized FFT routines, but they are
-presently not supported: use FFTW instead. Also note that Intel 
+MKL also contains optimized FFT routines, but they are
+presently not supported: use FFTW instead. Note that Intel 
 compiler v.~8 fails to load with MKL v.~5.2 or earlier versions,
 because some symbols that are referenced by MKL are missing. There
 is a fix for this (info from Konstantin Kudin): add libF90.a from 
 ifc 7.1 at the linking stage, as the last library.
+Also note that some combinations of not-so-recent versions of MKL 
+and ifc may yield a lot of "undefined references" when statically 
+loaded: use \texttt{configure --enable-shared}, 
+or remove the \texttt{-static} option in \texttt{make.sys}.
 
 The I/O libraries used by the Intel compiler ifc are incompatible with
 those called by most precompiled BLAS/LAPACK libraries (including

@@ -11,6 +11,8 @@ COMMON
 
 - adding/removing/modifying input variables is way too complex
 
+- time steps in fs (both in input and in output)
+
 - data files: modifying their format (e.g. adding a variable) 
   is way too complex right now
   add version information for future compatibility

@@ -144,7 +144,19 @@ pseudo_dir     CHARACTER ( default = '$HOME/pw/pseudo/' )
 tefield        LOGICAL ( default = .FALSE. )
                If .TRUE. a sawlike potential is added to the 
                bare ionic potential. 
-            
+
+lberry         LOGICAL  (default =  .FALSE.)
+               If .TRUE. perform a Berry phase calculation
+               See the header of PW/bp_c_phase.f90 for documentation
+
+gdir           INTEGER
+               For Berry phase calculation: direction of the k-point
+               strings in reciprocal space. Allowed values: 1, 2, 3 
+               1=first, 2=second, 3=third reciprocal lattice vector
+
+nppstr         INTEGER
+               For Berry phase calculation: number of k-points to be 
+               calculated along each symmetry-reduced string
 
 ===============================================================================
 NAMELIST &SYSTEM

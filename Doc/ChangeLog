@@ -1,9 +1,31 @@
+-------------------------------------------------------------------
+Date: 15 Sep 2004    Version: pw-2-1
+-------------------------------------------------------------------
+
+15 Sep 2004 All examples updated (CC)
+            added mpf90, mpcc for Mac, support for ifort 8.1 [Gerardo]
+            Setup: inequivalent k-points not generated in berry or
+            band-structure calculations.(C.S.)
+            Path optimizations: added the possibility to write the 
+            prefix.save file (logical varible write_save) relative
+            to each image (needed for post-processing). (C.S.)
+            Berry phase in parallel is implemented only along z.
+
 14 Sep 2004 Allocation of evc when starting from atomic wavefunctions 
             modified so that evc contain only the real number bands and 
             not all the atomic wfcs (they can be much more than the
             number of bands). 
             unified setup.f90 for both collinear and noncollinear case.
             (CS)
+            Pseudo-random wave functions initialization,
+            independent from number of procs and architecture (CC) 
+            Fixes for intel compiler 7.1:
+            - pstickset arguments;
+            - dummy argument to an external subroutine with implicit 
+              dimensions ( i.e. a(:,:) ..... CALL sub( a, ... )
+              replaced with a(:,:) ..... CALL sub( a(1,1), .... ) ) (CC)
+            Raman with finite differences disabled (doesn't work any longer)
+            Misc minor fixes (PG)
 
 13 Sep 2004 Merge of cell dynamics (CC): 
             - same cell dynamics subroutines used in CP and FPMD
@@ -78,7 +100,7 @@
              the same atoms. Fixed a bug in the definition of the tangent
              in the Fourier string method dynamics. (CS)
              Makefiles, examples 8-11 updated. Old Raman code renamed 
-             "phcg.f90" in order to avoid confusion with new cod3 (PG)
+             "phcg.f90" in order to avoid confusion with new code (PG)
 
 24 Aug 2004  Fixed a bug in the way the prefix.dat file was written.
              Cleanup of debug code (C.S.)
