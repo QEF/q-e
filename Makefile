@@ -77,6 +77,6 @@ veryclean: clean
 	/bin/rm -f make.rules make.sys */.dependencies */dum1 */dum2 bin/*
 
 tar:
-	tar -cf - License Makefile configure README */*.f90 \
-                  include/machine.h* install/* */Makefile \
+	tar -cf - License Makefile configure README INSTALL */*.f90 \
+                  */README include/*.h* install/* */Makefile \
                   upftools/UPF *docs/ *_examples/ pseudo/ | gzip > pw.tar.gz

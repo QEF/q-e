@@ -252,5 +252,5 @@ phcg.x: $(GAMMA) $(PWOBJS) $(CGOBJS)
 	$(LD) -o phcg.x $(FFLAGS) $(CGOBJS) $(GAMMA) $(PWOBJS) $(MODULES) $(LFLAGS)
 
 clean_:
-	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod
+	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod work.pc
 

@@ -25,7 +25,7 @@ include ../make.sys
 all: $(MODULES)
 #
 clean_:
-	-/bin/rm -f *.o *.d *~ *.F90 *.mod
+	-/bin/rm -f *.o *.d *~ *.F90 *.mod work.pc
 #
 include .dependencies
 
