@@ -27,7 +27,7 @@ pw : modules libs
 fpmd : modules libs
 	if test -d FPMD; then  ( cd FPMD; make all ) ; fi
 cp : modules libs
-	if test -d CP  ; then  ( cd CP  ; make all ) ; fi
+	if test -d CPV ; then  ( cd CPV ; make all ) ; fi
 
 ph : pw
 	if test -d PH  ; then  ( cd PH  ; make all ) ; fi
