@@ -2,15 +2,10 @@
 # System-dependent definitions for origin (parallel, MPI)
 # Edit according to your needs
 #
-#
-# Precompiler
-#
-CPP = /lib/cpp
-#
 # Add -DFFTW if you want to use fft routines from fftw library
 # instead of fft from complib library
 #
-CPPFLAGS = -P -DORIGIN -DPARA -D__MPI -I$(OSHOME)/include
+CPPFLAGS = -DORIGIN -DPARA -D__MPI -I$(OSHOME)/include
 
 #
 # Fortran compiler:
@@ -19,7 +14,8 @@ F90 = f90
 #
 # use -O3 only if you are sure that it actually works 
 #
-F90FLAGS = -mips4 -64 -O2 -r10000 -r8
+FFLAGS = -mips4 -64 -O2 -r10000 -r8
+F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #

@@ -51,14 +51,15 @@ End Module pffts
 Module para
   Use pfft
   Use pffts
+  Use mp_global, only: nproc
+  ! number of processors= # of tasks
   Integer :: MPI_COMM_POOL, MPI_COMM_ROW  
   ! comunicator handle intra-pool
   !      "        "    inter-pool
   !
   ! general parallel information
   !
-  Integer :: nproc, npool, nprocp, mypool, me, kunit  
-  ! number of processors= # of tasks
+  Integer :: npool, nprocp, mypool, me, kunit  
   ! number of pools
   ! number of processors in this task pool
   ! identifier of this task pool
