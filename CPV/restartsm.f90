@@ -332,7 +332,7 @@ CONTAINS
     tw0 = .TRUE.
     twm = .TRUE.
 
-    call invmat(h,ainv,deth)
+    call invmat( 3, h, ainv, deth )
     wfc_scal_cp90 = 1.0d0 / SQRT(ABS(deth))
     DO j = 1, nspin
        DO i = 1, nk

@@ -899,7 +899,7 @@ subroutine smdmain( tau, fion_out, etot_out )
                       &                   stress(i,3)*ainv(j,3)-press*ainv(j,i))
               end do
            end do
-           call invmat( h, ainv, deth )
+           call invmat( 3, h, ainv, deth )
         endif
         !
         if( tfor ) then
@@ -1161,7 +1161,6 @@ subroutine smdmain( tau, fion_out, etot_out )
 
   MAIN_LOOP: DO
 
-     call start_clock( 'total_time' )
      !
      !
      EL_REP_LOOP: DO sm_k=1,smpm        ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !
@@ -2115,7 +2114,6 @@ subroutine smdmain( tau, fion_out, etot_out )
         fricp = fricp * greasp
         frich = frich * greash
         !     =====================================================
-        call stop_clock( 'total_time' )
         !
         delta_etot = ABS( epre(sm_k) - enow(sm_k) )
         tstop = check_stop_now()
@@ -2146,6 +2144,7 @@ subroutine smdmain( tau, fion_out, etot_out )
         tstop = tstop .OR. tconv
 
      ENDDO POST_REP_LOOP ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
+
 
      if( (nfi >= nomore) .OR. tstop ) EXIT MAIN_LOOP
 
@@ -2236,7 +2235,6 @@ subroutine smdmain( tau, fion_out, etot_out )
      !
      IF( sm_k == smpm ) THEN
         call print_clock( 'initialize' )
-        call print_clock( 'total_time' )
         call print_clock( 'formf' )
         call print_clock( 'rhoofr' )
         call print_clock( 'vofrho' )
