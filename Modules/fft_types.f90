@@ -70,16 +70,16 @@ CONTAINS
 
   SUBROUTINE fft_dlay_deallocate( desc )
     TYPE (fft_dlay_descriptor) :: desc
-    DEALLOCATE( desc%nsp )
-    DEALLOCATE( desc%nsw )
-    DEALLOCATE( desc%ngl )
-    DEALLOCATE( desc%npp )
-    DEALLOCATE( desc%ipp )
-    DEALLOCATE( desc%iss )
-    DEALLOCATE( desc%isind )
-    DEALLOCATE( desc%ismap )
-    DEALLOCATE( desc%iplp )
-    DEALLOCATE( desc%iplw )
+    IF ( ASSOCIATED( desc%nsp ) )    DEALLOCATE( desc%nsp )
+    IF ( ASSOCIATED( desc%nsw ) )    DEALLOCATE( desc%nsw )
+    IF ( ASSOCIATED( desc%ngl ) )    DEALLOCATE( desc%ngl )
+    IF ( ASSOCIATED( desc%npp ) )    DEALLOCATE( desc%npp )
+    IF ( ASSOCIATED( desc%ipp ) )    DEALLOCATE( desc%ipp )
+    IF ( ASSOCIATED( desc%iss ) )    DEALLOCATE( desc%iss )
+    IF ( ASSOCIATED( desc%isind ) )  DEALLOCATE( desc%isind )
+    IF ( ASSOCIATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
+    IF ( ASSOCIATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
+    IF ( ASSOCIATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
   END SUBROUTINE
 
