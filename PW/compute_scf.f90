@@ -70,9 +70,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   !
   istep = istep_path + 1
-  istat = 0 
-  !
-  IF ( meta_ionode ) WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep
+  istat = 0
   !
   CALL flush( iunpath )
   !
