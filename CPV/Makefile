@@ -15,7 +15,7 @@ WRAPPERS= wrapper.o
 
 #   Fortran objects
 FOBJS= modules.o crayfft.o para.o \
-read_pseudo.o cplib.o cpr.o input.o \
+read_pseudo.o cplib.o input.o cpr.o \
 macdep.o which_dft.o $(WRAPPERS) \
 restart.o cpr_mod.o cprsub.o fft_cp.o
 
