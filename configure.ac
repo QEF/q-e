@@ -116,7 +116,7 @@ case "$build:$f90" in
 	;;
 *-ibm-aix* )
 	try_cc="mpcc_r mpcc xlc cc gcc"
-	try_f77="$f90"
+	try_f77="mpxlf_r mpxlf xlf f77 $f90"
 	;;
 mips-sgi-*:* )
 	try_cc="cc gcc"
