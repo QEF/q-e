@@ -35,8 +35,6 @@
 #  define DIRECT_IO_FACTOR 1
 #elif defined(__ALPHA)
 #  define DIRECT_IO_FACTOR 2
-#elif defined(__LINUX) && defined(__INTEL)
-#  define DIRECT_IO_FACTOR 2
 #else
 #  define DIRECT_IO_FACTOR 8 
 #endif

@@ -212,7 +212,7 @@ esac
 # check compilers flags
 case "$build:$f90" in
 ia64-*-linux-gnu:ifort )
-	try_fflags="-Vaxlib -O2"
+	try_fflags="-Vaxlib -O2 -assume byterecl"
 	try_fflags_noopt="-O0"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
@@ -264,7 +264,12 @@ ia64-*-linux-gnu:ifort )
 		else
 			try_f90flags="\$(FFLAGS) -nomodule"
 		fi
-		try_fflags="-Vaxlib -O2 -tpp6"
+		if test `echo $version | sed 's/\..*//'` -gt 7
+		then
+		        try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
+		else
+		        try_fflags="-Vaxlib -O2 -tpp6"
+		fi
 		try_fflags_noopt="-O0"
 		try_ldflags="-Vaxlib"
 		try_ldflags_static="-static"

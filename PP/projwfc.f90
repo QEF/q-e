@@ -126,9 +126,10 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   integer :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, nwfc,& 
        nwfc1, lmax_wfc, c_tab, ne, ie_mid, ie_delta, ie, is 
   logical :: exst 
-  real(kind=DP) :: psum, totcharge, Emin, Emax, DeltaE, smoothing, etev, & 
-             delta, w0gauss, Elw, Eup 
-  real(kind=DP), allocatable :: e (:), proj (:,:,:), charges(:,:), pdos(:,:,:) 
+  real(kind=DP) :: psum, totcharge(nspinx), Emin, Emax, DeltaE, &
+       smoothing, etev, delta, w0gauss, Elw, Eup 
+  real(kind=DP), allocatable :: e (:), proj (:,:,:), charges(:,:,:), &
+       pdos(:,:,:) 
   complex(kind=DP), allocatable :: wfcatom (:,:) 
   integer, allocatable :: index(:) 
   external w0gauss 
@@ -433,32 +434,56 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      ! 
      ! estimate partial charges (Loewdin) on each atom 
      ! 
-     allocate ( charges (nat, 0:lmax_wfc ) ) 
+     allocate ( charges (nat, 0:lmax_wfc, nspin ) ) 
      charges = 0.0 
      do ik = 1, nkstot 
+        if ( nspin == 1 ) then
+           current_spin = 1
+        else if ( nspin == 2 ) then
+           current_spin = isk ( ik )
+        else
+           call errore ('projwfc',' non collinear case not implemented ',1)
+        end if
         do ibnd = 1, nbnd 
            do nwfc = 1, natomwfc 
               na= nlmchi(nwfc)%na 
               l = nlmchi(nwfc)%l 
-              charges(na,l) = charges(na,l) + wg (ibnd,ik) * & 
-                              proj (nwfc, ibnd, ik) 
+              charges(na,l,current_spin) = charges(na,l,current_spin) + &
+                   wg (ibnd,ik) * proj (nwfc, ibnd, ik) 
            enddo 
         end do 
      end do 
      ! 
      WRITE( stdout, '(/"Lowdin Charges: "/)') 
      ! 
-     psum = 0.0 
      do na = 1, nat 
-        totcharge = 0.d0 
-        do l = 0, lmax_wfc 
-           totcharge = totcharge + charges(na,l) 
-        end do 
-        psum = psum + totcharge 
-        WRITE( stdout, 2000) na, totcharge, ( charges(na,l), l= 0,lmax_wfc) 
+        do is = 1, nspin
+           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
+        end do
+        if ( nspin == 1) then
+           WRITE( stdout, 2000) na, totcharge(1), &
+                ( charges(na,l,is), l= 0,lmax_wfc)
+        else if ( nspin == 2) then 
+           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
+                ( charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
+           WRITE( stdout, 2001) totcharge(1), &
+                ( charges(na,l,1), l= 0,lmax_wfc) 
+           WRITE( stdout, 2002) totcharge(2), &
+                ( charges(na,l,2), l= 0,lmax_wfc) 
+           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
+                 ( charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
+        end if
      end do 
-2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4 ,", s, p, d, f = ",4f8.4) 
-     psum = psum / nelec 
+2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4 ,&
+          & ", s, p, d, f = ",4f8.4) 
+2001 FORMAT (15x,"  spin up      = ",f8.4 , &
+          & ", s, p, d, f = ",4f8.4) 
+2002 FORMAT (15x,"  spin down    = ",f8.4 , &
+          & ", s, p, d, f = ",4f8.4) 
+2003 FORMAT (15x,"  polarization = ",f8.4 , &
+          & ", s, p, d, f = ",4f8.4) 
+     !
+     psum = SUM(charges(:,:,:)) / nelec 
      WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum 
      ! 
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995). 
