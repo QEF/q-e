@@ -24,14 +24,10 @@
       PRIVATE
 
 !
-      INTERFACE metric_setup
-        MODULE PROCEDURE metric_setup1
-      END INTERFACE
-
       PUBLIC :: gethinv, boxdimensions, pbc, get_cell_param, &
          metric_print_info, updatecell, dgcell, &
          movecell, r_to_s, s_to_r,  &
-         metric_setup, get_lattice_vectors, pbcs, get_celldm, &
+         get_lattice_vectors, pbcs, get_celldm, &
          cell_init, alat, press, at
 
 
@@ -217,73 +213,6 @@
           RETURN
         END SUBROUTINE MOVECELL
 
-!
-!------------------------------------------------------------------------------!
-!
-
-        SUBROUTINE metric_setup1( wc_inp, press_inp, frich_ , greash_ , cell_dofree )
-
-          USE constants, ONLY: gpa_au
-          USE cell_base, ONLY: iforceh, frich, greash
-
-          IMPLICIT NONE
-
-          CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
-          REAL(dbl),  INTENT(IN) :: wc_inp, frich_ , greash_
-          REAL(dbl),  INTENT(IN) :: press_inp  ! external pressure from imput ( GPa )
-          REAL(dbl) :: b1(3), b2(3), b3(3)
-          INTEGER :: i
-
-          IF( .NOT. tcell_base_init ) &
-            CALL errore( ' metric_setup ',' you need to call cell_bese_init first ',1)
-
-          press  = press_inp * gpa_au
-          wc     = wc_inp
-          frich  = frich_
-          greash = greash_
-
-          SELECT CASE ( TRIM( cell_dofree ) )
-            CASE ( 'all', 'default' )
-              iforceh = 1
-            CASE ( 'volume' )
-              CALL errore(' metric_setup ', &
-                 ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
-            CASE ('x')
-              iforceh      = 0
-              iforceh(1,1) = 1
-            CASE ('y')
-              iforceh      = 0
-              iforceh(2,2) = 1
-            CASE ('z')
-              iforceh      = 0
-              iforceh(3,3) = 1
-            CASE ('xy')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(2,2) = 1
-            CASE ('xz')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(3,3) = 1
-            CASE ('yz')
-              iforceh      = 0
-              iforceh(2,2) = 1
-              iforceh(3,3) = 1
-            CASE ('xyz')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(2,2) = 1
-              iforceh(3,3) = 1
-            CASE DEFAULT
-              CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
-          END SELECT
-
-          IF( wc <= 0.0d0 ) THEN
-            CALL errore(' METRIC_SETUP ',' wc out of range ',0)
-          END IF
-
-
-        END SUBROUTINE metric_setup1
 
 !
 !------------------------------------------------------------------------------!

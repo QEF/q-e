@@ -1752,7 +1752,8 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   real(dbl) :: grhoup, grhodw, grhoud
   real(dbl) :: v2cup, v2cdw, v2cud
   integer :: neg(3), ipol
-  real(dbl), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
+  real(dbl), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
+  logical :: debug_xc = .false.
 
   !
 
@@ -1799,6 +1800,15 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
      enddo
   endif
 
+  if( debug_xc ) then
+    open(unit=17,form='unformatted')
+    write(17) nnr, nspin
+    write(17) rhor
+    write(17) grhor
+    close(17)
+    debug_xc = .false.
+  end if
+
   ! now come the corrections
 
   if( igcx > 0 .or. igcc > 0 ) then
@@ -1817,16 +1827,21 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
           !
           arho = abs (rhor (k, 1) )
           segno = sign (1.d0, rhor (k, 1) )
-          if (arho.gt.epsr.and.grho2 (1) .gt.epsg) then
+          if (arho > epsr .and. grho2 (1) > epsg) then
 
              call gcxc (arho, grho2(1), sx, sc, v1x, v2x, v1c, v2c)
+
              !
              ! first term of the gradient correction : D(rho*Exc)/D(rho)
 
              v (k, 1) = v (k, 1) + e2 * (v1x + v1c)
+
+
              ! HERE h contains D(rho*Exc)/D(|grad rho|) / |grad rho|
+             !
              h (k, 1, 1) = e2 * (v2x + v2c) 
              etxc = etxc + e2 * (sx + sc) * segno
+
           else
              h (k, 1, 1) = 0.d0
              sx = 0.0d0
@@ -1966,3 +1981,91 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
 end subroutine
 
 
+      SUBROUTINE wrap_b88( rho, grho, sx, v1x, v2x )
+        IMPLICIT NONE
+        REAL*8 ::  rho, grho, sx, v1x, v2x 
+        REAL*8 :: b1 = 0.0042d0
+        REAL*8 :: RHOA,RHOB,GRHOA,GRHOB, V1XA,V2XA,V1XB,V2XB
+        rhoa = 0.5d0 * rho
+        rhob = 0.5d0 * rho
+        grhoa = 0.25d0 * grho
+        grhob = 0.25d0 * grho
+        CALL LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB, SX,V1XA,V2XA,V1XB,V2XB)
+        v1x = V1XA
+        v2x = V2XA
+      END SUBROUTINE
+
+      SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c )
+        IMPLICIT NONE
+        REAL*8 :: rho, grho, sc, v1c, v2c
+        REAL*8 :: RA,RB,GRHOAA,GRHOAB,GRHOBB
+        REAL*8 :: V1CA,V2CA,V1CB,V2CB,V2CAB
+        ra = rho * 0.5d0
+        rb = rho * 0.5d0
+        grhoaa = 0.25d0 * grho
+        grhobb = 0.25d0 * grho
+        grhoab = 0.25d0 * grho
+        CALL LSD_GLYP(RA,RB,GRHOAA,GRHOAB,GRHOBB,SC,  &
+                      V1CA,V2CA,V1CB,V2CB,V2CAB)
+        v1c = V1CA
+        v2c = 2.0d0*(v2ca+v2cb+v2cab*2.d0)*0.25d0
+      END SUBROUTINE
+
+!     ==================================================================
+      SUBROUTINE LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB, SX,V1XA,V2XA,V1XB,V2XB)
+!     ==--------------------------------------------------------------==
+! BECKE EXCHANGE: PRA 38, 3098 (1988)
+      IMPLICIT NONE
+      REAL*8 :: OB3, SMALL
+      REAL*8 :: xs, xs2, sa2b8, br1, br2, br4, ddd, gf, dgf, shm1, dd
+      REAL*8 :: dd2, grhoa, grhob, sx, b1, rhoa, rhob, v2xb, aa, a 
+      REAL*8 :: v1xa, v2xa, v1xb
+      PARAMETER(OB3=1.D0/3.D0,SMALL=1.D-20)
+
+!     ==--------------------------------------------------------------==
+      SX=0.0D0
+      V1XA=0.0D0
+      V2XA=0.0D0
+      V1XB=0.0D0
+      V2XB=0.0D0
+      IF(ABS(RHOA).GT.SMALL) THEN
+        AA    = GRHOA
+        A     = SQRT(AA)
+        BR1   = RHOA**OB3
+        BR2   = BR1*BR1
+        BR4   = BR2*BR2
+        XS    = A/BR4
+        XS2   = XS*XS
+        SA2B8 = SQRT(1.0D0+XS2)
+        SHM1  = LOG(XS+SA2B8)
+        DD    = 1.0D0 + 6.0D0*B1*XS*SHM1
+        DD2   = DD*DD
+        DDD   = 6.0D0*B1*(SHM1+XS/SA2B8)
+        GF    = -B1*XS2/DD
+        DGF   = (-2.0D0*B1*XS*DD + B1*XS2*DDD)/DD2
+        SX    = GF*BR4
+        V1XA  = 4./3.*BR1*(GF-XS*DGF)
+        V2XA  = DGF/A
+      ENDIF
+      IF(ABS(RHOB).GT.SMALL) THEN
+        AA    = GRHOB
+        A     = SQRT(AA)
+        BR1   = RHOB**OB3
+        BR2   = BR1*BR1
+        BR4   = BR2*BR2
+        XS    = A/BR4
+        XS2   = XS*XS
+        SA2B8 = SQRT(1.0D0+XS2)
+        SHM1  = LOG(XS+SA2B8)
+        DD    = 1.0D0 + 6.0D0*B1*XS*SHM1
+        DD2   = DD*DD
+        DDD   = 6.0D0*B1*(SHM1+XS/SA2B8)
+        GF    = -B1*XS2/DD
+        DGF   = (-2.0D0*B1*XS*DD + B1*XS2*DDD)/DD2
+        SX    = SX+GF*BR4
+        V1XB  = 4./3.*BR1*(GF-XS*DGF)
+        V2XB  = DGF/A
+      ENDIF
+!     ==--------------------------------------------------------------==
+      RETURN
+      END SUBROUTINE LSD_B88

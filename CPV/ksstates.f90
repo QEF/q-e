@@ -29,14 +29,13 @@
         LOGICAL :: tksout                        
         LOGICAL :: tksout_emp 
 
-        CHARACTER(LEN=256), PRIVATE :: ks_path 
 
         INTEGER, ALLOCATABLE :: indx_ksout(:,:)  ! (state inds, spin indxs)
         INTEGER, ALLOCATABLE :: n_ksout(:)       ! (spin indxs)
         INTEGER, ALLOCATABLE :: indx_ksout_emp(:,:)  ! (state inds, spin indxs)
         INTEGER, ALLOCATABLE :: n_ksout_emp(:)       ! (spin indxs)
 
-        PUBLIC :: ks_states_setup, kohn_sham, ks_states_closeup
+        PUBLIC :: ks_states_init, kohn_sham, ks_states_closeup
         PUBLIC :: n_ksout, indx_ksout, ks_states, tksout
         PUBLIC :: ks_states_force_pairing
 
@@ -52,7 +51,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE ks_states_setup(nspin, tprnks, tprnks_emp, ks_path_in)
+      SUBROUTINE ks_states_init( nspin, tprnks, tprnks_emp )
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -62,21 +61,15 @@
         LOGICAL, INTENT(IN) :: tprnks(:,:)
         LOGICAL, INTENT(IN) :: tprnks_emp(:,:)
 
-        CHARACTER(LEN=*), INTENT(IN) :: ks_path_in
-
         INTEGER :: i, ip, k, nstates
 
-        IF( LEN(ks_path_in) > 256 ) THEN
-          CALL errore(' ks_state_setup ',' ks_path too long ',LEN(ks_path_in))
-        END IF
-        IF( INDEX(ks_path_in, ' ') > 1 ) THEN
-          ks_path = trim(ks_path_in) // '/'
-        ELSE
-          ks_path = ' '
-        END IF
 
 ! ...   Tell the code which Kohn-Sham state should be printed to file
+        !
         tksout = .FALSE.
+        IF( ALLOCATED( n_ksout    ) ) DEALLOCATE( n_ksout )
+        IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
+        !
         IF( ANY( tprnks ) ) THEN
           tksout = .TRUE.
           ALLOCATE( n_ksout( nspin ) )
@@ -98,6 +91,9 @@
         END IF
 
         tksout_emp = .FALSE.
+        IF( ALLOCATED( n_ksout_emp    ) ) DEALLOCATE( n_ksout_emp )
+        IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
+        !
         IF( ANY( tprnks_emp ) ) THEN
           tksout_emp = .TRUE.
           ALLOCATE( n_ksout_emp( nspin ) )
@@ -363,7 +359,7 @@
               DO i = 1, n_ksout(ispin)
                 iks = indx_ksout(i, ispin)
                 IF( ( iks > 0 ) .AND. ( iks <= wfill%nbt( ispin ) ) ) THEN
-                  file_name = trim(ks_path) // TRIM( ks_file ) // &
+                  file_name = TRIM( ks_file ) // &
                             & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
                   CALL print_ks_states( cf(:,iks,1,ispin_wfc), file_name )
                 END IF
@@ -373,7 +369,7 @@
               DO i = 1, n_ksout_emp(ispin)
                 iks = indx_ksout_emp(i, ispin)
                 IF( ( iks > 0 ) .AND. ( iks <= wempt%nbt( ispin ) ) ) THEN
-                  file_name = trim(ks_path) // TRIM( ks_emp_file ) // &
+                  file_name = TRIM( ks_emp_file ) // &
                             & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
                   CALL print_ks_states( ce(:,iks,1,ispin), file_name )
                 END IF
@@ -541,7 +537,7 @@
               DO i = 1, n_ksout(ispin)
                 iks = indx_ksout(i, ispin)
                 IF( ( iks > 0 ) .AND. ( iks <= wfill%nbt( ispin ) ) ) THEN
-                  file_name = trim(ks_path) // TRIM( ks_file ) // &
+                  file_name = TRIM( ks_file ) // &
                             & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
                   CALL print_ks_states( cf(:,iks,1,1), file_name )
                 END IF
@@ -551,7 +547,7 @@
               DO i = 1, n_ksout_emp(ispin)
                 iks = indx_ksout_emp(i, ispin)
                 IF( ( iks > 0 ) .AND. ( iks <= wempt%nbt( ispin ) ) ) THEN
-                  file_name = trim(ks_path) // TRIM( ks_emp_file ) // &
+                  file_name = TRIM( ks_emp_file ) // &
                             & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
                   CALL print_ks_states( ce(:,iks,1,ispin), file_name )
                 END IF

@@ -99,12 +99,13 @@
         USE ions_base, ONLY: zv
         USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
         USE read_pseudo_module_fpmd, ONLY: ap
+        USE splines, ONLY: kill_spline
 
         INTEGER, INTENT(IN) :: nsp, pstab_size_inp
         LOGICAL, INTENT(IN) :: tpstab_inp
         REAL(dbl), INTENT(IN) :: raggio_inp(:)
 
-        INTEGER :: i, is, il, l
+        INTEGER :: i, is, il, l, j
 
 !  end of declarations
 !  ----------------------------------------------
@@ -165,16 +166,61 @@
           lmax = MAX( lmax, ( ap(is)%lloc - 1 ) )
         END DO
 
-        ALLOCATE(wsginit(ngh,nsp))
-
         tpstab = tpstab_inp
         IF( tpstab ) THEN
+          !
+          IF( ALLOCATED( vps_sp ) ) THEN
+            DO i = 1, size(vps_sp)
+              CALL kill_spline( vps_sp(i), 'a' )
+            END DO
+            DEALLOCATE( vps_sp )
+          END IF
           ALLOCATE( vps_sp(nsp))
+          !
+          IF(ALLOCATED(dvps_sp)) THEN
+            DO i = 1, size(dvps_sp)
+              CALL kill_spline(dvps_sp(i),'a')
+            END DO
+            DEALLOCATE(dvps_sp)
+          END IF
           ALLOCATE( dvps_sp(nsp))
+          !
+          IF(ALLOCATED(rhoc1_sp)) THEN
+            DO i = 1, size(rhoc1_sp)
+              CALL kill_spline(rhoc1_sp(i),'a')
+            END DO
+            DEALLOCATE(rhoc1_sp)
+          END IF
           ALLOCATE( rhoc1_sp(nsp))
+          !
+          IF(ALLOCATED(rhocp_sp)) THEN
+            DO i = 1, size(rhocp_sp)
+              CALL kill_spline(rhocp_sp(i),'a')
+            END DO
+            DEALLOCATE(rhocp_sp)
+          END IF
           ALLOCATE( rhocp_sp(nsp))
+          !
+          IF(ALLOCATED(wnl_sp)) THEN
+            DO i = 1, size(wnl_sp,2)
+              DO j = 1, size(wnl_sp,1)
+                CALL kill_spline(wnl_sp(j,i),'a')
+              END DO
+            END DO
+            DEALLOCATE(wnl_sp)
+          END IF
           ALLOCATE( wnl_sp(lnlx,nsp))
+          !
+          IF(ALLOCATED(wnla_sp)) THEN
+            DO i = 1, size(wnla_sp,2)
+              DO j = 1, size(wnla_sp,1)
+                CALL kill_spline(wnla_sp(j,i),'a')
+              END DO
+            END DO
+            DEALLOCATE(wnla_sp)
+          END IF
           ALLOCATE( wnla_sp(lnlx,nsp))
+          !
           DO is = 1, nsp
             CALL nullify_spline( vps_sp( is ) )
             CALL nullify_spline( dvps_sp( is ) )
@@ -185,10 +231,14 @@
               CALL nullify_spline( wnla_sp( il, is ) )
             END DO
           END DO
+          !
           tpstab_first = .TRUE.
           pstab_size   = pstab_size_inp
+          !
         END IF
 
+        IF( ALLOCATED( wsginit ) ) DEALLOCATE( wsginit )
+        ALLOCATE(wsginit(ngh,nsp))
         wsginit = 0.0d0
         DO is = 1, nspnl
           CALL nlset_base(ap(is), wsginit(:,is))
@@ -200,7 +250,7 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE pseudopotential_init(ps,na,nsp,gv,kp)
+      SUBROUTINE pseudopotential_init( ps, na, nsp, gv, kp )
 
 ! ...   declare modules
         USE brillouin, ONLY: kpoints

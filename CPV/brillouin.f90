@@ -35,14 +35,13 @@
       END TYPE kpoints
 !------------------------------------------------------------------------------!
 
-! ... Static k-points variable
-!      TYPE (kpoints), SAVE :: kp
-! ... save attribute has already been specified
       TYPE (kpoints) :: kp
+      REAL (dbl), ALLOCATABLE , TARGET :: weight(:)
+      REAL (dbl), ALLOCATABLE , TARGET :: xk(:,:)
 
 
       PUBLIC :: kpoints, kpoint_info, kpoint_setup, kp
-      PUBLIC :: get_kpoints_number, kpoint_closeup
+      PUBLIC :: get_kpoints_number
 ! 
 !
     CONTAINS
@@ -74,6 +73,9 @@
         kp%symmetry = .FALSE.
         kp%wfn_type = 0
 
+        IF( ALLOCATED( xk ) )     DEALLOCATE( xk )
+        IF( ALLOCATED( weight ) ) DEALLOCATE( weight )
+
 ! ... Kpoint type
         SELECT CASE ( TRIM(k_points) )
           CASE ( 'gamma', 'default' )
@@ -104,7 +106,9 @@
           CALL errore(' kpoint_setup ',' unknown Scheme '//TRIM(kp%scheme), 1)
         CASE ('gamma')
           kp%nkpt = 1
-          ALLOCATE( kp%xk(3,1), kp%weight(1) )
+          ALLOCATE( xk(3,1), weight(1) )
+          kp%xk => xk
+          kp%weight => weight
           kp%xk = 0.0_dbl
           kp%weight = 1.0_dbl
           kp%gamma_only = .TRUE.
@@ -119,7 +123,9 @@
           kp%shift = 0.0d0
         CASE ('general')
           kp%nkpt = nkpt_in
-          ALLOCATE( kp%xk(3,SIZE(xk_in,2)), kp%weight(SIZE(xk_in,2)) )
+          ALLOCATE( xk(3,SIZE(xk_in,2)), weight(SIZE(xk_in,2)) )
+          kp%xk => xk
+          kp%weight => weight
           kp%xk = xk_in
 ! ...     normalize and set k points weights
           kp%weight = weight_in
@@ -128,15 +134,6 @@
         END SELECT
         RETURN
       END SUBROUTINE kpoint_setup
-
-!------------------------------------------------------------------------------!
-
-      SUBROUTINE kpoint_closeup( )
-         IF( ASSOCIATED( kp%weight ) ) DEALLOCATE( kp%weight )
-         IF( ASSOCIATED( kp%xk     ) ) DEALLOCATE( kp%xk     )
-        RETURN
-      END SUBROUTINE kpoint_closeup
-    
 
 !------------------------------------------------------------------------------!
 

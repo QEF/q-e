@@ -273,6 +273,10 @@
         svar3 = delt * delt / pmss( 1:ngw ) * 0.5d0
       END IF
 
+      !    OPEN(unit=17,form='unformatted',status='old')
+      !    READ(17) vpot  ! debug
+      !    CLOSE(17)
+
       DO is = 1, cdesc%nspin
 
         nx   = cdesc%nbt( is )
@@ -294,6 +298,8 @@
               CALL dforce( ik, i+1, c0(:,:,:,is), cdesc, fi(:,:,is), c3, gv, vpot(:,:,:,is), &
                 fnl(ik, is)%c, eigr, ps )
             END IF
+
+            ! WRITE(6,*) 'DEBUG = ',SUM(c2), SUM(c3)
 
             IF( tlam ) THEN
               IF ( cdesc%gamma ) THEN

@@ -36,6 +36,15 @@ MODULE cg_module
 
 CONTAINS
 
+
+  SUBROUTINE cg_init( tcg_ , maxiter_ , etresh_ , passop_ )
+    USE kinds, ONLY: dbl
+    LOGICAL, INTENT(IN) :: tcg_
+    INTEGER, INTENT(IN) :: maxiter_
+    REAL(dbl), INTENT(IN) :: etresh_ , passop_
+    RETURN
+  END SUBROUTINE
+
   SUBROUTINE cg_info()
     USE io_global, ONLY: stdout 
     if(tcg) then

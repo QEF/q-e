@@ -68,7 +68,7 @@ MODULE read_cards_module
        tdipole_card     = .FALSE.
        ! ... OPTICAL PROPERTIES
        toptical_card    = .FALSE.
-       noptical    = 10
+       noptical    = 0
        woptical    = 0.1
        boptical    = 0.0
        ! ... Constraints

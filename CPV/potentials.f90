@@ -18,6 +18,7 @@
 !=----------------------------------------------------------------------------=!
 
         USE kinds
+        USE control_flags, ONLY: timing
 
         IMPLICIT NONE 
         PRIVATE
@@ -28,14 +29,13 @@
         REAL(dbl) :: vhrmin, vhrmax
         CHARACTER :: vhasse
 
-        LOGICAL   :: timing
         INTEGER   :: iesr
 
         REAL(dbl)  :: timtot, timfwft, timesr, timsumg, timforc, timinvft, timscat
         REAL(dbl)  :: timxc, timhar, timstr
         INTEGER    :: timcnt = 0
 
-        PUBLIC :: vofrhos, potential_setup, potential_print_info, &
+        PUBLIC :: vofrhos, potential_init, potential_print_info, &
                   kspotential, print_vofrho_time, localisation
 
         REAL(dbl), EXTERNAL :: cclock
@@ -44,14 +44,13 @@
   CONTAINS
 !=----------------------------------------------------------------------------=!
 
-      SUBROUTINE potential_setup(tvhmean_inp,vhnr_inp, vhiunit_inp, &
-          vhrmin_inp, vhrmax_inp, vhasse_inp, timing_inp, iesr_inp)
+      SUBROUTINE potential_init(tvhmean_inp,vhnr_inp, vhiunit_inp, &
+          vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp)
 
           LOGICAL, INTENT(IN) :: tvhmean_inp
           INTEGER, INTENT(IN) :: vhnr_inp, vhiunit_inp
           REAL(dbl), INTENT(IN)  :: vhrmin_inp, vhrmax_inp
           CHARACTER, INTENT(IN) :: vhasse_inp
-          LOGICAL, INTENT(IN) :: timing_inp
           INTEGER, INTENT(IN) :: iesr_inp
 
           tvhmean = tvhmean_inp
@@ -61,8 +60,6 @@
           vhrmax  = vhrmax_inp
           vhasse  = vhasse_inp
           iesr    = iesr_inp
-
-          timing = timing_inp
 
           timtot = 0.0d0
           timfwft = 0.0d0
@@ -77,7 +74,7 @@
           timcnt = 0
 
         RETURN
-      END SUBROUTINE potential_setup
+      END SUBROUTINE potential_init
 
 !! ...................................................................... !!
 !! ...................................................................... !!

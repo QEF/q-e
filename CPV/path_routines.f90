@@ -50,7 +50,8 @@ MODULE path_routines
       USE input_parameters, ONLY : max_seconds
       USE input_parameters, ONLY : ntyp, nat, na_inp, sp_pos, rd_pos, &
                                    atom_mass, atom_label, if_pos, rd_vel, &
-                                   atomic_positions, ion_radius
+                                   atomic_positions, ion_radius, wmass, cell_damping, &
+                                   greash, press, cell_dofree
       !
       USE io_global,     ONLY : ionode, ionode_id
       USE mp_global,     ONLY : mpime
@@ -67,7 +68,7 @@ MODULE path_routines
       INTEGER            :: ios
       CHARACTER(LEN=256) :: outdir_saved
       CHARACTER(LEN=256) :: filename
-      REAL(dbl)          :: alat_
+      REAL(dbl)          :: alat_ , massa_totale
       !
       INTEGER, EXTERNAL :: C_MKDIR
       !
@@ -120,8 +121,10 @@ MODULE path_routines
          !
       END SELECT
       !
-      CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, &
-                           rd_ht, a, b, c, cosab, cosac, cosbc, alat_ )
+      massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
+      CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, rd_ht, a, b, &
+             c, cosab, cosac, cosbc, wmass , massa_totale , press , cell_damping , &
+             greash , cell_dofree, alat_ )
 
       CALL ions_base_init( ntyp, nat, na_inp, sp_pos, rd_pos, rd_vel, &
                            atom_mass, atom_label, if_pos, atomic_positions, &

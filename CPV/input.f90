@@ -11,6 +11,9 @@
   MODULE input
 ! ----------------------------------------------------------------
 
+   USE kinds, ONLY: dbl
+   USE io_global, ONLY: ionode, stdout
+
    IMPLICIT NONE
    SAVE
 
@@ -18,8 +21,7 @@
 
    PUBLIC :: read_input_file
    PUBLIC :: iosys_pseudo
-   PUBLIC :: set_control_flags
-   PUBLIC :: modules_setup
+   PUBLIC :: iosys
 
    LOGICAL :: has_been_read = .FALSE.
 
@@ -101,6 +103,43 @@
 
    !  ----------------------------------------------
 
+   SUBROUTINE iosys
+
+     USE control_flags, ONLY: fix_dependencies
+     USE control_flags, only:  program_name
+
+     IMPLICIT NONE
+
+        ! . Set internal flags according to the input .......................!
+
+        CALL set_control_flags( )
+        CALL modules_setup()
+
+        ! . CALL the Module specific setup routine ..........................!
+
+        CALL modules_setup_cp()
+
+        ! . Fix values for dependencies .....................................!
+
+        IF( program_name == 'FPMD' ) THEN
+          CALL fix_dependencies()
+        END IF
+
+
+        ! . Write to stdout input module information ........................!
+
+        IF( program_name == 'FPMD' ) THEN
+          CALL input_info()
+          CALL modules_info()
+        ELSE
+          CALL input_info_cp()
+        END IF
+
+     RETURN
+   END SUBROUTINE iosys
+
+   !  ----------------------------------------------
+
    SUBROUTINE set_control_flags( )
      !
      USE kinds, ONLY: dbl
@@ -146,6 +185,9 @@
         tsteepdesc_ => tsteepdesc, &
         tzeroe_ => tzeroe, &
         tdamp_ => tdamp, &
+        trhor_ => trhor, &
+        trhow_ => trhow, &
+        tvlocw_ => tvlocw, &
         ortho_eps_ => ortho_eps, &
         ortho_max_ => ortho_max, &
         tnosee_ => tnosee
@@ -202,7 +244,7 @@
         amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,  &
         cell_parameters, cell_velocities, cell_temperature, force_pairing, &
         tapos, tavel, ecutwfc, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
-        ortho_max, ntyp, tolp, tchi2_inp
+        ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io
 
      USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
         tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
@@ -213,6 +255,9 @@
      !
      IMPLICIT NONE
      !
+
+     IF( .NOT. has_been_read ) &
+       CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
 
      ndr_        = ndr
      ndw_        = ndw
@@ -250,6 +295,10 @@
      tprnsfac_   = .FALSE.
           ! Print on file STRUCTURE_FACTOR the structure factor
           ! gvectors and charge density, in reciprocal space.
+
+     trhor_  = ( TRIM( calculation ) == 'nscf' )
+     trhow_  = ( TRIM( disk_io ) == 'high' )
+     tvlocw_ = .false. ! temporaneo
 
      SELECT CASE ( TRIM(verbosity) )
        CASE ('minimal')
@@ -677,21 +726,39 @@
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, nkstot, xk, dt, wmass,   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           tturbo_inp, nturbo_inp, outdir, prefix, xc_type
+           tturbo_inp, nturbo_inp, outdir, prefix, xc_type, woptical,         &
+           noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
+           xk, wk
+
+     USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
+           diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
+           diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
+           diis_nchmix, diis_g1chmix, empty_states_maxstep, empty_states_delt, &
+           empty_states_emass, empty_states_ethr, empty_states_nbnd,           &
+           tprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
+           tvhmean_inp, vhasse_inp, ion_damping, anner_inp, constr_dist_inp,   &
+           constr_inp, nconstr_inp, constr_tol_inp, constr_type_inp, iesr_inp, &
+           etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
+           nelec, anne_inp, tprnks, ks_path, tneighbo, neighbo_radius, press,  &
+           cell_damping, cell_dofree, tf_inp, tpstab_inp, pstab_size_inp,      &
+           greash, grease, greasp, epol, efield, tcg, maxiter, etresh, passop
+
      !
      USE check_stop,       ONLY: check_stop_init
      !
      USE printout_base,    ONLY: title_ => title
      !
-     USE cell_base,        ONLY: cell_base_init, a1, a2, a3, &
-           wmass_ => wmass
+     USE cell_base,        ONLY: cell_base_init, a1, a2, a3
      USE cell_nose,        ONLY: cell_nose_init
-     USE ions_base,        ONLY: ions_base_init
+     USE ions_base,        ONLY: ions_base_init, greasp_ => greasp
      USE ions_nose,        ONLY: ions_nose_init
+     USE wave_base,        ONLY: grease_ => grease
      USE electrons_nose,   ONLY: electrons_nose_init
      USE printout_base,    ONLY: printout_base_init
      USE time_step,        ONLY: set_time_step
      USE turbo,            ONLY: turbo_init
+     USE efield_module,    ONLY: efield_init
+     USE cg_module,        ONLY: cg_init
      !
      USE reciprocal_space_mesh,    ONLY: recvecs_units
      !
@@ -716,13 +783,33 @@
            nr3s_ => nr3s
      !
      USE exchange_correlation,     ONLY: exch_corr_init
+     USE brillouin,                ONLY: kpoint_setup
+     USE optical_properties,       ONLY: optical_setup
+     USE pseudopotential,          ONLY: pseudopotential_setup
+     USE cell_base,                ONLY: a1, a2, a3, cell_alat
+     USE guess,                    ONLY: guess_setup
+     USE ions_module,              ONLY: ions_setup
+     USE empty_states,             ONLY: empty_init
+     USE diis,                     ONLY: diis_setup
+     USE charge_mix,               ONLY: charge_mix_setup
+     USE potentials,               ONLY: potential_init
+     USE kohn_sham_states,         ONLY: ks_states_init
+     USE electrons_module,         ONLY: electrons_setup
+
 
      !
      IMPLICIT NONE
 
-     REAL(dbl) :: alat_
+     REAL(dbl) :: alat_ , massa_totale
+     REAL(dbl)  :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
+     ! ...   DIIS
+     REAL(dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
+     LOGICAL :: o_diis_inp, oqnr_diis_inp
      !
      !   Subroutine Body
+     !
+     IF( .NOT. has_been_read ) &
+       CALL errore( ' modules_setup ', ' input file has not been read yet! ', 1 )
      !
      title_ = title
      !
@@ -733,9 +820,14 @@
      ! ...  Set cell base module
 
      IF( .not. lneb ) THEN
-        CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, &
-               a, b, c, cosab, cosac, cosbc , alat_ )
+        massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
+        CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht,  &
+               a, b, c, cosab, cosac, cosbc , wmass , massa_totale , press , &
+               cell_damping, greash , cell_dofree, alat_ )
      END IF
+
+     alat_ = cell_alat()
+
 
      ! ...  Set ions base module
 
@@ -767,19 +859,10 @@
 
      CALL set_time_step( dt )
 
-     ! ... Set the default value for the cell mass
+     ! ... 
 
-     wmass_ = wmass
-     IF( wmass_ == 0.d0 ) THEN
-        wmass_ = 3.d0 / (4.d0 * pi**2 ) * SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
-        wmass_ = wmass_ * UMA_AU
-        WRITE( stdout,999) wmass_
-     ELSE
-        WRITE( stdout,998) wmass_
-     END IF
-998  format('   wmass (read from input) = ',f15.2,/)
-999  format('   wmass (calculated) = ',f15.2,/)
-
+     grease_ = grease
+     greasp_ = greasp
 
      !   set thermostat parameter for cell, ions and electrons
 
@@ -815,67 +898,70 @@
 
      CALL printout_base_init( outdir, prefix )
 
+     IF( noptical > 0 ) then
+        CALL optical_setup( woptical, noptical, boptical )
+     END IF
+
+     CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
+
+     CALL efield_init( epol, efield )
+
+     CALL cg_init( tcg , maxiter , etresh , passop )
+
+     !
+     !  empty states
+     !
+     delt_emp_inp  = dt
+     ethr_emp_inp  = ekin_conv_thr
+     IF( empty_states_delt > 0.d0 )  delt_emp_inp  = empty_states_delt
+     IF( empty_states_ethr > 0.d0 )  ethr_emp_inp  = empty_states_ethr
+     CALL empty_init( empty_states_maxstep, delt_emp_inp, ethr_emp_inp )
+
+     !
+     CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &
+               vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp)
+
+     CALL ks_states_init( nspin, tprnks, tprnks_empty )
+
+    
+     IF( program_name == 'FPMD' ) THEN
+
+        CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp, ion_radius )
+
+        CALL electrons_setup( tf_inp, nbnd, nint(nelec), nint(nelup), &
+          nint(neldw), nspin, empty_states_nbnd, emass, emass_cutoff, &
+          f_inp, nkstot )
+
+        CALL ions_setup( anne_inp, anner_inp,   &
+             nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
+             constr_inp, ion_damping, tneighbo, neighbo_radius )
+        !
+
+        o_diis_inp        = .TRUE.
+        oqnr_diis_inp     = .TRUE.
+        tolene_inp        = etot_conv_thr
+        tol_diis_inp      = ekin_conv_thr
+        delt_diis_inp     = dt
+        IF( diis_ethr > 0.0d0 ) tolene_inp    = diis_ethr
+        IF( diis_wthr > 0.0d0 ) tol_diis_inp  = diis_wthr
+        IF( diis_delt > 0.0d0 ) delt_diis_inp = diis_delt
+        CALL diis_setup( diis_fthr, oqnr_diis_inp, o_diis_inp, &
+          diis_size, diis_hcut, tol_diis_inp, diis_maxstep, diis_nreset, delt_diis_inp, &
+          diis_temp, diis_nrot(1), diis_nrot(2), diis_nrot(3), &
+          diis_rothr(1), diis_rothr(2), diis_rothr(3), tolene_inp)
+        CALL guess_setup( diis_chguess )
+        CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
+
+
+     END IF
+
      RETURN
    END SUBROUTINE modules_setup
 
    !
    !
 
-! ----------------------------------------------------------------
-  END MODULE input
-! ----------------------------------------------------------------
 !
-!
-!
-!
-! ----------------------------------------------------------------
-  MODULE input_cp
-! ----------------------------------------------------------------
-
-   IMPLICIT NONE
-   SAVE
-
-   PRIVATE
-
-   PUBLIC :: iosys
-
-! ----------------------------------------------------------------
-  CONTAINS
-! ----------------------------------------------------------------
-
-
-      SUBROUTINE iosys
-
-        USE control_flags, ONLY: fix_dependencies 
-        USE input, ONLY: modules_setup, set_control_flags
-
-        IMPLICIT NONE
-
-        ! . Set internal flags according to the input .......................!
-
-        CALL set_control_flags( )
-        CALL modules_setup()
-
-        ! . Fix values for dependencies .....................................!
-
-        ! CALL fix_dependencies() 
-
-        ! . CALL the Module specific setup routine ..........................! 
-
-        CALL modules_setup_cp()
-
-        ! . Write to stdout input module information ........................!
-
-        CALL input_info_cp()
-
-        ! . Write to stdout module specifice information  ...................!
-
-        ! CALL modules_info() 
-
-        RETURN
-      END SUBROUTINE iosys
-
-
 
     subroutine modules_setup_cp( )
 
@@ -883,8 +969,8 @@
 !     -------------------------------------------------------------------
 
       use input_parameters, only: &
-           nr1, nr2, nr3, greash, press, nr2s, nr3s, nr1s, grease, &
-           tempw, greasp, atomic_positions, nelec, &
+           nr1, nr2, nr3, nr2s, nr3s, nr1s, &
+           tempw, atomic_positions, nelec, &
            if_pos, rd_ht, trd_ht, a, b, c, cosab, cosac, cosbc, cell_symmetry, nelup, &
            neldw, occupations, f_inp, pos, pseudo_dir, &
            sp_pos, atom_mass, atom_pfile, &
@@ -892,8 +978,8 @@
            cell_velocities, electron_dynamics, ion_velocities, &
            celldm, nbnd, nspin, calculation, ntyp, ibrav, restart_mode, ion_positions, &
            ecutwfc, ecutrho, ortho_eps, ortho_max, qcutz, q2sigma, &
-           ecfixed, fnosep, nat, disk_io, ion_temperature, &
-           cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
+           ecfixed, fnosep, nat, ion_temperature, &
+           cell_temperature, cell_dynamics, cell_damping, electron_temperature, &
            dt, emass, emass_cutoff, ion_radius, &
            ekin_conv_thr, etot_conv_thr, na_inp, rd_pos, atom_label, rd_vel, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
@@ -901,8 +987,7 @@
            num_of_images, smd_ene_ini, smd_ene_fin, &
            n_inner, fermi_energy, rotmass, occmass, rotation_damping,                       &
            occupation_damping, occupation_dynamics, rotation_dynamics,                      &
-           degauss, smearing, tcg, maxiter, etresh, passop, epol, efield, &
-           tk_inp, nkstot, xk
+           degauss, smearing, tk_inp, nkstot, xk
 
 
       use constants, only: pi, scmass, factem, eps8, uma_au, terahertz 
@@ -926,9 +1011,6 @@
             tsdp_ => tsdp, &
             tcp_ => tcp, &
             tcap_ => tcap, &
-            trhor_ => trhor, &
-            trhow_ => trhow, &
-            tvlocw_ => tvlocw, &
             tnosep_ => tnosep, &
             tnosee_ => tnosee, &
             tnoseh_ => tnoseh, &
@@ -940,18 +1022,12 @@
       !
       USE ions_base, ONLY: tau_srt, ind_srt, &
            rcmax_ => rcmax, &
-           fricp_ => fricp, &
-           greasp_ => greasp
+           fricp_ => fricp
       !
       USE ions_positions, ONLY: &
            tau0_ => tau0
       ! 
-      USE cell_base, ONLY: cell_alat, a1, a2, a3, &
-           press_ => press, &
-           frich_ => frich, &
-           greash_ => greash, &
-           thdiag_ => thdiag, &
-           iforceh_ => iforceh
+      USE cell_base, ONLY: cell_alat, a1, a2, a3
 
       use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
 
@@ -962,9 +1038,7 @@
            emass_ => emass, &
            emaec_ => emass_cutoff
 
-      USE wave_base, ONLY: &
-           frice_ => frice, &
-           grease_ => grease
+      USE wave_base, ONLY: frice_ => frice
 
       USE ions_nose, ONLY: &
            qnp_ => qnp, &
@@ -1010,14 +1084,6 @@
            fmass_ => fmass, &
            fricz_ => fricz, &
            fricf_ => fricf
-      USE cg_module, ONLY: &
-           tcg_ => tcg, &
-           maxiter_ => maxiter, &
-           etresh_ => etresh, &
-           passop_ => passop
-      USE efield_module, ONLY: &
-           epol_ => epol, &
-           efield_ => efield
 
 
       !
@@ -1037,7 +1103,6 @@
 
       alat_ = cell_alat()
 
-      IF( TRIM( calculation ) == 'nscf' ) trhor_ = .true.
       ! 
       !     translate from input to internals of SMCP, 
       !
@@ -1071,61 +1136,17 @@
       !
       ! ... if smlm
       !
-      IF(smd_smlm) THEN
-         IF(smd_ene_ini >= 0.d0 .OR. smd_ene_fin >= 0.d0) &
-           & CALL errore(' start : ',' Check : ene_ini & ene_fin ', 1 )
-      ENDIF
+      IF( smd_smlm .AND. ( smd_ene_ini >= 0.d0 .OR. smd_ene_fin >= 0.d0 ) ) THEN
+         CALL errore(' start : ',' Check : ene_ini & ene_fin ', 1 )
+      END IF
       !
       ene_ini_ = smd_ene_ini
       ene_fin_ = smd_ene_fin
-
       !
-      !
-      ! For SMD 
-
-      IF( lsmd ) THEN
-
-        SELECT CASE ( cell_dynamics ) 
-        CASE ('none')
-           tpre_ = .FALSE.
-           thdyn_= .FALSE.
-           frich_= 0.d0
-        CASE DEFAULT
-           CALL errore(' smiosys ',' cell_dynamics not implemented : '//trim(cell_dynamics), 1 )
-        END SELECT
-
+      IF( lsmd .AND. cell_dynamics /= 'none' ) THEN
+        CALL errore(' smiosys ',' cell_dynamics not implemented : '//trim(cell_dynamics), 1 )
       END IF
-
       !
-      SELECT CASE ( cell_dofree )
-      CASE ('all')
-         thdiag_ =.false.
-      CASE ('xyz')
-         thdiag_ =.true.
-      CASE DEFAULT
-         CALL errore(' iosys ',' unknown cell_dofree '//trim(cell_dofree), 1 )
-      END SELECT
-      if(thdyn_) then
-         if(thdiag_) then
-            iforceh_=0
-            do i=1,3
-               iforceh_(i,i)=1
-            enddo
-         else
-            iforceh_=1
-         endif
-      endif
-
-
-
-      trhow_ = ( trim( disk_io ) == 'high' )
-      tvlocw_ = .false. ! temporaneo
-      !
-      grease_ = grease
-      greasp_ = greasp
-      greash_ = greash
-      press_ = press
-
       IF( lsmd ) THEN
 
          !
@@ -1358,17 +1379,7 @@
          end do
       end do
 
-      !------------------Gradiente Coniugato------------------
       !
-      tcg_=tcg
-      maxiter_=maxiter
-      etresh_=etresh
-      passop_=passop
-      !
-      !---------------campo elettrico
-      !
-      epol_=epol
-      efield_=efield
 
       RETURN
 
@@ -1382,7 +1393,7 @@
 
   SUBROUTINE input_info_cp()
 
-      use constants, only: pi, scmass, factem, eps8, uma_au, terahertz 
+      use constants, only: pi, scmass, factem, eps8, uma_au, terahertz, gpa_au
 
       use parameters, only: natx
 
@@ -1514,9 +1525,7 @@
            maxiter_ => maxiter, &
            etresh_ => etresh, &
            passop_ => passop
-      USE efield_module, ONLY: &
-           epol_ => epol, &
-           efield_ => efield
+
       !
 
       IMPLICIT NONE
@@ -1604,9 +1613,9 @@
             if(thdiag_) WRITE( stdout,608)
             if(tnoseh_) then
                frich_=0.
-               WRITE( stdout,604) temph_,qnh_,press_
+               WRITE( stdout,604) temph_,qnh_,press_ / gpa_au
             else
-               WRITE( stdout,602) frich_,greash_,press_
+               WRITE( stdout,602) frich_,greash_,press_ / gpa_au
             endif
          else
             WRITE( stdout,606)
@@ -1675,200 +1684,6 @@
 
     END SUBROUTINE
 !
-
-! ----------------------------------------------------------------
-  END MODULE input_cp
-! ----------------------------------------------------------------
-!  
-!  
-!  
-!  
-!  FPMD input module 
-!  
-!  
-!  
-! ----------------------------------------------------------------
-  MODULE input_fpmd
-! ----------------------------------------------------------------
-
-   !  this module handles the reading of input data
-   !
-
-        USE kinds, ONLY: dbl
-        USE io_global, ONLY: ionode, stdout
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-
-        PUBLIC :: iosys
-
-
-! ----------------------------------------------------------------
-  CONTAINS
-! ----------------------------------------------------------------
-
-
-      SUBROUTINE iosys
-
-        USE control_flags, ONLY: fix_dependencies
-        USE input, ONLY: modules_setup, set_control_flags
-
-        IMPLICIT NONE
-
-        ! . Set internal flags according to the input .......................!
-
-        CALL set_control_flags( )
-        CALL modules_setup()
-
-        ! . Fix values for dependencies .....................................!
-
-        CALL fix_dependencies()
-
-        ! . CALL the Module specific setup routine ..........................! 
-
-        CALL modules_setup_fpmd()
-
-        ! . Write to stdout input module information ........................!
-
-        CALL input_info()
-
-        ! . Write to stdout module specifice information  ...................!
-
-        CALL modules_info()
-
-        RETURN
-      END SUBROUTINE iosys
-
-
-! ----------------------------------------------------------------
-! ----------------------------------------------------------------
-
-
-      SUBROUTINE modules_setup_fpmd()
-
-        USE input_parameters, ONLY: &
-          diis_achmix, electron_damping, vhrmax_inp, &
-          vhasse_inp, iesr_inp, diis_ethr, diis_wthr, diis_delt, &
-          etot_conv_thr, diis_g0chmix, diis_nchmix, diis_g1chmix, xc_type, &
-          empty_states_maxstep, empty_states_delt, &
-          empty_states_emass, empty_states_ethr, vhnr_inp, vhiunit_inp, &
-          vhrmin_inp, tvhmean_inp, tscra_inp, wk, &
-          outdir, k3, nk3, k1, k2, woptical, noptical, boptical, &
-          tprnks, tprnks_empty, ks_path, diis_nreset, &
-          diis_temp, diis_nrot, diis_maxstep, diis_fthr, diis_size, diis_hcut, &
-          k_points, nk1, nk2, diis_rothr, ortho_max, ortho_eps, &
-          ekin_conv_thr, na_inp, ibrav, press, atom_mass, nkstot, xk, &
-          nbnd, nelec, nelup, tf_inp, cell_dofree, t2dpegrid_inp, &
-          diis_chguess, tpstab_inp, pstab_size_inp, ion_radius, atom_pfile, &
-          dt, ntyp, pseudo_dir, qcutz, q2sigma, tk_inp, ecfixed, celldm, &
-          ecutwfc, ecutrho, constr_dist_inp, constr_inp, ion_damping, &
-          constr_type_inp, anner_inp, nconstr_inp, constr_tol_inp, &
-          ekincw, tempw, tneighbo, neighbo_radius, fnosep, &
-          emass_cutoff, f_inp, sp_pos, emass, neldw, nspin, empty_states_nbnd, &
-          atom_label, anne_inp, rd_vel, rd_pos, if_pos, sp_vel, rd_ht, &
-          a, b, c, cosab, cosac, cosbc, cell_symmetry, trd_ht, nat, id_loc, &
-          sic, sic_epsilon, sic_rloc, atomic_positions, cell_damping, greash, &
-          prefix, wmass
-
-        USE io_files, ONLY: &
-          psfile, &
-          pseudo_dir_ => pseudo_dir
-
-        USE control_flags, ONLY: program_name, lneb, tnoseh, &
-              ortho_max_ => ortho_max, &
-              ortho_eps_ => ortho_eps
-
-        USE nose_electrons, ONLY: nose_electrons_setup
-        USE time_step, ONLY: set_time_step
-        USE cell_module, ONLY: metric_setup
-        USE ions_module, ONLY: ions_setup
-        USE guess, ONLY: guess_setup
-        USE empty_states, ONLY: empty_setup
-        USE electrons_module, ONLY: electrons_setup
-        USE pseudopotential, ONLY: pseudopotential_setup
-        USE diis, ONLY: diis_setup
-        USE charge_mix, ONLY: charge_mix_setup
-        USE potentials, ONLY:  potential_setup
-        USE brillouin, ONLY: kpoint_setup
-        USE kohn_sham_states, ONLY: ks_states_setup
-        USE optical_properties, ONLY: optical_setup
-        USE reciprocal_space_mesh, ONLY: recvecs_units
-        USE cell_base, ONLY: a1, a2, a3, cell_alat
-        USE cell_nose, ONLY: cell_nose_init
-        USE ions_base, ONLY: self_interaction
-        USE constants, ONLY: factem, terahertz, pi, eps8
-        !
-
-        IMPLICIT NONE
-
-! ...   Declare Variables
-        REAL(dbl)  :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
-! ...   DIIS
-        REAL(dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
-        REAL(dbl) :: alat_ 
-        LOGICAL :: o_diis_inp, oqnr_diis_inp
-        LOGICAL :: timing = .TRUE.
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-! ...   auxiliary input and/or setup routines
-
-        alat_ = cell_alat()
-
-        CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp, ion_radius )
-
-        CALL metric_setup( wmass, press, cell_damping, greash, cell_dofree )
-
-        CALL guess_setup( diis_chguess )
-
-        CALL electrons_setup( tf_inp, nbnd, nint(nelec), nint(nelup), &
-          nint(neldw), nspin, empty_states_nbnd, emass, emass_cutoff, &
-          f_inp, nkstot )
-
-        CALL ions_setup( anne_inp, anner_inp,   &
-             nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
-             constr_inp, ion_damping, tneighbo, neighbo_radius )
-
-        IF( ABS(self_interaction) /= 0 ) CALL sic_info()
-
-        !
-        delt_emp_inp  = dt
-        emass_emp_inp = emass
-        ethr_emp_inp  = ekin_conv_thr
-        IF( empty_states_delt > 0.d0 )  delt_emp_inp  = empty_states_delt
-        IF( empty_states_emass > 0.d0 ) emass_emp_inp = empty_states_emass
-        IF( empty_states_ethr > 0.d0 )  ethr_emp_inp  = empty_states_ethr
-        CALL empty_setup( empty_states_maxstep, delt_emp_inp, ethr_emp_inp )
-
-        !
-        !
-        CALL potential_setup(tvhmean_inp,vhnr_inp, vhiunit_inp, &
-               vhrmin_inp, vhrmax_inp, vhasse_inp, timing, iesr_inp)
-
-        CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
-
-        o_diis_inp        = .TRUE.
-        oqnr_diis_inp     = .TRUE.
-        tolene_inp        = etot_conv_thr
-        tol_diis_inp      = ekin_conv_thr
-        delt_diis_inp     = dt
-        IF( diis_ethr > 0.0d0 ) tolene_inp    = diis_ethr
-        IF( diis_wthr > 0.0d0 ) tol_diis_inp  = diis_wthr
-        IF( diis_delt > 0.0d0 ) delt_diis_inp = diis_delt
-        CALL diis_setup( diis_fthr, oqnr_diis_inp, o_diis_inp, &
-          diis_size, diis_hcut, tol_diis_inp, diis_maxstep, diis_nreset, delt_diis_inp, &
-          diis_temp, diis_nrot(1), diis_nrot(2), diis_nrot(3), &
-          diis_rothr(1), diis_rothr(2), diis_rothr(3), tolene_inp)
-
-        CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
-        CALL ks_states_setup(nspin, tprnks, tprnks_empty, ks_path)
-        CALL optical_setup( woptical, noptical, boptical )
-
-        RETURN
-      END SUBROUTINE modules_setup_fpmd
 
 
 ! ----------------------------------------------------------------
@@ -1966,7 +1781,10 @@
         CALL ions_print_info( stdout )
         CALL potential_print_info( stdout )
         CALL metric_print_info( stdout )
+        CALL sic_info( stdout )
       END IF
+
+
 
     RETURN
   512   FORMAT(   3X,'Orthog. with Gram-Schmidt')
@@ -1987,12 +1805,19 @@
 END SUBROUTINE modules_info
 
 
-SUBROUTINE sic_info()
-  USE io_global, ONLY: ionode, stdout
+
+SUBROUTINE sic_info( stdout )
   USE ions_base, ONLY: self_interaction
   IMPLICIT NONE
-! prints the type of USIC we will do :
-      if (ionode) then
+  INTEGER, INTENT(IN) :: stdout
+  !
+  ! prints the type of USIC we will do :
+  !
+
+  IF( self_interaction == 0 ) THEN
+    RETURN
+  END IF
+
         WRITE(stdout, 591)
         WRITE(stdout, 592) self_interaction
         WRITE(stdout, 593)
@@ -2028,14 +1853,13 @@ SUBROUTINE sic_info()
           write(stdout,*) &
             '  No unpaired-electron self-interaction correction '
         end select
-      endif
   591 FORMAT(   3X,'')
   592 FORMAT(   3X,'Introducing a Self_Interaction Correction case: ', I3)
   593 FORMAT(   3X,'----------------------------------------')
+
+  RETURN
 END SUBROUTINE
 
-
-
-!=----------------------------------------------------------------------------=!
-  END MODULE input_fpmd
-!=----------------------------------------------------------------------------=!
+! ----------------------------------------------------------------
+  END MODULE input
+! ----------------------------------------------------------------

@@ -31,6 +31,16 @@ MODULE efield_module
 
 CONTAINS
 
+
+  SUBROUTINE efield_init( epol_ , efield_ )
+    USE kinds, ONLY: dbl
+    REAL(dbl), INTENT(IN) :: efield_
+    INTEGER, INTENT(IN)    :: epol_
+    epol   = epol_
+    efield = efield_
+    RETURN
+  END SUBROUTINE
+
   SUBROUTINE efield_info( )
     USE io_global, ONLY: stdout
     write (stdout,401) epol, efield

@@ -30,7 +30,6 @@
         REAL(dbl) :: emass_emp      !  fictitious mass for the empty states
 
         LOGICAL :: prn_emp       = .FALSE.
-        LOGICAL :: tconjgrad_emp = .FALSE.
 
         CHARACTER(LEN=256) :: fileempty
         LOGICAL :: first = .TRUE.
@@ -49,38 +48,38 @@
 #endif
         END INTERFACE
 
-        PUBLIC :: empty, empty_setup, empty_print_info
+        PUBLIC :: empty , empty_init , empty_print_info
 
 ! ---------------------------------------------------------------------- !
       CONTAINS
 ! ---------------------------------------------------------------------- !
 
         SUBROUTINE empty_print_info(iunit)
+          !
           USE electrons_module, ONLY: n_emp
           INTEGER, INTENT(IN) :: iunit
+          !
           IF ( n_emp > 0 ) WRITE (iunit,620) n_emp, max_emp, delt_emp
 620       FORMAT(3X,'Empty states minimization : states = ',I4, &
              ' maxiter = ',I8,' delt = ',F8.4)
+          !
           RETURN
         END SUBROUTINE empty_print_info
 
 !----------------------------------------------------------------------
 
-        SUBROUTINE empty_setup( max_emp_inp, delt_emp_inp, ethr_emp_inp )
+        SUBROUTINE empty_init( max_emp_ , delt_emp_ , ethr_emp_ )
 
-          INTEGER, INTENT(IN) :: max_emp_inp
-          REAL(dbl), INTENT(IN) :: delt_emp_inp, ethr_emp_inp
+          INTEGER, INTENT(IN) :: max_emp_
+          REAL(dbl), INTENT(IN) :: delt_emp_ , ethr_emp_
 
-          delt_emp  = delt_emp_inp
+          delt_emp  = delt_emp_
           emass_emp = 200.0d0
-          max_emp   = max_emp_inp
-          ethr_emp  = ethr_emp_inp
-
-          tconjgrad_emp = .TRUE.
-          !tconjgrad_emp = .FALSE.
+          max_emp   = max_emp_
+          ethr_emp  = ethr_emp_
 
           RETURN
-        END SUBROUTINE empty_setup
+        END SUBROUTINE empty_init
 
 !
 !=----------------------------------------------------------------------------=!

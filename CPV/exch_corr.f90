@@ -164,7 +164,7 @@
           nzl   = MIN( ldz, SIZE( grho, 3 ) )
           nspin = SIZE(rhoer,4)
 
-          fac = REAL(nspin) / 2.0d0
+          fac = REAL(nspin)
 
           ALLOCATE( vtemp( gv%ng_l ) )
           ALLOCATE( vtemp_pol( gv%ng_l ) )
@@ -258,7 +258,7 @@
               END DO
             END DO
           END DO
-          gcpail(ic) = - REAL(nspin) / 2.0_dbl * stre * omega / REAL(nr1*nr2*nr3)
+          gcpail(ic) = - REAL(nspin) * stre * omega / REAL(nr1*nr2*nr3)
         END DO
 
       RETURN

@@ -410,10 +410,12 @@
 
 !------------------------------------------------------------------------------!
 
-  SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht, &
-               a, b, c, cosab, cosac, cosbc, alat_ )
+  SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht,  &
+               a, b, c, cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
+               frich_ , greash_ , cell_dofree, alat_ )
 
-    USE constants, ONLY: bohr_radius_angs
+    USE constants, ONLY: bohr_radius_angs, gpa_au, pi, uma_au 
+    USE io_global, ONLY: stdout
 
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ibrav_
@@ -422,6 +424,10 @@
     CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
     REAL(dbl), INTENT(IN) :: rd_ht (3,3)
     REAL(dbl), INTENT(IN) :: a, b, c, cosab, cosac, cosbc
+    CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
+    REAL(dbl),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
+    REAL(dbl),  INTENT(IN) :: press_  ! external pressure from imput ( GPa )
+
     REAL(dbl), INTENT(OUT) :: alat_
 
     REAL(dbl) :: b1(3), b2(3), b3(3)
@@ -431,6 +437,21 @@
 
     celldm = celldm_
     ibrav  = ibrav_
+    press  = press_ * gpa_au
+    !  frich  = frich_   ! for the time being this is set elsewhere
+    greash = greash_
+
+    wmass  = wc_
+    IF( wmass == 0.d0 ) THEN
+      wmass = 3.d0 / (4.d0 * pi**2 ) * total_ions_mass
+      wmass = wmass * UMA_AU
+      WRITE( stdout,999) wmass
+    ELSE
+      WRITE( stdout,998) wmass
+    END IF
+998 format('   wmass (read from input) = ',f15.2,/)
+999 format('   wmass (calculated) = ',f15.2,/)
+
 
     ! ... if celldm(1) /= 0  rd_ht should be in unit of alat
 
@@ -443,6 +464,8 @@
       CALL errore( ' cell_base_init ', ' ibrav=0: must read cell parameters', 1 )
     IF ( ibrav /= 0 .AND. trd_ht ) &
       CALL errore( ' cell_base_init ', ' redundant data for cell parameters', 2 )
+    IF( wmass <= 0.0d0 ) &
+      CALL errore(' cell_base_init ',' wmass out of range ',0)
 
 
     IF ( celldm(1) == 0.D0 .AND. a /= 0.D0 ) THEN
@@ -502,6 +525,49 @@
 
     tcell_base_init = .TRUE.
     alat_ = alat
+
+    thdiag = .false.
+
+    SELECT CASE ( TRIM( cell_dofree ) )
+
+            CASE ( 'all', 'default' )
+              iforceh = 1
+            CASE ( 'volume' )
+              CALL errore(' metric_setup ', &
+                 ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
+            CASE ('x')
+              iforceh      = 0
+              iforceh(1,1) = 1
+            CASE ('y')
+              iforceh      = 0
+              iforceh(2,2) = 1
+            CASE ('z')
+              iforceh      = 0
+              iforceh(3,3) = 1
+            CASE ('xy')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+            CASE ('xz')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(3,3) = 1
+            CASE ('yz')
+              iforceh      = 0
+              iforceh(2,2) = 1
+              iforceh(3,3) = 1
+            CASE ('xyz')
+              thdiag       = .true.
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+              iforceh(3,3) = 1
+            CASE DEFAULT
+              CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
+
+    END SELECT
+
+
 
     RETURN
   END SUBROUTINE

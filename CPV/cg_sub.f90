@@ -67,7 +67,6 @@
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir
-      use input_cp, only: iosys
       use qgb_mod, only: deallocate_qgb_mod
       use dqgb_mod, only: deallocate_dqgb_mod
       use qradb_mod, only: deallocate_qradb_mod

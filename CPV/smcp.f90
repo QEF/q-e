@@ -102,7 +102,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use parameters, only: nacx, natx, nsx, nbndxx
   use constants, only: pi, factem, au_gpa, au_ps, gpa_au
   use io_files, only: psfile, pseudo_dir, smwout
-  use input_cp, only: iosys
+  use input, only: iosys
   use qgb_mod, only: deallocate_qgb_mod
   use dqgb_mod, only: deallocate_dqgb_mod
   use qradb_mod, only: deallocate_qradb_mod
@@ -527,8 +527,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   temp1=tempw+tolp
   temp2=tempw-tolp
   gkbt = 3.*nat*tempw/factem
-  press = press * GPA_AU
-  !     ==========================================================
 
   etot_ar(0   ) = ene_ini
   etot_ar(sm_p) = ene_fin

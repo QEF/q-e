@@ -125,7 +125,7 @@
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem, au_gpa, au_ps, gpa_au
       use io_files, only: psfile, pseudo_dir
-      use input_cp, only: iosys
+      use input, only: iosys
       use qgb_mod, only: deallocate_qgb_mod
       use dqgb_mod, only: deallocate_dqgb_mod
       use qradb_mod, only: deallocate_qradb_mod
@@ -352,7 +352,6 @@
       temp1=tempw+tolp
       temp2=tempw-tolp
       gkbt = 3.*nat*tempw/factem
-      press = press * GPA_AU       ! factp   = 3.3989 * 0.00001  GPa to Au
 
 !     ==========================================================
 

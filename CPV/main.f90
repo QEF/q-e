@@ -111,7 +111,7 @@
       USE check_stop, ONLY: check_stop_now
       USE nl, ONLY: nlrh_m
       USE time_step, ONLY: tps, delt
-      USE brillouin, ONLY: kp, kpoint_closeup
+      USE brillouin, ONLY: kp
       USE rundiis_module, ONLY: rundiis, runsdiis
       USE from_scratch_module, ONLY: from_scratch
       USE from_restart_module, ONLY: from_restart
@@ -129,7 +129,7 @@
       USE charge_mix, ONLY: deallocate_charge_mix
       USE chi2, ONLY: deallocate_chi2
       USE guess, ONLY: guess_closeup
-      USE input_fpmd, ONLY: iosys
+      USE input, ONLY: iosys
       USE problem_size, ONLY: cpsizes
       USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene
       USE cell_base, ONLY: frich, greash
@@ -809,7 +809,6 @@
       CALL deallocate_diis
       CALL deallocate_stick
       CALL optical_closeup
-      CALL kpoint_closeup
       CALL deallocate_charge_mix
       CALL deallocate_chi2
       CALL gindex_closeup
