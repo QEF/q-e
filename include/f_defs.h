@@ -17,7 +17,7 @@
 
 #if defined __MAC
 #  if defined __MAC64
-#    defined C__POINTER  integer(kind=8)
+#    define C_POINTER  integer(kind=8)
 #  else
 #    define C_POINTER  integer(kind=4)
 #  endif
@@ -125,9 +125,20 @@
 
 #else
 
+#  if defined (__ALPHA) && ! defined (__LINUX)
+
+#    define DREAL       real
+#    define DCMPLX      cmplx
+#    define DIMAG       imag
+#    define DCONJG      conjg
+
+#  else
+
 #    define DREAL       dreal
 #    define DCMPLX      dcmplx
 #    define DIMAG       dimag
+
+#  endif
 
 #  if defined(ADD_BLAS_TWO_UNDERSCORES)
 
