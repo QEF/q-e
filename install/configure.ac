@@ -196,6 +196,10 @@ sparc-sun-*:* )
 	try_cc="cc"
 	try_f77="$f90"
 	;;
+powerpc-apple-darwin*:xlf90 )
+	try_cc="gcc"
+	try_f77="xlf f77 $f90"
+	;;
 powerpc-apple-darwin* )
 	try_cc="gcc"
 	try_f77="f77 $f90"

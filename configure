@@ -1977,6 +1977,10 @@ sparc-sun-*:* )
 	try_cc="cc"
 	try_f77="$f90"
 	;;
+powerpc-apple-darwin*:xlf90 )
+	try_cc="gcc"
+	try_f77="xlf f77 $f90"
+	;;
 powerpc-apple-darwin* )
 	try_cc="gcc"
 	try_f77="f77 $f90"
@@ -2109,7 +2113,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2112:" \
+echo "$as_me:2116:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
