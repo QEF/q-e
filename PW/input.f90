@@ -429,6 +429,10 @@ SUBROUTINE iosys()
   CASE ( 'nscf' )
      lforce    = .FALSE.
      nstep     = 1
+  CASE ( 'phonon' )
+     lforce    = .FALSE.
+     lphonon   = .TRUE.
+     nstep     = 1
   CASE ( 'relax' )
      lscf      = .TRUE.
      lforce    = .TRUE.
@@ -543,9 +547,6 @@ SUBROUTINE iosys()
                    & ' not supported', 1 )
      END IF
      !
-  CASE ( 'phonon' )
-     lphonon   = .TRUE.
-     nstep     = 1
   CASE ( 'raman' )
      lraman    = .TRUE.
      nstep     = 1
