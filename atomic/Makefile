@@ -58,7 +58,6 @@ seriebes.o \
 series.o \
 set_rho_core.o \
 sic_correction.o \
-sph_besr.o \
 starting_potential.o \
 start_potps.o \
 trou.o \
