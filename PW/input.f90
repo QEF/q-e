@@ -25,9 +25,12 @@ SUBROUTINE iosys()
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
                             lberry_ => lberry
-  USE cell_base,     ONLY : at, alat, omega, &
-                            cell_base_init
-  USE basis,         ONLY : ityp, tau, atomic_positions, &
+  USE brilz,         ONLY : at, alat, omega, &
+                            celldm_ => celldm, &
+                            ibrav_  => ibrav
+  USE basis,         ONLY : nat_  => nat, &
+                            ntyp_ => ntyp, &
+                            ityp, tau, atomic_positions, atm, &
                             startingwfc_ => startingwfc, &
                             startingpot_ => startingpot, &
                             startingconfig
@@ -121,7 +124,6 @@ SUBROUTINE iosys()
                             trust_radius_end_ => trust_radius_end, &
                             w_1_              => w_1, & 
                             w_2_              => w_2 
-
   !
   ! CONTROL namelist
   !
@@ -171,9 +173,6 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, &
                                wmass, cell_temperature, cell_dofree, &
                                cell_factor
-
-  USE input_parameters, ONLY : trd_ht, rd_ht, cell_symmetry
-
   !
   ! PHONON namelist
   !
@@ -331,8 +330,6 @@ SUBROUTINE iosys()
      ELSE
         restart      = .TRUE.
         restart_bfgs = .TRUE.
-        startingpot  = 'file'
-        startingwfc  = 'file'
         IF ( TRIM( ion_positions ) == 'from_input' ) THEN
            startingconfig = 'input'
         ELSE
@@ -357,62 +354,43 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   !
+  ! ... initialization
+  !
+  lscf      = .FALSE.
+  lbfgs     = .FALSE.
+  lmd       = .FALSE.
+  lneb      = .FALSE.     
+  lforce    = tprnfor
+  lmovecell = .FALSE.
+  lphonon   = .FALSE.  
+  !
   SELECT CASE ( TRIM( calculation ) )
   CASE ( 'scf' )
-     lscf      = .TRUE.
-     lbfgs     = .FALSE.
-     lmd       = .FALSE.
-     lneb      = .FALSE.     
+     lscf      = .TRUE.   
      iswitch   = 0 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-     lforce    = tprnfor
-     lmovecell = .FALSE.
-     lphonon   = .FALSE.
      nstep     = 1
  CASE ( 'nscf' )
-     lscf      = .FALSE.
-     lbfgs     = .FALSE.
-     lmd       = .FALSE.
-     lneb      = .FALSE.     
      iswitch   = -1
      lforce    = .FALSE.
-     lmovecell = .FALSE.
-     lphonon   = .FALSE.
      nstep     = 1
   CASE ( 'relax' )
      lscf      = .TRUE.
      lbfgs     = .TRUE.
-     lmd       = .FALSE.
-     lneb      = .FALSE.          
      iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
-     lmovecell = .FALSE.
-     lphonon   = .FALSE.
   CASE ( 'md' )
      lscf      = .TRUE.
-     lbfgs     = .FALSE.
-     lmd       = .TRUE.
-     lneb      = .FALSE.               
+     lmd       = .TRUE.          
      iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
-     lmovecell = .FALSE.
-     lphonon   = .FALSE.
   CASE ( 'vc-relax' , 'vc-md' )
      lscf      = .TRUE.
-     lbfgs     = .FALSE.
      lmd       = .TRUE.
-     lneb      = .FALSE.     
-     iswitch   = 3
+     iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lmovecell = .TRUE.
      lforce    = .TRUE.
-     lphonon   = .FALSE.
  CASE ( 'phonon' )
-     lscf      = .FALSE.
-     lbfgs     = .FALSE.
-     lmd       = .FALSE.
-     lneb      = .FALSE.
      iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-     lforce    = .FALSE.
-     lmovecell = .FALSE.
      lphonon   = .TRUE.
      nstep     = 1
   !
@@ -420,13 +398,9 @@ SUBROUTINE iosys()
   !   
   CASE ( 'neb' )
      lscf      = .TRUE.
-     lbfgs     = .FALSE.
-     lmd       = .FALSE.     
      lneb      = .TRUE.
      iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = tprnfor
-     lmovecell = .FALSE.
-     lphonon   = .FALSE.
   CASE DEFAULT
      CALL errore( ' iosys ', ' calculation ' // &
                 & TRIM( calculation ) // ' not implemented', 1 )
@@ -762,7 +736,11 @@ SUBROUTINE iosys()
   pseudo_dir_ = TRIM( pseudo_dir )
   nstep_      = nstep
   iprint_     = iprint
-
+  !
+  celldm_  = celldm
+  ibrav_   = ibrav
+  nat_     = nat 
+  ntyp_    = ntyp
   edir_    = edir
   emaxpos_ = emaxpos
   eopreg_  = eopreg
@@ -832,21 +810,57 @@ SUBROUTINE iosys()
   !
   ! ... read following cards
   !
-  ALLOCATE( force( 3, nat ) )  ! ... compatibility with old readin
+  ALLOCATE( tau( 3, nat_ ) )
+  ALLOCATE( ityp( nat_ ) )
+  ALLOCATE( force( 3, nat_ ) )  ! ... compatibility with old readin
+  ALLOCATE( if_pos( 3, nat_ ) )
   !
-  IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
+  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
   CALL read_cards( psfile, atomic_positions )
-
   !
   ! ... set up atomic positions and crystal lattice
   !
-
-  ! ... cell_base_init copys input parameters into cell_base variables
-  ! ... and initializes the crystal
-
-  CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, rd_ht, &
-         a, b, c, cosab, cosac, cosbc )
+  IF ( celldm_(1) == 0.D0 .AND. a /= 0.D0 ) THEN
+     IF ( ibrav_ == 0 ) ibrav = 14 
+     celldm_(1) = a / bohr_radius_angs
+     celldm_(2) = b / a
+     celldm_(3) = c / a
+     celldm_(4) = cosab
+     celldm_(5) = cosac
+     celldm_(6) = cosbc 
+  ELSE IF ( celldm_(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
+     CALL errore( 'input', ' do not specify both celldm and a,b,c!', 1 )
+  END IF
+  !
+  IF ( ibrav_ == 0 .AND. celldm_(1) /= 0.D0 ) THEN
+     !
+     ! ... input at are in units of alat
+     !
+     alat = celldm_(1)
+  ELSE IF ( ibrav_ == 0 .AND. celldm_(1) == 0.D0 ) THEN
+     !
+     ! ... input at are in atomic units: define alat
+     !
+     celldm_(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
+     alat = celldm_(1)
+     !
+     ! ... bring at to alat units
+     !
+     at(:,:) = at(:,:) / alat
+  ELSE
+     !
+     ! ... generate at (atomic units)
+     !
+     CALL latgen( ibrav, celldm_, at(1,1), at(1,2), at(1,3), omega )
+     alat = celldm_(1) 
+     !
+     ! ... bring at to alat units
+     !
+     at(:,:) = at(:,:) / alat
+  END IF
+  !
+  CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
   !
   IF ( calculation == 'neb' ) THEN
      !
@@ -854,7 +868,7 @@ SUBROUTINE iosys()
      !
      DO image = 1, num_of_images_
         !
-        tau = RESHAPE( SOURCE = pos(1:3*nat,image), SHAPE = (/ 3 , nat /) )
+        tau = RESHAPE( SOURCE = pos(1:3*nat_,image), SHAPE = (/ 3 , nat_ /) )
         !
         SELECT CASE ( atomic_positions )
            !
@@ -874,7 +888,7 @@ SUBROUTINE iosys()
            !
            ! ... input atomic positions are in crystal axis
            !
-           CALL cryst_to_cart( nat, tau, at, 1 )
+           CALL cryst_to_cart( nat_, tau, at, 1 )
         CASE ( 'angstrom' )
            !
            ! ... atomic positions in A: convert to a.u. and divide by alat
@@ -885,7 +899,7 @@ SUBROUTINE iosys()
                       & TRIM( atomic_positions ) // ' not implemented ', 1 )
         END SELECT
         !
-        pos(1:3*nat,image) = RESHAPE( SOURCE = tau, SHAPE = (/ 3 * nat /) )
+        pos(1:3*nat_,image) = RESHAPE( SOURCE = tau, SHAPE = (/ 3 * nat_ /) )
         !
      END DO 
      !
@@ -909,7 +923,7 @@ SUBROUTINE iosys()
         !
         ! ... input atomic positions are in crystal axis
         !
-        CALL cryst_to_cart( nat, tau, at, 1 )
+        CALL cryst_to_cart( nat_, tau, at, 1 )
      CASE ( 'angstrom' )
         !
         ! ... atomic positions in A: convert to a.u. and divide by alat
@@ -993,7 +1007,8 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
   USE wvfct,              ONLY : gamma_only
-  USE basis,              ONLY : ityp, tau
+  USE brilz,              ONLY : at, ibrav, symm_type, celldm
+  USE basis,              ONLY : nat, ntyp, ityp, tau, atm
   USE klist,              ONLY : nks
   USE ktetra,             ONLY : nk1_   => nk1, &
                                  nk2_   => nk2, &
@@ -1015,16 +1030,13 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  atom_ptyp, taspc, tapos, rd_pos, &
                                  atomic_positions, if_pos, sp_pos, &
                                  k_points, xk, wk, nk1, nk2, nk3, &
-                                 k1, k2, k3, nkstot, celldm, &
-                                 f_inp, calculation, nat, ntyp, na_inp, &
+                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
+                                 trd_ht, f_inp, calculation,&
                                  nconstr_inp, constr_tol_inp, constr_inp
   USE read_cards_module,  ONLY : read_cards_base => read_cards
   !
   USE parser
   USE basic_algebra_routines, ONLY : norm
-
-  USE ions_base,     ONLY : ions_base_init
-
   !
   IMPLICIT NONE
   !
@@ -1043,18 +1055,37 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
        CALL errore( ' cards ', ' atomic species info missing', 1 )
   IF ( .NOT. tapos ) &
        CALL errore( ' cards ', ' atomic position info missing', 1 )
-
-  !
-  ! ... Set nat, ntyp, ityp, na, tau
-  !
-  CALL ions_base_init( ntyp, nat, na_inp, sp_pos, rd_pos, atom_mass, &
-          atom_label, if_pos )
-
   !
   DO is = 1, ntyp
+    amass(is)  = atom_mass(is)
     psfile(is) = atom_pfile(is)
+    atm(is)    = atom_label(is)
+    IF( amass(is) <= 0.D0 ) THEN
+      CALL errore( ' iosys ', ' invalid  mass ', is )
+    END IF
   END DO
-
+  !
+  DO ia = 1, nat
+     tau(:,ia) = rd_pos(:,ia)
+     ityp(ia)  = sp_pos(ia)
+  END DO
+  !
+  ! ... TEMP: calculate fixatom (to be removed)
+  !
+  fixatom = 0
+  fix1: DO ia = nat, 1, -1
+    IF ( if_pos(1,ia) /= 0 .OR. &
+         if_pos(2,ia) /= 0 .OR. &
+         if_pos(3,ia) /= 0 ) EXIT fix1
+    fixatom = fixatom + 1
+  END DO fix1
+  !
+  ! ... The constrain on fixed coordinates is implemented using the array 
+  ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1 
+  ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
+  !
+  if_pos_ = 1
+  if_pos_(:,:) = if_pos(:,1:nat)
   !
   atomic_positions_ = TRIM( atomic_positions )
   !
@@ -1142,7 +1173,17 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      f_inp_ = f_inp
   ENDIF
   !
-
+  IF ( trd_ht ) THEN
+    symm_type = cell_symmetry 
+    at        = TRANSPOSE( rd_ht )
+    tcell     = .TRUE.
+  END IF
+  !
+  IF ( ibrav == 0 .AND. .NOT. tcell ) &
+     CALL errore( ' cards ', ' ibrav=0: must read cell parameters', 1 )
+  IF ( ibrav /= 0 .AND. tcell ) &
+     CALL errore( ' cards ', ' redundant data for cell parameters', 2 )
+  !
   IF ( lconstrain ) THEN
      !
      nconstr    = nconstr_inp

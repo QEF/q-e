@@ -220,8 +220,19 @@ MODULE read_namelists_module
        grease = 1.0D0
        twall  = .FALSE.
        IF ( prog == 'PW' ) THEN
-          startingwfc = 'atomic'
-          startingpot = 'atomic'
+          !
+          IF ( restart_mode == "from_scratch" ) THEN
+             !
+             startingwfc = 'atomic'
+             startingpot = 'atomic'
+             !
+          ELSE
+             !
+             startingwfc = 'file'
+             startingpot = 'file'             
+             !
+          END IF
+          !      
        ELSE
           startingwfc = 'random'
           startingpot = ' '
@@ -748,7 +759,7 @@ MODULE read_namelists_module
        IF( etot_conv_thr < 0.0d0 ) &
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
        IF( forc_conv_thr < 0.0d0 ) &
-          CALL errore( sub_name,' forc_conv_thr out of range ', 1 )
+          CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'FP' .OR. prog == 'CP' ) THEN
           IF( tefield ) & 
              CALL errore( sub_name,' tefield not implemented yet ',-1)
@@ -827,6 +838,12 @@ MODULE read_namelists_module
              CALL errore( sub_name ,' nr2s is not used in FPMD ',-1)
           IF( nr3s /= 0 ) &
              CALL errore( sub_name ,' nr3s is not used in FPMD ',-1)
+          IF( nr1b /= 0 ) &
+             CALL errore( sub_name ,' nr1b is not used in FPMD ',-1)
+          IF( nr2b /= 0 ) &
+             CALL errore( sub_name ,' nr2b is not used in FPMD ',-1)
+          IF( nr3b /= 0 ) &
+             CALL errore( sub_name ,' nr3b is not used in FPMD ',-1)
           IF( degauss /= 0.0d0 ) &
              CALL errore( sub_name ,' degauss is not used in FPMD ',-1)
           IF( ngauss /= 0 ) &
@@ -1222,16 +1239,11 @@ MODULE read_namelists_module
        IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'FP' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
-       ! ... Here set default values for namelists
-       !
-       CALL control_defaults( prog )
-       CALL system_defaults( prog )
-       CALL electrons_defaults( prog )
-       CALL ions_defaults( prog )
-       CALL cell_defaults( prog )
-       CALL phonon_defaults( prog )
-       !
        ! ... Here start reading standard input file
+       !
+       ! ... CONTROL namelist
+       !
+       CALL control_defaults( prog )       
        !
        ios = 0
        IF( ionode ) THEN
@@ -1248,6 +1260,9 @@ MODULE read_namelists_module
        !
        CALL fixval( prog )
        !
+       ! ... SYSTEM namelist
+       !
+       CALL system_defaults( prog )       
        ! 
        ios = 0
        IF( ionode ) THEN
@@ -1262,6 +1277,9 @@ MODULE read_namelists_module
        CALL system_bcast( )
        CALL system_checkin( prog )
        !
+       ! ... ELECTRONS namelist
+       !
+       CALL electrons_defaults( prog )       
        !
        ios = 0
        IF( ionode ) THEN
@@ -1276,6 +1294,9 @@ MODULE read_namelists_module
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
        !
+       ! ... IONS namelist 
+       !
+       CALL ions_defaults( prog )       
        !
        ios = 0
        IF( ionode ) THEN
@@ -1298,6 +1319,9 @@ MODULE read_namelists_module
        CALL ions_bcast( )
        CALL ions_checkin( prog )
        !
+       ! ... CELL namelist
+       !
+       CALL cell_defaults( prog )       
        !
        ios = 0
        IF( ionode ) THEN
@@ -1317,6 +1341,9 @@ MODULE read_namelists_module
        CALL cell_bcast()
        CALL cell_checkin( prog )
        !
+       ! ... PHONON namelist
+       !
+       CALL phonon_defaults( prog )       
        !
        ios = 0
        IF( ionode ) THEN
