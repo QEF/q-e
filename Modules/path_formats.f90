@@ -42,7 +42,7 @@ MODULE path_formats
                         & "    'error (eV/A)',8X,'frozen',/)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
-    real_space_run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L)"
+    real_space_run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L1)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
     fourier_run_info = "(5X,'mode',6X,'|FT[x(s)]|',6X," // &
