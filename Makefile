@@ -78,5 +78,5 @@ veryclean: clean
 
 tar:
 	tar -cf - License Makefile configure README INSTALL */*.f90 \
-                  */README include/*.h* install/* */Makefile \
+                  */*.c */*.f */README include/*.h* install/* */Makefile \
                   upftools/UPF *docs/ *_examples/ pseudo/ | gzip > pw.tar.gz
