@@ -38,8 +38,9 @@ Here is a list of platforms on which standalone pwgui executables are
 available:
 
 + Linux-i386
++ Macintosh (for Mac OS X, PWgui requires X11)
 + Windows
-+ Macintosh (for MACOSX, pwgui requires X11)
+
 
 
 

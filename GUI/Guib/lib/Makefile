@@ -1,8 +1,6 @@
-
 .tcl:
-.itcl:
 
-tclIndex: *.itcl
+tclIndex: *.tcl
 	./aindex
 
 clean:

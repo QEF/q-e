@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.4 2004-03-17 10:09:33 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.5 2004-04-06 13:19:57 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -1225,7 +1225,7 @@ proc ::tclu::tempDir {what args} {
 #------------------------------------------------------------------------
 
 proc ::tclu::stringMatch {pattern string {nocase 0}} {
-    if { $nocase } {
+    if { $nocase != 0 } {
 	return [string match -nocase $pattern $string]
     } else {
 	return [string match $pattern $string]
