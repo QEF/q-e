@@ -170,7 +170,7 @@ subroutine copy_ncpp_so ()
   real(kind=dp), external :: int_0_inf_dr
   real(kind=dp) :: aux(ndm)
   !
-  if ( lloc > -1) then
+  if ( lloc == 0) then
      do ir=1,mesh
         vpsloc(ir)=vnlo(ir,lloc,1)
      enddo
@@ -189,7 +189,7 @@ subroutine copy_ncpp_so ()
            if (llts(n) == l .and. abs(jjts(n)-l+0.5_dp) < 1e-3_dp) nch=n
         enddo
         if (l==0) nch=1
-        if (nch == 0) call errore('convert','jj not found',1)
+        if (nch == 0) call errore('copy_ncpp_so','jj not found',1)
         do ir=1,mesh
            betas(ir,nbeta) = (vnlo(ir,l,1)-vpsloc(ir)) * phis(ir,nch) 
         enddo
@@ -262,9 +262,15 @@ subroutine copy_ncpp ()
   nbeta=0
   do l=0,lmax
      if (l /= lloc) then
+        nch=0
+        do n=1,nwfts
+           if (llts(n) == l) nch=n
+        enddo
+        if (nch == 0) call errore('copy_ncpp','l not found',1)
+        !
         nbeta=nbeta+1
         do ir=1,mesh
-           betas(ir,nbeta) = (vnl(ir,l)-vpsloc(ir)) * phis(ir, l+1)
+           betas(ir,nbeta) = (vnl(ir,l)-vpsloc(ir)) * phis(ir, nch)
         enddo
         lls(nbeta)=l
         ikk(nbeta)=mesh
@@ -277,7 +283,7 @@ subroutine copy_ncpp ()
         enddo
 203     continue
         do ir = 1, mesh
-           aux (ir) = phis(ir, l+1) * betas (ir, nbeta)
+           aux (ir) = phis(ir, nch) * betas (ir, nbeta)
         enddo
         bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
      endif
