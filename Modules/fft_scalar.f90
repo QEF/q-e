@@ -789,13 +789,16 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
            do j = 1, nr2
               jj = j + ( k - 1 ) * nrx2 
               ii = 1 + nrx1 * ( jj - 1 ) 
-              if ( do_fft_x( jj ) == 1 ) &
+              if ( do_fft_x( jj ) == 1 ) THEN
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( ii ), incx1, incx2 )
 #elif defined __AIX
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr1, m, &
                   isign, 1.0d0, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
+#else
+                call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
+              endif
            enddo
         enddo
 
@@ -807,13 +810,16 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 
         do k = 1, nr3
            ii = 1 + nrx1 * nrx2 * ( k - 1 ) 
-           if ( do_fft_y( k ) == 1 ) &
+           if ( do_fft_y( k ) == 1 ) then
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( ii ), incx1, incx2 )
 #elif defined __AIX
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr2, m, &
                isign, 1.0d0, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
+#else
+             call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
+           endif
         enddo
 
         !
@@ -852,13 +858,16 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 
         do k = 1, nr3
            ii = 1 + nrx1 * nrx2 * ( k - 1 ) 
-           if ( do_fft_y ( k ) == 1 ) &
+           if ( do_fft_y ( k ) == 1 ) then
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( fw_plan( 2, ip), m, f( ii ), incx1, incx2 )
 #elif defined __AIX
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr2, m, &
                isign, 1.0d0, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
+#else
+             call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
+           endif
         enddo
 
         !
@@ -871,13 +880,16 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
            do j = 1, nr2
               jj = j + ( k - 1 ) * nrx2 
               ii = 1 + nrx1 * ( jj - 1 ) 
-              if ( do_fft_x( jj ) == 1 ) &
+              if ( do_fft_x( jj ) == 1 ) then
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( fw_plan( 1, ip), m, f( ii ), incx1, incx2 )
 #elif defined __AIX
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr1, m, &
                    isign, 1.0d0, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
+#else
+                call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
+              endif
            enddo
         enddo
 

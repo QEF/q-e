@@ -698,17 +698,17 @@ SUBROUTINE c_phase
    WRITE(6,"(2/,31X,'IONIC POLARIZATION')")
    WRITE(6,"(31X,18('~'),/)")
    WRITE(6,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
-           /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
-           /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
-           /)")
+           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
+           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
+           & /)")
    WRITE(6,"(2X,76('='))")
    WRITE(6,"(4X,'Ion',4X,'Species',4X,'Charge',14X, &
-           'Position',16X,'Phase')")
+           & 'Position',16X,'Phase')")
    WRITE(6,"(2X,76('-'))")
    DO na=1,nat
       WRITE(6,"(3X,I3,8X,A2,F12.3,5X,3F8.4,F12.5,' (mod ',I1,')')") &
-           na,atm(ityp(na)),zv(ityp(na)), &
-           tau(1,na),tau(2,na),tau(3,na),pdl_ion(na),mod_ion(na)
+           & na,atm(ityp(na)),zv(ityp(na)), &
+           & tau(1,na),tau(2,na),tau(3,na),pdl_ion(na),mod_ion(na)
    END DO
    WRITE(6,"(2X,76('-'))")
    WRITE(6,"(47X,'IONIC PHASE: ',F9.5,' (mod ',I1,')')") pdl_ion_tot,mod_ion_tot
@@ -718,18 +718,18 @@ SUBROUTINE c_phase
    WRITE(6,"(2/,28X,'ELECTRONIC POLARIZATION')")
    WRITE(6,"(28X,23('~'),/)")
    WRITE(6,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
-           /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
-           /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
-           /)")
+           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
+           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
+           & /)")
    WRITE(6,"(2X,76('='))")
    WRITE(6,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
-             'First k-point in string',9X,'Phase')")
+            &  'First k-point in string',9X,'Phase')")
    WRITE(6,"(2X,76('-'))")
    DO istring=1,nstring/nspin
       ind1=1+(istring-1)*nppstr
       WRITE(6,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5' (mod ',I1,')')") &
-           istring,wstring(istring), &
-           xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring),mod_elec(istring)
+          &  istring,wstring(istring), &
+          &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring),mod_elec(istring)
    END DO
    WRITE(6,"(2X,76('-'))")
 !  --- Treat unpolarized/polarized spin cases ---
@@ -746,8 +746,8 @@ SUBROUTINE c_phase
       DO istring=nstring/2+1,nstring
          ind1=1+(istring-1)*nppstr
          WRITE(6,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5' (mod ',I1,')')") &
-              istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
-              pdl_elec(istring),mod_elec(istring)
+           &    istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
+           &    pdl_elec(istring),mod_elec(istring)
       END DO
    END IF
    WRITE(6,"(2X,76('-'))")
@@ -773,11 +773,11 @@ SUBROUTINE c_phase
    WRITE(6,"(2/,29X,'VALUES OF POLARIZATION')")
    WRITE(6,"(29X,22('~'),/)")
    WRITE(6,"( &
-        8X,'The calculation of phases done along the direction of vector ',I1, &
-        /,8X,'of the reciprocal lattice gives the following contribution to', &
-        /,8X,'the polarization vector (in different units, and being Omega', &
-        /,8X,'the volume of the unit cell):')") &
-        gdir
+      &   8X,'The calculation of phases done along the direction of vector ',I1, &
+      &   /,8X,'of the reciprocal lattice gives the following contribution to', &
+      &   /,8X,'the polarization vector (in different units, and being Omega', &
+      &   /,8X,'the volume of the unit cell):')") &
+      &   gdir
 !  --- Calculate direction of polarization and modulus of lattice vector ---
    rmod=SQRT(at(1,gdir)*at(1,gdir)+at(2,gdir)*at(2,gdir) &
             +at(3,gdir)*at(3,gdir))
@@ -797,7 +797,7 @@ SUBROUTINE c_phase
         fac*pdl_tot,fac*REAL(mod_tot)
 !  --- Write polarization direction ---
    WRITE(6,"(/,8X,'The polarization direction is:  ( ', &
-        F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
+       &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
 
 !  --- End of information relative to polarization calculation ---
    WRITE(6,"(/,/,15X,50('=')/,/,)")
