@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib.tcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: guib.tcl,v 1.2 2004-02-24 16:32:20 kokalj Exp $ 
 #
 
 if { [info exists env(GUIB)] } {
@@ -47,9 +47,8 @@ if { $argc < 1 } {
 
 set moduleFile [lindex $argv 0]
 
-#t.k.
-set ::tclu::DEBUG 1
-#/
+set ::tclu::DEBUG      0
+set ::tclu::DEBUG_FILE 0
 
 namespace eval ::guib {    
     simpleTplwGUI $::moduleFile
