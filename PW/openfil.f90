@@ -13,16 +13,17 @@ SUBROUTINE openfil()
   ! ... This routine opens all files needed to the self consistent run,
   ! ... sets various file names, units, record lengths
   !
-  USE kinds,     ONLY :  DP
-  USE io_global,      ONLY :  stdout
-  USE basis,          ONLY :  natomwfc, startingwfc
-  USE wvfct,          ONLY :  nbnd, npwx
-  USE control_flags,          ONLY :  order, lneb
-  USE ldaU,           ONLY :  lda_plus_U
-  USE io_files,       ONLY :  prefix, &
-                              iunat, iunocc, iunwfc, iunoldwfc, iunoldwfc2, &
-                              iunigk, nwordwfc, nwordatwfc, iunneb
-  USE restart_module, ONLY :  readfile_new
+  USE kinds,          ONLY : DP
+  USE io_global,      ONLY : stdout
+  USE basis,          ONLY : natomwfc, startingwfc
+  USE wvfct,          ONLY : nbnd, npwx
+  USE control_flags,  ONLY : order, lneb
+  USE ldaU,           ONLY : lda_plus_U
+  USE io_files,       ONLY : prefix, &
+                             iunat, iunocc, iunwfc, iunoldwfc, iunoldwfc2, &
+                             iunigk, nwordwfc, nwordatwfc, iunneb
+  USE restart_module, ONLY : readfile_new
+  USE para,           ONLY : kunit
   !
   IMPLICIT NONE
   !

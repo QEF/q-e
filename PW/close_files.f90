@@ -12,7 +12,8 @@ SUBROUTINE close_files()
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
   USE control_flags, ONLY : order
-  USE io_files,      ONLY : prefix, iunwfc, iunoldwfc, iunoldwfc2, iunigk
+  USE ldaU,          ONLY : lda_plus_u
+  USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat
   USE mp_global,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
   !
@@ -29,6 +30,10 @@ SUBROUTINE close_files()
   ! ... iunigk is kept open during the execution - close and remove
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+  !
+  ! ... iunat contains the orthogonalized wfcs
+  !  
+  IF ( lda_plus_u ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
   !
   CALL mp_barrier( intra_image_comm )  
   !
