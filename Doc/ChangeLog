@@ -1,11 +1,31 @@
-27 Sep 2004 support for alpha-linux with compaq compiler 
-             PBC used in "cubefile" format (Axel)
-            Bug in Modules/cell_base.f90 (dt2 not defined) fixed
+27 Sep 2004 Atoms are refolded using PBC in "cubefile" format.
+            Several minor problems emerged with multiple compilations: 
+            - CPV/compute_scf.f90 / FPMD/compute_scf.f90:
+              tcpu was used but not initialized in compute_scf().
+            - CPV/wf.f90:
+              need to include 'f_defs.h' to get MPI_REAL8
+            - Modules/wave_base.f90:
+            - include "f_defs.h" instead of "../include/f_defs.h" to be
+              consistent with other files (and allow out-of-place compilation).
+            - flib/transto.f90:
+              include "opt_param.h" instead of "../include/opt_param.h" to be
+              consistent with other files (and allow out-of-place compilation).
+            - include/c_defs.h:
+              set correct underscoring for alpha machines running linux 
+              (discriminated from regular alpha by __LINUX64).
+            - configure.ac:
+              fix f90 compilation rule for platforms that need explicit
+              preprocessing and make it compatible to builds using VPATH.
+               support for alpha-linux with compaq compiler 
+            (Axel Kohlmeyer)
+
+27 Sep 2004 Bug in Modules/cell_base.f90 (dt2 not defined) fixed
             Bug in CPV/wf.f90 (iss2 not defined) temporarily fixed
             shmem_include only used if __SHMEM macro is defined
             More mergings between CPV and FPMD (init, grids setup)
             (CC)
-            References to para module replaced (everywhere in PW ) by 
+
+27 Sep 2004 References to para module replaced (everywhere in PW ) by 
             references to mp_global, pfft, pffts.
             Old parallel variables me and mypool have been replaced by
             me_pool ( = ( me - 1 ) ) and my_pool_id ( = ( mypool - 1) ), 

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "../include/opt_param.h"
+#include "opt_param.h"
 
 !     OPTIMIZED DRIVER FOR MATRIX TRASPOSITION
 !   

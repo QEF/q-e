@@ -51,6 +51,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   !
   stat = .TRUE.
+  tcpu = 0.0d0
   !
   IF( nat > 0 ) THEN
      ALLOCATE( tau( 3, nat ), fion( 3, nat ) )

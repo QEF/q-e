@@ -579,7 +579,7 @@ then
 	f90rule="\$(F90) \$(F90FLAGS) \$(MODULEFLAG) -c \$<"
 	echo "${ECHO_T}no"
 else
-	f90rule="\$(CPP) \$(CPPFLAGS) \$*.f90 \$*.F90 \\
+	f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$*.F90 \\
 	\$(F90) \$(F90FLAGS) \$(MODULEFLAG) -c \$*.F90 -o \$*.o"
 	echo "${ECHO_T}yes"
 fi

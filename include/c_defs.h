@@ -186,7 +186,7 @@
 #endif
 
 
-#if defined __ALPHA
+#if defined __ALPHA && !defined __LINUX64
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
 #  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
@@ -213,22 +213,22 @@
 
 #endif
 
-#if defined __ALPHA && defined __LINUX
+#if defined __ALPHA && defined __LINUX64
 
-#    define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
-#    define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
-#    define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d_
-#    define CREATE_PLAN_1D create_plan_1d_
-#    define DESTROY_PLAN_1D destroy_plan_1d_
-#    define CREATE_PLAN_2D create_plan_2d_
-#    define CREATE_PLAN_3D create_plan_3d_
-#    define DESTROY_PLAN_2D destroy_plan_2d_
-#    define DESTROY_PLAN_3D destroy_plan_3d_
+#    define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d__
+#    define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d__
+#    define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d__
+#    define CREATE_PLAN_1D create_plan_1d__
+#    define DESTROY_PLAN_1D destroy_plan_1d__
+#    define CREATE_PLAN_2D create_plan_2d__
+#    define CREATE_PLAN_3D create_plan_3d__
+#    define DESTROY_PLAN_2D destroy_plan_2d__
+#    define DESTROY_PLAN_3D destroy_plan_3d__
 #    define FFT_X_STICK fft_x_stick__
 #    define FFT_Y_STICK fft_y_stick__
 #    define FFT_Z_STICK fft_z_stick__
 #    define CPFLUSH cpflush_
-#    define ELAPSED_SECONDS elapsed_seconds_
+#    define ELAPSED_SECONDS elapsed_seconds__
 #    define CCLOCK cclock_
 #    define LN_ALLOC ln_alloc__
 #    define LN_DEALLOC ln_dealloc__
@@ -236,6 +236,6 @@
 #    define LN_ACTIVATE ln_activate__
 #    define LN_IND ln_ind__
 #    define MEMSTAT memstat_
-#    define C_MKDIR c_mkdir_
+#    define C_MKDIR c_mkdir__
 
 #endif
