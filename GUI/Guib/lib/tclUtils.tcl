@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.7 2004-09-20 07:28:41 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.8 2005-03-23 11:31:04 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -334,8 +334,7 @@ proc ::tclu::_error_or_warning_dialog {type msg} {
     
     set types {error warning}
 
-    if { [lsearch -exact $types $type] } {
-
+    if { [lsearch -exact $types $type] >= 0 } {
 	set TYPE [string toupper $type]
 	
 	if { [catch {package present Tk}] } {
@@ -345,7 +344,7 @@ proc ::tclu::_error_or_warning_dialog {type msg} {
 	    tk_messageBox -title $TYPE -message "$TYPE: $msg" -type ok -icon $type
 	}
     } else {
-	error "wrong type \"$type\" in ::tclu::_error_or_warning_dialog, whould be [joing $types ,]"
+	error "wrong type \"$type\" in ::tclu::_error_or_warning_dialog, should be [join $types ,]"
     }
 }
 
