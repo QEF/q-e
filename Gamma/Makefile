@@ -19,7 +19,6 @@ PWOBJS = \
 ../PW/atomic_wfc_nc.o \
 ../PW/bachel.o \
 ../PW/becmod.o \
-../PW/bfgs.o \
 ../PW/bp_calc_btq.o \
 ../PW/bp_c_phase.o \
 ../PW/bp_qvan3.o \
@@ -30,12 +29,10 @@ PWOBJS = \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
-../PW/ccgdiagg_nc.o \
 ../PW/cdiaghg.o \
 ../PW/cdiagh.o \
 ../PW/cdiisg_nc.o \
 ../PW/cegterg.o \
-../PW/cegterg_nc.o \
 ../PW/cft_3.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
@@ -145,6 +142,7 @@ PWOBJS = \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
+../PW/rcgdiagg.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
@@ -160,6 +158,7 @@ PWOBJS = \
 ../PW/restart_in_ions.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
+../PW/rinitcgg.o \
 ../PW/rotate_wfc_gamma.o \
 ../PW/rotate_wfc.o \
 ../PW/rotate_wfc_nc.o \

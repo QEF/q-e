@@ -47,7 +47,6 @@ transmit.o
 
 MODULES = \
 ../Modules/atom.o \
-../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \
 ../Modules/clocks.o \
@@ -101,12 +100,10 @@ PWOBJS = \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
-../PW/ccgdiagg_nc.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
 ../PW/cdiisg_nc.o \
 ../PW/cegterg.o \
-../PW/cegterg_nc.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \
@@ -207,6 +204,7 @@ PWOBJS = \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
+../PW/rcgdiagg.o \
 ../PW/rdiaghg.o \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
@@ -223,6 +221,7 @@ PWOBJS = \
 ../PW/restart_in_ions.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
+../PW/rinitcgg.o \
 ../PW/rotate_wfc.o \
 ../PW/rotate_wfc_gamma.o \
 ../PW/rotate_wfc_nc.o \

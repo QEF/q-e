@@ -115,9 +115,7 @@ zstar_eu_us.o
 
 MODULES = \
 ../Modules/atom.o \
-../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
-../Modules/bfgs_module.o \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
 ../Modules/clocks.o \
@@ -171,7 +169,6 @@ PWOBJS = \
 ../PW/atomic_wfc_nc.o \
 ../PW/bachel.o \
 ../PW/becmod.o \
-../PW/bfgs.o \
 ../PW/bp_c_phase.o \
 ../PW/bp_calc_btq.o \
 ../PW/bp_qvan3.o \
@@ -183,12 +180,11 @@ PWOBJS = \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
-../PW/ccgdiagg_nc.o \
+../PW/rcgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
 ../PW/cdiisg_nc.o \
 ../PW/cegterg.o \
-../PW/cegterg_nc.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \
@@ -230,7 +226,6 @@ PWOBJS = \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
 ../PW/dvloc_of_g.o \
-../PW/dynamics.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
@@ -278,7 +273,6 @@ PWOBJS = \
 ../PW/init_vloc.o \
 ../PW/interpolate.o \
 ../PW/io_pot.o \
-../PW/ions.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
 ../PW/kpoint_grid.o \
@@ -289,7 +283,6 @@ PWOBJS = \
 ../PW/mix_rho.o \
 ../PW/mix_rho_nc.o \
 ../PW/mode_group.o \
-../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
 ../PW/new_ns.o \
@@ -326,6 +319,7 @@ PWOBJS = \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \
+../PW/rinitcgg.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
 ../PW/rotate_wfc.o \

@@ -14,8 +14,6 @@ take_nloc_k_kq.o
 PHOBJS = \
 ../PH/add_dkmds.o \
 ../PH/add_for_charges.o \
-../PH/add_zstar_ue.o \
-../PH/add_zstar_ue_us.o \
 ../PH/addcore.o \
 ../PH/adddvepsi_us.o \
 ../PH/adddvscf.o \
@@ -27,7 +25,6 @@ PHOBJS = \
 ../PH/addusdynmat.o \
 ../PH/addusldos.o \
 ../PH/allocate_part.o \
-../PH/allocate_phq.o \
 ../PH/bcast_ph_input.o \
 ../PH/bcast_ph_input1.o \
 ../PH/cg_psi.o \
@@ -60,7 +57,6 @@ PHOBJS = \
 ../PH/dv_of_drho.o \
 ../PH/dvanqq.o \
 ../PH/dvkb3.o \
-../PH/dvpsi_e.o \
 ../PH/dvqpsi_us.o \
 ../PH/dvqpsi_us_only.o \
 ../PH/dyndia.o \
@@ -76,10 +72,8 @@ PHOBJS = \
 ../PH/io_pattern.o \
 ../PH/localdos.o \
 ../PH/newdq.o \
-../PH/openfilq.o \
 ../PH/phcom.o \
 ../PH/phq_init.o \
-../PH/phq_readin.o \
 ../PH/phq_recover.o \
 ../PH/phq_setup.o \
 ../PH/psidspsi.o \
@@ -108,13 +102,10 @@ PHOBJS = \
 ../PH/trntnsc.o \
 ../PH/write_dyn_on_file.o \
 ../PH/write_epsilon_and_zeu.o \
-../PH/write_matrix.o \
-../PH/zstar_eu.o \
-../PH/zstar_eu_us.o
+../PH/write_matrix.o
 
 MODULES = \
 ../Modules/atom.o \
-../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
@@ -173,9 +164,6 @@ PWOBJS = \
 ../PW/ccalbec_nc.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
-../PW/cdiisg_nc.o \
-../PW/cegterg.o \
-../PW/cegterg_nc.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \
@@ -188,13 +176,9 @@ PWOBJS = \
 ../PW/cgramg1_nc.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
-../PW/cinitcgg.o \
-../PW/cinitcgg_nc.o \
-../PW/clean_pw.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
 ../PW/compute_rho.o \
-../PW/constraints_module.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
@@ -203,9 +187,6 @@ PWOBJS = \
 ../PW/davcio.o \
 ../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
-../PW/diis_base.o \
-../PW/real_diis_module.o \
-../PW/complex_diis_module.o \
 ../PW/diropn.o \
 ../PW/divide.o \
 ../PW/divide_et_impera.o \
@@ -216,14 +197,12 @@ PWOBJS = \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
 ../PW/dvloc_of_g.o \
-../PW/dynamics.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \
 ../PW/fftw.o \
-../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_nc.o \
 ../PW/g_psi_mod.o \
@@ -257,7 +236,6 @@ PWOBJS = \
 ../PW/kpoint_grid.o \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
-../PW/lsda_functionals.o \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
