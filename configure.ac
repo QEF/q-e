@@ -101,8 +101,24 @@ f90=$F77
 
 case "$build:$f90" in
 ia64-*-linux-gnu:ifort )
-	is_ifc=1
-	version=8
+	# extract compiler version
+	echo $ECHO_N "checking version of $f90... $ECHO_C"
+	intel_version=`$f90 -V 2>&1 | grep "Intel(R)"`
+	version=`echo $intel_version | awk '{print $8}'`
+	echo "${ECHO_T}$version"
+
+	is_intel=1
+	try_cc="icc gcc cc mpicc pgcc"
+	try_f77="$f90"
+	;;
+*-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
+	# extract compiler version
+	echo $ECHO_N "checking version of $f90... $ECHO_C"
+	intel_version=`$f90 -V 2>&1 | grep "Intel(R)"`
+	version=`echo $intel_version | awk '{print $8}'`
+	echo "${ECHO_T}$version"
+
+	is_intel=1
 	try_cc="icc gcc cc mpicc pgcc"
 	try_f77="$f90"
 	;;
@@ -111,23 +127,20 @@ ia64-*-linux-gnu:ifort )
 	try_cc="pgcc gcc cc icc"
 	try_f77="pgf77 $f90"
 	;;
-*-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
-	# extract compiler version
-	echo $ECHO_N "checking version of $f90... $ECHO_C"
-	ifc_version=`$f90 -V 2>&1 | grep "Intel(R)"`
-	version=`echo $ifc_version | awk '{print $8}'`
-	echo "${ECHO_T}$version"
-
-	is_ifc=1
-	try_cc="icc gcc cc mpicc pgcc"
-	try_f77="$f90"
-	;;
 *-pc-linux-gnu:mpif* )
 	# which compiler is actually under the hood?
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
-	pgi_version=`$f90 -V 2>&1 | grep -e pgf`
-	ifc_version=`$f90 -V 2>&1 | grep "Intel(R)"`
-	if test "$pgi_version" != ""
+	intel_version=`$f90 -V 2>&1 | grep "Intel(R)"`
+	pgi_version=`$f90 -V 2>&1 | grep "pgf"`
+	if test "$intel_version" != ""
+	then
+		version=`echo $intel_version | awk '{print $8}'`
+		echo "${ECHO_T}ifc $version"
+
+		is_intel=1
+		try_cc="mpicc icc gcc cc pgcc"
+		try_f77="mpif77 ifort ifc $f90"
+	elif test "$pgi_version" != ""
 	then
 		name=`echo $pgi_version | awk '{print $1}'`
 		version=`echo $pgi_version | awk '{print $2}'`
@@ -136,14 +149,6 @@ ia64-*-linux-gnu:ifort )
 		is_pgi=1
 		try_cc="mpicc pgcc gcc cc icc"
 		try_f77="mpif77 pgf77 $f90"
-	elif test "$ifc_version" != ""
-	then
-		version=`echo $ifc_version | awk '{print $8}'`
-		echo "${ECHO_T}ifc $version"
-
-		is_ifc=1
-		try_cc="mpicc icc gcc cc pgcc"
-		try_f77="mpif77 ifort ifc $f90"
 	else
 		echo "${ECHO_T}unknown"
 		try_cc="mpicc gcc cc pgcc icc"
@@ -191,10 +196,10 @@ case "$build:$cc:$f90" in
 	# list supported combinations here
 ia64-*-linux-gnu:icc:ifort )                          ;;
 ia64-*-linux-gnu:gcc:ifort )                          ;;
+*-pc-linux-gnu:icc:ifort | *-pc-linux-*:icc:ifc )     ;;
+*-pc-linux-gnu:gcc:ifort | *-pc-linux-*:gcc:ifc )     ;;
 *-pc-linux-gnu:*cc:mpif90 )                           ;;
 *-pc-linux-gnu:pgcc:pgf90 )                           ;;
-*-pc-linux-gnu:icc:ifc | *-pc-linux-*:icc:ifort )     ;;
-*-pc-linux-gnu:gcc:ifc | *-pc-linux-*:gcc:ifort )     ;;
 *-ibm-aix*:mpcc_r:mpxlf*_r | *-ibm-aix*:mpcc:mpxlf* ) ;;
 *-ibm-aix*:xlc:*xlf* | *-ibm-aix*:cc:*xlf* )          ;;
 mips-sgi-*:cc:f90 )                                   ;;
@@ -221,18 +226,15 @@ ia64-*-linux-gnu:ifort )
 	have_cpp=1
 	;;
 *-pc-linux-gnu:* )
-	if test $is_pgi
-	then
-		try_fflags="-fast -r8"
-		try_f90flags="\$(FFLAGS)"
-		try_fflags_noopt="-O0"
-		try_cpp="cpp"
-		try_ldflags=""
-		try_ldflags_static="-Bstatic"
-		try_dflags="$try_dflags -D__PGI"
-	elif test $is_ifc
+	if test $is_intel
 	then
 		# extract integer part of version
+		if test `echo $version | sed 's/\..*//'` -gt 7
+		then
+		        try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
+		else
+		        try_fflags="-Vaxlib -O2 -tpp6"
+		fi
 		if test `echo $version | sed 's/\..*//'` -lt 7
 		then
 			# old versions of ifc require this stuff
@@ -264,18 +266,21 @@ ia64-*-linux-gnu:ifort )
 		else
 			try_f90flags="\$(FFLAGS) -nomodule"
 		fi
-		if test `echo $version | sed 's/\..*//'` -gt 7
-		then
-		        try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
-		else
-		        try_fflags="-Vaxlib -O2 -tpp6"
-		fi
 		try_fflags_noopt="-O0"
 		try_ldflags="-Vaxlib"
 		try_ldflags_static="-static"
 		try_dflags="$try_dflags -D__INTEL"
 		pre_f_dflags="-fpp "
 		have_cpp=1
+	elif test $is_pgi
+	then
+		try_fflags="-fast -r8"
+		try_f90flags="\$(FFLAGS)"
+		try_fflags_noopt="-O0"
+		try_cpp="cpp"
+		try_ldflags=""
+		try_ldflags_static="-Bstatic"
+		try_dflags="$try_dflags -D__PGI"
 	fi
 	;;
 *-ibm-aix*:mpxlf* | *-ibm-aix*:xlf* )
@@ -342,23 +347,23 @@ ia64-*-linux-gnu:icc )
 	c_ldflags="-Vaxlib"
 	;;
 *-pc-linux-gnu:mpicc )
-	if test $is_pgi
-	then
-		try_cflags="-fast"
-		c_ldflags=""
-	elif test $is_ifc
+	if test $is_intel
 	then
 		try_cflags="-O3"
 		c_ldflags="-Vaxlib"
+	elif test $is_pgi
+	then
+		try_cflags="-fast"
+		c_ldflags=""
 	fi
-	;;
-*-pc-linux-gnu:pgcc )
-	try_cflags="-fast"
-	c_ldflags=""
 	;;
 *-pc-linux-gnu:icc )
 	try_cflags="-O3"
 	c_ldflags="-Vaxlib"
+	;;
+*-pc-linux-gnu:pgcc )
+	try_cflags="-fast"
+	c_ldflags=""
 	;;
 *-ibm-aix*:mpcc_r | *-ibm-aix*:mpcc | *-ibm-aix*:xlc | *-ibm-aix*:cc )
 	try_cflags="-q64 -O2"
@@ -442,13 +447,13 @@ F77=$f90 # use Fortran 90 actually (autoconf only knows Fortran 77!)
 if test "$libs" = ""
 then
 	# build list of directories to search
-	if test $is_linux64 && test $is_ifc
+	if test $is_linux64 && test $is_intel
 	then
 		try_libdirs="/usr/local/lib
 			     /opt/intel/mkl70/lib/64
 			     /opt/intel/mkl/mkl61/lib/64 /opt/intel/mkl/lib/64
 			     /opt/intel/mkl61/lib/64"
-	elif test $is_linux && test $is_ifc
+	elif test $is_linux && test $is_intel
 	then
 		try_libdirs="/usr/local/lib
 			     /opt/intel/mkl70/lib/32
@@ -486,7 +491,7 @@ then
 	fi
 
 	# use vendor libraries if available
-	if test $is_linux64 && test $is_ifc
+	if test $is_linux64 && test $is_intel
 	then
 		# check for mkl (in several directories)
 		for dir in none $try_libdirs
@@ -509,7 +514,7 @@ $ac_cv_search_zggev -lmkl_ipf -lguide $libs", , -lmkl_ipf -lguide)
 			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
-	elif test $is_linux && test $is_ifc
+	elif test $is_linux && test $is_intel
 	then
 		# check for mkl (in several directories)
 		for dir in none $try_libdirs
