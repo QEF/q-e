@@ -28,8 +28,13 @@ MODULE io_files
   CHARACTER(LEN=256) :: input_drho = ' '   ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '  ! name of the file with the output drho
   !
-  CHARACTER(LEN=256) :: band_file = ' '
-  CHARACTER(LEN=256) :: tran_file = ' '
+  CHARACTER(LEN=19) :: band_file = ' '
+  CHARACTER(LEN=19) :: tran_file = ' '
+  CHARACTER(LEN=14) :: prefixt   = ' '
+  CHARACTER(LEN=14) :: prefixl   = ' '
+  CHARACTER(LEN=14) :: prefixs   = ' '
+  CHARACTER(LEN=14) :: prefixr   = ' '
+  CHARACTER(LEN=256) :: save_file = ' '
   CHARACTER(LEN=256) :: fil_loc = ' '      !  file with 2D eigenvectors and eigenvalues
   !
   CHARACTER(LEN=14), PARAMETER :: rho_name      = 'CHARGE_DENSITY'
