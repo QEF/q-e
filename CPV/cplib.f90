@@ -84,16 +84,11 @@
 !
       integer natwfc, is, ia, ir, nb, l, m, lm, i
       real(kind=8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
-     &     chiq(:), gxn(:,:)
+     &     chiq(:)
 !
 !
       allocate(ylm(ngw,(lmaxkb+1)**2))
-      allocate(gxn(3,ngw))
-      do i=1,3
-         gxn(i,1:ngw) = gx(1:ngw,i)
-      end do
-      call ylmr2 ((lmaxkb+1)**2, ngw, gxn, g, ylm)
-      deallocate (gxn)
+      call ylmr2 ((lmaxkb+1)**2, ngw, gx, g, ylm)
       allocate(q(ngw))
       allocate(jl(mmaxx))
       allocate(vchi(mmaxx))
@@ -559,9 +554,9 @@
       do j=1,3
          do k=1,3
             do ig=1,ngw
-               gtmp(ig) = gx(ig,j)*(gx(ig,1)*ainv(k,1)+                 &
-     &                              gx(ig,2)*ainv(k,2)+                 &
-     &                              gx(ig,3)*ainv(k,3)) *               &
+               gtmp(ig) = gx(j,ig)*(gx(1,ig)*ainv(k,1)+                 &
+     &                              gx(2,ig)*ainv(k,2)+                 &
+     &                              gx(3,ig)*ainv(k,3)) *               &
      &                 (1.d0+2.d0*agg/sgg/sqrt(pi)*                     &
      &            exp(-(tpiba2*g(ig)-e0gg)*(tpiba2*g(ig)-e0gg)/sgg/sgg))
             end do
@@ -627,16 +622,16 @@
                do ig=1,ngs
                   drhotmp(ig,i,j) = drhotmp(ig,i,j) -                   &
      &                    sfac(ig,is)*drhops(ig,is)*                    &
-     &                    2.d0*tpiba2*gx(ig,i)*(gx(ig,1)*ainv(j,1)+     &
-     &                     gx(ig,2)*ainv(j,2)+gx(ig,3)*ainv(j,3))-      &
+     &                    2.d0*tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+     &
+     &                     gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3))-      &
      &                    sfac(ig,is)*rhops(ig,is)*ainv(j,i)
                enddo
             enddo
             if (ng0.ne.1) vtemp(1)=(0.d0,0.d0)
             do ig=ng0,ng
                vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/(tpiba2*g(ig))**2 &
-     &                 * tpiba2*gx(ig,i)*(gx(ig,1)*ainv(j,1)+           &
-     &                   gx(ig,2)*ainv(j,2)+gx(ig,3)*ainv(j,3)) +       &
+     &                 * tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+           &
+     &                   gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3)) +       &
      &                 conjg(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
             enddo
             dh(i,j)=fpi*omega*real(SUM(vtemp))*wz
@@ -757,10 +752,10 @@
             do is=1,nsp
                do ig=1,ngs
                   vtemp(ig)=vtemp(ig)-conjg(rhotmp(ig))*sfac(ig,is)*    &
-     &                    dvps(ig,is)*2.d0*tpiba2*gx(ig,i)*             &
-     &                    (gx(ig,1)*ainv(j,1) +                         &
-     &                     gx(ig,2)*ainv(j,2) +                         &
-     &                     gx(ig,3)*ainv(j,3) ) +                       &
+     &                    dvps(ig,is)*2.d0*tpiba2*gx(i,ig)*             &
+     &                    (gx(1,ig)*ainv(j,1) +                         &
+     &                     gx(2,ig)*ainv(j,2) +                         &
+     &                     gx(3,ig)*ainv(j,3) ) +                       &
      &                    conjg(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
                enddo
             enddo
@@ -1578,7 +1573,7 @@
                qv(:) = (0.d0, 0.d0)
                if (nfft.eq.2) then
                   do ig=1,ngb
-                     facg = tpibab*cmplx(0.d0,gxb(ig,ix))*rhocb(ig,is)
+                     facg = tpibab*cmplx(0.d0,gxb(ix,ig))*rhocb(ig,is)
                      qv(npb(ig)) = eigrb(ig,ia,is)*facg                 &
      &                           + ci * eigrb(ig,ia+1,is)*facg 
                      qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*facg)          &
@@ -1586,7 +1581,7 @@
                   end do
                else
                   do ig=1,ngb
-                     facg = tpibab*cmplx(0.d0,gxb(ig,ix))*rhocb(ig,is)
+                     facg = tpibab*cmplx(0.d0,gxb(ix,ig))*rhocb(ig,is)
                      qv(npb(ig)) = eigrb(ig,ia,is)*facg
                      qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*facg)
                   end do
@@ -1735,7 +1730,7 @@
                      cvn=vps(ig,is)*conjg(rhog(ig,iss))
                      eigrx=ei1(in1p(ig),ia,is)*ei2(in2p(ig),ia,is)      &
      &                                        *ei3(in3p(ig),ia,is)
-                     vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ig,ix)) 
+                     vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
                   end do
                else
                   isup=1
@@ -1748,7 +1743,7 @@
      &                                   +rhog(ig,isdw))
                      eigrx=ei1(in1p(ig),ia,is)*ei2(in2p(ig),ia,is)      &
      &                                        *ei3(in3p(ig),ia,is)
-                     vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ig,ix)) 
+                     vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
                   end do
                endif
                fion1(ix,ia,is) = fion1(ix,ia,is) + tpiba*omega*         &
@@ -1864,19 +1859,19 @@
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,1)
+               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)
             end do
 ! py-like gaussians
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,2)
+               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(2,ig)
             end do
 ! pz-like gaussians
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,3)
+               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(3,ig)
             end do
          end do
       is=2
@@ -1891,44 +1886,44 @@
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,1)
+!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)
 !            end do
 ! py-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,2)
+!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(2,ig)
 !            end do
 ! pz-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,3)
+!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(3,ig)
 !            end do
 ! dxy-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,1)*gx(ig,2)
+!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)*gx(2,ig)
 !            end do
 ! dxz-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,1)*gx(ig,3)
+!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)*gx(3,ig)
 !            end do
 ! dxy-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(ig,2)*gx(ig,3)
+!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(2,ig)*gx(3,ig)
 !            end do
 ! dx2-y2-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
 !               cm(ig,nband)=auxf*eigr(ig,ia,is)*                        &
-!     &              (gx(ig,1)**2-gx(ig,2)**2)
+!     &              (gx(1,ig)**2-gx(2,ig)**2)
 !            end do
          end do
 !!!      end do
@@ -2156,7 +2151,7 @@
 !     third step: allocate space
 !     ng is the number of Gs local to this processor
 !
-      allocate(gx(ng,3))
+      allocate(gx(3,ng))
       allocate(g(ng))
       allocate(np(ng))
       allocate(nm(ng))
@@ -2457,9 +2452,9 @@
          i=in1p(ig)
          j=in2p(ig)
          k=in3p(ig)
-         gx(ig,1)=i*b1(1)+j*b2(1)+k*b3(1)
-         gx(ig,2)=i*b1(2)+j*b2(2)+k*b3(2)
-         gx(ig,3)=i*b1(3)+j*b2(3)+k*b3(3)
+         gx(1,ig)=i*b1(1)+j*b2(1)+k*b3(1)
+         gx(2,ig)=i*b1(2)+j*b2(2)+k*b3(2)
+         gx(3,ig)=i*b1(3)+j*b2(3)+k*b3(3)
       end do
 
       IF( ALLOCATED( index ) ) deallocate( index )
@@ -2474,7 +2469,7 @@
 ! As ggen, for the box grid. A "b" is appended to box variables.
 ! The documentation for ggen applies
 !
-      use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, gxnb, glb, npb, nmb
+      use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
       use gvecb, only: iglb, in1pb, in2pb, in3pb
       use io_global, only: stdout
 
@@ -2527,8 +2522,7 @@
 !
 !     second step: allocate space
 !
-      allocate(gxb(ngb,3))
-      allocate(gxnb(ngb,3))
+      allocate(gxb(3,ngb))
       allocate(gb(ngb))
       allocate(npb(ngb))
       allocate(nmb(ngb))
@@ -2687,16 +2681,9 @@
          i=in1pb(ig)
          j=in2pb(ig)
          k=in3pb(ig)
-         gxb(ig,1)=i*b1b(1)+j*b2b(1)+k*b3b(1)
-         gxb(ig,2)=i*b1b(2)+j*b2b(2)+k*b3b(2)
-         gxb(ig,3)=i*b1b(3)+j*b2b(3)+k*b3b(3)
-      end do
-!
-      do i=1,3
-         gxnb(1,i)=0.d0
-         do ig=2,ngb
-            gxnb(ig,i)=gxb(ig,i)/sqrt(gb(ig))
-         end do
+         gxb(1,ig)=i*b1b(1)+j*b2b(1)+k*b3b(1)
+         gxb(2,ig)=i*b1b(2)+j*b2b(2)+k*b3b(2)
+         gxb(3,ig)=i*b1b(3)+j*b2b(3)+k*b3b(3)
       end do
 !
       return
@@ -3472,9 +3459,9 @@
                         endif
                         if (nfft.eq.2) then
                            do ig=1,ngb
-                              facg1 = cmplx(0.d0,-gxb(ig,ik)) *         &
+                              facg1 = cmplx(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is) * fac1
-                              facg2 = cmplx(0.d0,-gxb(ig,ik)) *         &
+                              facg2 = cmplx(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is) * fac2
                               qv(npb(ig)) = qv(npb(ig))                 &
      &                                    +    eigrb(ig,ia  ,is)*facg1  &
@@ -3485,7 +3472,7 @@
                            end do
                         else
                            do ig=1,ngb
-                              facg1 = cmplx(0.d0,-gxb(ig,ik)) *         &
+                              facg1 = cmplx(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is)*fac1
                               qv(npb(ig)) = qv(npb(ig))                 &
      &                                    +    eigrb(ig,ia,is)*facg1
@@ -3536,9 +3523,9 @@
                            fac2=     fac*tpibab*rhovan(isa,ijv,isdw)
                         end if
                         do ig=1,ngb
-                           facg1 = fac1 * cmplx(0.d0,-gxb(ig,ik)) *     &
+                           facg1 = fac1 * cmplx(0.d0,-gxb(ik,ig)) *     &
      &                                qgb(ig,ijv,is) * eigrb(ig,ia,is)
-                           facg2 = fac2 * cmplx(0.d0,-gxb(ig,ik)) *     &
+                           facg2 = fac2 * cmplx(0.d0,-gxb(ik,ig)) *     &
      &                                qgb(ig,ijv,is) * eigrb(ig,ia,is)
                            qv(npb(ig)) = qv(npb(ig))                    &
      &                                    + facg1 + ci*facg2
@@ -3824,7 +3811,7 @@
 !
       do k=1,3
          do ig=1,ngw
-            gk(ig)=gx(ig,k)*tpiba
+            gk(ig)=gx(k,ig)*tpiba
          end do
 !
          do is=1,nsp
@@ -8620,8 +8607,8 @@
             v(ig)=(0.0,0.0)
          end do
          do ig=1,ng
-            v(np(ig))=      ci*tpiba*gx(ig,1)*rhog(ig,iss)
-            v(nm(ig))=conjg(ci*tpiba*gx(ig,1)*rhog(ig,iss))
+            v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
+            v(nm(ig))=conjg(ci*tpiba*gx(1,ig)*rhog(ig,iss))
          end do
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
@@ -8632,10 +8619,10 @@
             v(ig)=(0.0,0.0)
          end do
          do ig=1,ng
-            v(np(ig))= tpiba*(      ci*gx(ig,2)*rhog(ig,iss)-           &
-     &                                 gx(ig,3)*rhog(ig,iss) )
-            v(nm(ig))= tpiba*(conjg(ci*gx(ig,2)*rhog(ig,iss)+           &
-     &                                 gx(ig,3)*rhog(ig,iss)))
+            v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
+     &                                 gx(3,ig)*rhog(ig,iss) )
+            v(nm(ig))= tpiba*(conjg(ci*gx(2,ig)*rhog(ig,iss)+           &
+     &                                 gx(3,ig)*rhog(ig,iss)))
          end do
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
@@ -8691,7 +8678,7 @@
 !     multiply by (iG) to get x=(\grad_x gradr)(G)
 !
          do ig=1,ng
-            x(ig)=ci*tpiba*gx(ig,1)*v(np(ig))
+            x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
          end do
 !
 ! y and z polarizations: as above, two fft's together
@@ -8704,9 +8691,9 @@
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(ig,2)*0.5*cmplx( real(fp),aimag(fm))
+     &           ci*tpiba*gx(2,ig)*0.5*cmplx( real(fp),aimag(fm))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(ig,3)*0.5*cmplx(aimag(fp),-real(fm))
+     &           ci*tpiba*gx(3,ig)*0.5*cmplx(aimag(fp),-real(fm))
          end do
 !
 !     x = \sum_alpha(\grad_alpha gradr)(G)

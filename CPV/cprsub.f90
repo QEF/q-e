@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 CP90 group
+! Copyright (C) 2002-2004 CP90 group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -86,70 +86,6 @@
             end do
          end do
       end do
-!
-      return
-      end
-!-----------------------------------------------------------------------
-      real(kind=8) function dylmr(l,ig,i,j)
-!-----------------------------------------------------------------------
-!     calculation of the g-derivatives for real spherical harmonics
-!     l is combined index for lm  (l=1,2...9)
-!     order:  s, p_x, p_z, p_y, d_xy, d_xz, d_z^2, d_yz, d_x^2-y^2
-!
-      !use cell_base
-      use gvec
-
-      ! this isn't really needed, but if I remove it, ifc 7.1
-      ! gives an "internal compiler error"
-      use reciprocal_vectors, only: ng0 => gstart
-
-      use constants, only: pi, fpi
-      use cell_base, only: ainv
-      implicit none
-!
-      integer l,ig,i,j
-!
-      integer ii,ij,jj,ik
-      real(kind=8) gv(3),gt(3),dg(3,3,3),x,y,z,r
-!
-!
-      if (ig.gt.ng) call errore(' ylmr ',' ig.gt.ng ',ig)
-      x = gx(ig,1)
-      y = gx(ig,2)
-      z = gx(ig,3)
-!
-!     yml is undefined when  g=0 and l>0
-!
-      r = max(sqrt(x*x+y*y+z*z),1.0d-6)
-      x = x/r
-      y = y/r
-      z = z/r
-      gv(1)=x
-      gv(2)=y
-      gv(3)=z
-      do jj=1,3
-         gt(jj)=x*ainv(jj,1)+y*ainv(jj,2)+z*ainv(jj,3)
-      end do
-      do ii=1,3
-         do ij=1,3
-            do ik=1,3
-               dg(ik,ii,ij)=-gv(ii)*ainv(ij,ik)+gv(ik)*gv(ii)*gt(ij)
-            end do
-         end do
-      end do
-!
-!     only l=1 is ok also when  g=0
-!
-      if (l.eq.1) dylmr=0.0
-      if (l.eq.2) dylmr=sqrt(3.0/fpi)*dg(1,i,j)
-      if (l.eq.3) dylmr=sqrt(3.0/fpi)*dg(3,i,j)
-      if (l.eq.4) dylmr=sqrt(3.0/fpi)*dg(2,i,j)
-      if (l.eq.5) dylmr=sqrt(15.0/fpi)*(dg(1,i,j)*y+dg(2,i,j)*x)
-      if (l.eq.6) dylmr=sqrt(15.0/fpi)*(dg(1,i,j)*z+dg(3,i,j)*x)
-      if (l.eq.7) dylmr=sqrt(5.0/fpi/4.0)*6.0*z*dg(3,i,j)
-      if (l.eq.8) dylmr=sqrt(15.0/fpi)*(dg(2,i,j)*z+dg(3,i,j)*y)
-      if (l.eq.9) dylmr=sqrt(15.0/fpi/4.0)*2.0*(x*dg(1,i,j)-y*dg(2,i,j))
-      if (l.ge.10) call errore(' ylmr',' higher l not programmed  l=',l)
 !
       return
       end
@@ -511,17 +447,17 @@
 !
       integer i1,i2,i3,ig
 !
-!     calculation of gx(ng,3)
+!     calculation of gx(3,ng)
 !
       gmax=0.
       do ig=1,ng
          i1=in1p(ig)
          i2=in2p(ig)
          i3=in3p(ig)
-         gx(ig,1)=i1*b1(1)+i2*b2(1)+i3*b3(1)
-         gx(ig,2)=i1*b1(2)+i2*b2(2)+i3*b3(2)
-         gx(ig,3)=i1*b1(3)+i2*b2(3)+i3*b3(3)
-         g(ig)=gx(ig,1)*gx(ig,1)+gx(ig,2)*gx(ig,2)+gx(ig,3)*gx(ig,3)
+         gx(1,ig)=i1*b1(1)+i2*b2(1)+i3*b3(1)
+         gx(2,ig)=i1*b1(2)+i2*b2(2)+i3*b3(2)
+         gx(3,ig)=i1*b1(3)+i2*b2(3)+i3*b3(3)
+         g(ig)=gx(1,ig)**2 + gx(2,ig)**2 + gx(3,ig)**2
          if(g(ig).gt.gmax) gmax=g(ig)
       enddo
 !
@@ -545,25 +481,17 @@
 !
       integer i, i1,i2,i3,ig
 !
-!     calculation of gxb(ngbx,3)
+!     calculation of gxb(3,ngbx)
 !
       do ig=1,ngb
          i1=in1pb(ig)
          i2=in2pb(ig)
          i3=in3pb(ig)
-         gxb(ig,1)=i1*b1b(1)+i2*b2b(1)+i3*b3b(1)
-         gxb(ig,2)=i1*b1b(2)+i2*b2b(2)+i3*b3b(2)
-         gxb(ig,3)=i1*b1b(3)+i2*b2b(3)+i3*b3b(3)
-         gb(ig)=gxb(ig,1)*gxb(ig,1)+gxb(ig,2)*gxb(ig,2)+                &
-     &          gxb(ig,3)*gxb(ig,3)
+         gxb(1,ig)=i1*b1b(1)+i2*b2b(1)+i3*b3b(1)
+         gxb(2,ig)=i1*b1b(2)+i2*b2b(2)+i3*b3b(2)
+         gxb(3,ig)=i1*b1b(3)+i2*b2b(3)+i3*b3b(3)
+         gb(ig)=gxb(1,ig)**2 + gxb(2,ig)**2 + gxb(3,ig)**2
       enddo
-!
-      do i=1,3
-         gxnb(1,i)=0.
-         do ig=2,ngb
-            gxnb(ig,i)=gxb(ig,i)/sqrt(gb(ig))
-         end do
-      end do
 !
       return
       end
@@ -610,7 +538,7 @@
          end do
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ig=1,ng
-            x(ig)=ci*tpiba*gx(ig,1)*v(np(ig))
+            x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
          end do
 !
          if(tpre) then
@@ -618,8 +546,8 @@
                do j=1,3
                   do ig=1,ng
                      vtemp(ig) = omega*ci*conjg(v(np(ig)))*             &
-     &                    tpiba*(-rhog(ig,iss)*gx(ig,i)*ainv(j,1)+      &
-     &                    gx(ig,1)*drhog(ig,iss,i,j))
+     &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,1)+      &
+     &                    gx(1,ig)*drhog(ig,iss,i,j))
                   end do
                   dexc(i,j) = real(SUM(vtemp))*2.0
                end do
@@ -635,9 +563,9 @@
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(ig,2)*0.5*cmplx( real(fp),aimag(fm))
+     &           ci*tpiba*gx(2,ig)*0.5*cmplx( real(fp),aimag(fm))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(ig,3)*0.5*cmplx(aimag(fp),-real(fm))
+     &           ci*tpiba*gx(3,ig)*0.5*cmplx(aimag(fp),-real(fm))
          end do
 !
          if(tpre) then
@@ -648,11 +576,11 @@
                      fm=v(np(ig))-v(nm(ig))
                      vtemp(ig) = omega*ci*                              &
      &                    (0.5*cmplx(real(fp),-aimag(fm))*              &
-     &                    tpiba*(-rhog(ig,iss)*gx(ig,i)*ainv(j,2)+      &
-     &                    gx(ig,2)*drhog(ig,iss,i,j))+                  &
+     &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,2)+      &
+     &                    gx(2,ig)*drhog(ig,iss,i,j))+                  &
      &                    0.5*cmplx(aimag(fp),real(fm))*tpiba*          &
-     &                    (-rhog(ig,iss)*gx(ig,i)*ainv(j,3)+            &
-     &                    gx(ig,3)*drhog(ig,iss,i,j)))
+     &                    (-rhog(ig,iss)*gx(i,ig)*ainv(j,3)+            &
+     &                    gx(3,ig)*drhog(ig,iss,i,j)))
                   end do
                   dexc(i,j) = dexc(i,j) + 2.0*real(SUM(vtemp))
                end do
@@ -952,10 +880,10 @@
       implicit none
       integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj
       real(kind=8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
-      real(kind=8), allocatable:: ylmb(:,:), ylm(:,:), gxn(:,:)
+      real(kind=8), allocatable:: ylmb(:,:), ylm(:,:), &
+                                  dylmb(:,:,:,:), dylm(:,:,:,:)
       complex(kind=8), allocatable:: qgbs(:), dqgbs(:,:,:)
       real(kind=8) xg, c, betagl, dbetagl, gg
-      real(kind=8), external :: ylmr, dylmr
 !
 ! 
       allocate(dqradb(ngb,nbrx,nbrx,lqx,nsp))
@@ -965,12 +893,11 @@
 !
       qradb(:,:,:,:,:) = 0.d0
       dqrad(:,:,:,:,:,:,:) = 0.d0
-      allocate(gxn(3,ngb))
-      do i=1,3
-         gxn(i,1:ngb) = gxb(1:ngb,i)
-      end do
-      call ylmr2 (lqx*lqx, ngb, gxn, gb, ylmb)
-      deallocate (gxn)
+      call ylmr2 (lqx*lqx, ngb, gxb, gb, ylmb)
+      if (tpre) then
+         allocate(dylmb(ngb,lqx*lqx,3,3))
+         call dylmr2_(lqx*lqx, ngb, gxb, gb, ainv, dylmb)
+      end if
 
 !     ===============================================================
 !     initialization for vanderbilt species
@@ -1012,10 +939,10 @@
                               dqrad(ig,iv,jv,l,is,i,j)=                 &
      &                          -qradb(ig,iv,jv,l,is)*ainv(j,i)         &
      &                          -c*dqradb(ig,iv,jv,l,is)*               &
-     &                          gxb(ig,i)/gb(ig)*                       &
-     &                          (gxb(ig,1)*ainv(j,1)+                   &
-     &                           gxb(ig,2)*ainv(j,2)+                   &
-     &                           gxb(ig,3)*ainv(j,3)) 
+     &                          gxb(i,ig)/gb(ig)*                       &
+     &                          (gxb(1,ig)*ainv(j,1)+                   &
+     &                           gxb(2,ig)*ainv(j,2)+                   &
+     &                           gxb(3,ig)*ainv(j,3)) 
                               dqrad(ig,jv,iv,l,is,i,j) =                &
      &                          dqrad(ig,iv,jv,l,is,i,j)
                            enddo
@@ -1038,7 +965,7 @@
 !       ijv :   1  2  3 ...  
 !
                ijv=ijv+1
-               call qvan2b(ngb,iv,jv,is,ylmb,qgbs,dqgbs)
+               call qvan2b(ngb,iv,jv,is,ylmb,dylmb,qgbs,dqgbs)
                do ig=1,ngb
                   qgb(ig,ijv,is)=qgbs(ig)
                end do
@@ -1058,6 +985,7 @@
             end do
          end do
       end do
+      if (tpre) deallocate(dylmb)
       deallocate(qgbs)
       deallocate(dqgbs)
       deallocate(ylmb)
@@ -1069,12 +997,11 @@
 !
 !
       allocate(ylm(ngw,(lmaxkb+1)**2))
-      allocate(gxn(3,ngw))
-      do i=1,3
-         gxn(i,1:ngw) = gx(1:ngw,i)
-      end do
-      call ylmr2 ((lmaxkb+1)**2, ngw, gxn, g, ylm)
-      deallocate (gxn)
+      call ylmr2 ((lmaxkb+1)**2, ngw, gx, g, ylm)
+      if (tpre) then
+         allocate(dylm(ngw,(lmaxkb+1)**2,3,3))
+         call dylmr2_((lmaxkb+1)**2, ngw, gx, g, ainv, dylm)
+      end if
 !
       do is=1,nsp
 !     ---------------------------------------------------------------
@@ -1090,7 +1017,7 @@
                do i=1,3
                   do j=1,3
                      dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)    &
-     &                                 +c*dylmr(lp,1,i,j)*betagl
+     &                                 +c*dylm(1,lp,i,j)*betagl
                   enddo
                enddo
             end if
@@ -1107,11 +1034,11 @@
                      do j=1,3
                         dbeta(ig,iv,is,i,j)=                            &
      &                    -0.5*beta(ig,iv,is)*ainv(j,i)                 &
-     &                    +c*dylmr(lp,ig,i,j)*betagl                    &
-     &                    -c*ylm (ig,lp)*dbetagl*gx(ig,i)/g(ig)         &
-     &                    *(gx(ig,1)*ainv(j,1)+                         &
-     &                      gx(ig,2)*ainv(j,2)+                         &
-     &                      gx(ig,3)*ainv(j,3))
+     &                    +c*dylm(ig,lp,i,j)*betagl                     &
+     &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/g(ig)         &
+     &                    *(gx(1,ig)*ainv(j,1)+                         &
+     &                      gx(2,ig)*ainv(j,2)+                         &
+     &                      gx(3,ig)*ainv(j,3))
                      end do
                   end do
                end if
@@ -1145,6 +1072,7 @@
 !     ---------------------------------------------------------------
       end do
 !
+      if (tpre) deallocate(dylm)
       deallocate(ylm)
 !
       return
@@ -1292,7 +1220,7 @@
          if(ipp(is).le.1) nhsavb=nhsavb+na(is)*nh(is)
          nlcc=nlcc+ifpcor(is)
       end do
-      if (lmaxkb > lmaxx) call errore('nlinit ',' l > 3 ,l= ',lmaxkb)
+      if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
       lqx = 2*lmaxkb + 1
       if (nhsa.le.0) call errore('nlinit ','not implemented ?',nhsa)
 !
@@ -1329,13 +1257,7 @@
       do is=1,nsp
          ind=0
          do iv=1,nbeta(is)
-            if(lll(iv,is).eq.0)then
-               lm=0
-            else if (lll(iv,is).eq.1) then
-               lm=1
-            else if (lll(iv,is).eq.2) then
-               lm=4
-            endif
+            lm = lll(iv,is)**2
             do il=1,2*lll(iv,is)+1
                lm=lm+1
                ind=ind+1
@@ -1574,7 +1496,7 @@
       end
 
 !-------------------------------------------------------------------------
-      subroutine qvan2b(ngy,iv,jv,is,ylm,qg,dqg)
+      subroutine qvan2b(ngy,iv,jv,is,ylm,dylm,qg,dqg)
 !--------------------------------------------------------------------------
 !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
 !
@@ -1595,8 +1517,7 @@
 !
       integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
       complex(kind=8) sig
-      real(kind=8) :: ylm(ngb,lqx*lqx)
-      real(kind=8), allocatable:: dylm(:,:,:)
+      real(kind=8) :: ylm(ngb,lqx*lqx), dylm(ngb,lqx*lqx,3,3)
 ! 
 !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
 !       ivs = 1..4     s_1 s_2 p_1 p_2
@@ -1606,12 +1527,11 @@
       jvs=indv(jv,is)
       ivl=indlm(iv,is)
       jvl=indlm(jv,is)
-      if(ivl.gt.nlx)  call errore(' qvan ',' ivl.gt.nlx  ',ivl)
-      if(jvl.gt.nlx)  call errore(' qvan ',' jvl.gt.nlx  ',jvl)
+      if(ivl > nlx)  call errore(' qvan2b ',' ivl out of bounds ',ivl)
+      if(jvl > nlx)  call errore(' qvan2b ',' jvl out of bounds ',jvl)
 !
       qg(:) = (0.d0, 0.d0)
       if(tpre) then
-         allocate(dylm(ngb,3,3))
          dqg(:,:,:) = (0.d0, 0.d0)
       end if
 !
@@ -1620,21 +1540,27 @@
 !
       do i=1,lpx(ivl,jvl)
          lp=lpl(ivl,jvl,i)
+         if (lp > lqx*lqx) call errore(' qvanb ',' lp out of bounds ',lp)
 !
 !     extraction of angular momentum l from lp:  
+!     l = int ( sqrt( float(l-1) + epsilon) ) + 1
 !
-         if (lp.eq.1) then
+         if (lp == 1) then
             l=1         
-         else if ((lp.ge.2) .and. (lp.le.4)) then
+         else if ((lp >= 2) .and. (lp <= 4)) then
             l=2
-         else if ((lp.ge.5) .and. (lp.le.9)) then
+         else if ((lp >= 5) .and. (lp <= 9)) then
             l=3
-         else if ((lp.ge.10).and.(lp.le.16)) then
+         else if ((lp >= 10).and.(lp <= 16)) then
             l=4
-         else if ((lp.ge.17).and.(lp.le.25)) then
+         else if ((lp >= 17).and.(lp <= 25)) then
             l=5
-         else if (lp.ge.26) then 
-            call errore(' qvanb ',' lp.ge.26 ',lp)
+         else if ((lp >= 26).and.(lp <= 36)) then 
+            l=6
+         else if ((lp >= 37).and.(lp <= 49)) then 
+            l=7
+         else
+            call errore(' qvan2b ',' not implemented ',lp)
          endif
 !     
 !       sig= (-i)^l
@@ -1645,442 +1571,53 @@
             qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ivs,jvs,l,is)
          end do
          if(tpre)then
-            call dylmr2b(lp,ngy,ngb,gxnb,dylm)
             do ij=1,3
                do ii=1,3
                   do ig=1,ngy
                      dqg(ig,ii,ij)=dqg(ig,ii,ij)+sig*                   &
-     &                    ( ylm(ig,lp)  *dqrad(ig,ivs,jvs,l,is,ii,ij)+ &
-     &                    dylm(ig,ii,ij)*qradb(ig,ivs,jvs,l,is)       )
+     &                    ( ylm(ig,lp) * dqrad(ig,ivs,jvs,l,is,ii,ij)+  &
+     &                     dylm(ig,lp,ii,ij)*qradb(ig,ivs,jvs,l,is)     )
                   end do
                end do
             end do
          endif
       end do
 !
-      if (tpre) deallocate(dylm)
 !
       return
       end
-!-------------------------------------------------------------------------
-      subroutine dylmr2b(l,ngy,ngb,gxnb,dylm)
 !-----------------------------------------------------------------------
-!     derivatives of real spherical harmonics (see ylmr2b)
-!
-      use constants, only: pi, fpi
-      use cell_base, only: ainv
-!
-      implicit none
-      integer l, ngy, ngb
-      real(kind=8) gxnb(ngb,3), dylm(ngb,3,3)
-!
-      integer i, j, k, jj, ig
-      real(kind=8), allocatable:: gxt(:,:), dg(:,:,:,:)
-      real(kind=8) gsq1, gsq2, gsq3, c
-!
-!
-      if (ngy.gt.ngb) call errore('dylmr2 ',' ngy.gt.ngb ',ngy)
-      allocate (gxt(ngb,3))
-      allocate (dg(ngb,3,3,3))
-!
-      do i=1,3
-         do j=1,3
-            dylm(1,i,j)=0.
-         enddo
-      enddo
-      do jj=1,3
-         gxt(1,jj)=0.
-      enddo
-      do ig=2,ngy
-         do jj=1,3
-            gxt(ig,jj)=gxnb(ig,1)*ainv(jj,1)+gxnb(ig,2)*ainv(jj,2)+     &
-     &                 gxnb(ig,3)*ainv(jj,3)
-         enddo
-      enddo
-      do ig=2,ngy
-         do i=1,3
-            do j=1,3
-               do k=1,3
-                  dg(ig,k,i,j)=-gxnb(ig,i)*ainv(j,k) +                  &
-     &                          gxnb(ig,k)*gxnb(ig,i)*gxt(ig,j)
-               enddo 
-            enddo 
-         enddo 
-      enddo 
-!
-      if (l.eq.1) then
-         do ig=1,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=0.
-               enddo
-            enddo
-         end do
-      else if (l.eq.2) then
-!     x
-         c=sqrt(3./fpi)
-!
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*dg(ig,1,i,j)
-               enddo
-            enddo
-         end do
-      else if (l.eq.3) then
-!     z
-         c=sqrt(3./fpi)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*dg(ig,3,i,j)
-               enddo
-            enddo
-         end do
-      else if (l.eq.4) then
-!     y
-         c=sqrt(3./fpi)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*dg(ig,2,i,j)
-               enddo
-            enddo
-         end do
-      else if (l.eq.5) then
-!     x*y
-         c=sqrt(15./fpi)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(dg(ig,1,i,j)*gxnb(ig,2) +             &
-     &                 dg(ig,2,i,j)*gxnb(ig,1))
-               enddo
-            enddo
-         end do
-      else if (l.eq.6) then
-!     x*z
-         c=sqrt(15./fpi)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(dg(ig,1,i,j)*gxnb(ig,3) +             &
-     &                 dg(ig,3,i,j)*gxnb(ig,1))
-               enddo
-            enddo
-         end do
-      else if (l.eq.7) then
-!     (3.*z*z-1.0)
-         c=sqrt(5.0/fpi/4.0)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*6.*dg(ig,3,i,j)*gxnb(ig,3)
-               enddo
-            enddo
-         end do
-      else if (l.eq.8) then
-!     y*z
-         c=sqrt(15./fpi)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(dg(ig,2,i,j)*gxnb(ig,3) +             &
-     &                 dg(ig,3,i,j)*gxnb(ig,2))
-               enddo
-            enddo
-         end do
-      else if (l.eq.9) then
-!     x*x-y*y
-         c=sqrt(15./fpi/4.)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*2.*(dg(ig,1,i,j)*gxnb(ig,1)-           &
-     &                 dg(ig,2,i,j)*gxnb(ig,2))
-               enddo
-            enddo
-         end do
-      else if (l.eq.10) then
-!     x(x^2-3r^2/5)
-         c=sqrt(7./fpi)*5./2.
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(3.*gxnb(ig,1)*gxnb(ig,1)-0.6)*        &
-     &                         (-gxnb(ig,i)*ainv(j,1) +                 &
-     &                           gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))
-               enddo
-            enddo
-         end do
-      else if (l.eq.11) then
-!     y(y^2-3r^2/5)
-         c=sqrt(7./fpi)*5./2.
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(3.*gxnb(ig,2)*gxnb(ig,2)-0.6)*        &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))
-               enddo
-            enddo
-         end do
-      else if (l.eq.12) then
-!     xyz
-         c=sqrt(7.*15./fpi)
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,1)*gxnb(ig,2)*                &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j)) +             &
-     &                 gxnb(ig,1)*gxnb(ig,3)*                           &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j)) +             &
-     &                   gxnb(ig,2)*gxnb(ig,3)*                         &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j)))
-               enddo
-            enddo
-         end do
-      else if (l.eq.13) then
-!     z(z^2-.6r^2)
-         c=sqrt(7./fpi)*5./2.
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(3.*gxnb(ig,3)*gxnb(ig,3)-0.6)*        &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))
-               enddo
-            enddo
-         end do
-      else if (l.eq.14) then
-!     z(x^2-y^2)
-         c=sqrt(7.*15./fpi)/2.
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,3)*2.*                        &
-     &                 ((-gxnb(ig,i)*ainv(j,1)+                         &
-     &                 gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,1)-     &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,2))+  &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))*              &
-     &                 (gxnb(ig,1)*gxnb(ig,1)-gxnb(ig,2)*gxnb(ig,2)))
-               enddo
-            enddo
-         end do
-      else if (l.eq.15) then
-!     y(z^2-x^2)
-         c=sqrt(7.*15./fpi)/2.
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,2)*2.*((-gxnb(ig,i)*ainv(j,3)+&
-     &                 gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,3)-     &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,1))+  &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))*              &
-     &                 (gxnb(ig,3)*gxnb(ig,3)-gxnb(ig,1)*gxnb(ig,1)))
-               enddo
-            enddo
-         end do
-      else if (l.eq.16) then
-!     x(y^2-z^2)
-         c=sqrt(7.*15./fpi)/2.
-         do ig=2,ngy
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,1)*2.*((-gxnb(ig,i)*ainv(j,2)+&
-     &                 gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,2)-     &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,3))+  &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))*              &
-     &                 (gxnb(ig,2)*gxnb(ig,2)-gxnb(ig,3)*gxnb(ig,3)))
-               enddo
-            enddo
-         end do
-      else if (l.eq.17) then
-!     a1
-         c=sqrt(3.*7./fpi)*5./4.
-         do ig=2,ngy
-            gsq1=gxnb(ig,1)*gxnb(ig,1)
-            gsq2=gxnb(ig,2)*gxnb(ig,2)
-            gsq3=gxnb(ig,3)*gxnb(ig,3)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*4.*(gsq1*gxnb(ig,1)*                   &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gsq2*gxnb(ig,2)*                                 &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gsq3*gxnb(ig,3)*                                 &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j)))
-               enddo
-            enddo
-         end do
-      else if (l.eq.18) then
-         c=sqrt(9.*35./fpi)/2.
-         do ig=2,ngy        ! yz(y^2-z^2)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,2)*gxnb(ig,3)*2.*             &
-     &                 ((-gxnb(ig,i)*ainv(j,2)+                         &
-     &                 gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,2)-     &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,3))+  &
-     &                 (gxnb(ig,2)*gxnb(ig,2)-gxnb(ig,3)*gxnb(ig,3))*   &
-     &                 (gxnb(ig,2)*(-gxnb(ig,i)*ainv(j,3) +             &
-     &                  gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j)) + gxnb(ig,3)*  &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                 gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))))
-               enddo
-            enddo
-         end do
-      else if (l.eq.19) then
-         c=sqrt(9.*35./fpi)/2.
-         do ig=2,ngy        ! zx(z^2-x^2)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,3)*gxnb(ig,1)*2.*             &
-     &                 ((-gxnb(ig,i)*ainv(j,3)+                         &
-     &                 gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,3)-     &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))*              &
-     &                 gxnb(ig,1))+(gxnb(ig,3)*gxnb(ig,3) -             &
-     &                              gxnb(ig,1)*gxnb(ig,1))*             &
-     &                 (gxnb(ig,3)*                                     &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gxnb(ig,1)*                                      &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))))
-               enddo
-            enddo
-         end do
-      else if (l.eq.20) then
-         c=sqrt(9.*5./fpi)/4.
-         do ig=2,ngy        ! e\epsilon
-            gsq1=gxnb(ig,1)*gxnb(ig,1)
-            gsq2=gxnb(ig,2)*gxnb(ig,2)
-            gsq3=gxnb(ig,3)*gxnb(ig,3)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*4.*((gsq1-3.*gsq3)*gxnb(ig,1)*         &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))-              &
-     &                 (gsq2-3.*gsq3)*gxnb(ig,2)*                       &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))-              &
-     &                 3.*(gsq1-gsq2)*gxnb(ig,3)*                       &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j)))
-               enddo
-            enddo
-         end do
-      else if (l.eq.21) then
-         c=sqrt(9.*35./fpi)/2.
-         do ig=2,ngy            ! xy(x^2-y^2)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,1)*gxnb(ig,2)*2.*             &
-     &                 ((-gxnb(ig,i)*ainv(j,1)+                         &
-     &                 gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))*gxnb(ig,1)-     &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))*              &
-     &                 gxnb(ig,2))+(gxnb(ig,1)*gxnb(ig,1) -             &
-     &                              gxnb(ig,2)*gxnb(ig,2))*             &
-     &                 (gxnb(ig,1)*                                     &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gxnb(ig,2)*                                      &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                 gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))))
-               enddo
-            enddo
-         end do
-      else if (l.eq.22) then
-         c=sqrt(9.*5./fpi)*7./2.
-         do ig=2,ngy            ! xy(z^2-1/7*r^2)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,1)*gxnb(ig,2)*2.*gxnb(ig,3)*  &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 (gxnb(ig,3)*gxnb(ig,3)-1./7.)*(gxnb(ig,1)*       &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gxnb(ig,2)*                                      &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))))
-               enddo
-            enddo
-         end do
-      else if (l.eq.23) then
-         c=sqrt(9.*5./fpi)*7./2.
-         do ig=2,ngy            ! zx(y^2-1/7*r^2)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,1)*gxnb(ig,3)*2.*gxnb(ig,2)*  &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 (gxnb(ig,2)*gxnb(ig,2)-1./7.)*(gxnb(ig,1)*       &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gxnb(ig,3)*                                      &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))))
-               enddo
-            enddo
-         end do
-      else if (l.eq.24) then
-         c=sqrt(9.*5./fpi)*7./2.
-         do ig=2,ngy            ! yz(x^2-1/7*r^2)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*(gxnb(ig,3)*gxnb(ig,2)*2.*gxnb(ig,1)*  &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 (gxnb(ig,1)*gxnb(ig,1)-1./7.)*(gxnb(ig,3)*       &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j))+              &
-     &                 gxnb(ig,2)*(-gxnb(ig,i)*ainv(j,3) +              &
-     &                 gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))))
-               enddo
-            enddo
-         end do
-      else if (l.eq.25) then
-         c=sqrt(9.*5./fpi/3.)*7./2.
-         do ig=2,ngy             ! e\theta
-            gsq1=gxnb(ig,1)*gxnb(ig,1)
-            gsq2=gxnb(ig,2)*gxnb(ig,2)
-            gsq3=gxnb(ig,3)*gxnb(ig,3)
-            do i=1,3
-               do j=1,3
-                  dylm(ig,i,j)=c*((4.*gsq3-12./7.)*gxnb(ig,3)*          &
-     &                 (-gxnb(ig,i)*ainv(j,3) +                         &
-     &                   gxnb(ig,3)*gxnb(ig,i)*gxt(ig,j))-              &
-     &                 (2.*gsq1-6./7.)*gxnb(ig,1)*                      &
-     &                 (-gxnb(ig,i)*ainv(j,1) +                         &
-     &                   gxnb(ig,1)*gxnb(ig,i)*gxt(ig,j))-              &
-     &                 (2.*gsq2-6./7.)*gxnb(ig,2)*                      &
-     &                 (-gxnb(ig,i)*ainv(j,2) +                         &
-     &                   gxnb(ig,2)*gxnb(ig,i)*gxt(ig,j)))
-               enddo
-            enddo
-         end do
-      else if (l.ge.26) then
-         call errore('dylmr2',' higher l not programmed  l=',l)
-      endif
-!
-      deallocate (dg)
-      deallocate (gxt)
-!
-      return
-      end
+subroutine dylmr2_(nylm, ngy, g, gg, ainv, dylm)
+  !-----------------------------------------------------------------------
+  !
+  ! temporary CP interace for PW routine dylmr2
+  ! dylmr2 calculates d Y_{lm} /d G_ipol
+  !
+  USE kinds
+  implicit none
+  !
+  integer, intent(IN) :: nylm, ngy
+  real(kind=DP), intent(IN) :: g (3, ngy), gg (ngy), ainv(3,3)
+  real(kind=DP), intent(OUT) :: dylm (ngy, nylm, 3, 3)
+  !
+  integer :: ipol, jpol, lm
+  real(kind=DP), allocatable :: dylmaux (:,:,:)
+  !
+  allocate ( dylmaux(ngy,nylm,3) )
+  dylmaux(:,:,:) = 0.d0
+  do ipol =1,3
+     call dylmr2 (nylm, ngy, g, gg, dylmaux(1,1,ipol), ipol)
+  enddo
+  !
+  do ipol =1,3
+     do jpol =1,3
+        do lm=1,nylm
+           dylm (:,lm,ipol,jpol) = (dylmaux(:,lm,1) * ainv(jpol,1) + &
+                                    dylmaux(:,lm,2) * ainv(jpol,2) + &
+                                    dylmaux(:,lm,3) * ainv(jpol,3) ) &
+                                    * g(ipol,:)
+        end do
+     end do
+  end do
+  deallocate ( dylmaux )
+end subroutine dylmr2_

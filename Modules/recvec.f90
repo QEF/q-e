@@ -126,7 +126,7 @@
      INTEGER :: ngbl = 0  ! number of G-vector shells up to ngw
      INTEGER :: ngbx = 0  ! maximum local number of G vectors
 
-     REAL(dbl), ALLOCATABLE :: gb(:), gxb(:,:), gxnb(:,:), glb(:)
+     REAL(dbl), ALLOCATABLE :: gb(:), gxb(:,:), glb(:)
      INTEGER, ALLOCATABLE :: npb(:), nmb(:), iglb(:), in1pb(:), in2pb(:), in3pb(:)
 
      REAL(dbl) :: ecutb = 0.0d0
@@ -145,7 +145,6 @@
      SUBROUTINE deallocate_gvecb()
        IF( ALLOCATED( gb ) ) DEALLOCATE( gb )
        IF( ALLOCATED( gxb ) ) DEALLOCATE( gxb )
-       IF( ALLOCATED( gxnb ) ) DEALLOCATE( gxnb )
        IF( ALLOCATED( glb ) ) DEALLOCATE( glb )
        IF( ALLOCATED( npb ) ) DEALLOCATE( npb )
        IF( ALLOCATED( nmb ) ) DEALLOCATE( nmb )
