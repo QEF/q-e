@@ -66,7 +66,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/gen_us_dj.o \
 ../PW/gen_us_dy.o \
 ../PW/gk_sort.o \
-../PW/good_fft_dimension.o \
 ../PW/gweights.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \

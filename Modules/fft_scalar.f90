@@ -24,6 +24,7 @@
         PRIVATE
         PUBLIC :: set_scale, fft_x, fft_y, fft_z, tabmesh
         PUBLIC :: cft_1z, cft_2xy, cft_b, cfft3d
+        PUBLIC :: good_fft_dimension, allowed, good_fft_order
 
 ! ...   Local Parameter
 
@@ -572,83 +573,6 @@
 
      RETURN
    END SUBROUTINE fft_x
-
-!=----------------------------------------------------------------------=!
-
-!     ==================================================================
-      INTEGER FUNCTION tabmesh(nr, np)
-!     ==--------------------------------------------------------------==
-      INTEGER, INTENT(IN) ::  nr  ! input trial radix
-      INTEGER, INTENT(IN) ::  np  ! number of processors
-      INTEGER  :: I
-      LOGICAL  :: exist
-
-#if defined __AIX
-!     ==================================================================
-!     ==   The following table list of acceptable values for          ==
-!     ==   the transform lengths in the FFT is taken from pag. 758    ==
-!     ==   of the ESSL manual (vol. 3)                                ==
-!     ==================================================================
-      INTEGER, PARAMETER :: NMX = 165
-      INTEGER  LFT(NMX)
-      DATA LFT /   2,   4,   6,   8,  10,  12,  14,  16,  18,  20, &
-                  22,  24,  28,  30,  32,  36,  40,  42,  44,  48, &
-                  56,  60,  64,  66,  70,  72,  80,  84,  88,  90, &
-                  96, 110, 112, 120, 126, 128, 132, 140, 144, 154, &
-                 160, 168, 176, 180, 192, 198, 210, 220, 224, 240, &
-                 252, 256, 264, 280, 288, 308, 320, 330, 336, 352, &
-                 360, 384, 396, 420, 440, 448, 462, 480, 504, 512, &
-                 528, 560, 576, 616, 630, 640, 660, 672, 704, 720, &
-                 768, 770, 792, 840, 880, 896, 924, 960, 990,1008, &
-                1024,1056,1120,1152,1232,1260,1280,1320,1344,1386, &
-                1408,1440,1536,1540,1584,1680,1760,1792,1848,1920, &
-                1980,2016,2048,2112,2240,2304,2310,2464,2520,2560, &
-                2640,2688,2772,2816,2880,3072,3080,3168,3360,3520, &
-                3584,3696,3840,3960,4032,4096,4224,4480,4608,4620, &
-                4928,5040,5120,5280,5376,5544,5632,5760,6144,6160, &
-                6336,6720,6930,7040,7168,7392,7680,7920,8064,8192, &
-                8448,8960,9216,9240,9856     /
-!     ==--------------------------------------------------------------==
-
-#else
-
-
-      INTEGER, PARAMETER :: NMX = 173
-      INTEGER  LFT(NMX)
-      DATA LFT /   2,   3,   4,   5,   6,   8,   9,  10,  12,  15,  &
-                  16,  18,  20,  24,  25,  27,  30,  32,  36,  40,  &
-                  45,  48,  50,  54,  60,  64,  72,  75,  80,  81,  &
-                  90,  96, 100, 108, 120, 125, 128, 135, 144, 150,  &
-                 160, 162, 180, 192, 200, 216, 225, 240, 243, 250,  &
-                 256, 270, 288, 300, 320, 324, 360, 375, 384, 400,  &
-                 405, 432, 450, 480, 486, 500, 512, 540, 576, 600,  &
-                 625, 640, 648, 675, 720, 729, 750, 768, 800, 810,  &
-                 864, 900, 960, 972,1000,1024,1080,1125,1152,1200,  &
-                1215,1250,1280,1296,1350,1440,1458,1500,1536,1600,  &
-                1620,1728,1800,1875,1920,1944,2000,2025,2048,2160,  &
-                2187,2250,2304,2400,2430,2500,2560,2592,2700,2880,  &
-                2916,3000,3072,3125,3200,3240,3375,3456,3600,3645,  &
-                3750,3840,3888,4000,4050,4096,4320,4374,4500,4608,  &
-                4800,4860,5000,5120,5184,5400,5625,5760,5832,6000,  &
-                6075,6144,6250,6400,6480,6561,6750,6912,7200,7290,  &
-                7500,7680,7776,8000,8100,8192,8640,8748,9000,9216,  &
-                9375,9600,9720 /
-
-#endif
-
-      exist = .FALSE.
-      RADIX: DO I = 1, NMX
-        tabmesh = lft(i)
-        IF( ( tabmesh >= NR) .AND. (MOD( tabmesh, NP ) == 0) ) THEN
-          exist = .TRUE.
-          EXIT RADIX
-        END IF
-      END DO RADIX
-      IF( .NOT. exist ) THEN
-        CALL errore(' tabmesh ', ' radix not found ', nr )
-      END IF
-      RETURN
-      END FUNCTION TABMESH
 
 !
 !=----------------------------------------------------------------------=!
@@ -1393,6 +1317,235 @@
 
      RETURN
    END SUBROUTINE
+
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
+!         FFT support Functions/Subroutines
+!
+!
+!
+!=----------------------------------------------------------------------=!
+!
+
+!     ==================================================================
+      INTEGER FUNCTION tabmesh(nr, np)
+!     ==--------------------------------------------------------------==
+      INTEGER, INTENT(IN) ::  nr  ! input trial radix
+      INTEGER, INTENT(IN) ::  np  ! number of processors
+      INTEGER  :: I
+      LOGICAL  :: exist
+
+#if defined __AIX
+!     ==================================================================
+!     ==   The following table list of acceptable values for          ==
+!     ==   the transform lengths in the FFT is taken from pag. 758    ==
+!     ==   of the ESSL manual (vol. 3)                                ==
+!     ==================================================================
+      INTEGER, PARAMETER :: NMX = 165
+      INTEGER  LFT(NMX)
+      DATA LFT /   2,   4,   6,   8,  10,  12,  14,  16,  18,  20, &
+                  22,  24,  28,  30,  32,  36,  40,  42,  44,  48, &
+                  56,  60,  64,  66,  70,  72,  80,  84,  88,  90, &
+                  96, 110, 112, 120, 126, 128, 132, 140, 144, 154, &
+                 160, 168, 176, 180, 192, 198, 210, 220, 224, 240, &
+                 252, 256, 264, 280, 288, 308, 320, 330, 336, 352, &
+                 360, 384, 396, 420, 440, 448, 462, 480, 504, 512, &
+                 528, 560, 576, 616, 630, 640, 660, 672, 704, 720, &
+                 768, 770, 792, 840, 880, 896, 924, 960, 990,1008, &
+                1024,1056,1120,1152,1232,1260,1280,1320,1344,1386, &
+                1408,1440,1536,1540,1584,1680,1760,1792,1848,1920, &
+                1980,2016,2048,2112,2240,2304,2310,2464,2520,2560, &
+                2640,2688,2772,2816,2880,3072,3080,3168,3360,3520, &
+                3584,3696,3840,3960,4032,4096,4224,4480,4608,4620, &
+                4928,5040,5120,5280,5376,5544,5632,5760,6144,6160, &
+                6336,6720,6930,7040,7168,7392,7680,7920,8064,8192, &
+                8448,8960,9216,9240,9856     /
+!     ==--------------------------------------------------------------==
+
+#else
+
+
+      INTEGER, PARAMETER :: NMX = 173
+      INTEGER  LFT(NMX)
+      DATA LFT /   2,   3,   4,   5,   6,   8,   9,  10,  12,  15,  &
+                  16,  18,  20,  24,  25,  27,  30,  32,  36,  40,  &
+                  45,  48,  50,  54,  60,  64,  72,  75,  80,  81,  &
+                  90,  96, 100, 108, 120, 125, 128, 135, 144, 150,  &
+                 160, 162, 180, 192, 200, 216, 225, 240, 243, 250,  &
+                 256, 270, 288, 300, 320, 324, 360, 375, 384, 400,  &
+                 405, 432, 450, 480, 486, 500, 512, 540, 576, 600,  &
+                 625, 640, 648, 675, 720, 729, 750, 768, 800, 810,  &
+                 864, 900, 960, 972,1000,1024,1080,1125,1152,1200,  &
+                1215,1250,1280,1296,1350,1440,1458,1500,1536,1600,  &
+                1620,1728,1800,1875,1920,1944,2000,2025,2048,2160,  &
+                2187,2250,2304,2400,2430,2500,2560,2592,2700,2880,  &
+                2916,3000,3072,3125,3200,3240,3375,3456,3600,3645,  &
+                3750,3840,3888,4000,4050,4096,4320,4374,4500,4608,  &
+                4800,4860,5000,5120,5184,5400,5625,5760,5832,6000,  &
+                6075,6144,6250,6400,6480,6561,6750,6912,7200,7290,  &
+                7500,7680,7776,8000,8100,8192,8640,8748,9000,9216,  &
+                9375,9600,9720 /
+
+#endif
+
+      exist = .FALSE.
+      RADIX: DO I = 1, NMX
+        tabmesh = lft(i)
+        IF( ( tabmesh >= NR) .AND. (MOD( tabmesh, NP ) == 0) ) THEN
+          exist = .TRUE.
+          EXIT RADIX
+        END IF
+      END DO RADIX
+      IF( .NOT. exist ) THEN
+        CALL errore(' tabmesh ', ' radix not found ', nr )
+      END IF
+      RETURN
+      END FUNCTION TABMESH
+
+!=----------------------------------------------------------------------=!
+
+!
+! Copyright (C) 2001-2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+integer function good_fft_dimension (n)
+  !
+  ! Determines the optimal maximum dimensions of fft arrays
+  ! Useful on some machines to avoid memory conflicts
+  !
+#include "machine.h"
+  use parameters
+  implicit none
+  integer :: n, nx
+  ! this is the default: max dimension = fft dimension
+  nx = n
+#if defined(__AIX) || defined(DXML)
+  if ( n==8 .or. n==16 .or. n==32 .or. n==64 .or. n==128 .or. n==256) &
+       nx = n + 1
+#endif
+#if defined(CRAYY) || defined(__SX4)
+  if (mod (nr1, 2) ==0) nx = n + 1
+#endif
+  good_fft_dimension = nx
+  return
+end function good_fft_dimension
+
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
+
+
+function allowed (nr)
+
+#include "machine.h"
+
+  ! find if the fft dimension is a good one
+  ! a "bad one" is either not implemented (as on IBM with ESSL)
+  ! or implemented but with awful performances (most other cases)
+  use parameters
+  implicit none
+  integer :: nr
+
+  logical :: allowed
+  integer :: pwr (5)
+  integer :: mr, i, fac, p, maxpwr
+  integer :: factors (5)
+
+
+  data factors / 2, 3, 5, 7, 11 /
+
+  ! find the factors of the fft dimension
+
+  mr = nr
+  do i = 1, 5
+     pwr (i) = 0
+  enddo
+  do i = 1, 5
+     fac = factors (i)
+     maxpwr = nint (log (float (mr) ) / log (float (fac) ) ) + 1
+     do p = 1, maxpwr
+        if (mr.eq.1) goto 10
+        if (mod (mr, fac) .eq.0) then
+           mr = mr / fac
+           pwr (i) = pwr (i) + 1
+        endif
+     enddo
+  enddo
+
+10 if (nr.ne.mr * 2**pwr (1) * 3**pwr (2) * 5**pwr (3) * 7**pwr (4) &
+       * 11**pwr (5) ) call errore ('allowed', 'what ?!?', 1)
+
+  if (mr.ne.1) then
+
+     ! fft dimension contains factors > 11 : no good in any case
+
+     allowed = .false.
+
+  else
+
+#ifdef __AIX
+
+     ! IBM machines with essl libraries
+
+     allowed =  pwr(1) >= 1 .and. pwr(2) <= 2 .and. pwr(3) <= 1 .and. &
+                pwr(4) <= 1 .and. pwr(5) <= 1 .and. &
+                ( (pwr(2) == 0 .and. pwr(3) + pwr(4) + pwr(5) <= 2) .or. &
+                  (pwr(2) /= 0 .and. pwr(3) + pwr(4) + pwr(5) <= 1) )
+#else
+
+     ! fftw and all other cases: no factors 7 and 11
+
+     allowed = ( pwr(4) == 0 .and. pwr(5) == 0 )
+
+#endif
+
+  endif
+
+  return
+end function allowed
+
+!=----------------------------------------------------------------------=!
+
+   INTEGER FUNCTION good_fft_order( nr )
+
+!    
+!    This function find a "good" fft order value grather or equal to "nr"
+!    Input : tentative order n of a fft
+!    Output: the same if n is a good number
+!         the closest higher number that is good
+!         an fft order is not good if not implemented (as on IBM with ESSL)
+!         or implemented but with awful performances (most other cases)
+!
+
+     IMPLICIT NONE
+     INTEGER, INTENT(IN) :: nr
+     INTEGER :: new
+
+     new = nr
+     DO WHILE( ( .NOT. allowed( new ) ) .AND. ( new <= nfftx ) )
+       new = new + 1
+     END DO
+
+     IF( new > nfftx ) &
+       CALL errore( ' good_fft_order ', ' fft order too large ', new )
+
+     good_fft_order = new
+  
+     RETURN
+   END FUNCTION
 
 
 !=----------------------------------------------------------------------=!

@@ -20,13 +20,12 @@ subroutine data_structure
   use mp, only: mp_sum
   use mp_global, only: intra_pool_comm, nproc_pool
   use stick_base
+  use fft_scalar, only: good_fft_dimension
   !
   implicit none
   integer :: n1, n2, n3, i1, i2, i3
   ! counters on G space
   !
-  integer :: good_fft_dimension
-  ! a function with obvious meaning
 
   real(kind=DP) :: amod
   ! modulus of G vectors

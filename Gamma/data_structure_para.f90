@@ -21,6 +21,7 @@ subroutine data_structure_para
   use pwcom
   use mp, only: mp_sum
   use mp_global, only: intra_pool_comm
+  use fft_scalar, only: good_fft_dimension
   !
   implicit none
   !
@@ -47,8 +48,7 @@ subroutine data_structure_para
        idum, nct_,            &! check variables
        j,jj,                  &! counters on processors
        n1m1,n2m1,n3m1,        &! nr1-1 and so on
-       i1, i2, i3,            &! counters on G space
-       good_fft_dimension      ! a function with obvious meaning
+       i1, i2, i3              ! counters on G space
   logical has_gzero
   real(kind=8), allocatable :: aux(:)  ! used to order columns
   real(kind=8)  amod, gkcut        ! square modulus of G vectors

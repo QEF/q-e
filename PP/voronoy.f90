@@ -24,6 +24,7 @@ subroutine do_voronoy
   use parameters
   use pwcom
   use io
+  use fft_scalar, only: good_fft_dimension
   implicit none
   integer :: nr1big, nr2big, nr3big, nrx1big
   integer :: n, i, j, ng, na, plot_num
@@ -32,7 +33,6 @@ subroutine do_voronoy
   real(kind=DP), allocatable :: partial_charge (:)
   complex(kind=DP), allocatable :: rhobig (:)
   character(len=80) :: filename
-  integer :: good_fft_dimension
   !
   !
   print '(" Input file > ",$)'

@@ -3431,13 +3431,14 @@
       use parmb
       use control_module
       use pres_mod
+      use fft_scalar, only: good_fft_dimension, good_fft_order
+
       implicit none
 ! 
       integer ibrav
       real(kind=8) tau(3,natx,nsx), celldm(6), ecut
 !
       integer idum, ik, k, iss, i, in, is, ia
-      integer good_fft_dimension, good_fft_order
       real(kind=8) gcut, gcutw, gcuts, gcutb, ecutw, dual, fsum,        &
      &     b1(3), b2(3), b3(3), b1b(3),b2b(3),b3b(3), alatb, ocp
 !
@@ -7296,14 +7297,14 @@
 ! but their memory layout is the same as that of a 3d array
 ! having dimensions (nr1x,nr2x,nr3x) and the like for smooth grid
 !
+      use fft_scalar, only: good_fft_dimension
+
       implicit none
 ! input
       integer nr1, nr2, nr3, nr1s, nr2s, nr3s
 ! output 
       integer nnr, nr1x, nr2x, nr3x, nr1sx, nr2sx, nr3sx, nnrs
 ! local
-      integer good_fft_dimension
-      external good_fft_dimension
 !
 !     dense grid
 !
@@ -7326,15 +7327,16 @@
       subroutine set_fft_grid(a1,a2,a3,alat,gcut,nr1,nr2,nr3)
 !-------------------------------------------------------------------------
 !
+      use fft_scalar, only: good_fft_order
+
       implicit none
 ! input
       real(kind=8) a1(3), a2(3), a3(3), alat, gcut
 ! input/output
       integer nr1, nr2, nr3
 ! local
-      integer minr1, minr2, minr3, good_fft_order
+      integer minr1, minr2, minr3
       real(kind=8) a1n, a2n, a3n
-      external good_fft_order
 !
 !
       a1n=sqrt(a1(1)**2+a1(2)**2+a1(3)**2)/alat

@@ -254,6 +254,7 @@ end module para_mod
 !
       use para_mod
       use stick_base
+      use fft_scalar, only: good_fft_dimension
 !
       implicit none
       real(kind=8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
@@ -282,8 +283,7 @@ end module para_mod
      &        idum, nct_,          &! check variables 
      &        j,jj,                &! counters on processors
      &        n1m1,n2m1,n3m1,      &! nr1-1 and so on
-     &        i1, i2, i3,          &! counters on G space
-     &        good_fft_dimension    ! a function with obvious meaning
+     &        i1, i2, i3            ! counters on G space
       real(kind=8)                                                      &
      &        aux(ncplanex), &! used to order columns
      &        amod            ! modulus of G vectors

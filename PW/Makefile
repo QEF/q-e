@@ -96,7 +96,6 @@ gen_us_dj.o  \
 gen_us_dy.o  \
 ggen.o  \
 gk_sort.o  \
-good_fft_dimension.o  \
 g_psi.o  \
 g_psi_mod.o  \
 gradcorr.o  \

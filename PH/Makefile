@@ -197,7 +197,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/gen_us_dy.o  \
 ../PW/ggen.o  \
 ../PW/gk_sort.o  \
-../PW/good_fft_dimension.o  \
 ../PW/g_psi.o  \
 ../PW/g_psi_mod.o  \
 ../PW/gradcorr.o  \
