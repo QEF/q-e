@@ -31,23 +31,13 @@ cpmd2upf.x :  cpmd2upf.o $(OBJS) nclib.o
 oldcp2upf.x :  oldcp2upf.o $(OBJS) nclib.o
 	$(LD) -o $@  oldcp2upf.o nclib.o write_upf.o $(LDFLAGS)
 
-fpmd2upf.x : fpmd2upf.o
-	$(LD) -o $@ fpmd2upf.o $(MODS)  $(LDFLAGS)
+fpmd2upf.x : fpmd2upf.o $(OBJS)
+	$(LD) -o $@ fpmd2upf.o $(OBJS) $(MODS)  $(LDFLAGS)
 
 read_upf.x :
 	$(LD) -o $@ read_upf.o $(LDFLAGS)
 
 clean :
 	- /bin/rm -f  *.x *.o *~ *.F90 *.mod *.d *.i work.pc
-
-any2upf.o: $(OBJS)
-cpmd2upf.o: $(OBJS)
-fhi2upf.o: $(OBJS)
-ncpp2upf.o: $(OBJS)
-oldcp2upf.o: $(OBJS)
-rrkj2upf.o: $(OBJS)
-uspp2upf.o: $(OBJS)
-vanderbilt.o: $(OBJS)
-vdb2upf.o: $(OBJS)
 
 include .dependencies
