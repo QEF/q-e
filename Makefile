@@ -85,7 +85,8 @@ clean:
 clean_:
 
 veryclean: clean
-	- /bin/rm -f make.rules make.sys */.dependencies */dum1 */dum2 bin/*
+	- /bin/rm -f make.rules make.sys */.dependencies config.log \
+	             config.status */dum1 */dum2 bin/*
 
 # build list of files to archive and pass it to tar
 # don't archive CVS directories
