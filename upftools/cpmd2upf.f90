@@ -152,6 +152,7 @@ subroutine read_cpmd(iunps)
         read(iunps, *) r_(i),(chi_(i,l+1),l=0,lmax_)
      end do
   else if (matches ("&NLCC", trim(line)) ) then
+     found = found + 1
      nlcc_ = .true.
      read (iunps, '(a)') line
      if (.not. matches ("NUMERIC", trim(line)) ) &
