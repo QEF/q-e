@@ -97,6 +97,7 @@ MODULE read_namelists_module
        gdir     = 0
        nppstr   = 0
        wf_collect = .FALSE.
+       printwfc = -1
        ! 
        RETURN
        !
@@ -276,6 +277,25 @@ MODULE read_namelists_module
        sic = 'none' 
        sic_epsilon = 1.D0
        force_pairing = .false.
+       ! 
+       !***ensemble-DFT
+       fermi_energy = 0.D0
+       n_inner = 0
+       rotation_dynamics = "line-minimization"
+       occupation_dynamics = "line-minimization"
+       rotmass = 0.D0
+       occmass = 0.D0
+       rotation_damping = 0.D0
+       occupation_damping = 0.D0
+       !***gradiente coniugato
+       tcg = .false.
+       maxiter= 40
+       passop=0.3
+       etresh=1.d-6
+       !**** campo elettrico
+       epol=3
+       efield=0.d0
+
        ! 
        RETURN
        ! 
@@ -520,6 +540,7 @@ MODULE read_namelists_module
        CALL mp_bcast( gdir, ionode_id )
        CALL mp_bcast( nppstr, ionode_id )
        CALL mp_bcast( wf_collect, ionode_id )
+       CALL mp_bcast( printwfc, ionode_id )
        ! 
        RETURN
        !
@@ -668,6 +689,25 @@ MODULE read_namelists_module
        CALL mp_bcast( sic, ionode_id )
        CALL mp_bcast( sic_epsilon , ionode_id )
        CALL mp_bcast( force_pairing , ionode_id )
+       ! 
+       !***ensemble-DFT       
+       CALL mp_bcast( fermi_energy,       ionode_id )
+       CALL mp_bcast( n_inner,            ionode_id )
+       CALL mp_bcast( rotation_dynamics,  ionode_id )
+       CALL mp_bcast( occupation_dynamics,ionode_id )
+       CALL mp_bcast( rotmass,            ionode_id )
+       CALL mp_bcast( occmass,            ionode_id )
+       CALL mp_bcast( rotation_damping,   ionode_id )
+       CALL mp_bcast( occupation_damping, ionode_id )
+       !*** GRADIENTE CONIUGATO
+       CALL mp_bcast( tcg,       ionode_id )
+       CALL mp_bcast( maxiter,       ionode_id )
+       CALL mp_bcast( etresh,       ionode_id )
+       CALL mp_bcast( passop,       ionode_id )
+
+       !***** CAMPO ELETTRICO
+       CALL mp_bcast( epol,       ionode_id )
+       CALL mp_bcast( efield,       ionode_id )
        ! 
        RETURN
        !

@@ -9,7 +9,7 @@
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 
 !=----------------------------------------------------------------------------=!
-      MODULE runcp_module
+  MODULE runcp_module
 !=----------------------------------------------------------------------------=!
 
         IMPLICIT NONE
@@ -17,6 +17,7 @@
         SAVE
 
         PUBLIC :: runcp, runcp_force_pairing
+        PUBLIC :: runcp_uspp, runcp_ncpp
 
 !=----------------------------------------------------------------------------=!
         CONTAINS
@@ -45,7 +46,7 @@
       USE electrons_module, ONLY:  pmss, eigs, occ_desc
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-      USE wave_functions, ONLY : rande,moveelect, cp_kinetic_energy, gram
+      USE wave_functions, ONLY : rande, cp_kinetic_energy, gram
       USE wave_base, ONLY : frice
       USE wave_base, ONLY: hpsi
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
@@ -58,6 +59,7 @@
       USE pseudo_projector, ONLY: projector
       USE control_flags, ONLY: tnosee
       USE control_flags, ONLY: tdamp
+      USE wave_constrains, ONLY: update_lambda
 
       IMPLICIT NONE
 
@@ -81,27 +83,158 @@
 
 ! ...   declare other variables
       REAL(dbl) :: s1, s2, s3, s4
-      REAL(dbl) ::  svar1, svar2, tmpfac, annee
-      INTEGER :: i, ibl, ik, ig, nx, ngw, nb, j, nb_g, nb_l, ierr, nkl, is
+      INTEGER :: ik, nx, nb_l, ierr, nkl, is
 
-      COMPLEX(dbl), ALLOCATABLE :: c2(:)
-      COMPLEX(dbl), ALLOCATABLE :: c3(:)
-      COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: cprod(:)
-      REAL(dbl),    ALLOCATABLE :: svar3(:)
-      REAL(dbl),    ALLOCATABLE :: gam(:,:)
-      REAL(dbl),    ALLOCATABLE :: prod(:)
-
+      COMPLEX(dbl), ALLOCATABLE :: cgam(:,:,:)
+      REAL(dbl),    ALLOCATABLE :: gam(:,:,:)
 
       REAL(dbl) :: cclock
       EXTERNAL  :: cclock
-
 
 ! ...   end of declarations
 !  ----------------------------------------------
 
       s1 = cclock()
 
+      CALL get_local_dims( occ_desc, nb_l )
+      IF( cdesc%gamma ) THEN
+        ALLOCATE( cgam(1,1,1), gam( MAX(1,nb_l), SIZE( c0, 2 ), cdesc%nspin ), STAT=ierr)
+      ELSE
+        ALLOCATE( cgam(MAX(1,nb_l), SIZE( c0, 2 ), cdesc%nspin ), gam(1,1,1), STAT=ierr)
+      END IF
+      IF( ierr /= 0 ) CALL errore(' runcp ', ' allocating gam, prod ', ierr)
+
+      ekinc    = 0.0d0
+      timerd   = 0.0d0
+      timeorto = 0.0d0
+
+      !  Compute electronic forces and move electrons
+
+      CALL runcp_ncpp( cm, c0, cp, cdesc, gv, kp, ps, vpot, eigr, fi, fnl, vnosee, &
+           gam, cgam, lambda = ttprint )
+
+      !  Compute eigenstate
+      !
+      IF( ttprint ) THEN
+        DO is = 1, cdesc%nspin
+          nx = cdesc%nbt( is )
+          nkl  = cdesc%nkl
+          DO ik = 1, nkl
+              CALL eigs( nx, gam(:,:,is), cgam(:,:,is), tortho, fi(:,ik,is), ei(:,ik,is), cdesc%gamma )
+          END DO
+        END DO
+      END IF
+
+      s2 = cclock()
+      timerd = s2 - s1
+
+      !  Orthogonalize the new wave functions "cp"
+
+      IF( tortho ) THEN
+        CALL ortho(c0, cp, cdesc, pmss, emass)
+      ELSE
+        CALL gram(cp, cdesc)
+      END IF
+
+      s3 = cclock()
+      timeorto = s3 - s2
+
+      !  Compute fictitious kinetic energy of the electrons at time t
+
+      DO is = 1, cdesc%nspin
+        ekinc(is) = cp_kinetic_energy( is, cp(:,:,:,is), cm(:,:,:,is), cdesc, kp, &
+          gv%kg_mask_l, pmss, delt)
+      END DO
+
+      DEALLOCATE( cgam, gam, STAT=ierr)
+      IF( ierr /= 0 ) CALL errore(' runcp ', ' deallocating 1 ', ierr)
+
+
+      RETURN
+    END SUBROUTINE runcp
+
+
+!=----------------------------------------------------------------------------------=!
+
+
+!  ----------------------------------------------
+!  BEGIN manual
+
+    SUBROUTINE runcp_ncpp( cm, c0, cp, cdesc, gv, kp, ps, &
+      vpot, eigr, fi, fnl, vnosee, gam, cgam, lambda, fromscra, diis, restart )
+
+!     This subroutine performs a Car-Parrinello or Steepest-Descent step
+!     on the electronic variables, computing forces on electrons and,
+!     when required, the eigenvalues of the Hamiltonian 
+!
+!     On output "cp" contains the new plave waves coefficients, while
+!     "cm" and "c0" are not changed
+!  ----------------------------------------------
+!  END manual
+
+! ...   declare modules
+      USE kinds
+      USE mp_global, ONLY: mpime, nproc
+      USE mp, ONLY: mp_sum
+      USE electrons_module, ONLY:  pmss, occ_desc
+      USE cp_electronic_mass, ONLY: emass
+      USE wave_base, ONLY: frice, wave_steepest, wave_verlet
+      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE time_step, ONLY: delt
+      USE forces, ONLY: dforce
+      USE brillouin, ONLY: kpoints
+      USE wave_types, ONLY: wave_descriptor
+      USE wave_constrains, ONLY: update_lambda
+      USE control_flags, ONLY: tnosee, tdamp, tsde
+      USE pseudo_projector, ONLY: projector
+
+      IMPLICIT NONE
+
+! ...   declare subroutine arguments
+
+      COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(dbl) :: cgam(:,:,:)
+      REAL(dbl)    :: gam(:,:,:)
+      TYPE (wave_descriptor), INTENT(IN) :: cdesc
+      TYPE (pseudo), INTENT(IN)  ::  ps
+      TYPE (phase_factors), INTENT(IN)  ::  eigr
+      TYPE (recvecs), INTENT(IN)  ::  gv
+      TYPE (kpoints), INTENT(IN)  ::  kp
+      REAL(dbl), INTENT(IN)  ::  fi(:,:,:)
+      TYPE (projector) :: fnl(:,:)
+      REAL (dbl) ::  vpot(:,:,:,:)
+      REAL(dbl), INTENT(IN) :: vnosee
+      LOGICAL, OPTIONAL, INTENT(IN) :: lambda, fromscra, diis, restart
+
+! ...   declare other variables
+      REAL(dbl) ::  svar1, svar2, tmpfac, annee
+      INTEGER :: i, ik, ig, nx, ngw, nb, ierr, nkl, is
+      INTEGER :: iflag
+
+      COMPLEX(dbl), ALLOCATABLE :: c2(:), c3(:)
+      REAL(dbl),    ALLOCATABLE :: svar3(:)
+      LOGICAL :: tlam, ttsde
+
+
+! ...   end of declarations
+!  ----------------------------------------------
+
+      IF( PRESENT( lambda ) ) THEN
+        tlam = lambda
+      ELSE
+        tlam = .FALSE.
+      END IF
+
+      iflag = 0
+      IF( PRESENT( fromscra ) ) THEN
+        IF( fromscra ) iflag = 1
+      END IF
+      IF( PRESENT( restart ) ) THEN
+        IF( restart ) iflag = 2
+      END IF
+
+
+      ! WRITE(6,*) 'DEBUG: ', tlam
 
       nkl  = cdesc%nkl
       IF( nkl /= SIZE( fi, 2 ) ) &
@@ -110,10 +243,11 @@
       ngw  = cdesc%ngwl
 
       ALLOCATE( c2(ngw), c3(ngw), svar3(ngw), STAT = ierr )
-      IF( ierr /= 0 ) CALL errore(' runcp ', ' allocating c2, c3, svar3 ', ierr)
+      IF( ierr /= 0 ) CALL errore(' runcp_ncpp ', ' allocating c2, c3, svar3 ', ierr)
 
+      ! ...   determines friction dynamically according to the Nose' dynamics
+      !
 
-! ...   determines friction dynamically according to the Nose' dynamics
       IF( tnosee ) THEN
         annee   = vnosee * delt * 0.5d0
       ELSE IF ( tdamp ) THEN
@@ -121,31 +255,30 @@
       ELSE
         annee   = 0.0d0
       END IF
-
       tmpfac  = 1.d0 / (1.d0 + annee)
-      svar1   = 2.d0 * tmpfac
-      svar2   = 1.d0 - svar1
-      svar3( 1:ngw ) = delt * delt / pmss( 1:ngw ) * tmpfac
 
-      ekinc    = 0.0d0
-      timerd   = 0.0d0
-      timeorto = 0.0d0
+      IF( iflag == 0 ) THEN
+        ttsde   = tsde
+        svar1   = 2.d0 * tmpfac
+        svar2   = 1.d0 - svar1
+        svar3( 1:ngw ) = delt * delt / pmss( 1:ngw ) * tmpfac
+      ELSE IF ( iflag == 1 ) THEN
+        ttsde   = .TRUE.
+        svar1   = 1.d0
+        svar2   = 2.d0
+        svar3( 1:ngw ) = delt * delt / pmss( 1:ngw )
+      ELSE IF ( iflag == 2 ) THEN
+        ttsde = .FALSE.
+        svar1 = 1.d0
+        svar2 = 0.d0
+        svar3 = delt * delt / pmss( 1:ngw ) * 0.5d0
+      END IF
 
       DO is = 1, cdesc%nspin
 
         nx   = cdesc%nbt( is )
         IF( nx > SIZE( fi, 1 ) ) &
           CALL errore(' runcp ',' inconsistent occupation numbers ', 1)
-
-        nb_g = cdesc%nbt( is )
-        CALL get_local_dims( occ_desc, nb_l )
-        IF( cdesc%gamma ) THEN
-          ALLOCATE(cgam(1,1), cprod(1), gam(MAX(1,nb_l),nb_g), prod(nb_g), STAT=ierr)
-        ELSE
-          ALLOCATE(cgam(MAX(1,nb_l),nb_g), cprod(nb_g), gam(1,1), prod(1), STAT=ierr)
-        END IF
-        IF( ierr /= 0 ) CALL errore(' runcp ', ' allocating gam, prod ', ierr)
-
 
         KAPPA: DO ik = 1, nkl
 
@@ -163,44 +296,38 @@
                 fnl(ik, is)%c, eigr, ps )
             END IF
 
-            IF( ttprint ) THEN
+            IF( tlam ) THEN
               IF ( cdesc%gamma ) THEN
-                prod = hpsi( cdesc%gzero, c0(:,:,ik,is), c2)
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  gam( ibl, : ) = prod( : )
-                END IF
+                CALL update_lambda( i, gam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
+                CALL update_lambda( i+1, gam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c3 )
               ELSE
-                cprod = hpsi( c0(:,:,ik,is), c2 )
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  cgam( ibl, : ) = cprod( : )
-                END IF
-              END IF
-
-              IF ( cdesc%gamma ) THEN
-                prod = hpsi( cdesc%gzero, c0(:,:,ik,is), c3)
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( i+1, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i+1, occ_desc, 'R' )
-                  gam( ibl, : ) = prod( : )
-                END IF
-              ELSE
-                cprod = hpsi( c0(:,:,ik,is), c3)
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( i+1, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i+1, occ_desc, 'R' )
-                  cgam( ibl, : ) = cprod(:)
-                END IF
+                CALL update_lambda( i, cgam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
+                CALL update_lambda( i+1, cgam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c3 )
               END IF
             END IF
 
-            CALL moveelect(tsde, cp(:,i,ik,is), c0(:,i,ik,is), cm(:,i,ik,is), cdesc, c2, &
-                           svar1, svar2, svar3, gv%kg_mask_l(:,ik))
-            CALL moveelect(tsde, cp(:,i+1,ik,is), c0(:,i+1,ik,is), cm(:,i+1,ik,is), cdesc, c3, &
-                           svar1, svar2, svar3, gv%kg_mask_l(:,ik))
+            IF( iflag == 2 ) THEN
+              c0(:,i,ik,is) = cp(:,i,ik,is)
+              c0(:,i+1,ik,is) = cp(:,i+1,ik,is)
+            END IF
+
+            IF ( ttsde ) THEN
+              CALL wave_steepest( cp(:,i,ik,is), c0(:,i,ik,is), svar3, c2 )
+              CALL wave_steepest( cp(:,i+1,ik,is), c0(:,i+1,ik,is), svar3, c3 )
+            ELSE
+              cp(:,i,ik,is) = cm(:,i,ik,is)
+              cp(:,i+1,ik,is) = cm(:,i+1,ik,is)
+              CALL wave_verlet( cp(:,i,ik,is), c0(:,i,ik,is), svar1, svar2, svar3, c2 )
+              CALL wave_verlet( cp(:,i+1,ik,is), c0(:,i+1,ik,is), svar1, svar2, svar3, c3 )
+            END IF
+            IF( .NOT. cdesc%gamma ) THEN
+              cp(:,i,ik,is)  = cp(:,i,ik,is) * gv%kg_mask_l(:,ik)
+              cp(:,i+1,ik,is)  = cp(:,i+1,ik,is) * gv%kg_mask_l(:,ik)
+            ELSE
+              IF( cdesc%gzero ) cp(1,i,ik,is) = REAL( cp(1,i,ik,is), dbl )
+              IF( cdesc%gzero ) cp(1,i+1,ik,is) = REAL( cp(1,i+1,ik,is), dbl )
+            END IF
+
           END DO
 
           IF( MOD(nx,2) /= 0) THEN
@@ -212,68 +339,44 @@
               CALL dforce( ik, nb, c0(:,:,:,is), cdesc, fi(:,:,is), c2, gv, vpot(:,:,:,is), &
                  fnl(ik,is)%c, eigr, ps )
             END IF
-            IF( ttprint ) THEN
+            IF( tlam ) THEN
               IF ( cdesc%gamma ) THEN
-                prod = hpsi(cdesc%gzero, c0(:,:,ik,is), c2)
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( nb, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( nb, occ_desc, 'R' )
-                  gam(ibl,:) = prod(:)
-                END IF
+                CALL update_lambda( nb, gam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
               ELSE
-                cprod = hpsi(c0(:,:,ik,is), c2)
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( nb, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( nb, occ_desc, 'R' )
-                  cgam(ibl,:) = cprod(:)
-                END IF
+                CALL update_lambda( nb, cgam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
               END IF
             END IF
 
-            CALL moveelect( tsde, cp(:,nb,ik,is), c0(:,nb,ik,is), cm(:,nb,ik,is), cdesc, c2, &
-              svar1, svar2, svar3, gv%kg_mask_l(:,ik))
+            IF( iflag == 2 ) THEN
+              c0(:,nb,ik,is) = cp(:,nb,ik,is)
+            END IF
 
-          END IF
+            IF ( ttsde ) THEN
+              CALL wave_steepest( cp(:,nb,ik,is), c0(:,nb,ik,is), svar3, c2 )
+            ELSE
+              cp(:,nb,ik,is) = cm(:,nb,ik,is)
+              CALL wave_verlet( cp(:,nb,ik,is), c0(:,nb,ik,is), svar1, svar2, svar3, c2 )
+            END IF
+            IF( .NOT. cdesc%gamma ) THEN
+              cp(:,nb,ik,is)  = cp(:,nb,ik,is) * gv%kg_mask_l(:,ik)
+            ELSE
+              IF( cdesc%gzero ) cp(1,nb,ik,is) = REAL( cp(1,nb,ik,is), dbl )
+            END IF
 
-          IF( ttprint ) THEN
-            CALL eigs( nx, gam, cgam, tortho, fi(:,ik,is), ei(:,ik,is), cdesc%gamma )
           END IF
 
         END DO KAPPA
 
-        DEALLOCATE( cgam, gam, cprod, prod, STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' runcp ', ' deallocating 1 ', ierr)
-
-      END DO
-
-      s2 = cclock()
-      timerd = s2 - s1
-
-      !  Orthogonalize the new wave functions "cp"
-
-      IF( tortho ) THEN
-        CALL ortho(c0, cp, cdesc, pmss, emass)
-      ELSE
-        CALL gram(cp, cdesc)
-      END IF
-
-      s3 = cclock()
-      timeorto = s3 - s2
-
-      DO is = 1, cdesc%nspin
-
-        !  Compute fictitious kinetic energy of the electrons at time t
-
-        ekinc(is) = cp_kinetic_energy( is, cp(:,:,:,is), cm(:,:,:,is), cdesc, kp, &
-          gv%kg_mask_l, pmss, delt)
-
       END DO
 
       DEALLOCATE(svar3, c2, c3, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp ', ' deallocating ', ierr)
+      IF( ierr /= 0 ) CALL errore(' runcp_ncpp ', ' deallocating 1 ', ierr)
 
       RETURN
-    END SUBROUTINE runcp
+    END SUBROUTINE runcp_ncpp
+
+
+!=----------------------------------------------------------------------------------=!
 
 
 !cdesc is the desciptor for the wf
@@ -297,8 +400,8 @@
       USE electrons_module, ONLY: pmss, eigs, occ_desc, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-      USE wave_functions, ONLY : rande,moveelect, cp_kinetic_energy, gram
-      USE wave_base, ONLY : frice
+      USE wave_functions, ONLY : rande, cp_kinetic_energy, gram
+      USE wave_base, ONLY: frice, wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE cell_module, ONLY: boxdimensions
@@ -312,6 +415,7 @@
       USE control_flags, ONLY: tdamp
       USE constants, ONLY: au
       USE io_global, ONLY: ionode
+      USE wave_constrains, ONLY: update_lambda
 
         IMPLICIT NONE
 
@@ -515,41 +619,13 @@
                 !  anche solita divisione sul gamma == matrice lambda dei moltiplicatori di Lagrange
                 !  e faccio il prodotto <psi|dH/dpsi> == <psi|H|psi>
                 !
-                prod = hpsi( cdesc%gzero, c0(:,:,ik,1), c2)
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  gam( ibl, : ) = prod( : )
-                END IF
+                CALL update_lambda( i, gam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
+                CALL update_lambda( i+1, gam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c3 )
 
             ELSE
 
-                cprod = hpsi( c0(:,:,ik,1), c2)
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  cgam( ibl, : ) = cprod( : )
-                END IF
-
-            END IF
-
-            IF ( cdesc%gamma ) THEN
-
-                prod = hpsi( cdesc%gzero, c0(:,:,ik,1), c3)
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( i+1, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i+1, occ_desc, 'R' )
-                  gam( ibl, : ) = prod( : )
-                END IF
-
-            ELSE
-
-                cprod = hpsi( c0(:,:,ik,1), c3)
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( i+1, occ_desc, 'R' ) ) THEN 
-                  ibl = local_index( i+1, occ_desc, 'R' )
-                  cgam( ibl, : ) = cprod(:)
-                END IF
+                CALL update_lambda( i, cgam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
+                CALL update_lambda( i+1, cgam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c3 )
 
             END IF
 
@@ -570,11 +646,23 @@
 
           END IF ! ttprint
 
-          CALL moveelect(tsde, cp(:,i,ik,1), c0(:,i,ik,1), cm(:,i,ik,1), cdesc, c2, &
-                           svar1, svar2, svar3, gv%kg_mask_l(:,ik))
+          IF ( tsde ) THEN
+             CALL wave_steepest( cp(:,i,ik,1), c0(:,i,ik,1), svar3, c2 )
+             CALL wave_steepest( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar3, c3 )
+          ELSE
+            cp(:,i,ik,1) = cm(:,i,ik,1)
+            cp(:,i+1,ik,1) = cm(:,i+1,ik,1)
+            CALL wave_verlet( cp(:,i,ik,1), c0(:,i,ik,1), svar1, svar2, svar3, c2 )
+            CALL wave_verlet( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar1, svar2, svar3, c3 )
+          END IF
+          IF( .NOT. cdesc%gamma ) THEN
+            cp(:,i,ik,1)  = cp(:,i,ik,1) * gv%kg_mask_l(:,ik)
+            cp(:,i+1,ik,1)  = cp(:,i+1,ik,1) * gv%kg_mask_l(:,ik)
+          ELSE
+            IF( cdesc%gzero ) cp(1,i,ik,1) = REAL( cp(1,i,ik,1), dbl )
+            IF( cdesc%gzero ) cp(1,i+1,ik,1) = REAL( cp(1,i+1,ik,1), dbl )
+          END IF
 
-          CALL moveelect(tsde, cp(:,i+1,ik,1), c0(:,i+1,ik,1), cm(:,i+1,ik,1), cdesc, c3, &
-                           svar1, svar2, svar3, gv%kg_mask_l(:,ik))
 
         END DO ! bande
 
@@ -603,19 +691,9 @@
 
           IF( ttprint .and. ( nupdwn(1) > nupdwn(2) ) ) THEN
             IF ( cdesc%gamma ) THEN
-              prod = hpsi(cdesc%gzero, c0(:,:,ik,1), c2)
-              CALL mp_sum( prod )
-              IF( mpime == owner_of( nb, occ_desc, 'R' ) ) THEN
-                ibl = local_index( nb, occ_desc, 'R' )
-                gam(ibl,:) = prod(:)
-              END IF
+              CALL update_lambda( nb, gam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
             ELSE
-              cprod = hpsi(c0(:,:,ik,1), c2)
-              CALL mp_sum( cprod )
-              IF( mpime == owner_of( nb, occ_desc, 'R' ) ) THEN
-                ibl = local_index( nb, occ_desc, 'R' )
-                cgam(ibl,:) = cprod(:)
-              END IF
+              CALL update_lambda( nb, cgam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
             END IF
             if ( nupdwn(1) > nupdwn(2) ) then
               intermed  = sum ( c2 * conjg(c2) )
@@ -627,8 +705,18 @@
             endif
           END IF
 
-          CALL moveelect( tsde, cp(:,nb,ik,1), c0(:,nb,ik,1), cm(:,nb,ik,1), cdesc, c2, &
-            svar1, svar2, svar3, gv%kg_mask_l(:,ik))
+          IF ( tsde ) THEN
+             CALL wave_steepest( cp(:,nb,ik,1), c0(:,nb,ik,1), svar3, c2 )
+          ELSE
+           cp(:,nb,ik,1) = cm(:,nb,ik,1)
+            CALL wave_verlet( cp(:,nb,ik,1), c0(:,nb,ik,1), svar1, svar2, svar3, c2 )
+          END IF
+          IF( .NOT. cdesc%gamma ) THEN
+            cp(:,nb,ik,1)  = cp(:,nb,ik,1) * gv%kg_mask_l(:,ik)
+          ELSE
+            IF( cdesc%gzero ) cp(1,nb,ik,1) = REAL( cp(1,nb,ik,1), dbl )
+          END IF
+
 
         END IF
 
@@ -723,6 +811,133 @@
       RETURN
     END SUBROUTINE runcp_force_pairing
 
+
+!=----------------------------------------------------------------------------=!
+
+
+   SUBROUTINE runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
+              fromscra, restart )
+     !
+     use wave_base, only: wave_steepest, wave_verlet
+     use wave_base, only: frice
+     use control_flags, only: tnosee, tbuff, lwf, tsde
+     !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
+     use uspp, only : deeq, betae => vkb
+     use reciprocal_vectors, only : gstart
+     use electrons_base, only : n=>nbnd
+     use wannier_subroutines, only: ef_potential
+     use efield_module, only: dforce_efield, tefield
+
+     use gvecw, only: ngw
+     !
+     IMPLICIT NONE
+     integer, intent(in) :: nfi
+     real(kind=8) :: fccc, ccc
+     real(kind=8) :: ema0bg(:), dt2bye
+     real(kind=8) :: rhos(:,:)
+     real(kind=8) :: bec(:,:)
+     complex(kind=8) :: c0(:,:,:,:), cm(:,:,:,:)
+     logical, optional, intent(in) :: fromscra
+     logical, optional, intent(in) :: restart
+     !
+     real(kind=8) ::  verl1, verl2, verl3
+     real(kind=8), allocatable:: emadt2(:)
+     real(kind=8), allocatable:: emaver(:)
+     complex(kind=8), allocatable:: c2(:), c3(:)
+     integer :: i
+     integer :: iflag
+     logical :: ttsde
+
+     iflag = 0
+     IF( PRESENT( fromscra ) ) THEN
+       IF( fromscra ) iflag = 1
+     END IF
+     IF( PRESENT( restart ) ) THEN
+       IF( restart ) iflag = 2
+     END IF
+
+     !
+     !==== set friction ====
+     !
+     IF( iflag == 0 ) THEN
+       if( tnosee ) then
+         verl1 = 2.0d0 * fccc
+         verl2 = 1.0d0 - verl1
+         verl3 = 1.0d0 * fccc
+       else
+         verl1=2./(1.+frice)
+         verl2=1.-verl1
+         verl3=1./(1.+frice)
+       end if
+     ELSE IF( iflag == 1 .OR. iflag == 2 ) THEN
+       verl1 = 1.0d0
+       verl2 = 0.0d0
+     END IF
+
+     allocate(c2(ngw))
+     allocate(c3(ngw))
+     ALLOCATE( emadt2( ngw ) )
+     ALLOCATE( emaver( ngw ) )
+
+
+     IF( iflag == 0 ) THEN
+       emadt2 = dt2bye * ema0bg
+       emaver = emadt2 * verl3
+       ttsde = tsde
+     ELSE IF( iflag == 1 ) THEN
+       ccc = 0.5d0 * dt2bye
+       if(tsde) ccc = dt2bye
+       emadt2 = ccc * ema0bg
+       emaver = emadt2
+       ttsde = .TRUE.
+     ELSE IF( iflag == 2 ) THEN
+       emadt2 = dt2bye * ema0bg
+       emaver = emadt2 * 0.5d0
+       ttsde = .FALSE.
+     END IF
+
+      if( lwf ) then
+        call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+      else
+        do i=1,n,2
+           call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+           if( tefield ) then
+             CALL dforce_efield ( bec, i, c0(:,i,1,1), c2, c3, rhos)
+           end if
+           IF( iflag == 2 ) THEN
+             cm(:,i,1,1)   = c0(:,i,1,1)
+             cm(:,i+1,1,1) = c0(:,i+1,1,1)
+           END IF
+           if( ttsde ) then
+              CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
+              CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
+           else
+              CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), verl1, verl2, emaver, c2 )
+              CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), verl1, verl2, emaver, c3 )
+           endif
+           if ( gstart == 2 ) then
+              cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
+              cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
+           end if
+        end do
+      end if
+
+     IF( iflag == 0 ) THEN
+       ccc = fccc * dt2bye
+     END IF
+
+     DEALLOCATE( emadt2 )
+     DEALLOCATE( emaver )
+     deallocate(c2)
+     deallocate(c3)
+!
+!==== end of loop which updates electronic degrees of freedom
+!
+!     buffer for wavefunctions is unit 21
+!
+     if(tbuff) rewind 21
+
+   END SUBROUTINE
 
 
 !=----------------------------------------------------------------------------=!

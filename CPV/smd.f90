@@ -75,6 +75,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
   real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
   real(kind=8) fion(3,natx),tps
+  real(kind=8) mat_z(1,1,1)
   !
 
 
@@ -112,7 +113,8 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
      call readfile                                              &
           &     (-1,ndr+1,h,hold,nfi,c0,cm,rep(0)%tau0,taum,vel,velm,acc,   &
           &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-          &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps)
+          &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
+          &       fion,tps, mat_z, f)
      !
      WRITE( stdout,344) ibrav
      do i=1,3

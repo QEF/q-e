@@ -12,7 +12,7 @@
 !  BEGIN manual
 
 !=----------------------------------------------------------------------------=!
-      MODULE wave_functions
+   MODULE wave_functions
 !=----------------------------------------------------------------------------=!
 
 !  (describe briefly what this module does...)
@@ -21,8 +21,6 @@
 !  REAL(dbl) FUNCTION dft_kinetic_energy(c,hg,f,nb,rsum)
 !  REAL(dbl) FUNCTION cp_kinetic_energy(cp,cm,pmss,emass,delt)
 !  SUBROUTINE rande(cm,ampre)
-!  SUBROUTINE moveelect( i, tsde, tdyn, cp, c0, cm, c2, c3,  &
-!                       svar1, svar2, svar3, delt)
 !  SUBROUTINE gram(cp)
 !  SUBROUTINE update_wave_functions(cm,c0,cp)
 !  SUBROUTINE crot_gamma (c0,lambda,eig)
@@ -59,7 +57,7 @@
           END INTERFACE
 
           PUBLIC :: dft_kinetic_energy, cp_kinetic_energy
-          PUBLIC :: moveelect, update_wave_functions
+          PUBLIC :: update_wave_functions
 
 !  end of module-scope declarations
 !  ----------------------------------------------
@@ -404,57 +402,6 @@
 
       RETURN
    END SUBROUTINE rande_s
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE moveelect( tsde, cp, c0, cm, cdesc, c2, s1, s2, s3, kmask)
-
-     USE wave_types, ONLY: wave_descriptor
-     USE control_flags, ONLY: tdamp
-     USE wave_base, ONLY: wave_steepest, wave_verlet
-
-     IMPLICIT NONE
-
-     LOGICAL, INTENT(IN) :: tsde
-     COMPLEX(dbl), INTENT(IN) :: c0(:), cm(:)
-     COMPLEX(dbl), INTENT(OUT) :: cp(:)
-     TYPE (wave_descriptor), INTENT(IN) :: cdesc
-     REAL(dbl), INTENT(IN) :: kmask(:)
-     COMPLEX(dbl), INTENT(IN) :: C2(:)
-     REAL(dbl), INTENT(IN) :: s1, s2, s3(:)
-
-        IF( ( SIZE( cp )    /= SIZE( c0 ) ) .OR. &
-            ( SIZE( cp )    /= SIZE( cm ) ) .OR. &
-            ( SIZE( cp, 1 ) /= SIZE( s3 )   ) .OR. &
-            ( SIZE( cp, 1 ) /= SIZE( c2 )   )    ) &
-          CALL errore( ' moveelect ', ' wrong dimensions ', 1 )
-            
-        IF ( tsde ) THEN
-
-          CALL wave_steepest( cp, c0, s3, c2 )
-
-        ELSE
-
-          cp(:) = cm(:)
-          CALL wave_verlet( cp, c0, s1, s2, s3, c2 )
-
-        END IF
-
-        IF( .NOT. cdesc%gamma ) THEN
-
-          IF( SIZE( cp ) /= SIZE( kmask ) ) &
-            CALL errore( ' moveelect ', ' wrong dimensions ', 3 )
-
-          cp(:)  = cp(:) * kmask(:)
-
-        ELSE
-
-          IF( cdesc%gzero ) cp(1) = REAL( cp(1), dbl )
-
-        END IF
-
-     RETURN
-   END SUBROUTINE moveelect
 
 !=----------------------------------------------------------------------------=!
 
@@ -1088,8 +1035,104 @@
         RETURN
    END SUBROUTINE proj_kp
 
+!=----------------------------------------------------------------------------=!
+   END MODULE wave_functions
+!=----------------------------------------------------------------------------=!
+
 
 !=----------------------------------------------------------------------------=!
-      END MODULE wave_functions
+   MODULE wave_constrains
 !=----------------------------------------------------------------------------=!
 
+     ! ...   include modules
+     USE kinds
+
+     IMPLICIT NONE
+     SAVE
+
+     PRIVATE
+
+     PUBLIC :: interpolate_lambda, update_lambda
+
+     INTERFACE update_lambda
+       MODULE PROCEDURE update_rlambda, update_clambda
+     END INTERFACE
+
+!=----------------------------------------------------------------------------=!
+   CONTAINS
+!=----------------------------------------------------------------------------=!
+
+     SUBROUTINE interpolate_lambda( lambdap, lambda, lambdam )
+       IMPLICIT NONE
+       REAL(dbl) :: lambdap(:,:), lambda(:,:), lambdam(:,:) 
+       !
+       ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
+       !
+       lambdap(:,:) = 2.d0*lambda(:,:)-lambdam(:,:)
+       lambdam(:,:)=lambda (:,:)
+       lambda (:,:)=lambdap(:,:)
+       RETURN
+     END SUBROUTINE
+
+
+     SUBROUTINE update_rlambda( i, lambda, ldesc, c0, cdesc, c2 )
+       USE parallel_types, ONLY: descriptor
+       USE descriptors_module, ONLY: owner_of, local_index
+       USE mp_global, ONLY: mpime
+       USE mp, ONLY: mp_sum
+       USE wave_base, ONLY: hpsi
+       USE wave_types, ONLY: wave_descriptor
+       IMPLICIT NONE
+       REAL(dbl) :: lambda(:,:)
+       COMPLEX(dbl) :: c0(:,:), c2(:)
+       TYPE (wave_descriptor), INTENT(IN) :: cdesc
+       TYPE (descriptor), INTENT(IN) :: ldesc
+       INTEGER :: i
+       !
+       REAL(dbl), ALLOCATABLE :: prod(:)
+       INTEGER :: ibl
+       !
+       ALLOCATE( prod( SIZE( c0, 2 ) ) )
+       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
+       CALL mp_sum( prod )
+       IF( mpime == owner_of( i, ldesc, 'R' ) ) THEN
+           ibl = local_index( i, ldesc, 'R' )
+           lambda( ibl, : ) = prod( : )
+       END IF
+       DEALLOCATE( prod )
+       RETURN
+     END SUBROUTINE
+
+     SUBROUTINE update_clambda( i, lambda, ldesc, c0, cdesc, c2 )
+       USE parallel_types, ONLY: descriptor
+       USE descriptors_module, ONLY: owner_of, local_index
+       USE mp_global, ONLY: mpime
+       USE mp, ONLY: mp_sum
+       USE wave_base, ONLY: hpsi
+       USE wave_types, ONLY: wave_descriptor
+       IMPLICIT NONE
+       COMPLEX(dbl) :: lambda(:,:)
+       COMPLEX(dbl) :: c0(:,:), c2(:)
+       TYPE (wave_descriptor), INTENT(IN) :: cdesc
+       TYPE (descriptor), INTENT(IN) :: ldesc
+       INTEGER :: i
+       !
+       COMPLEX(dbl), ALLOCATABLE :: prod(:)
+       INTEGER :: ibl
+       !
+       ALLOCATE( prod( SIZE( c0, 2 ) ) )
+       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
+       CALL mp_sum( prod )
+       IF( mpime == owner_of( i, ldesc, 'R' ) ) THEN
+           ibl = local_index( i, ldesc, 'R' )
+           lambda( ibl, : ) = prod( : )
+       END IF
+       DEALLOCATE( prod )
+       RETURN
+     END SUBROUTINE
+
+
+
+!=----------------------------------------------------------------------------=!
+   END MODULE 
+!=----------------------------------------------------------------------------=!

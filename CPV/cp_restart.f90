@@ -136,7 +136,8 @@
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htm2, htvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, occ0, &
-        occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm )
+        occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, &
+        ekincm, mat_z )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -199,6 +200,7 @@
       REAL(dbl), INTENT(IN) :: xnhem2 ! 
       REAL(dbl), INTENT(IN) :: vnhe ! 
       REAL(dbl), INTENT(IN) :: ekincm ! 
+      REAL(dbl), INTENT(IN) :: mat_z(:,:,:) ! 
       !
       CHARACTER(LEN=256) :: dirname, filename
       CHARACTER(iotk_attlenx) :: attr
@@ -386,6 +388,10 @@
             call iotk_link(iunpun,"occupations_m",filename,create=.true.,binary=.not.ascii,raw=.true.)
             call iotk_write_dat(iunpun,"occupations_m",occm(:,i,ispin))
             !
+            filename = TRIM( wfc_filename( ".", 'mat_z', i, ispin, '0' ) ) ! filename GIUSTO !!
+            call iotk_link(iunpun,"mat_z",filename,create=.true.,binary=.true.,raw=.true.)
+            call iotk_write_dat(iunpun,"mat_z",mat_z(:,:,ispin))
+            !
             call iotk_write_end(iunpun,"spin_component")
           END DO
           call iotk_write_end(iunpun,"Kpoint")
@@ -501,7 +507,7 @@
         ht, htm, htm2, htvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, &
         occ0, occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, &
-        xnhem2, vnhe, ekincm )
+        xnhem2, vnhe, ekincm, mat_z, tens  )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -565,6 +571,8 @@
       REAL(dbl), INTENT(INOUT) :: xnhem2 !
       REAL(dbl), INTENT(INOUT) :: vnhe !  
       REAL(dbl), INTENT(INOUT) :: ekincm !  
+      REAL(dbl), INTENT(INOUT) :: mat_z(:,:,:) ! 
+      LOGICAL, INTENT(IN) :: tens
 
       !
       CHARACTER(LEN=256) :: dirname, kdirname, filename
@@ -725,6 +733,10 @@
             call iotk_scan_dat(iunpun,"occupations_0",occ0(:,i,ispin))
             call iotk_scan_dat(iunpun,"occupations_m",occm(:,i,ispin))
             !
+            IF( tens ) THEN
+              call iotk_scan_dat(iunpun,"mat_z",mat_z(:,:,ispin))
+            END IF
+            !
             call iotk_scan_end(iunpun,"spin_component")
           END DO
 
@@ -782,6 +794,11 @@
 
       CALL mp_bcast(occ0( :, :, :), ionode_id)
       CALL mp_bcast(occm( :, :, :), ionode_id)
+      !
+      IF( tens ) THEN
+        CALL mp_bcast(mat_z( :, :, :), ionode_id)
+      END IF
+      !
 
       IF( ionode ) THEN
         CALL iotk_close_read( iunpun )

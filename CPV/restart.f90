@@ -752,7 +752,7 @@
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,  &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
-     &       fion, tps)
+     &       fion, tps, mat_z, occ_f )
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
@@ -760,7 +760,7 @@
       use ions_base, only: nsp, na
       use cell_base, only: s_to_r
       use cp_restart, only: cp_writefile, cp_write_wfc
-      USE electrons_base, ONLY: nspin, nbnd
+      USE electrons_base, ONLY: nspin, nbnd, iupdwn, nupdwn
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
@@ -776,9 +776,10 @@
       real(kind=8), INTENT(in) :: celldm(:)
       real(kind=8), INTENT(in) :: tps
       integer, INTENT(in) :: ibrav
+      real(kind=8), INTENT(in) :: mat_z(:,:,:), occ_f(:)
 
       real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), htm2_(3,3) , xnhhp_(3,3)
-      integer :: nk = 1, ispin
+      integer :: nk = 1, ispin, i
       real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:) 
@@ -811,7 +812,13 @@
       xnhpm2_ = xnhpm
 
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
-      occ_ = 2.0d0 / nspin
+      occ_ = 0.0d0
+      do ispin = 1, nspin
+        do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
+          occ_ ( i - iupdwn ( ispin ) + 1, 1, ispin ) = occ_f( i ) 
+        end do
+      end do
+
 
       CALL invmat( 3, ht, htm1, omega )
       b1 = htm1(:,1)
@@ -825,7 +832,7 @@
         ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm  )
+        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm, mat_z  )
 
       DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
@@ -845,16 +852,17 @@
      &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm, &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
-     &       fion, tps)
+     &       fion, tps, mat_z, occ_f )
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
 !
 
-      use electrons_base, only: nbnd, nspin, nel
+      use electrons_base, only: nbnd, nspin, nel, nupdwn, iupdwn
       use gvecw, only: ngw, ngwt
       use ions_base, only: nsp, na
       use cp_restart, only: cp_readfile, cp_read_cell, cp_read_wfc
+      use ensemble_dft, only: tens
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -870,9 +878,10 @@
       real(kind=8), INTENT(in) :: celldm(6)
       integer, INTENT(in) :: ibrav
       real(kind=8), INTENT(OUT) :: tps
+      real(kind=8), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       !
       real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), htm2_(3,3) , xnhhp_(3,3)
-      integer :: nk = 1, ispin
+      integer :: nk = 1, ispin, i
       real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:)
@@ -892,7 +901,7 @@
         RETURN
       ELSE IF ( flag == 0 ) THEN
         DO ispin = 1, nspin
-          CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, c0, '0' )
+          CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, cm, 'm' )
         END DO
         RETURN
       END IF
@@ -904,9 +913,15 @@
         ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm  )
+        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm, mat_z, tens  )
 
       DEALLOCATE( taui_ )
+
+      do ispin = 1, nspin
+        do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
+          occ_f( i ) = occ_ ( i - iupdwn ( ispin ) + 1, 1, ispin )
+        end do
+      end do
       DEALLOCATE( occ_ )
 
       h     = TRANSPOSE( ht )
@@ -1382,6 +1397,7 @@
         REAL(dbl), ALLOCATABLE :: lambda(:,:)
         REAL(dbl) S0, S1
         REAL(dbl) :: ekincm
+        REAL(dbl) :: mat_z(1,1,nspin)
              
         s0 = cclock()
 
@@ -1395,12 +1411,13 @@
         ALLOCATE( lambda(nbnd,nbnd) )
         lambda  = 0.0d0
         ekincm = 0.0d0
+        mat_z = 0.0d0
 
         CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_m2%a, ht_0%hvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, xnhpp, xnhpm2, occ, occ, lambda, lambda, gv%b1, gv%b2, gv%b3, &
-          xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm )
+          xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z )
 
         DEALLOCATE( lambda )
 
@@ -1982,6 +1999,8 @@
         REAL(dbl), ALLOCATABLE :: lambda_ ( : , : )
         INTEGER :: nbnd_
         REAL(dbl) :: ekincm
+        REAL(dbl) :: mat_z_(1,1,nspin)
+        LOGICAL :: tens = .FALSE.
 
         CALL mp_barrier()
         s0 = cclock()
@@ -1994,7 +2013,7 @@
           ht_0%a, ht_m%a, ht_m2%a, ht_0%hvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, xnhpp, xnhpm2, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
-          gv%b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm )
+          gv%b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z_ , tens )
 
         DEALLOCATE( lambda_ )
 

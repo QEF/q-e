@@ -31,6 +31,7 @@
 
         PUBLIC :: printout_setup, printout, printmain
         PUBLIC :: print_time, print_sfac, printacc, print_legend
+        PUBLIC :: cp_print_rho
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
@@ -767,6 +768,88 @@
       END IF
       RETURN
     END SUBROUTINE open_and_append
+
+!=----------------------------------------------------------------------------=!
+
+   SUBROUTINE cp_print_rho(nfi, bec, c0, eigr, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
+   
+     use kinds, only: dbl
+     use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag, dval, zaux, e0, zx
+     use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+     use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
+     use energies, only: enl, ekin
+     use ions_base, only: nsp
+     use uspp, only: rhovan => becsum
+     use grid_dimensions, only: nnr => nnrx
+     use io_global, only: stdout
+     USE control_flags, ONLY: printwfc, trhor
+
+     IMPLICIT NONE
+
+     INTEGER :: nfi
+     INTEGER :: irb(:,:,:)
+     COMPLEX(dbl) :: c0( :, :, :, : )
+     REAL(dbl) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
+     REAL(dbl) :: tau0( :, : ), h( 3, 3 )
+     COMPLEX(dbl) :: eigrb( :, :, : ), rhog( :, : )
+     COMPLEX(dbl) :: eigr( :, :, : )
+
+     INTEGER :: is, istart, nss, i, j
+     LOGICAL, SAVE :: trhor_save
+
+     !se 0 stampa densita' di carica
+     if( printwfc == 0 ) then
+       call calbec(1,nsp,eigr,c0,bec)
+       if(.not.tens) then
+         call rhoofr(nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+       else
+         write(6,*) 'Print wfc: ', printwfc
+         !     calculation of the rotated quantities
+         call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
+         !     calculation of rho corresponding to the rotated wavefunctions
+         call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+       endif
+       call write_rho_xsf(tau0,h,rhor)
+#ifdef PARA
+       call write_rho(47,nspin,rhor)
+#endif            
+     else if(printwfc <= n ) then
+       !stampa funzione d'onda_n **2
+       !usa lo stesso macchinario della occupazione variabile
+       !PER ADESSO SOLO NSPIN=1 
+       trhor_save=trhor
+       write(6,*) 'Plotting band :', printwfc
+       do  is=1,nspin
+         istart=iupdwn(is)
+         nss=nupdwn(is)
+         call ddiag(nss,nss,lambda,dval(1),zaux(1,1,is),1)
+         do i=1,nss
+           e0(i+istart-1)=dval(i)
+         enddo
+       enddo
+       do  is=1,nspin
+         nss=nupdwn(is)
+         istart=iupdwn(is)
+         do i=1,nss
+           do j=1,nss
+             zx(j,i,is)=zaux(i,j,is)!ATTENZIONE ALLO SPIN
+           end do
+         enddo
+       enddo
+
+       call rotate(zx,c0(:,:,1,1),bec,c0diag,becdiag)
+       do i=1,n
+         !                  if(i.ne.printwfc) call zero(2*ngw, c0diag(1,i))!ATTENZIONE modifiche temporanee
+         if(i.ne.92 .and. i.ne.93 .and. i.ne.94) c0diag(:,i) = 0.0d0
+       enddo
+       call calbec(1,nsp,eigr,c0diag,becdiag)
+       call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+       call write_rho_xsf(tau0,h,rhor)
+       trhor=trhor_save
+     endif
+
+     RETURN
+   END SUBROUTINE
 
 
 !=----------------------------------------------------------------------------=!

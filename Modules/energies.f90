@@ -36,6 +36,9 @@
           REAL(dbl)  :: EVDW
           REAL(dbl)  :: EBAND
           REAL(dbl)  :: EKIN
+          REAL(dbl)  :: ATOT     ! Ensamble DFT
+          REAL(dbl)  :: ENTROPY  ! Ensamble DFT
+          REAL(dbl)  :: EGRAND   ! Ensamble DFT
         END TYPE
 
         REAL(dbl)  :: EHTE = 0.0_dbl
@@ -57,11 +60,16 @@
         REAL(dbl)  :: VXC = 0.0_dbl
         REAL(dbl)  :: SELF_VXC = 0.0_dbl
         REAL(dbl)  :: EBAND = 0.0_dbl
+        REAL(dbl)  :: ATOT = 0.0_dbl
+        REAL(dbl)  :: ENTROPY = 0.0_dbl
+        REAL(dbl)  :: EGRAND = 0.0_dbl
 
         PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
           print_energies, debug_energies
 
         PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc
+
+        PUBLIC :: atot, entropy, egrand
 
       CONTAINS
 

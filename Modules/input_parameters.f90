@@ -244,11 +244,14 @@ MODULE input_parameters
           !  .FALSE. do not collect wave function they are left in temporary
           !          local file
 
+        INTEGER :: printwfc=1
+          ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect
+          wf_collect, printwfc
 
 
 !
@@ -742,10 +745,56 @@ MODULE input_parameters
           ! specify the file containing the DFT potential of the system
           ! NOT used in FPMD
 
+        INTEGER :: n_inner = 0
+          ! number of inner loop per CP step.
+
+        LOGICAL :: tgrand = .FALSE.
+          ! whether to do grand-canonical calculations.
+
+        REAL(dbl) :: fermi_energy = 0.0d0
+          ! chemical potential of the grand-canonical ensemble.
+
+        CHARACTER(LEN=80) :: rotation_dynamics = "line-minimization"
+          ! evolution the rotational degrees of freedom.
+
+        CHARACTER(LEN=80) :: occupation_dynamics = "line-minimization"
+          ! evolution of the occupational degrees of freedom.
+
+        REAL(dbl) :: rotmass = 0
+          ! mass for the rotational degrees of freedom.
+
+        REAL(dbl) :: occmass = 0
+          ! mass for the occupational degrees of freedom.
+
+        REAL(dbl) :: occupation_damping = 0
+          ! damping for the rotational degrees of freedom.
+
+        REAL(dbl) :: rotation_damping = 0
+          ! damping for the occupational degrees of freedom.
+
+        LOGICAL :: tcg = .true. 
+          ! falg per gradiente coniugato
+
+        INTEGER :: maxiter = 40
+          ! numero massime iterazioni 
+
+        REAL(dbl)  :: etresh =0.1d-6 
+          ! treshhold su energia 
+
+        REAL(dbl) :: passop =0.3 
+          ! passetto per ricerca minimo
+
+        INTEGER  :: epol = 3
+          ! direzione campo elettrico
+
+        REAL(dbl) :: efield =0.d0 
+          ! intensita' del campo
+
+
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
-          ekincw, fnosee, ampre, grease, empty_states_nbnd,     &
+          ekincw, fnosee, ampre, grease, empty_states_nbnd,            &
           empty_states_maxstep, empty_states_delt, empty_states_emass, &
           empty_states_ethr, diis_size, diis_nreset, diis_hcut,        &
           diis_wthr, diis_delt, diis_maxstep, diis_rot, diis_fthr,     &
@@ -754,7 +803,11 @@ MODULE input_parameters
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
           diago_cg_maxiter, diago_david_ndim, diagonalization,         &
           startingpot, startingwfc , conv_thr, diago_diis_ndim,        &
-          diago_thr_init
+          diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
+          rotation_damping, occupation_damping, rotation_dynamics,     &
+          occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
+          efield
+
 
 !
 !=----------------------------------------------------------------------------=!

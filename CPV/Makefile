@@ -7,9 +7,14 @@ FOBJS = \
 atoms_type.o \
 band_type.o \
 bessel.o \
+berryion.o \
+bforceion.o \
 blacs.o \
 bmesh.o \
 brillouin.o \
+cg.o \
+cg_sub.o \
+cglib.o \
 chargedensity.o \
 chargemix.o \
 charge_types.o \
@@ -26,8 +31,15 @@ cptypes.o \
 crayfft.o \
 cutoffs.o \
 diis.o \
+dipol_matrix.o \
+dforceb.o \
+efermi.o \
+efield.o \
+eigsp.o \
+eigs0.o \
 electrons.o \
 emptystates.o \
+ensemble_dft.o \
 environment.o \
 exch_corr.o \
 fft_cp.o \
@@ -41,6 +53,7 @@ gga.o \
 greenf.o \
 grid.o \
 gsmesh.o \
+gtable.o \
 guess.o \
 init.o \
 input.o \
@@ -73,6 +86,8 @@ problem_size.o \
 pseudo_base.o \
 pseudopot.o \
 pseudotab_base.o \
+qmatrixd.o \
+qqberry.o \
 read_pseudo.o \
 redis.o \
 restart.o \
@@ -98,11 +113,13 @@ update.o \
 util.o \
 vanderwaals.o \
 version.o \
+vofrho2.o \
 wannier.o \
 waveinit.o \
 wave.o \
 wave_types.o \
 wf.o \
+ylmr.o \
 $(WRAPPERS)
 
 

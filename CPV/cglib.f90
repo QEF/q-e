@@ -1,0 +1,451 @@
+
+
+
+!-------------------------------------------------------------------------
+      subroutine calphiid(c0,bec,betae,phi)
+!-----------------------------------------------------------------------
+!     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
+!     where s'=s(r(t))  
+!
+!ATTENZION no  usa el preconditioning
+
+      use ions_base, only: na, nsp
+      use io_global, only: stdout
+      use cvan
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
+      use elct
+      use gvecw, only: ngw
+      use constants, only: pi, fpi
+      use control_flags, only: iprint, iprsta
+!
+      implicit none
+      complex(kind=8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
+      real(kind=8)    bec(nhsa,n), emtot
+! local variables
+      integer is, iv, jv, ia, inl, jnl, i, j
+      real(kind=8) qtemp(nhsavb,n) ! automatic array
+!
+      phi = 0.0d0
+!
+      if (nvb.gt.0) then
+         qtemp = 0.0d0
+         do is=1,nvb
+            do iv=1,nh(is)
+               do jv=1,nh(is)
+                  if(abs(qq(iv,jv,is)).gt.1.e-5) then
+                     do ia=1,na(is)
+                        inl=ish(is)+(iv-1)*na(is)+ia
+                        jnl=ish(is)+(jv-1)*na(is)+ia
+                        do i=1,n
+                           qtemp(inl,i) = qtemp(inl,i) +                &
+     &                                    qq(iv,jv,is)*bec(jnl,i)
+                        end do
+                     end do
+                  endif
+               end do
+            end do
+         end do
+         !
+         call MXMA                                                     &
+     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
+      end if
+!
+      do j=1,n
+         do i=1,ngw
+            phi(i,j)=(phi(i,j)+c0(i,j))
+         end do
+      end do
+!     =================================================================
+      if(iprsta.gt.2) then
+         emtot=0.
+         do j=1,n
+            do i=1,ngw
+               emtot=emtot                                              &
+     &        +2.*real(phi(i,j)*conjg(c0(i,j)))
+            end do
+         end do
+         emtot=emtot/n
+#ifdef __PARA
+         call reduce(1,emtot)
+#endif      
+         WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
+         WRITE( stdout,*)
+         do is=1,nsp
+            if(nsp.gt.1) then
+               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
+               WRITE( stdout,'(8f9.4)')                                       &
+     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
+            else
+               do ia=1,na(is)
+                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
+                  WRITE( stdout,'(8f9.4)')                                    &
+     &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
+               end do
+            end if
+         end do
+      endif
+!
+      return
+    end subroutine calphiid
+
+
+
+
+!-------------------------------------------------------------------------
+      subroutine cofmass(tau,cdm)
+!-----------------------------------------------------------------------
+!
+      use ions_base, only: na, nsp, pmass
+      use parameters, only: natx
+!
+      implicit none
+      real(kind=8) tau(3,natx,nsp), cdm(3)
+! local variables
+      real(kind=8) tmas
+      integer is,i,ia
+!
+      tmas=0.0
+      do is=1,nsp
+         tmas=tmas+na(is)*pmass(is)
+      end do
+!
+      do i=1,3
+         cdm(i)=0.0
+         do is=1,nsp
+            do ia=1,na(is)
+               cdm(i)=cdm(i)+tau(i,ia,is)*pmass(is)
+            end do
+         end do
+         cdm(i)=cdm(i)/tmas
+      end do
+!
+      return
+      end
+!***ensemble-DFT
+!-----------------------------------------------------------------------
+      subroutine calcmt(fdiag,zmat,fmat)
+!-----------------------------------------------------------------------
+!
+!  constructs fmat=zmat^t.fdiag.zmat
+!
+      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbndx
+
+      implicit none
+      integer iss, nss, istart, i, j, k
+      real(kind=8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),        &
+   &                fdiag(nx)
+
+      do iss=1,nspin
+       nss=nupdwn(iss)
+       istart=iupdwn(iss)
+       do i=1,nss
+        do k=1,nss
+         fmat(k,i,iss)=0.0
+         do j=1,nss
+          fmat(k,i,iss)=fmat(k,i,iss)+                                   &
+    &         zmat(j,k,iss)*fdiag(j+istart-1)*zmat(j,i,iss)
+         end do
+        end do
+       end do
+      end do
+
+      return
+      end
+!***ensemble-DFT
+
+
+!***ensemble-DFT
+!-----------------------------------------------------------------------
+      subroutine rotate(z0,c0,bec,c0diag,becdiag)
+!-----------------------------------------------------------------------
+
+      use cvan
+      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbndx, n => nbnd
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
+      use gvecw, only: ngw
+      use ions_base, only: nas => nax, nsp, na
+
+      implicit none
+      integer iss, nss, istart, i, j, k, ni, nj, is, jv, ia, jnl
+      real(kind=8) z0(nudx,nudx,nspin)
+      real(kind=8) bec(nhsa,n), becdiag(nhsa,n)
+      complex(kind=8) c0(ngw,nx), c0diag(ngw,nx)
+
+      c0diag(:,ni+istart-1) = 0.0d0
+        do iss=1,nspin
+         nss=nupdwn(iss)
+         istart=iupdwn(iss)
+!         do ni=1,nss
+!          call zero(2*ngw,c0diag(1,ni+istart-1))
+!          do nj=1,nss
+!           do j=1,ngw
+!            c0diag(j,ni+istart-1)=c0diag(j,ni+istart-1)+                &
+!     &           cmplx(z0(ni,nj,iss),0.0)*c0(j,nj+istart-1)
+!           end do
+!          end do
+!         end do
+          call MXMA(c0(1,istart),1,2*ngw,z0(1,1,iss),nudx,1,c0diag(1,istart),1,2*ngw,2*ngw,nss,nss)
+        end do
+
+        do iss=1,nspin
+        nss=nupdwn(iss)
+        istart=iupdwn(iss)
+        do ni=1,nss
+         do is=1,nsp
+          do jv=1,nh(is)
+           do ia=1,na(is)
+            jnl=ish(is)+(jv-1)*na(is)+ia
+             becdiag(jnl,ni+istart-1)=0.0
+             do nj=1,nss
+              becdiag(jnl,ni+istart-1)=becdiag(jnl,ni+istart-1)+        &
+     &        cmplx(z0(ni,nj,iss),0.0)*bec(jnl,nj+istart-1)
+             end do
+           end do
+          end do
+         end do
+        end do
+        end do
+      return
+      end
+
+!***ensemble-DFT
+!-----------------------------------------------------------------------
+      subroutine ddiag(nx,n,amat,dval,dvec,iflag)
+!-----------------------------------------------------------------------
+!
+      implicit none
+      integer nx,n,naux,ndim,iopt,iflag,k,i,j,info
+      real(kind=8)   dval(n)
+      real(kind=8) amat(nx,n), dvec(nx,n)
+      real(kind=8), allocatable::  ap(:)
+      real(kind=8), allocatable::  aux(:)
+
+
+      ndim=(n*(n+1))/2
+      naux=3*n
+      allocate(ap(ndim))
+      allocate(aux(naux))
+
+
+      if (iflag.eq.1) then
+       iopt=1
+      else if (iflag.eq.0) then
+       iopt=0
+      else
+       write(*,*) 'ERROR: diag, iflag not allowed'
+       stop
+      end if
+
+      k=0
+      do j=1,n
+       do i=1,j
+        k=k+1
+!       ap(i + (j-1)*j/2)=amat(i,j)
+        ap(k)=amat(i,j)
+       end do
+      end do
+
+      call dspev('V','U',n,ap,dval,dvec,nx,aux,info)
+      if(info.ne.0) write(6,*) 'Cazzi con ddiag'
+
+      deallocate(ap)
+      deallocate(aux)
+
+      return
+    end subroutine ddiag
+!***
+
+!-----------------------------------------------------------------------
+      subroutine calcm(fdiag,zmat,fmat)
+!-----------------------------------------------------------------------
+!
+!  constructs fmat=zmat.fdiag.zmat^t
+!
+      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbndx, n => nbnd
+
+      implicit none
+      integer iss, nss, istart, i, j, k
+      real(kind=8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
+    &   fdiag(nx)
+
+      do iss=1,nspin
+       nss=nupdwn(iss)
+       istart=iupdwn(iss)
+       do i=1,nss
+        do k=1,nss
+         fmat(k,i,iss)=0.0
+         do j=1,nss
+          fmat(k,i,iss)=fmat(k,i,iss)+                                  &
+    &            zmat(k,j,iss)*fdiag(j+istart-1)*zmat(i,j,iss)
+         end do
+        end do
+       end do
+      end do
+
+      return
+      end
+
+    subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
+!trova il minimo di parabola
+      
+      implicit none
+      real(kind=8) ene0,dene0,ene1,passop,passo,stima
+      real(kind=8) a,b,c!a*x^2+b*x+c
+      
+      c=ene0
+      b=dene0
+      a=(ene1-b*passop-c)/(passop**2.d0)
+      
+      passo = -b/(2.d0*a)
+!provemo a coreger erori...
+!se la xe' convessa xe' cassi...la trova un massimo..
+      if( a.lt.0.d0) then
+         if(ene1.lt.ene0) then
+            passo=passop
+         else 
+            passo=0.5*passop
+         endif
+      endif
+
+
+      stima=a*passo**2.d0+b*passo+c
+
+
+      return
+    end subroutine minparabola
+
+
+subroutine pc2(a,beca,b,becb)      
+               
+! this function applies the operator Pc
+            
+!    this subroutine applies the Pc operator
+!    a input :unperturbed wavefunctions
+!    b input :first order wavefunctions
+!    b output:b_i =b_i-a_j><a_j|S|b_i>
+     
+      use ions_base, only: na, nsp
+      use io_global, only: stdout
+      use cvan 
+      use elct
+      use gvecw, only: ngw
+      use constants, only: pi, fpi
+      use control_flags, only: iprint, iprsta
+      use reciprocal_vectors, only: ng0 => gstart
+      use mp, only: mp_sum
+      use electrons_base, only: n => nbnd
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb
+      use uspp, only :qq
+                           
+      implicit none        
+                           
+      complex(kind=8) a(ngw,n), b(ngw,n)
+                     
+      real(kind=8)    beca(nhsa,n),becb(nhsa,n)
+! local variables
+      integer is, iv, jv, ia, inl, jnl, i, j,ig
+      real(kind=8) sca
+      do i=1,n
+         do j=1,n
+            sca=0.
+            if (ng0.eq.2) then
+               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+            endif
+            do  ig=1,ngw           !loop on g vectors
+               sca=sca+2.d0*real(conjg(a(ig,j))*b(ig,i)) !2. for real weavefunctions
+            enddo
+            if (ng0.eq.2) then
+               sca=sca-real(conjg(a(1,j))*b(1,i))
+            endif
+
+            call mp_sum( sca )
+
+            if (nvb.gt.0) then
+
+               do is=1,nvb
+                  do iv=1,nh(is)
+                     do jv=1,nh(is)
+                        do ia=1,na(is)
+                           inl=ish(is)+(iv-1)*na(is)+ia
+                           jnl=ish(is)+(jv-1)*na(is)+ia
+                           sca=sca+ qq(iv,jv,is)*beca(inl,j)*becb(jnl,i)  
+                        end do
+                     end do
+                  end do
+               end do
+            end if
+
+            do ig=1,ngw
+               b(ig,i)=b(ig,i)-sca*a(ig,j)
+            enddo
+            ! this to prevent numerical errors
+            if (ng0.eq.2) then
+               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+            endif
+         enddo
+
+      enddo
+      return
+    end subroutine pc2
+
+
+subroutine pcdaga2(a,as ,b )
+
+! this function applies the operator Pc
+
+!    this subroutine applies the Pc^dagerr operator
+!    a input :unperturbed wavefunctions
+!    b input :first order wavefunctions
+!    b output:b_i =b_i - S|a_j><a_j|b_i>
+
+      use ions_base, only: na, nsp
+      use io_global, only: stdout
+      use cvan
+      use elct
+      use gvecw, only: ngw
+      use constants, only: pi, fpi
+      use control_flags, only: iprint, iprsta
+      use reciprocal_vectors, only: ng0 => gstart
+      use mp, only: mp_sum
+      use electrons_base, only: n => nbnd
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb
+
+      implicit none
+
+      complex(kind=8) a(ngw,n), b(ngw,n), as(ngw,n)
+      real(kind=8)    beca(nhsa,n),becb(nhsa,n)
+      ! local variables
+      integer is, iv, jv, ia, inl, jnl, i, j,ig
+      real(kind=8) sca
+      !
+      do i=1,n
+         do j=1,n
+            sca=0.
+            if (ng0.eq.2) then
+               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+            endif
+            do  ig=1,ngw           !loop on g vectors
+               sca=sca+2.*real(conjg(a(ig,j))*b(ig,i)) !2. for real weavefunctions
+            enddo
+            if (ng0.eq.2) then
+               sca=sca-real(conjg(a(1,j))*b(1,i))
+            endif
+            call mp_sum(sca)
+            do ig=1,ngw
+               b(ig,i)=b(ig,i)-sca*as(ig,j)
+            enddo
+            ! this to prevent numerical errors
+            if (ng0.eq.2) then
+               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+            endif
+         enddo
+      enddo
+      return
+    end subroutine pcdaga2
+

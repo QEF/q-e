@@ -685,7 +685,7 @@ END SUBROUTINE
 SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
            ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
            xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
-           ecut, ecutw, delt, celldm, fion, tps )
+           ecut, ecutw, delt, celldm, fion, tps, mat_z, occ_f )
 
   use efcalc, only: efield
   use wfparm, only: nwf, calwf, jwf, wffort, iplot, iwf
@@ -719,6 +719,7 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
   real(kind=8) :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
   real(kind=8) :: ecut, ecutw, delt, celldm(:)
   real(kind=8) :: fion(:,:), tps
+  real(kind=8) :: mat_z(:,:,:), occ_f(:)
 
 !=============================================================
 ! More Wannier Function Options
@@ -737,7 +738,8 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
     call writefile &
      &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,   &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps, &
+     &       mat_z, occ_f )
 
 
     write(6,*) 'Wannier Functions Written to unit',ndw

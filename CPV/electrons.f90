@@ -16,7 +16,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      MODULE electrons_module
+   MODULE electrons_module
 
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
@@ -78,7 +78,7 @@
           MODULE PROCEDURE rsumgam, csumgam
         END INTERFACE
 
-        PUBLIC :: electrons_setup, eigs
+        PUBLIC :: electrons_setup, eigs, cp_eigs
         PUBLIC :: electron_mass_init, band_init, bmeshset
         PUBLIC :: electrons_info, electrons_print_info
         PUBLIC :: deallocate_electrons, fermi_energy
@@ -872,9 +872,99 @@
 
       END SUBROUTINE
 
+!  ----------------------------------------------
+!
+!
+!
+!  ----------------------------------------------
+
+   SUBROUTINE cp_eigs( nfi, bec, c0, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
+
+     use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag
+     use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+     use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
+     use energies, only: enl, ekin
+     use uspp, only: rhovan => becsum
+     use grid_dimensions, only: nnr => nnrx
+     use io_global, only: stdout
+
+     IMPLICIT NONE
+
+     INTEGER :: nfi
+     INTEGER :: irb(:,:,:)
+     COMPLEX(dbl) :: c0( :, :, :, : )
+     REAL(dbl) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
+     REAL(dbl) :: tau0( :, : ), h( 3, 3 )
+     COMPLEX(dbl) :: eigrb( :, :, : ), rhog( :, : )
+
+     real(dbl), allocatable:: rhodip(:,:)
+     real(dbl) :: dipol( 3 )
+     LOGICAL, SAVE :: lprimo
+     INTEGER :: i
+
+         if( tens .and. ( ismear == -1) ) then!in questo caso stampa elementi matrice dipolo
+
+            call rotate( z0, c0(:,:,1,1), bec, c0diag, becdiag )
+
+            lprimo = .false.
+            do i = 1, n
+               if(f(i) .ne. 1) then
+                  c0diag(:,i) = (0.d0,0.d0)
+                  becdiag(:,i) = 0.d0
+               else if(lprimo) then
+                  c0diag(:,i) = (0.d0,0.d0)
+                  becdiag(:,i) = 0.d0
+               else
+                  lprimo=.true.
+               end if
+            enddo
+
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+
+            allocate(rhodip(nnr,nspin))
+            call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
+
+            lprimo=.true.
+            do i=1,n
+               if(f(i) .ne. 1) then
+                  c0diag(:,i) = (0.d0,0.d0)
+                  becdiag(:,i) = 0.d0
+               else if(lprimo) then
+                  c0diag(:,i) = (0.d0,0.d0)
+                  becdiag(:,i) = 0.d0
+                  lprimo=.false.
+               endif
+            enddo
+
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhodip,rhog,rhos,enl,ekin)
+
+            rhor(:,:)=sqrt(rhor(:,:))*sqrt(rhodip(:,:))
+            deallocate(rhodip)
+
+            call  dipol_matrix(tau0,h,rhor, dipol)
+
+            write(stdout,*) 'ELEMENTI DI DIPOLO :'
+            do i=1,3
+               write(stdout,*) dipol(i)
+            enddo
+            write(stdout,*) '--------------------------'
+
+
+         endif
+
+         if(.not.tens) then
+            call eigs0(nspin,nx,nupdwn,iupdwn,f,lambda)
+         else
+            call eigsp(nspin,nx,nupdwn,iupdwn,lambdap)
+         endif
+
+         WRITE( stdout,*)
+
+        RETURN
+      END SUBROUTINE
 
 
 !  ----------------------------------------------
-      END MODULE electrons_module
+   END MODULE electrons_module
 !  ----------------------------------------------
 

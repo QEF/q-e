@@ -22,6 +22,7 @@
       INTEGER :: nupdwn(2)  = 0    !  number of states with spin up (1) and down (2)
       INTEGER :: iupdwn(2)  = 0    !  first state with spin (1) and down (2)
       INTEGER :: nspin      = 0    !  nspin = number of spins (1=no spin, 2=LSDA)
+      INTEGER :: nudx       = 0    !  max (nupdw(1),nupdw(2))
 
       REAL(dbl), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
       REAL(dbl) :: qbac = 0.0d0        ! background neutralizing charge
@@ -30,6 +31,17 @@
 !------------------------------------------------------------------------------!
   CONTAINS
 !------------------------------------------------------------------------------!
+
+    SUBROUTINE electrons_base_init()
+      IF (nspin.EQ.1) THEN 
+        nelt=nel(1)
+        nudx=nupdwn(1)
+      ELSE
+        nelt=nel(1)+nel(2)
+        nudx=MAX(nupdwn(1),nupdwn(2))
+      END IF
+      RETURN
+    END SUBROUTINE
 
     SUBROUTINE deallocate_elct()
       IF( ALLOCATED( f ) ) DEALLOCATE( f )

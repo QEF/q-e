@@ -567,6 +567,7 @@
       use betax, only: mmx, refg
       use restart_file, only: readfile
       use parameters, only: nacx, nsx, natx
+      use electrons_base, only: f
 
       implicit none
 ! input/output
@@ -586,6 +587,7 @@
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8) fion(1,1), tps
+      real(kind=8) mat_z(1,1,1)
 !
 !
 ! taus = scaled, tau0 = alat units
@@ -602,7 +604,8 @@
          call readfile                                              &
      &     (-1,ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),tau0,taum,vel,velm,acc,             &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps, &
+     &       mat_z, f )
 !
          WRITE( stdout,344) ibrav
          do i=1,3

@@ -13,6 +13,20 @@ module cvan
   !     ish(is)= used for indexing the nonlocal projectors betae
   !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
   !              where "is" is the species and iv=1,nh(is)
+  !
+  !     indlm: indlm(ind,is)=Y_lm for projector ind
+  integer, allocatable:: indlm(:,:)
+contains
+
+  subroutine allocate_cvan( nind, ns )
+    integer, intent(in) :: nind, ns
+    allocate( indlm( nind, ns ) )
+  end subroutine
+
+  subroutine deallocate_cvan( )
+    if( allocated(indlm) ) deallocate( indlm )
+  end subroutine
+
 end module cvan
 
 

@@ -17,6 +17,7 @@ MODULE input
    PUBLIC :: read_input_file
    PUBLIC :: iosys_pseudo
    PUBLIC :: set_control_flags
+   PUBLIC :: modules_setup
 
    LOGICAL :: has_been_read = .FALSE.
 
@@ -95,7 +96,7 @@ CONTAINS
      USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
         tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
         tnewnfi_card, newnfi_card, ampre, nstep, restart_mode, ion_positions, &
-        startingwfc 
+        startingwfc, printwfc
      USE control_flags, ONLY: &
         ndr_     => ndr, &
         ndw_     => ndw, &
@@ -120,7 +121,8 @@ CONTAINS
         taurdr_  => taurdr, &
         nbeg_    => nbeg, &
         gamma_only_ => gamma_only, &
-        tatomicwfc_ => tatomicwfc
+        tatomicwfc_ => tatomicwfc, &
+        printwfc_ => printwfc
      !
      IMPLICIT NONE
 
@@ -132,6 +134,7 @@ CONTAINS
      if ( tstress ) tpre_ = .true.
      gamma_only_ = ( TRIM( k_points ) == 'gamma' )
      tprnfor_ = tprnfor
+     printwfc_ = printwfc
 
      !
      !  set the level of output, the code verbosity 
@@ -236,13 +239,19 @@ CONTAINS
      END SELECT
      IF( ampre_ == 0 ) trane_ = .FALSE.
 
-
-
      RETURN
    END SUBROUTINE
 
-
    !  ----------------------------------------------
+   !  
+   !  Initialise modules 
+
+   SUBROUTINE modules_setup( )
+     USE electrons_base, ONLY: electrons_base_init
+     IMPLICIT NONE
+     CALL electrons_base_init
+     RETURN
+   END SUBROUTINE
 
 END MODULE input
 
@@ -289,7 +298,11 @@ CONTAINS
            ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, rd_pos, atom_label, rd_vel, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
-           num_of_images, smd_ene_ini, smd_ene_fin, title
+           num_of_images, smd_ene_ini, smd_ene_fin, title, &
+           n_inner, fermi_energy, rotmass, occmass, rotation_damping,                       &
+           occupation_damping, occupation_dynamics, rotation_dynamics,                      &
+           degauss, smearing, tcg, maxiter, etresh, passop, epol, efield
+
 
       use constants, only: pi, scmass, factem, eps8, uma_au, terahertz 
 
@@ -414,7 +427,30 @@ CONTAINS
            pseudo_dir_ => pseudo_dir , &
            psfile_     => psfile
 
-      USE input, ONLY: set_control_flags
+      USE ensemble_dft, ONLY: &
+           tens_ => tens, &
+           tgrand_ => tgrand, &
+           ninner_ => ninner, &
+           ismear_ => ismear, &
+           etemp_ => etemp, &
+           ef_  => ef, &
+           tdynz_ => tdynz, &
+           tdynf_ => tdynf, &
+           zmass_ => zmass, &
+           fmass_ => fmass, &
+           fricz_ => fricz, &
+           fricf_ => fricf
+      USE cg_module, ONLY: &
+           tcg_ => tcg, &
+           maxiter_ => maxiter, &
+           etresh_ => etresh, &
+           passop_ => passop
+      USE efield_module, ONLY: &
+           epol_ => epol, &
+           efield_ => efield
+
+
+      USE input, ONLY: set_control_flags, modules_setup
 
       !
       implicit none
@@ -937,6 +973,88 @@ CONTAINS
             end do
          end do
 
+      CASE ('grand-canonical','g-c','gc')
+          tens_    =.true.
+          tgrand_  =.true.
+          CALL errore(' iosys ','grand-canonical not yet implemented ', 1 )
+
+      CASE ('ensemble','ensemble-dft','edft')
+          tens_    =.true.
+          ninner_  = n_inner
+          etemp_   = degauss
+          ef_      = fermi_energy
+          fricz_   = rotation_damping
+          fricf_   = occupation_damping
+          zmass_   = rotmass
+          fmass_   = occmass
+
+          SELECT CASE (rotation_dynamics)
+            CASE ( 'line-minimization','l-m','lm' )
+              tdynz_ = .FALSE.
+              fricz_ = 0.0d0
+              zmass_ = 0.0d0
+            CASE DEFAULT
+              CALL errore(' iosys ',' rotation_dynamics not implemented ', 1 )
+          END SELECT
+
+          SELECT CASE (occupation_dynamics)
+            CASE ( 'line-minimization','l-m','lm' )
+              tdynf_ = .FALSE.
+              fricf_ = 0.0d0
+              fmass_ = 0.0d0
+            CASE DEFAULT
+              CALL errore(' iosys ',' occupation_dynamics not implemented ', 1 )
+          END SELECT
+
+          if ( nspin_ == 1 ) then
+            n_       = nbnd
+            f_ ( : ) = nelec / n_
+            nel_ (1) = nint(nelec)
+            nupdwn_ (1) = n_
+          else
+            n_       = 2*nbnd
+            if (nelup.ne.0) then
+              if ((nelup+neldw).ne.nelec) then
+                 CALL errore(' iosys ',' nelup+neldw .ne. nelec', 1 )
+              end if
+              nel_ (1) = nelup
+              nel_ (2) = neldw
+            else
+              nel_ (1) = ( nint(nelec) + 1 ) / 2
+              nel_ (2) =   nint(nelec)       / 2
+            end if
+            nupdwn_ (1) = nbnd
+            nupdwn_ (2) = nbnd
+            iupdwn_ (2) = nbnd+1
+            do iss = 1, nspin_
+             do i = iupdwn_ ( iss ), iupdwn_ ( iss ) - 1 + nupdwn_ ( iss )
+                f_ (i) =  nel_ (iss) / real (nupdwn_ (iss))
+             end do
+            end do
+          end if
+
+          SELECT CASE (smearing)
+            CASE ( 'gaussian','g' )
+              ismear_ = 1
+            CASE ( 'fermi-dirac','f-d', 'fd' )
+              ismear_ = 2
+            CASE ( 'hermite-delta','h-d','hd' )
+              ismear_ = 3
+            CASE ( 'gaussian-splines','g-s','gs' )
+              ismear_ = 4
+            CASE ( 'cold-smearing','c-s','cs','cs1' )
+              ismear_ = 5
+            CASE ( 'marzari-vanderbilt','m-v','mv','cs2' )
+              ismear_ = 6
+            CASE ( '0')
+              ismear_ = 0
+            CASE ( '-1')
+              ismear_ = -1
+
+            CASE DEFAULT
+              CALL errore(' iosys ',' smearing not implemented', 1 )
+          END SELECT
+
       CASE DEFAULT
          CALL errore(' iosys ',' occupation method not implemented', 1 )
       END SELECT
@@ -946,6 +1064,18 @@ CONTAINS
             ispin_(in) = iss
          end do
       end do
+
+      !------------------Gradiente Coniugato------------------
+      !
+      tcg_=tcg
+      maxiter_=maxiter
+      etresh_=etresh
+      passop_=passop
+      !
+      !---------------campo elettrico
+      !
+      epol_=epol
+      efield_=efield
 
 !
 !     --------------------------------------------------------
@@ -1044,7 +1174,15 @@ CONTAINS
       end if
       WRITE( stdout,700) iprsta_
 
+      !     
+      !  Modules setup     
+      !     
+
+      CALL modules_setup()
 !     
+!     
+!     
+
  500  format(//                                                         &
      &       ' nbeg=',i3,' nomore=',i7,3x,' iprint=',i4,/               &
      &       ' reads from',i3,' writes on',i3)
@@ -1141,6 +1279,7 @@ MODULE input_fpmd
       SUBROUTINE iosys
 
         USE control_flags, ONLY: fix_dependencies
+        USE input, ONLY: modules_setup
 
         IMPLICIT NONE
 
@@ -1158,6 +1297,7 @@ MODULE input_fpmd
 
 ! . CALL the Module specific setup routine ..........................! 
 
+        CALL modules_setup_fpmd()
         CALL modules_setup()
 
 ! . Write to stdout module specifice information  ...................!
@@ -1172,7 +1312,7 @@ MODULE input_fpmd
 ! ----------------------------------------------------------------
 
 
-      SUBROUTINE modules_setup()
+      SUBROUTINE modules_setup_fpmd()
 
         USE input_parameters, ONLY: &
           tturbo_inp, nturbo_inp, diis_achmix, electron_damping, vhrmax_inp, &
@@ -1383,7 +1523,7 @@ MODULE input_fpmd
         CALL optical_setup( woptical, noptical, boptical )
 
         RETURN
-      END SUBROUTINE modules_setup
+      END SUBROUTINE modules_setup_fpmd
 
 
 

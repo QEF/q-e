@@ -273,6 +273,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   type(ptr), allocatable :: p_taup(:)
   type(ptr), allocatable :: p_tan(:)
   !
+  real(kind=8), allocatable :: mat_z(:,:,:)
+  !
   !
   !     CP loop starts here
   !
@@ -526,6 +528,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   allocate(drhog(ng,nspin,3,3))
   allocate(drhor(nnr,nspin,3,3))
   allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
+  allocate( mat_z( 1, 1, 1 ) )
   !
   WRITE( stdout,*) ' Allocation for CP core : successful '
   !
@@ -669,7 +672,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                 &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
                 &       ekincm(sm_k),                           &
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
-                &       tps)
+                &       tps, mat_z, f )
         endif
 
 
@@ -899,7 +902,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
              &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
              &       ekincm(sm_k),                                                         &
              &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
-             &       tps)
+             &       tps, mat_z, f )
 
 
         !
@@ -1603,7 +1606,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         if(mod(nfi-1,iprint).eq.0 .or. (nfi.eq.(nomore))) then
-           call eigs(nspin,nx,nupdwn,iupdwn,f,rep_el(sm_k)%lambda)
+           call eigs0(nspin,nx,nupdwn,iupdwn,f,rep_el(sm_k)%lambda)
            WRITE( stdout,*)
         endif
         !
@@ -1760,7 +1763,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
                 &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
-                &       rep(sm_k)%fion, tps)
+                &       rep(sm_k)%fion, tps, mat_z, f )
 
         endif
         !
@@ -1926,7 +1929,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
           &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
           &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
-          &       rep(sm_k)%fion, tps)
+          &       rep(sm_k)%fion, tps, mat_z, f )
 
      !
      !
@@ -2012,6 +2015,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   IF( ALLOCATED( paraforce )) DEALLOCATE( paraforce )
   IF( ALLOCATED( err_const )) DEALLOCATE( err_const )
   IF( ALLOCATED( pvvcheck )) DEALLOCATE( pvvcheck  )
+  !
+  IF( ALLOCATED( mat_z )) DEALLOCATE( mat_z  )
 
   DO sm_k=0,sm_p  
      IF( ASSOCIATED( p_tau0(sm_k)%d3 )) NULLIFY( p_tau0(sm_k)%d3 ) 

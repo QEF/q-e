@@ -52,6 +52,9 @@ CONTAINS
     USE ions_nose, ONLY: xnhp0,  xnhpm,  vnhp
     USE cell_nose, ONLY: xnhh0, xnhhm,  vnhh
     USE cp_electronic_mass, ONLY: emass, emaec => emass_cutoff
+    USE efield_module, ONLY: efield_berry_setup, tefield
+    USE runcp_module, ONLY: runcp_uspp
+    USE wave_constrains, ONLY: interpolate_lambda
 
     COMPLEX(kind=8) :: eigr(:,:,:), ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
     COMPLEX(kind=8) :: eigrb(:,:,:)
@@ -82,6 +85,8 @@ CONTAINS
     INTEGER :: i, j, iter
     LOGICAL :: tlast = .FALSE.
     REAL(kind=8) :: fcell(3,3)
+    REAL(kind=8) :: fccc = 0.0d0
+    REAL(kind=8) :: ccc
 
 
     ! We are restarting from file re compute ainv
@@ -127,6 +132,9 @@ CONTAINS
     call calbec ( 1, nsp, eigr, c0, bec )
     if (tpre) call caldbec( 1, nsp, eigr, c0 )
 
+    if ( tefield ) then
+      call efield_berry_setup( eigr, tau0 )
+    end if
 
     if ( tzerop .or. tzeroe .or. taurdr ) then
 
@@ -164,37 +172,7 @@ CONTAINS
 
       if( tzeroe ) then
 
-        verl1 = 1.0d0
-        verl2 = 0.0d0
-
-        ALLOCATE( emadt2( ngw ) )
-        ALLOCATE( emaver( ngw ) )
-        ALLOCATE( c2( ngw ) )
-        ALLOCATE( c3( ngw ) )
-        emadt2 = dt2bye * ema0bg
-        emaver = emadt2 * 0.5d0
-
-        if( lwf ) then
-          call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
-        else
-          do i = 1, n, 2
-             call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
-             cm(:,i,1,1) = c0(:,i,1,1)
-             CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
-                   verl1, verl2, emaver, c2 )
-             CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
-                   verl1, verl2, emaver, c3 )
-             if ( gstart == 2 ) then
-                cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
-                cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
-             end if
-          end do
-        end if
-
-        DEALLOCATE( emadt2 )
-        DEALLOCATE( emaver )
-        DEALLOCATE( c2 )
-        DEALLOCATE( c3 )
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
 
       end if
 !
@@ -203,13 +181,7 @@ CONTAINS
       if( tfor .or. tprnfor ) call nlfq( c0, eigr, bec, becdr, fion )
 !
       if( tfor .or. thdyn ) then
-!
-! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
-!
-         lambdap(:,:) = 2.d0*lambda(:,:)-lambdam(:,:)
-         lambdam(:,:)=lambda (:,:)
-         lambda (:,:)=lambdap(:,:)
-
+        CALL interpolate_lambda( lambdap, lambda, lambdam )
       endif
 !
 !     calphi calculates phi
@@ -297,7 +269,7 @@ CONTAINS
       USE time_step, ONLY: delt
       USE reciprocal_space_mesh, ONLY: newg
       USE charge_density, ONLY: rhoofr
-      USE wave_functions, ONLY: moveelect, gram, rande, fixwave
+      USE wave_functions, ONLY: gram, rande, fixwave
       USE wave_base, ONLY: wave_verlet
       USE electrons_module, ONLY: pmss,emass, nspin
       USE ions_base, ONLY: na, nsp, nax, randpos
@@ -329,6 +301,7 @@ CONTAINS
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
       USE ions_base, ONLY: vel_srt, tau_units
+      USE runcp_module, ONLY: runcp_ncpp
 
       IMPLICIT NONE
 
@@ -354,17 +327,13 @@ CONTAINS
 
 ! ... declare other variables
 
-      LOGICAL, PARAMETER :: ttsde = .FALSE.
-      REAL(dbl), PARAMETER :: svar1 = 1.d0
-      REAL(dbl), PARAMETER :: svar2 = 0.d0
-
-      REAL(dbl), ALLOCATABLE :: svar3(:)
       INTEGER ig, ib, i, j, k, ik, nb, is, ia, ierr, isa
       LOGICAL ttforce
-      REAL(dbl)  timepre
+      REAL(dbl) :: timepre, vdum = 0.0d0
       REAL(dbl) :: stau( 3 ), rtau( 3 ), hinv(3,3)
 
-      COMPLEX (dbl), ALLOCATABLE :: eforce(:,:,:)
+      COMPLEX (dbl) :: cgam(1,1,1)
+      REAL (dbl) :: gam(1,1,1)
 
 !  end of declarations
 !  ----------------------------------------------
@@ -477,35 +446,8 @@ CONTAINS
 
             IF( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
 
-              ALLOCATE( svar3( SIZE( pmss ) ), STAT = ierr )
-              IF( ierr /= 0 ) CALL errore(' restart ',' allocating svar3 ', ierr)
-
-              svar3 = delt * delt / pmss * 0.5d0
-
-              DO is = 1, cdesc%nspin
-
-                ALLOCATE( eforce( SIZE( c0, 1 ), SIZE( c0, 2 ), SIZE( c0, 3 ) ), STAT=ierr )
-                IF( ierr /= 0 ) CALL errore(' restart ',' allocating eforce ', ierr)
-
-                CALL dforce_all( is, cm(:,:,:,is), cdesc, fi(:,:,is), eforce, gv, vpot(:,:,:,is), &
-                   fnl(:,is), eigr, ps)
-
-                DO ik = 1,  cdesc%nkl
-                  DO ib = 1,  cdesc%nbl( is )
-                    cm(:,ib,ik,is) = c0(:,ib,ik,is)
-                    CALL wave_verlet( c0(:,ib,ik,is), cm(:,ib,ik,is), &
-                      svar1, svar2, svar3, eforce(:,ib,ik) )
-                  END DO
-                  CALL fixwave(  is, c0(:,:,ik,is), cdesc, gv%kg_mask_l(:,ik) )
-                END DO
-
-                DEALLOCATE( eforce, STAT=ierr )
-                IF( ierr /= 0 ) CALL errore(' restart ',' deallocating eforce ', ierr)
-
-              END DO
-
-              DEALLOCATE(svar3, STAT=ierr)
-              IF( ierr /= 0 ) CALL errore(' restart ',' deallocating svar3 ', ierr)
+              CALL runcp_ncpp( cm, cm, c0, cdesc, gv, kp, ps, vpot, eigr, fi, fnl, vdum, &
+                   gam, cgam, restart = .TRUE.)
 
               IF(tortho) THEN
                 CALL ortho(cm, c0, cdesc, pmss, emass)

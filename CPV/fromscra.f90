@@ -12,7 +12,7 @@
 !  ----------------------------------------------
 
 !=----------------------------------------------------------------------------=!
-      MODULE from_scratch_module
+  MODULE from_scratch_module
 !=----------------------------------------------------------------------------=!
 
         IMPLICIT NONE
@@ -46,7 +46,7 @@
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE wave_types, ONLY: wave_descriptor
       USE atoms_type_module, ONLY: atoms_type
-      USE wave_functions, ONLY: moveelect, gram, fixwave
+      USE wave_functions, ONLY: gram, fixwave
       USE wave_base, ONLY: wave_steepest
       USE charge_density, ONLY: rhoofr
       USE phase_factors_module, ONLY: strucf
@@ -66,6 +66,7 @@
       USE control_flags, ONLY: tcarpar, tfor, thdyn, tortho, prn, force_pairing
       USE charge_types, ONLY: charge_descriptor
       USE time_step, ONLY: delt
+      USE runcp_module, ONLY: runcp_ncpp
 
       IMPLICIT NONE
 
@@ -90,19 +91,14 @@
 
 ! ... declare other variables
 
-      LOGICAL, PARAMETER :: ttsde = .TRUE.
       LOGICAL, PARAMETER :: ttforce = .TRUE.
       LOGICAL, PARAMETER :: ttprint = .TRUE.
-      REAL(dbl), PARAMETER :: svar1 = 1.d0
-      REAL(dbl), PARAMETER :: svar2 = 0.d0
       INTEGER, PARAMETER :: nfi = 0
 
-      INTEGER :: ib, ik, is, ierr
-      REAL(dbl)  timepre, dum_kin
-
-      COMPLEX (dbl), ALLOCATABLE :: eforce(:,:,:)
-      REAL (dbl), ALLOCATABLE :: dt2bye( : )
-
+      COMPLEX(dbl) :: cgam(1,1,1)
+      REAL (dbl)   :: gam(1,1,1)
+      INTEGER :: ierr
+      REAL(dbl)  timepre, vdum
 
 !  end of declarations
 !  ----------------------------------------------
@@ -116,35 +112,12 @@
 
       ! CALL debug_energies( edft ) ! DEBUG
 
-      ! IF( .FALSE. ) THEN ! DEBUG
-
       IF( tcarpar ) THEN
-
-        ALLOCATE( dt2bye( SIZE( pmss ) ) )
-        dt2bye = delt * delt / pmss
-
+        
         IF( .NOT. force_pairing ) THEN
 
-          DO is = 1, cdesc%nspin
-
-            ALLOCATE( eforce( SIZE( cm, 1), SIZE( cm, 2), SIZE( cm, 3 ) ), STAT=ierr )
-            IF( ierr /= 0 ) CALL errore(' from_scratch ', ' allocating eforce ', ierr )
-
-            CALL dforce_all( is, cm(:,:,:,is), cdesc, fi(:,:,is), eforce(:,:,:), &
-              gv, vpot(:,:,:,is), fnl(:,is), eigr, ps)    
-
-            DO ik = 1, cdesc%nkl
-              DO ib = 1, cdesc%nbl( is )
-                CALL wave_steepest( c0(:,ib,ik,is), cm(:,ib,ik,is), dt2bye, eforce(:,ib,ik) )
-              END DO
-              CALL fixwave( is, c0(:,:,ik,is), cdesc, gv%kg_mask_l(:,ik) )
-            END DO
-
-
-            DEALLOCATE( eforce, STAT=ierr )
-            IF( ierr /= 0 ) CALL errore(' from_scrath ', ' deallocating eforce ', ierr )
-          
-          END DO
+          CALL runcp_ncpp( cm, cm, c0, cdesc, gv, kp, ps, vpot, eigr, &
+             fi, fnl, vdum, gam, cgam, fromscra = .TRUE. )
 
         ELSE
 
@@ -158,8 +131,6 @@
           CALL gram( c0, cdesc )
         END IF
 
-        DEALLOCATE( dt2bye )
-
       ELSE
 
         c0 = cm
@@ -169,12 +140,12 @@
       CALL set_reference_positions(cdmi, taui, atoms, ht)
       CALL constraints_setup(ht, atoms)
 
-      RETURN
-      END SUBROUTINE
+   RETURN
+   END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
+SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
       taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
       detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
       bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
@@ -187,6 +158,7 @@
     USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
     USE cell_base, ONLY: wmass, iforceh, cell_force
     USE elct, ONLY: n
+    USE energies, ONLY: entropy
     USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq
     USE wavefunctions_module, ONLY: c0, cm, phi => cp
     USE io_global, ONLY: stdout
@@ -200,6 +172,11 @@
     USE ions_nose, ONLY: xnhp0,  xnhpm,  vnhp
     USE cell_nose, ONLY: xnhh0, xnhhm,  vnhh
     USE cp_electronic_mass, ONLY: emass, emaec => emass_cutoff
+    USE efield_module, ONLY: tefield, efield_berry_setup, berry_energy, dforce_efield
+    USE cg_module, ONLY: tcg
+    USE ensemble_dft, ONLY: tens, compute_entropy
+    USE runcp_module, ONLY: runcp_uspp
+    USE electrons_base, ONLY: f, nspin
 
     COMPLEX(kind=8) :: eigr(:,:,:), ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
     COMPLEX(kind=8) :: eigrb(:,:,:)
@@ -229,7 +206,7 @@
     REAL(kind=8) :: bigr
     INTEGER :: i, j, iter
     LOGICAL :: tlast = .FALSE.
-    REAL(kind=8) :: fcell(3,3), ccc, dt2hbe
+    REAL(kind=8) :: fcell(3,3), ccc, dt2hbe, enb, enbi, fccc
 
     dt2hbe = 0.5d0 * dt2bye
 
@@ -256,13 +233,13 @@
 !       
 !     random initialization
 !     
-      call randin(1,n,gstart,ngw,ampre,cm)
+      call randin( 1, n, gstart, ngw, ampre, cm )
       
     else if( nbeg == -3 ) then
 !       
 !     gaussian initialization
 !     
-      call gausin(eigr,cm)
+      call gausin( eigr, cm )
       
     end if
 
@@ -281,103 +258,112 @@
     call phfac( tau0, ei1, ei2, ei3, eigr )
     call strucf( ei1, ei2, ei3, sfac )
     call formf( tfirst, eself )
-    call calbec ( 1, nsp, eigr, cm, bec )
-    if (tpre) call caldbec( 1, nsp, eigr, cm )
 
-    call initbox ( tau0, taub, irb )
-    call phbox( taub, eigrb )
+    IF( tefield ) THEN
+      CALL efield_berry_setup( eigr, tau0 )
+    END IF
+
+
+
+    IF( .NOT. tcg ) THEN
+
+      call calbec ( 1, nsp, eigr, cm, bec )
+      if (tpre) call caldbec( 1, nsp, eigr, cm )
+
+      call initbox ( tau0, taub, irb )
+      call phbox( taub, eigrb )
 !
-    call rhoofr ( nfi, cm, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, ekin )
+      call rhoofr ( nfi, cm, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, ekin )
 !
 !     put core charge (if present) in rhoc(r)
 !
-    if ( nlcc_any ) call set_cc( irb, eigrb, rhoc )
+      if ( nlcc_any ) call set_cc( irb, eigrb, rhoc )
 
-    call vofrho( nfi, rhor(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast,                 &
-     &  ei1(1,1,1), ei2(1,1,1), ei3(1,1,1), irb(1,1,1), eigrb(1,1,1), sfac(1,1), & 
-     &  tau0(1,1), fion(1,1) )
+      IF( tens ) THEN
+        CALL compute_entropy( entropy, f(1), nspin )
+        entropy = entropy * n
+      END IF
 
-    call compute_stress( stress, detot, h, omega )
+      call vofrho( nfi, rhor(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast,                 &
+        &  ei1(1,1,1), ei2(1,1,1), ei3(1,1,1), irb(1,1,1), eigrb(1,1,1), sfac(1,1), & 
+        &  tau0(1,1), fion(1,1) )
 
-    if(iprsta.gt.2) call print_atomic_var( fion, na, nsp, ' fion ' )
+      IF( tefield ) THEN
+        CALL berry_energy( enb, enbi, bec, cm(:,:,1,1), fion ) 
+        etot = etot + enb + enbi
+      END IF
 
-    call newd( rhor, irb, eigrb, rhovan, fion )
-    call prefor( eigr, betae )
+      call compute_stress( stress, detot, h, omega )
+
+      if(iprsta.gt.2) call print_atomic_var( fion, na, nsp, ' fion ' )
+
+      call newd( rhor, irb, eigrb, rhovan, fion )
+      call prefor( eigr, betae )
 !
-    ALLOCATE( emadt2( ngw ) )
-    ALLOCATE( emaver( ngw ) )
-    ALLOCATE( c2( ngw ) )
-    ALLOCATE( c3( ngw ) )
+      fccc = 0.0d0
+      !
+      CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, c0, fromscra = .TRUE. )
 
-    ccc = dt2hbe
-    if(tsde) ccc = dt2bye
-    emadt2 = ccc * ema0bg
-    emaver = emadt2
-
-    do i = 1, n, 2
-       call dforce(bec,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
-       CALL wave_steepest( c0(:, i  , 1, 1), cm(:, i  , 1, 1 ), emaver, c2 )
-       CALL wave_steepest( c0(:, i+1, 1, 1), cm(:, i+1, 1, 1 ), emaver, c3 )
-       if ( gstart == 2 ) then
-          c0(1,  i,1,1)=cmplx(real(c0(1,  i,1,1)),0.0)
-          c0(1,i+1,1,1)=cmplx(real(c0(1,i+1,1,1)),0.0)
-       end if
-    end do
-
-    DEALLOCATE( emadt2 )
-    DEALLOCATE( emaver )
-    DEALLOCATE( c2 )
-    DEALLOCATE( c3 )
 !
 !     nlfq needs deeq bec
 !
-    if( tfor .or. tprnfor ) call nlfq( cm, eigr, bec, becdr, fion )
+      if( tfor .or. tprnfor ) call nlfq( cm, eigr, bec, becdr, fion )
 !
 !     calphi calculates phi
 !     the electron mass rises with g**2
 !
-    call calphi( cm, ema0bg, bec, betae, phi )
+      call calphi( cm, ema0bg, bec, betae, phi )
 !
 
-    if( tortho ) then
-       call ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
-    else
-       call graham( betae, bec, c0 )
-    endif
+      if( tortho ) then
+         call ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
+      else
+         call graham( betae, bec, c0 )
+      endif
 !
-    if ( tfor .or. tprnfor ) call nlfl( bec, becdr, lambda, fion )
+      if ( tfor .or. tprnfor ) call nlfl( bec, becdr, lambda, fion )
 
-    if ( iprsta >= 3 ) call print_lambda( lambda, n, 9, ccc )
+      if ( iprsta >= 3 ) call print_lambda( lambda, n, 9, ccc )
 
-    if ( tpre ) call nlfh( bec, dbec, lambda )
+      if ( tpre ) call nlfh( bec, dbec, lambda )
 !
-    if ( tortho ) call updatc( ccc, lambda, phi, bephi, becp, bec, c0 )
-    call calbec ( nvb+1, nsp, eigr, c0, bec )
-    if ( tpre ) call caldbec( 1, nsp, eigr, cm )
+      if ( tortho ) call updatc( ccc, lambda, phi, bephi, becp, bec, c0 )
+      call calbec ( nvb+1, nsp, eigr, c0, bec )
+      if ( tpre ) call caldbec( 1, nsp, eigr, cm )
 
-    if(iprsta.ge.3) call dotcsc(eigr,c0)
+      if(iprsta.ge.3) call dotcsc(eigr,c0)
 !
-    xnhp0=0.
-    xnhpm=0.
-    vnhp =0.
-    fionm=0.
-    CALL ions_vel( vels, taus, tausm, na, nsp, delt )
-    xnhh0(:,:)=0.
-    xnhhm(:,:)=0.
-    vnhh (:,:) =0.
-    velh (:,:)=(h(:,:)-hold(:,:))/delt
+      xnhp0=0.
+      xnhpm=0.
+      vnhp =0.
+      fionm=0.
+      CALL ions_vel( vels, taus, tausm, na, nsp, delt )
+      xnhh0(:,:)=0.
+      xnhhm(:,:)=0.
+      vnhh (:,:) =0.
+      velh (:,:)=(h(:,:)-hold(:,:))/delt
 !
 !     ======================================================
 !     kinetic energy of the electrons
 !     ======================================================
 
-    call elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
+      call elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
 
-    xnhe0=0.
-    xnhem=0.
-    vnhe =0.
+      xnhe0=0.
+      xnhem=0.
+      vnhe =0.
 
-    lambdam(:,:)=lambda(:,:)
+      lambdam(:,:)=lambda(:,:)
+
+
+    else
+
+      !
+      !  Cojugate Gradient
+
+      c0 = cm
+
+    end if
 
     return
   end subroutine

@@ -59,7 +59,7 @@
 
         PUBLIC :: tbuff, tvlocw, trhor, trhow, thdyn, iprsta
 
-        PUBLIC :: twfcollect
+        PUBLIC :: twfcollect, printwfc
         
         PUBLIC :: tuspp
 
@@ -107,6 +107,7 @@
         LOGICAL :: tscreen   = .FALSE.  ! Use screened coulomb potentials for cluster calculations
         LOGICAL :: twfcollect = .FALSE. ! Collect wave function in the restart file at the end of run.
         LOGICAL :: tuspp = .FALSE.      ! Ultra-soft pseudopotential are being used
+        LOGICAL :: printwfc = .FALSE.   ! Print wave functions, temporarely used only by ensemble-dft
 
 ! ...   Force pairing
         LOGICAL :: force_pairing
