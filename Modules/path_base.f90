@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#define USE_ELASTIC_CONSTANTS_RESCALING
+!#define DEBUG_ELASTIC_CONSTANTS
 !
 !---------------------------------------------------------------------------
 MODULE path_base
@@ -75,7 +75,7 @@ MODULE path_base
       ! ... local variables
       !      
       INTEGER                     :: i, j, mode
-      REAL (KIND=DP)              :: inter_image_dist
+      REAL (KIND=DP)              :: inter_image_dist, k_ratio
       REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER (LEN=20)          :: num_of_images_char, nstep_path_char
       !
@@ -98,7 +98,17 @@ MODULE path_base
       !
       dim = 3 * nat
       !
-      IF ( lsmd ) THEN
+      IF ( lneb ) THEN
+         !
+         ! ... elastic constants are defined here ( m = 4 ) starting from ds :
+         !
+         k_ratio = k_min / k_max
+         !
+         k_max = pi**2 / 16.D0 / ds**2
+         !
+         k_min = k_max * k_ratio
+         !
+      ELSE IF ( lsmd ) THEN
          !
          ! ... some coefficients for string dynamics
          !
@@ -384,36 +394,17 @@ MODULE path_base
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
       ! 
-      USE path_variables,  ONLY : pos, num_of_images, Emax, Emin, k_max, &
-                                  k_min, k, pes, grad_pes, elastic_grad, &
-                                  tangent
-      USE supercell,       ONLY : pbc
+      USE path_variables,  ONLY : pos, num_of_images, Emax, Emin, &
+                                  k_max, k_min, k, pes
       !
       IMPLICIT NONE
       !
       ! ... local variables
       !
       INTEGER       :: i
-      REAL(KIND=DP) :: F_ortho_max, F_ortho_max_i, &
-                       F_para_max_i, F_para_max, rescale_coeff        
-      REAL(KIND=DP) :: delta_E, delta_norm_grad
+      REAL(KIND=DP) :: delta_E
       REAL(KIND=DP) :: k_sum, k_diff
-      REAL(KIND=DP) :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
       !
-      ! ... local parameters
-      !
-      REAL(KIND=DP), PARAMETER :: k_minimal = 0.1D0
-        ! minimum allowed input elastic constant
-      REAL(KIND=DP), PARAMETER :: rescale_coeff_min = 0.5D0, &
-                                  rescale_coeff_max = 1.5D0
-        ! minimum allowed rescaling coefficient (  50% )
-        ! maximum allowed rescaling coefficient ( 150% )
-      !
-      !
-      rescale_coeff = k_max / k_min
-      !
-      k_min = MAX( k_min, k_minimal )
-      k_max = MAX( k_max, k_minimal * rescale_coeff )
       !
       delta_E = Emax - Emin
       !
@@ -433,71 +424,9 @@ MODULE path_base
          !
       END IF
       !
-      norm_grad_V_min = + 1.0D32
-      norm_grad_V_max = - 1.0D32
-      !
-      DO i = 1, num_of_images 
-         !  
-         norm_grad_V = norm( grad_pes(:,i) )
-         !
-         IF ( norm_grad_V < norm_grad_V_min ) norm_grad_V_min = norm_grad_V
-         IF ( norm_grad_V > norm_grad_V_max ) norm_grad_V_max = norm_grad_V
-         !
-      END DO
-      !
-      delta_norm_grad = norm_grad_V_max - norm_grad_V_min
-      !
-      IF ( delta_norm_grad > eps32 ) THEN
-         !
-         DO i = 1, num_of_images 
-            !
-            norm_grad_V = norm( grad_pes(:,i) )
-            !
-            k(i) = k(i) + 0.5D0 * ( k_sum - k_diff * &
-                          COS( pi * ( norm_grad_V - norm_grad_V_min ) / & 
-                               delta_norm_grad ) )
-            !
-         END DO
-         !
-      END IF
-      !
       k(:) = 0.5D0 * k(:)
       !
-      F_ortho_max = 0.D0
-      F_para_max  = 0.D0
-      !
-      DO i = 2, ( num_of_images - 1 )
-         !
-         F_ortho_max_i = MAXVAL( ABS( grad_pes(:,i) - tangent(:,i) * &
-                                    ( grad_pes(:,i) .dot. tangent(:,i) ) ) )
-         !
-         elastic_grad(:) = tangent(:,i) * 0.5D0 * &
-                ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
-                  ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
-         !
-         F_para_max_i = MAXVAL( ABS( elastic_grad(:) ) )
-         !
-         IF ( F_ortho_max_i > F_ortho_max ) F_ortho_max = F_ortho_max_i
-         IF ( F_para_max_i  > F_para_max  ) F_para_max  = F_para_max_i
-         !
-      END DO
-      !
-      rescale_coeff = MAX( ( F_ortho_max / F_para_max ), rescale_coeff_min )
-      rescale_coeff = MIN( rescale_coeff, rescale_coeff_max )
-      !
-#if defined (USE_ELASTIC_CONSTANTS_RESCALING)
-      !
-      k     = k * rescale_coeff
-      k_max = k_max * rescale_coeff
-      k_min = k_min * rescale_coeff
-      !
-#endif
-      !
 #if defined (DEBUG_ELASTIC_CONSTANTS)
-      !
-      PRINT '(/5X,"F_ortho_max = ",F10.6 )', F_ortho_max
-      PRINT '( 5X,"F_para_max  = ",F10.6 )', F_para_max
-      PRINT '( 5X,"ALPHA       = ",F10.6/)', rescale_coeff
       !
       DO i = 1, num_of_images
          !
@@ -599,11 +528,10 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
-      USE path_variables,   ONLY : istep_path, num_of_images, num_of_modes,  &
-                                   Nft, ft_coeff, ft_vel_zeroed, pos, pes,   &
-                                   use_multistep, grad_pes, err_max, error,  &
-                                   frozen, vel, vel_zeroed, grad, norm_grad, &
-                                   path_thr
+      USE path_variables,   ONLY : istep_path, num_of_images, num_of_modes, &
+                                   path_thr, Nft, ft_coeff, ft_vel, pos,    &
+                                   pes, use_multistep, grad_pes, err_max
+                                   
       !
       IMPLICIT NONE
       !
@@ -643,7 +571,7 @@ MODULE path_base
             !
             num_of_images = new_num_of_images
             !
-            ft_vel_zeroed = .TRUE.
+            ft_vel = 0.D0
             !
          END IF
          !
@@ -667,7 +595,8 @@ MODULE path_base
         SUBROUTINE redispose_last_image( n )
           !--------------------------------------------------------------------
           !
-          USE path_variables, ONLY : first_last_opt
+          USE path_variables, ONLY : first_last_opt, error, frozen, &
+                                     vel, vel_zeroed, grad, norm_grad
           !
           IMPLICIT NONE
           !
@@ -910,28 +839,26 @@ MODULE path_base
                                  tangent, ft_pes, ft_grad, norm_ft_grad, &
                                  ft_coeff, pes_star, grad_proj_star,     &
                                  llangevin, lang_proj, lang_proj_star,   &
-                                 ft_lang, grad, first_last_opt, ds
+                                 ft_lang, lang, grad, first_last_opt, ds
       !
       IMPLICIT NONE
       !
-      INTEGER                     :: j, n
-      REAL (KIND=DP)              :: x, coeff
-      REAL (KIND=DP), ALLOCATABLE :: phi(:)
+      INTEGER        :: j, n
+      REAL (KIND=DP) :: x, coeff
       !
-      !
-      IF ( first_last_opt ) THEN
-         !s
-         grad(:,:) = grad_pes(:,:)
-         !
-      END IF
       !
       ft_pes  = 0.D0
       ft_grad = 0.D0
       !
+      IF ( first_last_opt ) THEN
+         !
+         grad(:,:) = grad_pes(:,:)
+         !
+      END IF
+      !
       IF ( llangevin ) THEN
          !
-         ALLOCATE( phi( dim ) )
-         !
+         lang    = 0.D0
          ft_lang = 0.D0
          !
       END IF
@@ -956,13 +883,10 @@ MODULE path_base
             !
             ! ... the random term used in langevin dynamics is generated here
             !
-            phi(:) = gaussian_vect() * DBLE( RESHAPE( if_pos, (/ dim /) ) )
+            lang(:,j) = gaussian_vect() * DBLE( RESHAPE( if_pos, (/ dim /) ) )
             !
-            IF ( first_last_opt ) &
-               grad(:,j) = grad(:,j) - phi(:) / SQRT( ds )
-            !
-            lang_proj(:,j) = phi(:) - &
-                             tangent(:,j) * ( tangent(:,j) .dot. phi(:) )
+            lang_proj(:,j) = lang(:,j) - &
+                             tangent(:,j) * ( tangent(:,j) .dot. lang(:,j) )
             !
          END IF
          !
@@ -1023,13 +947,7 @@ MODULE path_base
       !
       norm_ft_grad = norm_ft_grad * ft_coeff
       !
-      IF ( llangevin ) THEN
-         !
-         DEALLOCATE( phi )
-         !
-         ft_lang = ft_lang * ft_coeff
-         !
-      END IF
+      IF ( llangevin ) ft_lang = ft_lang * ft_coeff
       !
       RETURN
       !
@@ -1044,8 +962,7 @@ MODULE path_base
       USE control_flags,  ONLY : lneb, lsmd
       USE path_variables, ONLY : num_of_images, num_of_modes, grad, &
                                  first_last_opt, path_thr, error, ft_error, &
-                                 ft_pes, ft_grad, frozen, ft_frozen
-      USE mp_global, ONLY : mpime
+                                 ft_pes, ft_grad, frozen, ft_frozen, llangevin
       !
       IMPLICIT NONE
       !
@@ -1112,7 +1029,7 @@ MODULE path_base
             !
             error = error / bohr_radius_angs * au
             !
-            frozen(:) = ( error(:) < path_thr )
+            IF ( .NOT. llangevin ) frozen(:) = ( error(:) < path_thr )
             !
             err_max = MAX( error(1), error(num_of_images), err_max )
             !

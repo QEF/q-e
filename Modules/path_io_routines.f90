@@ -17,7 +17,7 @@ MODULE path_io_routines
   ! ... Written by Carlo Sbraccia ( 2003-2004 )
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
+  USE constants,  ONLY : au, bohr_radius_angs
   !
   USE parser
   USE basic_algebra_routines
@@ -117,15 +117,19 @@ MODULE path_io_routines
        INTEGER              :: i, j, ia, ierr
        CHARACTER (LEN=256)  :: input_line
        REAL (KIND=DP)       :: val
+       LOGICAL              :: exists
        LOGICAL, EXTERNAL    :: matches
-       !
-       ! ... end of local variables
        !
        !
        IF ( meta_ionode ) THEN
 
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"reading file ", A,/)') TRIM( path_file )
+          !
+          INQUIRE( FILE = TRIM( path_file ), EXIST = exists )
+          !
+          IF ( .NOT. exists ) &
+             CALL errore( 'read_restart()', 'restart file not found', 1 )
           !
           OPEN( UNIT = iunrestart, FILE = path_file, STATUS = "OLD", &
                 ACTION = "READ" )
@@ -196,6 +200,8 @@ MODULE path_io_routines
           READ( UNIT = iunrestart, FMT = * ) pes(1)
           !
           ia = 0  
+          !
+          if_pos = 0
           !
           DO j = 1, dim, 3 
              !
@@ -453,8 +459,6 @@ MODULE path_io_routines
        IF ( .NOT. reset_vel .AND. &
             ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
           !
-          CALL mp_bcast( ft_frozen, meta_ionode_id )
-          !
           IF ( lneb ) THEN
              !
              CALL mp_bcast( frozen,     meta_ionode_id )
@@ -518,8 +522,6 @@ MODULE path_io_routines
        INTEGER             :: i, j, ia
        CHARACTER (LEN=256) :: file
        !
-       ! ... end of local variables
-       !
        !
        IF ( meta_ionode ) THEN
           !
@@ -528,11 +530,11 @@ MODULE path_io_routines
           OPEN( UNIT = iunrestart, FILE = path_file, STATUS = "UNKNOWN", &
                 ACTION = "WRITE" )
           !
-          CALL write_common_filelds( iunrestart )
+          CALL write_common_fields( iunrestart )
           !
           IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
              !
-             CALL write_quick_min_filelds( iunrestart )
+             CALL write_quick_min_fields( iunrestart )
              ! 
           END IF
           !
@@ -549,11 +551,11 @@ MODULE path_io_routines
              OPEN( UNIT = iunrestart, FILE = TRIM( file ), &
                    STATUS = "UNKNOWN",  ACTION = "WRITE" )
              !
-             CALL write_common_filelds( iunrestart )
+             CALL write_common_fields( iunrestart )
              !
              IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
                 !
-                CALL write_quick_min_filelds( iunrestart )
+                CALL write_quick_min_fields( iunrestart )
                 ! 
              END IF
              !
@@ -566,7 +568,7 @@ MODULE path_io_routines
        CONTAINS
          !
          !-------------------------------------------------------------------
-         SUBROUTINE write_common_filelds( in_unit )
+         SUBROUTINE write_common_fields( in_unit )
            !-------------------------------------------------------------------
            !
            IMPLICIT NONE
@@ -639,10 +641,10 @@ MODULE path_io_routines
            !
            RETURN
            !
-         END SUBROUTINE write_common_filelds
+         END SUBROUTINE write_common_fields
          !
          !-------------------------------------------------------------------
-         SUBROUTINE write_quick_min_filelds( in_unit )
+         SUBROUTINE write_quick_min_fields( in_unit )
            !-------------------------------------------------------------------
            !
            IMPLICIT NONE
@@ -782,7 +784,7 @@ MODULE path_io_routines
            !
            RETURN
            !
-         END SUBROUTINE write_quick_min_filelds
+         END SUBROUTINE write_quick_min_fields
          !
      END SUBROUTINE write_restart
      !
@@ -815,8 +817,6 @@ MODULE path_io_routines
        REAL (KIND=DP)              :: ener, ener_0, delta_e
        INTEGER                     :: i, j, n, atom, image
        INTEGER, PARAMETER          :: max_i = 100
-       !
-       ! ... end of local variables
        !
        !
        IF ( .NOT. meta_ionode ) RETURN
@@ -962,7 +962,7 @@ MODULE path_io_routines
                  TRIM( atom_label( ityp( atom ) ) ), &
                  pos((3*atom-2),image) * bohr_radius_angs, &
                  pos((3*atom-1),image) * bohr_radius_angs, &
-                 pos((3*atom),image)   * bohr_radius_angs
+                 pos((3*atom-0),image) * bohr_radius_angs
              !
           END DO   
           !
@@ -1002,10 +1002,10 @@ MODULE path_io_routines
                  TRIM( atom_label(ityp(atom)) ), &
                  pos((3*atom-2),image) * bohr_radius_angs,  &
                  pos((3*atom-1),image) * bohr_radius_angs,  &
-                 pos((3*atom),image)   * bohr_radius_angs,  &
+                 pos((3*atom-0),image) * bohr_radius_angs,  &
                  - grad_pes((3*atom-2),image) / bohr_radius_angs, &
                  - grad_pes((3*atom-1),image) / bohr_radius_angs, &
-                 - grad_pes((3*atom),image)   / bohr_radius_angs
+                 - grad_pes((3*atom-0),image) / bohr_radius_angs
              !
           END DO   
           !
@@ -1024,7 +1024,8 @@ MODULE path_io_routines
        USE path_variables, ONLY : num_of_modes, num_of_images, error, &
                                   path_length, activation_energy, pes, &
                                   pos, frozen, ft_pos, ft_pes, ft_grad, &
-                                  ft_error, first_last_opt
+                                  ft_error, first_last_opt, CI_scheme, &
+                                  Emax_index
        USE path_formats,   ONLY : real_space_run_info, real_space_run_output, &
                                   fourier_run_info, fourier_run_output
        USE io_global,      ONLY : meta_ionode
@@ -1035,8 +1036,6 @@ MODULE path_io_routines
        !
        INTEGER        :: mode, image
        REAL (KIND=DP) :: inter_image_distance
-       !
-       ! ... end of local variables
        !
        !
        IF ( .NOT. meta_ionode ) RETURN 
@@ -1067,9 +1066,14 @@ MODULE path_io_routines
           !
           inter_image_distance = path_length / DBLE( num_of_images - 1 )
           !
+          IF ( CI_scheme == "highest-TS" ) &
+             WRITE( UNIT = iunpath, &
+                    FMT = '(/,5X,"climbing image = ",I2)' ) Emax_index
+
+          !
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"path length",&
-                         & T26," = ",F6.3," bohr")' ) path_length   
+                         & T26," = ",F6.3," bohr")' ) path_length
           WRITE( UNIT = iunpath, &
                  FMT = '(5X,"inter-image distance", &
                          & T26," = ",F6.3," bohr")' ) inter_image_distance

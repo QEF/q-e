@@ -131,21 +131,26 @@ PROGRAM images_interpolator
   READ( UNIT = iunrestart, FMT = * ) suspended_image 
   READ( UNIT = iunrestart, FMT = * ) ! conv_elec
   !
-  ! ... read either "ELASTIC CONSTANTS" or "ENERGIES, POSITIONS AND GRADIENTS"
+  ! ... read either "ENERGIES, POSITIONS AND GRADIENTS"
   !
-  READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
-  !
-  IF ( matches( "ELASTIC CONSTANTS", input_line ) ) THEN
+  repeat_loop: DO 
+     !  
+     READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
      !
-     READ( UNIT = iunrestart, FMT = * ) ! kmin
-     READ( UNIT = iunrestart, FMT = * ) ! kmax
-     READ( UNIT = iunrestart, FMT = '(256A)' ) input_line ! "ENERGIES, POSITIONS AND GRADIENTS"
+     IF ( matches( input_line, &
+                   "ENERGIES, POSITIONS AND GRADIENTS" ) ) EXIT repeat_loop
      !
-  END IF
+     IF ( ierr /= 0 ) THEN
+        !
+        WRITE( *, '(/,5X,"an error occured reading",A)' ) old_restart_file
+        !
+        STOP
+        !
+     END IF
+     !
+  END DO repeat_loop  
   !
   READ( UNIT = iunrestart, FMT = * ) ! Image:
-  !
-  READ( UNIT = iunrestart, FMT = * ) ! convergance flag (T/F)
   READ( UNIT = iunrestart, FMT = * ) old_V(1)
   !
   ia = 0  
@@ -171,8 +176,7 @@ PROGRAM images_interpolator
   !
   DO i = 2, old_num_of_images
      !
-     READ( UNIT = iunrestart, FMT = * ) ! Image:       
-     READ( UNIT = iunrestart, FMT = * ) ! convergance flag (T/F)
+     READ( UNIT = iunrestart, FMT = * ) ! Image:
      READ( UNIT = iunrestart, FMT = * ) old_V(i)
      !
      DO j = 1, dim, 3 
@@ -189,112 +193,91 @@ PROGRAM images_interpolator
      !
      old_PES_gradient(:,i) = old_PES_gradient(:,i) * fix_atom 
      !
-     IF ( ( norm( old_PES_gradient(:,i) ) <= eps16 ) .AND. &
-          ( i < old_num_of_images ) ) THEN
-        !
-        no_interpolation = .TRUE.
-        !
-        WRITE( * , '("norm of gradient number ",I3," is zero")' ) i
-        !
-     END IF
-     !
   END DO
   !
   CLOSE( UNIT = iunrestart )
-  !      
-  IF ( no_interpolation ) THEN
+  !
+  F = 0.D0
+  !
+  DO i = 2, ( old_num_of_images - 1 )
      !
-     IF ( new_num_of_images /= old_num_of_images ) THEN
-        !
-        WRITE(*,'("Interpolation is not possible")')
-        STOP
-        !
-     END IF
+     ! ... tangent to the path ( normalized )
      !
-     new_V            = old_V
-     new_pos          = old_pos
-     new_PES_gradient = old_PES_gradient
+     tangent(:) = 0.5D0 * ( ( old_pos(:,i+1) - old_pos(:,i) ) /     &
+                            norm( old_pos(:,i+1) - old_pos(:,i) ) + &
+                            ( old_pos(:,i) - old_pos(:,i-1) ) /     &
+                            norm( old_pos(:,i) - old_pos(:,i-1) ) )
      !
-  ELSE
+     tangent = tangent / norm( tangent )
      !
-     F = 0.D0
+     F(i) = DOT_PRODUCT( - old_PES_gradient(:,i) , tangent )
+     !  
+  END DO
+  !
+  old_mesh(1) = 0.D0
+  !
+  DO i = 1, ( old_num_of_images - 1 )
      !
-     DO i = 2, ( old_num_of_images - 1 )
-        !
-        ! ... tangent to the path ( normalized )
-        !
-        tangent(:) = 0.5D0 * ( ( old_pos(:,i+1) - old_pos(:,i) ) /     &
-             norm( old_pos(:,i+1) - old_pos(:,i) ) + &
-             ( old_pos(:,i) - old_pos(:,i-1) ) /     &
-             norm( old_pos(:,i) - old_pos(:,i-1) ) )
-        !
-        tangent = tangent / norm( tangent )
-        !
-        F(i) = DOT_PRODUCT( - old_PES_gradient(:,i) , tangent )
-        !  
-     END DO
+     d_R = pbc( old_pos(:,(i+1)) - old_pos(:,i) )
      !
-     old_mesh(1) = 0.D0
+     R = norm( d_R )
      !
-     DO i = 1, ( old_num_of_images - 1 )
-        !
-        d_R = pbc( old_pos(:,( i + 1 )) - old_pos(:,i) )
-        !
-        R = norm( d_R )
-        !
-        old_mesh(i+1) = old_mesh(i) + R
-        !
-        a(i) = 2.D0 * ( old_V(i) - old_V(i+1) ) / R**(3) - &
-             ( F(i) + F(i+1) ) / R**(2)
-        !   
-        b(i) = 3.D0 * ( old_V(i+1) - old_V(i) ) / R**(2) + &
-             ( 2.D0 * F(i) + F(i+1) ) / R
-        !
-        c(i) = - F(i)
-        !
-        d(i) = old_V(i)
-        !
-     END DO
+     old_mesh(i+1) = old_mesh(i) + R
      !
-     i = first_image
+     a(i) = 2.D0 * ( old_V(i) - old_V(i+1) ) / R**(3) - &
+          ( F(i) + F(i+1) ) / R**(2)
+     !   
+     b(i) = 3.D0 * ( old_V(i+1) - old_V(i) ) / R**(2) + &
+          ( 2.D0 * F(i) + F(i+1) ) / R
      !
-     delta_R = ( old_mesh(last_image) - &
-          old_mesh(first_image) ) / REAL( new_num_of_images - 1 )
-     ! 
-     DO j = 0, ( new_num_of_images - 1 )
+     c(i) = - F(i)
+     !
+     d(i) = old_V(i)
+     !
+  END DO
+  !
+  i = first_image
+  !
+  delta_R = ( old_mesh(last_image) - &
+              old_mesh(first_image) ) / REAL( new_num_of_images - 1 )
+  ! 
+  DO j = 0, ( new_num_of_images - 1 )
+     !
+     R = old_mesh( first_image ) + REAL(j) * delta_R 
+     !
+     new_mesh(j+1) = R
+     !
+     check_index: DO
         !
-        R = old_mesh( first_image ) + REAL(j) * delta_R 
-        !
-        new_mesh(j+1) = R
-        !
-        check_index: DO
+        IF ( ( R > old_mesh(i+1) ) .AND. &
+             ( i < ( old_num_of_images - 1 ) ) ) THEN
            !
-           IF ( ( R > old_mesh(i+1) ) .AND. &
-                ( i < ( old_num_of_images - 1 ) ) ) THEN
-              !
-              i = i + 1
-              !
-           ELSE
-              !
-              EXIT check_index
-              !
-           END IF
+           i = i + 1
            !
-        END DO check_index
+        ELSE
+           !
+           EXIT check_index
+           !
+        END IF
         !
-        x = R - old_mesh( i )
-        !
-        new_V(j+1) = a(i)*(x**3) + b(i)*(x**2) + c(i)*x + d(i) 
-        !
-     END DO
+     END DO check_index
      !
-  END IF
+     x = R - old_mesh( i )
+     !
+     new_V(j+1) = a(i)*(x**3) + b(i)*(x**2) + c(i)*x + d(i) 
+     !
+  END DO
   !
   new_mesh = new_mesh / old_mesh(old_num_of_images)  
   old_mesh = old_mesh / old_mesh(old_num_of_images)
   ! 
   CALL dosplineint( old_mesh , old_pos , new_mesh , new_pos )
-  CALL dosplineint( old_mesh , old_PES_gradient , new_mesh , new_PES_gradient )
+  !
+  new_PES_gradient = 0.D0
+  !
+  new_PES_gradient(:,1) = old_PES_gradient(:,1)
+  !
+  new_PES_gradient(:,new_num_of_images) = old_PES_gradient(:,old_num_of_images)
   !
   ! ... the new restart file is written
   !
@@ -315,7 +298,6 @@ PROGRAM images_interpolator
   DO i = 1, new_num_of_images
      !
      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-     WRITE( UNIT = iunrestart, FMT = '("F,  F")' )       
      WRITE( UNIT = iunrestart, FMT = energy ) new_V(i)
      !
      ia = 0
@@ -352,7 +334,9 @@ PROGRAM images_interpolator
      END DO
      !
   END DO
+  !
   WRITE( UNIT = iunrestart, FMT = '("END")' )
+  !
   CLOSE( UNIT = iunrestart )   
   !
   IF ( ALLOCATED( old_pos ) )             DEALLOCATE( old_pos )
