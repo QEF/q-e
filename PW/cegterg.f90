@@ -105,6 +105,9 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !
   notcnv = nvec
   nbase = nvec
+  spsi = (0.d0, 0.d0)
+  psi  = (0.d0, 0.d0)
+  hpsi = (0.d0, 0.d0)
   psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
