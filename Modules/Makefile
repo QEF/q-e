@@ -33,7 +33,7 @@ mp_global.o \
 mp_wave.o \
 mp_buffers.o \
 path_base.o \
-path_formats.f90 \
+path_formats.o \
 path_io_routines.o  \
 path_opt_routines.o \
 path_variables.o \

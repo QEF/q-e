@@ -59,6 +59,9 @@ module funct
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
   !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
+  !              wig     E.P.Wigner, Trans. Faraday Soc. 34, 67 (1938) 
+  !              hl      L.Hedin and B.I.Lundqvist, J. Phys. C4, 2064 (1971)
+  !              gl      O.Gunnarsson and B.I.Lundqvist, PRB 13, 4274 (1976)
   !              pw      J.P.Perdew and Y.Wang, PRB 45, 13244 (1992) 
   !              obpz    G.Ortiz and P.Ballone, PRB 50, 1391 (1994) 
   !              obpw    as above
@@ -66,7 +69,7 @@ module funct
   !              p86     J.P.Perdew, PRB 33, 8822 (1986)
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
-  !              blyp     C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
+  !              blyp    C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
