@@ -18,7 +18,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: table.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: table.itcl,v 1.2 2004-09-04 07:58:53 kokalj Exp $ 
 #
 
 #
@@ -136,13 +136,14 @@ class ::guib::keywidgets::Table {
 	    set _loadDataCmd  [lindex $LoaddataInfo 1]
 	    set _loadDataText [lindex $LoaddataInfo 2]
 
-	    if { [info commands $_loadDataCmd] == "" } {
-		tclu::ERROR "loaddata command $_loadDataCmd not found"
+	    set cmd [lindex $_loadDataCmd 0]
+	    if { [info commands $cmd] == "" } {
+		tclu::ERROR "loaddata command $cmd not found"
 	    }
 
 	    itk_component add loaddata {
 		button $itk_interior.loaddata -text $_loadDataText \
-		    -command [list $_loadDataCmd $_moduleObj]
+		    -command [concat $_loadDataCmd $_moduleObj]
 	    } {
 		rename -background -buttonbackground buttonBackground Background
 	    }
