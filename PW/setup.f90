@@ -50,7 +50,7 @@ subroutine setup
   !
   real(kind=DP), parameter :: rcut = 10.d0, eps = 1.0d-12
   !
-  integer :: na, ir, nt, input_nks, nrot, iter, ierr, irot, isym, &
+  integer :: na, ir, nt, nrot, iter, ierr, irot, isym, &
        ipol, jpol, tipo
   logical :: minus_q  
   integer, external ::n_atom_wfc, set_Hubbard_l
@@ -245,8 +245,6 @@ subroutine setup
      end if
   end if
   !
-  input_nks = nks
-  !
   !   allocate space for irt
   !
   allocate (irt( 48, nat))    
@@ -286,13 +284,6 @@ subroutine setup
      ntetra = 0
   end if
   !
-  !     In a non scf calculation we check if k-points are compatible
-  !     with the symmetry of the crystal but do not change them
-  !
-  if ( iswitch == -1 .and. input_nks.ne.nks .and. .not.ltetra ) then
-     write (6, '(5x,"Warning: missing inequivalent points")')
-     nks = input_nks
-  endif
 
   if (iswitch <= -2) call set_kplusq (xk, wk, xqq, nks, npk)
   if (lsda) then

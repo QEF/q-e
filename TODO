@@ -1,4 +1,4 @@
-TODO LIST -  11 July 2003
+TODO LIST -  16 July 2003
 
 INSTALLATION
 
@@ -60,8 +60,7 @@ PW
 
 - add possibility to read atomic positions from file
 
-- read a, b, c, cosab, cosbc, cosac instead of celldm
-  Use more standard choices for crystal axis
+- Use more standard choices for crystal axis
 
 - fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
 
@@ -89,6 +88,10 @@ POSTPROCESSING
 - add more scripts that process output files
 
 - dos, projected dos, etc: input data should be more uniform
+
+- non scf calculations: there must be an option to distinguish
+  the case of a few selected k-points (bands) from the case of
+  a grid of k-points covering the entire BZ (DOS, STM): nosym?
 
 PH
 

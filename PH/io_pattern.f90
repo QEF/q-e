@@ -14,9 +14,6 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
   use para
 #endif
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
 !
 !   the i/o variables first
 !

@@ -7,25 +7,17 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, &
-     gimq, iverbosity)
+     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, &
+     npert, nirr, gi, gimq, iverbosity)
   !---------------------------------------------------------------------
   !
   !     This routine substitute set_irr when there are no symmetries.
   !     The irreducible representations are all one dimensional and
   !     we set them to the displacement of a single atom in one direction
   !
-  !
-  !
 #include "machine.h"
-use parameters, only : DP
-#ifdef __PARA
-use para
-#endif
-implicit none
-#ifdef __PARA
-include 'mpif.h'
-#endif
+  use parameters, only : DP
+  implicit none
   !
   !   first the dummy variables
   !
@@ -53,7 +45,7 @@ include 'mpif.h'
   ! output: [S(irotq)*q - q]
   ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat), t (max_irr_dim, max_irr_dim, 48, 3 * nat), &
+  complex(kind=DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat),&
        tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! output: the pattern vectors
   ! output: the symmetry matrices

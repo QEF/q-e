@@ -47,5 +47,6 @@ subroutine output_tau
      write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau_out(i,na), i=1,3)
   enddo
   write (6, '(/)')
+  deallocate(tau_out)
   return
 end subroutine output_tau

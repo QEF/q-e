@@ -7,8 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
-     ftau)
+subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
   !-----------------------------------------------------------------------
   !  p-symmetrize the charge density.
   !
@@ -17,7 +16,6 @@ subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   use para
   use parameters, only : DP
   implicit none
-  include 'mpif.h'
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
 
   real (kind=DP) :: rho (nxx)

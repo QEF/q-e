@@ -59,7 +59,7 @@
       do i=1,len(line)
          line(i:i) = capital(line(i:i))
       end do
-      if (matches('ATOMIC_SPECIES',line)) then
+      if (matches('ATOMIC_POSITIONS',line)) then
          if ( matches('ALAT', line) ) then
             scale = 1.0
          else if ( matches('BOHR', line) ) then

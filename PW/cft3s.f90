@@ -57,7 +57,6 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
   complex (kind=DP) :: f ( nxxs )
   !
-  include 'mpif.h'
   integer :: mc, i, j, ii, iproc, k, nppx
   complex (kind=DP), allocatable :: aux (:)
   integer :: planes ( nx1 )

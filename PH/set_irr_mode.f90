@@ -8,8 +8,8 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
-     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, &
-     gimq, iverbosity, modenum)
+     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, &
+     npert, nirr, gi, gimq, iverbosity, modenum)
   !---------------------------------------------------------------------
   !
   !    This routine computes the symmetry matrix of the mode defined
@@ -20,13 +20,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
 #include "machine.h"
   use parameters, only : DP
-#ifdef __PARA
-  use para
-#endif
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
   !
   !   first the dummy variables
   !
@@ -56,7 +50,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: [S(irotq)*q - q]
   ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat), t (max_irr_dim, max_irr_dim, 48, 3 * nat), &
+  complex(kind=DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat),&
        tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! output: the pattern vectors
   ! output: the symmetry matrices
@@ -66,10 +60,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !   here the local variables
   !
-  real(kind=DP) :: tpi
-
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)
-
+  real(kind=DP), parameter ::  tpi = 2.0d0 * 3.14159265358979d0
 
   integer :: na, imode, jmode, ipert, jpert, nsymtot, imode0, irr, &
        ipol, jpol, isymq, irot, sna
