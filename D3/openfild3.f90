@@ -118,14 +118,14 @@ subroutine openfild3
   !
   if (me.ne.1) goto 120
 #endif
-  filint = trim(fildrho)
+  filint = trim(fildrho)//".u"
   call diropn (iudrho, filint, lrdrho, exst)
   !
   ! Variation of the charge density with respect to a perturbation with q=
   ! Not needed if q=0
   !
   if (.not.lgamma) then
-     filint = trim(fild0rho)
+     filint = trim(fild0rho)//".u"
      call diropn (iud0rho, filint, lrdrho, exst)
   endif
 #ifdef __PARA

@@ -25,6 +25,8 @@ PROGRAM phonon
   USE io_files,        ONLY : prefix, nd_nmbr
   USE mp,              ONLY : mp_bcast
   USE ions_base,       ONLY : nat
+  USE lsda_mod,        ONLY : nspin
+  USE gvect,           ONLY : nrx1, nrx2, nrx3
   USE parser,          ONLY : int_to_char
   USE control_flags,   ONLY : iswitch,  restart, lphonon, tr2, &
                               mixing_beta, lscf, david, isolve, modenum
@@ -33,6 +35,7 @@ PROGRAM phonon
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
                               elph, zue, recover, maxirr, irr0
   USE output,          ONLY : fildyn, fildrho
+  USE units_ph,        ONLY : iudrho, lrdrho
   USE parser,          ONLY : delete_if_present
   USE global_version,  ONLY : version_number
   !
@@ -48,7 +51,7 @@ PROGRAM phonon
   LOGICAL :: exst
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=80)  :: auxdyn
-  CHARACTER (LEN=256) :: filname
+  CHARACTER (LEN=256) :: filname, filint
   !
   EXTERNAL date_and_tim
   !
@@ -288,6 +291,25 @@ PROGRAM phonon
            CALL zstar_eu()
            !
            IF ( fildrho /= ' ' ) CALL punch_plot_e()
+           !
+           ! close the file with drho_E
+           !
+           if (fildrho.ne.' ') then
+              close (unit = iudrho, status = 'keep')
+              !
+              ! open the file with drho_u
+              !
+              iudrho = 23
+              lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
+#ifdef __PARA
+              if (me.ne.1) goto 300
+#endif
+              filint = trim(fildrho)//".u"
+              call diropn (iudrho, filint, lrdrho, exst)
+#ifdef __PARA
+300           continue
+#endif
+           end if
            !
         ELSE
            !

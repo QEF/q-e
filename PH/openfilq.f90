@@ -93,7 +93,11 @@ subroutine openfilq
 #ifdef __PARA
      if (me.ne.1) goto 300
 #endif
-     filint = trim(fildrho)
+     if(epsil) then
+        filint = trim(fildrho)//".E"
+     else
+        filint = trim(fildrho)//".u"
+     end if
      call diropn (iudrho, filint, lrdrho, exst)
 #ifdef __PARA
 300  continue
