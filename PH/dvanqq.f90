@@ -215,10 +215,10 @@ subroutine dvanqq
      endif
   enddo
 #ifdef __PARA
-  call reduce (2 * nhm * nhm * 3 * nat * nspin, int1)
-  call reduce (2 * nhm * nhm * 3 * nat * nat, int2)
-  call reduce (nhm * (nhm + 1) * 3 * 3 * nat * nspin, int4)
-  call reduce (nhm * (nhm + 1) * 3 * 3 * nat * nat, int5)
+  call reduce (2 * SIZE( int1 ), int1)
+  call reduce (2 * SIZE( int2 ), int2)
+  call reduce (2 * SIZE( int4 ), int4)
+  call reduce (2 * SIZE( int5 ), int5)
 #endif
   !      do ih=1,nh(1)
   !         do jh=1,nh(1)
