@@ -91,7 +91,8 @@ SUBROUTINE iosys()
                             nosym_       => nosym, &
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
-                            noinv, time_max, restart, loldbfgs
+                            noinv, time_max, restart, loldbfgs, lconstrain,   &
+                            ldamped
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
@@ -499,16 +500,23 @@ SUBROUTINE iosys()
                 & ' fixed occupations and lsda not implemented ', 1 )
   END IF
   !
-  calc = ' '
+  ! ... initialization
+  !
+  calc        = ' '
+  lbfgs       = .FALSE.
+  loldbfgs    = .FALSE.
+  lmd         = .FALSE.
+  ldamped     = .FALSE.
+  lconstrain  = .FALSE.  
   !
   IF ( TRIM( calculation ) == 'relax' ) THEN
+     !
      SELECT CASE ( TRIM( ion_dynamics ) )
      CASE ( 'bfgs' )
         iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
         lbfgs    = .TRUE.
-        loldbfgs = .FALSE.
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
+        epse     = etot_conv_thr
+        epsf     = forc_conv_thr
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
@@ -516,25 +524,25 @@ SUBROUTINE iosys()
         !
      CASE ( 'old-bfgs' )
         iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        lbfgs    = .FALSE.
         loldbfgs = .TRUE.
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
+        epse     = etot_conv_thr
+        epsf     = forc_conv_thr
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
         !
-     CASE ( 'constrained-bfgs' )
-        iswitch = 2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        lbfgs   = .TRUE.
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
+     CASE ( 'constrained-damp' )
+        iswitch = 4 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+        lmd         = .TRUE.
+        ldamped     = .TRUE.
+        lconstrain  = .TRUE.
+        epse        = etot_conv_thr
+        epsf        = forc_conv_thr
      CASE ( 'damp' )
         iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        lbfgs   = .FALSE.
         lmd     = .TRUE.
-        calc    = 'mm'
+        ldamped = .TRUE.
         epse    = etot_conv_thr
         epsf    = forc_conv_thr
         ntcheck = nstep + 1
@@ -543,13 +551,16 @@ SUBROUTINE iosys()
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      END SELECT
-  END IF
-  !
-  IF ( TRIM( calculation ) == 'md' ) THEN
+     !
+  ELSE IF ( TRIM( calculation ) == 'md' ) THEN
+     !
+     lmd = .TRUE.
+     !
      SELECT CASE ( TRIM( ion_dynamics ) )
      CASE ( 'verlet' )
         iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      CASE ( 'constrained-verlet' )
+        lconstrain = .TRUE.
         iswitch = 4 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      CASE ( 'beeman' )
         iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
@@ -560,9 +571,9 @@ SUBROUTINE iosys()
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      END SELECT
-  END IF
-  !
-  IF ( TRIM( calculation ) == 'vc-relax' ) THEN
+     !
+  ELSE IF ( TRIM( calculation ) == 'vc-relax' ) THEN
+     !
      SELECT CASE ( TRIM( cell_dynamics ) )
      CASE ( 'none' )
         epse    = etot_conv_thr
@@ -592,9 +603,9 @@ SUBROUTINE iosys()
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      END IF
-  END IF
-  !
-  IF ( TRIM( calculation ) == 'vc-md' ) THEN
+     !
+  ELSE IF ( TRIM( calculation ) == 'vc-md' ) THEN
+     !
      SELECT CASE ( TRIM( cell_dynamics ) )
      CASE ( 'none' )
         iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
@@ -613,16 +624,16 @@ SUBROUTINE iosys()
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      END SELECT
+     !
      IF ( TRIM( ion_dynamics ) /= 'beeman' ) THEN
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      END IF
-  END IF
-  !
-  ! ... NEB specific
-  !
-  IF ( TRIM( calculation ) == 'neb' ) THEN
+     !
+  ELSE IF ( TRIM( calculation ) == 'neb' ) THEN
+     !
+     ! ... NEB specific
      !
      IF ( num_of_images < 2 ) THEN
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
@@ -646,38 +657,28 @@ SUBROUTINE iosys()
         !
      END IF
      !
-     SELECT CASE ( minimization_scheme )
+     ! ... initialization
      !
+     lsteep_des  = .FALSE.     
+     lquick_min  = .FALSE.
+     ldamped_dyn = .FALSE.
+     lmol_dyn    = .FALSE.     
+     !
+     SELECT CASE ( minimization_scheme )
      CASE ( "sd" )
         lsteep_des  = .TRUE.
-        lquick_min  = .FALSE.
-        ldamped_dyn = .FALSE.
-        lmol_dyn    = .FALSE.
      CASE ( "quick-min" )
-        lsteep_des  = .FALSE.
         lquick_min  = .TRUE.
-        ldamped_dyn = .FALSE.
-        lmol_dyn    = .FALSE.
      CASE ( "damped-dyn" )
-        lsteep_des  = .FALSE.
-        lquick_min  = .FALSE.
         ldamped_dyn = .TRUE.
-        lmol_dyn    = .FALSE.
      CASE ( "mol-dyn" )
-        lsteep_des  = .FALSE.
-        lquick_min  = .FALSE.
-        ldamped_dyn = .FALSE.
         lmol_dyn    = .TRUE.
         IF ( temp_req == 0 ) &
            WRITE( stdout,'(/,T2,"WARNING: tepm_req has not been set" )')
-        !
         temp_req = temp_req / ( eV_to_kelvin * AU )
-        !    
      CASE default
-        !
         CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
                    & ': unknown minimization_scheme', 1 )  
-        !
      END SELECT             
      !
   END IF
@@ -1030,9 +1031,8 @@ END SUBROUTINE iosys
 SUBROUTINE read_cards( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
-  USE parser
   USE wvfct,             ONLY : gamma_only
-  USE brilz,             ONLY : at, ibrav, symm_type
+  USE brilz,             ONLY : at, ibrav, symm_type, celldm
   USE basis,             ONLY : nat, ntyp, ityp, tau, atm
   USE klist,             ONLY : nks
   USE ktetra,            ONLY : nk1_   => nk1, &
@@ -1049,13 +1049,19 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   USE relax,             ONLY : fixatom, &
                                 if_pos_ =>  if_pos
   USE dynam,             ONLY : amass
+  USE control_flags,     ONLY : lconstrain
+  USE constrains_module, ONLY : nconstr, constr_tol, constr, target
   USE input_parameters,  ONLY : atom_label, atom_pfile, atom_mass, &
                                 atom_ptyp, taspc, tapos, rd_pos, &
                                 atomic_positions, if_pos, sp_pos, &
                                 k_points, xk, wk, nk1, nk2, nk3, &
                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                trd_ht, f_inp, calculation
+                                trd_ht, f_inp, calculation,&
+                                nconstr_inp, constr_tol_inp, constr_inp
   USE read_cards_module, ONLY : read_cards_base => read_cards
+  !
+  USE parser
+  USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !
@@ -1203,7 +1209,36 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   IF ( ibrav /= 0 .AND. tcell ) &
      CALL errore( ' cards ', ' redundant data for cell parameters', 2 )
   !
-  RETURN
+  IF ( lconstrain ) THEN
+     !
+     nconstr    = nconstr_inp
+     constr_tol = constr_tol_inp
+     !
+     ALLOCATE( constr(2,nconstr) )
+     ALLOCATE( target(nconstr) )
+     !
+     constr(:,:) = constr_inp(:,1:nconstr)
+     !
+     ! ... target value of the constrain ( in bohr )
+     !
+     DO ia = 1, nconstr
+        !
+        target(ia) = norm( tau(:,constr(1,ia)) - &
+                           tau(:,constr(2,ia)) ) * celldm(1)
+        !
+     END DO    
+     !
+     ! ... "if_pos" constrains are not compatible with other constrains
+     !
+     if_pos_ = 1
+     !
+     IF ( fixatom > 0 ) &
+       CALL errore( ' cards ', &
+                  & ' constrains are not compatible with fixed atoms', 1 ) 
+     !
+  END IF   
+  !
+  RETURN 
   !
 END SUBROUTINE read_cards
 !
@@ -1221,7 +1256,7 @@ SUBROUTINE verify_tmpdir()
   USE mp,               ONLY : mp_barrier
 #endif  
   !
-  USE parser,           ONLY : int_to_char
+  USE parser,           ONLY : int_to_char, delete_if_present
   !
   IMPLICIT NONE
   !
@@ -1258,13 +1293,19 @@ SUBROUTINE verify_tmpdir()
      !
 #if defined (__PARA)
      IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif        
+#endif   
+        !
+        ! ... wfc-extrapolation file is removed
+        !     
+        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
+        !
+        ! ... MD restart file is removed
+        !
+        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
         !
         ! ... BFGS rstart file is removed       
         !     
-        OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs', &
-              STATUS = 'UNKNOWN' )
-        CLOSE( UNIT = 4, STATUS = 'DELETE' )
+        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
         !
 #if defined (__PARA)
      END IF
@@ -1323,11 +1364,9 @@ SUBROUTINE verify_tmpdir()
            IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif                 
               !
-              ! ... standard output of the self consistency is removed
+              ! ... standard output of the self-consistency is removed
               !      
-              OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'PW.out', &
-                    STATUS = 'UNKNOWN' )
-              CLOSE( UNIT = 4, STATUS = 'DELETE' )
+              CALL delete_if_present( TRIM( tmp_dir ) // 'PW.out' )
               !
 #if defined (__PARA)
            END IF

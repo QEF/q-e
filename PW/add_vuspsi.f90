@@ -21,20 +21,27 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   !     m     number of states psi
   !     psi
   ! output:
-  !     hpsi  V_US*psi is added to hpsi
+  !     hpsi  V_US|psi> is added to hpsi
   !
   !
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE basis,      ONLY : nat, ntyp, ityp
   USE lsda_mod,   ONLY : current_spin
   USE wvfct,      ONLY : gamma_only
   USE us,         ONLY : vkb, nkb, nh, deeq
   !
   IMPLICIT NONE
-  !  
+  !
+  ! ... I/O variables
+  !
   INTEGER,          INTENT(IN)  :: lda, n, m
   COMPLEX(KIND=DP), INTENT(IN)  :: psi(lda,m) 
   COMPLEX(KIND=DP), INTENT(OUT) :: hpsi(lda,m)  
+  !
+  ! ... here the local variables
+  !
+  INTEGER :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
+    ! counters
   !
   !
   CALL start_clock( 'add_vuspsi' )  
@@ -63,37 +70,48 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
-       ! ... here the local variables
-       !
-       INTEGER :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
-       ! counters
-       !
        !
        IF ( nkb == 0 ) RETURN
        !
        becp_(:,:) = 0.D0
        !
        ijkb0 = 0
+       !
        DO nt = 1, ntyp
+          !
           DO na = 1, nat
+             !
              IF ( ityp(na) == nt ) THEN
+                !
                 DO ibnd = 1, m
+                   !
                    DO jh = 1, nh(nt)
+                      !
                       jkb = ijkb0 + jh
+                      !
                       DO ih = 1, nh(nt)
+                         !
                          ikb = ijkb0 + ih
-                         becp_(ikb, ibnd) = becp_(ikb, ibnd) + &
+                         !
+                         becp_(ikb,ibnd) = becp_(ikb,ibnd) + &
                                     deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
+                         !
                       END DO
+                      !
                    END DO
+                   !
                 END DO
+                !
                 ijkb0 = ijkb0 + nh(nt)
+                !
              END IF
+             !
           END DO
+          !
        END DO
        !
-       CALL DGEMM( 'N', 'N', 2*n, m, nkb, 1.d0, vkb, &
-                   2*lda, becp_, nkb, 1.d0, hpsi, 2*lda )
+       CALL DGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
+                   ( 2 * lda ), becp_, nkb, 1.D0, hpsi, ( 2 * lda ) )
        !
        RETURN
        !
@@ -110,38 +128,53 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        !
        ! ... here the local variables
        !
-       INTEGER :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
-       ! counters
-       COMPLEX(KIND=DP), ALLOCATABLE :: ps (:,:)
-       ! the product vkb and psi
+       COMPLEX(KIND=DP), ALLOCATABLE :: ps(:,:)
+         ! the product vkb and psi
        !
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE( ps( nkb, m) )
-       !     
+       ALLOCATE( ps( nkb, m ) )
+       !
        ps(:,:) = ( 0.D0, 0.D0 )
+       !
        ijkb0 = 0
+       !
        DO nt = 1, ntyp
+          !
           DO na = 1, nat
+             !
              IF ( ityp(na) == nt ) THEN
+                !
                 DO ibnd = 1, m
+                   !
                    DO jh = 1, nh(nt)
+                      !
                       jkb = ijkb0 + jh
+                      !
                       DO ih = 1, nh(nt)
+                         !
                          ikb = ijkb0 + ih
-                         ps(ikb, ibnd) = ps(ikb, ibnd) + &
+                         !
+                         ps(ikb,ibnd) = ps(ikb,ibnd) + &
                                     deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
+                         !
                       END DO
+                      !
                    END DO
+                   !
                 END DO
+                !
                 ijkb0 = ijkb0 + nh(nt)
+                !
              END IF
+             !
           END DO
+          !
        END DO
        !
-       CALL ZGEMM( 'N', 'N', n, m, nkb, (1.D0, 0.D0) , vkb, &
-                   lda, ps, nkb, (1.D0, 0.D0) , hpsi, lda )
+       CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
+                   lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
        !
        DEALLOCATE( ps )
        !
@@ -149,4 +182,4 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        !
      END SUBROUTINE add_vuspsi_k     
      !  
-END SUBROUTINE add_vuspsi 
+END SUBROUTINE add_vuspsi

@@ -726,7 +726,8 @@ MODULE input_parameters
 !
 
         CHARACTER(LEN=80) :: ion_dynamics = 'none' 
-          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 'old-bfgs' | 'none'*  
+          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 
+          !                'old-bfgs' | 'none'*  
           ! set how ions shold be moved
           ! 'none'     ions are kept fixed 
           ! 'bfgs'     a new BFGS algorithm is used to minimize ionic configuration
@@ -737,8 +738,9 @@ MODULE input_parameters
           ! 'verlet'   standard Verlet algorithm is used to propagate ions
 
         CHARACTER(LEN=80) :: ion_dynamics_allowed(10)
-        DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none', &
-          'bfgs', 'old-bfgs', 'constrained-bfgs', 'constrained-verlet', 'beeman' /
+        DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none',   &
+                                    'bfgs', 'old-bfgs', 'constrained-damp', &
+                                    'constrained-verlet', 'beeman' /
 
         REAL(dbl) :: ion_radius(nsx) = 0.5d0
           ! pseudo-atomic radius of the i-th atomic species

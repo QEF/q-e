@@ -56,6 +56,7 @@ clean_pw.o \
 close_files.o \
 compute_dip.o \
 constrain.o \
+constrains_module.o \
 conv_to_num.o \
 coset.o \
 cryst_to_car.o \
@@ -87,7 +88,6 @@ error.o \
 error_handler.o \
 estimate.o \
 ewald.o \
-ewald_dipole.o \
 fft_scatter.o \
 fftw.o \
 force_cc.o \
@@ -117,8 +117,6 @@ hinit0.o \
 hinit1.o \
 io_routines.o \
 init_ns.o \
-init_paw_1.o \
-init_paw_2.o \
 init_pool.o \
 init_run.o \
 init_us_1.o \
@@ -241,7 +239,6 @@ swap.o \
 symrho.o \
 symtns.o \
 symvect.o \
-symz.o \
 tabd.o \
 trntns.o \
 trnvecc.o \

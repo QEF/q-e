@@ -1,55 +1,101 @@
 !
-! Copyright (C) 2001 Carlo Cavazzoni and PWSCF group
+! Copyright (C) 2001-2004 Carlo Cavazzoni and PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module parser
-
+!----------------------------------------------------------------------------
+MODULE parser
+  !----------------------------------------------------------------------------
+  !
   USE io_global,  ONLY : stdout
   USE kinds
-
+  !
   INTERFACE parser_error
      MODULE PROCEDURE p_err_I, p_err_R, p_err_S, p_err_L
   END INTERFACE
-
-contains
-
-     PURE FUNCTION int_to_char( int )
+  !
+  CONTAINS
+  !
+  !-----------------------------------------------------------------------
+  PURE FUNCTION int_to_char( int )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: int
+    CHARACTER (LEN=6)   :: int_to_char
+    !
+    !   
+    IF ( int < 10 ) THEN
        !
-       IMPLICIT NONE
+       WRITE( UNIT = int_to_char , FMT = "(I1)" ) int
        !
-       INTEGER, INTENT(IN) :: int
-       CHARACTER (LEN=6)   :: int_to_char
+    ELSE IF ( int < 100 ) THEN
        !
-       !   
-       IF ( int < 10 ) THEN
-          !
-          WRITE( UNIT = int_to_char , FMT = "(I1)" ) int
-          !
-       ELSE IF ( int < 100 ) THEN
-          !
-          WRITE( UNIT = int_to_char , FMT = "(I2)" ) int
-          !
-       ELSE IF ( int < 1000 ) THEN
-          !
-          WRITE( UNIT = int_to_char , FMT = "(I3)" ) int
-          !
-       ELSE IF ( int < 10000 ) THEN
-          !
-          WRITE( UNIT = int_to_char , FMT = "(I4)" ) int
-          !
-       ELSE      
-          ! 
-          WRITE( UNIT = int_to_char , FMT = "(I5)" ) int     
-          !
-       END IF    
+       WRITE( UNIT = int_to_char , FMT = "(I2)" ) int
        !
-       RETURN
+    ELSE IF ( int < 1000 ) THEN
        !
-    END FUNCTION int_to_char
-
+       WRITE( UNIT = int_to_char , FMT = "(I3)" ) int
+       !
+    ELSE IF ( int < 10000 ) THEN
+       !
+       WRITE( UNIT = int_to_char , FMT = "(I4)" ) int
+       !
+    ELSE      
+       ! 
+       WRITE( UNIT = int_to_char , FMT = "(I5)" ) int     
+       !
+    END IF    
+    !
+    RETURN
+    !
+  END FUNCTION int_to_char
+  !
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE delete_if_present( filename )
+    !--------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN=*) :: filename
+    LOGICAL          :: exst, opnd
+    INTEGER          :: iunit
+    !
+    INQUIRE( FILE = filename, EXIST = exst )
+    !
+    IF ( exst ) THEN
+       !
+       unit_loop: DO iunit = 99, 1, - 1
+          !
+          INQUIRE( UNIT = iunit, OPENED = opnd )
+          !
+          IF ( .NOT. opnd ) THEN
+             !
+             OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
+             CLOSE( UNIT = iunit, STATUS = 'DELETE' )
+             WRITE( UNIT = stdout,         &
+                    FMT = '(/,5X"WARNING: ",A, &
+                           &" file was present; old file deleted")' ) filename
+             !
+             RETURN
+             !
+          END IF
+          !
+       END DO unit_loop
+       !
+       CALL errore( 'delete_if_present', 'free unit not found ?!?', 1 )
+       !
+    END IF
+    !
+    RETURN
+    !
+  END SUBROUTINE  
+  !
+  !
   !-----------------------------------------------------------------------
   logical function matches (string1, string2)  
     !-----------------------------------------------------------------------

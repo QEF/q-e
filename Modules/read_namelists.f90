@@ -282,7 +282,7 @@ MODULE read_namelists_module
        !
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' )
-       ! ... ( 'constrained-verlet' | 'bfgs' | 'constrained-bfgs' | 'beeman' )
+       ! ... ( 'constrained-verlet' | 'bfgs' | 'constrained-damp' | 'beeman' )
        !
        ion_dynamics = 'none'  
        ion_radius = 0.5D0

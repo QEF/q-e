@@ -213,8 +213,10 @@
        lmd,              &! if .TRUE. the calculation is a dynamics
        lneb,             &! if .TRUE. the calculation is neb
        lphonon,          &! if .TRUE. the calculation is phonon
+       lconstrain,       &! if .TRUE. the calculation is constraint
+       ldamped,          &! if .TRUE. the calculation is a damped dynamics
        conv_elec,        &! if .TRUE. electron convergence has been reached
-       conv_ions,        &! if .TRUE.    ionic convergence has been reached
+       conv_ions,        &! if .TRUE. ionic convergence has been reached
        nosym,            &! if .TRUE. no symmetry is used
        noinv = .FALSE.,  &! if .TRUE. eliminates inversion symmetry
        diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting

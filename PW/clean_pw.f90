@@ -36,6 +36,7 @@ SUBROUTINE clean_pw()
   USE afftnec,              ONLY : auxp
 #endif  
   USE fft_types,            ONLY : fft_dlay_deallocate
+  USE constrains_module,    ONLY : constr, target
   !
   IMPLICIT NONE
   !
@@ -137,6 +138,11 @@ SUBROUTINE clean_pw()
   ! ... deallocate indices used in calculation of polarizability at gamma
   !
   CALL berry_closeup( )
+  !
+  ! ... vectors for ionic constrains
+  !
+  IF ( ALLOCATED( constr ) )     DEALLOCATE( constr )
+  IF ( ALLOCATED( target ) )     DEALLOCATE( target )
   !
   RETURN
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,7 @@ SUBROUTINE move_ions()
   !
   ! ... This routine moves the ions according to the requested scheme:
   !
-  ! ... iswitch = 1      bfgs minimizations or conjugate gradient
+  ! ... iswitch = 1      bfgs minimizations
   ! ... iswitch = 2      constrained bfgs minimization:
   ! ...                  the user must supply the routine 'constrain' which
   ! ...                  defines the constraint equation and the gradient
@@ -28,12 +28,15 @@ SUBROUTINE move_ions()
   ! ...                            dgv(i,na) = ---------------.
   ! ...                                         D tau(i,na)
   !
-  ! ... iswitch = 3      molecular dynamics, (verlet of vcsmd)
+  ! ... iswitch = 3      molecular dynamics, ( verlet of vcsmd )
   ! ... iswitch = 4      molecular dynamics with one constraint,
   ! ...                  the same conventions as iswitch = 2
   !
+  ! ... coefficients for potential and wavefunctions extrapolation are
+  ! ... also computed here
+  !
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : tmp_dir
+  USE io_files,      ONLY : tmp_dir, prefix
   USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
   USE kinds,         ONLY : DP
   USE brilz,         ONLY : alat, at, bg
@@ -43,8 +46,8 @@ SUBROUTINE move_ions()
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
-  USE control_flags, ONLY : tr2, upscale, iswitch, lbfgs, loldbfgs, &
-                            conv_ions
+  USE control_flags, ONLY : upscale, iswitch, lbfgs, loldbfgs, lconstrain, &
+                            lmd, conv_ions, alpha0, beta0, tr2
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,        ONLY : lmovecell, calc
 #if defined (__PARA)
@@ -53,42 +56,55 @@ SUBROUTINE move_ions()
   USE mp,            ONLY : mp_bcast
 #endif
   !
+  ! ... external procedures
+  !
+  USE constrains_module,      ONLY : dist_constrain, check_constrain, &
+                                     new_force, compute_penalty
+  USE basic_algebra_routines, ONLY : norm
+  !
   IMPLICIT NONE
   !
-  REAL(KIND=DP)              :: dummy, gv
-  REAL(KIND=DP), ALLOCATABLE :: dgv(:,:)
-  REAL(KIND=DP)              :: dgv2, theta0
-    ! auxiliar variable :
-    ! gv=0 defines the constrain
-    ! the gradient of gv
-    ! its square modulus
-    ! the value of the one-dimensional const
+  ! ... local variables
+  !
+  REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
+    ! previous positions of atoms  
+  REAL(KIND=DP), SAVE        :: lambda = 0.5D0    
+  INTEGER                    :: na  
   REAL(KIND=DP)              :: energy_error, gradient_error
-  LOGICAL                    :: step_accepted
+  LOGICAL                    :: step_accepted, exst
   REAL(KIND=DP), ALLOCATABLE :: pos(:), gradient(:)
   !
   !
   conv_ions = .FALSE.
   !
-  IF ( iswitch == 2 .OR. iswitch == 4 ) THEN
+  ALLOCATE( tauold( 3, nat, 3 ) )   
+  !
+  ! ... constrains are imposed here
+  !  
+  IF ( lconstrain ) &
+     CALL impose_constrains()
+  !
+  ! ... the file containing old positions is opened ( needed for extrapolation )
+  !
+  CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+  !
+  IF ( exst ) THEN
      !
-     ALLOCATE( dgv(3,nat) )
+     READ( UNIT = 4, FMT = * ) tauold
      !
-     ! ... gv is the function which define the constrain, now first of all we
-     ! ... find the constrain theta0 such that gv=0, and find the gradient of
-     ! ... gv, dgv
+  ELSE
      !
-     dummy = 0.D0
-     !
-     CALL constrain( theta0, gv, dgv, dgv2, dummy, nat, tau, alat )
-     !
-     ! ... find the constrained forces
-     !
-     CALL new_force( dgv, dgv2 )
-     !
-     DEALLOCATE( dgv )
+     tauold = 0.D0
      !
   END IF
+  !
+  CLOSE( UNIT = 4, STATUS = 'KEEP' )
+  !
+  ! ... save the previous two steps ( a total of three steps is saved )
+  !
+  tauold(:,:,3) = tauold(:,:,2)
+  tauold(:,:,2) = tauold(:,:,1)
+  tauold(:,:,1) = tau(:,:)
   !
   ! ... do the minimization / dynamics step
   !
@@ -107,6 +123,7 @@ SUBROUTINE move_ions()
      ! ... only one node does the calculation in the parallel case
      !
      IF ( me == 1 .AND. mypool == 1 ) THEN 
+        !
 #endif     
         !
         ALLOCATE( pos( 3 * nat ) )
@@ -122,7 +139,7 @@ SUBROUTINE move_ions()
                           conv_ions )
            !
         ELSE
-           ! 
+           !
            CALL lin_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
                           epsf, energy_error, gradient_error, step_accepted, &
                           conv_ions )
@@ -149,19 +166,20 @@ SUBROUTINE move_ions()
         tau   =   RESHAPE( SOURCE = pos, SHAPE = (/ 3 , nat /) ) / alat
         force = - RESHAPE( SOURCE = gradient, SHAPE = (/ 3 , nat /) )
         !
-        CALL output_tau(conv_ions)
+        CALL output_tau( conv_ions )
         !
         DEALLOCATE( pos )
         DEALLOCATE( gradient ) 
+        !
 #if defined (__PARA)
         !
      END IF
      !  
      ! ... broadcast calculated quantities to all nodes
      !
-     CALL mp_bcast( tau, ionode_id )
-     CALL mp_bcast( force, ionode_id )
-     CALL mp_bcast( tr2, ionode_id )
+     CALL mp_bcast( tau,       ionode_id )
+     CALL mp_bcast( force,     ionode_id )
+     CALL mp_bcast( tr2,       ionode_id )
      CALL mp_bcast( conv_ions, ionode_id )
 #endif 
      !
@@ -175,191 +193,255 @@ SUBROUTINE move_ions()
   !
   ! ... molecular dynamics schemes are used
   !
-  IF ( iswitch == 3 .OR.iswitch == 4 ) THEN
+  IF ( lmd ) THEN
      !
      IF ( calc == ' ' ) CALL dynamics()  ! verlet dynamics
      IF ( calc /= ' ' ) CALL vcsmd()     ! variable cell shape md
      !
   END IF
   !
-  IF ( iswitch > 4 .OR. iswitch <= 0 ) THEN
-     !
-     CALL errore( 'move_ions', 'iswitch value not implemented or wrong', 1 )
-     !
-  END IF
+  ! ... check if the new positions satisfy the constrain equation
   !
-  ! ... check if the new positions satisfy the constrain equation, in
-  ! ... the CP case this is done inside the routine "cp"
-  !
-  IF ( iswitch == 2 .OR. iswitch == 4 ) &
-     CALL check_constrain( theta0 )
+  IF ( lconstrain ) CALL check_constrain()
   !
   ! ... before leaving check that the new positions still transform
   ! ... according to the symmetry of the system.
   !
   CALL checkallsym( nsym, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, irt, ftau )
   !
+  ! ... find the best coefficients for the extrapolation of the potential
+  !
+  CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+  !
+#if defined (__PARA)
+  !
+  IF ( me == 1 ) CALL poolbcast( 1, alpha0 )
+  IF ( me == 1 ) CALL poolbcast( 1, beta0 )
+  !
+  CALL mp_bcast( alpha0, ionode_id )
+  CALL mp_bcast( beta0,  ionode_id )
+  !
+#endif
+  !
+  CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+  !
+  WRITE( UNIT = 4, FMT = * ) tauold
+  !
+  CLOSE( UNIT = 4, STATUS = 'KEEP' )
+  !  
+  DEALLOCATE( tauold )
+  !  
   RETURN
   !
+  CONTAINS
+     !
+     ! ... internal procedures   
+     !  
+     !-----------------------------------------------------------------------
+     SUBROUTINE impose_constrains()
+       !-----------------------------------------------------------------------
+       !
+       USE constrains_module, ONLY : nconstr
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       INTEGER       :: index, na
+       REAL(KIND=DP) :: gv
+       REAL(KIND=DP) :: dgv(3,nat)
+       REAL(KIND=DP) :: dgv2
+         ! gv = 0 defines the constrain
+         ! the gradient of gv
+         ! its square modulus       
+       !
+       !
+       IF ( lbfgs ) THEN
+          !
+          ! ... BFGS case: a penalty function is used
+          !
+          CALL compute_penalty( gv, dgv, dgv2 )
+          !
+          etot = etot + lambda * gv**2
+          !
+          force(:,:) = force(:,:) - 2.D0 * lambda * gv * dgv(:,:)
+          !
+       ELSE IF ( lmd ) THEN
+          !
+          ! ... molecular dynamics case: lagrange multipliers are used
+          !
+          ! ... find the constrained forces
+          !
+          DO index = 1, nconstr
+             !
+             CALL dist_constrain( index, gv, dgv, dgv2 )
+             !
+             CALL new_force( dgv, dgv2 )
+             !
+          END DO
+          !
+          WRITE( stdout, '(/5x,"Constrained forces")')
+          !
+          DO na = 1, nat
+             !
+             WRITE( stdout, '(3F14.8)') force(:,na)
+             !
+          END DO
+          !   
+       END IF       
+       !
+     END SUBROUTINE impose_constrains
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE compute_lambda()
+       !-----------------------------------------------------------------------
+       !
+       USE constrains_module, ONLY : constr_tol
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       LOGICAL       :: ltest       
+       REAL(KIND=DP) :: gv
+       REAL(KIND=DP) :: dgv(3,nat)
+       REAL(KIND=DP) :: dgv2
+         ! gv = 0 defines the constrain
+         ! the gradient of gv
+         ! its square modulus             
+       !
+       !
+       CALL compute_penalty( gv, dgv, dgv2 )
+       !
+       IF ( step_accepted ) THEN
+          !
+          lambda_loop: DO
+             !
+             IF ( ABS( gv ) > constr_tol ) lambda = lambda * 1.1D0        
+             !
+             ltest = .TRUE. 
+             !
+             DO na = 1, nat
+                !
+                IF ( 2.D0 * lambda * gv * norm( dgv(:,na) ) > 0.05D0 ) &
+                   ltest = .FALSE.
+                !
+             END DO
+             !
+             IF ( ltest ) EXIT lambda_loop 
+             !
+             lambda = lambda * 0.5D0
+             !
+          END DO lambda_loop
+          !
+       END IF
+       !
+       WRITE( stdout, '("LAMBDA  = ",F14.10)' ) lambda
+       WRITE( stdout, '("GV      = ",F14.10)' ) gv 
+       WRITE( stdout, '("PENALTY = ",F14.10)' ) lambda * gv**2       
+       !
+       RETURN
+       !
+     END SUBROUTINE compute_lambda
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+       !-----------------------------------------------------------------------
+       !
+       ! ... This routine finds the best coefficients alpha0 and beta0 so that
+       !
+       ! ...    | tau(t+dt) - tau' | is minimum, where
+       !
+       ! ...    tau' = alpha0 * ( tau(t) - tau(t-dt) ) +
+       ! ...            beta0 * ( tau(t-dt) - tau(t-2*dt) )
+       !
+       USE constants, ONLY : eps8
+       !
+       IMPLICIT NONE
+       !
+       INTEGER       :: nat, na, ipol
+       REAL(KIND=DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
+       REAL(KIND=DP) :: a11, a12, a21, a22, b1, b2, c, det
+       !
+       ! ... solution of the linear system
+       !
+       a11 = 0.D0
+       a12 = 0.D0
+       a21 = 0.D0
+       a22 = 0.D0 + eps8
+       b1  = 0.D0
+       b2  = 0.D0
+       c   = 0.D0
+       !
+       DO na = 1, nat
+          !
+          DO ipol = 1, 3
+             !
+             a11 = a11 + ( tauold(ipol,na,1) - tauold(ipol,na,2) )**2
+             !
+             a12 = a12 + ( tauold(ipol,na,1) - tauold(ipol,na,2) ) * &
+                         ( tauold(ipol,na,2) - tauold(ipol,na,3) )
+             !
+             a22 = a22 + ( tauold(ipol,na,2) - tauold(ipol,na,3) )**2
+             !
+             b1 = b1 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
+                       ( tauold(ipol,na,1) - tauold(ipol,na,2) )
+             !
+             b2 = b2 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
+                       ( tauold(ipol,na,2) - tauold(ipol,na,3) )
+             !
+             c = c + ( tauold(ipol,na,1) - tau(ipol,na) )**2
+             !
+          END DO
+          !
+       END DO
+       !
+       a21 = a12
+       !
+       det = a11 * a22 - a12 * a21
+       !
+       IF ( det < 0.D0 ) CALL errore( 'find_alpha_and_beta', ' det < 0', 1 )
+       !
+       ! ... case det > 0:  a well defined minimum exists
+       !
+       IF ( det > 0.D0 ) THEN
+          !
+          alpha0 = ( b1 * a22 - b2 * a12 ) / det
+          beta0  = ( a11 * b2 - a21 * b1 ) / det
+          !
+       ELSE
+          !
+          ! ... case det = 0 : the two increments are linearly dependent, 
+          ! ...                chose solution with beta = 0 
+          ! ...                ( discard oldest configuration )
+          !
+          alpha0 = 1.D0
+          beta0  = 0.D0
+          !
+          IF ( a11 > 0.D0 ) alpha0 = b1 / a11
+          !
+       END IF
+       !
+       chi = 0.D0
+       !
+       DO na = 1, nat
+          !
+          DO ipol = 1, 3
+             !
+             chi = chi + ( ( 1.D0  + alpha0 ) * tauold(ipol,na,1) + &
+                           ( beta0 - alpha0 ) * tauold(ipol,na,2) - & 
+                           beta0 * tauold(ipol, na, 3) - tau(ipol,na) )**2
+             !
+          END DO
+          !
+       END DO
+       !
+       !WRITE( stdout, * ) chi, alpha0, beta0
+       !
+       RETURN
+       !
+     END SUBROUTINE find_alpha_and_beta     
+     !
 END SUBROUTINE move_ions
-!
-!
-!----------------------------------------------------------------------------
-SUBROUTINE new_force( dg, dg2 )
-  !----------------------------------------------------------------------------
-  !
-  !     find the lagrange multiplier lambda for the problem with one const
-  !
-  !                force*dg
-  !     lambda = - --------,
-  !                 |dg|^2
-  !
-  !     and redefine the forces:
-  !
-  !     force = force + lambda*dg
-  !
-  !     where dg is the gradient of the constraint function
-  !
-  USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : DP
-  USE basis,      ONLY : nat
-  USE brilz,      ONLY : at, bg
-  USE force_mod,  ONLY : force
-  USE symme,      ONLY : s, nsym, irt
-  !
-  IMPLICIT NONE
-  !
-  INTEGER       :: na, i, ipol
-  REAL(KIND=DP) :: dg(3, nat), lambda, dg2, sum
-  REAL(KIND=DP), EXTERNAL :: DDOT
-  !
-  !
-  lambda = 0.D0
-  !
-  IF ( dg2 /= 0.D0 ) THEN
-     !
-     lambda = - DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
-     !
-     CALL DAXPY( 3 * nat, lambda, dg, 1, force, 1)
-     !
-     IF ( DDOT( 3 * nat, force, 1, dg, 1 )**2 > 1.D-30 ) THEN
-        !
-        CALL errore( 'new_force', 'force is not orthogonal to constrain', - 1 )
-        PRINT *, DDOT( 3 * nat, force, 1, dg, 1 )**2
-        !
-     END IF
-     !
-     DO ipol = 1, 3
-        sum = 0.D0
-        DO na = 1, nat
-           sum = sum + force(ipol,na)
-        END DO
-        !
-        ! ... impose total force = 0
-        !
-        DO na = 1, nat
-           force(ipol,na) = force(ipol,na) - sum / nat
-        END DO
-     END DO
-     !
-     ! ... resymmetrize (should not be needed, but...)
-     !
-     IF ( nsym > 1 ) THEN
-        !
-        DO na = 1, nat
-           CALL trnvect( force(1,na), at, bg, - 1 )
-        END DO
-        !
-        CALL symvect( nat, force, nsym, s, irt )
-        !
-        DO na = 1, nat
-           CALL trnvect( force(1,na), at, bg, 1 )
-        END DO
-        !
-     END IF
-     !
-     WRITE( stdout, '(/5x,"Constrained forces")')
-     !
-     DO na = 1, nat
-        WRITE( stdout, '(3F14.8)') ( force(i,na) , i = 1, 3 )
-     END DO
-     !
-  END IF
-  !
-  RETURN
-  !
-END SUBROUTINE new_force
-!
-!
-!---------------------------------------------------------------------
-SUBROUTINE check_constrain( theta0 )
-  !---------------------------------------------------------------------
-  !
-  !     update tau so that the constraint equation g=0 is satisfied,
-  !     use the recursion formula:
-  !
-  !                      g(tau)
-  !     tau' = tau -  ------------ * dg(tau)
-  !                    |dg(tau)|^2
-  !
-  !     in normal cases the constraint equation should be always satisfied
-  !     the very first iteration.
-  !
-  USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : DP
-  USE constants,  ONLY : eps16
-  USE basis,      ONLY : nat, ityp, tau, atm
-  USE brilz,      ONLY : alat
-  !
-  IMPLICIT NONE
-  !
-  REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
-  REAL(KIND=DP)              :: dg2, g, theta0, dummy
-  INTEGER                    :: na, i, j
-  INTEGER, PARAMETER         :: maxiter = 250
-  !
-  !
-  ALLOCATE( dg(3,nat) )
-  !
-  CALL constrain( dummy, g, dg, dg2, theta0, nat, tau, alat )
-  !
-  WRITE( stdout, '(5X,"G = ",1PE9.2," iteration # ",I3)' ) g, 0
-  !
-  DO i = 1, maxiter
-     !
-     ! ... check if g=0
-     !
-     IF ( ABS( g ) < eps16 ) GO TO 14
-     !
-     ! ... if g<>0 find new tau = tau - g*dg/dg2 and check again
-     !
-     CALL DAXPY( 3 * nat, - g / dg2, dg, 1, tau, 1 )
-     !
-     CALL constrain( dummy, g, dg, dg2, theta0, nat, tau, alat )
-     !
-     WRITE( stdout, '(5X,"G = ",1PE9.2," iteration # ",I3)' ) g, i
-     !
-  END DO
-  !
-  CALL errore( 'new_dtau', 'g=0 is not satisfied g=', - 1 )
-  !
-14 CONTINUE
-  !
-  WRITE( stdout, '(5X,"Number of step(s): ",I3)') i - 1
-  !
-  ! ... if the atomic positions have been corrected write them on output
-  !
-  IF ( i > 1 ) THEN
-     !
-     WRITE( stdout, '(/5X,"Corrected atomic positions:",/)')
-     DO na = 1, nat
-        WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), ( tau(j,na), j = 1, 3 )
-     END DO
-     !
-  END IF
-  !
-  DEALLOCATE( dg )
-  !
-  RETURN
-  !
-END SUBROUTINE check_constrain

@@ -45,12 +45,18 @@ SUBROUTINE update_pot()
   !
   CALL start_clock( 'update_pot' )
   !
-  IF ( order == 0 ) RETURN
+  IF ( order == 0 ) THEN
+     !
+     CALL stop_clock( 'update_pot' )
+     !
+     RETURN
+     !
+  END IF
   !
-  IF ( order > 2 .AND. ( lbfgs .OR. lneb ) ) THEN
+  IF ( order > 2 .AND. lneb ) THEN
      !
      order = 2
-     CALL errore( 'update_pot', 'order > 2 not allowed in bfgs', -1 )
+     CALL errore( 'update_pot', 'order > 2 not allowed in neb', -1 )
      !
   END IF
   !
@@ -327,7 +333,7 @@ SUBROUTINE extrapolate_wfcs()
         !
         ! ... extrapolate the wfc's,
         ! ... if order=3 use the second order extrapolation formula
-        ! ... alpha0 and beta0 are calculated in "dynamics"
+        ! ... alpha0 and beta0 are calculated in "move_ions"
         !
         IF ( order > 2 ) THEN
            !
@@ -342,19 +348,22 @@ SUBROUTINE extrapolate_wfcs()
               CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
               !
               evc = evc - beta0 * evcold
+              !
            END IF
            !
         ELSE
            !
-           evc = 2 * evcold - evc
+           evc = 2.D0 * evcold - evc
            !
         END IF
         !
         ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
         IF ( order > 2 ) THEN
+           !
            CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
            CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, 1 )
+           !
         END IF
         !
         CALL davcio( evcold, nwordwfc, iunwfc, ik, - 1 )

@@ -1,14 +1,16 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-
-subroutine vcsmd
-  !-----------------------------------------------------------------------
+#include "machine.h"
+!
+!----------------------------------------------------------------------------
+SUBROUTINE vcsmd()
+  !----------------------------------------------------------------------------
+  !
   ! Main (interface) routine between PWSCF and the variable-cell shape
   ! molecular dynamics code by R.M. Wentzcovitch, PRB 44, 2358 (1991).
   !
@@ -23,26 +25,30 @@ subroutine vcsmd
   !  calc  = 'nm'   : Wentzcovitch's new cell minimization by damped dynam
   !
   ! Dynamics performed using Beeman algorithm, J. Comp. Phys. 20, 130 (1976))
-
   !
-#include "machine.h"
-  USE io_global, ONLY : stdout
-  use constants, only : e2, uakbar
-  use brilz
-  use basis
-  use cellmd
-  use dynam
-  use relax
-  use force_mod
-  USE control_flags
-  use ener, only: etot
-  use io_files,  only : prefix
-#ifdef __PARA
-  use para
+  !
+  USE kinds,         ONLY : DP
+  USE io_global,     ONLY : stdout
+  USE constants,     ONLY : e2, uakbar
+  USE brilz,         ONLY : omega, alat, at, bg
+  USE basis,         ONLY : tau, nat, ntyp, ityp, atm
+  USE cellmd,        ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
+                            cmass, ttol, ntcheck, lmovecell
+  USE dynam,         ONLY : dt, temperature, amass
+  USE relax,         ONLY : epse, epsf, fixatom
+  USE force_mod,     ONLY : force, sigma
+  USE control_flags, ONLY : istep, conv_ions 
+  USE parameters,    ONLY : ntypx
+  USE ener,          ONLY : etot
+  USE io_files,      ONLY : prefix
+  USE parser,        ONLY : delete_if_present
+#if defined (__PARA)
+  USE para,          ONLY : me, mypool
 #endif
-  implicit none
   !
-  ! I/O variable first
+  IMPLICIT NONE
+  !
+  ! ... I/O variable first
   !
   ! PWSCF variables
   !  nat  = total number of atoms
@@ -55,548 +61,383 @@ subroutine vcsmd
   !  cmass = cell mass in ryd units.
   !  press = target pressure in ryd/(a.u.)^3
   !
-  ! local variable
+  ! ... local variables
   !
-
-  real(kind=DP) :: p,            & ! virial pressure
+  REAL(KIND=DP) :: p,            & ! virial pressure
                    vcell,        & ! cell volume
-                   avec (3, 3),  & ! at(3,3) * alat
-                   aveci (3, 3), & ! avec at t-dt
-                   avecd (3, 3), & ! d(avec)/dt
-                   avec2d (3, 3),& ! d2(avec)/dt2
-                   avec2di (3, 3),&! d2(avec)/dt2 at t-dt
-                   avec0 (3, 3), & ! avec at t = 0
-                   sig0 (3, 3),  & ! sigma at t=0
+                   avec(3,3),    & ! at(3,3) * alat
+                   aveci(3,3),   & ! avec at t-dt
+                   avecd(3,3),   & ! d(avec)/dt
+                   avec2d(3,3),  & ! d2(avec)/dt2
+                   avec2di(3,3), & ! d2(avec)/dt2 at t-dt
+                   avec0(3,3),   & ! avec at t = 0
+                   sig0(3,3),    & ! sigma at t=0
                    v0              ! volume at t=0
-  real(kind=DP), allocatable ::      &
-                   rat (:, :),   & ! atomic positions (lattice coord)
-                   rati (:, :),  & ! rat at previous step
-                   ratd (:, :),  & ! rat derivatives at current step
-                   rat2d (:, :), & ! rat 2nd derivatives at current step
-                   rat2di (:,:), & ! rat 2nd derivatives at previous step
-                   tauold (:, :, :)! additional  history variables
-  real(kind=DP) :: &
-           avmod (3), theta (3, 3), & ! used to monitor cell dynamics
-           enew, e_start,           & ! DFT energy at current and first step
-           eold,                    & ! DFT energy at previous step
+  REAL(KIND=DP), ALLOCATABLE ::      &
+                   rat(:,:),     & ! atomic positions (lattice coord)
+                   rati(:,:),    & ! rat at previous step
+                   ratd(:,:),    & ! rat derivatives at current step
+                   rat2d(:,:),   & ! rat 2nd derivatives at current step
+                   rat2di(:,:),  & ! rat 2nd derivatives at previous step
+                   tauold(:,:,:)   ! additional  history variables
+  REAL(KIND=DP) :: &
+           avmod(3), theta(3,3), & ! used to monitor cell dynamics
+           enew, e_start,        & ! DFT energy at current and first step
+           eold,                 & ! DFT energy at previous step
            uta, eka, eta, ekla, utl, etl, ut, ekint, edyn,  & ! other energies
            acu, ack, acp, acpv, avu, avk, avp, avpv,        & ! acc.& avrg. ener
-           tnew, pv,                & ! istantaneous temperature and p*vcell
-           sigmamet (3, 3),         & ! sigma = avec^-1 * vcell = bg/alat*omega
-           vx2 (ntypx), vy2 (ntypx), vz2 (ntypx),     & ! work vectors
-           vmean (ntypx), rms (ntypx), ekin (ntypx),  & ! work vectors
+           tnew, pv,             & ! istantaneous temperature and p*vcell
+           sigmamet(3,3),        & ! sigma = avec^-1 * vcell = bg/alat*omega
+           vx2(ntypx), vy2(ntypx), vz2(ntypx),     & ! work vectors
+           vmean(ntypx), rms(ntypx), ekin(ntypx),  & ! work vectors
            tempo, time_au, epsp
-
-  character(len=3) :: ios   ! status (old or new) for I/O files
-  character(len=6) :: ipos  ! status ('append' or 'asis') for I/O files
-
-  logical :: exst
-  integer :: idone, na, nst, ipol, i, j, k
-  ! last completed time step
-  ! counter on atoms
-  ! counter on completed moves
+  CHARACTER(LEN=3) :: ios          ! status (old or new) for I/O files
+  CHARACTER(LEN=6) :: ipos         ! status ('append' or 'asis') for I/O files
+  LOGICAL :: exst
+  INTEGER :: idone, na, nst, ipol, i, j, k
+    ! last completed time step
+    ! counter on atoms
+    ! counter on completed moves
   !
-  ! I/O units
+  ! ... I/O units
   !
-  integer :: iun_e, iun_eal, iun_ave, iun_p, iun_avec, iun_tv
-
-  parameter (iun_e=21, iun_eal=22, iun_ave=23, iun_p=24, iun_avec=25, iun_tv=26)
+  INTEGER, PARAMETER :: iun_e    = 21, &
+                        iun_eal  = 22, &
+                        iun_ave  = 23, &
+                        iun_p    = 24, &
+                        iun_avec = 25, &
+                        iun_tv   = 26
   !
-  ! Allocate work arrays
   !
-  allocate (rat(3,nat), rati(3,nat), ratd(3,nat), rat2d(3,nat), rat2di(3,nat),&
-            tauold(3,nat,3))
+  ! ... Allocate work arrays
   !
-  ! open MD history file (if not present this is a new run!)
+  ALLOCATE( rat(3,nat) )
+  ALLOCATE( rati(3,nat) )
+  ALLOCATE( ratd(3,nat) )
+  ALLOCATE( rat2d(3,nat) )
+  ALLOCATE( rat2di(3,nat) )
+  ALLOCATE( tauold(3,nat,3) )
   !
-  call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
-  if (.not.exst) then
-     close (unit = 4, status = 'delete')
-     if (istep.ne.1) call errore ('vcsmd', ' previous MD history got lost', 1)
-     tnew = 0.d0
-     acu = 0.d0
-     ack = 0.d0
-     acp = 0.d0
-     acpv = 0.d0
-     avu = 0.d0
-     avk = 0.d0
-     avp = 0.d0
-     avpv = 0.d0
+  ! ... open MD history file (if not present this is a new run!)
+  !
+  CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
+  !
+  IF ( .NOT. exst ) THEN
+     !
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     IF ( istep /= 1 ) &
+        CALL errore( 'vcsmd', ' previous MD history got lost', 1 )
+     !
+     tnew  = 0.D0
+     acu   = 0.D0
+     ack   = 0.D0
+     acp   = 0.D0
+     acpv  = 0.D0
+     avu   = 0.D0
+     avk   = 0.D0
+     avp   = 0.D0
+     avpv  = 0.D0
      nzero = 0
-     tauold(:,:,:) = 0.d0
-
-     eold = etot + 2*epse ! set value for eold at first iteration
-  else
+     tauold(:,:,:) = 0.D0
      !
-     ! read MD run history (idone is the last completed MD step)
+     ! ... set value for eold at first iteration
      !
-     read (4, * ) rati, ratd, rat2d, rat2di, tauold
-     read (4, * ) aveci, avecd, avec2d, avec2di
-     read (4, * ) avec0, sig0, v0, e_start, eold
-     read (4, * ) acu, ack, acp, acpv, avu, avk, avp, avpv, sigmamet
-     read (4, * ) idone, nzero, ntimes
-     close (unit = 4, status = 'keep')
-     istep = idone+1
-     call DCOPY (3 * nat, tauold (1, 1, 2), 1, tauold (1, 1, 3), 1)
-     call DCOPY (3 * nat, tauold (1, 1, 1), 1, tauold (1, 1, 2), 1)
-  endif
-
+     eold = etot + 2.D0 * epse 
+     !
+  ELSE
+     !
+     ! ... read MD run history (idone is the last completed MD step)
+     !
+     READ( 4, * ) rati, ratd, rat2d, rat2di, tauold
+     READ( 4, * ) aveci, avecd, avec2d, avec2di
+     READ( 4, * ) avec0, sig0, v0, e_start, eold
+     READ( 4, * ) acu, ack, acp, acpv, avu, avk, avp, avpv, sigmamet
+     READ( 4, * ) idone, nzero, ntimes
+     !
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     !
+     istep = idone + 1
+     !
+     tauold(:,:,3) = tauold(:,:,2)
+     tauold(:,:,2) = tauold(:,:,1)     
+     !
+  END IF
   !
-  ! check if convergence for structural minimization is achieved
+  ! ... check if convergence for structural minimization is achieved
   !
-  if (calc.eq.'mm') then
-     conv_ions = eold - etot .lt. epse
-     do i = 1, 3
-        do na = 1, nat - fixatom
-           conv_ions = conv_ions.and.abs (force (i, na) ) .lt. epsf
-        enddo
-     enddo
-     if (conv_ions) then
-        WRITE( stdout,'(/5x,"Damped Dynamics: convergence achieved, Efinal=",&
-              &     f15.8)') etot
-        call output_tau(.TRUE.)
-        return
-     end if
-  end if
-  if (calc.eq.'nm' .or. calc.eq.'cm') then
-     epsp = 0.5  ! kbar
-     conv_ions = eold - etot .lt. epse
-     do i = 1, 3
-        do na = 1, nat - fixatom
-           conv_ions = conv_ions.and.abs (force (i, na) ) .lt. epsf
-        enddo
-     enddo
-     do i =1,3
-        conv_ions = conv_ions .and. abs (sigma(i,i) - press)*uakbar.lt. epsp
-        do j =i+1,3
-           conv_ions = conv_ions .and. abs ( sigma(i,j) )*uakbar.lt. epsp
-        end do
-     end do
-     if (conv_ions) then
-        if (calc.eq.'cm') WRITE( stdout, &
-         '(/5x,"Parrinello-Rahman Damped Dynamics: convergence achieved, ", &
-         &     "Efinal=", f15.8)') etot
-        if (calc.eq.'nm') WRITE( stdout, &
-         '(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, ", &
-         &     "Efinal=", f15.8)') etot
-        WRITE( stdout,'(/72("-")//5x,"Final estimate of lattice vectors ", &
-         &       "(input alat units)")')
-        WRITE( stdout, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
-        WRITE( stdout,'("  final unit-cell volume =",f12.4," (a.u.)^3")') omega
-        WRITE( stdout,'("  input alat = ",f12.4," (a.u.)")') alat
+  IF ( calc == 'mm' ) THEN
+     !
+     conv_ions = ( eold - etot ) < epse
+     !
+     DO i = 1, 3
+        DO na = 1, nat
+           conv_ions = conv_ions .AND. ( ABS( force(i,na) ) < epsf )
+        END DO
+     END DO
+     !
+     IF ( conv_ions ) THEN
         !
-        call output_tau (.TRUE.)
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Damped Dynamics: convergence achieved, Efinal=", &
+                      &F15.8)' ) etot
         !
-        return
-     end if
-  end if
-
-  call DCOPY (3 * nat, tau, 1, tauold (1, 1, 1), 1)
+        CALL output_tau( .TRUE. )
+        !
+        RETURN
+        !
+     END IF
+     !
+  ELSE IF ( calc == 'nm' .OR. calc == 'cm' ) THEN
+     !
+     epsp = 0.5D0  ! kbar
+     !
+     conv_ions = ( eold - etot ) < epse
+     !
+     DO i = 1, 3
+        DO na = 1, nat
+           conv_ions = conv_ions .AND. ( ABS( force(i,na) ) < epsf )
+        END DO
+     END DO
+     !
+     DO i = 1, 3
+        !
+        conv_ions = conv_ions .AND. &
+                    ( ABS( sigma(i,i) - press) * uakbar < epsp )
+        !
+        DO j = ( i + 1 ), 3
+           conv_ions = conv_ions .AND. &
+                       ( ABS( sigma(i,j) ) * uakbar < epsp )
+        END DO
+        !
+     END DO
+     !
+     IF ( conv_ions ) THEN
+        !
+        IF ( calc == 'cm' ) &
+           WRITE( UNIT = stdout, &
+                  FMT = '(/5X,"Parrinello-Rahman Damped Dynamics: ", &
+                            & "convergence achieved, Efinal=", F15.8)' ) etot
+        IF ( calc == 'nm' ) &
+           WRITE( UNIT = stdout, &
+                  FMT = '(/5X,"Wentzcovitch Damped Dynamics: ", &
+                            & "convergence achieved, Efinal=", F15.8)' ) etot
+        !                    
+        WRITE( UNIT = stdout, &
+               FMT = '(/72("-")//5X,"Final estimate of lattice vectors ", &
+                                  & "(input alat units)")' )
+        WRITE( UNIT = stdout, &
+               FMT =  '(3F14.9)') ( ( at(i,k) , i = 1, 3 ) , k = 1, 3 )
+        WRITE( UNIT = stdout, &
+               FMT =  '("  final unit-cell volume =",F12.4," (a.u.)^3")') omega
+        WRITE( UNIT = stdout, &
+               FMT =  '("  input alat = ",F12.4," (a.u.)")') alat
+        !
+        CALL output_tau( .TRUE. )
+        !
+        RETURN
+        !
+     END IF
+     !
+  END IF
+  !
+  tauold(:,:,1) = tau(:,:)
+  !
   time_au = 0.0000242 * e2
-  tempo = (istep - 1) * dt * time_au
-
-  if (istep.eq.1 .and. calc.eq.'mm')  &
-     WRITE( stdout,'(/5x,"Damped Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2)') &
+  !
+  tempo = ( istep - 1 ) * dt * time_au
+  !
+  IF ( istep == 1 .AND. calc == 'mm' ) &
+     WRITE( stdout,'(/5X,"Damped Dynamics Minimization",/5X, &
+             & "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2)' ) &
                epse, epsf
-  if (istep.eq.1 .and. calc.eq.'cm')  &
-     WRITE( stdout,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", &
-             & /5x, "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",  &
-             & e8.2,"  EPSP = ",e8.2 )') epse, epsf, epsp
-  if (istep.eq.1 .and. calc.eq.'nm')  &
-     WRITE( stdout,'(/5x,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2,&
-             & "  EPSP = ",e8.2 )') epse, epsf, epsp
-
-  WRITE( stdout, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
-       &                          f8.5," pico-seconds"/)') istep, tempo
-  !       WRITE( stdout,*) ' enter vcsmd ', istep,idone,exst
+  IF ( istep == 1 .AND. calc == 'cm' ) &
+     WRITE( stdout,'(/5X,"Parrinello-Rahman Damped Cell-Dynamics Minimization", &
+             & /5X, "convergence thresholds: EPSE = ",E8.2,"  EPSF = ", &
+             & E8.2,"  EPSP = ",E8.2 )' ) epse, epsf, epsp
+  IF ( istep == 1 .AND. calc == 'nm' ) &
+     WRITE( stdout,'(/5X,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
+             & "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2, &
+             & "  EPSP = ",E8.2 )' ) epse, epsf, epsp
   !
-  ! save cell shape of previous step
+  WRITE( stdout, '(/5X,"Entering Dynamics;  it = ",I5,"   time = ", &
+       &                          F8.5," pico-seconds"/)' ) istep, tempo
   !
-  call DCOPY (9, at, 1, at_old, 1)
+  ! ... save cell shape of previous step
+  !
+  at_old = at
+  !
   omega_old = omega
   !
-  ! Translate
+  ! ... Translate
   !
-  ! define rat as the atomic positions in lattice coordinates
+  ! ... define rat as the atomic positions in lattice coordinates
   !
-  call DCOPY (3 * nat, tau, 1, rat, 1)
-  call cryst_to_cart (nat, rat, bg, - 1)
+  rat = tau
   !
-  call DCOPY (9, at, 1, avec, 1)
-  call DSCAL (9, alat, avec, 1)
+  CALL cryst_to_cart( nat, rat, bg, -1 )
   !
-  ! convert forces to lattice coordinates
+  avec = alat * at
   !
-  call cryst_to_cart (nat, force, bg, - 1)
-  call DSCAL (3 * nat, 1.d0 / alat, force, 1)
+  ! ... convert forces to lattice coordinates
   !
-  ! scale stress to stress*omega
+  CALL cryst_to_cart( nat, force, bg, -1 )
   !
-  call DSCAL (9, omega, sigma, 1)
-
+  force = force / alat
+  !
+  ! ... scale stress to stress*omega
+  !
+  sigma = sigma * omega
+  !
   vcell = omega
-  if (istep.eq.1) then
+  !
+  IF ( istep == 1 ) THEN
+     !   
      e_start = etot
-
+     !
      enew = etot - e_start
-
-#ifdef DEBUG_VCSMD
-     write (45,*) 'istep=',istep
-     write (45,*) 'ntyp=', ntyp
-     write (45,*) 'nat=', nat
-     write (45,*) 'rat=',rat
-     write (45,*) 'ityp=',ityp
-     write (45,*) 'avec=',avec
-     write (45,*) 'vcell=',vcell
-     write (45,*) 'force=',force
-     write (45,*) 'sigma=',sigma
-     write (45,*) 'calc=',calc
-     write (45,*) 'temperature=',temperature
-     write (45,*) 'vx2=',vx2
-     write (45,*) 'vy2=',vy2
-     write (45,*) 'vz2=',vz2
-     write (45,*) 'rms=',rms
-     write (45,*) 'vmean=',vmean
-     write (45,*) 'ekin=',ekin
-     write (45,*) 'avmod=',avmod
-     write (45,*) 'theta=',theta
-     write (45,*) 'amass=',amass
-     write (45,*) 'cmass=',cmass
-     write (45,*) 'press=',press
-     write (45,*) 'p=',p
-     write (45,*) 'dt=',dt
-     write (45,*) 'aveci=',aveci
-     write (45,*) 'avecd=',avecd
-     write (45,*) 'avec2d=',avec2d
-     write (45,*) 'avec2di=',avec2di
-     write (45,*) 'sigmamet=',sigmamet
-     write (45,*) 'sig0=', sig0
-     write (45,*) 'avec0=',avec0
-     write (45,*) 'v0=',v0
-     write (45,*) 'rati=',rati
-     write (45,*) 'ratd=',ratd
-     write (45,*) 'rat2d=',rat2d
-     write (45,*) 'rat2di=',rat2di
-     write (45,*) 'enew=',enew
-     write (45,*) 'uta=',uta
-     write (45,*) 'eka=',eka
-     write (45,*) 'eta=',eta
-     write (45,*) 'ekla=',ekla
-     write (45,*) 'utl=',utl
-     write (45,*) 'etl=',etl
-     write (45,*) 'ut=',ut
-     write (45,*) 'ekint=',ekint
-     write (45,*) 'edyn=',edyn
-#endif
-
-     call init (ntyp, nat, ntyp, nat-fixatom, rat, ityp, avec, vcell, force, &
-          sigma, calc, temperature, vx2, vy2, vz2, rms, vmean, ekin, &
-          avmod, theta, amass, cmass, press, p, dt, aveci, avecd, avec2d, &
-          avec2di, sigmamet, sig0, avec0, v0, rati, ratd, rat2d, rat2di, &
-          enew, uta, eka, eta, ekla, utl, etl, ut, ekint, edyn)
-
-#ifdef DEBUG_VCSMD
-     write (46,*) 'istep=',istep
-     write (46,*) 'ntyp=', ntyp
-     write (46,*) 'nat=', nat
-     write (46,*) 'rat=',rat
-     write (46,*) 'ityp=',ityp
-     write (46,*) 'avec=',avec
-     write (46,*) 'vcell=',vcell
-     write (46,*) 'force=',force
-     write (46,*) 'sigma=',sigma
-     write (46,*) 'calc=',calc
-     write (46,*) 'temperature=',temperature
-     write (46,*) 'vx2=',vx2
-     write (46,*) 'vy2=',vy2
-     write (46,*) 'vz2=',vz2
-     write (46,*) 'rms=',rms
-     write (46,*) 'vmean=',vmean
-     write (46,*) 'ekin=',ekin
-     write (46,*) 'avmod=',avmod
-     write (46,*) 'theta=',theta
-     write (46,*) 'amass=',amass
-     write (46,*) 'cmass=',cmass
-     write (46,*) 'press=',press
-     write (46,*) 'p=',p
-     write (46,*) 'dt=',dt
-     write (46,*) 'aveci=',aveci
-     write (46,*) 'avecd=',avecd
-     write (46,*) 'avec2d=',avec2d
-     write (46,*) 'avec2di=',avec2di
-     write (46,*) 'sigmamet=',sigmamet
-     write (46,*) 'sig0=', sig0
-     write (46,*) 'avec0=',avec0
-     write (46,*) 'v0=',v0
-     write (46,*) 'rati=',rati
-     write (46,*) 'ratd=',ratd
-     write (46,*) 'rat2d=',rat2d
-     write (46,*) 'rat2di=',rat2di
-     write (46,*) 'enew=',enew
-     write (46,*) 'uta=',uta
-     write (46,*) 'eka=',eka
-     write (46,*) 'eta=',eta
-     write (46,*) 'ekla=',ekla
-     write (46,*) 'utl=',utl
-     write (46,*) 'etl=',etl
-     write (46,*) 'ut=',ut
-     write (46,*) 'ekint=',ekint
-     write (46,*) 'edyn=',edyn
-#endif
-  else
-     !         WRITE( stdout,'(3f12.6)') ((ratd(ipol,na),ipol=1,3),na=1,nat)
-
+     !
+     CALL init( ntyp, nat, ntyp, nat-fixatom, rat, ityp, avec, vcell, force,   &
+                sigma, calc, temperature, vx2, vy2, vz2, rms, vmean, ekin,     &
+                avmod, theta, amass, cmass, press, p, dt, aveci, avecd, avec2d,&
+                avec2di, sigmamet, sig0, avec0, v0, rati, ratd, rat2d, rat2di, &
+                enew, uta, eka, eta, ekla, utl, etl, ut, ekint, edyn )
+     !
+  ELSE
+     !
      enew = etot - e_start
-
-#ifdef DEBUG_VCSMD
-     write (45,*) 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-     write (45,*) 'istep=', istep
-     write (45,*) 'ntyp=',ntyp
-     write (45,*) 'nat=',nat
-     write (45,*) 'ityp=',ityp
-     write (45,*) 'rat=',rat
-     write (45,*) 'avec=',avec
-     write (45,*) 'vcell=',vcell
-     write (45,*) 'force=',force
-     write (45,*) 'sigma=',sigma
-     write (45,*) 'calc=',calc
-     write (45,*) 'avmod=',avmod
-     write (45,*) 'theta=',theta
-     write (45,*) 'amass=',amass
-     write (45,*) 'cmass=',cmass
-     write (45,*) 'press=',press
-     write (45,*) 'p=',p
-     write (45,*) 'dt=',dt
-     write (45,*) 'avecd=',avecd
-     write (45,*) 'avec2d=',avec2d
-     write (45,*) 'aveci=',aveci
-     write (45,*) 'avec2di=',avec2di
-     write (45,*) 'sigmamet=',sigmamet
-     write (45,*) 'sig0=',sig0
-     write (45,*) 'avec0=',avec0
-     write (45,*) 'v0=',v0
-     write (45,*) 'ratd=',ratd
-     write (45,*) 'rat2d=',rat2d
-     write (45,*) 'rati=',rati
-     write (45,*) 'rat2di=',rat2di
-     write (45,*) 'enew=',enew
-     write (45,*) 'uta=',uta
-     write (45,*) 'eka=',eka
-     write (45,*) 'eta=',eta
-     write (45,*) 'ekla=',ekla
-     write (45,*) 'utl=',utl
-     write (45,*) 'etl=',etl
-     write (45,*) 'ut=',ut
-     write (45,*) 'ekint=',ekint
-     write (45,*) 'edyn=',edyn
-     write (45,*) 'temperature=',temperature
-     write (45,*) 'ttol=',ttol
-     write (45,*) 'ntcheck=',ntcheck
-     write (45,*) 'ntimes=',ntimes
-     write (45,*) 'istep=',istep
-     write (45,*) 'tnew=',tnew
-     write (45,*) 'nzero=',nzero
-     write (45,*) 'nat=',nat
-     write (45,*) 'acu=',acu
-     write (45,*) 'ack=',ack
-     write (45,*) 'acp=',acp
-     write (45,*) 'acpv=',acpv
-     write (45,*) 'avu=',avu
-     write (45,*) 'avk=',avk
-     write (45,*) 'avp=',avp
-     write (45,*) 'avpv=',avpv
-#endif
-
-     call move (ntyp, nat, ntyp, ityp, rat, avec, vcell, force, &
-          sigma, calc, avmod, theta, amass, cmass, press, p, dt, avecd, &
-          avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d, &
-          rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint, &
-          edyn, temperature, ttol, ntcheck, ntimes, istep, tnew, nzero, &
-          nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv)
-
-#ifdef DEBUG_VCSMD
-     write (46,*) 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-     write (46,*) 'istep=', istep
-     write (46,*) 'ntyp=',ntyp
-     write (46,*) 'nat=',nat
-     write (46,*) 'ityp=',ityp
-     write (46,*) 'rat=',rat
-     write (46,*) 'avec=',avec
-     write (46,*) 'vcell=',vcell
-     write (46,*) 'force=',force
-     write (46,*) 'sigma=',sigma
-     write (46,*) 'calc=',calc
-     write (46,*) 'avmod=',avmod
-     write (46,*) 'theta=',theta
-     write (46,*) 'amass=',amass
-     write (46,*) 'cmass=',cmass
-     write (46,*) 'press=',press
-     write (46,*) 'p=',p
-     write (46,*) 'dt=',dt
-     write (46,*) 'avecd=',avecd
-     write (46,*) 'avec2d=',avec2d
-     write (46,*) 'aveci=',aveci
-     write (46,*) 'avec2di=',avec2di
-     write (46,*) 'sigmamet=',sigmamet
-     write (46,*) 'sig0=',sig0
-     write (46,*) 'avec0=',avec0
-     write (46,*) 'v0=',v0
-     write (46,*) 'ratd=',ratd
-     write (46,*) 'rat2d=',rat2d
-     write (46,*) 'rati=',rati
-     write (46,*) 'rat2di=',rat2di
-     write (46,*) 'enew=',enew
-     write (46,*) 'uta=',uta
-     write (46,*) 'eka=',eka
-     write (46,*) 'eta=',eta
-     write (46,*) 'ekla=',ekla
-     write (46,*) 'utl=',utl
-     write (46,*) 'etl=',etl
-     write (46,*) 'ut=',ut
-     write (46,*) 'ekint=',ekint
-     write (46,*) 'edyn=',edyn
-     write (46,*) 'temperature=',temperature
-     write (46,*) 'ttol=',ttol
-     write (46,*) 'ntcheck=',ntcheck
-     write (46,*) 'ntimes=',ntimes
-     write (46,*) 'istep=',istep
-     write (46,*) 'tnew=',tnew
-     write (46,*) 'nzero=',nzero
-     write (46,*) 'nat=',nat
-     write (46,*) 'acu=',acu
-     write (46,*) 'ack=',ack
-     write (46,*) 'acp=',acp
-     write (46,*) 'acpv=',acpv
-     write (46,*) 'avu=',avu
-     write (46,*) 'avk=',avk
-     write (46,*) 'avp=',avp
-     write (46,*) 'avpv=',avpv
-#endif
-
-  endif
-
+     !
+     CALL move( ntyp, nat, ntyp, ityp, rat, avec, vcell, force,                &
+                sigma, calc, avmod, theta, amass, cmass, press, p, dt, avecd,  &
+                avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d,&
+                rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint,  &
+                edyn, temperature, ttol, ntcheck, ntimes, istep, tnew, nzero,  &
+                nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv)
+     !
+  END IF
+  !
   pv = p * omega
   !
-  !  write on output files several control quantities
-  !
-#ifdef __PARA
-  !
-  ! only the first processor does this I/O
-  !
-  if (me.eq.1.and.mypool.eq.1) then
-#endif
+  IF ( calc /= 'mm' .AND. calc /= 'nm' .AND. calc /= 'cm' ) THEN
      !
-     !  NB: at the first iteration files should not be present,
-     !      for subsequent iterations they should.
+     ! ... write on output files several control quantities
      !
-     if (istep.eq.1) then
-        call delete_if_present ( 'e')
-        call delete_if_present ( 'eal')
-        call delete_if_present ( 'ave')
-        call delete_if_present ( 'p')
-        call delete_if_present ( 'avec')
-        call delete_if_present ( 'tv')
-        ios = 'new'
-        ipos= 'asis'
-     else
-        ios = 'old'
-        ipos= 'append'
-     endif
-     open (unit=iun_e,   file='e',   status=ios,form='formatted',position=ipos)
-     open (unit=iun_eal, file='eal', status=ios,form='formatted',position=ipos)
-     open (unit=iun_ave, file='ave', status=ios,form='formatted',position=ipos)
-     open (unit=iun_p,   file='p',   status=ios,form='formatted',position=ipos)
-     open (unit=iun_avec,file='avec',status=ios,form='formatted',position=ipos)
-     open (unit=iun_tv,  file='tv',  status=ios,form='formatted',position=ipos)
-     nst = istep - 1
-     write (iun_e,   101) ut, ekint, edyn, pv, nst
-     write (iun_eal, 103) uta, eka, eta, utl, ekla, etl, nst
-     write (iun_ave, 104) avu, avk, nst
-     write (iun_p,   105) press, p, avp, nst
-     if (calc (1:1) .ne.'m') write (iun_avec, 103) (avmod(k), k=1,3),  &
-                                    theta(1,2), theta(2,3), theta(3,1), nst
-
-     write (iun_tv, 104) vcell, tnew, nst
-     close (unit = iun_e,    status = 'keep')
-     close (unit = iun_eal,  status = 'keep')
-     close (unit = iun_ave,  status = 'keep')
-     close (unit = iun_p,    status = 'keep')
-     close (unit = iun_avec, status = 'keep')
-     close (unit = iun_tv,   status = 'keep')
-#ifdef __PARA
-  endif
+#if defined (__PARA)
+     !
+     ! ... only the first processor does this I/O
+     !
+     IF ( me == 1 .AND. mypool == 1 ) THEN
+#endif
+        !
+        ! ... NB: at the first iteration files should not be present,
+        ! ...     for subsequent iterations they should.
+        !
+        IF ( istep == 1 ) THEN
+           !
+           CALL delete_if_present( 'e' )
+           CALL delete_if_present( 'eal' )
+           CALL delete_if_present( 'ave' )
+           CALL delete_if_present( 'p' )
+           CALL delete_if_present( 'avec' )
+           CALL delete_if_present( 'tv' )
+           !
+           ios  = 'NEW'
+           ipos = 'ASIS'
+           !
+        ELSE
+           !
+           ios  = 'OLD'
+           ipos = 'APPEND'
+           !
+        END IF
+        !
+        OPEN( UNIT = iun_e,    FILE = 'e',    STATUS = ios, &
+              FORM = 'FORMATTED', POSITION = ipos )
+        OPEN( UNIT = iun_eal,  FILE = 'eal',  STATUS = ios, &
+              FORM = 'FORMATTED', POSITION = ipos )
+        OPEN( UNIT = iun_ave,  FILE = 'ave',  STATUS = ios, &
+              FORM = 'FORMATTED', POSITION = ipos )
+        OPEN( UNIT = iun_p,    FILE = 'p',    STATUS = ios, &
+              FORM = 'FORMATTED', POSITION = ipos )
+        OPEN( UNIT = iun_avec, FILE = 'avec', STATUS = ios, &
+              FORM = 'FORMATTED', POSITION = ipos )
+        OPEN( UNIT = iun_tv,   FILE = 'tv',   STATUS = ios, &
+              FORM = 'FORMATTED', POSITION = ipos )
+        !
+        nst = istep - 1
+        !
+        WRITE( iun_e,   101 ) ut, ekint, edyn, pv, nst
+        WRITE( iun_eal, 103 ) uta, eka, eta, utl, ekla, etl, nst
+        WRITE( iun_ave, 104 ) avu, avk, nst
+        WRITE( iun_p,   105 ) press, p, avp, nst
+        !
+        IF ( calc(1:1) /= 'm' ) &
+           WRITE( iun_avec, 103 ) &
+               avmod(:), theta(1,2), theta(2,3), theta(3,1), nst
+        !
+        WRITE( iun_tv, 104 ) vcell, tnew, nst
+        !
+        CLOSE( UNIT = iun_e,    STATUS = 'KEEP' )
+        CLOSE( UNIT = iun_eal,  STATUS = 'KEEP' )
+        CLOSE( UNIT = iun_ave,  STATUS = 'KEEP' )
+        CLOSE( UNIT = iun_p,    STATUS = 'KEEP' )
+        CLOSE( UNIT = iun_avec, STATUS = 'KEEP' )
+        CLOSE( UNIT = iun_tv,   STATUS = 'KEEP' )
+        !
+#if defined (__PARA)
+     END IF
 #endif
   !
-  ! update configuration in PWSCF variables
+  END IF
   !
-  call DCOPY (9, avec, 1, at, 1)
-  call DSCAL (9, 1.d0 / alat, at, 1)
-  call volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
-
-  call recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2) , bg(1,3) )
-  call DCOPY (3 * nat, rat, 1, tau, 1)
-  if (lmovecell) then
+  ! ... update configuration in PWSCF variables
+  !
+  at = avec / alat
+  !
+  CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+  !
+  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2) , bg(1,3) )
+  !
+  tau = rat
+  !
+  IF ( lmovecell ) THEN
+     !
      WRITE( stdout, * ) ' new lattice vectors (alat unit) :'
-     WRITE( stdout, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
-     WRITE( stdout,'(a,f12.4,a)') '  new unit-cell volume =', omega, ' (a.u.)^3'
-  endif
+     WRITE( stdout, '(3F14.9)') ( ( at(i,k) , i = 1, 3 ) , k = 1, 3 )
+     WRITE( stdout,'(A,F12.4,A)') '  new unit-cell volume =', omega, ' (a.u.)^3'
+     !
+  END IF
+  !
   WRITE( stdout, * ) ' new positions in cryst coord'
-  WRITE( stdout,'(a3,3x,3f14.9)') (atm(ityp(na)), (tau(i,na), i=1,3),na=1,nat)
+  WRITE( stdout,'(A3,3X,3F14.9)') ( atm(ityp(na)), tau(:,na), na = 1, nat )
   WRITE( stdout, * ) ' new positions in cart coord (alat unit)'
-  call cryst_to_cart (nat, tau, at, + 1)
-  WRITE( stdout,'(a3,3x,3f14.9)') (atm(ityp(na)), (tau(i,na), i=1,3),na=1,nat)
-  WRITE( stdout, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
-       &       " Etot = ",f14.8)') ekint, tnew, edyn + e_start
   !
-  ! save MD history on file
+  CALL cryst_to_cart( nat, tau, at, 1 )
   !
-  call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
-  write (4, * ) rati, ratd, rat2d, rat2di, tauold
-  write (4, * ) aveci, avecd, avec2d, avec2di
-  write (4, * ) avec0, sig0, v0, e_start, etot
-  write (4, * ) acu, ack, acp, acpv, avu, avk, avp, avpv, sigmamet
-  write (4, * ) istep, nzero, ntimes
-  close (unit = 4, status = 'keep')
+  WRITE( stdout,'(A3,3X,3F14.9)') ( atm(ityp(na)), tau(:,na), na = 1, nat )
+  WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ryd   T = ",F6.1," K ", &
+       &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
   !
-  ! find alpha & beta for charge-density and wfc extrapolation (uptate_pot
+  ! ... save MD history on file
   !
-  if (calc(1:1).eq.'m') call find_alpha_and_beta(nat,tau,tauold,alpha0,beta0)
+  CALL seqopn( 4, TRIM( prefix )//'.md', 'FORMATTED', exst )
   !
-  ! Deallocate
+  WRITE(4,*) rati, ratd, rat2d, rat2di, tauold
+  WRITE(4,*) aveci, avecd, avec2d, avec2di
+  WRITE(4,*) avec0, sig0, v0, e_start, etot
+  WRITE(4,*) acu, ack, acp, acpv, avu, avk, avp, avpv, sigmamet
+  WRITE(4,*) istep, nzero, ntimes
   !
-  deallocate (rat, rati, ratd, rat2d, rat2di, tauold)
+  CLOSE( UNIT = 4, STATUS = 'KEEP' )
   !
-
-  return
-101 format(1x,4d12.5,i6)
-103 format(1x,6d12.5,i6)
-104 format(1x,2d12.5,i6)
-
-105 format(1x,3d12.5,i6)
-end subroutine vcsmd
-
-subroutine delete_if_present(filename)
-
-   USE io_global,  ONLY :  stdout
-
-   character (len=*) :: filename
-   logical           :: exst, opnd
-   integer           :: iunit
-
-   inquire (file = filename, exist = exst)
-
-   if (exst) then
-      do iunit = 99, 1, - 1
-         inquire (unit = iunit, opened = opnd)
-         if (.not.opnd) goto 10
-      enddo
-      call errore ('delete_if_present', 'free unit not found?!?', 1)
-10    continue
-      open  (unit=iunit, file= filename , status='old')
-      close (unit=iunit, status = 'delete')
-      WRITE( stdout,*) 'WARNING: ',filename,' file was present; old file deleted '
-   end if
-
-end subroutine
+  ! ... Deallocate
+  !
+  DEALLOCATE( rat, rati, ratd, rat2d, rat2di, tauold )
+  !
+  RETURN
+  !
+101 FORMAT(1X,4D12.5,I6)
+103 FORMAT(1X,6D12.5,I6)
+104 FORMAT(1X,2D12.5,I6)
+105 FORMAT(1X,3D12.5,I6)
+  !
+END SUBROUTINE vcsmd
