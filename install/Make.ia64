@@ -11,14 +11,14 @@
 #  64-bit version
 # FFTW_LIB=-L/nethome/proffess/lib/fftw-2.1.5/64/lib -lfftw
 # FFTW_INC_DIR=/nethome/proffess/lib/fftw-2.1.5/64/include
-#  CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -I$(FFTW_INC_DIR)
+#  CPPFLAGS = -I../include -D__HP -D__FFTW -I$(FFTW_INC_DIR)
 #
 #-------------------------------------------------#
 # Add -D__HP64 to CPPFLAGS for 64-bit compilation #
 #-------------------------------------------------#
 #
 # Use the local copy of fftw
-CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -D__USE_INTERNAL_FFTW -D__HP64
+CPPFLAGS = -I../include -D__HP -D__FFTW -D__USE_INTERNAL_FFTW -D__HP64
 #
 # Fortran compiler:
 #
@@ -32,7 +32,7 @@ F77 = $(F90)
 # 64-bit
 FFLAGS = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77  +noppu +DD64
 
-F90FLAGS = $(FFLAGS) $(CPPFLAGS)
+F90FLAGS = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH
 #
 # Fortran77 compiler flags
 #
@@ -43,11 +43,9 @@ F77FLAGS_NOOPT = -O0
 #
 CC = cc
 # 32-bit
-#CCFLAGS  = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
+#CFLAGS  = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
 # 64-bit
-CCFLAGS  = $(CPPFLAGS) +O2  +DD64 +Odataprefetch +Onolimit
-# This is needed to tell the compiler where modules are
-MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+CFLAGS  = $(CPPFLAGS) +O2  +DD64 +Odataprefetch +Onolimit
 #
 # Libraries:
 # 32-bit
@@ -57,9 +55,9 @@ LIBS =  -L/opt/mlib/lib/hpux64 -lveclib -llapack $(FFTW_LIB)
 # Loader:
 LD=$(F90)
 #32-bit
-#LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a +U77 +DA2.0 +DS2.0 +O2  $(LIBS)
+#LDFLAGS =  ../flib/ptools.a ../flib/flib.a ../clib/clib.a +U77 +DA2.0 +DS2.0 +O2  $(LIBS)
 # 64-bit
-LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a  +U77  +O2  +DD64  $(LIBS)
+LDFLAGS =  ../flib/ptools.a ../flib/flib.a ../clib/clib.a  +U77  +O2  +DD64  $(LIBS)
 #
 # ar:
 #

@@ -22,7 +22,7 @@ F77 = $(F90)
 #
 # Fortran compiler flags
 #
-FFLAGS =  -qalias=noaryovrlp -I$(OSHOME)/include \
+FFLAGS =  -qalias=noaryovrlp -I../include \
           -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
           -qdpc -qalias=nointptr -Q
 #
@@ -33,15 +33,11 @@ F77FLAGS_NOOPT = -O0
 #
 # Fortran90 compiler flags
 #
-F90FLAGS = $(FFLAGS) -qfree=f90 -I$(OSHOME)/include -WF,$(CPPFLAGS)
+F90FLAGS = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS) -I../Modules -I../PW -I../PH
 #
 # C compiler flags
 #
-CCFLAGS  = -I$(OSHOME)/include -Wp,$(CPPFLAGS) -O2
-#
-# This is needed to tell the compiler where modules are
-#
-MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
+CFLAGS  = -I../include -Wp,$(CPPFLAGS) -O2
 #
 # Libraries:
 #
@@ -62,8 +58,8 @@ LIBS = -lessl  -L/usr/local/lib -llapack
 #         use -s for stripped executable (smaller file but no debugging)
 #
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS) -s
-#LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(LIBS) -s -bmaxdata:512000000
+LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) -s
+#LDFLAGS = ../flib/ptools.a ../flib/flib.a $(LIBS) -s -bmaxdata:512000000
 #
 # ar:
 #

@@ -5,7 +5,7 @@
 
 # Use fft routines from the dxml or cxml library:
 
-# CPPFLAGS = -D__ALPHA -D__PARA -D__MPI -DDXML -I$(OSHOME)/include
+# CPPFLAGS = -D__ALPHA -D__PARA -D__MPI -DDXML -I../include
 
 # Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
 #
@@ -14,12 +14,12 @@
 # FFTW_LIB=-L/usr/local/src/fftw-2.1.3/fftw/.libs -lfftw
 # FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
 # CPPFLAGS = -D__ALPHA -D__PARA  -D__MPI -D__FFTW \
-#  -I$(OSHOME)/include -I$(FFTW_INC_DIR)
+#  -I../include -I$(FFTW_INC_DIR)
 
 # Use the local copy of fftw
 #
 CPPFLAGS = -D__ALPHA -D__PARA -D__MPI -D__FFTW -D__USE_INTERNAL_FFTW \
-  -I$(OSHOME)/include -I./
+  -I../include -I.
 
 #
 # Fortran compiler:
@@ -38,13 +38,8 @@ FFLAGS = -O -fpe0 -real_size 64 -align dcommons -align records
 
 #
 F77FLAGS = $(FFLAGS)
-F90FLAGS = $(FFLAGS) -free -cpp $(CPPFLAGS)
-
-CCFLAGS = -O $(CPPFLAGS)
-#
-# This is needed to tell the compiler where modules are
-#
-MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+F90FLAGS = $(FFLAGS) -free -cpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
+CFLAGS = -O $(CPPFLAGS)
 
 #
 # Libraries (mpi + cxml + fftw) :
@@ -54,7 +49,7 @@ LIBS = -lfmpi -lpmpi -lmpi -lelan -lcxml $(FFTW_LIB)
 # Loader:
 # 
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
+LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
 
 AR = ar
 ARFLAGS = rv

@@ -12,13 +12,12 @@
 
 # Use fft routines from the SCSL library (recommended):
 
-CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__SCSL -D__MPI -D__PARA \
- -I$(OSHOME)/include
+CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__SCSL -D__MPI -D__PARA -I../include
 
 # Use fft routines from complib library:
 
 # CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__COMPLIB -D__MPI -D__PARA \
-#  -I$(OSHOME)/include
+#  -I../include
 
 # Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
 #
@@ -27,12 +26,12 @@ CPPFLAGS = -D__SGI -D__SGI64 -D__ORIGIN -D__SCSL -D__MPI -D__PARA \
 # FFTW_LIB=-L/usr/local/src/fftw-2.1.3/fftw/.libs -lfftw64
 # FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
 # CPPFLAGS = -D__FFTW -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA \
-#  -I$(OSHOME)/include -I$(FFTW_INC_DIR)
+#  -I../include -I$(FFTW_INC_DIR)
 
 # Use the local copy of fftw
 #
 # CPPFLAGS = -D__COMPLIB -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA \
-#  -I$(OSHOME)/include -I./
+#  -I../include -I.
 
 #
 # Fortran compiler:
@@ -45,11 +44,7 @@ F77 = f90
 FFLAGS = -mips4 -64 -r8 -TARG:platform=ip35
 OFLAGS = -O3 -OPT:Olimit=0:IEEE_arithmetic=3:roundoff=3 -LNO:cs2=8m:fusion=0
 F77FLAGS = $(FFLAGS) $(OFLAGS)
-F90FLAGS = $(FFLAGS) $(OFLAGS) -cpp $(CPPFLAGS)
-#
-# This is needed to tell the compiler where modules are
-#
-MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+F90FLAGS = $(FFLAGS) $(OFLAGS) -cpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
 #
 # C compiler
 #
@@ -57,7 +52,7 @@ CC=cc
 #
 # Flags for the C compiler
 #
-CCFLAGS=  -mips4 -64 $(OFLAGS) $(CPPFLAGS) 
+CFLAGS=  -mips4 -64 $(OFLAGS) $(CPPFLAGS) 
 #
 # Libraries:
 #
@@ -73,8 +68,8 @@ LIBS = -lmpi -lscs
 #
 LD=$(F90)
 
-LDFLAGS = $(FFLAGS) $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a \
- $(OSHOME)/clib/clib.a $(LIBS)
+LDFLAGS = $(FFLAGS) ../flib/ptools.a ../flib/flib.a \
+ ../clib/clib.a $(LIBS)
 
 #
 # ar:

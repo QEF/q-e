@@ -15,12 +15,12 @@
 # FFTW_LIB=-L/usr/local/src/fftw-2.1.3/fftw/.libs -lfftw
 # FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
 # CPPFLAGS = -D__LINUX -D__INTEL -D__PARA -D__MPI -D__FFTW \
-#  -I$(OSHOME)/include -I$(FFTW_INC_DIR)
+#  -I../include -I$(FFTW_INC_DIR)
 
 # Use the local copy of fftw
 
 CPPFLAGS = -D__LINUX -D__INTEL -D__PARA -D__MPI -D__FFTW \
-  -D__USE_INTERNAL_FFTW -I$(OSHOME)/include -I./
+  -D__USE_INTERNAL_FFTW -I../include -I.
 
 #
 # Fortran compiler
@@ -43,7 +43,11 @@ FFLAGS = -Vaxlib -O2 -tpp6
 #
 # Fortran90 compiler flags
 #
-F90FLAGS = $(FFLAGS) -fpp $(CPPFLAGS)
+# use this for version < 7
+# F90FLAGS = $(FFLAGS) -fpp $(CPPFLAGS) -cl,./intel.pcl
+# use this for version = 7
+F90FLAGS = $(FFLAGS) -fpp $(CPPFLAGS) -nomodule -I../Modules -I../PW -I../PH
+#
 #
 # Fortran77 compiler flags
 #
@@ -52,14 +56,7 @@ F77FLAGS_NOOPT = -O0
 #
 # C compiler flags
 #
-CCFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
-#
-# This is needed to tell the compiler where modules are
-#
-# use this for version < 7
-# MODULEFLAG= -cl,./intel.pcl
-# use this for version = 7
-MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW -I $(OSHOME)/PH
+CFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
 #
 # Loader:
 #
@@ -84,7 +81,7 @@ MYLIB=lapack_mkl
 #  MYLIB=blas_and_lapack
 #
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a -Vaxlib $(LIBS)
+LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -Vaxlib $(LIBS)
 
 #
 # ar:

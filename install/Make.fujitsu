@@ -8,7 +8,7 @@ CPP = /usr/lib/cpp
 #
 # -DLANGUAGE_FORTRAN avoids that // is considered as a C++ comment
 #
-CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I $(OSHOME)/include
+CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I../include
 
 #
 # Fortran compiler:
@@ -17,20 +17,17 @@ F90 = frt
 F77 = frt
 #F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9 -Kfreealloc -KA64
 #F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9
-F90FLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am -Wv,-noalias
+F90FLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am -Wv,-noalias -M../Modules -M../PW -M../PH
 F77FLAGS = -g -Ad -AR -Am
-#F90FLAGS = -g -Ad -AR -Am
+#F90FLAGS = -g -Ad -AR -Am -M../Modules -M../PW -M../PH
 #
-# This is needed to tell the compiler where modules are
-#
-MODULEFLAG= -M$(OSHOME)/Modules -M$(OSHOME)/PW -M$(OSHOME)/PH
 #
 # Libraries:
 LIBS= -L/usr/lang/lib64 -llapackvp -lblasvp -lssl2vp  -L/usr/local/lib/lib64/ -lfftvp_news  -lmp
 
 # 
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
+LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
 #
 # ar:
 #

@@ -17,14 +17,14 @@
 #  64-bit version
 # FFTW_LIB=-L/nethome/proffess/lib/fftw-2.1.5/64/lib -lfftw
 # FFTW_INC_DIR=/nethome/proffess/lib/fftw-2.1.5/64/include
-  CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -D__PARA -D__MPI -I$(FFTW_INC_DIR)
+  CPPFLAGS = -I../include -D__HP -D__FFTW -D__PARA -D__MPI -I$(FFTW_INC_DIR)
 #
 #-------------------------------------------------#
 # Add -D__HP64 to CPPFLAGS for 64-bit compilation #
 #-------------------------------------------------#
 #
 # Use the local copy of fftw
-#CPPFLAGS = -I$(OSHOME)/include -D__HP -D__FFTW -D__PARA -D__MPI -D__USE_INTERNAL_FFTW
+#CPPFLAGS = -I../include -D__HP -D__FFTW -D__PARA -D__MPI -D__USE_INTERNAL_FFTW
 # Fortran compiler:
 #
 F90 = f90
@@ -37,7 +37,7 @@ FFLAGS = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 +DA2.0 +DS2.0
 # 64-bit
 #FFLAGS = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 +DA2.0W +DS2.0W +noppu
 
-F90FLAGS = $(FFLAGS) $(CPPFLAGS)
+F90FLAGS = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH -I/opt/mpi/include
 #
 # Fortran77 compiler flags
 #
@@ -46,11 +46,9 @@ F77FLAGS_NOOPT = -O0
 #
 # C compiler flags
 # 32-bit
-CCFLAGS  = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
+CFLAGS  = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
 # 64-bit
-#CCFLAGS  = $(CPPFLAGS) +O2 +DA2.0W +DS2.0W +DD64 +Odataprefetch +Onolimit
-# This is needed to tell the compiler where modules are
-MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH -I/opt/mpi/include
+#CFLAGS  = $(CPPFLAGS) +O2 +DA2.0W +DS2.0W +DD64 +Odataprefetch +Onolimit
 #
 # Libraries:
 # 32-bit
@@ -60,9 +58,9 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH -I/opt/mpi/include
 # Loader:
 LD=$(F90)
 # 32-bit
-LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a +U77 +DA2.0 +DS2.0 +O2  $(LIBS) -lpthread
+LDFLAGS =  ../flib/ptools.a ../flib/flib.a ../clib/clib.a +U77 +DA2.0 +DS2.0 +O2  $(LIBS) -lpthread
 # 64-bit
-#LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a +U77 +DA2.0W +DS2.0W +O2  $(LIBS) -lpthread
+#LDFLAGS =  ../flib/ptools.a ../flib/flib.a ../clib/clib.a +U77 +DA2.0W +DS2.0W +O2  $(LIBS) -lpthread
 # ar:
 #
 AR = ar

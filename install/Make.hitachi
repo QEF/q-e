@@ -19,14 +19,11 @@ F90 = f90
 F77 = f77
 CC = cc
 FFLAGS = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
-         -I$(OSHOME)/include -I/usr/mpi/include
+         -I../include -I/usr/mpi/include
 F77FLAGS = $(FFLAGS)
-F90FLAGS = $(FFLAGS) $(CPPFLAGS)
-CCFLAGS = -D__FFTW -I$(FFTW_INC_DIR)
+F90FLAGS = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH
+CFLAGS = -D__FFTW -I$(FFTW_INC_DIR)
 #
-# This is needed to tell the compiler where modules are
-#
-MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
 #
 # Libraries:
 LAPACKdir = /usr/lib/LAPACK/lib32
@@ -36,7 +33,7 @@ LIBS= -L$(LAPACKdir) -llapack_sc -lblas_sc \
 
 # 
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS)
+LDFLAGS = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
 #
 # ar:
 #

@@ -471,7 +471,7 @@ sparc:mpf90 | sparc:f90 )
 	try_fflags_noopt="-O0"
 	try_f90flags_noopt="-O0"
 	try_ldflags=""
-	imodule="-M"
+	imod="-M"
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 \
@@ -514,7 +514,7 @@ echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 echo setting FFLAGS_NOOPT... $fflags_noopt
 echo setting F90FLAGS_NOOPT... $f90flags_noopt
-if test "$imodule" = "" ; then imodule="-I" ; fi
+if test "$imod" = "" ; then imod="-I" ; fi
 
 case "$arch:$cc_id" in
 linux*:icc )
@@ -598,11 +598,11 @@ AC_PROG_MAKE_SET
 echo $ECHO_N "checking whether Fortran files must be preprocessed... $ECHO_C"
 if test $have_cpp
 then
-	f90rule="\$(F90) \$(F90FLAGS) \$(MODULEFLAG) -c \$<"
+	f90rule="\$(F90) \$(F90FLAGS) -c \$<"
 	echo "${ECHO_T}no"
 else
 	f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$*.F90 \\
-	\$(F90) \$(F90FLAGS) \$(MODULEFLAG) -c \$*.F90 -o \$*.o"
+	\$(F90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
 	echo "${ECHO_T}yes"
 fi
 
@@ -1061,7 +1061,7 @@ AC_SUBST(f90flags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(f90flags_noopt)
 AC_SUBST(pre_fdflags)
-AC_SUBST(imodule)
+AC_SUBST(imod)
 AC_SUBST(ifftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
