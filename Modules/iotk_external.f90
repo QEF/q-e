@@ -45511,7 +45511,8 @@ recursive subroutine iotk_scan_dat_aux_CHARACTER1_3(unit,dat,rkind,rlen,fmt,ierr
   character(len(fmt)) :: fmt1
   logical :: raw,binary
   integer :: lunit
-  CHARACTER (kind=kind(dat), len=rlen) :: dattmp(lbound(dat,1):ubound(dat,1),lbound(dat,2):ubound(dat,2),lbound(dat,3):ubound(dat,3))
+  CHARACTER (kind=kind(dat), len=rlen) :: dattmp(lbound(dat,1):ubound(dat,1),&
+             lbound(dat,2):ubound(dat,2),lbound(dat,3):ubound(dat,3))
   lunit = iotk_physical_unit(unit)
   ierr = 0
   call iotk_unit_get(lunit,raw=raw,ierr=ierr)
@@ -45684,8 +45685,9 @@ recursive subroutine iotk_scan_dat_aux_CHARACTER1_4(unit,dat,rkind,rlen,fmt,ierr
   character(len(fmt)) :: fmt1
   logical :: raw,binary
   integer :: lunit
-  CHARACTER (kind=kind(dat), len=rlen) :: dattmp(lbound(dat,1):ubound(dat,1),lbound(dat,2):ubound(dat,2),lbound(dat,3):ubound(dat,3), &
-lbound(dat,4):ubound(dat,4))
+  CHARACTER (kind=kind(dat), len=rlen) :: dattmp(lbound(dat,1):ubound(dat,1),&
+             lbound(dat,2):ubound(dat,2),lbound(dat,3):ubound(dat,3), &
+             lbound(dat,4):ubound(dat,4))
   lunit = iotk_physical_unit(unit)
   ierr = 0
   call iotk_unit_get(lunit,raw=raw,ierr=ierr)
