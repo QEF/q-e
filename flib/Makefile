@@ -3,15 +3,13 @@ include ../make.sys
 
 all: flib.a ptools.a eispack $(MYLIB)
 
-OBJS = inv3.o itoa.o sort.o simpsn.o \
-       transto.o iceil.o erf.o sph_bes.o avrec.o scnds.o \
-       recips.o latgen.o volume.o iglocal.o ngnr_set.o
+OBJS = avrec.o erf.o iceil.o iglocal.o inv3.o itoa.o latgen.o \
+       ngnr_set.o recips.o scnds.o simpsn.o sort.o sph_bes.o \
+       transto.o volume.o
 
-POBJS = gridsetup.o blockset.o hangup.o reduce.o \
-       matmul.o localindex.o localdim.o ownerof.o \
-       ilcm.o indxg2l.o indxg2p.o indxl2g.o infog1l.o infog2l.o \
-       numroc.o npreroc.o
-
+POBJS = blockset.o gridsetup.o hangup.o ilcm.o indxg2l.o indxg2p.o \
+        indxl2g.o infog1l.o infog2l.o localdim.o localindex.o \
+        matmul.o npreroc.o numroc.o ownerof.o reduce.o
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
