@@ -11,7 +11,7 @@ SUBROUTINE clean_pw()
   !    
   !    This routine deallocates all dynamically allocated arrays
   !
-  USE basis,                ONLY : ityp, tau
+  USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
@@ -43,9 +43,8 @@ SUBROUTINE clean_pw()
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
-  IF ( ALLOCATED( tau ) )        DEALLOCATE( tau )
+  CALL deallocate_ions_base( )
   IF ( ALLOCATED( force ) )      DEALLOCATE( force )
-  IF ( ALLOCATED( ityp ) )       DEALLOCATE( ityp )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
   IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
   IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )

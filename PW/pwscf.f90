@@ -71,7 +71,7 @@ PROGRAM pwscf
      END IF
 #endif     
      !
-     CALL initialize_neb()
+     CALL initialize_neb( 'PW' )
      !
      ! ... this routine does all the NEB job
      !   

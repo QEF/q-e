@@ -22,6 +22,7 @@ input_parameters.o \
 io_base.o \
 io_files.o \
 io_global.o  \
+io_routines.o  \
 ions_base.o \
 kind.o \
 minimization_routines.o \
@@ -29,6 +30,7 @@ mp.o \
 mp_global.o \
 mp_wave.o \
 mp_buffers.o \
+neb_base.o \
 neb_variables.o \
 parallel_include.o \
 parallel_types.o \
@@ -45,6 +47,7 @@ shmem_include.o \
 smallbox.o \
 splinelib.o \
 stick_base.o \
+supercell.o \
 version.o \
 wave_base.o \
 wavefunctions.o

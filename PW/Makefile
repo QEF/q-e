@@ -115,7 +115,6 @@ h_psi.o \
 hexsym.o \
 hinit0.o \
 hinit1.o \
-io_routines.o \
 init_ns.o \
 init_paw_1.o \
 init_paw_2.o \
@@ -235,7 +234,6 @@ sum_band.o \
 sumkg.o \
 sumkt.o \
 summary.o \
-supercell.o \
 swap.o \
 symrho.o \
 symtns.o \

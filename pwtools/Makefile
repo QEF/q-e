@@ -25,7 +25,6 @@ PWOBJS = \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
 ../PW/smallg_q.o \
-../PW/supercell.o \
 ../PW/trnvecc.o \
 ../PW/wsweight.o
 

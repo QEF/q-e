@@ -163,7 +163,6 @@ PWOBJS = \
 ../PW/interpolate.o \
 ../PW/invmat.o \
 ../PW/io_pot.o \
-../PW/io_routines.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
 ../PW/kpoint_grid.o \
@@ -264,7 +263,6 @@ PWOBJS = \
 ../PW/sumkg.o \
 ../PW/sumkt.o \
 ../PW/summary.o \
-../PW/supercell.o \
 ../PW/swap.o \
 ../PW/symrho.o \
 ../PW/symtns.o \

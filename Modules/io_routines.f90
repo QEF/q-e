@@ -28,11 +28,9 @@ MODULE io_routines
                                     PES_gradient, suspended_image,     &
                                     Emax, Emin, Emax_index,            &
                                     lquick_min , ldamped_dyn, lmol_dyn
-#if defined (__PARA)
-       USE para,             ONLY : me, mypool 
+       USE mp_global,        ONLY : mpime, my_pool_id
        USE io_global,        ONLY : ionode_id
        USE mp,               ONLY : mp_bcast
-#endif  
        !
        IMPLICIT NONE
        !
@@ -44,9 +42,8 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-#if defined (__PARA)
-       IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif       
+       IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
+
           WRITE( UNIT = iunneb, &
                  FMT = '(/,5X,"reading file ", A,/)') TRIM( neb_file )
           !
@@ -146,7 +143,6 @@ MODULE io_routines
           !
           CLOSE( iunrestart )
           !  
-#if defined (__PARA)
        END IF
        !
        ! ... broadcast to all nodes
@@ -166,7 +162,6 @@ MODULE io_routines
        CALL mp_bcast( Emax, ionode_id )  
        CALL mp_bcast( Emin, ionode_id )
        CALL mp_bcast( Emax_index, ionode_id )
-#endif       
        !
      END SUBROUTINE read_restart
      !
@@ -183,9 +178,7 @@ MODULE io_routines
                                     lquick_min , ldamped_dyn, lmol_dyn
        USE formats,          ONLY : energy, restart_first, restart_others, &
                                     velocities
-#if defined (__PARA)
-       USE para,             ONLY : me, mypool
-#endif        
+       USE mp_global,        ONLY : mpime, my_pool_id
        !
        IMPLICIT NONE
        !
@@ -196,9 +189,8 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-#if defined (__PARA)
-       IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif       
+       IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
+
           OPEN( UNIT = iunrestart, FILE = neb_file, STATUS = "UNKNOWN", &
                 ACTION = "WRITE" )
           !
@@ -275,9 +267,7 @@ MODULE io_routines
           !
           CLOSE( iunrestart )
           !
-#if defined (__PARA)
        END IF
-#endif 
        !
      END SUBROUTINE write_restart
      !
@@ -287,8 +277,8 @@ MODULE io_routines
        !-----------------------------------------------------------------------
        !
        USE input_parameters,       ONLY : atom_label
-       USE brilz,                  ONLY : alat, at
-       USE basis,                  ONLY : ityp, nat
+       USE cell_base,              ONLY : alat, at
+       USE ions_base,              ONLY : ityp, nat
        USE formats,                ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE basic_algebra_routines, ONLY : norm
        USE supercell,              ONLY : pbc
@@ -297,9 +287,7 @@ MODULE io_routines
        USE io_files,               ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                           dat_file, int_file, xyz_file,    &
                                           axsf_file
-#if defined (__PARA)
-       USE para,                   ONLY : me, mypool
-#endif     
+       USE mp_global,              ONLY : mpime, my_pool_id
        !
        IMPLICIT NONE
        !
@@ -316,9 +304,7 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-#if defined (__PARA)
-       IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif  
+       IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
           ALLOCATE( d_R( dim ) )
           !
           ALLOCATE( a( num_of_images - 1 ) )
@@ -474,9 +460,7 @@ MODULE io_routines
           !     
           CLOSE( UNIT = iunaxsf )
           !
-#if defined (__PARA)
        END IF
-#endif 
        !
      END SUBROUTINE write_dat_files
      !

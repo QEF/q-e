@@ -76,6 +76,8 @@
 
         REAL(dbl) :: wmass = 0.0d0
 
+        LOGICAL :: tcell_base_init = .FALSE.
+
         INTERFACE cell_init
           MODULE PROCEDURE cell_init_ht, cell_init_a
         END INTERFACE
@@ -364,6 +366,100 @@
         RETURN
       END SUBROUTINE
 
+!------------------------------------------------------------------------------!
+
+  SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht, &
+               a, b, c, cosab, cosac, cosbc )
+
+    USE constants, ONLY: bohr_radius_angs
+
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: ibrav_
+    REAL(dbl), INTENT(IN) :: celldm_ (6)
+    LOGICAL, INTENT(IN) :: trd_ht
+    CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
+    REAL(dbl), INTENT(IN) :: rd_ht (3,3)
+    REAL(dbl), INTENT(IN) :: a, b, c, cosab, cosac, cosbc
+
+    REAL(dbl) :: b1(3), b2(3), b3(3)
+    !
+    ! ... set up crystal lattice, and initialize cell_base module
+    !
+
+    celldm = celldm_
+    ibrav  = ibrav_
+
+    IF ( trd_ht ) THEN
+      symm_type = cell_symmetry
+      at        = TRANSPOSE( rd_ht )
+    END IF
+
+    IF ( ibrav == 0 .AND. .NOT. trd_ht ) &
+      CALL errore( ' cell_base_init ', ' ibrav=0: must read cell parameters', 1 )
+    IF ( ibrav /= 0 .AND. trd_ht ) &
+      CALL errore( ' cell_base_init ', ' redundant data for cell parameters', 2 )
+
+
+    IF ( celldm(1) == 0.D0 .AND. a /= 0.D0 ) THEN
+      IF ( ibrav == 0 ) ibrav = 14
+      celldm(1) = a / bohr_radius_angs
+      celldm(2) = b / a
+      celldm(3) = c / a
+      celldm(4) = cosab
+      celldm(5) = cosac
+      celldm(6) = cosbc
+    ELSE IF ( celldm(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
+      CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
+    END IF
+
+    IF ( ibrav == 0 .AND. celldm(1) /= 0.D0 ) THEN
+      !
+      ! ... input at are in units of alat
+      !
+      alat = celldm(1)
+    ELSE IF ( ibrav == 0 .AND. celldm(1) == 0.D0 ) THEN
+      !
+      ! ... input at are in atomic units: define alat
+      !
+      celldm(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
+      alat = celldm(1)
+      !
+      ! ... bring at to alat units
+      !
+      at(:,:) = at(:,:) / alat
+    ELSE
+      !
+      ! ... generate at (atomic units)
+      !
+      CALL latgen( ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
+      alat = celldm(1)
+      !
+      ! ... bring at to alat units
+      !
+      at(:,:) = at(:,:) / alat
+    END IF
+
+    !
+    a1  =  at( :, 1 ) * alat
+    a2  =  at( :, 2 ) * alat
+    a3  =  at( :, 3 ) * alat
+
+    CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+
+    CALL recips( a1, a2, a3, b1, b2, b3 )
+    ainv( 1, : ) = b1( : )
+    ainv( 2, : ) = b2( : )
+    ainv( 3, : ) = b3( : )
+
+    bg( :, 1 ) = b1( : )
+    bg( :, 2 ) = b2( : )
+    bg( :, 3 ) = b3( : )
+
+    tcell_base_init = .TRUE.
+
+    RETURN
+  END SUBROUTINE
+      
 
 !
 !------------------------------------------------------------------------------!

@@ -30,23 +30,21 @@ END MODULE brilz
 MODULE basis
   USE kinds, ONLY: DP
   USE parameters, ONLY: ntypx
+  USE ions_base, ONLY: &
+       nat,            &! number of atoms in the unit cell
+       ntyp => nsp,    &! number of different types of atoms
+       tau,            &! the positions of each atom
+       atm,            &! name of the type of the atoms
+       ityp             ! the type of each atom
   !
   ! ... The variables needed to describe the atoms in the unit cell
   !
   SAVE
   !
   INTEGER :: &
-       nat,               &! number of atoms in the unit cell
-       ntyp,              &! number of different types of atoms
        natomwfc            ! number of starting wavefunctions
-  INTEGER, ALLOCATABLE :: &
-       ityp(:)             ! the type of each atom
-  REAL(KIND=DP), ALLOCATABLE :: &
-       tau(:,:)            ! the positions of each atom
   CHARACTER(LEN=30) :: &   ! 'alat', 'crystal', 'angstrom', 'bohr'
        atomic_positions    ! specifies how input coordinates are given
-  CHARACTER(LEN=3 ) :: &
-       atm(ntypx)          ! name of the type of the atoms
   CHARACTER(LEN=6)  :: &
        startingwfc ,      &! 'random' or 'atomic' or 'file'
        startingpot ,      &! 'atomic' or 'file'
@@ -58,13 +56,13 @@ END MODULE basis
 MODULE dynam
   USE kinds, ONLY: DP
   USE parameters, ONLY: ntypx
+  USE ions_base, ONLY: amass
   !
   ! ... Variables needed for the dynamics
   !
   SAVE
   !
   REAL(KIND=DP) :: &
-       amass(ntypx),  &! mass of atoms
        dt,            &! time step
        temperature,   &! starting temperature
        delta_T         ! rate of thermalization
@@ -471,15 +469,14 @@ END MODULE varie
 !
 MODULE relax
   USE kinds, ONLY: DP
+  USE ions_base, ONLY: &
+       if_pos,                  &! if 0 that coordinate will be kept fixed
+       fixatom                   ! last "fixatom" are kept fixed
   !
   ! ... The variables used to control ionic relaxations
   !
   SAVE
   !
-  INTEGER :: &
-       fixatom                   ! last "fixatom" are kept fixed
-  INTEGER, ALLOCATABLE :: &
-       if_pos(:,:)               ! if 0 that coordinate will be kept fixed
   LOGICAL :: &                   ! if .TRUE. start the structural optimization
        restart_bfgs              ! from the results of a previous run
   REAL(KIND=DP) :: &
