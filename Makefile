@@ -8,6 +8,7 @@ what:
 	@echo '   pp        (postprocessing programs)'
 	@echo '   ph        (phonon code)'
 	@echo '   d3        (third-order derivatives)'
+	@echo '   pwcond    (ballistic conductance)'
 	@echo '   gamma     (Gamma-only version of pw and ph)'
 	@echo '   upf       (utilities for pseudopotential conversion)'
 	@echo '   tools     (misc tools for data analysis)'
@@ -18,7 +19,7 @@ what:
 	@echo '   cp        (CP code: CP MD with ultrasoft pseudopotentials)'
 	@echo '   links     (creates links to executables in bin/)'
 
-all: d3 pp gamma tools
+all: d3 pp pwcond gamma tools
 
 tools: libs
 	( cd pwtools ; make all )
@@ -38,6 +39,9 @@ ph: pw
 pp: pw
 	( cd PP; make all )
 
+pwcond: pp
+	( cd PWCOND; make all )
+
 pw: modules libs
 	( cd PW; make all )
 
@@ -55,13 +59,14 @@ cp: modules libs
 
 links:
 	test -d bin || mkdir bin
-	( cd bin/ ; ln -fs ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x ../PP/plotband.x ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x ../pwtools/ev.x ../pwtools/kpoints.x . )
+	( cd bin/ ; ln -fs ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x ../PP/plotband.x ../PWCOND/pwcond.x ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x../pwtools/ev.x ../pwtools/kpoints.x . )
 
 clean:
 	( cd PW ; make clean_ ) ; \
 	( cd PH ; make clean_ ) ; \
 	( cd PP ; make clean_ ) ; \
 	( cd D3 ; make clean_ ) ; \
+	( cd PWCOND ; make clean_ ) ; \
 	( cd Gamma ; make clean_ ) ; \
 	( cd pwtools ; make clean_ ) ; \
 	( cd upftools ; make clean_ ) ; \

@@ -49,6 +49,10 @@ then
 		echo $PWD/PW/work.pc >> $PWD/D3/intel.pcl
 		echo $PWD/PH/work.pc >> $PWD/D3/intel.pcl
 
+                echo work.pc > $PWD/PWCOND/intel.pcl
+                echo $PWD/Modules/work.pc >> $PWD/PWCOND/intel.pcl
+                echo $PWD/PW/work.pc >> $PWD/PWCOND/intel.pcl
+
 		echo work.pc > $PWD/pwtools/intel.pcl
 		echo $PWD/Modules/work.pc >> $PWD/pwtools/intel.pcl
 		echo $PWD/PW/work.pc >> $PWD/pwtools/intel.pcl
