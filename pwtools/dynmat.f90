@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,6 +11,8 @@
 !--------------------------------------------------------------------
 !
 !  read a dynamical matrix at q=0 , diagonalise it, calculate IR
+!  and Raman cross sections (if Z* and Raman tensor available) 
+!
 !  Input data (namelist "input")
 !
 !  flmat  character  input file containing the dynamical matrix
@@ -26,20 +28,19 @@
 !                    (default: flmol='moldout') 
 !
       implicit none
-      integer nax
-      parameter (nax=30)
-      character(len=50) flmat, flout, flmol
-      character(len=3) atm(nax)
-      logical asr, lread, gamma
-      complex(kind=8) dyn(3,3,nax,nax), z(3*nax,3*nax)
-      real(kind=8) tau(3,nax), amass(nax), amass_(nax), zstar(3,3,nax),&
+      integer, parameter :: nax=30
+      character(len=50):: flmat, flout, flmol
+      character(len=3) :: atm(nax)
+      logical :: asr, lread, gamma
+      complex(kind=8) :: dyn(3,3,nax,nax), z(3*nax,3*nax)
+      real(kind=8) :: tau(3,nax), amass(nax), amass_(nax), zstar(3,3,nax),&
            eps0(3,3), a0, omega, amconv, q(3), q_(3), w2(3*nax)
-      integer ityp(nax), itau(nax), nat, na, nt, ntyp, nu, iout
-      namelist /input/ amass,asr,flmat,flout,flmol,q
+      real(kind=8) :: dchi_dtau(3,3,3,nax)
+      integer :: ityp(nax), itau(nax), nat, na, nt, ntyp, nu, iout
+      namelist /input/ amass, asr, flmat, flout, flmol, q
 !
 !
       asr  =.true.
-      flout=' '
       flmat='dynmat'
       flout='dynout'
       flmol='moldout'
@@ -60,12 +61,12 @@
       end if
 !
       call readmat (flmat,asr,nax,nat,ntyp,ityp,atm,a0,omega, amass_&
-           &,tau,zstar,eps0,dyn,q_)
+           &,tau,zstar,eps0,dyn,dchi_dtau,q_)
 !
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0e-8
       amconv = 1.66042e-24/9.1095e-28*0.5
       do nt=1, ntyp
-         if (amass(nt).gt.0.0) then
+         if (amass(nt) > 0.0) then
             amass(nt)=amass(nt)*amconv
          else 
             amass(nt)=amass_(nt)
@@ -92,14 +93,15 @@
 !
       call writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
 !
-      if (gamma) call writeIR (nax, nat, w2, z, zstar)
+      if (gamma) call RamanIR &
+           (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
 !
       stop
       end
 !
 !-----------------------------------------------------------------------
       subroutine readmat (flmat,asr,nax,nat,ntyp,ityp,atm,a0,           &
-     &                    omega,amass,tau,zstar,eps0,dynr,q)
+           omega,amass,tau,zstar,eps0,dynr,dchi_dtau,q)
 !-----------------------------------------------------------------------
 !
       implicit none
@@ -107,15 +109,17 @@
       integer nax, nat, ntyp, ityp(nax)
       character(len=3) atm(ntyp)
       real(kind=8) amass(ntyp), tau(3,nax), a0, omega
-      real(kind=8) dynr(2,3,3,nax,nax), eps0(3,3), zstar(3,3,nax),q(3)
+      real(kind=8) dynr(2,3,3,nax,nax), eps0(3,3), zstar(3,3,nax), &
+           dchi_dtau(3,3,3,nax), q(3)
       logical asr
 !
       character(len=80) line
       real(kind=8)  at(3,3), celldm(6), sum
-      integer ibrav, nt, na, nb, naa, nbb, i, j
-      logical qfinito
+      integer ibrav, nt, na, nb, naa, nbb, i, j, k
+      logical qfinito, noraman
 !
 !
+      noraman=.true.
       open (unit=1,file=flmat,status='old',form='formatted')
       read(1,'(a)') line
       read(1,'(a)') line
@@ -124,7 +128,6 @@
       a0=celldm(1)
       call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
       at = at / a0 !  bring at in units of alat
-      call volume(a0,at(1,1),at(1,2),at(1,3),omega)
       do nt=1,ntyp
          read(1,*) i,atm(nt),amass(nt)
       end do
@@ -177,8 +180,23 @@
                read(1,*)
                read(1,*) ((zstar(i,j,na), j=1,3),i=1,3)
             end do
+ 20         read(1,'(a)',end=10,err=10) line
+            if (line(1:17) == '     Raman tensor') go to 25
+            go to 20
+ 25         read(1,*,end=10,err=10)
+            do na = 1,nat
+               do i = 1, 3
+                  read(1,*,end=10,err=10)
+                  read(1,*,end=10,err=10) &
+                       ((dchi_dtau(k,j,i,na), j=1,3), k=1,3)
+               end do
+            end do
+            write(6,'(/5x,a)') 'Raman cross sections read'
+            noraman=.false.
+10          continue
          end if
       end if
+      if (noraman) dchi_dtau=0.d0
       if (asr) then
 !
 ! ASR on effective charges
@@ -217,28 +235,66 @@
       end
 !
 !-----------------------------------------------------------------------
-subroutine writeIR (nax, nat, w2, z, zstar)
+subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !-----------------------------------------------------------------------
   !
-  !   write IR cross sections
-  !   on input: z = eigendisplacements
-  !
+  !   write IR and Raman cross sections
+  !   on input: z = eigendisplacements (normalized as <z|M|z>)
+  !             zstar = effective charges (units of e)
+  !             dchi_dtau = derivatives of chi wrt atomic displacement
+  !                         (units: A^2)
  implicit none
  ! input
  integer nax, nat
- real(kind=8) w2(3*nat), zstar(3,3,nat)
+ real(kind=8) omega, w2(3*nat), zstar(3,3,nat), eps0(3,3), &
+      dchi_dtau(3,3,3,nat), chi(3,3)
  complex(kind=8) z(3*nax,3*nat)
  ! local
- integer na, nu, ipol, jpol
- real(kind=8) :: infrared(3*nat)
- real(kind=8) :: polar(3), rydcm1, cm1thz, freq, irmax
+ integer na, nu, ipol, jpol, lpol
+ logical noraman
+ real(kind=8), pointer :: infrared(:), raman(:,:,:)
+ real(kind=8):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
+ real(kind=8):: cmfac, alpha, beta2
  !
- !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
+ !  conversion factors Ry => THz, Ry=>cm^(-1) e cm^(-1)=>THz
  !
  rydcm1 = 13.6058*8065.5
  cm1thz = 241.796/8065.5
  !
- irmax=0.d0
+ !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
+ !
+ r1fac = 911.444
+ !
+ !   conversion factor for IR cross sections from Ry au to (Debye/A)^2/amu
+ !
+ irfac = 10514.0155
+ !
+ write (6,'(/5x,"Polarizability (A^3 units)")')
+ !
+ !  correction to molecular polarizabilities from Clausius-Mossotti formula
+ !  (for anisoptropic systems the 
+ !
+ cmfac = 3.d0 / ( 2.d0 + (eps0(1,1) + eps0(2,2) + eps0(3,3))/3.d0 )
+ !
+ write (6,'(/5x,"Multiply by",f9.6," for Clausius-Mossotti correction")') cmfac
+ do jpol=1,3
+    do ipol=1,3
+       if (ipol == jpol) then
+          chi(ipol,jpol) = (eps0(ipol,jpol)-1.d0) 
+       else
+          chi(ipol,jpol) = eps0(ipol,jpol)
+       end if
+    end do
+ end do
+ do ipol=1,3
+    write (6,'(5x,3f12.6)') (chi(ipol,jpol)*0.529177**3*omega/4.0/3.1415926, &
+         jpol=1,3)
+ end do
+ !
+ allocate(infrared (3*nat))
+ allocate(raman(3,3,3*nat))
+ !
+ noraman=.true.
  do nu = 1,3*nat
     do ipol=1,3
        polar(ipol)=0.0
@@ -251,21 +307,57 @@ subroutine writeIR (nax, nat, w2, z, zstar)
           end do
        end do
     end do
-    infrared(nu) = sqrt(polar(1)**2+polar(2)**2+polar(3)**2)
-    irmax = max(irmax,infrared(nu))
+    !
+    infrared(nu) = 2.d0*(polar(1)**2+polar(2)**2+polar(3)**2)*irfac
+    !
+    do ipol=1,3
+       do jpol=1,3
+          raman(ipol,jpol,nu)=0.0
+          do na=1,nat
+             do lpol=1,3
+                raman(ipol,jpol,nu) = raman(ipol,jpol,nu) + &
+                     dchi_dtau(ipol,jpol,lpol,na) * z((na-1)*3+lpol,nu) 
+             end do
+          end do
+          noraman=noraman .and. abs(raman(ipol,jpol,nu)).lt.1.d-12
+       end do
+    end do
+    !   Raman cross sections are in units of bohr^4/(Ry mass unit)
  end do
  !
- write (6,'(/5x,''Max IR cross section: '',e12.4/)') irmax
+ write (6,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
+ if (noraman) then
+    write (6,'(/"#  mode   [cm-1]     [THz]       IR")')
+ else
+    write (6,'(5x,"Raman cross sections are in A^4/amu units")')
+    write (6,'(/5x,"Multiply Raman by",f9.6," for Clausius-Mossotti" &
+         & " correction")') cmfac**2
+    write (6,'(/"#  mode   [cm-1]     [THz]      IR       Raman     depol")')
+ end if
  !
  do nu = 1,3*nat
+    !
     freq = sqrt(abs(w2(nu)))*rydcm1
     if (w2(nu).lt.0.0) freq = -freq
-    write (6,9010) nu, freq, freq*cm1thz, infrared(nu)/irmax
+    !
+    ! alpha, beta2: see PRB 54, 7830 (1996) and refs quoted therein
+    !
+    if (noraman) then
+       write (6,'(i5,f10.2,f12.4,2f10.4)') &
+         nu, freq, freq*cm1thz, infrared(nu)
+    else
+       alpha = (raman(1,1,nu) + raman(2,2,nu) + raman(3,3,nu))/3.d0
+       beta2 = ( (raman(1,1,nu) - raman(2,2,nu))**2 + &
+                 (raman(1,1,nu) - raman(3,3,nu))**2 + &
+                 (raman(2,2,nu) - raman(3,3,nu))**2 + 6.d0 * &
+          (raman(1,2,nu)**2 + raman(1,3,nu)**2 + raman(2,3,nu)**2) )/2.d0
+       write (6,'(i5,f10.2,f12.4,3f10.4)') &
+            nu, freq, freq*cm1thz, infrared(nu), &
+            (45.d0*alpha**2 + 7.0d0*beta2)*r1fac, &
+             3.d0*beta2/(45.d0*alpha**2 + 4.0d0*beta2)
+    end if
  end do
  !
  return
  !
-9010 format(5x,'omega(',i2,') =',f10.2,' [cm-1] = ',f12.4, ' [THz]',&
-            5x,' IR = ',f12.4)
- !
-end subroutine writeIR
+end subroutine RamanIR
