@@ -180,8 +180,13 @@ subroutine vcsmd
               &     f15.8)') etot
         if (calc.eq.'nm') write (6,'(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, Efinal=",&
               &     f15.8)') etot
-        write (6,'(/72("-")//5x,"Final estimate of positions")')  
-        if (ltaucry) write (6, '(/5x,"Cartesian coordinates")')
+        write (6,'(/72("-")//5x,"Final estimate of lattice vectors (input alat units)")')
+        write (6, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
+        write (6,'(a,f12.4,a)') '  final unit-cell volume =', omega, ' (a.u.)^3'
+        write (6,'(a,f12.4,a)') '  input alat = ', alat, ' (a.u.)'
+
+        write (6,'(//5x,"Final estimate of positions")')
+        if (ltaucry) write (6, '(/5x,"Cartesian coordinates (input alat units)")')
         do na = 1, nat
            write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
         enddo
@@ -207,7 +212,7 @@ subroutine vcsmd
              & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2)') &
                epse, epsf
   if (istep.eq.1 .and. calc.eq.'cm')  &
-     write(6,'(/5x,"PArrinella Rahman Damped Cell-Dynamics Minimization", /5x, &
+     write(6,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", /5x, &
              & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2,&
              & "    EPSP = ",epsp ') epse, epsf, epsp
   if (istep.eq.1 .and. calc.eq.'nm')  &

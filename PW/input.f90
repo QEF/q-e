@@ -758,14 +758,20 @@ subroutine iosys
   if ( TRIM(calculation) == 'vc-relax' ) then
      SELECT CASE ( TRIM(cell_dynamics) ) 
      CASE ('none')
+        epse = etot_conv_thr
+        epsf = forc_conv_thr
         iswitch = 3
         calc = 'mm'
         ntcheck=nstep+1
      CASE ('damp-pr')
+        epse = etot_conv_thr
+        epsf = forc_conv_thr
         iswitch = 3
         calc = 'cm'
         ntcheck=nstep+1
      CASE ('damp-w')
+        epse = etot_conv_thr
+        epsf = forc_conv_thr
         iswitch = 3
         calc = 'nm'
         ntcheck=nstep+1
@@ -915,6 +921,24 @@ subroutine iosys
   ! units are transformed in cartesian coordinates
   !  
   if (ltaucry) call cryst_to_cart (nat, tau, at, 1)   
+  !
+  ! set default value of wmass
+  !
+  if (wmass.eq.0.d0) then
+     if (calc.eq.'nd' .or. calc.eq.'nm') then
+        do ia=1,nat
+           wmass = wmass + amass(ityp(ia))
+        end do
+        wmass = wmass / omega**(2.d0/3.d0)
+     end if
+     if (calc.eq.'cd' .or. calc.eq.'cm') then
+        do ia=1,nat
+           wmass = wmass + amass(ityp(ia))
+        end do
+     end if
+     write (6,*) ' default wmass set to ', wmass
+  end if
+  !
   !
   ! unit conversion for cell mass and pressure
   !
