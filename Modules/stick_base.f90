@@ -420,9 +420,9 @@
       LOGICAL, INTENT(IN) :: tk
 
       INTEGER, INTENT(IN) :: ub(:), lb(:), index(:)
-      INTEGER, INTENT(OUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-      INTEGER, INTENT(OUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
-      INTEGER, INTENT(OUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(INOUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(INOUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(INOUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
 
       INTEGER, INTENT(IN) :: in1(:), in2(:)
       INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:)
@@ -436,7 +436,7 @@
 
         !  when gamma symmetry is used only the sticks of half reciprocal space
         !  are generated, then here we pair-up the sticks with those of the other
-        !  half of the space, using the gamma symmetri relation
+        !  half of the space, using the gamma symmetry relation
         !  Note that the total numero of stick "nct" is not modified
 
         DO mc = 1, nct
