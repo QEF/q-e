@@ -136,6 +136,9 @@ subroutine ld1_readin
 
   if (isic == 1 .and. latt == 1) call errore('ld1_readin', &
        &    'isic and latter correction not allowed',1)
+  if (isic == 1 .and. iswitch .ne. 1 ) call errore('ld1_readin', &
+       &    'SIC available with all-electron only', 1)
+ 
 
   zmesh=zed
   if (rel == 5 ) then
