@@ -35,7 +35,6 @@ subroutine hinit0
      !
      !  g2kin is used here as work space
      !
-     npw=npwx
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      !
      call gk_l2gmap (ngm, ig_l2g(1), npw, igk, igk_l2g(1,ik) )
