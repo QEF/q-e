@@ -584,6 +584,8 @@ MODULE ldaU
   LOGICAL :: &                                                
        lda_plus_u,           &! .TRUE. if lda+u calculation is performed
        conv_ns                ! .TRUE. if ns are converged
+  CHARACTER(LEN=30) :: &      ! 'atomic', 'ortho-atomic', 'file'
+       U_projection           ! specifies how input coordinates are given
   !
 END MODULE ldaU
 !

@@ -271,13 +271,16 @@ PWOBJS = \
 ../PW/ylmr2.o
 
 all : pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x \
-      bands.x plotband.x pw2wan.x pw2casino.x efg.x
+      bands.x plotband.x pw2wan.x pw2casino.x efg.x pmw.x
 
 pp.x : $(PPOBJS) postproc.o
 	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 projwfc.x : $(PPOBJS) projwfc.o
 	$(LD) -o projwfc.x projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+
+pmw.x : $(PPOBJS) poormanwannier.o
+	$(LD) -o pmw.x poormanwannier.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 chdens.x : $(PPOBJS) chdens.o
 	$(LD) -o chdens.x chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)

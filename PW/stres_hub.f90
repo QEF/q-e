@@ -18,7 +18,8 @@ subroutine stres_hub ( sigmah )
   USE kinds, ONLY: DP
   USE basis, ONLY: nat, ityp
   USE cell_base, ONLY: omega, at, bg
-  USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns
+  USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns, &
+                   U_projection
   USE lsda_mod, ONLY: nspin
   USE symme,    ONLY: s, nsym
   USE io_files, ONLY : prefix, iunocc
@@ -39,6 +40,9 @@ subroutine stres_hub ( sigmah )
    real (kind=DP), allocatable :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
  
+   if (U_projection .ne. "atomic") call errore("stres_hub", &
+                   " stress for this U_projection_type not implemented",1)
+
    if (gamma_only) call errore('stres_hub',&
                    ' LDA+U, stress AND gamma-only not implemented yet',1)
 

@@ -385,6 +385,9 @@ MODULE input_parameters
         REAL(dbl) :: hubbard_alpha(nsx) = 0.0d0
           ! ONLY PWSCF
 
+        CHARACTER(LEN=80) :: U_projection_type = 'atomic'
+          ! ONLY PWSCF
+
         REAL(dbl) :: a = 0.0d0
 
         REAL(dbl) :: c = 0.0d0
@@ -455,6 +458,7 @@ LOGICAL   :: force_pairing= .FALSE.
              occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
+             U_projection_type, &
              noncolin, mcons, lambda, i_cons, angle1, angle2, report, &
              sic, sic_epsilon, force_pairing
 

@@ -65,7 +65,7 @@ links :
 	      ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x \
 	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
 	      ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x \
-	      ../PP/plotband.x ../PWNC/pwnc.x ../PWCOND/pwcond.x \
+	      ../PP/plotband.x ../PP/pmw.x ../PWNC/pwnc.x ../PWCOND/pwcond.x \
 	      ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
 	      ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
 	      ../pwtools/ev.x ../pwtools/kpoints.x ../pwtools/path_int.x \

@@ -157,6 +157,7 @@ MODULE read_namelists_module
        ENDIF
        IF ( prog == 'PW' ) THEN
           starting_ns_eigenvalue=-1.d0
+          U_projection_type='atomic'
        ENDIF
        lda_plus_U = .FALSE.
        Hubbard_U = 0.0D0
@@ -505,6 +506,7 @@ MODULE read_namelists_module
        CALL mp_bcast( xc_type, ionode_id )
        CALL mp_bcast( starting_magnetization, ionode_id ) 
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id ) 
+       CALL mp_bcast( U_projection_type, ionode_id ) 
        CALL mp_bcast( lda_plus_U, ionode_id ) 
        CALL mp_bcast( Hubbard_U, ionode_id ) 
        CALL mp_bcast( Hubbard_alpha, ionode_id ) 

@@ -19,7 +19,8 @@ subroutine force_hub(forceh)
    USE kinds, ONLY: DP
    USE basis, ONLY: nat, ityp
    USE cell_base, ONLY: at, bg
-   USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns
+   USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns, &
+                    U_projection
    USE lsda_mod, ONLY: nspin
    USE symme,    ONLY: s, nsym, irt
    USE io_files, ONLY : prefix, iunocc
@@ -37,6 +38,8 @@ subroutine force_hub(forceh)
    real (kind=DP), allocatable :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
 
+   if (U_projection .ne. "atomic") call errore("force_hub", &
+                   " forces for this U_projection_type not implemented",1)
    if (gamma_only) call errore('force_huh',&
                    ' LDA+U, forces AND gamma-only not implemented yet',1)
    ldim= 2 * Hubbard_lmax + 1

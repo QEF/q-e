@@ -21,7 +21,7 @@ subroutine orthoatwfc
   USE io_files, ONLY: iunat, nwordatwfc, iunigk
   USE basis, ONLY: nat, natomwfc
   USE klist, ONLY: nks, xk
-  USE ldaU, ONLY: swfcatom
+  USE ldaU, ONLY: swfcatom, U_projection
   USE wvfct, ONLY: npwx, npw, igk, gamma_only
   USE us, ONLY: nkb, vkb
   use becmod,   only: becp
@@ -58,19 +58,31 @@ subroutine orthoatwfc
   allocate (e      ( natomwfc))    
   allocate (ml     ( natomwfc))    
   allocate (nwfc   ( nat))    
+
+  if (U_projection=="file") then
+     WRITE( stdout,*) 'LDA+U Projector read from file '
+     return
+  end if
+
+  if (U_projection=="atomic") then
+     orthogonalize_wfc = .false.
+     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are NOT orthogonalized'
+  else if (U_projection=="ortho-atomic") then
+     orthogonalize_wfc = .true.
+     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are orthogonalized'
+     if (gamma_only) then
+        WRITE( stdout,*) 'Gamma-only calculation for this case not implemented'
+        stop
+     end if
+  else
+     write( stdout,*) "U_projection_type =", U_projection
+     call errore ("orthoatwfc"," this U_projection_type is not valid",1)
+  end if
+
   if ( gamma_only ) then 
      ! Allocate the array rbecp=<beta|wfcatom>, which is not allocated by 
      ! allocate_wfc() in a gamma-point calculation: 
      allocate (rbecp (nkb,natomwfc)) 
-  end if
-  
-  orthogonalize_wfc = .false.
-  if (orthogonalize_wfc) then
-     WRITE( stdout,*) 'Atomic wfc used in LDA+U are orthogonalized'
-     WRITE( stdout,*) 'Gamma-only calculation for this case not implemented'
-     STOP
-  else
-     WRITE( stdout,*) 'Atomic wfc used in LDA+U are NOT orthogonalized'
   end if
   
   if (nks.gt.1) rewind (iunigk)

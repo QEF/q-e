@@ -33,6 +33,8 @@ subroutine saveall (iun, iflag)
   USE us
   USE extfield
   USE fixed_occ, ONLY: tfixed_occ
+  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                     Hubbard_U, Hubbard_alpha
   USE io_files
   USE funct
   implicit none
@@ -43,7 +45,6 @@ subroutine saveall (iun, iflag)
   integer :: ios
   ! integer variable for I/O control
   character (len=80) :: dummy_tmp_dir
-  !
   !
   if (iflag == 1) then
      write (iun) celldm, at, bg, alat, omega, tpiba, tpiba2, ibrav, symm_type
@@ -65,6 +66,7 @@ subroutine saveall (iun, iflag)
      write (iun) a_nlcc, b_nlcc, alpha_nlcc, nlcc
      write (iun) lforce
      write (iun) tfixed_occ
+     write (iun) lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha
      write (iun) tefield, dipfield
      write (iun) edir
      write (iun) emaxpos, eopreg, eamp
@@ -96,6 +98,8 @@ subroutine saveall (iun, iflag)
      read (iun, err = 100, iostat = ios) a_nlcc, b_nlcc, alpha_nlcc, nlcc
      read (iun, err = 100, iostat = ios) lforce
      read (iun, err = 100, iostat = ios) tfixed_occ
+     read (iun, err = 100, iostat = ios) lda_plus_u, Hubbard_lmax, Hubbard_l, &
+          Hubbard_U, Hubbard_alpha
      read (iun, err = 100, iostat = ios) tefield, dipfield 
      read (iun, err = 100, iostat = ios) edir
      read (iun, err = 100, iostat = ios) emaxpos, eopreg, eamp

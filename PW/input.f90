@@ -73,7 +73,7 @@ SUBROUTINE iosys()
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
-                            niter_with_fixed_ns, starting_ns, &
+                            niter_with_fixed_ns, starting_ns, U_projection, &
                             lda_plus_u_ => lda_plus_u
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -147,7 +147,8 @@ SUBROUTINE iosys()
                                occupations, degauss, smearing, &
                                nspin, ecfixed, qcutz, q2sigma, &
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
-                               edir, emaxpos, eopreg, eamp, starting_ns_eigenvalue, &
+                               starting_ns_eigenvalue, U_projection_type, &
+                               edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, i_cons, mcons, angle1, &
                                angle2, report
   !
@@ -775,6 +776,7 @@ SUBROUTINE iosys()
   nspin_                     = nspin
   starting_magnetization_    = starting_magnetization
   starting_ns                = starting_ns_eigenvalue
+  U_projection               = U_projection_type
   nosym_                     = nosym
   nbnd_                      = nbnd
   !
