@@ -32,25 +32,18 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   ! Local variables
   !
   integer :: na, mu, ig, igg, ir, ibnd, nt, ikb, jkb
-  ! counter on atoms
-  ! counter on modes
-  ! counter on G vectors
-  ! counter on G vectors
-  ! counter on real space points
-  ! counter on bands
-  ! counter on atomic types
-  ! counters on beta functions
+  ! counters
   complex (kind=DP), pointer :: u_x (:,:)
-  complex (kind=DP), allocatable :: aux (:), ps (:,:), wrk2 (:)
   ! the transformation modes patterns
+  complex (kind=DP), allocatable :: aux (:), ps (:,:), wrk2 (:)
   ! work space
-  complex (kind=DP) :: ZDOTC
+  complex (kind=DP) , external:: ZDOTC
   logical :: q_eq_zero
   !
   allocate  (aux( nrxx))    
   allocate  (ps( 2, nbnd))    
   allocate  (wrk2( npwx))    
-  q_eq_zero = xq_ (1) .eq.0.d0.and.xq_ (2) .eq.0.d0.and.xq_ (3) .eq.0.d0
+  q_eq_zero = xq_ (1) == 0.d0 .and. xq_ (2) == 0.d0 .and. xq_ (3) == 0.d0
   if (q_eq_zero) then
      u_x => ug0
   else
@@ -58,7 +51,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   endif
   !
   do ibnd = 1, nbnd
-     call setv (2 * nrxxs, 0.d0, aux, 1)
+     aux (:) = (0.d0, 0.d0)
      do ig = 1, npw
         aux (nls (igk (ig) ) ) = psi_ (ig, ibnd)
      enddo
@@ -82,7 +75,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
            do ikb = 1, nh (nt)
               jkb = jkb+1
               if (abs (u_x (mu + 1, nu_i) ) + abs (u_x (mu + 2, nu_i) ) + &
-                  abs (u_x (mu + 3, nu_i) ) .gt.1.0d-12) then
+                  abs (u_x (mu + 3, nu_i) ) > 1.0d-12) then
            !
            ! first term: sum_l v_l beta_l(k+q+G) \sum_G' beta^*_l(k+G') (iG'*u) psi
            ! second term: sum_l E_l(-i(q+G)*u) beta_l(k+q+G)\sum_G'beta^*_l(k+G')ps

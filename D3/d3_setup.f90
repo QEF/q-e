@@ -65,23 +65,11 @@ subroutine d3_setup
   ! computes derivative of xc potential
   ! working array
 
-  integer :: ir, table (48, 48), isym, jsym, iinv, irot, jrot, ik, &
+  integer :: table (48, 48)
+  ! the multiplication table of the point group
+  integer :: ir, isym, jsym, iinv, irot, jrot, ik, &
        ibnd, ipol, mu, nu, imode0, irr, ipert, nt, ii, nu_i
-  ! counter on mesh points
-  ! the multiplication table of the point g
-  ! counter on symmetries
-  ! counter on symmetries
-  ! the index of the inverse
-  ! counter on rotations
-  ! counter on rotations
-  ! counter on k points
-  ! counter on bands
-  ! counter on polarizations
-  ! counter on modes
-  ! the starting mode
-  ! counter on representation and perturbat
-  ! counter on atomic type
-
+  ! counters
   logical :: sym (48)
   ! the symmetry operations
 
@@ -96,25 +84,25 @@ subroutine d3_setup
   !
   ! 2) Computes the derivative of the xc potential
   !
-  call setv (nrxx * nspin * nspin, 0.d0, dmuxc, 1)
+  dmuxc (:,:,:) = 0.d0
   if (lsda) then
      do ir = 1, nrxx
         rhoup = rho (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho (ir, 2) + 0.5d0 * rho_core (ir)
-        call dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), dmuxc (ir, 2, &
-             1), dmuxc (ir, 1, 2), dmuxc (ir, 2, 2) )
+        call dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), &
+             dmuxc (ir, 2, 1), dmuxc (ir, 1, 2), dmuxc (ir, 2, 2) )
      enddo
   else
      do ir = 1, nrxx
         rhotot = rho (ir, nspin) + rho_core (ir)
-        if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-        if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+        if (rhotot > 1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+        if (rhotot < - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
      enddo
   endif
   !
   ! 3) Computes the number of occupated bands for each k point
   !
-  if (degauss.ne.0.d0) then
+  if (degauss /= 0.d0) then
      !
      ! discard conduction bands such that w0gauss(x,n) < small
      !
@@ -131,23 +119,21 @@ subroutine d3_setup
      !
      ! - limit appropriated for Fermi-Dirac
      !
-     if (ngauss.eq. - 99) then
+     if (ngauss == - 99) then
         fac = 1.d0 / sqrt (small)
         xmax = 2.d0 * log (0.5 * (fac + sqrt (fac * fac - 4.0) ) )
-
      endif
      target = ef + xmax * degauss
      do ik = 1, nks
         do ibnd = 1, nbnd
-           if (et (ibnd, ik) .lt.target) nbnd_occ (ik) = ibnd
+           if (et (ibnd, ik) < target) nbnd_occ (ik) = ibnd
         enddo
-        if (nbnd_occ (ik) .eq.nbnd) &
+        if (nbnd_occ (ik) == nbnd) &
              WRITE( stdout, '(5x,/,"Possibly too few bands at point ", &
              & i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
      enddo
   else
-     if (lsda) call errore ('d3_setup', 'occupation numbers probably wro &
-          &ng',  - 1)
+     if (lsda) call errore ('d3_setup', 'occupation numbers probably wrong',-1)
      do ik = 1, nks
         nbnd_occ (ik) = nint (nelec) / degspin
      enddo
@@ -199,15 +185,15 @@ subroutine d3_setup
   call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
-  minus_q = (iswitch.gt. - 3)
+  minus_q = (iswitch > - 3)
   ! Sq=-q+G symmetry. On output minus_q=.t.
   ! if such a symmetry has been found
-  if (iswitch.eq. - 4) then
+  if (iswitch ==  - 4) then
      call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
           npert, nirr, gi, gimq, iverbosity, modenum)
   else
-     if (nsym.gt.1) then
+     if (nsym > 1) then
         call io_pattern(fildrho,nirr,npert,u,-1)
         call set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,   &
@@ -241,7 +227,7 @@ subroutine d3_setup
      call multable (nsymg0, s, table)
      do irot = 1, nsymg0
         do jrot = 1, nsymg0
-           if (table (irot, jrot) .eq.1) invs (irot) = jrot
+           if (table (irot, jrot) == 1) invs (irot) = jrot
         enddo
      enddo
      !
@@ -263,7 +249,6 @@ subroutine d3_setup
   nlcc_any = .false.
   do nt = 1, ntyp
      nlcc_any = nlcc_any.or.nlcc (nt)
-
   enddo
 
   if (nlcc_any) allocate (drc( ngm, ntyp))    
@@ -276,7 +261,7 @@ subroutine d3_setup
   nlength_w = (3 * nat) / npool
   nresto = 3 * nat - nlength_w * npool
   do ii = 1, npool
-     if (ii.le.nresto) then
+     if (ii <= nresto) then
         nlength (ii) = nlength_w + 1
      else
         nlength (ii) = nlength_w
@@ -293,7 +278,7 @@ subroutine d3_setup
   ! 8) Sets up variables needed to calculate only selected
   !    modes at q=0 --the first index of the third order matrix--
   !
-  if (q0mode_todo (1) .le.0) then
+  if (q0mode_todo (1) <= 0) then
      do ii = 1, 3 * nat
         q0mode (ii) = .true.
      enddo
@@ -302,7 +287,7 @@ subroutine d3_setup
         q0mode (ii) = .false.
      enddo
      ii = 1
-     do while (q0mode_todo (ii) .gt.0)
+     do while (q0mode_todo (ii) > 0)
         q0mode (q0mode_todo (ii) ) = .true.
         ii = ii + 1
      enddo
@@ -312,7 +297,7 @@ subroutine d3_setup
   ! the calculation can be simplyfied, in this case allmodes
   ! is set .true.
   !
-  allmodes = lgamma.and.q0mode_todo (1) .le.0
+  allmodes = lgamma.and.q0mode_todo (1) <= 0
   !
   ! Sets up variables needed to write only selected
   ! modes at q=0 --the first index of the third order matrix--
@@ -325,8 +310,7 @@ subroutine d3_setup
         endif
      enddo
      wrmode (ii) = .false.
-     if (wrk.gt.1.d-8) wrmode (ii) = .true.
-
+     if (wrk > 1.d-8) wrmode (ii) = .true.
   enddo
   call stop_clock ('d3_setup')
   return

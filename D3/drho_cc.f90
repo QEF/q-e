@@ -32,12 +32,14 @@ subroutine drho_cc (iflag)
   real (kind = dp) :: xq0 (3), scale
 
   if (.not.nlcc_any) return
-  scale = 1.d0
-
-  if (iflag.eq. - 1) scale = - 1.d0
-  call setv (3, 0.d0, xq0, 1)
+  if (iflag.eq. - 1) then
+     scale = - 1.d0
+  else
+     scale = 1.d0
+  end if
+  xq0 = 0.d0
   call drho_drc (iud0rho, ug0, xq0, d0rc, scale)
-
   if (.not.lgamma) call drho_drc (iudrho, u, xq, drc, scale)
+
   return
 end subroutine drho_cc

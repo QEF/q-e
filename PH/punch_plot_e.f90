@@ -82,11 +82,11 @@ subroutine punch_plot_e
   !
   !     rotate the charge and transform to cartesian coordinates
   !
-  call setv (6 * nrxx, 0.0d0, aux1, 1)
+  aux1(:,:) = (0.0d0, 0.0d0)
   do ipol = 1, 3
      do jpol = 1, 3
-        call DAXPY (2 * nrxx, bg (ipol, jpol), aux (1, jpol), 1, aux1 (1, &
-             ipol), 1)
+        call DAXPY (2 * nrxx, bg (ipol, jpol), aux (1, jpol), 1, &
+             aux1 (1, ipol), 1)
      enddo
   enddo
   !
@@ -106,7 +106,7 @@ subroutine punch_plot_e
 100     call errore ('plotout', 'opening file'//filin, abs (ios) )
         rewind (iunplot)
         !
-        !       Here we write some information quantity which are always necessa
+        !    Here we write some needed quantities
         !
         ! not used
         plot_num = - 1
@@ -126,12 +126,11 @@ subroutine punch_plot_e
      !
      !      plot of the charge density
      !
-
-     call DCOPY (nrxx, aux1 (1, ipol), 2, raux, 1)
+     raux (:) = DREAL (aux1 (:, ipol) )
 #ifdef __PARA
      allocate (raux1( nrx1 * nrx2 * nrx3))    
      call gather (raux, raux1)
-     if (me.eq.1.and.mypool.eq.1) write (iunplot, '(5(1pe17.9))') &
+     if (me == 1 .and. mypool == 1) write (iunplot, '(5(1pe17.9))') &
           (raux1 (ir) , ir = 1, nrx1 * nrx2 * nrx3)
      deallocate (raux1)
 #else

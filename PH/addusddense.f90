@@ -31,7 +31,7 @@ subroutine addusddense (drhoscf, dbecsum)
   complex(kind=DP) :: drhoscf(nrxx,nspin,3), dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
 
   ! inp/out: change of the charge density
-  !input: sum over kv of bec
+  ! input: sum over kv of bec
   !
   !     here the local variables
   !
@@ -56,11 +56,8 @@ subroutine addusddense (drhoscf, dbecsum)
 
   complex(kind=DP) :: zsum
   complex(kind=DP), allocatable ::  sk (:), qg (:), aux (:,:,:)
-  ! auxiliary variables
   ! the structure factor
-  ! auxiliary variable for FFT
-  ! contain the charge of drho
-  ! auxiliary variable for drho(G)
+  ! work space
 
   if (.not.okvan) return
   call start_clock ('addusddense')
@@ -77,7 +74,7 @@ subroutine addusddense (drhoscf, dbecsum)
      qmod (ig) = sqrt (gg (ig) )
   enddo
 
-  call setv (6 * ngm, 0.d0, aux, 1)
+  aux (:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
      if (tvanp (nt) ) then
         ijh = 0
@@ -86,7 +83,7 @@ subroutine addusddense (drhoscf, dbecsum)
               call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
               ijh = ijh + 1
               do na = 1, nat
-                 if (ityp (na) .eq.nt) then
+                 if (ityp (na) == nt) then
                     !
                     ! calculate the structure factor
                     !
@@ -114,14 +111,10 @@ subroutine addusddense (drhoscf, dbecsum)
   !
   do is=1,nspin
      do ipert = 1, 3
-        call setv (2 * nrxx, 0.d0, qg, 1)
-        do ig = 1, ngm
-           qg (nl (ig) ) = aux (ig, is, ipert)
-        enddo
+        qg (:) = (0.d0, 0.d0)
+        qg (nl (:) ) = aux (:, is, ipert)
         call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        do ir = 1, nrxx
-           drhoscf(ir,is,ipert)=drhoscf(ir,is,ipert)+2.d0*qg(ir)
-        enddo
+        drhoscf(:,is,ipert) = drhoscf(:,is,ipert) + 2.d0*qg(:)
      enddo
   enddo
   deallocate (ylmk0)

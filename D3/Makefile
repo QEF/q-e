@@ -146,7 +146,6 @@ PHOBJS = \
 ../PH/setlocq.o \
 ../PH/setqmod.o \
 ../PH/setup_dgc.o \
-../PH/setv.o \
 ../PH/smallgq.o \
 ../PH/solve_e.o \
 ../PH/solve_linter.o \

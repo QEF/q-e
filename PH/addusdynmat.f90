@@ -44,7 +44,7 @@ subroutine addusdynmat (dynwrk)
   if (.not.okvan) return
   call start_clock ('addusdynmat')
 
-  call setv (18 * nat * nat, 0.d0, dyn1, 1)
+  dyn1 (:,:) = (0.d0, 0.d0)
   !
   !  We compute the four terms required
   !
@@ -67,7 +67,7 @@ subroutine addusdynmat (dynwrk)
         !
         !   The second term requires an exchange of the components.
         !
-        call setv (2 * 9, 0.d0, term, 1)
+        term (:,:) = (0.d0, 0.d0)
         do ipol = 1, 3
            do jpol = 1, 3
               ijh = 0

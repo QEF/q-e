@@ -11,48 +11,45 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      nl, ngm, g, alat, omega, dvxc)
   !     ===================
   !--------------------------------------------------------------------
-  !  ADD Gradient Correction contibution
+  !  ADD Gradient Correction contribution
   !  LSDA is allowed. AdC (September 1999)
   !
 #include "machine.h"
   USE kinds, only : DP
   implicit none
-
   !
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, nl (ngm), &
        nspin
-
   real(kind=DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin), &
        dvxc_rr(nrxx, nspin, nspin), dvxc_sr (nrxx, nspin, nspin), &
        dvxc_ss (nrxx,nspin, nspin), dvxc_s (nrxx, nspin, nspin),&
-       g (3, ngm), alat, omega
-  real(kind=DP) :: xq (3)
-
+       g (3, ngm), xq(3), alat, omega
   complex(kind=DP) :: drho (nrxx, nspin), dvxc (nrxx, nspin)
-  integer :: k, ipol, is, js, ks, ls
-  real(kind=DP) :: epsr, epsg, grho2
+
+  real(kind=DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
+  real(kind=DP) :: grho2
   complex(kind=DP) :: s1
   complex(kind=DP) :: a (2, 2, 2), b (2, 2, 2, 2), c (2, 2, 2), &
                       ps (2, 2), ps1 (3, 2, 2), ps2 (3, 2, 2, 2)
   complex(kind=DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
-  parameter (epsr = 1.0d-6, epsg = 1.0d-10)
+  integer :: k, ipol, is, js, ks, ls
 
   allocate (gdrho( 3, nrxx , nspin))    
   allocate (h(  3, nrxx , nspin))    
   allocate (dh( nrxx))    
 
-  call setv (6 * nrxx * nspin, 0.d0, h, 1)
+  h (:, :, :) = (0.d0, 0.d0)
   do is = 1, nspin
      call qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
          drho (1, is), ngm, g, nl, alat, gdrho (1, 1, is) )
   enddo
   do k = 1, nrxx
      grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
-     if (nspin.eq.1) then
+     if (nspin == 1) then
         !
         !    LDA case
         !
-        if (abs (rho (k, 1) ) .gt.epsr.and.grho2.gt.epsg) then
+        if (abs (rho (k, 1) ) > epsr .and. grho2 > epsg) then
            s1 = grho (1, k, 1) * gdrho (1, k, 1) + &
                 grho (2, k, 1) * gdrho (2, k, 1) + &
                 grho (3, k, 1) * gdrho (3, k, 1)
@@ -75,7 +72,7 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         !
         !    LSDA case
         !
-        call setv (8, 0.d0, ps, 1)
+        ps (:,:) = (0.d0, 0.d0)
         do is = 1, nspin
            do js = 1, nspin
               do ipol = 1, 3
@@ -83,16 +80,16 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
                  ps(is, js) = ps(is, js) + grho(ipol,k,is)*gdrho(ipol,k,js)
               enddo
               do ks = 1, nspin
-                 if (is.eq.js.and.js.eq.ks) then
+                 if (is == js .and. js == ks) then
                     a (is, js, ks) = dvxc_sr (k, is, is)
                     c (is, js, ks) = dvxc_sr (k, is, is)
                  else
-                    if (is.eq.1) then
+                    if (is == 1) then
                        a (is, js, ks) = dvxc_sr (k, 1, 2)
                     else
                        a (is, js, ks) = dvxc_sr (k, 2, 1)
                     endif
-                    if (js.eq.1) then
+                    if (js == 1) then
                        c (is, js, ks) = dvxc_sr (k, 1, 2)
                     else
                        c (is, js, ks) = dvxc_sr (k, 2, 1)
@@ -102,10 +99,10 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
                     ps2 (ipol, is, js, ks) = ps (is, js) * grho (ipol, k, ks)
                  enddo
                  do ls = 1, nspin
-                    if (is.eq.js.and.js.eq.ks.and.ks.eq.ls) then
+                    if (is == js .and. js == ks .and. ks == ls) then
                        b (is, js, ks, ls) = dvxc_ss (k, is, is)
                     else
-                       if (is.eq.1) then
+                       if (is == 1) then
                           b (is, js, ks, ls) = dvxc_ss (k, 1, 2)
                        else
                           b (is, js, ks, ls) = dvxc_ss (k, 2, 1)
@@ -117,8 +114,7 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         enddo
         do is = 1, nspin
            do js = 1, nspin
-              dvxc (k, is) = dvxc (k, is) + dvxc_rr (k, is, js) * drho (k, &
-                   js)
+              dvxc (k, is) = dvxc (k, is) + dvxc_rr (k, is, js) * drho (k, js)
               do ipol = 1, 3
                  h (ipol, k, is) = h (ipol, k, is) + &
                       dvxc_s (k, is, js) * gdrho(ipol, k, js)
@@ -160,13 +156,13 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is also in R-space)
   USE kinds, only : DP
+  USE constants, ONLY: tpi
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   complex(kind=DP) :: a (nrxx), ga (3, nrxx)
   real(kind=DP) :: g (3, ngm), alat, xq (3)
   integer :: n, ipol
-  real(kind=DP) :: tpi, tpiba
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  real(kind=DP) :: tpiba
   complex(kind=DP), allocatable :: aux (:), gaux (:)
 
   allocate (gaux(  nrxx))    
@@ -174,15 +170,12 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
 
   tpiba = tpi / alat
   ! bring a(r) to G-space, a(G) ...
-  call DCOPY (2 * nrxx, a, 1, aux, 1)
-
+  aux (:) = a(:)
 
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
   do ipol = 1, 3
-     do n = 1, nrxx
-        gaux (n) = (0.d0, 0.d0)
-     enddo
+     gaux (:) = (0.d0, 0.d0)
      do n = 1, ngm
         gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n)) * aux (nl(n))
      enddo
@@ -205,22 +198,19 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
   USE kinds, only : DP
+  USE constants, ONLY: tpi
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   complex(kind=DP) :: a (3, nrxx), da (nrxx)
 
   real(kind=DP) :: xq (3), g (3, ngm), alat
   integer :: n, ipol
-  real(kind=DP) :: tpi, tpiba
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  real(kind=DP) :: tpiba
   complex(kind=DP), allocatable :: aux (:)
 
-  allocate (aux (  nrxx))    
-
+  allocate (aux (nrxx))
   tpiba = tpi / alat
-  do n = 1, nrxx
-     da(n) = (0.d0, 0.d0)
-  enddo
+  da(:) = (0.d0, 0.d0)
   do ipol = 1, 3
      ! copy a(ipol,r) to a complex array...
      do n = 1, nrxx
@@ -237,9 +227,7 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !  bring back to R-space, (\grad_ipol a)(r) ...
   call cft3 (da, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
-  do n = 1, nrxx
-     da (n) = da (n) * tpiba
-  enddo
+  da (:) = da (:) * tpiba
   deallocate (aux)
 
   return

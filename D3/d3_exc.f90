@@ -39,16 +39,16 @@ subroutine d3_exc
   !
   ! Calculates third derivative of Exc
   !
-  call setv (nrxx, 0.d0, d2muxc, 1)
+  d2muxc(:) = 0.d0
   do ir = 1, nrxx
      rhotot = rho (ir, 1) + rho_core (ir)
-     if (rhotot.gt.1.d-30) d2muxc (ir) = d2mxc (rhotot)
-     if (rhotot.lt. - 1.d-30) d2muxc (ir) = - d2mxc ( - rhotot)
+     if (rhotot > 1.d-30) d2muxc (ir) = d2mxc (rhotot)
+     if (rhotot < - 1.d-30) d2muxc (ir) = - d2mxc ( - rhotot)
   enddo
   !
   ! Calculates the contribution to d3dyn
   !
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn1, 1)
+  d3dyn1 (:,:,:) = (0.d0, 0.d0)
   do ipert = 1, 3 * nat
      if (q0mode (ipert) ) then
         call davcio_drho (work1, lrdrho, iud0rho, ipert, - 1)
@@ -75,8 +75,8 @@ subroutine d3_exc
   call poolbcast (2 * 27 * nat * nat * nat, d3dyn1)
 #endif
 
-  call DAXPY (2 * 27 * nat * nat * nat, 1.d0, d3dyn1, 1, d3dyn, 1)
-  call ZCOPY (27 * nat * nat * nat, d3dyn1, 1, d3dyn_aux9, 1)
+  d3dyn = d3dyn  + d3dyn1
+  d3dyn_aux9 = d3dyn1
 
   deallocate (d2muxc)
   deallocate (work1)

@@ -49,14 +49,14 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   ! the exchange-correlation contribution is computed in real space
   !
-  call setv (2 * nrxx * nspin, 0.d0, dvaux, 1)
+  dvaux (:,:) = (0.d0, 0.d0)
 
   fac = 1.d0 / float (nspin)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
      do is = 1, nspin
-        call DAXPY (nrxx,   fac, rho_core, 1, rho (1, is),   1)
-        call DAXPY (2*nrxx, fac, drhoc,    1, dvscf (1, is), 1)
+        rho(:, is) = rho(:, is) + fac * rho_core (:)
+        dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
   do is = 1, nspin
@@ -70,22 +70,23 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! add gradient correction to xc, NB: if nlcc is true we need to add here
   ! its contribution. grho contains already the core charge
   !
-  if (igcx.ne.0.or.igcc.ne.0) call dgradcorr &
+  if (igcx /= 0 .or. igcc /= 0) call dgradcorr &
        (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
        alat, omega, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin
-        call DAXPY (nrxx,   -fac, rho_core, 1, rho (1, is),   1)
-        call DAXPY (2*nrxx, -fac, drhoc,    1, dvscf (1, is), 1)
+        rho(:, is) = rho(:, is) - fac * rho_core (:)
+        dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif
   !
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
-  do is = 2, nspin
-     call DAXPY (2 * nrxx, 1.d0, dvscf(1,is), 1, dvscf(1,1), 1)
-  enddo
+  if (nspin == 2) then
+     dvscf(:,1) = dvscf(:,1) + dvscf(:,2) 
+  end if
+  !
   call cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   !
   ! hartree contribution is computed in reciprocal space
@@ -94,7 +95,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
      call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-        if (qg2.gt.1.d-8) then
+        if (qg2 > 1.d-8) then
            dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
                               e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
         endif
@@ -107,8 +108,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   ! at the end the two contributes are added
   !
-
-  call ZCOPY (nrxx * nspin, dvaux, 1, dvscf, 1)
+  dvscf (:,:) = dvaux (:,:)
   !
   deallocate (drhoc)
   deallocate (dvaux)

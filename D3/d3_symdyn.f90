@@ -43,18 +43,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   ! input: the patterns
 
   integer :: i, j, i1, icart, jcart, kcart, na, nb, nc, mu, nu, om
-  ! counter on modes
-  ! counter on modes
-  ! counter on modes
-  ! counter on cartesian coordinates
-  ! counter on cartesian coordinates
-  ! counter on cartesian coordinates
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on modes
-  ! counter on modes
-  ! counter on modes
+  ! counters
 
   complex (kind = dp) :: work, wrk (3, 3)
   ! auxiliary variables
@@ -65,7 +54,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   !
   ! First we transform in the cartesian coordinates
   !
-  call setv (2 * 27 * nat * nat * nat, 0.d0, phi, 1)
+  phi = (0.d0, 0.d0)
   do i1 = npert_i, npert_f
      nc = (i1 - 1) / 3 + 1
      kcart = i1 - 3 * (nc - 1)
@@ -79,8 +68,8 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
            do om = 1, 3 * nat
               do mu = 1, 3 * nat
                  do nu = 1, 3 * nat
-                    work = work + conjg (ug0 (i1, om) ) * u (i, mu) * d3dyn (om, mu, &
-                         nu) * conjg (u (j, nu) )
+                    work = work + conjg (ug0 (i1, om) ) * u (i, mu) * &
+                         d3dyn (om, mu, nu) * conjg (u (j, nu) )
                  enddo
               enddo
            enddo

@@ -7,7 +7,6 @@
 !
 !
 !-----------------------------------------------------------------------
-
 subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   !-----------------------------------------------------------------------
   !    This routine is a driver for the solution of the linear system whic
@@ -45,7 +44,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! input: a switch
 
   real (kind = dp) :: thresh, wg1, wg2, wwg, deltae, theta, anorm, averlt, &
-       eprec, aux_avg (2), w0gauss, wgauss, tcpu, get_clock, xq_ (3)
+       eprec, aux_avg (2), tcpu, xq_ (3)
   ! the convergence threshold
   ! weight for metals
   ! weight for metals
@@ -56,23 +55,24 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! average number of iterations
   ! cut-off for preconditioning
   ! auxiliary variable for avg. iter. coun
+
+  real (kind = dp), external :: w0gauss, wgauss, get_clock
   ! function computing the delta function
   ! function computing the theta function
   ! cpu time
 
-  complex (kind = dp) ::  ps (nbnd), ZDOTC, dbecsum, psidvpsi
+  complex (kind = dp) ::  ps (nbnd), dbecsum, psidvpsi
   ! the scalar products
-  ! the scalar product function
   ! dummy variable
   ! auxiliary dpsi dV matrix element between k+q  and  k wavefunctions
+  complex (kind = dp), external ::  ZDOTC
 
   real (kind = dp), allocatable :: h_diag (:,:)
   ! the diagonal part of the Hamiltonian
   complex (kind = dp), allocatable :: drhoscf (:,:), dvloc (:,:),  &
-       spsi (:), auxg (:), &
-       dpsiaux (:,:)
+       spsi (:), auxg (:), dpsiaux (:,:)
   ! the variation of the charge
-  ! variation of local part of the potenti
+  ! variation of local part of the potential
   ! the function spsi
   logical :: q0mode_f, conv_root, lmetq0
   ! if .true. it is useless to compute this
@@ -81,21 +81,8 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 
   integer :: ipert, ibnd, jbnd, lter, ltaver, lintercall, ik, ikk, &
        ikq, ig, ir, nrec, ios, mode, iuaux
-  ! counter on perturbations
-  ! counter on bands
-  ! counter on bands
-  ! counter on iterations of linter
-  ! average counter
-  ! average number of call to linter
-  ! counter on k points
-  ! counter on k points
-  ! counter on k+q points
-  ! counter on G vectors
-  ! counter on mesh points
-  ! the record number
-  ! integer variable for I/O control
-  ! mode index
-
+  ! counters
+  !
   external ch_psi_all2, cg_psi
   !
   call start_clock ('solve_linter')
@@ -103,17 +90,16 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   allocate  (dvloc( nrxx, npe))    
   allocate  (spsi( npwx))    
   allocate  (auxg( npwx))    
-  if (degauss.ne.0.d0) allocate  (dpsiaux( npwx, nbnd))    
+  if (degauss /= 0.d0) allocate  (dpsiaux( npwx, nbnd))    
   allocate  (h_diag( npwx, nbnd))    
   ltaver = 0
   lintercall = 0
-  lmetq0 = (degauss.ne.0.d0) .and. (isw_sl.ge.3)
-
+  lmetq0 = (degauss /= 0.d0) .and. (isw_sl >= 3)
   thresh = ethr_ph
-  if (isw_sl.eq.1) then
-     call DCOPY (3, xq, 1, xq_, 1)
+  if (isw_sl == 1) then
+     xq_ = xq
   else
-     call setv (3, 0.d0, xq_, 1)
+     xq_ = 0.d0
   endif
   !
   ! calculates the variation of the local part of the K-S potential
@@ -122,7 +108,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      mode = imode0 + ipert
      call dvscf (mode, dvloc (1, ipert), xq_)
   enddo
-  call setv (2 * npe * nrxx, 0.d0, drhoscf, 1)
+  drhoscf (:,:) = (0.d0, 0.d0)
   rewind (unit = iunigk)
 
   do ik = 1, nksq
@@ -135,17 +121,17 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      else
         read (iunigk, err = 200, iostat = ios) npwq, igkq
 200     call errore ('solve_linter_d3', 'reading igkq', abs (ios) )
-        if (isw_sl.eq.1) then
+        if (isw_sl == 1) then
            ikk = 2 * ik - 1
            ikq = 2 * ik
-        elseif (isw_sl.eq.2) then
+        elseif (isw_sl == 2) then
            ikk = 2 * ik
            ikq = 2 * ik
            npw = npwq
            do ig = 1, npwx
               igk (ig) = igkq (ig)
            enddo
-        elseif (isw_sl.eq.3) then
+        elseif (isw_sl == 3) then
            ikk = 2 * ik - 1
            ikq = 2 * ik - 1
            npwq = npw
@@ -171,12 +157,11 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      enddo
      !
      do ipert = 1, npe
-
         q0mode_f = (.not.q0mode (imode0 + ipert) ) .and. (.not.lgamma) &
-             .and. (isw_sl.ne.1)
+             .and. (isw_sl /= 1)
         if (q0mode_f) then
-           call setv (2 * nbnd * nbnd, 0.d0, psidqvpsi, 1)
-           call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
+           psidqvpsi(:,:) = (0.d0, 0.d0)
+           dpsi(:,:) = (0.d0, 0.d0)
            lintercall = 1
            goto 120
         endif
@@ -189,20 +174,22 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         ! calculates matrix element of dvscf between k+q and k  wavefunctions,
         ! that will be written on a file
         !
-        if (degauss.ne.0.d0) call setv (2 * npwx * nbnd, 0.d0, dpsiaux, 1)
+        if (degauss /= 0.d0) then
+           dpsiaux(:,:) = (0.d0, 0.d0)
+        end if
         do ibnd = 1, nbnd
-           if (isw_sl.ne.2) then
+           if (isw_sl /= 2) then
               do jbnd = 1, nbnd
                  psidvpsi = ZDOTC(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
 #ifdef __PARA
                  call reduce (2, psidvpsi)
 #endif
                  psidqvpsi (jbnd, ibnd) = psidvpsi
-                 if (degauss.ne.0.d0) then
+                 if (degauss /= 0.d0) then
                     deltae = et (ibnd, ikk) - et (jbnd, ikq)
                     !            theta = 2.0d0*wgauss(deltae/degauss,0)
                     theta = 1.0d0
-                    if (abs (deltae) .gt.1.0d-5) then
+                    if (abs (deltae) > 1.0d-5) then
                        wg1 = wgauss ( (ef-et (ibnd, ikk) ) / degauss, ngauss)
                        wg2 = wgauss ( (ef-et (jbnd, ikq) ) / degauss, ngauss)
                        wwg = (wg1 - wg2) / deltae
@@ -222,7 +209,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         call start_clock ('ortho')
         wwg = 1.0d0
         do ibnd = 1, nbnd_occ (ikk)
-           call setv (2 * npwx, 0.d0, auxg, 1)
+           auxg (:) = (0.d0, 0.d0)
            do jbnd = 1, nbnd
               ps (jbnd) = - wwg * ZDOTC(npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1)
            enddo
@@ -239,7 +226,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         ! solution of the linear system (H-eS)*dpsi=dvpsi,
         ! dvpsi=-P_c^+ (dvscf)*psi
         !
-        call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
+        dpsi (:,:) = (0.d0, 0.d0)
         do ibnd = 1, nbnd_occ (ikk)
            conv_root = .true.
            do ig = 1, npwq
@@ -265,27 +252,27 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         ! writes psidqvpsi on iupdqvp
         !
         nrec = imode0 + ipert + (ik - 1) * 3 * nat
-        if (isw_sl.eq.1) then
+        if (isw_sl == 1) then
            call davcio (psidqvpsi, lrpdqvp, iupdqvp, nrec, + 1)
-        elseif (isw_sl.ge.3) then
+        elseif (isw_sl >= 3) then
            call davcio (psidqvpsi, lrpdqvp, iupd0vp, nrec, + 1)
         endif
         !
         ! writes delta_psi on iunit iudwf, k=kpoint,
         !
-        if (isw_sl.eq.1) then
+        if (isw_sl == 1) then
            iuaux = iudqwf
-        elseif (isw_sl.ge.3) then
+        elseif (isw_sl >= 3) then
            iuaux = iudwf
-        elseif (isw_sl.eq.2) then
+        elseif (isw_sl == 2) then
            iuaux = iud0qwf
         endif
         nrec = (imode0 + ipert - 1) * nksq + ik
 
         call davcio (dpsi, lrdwf, iuaux, nrec, + 1)
         if (q0mode_f) goto 110
-        if (isw_sl.ne.2) then
-           if (degauss.ne.0.d0) then
+        if (isw_sl /= 2) then
+           if (degauss /= 0.d0) then
               do ibnd = 1, nbnd
                  wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
                  call DSCAL (2 * npwq, wg1, dpsi (1, ibnd), 1)
@@ -306,7 +293,6 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      do ipert = 1, npe
         call cinterpolate (drhoscf (1, ipert), drhoscf (1, ipert), 1)
      enddo
-
   endif
 #ifdef __PARA
   call poolreduce (2 * npe * nrxx, drhoscf)
@@ -327,7 +313,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   call flush (6)
 #endif
   deallocate (h_diag)
-  if (degauss.ne.0.d0) deallocate (dpsiaux)
+  if (degauss /= 0.d0) deallocate (dpsiaux)
   deallocate (auxg)
   deallocate (spsi)
   deallocate (dvloc)

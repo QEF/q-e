@@ -29,66 +29,44 @@ subroutine localdos (ldos, ldoss, dos_ef)
   implicit none
 
   complex(kind=DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
-  ! output: the local density of states at
-  ! output: the local density of states at
-  !         without augmentation
+  ! output: the local density of states at Ef
+  ! output: the local density of states at Ef without augmentation
   real(kind=DP) :: dos_ef
   ! output: the density of states at Ef
   !
   !    local variables for Ultrasoft PP's
   !
-
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
-  ! counter on beta functions
-  ! counter on beta functions
-  ! auxiliary variable for ijkb0
-  ! counter on solid beta functions
-  ! counter on solid beta functions
-  ! counter on atoms
-  ! counter on composite beta functions
-  ! counter on atomic types
+  ! countera
   real(kind=DP), allocatable :: becsum1 (:,:,:)
-  ! the becsum1 terms
   !
   ! local variables
   !
-
-  real(kind=DP) :: weight, w1, wdelta, w0gauss
-  ! kpoint wheight
-  ! weight
-  ! delta function weight
-  ! delta function
-
-  real(kind=DP) :: check
-
-
+  real(kind=DP) :: weight, w1, wdelta
+  ! weights
+  real(kind=DP), external :: w0gauss
+  !
   integer :: ik, is, ig, ibnd, j
-  ! kpoint index
-  ! counter on spin polarizations
-  ! g vector index
-  ! band index
-  ! fft index
-
+  ! counters
   integer :: ios
   ! status flag for i/o
-
   !
   !  initialize ldos and dos_ef
   !
   call start_clock ('localdos')
   allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))    
 
-  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum1, 1)
-  call setv (2 * nrxx * nspin, 0.d0, ldos, 1)
-  call setv (2 * nrxxs * nspin, 0.d0, ldoss, 1)
+  becsum1 (:,:,:) = 0.d0
+  ldos (:,:) = (0d0, 0.0d0)
+  ldoss(:,:) = (0d0, 0.0d0)
   dos_ef = 0.d0
   !
   !  loop over kpoints
   !
-  if (nksq.gt.1) rewind (unit = iunigk)
+  if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
      if (lsda) current_spin = isk (ik)
-     if (nksq.gt.1) then
+     if (nksq > 1) then
         read (iunigk, err = 100, iostat = ios) npw, igk
 100     call errore ('solve_linter', 'reading igk', abs (ios) )
      endif
@@ -96,17 +74,16 @@ subroutine localdos (ldos, ldoss, dos_ef)
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
-
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
-
+     !
      call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
      do ibnd = 1, nbnd_occ (ik)
         wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
         !
         ! unperturbed wf from reciprocal to real space
         !
-        call setv (2 * nrxxs, 0.d0, psic, 1)
+        psic (:) = (0.d0, 0.d0)
         do ig = 1, npw
            psic (nls (igk (ig) ) ) = evc (ig, ibnd)
         enddo
@@ -124,7 +101,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
         do nt = 1, ntyp
            if (tvanp (nt) ) then
               do na = 1, nat
-                 if (ityp (na) .eq.nt) then
+                 if (ityp (na) == nt) then
                     ijh = 1
                     do ih = 1, nh (nt)
                        ikb = ijkb0 + ih
@@ -145,7 +122,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
               enddo
            else
               do na = 1, nat
-                 if (ityp (na) .eq.nt) ijkb0 = ijkb0 + nh (nt)
+                 if (ityp (na) == nt) ijkb0 = ijkb0 + nh (nt)
               enddo
            endif
         enddo
@@ -158,7 +135,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
         call cinterpolate (ldos (1, is), ldoss (1, is), 1)
      enddo
   else
-     call ZCOPY (nrxx * nspin, ldoss, 1, ldos, 1)
+     ldos (:,:) = ldoss (:,:) 
   endif
 
   call addusldos (ldos, becsum1)

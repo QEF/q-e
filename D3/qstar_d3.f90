@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
 subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
      nq, sxq, isq, imq, iudyn, wrmode)
@@ -17,7 +16,6 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   !
   ! input variables
   !
-
   integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
        nq, isq (48), imq, iudyn
   ! number of atoms in the unit cell
@@ -36,30 +34,18 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   real (kind = dp) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
   ! direct lattice vectors
   ! reciprocal lattice vectors
-  ! for eaxh atom and rotation gives the
-  ! R vector involved
+  ! position of rotated atoms for each sym.op.
   ! list of q in the star
   logical :: wrmode (3 * nat )
   ! if .true. this mode is to be written
   !
   !  local variables
   !
-
   integer :: iq, nsq, isym, na, nb, nc, icar, jcar, kcar, i, j, k
-  ! counter on q vectors
-  ! number of sym.op. giving each q in the list
-  ! index of a symm.op.
-  ! counters on atoms
-  ! counters on atoms
-  ! counters on atoms
-  ! cartesian coordinate counters
-  ! cartesian coordinate counters
-  ! cartesian coordinate counters
-  ! generic counters
+  ! counters
 
   complex (kind = dp), allocatable :: phi (:,:,:,:,:,:), phi2 (:,:,:,:,:,:)
-  ! an auxiliary dyn. matrix.
-  ! another one
+  ! work space
 
   allocate  (phi (3,3,3,nat,nat,nat))    
   allocate  (phi2(3,3,3,nat,nat,nat))    
@@ -67,8 +53,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! Sets number of symmetry operations giving each q in the list
   !
   nsq = nsym / nq
-  if (nsq * nq.ne.nsym) call errore ('qstar_d3', 'wrong degeneracy', &
-       1)
+  if (nsq * nq /= nsym) call errore ('qstar_d3', 'wrong degeneracy', 1)
   !
   ! Writes dyn.mat d3dyn(3*nat,3*nat,3*nat)
   ! on the 6-index array phi(3,3,3,nat,nat,nat)
@@ -100,14 +85,14 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! For each q of the star rotates phi with the appropriate sym.op. -> phi
   !
   do iq = 1, nq
-     call setv (2 * 27 * nat * nat * nat, 0.d0, phi2, 1)
+     phi2 (:,:,:,:,:,:) = (0.d0, 0.d0)
      do isym = 1, nsym
-        if (isq (isym) .eq.iq) then
+        if (isq (isym) == iq) then
            call rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
                 rtau, sxq (1, iq) )
         endif
      enddo
-     call DSCAL (2 * 27 * nat * nat * nat, 1.d0 / nsq, phi2, 1)
+     phi2 = phi2 / float (nsq)
      !
      ! Back to cartesian coordinates
      !
@@ -123,34 +108,18 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
      !
 
      call write_d3dyn (sxq (1, iq), phi2, nat, iudyn, wrmode)
-     if (imq.eq.0) then
+     if (imq == 0) then
         !
         ! if -q is not in the star recovers its matrix by time reversal
         !
-        do na = 1, nat
-           do nb = 1, nat
-              do nc = 1, nat
-                 do i = 1, 3
-                    do j = 1, 3
-                       do k = 1, 3
-                          phi2 (i, j, k, na, nb, nc) = conjg (phi2 (i, j, k, na, nb, nc) &
-                               )
-                       enddo
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
+        phi2 (:,:,:,:,:,:) = conjg (phi2 (:,:,:,:,:,:) )
         !
         ! and writes it (changing temporarily sign to q)
         !
-        call DSCAL (3, - 1.d0, sxq (1, iq), 1)
+        sxq (:, iq) = - sxq (:, iq)
         call write_d3dyn (sxq (1, iq), phi2, nat, iudyn, wrmode)
-
-        call DSCAL (3, - 1.d0, sxq (1, iq), 1)
-
+        sxq (:, iq) = - sxq (:, iq)
      endif
-
   enddo
   deallocate (phi)
   deallocate (phi2)

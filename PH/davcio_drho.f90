@@ -7,7 +7,6 @@
 !
 !
 !-----------------------------------------------------------------------
-
 subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
   !-----------------------------------------------------------------------
   !
@@ -38,7 +37,7 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
   complex(kind=DP), allocatable  :: ddrho (:,:)
 
   allocate (ddrho( nrx1 * nrx2 * nrx3 , nspin))    
-  if (isw.eq.1) then
+  if (isw == 1) then
      !
      ! First task of the first pool is the only task allowed to write
      ! the file
@@ -50,13 +49,13 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
      call MPI_barrier (MPI_COMM_WORLD, errcode)
      call errore ('davcio_drho', 'at barrier', errcode)
 
-     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, + 1)
-  elseif (isw.lt.0) then
+     if (me == 1) call davcio (ddrho, lrec, iunit, nrec, + 1)
+  elseif (isw < 0) then
      !
      ! First task of the pool reads ddrho, and broadcasts to all the
      ! processors of the pool
      !
-     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, - 1)
+     if (me == 1) call davcio (ddrho, lrec, iunit, nrec, - 1)
      call broadcast (2 * nrx1 * nrx2 * nrx3 * nspin, ddrho)
      !
      ! Distributes ddrho between between the tasks of the pool
@@ -66,11 +65,9 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
         itmp = itmp + ncplane * npp (proc)
      enddo
      do is = 1, nspin
-        call setv (2 * nrxx, 0.d0, drho (1, is), 1)
-        call ZCOPY (ncplane * npp (me), ddrho (itmp, is), 1, drho (1, &
-             is), 1)
+        drho (:, is) = (0.d0, 0.d0)
+        call ZCOPY (ncplane * npp (me), ddrho (itmp, is), 1, drho (1, is), 1)
      enddo
-
   endif
   deallocate(ddrho)
 #else

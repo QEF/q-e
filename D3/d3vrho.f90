@@ -7,7 +7,6 @@
 !
 !
 !----------------------------------------------------------------------
-
 subroutine d3vrho
   !-----------------------------------------------------------------------
   !
@@ -25,24 +24,7 @@ subroutine d3vrho
   implicit none
   integer :: icart, jcart, kcart, na_i, na_j, na_k, na, ng, ir, nt, &
        ik, ikk, ig, ibnd, ikb, jkb, ios, igg, ia
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on modes
-  ! counter on modes
-  ! counter on modes
-  ! counter on atoms
-  ! counter on G vectors
-  ! counter on real space mesh
-  ! counter on atomic types
-  ! counter on k points
-  ! counter on k points
-  ! counter on G vectors
-  ! counter on bands
-  ! counters on beta functions
-  ! integer variable for I/O control
-  ! counter on g
-  ! counter on index permutation
+  ! counters
 
   real (kind = dp) :: gtau, fac, wgg
   ! the product G*\tau_s
@@ -50,8 +32,8 @@ subroutine d3vrho
   ! the true weight of a K point
 
   complex (kind = dp) :: alpha (8), ZDOTC, work
-  complex (kind = dp), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), rhog (:), &
-       work1 (:,:), work2 (:,:), work3 (:)
+  complex (kind = dp), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), &
+       rhog (:), work1 (:,:), work2 (:,:), work3 (:)
 
   allocate  (rhog( nrxx))    
   allocate  (d3dynwrk( 3 * nat, 3 * nat, 3 * nat))    
@@ -60,7 +42,7 @@ subroutine d3vrho
   allocate  (work2(  npwx, 3))    
   allocate  (work3(  npwx))    
 
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dynwrk, 1)
+  d3dynwrk (:,:,:) = (0.d0, 0.d0)
   do ir = 1, nrxx
      rhog (ir) = cmplx (rho (ir, 1), 0.d0)
   enddo
@@ -78,11 +60,11 @@ subroutine d3vrho
            do ng = 1, ngm
               gtau = tpi * (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
                    + g (3, ng) * tau (3, na) )
-              fac = vloc (igtongl (ng), ityp (na) ) * tpiba2 * tpiba * omega * &
-                   (real (rhog (nl (ng) ) ) * sin (gtau) + DIMAG (rhog (nl (ng) ) ) &
-                   * cos (gtau) )
-              d3dynwrk (na_i, na_j, na_k) = d3dynwrk (na_i, na_j, na_k) + fac * &
-                   g (icart, ng) * g (jcart, ng) * g (kcart, ng)
+              fac = vloc (igtongl (ng), ityp (na) ) * tpiba2 * tpiba * omega *&
+                   (real (rhog (nl (ng) ) ) * sin (gtau) + &
+                   DIMAG (rhog (nl (ng) ) ) * cos (gtau) )
+              d3dynwrk (na_i, na_j, na_k) = d3dynwrk (na_i, na_j, na_k) + &
+                   fac * g (icart, ng) * g (jcart, ng) * g (kcart, ng)
            enddo
         enddo
      enddo
@@ -114,7 +96,7 @@ subroutine d3vrho
               do ibnd = 1, nbnd_occ (ikk)
                  wgg = wg (ibnd, ikk)
                  do ig = 1, npw
-                    work3 (ig) = evc (ig, ibnd) * tpiba * g (icart, igk (ig) ) &
+                    work3 (ig) = evc (ig, ibnd) * tpiba * g (icart, igk (ig) )&
                          * tpiba * g (jcart, igk (ig) ) * tpiba * g (kcart, igk (ig) )
                     work2 (ig, 1) = evc (ig, ibnd) * tpiba * g (icart, igk (ig) ) &
                          * tpiba * g (jcart, igk (ig) )
@@ -129,7 +111,7 @@ subroutine d3vrho
                  jkb=0
                  do nt = 1, ntyp
                     do na = 1, nat
-                       if (ityp (na).eq.nt) then
+                       if (ityp (na) == nt) then
                           na_k = 3 * (na - 1) + kcart
                           na_i = 3 * (na - 1) + icart
                           na_j = 3 * (na - 1) + jcart
@@ -166,7 +148,7 @@ subroutine d3vrho
   !   The dynamical matrix was computed in cartesian axis and now we put
   !   it on the basis of the modes
   !
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dynwrk2, 1)
+  d3dynwrk2(:,:,:) = (0.d0, 0.d0)
   do na_k = npert_i, npert_f
      if (q0mode (na_k) ) then
         do na_i = 1, 3 * nat
@@ -188,9 +170,9 @@ subroutine d3vrho
 #ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dynwrk2)
 #endif
-  call DAXPY (2 * 27 * nat * nat * nat, 1.d0, d3dynwrk2, 1, d3dyn, 1)
+  d3dyn (:,:,:) = d3dyn (:,:,:) +  d3dynwrk2 (:,:,:) 
+  d3dyn_aux1(:,:,:) = d3dynwrk2 (:,:,:) 
 
-  call ZCOPY (27 * nat * nat * nat, d3dynwrk2, 1, d3dyn_aux1, 1)
   deallocate (work1)
   deallocate (work2)
   deallocate (work3)

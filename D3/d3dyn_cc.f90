@@ -7,7 +7,6 @@
 !
 !
 !-----------------------------------------------------------------------
-
 subroutine d3dyn_cc
   !-----------------------------------------------------------------------
   !
@@ -48,11 +47,11 @@ subroutine d3dyn_cc
   allocate  (d3dyn3 ( 3 * nat, 3 * nat, 3 * nat))    
   allocate  (d3dyn4 ( 3 * nat, 3 * nat, 3 * nat))    
 
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn0, 1)
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn1, 1)
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn2, 1)
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn3, 1)
-  call setv (2 * ngm * nat, 0.d0, drc_exp, 1)
+  d3dyn0(:,:,:) = (0.d0, 0.d0)
+  d3dyn1(:,:,:) = (0.d0, 0.d0)
+  d3dyn2(:,:,:) = (0.d0, 0.d0)
+  d3dyn3(:,:,:) = (0.d0, 0.d0)
+  drc_exp(:,:) = (0.d0, 0.d0)
 
   do na = 1, nat
      nta = ityp (na)
@@ -63,11 +62,11 @@ subroutine d3dyn_cc
         drc_exp (ig, na) = d0rc (ig, nta) * exc
      enddo
   enddo
-  call setv (2 * nrxx, 0.d0, aux, 1)
+  aux(:) = (0.d0, 0.d0)
   do ir = 1, nrxx
      rhox = rho (ir, 1) + rho_core (ir)
      arhox = abs (rhox)
-     if (arhox.gt.1.0e-30) then
+     if (arhox > 1.0e-30) then
         call xc (arhox, ex, ec, vx, vc)
         aux (ir) = DCMPLX (e2 * (vx + vc), 0.d0)
      endif
@@ -92,12 +91,10 @@ subroutine d3dyn_cc
            d3dyn0 (na_i, na_j, na_k) = work * omega * tpiba2 * tpiba
         enddo
      enddo
-
   enddo
 #ifdef __PARA
   do nu_i = 1, 3 * nat
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
-
   enddo
   do nu_i = 1, npert_i - 1
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
@@ -110,11 +107,11 @@ subroutine d3dyn_cc
      enddo
 
      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+
      do na = 1, nat
         do i_cart = 1, 3
            na_i = i_cart + 3 * (na - 1)
            do j_cart = 1, 3
-
               na_j = j_cart + 3 * (na - 1)
               work = DCMPLX (0.d0, 0.d0)
               do ig = 1, ngm
@@ -122,7 +119,6 @@ subroutine d3dyn_cc
                       j_cart, ig) * drc_exp (ig, na)
 
               enddo
-
               d3dyn1 (nu_i, na_i, na_j) = work * tpiba2 * omega
            enddo
         enddo
@@ -132,10 +128,9 @@ subroutine d3dyn_cc
 #ifdef __PARA
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
-
   enddo
 #endif
-  call setv (2 * ngm * nat, 0.d0, drc_exp, 1)
+  drc_exp(:,:) = (0.d0, 0.d0)
   do na = 1, nat
      nta = ityp (na)
      do ig = 1, ngm
@@ -144,12 +139,10 @@ subroutine d3dyn_cc
         exc = DCMPLX (cos (arg), sin (arg) )
         drc_exp (ig, na) = drc (ig, nta) * exc
      enddo
-
   enddo
 #ifdef __PARA
   do nu_i = 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
-
   enddo
   do nu_i = 1, npert_i - 1
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
@@ -162,6 +155,7 @@ subroutine d3dyn_cc
      enddo
 
      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+
      do na = 1, nat
         do i_cart = 1, 3
            na_i = i_cart + 3 * (na - 1)
@@ -179,17 +173,15 @@ subroutine d3dyn_cc
            enddo
         enddo
      enddo
-
   enddo
+
 #ifdef __PARA
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
-
   enddo
   call reduce (2 * 27 * nat * nat * nat, d3dyn0)
   call reduce (2 * 27 * nat * nat * nat, d3dyn1)
   call reduce (2 * 27 * nat * nat * nat, d3dyn2)
-
   call reduce (2 * 27 * nat * nat * nat, d3dyn3)
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn0)
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)
@@ -200,7 +192,7 @@ subroutine d3dyn_cc
   !   The dynamical matrix was computed in cartesian axis and now we put
   !   it on the basis of the modes
   !
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn4, 1)
+  d3dyn4(:,:,:) = (0.d0, 0.d0)
   do nu_k = npert_i, npert_f
      if (q0mode (nu_k) ) then
         do nu_i = 1, 3 * nat
@@ -210,38 +202,38 @@ subroutine d3dyn_cc
               do nc_kcart = 1, 3 * nat
                  do na_icart = 1, 3 * nat
                     do nb_jcart = 1, 3 * nat
-                       work0 = work0 + ug0 (nc_kcart, nu_k) * conjg (u (na_icart, &
-                            nu_i) ) * d3dyn0 (nc_kcart, na_icart, nb_jcart) * u (nb_jcart, &
-                            nu_j)
+                       work0 = work0 + ug0 (nc_kcart, nu_k) * &
+                            conjg (u (na_icart, nu_i) ) * &
+                            d3dyn0 (nc_kcart, na_icart, nb_jcart) * &
+                            u (nb_jcart, nu_j)
                     enddo
                  enddo
-
               enddo
+
               work1 = (0.d0, 0.d0)
               do na_icart = 1, 3 * nat
                  do nb_jcart = 1, 3 * nat
                     work1 = work1 + conjg (u (na_icart, nu_i) ) * d3dyn1 (nu_k, &
                          na_icart, nb_jcart) * u (nb_jcart, nu_j)
                  enddo
-
               enddo
+
               work2 = (0.d0, 0.d0)
               do nc_kcart = 1, 3 * nat
                  do nb_jcart = 1, 3 * nat
                     work2 = work2 + ug0 (nc_kcart, nu_k) * d3dyn2 (nc_kcart, nu_i, &
                          nb_jcart) * u (nb_jcart, nu_j)
                  enddo
-
               enddo
+
               work3 = (0.d0, 0.d0)
               do nc_kcart = 1, 3 * nat
                  do na_icart = 1, 3 * nat
-                    work3 = work3 + ug0 (nc_kcart, nu_k) * conjg (u (na_icart, &
-                         nu_i) ) * d3dyn3 (nc_kcart, na_icart, nu_j)
+                    work3 = work3 + ug0 (nc_kcart, nu_k) * &
+                         conjg (u (na_icart, nu_i) ) * &
+                         d3dyn3 (nc_kcart, na_icart, nu_j)
                  enddo
-
               enddo
-
               d3dyn4 (nu_k, nu_i, nu_j) = work0 + work1 + work2 + work3
            enddo
         enddo
@@ -250,8 +242,8 @@ subroutine d3dyn_cc
 #ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn4)
 #endif
-  call DAXPY (2 * 27 * nat * nat * nat, 1.d0, d3dyn4, 1, d3dyn, 1)
-  call ZCOPY (27 * nat * nat * nat, d3dyn4, 1, d3dyn_aux8, 1)
+  d3dyn (:,:,:) = d3dyn(:,:,:) + d3dyn4(:,:,:)
+  d3dyn_aux8(:,:,:) = d3dyn4(:,:,:)
 
   deallocate (aux)
   deallocate (drc_exp)

@@ -26,35 +26,18 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! input: the initial position of the mode
 
   complex(kind=DP) :: drhoscf (nrxx, nspin, npertx)
-  ! the change of density due to
-  ! perturbations
-
+  ! the change of density due to perturbations
 
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &
        ipol, ikk
-  ! counter on perturbations
-  ! counter on k points
-  ! counter on k points
-  ! counter on g vectors
-  ! counter on the i modes
-  ! counter on the j modes
-  ! counter on the icart modes
-  ! counter on bands
-  ! counter on records
-  ! counter on polarizations
-  ! record position for wfc at k
+  ! counters
+  ! ikk: record position for wfc at k
 
-  complex(kind=DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), wdyn (3 * &
-       nat, 3 * nat), ZDOTC
+  complex(kind=DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
+       wdyn (3 * nat, 3 * nat), ZDOTC
   complex(kind=DP), allocatable ::  aux (:,:), dbecq (:,:,:), &
        dalpq (:,:,:,:)
-  ! auxiliary matrix
-  ! auxiliary matrix where drhodv is store
-  ! auxiliary quantity
-  ! contain dbec
-  ! contain dalpha
-  ! the scalar product functions
-
+  ! work space
   !
   !   Initialize the auxiliary matrix wdyn
   !
@@ -62,14 +45,14 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   allocate (dbecq ( nkb , nbnd, nper))    
   allocate (dalpq ( nkb , nbnd ,3 ,nper))    
   allocate (aux   ( npwx , nbnd))    
-  call setv (18 * nat * nat, 0.d0, dynwrk, 1)
-  call setv (18 * nat * nat, 0.d0, wdyn, 1)
+  dynwrk(:,:) = (0.d0, 0.d0)
+  wdyn  (:,:) = (0.d0, 0.d0)
   !
   !   We need a sum over all k points ...
   !
-  if (nksq.gt.1) rewind (unit = iunigk)
+  if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) read (iunigk) npw, igk
+     if (nksq > 1) read (iunigk) npw, igk
      if (lgamma) then
         ikk = ik
         ikq = ik
@@ -77,14 +60,14 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      else
         ikk = 2 * ik - 1
         ikq = ikk + 1
-        if (nksq.gt.1) read (iunigk) npwq, igkq
+        if (nksq > 1) read (iunigk) npwq, igkq
      endif
      if (lsda) current_spin = isk (ikk)
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
 
      do mu = 1, nper
         nrec = (mu - 1) * nksq + ik
-        if (nksq.gt.1.or.nper.gt.1) call davcio(dpsi, lrdwf, iudwf, nrec,-1)
+        if (nksq > 1 .or. nper > 1) call davcio(dpsi, lrdwf, iudwf, nrec,-1)
         call ccalbec (nkb, npwx, npwq, nbnd, dbecq (1, 1, mu), vkb, dpsi)
         do ipol = 1, 3
            do ibnd = 1, nbnd
@@ -97,7 +80,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
         enddo
      enddo
      fact = DCMPLX (0.d0, tpiba)
-     call ZSCAL (nkb * nbnd * 3 * nper, fact, dalpq, 1)
+     dalpq = dalpq * fact
      call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq, dalpq)
   enddo
   !
@@ -122,7 +105,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   ! add the contribution of the local part of the perturbation
   !
-
   call drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !
   ! add to the rest of the dynamical matrix
@@ -131,7 +113,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !      call tra_write_matrix('drhodv dyn',dyn,u,nat)
   !      call tra_write_matrix('drhodv wdyn',wdyn,u,nat)
 
-  call DAXPY (18 * nat * nat, 1.d0, wdyn, 1, dyn, 1)
+  dyn (:,:) = dyn (:,:) + wdyn (:,:) 
 
   deallocate (aux)
   deallocate (dalpq)

@@ -36,7 +36,6 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   integer :: j
   ! do loop index
 
-
   complex(kind=DP) :: psi (lda, m), hpsi (lda, m), spsi (lda, m)
   ! input: the functions where to apply H and S
   ! output: H times psi
@@ -61,7 +60,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
 
   do ibnd = 1, m
      call start_clock ('firstfft')
-     call setv (2 * nrxxs, 0.d0, psic, 1)
+     psic(:) = (0.d0, 0.d0)
      do j = 1, n
         psic (nls(igkq(j))) = psi (j, ibnd)
      enddo

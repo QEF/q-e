@@ -17,8 +17,6 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   !
 #include "machine.h"
 
-
-
   use pwcom
   USE kinds, only : DP
   use phcom
@@ -26,9 +24,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 
   complex(kind=DP) :: becq (nkb, nbnd, nksq), alpq (nkb, nbnd, 3, nksq), &
        wdyn (3 * nat, 3 * nat)
-  ! input: the becp with psi_{k+q
-  ! input: the alphap with psi_{k
-  ! output: the term of the dynamical
+  ! input: the becp with psi_{k+q}
+  ! input: the alphap with psi_{k}
+  ! output: the term of the dynamical matrix
 
   real(kind=DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights
@@ -36,34 +34,21 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   complex(kind=DP) :: ps, aux1 (nbnd), aux2 (nbnd)
   complex(kind=DP), allocatable ::  ps1 (:,:),&
        ps2 (:,:,:), ps3 (:,:), ps4 (:,:,:)
+  ! work space
   complex(kind=DP) ::  dynwrk (3 * nat, 3 * nat)
-  ! auxiliary
-  ! auxiliary
-  ! auxiliary for speed
-  ! auxiliary for speed
-  ! auxiliary for speed
-  ! auxiliary for speed
-  ! dynamical matrix
+  ! auxiliary dynamical matrix
 
   integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkb0b, ih, jh, ikb, &
        jkb, ipol, jpol, startb, lastb, na, nb, nt, ntb, nu_i, nu_j, &
        na_icart, na_jcart, mu, nu
-  ! counter on k points
-  ! counter on bands
-  ! counter on beta functions
-  ! counter on beta functions
-  ! counter on polarization
-  ! divide band among processors
-  ! counter on atoms and types
-  ! counters on modes
-  ! counter on the weights
+  ! counters
 
   allocate (ps1 (  nkb , nbnd))    
   allocate (ps2 (  nkb , nbnd , 3))    
   allocate (ps3 (  nkb , nbnd))    
   allocate (ps4 (  nkb , nbnd , 3))    
 
-  call setv (2 * 3 * nat * 3 * nat, 0.d0, dynwrk, 1)
+  dynwrk (:,:) = (0.d0, 0.d0)
   call divide (nbnd, startb, lastb)
   do ik = 1, nksq
      if (lgamma) then
@@ -75,17 +60,17 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      endif
 
      if (lsda) current_spin = isk (ikk)
-     call setv (2 * nkb * nbnd, 0.d0, ps1, 1)
-     call setv (2 * nkb * nbnd * 3, 0.d0, ps2, 1)
-     call setv (2 * nkb * nbnd, 0.d0, ps3, 1)
-     call setv (2 * nkb * nbnd * 3, 0.d0, ps4, 1)
+     ps1 (:,:) = (0.d0, 0.d0)
+     ps2 (:,:,:) = (0.d0, 0.d0)
+     ps3 (:,:) = (0.d0, 0.d0)
+     ps4 (:,:,:) = (0.d0, 0.d0)
      !
      !   Here we prepare the two terms
      !
      ijkb0 = 0
      do nt = 1, ntyp
         do na = 1, nat
-           if (ityp (na) .eq.nt) then
+           if (ityp (na) == nt) then
               do ih = 1, nh (nt)
                  ikb = ijkb0 + ih
                  do jh = 1, nh (nt)
@@ -124,7 +109,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
               do ipol = 1, 3
                  mu = 3 * (na - 1) + ipol
                  do ibnd = 1, nbnd_occ (ikk)
-                    call setv (2 * nbnd, 0.d0, aux1, 1)
+                    aux1 (:) = (0.d0, 0.d0)
                     do ih = 1, nh (nt)
                        ikb = ijkb0 + ih
                        do jbnd = startb, lastb
@@ -136,7 +121,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                     ijkb0b = 0
                     do ntb = 1, ntyp
                        do nb = 1, nat
-                          if (ityp (nb) .eq.ntb) then
+                          if (ityp (nb) == ntb) then
                              do ih = 1, nh (ntb)
                                 ikb = ijkb0b + ih
                                 ps = (0.d0, 0.d0)
@@ -160,10 +145,10 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                     ijkb0b = 0
                     do ntb = 1, ntyp
                        do nb = 1, nat
-                          if (ityp (nb) .eq.ntb) then
+                          if (ityp (nb) == ntb) then
                              do jpol = 1, 3
                                 nu = 3 * (nb - 1) + jpol
-                                call setv (2 * nbnd, 0.d0, aux2, 1)
+                                aux2 (:) = (0.d0, 0.d0)
                                 do ih = 1, nh (ntb)
                                    ikb = ijkb0b + ih
                                    do jbnd = startb, lastb
@@ -192,7 +177,6 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      enddo
   enddo
 #ifdef __PARA
-
   call reduce (2 * 3 * nat * 3 * nat, dynwrk)
 #endif
   do nu_i = 1, 3 * nat

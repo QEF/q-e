@@ -18,6 +18,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
 #include "machine.h"
   USE kinds, only : DP
+  USE constants, ONLY: tpi
   implicit none
   !
   !    The dummy variables
@@ -40,37 +41,17 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   complex(kind=DP) :: phi (3, 3, nat, nat)
   ! inp/out: the matrix to symmetrize
   !
-  !     One parameter
+  !   local variables
   !
-  real(kind=DP) :: tpi
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)
-  !
-  !   and the local variables
-  !
-
   integer :: isymq, sna, snb, irot, na, nb, ipol, jpol, lpol, kpol, &
        iflb (nat, nat)
-  ! counter on symmetries
-  ! the rotated of the a atom
-  ! the rotated of the b atom
-  ! counter on rotations
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on polarizations
-  ! used to account for symmetrized e
+  ! counters, indices, work space
 
   real(kind=DP) :: arg
   ! the argument of the phase
 
-  complex(kind=DP) :: phip (3, 3, nat, nat), work (3, 3), fase, faseq ( &
-       48)
-  ! working space
-  ! working space
-  ! the phase factor
-  ! the phases for each symmetry
+  complex(kind=DP) :: phip (3, 3, nat, nat), work (3, 3), fase, faseq (48)
+  ! work space, phase factors
   !
   !    We start by imposing hermiticity
   !
@@ -88,8 +69,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
   !    If no other symmetry is present we quit here
   !
-
-  if ( (nsymq.eq.1) .and. (.not.minus_q) ) return
+  if ( (nsymq == 1) .and. (.not.minus_q) ) return
   !
   !    Then we impose the symmetry q -> -q+G if present
   !
@@ -98,53 +78,50 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
         do nb = 1, nat
            do ipol = 1, 3
               do jpol = 1, 3
-                 call setv (18, 0.d0, work, 1)
+                 work(:,:) = (0.d0, 0.d0)
                  sna = irt (irotmq, na)
                  snb = irt (irotmq, nb)
                  arg = 0.d0
                  do kpol = 1, 3
-                    arg = arg + (xq (kpol) * (rtau (kpol, irotmq, na) - rtau (kpol, &
-                         irotmq, nb) ) )
+                    arg = arg + (xq (kpol) * (rtau (kpol, irotmq, na) - &
+                                              rtau (kpol, irotmq, nb) ) )
                  enddo
                  arg = arg * tpi
                  fase = DCMPLX (cos (arg), sin (arg) )
                  do kpol = 1, 3
                     do lpol = 1, 3
-                       work (ipol, jpol) = work (ipol, jpol) + s (ipol, kpol, irotmq) &
-                            * s (jpol, lpol, irotmq) * phi (kpol, lpol, sna, snb) * fase
+                       work (ipol, jpol) = work (ipol, jpol) + &
+                            s (ipol, kpol, irotmq) * s (jpol, lpol, irotmq) &
+                            * phi (kpol, lpol, sna, snb) * fase
                     enddo
                  enddo
-                 phip (ipol, jpol, na, nb) = (phi (ipol, jpol, na, nb) + conjg ( &
-                      work (ipol, jpol) ) ) * 0.5d0
+                 phip (ipol, jpol, na, nb) = (phi (ipol, jpol, na, nb) + &
+                      conjg ( work (ipol, jpol) ) ) * 0.5d0
               enddo
            enddo
         enddo
      enddo
-     call ZCOPY (9 * nat * nat, phip, 1, phi, 1)
+     phi = phip
   endif
 
   !
   !    Here we symmetrize with respect to the small group of q
   !
-  if (nsymq.eq.1) return
+  if (nsymq == 1) return
 
+  iflb (:, :) = 0
   do na = 1, nat
      do nb = 1, nat
-        iflb (na, nb) = 0
-     enddo
-  enddo
-  do na = 1, nat
-     do nb = 1, nat
-        if (iflb (na, nb) .eq.0) then
-           call setv (18, 0.d0, work, 1)
+        if (iflb (na, nb) == 0) then
+           work(:,:) = (0.d0, 0.d0)
            do isymq = 1, nsymq
               irot = irgq (isymq)
               sna = irt (irot, na)
               snb = irt (irot, nb)
               arg = 0.d0
               do ipol = 1, 3
-                 arg = arg + (xq (ipol) * (rtau (ipol, irot, na) - rtau (ipol, &
-                      irot, nb) ) )
+                 arg = arg + (xq (ipol) * (rtau (ipol, irot, na) - &
+                                           rtau (ipol, irot, nb) ) )
               enddo
               arg = arg * tpi
               faseq (isymq) = DCMPLX (cos (arg), sin (arg) )
@@ -152,9 +129,9 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                  do jpol = 1, 3
                     do kpol = 1, 3
                        do lpol = 1, 3
-                          work (ipol, jpol) = work (ipol, jpol) + s (ipol, kpol, irot) &
-                               * s (jpol, lpol, irot) * phi (kpol, lpol, sna, snb) * faseq ( &
-                               isymq)
+                          work (ipol, jpol) = work (ipol, jpol) + &
+                               s (ipol, kpol, irot) * s (jpol, lpol, irot) &
+                               * phi (kpol, lpol, sna, snb) * faseq (isymq)
                        enddo
                     enddo
                  enddo
@@ -181,6 +158,6 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
         endif
      enddo
   enddo
-  call DSCAL (18 * nat * nat, 1.d0 / nsymq, phi, 1)
+  phi (:, :, :, :) = phi (:, :, :, :) / float(nsymq)
   return
 end subroutine symdynph_gq

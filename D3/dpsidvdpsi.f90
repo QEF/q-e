@@ -35,11 +35,11 @@ subroutine dpsidvdpsi (nu_q0)
      allocate  (d3dyn3( 3 * nat, 3 * nat,3 * nat))    
   endif
 
-  call setv (3, 0.d0, zero, 1)
-  call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn1, 1)
+  zero = 0.d0
+  d3dyn1 (:,:,:) = (0.d0, 0.d0)
   if (.not.allmodes) then
-     call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn2, 1)
-     call setv (2 * 27 * nat * nat * nat, 0.d0, d3dyn3, 1)
+     d3dyn2 (:,:,:) = (0.d0, 0.d0)
+     d3dyn3 (:,:,:) = (0.d0, 0.d0)
   endif
   nu_z = nu_q0
 
@@ -48,8 +48,7 @@ subroutine dpsidvdpsi (nu_q0)
   rewind (unit = iunigk)
 
   do ik = 1, nksq
-     if (.not.lgamma) read (iunigk, err = 100, iostat = ios) npwq, &
-          igkq
+     if (.not.lgamma) read (iunigk, err = 100, iostat = ios) npwq, igkq
      read (iunigk, err = 100, iostat = ios) npwq, igkq
 100  call errore ('dpsidvdpsi', 'reading iunigk-iunigkq', abs (ios) )
      npw = npwq
@@ -66,7 +65,7 @@ subroutine dpsidvdpsi (nu_q0)
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
 
      wg1 = wk (ikk)
-     if (degauss.ne.0.d0) then
+     if (degauss /= 0.d0) then
         do ibnd = 1, nbnd
            wga (ibnd) = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
         enddo
@@ -74,17 +73,16 @@ subroutine dpsidvdpsi (nu_q0)
      do nu_i = 1, 3 * nat
         nrec = (nu_i - 1) * nksq + ik
         call davcio (dpsi, lrdwf, iudqwf, nrec, - 1)
-
         call dvdpsi (nu_z, zero, dvloc, vkb, vkb, dpsi, dvpsi)
+
         do nu_j = 1, 3 * nat
            nrec = (nu_j - 1) * nksq + ik
-
            call davcio (dqpsi, lrdwf, iudqwf, nrec, - 1)
            wrk = DCMPLX (0.d0, 0.d0)
            do ibnd = 1, nbnd
-              if (degauss.ne.0.d0) wg1 = wk (ikk) * wga (ibnd)
-              wrk = wrk + 2.d0 * wg1 * ZDOTC (npwq, dqpsi (1, ibnd), 1, dvpsi ( &
-                   1, ibnd), 1)
+              if (degauss /= 0.d0) wg1 = wk (ikk) * wga (ibnd)
+              wrk = wrk + 2.d0 * wg1 * &
+                   ZDOTC (npwq, dqpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
            enddo
 #ifdef __PARA
            call reduce (2, wrk)
@@ -92,17 +90,14 @@ subroutine dpsidvdpsi (nu_q0)
            d3dyn1 (nu_z, nu_j, nu_i) = d3dyn1 (nu_z, nu_j, nu_i) + wrk
         enddo
      enddo
-
   enddo
+
   if (.not.allmodes) then
-
      rewind (unit = iunigk)
-
      do ik = 1, nksq
         read (iunigk, err = 110, iostat = ios) npw, igk
         if (.not.lgamma) read (iunigk, err = 110, iostat = ios) npwq, &
              igkq
-
 110     call errore ('dpsidvdpsi', 'reading iunigk-iunigkq', abs (ios) )
         if (lgamma) then
            npwq = npw
@@ -117,7 +112,7 @@ subroutine dpsidvdpsi (nu_q0)
         call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
 
         wg1 = wk (ikk)
-        if (degauss.ne.0.d0) then
+        if (degauss /= 0.d0) then
            do ibnd = 1, nbnd
               wga (ibnd) = wgauss ( (ef - et (ibnd, ikk) ) / degauss, &
                    ngauss)
@@ -129,7 +124,6 @@ subroutine dpsidvdpsi (nu_q0)
            call dvscf (nu_z, dvloc, xq)
            nrec = (nu_i - 1) * nksq + ik
            call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
-
            call dvdpsi (nu_z, xq, dvloc, vkb0, vkb, dpsi, dvpsi)
 
            do nu_j = 1, 3 * nat
@@ -138,8 +132,8 @@ subroutine dpsidvdpsi (nu_q0)
               wrk = DCMPLX (0.d0, 0.d0)
               do ibnd = 1, nbnd
                  if (degauss.ne.0.d0) wg1 = wk (ikk) * wga (ibnd)
-                 wrk = wrk + 2.d0 * wg1 * ZDOTC (npwq, dvpsi (1, ibnd), 1, &
-                      dqpsi (1, ibnd), 1)
+                 wrk = wrk + 2.d0 * wg1 * &
+                      ZDOTC (npwq, dvpsi (1, ibnd), 1, dqpsi (1, ibnd), 1)
               enddo
 #ifdef __PARA
               call reduce (2, wrk)
@@ -149,8 +143,8 @@ subroutine dpsidvdpsi (nu_q0)
            enddo
         enddo
      enddo
-
   endif
+
 #ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)
   if (.not.allmodes) then

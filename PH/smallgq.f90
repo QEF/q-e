@@ -31,7 +31,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
   ! input: the q point of the crystal
-  ! output: the G associated to a symmetry:[S(irotq
+  ! output: the G associated to a symmetry:[S(irotq)*q - q]
   ! output: the G associated to:  [S(irotmq)*q + q]
 
   integer :: s (3, 3, 48), irgq (48), irotmq, nsymq, nsym
@@ -42,8 +42,8 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   ! input: dimension of the point group
 
   logical :: minus_q
-  ! input: .t. if sym.ops. such that Sq=-q+G are se
-  ! output: .t. if such asymmetry has been found
+  ! input: .t. if sym.ops. such that Sq=-q+G are searched for
+  ! output: .t. if such a symmetry has been found
 
   real(kind=DP) :: wrk (3), aq (3), raq (3), zero (3)
   ! additional space to compute gi and gimq
@@ -57,31 +57,29 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   ! counter on polarizations
 
   logical :: look_for_minus_q, eqvect
-  ! .t. if sym.ops. such that Sq=-q+G are se
-  ! logical function, check if two vectors are equa
+  ! .t. if sym.ops. such that Sq=-q+G are searched for
+  ! logical function, check if two vectors are equal
   !
   !  Set to zero some variables and transform xq to the crystal basis
   !
   look_for_minus_q = minus_q
   !
-  !
-  !
   minus_q = .false.
-  call setv (3, 0.d0, zero, 1)
-  call setv (3 * 48, 0.d0, gi, 1)
-  call setv (3, 0.d0, gimq, 1)
-  call DCOPY (3, xq, 1, aq, 1)
+  zero = 0.d0
+  gi   = 0.d0
+  gimq = 0.d0
+  aq = xq
   call cryst_to_cart (1, aq, at, - 1)
   !
   !   test all symmetries to see if the operation S sends q in q+G ...
   !
   nsymq = 0
   do isym = 1, nsym
-     call setv (3, 0.d0, raq, 1)
+     raq = 0.d0
      do ipol = 1, 3
         do jpol = 1, 3
-           raq (ipol) = raq (ipol) + float (s (ipol, jpol, isym) ) * aq ( &
-                jpol)
+           raq (ipol) = raq (ipol) + float (s (ipol, jpol, isym) ) * &
+                aq (jpol)
         enddo
      enddo
      if (eqvect (raq, aq, zero) ) then
@@ -91,12 +89,12 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
            wrk (ipol) = raq (ipol) - aq (ipol)
         enddo
         call cryst_to_cart (1, wrk, bg, 1)
-        call DCOPY (3, wrk, 1, gi (1, nsymq), 1)
+        gi (:, nsymq) = wrk (:) 
         !
         !   ... and in -q+G
         !
         if (look_for_minus_q.and..not.minus_q) then
-           call DSCAL (3, - 1.d0, raq, 1)
+           raq (:) = - raq(:)
            if (eqvect (raq, aq, zero) ) then
               minus_q = .true.
               irotmq = isym
@@ -104,20 +102,19 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
                  wrk (ipol) = - raq (ipol) + aq (ipol)
               enddo
               call cryst_to_cart (1, wrk, bg, 1)
-              call DCOPY (3, wrk, 1, gimq, 1)
+              gimq (:) = wrk (:) 
            endif
         endif
      endif
-
   enddo
   !
   ! if xq=(0,0,0) minus_q always apply with the identity operation
   !
-  if (xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0) then
+  if (xq (1) == 0.d0 .and. xq (2) == 0.d0 .and. xq (3) == 0.d0) then
      minus_q = .true.
      irotmq = 1
-     call setv (3, 0.d0, gimq, 1)
-
+     gimq = 0.d0
   endif
+  !
   return
 end subroutine smallgq

@@ -6,8 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
-     w2)
+subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   !-----------------------------------------------------------------------
   !
   !   This routine diagonalizes the dynamical matrix and returns
@@ -22,7 +21,6 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   !
   !   first the dummy variables
   !
-
   integer :: nmodes, nat, ntyp, ityp (nat), iudyn
   ! input: the total number of modes
   ! input: the number of atoms
@@ -33,23 +31,14 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   real(kind=DP) :: xq (3), amass (ntyp), w2 (3 * nat)
   ! input: q vector
   ! input: the masses
-  ! output: the frequencies square
+  ! output: the frequencies squared
   complex(kind=DP) :: dyn (3 * nat, nmodes)
   ! input: the dynamical matrix
   !
   !   here the local variables
   !
-
-
   integer :: nta, ntb, nu_i, nu_j, mu, na, nb, i
-  ! counter on types
-  ! counter on types
-  ! counter on modes
-  ! counter on modes
-  ! counter on 3*nat
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on modes
+  ! counters
 
   real(kind=DP) :: rydthz, rydcm1, w1, unorm
   ! conversion from a.u. to terahertz
@@ -65,8 +54,8 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   !
   do nu_i = 1, nmodes
      do nu_j = 1, nu_i
-        dyn (nu_i, nu_j) = 0.5d0 * (dyn (nu_i, nu_j) + conjg (dyn (nu_j, &
-             nu_i) ) )
+        dyn (nu_i, nu_j) = 0.5d0 * (dyn (nu_i, nu_j) + &
+                             conjg (dyn (nu_j, nu_i) ) )
         dyn (nu_j, nu_i) = conjg (dyn (nu_i, nu_j) )
      enddo
   enddo
@@ -79,8 +68,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
      do nu_j = 1, nmodes
         nb = (nu_j - 1) / 3 + 1
         ntb = ityp (nb)
-        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) / sqrt (amass (nta) * amass ( &
-             ntb) )
+        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) / sqrt (amass (nta) * amass (ntb) )
      enddo
   enddo
   !
@@ -96,17 +84,16 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   !    Writes on output the displacements and the normalized frequencies.
   !
   WRITE( stdout, 9000) (xq (i), i = 1, 3)
-  if (iudyn.ne.0) write (iudyn, 9000) (xq (i), i = 1, 3)
+  if (iudyn /= 0) write (iudyn, 9000) (xq (i), i = 1, 3)
 
 9000 format(/,5x,'Diagonalizing the dynamical matrix', &
        &       //,5x,'q = ( ',3f14.9,' ) ',//,1x,74('*'))
-  call setv (2 * 3 * nat * nmodes, 0.d0, dyn, 1)
+  dyn (:,:) = (0.d0, 0.d0)
   do nu_i = 1, nmodes
      w1 = sqrt (abs (w2 (nu_i) ) )
-     if (w2 (nu_i) .lt.0.d0) w1 = - w1
+     if (w2 (nu_i) < 0.d0) w1 = - w1
      WRITE( stdout, 9010) nu_i, w1 * rydthz, w1 * rydcm1
-     if (iudyn.ne.0) write (iudyn, 9010) nu_i, w1 * rydthz, w1 * &
-          rydcm1
+     if (iudyn /= 0) write (iudyn, 9010) nu_i, w1 * rydthz, w1 * rydcm1
 9010 format   (5x,'omega(',i2,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
      !
      ! write displacements onto matrix dyn
@@ -117,11 +104,11 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
         dyn (mu, nu_i) = z (mu, nu_i) / sqrt (amass (ityp (na) ) )
         unorm = unorm + dyn (mu, nu_i) * conjg (dyn (mu, nu_i) )
      enddo
-     if (iudyn.ne.0) write (iudyn, '(" (",6f10.6," ) ")') (dyn (mu, &
-          nu_i) / sqrt (unorm) , mu = 1, 3 * nat)
+     if (iudyn /= 0) write (iudyn, '(" (",6f10.6," ) ")') &
+          (dyn (mu, nu_i) / sqrt (unorm) , mu = 1, 3 * nat)
   enddo
   WRITE( stdout, '(1x,74("*"))')
-  if (iudyn.ne.0) write (iudyn, '(1x,74("*"))')
+  if (iudyn /= 0) write (iudyn, '(1x,74("*"))')
   return
 
 end subroutine dyndia

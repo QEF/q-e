@@ -37,22 +37,16 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   !
   !    The local variables
   !
-
   integer :: na, nb, ipol, jpol, isymq, irot, ira, iramq
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on symmetries
-  ! counter on rotations
-  ! the rotated atom
-  ! the rotated atom with the q->-q+G s
-  real(kind=DP) :: rndm, arg
-  ! a function giving a random number
-  ! dummy variable
-
-  external rndm
-  call setv (2 * 3 * nat * 3 * nat, 0d0, wdyn, 1)
+  ! counters
+  ! ira:   rotated atom
+  ! iramq: rotated atom with the q->-q+G symmetry
+  real(kind=DP) :: arg
+  real(kind=DP), EXTERNAL :: rndm
+  ! a function generating a random number
+  !
+  !
+  wdyn (:, :, :, :) = (0d0, 0d0)
   do na = 1, nat
      do ipol = 1, 3
         wdyn (ipol, ipol, na, na) = DCMPLX (2 * rndm () - 1, 0.d0)
@@ -60,8 +54,8 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
            if (lgamma) then
               wdyn (ipol, jpol, na, na) = DCMPLX (2 * rndm () - 1, 0.d0)
            else
-              wdyn (ipol, jpol, na, na) = DCMPLX (2 * rndm () - 1, 2 * rndm ( &
-                   ) - 1)
+              wdyn (ipol, jpol, na, na) = DCMPLX (2 * rndm () - 1, &
+                                                  2 * rndm () - 1)
            endif
            wdyn (jpol, ipol, na, na) = conjg (wdyn (ipol, jpol, na, na) )
         enddo
@@ -74,15 +68,15 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
               else
                  iramq = 0
               endif
-              if ( (nb.eq.ira) .or. (nb.eq.iramq) ) then
+              if ( (nb == ira) .or. (nb == iramq) ) then
                  do jpol = 1, 3
                     if (lgamma) then
-                       wdyn (ipol, jpol, na, nb) = DCMPLX (2 * rndm () - 1, 0.d0)
+                       wdyn (ipol, jpol, na, nb) = DCMPLX (2*rndm () - 1, 0.d0)
                     else
-                       wdyn (ipol, jpol, na, nb) = DCMPLX (2 * rndm () - 1, 2 * &
-                            rndm () - 1)
+                       wdyn (ipol, jpol, na, nb) = DCMPLX (2*rndm () - 1,  &
+                                                           2*rndm () - 1)
                     endif
-                    wdyn (jpol, ipol, nb, na) = conjg (wdyn (ipol, jpol, na, nb) )
+                    wdyn(jpol, ipol, nb, na) = conjg(wdyn(ipol, jpol, na, nb))
                  enddo
                  goto 10
               endif

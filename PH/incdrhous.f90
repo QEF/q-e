@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
+subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
+     alpq, mode)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due
@@ -28,7 +29,6 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
   ! input: the weight of the k point
   ! input: the weights
 
-
   complex(kind=DP) :: evcr (nrxxs, nbnd), drhoscf (nrxxs), &
        dbecsum(nhm * (nhm + 1) / 2, nat), becq (nkb, nbnd, nksq), &
        alpq (nkb, nbnd, 3, nksq)
@@ -40,7 +40,6 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
   !
   !   here the local variable
   !
-
   real(kind=DP) :: wgt
   ! the effective weight of the k point
 
@@ -50,21 +49,14 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
 
   integer :: ibnd, jbnd, nt, na, mu, ih, jh, ikb, jkb, ijkb0, &
        startb, lastb, ipol, ikk, ir, ig
-  ! counter on bands
-  ! counter on types and atoms
-  ! counter on beta functions
-  ! used to divide bands among processors
-  ! counter on polarizations
-  ! the record ik
-  ! counter on mesh points
-  ! counter on G vectors
+  ! counters
 
   call start_clock ('incdrhous')
   allocate (dpsir( nrxxs))    
   allocate (ps1  ( nbnd , nbnd))    
 
   call divide (nbnd, startb, lastb)
-  call setv (2 * nbnd * nbnd, 0.d0, ps1, 1)
+  ps1 (:,:) = (0.d0, 0.d0)
   if (lgamma) then
      ikk = ik
   else
@@ -76,10 +68,10 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
   ijkb0 = 0
   do nt = 1, ntyp
      do na = 1, nat
-        if (ityp (na) .eq.nt) then
+        if (ityp (na) == nt) then
            mu = 3 * (na - 1)
            if (abs(u(mu+1,mode)) + abs(u(mu+2,mode)) &
-                                 + abs(u(mu+3,mode)) .gt.1.0d-12) then
+                                 + abs(u(mu+3,mode)) > 1.0d-12) then
               do ih = 1, nh (nt)
                  ikb = ijkb0 + ih
                  do jh = 1, nh (nt)
@@ -103,20 +95,18 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
      enddo
   enddo
 #ifdef __PARA
-
   call reduce (2 * nbnd * nbnd, ps1)
 #endif
-  call setv (2 * npwx * nbnd, 0.d0, dpsi, 1)
+  dpsi (:,:) = (0.d0, 0.d0)
   wgt = 2.d0 * weight / omega
   do ibnd = 1, nbnd_occ (ikk)
      do jbnd = 1, nbnd
         call ZAXPY (npwq, ps1(ibnd,jbnd), evq(1,jbnd), 1, dpsi(1,ibnd), 1)
      enddo
-     call setv (2 * nrxxs, 0.d0, dpsir, 1)
+     dpsir(:) = (0.d0, 0.d0)
      do ig = 1, npwq
         dpsir(nls(igkq(ig))) = dpsi (ig, ibnd)
      enddo
-
      call cft3s (dpsir, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
      do ir = 1, nrxxs
         drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * conjg(evcr(ir,ibnd))

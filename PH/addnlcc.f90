@@ -34,10 +34,9 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! counter on modes
 
   complex(kind=DP) :: ZDOTC, dyn1 (3 * nat, 3 * nat)
-  complex(kind=DP), allocatable :: drhoc (:),&
-       dvaux (:,:)
   ! the scalar product function
   ! auxiliary dynamical matrix
+  complex(kind=DP), allocatable :: drhoc (:), dvaux (:,:)
   ! the change of the core
   ! the change of the potential
 
@@ -50,16 +49,16 @@ subroutine addnlcc (imode0, drhoscf, npe)
   allocate (drhoc(  nrxx))    
   allocate (dvaux(  nrxx , nspin))    
 
-  call setv (2 * 3 * nat * 3 * nat, 0.d0, dyn1, 1)
+  dyn1 (:,:) = (0.d0, 0.d0)
   !
   !  compute the exchange and correlation potential for this mode
   !
   nrtot = nr1 * nr2 * nr3
   fac = 1.d0 / float (nspin)
-  do ipert = 1, npe
 
+  do ipert = 1, npe
      mode = imode0 + ipert
-     call setv (2 * nrxx * nspin, 0.d0, dvaux, 1)
+     dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin
         call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
@@ -77,7 +76,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if (igcx.ne.0.or.igcc.ne.0) &
+     if (igcx /= 0 .or. igcc /= 0) &
        call dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
           nspin, nl, ngm, g, alat, omega, dvaux)
@@ -91,8 +90,9 @@ subroutine addnlcc (imode0, drhoscf, npe)
            mode1 = mode1 + 1
            call addcore (mode1, drhoc)
            do is = 1, nspin
-              dyn1 (mode, mode1) = dyn1 (mode, mode1) + ZDOTC (nrxx, dvaux (1, &
-                   is), 1, drhoc, 1) * omega * fac / float (nrtot)
+              dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
+                   ZDOTC (nrxx, dvaux (1, is), 1, drhoc, 1) * &
+                   omega * fac / float (nrtot)
            enddo
         enddo
      enddo
@@ -103,8 +103,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !
   call reduce (18 * nat * nat, dyn1)
 #endif
-
-  call ZAXPY (9 * nat * nat, (1.d0, 0.d0), dyn1, 1, dyn, 1)
+  dyn (:,:) = dyn(:,:) + dyn1(:,:) 
   deallocate (dvaux)
   deallocate (drhoc)
   return

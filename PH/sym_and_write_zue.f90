@@ -26,23 +26,22 @@ subroutine sym_and_write_zue
   ! counter on atoms and modes
   ! counter on modes
 
-
   real(kind=DP) :: work (3, 3, nat)
-  ! auxiliary space (note the index order
-  call setv (9 * nat, 0.d0, work, 1)
+  ! auxiliary space (note the order of indeces)
+  !
 #ifdef __PARA
   call reduce (18 * nat, zstarue0)
   call poolreduce (18 * nat, zstarue0)
 #endif
   !
-  call setv (9 * nat, 0.d0, zstarue, 1)
+  zstarue(:,:,:) = 0.d0
   do jcart = 1, 3
      do mu = 1, 3 * nat
         na = (mu - 1) / 3 + 1
         icart = mu - 3 * (na - 1)
         do nu = 1, 3 * nat
-           zstarue (icart, na, jcart) = zstarue (icart, na, jcart) + u (mu, &
-                nu) * zstarue0 (nu, jcart)
+           zstarue (icart, na, jcart) = zstarue (icart, na, jcart) + &
+                u (mu, nu) * zstarue0 (nu, jcart)
         enddo
      enddo
 
@@ -51,12 +50,13 @@ subroutine sym_and_write_zue
   ! copy to work (a vector with E-U index order) and transform to crystal
   ! NOTA BENE: the E index is already in crystal axis
   !
+  work(:,:,:) = 0.d0
   do na = 1, nat
      do icart = 1, 3
         do jcart = 1, 3
            work (jcart, icart, na) = at (1, icart) * zstarue (1, na, jcart) &
-                + at (2, icart) * zstarue (2, na, jcart) + at (3, icart) * &
-                zstarue (3, na, jcart)
+                                   + at (2, icart) * zstarue (2, na, jcart) &
+                                   + at (3, icart) * zstarue (3, na, jcart)
         enddo
      enddo
   enddo
@@ -80,10 +80,8 @@ subroutine sym_and_write_zue
   !
   do ipol = 1, 3
      do na = 1, nat
-        zstarue (ipol, na, ipol) = zstarue (ipol, na, ipol) + zv (ityp ( &
-             na) )
+        zstarue (ipol, na, ipol) = zstarue (ipol, na, ipol) + zv (ityp (na) )
      enddo
-
   enddo
   !
   ! write Z_{s,alpha}{beta} on iudyn

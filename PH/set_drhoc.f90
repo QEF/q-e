@@ -44,7 +44,7 @@ subroutine set_drhoc (q)
   enddo
 
   if (some_numeric) allocate (aux ( ndm))    
-  call setv (2 * ngm * ntyp, 0.d0, drc, 1)
+  drc (:,:) = (0.d0, 0.d0)
   do ng = 1, ngm
      gq2 = (g (1, ng) + q (1) ) **2 + (g (2, ng) + q (2) ) **2 + &
           (g (3, ng) + q (3) ) **2
@@ -53,7 +53,7 @@ subroutine set_drhoc (q)
         rhocgnt = 0.d0
         if (nlcc (nt) ) then
            if (numeric (nt) ) then
-              if (gq2.lt.1.0d-8) then
+              if (gq2 < 1.0d-8) then
                  do ir = 1, msh (nt)
                     aux (ir) = r (ir, nt) **2 * rho_atc (ir, nt)
                  enddo

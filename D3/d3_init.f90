@@ -43,9 +43,9 @@ subroutine d3_init
      if (.not.lgamma) then
 
         allocate (d0rc( ngm, ntyp))    
-        call setv (3, 0.d0, work, 1)
+        work = 0.d0
         call set_drhoc (work)
-        call ZCOPY (ngm * ntyp, drc, 1, d0rc, 1)
+        d0rc (:,:) = drc (:,:)
      else
         d0rc => drc
      endif
@@ -62,8 +62,8 @@ subroutine d3_init
 !  the fourier components of the local potential at q+G for q=0
 !
   if (.not.lgamma) then
-     call setv (ngm * ntyp, 0.d0, vlocg0, 1)
-     call setv (3, 0.d0, work, 1)
+     vlocg0 (:,:) = 0.d0
+     work = 0.d0
      do nt = 1, ntyp
         call setlocq (work, lloc(nt), lmax(nt), numeric(nt), &
              mesh(nt), msh(nt), rab(1,nt), r(1,nt), vnl(1,lloc(nt),nt), &
@@ -75,7 +75,7 @@ subroutine d3_init
 ! Reads the q=0 variation of the charge --d0rho-- and symmetrizes it
 !
 #ifdef __PARA
-!  if (mypool.ne.1) goto 100
+!  if (mypool /= 1) goto 100
 #endif
   do irr = 1, nirrg0
      imode0 = 0

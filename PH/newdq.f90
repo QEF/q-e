@@ -23,7 +23,6 @@ subroutine newdq (dvscf, npe)
   !
   !   The dummy variables
   !
-
   integer :: npe
   ! input: the number of perturbations
 
@@ -33,34 +32,24 @@ subroutine newdq (dvscf, npe)
   !
   !   And the local variables
   !
-
   integer :: na, ig, nt, ir, ipert, is, ih, jh
-  ! counter on atoms
-  ! counter on G vectors
-  ! counter on atomic types
-  ! counter on real mesh
-  ! counter on perturbations
-  ! counter on spin
-  ! counter on beta functions
-  ! counter on beta functions
+  ! countera
 
   real(kind=DP), allocatable :: qmod (:), qg (:,:), ylmk0 (:,:)
   ! the modulus of q+G
   ! the values of q+G
   ! the spherical harmonics
 
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP), external :: ZDOTC
   ! the scalar product function
 
   complex(kind=DP), allocatable :: aux1 (:), aux2 (:,:), veff (:)
-  ! space for several quantities
-  ! space for veff
-  ! a mesh space for the FFT of the V_eff
+  ! work space
 
   if (.not.okvan) return
-  call setv (2 * nhm * nhm * 3 * nat * nspin, 0.0d0, int3, 1)
-
   call start_clock ('newdq')
+
+  int3 (:,:,:,:,:) = (0.d0, 0.0d0)
   allocate (aux1 (  ngm))    
   allocate (aux2 (  ngm , nspin))    
   allocate (veff (  nrxx))    
@@ -106,7 +95,7 @@ subroutine newdq (dvscf, npe)
               do jh = ih, nh (nt)
                  call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
                  do na = 1, nat
-                    if (ityp (na) .eq.nt) then
+                    if (ityp (na) == nt) then
                        do ig = 1, ngm
                           aux1(ig) = qgm(ig) * eigts1(ig1(ig),na) * &
                                                eigts2(ig2(ig),na) * &
@@ -122,7 +111,7 @@ subroutine newdq (dvscf, npe)
               enddo
            enddo
            do na = 1, nat
-              if (ityp(na) .eq.nt) then
+              if (ityp(na) == nt) then
                  !
                  !    We use the symmetry properties of the ps factor
                  !

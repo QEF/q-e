@@ -5,9 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !-----------------------------------------------------------------------
-
 subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
   !
@@ -52,8 +50,8 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   allocate (hpsi( npwx, m))    
   allocate (spsi( npwx, m))    
 
-  call setv (2 * npwx * m, 0.d0, hpsi, 1)
-  call setv (2 * npwx * m, 0.d0, spsi, 1)
+  hpsi = (0.d0, 0.d0)
+  spsi = (0.d0, 0.d0)
   !
   !   compute the product of the hamiltonian with the h vector
   !
@@ -71,24 +69,24 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   !
   !   Here we compute the projector in the valence band
   !
-  call setv (2 * npwx * m, 0.d0, hpsi, 1)
+  hpsi = (0.d0, 0.d0)
   if (lgamma) then
      ikq = ik
   else
      ikq = 2 * ik
   endif
-  call setv (2 * nbnd * m, 0.d0, ps, 1)
+  ps = (0.d0, 0.d0)
 
   call ZGEMM ('C', 'N', nbnd, m, n, (1.d0, 0.d0) , evq, npwx, spsi, &
        npwx, (0.d0, 0.d0) , ps, nbnd)
-  call DSCAL (2 * nbnd * m, alpha_pv, ps, 1)
+  ps = ps * alpha_pv
 #ifdef __PARA
   call reduce (2 * nbnd * m, ps)
 #endif
 
   call ZGEMM ('N', 'N', n, m, nbnd, (1.d0, 0.d0) , evq, npwx, ps, &
        nbnd, (1.d0, 0.d0) , hpsi, npwx)
-  call ZCOPY (npwx * m, hpsi, 1, spsi, 1)
+  spsi = hpsi
   !
   !    And apply S again
   !

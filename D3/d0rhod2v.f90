@@ -62,16 +62,16 @@ subroutine d0rhod2v (ipert, drhoscf)
   allocate (work5(npwx))    
   allocate (work6(npwx))    
 
-  call setv (2*9*nat*nat,0.0d0,d3dywrk,1)
+  d3dywrk (:,:) = (0.d0, 0.d0)
 !
 ! Here the contribution deriving from the local part of the potential
 #ifdef __PARA
 !   ... computed only by the first pool (no sum over k needed)
 !
-  if (mypool.ne.1) goto 100
+  if (mypool /= 1) goto 100
 #endif
 !
-  call ZCOPY (nrxx, drhoscf, 1, work0, 1)
+  work0 (:) = drhoscf (:)
   call cft3 (work0, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   do na = 1, nat
      do icart = 1,3
@@ -97,7 +97,6 @@ subroutine d0rhod2v (ipert, drhoscf)
      WRITE( stdout,'(3(2f10.6,2x))') &
            ((d3dywrk(3*(na-1)+icart,3*(na-1)+jcart), &
            jcart=1,3),icart=1,3)
-
   enddo
 #ifdef __PARA
   call reduce(2*9*nat*nat,d3dywrk)
@@ -136,7 +135,7 @@ subroutine d0rhod2v (ipert, drhoscf)
      ! In the metallic case corrects dpsi so as that the density matrix
      ! will be:   Sum_{k,nu} 2 * | dpsi > < psi |
      !
-     if (degauss.ne.0.d0) then
+     if (degauss /= 0.d0) then
         nrec = ipert + (ik - 1) * 3 * nat
         call davcio (psidqvpsi, lrpdqvp, iupd0vp, nrec, - 1)
         call dpsi_corr (evc, psidqvpsi, ikk, ikk, ipert)
@@ -155,7 +154,7 @@ subroutine d0rhod2v (ipert, drhoscf)
               jkb=0
               do nt = 1, ntyp
                  do na = 1, nat
-                    if (ityp (na).eq.nt) then
+                    if (ityp (na) == nt) then
                        na_icart = 3 * (na - 1) + icart
                        na_jcart = 3 * (na - 1) + jcart
                        do ikb = 1, nh (nt)
@@ -211,8 +210,8 @@ subroutine d0rhod2v (ipert, drhoscf)
            d3dyn(nu_i,nu_j,nu_k) = d3dyn(nu_i,nu_j,nu_k) + work
         endif
      enddo
-
   enddo
+
   deallocate (work6)
   deallocate (work5)
   deallocate (work4)

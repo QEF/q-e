@@ -26,6 +26,7 @@ subroutine dqrhod2v (ipert, drhoscf)
 #endif
   implicit none
   integer :: ipert
+  ! index of the perturbation associated with drho
   complex (kind = dp) :: drhoscf (nrxx)
   ! the variation of the charge density
   !
@@ -33,25 +34,7 @@ subroutine dqrhod2v (ipert, drhoscf)
   !
   integer :: icart, jcart, na_icart, na_jcart, na, ng, nt, &
        ik, ikk, ikq, ig, ibnd, nu_i, nu_j, nu_k, ikb, jkb, nrec, ios
-  ! index of the perturbation associated with drho
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on modes
-  ! counter on modes
-  ! counter on atoms
-  ! counter on G vectors
-  ! counter on atomic types
-  ! counter on k points
-  ! counter on k points
-  ! counter on k+q points
-  ! counter on G vectors
-  ! counter on bands
-  ! counter on modes
-  ! counter on modes
-  ! counter on modes
-  ! counters on beta functions
-  ! record position of dwfc
-  ! integer variable for I/O control
+  ! counters
 
   real (kind = dp) :: gtau, wgg
   ! the product G*\tau_s
@@ -71,16 +54,16 @@ subroutine dqrhod2v (ipert, drhoscf)
   allocate  (work5( npwx))    
   allocate  (work6( npwx))    
 
-  call setv (2 * 9 * nat * nat, 0.0d0, d3dywrk, 1)
+  d3dywrk (:,:) = (0.d0, 0.d0)
   !
   ! Here the contribution deriving from the local part of the potential
 #ifdef __PARA
   !   ... computed only by the first pool (no sum over k needed)
   !
-  if (mypool.ne.1) goto 100
+  if (mypool /= 1) goto 100
 #endif
   !
-  call ZCOPY (nrxx, drhoscf, 1, work0, 1)
+  work0 (:) = drhoscf(:)
   call cft3 (work0, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   do na = 1, nat
      do icart = 1, 3
@@ -131,7 +114,7 @@ subroutine dqrhod2v (ipert, drhoscf)
      ! In metallic case it necessary to know the wave function at k+q point
      ! so as to correct dpsi. dvpsi is used as working array
      !
-     if (degauss.ne.0.d0) call davcio (dvpsi, lrwfc, iuwfc, ikq, -1)
+     if (degauss /= 0.d0) call davcio (dvpsi, lrwfc, iuwfc, ikq, -1)
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
      call init_us_2 (npw, igk, xk (1, ikk), vkb0)
      !
@@ -143,7 +126,7 @@ subroutine dqrhod2v (ipert, drhoscf)
      ! In the metallic case corrects dpsi so as that the density matrix
      ! will be:   Sum_{k,nu} 2 * | dpsi > < psi |
      !
-     if (degauss.ne.0.d0) then
+     if (degauss /= 0.d0) then
         nrec = ipert + (ik - 1) * 3 * nat
         call davcio (psidqvpsi, lrpdqvp, iupdqvp, nrec, - 1)
         call dpsi_corr (dvpsi, psidqvpsi, ikk, ikq, ipert)

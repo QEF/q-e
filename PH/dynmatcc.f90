@@ -40,7 +40,7 @@ subroutine dynmatcc
   call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
              nl, ngm, g, nspin, alat, omega, etxcd, vtxcd, v)
   !
-  if (nspin.eq.1) then
+  if (nspin == 1) then
      is=1
      do ir = 1, nrxx
         vxc(ir) = v(ir,is)
@@ -58,16 +58,16 @@ subroutine dynmatcc
   !
   ! vxc is the spin-averaged XC potential (in G-space)
   !
-  call setv (3, 0.d0, q0, 1)
+  q0 = 0.d0
   call set_drhoc (q0)
   !
   ! set_drhoc produces drc=Drho_core(G)/DG , without struct.fact.
   !
-  call setv (18 * nat * nat, 0.d0, dynwrk, 1)
-  allocate (work ( nrxx))    
+  dynwrk (:,:) = (0.d0, 0.d0)
+  allocate (work (nrxx))    
   do na = 1, nat
      nta = ityp (na)
-     call setv (2 * nrxx, 0.d0, work, 1)
+     work (:) = (0.d0, 0.d0)
      do ig = 1, ngm
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
@@ -89,9 +89,7 @@ subroutine dynmatcc
   call reduce (18 * nat * nat, dynwrk)
 #endif
   !
-  ! divide by omega
-  !
-  call DSCAL (18 * nat * nat, omega, dynwrk, 1)
+  dynwrk = dynwrk * omega
   !
   ! calculate drc for later use in calculation of non diagonal term
   !

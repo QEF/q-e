@@ -15,8 +15,6 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   !  the nonlocal terms is computed here
   !
 #include "machine.h"
-
-
   use pwcom
   USE kinds, only : DP
   use phcom
@@ -28,9 +26,9 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 
   complex(kind=DP) :: dbecq (nkb, nbnd, nper), dalpq (nkb, nbnd,3, nper),&
           wdyn (3 * nat, 3 * nat)
-  ! input: the becp with psi_{k+
-  ! input: the alphap with psi_{
-  ! output: the term of the dynamical
+  ! input: the becp with psi_{k+q}
+  ! input: the alphap with psi_{k}
+  ! output: the term of the dynamical matryx
 
   complex(kind=DP) :: ps, dynwrk (3 * nat, 3 * nat)
   ! dynamical matrix
@@ -38,30 +36,22 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 
   integer :: ibnd, ijkb0, ijkb0b, ih, jh, ikb, jkb, ipol, jpol, &
        startb, lastb, iper, na, nb, nt, ntb, mu, nu
-  ! counter on bands
-  ! counter on beta functions
-  ! counter on beta functions
-  ! counter on polarization
-  ! divide band among processors
-  ! counter on perturbations
-  ! counter on atoms and types
-  ! counter on the weights
+  ! counters
 
-  allocate (ps1 (  nkb , nbnd))    
+  allocate (ps1 (  nkb , nbnd))
+  ps1 (:,:) = (0.d0, 0.d0)
   allocate (ps2 (  nkb , nbnd , 3))    
-
-  call setv (2 * 3 * nat * 3 * nat, 0.d0, dynwrk, 1)
+  ps2 (:,:,:) = (0.d0, 0.d0)
+  dynwrk (:, :) = (0.d0, 0.d0)
 
   call divide (nbnd, startb, lastb)
-  call setv (2 * nkb * nbnd, 0.d0, ps1, 1)
-  call setv (2 * nkb * nbnd * 3, 0.d0, ps2, 1)
   !
   !   Here we prepare the two terms
   !
   ijkb0 = 0
   do nt = 1, ntyp
      do na = 1, nat
-        if (ityp (na) .eq.nt) then
+        if (ityp (na) == nt) then
            do ih = 1, nh (nt)
               ikb = ijkb0 + ih
               do jh = 1, nh (nt)
@@ -93,7 +83,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   ijkb0 = 0
   do nt = 1, ntyp
      do na = 1, nat
-        if (ityp (na) .eq.nt) then
+        if (ityp (na) == nt) then
            do ipol = 1, 3
               mu = 3 * (na - 1) + ipol
               do ibnd = startb, lastb
@@ -111,7 +101,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                     ijkb0b = 0
                     do ntb = 1, ntyp
                        do nb = 1, nat
-                          if (ityp (nb) .eq.ntb) then
+                          if (ityp (nb) == ntb) then
                              do ih = 1, nh (ntb)
                                 ikb = ijkb0b + ih
                                 ps = (0.d0, 0.d0)
@@ -141,7 +131,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 #ifdef __PARA
   call reduce (2 * 3 * nat * 3 * nat, dynwrk)
 #endif
-  call DAXPY (18 * nat * nat, 1.d0, dynwrk, 1, wdyn, 1)
+  wdyn (:,:) = wdyn (:,:) + dynwrk (:,:)
 
   deallocate (ps2)
   deallocate (ps1)

@@ -23,7 +23,7 @@ subroutine sym_def1 (def, irr)
   integer :: irr
   ! input: the representation under consideration
 
-  complex (kind = dp) :: def (3)
+  complex (kind = dp) :: def (npertx)
   ! inp/out: the fermi energy changes
 
   integer :: ipert, jpert, isym, irot
@@ -32,32 +32,30 @@ subroutine sym_def1 (def, irr)
   ! counter on symmetries
   ! the rotation
 
-  complex (kind = dp) :: w_def (3)
+  complex (kind = dp) :: w_def (npertx)
   ! the fermi energy changes (work array)
+
   do ipert = 1, npertg0 (irr)
      def (ipert) = DREAL (def (ipert) )
-
   enddo
-  if (nsymq.eq.1) return
+  if (nsymq == 1) return
   !
   ! Here we symmetrize with respect to the small group of q
   !
-  call setv (6, 0.d0, w_def, 1)
+  w_def (:) = (0.d0, 0.d0)
   do ipert = 1, npertg0 (irr)
      do isym = 1, nsymq
         irot = irgq (isym)
         do jpert = 1, npertg0 (irr)
            w_def (ipert) = w_def (ipert) + tg0 (jpert, ipert, irot, irr) &
                 * def (jpert)
-
         enddo
      enddo
   enddo
   !
   ! normalize and exit
   !
-  call DSCAL (6, 1.d0 / nsymq, w_def, 1)
+  def (:) = w_def(:) / float(nsymq)
 
-  call DCOPY (6, w_def, 1, def, 1)
   return
 end subroutine sym_def1

@@ -49,40 +49,37 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 #endif
 
   do ipert = 1, 3 * nat
-     call setv (2 * nrxx, 0.d0, drhoc, 1)
-
-     call ZCOPY (3 * nat, u_x (1, ipert), 1, uact, 1)
+     drhoc(:) = (0.d0, 0.d0)
+     uact = u_x (1, ipert)
      do na = 1, nat
         mu = 3 * (na - 1)
-        if (abs (uact (mu + 1) ) + abs (uact (mu + 2) ) + abs (uact (mu + &
-             3) ) .gt.1.0d-12) then
+        if (abs (uact (mu + 1) ) + abs (uact (mu + 2) ) + &
+             abs (uact (mu + 3) ) > 1.0d-12) then
            nt = ityp (na)
            if (nlcc (nt) ) then
               do ig = 1, ngm
                  gtau = tpi * ( (g (1, ig) + xq_x (1) ) * tau (1, na) &
-                      + (g (2, ig) + xq_x (2) ) * tau (2, na) + (g (3, ig) &
-                      + xq_x (3) ) * tau (3, na) )
+                              + (g (2, ig) + xq_x (2) ) * tau (2, na) &
+                              + (g (3, ig) + xq_x (3) ) * tau (3, na) )
                  guexp = tpiba * ( (g (1, ig) + xq_x (1) ) * uact (mu + 1) &
-                      + (g (2, ig) + xq_x (2) ) * uact (mu + 2) + (g (3, ig) &
-                      + xq_x (3) ) * uact (mu + 3) ) * DCMPLX (0.d0, - 1.d0) &
-                      * DCMPLX (cos (gtau), - sin (gtau) )
-                 drhoc (nl (ig) ) = drhoc (nl (ig) ) + drc_x (ig, nt) &
-                      * guexp
+                                 + (g (2, ig) + xq_x (2) ) * uact (mu + 2) &
+                                 + (g (3, ig) + xq_x (3) ) * uact (mu + 3) )&
+                               * DCMPLX (0.d0, - 1.d0) &
+                               * DCMPLX (cos (gtau), - sin (gtau) )
+                 drhoc (nl (ig) ) = drhoc (nl (ig) ) + drc_x (ig, nt) * guexp
               enddo
            endif
         endif
-
      enddo
+
      call cft3 (drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
      call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, - 1)
-     call DAXPY (2 * nrxx, scale, drhoc, 1, drhov, 1)
-
+     drhov(:) = drhov(:) + scale * drhoc(:)
      call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)
   enddo
 #ifdef __PARA
 100 continue
   call MPI_barrier (MPI_COMM_WORLD, errcode)
-
   call errore ('drho_drc', 'at barrier', errcode)
 #endif
   deallocate (drhoc)

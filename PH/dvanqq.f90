@@ -27,14 +27,7 @@ subroutine dvanqq
   !
 
   integer :: na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is
-  ! counter on atoms
-  ! counter on G vectors
-  ! counter on atomic types
-  ! counter on real mesh
-  ! counter on beta functions
-  ! counter on polarizations
-  ! counter on spin
-
+  ! counters
 
   real(kind=DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
        ylmkq (:,:), ylmk0 (:,:)
@@ -42,20 +35,12 @@ subroutine dvanqq
   ! the modulus of G
   ! the  q+G vectors
   ! the spherical harmonics
-  ! the spherical harmonics
 
   complex(kind=DP) :: fact, fact1, ZDOTC
   complex(kind=DP), allocatable :: sk (:), aux1 (:), aux2 (:),&
        aux3 (:), aux5 (:,:,:), veff (:,:)
+  ! work space
   complex(kind=DP), pointer :: qgmq (:)
-  ! auxiliary variables
-  ! the scalar product function
-  ! auxiliary variable
-  ! a mesh space for d V_loc /dtau
-  ! a mesh space
-  ! a mesh space
-  ! a mesh space
-  ! a mesh space for the FFT of the V_eff
   ! the augmentation function at q+G
 
   if (recover) return
@@ -63,11 +48,10 @@ subroutine dvanqq
   if (.not.okvan) return
 
   call start_clock ('dvanqq')
-  call setv (2 * nhm * nhm * 3 * nat * nspin, 0.d0, int1, 1)
-  call setv (2 * nhm * nhm * 3 * nat * nat, 0.d0, int2, 1)
-  call setv (nhm * (nhm + 1) * 3 * 3 * nat * nspin, 0.d0, int4, 1)
-
-  call setv (nhm * (nhm + 1) * 3 * 3 * nat * nat, 0.d0, int5, 1)
+  int1(:,:,:,:,:) = (0.d0, 0.d0)
+  int2(:,:,:,:,:) = (0.d0, 0.d0)
+  int4(:,:,:,:,:) = (0.d0, 0.d0)
+  int5(:,:,:,:,:) = (0.d0, 0.d0)
   allocate (sk  (  ngm))    
   allocate (aux1(  ngm))    
   allocate (aux2(  ngm))    
@@ -143,7 +127,7 @@ subroutine dvanqq
               !
               !
               do nb = 1, nat
-                 if (ityp (nb) .eq.ntb) then
+                 if (ityp (nb) == ntb) then
                     do ig = 1, ngm
                        aux1 (ig) = qgmq (ig) * eigts1 (ig1 (ig), nb) &
                                              * eigts2 (ig2 (ig), nb) &
@@ -158,7 +142,7 @@ subroutine dvanqq
                           int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
                                 ZDOTC (ngm, aux1, 1, aux5(1,na,ipol), 1)
                           do jpol = 1, 3
-                             if (jpol.ge.ipol) then
+                             if (jpol >= ipol) then
                                 do ig = 1, ngm
                                    aux3 (ig) = aux5 (ig, na, ipol) * &
                                                (g (jpol, ig) + xq (jpol) )
@@ -188,7 +172,7 @@ subroutine dvanqq
                           int1 (ih, jh, ipol, nb, is) = - fact1 * &
                                ZDOTC (ngm, aux1, 1, aux2, 1)
                           do jpol = 1, 3
-                             if (jpol.ge.ipol) then
+                             if (jpol >= ipol) then
                                 do ig = 1, ngm
                                    aux3 (ig) = aux2 (ig) * g (jpol, ig)
                                 enddo
@@ -211,7 +195,7 @@ subroutine dvanqq
               !    We use the symmetry properties of the integral factor
               !
               do nb = 1, nat
-                 if (ityp (nb) .eq.ntb) then
+                 if (ityp (nb) == ntb) then
                     do ipol = 1, 3
                        do is = 1, nspin
                           int1(jh,ih,ipol,nb,is) = int1(ih,jh,ipol,nb,is)

@@ -91,7 +91,6 @@ set_irr_nosym.o \
 setlocq.o \
 setqmod.o \
 setup_dgc.o \
-setv.o \
 smallgq.o \
 solve_e.o \
 solve_linter.o \

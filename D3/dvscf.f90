@@ -34,11 +34,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 
   integer :: iudrho_x, ig, ir, mu, na, nt
   ! unit containing the charge variation
-  ! counter on G points
-  ! counter on real mesh
-  ! counter on modes
-  ! counter on atoms
-  ! the type of atom
+  ! countes
 
   real (kind=DP) :: qg2, gtau
   ! the modulus of (q+G)^2
@@ -50,16 +46,16 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   real (kind=DP), pointer :: vloc_x (:,:)
   ! the local potential at G+q
   complex (kind=DP), pointer :: u_x(:,:), drc_x (:,:)
-  complex (kind=DP), allocatable :: aux1 (:), aux2 (:,:)
+  complex (kind=DP), allocatable :: aux1 (:), aux2 (:)
   ! the transformation modes patterns
   ! contain drho_core for all atomic types
   logical :: q_eq_zero
   ! true if xq equal zero
 
   allocate  (aux1( nrxx))    
-  allocate  (aux2( nrxx,1))    
+  allocate  (aux2( nrxx))    
 
-  q_eq_zero = xq_x(1).eq.0.d0 .and. xq_x(2).eq.0.d0 .and. xq_x(3).eq.0.d0
+  q_eq_zero = xq_x(1) == 0.d0 .and. xq_x(2) == 0.d0 .and. xq_x(3) == 0.d0
   if (q_eq_zero) then
      u_x   => ug0
      drc_x => d0rc
@@ -72,35 +68,32 @@ subroutine dvscf (nu_i, dvloc, xq_x)
      iudrho_x = iudrho
   endif
 
-  call davcio_drho (aux2(:,1), lrdrho, iudrho_x, nu_i, - 1)
+  call davcio_drho (aux2, lrdrho, iudrho_x, nu_i, - 1)
 
-!  call dv_of_drho (nu_i, aux2(1,1), .true.)
+!  call dv_of_drho (nu_i, aux2(1), .true.)
 
-!  dvloc = aux2(:,1)
+!  dvloc = aux2(:)
 
 !  deallocate (aux1, aux2)
 
 !  return
 
+  dvloc (:) = aux2(:) * dmuxc(:,1,1)
+  call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
 
-  do ir = 1, nrxx
-     dvloc (ir) = aux2(ir,1) * dmuxc(ir,1,1)
-  enddo
-
-  call cft3 (aux2(:,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-  call setv (2 * nrxx, 0.d0, aux1, 1)
+  aux1 (:) = (0.d0, 0.d0)
   do ig = 1, ngm
      qg2 = (g(1,ig)+xq_x(1))**2 + (g(2,ig)+xq_x(2))**2 + (g(3,ig)+xq_x(3))**2
-     if (qg2.gt.1.d-8) then
-        aux1(nl(ig)) = e2 * fpi * aux2(nl(ig),1) / (tpiba2 * qg2)
+     if (qg2 > 1.d-8) then
+        aux1(nl(ig)) = e2 * fpi * aux2(nl(ig)) / (tpiba2 * qg2)
      endif
   enddo
 
-  if (nlcc_any) call setv (2 * nrxx, 0.d0, aux2, 1)
+  if (nlcc_any) aux2 (:) = (0.d0, 0.d0)
   do na = 1, nat
      mu = 3 * (na - 1)
      if (abs(u_x(mu+1,nu_i)) + abs(u_x(mu+2,nu_i)) + &
-         abs(u_x(mu+3,nu_i)) .gt. 1.0d-12) then
+         abs(u_x(mu+3,nu_i)) > 1.0d-12) then
         nt = ityp (na)
         do ig = 1, ngm
 
@@ -113,21 +106,18 @@ subroutine dvscf (nu_i, dvloc, xq_x)
                              (g(3,ig) + xq_x(3)) * u_x(mu+3,nu_i) ) * &
                    DCMPLX(0.d0,-1.d0) * DCMPLX(cos(gtau),-sin(gtau))
            aux1 (nl(ig)) = aux1 (nl(ig)) + vloc_x (ig,nt) * guexp
-           if (nlcc(nt)) aux2 (nl(ig),1) = aux2 (nl(ig),1) + drc_x(ig,nt) * guexp
+           if (nlcc(nt)) then
+              aux2 (nl(ig)) = aux2 (nl(ig)) + drc_x(ig,nt) * guexp
+           end if
         enddo
      endif
 
   enddo
   call cft3 (aux1, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
-
-  call DAXPY (2 * nrxx, 1.d0, aux1, 1, dvloc, 1)
+  dvloc (:) = dvloc(:) + aux1 (:)
   if (nlcc_any) then
-     call cft3 (aux2(:,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
-     do ir = 1, nrxx
-        aux2 (ir,1) = aux2 (ir,1) * dmuxc(ir,1,1)
-     enddo
-     call DAXPY (2 * nrxx, 1.d0, aux2(:,1), 1, dvloc, 1)
-
+     call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+     dvloc (:) = dvloc(:) + aux2 (:) * dmuxc(:,1,1)
   endif
 
   if (doublegrid) call cinterpolate (dvloc, dvloc, - 1)

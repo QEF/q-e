@@ -42,14 +42,10 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
 
   complex (kind = dp), allocatable :: psi (:), dpsic (:)
   ! the wavefunctions in real space
-  ! the change of wavefunctions in real sp
+  ! the change of wavefunctions in real space
 
   integer :: ibnd, jbnd, ikk, ir, ig
-  ! counter on bands
-  ! counter on bands
-  ! the record ik
-  ! counter on mesh points
-  ! counter on G vectors
+  ! counters
 
   call start_clock ('incdrhoscf')
   allocate  (dpsic( nrxxs))    
@@ -66,20 +62,20 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   !
   !      do ibnd = 1,nbnd_occ(ikk)
   do ibnd = 1, nbnd
-     call setv (2 * nrxxs, 0.d0, psi, 1)
+     psi (:) = (0.d0, 0.d0)
      do ig = 1, npw
         psi (nls (igk (ig) ) ) = evc (ig, ibnd)
      enddo
      call cft3s (psi, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
-     call setv (2 * nrxxs, 0.d0, dpsic, 1)
+     dpsic(:) =(0.d0, 0.d0)
      !
      !    here we add the term in the valence due to the change of the
      !    constraint. dvpsi is used as work space, dpsi is unchanged
      !
-     if (flag.eq.1) then
-        call ZCOPY (npwx, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+     if (flag == 1) then
+        dvpsi (:, ibnd) = dpsi (:, ibnd)
      else
-        call setv (2 * npwx, 0.d0, dvpsi (1, ibnd), 1)
+        dvpsi (:, ibnd) = (0.d0, 0.d0)
      endif
      !         call ZGEMM('N','N', npwq, nbnd, nbnd, (1.d0,0.d0),
      !     +              evq, npwx, prodval(1,1,mode),nbnd,

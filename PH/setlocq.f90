@@ -29,6 +29,8 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   !
 #include "machine.h"
   USE kinds, only  : DP
+  USE constants, ONLY : e2, fpi, pi
+  !
   implicit none
   !
   !    first the dummy variables
@@ -61,48 +63,28 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   logical :: numeric
   ! input: if true the pseudo is numeric
   !
-  !   here the parameters
-  !
-
-  real(kind=DP) :: pi, fpi, e2, eps
-  ! pi
-  ! four times pi
-  ! the square of the charge
-  ! a small number
-  parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi, e2 = 2.d0, &
-       eps = 1.d-8)
   !
   !    and the local variables
   !
-
+  real(kind=DP), parameter :: eps = 1.d-8
   real(kind=DP) :: vlcp, vloc0, fac, den1, den2, g2a, g2a1, aux (mesh), &
-       aux1 (mesh), erf, gx
-  ! the value of the local potential
-  ! the value of the local potential
-  !
-  !  auxiliary variables for faster computati
-  !   /
-  !  /
-  ! /
-  ! auxiliary variable for numerical integrat
-  ! auxiliary variable for numerical integrat
+       aux1 (mesh), gx
+  ! auxiliary variables
+  ! gx = modulus of g vectors
+  real(kind=DP), external :: erf
   ! the erf function
-  ! the modulus of g vectors
   integer :: i, ig, l, ipol, ir
-  ! counter on erf functions or gaussians
-  ! counter on g shells vectors
-  ! the angular momentum
-  ! counter on polarizations
-  ! counter on mesh points
+  ! counters
+  !
   if (.not.numeric) then
-     call setv (ngm, 0.d0, vloc, 1)
+     vloc (:) = 0.d0
      !
      !    In this case the potential is given in analytic form
      !
      do ig = 1, ngm
         g2a = (xq (1) + g (1, ig) ) **2 + (xq (2) + g (2, ig) ) **2 + &
              (xq (3) + g (3, ig) ) **2
-        if (g2a.lt.1d-9) then
+        if (g2a < eps) then
            do i = 1, nlc
               vloc (ig) = vloc (ig) + cc (i) * tpiba2 * 0.25d0 / alpc (i)
            enddo
@@ -115,20 +97,20 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
         endif
      enddo
      den1 = zp * e2 * fpi / tpiba2 / omega
-     call DSCAL (ngm, den1, vloc, 1)
+     vloc (:) = vloc(:) * den1
      !
      ! Add the local part l=lloc term (only if l <= lmax)
      !
      l = lloc
 
-     if (l.le.lmax) then
+     if (l <= lmax) then
         !
         !   and here all the other g components
         !
         do ig = 1, ngm
            g2a = ( (xq (1) + g (1, ig) ) **2 + (xq (2) + g (2, ig) ) ** &
                 2 + (xq (3) + g (3, ig) ) **2)
-           if (g2a.lt.1.d-9) then
+           if (g2a < eps) then
               do i = 1, nnl
                  fac = (pi / alps (i, l) ) **1.5d0 * e2 / omega
                  den1 = aps (i + 3, l) / alps (i, l)
@@ -175,7 +157,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
      do ig = 1, ngm
         g2a = (xq (1) + g (1, ig) ) **2 + (xq (2) + g (2, ig) ) **2 + &
              (xq (3) + g (3, ig) ) **2
-        if (g2a.lt.1d-9) then
+        if (g2a < eps) then
            vloc (ig) = vloc0
         else
            gx = sqrt (g2a * tpiba2)
@@ -191,7 +173,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
         endif
      enddo
 
-     call DSCAL (ngm, fpi / omega, vloc, 1)
+     vloc(:) = vloc(:) * fpi / omega
   endif
   return
 end subroutine setlocq

@@ -26,18 +26,13 @@ subroutine dvpsi_e (kpoint, ipol)
   use phcom
   implicit none
   !
-  integer :: ipol, ig, na, ibnd, jbnd, ikb, jkb, nt, lter, kpoint, &
-                   ih, jh, ijkb0, nrec
-  ! input: the polarization
-  ! counter on G vectors
-  ! counter on atoms
-  ! counters on bands
-  ! counter on beta functions
-  ! counter on beta functions
-  ! counter on pseudopotentials
-  ! iterations of linter
-  ! input: the kpoint
-
+  integer, intent(IN) :: ipol, kpoint
+  !
+  ! Local variables
+  !
+  integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, nrec
+  ! counters
+  
   real(kind=DP), allocatable  :: gk (:,:), h_diag (:,:),  eprec (:)
   ! the derivative of |k+G|
   real(kind=DP) ::   anorm, thresh
@@ -49,7 +44,7 @@ subroutine dvpsi_e (kpoint, ipol)
 
   complex(kind=DP), allocatable :: ps (:,:), dvkb (:,:), dvkb1 (:,:), &
                                    work (:,:), becp2(:,:), spsi(:,:)
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP), external :: ZDOTC
   ! the scalar products
   external ch_psi_all, cg_psi
   !
@@ -59,7 +54,7 @@ subroutine dvpsi_e (kpoint, ipol)
      nrec = (ipol - 1)*nksq + kpoint
      call davcio(dvpsi, lrebar, iuebar, nrec, -1)
   else
-     if (nkb.gt.0) then
+     if (nkb > 0) then
         allocate (work ( npwx, nkb))    
      else
         allocate (work ( npwx, 1))    
@@ -69,12 +64,14 @@ subroutine dvpsi_e (kpoint, ipol)
      allocate (ps ( 2 , nbnd))    
      allocate (spsi ( npwx, nbnd))    
      allocate (eprec ( nbnd))    
-     if (nkb.gt.0) allocate (becp2 ( nkb, nbnd))    
-     if (nkb.gt.0) allocate (dvkb ( npwx , nkb))    
-     if (nkb.gt.0) allocate (dvkb1( npwx , nkb))    
-     call setv (2 * npwx * nkb, 0.d0, dvkb, 1)
-     call setv (2 * npwx * nkb, 0.d0, dvkb1, 1)
-     call setv (2 * npwx * nbnd, 0.d0, dvpsi, 1)
+     if (nkb > 0) then
+        allocate (becp2 ( nkb, nbnd))    
+        allocate (dvkb ( npwx , nkb))    
+        allocate (dvkb1( npwx , nkb))    
+        dvkb (:,:) = (0.d0, 0.d0)
+        dvkb1(:,:) = (0.d0, 0.d0)
+        dvpsi(:,:) = (0.d0, 0.d0)
+     end if
      do ig = 1, npw
         gk (1, ig) = (xk (1, kpoint) + g (1, igk (ig) ) ) * tpiba
         gk (2, ig) = (xk (2, kpoint) + g (2, igk (ig) ) ) * tpiba
@@ -98,7 +95,7 @@ subroutine dvpsi_e (kpoint, ipol)
      call gen_us_dj (kpoint, dvkb)
      call gen_us_dy (kpoint, at (1, ipol), dvkb1)
      do ig = 1, npw
-        if (g2kin (ig) .lt.1.0d-10) then
+        if (g2kin (ig) < 1.0d-10) then
            gk (1, ig) = 0.d0
            gk (2, ig) = 0.d0
            gk (3, ig) = 0.d0
@@ -112,7 +109,7 @@ subroutine dvpsi_e (kpoint, ipol)
      jkb = 0
      do nt = 1, ntyp
         do na = 1, nat
-           if (nt.eq.ityp (na)) then
+           if (nt == ityp (na)) then
               do ikb = 1, nh (nt)
                  jkb = jkb + 1
                  do ig = 1, npw
@@ -125,12 +122,13 @@ subroutine dvpsi_e (kpoint, ipol)
            endif
         enddo
      enddo
+
      call ccalbec (nkb, npwx, npw, nbnd, becp2, work, evc)
 
      ijkb0 = 0
      do nt = 1, ntyp
         do na = 1, nat
-           if (nt.eq.ityp (na)) then
+           if (nt == ityp (na)) then
               do ih = 1, nh (nt)
                  ikb = ijkb0 + ih
                  ps(:,:)=(0.d0,0.d0)
@@ -154,12 +152,12 @@ subroutine dvpsi_e (kpoint, ipol)
            end if
         end do
      end do
-     if (jkb.ne.nkb) call errore ('dvpsi_e', 'unexpected error', 1)
+     if (jkb /= nkb) call errore ('dvpsi_e', 'unexpected error', 1)
      !
      !    orthogonalize dpsi to the valence subspace
      !
      do ibnd = 1, nbnd_occ (kpoint)
-        call setv (2 * npwx, 0.d0, work, 1)
+        work (:,1) = (0.d0, 0.d0)
         do jbnd = 1, nbnd_occ (kpoint)
            ps (1, jbnd) = - ZDOTC(npw,evc(1,jbnd),1,dpsi(1, ibnd),1)
         enddo
@@ -227,9 +225,9 @@ subroutine dvpsi_e (kpoint, ipol)
         call adddvepsi_us(becp2,ipol,kpoint)
      endif
 
-     if (nkb.gt.0) deallocate (dvkb1)
-     if (nkb.gt.0) deallocate (dvkb)
-     if (nkb.gt.0) deallocate (becp2)
+     if (nkb > 0) deallocate (dvkb1)
+     if (nkb > 0) deallocate (dvkb)
+     if (nkb > 0) deallocate (becp2)
      deallocate (eprec)
      deallocate (spsi)
      deallocate (ps)

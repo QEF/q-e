@@ -49,8 +49,8 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   allocate (ps  ( nbnd , m))    
   allocate (hpsi( npwx , m))    
   allocate (spsi( npwx , m))    
-  call setv (2 * npwx * m, 0.d0, hpsi, 1)
-  call setv (2 * npwx * m, 0.d0, spsi, 1)
+  hpsi (:,:) = (0.d0, 0.d0)
+  spsi (:,:) = (0.d0, 0.d0)
   !
   !   compute the product of the hamiltonian with the h vector
   !
@@ -68,24 +68,24 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
   !   Here we compute the projector in the valence band
   !
-  call setv (2 * npwx * m, 0.d0, hpsi, 1)
   if (lgamma) then
      ikq = ik
   else
      ikq = 2 * ik
   endif
-  call setv (2 * nbnd * m, 0.d0, ps, 1)
+  ps (:,:) = (0.d0, 0.d0)
 
   call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
        npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
-  call DSCAL (2 * nbnd * m, alpha_pv, ps, 1)
+  ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __PARA
   call reduce (2 * nbnd * m, ps)
 #endif
 
+  hpsi (:,:) = (0.d0, 0.d0)
   call ZGEMM ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
        npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
-  call ZCOPY (npwx * m, hpsi, 1, spsi, 1)
+  spsi(:,:) = hpsi(:,:)
   !
   !    And apply S again
   !
@@ -96,8 +96,8 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
      do ig = 1, n
         ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
      enddo
-
   enddo
+
   deallocate (spsi)
   deallocate (hpsi)
   deallocate (ps)

@@ -27,27 +27,8 @@ subroutine dynmat_us
   implicit none
   integer :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &
        ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on modes
-  ! counter on modes
-  ! counter on atoms
-  ! counter on atoms
-  ! counter on G vectors
-  ! counter on atomic types
-  ! counter on k points
-  ! counter on G vectors
-  ! counter on real space mesh
-  ! counter on spin
-  ! counter on bands
-  ! counter on modes
-  ! counter on modes
-  ! initial value of ikb
-  ! counter on beta functions
-  ! counter on beta functions
-  ! counter on beta functions
-  ! counter on beta functions
-  ! record position of wfc at k
+  ! counters
+  ! ikk: record position of wfc at k
 
   real(kind=DP) :: gtau, fac, wgg
   ! the product G*\tau_s
@@ -55,15 +36,12 @@ subroutine dynmat_us
   ! the true weight of a K point
 
   complex(kind=DP) :: work, dynwrk (3 * nat, 3 * nat)
-  ! auxiliary space
   ! work space
   complex(kind=DP), allocatable :: rhog (:), &
        gammap (:,:,:,:), aux1 (:,:), work1 (:), work2 (:)
   ! fourier transform of rho
   ! the second derivative of the beta
-  ! auxiliary space
-  ! auxiliary space
-  ! auxiliary space
+  ! work space
 
   call start_clock ('dynmat_us')
   allocate (rhog  ( nrxx))    
@@ -72,7 +50,7 @@ subroutine dynmat_us
   allocate (aux1  ( npwx , nbnd))    
   allocate (gammap(  nkb, nbnd , 3 , 3))    
 
-  call setv (2 * 3 * 3 * nat * nat, 0.0d0, dynwrk, 1)
+  dynwrk (:,:) = (0.d0, 0.0d0)
   !
   !   We first compute the part of the dynamical matrix due to the local
   !   potential
@@ -81,11 +59,9 @@ subroutine dynmat_us
   if (mypool.ne.1) goto 100
 #endif
   !
-  call setv (2 * nrxx, 0.d0, rhog, 1)
+  rhog (:) = (0.d0, 0.d0)
   do is = 1, nspin
-     do ir = 1, nrxx
-        rhog (ir) = rhog (ir) + DCMPLX (rho (ir, is), 0.d0)
-     enddo
+     rhog (:) = rhog (:) + DCMPLX (rho (:, is), 0.d0)
   enddo
 
   call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
@@ -121,7 +97,7 @@ subroutine dynmat_us
   !
   ! Here we compute  the nonlocal Ultra-soft contribution
   !
-  if (nksq.gt.1) rewind (unit = iunigk)
+  if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
      if (lgamma) then
         ikk = ik
@@ -129,12 +105,12 @@ subroutine dynmat_us
         ikk = 2 * ik - 1
      endif
      if (lsda) current_spin = isk (ikk)
-     if (nksq.gt.1) read (iunigk) npw, igk
+     if (nksq > 1) read (iunigk) npw, igk
+
      ! npwq and igkq are not actually used
+     if (nksq >1 .and. .not.lgamma) read (iunigk) npwq, igkq
 
-     if (nksq.gt.1.and..not.lgamma) read (iunigk) npwq, igkq
-
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ikk, - 1)
+     if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ikk, - 1)
      call init_us_2 (npw, igk, xk (1, ikk), vkb)
      !
      !    We first prepare the gamma terms, which are the second derivatives
@@ -151,9 +127,10 @@ subroutine dynmat_us
            enddo
 
            call ccalbec(nkb,npwx,npw,nbnd,gammap(1,1,icart,jcart),vkb,aux1)
-           if (jcart.lt.icart) &
+           if (jcart < icart) then
                call ZCOPY (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
                                        gammap (1, 1, jcart, icart), 1)
+            end if
         enddo
      enddo
      !
@@ -163,7 +140,7 @@ subroutine dynmat_us
      ijkb0 = 0
      do nt = 1, ntyp
         do na = 1, nat
-           if (ityp (na) .eq.nt) then
+           if (ityp (na) == nt) then
               do icart = 1, 3
                  na_icart = 3 * (na - 1) + icart
                  do jcart = 1, 3

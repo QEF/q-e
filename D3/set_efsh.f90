@@ -18,35 +18,30 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   use phcom
   use d3com
   implicit none
-  integer :: npe, imode0, irr, ipert, ik, ikk, ibnd
+  complex (kind = dp) :: drhoscf (nrxx, npe)
+  ! input: variation of the charge density
+  integer :: npe, imode0, irr
   ! input: the number of perturbation
   ! input: the position of the current mode
   ! input: index of the current irr. rep.
-  ! counter on perturbations
-  ! counter on k_points
-  ! counter on k_points
-  ! counter on bands
 
-  complex (kind = dp) :: drhoscf (nrxx, npe), delta_n, def (3)
-  ! input: variation of the charge density
+  integer :: ipert, ik, ikk, ibnd
+  ! counters
+  complex (kind = dp) :: delta_n, def (npertx)
   ! the change in electron number
-  ! the change of the Fermi energy for each per
-  real (kind = dp) :: dos_ef, weight, w0gauss, wdelta
-  ! density of states at Ef
+  ! the change of the Fermi energy for each perturbation
+  real (kind = dp) :: weight, wdelta
   ! kpoint weight
-  ! delta function
   ! delta function weight
-
-  save dos_ef
-  logical :: first
+  real (kind = dp), save :: dos_ef
+  ! density of states at Ef
+  real (kind = dp), external :: w0gauss
+  logical, save :: first = .true.
   ! Used for initialization
-  data first / .true. /
-  save first
   !
   ! first call: calculates density of states at Ef
   !
   if (first) then
-
      first = .false.
      dos_ef = 0.d0
      do ik = 1, nksq
@@ -71,11 +66,10 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !
   WRITE( stdout, * )
   do ipert = 1, npe
-     call cft3 (drhoscf (1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-          - 1)
+     call cft3 (drhoscf (1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
 #ifdef __PARA
      delta_n = (0.d0, 0.d0)
-     if (gg (1) .lt.1.0d-8) delta_n = omega * drhoscf (nl (1), ipert)
+     if (gg (1) < 1.0d-8) delta_n = omega * drhoscf (nl (1), ipert)
      call reduce (2, delta_n)
 #else
      delta_n = omega * drhoscf (nl (1), ipert)

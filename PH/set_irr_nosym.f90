@@ -62,7 +62,7 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !     set the modes
   !
-  call setv (18 * nat * nat, 0.d0, u, 1)
+  u (:,:) = (0.d0, 0.d0)
   do imode = 1, 3 * nat
      u (imode, imode) = (1.d0, 0.d0)
   enddo
@@ -74,14 +74,12 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !   And we compute the matrices which represent the symmetry transformat
   !   in the basis of the displacements
   !
-  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)
-  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)
-
+  t(:, :, :, :) = (0.d0, 0.d0)
   do imode = 1, 3 * nat
      t (1, 1, 1, imode) = (1.d0, 0.d0)
   enddo
 
-  tmq = (0.d0,0.d0)
+  tmq (:, :, :) = (0.d0, 0.d0)
   if (minus_q) then
      tmq (1, 1, :) = (1.d0, 0.d0)
   end if

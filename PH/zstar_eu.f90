@@ -24,33 +24,23 @@ subroutine zstar_eu
 
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
        imode, nrec, mode, ik
-  ! counter on bands
-  ! counter on polarization
-  ! counter on cartesian coordinates
-  ! counter on atoms and modes
-  ! counter on modes
-  ! counter on modes
-  ! counter on records
-  ! counter on modes
-  ! counter on k points
-
+  ! counters
   real(kind=DP) :: work (3, 3, nat), weight
   !  auxiliary space
-  !
-
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP), external :: ZDOTC
   !  scalar product
+  !
   call start_clock ('zstar_eu')
 
-  call setv (2 * 9 * nat, 0.d0, zstareu0, 1)
-  call setv (9 * nat, 0.d0, zstareu, 1)
+  zstareu0(:,:) = (0.d0,0.d0)
+  zstareu (:,:,:) = 0.d0
 
-  if (nksq.gt.1) rewind (iunigk)
+  if (nksq > 1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) read (iunigk) npw, igk
+     if (nksq > 1) read (iunigk) npw, igk
      npwq = npw
      weight = wk (ik)
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      imode0 = 0
      do irr = 1, nirr
@@ -93,13 +83,13 @@ subroutine zstar_eu
         na = (mu - 1) / 3 + 1
         icart = mu - 3 * (na - 1)
         do nu = 1, 3 * nat
-           zstareu (jpol, icart, na) = zstareu (jpol, icart, na) + conjg (u ( &
-                mu, nu) ) * zstareu0 (jpol, nu)
+           zstareu (jpol, icart, na) = zstareu (jpol, icart, na) + &
+                conjg (u (mu, nu) ) * zstareu0 (jpol, nu)
         enddo
      enddo
-
   enddo
-  call setv (9 * nat, 0.d0, work, 1)
+  !
+  work(:,:,:) = 0.d0
   !
   ! bring to crystal axis for symmetrization
   ! NOTA BENE: the electric fields are already in crystal axis
@@ -126,8 +116,7 @@ subroutine zstar_eu
   do na = 1, nat
      call trntns (work (1, 1, na), at, bg, 1)
   enddo
-
-  call DCOPY (9 * nat, work, 1, zstareu, 1)
+  zstareu(:,:,:) = work(:,:,:)
   !
   ! add the diagonal part
   !
@@ -142,7 +131,6 @@ subroutine zstar_eu
      WRITE( stdout, '(10x," atom ",i6)') na
      WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstareu (ipol, jpol, na) &
           , ipol = 1, 3) , jpol = 1, 3)
-
   enddo
   call stop_clock ('zstar_eu')
   return

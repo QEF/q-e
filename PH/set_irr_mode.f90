@@ -20,6 +20,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
 #include "machine.h"
   USE kinds, only : DP
+  USE constants, ONLY: tpi
   implicit none
   !
   !   first the dummy variables
@@ -56,27 +57,13 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: the symmetry matrices
   ! output: the matrice sending q -> -q+G
   logical :: minus_q
-  ! output: if true one symmetry send q -
+  ! output: if true one symmetry send q -> -q+G
   !
   !   here the local variables
   !
-  real(kind=DP), parameter ::  tpi = 2.0d0 * 3.14159265358979d0
-
   integer :: na, imode, jmode, ipert, jpert, nsymtot, imode0, irr, &
        ipol, jpol, isymq, irot, sna
-  ! counter on atoms
-  ! counter on modes
-  ! counter on modes
-  ! counter on perturbations
-  ! counter on perturbations
-  ! total number of symmetries
-  ! auxiliry variable for mode counting
-  ! counter on irreducible representation
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on symmetries
-  ! counter on rotations
-  ! the rotated atom
+  ! counters and auxilary variables
 
   real(kind=DP) :: modul, arg
   ! the modulus of the mode
@@ -92,7 +79,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !   Allocate the necessary quantities
   !
-  lgamma = (xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0)
+  lgamma = (xq (1) == 0.d0 .and. xq (2) == 0.d0 .and. xq (3) == 0.d0)
   !
   !   find the small group of q
   !
@@ -100,7 +87,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !    set the modes to be done
   !
-  call setv (18 * nat * nat, 0.d0, u, 1)
+  u (:, :) = (0.d0, 0.d0)
   do imode = 1, 3 * nat
      u (imode, imode) = (1.d0, 0.d0)
   enddo
@@ -108,22 +95,21 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !  Here we count the irreducible representations and their dimensions
   !
   nirr = 3 * nat
-  do imode = 1, 3 * nat
-     ! initialization
-     npert (imode) = 1
-  enddo
+  ! initialization
+  npert (:) = 1
   !
   !   And we compute the matrices which represent the symmetry transformat
   !   in the basis of the displacements
   !
-  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)
-  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)
+  
+  t(:, :, :, :) = (0.d0, 0.d0)
+  tmq (:, :, :) = (0.d0, 0.d0)
   if (minus_q) then
      nsymtot = nsymq + 1
   else
      nsymtot = nsymq
-
   endif
+
   do isymq = 1, nsymtot
      if (isymq.le.nsymq) then
         irot = irgq (isymq)
@@ -149,7 +135,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
            !
            !     the patterns are rotated with this symmetry
            !
-           call setv (2 * 3 * nat, 0.d0, wrk_ru, 1)
+           wrk_ru(:,:) = (0.d0, 0.d0)
            do na = 1, nat
               sna = irt (irot, na)
               arg = 0.d0
@@ -157,15 +143,15 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
                  arg = arg + xq (ipol) * rtau (ipol, irot, na)
               enddo
               arg = arg * tpi
-              if (isymq.eq.nsymtot.and.minus_q) then
+              if (isymq == nsymtot .and. minus_q) then
                  fase = DCMPLX (cos (arg), sin (arg) )
               else
                  fase = DCMPLX (cos (arg), - sin (arg) )
               endif
               do ipol = 1, 3
                  do jpol = 1, 3
-                    wrk_ru (ipol, sna) = wrk_ru (ipol, sna) + s (jpol, ipol, irot) &
-                         * wrk_u (jpol, na) * fase
+                    wrk_ru (ipol, sna) = wrk_ru (ipol, sna) + fase * &
+                         s (jpol, ipol, irot) * wrk_u (jpol, na)
                  enddo
               enddo
            enddo
@@ -183,9 +169,9 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
               do na = 1, nat
                  do ipol = 1, 3
                     jmode = ipol + (na - 1) * 3
-                    if (isymq.eq.nsymtot.and.minus_q) then
-                       tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + conjg (u ( &
-                            jmode, imode) * wrk_ru (ipol, na) )
+                    if (isymq == nsymtot .and. minus_q) then
+                       tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + &
+                            conjg (u (jmode, imode) * wrk_ru (ipol, na) )
                     else
                        t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
                             + conjg (u (jmode, imode) ) * wrk_ru (ipol, na)

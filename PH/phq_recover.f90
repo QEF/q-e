@@ -31,7 +31,7 @@ subroutine phq_recover
   call seqopn (iunrec, 'recover', 'unformatted', recover)
   irr0 = 0
   iter0 = 0
-  call setv (2 * 9 * nat, 0.d0, zstarue0, 1)
+  zstarue0 (:,:) = (0.d0, 0.d0)
   if (recover) then
      if (okvan) read (iunrec) int1, int2
 
@@ -39,16 +39,14 @@ subroutine phq_recover
           zstarue0
 
      read (iunrec) irr0, iter0, convt, done_irr, comp_irr0, ifat0
-     if (iter0.eq.0.and.iswitch.eq. - 4) then
+     if (iter0 == 0 .and. iswitch == - 4) then
         call errore ('recover', 'recover not possible', 1)
-        call ZCOPY (9 * nat * nat, dyn00, 1, dyn, 1)
+        dyn = dyn00
         do irr = 1, nirr
            done_irr (irr) = 0
         enddo
-
-
      endif
-     if (iter0.ne.0) then
+     if (iter0 /= 0) then
         !
         !    If iter0.ne.0 we must recover also the irreducible representations
         !    to do and atoms
@@ -59,34 +57,32 @@ subroutine phq_recover
         nat_todo = 0
         do na = 1, nat
            ifat (na) = ifat0 (na)
-           if (ifat (na) .eq.1) then
+           if (ifat (na) == 1) then
               nat_todo = nat_todo + 1
               atomo (nat_todo) = na
            endif
         enddo
-        all_comp = nat_todo.eq.nat
-
+        all_comp = ( nat_todo == nat )
      endif
-     if (irr0.eq. - 1) then
-        WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
 
+     if (irr0 == - 1) then
+        WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
         close (unit = iunrec, status = 'keep')
-     elseif (irr0.eq. - 2) then
+     elseif (irr0 == - 2) then
         call errore ('phq_recover', 'recovering from wrong case', 1)
         WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
              &                   " of Elect. Field")') iter0 + 1
-     elseif (irr0.gt.0) then
-        if (iter0.ne.0) then
+     elseif (irr0 > 0) then
+        if (iter0 /= 0) then
            WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
                 &             " of Representation #",i5)') iter0 + 1, irr0
         else
-           if (irr0.eq.nirr) then
+           if (irr0 == nirr) then
               WRITE( stdout, '(/,4x," From recover: Dynamical ", &
                    &       " Matrix calculation ")')
            else
               do irr = 1, nirr
-                 if ( (comp_irr (irr) .eq.1) .and. (done_irr (irr) &
-                      .eq.0) ) then
+                 if ( (comp_irr (irr) == 1) .and. (done_irr (irr) == 0) ) then
                     WRITE( stdout, '(/,4x," Restart from first iteration", &
                          &      " of Representation # ",i5)') irr
                     goto 1000
@@ -101,7 +97,7 @@ subroutine phq_recover
      endif
   else
      close (unit = iunrec, status = 'delete')
-
   endif
+
   return
 end subroutine phq_recover

@@ -40,12 +40,12 @@ subroutine syme (dvsym)
         dvsym(:,:,:,is,ipol) = CMPLX(REAL(dvsym(:,:,:,is,ipol)),0.d0)
      end do
   end do
-  if (nsym.eq.1) return
+  if (nsym == 1) return
   allocate (aux(nrx1 , nrx2 , nrx3 , 3))    
   do is = 1, nspin
      do ipol = 1, 3
-        call ZCOPY (nrx1*nrx2*nrx3, dvsym(1,1,1,is,ipol), 1, aux(1,1,1,ipol), 1)
-        call setv (2*nrx1*nrx2*nrx3, 0.d0, dvsym(1,1,1,is,ipol), 1)
+        aux(:,:,:,ipol) = dvsym(:,:,:,is,ipol)
+        dvsym(:,:,:,is,ipol) = (0.d0, 0.d0)
      enddo
      !
      !  symmmetrize
@@ -70,7 +70,7 @@ subroutine syme (dvsym)
         enddo
      enddo
      do ipol = 1, 3
-        call DSCAL (2*nrx1*nrx2*nrx3, 1.d0/float(nsym), dvsym(1,1,1,is,ipol), 1)
+        dvsym(:,:,:,is,ipol) = dvsym(:,:,:,is,ipol) / float(nsym)
      enddo
   enddo
   deallocate (aux)
