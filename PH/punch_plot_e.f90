@@ -40,7 +40,7 @@ subroutine punch_plot_e
   ! counter on atoms
   ! counter on mesh points
 
-  character :: caux * 1, filin * 80
+  character :: caux * 1, filin * 80, which*2
   ! used to compose the name
   ! complete name of the file
 
@@ -89,9 +89,10 @@ subroutine punch_plot_e
   !     write on output the change of the charge
   !
   iunplot = 4
+  which='_e'
   do ipol = 1, 3
      write (caux, '(i1)') ipol
-     filin = trim(fildrho) //caux
+     filin = trim(fildrho) //which//caux
 #ifdef __PARA
      if (me.eq.1.and.mypool.eq.1) then
 #endif
