@@ -1126,6 +1126,7 @@ MODULE input_parameters
 !
        REAL(dbl) :: rd_ht(3,3) = 0.0d0
        CHARACTER(len=80) :: cell_symmetry = 'none'
+       CHARACTER(LEN=80) :: cell_units = 'alat'
        LOGICAL   :: trd_ht = .FALSE.
 
 !

@@ -369,7 +369,7 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht, &
-               a, b, c, cosab, cosac, cosbc )
+               a, b, c, cosab, cosac, cosbc, alat_ )
 
     USE constants, ONLY: bohr_radius_angs
 
@@ -380,6 +380,7 @@
     CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
     REAL(dbl), INTENT(IN) :: rd_ht (3,3)
     REAL(dbl), INTENT(IN) :: a, b, c, cosab, cosac, cosbc
+    REAL(dbl), INTENT(OUT) :: alat_
 
     REAL(dbl) :: b1(3), b2(3), b3(3)
     !
@@ -388,6 +389,8 @@
 
     celldm = celldm_
     ibrav  = ibrav_
+
+    ! ... if celldm(1) /= 0  rd_ht should be in unit of alat
 
     IF ( trd_ht ) THEN
       symm_type = cell_symmetry
@@ -456,6 +459,7 @@
     bg( :, 3 ) = b3( : )
 
     tcell_base_init = .TRUE.
+    alat_ = alat
 
     RETURN
   END SUBROUTINE

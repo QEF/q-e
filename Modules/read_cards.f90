@@ -1246,6 +1246,14 @@ MODULE read_cards_module
           cell_symmetry = 'cubic'
        END IF
        !
+       IF ( matches( "BOHR", input_line ) ) THEN
+          cell_units = 'bohr'
+       ELSE IF ( matches( "ANGSTROM", input_line ) ) THEN
+          cell_units = 'angstrom'
+       ELSE
+          cell_units = 'alat'
+       END IF
+       !
        DO i = 1, 3
           CALL read_line( input_line )
           READ(input_line,*) ( rd_ht( i, j ), j = 1, 3 )

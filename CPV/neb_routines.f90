@@ -15,7 +15,7 @@ MODULE neb_routines
   ! ... Written by Carlo Sbraccia ( 04-11-2003 )
   !
   USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : DP
+  USE kinds,      ONLY : DP, dbl
   USE constants,  ONLY : AU, BOHR_RADIUS_ANGS, eV_to_kelvin
   USE neb_base,   ONLY : initialize_neb, compute_action, compute_tangent, &
                          elastic_constants, gradient, search_stationary_points, &
@@ -76,6 +76,8 @@ MODULE neb_routines
       CHARACTER(LEN=256) :: outdir_saved
       CHARACTER(LEN=256) :: filename
 
+      REAL(dbl) :: alat_
+
       INTEGER :: c_mkdir
 
       IF ( num_of_images < 2 ) THEN
@@ -135,7 +137,7 @@ MODULE neb_routines
       END SELECT
  
       CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, rd_ht, &
-             a, b, c, cosab, cosac, cosbc )
+             a, b, c, cosab, cosac, cosbc, alat_ )
 
       CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , atom_mass, &
              atom_label, if_pos  )
