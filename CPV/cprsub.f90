@@ -119,10 +119,10 @@
       use cell_base, only: omega
       use constants, only: pi, fpi
       use ions_base, only: rcmax,  zv, nsp, na
-      use cvan, only: ipp
+      use cvan, only: oldvan
       use pseu
       use reciprocal_vectors, only: gstart
-      use atom, only: r, rab, mesh
+      use atom, only: r, rab, mesh, numeric
       use uspp_param, only: vloc_at
       use qrl_mod, only: cmesh
 !
@@ -168,8 +168,7 @@
 !     fourier transform of local pp and gaussian nuclear charge
 !     ==================================================================
       do is=1,nsp
-         if(ipp(is).ne.3) then
-!!!        if (numeric(is)) then
+         if (numeric(is)) then
 !     ==================================================================
 !     local potential given numerically on logarithmic mesh 
 !     ==================================================================
@@ -196,8 +195,7 @@
                vscr(ir)=0.0
                f(ir)=0.0
             end do
-!!!         if (oldpseudo(is)) then
-            if (ipp(is).eq.0) then
+            if (oldvan(is)) then
                call herman_skillman_int(mesh(is),cmesh(is),f,fint)
             else
                call simpson_cp90(mesh(is),f,rab(1,is),fint)
@@ -225,8 +223,7 @@
                      df(ir)=vscr(ir)*cos(r(ir,is)*xg)*.5*r(ir,is)/xg
                   endif
                end do
-!!!         if (oldpseudo(is)) then
-               if (ipp(is).eq.0) then
+               if (oldvan(is)) then
                   call herman_skillman_int                              &
      &                 (mesh(is),cmesh(is),f,figl(ig))
                   if(tpre) call herman_skillman_int                     &
@@ -895,7 +892,7 @@
       use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
-      use cvan, only: ish, nvb, ipp
+      use cvan, only: ish, nvb, oldvan
       use core
       use constants, only: pi, fpi
       use ions_base, only: na, nsp
@@ -903,9 +900,9 @@
       use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, &
            nhsa => nkb, nhsavb=>nkbus
       use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &
-           nbeta, lmaxkb, lll, nhm, nh
+           nbeta, lmaxkb, lll, nhm, nh, tvanp
       use qrl_mod, only: qrl, cmesh
-      use atom, only: mesh, r, rab, nlcc
+      use atom, only: mesh, r, rab, nlcc, numeric
       use qradb_mod
       use qgb_mod
       use gvecb
@@ -939,7 +936,7 @@
          nhm=max(nhm,nh(is))
          ish(is)=nhsa
          nhsa=nhsa+na(is)*nh(is)
-         if(ipp(is).le.1) nhsavb=nhsavb+na(is)*nh(is)
+         if(tvanp(is)) nhsavb=nhsavb+na(is)*nh(is)
          nlcc_any = nlcc_any .OR. nlcc(is)
       end do
       if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
@@ -1057,8 +1054,7 @@
                      do ir=1,kkbeta(is)
                         fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
                      end do
-!!!         if (oldpseudo(is)) then
-                     if (ipp(is).eq.0) then
+                     if (oldvan(is)) then
                         call herman_skillman_int                        &
      &                    (kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
                      else
@@ -1071,8 +1067,7 @@
                         do ir=1,kkbeta(is)
                            dfint(ir)=qrl(ir,iv,jv,l,is)*djl(ir)
                         end do
-!!!         if (oldpseudo(is)) then
-                        if (ipp(is).eq.0) then
+                        if (oldvan(is)) then
                            call herman_skillman_int                     &
      &                          (kkbeta(is),cmesh(is),dfint,            &
      &                          dqradx(il,iv,jv,l,is))
@@ -1111,8 +1106,7 @@
       WRITE( stdout, fmt="(//,3X,'Common initialization' )" )
       do is=1,nsp
          WRITE( stdout, fmt="(/,3X,'Specie: ',I5)" ) is
-!!!         if (.not.numeric(is)) then
-         if (ipp(is).eq.3) then
+         if (.not.numeric(is)) then
             fac=1.0
          else
 !     fac converts ry to hartree
@@ -1167,8 +1161,7 @@
                do ir=1,kkbeta(is)
                   fint(ir)=r(ir,is)*betar(ir,indv(iv,is),is)*jl(ir)
                end do
-!!!         if (oldpseudo(is)) then
-               if (ipp(is).eq.0) then
+               if (oldvan(is)) then
                   call herman_skillman_int                              &
      &                 (kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
                else
@@ -1180,8 +1173,7 @@
                   do ir=1,kkbeta(is)
                      dfint(ir)=r(ir,is)*betar(ir,indv(iv,is),is)*djl(ir)
                   end do
-!!!         if (oldpseudo(is)) then
-                  if (ipp(is).eq.0) then
+                  if (oldvan(is)) then
                      call herman_skillman_int                           &
      &                 (kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
                   else

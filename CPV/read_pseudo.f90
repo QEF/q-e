@@ -187,8 +187,10 @@ END FUNCTION
 
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
+      USE uspp_param, ONLY : tvanp
+      USE atom, ONLY: numeric
+      USE cvan, ONLY: oldvan, nvb
       use ions_base, only: nsp
-      use cvan, only: nvb, ipp
       use read_pseudo_module, only: read_pseudo_upf
       use control_flags, only: program_name, tuspp
       use funct, only: iexch, icorr, igcx, igcc, dft, which_dft
@@ -266,6 +268,10 @@ END FUNCTION
 
         OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
 
+        numeric(is)=.true.
+        ! used only by obsolete "bhs" format of CP
+        oldvan(is)=.false.
+        ! used only by obsolete Vanderbilt format with Herman-Skillman grid
         IF( info == 20 ) THEN
            !
            !  ...      Pseudopotential form is UPF
@@ -338,25 +344,21 @@ END FUNCTION
           !
         ELSE IF( program_name == 'CP90' ) THEN
           !
-          !     ipp=-2 UPF format, vanderbilt (TEMP)
-          !     ipp=-1 ultrasoft vanderbilt pp , AdC format
-          !     ipp= 0 ultrasoft vanderbilt pp , old format
-          !     ipp= 1 ultrasoft vanderbilt pp
-          !     ipp= 2 norm-conserving hsc pp
-          !     ipp= 3 norm-conserving bhs pp
-          !     ipp= 4 UPF format, non-vanderbilt (TEMP)
+          !     Ultrasoft formats: UPF, AdC, Vanderbilt ("old" and new)
+          !     norm-conserving formats: hsc, bhs, UPF
           !
-          !     check on ipp value and input order
+          !     check on input ordering: US first, NC later 
           !
           if(is > 1) then
-            if ( ipp(is) < ipp(is-1) ) then
-               call errore('readpp', 'first vdb, then nnc',10)
+            if ( (.NOT. tvanp(is-1)) .AND. tvanp(is) ) then
+               call errore ('readpp', &
+                            'ultrasoft PPs must precede norm-conserving',is)
             endif
           endif
           !
           !     count u-s vanderbilt species 
           !
-          if (ipp(is) <= 1) nvb=nvb+1
+          if (tvanp(is)) nvb=nvb+1
 
         END IF
 
@@ -898,10 +900,9 @@ subroutine upf2internal ( upf, is, ierr )
   ! CP90 modules
   !
   use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
-                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
-  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
+                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
+  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
-  use cvan, only: ipp
   use funct, only: dft, which_dft
   !
   use pseudo_types
@@ -918,12 +919,7 @@ subroutine upf2internal ( upf, is, ierr )
   !
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
-  ! tvanp(is)=upf%tvanp
-  if (upf%tvanp) then
-     ipp(is) = -2
-  else
-     ipp(is) = +4     
-  end if
+  tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
   !
   dft = upf%dft
@@ -1236,13 +1232,12 @@ END SUBROUTINE
       subroutine readbhs( is, iunps )
 !---------------------------------------------------------------------
 !
-      use atom, only: rab, r, mesh, nlcc, rho_atc
+      use atom, only: rab, r, mesh, nlcc, rho_atc, numeric
       use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
       use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: dft, which_dft
       use ions_base, only: zv
-      use cvan, only: ipp
       use io_global, only: stdout
 
 !
@@ -1256,7 +1251,7 @@ END SUBROUTINE
 !
 ! nlcc is unfortunately not read from file
 !
-      ipp(is) = 3
+      numeric(is) = .false.
       nlcc(is)=.false.
       read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
       if (zv(is) < 1 .or. zv(is) > 100 ) then
@@ -1423,11 +1418,10 @@ END SUBROUTINE
       use parameters, only: nsx, natx, lqmax, ndmx
       use atom, only: rho_atc, r, rab, mesh, nlcc, lchi, chi, nchi, nchix
       use uspp_param, only: nqlc, qfunc, vloc_at, rinner,&
-                       qqq, nbeta, nbrx, betar, dion, lll, kkbeta
+                       qqq, nbeta, nbrx, betar, dion, lll, kkbeta, tvanp
       use qrl_mod, only: qrl
       use funct, only: dft, iexch, icorr, igcx, igcc
       use ions_base, only: zv
-      use cvan, only: ipp
       use io_global, only: stdout
 !
       ! the above module variables has no dependency from iosys
@@ -1473,7 +1467,7 @@ END SUBROUTINE
       if (is.lt.0 .or. is.gt.nsx)                                       &
      &   call errore('readAdC','Wrong is number', 1)
 !
-      ipp(is) = -1
+      tvanp(is) = (pseudotype == 3)
       read( iunps, '(a75)', err=100, iostat=ios ) titleps
 !
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
@@ -1677,12 +1671,12 @@ END SUBROUTINE
       use kinds, only: DP
       use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
       use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
-           rinner, kkbeta, lll, nbeta, nqf, nqlc
+           rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp
       use qrl_mod, only: cmesh, qrl
       use funct, only: dft, which_dft
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
+      use cvan, only: oldvan
       use ions_base, only: zv
-      use cvan, only: ipp
       use io_global, only: stdout
 !
       implicit none
@@ -1791,11 +1785,7 @@ END SUBROUTINE
       else if (keyps.eq.4) then
          call errore('readvan','keyps not implemented',keyps)
       end if
-      if (keyps == 3) then
-         ipp(is) = 1
-      else
-         ipp(is) = 2
-      end if
+      tvanp(is) = (keyps == 3)
 !
 !     Read information on the angular momenta, and on Q pseudization
 !     (version > 3.0)
@@ -1842,7 +1832,7 @@ END SUBROUTINE
 !       set the number of angular momentum terms in q_ij to read in
 !
       if (iver(1).eq.1) then
-         ipp(is) = 0
+         oldvan(is) = .TRUE.
 ! old format: no distinction between nang and nchi
          nang = nchi(is)
 ! old format: no optimization of q_ij => 3-term taylor series

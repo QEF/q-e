@@ -19,7 +19,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use parameters
   use  elct
   use  constants
-  use cvan
+  use cvan, only: oldvan, nvb, indlm
   use  ions_base
   use ions_base, only : nas => nax
   use cell_base, only: a1, a2, a3
@@ -105,7 +105,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
               do ir=1,kkbeta(is)
                  fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
               end do
-              if (ipp(is).eq.0) then
+              if (oldvan(is)) then
                  call herman_skillman_int     &
                       &  (kkbeta(is),cmesh(is),fint,qradb2(iv,jv,l,is))
               else

@@ -44,7 +44,7 @@
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use cvan, only: ipp, nvb, ish
+      use cvan, only: nvb, ish
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3

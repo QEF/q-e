@@ -182,7 +182,7 @@ program read_bands
      write (1,'(2(f8.3,1x)," lineto stroke [] 0 setdash")') &
           xdim, (Ef-emin)/(emax-emin)*ydim
   end if
-  ! draw axis and set clippping region
+  ! draw axis and set clipping region
   write (1,*) '1 setlinewidth'
   write (1,'(8(f8.3,1x))') 0.0,0.0,0.0,ydim,xdim,ydim,xdim,0.0 
   write (1,*) 'newpath moveto lineto lineto lineto closepath clip stroke'

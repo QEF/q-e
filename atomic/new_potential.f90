@@ -72,7 +72,6 @@ subroutine new_potential &
         vnew(i,is)=vnew(i,is)+vgc(i,is)
      enddo
   enddo
-
   deallocate(egc)
   deallocate(vgc)
 
