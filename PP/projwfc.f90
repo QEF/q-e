@@ -184,14 +184,15 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !    loop on k points
   !
   call init_us_1
+  call init_at_1
   !
   do ik = 1, nks
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
 
      call atomic_wfc (ik, wfcatom)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
 
+     call init_us_2 (npw, igk, xk (1, ik), vkb)
      call ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
 
      call s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
