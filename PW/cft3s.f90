@@ -217,7 +217,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !
   use parameters
 
-  use fft_scalar, only: cfft3ds    !  common scalar fft driver
+  use fft_scalar, only: cfft3ds, cfft3d    !  common scalar fft driver
   use sticks, only: dffts          !  data structure for fft data layout
 
   implicit none
@@ -238,11 +238,19 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 
   if (sign.eq.1) then
 
+#if defined __FFT_MODULE_DRV
+     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, 1)
+#else
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
+#endif
 
   elseif (sign.eq. - 1) then
 
+#if defined __FFT_MODULE_DRV
+     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, - 1)
+#else
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1)
+#endif
 
      !
      !   sign = +-2 : if available, call the "short" fft (for psi's)
@@ -250,8 +258,10 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 
   elseif (sign.eq.2) then
 
-#if defined __FFT_MODULE_DRV && defined __AIX
+#if defined __FFT_MODULE_DRV && ( defined __AIX || defined __FFTW )
      call cfft3ds (f, n1, n2, n3, nx1, nx2, nx3,  1, dffts%isind, dffts%iplw)
+#elif defined __FFT_MODULE_DRV
+     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, 1)
 #elif defined NOPENCILS
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
 #else
@@ -260,8 +270,10 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 
   elseif (sign.eq. - 2) then
 
-#if defined __FFT_MODULE_DRV && defined __AIX
+#if defined __FFT_MODULE_DRV && ( defined __AIX || defined __FFTW )
      call cfft3ds (f, n1, n2, n3, nx1, nx2, nx3, -1, dffts%isind, dffts%iplw)
+#elif defined __FFT_MODULE_DRV
+     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, -1)
 #elif defined NOPENCILS
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1)
 #else

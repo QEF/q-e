@@ -109,25 +109,21 @@ int FFT_Z_STICK(fftw_plan *p, FFTW_COMPLEX *zstick, int *ldz, int *nstick_l)
    return 0;
 }
 
-int FFTW_INPLACE_DRV_1D(fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *lda, int *inca)
+int FFTW_INPLACE_DRV_1D(fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *inca, int *idist)
 {
-   int howmany, idist, inc;
-   howmany = (*nfft);
-   idist   = (*lda);
-   inc     = (*inca);
-   fftw(*p, howmany, a, inc, idist, 0, 0, 0);
+   fftw(*p, (*nfft), a, (*inca), (*idist), 0, 0, 0);
    return 0;
 }
 
-int FFTW_INPLACE_DRV_2D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
+int FFTW_INPLACE_DRV_2D( fftwnd_plan *p, int *nfft, FFTW_COMPLEX *a, int *inca, int *idist)
 {
-   fftwnd( *p, *howmany, a, *inca, *idist, 0, 0, 0 );
+   fftwnd( *p, (*nfft), a, (*inca), (*idist), 0, 0, 0 );
    return 0;
 }
 
-int FFTW_INPLACE_DRV_3D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
+int FFTW_INPLACE_DRV_3D( fftwnd_plan *p, int *nfft, FFTW_COMPLEX *a, int *inca, int *idist)
 {
-   fftwnd( *p, *howmany, a, *inca, *idist, 0, 0, 0 );
+   fftwnd( *p, (*nfft), a, (*inca), (*idist), 0, 0, 0 );
    return 0;
 }
 

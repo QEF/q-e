@@ -168,6 +168,8 @@ CONTAINS
     desc%nr3x = nr3x
     desc%nnp  = nr1x * nr2x   ! see ncplane
 
+    !  Set fft local workspace dimension
+
     IF ( nproc == 1 ) THEN
       desc%nnr = nr1x * nr2x * nr3x
     ELSE
@@ -245,6 +247,8 @@ CONTAINS
     !     in the plane with stick indexes (it is the inverse of desc%ismap )
     !
 
+    !  wave function sticks first
+
     desc%ismap = 0
     nsp        = 0
     DO iss = 1, SIZE( desc%isind )
@@ -260,10 +264,18 @@ CONTAINS
       END IF
     END DO
 
-    IF( ANY( nsp( 1:nproc ) /= ncpw( 1:nproc ) ) ) &
+    !  chack number of stick against the input value
+
+    IF( ANY( nsp( 1:nproc ) /= ncpw( 1:nproc ) ) ) THEN
+      DO ip = 1, nproc
+        WRITE(6,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncpw( ip )
+      END DO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
+    END IF
 
     desc%nsw( 1:nproc ) = nsp
+
+    !  then add pseudopotential stick 
 
     DO iss = 1, SIZE( desc%isind )
       ip = desc%isind( iss )
@@ -277,6 +289,8 @@ CONTAINS
         END IF
       END IF
     END DO
+
+    !  chack number of stick against the input value
 
     IF( ANY( nsp( 1:nproc ) /= ncp( 1:nproc ) ) ) THEN
       DO ip = 1, nproc

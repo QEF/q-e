@@ -17,54 +17,9 @@
 !     routine issuing an error message is compiled.
 !
 #include "machine.h"
-#ifdef __FFTW
-!
-!-----------------------------------------------------------------------
 
-subroutine cft_3 (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, igrid, isign)
-  !-----------------------------------------------------------------------
-  ! driver routine for 3d fft using fftw libraries (PG)
-  !
-  use parameters, only : DP
-  use fftw_mod
-
-  implicit none
-  integer :: nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, igrid
-  complex(kind=DP) :: f (nr1x * nr2x * nr3x)
-  !
-  real(kind=DP) :: fac
-  integer :: ibid
-  !
-  ! initialization variables
-  !
-  C_POINTER, save :: plan(2,2)
-  data plan/0,0,0,0/
-  !plan = reshape((/ 0, 0, 0, 0 /),(/2,2/))
-  !
-  !
-  if (nr1.ne.nr1x.or.nr2.ne.nr2x) call errore ('cft_3', 'not implemented', 1)
-  if (igrid.le.0.or.igrid.gt.2) call errore ('cft_3', 'which grid ?',1)
-  if (isign.eq.1) then
-     ibid = 1
-  elseif (isign.eq. - 1) then
-     ibid = 2
-  else
-     call errore ('cft_3', 'isign unexpected', isign)
-
-  endif
-
-  if (plan (igrid, ibid) .eq.0) call FFTW3D_F77_CREATE_PLAN (plan (igrid, ibid),&
-       nr1, nr2, nr3, isign, FFTW_ESTIMATE+FFTW_IN_PLACE)
-  call FFTWND_F77_ONE (plan (igrid, ibid), f, 0)
-  if (isign.eq. - 1) then
-     fac = 1.0 / float (nr1 * nr2 * nr3)
-     call DSCAL (2 * nr1 * nr2 * nr3, fac, f, 1)
-  endif
-  return
-
-end subroutine cft_3
-#else
 #undef PRESENT
+
 #if defined(__SGI) || defined(__ORIGIN)
 #define PRESENT
 !----------------------------------------------------------------------
@@ -734,6 +689,3 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
 
 end subroutine cft_3
 #endif
-#endif
-
-

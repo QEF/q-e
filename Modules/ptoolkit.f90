@@ -1011,9 +1011,6 @@
       REAL(dbl) fv1(FV_WORK_SIZE)
       REAL(dbl) fv2(FV_WORK_SIZE)
 
-#if defined __T3E
-!DIR$ CACHE_ALIGN cv,sv,fv1,fv2
-#endif
 
       save cv,sv,fv1,fv2,b,dd,f,g,p,r,c,s
       save i,iter,mk,k,l,m
@@ -1326,18 +1323,8 @@
           IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
           CALL DSPEV(IOPT, ap, w, z, ldz, n, work, 3*n)
 
-#elif defined __T3E
+#else 
 
-          CALL SSPEV(jobz, uplo, n, ap, w, z, ldz, work, INFO)
-          IF( info .NE. 0 ) THEN
-            CALL errore( ' dspev_drv ', ' diagonalization failed ',info )
-          END IF
-
-#elif defined __SGI | defined __LINUX | defined __QSW 
-
-          !write(6,*) jobz,uplo,n,ldz  ! debug
-          !write(6,'(4D12.6)') ap( 1:(n*(n+1)/2) )      ! debug
-          !stop                        ! debug
           CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
           IF( info .NE. 0 ) THEN
             CALL errore( ' dspev_drv ', ' diagonalization failed ',info )
@@ -1421,11 +1408,9 @@
 
 #if defined __AIX
           iopt = 1
-          CALL zhpev(iopt,aloc,d,ev,n,n,cwork,4*n)
-#elif defined __T3E
-          CALL chpev('V','L',n,aloc,d,ev,n,cwork,rwork,info)
-#elif defined __SGI | defined __LINUX | defined __QSW
-          CALL zhpev('V','L',n,aloc,d,ev,n,cwork,rwork,info)
+          CALL ZHPEV(iopt,aloc,d,ev,n,n,cwork,4*n)
+#else
+          CALL ZHPEV('V','L',n,aloc,d,ev,n,cwork,rwork,info)
 #endif
 
           DEALLOCATE(cwork)
@@ -2804,16 +2789,7 @@
         CALL ZHPEV(IOPT, ap, w, z, ldz, n, rwork, 4*n)
         DEALLOCATE( rwork )
 
-#elif defined __T3E
-
-        ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
-        CALL CHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
-        DEALLOCATE( rwork, zwork )
-        IF( info .NE. 0 ) THEN
-          CALL errore( ' dspev_drv ', ' diagonalization failed ',info )
-        END IF
-
-#elif defined __SGI | defined __LINUX | defined __QSW
+#else
 
         ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
         CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)

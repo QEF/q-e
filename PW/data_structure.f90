@@ -13,9 +13,13 @@ subroutine data_structure( lgamma )
   ! This version computes also the smooth and hard mesh
   !
 #include "machine.h"
-  use pwcom
+  use sticks, only: dfftp, dffts
+  use pwcom, only: dp, bg, xk, nks, tpiba, ecutwfc, ngm, ngms, ngm_l, ngm_g, &
+    ngms_l, ngms_g, nrxx, nrxxs, gcutm, gcutms, &
+    nr1, nr2, nr3, nrx1, nrx2, nrx3, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
 #ifdef __PARA
-  use para
+  use para, only: maxproc, ncplane, ncplanes, nkcp, ipc, ipcs, npp, npps, &
+    ncp0, ncp0s, icpl, icpls, nxx, nxxs, nct, ncts, ncp, ncps
 #endif
   use mp, only: mp_sum
   use mp_global, only: intra_pool_comm, nproc_pool, me_pool
@@ -100,59 +104,28 @@ subroutine data_structure( lgamma )
   !
   allocate (ipc( ncplane))    
   allocate (ipcs( ncplanes))    
+
   !
-  ! set the number of plane per process
+  ! check the number of plane per process
   !
-  if (nr3.lt.nprocp) call errore ('data_structure', &
-       'some processors have no planes ',  - 1)
+  if ( nr3 < nproc_pool ) &
+    call errore ('data_structure', 'some processors have no planes ',  - 1)
 
-  if (nr3s.lt.nprocp) call errore ('data_structure', &
-       'some processors have no smooth planes ',  - 1)
-  if (nprocp.eq.1) then
-     npp (1) = nr3
-     npps (1) = nr3s
-  else
-     np = nr3 / nprocp
-     nq = nr3 - np * nprocp
-     nps1 = nr3s / nprocp
-     nqs = nr3s - nps1 * nprocp
-     do i = 1, nprocp
-        npp (i) = np
-        if (i.le.nq) npp (i) = np + 1
-        npps (i) = nps1
-        if (i.le.nqs) npps (i) = nps1 + 1
-     enddo
-  endif
-  write (6, '(/5x,"Planes per process (thick) : nr3 =", &
-       &        i3," npp = ",i3," ncplane =",i5)') nr3, npp (me) , ncplane
+  if ( nr3s < nproc_pool ) &
+    call errore ('data_structure', 'some processors have no smooth planes ',  - 1)
 
-  if (nr3s.ne.nr3) write (6, '(/5x,"Planes per process (smooth): nr3s=",&
-       &i3," npps= ",i3," ncplanes=",i5)') &
-       nr3s, npps (me) , ncplanes
+  !
+  ! compute gkcut calling an internal procedure
+  !
 
-  !if (nks.eq.0) then
-  !   !
-  !   ! if k-points are automatically generated (which happens later)
-  !   ! use max(bg)/2 as an estimate of the largest k-point
-  !   !
-  !   gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max (sqrt (bg ( &
-  !        1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), sqrt (bg (1, 2) ** &
-  !        2 + bg (2, 2) **2 + bg (3, 2) **2), sqrt (bg (1, 3) **2 + bg ( &
-  !        2, 3) **2 + bg (3, 3) **2) )
-  !else
-  !   gkcut = 0.0d0
-  !   do kpoint = 1, nks
-  !      gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt (xk ( &
-  !           1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
-  !   enddo
-  !endif
-!
-!  gkcut = gkcut * gkcut
+  call calculate_gkcut()  
 
-  call calculate_gkcut()  ! call the internal procedure
-
+  !
   ! find maximum among the nodes
+  !
+
   call poolextreme (gkcut, + 1)
+
   !
 #ifdef DEBUG
   write (6, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
@@ -167,21 +140,12 @@ subroutine data_structure( lgamma )
   n2 = nr2 + 1
   n3 = nr3 + 1
   !
-  lb(1) = -n1
-  lb(2) = -n2
-  lb(3) = -n3
-  ub(1) =  n1
-  ub(2) =  n2
-  ub(3) =  n3
+  ub =  (/  n1,  n2,  n3 /)
+  lb =  (/ -n1, -n2, -n3 /)
 !
-  ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
-  ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
-  ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
-
-  
-  ipc  = 0
-  ic   = 0
-  ipcs = 0
+  ALLOCATE( stw ( lb(1) : ub(1), lb(2) : ub(2) ) )
+  ALLOCATE( st  ( lb(1) : ub(1), lb(2) : ub(2) ) )
+  ALLOCATE( sts ( lb(1) : ub(1), lb(2) : ub(2) ) )
 
 !
 ! ...     Fill in the stick maps, for given g-space base (b1,b2,b3)
@@ -230,8 +194,26 @@ subroutine data_structure( lgamma )
   CALL sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngkc, ngcs, nct, &
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts )
 
+  !  set the total number of G vectors
+
+  IF( tk ) THEN
+    ngm  = ngp ( me_pool + 1 )
+    ngms = ngps( me_pool + 1 )
+  ELSE
+    IF( st( 0, 0 ) == ( me_pool + 1 ) ) THEN
+      ngm  = ngp ( me_pool + 1 ) / 2 + 1
+      ngms = ngps( me_pool + 1 ) / 2 + 1
+    ELSE
+      ngm  = ngp ( me_pool + 1 ) / 2
+      ngms = ngps( me_pool + 1 ) / 2
+    END IF
+  END IF
+
   CALL fft_dlay_allocate( dfftp, nproc_pool, nrx1,  nrx2  )
   CALL fft_dlay_allocate( dffts, nproc_pool, nrx1s, nrx2s )
+
+  !  here set the fft data layout structures for dense and smooth mesh,
+  !  according to stick distribution
 
   CALL fft_dlay_set( dfftp, &
        tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, (me_pool+1), &
@@ -240,79 +222,26 @@ subroutine data_structure( lgamma )
        tk, ncts, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, (me_pool+1), &
        nproc_pool, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
 
+  !  if tk = .FALSE. only half reciprocal space is considered, then we
+  !  need to correct the number of sticks
+
+  IF( .NOT. tk ) THEN
+    nct  = nct*2  - 1
+    ncts = ncts*2 - 1
+  END IF
+
   !
-  !  Set the the correspondence between planes in the smooth thick mesh
+  ! set the number of plane per process
   !
-  if (mod (nr1s, 2) .eq.0) then
-     max1 = nr1s / 2
-     min1 = nr1 - nr1s / 2 + 1
-  else
-     max1 = (nr1s - 1) / 2 + 1
-     min1 = nr1 - (nr1s - 1) / 2 + 1
-  endif
 
-  if (mod (nr2s, 2) .eq.0) then
-     max2 = nr2s / 2
-     min2 = nr2 - nr2s / 2 + 1
-  else
-     max2 = (nr2s - 1) / 2 + 1
-     min2 = nr2 - (nr2s - 1) / 2 + 1
-  endif
+  npp ( 1 : nproc_pool ) = dfftp%npp ( 1 : nproc_pool )
+  npps( 1 : nproc_pool ) = dffts%npp ( 1 : nproc_pool )
 
+  write (6, '(/5x,"Planes per process (thick) : nr3 =", &
+       &        i3," npp = ",i3," ncplane =",i5)') nr3, npp (me_pool + 1) , ncplane
 
-  DO mc = 1, nct
-
-    i = index( mc )
-
-    i1 = in1( i )
-    i2 = in2( i )
-
-    m1 = mod ( i1 , nr1 ) + 1
-    if ( m1 < 1 ) m1 = m1 + nr1
-    m2 = mod ( i2 , nr2 ) + 1
-    if ( m2 < 1 ) m2 = m2 + nr2
-    ic = m1 + (m2 - 1) * nrx1 
-
-    IF( st( i1, i2 ) > 0 .AND. stw( i1, i2 ) > 0 ) THEN
-      ipc( ic  ) = st(  i1,  i2 )
-    ELSE IF( st( i1, i2 ) > 0 ) THEN
-      ipc( ic  ) = -st(  i1,  i2 )
-    END IF
-
-    IF( sts( i1, i2 ) > 0 ) THEN
-
-      if ( m1 <= max1 ) then
-         n1 = m1
-      elseif ( m1 >= min1 ) then
-         n1 = nr1s - (nr1 - m1)
-      else
-         call errore ('data_structure', 'something wrong with n1', 1)
-      endif
-
-      if ( m2 <= max2 ) then
-         n2 = m2
-      elseif ( m2 >= min2 ) then
-         n2 = nr2s - (nr2 - m2)
-      else
-         call errore ('data_structure', 'something wrong with n2', 1)
-      endif
-
-      !   check that the indices are within bounds
-      !
-      if (n1.lt.1.or.n1.gt.nr1s.or.n2.lt.1.or.n2.gt.nr2s) &
-         call errore ('data_structure', 'something wrong with n1,n2', 1)
-
-      ics = n1 + (n2 - 1) * nrx1s
-
-      IF( stw( i1, i2 ) > 0 ) THEN
-        ipcs( ics ) = sts(  i1,  i2 )
-      ELSE
-        ipcs( ics ) = -sts(  i1,  i2 )
-      END IF
-
-    END IF
-
-  END DO
+  if ( nr3s /= nr3 ) write (6, '(/5x,"Planes per process (smooth): nr3s=",&
+       &i3," npps= ",i3," ncplanes=",i5)') nr3s, npps (me_pool + 1) , ncplanes
 
   write(6,*)
   write(6,'(                                                        &
@@ -322,148 +251,47 @@ subroutine data_structure( lgamma )
     write(6,'(i3,2x,3(i5,2i7))') i, npp(i), ncp(i), ngp(i),          &
       &        npps(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
   end do
-  write(6,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc)), SUM(ncp(1:nproc)), &
-    &   SUM(ngp(1:nproc)), SUM(npps(1:nproc)), SUM(ncps(1:nproc)), &
-    &   SUM(ngps(1:nproc)), SUM(nkcp(1:nproc)), SUM(ngkp(1:nproc))
+  write(6,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), &
+    &   SUM(ngp(1:nproc_pool)), SUM(npps(1:nproc_pool)), SUM(ncps(1:nproc_pool)), &
+    &   SUM(ngps(1:nproc_pool)), SUM(nkcp(1:nproc_pool)), SUM(ngkp(1:nproc_pool))
   write(6,*)
 
 
   DEALLOCATE( stw, st, sts, in1, in2, index, ngc, ngcs, ngkc )
 
   !
-  !   computing the starting column for each processor
-  !   and the total number of G vectors
+  !   ncp0 = starting column for each processor
   !
-  ngm = ngp (me)
-  ngms = ngps (me)
 
-  do i = 1, nprocp
-
-     if (ngkp (i) .eq.0) call errore ('data_structure', &
-          'some processors have no pencils, not yet implemented', 1)
-     if (i.eq.1) then
-        ncp0 (i) = 0
-        ncp0s (i) = 0
-     else
-        ncp0 (i) = ncp0 (i - 1) + ncp (i - 1)
-        ncp0s (i) = ncp0s (i - 1) + ncps (i - 1)
-     endif
-
-  enddo
+  ncp0( 1:nproc_pool )  = dfftp%iss( 1:nproc_pool )
+  ncp0s( 1:nproc_pool ) = dffts%iss( 1:nproc_pool )
 
   allocate (icpl( nct))    
-
   allocate (icpls( ncts))    
-  do j = 1, nprocp
-     ncp_ (j) = 0
-  enddo
-  !
-  !  Now compute the array ipc and ipcl ( ipc contain the number of the
-  !                        column for that processor or zero if the
-  !                        column do not belong to the processor,
-  !                        ipcl contains the point in the plane for
-  !                        each column)
-  !
-  !- columns with non zero ngkc first........
-  !
-  do mc = 1, ncplane
-     if (ipc (mc) .gt.0) then
-        j = ipc (mc)
-        ncp_ (j) = ncp_ (j) + 1
-        icpl (ncp_ (j) + ncp0 (j) ) = mc
-        if (j.eq.me) then
-           ipc (mc) = ncp_ (j)
-        else
-           ipc (mc) = 0
-        endif
-     endif
-  enddo
-  !
-  !-..... ( intermediate check ) ....
-  !
-  do j = 1, nprocp
-     if (ncp_ (j) .ne.nkcp (j) ) then
-        write (6, * ) 'ncp_(j).ne.nkcp(j)', j, ncp_ (j) , nkcp (j)
-     endif
-  enddo
-  !
-  !- ........then the remaining columns
-  !
-  do mc = 1, ncplane
-     if (ipc (mc) .lt.0) then
-        j = - ipc (mc)
-        ncp_ (j) = ncp_ (j) + 1
-        icpl (ncp_ (j) + ncp0 (j) ) = mc
-        if (j.eq.me) then
-           ipc (mc) = ncp_ (j)
-        else
-           ipc (mc) = 0
-        endif
-     endif
-  enddo
-  !
-  !-... ( final check )
-  !
-  nct_ = 0
-  do j = 1, nprocp
-     if (ncp_ (j) .ne.ncp (j) ) then
-        write (6, * ) 'ncp_(j).ne.ncp(j)', j, ncp_ (j) , ncp (j)
-     endif
-     nct_ = nct_ + ncp_ (j)
-  enddo
-  if (nct_.ne.nct) then
-     write (6, * ) 'nct_.ne.nct', nct_, nct
-  endif
-  !
-  !   here compute the two arrays ipcs and ipcls for the smooth mesh
-  !
-  do j = 1, nprocp
-     ncp_ (j) = 0
-  enddo
-  !
-  !    the columns of the wavefunction sphere first
-  !
-  do mc = 1, ncplanes
-     if (ipcs (mc) .gt.0) then
-        j = ipcs (mc)
-        ncp_ (j) = ncp_ (j) + 1
-        icpls (ncp_ (j) + ncp0s (j) ) = mc
-        if (j.eq.me) then
-           ipcs (mc) = ncp_ (j)
-        else
-           ipcs (mc) = 0
-        endif
-     endif
-  enddo
-  !
-  !    and then all the others
-  !
-  do mc = 1, ncplanes
-     if (ipcs (mc) .lt.0) then
-        j = - ipcs (mc)
-        ncp_ (j) = ncp_ (j) + 1
-        icpls (ncp_ (j) + ncp0s (j) ) = mc
-        if (j.eq.me) then
-           ipcs (mc) = ncp_ (j)
-        else
-           ipcs (mc) = 0
-        endif
-     endif
 
-  enddo
-  if (nprocp.eq.1) then
-     nrxx = nrx1 * nrx2 * nrx3
-     nrxxs = nrx1s * nrx2s * nrx3s
-  else
-     nrxx = max (nrx3 * ncp (me), nrx1 * nrx2 * npp (me) )
-     nrxxs = max (nrx3s * ncps (me), nrx1s * nrx2s * npps (me) )
-  endif
+  !
+  !  array ipc and ipcl ( ipc contain the number of the
+  !                       column for that processor or zero if the
+  !                       column do not belong to the processor,
+  !                       ipcl contains the point in the plane for
+  !                       each column)
+  !
+  ipc ( 1:ncplane )    = dfftp%isind( 1:ncplane )
+  icpl( 1:nct )        = dfftp%ismap( 1:nct )
+
+  ipcs ( 1:ncplanes )  = dffts%isind( 1:ncplanes )
+  icpls( 1:ncts )      = dffts%ismap( 1:ncts )
+
+  nrxx  = dfftp%nnr
+  nrxxs = dffts%nnr
+
   !
   ! nxx is just a copy in the parallel commons of nrxx
   !
-  nxx = nrxx
 
-  nxxs = nrxxs
+  nxx   = nrxx
+  nxxs  = nrxxs
+
 
 #else
 
@@ -491,15 +319,12 @@ subroutine data_structure( lgamma )
   n1 = nr1 + 1
   n2 = nr2 + 1
   n3 = nr3 + 1
+
   ngm = 0
   ngms = 0
 
-  lb(1) = -n1
-  lb(2) = -n2
-  lb(3) = -n3
-  ub(1) =  n1
-  ub(2) =  n2
-  ub(3) =  n3
+  ub =  (/  n1,  n2,  n3 /)
+  lb =  (/ -n1, -n2, -n3 /)
 !
   ALLOCATE( stw ( lb(2):ub(2), lb(3):ub(3) ) )
   stw = 0
