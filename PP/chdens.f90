@@ -207,11 +207,11 @@ subroutine do_chdens
 
   ! check for idpol
   if (idpol == 1 .or. idpol == 2) then
-     if (iflag.ne.3) then
+     if (iflag /= 3) then
         idpol=0
-        call errore("chdens","dipole computed only if iflag=3 or 30",-1)
+        call errore("chdens","dipole computed only if iflag=3",-1)
      endif
-     if (plot_out.ne.1) then
+     if (plot_out /= 1) then
         idpol=0
         call errore("chdens","dipole computed only if plot_out=1",-1)
      endif
@@ -338,7 +338,7 @@ subroutine do_chdens
   !
   ! open output file, i.e., "fileout"
   !
-  if (fileout.ne.' ') then
+  if (fileout /= ' ') then
      ounit = 1
      open (unit=ounit, file=fileout, form='formatted', status='unknown')
      write (6, '(5x,"Writing data on file ",a)') fileout
@@ -353,25 +353,25 @@ subroutine do_chdens
   !
 
   m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
-  if (m1 == 0) then
+  if (abs(m1) < 1.d-6) then
      e1 (:) = at(:,1)
      m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
   end if
-  if (m1 > 0) e1 (:) = e1 (:) / m1
+  e1 (:) = e1 (:) / m1
   !
   m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
-  if (m2 == 0) then
+  if (abs(m2) < 1.d-6) then
      e2 (:) = at(:,2)
      m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
   end if
-  if (m2 > 0) e2 (:) = e2 (:) / m2
+  e2 (:) = e2 (:) / m2
   !
   m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
-  if (m3 == 0) then
+  if (abs(m3) < 1.d-6) then
      e3 (:) = at(:,3)
      m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
   end if
-  if (m3 > 0) e3 (:) = e3 (:) / m3
+  e3 (:) = e3 (:) / m3
   !
   !    and rebuild G-vectors in reciprocal space
   !
@@ -434,7 +434,7 @@ subroutine do_chdens
 
         ! gopenmol wants the coordinates in a separate file
 
-        if (fileout .ne. ' ') then
+        if (fileout /= ' ') then
            open (unit = ounit+1, file = trim(fileout)//'.xyz', &
                 form = 'formatted', status = 'unknown')
            write (6, '(5x,"Writing coordinates on file ",a)') &
@@ -452,7 +452,7 @@ subroutine do_chdens
               ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
               ( e3(1) == 0.d0  .and.  e3(2) == 0.d0) 
 
-     ! are crystal axis aligned along x, y, z ?
+     ! are crystal axis aligned along xyz ?
 
      fast3d = fast3d .and. &
           ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
@@ -470,7 +470,7 @@ subroutine do_chdens
         !
         ! GOPENMOL FORMAT
         !
-        if (.not.fast3d) then
+        if (fast3d) then
 
            call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
                 nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
@@ -484,7 +484,7 @@ subroutine do_chdens
 
      !   at this point we are ready to print the whole FFT mesh (density only)
 
-     if (idpol.eq.1.or.idpol.eq.2) & 
+     if (idpol == 1 .or. idpol == 2) & 
         call write_dipol(dipol(0),tau,nat,alat,zv,ntyp,ityp,idpol)
 
   elseif (iflag == 4) then
@@ -507,6 +507,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
+  use constants, only:  pi
   implicit none
   integer :: nx, ngm, plot_out, ounit
   ! number of points along the line
@@ -534,12 +535,11 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
   ! the argument of the exponential
   ! |G|*|r|
 
-  real, parameter :: pi = 3.14159265358979d0
   complex(kind=DP) :: rho0g, carica (nx)
 
   deltax = m1 / (nx - 1)
   carica(:) = (0.d0,0.d0)
-  if (plot_out.eq.1) then
+  if (plot_out == 1) then
      do i = 1, nx
         xi = x0 (1) + (i - 1) * deltax * e (1)
         yi = x0 (2) + (i - 1) * deltax * e (2)
@@ -624,6 +624,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
+  use constants, only : pi
   implicit none
   integer :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
   ! number of points along x
@@ -652,9 +653,6 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! integrated imaginary charge
   ! steps along e1
   ! steps along e2
-  real(kind=DP) :: pi
-
-  parameter (pi = 3.14159265358979d0)
   complex(kind=DP), allocatable :: eigx (:), eigy (:), carica(:,:)
 
   allocate (eigx(  nx))    
@@ -755,6 +753,7 @@ end subroutine plot_2d
 subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   !-----------------------------------------------------------------------
   use parameters, only : DP
+  use constants, only:  pi
   !
   implicit none
   integer :: nx, ny, ngm, ounit, output_format
@@ -780,9 +779,6 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   ! integrated imaginary charge
   ! steps along e1
   ! steps along e2
-  real(kind=DP) :: pi
-
-  parameter (pi = 3.14159265358979d0)
   complex(kind=DP), allocatable :: carica (:,:)
   complex(kind=DP) :: eig
 
@@ -867,6 +863,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
+  use constants, only:  pi 
   implicit none
   integer :: nat, ityp (nat), ngm, nx, ny, nz, output_format, ounit
   ! number of atoms
@@ -894,7 +891,6 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   real(kind=DP) :: rhomin, rhomax, rhotot, rhoabs, deltax, deltay, deltaz
   ! min, max value of the charge, total charge, total absolute charge
   ! steps along e1, e2, e3
-  real(kind=DP), parameter :: pi = 3.14159265358979d0
   complex(kind=DP), allocatable :: eigx (:), eigy (:), eigz (:)
   real(kind=DP), allocatable :: carica (:,:,:), fact(:,:,:), rws(:,:)
   real(kind=dp) :: wsweight, r(3), rijk, omega, suma
