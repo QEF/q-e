@@ -929,12 +929,13 @@ subroutine iosys
         do ia=1,nat
            wmass = wmass + amass(ityp(ia))
         end do
-        wmass = wmass / omega**(2.d0/3.d0)
+        wmass =  0.75d0 * wmass / pi / pi / omega**(2.d0/3.d0)
      end if
      if (calc.eq.'cd' .or. calc.eq.'cm') then
         do ia=1,nat
            wmass = wmass + amass(ityp(ia))
         end do
+        wmass =  0.75d0 * wmass / pi / pi 
      end if
      write (6,*) ' default wmass set to ', wmass
   end if
