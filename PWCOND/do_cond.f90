@@ -25,7 +25,6 @@ implicit none
   real(kind=DP), parameter :: eps=1.d-8
   real(kind=DP) :: wtot
   integer :: ik, ien, ios, orbin, orbfin 
-  integer :: ionode_id
   logical :: write0
 
   namelist /inputcond/ outdir, prefix, band_file, tran_file, fil_loc,  & 
