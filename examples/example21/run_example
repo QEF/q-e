@@ -10,14 +10,14 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use par2.x to perform molecular dynamics"
+$ECHO "This example shows how to use fpmd.x to perform molecular dynamics"
 $ECHO "simulation of medium to large systems."
 
 # set the needed environment variables 
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="par2.x"
+BIN_LIST="fpmd.x"
 PSEUDO_LIST="O.BLYP.UPF H.fpmd.UPF"
 
 $ECHO
@@ -64,9 +64,9 @@ done
 $ECHO " done"
 
 # how to run executables
-FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/par2.x $PARA_POSTFIX"
+FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/fpmd.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running par2.x as: $FPMD_COMMAND"
+$ECHO "  running fpmd.x as: $FPMD_COMMAND"
 $ECHO
 
 # clean TMP_DIR
