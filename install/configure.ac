@@ -68,14 +68,15 @@ esac
 
 # check Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
+unset F77 # otherwise it may interfere with the check
 AC_PROG_F77($f90)
 f90=$F77
 
 case "$build:$f90" in
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
-	try_cc="mpicc pgcc gcc cc icc"
-	try_f77="mpif77 pgf77 $f90"
+	try_cc="pgcc gcc cc icc"
+	try_f77="pgf77 $f90"
 	;;
 *-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
@@ -642,21 +643,20 @@ AC_CONFIG_FILES(make.sys make.rules)
 AC_OUTPUT
 
 # final warnings
-echo ------------------------------------------------------------------
+echo -------------------------------------------------------------------
 echo PWscf can take advantage of several optimized numerical libraries
 echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
 echo but may fail if they have been installed in non-standard locations.
+echo
 echo The following libraries have been found:
 echo "  LIBS=$libs"
-echo If any libraries are missing, try setting the environment variable
-echo "  LIBDIRS=\"list of directories, separated by spaces\""
-echo and rerunning configure.
-echo Bourne shell syntax:
-echo "  export LIBDIRS=\"...\" ; ./configure"
-echo C shell syntax:
-echo "  setenv LIBDIRS \"...\" ; ./configure"
-echo If this still fails, set the environment variable LIBS manually.
-echo ------------------------------------------------------------------
+echo
+echo If any libraries are missing, you may specify a list of directories
+echo to search and retry, as follows:
+echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
+echo
+echo \(For more information, read the INSTALL file or the PWscf manuals.\)
+echo -------------------------------------------------------------------
 
 if ! test $parallel
 then
