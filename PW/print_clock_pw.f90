@@ -29,7 +29,8 @@ subroutine print_clock_pw
    call print_clock ('v_of_rho')
    call print_clock ('newd')
 #ifdef DEBUG_NEWD
-   write (*,*) nhm*(nhm+1)/2, nbrx*(nbrx+1)/2*lqx
+   write (*,*) "nhm*(nhm+1)/2       = ", nhm*(nhm+1)/2, nhm
+   write (*,*) "nbrx*(nbrx+1)/2*lqx = ", nbrx*(nbrx+1)/2*lqx, nbrx,lqx
    call print_clock ('newd:fftvg')
    call print_clock ('newd:qvan2')
    call print_clock ('newd:int1')
@@ -55,6 +56,12 @@ subroutine print_clock_pw
    call print_clock ('sumbec')
 
    call print_clock ('addusdens')
+#ifdef DEBUG_ADDUSDENS
+   call print_clock ('addus:qvan2')
+   call print_clock ('addus:strf')
+   call print_clock ('addus:aux2')
+   call print_clock ('addus:aux')
+#endif
    write (6, * )
    if (isolve.eq.0) then
       call print_clock ('cegterg')

@@ -35,8 +35,10 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   ! input: the positions of the atoms in the c
   ! input: the coordinates of the g vectors
 
-  complex(kind=DP) :: strf (ngm, ntyp), eigts1 ( - nr1:nr1, nat), &
-       eigts2 ( - nr2:nr2, nat), eigts3 ( - nr3:nr3, nat)
+  complex(kind=DP) :: strf (ngm, ntyp),        &
+                      eigts1 ( -nr1:nr1, nat), &
+                      eigts2 ( -nr2:nr2, nat), &
+                      eigts3 ( -nr3:nr3, nat)
   ! output: the structure factor
   !
   ! output: the phases e^{-iG\tau_s}
@@ -74,8 +76,9 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
 
   do na = 1, nat
      do ipol = 1, 3
-        bgtau (ipol) = bg (1, ipol) * tau (1, na) + bg (2, ipol) * tau (2, &
-             na) + bg (3, ipol) * tau (3, na)
+        bgtau (ipol) = bg (1, ipol) * tau (1, na) + &
+                       bg (2, ipol) * tau (2, na) + &
+                       bg (3, ipol) * tau (3, na)
      enddo
      do n1 = - nr1, nr1
         arg = tpi * n1 * bgtau (1)

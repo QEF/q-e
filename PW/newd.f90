@@ -20,7 +20,7 @@ subroutine newd
   implicit none
   integer :: ig, nt, ih, jh, na, is
   ! counters on g vectors, atom type, beta functions x 2, atoms, spin
-  complex(kind=DP), allocatable :: aux (:,:), vg (:)
+  complex(kind=DP), allocatable :: aux (:,:), qgm_na (:)
   ! work space
   real(kind=DP), allocatable  :: ylmk0 (:,:), qmod (:)
   ! spherical harmonics, modulus of G
@@ -49,7 +49,7 @@ subroutine newd
      fact = 1.d0
   end if
   call start_clock ('newd')
-  allocate ( aux(ngm,nspin), vg(nrxx), qmod(ngm), ylmk0(ngm, lqx*lqx) )
+  allocate ( aux(ngm,nspin), qgm_na(ngm), qmod(ngm), ylmk0(ngm, lqx*lqx) )
   !
   deeq(:,:,:,:) = 0.d0
   !
@@ -64,10 +64,10 @@ subroutine newd
    call start_clock ('newd:fftvg')
 #endif
   do is = 1, nspin
-     vg (:) = vltot (:) + vr (:, is)
-     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     psic (:) = vltot (:) + vr (:, is)
+     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
-        aux (ig, is) = vg (nl (ig) )
+        aux (ig, is) = psic (nl (ig) )
      enddo
   enddo
 #ifdef DEBUG_NEWD
@@ -84,48 +84,50 @@ subroutine newd
 #ifdef DEBUG_NEWD
    call start_clock ('newd:qvan2')
 #endif
+              !
+              ! The Q(r) for this atomic species without structure factor
+              !
               call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
 #ifdef DEBUG_NEWD
    call stop_clock ('newd:qvan2')
 #endif
               do na = 1, nat
                  if (ityp (na) .eq.nt) then
-                    !
-                    !    The product of the potential and the structure factor
-                    !
-                    do is = 1, nspin
 #ifdef DEBUG_NEWD
    call start_clock ('newd:int1')
 #endif
-                       do ig = 1, ngm
-                          vg (ig) = aux(ig, is) * conjg(eigts1 (ig1(ig), na) &
-                                                      * eigts2 (ig2(ig), na) &
-                                                      * eigts3 (ig3(ig), na) )
-                       enddo
+                    !
+                    ! The Q(r) for this specific atom
+                    !
+                    do ig = 1, ngm
+                       qgm_na (ig) = qgm(ig) * eigts1 (ig1(ig), na) &
+                                             * eigts2 (ig2(ig), na) &
+                                             * eigts3 (ig3(ig), na) 
+                     enddo
 #ifdef DEBUG_NEWD
    call stop_clock ('newd:int1')
 #endif
-                       !
-                       !    and the product with the Q functions
-                       !
 #ifdef DEBUG_NEWD
    call start_clock ('newd:int2')
 #endif
+                    !
+                    !  and the product with the Q functions
+                    !
+                    do is = 1, nspin
                        deeq (ih, jh, na, is) = fact * omega * &
-                            DDOT (2 * ngm, vg, 1, qgm, 1)
+                            DDOT (2 * ngm, aux(1,is), 1, qgm_na, 1)
                        if (gamma_only .and. gstart==2) &
-                            deeq (ih, jh, na, is) = &
-                            deeq (ih, jh, na, is) - omega*real(vg(1)*qgm(1))
+                           deeq (ih, jh, na, is) = deeq (ih, jh, na, is) - &
+                                             omega*real(aux(1,is)*qgm_na(1))
+                    enddo
 #ifdef DEBUG_NEWD
    call stop_clock ('newd:int2')
 #endif
-                    enddo
                  endif
               enddo
            enddo
         enddo
      endif
-
   enddo
 #ifdef __PARA
   call reduce (nhm * nhm * nat * nspin, deeq)
@@ -150,7 +152,7 @@ subroutine newd
      !        end do
 
   enddo
-  deallocate ( aux, vg, qmod, ylmk0 )
+  deallocate ( aux, qgm_na, qmod, ylmk0 )
   call stop_clock ('newd')
 
   return

@@ -124,10 +124,9 @@ subroutine phq_init
      if (.not.lgamma) then
         call gk_sort (xk (1, ikq), ngm, g, ecutwfc / tpiba2, npwq, igkq, g2kin)
         if (nksq.gt.1) write (iunigk) npwq, igkq
-        if (abs (xq (1) - (xk (1, ikq) - xk (1, ikk) ) ) &
-             .gt.1.d-8.or.abs (xq (2) - (xk (2, ikq) - xk (2, ikk) ) ) &
-             .gt.1.d-8.or.abs (xq (3) - (xk (3, ikq) - xk (3, ikk) ) ) &
-             .gt.1.d-8) then
+        if (abs (xq (1) - (xk (1, ikq) - xk (1, ikk) ) ) .gt.1.d-8 .or. &
+            abs (xq (2) - (xk (2, ikq) - xk (2, ikk) ) ) .gt.1.d-8 .or. &
+            abs (xq (3) - (xk (3, ikq) - xk (3, ikk) ) ) .gt.1.d-8) then
            write (6, * ) ikk, ikq, nksq
            write (6, * ) (xq (ipol), ipol = 1, 3)
            write (6, * ) (xk (ipol, ikq), ipol = 1, 3)
@@ -140,17 +139,12 @@ subroutine phq_init
      !
      call init_us_2 (npw, igk, xk (1, ikk), vkb)
      !
-     !     e) we compute also the becp terms which are used in the rest of
-     !     the code
-     !
      ! read the wavefunctions at k
      !
      call davcio (evc, lrwfc, iuwfc, ikk, - 1)
      !
-     ! if there is only one k-point the wavefunctions are read once here
-     !
-
-     if (nksq.eq.1.and..not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, -1)
+     !     e) we compute the becp terms which are used in the rest of
+     !     the code
      call ccalbec (nkb, npwx, npw, nbnd, becp1 (1, 1, ik), vkb, evc)
      !
      !     e') we compute the derivative of the becp term with respect to an
@@ -164,8 +158,12 @@ subroutine phq_init
            enddo
         enddo
         call ccalbec (nkb, npwx, npw, nbnd, alphap(1,1,ipol,ik), vkb, aux1)
-
      enddo
+
+     !
+     ! if there is only one k-point the k+q wavefunctions are read once here
+     !
+     if (nksq.eq.1.and..not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, -1)
 
   enddo
 

@@ -75,8 +75,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   call start_clock ('localdos')
   allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))    
 
-  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum1, &
-       1)
+  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum1, 1)
   call setv (2 * nrxx * nspin, 0.d0, ldos, 1)
   call setv (2 * nrxxs * nspin, 0.d0, ldoss, 1)
   dos_ef = 0.d0
@@ -100,29 +99,23 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
      call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
      do ibnd = 1, nbnd_occ (ik)
-        wdelta = w0gauss ( (ef - et (ibnd, ik) ) / degauss, ngauss) &
-             / degauss
+        wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
         !
         ! unperturbed wf from reciprocal to real space
         !
-
         call setv (2 * nrxxs, 0.d0, psic, 1)
         do ig = 1, npw
            psic (nls (igk (ig) ) ) = evc (ig, ibnd)
-
         enddo
-
         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
         w1 = weight * wdelta / omega
         do j = 1, nrxxs
-           ldoss (j, current_spin) = ldoss (j, current_spin) + w1 * (DREAL ( &
-                psic (j) ) **2 + DIMAG (psic (j) ) **2)
-
+           ldoss (j, current_spin) = ldoss (j, current_spin) + &
+                 w1 * (DREAL ( psic (j) ) **2 + DIMAG (psic (j) ) **2)
         enddo
         !
         !    If we have a US pseudopotential we compute here the sumbec term
         !
-
         w1 = weight * wdelta
         ijkb0 = 0
         do nt = 1, ntyp
@@ -152,7 +145,6 @@ subroutine localdos (ldos, ldoss, dos_ef)
                  if (ityp (na) .eq.nt) ijkb0 = ijkb0 + nh (nt)
               enddo
            endif
-
         enddo
         dos_ef = dos_ef + weight * wdelta
      enddo

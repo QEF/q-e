@@ -39,20 +39,18 @@ subroutine addusldos (ldos, becsum1)
   ! the spherical harmonics
   ! the modulus of G
 
-  complex(kind=DP), allocatable :: qg (:), aux (:,:)
+  complex(kind=DP), allocatable :: aux (:,:)
   ! auxiliary variable for FFT
   ! auxiliary variable for rho(G)
 
   allocate (aux ( ngm , nspin))    
-  allocate (qg  ( nrxx))    
   allocate (qmod( ngm))    
   allocate (ylmk0 ( ngm , lqx * lqx))    
 
-  call setv (2 * ngm * nspin, 0.d0, aux, 1)
+  aux (:,:) = (0.d0,0.d0)
   call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
-
   enddo
   do nt = 1, ntyp
      if (tvanp (nt) ) then
@@ -68,9 +66,11 @@ subroutine addusldos (ldos, becsum1)
                     !
                     do is = 1, nspin
                        do ig = 1, ngm
-                          aux (ig, is) = aux (ig, is) + qgm (ig) * becsum1 (ijh, na, &
-                               is) * (eigts1 (ig1 (ig), na) * eigts2 (ig2 (ig), na) &
-                               * eigts3 (ig3 (ig), na) )
+                          aux (ig, is) = aux (ig, is) + &
+                                         qgm (ig) * becsum1 (ijh, na, is) * &
+                                       ( eigts1 (ig1 (ig), na) * &
+                                         eigts2 (ig2 (ig), na) * &
+                                         eigts3 (ig3 (ig), na) )
                        enddo
                     enddo
                  endif
@@ -84,23 +84,16 @@ subroutine addusldos (ldos, becsum1)
   !
   if (okvan) then
      do is = 1, nspin
-        call setv (2 * nrxx, 0.d0, qg, 1)
+        psic (:) = (0.d0,0.d0)
         do ig = 1, ngm
-           qg (nl (ig) ) = aux (ig, is)
-
+           psic (nl (ig) ) = aux (ig, is)
         enddo
-
-        call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        do ir = 1, nrxx
-           ldos (ir, is) = ldos (ir, is) + DREAL (qg (ir) )
-        enddo
-
+        call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        call DAXPY (nrxx, 1.d0, psic, 2, ldos(1,is), 2 )
      enddo
-
   endif
   deallocate (ylmk0)
   deallocate (qmod)
-  deallocate (qg)
   deallocate (aux)
   return
 end subroutine addusldos

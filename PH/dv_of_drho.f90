@@ -55,16 +55,14 @@ subroutine dv_of_drho (mode, dvscf, flag)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
      do is = 1, nspin
-        call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
-        call DAXPY (2 * nrxx, fac, drhoc, 1, dvscf (1, is), 1)
+        call DAXPY (nrxx,   fac, rho_core, 1, rho (1, is),   1)
+        call DAXPY (2*nrxx, fac, drhoc,    1, dvscf (1, is), 1)
      enddo
-
   endif
   do is = 1, nspin
      do is1 = 1, nspin
         do ir = 1, nrxx
-           dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * dvscf (ir, &
-                is1)
+           dvaux(ir,is) = dvaux(ir,is) + dmuxc(ir,is,is1) * dvscf(ir,is1)
         enddo
      enddo
   enddo
@@ -78,37 +76,33 @@ subroutine dv_of_drho (mode, dvscf, flag)
        alat, omega, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin
-        call DAXPY (nrxx, - fac, rho_core, 1, rho (1, is), 1)
-        call DAXPY (2 * nrxx, - fac, drhoc, 1, dvscf (1, is), 1)
+        call DAXPY (nrxx,   -fac, rho_core, 1, rho (1, is),   1)
+        call DAXPY (2*nrxx, -fac, drhoc,    1, dvscf (1, is), 1)
      enddo
   endif
   !
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
   do is = 2, nspin
-     call DAXPY (2 * nrxx, 1.d0, dvscf (1, is), 1, dvscf (1, 1), &
-          1)
+     call DAXPY (2 * nrxx, 1.d0, dvscf(1,is), 1, dvscf(1,1), 1)
   enddo
-  call cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  call cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   !
   ! hartree contribution is computed in reciprocal space
   !
   do is = 1, nspin
-     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-          - 1)
+     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
-        qg2 = (g (1, ig) + xq (1) ) **2 + (g (2, ig) + xq (2) ) **2 + &
-             (g (3, ig) + xq (3) ) **2
+        qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
         if (qg2.gt.1.d-8) then
-           dvaux (nl (ig), is) = dvaux (nl (ig), is) + e2 * fpi * dvscf ( &
-                nl (ig), 1) / (tpiba2 * qg2)
+           dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
+                              e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
         endif
      enddo
      !
      !  and transformed back to real space
      !
-     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-          + 1)
+     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
   enddo
   !
   ! at the end the two contributes are added

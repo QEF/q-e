@@ -225,10 +225,9 @@ subroutine do_chdens
 
   ! reading the rest of input (spanning vectors, origin, number-of points)
   if (iflag.lt.4) then
-     read (inunit, *, err = 1100, iostat = ios) (e (ipol, 1), &
-          ipol = 1, 3)
-     if (e (1, 1) **2 + e (2, 1) **2 + e (3, 1) **2.lt.1d-3) call &
-          errore ('chdens', 'zero vector', 1)
+     read (inunit, *, err = 1100, iostat = ios) (e (ipol,1), ipol = 1, 3)
+     if (e(1,1)**2 + e(2,1)**2 + e(3,1)**2 .lt. 1d-3) &
+         call errore ('chdens', 'zero vector', 1)
   endif
   if (iflag.eq.1) then
      !
@@ -242,44 +241,39 @@ subroutine do_chdens
      !
      !    reading for the 2D and 3D plots
      !
-     read (inunit, *, err = 1100, iostat = ios) (e (ipol, 2), &
-          ipol = 1, 3)
+     read (inunit, *, err = 1100, iostat = ios) (e(ipol,2), ipol=1,3)
      !
      !    here we control that the vectors are not on the same line
      !
-     if ( (abs (e (1, 1)  * e (2, 2)  - e (2, 1)  * e (1, 2) ) .lt.1e-7 ) &
-          .and. (abs (e (3, 1)  * e (1, 2)  - e (1, 1)  * e (3, 2) ) .lt.1e-7) &
-          .and. (abs (e (3, 1)  * e (2, 2)  - e (2, 1)  * e (3, 2) ) .lt.1e-7) ) &
-          call errore ('chdens', 'vectors on the same line', 1)
+     if ( (abs(e(1,1)*e(2,2) - e(2,1)*e(1,2) ) .lt. 1e-7) .and. &
+          (abs(e(3,1)*e(1,2) - e(1,1)*e(3,2) ) .lt. 1e-7) .and. &
+          (abs(e(3,1)*e(2,2) - e(2,1)*e(3,2) ) .lt. 1e-7) ) &
+           call errore ('chdens', 'vectors on the same line', 1)
      !
      !    and here that they are orthogonal
      !
-     if (abs (e (1, 1)  * e (1, 2)  + e (2, 1)  * e (2, 2)  + e (3, 1) &
-          & * e (3, 2) ) .gt.1e-4) call errore ('chdens', &
-          'vectors are not orthogonal', 1)
+     if (abs(e(1,1)*e(1,2) + e(2,1)*e(2,2) + e(3,1)*e(3,2)) .gt. 1e-4) &
+         call errore ('chdens', 'vectors are not orthogonal', 1)
      !
      if (iflag.eq.3) then
         !
         !    reading for the 3D plot
         !
-        read (inunit, *, err = 1100, iostat = ios) (e (ipol, 3), &
-             ipol = 1, 3)
+        read (inunit, *, err=1100, iostat=ios) (e(ipol,3), ipol=1,3)
 
         !
         !    here we control that the vectors are not on the same line
         !
-        if ( (abs (e (1, 1) * e (2, 3) - e (2, 1) * e (1, 3) ) &
-             .lt.1e-7) .and. (abs (e (3, 1) * e (1, 3) - e (1, 1) &
-             * e (3, 3) ) .lt.1e-7) .and. (abs (e (3, 1) * e (2, 3) &
-             - e (2, 1) * e (3, 3) ) .lt.1e-7) ) call errore ('chdens', &
-             'vectors on the same line', 2)
+        if ( (abs(e(1,1)*e(2,3) - e(2,1)*e(1,3)) .lt. 1e-7) .and. &
+             (abs(e(3,1)*e(1,3) - e(1,1)*e(3,3)) .lt. 1e-7) .and. &
+             (abs(e(3,1)*e(2,3) - e(2,1)*e(3,3)) .lt. 1e-7) ) &
+              call errore ('chdens', 'vectors on the same line', 2)
         !
         !    and here that they are orthogonal
         !
-        if (abs (e (1, 1) * e (1, 3) + e (2, 1) * e (2, 3) + e (3, &
-             1) * e (3, 3) ) .gt.1e-4.or.abs (e (1, 2) * e (1, 3) &
-             + e (2, 2) * e (2, 3) + e (3, 2) * e (3, 3) ) .gt.1e-4) &
-             call errore ('chdens', 'vectors are not orthogonal', 2)
+        if (abs(e(1,1)*e(1,3) + e(2,1)*e(2,3) + e(3,1)*e(3,3)) .gt. 1e-4 .or. &
+            abs(e(1,2)*e(1,3) + e(2,2)*e(2,3) + e(3,2)*e(3,3)) .gt. 1e-4) &
+            call errore ('chdens', 'vectors are not orthogonal', 2)
      endif
      read (inunit, *, err = 1100, iostat = ios) (x0 (ipol), ipol = &
           1, 3)
@@ -296,15 +290,13 @@ subroutine do_chdens
   endif
 
   ! check for plot_out
-  if (plot_out.lt.0.or.plot_out.gt.4) call errore ('chdens', &
-       'plot_out wrong', 1)
-
+  if (plot_out.lt.0.or.plot_out.gt.4) call errore ('chdens','plot_out wrong',1)
   !
   ! Read the header and allocate objects
   !
-  call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
-       nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-       plot_num, atm, ityp, zv, tau, rhodum, 0)
+  call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+                plot_num, atm, ityp, zv, tau, rhodum, 0)
   !
   allocate(tau (3, nat))
   allocate(ityp(nat))
@@ -320,11 +312,9 @@ subroutine do_chdens
   endif
 
   nspin = 1
-  if (ibrav.gt.0) call latgen (ibrav, celldm, at (1, 1), &
-                                            & at (1, 2), at (1, 3) )
-  call recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
-       , bg (1, 3) )
-  call volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
+  if (ibrav.gt.0) call latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3) )
+  call recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  call volume (alat, at(1,1), at(1,2), at(1,3), omega)
 
   call set_fft_dim
 
@@ -334,9 +324,9 @@ subroutine do_chdens
   !
   ! Read first file
   !
-  call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
-       nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-       plot_num, atm, ityp, zv, tau, rho, -1)
+  call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+                plot_num, atm, ityp, zv, tau, rho, -1)
   !
   do ir = 1, nrxx
      psic (ir) = weight (1) * cmplx (rho (ir, 1),0.d0)
@@ -370,8 +360,7 @@ subroutine do_chdens
      enddo
      !
      do ir = 1, nrxx
-        psic (ir) = psic (ir) + weight (ifile) * cmplx (rho (ir, 1), &
-             0.d0)
+        psic(ir) = psic(ir) + weight(ifile) * cmplx(rho(ir,1),0.d0)
      enddo
   enddo
 
@@ -380,8 +369,7 @@ subroutine do_chdens
   !
   if (fileout.ne.' ') then
      ounit = 1
-     open (unit = ounit, file = fileout, form = 'formatted', status &
-          = 'unknown')
+     open (unit=ounit, file=fileout, form='formatted', status='unknown')
      write (6, '(5x,"Writing data on file ",a)') fileout
   else
      ounit = 6
@@ -410,11 +398,8 @@ subroutine do_chdens
   !
   if (iflag.lt.4) then
      m1 = sqrt (e (1, 1) **2 + e (2, 1) **2 + e (3, 1) **2)
-     if (iflag.ge.2) m2 = sqrt (e (1, 2) **2 + e (2, 2) **2 + e (3, &
-          2) **2)
-
-     if (iflag.eq.3) m3 = sqrt (e (1, 3) **2 + e (2, 3) **2 + e (3, &
-          3) **2)
+     if (iflag.ge.2) m2 = sqrt(e(1,2)**2 + e(2,2)**2 + e(3,2)**2)
+     if (iflag.eq.3) m3 = sqrt(e(1,3)**2 + e(2,3)**2 + e(3,3)**2)
 
      do ipol = 1, 3
         e (ipol, 1) = e (ipol, 1) / m1
@@ -450,7 +435,7 @@ subroutine do_chdens
         !
         !    bring the quantity in real space and write the output file
         !
-        call setv (2 * nrxx, 0.d0, psic, 1)
+        psic(:) = (0.d0,0.d0)
         do ig = 1, ngm
            psic (nl (ig) ) = vgc (ig)
         enddo
@@ -459,19 +444,17 @@ subroutine do_chdens
         do ir = 1, nrxx
            rho (ir, 1) = real (psic (ir) )
         enddo
-        call plot_io (filepol, title, nrx1, nrx2, nrx3, nr1, nr2, &
-             nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-             plot_num, atm, ityp, zv, tau, rho, + 1)
+        call plot_io (filepol, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                      nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+                      plot_num, atm, ityp, zv, tau, rho, + 1)
      endif
   endif
-
   !
   !     And now the plot
   !
   if (iflag.eq.1) then
 
-     call plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
-          ounit)
+     call plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
 
   elseif (iflag.eq.2) then
 
@@ -479,8 +462,7 @@ subroutine do_chdens
           at, nat, tau, atm, ityp, output_format, ounit)
      if (output_format.eq.2) then
         write (ounit, '(i4)') nat
-        write (ounit, '(3f8.4,i3)') ( (tau (ipol, na) , ipol = 1, 3) &
-             , 1, na = 1, nat)
+        write (ounit, '(3f8.4,i3)') ( (tau(ipol,na), ipol=1,3), 1, na=1,nat)
         write (ounit, '(f10.6)') celldm (1)
         write (ounit, '(3(3f12.6/))') at
      endif
@@ -517,9 +499,7 @@ subroutine do_chdens
 
   elseif (iflag.eq.4) then
      radius = radius / alat
-
-     call plot_2ds (nx, ny, radius, ngm, g, vgc, output_format, &
-          ounit)
+     call plot_2ds (nx, ny, radius, ngm, g, vgc, output_format, ounit)
   else
      call errore ('chdens', 'wrong iflag', 1)
 
@@ -531,8 +511,7 @@ subroutine do_chdens
 end subroutine do_chdens
 !
 !-----------------------------------------------------------------------
-subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
-     ounit)
+subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
@@ -567,7 +546,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
   complex(kind=DP) :: rho0g, carica (nx)
 
   deltax = m1 / (nx - 1)
-  call setv (2 * nx, 0.d0, carica, 1)
+  carica(:) = (0.d0,0.d0)
   if (plot_out.eq.1) then
      do i = 1, nx
         xi = x0 (1) + (i - 1) * deltax * e (1)
@@ -580,10 +559,8 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
            !
            !     NB: G are in 2pi/alat units, r are in alat units
            !
-           arg = 2.d0 * pi * (xi * g (1, ig) + yi * g (2, ig) + zi * g (3, &
-                ig) )
-           carica (i) = carica (i) + vgc (ig) * cmplx (cos (arg), sin ( &
-                arg) )
+           arg = 2.d0 * pi * ( xi*g(1,ig) + yi*g(2,ig) + zi*g(3,ig) )
+           carica(i) = carica(i) + vgc (ig) * cmplx(cos(arg),sin(arg))
         enddo
      enddo
   else
@@ -597,16 +574,15 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
      enddo
      !     G!=0 terms
      do ig = 2, ngm
-        arg = 2.d0 * pi * (x0 (1) * g (1, ig) + x0 (2) * g (2, ig) &
-             + x0 (3) * g (3, ig) )
+        arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
         !     This displaces the origin into x0
-        rho0g = vgc (ig) * cmplx (cos (arg), sin (arg) )
+        rho0g = vgc (ig) * cmplx(cos(arg),sin(arg))
         !     r =0 term
         carica (1) = carica (1) + 4.d0 * pi * rho0g
         !     r!=0 terms
         do i = 2, nx
-           gr = 2.d0 * pi * sqrt (g (1, ig) **2 + g (2, ig) **2 + g (3, &
-                ig) **2) * (i - 1) * deltax
+           gr = 2.d0 * pi * sqrt(g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2) * &
+                       (i-1) * deltax
            carica (i) = carica (i) + 4.d0 * pi * rho0g * sin (gr) / gr
         enddo
 
@@ -615,27 +591,24 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
   !
   !    Here we check the value of the resulting charge
   !
-  rhomin = 1.0d10
-  rhomax = - 1.0d10
+  rhomin =  1.0d10
+  rhomax = -1.0d10
 
   rhoim = 0.d0
   do i = 1, nx
      rhomin = min (rhomin, DREAL (carica (i) ) )
      rhomax = max (rhomax, DREAL (carica (i) ) )
      rhoim = rhoim + abs (DIMAG (carica (i) ) )
-
   enddo
 
   rhoim = rhoim / nx
-  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, &
-       rhomax, rhoim
+  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
   !
   !       we print the charge on output
   !
   if (plot_out.eq.1) then
      do i = 1, nx
-        write (ounit, '(2f20.10)') deltax * float (i - 1) , real ( &
-             carica (i) )
+        write (ounit, '(2f20.10)') deltax*float(i-1), real(carica(i))
      enddo
   else
      rhoint = 0.d0
@@ -643,10 +616,8 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
         !
         !       simple trapezoidal rule: rhoint=int carica(i) r^2(i) dr
         !
-        rhoint = rhoint + real (carica (i) ) * ( (i - 1) * deltax) **2 &
-             * deltax * alat**3
-        write (ounit, '(3f20.10)') deltax * float (i - 1) , real ( &
-             carica (i) ) , rhoint
+        rhoint = rhoint + real(carica(i)) * (i-1)**2 * (deltax*alat)**3 
+        write (ounit, '(3f20.10)') deltax*float(i-1), real(carica(i)), rhoint
      enddo
 
   endif
@@ -671,8 +642,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   ! output unit
   ! output format
   character(len=3) :: atm(*) ! atomic symbols
-  real(kind=DP)    :: e (3, 2), x0 (3), m1, m2, g (3, ngm), &
-       alat, tau (3, nat), at (3, 3)
+  real(kind=DP) :: e(3,2), x0(3), m1, m2, g(3,ngm), alat, tau(3,nat), at(3,3)
   ! vectors e1, e2 defining the plane
   ! origin
   ! modulus of e1
@@ -701,7 +671,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   deltax = m1 / (nx - 1)
   deltay = m2 / (ny - 1)
 
-  call setv (2 * nx * ny, 0.d0, carica, 1)
+  carica(:,:) = (0.d0,0.d0)
   do ig = 1, ngm
      !
      ! eigx=exp(iG*e1+iGx0), eigy=(iG*e2)
@@ -725,8 +695,8 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   !
   !    Here we check the value of the resulting charge
   !
-  rhomin = 1.0d10
-  rhomax = - 1.0d10
+  rhomin =  1.0d10
+  rhomax = -1.0d10
 
   rhoim = 0.d0
   do i = 1, nx
@@ -739,8 +709,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   enddo
 
   rhoim = rhoim / nx / ny
-  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, &
-       rhomax, rhoim
+  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
   print '(5x,"Output format: ",i3)', output_format
 
   !
@@ -752,7 +721,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      !
      !         write(ounit,'(2i6)') nx,ny
      do i = 1, nx
-        write (ounit, '(e25.14)') (DREAL (carica (i, j) ) , j = 1, ny)
+        write (ounit, '(e25.14)') ( DREAL(carica(i,j)), j = 1, ny )
         write (ounit, * )
      enddo
   elseif (output_format.eq.1) then
@@ -760,8 +729,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( (DREAL (carica (i, j) ) , j = 1, &
-          ny) , i = 1, nx)
+     write (ounit, '(4e25.14)') ( ( DREAL(carica(i,j)), j = 1, ny ), i = 1, nx )
   elseif (output_format.eq.2) then
      !
      !     plotrho format
@@ -769,8 +737,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      write (ounit, '(2i4)') nx - 1, ny - 1
      write (ounit, '(8f8.4)') (deltax * (i - 1) , i = 1, nx)
      write (ounit, '(8f8.4)') (deltay * (j - 1) , j = 1, ny)
-     write (ounit, '(6e12.4)') ( (DREAL (carica (i, j) ) , i = 1, &
-          nx) , j = 1, ny)
+     write (ounit, '(6e12.4)') ( ( DREAL(carica(i,j)), i = 1, nx ), j = 1, ny )
      write (ounit, '(3f8.4)') x0
      write (ounit, '(3f8.4)') (m1 * e (i, 1) , i = 1, 3)
      write (ounit, '(3f8.4)') (m2 * e (i, 2) , i = 1, 3)
@@ -792,8 +759,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
 end subroutine plot_2d
 !
 !-----------------------------------------------------------------------
-subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
-     ounit)
+subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, ounit)
   !-----------------------------------------------------------------------
   use parameters, only : DP
   !
@@ -813,8 +779,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
   integer :: i, j, ig
 
   real(kind=DP), allocatable :: r (:,:,:)
-  real(kind=DP) :: theta, phi, rhomin, rhomax, rhoim, &
-       deltax, deltay
+  real(kind=DP) :: theta, phi, rhomin, rhomax, rhoim, deltax, deltay
   ! the point in space
   ! the position on the sphere
   ! minimum value of the charge
@@ -835,7 +800,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
 
   deltay = pi / (ny - 1)
 
-  call setv (2 * nx * ny, 0.d0, carica, 1)
+  carica(:,:) = (0.d0,0.d0)
   do j = 1, ny
      do i = 1, nx
         phi = (i - 1) * deltax
@@ -852,8 +817,8 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
      !
      do j = 1, ny
         do i = 1, nx
-           eig = exp ( (0.d0,1.d0) * 2.d0 * pi * (r (1, i, j) * g (1, ig) &
-                + r (2, i, j) * g (2, ig) + r (3, i, j) * g (3, ig) ) )
+           eig = exp ( (0.d0,1.d0) * 2.d0 * pi * &
+               ( r(1,i,j)*g(1,ig) + r(2,i,j)*g(2,ig) + r(3,i,j)*g(3,ig) ) )
            carica (i, j) = carica (i, j) + vgc (ig) * eig
         enddo
      enddo
@@ -861,8 +826,8 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
   !
   !    Here we check the value of the resulting charge
   !
-  rhomin = 1.0d10
-  rhomax = - 1.0d10
+  rhomin =  1.0d10
+  rhomax = -1.0d10
 
   rhoim = 0.d0
   do i = 1, nx
@@ -875,8 +840,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
   enddo
 
   rhoim = rhoim / nx / ny
-  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, &
-       rhomax, rhoim
+  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
   !
   !     and we print the charge on output
   !
@@ -886,15 +850,14 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
      !
      write (ounit, '(2i8)') nx, ny
      do i = 1, nx
-        write (ounit, '(e25.14)') (DREAL (carica (i, j) ) , j = 1, ny)
+        write (ounit, '(e25.14)') ( DREAL(carica(i,j)), j = 1, ny )
      enddo
   elseif (output_format.eq.1) then
      !
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( (DREAL (carica (i, j) ) , j = 1, &
-          ny) , i = 1, nx)
+     write (ounit, '(4e25.14)') ( ( DREAL(carica(i,j)), j = 1, ny ), i = 1, nx )
   else
      call errore ('plot_2ds', 'not implemented plot', 1)
 
@@ -921,8 +884,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   ! output unit
   character(len=3) :: atm(*)
 
-  real(kind=DP) :: alat, tau (3, nat), at (3, 3), g (3, ngm), e (3, 3), &
-       x0 (3), m1, m2, m3, dipol(0:3)
+  real(kind=DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), e(3,3), x0(3), &
+                   m1, m2, m3, dipol(0:3)
   ! lattice parameter
   ! atomic positions
   ! lattice vectors
@@ -961,16 +924,16 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
      ! These factors are calculated and stored in order to save CPU time
      !
      do i = 1, nx
-        eigx (i) = exp((0.d0, 1.d0)*2.d0*pi*((i - 1) * deltax * &
-             (e(1,1)*g(1,ig)+e(2,1)*g(2,ig)+e(3,1)*g(3,ig)) &
-             +(x0(1)*g(1,ig)+x0(2)*g(2,ig)+x0(3)*g(3,ig) ) ) )
+        eigx (i) = exp( (0.d0,1.d0) * 2.d0 * pi * ( (i-1) * deltax * &
+             (e(1,1)*g(1,ig)+e(2,1)*g(2,ig)+e(3,1)*g(3,ig)) + &
+             ( x0(1)*g(1,ig)+ x0(2)*g(2,ig)+ x0(3)*g(3,ig)) ) )
      enddo
      do j = 1, ny
-        eigy (j) = exp ( (0.d0,1.d0)*2.d0*pi*(j-1)*deltay* &
-             (e(1,2)*g(1,ig)+e(2,2)*g(2,ig)+e(3,2)*g(3,ig) ) )
+        eigy (j) = exp( (0.d0,1.d0) * 2.d0 * pi * (j-1) * deltay * &
+             (e(1,2)*g(1,ig)+e(2,2)*g(2,ig)+e(3,2)*g(3,ig)) )
      enddo
      do k = 1, nz
-        eigz (k) = exp ( (0.d0,1.d0)*2.d0*pi*(k-1)*deltaz* &
+        eigz (k) = exp( (0.d0,1.d0) * 2.d0 * pi * (k-1) * deltaz * &
              (e(1,3)*g(1,ig)+e(2,3)*g(2,ig)+e(3,3)*g(3,ig)) )
      enddo
      do k = 1, nz
@@ -1037,8 +1000,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   do ipol=1,3
      dipol(ipol)=dipol(ipol) / suma * omega * alat
   enddo
-  print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
-       rhomax, rhotot, rhoabs
+  print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, rhomax, &
+                                                        rhotot, rhoabs
 
   if (output_format.eq.4) then
      !
@@ -1075,7 +1038,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   !
   use parameters, only : DP
   implicit none
-  integer :: nat, ityp (nat), nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+  integer :: nat, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3, &
        output_format, ounit
   character(len=3) :: atm(*)
 

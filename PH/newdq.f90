@@ -82,7 +82,6 @@ subroutine newdq (dvscf, npe)
      do ig = 1, ngm
         qmod (ig) = sqrt (gg (ig) )
      enddo
-
   endif
   !
   !     and for each perturbation of this irreducible representation
@@ -90,6 +89,7 @@ subroutine newdq (dvscf, npe)
   !     the Q functions
   !
   do ipert = 1, npe
+
      do is = 1, nspin
         do ir = 1, nrxx
            veff (ir) = dvscf (ir, is, ipert)
@@ -98,8 +98,8 @@ subroutine newdq (dvscf, npe)
         do ig = 1, ngm
            aux2 (ig, is) = veff (nl (ig) )
         enddo
-
      enddo
+
      do nt = 1, ntyp
         if (tvanp (nt) ) then
            do ih = 1, nh (nt)
@@ -108,48 +108,40 @@ subroutine newdq (dvscf, npe)
                  do na = 1, nat
                     if (ityp (na) .eq.nt) then
                        do ig = 1, ngm
-                          aux1(ig)=qgm(ig)*eigts1(ig1(ig),na)*eigts2(ig2( &
-                               ig),na)*eigts3(ig3(ig),na)*eigqts(na)
+                          aux1(ig) = qgm(ig) * eigts1(ig1(ig),na) * &
+                                               eigts2(ig2(ig),na) * &
+                                               eigts3(ig3(ig),na) * &
+                                               eigqts(na)
                        enddo
                        do is = 1, nspin
-                          int3(ih,jh,ipert,na,is)=omega*ZDOTC(ngm,aux1,1, &
-                               aux2 (1, is), 1)
+                          int3(ih,jh,ipert,na,is) = omega * &
+                                             ZDOTC(ngm,aux1,1,aux2(1,is),1)
                        enddo
-                       !
-                       !  ps contain the integral of V_loc and Q_nm
-                       !
                     endif
                  enddo
               enddo
-
            enddo
            do na = 1, nat
-              if (ityp (na) .eq.nt) then
+              if (ityp(na) .eq.nt) then
                  !
                  !    We use the symmetry properties of the ps factor
                  !
                  do ih = 1, nh (nt)
                     do jh = ih, nh (nt)
                        do is = 1, nspin
-                          int3 (jh,ih,ipert,na,is)=int3(ih,jh,ipert,na,is)
+                          int3(jh,ih,ipert,na,is) = int3(ih,jh,ipert,na,is)
                        enddo
                     enddo
                  enddo
-
               endif
            enddo
         endif
      enddo
+
   enddo
 #ifdef __PARA
   call reduce (2 * nhm * nhm * 3 * nat * nspin, int3)
 #endif
-  !      do ih = 1,nh(1)
-  !         do jh=1,nh(1)
-  !            write(6,*) int3(jh,ih,1,1,1)
-  !         enddo
-  !      enddo
-  !      call stop_ph(.true.)
   if (.not.lgamma) deallocate (qg)
   deallocate (qmod)
   deallocate (ylmk0)

@@ -51,9 +51,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   logical :: lgamma
   external w0gauss, w1gauss
   !
-  call setv (nrxx * nspin, 0.d0, rho, 1)
-  call setv (nrxx, 0.d0, dos, 1)
-  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum, 1)
+  rho(:,:) = 0.d0
+  dos(:) = 0.d0
+  becsum(:,:,:) = 0.d0
   !
   !   calculate the correct weights
   !
@@ -105,7 +105,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
      !
         do ibnd = 1, nbnd
            if (ibnd.eq.kband.or.iflag.ne.0) then
-              call setv (2 * nrxxs, 0.d0, psic, 1)
+              psic(1:nrxxs) = (0.d0,0.d0)
               do ig = 1, npw
                  psic (nls (igk (ig) ) ) = evc (ig, ibnd)
               enddo

@@ -59,15 +59,14 @@ subroutine plan_avg (averag, plan, ninter)
   !     Compute the number of planes and the coordinates on the mesh of th
   !     points which define each plane
   !
-  call setv (nat, 0.d0, avg, 1)
+  avg(:) = 0.d0
   ninter = 1
   z1 (ninter) = tau (3, 1)
   avg (ninter) = tau (3, 1)
   ntau (ninter) = 1
   do na = 2, nat
      do iin = 1, ninter
-        if (abs (mod (z1 (iin) - tau (3, na), celldm (3) ) ) .lt.sp_min) &
-             then
+        if (abs (mod (z1(iin)-tau(3,na), celldm(3)) ) .lt. sp_min) then
            avg (iin) = avg (iin) + tau (3, na)
            ntau (iin) = ntau (iin) + 1
            goto 100
@@ -112,8 +111,8 @@ subroutine plan_avg (averag, plan, ninter)
   !
   !     for each state compute the planar average
   !
-  call setv (nat * nbnd * nkstot, 0.d0, averag, 1)
-  call setv (nr3 * nbnd * nkstot, 0.d0, plan, 1)
+  averag(:,:,:) = 0.d0
+  plan(:,:,:) = 0.d0
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -136,8 +135,7 @@ subroutine plan_avg (averag, plan, ninter)
         sum = averag (1, ibnd, ik)
         do iin = 2, ninter
            do ir = i1 (iin - 1), i1 (iin) - 1
-              averag (iin, ibnd, ik) = averag (iin, ibnd, ik) + plan (ir, ibnd, &
-                   ik)
+              averag(iin,ibnd,ik) = averag(iin,ibnd,ik) + plan(ir,ibnd,ik)
            enddo
            averag (iin, ibnd, ik) = averag (iin, ibnd, ik) * zdim / nr3
            sum = sum + averag (iin, ibnd, ik)
@@ -147,7 +145,6 @@ subroutine plan_avg (averag, plan, ninter)
 #ifdef __PARA
   call poolrecover (plan, nr3 * nbnd, nkstot, nks)
   call poolrecover (averag, nat * nbnd, nkstot, nks)
-
   call poolrecover (xk, 3, nkstot, nks)
 #endif
   return

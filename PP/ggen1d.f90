@@ -37,13 +37,12 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   parameter (eps = 1.d-12)
 
 
-  call setv (nr3 * 3, 0.d0, g1d, 1)
-  call setv (nr3, 0.d0, gg1d, 1)
+  g1d(:,:) = 0.d0
+  gg1d(:) = 0.d0
 
   ig1d = 0
   do ig = 1, ngm
-     if ( (abs (g (1, ig) ) .lt.eps) .and. (abs (g (2, ig) ) .lt.eps) ) &
-          then
+     if ( (abs(g(1,ig)).lt.eps) .and. (abs(g(2,ig)) .lt.eps) ) then
         !
         !    a vector of the 1D grid has been found
         !

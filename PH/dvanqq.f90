@@ -90,7 +90,6 @@ subroutine dvanqq
   call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmodg (ig) = sqrt (gg (ig) )
-
   enddo
   if (.not.lgamma) then
      call setqmod (ngm, xq, g, qmod, qpg)
@@ -125,7 +124,6 @@ subroutine dvanqq
            aux5 (ig, na, ipol) = sk (ig) * (g (ipol, ig) + xq (ipol) )
         enddo
      enddo
-
   enddo
   do ntb = 1, ntyp
      if (tvanp (ntb) ) then
@@ -150,7 +148,6 @@ subroutine dvanqq
                        aux1 (ig) = qgmq (ig) * eigts1 (ig1 (ig), nb) &
                                              * eigts2 (ig2 (ig), nb) &
                                              * eigts3 (ig3 (ig), nb)
-
                     enddo
                     do na = 1, nat
                        fact = eigqts (na) * conjg (eigqts (nb) )
@@ -158,7 +155,6 @@ subroutine dvanqq
                        !    nb is the atom of the augmentation function
                        !
                        do ipol = 1, 3
-
                           int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
                                 ZDOTC (ngm, aux1, 1, aux5(1,na,ipol), 1)
                           do jpol = 1, 3

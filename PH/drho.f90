@@ -23,8 +23,7 @@ subroutine drho
   use phcom
   implicit none
 
-  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, &
-       nu_j
+  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j
   ! counter on atomic types
   ! counter on modes
   ! counter on atoms and polarizations

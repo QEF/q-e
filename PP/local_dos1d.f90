@@ -61,9 +61,9 @@ subroutine local_dos1d (ik, kband, plan)
   allocate (prho(nrxx))    
   allocate (aux(nrxx))    
 
-  call setv (nrxx, 0.d0, aux, 1)
+  aux(:) = 0.d0
+  becsum(:,:,:) = 0.d0
 
-  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum, 1)
   wg (kband, ik) = 1.d0
   !
   !
@@ -71,17 +71,15 @@ subroutine local_dos1d (ik, kband, plan)
   !     mesh
   !
 
-  call setv (2 * nrxxs, 0.d0, psic, 1)
+  psic(1:nrxxs) = (0.d0,0.d0)
   do ig = 1, npw
      psic (nls (igk (ig) ) ) = evc (ig, kband)
-
   enddo
   call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
 
   w1 = wg (kband, ik) / omega
   do ir = 1, nrxxs
-     aux (ir) = aux (ir) + w1 * (real (psic (ir) ) **2 + DIMAG (psic ( &
-          ir) ) **2)
+     aux(ir) = aux(ir) + w1 * (real(psic(ir))**2 + DIMAG(psic(ir))**2)
   enddo
   !
   !    If we have a US pseudopotential we compute here the sumbec term
@@ -97,15 +95,15 @@ subroutine local_dos1d (ik, kband, plan)
               ijh = 1
               do ih = 1, nh (np)
                  ikb = ijkb0 + ih
-                 becsum (ijh, na, current_spin) = becsum (ijh, na, &
-                      current_spin) + w1 * real (conjg (becp (ikb, ibnd) ) &
-                      * becp (ikb, ibnd) )
+                 becsum(ijh,na,current_spin) = &
+                        becsum(ijh,na,current_spin) + w1 * &
+                        real ( conjg(becp(ikb,ibnd)) * becp(ikb,ibnd) )
                  ijh = ijh + 1
                  do jh = ih + 1, nh (np)
                     jkb = ijkb0 + jh
-                    becsum (ijh, na, current_spin) = becsum (ijh, na, &
-                         current_spin) + w1 * 2.d0 * real (conjg (becp (ikb, ibnd) ) &
-                         * becp (jkb, ibnd) )
+                    becsum(ijh,na,current_spin) = &
+                           becsum(ijh,na,current_spin) + w1 * 2.d0 * &
+                           real( conjg(becp(ikb,ibnd)) * becp(jkb,ibnd) )
                     ijh = ijh + 1
                  enddo
               enddo
