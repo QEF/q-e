@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2003-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,10 +10,14 @@
 MODULE minimization_routines
   !---------------------------------------------------------------------------
   !
+  ! ... This module contains all subroutines and functions needed for
+  ! ... the optimization of the reaction path (NEB calculations)
+  ! ... Written by Carlo Sbraccia ( 04-11-2003 )  
+  !
   USE kinds,          ONLY :  DP
   USE constants,      ONLY :  AU, eV_to_kelvin, eps32  
-  USE neb_variables,  ONLY :  pos, ds, grad, norm_grad
-  USE basic_algebra_routines, ONLY : norm
+  USE neb_variables,  ONLY :  ds, pos, grad, norm_grad
+  USE basic_algebra_routines
   !  
   IMPLICIT NONE
   !
@@ -32,10 +36,10 @@ MODULE minimization_routines
        !
        IF ( norm_grad(index) >= eps32 ) THEN
           !
-          pos(:,index) = pos(:,index) - ds * grad(:,index)
+          pos(:,index) = pos(:,index) - ds(index) * grad(:,index)
           !
        END IF
-       !
+       !      
        RETURN
        !
      END SUBROUTINE steepest_descent 
@@ -47,15 +51,16 @@ MODULE minimization_routines
      SUBROUTINE velocity_Verlet_first_step( index )
        !---------------------------------------------------------------------- 
        !
-       USE neb_variables,  ONLY : vel, mass
+       USE neb_variables, ONLY : vel, mass
        !
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
        !
-       ! 
-       vel(:,index) = vel(:,index) - ds / 2.D0 * grad(:,index) / mass(:)
-       pos(:,index) = pos(:,index) + ds * vel(:,index)
+       !
+       vel(:,index) = vel(:,index) - &
+                      ds(index) / 2.D0 * grad(:,index) / mass(:)
+       pos(:,index) = pos(:,index) + ds(index) * vel(:,index)
        !
        RETURN
        !
@@ -66,7 +71,7 @@ MODULE minimization_routines
      SUBROUTINE velocity_Verlet_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE neb_variables,  ONLY : vel, mass, damp, ldamped_dyn, lmol_dyn
+       USE neb_variables, ONLY : vel, mass, damp, ldamped_dyn, lmol_dyn
        !
        IMPLICIT NONE
        !
@@ -76,11 +81,12 @@ MODULE minimization_routines
        IF ( ldamped_dyn ) THEN
           !
           vel(:,index) = damp * ( vel(:,index) - &
-                                  ds / 2.D0 * grad(:,index)  / mass(:) )
+                                  ds(index) / 2.D0 * grad(:,index) / mass(:) )
           !
        ELSE IF ( lmol_dyn ) THEN
           !       
-          vel(:,index) = vel(:,index) - ds / 2.D0 * grad(:,index) / mass(:)
+          vel(:,index) = vel(:,index) - &
+                         ds(index) / 2.D0 * grad(:,index) / mass(:)
           !
        END IF
        !
@@ -92,30 +98,60 @@ MODULE minimization_routines
      SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE neb_variables,  ONLY : vel, mass, dim
+       USE neb_variables, ONLY : pos_old, grad_old, vel, mass, dim
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN)            :: index
-       REAL (KIND=DP), DIMENSION(dim) :: force_versor
-       REAL (KIND=DP)                 :: vel_component
+       INTEGER, INTENT(IN)         :: index
+       REAL (KIND=DP)              :: force_versor(dim)
+       REAL (KIND=DP)              :: vel_component
+       REAL (KIND=DP), ALLOCATABLE :: y(:), s(:)
+       LOGICAL, SAVE               :: new_step = .FALSE.
        !
+       !        
+       ds(index) = optimal_time_step( index )
        !
-       vel(:,index) = vel(:,index) - ds / 2.D0 * grad(:,index) / mass(:)
+       vel(:,index) = vel(:,index) - &
+                      ds(index) / 2.D0 * grad(:,index) / mass(:)               
        !
        IF ( norm_grad(index) >= eps32 ) THEN
           !
           force_versor = - grad(:,index) / norm_grad(index)
           !
-          vel_component = DOT_PRODUCT( vel(:,index) , force_versor )
+          vel_component = ( vel(:,index) .dot. force_versor )
           !
-          IF ( vel_component > 0.D0 ) THEN
+          IF ( vel_component > 0.D0 .OR. new_step ) THEN
              ! 
              vel(:,index) = vel_component * force_versor
              !
+             new_step = .FALSE.
+             !
           ELSE
              !
+            ! PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
+             !
+             ! ... an approximate newton-raphson step is performed
+             !
              vel(:,index) = 0.D0
+             !
+             ALLOCATE( y( dim ), s( dim ) )
+             !
+             y = grad(:,index) - grad_old(:,index)
+             s =  pos(:,index) -  pos_old(:,index)
+             !
+             ds(index) = 1.D0
+             !
+            ! PRINT '(5X,"projection = ",F7.4)',( s .dot. grad(:,index) ) / &
+            !                                   ( norm( s ) * norm_grad(index) )
+             !             
+             grad(:,index) = 2.D0 * s * &
+                             ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
+             !             
+            ! PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
+             !
+             new_step = .TRUE.
+             !
+             DEALLOCATE( y, s )
              !
           END IF
           !
@@ -124,6 +160,11 @@ MODULE minimization_routines
           vel(:,index) = 0.D0
           !
        END IF
+       !
+       ! ... pos_old and grad_old are updated here
+       !   
+       pos_old(:,index)  = pos(:,index)
+       grad_old(:,index) = grad(:,index)       
        !
        RETURN
        !
@@ -135,7 +176,7 @@ MODULE minimization_routines
      SUBROUTINE thermalization( N_in , N_fin )
        !----------------------------------------------------------------------
        !
-       USE neb_variables,  ONLY : vel, mass, temp, temp_req, deg_of_freedom
+       USE neb_variables, ONLY : vel, mass, temp, temp_req, deg_of_freedom
        !
        IMPLICIT NONE
        !
@@ -148,8 +189,8 @@ MODULE minimization_routines
        !
        DO image = N_in, N_fin
           !
-          local_temp = DOT_PRODUCT( mass(:) * vel(:,image) , &
-                       vel(:,image) ) / REAL( deg_of_freedom ) 
+          local_temp = ( ( mass(:) * vel(:,image) ) .dot. vel(:,image) ) / &
+                       REAL( deg_of_freedom ) 
           !
           temp = temp + local_temp
           !
@@ -167,7 +208,7 @@ MODULE minimization_routines
        !
        DO image = N_in, N_fin
           !
-          temp = temp + DOT_PRODUCT( mass(:) * vel(:,image) , vel(:,image) )
+          temp = temp + ( ( mass(:) * vel(:,image) ) .dot. vel(:,image) )
           !
        END DO
        !
@@ -180,5 +221,69 @@ MODULE minimization_routines
        RETURN
        !
      END SUBROUTINE thermalization
+     !
+     ! ... this routine computes the optimal time step using an approximation
+     ! ... of the second derivative along the last displacement vector
+     !
+     !------------------------------------------------------------------------
+     FUNCTION optimal_time_step( index )
+       !------------------------------------------------------------------------
+       !
+       USE constants,     ONLY : eps8
+       USE neb_variables, ONLY : dim, pos_old, grad_old, istep_neb
+       !
+       IMPLICIT NONE
+       !
+       INTEGER, INTENT(IN)        :: index
+       REAL(KIND=DP)              :: optimal_time_step
+       REAL(KIND=DP), ALLOCATABLE :: y(:), s(:)
+       REAL(KIND=DP)              :: projection
+       INTEGER, PARAMETER         :: steps_at_fixed_ds = 10
+         ! for the first "steps_at_fixed_ds" steps the update of the time
+         ! step is disabled
+       REAL(KIND=DP), PARAMETER   :: ds_min = 0.4D0, &
+                                     ds_max = 4.0D0
+         ! minimum and maximum allowed time-steps
+       !
+       !
+       ALLOCATE( y( dim ), s( dim ) )
+       !
+       y = grad(:,index) - grad_old(:,index)
+       s =  pos(:,index) -  pos_old(:,index)
+       !
+       IF ( istep_neb < steps_at_fixed_ds ) THEN
+          !
+          optimal_time_step = ds(index)
+          !
+       ELSE
+          !
+          IF ( ABS( y .dot. s ) > eps8 ) THEN
+             !
+             projection = ( s .dot. grad(:,index) ) / &
+                          ( norm( s ) * norm_grad(index) )
+             !
+            ! PRINT '(5X,"projection = ",F7.4)', projection
+             !
+             optimal_time_step = ABS( projection ) * &
+                                 SQRT( 2.D0 * ( s .dot. s ) / ABS( y .dot. s ) )
+             !
+          ELSE
+             !
+             optimal_time_step = ds(index)
+             !
+          END IF
+          !
+         ! PRINT '(5X,"before:  ",F12.8)', optimal_time_step
+          !
+          optimal_time_step = MAX( ds_min, optimal_time_step )
+          optimal_time_step = MIN( ds_max, optimal_time_step )
+          !
+         ! PRINT '(5X,"after:   ",F12.8)', optimal_time_step
+          !
+       END IF
+       !
+       DEALLOCATE( y, s )
+       !
+     END FUNCTION optimal_time_step
      !
 END MODULE minimization_routines

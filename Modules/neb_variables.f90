@@ -37,7 +37,6 @@ MODULE neb_variables
                                   ! achieved
   REAL (KIND=DP) :: &
        neb_thr,                  &! convergence threshold for NEB
-       ds,                       &! minimization step 
        damp,                     &! damp coefficient
        temp,                     &! actual temperature ( average over images )
        temp_req                   ! required temperature
@@ -47,11 +46,14 @@ MODULE neb_variables
        ldamped_dyn,              &! .TRUE. if minimization_scheme = "damped-dyn"
        lmol_dyn                   ! .TRUE. if minimization_scheme = "mol-dyn"
   REAL (KIND=DP), ALLOCATABLE :: &
+       ds(:),                    &! minimization step 
        pos(:,:),                 &!
+       pos_old(:,:),             &!
        vel(:,:),                 &!
        PES(:),                   &!       
        PES_gradient(:,:),        &! 
        grad(:,:),                &!
+       grad_old(:,:),            &!
        norm_grad(:),             &!
        k(:),                     &!
        elastic_gradient(:),      &!
@@ -77,7 +79,9 @@ MODULE neb_variables
        IMPLICIT NONE
        !
        !
+       ALLOCATE( ds( num_of_images ) )
        ALLOCATE( pos( dim, num_of_images ) )
+       ALLOCATE( pos_old( dim, num_of_images ) )
        !
        IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
           !
@@ -86,6 +90,7 @@ MODULE neb_variables
        END IF
        !
        ALLOCATE( grad( dim, num_of_images ) )
+       ALLOCATE( grad_old( dim, num_of_images ) )
        ALLOCATE( norm_grad( num_of_images ) )
        ALLOCATE( PES( num_of_images ) )
        ALLOCATE( PES_gradient( dim, num_of_images ) )       
@@ -107,9 +112,12 @@ MODULE neb_variables
        IMPLICIT NONE
        !
        !
+       IF ( ALLOCATED( ds ) )                DEALLOCATE( ds )
        IF ( ALLOCATED( pos ) )               DEALLOCATE( pos )
+       IF ( ALLOCATED( pos_old ) )           DEALLOCATE( pos_old )
        IF ( ALLOCATED( vel ) )               DEALLOCATE( vel )
        IF ( ALLOCATED( grad ) )              DEALLOCATE( grad )
+       IF ( ALLOCATED( grad_old ) )          DEALLOCATE( grad_old )
        IF ( ALLOCATED( norm_grad ) )         DEALLOCATE( norm_grad )       
        IF ( ALLOCATED( PES ) )               DEALLOCATE( PES )       
        IF ( ALLOCATED( PES_gradient ) )      DEALLOCATE( PES_gradient )

@@ -34,18 +34,20 @@ MODULE neb_base
       !-----------------------------------------------------------------------
       !
       USE input_parameters, ONLY : pos, nat, restart_mode, calculation, &
-                                   minimization_scheme, climbing, nstep
+                                   minimization_scheme, climbing, nstep, ds
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
                                    dat_file, int_file, xyz_file, axsf_file
       USE cell_base,        ONLY : alat
-      USE neb_variables,    ONLY : pos_      => pos, &
+      USE neb_variables,    ONLY : ds_       => ds, &
+                                   pos_      => pos, &
                                    climbing_ => climbing, &
+                                   pos_old, grad_old, &
                                    vel, num_of_images, dim, PES, PES_gradient, &
                                    elastic_gradient, tangent, grad, norm_grad, &
                                    error, mass, free_minimization, CI_scheme,  &
                                    optimization, k, k_min, k_max,  Emax_index, &
-                                   VEC_scheme, ds, neb_thr, lquick_min ,       &
-                                   ldamped_dyn, lmol_dyn, nstep_neb, istep_neb
+                                   VEC_scheme, neb_thr, lquick_min, lmol_dyn,  &
+                                   ldamped_dyn, nstep_neb, istep_neb
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
@@ -53,16 +55,16 @@ MODULE neb_base
       USE io_global,        ONLY : ionode
       !
       IMPLICIT NONE
-
-      CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-
+      !
+      ! ... input variables
+      !
+      CHARACTER(LEN=2) :: prog   
+        ! ... specify the calling program
       !
       ! ... local variables
       !
       INTEGER                     :: i
       REAL (KIND=DP), ALLOCATABLE :: d_R(:)
-      !
-      ! ... end of local variables
       !
       !    
       ! ... NEB internal variables are set
@@ -102,11 +104,13 @@ MODULE neb_base
       !
       ! ... all other arrays are initialized 
       !
+      ds_              = ds
       PES              = 0.D0
       PES_gradient     = 0.D0
       elastic_gradient = 0.D0
       tangent          = 0.D0
       grad             = 0.D0
+      grad_old         = 0.D0
       norm_grad        = 0.D0
       error            = 0.D0
       mass             = 1.D0
@@ -188,6 +192,10 @@ MODULE neb_base
          !
       END IF
       !
+      ! ... pos_old is initialized
+      !
+      pos_old = pos_
+      !
       ! ... the actual number of degrees of freedom is computed
       !
       CALL compute_deg_of_freedom()
@@ -253,41 +261,6 @@ MODULE neb_base
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE compute_tangent()
-      !------------------------------------------------------------------------
-      !
-      USE neb_variables,          ONLY : num_of_images, tangent
-      USE basic_algebra_routines, ONLY : norm
-      !
-      IMPLICIT NONE
-      !
-      ! ... local variables
-      !
-      INTEGER :: image   
-      !
-      ! ... end of local variables
-      !
-      !
-      tangent = 0
-      !
-      DO image = 2, ( num_of_images - 1 )
-         !
-         ! ... tangent to the path ( normalized )
-         !
-         !!! tangent(:,image) = path_tangent( image )
-         !!! workaround for ifc8 compiler internal error
-         CALL path_tangent_( image, tangent(:,image) )
-         !
-         tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
-         !
-      END DO
-      !
-      RETURN
-      !
-    END SUBROUTINE compute_tangent
-    !
-    !
-    !------------------------------------------------------------------------
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
       ! 
@@ -302,13 +275,15 @@ MODULE neb_base
       !
       ! ... local variables
       !
-      INTEGER        :: i
-      REAL (KIND=DP) :: F_ortho_max, F_ortho_max_i, &
-                        F_para_max_i, F_para_max
-      REAL (KIND=DP) :: delta_E
-      REAL (KIND=DP) :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
-      !
-      ! ... end of local variables
+      INTEGER                  :: i
+      REAL(KIND=DP)            :: F_ortho_max, F_ortho_max_i, &
+                                  F_para_max_i, F_para_max, rescale_coeff
+      REAL(KIND=DP), PARAMETER :: rescale_coeff_min = 0.3D0, &
+                                  rescale_coeff_mAX = 3.D0
+        ! minimum allowed rescaling coefficient ( 30% )
+        ! maximum allowed rescaling coefficient ( 300% )
+      REAL(KIND=DP)            :: delta_E
+      REAL(KIND=DP)            :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
       !
       !
       IF ( VEC_scheme == "energy-weighted" ) THEN
@@ -376,13 +351,16 @@ MODULE neb_base
          !
       END DO
       !
-      PRINT '(/5X,"F_ortho_max = ",F10.6)', F_ortho_max
-      PRINT '(5X,"F_para_max  = ",F10.6)', F_para_max
-      PRINT '(5X,"ALPHA       = ",F10.6)', F_ortho_max / F_para_max
+      rescale_coeff = MAX( ( F_ortho_max / F_para_max ), rescale_coeff_min )
+      rescale_coeff = MIN( rescale_coeff, rescale_coeff_max )
       !
-      k     = k * F_ortho_max / F_para_max
-      k_max = k_max * F_ortho_max / F_para_max
-      k_min = k_min * F_ortho_max / F_para_max
+      PRINT '(/5X,"F_ortho_max = ",F10.6)', F_ortho_max
+      PRINT '( 5X,"F_para_max  = ",F10.6)', F_para_max
+      PRINT '( 5X,"ALPHA       = ",F10.6)', rescale_coeff
+      !
+      k     = k * rescale_coeff
+      k_max = k_max * rescale_coeff
+      k_min = k_min * rescale_coeff
       !      
       RETURN
       !
@@ -405,8 +383,6 @@ MODULE neb_base
       ! ... local variables
       !
       INTEGER :: i
-      !
-      ! ... end of local variables
       !
       !
       CALL elastic_constants()
@@ -479,8 +455,6 @@ MODULE neb_base
       INTEGER         :: i
       REAL (KIND=DP)  :: V_p, V_h, V_n
       !
-      ! ... end of local variables
-      !
       !
       climbing          = .FALSE.
       free_minimization = .FALSE.
@@ -532,8 +506,6 @@ MODULE neb_base
       INTEGER                      :: N_in, N_fin
       INTEGER                      :: i
       !
-      ! ... end of local variables
-      !
       !
       err = 0.D0
       !
@@ -565,6 +537,39 @@ MODULE neb_base
     END SUBROUTINE compute_error
     !
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE compute_tangent()
+      !------------------------------------------------------------------------
+      !
+      USE neb_variables,          ONLY : num_of_images, tangent
+      USE basic_algebra_routines, ONLY : norm
+      !
+      IMPLICIT NONE
+      !
+      ! ... local variables
+      !
+      INTEGER :: image   
+      !
+      !
+      tangent = 0
+      !
+      DO image = 2, ( num_of_images - 1 )
+         !
+         ! ... tangent to the path ( normalized )
+         !
+         !!! tangent(:,image) = path_tangent( image )
+         !!! workaround for ifc8 compiler internal error
+         CALL path_tangent_( image, tangent(:,image) )
+         !
+         tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE compute_tangent
+    !
+    !    
     !-----------------------------------------------------------------------
     !!! FUNCTION path_tangent( index )
     !!! workaround for ifc8 compiler internal error
@@ -586,8 +591,6 @@ MODULE neb_base
       REAL (KIND=DP) :: V_previous, V_actual, V_next
       REAL (KIND=DP) :: abs_next, abs_previous
       REAL (KIND=DP) :: delta_V_max, delta_V_min
-      !
-      ! ... end of local variables
       !
       !
       V_previous = PES( index - 1 )
@@ -637,10 +640,9 @@ MODULE neb_base
     !!! workaround for ifc8 compiler internal error
     END SUBROUTINE path_tangent_
     !
-    !
-    !-----------------------------------------------------------------------
+    !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_PES( flag, stat )
-      !-----------------------------------------------------------------------
+      !------------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
                                 PES, PES_gradient, suspended_image
@@ -656,8 +658,6 @@ MODULE neb_base
       !
       INTEGER               :: i, image
       INTEGER               :: N_in, N_fin
-      !
-      ! ... end of local variables
       !
       !
       IF ( flag ) THEN
@@ -728,7 +728,7 @@ MODULE neb_base
       !
       ! ... external functions
       !
-      REAL (kind=DP), EXTERNAL :: get_clock
+      REAL (KIND=DP), EXTERNAL :: get_clock
       !
       !
       conv_neb = .FALSE.
@@ -812,6 +812,10 @@ MODULE neb_base
             !
          END IF
          !
+         ! ... istep_neb is updated after a self-consistency step
+         !
+         istep_neb = istep_neb + 1         
+         !
          IF ( .NOT. stat ) THEN
             !
             conv_neb = .FALSE.
@@ -861,8 +865,6 @@ MODULE neb_base
          CALL compute_error( err )
          !
          CALL write_dat_files()
-         !
-         istep_neb = istep_neb + 1
          !
          ! ... informations are written on the standard output
          !

@@ -35,11 +35,11 @@ MODULE formats
     scf_fmt_para       = "(5X,'cpu = ',I2,'; tcpu = ',F8.2," // &
                        & "';  self-consistency for image ', I3)", &                   
     run_output         = "(/,5X,'iteration:',I4,4X,'E activation ='," // &
-                       & " F6.3,' eV',4X,'error =',F8.4,' eV / bohr'/)", &
+                       & " F6.3,' eV',4X,'error =',F8.4,' eV / A'/)", &
     run_output_T_const = "(/,5X,'iteration:',I4,4X,'temperature ='," // &
-                       & " F8.2,' K',4X,'forces =',F8.4,' eV / bohr')", &  
+                       & " F8.2,' K',4X,'forces =',F8.4,' eV / A')", &  
     final_output       = "(5X,'image: ',I2,'   E tot = ',F16.8," // &
-                       & "' eV   error = ',F8.4,' eV / bohr')"
+                       & "' eV   error = ',F8.4,' eV / A')"
   !
   CHARACTER (LEN=*), PARAMETER :: &
     stringfmt = "(5X,A,T35,' = ',A)"      

@@ -28,7 +28,7 @@ SUBROUTINE iosys()
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
                             lberry_ => lberry
-  USE brilz,         ONLY : at, alat, omega, &
+  USE cell_base,     ONLY : at, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav
   USE ions_base,     ONLY : ntyp_ => nsp                            
@@ -107,7 +107,6 @@ SUBROUTINE iosys()
                             optimization_   => optimization, &
                             damp_           => damp, &
                             temp_req_       => temp_req, &
-                            ds_             => ds, &
                             k_max_          => k_max, & 
                             k_min_          => k_min, &
                             neb_thr_        => neb_thr, &
@@ -168,7 +167,7 @@ SUBROUTINE iosys()
                                tempw, tolp, upscale, potential_extrapolation, &
                                CI_scheme, VEC_scheme, minimization_scheme, &
                                num_of_images, optimization, damp, temp_req, &
-                               ds, k_max, k_min, neb_thr, &
+                               k_max, k_min, neb_thr, &
                                trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, &
                                w_1, w_2, lbfgs_ndim
@@ -797,7 +796,6 @@ SUBROUTINE iosys()
   optimization_  = optimization
   damp_          = damp
   temp_req_      = temp_req
-  ds_            = ds
   k_max_         = k_max 
   k_min_         = k_min
   neb_thr_       = neb_thr
@@ -1011,7 +1009,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
   USE wvfct,              ONLY : gamma_only
-  USE brilz,              ONLY : at, ibrav, symm_type, celldm
+  USE cell_base,          ONLY : at, ibrav, symm_type, celldm
   USE basis,              ONLY : nat, ntyp, ityp, tau, atm
   USE klist,              ONLY : nks
   USE ktetra,             ONLY : nk1_   => nk1, &
