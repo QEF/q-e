@@ -594,7 +594,26 @@ w_1, w_2
 !
 
 num_of_images  INTEGER ( default = 0 )
-               number of points used to discrtize the path
+               number of points used to discrtize the path 
+               (it must be larger than 3)
+
+opt_scheme     
+               CHARACTER ( default = "quick-min" )
+               specify the type of optimization scheme      
+               "sd"         : steepest descent
+               "broyden"    : quasi-Newton Broyden's second method (suggested)
+	       "quick-min"  : a minimization algorithm based on
+	                      molecular dynamics
+               "damped-dyn" : damped molecular dynamics. See also the 
+	                      keyword damp
+               "mol-dyn"    : constant temperature molecular dynamics. See 
+	                      also the keyword temp_req.
+	                      Note that, in order to perform such molecular 
+			      dynamics, spring forces are NOT projected 
+			      along the path.
+               "langevin"   : finite temperature langevin dynamics of the 
+                              string (smd only). It is used to compute the
+                              average path and the free-energy profile.
 
 CI_scheme      CHARACTER. ( default = "no-CI" )
                specify the type of Climbing Image scheme
@@ -610,23 +629,6 @@ first_last_opt LOGICAL ( default = .FALSE. )
                "on the fly" 
 	       (these images do not feel the effect of the springs)
 
-opt_scheme     
-               CHARACTER ( default = "quick-min" )
-               specify the type of optimization scheme      
-               "sd"         : steepest descent
-	       "quick-min"  : a minimization algorithm based on
-	                      molecular dynamics (suggested)
-               "damped-dyn" : damped molecular dynamics. See also the 
-	                      keyword damp
-               "mol-dyn"    : constant temperature molecular dynamics. See 
-	                      also the keyword temp_req.
-	                      Note that, in order to perform such molecular 
-			      dynamics, spring forces are NOT projected 
-			      along the path.
-               "langevin"   : finite temperature langevin dynamics of the 
-                              string (smd only). It is used to compute the
-                              average path and the free-energy profile.
-
 damp           REAL ( default = 1.D0 )
                Damping coefficent. Ignored when "opt_scheme" is different 
                from "damped-dyn"
@@ -634,8 +636,9 @@ damp           REAL ( default = 1.D0 )
 temp_req       REAL ( default = 0.D0 Kelvin )
                temperature used for the langevin dynamics of the string.
 
-ds             REAL ( default = 1.5D0 )
-               optimisation step length ( Hartree atomic units )
+ds             REAL ( default = 1.D0 )
+               optimisation step length ( Hartree atomic units ).
+               Not used if opt_scheme="broyden"
 	              
 k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
                set them to use a Variable Elastic Constants scheme 
@@ -649,13 +652,11 @@ path_thr       REAL ( default = 0.05D0 eV / Angstrom )
 use_freezing   LOGICAL ( default = .FALSE. )
                if. TRUE. the images are optimised according to their error:
                only those images with an error larger than half the largest one
-               are optimised. The other are kept forzen. 
-
-fixed_tan      LOGICAL ( default = .FALSE. )
-               if. TRUE. the projection is done using the tangent of the 
-               average path (the one written in the restart file).
-               used only for the estimate of the free-energy profile with
-               finite-temperature string dynamics
+               are optimised. The other are kept forzen.
+               
+free_energy    LOGICAL ( default = .FALSE. )
+               Used in the evaluation of the free-energy profile with
+               finite-temperature string dynamics.
 
 reset_vel      LOGICAL ( default = .FALSE. )
                used to reset quick-min velocities at restart time
