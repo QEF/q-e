@@ -1,10 +1,12 @@
 
      Program PWSCF     v.2.1    starts ...
-     Today is  2Sep2004 at 11:57:17 
+     Today is 16Sep2004 at 21:53:31 
 
      non-colinear magnetization allowed
 
-     Warning: missing inequivalent points
+
+     Only input k-points are used (inequivalent points not generated)
+
    Generating pointlists ...
      new r_m :   0.357235479061081     
 
@@ -101,7 +103,7 @@
      The initial potential is read from file         fe.pot
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      1.97 secs
+     total cpu time spent up to now is      1.88 secs
 
      Band Structure Calculation
      Davidson diagonalization (with overlap)
@@ -258,44 +260,44 @@
 
      Writing file        fe.save for program phonon
  
-     PWSCF        :    12.00s CPU time
+     PWSCF        :    10.46s CPU time
 
-     init_run     :     1.89s CPU
-     electrons    :     9.40s CPU
+     init_run     :     1.80s CPU
+     electrons    :     8.21s CPU
  
-     electrons    :     9.40s CPU
-     c_bands      :     9.40s CPU
-     sum_band     :     0.62s CPU
-     newd         :     0.06s CPU
+     electrons    :     8.21s CPU
+     c_bands      :     8.21s CPU
+     sum_band     :     0.36s CPU
+     newd         :     0.08s CPU
  
-     c_bands      :     9.40s CPU
-     init_us_2    :     0.04s CPU (      84 calls,   0.000 s avg)
-     cegterg      :     9.33s CPU (      37 calls,   0.252 s avg)
+     c_bands      :     8.21s CPU
+     init_us_2    :     0.02s CPU (      84 calls,   0.000 s avg)
+     cegterg      :     8.16s CPU (      37 calls,   0.220 s avg)
  
-     sum_band     :     0.62s CPU
+     sum_band     :     0.36s CPU
      becsum       :     0.01s CPU (      28 calls,   0.000 s avg)
-     addusdens    :     0.10s CPU
+     addusdens    :     0.11s CPU
  
-     wfcrot       :     0.64s CPU (      28 calls,   0.023 s avg)
-     cegterg      :     9.33s CPU (      37 calls,   0.252 s avg)
-     h_psi        :     6.31s CPU (     630 calls,   0.010 s avg)
-     g_psi        :     0.05s CPU (     565 calls,   0.000 s avg)
-     overlap      :     0.62s CPU (     565 calls,   0.001 s avg)
-     cdiaghg      :     1.65s CPU (     593 calls,   0.003 s avg)
-     update       :     0.51s CPU (     565 calls,   0.001 s avg)
-     last         :     0.38s CPU (      93 calls,   0.004 s avg)
+     wfcrot       :     0.47s CPU (      28 calls,   0.017 s avg)
+     cegterg      :     8.16s CPU (      37 calls,   0.220 s avg)
+     h_psi        :     3.86s CPU (     630 calls,   0.006 s avg)
+     g_psi        :     0.12s CPU (     565 calls,   0.000 s avg)
+     overlap      :     0.87s CPU (     565 calls,   0.002 s avg)
+     cdiaghg      :     2.09s CPU (     593 calls,   0.004 s avg)
+     update       :     0.68s CPU (     565 calls,   0.001 s avg)
+     last         :     0.47s CPU (      93 calls,   0.005 s avg)
  
-     h_psi        :     6.31s CPU (     630 calls,   0.010 s avg)
-     init         :     0.12s CPU (     630 calls,   0.000 s avg)
-     firstfft     :     3.00s CPU (    4752 calls,   0.001 s avg)
-     secondfft    :     2.29s CPU (    4752 calls,   0.000 s avg)
-     add_vuspsi   :     0.24s CPU (     630 calls,   0.000 s avg)
-     s_psi        :     0.31s CPU (     630 calls,   0.000 s avg)
+     h_psi        :     3.86s CPU (     630 calls,   0.006 s avg)
+     init         :     0.23s CPU (     630 calls,   0.000 s avg)
+     firstfft     :     1.48s CPU (    4752 calls,   0.000 s avg)
+     secondfft    :     1.15s CPU (    4752 calls,   0.000 s avg)
+     add_vuspsi   :     0.31s CPU (     630 calls,   0.000 s avg)
+     s_psi        :     0.29s CPU (     630 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.13s CPU (     658 calls,   0.000 s avg)
+     ccalbec      :     0.23s CPU (     658 calls,   0.000 s avg)
      cft3         :     0.02s CPU (      18 calls,   0.001 s avg)
-     cft3s        :     4.37s CPU (   19912 calls,   0.000 s avg)
-     interpolate  :     0.01s CPU (       8 calls,   0.001 s avg)
-     davcio       :     0.04s CPU (     121 calls,   0.000 s avg)
+     cft3s        :     2.13s CPU (   19912 calls,   0.000 s avg)
+     interpolate  :     0.01s CPU (       8 calls,   0.002 s avg)
+     davcio       :     0.02s CPU (     121 calls,   0.000 s avg)
  
