@@ -14,6 +14,7 @@ subroutine kpoint_grid &
 !
 #include "f_defs.h"
   USE kinds, only: DP
+  USE noncollin_module, ONLY: noncolin
   implicit none
   ! INPUT:
   integer nrot, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3
@@ -85,24 +86,26 @@ subroutine kpoint_grid &
                     'something wrong in the checking algorithm',1)
               end if
            end if
-           xx =-xkr(1)*nk1 - 0.5d0*k1
-           yy =-xkr(2)*nk2 - 0.5d0*k2
-           zz =-xkr(3)*nk3 - 0.5d0*k3
-           in_the_list = abs(xx-nint(xx)).le.eps .and. abs(yy-nint(yy)).le.eps &
+           if (.not. noncolin) then
+              xx =-xkr(1)*nk1 - 0.5d0*k1
+              yy =-xkr(2)*nk2 - 0.5d0*k2
+              zz =-xkr(3)*nk3 - 0.5d0*k3
+              in_the_list=abs(xx-nint(xx)).le.eps.and.abs(yy-nint(yy)).le.eps &
                                                  .and. abs(zz-nint(zz)).le.eps 
-           if (in_the_list) then
-              i = mod ( nint (-xkr(1)*nk1 - 0.5 * k1 + 2*nk1), nk1 ) + 1
-              j = mod ( nint (-xkr(2)*nk2 - 0.5 * k2 + 2*nk2), nk2 ) + 1
-              k = mod ( nint (-xkr(3)*nk3 - 0.5 * k3 + 2*nk3), nk3 ) + 1
-              n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
-              if (n.gt.nk .and. equiv(n).eq.n) then
-                 equiv(n) = nk
-                 wkk(nk)=wkk(nk)+1.0
-              else
-                 if (equiv(n).ne.nk .or. n.lt.nk ) call errore('kpoint_grid', &
+              if (in_the_list) then
+                 i = mod ( nint (-xkr(1)*nk1 - 0.5 * k1 + 2*nk1), nk1 ) + 1
+                 j = mod ( nint (-xkr(2)*nk2 - 0.5 * k2 + 2*nk2), nk2 ) + 1
+                 k = mod ( nint (-xkr(3)*nk3 - 0.5 * k3 + 2*nk3), nk3 ) + 1
+                 n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+                 if (n.gt.nk .and. equiv(n).eq.n) then
+                    equiv(n) = nk
+                    wkk(nk)=wkk(nk)+1.0
+                 else
+                    if (equiv(n).ne.nk.or.n.lt.nk) call errore('kpoint_grid', &
                     'something wrong in the checking algorithm',2)
+                 end if
               end if
-           end if
+           endif
         end do
      end if
   end do
