@@ -1,3 +1,8 @@
+Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si) and Carlo Sbraccia (sbraccia@sissa.it)
+	* updating PWgui for PWscf 2.1 ( a lot of changes )
+	* PWgui version: the PWgui version will now match the version of
+	PWscf, so that the compatibility of the two codes will be obvious
+
 Fri Apr 23 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* pw-event.tcl: tracevar on "nat": the starting_magnetization entries were not
 		updated accordingly

@@ -1,15 +1,24 @@
+Version: 2.1
+	* PWgui version was set equal to version of PWscf so that the
+		compatibility of the two codes can be ascertained from
+		the version number. The structure of the PWgui version
+		number is now the following: X.Y.Z, where X.Y is PWscf
+		version, and Z is the PWgui patch number (when Z=0, it
+		is omitted).
+	* PWgui updated: now compatible with PWscf version 2.1
+
 Version: 0.6.2
-* PWgui is available as self-contained, installation-free standalone
-	executable which run out of the box
-* a few small bug fixes
+	* PWgui is available as self-contained, installation-free standalone
+		executable which run out of the box
+	* a few small bug fixes
 
 Version: 0.6.1 
-* adding internal EDITOR and PAGER to PWgui (better porting to
-	non-unix systems)
+	* adding internal EDITOR and PAGER to PWgui (better porting to
+		non-unix systems)
 
 Version: 0.6.0
-* PWgui compatible with PWscf 2.0
-* D3.X module added
-* PWgui is avaiable via anonymous CVS
-* There is now a `NEWS' file (this one), giving a history of
-	user-visible changes.
+	* PWgui compatible with PWscf 2.0
+	* D3.X module added
+	* PWgui is avaiable via anonymous CVS
+	* There is now a `NEWS' file (this one), giving a history of
+		user-visible changes.
