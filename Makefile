@@ -23,40 +23,40 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
-pw : mods libs
+pw : bindir mods libs
 	if test -d PW   ; then ( cd PW   ; make all ) ; fi
 
-fpmd : mods libs
+fpmd : bindir mods libs
 	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
 
-cp : mods libs
+cp : bindir mods libs
 	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
 
-ph : mods libs pw
+ph : bindir mods libs pw
 	if test -d PH ; then ( cd PH ; make all ) ; fi
 
-pp : mods libs pw
+pp : bindir mods libs pw
 	if test -d PP ; then ( cd PP ; make all ) ; fi
 
-gamma : mods libs pw
+gamma : bindir mods libs pw
 	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
 
-nc : mods libs pw
+nc : bindir mods libs pw
 	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
 
-pwcond : mods libs pw pp
+pwcond : bindir mods libs pw pp
 	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
 
-d3 : mods libs pw ph
+d3 : bindir mods libs pw ph
 	if test -d D3 ; then ( cd D3 ; make all ) ; fi
 
-raman : mods libs pw ph
+raman : bindir mods libs pw ph
 	if test -d Raman ; then ( cd Raman ; make all ) ; fi
 
-tools : mods libs pw
+tools : bindir mods libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
 
-ld1 : mods libs pw
+ld1 : bindir mods libs pw
 	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
 upf : mods libs
@@ -70,6 +70,8 @@ mods :
 libs : mods
 	( cd clib ; make all )
 	( cd flib ; make all )
+bindir :
+	test -d bin || mkdir bin
 
 # remove object files and executables
 clean :
@@ -98,10 +100,10 @@ tar :
 	    configure configure.ac config.guess config.sub install-sh \
 	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure.old \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
-	    pwtools/*.awk pwtools/*.sh bin
+	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs
 	find install Doc *docs examples pseudo -type f \
-		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
+		| grep -v -e /CVS/ -e /results | xargs tar rvf pw.tar
 	gzip pw.tar
 
 # TAR-GUI works only if we have CVS-sources !!!
@@ -115,3 +117,29 @@ tar-gui :
 	    echo "  Sorry, tar-gui works only for CVS-sources !!!" ; \
 	    echo ; \
 	fi
+
+links : bindir
+	( cd bin/ ; \
+	for exe in \
+	    ../CPV/cp.x \
+	    ../D3/d3.x \
+	    ../FPMD/fpmd.x ../FPMD/fpmdpp.x \
+	    ../Gamma/phcg.x \
+	    ../PH/ph.x \
+	    ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
+	      ../PP/efg.x ../PP/plotband.x ../PP/plotrho.x ../PP/pmw.x \
+	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
+	      ../PP/voronoy.x \
+	    ../PW/memory.x ../PW/pw.x \
+	    ../PWCOND/pwcond.x \
+	    ../PWNC/pwnc.x \
+	    ../Raman/ram.x \
+	    ../atomic/ld1.x \
+	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/dynmat.x \
+	      ../pwtools/ev.x ../pwtools/fqha.x ../pwtools/kpoints.x \
+	      ../pwtools/matdyn.x ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
+	      ../pwtools/q2r.x \
+	; do \
+	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+	done \
+	)
