@@ -149,6 +149,7 @@ MODULES = \
 ../Modules/stick_base.o \
 ../Modules/shmem_include.o \
 ../Modules/supercell.o \
+../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o

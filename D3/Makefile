@@ -189,6 +189,7 @@ MODULES = \
 ../Modules/shmem_include.o \
 ../Modules/stick_base.o \
 ../Modules/uspp.o \
+../Modules/timestep.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o
 
