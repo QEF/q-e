@@ -476,46 +476,71 @@ settings and how to force their recompilation.
 
 \subsubsection{Manual configuration}
 
-From the top directory, type:
+To configure ESPRESSO manually, you have to write working
+\texttt{make.sys} and \texttt{make.rules}, and generate
+\texttt{*/.dependencies} files yourself.
+
+For \texttt{make.sys}, several templates (each for a different machine
+type) to start with are provided in the \texttt{install/} directory:
+they have names of the form \texttt{Make.}\emph{system}, where
+\emph{system} is a string identifying the architecture and compiler.
+Currently available systems are:
+\begin{quote}
+  \texttt{alpha}:     HP-Compaq alpha workstations\\
+  \texttt{alphaMPI}:  HP-Compaq alpha parallel machines\\
+  \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
+  \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
+  \texttt{fujitsu}:   Fujitsu vector machines\\
+  \texttt{hitachi}:   Hitachi SR8000\\
+  \texttt{hp}:        HP PA-RISC workstations\\
+  \texttt{hpMPI}:     HP PA-RISC parallel machines\\
+  \texttt{ia64}:      HP Itanium workstations\\
+  \texttt{irix}:      SGI workstations\\
+  \texttt{pc\_abs}:   Linux PCs, Absoft compiler\\
+  \texttt{pc\_lahey}: Linux PCs, Lahey compiler\\
+  \texttt{pc\_pgi}:   Linux PCs, Portland compiler\\
+  \texttt{sun}:       Sun workstations\\
+  \texttt{sunmpi}:    Sun parallel machines\\
+  \texttt{sxcross}:   NEC SX-6\\
+  \texttt{t3e}:       Cray T3E
+\end{quote}
+The \texttt{install/} directory also contains files \texttt{Rules.cpp}
+and \texttt{Rules.nocpp}, which are templates for \texttt{make.rules}.
+The former is to be used with Fortran compilers that support
+the preprocessing of source files; otherwise you must use the latter.
+They'll usually work without further editing.
+
+To select the appropriate templates, you can run:
 \medskip
 
-\texttt{./configure.old} \emph{your-system}
+\texttt{./configure.old} \emph{system}
 \medskip
 
 \noindent
-where \emph{your-system} is one of the following:
-\begin{quote}
-  \texttt{alpha}:     HP-Compaq alpha workstations, HP-Compaq
-                      compiler\\
-  \texttt{alphaMPI}:  HP-Compaq alpha parallel machines, HP-Compaq\\
-                      \strut\qquad compiler\\
-  \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
-  \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
-  \texttt{fujitsu}:   Fujitsu vector machines, Fujitsu compiler\\ %(+)
-  \texttt{hitachi}:   Hitachi SR8000\\
-  \texttt{hp}:        HP PA-RISC workstations, HP compiler\\
-  \texttt{hpMPI}:     HP PA-RISC parallel machines, HP compiler\\
-  \texttt{ia64}:      HP Itanium workstations, HP compiler\\
-  \texttt{irix}:      SGI workstations, SGI compiler\\
-  \texttt{pc\_abs}:   Linux PCs, Absoft compiler\\ %(+)
-  \texttt{pc\_lahey}: Linux PCs, Lahey compiler\\ %(+)
-  \texttt{pc\_pgi}:   Linux PCs, Portland compiler\\ %(+)
-  \texttt{sun}:       Sun workstations, Sun compiler\\ %(+)
-  \texttt{sunmpi}:    Sun parallel machines, Sun compiler\\ %(+)
-  \texttt{sxcross}:   NEC SX-6\\ %(+)
-  \texttt{t3e}:       Cray T3E, Cray compiler
-\end{quote}
-and has a corresponding file \texttt{Make.}\emph{your-system}
-in the \texttt{install/} directory. 
-% Note that systems marked with (+) in the above list do not support, 
-% or did not in the past, or we don't know if they do, C-style
-% preprocessing directives in fortran compilers.
+where \emph{system} is the best match to your configuration;
+\texttt{configure.old} with no arguments prints the up-to-date list of
+available systems.
 
-If your machine/compiler combination is not in the list, choose what
-looks like the most similar combination.  You may need to define your
-own preprocessing flags and to delve into the code, but usually very
-minor changes are needed to port ESPRESSO to an unsupported machine.
-See also the {\tt install/README.install} file.
+That will copy \texttt{Make.}\emph{system} to \texttt{make.sys}, and
+either \texttt{Rules.*} file to \texttt{make.rules}; it will usually
+pick the right one.
+In addition, it'll run the \texttt{makedeps.sh} script to generate
+\texttt{*/.dependencies} files.
+(If you don't run the \texttt{configure.old} script, you'll have to do
+that yourself.)
+
+Most probably (and even more so if there isn't an exact match to your
+machine type), you'll have to tweak \texttt{make.sys} by hand until
+you obtain successful compilation.
+In particular, you must specify the full list of libraries that
+you intend to link to.
+You'll also have to set the \texttt{MYLIB} variable to:
+\begin{quote}
+  \texttt{blas\_and\_lapack} to compile BLAS and LAPACK from source;\\
+  \texttt{lapack\_mkl} to use the Intel MKL library;\\
+  \texttt{lapack\_t3e} to use the LAPACK for Cray T3E;\\
+  otherwise, leave it empty.
+\end{quote}
 
 \paragraph{Note for HP PA-RISC users:} 
 
