@@ -100,6 +100,7 @@ sparc-sun-* )
 	;;
 powerpc-apple-darwin* )
 	is_mac=1
+	try_f90_parallel="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
 	try_ar="ar"
 	try_arflags="ruv"
@@ -227,6 +228,10 @@ sparc-sun-*:mpf90 )
 	try_cc_parallel="mpcc"
 	try_f77_parallel="mpf77"
 	;;
+powerpc-apple-darwin*:mp* )
+	try_cc_parallel="mpxlc mpcc"
+	try_f77_parallel="mpxlf77 mpf77"
+	;;
 esac
 if ! test $no_parallel
 then
@@ -291,9 +296,10 @@ x86_64-*-linux-gnu:pgcc:pgf90 )                         ;;
 *-ibm-aix*:xlc*:*xlf* | *-ibm-aix*:cc:*xlf* )           ;;
 mips-sgi-*:cc:f90 )                                     ;;
 alphaev*-dec-osf*:cc:f90 )                              ;;
+powerpc-apple-darwin*:mpcc:mpf90 )                      ;;
 powerpc-apple-darwin*:gcc:xlf90 )                       ;;
+*cray-unicosmp*:cc:ftn )                                ;;
 # sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )           ;;
-# *cray-unicosmp*:cc:ftn )                                ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
@@ -432,7 +438,7 @@ sparc-sun-*:mpf90 | sparc-sun-*:f90 )
         pre_fdflags="-e Z -F"
         have_cpp=1
 	;;
-powerpc-apple-darwin* )
+powerpc-apple-darwin*:* )
 	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 -qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
@@ -507,8 +513,12 @@ sparc-sun-*:mpcc | sparc-sun-*:cc )
         try_cflags=""
         c_ldflags=""
         ;;
-powerpc-apple-darwin* )
+powerpc-apple-darwin*:gcc )
 	try_cflags="-O3 -fomit-frame-pointer -I/usr/include/malloc"
+	try_cpp="cpp"
+	;;
+powerpc-apple-darwin*:* )
+	try_cflags="-O4"
 	;;
 *:gcc )
 	try_cflags="-O3 -fomit-frame-pointer"
