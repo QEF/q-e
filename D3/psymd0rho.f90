@@ -14,13 +14,15 @@ subroutine psymd0rho (nper, irr, dvtosym)
   !
 #include "machine.h"
 #ifdef __PARA
-  USE kinds, only : DP
-  use pwcom
-  use phcom
-  use d3com
-  use para
+  USE kinds, ONLY : DP
+  USE ions_base, ONLY : nat
+  USE pwcom
+  USE phcom
+  USE d3com
+  USE para
 
-  implicit none
+  IMPLICIT NONE
+
   integer :: nper, irr
   ! the number of perturbations
   ! the representation under consideration
