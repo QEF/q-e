@@ -14,7 +14,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
 ! using either LAPACK routine or the routines in GEP.f
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none  
 
   integer :: n2d,     & ! 2D dimension

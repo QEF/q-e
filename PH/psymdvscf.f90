@@ -16,7 +16,7 @@ subroutine psymdvscf (nper, irr, dvtosym)
 #ifdef __PARA
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use para
   implicit none

@@ -23,7 +23,7 @@ subroutine read_file
     xk, ngms, gg, nls, ecutwfc, tpiba2, nrx1s, nr1s, nr2s, nr3s, nbndx, &
     natomwfc, et, wg, rho, vr, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
     strf, eigts1, eigts2, eigts3, isk, wk, forcefield, tefield
-  use parameters, only: dp
+  USE kinds, only: dp
   use io_files, only: tmp_dir, prefix
   use restart_module, only: readfile_new
 #ifdef __PARA

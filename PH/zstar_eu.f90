@@ -18,7 +18,7 @@ subroutine zstar_eu
   USE io_files, ONLY: iunigk
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

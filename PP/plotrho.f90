@@ -19,7 +19,7 @@ program plotrho
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer, parameter :: nwrk = 10000, nximax = 64, nyimax = 64, &
        nxmax = 128, nymax = 128, nlevelx = 19, nax = 130
@@ -196,7 +196,7 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   !   z(0:nc) are the levels,
   !   xdim and ydim are the physical dimensions of the figure in cm
   !   xs and ys determine a shift of the origin in cm
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: imax, jmax, iub, jub, nc
   real(kind=DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
@@ -291,7 +291,7 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
 end subroutine cplot
 
 subroutine conrec (imax, iub, jmax, jub, x, y, d, nc, z)
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: imax, iub, jmax, jub, nc
 
@@ -585,7 +585,7 @@ end subroutine conrec
 subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
   !-----------------------------------------------------------------------
   !
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: nat, ityp (nat)
   real(kind=DP) :: tau (3, nat), at (3, 3), r0 (3), tau1 (3), tau2 (3), a0
@@ -655,7 +655,7 @@ subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
 end subroutine atomi
  
 subroutine hatch (x1, x2, y1, y2)
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   real(kind=DP) :: x1, x2, y1, y2
   real(kind=DP) :: cm =  28.453, delta = 0.2, dim
@@ -700,7 +700,7 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   !   z(0:nlevels) are the levels
   !   xdim and ydim are the physical dimensions of the figure in cm
   !   xs and ys determine a shift of the origin in cm
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer, parameter :: ncontourmax=100, npointmax=500, nmaxtypes=8
   integer :: imax, iub, jub, nlevels
@@ -809,7 +809,7 @@ end subroutine psplot
 subroutine findcontours (d, imax, iub, jub, x, y, z, segments, work, &
      done, npointmax, ncontourmax, line, npoints, ncontours)
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: imax, iub, jub, npointmax, ncontourmax,  ncontours, &
        npoints(ncontourmax)
@@ -945,7 +945,7 @@ end subroutine findcontours
 !
 subroutine triangle ( d, x, y, z, imax, iub, jub, i0, j0, m0, found, line )
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: imax, iub, jub, i0, j0, m0
   real(kind=DP) :: d(0:imax,0:jub), x(0:iub), y(0:jub), z, line(2,2)

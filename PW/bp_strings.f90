@@ -4,7 +4,7 @@ SUBROUTINE kp_strings &
 #include "machine.h"
 
 !  --- Usage of modules ---
-   USE parameters, ONLY: dp
+   USE kinds, ONLY: dp
 
 !  --- No implicit definitions ---
    IMPLICIT NONE

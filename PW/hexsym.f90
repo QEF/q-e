@@ -13,7 +13,7 @@ subroutine hexsym (at, is, isname, nrot)
   ! Provides symmetry operations for Hexagonal and Trigonal lattices.
   ! The c axis is assumed to be along the z axis
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the input variables

@@ -13,7 +13,8 @@ subroutine io_pot (iop, filename, pot, nc)
   !     in real space onto a file
   !
 #include "machine.h"
-  use pwcom
+  USE kinds, ONLY: DP
+  USE gvect, ONLY: nrxx
 #ifdef __PARA
   use para
 #endif

@@ -10,7 +10,7 @@
 subroutine bachel (alps, aps, npseu, lmax)
   !----------------------------------------------------------------------
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !   First dummy variables

@@ -11,7 +11,7 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, &
      tetra, et, ef, wg)
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
-  use parameters
+  USE kinds
   implicit none
   !
   integer :: nks, nspin, nbnd, ntetra, tetra (4, ntetra)

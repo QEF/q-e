@@ -10,7 +10,7 @@
 subroutine which_dft (dft, iexch, icorr, igcx, igcc)
   !-----------------------------------------------------------------------
   !
-  use parameters
+  USE kinds
   use parser
   implicit none
   ! input

@@ -15,7 +15,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   !
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &
        nsymq, irotmq

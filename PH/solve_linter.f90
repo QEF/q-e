@@ -26,7 +26,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE wavefunctions_module,  ONLY: evc
   USE constants,  ONLY: degspin
   use becmod
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

@@ -10,7 +10,7 @@
 MODULE io_routines
   !----------------------------------------------------------------------------
   !
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   USE constants,  ONLY :  AU, BOHR_RADIUS_ANGS
   !      
   IMPLICIT NONE
@@ -21,7 +21,7 @@ MODULE io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE varie,            ONLY : istep, nstep
+       USE control_flags,            ONLY : istep, nstep
        USE io_files,         ONLY : iunneb, iunrestart, neb_file   
        USE input_parameters, ONLY : if_pos
        USE neb_variables,    ONLY : pos, vel, num_of_images, dim, PES, &
@@ -156,7 +156,7 @@ MODULE io_routines
      SUBROUTINE write_restart()
        !-----------------------------------------------------------------------
        !
-       USE varie,            ONLY : istep, nstep
+       USE control_flags,            ONLY : istep, nstep
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, neb_file 
        USE neb_variables,    ONLY : pos, vel, num_of_images, PES, &

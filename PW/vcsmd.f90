@@ -34,7 +34,7 @@ subroutine vcsmd
   use dynam
   use relax
   use force_mod
-  use varie
+  USE control_flags
   use ener, only: etot
   use io_files,  only : prefix
 #ifdef __PARA

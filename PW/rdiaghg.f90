@@ -16,7 +16,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !   On output both matrix are unchanged
   !   Uses LAPACK routines
   !
-  USE parameters
+  USE kinds
 #ifdef __PARA
   USE para
 #endif

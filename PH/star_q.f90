@@ -20,7 +20,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !-input variables
   integer :: ibrav, nat, ityp (nat), modenum, nr1, nr2, nr3

@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 !
 MODULE rbecmod
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !

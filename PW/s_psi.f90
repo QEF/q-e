@@ -23,7 +23,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   ! output:
   !     spsi  S*psi
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE wvfct,      ONLY : gamma_only 
   USE us,         ONLY : vkb, nkb, okvan, nh, tvanp, qq
   USE wvfct,      ONLY : igk, g2kin

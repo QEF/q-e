@@ -9,7 +9,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   !-----------------------------------------------------------------------
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    This routine writes on output the dynamical matrix in the cartesian

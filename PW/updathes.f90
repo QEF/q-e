@@ -12,7 +12,7 @@ subroutine updathes (nax3, nat3, oldforce, force, hessm1, dtau)
    ! updates the inverse hessian
    !
 #include "machine.h"
-   use parameters
+   USE kinds
    implicit none
    integer :: nat3, nax3
 

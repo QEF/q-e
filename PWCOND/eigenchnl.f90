@@ -11,7 +11,7 @@ subroutine eigenchnl(nchanl, nchanr, tchan, vec, eigen)
 ! the matrix amat=T^+T, where T is a transmission matrix  
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
 implicit none
 
   integer ::  i, j, j1, info

@@ -11,7 +11,17 @@ subroutine hinit0
   !
   ! configuration-independent hamiltonian initialization
   !
-  use pwcom
+  USE parameters, ONLY: ndm, lmaxx
+  USE atom, ONLY: numeric, mesh, r, vnl
+  USE basis, ONLY: nat, ntyp, ityp, tau, startingconfig
+  USE brilz, ONLY: at, bg, omega, tpiba2
+  USE cellmd, ONLY: omega_old, at_old, lmovecell
+  USE klist, ONLY: nks, xk
+  USE gvect, ONLY: nr1, nr2, nr3, ngm, ecutwfc, ig_l2g, &
+       g, eigts1, eigts2, eigts3
+  USE vlocal, ONLY: strf
+  USE wvfct, ONLY: npw, g2kin, igk, igk_l2g
+  USE pseud, ONLY: lloc, lmax, nnl, aps, alps
   USE io_files, ONLY: iunigk
   implicit none
   ! counter on k points

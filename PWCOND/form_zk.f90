@@ -10,7 +10,7 @@ subroutine form_zk(n2d, nrzp, zkr, zk, e, tpiba)
 ! Just to construct complex zk=sqrt(e-E_n) for energy e  
 ! from eigenvalues E_n found for some initial energy
 !
-  use parameters, only : DP 
+  USE kinds, only : DP 
   implicit none
   integer :: nrzp, n2d, n, k 
   real(kind=DP) :: zkr(n2d,nrzp), e, ed, tpiba

@@ -22,7 +22,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters
+  USE kinds
   implicit none
   !
   !     input variables

@@ -13,7 +13,7 @@ SUBROUTINE g_psi( lda, n, m, psi, e )
   ! ... This routine computes an estimate of the inverse Hamiltonian
   ! ... and applies it to m wavefunctions
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE g_psi_mod,  ONLY : h_diag, s_diag, test_new_preconditioning
   !
   IMPLICIT NONE

@@ -10,7 +10,7 @@
 subroutine estimate (hessm1, nax3, nat, nat3)
   !-----------------------------------------------------------------------
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: nax3, nat3, nat, i
   real(kind=DP) :: hessm1 (nax3, nat3)

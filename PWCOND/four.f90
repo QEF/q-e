@@ -216,7 +216,7 @@ implicit none
 end subroutine four
 
 function indexr(zz, ndim, r)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: iz, ndim, indexr

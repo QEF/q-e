@@ -11,7 +11,7 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
      et, ef, demet, wg)
   !--------------------------------------------------------------------
   !     calculates weights with the gaussian spreading technique
-  use parameters
+  USE kinds
   implicit none
   !
   integer :: nks, nbnd, ngauss

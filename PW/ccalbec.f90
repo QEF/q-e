@@ -14,7 +14,7 @@ subroutine ccalbec (nkb, npwx, npw, nbnd, bec, vkb, psi)
   !    and the wavefunctions, and save them in the array bec.
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   !
   !   here the dummy variables

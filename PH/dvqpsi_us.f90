@@ -19,7 +19,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
 
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
   !

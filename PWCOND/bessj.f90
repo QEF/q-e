@@ -9,7 +9,7 @@ function bessj(n,x)
 !
 ! It computes the Bessel functions J(n,x)
 !
-  use parameters, only : DP
+  USE kinds, only : DP
   
   implicit none
   integer, parameter :: iacc=40 
@@ -68,7 +68,7 @@ end function bessj
 !---------------------------------------
 
 function bessj0(x)
-  use parameters, only : DP
+  USE kinds, only : DP
   real(kind=DP) :: x, ax, xx, z, y, ans, ans1, ans2, bessj0
 
   if (abs(x).lt.8.d0) then
@@ -97,7 +97,7 @@ end function bessj0
 !-----------------------------------
 
 function bessj1(x)
-  use parameters, only : DP
+  USE kinds, only : DP
   real(kind=DP) :: x, ax, xx, y, ans, ans1, ans2, bessj1      
 
   if (abs(x).le.8.d0) then

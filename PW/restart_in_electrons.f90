@@ -10,9 +10,9 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunwfc, nwordwfc, iunres
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE klist, ONLY: nks
-  USE varie, ONLY: restart, tr2, ethr
+  USE control_flags, ONLY: restart, tr2, ethr
   USE wvfct, ONLY: nbnd, et
   USE wavefunctions_module,    ONLY : evc
   implicit none

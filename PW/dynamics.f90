@@ -30,7 +30,16 @@ subroutine dynamics
   !
 #include "machine.h"
   USE io_global, ONLY : stdout
-  use pwcom
+  USE kinds, ONLY: DP
+  USE constants, ONLY: amconv
+  USE basis, ONLY: nat, ntyp, tau, ityp, atm
+  USE brilz, ONLY: alat
+  USE dynam, ONLY: amass, temperature, dt, delta_t, nraise
+  USE ener, ONLY: etot
+  USE force_mod, ONLY: force
+  USE klist, ONLY: nelec
+  USE relax, ONLY: fixatom, dtau_ref, starting_diag_threshold
+  USE control_flags, ONLY: ethr, upscale, tr2, imix, alpha0, beta0, istep
   use io_files, only : prefix
 #ifdef __PARA
   use para
@@ -194,7 +203,7 @@ subroutine verlet (rnew, rold, a, n, ec, mass, ml, dt)
   !
   ! Verlet algorithm to update atomic position
   !
-  use parameters
+  USE kinds
   implicit none
   ! INPUT
   integer :: n  ! number of particles
@@ -233,7 +242,12 @@ subroutine start_therm (mass, tauold)
   !
   !     Starting thermalization of the system
   !
-  use pwcom
+  USE kinds, ONLY: DP
+  USE basis, ONLY: nat, tau
+  USE brilz, ONLY: alat
+  USE dynam, ONLY: temperature, dt!, delta_t, nraise
+  USE relax, ONLY: fixatom
+  USE symme, only: invsym, nsym, irt
 #ifdef __PARA
   use para
 #endif
@@ -349,7 +363,8 @@ end subroutine start_therm
 
 subroutine thermalize (temp_old, temp_new, tauold)
   !-------------------------------------------------------------------
-  use pwcom
+  USE kinds, ONLY: DP
+  USE basis, ONLY: nat, tau
   real(kind=DP) :: tauold (3, nat), temp_new, temp_old
   !
   integer :: na, natoms
@@ -387,7 +402,7 @@ subroutine find_alpha_and_beta (nat, tau, tauold, alpha0, beta0)
   !     tau' = alpha0 * ( tau(t) - tau(t-dt) ) +
   !             beta0 * ( tau(t-dt) - tau(t-2*dt) )
   !
-  use parameters
+  USE kinds
   implicit none
 
   integer :: nat, na, ipol

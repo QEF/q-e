@@ -21,7 +21,7 @@ SUBROUTINE cdiisg( ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   ! ... The band-by-band RMM-DIIS method is used. 
   !
   USE io_global,  ONLY : stdout
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE g_psi_mod,  ONLY : h_diag, s_diag
   USE us,         ONLY : okvan
   !

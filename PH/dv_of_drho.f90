@@ -16,7 +16,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
 #include "machine.h"
   use funct
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

@@ -17,7 +17,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
   !

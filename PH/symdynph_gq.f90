@@ -17,7 +17,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    The dummy variables

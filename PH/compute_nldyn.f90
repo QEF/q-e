@@ -20,7 +20,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

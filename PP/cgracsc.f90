@@ -18,7 +18,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !     here the dummy variables

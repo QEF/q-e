@@ -8,7 +8,7 @@ subroutine dvkb3(kpoint,dvkb)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   use becmod
   use phcom

@@ -14,7 +14,7 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   !     The spherical harmonics are calculated in ylmr2
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !    here the I/O variables

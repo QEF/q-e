@@ -10,7 +10,7 @@
 MODULE miscellany
   !---------------------------------------------------------------------------
   !
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   !
   IMPLICIT NONE
   !

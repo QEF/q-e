@@ -15,7 +15,7 @@ SUBROUTINE stop_pw( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,         ONLY :  stdout
-  USE varie,             ONLY :  order, lneb
+  USE control_flags,             ONLY :  order, lneb
   USE io_files,          ONLY :  prefix, &
                                  iunwfc, iunoldwfc, iunoldwfc2, iunigk, iunres
   USE input_parameters,  ONLY :  deallocate_input_parameters

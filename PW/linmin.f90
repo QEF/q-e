@@ -45,7 +45,7 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
   ! additional reduced step and see what happens
   !
   USE io_global,  ONLY : stdout
-  use parameters
+  USE kinds
   implicit none
   !  Input
   real(kind=DP) :: xold, eold, deold, xtot, etot, detot

@@ -15,7 +15,7 @@ subroutine ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk)
   !    on the original mesh
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !    first the dummy variables

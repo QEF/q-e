@@ -16,7 +16,7 @@ subroutine compute_becalp (becq, alpq)
 
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
   implicit none

@@ -22,7 +22,7 @@ program voronoy
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters
+  USE kinds
   use pwcom
   use fft_scalar, only : good_fft_dimension
   use io_files,   only : nd_nmbr
@@ -126,7 +126,7 @@ end program voronoy
 subroutine get_fftindex (g, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      at, nl)
   !-----------------------------------------------------------------------
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, ngm
   real(kind=DP) :: g (3, ngm), at (3, 3)
@@ -158,7 +158,7 @@ subroutine rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, &
      nr1big, nr2big, nr3big, nrx1big, nlbig, rhobig)
   !-----------------------------------------------------------------------
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: ngm, nr1, nr2, nr3, nrx1, nl (ngm), nr1big, nr2big, &
        nr3big, nrx1big, nlbig (ngm)
@@ -193,7 +193,7 @@ subroutine calculate_partial_charges (nat, tau, at, bg, nrx1big, &
      nr1big, nr2big, nr3big, rhobig, partial_charge)
   !-----------------------------------------------------------------------
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: nat, nrx1big, nr1big, nr2big, nr3big
   real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge ( &

@@ -18,7 +18,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds
-  USE parameters,  ONLY :  DP, nsx, natx, npkx, nbndxx, nspinx
+  USE parameters,  ONLY :  nsx, natx, npkx, nbndxx, nspinx
   !
   IMPLICIT NONE
   !

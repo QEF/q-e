@@ -22,8 +22,9 @@ subroutine atomic_rho (rhoa, nspina)
   !
   !
 #include "machine.h"
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ndm
   USE io_global,  ONLY : stdout
-  USE parameters, ONLY: DP, ndm
   USE atom, ONLY: r, rab, msh, rho_at
   USE basis, ONLY: ntyp
   USE brilz, ONLY: tpiba, omega

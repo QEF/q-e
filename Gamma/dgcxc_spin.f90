@@ -15,7 +15,7 @@ subroutine dgcxc_spin (rup, rdw, gup, gdw, vrrxup, vrrxdw, vrsxup, &
 !    This routine computes the derivative of the exchange and correlatio
 !    potentials with respect to the density, the gradient and zeta
 !
-use parameters, only : DP
+USE kinds, only : DP
 implicit none
 real(kind=DP) :: rup, rdw, gup (3), gdw (3), vrrxup, vrrxdw, vrsxup, &
  vrsxdw, vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, &

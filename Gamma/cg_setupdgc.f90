@@ -11,7 +11,7 @@ subroutine cg_setupdgc
   ! Setup all arrays needed in the gradient correction case
   ! This version requires on input allocated array
   !
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   use cgcom
   use funct

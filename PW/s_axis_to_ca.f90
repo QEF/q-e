@@ -16,7 +16,7 @@ subroutine s_axis_to_cart (s, sr, at, bg)
   !     last revised 3 may 1995 by A. Dal Corso
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the input parameters

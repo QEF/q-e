@@ -16,8 +16,12 @@ subroutine force_hub(forceh)
    ! (in the unit ceel) along the direction ipol.
    !
 #include "machine.h"
-   use pwcom
-   use becmod
+   USE kinds, ONLY: DP
+   USE basis, ONLY: nat, ityp
+   USE brilz, ONLY: at, bg
+   USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns
+   USE lsda_mod, ONLY: nspin
+   USE symme,    ONLY: s, nsym, irt
    use io_files, only : prefix, iunocc
 #ifdef __PARA
    use para

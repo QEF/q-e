@@ -6,7 +6,7 @@ subroutine addnlcc_zstar_eu_us (drhoscf)
 
   use funct
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
 #ifdef __PARA
   use para

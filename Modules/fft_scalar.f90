@@ -17,7 +17,7 @@
 !----------------------------------------------------------------------!
 ! FFT scalar drivers Module.
 ! Written by Carlo Cavazzoni 
-! Last update April 2003
+! Last update January 2004
 !----------------------------------------------------------------------!
 
 
@@ -63,24 +63,14 @@
 
 #endif
 
-#if defined __SGI64 || defined __ALPHA || defined __T3E
-
-        INTEGER, PARAMETER :: ipt = 8
-
-#else
-
-        INTEGER, PARAMETER :: ipt = 4
-
-#endif
-
-        !   ipt   Size of integer that store "C" pointers
-        !         ipt = 4 for 32bit executables
-        !         ipt = 8 for 64bit executables
+        !   C_POINTER is defined in include/machine.h
+        !   for 32bit executables, C_POINTER is integer(4)
+        !   for 64bit executables, C_POINTER is integer(8)
 
 #if defined __FFTW
 
-        INTEGER ( kind=ipt ) :: fw_plan( 3, ndims ) = 0
-        INTEGER ( kind=ipt ) :: bw_plan( 3, ndims ) = 0
+        C_POINTER :: fw_plan( 3, ndims ) = 0
+        C_POINTER :: bw_plan( 3, ndims ) = 0
 
         !   Pointers to the "C" structures containing FFT factors ( PLAN )
 
@@ -518,8 +508,8 @@
 
 #if defined __FFTW
 
-     integer(kind=ipt), save :: fw_plan(ndims) = 0
-     integer(kind=ipt), save :: bw_plan(ndims) = 0
+     C_POINTER, save :: fw_plan(ndims) = 0
+     C_POINTER, save :: bw_plan(ndims) = 0
 
 #elif defined __AIX
 
@@ -934,8 +924,8 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 
 #if defined __FFTW
 
-      integer(kind=ipt), save :: bw_planz(  ndims ) = 0
-      integer(kind=ipt), save :: bw_planxy( ndims ) = 0
+      C_POINTER, save :: bw_planz(  ndims ) = 0
+      C_POINTER, save :: bw_planxy( ndims ) = 0
 
 #elif defined __AIX
 
@@ -1088,7 +1078,7 @@ integer function good_fft_dimension (n)
   ! Determines the optimal maximum dimensions of fft arrays
   ! Useful on some machines to avoid memory conflicts
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: n, nx
   ! this is the default: max dimension = fft dimension
@@ -1113,7 +1103,7 @@ function allowed (nr)
   ! a "bad one" is either not implemented (as on IBM with ESSL)
   ! or implemented but with awful performances (most other cases)
 
-  use parameters
+  USE kinds
 
   implicit none
   integer :: nr

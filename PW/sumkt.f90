@@ -10,7 +10,7 @@
 function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e)
   !--------------------------------------------------------------------
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: sumkt
   integer :: nbnd, nks, nspin, ntetra, tetra (4, ntetra)
@@ -74,7 +74,7 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e)
 end function sumkt
 
 subroutine piksort (n, a)
-  use parameters
+  USE kinds
   implicit none
   integer :: n
 

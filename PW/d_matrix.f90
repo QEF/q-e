@@ -10,7 +10,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   !---------------------------------------------------------------
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   USE brilz, ONLY : at, bg
   USE symme, ONLY:  nsym, s
   implicit none

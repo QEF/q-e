@@ -15,7 +15,7 @@ subroutine data_structure( lgamma )
 #include "machine.h"
   USE io_global,  ONLY : stdout
   USE sticks, ONLY: dfftp, dffts
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE brilz, ONLY: bg,  tpiba
   USE klist, ONLY: xk, nks
   USE gvect, ONLY:  nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &

@@ -17,7 +17,7 @@ subroutine phq_readin
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use io_files, only: tmp_dir, prefix
   use control_flags, only : twfcollect

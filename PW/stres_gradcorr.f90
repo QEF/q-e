@@ -12,7 +12,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
      nrx1, nrx2, nrx3, nrxx, nl, ngm, g, alat, omega, sigmaxc)
   !--------------------------------------------------------------------
 #include "machine.h"
-  use parameters
+  USE kinds
   use funct
   implicit none
 

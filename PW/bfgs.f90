@@ -15,11 +15,11 @@ SUBROUTINE bfgs()
   ! ... minimization
   ! ... this version saves data at each iteration
   !
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   USE brilz,       ONLY : alat
   USE basis,       ONLY : nat, tau
   USE force_mod,   ONLY : force
-  USE varie,       ONLY : conv_ions, upscale, imix, tr2, ethr, istep
+  USE control_flags,       ONLY : conv_ions, upscale, imix, tr2, ethr, istep
   USE relax,       ONLY : restart_bfgs, epse, epsf, starting_diag_threshold, &
                           starting_scf_threshold, dtau_ref
   USE ener,        ONLY : etot

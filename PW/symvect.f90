@@ -16,7 +16,7 @@ subroutine symvect (nat, vect, nsym, s, irt)
    ! axis basis
    !
 #include "machine.h"
-   use parameters
+   USE kinds
    implicit none
    !
    !    I/O variables first

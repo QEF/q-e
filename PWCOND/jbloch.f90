@@ -13,7 +13,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
 ! rearrangements.   
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   real(kind=DP), parameter :: eps=1.d-4 

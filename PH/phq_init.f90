@@ -37,7 +37,7 @@ SUBROUTINE phq_init()
   USE io_files,             ONLY : iunigk
   USE pwcom
   USE wavefunctions_module, ONLY : evc
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE phcom
   !
   IMPLICIT NONE

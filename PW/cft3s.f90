@@ -49,7 +49,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 
   use fft_base, only: fft_scatter
 
-  use parameters, only: DP
+  USE kinds, only: DP
   use para, only: ncts, ncplanes, ncp0s, nkcp, nprocp, nxxs, npps, ncps, me
   use sticks, only: dffts
 
@@ -210,7 +210,7 @@ end subroutine cft3s
 subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !----------------------------------------------------------------------
   !
-  use parameters
+  USE kinds
 
   use fft_scalar, only: cfft3ds, cfft3d    !  common scalar fft driver
   use sticks, only: dffts          !  data structure for fft data layout

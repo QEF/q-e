@@ -18,7 +18,10 @@ subroutine init_ns
    !
 #include "machine.h"
 
-   use pwcom
+   USE kinds, ONLY: DP
+   USE basis, ONLY: nat, ityp
+   USE lsda_mod, ONLY: nspin, starting_magnetization
+   USE ldaU, ONLY: ns, hubbard_u, hubbard_alpha, hubbard_l
    implicit none
 
    real(kind=DP) :: totoc

@@ -20,7 +20,7 @@ subroutine set_kplusq (xk, wk, xq, nks, npk)
   !     the gamma point is treated in a special way. No change is done
   !     to the k-points
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    First the dummy variables

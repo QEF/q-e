@@ -12,7 +12,7 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
   !     Finds the Fermi energy - Gaussian Broadening (Methfessel-Paxton)
   !
   USE io_global, ONLY : stdout
-  use parameters
+  USE kinds
   implicit none
   integer :: nks, nbnd, i, kpoint, Ngauss
   real(kind=DP) :: wk (nks), et (nbnd, nks), Degauss, Ef, Eup, Elw, &

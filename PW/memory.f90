@@ -43,7 +43,7 @@ end program pwmemory
 !-----------------------------------------------------------------------
 subroutine setup2()
   !-----------------------------------------------------------------------
-  USE parameters, only: DP
+  USE kinds, only: DP
   USE basis, ONLY: nat, ntyp, ityp
   USE brilz, ONLY: omega
   USE cellmd, ONLY: cell_factor
@@ -52,8 +52,7 @@ subroutine setup2()
   USE klist, ONLY: xqq
   USE pseud, ONLY: lmax, lloc
   USE us, ONLY: lmaxkb, tvanp, nh, nbeta, lll, lqx, nqx, nqxq, nhm, nkb, &
-       dq
-  USE varie, ONLY: newpseudo
+       dq, newpseudo
   USE wvfct, ONLY: npwx
   implicit none
   !
@@ -113,7 +112,8 @@ end subroutine setup2
 !-----------------------------------------------------------------------
 subroutine memory_estimate ( )
   !-----------------------------------------------------------------------
-  USE parameters, ONLY: DP, ndm, npsx, lmaxx, nchix, nbrx, nqfm, lqmax
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ndm, npsx, lmaxx, nchix, nbrx, nqfm, lqmax
   USE basis, ONLY: nat, ntyp, natomwfc
   USE cellmd,ONLY: lmovecell
   USE klist, ONLY: npk, nks, nkstot
@@ -123,7 +123,7 @@ subroutine memory_estimate ( )
   USE ldaU,  ONLY: Hubbard_lmax, lda_plus_u
   USE lsda_mod, ONLY: nspin
   USE us,    ONLY: okvan, nkb, lqx, nqx, nqxq, nhm
-  USE varie, ONLY: nmix, isolve, diis_ndim
+  USE control_flags, ONLY: nmix, isolve, diis_ndim
   USE wvfct, ONLY: gamma_only, npwx, nbnd, nbndx
 #ifdef __PARA
   use para, only: nprocp, npool, nct, ncplane, ncts, ncplanes

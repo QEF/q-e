@@ -15,7 +15,7 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! dynamical matrix those conditions related to time reversal symmetry.
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   ! input variables
   integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &

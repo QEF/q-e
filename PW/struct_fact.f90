@@ -15,7 +15,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   !   cell
 #include "machine.h"
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !   Here the dummy variables

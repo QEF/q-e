@@ -25,7 +25,7 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 ! So in this case there are 3 matching steps. 
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
 #ifdef __PARA
   use para
   implicit none 

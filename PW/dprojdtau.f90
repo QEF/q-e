@@ -15,7 +15,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
    !
 #include "machine.h"
-   USE parameters, ONLY: DP
+   USE kinds, ONLY: DP
    USE atom, ONLY: nchi, lchi, oc
    USE basis, ONLY: nat, natomwfc, ntyp, ityp
    USE brilz, ONLY: tpiba
@@ -24,8 +24,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
-   USE varie, ONLY: newpseudo
-   USE us, ONLY: nkb, vkb, nhm, nh, qq
+   USE us, ONLY: nkb, vkb, nhm, nh, qq, newpseudo
    USE wavefunctions_module,    ONLY : evc
    use becmod
 #ifdef __PARA

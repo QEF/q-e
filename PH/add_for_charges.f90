@@ -7,7 +7,7 @@ subroutine add_for_charges (ik, uact)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use becmod
   use phcom
   implicit none

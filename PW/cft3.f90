@@ -37,7 +37,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #endif
   use sticks, only: dfftp
   use fft_base, only: fft_scatter
-  use parameters, only : DP
+  USE kinds, only : DP
   use para, only: nct, ncp, ncplane, nprocp, nxx, me, npp
 
   implicit none
@@ -122,7 +122,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #if defined __FFT_MODULE_DRV
   use fft_scalar, only : cfft3d
 #endif
-  use parameters
+  USE kinds
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
 

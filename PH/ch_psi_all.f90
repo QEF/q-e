@@ -17,7 +17,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 
   use pwcom
   use becmod
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

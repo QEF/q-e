@@ -22,7 +22,7 @@ subroutine punch_plot_ph
 
   USE io_global,  ONLY : stdout
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
 #ifdef __PARA
   use para

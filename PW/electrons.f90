@@ -26,7 +26,8 @@ SUBROUTINE electrons()
   ! ... It prints on output the total energy and its decomposition in
   ! ... the separate contributions.
   !
-  USE parameters,           ONLY : DP, npk 
+  USE kinds,                ONLY : DP
+  USE parameters,           ONLY : npk 
   USE io_global,            ONLY : stdout
   USE brilz,                ONLY : at, bg, alat, omega, tpiba2
   USE basis,                ONLY : nat, ntyp, ityp, tau   
@@ -43,7 +44,7 @@ SUBROUTINE electrons()
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef  
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
-  USE varie,                ONLY : mixing_beta, tr2, time_max, ethr, ngm0, &
+  USE control_flags,                ONLY : mixing_beta, tr2, time_max, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, iswitch, &
                                    lscf, lneb, lmd, conv_elec, restart, &
                                    reduce_io  

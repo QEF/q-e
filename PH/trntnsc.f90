@@ -14,7 +14,7 @@ subroutine trntnsc (phi, at, bg, iflg)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
 #include"machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: iflg

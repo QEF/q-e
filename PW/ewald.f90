@@ -15,7 +15,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! Determines optimal alpha. Should hopefully work for any structure.
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !   first the dummy variables

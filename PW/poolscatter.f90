@@ -12,7 +12,7 @@ subroutine poolscatter (nsize, nkstot, f_in, nks, f_out)
 #include "machine.h"
 #ifdef __PARA
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    This routine scatters a quantity (typically the eigenvalues)

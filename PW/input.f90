@@ -81,9 +81,9 @@ SUBROUTINE iosys()
                             psfile
   USE relax,         ONLY : if_pos, epsf, starting_scf_threshold, &
                             restart_bfgs, epse
-  USE varie,         ONLY : diis_ethr_cg, diis_ndim, diis_wfc_keep, isolve, &
+  USE control_flags,         ONLY : diis_ethr_cg, diis_ndim, diis_wfc_keep, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
-                            iverbosity, tr2, niter, order, iswitch, ntypx, &
+                            iverbosity, tr2, niter, order, iswitch, &
                             upscale_     => upscale, &
                             mixing_beta_ => mixing_beta, &
                             nstep_       => nstep, &
@@ -1200,7 +1200,7 @@ SUBROUTINE verify_tmpdir()
   !-----------------------------------------------------------------------
   !
   USE input_parameters, ONLY : restart_mode
-  USE varie,            ONLY : lneb
+  USE control_flags,            ONLY : lneb
   USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr
   USE neb_variables,    ONLY : num_of_images
 #if defined (__PARA)

@@ -31,7 +31,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !
   !----------------------------------------------------------------------
 
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
@@ -71,7 +71,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !
   !----------------------------------------------------------------------
 
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
@@ -93,7 +93,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   !
   !      3d fft - cray scilib version
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, isign
 
@@ -196,7 +196,7 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !      uses GPFA routines
   !
 
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign
@@ -293,7 +293,7 @@ end subroutine cft_3
 
 module afftnec
 
-  use parameters
+  USE kinds
   implicit none
 
   integer, parameter :: ngrid=2
@@ -314,7 +314,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   !      3d fft for NEC SX6 - uses ASL library routines
   !      contributed by Guido Roma
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   use afftnec
   implicit none
 
@@ -454,7 +454,7 @@ subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   !     nx1=n1+1 is allowed (in order to avoid memory conflicts)
   !     for compatibility: nx2=n2, nx3=n3. nx2 and nx3 are not used
   !----------------------------------------------------------------------
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
 
@@ -496,7 +496,7 @@ subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   ! SUNperf library
   !
   !----------------------------------------------------------------------
-  use parameters, only : DP
+  USE kinds, only : DP
 
   implicit none
 
@@ -539,7 +539,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !
   !----------------------------------------------------------------------
 
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
@@ -610,7 +610,7 @@ end subroutine cft_3
 !
 !      3d fft - FUJITSU, FFTVPLIB version (GRoma, 2001)
 !
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   integer :: n1,n2,n3,nm1,nm2,nm3,igrid,isign
   integer, parameter :: ngrid=2, nmax=256
@@ -679,7 +679,7 @@ end subroutine cft_3
 
 #ifndef PRESENT
 subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
-  use parameters, only : DP
+  USE kinds, only : DP
   call errore ('cft_3', 'machine-specific routine not available', 1)
   return
 

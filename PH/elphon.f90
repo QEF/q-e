@@ -14,7 +14,7 @@ subroutine elphon
   !
 #include "machine.h"
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use el_phon
   implicit none
@@ -68,7 +68,7 @@ subroutine readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   ! Input
   integer :: iudyn, ibrav, nat, ntyp, ityp (nat)
@@ -164,7 +164,7 @@ subroutine elphel (npe, imode0, dvscfins)
 #include "machine.h"
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use parameters, only : DP
+  USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
   use el_phon
@@ -295,7 +295,7 @@ subroutine elphsum
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use el_phon
 #ifdef __PARA
@@ -461,7 +461,7 @@ end subroutine elphsum
 function dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   real(kind=DP) :: dos_ef
   integer :: ngauss, nbnd, nks

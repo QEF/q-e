@@ -18,7 +18,7 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
   !
 #include "machine.h"
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
 #ifdef __PARA
   use para

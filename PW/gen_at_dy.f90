@@ -14,8 +14,17 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    ! is needed in computing the the internal stress tensor.
    !
 #include "machine.h"
+   USE kinds, ONLY: DP
+   USE parameters, ONLY: ndm, nchix
    USE io_global,  ONLY : stdout
-   use pwcom
+   USE constants, ONLY: tpi, fpi
+   USE atom, ONLY: msh, r, rab, lchi, nchi, oc, chi
+   USE basis, ONLY: nat, ntyp, tau, ityp
+   USE brilz, ONLY: omega, at, bg, tpiba
+   USE klist, ONLY: xk
+   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+   USE wvfct, ONLY: npw, npwx, igk
+   USE us, ONLY: newpseudo
    implicit none
    !
    !  I/O variables

@@ -11,7 +11,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  USE parameters,           ONLY: DP
+  USE kinds,           ONLY: DP
   USE constants,            ONLY: pi, e2
   USE brilz,                ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: qcutz, ecfixed, q2sigma, g

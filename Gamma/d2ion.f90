@@ -15,7 +15,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !      (both real- and reciprocal-space contributions are present)
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   USE io_global,  ONLY : stdout
   implicit none
   integer :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)

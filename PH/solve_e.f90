@@ -24,7 +24,7 @@ subroutine solve_e
   USE io_files, ONLY: iunigk
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use parameters, only : DP
+  USE kinds, only : DP
   use becmod
   use phcom
   implicit none

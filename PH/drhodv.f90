@@ -16,7 +16,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
   implicit none

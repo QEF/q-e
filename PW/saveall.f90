@@ -28,7 +28,7 @@ subroutine saveall (iun, iflag)
   USE wvfct, ONLY: nbnd, npwx, nbndx, gamma_only
   USE ener, ONLY: ef
   USE force_mod, ONLY: lforce
-  USE varie, ONLY: iswitch, istep, modenum, noinv, newpseudo
+  USE control_flags, ONLY: iswitch, istep, modenum, noinv
   USE char, ONLY : title, crystal, psd, sname
   USE us
   USE extfield

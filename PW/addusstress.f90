@@ -13,7 +13,7 @@ subroutine addusstres (sigmanlc)
   !   to the dependence of the Q function on the atomic position.
   !
 #include "machine.h"
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE basis, ONLY : nat, ntyp, ityp
   USE brilz, ONLY: omega, tpiba
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &

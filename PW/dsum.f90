@@ -12,7 +12,7 @@ function dsum (n, vect, inc)
   !
   !     This function compute the sum of all the elements of a vector vect
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !    first the dummy variables

@@ -9,7 +9,8 @@
       use atom, only: r, rab, dx
       use basis, only: ntyp
       use brilz, only: omega
-      use parameters, only: DP, ndm, nbrx
+      USE parameters, only:  ndm, nbrx
+      USE kinds, only: DP
       use constants, only: fpi
       use us, only: lqx, tvanp, qfunc, qfcoef, nqf, rinner, lll, nbeta, &
            kkbeta

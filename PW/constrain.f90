@@ -18,7 +18,7 @@ subroutine constrain (dist0, g, dg, dg2, dist, nat, tau, alat)
 !     DA 1997
 !
 #include "machine.h"
-use parameters
+USE kinds
 implicit none
 
 integer :: nat

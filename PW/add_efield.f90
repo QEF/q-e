@@ -35,7 +35,7 @@
 !
 !
 #include "machine.h"
-    USE parameters, ONLY : DP
+    USE kinds, ONLY : DP
     USE constants, ONLY: fpi
     USE pseud, ONLY : zv
     USE basis, ONLY : nat, ityp
@@ -45,7 +45,7 @@
     USE force_mod, ONLY: lforce
     USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE io_global,  ONLY : stdout
-    USE varie, ONLY: mixing_beta
+    USE control_flags, ONLY: mixing_beta
 #ifdef __PARA
     use para
     use mp

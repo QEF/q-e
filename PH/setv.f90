@@ -12,7 +12,7 @@ subroutine setv (n, sa, sx, incx)
   !
   !     This routine sets the array sx to the value sa.
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: sa, sx ( * )
   ! The value to be set

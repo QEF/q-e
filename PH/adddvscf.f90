@@ -17,7 +17,7 @@ subroutine adddvscf (ipert, ik)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
   !

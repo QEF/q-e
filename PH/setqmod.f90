@@ -14,7 +14,7 @@ subroutine setqmod (ngm, xq, g, qmod, qpg)
   !    table used to compute qgm
   !
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: ngm

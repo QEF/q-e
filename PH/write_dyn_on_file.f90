@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine write_dyn_on_file (xq, phi, nat, iudyn)
   !-----------------------------------------------------------------------
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   ! input variables
   integer :: iudyn, nat

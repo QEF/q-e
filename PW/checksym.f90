@@ -18,7 +18,7 @@ subroutine checksym (ir, nat, ityp, xau, rau, ft, sym, irt)
   !
   !   Revised layout 1 may 1995 by A. Dal Corso
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the dummy variables

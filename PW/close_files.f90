@@ -11,7 +11,7 @@ SUBROUTINE close_files()
   !
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
-  USE varie,    ONLY :  order
+  USE control_flags,    ONLY :  order
   USE io_files, ONLY :  prefix, iunwfc, iunoldwfc, iunoldwfc2, iunigk
 #ifdef __PARA
   USE mp,       ONLY :  mp_barrier

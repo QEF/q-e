@@ -15,7 +15,7 @@ subroutine ggen
   !     between the fft mesh points and the array of g vectors.
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use brilz
   use gvect
   use gsmooth

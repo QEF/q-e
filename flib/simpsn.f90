@@ -13,10 +13,9 @@ subroutine simpson (mesh, func, rab, asum)
   !     simpson's rule integrator for function stored on the
   !     radial logarithmic mesh
   !
-  use parameters
+  use kinds, ONLY: DP
   implicit none
   integer :: i, mesh
-
 
   real(kind=DP) :: rab (mesh), func (mesh), f1, f2, f3, r12, asum
   !     routine assumes that mesh is an odd number so run check

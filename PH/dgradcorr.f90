@@ -15,7 +15,7 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !  LSDA is allowed. AdC (September 1999)
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   !
@@ -159,7 +159,7 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      a, ngm, g, nl, alat, ga)
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is also in R-space)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   complex(kind=DP) :: a (nrxx), ga (3, nrxx)
@@ -204,7 +204,7 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      a, ngm, g, nl, alat, da)
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   complex(kind=DP) :: a (3, nrxx), da (nrxx)

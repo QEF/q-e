@@ -16,7 +16,7 @@ subroutine cubicsym (at, is, isname, nrot)
   ! Last revision  30 May 1995  by A. Di Pomponio
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the input/output variables

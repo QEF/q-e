@@ -14,7 +14,7 @@ subroutine davcio (vect, nword, unit, nrec, io)
   !   read/write nword words starting from the address specified by vect
   !
   USE io_global, ONLY : stdout
-  use parameters
+  USE kinds
 implicit none
   integer :: nword, unit, nrec, io
   ! input: the dimension of vect

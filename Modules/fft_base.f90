@@ -613,7 +613,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !
 #include "machine.h"
   use mp_global, ONLY: nproc_pool, me_pool, intra_pool_comm, nproc
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer, intent(in) :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)

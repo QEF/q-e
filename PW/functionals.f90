@@ -29,7 +29,7 @@ subroutine xc (rho, ex, ec, vx, vc)
   !             vx = dE_x(rho)/drho  ( NOT d\epsilon_x(rho)/drho )
   !             ec, vc as above for correlation
   !
-  use parameters
+  USE kinds
   use funct
   implicit none
 
@@ -106,7 +106,7 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   !             sc, v1c, v2c as above for correlation
   !
   use funct
-  use parameters
+  USE kinds
   implicit none
 
   real(kind=DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
@@ -158,7 +158,7 @@ subroutine slater (rs, ex, vx)
   !-----------------------------------------------------------------------
   !        Slater exchange with alpha=2/3
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ex, vx
   real(kind=DP) :: f, alpha
@@ -179,7 +179,7 @@ subroutine pz (rs, iflag, ec, vc)
   !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ec, vc
   integer :: iflag
@@ -218,7 +218,7 @@ subroutine vwn (rs, ec, vc)
   !-----------------------------------------------------------------------
   !     S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: a, b, c, x0
@@ -249,7 +249,7 @@ subroutine lyp (rs, ec, vc)
   !     C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988)
   !     LDA part only
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: a, b, c, d, pi43
@@ -273,7 +273,7 @@ subroutine pw (rs, iflag, ec, vc)
   !     iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ec, vc
   integer :: iflag
@@ -324,7 +324,7 @@ subroutine wigner (rs, ec, vc)
   !-----------------------------------------------------------------------
   !        Wigner correlation
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: pi34, rho13
@@ -344,7 +344,7 @@ subroutine hl (rs, ec, vc)
   !-----------------------------------------------------------------------
   !     L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, ec, vc
   real(kind=DP) :: a, x
@@ -363,7 +363,7 @@ subroutine gl (rs, ec, vc)
   !-----------------------------------------------------------------------
   !  O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rs, vc, ec
   real(kind=DP) :: c, r, x
@@ -384,7 +384,7 @@ subroutine becke88 (rho, grho, sx, v1x, v2x)
   ! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   ! only gradient-corrected part, no Slater term included
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sx, v1x, v2x
   real(kind=DP) :: beta, third, two13
@@ -415,7 +415,7 @@ subroutine ggax (rho, grho, sx, v1x, v2x)
   ! Perdew-Wang GGA (PW91), exchange part:
   ! J.P. Perdew et al.,PRB 46, 6671 (1992)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sx, v1x, v2x
   real(kind=DP) :: f1, f2, f3, f4, f5
@@ -453,7 +453,7 @@ subroutine perdew86 (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
   ! Perdew gradient correction on correlation: PRB 33, 8822 (1986)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sc, v1c, v2c
   real(kind=DP) :: p1, p2, p3, p4, pc1, pc2, pci
@@ -494,7 +494,7 @@ subroutine glyp (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
   ! Lee Yang Parr: gradient correction part
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sc, v1c, v2c
   real(kind=DP) :: a, b, c, d
@@ -524,7 +524,7 @@ subroutine ggac (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
   ! Perdew-Wang GGA (PW91) correlation part
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sc, v1c, v2c
   real(kind=DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
@@ -587,7 +587,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sx, v1x, v2x
   ! input: charge and squared gradient
@@ -648,7 +648,7 @@ subroutine pbec (rho, grho, sc, v1c, v2c)
   ! PBE correlation (without LDA part)
   ! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: rho, grho, sc, v1c, v2c
   real(kind=DP) :: ga, be

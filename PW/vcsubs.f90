@@ -49,7 +49,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   ! avmod(3) = lattice vectors moduli
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   real(kind=DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
@@ -428,7 +428,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !     avmod(3) = lattice vectors moduli
   !
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   real(kind=DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
@@ -920,7 +920,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   !     vmean(nt), rms(nt),vx2(nt),vy2(nt),vz2(nt)
   !
   USE io_global,   ONLY : stdout
-  use parameters , only : DP
+  USE kinds , only : DP
   implicit none
   !
 
@@ -1121,7 +1121,7 @@ subroutine sigp (avec, avecd, avec2d, sigma, vcell)
   !      output:
   !            avec2d = new 2nd time derivative of lattice vectors
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   real(kind=DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), sigmap (3, &
@@ -1279,7 +1279,7 @@ subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
   !      sigma(3,3) = reciprocal lattice vectors / twopi
   !      vcell = cell volume
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   real(kind=DP) :: pi, twopi, eps, zero, um, dois, tres
@@ -1370,7 +1370,7 @@ subroutine setg (avec, g)
   !      output:      t
   !      g(3,3) = avec * avec
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   real(kind=DP) :: zero
@@ -1399,7 +1399,7 @@ end subroutine setg
 !*
 !*
 real(8) function ran3 (idum)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   save

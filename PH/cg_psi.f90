@@ -14,7 +14,7 @@ subroutine cg_psi (lda, n, m, psi, h_diag)
 !    The preconditioning is diagonal in reciprocal space
 !
 !
-use parameters, only : DP
+USE kinds, only : DP
 implicit none
 
 integer :: lda, n, m

@@ -22,7 +22,7 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
   ! The indices limi,ljmj and LM assume the order for real spherical harmonics
   ! given in routine ylmr2
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   ! first the I/O variables
@@ -102,7 +102,7 @@ end subroutine aainit
 subroutine gen_rndm_r(llx,r,rr)
   !-----------------------------------------------------------------------
   ! - generate an array of random vectors (uniform deviate on unitary sphere)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   ! first the I/O variables
@@ -142,7 +142,7 @@ end subroutine gen_rndm_r
 function compute_ap(l,li,lj,llx,ylm,mly)
   !-----------------------------------------------------------------------
   !-  given an l and a li,lj pair compute ap(l,li,lj)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   ! first the I/O variables

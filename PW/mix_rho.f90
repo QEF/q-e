@@ -17,13 +17,13 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, dr2, ethr, ethr_min, &
   ! ...         d.d. johnson prb 38, 12807 (1988)
   ! ... On output: the mixed density is in rhoin, rhout is UNCHANGED
   !
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE basis,                ONLY : nat
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, nlm
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax
   USE lsda_mod,             ONLY : nspin
-  USE varie,                ONLY : imix, ngm0, tr2
+  USE control_flags,                ONLY : imix, ngm0, tr2
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
@@ -527,12 +527,12 @@ FUNCTION rho_dot_product( rho1, rho2 )
   !
   ! ... this function evaluates the dot product between two input densities
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE constants,  ONLY : e2, tpi, fpi
   USE brilz,      ONLY : omega, tpiba2
   USE gvect,      ONLY : gstart, gg
   USE lsda_mod,   ONLY : nspin
-  USE varie,      ONLY : ngm0
+  USE control_flags,      ONLY : ngm0
   USE wvfct,      ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -624,7 +624,7 @@ FUNCTION ns_dot_product( ns1, ns2 )
   !
   ! ... this function evaluates the dot product between two input densities
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
                          Hubbard_alpha
   USE basis,      ONLY : nat, ityp
@@ -688,12 +688,12 @@ FUNCTION fn_dehar( drho )
   !
   ! ... this function evaluates the residual hartree energy of drho
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE constants,  ONLY : e2, fpi
   USE brilz,      ONLY : omega, tpiba2
   USE gvect,      ONLY : gstart, gg
   USE lsda_mod,   ONLY : nspin
-  USE varie,      ONLY : ngm0
+  USE control_flags,      ONLY : ngm0
   USE wvfct,      ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -764,13 +764,13 @@ SUBROUTINE approx_screening( drho )
   !
   ! ... apply an average TF preconditioning to drho
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE constants,  ONLY : e2, pi, fpi
   USE brilz,      ONLY : omega, tpiba2
   USE gvect,      ONLY : gstart, gg
   USE klist,      ONLY : nelec
   USE lsda_mod,   ONLY : nspin
-  USE varie,      ONLY : ngm0
+  USE control_flags,      ONLY : ngm0
   !
   IMPLICIT NONE  
   !
@@ -823,14 +823,14 @@ END SUBROUTINE approx_screening
   !
   ! ... apply a local-density dependent TF preconditioning to drho
   !
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8
   USE brilz,                ONLY : omega, tpiba2
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, nlm, gg
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
-  USE varie,                ONLY : ngm0
+  USE control_flags,                ONLY : ngm0
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !

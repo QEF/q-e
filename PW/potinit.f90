@@ -20,7 +20,7 @@ SUBROUTINE potinit()
   !        as a sum of atomic charges, and the corresponding potential
   !        is saved in vr
   !
-  USE parameters,  ONLY :  DP
+  USE kinds,  ONLY :  DP
   USE io_global,   ONLY :  stdout
   USE brilz,       ONLY :  alat, omega
   USE basis,       ONLY :  nat, startingpot
@@ -29,7 +29,7 @@ SUBROUTINE potinit()
   USE gvect,       ONLY :  ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                            nrxx, nl, g, gg
   USE gsmooth,     ONLY :  doublegrid
-  USE varie,       ONLY :  imix, lscf
+  USE control_flags,       ONLY :  imix, lscf
   USE scf,         ONLY :  rho, rho_core, vltot, vr, vrs
   USE ener,        ONLY :  ehart, etxc, vtxc
   USE ldaU,        ONLY :  niter_with_fixed_ns

@@ -10,7 +10,7 @@
 subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
   !------------------------------------------------------------------
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nspin, nbnd, nks, ntetra, tetra (4, ntetra)
 

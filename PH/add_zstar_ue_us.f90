@@ -11,7 +11,7 @@ subroutine add_zstar_ue_us(imode0,npe)
 #include "machine.h"
 
   USE pwcom
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
   USE phcom

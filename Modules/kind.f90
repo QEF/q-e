@@ -12,7 +12,7 @@
       INTEGER, PARAMETER :: i4b = selected_int_kind(9)
       INTEGER, PARAMETER :: DP = kind(0.0d0) ! compatibility with PWSCF
       PRIVATE
-      PUBLIC :: i4b, dbl, sgl, print_kind_info
+      PUBLIC :: i4b, dbl, sgl, DP, print_kind_info
 !
 !------------------------------------------------------------------------------!
 !

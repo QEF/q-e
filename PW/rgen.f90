@@ -16,7 +16,7 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
   !      r=i*a1+j*a2+k*a3-dtau,
   !   where a1,a2,a3 are the vectors defining the lattice
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !    first the dummy variables

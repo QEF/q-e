@@ -8,7 +8,7 @@
 !
 MODULE mytime
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
@@ -31,7 +31,7 @@ SUBROUTINE init_clocks( go )
   ! flag = .TRUE.  : clocks will run
   ! flag = .FALSE. : only clock #1 will run
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE mytime
   !
   IMPLICIT NONE
@@ -55,7 +55,7 @@ END SUBROUTINE init_clocks
 !
 SUBROUTINE start_clock( label )
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE mytime
   !
   IMPLICIT NONE
@@ -101,7 +101,7 @@ END SUBROUTINE start_clock
 !
 SUBROUTINE stop_clock( label )
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE mytime
   !
   IMPLICIT NONE
@@ -141,7 +141,7 @@ END SUBROUTINE stop_clock
 !
 SUBROUTINE print_clock( label )
   !
-  USE parameters, ONLY : DP  
+  USE kinds, ONLY : DP  
   use mytime
   !
   IMPLICIT NONE
@@ -176,7 +176,7 @@ END SUBROUTINE print_clock
 !
 SUBROUTINE print_this_clock( n )
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE mytime
   USE mp,         ONLY : mp_max, mp_min
   USE mp_global,  ONLY : group, inter_pool_comm 
@@ -253,7 +253,7 @@ END SUBROUTINE print_this_clock
 !
 FUNCTION get_clock( label )
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE mytime
   USE mp,         ONLY : mp_max, mp_min
   USE mp_global,  ONLY : group, inter_pool_comm 

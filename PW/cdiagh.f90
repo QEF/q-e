@@ -14,7 +14,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   ! ... calculates all the eigenvalues and eigenvectors of a complex
   ! ... hermitean matrix H . On output, the matrix is unchanged
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
 #if defined (__PARA)
   USE para,       ONLY : me, mypool, npool
 #endif

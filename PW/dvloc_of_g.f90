@@ -13,7 +13,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
 !----------------------------------------------------------------------
 !
 #include "machine.h"
-use parameters
+USE kinds
 implicit none
 !
 !    first the dummy variables

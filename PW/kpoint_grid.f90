@@ -13,7 +13,7 @@ subroutine kpoint_grid &
 !  Automatic generation of a uniform grid of k-points
 !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   ! INPUT:
   integer nrot, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3
@@ -145,7 +145,7 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   ! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994)
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   ! INPUT:
   integer nks, nsym, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3, ntetra

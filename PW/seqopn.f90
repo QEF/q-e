@@ -13,7 +13,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   !     this routine opens a file in tmp_dir for sequential I/O access
   !     If appropriate, the node number is added to the file name
   !
-  use parameters
+  USE kinds
   use io_files
   implicit none
   !

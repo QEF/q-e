@@ -10,7 +10,7 @@ function scnds ()
   ! Returns elapsed CPU time in seconds since its first call
   ! uses standard f90 call (with several exceptions)
   !
-  use parameters
+  use kinds, ONLY: DP
   implicit none
   real(kind=DP) :: scnds
   !

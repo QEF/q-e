@@ -14,7 +14,7 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, nkstot, xk, g, ngm, &
   !
   ! Find number of plane waves for each k-point
   !
-  use parameters
+  USE kinds
   implicit none
   ! input
   integer :: nks, nkstot, ngm

@@ -18,7 +18,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !     iflag=3: calculates the integral of local dos from emin to emax
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   USE io_files, ONLY: iunwfc, nwordwfc
   USE wavefunctions_module,  ONLY: evc, psic

@@ -11,7 +11,7 @@ function dmxc (rho)
   !
   !  derivative of the xc potential with respect to the local density
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   use funct
   implicit none
   ! I/O variables
@@ -78,7 +78,7 @@ function dpz (rs, iflg)
 !  derivative of the correlation potential with respect to the local den
 !  Perdew and Zunger parameterization of the C.A. functional
 !
-use parameters, only : DP
+USE kinds, only : DP
 implicit none
 real(kind=DP) :: rs, dpz
                              ! input : the value of rs

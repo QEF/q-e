@@ -7,7 +7,7 @@ subroutine zstar_eu_us
   !
 #include "machine.h"
 
-  use parameters, only : DP
+  USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
   use pwcom

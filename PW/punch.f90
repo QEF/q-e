@@ -21,7 +21,7 @@ subroutine punch
   USE klist, ONLY: nks, nkstot
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
-  USE varie, ONLY: reduce_io, lscf
+  USE control_flags, ONLY: reduce_io, lscf
   USE wvfct, ONLY: et, wg, nbnd
   USE wavefunctions_module, ONLY : evc
   USE io_files, ONLY: prefix, iunpun, iunwfc, nwordwfc
@@ -98,7 +98,7 @@ subroutine punch
   USE ktetra, ONLY: ltetra, tetra
   USE lsda_mod, ONLY: nspin, isk
   USE scf, ONLY: rho
-  USE varie, ONLY: reduce_io, lscf
+  USE control_flags, ONLY: reduce_io, lscf
   USE wvfct, ONLY: et, wg, nbnd
   USE wavefunctions_module, ONLY : evc
   USE io_files, ONLY: prefix, iunpun, iunwfc, nwordwfc

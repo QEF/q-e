@@ -13,7 +13,15 @@ subroutine gen_us_dj (ik, dvkb)
   !   the derivative of the Bessel functions
   !
 #include "machine.h"
-  use pwcom
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ndm, nbrx
+  USE constants, ONLY: tpi
+  USE basis, ONLY: nat, ntyp, tau, ityp
+  USE brilz, ONLY: tpiba
+  USE klist, ONLY: xk
+  USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE wvfct, ONLY: npw, npwx, igk
+  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtom, tab
   implicit none
   !
   integer :: ik

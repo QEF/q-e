@@ -13,7 +13,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... this is a wrapper to specific calls
   !
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
@@ -24,7 +24,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                                    nr1, nr2, nr3  
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
-  USE varie,                ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
+  USE control_flags,                ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
                                    diis_ethr_cg, isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot

@@ -12,7 +12,7 @@ subroutine drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, b_nlcc, &
 !-----------------------------------------------------------------------
 !
 #include "machine.h"
-use parameters
+USE kinds
 implicit none
 !
 !    first the dummy variables

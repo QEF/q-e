@@ -16,7 +16,7 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !     we set them to the displacement of a single atom in one direction
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !   first the dummy variables

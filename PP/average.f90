@@ -39,7 +39,7 @@ program average
   !
 #include "machine.h"
   USE io_global,      ONLY : stdout
-  use parameters,     only : DP
+  USE kinds,     only : DP
   use pwcom
   USE wavefunctions_module,  ONLY : psic
   use io_files,       only : nd_nmbr, iunpun

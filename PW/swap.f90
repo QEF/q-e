@@ -10,7 +10,7 @@ subroutine swap (n, x, x1)
   !-----------------------------------------------------------------------
   ! swap array x with array x1
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !   I/O variables

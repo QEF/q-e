@@ -19,7 +19,7 @@ subroutine addusddense (drhoscf, dbecsum)
 
   use pwcom
   use phcom
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !   the dummy variables

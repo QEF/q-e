@@ -20,7 +20,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   !
   !  input-output variables
   !
-  use parameters
+  USE kinds
   implicit none
 
   integer :: nat, s (3, 3, 48), irt (48, nat), nrot, modenum

@@ -14,7 +14,7 @@ subroutine dvpsi_e(kpoint,ipol)
   ! Requires on input: vkb, evc, igk
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE rbecmod, ONLY: becp, becp_

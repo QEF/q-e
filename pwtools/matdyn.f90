@@ -887,7 +887,7 @@ end subroutine gen_qpoints
 subroutine dos_t (et, nspin, nbndx, nbnd, nks, ntetra, tetra, e, dost)
   !------------------------------------------------------------------
   !
-  use parameters, only : DP
+  use kinds, only : DP
   implicit none  
   integer :: nspin, nbndx, nbnd, nks, ntetra, tetra (4, ntetra)  
 

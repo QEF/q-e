@@ -39,7 +39,7 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   !
   ! This  driver work just if npool=1
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n, ilda, ildb, ildz
   ! input: size of the matrix to diagonalize

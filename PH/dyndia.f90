@@ -17,7 +17,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, &
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !   first the dummy variables

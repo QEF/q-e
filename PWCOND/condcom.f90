@@ -12,7 +12,7 @@
 !
 !
 MODULE zdir_cond
-  USE parameters
+  USE kinds
   !
   ! ... description of z direction
   !
@@ -36,7 +36,7 @@ END MODULE zdir_cond
 !
 !
 MODULE perp_cond
-  USE parameters
+  USE kinds
   !
   ! ... description of the direction perpendicular to z (XY)
   !
@@ -63,7 +63,7 @@ END MODULE perp_cond
 !
 !
 MODULE eigen_cond
-  USE parameters
+  USE kinds
   !
   ! ... Eigenvalue equation for local potential
   !
@@ -81,7 +81,7 @@ END MODULE eigen_cond
 !
 !
 MODULE control_cond
-  USE parameters
+  USE kinds
   !
   ! ... control of the run
   !
@@ -113,7 +113,7 @@ END MODULE control_cond
 !
 !         
 MODULE cross_cond
-  USE parameters
+  USE kinds
   !   
   ! ... description of nonlocal orbitals 
   !
@@ -144,7 +144,7 @@ END MODULE cross_cond
 !
 !
 MODULE scattnl_cond
-  USE parameters
+  USE kinds
   !
   ! ... The variables computed by scatter_forw
   !
@@ -166,7 +166,7 @@ END MODULE scattnl_cond
 !
 !
 MODULE cb_cond
-  USE parameters
+  USE kinds
   !
   ! ... Some variables of CBS for the tips needed for matching
   !

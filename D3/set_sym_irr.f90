@@ -30,7 +30,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !     April 1997: parallel stuff added (SdG)
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
 #ifdef __PARA
   use para, only: me
   use mp, only: mp_bcast

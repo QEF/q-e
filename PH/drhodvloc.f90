@@ -17,7 +17,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

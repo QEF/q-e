@@ -16,7 +16,7 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
 !  its subgroups.
 !
 #include "machine.h"
-use parameters, only : DP
+USE kinds, only : DP
 implicit none
 !
 !     first the dummy variables

@@ -18,7 +18,7 @@ subroutine extreme (ps, iflag)
 #include "machine.h"
 #ifdef __PARA
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   include 'mpif.h'
 

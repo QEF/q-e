@@ -9,7 +9,7 @@ function rndm ()
   !
   !   RANDOM NUMBER GENERATOR equivalent to ran1 of Num.Rec.
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: irand
   common/random_number/ irand
@@ -41,7 +41,7 @@ function rndx (irand)
   !
   !   RANDOM NUMBER GENERATOR equivalent to ran0 of Num.Rec.
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: im, ia, iq, ir, irand, is, it
   real(kind=DP) :: rndx, obm
@@ -73,7 +73,7 @@ subroutine set_rndm_seed(iseed)
 !
 ! this subroutine initialize the random number with the given seed
 !
-  use parameters
+  USE kinds
   implicit none
   integer :: irand,iseed
   common/random_number/ irand

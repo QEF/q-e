@@ -13,7 +13,7 @@ subroutine poolrecover (vec, length, nkstot, nks)
 #ifdef __PARA
 #include "machine.h"
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   include 'mpif.h'

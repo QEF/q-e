@@ -13,7 +13,7 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
 ! It works for forward iterative process. 
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: norbf, n2d, norbnow, lam, n, n1, iorb, iorb1, info
   integer, allocatable :: ipiv(:) 
@@ -113,7 +113,7 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow)
 ! It works for backward iterative process.
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none 
 
   integer :: norbf, n2d, norbnow, lam, n, n1, iorb, info

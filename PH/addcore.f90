@@ -13,7 +13,7 @@ subroutine addcore (mode, drhoc)
   !
 #include "machine.h"
 
-  use parameters, only : DP
+  USE kinds, only : DP
   use basis, only: nat, ityp
   use brilz, only: tpiba
   use gvect, only: ngm, nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &

@@ -13,7 +13,7 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e)
   !     This function computes the number of states under a given energy e
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   real(kind=DP) :: sumkg

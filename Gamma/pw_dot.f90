@@ -13,7 +13,7 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   !  using half G vectors or half PWs
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use gvect, only: gstart
   implicit none
   ! input

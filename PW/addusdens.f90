@@ -14,7 +14,7 @@ subroutine addusdens
   !  the US augmentation.
   !
 #include "machine.h"
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE basis, ONLY : nat, ntyp, ityp
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3

@@ -29,7 +29,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    vout      vout-vin
   !    conv      true if dr2.le.tr2
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !   First the dummy variables

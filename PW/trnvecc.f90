@@ -14,7 +14,7 @@ subroutine trnvecc (u, at, bg, iflg)
   !  from crystal to cartesian axis (iflag.gt.0) and viceversa (iflag.le.0
   !
 #include"machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: iflg

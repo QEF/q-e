@@ -301,7 +301,7 @@ contains
   SUBROUTINE p_err_I(a,b,n)
       USE mp
       USE mp_global, ONLY: mpime
-      USE parameters
+      USE kinds
 
       IMPLICIT NONE
 
@@ -330,7 +330,7 @@ contains
 
       USE mp
       USE mp_global, ONLY: mpime
-      USE parameters
+      USE kinds
 
       IMPLICIT NONE
 
@@ -360,7 +360,7 @@ contains
 
       USE mp
       USE mp_global, ONLY: mpime
-      USE parameters
+      USE kinds
 
       IMPLICIT NONE
 
@@ -387,7 +387,7 @@ contains
 
       USE mp
       USE mp_global, ONLY: mpime
-      USE parameters
+      USE kinds
 
       IMPLICIT NONE
 

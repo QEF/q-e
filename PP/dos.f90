@@ -27,7 +27,7 @@ program dos
   !
   USE io_global,  ONLY : stdout, ionode_id
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
   USE ktetra,     ONLY : ntetra, tetra, ltetra
   USE wvfct,      ONLY : nbnd, et

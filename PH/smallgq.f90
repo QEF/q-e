@@ -24,7 +24,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   !
   !  The dummy variables
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   real(kind=DP) :: bg (3, 3), at (3, 3), xq (3), gi (3, 48), gimq (3)

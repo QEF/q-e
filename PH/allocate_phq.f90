@@ -17,7 +17,7 @@ subroutine allocate_phq
 
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use el_phon
   implicit none

@@ -13,7 +13,7 @@ SUBROUTINE wfcinit()
   ! ... This routine computes an estimate of the starting wavefunctions
   ! ... from superposition of atomic wavefunctions.
   !
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only   
   USE constants,            ONLY : tpi, rytoev
@@ -22,7 +22,7 @@ SUBROUTINE wfcinit()
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE varie,                ONLY : isolve, iprint, reduce_io
+  USE control_flags,                ONLY : isolve, iprint, reduce_io
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et
   USE us,                   ONLY : nkb, vkb, okvan
   USE ldaU,                 ONLY : swfcatom, lda_plus_u

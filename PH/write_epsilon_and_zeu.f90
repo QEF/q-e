@@ -9,7 +9,7 @@
 subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   ! input variables
   integer :: iudyn, nat

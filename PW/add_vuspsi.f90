@@ -24,7 +24,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   !     hpsi  V_US*psi is added to hpsi
   !
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE basis,      ONLY : nat, ntyp, ityp
   USE lsda_mod,   ONLY : current_spin
   USE wvfct,      ONLY : gamma_only

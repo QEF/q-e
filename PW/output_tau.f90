@@ -10,7 +10,7 @@ subroutine output_tau (plot_lattice)
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout
-  use parameters, only: DP
+  USE kinds, only: DP
   use constants, only: bohr_radius_angs
   use brilz, only: alat, at, bg
   use basis, only: nat, tau, atomic_positions, ityp, atm

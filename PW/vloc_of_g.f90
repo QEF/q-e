@@ -24,7 +24,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
   !    numerical form, expressed in Ry units.
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !    first the dummy variables

@@ -18,7 +18,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer npw, npwx, nbnd, nbndx, niter, iter
   real(kind=DP) :: diagonal(npw), e(nbnd), overlap(nbndx,nbnd)

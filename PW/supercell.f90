@@ -10,7 +10,7 @@
 MODULE supercell
   !---------------------------------------------------------------------------
   !
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   USE brilz,       ONLY : alat, at
   !
   IMPLICIT NONE

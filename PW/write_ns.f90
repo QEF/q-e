@@ -9,7 +9,7 @@
 subroutine write_ns
   !-----------------------------------------------------------------------
 
-  USE parameters, only : DP
+  USE kinds, only : DP
   USE constants, ONLY : rytoev
   USE basis, ONLY : nat, ntyp, ityp
   USE lsda_mod, ONLY : nspin

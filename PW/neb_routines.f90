@@ -15,7 +15,7 @@ MODULE neb_routines
   ! ... Written by Carlo Sbraccia ( 04-11-2003 )
   !
   USE io_global,  ONLY :  stdout
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   USE constants,  ONLY :  AU, BOHR_RADIUS_ANGS, eV_to_kelvin
   !
   PRIVATE
@@ -29,7 +29,7 @@ MODULE neb_routines
     SUBROUTINE initialize_neb()
       !-----------------------------------------------------------------------
       !
-      USE varie,            ONLY : istep
+      USE control_flags,            ONLY : istep
       USE input_parameters, ONLY : pos, nat, restart_mode, calculation, &
                                    minimization_scheme, climbing
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
@@ -221,7 +221,7 @@ MODULE neb_routines
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE varie,          ONLY : time_max, istep, nstep
+      USE control_flags,          ONLY : time_max, istep, nstep
       USE io_files,       ONLY : iunneb, iunexit, exit_file     
       USE formats,        ONLY : run_output, run_output_T_const
       USE neb_variables,  ONLY : num_of_images, dim, pos, PES, error,       &
@@ -868,7 +868,7 @@ MODULE neb_routines
       !
       USE input_parameters,  ONLY : if_pos, sp_pos, startingwfc, startingpot
       USE constants,         ONLY : e2
-      USE varie,             ONLY : time_max, conv_elec, ethr
+      USE control_flags,             ONLY : time_max, conv_elec, ethr
       USE brilz,             ONLY : alat
       USE basis,             ONLY : tau, ityp, nat, &
                                     startingwfc_ => startingwfc, &

@@ -1,6 +1,6 @@
 subroutine plot_whole_cell (alat, at, nat, tau, atm, ityp, &
      nr1, nr2, nr3, nrx1, nrx2, nrx3, rho, output_format, ounit)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer          :: nat, ityp (nat), output_format, ounit
   integer          :: nrx1, nrx2, nrx3, nr1, nr2, nr3

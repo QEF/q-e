@@ -14,17 +14,16 @@ SUBROUTINE force_us( forcenl )
   ! ... nonlocal potential contribution to forces
   ! ... wrapper
   !
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE wvfct,                ONLY : gamma_only
   USE brilz,                ONLY : at, bg, tpiba
   USE basis,                ONLY : nat, ntyp, ityp
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g
-  USE us,                   ONLY : nkb, vkb, nh, qq, deeq, tvanp
+  USE us,                   ONLY : nkb, vkb, nh, qq, deeq, tvanp, newpseudo
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE symme,                ONLY : irt, s, nsym
-  USE varie,                ONLY : newpseudo
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   !

@@ -9,7 +9,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
 !
 ! It solves GEP: A X = lambda B X using LAPACK routines 
 !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none  
 
   integer :: i, n, info, lwork

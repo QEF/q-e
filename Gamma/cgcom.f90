@@ -47,7 +47,7 @@ END MODULE flags
 !
 !
 MODULE dielectric
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -60,7 +60,7 @@ END MODULE dielectric
 !
 !
 MODULE modes1
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -74,7 +74,7 @@ END MODULE modes1
 !
 !
 MODULE cgconv
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -87,7 +87,7 @@ END MODULE cgconv
 !
 !
 MODULE AA
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -101,7 +101,7 @@ END MODULE AA
 !
 !
 MODULE dmu
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -117,7 +117,7 @@ END MODULE dmu
 !
 !
 MODULE phon
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -145,7 +145,7 @@ END MODULE symmetry
 !
 !
 MODULE diffs
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !

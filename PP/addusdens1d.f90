@@ -16,7 +16,7 @@ subroutine addusdens1d (plan, prho)
   !  of the charge density.
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   !
   !     here the local variables

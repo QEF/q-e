@@ -17,7 +17,7 @@ subroutine gather (f_in, f_out)
 #ifdef __PARA
 #include "machine.h"
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   real (kind=DP) :: f_in (nxx), f_out ( * )

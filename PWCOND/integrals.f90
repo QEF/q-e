@@ -10,7 +10,7 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
 ! This function computes the integral of beta function with the
 ! exponential
 !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer ::  &
       ik,     &        ! counter on slab points
@@ -48,7 +48,7 @@ function int2d(fun1, fun2, zk, dz1, nz1, tpiba)
 ! This function computes the 2D integrals of beta functions with
 ! exponential
 !
-  use parameters, only : DP 
+  USE kinds, only : DP 
   implicit none
   integer ::    &
      nz1,       &  ! number of points for the slab integration 

@@ -16,7 +16,7 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   !
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    The dummy variables

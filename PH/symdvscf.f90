@@ -15,7 +15,7 @@ subroutine symdvscf (nper, irr, dvtosym)
 #include"machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

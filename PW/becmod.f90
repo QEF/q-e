@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 !
 MODULE becmod
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   SAVE
   !

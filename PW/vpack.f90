@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine vpack (ndim, ndimx, nspin, vin, vout, iflag)
-  use parameters
+  USE kinds
   implicit none
   integer :: ndim, ndimx, nspin, iflag, n
 

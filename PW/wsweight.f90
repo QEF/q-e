@@ -3,7 +3,7 @@
 subroutine wsinit(rws,nrwsx,nrws,atw)
 !-----------------------------------------------------------------------
 !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer i, ii, ir, jr, kr, nrws, nrwsx, nx
   real(kind=dp) rt, eps, rws(0:3,nrwsx), atw(3,3)
@@ -31,7 +31,7 @@ end subroutine wsinit
 function wsweight(r,rws,nrws)
 !-----------------------------------------------------------------------
 !
-  use parameters, only : dp
+  USE kinds, only : dp
   implicit none
   integer ir, nreq, nrws
   real(kind=dp) r(3), rrt, ck, eps, rws(0:3,nrws), wsweight

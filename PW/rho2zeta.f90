@@ -14,7 +14,7 @@ subroutine rho2zeta (rho, rho_core, nrxx, nspin, iop)
   ! if (iopi.eq.-1) do the opposit transformation
   !
   USE io_global,  ONLY : stdout
-  use parameters
+  USE kinds
   implicit none
   integer :: iop, nspin, nrxx, ir
   ! the input option

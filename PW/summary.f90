@@ -18,7 +18,7 @@ subroutine summary
   !
 #include "machine.h"
   USE io_global,  ONLY :  stdout
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE constants, ONLY: amconv
   USE atom
   USE brilz
@@ -34,7 +34,7 @@ subroutine summary
   USE nl_c_c, ONLY: nlcc, a_nlcc, b_nlcc, alpha_nlcc
   USE pseud, ONLY: zv, zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc
   USE symme, ONLY: nsym, invsym, s, ftau
-  USE varie
+  USE control_flags
   USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll
   USE funct
   implicit none

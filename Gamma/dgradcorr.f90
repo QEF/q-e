@@ -14,7 +14,7 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
   !  ADD Gradient Correction contibution to screening potential
   !  phonon calculation, half G-vectors
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   !
@@ -158,7 +158,7 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      a, ngm, g, nl, nlm, alat, ga)
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is G-space)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
         nlm(ngm)
@@ -219,7 +219,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      a, ngm, g, nl, nlm, alat, da)
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
         nlm(ngm)

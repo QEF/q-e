@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 module pseudodata
-use parameters 
+  USE kinds, ONLY: DP
+  USE parameters , ONLY: nchix
 !  c
 !  c The redundant data of KKRJ3 files to be written in UPF header
 !  c

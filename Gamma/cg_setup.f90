@@ -11,7 +11,7 @@ subroutine cg_setup
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   use io_files, only: prefix, iunpun, iunres

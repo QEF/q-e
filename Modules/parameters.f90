@@ -24,7 +24,6 @@ MODULE parameters
        lmaxx  = 3,     &! max non local angular momentum       
        nchix  = 6,     &! max number of atomic wavefunctions per atom
        ndm    = 2000    ! max number of points in the atomic radial mesh
-  INTEGER, PARAMETER :: DP = kind(0.0d0)
 
   INTEGER, PARAMETER :: &
        nbrx = 8,           &! max number of beta functions

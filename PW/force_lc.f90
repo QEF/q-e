@@ -13,7 +13,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !   first the dummy variables

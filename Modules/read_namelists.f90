@@ -14,7 +14,7 @@ MODULE read_namelists_module
   !  --------------------------------------------------
   !
   USE kinds
-  USE parameters
+  USE kinds
   USE input_parameters
   USE constants, ONLY: factem, kb_au, au_kb, k_boltzman_au, angstrom_au, &
                        uma_au, pi

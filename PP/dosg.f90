@@ -10,7 +10,7 @@
 subroutine dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
   !--------------------------------------------------------------------
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nspin, nks, nbnd, ngauss
 

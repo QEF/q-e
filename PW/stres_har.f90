@@ -11,7 +11,7 @@ subroutine stres_har (sigmahar)
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE constants, ONLY : e2, fpi
   USE brilz, ONLY: omega, tpiba2
   USE ener, ONLY: ehart

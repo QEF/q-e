@@ -10,7 +10,7 @@ subroutine divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
   !-----------------------------------------------------------------------
 #include "machine.h"
 #ifdef __PARA
-  use parameters, only : DP
+  USE kinds, only : DP
   use para
   implicit none
   !

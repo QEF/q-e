@@ -15,7 +15,7 @@ subroutine set_rhoc
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE atom, ONLY: rho_atc, numeric, msh, r, rab
   USE basis, ONLY: ntyp
   USE brilz, ONLY: omega, tpiba2

@@ -17,7 +17,7 @@ logical function lchk_tauxk (nvec, vec, trmat)
   !
 #include "machine.h"
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the dummy variables

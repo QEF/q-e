@@ -8,7 +8,7 @@
 
 subroutine delta_e (nr1, nr2, nr3, nrxx, rho, v_in, v_out, omega, &
  de, deband, nspin)
-use parameters
+USE kinds
 implicit none
 
 integer :: nspin, nr1, nr2, nr3, nrxx, i, ipol

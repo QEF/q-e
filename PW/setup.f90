@@ -39,7 +39,8 @@ SUBROUTINE setup()
   !  + LDA+U-related quantities.
   !
   !
-  USE parameters,  ONLY :  DP, npsx, nchix, npk
+  USE kinds,  ONLY :  DP
+  USE parameters,  ONLY :  npsx, nchix, npk
   USE io_global,   ONLY :  stdout
   USE constants,   ONLY :  pi
   USE brilz,       ONLY :  at, bg, alat, tpiba, tpiba2, ibrav, symm_type
@@ -55,12 +56,12 @@ SUBROUTINE setup()
   USE atom,        ONLY :  r, oc, nchi, lchi, mesh, msh
   USE pseud,       ONLY :  zv, zp, nlc, nnl, bhstype, alps, aps, lmax
   USE wvfct,       ONLY :  nbnd, nbndx
-  USE varie,       ONLY :  tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
+  USE control_flags,       ONLY :  tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
                            lphonon, david, isolve, imix, niter, noinv,   &
-                           newpseudo, restart, nosym, modenum
+                           restart, nosym, modenum
   USE relax,       ONLY :  dtau_ref, starting_diag_threshold
   USE cellmd,      ONLY :  calc
-  USE us,          ONLY :  tvanp, okvan
+  USE us,          ONLY :  tvanp, okvan, newpseudo
   USE ldaU,        ONLY :  d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
                            Hubbard_alpha, Hubbard_lmax
   USE bp,          ONLY :  gdir, lberry, nppstr
@@ -480,7 +481,7 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
   !
   ! ... Find max number of bands needed
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !

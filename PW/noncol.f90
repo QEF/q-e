@@ -8,7 +8,8 @@
 !----------------------------------------------------------------------------
 !
 MODULE noncollin_module
-  USE parameters, ONLY :  DP, ntypx
+  USE kinds, ONLY : DP
+  USE parameters, ONLY : ntypx
   !
   SAVE
   !

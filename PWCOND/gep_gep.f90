@@ -3,7 +3,7 @@ subroutine gep_gep(n, amt, bmt, eigen, veigen)
 ! It solves GEP: A X = lambda B X using routines in GEP.f
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   use cond, only: delgep
 implicit none  
   integer :: i, n

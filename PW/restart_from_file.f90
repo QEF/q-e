@@ -10,7 +10,7 @@ subroutine restart_from_file
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE io_files,  ONLY : iunres
-  USE varie, ONLY: restart
+  USE control_flags, ONLY: restart
   implicit none
 
   character :: where * 20  ! parameter indicating from where to restart

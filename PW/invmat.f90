@@ -12,7 +12,7 @@ subroutine invmat (a, a_inv, n)
   ! computes the inverse "a_inv" of matrix "a", both dimensioned (n,n)
   ! matrix "a" is unchanged on output - LAPACK
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: n
   real(kind=DP) :: a (n, n), a_inv (n, n)

@@ -28,7 +28,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   !
   !
 #include "machine.h"
-  use parameters, only  : DP
+  USE kinds, only  : DP
   implicit none
   !
   !    first the dummy variables

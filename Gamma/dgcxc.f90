@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
 !-----------------------------------------------------------------------
-use parameters, only : DP
+USE kinds, only : DP
 implicit none
 real(kind=DP) :: r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc
 real(kind=DP) :: dr, s, ds

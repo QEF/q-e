@@ -9,7 +9,7 @@
 subroutine write_matrix (alpha, wdyn, nat)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: i, j, na, nb, nat
   complex(kind=DP) :: wdyn (3, 3, nat, nat)

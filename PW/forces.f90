@@ -21,7 +21,7 @@ SUBROUTINE forces
   !    e)   force_corr  correction term for incomplete self-consistency
   !
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE io_global,  ONLY : stdout
   USE brilz,      ONLY : at, bg, alat, omega  
   USE basis,      ONLY : nat, ntyp, ityp, tau

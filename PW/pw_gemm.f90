@@ -18,7 +18,7 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !    pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, psi, npwx, bec, nkb )  
   !
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE gvect,      ONLY : gstart
   !
   IMPLICIT NONE

@@ -14,7 +14,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !   and mode displacements in "dynout". dyn is unchanged on output.
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   USE io_global,  ONLY : stdout
   implicit none
   integer :: nmodes, nat3, nat,ityp(nat), iudyn

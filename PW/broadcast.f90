@@ -13,7 +13,7 @@ subroutine broadcast (ndata, data)
   ! this routine broadcasts the real*8 vector 'data' from the first proces
   ! of each pool to all the other processors of the pool
   !
-  use parameters, only : DP
+  USE kinds, only : DP
 #ifdef __PARA
   use para
 #endif

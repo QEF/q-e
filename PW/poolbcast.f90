@@ -13,7 +13,7 @@ subroutine poolbcast (ndata, data)
   ! this routine broadcasts the (distributed) real*8 vector 'data'
   ! from each node of the first pool to each node of all other pools
   !
-  use parameters,  only : DP
+  USE kinds,  only : DP
 #ifdef __PARA
   use para
 #endif

@@ -8,10 +8,10 @@
 !-----------------------------------------------------------------------
 subroutine save_in_cbands (iter, ik_, dr2)
   !-----------------------------------------------------------------------
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE io_files, ONLY: iunres
   USE klist, ONLY: nks
-  USE varie, ONLY: reduce_io, tr2, ethr
+  USE control_flags, ONLY: reduce_io, tr2, ethr
   USE wvfct, ONLY: nbnd, et
    implicit none
   character :: where * 20

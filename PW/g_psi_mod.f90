@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 module g_psi_mod
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   ! These are the variables needed in g_psi
   real(kind=DP), allocatable :: h_diag (:),& ! diagonal part of the Hamiltonian

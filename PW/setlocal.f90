@@ -13,7 +13,7 @@ subroutine setlocal
   !    This routine computes the local potential in real space vltot(ir)
   !
 #include "machine.h"
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE basis,  ONLY: ntyp
   USE extfield, ONLY: tefield, dipfield
   USE gvect,  ONLY: igtongl

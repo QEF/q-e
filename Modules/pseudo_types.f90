@@ -14,8 +14,8 @@
 !  this module contains the definitions of several TYPE structures,
 !  together with their allocation/deallocation routines
 
-        USE kinds
-        USE parameters
+        USE kinds, ONLY: dbl
+        USE parameters, ONLY: mmaxx, cp_lmax
 
         IMPLICIT NONE
         SAVE

@@ -14,7 +14,7 @@ subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #include "machine.h"
 #ifdef __PARA
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
 

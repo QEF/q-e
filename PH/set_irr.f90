@@ -32,7 +32,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 #include "machine.h"
 
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
 #ifdef __PARA
   use mp, only: mp_bcast
 #endif

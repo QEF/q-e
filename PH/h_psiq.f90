@@ -20,7 +20,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   use pwcom
   USE wavefunctions_module,  ONLY: psic
   use becmod
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
   !

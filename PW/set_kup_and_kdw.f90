@@ -17,7 +17,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   !                those in the second (nks/2) one correspond to down spin
   !                the weights wk are halved !
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   ! I/O variables first

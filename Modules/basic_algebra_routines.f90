@@ -29,7 +29,7 @@ MODULE basic_algebra_routines
   !  identity( N )	the identity matrix in dimension N
   !
   !
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   !
   IMPLICIT NONE
   !

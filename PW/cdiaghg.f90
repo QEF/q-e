@@ -19,7 +19,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
   !   define HAS_ZHEGVX in the preprocessing options to use ZHEGVX
   !-----------------------------------------------------------------------
 #include "machine.h"
-  use parameters
+  USE kinds
 #ifdef __PARA
   use para
 #endif

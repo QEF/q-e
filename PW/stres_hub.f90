@@ -15,7 +15,7 @@ subroutine stres_hub ( sigmah )
    ! the quantity -(1/\Omega)dE_{h}/d\epsilon_{i,j}
    !
 #include "machine.h"
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE basis, ONLY: nat, ityp
   USE brilz, ONLY: omega, at, bg
   USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns

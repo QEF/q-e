@@ -13,7 +13,7 @@ subroutine h_1psi (lda, n, psi, hpsi, spsi)
   !    This routine applies the Hamiltonian and the S matrix
   !    to a vector psi and puts the result in hpsi and spsi
   !    Wrapper routine - calls h_psi and s_psi
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   !
   integer :: lda, n

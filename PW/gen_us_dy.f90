@@ -13,8 +13,16 @@ subroutine gen_us_dy (ik, u, dvkb)
   !  derivative of the spherical harmonics projected on vector u
   !
 #include "machine.h"
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ndm, nbrx
   USE io_global,  ONLY :  stdout
-  use pwcom
+  USE constants, ONLY: tpi
+  USE basis, ONLY: nat, ntyp, tau, ityp
+  USE brilz, ONLY: tpiba
+  USE klist, ONLY: xk
+  USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE wvfct, ONLY: npw, npwx, igk
+  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtom, tab
   implicit none
   !
   integer :: ik

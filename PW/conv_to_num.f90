@@ -13,7 +13,7 @@ subroutine convert_to_num (npseu, numeric, ndm, mesh, r, lmaxx, &
   !
   !   Convert PPs from analytical to numerical form
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    first the dummy variables

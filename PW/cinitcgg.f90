@@ -17,7 +17,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, evc, e)
   !   Calls h_1psi to calculate H|psi>, S|psi
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   integer :: npw, npwx, nstart, nbnd

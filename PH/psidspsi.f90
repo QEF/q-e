@@ -18,7 +18,7 @@ subroutine psidspsi (ik, uact, pdsp)
 #include "machine.h"
 
   USE pwcom
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE wavefunctions_module,    ONLY : evc
   USE phcom
   implicit none

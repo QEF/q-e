@@ -12,7 +12,7 @@ subroutine set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   ! adding the (spin dependent) scf (H+xc) part and the sum of all the loc
   ! pseudopotential contributions.
   !
-  use parameters
+  USE kinds
   implicit none
 
   integer :: nspin, nrxx, ir, is

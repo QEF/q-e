@@ -21,7 +21,10 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   !     here the dummy variables
   !
 #include "machine.h"
-  use pwcom
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: nbrx
+  USE gvect, ONLY: g
+  USE us, ONLY: lqx, dq, nlx, indv, nhtol, nhtom, lpx, lpl, ap, qrad
   implicit none
   integer :: ngy, ih, jh, np, ipol
   ! input: the number of G vectors to compute

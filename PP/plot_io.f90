@@ -19,7 +19,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   !                read are allocated with the correct dimensions!)
   !
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   character (len=*) :: filplot
   character (len=75) :: title

@@ -15,7 +15,7 @@ logical function eqvect (x, y, f)
   !
   !   Last revision  June 1997 (PG+SdG)
   !
-  use parameters
+  USE kinds
   implicit none
   real(kind=DP) :: x (3), y (3), f (3)
   ! input: input vector

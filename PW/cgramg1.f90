@@ -16,7 +16,7 @@ subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
   !      It updates also the Hamiltonian so that it contains the new hpsi.
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the dummy variables

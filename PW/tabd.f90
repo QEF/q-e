@@ -14,7 +14,7 @@ subroutine tabd (nt, occ_loc)
   ! of localized electrons in transition metals or rare earths
   ! (PPs usually are built on non physical configurations)
   !
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE char, ONLY: psd
   implicit none
   real(kind=DP) :: occ_loc

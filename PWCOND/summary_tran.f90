@@ -9,7 +9,7 @@ subroutine summary_tran(tran_file, nenergy, earr, tran_tot)
 !
 ! It writes transmission coefficients onto the file tran_file
 !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   character(len=80) :: tran_file

@@ -19,7 +19,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !   first the dummy variables

@@ -12,7 +12,7 @@ subroutine kbloch(ntot, val)
 ! The result is in the units (2\pi/d)
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   use constants, only : tpi
   implicit none
 

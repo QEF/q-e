@@ -15,7 +15,7 @@ subroutine multable (nsym, s, table)
   !
   !  table(n,m) = index( s(n)*s(m) )
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !    here the dummy variables

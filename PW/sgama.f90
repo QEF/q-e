@@ -36,7 +36,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !     linear-response preparation run.
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !    First the I/O variables

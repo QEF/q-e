@@ -13,12 +13,11 @@ subroutine usnldiag (h_diag, s_diag)
   !    add nonlocal pseudopotential term to diagonal part of Hamiltonian
   !    compute the diagonal part of the S matrix
   !
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE basis,  ONLY: ntyp, nat, ityp
   USE wvfct, ONLY: npw
   USE lsda_mod, ONLY: current_spin 
-  USE us,  ONLY: nh, deeq, vkb, qq, tvanp
-  USE varie, ONLY: newpseudo
+  USE us,  ONLY: nh, deeq, vkb, qq, tvanp, newpseudo
   implicit none
   !
   !    here the dummy variables

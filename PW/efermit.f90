@@ -14,7 +14,7 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
   !     Finds the Fermi energy - tetrahedron method (Bloechl)
   !
   USE io_global, ONLY : stdout
-  use parameters
+  USE kinds
   implicit none
   integer :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
   ! input: the number of k points

@@ -12,7 +12,7 @@ subroutine symz (phi, nsym, s, nat, irt)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: nsym, s (3, 3, 48), nat, irt (48, nat)

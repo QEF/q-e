@@ -18,7 +18,7 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
 !     revised layout 2 may 1995 by Andrea Dal Corso
 !
 #include "machine.h"
-use parameters
+USE kinds
 implicit none
 !
 !     first the dummy variables

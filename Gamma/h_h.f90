@@ -11,7 +11,7 @@ subroutine H_h(e,h,Ah)
   !-----------------------------------------------------------------------
 #include "machine.h"
   !
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   use rbecmod, only: becp
   use cgcom

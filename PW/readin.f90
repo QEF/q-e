@@ -13,9 +13,8 @@ subroutine readpp
   !
 #include "machine.h"
   USE atom, ONLY: numeric, xmin, dx
-  USE us, ONLY: tvanp, iver
+  USE us, ONLY: tvanp, iver, newpseudo
   USE basis, ONLY: ntyp
-  USE varie, ONLY: newpseudo
   USE funct, ONLY: iexch, icorr, igcx, igcc
   USE io_files, ONLY: pseudo_dir, psfile
   !

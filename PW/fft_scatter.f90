@@ -37,7 +37,7 @@ subroutine fft_scatter1 (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
 #include "machine.h"
 #ifdef __PARA
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   include 'mpif.h'

@@ -14,7 +14,8 @@ subroutine readnewvan (is, iunps)
   !     pseudopotential from the file produced by the atomic program.
   !     It is compatible only with the ld1 atomic code
   !
-  use parameters, only: dp, nchix, lmaxx, nbrx, ndm, npsx, lqmax
+  USE kinds, only: dp
+  USE parameters, ONLY: nchix, lmaxx, nbrx, ndm, npsx, lqmax
   use constants, only: fpi
   use atom,  only: zmesh, mesh, xmin, dx, r, rab, vnl, chi, oc, nchi, &
        lchi, rho_at, rho_atc

@@ -38,7 +38,7 @@ SUBROUTINE update_pot()
   !                                    + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-  USE varie, ONLY : lbfgs, lneb, order
+  USE control_flags, ONLY : lbfgs, lneb, order
   !
   IMPLICIT NONE
   !
@@ -70,14 +70,14 @@ SUBROUTINE extrapolate_charge()
   !----------------------------------------------------------------------------
   !
   USE io_global,   ONLY :  stdout
-  USE parameters,  ONLY :  DP
+  USE kinds,  ONLY :  DP
   USE brilz,       ONLY :  omega, bg, alat
   USE basis,       ONLY :  nat, tau, ntyp, ityp
   USE gvect,       ONLY :  nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
                            eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
   USE lsda_mod,    ONLY :  lsda, nspin
   USE scf,         ONLY :  rho, rho_core, vr
-  USE varie,       ONLY :  lbfgs, istep, alpha0, beta0, imix
+  USE control_flags,       ONLY :  lbfgs, istep, alpha0, beta0, imix
   USE ener,        ONLY :  ehart, etxc, vtxc
   USE cellmd,      ONLY :  lmovecell, omega_old
   USE vlocal,      ONLY :  strf
@@ -201,9 +201,9 @@ SUBROUTINE extrapolate_wfcs()
 #define ZERO (0.D0,0.D0)  
   !
   USE io_global,            ONLY : stdout
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE klist,                ONLY : nks
-  USE varie,                ONLY : isolve, istep, order, alpha0, beta0
+  USE control_flags,                ONLY : isolve, istep, order, alpha0, beta0
   USE basis,                ONLY : startingwfc
   USE wvfct,                ONLY : nbnd, npw, npwx, igk
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &

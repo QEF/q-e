@@ -103,7 +103,7 @@ end subroutine cg_readin
 subroutine cg_readmodes(iunit)
   !-----------------------------------------------------------------------
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   use cgcom
 #ifdef __PARA

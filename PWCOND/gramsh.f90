@@ -13,7 +13,7 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
 ! Gram-Schmidt method. 
 !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer ::         & 
      n,              &  ! input: physical dimension

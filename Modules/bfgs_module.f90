@@ -29,7 +29,7 @@ MODULE bfgs_module
   ! ...    Landscapes and Rare Events. 
   !
   !
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   USE io_files,    ONLY : iunbfgs
   !
   USE basic_algebra_routines  

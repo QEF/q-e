@@ -16,7 +16,7 @@ subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, overlap, evc, e)
   !   Calls h_psi, s_psi to calculate H|psi> ans S|psi>
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
 

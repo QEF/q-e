@@ -46,7 +46,7 @@ subroutine phq_setup
   USE io_global,  ONLY : stdout
   use pwcom
   USE constants,  ONLY: degspin
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

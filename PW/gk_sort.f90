@@ -13,7 +13,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   ! ... NB: this version will yield the same ordering for different ecut
   ! ...     and the same ordering in all machines
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE constants,  ONLY : eps8
   USE wvfct,      ONLY : npwx
   !
@@ -116,7 +116,7 @@ SUBROUTINE gk_l2gmap( ngm, ig_l2g, ngk, igk, igk_l2g )
   ! ... across processors.
   ! ... Written by Carlo Cavazzoni
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !

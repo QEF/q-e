@@ -14,7 +14,7 @@ subroutine setqf (qfcoef, rho, r, nqf, ltot, mesh)
   !   On output it contains r^2 Q
   !
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the dummy variables

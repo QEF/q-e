@@ -14,7 +14,7 @@ MODULE read_cards_module
   ! ...  by Carlo Sbraccia
   !
   USE kinds
-  USE parameters
+  USE kinds
   USE io_global,         ONLY: stdout 
   USE input_parameters
   USE constants,         ONLY: angstrom_au

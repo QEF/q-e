@@ -12,7 +12,7 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg)
   !     calculates weights for semiconductors and insulators
   !     (bands are either empty or filled)
   !     On output, Ef is the highest occupied Kohn-Sham level
-  use parameters
+  USE kinds
   implicit none
   !
   integer :: nks, nbnd

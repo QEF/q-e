@@ -36,7 +36,7 @@ SUBROUTINE move_ions()
   USE io_files,    ONLY : tmp_dir
   USE bfgs_module, ONLY : new_bfgs => bfgs, lin_bfgs
   USE bfgs_module, ONLY : lbfgs_ndim
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   USE brilz,       ONLY : alat, at, bg
   USE basis,       ONLY : nat, ityp, tau, atm
   USE gvect,       ONLY : nr1, nr2, nr3
@@ -44,7 +44,7 @@ SUBROUTINE move_ions()
   USE symme,       ONLY : s, ftau, nsym, irt
   USE ener,        ONLY : etot
   USE force_mod,   ONLY : force
-  USE varie,       ONLY : tr2, upscale, iswitch, lbfgs, lnewbfgs, &
+  USE control_flags,       ONLY : tr2, upscale, iswitch, lbfgs, lnewbfgs, &
                           conv_ions
   USE relax,       ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,      ONLY : lmovecell, calc
@@ -297,7 +297,7 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
   !     the very first iteration.
   !
   USE io_global,  ONLY : stdout
-  USE parameters
+  USE kinds
   !
   IMPLICIT NONE
   !

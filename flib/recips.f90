@@ -16,7 +16,7 @@ subroutine recips (a1, a2, a3, b1, b2, b3)
   !
   !     first the input variables
   !
-  use parameters
+  use kinds, ONLY: DP
   implicit none
   real(kind=DP) :: a1 (3), a2 (3), a3 (3), b1 (3), b2 (3), b3 (3)
   ! input: first direct lattice vector

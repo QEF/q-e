@@ -27,7 +27,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  use parameters
+  USE kinds
 
   implicit none
 

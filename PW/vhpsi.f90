@@ -14,13 +14,13 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   ! of the current k-point, the result is added to hpsi
   !
 #include "machine.h"
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE atom, ONLY: oc, lchi, nchi
   USE ldaU, ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
        ns, nsnew, swfcatom
   USE lsda_mod, ONLY: nspin, current_spin
   USE basis, ONLY: nat, ntyp, ityp, natomwfc
-  USE varie, ONLY: newpseudo
+  USE us, ONLY: newpseudo
 
   implicit none
   integer :: ldap, np, mp

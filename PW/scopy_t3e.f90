@@ -11,7 +11,7 @@ subroutine scopy_t3e (n, a, ia, b, ib)
   !----------------------------------------------------------------
   ! optimized scopy for t3e system (SC 2/99)
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: i, ni
   integer,  intent (in) ::n

@@ -8,7 +8,7 @@
 !--------------------------------------------------------------------------
 !
 MODULE brilz
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed to describe the lattice
   !
@@ -31,7 +31,8 @@ END MODULE brilz
 !
 !
 MODULE basis
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ntypx
   !
   ! ... The variables needed to describe the atoms in the unit cell
   !
@@ -58,7 +59,8 @@ END MODULE basis
 !
 !
 MODULE dynam
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ntypx
   !
   ! ... Variables needed for the dynamics
   !
@@ -76,7 +78,7 @@ END MODULE dynam
 !
 !
 MODULE gvect
-  USE parameters
+  USE kinds, ONLY: DP
   USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
   !
   ! ...The variables describing the reciprocal lattice vectors
@@ -131,7 +133,7 @@ END MODULE gvect
 !
 !
 MODULE gsmooth
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... the variables for the smooth mesh of the wavefunction. It can
   ! ... be different from the large mesh if dual > 4
@@ -163,7 +165,8 @@ END MODULE gsmooth
 !
 !
 MODULE klist
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: npk
   !
   ! ... The variables for the k-points
   !
@@ -188,7 +191,8 @@ END MODULE klist
 !
 !
 MODULE lsda_mod
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ntypx, npk
   !
   ! ... The variables needed for the lsda calculation
   !
@@ -207,7 +211,7 @@ END MODULE lsda_mod
 !
 !
 MODULE ktetra
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables for the tetrahedron method
   !
@@ -227,7 +231,7 @@ END MODULE ktetra
 !
 !
 MODULE symme
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed to describe the symmetry properties
   !
@@ -246,7 +250,8 @@ END MODULE symme
 !
 !
 MODULE atom
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: npsx, ndm, lmaxx, nchix
   !
   ! ... The variables needed to describe the atoms and related quantities
   !
@@ -275,7 +280,8 @@ END MODULE atom
 !
 !
 MODULE pseud
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: npsx, ntypx
   !
   ! ... The variables needed to compute the BHS pseudopotentials
   !
@@ -300,7 +306,8 @@ END MODULE pseud
 !
 !
 MODULE nl_c_c
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: npsx
   !
   ! ... The variable needed for the Non Linear Core Correction
   !
@@ -317,7 +324,7 @@ END MODULE nl_c_c
 !
 !
 MODULE vlocal
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed for the local potential in reciprocal space
   !
@@ -333,7 +340,7 @@ END MODULE vlocal
 !
 !
 MODULE wvfct
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed to compute the band structure
   !
@@ -361,7 +368,7 @@ END MODULE wvfct
 !
 !
 MODULE ener
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed to compute the energies
   !
@@ -383,7 +390,7 @@ END MODULE ener
 !
 !
 MODULE force_mod
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables for the first derivative of the energy
   !
@@ -401,7 +408,7 @@ END MODULE force_mod
 !
 !
 MODULE scf
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed to define the self-consistent cycle
   !
@@ -419,7 +426,7 @@ END MODULE scf
 !
 !
 MODULE workspace
-  USE parameters
+  USE kinds, ONLY: DP
   !
   SAVE
   !
@@ -429,7 +436,7 @@ END MODULE workspace
 !
 !
 MODULE varie
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... Several variables controlling the run
   !
@@ -467,7 +474,6 @@ MODULE varie
       conv_elec,        &! if .TRUE. electron convergence has been reached
       conv_ions,        &! if .TRUE.    ionic convergence has been reached
       nosym,            &! if .TRUE. no symmetry is used
-      newpseudo,        &! if .TRUE. done with the new pseudopotentials
       noinv,            &! if .TRUE. eliminates inversion symmetry
       diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
       restart,          &! if .TRUE. restart from results of a preceding run
@@ -477,7 +483,7 @@ END MODULE varie
 !
 !
 MODULE relax
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables used to control ionic relaxations
   !
@@ -500,7 +506,7 @@ END MODULE relax
 !
 !
 MODULE cellmd
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables used to control cell relaxation
   !
@@ -528,7 +534,8 @@ END MODULE cellmd
 !
 !
 MODULE char
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: npsx
   !
   ! ... The names of the atoms, of the solid and of the symmetries
   !
@@ -545,7 +552,8 @@ END MODULE char
 !
 !
 MODULE us
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: lmaxx, lqmax, nbrx, npsx, nqfm, ndm
   !
   ! ... These parameters are needed with the US pseudopotentials
   !
@@ -603,13 +611,15 @@ MODULE us
        ap(lqmax*lqmax,nlx,nlx) ! Clebsch-Gordan coefficients for spher.harm.
   LOGICAL :: &
        tvanp(npsx),           &! if .TRUE. the atom is of Vanderbilt type
+       newpseudo(npsx),       &! if .TRUE. RRKJ3 US pseudopotentials
        okvan                   ! if .TRUE. at least one pseudo is Vanderbilt
   !
 END MODULE us
 !
 !
 MODULE ldaU
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: ntypx
   !
   ! ... The quantities needed in lda+U calculations
   !
@@ -639,7 +649,7 @@ END MODULE ldaU
 !
 !
 MODULE extfield
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... 
   !
@@ -679,7 +689,7 @@ END MODULE
 !  
 !  
 MODULE bp
-  USE parameters
+  USE kinds, ONLY: DP
   !
   ! ... The variables needed for the Berry phase polarization calculation
   !
@@ -695,7 +705,8 @@ END MODULE bp
 !
 !
 MODULE fixed_occ
-  USE parameters
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: nbndxx, nspinx
   !
   ! ...
   !

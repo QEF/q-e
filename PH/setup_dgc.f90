@@ -16,7 +16,7 @@ subroutine setup_dgc
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use funct
   implicit none

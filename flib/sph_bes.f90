@@ -18,7 +18,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   ! output:
   !   jl(1:msh) = j_l(q*r(i))  (j_l = spherical bessel function)
   !
-  use parameters, only: DP
+  use kinds, only: DP
   implicit none
   !
   integer :: msh, l

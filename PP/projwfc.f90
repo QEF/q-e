@@ -26,7 +26,7 @@ program projwfc
   !   smoothing   gaussian broadening (eV, default: DeltaE)
   !
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   use io_files,   only : nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para,       only : me
@@ -104,7 +104,6 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use ldaU
   use lsda_mod
   use symme, only: nsym, irt
-  use varie, only: newpseudo
   use wvfct
   use us
   use becmod

@@ -19,7 +19,7 @@ subroutine coset (nrot, table, sym, nsym, irg)
   !
   !  revised layout 1 may 1995 by A. Dal Corso
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !    first the dummy variables

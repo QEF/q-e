@@ -18,7 +18,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE wvfct,      ONLY : gamma_only 
   !
   IMPLICIT NONE

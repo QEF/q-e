@@ -54,8 +54,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
             write_restart_wfc, write_restart_symmetry, &
             write_restart_xdim, write_restart_pseudo
 
-  use parameters, only: nacx, nsx
-  use parameters, only: npk
+  USE parameters, only: nacx, nsx, npk
   use read_pseudo_module
   use pseudo_types
 
@@ -480,9 +479,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !     programs.
   !
   !
-  use parameters, only: npk, nchix, ndm
-  use io_files, only: prefix, tmp_dir
-  USE io_files,  ONLY : iunwfc, nwordwfc
+  USE parameters, only: npk, nchix, ndm
+  USE io_files,  ONLY : iunwfc, nwordwfc, prefix, tmp_dir
   use funct, only: iexch, icorr, igcx, igcc
   use pwcom, only: DP, ngk, dual, ecutwfc, nat, istep, iswitch, nr1, nr2, nr3, &
    nr1s, nr2s, nr3s, ngm, ngm_g, nks, nkstot, nspin, nbnd, nelec, ntyp, alat, &
@@ -513,7 +511,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
             read_restart_wfc, read_restart_symmetry, &
             read_restart_xdim, read_restart_pseudo
 
-  use parameters, only: nacx, nsx
+  USE parameters, only: nacx, nsx
   use upf_to_internal
 
   implicit none
@@ -1017,8 +1015,8 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !     programs.
   !
   !
-  use pwcom, only: DP
-  use parameters, only: npk
+  use kinds, only: DP
+  USE parameters, only: npk, nacx, nsx
   use io_files, only: prefix, tmp_dir
   use io_global, only: ionode, ionode_id
   use mp, only: mp_bcast
@@ -1028,8 +1026,6 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
             read_restart_gvec, read_restart_gkvec, read_restart_charge, &
             read_restart_wfc, read_restart_symmetry, &
             read_restart_xdim, read_restart_pseudo
-
-  use parameters, only: nacx, nsx
 
   implicit none
   !

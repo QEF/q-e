@@ -4,23 +4,23 @@
 #endif
 
 #if defined(CRAYY) || defined(__LINUX) || defined(__AIX) || defined(__T3E) ||defined(HITACHI) || defined(SUN)
-#  define C_POINTER  integer
+#  define C_POINTER  integer(kind=4)
 #endif
 
-#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6)
-#  define C_POINTER  integer*8
+#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64)
+#  define C_POINTER  integer(kind=8)
 #endif
 
 #if defined __SGI || defined __ORIGIN
 #  if defined __SGI64
-#    define C_POINTER  integer*8
+#    define C_POINTER  integer(kind=8)
 #  else
-#    define C_POINTER  integer
+#    define C_POINTER  integer(kind=4)
 #  endif
 #endif
 
 #if defined(__SX4)
-#  define C_POINTER  real*8
+#  define C_POINTER  real(kind=8)
 #endif
 
 #if defined(__SX4)

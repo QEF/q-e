@@ -10,7 +10,7 @@
    MODULE wavefunctions_module
 !=----------------------------------------------------------------------------=!
      USE kinds
-     USE parameters, ONLY :  DP
+     USE kinds, ONLY :  DP
 
      IMPLICIT NONE
      SAVE

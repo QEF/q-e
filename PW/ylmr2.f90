@@ -13,7 +13,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     lmax2 = (lmax+1)^2 is the total number of spherical harmonics
   !     Numerical recursive algorithm as given in Numerical Recipes
   !
-  use parameters
+  USE kinds
   implicit none
   !
   ! Input

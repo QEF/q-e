@@ -9,7 +9,7 @@
 ! Common for d3toten
 !
 module g0aux
-  use parameters, only: DP
+  USE kinds, only: DP
   real(kind=DP), pointer:: vlocg0(:,:) ! local potential at q+G for q=0
   complex(kind=DP), pointer:: vkb0 (:,:) ! contains beta functions at q=0
   complex(kind=DP), pointer:: d0rc(:,:)! contain the rhoc for q=0
@@ -32,7 +32,7 @@ end module d0rho
 !     the variable needed to describe the patterns when q=0
 !
 module modesg0
-  use parameters, only: DP
+  USE kinds, only: DP
   integer :: nsymg0,        &! the number of symmetries of the crystal
              nirrg0          ! the number of irreducible representation
 !
@@ -45,7 +45,7 @@ end module modesg0
 !    third order dynamical matrices (auxiliary)
 !
 module d3aux
-  use parameters, only: DP
+  USE kinds, only: DP
   complex(kind=DP), allocatable :: &
        d3dyn_aux1(:,:,:), d3dyn_aux2(:,:,:), d3dyn_aux3(:,:,:), &
        d3dyn_aux4(:,:,:), d3dyn_aux5(:,:,:), d3dyn_aux6(:,:,:), &
@@ -55,7 +55,7 @@ end module d3aux
 !    third order dynamical matrix
 !
 module thirdorder
-  use parameters, only: DP
+  USE kinds, only: DP
   complex(kind=DP), allocatable ::  d3dyn(:,:,:)
   ! third order dynamical matrix
   complex(kind=DP), allocatable :: psidqvpsi(:,:)
@@ -69,7 +69,7 @@ end module thirdorder
 !    test variables
 !
 module testvar
-  use parameters, only: DP
+  USE kinds, only: DP
   real(kind=DP) :: testreal(50)
   integer :: testint(50)
   logical :: testflag(50)

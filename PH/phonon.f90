@@ -18,7 +18,7 @@ program phonon
   !
   USE io_global,  ONLY : stdout
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   use io_files
   use global_version

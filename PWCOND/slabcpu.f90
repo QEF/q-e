@@ -9,7 +9,7 @@ subroutine slabcpu(nrz, nrzp, nkofz, bdl1, bdl2, bdr1, bdr2, z)
 !
 ! To set up the division of slabs among CPU
 !
-use parameters, only : DP
+USE kinds, only : DP
 implicit none  
   integer :: k, nrz, nrzp, kin, kfin, startk, lastk 
   integer :: nkofz(nrz)  

@@ -18,7 +18,7 @@ subroutine poolreduce (size, ps)
 #ifdef __PARA
   use para
 #endif
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: size
 

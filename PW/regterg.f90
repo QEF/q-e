@@ -21,7 +21,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, gstart, &
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   use g_psi_mod
   implicit none
   ! on INPUT

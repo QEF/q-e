@@ -16,7 +16,7 @@ subroutine generate_dynamical_matrix   &
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)

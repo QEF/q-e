@@ -26,7 +26,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !     NOTA BENE: all axis sets are right-handed
   !     Boxes for US PPs do not work properly with left-handed axis
   !
-  use parameters, only:DP
+  use kinds, only: DP
   implicit none
   integer ibrav
   real(kind=DP) celldm(6), a1(3), a2(3), a3(3), omega

@@ -10,7 +10,7 @@
 ! ... Common variables for the phonon program
 !  
 MODULE modes
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   !
   ! ... The variables needed to describe the modes and the small group of q
   !
@@ -51,7 +51,7 @@ END MODULE modes
 !
 !
 MODULE dynmat
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... The dynamical matrix 
   !
@@ -70,7 +70,7 @@ END MODULE dynmat
 !
 !
 MODULE qpoint
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... The q point
   !
@@ -90,7 +90,7 @@ END MODULE qpoint
 !
 !
 MODULE eqv
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... The wavefunctions at point k+q 
   !
@@ -112,7 +112,7 @@ END MODULE eqv
 !
 !
 MODULE efield
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... the variables for the electric field perturbation
   !  
@@ -134,7 +134,7 @@ END MODULE efield
 !
 !
 MODULE nlcc_ph
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... The variables needed for non-linear core correction
   !
@@ -149,7 +149,7 @@ END MODULE nlcc_ph
 !
 !
 MODULE gc_ph
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... The variables needed for gradient corrected calculations
   !
@@ -170,7 +170,7 @@ END MODULE gc_ph
 !
 !
 MODULE phus
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... These are additional variables needed for the linear response
   ! ... program with the US pseudopotentials
@@ -202,7 +202,7 @@ END MODULE phus
 !
 !
 MODULE partial
-  USE parameters, ONLY :  DP
+  USE kinds, ONLY :  DP
   !
   ! ... the variables needed for partial computation of dynamical matrix
   !
@@ -229,7 +229,8 @@ END MODULE partial
 !
 !
 MODULE control_ph
-  USE parameters, ONLY :  DP, npk
+  USE kinds, ONLY :  DP
+  USE parameters, ONLY: npk
   !
   ! ... the variable controlling the phonon run
   !

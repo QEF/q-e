@@ -14,7 +14,7 @@ subroutine cft_1 (f, m, n, nx, isign, fout)
   !----------------------------------------------------------------------
 #include "machine.h"
   use fftw_mod
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: m, n, nx, isign
 
@@ -58,7 +58,7 @@ subroutine cft_1s (f, m, n, nx, isign, fout)
   !----------------------------------------------------------------------
 #include "machine.h"
   use fftw_mod
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: m, n, nx, isign
 
@@ -107,7 +107,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
   !----------------------------------------------------------------------
 #include "machine.h"
   use fftw_mod
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, isign
   complex (kind=DP) :: f (nx1 * nx2 * mplane)
@@ -185,7 +185,7 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
   !     (sparse and wavefunction grid) - fftw
   !----------------------------------------------------------------------
   use fftw_mod
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, isign, planes (nx1)
   complex (kind=DP) :: f (nx1 * nx2 * mplane)

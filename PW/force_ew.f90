@@ -15,7 +15,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !  both the real- and reciprocal-space terms are present
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !   First the dummy variables

@@ -10,7 +10,8 @@
 subroutine read_ncpp (np, iunps)
   !-----------------------------------------------------------------------
   !
-  use parameters, only: dp, nchix, lmaxx, ndm
+  USE kinds, only: dp
+  USE parameters, ONLY: nchix, lmaxx, ndm
   use atom,  only: zmesh, mesh, xmin, dx, r, rab, vnl, chi, oc, nchi, &
        lchi, rho_at, rho_atc, numeric
   use char, only: psd

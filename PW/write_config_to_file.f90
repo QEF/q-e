@@ -10,7 +10,7 @@ subroutine write_config_to_file_old
   !-----------------------------------------------------------------------
   USE brilz, ONLY : ibrav, alat, at
   USE basis, ONLY : nat, tau
-  USE varie, ONLY : lscf
+  USE control_flags, ONLY : lscf
   USE io_files, ONLY : prefix, iunres
   implicit none
   logical :: exst
@@ -38,8 +38,8 @@ end subroutine write_config_to_file_old
 !-----------------------------------------------------------------------
 subroutine write_config_to_file
   !-----------------------------------------------------------------------
-  USE varie, ONLY : lscf
-  USE parameters, ONLY : DP
+  USE control_flags, ONLY : lscf
+  USE kinds, ONLY : DP
   USE io_files, ONLY : prefix, iunres
   USE restart_module, ONLY : writefile_new
   !

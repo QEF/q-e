@@ -24,7 +24,7 @@ subroutine errore (routin, messag, ierr)
   !    (this will appear in the error files produced by loadleveler).
   !
   USE io_global,  ONLY : stdout
-  use parameters
+  USE kinds
   implicit none
 #ifdef __PARA
   include 'mpif.h'

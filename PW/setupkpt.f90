@@ -16,7 +16,7 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
   !     If tipo=2 it uses the mesh for hexagonal bravais lattice.
   !
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: nrot, nks, npk, nk1, nk2, nk3, k1, k2, k3, tipo, s(3,3,48)
@@ -200,7 +200,7 @@ subroutine modulo2 (vect, bg, modulo, d, esort)
   !     This routine computes the modulus of the vector vect
   !     written in the bg basis. bg could be non orthogonal
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   real(kind=DP) :: vect (3), bg (3, 3), d (3), esort, modulo
@@ -237,7 +237,7 @@ subroutine prodotto3dk (a, v, w)
   !
   !  This subrutine computes w=A v where A is a 3*3 matrix
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: a (3, 3)
   real(kind=DP) :: v (3)

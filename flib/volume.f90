@@ -12,7 +12,7 @@ subroutine volume (alat, a1, a2, a3, omega)
   !
   !     Compute the volume of the unit cell
   !
-  use parameters
+  use kinds, ONLY: DP
   implicit none
   !
   !     First the I/O variables

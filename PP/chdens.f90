@@ -417,7 +417,7 @@ end program chdens
 subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
   !-----------------------------------------------------------------------
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   use constants, only:  pi
   implicit none
   integer :: nx, ngm, plot_out, ounit
@@ -534,7 +534,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
      at, nat, tau, atm, ityp, output_format, ounit)
   !-----------------------------------------------------------------------
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   use constants, only : pi
   implicit none
   integer :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
@@ -663,7 +663,7 @@ end subroutine plot_2d
 !-----------------------------------------------------------------------
 subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   !-----------------------------------------------------------------------
-  use parameters, only : DP
+  USE kinds, only : DP
   use constants, only:  pi
   !
   implicit none
@@ -773,7 +773,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
      nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol)
   !-----------------------------------------------------------------------
   !
-  use parameters, only : DP
+  USE kinds, only : DP
   use constants, only:  pi 
   implicit none
   integer :: nat, ityp (nat), ngm, nx, ny, nz, output_format, ounit
@@ -938,7 +938,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nat, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3, &
        output_format, ounit
@@ -1106,7 +1106,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
      m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: nat, ityp (nat), nx, ny, nz, ounit
   real(kind=DP) :: alat, tau (3, nat), at (3, 3), rhomax, x0 (3), &
@@ -1187,7 +1187,7 @@ end subroutine write_openmol_file
 
 subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
   USE io_global,  ONLY : stdout
-  use parameters, only : dp
+  USE kinds, only : dp
   implicit none
 
   integer :: nat, ntyp, ityp(nat), idpol

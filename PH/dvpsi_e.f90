@@ -21,7 +21,7 @@ subroutine dvpsi_e (kpoint, ipol)
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use parameters, only : DP
+  USE kinds, only : DP
   use becmod
   use phcom
   implicit none

@@ -35,8 +35,7 @@ subroutine allocate_nlpot
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
   USE us, ONLY: nh, indv, nhtol, nhtom, qq, dvan, deeq, qrad, vkb, tab, &
        dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
-       tvanp
-  USE varie, ONLY: newpseudo
+       tvanp, newpseudo
   implicit none
   !
   !    a few local variables

@@ -18,7 +18,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
 #include "machine.h"
 
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
   !

@@ -21,7 +21,7 @@ subroutine compute_becsum
 
 
 use pwcom
-use parameters, only : DP
+USE kinds, only : DP
 use phcom
 implicit none
 

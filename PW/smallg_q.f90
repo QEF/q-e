@@ -19,7 +19,7 @@ subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
 !
 !  input-output variables
 !
-use parameters
+USE kinds
 implicit none
 
 real(kind=DP) :: bg (3, 3), at (3, 3), xq (3)

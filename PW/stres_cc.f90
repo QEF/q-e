@@ -9,7 +9,7 @@
 subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
 #include "machine.h"
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE atom, ONLY: rho_atc, numeric, mesh, r, rab
   USE basis, ONLY: ntyp
   USE brilz, ONLY: alat, omega, tpiba, tpiba2

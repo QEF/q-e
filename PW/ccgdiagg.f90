@@ -17,7 +17,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
   ! Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   logical :: reorder

@@ -62,7 +62,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   !     if n has more than one square-free factor, the product of the
   !     square-free factors must be .le. 210
   !
-  use parameters
+  USE kinds
   implicit real(kind=DP)(a - h, o - z)
   dimension a ( * ), b ( * )
   dimension nfac (11), np (209)

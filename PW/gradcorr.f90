@@ -11,7 +11,7 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !     ===================
   !--------------------------------------------------------------------
 #include "machine.h"
-  use parameters
+  USE kinds
   use funct
   implicit none
   !
@@ -141,7 +141,7 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !--------------------------------------------------------------------
   !
   ! Calculates ga = \grad a in R-space (a is also in R-space)
-  use parameters
+  USE kinds
   use gvect, only: nlm
   use wvfct, only: gamma_only
   implicit none
@@ -206,7 +206,7 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !--------------------------------------------------------------------
   !
   ! Calculates da = \sum_i \grad_i a_i in R-space
-  use parameters
+  USE kinds
   use gvect, only: nlm
   use wvfct, only: gamma_only
   implicit none

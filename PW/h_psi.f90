@@ -21,7 +21,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ... output:
   ! ...    hpsi  H*psi
   !
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE wvfct,      ONLY : gamma_only 
   USE us,         ONLY : vkb, nkb
   USE wvfct,      ONLY : igk, g2kin

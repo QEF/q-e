@@ -11,7 +11,7 @@ subroutine stres_loc (sigmaloc)
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  USE parameters, ONLY : DP
+  USE kinds, ONLY : DP
   USE atom, ONLY : msh, mesh, r, rab, vnl, numeric
   USE basis, ONLY: ntyp
   USE brilz, ONLY: omega, tpiba2

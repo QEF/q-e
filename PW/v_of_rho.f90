@@ -19,7 +19,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !
   !
   USE io_global,  ONLY : stdout
-  use parameters, only: DP
+  USE kinds, only: DP
   implicit none
   !
   !    first the dummy variables
@@ -77,7 +77,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !     Exchange-Correlation potential Vxc(r) from n(r)
   !
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   ! input
@@ -214,7 +214,7 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !     Hartree potential VH(r) from n(r)
   !
-  USE parameters,  ONLY: DP
+  USE kinds,  ONLY: DP
   USE gvect, ONLY: nlm
   USE wvfct, ONLY: gamma_only
   implicit none

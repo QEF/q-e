@@ -12,7 +12,7 @@ subroutine dvpsi_kb(kpoint,nu)
   ! calculates dVion/dtau * psi and stores it in dvpsi
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE kinds, only: DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
   use cgcom

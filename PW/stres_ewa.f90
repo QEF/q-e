@@ -13,7 +13,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   ! Ewald contribution, both real- and reciprocal-space terms are present
   !
-  use parameters
+  USE kinds
   implicit none
   !
   !   first the dummy variables

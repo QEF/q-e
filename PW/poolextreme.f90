@@ -19,7 +19,7 @@ subroutine poolextreme (ps, iflag)
 #include "machine.h"
 #ifdef __PARA
   use para
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: iflag, info

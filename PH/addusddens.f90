@@ -20,7 +20,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   use pwcom
   USE wavefunctions_module,  ONLY: psic
   use phcom
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   !
   !   the dummy variables

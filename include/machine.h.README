@@ -5,7 +5,8 @@
 
       __AIX     ibm rs/6000 machines
       __T3E     t3d/t3e machines 
-      __LINUX   intel pc's running Linux
+      __LINUX   intel/amd 32-bit pc's (pentium, athlon) running Linux
+      __LINUX64 intel/amd 64-bit cpu's (Opteron, Itanium?) pc's running Linux
       __SGI     all sgi machines
       __SGI64   64-bit mode for sgi machines
       __ORIGIN  sgi origin 2k or 3k machines

@@ -22,7 +22,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
   use becmod
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   USE io_files, ONLY: iunigk
 

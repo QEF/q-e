@@ -51,7 +51,7 @@
 
   USE io_global,  ONLY : stdout
   USE kinds
-  USE parameters
+  USE parameters, ONLY: nsx
 
   IMPLICIT NONE
   SAVE
@@ -158,9 +158,9 @@
 ! neld          = number of electrons with spin down
 ! nat           = number of atoms
 ! ntyp          = number of atomic species
-! na(.)         = numbero of atom for each species
+! na(.)         = number of atom for each species
 ! acc(.)        = accomulators
-! nacc          = number of accomulators
+! nacc          = number of accumulators
 ! ecutwfc       = wave function cutoff
 ! ecutrho       = charge density cutoff cutoff
 

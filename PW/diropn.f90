@@ -14,7 +14,7 @@ subroutine diropn (unit, filename, recl, exst)
   !     If appropriate, the node number is added to the file name
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   use io_files
   use mp_global, only: mpime
   implicit none

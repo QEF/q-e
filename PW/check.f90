@@ -12,7 +12,7 @@ subroutine check (size, ps)
   !-----------------------------------------------------------------------
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use parameters, only : DP
+  USE kinds, only : DP
 #ifdef __PARA
   use para
 #endif

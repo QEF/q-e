@@ -4,7 +4,7 @@ subroutine compute_qdipol
 ! augmentation charge.
 !
 use pwcom
-use parameters, only: DP
+USE kinds, only: DP
 use phcom
 
 implicit none

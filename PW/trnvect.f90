@@ -15,7 +15,7 @@ subroutine trnvect (vect, at, bg, iflag)
   !  vectors) from crystal to cartesian axis (iflag.gt.0)
   !  and viceversa (iflag.le.0)
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: iflag
   ! input: gives the versus of the transformati

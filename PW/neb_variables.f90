@@ -10,7 +10,7 @@
 MODULE neb_variables
   !---------------------------------------------------------------------------
   !
-  USE parameters,  ONLY : DP
+  USE kinds,  ONLY : DP
   !
   IMPLICIT NONE
   !

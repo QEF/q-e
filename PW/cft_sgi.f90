@@ -22,7 +22,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
 #include "machine.h"
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
 
   integer :: m, n, nx, sgn
@@ -67,7 +67,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-use parameters, only : DP
+USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn
   complex (kind=DP) :: f (nx1 * nx2 * mplane)

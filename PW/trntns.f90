@@ -13,7 +13,7 @@ subroutine trntns (phi, at, bg, iflg)
   ! trasforms a tensor (like the stress)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
-  use parameters
+  USE kinds
   implicit none
   integer :: iflg, i, j, k, l
   real(kind=DP) :: phi (3, 3), wrk (3, 3), at (3, 3), bg (3, 3)

@@ -12,7 +12,7 @@
 !   this routine writes the crystal structure in XSF format
 ! -------------------------------------------------------------------
 subroutine xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer          :: nat, ityp (nat), ounit
   character(len=3) :: atm(*)
@@ -51,7 +51,7 @@ end subroutine xsf_struct
 ! -------------------------------------------------------------------
 subroutine xsf_fast_datagrid_3d &
      (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer       :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
   real(kind=DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
@@ -114,7 +114,7 @@ end subroutine xsf_fast_datagrid_3d
 
 
 subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer       :: nx, ny, ounit
   real(kind=DP) :: m1, m2, alat, x0(3), e1(3), e2(3), rho(2, nx, ny)
@@ -159,7 +159,7 @@ end subroutine xsf_datagrid_2d
 
 subroutine xsf_datagrid_3d &
      (rho, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
-  use parameters, only : DP
+  USE kinds, only : DP
   implicit none
   integer       :: nx, ny, nz, ounit
   real(kind=DP) :: m1, m2, m3, alat, x0(3), e1(3),e2(3),e3(3), rho(nx, ny, nz)

@@ -15,7 +15,7 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     consistent with assumed symmetry.
   !
 #include "machine.h"
-  use parameters
+  USE kinds
   implicit none
   !
   !     first the I/O variables

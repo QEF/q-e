@@ -14,7 +14,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   use funct
   use pwcom
-  use parameters, only : DP
+  USE kinds, only : DP
   use phcom
   implicit none
 

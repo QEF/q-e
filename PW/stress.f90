@@ -13,7 +13,7 @@ subroutine stress
 #include "machine.h"
   !
   USE io_global,  ONLY : stdout
-  USE parameters, ONLY: DP
+  USE kinds, ONLY: DP
   USE brilz, ONLY: omega, alat, at, bg
   USE basis, ONLY: nat, ntyp, ityp, tau
   USE constants, ONLY: uakbar
@@ -25,7 +25,7 @@ subroutine stress
   USE lsda_mod, ONLY: nspin
   USE pseud, ONLY: zv
   USE scf, ONLY: rho, rho_core
-  USE varie, only: iverbosity
+  USE control_flags, only: iverbosity
   USE wvfct, ONLY: gamma_only
   implicit none
   !

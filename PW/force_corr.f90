@@ -18,7 +18,17 @@ subroutine force_corr (forcescc)
   ! and already set in readin-readvan
   !
 #include "machine.h"
-  use pwcom
+  USE kinds, ONLY: DP
+  USE parameters,  ONLY : ndm
+  USE constants, ONLY: tpi
+  USE atom, ONLY: rho_at, msh, r, rab
+  USE basis, ONLY: nat, ntyp, ityp, tau
+  USE brilz, ONLY: tpiba
+  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx, nl, g, ngl, gl, igtongl
+  USE lsda_mod, ONLY: nspin
+  USE vlocal, ONLY: vnew
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
   !

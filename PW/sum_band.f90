@@ -15,7 +15,7 @@ SUBROUTINE sum_band()
   ! ... eigenvalues.
   ! ... this version works also for metals (gaussian spreading technique)  
   !
-  USE parameters,           ONLY : DP
+  USE kinds,           ONLY : DP
   USE wvfct,                ONLY : gamma_only
   USE brilz,                ONLY : omega
   USE basis,                ONLY : nat, ntyp, ityp
