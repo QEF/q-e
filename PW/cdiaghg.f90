@@ -119,7 +119,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
         !
         call ZCOPY (ldh * n, h, 1, hdum, 1)
         call ZHEGVX (1, 'V', 'I', 'U', n, hdum, ldh, sdum, ldh, &
-             0.0D0, 0.0D0, 1, m, 0.d0, mm, e, v, ldh, work, lwork, rwork, &
+             0.0D0, 0.0D0, 1, m, 0.d0, mm, e(1), v, ldh, work, lwork, rwork, &
              iwork, ifail, info)
 #endif
      endif
