@@ -182,13 +182,15 @@ int main(int argc,char *argv[])
     len = strlen( use[i].filename ) + 3;
     for( nm = 0; nm < use[i].nmodules; nm ++ ) {
       for( j = 0; j < ndepend; j++ ) {
-        for( k = 0; k < module[j].nmodules; k ++ ) {
-          if( DEBUG ) printf("%s %s\n",use[i].modules[nm], module[j].modules[k]);
-          if( ! strcmp( use[i].modules[nm], module[j].modules[k] ) ) {
-            lobj = strlen( module[j].filename );
-            if( (len+lobj) > 70 ) { printf(" \\\n    "); len = 4; }
-            printf("%s ", module[j].filename );
-            len += lobj;
+        if( strcmp( use[i].filename, module[j].filename ) ) {
+          for( k = 0; k < module[j].nmodules; k ++ ) {
+            if( DEBUG ) printf("%s %s\n",use[i].modules[nm], module[j].modules[k]);
+            if( ! strcmp( use[i].modules[nm], module[j].modules[k] ) ) {
+              lobj = strlen( module[j].filename );
+              if( (len+lobj) > 70 ) { printf(" \\\n    "); len = 4; }
+              printf("%s ", module[j].filename );
+              len += lobj;
+            }
           }
         }
       }
