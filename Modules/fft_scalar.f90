@@ -609,7 +609,7 @@
 !
 
 !
-        SUBROUTINE cft_1z(c, nsl, nz, ldc, sgn, cout)
+      SUBROUTINE cft_1z(c, nsl, nz, ldc, sgn, cout)
 
 !     driver routine for m 1d complex fft's 
 !     nx=n+1 is allowed (in order to avoid memory conflicts)
@@ -1016,15 +1016,32 @@
 !=----------------------------------------------------------------------=!
 !
 
-        SUBROUTINE cfft3d( f, nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn )
-          IMPLICIT NONE
+   SUBROUTINE cfft3d( f, nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn )
 
-          INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn 
-          COMPLEX (dbl) :: f(:)
-          INTEGER :: i, k, j, err, idir, ip, isign
-          REAL(dbl) :: tscale
-          INTEGER, SAVE :: icurrent = 1
-          INTEGER, SAVE :: dims(3,ndims) = -1
+     IMPLICIT NONE
+
+     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn 
+     COMPLEX (dbl) :: f(:)
+     INTEGER :: i, k, j, err, idir, ip, isign
+     REAL(dbl) :: tscale
+     INTEGER, SAVE :: icurrent = 1
+     INTEGER, SAVE :: dims(3,ndims) = -1
+
+#if defined __FFTW
+
+#  if defined(__SGI64) || defined(__COMPAQ) || defined(__TRU64)
+     integer, parameter :: ipt = 8
+#  else
+     integer, parameter :: ipt = 4
+#  endif
+
+     integer(kind=ipt), save :: fw_plan(ndims) = 0
+     integer(kind=ipt), save :: bw_plan(ndims) = 0
+
+#elif defined __AIX
+
+#endif
+
 
           isign = -sgn
 
@@ -1049,29 +1066,60 @@
             !   no table exist for these parameters
             !   initialize a new one
 
+#if defined __FFTW
+
+            IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
+              call errore('cfft3','not implemented',1)
+
+            IF( fw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
+            IF( bw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
+            idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nr1, nr2, nr3, idir) 
+            idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nr1, nr2, nr3, idir) 
+
+#elif defined __AIX
+
+#endif
+
             dims(1,icurrent) = nr1; dims(2,icurrent) = nr2; dims(3,icurrent) = nr3
             ip = icurrent
             icurrent = MOD( icurrent, ndims ) + 1
 
           END IF
 
+          !
+          !   Now perform the 3D FFT using the machine specific driver
+          !
 
 #if defined __FFTW
+
+          IF( isign > 0 ) THEN
+
+            call FFTW_INPLACE_DRW_3D( fw_plan(ip), 1, f(1), 1, 1 )
+
+            tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
+            call ZDSCAL( nr1 * nr2 * nr3, tscale, f(1), 1)
+
+          ELSE IF( isign < 0 ) THEN
+
+            call FFTW_INPLACE_DRW_3D( bw_plan(ip), 1, f(1), 1, 1 )
+
+          END IF
+
 #elif defined __AIX
 
           if ( isign > 0 ) then
-            scale = 1.0d0 / (nr1*nr2*nr3)
+            tscale = 1.0d0 / ( nr1 * nr2 * nr3 )
           else
-            scale=1.0d0
+            tscale = 1.0d0
           end if
-!
+ 
           call dcft3( f(1), nr1x, nr1x*nr2x, f(1), nr1x, nr1x*nr2x, nr1, nr2, nr3,  &
-            isign, scale, work(1), lwork)
-!
+            isign, tscale, work(1), lwork)
+ 
 #endif
       
-          RETURN
-        END SUBROUTINE
+     RETURN
+   END SUBROUTINE
 !
 !=----------------------------------------------------------------------=!
 !
@@ -1083,84 +1131,152 @@
 !
 !=----------------------------------------------------------------------=!
 !
-!----------------------------------------------------------------------
-      subroutine cft_b (f,n1,n2,n3,n1x,n2x,n3x,imin3,imax3,sgn)
-!     ===============
+      SUBROUTINE cft_b ( f, n1, n2, n3, n1x, n2x, n3x, imin3, imax3, sgn )
+
 !     driver routine for 3d complex fft's on box grid - ibm essl
 !     fft along xy is done only on planes that correspond to
 !     dense grid planes on the current processor, i.e. planes
 !     with imin3 .le. n3 .le. imax3
-!----------------------------------------------------------------------
 !
       implicit none
       integer n1,n2,n3,n1x,n2x,n3x,imin3,imax3,sgn
       complex(kind=8) :: f(:)
 
-#ifdef __AIX
-!
-! initialization variables
-!
+      integer isign, naux, ibid, nplanes, nstart, k
+      real(dbl) :: scale
+
+      integer :: ip, i
+      integer, save :: icurrent = 1
+      integer, save :: dims( 3, ndims ) = -1
+
+#if defined __FFTW
+
+#  if defined(__SGI64) || defined(__COMPAQ) || defined(__TRU64)
+      integer, parameter :: ipt = 8
+#  else
+      integer, parameter :: ipt = 4
+#  endif
+
+      integer(kind=ipt), save :: bw_planz(ndims) = 0
+      integer(kind=ipt), save :: bw_planxy(ndims) = 0
+
+#elif defined __AIX
+
       logical first(2)
       data first /.true., .true./
       integer naux1
       parameter (naux1=20000)
       real(kind=8) aux3(naux1,2), aux2(naux1,2), aux1(naux1,2)
       save first, aux1, aux2, aux3
-!
-! work variables
-!
-      integer isign, naux, ibid, nplanes, nstart, k
-      parameter (naux=15000)
-      real(kind=8) aux(naux), scale
-!
-!
+
+#endif
+
+
       isign = -sgn
-      if (isign.eq.-1) then
-         ibid =1
-         scale=1.d0
-      else if (isign.eq.1) then
+      scale = 1.d0
+
+      if ( isign > 0 ) then
          call errore('cft_b','not implemented',isign)
       end if
-!
-      if (first(ibid)) then
-!
-! initialization for the z-direction...
-!
-         call dcft(1,f,n1x*n2x,1,f,n1x*n2x,1,n3,n1x*n2x,isign,          &
-     &        scale,aux3(1,ibid),naux1,aux,naux)
-         first(ibid)=.false.
-      end if
-!
-! fft in the z-direction...
-!
-      call dcft(0,f,n1x*n2x,1,f,n1x*n2x,1,n3,n1x*n2x,isign,             &
-     &        scale,aux3(1,ibid),naux1,aux,naux)
 !
 ! 2d fft on xy planes - only needed planes are transformed
 ! note that all others are left in an unusable state
 !
-      nplanes=imax3-imin3+1
-      nstart =(imin3-1)*n1x*n2x+1
+      nplanes = imax3 - imin3 + 1
+      nstart  = ( imin3 - 1 ) * n1x * n2x + 1
+
+      !
+      !   Here initialize table only if necessary
+      !
+
+      ip = -1
+      DO i = 1, ndims
+
+        !   first check if there is already a table initialized
+        !   for this combination of parameters
+
+        IF ( ( n1 == dims(1,i) ) .and. ( n2 == dims(2,i) ) .and. ( n3 == dims(3,i) ) ) THEN
+           ip = i
+           EXIT
+        END IF
+
+      END DO
+
+      IF( ip == -1 ) THEN
+
+        !   no table exist for these parameters
+        !   initialize a new one
+
+#if defined __FFTW
+
+        if ( bw_planz(icurrent) /= 0 ) call DESTROY_PLAN( bw_planz(icurrent) )
+        call CREATE_PLAN( bw_planz(icurrent), n3, 1 )
+
+        if ( bw_planxy(icurrent) /= 0 ) call DESTROY_PLAN_2D( bw_planxy(icurrent) )
+        call CREATE_PLAN_2D( bw_planxy(icurrent), n1, n2, 1 )
+!
+#elif defined __AIX
+#endif
+
+        dims(1,icurrent) = n1; dims(2,icurrent) = n2; dims(3,icurrent) = n3
+        ip = icurrent
+        icurrent = MOD( icurrent, ndims ) + 1
+
+      END IF
+
+
+#if defined __FFTW
+
+      IF( isign < 0 ) THEN
+        call FFTW_INPLACE_DRW( bw_planz(ip), n1x*n2x, f, 1, n1x*n2x )
+        call FFTW_INPLACE_DRW_2D( bw_planxy(ip), nplanes, f(nstart), n1x*n2x, 1 )
+      END IF
+
+#elif defined __AIX
+
+      if (isign.eq.-1) then
+         ibid =1
+      end if
+!
+      if ( first(ibid) ) then
+!
+! initialization for the z-direction...
+!
+         call dcft(1,f,n1x*n2x,1,f,n1x*n2x,1,n3,n1x*n2x,isign,          &
+     &        scale,aux3(1,ibid),naux1,work,lwork)
+         first(ibid)=.false.
+      end if
 !
 ! x-direction  - Inizialization must be done every time because it depends
 ! on nplanes that may vary from call to call !!!! sigh
 !
       call dcft(1,f,1,n1x,f,1,n1x,n1,n2x*nplanes,isign,                  &
-     &        scale,aux1(1,ibid),naux1,aux,naux)
+     &        scale,aux1(1,ibid),naux1,work,lwork)
+      call dcft(1,f,n1x,1,f,n1x,1,n2,n1x,isign,                          &
+     &        scale,aux2(1,ibid),naux1,work,lwork)
+!
+! fft in the z-direction...
+!
+      call dcft(0,f,n1x*n2x,1,f,n1x*n2x,1,n3,n1x*n2x,isign,             &
+     &        scale,aux3(1,ibid),naux1,work,lwork)
+
+!
+! x-direction
+!
+
       call dcft(0,f(nstart),1,n1x,f(nstart),1,n1x,n1,n2x*nplanes,isign,  &
-     &        scale,aux1(1,ibid),naux1,aux,naux)
+     &        scale,aux1(1,ibid),naux1,work,lwork)
 !
 ! y-direction
-!
-      call dcft(1,f,n1x,1,f,n1x,1,n2,n1x,isign,                          &
-     &        scale,aux2(1,ibid),naux1,aux,naux)
 !
       do k= imin3,imax3
         nstart=(k-1)*n1x*n2x+1
         call dcft(0,f(nstart),n1x,1,f(nstart),n1x,1,n2,n1x,isign,        &
-     &        scale,aux2(1,ibid),naux1,aux,naux)
+     &        scale,aux2(1,ibid),naux1,work,lwork)
      end do
+
 #endif
+
       return
       end subroutine
 

@@ -697,7 +697,7 @@ end module para_mod
 !
       implicit none
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,sign
-      complex(kind=8) f(nr1bx,nr2bx,nr3bx)
+      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
 !
       integer ir3, ibig3, imin3, imax3, np3
 !

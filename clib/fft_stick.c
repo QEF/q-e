@@ -22,7 +22,7 @@ int CREATE_PLAN(fftw_plan *p, int *n, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD ); 
    *p = fftw_create_plan(*n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
-   if( *p == NULL ) fprintf(stderr," *** DESTROY_PLAN: warning empty plan ***\n");
+   if( *p == NULL ) fprintf(stderr," *** CREATE_PLAN: warning empty plan ***\n");
 /*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
    return 0;
 }
@@ -33,6 +33,39 @@ int DESTROY_PLAN(fftw_plan *p)
    else fprintf(stderr," *** DESTROY_PLAN: warning empty plan ***\n");
    return 0;
 }
+
+int CREATE_PLAN_2D(fftwnd_plan *p, int *n, int *m, int *idir)
+{
+   fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
+   *p = fftw2d_create_plan(*m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
+   if( *p == NULL ) fprintf(stderr," *** CREATE_PLAN_2D: warning empty plan ***\n");
+/*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
+   return 0;
+}
+
+int DESTROY_PLAN_2D(fftwnd_plan *p)
+{
+   if ( *p != NULL ) fftwnd_destroy_plan(*p);
+   else fprintf(stderr," *** DESTROY_PLAN_2D: warning empty plan ***\n");
+   return 0;
+}
+
+int CREATE_PLAN_3D(fftwnd_plan *p, int *n, int *m, int *l, int *idir)
+{
+   fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
+   *p = fftw3d_create_plan(*l, *m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
+   if( *p == NULL ) fprintf(stderr," *** CREATE_PLAN_3D: warning empty plan ***\n");
+/*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
+   return 0;
+}
+
+int DESTROY_PLAN_3D(fftwnd_plan *p)
+{
+   if ( *p != NULL ) fftwnd_destroy_plan(*p);
+   else fprintf(stderr," *** DESTROY_PLAN_3D: warning empty plan ***\n");
+   return 0;
+}
+
 
 
 int FFT_X_STICK
@@ -85,6 +118,25 @@ int FFTW_INPLACE_DRW(fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *lda, int *in
    fftw(*p, howmany, a, inc, idist, 0, 0, 0);
    return 0;
 }
+
+int FFTW_INPLACE_DRW_2D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
+{
+   fftwnd( *p, *howmany, a, *inca, *idist, 0, 0, 0 );
+   return 0;
+}
+
+int FFTW_INPLACE_DRW_3D( fftwnd_plan *p, int *howmany, FFTW_COMPLEX *a, int *idist, int *inca)
+{
+   fftwnd( *p, *howmany, a, *inca, *idist, 0, 0, 0 );
+   return 0;
+}
+
+/* Computing the N-Dimensional FFT 
+void fftwnd(fftwnd_plan plan, int howmany,
+            FFTW_COMPLEX *in, int istride, int idist,
+            FFTW_COMPLEX *out, int ostride, int odist);
+*/
+
 
 /*
 void fftw(fftw_plan plan, int howmany,

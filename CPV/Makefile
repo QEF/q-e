@@ -14,7 +14,7 @@ PROGNAME= cp.x
 WRAPPERS= wrapper.o
 
 #   Fortran objects
-FOBJS= modules.o crayfft.o fftw.o para.o \
+FOBJS= modules.o crayfft.o para.o \
 read_pseudo.o cplib.o cpr.o input.o \
 macdep.o which_dft.o $(WRAPPERS) \
 restart.o cpr_mod.o cell_module.o cprsub.o fft_cp.o

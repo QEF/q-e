@@ -10,14 +10,15 @@
 
 #if defined __T3E | defined __ABSOFT
 
+#  define FFTW_INPLACE_DRW FFTW_INPLACE_DRW
+#  define FFTW_INPLACE_DRW_2D FFTW_INPLACE_DRW_2D
+#  define FFTW_INPLACE_DRW_3D FFTW_INPLACE_DRW_3D
 #  define CREATE_PLAN CREATE_PLAN
-#  define CREATE_PLANX CREATE_PLANX
-#  define CREATE_PLANY CREATE_PLANY
-#  define CREATE_PLANZ CREATE_PLANZ
+#  define CREATE_PLAN_2D CREATE_PLAN_2D
+#  define CREATE_PLAN_3D CREATE_PLAN_3D
 #  define DESTROY_PLAN DESTROY_PLAN
-#  define DESTROY_PLANX DESTROY_PLANX
-#  define DESTROY_PLANY DESTROY_PLANY
-#  define DESTROY_PLANZ DESTROY_PLANZ
+#  define DESTROY_PLAN_2D DESTROY_PLAN_2D
+#  define DESTROY_PLAN_3D DESTROY_PLAN_3D
 #  define FFT_X_STICK FFT_X_STICK
 #  define FFT_XY_STICK FFT_XY_STICK
 #  define FFT_XY FFT_XY
@@ -48,14 +49,15 @@
 
 #if defined __SGI | defined __FUJITSU | defined __SX4 | defined __INTEL
 
+#  define FFTW_INPLACE_DRW fftw_inplace_drw_
+#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
+#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
 #  define CREATE_PLAN create_plan_
-#  define CREATE_PLANX create_planx_
-#  define CREATE_PLANY create_plany_
-#  define CREATE_PLANZ create_planz_
+#  define CREATE_PLAN_2D create_plan_2d_
+#  define CREATE_PLAN_3D create_plan_3d_
 #  define DESTROY_PLAN destroy_plan_
-#  define DESTROY_PLANX destroy_planx_
-#  define DESTROY_PLANY destroy_plany_
-#  define DESTROY_PLANZ destroy_planz_
+#  define DESTROY_PLAN_2D destroy_plan_2d_
+#  define DESTROY_PLAN_3D destroy_plan_3d_
 #  define FFT_X_STICK fft_x_stick_
 #  define FFT_XY_STICK fft_xy_stick_
 #  define FFT_XY fft_xy_
@@ -89,14 +91,15 @@
 
 #  if defined __GNU_LINK
 
+#  define FFTW_INPLACE_DRW fftw_inplace_drw__
+#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d__
+#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d__
 #  define CREATE_PLAN create_plan__
-#  define CREATE_PLANX create_planx__
-#  define CREATE_PLANY create_plany__
-#  define CREATE_PLANZ create_planz__
+#  define CREATE_PLAN_2D create_plan_2d__
+#  define CREATE_PLAN_3D create_plan_3d__
 #  define DESTROY_PLAN destroy_plan__
-#  define DESTROY_PLANX destroy_planx__
-#  define DESTROY_PLANY destroy_plany__
-#  define DESTROY_PLANZ destroy_planz__
+#  define DESTROY_PLAN_2D destroy_plan_2d__
+#  define DESTROY_PLAN_3D destroy_plan_3d__
 #  define FFT_X_STICK fft_x_stick__
 #  define FFT_XY_STICK fft_xy_stick__
 #  define FFT_XY fft_xy__
@@ -126,14 +129,15 @@
 
 #  else
 
+#  define FFTW_INPLACE_DRW fftw_inplace_drw_
+#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
+#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
 #  define CREATE_PLAN create_plan_
-#  define CREATE_PLANX create_planx_
-#  define CREATE_PLANY create_plany_
-#  define CREATE_PLANZ create_planz_
+#  define CREATE_PLAN_2D create_plan_2d_
+#  define CREATE_PLAN_3D create_plan_3d_
 #  define DESTROY_PLAN destroy_plan_
-#  define DESTROY_PLANX destroy_planx_
-#  define DESTROY_PLANY destroy_plany_
-#  define DESTROY_PLANZ destroy_planz_
+#  define DESTROY_PLAN_2D destroy_plan_2d_
+#  define DESTROY_PLAN_3D destroy_plan_3d_
 #  define FFT_X_STICK fft_x_stick_
 #  define FFT_XY_STICK fft_xy_stick_
 #  define FFT_XY fft_xy_
@@ -167,16 +171,17 @@
 
 #if defined __AIX 
 
+#  define FFTW_INPLACE_DRW fftw_inplace_drw
+#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d
+#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d
 #  define CP_GETENV cp_getenv
 #  define CP_DATE cp_date
+#  define CREATE_PLAN_2D create_plan_2d
+#  define CREATE_PLAN_3D create_plan_3d
 #  define CREATE_PLAN my_create_plan
-#  define CREATE_PLANX create_planx
-#  define CREATE_PLANY create_plany
-#  define CREATE_PLANZ create_planz
 #  define DESTROY_PLAN my_destroy_plan
-#  define DESTROY_PLANX destroy_planx
-#  define DESTROY_PLANY destroy_plany
-#  define DESTROY_PLANZ destroy_planz
+#  define DESTROY_PLAN_2D destroy_plan_2d
+#  define DESTROY_PLAN_3D destroy_plan_3d
 #  define FFT_X_STICK fft_x_stick
 #  define FFT_XY_STICK fft_xy_stick
 #  define FFT_XY fft_xy
@@ -207,14 +212,15 @@
 
 #if defined __TRU64
 
+#  define FFTW_INPLACE_DRW fftw_inplace_drw_
+#  define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
+#  define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
+#  define CREATE_PLAN_2D create_plan_2d_
+#  define CREATE_PLAN_3D create_plan_3d_
 #  define CREATE_PLAN create_plan_
-#  define CREATE_PLANX create_planx_
-#  define CREATE_PLANY create_plany_
-#  define CREATE_PLANZ create_planz_
 #  define DESTROY_PLAN destroy_plan_
-#  define DESTROY_PLANX destroy_planx_
-#  define DESTROY_PLANY destroy_plany_
-#  define DESTROY_PLANZ destroy_planz_
+#  define DESTROY_PLAN_2D destroy_plan_2d_
+#  define DESTROY_PLAN_3D destroy_plan_3d_
 #  define FFT_X_STICK fft_x_stick_
 #  define FFT_XY_STICK fft_xy_stick_
 #  define FFT_XY fft_xy_
@@ -246,14 +252,15 @@
 
 #if defined __QSW && defined __LINUX
 
+#    define FFTW_INPLACE_DRW fftw_inplace_drw_
+#    define FFTW_INPLACE_DRW_2D fftw_inplace_drw_2d_
+#    define FFTW_INPLACE_DRW_3D fftw_inplace_drw_3d_
 #    define CREATE_PLAN create_plan_
-#    define CREATE_PLANX create_planx__
-#    define CREATE_PLANY create_plany__
-#    define CREATE_PLANZ create_planz__
 #    define DESTROY_PLAN destroy_plan__
-#    define DESTROY_PLANX destroy_planx__
-#    define DESTROY_PLANY destroy_plany__
-#    define DESTROY_PLANZ destroy_planz__
+#    define CREATE_PLAN_2D create_plan_2d_
+#    define CREATE_PLAN_3D create_plan_3d_
+#    define DESTROY_PLAN_2D destroy_plan_2d_
+#    define DESTROY_PLAN_3D destroy_plan_3d_
 #    define FFT_X_STICK fft_x_stick__
 #    define FFT_XY_STICK fft_xy_stick_
 #    define FFT_XY fft_xy_
