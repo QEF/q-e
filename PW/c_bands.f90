@@ -87,10 +87,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ALLOCATE( h_diag( npwx ) )    
   ALLOCATE( s_diag( npwx ) )   
-  !
-  ! ... allocate specific array for DIIS
-  !
-  IF ( isolve == 2 ) ALLOCATE( btype(  nbnd ) )       
+  ALLOCATE( btype(  nbnd ) )       
   !
   IF ( gamma_only ) THEN
      !
@@ -106,8 +103,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
-  !
-  IF ( isolve == 2 ) DEALLOCATE( btype )
+  DEALLOCATE( btype )
   !       
   CALL stop_clock( 'c_bands' )  
   !
@@ -213,6 +209,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
           END IF
           !
+          btype(:) = 1
+          !
+          IF ( ( iter > 1 ) .OR. ( istep > 1 ) ) THEN
+             !
+             ! ... a band is considered empty when its occupation is less 
+             ! ... than 1.0 %
+             !   
+             WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+             !
+          END IF
+          !
           IF ( isolve == 2 ) THEN
              !
              ! ... RMM-DIIS method
@@ -222,25 +229,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              CALL usnldiag( h_diag, s_diag )
              !
              ntry = 0
-             !
-             btype(:) = 1
-             !
-             IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
-                !
-                ! ... at the first iteration a static criterium is used to
-                ! ... define whether or not a band is occupied
-                !
-                FORALL( ibnd = 1 : nbnd, &
-                        ibnd > ( INT( nelec / 2.D0 ) + 4 ) ) btype(ibnd) = 0
-                !
-             ELSE
-                !
-                ! ... a band is considered empty when its occupation is less 
-                ! ... than 1.0 %
-                !   
-                WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
-                !
-             END IF   
              !
              RMMDIIS_loop: DO
                 !
@@ -280,8 +268,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              david_loop: DO
                 !
-                CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-                              okvan, gstart, et(1,ik), notconv, dav_iter )
+                CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
+                              gstart, et(1,ik), btype, notconv, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter
                 !
@@ -442,6 +430,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              END DO
           END IF
           !
+          btype(:) = 1
+          !
+          IF ( ( iter > 1 ) .OR. ( istep > 1 ) ) THEN
+             !
+             ! ... a band is considered empty when its occupation is less 
+             ! ... than 1.0 %
+             !   
+             WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+             !
+          END IF
+          !
           IF ( isolve == 1 ) THEN
              !
              ! ... Conjugate-Gradient diagonalization
@@ -492,25 +491,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              ntry = 0
              !
-             btype(:) = 1
-             !
-             IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
-                !
-                ! ... at the first iteration a static criterium is used to
-                ! ... define whether or not a band is occupied
-                !
-                FORALL( ibnd = 1 : nbnd, &
-                        ibnd > ( INT( nelec / 2.D0 ) + 4 ) ) btype(ibnd) = 0
-                !
-             ELSE
-                !
-                ! ... a band is considered empty when its occupation is less 
-                ! ... than 1.0 %
-                !   
-                WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
-                !
-             END IF   
-             !
              RMMDIIS_loop: DO
                 !
                 CALL cdiisg( npw, npwx, nbnd, evc, &
@@ -550,7 +530,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              david_loop: DO
                 !
                 CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-                              okvan, et(1,ik), notconv, dav_iter )
+                              okvan, et(1,ik), btype, notconv, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter
                 !
@@ -567,7 +547,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( test_exit_cond() ) EXIT david_loop                
                 !
-             END DO david_loop
+             END DO david_loop 
              !
           END IF
           !

@@ -448,7 +448,7 @@ MODULE real_diis_module
       !
       ! ... threshold for empty bands
       !
-      empty_ethr = MAX( ( ethr * 10.D0 ), 1.D-4 )
+      empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
       !
 #if defined (DIIS_DEBUG)
       PRINT *, "input eigenvalues :"
@@ -1720,7 +1720,7 @@ MODULE complex_diis_module
       !
       ! ... threshold for empty bands
       !
-      empty_ethr = MAX( ( ethr * 10.D0 ), 1.D-4 )
+      empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
       !
 #if defined (DIIS_DEBUG)
       PRINT *, "input eigenvalues :"

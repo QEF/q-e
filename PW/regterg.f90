@@ -1,342 +1,419 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#define ZERO ( 0.D0, 0.D0 )
+#define ONE  ( 1.D0, 0.D0 )
 !
-!----------------------------------------------------------------------
-subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, gstart, &
-     e, notcnv, iter)
-  !----------------------------------------------------------------------
-  !
-  !     iterative solution of the eigenvalue problem:
-  !
-  !     ( H - e S ) * evc = 0
-  !
-  !     where H is an hermitean operator, e is a real scalar,
-  !     S is an overlap matrix, evc is a complex vector
-  !     (real wavefunctions with only half plane waves stored)
-  !
 #include "f_defs.h"
+!
+!----------------------------------------------------------------------------
+SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+                    overlap, gstart, e, btype, notcnv, iter )
+  !----------------------------------------------------------------------------
+  !
+  ! ... iterative solution of the eigenvalue problem:
+  !
+  ! ... ( H - e S ) * evc = 0
+  !
+  ! ... where H is an hermitean operator, e is a real scalar,
+  ! ... S is an overlap matrix, evc is a complex vector
+  ! ... (real wavefunctions with only half plane waves stored)
+  !
   USE io_global,  ONLY : stdout
-  USE kinds, only : DP
-  use g_psi_mod
-  implicit none
-  ! on INPUT
-  integer :: ndim, ndmx, nvec, nvecx, gstart
-  ! dimension of the matrix to be diagonalized
-  ! leading dimension of matrix evc, as declared in the calling pgm unit
-  ! integer number of searched low-lying roots
-  ! maximum dimension of the reduced basis set
-  !    (the basis set is refreshed when its dimension would exceed nvecx)
-  complex(kind=DP) :: evc (ndmx, nvec)
-  real(kind=DP) :: ethr
-  ! energy threshold for convergence: root improvement is stopped,
-  ! when two consecutive estimates of the root differ by less than ethr.
-  logical :: overlap
-  ! if .false. : S|psi> not needed
+  USE kinds,      ONLY : DP
   !
-  ! on OUTPUT
-  !  evc   contains the  refined estimates of the eigenvectors
-  real(kind=DP) :: e (nvec)
-  ! contains the estimated roots.
-
-  integer :: iter, notcnv
-  ! integer  number of iterations performed
-  ! number of unconverged roots
+  IMPLICIT NONE
   !
-  ! LOCAL variables
+  ! ... on INPUT
   !
-  integer, parameter :: maxter=20
-  ! maximum number of iterations
+  INTEGER :: ndim, ndmx, nvec, nvecx, gstart
+    ! dimension of the matrix to be diagonalized
+    ! leading dimension of matrix evc, as declared in the calling pgm unit
+    ! integer number of searched low-lying roots
+    ! maximum dimension of the reduced basis set
+    !    (the basis set is refreshed when its dimension would exceed nvecx)
+  COMPLEX (KIND=DP) :: evc(ndmx,nvec)
+    !  evc   contains the  refined estimates of the eigenvectors
+  REAL (KIND=DP) :: ethr
+    ! energy threshold for convergence: root improvement is stopped,
+    ! when two consecutive estimates of the root differ by less than ethr.
+  LOGICAL :: overlap
+    ! if .FALSE. : S|psi> not needed
+  INTEGER, INTENT(IN) :: btype(nvec)
+    ! band type ( 1 = occupied, 0 = empty )
   !
-  integer :: kter, nbase, np, n, m
-  ! counter on iterations
-  ! dimension of the reduced basis
-  ! counter on the reduced basis vectors
-  ! do-loop counters
-  real(kind=DP), allocatable :: hr (:,:),  sr (:,:), vr (:,:),  ew (:)
-  ! Hamiltonian on the reduced basis
-  ! S matrix on the reduced basis
-  ! eigenvectors of the Hamiltonian
-  ! eigenvalues of the reduced hamiltonian
-  real(kind=DP), external :: DDOT
-  complex(kind=DP), allocatable :: psi(:,:), hpsi (:,:),spsi (:,:)
-  ! work space, contains psi
-  ! the product of H and psi
-  ! the product of S and psi
-  logical, allocatable  :: conv (:)
-  ! true if the root is converged
+  ! ... on OUTPUT
   !
-  ! Called routines:
-  external h_psi, s_psi, g_psi
-  ! h_psi(ndmx,ndim,nvec,psi,hpsi)
-  !     calculates H|psi> 
-  ! s_psi(ndmx,ndim,nvec,psi,spsi)
-  !     calculates S|psi> (if needed)
-  !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
-  ! g_psi(ndmx,ndim,notcnv,psi,e)
-  !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
-  !    the first nvec columns contain the trial eigenvectors
+  REAL (KIND=DP) :: e(nvec)
+    ! contains the estimated roots.
+  INTEGER :: iter, notcnv
+    ! integer  number of iterations performed
+    ! number of unconverged roots
   !
-  ! allocate the work arrays
+  ! ... LOCAL variables
   !
-
-  call start_clock ('cegterg')
-  allocate ( psi( ndmx, nvecx))    
-  allocate (hpsi( ndmx, nvecx))    
-  if (overlap) allocate (spsi( ndmx, nvecx))    
-  allocate (sr( nvecx, nvecx))    
-  allocate (hr( nvecx, nvecx))    
-  allocate (vr( nvecx, nvecx))    
-  allocate (ew( nvecx))    
-  allocate (conv( nvec))    
-
-  if (nvec > nvecx / 2) call errore ('regter', 'nvecx is too small',1)
+  INTEGER, PARAMETER :: maxter = 20
+    ! maximum number of iterations
   !
-  !     prepare the hamiltonian for the first iteration
+  INTEGER :: kter, nbase, np, n, m
+    ! counter on iterations
+    ! dimension of the reduced basis
+    ! counter on the reduced basis vectors
+    ! do-loop counters
+  REAL (KIND=DP), ALLOCATABLE :: hr(:,:),  sr(:,:), vr(:,:),  ew(:)
+    ! Hamiltonian on the reduced basis
+    ! S matrix on the reduced basis
+    ! eigenvectors of the Hamiltonian
+    ! eigenvalues of the reduced hamiltonian
+  REAL (KIND=DP), EXTERNAL :: DDOT
+  COMPLEX (KIND=DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+    ! work space, contains psi
+    ! the product of H and psi
+    ! the product of S and psi
+  LOGICAL, ALLOCATABLE  :: conv(:)
+    ! true if the root is converged
+  REAL (KIND=DP) :: empty_ethr 
+    ! threshold for empty bands
+  !
+  ! ... Called routines:
+  !
+  EXTERNAL :: h_psi, s_psi, g_psi
+    ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+    !     calculates H|psi> 
+    ! s_psi(ndmx,ndim,nvec,psi,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
+    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
+    !    the first nvec columns contain the trial eigenvectors
+  !
+  !
+  CALL start_clock( 'cegterg' )
+  !
+  ! ... ALLOCATE the work arrays
+  !
+  ALLOCATE( psi( ndmx, nvecx ) )    
+  ALLOCATE( hpsi( ndmx, nvecx ) )    
+  IF ( overlap ) ALLOCATE( spsi( ndmx, nvecx ) )    
+  ALLOCATE( sr( nvecx, nvecx ) )    
+  ALLOCATE( hr( nvecx, nvecx ) )    
+  ALLOCATE( vr( nvecx, nvecx ) )    
+  ALLOCATE( ew( nvecx ) )    
+  ALLOCATE( conv( nvec ) )    
+  !
+  IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
+  !
+  !
+  ! ... threshold for empty bands
+  !
+  empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
+  !
+  ! ... prepare the hamiltonian for the first iteration
   !
   notcnv = nvec
-  nbase = nvec
-  if (overlap) spsi = (0.d0, 0.d0)
-  psi  = (0.d0, 0.d0)
-  hpsi = (0.d0, 0.d0)
-  psi(:, 1:nvec) = evc(:, 1:nvec)
+  nbase  = nvec
+  CONV   = .FALSE.
   !
-  !     hpsi contains h times the basis vectors
+  IF ( overlap ) spsi = ZERO
+  psi  = ZERO
+  hpsi = ZERO
+  psi(:,1:nvec) = evc(:,1:nvec)
   !
-  call h_psi (ndmx, ndim, nvec, psi, hpsi)
-  if (overlap) call s_psi (ndmx, ndim, nvec, psi, spsi)
+  ! ... hpsi contains h times the basis vectors
   !
-  !     hr contains the projection of the hamiltonian onto the reduced space
-  !     vr contains the eigenvectors of hr
+  CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
   !
-  hr (:,:) = 0.d0
-  vr (:,:) = 0.d0
-  call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0 , psi, &
-       2*ndmx, hpsi, 2*ndmx, 0.d0, hr, nvecx)
-  if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
-       hpsi, 2*ndmx, hr, nvecx)
-#ifdef __PARA
-  call reduce (nbase * nvecx, hr)
-#endif
-  sr(:,:) = 0.d0
-  if (overlap) then
-     call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0, psi, &
-          2*ndmx, spsi, 2*ndmx, 0.d0, sr, nvecx)
-     if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
-          spsi, 2*ndmx, sr, nvecx)
-  else
-     call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0, psi, &
-          2*ndmx, psi, 2*ndmx, 0.d0, sr, nvecx)
-     if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
-          psi, 2*ndmx, sr, nvecx)
-  end if
-#ifdef __PARA
-  call reduce (nbase * nvecx, sr)
-#endif
-
-  do n = 1, nbase
-     e (n) = hr (n, n)
-     conv (n) = .false.
-     vr (n, n) = 1.d0
-  enddo
+  IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
   !
-  !       iterate
+  ! ... hr contains the projection of the hamiltonian onto the reduced space
+  ! ... vr contains the eigenvectors of hr
   !
-  do kter = 1, maxter
+  hr(:,:) = 0.D0
+  vr(:,:) = 0.D0
+  !
+  CALL DGEMM( 'T', 'N', nbase, nbase, 2*ndim, 2.D0 , &
+              psi, 2*ndmx, hpsi, 2*ndmx, 0.D0, hr, nvecx )
+  !
+  IF ( gstart == 2 ) &
+     CALL DGER( nbase, nbase, -1.D0, psi, 2*ndmx, hpsi, 2*ndmx, hr, nvecx )
+  !
+  CALL reduce( nbase * nvecx, hr )
+  !
+  sr(:,:) = 0.D0
+  !
+  IF ( overlap ) THEN
+     !
+     CALL DGEMM( 'T', 'N', nbase, nbase, 2*ndim, 2.D0, &
+                 psi, 2*ndmx, spsi, 2*ndmx, 0.D0, sr, nvecx )
+     !
+     IF ( gstart == 2 ) &
+        CALL DGER( nbase, nbase, -1.D0, psi, 2*ndmx, spsi, 2*ndmx, sr, nvecx )
+     !
+  ELSE
+     !
+     CALL DGEMM( 'T', 'N', nbase, nbase, 2*ndim, 2.D0, &
+                 psi, 2*ndmx, psi, 2*ndmx, 0.D0, sr, nvecx )
+     !
+     IF ( gstart == 2 ) &
+        CALL DGER( nbase, nbase, -1.D0, psi, 2*ndmx, psi, 2*ndmx, sr, nvecx )
+     !
+  END IF
+  !
+  CALL reduce( nbase * nvecx, sr )
+  !
+  DO n = 1, nbase
+     !
+     e(n)    = hr(n,n)
+     vr(n,n) = 1.D0
+     !
+  END DO
+  !
+  ! ... iterate
+  !
+  iterate: DO kter = 1, maxter
+     !
      iter = kter
-     call start_clock ('update')
+     !
+     CALL start_clock( 'update' )
+     !
      np = 0
-     do n = 1, nvec
-        if ( .not.conv (n) ) then
+     !
+     DO n = 1, nvec
+        !
+        IF ( .NOT. conv(n) ) THEN
            !
-           !     this root not yet converged ... 
+           ! ... this root not yet converged ... 
            !
            np = np + 1
            !
-           ! reorder eigenvectors so that coefficients for unconverged
-           ! roots come first. This allows to use quick matrix-matrix 
-           ! multiplications to set a new basis vector (see below)
+           ! ... reorder eigenvectors so that coefficients for unconverged
+           ! ... roots come first. This allows to use quick matrix-matrix 
+           ! ... multiplications to set a new basis vector (see below)
            !
-           if (np .ne. n) vr(:,np) = vr(:,n)
-           ! for use in g_psi
-           ew(nbase+np) = e (n)
-        endif
-     enddo
-     !
-     !     expand the basis set with new basis vectors (h-es)psi ...
-     !
-     if (overlap) then
-        call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, spsi, &
-             2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
-     else
-        call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, psi, &
-             2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
-     end if
-     do np = 1, notcnv
-        psi (:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
-     end do
-
-     call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, hpsi, &
-          2*ndmx, vr, nvecx, 1.d0, psi (1, nbase+1), 2*ndmx)
-
-     call stop_clock ('update')
-     !
-     ! approximate inverse iteration
-     !
-     call g_psi (ndmx, ndim, notcnv, psi (1, nbase+1), ew(nbase+1) )
-     !
-     ! "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
-     ! to improve numerical stability of subspace diagonalization rdiaghg
-     ! ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
-     !
-     do n = 1, notcnv
-        ew (n) = 2.d0*DDOT(2*ndim, psi (1, nbase+n), 1, psi (1, nbase+n), 1)
-        if (gstart.eq.2) ew (n) = ew(n) - psi (1, nbase+n)*psi (1, nbase+n)
-     end do
-#ifdef __PARA
-     call reduce (notcnv, ew)
-#endif
-     do n = 1, notcnv
-        call DSCAL (2 * ndim, 1.d0 / sqrt (ew (n) ), psi (1, nbase+n), 1)
-     enddo
-     !
-     !   here compute the hpsi and spsi of the new functions
-     !
-     call h_psi (ndmx, ndim, notcnv, psi (1, nbase+1), &
-                 hpsi (1, nbase+1) )
-     if (overlap) call s_psi (ndmx, ndim, notcnv, psi (1, nbase+1), &
-                 spsi (1, nbase+1) )
-     !
-     !     update the reduced hamiltonian
-     !
-     call start_clock ('overlap')
-     !
-     call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
-          psi, 2*ndmx, hpsi (1, nbase+1), 2*ndmx, 0.d0, &
-          hr (1, nbase+1) , nvecx)
-     if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
-          hpsi(1,nbase+1), 2*ndmx, hr (1, nbase+1), nvecx)
-     !
-#ifdef __PARA
-     call reduce (nvecx * notcnv, hr (1, nbase+1) )
-#endif
-     if (overlap) then
-        call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
-             psi, 2*ndmx, spsi (1, nbase+1) , 2*ndmx, 0.d0, &
-             sr (1, nbase+1) , nvecx)
-        if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
-             spsi(1,nbase+1), 2*ndmx, sr (1, nbase+1), nvecx)
-     else
-        call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
-             psi, 2*ndmx, psi (1, nbase+1) , 2*ndmx, 0.d0, &
-             sr (1, nbase+1) , nvecx)
-        if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
-             psi(1,nbase+1), 2*ndmx, sr (1, nbase+1), nvecx)
-     end if
-#ifdef __PARA
-     call reduce (nvecx * notcnv, sr (1, nbase+1) )
-#endif
-     call stop_clock ('overlap')
-     nbase = nbase+notcnv
-     do n = 1, nbase
-        do m = n + 1, nbase
-           hr (m, n) = hr (n, m)
-           sr (m, n) = sr (n, m)
-        enddo
-     enddo
-     !
-     !     diagonalize the reduced hamiltonian
-     !
-     call rdiaghg (nbase, nvec, hr, sr, nvecx, ew, vr)
-     !
-     !     test for convergence
-     !
-     notcnv = 0
-     do n = 1, nvec
-!!!        conv (n) = conv(n) .or. ( abs (ew (n) - e (n) ) <= ethr )
-        conv (n) = ( abs (ew (n) - e (n) ) <= ethr )
-        if ( .not. conv(n) ) notcnv = notcnv + 1
-        e (n) = ew (n)
-     enddo
-     !
-     !     if overall convergence has been achieved, OR
-     !     the dimension of the reduced basis set is becoming too large, OR
-     !     in any case if we are at the last iteration
-     !     refresh the basis set. i.e. replace the first nvec elements
-     !     with the current estimate of the eigenvectors;
-     !     set the basis dimension to nvec.
-     !
-     if (notcnv == 0 .or. nbase+notcnv > nvecx .or. iter == maxter) then
-        call start_clock ('last')
-        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, psi, &
-             2*ndmx, vr, nvecx, 0.d0, evc, 2*ndmx)
-        if (notcnv == 0) then
+           IF ( np /= n ) vr(:,np) = vr(:,n)
+           !
+           ! ... for use in g_psi
+           !
+           ew(nbase+np) = e(n)
+           !   
+        END IF
         !
-        !     all roots converged: return
+     END DO
+     !
+     ! ... expand the basis set with new basis vectors ( H - e S)|psi> ...
+     !
+     IF ( overlap ) THEN
         !
-           call stop_clock ('last')
-           goto 10
-        else if (iter == maxter) then
+        CALL DGEMM( 'N', 'N', 2*ndim, notcnv, nbase, 1.D0, spsi, &
+                    2*ndmx, vr, nvecx, 0.D0, psi(1,nbase+1), 2*ndmx )
         !
-        !     last iteration, some roots not converged: return
+     ELSE
         !
-#ifdef DEBUG_DAVIDSON
-           do n = 1, nvec
-              if ( .not.conv (n) ) WRITE( stdout, '("   WARNING: e(",i3,") =",&
-                   f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
-           enddo
-#else
-           WRITE( stdout, '("   WARNING: ",i5," eigenvalues not converged")') &
+        CALL DGEMM( 'N', 'N', 2*ndim, notcnv, nbase, 1.D0, psi, &
+                    2*ndmx, vr, nvecx, 0.D0, psi(1,nbase+1), 2*ndmx )
+        !
+     END IF
+     !
+     FORALL( np = 1: notcnv ) &
+        psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+     !
+     CALL DGEMM( 'N', 'N', 2*ndim, notcnv, nbase, 1.D0, hpsi, &
+                 2*ndmx, vr, nvecx, 1.D0, psi(1,nbase+1), 2*ndmx )
+     !
+     CALL stop_clock( 'update' )
+     !
+     ! ... approximate inverse iteration
+     !
+     CALL g_psi( ndmx, ndim, notcnv, psi(1,nbase+1), ew(nbase+1) )
+     !
+     ! ... "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
+     ! ... to improve numerical stability of subspace diagonalization rdiaghg
+     ! ... ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
+     !
+     DO n = 1, notcnv
+        !
+        ew(n) = 2.D0 * DDOT( 2*ndim, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
+        !
+        IF ( gstart == 2 ) ew(n) = ew(n) - psi(1,nbase+n) * psi(1,nbase+n)
+        !
+     END DO
+     !
+     CALL reduce( notcnv, ew )
+     !
+     DO n = 1, notcnv
+        !
+        psi(1,nbase+n) = psi(1,nbase+n) / SQRT( ew(n) )
+        !
+     END DO
+     !
+     ! ... here compute the hpsi and spsi of the new functions
+     !
+     CALL h_psi( ndmx, ndim, notcnv, psi(1,nbase+1), hpsi(1,nbase+1) )
+     !
+     IF ( overlap ) &
+        CALL s_psi( ndmx, ndim, notcnv, psi(1,nbase+1), spsi(1,nbase+1) )
+     !
+     ! ... update the reduced hamiltonian
+     !
+     CALL start_clock( 'overlap' )
+     !
+     CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, 2*ndim, 2.D0, psi, &
+                 2*ndmx, hpsi(1,nbase+1), 2*ndmx, 0.D0, hr(1,nbase+1), nvecx )
+     !
+     IF ( gstart == 2 ) &
+        CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, 2*ndmx, &
+                   hpsi(1,nbase+1), 2*ndmx, hr(1,nbase+1), nvecx )
+     !
+     CALL reduce( nvecx * notcnv, hr(1,nbase+1) )
+     !
+     IF ( overlap ) THEN
+        !
+        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, 2*ndim, 2.D0, psi, 2*ndmx, &
+                    spsi(1,nbase+1), 2*ndmx, 0.D0, sr(1,nbase+1), nvecx )
+        !
+        IF ( gstart == 2 ) &
+           CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, 2*ndmx, &
+                      spsi(1,nbase+1), 2*ndmx, sr(1,nbase+1), nvecx )
+        !
+     ELSE
+        !
+        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, 2*ndim, 2.D0, psi, 2*ndmx, &
+                    psi(1,nbase+1), 2*ndmx, 0.D0, sr(1,nbase+1) , nvecx )
+        !
+        IF ( gstart == 2 ) &
+           CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, 2*ndmx, &
+                      psi(1,nbase+1), 2*ndmx, sr(1,nbase+1), nvecx )
+        !
+     END IF
+     !
+     CALL reduce( nvecx * notcnv, sr(1,nbase+1) )
+     !
+     CALL stop_clock( 'overlap' )
+     !
+     nbase = nbase + notcnv
+     !
+     DO n = 1, nbase
+        !
+        DO m = n + 1, nbase
+           !
+           hr(m,n) = hr(n,m)
+           sr(m,n) = sr(n,m)
+           !
+        END DO
+        !
+     END DO
+     !
+     ! ... diagonalize the reduced hamiltonian
+     !
+     CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+     !
+     ! ... test for convergence
+     !
+     WHERE( btype(:) == 1 )
+        !
+        conv(:) = ( ( ABS( ew(:) - e(:) ) < ethr ) )
+        !
+     ELSEWHERE
+        !
+        conv(:) = ( ( ABS( ew(:) - e(:) ) < empty_ethr ) )
+        !
+     END WHERE
+     !
+     notcnv = COUNT( .NOT. conv(:) )
+     !
+     e(1:nvec) = ew(1:nvec)
+     !
+     ! ... if overall convergence has been achieved, OR
+     ! ... the dimension of the reduced basis set is becoming too large, OR
+     ! ... in any case if we are at the last iteration
+     ! ... refresh the basis set. i.e. replace the first nvec elements
+     ! ... with the current estimate of the eigenvectors;
+     ! ... set the basis dimension to nvec.
+     !
+     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. iter == maxter ) THEN
+        !
+        CALL start_clock( 'last' )
+        !
+        CALL DGEMM( 'N', 'N', 2*ndim, nvec, nbase, 1.D0, &
+                    psi, 2*ndmx, vr, nvecx, 0.D0, evc, 2*ndmx )
+        !
+        IF ( notcnv == 0 ) THEN
+           !
+           ! ... all roots converged: return
+           !
+           CALL stop_clock( 'last' )
+           !
+           EXIT iterate
+           !
+        ELSE IF ( iter == maxter ) THEN
+           !
+           ! ... last iteration, some roots not converged: return
+           !
+           WRITE( UNIT = stdout, &
+                  FMT = '("   WARNING: ",i5," eigenvalues not converged")' ) &
                 notcnv
-#endif
-           call stop_clock ('last')
-           goto 10
-        end if
+           !
+           CALL stop_clock( 'last' )
+           !
+           EXIT iterate
+           !
+        END IF
         !
-        !     refresh psi, H*psi and S*psi
+        ! ... refresh psi, H*psi and S*psi
         !
-        psi(:, 1:nvec) = evc(:, 1:nvec)
-
-        if (overlap) then
-           call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, spsi, &
-                2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
-           spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
-        end if
-        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, hpsi, &
-             2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
-        hpsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
+        psi(:,1:nvec) = evc(:,1:nvec)
         !
-        !     refresh the reduced hamiltonian
+        IF ( overlap ) THEN
+           !
+           CALL DGEMM( 'N', 'N', 2*ndim, nvec, nbase, 1.D0, spsi, &
+                       2*ndmx, vr, nvecx, 0.D0, psi(1,nvec+1), 2*ndmx )
+           !
+           spsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
+           !
+        END IF
+        !
+        CALL DGEMM( 'N', 'N', 2*ndim, nvec, nbase, 1.D0, hpsi, &
+                    2*ndmx, vr, nvecx, 0.D0, psi(1,nvec+1), 2*ndmx )
+        !
+        hpsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
+        !
+        ! ... refresh the reduced hamiltonian
         !
         nbase = nvec
-        hr (:, 1:nbase) = 0.d0
-        sr (:, 1:nbase) = 0.d0
-        vr (:, 1:nbase) = 0.d0
-        do n = 1, nbase
-           hr (n, n) = e(n)
-           sr (n, n) = 1.d0
-           vr (n, n) = 1.d0
-        end do
-        call stop_clock ('last')
-     endif
-  enddo
-
-10 continue
-
-  deallocate (conv)
-  deallocate (ew)
-  deallocate (vr)
-  deallocate (hr)
-  deallocate (sr)
-  if (overlap) deallocate (spsi)
-  deallocate (hpsi)
-  deallocate ( psi)
-
-  call stop_clock ('cegterg')
-  return
-end subroutine regterg
-
+        !
+        hr(:,1:nbase) = 0.D0
+        sr(:,1:nbase) = 0.D0
+        vr(:,1:nbase) = 0.D0
+        !
+        DO n = 1, nbase
+           !
+           hr(n,n) = e(n)
+           sr(n,n) = 1.D0
+           vr(n,n) = 1.D0
+           !
+        END DO
+        !
+        CALL stop_clock( 'last' )
+        !
+     END IF
+     !
+  END DO iterate
+  !
+  DEALLOCATE( conv )
+  DEALLOCATE( ew )
+  DEALLOCATE( vr )
+  DEALLOCATE( hr )
+  DEALLOCATE( sr )
+  IF ( overlap ) DEALLOCATE( spsi )
+  DEALLOCATE( hpsi )
+  DEALLOCATE( psi )
+  !
+  CALL stop_clock( 'cegterg' )
+  !
+  RETURN
+  !
+END SUBROUTINE regterg
