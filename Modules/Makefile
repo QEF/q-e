@@ -17,7 +17,8 @@ readpseudo.o  \
 pseudodata.o  \
 cell_base.o  \
 pseudo_types.o \
-ptoolkit.o
+ptoolkit.o \
+stick_base.o
 #
 include ../make.rules
 #
