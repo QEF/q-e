@@ -48,3 +48,5 @@ rrkj2upf.o: $(OBJS)
 uspp2upf.o: $(OBJS)
 vanderbilt.o: $(OBJS)
 vdb2upf.o: $(OBJS)
+
+include .dependencies

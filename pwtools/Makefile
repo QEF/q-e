@@ -42,7 +42,7 @@ MODULES = \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/supercell.o \
-../Modules/splinelib.o 
+../Modules/splinelib.o
 
 all : band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x \
       kpoints.x pwi2xsf.x path_int.x
@@ -79,3 +79,5 @@ path_int.x : path_int.o
 
 clean :
 	- /bin/rm -f pwi2xsf pwi2xsf_old *.x *.o *~ *.F90 *.mod *.d *.i work.pc
+
+include .dependencies

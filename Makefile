@@ -23,29 +23,29 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
 pw : modules libs
-	if test -d PW  ; then  ( cd PW  ; make all ) ; fi
+	if test -d PW   ; then ( cd PW   ; make all ) ; fi
 fpmd : modules libs
-	if test -d FPMD; then  ( cd FPMD; make all ) ; fi
+	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
 cp : modules libs
-	if test -d CPV ; then  ( cd CPV ; make all ) ; fi
+	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
 
-ph : pw
-	if test -d PH  ; then  ( cd PH  ; make all ) ; fi
-pp : pw
-	if test -d PP  ; then  ( cd PP  ; make all ) ; fi
-gamma : pw
-	if test -d Gamma;then  ( cd Gamma; make all ); fi
-nc : pw
-	if test -d PWNC; then  ( cd PWNC; make all ) ; fi
-pwcond : pw pp
-	if test -d PWCOND;then ( cd PWCOND; make all );fi
-d3 : pw ph
-	if test -d D3  ; then  ( cd D3  ; make all ) ; fi
+ph : modules libs pw
+	if test -d PH ; then ( cd PH ; make all ) ; fi
+pp : modules libs pw
+	if test -d PP ; then ( cd PP ; make all ) ; fi
+gamma : modules libs pw
+	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
+nc : modules libs pw
+	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
+pwcond : modules libs pw pp
+	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
+d3 : modules libs pw ph
+	if test -d D3 ; then ( cd D3 ; make all ) ; fi
 
-tools : libs
-	if test -d pwtools ; then ( cd pwtools ; make all ) ; fi
-upf : libs
-	if test -d upftools; then ( cd upftools; make all ) ; fi
+tools : modules libs pw
+	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
+upf : modules libs
+	if test -d upftools ; then ( cd upftools ; make all ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 tools
 all   : pwall fpmd cp upf 
@@ -53,25 +53,25 @@ all   : pwall fpmd cp upf
 modules :
 	( cd Modules; make all )
 libs : modules
-	( cd clib; make all )
-	( cd flib; make all )
+	( cd clib ; make all )
+	( cd flib ; make all )
 
 # create link only if file exists
 links :
 	test -d bin || mkdir bin
 	( cd bin/ ; \
-	  for exe in ../PW/pw.x ../PW/memory.x \
-	             ../PH/ph.x ../D3/d3.x ../Gamma/phcg.x \
-		     ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x \
-		     ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x \
-		     ../PP/projwfc.x ../PP/voronoy.x ../PP/plotband.x \
-		     ../PWCOND/pwcond.x ../pwtools/band_plot.x \
-		     ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x \
-		     ../pwtools/q2r.x ../pwtools/dist.x ../pwtools/ev.x \
-		     ../pwtools/kpoints.x ../pwtools/path_int.x ; do \
-	    if test -f $$exe ; then ln -fs $$exe . ; fi \
-	  done ; \
-	  if test -f ../PWNC/pw.x ; then ln -fs ../PWNC/pw.x pwnc.x ; fi \
+	  for exe in \
+	      ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x \
+	      ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x \
+	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
+	      ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x \
+	      ../PP/plotband.x ../PWNC/pwnc.x ../PWCOND/pwcond.x \
+	      ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
+	      ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
+	      ../pwtools/ev.x ../pwtools/kpoints.x ../pwtools/path_int.x \
+	  ; do \
+	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+	  done \
 	)
 
 # remove object files and executables
@@ -80,15 +80,15 @@ clean :
 	#                         # same with .dependencies below
 	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools \
 		   Modules install clib flib FPMD CPV ; do \
-	  if test -d $$dir ; then \
-	    ( cd $$dir ; touch .dependencies ; make clean ) \
-	  fi \
+	    if test -d $$dir ; then \
+		( cd $$dir ; touch .dependencies ; make clean ) \
+	    fi \
 	done
 
 # remove configuration files too
 veryclean : clean
 	- /bin/rm -rf make.rules make.sys */.dependencies \
-		      config.log config.status */dum1 */dum2 bin/*.x \
+		      config.log config.status bin/*.x \
 		      autom4te.cache pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
 	- if test -d GUI ; then ( cd GUI; make veryclean ) ; fi
@@ -110,13 +110,11 @@ tar :
 # TAR-GUI works only if we have CVS-sources !!!
 tar-gui :
 	@if test -d GUI/PWgui ; then \
-		cd GUI/PWgui; \
-		make clean cvsinit pwgui-source-notcl; \
-		mv PWgui-*.tgz ../../; \
+	    cd GUI/PWgui ; \
+	    make clean cvsinit pwgui-source-notcl ; \
+	    mv PWgui-*.tgz ../.. ; \
 	else \
-		echo ""; \
-		echo "  Sorry tar-gui works only for CVS-sources !!!"; \
-		echo  ""; \
+	    echo ; \
+	    echo "  Sorry, tar-gui works only for CVS-sources !!!" ; \
+	    echo ; \
 	fi
-
-
