@@ -1,4 +1,26 @@
-19 Aug 2004  Manual update (PHG)
+24 Aug 2004  Fixed a bug in the way the prefix.dat file was written.
+             Cleanup of debug code (C.S.)
+             Examples 1-7 updated (PG)
+
+23 Aug 2004  Fixed several bugs in the routines for "path-optimization": 
+             "reset_vel" input variable was read but not used
+             parallelization on images was not properly working
+             cleanup in the way ATOMIC_POSITIONS card is readi.
+             Minor fixes to compute_scf.f90 (C.S.)
+             Minor Mac OS-X fix .
+
+20 Aug 2004  Manuals for PW and CP/FPMD merged  [Gerardo]
+             bugfix for configure on AIX [Gerardo]
+             Added calculation of the Chemical shift tensor (NMR)
+             Reconstruction with GIPAW method
+             Totally experimental for the moment (MP)
+             Example for electric-field gradient calculation (MP)
+
+19 Aug 2004  Manual update (PHG) . Examples: changed default path from 
+             $HOME/O-sesame to $HOME/espresso [Gerardo]
+             efg.f90: typos corrected in the printout of various tensors
+                      units added to final results
+                      sign of off-diagonal terms corrected (MP)
              DIIS: fixed some bugs in the diis procedure.
              Davidson: minor cleanup. (CS)
 

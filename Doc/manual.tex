@@ -28,29 +28,26 @@
 
 This manual covers the installation and usage of ESPRESSO (opEn-Source
 Package for Research in Electronic Structure, Simulation, and
-Optimization), version \version.
-
-ESPRESSO is composed of the following packages:
+Optimization), version \version. The ESPRESSO package contains the
+following codes for the calculation of electronic-structure 
+properties within Density-Functional Theory, using a 
+Plane-Wave basis set and pseudopotentials:
 \begin{description}
-  \item [PWscf] (Plane-Wave Self-Consistent Field):
-    a set of programs for electronic structure calculations within
-    Density-Functional Theory and Density-Functional Perturbation
-    Theory, using a Plane-Wave basis set and pseudopotentials.
-
-  \item [FPMD] (First Principles Molecular Dynamics) and \textbf{CP}:
-    two programs for Car-Parrinello \emph{ab initio} molecular
-    dynamics, also with a Plane-Wave basis set and pseudopotentials.
-    (It is our long-term goal to merge FPMD and CP into a single
-    program.)
-
+  \item [PWscf] (Plane-Wave Self-Consistent Field).
+  \item [FPMD] (First Principles Molecular Dynamics).
+  \item [CP] (Car-Parrinello).
+\end{description}
+Moreover it contains auxiliary codes:
+\begin{description}
   \item [PWgui] (Graphical User Interface for PWscf):
     a graphical interface for producing input data files for PWscf.
 
-  \item [atomic]:
-    a set of programs for atomic calculations and generation of
+  \item [atomic]
+    a program for atomic calculations and generation of
     pseudopotentials.
 \end{description}
-Other sources of documentation can be found in:
+Documentation, in addition to what provided in this manual,
+can be found in:
 \begin{itemize}
   \item the \texttt{Doc/} directory of the ESPRESSO distribution
   \item the various \texttt{README} files found in the distribution
@@ -70,29 +67,28 @@ Other sources of documentation can be found in:
 \end{itemize}
 The ESPRESSO codes work on many different types of Unix machines,
 including parallel machines using Message Passing Interface (MPI).
-Running ESPRESSO on MS-Windows is possible in principle, but not
-supported: a \texttt{Makefile} is provided (from an old release of
-PWscf), but has not been tested with the current version and may not
-work.
+Running ESPRESSO on MS-Windows is possible, but not supported: 
+see the Installation section.
 
-\paragraph{}
+\subsection{Codes}
+
 PWscf can currently perform the following kinds of calculations:
 
 \begin{itemize}
   \item ground-state energy and one-electron (Kohn-Sham) orbitals
   \item atomic forces, stresses, and structural optimization
   \item molecular dynamics on the ground-state Born-Oppenheimer
-        surface
-  \item variable-cell molecular dynamics
-  \item phonon frequencies and eigenvectors at a generic wave vector
+        surface, also with variable-cell
+  \item Nudged Elastic Band (NEB) for energy barriers and reaction
+        paths
+  \item phonon frequencies and eigenvectors at a generic wave vector,
+        using Density-Functional Perturbation Theory
   \item effective charges and dielectric tensors
   \item electron-phonon interaction coefficients for metals
   \item interatomic force constants in real space
   \item third-order anharmonic phonon lifetimes
   \item Infrared and Raman (nonresonant) cross section
   \item macroscopic polarization via Berry Phase
-  \item Nudged Elastic Band (NEB) for energy barriers and reaction
-        paths
 \end{itemize}
 All of the above work for both insulators and metals, in any crystal
 structure, for many exchange-correlation functionals (including spin
@@ -103,24 +99,24 @@ Non-colinear magnetism and spin-orbit interactions are also
 implemented, although at an experimental stage.
 Various postprocessing programs are available.
 
-\paragraph{}
 FPMD and CP can currently perform the following kinds of calculations:
 
 \begin{itemize}
   \item Car-Parrinello molecular dynamics simulation
   \item geometry optimization by damped dynamics
   \item constant-temperature simulation with Nos\`e thermostats
-  \item variable-cell dynamics (FPMD only (*** \`e vero? ***))
-  \item spin-polarized and/or many-k-points calculation
+  \item variable-cell (Parrinello-Rahman) dynamics
   \item Nudged Elastic Band (NEB) for energy barriers and reaction
         paths
-  \item *** altro? ***
+  \item strings method (CP only)
+  \item dynamics with Wannier functions (CP only)
 \end{itemize}
+Spin-polarized calculations and (for FPMD only) calculations with
+multiple k-points can be performed.
 CP works with both norm-conserving and Ultrasoft pseudopotentials,
-while FPMD is currently limited to norm-conserving (*** \`e vero?
-***).
+while FPMD is currently limited to norm-conserving.
 The restart files of the two programs are compatible: you can run FPMD
-with a restart file from CP, and vice versa.
+with a restart file from CP, and vice versa. 
 
 \subsection{People}
 
@@ -132,8 +128,8 @@ INFM
                    {http://www.democritos.it/})
 under the coordination of
 Paolo Giannozzi
-(\htmladdnormallink{\texttt{p.giannozzi@sns.it}}%
-                   {mailto:p.giannozzi@sns.it})
+(\htmladdnormallink{\texttt{giannozz@nest.sns.it}}%
+                   {mailto:giannozz@nest.sns.it})
 (Scuola Normale Superiore, Pisa),
 with the strong support of
 the CINECA National Supercomputing Center in Bologna
@@ -155,8 +151,8 @@ Stefano Baroni, Stefano de Gironcoli, Andrea Dal Corso (SISSA),
 Paolo Giannozzi,
 and others.
 The web site for PWscf and related codes is:
-\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-                  {http://www.pwscf.org/}
+\htmladdnormallink{\texttt{http://www.pwscf.org}}%
+                  {http://www.pwscf.org}.
 
 The FPMD and CP codes are both based on the original code written by
 Roberto Car and Michele Parrinello.
@@ -212,7 +208,8 @@ Yudong Wu,
 Xiaofei Wang,
 and let us apologize to everybody we have forgotten.
 
-This manual was (mostly) written by Paolo Giannozzi.
+This manual was written (mostly) by Paolo Giannozzi, Gerardo Ballabio,
+Carlo Cavazzoni.
 
 \subsection{Terms of use}
 
@@ -221,7 +218,8 @@ License
 (\htmladdnormallink{\texttt{http://www.pwscf.org/License.txt}}%
                    {http://www.pwscf.org/License.txt},
 or the file \texttt{License} in the distribution).
-All trademarks belong to their respective owners.
+All trademarks mentioned in this manual 
+belong to their respective owners.
 
 We shall greatly appreciate if scientific work done using this code
 will contain an explicit acknowledgment and a reference to the
@@ -306,15 +304,15 @@ Presently it is expected to work for Linux PCs, IBM sp machines, SGI
 Origin, some HP-Compaq Alpha machines, Cray X1.
 See also the \texttt{README.install} file.
 
-If \texttt{configure} completes but it doesn't recognize your 
-configuration, you may either edit the \texttt{make.sys} file, or try
-to generate a new \texttt{configure} file following the instructions
-in \texttt{README.configure} (please report success to the
-developers).
-If \texttt{configure} stops with an error and the nontrivial task of
-configuring \texttt{configure} scares you, or if you don't know what
-to do with the \texttt{make.sys} file, you may want to try the manual
-configuration, described below.
+If \texttt{configure} doesn't recognize your configuration, you may 
+resort to the manual configuration, described below, or try to
+generate a better \texttt{configure} file following the instructions 
+in \texttt{README.configure} (please report success to the developers). 
+The latter option is only for experts.
+If \texttt{configure} stops with an error, you typically have a 
+misconfigured fortran compiler, or no compiler at all, or a machine 
+that does not allow direct interactive execution of fortran compiled 
+codes.
 
 The file \texttt{make.sys} may still require some tweaking if produced
 by the automatic configuration; if produced by manual configuration,
@@ -322,11 +320,11 @@ it MUST be edited.
 In most cases you will need to specify the name and location of
 libraries (see next section).
 In some cases you may need to change preprocessing options
-(\texttt{CPPFLAGS}) and compiler options (\texttt{FFLAGS}).
+(\texttt{CPPFLAGS}) and/or compiler options (\texttt{F90FLAGS}).
 
 \paragraph{Please Note:}
 
-if you change \texttt{CPPFLAGS} or \texttt{FFLAGS} after the first
+if you change \texttt{CPPFLAGS} or \texttt{F90FLAGS} after the first
 compilation, run \texttt{make clean} and recompile everything, unless
 you know exactly which routines are affected and how to force their
 recompilation.
@@ -390,24 +388,25 @@ where \emph{your-system} is one of the following:
                       \strut\qquad compiler\\
   \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
   \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
-  \texttt{fujitsu}:   Fujitsu vector machines, Fujitsu compiler (+)\\
+  \texttt{fujitsu}:   Fujitsu vector machines, Fujitsu compiler \\ %(+)
   \texttt{hitachi}:   Hitachi SR8000 \\
   \texttt{hp}:        HP PA-RISC workstations, HP compiler\\
   \texttt{hpMPI}:     HP PA-RISC parallel machines, HP compiler\\
   \texttt{ia64}:      HP Itanium workstations, HP compiler\\
   \texttt{irix}:      SGI workstations, SGI compiler\\
-  \texttt{pc\_abs}:   Linux PCs, Absoft compiler (+)\\
-  \texttt{pc\_lahey}: Linux PCs, Lahey compiler (+)\\
-  \texttt{pc\_pgi}:   Linux PCs, Portland compiler (+)\\
-  \texttt{sun}:       Sun workstations, Sun compiler (+)\\
-  \texttt{sunmpi}:    Sun parallel machines, Sun compiler (+)\\
-  \texttt{sxcross}:   NEC SX-6 (+)\\
+  \texttt{pc\_abs}:   Linux PCs, Absoft compiler \\ %(+)
+  \texttt{pc\_lahey}: Linux PCs, Lahey compiler \\ %(+)
+  \texttt{pc\_pgi}:   Linux PCs, Portland compiler \\ %(+)
+  \texttt{sun}:       Sun workstations, Sun compiler \\ %(+)
+  \texttt{sunmpi}:    Sun parallel machines, Sun compiler \\ %(+)
+  \texttt{sxcross}:   NEC SX-6 \\ %(+)
   \texttt{t3e}:       Cray T3E, Cray compiler
 \end{quote}
 and has a corresponding file \texttt{Make.}\emph{your-system}
-in the \texttt{install/} directory. Note that systems marked with (+) 
-in the above list do not support, or did not in the past, or we don't 
-know if they do, C-style preprocessing directives.
+in the \texttt{install/} directory. 
+% Note that systems marked with (+) in the above list do not support, 
+% or did not in the past, or we don't know if they do, C-style
+% preprocessing directives in fortran compilers.
 
 If your machine/compiler combination is not in the list, choose what
 looks like the most similar combination.  You may need to define your
@@ -508,8 +507,8 @@ targets:
   \item
     \texttt{make pwall} produces all of the above.
   \item
-    \texttt{make ld1} produces utilities for pseudopotential
-    generation in directory \texttt{atomic/} (see the specific
+    \texttt{make ld1} produces code \texttt{atomic/ld1.x} for 
+    pseudopotential generationd (see the specific
     documentation in \texttt{atomic\_doc/}).
   \item
     \texttt{make upf} produces utilities for pseudopotential
@@ -519,8 +518,14 @@ targets:
     \texttt{make links} produces links to all executables in directory
     \texttt{bin/}.
   \item
-    \texttt{make all} produces all of the above, plus the CP and FPMD
-    codes (if present).
+    \texttt{make cp} produces the Car-Parrinello code CP in
+    \texttt{CPV/cp.x}.
+  \item
+    \texttt{make fpmd} produces the Car-Parrinello code FPMD
+    \texttt{FPMD/par2.x} and the postprocessing code 
+    \texttt{FPMD/fpmdpp.x}.
+  \item
+    \texttt{make all} produces all of the above.
 \end{itemize}
 For the setup of the GUI, refer to the
 \texttt{PWgui-}\emph{X.Y.Z}\texttt{/INSTALL} file, where \emph{X.Y.Z}
@@ -813,24 +818,28 @@ If you get errors at loading because symbols \texttt{LPUTP},
 
 \section{Pseudopotentials}
 
-Currently PWscf supports both Ultrasoft (US) Vanderbilt
+Currently PWscf and CP support both Ultrasoft (US) Vanderbilt
 pseudopotentials (PPs) and Norm-Conserving (NC)
 Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
-implemented with US PPs.
+implemented with US PPs. Presently FPMD supports only NC PPs.
 
-PWscf uses a unified pseudopotential format (UPF)\\
+The ESPRESSO package uses a unified pseudopotential format (UPF)\\
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
                    {http://www.pwscf.org/format.htm})
-for all types of PPs, but still accepts a number of other formats
+for all types of PPs, but still accepts a number of other formats:
 (\htmladdnormallink{\texttt{http://www.pwscf.org/oldformat.htm}}%
                    {http://www.pwscf.org/oldformat.htm}):
 \begin{enumerate}
-  \item the ``old PWscf'' format for NC PPs
+  \item the ``old PWscf'' format for NC PPs,
+  \item the ``old CP'' format for NC PPs,
+  \item the ``old FPMD'' format for NC PPs,
+  \item the ``new PWscf'' format for NC and US PPs,
   \item the ``Vanderbilt'' format (formatted, not binary) for NC and
-        US PPs
-  \item the ``new PWscf'' format for NC and US PPs.
+        US PPs.
 \end{enumerate}
+Note however that PWscf accept the first, fourth and fifth in the
+above list; CP the second, fourth and fifth; FPMD the third only.
 
 PPs for selected elements can be downloaded from the PWscf PP page
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.html}}%
@@ -848,14 +857,12 @@ tables, such as e.g.:
   \item S. Goedecker, M. Teter, and J. Hutter, Phys. Rev. B
         \textbf{54}, 1703 (1996)
 \end{itemize}
-or otherwise it must be generated.
-This is not as daunting a task as most people think.
-
-Since version 2.1, ESPRESSO includes a PP generation package, in the
+or otherwise it must be generated. Since version 2.1, ESPRESSO 
+includes a PP generation package, in the
 directory \texttt{atomic/} (sources) and \texttt{atomic\_doc/}
 (documentation, tests and examples). 
-The package can generate both NC and US PPs, in various formats that
-are directly read by PWscf.
+The package can generate both NC and US PPs in UPF (and older, not 
+recommended) format.
 We refer to its documentation for instructions on how to generate PPs
 with the \texttt{atomic/} code.
 
@@ -879,9 +886,13 @@ Other PP generation packages are available on-line:
     {http://bohr.inesc-mn.pt/~jlm/pseudo.html}
 \end{itemize}
 
-The first three codes produce PPs in UPF format, or in a format that
+The first two codes produce PPs in UPF format, or in a format that
 can be converted to unified format using the utilities of directory
 \texttt{upftools/}.
+
+Finally, other electronic-structure packages (CAMPOS, ABINIT)
+provide tables of PPs that can be freely downloaded, but need
+to be converted into a suitable format for use with ESPRESSO.
 
 Remember: \emph{always} test the PPs on simple test systems before
 proceeding to serious calculations.
@@ -1796,7 +1807,8 @@ where $d_1$, $d_2$ are prefactors.
 
 \subsection{Memory requirements}
 
-A typical \texttt{pw.x} run will require a maximum memory in the order
+A typical self-consistency or molecular-dynamics run requires 
+a maximum memory in the order
 of $O$ double precision complex numbers, where
 $$
 O = m \cdot M \cdot N + P \cdot N + p \cdot N_1 \cdot N_2 \cdot N_3
@@ -1807,9 +1819,9 @@ meaning as above.
 Note that if the $\Gamma$-point only ($\mathbf{q}=0$) is used to
 sample the Brillouin Zone, the value of $N$ will be cut into half.
 
-Code \texttt{memory.x} yields a rough estimate of the required memory 
-and checks for the validity of the input data file as well.
-Use it exactly as \texttt{pw.x}.
+Code \texttt{memory.x} yields a rough estimate of the memory required 
+by \texttt{pw.x} and checks for the validity of the input data file as 
+well. Use it exactly as \texttt{pw.x}.
 
 The memory required by the phonon code follows the same patterns,
 with somewhat larger factors $m$, $p$, $q$.
@@ -1835,9 +1847,11 @@ processors, $N_p=N_{pk}*N_{pr}$.
 The k-points are divided across $N_{pk}$ pools (``k-point
 parallelization''), while both R- and G-space grids are divided across
 the $N_{pr}$ processors of each pool (``PW parallelization'').
-There is also a third level of parallelization, on the number of
-bands, but it is currently confined to the calculation of a few
-quantities that would not be parallelized at all otherwise.
+A third level of parallelization, on the number of bands, is 
+currently confined to the calculation of a few quantities that 
+would not be parallelized at all otherwise.
+A fourth level of parallelization, on the number of NEB images,
+is available for NEB calculation only.
 
 The effectiveness of parallelization depends on the size and type of
 the system and on a judicious choice of the $N_{pk}$ and $N_{pr}$:
@@ -1849,6 +1863,7 @@ the system and on a judicious choice of the $N_{pk}$ and $N_{pr}$:
     it does not reduce the amount of memory per processor taken by the
     calculation.
     As a consequence, large systems may not fit into memory.
+    The same applies to parallelization over NEB images.
   \item
     PW parallelization works well if $N_{pr}$ is a divisor of both
     dimensions along the $z$ axis of the FFT grids, $N_3$ and $Nr_3$
@@ -1877,13 +1892,13 @@ Do not expect good scaling with cheap hardware: plane-wave
 calculations are not at all an "embarrassing parallel" problem. 
 Note that multiprocessor motherboards for Intel Pentium CPUs typically
 have just one memory bus for all processors.
-This dramatically slows down any code doing  massive access to memory
-(such as PWscf and other plane-wave codes) that runs on processors of
+This dramatically slows down any code doing massive access to memory
+(as most codes in the ESPRESSO package do) that runs on processors of
 the same motherboard.
 
 \clearpage
 
-\section{Troubleshooting}
+\section{Troubleshooting (PWscf)}
 
 Almost all problems in PWscf arise from incorrect input data and
 result in error stops. Error messages should be self-explanatory, 
@@ -2259,7 +2274,7 @@ If the above doesn't help: verify if your system is metallic or is
 close to a metallic state, especially if you have few k-points.
 If the highest occupied and lowest unoccupied state(s) keep exchanging
 place during self-consistency, forget about reaching convergence. A 
-typical sign of such behaviours is that the self-consistency error 
+typical sign of such behavior is that the self-consistency error 
 goes down, down, down, than all of a sudden up again, and so on.
 Usually one can solve the problem by adding a few empty bands and a
 broadening.
