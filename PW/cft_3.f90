@@ -122,7 +122,7 @@ END SUBROUTINE cft_3
 !
       INTEGER                    :: isys(0:1)
       INTEGER, PARAMETER         :: ngrid = 2, nmax=1000, nwork=1000
-      INTEGER, SAVE              :: first(ngrid)
+      LOGICAL, SAVE              :: first(ngrid)
       REAL(kind=DP), SAVE        :: aux(nmax, ngrid)
       REAL(kind=DP)              :: dummy, scale, work(nwork)
       DATA                          first / ngrid * .TRUE. /
