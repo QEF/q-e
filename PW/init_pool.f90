@@ -101,37 +101,6 @@ SUBROUTINE init_pool()
   !                            
 #endif
   !
-#if defined (__NEW_PARALLEL_DEBUG)  
-  PRINT *, ""  
-  PRINT *, "MPIME       = ", MPIME
-  PRINT *, "ME          = ", ME
-  PRINT *, "MY_IMAGE_ID = ", MY_IMAGE_ID
-  PRINT *, "MYPOOL      = ", MYPOOL 
-  PRINT *, ""  
-  ierr = 666
-  IF ( me_image == 0 ) ierr = my_image_id
-  PRINT *, "1:MPIME = ", MPIME, " IERR = ", IERR
-  CALL mp_bcast( ierr, 0, inter_pool_comm )
-  IF ( ierr /= 666 ) ierr = ierr + my_pool_id
-  PRINT *, "2:MPIME = ", MPIME, " IERR = ", IERR
-  CALL mp_bcast( ierr, 0, intra_pool_comm )
-  IF ( ierr /= 666 ) ierr = ierr + me_pool
-  PRINT *, "3:MPIME = ", MPIME, " IERR = ", IERR
-  ierr = 999
-  IF ( me_image == 0 ) ierr = 100 + my_image_id
-  PRINT *, "4:MPIME = ", MPIME, " IERR = ", IERR
-  CALL mp_bcast( ierr, 0, intra_pool_comm )
-  IF ( ierr /= 999 ) ierr = ierr + me_pool
-  PRINT *, "5:MPIME = ", MPIME, " IERR = ", IERR
-  CALL mp_bcast( ierr, 0, inter_pool_comm )
-  IF ( ierr /= 999 ) ierr = ierr + my_pool_id
-  PRINT *, "6:MPIME = ", MPIME, " IERR = ", IERR
-  PRINT *, ""    
-  !
-  CALL stop_pw( .FALSE. )
-  !
-#endif    
-  !
   RETURN
   !
 END SUBROUTINE init_pool

@@ -44,12 +44,13 @@ SUBROUTINE startup( nd_nmbr, code, version )
   ! ... The following two modules hold global information about processors
   ! ... number, IDs and communicators
   !
-  USE io_global,  ONLY :  stdout, io_global_start, ionode, ionode_id
-  USE mp_global,  ONLY :  nproc, nimage, mpime, me_image, root, root_image
-  USE mp_global,  ONLY :  mp_global_start
-  USE mp,         ONLY :  mp_start, mp_env, mp_barrier, mp_bcast
-  USE para_const, ONLY :  maxproc
-  USE para,       ONLY :  me, npool, nprocp 
+  USE io_global,  ONLY : stdout, io_global_start, ionode, ionode_id
+  USE mp_global,  ONLY : nproc, nproc_image, nimage, mpime, me_image, &
+                         my_image_id, root_image
+  USE mp_global,  ONLY : mp_global_start
+  USE mp,         ONLY : mp_start, mp_env, mp_barrier, mp_bcast
+  USE para_const, ONLY : maxproc
+  USE para,       ONLY : npool, nprocp 
   !
   IMPLICIT NONE
   !
@@ -77,15 +78,15 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   CALL mp_start()
   !
-  CALL mp_env( nproc, me, gid )
+  CALL mp_env( nproc, mpime, gid )
   !
   ! ... Set the I/O node
   !
-  CALL io_global_start( me, 0 )
+  CALL io_global_start( mpime, 0 )
   !
   ! ... Set global coordinate for this processor
   !
-  CALL mp_global_start( 0, me, gid, nproc )  
+  CALL mp_global_start( 0, mpime, gid, nproc )  
   !
   IF ( ionode ) THEN
      !
@@ -145,40 +146,54 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   ! ... all pools are initialized here
   !
-  CALL init_pool()  
+  CALL init_pool()
   !
-  ! ... set the processor label for files
+  ! ... set the processor label for files ( remember that 
+  ! ... me_image = 0 : ( nproc_image - 1 ) )
   !
   nd_nmbr = '   '
   !
-  IF ( nproc < 10 ) THEN
+  IF ( nproc_image < 10 ) THEN
      !
      WRITE( nd_nmbr(1:1) , '(I1)' ) ( me_image + 1 )
      !
-  ELSE IF ( nproc < 100 ) THEN
+  ELSE IF ( nproc_image < 100 ) THEN
      !
-     IF ( me < 10 ) THEN
+     IF ( ( me_image + 1 ) < 10 ) THEN
+        !
         nd_nmbr = '0'
+        !
         WRITE( nd_nmbr(2:2) , '(I1)' ) ( me_image + 1 )
+        !
      ELSE
+        !
         WRITE( nd_nmbr(1:2) , '(I2)' ) ( me_image + 1 )
+        !
      END IF
      !
   ELSE
      !
-     IF ( me < 10 ) THEN
+     IF ( ( me_image + 1 ) < 10 ) THEN
+        !
         nd_nmbr = '00'
+        !     
         WRITE( nd_nmbr(3:3) , '(I1)' ) ( me_image + 1 )
-     ELSE IF ( me < 100 ) THEN
+        !
+     ELSE IF ( ( me_image + 1 ) < 100 ) THEN
+        !
         nd_nmbr = '0'
+        !
         WRITE( nd_nmbr(2:3) , '(I2)' ) ( me_image + 1 )
+        !
      ELSE
+        !
         WRITE( nd_nmbr, '(I3)' ) ( me_image + 1 )
+        !
      END IF
      !
   END IF    
   !
-  ! ... stdout is printed only by the root_image (set in init_pool())
+  ! ... stdout is printed only by the root_image ( set in init_pool() )
   !
 #  if defined (DEBUG)
   !
@@ -194,7 +209,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   ! ... information printout
   !  
-  IF ( mpime == root ) THEN
+  IF ( ionode ) THEN
      !
      CALL date_and_tim( cdate, ctime )
      !

@@ -19,8 +19,8 @@ PROGRAM pwscf
   USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lneb, ldisp
   USE io_files,         ONLY : nd_nmbr, iunneb, tmp_dir
   USE neb_variables,    ONLY : conv_neb
-  USE neb_base,         ONLY : initialize_neb, search_mep
-  USE mp_global,        ONLY : me_image, root_image
+  USE neb_base,         ONLY : io_neb_start, io_neb_stop, &
+                               initialize_neb, search_mep
   USE io_global,        ONLY : ionode
   !
   IMPLICIT NONE
@@ -61,10 +61,7 @@ PROGRAM pwscf
   !
   IF ( lneb ) THEN
      !
-     ! ... stdout is connected to a file ( specific for each image ) 
-     ! ... via unit 17 ( only root_image performes I/O )
-     !
-     IF ( me_image == root_image ) stdout = 17
+     CALL io_neb_start()
      !
      CALL initialize_neb( 'PW' )
      !
@@ -72,9 +69,7 @@ PROGRAM pwscf
      !   
      CALL search_mep()
      !
-     ! ... stdout is reconnected to standard output
-     !
-     stdout = 6 
+     CALL io_neb_stop()
      !  
      CALL stop_pw( conv_neb )
      !
@@ -84,7 +79,7 @@ PROGRAM pwscf
      !
      call q_points
      !
-!     call phonon_driver
+    ! call phonon_driver
      !
   ELSE
      !
