@@ -163,9 +163,11 @@ subroutine phq_readin
   if (nat_todo.ne.0.and.nrapp.ne.0) call errore ('phq_readin', &
        &' incompatible flags', 1)
   !
-  !    reads the q point
+  !    reads the q point (just if ldisp = .false.)
   !
-  read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
+  if (.not. ldisp) then
+     read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
+  end if
 300 call errore ('phq_readin', 'reading xq', abs (ios) )
   lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
   if ( (epsil.or.zue) .and..not.lgamma) call errore ('phq_readin', &

@@ -19,6 +19,8 @@ program phonon
   USE io_global,  ONLY : stdout
   use pwcom
   use io_files
+  USE io_global, ONLY: ionode_id
+  USE mp, ONLY: mp_bcast
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
   USE parser,           ONLY : int_to_char
@@ -136,6 +138,10 @@ program phonon
            epsil = .false.
            zue = .false.
         end if
+
+        call mp_bcast (epsil, ionode_id)
+        call mp_bcast (zue, ionode_id)
+        call mp_bcast (lgamma, ionode_id)
 
         nks = nks_start
         xk(:,1:nks_start) = xk_start(:,1:nks_start)

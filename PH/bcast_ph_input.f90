@@ -34,6 +34,8 @@ subroutine bcast_ph_input
   call mp_bcast (zue, root)
   call mp_bcast (reduce_io, root)
   call mp_bcast (elph, root)
+  call mp_bcast (lnscf, root)
+  call mp_bcast (ldisp, root)
   !
   ! integers
   !
