@@ -522,7 +522,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (convt) then
      call drhodvus (irr, imode0, dvscfin, npe)
      if (fildvscf.ne.' ') write (iudvscf) dvscfin
-     if (elph) call elphon (npe, imode0, dvscfins)
+     if (elph) call elphel (npe, imode0, dvscfins)
   endif
   if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
   if (lmetq0) deallocate (ldoss)
