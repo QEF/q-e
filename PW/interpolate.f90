@@ -123,7 +123,7 @@ subroutine cinterpolate (v, vs, iflag)
 
   integer :: ig
 
-  if (gamma_only) call errore ('cinterpolate','not implemented', 1)
+  if (gamma_only) call errore ('cinterpolate','not allowed', 1)
   call start_clock ('cinterpolate')
   if (iflag <= 0) then
      !

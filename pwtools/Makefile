@@ -30,6 +30,7 @@ PWOBJS = \
 
 MODULES = \
 ../Modules/basic_algebra_routines.o \
+../Modules/cell_base.o \
 ../Modules/constants.o \
 ../Modules/io_global.o \
 ../Modules/io_files.o \

@@ -41,22 +41,22 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   logical :: noinv
   ! input: if true eliminates symmetries z <-> -z
   !-output variables
-  integer :: nsym, s (3, 3, 48), invs (48), irt (48, nat), nq, isq ( &
-       48), imq
+  integer :: nsym, s (3, 3, 48), invs (48), irt (48, nat), nq, isq (48), imq
   ! output: number of symmetry operations
-  ! output: the first nq matrices are those that
-  ! generate the star of q startting from it
-  ! list of inverse operation indices
+  ! output: the first nq matrices are those that generate the star of q
+  !         starting from it
+  ! output: list of inverse operation indices
   ! output: for each atom gives the rotated atom
   ! output: degeneracy of the star of q
   ! output: index of q in the star for a given sym
-  ! output: index of -q in the star (0 if not pres
+  ! output: index of -q in the star (0 if not present)
 
   real(kind=DP) :: rtau (3, 48, nat), sxq (3, 48)
-  ! output: for eaxh atom and rotation gives th
-  ! R vector involved
+  ! output: for each atom and rotation gives the R vector involved
   ! output: list of vectors in the star of q
-  !-local variables
+  !
+  ! Local variables
+  !
   integer :: nsq (48), ftau(3,48), nrot, isym, jsym, ism1, table (48, 48), &
        iq, i, j, nks, npk, izero
   ! number of symmetry ops. of bravais lattice.
@@ -68,27 +68,24 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! number of dummy k-points
   ! maximum allowed number of dummy k-points
   ! dummy (zero) value of iswitch passed to sgama
-  real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), &
-       wk(1), zero (3)
+  real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates
   ! rotated q in crystal coordinates
   ! coordinates of fractionary translations
   ! dummy k-points list
-  ! a zero vector: used in eqvect and as dummy
-  ! q-vector in sgama
+  ! a zero vector: used in eqvect and as dummy q-vector in sgama
 
-  logical :: invsym, minus_q, nosym, eqvect, sym (48)
+  logical :: invsym, minus_q, nosym, sym (48)
   ! .t. if the crystal has inversion
   ! dummy output from sgama
   ! input for sgama
-  ! function used to compare two vectors
 
   character (len=45) :: sname (48)
-  ! name of the rotat. part of each selected symmet
-  ! operation
+  ! name of the rotat. part of each selected symmetry operation
 
-  external eqvect
+  logical, external :: eqvect
+  ! function used to compare two vectors
   !
   !  initialize dummy k-point list and zero vector
   !
@@ -101,23 +98,23 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   !
   !  generate transformation matrices for the bravais lattice
   !
-  if (ibrav.eq.4.or.ibrav.eq.5) then
+  if (ibrav == 4 .or. ibrav == 5) then
      call hexsym (at, s, sname, nrot)
-  elseif (ibrav.ge.1.and.ibrav.le.14) then
+  elseif (ibrav >= 1 .and. ibrav <= 14) then
      call cubicsym (at, s, sname, nrot)
-  elseif (ibrav.eq.0) then
-     if (symm_type.eq.'cubic') call cubicsym (at, s, sname, nrot)
-     if (symm_type.eq.'hexagonal') call hexsym (at, s, sname, nrot)
+  elseif (ibrav == 0) then
+     if (symm_type == 'cubic') call cubicsym (at, s, sname, nrot)
+     if (symm_type == 'hexagonal') call hexsym (at, s, sname, nrot)
   else
-     call errore ('setup', 'wrong ibrav', 1)
-
+     call errore ('star_q', 'wrong ibrav', 1)
   endif
+
   if (noinv) then
      jsym = 0
      do isym = 1, nrot
-        if (s (1, 3, isym) .eq.0.and.s (3, 1, isym) .eq.0.and.s (2, 3, &
-             isym) .eq.0.and.s (3, 2, isym) .eq.0.and.s (3, 3, isym) .eq.1) &
-             then
+        if ( s (1, 3, isym) == 0 .and. s (3, 1, isym) == 0 .and. &
+             s (2, 3, isym) == 0 .and. s (3, 2, isym) == 0 .and. &
+             s (3, 3, isym) == 1) then
            jsym = jsym + 1
            do i = 1, 3
               do j = 1, 3
@@ -128,7 +125,6 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
         endif
      enddo
      nrot = jsym
-
   endif
   !
   ! extract from it the crystal symmetry group by calling sgama
@@ -154,8 +150,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! go to  crystal coordinates
   !
   do i = 1, 3
-     aq (i) = xq (1) * at (1, i) + xq (2) * at (2, i) + xq (3) * at (3, &
-          i)
+     aq (i) = xq (1) * at (1, i) + xq (2) * at (2, i) + xq (3) * at (3, i)
   enddo
   !
   ! create the list of rotated q
@@ -169,11 +164,11 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
      ism1 = invs (isym)
      do i = 1, 3
         raq (i) = s (i, 1, ism1) * aq (1) + s (i, 2, ism1) * aq (2) &
-             + s (i, 3, ism1) * aq (3)
+                + s (i, 3, ism1) * aq (3)
      enddo
      do i = 1, 3
-        sxq (i, 48) = bg (i, 1) * raq (1) + bg (i, 2) * raq (2) + bg (i, &
-             3) * raq (3)
+        sxq (i, 48) = bg (i, 1) * raq (1) + bg (i, 2) * raq (2) &
+                    + bg (i, 3) * raq (3)
      enddo
      do iq = 1, nq
         if (eqvect (raq, saq (1, iq), zero) ) then
@@ -181,27 +176,25 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
            nsq (iq) = nsq (iq) + 1
         endif
      enddo
-     if (isq (isym) .eq.0) then
+     if (isq (isym) == 0) then
         nq = nq + 1
         nsq (nq) = 1
         isq (isym) = nq
-        call DCOPY (3, raq, 1, saq (1, nq), 1)
+        saq(:,nq) = raq(:) 
         do i = 1, 3
            sxq (i, nq) = bg (i, 1) * saq (1, nq) + bg (i, 2) * saq (2, nq) &
-                + bg (i, 3) * saq (3, nq)
+                       + bg (i, 3) * saq (3, nq)
         enddo
      endif
   enddo
   !
   ! set imq index if needed and check star degeneracy
   !
-  call DCOPY (3, aq, 1, raq, 1)
-  call DSCAL (3, - 1.d0, raq, 1)
+  raq (:) = - aq(:) 
   imq = 0
   do iq = 1, nq
      if (eqvect (raq, saq (1, iq), zero) ) imq = iq
-     if (nsq (iq)  * nq.ne.nsym) call errore ('star_q', 'wrong degenerac &
-          &y', iq)
+     if (nsq (iq)*nq /= nsym) call errore ('star_q', 'wrong degeneracy', iq)
   enddo
   !
   ! writes star of q
@@ -209,13 +202,11 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   WRITE( stdout, * )
   WRITE( stdout, '(5x,a,i4)') 'Number of q in the star = ', nq
   WRITE( stdout, '(5x,a)') 'List of q in the star:'
-  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq (i, iq) , i = 1, 3) , iq = &
-       1, nq)
-  if (imq.eq.0) then
+  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq (i, iq) , i = 1, 3) , iq = 1, nq)
+  if (imq == 0) then
      WRITE( stdout, '(5x,a)') 'In addition there is the -q list: '
      WRITE( stdout, '(7x,i4,3f12.9)') (iq, ( - sxq (i, iq) , i = 1, 3) , &
           iq = 1, nq)
-
   endif
   return
 end subroutine star_q

@@ -18,12 +18,12 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   use phcom
   use d3com
   implicit none
-  complex (kind = dp) :: drhoscf (nrxx, npe)
-  ! input: variation of the charge density
   integer :: npe, imode0, irr
   ! input: the number of perturbation
   ! input: the position of the current mode
   ! input: index of the current irr. rep.
+  complex (kind = dp) :: drhoscf (nrxx, npe)
+  ! input: variation of the charge density
 
   integer :: ipert, ik, ikk, ibnd
   ! counters

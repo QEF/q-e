@@ -41,10 +41,12 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   !
   !--> these quantities may be complex since perturbation may be
 
-  complex(kind=DP) :: delta_n, def (npertx), wfshift
+  complex(kind=DP) :: delta_n, wfshift, def(3)
   ! the change in electron number
-  ! the change of the Fermi energy for each pert.
   ! the shift coefficient for the wavefunction
+  ! the change of the Fermi energy for each pert.
+  ! NB: def(3) should be def (npertx) but then it cannot be saved
+  !     anyway at Gamma the dimension of irreps never exceeds 3
 
   real(kind=DP), external :: w0gauss
   ! the smeared delta function
