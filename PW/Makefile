@@ -145,7 +145,7 @@ n_plane_waves.o  \
 openfil.o  \
 orthoatwfc.o  \
 ortho.o  \
-pencils.o  \
+output_tau.o  \
 poolbcast.o  \
 poolextreme.o  \
 poolrecover.o  \
@@ -192,7 +192,6 @@ set_hubbard_l.o  \
 set_kplusq.o  \
 set_kup_and_kdw.o  \
 setlocal.o  \
-set_pencils.o  \
 setqf.o  \
 set_rhoc.o  \
 setup.o  \

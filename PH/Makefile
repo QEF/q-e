@@ -121,7 +121,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/atomic_wfc.o  \
 ../PW/bachel.o  \
 ../PW/becmod.o  \
-../PW/bfgs.o  \
 ../PW/broadcast.o  \
 ../PW/c_bands.o  \
 ../PW/ccalbec.o  \
@@ -216,7 +215,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/interpolate.o  \
 ../PW/invmat.o  \
 ../PW/io.o  \
-../PW/ions.o  \
 ../PW/io_pot.o  \
 ../PW/irrek.o  \
 ../PW/iweights.o  \
@@ -228,7 +226,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/mix_pot.o  \
 ../PW/mix_rho.o  \
 ../PW/mode_group.o  \
-../PW/move_ions.o  \
 ../PW/multable.o  \
 ../PW/newd.o  \
 ../PW/new_ns.o  \
@@ -237,7 +234,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/orthoatwfc.o  \
 ../PW/ortho.o  \
 ../PW/para.o  \
-../PW/pencils.o  \
 ../PW/poolbcast.o  \
 ../PW/poolextreme.o  \
 ../PW/poolrecover.o  \
@@ -284,7 +280,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/set_kplusq.o  \
 ../PW/set_kup_and_kdw.o  \
 ../PW/setlocal.o  \
-../PW/set_pencils.o  \
 ../PW/setqf.o  \
 ../PW/set_rhoc.o  \
 ../PW/setup.o  \
@@ -327,8 +322,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/updathes.o  \
 ../PW/upf_to_internal.o  \
 ../PW/usnldiag.o  \
-../PW/vcsmd.o  \
-../PW/vcsubs.o  \
 ../PW/vhpsi.o  \
 ../PW/vloc_of_g.o  \
 ../PW/v_of_rho.o  \

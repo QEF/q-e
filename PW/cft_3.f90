@@ -6,15 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!     This is a collection of the fft routines which are used on differe
-!     machines. The performance of the code depends heavily upon the
-!     performance of these routines. Therefore it is convenient always
-!     to use machine-specific routines
+! This is a collection of serial fft drivers for several 
+! machine-specific libraries (including some obsolete ones). 
+! The performance of the code may depend heavily upon the
+! performance of these routines.
 !
-!     If __FFTW is defined, the fftw library is used.
-!     Otherwise machine-specific routines are used (if available).
-!     If a machine-specific routine is not available either a fake
-!     routine issuing an error message is compiled.
+! For FFTW and AIX ESSL, there are no serial drivers: 
+! parallel drivers are used also in the serial case
+!
+! If a machine-specific routine is not available, a fake
+! routine issuing an error message is compiled.
 !
 #include "machine.h"
 

@@ -8,7 +8,6 @@ include ../make.sys
 #
 PWOBJS=../PW/pwcom.o \
 ../PW/para.o \
-../PW/pencils.o \
 ../PW/io.o \
 ../PW/funct.o \
 ../PW/g_psi_mod.o \
@@ -93,6 +92,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/new_ns.o \
 ../PW/newd.o \
 ../PW/openfil.o \
+../PW/output_tau.o \
 ../PW/potinit.o \
 ../PW/print_clock_pw.o \
 ../PW/punch.o \
@@ -123,7 +123,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/set_fft_dim.o \
 ../PW/set_kplusq.o \
 ../PW/set_kup_and_kdw.o \
-../PW/set_pencils.o \
 ../PW/setqf.o \
 ../PW/set_vrs.o \
 ../PW/setup.o \

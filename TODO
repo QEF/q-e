@@ -1,4 +1,4 @@
-TODO LIST -  1 July 2003
+TODO LIST -  11 July 2003
 
 INSTALLATION
 
@@ -40,10 +40,6 @@ PW
 - replace "use pwcom" into more "use" statement
 
 - add traceback in error (error_handler module)
-
-- bfgs, md : atomic positions should be written in the same
-  format as they are read (but this should not spoil scripts
-  that extract coordinates from output file)
 
 - remove analytical PPs and related variables
 

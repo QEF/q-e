@@ -37,12 +37,14 @@ module basis
        ntyp,           &! number of different types of atoms
        natomwfc         ! number of starting wavefunctions
   integer, allocatable :: &
-       ityp(:)               ! the type of each atom
+       ityp(:)          ! the type of each atom
   real(kind=DP), allocatable ::  &
        tau(:,:)         ! the positions of each atom
-  logical         ::                                                &
-       ltaucry          ! if true atom. cryst. coord. accepted in input
-  character(len=6)::   &
+  character(len=30) :: &! 'alat', 'crystal', 'angstrom', 'bohr'
+       atomic_positions ! specifies how input coordinates are given
+  character(len=3 ) :: &
+       atm(ntypx)       ! name of the type of the atoms
+  character(len=6)  :: &
        startingwfc ,   &! 'random' or 'atomic' or 'file'
        startingpot ,   &! 'atomic' or 'file'
        startingconfig   ! 'input' or 'file'
@@ -480,7 +482,6 @@ module char
   !
   character(len=75)   ::  title       ! title of the run
   character(len=20)   ::  crystal     ! type of the solid
-  character(len=3 )   ::  atm(ntypx)  ! name of the type of the atoms
   character(len=2 )   ::  psd(npsx)   ! name of the pseudopotential
   character(len=45)   ::  sname(48)   ! name of the symmetries
   !
@@ -588,7 +589,7 @@ end module ldaU
 
 module extfield
   use parameters
-  logical :: tefield, &      ! if true a finite electric field is added to the
+  logical :: tefield, &     ! if true a finite electric field is added to the
                             ! local potential
              dipfield       ! if true the dipole field is subtracted
   integer :: edir           ! direction of the field

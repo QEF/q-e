@@ -526,8 +526,8 @@
 
       DO ip = 1, nproc
 
-! ...   In turn each processor send to root the the indexes of its wavefunction conponents
-! ...   Root receive the indexes and send the componens of the wavefunction read from the disk (pwt)
+! ...   In turn each processor sends to root the indices of its wavefunction components
+! ...   Root receives the indices and sends the components of the wavefunction read from the disk (pwt)
 
         IF ( (ip-1) /= root ) THEN
 
@@ -638,10 +638,15 @@
         end if
       end do
 
+#if defined __MPI
       call MPI_ALLTOALL( mp_snd_buffer(1), icsize, MPI_DOUBLE_COMPLEX, &
                          mp_rcv_buffer(1), icsize, MPI_DOUBLE_COMPLEX, &
                          group, ierr)
+#else
 
+      CALL errore(' pwscatter ',' no communication protocol ',0)
+
+#endif
       ibuf = 0
       DO IG = 1, n_indi_rcv
         isour = sour_indi(ig)

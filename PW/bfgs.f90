@@ -13,7 +13,13 @@ subroutine bfgs
   ! this version saves data at each iteration
   !
 #include "machine.h"
-  use pwcom
+  use brilz
+  use basis
+  use relax
+  use force_mod
+  use varie
+  use ener, only: etot
+  use klist, only: nelec
   use io, only : prefix
 #ifdef __PARA
   use para, only : me, mypool
@@ -203,20 +209,8 @@ subroutine bfgs
              &"Search of equilibrium positions: iteration # ",i4, &
              &", scf threshold ",1pe8.2/)') istep, tr2
      endif
-     if (ltaucry) write (6, '(/5x,"Cartesian coordinates")')
-     do na = 1, nat
-        write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
-     enddo
-     if (ltaucry) then
-        write (6, '(/5x,"In crystal coordinates")')
-        call cryst_to_cart (nat, tau, bg, - 1)
-        do na = 1, nat
-           write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
-        enddo
-        call cryst_to_cart (nat, tau, at, 1)
-
-     endif
-     write (6, '(/)')
+     !
+     call output_tau
      !
      ! save all quantities needed at the following iterations
      !

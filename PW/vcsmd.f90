@@ -26,7 +26,15 @@ subroutine vcsmd
 
   !
 #include "machine.h"
-  use pwcom
+  use constants, only: e2, uakbar
+  use brilz
+  use basis
+  use cellmd
+  use dynam
+  use relax
+  use force_mod
+  use varie
+  use ener, only: etot
   use io, only : prefix
 #ifdef __PARA
   use para
@@ -78,7 +86,7 @@ subroutine vcsmd
            vmean (ntypx), rms (ntypx), ekin (ntypx),  & ! work vectors
            tempo, time_au, epsp
 
-  character(len=3) :: iost  ! status (old or new) for I/O files
+  character(len=3) :: ios   ! status (old or new) for I/O files
   character(len=6) :: ipos  ! status ('append' or 'asis') for I/O files
 
   logical :: exst
@@ -95,7 +103,7 @@ subroutine vcsmd
   !
   ! Allocate work arrays
   !
-  allocate (rat(3,nat), rati(3,nat), ratd(3,nat), rat2d(3,nat), rat2di(3,nat), &
+  allocate (rat(3,nat), rati(3,nat), ratd(3,nat), rat2d(3,nat), rat2di(3,nat),&
             tauold(3,nat,3))
   !
   ! open MD history file (if not present this is a new run!)
@@ -145,20 +153,7 @@ subroutine vcsmd
      if (conv_ions) then
         write (6,'(/5x,"Damped Dynamics: convergence achieved, Efinal=",&
               &     f15.8)') etot
-        write (6,'(/72("-")//5x,"Final estimate of positions")')
-        if (ltaucry) write (6, '(/5x,"Cartesian coordinates")')
-        do na = 1, nat
-           write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
-        enddo
-        if (ltaucry) then
-           write (6, '(/5x,"In crystal coordinates")')
-           call cryst_to_cart (nat, tau, bg, - 1)
-           do na = 1, nat
-              write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
-           enddo
-           call cryst_to_cart (nat, tau, at, 1)
-        endif
-        write (6, '(/)')
+        call output_tau
         return
      end if
   end if
@@ -177,29 +172,20 @@ subroutine vcsmd
         end do
      end do
      if (conv_ions) then
-        if (calc.eq.'cm') write (6,'(/5x,"Parrinello-Rahman Damped Dynamics: convergence achieved, Efinal=",&
-              &     f15.8)') etot
-        if (calc.eq.'nm') write (6,'(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, Efinal=",&
-              &     f15.8)') etot
-        write (6,'(/72("-")//5x,"Final estimate of lattice vectors (input alat units)")')
+        if (calc.eq.'cm') write (6, &
+         '(/5x,"Parrinello-Rahman Damped Dynamics: convergence achieved, ", &
+         &     "Efinal=", f15.8)') etot
+        if (calc.eq.'nm') write (6, &
+         '(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, " &
+         &     "Efinal=", f15.8)') etot
+        write (6,'(/72("-")//5x,"Final estimate of lattice vectors ", &
+         &       "(input alat units)")')
         write (6, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
-        write (6,'(a,f12.4,a)') '  final unit-cell volume =', omega, ' (a.u.)^3'
-        write (6,'(a,f12.4,a)') '  input alat = ', alat, ' (a.u.)'
-
-        write (6,'(//5x,"Final estimate of positions")')
-        if (ltaucry) write (6, '(/5x,"Cartesian coordinates (input alat units)")')
-        do na = 1, nat
-           write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
-        enddo
-        if (ltaucry) then
-           write (6, '(/5x,"In crystal coordinates")')
-           call cryst_to_cart (nat, tau, bg, - 1)
-           do na = 1, nat
-              write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
-           enddo
-           call cryst_to_cart (nat, tau, at, 1)
-        endif
-        write (6, '(/)')
+        write (6,'("  final unit-cell volume =",f12.4," (a.u.)^3")') omega
+        write (6,'("  input alat = ",f12.4," (a.u.)")') alat
+        !
+        call output_tau
+        !
         return
      end if
   end if
@@ -213,9 +199,9 @@ subroutine vcsmd
              & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2)') &
                epse, epsf
   if (istep.eq.1 .and. calc.eq.'cm')  &
-     write(6,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2,&
-             & "  EPSP = ",e8.2 )') epse, epsf, epsp
+     write(6,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", &
+             & /5x, "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",  &
+             & e8.2,"  EPSP = ",e8.2 )') epse, epsf, epsp
   if (istep.eq.1 .and. calc.eq.'nm')  &
      write(6,'(/5x,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
              & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2,&
@@ -511,18 +497,18 @@ subroutine vcsmd
         call delete_if_present ( 'p')
         call delete_if_present ( 'avec')
         call delete_if_present ( 'tv')
-        iost = 'new'
-        ipos = 'asis'
+        ios = 'new'
+        ipos= 'asis'
      else
-        iost = 'old'
-        ipos = 'append'
+        ios = 'old'
+        ipos= 'append'
      endif
-     open (unit=iun_e,   file='e',   status=iost,form='formatted',position=ipos)
-     open (unit=iun_eal, file='eal', status=iost,form='formatted',position=ipos)
-     open (unit=iun_ave, file='ave', status=iost,form='formatted',position=ipos)
-     open (unit=iun_p,   file='p',   status=iost,form='formatted',position=ipos)
-     open (unit=iun_avec,file='avec',status=iost,form='formatted',position=ipos)
-     open (unit=iun_tv,  file='tv',  status=iost,form='formatted',position=ipos)
+     open (unit=iun_e,   file='e',   status=ios,form='formatted',position=ipos)
+     open (unit=iun_eal, file='eal', status=ios,form='formatted',position=ipos)
+     open (unit=iun_ave, file='ave', status=ios,form='formatted',position=ipos)
+     open (unit=iun_p,   file='p',   status=ios,form='formatted',position=ipos)
+     open (unit=iun_avec,file='avec',status=ios,form='formatted',position=ipos)
+     open (unit=iun_tv,  file='tv',  status=ios,form='formatted',position=ipos)
      nst = istep - 1
      write (iun_e,   101) ut, ekint, edyn, pv, nst
      write (iun_eal, 103) uta, eka, eta, utl, ekla, etl, nst

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,39 +11,35 @@ subroutine cryst_to_cart (nvec, vec, trmat, iflag)
   !-----------------------------------------------------------------------
   !
   !     This routine transforms the atomic positions or the k-point
-  !     components from crystallographic to cartesian coordinates ( iflag=
-  !     and viceversa ( iflag=-1 ).
+  !     components from crystallographic to cartesian coordinates 
+  !     ( iflag=1 ) and viceversa ( iflag=-1 ).
   !     Output cartesian coordinates are stored in the input ('vec') array
   !
   !
   use parameters
   implicit none
   !
-  !     first the dummy variables
-  !
-  integer :: nvec, iflag
-  ! input: number of vectors (atom. pos. or k-p
-  !        to be transf. from cryst. to cart. a
-  ! input: gives the sense of the transformatio
-  real(kind=DP) :: vec (3, nvec), trmat (3, 3)
-  ! input/output: cryst./cart. coord. of the ve
-  !               (atom. pos. or k-points)
-  ! input: transformation matrix
+  integer, intent(in) :: nvec, iflag
+  ! nvec:  number of vectors (atomic positions or k-points)
+  !        to be transformed from crystal to cartesian and vice versa
+  ! iflag: gives the direction of the transformation
+  real(kind=DP), intent(in) :: trmat (3, 3)
+  ! trmat: transformation matrix
   ! if iflag=1:
-  !    trmat = at ,  basis of the real-space la
-  !                  for atoms   or
-  !          = bg ,  basis of the rec.-space la
-  !                  for k-points
+  !    trmat = at ,  basis of the real-space lattice,       for atoms   or
+  !          = bg ,  basis of the reciprocal-space lattice, for k-points
   ! if iflag=-1: the opposite
+  real(kind=DP), intent(inout) :: vec (3, nvec)
+  ! coordinates of the vector (atomic positions or k-points) to be
+  ! transformed - overwritten on output
   !
-  !    here the local variables
+  !    local variables
   !
-
   integer :: nv, kpol
   ! counter on vectors
   ! counter on polarizations
   real(kind=DP) :: vau (3)
-  ! auxil. vector (containing the temp. transf.
+  ! workspace
   !
   !     Compute the cartesian coordinates of each vectors
   !     (atomic positions or k-points components)
@@ -67,3 +63,4 @@ subroutine cryst_to_cart (nvec, vec, trmat, iflag)
   !
   return
 end subroutine cryst_to_cart
+

@@ -12,26 +12,28 @@ subroutine iosys
   !-----------------------------------------------------------------------
   !   this subroutine reads input data from standard input (unit 5)
   !     ------------------------------------------------------------------
-  use pwcom, only: dt, iswitch, ltaucry, restart, lscf, iprint, &
-       time_max, iverbosity, order, reduce_io, modenum, ibrav, &
-       celldm, nat, input_drho, output_drho, &
-       ntyp, nbnd, nelec, nr1,nr2,nr3, nr1s,nr2s,nr3s, lstres, &
-       degauss, ngauss, nosym, ltetra, ecfixed, qcutz, q2sigma, &
-       ecutwfc, lsda, nspin, dual, lxkcry, noinv, starting_magnetization, &
-       lda_plus_U, Hubbard_U, Hubbard_alpha, niter_with_fixed_ns, rytoev, &
-       niter, tr2, ethr, mixing_beta, nmix,&
-       isolve, max_cg_iter, david, diis_buff, diis_wfc_keep, &
-       diis_start_cg, diis_ndim, startingwfc, startingpot, startingconfig, &
-       restart_bfgs, nstep, epse, epsf, amass, &
-       temperature, lforce, ttol, delta_t, nraise, ntcheck, upscale, &
-       press, cmass, calc, cell_factor, xqq, alat, ntypx, &
-       lmovecell, imix, at, omega, ityp, tau, nks, xk, wk, uakbar, amconv, &
-       force, at_old, omega_old, starting_scf_threshold, title, crystal,  &
-       atm, nk1, nk2, nk3, k1, k2, k3, &
-       tefield, dipfield, edir, emaxpos, eopreg, eamp, forcefield, &
-       lberry, gdir, nppstr
+  use bp
+  use brilz, only: celldm, at, alat, omega, ibrav
+  use basis, only: nat, ntyp, ityp, tau, atomic_positions, atm, &
+       startingwfc, startingpot, startingconfig
+  use char, only: title, crystal
+  use cellmd
+  use constants, only: pi, rytoev, uakbar, amconv, bohr_radius_angs
+  use dynam
+  use extfield, only : tefield, dipfield, edir, emaxpos, eopreg, eamp, &
+       forcefield
+  use filnam, only : input_drho, output_drho
+  use force_mod, only: lforce, lstres, force
+  use gvect, only: nr1,nr2,nr3,  dual, ecutwfc, ecfixed, qcutz, q2sigma
+  use gsmooth, only : nr1s,nr2s,nr3s
+  use klist, only: xk, wk, nks, xqq, ngauss, degauss, nelec
+  use ktetra, only : nk1, nk2, nk3, k1, k2, k3, ltetra
+  use ldaU, only: Hubbard_U, Hubbard_alpha, niter_with_fixed_ns, lda_plus_u
+  use lsda_mod, only: nspin, starting_magnetization, lsda
   use io, only : tmp_dir, prefix, pseudo_dir, pseudop
-  use constants, only: pi
+  use relax
+  use varie
+  use wvfct, only: nbnd
 #ifdef __PARA
   use para, only: me
   use mp
@@ -42,7 +44,6 @@ subroutine iosys
   !
   ! local variables
   !
-  character (len=30) :: atomic_positions
   integer :: unit = 5, ionode_id = 0, i, ia, ios, ierr, ilen, is
   !
   ! CONTROL namelist
@@ -63,9 +64,11 @@ subroutine iosys
 
   character(len=80) :: occupations, smearing, xc_type
   integer :: nelup, neldw, nr1b, nr2b, nr3b
+  real (kind=8) :: a, b, c, cosab, cosac, cosbc
   real (kind=8) :: ecutrho
-  NAMELIST / system / ibrav, celldm, nat, ntyp, nbnd, nelec, &
-       ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, nr3s, &
+  NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+       nat, ntyp, nbnd, nelec, ecutwfc, ecutrho, &
+       nr1, nr2, nr3, nr1s, nr2s, nr3s, &
        nr1b, nr2b, nr3b, nosym, starting_magnetization, &
        occupations, degauss, smearing, &
        nelup, neldw, nspin, ecfixed, qcutz, q2sigma, xc_type, &
@@ -174,6 +177,12 @@ subroutine iosys
 
   ibrav  =-1
   celldm = (/ 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0 /)
+  a = 0.d0
+  b = 0.d0
+  c = 0.d0
+  cosab = 0.d0
+  cosac = 0.d0
+  cosbc = 0.d0
   nat    = 0
   ntyp   = 0
   nbnd   = 0
@@ -335,19 +344,18 @@ subroutine iosys
      else
         startingpot = 'atomic'
      end if
-
-
+     !
      READ (unit, system, iostat = ios )
      if (ios /= 0) call errore ('reading','namelist &system',2)
      READ (unit, electrons, iostat = ios )
      if (ios /= 0) call errore ('reading','namelist &electrons',3)
-     if ( TRIM(calculation) == 'relax'   .or. TRIM(calculation) == 'md'    .or.&
-          TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md' .or.&
-          TRIM(calculation) == 'cpmd' .or. TRIM(calculation) == 'vc-cpmd' ) then
+     if ( TRIM(calculation) == 'relax'   .or. TRIM(calculation) == 'md'   .or.&
+          TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md'.or.&
+          TRIM(calculation) == 'cpmd' .or. TRIM(calculation) == 'vc-cpmd' )then
         READ (unit, ions, iostat = ios )
         if (ios /= 0) call errore ('reading','namelist &ions',4)
      end if
-     if ( TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md' .or.&
+     if ( TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md'.or.&
           TRIM(calculation) == 'vc-cpmd' ) then
         READ (unit, cell, iostat = ios )
         if (ios /= 0) call errore ('reading','namelist &cell',5)
@@ -357,17 +365,6 @@ subroutine iosys
         if (ios /= 0) call errore ('reading','namelist &phonon',5)
      end if
 
-     if (tefield.and..not.nosym) then
-        nosym=.true.
-        write(6,'(5x,"Presently no symmetry can be used with electric field",/)')
-     endif
-     if (tefield.and.(tstress)) then
-        tstress=.false.
-        write(6,'(5x,"Presently stress not available with electric field",/)')
-     endif
-     if (tefield.and.(nspin.eq.2)) then
-        call errore('input','LSDA not available with electric field',1)
-     endif
 #ifdef __PARA
   end if
 
@@ -404,6 +401,12 @@ subroutine iosys
   !
   CALL mp_bcast( ibrav, ionode_id  )
   CALL mp_bcast( celldm, ionode_id  )
+  CALL mp_bcast( a, ionode_id  )
+  CALL mp_bcast( b, ionode_id  )
+  CALL mp_bcast( c, ionode_id  )
+  CALL mp_bcast( cosab, ionode_id  )
+  CALL mp_bcast( cosac, ionode_id  )
+  CALL mp_bcast( cosbc, ionode_id  )
   CALL mp_bcast( nat, ionode_id  )
   CALL mp_bcast( ntyp, ionode_id  )
   CALL mp_bcast( nbnd, ionode_id  )
@@ -534,6 +537,18 @@ subroutine iosys
   ! translate from input to internals of PWscf, various checks
   time_max = max_seconds
 
+  if (tefield.and..not.nosym) then
+     nosym=.true.
+     write(6,'(5x,"Presently no symmetry can be used with electric field",/)')
+  endif
+  if (tefield.and.(tstress)) then
+     tstress=.false.
+     write(6,'(5x,"Presently stress not available with electric field",/)')
+  endif
+  if (tefield.and.(nspin.eq.2)) then
+     call errore('input','LSDA not available with electric field',1)
+  endif
+
   ! ...   Set the number of species
 
   IF( ntyp < 1 .OR. ntyp > ntypx ) THEN
@@ -542,8 +557,8 @@ subroutine iosys
 
   ! ...   IBRAV and CELLDM
 
-  IF( ibrav /= 0 .and. celldm(1) == 0.d0 ) THEN
-     CALL errore(' iosys ',' invalid value in celldm ', 1 )
+  IF( ibrav /= 0 .and. celldm(1) == 0.d0 .and. a == 0.d0 ) THEN
+     CALL errore(' iosys ',' invalid value of lattice parameter ', 1 )
   END IF
   IF( ibrav < 0 .OR. ibrav > 14 ) THEN
      CALL errore(' iosys ',' ibrav out of range ', 1 )
@@ -911,15 +926,26 @@ subroutine iosys
   !
   ! set up atomic positions and crystal lattice
   !
+  if (celldm (1) == 0.d0 .and. a /= 0.d0) then
+     if (ibrav == 0) ibrav = 14 
+     celldm (1) = a*bohr_radius_angs
+     celldm (2) = b/a
+     celldm (3) = c/a
+     celldm (4) = cosab
+     celldm (5) = cosac
+     celldm (6) = cosbc 
+  else if (celldm (1) /= 0.d0 .and. a /= 0.d0) then
+     call errore('input', ' do not specify both celldm and a,b,c!',1)
+ end if
+  !
   if (ibrav == 0) then
      if (celldm (1) == 0.d0) then
         celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
-        at(:,:) = at(:,:) / celldm(1)
-     end if
+    end if
   else
      CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
-     at = at / celldm(1) !  bring at in units of alat
   end if
+  at(:,:) = at(:,:) / celldm(1)   !  bring at in units of alat
   alat = celldm(1)
   CALL volume(alat,at(1,1),at(1,2),at(1,3),omega)
   !
@@ -932,33 +958,26 @@ subroutine iosys
      !
      !  input atomic positions are divided by a0: do nothing
      !
-     ltaucry = .false.
   CASE ('bohr')
      !
      !  input atomic positions are in a.u.: divide by alat
      !
      tau = tau/alat
-     ltaucry = .false.
   CASE ('crystal')
      !
      !  input atomic positions are in crystal axis
      !
-     ltaucry = .true.
+     call cryst_to_cart (nat, tau, at, 1)
   CASE ('angstrom')
      !
      !  atomic positions in A: convert to a.u. and divide by alat
      !
-     tau = tau/0.529177/alat
-     ltaucry = .false.
+     tau = tau/bohr_radius_angs/alat
   CASE DEFAULT
      CALL errore(' iosys ',' atomic_positions='//trim(atomic_positions)// &
           ' not implemented ', 1 )
   END SELECT
 
-  ! If  ltaucry = .true. , the input atomic positions in crystallographic
-  ! units are transformed in cartesian coordinates
-  !
-  if (ltaucry) call cryst_to_cart (nat, tau, at, 1)
   !
   ! set default value of wmass
   !
