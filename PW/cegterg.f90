@@ -85,7 +85,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   !
   ! ... Called routines:
   !
-  EXTERNAL :: h_psi, s_psi, g_psi
+  EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(ndmx,ndim,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(ndmx,ndim,nvec,spsi)
