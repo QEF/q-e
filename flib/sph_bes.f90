@@ -127,6 +127,7 @@ subroutine sph_bes (msh, r, q, l, jl)
            jl (ir) = ( (3.d0 / (q * r (ir) ) - (q * r (ir) ) ) * sin ( &
                 q * r (ir) ) - 3.d0 * cos (q * r (ir) ) ) / (q * r (ir) ) ** &
                 2
+        enddo
 
 #endif
 
