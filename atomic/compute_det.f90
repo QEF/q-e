@@ -1,4 +1,11 @@
 !
+! Copyright (C) 2004 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 !---------------------------------------------------------------
 subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,det)

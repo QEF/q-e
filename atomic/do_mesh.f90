@@ -1,4 +1,11 @@
 !
+! Copyright (C) 2004 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 !---------------------------------------------------------------
       subroutine do_mesh(rmax,zmesh,xmin,dx,ibound,ndm, &
                          mesh,r,r2,rab,sqr)
@@ -23,6 +30,9 @@
       do i=1,mesh
          x=xmin+dble(i-1)*dx
          r(i)=exp(x)/zmesh
+         rab(i)=(r(i)+exp(xmin)/zmesh)*dx
+         !!! r(i)=exp(xmin)*(exp((i-1)*dx)-1.0_dp)/zmesh
+         !!! rab(i)=r(i)*dx
          r2(i)=r(i)*r(i)
          rab(i)=r(i)*dx
          sqr(i)=sqrt(r(i))

@@ -1,7 +1,9 @@
 !
 ! Copyright (C) 2002 Vanderbilt group
-! This file is distributed under the terms of the GNU General Public
-! License as described in the file 'License' in the current directory.
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! This routine has been modified in order to be compatible with the
 ! ld1 code. The numerical algorithm is unchanged.
