@@ -493,7 +493,7 @@ MODULE read_cards_module
                    !     
                    CALL errore( ' read_cards ', &
                               & ' wrong index in ATOMIC_POSITIONS ', ia )
-                   !	    
+                   !    
                 END IF
                 !
                 is  =  sp_pos(ia)

@@ -991,7 +991,7 @@ MODULE read_namelists_module
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' VEC_scheme '''// &
                        & TRIM( VEC_scheme )//''' not allowed ', -1 )       
-       !	       
+       !       
        DO i = 1, SIZE( minimization_scheme_allowed )
           IF ( TRIM( minimization_scheme ) == &
                minimization_scheme_allowed(i) ) allowed = .TRUE.
@@ -999,7 +999,7 @@ MODULE read_namelists_module
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' minimization_scheme '''// &
                        & TRIM( minimization_scheme )//''' not allowed ', -1 )       
-       !	       
+       !
        RETURN
        !
      END SUBROUTINE

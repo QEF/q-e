@@ -78,7 +78,7 @@ subroutine interpolate (v, vs, iflag)
         enddo
         if (gamma_only) then
            do ig = 1, ngms
-              aux (nlm(ig) ) = aux (nlsm(ig) )
+              aux (nlm(ig) ) = auxs (nlsm(ig) )
            enddo
         end if
         call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)

@@ -114,8 +114,8 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
         !
         ! calculate quantites depending on the module of G only when needed
         !
-	IF ( ig > 1 ) ltest = ABS( qmod(ig) - qmod(ig-1) ) > 1.0D-6
-	!
+        IF ( ig > 1 ) ltest = ABS( qmod(ig) - qmod(ig-1) ) > 1.0D-6
+        !
         IF ( ig == 1 .OR. ltest ) THEN
            qm = qmod (ig) * dqi
            px = qm - int (qm)

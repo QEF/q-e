@@ -120,7 +120,7 @@ MODULE input_parameters
           ! specify how to start/restart the simulation
           !   'from_scratch'    start a new simulation from scratch,
           !                     with random wave functions
-	  !                     for NEB only : a simulation is started
+          !                     for NEB only : a simulation is started
           !                     from scratch and the initial guess for the
           !                     path is the linear interpolation between
           !                     the initial and the final images
