@@ -7,12 +7,13 @@
 
 \begin{document} 
 
-% front page, enlarge to let table of contents fit within
-\enlargethispage*{0.5cm}
+% front page: no page number
+% enlarge page a little to let table of contents fit within
 \thispagestyle{empty}
+\enlargethispage*{1cm}
 
-% PWscf and Democritos logos, raise the latter to align
 \begin{center}
+  % PWscf and Democritos logos, raise the latter to align
   \epsfig{figure=pwscf,width=4cm}\hfill%
   \raisebox{0.5cm}{\epsfig{figure=democritos,width=8cm}}
   \\
@@ -30,19 +31,24 @@
 This manual covers the installation and usage of PWscf (Plane-Wave
 Self-Consistent Field): a set of programs for electronic structure
 calculations within Density-Functional Theory and Density-Functional
-Perturbation Theory, using a Plane-Wave basis set and pseudopotentials.
+Perturbation Theory, using a Plane-Wave basis set and
+pseudopotentials.
 PWscf is a component of the ESPRESSO (opEn-Source Package for Research
 in Electronic Structure, Simulation, and Optimization) suite of codes,
 including, in addition to PWscf, the Car-Parrinello codes CP and FPMD.
 
 Other sources of documentation can be found in:
-\begin{quote}
-  the various \texttt{README} files found in the distribution;\\
-  the \texttt{Doc/} directory; \\
-  the PWscf \htmladdnormallink{web site}{http://www.pwscf.org/};\\
-  the mailing list \texttt{pw\_forum@pwscf.org}: see the PWscf web
-      site for instructions on how to register and how to search the 
-      archives of the mailing list.
+\begin{itemize}
+  \item the \texttt{Doc/} directory of the PWscf distribution;
+  \item the various \texttt{README} files found in the distribution;
+  \item the PWscf web site
+        (\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
+                           {http://www.pwscf.org/});
+  \item the Pw\_forum mailing list
+        (\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
+                           {mailto:pw_forum@pwscf.org}):
+        see the PWscf web site for instructions on how to register and
+        how to search the archives of the mailing list.
 \end{itemize}
 
 PWscf can currently perform the following kind of calculations:
@@ -50,7 +56,8 @@ PWscf can currently perform the following kind of calculations:
 \begin{itemize}
   \item ground-state energy and one-electron (Kohn-Sham) orbitals
   \item atomic forces, stresses, and structural optimization
-  \item molecular dynamics on the ground-state Born-Oppenheimer surface
+  \item molecular dynamics on the ground-state Born-Oppenheimer
+        surface
   \item variable-cell molecular dynamics
   \item phonon frequencies and eigenvectors at a generic wave vector
   \item effective charges and dielectric tensors
@@ -59,7 +66,8 @@ PWscf can currently perform the following kind of calculations:
   \item third-order anharmonic phonon lifetimes
   \item Infrared and Raman (nonresonant) cross section
   \item macroscopic polarization via Berry Phase
-  \item Nudged Elastic Band (NEB) for energy barriers and reaction paths
+  \item Nudged Elastic Band (NEB) for energy barriers and reaction
+        paths
 \end{itemize}
 
 All of the above work for both insulators and metals, in any crystal
@@ -73,43 +81,44 @@ Various postprocessing programs are available.
 The PWscf codes work on many different types of machines, including
 parallel machines using Message Passing Interface (MPI).
 
-Starting from version 2.0, a Graphical User Interface (GUI) is included
-in the package. The GUI may be used in producing input data files needed
-to run PWscf.
+Starting from version 2.0, a Graphical User Interface (GUI) is
+included in the package.
+The GUI may be used in producing input data files needed to run PWscf.
 
 \subsection{People}
 
 The PWscf package was originally developed by
 Stefano Baroni\\
 \htmladdnormallink{(\texttt{baroni@sissa.it})}%
-{mailto:baroni@sissa.it},
+                  {mailto:baroni@sissa.it},
 Stefano de Gironcoli
 \htmladdnormallink{(\texttt{degironc@sissa.it})}%
-{mailto:degironc@sissa.it},
+                  {mailto:degironc@sissa.it},
 Andrea Dal Corso
 \htmladdnormallink{(\texttt{dalcorso@sissa.it})}%
-{mailto:dalcorso@sissa.it}
+                  {mailto:dalcorso@sissa.it}
 (SISSA, Trieste)
 and Paolo Giannozzi\\
 \htmladdnormallink{(\texttt{giannozz@nest.sns.it})}%
-{mailto:giannozz@nest.sns.it} 
+                  {mailto:giannozz@nest.sns.it} 
 (Scuola Normale Superiore, Pisa)
 who are the copyleft holders.
 
 The maintenance and further development of the ESPRESSO code is
-promoted by the
-\htmladdnormallink{DEMOCRITOS National Simulation Center}%
-{http://www.democritos.it}
-of the Italian INFM
-(\texttt{http://www.democritos.it/scientific.php}),
+promoted by the DEMOCRITOS National Simulation Center of the Italian
+INFM
+(\htmladdnormallink{\texttt{http://www.democritos.it/scientific.php}}%
+                   {http://www.democritos.it/scientific.php})
 under the coordination of Paolo Giannozzi, with the strong support of
 the CINECA National Supercomputing Center in Bologna, under the
 responsibility of Carlo Cavazzoni
 \htmladdnormallink{(\texttt{c.cavazzoni@cineca.it})}%
-{mailto:c.cavazzoni@cineca.it}.
+                  {mailto:c.cavazzoni@cineca.it}.
 \hyphenation{ge-rar-do}
-Currently active developers include Gerardo Ballabio (CINECA), 
-Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA), 
+Currently active developers include
+Gerardo Ballabio (CINECA), 
+Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
+(SISSA), 
 Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 Several other people, mostly but not exclusively former SISSA students, 
@@ -117,10 +126,10 @@ contribute or have contributed to it. Among them we mention:
 \begin{quote}
 \hyphenation{laz-ze-ri}
 Dario Alf\`e, Francesco Antoniella, Mauro Boero, Claudia Bungaro,
-Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto Debernardi, 
-Guido Fratesi, Ralph Gebauer, Michele Lazzeri, Kurt M\"ader,
-Nicola Marzari, Francesco Mauri, Pasquale Pavone, Mickael Profeta,
-Guido Roma, Kurt Stokbro, Renata Wentzcovitch.
+Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto
+Debernardi, Guido Fratesi, Ralph Gebauer, Michele Lazzeri, Kurt
+M\"ader, Nicola Marzari, Francesco Mauri, Pasquale Pavone, Mickael
+Profeta, Guido Roma, Kurt Stokbro, Renata Wentzcovitch.
 \end{quote}
 
 \hyphenation{a-les-sio}
@@ -134,9 +143,12 @@ This manual was (mostly) written by Paolo Giannozzi.
 
 \subsection{Terms of Use}
 
-PWscf is released under the GNU 
-\htmladdnormallink{General Public License}%
-{http://www.pwscf.org/License.txt}.
+PWscf is free software, released under the GNU General Public License
+(\htmladdnormallink{\texttt{http://www.pwscf.org/License.txt}}%
+                   {http://www.pwscf.org/License.txt},
+or the file \texttt{License} in the top directory of the PWscf
+distribution).
+All trademarks belong to their respective owners.
 
 We shall greatly appreciate if scientific work done using this code
 will contain an explicit acknowledgment and a reference to the PWscf
@@ -144,51 +156,70 @@ web page.
 Our preferred form for the acknowledgment is the following:
 
 \begin{quote}
-{\em Acknowledgments}
-\par\noindent\dots
+\emph{Acknowledgments:}
+\par\noindent
 Calculations in this work have been done using the PWscf package
-[ref]\dots
+[\emph{ref}].
 \par\noindent
-{\em Bibliography}
+\emph{Bibliography:}
 \par\noindent
-[ref] S. Baroni, A. Dal Corso, S. de Gironcoli, and P. Giannozzi,
-\texttt{http://www.pwscf.org/}.
+[\emph{ref}] S.~Baroni, A.~Dal Corso, S.~de Gironcoli, and
+P.~Giannozzi, \texttt{http://www.pwscf.org/}.
 \end{quote}
-
-All trademarks belong to their respective owners.
 
 \clearpage
 
 \section{Installation}
 
-The PWscf package can be downloaded from the
-\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-{http://www.pwscf.org/}
-site.
-Presently, only source files are provided.
-Some precompiled executables (binary files) are provided only for the
-GUI.
+Presently, the PWscf package is only distributed in source form; some
+precompiled executables (binary files) are provided only for the GUI.
 Providing binaries for PWscf would require too much effort and would
 work only for a small number of machines anyway.
 
-Uncompress and unpack the code in an empty directory of your choice
-that will become the root directory of the distribution.
-On Linux machines, you may use:
+To install it, you must follow these steps:
+\begin{enumerate}
+  \item download and unpack the PWscf source distribution;
+  \item configure PWscf for your system, compilers and libraries;
+  \item compile some or all of the executables in the package.
+\end{enumerate}
 
-\texttt{tar xzvf pw.\version.tgz}
+\subsection{Download and unpack PWscf}
+
+The latest release of the PWscf source package can be downloaded from
+the PWscf web site at this URL:
+\smallskip
+
+\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
+                  {http://www.pwscf.org/}
+\smallskip
 
 \noindent
-On other Unix machines:
+The release corresponding to this manual is version \version.
+
+To uncompress and unpack the source package, move it to an empty
+directory of your choice, \texttt{cd} to that directory, and run the
+command:
+\smallskip
+
+\texttt{tar zxvf pw.\version.tgz}
+\smallskip
+
+\noindent
+If your version of \texttt{tar} doesn't recognize the \texttt{z} flag,
+use this instead:
+\smallskip
 
 \texttt{gunzip -c pw.\version.tgz | tar xvf -}
 
 \subsection{Automatic configuration}
 
-An experimental automatic configuration, generated with the GNU
-Autoconf package, is available (thanks to Gerardo Ballabio, CINECA).
-From the root directory, type:
+An automatic configuration procedure, generated with the GNU Autoconf
+package, is available since version 2.0.
+From the top directory of the PWscf source tree, just type:
+\smallskip
 
 \texttt{./configure}
+\smallskip
 
 \noindent 
 The script will examine your hardware and software, generate
@@ -210,10 +241,13 @@ you may want to try the manual configuration, described in the next section.
 \subsection{Manual configuration}
 
 From the root directory, type:
+\smallskip
 
 \texttt{./configure.old} \emph{your-system}
+\smallskip
 
-\noindent where \emph{your-system} is one of the following:
+\noindent
+where \emph{your-system} is one of the following:
 \begin{quote}
   \texttt{t3e}:       Cray T3E, Cray compiler\\
   \texttt{sunmpi}:    Sun parallel machines, Sun compiler (+)\\
@@ -376,13 +410,11 @@ have different ideas about the right way to call external libraries.
 As a consequence you may have a mismatch between what your compiler
 calls ("symbols") and the actual name of the required library call.
 Use the \texttt{nm} command to determine the name of a library call,
-as in the following examples:
-
-\texttt{nm /usr/local/lib/libblas.a | grep T | grep -i daxpy } 
-
-\texttt{nm /usr/local/lib/liblapack.a | grep T | grep -i zhegv } 
-
-\noindent
+as in the following examples:%
+\begin{verbatim}
+    nm /usr/local/lib/libblas.a | grep T | grep -i daxpy
+    nm /usr/local/lib/liblapack.a | grep T | grep -i zhegv
+\end{verbatim}
 where typical location and name of libraries is assumed.
 Most precompiled libraries have lowercase names with one or two
 underscores (\_) appended.
@@ -467,16 +499,16 @@ The workaround is to recompile BLAS/LAPACK with ifc, or (better) to
 replace the BLAS routine \texttt{xerbla} and LAPACK routine
 \texttt{dlamch} (the only two containing I/O calls) with recompiled
 objects:
-\begin{quote}
-  \texttt{ifc -c xerbla.f}\\
-  \texttt{ifc -O0 -c dlamch.f}
-\end{quote}
+\begin{verbatim}
+    ifc -c xerbla.f
+    ifc -O0 -c dlamch.f
+\end{verbatim}
 (do not forget \texttt{-O0} --- \texttt{dlamch.f} \emph{must} be
 compiled without optimization) and replace them into the library, as
 in the following example:
-\begin{quote}
-  \texttt{ar rv libatlas.a xerbla.o dlamch.o}
-\end{quote}
+\begin{verbatim}
+    ar rv libatlas.a xerbla.o dlamch.o
+\end{verbatim}
 (assuming that the library and the two object files are in the same
 directory).
 Note that if you have a PC cluster running MPI, you may have to
