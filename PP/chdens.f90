@@ -139,8 +139,10 @@ subroutine do_chdens
           e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3) > 1d-6 )    &
          call errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
 
-     if ((iflag.eq.3) .and.(output_format < 3 .or. output_format > 4)) &
+     if ((iflag.eq.3) .and.(output_format < 3 .or. output_format > 5)) &
         call errore ('chdens', 'incompatible iflag/output_format', 1)
+     if ((iflag.ne.3) .and. (output_format == 5) ) &
+        call errore ('chdens', 'output_format=5, iflag<>3', 1)
 
   else if (iflag  == 4) then
 
