@@ -197,7 +197,7 @@ K_POINTS {automatic}
  4 4 4 1 1 1  
 EOF
 
-$ECHO "  running the non self-consitent calculation for the groundstate...\c"
+$ECHO "  running the non self-consistent calculation for the ground state...\c"
 $PW_COMMAND < alas.nscf.in > alas.nscf.out
 $ECHO " done"
 
@@ -230,7 +230,7 @@ phonons of AlAs at Gamma
  /
 EOF
 
-$ECHO "  running the non self-consitent calculation for the perturbed"
+$ECHO "  running the non self-consistent calculation for the perturbed"
 $ECHO "  wavefunctions and the Raman tensor ...\c"
 $RAM_COMMAND < alas.ram.in > alas.ram.out
 $ECHO " done"

@@ -25,7 +25,7 @@ program cg_raman
   real(kind=DP), allocatable :: deps_dtau(:,:,:,:), dynout(:,:)
   real(kind=DP), allocatable :: w2(:)
   real(kind=DP):: max_seconds = 1.D+6
-  character(len=9) :: cdate, ctime, code = 'RAMAN'
+  character(len=9) :: cdate, ctime, code = 'PHCG'
   logical :: exst
   integer :: i
   !
@@ -33,7 +33,7 @@ program cg_raman
   call check_stop_init ( max_seconds ) 
   !
   call init_clocks(.true.)
-  call start_clock('raman')
+  call start_clock('phcg')
   call startup( nd_nmbr, code, version_number )
   !
   call cg_readin
@@ -67,7 +67,7 @@ program cg_raman
      end if
   end if
   !
-  call stop_clock('raman')
+  call stop_clock('phcg')
   call print_clock(' ')
   !
   !  close everything and stop

@@ -1,6 +1,6 @@
 c   phonon input cards are as follows:
 c
-c card 1   title_ph
+c card 1   title_ph (a line that is reprinted on output)
 c
 c                    namelist "inputph"
 c
