@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine d0rhod2v (ipert, drhoscf)
@@ -13,7 +14,7 @@ subroutine d0rhod2v (ipert, drhoscf)
 ! and the first variation of the charge density with respect to a
 ! perturbation at q=0
 !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE io_global,      ONLY : stdout
   USE io_files,      ONLY : iunigk
   USE kinds, only : DP

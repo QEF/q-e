@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine gen_dpdvp
@@ -17,7 +18,7 @@ subroutine gen_dpdvp
   !  iudpdvp_2 :   < Pc dpsi_k/du(-q)    | dH/du(0) |   psi_{k+q} >
   !  iudpdvp_3 :   < Pc dpsi_{k+q}/du(0) | dH/du(q) |   psi_k >
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc

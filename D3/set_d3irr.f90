@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine set_d3irr
   !-----------------------------------------------------------------------
@@ -22,7 +24,7 @@ subroutine set_d3irr
   ! performed with iswitch=-2. If this is not the case the following
   ! routine does not work.
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
   USE control_flags, ONLY : iverbosity

@@ -5,12 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 program d3toten
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, zv, tau
   USE io_global,      ONLY : stdout
   USE kinds, only : DP
   use pwcom

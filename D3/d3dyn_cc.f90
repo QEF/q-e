@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine d3dyn_cc
@@ -16,7 +17,7 @@ subroutine d3dyn_cc
   ! while reading the variation of the density on unit iudrho and iud0rho
   ! it assumes it is the total density, i.e. sum of valence + core.
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, tau
   USE kinds, only : DP
   use pwcom
   use phcom

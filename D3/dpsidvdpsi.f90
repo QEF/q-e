@@ -5,12 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine dpsidvdpsi (nu_q0)
   !-----------------------------------------------------------------------
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
   use phcom

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
@@ -13,7 +14,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
 ! Receives in input the variation of the local part of the KS-potential
 ! and calculates dV(xq_)_KS*psi_ in G_space, for all bands
 !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   use pwcom
   use phcom
   use d3com

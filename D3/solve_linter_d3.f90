@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
@@ -27,7 +28,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   !  isw_sl = 1  : calculates <psi_k+q|dH/du(q)|psi_k > and writes on: iupdqvp
   !  isw_sl = 3  : calculates <psi_k  |dH/du(0)|psi_k > and writes on: iupd0vp
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   USE io_global,      ONLY : stdout
   USE io_files,      ONLY : iunigk
   USE kinds, only : DP

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine dvscf (nu_i, dvloc, xq_x)
@@ -14,7 +15,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 !   calculates the variation of the local part of the variation of the
 !   K-S potential.
 !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, tau
   USE kinds, only : DP
   use pwcom
   USE atom, ONLY: nlcc

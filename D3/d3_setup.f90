@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine d3_setup
@@ -42,7 +43,7 @@ subroutine d3_setup
   !  7) set the variables needed to distribute one loop between pools
   !  8) set the variables needed to calculate only selected q=0 modes
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use pwcom

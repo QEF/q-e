@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
@@ -15,7 +16,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   !     change of the wavefunction for a given k point.
   !
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc

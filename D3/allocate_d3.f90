@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine allocate_d3
@@ -13,7 +14,7 @@ subroutine allocate_d3
   ! dynamical allocation of arrays: quantities needed for the third
   ! derivative of the total energy
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ntyp => nsp
   use pwcom
   use phcom
   use d3com

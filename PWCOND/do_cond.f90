@@ -12,6 +12,7 @@ subroutine do_cond(nodenumber)
 !   scattering problem and calculates the transmission coefficient. 
 !
 #include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   use pwcom
   use cond 
   use io_files 

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine drhod2v
@@ -19,7 +20,7 @@ subroutine drhod2v
   ! The variation of the charge can be read from a file or calculated dire
   ! --this last option is to be used for testing pourposes--
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
   use phcom

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine write_aux (isw)
@@ -12,7 +13,7 @@ subroutine write_aux (isw)
   !
   ! Writes on files partial computation of d3dyn
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat
   use pwcom
   use phcom
   use d3com

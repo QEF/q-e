@@ -14,6 +14,7 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   !  it according to the variation of the core_charge
   !  It is used by drho_cc. Have a look there for more explanation
   !
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE kinds, ONLY : DP
   use pwcom
   use phcom

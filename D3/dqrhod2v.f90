@@ -5,16 +5,16 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
-
 subroutine dqrhod2v (ipert, drhoscf)
   !-----------------------------------------------------------------------
   ! calculates the term containing the second variation of the potential
   ! and the first variation of the charge density with respect to a
   ! perturbation at a generic q
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE kinds, only : DP
   use pwcom
   USE uspp_param, ONLY: nh

@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine d3_readin
   !-----------------------------------------------------------------------
@@ -14,7 +16,7 @@ subroutine d3_readin
   !    allows it. A second routine readfile reads the variables saved
   !    on the data file by the self-consistent program.
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ntyp => nsp
   use pwcom
   USE control_flags, ONLY : iverbosity, iswitch
   use phcom

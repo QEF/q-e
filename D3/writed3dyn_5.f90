@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
+!
 !-----------------------------------------------------------------------
 subroutine writed3dyn_5 (d3dyn_x, filename, isw)
   !-----------------------------------------------------------------------
@@ -13,7 +15,8 @@ subroutine writed3dyn_5 (d3dyn_x, filename, isw)
   !     isw = +1  :  d3dyn_x is in cartesian axis
   !     isw = -1  :  rotates d3dyn_x from the basis of pattern to
   !                      cartesian axis
-#include "machine.h"
+  !
+  USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
   use phcom

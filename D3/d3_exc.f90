@@ -14,7 +14,8 @@ subroutine d3_exc
   !    Calculates the contribution to the derivative of the dynamical
   !    matrix due to the third derivative of the exchange and correlation
   !    energy
-
+  !
+  USE ions_base,  ONLY : nat
   USE kinds, ONLY : DP
   use pwcom
   use phcom

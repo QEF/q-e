@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !----------------------------------------------------------------------
 subroutine d3vrho
@@ -13,7 +14,7 @@ subroutine d3vrho
   !  This routine calculates the electronic term: <psi|V"'|psi>
   !  of the third order dynamical matrix.
   !
-#include "machine.h"
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE kinds, only : DP
   use pwcom
   USE uspp_param, ONLY: nh

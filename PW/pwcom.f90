@@ -11,13 +11,13 @@ MODULE basis
   !
   ! ... The variables needed to describe the atoms in the unit cell
   !
-  USE ions_base,  ONLY : &
-       zv,               &! the valence charge of the atom
-       nat,              &! number of atoms in the unit cell
-       ntyp => nsp,      &! number of different types of atoms
-       tau,              &! the positions of each atom
-       atm,              &! name of the type of the atoms
-       ityp               ! the type of each atom
+ ! USE ions_base,  ONLY : &
+ !      zv,               &! the valence charge of the atom
+ !      nat,              &! number of atoms in the unit cell
+ !      ntyp => nsp,      &! number of different types of atoms
+ !      tau,              &! the positions of each atom
+ !      atm,              &! name of the type of the atoms
+ !      ityp               ! the type of each atom
   !
   SAVE
   !

@@ -14,6 +14,7 @@ subroutine d3matrix
   ! of the dynamical matrix at q and in the star of q.
   ! The result is written on a iudyn file
   !
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau, atm
   USE kinds, only : DP
   use pwcom
   USE control_flags, ONLY : noinv, modenum

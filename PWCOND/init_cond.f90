@@ -9,6 +9,7 @@ subroutine init_cond
 !
 ! This subroutine sets up some variables of PWCOND
 !
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, tau 
   USE io_global,  ONLY : stdout
   use pwcom
   USE uspp_param,    ONLY : dion, nbeta, lll, tvanp
