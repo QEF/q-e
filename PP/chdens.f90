@@ -16,17 +16,17 @@ program chdens
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  USE parameters,       ONLY : ntypx
-  use constants, only:  pi, fpi
-  use cell_base
-  USE ions_base, ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
-  use char
-  use lsda_mod, only: nspin
-  use gvect
-  use gsmooth
-  use scf, only: rho
+  USE parameters, ONLY : ntypx
+  USE constants,  ONLY :  pi, fpi
+  USE cell_base
+  USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
+  USE char
+  USE lsda_mod,   ONLY: nspin
+  USE gvect
+  USE gsmooth
+  USE scf, ONLY: rho
   USE wavefunctions_module,  ONLY: psic
-  use io_files, only: nd_nmbr
+  USE io_files, ONLY: nd_nmbr
 
   implicit none
   integer, parameter :: nfilemax = 7
@@ -44,24 +44,22 @@ program chdens
   real(kind=DP), allocatable :: taus (:,:), rhor(:)
   integer :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
-  integer :: idpol               ! dipol moment flag
+  integer :: idpol               ! dipole moment flag
   integer, allocatable :: ityps (:)
   character (len=3) :: atms(ntypx)
   character (len=80) :: filepp(nfilemax)
   real(kind=DP) :: rhodum, dipol(0:3)
   complex(kind=DP), allocatable:: rhog (:)
   ! rho or polarization in G space
-  logical :: fast3d
+  logical :: fast3d, makov
 
   namelist /input/  &
        nfile, filepp, weight, iflag, idpol, e1, e2, e3, nx, ny, nz, x0, &
-       plot_out, output_format, fileout, epsilon, filepol
-                                                                                
+       makov, plot_out, output_format, fileout, epsilon, filepol
+
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
   INTEGER, EXTERNAL   :: iargc
-
-                                                                                
 
   !
   call start_postproc (nd_nmbr)
@@ -86,6 +84,7 @@ program chdens
   nx            = 0
   ny            = 0
   nz            = 0
+  makov         = .false.
   !
   !    read and check input data
   !
@@ -426,6 +425,11 @@ program chdens
 
   endif
 
+  if ( makov ) then
+     call makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
+          nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor)
+  endif
+ 
   deallocate(rhor)
   deallocate(rhog)
   call stop_pp
@@ -1262,3 +1266,149 @@ subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
   endif
 
 end subroutine write_dipol
+!
+!-----------------------------------------------------------------------
+subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
+     nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor)
+  !-----------------------------------------------------------------------
+  !
+  USE io_global,  ONLY : stdout
+  USE kinds, only : DP
+  implicit none
+  integer :: ibrav, nat, ntyp, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3
+
+  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rhor(nrx1*nrx2*nrx3), &
+       zv(ntyp), dipol_ions(3), dipol_el(3), quadrupol_ions, quadrupol_el, &
+       x0(3)
+
+  integer :: i, j, k, ipol, na
+  real(kind=DP) :: rhotot, dr, zvtot
+  real(kind=DP) :: rijk, deltax, deltay, deltaz, debye, omega, rhomin, rho_tmp
+  real(kind=DP) :: pi, corr1, corr2, qq, dipol(3), quadrupol, AA, BB
+
+  !  Note that the definition of the Madelung constant used here
+  !  differs from the "traditional" one found in the literature. See
+  !  Lento, Mozos, Nieminen, J. Phys.: Condens. Matter 14 (2002), 2637-2645
+
+  real(kind=DP), parameter:: Madelung(3) = [2.8373, 2.8883, 2.885]
+
+  if (ibrav < 1 .or. ibrav > 3) then
+     WRITE(stdout,'("Makov-Payne correction only for cubic lattices")')
+     return
+  else
+     WRITE(stdout,'("Makov-Payne correction with Madelung constant = ",f8.4)')&
+          Madelung(ibrav)
+  end if
+  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
+
+  deltax = 1.d0 / nr1
+  deltay = 1.d0 / nr2
+  deltaz = 1.d0 / nr3
+
+  dipol_ions = 0.d0
+  dipol_el = 0.d0
+  quadrupol_ions = 0.d0
+  quadrupol_el = 0.d0
+
+! Volume element in real space
+  dr = omega / nr1 / nr2 / nr3
+
+  rhomin = MAX ( MINVAL (rhor), 1.d-10 )
+  !
+  !   compute electronic total charge, dipole and quadrupole moments
+  !
+  do k = 1, nr3
+     do j = 1, nr2
+        do i = 1, nr1
+           rho_tmp = rhor( i + (j-1)*nrx1 + (k-1)*nrx1*nrx2 )  / rhomin
+           rhotot = rhotot + rho_tmp
+           do ipol=1,3
+              rijk=x0(ipol)+(i-1)*at(ipol,1)*deltax + &
+                            (j-1)*at(ipol,2)*deltay + &
+                            (k-1)*at(ipol,3)*deltaz
+              dipol_el(ipol)=dipol_el(ipol)+rho_tmp*rijk*alat
+              quadrupol_el=quadrupol_el+rho_tmp*(rijk*alat)**2
+           enddo
+        enddo
+     enddo
+  enddo
+
+  rhotot = rhotot * dr * rhomin
+
+  dipol_el=dipol_el * dr * rhomin
+  quadrupol_el = quadrupol_el * dr * rhomin
+
+  !
+  !   compute ionic total charge, dipole and quadrupole moments
+  !
+  dipol_ions=0.d0
+  zvtot=0.d0
+  do na=1,nat
+     zvtot = zvtot+zv(ityp(na))
+     do ipol=1,3
+        dipol_ions(ipol)=dipol_ions(ipol)+zv(ityp(na))*tau(ipol,na)*alat
+        quadrupol_ions=quadrupol_ions+zv(ityp(na))*(tau(ipol,na)*alat)**2
+     enddo
+  enddo
+
+  !
+  !   compute ionic+electronic total charge, dipole and quadrupole moments
+  !
+  qq = -rhotot+zvtot
+  dipol = -dipol_el+dipol_ions
+  quadrupol = -quadrupol_el+quadrupol_ions
+
+  !
+  !  Makov-Payne correction, PRB 51, 43014 (1995)
+  !  Note that Eq. 15 has the wrong sign for the quadrupole term 
+  !
+  pi = 3.14159265358979d0
+  corr1 = -Madelung(ibrav)/alat * qq**2
+  AA = quadrupol
+  BB = dipol(1)**2 + dipol(2)**2 + dipol(3)**2
+  corr2 = (4.d0/3.d0*pi) * (qq*AA-BB) / alat**3
+  if (abs(qq) < 1.d-3) then
+      corr2 = 0.0d0
+  endif
+
+  !
+  !  print the results
+  !
+  WRITE( stdout, '(//8x,"************    MAKOV-PAYNE CORRECTION    ***********")')
+  WRITE( stdout, '(/,"----> Warning: results are meaningless if the cluster is &
+&not centred within the cell.")')
+  WRITE( stdout, '(/4x,"Electron charge: ",f15.8," el.")') -rhotot
+  WRITE( stdout, '(4x,"   Ionic charge: ",f15.8," el.")') zvtot
+  WRITE( stdout, '(4x,"   Total charge: ",f15.8," el.        <---- Check this value.")') qq
+
+  !
+  !  print the electron dipole moment
+  !  A positive dipole goes from the - charge to the + charge.
+  !
+  WRITE( stdout, '(/4x,"Electrons dipole moments",3f17.8," a.u.")')  &
+       (-dipol_el(ipol),ipol=1,3)
+  !
+  ! print the ionic and total dipole moment
+  !
+  WRITE( stdout, '(4x,"     Ions dipole moments",3f17.8," a.u.")') &
+      (dipol_ions(ipol),ipol=1,3)
+  WRITE( stdout,'(4x,"    Total dipole moments",3f17.8," a.u.")') &
+      (dipol(ipol),ipol=1,3)
+  !
+  ! print the electronic,ionic and total quadrupol moment
+  !
+  WRITE( stdout, '(/4x,"Electrons quadrupole moment",f20.8," a.u.")')  &
+       -quadrupol_el
+  WRITE( stdout, '(4x,"     Ions quadrupole moment",f20.8," a.u.")') &
+      quadrupol_ions
+  WRITE( stdout,'(4x,"    Total quadrupole moment",f20.8," a.u.")') quadrupol
+  !
+  ! print the Makov-Payne correction
+  !
+  WRITE( stdout,'(/4x,"Makov-Payne correction is ",f14.8," Ry = ",f6.3," eV (first order, 1/a0)")') -corr1, (-corr1)*13.60569172d0
+  WRITE( stdout,'(4x,"                          ",f14.8," Ry = ",f6.3," eV (second order, 1/a0^3)")') -corr2, (-corr2)*13.60569172d0
+  WRITE( stdout,'(4x,"                          ",f14.8," Ry = ",f6.3," eV (total)")') -corr1-corr2, (-corr1-corr2)*13.60569172d0
+
+  return
+
+end subroutine makov_payne
