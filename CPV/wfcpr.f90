@@ -713,7 +713,7 @@
 !
 !     newd calculates deeq and a contribution to fion
 !
-         call newd(rhor,irb,eigrb,rhovan,deeq,fion)
+         call newd(rhor,irb,eigrb,rhovan,fion)
          WRITE( stdout,*) ' out from newd'
          call prefor(eigr,betae)
 !
@@ -725,7 +725,7 @@
          emadt2 = ccc * ema0bg
 
          do i=1,n,2
-            call dforce(bec,deeq,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
+            call dforce(bec,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
             call wave_steepest( c0(:,i,1,1), cm(:,i,1,1), emadt2, c2 )
             call wave_steepest( c0(:,i+1,1,1), cm(:,i+1,1,1), emadt2, c3 )
          end do
@@ -739,7 +739,7 @@
 !
 !     nlfq needs deeq calculated in newd
 !
-         if ( tfor .or. tprnfor ) call nlfq(cm,deeq,eigr,bec,becdr,fion)
+         if ( tfor .or. tprnfor ) call nlfq(cm,eigr,bec,becdr,fion)
          WRITE( stdout,*) ' out from nlfq'
 ! 
 !     imposing the orthogonality
@@ -1130,7 +1130,7 @@
 !
 !=======================================================================
 !
-      call newd(rhor,irb,eigrb,rhovan,deeq,fion)
+      call newd(rhor,irb,eigrb,rhovan,fion)
       call prefor(eigr,betae)
 !
 !==== set friction ====
@@ -1236,14 +1236,14 @@
             else
 !            write(6,*) "out from dforce_field"
             call dforce                                                 &
-     &         (bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+     &         (bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
             end if
 !===================
 !  End Potential for Electric Feild
 !                         - M.S
 !
 !      do i=1,n,2
-!         call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+!         call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
          if(tsde) then
             CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
             CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
@@ -1275,7 +1275,7 @@
 !
 !     nlfq needs deeq bec
 !
-      if ( tfor .or. tprnfor ) call nlfq(c0,deeq,eigr,bec,becdr,fion)
+      if ( tfor .or. tprnfor ) call nlfq(c0,eigr,bec,becdr,fion)
 !
       if( tfor .or. thdyn ) then
 !

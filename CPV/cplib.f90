@@ -4814,6 +4814,7 @@
          call read_pseudo(is,iunit,ierr)
          
          if (ierr /= 0) then
+            rewind ( iunit )
             !
             ! UPF not found, pseudopotential format determined by file name:
             ! *.vdb or *.van  Vanderbilt US pseudopotential code  pseudo_type=1
@@ -5402,6 +5403,7 @@ end function pseudo_type
      &     iver(2).gt.9 .or. iver(2).lt.0 .or.                          &
      &     iver(3).gt.9 .or. iver(3).lt.0      )                        &
      &   call errore('readvan','wrong version numbers',1)
+
 !
       read( iunps, '(a20,3f15.9)', err=100, iostat=ios )                &
      &     title, z(is), zv(is), exfact 
@@ -5413,6 +5415,7 @@ end function pseudo_type
      &     call errore('readvan','Wrong xc in pseudopotential',1)
 ! convert from "our" conventions to Vanderbilt conventions
 !
+
       call dftname (nint(exfact), dft)
       call which_dft (dft)
 !
@@ -5563,6 +5566,7 @@ end function pseudo_type
          read( iunps, '(i5,f15.9)',err=100, iostat=ios )                &
      &        npf, dummy
       end if
+
 !
 !   read the local potential 
 !

@@ -1283,7 +1283,7 @@ end subroutine wf
   real(kind=8), allocatable, dimension(:,:) :: W
   real(kind=8) :: t0, fric,U(m,m), t2
   real(kind=8) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
-  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(3*m-2)
+  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(4*m)
 !  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(4*m)
   real(kind=8) :: temp(m,m)
   complex(kind=8) :: d(m,m), alpha, beta1, ci
@@ -1406,8 +1406,12 @@ end subroutine wf
        end do
     end do
 
+#if ! defined __AIX
     call zhpev('V','U',m,wp,wr,z,m,f1,f2,ierr1)
-!    call zhpev(21, wp, wr, z, m, m, f2, 4*m)
+#else
+    call zhpev(21, wp, wr, z, m, m, f2, 4*m)
+    ierr1 = 0
+#endif
 
     if (ierr1.ne.0) then 
    write(6,*) "failed to diagonalize W!"
@@ -3408,7 +3412,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !  integer :: f3(nw), f4(nw),isteep , ierr1
   integer :: f3(nw), f4(nw), ierr1
   real(kind=8) :: slope, slope2, t1, t2, t3, pi2, mt(nw),t21,temp1,maxdt
-  real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
+  real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(4*m), gr(nw, 3)
   real(kind=8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
   real(kind=8) :: spread, sp
   real(kind=8), allocatable, dimension(:) :: wr
@@ -3534,7 +3538,13 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
        end do
     end do
 
+#if ! defined __AIX
     call zhpev('V','U',m,wp1,wr,z,m,f1,f2,ierr)
+#else
+    call zhpev(21, wp1, wr, z, m, m, f2, 4*m)
+    ierr1 = 0
+#endif
+
     if (ierr.ne.0) stop 'failed to diagonalize W!'
 
     else
@@ -3577,7 +3587,12 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
        end do
     end do
 
+#if ! defined __AIX
     call zhpev('V','U',m,wp1,wr,z,m,f1,f2,ierr)
+#else
+    call zhpev(21, wp1, wr, z, m, m, f2, 4*m)
+    ierr1 = 0
+#endif
     if (ierr.ne.0) stop 'failed to diagonalize W!'
 
       maxdt=maxwfdt

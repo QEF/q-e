@@ -1345,6 +1345,11 @@ MODULE read_namelists_module
                 electron_dynamics = 'damp'
                 ion_dynamics = 'damp'
              END IF
+          CASE ( 'cp-wf' )
+             IF( prog == 'CP' ) THEN
+                electron_dynamics = 'damp'
+                ion_dynamics = 'damp'
+             END IF
           CASE ('relax')
              IF( prog == 'FP' ) THEN
                 electron_dynamics = 'sd'
@@ -1547,6 +1552,7 @@ MODULE read_namelists_module
               TRIM( calculation ) == 'cp'       .OR. &
               TRIM( calculation ) == 'vc-cp'    .OR. &
               TRIM( calculation ) == 'smd'      .OR. &
+              TRIM( calculation ) == 'cp-wf'    .OR. &
               TRIM( calculation ) == 'neb' ) THEN
              READ( 5, ions, iostat = ios ) 
           END IF
