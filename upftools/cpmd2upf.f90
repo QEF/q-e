@@ -77,7 +77,10 @@ module cpmd
   !
   logical :: nlcc_
   real(kind=8), allocatable :: rho_atc_(:)
-
+  !
+  integer :: maxinfo_, info_lines_
+  parameter (maxinfo_ = 100)
+  character (len=80), allocatable :: info_sect_(:)
   !------------------------------
 
 end module cpmd
@@ -99,6 +102,7 @@ subroutine read_cpmd(iunps)
   integer, external :: locate
   !
   nlcc_ = .false.
+  info_lines_ = 0
 10 read (iunps,'(A)',end=20,err=20) line
   if (matches ("&ATOM", trim(line)) ) then
      found = found + 1
@@ -124,10 +128,26 @@ subroutine read_cpmd(iunps)
              call errore('read_cpmd','unknown type: '//line,1)
   else if (matches ("&INFO", trim(line)) ) then
      found = found + 1
-     read (iunps,'(a)') title
+     ! read (iunps,'(a)') title
+     ! store info section for later perusal (FIXME: not yet implemented. 2004/10/12, AK)
+     allocate (info_sect_(maxinfo_))
+     do i=1,maxinfo_
+        read (iunps,'(a)',end=20,err=20) title
+        if (matches ("&END", trim(title)) ) then
+           closed = closed + 1
+           goto 10
+        else
+           info_sect_(i) = trim(title)
+           info_lines_ = i
+        end if
+     enddo
   else if (matches ("&POTENTIAL", trim(line)) ) then
      found = found + 1
-     read (iunps,*) mesh_, amesh
+     !read (iunps,*) mesh_, amesh
+     read (iunps,'(a)') line
+     read (line,*,iostat=ios) mesh_
+     amesh = -1.0
+     if ( ios /= 0 ) read (line,*,iostat=ios) mesh_, amesh
      allocate (r_(mesh_))
      !
      ! determine the number of angular momenta
@@ -144,9 +164,13 @@ subroutine read_cpmd(iunps)
      do i=2,mesh_
         read(iunps, *) r_(i),(vnl(i,l),l=0,lmax_)
      end do
+     ! get amesh if not available directly
+     if (amesh < 0.0) amesh = exp (r_(1) - r_(0))
   else if (matches ("&WAVEFUNCTION", trim(line)) ) then
      found = found + 1
-     read (iunps,*) mesh_, amesh
+     ! read (iunps,*) mesh_, amesh
+     read (iunps,'(a)') line
+     read (line,*,iostat=ios) mesh_
      allocate(chi_(mesh_,lmax_+1))
      do i=1,mesh_
         read(iunps, *) r_(i),(chi_(i,l+1),l=0,lmax_)
@@ -156,13 +180,19 @@ subroutine read_cpmd(iunps)
      nlcc_ = .true.
      read (iunps, '(a)') line
      if (.not. matches ("NUMERIC", trim(line)) ) &
-          call errore('read_cpmd','core-correction not allowed',1)
+          call errore('read_cpmd',' only NUMERIC core-correction supported',1)
      read(iunps, *) mesh_
      allocate (rho_atc_(mesh_))
      read(iunps, * ) (r_(i), rho_atc_(i), i=1,mesh_)
+  else if (matches ("&ATDENS", trim(line)) ) then
+     ! skip over &ATDENS section, add others here, if there are more.
+     do while(.not. matches("&END", trim(line)))
+        read (iunps,'(a)') line
+     end do
   else if (matches ("&END", trim(line)) ) then
      closed = closed + 1
   else
+     print*, 'line ignored: ', line
      unknown = unknown + 1
   end if
   go to 10
