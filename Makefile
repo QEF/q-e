@@ -99,6 +99,7 @@ veryclean : clean
 		      config.log config.status bin/*.x \
 		      autom4te.cache pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
+	- cd examples ; ./make_clean
 	- if test -d GUI ; then ( cd GUI; make veryclean ) ; fi
 
 tar :
@@ -110,7 +111,7 @@ tar :
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs
-	find install *docs *_examples pseudo -type f \
+	find install *docs examples pseudo -type f \
 		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
 	gzip pw.tar
 

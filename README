@@ -33,6 +33,7 @@ install/   machine-dependent makefiles and tools for compilation
 pseudo/    pseudopotential files used by examples
 upftools/  Source files for converters to unified pseudopotential
            format (UPF)
+examples/  Contains sample input and output files
 
 Directory structure of the PWscf package:
 
@@ -46,22 +47,19 @@ PWNC/      Source files for scf calculations with noncolinear magnetism (pwnc.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
 pwdoc/     Documentation for PWscf, ChangeLog, etc
-pw_examples/ Contains sample input and output files
 GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
                  PWgui-*/ for the tarball *.tar.gz).
                  GUI = Graphical User Interface "PWgui", written by 
 		 Anton Kokalj (http://www-k3.ijs.si/kokalj/pwgui/)
 
-Directory structure of the CP code:
+Directory structure of the CP package:
 
 CPV/       Source files
 cpdocs/    documentation, ChangeLog, etc
-cp_examples/ contains sample input and output files
 
-Directory structure of the FPMD code:
+Directory structure of the FPMD package:
 
 FPMD/      Source files
-cp_examples/ contains sample input and output files (common with CP)
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
