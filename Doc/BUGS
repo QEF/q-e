@@ -1,4 +1,6 @@
 
+  * LDA+U forces not working for unppolarized (nspin=1) calculations
+
   * memory leak in Raman code
 
   * disproportionate memory requirement in phonon code with USPP

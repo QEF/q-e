@@ -353,7 +353,7 @@ Some environment variables that are relevant to \texttt{configure} are:
   \texttt{ARCH}:
     label identifying the machine type (see below)\\
   \texttt{F90}, \texttt{F77}, \texttt{CC}:
-    names of Fortran 90, Fortran 77, and C compilers\\
+    names of Fortran 95, Fortran 77, and C compilers\\
   \texttt{CPP}:
     source file preprocessor (defaults to \texttt{\$CC -E})\\
   \texttt{LD}: linker (defaults to \texttt{\$F90})\\
@@ -368,7 +368,7 @@ For example, the following command line:
   ./configure F90=ifort FFLAGS="-Vaxlib -O2 -assume byterecl" \
               CC=gcc CFLAGS=-O3 LDFLAGS="-Vaxlib -static"
 \end{verbatim}
-instructs \texttt{configure} to use \texttt{ifort} as Fortran 90
+instructs \texttt{configure} to use \texttt{ifort} as Fortran 95
 compiler with flags \texttt{"-Vaxlib -O2 -assume byterecl"},
 \texttt{gcc} as C compiler with flags \texttt{"-O3"}, and to use flags
 \texttt{"-Vaxlib -static"} when linking.  Note that the values
@@ -953,6 +953,11 @@ and Intel compiler.  For other machines, we rely on user's feedback.
 
 \paragraph{All machines}
 
+Working fortran-95 and C compilers are needed in order to compile 
+ESPRESSO. Most so-called ``fortran-90'' compilers implement the 
+fortran-95 standard, but older versions may not be fortran-95
+compliant.
+
 If you get ``Compiler Internal Error'' or similar messages, try to
 lower the optimization level, or to remove optimization, just for the
 routine that has problems.  If it doesn't work, or if you experience
@@ -977,6 +982,14 @@ If many symbols are missing in the loading phase, you did not specify
 the location of all needed libraries (LAPACK, BLAS, FFTW,
 machine-specific optimized libraries).  If you did, but symbols are
 still missing, see below (for Linux PC).
+
+\paragraph{SGI machines with MIPS compiler}
+
+Many versions of the MIPS compiler yield compilation errors in
+conjunction with with \texttt{FORALL} constructs. There is no
+known solution other than editing the \texttt{FORALL} construct
+that gives a problem, or to replace it with an equivalent 
+\texttt{DO...END DO} construct.
 
 \paragraph{Linux Alphas with Compaq compiler}
 
