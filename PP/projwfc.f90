@@ -1,4 +1,3 @@
-!
 ! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -106,7 +105,8 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use symme, only: nsym, irt
   use wvfct
   use us
-  use becmod
+  use becmod,   only: becp
+  use rbecmod,  only: rbecp => becp
   use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
   use wavefunctions_module, only: evc
 #ifdef __PARA
@@ -129,13 +129,18 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   real(kind=DP) :: psum, totcharge, Emin, Emax, DeltaE, smoothing, etev, &
              delta, w0gauss, Elw, Eup
   real(kind=DP), allocatable :: e (:), proj (:,:,:), charges(:,:), pdos(:,:,:)
-  complex(kind=DP), allocatable :: wfcatom (:,:),  overlap (:,:), &
-       work (:,:), work1(:), proj0(:,:)
+  complex(kind=DP), allocatable :: wfcatom (:,:)
   integer, allocatable :: index(:)
   external w0gauss
   !
+  complex(kind=DP), allocatable ::  overlap(:,:),  work(:,:),  work1(:),  proj0(:,:)
+  ! Some workspace for k-point calculation ...
+  real   (kind=DP), allocatable :: roverlap(:,:),             rwork1(:), rproj0(:,:)
+  ! ... or for gamma-point.
+  !
   !
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
+  if ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   if (io_choice.eq.'standard' ) &
      WRITE( stdout, '(5x,"Projections are written to standard output")')
   if (io_choice.eq.'files' ) &
@@ -146,8 +151,15 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   allocate(swfcatom (npwx , natomwfc ) )
   allocate(wfcatom (npwx, natomwfc) )
   allocate(proj (natomwfc, nbnd, nkstot) )
-  allocate(overlap (natomwfc, natomwfc) )
   allocate(e (natomwfc) )
+  allocate(overlap (natomwfc, natomwfc) )
+  if ( gamma_only ) then
+     allocate(roverlap (natomwfc, natomwfc) )
+     roverlap= 0.d0
+     ! Allocate the array rbecp=<beta|wfcatom>, which is not allocated by
+     ! allocate_wfc() in a gamma-point calculation:
+     allocate (rbecp (nkb,natomwfc))
+  end if
 
   proj   = 0.d0
   overlap= (0.d0,0.d0)
@@ -193,18 +205,29 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      call atomic_wfc (ik, wfcatom)
 
      call init_us_2 (npw, igk, xk (1, ik), vkb)
-     call ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
+
+     if ( gamma_only ) then
+        call pw_gemm ('Y', nkb, natomwfc, npw, vkb, npwx, wfcatom, npwx, rbecp, nkb)  
+     else
+        call ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
+     end if
 
      call s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      !
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
      !
-     call ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
-          wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
-#ifdef __PARA
-     call reduce (2 * natomwfc * natomwfc, overlap)
-#endif
+     if ( gamma_only ) then
+        call pw_gemm ('Y', natomwfc, natomwfc, npw, wfcatom, npwx, swfcatom, npwx, roverlap, natomwfc)
+        overlap(:,:)=cmplx(roverlap(:,:),0.d0) ! HORRIBLE
+        !  This is a VERY BAD way of doing
+        !  things: diagonalizing a symmetric matrix
+        !  using a routine for an hermitian one,
+        !  and then taking only the real part... (GFjan04)
+     else
+        call ccalbec (natomwfc, npwx, npw, natomwfc, overlap, wfcatom, swfcatom)
+     end if
+
      !
      ! calculate O^{-1/2}
      !
@@ -226,21 +249,38 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      !
      ! calculate wfcatom = O^{-1/2} \hat S | phi>
      !
-     call ZGEMM ('n', 't', npw, natomwfc, natomwfc, (1.d0, 0.d0) , &
-          swfcatom, npwx,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx)
+     if ( gamma_only ) then
+        roverlap(:,:)=real(overlap(:,:),DP) ! HORRIBLE
+        !  This is a VERY BAD way of doing
+        !  things: diagonalizing a symmetric matrix
+        !  using a routine for an hermitian one,
+        !  and then taking only the real part...(GFjan04)
+        call DGEMM ('n', 't', 2*npw, natomwfc, natomwfc, 1.d0 , &
+             swfcatom, 2*npwx,  roverlap, natomwfc, 0.d0, wfcatom, 2*npwx)
+     else
+        call ZGEMM ('n', 't', npw, natomwfc, natomwfc, (1.d0, 0.d0) , &
+             swfcatom, npwx,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx)
+     end if
+
      !
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>
      !
-     allocate(proj0(natomwfc,nbnd) )
-     call ZGEMM ('c', 'n', natomwfc, nbnd, npw, (1.d0, 0.d0) , &
-          wfcatom, npwx, evc, npwx, (0.d0, 0.d0) , proj0, natomwfc)
-#ifdef __PARA
-     call reduce (2 * natomwfc * nbnd, proj0)
-#endif
+     if ( gamma_only ) then
+        allocate(rproj0(natomwfc,nbnd) )
+        call pw_gemm ('Y', natomwfc, nbnd, npw, wfcatom, npwx, evc, npwx, rproj0, natomwfc)
+     else
+        allocate(proj0(natomwfc,nbnd) )
+        call ccalbec (natomwfc, npwx, npw, nbnd, proj0, wfcatom, evc)
+     end if
      !
      ! symmetrize the projections
      !
-     allocate(work1 (nbnd) )
+     if ( gamma_only ) then
+        allocate(rwork1 (nbnd) )
+     else
+        allocate( work1 (nbnd) )
+     end if
+
      do nwfc = 1, natomwfc
         !
         !  atomic wavefunction nwfc is on atom na
@@ -263,34 +303,70 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
            !
            !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
            !
-           if (l == 0) then
-              work1(:) = proj0 (nwfc1 + 1,:)
-           else if (l == 1) then 
-              work1(:) = 0.d0  
-              do m1 = 1, 3  
-                 work1(:) = work1(:) + d1 (m1, m, isym) * proj0 (nwfc1 + m1,:)
+           if ( gamma_only ) then
+              if (l == 0) then
+                 rwork1(:) = rproj0 (nwfc1 + 1,:)
+              else if (l == 1) then 
+                 rwork1(:) = 0.d0  
+                 do m1 = 1, 3  
+                    rwork1(:) = rwork1(:) + d1 (m1, m, isym) * rproj0 (nwfc1 + m1,:)
+                 enddo
+              else if (l == 2) then 
+                 rwork1(:) = 0.d0  
+                 do m1 = 1, 5  
+                    rwork1(:) = rwork1(:) + d2 (m1, m, isym) * rproj0 (nwfc1 + m1,:)
+                 enddo
+              else if (l == 3) then 
+                 rwork1(:) = 0.d0  
+                 do m1 = 1, 7  
+                    rwork1(:) = rwork1(:) + d3 (m1, m, isym) * rproj0 (nwfc1 + m1,:)
+                 enddo
+              endif
+              do ibnd = 1, nbnd
+                 proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
+                      rwork1(ibnd) * rwork1(ibnd) / nsym
               enddo
-           else if (l == 2) then 
-              work1(:) = 0.d0  
-              do m1 = 1, 5  
-                 work1(:) = work1(:) + d2 (m1, m, isym) * proj0 (nwfc1 + m1,:)
+           else
+              if (l == 0) then
+                 work1(:) = proj0 (nwfc1 + 1,:)
+              else if (l == 1) then 
+                 work1(:) = 0.d0  
+                 do m1 = 1, 3  
+                    work1(:) = work1(:) + d1 (m1, m, isym) * proj0 (nwfc1 + m1,:)
+                 enddo
+              else if (l == 2) then 
+                 work1(:) = 0.d0  
+                 do m1 = 1, 5  
+                    work1(:) = work1(:) + d2 (m1, m, isym) * proj0 (nwfc1 + m1,:)
+                 enddo
+              else if (l == 3) then 
+                 work1(:) = 0.d0  
+                 do m1 = 1, 7  
+                    work1(:) = work1(:) + d3 (m1, m, isym) * proj0 (nwfc1 + m1,:)
+                 enddo
+              endif
+              do ibnd = 1, nbnd
+                 proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
+                      work1(ibnd) * conjg (work1(ibnd)) / nsym
               enddo
-           else if (l == 3) then 
-              work1(:) = 0.d0  
-              do m1 = 1, 7  
-                 work1(:) = work1(:) + d3 (m1, m, isym) * proj0 (nwfc1 + m1,:)
-              enddo
-           endif
-           do ibnd = 1, nbnd
-              proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                   work1(ibnd) * conjg (work1(ibnd)) / nsym
-           enddo
+           end if
         enddo
      enddo
-     deallocate (work1)
-     deallocate (proj0 )
+     if ( gamma_only ) then
+        deallocate (rwork1)
+        deallocate (rproj0)
+     else
+        deallocate (work1)
+        deallocate (proj0)
+     end if
      ! on k-points
   enddo
+  !
+  if ( gamma_only ) then
+     deallocate (roverlap)
+     deallocate (rbecp)
+  end if
+  !
 #ifdef __PARA
   !
   !   recover the vector proj over the pools
@@ -306,11 +382,12 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      if (io_choice.eq.'standard' .OR. io_choice.eq.'both' ) then 
         WRITE( stdout,'(/"Projection on atomic states:"/)')
         do nwfc = 1, natomwfc
-           WRITE( stdout,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
-                &       " (l=",i1," m=",i2,")")') &
+           WRITE(stdout,1000) &
                 nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
                 nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
         end do
+1000 FORMAT &
+     (5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2," (l=",i1," m=",i2,")")
         !
         allocate(index (natomwfc) )
         do ik = 1, nkstot
@@ -378,10 +455,9 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
            totcharge = totcharge + charges(na,l)
         end do
         psum = psum + totcharge
-        WRITE( stdout, '(5x,"Atom # ",i3,": total charge = ",f8.4, &
-      &                ", s, p, d, f = ",4f8.4    )') &
-             na, totcharge, ( charges(na,l), l= 0,lmax_wfc)
+        WRITE( stdout, 2000) na, totcharge, ( charges(na,l), l= 0,lmax_wfc)
      end do
+2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4 ,", s, p, d, f = ",4f8.4)
      psum = psum / nelec
      WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum
      !
@@ -519,4 +595,3 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
 
   return
 end subroutine projwave
-
