@@ -265,7 +265,7 @@ subroutine summary
   WRITE( stdout, '(/,3x,"Cartesian axes")')
   WRITE( stdout, '(/,5x,"site n.     atom                  positions (a_0 units)")')
 
-  WRITE( stdout, '(7x,i3,8x,a6," tau(",i3,") = (",3f11.7,"  )")') &
+  WRITE( stdout, '(7x,i3,8x,a6," tau(",i3,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
   !
   !  output of starting magnetization
