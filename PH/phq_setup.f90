@@ -218,16 +218,16 @@ subroutine phq_setup
   ! if such a symmetry has been found
   if (iswitch.eq. - 4) then  
      call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-          irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, gimq, &
+          irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, gimq, &
           iverbosity, modenum)
   else  
      if (nsym.gt.1) then  
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, &
+             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, &
              gimq, iverbosity)
      else  
         call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-             irt, irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, &
+             irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, &
              gi, gimq, iverbosity)
      endif
   endif

@@ -30,10 +30,13 @@ module modes
   ! the possible G associated to each symmetry
   ! the G associated to the symmetry q<->-q+G
 
+  integer , parameter :: max_irr_dim = 4    ! maximal allowed dimension for 
+                                           ! irreducible representattions
+
   complex (kind=DP), pointer :: u (:,:), & ! 3 * nat, 3 * nat), 
        ubar(:),&                           ! 3 * nat), &
-       t (:,:,:,:),&                       ! 3, 3, 48,3 * nat), 
-       tmq (:,:,:)                         ! 3, 3, 3 * nat)
+       t (:,:,:,:),&                       ! max_irr_dim, max_irr_dim, 48,3 * nat), 
+       tmq (:,:,:)                         ! max_irr_dim, max_irr_dim, 3 * nat)
   ! the transformation modes patterns
   ! the mode for deltarho
   ! the symmetry in the base of the pattern

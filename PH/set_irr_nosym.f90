@@ -7,7 +7,7 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-     irt, irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, &
+     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, &
      gimq, iverbosity)
   !---------------------------------------------------------------------
   !
@@ -31,7 +31,7 @@ include 'mpif.h'
   !
 
   integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr
+       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, max_irr_dim
   ! input: the number of atoms
   ! input: the number of symmetries
   ! input: the symmetry matrices
@@ -53,8 +53,8 @@ include 'mpif.h'
   ! output: [S(irotq)*q - q]
   ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat), t (3, 3, 48, 3 * nat), &
-       tmq (3, 3, 3 * nat)
+  complex(kind=DP) :: u (3 * nat, 3 * nat), t (max_irr_dim, max_irr_dim, 48, 3 * nat), &
+       tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! output: the pattern vectors
   ! output: the symmetry matrices
   ! output: the matrice sending q -> -q+G
@@ -87,12 +87,12 @@ include 'mpif.h'
   !   And we compute the matrices which represent the symmetry transformat
   !   in the basis of the displacements
   !
-  call setv (2 * 3 * 3 * 48 * 3 * nat, 0.d0, t, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)  
 
-  call setv (2 * 3 * 3 * 3 * nat, 0.d0, tmq, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)  
   do imode = 1, 3 * nat  
      t (1, 1, 1, imode) = (1.d0, 0.d0)  
-
   enddo
+
   return  
 end subroutine set_irr_nosym

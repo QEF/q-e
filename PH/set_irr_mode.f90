@@ -8,7 +8,7 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
-     irt, irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, &
+     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, &
      gimq, iverbosity, modenum)
   !---------------------------------------------------------------------
   !
@@ -33,7 +33,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
 
   integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
        iverbosity, modenum, npert (3 * nat), irgq (48), nsymq, irotmq, &
-       nirr
+       nirr, max_irr_dim
   ! input: the number of atoms
   ! input: the number of symmetries
   ! input: the symmetry matrices
@@ -56,8 +56,8 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: [S(irotq)*q - q]
   ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat), t (3, 3, 48, 3 * nat), &
-       tmq (3, 3, 3 * nat)
+  complex(kind=DP) :: u (3 * nat, 3 * nat), t (max_irr_dim, max_irr_dim, 48, 3 * nat), &
+       tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! output: the pattern vectors
   ! output: the symmetry matrices
   ! output: the matrice sending q -> -q+G
@@ -105,8 +105,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !   find the small group of q
   !
-  call smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, minus_q, &
-       gi, gimq)
+  call smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, minus_q, gi, gimq)
   !
   !    set the modes to be done
   !
@@ -126,8 +125,8 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !   And we compute the matrices which represent the symmetry transformat
   !   in the basis of the displacements
   !
-  call setv (2 * 3 * 3 * 48 * 3 * nat, 0.d0, t, 1)  
-  call setv (2 * 3 * 3 * 3 * nat, 0.d0, tmq, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)  
   if (minus_q) then  
      nsymtot = nsymq + 1  
   else  

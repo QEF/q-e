@@ -7,7 +7,7 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-     irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, gi, gimq, &
+     irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, gimq, &
      iverbosity)
 !---------------------------------------------------------------------
 !
@@ -44,7 +44,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 
   integer ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr
+       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, max_irr_dim
 ! input: the number of atoms
 ! input: the number of symmetries
 ! input: the symmetry matrices
@@ -66,8 +66,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: [S(irotq)*q - q]
 ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat), t (3, 3, 48, 3 * nat), &
-       tmq (3, 3, 3 * nat)
+  complex(kind=DP) :: u (3 * nat, 3 * nat), t (max_irr_dim, max_irr_dim, 48, 3 * nat), &
+       tmq (max_irr_dim, max_irr_dim, 3 * nat)
 ! output: the pattern vectors
 ! output: the symmetry matrices
 ! output: the matrice sending q -> -q+G
@@ -211,8 +211,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      if (abs (eigen (imode) - eigen (imode-1) ) / (abs (eigen (imode) ) &
           + abs (eigen (imode-1) ) ) .lt.1.d-4) then
         npert (nirr) = npert (nirr) + 1  
-        if (npert (nirr) .gt.3) call error ('set_irr', 'npert > 3 ', &
-             nirr)
+        if (npert (nirr) .gt. max_irr_dim) call error &
+                         ('set_irr', 'npert > max_irr_dim ', nirr)
      else  
         nirr = nirr + 1  
         npert (nirr) = 1  
@@ -223,8 +223,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   And we compute the matrices which represent the symmetry transformat
 !   in the basis of the displacements
 !
-  call setv (2 * 3 * 3 * 48 * 3 * nat, 0.d0, t, 1)  
-  call setv (2 * 3 * 3 * 3 * nat, 0.d0, tmq, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)  
   if (minus_q) then  
      nsymtot = nsymq + 1
   else  
@@ -333,8 +333,10 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   call mpi_bcast (gi, 144, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
   call mpi_bcast (gimq, 3, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
 !-complex*16
-  call mpi_bcast (t, 2592 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (tmq, 54 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
+  call mpi_bcast (t, 2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, MPI_REAL8, &
+                                                0, MPI_COMM_WORLD, info)  
+  call mpi_bcast (tmq, 2 * max_irr_dim * max_irr_dim * 3 * nat, MPI_REAL8, &
+                                                0, MPI_COMM_WORLD, info)  
   call mpi_bcast (u, 18 * nat * nat, MPI_REAL8, 0, MPI_COMM_WORLD, &
        info)
 !-integer

@@ -324,7 +324,7 @@ subroutine solve_e
           &      ''   av.it.: '',f5.1)') iter, averlt
      dr2 = dr2 / 3  
      write (6, '(5x,'' thresh='',e10.3, '' alpha_mix = '',f6.3, &
-          &       ''|ddv_scf|^2 = '',e10.3 )') thresh, alpha_mix (kter), dr2
+          &      '' |ddv_scf|^2 = '',e10.3 )') thresh, alpha_mix (kter), dr2
 #ifdef FLUSH
      call flush (6)  
 #endif
