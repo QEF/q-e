@@ -1,3 +1,8 @@
+Mon Sep 13 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* table.itcl: table's checkbutton didn't display updated text upon
+		variable's value change. Fixed by using -textvariable
+		option. The method _checkbuttonText not used anymore.
+	
 Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding a "scriptvar" Guib keywords (=script variables used inside
 		the module definition files)

@@ -1,3 +1,10 @@
+Version: 0.3.0
+* a "scriptvar" Guib keyword was added, which can be used inside
+	module definition files. "scriptvar" is a variable which is
+	not related to the input syntax, hence it has no associated
+	widget, but the rest is the same as with "var", for example,
+	event (tracing) mechanism, ...
+
 Version: 0.2.3
 * further improved syntax-error handling mechanism for reading corrupted
 	input file.
