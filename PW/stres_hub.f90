@@ -22,6 +22,7 @@ subroutine stres_hub ( sigmah )
   USE lsda_mod, ONLY: nspin
   USE symme,    ONLY: s, nsym
   USE io_files, ONLY : prefix, iunocc
+  USE wvfct,    ONLY : gamma_only   
 #ifdef DEBUG
   USE io_global,      ONLY : stdout
 #endif
@@ -38,6 +39,9 @@ subroutine stres_hub ( sigmah )
    real (kind=DP), allocatable :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
  
+   if (gamma_only) call errore('stres_hub',&
+                   ' LDA+U, stress AND gamma-only not implemented yet',1)
+
    sigmah(:,:) = 0.d0
 
    ldim = 2 * Hubbard_lmax + 1

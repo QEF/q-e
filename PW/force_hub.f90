@@ -22,7 +22,8 @@ subroutine force_hub(forceh)
    USE ldaU,  ONLY: hubbard_lmax, hubbard_l, hubbard_u, hubbard_alpha, ns
    USE lsda_mod, ONLY: nspin
    USE symme,    ONLY: s, nsym, irt
-   use io_files, only : prefix, iunocc
+   USE io_files, ONLY : prefix, iunocc
+   USE wvfct,    ONLY : gamma_only   
 #ifdef __PARA
    use para
 #endif
@@ -36,6 +37,8 @@ subroutine force_hub(forceh)
    real (kind=DP), allocatable :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
 
+   if (gamma_only) call errore('force_huh',&
+                   ' LDA+U, forces AND gamma-only not implemented yet',1)
    ldim= 2 * Hubbard_lmax + 1
    allocate(dns(ldim,ldim,nspin,nat))
    forceh(:,:) = 0.d0
