@@ -3,7 +3,8 @@ Date: 15 Sep 2004    Version: pw-2-1
 -------------------------------------------------------------------
 
 15 Sep 2004 All examples updated (CC)
-            added mpf90, mpcc for Mac, support for ifort 8.1 [Gerardo]
+            added mpf90, mpcc for Mac, support for ifort 8.1,
+            ARCH variable to configure [Gerardo]
             Setup: inequivalent k-points not generated in berry or
             band-structure calculations.(C.S.)
             Path optimizations: added the possibility to write the 
