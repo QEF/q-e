@@ -73,7 +73,9 @@ all : $(MODULES)
 
 $(IOTKOBJS) : ../include/iotk_config.h
 
-iotk : $(IOTKOBJS)
+iotk : libiotk.a
+
+libiotk.a : $(IOTKOBJS)
 	$(AR) $(ARFLAGS) libiotk.a $(IOTKOBJS)
 
 clean :
