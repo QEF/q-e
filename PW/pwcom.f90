@@ -535,7 +535,6 @@ MODULE units
   SAVE
   !
   INTEGER :: &
-       iunstdout,        &! unit connected to standard output ( default is 6 )
        iunpun,           &! unit for saving the final results
        iunwfc,           &! unit with wavefunctions
        iunat,            &! unit for saving orthogonal atomic wfcs
