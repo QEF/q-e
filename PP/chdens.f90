@@ -58,7 +58,7 @@ program chdens
        makov, plot_out, output_format, fileout, epsilon, filepol
 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
+  INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 
   !
@@ -1291,7 +1291,7 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   !  differs from the "traditional" one found in the literature. See
   !  Lento, Mozos, Nieminen, J. Phys.: Condens. Matter 14 (2002), 2637-2645
 
-  real(kind=DP), parameter:: Madelung(3) = [2.8373, 2.8883, 2.885]
+  real(kind=DP), parameter:: Madelung(3) = (/ 2.8373, 2.8883, 2.885/)
 
   if (ibrav < 1 .or. ibrav > 3) then
      WRITE(stdout,'("Makov-Payne correction only for cubic lattices")')
@@ -1315,6 +1315,7 @@ subroutine makov_payne (ibrav, alat, at, nat, tau, ityp, zv, ntyp, x0, &
   dr = omega * deltax * deltay * deltaz
 
   rhomin = MAX ( MINVAL (rhor), 1.d-10 )
+  rhotot = 0.d0
   !
   !   compute electronic total charge, dipole and quadrupole moments
   !
