@@ -167,6 +167,8 @@ subroutine phq_setup
              &"Possibly too few bands at point ", i4,3f10.5)') &
              ik,  (xk (ipol, ik) , ipol = 1, 3)
      enddo
+  else if (ltetra) then
+     call errore('phq_setup','phonon + tetrahedra not implemented', 1)
   else
      if (lsda) call errore('phq_setup','occupation numbers probably wrong', -1)
      do ik = 1, nks
