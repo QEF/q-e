@@ -348,6 +348,7 @@
 
         USE kinds, ONLY: dbl
         USE cp_types, ONLY: recvecs
+        USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
 
         REAL (dbl) :: rhoetr(:,:,:,:)
         COMPLEX(dbl) :: rhoetg(:,:)
@@ -357,8 +358,9 @@
         REAL(dbl) :: vxc              ! SUM ( v(r) * rho(r) )
         REAL (dbl) :: v2xc(:,:,:,:,:)
         TYPE (recvecs), INTENT(IN) :: gv
+        REAL(dbl) :: ddot
 
-        INTEGER :: nspin, nnr
+        INTEGER :: nspin, nnr, ispin, j, k
 
           !  vpot = vxc(rhoetr); vpot(r) <-- u(r)
 
@@ -367,13 +369,25 @@
           !
           CALL exch_corr_wrapper( nnr, nspin, grho(1,1,1,1,1), rhoetr(1,1,1,1), &
                                   sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
-          !
-          vxc = SUM( vpot * rhoetr )
+
           !
           IF(tgc) THEN
             ! ... vpot additional term for gradient correction
             CALL v2gc( v2xc, grho, rhoetr, vpot, gv )
           END If
+
+          !
+          ! vxc = SUM( vpot * rhoetr )
+          !
+          vxc = 0.0d0
+          DO ispin = 1, nspin
+            DO k = 1, nr3l
+              DO j = 1, nr2l
+                vxc = vxc + &
+                DDOT ( nr1l, vpot(1,j,k,ispin), 1, rhoetr(1,j,k,ispin), 1 )
+              END DO
+            END DO
+          END DO
 
         RETURN
       END SUBROUTINE

@@ -370,6 +370,10 @@
         REAL(dbl) :: s0, s1
         REAL(dbl), ALLOCATABLE :: lambda_ ( : , : )
         REAL(dbl) :: ekincm
+        REAL(dbl) :: hp0_ (3,3)
+        REAL(dbl) :: hm1_ (3,3)
+        REAL(dbl) :: hm2_ (3,3)
+        REAL(dbl) :: hvel_ (3,3)
         REAL(dbl) :: mat_z_(1,1,nspin)
         LOGICAL :: tens = .FALSE.
 
@@ -380,7 +384,7 @@
         lambda_  = 0.0d0
 
         CALL cp_readfile( ndr, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
-          ht_0%a, ht_m%a, ht_m2%a, ht_0%hvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
+          hp0_ , hm1_ , hm2_ , hvel_ , xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, xnhpp, xnhpm2, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
           gv%b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z_ , tens )
@@ -388,6 +392,13 @@
         DEALLOCATE( lambda_ )
 
         CALL cp_read_wfc( ndr, ' ', kp%nkpt, nspin, c0, cm )
+
+        IF( .NOT. tbeg ) THEN
+          CALL cell_init( ht_0, hp0_ )
+          CALL cell_init( ht_m, hm1_ )
+          CALL cell_init( ht_m2, hm2_ )
+          ht_0%hvel = hvel_  !  set cell velocity
+        END IF
 
         CALL mp_barrier()
         s1 = cclock()
