@@ -45,7 +45,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
     ! if .FALSE. : S|psi> not needed
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
-  INTEGER, INTENT(IN) :: lrot
+  LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already be rotated
   !
   ! ... on OUTPUT

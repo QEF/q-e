@@ -46,7 +46,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! if .FALSE. : do not calculate S|psi>
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
-  INTEGER, INTENT(IN) :: lrot
+  LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already be rotated
   !
   ! ... on OUTPUT
