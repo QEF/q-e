@@ -15,23 +15,31 @@ SUBROUTINE wfcinit()
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE wvfct,                ONLY : gamma_only   
+  USE wvfct,                ONLY : gamma_only
+  USE ener,                 ONLY : ef , demet  
   USE constants,            ONLY : tpi, rytoev
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
   USE gvect,                ONLY : g
-  USE klist,                ONLY : xk, nks, nkstot
-  USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE control_flags,                ONLY : isolve, iprint, reduce_io
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et
+  USE klist,                ONLY : lgauss, degauss, ngauss, xk, nks, &
+                                   wk, nkstot, nelec
+  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+  USE control_flags,        ONLY : isolve, iprint, reduce_io
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et, wg
   USE us,                   ONLY : okvan
+  USE fixed_occ,            ONLY : f_inp, tfixed_occ
+  USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE uspp,                 ONLY : nkb, vkb
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE io_files,             ONLY : iunat, nwordwfc, iunwfc, iunigk, &
                                    nwordatwfc
   USE wavefunctions_module, ONLY : evc
+  USE mp_global,            ONLY : intra_image_comm, me_image, root_image
+  USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
+  !
+  INTEGER  :: ik, is, ibnd
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -45,6 +53,72 @@ SUBROUTINE wfcinit()
      CALL wfcinit_k()
      !
   END IF  
+  !
+  demet = 0.D0
+  !
+  CALL poolrecover( et, nbnd, nkstot, nks )
+  !
+  ! ... occupations are computed here
+  !
+  IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
+     !
+     ! ... calculate weights for the insulator case
+     !
+     CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
+     !
+  ELSE IF ( ltetra ) THEN
+     !
+     ! ... calculate weights for the metallic case
+     !
+     CALL poolrecover( et, nbnd, nkstot, nks )
+     !
+     IF ( me_image == root_image ) THEN
+        !
+        CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg )
+        !
+     END IF
+     !
+     CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+     !
+     CALL mp_bcast( ef, root_image, intra_image_comm )
+     !
+  ELSE IF ( lgauss ) THEN
+     !
+     CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, demet, wg )
+     !
+  ELSE IF ( tfixed_occ ) THEN
+     !
+     ef = - 1.0D+20
+     !
+     wg = f_inp
+     !
+     DO is = 1, nspin
+        !
+        DO ibnd = 1, nbnd
+           !
+           IF ( wg(ibnd,is) > 0.D0 ) ef = MAX( ef, et(ibnd,is) )
+           !
+        END DO
+        !
+     END DO
+     !
+  END IF  
+  !
+  IF ( iprint == 1 ) THEN
+     !
+     DO ik = 1, nkstot
+        !
+        WRITE( stdout, &
+               '(/,10X,"k =",3F7.4,5X,"band energies (ev):"/)' ) xk(:,ik)
+        WRITE( stdout, '(2X,8F9.4)') et(:,ik) * rytoev
+        !
+     END DO
+     !
+  END IF
+  !
+#if defined (FLUSH)
+       CALL flush( stdout )
+#endif
   !
   CALL stop_clock( 'wfcinit' )  
   !
@@ -63,18 +137,18 @@ SUBROUTINE wfcinit()
        !
        IMPLICIT NONE
        !
-       INTEGER                        :: ik, ibnd, ig, ipol, n_starting_wfc
-       ! counter on k points
-       !    "     "   bands
-       !    "     "  plane waves
-       !    "     "  polarization
-       ! number of starting wavefunctions
+       INTEGER                        :: ibnd, ig, ipol, n_starting_wfc
+         ! counter on k points
+         !    "     "   bands
+         !    "     "  plane waves
+         !    "     "  polarization
+         ! number of starting wavefunctions
        COMPLEX(KIND=DP), ALLOCATABLE  :: wfcatom(:,:)
-       ! atomic wfcs for initialization
+         ! atomic wfcs for initialization
        REAL(KIND=DP)                  :: rr, arg
        REAL(KIND=DP)                  :: rndm
        EXTERNAL                          rndm
-       ! random function generation
+         ! random function generation
        !
        !
        ! ... state what is going to happen
@@ -180,19 +254,18 @@ SUBROUTINE wfcinit()
           !
           ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
           !
-!!!       IF ( isolve == 1 ) THEN
-!!!          CALL cinitcgg( npwx, npw, n_starting_wfc, nbnd, &
-!!!                         wfcatom, evc, et(1,ik) )
-!!!       ELSE
+          IF ( isolve == 1 ) THEN
+             !
+             CALL cinitcgg( npwx, npw, n_starting_wfc, &
+                            nbnd, wfcatom, evc, et(1,ik) )
+             !
+          ELSE
+             !
              CALL rotate_wfc_gamma( npwx, npw, n_starting_wfc, gstart, &
                                     nbnd, wfcatom, okvan, evc, et(1,ik) )
-!!!       END IF
+          END IF
           !
-          DO ibnd = 1, nbnd
-             DO ig = ( npw + 1 ), npwx
-                evc(ig,ibnd) = (0.D0,0.D0)
-             END DO
-          END DO
+          evc(npw+1:npwx,:) = ( 0.D0, 0.D0 )
           !
           IF ( nks > 1 .OR. .NOT. reduce_io ) &
              CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
@@ -201,23 +274,6 @@ SUBROUTINE wfcinit()
        !
        DEALLOCATE( rbecp )
        DEALLOCATE( wfcatom )
-       !
-       IF ( iprint == 1 ) THEN
-#ifdef __PARA
-          CALL poolrecover( et, nbnd, nkstot, nks )
-#endif
-          DO ik = 1, nkstot
-             WRITE( stdout, &
-                    '(/,10X,"k =",3F7.4,5X,"band energies (ev):"/)' ) &
-                 ( xk(ipol,ik), ipol = 1, 3)
-             WRITE( stdout, '(2X,8F9.4)') &
-                 ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
-          END DO
-       END IF
-       !
-#ifdef FLUSH
-       CALL flush( 6 )
-#endif
        !
        RETURN
        !
@@ -237,7 +293,6 @@ SUBROUTINE wfcinit()
        ! ... local variables
        !
        INTEGER :: &
-            ik,               &!  counter on k points
             ibnd,             &!     "     "   bands
             ig,               &!     "     "   plane waves
             ipol,             &!     "     "   polarization
@@ -348,18 +403,14 @@ SUBROUTINE wfcinit()
           ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
           !
           IF ( isolve == 1 ) THEN
-             CALL cinitcgg( npwx, npw, n_starting_wfc, nbnd, &
-                            wfcatom, evc, et(1,ik) )
+             CALL cinitcgg( npwx, npw, n_starting_wfc, &
+                            nbnd, wfcatom, evc, et(1,ik) )
           ELSE
-             CALL rotate_wfc( npwx, npw, n_starting_wfc, nbnd, wfcatom, &
-                              okvan, evc, et(1,ik) )
+             CALL rotate_wfc( npwx, npw, n_starting_wfc, &
+                              nbnd, wfcatom, okvan, evc, et(1,ik) )
           END IF
           !
-          DO ibnd = 1, nbnd
-             DO ig = npw + 1, npwx
-                evc(ig,ibnd) = ( 0.D0, 0.D0 )
-             END DO
-          END DO
+          evc(npw+1:npwx,:) = ( 0.D0, 0.D0 )
           !
           IF ( nks > 1 .OR. .NOT. reduce_io ) &
                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
@@ -368,23 +419,6 @@ SUBROUTINE wfcinit()
        !
        DEALLOCATE( becp )
        DEALLOCATE( wfcatom )
-       !
-       IF ( iprint == 1 ) THEN
-#ifdef __PARA
-          CALL poolrecover( et, nbnd, nkstot, nks )
-#endif
-          DO ik = 1, nkstot
-             WRITE( stdout, &
-                    '(/,10X,"k =",3F7.4,5X,"band energies (ev):"/)' ) &
-                 ( xk(ipol,ik), ipol = 1, 3)
-             WRITE( stdout, '(2X,8F9.4)') &
-                 ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
-          END DO
-       END IF
-       !
-#ifdef FLUSH
-       CALL flush( 6 )
-#endif
        !
        RETURN
        !

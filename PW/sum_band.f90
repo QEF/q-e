@@ -61,15 +61,15 @@ SUBROUTINE sum_band()
   eband         = 0.D0
   demet         = 0.D0
   !
-  ! ... calculate weights for the insulator case
-  !
   IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
+     !
+     ! ... calculate weights for the insulator case
      !
      CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
      !
-     ! ... calculate weights for the metallic case
-     !
   ELSE IF ( ltetra ) THEN
+     !
+     ! ... calculate weights for the metallic case
      !
      CALL poolrecover( et, nbnd, nkstot, nks )
      !
