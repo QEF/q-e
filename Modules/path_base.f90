@@ -38,7 +38,7 @@ MODULE path_base
                                    minimization_scheme, climbing, nstep, ds, &
                                    input_images
       USE control_flags,    ONLY : conv_elec, lneb, lsmd
-      USE ions_base,        ONLY : nat                                   
+      USE ions_base,        ONLY : nat, if_pos
       USE io_files,         ONLY : prefix, iunpath, path_file, &
                                    dat_file, int_file, xyz_file, axsf_file
       USE cell_base,        ONLY : alat
@@ -47,7 +47,7 @@ MODULE path_base
                                    istep_path, nstep_path, dim, num_of_images, &
                                    pes, grad_pes, grad_proj, tangent, error,   &
                                    frozen, path_length, first_last_opt,        &
-                                   reset_vel, path_thr
+                                   reset_vel, path_thr, deg_of_freedom
       USE path_variables,   ONLY : climbing_ => climbing,                  &
                                    CI_scheme, vel, grad, elastic_grad,     &
                                    norm_grad, k, k_min, k_max, Emax_index, &
@@ -283,7 +283,15 @@ MODULE path_base
       !
       ! ... the actual number of degrees of freedom is computed
       !
-      CALL compute_deg_of_freedom()
+      deg_of_freedom = 0
+      !
+      DO i = 1, nat
+         !
+         IF ( if_pos(1,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
+         IF ( if_pos(2,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
+         IF ( if_pos(3,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
+         !
+      END DO
       !
       IF ( lsmd ) THEN
          !
@@ -354,32 +362,6 @@ MODULE path_base
       !
       RETURN
       !
-      CONTAINS
-         !
-         !-------------------------------------------------------------------
-         SUBROUTINE compute_deg_of_freedom()
-           !-------------------------------------------------------------------
-           !
-           USE input_parameters, ONLY :  if_pos
-           USE path_variables,   ONLY :  deg_of_freedom
-           !
-           IMPLICIT NONE
-           !
-           INTEGER :: ia
-           !
-           !
-           deg_of_freedom = 0
-           !
-           DO ia = 1, nat
-              !
-              IF ( if_pos(1,ia) == 1 ) deg_of_freedom = deg_of_freedom + 1
-              IF ( if_pos(2,ia) == 1 ) deg_of_freedom = deg_of_freedom + 1
-              IF ( if_pos(3,ia) == 1 ) deg_of_freedom = deg_of_freedom + 1
-              !
-           END DO
-           !
-         END SUBROUTINE compute_deg_of_freedom
-         !
     END SUBROUTINE initialize_path
     !
     ! ... neb specific routines

@@ -467,192 +467,11 @@ MODULE path_io_routines
           OPEN( UNIT = iunrestart, FILE = path_file, STATUS = "UNKNOWN", &
                 ACTION = "WRITE" )
           !
-          WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATION")' )
-          !
-          WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_path
-          WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_path
-          WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
-          WRITE( UNIT = iunrestart, FMT = '(L1)' ) conv_elec
-          !
-          IF ( lneb ) THEN
-             !
-             WRITE( UNIT = iunrestart, FMT = '("ELASTIC CONSTANTS")' )
-             !
-             WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_max
-             WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min
-             !
-          END IF
-          !
-          WRITE( UNIT = iunrestart, &
-                 FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
-          !
-          DO i = 1, num_of_images
-             !
-             WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-             WRITE( UNIT = iunrestart, FMT = energy ) pes(i)
-             !
-             ia = 0
-             !
-             DO j = 1, dim, 3
-                !
-                ia = ia + 1
-                !
-                IF ( i == 1 ) THEN
-                   !
-                   WRITE( UNIT = iunrestart, FMT = restart_first ) &
-                       pos(j,i),                         &
-                       pos((j+1),i),                     &
-                       pos((j+2),i),                     &
-                       grad_pes(j,i),                    &
-                       grad_pes((j+1),i),                & 
-                       grad_pes((j+2),i),                &
-                       if_pos(1,ia),                     &
-                       if_pos(2,ia),                     &
-                       if_pos(3,ia) 
-                   !
-                ELSE
-                   !
-                   WRITE( UNIT = iunrestart, FMT = restart_others ) &
-                       pos(j,i),                          &
-                       pos((j+1),i),                      &
-                       pos((j+2),i),                      &
-                       grad_pes(j,i),                     &
-                       grad_pes((j+1),i),                 & 
-                       grad_pes((j+2),i)
-                   !
-                END IF
-                !
-             END DO
-             !
-          END DO
+          CALL write_common_filelds( iunrestart )
           !
           IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
              !
-             WRITE( UNIT = iunrestart, FMT = '("QUICK-MIN FIELDS")' )
-             !
-             IF ( lneb ) THEN
-                !
-                DO i = 1, num_of_images
-                   !
-                   WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                   !
-                   DO j = 1, dim, 3
-                      !
-                      WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                          vel(j,i),                & 
-                          vel((j+1),i),            &
-                          vel((j+2),i),            &
-                          pos_old(j,i),            &
-                          pos_old((j+1),i),        &
-                          pos_old((j+2),i),        &
-                          grad_old(j,i),           &
-                          grad_old((j+1),i),       &
-                          grad_old((j+2),i)
-                      !
-                   END DO
-                   !
-                END DO
-                !
-             ELSE IF ( lsmd ) THEN
-                !
-                DO i = 1, ( Nft - 1 )
-                   !
-                   WRITE( UNIT = iunrestart, FMT = '("Mode: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,1X))' ) ft_frozen(i), ft_vel_zeroed(i)
-                   !
-                   DO j = 1, dim, 3
-                      !
-                      WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                          ft_vel(j,i),              & 
-                          ft_vel((j+1),i),          &
-                          ft_vel((j+2),i),          &
-                          ft_pos_old(j,i),          &
-                          ft_pos_old((j+1),i),      &
-                          ft_pos_old((j+2),i),      &
-                          ft_grad_old(j,i),         &
-                          ft_grad_old((j+1),i),     &
-                          ft_grad_old((j+2),i)
-                      !
-                   END DO
-                   !
-                END DO
-                !
-                IF ( first_last_opt ) THEN
-                   !
-                   i = 1
-                   !
-                   WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                   !
-                   DO j = 1, dim, 3
-                      !
-                      WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                          vel(j,i),                & 
-                          vel((j+1),i),            &
-                          vel((j+2),i),            &
-                          pos_old(j,i),            &
-                          pos_old((j+1),i),        &
-                          pos_old((j+2),i),        &
-                          grad_old(j,i),           &
-                          grad_old((j+1),i),       &
-                          grad_old((j+2),i)
-                      !
-                   END DO
-                   !
-                   i = num_of_images
-                   !
-                   WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, &
-                          FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                   !
-                   DO j = 1, dim, 3
-                      !
-                      WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                          vel(j,i),                & 
-                          vel((j+1),i),            &
-                          vel((j+2),i),            &
-                          pos_old(j,i),            &
-                          pos_old((j+1),i),        &
-                          pos_old((j+2),i),        &
-                          grad_old(j,i),           &
-                          grad_old((j+1),i),       &
-                          grad_old((j+2),i)
-                      !
-                   END DO
-                   !
-                ELSE
-                   !
-                   i = 1
-                   !
-                   WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
-                   !
-                   DO j = 1, dim, 3
-                      !
-                      WRITE( UNIT = iunrestart, &
-                             FMT = quick_min ) 0.D0, 0.D0, 0.D0
-                      !
-                   END DO
-                   !
-                   i = num_of_images
-                   !
-                   WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                   WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
-                   !
-                   DO j = 1, dim, 3
-                      !
-                      WRITE( UNIT = iunrestart, &
-                             FMT = quick_min ) 0.D0, 0.D0, 0.D0
-                      !
-                   END DO
-                   !
-                END IF
-                !
-             END IF
+             CALL write_quick_min_filelds( iunrestart )
              ! 
           END IF
           !
@@ -665,196 +484,15 @@ MODULE path_io_routines
              !
              file = TRIM( tmp_dir ) // &
                     TRIM( path_file ) // TRIM( int_to_char( istep_path ) )
-             !       
+             !
              OPEN( UNIT = iunrestart, FILE = TRIM( file ), &
                    STATUS = "UNKNOWN",  ACTION = "WRITE" )
              !
-             WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATION")' )
-             !
-             WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_path
-             WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_path
-             WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
-             WRITE( UNIT = iunrestart, FMT = '(L1)' ) conv_elec
-             !
-             IF ( lneb ) THEN
-                !
-                WRITE( UNIT = iunrestart, FMT = '("ELASTIC CONSTANTS")' )
-                !
-                WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_max
-                WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min
-                !
-             END IF
-             !
-             WRITE( UNIT = iunrestart, &
-                    FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
-             !
-             DO i = 1, num_of_images
-                !
-                WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                WRITE( UNIT = iunrestart, FMT = energy ) pes(i)
-                !
-                ia = 0
-                !
-                DO j = 1, dim, 3
-                   !
-                   ia = ia + 1
-                   !
-                   IF ( i == 1 ) THEN
-                      !
-                      WRITE( UNIT = iunrestart, FMT = restart_first ) &
-                          pos(j,i),                         &
-                          pos((j+1),i),                     &
-                          pos((j+2),i),                     &
-                          grad_pes(j,i),                    &
-                          grad_pes((j+1),i),                & 
-                          grad_pes((j+2),i),                &
-                          if_pos(1,ia),                     &
-                          if_pos(2,ia),                     &
-                          if_pos(3,ia) 
-                      !
-                   ELSE
-                      !
-                      WRITE( UNIT = iunrestart, FMT = restart_others ) &
-                          pos(j,i),                          &
-                          pos((j+1),i),                      &
-                          pos((j+2),i),                      &
-                          grad_pes(j,i),                     &
-                          grad_pes((j+1),i),                 & 
-                          grad_pes((j+2),i)
-                      !
-                   END IF
-                   !
-                END DO
-                !
-             END DO
+             CALL write_common_filelds( iunrestart )
              !
              IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
                 !
-                WRITE( UNIT = iunrestart, FMT = '("QUICK-MIN FIELDS")' )
-                !
-                IF ( lneb ) THEN
-                   !
-                   DO i = 1, num_of_images
-                      !
-                      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                             vel(j,i),                & 
-                             vel((j+1),i),            &
-                             vel((j+2),i),            &
-                             pos_old(j,i),            &
-                             pos_old((j+1),i),        &
-                             pos_old((j+2),i),        &
-                             grad_old(j,i),           &
-                             grad_old((j+1),i),       &
-                             grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                   END DO
-                   !
-                ELSE IF ( lsmd ) THEN
-                   !
-                   DO i = 1, ( Nft - 1 )
-                      !
-                      WRITE( UNIT = iunrestart, FMT = '("Mode: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,1X))' ) ft_frozen(i), ft_vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                             ft_vel(j,i),              & 
-                             ft_vel((j+1),i),          &
-                             ft_vel((j+2),i),          &
-                             ft_pos_old(j,i),          &
-                             ft_pos_old((j+1),i),      &
-                             ft_pos_old((j+2),i),      &
-                             ft_grad_old(j,i),         &
-                             ft_grad_old((j+1),i),     &
-                             ft_grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                   END DO
-                   !
-                   IF ( first_last_opt ) THEN
-                      !
-                      i = 1
-                      !
-                      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                             vel(j,i),                & 
-                             vel((j+1),i),            &
-                             vel((j+2),i),            &
-                             pos_old(j,i),            &
-                             pos_old((j+1),i),        &
-                             pos_old((j+2),i),        &
-                             grad_old(j,i),           &
-                             grad_old((j+1),i),       &
-                             grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                      i = num_of_images
-                      !
-                      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, &
-                             FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         WRITE( UNIT = iunrestart, FMT = quick_min ) &
-                             vel(j,i),                & 
-                             vel((j+1),i),            &
-                             vel((j+2),i),            &
-                             pos_old(j,i),            &
-                             pos_old((j+1),i),        &
-                             pos_old((j+2),i),        &
-                             grad_old(j,i),           &
-                             grad_old((j+1),i),       &
-                             grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                   ELSE
-                      !
-                      i = 1
-                      !
-                      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         WRITE( UNIT = iunrestart, &
-                                FMT = quick_min ) 0.D0, 0.D0, 0.D0
-                         !
-                      END DO
-                      !
-                      i = num_of_images
-                      !
-                      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                      WRITE( UNIT = iunrestart, FMT = '(2("F",1X))' )
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         WRITE( UNIT = iunrestart, &
-                                FMT = quick_min ) 0.D0, 0.D0, 0.D0
-                         !
-                      END DO
-                      !
-                   END IF
-                   !
-                END IF
+                CALL write_quick_min_filelds( iunrestart )
                 ! 
              END IF
              !
@@ -864,6 +502,223 @@ MODULE path_io_routines
           !
        END IF
        !
+       CONTAINS
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE write_common_filelds( in_unit )
+           !-------------------------------------------------------------------
+           !
+           IMPLICIT NONE
+           !
+           INTEGER, INTENT(IN) :: in_unit
+           !
+           !
+           WRITE( UNIT = in_unit, FMT = '("RESTART INFORMATION")' )
+           !
+           WRITE( UNIT = in_unit, FMT = '(I4)' ) istep_path
+           WRITE( UNIT = in_unit, FMT = '(I4)' ) nstep_path
+           WRITE( UNIT = in_unit, FMT = '(I4)' ) suspended_image
+           WRITE( UNIT = in_unit, FMT = '(L1)' ) conv_elec
+           !
+           IF ( lneb ) THEN
+              !
+              WRITE( UNIT = in_unit, FMT = '("ELASTIC CONSTANTS")' )
+              !
+              WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_max
+              WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_min
+              !
+           END IF
+           !
+           WRITE( UNIT = in_unit, &
+                  FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
+           !
+           DO i = 1, num_of_images
+              !
+              WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+              WRITE( UNIT = in_unit, FMT = energy ) pes(i)
+              !
+              ia = 0
+              !
+              DO j = 1, dim, 3
+                 !
+                 ia = ia + 1
+                 !
+                 IF ( i == 1 ) THEN
+                    !
+                    WRITE( UNIT = in_unit, FMT = restart_first ) &
+                        pos(j,i),                         &
+                        pos((j+1),i),                     &
+                        pos((j+2),i),                     &
+                        grad_pes(j,i),                    &
+                        grad_pes((j+1),i),                & 
+                        grad_pes((j+2),i),                &
+                        if_pos(1,ia),                     &
+                        if_pos(2,ia),                     &
+                        if_pos(3,ia) 
+                    !
+                 ELSE
+                    !
+                    WRITE( UNIT = in_unit, FMT = restart_others ) &
+                        pos(j,i),                          &
+                        pos((j+1),i),                      &
+                        pos((j+2),i),                      &
+                        grad_pes(j,i),                     &
+                        grad_pes((j+1),i),                 & 
+                        grad_pes((j+2),i)
+                    !
+                 END IF
+                 !
+              END DO
+              !
+           END DO
+           !
+           RETURN
+           !
+         END SUBROUTINE write_common_filelds
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE write_quick_min_filelds( in_unit )
+           !-------------------------------------------------------------------
+           !
+           IMPLICIT NONE
+           !
+           INTEGER, INTENT(IN) :: in_unit
+           !
+           !
+           WRITE( UNIT = in_unit, FMT = '("QUICK-MIN FIELDS")' )
+           !
+           IF ( lneb ) THEN
+              !
+              DO i = 1, num_of_images
+                 !
+                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+                 WRITE( UNIT = in_unit, &
+                        FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, FMT = quick_min ) &
+                        vel(j,i),                & 
+                        vel((j+1),i),            &
+                        vel((j+2),i),            &
+                        pos_old(j,i),            &
+                        pos_old((j+1),i),        &
+                        pos_old((j+2),i),        &
+                        grad_old(j,i),           &
+                        grad_old((j+1),i),       &
+                        grad_old((j+2),i)
+                    !
+                 END DO
+                 !
+              END DO
+              !
+           ELSE IF ( lsmd ) THEN
+              !
+              DO i = 1, ( Nft - 1 )
+                 !
+                 WRITE( UNIT = in_unit, FMT = '("Mode: ",I4)' ) i
+                 WRITE( UNIT = in_unit, &
+                        FMT = '(2(L1,1X))' ) ft_frozen(i), ft_vel_zeroed(i)
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, FMT = quick_min ) &
+                        ft_vel(j,i),              & 
+                        ft_vel((j+1),i),          &
+                        ft_vel((j+2),i),          &
+                        ft_pos_old(j,i),          &
+                        ft_pos_old((j+1),i),      &
+                        ft_pos_old((j+2),i),      &
+                        ft_grad_old(j,i),         &
+                        ft_grad_old((j+1),i),     &
+                        ft_grad_old((j+2),i)
+                    !
+                 END DO
+                 !
+              END DO
+              !
+              IF ( first_last_opt ) THEN
+                 !
+                 i = 1
+                 !
+                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+                 WRITE( UNIT = in_unit, &
+                        FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, FMT = quick_min ) &
+                        vel(j,i),                & 
+                        vel((j+1),i),            &
+                        vel((j+2),i),            &
+                        pos_old(j,i),            &
+                        pos_old((j+1),i),        &
+                        pos_old((j+2),i),        &
+                        grad_old(j,i),           &
+                        grad_old((j+1),i),       &
+                        grad_old((j+2),i)
+                    !
+                 END DO
+                 !
+                 i = num_of_images
+                 !
+                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+                 WRITE( UNIT = in_unit, &
+                        FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, FMT = quick_min ) &
+                        vel(j,i),                & 
+                        vel((j+1),i),            &
+                        vel((j+2),i),            &
+                        pos_old(j,i),            &
+                        pos_old((j+1),i),        &
+                        pos_old((j+2),i),        &
+                        grad_old(j,i),           &
+                        grad_old((j+1),i),       &
+                        grad_old((j+2),i)
+                    !
+                 END DO
+                 !
+              ELSE
+                 !
+                 i = 1
+                 !
+                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+                 WRITE( UNIT = in_unit, FMT = '(2("F",1X))' )
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, &
+                           FMT = quick_min ) 0.D0, 0.D0, 0.D0, &
+                                             0.D0, 0.D0, 0.D0, &
+                                             0.D0, 0.D0, 0.D0
+                    !
+                 END DO
+                 !
+                 i = num_of_images
+                 !
+                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+                 WRITE( UNIT = in_unit, FMT = '(2("F",1X))' )
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, &
+                           FMT = quick_min ) 0.D0, 0.D0, 0.D0, &
+                                             0.D0, 0.D0, 0.D0, &
+                                             0.D0, 0.D0, 0.D0
+                    !
+                 END DO
+                 !
+              END IF
+              !
+           END IF
+           !
+           RETURN
+           !
+         END SUBROUTINE write_quick_min_filelds
+         !
      END SUBROUTINE write_restart
      !
      !
