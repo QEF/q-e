@@ -1,4 +1,4 @@
-# Makefile for phonon (PH)
+# Makefile for Nmr
 
 include ../make.rules
 include ../make.sys
@@ -8,6 +8,7 @@ add_j_bare.o \
 grad.o \
 magnetic_kkterm.o \
 nmr_mod.o \
+nmr.o \
 solve_cg.o \
 take_nloc_k_kq.o 
 
@@ -67,7 +68,6 @@ PHOBJS = \
 ../PH/dynmat0.o \
 ../PH/dynmat_us.o \
 ../PH/dynmatcc.o \
-../PH/dynmatrix.o \
 ../PH/ef_shift.o \
 ../PH/elph.o \
 ../PH/elphon.o \
@@ -79,19 +79,13 @@ PHOBJS = \
 ../PH/newdq.o \
 ../PH/openfilq.o \
 ../PH/phcom.o \
-../PH/phonon.o \
 ../PH/phq_init.o \
 ../PH/phq_readin.o \
 ../PH/phq_recover.o \
 ../PH/phq_setup.o \
-../PH/phq_summary.o \
-../PH/phqscf.o \
-../PH/print_clock_ph.o \
 ../PH/psidspsi.o \
 ../PH/psymdvscf.o \
 ../PH/psyme.o \
-../PH/punch_plot_e.o \
-../PH/punch_plot_ph.o \
 ../PH/q_points.o \
 ../PH/q2qstar_ph.o \
 ../PH/random_matrix.o \
@@ -104,10 +98,7 @@ PHOBJS = \
 ../PH/setqmod.o \
 ../PH/setup_dgc.o \
 ../PH/smallgq.o \
-../PH/solve_e.o \
-../PH/solve_linter.o \
 ../PH/star_q.o \
-../PH/stop_ph.o \
 ../PH/sym_and_write_zue.o \
 ../PH/sym_def.o \
 ../PH/symdvscf.o \
@@ -126,7 +117,6 @@ MODULES = \
 ../Modules/atom.o \
 ../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
-../Modules/bfgs_module.o \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
 ../Modules/clocks.o \
@@ -149,6 +139,7 @@ MODULES = \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
@@ -174,19 +165,8 @@ PWOBJS = \
 ../PW/atomic_wfc.o \
 ../PW/bachel.o \
 ../PW/becmod.o \
-../PW/bfgs.o \
-../PW/bp_bess.o \
-../PW/bp_c_phase.o \
-../PW/bp_calc_btq.o \
-../PW/bp_dbess.o \
-../PW/bp_qvan3.o \
-../PW/bp_radin.o \
-../PW/bp_strings.o \
-../PW/bp_ylm_q.o \
-../PW/c_bands.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
-../PW/ccgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
 ../PW/cegterg.o \
@@ -230,20 +210,10 @@ PWOBJS = \
 ../PW/dynamics.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
-../PW/electrons.o \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \
-../PW/ewald.o \
-../PW/ewald_dipole.o \
 ../PW/fftw.o \
-../PW/force_cc.o \
-../PW/force_corr.o \
-../PW/force_ew.o \
-../PW/force_hub.o \
-../PW/force_lc.o \
-../PW/force_us.o \
-../PW/forces.o \
 ../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_mod.o \
@@ -259,19 +229,15 @@ PWOBJS = \
 ../PW/h_psi.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \
-../PW/hinit1.o \
-../PW/init_ns.o \
 ../PW/init_paw_1.o \
 ../PW/init_paw_2.o \
 ../PW/init_pool.o \
-../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
 ../PW/interpolate.o \
 ../PW/io_pot.o \
-../PW/ions.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
 ../PW/kpoint_grid.o \
@@ -282,7 +248,6 @@ PWOBJS = \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \
-../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
 ../PW/new_ns.o \
@@ -295,7 +260,6 @@ PWOBJS = \
 ../PW/output_tau.o \
 ../PW/para.o \
 ../PW/paw.o \
-../PW/potinit.o \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
 ../PW/punch.o \
@@ -310,13 +274,8 @@ PWOBJS = \
 ../PW/readin.o \
 ../PW/readnewvan.o \
 ../PW/readvan.o \
-../PW/regterg.o \
-../PW/remove_atomic_rho.o \
-../PW/reset_k_points.o \
 ../PW/restart.o \
-../PW/restart_from_file.o \
-../PW/restart_in_electrons.o \
-../PW/restart_in_ions.o \
+../PW/reset_k_points.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
 ../PW/rotate_wfc.o \
@@ -344,7 +303,6 @@ PWOBJS = \
 ../PW/set_vrs.o \
 ../PW/setlocal.o \
 ../PW/setqf.o \
-../PW/setup.o \
 ../PW/setupkpt.o \
 ../PW/sgam_at.o \
 ../PW/sgam_at_mag.o \
@@ -355,20 +313,10 @@ PWOBJS = \
 ../PW/spinor.o \
 ../PW/sph_ind.o \
 ../PW/startup.o \
-../PW/stres_cc.o \
-../PW/stres_ewa.o \
-../PW/stres_gradcorr.o \
-../PW/stres_har.o \
-../PW/stres_hub.o \
-../PW/stres_knl.o \
-../PW/stres_loc.o \
-../PW/stres_us.o \
-../PW/stress.o \
 ../PW/struct_fact.o \
 ../PW/sum_band.o \
 ../PW/sumkg.o \
 ../PW/sumkt.o \
-../PW/summary.o \
 ../PW/swap.o \
 ../PW/symrho.o \
 ../PW/symtns.o \
@@ -379,22 +327,16 @@ PWOBJS = \
 ../PW/trnvecc.o \
 ../PW/trnvect.o \
 ../PW/tweights.o \
-../PW/update_pot.o \
-../PW/updathes.o \
 ../PW/upf_to_internal.o \
 ../PW/usnldiag.o \
 ../PW/v_of_rho.o \
-../PW/vcsmd.o \
-../PW/vcsubs.o \
 ../PW/vhpsi.o \
 ../PW/vloc_of_g.o \
 ../PW/vloc_psi.o \
 ../PW/vpack.o \
 ../PW/w0gauss.o \
 ../PW/w1gauss.o \
-../PW/wfcinit.o \
 ../PW/wgauss.o \
-../PW/write_config_to_file.o \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
