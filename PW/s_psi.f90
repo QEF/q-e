@@ -30,7 +30,6 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,       ONLY : lda_plus_u
   USE basis,      ONLY : ntyp, ityp, nat 
-  use workspace,  ONLY :
   !
   IMPLICIT NONE
   !

@@ -439,10 +439,11 @@ MODULE read_cards_module
        ELSE IF ( matches( "ALAT", input_line ) ) THEN
           atomic_positions = 'alat'
        ELSE
-          IF ( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) &
+          IF ( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) THEN
              CALL errore( ' read_cards ', &
                         & ' unknow unit option for ATOMIC_POSITION: '&
                         & //input_line, 1 )
+          END IF
           IF ( prog == 'FP' ) atomic_positions = 'bohr'
           IF ( prog == 'CP' ) atomic_positions = 'bohr'
           IF ( prog == 'PW' ) atomic_positions = 'alat'

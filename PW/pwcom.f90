@@ -425,16 +425,6 @@ MODULE scf
 END MODULE scf
 !
 !
-MODULE workspace
-  USE kinds, ONLY: DP
-  !
-  SAVE
-  !
-  ! ... additional memory needed in h_psi
-  !
-END MODULE workspace
-!
-!
 MODULE varie
   USE kinds, ONLY: DP
   !
@@ -740,7 +730,6 @@ MODULE pwcom
   USE ener
   USE force_mod
   USE scf
-  USE workspace
   USE varie
   USE relax
   USE cellmd

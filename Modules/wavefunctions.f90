@@ -9,8 +9,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions_module
 !=----------------------------------------------------------------------------=!
-     USE kinds
-     USE kinds, ONLY :  DP
+     USE kinds, ONLY :  DP, dbl
 
      IMPLICIT NONE
      SAVE
