@@ -18,6 +18,7 @@ subroutine readpp
   character :: file_pseudo * 256
   ! file name complete with path
   integer :: iunps, isupf, l, nt, ios, pseudo_type
+  integer :: iexch_, icorr_, igcx_, igcc_
   external pseudo_type
   !
   iunps = 4
@@ -85,6 +86,18 @@ subroutine readpp
         newpseudo (nt) = .true.
         close (iunps)
      endif
+     !
+     if (nt == 1) then
+        iexch_ = iexch
+        icorr_ = icorr
+        igxc_ = igxc
+        igcc_ = igcc
+     else
+        if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
+             igxc_  /= igxc  .or.  igcc_ /= igcc ) then
+           CALL errore( 'readpp','inconsistent DFT read',nt)
+        end if
+     end if
 
   enddo
   return

@@ -46,9 +46,12 @@ PW
 - remove residual direct calls to MPI routines,
   use (or merge with) existing routines in mp.f90 instead
 
-- remove potential mixing, save and start from rho instead of V
-
 - remove all calls to setv and to blas copy, scal
+
+- remove potential mixing, save and start from rho instead of V,
+  at least for scf calculations. For non-scf calculations: we may
+  still start from V, but the output file MUST include the scf rho,
+  not a bogus rho as it may happen now
 
 - save rho and/or V in G-space instead of R-space
   check that what is read is sensible

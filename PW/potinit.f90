@@ -39,7 +39,7 @@ subroutine potinit
 #ifdef __PARA
   if (me.eq.1.and.mypool.eq.1) then
 #endif
-     if (imix.ge.0) then
+     if (imix.ge.0.and.lscf) then
         call seqopn (4, trim(prefix)//'.rho', 'unformatted', exst)
      else
         call seqopn (4, trim(prefix)//'.pot', 'unformatted', exst)
