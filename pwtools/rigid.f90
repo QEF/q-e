@@ -206,6 +206,7 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
  real(kind=8) w2(3*nat)
  complex(kind=8) z(3*nax,3*nat)
  ! local
+ real(kind=8) diff, dif1, difrel
  integer nat3, na, nta, ntb, nb, ipol, jpol, i, j
  complex(kind=8), allocatable :: dyn2(:,:)
  !
@@ -226,15 +227,23 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
  !
  !  impose hermiticity
  !
+ diff = 0.d0
+ difrel=0.d0
  do i = 1,nat3
     dyn2(i,i) = dcmplx(dreal(dyn2(i,i)),0.0)
     do j = 1,i - 1
-       if (abs(dyn2(i,j)-conjg(dyn2(j,i))).gt.1.0e-6)              &
-            &           write (6,9000) i,j,dyn2(i,j),dyn2(j,i)
+       dif1 = abs(dyn2(i,j)-conjg(dyn2(j,i)))
+       if ( dif1 > diff .and. &
+            max ( abs(dyn2(i,j)), abs(dyn2(j,i))) > 1.0d-6) then
+          diff = dif1
+          difrel=diff / min ( abs(dyn2(i,j)), abs(dyn2(j,i)))
+       end if
        dyn2(j,i) = 0.5* (dyn2(i,j)+conjg(dyn2(j,i)))
        dyn2(i,j) = conjg(dyn2(j,i))
     end do
  end do
+ if ( diff > 1.d-6 ) write (6,'(5x,"Max |d(i,j)-d*(j,i)| = ",f9.6,/,5x, &
+      & "Max |d(i,j)-d*(j,i)|/|d(i,j)|: ",f8.4,"%")') diff, difrel*100
  !
  !  divide by the square root of masses
  !
@@ -269,8 +278,6 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
     end do
  end do
  !
- !
-9000 format ('  element ',2i3,' non symmetric ',2f12.6,/,35x,2f15.6)
  return
 end subroutine dyndiag
 !

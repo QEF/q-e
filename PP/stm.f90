@@ -211,7 +211,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
         do ibnd = first_band, last_band
 
            w1 = wg (ibnd, ik) / omega
-           WRITE( stdout, * ) w1, ibnd, ik
+           !!! WRITE( stdout, * ) w1, ibnd, ik
 
            !
            !     find the coefficients of the matching wfcs
@@ -298,11 +298,11 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            !
            DO ibnd = first_band, last_band, 2
               w1 = wg (ibnd, ik) / omega
-              WRITE( stdout, * ) w1, ibnd, ik
+              !!! WRITE( stdout, * ) w1, ibnd, ik
 
               IF ( ibnd < last_band ) THEN
                  w2 = wg (ibnd+1, ik) / omega
-                 WRITE( stdout, * ) w2, ibnd+1, ik
+                 !!! WRITE( stdout, * ) w2, ibnd+1, ik
               ELSE
                  w2= 0.d0
               END IF
@@ -337,7 +337,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            DO ibnd = first_band, last_band
 
               w1 = wg (ibnd, ik) / omega
-              WRITE( stdout, * ) w1, ibnd, ik
+              !!! WRITE( stdout, * ) w1, ibnd, ik
               !
               !     Compute the contribution of this state only if needed
               !

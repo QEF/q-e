@@ -1,6 +1,11 @@
+26 Aug 2004  Example 16 updated, cleanup (PG)
+
 25 Aug 2004  Fixed some errors in constrained dynamics. "Fixed atoms" and
              explicit constraints are now compatible when they do not involve
-             the same atoms. (CS) Makefiles, examples 10-11 updated (PG)
+             the same atoms. Fixed a bug in the definition of the tangent
+             in the Fourier string method dynamics. (C.S.)
+             Makefiles, examples 8-11 updated. Old Raman code renamed 
+             "phcg.f90" in order to avoid confusion with new cod3 (PG)
 
 24 Aug 2004  Fixed a bug in the way the prefix.dat file was written.
              Cleanup of debug code (C.S.)

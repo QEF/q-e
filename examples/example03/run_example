@@ -21,7 +21,8 @@ $ECHO "2) using a damped dynamics algorithm."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST=" O.LDA.US.RRKJ3.UPF CUS.RRKJ3.UPF Al.vbc.UPF "
+PSEUDO_LIST=" O.LDA.US.RRKJ3.UPF C.pz-rrkjus.UPF Al.vbc.UPF "
+
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -99,7 +100,7 @@ cat > co.rx.in << EOF
  /
 ATOMIC_SPECIES
  O 16.00  O.LDA.US.RRKJ3.UPF
- C 12.00  CUS.RRKJ3.UPF
+ C 12.00  C.pz-rrkjus.UPF
 ATOMIC_POSITIONS {bohr}
  C 2.256 0.0 0.0
  O 0.0   0.0 0.0  0 0 0 
