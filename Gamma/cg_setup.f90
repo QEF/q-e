@@ -13,6 +13,7 @@ subroutine cg_setup
 #include "machine.h"
   USE kinds, only: DP
   use pwcom
+  USE atom, ONLY: nlcc
   USE wavefunctions_module,  ONLY: evc
   use io_files, only: prefix, iunpun, iunres
   use cgcom

@@ -59,12 +59,12 @@ SUBROUTINE setup()
                             restart, nosym, modenum
   USE relax,         ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,        ONLY : calc
-  USE us,            ONLY : tvanp, okvan, newpseudo
+  USE us,            ONLY : tvanp, okvan, newpseudo, psd
   USE ldaU,          ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
                             Hubbard_alpha, Hubbard_lmax
   USE bp,            ONLY : gdir, lberry, nppstr
   USE fixed_occ,     ONLY : f_inp, tfixed_occ   
-  USE char,          ONLY : sname, psd
+  USE char,          ONLY : sname
   USE para,          ONLY : kunit
   USE mp_global,     ONLY : nimage
   !

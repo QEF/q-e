@@ -15,7 +15,7 @@ MODULE uspp
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: nlx, lpx, lpl, ap, aainit, mx
+  PUBLIC :: nlx, lpx, lpl, ap, aainit
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q

@@ -75,7 +75,7 @@
       use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na, nas => nax
       use gvec
-      use wfc_atomic
+      use atom
 !
       implicit none
       integer, intent(in) :: n_atomic_wfc
@@ -1535,7 +1535,7 @@
       use small_box, only: tpibab
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use ncprm, only: ifpcor
+      use atom, only: nlcc
       use work_box
 #ifdef __PARA
       use para_mod
@@ -1559,7 +1559,7 @@
       fac = omega/dble(nr1*nr2*nr3*nspin)
       fcc = 0.d0
       do is=1,nsp
-         if (ifpcor(is).eq.0) go to 10
+         if(nlcc(is)) go to 10
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
@@ -4448,7 +4448,7 @@
       use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na, nas => nax
       use cvan, only: nhsa
-      use wfc_atomic
+      use atom
 !
       implicit none
       complex(kind=8), intent(in) :: c(ngw,nx), eigr(ngw,nas,nsp),      &
@@ -4836,8 +4836,8 @@
       subroutine readbhs( is, iunps )
 !---------------------------------------------------------------------
 !
-      use ncprm, only: ifpcor, rscore, betar, rab, dion, vloc_at, r, &
-                       lll, nbeta, mesh, kkbeta, cmesh
+      use atom, only: rab, r, mesh, nlcc, rho_atc
+      use ncprm, only: betar, dion, vloc_at, lll, nbeta, kkbeta, cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: dft, which_dft
       use ions_base, only: zv
@@ -4852,9 +4852,9 @@
       real(kind=8), allocatable:: fint(:), vnl(:)
       real(kind=8) rdum, alpha, z, zval, cmeshp, exfact
 !
-! ifpcor is unfortunately not read from file
+! nlcc is unfortunately not read from file
 !
-      ifpcor(is)=0
+      nlcc(is)=.false.
       read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
       if (zv(is) < 1 .or. zv(is) > 100 ) then
          call errore('readpp','wrong potential read',15)
@@ -4912,13 +4912,13 @@
 !     core charge is read from unit 15
 !     ------------------------------------------------------------------
 !
-      if(ifpcor(is).eq.1) then
+      if(nlcc(is)) then
          read(15,*) meshp,cmeshp
          if(meshp.ne.mesh(is).or.cmeshp.ne.cmesh(is))then
             call errore('readpp','core charge mesh mismatch',is)
          endif
          do ir=1,mesh(is)
-            read(15,*) rdum,rscore(ir,is)
+            read(15,*) rdum, rho_atc(ir,is)
          end do
       endif
 !
@@ -5017,11 +5017,11 @@
 !     info on DFT level in module "dft"
 !
       use parameters, only: nsx, natx, lqmax, ndmx
-      use ncprm, only: rscore, nqlc, qfunc, vloc_at, r, rab, rinner,&
-                       qrl, qqq, nbeta, nbrx, ifpcor, mesh, betar,  &
+      use atom, only: rho_atc, r, rab, mesh, nlcc, lchi, chi, nchi, nchix
+      use ncprm, only: nqlc, qfunc, vloc_at, rinner,&
+                       qrl, qqq, nbeta, nbrx, betar,  &
                        dion, lll, kkbeta
       use funct, only: dft, iexch, icorr, igcx, igcc
-      use wfc_atomic, only: lchi, chi, nchi, nchix
       use ions_base, only: zv
       use io_global, only: stdout
 !
@@ -5064,7 +5064,6 @@
      &        mgcx, mgcc,     &! exch-corr functional indices 
      &        exfact,         &
      &        lmin, lmax       ! min and max l
-      logical nlcc             ! core correction flag (same as ifpcor)
 !
 !
       if (is.lt.0 .or. is.gt.nsx)                                       &
@@ -5078,12 +5077,7 @@
       else
          WRITE( stdout,'('' RRKJ3 norm-conserving PP for '',a2)') titleps(7:8)
       endif
-      read( iunps, '(2l5)',err=100, iostat=ios ) rel, nlcc
-      if (nlcc) then
-         ifpcor(is)=1
-      else
-         ifpcor(is)=0
-      end if
+      read( iunps, '(2l5)',err=100, iostat=ios ) rel, nlcc(is)
       read( iunps, '(4i5)',err=100, iostat=ios )  iexch, icorr, igcx,  &
            igcc
 !
@@ -5162,9 +5156,9 @@
 !
 !   if present reads the core charge
 !
-      if ( nlcc ) then 
+      if ( nlcc(is) ) then 
          read( iunps, '(1p4e19.11)', err=100, iostat=ios )              &
-     &                         ( rscore(ir,is), ir=1,mesh(is) )
+     &                         ( rho_atc(ir,is), ir=1,mesh(is) )
       endif
 !
 !   read the pseudo wavefunctions of the atom
@@ -5204,11 +5198,11 @@
         rab(ir,is) = dx * r(ir,is)
       end do
 !
-!     set rscore(r)=rho_core(r) without factors
+!     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)
 !
-      if ( nlcc ) then
+      if ( nlcc(is) ) then
          do ir=1,mesh(is)
-            rscore(ir,is) = rscore(ir,is)/4.0/3.14159265/r(ir,is)**2
+            rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265/r(ir,is)**2
          enddo
       end if
 !
@@ -5237,7 +5231,7 @@
 !     and are normalized so int (chi**2) dr = 1
 !     thus psi(r-vec)=(1/r)*chi(r)*y_lm(theta,phi)
 !     conventions carry over to beta, etc
-!     charge dens, e.g. rscore, really 4*pi*r**2*rho
+!     charge dens, e.g. rho_atc, really 4*pi*r**2*rho
 !
 !     ------------------------------------------------------
 !     Notes on qfunc and qfcoef:
@@ -5278,10 +5272,9 @@
       use kinds, only: DP
       use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
       use ncprm, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, cmesh,&
-                       qrl, rab, rscore, r, mesh, ifpcor,  &
-                       rinner, kkbeta, lll, nbeta, nqf, nqlc
+                       qrl, rinner, kkbeta, lll, nbeta, nqf, nqlc
       use funct, only: dft, which_dft
-      use wfc_atomic, only: nchi, chi, lchi
+      use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use ions_base, only: zv
       use io_global, only: stdout
 !
@@ -5315,6 +5308,7 @@
       integer                                                           &
      &       iver(3),       &! contains the version of the code
      &       idmy(3),       &! contains the date of creation of the pseudo
+     &       ifpcor,        &! for core correction, 0 otherwise
      &       ios,           &! integer variable for I/O control
      &       i,             &! dummy counter 
      &       nnlz(nchix),   &! The nlm values of the valence states
@@ -5381,10 +5375,8 @@
       read( iunps, '(i5,2f15.9)', err=100, iostat=ios ) ( nnlz(iv),     &
      &                      wwnl(iv), ee(iv), iv=1,nchi(is) )
       read( iunps, '(2i5,f15.9)', err=100, iostat=ios ) keyps,          &
-     &                      ifpcor(is), rinner(1,is)
-!
-!     ifpcor   1 if "partial core correction" of louie, froyen,
-!                 & cohen to be used; 0 otherwise
+     &                      ifpcor, rinner(1,is)
+      nlcc (is) = (ifpcor == 1)
 !
 !     keyps= 0 --> standard hsc pseudopotential with exponent 4.0
 !            1 --> standard hsc pseudopotential with exponent 3.5
@@ -5521,14 +5513,14 @@
       read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rcloc,           &
      &                       ( vloc_at(ir,is), ir=1,mesh(is) )
 !
-!   If present reads the core charge rscore(r)=4*pi*r**2*rho_core(r)
+!   If present reads the core charge rho_atc(r)=4*pi*r**2*rho_core(r)
 !
-      if ( ifpcor(is).eq.1 ) then 
+      if ( nlcc(is) ) then 
          if (iver(1).ge.7)                                              &
      &        read( iunps, '(1p4e19.11)', err=100, iostat=ios )         &
      &        dummy
          read( iunps, '(1p4e19.11)', err=100, iostat=ios )              &
-     &                         ( rscore(ir,is), ir=1,mesh(is) )
+     &                         ( rho_atc(ir,is), ir=1,mesh(is) )
       endif
 !
 !     Reads the screened local potential
@@ -5555,11 +5547,11 @@
          call herman_skillman_grid(mesh(is),z(is),cmesh(is),r(1,is))
       end if
 !
-!     set rscore(r)=rho_core(r) without factors
+!     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)
 !
-      rscore(1,is) = 0.0
+      rho_atc(1,is) = 0.0
       do ir=2,mesh(is)
-         rscore(ir,is) = rscore(ir,is)/4.0/3.14159265/r(ir,is)**2
+         rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265/r(ir,is)**2
       enddo
 !
 !    Reads the wavefunctions of the atom
@@ -5620,7 +5612,7 @@
       WRITE( stdout,500) z(is), is, zv(is), exfact
 500   format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
      &     f10.5, 9x,'|')
-      WRITE( stdout,600) ifpcor(is), etotpseu
+      WRITE( stdout,600) ifpcor, etotpseu
  600  format (4x,'|  ifpcor = ',i2,10x,' atomic energy =',f10.5,        &
      &     ' Ry',6x,'|')
       WRITE( stdout,700)
@@ -5657,8 +5649,8 @@
 ! for compatibility with old Vanderbilt formats
 !
       use ncprm, only: qfunc, qrl, nqf, qfcoef, rinner, lll, nbeta, &
-                       r, kkbeta
-
+                       kkbeta
+      use atom, only: r
       ! the above module variables has no dependency from iosys
 !
       implicit none
@@ -6369,9 +6361,8 @@
 !
       use ions_base, only: nas => nax, nsp, na
       use parameters, only: natx, nsx
+      use atom, only: nlcc
       use gvec
-      use ncprm, only: ifpcor
-      !use parm
       use grid_dimensions, only: nr3, nnr => nnrx
       use elct
       use gvecb
@@ -6400,7 +6391,7 @@
       wrk1 (:) = (0.d0, 0.d0)
 !
       do is=1,nsp
-         if (ifpcor(is).eq.0) go to 10
+         if (nlcc(is)) go to 10
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
@@ -7127,7 +7118,7 @@
 !     ===================================================================
 !      calculation exchange and correlation energy and potential
 !     -------------------------------------------------------------------
-      if (nlcc.gt.0) call add_cc(rhoc,rhog,rhor)
+      if (nlcc_any) call add_cc(rhoc,rhog,rhor)
 !
       call exch_corr_h(nspin,rhog,rhor,exc,dxc)
 !
@@ -7172,7 +7163,7 @@
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
       if( tprnfor .or. tfor ) then
-         if (nlcc.gt.0) call force_cc(irb,eigrb,rhor,fion1)
+         if (nlcc_any) call force_cc(irb,eigrb,rhor,fion1)
 #ifdef __PARA
          call reduce(3*natx*nsp,fion1)
 #endif

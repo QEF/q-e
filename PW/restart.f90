@@ -38,7 +38,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
        gcutms, doublegrid
   USE wvfct, ONLY:  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
-  USE char, ONLY: title, crystal, psd, sname
+  USE char, ONLY: title, crystal, sname
   USE dynam, ONLY: amass
   USE symme, ONLY: s, irt, ftau, nsym, invsym
   USE ener, ONLY: ef
@@ -46,7 +46,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
   USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
-  USE us, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, nh, &
+  USE us, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, nh, psd, &
        nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
   USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
@@ -508,7 +508,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
        gcutms, doublegrid
   USE wvfct, ONLY:  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
-  USE char, ONLY: title, crystal, psd, sname
+  USE char, ONLY: title, crystal, sname
   USE dynam, ONLY: amass
   USE symme, ONLY: s, irt, ftau, nsym, invsym
   USE ener, ONLY: ef
@@ -516,7 +516,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
   USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
-  USE us, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, nh, &
+  USE us, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, nh, psd, &
        nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
   USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc

@@ -4,6 +4,7 @@ include ../make.rules
 include ../make.sys
 
 MODULES = \
+atom.o \
 berry_phase.o \
 bfgs_module.o \
 cell_base.o  \

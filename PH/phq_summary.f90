@@ -19,7 +19,7 @@ subroutine phq_summary
 #include"machine.h"
   USE io_global,     ONLY : stdout
   use pwcom
-  USE kinds,         ONLY : DP
+  USE atom,          ONLY : numeric, mesh, msh, dx, r , rab, xmin, nlcc
   use phcom
   USE control_flags, ONLY : iverbosity
   

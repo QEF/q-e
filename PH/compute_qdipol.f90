@@ -8,7 +8,7 @@ subroutine compute_qdipol
   USE atom, ONLY: r, rab
   USE ions_base, ONLY: ntyp => nsp
   USE us, only: nbrx, tvanp, nbeta, lll, kkbeta, qfunc, rinner, &
-       qfcoef, nh, nhtol, nhtom, nqf, indv
+       qfcoef, nh, nhtol, nhtolm, nqf, indv
   USE uspp, ONLY: nlx, ap
   USE phus, ONLY: dpqq
 
@@ -81,10 +81,10 @@ subroutine compute_qdipol
      do nt = 1,ntyp
         if (tvanp(nt)) then
            do ih = 1, nh(nt)
-              ivl = nhtol(ih, nt)*nhtol(ih, nt)+nhtom(ih,nt)
+              ivl = nhtolm(ih, nt)
               mb = indv(ih, nt)
               do jh = ih, nh (nt)
-                 jvl = nhtol(jh, nt)*nhtol(jh,nt)+nhtom(jh,nt)
+                 jvl = nhtolm(jh, nt)
                  nb=indv(jh,nt)
                  if (ivl > nlx) call errore('compute_qdipol',' ivl > nlx', ivl)
                  if (jvl > nlx) call errore('compute_qdipol',' jvl > nlx', jvl)

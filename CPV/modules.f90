@@ -19,9 +19,9 @@ end module bhs
 module core
   implicit none
   save
-  !     nlcc = 0 no core correction on any atom
+  !     nlcc_any = 0 no core correction on any atom
   !     rhocb = core charge in G space (box grid)
-  integer nlcc
+  logical :: nlcc_any
   real(kind=8), allocatable:: rhocb(:,:)
 contains
   subroutine deallocate_core()
@@ -43,10 +43,10 @@ module cvan
   !     nhsavb = total number of Vanderbilt nonlocal projectors
   !     nhsa   = total number of nonlocal projectors for all atoms
   integer nvb, nhsavb, ish(nsx), nh(nsx), nhsa, nhx
-  !     nhtol: nhtol(ind,is)=value of l for projector ind of species is
-  !     indv : indv(ind,is) =beta function (without Y_lm) for projector ind
-  !     indlm: indlm(ind,is)=Y_lm for projector ind
-  integer, allocatable:: nhtol(:,:), indv(:,:), indlm(:,:)
+  !     indv  : indv(  ind,is)=beta function (without Y_lm) for projector ind
+  !     nhtol : nhtol( ind,is)=value of l for projector ind of species is
+  !     nhtolm: nhtolm(ind,is)=cobined lm index in Y_lm for projector ind
+  integer, allocatable:: nhtol(:,:), indv(:,:), nhtolm(:,:)
   !     beta = nonlocal projectors in g space without e^(-ig.r) factor
   !     qq   = ionic Q_ij for each species (Vanderbilt only)
   !     dvan = ionic D_ij for each species (Vanderbilt only)
@@ -55,7 +55,7 @@ contains
   subroutine deallocate_cvan()
       IF( ALLOCATED( nhtol ) ) DEALLOCATE( nhtol )
       IF( ALLOCATED( indv ) ) DEALLOCATE( indv )
-      IF( ALLOCATED( indlm ) ) DEALLOCATE( indlm )
+      IF( ALLOCATED( nhtolm ) ) DEALLOCATE( nhtolm )
       IF( ALLOCATED( beta ) ) DEALLOCATE( beta )
       IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
       IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
@@ -148,8 +148,6 @@ module ncprm
 !  ndmx:  maximum number of points in the radial grid
 ! 
 
-!  ifpcor   1 if "partial core correction" of louie, froyen,
-!                 & cohen to be used; 0 otherwise
 !  nbeta    number of beta functions (sum over all l)
 !  kkbeta   last radial mesh point used to describe functions
 !                 which vanish outside core
@@ -159,10 +157,9 @@ module ncprm
 !  lqx      highest angular momentum that is present in Q functions
 !  lmaxkb   highest angular momentum that is present in beta functions
 
-  integer :: ifpcor(nsx), nbeta(nsx), kkbeta(nsx), &
+  integer :: nbeta(nsx), kkbeta(nsx), &
        nqf(nsx), nqlc(nsx), lll(nbrx,nsx), lqx, lmaxkb
 
-!  rscore   partial core charge (Louie, Froyen, Cohen)
 !  dion     bare pseudopotential D_{\mu,\nu} parameters
 !              (ionic and screening parts subtracted out)
 !  betar    the beta function on a r grid (actually, r*beta)
@@ -174,22 +171,17 @@ module ncprm
 !              angular momentum (for r<rinner)
 !  vloc_at  local potential for each atom
 
-  real(kind=8) :: rscore(ndmx,nsx), dion(nbrx,nbrx,nsx), &
+  real(kind=8) :: dion(nbrx,nbrx,nsx), &
        betar(ndmx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
        qfunc(ndmx,nbrx,nbrx,nsx), vloc_at(ndmx,nsx), &
        qfcoef(nqfx,lqmax,nbrx,nbrx,nsx), rinner(lqmax,nsx)
 !
-! qrl       q(r) functions
+! qrl       q(r) functions (old format)
+! cmesh     used only for Herman-Skillman mesh (old format)
 !
   real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
+  real(kind=8) :: cmesh(nsx)
 
-!  mesh     number of radial mesh points
-!  r        logarithmic radial mesh
-!  rab      derivative of r(i) (used in numerical integration)
-!  cmesh    used only for Herman-Skillman mesh (old format)
-
-  integer :: mesh(nsx)
-  real(kind=8) :: r(ndmx,nsx), rab(ndmx,nsx), cmesh(nsx)
 end module ncprm
 
 module pseu
@@ -225,23 +217,7 @@ contains
   end subroutine
 end module qradb_mod
 
-module wfc_atomic
-  use parameters, only:nsx
-  use ncprm, only:ndmx
-  implicit none
-  save
-  !  nchix=  maximum number of pseudo wavefunctions
-  !  nchi =  number of atomic (pseudo-)wavefunctions
-  !  lchi =  angular momentum of chi
-  !  chi  =  atomic (pseudo-)wavefunctions
-  integer :: nchix
-  parameter (nchix=6)
-  real(kind=8) :: chi(ndmx,nchix,nsx)
-  integer :: lchi(nchix,nsx), nchi(nsx)
-end module wfc_atomic
-
 module work
-  use pseudo_types
   implicit none
   save
   complex(kind=8), allocatable, target:: wrk1(:)

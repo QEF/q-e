@@ -166,6 +166,7 @@ PHOBJS = \
 ../PH/zstar_eu_us.o
 
 MODULES = \
+../Modules/atom.o \
 ../Modules/basic_algebra_routines.o \
 ../Modules/cell_base.o \
 ../Modules/clocks.o \

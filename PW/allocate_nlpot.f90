@@ -33,7 +33,7 @@ subroutine allocate_nlpot
   USE lsda_mod, ONLY: nspin
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
-  USE us, ONLY: nh, indv, nhtol, nhtom, qq, dvan, deeq, qrad, vkb, tab, &
+  USE us, ONLY: nh, indv, nhtol, nhtolm, qq, dvan, deeq, qrad, vkb, tab, &
        tab_at, dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
        tvanp, newpseudo
   implicit none
@@ -90,9 +90,9 @@ subroutine allocate_nlpot
      nkb = nkb + nh (ityp(na))
   enddo
   !
-  allocate (indv( nhm, ntyp))    
-  allocate (nhtol(nhm, ntyp))    
-  allocate (nhtom(nhm, ntyp))    
+  allocate (indv(  nhm, ntyp))    
+  allocate (nhtol( nhm, ntyp))    
+  allocate (nhtolm(nhm, ntyp))    
   allocate (qq(   nhm, nhm, ntyp))    
   allocate (dvan( nhm, nhm, ntyp))    
   allocate (deeq( nhm, nhm, nat, nspin))    

@@ -226,37 +226,6 @@ MODULE symme
 END MODULE symme
 !
 !
-MODULE atom
-  !
-  ! ... The variables needed to describe the atoms and related quantities
-  !
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx, ndmx, nchix
-  !
-  SAVE
-  !
-  REAL(KIND=DP) :: &
-       zmesh(npsx),              &! the atomic charge for mesh generation
-       xmin(npsx),               &! initial linear mesh point
-       dx(npsx),                 &! linear interval for logaritmic mesh
-       r(ndmx,npsx),             &! radial logaritmic mesh
-       rab(ndmx,npsx),           &! derivative of the radial mesh
-       chi(ndmx,nchix,npsx),     &! radial atomic orbitals
-       oc(nchix,npsx),           &! atomic level occupation
-       rho_at(ndmx,npsx),        &! radial atomic charge density
-       rho_atc(ndmx,npsx)        ! radial core charge density
-  INTEGER :: &
-       mesh(npsx),               &! number of mesh points
-       msh(npsx),                &! the point at rcut
-       nchi(npsx),               &! number of atomic orbitals
-       lchi(nchix,npsx)           ! angular momentum of atomic orbitals
-  LOGICAL :: &
-       numeric(npsx),            &! if .TRUE. the potential is in numeric form
-       nlcc(npsx)                 ! if .TRUE. the atom has nlcc
-  !
-END MODULE atom
-!
-!
 MODULE pseud
   !
   ! ... The variables describing pseudopotentials in analytical form
@@ -446,20 +415,15 @@ END MODULE cellmd
 !
 MODULE char
   !
-  ! ... The names of the atoms, of the solid and of the symmetries
+  ! ... The names of the system and of the symmetries
   !  
-  USE parameters, ONLY : npsx
-  !
   SAVE
   !
   CHARACTER(LEN=75) ::  title       ! title of the run
   CHARACTER(LEN=20) ::  crystal     ! type of the solid
-  CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   !
 END MODULE char
-!
-!
 !
 !
 MODULE us
@@ -471,8 +435,8 @@ MODULE us
   !
   SAVE
   !
-  REAL(KIND=DP), PARAMETER:: &
-       dq = 0.01D0           ! space between points in the pseudopotential tab.
+  CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
+
   REAL(KIND=DP) :: &
        dion(nbrx,nbrx,npsx),              &! D_{mu,nu} parameters (in the 
                                            !  atomic case)
@@ -503,11 +467,13 @@ MODULE us
        nqx                ! number of interpolation points
   INTEGER, ALLOCATABLE ::&
        indv(:,:),        &! correspondence of betas atomic <-> soli
-       nhtol(:,:),       &! correspondence n <-> angular momentum
-       nhtom(:,:)         ! correspondence n <-> magnetic angular m
+       nhtol(:,:),       &! correspondence n <-> angular momentum l
+       nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
   COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
        vkb(:,:),              &! all beta functions in reciprocal space
        qgm(:)                  ! complete fourier transform of Q
+  REAL(KIND=DP), PARAMETER:: &
+       dq = 0.01D0           ! space between points in the pseudopotential tab.
   REAL(KIND=DP), ALLOCATABLE :: &
        qq(:,:,:),             &! the q functions in the solid
        dvan(:,:,:),           &! the D functions of the solid
@@ -645,7 +611,6 @@ MODULE pwcom
   USE lsda_mod
   USE ktetra
   USE symme
-  USE atom
   USE pseud
   USE vlocal
   USE wvfct

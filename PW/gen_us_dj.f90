@@ -21,7 +21,7 @@ subroutine gen_us_dj (ik, dvkb)
   USE klist, ONLY: xk
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct, ONLY: npw, npwx, igk
-  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtom, tab
+  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtolm, tab
   implicit none
   !
   integer :: ik
@@ -44,7 +44,7 @@ subroutine gen_us_dj (ik, dvkb)
   ! atomic phase factor
   ! prefactor
 
-  integer :: na, i, m, l, iig, lm
+  integer :: na, i, l, iig, lm
   real(kind=DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
   real(kind=DP) ::  qt, dv, eps
   parameter (eps = 1.0e-8)
@@ -114,8 +114,7 @@ subroutine gen_us_dj (ik, dvkb)
            do ih = 1, nh (nt)
               nb = indv (ih, nt)
               l = nhtol (ih, nt)
-              m = nhtom (ih, nt)
-              lm = l * l + m
+              lm= nhtolm(ih, nt)
               ikb = ikb + 1
               pref = (0.d0, - 1.d0) **l
               !

@@ -45,6 +45,7 @@ subroutine phq_setup
 #include "machine.h"
   USE io_global,     ONLY : stdout
   use pwcom
+  USE atom,          ONLY : nlcc
   USE constants,     ONLY : degspin
   USE kinds,         ONLY : DP
   use phcom

@@ -19,6 +19,7 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   use phcom
   use d3com
   use para
+  USE atom, ONLY: nlcc
   USE mp,    ONLY : mp_barrier
 
   implicit none

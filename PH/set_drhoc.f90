@@ -15,6 +15,7 @@ subroutine set_drhoc (q)
 #include "machine.h"
 
   use pwcom
+  USE atom, ONLY : numeric, nlcc, msh, r, rab, rho_atc
   USE kinds, only : DP
   use phcom
   implicit none

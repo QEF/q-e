@@ -11,6 +11,7 @@ subroutine allocate_cond
 !
 #include "machine.h"
   use pwcom
+  use atom, only: mesh, r
   use cond 
   implicit none
   integer :: mmax, nt, k, iw, ib, ir, na, naux 

@@ -21,10 +21,9 @@ subroutine readvan (is, iunps)
   USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, nqfx, lqmax
   use atom,  only: zmesh, mesh,dx, r, rab, chi, oc, nchi, lchi, &
        rho_at, rho_atc, nlcc
-  use char,  only: psd
   use pseud, only: zp, lmax, lloc
   use us,    only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt
+       rinner, nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt, psd
   use funct, only: dft, which_dft
   implicit none
 

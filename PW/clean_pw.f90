@@ -24,7 +24,7 @@ SUBROUTINE clean_pw()
   USE scf,                  ONLY : rho, rho_save,vr, vltot, rho_core, vrs
   USE relax,                ONLY : if_pos
   USE wavefunctions_module, ONLY : evc, psic
-  USE us,                   ONLY : indv, nhtol, nhtom, qq, dvan, deeq, qrad, &
+  USE us,                   ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, qrad, &
                                    vkb, qgm, becsum, tab, tab_at
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
   USE extfield,             ONLY : forcefield
@@ -96,7 +96,7 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( indv ) )       DEALLOCATE( indv )
   IF ( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
-  IF ( ALLOCATED( nhtom ) )      DEALLOCATE( nhtom )
+  IF ( ALLOCATED( nhtolm) )      DEALLOCATE( nhtolm)
   IF ( ALLOCATED( qq ) )         DEALLOCATE( qq )
   IF ( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
   IF ( ALLOCATED( deeq ) )       DEALLOCATE( deeq )

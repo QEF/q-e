@@ -19,10 +19,9 @@ subroutine readnewvan (is, iunps)
   use constants, only: fpi
   use atom,  only: zmesh, mesh, xmin, dx, r, rab, chi, oc, nchi, &
        lchi, rho_at, rho_atc, nlcc
-  use char,  only: psd
   use pseud, only: zp, lmax, lloc
   use us,    only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqlc, &
-       rinner, nh, nbeta, kkbeta, lll, tvanp
+       rinner, nh, nbeta, kkbeta, lll, tvanp, psd
 
   use funct
   !

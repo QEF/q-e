@@ -30,7 +30,7 @@ CONTAINS
       use mp_global
       use io_global
       use cell_base, only: boxdimensions, s_to_r, cell_init
-      USE ncprm, ONLY: r, rab
+      USE atom, ONLY: r, rab
       use control_flags, only: twfcollect
       USE parser, ONLY: int_to_char
       use input_parameters, only: outdir

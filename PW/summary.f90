@@ -23,7 +23,7 @@ subroutine summary
   USE atom
   USE cell_base
   USE basis
-  USE char, ONLY: title, sname, psd
+  USE char, ONLY: title, sname
   USE cellmd, ONLY: calc, cmass
   USE dynam, ONLY: amass
   USE gvect
@@ -35,7 +35,7 @@ subroutine summary
        a_nlcc, b_nlcc, alpha_nlcc
   USE symme, ONLY: nsym, invsym, s, ftau
   USE control_flags
-  USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll
+  USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll, psd
   USE funct
   implicit none
   !

@@ -12,6 +12,7 @@ subroutine d3_init
 !-----------------------------------------------------------------------
 
   use pwcom
+  use atom, only: numeric, mesh, msh, rab, r
   use phcom
   use d3com
   use para

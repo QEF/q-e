@@ -9,10 +9,9 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   ! CP90 modules
   !
-  use ncprm, only: qfunc, qfcoef, rinner, qqq, rscore, vloc_at, r, rab, &
-                   lll, nbeta, kkbeta, ifpcor, mesh, nqlc, nqf, &
-                   betar, dion
-  use wfc_atomic, only: chi, lchi, nchi
+  use ncprm, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
+                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
+  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
   use ions_base, only: zv
   use funct, only: dft, which_dft
   !
@@ -39,11 +38,7 @@ subroutine read_pseudo (is, iunps, ierr)
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
   ! tvanp(is)=upf%tvanp
-  if (upf%nlcc) then
-     ifpcor(is) = 1
-  else
-     ifpcor(is) = 0
-  end if
+  nlcc(is) = upf%nlcc
   !
   dft = upf%dft
   call which_dft (upf%dft)
@@ -82,9 +77,9 @@ subroutine read_pseudo (is, iunps, ierr)
   rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
   !
   if ( upf%nlcc) then
-     rscore (1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
+     rho_atc (1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
   else
-     rscore (:,is) = 0.d0
+     rho_atc (:,is) = 0.d0
   end if
   ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   ! lloc(is) = 1

@@ -17,6 +17,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 #include "machine.h"
   USE kinds, only : DP
   use pwcom
+  USE atom, ONLY: nlcc
   use phcom
   use d3com
   !

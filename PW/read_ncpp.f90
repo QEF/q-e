@@ -14,10 +14,9 @@ subroutine read_ncpp (np, iunps)
   USE parameters, ONLY: nchix, lmaxx, ndmx
   use atom,  only: zmesh, msh, mesh, xmin, dx, r, rab, chi, oc, &
        nchi, lchi, rho_at, rho_atc, numeric, nlcc
-  use char, only: psd
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
-  use us, only: vloc_at, betar, kkbeta, nbeta, lll, dion
+  use us, only: vloc_at, betar, kkbeta, nbeta, lll, dion, psd
   use funct, only: dft, which_dft
   implicit none
   !

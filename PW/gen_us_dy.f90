@@ -22,14 +22,14 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE klist, ONLY: xk
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct, ONLY: npw, npwx, igk
-  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtom, tab
+  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtolm, tab
   implicit none
   !
   integer :: ik
   real(kind=DP) :: u (3)
 
   complex(kind=DP) :: dvkb (npwx, nkb)
-  integer :: na, nt, nb, ih, l, m, lm, ikb, iig, ipol, i0, i1, i2, &
+  integer :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
        i3, ig
   real(kind=DP), allocatable :: gk(:,:), q (:)
   real(kind=DP) :: px, ux, vx, wx, arg
@@ -102,8 +102,7 @@ subroutine gen_us_dy (ik, u, dvkb)
            do ih = 1, nh (nt)
               nb = indv (ih, nt)
               l = nhtol (ih, nt)
-              m = nhtom (ih, nt)
-              lm = l * l + m
+              lm = nhtolm(ih, nt)
               ikb = ikb + 1
               pref = (0.d0, - 1.d0) **l
               !

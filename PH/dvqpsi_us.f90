@@ -18,6 +18,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
 #include "machine.h"
 
   use pwcom
+  use atom, only: nlcc
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
   use phcom

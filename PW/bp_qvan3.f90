@@ -6,7 +6,7 @@
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
       USE kinds, ONLY: DP
       USE basis, ONLY: ntyp
-      USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtol, nhtom
+      USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtol, nhtolm
       USE uspp, ONLY: nlx, lpl, lpx, ap
 
       implicit none
@@ -25,8 +25,8 @@
 !
       ivs = indv(iv,is)
       jvs = indv(jv,is)
-      ivl = nhtol(iv,is)*nhtol(iv,is)+nhtom(iv,is)
-      jvl = nhtol(jv,is)*nhtol(jv,is)+nhtom(jv,is)
+      ivl = nhtolm(iv,is)
+      jvl = nhtolm(jv,is)
 
       IF(IVL.GT.NLX)  CALL ERRORE(' QVAN ',' IVL.GT.NLX  ',IVL)
       IF(JVL.GT.NLX)  CALL ERRORE(' QVAN ',' JVL.GT.NLX  ',JVL)

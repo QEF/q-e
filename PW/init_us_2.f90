@@ -20,7 +20,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE constants, ONLY: tpi
   USE gvect, ONLY: eigts1, eigts2, eigts3, ig1, ig2, ig3, g
   USE wvfct, ONLY: npw, npwx, igk
-  USE us, ONLY: nhm, nkb, vkb, lmaxkb, dq, nh, nhtol, nhtom, tab, &
+  USE us, ONLY: nhm, nkb, vkb, lmaxkb, dq, nh, nhtol, nhtolm, tab, &
        indv, nbeta
   implicit none
   !
@@ -89,7 +89,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
         do ih = 1, nh (nt)
            if (nb.eq.indv (ih, nt) ) then
               l = nhtol (ih, nt)
-              lm = l * l + nhtom (ih, nt)
+              lm =nhtolm (ih, nt)
               do ig = 1, npw_
                  vkb1 (ig,ih) = ylm (ig, lm) * vq (ig)
               enddo

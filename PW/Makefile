@@ -243,6 +243,7 @@ write_ns.o \
 wsweight.o
 
 MODULES = \
+../Modules/atom.o \
 ../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/bfgs_module.o \

@@ -17,8 +17,8 @@ subroutine init_us_1
   !      nh <-> beta in the atom
   !   c) It computes the indices nhtol which establish the correspondence
   !      nh <-> angular momentum of the beta function
-  !   d) It computes the indices nhtom which establish the correspondence
-  !      nh <-> magnetic angular momentum of the beta function.
+  !   d) It computes the indices nhtolm which establish the correspondence
+  !      nh <-> combined (l,m) index for the beta function.
   !   e) It computes the coefficients c_{LM}^{nm} which relates the
   !      spherical harmonics in the Q expansion
   !   f) It computes the radial fourier transform of the Q function on
@@ -37,8 +37,7 @@ subroutine init_us_1
   USE pseud, ONLY: lloc, lmax
   USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
        kkbeta, nqf, nqlc, lll, tvanp, okvan, newpseudo, lmaxkb, &
-       nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, &
-       nhtom, qrad, indv, nhm
+       nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, nhtolm, qrad, indv, nhm
   USE uspp, ONLY : ap, aainit
   implicit none
   !
@@ -78,7 +77,7 @@ subroutine init_us_1
 
   prefr = fpi / omega
   !
-  !   For each pseudopotential we initialize the indices nhtol, nhtom,
+  !   For each pseudopotential we initialize the indices nhtol, nhtolm,
   !   indv, and if the pseudopotential is of KB type we initialize the
   !   atomic D terms
   !
@@ -88,7 +87,7 @@ subroutine init_us_1
         l = lll (nb, nt)
         do m = 1, 2 * l + 1
            nhtol (ih, nt) = l
-           nhtom (ih, nt) = m
+           nhtolm(ih, nt) = l*l+m
            indv (ih, nt) = nb
            ih = ih + 1
         enddo
@@ -101,7 +100,8 @@ subroutine init_us_1
      !
      do ih = 1, nh (nt)
         do jh = 1, nh (nt)
-           if (nhtol (ih, nt) .eq.nhtol (jh, nt) .and.nhtom (ih, nt).eq.nhtom (jh, nt) ) then
+           if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
+               nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
               dvan (ih, jh, nt) = dion (ir, is, nt)

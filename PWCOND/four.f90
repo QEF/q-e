@@ -32,6 +32,7 @@ subroutine four(alpha, w0, k, dz)
 ! 
 #include "machine.h"
   use pwcom
+  use atom, only: msh, r, rab
   use cond
 implicit none
 

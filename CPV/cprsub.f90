@@ -214,7 +214,8 @@
 
       use pseu
       use reciprocal_vectors, only: gstart
-      use ncprm
+      use atom, only: r, rab, mesh
+      use ncprm, only: vloc_at, cmesh
 !
       use dpseu
       use dener
@@ -876,6 +877,7 @@
       use ions_base, only: nsp
       use elct
       use ncprm
+      use atom, only: nlcc, r, rab, mesh, rho_atc
       use qradb_mod
       use qgb_mod
       use gvecb
@@ -1041,7 +1043,7 @@
          if(iprsta.ge.4) WRITE( stdout,*)  '  beta  '
          c=fpi/sqrt(omega)
          do iv=1,nh(is)
-            lp=indlm(iv,is)
+            lp=nhtolm(iv,is)
             do ig=1,ngw
                gg=g(ig)*tpiba*tpiba/refg
                jj=int(gg)+1
@@ -1064,7 +1066,7 @@
             if(iprsta.ge.4) WRITE( stdout,*)  '  dbeta  '
             c=fpi/sqrt(omega)
             do iv=1,nh(is)
-               lp=indlm(iv,is)
+               lp=nhtolm(iv,is)
                betagl=betagx(1,iv,is)
                do i=1,3
                   do j=1,3
@@ -1102,7 +1104,7 @@
 !     non-linear core-correction   ( rhocb(ig,is) )
 !     ---------------------------------------------------------------
       do is=1,nsp
-         if(ifpcor(is) == 1) then
+         if(nlcc(is)) then
             allocate(fint(kkbeta(is)))
             allocate(jl(kkbeta(is)))
             c=fpi/omegab
@@ -1111,7 +1113,7 @@
                xg=sqrt(gb(ig))*tpibab
                call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
                do ir=1,kkbeta(is)
-                  fint(ir)=r(ir,is)**2*rscore(ir,is)*jl(ir)
+                  fint(ir)=r(ir,is)**2*rho_atc(ir,is)*jl(ir)
                end do
                call simpson_cp90(kkbeta(is),fint,rab(1,is),rhocb(ig,is))
             end do
@@ -1234,6 +1236,7 @@
       use ions_base, only: ipp, na, nsp
       use elct
       use ncprm
+      use atom, only: mesh, r, rab, nlcc
       use qradb_mod
       use qgb_mod
       use gvecb
@@ -1257,7 +1260,7 @@
       nhx=0
       nhsa=0
       nhsavb=0
-      nlcc=0
+      nlcc_any=.false.
       do is=1,nsp
          ind=0
          do iv=1,nbeta(is)
@@ -1269,7 +1272,7 @@
          ish(is)=nhsa
          nhsa=nhsa+na(is)*nh(is)
          if(ipp(is).le.1) nhsavb=nhsavb+na(is)*nh(is)
-         nlcc=nlcc+ifpcor(is)
+         nlcc_any = nlcc_any .OR. nlcc(is)
       end do
       if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
       lqx = 2*lmaxkb + 1
@@ -1284,10 +1287,10 @@
       allocate(qgb(ngb,nhx*(nhx+1)/2,nsp))
       allocate(qq(nhx,nhx,nsp))
       allocate(dvan(nhx,nhx,nsp))
-      if (nlcc.gt.0) allocate(rhocb(ngb,nsp))
+      if (nlcc_any) allocate(rhocb(ngb,nsp))
       allocate(nhtol(nhx,nsp))
       allocate(indv (nhx,nsp))
-      allocate(indlm(nhx,nsp))
+      allocate(nhtolm(nhx,nsp))
 !
       allocate(dqrad(ngb,nbrx,nbrx,lqx,nsp,3,3))
       allocate(dqgb(ngb,nhx*(nhx+1)/2,nsp,3,3))
@@ -1303,7 +1306,7 @@
       if(tpre) dqrad(:,:,:,:,:,:,:) = 0.d0
 !
 !     ------------------------------------------------------------------
-!     definition of indices nhtol, indv, indlm
+!     definition of indices nhtol, indv, nhtolm
 !     ------------------------------------------------------------------
       do is=1,nsp
          ind=0
@@ -1312,7 +1315,7 @@
             do il=1,2*lll(iv,is)+1
                lm=lm+1
                ind=ind+1
-               indlm(ind,is)=lm
+               nhtolm(ind,is)=lm
                nhtol(ind,is)=lll(iv,is)
                indv(ind,is)=iv
             end do
@@ -1512,7 +1515,7 @@
 !     ---------------------------------------------------------------
          do iv=1,nh(is)
             do jv=1,nh(is)
-               if ( indlm(iv,is).eq.indlm(jv,is) ) then
+               if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
                   dvan(iv,jv,is)=fac*dion(indv(iv,is),indv(jv,is),is)
                endif 
             end do
@@ -1573,8 +1576,8 @@
 ! 
       ivs=indv(iv,is)
       jvs=indv(jv,is)
-      ivl=indlm(iv,is)
-      jvl=indlm(jv,is)
+      ivl=nhtolm(iv,is)
+      jvl=nhtolm(jv,is)
       if(ivl > nlx)  call errore(' qvan2b ',' ivl out of bounds ',ivl)
       if(jvl > nlx)  call errore(' qvan2b ',' jvl out of bounds ',jvl)
 !
@@ -1649,8 +1652,8 @@
 ! 
       ivs=indv(iv,is)
       jvs=indv(jv,is)
-      ivl=indlm(iv,is)
-      jvl=indlm(jv,is)
+      ivl=nhtolm(iv,is)
+      jvl=nhtolm(jv,is)
       if(ivl > nlx)  call errore(' dqvan2b ',' ivl out of bounds ',ivl)
       if(jvl > nlx)  call errore(' dqvan2b ',' jvl out of bounds ',jvl)
 !

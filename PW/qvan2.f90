@@ -21,7 +21,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtol, nhtom
+  USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtolm
   USE uspp, ONLY: nlx, lpl, lpx, ap
   implicit none
 
@@ -76,8 +76,8 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   else
      nmb = mb * (mb - 1) / 2 + nb
   endif
-  ivl = nhtol (ih, np) * nhtol (ih, np) + nhtom (ih, np)
-  jvl = nhtol (jh, np) * nhtol (jh, np) + nhtom (jh, np)
+  ivl = nhtolm(ih, np)
+  jvl = nhtolm(jh, np)
   if (nb.gt.nbrx) call errore (' qvan2 ', ' nb.gt.nbrx ', nb)
   if (mb.gt.nbrx) call errore (' qvan2 ', ' mb.gt.nbrx ', mb)
   if (ivl.gt.nlx) call errore (' qvan2 ', ' ivl.gt.nlx  ', ivl)

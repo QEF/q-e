@@ -36,6 +36,7 @@ SUBROUTINE phq_init()
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk
   USE pwcom
+  USE atom,                 ONLY : numeric, mesh, msh, r , rab
   USE wavefunctions_module, ONLY : evc
   USE kinds,           ONLY : DP
   USE phcom

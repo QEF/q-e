@@ -217,6 +217,7 @@ PWOBJS = \
 ../PW/wsweight.o 
 
 MODULES = \
+../Modules/atom.o \
 ../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \

@@ -12,6 +12,7 @@ subroutine dynmatcc(dyncc)
   !
 #include "machine.h"
   use pwcom
+  USE atom, ONLY: nlcc, mesh, dx, r, rab, rho_atc, numeric
   USE wavefunctions_module,  ONLY: psic
   use cgcom
   implicit none

@@ -24,7 +24,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   USE kinds, ONLY: DP
   USE parameters, ONLY: nbrx
   USE gvect, ONLY: g
-  USE us, ONLY: lqx, dq, indv, nhtol, nhtom, qrad
+  USE us, ONLY: lqx, dq, indv, nhtol, nhtolm, qrad
   USE uspp, ONLY: nlx, lpl, lpx, ap
   implicit none
   integer :: ngy, ih, jh, np, ipol
@@ -80,8 +80,8 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   else
      nmb = mb * (mb - 1) / 2 + nb
   endif
-  ivl = nhtol (ih, np) * nhtol (ih, np) + nhtom (ih, np)
-  jvl = nhtol (jh, np) * nhtol (jh, np) + nhtom (jh, np)
+  ivl = nhtolm (ih, np)
+  jvl = nhtolm (jh, np)
 
   if (nb.gt.nbrx) call errore (' qvan2 ', ' nb.gt.nbrx ', nb)
   if (mb.gt.nbrx) call errore (' qvan2 ', ' mb.gt.nbrx ', mb)

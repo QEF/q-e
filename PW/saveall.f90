@@ -28,7 +28,7 @@ subroutine saveall (iun, iflag)
   USE ener, ONLY: ef
   USE force_mod, ONLY: lforce
   USE control_flags, ONLY: iswitch, istep, modenum, noinv
-  USE char, ONLY : title, crystal, psd, sname
+  USE char, ONLY : title, crystal, sname
   USE us
   USE extfield
   USE fixed_occ, ONLY: tfixed_occ

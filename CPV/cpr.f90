@@ -55,7 +55,7 @@
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
 
-      use core, only: nlcc
+      use core, only: nlcc_any
       use core, only: deallocate_core
       use cvan, only: nvb, nhx, nhsa
       use cvan, only: deallocate_cvan
@@ -369,7 +369,7 @@
       allocate(rhor(nnr,nspin))
       allocate(rhos(nnrsx,nspin))
       allocate(rhog(ng,nspin))
-      if (nlcc > 0) allocate(rhoc(nnr))
+      if (nlcc_any) allocate(rhoc(nnr))
       allocate(wrk1(nnr))
       allocate(qv(nnrb))
       allocate(c2(ngw))
@@ -503,7 +503,7 @@
 !
 !     put core charge (if present) in rhoc(r)
 !
-         if (nlcc.gt.0) call set_cc(irb,eigrb,rhoc)
+         if (nlcc_any) call set_cc(irb,eigrb,rhoc)
 !
          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
      &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
@@ -803,7 +803,7 @@
 !
 !     put core charge (if present) in rhoc(r)
 !
-      if (nlcc.gt.0) call set_cc(irb,eigrb,rhoc)
+      if (nlcc_any) call set_cc(irb,eigrb,rhoc)
 !
       call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
      &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
