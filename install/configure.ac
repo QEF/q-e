@@ -50,6 +50,12 @@ mips-sgi-* )
 	try_ar="ar"
 	try_arflags="ruv"
 	;;
+alphaev*-dec-osf* )
+	is_alpha=1
+	try_f90="f90 f77"
+	try_ar="ar"
+	try_arflags="ruv"
+	;;
 sparc-sun-* )
 	is_sparc=1
 	try_f90="mpf90 f90 mpf77 f77 g77"
@@ -69,6 +75,7 @@ esac
 
 # check Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
+unset F77 # otherwise it may interfere with the check
 AC_PROG_F77($f90)
 f90=$F77
 
@@ -125,6 +132,10 @@ mips-sgi-*:* )
 	try_cc="cc gcc"
 	try_f77="f77 $f90"
 	;;
+alphaev*-dec-osf* )
+	try_cc="cc gcc"
+	try_f77="f77 $f90"
+	;;
 sparc-sun-*:* )
 	try_cc="mpcc cc gcc"
 	try_f77="mpf77 f77 $f90"
@@ -159,6 +170,7 @@ case "$build:$cc:$f90" in
 *-pc-linux-*:icc:ifc | *-pc-linux-*:gcc:ifc | \
 *-pc-linux-*:icc:ifort | *-pc-linux-*:gcc:ifort )       ;;
 mips-sgi-*:cc:f90 )                                     ;;
+alphaev*-dec-osf*:cc:f90 )				;;
 # sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )           ;;
 
 * )
@@ -241,6 +253,14 @@ mips-sgi-*:f90 )
 	pre_f_dflags="-cpp "
 	have_cpp=1
 	;;
+alphaev*-dec-osf*:f90 )
+	have_cpp=1
+	try_dflags="-D__ALPHA"
+	pre_f_dflags="-cpp "
+	try_fflags="-O -real_size 64 -align dcommons -align records"
+	try_f77flags="\$(FFLAGS)"
+	try_f90flags="\$(FFLAGS) -free"
+	;;
 sparc-sun-*:mpf90 | sparc-sun-*:f90 )
 	try_fflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
 -xlic_lib=sunperf"
@@ -297,6 +317,9 @@ case "$build:$cc" in
 	;;
 mips-sgi-*:cc )
 	try_cflags="-mips4 -64 -O2 -r10000"
+	;;
+alphaev*-dec-osf*:cc )
+	try_cflags="-O"
 	;;
 sparc-sun-*:mpcc | sparc-sun-*:cc )
 	try_cflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
@@ -362,7 +385,7 @@ fi
 test_ldflags="`echo $ldflags | sed 's/\$([[^)]]*)//g'`"
 
 AC_LANG_PUSH(Fortran 77)
-F77=$f90 # use Fortran 90 actually (autoconf knows Fortran 77 only!)
+F77=$f90 # use Fortran 90 actually (autoconf only knows Fortran 77!)
 
 # search for libraries (unless LIBS has been set from the environment)
 if test "$libs" = ""
@@ -386,6 +409,8 @@ then
 	elif test $is_mips
 	then
 		try_libdirs="/usr/local/lib /cineca/lib"
+	else
+		try_libdirs="/usr/local/lib"
 	fi
 
 	# prepend directories specified by the user
@@ -394,6 +419,8 @@ then
 		try_libdirs="$libdirs $try_libdirs"
 	fi
 
+	# check directories in LD_LIBRARY_PATH too
+	# (maybe they are already searched by default, but I'm not sure)
 	if test "$LD_LIBRARY_PATH" != ""
 	then
 		ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
@@ -462,6 +489,33 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 		LIBS="$libs"
 		AC_SEARCH_LIBS(dgemm, complib.sgimath, have_blas=1
 			       libs="$LIBS")
+	elif test $is_alpha
+	then
+		# check for cxml (old dxml)
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$libs"
+		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
+			       libs="$LIBS")
+
+		# check for parallel libraries
+		if test $no_parallel
+		then
+			AC_LANG_PUSH(C)
+			CFLAGS="$test_cflags"
+			CPPFLAGS="$test_cppflags"
+			LDFLAGS="$c_ldflags"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(elan_baseInit, elan, libs="$LIBS")
+			AC_SEARCH_LIBS(mpi_waitany_, fmpi, have_mpi=1
+				       libs="$ac_cv_search_mpi_waitany_ \
+-lmpi $libs", , -lmpi)
+			AC_LANG_POP(C)
+
+			LIBS="$libs"
+			AC_SEARCH_LIBS(pmpi_init, pmpi, libs="$LIBS")
+		fi
 	fi
 
 	if ! test $have_fft
@@ -552,11 +606,14 @@ $ac_cv_search_dgemm -latlas $libs", , -latlas)
 	if test $have_essl && test $have_lapack
 	then libs="-lessl $libs" ; fi
 
-	# check for mpi
-	unset ac_cv_search_mpi_init # clear cached value
-	LDFLAGS="$test_ldflags"
-	LIBS="$libs"
-	AC_SEARCH_LIBS(mpi_init, mpi, libs="$LIBS")
+	if ! test $no_parallel && ! test $have_mpi
+	then
+		# check for mpi
+		unset ac_cv_search_mpi_init # clear cached value
+		LDFLAGS="$test_ldflags"
+		LIBS="$libs"
+		AC_SEARCH_LIBS(mpi_init, mpi, have_mpi=1 libs="$LIBS")
+	fi
 fi
 echo setting LIBS... $libs
 
@@ -565,17 +622,20 @@ FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 LIBS="$libs"
 
-AC_SEARCH_LIBS(mpi_init, "", parallel=1
-	       try_dflags="$try_dflags -D__MPI -D__PARA")
+if ! test $no_parallel
+then
+	AC_SEARCH_LIBS(mpi_init, "", parallel=1
+		       try_dflags="$try_dflags -D__MPI -D__PARA")
+fi
 
 if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
 AC_SEARCH_LIBS(zggev, "", , mylib="blas_and_lapack")
 
 AC_SEARCH_LIBS(zhegvx, "", try_dflags="$try_dflags -DHAS_ZHEGVX")
-AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
 
 if test $is_aix
 then
+	AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
 	AC_SEARCH_LIBS(dcft, "", have_fft=1)
 fi
 
@@ -651,7 +711,7 @@ then
 	echo "${ECHO_T}done"
 fi
 
-# check sizes of types (not really needed)
+# check sizes of types (not really needed, but Carlo wanted it)
 CFLAGS="$test_cflags"
 CPPFLAGS="$test_cppflags"
 LDFLAGS="$c_ldflags"
@@ -711,7 +771,7 @@ echo
 echo For more information, read the INSTALL file or the PWscf manuals.
 echo -----------------------------------------------------------------
 
-if ! test $parallel
+if ! test $no_parallel && ! test $parallel
 then
 	echo ----------------------------------------------
 	echo WARNING: parallel environment not detected
