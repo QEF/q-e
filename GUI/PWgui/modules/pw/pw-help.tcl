@@ -524,10 +524,10 @@ help tempw        -vartype real -helpfmt txt2html -helptext {
              starting temperature in MD runs
 }
 
-help ttol         -vartype real -helpfmt txt2html -helptext { 
+help tolp         -vartype real -helpfmt txt2html -helptext { 
              tolerance for velocity rescaling. Velocities are
              not rescaled if the ratio of the run-averaged and 
-             target temperature differs from unit less than ttol
+             target temperature differs from unit less than tolp
              (default: 1.D-3)
 }
 

@@ -458,10 +458,10 @@ ion_temperature
 tempw          REAL ( default = 300.D0 )
                starting temperature (Kelvin) in MD runs 
 
-ttol           REAL ( default = 1.D-3 )
+tolp           REAL ( default = 1.D-3 )
                tolerance for velocity rescaling. Velocities are
                not rescaled if the ratio of the run-averaged and
-               target temperature differs from unit less than ttol.
+               target temperature differs from unit less than tolp.
                This keyword is used only in the case of variable cell
                calculations.
 

@@ -702,8 +702,8 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-validate  fortrannonnegreal
 		    }
 		    
-		    var ttol {
-			-label    "Tolerance for velocity rescaling (ttol):"
+		    var tolp {
+			-label    "Tolerance for velocity rescaling (tolp):"
 			-validate fortranreal
 		    }
 		}

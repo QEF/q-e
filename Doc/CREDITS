@@ -18,10 +18,10 @@ Bologna (http://www.cineca.it/), under the responsibility of Carlo
 Cavazzoni (c.cavazzoni@cineca.it).
 
 Currently active developers include Gerardo Ballabio (CINECA), 
-Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA,
-Trieste), Anton Kokalj (Joszef Stefan Institute, Ljubljana).
+Stefano Fabris, Guido Fratesi, Adriano Mosca Conte, Carlo Sbraccia
+(SISSA, Trieste), Anton Kokalj (Joszef Stefan Institute, Ljubljana).
 
-The PWscf package was originally developed by Stefano Baroni, Stefano
+The PWscf package was developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
 The web site for PWSCF and related codes is: http://www.pwscf.org/
 
@@ -46,13 +46,13 @@ the original code by Paolo Giannozzi.
 A list of further contributors includes:
 Dario Alfe', Francesco Antoniella, Mauro Boero, Claudia Bungaro, 
 Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni,
-Alberto Debernardi, Gernot Deinzer, Oswaldo Dieguez, Guido Fratesi,
+Alberto Debernardi, Gernot Deinzer, Oswaldo Dieguez,
 Ralph Gebauer,  Martin Hilgeman, Yosuke Kanai, Axel Kohlmeyer,
 Konstantin Kudin, Michele Lazzeri, Kurt Maeder, Francesco Mauri, 
 Nicolas Mounet, Pasquale Pavone, Mickael Profeta, Guido Roma, 
 Manu Sharma, Alexander Smogunov, Kurt Stokbro, Pascal Thibaudeau,
-Antonio Tilocca, Renata Wentzcovitch, Yudong Wu, Xiaofei Wang,
-and let us apologize to everybody we have forgotten.
+Antonio Tilocca, Paolo Umari, Renata Wentzcovitch, Yudong Wu, 
+Xiaofei Wang, and let us apologize to everybody we have forgotten.
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
