@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -68,8 +68,8 @@ subroutine phq_readin
   !   set default values for variables in namelist
   !
   tr2_ph = 1.d-10
-  call setv (ntypx, 0.d0, amass, 1)
-  call setv (maxter, 0.d0, alpha_mix, 1)
+  amass(:) = 0.d0
+  alpha_mix(:) = 0.d0
   alpha_mix (1) = 0.7d0
   niter_ph = maxter
   nmix_ph = 4
@@ -89,8 +89,6 @@ subroutine phq_readin
   filelph = ' '
   fildyn = 'matdyn'
   fildrho = ' '
-
-
   fildvscf = ' '
   !
   !     reading the namelist inputph
@@ -101,10 +99,6 @@ subroutine phq_readin
   ios = 0
 #else
   !
-  !   Note: for AIX machine (xlf compiler version 3.0 or higher):
-  !   The variable XLFRTEOPTS must be set to "namelist=old"
-  !   in order to have "&end" to end the namelist
-  !
   read (5, inputph, err = 200, iostat = ios)
 #endif
 
@@ -112,42 +106,39 @@ subroutine phq_readin
   !
   !     Check all namelist variables
   !
-  if (tr2_ph.le.0.d0) call errore (' phq_readin', ' Wrong tr2_ph ', &
-       1)
+  if (tr2_ph.le.0.d0) call errore (' phq_readin', ' Wrong tr2_ph ', 1)
   do iter = 1, maxter
      if (alpha_mix (iter) .lt.0.d0.or.alpha_mix (iter) .gt.1.d0) call &
           errore ('phq_readin', ' Wrong alpha_mix ', iter)
   enddo
   if (niter_ph.lt.1.or.niter_ph.gt.maxter) call errore ('phq_readin', &
        ' Wrong niter_ph ', 1)
-  if (nmix_ph.lt.1.or.nmix_ph.gt.5) call errore ('phq_readin', ' Wron &
-       &g nmix_ph ', 1)
-  if (iverbosity.ne.0.and.iverbosity.ne.1) call errore ('phq_readin', ' Wrong &
-       & iverbosity ', 1)
+  if (nmix_ph.lt.1.or.nmix_ph.gt.5) call errore ('phq_readin', ' Wrong &
+       &nmix_ph ', 1)
+  if (iverbosity.ne.0.and.iverbosity.ne.1) call errore ('phq_readin', &
+       &' Wrong  iverbosity ', 1)
   if (fildyn.eq.' ') call errore ('phq_readin', ' Wrong fildyn ', 1)
   if (time_max.lt.1.d0) call errore ('phq_readin', ' Wrong time_max', 1)
 
-  if (nat_todo.ne.0.and.nrapp.ne.0) call errore ('phq_readin', ' inco &
-       &mpatible flags', 1)
+  if (nat_todo.ne.0.and.nrapp.ne.0) call errore ('phq_readin', &
+       &' incompatible flags', 1)
   !
   !    reads the q point
   !
   read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
 300 call errore ('phq_readin', 'reading xq', abs (ios) )
-
-
   lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
   if ( (epsil.or.zue) .and..not.lgamma) call errore ('phq_readin', &
        'gamma is needed for elec.field', 1)
-  if (zue.and..not.trans) call errore ('phq_readin', 'trans must be . &
-       &t. for Zue calc.', 1)
+  if (zue.and..not.trans) call errore ('phq_readin', 'trans must be &
+       &.t. for Zue calc.', 1)
 #ifdef __PARA
 400 continue
 
   call bcast_ph_input
   call init_pool
 #endif
-  call DCOPY (3, xq, 1, xqq, 1)
+  xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
@@ -161,8 +152,7 @@ subroutine phq_readin
   endif
   !
   if ( (zue) .and.okvan) then
-     call errore ('phq_readin', 'No electric field in US case', &
-          - 1)
+     call errore ('phq_readin', 'No electric field in US case', -1)
      epsil = .false.
      zue = .false.
   endif
@@ -204,13 +194,12 @@ subroutine phq_readin
   if (epsil.and.degauss.ne.0.d0) call errore ('phq_readin', 'no elec. &
        &field with metals', 1)
 
-  if (iswitch.ne. - 2.and.iswitch.ne. - 3.and.iswitch.ne. - &
-       4.and..not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', 1 &
-       + abs (iswitch) )
+  if (iswitch.ne. - 2 .and. iswitch.ne. - 3 .and. iswitch.ne. -4 &
+       .and. .not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', &
+       & 1 + abs (iswitch) )
   do it = 1, ntyp
      if (amass (it) .le.0.d0) call errore ('phq_readin', 'Wrong masses', &
           it)
-
   enddo
 
   if (maxirr.lt.0.or.maxirr.gt.3 * nat) call errore ('phq_readin', ' &
@@ -221,7 +210,6 @@ subroutine phq_readin
      nrapp = 1
      nat_todo = 0
      list (1) = modenum
-
   endif
   return
 end subroutine phq_readin

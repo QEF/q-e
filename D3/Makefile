@@ -83,6 +83,7 @@ PHOBJS = ../PH/phcom.o  \
 ../PH/compute_drhous.o  \
 ../PH/compute_dvloc.o  \
 ../PH/compute_nldyn.o  \
+../PH/compute_qdipol.o  \
 ../PH/compute_weight.o  \
 ../PH/d2ionq.o  \
 ../PH/davcio_drho.o  \
@@ -267,6 +268,7 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/init_us_1.o  \
 ../PW/init_us_2.o  \
 ../PW/init_vloc.o  \
+../PW/input.o  \
 ../PW/interpolate.o  \
 ../PW/invmat.o  \
 ../PW/io.o  \
