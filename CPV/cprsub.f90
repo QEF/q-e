@@ -883,7 +883,7 @@
 !     (betax, qradx) then calculated on the box grid by interpolation
 !     (this is done in routine newnlinit)
 !     
-      use parameters, only: lmaxx
+      use parameters, only: lmaxx, lqmax
       use control_flags, only: iprint, tpre
       use io_global, only: stdout
       use gvec
@@ -945,7 +945,7 @@
       call aainit(lmaxkb+1)
 !
       allocate(beta(ngw,nhm,nsp))
-      allocate(qradb(ngb,nbrx,nbrx,lmaxq,nsp))
+      allocate(qradb(ngb,nbrx,nbrx,lqmax,nsp))
       allocate(qgb(ngb,nhm*(nhm+1)/2,nsp))
       allocate(qq(nhm,nhm,nsp))
       allocate(dvan(nhm,nhm,nsp))
@@ -959,8 +959,8 @@
       allocate(dbeta(ngw,nhm,nsp,3,3))
       allocate(betagx(mmx,nhm,nsp))
       allocate(dbetagx(mmx,nhm,nsp))
-      allocate(qradx(mmx,nbrx,nbrx,lmaxq,nsp))
-      allocate(dqradx(mmx,nbrx,nbrx,lmaxq,nsp))
+      allocate(qradx(mmx,nbrx,nbrx,lqmax,nsp))
+      allocate(dqradx(mmx,nbrx,nbrx,lqmax,nsp))
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
