@@ -13,7 +13,7 @@ INFM (http://www.democritos.it). It includes all or part of the following:
   pseudopotentials
 
 - the FPMD code, developed by Carlo Cavazzoni (CINECA, Bologna),
-  Sandr Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 
+  Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 
   Paolo Focher, Gerardo Ballabio and others, for Car-Parrinello 
   variable-cell molecular dynamics
 

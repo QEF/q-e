@@ -190,7 +190,7 @@ module ncprm
 !  mmaxx:  maximum number of points in the radial grid
 ! 
   integer nqfx, lqx, nbrx, mmaxx
-  parameter (lqx=5, nqfx=8, nbrx=6, mmaxx=921)
+  parameter (lqx=5, nqfx=8, nbrx=6, mmaxx=1301)
 
 !  ifpcor   1 if "partial core correction" of louie, froyen,
 !                 & cohen to be used; 0 otherwise

@@ -165,7 +165,8 @@ subroutine dynamics
   write (4, * ) temp_new, mass, total_mass, tauold, tempo, it  
   close (unit = 4, status = 'keep')  
   do na = 1, nat  
-     write (6, '(3f12.7,i3)') (tau (ipol, na) , ipol = 1, 3) , ityp(na)
+     write (6, '(a3,3f12.7)') atm(ityp(na)),&
+        (tau (ipol, na) , ipol = 1, 3)
   enddo
   write (6, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
        &       " Etot = ",f14.8)') ekin*alat**2, temp_new, ekin*alat**2+etot
