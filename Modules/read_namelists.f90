@@ -251,6 +251,7 @@ MODULE read_namelists_module
        mixing_beta = 0.7D0
        mixing_ndim = 8
        diagonalization = ' '
+       diago_thr_init = 0.D0
        diago_cg_maxiter = 20
        diago_david_ndim = 4
        diago_diis_buff = 200
@@ -573,6 +574,7 @@ MODULE read_namelists_module
        CALL mp_bcast( mixing_beta, ionode_id )
        CALL mp_bcast( mixing_ndim, ionode_id )
        CALL mp_bcast( diagonalization, ionode_id )
+       CALL mp_bcast( diago_thr_init, ionode_id )
        CALL mp_bcast( diago_cg_maxiter, ionode_id )
        CALL mp_bcast( diago_david_ndim, ionode_id )
        CALL mp_bcast( diago_diis_buff, ionode_id )

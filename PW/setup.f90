@@ -56,8 +56,8 @@ SUBROUTINE setup()
   USE pseud,       ONLY :  zv, zp, nlc, nnl, bhstype, alps, aps, lmax
   USE wvfct,       ONLY :  nbnd, nbndx
   USE varie,       ONLY :  tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
-                           david, isolve, imix, niter, noinv, newpseudo, &
-                           restart, nosym, modenum
+                           lphonon, david, isolve, imix, niter, noinv,   &
+                           newpseudo, restart, nosym, modenum
   USE relax,       ONLY :  dtau_ref, starting_diag_threshold
   USE cellmd,      ONLY :  calc
   USE us,          ONLY :  tvanp, okvan
@@ -171,27 +171,58 @@ SUBROUTINE setup()
   ! ... iteration of for the first ionic step
   ! ... for subsequent steps ethr is automatically updated in electrons
   !
-  IF ( ethr == 0.D0 ) THEN
+  IF ( lphonon ) THEN
      !
-     IF ( startingpot == 'file' ) THEN
+     ! ... in the case of a phonon calculation ethr can not be specified
+     ! ... in the input file
+     !
+     IF ( ethr == 0.D0 ) &
+        WRITE( UNIT = stdout, &
+             & FMT = '(5X,"WARNING: diago_thr_init ", &
+             &            "overwritten with conv_thr / nelec")' )
+     IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
+     IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.0D-6, SQRT( tr2 ) )     
+     !
+  ELSE IF ( .NOT. lscf ) THEN
+     !
+     IF ( ethr == 0.D0 ) THEN
         !
-        ! ... starting potential is expected to be a good one :
-        ! ... do not spoil it with a lousy first diagonalization
+        !IF ( imix >= 0 ) ethr = 1.D-6
+        ! ... I think ethr should not be more strict than that in a simple band
+        ! ... structure calculation but there is still something unsatisfactory 
+        ! ... in the Davidson diagonalization convergence. SdG 20/03/2003
         !
         IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
         IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.0D-6, SQRT( tr2 ) )
         !
-     ELSE
+     END IF   
+     !
+  ELSE   
+     !
+     IF ( ethr == 0.D0 ) THEN
         !
-        ! ... starting atomic potential is probably far from scf
-        ! ... do not waste iterations in the first diagonalizations
-        !
-        IF ( imix >= 0 ) ethr = 1.0D-2
-        IF ( imix < 0 )  ethr = 1.0D-5
+        IF ( startingpot == 'file' ) THEN
+           !
+           ! ... if you think that the starting potential is good
+           ! ... do not spoil it with a lousy first diagonalization :
+           ! ... set a strict ethr in the input file (diago_thr_init)
+           !
+           IF ( imix >= 0 ) ethr = 1.D-5
+           IF ( imix < 0 )  ethr = 1.D-8
+           !
+        ELSE
+           !
+           ! ... starting atomic potential is probably far from scf
+           ! ... do not waste iterations in the first diagonalizations
+           !
+           IF ( imix >= 0 ) ethr = 1.0D-2
+           IF ( imix < 0 )  ethr = 1.0D-5
+           !
+        END IF
         !
      END IF
      !
-  END IF
+  END IF   
   !
   IF ( .NOT. lscf ) niter = 1
   !

@@ -665,6 +665,10 @@ MODULE input_parameters
           ! NOTA: 'david' e 'david_overlap' per eliminare la variabile "loverlap"
           ! NOT used in FPMD
 
+        REAL(dbl) :: diago_thr_init = 0.D0
+          ! convergence threshold for the firts iterative diagonalization.
+          ! NOT used in FPMD
+
         INTEGER :: diago_cg_maxiter = 100
           ! NOT used in FPMD
 
@@ -709,7 +713,7 @@ MODULE input_parameters
           diis_rothr, diis_ethr, diis_chguess, mixing_mode, &
           mixing_beta, mixing_ndim, mixing_fixed_ns, diago_cg_maxiter, diago_david_ndim, &
           diago_diis_buff, diago_diis_ethr, diago_diis_keep, diagonalization, &
-          startingpot, startingwfc , conv_thr, diago_diis_ndim
+          startingpot, startingwfc , conv_thr, diago_diis_ndim, diago_thr_init
 
 !
 !=----------------------------------------------------------------------------=!

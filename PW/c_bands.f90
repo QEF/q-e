@@ -222,7 +222,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              WRITE( stdout, '(" warning : ",I3," eigenvectors not",&
                   &" converged after ",I3," attemps")') notconv, ntry
           !
-          IF ( notconv > MAX( 5, nbnd / 4 ) ) STOP
+          IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
+             !
+             CALL errore( 'c_bands', &
+                        & 'too many bands are not converged', 1 )
+             !
+          END IF
           !
           ! ... save restart information
           !
@@ -534,7 +539,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              WRITE( stdout, '(" warning : ",i3," eigenvectors not",&
                   &" converged after ",i3," attemps")') notconv, ntry
           !
-          IF ( notconv > MAX( 5, nbnd / 4 ) ) STOP
+          IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
+             !
+             CALL errore( 'c_bands', &
+                        & 'too many bands are not converged', 1 )
+             !
+          END IF
           !
           ! ... save restart information
           !

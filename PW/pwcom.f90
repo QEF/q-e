@@ -434,43 +434,44 @@ MODULE varie
   ! ... Several variables controlling the run
   !
   USE control_flags, ONLY: &
-       mixing_beta,      &! the mixing parameter
-       tr2,              &! the convergence threshold for potential
-       upscale,          &! maximum reduction of convergence threshold
-       time_max,         &! maximum allowed cpu time in sec
-       ethr,             &! the convergence threshold for eigenvalues
-       alpha0,           &! the mixing parameters for the extrapolation
-       beta0,            &! of the starting potential
-       diis_ethr_cg,     &! threshold in eigval for starting DIIS
-       ngm0,             &! used in mix_rho
-       niter,            &! the maximum number of iteration
-       nmix,             &! the number of iteration kept in the history
-       imix,             &! the type of mixing (0=plain,1=TF,2=local-TF)
-       iprint,           &! the interval between full writing of results
-       iverbosity,       &! type of printing ( 0 few, 1 all )
-       david,            &! used on Davidson diagonalization
-       nstep,            &! number of minimization steps
-       istep,            &! current minimization step
-       isolve,           &! Davidson or CG diagonalization
-       iswitch,          &! general switch for the calculation type
-       modenum,          &! used with iswitch=-4
-       max_cg_iter,      &! maximum number of iterations in a CG di
-       diis_buff,        &! dimension of the buffer in diis
-       diis_ndim,        &! dimension of reduced basis in DIIS
-       order,            &! type of potential updating ( see update_pot )
-       lscf,             &! if .TRUE. the calculation is selfconsistent
-       lbfgs,            &! if .TRUE. the calculation is a bfgs-type relaxation
-       lnewbfgs,         &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
-       lmd,              &! if .TRUE. the calculation is a dynamics            
-       lneb,             &! if .TRUE. the calculation is neb
-       conv_elec,        &! if .TRUE. electron convergence has been reached
-       conv_ions,        &! if .TRUE.    ionic convergence has been reached
-       nosym,            &! if .TRUE. no symmetry is used
-       newpseudo,        &! if .TRUE. done with the new pseudopotentials
-       noinv,            &! if .TRUE. eliminates inversion symmetry
-       diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
-       restart,          &! if .TRUE. restart from results of a preceding run
-       reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
+      mixing_beta,      &! the mixing parameter
+      tr2,              &! the convergence threshold for potential
+      upscale,          &! maximum reduction of convergence threshold
+      time_max,         &! maximum allowed cpu time in sec
+      ethr,             &! the convergence threshold for eigenvalues
+      alpha0,           &! the mixing parameters for the extrapolation
+      beta0,            &! of the starting potential
+      diis_ethr_cg,     &! threshold in eigval for starting DIIS
+      ngm0,             &! used in mix_rho
+      niter,            &! the maximum number of iteration
+      nmix,             &! the number of iteration kept in the history
+      imix,             &! the type of mixing (0=plain,1=TF,2=local-TF)
+      iprint,           &! the interval between full writing of results
+      iverbosity,       &! type of printing ( 0 few, 1 all )
+      david,            &! used on Davidson diagonalization
+      nstep,            &! number of minimization steps
+      istep,            &! current minimization step
+      isolve,           &! Davidson or CG diagonalization
+      iswitch,          &! general switch for the calculation type
+      modenum,          &! used with iswitch=-4
+      max_cg_iter,      &! maximum number of iterations in a CG di
+      diis_buff,        &! dimension of the buffer in diis
+      diis_ndim,        &! dimension of reduced basis in DIIS
+      order,            &! type of potential updating ( see update_pot )
+      lscf,             &! if .TRUE. the calculation is selfconsistent
+      lbfgs,            &! if .TRUE. the calculation is a bfgs-type relaxation
+      lnewbfgs,         &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
+      lmd,              &! if .TRUE. the calculation is a dynamics            
+      lneb,             &! if .TRUE. the calculation is neb
+      lphonon,          &! if .TRUE. the calculation is phonon
+      conv_elec,        &! if .TRUE. electron convergence has been reached
+      conv_ions,        &! if .TRUE.    ionic convergence has been reached
+      nosym,            &! if .TRUE. no symmetry is used
+      newpseudo,        &! if .TRUE. done with the new pseudopotentials
+      noinv,            &! if .TRUE. eliminates inversion symmetry
+      diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
+      restart,          &! if .TRUE. restart from results of a preceding run
+      reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
   !
 END MODULE varie
 !

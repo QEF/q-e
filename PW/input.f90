@@ -90,8 +90,8 @@ SUBROUTINE iosys()
                             iprint_      => iprint, &
                             nosym_       => nosym, &
                             modenum_     => modenum, &
-                            reduce_io, ethr, lscf, lbfgs, lmd, lneb, noinv, &
-                            time_max, restart, lnewbfgs
+                            reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
+                            noinv, time_max, restart, lnewbfgs
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
@@ -153,7 +153,7 @@ SUBROUTINE iosys()
                                diago_david_ndim, diago_diis_buff, &
                                diago_diis_ndim, diago_diis_keep, &
                                diago_diis_ethr, diagonalization, startingwfc, &
-                               startingpot, conv_thr
+                               startingpot, conv_thr, diago_thr_init
   !
   ! IONS namelist
   !
@@ -349,7 +349,7 @@ SUBROUTINE iosys()
   Hubbard_U(:)    = Hubbard_U(:) / rytoev
   Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
   !
-  ethr = 0.D0
+  ethr = diago_thr_init
   !
   SELECT CASE ( TRIM( calculation ) )
   CASE ( 'scf' )
@@ -360,6 +360,7 @@ SUBROUTINE iosys()
      iswitch   = 0 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = tprnfor
      lmovecell = .FALSE.
+     lphonon   = .FALSE.
      nstep     = 1
  CASE ( 'nscf' )
      lscf      = .FALSE.
@@ -369,12 +370,8 @@ SUBROUTINE iosys()
      iswitch   = -1
      lforce    = .FALSE.
      lmovecell = .FALSE.
+     lphonon   = .FALSE.
      nstep     = 1
-     ! ethr      = 1.D-6
-     ! ... I think ethr should not be more strict than that in a simple band
-     ! ... structure calculation but there is still something unsatisfactory 
-     ! ... in the Davidson diagonalization convergence. SdG 20/03/2003
-     !
   CASE ( 'relax' )
      lscf      = .TRUE.
      lbfgs     = .TRUE.
@@ -383,6 +380,7 @@ SUBROUTINE iosys()
      iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
      lmovecell = .FALSE.
+     lphonon   = .FALSE.
   CASE ( 'md' )
      lscf      = .TRUE.
      lbfgs     = .FALSE.
@@ -391,6 +389,7 @@ SUBROUTINE iosys()
      iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
      lmovecell = .FALSE.
+     lphonon   = .FALSE.
   CASE ( 'vc-relax' , 'vc-md' )
      lscf      = .TRUE.
      lbfgs     = .FALSE.
@@ -399,14 +398,16 @@ SUBROUTINE iosys()
      iswitch   = 3
      lmovecell = .TRUE.
      lforce    = .TRUE.
+     lphonon   = .FALSE.
  CASE ( 'phonon' )
      lscf      = .FALSE.
      lbfgs     = .FALSE.
      lmd       = .FALSE.
      lneb      = .FALSE.
-     iswitch   = -2
+     iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .FALSE.
      lmovecell = .FALSE.
+     lphonon   = .TRUE.
      nstep     = 1
   !
   ! ... NEB specific
@@ -419,6 +420,7 @@ SUBROUTINE iosys()
      iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = tprnfor
      lmovecell = .FALSE.
+     lphonon   = .FALSE.
   CASE DEFAULT
      CALL errore( ' iosys ', ' calculation ' // &
                 & TRIM( calculation ) // ' not implemented', 1 )
