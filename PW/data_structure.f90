@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -322,16 +322,37 @@ subroutine data_structure( lgamma )
   stw = 0
 
   do i1 = - n1, n1
+     !
+     ! Gamma-only: exclude space with x<0
+     !
+     if (lgamma .and. i1 < 0) go to 10 
+     !
      do i2 = - n2, n2
+        !
+        ! Gamma-only: exclude plane with x=0, y<0
+        !
+        if(lgamma .and. i1 == 0.and. i2 < 0) go to 20
+        !
         do i3 = - n3, n3
+           !
+           ! Gamma-only: exclude line with x=0, y=0, z<0
+           !
+           if(lgamma .and. i1 == 0 .and. i2 == 0 .and. i3 < 0) go to 30
+           !
            amod = (i1 * bg (1, 1) + i2 * bg (1, 2) + i3 * bg (1, 3) ) **2 + &
-                (i1 * bg (2, 1) + i2 * bg (2, 2) + i3 * bg (2, 3) ) **2 + (i1 * &
-                bg (3, 1) + i2 * bg (3, 2) + i3 * bg (3, 3) ) **2
-           if (amod.le.gcutm) ngm = ngm + 1
-           if (amod.le.gcutms) ngms = ngms + 1
-           if (amod <= gkcut ) stw( i2, i3 ) = 1
+                  (i1 * bg (2, 1) + i2 * bg (2, 2) + i3 * bg (2, 3) ) **2 + &
+                  (i1 * bg (3, 1) + i2 * bg (3, 2) + i3 * bg (3, 3) ) **2
+           if (amod <= gcutm)  ngm  = ngm  + 1
+           if (amod <= gcutms) ngms = ngms + 1
+           if (amod <= gkcut ) then
+              stw( i2, i3 ) = 1
+              if (lgamma) stw( -i2, -i3 ) = 1
+           end if
+30         continue
         enddo
+20      continue
      enddo
+10   continue
   enddo
 
   call fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nrx1, nrx2, nrx3, stw )
