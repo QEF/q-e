@@ -243,6 +243,51 @@ AND at the beginning of continuation line if there is a ' '
 or " " spanning two lines. Some compilers do not complain
 if the latter \& is missing, others do.
 
+\subsection{Adding or modifying input variables}
+
+New input variables should be added to \texttt{Modules/input\_parameters.f90}, 
+and then copied to the code internal variables in the \texttt{input.f90}
+subroutine. The namelists and cards parsers are in :
+\texttt{Modules/read\_namelists.f90} and \texttt{Modules/read\_cards.f90}.
+Files \texttt{input\_parameters.f90}, \texttt{read\_namelists.f90},
+\texttt{read\_cards.f90} are shared by all codes, while each code 
+has its own version of \texttt{input.f90}  used to copy input values 
+into internals variables ).
+
+EXAMPLE:
+suppose you need to add a new input variable called "pippo"
+to the namelist control, then:
+
+\begin{verbatim}
+1) add pippo to the input_parameters.f90 file containing the namelist
+control
+
+              INTEGER :: pippo = 0
+              NAMELIST / control / ....., pippo
+              remember: always set an initialization value!
+
+2) add pippo to the control_default subroutine (contained in module
+read_namelists.f90 )
+
+              subroutine control_default( prog )
+              ...
+              IF( prog == 'PW' ) pippo = 10
+              ...
+              end subroutine
+
+              this routine set the default value for pippo,
+              that could vary with the code
+
+3) add pippo to the control_bcast subroutine (contained in module 
+read_namelists.f90 )
+
+                subroutine control_bcast( )
+                ...
+                call mp_bcast( pippo )
+                ...
+                end subroutine
+\end{verbatim}
+
 \section{Using CVS}
 
 The package is available read-only using anonymous CVS. Developers 
