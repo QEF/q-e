@@ -9,8 +9,9 @@
 program wannier
   !-----------------------------------------------------------------------
   !
+  USE io_global,  ONLY : stdout
   use pwcom  
-  use para, only: kunit
+  use para,       only : kunit
   use io_files
   !
   implicit none
@@ -57,16 +58,16 @@ program wannier
 
   call write_wannier (nk, s0, kunittmp)
 
-  write( 6, * ) 'K-points (reciprocal lattice coordinates) '
+  WRITE( stdout, * ) 'K-points (reciprocal lattice coordinates) '
   do ik = 1, nkstot
-    write(6,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
+    WRITE( stdout,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
   end do
   !
   call cryst_to_cart ( nkstot, xk, at, -1)
   !
-  write( 6, * ) 'K-points in unit of 2PI/alat (cartesian coordinates) '
+  WRITE( stdout, * ) 'K-points in unit of 2PI/alat (cartesian coordinates) '
   do ik = 1, nkstot
-    write(6,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
+    WRITE( stdout,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
   end do
   !
   call stop_pp
@@ -78,14 +79,15 @@ subroutine write_wannier (nk, s0, kunit)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom  
-  USE wavefunctions,  ONLY: evc
-  use io_files, only: nd_nmbr, tmp_dir, prefix
-  use io_base, only: write_restart_wfc
-  use io_global, only: ionode
-  use mp_global, only: nproc, nproc_pool
-  use mp_global, only: my_pool_id, intra_pool_comm, inter_pool_comm
-  use mp, only: mp_sum, mp_max
+  USE wavefunctions,  ONLY : evc
+  use io_files,       only : nd_nmbr, tmp_dir, prefix
+  use io_base,        only : write_restart_wfc
+  use io_global,      only : ionode
+  use mp_global,      only : nproc, nproc_pool
+  use mp_global,      only : my_pool_id, intra_pool_comm, inter_pool_comm
+  use mp,             only : mp_sum, mp_max
 
 
   implicit none
@@ -167,9 +169,9 @@ subroutine write_wannier (nk, s0, kunit)
   if( ionode ) then
 
     ! First write to launch.dat crystal base vectors
-    write(6,*) 'Crystal basis vectors, in unit of alat = ', alat
+    WRITE( stdout,*) 'Crystal basis vectors, in unit of alat = ', alat
     do i = 1, 3
-      write(6,fmt="(' a(',I1,')',3F10.6)" ) i,at(1,i), at(2,i), at(3,i)
+      WRITE( stdout,fmt="(' a(',I1,')',3F10.6)" ) i,at(1,i), at(2,i), at(3,i)
     end do
     write( 40 ) alat
     write( 40 ) ( at( i, 1 ), i = 1, 3 )  ! save A1
@@ -177,14 +179,14 @@ subroutine write_wannier (nk, s0, kunit)
     write( 40 ) ( at( i, 3 ), i = 1, 3 )  ! save A3
 
     ! write to launch.dat atomic positions 
-    write(6,*) 'Atomic positions ( lattice coordinates )'
+    WRITE( stdout,*) 'Atomic positions ( lattice coordinates )'
     write( 40 ) ntyp
     do i = 1, ntyp
       write( 40 ) natom(i), atm(i)
       write( 40 ) ( ( rat( k, j, i ), k = 1, 3 ), j = 1, natom(i) )
-      write(6,*) 'Specie ', atm(i), ' atoms = ', natom(i)
+      WRITE( stdout,*) 'Specie ', atm(i), ' atoms = ', natom(i)
       do j = 1, natom( i )
-        write(6,fmt="(' tau(',I1,')',3F10.6)" ) j, ( rat( k, j, i ), k = 1, 3 )
+        WRITE( stdout,fmt="(' tau(',I1,')',3F10.6)" ) j, ( rat( k, j, i ), k = 1, 3 )
       end do
     end do
   
@@ -228,7 +230,7 @@ subroutine write_wannier (nk, s0, kunit)
 
   do ik = 1, nkstot
     if( ionode ) then
-      write (6,fmt="(' k ',2I4,4F12.6)")  &
+      WRITE( stdout,fmt="(' k ',2I4,4F12.6)")  &
         ik, ngk_g( ik), ecutwfc / tpiba2,  xk(1,ik), xk(2,ik), xk(3,ik)
     end if
   end do
@@ -242,11 +244,11 @@ subroutine write_wannier (nk, s0, kunit)
 
   if( ionode ) then
     write (40) npwx_g, nbnd, nkstot
-    write (6,*) 'Wave function dimensions ( npwx, nbnd, nkstot) = ', npwx_g, nbnd, nkstot
+    WRITE( stdout,*) 'Wave function dimensions ( npwx, nbnd, nkstot) = ', npwx_g, nbnd, nkstot
   end if
 
   ! for each k point build and write the global G+k indexes array
-  write (6,*) 'combining indexes'
+  WRITE( stdout,*) 'combining indexes'
 
   allocate( igwk( npwx_g ) )
 
@@ -268,7 +270,7 @@ subroutine write_wannier (nk, s0, kunit)
       end if
     end do
     if( ngg /= ngk_g( ik ) ) then
-      write(6,*) ' ik, ngg, ngk_g = ', ik, ngg, ngk_g( ik )
+      WRITE( stdout,*) ' ik, ngg, ngk_g = ', ik, ngg, ngk_g( ik )
     end if
     deallocate( itmp )
     if( ionode ) then
@@ -290,7 +292,7 @@ subroutine write_wannier (nk, s0, kunit)
     write (40) ( ngk_g( ik ), ik = 1, nkstot )
     write (40) ( nbnd, ik = 1, nkstot )
     write (40) nr1, nr2, nr3, ngm_g, npw_g
-    write (6,*) 'Grid  ( nr1, nr2, nr3, ngm_g, npw_g ) = ', nr1, nr2, nr3, ngm_g, npw_g
+    WRITE( stdout,*) 'Grid  ( nr1, nr2, nr3, ngm_g, npw_g ) = ', nr1, nr2, nr3, ngm_g, npw_g
   end if
 
   
@@ -304,7 +306,7 @@ subroutine write_wannier (nk, s0, kunit)
        call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
      END IF
      ispin = isk( ik )
-     !  ! write(6,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
+     !  ! WRITE( stdout,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
      CALL write_restart_wfc(40, ik, nkstot, kunit, ispin, nspin, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), ngk(ik-iks+1) )
   end do

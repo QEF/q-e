@@ -21,12 +21,13 @@ program voronoy
   !  the original ones (the largest, the more accurate the integration)
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters
   use pwcom
-  use fft_scalar, only: good_fft_dimension
-  use io_files, only: nd_nmbr
+  use fft_scalar, only : good_fft_dimension
+  use io_files,   only : nd_nmbr
 #ifdef __PARA
-  use para, only: me
+  use para,       only : me
 #endif
   implicit none
   integer :: nr1big, nr2big, nr3big, nrx1big
@@ -103,18 +104,18 @@ program voronoy
   call calculate_partial_charges (nat, tau, at, bg, nrx1big, nr1big, &
        nr2big, nr3big, rhobig, partial_charge)
 
-  write (6, '(" nr1, nr2, nr3 = ",3i4)') nr1big, nr2big, nr3big
+  WRITE( stdout, '(" nr1, nr2, nr3 = ",3i4)') nr1big, nr2big, nr3big
   total_charge = 0.0
   do na = 1, nat
      partial_charge (na) = partial_charge (na) * omega / (nr1big * &
           nr2big * nr3big)
-     write (6, '(" Atom # ",i2," tau = ",3f8.4, &
+     WRITE( stdout, '(" Atom # ",i2," tau = ",3f8.4, &
           &       "  charge: ",f8.4) ') na,  (tau (i, na) , i = 1, 3) , &
           partial_charge (na)
      total_charge = total_charge+partial_charge (na)
   enddo
 
-  write (6, '(" Check: total charge = ",f8.4)') total_charge
+  WRITE( stdout, '(" Check: total charge = ",f8.4)') total_charge
 #ifdef __PARA
   end if
 #endif

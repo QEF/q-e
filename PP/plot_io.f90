@@ -18,6 +18,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   !     iflag< 0 : read everything (requires that all variables that are
   !                read are allocated with the correct dimensions!)
   !
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   character (len=*) :: filplot
@@ -34,14 +35,14 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   !
   iunplot = 4
   if (iflag.gt.0) then
-     write (6, '(5x,"Writing data on file  ",a)') filplot
+     WRITE( stdout, '(5x,"Writing data on file  ",a)') filplot
      open (unit = iunplot, file = filplot, form = 'formatted', &
           status = 'unknown', err = 100, iostat = ios)
   else
      if (iflag.lt.0) then
-        write (6, '(5x,"Reading data from file  ",a)') filplot
+        WRITE( stdout, '(5x,"Reading data from file  ",a)') filplot
      else
-        write (6, '(5x,"Reading header from file  ",a)') filplot
+        WRITE( stdout, '(5x,"Reading header from file  ",a)') filplot
      endif
      open (unit = iunplot, file = filplot, form = 'formatted', &
           status = 'old', err = 100, iostat = ios)

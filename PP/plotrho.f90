@@ -15,7 +15,8 @@ program plotrho
   !                   - Postscript printable output
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE io_global,  ONLY : stdout
+  use parameters, only : DP
   implicit none
   integer :: nwrk, nximax, nyimax, nxmax, nymax, nlevelx, nax
   parameter (nwrk = 10000, nximax = 64, nyimax = 64, nxmax = 128, &
@@ -36,23 +37,23 @@ program plotrho
 
   i = iargc ()
   if (i == 0) then
-     write(6, '("input file > ",$)')
+     WRITE( stdout, '("input file > ",$)')
      read (5, '(a)', end = 20, err = 20) filename
   elseif (i == 1) then
      call getarg (1, filename)
   else
-     write(6, '("usage: plotrho  [input file] ")')
+     WRITE( stdout, '("usage: plotrho  [input file] ")')
   endif
   open (unit = 1, file = filename, form = 'formatted', status = &
        'old', iostat = i)
   if (i /= 0) then
-     write(6, '("Error: file not found ")')
+     WRITE( stdout, '("Error: file not found ")')
      stop
   endif
 
   read (1, * ) nxi, nyi
   if (nxi > nximax .or. nyi > nyimax) then
-     write(6, '("Error: nx or ny too big ")')
+     WRITE( stdout, '("Error: nx or ny too big ")')
      stop
   endif
   read (1, * ) (xi (i), i = 0, nxi)
@@ -63,7 +64,7 @@ program plotrho
   read (1, * ) tau2
   read (1, * ) nat
   if (nat > nax) then
-     write(6, '("Error: too many atoms (",i4,", max:",i4,")")') nat, nax
+     WRITE( stdout, '("Error: too many atoms (",i4,", max:",i4,")")') nat, nax
      stop
   endif
   read (1, * ) ( (tau (j, na), j = 1, 3), ityp (na), na = 1, nat)
@@ -71,26 +72,26 @@ program plotrho
   read (1, * ) at
   close (unit = 1)
   !
-  write (6, '("r0   : ",3f8.4)') r0
-  write (6, '("tau1 : ",3f8.4)') tau1
-  write (6, '("tau2 : ",3f8.4)') tau2
+  WRITE( stdout, '("r0   : ",3f8.4)') r0
+  WRITE( stdout, '("tau1 : ",3f8.4)') tau1
+  WRITE( stdout, '("tau2 : ",3f8.4)') tau2
   !
-  write (6, '("read",i4," atomic positions")') nat
-  !      write(6,'("Atomic positions:")')
-  !      write(6,'(3f8.4)') ( (tau(j,na),j=1,3),na=1,nat)
-  write (6, '("output file > ",$)')
+  WRITE( stdout, '("read",i4," atomic positions")') nat
+  !      WRITE( stdout,'("Atomic positions:")')
+  !      WRITE( stdout,'(3f8.4)') ( (tau(j,na),j=1,3),na=1,nat)
+  WRITE( stdout, '("output file > ",$)')
 
   read (5, '(a)') fileout
 
-  write (6, '("Read ",i3," *",i3,"  grid")') nxi+1, nyi+1
+  WRITE( stdout, '("Read ",i3," *",i3,"  grid")') nxi+1, nyi+1
 #ifdef __AIX
   !
   ! interpolation implemented only for ESSL routines ...
   !
-  write (6, '("nx, ny (output) > ",$)')
+  WRITE( stdout, '("nx, ny (output) > ",$)')
   read (5, * ) nx, ny
   if (nx > nxmax .or. ny > nymax) then
-     write (6, '("Error: nx or ny too big ")')
+     WRITE( stdout, '("Error: nx or ny too big ")')
      stop
   endif
 #else
@@ -118,27 +119,27 @@ program plotrho
   rhomax = maxval (rhoo(0:nx, 0:ny))
 
   if (rhomin > 0.d0) then
-     write (6,'("Logarithmic scale (y/n)? > ",$)')
+     WRITE( stdout,'("Logarithmic scale (y/n)? > ",$)')
      read (5, '(a)') ans
      logarithmic_scale = ans.ne.'n'.and.ans.ne.'N'
   else
      logarithmic_scale = .false.
   end if
 10 continue
-  write (6, '("Bounds: ",2f12.6)') rhomin, rhomax
-  write (6, '("min, max, # of levels > ",$)')
+  WRITE( stdout, '("Bounds: ",2f12.6)') rhomin, rhomax
+  WRITE( stdout, '("min, max, # of levels > ",$)')
   read (5, * ) rhoomin, rhoomax, nlevels
   if ( rhoomax <= rhoomin .or. &
        rhoomin >= rhomax .or. rhoomax <= rhomin ) then
-     write (6, '("Out of Bounds! try again")')
+     WRITE( stdout, '("Out of Bounds! try again")')
      go to 10
   end if
   if (nlevels > nlevelx) then
-     write (6, '("Too many levels, reducing to allowed max:",i4))') &
+     WRITE( stdout, '("Too many levels, reducing to allowed max:",i4))') &
           nlevelx
      nlevels = nlevelx
   else if (nlevels < 1) then
-     write (6, '("Too few levels! assuming 1 level"))') 
+     WRITE( stdout, '("Too few levels! assuming 1 level"))') 
      nlevels = 1
   end if
   if (logarithmic_scale) then

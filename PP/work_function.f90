@@ -11,6 +11,7 @@ subroutine work_function (wf)
   ! potential energy and the fermi energy.
   ! Written for supercells with the main axis along z.
   !
+  USE io_global,  ONLY : stdout
   use pwcom
 #ifdef __PARA
   use para
@@ -89,7 +90,7 @@ subroutine work_function (wf)
              (wmean2 - ef) * rytoev, wx2 * rytoev
         write (19, * ) nmean, meancharge, wxm
         if (nmean.eq. (nr3 + 1) / 2) then
-           write (6, 9130) rytoev * (wmean1 - ef), wx1 * rytoev, &
+           WRITE( stdout, 9130) rytoev * (wmean1 - ef), wx1 * rytoev, &
                 rytoev * (wmean2 - ef), wx2 * rytoev
         endif
      enddo
@@ -97,8 +98,8 @@ subroutine work_function (wf)
   endif
   CALL mp_bcast( wf, ionode_id )
 #endif
-  write (6, '(/5x,"Work function written on file workf")')
-  write (6, '( 5x,"Planar mean charge written on file charge")')
+  WRITE( stdout, '(/5x,"Work function written on file workf")')
+  WRITE( stdout, '( 5x,"Planar mean charge written on file charge")')
 
 9130 format (/'     workfunction     = ',f10.4,' +- ',f10.4,' eV', &
     &        /'     without exchcorr = ',f10.4,' +- ',f10.4,' eV')

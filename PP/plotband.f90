@@ -1,6 +1,8 @@
 
 program read_bands
 
+  USE io_global,  ONLY : stdout
+
   implicit none
   real, allocatable :: e(:,:), k(:,:), e_in(:), kx(:)
   real :: k1(3), k2(3), xk1, xk2, ps
@@ -94,7 +96,7 @@ program read_bands
            nlines=nlines+1
            npoints(nlines+1) = 1
         end if
-        write(6,'("high-symmetry point: ",3f7.4)') (k(i,n),i=1,3)
+        WRITE( stdout,'("high-symmetry point: ",3f7.4)') (k(i,n),i=1,3)
      else
         npoints(nlines+1) = npoints(nlines+1)+1
      end if

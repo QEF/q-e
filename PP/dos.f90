@@ -27,10 +27,11 @@ program dos
   !
   ! Parallel case implemented only for one processor!
   !
+  USE io_global,  ONLY : stdout
   use pwcom
-  use io_files, only: nd_nmbr, prefix, tmp_dir
+  use io_files,   only : nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
-  use para, only: me
+  use para,       only : me
 #endif
   implicit none
   character(len=80) :: fildos
@@ -73,14 +74,14 @@ program dos
   if (degauss1.ne.0.d0) then
      degauss=degauss1
      ngauss =ngauss1
-     write(6,'(/5x,"Gaussian broadening (read from input): ",&
+     WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      ltetra=.false.
      lgauss=.true.
   else if (ltetra) then
-     write(6,'(/5x,"Tetrahedra used"/)')
+     WRITE( stdout,'(/5x,"Tetrahedra used"/)')
   else if (lgauss) then
-     write(6,'(/5x,"Gaussian broadening (read from file): ",&
+     WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
   else
      if (degauss1.eq.0.d0) call errore('dos','I need a gaussian broadening!',1)

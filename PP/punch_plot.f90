@@ -36,6 +36,8 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #include "machine.h"
 
   use pwcom
+  USE io_global,  ONLY : stdout
+  
 #ifdef __PARA
   use para
 #endif
@@ -62,7 +64,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   allocate (raux1( nrx1 * nrx2 * nrx3))    
 #endif
 
-  write (6, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
+  WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
   !
   allocate (raux( nrxx))    
   !

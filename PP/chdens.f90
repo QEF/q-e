@@ -15,6 +15,7 @@ program chdens
   !      DESCRIPTION of the INPUT: see file INPUT_CHDENS in pwdocs/
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use constants, only:  pi, fpi
   use brilz
   use basis
@@ -245,7 +246,7 @@ program chdens
   if (fileout /= ' ') then
      ounit = 1
      open (unit=ounit, file=fileout, form='formatted', status='unknown')
-     write (6, '(5x,"Writing data on file ",a)') fileout
+     WRITE( stdout, '(5x,"Writing data on file ",a)') fileout
   else
      ounit = 6
   endif
@@ -341,12 +342,12 @@ program chdens
         if (fileout /= ' ') then
            open (unit = ounit+1, file = trim(fileout)//'.xyz', &
                 form = 'formatted', status = 'unknown')
-           write (6, '(5x,"Writing coordinates on file ",a)') &
+           WRITE( stdout, '(5x,"Writing coordinates on file ",a)') &
                 trim(fileout)//'.xyz'
         else
            open (unit = ounit+1, file = 'coord.xyz', &
                 form = 'formatted', status = 'unknown')
-           write (6, '("Writing coordinates on file coord.xyz")')
+           WRITE( stdout, '("Writing coordinates on file coord.xyz")')
         end if
      endif
 
@@ -936,6 +937,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
      bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol)
   !-----------------------------------------------------------------------
   !
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   integer :: nat, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3, &
@@ -996,20 +998,20 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   ! recalculate m1, m2, m3 (the sides of the parallelepiped divided by alat)
   ! consistent with the FFT grid
   !
-  write(6,'(5x,"Requested parallelepiped sides : ",3f8.4)') m1, m2,m3
+  WRITE( stdout,'(5x,"Requested parallelepiped sides : ",3f8.4)') m1, m2,m3
   m1 = (nx-1) * sqrt (at(1, 1) **2 + at(2, 1) **2 + at(3, 1) **2) / nr1
   m2 = (ny-1) * sqrt (at(1, 2) **2 + at(2, 2) **2 + at(3, 2) **2) / nr2
   m3 = (nz-1) * sqrt (at(1, 3) **2 + at(2, 3) **2 + at(3, 3) **2) / nr3
-  write(6,'(5x,"Redefined parallelepiped sides : ",3f8.4)') m1, m2,m3
+  WRITE( stdout,'(5x,"Redefined parallelepiped sides : ",3f8.4)') m1, m2,m3
   !
   ! recalculate x0 (the origin of the parallelepiped)
   ! consistent with the FFT grid
   !
-  write(6,'(5x,"Requested parallelepiped origin: ",3f8.4)') x0
+  WRITE( stdout,'(5x,"Requested parallelepiped origin: ",3f8.4)') x0
   x0(1) = (nx0-1)*at(1,1)/nr1+(ny0-1)*at(1,2)/nr2+(nz0-1)*at(1,3)/nr3
   x0(2) = (nx0-1)*at(2,1)/nr1+(ny0-1)*at(2,2)/nr2+(nz0-1)*at(2,3)/nr3
   x0(3) = (nx0-1)*at(3,1)/nr1+(ny0-1)*at(3,2)/nr2+(nz0-1)*at(3,3)/nr3
-  write(6,'(5x,"Redefined parallelepiped origin: ",3f8.4)') x0
+  WRITE( stdout,'(5x,"Redefined parallelepiped origin: ",3f8.4)') x0
 
   deltax = m1/(nx - 1)
   deltay = m2/(ny - 1)
@@ -1068,7 +1070,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   dipol(0) = dipol(0) / suma * omega 
 
   if (omega > m1*m2*m3*alat**3) &
-     write(6,*) 'Warning: the box is too small to calculate dipole'
+     WRITE( stdout,*) 'Warning: the box is too small to calculate dipole'
 
   print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
        rhomax, rhotot, rhoabs
@@ -1103,7 +1105,7 @@ end subroutine plot_fast
 subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
      m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
   !-----------------------------------------------------------------------
-
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   integer :: nat, ityp (nat), nx, ny, nz, ounit
@@ -1163,7 +1165,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
 
   enddo
 
-10 write(6,'(5x,"Found ",i4," atoms in the box")') natoms
+10 WRITE( stdout,'(5x,"Found ",i4," atoms in the box")') natoms
   write(ounit,'("  3 2")')
   write(ounit,'(3i5)') nz,ny,nx
   write(ounit,'(6f10.4)') 0.0,sidez,0.0,sidey,0.0,sidex
@@ -1184,6 +1186,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
 end subroutine write_openmol_file
 
 subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
+  USE io_global,  ONLY : stdout
   use parameters, only : dp
   implicit none
 
@@ -1207,22 +1210,22 @@ subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
   !
   !  Charge inside the Wigner-Seitz cell
   !
-  write(6, '(/4x," Charge density inside the Wigner-Seitz cell:",3f14.8," el.")')  &
+  WRITE( stdout, '(/4x," Charge density inside the Wigner-Seitz cell:",3f14.8," el.")')  &
        dipol(0)
 
   !
   !  print the electron dipole moment calculated by the plotting 3d routines
   !  A positive dipole goes from the - charge to the + charge.
   !
-  write(6, '(/4x,"Electrons dipole moments",3f14.8," a.u.")')  &
+  WRITE( stdout, '(/4x,"Electrons dipole moments",3f14.8," a.u.")')  &
        (-dipol(ipol),ipol=1,3)
   !
   ! print the ionic and total dipole moment
   !
   if (idpol.eq.1) then
-     write(6, '(4x,"     Ions dipole moments",3f14.8," a.u.")') &
+     WRITE( stdout, '(4x,"     Ions dipole moments",3f14.8," a.u.")') &
           (dipol_ion(ipol),ipol=1,3)
-     write(6,'(4x,"    Total dipole moments",3f14.8," a.u.")') &
+     WRITE( stdout,'(4x,"    Total dipole moments",3f14.8," a.u.")') &
           ((-dipol(ipol)+dipol_ion(ipol)),ipol=1,3)
   endif
   !
@@ -1230,12 +1233,12 @@ subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
   !
   debye=2.54176d0
 
-  write(6,'(/4x,"Electrons dipole moments",3f14.8," Debye")') &
+  WRITE( stdout,'(/4x,"Electrons dipole moments",3f14.8," Debye")') &
        (-dipol(ipol)*debye,ipol=1,3)
   if (idpol.eq.1) then
-     write(6,'(4x,"     Ions dipole moments",3f14.8," Debye")') &
+     WRITE( stdout,'(4x,"     Ions dipole moments",3f14.8," Debye")') &
           (dipol_ion(ipol)*debye,ipol=1,3)
-     write(6,'(4x,"    Total dipole moments",3f14.8," Debye")') &
+     WRITE( stdout,'(4x,"    Total dipole moments",3f14.8," Debye")') &
           ((-dipol(ipol)+dipol_ion(ipol))*debye,ipol=1,3)
   endif
 

@@ -24,9 +24,10 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     It may not properly work if the slab has two symmetric surfaces.
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc, psic
-  USE constants,  ONLY: degspin
+  USE wavefunctions,  ONLY : evc, psic
+  USE constants,      ONLY : degspin
 !
   implicit none
   logical :: stm_wfc_matching
@@ -70,18 +71,18 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   stmdos(:) = 0.d0
   if (.not.stm_wfc_matching) then
      rho(:,:) = 0.d0
-     write (6, '(5x,"Use the true wfcs")')
-     write (6, '(5x,"Sample bias          =",f8.4, &
+     WRITE( stdout, '(5x,"Use the true wfcs")')
+     WRITE( stdout, '(5x,"Sample bias          =",f8.4, &
           &       " eV")') sample_bias * rytoev
   else 
      call errore('stm','option stm_wfc_matching does not work',1)
      z = z * alat
      dz = dz * alat
-     write (6, '(5x,"Matching plane at z  =",f6.2, &
+     WRITE( stdout, '(5x,"Matching plane at z  =",f6.2, &
           &       " alat units")') z / alat
-     write (6, '(5x,"Next planes every dz =",f6.2, &
+     WRITE( stdout, '(5x,"Next planes every dz =",f6.2, &
           &       " atomic units")') dz
-     write (6, '(5x,"Sample bias          =",f8.4, &
+     WRITE( stdout, '(5x,"Sample bias          =",f8.4, &
           &       " eV")') sample_bias * rytoev
   endif
   !
@@ -112,9 +113,9 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      degauss = 0.00001
 
      ngauss = 0
-     write (6, '(/5x,"Occupied bands: ",i6)') nbnd_ocp
-     write (6, '(/5x,"  Fermi energy: ",f10.2," eV")') ef * rytoev
-     write (6, '(/5x,"    Gap energy: ",f10.2," eV")')  (emax - emin)  * rytoev
+     WRITE( stdout, '(/5x,"Occupied bands: ",i6)') nbnd_ocp
+     WRITE( stdout, '(/5x,"  Fermi energy: ",f10.2," eV")') ef * rytoev
+     WRITE( stdout, '(/5x,"    Gap energy: ",f10.2," eV")')  (emax - emin)  * rytoev
   endif
   !
   !     take only the states in the energy window above or below the fermi
@@ -187,7 +188,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      do ibnd = 1, nbnd
         w1 = wg (ibnd, ik) / omega
         if (et (ibnd, ik) > up1 .or. et (ibnd, ik) < down1) goto 10
-        write (6, * ) w1, ibnd, ik
+        WRITE( stdout, * ) w1, ibnd, ik
         !
         !     istates is a counter on the states used to compute the image
         !
@@ -266,7 +267,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
                  enddo
               enddo
            enddo
-           write (6, * ) 'end of if (1)'
+           WRITE( stdout, * ) 'end of if (1)'
         else
            !
            !     do not match
@@ -306,7 +307,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   deallocate(psi)
   deallocate(a)
   deallocate(gs)
-  write (6, '(/5x,"stm took ",f10.2," cpu secs")') scnds ()-t0
+  WRITE( stdout, '(/5x,"stm took ",f10.2," cpu secs")') scnds ()-t0
   !
   !     use wf to store istates
   !

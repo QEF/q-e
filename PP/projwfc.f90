@@ -25,10 +25,11 @@ program projwfc
   !   DeltaE      ...in steps of DeltaE (eV, default: 0.01)
   !   smoothing   gaussian broadening (eV, default: DeltaE)
   !
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
-  use io_files, only: nd_nmbr, prefix, tmp_dir
+  use io_files,   only : nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
-  use para, only: me
+  use para,       only : me
   use mp
 #endif
   implicit none
@@ -93,6 +94,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use atom
   use basis
   use brilz
@@ -135,13 +137,13 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   external w0gauss
   !
   !
-  write (6, '(/5x,"Calling projwave .... ")')
+  WRITE( stdout, '(/5x,"Calling projwave .... ")')
   if (io_choice.eq.'standard' ) &
-     write (6, '(5x,"Projections are written to standard output")')
+     WRITE( stdout, '(5x,"Projections are written to standard output")')
   if (io_choice.eq.'files' ) &
-     write (6, '(5x,"Projections are written to files")')
+     WRITE( stdout, '(5x,"Projections are written to files")')
   if (io_choice.eq.'both' ) &
-     write (6, '(5x,"Projections are written to both standard output and file")')
+     WRITE( stdout, '(5x,"Projections are written to both standard output and file")')
   !
   allocate(swfcatom (npwx , natomwfc ) )
   allocate(wfcatom (npwx, natomwfc) )
@@ -304,9 +306,9 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      ! write on the standard output file
      !
      if (io_choice.eq.'standard' .OR. io_choice.eq.'both' ) then 
-        write(6,'(/"Projection on atomic states:"/)')
+        WRITE( stdout,'(/"Projection on atomic states:"/)')
         do nwfc = 1, natomwfc
-           write(6,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
+           WRITE( stdout,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
                 &       " (l=",i1," m=",i2,")")') &
                 nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
                 nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
@@ -314,9 +316,9 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
         !
         allocate(index (natomwfc) )
         do ik = 1, nkstot
-           write (6, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
+           WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
            do ibnd = 1, nbnd
-              write (6, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev
+              WRITE( stdout, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev
               !
               ! sort projections by magnitude, in decreasing order
               !
@@ -337,17 +339,17 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
               !
               ! fancy (?!?) formatting
               !
-              write (6, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') &
+              WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') &
                   (e (i), index(i), i = 1, min(5,nwfc))
               do j = 1, (nwfc-1)/5
-                 write (6, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') &
+                 WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') &
                    (e (i), index(i), i = 5*j+1, min(5*(j+1),nwfc))
               end do
               psum = 0.d0
               do nwfc = 1, natomwfc
                  psum = psum + proj (nwfc, ibnd, ik)
               end do
-              write (6, '(4x,"|psi|^2 = ",f5.3)') psum
+              WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
               !
            enddo
         enddo
@@ -369,7 +371,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
         end do
      end do
      !
-     write (6, '(/"Lowdin Charges: "/)')
+     WRITE( stdout, '(/"Lowdin Charges: "/)')
      !
      psum = 0.0
      do na = 1, nat
@@ -378,12 +380,12 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
            totcharge = totcharge + charges(na,l)
         end do
         psum = psum + totcharge
-        write (6, '(5x,"Atom # ",i3,": total charge = ",f8.4, &
+        WRITE( stdout, '(5x,"Atom # ",i3,": total charge = ",f8.4, &
       &                ", s, p, d, f = ",4f8.4    )') &
              na, totcharge, ( charges(na,l), l= 0,lmax_wfc)
      end do
      psum = psum / nelec
-     write (6, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum
+     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
      ! The spilling parameter measures the ability of the basis provided by

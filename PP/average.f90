@@ -38,12 +38,13 @@ program average
   !      awin         ! the size of the window for macroscopic averages.
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE io_global,      ONLY : stdout
+  use parameters,     only : DP
   use pwcom
-  USE wavefunctions,  ONLY: psic
-  use io_files, only: nd_nmbr
+  USE wavefunctions,  ONLY : psic
+  use io_files,       only : nd_nmbr
 #ifdef __PARA
-  use para, only: me
+  use para,           only : me
 #endif
   implicit none
   integer :: npixmax, nfilemax
@@ -310,7 +311,7 @@ program average
   deltaz = leng / float (npt)
 
 
-  write (6, '(3f15.9)') (deltaz * (i - 1) , gre (i) , macros (i) , &
+  WRITE( stdout, '(3f15.9)') (deltaz * (i - 1) , gre (i) , macros (i) , &
        i = 1, npt)
   deallocate(funci)
   deallocate(funcr)
