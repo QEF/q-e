@@ -46,6 +46,7 @@ subroutine saveall (iun, iflag)
      write (iun) iexch, icorr, igcx, igcc, lsda
      write (iun) a_nlcc, b_nlcc, alpha_nlcc, nlcc
      write (iun) lforce
+     write (iun) tfixed_occ
      write (iun) tefield, dipfield
      write (iun) edir
      write (iun) emaxpos, eopreg, eamp
@@ -75,6 +76,7 @@ subroutine saveall (iun, iflag)
      read (iun, err = 100, iostat = ios) iexch, icorr, igcx, igcc, lsda
      read (iun, err = 100, iostat = ios) a_nlcc, b_nlcc, alpha_nlcc, nlcc
      read (iun, err = 100, iostat = ios) lforce
+     read (iun, err = 100, iostat = ios) tfixed_occ
      read (iun, err = 100, iostat = ios) tefield, dipfield 
      read (iun, err = 100, iostat = ios) edir
      read (iun, err = 100, iostat = ios) emaxpos, eopreg, eamp

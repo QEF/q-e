@@ -73,7 +73,7 @@ subroutine iosys
      nr2s_ => nr2s, &
      nr3s_ => nr3s
   use klist, only: &
-     xk, wk, nks, ngauss, &
+     xk, wk, nks, ngauss,&
      xqq_ => xqq, &
      degauss_ => degauss, &
      nelec_ => nelec
@@ -108,7 +108,8 @@ subroutine iosys
      reduce_io, ethr, lscf, noinv, time_max, restart
   use wvfct, only: &
      nbnd_ => nbnd
-
+  use fixed_occ, only : &
+      tfixed_occ
   !
   ! CONTROL namelist
 
@@ -196,6 +197,7 @@ subroutine iosys
 
   ! ...   Set Values for electron and bands
 
+  tfixed_occ=.false.
   SELECT CASE ( TRIM(occupations) )
      CASE ('fixed')
         ngauss = 0
@@ -224,6 +226,10 @@ subroutine iosys
      CASE ('tetrahedra')
         ngauss = 0
         ltetra = .true.
+     CASE ('from_input')
+        ngauss=0
+        ltetra=.false.
+        tfixed_occ=.true.
      CASE DEFAULT
         CALL errore(' iosys ',' occupations '//trim(occupations)// &
              & 'not implemented', 1 )
@@ -738,21 +744,22 @@ subroutine read_cards ( pseudop, atomic_positions_ )
   !
   use parser
   use pwcom, only: at, ityp, tau, nat, ntyp, atm, amass, ibrav, nks, &
-       nk1_ => nk1,  &
-       nk2_ => nk2,  &
+       nk1_ => nk1, &
+       nk2_ => nk2, &
        nk3_ => nk3, &
        k1_  => k1,  &
-       k2_  => k2, &
+       k2_  => k2,  &
        k3_  => k3,  &
-       xk_  => xk, &
-       wk_  => wk, &
-       lxkcry, symm_type, fixatom
+       xk_  => xk,  &
+       wk_  => wk,  &
+       f_inp_ => f_inp, &
+       lxkcry, symm_type, fixatom, tfixed_occ
  
   use input_parameters, only: &
        atom_label, atom_pfile, atom_mass, atom_ptyp, taspc, &
        tapos, rd_pos, atomic_positions, if_pos, sp_pos, &
        k_points, xk, wk, nk1, nk2, nk3, k1, k2, k3, nkstot, &
-       cell_symmetry, rd_ht, trd_ht
+       cell_symmetry, rd_ht, trd_ht, f_inp
 
   use read_cards_module, only: read_cards_base => read_cards
 
@@ -835,6 +842,12 @@ subroutine read_cards ( pseudop, atomic_positions_ )
     xk_( :, 1 : nks )  = xk( :, 1 : nks )
     wk_( 1 : nks )  = wk( 1 : nks )
   end if
+
+  if (tfixed_occ) then
+     if (nks.gt.1.or.nk1*nk2*nk3.gt.1) call errore('read_cards', &
+                          'only one k point with fixed occupations',1)
+     f_inp_=f_inp
+  endif
 
   
   if ( trd_ht ) then

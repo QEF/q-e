@@ -194,8 +194,8 @@
           ELSE IF( TRIM(card) == 'OCCUPATIONS' ) THEN
 
             CALL card_occupations( input_line )
-            IF( prog == 'PW' .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+!            IF( prog == 'PW' .AND. ionode ) &
+!              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'PSTAB' ) THEN
 

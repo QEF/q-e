@@ -51,9 +51,10 @@ subroutine setup
   real(kind=DP), parameter :: rcut = 10.d0, eps = 1.0d-12
   !
   integer :: na, ir, nt, input_nks, nrot, iter, ierr, irot, isym, &
-       ipol, jpol, tipo
+       ipol, jpol, tipo, is, ibnd
   logical :: minus_q  
   integer, external ::n_atom_wfc, set_Hubbard_l
+  real(kind=dp) :: iocc
   !
   ! lchk_tauxk tests that atomic coordinates do not overlap
   !
@@ -81,15 +82,31 @@ subroutine setup
   !     Set the number of electrons equal to the total ionic charge
   !
   if (nelec == 0.d0) nelec = SUM(zv (ityp (1:nat) ))
+!
+!  If the occupations are from input, check the consistency with the
+!  number of electrons
+!
+  if (tfixed_occ) then
+     iocc=0
+     do is=1,nspin
+        do ibnd=1,nbnd
+           iocc=iocc+f_inp(ibnd,is)
+        enddo
+     enddo  
+     if (abs(iocc-nelec).gt.1d-5) &
+        call errore('setup','strange occupations',1)
+  endif
+
   !
   ! For metals: check whether Gaussian broadening or Tetrahedron method is
   !
-  lgauss = degauss .ne. 0.d0
+  lgauss = (degauss .ne. 0.d0).and.(.not.tfixed_occ)
   !
   ! Check: if there is an odd number of electrons, the crystal is a metal
   !
   if (lscf .and. abs (nint (nelec / 2.d0) - nelec / 2.d0) > 1.0d-8 &
-           .and. .not.lgauss .and. .not.ltetra ) call errore ('setup', &
+           .and. .not.lgauss .and. .not.ltetra .and.(.not.tfixed_occ)) &
+              call errore ('setup', &
        'the system is metallic, specify occupations', 1)
   !
   !     Set the number of occupied bands if not given in input

@@ -624,6 +624,12 @@ module bp
        nppstr                  ! number of k-points (parallel vector)
 end module bp
 !
+module fixed_occ
+  use parameters
+  real(kind=dp) :: f_inp(nbndxx,nspinx) ! the occupations for each spin
+
+  logical :: tfixed_occ  ! if true the occupations are fixed.
+end module fixed_occ
 
 
 module pwcom
@@ -657,5 +663,6 @@ module pwcom
   use extfield
   use sticks
   use bp
+  use fixed_occ
 end module pwcom
 !

@@ -152,9 +152,11 @@ subroutine phq_readin
      nksq = nks / 2
   endif
   !
+  if (tfixed_occ) &
+     call errore('phq_readin','phonon with arbitrary occupations not tested',1)
+
   if ( (zue) .and.okvan) then
-     call errore ('phq_readin', 'No electric field in US case', -1)
-     epsil = .false.
+     call errore ('phq_readin', 'No effective charges in US case', -1)
      zue = .false.
   endif
   !
