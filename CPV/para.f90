@@ -433,7 +433,7 @@ end module para_mod
       write(40,*) ' 3 1'
       write(40,*) ' PRIMVEC'
       do i = 1,3
-         write(40,'(3(x,f12.6))') (h(j,i)*0.529177d0,j=1,3)
+         write(40,'(3(1x,f12.6))') (h(j,i)*0.529177d0,j=1,3)
       end do
       write(40,*) ' PRIMCOORD'
 
@@ -519,10 +519,10 @@ end module para_mod
       write(40,*) ' 3D_PWSCF'
       write(40,*) ' DATAGRID_3D_UNKNOWN'
       write(40,*) nr1, nr2, nr3
-      write(40,'(3(x,f10.6))') -0.0d0*l1*0.529177d0,-0.0d0*l2*0.529177d0,  &
+      write(40,'(3(1x,f10.6))') -0.0d0*l1*0.529177d0,-0.0d0*l2*0.529177d0,  &
      &                         -0.0d0*l3*0.529177d0
       do i = 1,3
-         write(40,'(3(x,f10.6))')  (h(j,i)*0.529177d0,j=1,3)
+         write(40,'(3(1x,f10.6))')  (h(j,i)*0.529177d0,j=1,3)
       end do
 #ifdef __PARA
       end if
