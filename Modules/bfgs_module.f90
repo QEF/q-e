@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#define OLDRECIPE
-!
 !----------------------------------------------------------------------------
 MODULE bfgs_module
   !----------------------------------------------------------------------------
@@ -42,7 +40,7 @@ MODULE bfgs_module
   !
   ! ... public methods
   !
-  PUBLIC :: bfgs,             &
+  PUBLIC :: bfgs, &
             lin_bfgs
   !
   ! ... public variables
@@ -67,7 +65,7 @@ MODULE bfgs_module
       gradient_old(:,:)          ! list of m old gradients ( m = 1 for 
                                  ! standard BFGS algorithm )
   INTEGER :: &
-      lbfgs_ndim = 4             ! dimension of the subspace for L-BFGS
+      lbfgs_ndim = 1             ! dimension of the subspace for L-BFGS
                                  ! fixed to 1 for standard BFGS algorithm
   REAL(KIND=DP) :: &   
       trust_radius,             &! displacement along the bfgs direction
@@ -84,8 +82,8 @@ MODULE bfgs_module
       trust_radius_end = 1.D-7   ! bfgs stops when trust_radius is less than
                                  ! this value
   REAL(KIND=DP)  :: &
-      w_1 = 1.0D-2,             &! parameters for Wolfe conditions
-      w_2 = 0.8D0                ! parameters for Wolfe conditions
+      w_1 = 1.0D-5,             &! parameters for Wolfe conditions
+      w_2 = 0.2D0                ! parameters for Wolfe conditions
   !
   ! ... Note that m, trust_radius_max, trust_radius_min, trust_radius_ini,
   ! ... trust_radius_end, w_1, w_2 have a default value, but can also be 
@@ -157,7 +155,7 @@ MODULE bfgs_module
        ALLOCATE( bfgs_step_old( dim ) )
        ALLOCATE( gradient_old( dim, lbfgs_ndim ) )
        !       
-       CALL read_bfgs_file( pos, energy, gradient, scratch, dim )
+       CALL read_bfgs_file( pos, energy, gradient, scratch, dim, stdout )
        !
        scf_iter = scf_iter + 1       
        !       
@@ -190,9 +188,9 @@ MODULE bfgs_module
        ! ... some output is written
        !
        WRITE( UNIT = stdout, &
-            & FMT = '(/,5X,"number of ionic steps",T30,"= ",I3)' ) scf_iter
+            & FMT = '(/,5X,"number of scf cycles",T30,"= ",I3)' ) scf_iter
        WRITE( UNIT = stdout, &
-            & FMT = '(  5X,"number of bfgs  steps",T30,"= ",I3,/)' ) bfgs_iter
+            & FMT = '(  5X,"number of bfgs steps",T30,"= ",I3,/)' ) bfgs_iter
        IF ( scf_iter > 1 ) &
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"energy old",T30,"= ",F18.10," ryd")' ) energy_old
@@ -211,14 +209,6 @@ MODULE bfgs_module
           !
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"CASE: energy_new > energy_old",/)' )
-          !
-#if defined (OLDRECIPE)
-          !
-          ! ... the old trust radius is reduced by a factor 2
-          !
-          trust_radius = 0.5D0 * trust_radius_old
-          !
-#else
           !
           ! ... the new trust radius is obtained with a quadratic interpolation
           !
@@ -241,7 +231,6 @@ MODULE bfgs_module
              trust_radius = 0.5D0 * trust_radius_old
              !
           END IF   
-#endif
           !
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
@@ -254,6 +243,18 @@ MODULE bfgs_module
           gradient = gradient_old(:,1)          
           !
           IF ( trust_radius < trust_radius_min ) THEN
+             !
+             IF ( trust_radius < trust_radius_end ) THEN
+                !
+                ! ... convergence was achieved at the previous step
+                !
+                conv_bfgs = .TRUE.
+                !
+                CALL terminate_bfgs( energy, stdout, scratch )
+                !
+                RETURN
+                !
+             END IF
              !
              ! ... the history is reset
              !                  
@@ -486,9 +487,9 @@ MODULE bfgs_module
        ! ... some output is written
        !
        WRITE( UNIT = stdout, &
-            & FMT = '(/,5X,"number of ionic steps",T30,"= ",I3)' ) scf_iter
+            & FMT = '(/,5X,"number of scf cycles",T30,"= ",I3)' ) scf_iter
        WRITE( UNIT = stdout, &
-            & FMT = '(  5X,"number of bfgs  steps",T30,"= ",I3,/)' ) bfgs_iter
+            & FMT = '(  5X,"number of bfgs steps",T30,"= ",I3,/)' ) bfgs_iter
        IF ( scf_iter > 1 ) &
           WRITE( UNIT = stdout, &
                & FMT = '(5X,"energy old",T30,"= ",F18.10," ryd")' ) energy_old
@@ -517,6 +518,18 @@ MODULE bfgs_module
               trust_radius
           !
           IF ( trust_radius < trust_radius_min ) THEN
+             !
+             IF ( trust_radius < trust_radius_end ) THEN
+                !
+                ! ... convergence was achieved at the previous step
+                !
+                conv_bfgs = .TRUE.
+                !
+                CALL terminate_bfgs( energy, stdout, scratch )
+                !
+                RETURN
+                !
+             END IF             
              !
              ! ... the history is reset
              !     
@@ -665,7 +678,7 @@ MODULE bfgs_module
      ! ... private methods :
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE read_bfgs_file( pos, energy, gradient, scratch, dim )
+     SUBROUTINE read_bfgs_file( pos, energy, gradient, scratch, dim, stdout )
        !-----------------------------------------------------------------------
        !
        USE io_files, ONLY : prefix
@@ -677,10 +690,12 @@ MODULE bfgs_module
        REAL(KIND=DP),     INTENT(INOUT) :: gradient(:)       
        CHARACTER (LEN=*), INTENT(IN)    :: scratch
        INTEGER,           INTENT(IN)    :: dim
+       INTEGER,           INTENT(IN)    :: stdout                
        !
        ! ... local variables
        !
-       CHARACTER (LEN=256) :: bfgs_file
+       INTEGER             :: rank1, rank2
+       CHARACTER (LEN=256) :: bfgs_file, hess_file
        LOGICAL             :: file_exists
        !
        !
@@ -720,6 +735,31 @@ MODULE bfgs_module
           bfgs_step_old              = 0.D0
           trust_radius_old           = trust_radius_ini
           inverse_hessian            = identity(dim)
+          !
+          hess_file = TRIM( scratch ) // TRIM( prefix ) // '.hess'
+          !
+          INQUIRE( FILE = TRIM( hess_file ) , EXIST = file_exists )
+          !
+          IF ( file_exists ) THEN
+             !
+             OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
+                   & '.hess', STATUS = 'UNKNOWN', ACTION = 'READ' )  
+             !
+             READ( iunbfgs, * ) rank1, rank2
+             !
+             IF ( ( rank1 == rank2 ) .AND. ( rank1 == dim ) ) THEN
+                !
+                WRITE( UNIT = stdout, &
+                     & FMT = '(/,5X,"Reading the approximate inverse ", &
+                                  & "hessian from file",/)' )                
+                !
+                READ( iunbfgs, * ) inverse_hessian
+                !
+             END IF  
+             ! 	     
+             CLOSE( UNIT = iunbfgs )                 
+             !
+          END IF
           !
        END IF    
        !
@@ -981,7 +1021,7 @@ MODULE bfgs_module
        !
        lwolfe = ( energy - energy_old ) < & 
                 w_1 * ( gradient_old(:,lbfgs_ndim) .dot. bfgs_step_old )
-       !
+       !                  
        lwolfe = lwolfe .AND. &
                 ( ABS( gradient .dot. bfgs_step_old ) > &
                   - w_2 * ( gradient_old(:,lbfgs_ndim) .dot. bfgs_step_old ) ) 
@@ -1083,7 +1123,7 @@ MODULE bfgs_module
        !       
        !
        WRITE( UNIT = stdout, &
-            & FMT = '(/,5X,"bfgs converged in ",I3," ionic steps and ", &
+            & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
             &         I3," bfgs steps",/)' ) scf_iter, bfgs_iter
        WRITE( UNIT = stdout, &
             & FMT = '(5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
@@ -1091,7 +1131,7 @@ MODULE bfgs_module
        IF ( ALLOCATED( inverse_hessian ) ) THEN
           !
           WRITE( UNIT = stdout, &
-               & FMT = '(/,5X,"Saving the approssimate hessian",/)' )
+               & FMT = '(/,5X,"Saving the approximate inverse hessian",/)' )
           !
           OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
               & '.hess', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
