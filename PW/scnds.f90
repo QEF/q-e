@@ -14,7 +14,7 @@ function scnds ()
   implicit none
   real(kind=DP) :: scnds
   !
-#if defined(PGI) || defined(DEC)
+#if defined(__PGI) || defined(DEC)
   real(kind=4) :: etime, tarry(2)
   ! etime:  system function, returns the CPU time in sec.
   ! PGI compiler has no intrinsic f90 cpu_time
@@ -25,7 +25,7 @@ function scnds ()
   logical :: first=.true.
   save first, t0
   !
-#if defined(PGI) || defined (DEC)
+#if defined(__PGI) || defined (DEC)
   t1 = etime( tarry )
 #elif defined(HITACHI)
   call CLOCK(IT,2)

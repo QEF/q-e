@@ -13,7 +13,7 @@ CPP = /lib/cpp
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -DPGI -D__FFTW  \
+CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -D__PGI -D__FFTW  \
            -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan" \
            -D"FFTW_F77=fftw_f77"  \
            -D"FFTWND_F77_ONE=fftwnd_f77_one" \
@@ -22,15 +22,23 @@ CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -DPGI -D__FFTW  \
 #
 # Fortran compilers:
 # Please note: -r8 is necessary for numerical stability ..
+#
 F90 =pgf90
 F77 =pgf77
-CC = pgcc
 F77FLAGS =  -fast -r8
 F90FLAGS =  -fast -r8
+#
+# C compiler
+#
+CC = pgcc
+CCFLAGS  =  -fast -D__LINUX -D__PGI -D__FFTW
+
 #
 # This is needed to tell the compiler where modules are
 #
 MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+# MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/FPMD
+# MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/CPV
 
 #
 # Loader:
@@ -39,6 +47,9 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 # 
 LD=$(F90)
 LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L/usr/local/lib -lfftw 
+#
+# For CINECA machines use:
+# LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L/cineca/lib -lfftw
 #
 LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) $(MODULEFLAG)
 
