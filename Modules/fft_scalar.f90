@@ -850,9 +850,18 @@
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims(4,ndims) = -1
      INTEGER :: isys = 0
-     LOGICAL :: dofft
+     LOGICAL :: dofft( ldx )
 
      isign = - sgn
+
+     dofft = .TRUE.
+     IF( PRESENT( pl2ix ) ) THEN
+       IF( SIZE( pl2ix ) < nx ) &
+         CALL errore( ' cft_2xy ', ' wrong dimension for arg no. 8 ', 1 )
+       DO i = 1, nx
+         IF( pl2ix(i) < 1 ) dofft( i ) = .FALSE.
+       END DO
+     END IF
 
      !
      !   Here initialize table only if necessary
@@ -935,12 +944,8 @@
 
        CALL FFT_X_STICK( fw_plan_x(ip), r(1), nx, ny, nzl, ldx, ldy ) 
        do i = 1, nx
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
          do k = 1, nzl
-           IF( dofft ) THEN
+           IF( dofft( i ) ) THEN
              j = i + ldx*ldy * ( k - 1 )
              call FFT_Y_STICK(fw_plan_y(ip), r(j), ny, ldx) 
            END IF
@@ -952,14 +957,10 @@
      ELSE IF( isign < 0 ) THEN
 
        do i = 1, nx
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
          do k = 1, nzl
-           IF( dofft ) THEN
+           IF( dofft( i ) ) THEN
              j = i + ldx*ldy * ( k - 1 )
-             call FFT_Y_STICK(bw_plan_y(ip), r(j), ny, ldx) 
+             call FFT_Y_STICK( bw_plan_y(ip), r(j), ny, ldx) 
            END IF
          end do
        end do
