@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -69,6 +69,18 @@ subroutine do_chdens
   !      filepol   name of an output file to which the induced polarization
   !                is written (in postproc format) for further processing
   !                (macroscopic average)
+  !
+  !----IF iflag=3,30 and plot_out=1
+  ! 
+  !      idpol     1 the ionic and electronic dipole moment of the charge
+  !                  is computed. 
+  !                2 only the electronic dipole moment is computed
+  !
+  !      NB: This option is to be used for an isolated molecule in 
+  !          a box and the molecule must be at the center of the box.
+  !          The code computes the dipole on the Wigner-Seitz cell of
+  !          the Bravais lattice. The 3d box must contain this cell 
+  !          otherwise meaningless numbers are printed.
   !
   !----END_IF
   !
@@ -146,16 +158,17 @@ subroutine do_chdens
   real(kind=DP), allocatable :: taus (:,:)
   integer :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
+  integer :: idpol               ! dipol moment flag
   integer, allocatable :: ityps (:)
   character (len=3) :: atms(ntypx)
   character (len=80) :: filepp(nfilemax)
-  real(kind=DP) :: rhodum
+  real(kind=DP) :: rhodum, dipol(0:3)
   complex(kind=DP), allocatable:: vgc (:)
   ! rho or polarization in G space
   logical :: fast3d
 
   namelist /input/  &
-       nfile, filepp, weight, iflag, &
+       nfile, filepp, weight, iflag, idpol, &
        plot_out, output_format, fileout, epsilon, filepol
 
   !
@@ -170,8 +183,9 @@ subroutine do_chdens
   output_format = 0
   fileout       = ' '
   epsilon       = 1.0d0
+  idpol         = 0
   filepol       = ' '
-  fast3d        = .false.
+  fast3d = .false.
 
   !
   !    read and check input data
@@ -188,6 +202,7 @@ subroutine do_chdens
   if (nfile.le.0.or.nfile.gt.nfilemax) &
        call errore ('chdens ', 'nfile is wrong ', 1)
 
+
   ! check for iflag
   if (iflag.eq.30) then
      iflag = 3
@@ -196,6 +211,17 @@ subroutine do_chdens
   if ((iflag.lt.1.or.iflag.gt.4) .and. iflag.ne.31) &
        call errore ('chdens', 'iflag not implemented', 1)
 
+  ! check for idpol
+  if (idpol.eq.1.or.idpol.eq.2) then
+     if (iflag.ne.3) then
+        idpol=0
+        call errore("chdens","dipole computed only if iflag=3 or 30",-1)
+     endif
+     if (plot_out.ne.1) then
+        idpol=0
+        call errore("chdens","dipole computed only if plot_out=1",-1)
+     endif
+  endif
 
   ! reading the rest of input (spanning vectors, origin, number-of points)
   if (iflag.lt.4) then
@@ -480,11 +506,14 @@ subroutine do_chdens
         call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
         call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
              nrx1, nrx2, nrx3, nr1, nr2, nr3, psic, &
-             bg, m1, m2, m3, x0, e, output_format, ounit)
+             bg, m1, m2, m3, x0, e, output_format, ounit, dipol(0))
      else
         call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, vgc, &
-             nx, ny, nz, m1, m2, m3, x0, e, output_format, ounit)
+             nx, ny, nz, m1, m2, m3, x0, e, output_format, ounit, dipol(0))
      end if
+
+     if (idpol.eq.1.or.idpol.eq.2) & 
+        call write_dipol(dipol(0),tau,nat,alat,zv,ntyp,ityp,idpol)
 
   elseif (iflag.eq.4) then
      radius = radius / alat
@@ -591,8 +620,8 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, &
 
   rhoim = 0.d0
   do i = 1, nx
-     rhomin = min (rhomin, dreal (carica (i) ) )
-     rhomax = max (rhomax, dreal (carica (i) ) )
+     rhomin = min (rhomin, DREAL (carica (i) ) )
+     rhomax = max (rhomax, DREAL (carica (i) ) )
      rhoim = rhoim + abs (DIMAG (carica (i) ) )
 
   enddo
@@ -702,8 +731,8 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   rhoim = 0.d0
   do i = 1, nx
      do j = 1, ny
-        rhomin = min (rhomin, dreal (carica (i, j) ) )
-        rhomax = max (rhomax, dreal (carica (i, j) ) )
+        rhomin = min (rhomin, DREAL (carica (i, j) ) )
+        rhomax = max (rhomax, DREAL (carica (i, j) ) )
         rhoim = rhoim + abs (dimag (carica (i, j) ) )
      enddo
 
@@ -723,7 +752,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      !
      !         write(ounit,'(2i6)') nx,ny
      do i = 1, nx
-        write (ounit, '(e25.14)') (dreal (carica (i, j) ) , j = 1, ny)
+        write (ounit, '(e25.14)') (DREAL (carica (i, j) ) , j = 1, ny)
         write (ounit, * )
      enddo
   elseif (output_format.eq.1) then
@@ -731,7 +760,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( (dreal (carica (i, j) ) , j = 1, &
+     write (ounit, '(4e25.14)') ( (DREAL (carica (i, j) ) , j = 1, &
           ny) , i = 1, nx)
   elseif (output_format.eq.2) then
      !
@@ -740,7 +769,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      write (ounit, '(2i4)') nx - 1, ny - 1
      write (ounit, '(8f8.4)') (deltax * (i - 1) , i = 1, nx)
      write (ounit, '(8f8.4)') (deltay * (j - 1) , j = 1, ny)
-     write (ounit, '(6e12.4)') ( (dreal (carica (i, j) ) , i = 1, &
+     write (ounit, '(6e12.4)') ( (DREAL (carica (i, j) ) , i = 1, &
           nx) , j = 1, ny)
      write (ounit, '(3f8.4)') x0
      write (ounit, '(3f8.4)') (m1 * e (i, 1) , i = 1, 3)
@@ -838,8 +867,8 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
   rhoim = 0.d0
   do i = 1, nx
      do j = 1, ny
-        rhomin = min (rhomin, dreal (carica (i, j) ) )
-        rhomax = max (rhomax, dreal (carica (i, j) ) )
+        rhomin = min (rhomin, DREAL (carica (i, j) ) )
+        rhomax = max (rhomax, DREAL (carica (i, j) ) )
         rhoim = rhoim + abs (dimag (carica (i, j) ) )
      enddo
 
@@ -857,14 +886,14 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
      !
      write (ounit, '(2i8)') nx, ny
      do i = 1, nx
-        write (ounit, '(e25.14)') (dreal (carica (i, j) ) , j = 1, ny)
+        write (ounit, '(e25.14)') (DREAL (carica (i, j) ) , j = 1, ny)
      enddo
   elseif (output_format.eq.1) then
      !
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( (dreal (carica (i, j) ) , j = 1, &
+     write (ounit, '(4e25.14)') ( (DREAL (carica (i, j) ) , j = 1, &
           ny) , i = 1, nx)
   else
      call errore ('plot_2ds', 'not implemented plot', 1)
@@ -878,7 +907,7 @@ end subroutine plot_2ds
 !
 !-----------------------------------------------------------------------
 subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
-     nx, ny, nz, m1, m2, m3, x0, e, output_format, ounit)
+     nx, ny, nz, m1, m2, m3, x0, e, output_format, ounit, dipol)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
@@ -893,7 +922,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   character(len=3) :: atm(*)
 
   real(kind=DP) :: alat, tau (3, nat), at (3, 3), g (3, ngm), e (3, 3), &
-       x0 (3), m1, m2, m3
+       x0 (3), m1, m2, m3, dipol(0:3)
   ! lattice parameter
   ! atomic positions
   ! lattice vectors
@@ -911,12 +940,15 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   ! steps along e1, e2, e3
   real(kind=DP), parameter :: pi = 3.14159265358979d0
   complex(kind=DP), allocatable :: eigx (:), eigy (:), eigz (:)
-  real(kind=DP), allocatable :: carica (:,:,:)
+  real(kind=DP), allocatable :: carica (:,:,:), fact(:,:,:), rws(:,:)
+  real(kind=dp) :: wsweight, r(3), rijk, omega, suma
+  integer :: ipol, na, nrwsx, nrws
 
   allocate (eigx(  nx))    
   allocate (eigy(  ny))    
   allocate (eigz(  nz))    
   allocate (carica( nx , ny , nz))    
+  allocate (fact( nx , ny , nz))    
 
   deltax = m1 / (nx - 1)
   deltay = m2 / (ny - 1)
@@ -929,23 +961,23 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
      ! These factors are calculated and stored in order to save CPU time
      !
      do i = 1, nx
-        eigx (i) = exp ( (0.d0, 1.d0) * 2.d0 * pi * ( (i - 1) * deltax * &
-             (e (1, 1) * g (1, ig) + e (2, 1) * g (2, ig) + e (3, 1) * g (3, ig)) &
-             + (x0 (1) * g (1, ig) + x0 (2) * g (2, ig) + x0 (3) * g (3, ig) ) ) )
+        eigx (i) = exp((0.d0, 1.d0)*2.d0*pi*((i - 1) * deltax * &
+             (e(1,1)*g(1,ig)+e(2,1)*g(2,ig)+e(3,1)*g(3,ig)) &
+             +(x0(1)*g(1,ig)+x0(2)*g(2,ig)+x0(3)*g(3,ig) ) ) )
      enddo
      do j = 1, ny
-        eigy (j) = exp ( (0.d0, 1.d0) * 2.d0 * pi * (j - 1) * deltay * &
-             (e (1, 2) * g (1, ig) + e (2, 2) * g (2, ig) + e (3, 2) * g (3, ig) ) )
+        eigy (j) = exp ( (0.d0,1.d0)*2.d0*pi*(j-1)*deltay* &
+             (e(1,2)*g(1,ig)+e(2,2)*g(2,ig)+e(3,2)*g(3,ig) ) )
      enddo
      do k = 1, nz
-        eigz (k) = exp ( (0.d0, 1.d0) * 2.d0 * pi * (k - 1) * deltaz * &
-             (e (1, 3) * g (1, ig) + e (2, 3) * g (2, ig) + e (3, 3) * g (3, ig) ) )
+        eigz (k) = exp ( (0.d0,1.d0)*2.d0*pi*(k-1)*deltaz* &
+             (e(1,3)*g(1,ig)+e(2,3)*g(2,ig)+e(3,3)*g(3,ig)) )
      enddo
      do k = 1, nz
         do j = 1, ny
            do i = 1, nx
               carica (i, j, k) = carica (i, j, k) + &
-                   dreal (vgc (ig) * eigz (k) * eigy (j) * eigx (i) )
+                   DREAL (vgc (ig) * eigz (k) * eigy (j) * eigx (i) )
            enddo
         enddo
      enddo
@@ -953,11 +985,35 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   enddo
   !
   !    Here we check the value of the resulting charge
+  !    and compute the dipole of the charge
   !
+  nrwsx=125
+  allocate(rws(0:3,nrwsx))
+  call wsinit(rws,nrwsx,nrws,at) 
+
+  fact=0.d0
+  suma=0.d0
+  do k = 1, nz
+     do j = 1, ny
+        do i = 1, nx
+           do ipol=1,3
+              r(ipol)=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
+                               (j-1)*e(ipol,2)*deltay + &
+                               (k-1)*e(ipol,3)*deltaz
+           enddo
+           fact(i,j,k)=wsweight(r,rws,nrws)
+           suma=suma+fact(i,j,k)
+        enddo
+     enddo
+  enddo
+
+  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
+
   rhomin = 1.0d10
   rhomax =-1.0d10
   rhotot = 0.d0
   rhoabs = 0.d0
+  dipol = 0.d0
   do k = 1, nz
      do j = 1, ny
         do i = 1, nx
@@ -965,12 +1021,22 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
            rhomax = max (rhomax, carica (i, j, k) )
            rhotot = rhotot + carica (i, j, k)
            rhoabs = rhoabs + abs (carica (i, j, k) )
+           dipol(0) = dipol(0) + fact(i,j,k)*carica (i, j, k)
+           do ipol=1,3
+              rijk=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
+                            (j-1)*e(ipol,2)*deltay + &
+                            (k-1)*e(ipol,3)*deltaz
+              dipol(ipol)=dipol(ipol)+fact(i,j,k)*rijk*carica(i,j,k)
+           enddo
         enddo
      enddo
   enddo
 
   rhotot = rhotot / nx / ny / nz * m1 * m2 * m3 * alat**3
   rhoabs = rhoabs / nx / ny / nz * m1 * m2 * m3 * alat**3
+  do ipol=1,3
+     dipol(ipol)=dipol(ipol) / suma * omega * alat
+  enddo
   print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
        rhomax, rhotot, rhoabs
 
@@ -993,6 +1059,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   endif
 
   deallocate (carica)
+  deallocate (fact)
+  deallocate (rws)
   deallocate (eigz)
   deallocate (eigy)
   deallocate (eigx)
@@ -1000,9 +1068,9 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
 end subroutine plot_3d
 !
 !-----------------------------------------------------------------------
-subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
+subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
      nrx1, nrx2, nrx3, nr1, nr2, nr3, rho, &
-     bg, m1, m2, m3, x0, e, output_format, ounit)
+     bg, m1, m2, m3, x0, e, output_format, ounit, dipol)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
@@ -1012,11 +1080,14 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
   character(len=3) :: atm(*)
 
   real(kind=DP) :: alat, tau (3, nat), at (3, 3), rho(2, nrx1,nrx2,nrx3), &
-       bg (3, 3), e (3, 3), x0 (3), m1, m2, m3
+       bg (3, 3), e (3, 3), x0 (3), m1, m2, m3, dipol(0:3)
 
   integer :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1
   real(kind=DP) :: rhomin, rhomax, rhotot, rhoabs
-  real(kind=DP), allocatable :: carica (:,:,:)
+  real(kind=DP), allocatable :: carica (:,:,:), fact(:,:,:), rws(:,:)
+  real(kind=DP) :: rijk, deltax, deltay, deltaz, debye
+  real(kind=dp) :: wsweight, r(3), omega, suma
+  integer :: ipol, na, nrwsx, nrws
 
   ! find FFT grid point closer to X0 (origin of the parallelepiped)
   ! (add 1 because r=0 correspond to n=1)
@@ -1030,18 +1101,19 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
        e(1,3) .ne. 0.d0  .or.  e(2,3) .ne. 0.d0 )   &
        call errore ('plot_fast','need vectors along x,y,z',1)
 
-  ! find FFT grid points closer to X0 + e1, X0 + e2, X(0 + e3
+  ! find FFT grid points closer to X0 + e1, X0 + e2, X0 + e3
   ! (the opposite vertex of the parallelepiped)
 
-  nx1 = nint ((x0(1)+m1)*bg(1,1)*nr1 + x0(2)*bg(2,1)*nr1 + x0(3)*bg(3,1)*nr1 ) + 1
-  ny1 = nint ( x0(1)*bg(1,2)*nr2 +(x0(2)+m2)*bg(2,2)*nr2 + x0(3)*bg(3,2)*nr2 ) + 1
-  nz1 = nint ( x0(1)*bg(1,3)*nr3 + x0(2)*bg(2,3)*nr3 +(x0(3)+m3)*bg(3,3)*nr3 ) + 1
+  nx1 = nint ((x0(1)+m1)*bg(1,1)*nr1+x0(2)*bg(2,1)*nr1+x0(3)*bg(3,1)*nr1)+1
+  ny1 = nint (x0(1)*bg(1,2)*nr2+(x0(2)+m2)*bg(2,2)*nr2+x0(3)*bg(3,2)*nr2)+1
+  nz1 = nint (x0(1)*bg(1,3)*nr3+x0(2)*bg(2,3)*nr3+(x0(3)+m3)*bg(3,3)*nr3)+1
 
   nx = nx1 - nx0 + 1
   ny = ny1 - ny0 + 1
   nz = nz1 - nz0 + 1
 
   allocate (carica( nx, ny, nz))    
+  allocate (fact( nx, ny, nz))    
 
   carica = 0.d0
   do k = nz0, nz1
@@ -1071,17 +1143,45 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
   ! consistent with the FFT grid
   !
   write(6,'(5x,"Requested parallelepiped origin: ",3f8.4)') x0
-  x0(1) = (nx0-1) * at(1,1)/nr1 + (ny0-1) * at(1,2)/nr2 + (nz0-1) * at(1,3)/nr3
-  x0(2) = (nx0-1) * at(2,1)/nr1 + (ny0-1) * at(2,2)/nr2 + (nz0-1) * at(2,3)/nr3
-  x0(3) = (nx0-1) * at(3,1)/nr1 + (ny0-1) * at(3,2)/nr2 + (nz0-1) * at(3,3)/nr3
+  x0(1) = (nx0-1)*at(1,1)/nr1+(ny0-1)*at(1,2)/nr2+(nz0-1)*at(1,3)/nr3
+  x0(2) = (nx0-1)*at(2,1)/nr1+(ny0-1)*at(2,2)/nr2+(nz0-1)*at(2,3)/nr3
+  x0(3) = (nx0-1)*at(3,1)/nr1+(ny0-1)*at(3,2)/nr2+(nz0-1)*at(3,3)/nr3
   write(6,'(5x,"Redefined parallelepiped origin: ",3f8.4)') x0
+
+  deltax = m1/(nx - 1)
+  deltay = m2/(ny - 1)
+  deltaz = m3/(nz - 1)
   !
   !    Here we check the value of the resulting charge
+  !    and compute the dipole 
   !
+  nrwsx=125
+  allocate(rws(0:3,nrwsx))
+  call wsinit(rws,nrwsx,nrws,at) 
+
+  fact=0.d0
+  suma=0.d0
+  do k = 1, nz
+     do j = 1, ny
+        do i = 1, nx
+           do ipol=1,3
+              r(ipol)=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
+                               (j-1)*e(ipol,2)*deltay + &
+                               (k-1)*e(ipol,3)*deltaz
+           enddo
+           fact(i,j,k)=wsweight(r,rws,nrws)
+           suma=suma+fact(i,j,k)
+        enddo
+     enddo
+  enddo
+
+  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
+
   rhomin = 1.0d10
   rhomax =-1.0d10
   rhotot = 0.d0
   rhoabs = 0.d0
+  dipol=0.d0
   do k = 1, nz
      do j = 1, ny
         do i = 1, nx
@@ -1089,20 +1189,35 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
            rhomax = max (rhomax, carica (i, j, k) )
            rhotot = rhotot + carica (i, j, k)
            rhoabs = rhoabs + abs (carica (i, j, k) )
+           dipol(0) = dipol(0) + fact(i,j,k)*carica (i, j, k) 
+           do ipol=1,3
+              rijk=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
+                            (j-1)*e(ipol,2)*deltay + &
+                            (k-1)*e(ipol,3)*deltaz
+              dipol(ipol)=dipol(ipol)+fact(i,j,k)*rijk*carica(i,j,k)
+           enddo
         enddo
      enddo
   enddo
 
-  rhotot = rhotot / nx / ny / nz * m1 * m2 * m3 * alat**3
-  rhoabs = rhoabs / nx / ny / nz * m1 * m2 * m3 * alat**3
+  rhotot = rhotot / (nx-1) / (ny-1) / (nz-1) * m1 * m2 * m3 * alat**3
+  rhoabs = rhoabs / (nx-1) / (ny-1) / (nz-1) * m1 * m2 * m3 * alat**3
+  dipol(0) = dipol(0) / suma * omega 
+
+  if (omega.gt.m1*m2*m3*alat**3) &
+     write(6,*) 'Warning: the box is too small to calculate dipole'
+
   print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
        rhomax, rhotot, rhoabs
+
+  do ipol=1,3
+     dipol(ipol)=dipol(ipol) / suma *omega*alat
+  enddo
 
   if (output_format.eq.4) then
      !
      !     "gopenmol" file
      !
-
      call write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
           m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
   else
@@ -1112,9 +1227,10 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
      call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
      call xsf_datagrid_3d (carica, nx, ny, nz, m1, m2, m3, x0, e, alat, ounit)
   endif
-
   !
   deallocate (carica)
+  deallocate (fact)
+  deallocate (rws)
   return
 
 end subroutine plot_fast
@@ -1202,3 +1318,61 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   !
   return
 end subroutine write_openmol_file
+
+subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
+use parameters, only : dp
+implicit none
+
+integer :: nat, ntyp, ityp(nat), idpol
+real(kind=dp) :: dipol(0:3), tau(3,nat), zv(ntyp), alat
+
+real(kind=dp) :: debye, dipol_ion(3)
+
+integer :: na, ipol
+!
+!   compute ion dipole moments
+!
+  if (idpol.eq.1) then
+     dipol_ion=0.d0
+     do na=1,nat
+        do ipol=1,3
+           dipol_ion(ipol)=dipol_ion(ipol)+zv(ityp(na))*tau(ipol,na)*alat
+        enddo
+     enddo
+  endif
+!
+!  Charge inside the Wigner-Seitz cell
+!
+  write(6, '(/4x," Charge density inside the Wigner-Seitz cell:",3f14.8," el.")')  &
+        dipol(0)
+
+!
+!  print the electron dipole moment calculated by the plotting 3d routines
+!  A positive dipole goes from the - charge to the + charge.
+!
+  write(6, '(/4x,"Electrons dipole moments",3f14.8," a.u.")')  &
+                                         (-dipol(ipol),ipol=1,3)
+!
+! print the ionic and total dipole moment
+!
+  if (idpol.eq.1) then
+     write(6, '(4x,"     Ions dipole moments",3f14.8," a.u.")') &
+                                         (dipol_ion(ipol),ipol=1,3)
+     write(6,'(4x,"    Total dipole moments",3f14.8," a.u.")') &
+                                     ((-dipol(ipol)+dipol_ion(ipol)),ipol=1,3)
+  endif
+!
+!   Print the same information in Debye
+!
+  debye=2.54176d0
+
+  write(6,'(/4x,"Electrons dipole moments",3f14.8," Debye")') &
+                                         (-dipol(ipol)*debye,ipol=1,3)
+  if (idpol.eq.1) then
+     write(6,'(4x,"     Ions dipole moments",3f14.8," Debye")') &
+                                         (dipol_ion(ipol)*debye,ipol=1,3)
+     write(6,'(4x,"    Total dipole moments",3f14.8," Debye")') &
+                               ((-dipol(ipol)+dipol_ion(ipol))*debye,ipol=1,3)
+  endif
+
+end subroutine write_dipol

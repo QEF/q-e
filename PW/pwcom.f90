@@ -583,6 +583,19 @@ module ldaU
        conv_ns              ! .true. if ns are converged
 end module ldaU
 
+module efield_0
+  use parameters
+  logical :: tefield        ! if true a finite electric field is added to the
+                            ! local potential
+  integer :: edir           ! direction of the field
+  real(kind=DP) ::   &
+      emaxpos,       &      ! position of the maximum of the field (0<emaxpos<1)
+      eopreg,        &      ! amplitude of the inverse region (0<eopreg<1)
+      eamp                  ! field amplitude (in a.u.) (1 a.u.=51.44 10^11 V/m)
+
+end module efield_0
+
+
 module pwcom
   use constants, only: e2, degspin, rytoev, amconv, uakbar, pi, tpi, fpi
   use brilz
@@ -611,5 +624,6 @@ module pwcom
   use filnam
   use us
   use ldaU
+  use efield_0
 end module pwcom
 !

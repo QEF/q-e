@@ -7,6 +7,7 @@ include ../make.sys
 PWOBJS = pwcom.o  \
 para.o  \
 aainit.o  \
+add_efield.o \
 addusdens.o  \
 addusforce.o  \
 addusstress.o  \

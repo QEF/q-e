@@ -26,7 +26,8 @@ subroutine iosys
        press, cmass, calc, cell_factor, xqq, alat, ntypx, &
        lmovecell, imix, at, omega, ityp, tau, nks, xk, wk, uakbar, amconv, &
        force, at_old, omega_old, starting_scf_threshold, title, crystal,  &
-       atm, nk1, nk2, nk3, k1, k2, k3
+       atm, nk1, nk2, nk3, k1, k2, k3, &
+       tefield, edir, emaxpos, eopreg, eamp 
   use io, only : tmp_dir, prefix, pseudo_dir, pseudop
   use constants, only: pi
 #ifdef __PARA
@@ -53,7 +54,7 @@ subroutine iosys
   NAMELIST / control / title, calculation, verbosity, &
        restart_mode, nstep, iprint, isave, tstress, tprnfor, &
        dt, ndr, ndw, outdir, prefix, max_seconds, ekin_conv_thr,&
-       etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io
+       etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io, tefield
 
   ! SYSTEM namelist
 
@@ -65,7 +66,8 @@ subroutine iosys
        nr1b, nr2b, nr3b, nosym, starting_magnetization, &
        occupations, degauss, smearing, &
        nelup, neldw, nspin, ecfixed, qcutz, q2sigma, xc_type, &
-       lda_plus_U, Hubbard_U, Hubbard_alpha
+       lda_plus_U, Hubbard_U, Hubbard_alpha, &
+       edir, emaxpos, eopreg, eamp
 
   ! ELECTRONS namelist
 
@@ -155,6 +157,7 @@ subroutine iosys
   etot_conv_thr = 1.d-4
   forc_conv_thr = 1.d-3
   disk_io = 'default'
+  tefield=.false.
   noinv = .false.    ! not actually used
   !
 #ifdef __T3E
@@ -198,6 +201,10 @@ subroutine iosys
   Hubbard_U(:) = 0.d0
   Hubbard_alpha(:) = 0.d0
   starting_magnetization(:) = 0.d0
+  edir=1
+  emaxpos=0.5d0
+  eopreg=0.1d0
+  eamp=1.d-3
 
   ! ...   Variables initialization for ELECTRONS
   !
@@ -325,6 +332,7 @@ subroutine iosys
         startingpot = 'atomic'
      end if
 
+
      READ (unit, system, iostat = ios )
      if (ios /= 0) call errore ('reading','namelist &system',2)
      READ (unit, electrons, iostat = ios )
@@ -344,6 +352,16 @@ subroutine iosys
         READ (unit, phonon, iostat = ios )
         if (ios /= 0) call errore ('reading','namelist &phonon',5)
      end if
+
+     if (tefield.and..not.nosym) then
+        nosym=.true.
+        write(6,'(5x,"Presently no symmetry can be used with electric field",/)')
+     endif
+     if (tefield.and.(tstress.or.tprnfor)) then
+        tstress=.false.
+        tprnfor=.false.
+        write(6,'(5x,"Presently stress and forces not available with electric field",/)')
+     endif
 #ifdef __PARA
   end if
 
@@ -370,6 +388,7 @@ subroutine iosys
   CALL mp_bcast( forc_conv_thr, ionode_id )
   CALL mp_bcast( pseudo_dir, ionode_id )
   CALL mp_bcast( disk_io, ionode_id )
+  CALL mp_bcast( tefield, ionode_id )
   !
   ! ...   SYSTEM Variables Broadcast
   !
@@ -405,7 +424,11 @@ subroutine iosys
   CALL mp_bcast( Hubbard_U, ionode_id )
   CALL mp_bcast( Hubbard_alpha, ionode_id )
   CALL mp_bcast( starting_magnetization, ionode_id )
-
+  CALL mp_bcast( edir, ionode_id )
+  CALL mp_bcast( emaxpos, ionode_id )
+  CALL mp_bcast( eopreg, ionode_id )
+  CALL mp_bcast( eamp, ionode_id )
+  !
   ! ...   ELECTRONS Variables Broadcast
   !
   CALL mp_bcast( emass, ionode_id )

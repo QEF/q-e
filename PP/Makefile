@@ -27,12 +27,14 @@ stm.o  \
 stop_pp.o  \
 subtract_vxc.o  \
 voronoy.o  \
-work_function.o
+work_function.o \
+wsweight.o
 
 MODULES = ../Modules/*.o
 
 PWOBJS = ../PW/pwcom.o  \
 ../PW/aainit.o  \
+../PW/add_efield.o \
 ../PW/addusdens.o  \
 ../PW/addusforce.o  \
 ../PW/addusstress.o  \

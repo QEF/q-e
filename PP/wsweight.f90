@@ -1,0 +1,50 @@
+!
+!-----------------------------------------------------------------------
+subroutine wsinit(rws,nrwsx,nrws,atw)
+!-----------------------------------------------------------------------
+!
+  use parameters, only : DP
+  implicit none
+  integer i, ii, ir, jr, kr, nrws, nrwsx, nx
+  real(kind=dp) rt, eps, rws(0:3,nrwsx), atw(3,3)
+  parameter (eps=1.0d-6,nx=2)
+  ii = 1
+  do ir=-nx,nx
+     do jr=-nx,nx
+        do kr=-nx,nx
+           do i=1,3
+              rws(i,ii) = atw(i,1)*ir + atw(i,2)*jr + atw(i,3)*kr
+           end do
+           rws(0,ii)=rws(1,ii)*rws(1,ii)+rws(2,ii)*rws(2,ii)+            &
+                               rws(3,ii)*rws(3,ii)
+           rws(0,ii)=0.5d0*rws(0,ii)
+           if (rws(0,ii).gt.eps) ii = ii + 1
+           if (ii.gt.nrwsx) call errore('wsinit', 'ii.gt.nrwsx',1)
+        end do
+     end do
+  end do
+  nrws = ii - 1
+  return
+end subroutine wsinit
+!
+!-----------------------------------------------------------------------
+function wsweight(r,rws,nrws)
+!-----------------------------------------------------------------------
+!
+  use parameters, only : dp
+  implicit none
+  integer ir, nreq, nrws
+  real(kind=dp) r(3), rrt, ck, eps, rws(0:3,nrws), wsweight
+  parameter (eps=1.0d-6)
+!
+  wsweight = 0.d0
+  nreq = 1
+  do ir =1,nrws
+     rrt = r(1)*rws(1,ir) + r(2)*rws(2,ir) + r(3)*rws(3,ir)
+     ck = rrt-rws(0,ir)
+     if ( ck .gt. eps ) return
+     if ( abs(ck) .lt. eps ) nreq = nreq + 1
+  end do
+  wsweight = 1.d0/float(nreq)
+  return
+end function wsweight

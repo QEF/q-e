@@ -108,6 +108,7 @@ MODULES = ../Modules/*.o
 
 PWOBJS = ../PW/pwcom.o  \
 ../PW/aainit.o  \
+../PW/add_efield.o  \
 ../PW/addusdens.o  \
 ../PW/addusforce.o  \
 ../PW/addusstress.o  \

@@ -14,6 +14,7 @@ subroutine setlocal
   !
 #include "machine.h"
   use pwcom
+
   implicit none
   complex(kind=DP), allocatable :: aux (:)
   ! auxiliary variable
@@ -22,12 +23,13 @@ subroutine setlocal
   ! counter on g vectors
   ! counter on r vectors
   !
+  
   allocate (aux( nrxx))    
   !
   call setv (2 * nrxx, 0.d0, aux, 1)
   do nt = 1, ntyp
      do ng = 1, ngm
-        aux (nl (ng) ) = aux (nl (ng) ) + vloc (igtongl (ng), nt) * strf (ng, nt)
+        aux (nl(ng))=aux(nl(ng)) + vloc (igtongl (ng), nt) * strf (ng, nt)
      enddo
   enddo
   !
@@ -38,7 +40,12 @@ subroutine setlocal
   do ir = 1, nrxx
      vltot (ir) = DREAL (aux (ir) )
   enddo
- !
+!
+!  If required add an electric field to the local potential 
+!
+
+  if (tefield) call add_efield
+
   deallocate(aux)
   return
 end subroutine setlocal
