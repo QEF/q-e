@@ -217,6 +217,7 @@ sumkt.o \
 summary.o \
 swap.o \
 symrho.o \
+symscalar.o \
 symtns.o \
 symvect.o \
 symz.o \

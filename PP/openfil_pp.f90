@@ -68,8 +68,8 @@ SUBROUTINE openfil_pp()
   ! ... iunigk contains the number of PW and the indices igk
   ! ... Note that unit 15 is reserved for error messages 
   !
-  !iunigk = 16
-  !CALL seqopn( iunigk, TRIM( prefix )//'.igk', 'UNFORMATTED', exst )
+  iunigk = 16
+  CALL seqopn( iunigk, TRIM( prefix )//'.igk', 'UNFORMATTED', exst )
   !
   RETURN
   !

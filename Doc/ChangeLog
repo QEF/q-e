@@ -1,3 +1,19 @@
+07 Oct 2004  - a new utility virtual.x has been added to upftools 
+             that can combine two pseudopotentials in UPF format to 
+             produce a third one (in the same format) for the virtual 
+             atom Vvirt = x * V1 + (1-x) V2 . For the time being it 
+             has only limited functionality as the two pseudos need 
+             to be defined on the same radial grid. (SdG)
+             - a new utility initial_state.x has been added to PP that
+             can computed the core level shift in the initial state
+             approximation... in practice the first order derivative of
+             the total energy with respect to DeltaV=V(excited)-V(GS).
+             It is the analogue (via Janak theorem) of the core eigenvalue
+             in the pseudopotential framework where the core electrons
+             do not exist. 
+             In the present status it require both V(excited) and V(GS) 
+             to be defined in the preceeding SCF calculation.  (SdG)
+
 28 Sep 2004  release.sh script updated: Raman/ added (PG)
              SUN compilation problem in mp.f90 (PG)
              More cleanup of parallel variables and pwcom/phcom references.

@@ -103,16 +103,18 @@ end subroutine write_upf
     else if (rel==1) then  
        write (ounps, '(i5,t14,a)', err = 100, iostat = ios) rel,& 
             &"The Pseudo was generated with a Scalar-Relativistic Calculation"
-    else  
+    else if (rel==0) then 
        write (ounps, '(i5,t14,a)', err = 100, iostat = ios) rel, &
             & "The Pseudo was generated with a Non-Relativistic Calculation"
     endif
 
-    write (ounps, '(1pe19.11,t24,a)', err = 100, iostat = ios) &
-         rcloc, "Local Potential cutoff radius"
+    if (rcloc > 0.d0) &
+       write (ounps, '(1pe19.11,t24,a)', err = 100, iostat = ios) &
+              rcloc, "Local Potential cutoff radius"
 
-    write (ounps, '(a2,2a3,a6,3a19)', err = 100, iostat = ios) "nl", &
-         &" pn", "l", "occ", "Rcut", "Rcut US", "E pseu"
+    if (nwfs>0) &
+       write (ounps, '(a2,2a3,a6,3a19)', err = 100, iostat = ios) "nl", &
+              &" pn", "l", "occ", "Rcut", "Rcut US", "E pseu"
     do nb = 1, nwfs  
        write (ounps, '(a2,2i3,f6.2,3f19.11)') els (nb) , nns (nb) , &
             lchi (nb) , oc (nb) , rcut (nb) , rcutus (nb) , epseu(nb)
@@ -433,11 +435,3 @@ end subroutine write_upf
 
   return
 end subroutine dftname
-
-subroutine errore(a,b,n)
-  character(len=*) :: a,b
-
-  write(6,'(//'' program '',a,'':'',a,''.'',8x,i8,8x,''stop'')') a,b,n
-  stop
-end subroutine errore
-

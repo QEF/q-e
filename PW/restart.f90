@@ -659,7 +659,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   ierr = 0
   filename = trim(prefix)//'.save'
   flen = index(filename,' ')-1
-  WRITE( stdout, '(/,5x,"Reading file ",a," ... ")') filename(1:flen)
+  WRITE( stdout, '(/,5x,"Reading file ",a," ... ",$)') filename(1:flen)
   !
   if( ionode ) THEN
     call seqopn (ndr, filename(1:flen), 'unformatted', exst)
@@ -689,6 +689,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
   SELECT CASE ( TRIM( what ) )
      CASE ( 'all' )
+      WRITE( stdout, '(5x,"all data")') 
       trdhead   = .TRUE.
       trdxdim   = .TRUE.
       trdcell   = .TRUE.
@@ -701,6 +702,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
       trdchden  = .TRUE.
       trdwfc    = .TRUE.
     CASE ( 'nowave' )
+      WRITE( stdout, '(5x,"all except wavefuctions")') 
       trdhead   = .TRUE.
       trdxdim   = .TRUE.
       trdcell   = .TRUE.
@@ -712,11 +714,14 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
       trdgkvec  = .TRUE.
       trdchden  = .TRUE.
     CASE ( 'wave' )
+      WRITE( stdout, '(5x,"wavefuctions")') 
       trdwfc    = .TRUE.
     CASE ( 'dim' )
+      WRITE( stdout, '(5x,"only dimensions")') 
       trdhead   = .TRUE.
       trdxdim   = .TRUE.
     CASE DEFAULT
+      WRITE( stdout, '(5x,a)') what
       CALL errore( ' readfile_new ', ' unknown value for what ', 1 )
   END SELECT
 

@@ -5,10 +5,15 @@ include ../make.sys
 
 PPOBJS = \
 addusdens1d.o \
+add_shift_cc.o \
+add_shift_lc.o \
+add_shift_us.o \
 cft.o \
 cgracsc.o \
 cube.o \
 dosg.o \
+do_initial_state.o \
+do_shift_ew.o \
 elf.o \
 ggen1d.o \
 local_dos.o \
@@ -174,6 +179,7 @@ PWOBJS = \
 ../PW/ns_adj.o \
 ../PW/newd.o \
 ../PW/noncol.o \
+../PW/openfil.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
 ../PW/output_tau.o \
@@ -236,6 +242,7 @@ PWOBJS = \
 ../PW/summary.o \
 ../PW/swap.o \
 ../PW/symrho.o \
+../PW/symscalar.o \
 ../PW/symtns.o \
 ../PW/symvect.o \
 ../PW/symz.o \
@@ -261,7 +268,7 @@ PWOBJS = \
 ../PW/wsweight.o
 
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
-      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x
+      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x initial_state.x
 
 average.x : average.o $(PPOBJS)
 	$(LD) -o $@ average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
@@ -313,6 +320,10 @@ pw2wan.x : pw2wan.o $(PPOBJS)
 
 voronoy.x : voronoy.o $(PPOBJS)
 	$(LD) -o $@ voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+initial_state.x : initial_state.o $(PPOBJS)
+	$(LD) -o $@ initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 clean :

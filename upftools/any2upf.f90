@@ -56,13 +56,6 @@ stop
 
 end program mypp2upf
 
-subroutine errore(a,b,n)
-  character(len=*) :: a,b
-  integer :: n
-  write(6,'(//'' program '',a,'':'',a,''.'',8x,i8,8x,''stop'')') a,b,n
-  stop
-end subroutine errore
-
 module mypp
   !
   ! All variables read from user-supplied file format
