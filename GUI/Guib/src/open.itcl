@@ -1,3 +1,29 @@
+#
+# $RCSfile: open.itcl,v $ --
+#
+#     This file contains the implementation for reading/parsing the
+# input file according to definition of input syntax as specified in
+# guib-definition file.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: open.itcl,v 1.2 2004-04-05 13:20:58 kokalj Exp $ 
+#
+
 # ------------------------------------------------------------------------
 #****m* moduleObj/openFile
 #  NAME
@@ -64,6 +90,37 @@ body ::guib::moduleObj::readFile {fileChannel {fileName {}}} {
 }
 
 
+# ------------------------------------------------------------------------
+#****im* moduleObj/_openSyntaxError
+#  NAME
+#    ::guib::moduleObj::_open --  method for dealing with file-read errors
+#
+#  USAGE
+#    _openSyntaxError errMsg ?addSkipMsg?
+#
+#  DESCRIPTION
+#    When an error occurs while reading an input file, this method
+# should be called to correctly handle the error. When a syntax error
+# is encountered the reading should be skippe immediately, otherwise
+# the GUI might trap in an infinite loop!!!
+# 
+#  ARGUMENTS
+#     errMsg     -- error message to display when syntax error is encountered
+#     addSkipMsg -- do we add "Skipping the rest of the input file" text
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::_openSyntaxError {text {addSkipMsg 1}} {
+    
+    set readError 1
+    
+    if { $addSkipMsg == 1 } {
+	::tku::errorDialog "SYNTAX ERROR in the input file: ${text}\n\nSkipping the rest of the input file !!!"
+    } else {
+	::tku::errorDialog $text
+    }
+}
+
 
 # ------------------------------------------------------------------------
 #****im* moduleObj/_open
@@ -92,13 +149,17 @@ body ::guib::moduleObj::readFile {fileChannel {fileName {}}} {
 body ::guib::moduleObj::_open {obj fileChannel} {
     
     if { $readError == 1 } {
-	# an error has occured; TODO: notify to the user !!!
-	tk_messageBox -icon error -title "Read ERROR" -message "An ERROR occured during reading the file.\n\nFile-reading might be corrupted!!!" -type ok
+	# skip reading of the input file immediately ...
 	return
     }
 
     set NItem [$obj getID]    
     for {set id 0} {$id <= $NItem} {incr id} {
+
+	if { $readError == 1 } {
+	    # skip reading of the input file immediately ...
+	    return
+	}
 
 	update;	update idletask
 
@@ -373,8 +434,8 @@ body ::guib::moduleObj::_openCompareStr {args} {
     set readStr {}
     if { [scan $lineStr %s readStr] != 1 } {
 	#-->EOF
-	::tclu::DEBUG "EOF ERROR"
-	set readError 1
+	_openSyntaxError "end of file while reading input" eof
+	return -code return
     }
 
     if { $nocase } {
@@ -384,8 +445,8 @@ body ::guib::moduleObj::_openCompareStr {args} {
     }
     if { $result != 0 } {
 	#-->READ ERROR
-	::tclu::DEBUG "NOT-MATCH ERROR"
-	set readError 1
+	_openSyntaxError "NOT-MATCH ERROR"
+	return -code return
     }
 }
 
@@ -431,7 +492,8 @@ body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
     set ind [string first = $readline]
 
     if { $ind <= 0 } {
-	::tku::errorDialog "syntax error in the input file. Error in the namelist"
+	_openSyntaxError "syntax error in the namelist"
+	return -code return
     }
     scan [lindex [split $readline =] 0] %s result    
 
@@ -475,7 +537,8 @@ body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
     }
     
     # If we came here, then the variable could not be allocated
-    ::tku::errorDialog "syntax error in the input file. Error in the namelist. Namelist's variable \"$result\" not allowed."
+    _openSyntaxError "namelist's variable \"$result\" not allowed."
+    return -code return
 }
 
 
@@ -526,7 +589,8 @@ body ::guib::moduleObj::_openReadKeyword {keyword} {
     ::tclu::DEBUG --count $_count $keyword $readline
     if { $_count == 0 } {
 	set keyword [string trim $keyword "\n"]
-	::tku::errorDialog "syntax error in the input file. Expecting keyword \"$keyword\" on input, but keyword wasn't found."
+	_openSyntaxError "expecting keyword \"$keyword\", but read \"$readline\" instead."
+	return -code return
     }
 }
 
