@@ -72,7 +72,7 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
         if ( ( g (1, ng) **2 + g (2, ng) **2 + g (3, ng) **2 ) .gt. ( q2x + eps8 ) ) exit
      endif
   enddo
-  call errore ('gk_sort', 'unexpected exit from do-loop', - 1)
+  if( ng > ngm ) call errore ('gk_sort', 'unexpected exit from do-loop', - 1)
   !
   ! order vector gk keeping initial position in index
   !
