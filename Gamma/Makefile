@@ -34,7 +34,6 @@ PWOBJS = \
 ../PW/ccalbec.o \
 ../PW/ccgdiagg.o \
 ../PW/cdiaghg.o \
-../PW/cdiaghg.o \
 ../PW/cdiagh.o \
 ../PW/cdiisg.o \
 ../PW/cegterg.o \
