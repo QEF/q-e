@@ -44,7 +44,7 @@ SUBROUTINE electrons()
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef  
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
-  USE control_flags,                ONLY : mixing_beta, tr2, time_max, ethr, ngm0, &
+  USE control_flags,        ONLY : mixing_beta, tr2, time_max, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, iswitch, &
                                    lscf, lneb, lmd, conv_elec, restart, &
                                    reduce_io  
@@ -181,8 +181,8 @@ SUBROUTINE electrons()
      ELSE
         WRITE( stdout, 9009 )
      END IF
-#if defined (__FLUSH)
-     CALL cpflush()
+#if defined (FLUSH)
+     CALL flush( stdout )
 #endif
      !
      ! ... Convergence threshold for iterative diagonalization
@@ -497,8 +497,8 @@ SUBROUTINE electrons()
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
-#if defined (__FLUSH)
-     CALL cpflush()
+#if defined (FLUSH)
+     CALL flush( stdout )
 #endif
      IF ( conv_elec ) THEN
         !
