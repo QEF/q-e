@@ -268,6 +268,13 @@ SUBROUTINE move_ions()
   CALL mp_bcast( alpha0,    ionode_id, intra_image_comm )
   CALL mp_bcast( beta0,     ionode_id, intra_image_comm )
   CALL mp_bcast( history,   ionode_id, intra_image_comm )
+  IF (lmovecell) THEN
+     CALL mp_bcast( at,        ionode_id, intra_image_comm )
+     CALL mp_bcast( at_old,    ionode_id, intra_image_comm )
+     CALL mp_bcast( omega,     ionode_id, intra_image_comm )
+     CALL mp_bcast( omega_old, ionode_id, intra_image_comm )
+     CALL mp_bcast( bg,        ionode_id, intra_image_comm )
+  END IF
   ! 
   RETURN
   !

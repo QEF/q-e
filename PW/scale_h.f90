@@ -37,7 +37,6 @@ subroutine scale_h
   WRITE( stdout, * ) ' NEW K-POINTS'
   do ik = 1, nkstot
      WRITE( stdout, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-
   enddo
   !
   ! scale the g vectors (as well as gg and gl arrays)

@@ -1,13 +1,15 @@
 
-  * Berry phase calculation in parallel should have been disabled
+  *  variable-cell dynamics and optimization was not working in parallel
 
-  * bug in readfile_config when restarting without a "*.save" file
+  *  Berry phase calculation in parallel should have been disabled
 
-  * LDA+U forces not working for unppolarized (nspin=1) calculations
+  *  bug in readfile_config when restarting without a "*.save" file
 
-  * memory leak in Raman code
+  *  LDA+U forces not working for unpolarized (nspin=1) calculations
 
-  * disproportionate memory requirement in phonon code with USPP
+  *  memory leak in Raman code
+
+  *  disproportionate memory requirement in phonon code with USPP
 
   *  dangerous calls to read_restart_tetra and write_restart_tetra
      when restarting with no allocated tetrahedra
