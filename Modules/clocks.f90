@@ -155,6 +155,8 @@ subroutine print_this_clock (n)
   !
   use parameters
   use mytime
+  use mp, only: mp_max, mp_min
+  use mp_global, only: group, inter_pool_comm 
   implicit none
 
   real(kind=8) :: scnds
@@ -185,9 +187,8 @@ subroutine print_this_clock (n)
   ! /* #define DEBUG */
   !
 #ifndef DEBUG
-  call extreme (elapsed_cpu_time, + 1)
-
-  call poolextreme (elapsed_cpu_time, + 1)
+  call mp_max( elapsed_cpu_time, group )
+  call mp_max( elapsed_cpu_time, inter_pool_comm )
 #endif
 #endif
   if (n.eq.1) then
@@ -227,6 +228,8 @@ real(kind=8) function get_clock (label)
   !
   use parameters
   use mytime
+  use mp, only: mp_max, mp_min
+  use mp_global, only: group, inter_pool_comm 
 
   implicit none
 
@@ -253,8 +256,8 @@ real(kind=8) function get_clock (label)
         !
         ! In the parallel case, use the maximum over all nodes and pools
         !
-        call extreme (get_clock, + 1)
-        call poolextreme (get_clock, + 1)
+        call mp_max( get_clock, group )
+        call mp_max( get_clock, inter_pool_comm )
 #endif
         return
      endif

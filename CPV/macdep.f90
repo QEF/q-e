@@ -293,6 +293,7 @@
          good=.false.
       else
 ! specific (machine- and library-dependent cases)
+
 #ifdef __AIX
 !
 ! IBM machines with essl libraries
@@ -304,9 +305,10 @@
      &           pwr(5).le.1 .and.                                      &
      &           ((pwr(2).eq.0 .and. pwr(3)+pwr(4)+pwr(5).le.2) .or.    &
      &            (pwr(2).ne.0 .and. pwr(3)+pwr(4)+pwr(5).le.1)     )
+
 #endif
 !
-#if defined(__CRAYY) || defined(__SX4)
+#if defined(__CRAYY) || defined(__SX4) || defined(__SGI) || defined(__ORIGIN)
 !
 ! Cray and t3d machines with scilib libraries
 !

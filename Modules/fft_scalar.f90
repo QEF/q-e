@@ -80,7 +80,7 @@
         REAL (dbl) :: bw_tablex(ltabl,ndims)
         REAL (dbl) :: bw_tabley(ltabl,ndims)
 
-#else
+#elif defined __SGI || defined __T3E
 
         REAL (dbl) :: work(lwork) 
         REAL (dbl) :: tablez(ltabl,ndims)
@@ -245,7 +245,7 @@
 #elif defined __SGI
 
      IF (isign /= 0) THEN
-       CALL zfftm1d( isign, nz, nsl, c(1,1), 1, ldc, tablez(i,ip) )
+       CALL zfftm1d( isign, nz, nsl, c(1,1), 1, ldc, tablez(1,ip) )
        IF (isign > 0) THEN
          CALL zdscal(SIZE(c), scale, c(1,1), 1)
        END IF
@@ -420,7 +420,7 @@
      IF( isign /= 0 ) THEN
        do i = 1, nxl
          IF( pl2ix( i ) > 0 ) THEN
-         call zfftm1d( isign, ny, nzl, r(i,1,1), ldx, ldx*ldy, tabley(ip) )
+         call zfftm1d( isign, ny, nzl, r(i,1,1), ldx, ldx*ldy, tabley(1,ip) )
          END IF
        end do
      END IF
@@ -783,7 +783,9 @@
 #elif defined __SGI
 
      IF (isign /= 0) THEN
-       CALL zfftm1d( isign, nz, nsl, c(1), 1, ldc, tablez(i,ip) )
+       IF( isign < 0 ) idir = +1
+       IF( isign > 0 ) idir = -1
+       CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
        IF (isign > 0) THEN
          tscale = 1.0d0 / nz
          CALL zdscal(SIZE(c), tscale, c(1), 1)
@@ -1073,34 +1075,28 @@
 #elif defined __SGI
 
      IF( isign > 0 ) THEN
+       idir =  -1
        DO i = 1, nzl
          k = 1 + ( i - 1 ) * ldx * ldy
-         call zfftm1d( isign, nx, ny, r(k), 1, ldx, tablex(1,ip) )
+         call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex(1,ip) )
        END DO
        do i = 1, nx
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
-         IF( dofft ) THEN
-           call zfftm1d( isign, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
+         IF( dofft( i ) ) THEN
+           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
          END IF
        end do
        tscale = 1.0d0 / ( nx * ny )
        CALL zdscal(SIZE(r), tscale, r(1), 1)
      ELSE IF( isign < 0 ) THEN
+       idir = 1
        do i = 1, nx
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
-         IF( dofft ) THEN
-           call zfftm1d( isign, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
+         IF( dofft( i ) ) THEN
+           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
          END IF
        end do
-     DO i = 1, nzl
+       DO i = 1, nzl
          k = 1 + ( i - 1 ) * ldx * ldy
-         call zfftm1d( isign, nx, ny, r(k), 1, ldx, tablex(1,ip) )
+         call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex(1,ip) )
        END DO
      END IF
 
@@ -1143,6 +1139,10 @@
 
 #elif defined __AIX
 
+#elif defined __SGI
+
+      real(kind=8), save :: table( 3 * ltabl,  ndims )
+
 #endif
 
 
@@ -1181,6 +1181,10 @@
 
 #elif defined __AIX
 
+#elif defined __SGI
+
+       CALL zfft3di( nr1, nr2, nr3, table(1,icurrent) )
+
 #endif
 
        dims(1,icurrent) = nr1; dims(2,icurrent) = nr2; dims(3,icurrent) = nr3
@@ -1218,6 +1222,17 @@
  
      call dcft3( f(1), nr1x, nr1x*nr2x, f(1), nr1x, nr1x*nr2x, nr1, nr2, nr3,  &
        isign, tscale, work(1), lwork)
+
+#elif defined __SGI
+
+     IF( isign > 0 ) idir = -1
+     IF( isign < 0 ) idir = +1
+     IF( isign /= 0 ) &
+       CALL zfft3d( idir, nr1, nr2, nr3, f(1), nr1x, nr2x, table(1,ip) )
+     IF( isign > 0 ) THEN
+       tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
+       call ZDSCAL( nr1x * nr2x * nr3x, tscale, f(1), 1)
+     END IF
  
 #endif
       
@@ -1263,6 +1278,12 @@
       real(kind=8), save :: aux3( ltabl, ndims )
       real(kind=8), save :: aux2( ltabl, ndims )
       real(kind=8), save :: aux1( ltabl, ndims )
+
+#elif defined __SGI
+
+      real(kind=8), save :: bw_coeffz( ltabl,  ndims )
+      real(kind=8), save :: bw_coeffy( ltabl,  ndims )
+      real(kind=8), save :: bw_coeffx( ltabl,  ndims )
 
 #endif
 
@@ -1324,6 +1345,12 @@
      &        tscale, aux2(1,icurrent), ltabl, work(1), lwork)
          end if
 
+#elif defined __SGI
+
+         call zfft1di( n3, bw_coeffz( 1, icurrent ) )
+         call zfft1di( n2, bw_coeffy( 1, icurrent ) )
+         call zfft1di( n1, bw_coeffx( 1, icurrent ) )
+
 #endif
 
         dims(1,icurrent) = n1; dims(2,icurrent) = n2
@@ -1358,6 +1385,15 @@
         nstart = ( k - 1 ) * n1x * n2x + 1
         call dcft( 0, f(nstart), n1x, 1, f(nstart), n1x, 1, n2, n1x, isign,        &
      &        tscale, aux2(1,ip), ltabl, work(1), lwork)
+      END DO
+
+#elif defined __SGI
+
+      call zfftm1d( 1, n3, n1x*n2x, f(1), n1x*n2x, 1, bw_coeffz(1, ip) )
+      call zfftm1d( 1, n1, n2x*nplanes, f(nstart), 1, n1x, bw_coeffx(1, ip) )
+      DO K = imin3, imax3
+        nstart = ( k - 1 ) * n1x * n2x + 1
+        call zfftm1d( 1, n2, n1x, f(nstart), n1x, 1, bw_coeffy(1, ip) )
       END DO
 
 #endif

@@ -2251,7 +2251,7 @@
 #ifdef __PARA
       call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 # else
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
@@ -2275,7 +2275,7 @@
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
 # else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
@@ -2299,7 +2299,7 @@
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2,dffts)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
 # else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
@@ -3788,7 +3788,7 @@
 #ifdef __PARA
       call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dfftp)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
 # else
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
@@ -3811,7 +3811,7 @@
 #ifdef __PARA
       call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
 # else
       call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
@@ -3836,7 +3836,7 @@
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
 # else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
@@ -3861,7 +3861,7 @@
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2,dffts)
 #else
-# if defined __AIX || __FFTW
+# if defined __AIX || __FFTW || __SGI
       call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
 # else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
