@@ -26,7 +26,7 @@ subroutine do_projwfc (nodenumber)
   character (len=8)  :: io_choice
   character(len=256) :: outdir
   real (kind=DP)     :: Emin, Emax, DeltaE, smoothing
-  integer :: ios,ionode_id = 0 
+  integer :: ios, ionode_id = 0 
   namelist / inputpp / outdir, prefix, io_choice, &
              Emin, Emax, DeltaE, smoothing
   !
@@ -46,6 +46,7 @@ subroutine do_projwfc (nodenumber)
   if (me == 1)  then
 #endif
   read (5, inputpp, err = 200, iostat = ios)
+200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
   !
   tmp_dir = trim(outdir)
   !
@@ -67,7 +68,6 @@ subroutine do_projwfc (nodenumber)
       io_choice.ne.'both') &
       call errore ('projwave','io_choice definition is invalid',1)
 
-200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
