@@ -338,11 +338,13 @@ MODULE path_base
           !
           inter_image_dist = path_length / DBLE( num_of_images - 1  )
           !
-          FORALL( i = 1: ( input_images - 1 ) )
+!         FORALL( i = 1: ( input_images - 1 ) )
+          do i = 1, input_images - 1
              !
              d_R(:,i) = d_R(:,i) / image_spacing(i)
              !
-          END FORALL   
+          end do
+!          END FORALL   
           !
           pos_(:,1) = pos(1:dim,1)
           !
