@@ -18,9 +18,13 @@ subroutine punch
   !
   !
   USE io_global, ONLY : stdout
-  use pwcom, only: nks, reduce_io, lscf, rho, nspin, et, wg, nbnd, nkstot
-  USE wavefunctions_module,    ONLY : evc
-  use io_files, only: prefix, iunpun, iunwfc, nwordwfc
+  USE klist, ONLY: nks, nkstot
+  USE lsda_mod, ONLY: nspin
+  USE scf, ONLY: rho
+  USE varie, ONLY: reduce_io, lscf
+  USE wvfct, ONLY: et, wg, nbnd
+  USE wavefunctions_module, ONLY : evc
+  USE io_files, ONLY: prefix, iunpun, iunwfc, nwordwfc
 #ifdef __PARA
   use para
 #endif
@@ -89,10 +93,18 @@ subroutine punch
   !     the information needed to the phonon program.
   !
   !
-  USE io_global,        ONLY : stdout
-  use pwcom
-  USE wavefunctions_module,    ONLY : evc
-  use io_files, only: prefix, iunpun, iunwfc, nwordwfc
+  USE io_global, ONLY : stdout
+  USE klist, ONLY: nks, nkstot, xk, wk
+  USE ktetra, ONLY: ltetra, tetra
+  USE lsda_mod, ONLY: nspin, isk
+  USE scf, ONLY: rho
+  USE varie, ONLY: reduce_io, lscf
+  USE wvfct, ONLY: et, wg, nbnd
+  USE wavefunctions_module, ONLY : evc
+  USE io_files, ONLY: prefix, iunpun, iunwfc, nwordwfc
+  USE basis, ONLY:  tau, ityp
+  USE force_mod, ONLY: lforce, force
+  USE symme, ONLY: irt
 #ifdef __PARA
   use para
 #endif

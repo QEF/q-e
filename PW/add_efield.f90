@@ -35,8 +35,17 @@
 !
 !
 #include "machine.h"
-    use pwcom
+    USE parameters, ONLY : DP
+    USE constants, ONLY: fpi
+    USE pseud, ONLY : zv
+    USE basis, ONLY : nat, ityp
+    USE brilz, ONLY : alat, bg, omega
+    USE extfield, ONLY: tefield, dipfield, edir, eamp, emaxpos, eopreg, &
+         etotefield, forcefield
+    USE force_mod, ONLY: lforce
+    USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE io_global,  ONLY : stdout
+    USE varie, ONLY: mixing_beta
 #ifdef __PARA
     use para
     use mp

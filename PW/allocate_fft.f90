@@ -14,9 +14,15 @@ subroutine allocate_fft
   !     these dimensions
   !
 #include "machine.h"
-  USE io_global,        ONLY : stdout
-  use pwcom
-  USE wavefunctions_module,    ONLY : psic
+  USE io_global, ONLY : stdout
+  USE gvect,     ONLY : nr1, nr2, nr3, nrxx, ngm, g, gg, nl, nlm, &
+       ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl
+  USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
+  USE lsda_mod,  ONLY : nspin
+  USE scf,       ONLY : rho, vr, vltot, vrs, rho_core, rho_save
+  USE vlocal,    ONLY : vnew
+  USE wvfct,     ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
   implicit none
   !
   !     determines the data structure for fft arrays

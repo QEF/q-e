@@ -19,10 +19,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
   !
   !
-  !     here the dummy variables
-  !
 #include "machine.h"
-  use pwcom
+  USE parameters, ONLY: DP
+  USE us, ONLY: lqx, dq, nbrx, nlx, indv, qrad, lpl, lpx, ap, nhtol, nhtom
   implicit none
 
   integer :: ngy, ih, jh, np

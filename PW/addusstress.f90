@@ -13,8 +13,15 @@ subroutine addusstres (sigmanlc)
   !   to the dependence of the Q function on the atomic position.
   !
 #include "machine.h"
-
-  use pwcom
+  USE parameters, ONLY: DP
+  USE basis, ONLY : nat, ntyp, ityp
+  USE brilz, ONLY: omega, tpiba
+  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
+       nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE lsda_mod, ONLY: nspin
+  USE scf, ONLY: vr, vltot
+  USE us, ONLY : lqx, okvan, tvanp, qgm, nhm, nh, becsum
+  USE wvfct, ONLY: gamma_only
   implicit none
   real(kind=DP) :: sigmanlc (3, 3)
   ! the nonlocal stress
