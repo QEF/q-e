@@ -1240,12 +1240,13 @@
       use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
-      use cvan, only: nhsavb, ish, nvb, ipp
+      use cvan, only: ish, nvb, ipp
       use core
       use constants, only: pi, fpi
       use ions_base, only: na, nsp
       use elct
-      use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, nhsa => nkb
+      use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, &
+           nhsa => nkb, nhsavb=>nkbus
       use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &
            nbeta, lmaxkb, lll, nhm, nh
       use qrl_mod, only: qrl, cmesh

@@ -371,9 +371,9 @@
 !
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use cvan, only: ish, nhsavb, nvb
+      use cvan, only: ish, nvb
       use uspp_param, only: nh
-      use uspp, only :nhsa=>nkb, qq
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use elct
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -489,9 +489,9 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use elct
-      use cvan, only: ish, nhsavb, nvb
+      use cvan, only: ish, nvb
       use uspp_param, only: nh
-      use uspp, only: nhsa=>nkb, qq
+      use uspp, only: nhsa=>nkb, nhsavb=>nkbus, qq
 !
       implicit none
       integer i
@@ -2721,8 +2721,8 @@
 !     on output: bec(i) is recalculated
 !
       use ions_base, only: na
-      use cvan, only :nhsavb, nvb, ish
-      use uspp, only :nhsa=>nkb, qq
+      use cvan, only :nvb, ish
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use uspp_param, only:  nh
       use elct
       use gvecw, only: ngw
@@ -2807,8 +2807,7 @@
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
-      use uspp, only :nhsa=>nkb
-      use cvan, only: nhsavb
+      use uspp, only :nhsa=>nkb, nhsavb=> nkbus
       use elct
       use gvecw, only: ngw
 !
@@ -6077,8 +6076,8 @@ end function pseudo_type
       use parameters, only: nsx, natx
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use uspp, only: nhsa => nkb
-      use cvan, only: nvb, nhsavb
+      use uspp, only: nhsa => nkb, nhsavb=>nkbus
+      use cvan, only: nvb
       use elct
 !
       implicit none
@@ -6505,8 +6504,8 @@ end function pseudo_type
 !     output: swfc=S|wfc>
 !
       use ions_base, only: na
-      use cvan, only: nvb, ish, nhsavb
-      use uspp, only: nhsa => nkb, qq
+      use cvan, only: nvb, ish
+      use uspp, only: nhsa => nkb, nhsavb=>nkbus, qq
       use uspp_param, only: nh
       use elct
       use gvecw, only: ngw
@@ -6602,8 +6601,8 @@ end function pseudo_type
 !     routine makes use of c(-q)=c*(q)
 !
       use parameters, only: natx, nsx
-      use uspp, only: nhsa => nkb
-      use cvan, only : nvb, nhsavb
+      use uspp, only: nhsa => nkb, nhsavb=>nkbus
+      use cvan, only : nvb
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -6696,8 +6695,8 @@ end function pseudo_type
       use grid_dimensions, only: nr1, nr2, nr3, &
             nnr => nnrx
       use cell_base, only: omega
-      use cvan, only: nhsavb, nvb, ish
-      use uspp, only: nhsa => nkb, qq
+      use cvan, only: nvb, ish
+      use uspp, only: nhsa => nkb, nhsavb=>nkbus, qq
       use uspp_param, only: nh
       use ions_base, only: na
 !
@@ -6858,8 +6857,8 @@ end function pseudo_type
 !     routine makes use of c(-q)=c*(q)
 !
       use parameters, only: nsx, natx
-      use cvan, only: nhsavb, nvb
-      use uspp, only: nhsa => nkb
+      use cvan, only: nvb
+      use uspp, only: nhsa => nkb, nhsavb=>nkbus
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -6926,8 +6925,8 @@ end function pseudo_type
 !
       use ions_base, only: nsp, na
       use io_global, only: stdout
-      use cvan, only: nhsavb, nvb, ish
-      use uspp, only: nhsa => nkb
+      use cvan, only: nvb, ish
+      use uspp, only: nhsa => nkb, nhsavb=>nkbus
       use uspp_param, only: nh
       use gvecw, only: ngw
       use elct
