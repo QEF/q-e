@@ -691,8 +691,8 @@ cell_dynamics
 press          REAL ( default = 0.D0 )
                target pressure [KBar] in a variable-cell md simulation
 
-wmass          REAL
-               ficticious cell mass for variable-cell md simulations
+wmass          REAL ( default = sum of atomic masses in the cell )
+               ficticious cell mass [amu] for variable-cell md simulations
 
 cell_factor    REAL ( default = 1.2D0 )
                used in the construction of the pseudopotential tables. 
@@ -807,11 +807,12 @@ K_POINTS { tpiba | automatic | crystal | gamma }
    automatic: automatically generated uniform grid of k-points
               next card:
    nk1, nk2, nk3, k1, k2, k3
-              generates ( nk1, nk2, nk3 ) mesh with ( k1, k2, k3 ) offset
+              generates ( nk1, nk2, nk3 ) grid with ( k1, k2, k3 ) offset
               nk1, nk2, nk3 as in Monkhorst-Pack grids
               k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced 
               by half a grid step in the corresponding direction )
-              The mesh with offset may not work with tetrahedra.
+              BEWARE: only grids having the full symmetry of the crystal
+              work with tetrahedra. Some grids with offset may not work.
    crystal  : read k-points in crystal coordinates
    tpiba    : read k-points in 2pi/a units ( default )
               next card:
