@@ -38,7 +38,7 @@ MODULE path_formats
     neb_run_output     = "(5X,'image: ',I2,'   E tot = ',F16.8," // &
                        & "' eV   error = ',F8.4,' eV / A')", &
     smd_run_output     = "(5X,'mode = ',I2,3X,'|ft_pos| = '," // &
-                       & "F10.6,3X,'error = ',F10.6)"                    
+                       & "F10.6,3X,'error = ',F8.4,' eV / A')"                    
   !
   CHARACTER (LEN=*), PARAMETER :: &
     summary_fmt = "(5X,A,T35,' = ',A)"      
