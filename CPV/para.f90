@@ -74,6 +74,12 @@ module para_mod
 ! nnrs_ -> dffts%nnr
 !
 
+! wannier function
+!         -M.S
+  integer ngp__(maxproc), ngpw__(maxproc), n3s(maxproc)
+  integer npps(maxproc), n3me(maxproc)
+  integer npp(maxproc)
+
 contains
 
   subroutine deallocate_para_mod
@@ -213,6 +219,7 @@ end module para_mod
       use para_mod
       use parallel_include
       use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
+      use gvecw , only : ngw
       implicit none
       integer unit, nspin
       real(kind=8) rhor(nnr,nspin)
@@ -247,6 +254,7 @@ end module para_mod
 ! write the charge density to unit "unit" from first node only
 !
          if (me.eq.1) write(unit) (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
+         ! if (me.eq.1) write(unit,'(f12.7)') (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
       end do
       if (me.eq.1) deallocate(rhodist)
 !
@@ -291,10 +299,11 @@ end module para_mod
      &        nq, nqs,             &! counters on planes
      &        n1m1,n2m1,n3m1        ! nr1-1 and so on
 !
-      integer  npp(maxproc), npps(maxproc)
+!      integer  npp(maxproc), npps(maxproc)
       integer  ncp(maxproc), ncps(maxproc)
       integer  ncpw(maxproc)
-      integer  ncplane, ncplanes
+      integer  ncplane
+      integer  ncplanes
       integer  nct, ncts
       integer  i
 !
@@ -345,6 +354,22 @@ end module para_mod
             if (i.le.nqs) npps(i) = nps1 + 1
          end do
       end if
+
+!----------------------------
+!        Wannier function and Electric Field
+!                                   - M.S
+!----------------------------
+      n3s(1)= 0
+      n3me(1)= 0
+      do i = 2, nproc
+         n3s(i)=n3s(i-1)+npps(i-1)
+         n3me(i)=n3me(i-1)+npp(i-1)
+      end do
+!----------------------------
+!       End Wannier function and Electric Field
+!                                    - M.S
+!---------------------------
+
 !
       nct = 0
       ncts= 0
@@ -449,6 +474,14 @@ end module para_mod
          nnr  = max(nr3x*ncp(me), nr1x*nr2x*npp(me))
          nnrs = max(nr3sx*ncps(me), nr1sx*nr2sx*npps(me))
       end if
+
+!
+!   Wannier Functions
+!          - M.S
+        do i=1, nproc
+          ngp__(i)=ngp(i)
+          ngpw__(i)=ngpw(i)
+        end do
 
       call stop_clock( 'setfftpara' )
 !
@@ -618,4 +651,58 @@ end module para_mod
       return
       end subroutine nrbounds
 
+!----------------------------------------------------------------------
+      subroutine write_pot(unit,rhos2)
+!     - To write the hartree potential
+!        M.S
+!----------------------------------------------------------------------
+!
+! collect rhos2(nnrs) on first node and write to file
+!
+      use para_mod
+      use smooth_grid_dimensions , nnrs => nnrsx
+      use parallel_include
+
+      implicit none
+
+      integer unit, nspin
+      real(kind=8) rhos2(nnrs)
+!
+      integer ir, is
+      integer root, proc, ierr, displs(nproc), recvcount(nproc)
+      real(kind=8), allocatable:: rhodist(:)
+!
+!
+      if (me.eq.1) allocate(rhodist(nr1sx*nr2sx*nr3sx))
+!
+      root = 0
+      do proc=1,nproc
+         recvcount(proc) =   dffts%nnp * npps(proc)
+         if (proc.eq.1) then
+            displs(proc)=0
+         else
+            displs(proc)=displs(proc-1) + recvcount(proc-1)
+         end if
+      end do
+!
+!      do is=1,nspin
+!
+! gather the charge density on the first node
+         call mpi_barrier ( MPI_COMM_WORLD, ierr)
+         call mpi_gatherv (rhos2, recvcount(me), MPI_REAL8,        &
+     &                     rhodist,recvcount, displs, MPI_REAL8,        &
+     &                     root, MPI_COMM_WORLD, ierr)
+         if (ierr.ne.0) call errore('mpi_gatherv','ierr<>0',ierr)
+!
+! write the charge density to unit "unit" from first node only
+!
+         if (me.eq.1) write(unit,'(f12.6)') (rhodist(ir),ir=1,nr1sx*nr2sx*nr3sx)
+!      end do
+      if (me.eq.1) deallocate(rhodist)
+!
+      return
+      end subroutine write_pot
+
+
 #endif
+

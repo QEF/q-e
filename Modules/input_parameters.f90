@@ -94,7 +94,7 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: calculation = 'none'  
           ! calculation = 'scf', 'relax', 'md', 'cp'*, 'vc-relax', 'vc-md', 
-          !               'vc-cp', 'neb', 'smd' 
+          !               'vc-cp', 'neb', 'smd', 'cp-wf' 
           ! Specify the type of the simulation
           ! 'scf'      = electron minimization
           ! 'relax'    = ionic minimization
@@ -105,11 +105,12 @@ MODULE input_parameters
           ! 'vc-md'    = variable-cell Car-Parrinello (-Rahman) dynamics
           ! 'neb'      = VEC-CI-NEB search of the Minimum Energy Path (MEP)
           ! 'smd'      = String Method search of the Minimum Energy Path (MEP)
+          ! 'cp-wf'    = Car-Parrinello with wannier functions
 
 
         CHARACTER(LEN=80) :: calculation_allowed(12)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd'/
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd', 'cp-wf' /
           ! Allowed value for calculation parameters
 
 

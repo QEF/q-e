@@ -23,13 +23,13 @@ CONTAINS
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE read_input_file( lneb, lsmd )
+      SUBROUTINE read_input_file( lneb, lsmd, lwf )
         USE read_namelists_module, ONLY: read_namelists
         USE read_cards_module, ONLY: read_cards
         USE input_parameters, ONLY: calculation
         IMPLICIT NONE
 
-        LOGICAL, INTENT(OUT) :: lneb, lsmd
+        LOGICAL, INTENT(OUT) :: lneb, lsmd, lwf
 
 ! . Read NAMELISTS ..................................................!
 
@@ -41,6 +41,7 @@ CONTAINS
 
         lneb = ( TRIM( calculation ) == 'neb' )
         lsmd = ( TRIM( calculation ) == 'smd' )
+        lwf  = ( TRIM( calculation ) == 'cp-wf' )
 
         RETURN
       END SUBROUTINE

@@ -57,7 +57,7 @@
       use para_mod, ONLY: me, mygroup, nproc
       use io_files, only: psfile, pseudo_dir
       use ions_base, only: nsp
-      use control_flags, only: lneb, lsmd
+      use control_flags, only: lneb, lsmd, lwf
 !
       implicit none
 !
@@ -75,7 +75,7 @@
       !  readin the input file
       !
 
-      call read_input_file( lneb, lsmd )
+      call read_input_file( lneb, lsmd, lwf )
 
       !
       !  copy pseudopotential input parameter into internal variables
@@ -88,6 +88,8 @@
         call neb_loop( 1 )
       ELSE IF ( lsmd ) THEN
         call smd_loop( 1 )
+      ELSE IF ( lwf ) THEN
+        call wf_loop( 1 )
       ELSE
         call cpr_loop( 1 )
       END IF
@@ -215,6 +217,41 @@
       END DO
 
       DEALLOCATE( tau, fion, etot )
+
+      RETURN
+    END SUBROUTINE
+
+
+    SUBROUTINE wf_loop( nloop )
+      USE input_parameters, ONLY: nat, tprnfor
+      USE input_parameters, ONLY: ion_positions, rd_pos
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: nloop
+      INTEGER :: iloop
+      REAL(kind=8), ALLOCATABLE :: tau( :, : )
+      REAL(kind=8), ALLOCATABLE :: fion( :, : )
+      REAL(kind=8) :: etot
+
+      IF( nat > 0 ) THEN
+        ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
+      ELSE
+        CALL errore( ' cpr_loop ', ' nat less or equal 0 ', 1 )
+      END IF
+
+      ! ... set tprnfor = .true. to get atomic forces
+      ! ... even if the atoms do not move
+
+      ! ... set ion_positions = 'from_input'
+      ! ... and rd_pos = +your_positions+
+      ! ... to force cprmain to compute forces for
+      ! ... +your_position+ configuration
+
+      DO iloop = 1, nloop
+        call cprmain_wf( tau(1,1), fion(1,1), etot)
+        call memstat( 1 )
+      END DO
+
+      DEALLOCATE( tau, fion )
 
       RETURN
     END SUBROUTINE

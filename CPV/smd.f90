@@ -42,7 +42,8 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   use cell_base, only: wmass, hold, h
   use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
   use betax, only: mmx, refg
-  use restartsm
+  !use restartsm
+  use restart
   use parameters, only: nacx, nsx, natx
   USE smd_rep, only: rep
   USE smd_variables, only: sm_p

@@ -9018,3 +9018,636 @@ end function pseudo_type
 #endif
       return
       end
+
+
+!-----------------------------------------------------------------------
+      subroutine vofrho_wf(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
+     &     ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
+!-----------------------------------------------------------------------
+!     computes: the one-particle potential v in real space,
+!               the total energy etot,
+!               the forces fion acting on the ions,
+!               the derivative of total energy to cell parameters h
+!     rhor input : electronic charge on dense real space grid
+!                  (plus core charge if present)
+!     rhog input : electronic charge in g space (up to density cutoff)
+!     rhos input : electronic charge on smooth real space grid
+!     rhor output: total potential on dense real space grid
+!     rhos output: total potential on smooth real space grid
+!
+      use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
+      use io_global, only: stdout
+      use parameters, only: natx, nsx
+      use ions_base, only: nas => nax, nsp, na
+      use gvec
+      use gvecs
+      use cell_base, only: omega
+      use cell_base, only: a1, a2, a3, alat
+      use reciprocal_vectors, only: ng0 => gstart
+      !use parm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+            nr1sx, nr2sx, nr3sx, nnrsx
+      use elct
+      use constants, only: pi, fpi
+      use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
+      use pseu
+      use core
+      !use ncprm
+      use gvecb
+      !use dft_mod
+      use work, only: wrk1
+      use work_box
+      use atom, only: nlcc
+!
+      use dener
+      use derho
+      use dpseu
+!
+      implicit none
+!
+      logical tlast,tfirst
+      integer nfi
+      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx,nsx)
+      real(kind=8)  rhoc(nnr), tau0(3,natx,nsp)
+      complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
+     &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
+     &                rhog(ng,nspin), sfac(ngs,nsp)
+!
+      integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
+      real(kind=8) fion1(3,natx,nsx), vave, ebac, wz, eh, SSUM
+      complex(kind=8)  fp, fm, ci, CSUM
+      complex(kind=8), pointer:: v(:), vs(:)
+      complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      external SSUM, CSUM
+
+! Makov Payne Variables
+!
+      real(kind=8) dipole,quadrupole
+      real(kind=8) E_dip,E_quad,en1,en2
+      real(kind=8), allocatable:: rhortot(:)
+      real(kind=8) alpha
+
+!
+      call start_clock( 'vofrho_wf' )
+      
+      ci=(0.,1.)
+!
+!     wz = factor for g.neq.0 because of c*(g)=c(-g)
+!
+      wz = 2.0
+      v => wrk1
+      vs=> wrk1
+      allocate(vtemp(ng))
+!      write(6,*) 'Allocated vtemp'
+      allocate(rhotmp(ng))
+!      write(6,*) 'Allocated rhotmp'
+      allocate(rhortot(nnr))                ! for Makov Payne
+!      write(6,*) 'Allocated rhortot'
+      if (tpre) allocate(drhotmp(ng,3,3))
+!      write(6,*) 'Allocated all'
+!
+!     first routine in which fion is calculated: annihilation
+!
+      do is=1,nsp
+         do ia=1,natx
+            do i=1,3
+               fion (i,ia,is)=0.d0
+               fion1(i,ia,is)=0.d0
+            end do
+         end do
+      end do
+
+!      write(6,*) 'Annihilation'
+!
+!     ===================================================================
+!     forces on ions, ionic term in real space
+!     -------------------------------------------------------------------
+      if( tprnfor .or. tfor .or. tfirst .or. thdyn ) then
+        call force_ion(tau0,esr,fion,dsr)
+      end if
+!
+      if(nspin.eq.1) then
+         iss=1
+         do ig=1,ng
+            rhotmp(ig)=rhog(ig,iss)
+         end do
+         if(tpre)then
+            do j=1,3
+               do i=1,3
+                  do ig=1,ng
+                     drhotmp(ig,i,j)=drhog(ig,iss,i,j)
+                  enddo
+               enddo
+            enddo
+         endif
+      else
+         isup=1
+         isdw=2
+         do ig=1,ng
+            rhotmp(ig)=rhog(ig,isup)+rhog(ig,isdw)
+         end do
+         if(tpre)then
+            do i=1,3
+               do j=1,3
+                  do ig=1,ng
+                     drhotmp(ig,i,j) = drhog(ig,isup,i,j) +           &
+     &                                 drhog(ig,isdw,i,j)
+                  enddo
+               enddo
+            enddo
+         endif
+      end if
+!      write(6,*) 'fion'
+!     ===================================================================
+!     calculation local potential energy
+!     -------------------------------------------------------------------
+      vtemp=(0.,0.)
+      do is=1,nsp
+         do ig=1,ngs
+            vtemp(ig)=vtemp(ig)+conjg(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
+         end do
+      end do
+!
+      epseu=wz*real(CSUM(ngs,vtemp,1))
+      if (ng0.eq.2) epseu=epseu-vtemp(1)
+#ifdef __PARA
+      call reduce(1,epseu)
+#endif
+      epseu=epseu*omega
+!
+      if(tpre) call denps(rhotmp,drhotmp,sfac,vtemp,dps)
+
+!      write(6,*) 'Local Energy'
+!
+!     ===================================================================
+!     calculation hartree energy
+!     -------------------------------------------------------------------
+      do is=1,nsp
+         do ig=1,ngs
+            rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
+         end do
+      end do
+      if (ng0.eq.2) vtemp(1)=0.0
+      do ig=ng0,ng
+         vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
+      end do
+!
+      eh=real(CSUM(ng,vtemp,1))*wz*0.5*fpi/tpiba2
+#ifdef __PARA
+      call reduce(1,eh)
+#endif
+      if(tpre) call denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
+      if(tpre) deallocate(drhotmp)
+!      write(6,*) 'Hartree Energy'
+!     ===================================================================
+!     forces on ions, ionic term in reciprocal space
+!     -------------------------------------------------------------------
+      if( tprnfor .or. tfor .or. thdyn)                                                  &
+     &    call force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
+!     ===================================================================
+!     calculation hartree + local pseudo potential
+!     -------------------------------------------------------------------
+!
+      if (ng0.eq.2) vtemp(1)=(0.,0.)
+      do ig=ng0,ng
+         vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
+      end do
+!
+      do is=1,nsp
+         do ig=1,ngs
+            vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
+         end do
+      end do
+!
+!     vtemp = v_loc(g) + v_h(g)
+!  
+!       write(6,*) 'Hartree + Local'
+! Makov-Payne corrections, by Filippo
+!
+      if(tlast) then
+!     ===================================================================
+!     fourier transform of total density to r-space (dense grid)
+!     -------------------------------------------------------------------
+      call zero(2*nnr,v)
+         do ig=1,ng
+            v(nm(ig))=conjg(rhotmp(ig))
+            v(np(ig))=rhotmp(ig)
+         end do
+!
+!     v(g) --> v(r)
+!
+         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+!
+         do ir=1,nnr
+          rhortot(ir)=real(v(ir))
+         end do
+!
+       call poles(rhortot,dipole,quadrupole)
+!
+!      Madelung constant for cubic lattice (NaCl)
+
+!
+       alpha=1.7476
+!
+       en1=qbac**2.*alpha/(2.*alat)
+       en2=2.*pi*qbac*quadrupole/(3.*alat**3)
+!
+       write (6,*) "en1: ", en1
+       write (6,*) "en2: ", en2
+!
+       E_quad= en1 + en2
+!
+!      The interaction energy of the background charge (minus the
+!      molecular charge) with itself on a lattice (Madelung energy).
+!      +
+!      The interaction energy of the background charge with the nuclear
+!      quadupole moment on a lattice, with reversed sign due to the fact
+!      that the electron density is assumed to be positive.
+!
+      end if
+! END of Makov-Payne corrections, writen by Filippo
+!
+!
+!     ===================================================================
+!      calculation exchange and correlation energy and potential
+!     -------------------------------------------------------------------
+      if ( ANY( nlcc ) ) call add_cc(rhoc,rhog,rhor)
+!
+!      write(6,*) 'add_cc'
+
+      call exch_corr_h(nspin,rhog,rhor,exc,dxc)
+!
+!     rhor contains the xc potential in r-space
+
+!      write(6,*) 'XC R Space'
+!
+!     ===================================================================
+!     fourier transform of xc potential to g-space (dense grid)
+!     -------------------------------------------------------------------
+!
+      if(nspin.eq.1) then
+         iss=1
+         do ir=1,nnr
+            v(ir)=cmplx(rhor(ir,iss),0.0)
+         end do
+!
+!     v_xc(r) --> v_xc(g)
+!
+         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+!
+         do ig=1,ng
+            rhog(ig,iss)=vtemp(ig)+v(np(ig))
+         end do
+!
+!     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
+!     rhog contains the total potential in g-space
+!
+      else
+         isup=1
+         isdw=2
+         do ir=1,nnr
+            v(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
+         end do
+         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         do ig=1,ng
+            fp=v(np(ig))+v(nm(ig))
+            fm=v(np(ig))-v(nm(ig))
+            rhog(ig,isup)=vtemp(ig)+0.5*cmplx( real(fp),aimag(fm))
+            rhog(ig,isdw)=vtemp(ig)+0.5*cmplx(aimag(fp),-real(fm))
+         end do
+      endif
+!
+!     rhog contains now the total (local+Hartree+xc) potential in g-space
+!
+!     write(6,*) 'XC G-Space'
+
+      if( tprnfor .or. tfor ) then
+         if ( ANY( nlcc ) ) call force_cc(irb,eigrb,rhor,fion1)
+#ifdef __PARA
+         call reduce(3*natx*nsp,fion1)
+#endif
+!
+!    add g-space ionic and core correction contributions to fion
+!
+         do is=1,nsp
+            do ia=1,na(is)
+               do k=1,3
+                  fion(k,ia,is) = fion(k,ia,is) + fion1(k,ia,is)
+               end do
+            end do
+         end do
+      end if
+!     ===================================================================
+!     fourier transform of total potential to r-space (dense grid)
+!     -------------------------------------------------------------------
+      call zero(2*nnr,v)
+      if(nspin.eq.1) then
+         iss=1
+         do ig=1,ng
+            v(np(ig))=rhog(ig,iss)
+            v(nm(ig))=conjg(rhog(ig,iss))
+         end do
+!
+!     v(g) --> v(r)
+!
+         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+!
+         do ir=1,nnr
+            rhor(ir,iss)=real(v(ir))
+         end do
+!
+!     calculation of average potential
+!
+         vave=SSUM(nnr,rhor(1,iss),1)/dfloat(nr1*nr2*nr3)
+      else
+         isup=1
+         isdw=2
+         do ig=1,ng
+            v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+            v(nm(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+         end do
+!
+         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         do ir=1,nnr
+            rhor(ir,isup)= real(v(ir))
+            rhor(ir,isdw)=aimag(v(ir))
+         end do
+
+!       write(6,*) 'Average Potential'
+!
+!     calculation of average potential
+!
+         vave=(SSUM(nnr,rhor(1,isup),1)+SSUM(nnr,rhor(1,isdw),1))       &
+     &        /2.0/dfloat(nr1*nr2*nr3)
+      endif
+#ifdef __PARA
+      call reduce(1,vave)
+#endif
+!     ===================================================================
+!     fourier transform of total potential to r-space (smooth grid)
+!     -------------------------------------------------------------------
+      call zero(2*nnrsx,vs)
+      if(nspin.eq.1)then
+         iss=1
+         do ig=1,ngs
+            vs(nms(ig))=conjg(rhog(ig,iss))
+            vs(nps(ig))=rhog(ig,iss)
+         end do
+!
+         call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+!
+         do ir=1,nnrsx
+            rhos(ir,iss)=real(vs(ir))
+         end do
+      else
+         isup=1
+         isdw=2
+         do ig=1,ngs
+            vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+            vs(nms(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+         end do 
+         call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         do ir=1,nnrsx
+            rhos(ir,isup)= real(vs(ir))
+            rhos(ir,isdw)=aimag(vs(ir))
+         end do
+      endif
+
+
+!      write(6,*) 'Total Potential r-space'
+
+      ebac=0.0
+!
+      eht=eh*omega+esr-eself
+!
+!     etot is the total energy ; ekin, enl were calculated in rhoofr
+!
+      etot=ekin+eht+epseu+enl+exc+ebac
+      if(tpre) detot=dekin+dh+dps+denl+dxc+dsr
+
+     if(tlast) then
+         write (6,*)'MAKOV-PAYNE CORRECTED TOTAL ENERGY',etot+E_quad
+         write (6,*)'THIS CORRECTION IS VALID ONLY FOR CUBIC LATTICES'
+      end if
+
+
+!
+      if(tvlocw.and.tlast)then
+#ifdef __PARA
+         call write_rho(46,nspin,rhor)
+#else
+         write(46) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
+#endif
+      endif
+!
+      deallocate(rhotmp)
+      deallocate(vtemp)
+      deallocate(rhortot)                ! Makov Payne Variable - M.S
+
+!      write(6,*) 'Deallocations'
+!
+!
+      call stop_clock( 'vofrho_wf' )
+      if((nfi.eq.0).or.tfirst.or.tlast) goto 999
+      if(mod(nfi-1,iprint).ne.0 ) return
+!
+ 999  WRITE( stdout,1) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
+    1 format(//'                total energy = ',f14.5,' a.u.'/         &
+     &         '              kinetic energy = ',f14.5,' a.u.'/         &
+     &         '        electrostatic energy = ',f14.5,' a.u.'/         &
+     &         '                         esr = ',f14.5,' a.u.'/         &
+     &         '                       eself = ',f14.5,' a.u.'/         &
+     &         '      pseudopotential energy = ',f14.5,' a.u.'/         &
+     &         '  n-l pseudopotential energy = ',f14.5,' a.u.'/         &
+     &         ' exchange-correlation energy = ',f14.5,' a.u.'/         &
+     &         '           average potential = ',f14.5,' a.u.'//)
+!
+      if(tpre)then
+         WRITE( stdout,*) "cell parameters h"
+         WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
+         WRITE( stdout,*)
+         WRITE( stdout,*) "derivative of e(tot)"
+         WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
+         WRITE( stdout,*)
+         if(tpre.and.iprsta.ge.2) then
+            WRITE( stdout,*) "derivative of e(kin)"
+            WRITE( stdout,5555) ((dekin(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(electrostatic)"
+            WRITE( stdout,5555) (((dh(i,j)+dsr(i,j)),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(h)"
+            WRITE( stdout,5555) ((dh(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(sr)"
+            WRITE( stdout,5555) ((dsr(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(ps)"
+            WRITE( stdout,5555) ((dps(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(nl)"
+            WRITE( stdout,5555) ((denl(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "derivative of e(xc)"
+            WRITE( stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
+         endif
+      endif
+5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)
+!
+      return
+      end
+
+!------------------------------------------------------------------------
+      subroutine poles(rhortot,dipole,quadrupole)
+!------------------------------------------------------------------------
+!
+#ifdef __PARA
+      use para_mod
+#endif
+      use gvec
+!      use parm
+      use grid_dimensions, only : nr1, nr2, nr3, nnr=> nnrx
+      use cell_base, only : a1, a2, a3
+      use elct
+!
+      parameter (debye=1./0.39344,angs=1./0.52917726)
+!
+      real(kind=8)  dipole,quadrupole,mu(3),quad(6)
+      real(kind=8)  ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,s,rzero,x0,y0,z0
+      real(kind=8)  en1,en2
+      real(kind=8)  rhortot(nnr)
+!     real(kind=8), allocatable:: x(:),y(:),z(:)
+      real(kind=8), allocatable:: dip(:)
+      integer (kind=4) ix,ir
+!
+      external SSUM
+!
+      allocate(dip(nnr))
+
+!     compute the dipole moment
+!
+        ax=a1(1)
+        ay=a2(2)
+        az=a3(3)
+!
+        XG0 = -ax/2.
+        YG0 = -ay/2.
+        ZG0 = -az/2.
+        pass1=ax/nr1
+        pass2=ax/nr2
+        pass3=ax/nr3
+!        pass1 = ax / (nr1-1)
+!        pass2 = ay / (nr2-1)
+!        pass3 = az / (nr3-1)
+!
+        do ix=1,3
+        ir=1
+!
+        do k=n3me(me)+1,n3me(me)+npp(me)!!!!!!!!!!!!!!!!!!!!!!111,nr3
+         do j=1,nr2x
+          do i=1,nr1x
+            X=XG0+(i-1)*pass1
+            Y=YG0+(j-1)*pass2
+            Z=ZG0+(k-1)*pass3
+            if (ix.eq.1) D=X
+            if (ix.eq.2) D=Y
+            if (ix.eq.3) D=Z
+            dip(ir)=D*rhortot(ir)
+            ir=ir+1
+           end do
+          end do
+         end do
+!
+         mu(ix)=ssum(nnr,dip(1),1)
+!
+         end do !!!!!!! ix
+!
+#ifdef __PARA
+         call reduce(3,mu)
+#endif
+!
+        do ix=1,3
+         mu(ix)=mu(ix)*omega/dfloat(nr1*nr2*nr3)
+        end do
+!
+        dipole=sqrt(mu(1)**2+mu(2)**2+mu(3)**2)
+!
+!
+!       compute the coordinates which put the dipole moment to zero
+!
+        if (abs(qbac).gt.1.d-05) then
+         x0=mu(1)/abs(qbac)
+         y0=mu(2)/abs(qbac)
+         z0=mu(3)/abs(qbac)
+         rzero=x0**2+y0**2+z0**2
+        else
+         rzero=0.
+        end if
+!
+!       compute the quadrupole moment
+!
+        do ix=1,6
+!
+         ir=1
+         do k=n3me(me)+1,n3me(me)+npp(me)
+          do j=1,nr2x
+           do i=1,nr1x
+!
+            X=XG0+(i-1)*pass1
+            Y=YG0+(j-1)*pass2
+            Z=ZG0+(k-1)*pass3
+!
+            XX=X*X
+            YY=Y*Y
+            ZZ=Z*Z
+            XY=X*Y
+            XZ=X*Z
+            YZ=Y*Z
+!
+            if (ix.eq.1) D=XX
+            if (ix.eq.2) D=YY
+            if (ix.eq.3) D=ZZ
+            if (ix.eq.4) D=XY
+            if (ix.eq.5) D=XZ
+            if (ix.eq.6) D=YZ
+!
+            dip(ir)=D*rhortot(ir)
+!
+            ir=ir+1
+           end do
+          end do
+         end do
+!
+        quad(ix)=SSUM(nnr,dip(1),1)
+        end do
+!
+#ifdef __PARA
+         call reduce(6,quad)
+#endif
+        do ix=1,6
+         quad(ix)=quad(ix)*omega/dfloat(nr1*nr2*nr3)
+        end do
+!
+        quadrupole=quad(1)+quad(2)+quad(3)-rzero*qbac
+!
+!  only the diagonal elements contribute to the inetaction energy
+!  the term rzero*qbac is subtracted to zero the dipole moment
+!
+        write (*,1001)(mu(ix),ix=1,3)
+        write (*,1002) dipole
+        write (*,*) ' '
+        write (*,1003)(quad(ix),ix=1,3)
+        write (*,1004)(quad(ix),ix=4,6)
+        write (*,1005) quadrupole,rzero*qbac
+!
+1001  format('DIPOLE XYZ-COMPONENTS (A.U.)',f10.4,2x,f10.4,2x,f10.4)
+1002  format('DIPOLE MOMENT         (A.U.)',f10.4)
+1003  format('QUADRUPOLE XX-YY-ZZ COMPONENTS (A.U.)',             &
+     &f9.4,2x,f9.4,2x,f9.4)
+1004  format('QUADRUPOLE XY-XZ-YZ COMPONENTS (A.U.)',             &
+     &f9.4,2x,f9.4,2x,f9.4)
+1005  format('QUADRUPOLE MOMENT              (A.U.)',2f9.4)
+!
+      deallocate(dip)
+!
+      return
+      end
+
