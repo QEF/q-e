@@ -38,7 +38,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
 
   real(kind=dp) :: &
        vnloc, a_core, b_core, &
-       alfa_core, rdum, xmax, &
+       alfa_core, xmax, &
        cc(2),alpc(2),alc(6,0:3),alps(3,0:3),erf 
 
   logical :: &
@@ -56,13 +56,13 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
   !     reads the starting lines
   !
   read( iunps, '(a)', end=300, err=300, iostat=ios ) dft
-
   if (dft(1:2).eq.'**') dft='LDA'
   if (dft(1:17).eq.'slater-pz-ggx-ggc') dft='PW'
 
   read ( iunps, *, err=300, iostat=ios ) cdum,  &
        zval, lmax, nlc, nnl, nlcc,  &
-       lloc, bhstype, rdum
+       lloc, bhstype
+
   if ( nlc.gt.2 .or. nnl.gt.3)  &
        call errore( 'read_pseudo','Wrong nlc or nnl', 1)
   if ( nlc .lt.0 .or. nnl .lt. 0 )  &

@@ -116,7 +116,7 @@ implicit none
       evxt=    int_0_inf_dr(f4,r,r2,dx,mesh,2)
       if (nlcc) then
          ecc=    int_0_inf_dr(f8,r,r2,dx,mesh,2)
-         write(6,'(5x,'' Core only energy '',f15.8 )') ecc
+         write(6,'(5x,''Core only energy '',f15.8 )') ecc
       endif
 !
       epseu=0.0_DP

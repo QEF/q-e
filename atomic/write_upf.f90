@@ -42,8 +42,9 @@ end subroutine write_upf
     character(len=9) :: day, hour
 
     call date_and_tim(day,hour)
-    generated='Generated using Andrea Dal Corso code (rrkj3)'
-    date_author='Andrea Dal Corso   Generation date: '// day 
+    generated='Generated using "atomic" code by A. Dal Corso &
+             & (quantum-espresso distribution)'
+    date_author='Author field   Generation date: '// day 
     comment=title
 
     write (ounps, '(a9)', err = 100, iostat = ios) "<PP_INFO>"  
@@ -93,6 +94,7 @@ end subroutine write_upf
     integer :: ounps  
     !
     character (len=4) :: shortname
+    character (len=2), external :: atom_name
     real(kind=dp) ecutrho, ecutwfc
     integer :: nb, ios, nv  
     !
@@ -102,8 +104,8 @@ end subroutine write_upf
     nv=0
     write (ounps, '(t3,i2,t24,a)', err = 100, iostat = ios) nv, &
          "Version Number"
-    write (ounps, '(t3,a,t24,a)', err = 100, iostat = ios) title , &
-         "Element"
+    write (ounps, '(t3,a,t24,a)', err = 100, iostat = ios) &
+         atom_name(nint(zed)), "Element"
     if (pseudotype == 1.or.pseudotype == 2) then  
        write (ounps, '(a5,t24,a)', err = 100, iostat = ios) "NC", &
             "Norm - Conserving pseudopotential"

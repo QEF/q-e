@@ -53,7 +53,7 @@ subroutine scf
               call errore('scf','relativistic not programmed',1)
            endif
            !      write(6,*) el(n),enl(n)
-           if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
+           ! if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
            nerr=nerr+nstop
         else
            enl(n)=0.0_dp

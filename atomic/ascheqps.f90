@@ -111,7 +111,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   else
      elw=elw0
   endif
-  write(6,*) 'Try bisec', elw,eup       
+  ! write(6,*) 'Try bisec', elw,eup       
   if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
   if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
 
@@ -189,7 +189,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
         e=(eup+elw)*0.5_DP
      endif
   enddo
-  write(6,'('' solution not found in ascheqps'')')
+  write(6,'(5x,"Solution not found in ascheqps for n,l=",2i2)'), nn,lam
   nosol=.true.
 900 continue
   !
@@ -198,7 +198,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   if (e.gt.0.0_DP) then
      e=0.0_DP
      y=0.0_DP
-     write(6,'('' solution not found in ascheqps'')')
+     write(6,'(5x,"Solution not found in ascheqps for n,l=",2i2)'), nn,lam
      nosol=.true.
   else
      call compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
