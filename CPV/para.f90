@@ -13,15 +13,13 @@ module para_mod
   USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
      fft_dlay_deallocate, fft_dlay_set
   USE fft_base, ONLY: dfftp, dffts
+  USE mp_global, ONLY: nproc, mygroup => group
 
-  integer maxproc, ncplanex
-  parameter (maxproc=64, ncplanex=37000)
-  
   character(len=3) :: node
 
 ! node:    node number, useful for opening files
 
-  integer nproc, me, mygroup
+  integer  me
 
 ! nproc:   number of processors
 ! me:      number of this processor
@@ -48,6 +46,9 @@ module para_mod
 ! icpl -> dfftp%ismap
 ! nnr_ -> dfftp%nnr
 !
+!  integer maxproc, ncplanex
+!  parameter (maxproc=64, ncplanex=37000)
+!  
 !  integer  npp(maxproc), n3(maxproc), ncp(maxproc), ncp0(maxproc), &
 !           ncplane, nct, nnr_, ipc(ncplanex), icpl(ncplanex)
 !
@@ -84,71 +85,8 @@ contains
   end subroutine
 
 end module para_mod
-!
-!-----------------------------------------------------------------------
-      subroutine startup
-!-----------------------------------------------------------------------
-!
-!  This subroutine initializes the Message Passing environment. 
-!  The number of processors "nproc" returned by this routine is 
-!  determined by the way the process was started. 
-!  This is configuration- and machine-dependent. For inter-
-!  active execution it is determined by environment variable MP_PROCS
-!
-      use para_mod
-      use mp, only: mp_start, mp_env
-      use io_global, only: stdout
-      use global_version
-!
-      implicit none
 
-      integer ierr
 !
-      call mp_start()
-      call mp_env( nproc, me, mygroup )
-      me = me + 1
-!
-!
-! parent process (source) will have me=1 - child process me=2,...,NPROC
-! (for historical reasons: MPI uses 0,...,NPROC-1 instead )
-!
-      if ( nproc > maxproc) &
-     &   call errore('startup',' too many processors ',nproc)
-!
-      if (me < 10) then
-         write(node,'(i1,2x)') me
-      else if (me < 100) then
-         write(node,'(i2,1x)') me
-      else if (me < 1000) then
-         write(node,'(i3)') me
-      else
-         call errore('startup','wow, >1000 nodes !!',nproc)
-      end if
-!
-! only the first processor writes
-!
-      if ( me == 1 ) then
-         WRITE( stdout,'(72("*"))')
-         WRITE( stdout,'(4("*"),64x,4("*"))')
-         WRITE( stdout,'(4("*"),"  CPV: variable-cell Car-Parrinello ", &
-              &  "molecular dynamics          ",4("*"))') 
-         WRITE( stdout,'(4("*"),"  using ultrasoft Vanderbilt ", &
-              &  "pseudopotentials - v.",a6,8x,4("*"))') version_number
-         WRITE( stdout,'(4("*"),64x,4("*"))')
-         WRITE( stdout,'(72("*"))')
-         WRITE( stdout,'(/5x,''Parallel version (MPI)'')')
-         WRITE( stdout,'(5x,''Number of processors in use:   '',i4)') nproc
-      else
-         open(6,file='/dev/null',status='unknown')
-!
-! useful for debugging purposes 
-!         open(6,file='out.'//node,status='unknown')
-      end if
-!
-      return
-      end
-
-
 !
 !----------------------------------------------------------------------
       subroutine read_rho(unit,nspin,rhor)

@@ -41,8 +41,9 @@ CONTAINS
     USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq
     USE wavefunctions_module, ONLY: c0, cm, phi => cp
     USE io_global, ONLY: stdout
-    USE cpr_subroutines
-    USE wannier_subroutines
+    USE cpr_subroutines, ONLY: compute_stress, elec_fakekine
+    USE wannier_subroutines, ONLY: get_wannier_center, write_charge_and_exit, &
+          ef_tune, wf_options, ef_potential
     USE core, ONLY: nlcc_any
     USE gvecw, ONLY: ngw
     USE reciprocal_vectors, ONLY: gstart

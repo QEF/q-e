@@ -105,7 +105,7 @@
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use restart_file
       use parameters, only: nacx, natx, nsx, nbndxx
-      use constants, only: pi, factem, au_gpa, au_ps
+      use constants, only: pi, factem, au_gpa, au_ps, gpa_au
       use io_files, only: psfile, pseudo_dir
       use input_cp, only: iosys
       use qgb_mod, only: deallocate_qgb_mod
@@ -241,7 +241,7 @@
       real(kind=8) cdm(3)
 !
       integer k, ii, l, m
-      real(kind=8) ekinh, temphc, factp, temp1, temp2, randy
+      real(kind=8) ekinh, temphc, temp1, temp2, randy
       real(kind=8) ftmp
 
       character(len=256) :: filename
@@ -275,7 +275,6 @@
 
       etot_out = 0.0d0
 
-      factp   = 3.3989 * 0.00001
       tps     = 0.0d0
 
 !     general variables
@@ -392,7 +391,7 @@
       temp1=tempw+tolp
       temp2=tempw-tolp
       gkbt = 3.*nat*tempw/factem
-      press = press*factp
+      press = press * GPA_AU       ! factp   = 3.3989 * 0.00001  GPa to Au
 
 !     ==========================================================
 

@@ -28,12 +28,14 @@
   END INTERFACE
 
   INTERFACE writefile
-    MODULE PROCEDURE writefile_cp, readfile_fpmd
+    MODULE PROCEDURE writefile_cp, writefile_fpmd
   END INTERFACE
   
 !=----------------------------------------------------------------------------=!
      CONTAINS
 !=----------------------------------------------------------------------------=!
+
+#ifdef __OLD_RESTART
 
 !-----------------------------------------------------------------------
       subroutine writefile_cp_new                                         &
@@ -147,9 +149,11 @@
 ! and tests
 !
 
-      if ( ndw < 1 ) then
-        return
-      end if
+        IF( ndw < 1 ) RETURN
+        !
+        !   this is used for benchmarking and debug
+        !   if ndw < 1 Do not save wave functions and other system
+        !   properties on the writefile subroutine
 
 !
 ! Only the first node writes
@@ -743,6 +747,8 @@
       end subroutine
 
 
+#endif
+
 !=----------------------------------------------------------------------------=!
 
 !-----------------------------------------------------------------------
@@ -922,6 +928,8 @@
 
 !=----------------------------------------------------------------------------=!
 
+#ifdef __OLD_RESTART
+
         SUBROUTINE writefile_fpmd_new( nfi, trutime, &
           c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, ibrav, celldm, &
           ht_m2, ht_m, ht_0, rho, desc, vpot, gv, kp)
@@ -938,7 +946,7 @@
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp_wave, ONLY: mergewf
         USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndw, tnodump, gamma_only
+        USE control_flags, ONLY: ndw, gamma_only
         USE atoms_type_module, ONLY: atoms_type
         USE io_base, only: write_restart_header, write_restart_ions, &
             write_restart_cell, write_restart_electrons, &
@@ -1034,7 +1042,11 @@
 
         s0 = cclock()
 
-        IF( tnodump ) RETURN
+        IF( ndw < 1 ) RETURN
+        !
+        !   this is used for benchmarking and debug
+        !   if ndw < 1 Do not save wave functions and other system
+        !   properties on the writefile subroutine
 
         ngw_g = cdesc%ngwt
         ng_l  = gv%ng_l
@@ -1327,6 +1339,7 @@
         RETURN 
         END SUBROUTINE writefile_fpmd_new
 
+#endif
 
 !=------------------------------------------------------------------
 
@@ -1340,7 +1353,7 @@
         USE cell_module, only: boxdimensions, r_to_s
         USE brillouin, only: kpoints
         USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndw, tnodump, gamma_only
+        USE control_flags, ONLY: ndw, gamma_only
         USE control_flags, ONLY: twfcollect, force_pairing
         USE atoms_type_module, ONLY: atoms_type
         USE io_global, ONLY: ionode, ionode_id
@@ -1377,7 +1390,11 @@
              
         s0 = cclock()
 
-        IF( tnodump ) RETURN
+        IF( ndw < 1 ) RETURN
+        !
+        !   this is used for benchmarking and debug
+        !   if ndw < 1 Do not save wave functions and other system
+        !   properties on the writefile subroutine
 
         nbnd    = MAXVAL( cdesc%nbt )
         ALLOCATE( lambda(nbnd,nbnd) )
@@ -1410,6 +1427,8 @@
 
 !=----------------------------------------------------------------------------=!
 
+#ifdef __OLD_RESTART
+
         SUBROUTINE readfile_fpmd_new( nfi, trutime, &
           c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, ibrav, celldm, &
           ht_m2, ht_m, ht_0, rho, desc, vpot, gv, kp)
@@ -1426,7 +1445,7 @@
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp_wave, ONLY: mergewf
         USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndr, tnodump, tbeg, taurdr, gamma_only
+        USE control_flags, ONLY: ndr, tbeg, taurdr, gamma_only
         USE atoms_type_module, ONLY: atoms_type
         USE io_base, ONLY:  read_restart_header, read_restart_ions, &
           read_restart_cell, read_restart_electrons, &
@@ -1548,9 +1567,6 @@
 
         CALL mp_barrier()
         s0 = cclock()
-
-        IF( tnodump ) RETURN
-
 
         ngw_g = cdesc%ngwt
         ng_l  = gv%ng_l
@@ -1912,6 +1928,8 @@
         RETURN 
         END SUBROUTINE readfile_fpmd_new
 
+#endif
+
 !=----------------------------------------------------------------------------=!
 
         SUBROUTINE readfile_fpmd( nfi, trutime, &
@@ -1927,7 +1945,7 @@
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp_wave, ONLY: mergewf
         USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndr, tnodump, tbeg, taurdr, gamma_only
+        USE control_flags, ONLY: ndr, tbeg, taurdr, gamma_only
         USE atoms_type_module, ONLY: atoms_type
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout

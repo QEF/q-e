@@ -8,7 +8,7 @@
 
 
 !==-----------------------------------------------------------------------==!
-      MODULE environment
+   MODULE environment
 !==-----------------------------------------------------------------------==!
 
         USE kinds
@@ -27,30 +27,38 @@
         PUBLIC :: opening_date_and_time, closing_date_and_time
       
 !==-----------------------------------------------------------------------==!
-      CONTAINS
+   CONTAINS
 !==-----------------------------------------------------------------------==!
     
 
-        SUBROUTINE environment_start( ionode, mpime, nproc, cp_version )
+        SUBROUTINE environment_start( )
 
-          USE io_global, ONLY: stdout
+          USE io_global, ONLY: stdout, ionode
+          USE mp_global, ONLY: mpime, nproc
+          USE control_flags, ONLY: program_name
           USE parser, ONLY: int_to_char
-
-          LOGICAL, INTENT(IN) :: ionode
-          INTEGER, INTENT(IN) :: mpime, nproc
-          CHARACTER(LEN=*), INTENT(IN) :: cp_version
+          use para_mod, ONLY: me, node
+          use mp, only: mp_env
+          USE version
 
           LOGICAL    :: texst
           REAL(dbl)  :: elapsed_seconds
           EXTERNAL      elapsed_seconds
           INTEGER    :: nchar
           CHARACTER(LEN=80) :: uname
+          CHARACTER(LEN=80) :: cp_version
 
 
           CALL init_clocks( .TRUE. )
-          CALL start_clock( 'FPMD' )
+          CALL start_clock( program_name )
 
           start_seconds = elapsed_seconds()
+
+          cp_version = TRIM (version_number) // " - " // TRIM (version_date)
+
+          ! ...  Temporary for para_mod
+
+          me = mpime + 1
 
           ! ...  search for file CRASH and delete it
 
@@ -62,26 +70,59 @@
             END IF
           END IF
 
-! ...       use IBM SP Hardware performance monitor      
-
-! ...       each processor other than me=1 opens its own standard output file,
-! ...       this is mainly for debugging, usually only ionode writes to stdout
+          ! ...       each processor other than me=1 opens its own standard output file,
+          ! ...       this is mainly for debugging, usually only ionode writes to stdout
 
           IF( .NOT. ionode ) THEN
 
-            uname = 'fort_6.' // int_to_char( mpime )
+            uname = 'out.' // int_to_char( mpime )
             nchar = INDEX(uname,' ') - 1
-            OPEN( unit = stdout, file = uname(1:nchar), status = 'unknown', form = 'formatted')
+
+            IF( program_name == 'CPVC' ) THEN
+              !
+              ! useful for debugging purposes 
+              !     open(6,file=file = uname(1:nchar),status='unknown')
+              open( unit = stdout, file='/dev/null', status='unknown' )
+
+            ELSE IF( program_name == 'FPMD' ) THEN
+
+              OPEN( unit = stdout, file = uname(1:nchar), status = 'unknown' )
+
+            END IF
 
           END IF
 
-          ! ...  turn on stream buffering (Cray only)
+          ! ...  Temporary for para_mod
 
-#if defined __STREAMS_BUF
-          CALL set_d_stream(1)
-#endif
+          if (me < 10) then
+             write(node,'(i1,2x)') me
+          else if (me < 100) then
+             write(node,'(i2,1x)') me
+          else if (me < 1000) then
+             write(node,'(i3)') me
+          else
+             call errore('startup','wow, >1000 nodes !!',nproc)
+          end if
 
-          CALL opening_date_and_time(ionode, cp_version)
+          IF( program_name == 'CPVC' ) THEN
+
+            if ( ionode ) then
+              WRITE( stdout,'(72("*"))')
+              WRITE( stdout,'(4("*"),64x,4("*"))')
+              WRITE( stdout,'(4("*"),"  CPV: variable-cell Car-Parrinello ", &
+                   &  "molecular dynamics          ",4("*"))')
+              WRITE( stdout,'(4("*"),"  using ultrasoft Vanderbilt ", &
+                   &  "pseudopotentials - v.",a6,8x,4("*"))') version_number
+              WRITE( stdout,'(4("*"),64x,4("*"))')
+              WRITE( stdout,'(72("*"))')
+              WRITE( stdout,'(/5x,''Parallel version (MPI)'')')
+            end if
+
+          ELSE IF( program_name == 'FPMD' ) THEN
+
+            CALL opening_date_and_time( cp_version )
+
+          END IF
 
           WRITE( stdout,100)  nproc, mpime
 100       FORMAT(3X,'Tasks =',I5,'  This task id =',I5)
@@ -91,32 +132,24 @@
 
 !==-----------------------------------------------------------------------==!
 
-        SUBROUTINE environment_end( ionode, mpime )
+        SUBROUTINE environment_end( )
 
-          USE io_global, ONLY: stdout
-
-          LOGICAL, INTENT(IN) :: ionode
-          INTEGER, INTENT(IN) :: mpime
+          USE io_global, ONLY: stdout, ionode
+          USE control_flags, ONLY: program_name
 
           REAL(dbl)  :: total_seconds
 
           REAL(dbl)  :: elapsed_seconds
           EXTERNAL      elapsed_seconds
 
-! ...     turn off stream buffering (Cray only)
-
-#if defined __STREAMS_BUF
-          CALL set_d_stream(0)                                                             
-#endif
-
           IF(ionode) THEN
             WRITE( stdout,*)
           END IF
 
-          CALL print_clock( 'FPMD' )
-          CALL stop_clock( 'FPMD' )
+          CALL print_clock( program_name )
+          CALL stop_clock( program_name )
 
-          CALL closing_date_and_time(ionode)
+          CALL closing_date_and_time( )
 
           total_seconds = elapsed_seconds() - start_seconds
 
@@ -132,11 +165,10 @@
 
 !==-----------------------------------------------------------------------==!
 
-        SUBROUTINE opening_date_and_time( ionode, cp_version )
+        SUBROUTINE opening_date_and_time( cp_version )
 
-          USE io_global, ONLY: stdout
+          USE io_global, ONLY: stdout, ionode
 
-          LOGICAL, INTENT(IN) :: ionode
           CHARACTER(LEN=*), INTENT(IN) :: cp_version
           CHARACTER(LEN=9) :: cdate, ctime
 
@@ -163,11 +195,10 @@
 
 !==-----------------------------------------------------------------------==!
 
-        SUBROUTINE closing_date_and_time( ionode )
+        SUBROUTINE closing_date_and_time( )
 
-          USE io_global, ONLY: stdout
+          USE io_global, ONLY: stdout, ionode
 
-          LOGICAL, INTENT(IN) :: ionode
           CHARACTER(LEN=9) :: cdate, ctime
 
           CALL date_and_tim(cdate, ctime)
@@ -185,5 +216,5 @@
         END SUBROUTINE
 
 !==-----------------------------------------------------------------------==!
-      END MODULE environment
+   END MODULE environment
 !==-----------------------------------------------------------------------==!

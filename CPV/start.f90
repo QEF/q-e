@@ -43,12 +43,13 @@
 ! ... declare modules
       USE kinds
       USE environment, ONLY: environment_start, environment_end
-      USE input_fpmd, ONLY : read_input_file
+      USE input, ONLY: read_input_file, iosys_pseudo
       USE mp, ONLY: mp_start, mp_end, mp_env
       USE mp_global, ONLY: mp_global_start
       USE io_global, ONLY: io_global_start, io_global_getionode
       USE control_flags, ONLY: lneb, program_name
-      USE version
+      USE io_files, ONLY: psfile, pseudo_dir
+      USE ions_base, ONLY: nsp
 
       IMPLICIT NONE      
       
@@ -79,14 +80,21 @@
       CALL io_global_start( mpime, root )
       CALL io_global_getionode( ionode, ionode_id )
 
-! ... get environment variables (through the C library function getenv)
+! ... now contact the environment for execution date and time
 
-      cp_version = TRIM (version_number) // " - " // TRIM (version_date)
-      CALL environment_start( ionode, mpime, nproc, cp_version )
+      CALL environment_start( )
 
 ! ... read in the input file
 
       CALL read_input_file( lneb )
+
+      !
+      !  copy pseudopotential input parameter into internal variables
+      !  and read in pseudopotentials and wavefunctions files
+      !
+
+      call iosys_pseudo( psfile, pseudo_dir, nsp )
+
 
       IF( lneb ) THEN
         CALL neb_loop( 0 )
@@ -96,7 +104,7 @@
 
 ! ... Close the environment
 
-      CALL environment_end( ionode, mpime )
+      CALL environment_end( )
 
 ! ... terminate MPI
 

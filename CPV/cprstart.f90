@@ -50,28 +50,45 @@
 !     dt2bye         = 2*delt/emass
 !***********************************************************************
 !
-      use input_cp, only: read_input_file, iosys_pseudo
-      use io_global, ONLY: io_global_start
+      use input, only: read_input_file, iosys_pseudo
+      use io_global, ONLY: io_global_start, io_global_getionode
       use mp_global, ONLY: mp_global_start
-      use mp, ONLY: mp_end
-      use para_mod, ONLY: me, mygroup, nproc
+      use mp, ONLY: mp_end, mp_start, mp_env
       use io_files, only: psfile, pseudo_dir
       use ions_base, only: nsp
       use control_flags, only: lneb, lsmd, lwf, program_name
+      use environment, ONLY: environment_start, environment_end
 !
       implicit none
+
+      INTEGER :: mpime, nproc, gid, root, ionode_id
+      LOGICAL :: ionode
+
 !
 !     program starts here
 !
-!     Initialize processors IDs
-      call startup()
-      call io_global_start( (me-1), 0 )
-      call mp_global_start(0, (me-1), mygroup, nproc )
+
+! ... initialize MPI (parallel processing handling)
+
+      root = 0
+      CALL mp_start()
+      CALL mp_env( nproc, mpime, gid )
+      CALL mp_global_start( root, mpime, gid, nproc )
+
+! ... mpime = processor number, starting from 0
+! ... nproc = number of processors
+! ... gid   = group index
+! ... root  = index of the root processor
 
       program_name = 'CPVC'
 
-      CALL init_clocks( .TRUE. )
-      CALL start_clock( 'CP' )
+! ... initialize input output
+
+      CALL io_global_start( mpime, root )
+      CALL io_global_getionode( ionode, ionode_id )
+
+
+      CALL environment_start( )
 
       !
       !  readin the input file
@@ -96,8 +113,7 @@
         call cpr_loop( 1 )
       END IF
 
-      CALL stop_clock( 'CP' )
-      CALL print_clock( 'CP' )
+      CALL environment_end( )
 
       call mp_end()
 

@@ -19,7 +19,7 @@
 
 !  BEGIN manual
 
-      MODULE pseudopotential
+   MODULE pseudopotential
 
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
@@ -42,23 +42,18 @@
         USE kinds
         USE parameters, ONLY: cp_lmax
         USE cp_types, ONLY: pseudo, allocate_pseudo, recvecs
-        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf, &
-           nullify_pseudo_upf, deallocate_pseudo_upf
         USE splines, ONLY: spline_data
+        USE read_pseudo_module_fpmd, ONLY: nspnl, l2ind
 
         IMPLICIT NONE
         SAVE
 
 !  declare module-scope variables
-        INTEGER :: nspnl   ! number of non local species
         INTEGER :: nsanl   ! number of atoms of the non local species
         INTEGER :: lnlx    ! maximum number of different non local components
         INTEGER :: lmax    ! maximum value of the angular momentum
         INTEGER :: lm1x    ! maximum value of the angular momentum, of non local components
         INTEGER :: ngh     ! actual number of spherical harmonics 
-
-        TYPE (pseudo_ncpp), ALLOCATABLE, TARGET :: ap(:)
-        TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
         REAL(dbl), ALLOCATABLE :: wsginit(:,:)
 
@@ -93,39 +88,18 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-!  ----------------------------------------------
-!  ----------------------------------------------
-      INTEGER FUNCTION l2ind( lw, is )
 
-! this function returns the index of the wanted channel lw
-! ( 1 = s, 2 = p, 3 = d, 4 = f ) within the non local pseudopotential
-! array WNL. The p component of the pseudopotential is stored, for the specie
-! is, in wnl(:,l2ind(2,is),is)
-!  ----------------------------------------------
-
-        INTEGER, INTENT(IN) :: lw, is
-        INTEGER :: l
-
-        l2ind = 0
-        DO l = 1, ap(is)%lnl
-          IF ( ap(is)%indl(l) == lw ) l2ind = l
-        END DO
-
-        RETURN
-      END FUNCTION l2ind
-
-!  ----------------------------------------------
-!  ----------------------------------------------
       SUBROUTINE pseudopotential_setup(nsp, pseudo_dir, psfile, &
                  tpstab_inp, pstab_size_inp, raggio_inp)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
-        USE read_pseudo_module_fpmd, ONLY: read_pseudo_fpmd
         USE splines, ONLY: nullify_spline
         USE pseudo_base, ONLY: nlset_base
         USE ions_base, ONLY: zv
+        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE read_pseudo_module_fpmd, ONLY: ap
 
         INTEGER, INTENT(IN) :: nsp, pstab_size_inp
         LOGICAL, INTENT(IN) :: tpstab_inp
@@ -138,27 +112,12 @@
 !  end of declarations
 !  ----------------------------------------------
 
-
-        ALLOCATE( ap( nsp )  )
-        ALLOCATE( upf( nsp ) )
-
         DO i = 1, nsp
-          CALL nullify_pseudo_upf( upf( i ) )
-          ap(i)%tnlcc = .FALSE.
           ap(i)%raggio = raggio_inp(i)
           IF( ap(i)%raggio <= 0.0d0 ) THEN
             CALL errore(' pseudopotential_setup ',' ion_radius less than 0 ',-1)
           END IF
         END DO
-
-! ...   read pseudopotential file
-
-        !  read pseudopotential for FPMD
-        !
-        CALL read_pseudo_fpmd(ap, upf, pseudo_dir, psfile, nsp, nspnl)
-   
-        ! re-read pseudopotential for CPV
-        !CALL readpp( ) 
 
         !  initialize the global array zv containing the 
         !  value of the ionic charges
@@ -248,6 +207,8 @@
 
 ! ...   declare modules
         USE brillouin, ONLY: kpoints
+        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE read_pseudo_module_fpmd, ONLY: ap
         
         IMPLICIT NONE
 
@@ -280,11 +241,6 @@
 
           INTEGER :: i, j
 
-          DEALLOCATE( ap  )
-          DO i = 1, SIZE( upf )
-            CALL deallocate_pseudo_upf( upf( i ) )
-          END DO
-          DEALLOCATE( upf )
           DEALLOCATE( wsginit )
           IF(ALLOCATED(vps_sp)) THEN
             DO i = 1, size(vps_sp)
@@ -395,14 +351,14 @@
 ! ... handle local part
       DO is = 1, nsp
 
-        CALL rhops_base(ap(is), gv%hg_l, ps%rhops(:,is), omega) 
+        CALL rhops_base(ps%ap(is), gv%hg_l, ps%rhops(:,is), omega) 
 
-        IF( ap(is)%tnlcc ) THEN
+        IF( ps%ap(is)%tnlcc ) THEN
           IF(tpstab) THEN
             CALL corecortab_base(gv%hg_l, ps%rhoc1(:,is), ps%rhocp(:,is), &
                    rhoc1_sp(is), rhocp_sp(is), xgtabmax, omega) 
           ELSE
-            CALL corecor_base(ap(is), gv%hg_l, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
+            CALL corecor_base(ps%ap(is), gv%hg_l, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
           END IF
         END IF
 
@@ -411,7 +367,7 @@
           CALL formftab_base(gv%hg_l, ps%vps(:,is), ps%dvps(:,is), &
                vps_sp(is), dvps_sp(is), xgtabmax, omega )
         ELSE
-          CALL formfn_base(ap(is), gv%hg_l, ps%vps(:,is), ps%dvps(:,is), omega)
+          CALL formfn_base(ps%ap(is), gv%hg_l, ps%vps(:,is), ps%dvps(:,is), omega)
         END IF
 
         ! DEBUG
@@ -452,6 +408,8 @@
         USE pseudo_base, ONLY: nlin_base
         USE pseudo_base, ONLY: nlin_stress_base
         USE pseudo_base, ONLY: corecor_base
+        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE read_pseudo_module_fpmd, ONLY: ap
 
         IMPLICIT NONE
 
@@ -546,6 +504,7 @@
       USE brillouin, ONLY: kpoints
       USE pseudotab_base, ONLY: nlintab_base
       USE pseudo_base, ONLY: nlin_base
+      USE read_pseudo_module_fpmd, ONLY: ap
 
       IMPLICIT NONE
 
@@ -588,6 +547,7 @@
       USE ions_base, ONLY: nsp
       USE pseudotab_base, ONLY: nlintab_base
       USE pseudo_base, ONLY: nlin_stress_base
+      USE read_pseudo_module_fpmd, ONLY: ap
 
       IMPLICIT NONE
 
@@ -616,6 +576,9 @@
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
+
+        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE read_pseudo_module_fpmd, ONLY: ap
 
 ! ...   declare subroutine arguments
         REAL(dbl), INTENT(OUT) :: oc_out(:,:)

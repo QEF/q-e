@@ -75,7 +75,6 @@ pseudo_base.o \
 pseudopot.o \
 pseudotab_base.o \
 read_pseudo.o \
-readpseudo.o \
 redis.o \
 restart.o \
 restart_sub.o \

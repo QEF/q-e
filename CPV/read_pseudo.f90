@@ -1,4 +1,1267 @@
 !
+! Copyright (C) 2002 FPMD group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+#include "f_defs.h"
+
+!  ----------------------------------------------
+!  BEGIN manual
+
+!=----------------------------------------------------------------------------=!
+   MODULE read_pseudo_module_fpmd
+!=----------------------------------------------------------------------------=!
+
+!  this module handles the reading of pseudopotential data
+!  ----------------------------------------------
+!  routines in this module:
+!  SUBROUTINE readpseudo( psdir, psfile, nsp, nspnl)
+!  ----------------------------------------------
+!
+!  Description of the Native FPMD pseudopotential format
+!
+!  The format of the file must be as follows
+!  (lowercase text and }'s are comments):
+!
+!  When POTTYP = 'ANALYTIC' the layout is:
+!
+!    TCC      TMIX                additional stuff on each line is ignored
+!    POTTYP   LLOC LNL ( INDL(i), i = 1, LNL )
+!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
+!    ZV       IGAU                igau must be 1 or 3     }
+!    WRC(1) RC(1) WRC(2) RC(2)    this line if igau = 3   }
+!    RC(1)                        this one if igau = 1    }
+!    RCL(1,1)    AL(1,1)    BL(1,1)         }             }  this
+!     ...         ...        ...            }  l = 0      }  section
+!    RCL(IGAU,1) AL(IGAU,1) BL(IGAU,1)      }             }  only if
+!    RCL(1,2)    AL(1,2)    BL(1,2)      }                }  pottyp is
+!     ...         ...        ...         }     l = 1      }  'ANALYTIC'
+!    RCL(IGAU,2) AL(IGAU,2) BL(IGAU,2)   }                }
+!    RCL(1,3)    AL(1,3)    BL(1,3)         }             }
+!     ...         ...        ...            }  l = 2      }
+!    RCL(IGAU,3) AL(IGAU,3) BL(IGAU,3)      }             }
+!    NMESH NCHAN                                       }
+!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
+!     ...         ...              ...                 }
+!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
+!
+!  
+!  When POTTYP = 'NUMERIC' the layout is:
+!
+!    TCC      TMIX             additional stuff on each line is ignored
+!    POTTYP   LLOC LNL  ( INDL(i), i = 1, LNL )
+!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
+!    ZV                                             }
+!    NMESH NCHAN                                    }    this if
+!    RW( 1 )     ( VR( 1, j ), j = 1, NCHAN )       }    pottyp is
+!     ...       ...             ...                 }    'NUMERIC'
+!    RW( NMESH ) ( VR( NMESH, j ), j = 1, NCHAN )   }
+!    NMESH NCHAN                                       }
+!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
+!     ...         ...              ...                 }
+!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
+!
+!  DETAILED DESCRIPTION OF INPUT PARAMETERS:
+!
+!    TCC      (logical)   True if Core Correction are required for this 
+!                         pseudo
+!
+!    TMIX     (logical)   True if we want to mix nonlocal pseudopotential 
+!                         components 
+!
+!    WGV(i)   (real)      wheight of the nonlocal components in the 
+!                         pseudopotential mixing scheme 
+!                         These parameters are present only if TMIX = .TRUE.
+!                         1 <= i <= LNL
+!                           
+!    POTTYP   (character) pseudopotential type
+!                         pottyp = 'ANALYTIC' : use an analytic expression
+!                         pottyp = 'NUMERIC'  : read values from a table
+!
+!    ZV       (integer)   valence for each species
+!
+!    IGAU     (integer)   number of Gaussians in the pseudopotentials
+!                         expression used only if pottyp='ANALYTIC'
+!
+!  parameters from Bachelet-Hamann-Schluter's table:
+!
+!    WRC(2)   (real)      c1, c2 (core)  parameters
+!    RC(2)    (real)      alpha1, alpha2 parameters
+!
+!    RCL(i,3) (real)      alpha1, alpha2, alpha3 for each angular momentum
+!                         1 <= i <= IGAU
+!    AL(i,3)  (real)      parameters for each angular momentum
+!                         1 <= i <= IGAU
+!    BL(i,3)  (real)      parameters for each angular momentum
+!                         1 <= i <= IGAU
+!
+!  nonlocality
+!    IGAU     (integer)   number of Gaussians for analytic pseudopotentials
+!    LLOC     (integer)   index of the angular momentum component added to 
+!                          the local part  ( s = 1, p = 2, d = 3 )
+!    LNL      (integer)   number of non local component
+!    INDL(i)  (integer)   indices of non local components
+!                         1 <= i <= LNL
+!                         ( 1 3 means s and d taken as non local )
+!
+!  pseudo grids
+!    NMESH    (integer)   number of points in the mesh mesh
+!    NCHAN    (integer)   numbero of colums, radial components
+!    RW(i)    (real)      distance from the core in A.U. (radial mesh)
+!                         1 <= i <= NMESH
+!    RPS(i,j) (real)      Atomic pseudo - wavefunctions
+!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
+!    VP(i,j)  (real)      Atomic pseudo - potential
+!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
+!
+!  ----------------------------------------------
+!  END manual
+
+
+! ...   declare modules
+
+        USE kinds, ONLY: dbl
+        USE io_files, ONLY: pseudounit
+        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
+
+        IMPLICIT NONE
+
+        SAVE
+
+        PRIVATE
+
+        REAL(dbl) :: TOLMESH = 1.d-5
+        INTEGER   :: nspnl = 0  ! number of non local species
+
+        TYPE (pseudo_ncpp), ALLOCATABLE, TARGET :: ap(:)
+        TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
+
+        PUBLIC :: read_pseudo_fpmd, ap, upf, nspnl, l2ind
+
+!=----------------------------------------------------------------------------=!
+   CONTAINS
+!=----------------------------------------------------------------------------=!
+
+!  subroutines
+!  ----------------------------------------------
+!  ----------------------------------------------
+
+   SUBROUTINE read_pseudo_fpmd( psdir, psfile, nsp )
+
+!  this subroutine reads pseudopotential parameters from file
+!
+!  Allowed format are:
+!  Native FPMD  ( 'NUMERIC' and 'ANALYTIC' )
+!  Native PWSCF ( 'GIANNOZ' )
+!  UPF          ( 'UPF' )
+!
+! INPUT:
+!  nsp       number of atomic species
+!  psdir     directori containing pseudopotentials
+!  psfile(i) pseudopotentials file name
+!            1 <= i <= nsp
+!
+! WHAT THIS ROUTINE SET:
+!  ap(i)     atomic pseudopotential structure
+!  upf(i)    atomic pseudopotential structure
+!            1 <= i <= nsp
+!  nspnl     number of atomic species  with non local pseudopotentials
+!  
+!  
+!  ----------------------------------------------
+
+      USE mp, ONLY: mp_bcast
+      USE mp_global, ONLY: mpime, root, group
+      USE io_global, ONLY: stdout
+
+      IMPLICIT NONE
+
+! ... declare subroutine arguments
+      INTEGER, INTENT(IN) :: nsp
+      CHARACTER(LEN=*), INTENT(IN) :: psfile(:)
+      CHARACTER(LEN=*), INTENT(IN) :: psdir
+
+! ... declare other variables
+      CHARACTER(LEN=20)  :: pottyp
+      CHARACTER(LEN=80)  :: error_msg
+      CHARACTER(LEN=256) :: filename
+      INTEGER            :: is, ierr, info
+      LOGICAL            :: rdlocal
+
+!  end of declarations
+!  ----------------------------------------------
+
+      nspnl   = 0
+      rdlocal = .FALSE.
+
+      IF( nsp < 1 ) THEN
+        CALL errore(' READPOT ',' nsp out of range ', MAX(1,ABS(nsp)) )
+      END IF
+
+      IF( ALLOCATED( ap  ) ) DEALLOCATE( ap )
+      IF( ALLOCATED( upf ) ) THEN
+        DO is = 1, SIZE( upf )
+          CALL deallocate_pseudo_upf( upf( is ) )
+          CALL nullify_pseudo_upf( upf( is ) )
+        END DO
+        DEALLOCATE( upf )
+      END IF
+
+      ALLOCATE( ap( nsp )  )
+      ALLOCATE( upf( nsp ) )
+
+      ierr = 0
+      info = 0
+      error_msg = 'none'
+     
+      IF(mpime == root) THEN
+
+        WRITE( stdout,4)
+    4   FORMAT(//,3X,'Atomic Pseudopotentials Parameters',/, &
+                  3X,'----------------------------------' )
+
+        DO is = 1, nsp
+
+          IF( psdir /= ' ' ) THEN
+            filename = TRIM( ADJUSTL( psdir ) ) // '/' // TRIM( ADJUSTL( psfile(is) ) ) 
+          ELSE
+            filename = TRIM( ADJUSTL( psfile(is) ) ) 
+          ENDIF
+
+          ap(is)%tnlcc  = .FALSE.
+          ap(is)%raggio = 0.5d0
+          CALL nullify_pseudo_upf( upf( is ) )
+
+          WRITE( stdout,6) is
+          WRITE( stdout,7) filename
+    6     FORMAT( /,3X,'ATOMIC PSEUDOPOTENTIAL for SPECIE : ',I2)
+    7     FORMAT(   3X,'Read from file ',A60)
+
+          OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
+          REWIND( pseudounit )
+
+          CALL check_file_type( pseudounit, info )
+          CLOSE( pseudounit )
+
+          OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
+          REWIND( pseudounit )
+
+          IF( info == 1 ) THEN
+
+!  ...      Pseudopotential form is UPF
+            ap(is)%pottyp = 'UPF'
+
+          ELSE
+
+!  ...      Read pseudopotential header
+            CALL read_head_pp( pseudounit, ap(is), error_msg, info)
+            IF( info /= 0 ) GO TO 200
+
+            IF ( ap(is)%lnl > 0) THEN
+              !   A non-local pseudopotential is being read, increase nspnl.
+              nspnl = nspnl + 1
+              !   non-local species must come before local one,
+              !   write an error message if a n-l pseudopotential follow a local one
+              IF( rdlocal ) THEN
+                info = 20
+                error_msg = ' Local pseudopotentials should follow non local ones '
+                GO TO 200
+              END IF
+            ELSE
+              !   now follow local potentials
+              rdlocal = .TRUE.
+            END IF
+
+          END IF
+
+          pottyp = ap(is)%pottyp
+
+          IF( pottyp == 'GIANNOZ' ) THEN
+
+            CALL read_giannoz(pseudounit, ap(is), info)
+            IF( info /= 0 ) GO TO 200
+
+          ELSE IF( pottyp == 'UPF' ) THEN
+
+            CALL read_pseudo(pseudounit, ap(is), upf(is), info)  
+            IF( info /= 0 ) GO TO 200
+            IF( ap(is)%lnl > 0 ) nspnl = nspnl + 1
+
+          ELSE IF( pottyp == 'NUMERIC' ) THEN
+
+            CALL read_numeric_pp( pseudounit, ap(is), error_msg, info)
+            IF( info /= 0 ) GO TO 200
+
+          ELSE IF( pottyp == 'ANALYTIC' ) THEN
+
+            CALL read_analytic_pp( pseudounit, ap(is), error_msg, info)
+            IF( info /= 0 ) GO TO 200
+
+          ELSE 
+
+            info = 1
+            error_msg = ' Pseudopotential type '//TRIM(pottyp)//' not implemented '
+            GO TO 200
+
+          END IF
+
+          CALL ap_info( ap(is) )
+
+          CLOSE(pseudounit)
+
+        END DO
+
+      END IF
+
+200   CONTINUE
+      CALL mp_bcast(info, root, group)
+
+      IF( info /= 0 ) THEN
+        ierr = 1000 * is + info
+        CALL errore(' readpseudo ', error_msg, ABS(ierr) )
+      END IF
+
+      DO is = 1, nsp
+
+        CALL mp_bcast(ap(is)%psd,root,group)
+        CALL mp_bcast(ap(is)%pottyp,root,group)
+        CALL mp_bcast(ap(is)%tmix,root,group)
+        CALL mp_bcast(ap(is)%tnlcc,root,group)
+        CALL mp_bcast(ap(is)%igau,root,group)
+        CALL mp_bcast(ap(is)%lloc,root,group)
+        CALL mp_bcast(ap(is)%lnl,root,group)
+        CALL mp_bcast(ap(is)%indl,root,group)
+        CALL mp_bcast(ap(is)%nchan,root,group)
+        CALL mp_bcast(ap(is)%mesh,root,group)
+        CALL mp_bcast(ap(is)%zv,root,group)
+        CALL mp_bcast(ap(is)%raggio,root,group)
+        CALL mp_bcast(ap(is)%dx,root,group)
+        CALL mp_bcast(ap(is)%rw,root,group)
+        CALL mp_bcast(ap(is)%rab,root,group)
+        CALL mp_bcast(ap(is)%vnl,root,group)
+        CALL mp_bcast(ap(is)%vrps,root,group)
+        CALL mp_bcast(ap(is)%vloc,root,group)
+        CALL mp_bcast(ap(is)%wgv,root,group)
+        CALL mp_bcast(ap(is)%rc,root,group)
+        CALL mp_bcast(ap(is)%wrc,root,group)
+        CALL mp_bcast(ap(is)%rcl,root,group)
+        CALL mp_bcast(ap(is)%al,root,group)
+        CALL mp_bcast(ap(is)%bl,root,group)
+
+        CALL mp_bcast(ap(is)%nrps,root,group)
+        CALL mp_bcast(ap(is)%lrps,root,group)
+        CALL mp_bcast(ap(is)%oc,root,group)
+        CALL mp_bcast(ap(is)%rps,root,group)
+        CALL mp_bcast(ap(is)%rhoc,root,group)
+
+      END DO
+
+      CALL mp_bcast( nspnl, root, group )
+
+      RETURN
+      END SUBROUTINE read_pseudo_fpmd
+
+!=----------------------------------------------------------------------------=!
+
+      INTEGER FUNCTION l2ind( lw, is )
+
+        ! this function returns the index of the wanted channel lw
+        ! ( 1 = s, 2 = p, 3 = d, 4 = f ) within the non local pseudopotential
+        ! array WNL. The p component of the pseudopotential is stored, for the specie
+        ! is, in wnl(:,l2ind(2,is),is)
+        !  ----------------------------------------------
+
+        INTEGER, INTENT(IN) :: lw, is
+        INTEGER :: l
+
+        l2ind = 0
+        DO l = 1, ap(is)%lnl
+          IF ( ap(is)%indl(l) == lw ) l2ind = l
+        END DO
+
+        RETURN
+      END FUNCTION l2ind
+
+!=----------------------------------------------------------------------------=!
+
+      SUBROUTINE check_file_type( iunit, info )
+
+! ...   This sub. check if a given fortran unit 'iunit' contains a UPF pseudopot.
+
+        INTEGER, INTENT(IN) :: iunit
+        INTEGER, INTENT(OUT) :: info
+        CHARACTER(LEN=80) :: dummy
+        LOGICAL, EXTERNAL :: matches
+        INTEGER :: ios
+
+        info = 0
+        ios  = 0
+        header_loop: do while (ios == 0)
+          read (iunit, *, iostat = ios, err = 200) dummy  
+          if (matches ("<PP_HEADER>", dummy) ) then
+            info = 1
+            exit header_loop
+          endif
+        enddo header_loop
+
+200     continue
+        RETURN
+      END SUBROUTINE check_file_type
+
+!=----------------------------------------------------------------------------=!
+
+      SUBROUTINE analytic_to_numeric(ap)
+
+!       This subroutine converts an Analytic pseudo into a numeric one
+
+        USE constants, ONLY: pi
+        USE pseudo_types, ONLY: pseudo_ncpp
+
+        IMPLICIT NONE
+
+        TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+        INTEGER   :: ir, mesh, lmax, l, n, il, ib, ll
+        REAL(dbl) :: xmin, zmesh, dx, x
+
+! ...   declare external function
+        REAL(dbl) :: erf, erfc
+        EXTERNAL erf, erfc
+
+        IF( ap%mesh == 0 ) THEN
+! ...     Local pseudopotential, define a logaritmic grid
+          mesh  =  400
+          xmin  = -5.0d0
+          zmesh =  6.0d0
+          dx    =  0.025d0
+          DO ir = 1, mesh
+            x = xmin + REAL(ir-1) * dx
+            ap%rw(ir)  = EXP(x) / zmesh
+          END DO
+          ap%mesh = mesh
+          ap%dx   = dx
+          ap%rab  = ap%dx * ap%rw
+        END IF
+
+        ap%vnl  = 0.0d0
+        ap%vloc = 0.0d0
+        ap%vrps = 0.0d0
+        do l = 1, 3
+          do ir = 1, ap%mesh
+            ap%vnl(ir,l)= - ( ap%wrc(1) * erf( SQRT( ap%rc(1) ) * ap%rw(ir) ) + &
+                              ap%wrc(2) * erf( SQRT( ap%rc(2) ) * ap%rw(ir) )   & 
+                            ) * ap%zv / ap%rw(ir)
+          end do
+          do ir = 1, ap%mesh
+            do n = 1, ap%igau
+              ap%vnl(ir,l) = ap%vnl(ir,l) + &
+                             ( ap%al(n,l) + ap%bl(n,l) * ap%rw(ir)**2 ) * &
+                             EXP( - ap%rcl(n,l) * ap%rw(ir)**2 )
+            end do
+          end do
+        end do
+
+! ...   Copy local component to a separate array
+        ap%vloc(:) = ap%vnl(:,ap%lloc)
+        DO l = 1, ap%lnl
+          ll=ap%indl(l)  ! find out the angular momentum (ll-1) of the component stored
+                         ! in position l
+          ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
+        END DO
+
+        RETURN
+      END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+      SUBROUTINE read_giannoz(uni, ap, ierr)
+        USE constants, ONLY: pi
+        USE pseudo_types, ONLY: pseudo_ncpp
+        IMPLICIT NONE
+        TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+        INTEGER, INTENT(IN) :: uni
+        INTEGER, INTENT(OUT) :: ierr
+        REAL(dbl) :: chi( SIZE(ap%rps, 1), SIZE(ap%rps, 2) )
+        REAL(dbl) :: vnl( SIZE(ap%vnl, 1), SIZE(ap%vnl, 2) )
+        REAL(dbl) :: rho_core( SIZE(ap%rhoc, 1) )
+        REAL(dbl) :: r, ra, rb, fac
+        REAL(dbl) :: oc( SIZE(ap%rps, 2) )
+        REAL(dbl) :: enl( SIZE(ap%rps, 2) )
+        REAL(dbl) :: zmesh, xmin, dx, etot
+        REAL(dbl) :: zval
+        INTEGER   :: nn(SIZE(ap%rps, 2)), ll(SIZE(ap%rps, 2))
+        INTEGER   :: nwf, mesh, i, j, in1, in2, in3, in4, m
+        INTEGER   :: lmax, nlc, nnl, lloc, l, il
+        LOGICAL   :: nlcc
+        CHARACTER(len=80) :: dft
+        CHARACTER(len=4)  :: atom
+        CHARACTER(len=2)  :: el( SIZE(ap%rps, 2) )
+        CHARACTER(len=80) :: ppinfo
+        CHARACTER(len=80) :: strdum
+        CHARACTER(len=2) :: sdum1, sdum2
+
+!
+        ierr = 0
+
+        READ(uni,fmt='(a)') dft
+        READ(uni,fmt='(a4,f5.1,3i2,a2,l1,a2,i2,a)') &
+          atom, zval, lmax, nlc, nnl, sdum1, nlcc, sdum2, lloc, ppinfo
+
+        ! WRITE( stdout,*) ' DEBUG ', atom, zval,lmax, nlc, nnl, nlcc, lloc, ppinfo
+
+        IF( (lmax+1) > SIZE(ap%vnl, 2) ) THEN
+          ierr = 1
+          RETURN
+        END IF
+        IF( (nlcc .AND. .NOT.ap%tnlcc) .OR. (.NOT.nlcc .AND. ap%tnlcc) ) THEN
+          ierr = 2
+          RETURN
+        END IF
+
+        READ(uni,fmt='(f8.2,f8.4,f10.6,2i6)') zmesh, xmin, dx, mesh, nwf
+
+        IF( mesh > SIZE(ap%rps, 1) ) THEN
+          ierr = 3
+          RETURN
+        END IF
+        IF( nwf > SIZE(ap%rps, 2) ) THEN
+          ierr = 4
+          RETURN
+        END IF
+
+        DO j = 0, lmax
+           READ(uni,fmt="(A16,i1)") strdum, l
+           READ(uni,'(4e16.8)') (vnl(i,j+1), i=1,mesh)
+        END DO
+        IF (nlcc) THEN
+          READ(uni,fmt='(4e16.8)') (rho_core(i), i=1,mesh)
+        END IF   
+        DO j = 1, nwf
+          READ(uni,fmt="(A16,a2)") strdum,el(j)
+          READ(uni,fmt='(i5,f6.2)') ll(j),oc(j)
+          READ(uni,fmt='(4e16.8)') (chi(i,j), i=1,mesh)
+        END DO
+
+        ap%zv = zval
+        ap%nchan = lmax+1
+        ap%mesh = mesh
+        ap%rw = 0.0d0
+        ap%vnl = 0.0d0
+        ap%vrps = 0.0d0
+        fac = 0.5d0
+
+        ! WRITE( stdout,*) ' DEBUG ', ap%lloc, ap%numeric, ap%lnl, ap%raggio, ap%zv
+
+        DO i = 1, mesh
+          r = EXP(xmin+REAL(i-1)*dx)/zmesh
+          ap%rw(i) = r
+          DO j = 1, lmax+1
+            ap%vnl(i,j) = vnl(i,j) * fac
+          END DO
+        END DO
+        IF( MINVAL( ap%rw(1:mesh) ) <= 0.0d0 ) THEN
+           ierr = 5
+           RETURN
+        END IF
+        ap%dx  = dx
+        ap%rab = ap%dx * ap%rw
+        ap%vloc(:) = ap%vnl(:,ap%lloc)
+
+        ap%lrps(1:nwf) = ll(1:nwf)
+        ap%oc = 0.0d0
+        ap%nrps = nwf
+        ap%mesh = mesh
+        ap%rps = 0.0d0
+        fac = 1.0d0/SQRT(4.0d0*pi)
+        fac = 1.0d0
+        DO i = 1, mesh
+          r = EXP(xmin+REAL(i-1)*dx)/zmesh
+          DO j = 1, nwf
+            ap%rps(i,j) = chi(i,j) * fac
+          END DO
+        END DO
+
+        DO l = 1, ap%lnl
+          il=ap%indl(l)  ! find out the angular momentum (il-1) of the component stored
+                         ! in position l
+          DO i = 1, mesh
+            ap%vrps(i,l) = ( ap%vnl(i,il) - ap%vloc(i) ) * ap%rps(i,il)
+          END DO
+        END DO
+
+        IF( nlcc ) THEN
+          ap%rhoc = 0.0d0
+          DO i = 1, mesh
+            r = EXP(xmin+REAL(i-1)*dx)/zmesh
+            ap%rhoc(i) = rho_core(i)
+          END DO
+        END IF
+
+        RETURN
+      END SUBROUTINE 
+
+!=----------------------------------------------------------------------------=!
+
+
+      SUBROUTINE ap_info( ap )
+        USE pseudo_types, ONLY: pseudo_ncpp
+        USE io_global, ONLY: stdout
+
+        TYPE (pseudo_ncpp), INTENT(IN) :: ap
+        INTEGER   :: in1, in2, in3, in4, m, il, ib, l, i
+
+        IF (ap%lnl > 0) THEN
+          WRITE( stdout,10) ap%pottyp
+          IF (ap%tmix) THEN
+            WRITE( stdout,107) 
+            WRITE( stdout,106)  (ap%indl(l),l=1,ap%lnl)
+            WRITE( stdout,105)  (ap%wgv(l),l=1,ap%lnl)
+          ELSE
+            WRITE( stdout,50) ap%lloc
+          END IF
+          WRITE( stdout,60) (ap%indl(l),l=1,ap%lnl)
+        ELSE
+! ...     A local pseudopotential has been read.
+          WRITE( stdout,11) ap%pottyp
+          WRITE( stdout,50) ap%lloc
+        END IF
+
+   10   FORMAT(   3X,'Type is ',A10,' and NONLOCAL. ')
+  107   FORMAT(   3X,'Mixed reference potential:')
+  106   FORMAT(   3X,'  L     :',3(9X,i1))
+  105   FORMAT(   3X,'  Weight:',3(2X,F8.5))
+   50   FORMAT(   3X,'Local component is ..... : ',I3)
+   60   FORMAT(   3X,'Non local components are : ',4I3)
+   11   FORMAT(   3X,'Type is ',A10,' and LOCAL. ')
+   20   FORMAT(   3X,'Pseudo charge : ',F8.3,', pseudo radius : ',F8.3)
+
+        WRITE( stdout,20) ap%zv, ap%raggio
+
+        IF( ap%pottyp /= 'ANALYTIC' ) THEN
+
+          WRITE( stdout,131) ap%nchan, ap%mesh, ap%dx
+          in1=1
+          in2=ap%mesh/4
+          in3=ap%mesh/2
+          in4=ap%mesh
+          WRITE( stdout,132)
+          WRITE( stdout,120) in1,ap%rw(in1),(ap%vnl(in1,m),m=1,ap%nchan)
+          WRITE( stdout,120) in2,ap%rw(in2),(ap%vnl(in2,m),m=1,ap%nchan)
+          WRITE( stdout,120) in3,ap%rw(in3),(ap%vnl(in3,m),m=1,ap%nchan)
+          WRITE( stdout,120) in4,ap%rw(in4),(ap%vnl(in4,m),m=1,ap%nchan)
+  131     FORMAT(/, 3X,'Pseudopotentials Grid    : Channels = ',I2,&
+                   ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
+  132     FORMAT(   3X,'point      radius        pseudopotential')
+  120     FORMAT(I8,F15.10,5F10.6)
+
+        ELSE
+
+          WRITE( stdout,25) ap%igau
+          WRITE( stdout,30)
+          WRITE( stdout,104) ap%wrc(1),ap%rc(1),ap%wrc(2),ap%rc(2)
+   25     FORMAT(/, 3X,'Gaussians used : ',I2,'. Parameters are : ')
+   30     FORMAT(   3X,'C (core), Alfa(core) : ')
+  104     FORMAT(4(3X,F8.4))
+
+          WRITE( stdout,40)
+          DO il=1,3
+            DO ib=1,ap%igau
+              WRITE( stdout,103) ap%rcl(ib,il),ap%al(ib,il),ap%bl(ib,il)
+            END DO
+          END DO
+   40     FORMAT(   3X,'Hsc radii and coeff. A and B :')
+  103     FORMAT(3X,F8.4,2(3X,F15.7))
+
+
+        END IF
+
+        IF( ap%nrps > 0 .AND. ap%mesh > 0 ) THEN
+          WRITE( stdout,141) ap%nrps, ap%mesh, ap%dx
+          in1=1
+          in2=ap%mesh/4
+          in3=ap%mesh/2
+          in4=ap%mesh
+          WRITE( stdout,145) (ap%oc(i),i=1,ap%nrps)
+          WRITE( stdout,142)
+          WRITE( stdout,120) in1,ap%rw(in1),(ap%rps(in1,m),m=1,ap%nrps)
+          WRITE( stdout,120) in2,ap%rw(in2),(ap%rps(in2,m),m=1,ap%nrps)
+          WRITE( stdout,120) in3,ap%rw(in3),(ap%rps(in3,m),m=1,ap%nrps)
+          WRITE( stdout,120) in4,ap%rw(in4),(ap%rps(in4,m),m=1,ap%nrps)
+        END IF
+
+  141   FORMAT(/, 3X,'Atomic wavefunction Grid : Channels = ',I2,&
+                   ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
+  142   FORMAT(   3X,'point      radius        wavefunction')
+  145   FORMAT(   3X,'Channels occupation number : ',5F10.4)
+
+        IF( ap%tnlcc ) THEN
+          WRITE( stdout,151) ap%mesh, ap%dx
+          in1 = 1
+          in2 = ap%mesh / 4
+          in3 = ap%mesh / 2
+          in4 = ap%mesh
+          WRITE( stdout,152)
+          WRITE( stdout,120) in1,ap%rw(in1),ap%rhoc(in1)
+          WRITE( stdout,120) in2,ap%rw(in2),ap%rhoc(in2)
+          WRITE( stdout,120) in3,ap%rw(in3),ap%rhoc(in3)
+          WRITE( stdout,120) in4,ap%rw(in4),ap%rhoc(in4)
+        END IF
+
+  151   FORMAT(/, 3X,'Core correction Grid     : Mesh = ',I5, &
+             ', dx   = ',F16.14)
+  152   FORMAT(   3X,'point      radius        rho core')
+
+        RETURN
+      END SUBROUTINE 
+
+!=----------------------------------------------------------------------------=!
+
+      REAL(dbl) FUNCTION calculate_dx( a, m )
+        REAL(dbl), INTENT(IN) :: a(:)
+        INTEGER, INTENT(IN) :: m 
+        INTEGER :: n
+        REAL(dbl) :: ra, rb 
+          n = MIN( SIZE( a ), m )
+          ra = a(1)
+          rb = a(n)
+          calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
+        RETURN
+      END FUNCTION 
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
+
+  USE pseudo_types, ONLY: pseudo_ncpp
+  USE parser, ONLY: field_count
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: iunit
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  CHARACTER(LEN=*) :: err_msg
+  INTEGER, INTENT(OUT) :: ierr
+!
+  CHARACTER(LEN=80) :: input_line
+  INTEGER :: i, j, m, strlen, info, nf, mesh
+  REAL(dbl) :: rdum
+
+! ... read atomic wave functions
+! ... nchan : indicate number of atomic wave functions ( s p d )
+
+  ierr = 0
+  err_msg = ' error while reading atomic wf '
+
+  ap%rps  = 0.0_dbl
+  ap%nrps = 0
+  ap%oc   = 0.0d0
+  ap%lrps = 0
+
+  ! this is for local pseudopotentials
+  IF( ap%lnl == 0 ) RETURN
+              
+  READ(iunit,'(A80)',end=100) input_line
+  CALL field_count(nf, input_line)
+
+  strlen = len_trim(input_line)
+
+  IF( nf == 2 ) THEN
+    READ(input_line(1:strlen),*,IOSTAT=ierr) mesh, ap%nrps
+  ELSE
+    READ(input_line(1:strlen),*,IOSTAT=ierr) mesh, ap%nrps, ( ap%oc(j), j=1, MIN(ap%nrps,SIZE(ap%oc)) )
+  END IF
+  IF( ap%nrps > SIZE(ap%rps,2) ) THEN
+    ierr = 2   
+    err_msg = ' NCHAN NOT PROGRAMMED '
+    GO TO 110
+  END IF
+  IF( mesh > SIZE(ap%rw) .OR. mesh < 0) THEN
+    ierr = 4
+    err_msg = ' WAVMESH OUT OF RANGE '
+    GO TO 110
+  END IF
+
+  DO j = 1, mesh
+    READ(iunit,*,IOSTAT=ierr) rdum, (ap%rps(j,m),m=1,ap%nrps)
+    IF( ap%mesh == 0 ) ap%rw(j) = rdum
+    IF( ABS(rdum - ap%rw(j))/(rdum+ap%rw(j)) > TOLMESH ) THEN
+      ierr = 5
+      err_msg = ' radial meshes do not match '
+      GO TO 110
+    END IF
+  END DO
+
+  IF( ap%mesh == 0 ) THEN
+    ap%mesh = mesh
+    ap%dx = calculate_dx( ap%rw, ap%mesh )
+    ap%rab  = ap%dx * ap%rw
+  END IF
+
+  GOTO 110
+100 ierr = 1
+110 CONTINUE
+  
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
+  USE pseudo_types, ONLY: pseudo_ncpp
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iunit
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  CHARACTER(LEN=*) :: err_msg
+  INTEGER, INTENT(OUT) :: ierr
+!
+  CHARACTER(LEN=80) :: input_line
+  INTEGER :: i, j, m, strlen, info, nf, l, ll
+
+! ... read numeric atomic pseudopotential
+! ... nchan : indicate number of atomic wave functions ( s p d )
+
+  ierr = 0
+  err_msg = ' error while reading atomic numeric pseudo '
+
+  IF(ap%tmix) THEN
+    READ(iunit,*) (ap%wgv(l),l=1,ap%lnl)
+  END IF
+
+  READ(iunit,*,IOSTAT=ierr) ap%zv
+  READ(iunit,*,IOSTAT=ierr) ap%mesh, ap%nchan
+
+  IF((ap%nchan > SIZE(ap%vnl,2) ) .OR. (ap%nchan < 1)) THEN
+    ierr = 1
+    err_msg = ' NCHAN NOT PROGRAMMED '
+    GO TO 110
+  END IF
+  IF((ap%mesh > SIZE(ap%rw) ) .OR. (ap%mesh < 0)) THEN
+    info = 2
+    err_msg = ' NPOTMESH OUT OF RANGE '
+    GO TO 110
+  END IF
+
+  ap%rw = 0.0d0
+  ap%vnl = 0.0d0
+  ap%vloc = 0.0d0
+  ap%vrps = 0.0d0
+  DO j = 1, ap%mesh
+    READ(iunit,*,IOSTAT=ierr) ap%rw(j), (ap%vnl(j,l),l=1,ap%nchan)
+  END DO
+
+  IF( MINVAL( ap%rw(1:ap%mesh) ) <= 0.0d0 ) THEN
+    info = 30
+    err_msg = ' ap rw too small '
+    GO TO 110
+  END IF
+
+! ...  mixed reference potential is in vr(lloc)
+  IF(ap%tmix) THEN
+    DO j=1,ap%mesh
+      ap%vnl(j,ap%lloc)= 0.d0
+      DO l=1,ap%nchan
+        IF(l /= ap%lloc) THEN
+          ap%vnl(j,ap%lloc)=  ap%vnl(j,ap%lloc) + ap%wgv(l) * ap%vnl(j,l)
+        END IF
+      END DO
+    END DO
+  END IF
+  ap%vloc(:) = ap%vnl(:,ap%lloc)
+  ap%dx = calculate_dx( ap%rw, ap%mesh )
+  ap%rab  = ap%dx * ap%rw
+
+  CALL read_atomic_wf( iunit, ap, err_msg, ierr)
+  IF( ierr /= 0 ) GO TO 110
+
+  DO l = 1, ap%lnl
+    ll=ap%indl(l) 
+    ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
+  END DO
+
+  IF(ap%tnlcc) THEN
+    CALL read_atomic_cc( iunit, ap,  err_msg, ierr)
+    IF( ierr /= 0 ) GO TO 110
+  END IF
+
+  GOTO 110
+100 ierr = 1
+110 CONTINUE
+  
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+subroutine read_pseudo (iunps, ap, upf, ierr)  
+  !
+  !   read a pseudopotential in the Unified Pseudopotential Format
+  !   from unit "iunps" - convert and copy to internal FPMD variables
+  !   return error code in "ierr" (success: ierr=0)
+  !
+  use pseudo_types
+  use read_pseudo_module, only: read_pseudo_upf
+  use control_flags, only: tuspp
+  !
+  implicit none
+  !
+  integer :: is, iunps, ierr 
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  TYPE (pseudo_upf ), INTENT(INOUT) :: upf
+  !
+  !
+  call read_pseudo_upf(iunps, upf, ierr)
+  !
+  if ( ierr /= 0 ) return
+  !
+  IF( upf%tvanp ) THEN
+    CALL upf2uspp( upf, is )
+    tuspp = .TRUE.
+  ELSE
+    CALL upf2ncpp( upf, ap )
+  END IF
+  !
+  RETURN
+  !
+end subroutine read_pseudo
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE upf2uspp( upf, is )
+  !
+  !   convert and copy upf ultra-soft pseudo to internal modules
+  !
+  use pseudo_types
+  use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
+                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
+  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
+  use ions_base, only: zv
+  use cvan, only: ipp
+  use funct, only: dft, which_dft
+
+  INTEGER, INTENT(INOUT) :: is
+  TYPE (pseudo_upf ), INTENT(INOUT) :: upf
+
+  integer :: nb, exfact
+
+  zv(is)  = upf%zp
+  ! psd (is)= upf%psd
+  ! tvanp(is)=upf%tvanp
+  if (upf%tvanp) then
+     ipp(is) = -2
+  else
+     ipp(is) = +4
+  end if
+  nlcc(is) = upf%nlcc
+  !
+  dft = upf%dft
+  call which_dft (upf%dft)
+  !
+  mesh(is) = upf%mesh
+  if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
+  !
+  nchi(is) = upf%nwfc
+  lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
+  ! oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
+  chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
+
+  !
+  nbeta(is)= upf%nbeta
+  kkbeta(is)=0
+  do nb=1,upf%nbeta
+     kkbeta(is)=max(upf%kkbeta(nb),kkbeta(is))
+  end do
+  betar(1:upf%mesh, 1:upf%nbeta, is) = upf%beta(1:upf%mesh, 1:upf%nbeta)
+  dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
+  !
+
+  ! lmax(is) = upf%lmax
+  nqlc(is) = upf%nqlc
+  nqf (is) = upf%nqf
+  lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
+  rinner(1:upf%nqlc,is) = upf%rinner(1:upf%nqlc)
+  qqq(1:upf%nbeta,1:upf%nbeta,is) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
+  qfunc (1:upf%mesh, 1:upf%nbeta, 1:upf%nbeta, is) = &
+       upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
+  qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
+       upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
+
+  !
+  r  (1:upf%mesh, is) = upf%r  (1:upf%mesh)
+  rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
+  !
+  if ( upf%nlcc) then
+     rho_atc (1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
+  else
+     rho_atc (:,is) = 0.d0
+  end if
+  ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
+  ! lloc(is) = 1
+
+  !
+  vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh)
+  !
+
+  ! compatibility with old Vanderbilt formats
+  call fill_qrl(is)
+
+  RETURN
+END SUBROUTINE
+
+
+!=----------------------------------------------------------------------------=!
+
+
+SUBROUTINE upf2ncpp( upf, ap )
+
+  !
+  !   convert and copy upf norm conserving pseudo to internal FPMD variables
+  !
+
+  use pseudo_types
+
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  TYPE (pseudo_upf ), INTENT(INOUT) :: upf
+
+  integer :: l, il
+
+  ap%rw    = 0.0d0
+  ap%vnl   = 0.0d0
+  ap%vrps  = 0.0d0
+  ap%rps   = 0.0d0
+  ap%oc    = 0.0d0
+  ap%tmix  = .FALSE.
+  ap%tnlcc = upf%nlcc
+  !
+  ap%zv   = upf%zp
+  ap%lnl  = upf%nbeta
+
+  !  assume that lloc = lmax
+
+  ap%lloc = upf%nbeta + 1 
+
+  !  angular momentum indl: S = 1, P = 2, ecc ... while  lll: S = 0, P = 1, ecc ...
+
+  ap%indl( 1:upf%nbeta ) = upf%lll( 1:upf%nbeta ) + 1
+  ap%nchan = upf%nbeta + 1   ! projectors and local part
+  ap%mesh  = upf%mesh
+  ap%rw( 1:upf%mesh )     = upf%r( 1:upf%mesh )
+  ap%vnl( 1:upf%mesh, 1 ) = upf%vloc( 1:upf%mesh ) / 2.0d0  ! Rydberg to Hartree atomic units
+  ap%dx   = calculate_dx( ap%rw, ap%mesh )
+  ap%rab  = ap%dx * ap%rw
+  ap%vloc( 1:upf%mesh ) = upf%vloc( 1:upf%mesh ) / 2.0d0
+  ap%nrps = upf%nwfc
+  ap%lrps( 1:upf%nwfc ) = upf%lchi( 1:upf%nwfc )
+  ap%rps( 1:upf%mesh, 1:upf%nwfc ) = upf%chi( 1:upf%mesh, 1:upf%nwfc )
+  
+  DO l = 1, ap%lnl
+
+    !  find out the angular momentum (il-1) of the component stored in position l
+
+    il = ap%indl(l)  
+     
+    !  vrps(i, il) = ( vnl(i, il) - vloc(i) ) * rps(i, il)
+     
+    ap%vrps( 1:upf%mesh, l ) = upf%beta( 1:upf%mesh, il ) / 2.0d0 
+
+  END DO
+ 
+  IF( ap%tnlcc ) THEN
+    ap%rhoc = 0.0d0
+    ap%rhoc(1:upf%mesh) = upf%rho_atc(1:upf%mesh)
+  END IF
+
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
+  USE pseudo_types, ONLY: pseudo_ncpp
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iunit
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  CHARACTER(LEN=*) :: err_msg
+  INTEGER, INTENT(OUT) :: ierr
+!
+  INTEGER :: i, l
+
+! ... read pseudo header
+
+  ierr = 0
+  err_msg = ' error while reading header pseudo '
+
+  ap%indl = 0
+  READ(iunit, *) ap%tnlcc, ap%tmix
+  READ(iunit, *) ap%pottyp, ap%lloc, ap%lnl, (ap%indl(l), l = 1, MIN(ap%lnl, SIZE(ap%indl)) ) 
+
+  IF( ap%lnl > SIZE(ap%indl) .OR. ap%lnl < 0 ) THEN
+    ierr = 1
+    err_msg = 'LNL out of range'
+    GO TO 110
+  END IF
+  IF( ap%lloc < 0 .OR. ap%lloc > SIZE(ap%vnl,2) ) THEN
+    ierr = 3
+    err_msg = 'LLOC out of range'
+    GO TO 110
+  END IF
+  IF( ap%tmix .AND. ap%pottyp /= 'NUMERIC' ) THEN
+    ierr = 4
+    err_msg = 'tmix not implemented for pseudo ' // ap%pottyp
+    GO TO 110
+  END IF
+  DO l = 2, ap%lnl
+    IF( ap%indl(l) <= ap%indl(l-1)) THEN
+      ierr = 5
+      err_msg =' NONLOCAL COMPONENTS MUST BE GIVEN IN ASCENDING ORDER'
+      GO TO 110
+    END IF
+  END DO
+  DO l = 1, ap%lnl
+    IF( ap%indl(l) == ap%lloc) THEN
+      ierr = 6
+      err_msg = ' LLOC.EQ.L NON LOCAL!!' 
+      GO TO 110
+    END IF
+  END DO
+
+  GOTO 110
+100 ierr = 1
+110 CONTINUE
+  
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
+  USE pseudo_types, ONLY: pseudo_ncpp
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iunit
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  CHARACTER(LEN=*) :: err_msg
+  INTEGER, INTENT(OUT) :: ierr
+!
+  INTEGER :: i, l
+
+! ... read analytic pseudo gaussians
+
+  ierr = 0
+  err_msg = ' error while reading atomic analytic pseudo '
+
+  READ(iunit,*,IOSTAT=ierr) ap%zv, ap%igau
+
+  ap%mesh = 0 
+  ap%nchan = 0 
+  ap%dx = 0.0d0
+  ap%rab  = 0.0d0
+  ap%rw   = 0.0d0
+  ap%vnl   = 0.0d0
+  ap%vloc   = 0.0d0
+  ap%vrps   = 0.0d0
+
+  SELECT CASE (ap%igau)
+    CASE ( 1 )
+      READ(iunit,*,IOSTAT=ierr) ap%rc(1)
+      ap%wrc(1) = 1.d0
+      ap%wrc(2) = 0.d0
+      ap%rc(2)  = 0.d0
+    CASE ( 3 )
+      READ(iunit,*,IOSTAT=ierr) ap%wrc(1), ap%rc(1), ap%wrc(2), ap%rc(2)
+    CASE DEFAULT
+      ierr = 1
+      err_msg = ' IGAU NOT PROGRAMMED '
+      GO TO 110
+  END SELECT
+
+  DO l=1,3
+    DO i=1,ap%igau
+      READ(iunit,*,IOSTAT=ierr) ap%rcl(i,l), ap%al(i,l), ap%bl(i,l)
+    END DO
+  END DO
+
+  CALL read_atomic_wf( iunit, ap, err_msg, ierr)
+  IF( ierr /= 0 ) GO TO 110
+
+  IF(ap%tnlcc) THEN
+    CALL read_atomic_cc( iunit, ap, err_msg, ierr)
+    IF( ierr /= 0 ) GO TO 110
+  END IF
+
+! ... Analytic pseudo are not supported anymore, conversion
+! ... to numeric form is forced
+  CALL analytic_to_numeric( ap )
+
+  GOTO 110
+100 ierr = 1
+110 CONTINUE
+  
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr )
+
+  !  this subroutine reads core correction charge mesh
+
+  USE pseudo_types, ONLY: pseudo_ncpp
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: iunit
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  CHARACTER(LEN=*) :: err_msg
+  INTEGER, INTENT(OUT) :: ierr
+!
+  CHARACTER(LEN=80) :: input_line
+  INTEGER :: j, mesh
+  REAL(dbl) :: rdum
+
+! ... read atomic core
+
+  ierr = 0
+  err_msg = ' error while reading atomic core pseudo '
+
+  ap%rhoc = 0.0d0
+
+  READ( iunit, *, IOSTAT = ierr ) mesh
+  IF( mesh > SIZE( ap%rw ) .OR. mesh < 0 ) THEN
+    ierr = 17
+    err_msg = '  CORE CORRECTION MESH OUT OF RANGE '
+    GO TO 110
+  END IF
+  DO j = 1, mesh
+    READ( iunit, *, IOSTAT = ierr ) rdum, ap%rhoc(j)
+    IF( ap%mesh == 0 ) ap%rw(j) = rdum
+    IF( ABS( rdum - ap%rw(j) ) / ( rdum + ap%rw(j) ) > TOLMESH ) THEN
+      ierr = 5
+      err_msg = ' core cor. radial mesh does not match '
+      GO TO 110
+    END IF
+  END DO
+
+  IF( ap%mesh == 0 ) THEN
+    ap%mesh = mesh
+    ap%dx   = calculate_dx( ap%rw, ap%mesh )
+    ap%rab  = ap%dx * ap%rw
+  END IF
+
+  GOTO 110
+100 ierr = 1
+110 CONTINUE
+  
+  RETURN
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+   END MODULE read_pseudo_module_fpmd
+!=----------------------------------------------------------------------------=!
+
+!
+!
 !---------------------------------------------------------------------
 subroutine read_pseudo (is, iunps, ierr)  
   !---------------------------------------------------------------------
@@ -103,3 +1366,936 @@ subroutine read_pseudo (is, iunps, ierr)
   return
 
 end subroutine read_pseudo
+
+!
+!
+!---------------------------------------------------------------------
+      subroutine readpp
+!---------------------------------------------------------------------
+!
+      use cvan, only: nvb, ipp
+      use ions_base, only: nsp
+      use io_files, only: psfile, pseudo_dir
+      use funct, only: iexch, icorr, igcx, igcc
+      use io_global, only: stdout
+!
+      implicit none
+!
+      character(len=256) :: filename
+      integer :: is, ierr, iexch_, icorr_, igcx_, igcc_, iunit=14
+      integer, external :: pseudo_type
+!
+!     -----------------------------------------------------------------
+!     first vanderbilt species , then norm-conserving are read !!
+!
+!
+      nvb=0
+!
+      do is=1,nsp
+!
+         if (trim(pseudo_dir) == ' ' ) then
+             filename=trim(psfile(is))
+         else
+             filename=trim(pseudo_dir)//trim(psfile(is))
+         end if
+         WRITE( stdout,"('reading ppot for species # ',i2, &
+        &          ' from file ',a)") is, trim(filename)
+         open (unit=iunit,file=filename,status='old',form='formatted')
+         !
+         ! try first with UPF format
+         !
+         call read_pseudo(is,iunit,ierr)
+         
+         if (ierr /= 0) then
+            rewind ( iunit )
+            !
+            ! UPF not found, pseudopotential format determined by file name:
+            ! *.vdb or *.van  Vanderbilt US pseudopotential code  pseudo_type=1
+            ! *.RRKJ3         Andrea's   US new code              pseudo_type=2
+            ! none of the above: old CPV norm-conserving format   pseudo_type=0
+            !
+            if ( pseudo_type (psfile (is) ) == 1 ) then
+               call readvan(is,iunit)
+            else if ( pseudo_type (psfile (is) ) == 2 ) then
+               call readAdC(is,iunit)
+            else
+               call readbhs(is,iunit)
+            end if
+         end if
+         close (unit=iunit)
+!
+!     ipp=-2 UPF format, vanderbilt (TEMP)
+!     ipp=-1 ultrasoft vanderbilt pp , AdC format
+!     ipp= 0 ultrasoft vanderbilt pp , old format
+!     ipp= 1 ultrasoft vanderbilt pp
+!     ipp= 2 norm-conserving hsc pp
+!     ipp= 3 norm-conserving bhs pp
+!     ipp= 4 UPF format, non-vanderbilt (TEMP)
+!
+! check for consistency of DFT
+!
+         if (is == 1) then
+            iexch_ = iexch
+            icorr_ = icorr
+            igcx_ = igcx
+            igcc_ = igcc
+         else
+            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
+                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
+               CALL errore( 'readpp','inconsistent DFT read',is)
+            end if
+         end if
+!
+!     check on ipp value and input order
+!
+         if(is > 1) then
+!!!            if (tvanp(is) .and. .not. tvanp(is-1)) then
+           if ( ipp(is) < ipp(is-1) ) then
+               call errore('readpp', 'first vdb, then nnc',10)
+            endif
+         endif
+!
+!     count u-s vanderbilt species 
+!!!         if(tvanp(is)) nvb=nvb+1
+         if (ipp(is) <= 1) nvb=nvb+1
+      end do
+!
+      return
+      end subroutine
+!
+!
+!-----------------------------------------------------------------------
+integer function pseudo_type (psfile)
+  !-----------------------------------------------------------------------
+  implicit none
+  character (len=*) :: psfile
+  integer :: l
+  !   
+  l = len_trim (psfile)
+  pseudo_type = 0
+  if (psfile (l - 3:l) .eq.'.vdb'.or.psfile (l - 3:l) .eq.'.van') &
+       pseudo_type = 1
+  if (l > 5) then
+     if (psfile (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
+  end if
+  !   
+  return
+
+end function pseudo_type
+
+!
+!     
+!---------------------------------------------------------------------
+      subroutine readbhs( is, iunps )
+!---------------------------------------------------------------------
+!
+      use atom, only: rab, r, mesh, nlcc, rho_atc
+      use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
+      use qrl_mod, only: cmesh
+      use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
+      use funct, only: dft, which_dft
+      use ions_base, only: zv
+      use cvan, only: ipp
+      use io_global, only: stdout
+
+!
+      implicit none
+!
+      integer is, iunps
+!
+      integer meshp, ir, ib, il, i, j, jj
+      real(kind=8), allocatable:: fint(:), vnl(:)
+      real(kind=8) rdum, alpha, z, zval, cmeshp, exfact
+!
+! nlcc is unfortunately not read from file
+!
+      ipp(is) = 3
+      nlcc(is)=.false.
+      read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
+      if (zv(is) < 1 .or. zv(is) > 100 ) then
+         call errore('readpp','wrong potential read',15)
+      endif
+
+      call dftname (nint(exfact), dft)
+      call which_dft (dft)
+!
+      if(lloc(is).eq.2)then 
+         lll(1,is)=0
+         lll(2,is)=1
+      else if(lloc(is).ne.2) then
+         call errore('readbhs','kb-ization for lloc=2 only',10)
+      endif
+!     
+!     see eqs. (2.21) and (2.22) of bhs, prb 26, 4199 (1982).
+!
+!     wrc1  =c_core(1)
+!     wrc2  =c_core(2)
+!     rc1   =alpha_core(1)
+!     rc2   =alpha_core(2)
+!     al(i) =a(i)          i=1,3
+!     bl(i) =a(i+3)        i=1,3
+!     rcl(i)=alpha(i)      i=1,3 
+!
+!     ------------------------------------------------------------------
+!     pp parameters are read from file iunps
+!     bhs 's coefficients have been turned into lengths
+!     ------------------------------------------------------------------
+      read(iunps,*) wrc1(is),rc1(is),wrc2(is),rc2(is)  
+      rc1(is)=1.0/sqrt(rc1(is))
+      rc2(is)=1.0/sqrt(rc2(is))
+      do il=1,3
+         do ib=1,3
+            read(iunps,*) rcl(ib,is,il),al(ib,is,il),bl(ib,is,il)
+            rcl(ib,is,il)=1.0/sqrt(rcl(ib,is,il))
+         end do
+      end do
+!
+!     ------------------------------------------------------------------
+!     wavefunctions are read from file iunps
+!     ------------------------------------------------------------------
+      do il=1,nbeta(is)
+         read(iunps,*) mesh(is),cmesh(is)
+!
+! kkbeta is for compatibility with Vanderbilt PP
+!
+         kkbeta(is)=mesh(is)
+         do j=1,mesh(is)
+            read(iunps,*) jj,r(j,is),betar(j,il,is)
+         end do
+      end do
+!     
+!     ------------------------------------------------------------------
+!     core charge is read from unit 15
+!     ------------------------------------------------------------------
+!
+      if(nlcc(is)) then
+         read(15,*) meshp,cmeshp
+         if(meshp.ne.mesh(is).or.cmeshp.ne.cmesh(is))then
+            call errore('readpp','core charge mesh mismatch',is)
+         endif
+         do ir=1,mesh(is)
+            read(15,*) rdum, rho_atc(ir,is)
+         end do
+      endif
+!
+!  rab(i) is the derivative of the radial mesh
+!
+      cmesh(is)=log(cmesh(is))
+      do ir=1,mesh(is)
+         rab(ir,is)=r(ir,is)*cmesh(is)
+      end do
+!
+!     ------------------------------------------------------------------
+!     local potential 
+!     ------------------------------------------------------------------
+      lloc(is)=lloc(is)+1
+!
+! NB: the following is NOT the local potential: the -ze^2/r term is missing
+!
+      do ir=1,mesh(is)
+         vloc_at(ir,is)=0.
+         do i=1,3
+            vloc_at(ir,is) = vloc_at(ir,is)                             &
+     &            +(al(i,is,lloc(is))+bl(i,is,lloc(is))*r(ir,is)**2)    &
+     &            *exp(-(r(ir,is)/rcl(i,is,lloc(is)))**2)
+         end do
+      end do
+!
+!     ------------------------------------------------------------------
+!     nonlocal potentials: kleinman-bylander form 
+!     (1) definition of betar   (2) calculation of dion 
+!     ------------------------------------------------------------------
+      allocate(fint(mesh(is)), vnl(mesh(is)))
+      do il=1,nbeta(is)
+         do ir=1,mesh(is)
+            vnl(ir)=0.
+            do i=1,3
+               vnl(ir) = vnl(ir) + (al(i,is,il)+bl(i,is,il)*r(ir,is)**2)&
+     &                    * exp(-(r(ir,is)/rcl(i,is,il))**2)
+            end do
+            vnl(ir) = vnl(ir) - vloc_at(ir,is)
+            fint(ir)= betar(ir,il,is)**2*vnl(ir)
+            betar(ir,il,is)=vnl(ir)*betar(ir,il,is)
+         end do
+         call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
+         dion(il,il,is) = 1.0/dion(il,il,is)
+      end do
+      deallocate(vnl, fint)
+!     
+!     ------------------------------------------------------------------
+!     output: pp info 
+!     ------------------------------------------------------------------
+      WRITE( stdout,3000) z,zv(is)
+3000  format(2x,'bhs pp for z=',f3.0,2x,'zv=',f3.0)
+
+      WRITE( stdout,'(2x,a20)') dft
+      WRITE( stdout,3002) lloc(is)-1 
+3002  format(2x,'   local angular momentum: l=',i3)
+      WRITE( stdout,3005) nbeta(is)
+3005  format(2x,'number of nl ang. mom. nbeta=',i3)
+      do il=1,nbeta(is)
+         WRITE( stdout,3010) lll(il,is)
+3010     format(2x,'nonlocal angular momentum: l=',i3)
+      end do
+      WRITE( stdout,3030) 
+3030  format(2x,'pseudopotential parameters:')
+      WRITE( stdout,3035) wrc1(is),1.0/rc1(is)**2
+3035  format(2x,'core:',2x,'c1_c=',f7.4,' alpha1_c=',f7.4)
+      WRITE( stdout,3036) wrc2(is),1.0/rc2(is)**2
+3036  format(2x,'     ',2x,'c2_c=',f7.4,' alpha2_c=',f7.4)
+      WRITE( stdout,3038)
+3038  format(2x,'other table parameters:')
+      do il=1,3
+         WRITE( stdout,3040) il-1
+3040     format(2x,'l=',i3)
+         do i =1,3
+            alpha=1.0/rcl(i,is,il)**2
+            WRITE( stdout,3050) i,alpha,i,al(i,is,il),i+3,bl(i,is,il)
+         end do
+      end do
+3050  format(2x,'alpha',i1,'=',f6.2,'  a',i1,'=',f16.7,                 &
+     &           '  a',i1,'=',f16.7)
+      WRITE( stdout,*)
+!     
+      return
+      end
+!
+!     
+!---------------------------------------------------------------------
+      subroutine readadc( is, iunps )
+!---------------------------------------------------------------------
+!
+!     This routine reads Vanderbilt pseudopotentials produced by the
+!     code of Andrea Dal Corso. Hard PPs are first generated
+!     according to the Rabe Rappe Kaxiras Johannopoulos recipe.
+!     Ultrasoft PP's are subsequently generated from the hard PP's.
+!
+!     Output parameters in module "uspp_param"
+!     info on DFT level in module "dft"
+!
+      use parameters, only: nsx, natx, lqmax, ndmx
+      use atom, only: rho_atc, r, rab, mesh, nlcc, lchi, chi, nchi, nchix
+      use uspp_param, only: nqlc, qfunc, vloc_at, rinner,&
+                       qqq, nbeta, nbrx, betar, dion, lll, kkbeta
+      use qrl_mod, only: qrl
+      use funct, only: dft, iexch, icorr, igcx, igcc
+      use ions_base, only: zv
+      use cvan, only: ipp
+      use io_global, only: stdout
+!
+      ! the above module variables has no dependency from iosys
+
+      implicit none
+!
+!    First the arguments passed to the subroutine
+!
+      integer                                                           &
+     &      is,        &! The number of the pseudopotential
+     &      iunps       ! the unit with the pseudopotential
+!
+!    Local variables
+!
+      integer                                                           &
+     &       nb,mb,     &! counters on beta functions
+     &       n,         &! counter on mesh points
+     &       ir,        &! counters on mesh points
+     &       pseudotype,&! the type of pseudopotential
+     &       ios,       &! I/O control
+     &       ndum,      &! dummy integer variable
+     &       l,         &! counter on angular momentum
+     &       ikk         ! the kkbeta for each beta
+      real(kind=8)                                                      &
+     &       x,         &! auxiliary variable
+     &       etotps,    &! total energy of the pseudoatom
+     &       rdum        ! dummy real variable
+!
+      logical                                                           &
+     &       rel      ! if true the atomic calculation is relativistic
+!
+      character(len=75)                                                 &
+     &       titleps    ! the title of the pseudo
+!
+      real(kind=8)  xmin, zmesh, dx,&! mesh parameters
+     &        oc(nchix,nsx),  &! occupancies
+     &        rsatom(ndmx)    ! charge density of pseudoatom
+      integer mfxcx, mfxcc,   &!
+     &        mgcx, mgcc,     &! exch-corr functional indices 
+     &        lmin, lmax       ! min and max l
+!
+!
+      if (is.lt.0 .or. is.gt.nsx)                                       &
+     &   call errore('readAdC','Wrong is number', 1)
+!
+      ipp(is) = -1
+      read( iunps, '(a75)', err=100, iostat=ios ) titleps
+!
+      read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
+      if (pseudotype.eq.3) then
+         WRITE( stdout,'('' RRKJ3 Ultrasoft PP for '',a2)') titleps(7:8)
+      else
+         WRITE( stdout,'('' RRKJ3 norm-conserving PP for '',a2)') titleps(7:8)
+      endif
+      read( iunps, '(2l5)',err=100, iostat=ios ) rel, nlcc(is)
+      read( iunps, '(4i5)',err=100, iostat=ios )  iexch, icorr, igcx,  &
+           igcc
+!
+      dft = '?'
+!
+      read( iunps, '(2e17.11,i5)') zv(is), etotps, lmax
+      if ( zv(is) < 1 .or. zv(is) > 100 )                               &
+     &     call errore('readAdC','wrong potential read',is)
+!
+      read( iunps, '(4e17.11,i5)',err=100, iostat=ios )                 &
+     &                       xmin,rdum,zmesh,dx,mesh(is)
+!
+      if (mesh(is) > ndmx .or. mesh(is) < 0)                            &
+     &   call errore('readAdC', 'wrong mesh',is)
+!
+      read( iunps, '(2i5)', err=100, iostat=ios ) nchi(is), nbeta(is)
+!
+      if (nbeta(is).gt.nbrx.or. nbeta(is).lt.0)                         &
+     &   call errore('readAdC', 'wrong nbeta', is)
+      if (nchi(is).gt.nchix.or.nchi(is).lt.1)                           &
+     &   call errore('readAdC', 'wrong nchi', is)
+!
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &                              ( rdum, nb=1,nchi(is) )
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &                              ( rdum, nb=1,nchi(is) )
+!
+      do nb=1,nchi(is)
+         read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios)                 &
+     &                rdum, ndum, lchi(nb,is), oc(nb,is)
+         lll(nb,is)=lchi(nb,is)
+      enddo
+!
+      kkbeta(is)=0
+      do nb=1,nbeta(is)
+         read ( iunps, '(i6)',err=100, iostat=ios ) ikk
+         kkbeta(is)=max(kkbeta(is),ikk)
+         read ( iunps, '(1p4e19.11)',err=100, iostat=ios )              &
+     &                      ( betar(ir,nb,is), ir=1,ikk)
+         do ir=ikk+1,mesh(is)
+            betar(ir,nb,is)=0.d0
+         enddo
+         do mb=1,nb
+            read( iunps, '(1p4e19.11)', err=100, iostat=ios )           &
+     &            dion(nb,mb,is)
+            dion(mb,nb,is)=dion(nb,mb,is)
+            if (pseudotype.eq.3) then
+               read(iunps,'(1p4e19.11)',err=100,iostat=ios)             &
+     &              qqq(nb,mb,is)
+               qqq(mb,nb,is)=qqq(nb,mb,is)
+               read(iunps,'(1p4e19.11)',err=100,iostat=ios)             &
+     &              (qfunc(n,nb,mb,is),n=1,mesh(is))
+               do n=1,mesh(is)
+                  qfunc(n,mb,nb,is)=qfunc(n,nb,mb,is)
+               enddo
+            else
+               qqq(nb,mb,is)=0.d0
+               qqq(mb,nb,is)=0.d0
+               do n=1,mesh(is)
+                  qfunc(n,nb,mb,is)=0.d0
+                  qfunc(n,mb,nb,is)=0.d0
+               enddo
+            endif
+         enddo
+      enddo
+!
+!   reads the local potential 
+!
+      read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rdum,            &
+     &                       ( vloc_at(ir,is), ir=1,mesh(is) )
+!
+!   reads the atomic charge
+!
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &                         ( rsatom(ir), ir=1,mesh(is) )
+!
+!   if present reads the core charge
+!
+      if ( nlcc(is) ) then 
+         read( iunps, '(1p4e19.11)', err=100, iostat=ios )              &
+     &                         ( rho_atc(ir,is), ir=1,mesh(is) )
+      endif
+!
+!   read the pseudo wavefunctions of the atom
+!  
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &             ((chi(ir,nb,is),ir=1,mesh(is)),nb=1,nchi(is))
+!
+!    set several variables for compatibility with the rest of the
+!    code
+!
+      nqlc(is)=2*lmax+1
+      if ( nqlc(is) > lqmax .or. nqlc(is) < 0 )                         &
+     &     call errore(' readAdC', 'Wrong  nqlc', nqlc(is) )
+      do l=1,nqlc(is)
+         rinner(l,is)=0.d0
+      enddo
+!
+!    fill the q(r)
+!
+      do nb=1,nbeta(is)
+         do mb=nb,nbeta(is)
+            lmin=abs(lll(mb,is)-lll(nb,is))+1
+            lmax=lmin+2*lll(nb,is)
+            do l=lmin,lmax,2
+               do ir=1,kkbeta(is)
+                  qrl(ir,nb,mb,l,is)=qfunc(ir,nb,mb,is)
+               end do
+            end do
+         end do
+      end do
+!
+!    compute the radial mesh
+!
+      do ir = 1, mesh(is)
+        x = xmin + float(ir-1) * dx
+        r(ir,is) = exp(x) / zmesh
+        rab(ir,is) = dx * r(ir,is)
+      end do
+!
+!     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)
+!
+      if ( nlcc(is) ) then
+         do ir=1,mesh(is)
+            rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265/r(ir,is)**2
+         enddo
+      end if
+!
+      return
+100   call errore('readAdC','Reading pseudo file',abs(ios))
+      stop
+      end
+
+!     
+!---------------------------------------------------------------------
+      subroutine readvan( is, iunps )
+!---------------------------------------------------------------------
+!
+!     Read Vanderbilt pseudopotential for species "is" from unit "iunps"
+!     Output parameters in module "uspp_param"
+!     info on DFT level in module "funct"
+!
+!
+!     ------------------------------------------------------
+!     Important:
+!     ------------------------------------------------------
+!     The order of all l-dependent objects is always s,p,d
+!     ------------------------------------------------------
+!     potentials, e.g. vloc_at, are really r*v(r)
+!     wave funcs, e.g. chi, are really proportional to r*psi(r)
+!     and are normalized so int (chi**2) dr = 1
+!     thus psi(r-vec)=(1/r)*chi(r)*y_lm(theta,phi)
+!     conventions carry over to beta, etc
+!     charge dens, e.g. rho_atc, really 4*pi*r**2*rho
+!
+!     ------------------------------------------------------
+!     Notes on qfunc and qfcoef:
+!     ------------------------------------------------------
+!     Since Q_ij(r) is the product of two orbitals like
+!     psi_{l1,m1}^star * psi_{l2,m2}, it can be decomposed by
+!     total angular momentum L, where L runs over | l1-l2 | ,
+!     | l1-l2 | +2 , ... , l1+l2.  (L=0 is the only component
+!     needed by the atomic program, which assumes spherical
+!     charge symmetry.)
+!
+!     Recall  qfunc(r) = y1(r) * y2(r)  where y1 and y2 are the
+!     radial parts of the wave functions defined according to
+!
+!       psi(r-vec) = (1/r) * y(r) * Y_lm(r-hat)  .
+!
+!     For each total angular momentum L, we pseudize qfunc(r)
+!     inside rc as:
+!
+!       qfunc(r) = r**(L+2) * [ a_1 + a_2*r**2 + a_3*r**4 ]
+!
+!     in such a way as to match qfunc and its 1'st derivative at
+!     rc, and to preserve
+!
+!       integral dr r**L * qfunc(r)   ,
+!
+!     i.e., to preserve the L'th moment of the charge.  The array
+!     qfunc has been set inside rc to correspond to this pseudized
+!     version using the minimal L, namely L = | l1-l2 | (e.g., L=0
+!     for diagonal elements).  The coefficients a_i (i=1,2,3)
+!     are stored in the array qfcoef(i,L+1,j,k) for each L so that
+!     the correctly pseudized versions of qfunc can be reconstructed
+!     for each L.  (Note that for given l1 and l2, only the values
+!     L = | l1-l2 | , | l1-l2 | +2 , ... , l1+l2 are ever used.)
+!     ------------------------------------------------------
+!
+!
+      use kinds, only: DP
+      use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
+      use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
+           rinner, kkbeta, lll, nbeta, nqf, nqlc
+      use qrl_mod, only: cmesh, qrl
+      use funct, only: dft, which_dft
+      use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
+      use ions_base, only: zv
+      use cvan, only: ipp
+      use io_global, only: stdout
+!
+      implicit none
+!
+!    First the arguments passed to the subroutine
+!
+      integer                                                           &
+     &      is,        &! The number of the pseudopotential
+     &      iunps       ! The unit of the pseudo file
+!
+!   The local variables which are used to read the Vanderbilt file.
+!   They are used only for the pseudopotential report. They are no 
+!   longer used in the rest of the code.
+!
+      real(kind=DP)                                                     &
+     &       exfact,        &! index of the exchange and correlation used 
+     &       etotpseu,      &! total pseudopotential energy
+     &       wwnl(nchix),   &! the occupation of the valence states
+     &       ee(nchix),     &! the energy of the valence states
+     &       eloc,          &! energy of the local potential
+     &       dummy,         &! dummy real variable
+     &       rc(nchix),     &! the cut-off radii of the pseudopotential
+     &       eee(nbrx),     &! energies of the beta function
+     &       ddd(nbrx,nbrx),&! the screened D_{\mu,\nu} parameters
+     &       rcloc,         &! the cut-off radius of the local potential 
+     &       vloc0(ndmx),  &! the screened local potential
+     &       rsatom(ndmx), &! the charge density of pseudoatom
+     &       z(nsx)          ! atomic charge
+      integer                                                           &
+     &       iver(3),       &! contains the version of the code
+     &       idmy(3),       &! contains the date of creation of the pseudo
+     &       ifpcor,        &! for core correction, 0 otherwise
+     &       ios,           &! integer variable for I/O control
+     &       i,             &! dummy counter 
+     &       nnlz(nchix),   &! The nlm values of the valence states
+     &       keyps,         &! the type of pseudopotential. Only US allowed
+     &       irel,          &! it says if the pseudopotential is relativistic
+     &       ifqopt(nsx),   &! level of Q optimization
+     &       iptype(nbrx),  &! more recent parameters 
+     &       npf,           &! as above
+     &       nang,          &! number of angular momenta in pseudopotentials
+     &       lloc,          &! angular momentum of the local part of PPs
+     &       lmin, lmax,    &! min and max angular momentum in Q
+     &       lp,            &! counter on Q angular momenta
+     &       l,             &! counter on angular momenta
+     &       jv,            &! beta function counter
+     &       iv,            &! beta function counter
+     &       ir              ! mesh points counter
+!
+      character(len=20)                                                &
+     &        title
+      character(len=60)                                                &
+     &        fmt            ! format string
+!
+!     We first check the input variables
+!
+      if (is.lt.0 .or. is.gt.nsx)                                       &
+     &   call errore('readvan','Wrong is number', 1)
+!
+      read(iunps, *, err=100 )                                          &
+     &     (iver(i),i=1,3), (idmy(i),i=1,3)
+      if ( iver(1).gt.7 .or. iver(1).lt.1 .or.                          &
+     &     iver(2).gt.9 .or. iver(2).lt.0 .or.                          &
+     &     iver(3).gt.9 .or. iver(3).lt.0      )                        &
+     &   call errore('readvan','wrong version numbers',1)
+
+!
+      read( iunps, '(a20,3f15.9)', err=100, iostat=ios )                &
+     &     title, z(is), zv(is), exfact 
+      if ( z(is) < 1 .or. z(is) > 100.d0)                               &
+     &     call errore( 'readvan','wrong z', is )
+      if ( zv(is) < 1 .or. zv(is) > 100.d0)                             &
+     &     call errore('readvan','wrong zv',is)
+      if ( exfact.lt.-6.or.exfact.gt.5)                                 &
+     &     call errore('readvan','Wrong xc in pseudopotential',1)
+! convert from "our" conventions to Vanderbilt conventions
+!
+
+      call dftname (nint(exfact), dft)
+      call which_dft (dft)
+!
+      read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &
+     &     nchi(is), mesh(is), etotpseu
+      if ( nchi(is).gt.nchix )                                          &
+     &     call errore( 'readvan', 'increase nchix', nchi(is) )
+      if ( nchi(is).lt. 1 )                                             &
+     &     call errore( 'readvan', 'wrong nchi ', is )
+      if ( mesh(is) > ndmx .or. mesh(is) < 0 )                          &
+     &     call errore( 'readvan','wrong mesh', is )
+!
+!     nnlz, wwnl, ee  give info (not used) on pseudo eigenstates
+!
+      read( iunps, '(i5,2f15.9)', err=100, iostat=ios ) ( nnlz(iv),     &
+     &                      wwnl(iv), ee(iv), iv=1,nchi(is) )
+      read( iunps, '(2i5,f15.9)', err=100, iostat=ios ) keyps,          &
+     &                      ifpcor, rinner(1,is)
+      nlcc (is) = (ifpcor == 1)
+!
+!     keyps= 0 --> standard hsc pseudopotential with exponent 4.0
+!            1 --> standard hsc pseudopotential with exponent 3.5
+!            2 --> vanderbilt modifications using defaults
+!            3 --> new generalized eigenvalue pseudopotentials
+!            4 --> frozen core all-electron case
+      if ( keyps .lt. 0 .or. keyps .gt. 4 ) then
+         call errore('readvan','wrong keyps',keyps)
+      else if (keyps.eq.4) then
+         call errore('readvan','keyps not implemented',keyps)
+      end if
+      if (keyps == 3) then
+         ipp(is) = 1
+      else
+         ipp(is) = 2
+      end if
+!
+!     Read information on the angular momenta, and on Q pseudization
+!     (version > 3.0)
+!
+      if (iver(1).ge.3) then
+         read( iunps, '(2i5,f9.5,2i5,f9.5)', err=100, iostat=ios )      &
+     &        nang, lloc, eloc, ifqopt(is), nqf(is), dummy
+!
+!    NB: In the Vanderbilt atomic code the angular momentum goes 
+!        from 1 to nang
+!
+         if ( nang .gt. nchix + 1 .or. nang.lt.0 )                      &
+     &        call errore(' readvan', 'Wrong nang', nang)
+         if ( lloc .eq. -1 ) lloc = nang+1
+         if ( lloc .gt. nang+1 .or. lloc .lt. 0 )                       &
+     &        call errore( 'readvan', 'wrong lloc', is )
+         if ( nqf(is).gt.nqfx .or. nqf(is).lt.0 )                       &
+     &        call errore(' readvan', 'Wrong nqf', nqf(is))
+         if ( ifqopt(is).lt.0 )                                         &
+     &        call errore( 'readvan', 'wrong ifqopt', is )
+      end if
+!
+!     Reads and test the values of rinner (version > 5.1)
+!     rinner = radius at which to cut off partial core or q_ij
+!
+      if (10*iver(1)+iver(2).ge.51) then
+!
+         read( iunps, *, err=100, iostat=ios )                          &
+     &        (rinner(lp,is), lp=1,2*nang-1 )
+!
+         do lp = 1, 2*nang-1
+            if (rinner(lp,is).lt.0.d0)                                  &
+     &           call errore('readvan','Wrong rinner', is )
+         enddo
+      else if (iver(1).gt.3) then
+         do lp = 2, 2*nang-1
+            rinner(lp,is)=rinner(1,is)
+         end do
+      end if
+!
+      if (iver(1).ge.4)                                                 &
+     &     read( iunps, '(i5)',err=100, iostat=ios ) irel
+!     
+!       set the number of angular momentum terms in q_ij to read in
+!
+      if (iver(1).eq.1) then
+         ipp(is) = 0
+! old format: no distinction between nang and nchi
+         nang = nchi(is)
+! old format: no optimization of q_ij => 3-term taylor series
+         nqf(is)=3
+         nqlc(is)=5
+      else if (iver(1).eq.2) then
+         nang = nchi(is)
+         nqf(is)=3
+         nqlc(is) = 2*nang - 1
+      else
+         nqlc(is) = 2*nang - 1
+      end if
+!
+      if ( nqlc(is) > lqmax )                                           &
+     &     call errore(' readvan', 'Wrong  nqlc', nqlc(is) )
+!
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &                              ( rc(l), l=1,nang )
+!
+!     reads the number of beta functions 
+!
+      read( iunps, '(2i5)', err=100, iostat=ios ) nbeta(is), kkbeta(is)
+!
+      if( nbeta(is).gt.nbrx .or. nbeta(is).lt.0 )                       &
+     &     call errore( 'readvan','wrong nbeta', is )
+      if( kkbeta(is).gt.mesh(is) .or. kkbeta(is).lt.0 )                 &
+     &     call errore( 'readvan','wrong kkbeta', is )
+!
+!    Now reads the main Vanderbilt parameters
+!
+      do iv=1,nbeta(is)
+         read( iunps, '(i5)',err=100, iostat=ios ) lll(iv,is)
+         read( iunps, '(1p4e19.11)',err=100, iostat=ios ) eee(iv),      &
+     &                      ( betar(ir,iv,is), ir=1,kkbeta(is) )
+         if ( lll(iv,is).gt.3 .or. lll(iv,is).lt.0 )                    &
+     &      call errore( 'readvan', ' wrong lll ? ', is )
+         do jv=iv,nbeta(is)
+            read( iunps, '(1p4e19.11)', err=100, iostat=ios )           &
+     &           dion(iv,jv,is),                                        &
+     &           ddd(iv,jv), qqq(iv,jv,is),                             &
+     &           (qfunc(ir,iv,jv,is),ir=1,kkbeta(is)),                  &
+     &           ((qfcoef(i,lp,iv,jv,is),i=1,nqf(is)),lp=1,nqlc(is))
+!
+!     Use the symmetry of the coefficients
+!
+            dion(jv,iv,is)=dion(iv,jv,is)
+            qqq(jv,iv,is)=qqq(iv,jv,is)
+!
+            do ir = 1, kkbeta(is)
+               qfunc(ir,jv,iv,is)=qfunc(ir,iv,jv,is)
+            enddo
+!
+            do i = 1, nqf(is)
+               do lp= 1, nqlc(is)
+                  qfcoef(i,lp,jv,iv,is)=qfcoef(i,lp,iv,jv,is)
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!    for versions later than 7.2
+!
+      if (10*iver(1)+iver(2).ge.72) then
+         read( iunps, '(6i5)',err=100, iostat=ios )                     &
+     &        (iptype(iv), iv=1,nbeta(is))
+         read( iunps, '(i5,f15.9)',err=100, iostat=ios )                &
+     &        npf, dummy
+      end if
+
+!
+!   read the local potential 
+!
+      read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rcloc,           &
+     &                       ( vloc_at(ir,is), ir=1,mesh(is) )
+!
+!   If present reads the core charge rho_atc(r)=4*pi*r**2*rho_core(r)
+!
+      if ( nlcc(is) ) then 
+         if (iver(1).ge.7)                                              &
+     &        read( iunps, '(1p4e19.11)', err=100, iostat=ios )         &
+     &        dummy
+         read( iunps, '(1p4e19.11)', err=100, iostat=ios )              &
+     &                         ( rho_atc(ir,is), ir=1,mesh(is) )
+      endif
+!
+!     Reads the screened local potential
+!
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &                             (vloc0(ir), ir=1,mesh(is))
+!
+!     Reads the valence atomic charge
+!
+      read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
+     &                             (rsatom(ir), ir=1,mesh(is))
+!
+!     Reads the logarithmic mesh (if version > 1)
+!
+      if (iver(1).gt.1) then
+         read( iunps, '(1p4e19.11)',err=100, iostat=ios )               &
+     &        (r(ir,is),ir=1,mesh(is))
+         read( iunps, '(1p4e19.11)',err=100, iostat=ios )               &
+     &        (rab(ir,is),ir=1,mesh(is))
+      else
+!
+!     generate herman-skillman mesh (if version = 1)
+!
+         call herman_skillman_grid(mesh(is),z(is),cmesh(is),r(1,is))
+      end if
+!
+!     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)
+!
+      rho_atc(1,is) = 0.0
+      do ir=2,mesh(is)
+         rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265/r(ir,is)**2
+      enddo
+!
+!    Reads the wavefunctions of the atom
+!      
+      if (iver(1).ge.7) then
+         read( iunps, *, err=100, iostat=ios ) i
+         if (i.ne.nchi(is))                                             &
+     &        call errore('readvan','unexpected or unimplemented case',1)
+      end if
+!
+      if (iver(1).ge.6)                                                 &
+     &     read( iunps, *, err=100, iostat=ios )                        &
+     &     ((chi(ir,iv,is),ir=1,mesh(is)),iv=1,nchi(is))
+      do iv = 1, nchi(is)
+            i = nnlz(iv) / 100
+            lchi(iv,is) = nnlz(iv)/10 - i * 10
+      enddo
+!
+      if (iver(1).eq.1) then
+!
+!   old version: read the q(r) here
+!
+         do iv=1,nbeta(is)
+            do jv=iv,nbeta(is)
+               lmin=lll(jv,is)-lll(iv,is)+1
+               lmax=lmin+2*lll(iv,is)
+               do l=lmin,lmax
+                  read(iunps,*, err=100, iostat=ios)                    &
+     &                 (qrl(ir,iv,jv,l,is),ir=1,kkbeta(is))
+               end do
+            end do
+         end do
+      else
+!
+!   new version: fill the q(r) here
+!
+         call fill_qrl(is)
+      end if
+!
+!   vloc_at as read from Vanderbilt's format is r*v_loc(r)
+!
+      do ir = 2, mesh (is)
+         vloc_at (ir, is) = vloc_at (ir, is) / r (ir, is)
+      enddo
+      vloc_at (1, is) = vloc_at (2, is)
+!
+!    Here we write on output information on the pseudopotential 
+!
+
+      WRITE( stdout,200) is
+200   format (/4x,60('=')/4x,'|  pseudopotential report',               &
+     &        ' for atomic species:',i3,11x,'|')
+      WRITE( stdout,300) 'pseudo potential version', iver(1),                 &
+     &     iver(2), iver(3)
+300   format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
+      WRITE( stdout,400) title, dft
+400   format (4x,'|  ',2a20,' exchange-corr  |')
+      WRITE( stdout,500) z(is), is, zv(is), exfact
+500   format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
+     &     f10.5, 9x,'|')
+      WRITE( stdout,600) ifpcor, etotpseu
+ 600  format (4x,'|  ifpcor = ',i2,10x,' atomic energy =',f10.5,        &
+     &     ' Ry',6x,'|')
+      WRITE( stdout,700)
+700   format(4x,'|  index    orbital      occupation    energy',14x,'|')
+      WRITE( stdout,800) ( iv, nnlz(iv), wwnl(iv), ee(iv), iv=1,nchi(is) )
+800   format(4x,'|',i5,i11,5x,f10.2,f12.2,15x,'|')
+      if (iver(1).ge.3.and.nang.gt.0) then
+         write(fmt,900) 2*nang-1, 40-8*(2*nang-2)
+ 900     format('(4x,''|  rinner ='',',i1,'f8.4,',i2,'x,''|'')')
+         WRITE( stdout,fmt)  (rinner(lp,is),lp=1,2*nang-1)
+      end if
+      WRITE( stdout,1000)
+1000  format(4x,'|    new generation scheme:',32x,'|')
+      WRITE( stdout,1100) nbeta(is),kkbeta(is),rcloc
+1100  format(4x,'|    nbeta = ',i2,5x,'kkbeta =',i5,5x,                 &
+     &     'rcloc =',f10.4,4x,'|'/                                      &
+     &     4x,'|    ibeta    l     epsilon   rcut',25x,'|')
+      do iv = 1, nbeta(is)
+         lp=lll(iv,is)+1
+         WRITE( stdout,1200) iv,lll(iv,is),eee(iv),rc(lp)
+1200      format(4x,'|',5x,i2,6x,i2,4x,2f7.2,25x,'|')
+      enddo
+      WRITE( stdout,1300)
+1300  format (4x,60('='))
+!
+      return
+100   call errore('readvan','error reading pseudo file', abs(ios) )
+      end

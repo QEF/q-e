@@ -5,51 +5,63 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE input_cp
+
+
+MODULE input
 
    IMPLICIT NONE
    SAVE
 
    PRIVATE
 
-   PUBLIC :: iosys
-   PUBLIC :: iosys_pseudo
    PUBLIC :: read_input_file
+   PUBLIC :: iosys_pseudo
 
 CONTAINS
 
-!  subroutines
-!  ----------------------------------------------
-!  ----------------------------------------------
+   !  ----------------------------------------------
 
-      SUBROUTINE read_input_file( lneb, lsmd, lwf )
+   SUBROUTINE read_input_file( lneb, lsmd, lwf )
         USE read_namelists_module, ONLY: read_namelists
         USE read_cards_module, ONLY: read_cards
         USE input_parameters, ONLY: calculation
+        USE control_flags, ONLY: program_name
         IMPLICIT NONE
 
-        LOGICAL, INTENT(OUT) :: lneb, lsmd, lwf
+        LOGICAL, OPTIONAL, INTENT(OUT) :: lneb, lsmd, lwf
+        CHARACTER(LEN=2) :: prog
 
-! . Read NAMELISTS ..................................................!
+        IF( program_name == 'FPMD' ) prog = 'FP'
+        IF( program_name == 'CPVC' ) prog = 'CP'
 
-        CALL read_namelists( 'CP' )
+        ! . Read NAMELISTS ..................................................!
 
-! . Read CARDS ......................................................!
+        CALL read_namelists( prog )
 
-        CALL read_cards( 'CP' )
+        ! . Read CARDS ......................................................!
 
-        lneb = ( TRIM( calculation ) == 'neb' )
-        lsmd = ( TRIM( calculation ) == 'smd' )
-        lwf  = ( TRIM( calculation ) == 'cp-wf' )
+        CALL read_cards( prog )
+
+        IF( PRESENT(lneb) ) THEN
+          lneb = ( TRIM( calculation ) == 'neb' )
+        END IF
+        IF( PRESENT(lsmd) ) THEN
+          lsmd = ( TRIM( calculation ) == 'smd' )
+        END IF
+        IF( PRESENT(lwf) ) THEN
+          lwf  = ( TRIM( calculation ) == 'cp-wf' )
+        END IF
 
         RETURN
-      END SUBROUTINE
+   END SUBROUTINE
 
-
+   !  ----------------------------------------------
 
       subroutine iosys_pseudo( psfile_ , pseudo_dir_ , nsp_ )
         use input_parameters, only:  atom_pfile, pseudo_dir, ntyp
+        use control_flags, only:  program_name
         use parameters, only: nsx
+        use read_pseudo_module_fpmd, only: read_pseudo_fpmd
         implicit none
         character(len=256) :: psfile_ ( nsx ) , pseudo_dir_
         integer :: nsp_
@@ -60,12 +72,39 @@ CONTAINS
         !
         !  read in pseudopotentials and wavefunctions files
         !
-        call readpp()
+        IF( program_name == 'CPVC' ) THEN
+          call readpp()
+        ELSE IF( program_name == 'FPMD' ) THEN
+          call read_pseudo_fpmd( pseudo_dir_ , psfile_ , nsp_ )
+        END IF
         return
       end subroutine
 
+   !  ----------------------------------------------
 
-!-----------------------------------------------------------------------
+END MODULE input
+
+! ----------------------------------------------------------------
+!
+!
+!
+!
+! ----------------------------------------------------------------
+
+MODULE input_cp
+
+   IMPLICIT NONE
+   SAVE
+
+   PRIVATE
+
+   PUBLIC :: iosys
+
+CONTAINS
+
+!  subroutines
+!  ----------------------------------------------
+!  ----------------------------------------------
 
     subroutine iosys( )
 
@@ -963,7 +1002,6 @@ END MODULE input_cp
 
         PRIVATE
 
-        PUBLIC :: read_input_file
         PUBLIC :: iosys
 
 !  end of module-scope declarations
@@ -974,33 +1012,6 @@ END MODULE input_cp
 !  subroutines
 !  ----------------------------------------------
 !  ----------------------------------------------
-
-      SUBROUTINE read_input_file( lneb )
-        USE read_namelists_module, ONLY: read_namelists
-        USE read_cards_module, ONLY: read_cards
-        USE input_parameters, ONLY: calculation
-        IMPLICIT NONE
-
-        LOGICAL, INTENT(OUT) :: lneb
-
-! . Read NAMELISTS ..................................................! 
-
-        CALL read_namelists( 'FP' )
-
-! . Read CARDS ......................................................! 
-
-        CALL read_cards( 'FP' )
-
-        lneb = ( TRIM( calculation ) == 'neb' )
-
-        RETURN
-      END SUBROUTINE
-
-! ----------------------------------------------------------------
-!
-!
-!
-! ----------------------------------------------------------------
 
       SUBROUTINE iosys
 

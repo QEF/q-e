@@ -49,7 +49,7 @@
                   memchk, tconjgrad, tprnsfac, toptical, &
                   tcarpar, rhoout, trane, ampre, tranp, amprp, &
                   tdipole, t_diis, t_diis_simple, t_diis_rot, tnosee, tnosep, tnoseh, &
-                  tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, tolp, &
+                  tcp, tcap, tdamp, tdampions, tconvthrs, tolp, &
                   convergence_criteria, tionstep, nstepe, tsteepdesc, &
                   ionic_conjugate_gradient, tconjgrad_ion, &
                   tatomicwfc, tscreen, gamma_only, ekin_conv_thr, ekin_maxiter, force_pairing
@@ -101,7 +101,6 @@
         LOGICAL :: toptical  = .FALSE.  ! print out optical properties
         LOGICAL :: tcarpar   = .FALSE.  ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
         LOGICAL :: rhoout    = .FALSE.  ! print out charge densities
-        LOGICAL :: tnodump   = .FALSE.  ! if true avoid the dump of the wavefunctions in resetart
         LOGICAL :: tdamp     = .FALSE.  ! Use damped dinamics for electrons
         LOGICAL :: tdampions = .FALSE.  ! Use damped dinamics for electrons
         LOGICAL :: tatomicwfc= .FALSE.  ! Use atomic wavefunctions as starting guess for ch. density
@@ -255,14 +254,6 @@
 
    SUBROUTINE fix_dependencies()
      IMPLICIT NONE
-! ...   Restart file dump
-        tnodump = .false.
-          ! this flag used for benchmarking and debug
-          ! if true Do not save wave functions and other system
-          ! properties on the writefile subroutine
-        IF( ndw < 0  ) THEN
-          tnodump = .true.
-        END IF
 
 ! ...   Car Parrinello simulation
         tcarpar     = .TRUE.
