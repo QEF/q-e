@@ -72,7 +72,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call cft_1 (f, ncp (me), n3, nx3, sign, aux)
 #endif
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
-     call setv (2 * nxx, 0.0d0, f, 1)
+     f(:) = (0.d0,0.d0)
      do i = 1, nct
         mc = icpl (i)
         do j = 1, npp (me)

@@ -20,7 +20,7 @@ real(kind=DP) :: phi (3, 3), work (3, 3)
 external DSCAL, DCOPY
 !
 if (nsym.eq.1) return
-call setv (9, 0.d0, work, 1)
+work(:,:) = 0.d0
 !
 do isym = 1, nsym
 do i = 1, 3

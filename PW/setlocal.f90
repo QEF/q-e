@@ -26,7 +26,7 @@ subroutine setlocal
   
   allocate (aux( nrxx))    
   !
-  call setv (2 * nrxx, 0.d0, aux, 1)
+  aux(:)=(0.d0,0.d0)
   do nt = 1, ntyp
      do ng = 1, ngm
         aux (nl(ng))=aux(nl(ng)) + vloc (igtongl (ng), nt) * strf (ng, nt)

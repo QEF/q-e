@@ -18,7 +18,6 @@ subroutine drho
   !
 #include"machine.h"
 
-
   use pwcom
   use parameters, only : DP
   use phcom
@@ -108,8 +107,9 @@ subroutine drho
      call compute_dvloc (nu_i, dvlocin)
      do nu_j = 1, 3 * nat
         do is = 1, nspin
-           wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + ZDOTC (nrxxs, drhous (1, &
-                is, nu_j), 1, dvlocin, 1) * omega / float (nrstot)
+           wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
+                ZDOTC (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
+                omega / float (nrstot)
         enddo
      enddo
 
@@ -131,9 +131,8 @@ subroutine drho
   !
   do nu_i = 1, 3 * nat
      do nu_j = 1, nu_i
-        dyn00 (nu_i, nu_j) = 0.5d0 * (dyn00 (nu_i, nu_j) + conjg (dyn00 ( &
-             nu_j, nu_i) ) )
-        dyn00 (nu_j, nu_i) = conjg (dyn00 (nu_i, nu_j) )
+        dyn00(nu_i,nu_j) = 0.5d0*( dyn00(nu_i,nu_j) + conjg(dyn00(nu_j,nu_i))) 
+        dyn00(nu_j,nu_i) = conjg(dyn00(nu_i,nu_j))
      enddo
   enddo
   !      call tra_write_matrix('drho dyn00',dyn00,u,nat)
@@ -141,8 +140,7 @@ subroutine drho
   !    add the augmentation term to the charge density and save it
   !
   allocate (drhoust( nrxx , nspin , 3))    
-  call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, &
-       dbecsum, 1)
+  call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, dbecsum, 1)
 #ifdef __PARA
   call reduce (nhm * (nhm + 1) * nat * nspin * 3 * nat, dbecsum)
 #endif
@@ -152,19 +150,16 @@ subroutine drho
      if (doublegrid) then
         do is = 1, nspin
            do iper = 1, npe
-              call cinterpolate (drhoust (1, is, iper), &
-                   drhous (1, is, mode+iper), 1)
+              call cinterpolate (drhoust(1,is,iper), drhous(1,is,mode+iper), 1)
            enddo
         enddo
      else
-        call ZCOPY (nrxx * nspin * npe, drhous (1, 1, mode+1), 1, &
-             drhoust, 1)
+        call ZCOPY (nrxx*nspin*npe, drhous(1,1,mode+1), 1, drhoust, 1)
      endif
 
-     call DSCAL (2 * nrxx * nspin * npe, 0.5d0, drhoust, 1)
+     call DSCAL (2*nrxx*nspin*npe, 0.5d0, drhoust, 1)
 
-     call addusddens (drhoust, dbecsum (1, 1, 1, mode+1), irr, mode, &
-          npe, 1)
+     call addusddens (drhoust, dbecsum(1,1,1,mode+1), irr, mode, npe, 1)
      do iper = 1, npe
         nu_i = mode+iper
         call davcio (drhoust (1, 1, iper), lrdrhous, iudrhous, nu_i, 1)

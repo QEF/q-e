@@ -26,7 +26,7 @@ integer :: nat
 real(kind=DP) :: tau (3, nat), alat, dg (3, nat), dg2, g, dist, dist0, &
  x1, x2, y1, y2, z1, z2, DDOT
 
-call setv (3 * nat, 0.d0, dg, 1)
+dg(:,:) = 0.d0
 x1 = tau (1, 1)
 y1 = tau (2, 1)
 z1 = tau (3, 1)

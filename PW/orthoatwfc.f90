@@ -101,7 +101,7 @@ subroutine orthoatwfc
         ! trasform atomic orbitals O^-.5 psi
         !
         do i = 1, npw
-           call setv (2 * natomwfc, 0.d0, work, 1)
+           work(:,1) = (0.d0,0.d0)
            call ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
                 natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
            call ZCOPY (natomwfc, work, 1, swfcatom (i, 1), npwx)

@@ -59,7 +59,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   ! scalar product of bg and tau
   parameter (tpi = 2.0d0 * 3.14159265358979d0)
 
-  call setv (2 * ngm * ntyp, 0.d0, strf, 1)
+  strf(:,:) = (0.d0,0.d0)
   do nt = 1, ntyp
      do na = 1, nat
         if (ityp (na) .eq.nt) then

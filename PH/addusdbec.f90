@@ -85,18 +85,15 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
                  ikb = ijkb0 + ih
                  do ibnd = startb, lastb
                     dbecsum (ijh, na) = dbecsum (ijh, na) + &
-                         w * (conjg (becp1 (ikb, ibnd, ik) ) * &
-                         dbecq (ikb, ibnd) )
+                         w * ( conjg(becp1(ikb,ibnd,ik)) * dbecq(ikb,ibnd) )
                  enddo
                  ijh = ijh + 1
                  do jh = ih + 1, nh (nt)
                     jkb = ijkb0 + jh
                     do ibnd = startb, lastb
                        dbecsum (ijh, na) = dbecsum (ijh, na) + &
-                            w * (conjg (becp1 (ikb, ibnd, ik) ) * &
-                            dbecq (jkb, ibnd) + &
-                            conjg (becp1 (jkb, ibnd, ik) ) * &
-                            dbecq (ikb, ibnd) )
+                         w * ( conjg(becp1(ikb,ibnd,ik)) * dbecq(jkb,ibnd) + &
+                               conjg(becp1(jkb,ibnd,ik)) * dbecq(ikb,ibnd) )
                     enddo
                     ijh = ijh + 1
                  enddo

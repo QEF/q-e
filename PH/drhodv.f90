@@ -92,7 +92,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                       (xk (ipol, ikq) + g (ipol, igkq (ig) ) )
               enddo
            enddo
-           call ccalbec (nkb, npwx, npwq, nbnd, dalpq(1,1,ipol,mu),vkb, aux)
+           call ccalbec (nkb, npwx, npwq, nbnd, dalpq(1,1,ipol,mu), vkb, aux)
         enddo
      enddo
      fact = DCMPLX (0.d0, tpiba)

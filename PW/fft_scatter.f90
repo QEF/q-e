@@ -86,14 +86,14 @@ subroutine fft_scatter1 (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
         from = offset1 (proc)
         dest = 1 + sdispls (proc)
         do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ (proc), f_in (from + 2 * (k - 1) * nrx3), &
-                1, f_aux (dest + 2 * (k - 1) * npp_ (proc) ), 1)
+           call DCOPY (2*npp_(proc), f_in (from + 2*(k-1)*nrx3),       1, &
+                                     f_aux(dest + 2*(k-1)*npp_(proc)), 1)
         enddo
      enddo
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
-     call setv (2 * nxx_, 0.0d0, f_in, 1)
+     f_in(:) = (0.d0,0.d0)
      !
      ! step two: communication
      !
@@ -115,14 +115,14 @@ subroutine fft_scatter1 (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      !
      !  step one: store contiguously the columns
      !
-     call setv (2 * nxx_, 0.0d0, f_in, 1)
+     f_in(:) = (0.d0,0.d0)
      !
      do proc = 1, nprocp
         from = 1 + sdispls (proc)
         dest = offset1 (proc)
         do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ (proc), f_aux (from + 2 * (k - 1) * npp_ ( &
-                proc) ), 1, f_in (dest + 2 * (k - 1) * nrx3), 1)
+           call DCOPY(2*npp_(proc), f_aux(from + 2*(k-1)*npp_(proc)), 1, &
+                                    f_in (dest + 2*(k-1)*nrx3),       1)
         enddo
 
      enddo

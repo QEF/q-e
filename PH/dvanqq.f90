@@ -116,8 +116,9 @@ subroutine dvanqq
   do na = 1, nat
      nta = ityp (na)
      do ig = 1, ngm
-        sk (ig) = vlocq (ig, nta) * eigts1 (ig1 (ig), na) * eigts2 (ig2 ( &
-             ig), na) * eigts3 (ig3 (ig), na)
+        sk (ig) = vlocq (ig, nta) * eigts1 (ig1 (ig), na) &
+                                  * eigts2 (ig2 (ig), na) &
+                                  * eigts3 (ig3 (ig), na)
      enddo
      do ipol = 1, 3
         do ig = 1, ngm
@@ -135,11 +136,9 @@ subroutine dvanqq
               !
               !    compute the augmentation function
               !
-
               call qvan2 (ngm, ih, jh, ntb, qmodg, qgm, ylmk0)
 
-              if (.not.lgamma) call qvan2 (ngm, ih, jh, ntb, qmod, qgmq, &
-                   ylmkq)
+              if (.not.lgamma) call qvan2 (ngm, ih, jh, ntb, qmod, qgmq, ylmkq)
               !
               !     NB: for this integral the moving atom and the atom of Q
               !     do not necessarily coincide
@@ -148,39 +147,41 @@ subroutine dvanqq
               do nb = 1, nat
                  if (ityp (nb) .eq.ntb) then
                     do ig = 1, ngm
-                       aux1 (ig) = qgmq (ig) * eigts1 (ig1 (ig), nb) * eigts2 (ig2 &
-                            (ig), nb) * eigts3 (ig3 (ig), nb)
+                       aux1 (ig) = qgmq (ig) * eigts1 (ig1 (ig), nb) &
+                                             * eigts2 (ig2 (ig), nb) &
+                                             * eigts3 (ig3 (ig), nb)
 
                     enddo
                     do na = 1, nat
-
                        fact = eigqts (na) * conjg (eigqts (nb) )
                        !
                        !    nb is the atom of the augmentation function
                        !
                        do ipol = 1, 3
 
-                          int2 (ih, jh, ipol, na, nb) = fact * fact1 * ZDOTC (ngm, &
-                               aux1, 1, aux5 (1, na, ipol), 1)
+                          int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
+                                ZDOTC (ngm, aux1, 1, aux5(1,na,ipol), 1)
                           do jpol = 1, 3
                              if (jpol.ge.ipol) then
                                 do ig = 1, ngm
-                                   aux3 (ig) = aux5 (ig, na, ipol) * (g (jpol, ig) + xq ( &
-                                        jpol) )
+                                   aux3 (ig) = aux5 (ig, na, ipol) * &
+                                               (g (jpol, ig) + xq (jpol) )
                                 enddo
-                                int5 (ijh, ipol, jpol, na, nb) = conjg (fact) * tpiba2 * &
-                                     omega * ZDOTC (ngm, aux3, 1, aux1, 1)
+                                int5 (ijh, ipol, jpol, na, nb) = &
+                                     conjg(fact) * tpiba2 * omega * &
+                                     ZDOTC (ngm, aux3, 1, aux1, 1)
                              else
-                                int5 (ijh, ipol, jpol, na, nb) = int5 (ijh, jpol, ipol, &
-                                     na, nb)
+                                int5 (ijh, ipol, jpol, na, nb) = &
+                                     int5 (ijh, jpol, ipol, na, nb)
                              endif
                           enddo
                        enddo
                     enddo
                     if (.not.lgamma) then
                        do ig = 1, ngm
-                          aux1 (ig) = qgm (ig) * eigts1 (ig1 (ig), nb) * eigts2 ( &
-                               ig2 (ig), nb) * eigts3 (ig3 (ig), nb)
+                          aux1 (ig) = qgm (ig) * eigts1 (ig1 (ig), nb) &
+                                               * eigts2 (ig2 (ig), nb) &
+                                               * eigts3 (ig3 (ig), nb)
                        enddo
                     endif
                     do is = 1, nspin
@@ -188,18 +189,18 @@ subroutine dvanqq
                           do ig = 1, ngm
                              aux2 (ig) = veff (nl (ig), is) * g (ipol, ig)
                           enddo
-                          int1 (ih, jh, ipol, nb, is) = - fact1 * ZDOTC (ngm, aux1, 1, &
-                               aux2, 1)
+                          int1 (ih, jh, ipol, nb, is) = - fact1 * &
+                               ZDOTC (ngm, aux1, 1, aux2, 1)
                           do jpol = 1, 3
                              if (jpol.ge.ipol) then
                                 do ig = 1, ngm
                                    aux3 (ig) = aux2 (ig) * g (jpol, ig)
                                 enddo
-                                int4 (ijh, ipol, jpol, nb, is) = - tpiba2 * omega * &
-                                     ZDOTC (ngm, aux3, 1, aux1, 1)
+                                int4 (ijh, ipol, jpol, nb, is) = - tpiba2 * &
+                                     omega * ZDOTC (ngm, aux3, 1, aux1, 1)
                              else
-                                int4 (ijh, ipol, jpol, nb, is) = int4 (ijh, jpol, ipol, &
-                                     nb, is)
+                                int4 (ijh, ipol, jpol, nb, is) = &
+                                     int4 (ijh, jpol, ipol, nb, is)
                              endif
                           enddo
                        enddo
@@ -217,10 +218,10 @@ subroutine dvanqq
                  if (ityp (nb) .eq.ntb) then
                     do ipol = 1, 3
                        do is = 1, nspin
-                          int1 (jh, ih, ipol, nb, is) = int1 (ih, jh, ipol, nb, is)
+                          int1(jh,ih,ipol,nb,is) = int1(ih,jh,ipol,nb,is)
                        enddo
                        do na = 1, nat
-                          int2 (jh, ih, ipol, na, nb) = int2 (ih, jh, ipol, na, nb)
+                          int2(jh,ih,ipol,na,nb) = int2(ih,jh,ipol,na,nb)
                        enddo
                     enddo
                  endif

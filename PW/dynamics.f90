@@ -51,8 +51,7 @@ subroutine dynamics
   allocate (mass(   nat))    
   allocate (a(  3, nat))    
   allocate (tauold(   3,  nat, 3))    
-
-  call setv (9 * nat, 0.d0, tauold, 1)
+  tauold(:,:,:) = 0.d0
 
   dtau_ref = 0.2
   natoms = nat - fixatom
@@ -247,7 +246,7 @@ subroutine start_therm (mass, tauold)
   allocate (step(3,nat))    
   aux = temperature / convert_E_to_temp
   natoms = nat - fixatom
-  call setv (3, 0.d0, ml, 1)
+  ml(:) = 0.d0
   !
   ! velocity in random direction, with modulus accordingly to mass and
   ! temperature: 3/2KT = 1/2mv^2

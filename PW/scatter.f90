@@ -39,9 +39,8 @@ subroutine scatter (f_in, f_out)
   call mpi_scatterv (f_in, sendcount, displs, MPI_REAL8, f_out, &
        sendcount (me), MPI_REAL8, root, MPI_COMM_POOL, info)
   call errore ('gather_pot', 'info<>0', info)
+  if (sendcount(me).ne.nxx) f_out(sencount(me)+1:nxx) = 0.d0
 
-  if (sendcount (me) .ne.nxx) call setv (nxx - sendcount (me), &
-       0.d0, f_out (sendcount (me) + 1), 1)
   call stop_clock ('scatter')
 #endif
   return

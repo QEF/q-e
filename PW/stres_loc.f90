@@ -24,7 +24,7 @@ subroutine stres_loc (sigmaloc)
 
   allocate(dvloc(ngl))
   sigmaloc(:,:) = 0.d0
-  call setv (2 * nrxx, 0.d0, psic, 1)
+  psic(:)=(0.d0,0.d0)
   do is = 1, nspin
      call DAXPY (nrxx, 1.d0, rho (1, is), 1, psic, 2)
   enddo

@@ -61,12 +61,11 @@ subroutine phqscf
            imode0 = imode0 + npert (irr1)
         enddo
         if (npert (irr) .eq.1) then
-           write (6, '(//,5x,"Representation #", i3, &
-                &                     " mode # ",i3)') irr, imode0 + 1
+           write (6, '(//,5x,"Representation #", i3," mode # ",i3)') &
+                              irr, imode0 + 1
         else
-           write (6, '(//,5x,"Representation #", i3, &
-                &                 " modes # ",3i3)') irr,  (imode0 + irr1, irr1 = &
-                & 1, npert (irr) )
+           write (6, '(//,5x,"Representation #", i3," modes # ",3i3)') &
+                              irr, (imode0+irr1, irr1=1,npert(irr))
         endif
         !
         !    then for this irreducible representation we solve the linear system
@@ -99,10 +98,9 @@ subroutine phqscf
         call seqopn (iunrec, 'recover', 'unformatted', exst)
         if (okvan) write (iunrec) int1, int2
 
-        write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, &
-             zstarue0
+        write(iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
 
-        write (iunrec) irr, 0, convt, done_irr, comp_irr, ifat
+        write(iunrec) irr, 0, convt, done_irr, comp_irr, ifat
 
         close (unit = iunrec, status = 'keep')
         tcpu = get_clock ('PHONON')

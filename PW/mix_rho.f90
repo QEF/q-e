@@ -84,7 +84,6 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   real (kind=DP), external :: rho_dot_product, ns_dot_product, fn_dehar
 
-
   call start_clock('mix_rho')
 
   if (iter < 1) call errore('mix_rho','iter is wrong',1)

@@ -158,7 +158,7 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !
   ! copy a(r) to complex array...
   !
-  call setv (nrxx, 0.d0, aux (2, 1), 2)
+  aux(2,:) = 0.d0
   call DCOPY (nrxx, a, 1, aux, 2)
   !
   ! bring a(r) to G-space, a(G) ...
@@ -167,13 +167,13 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !
   ! multiply by (iG) to get (\grad_ipol a)(G) ...
   !
-  call setv (3 * nrxx, 0.d0, ga, 1)
+  ga(:,:) = 0.d0
 
   do ipol = 1, 3
-     call setv (2 * nrxx, 0.d0, gaux, 1)
+     gaux(:,:) = 0.d0
      do n = 1, ngm
         gaux (1, nl (n) ) = - g (ipol, n) * aux (2, nl (n) )
-        gaux (2, nl (n) ) = g (ipol, n) * aux (1, nl (n) )
+        gaux (2, nl (n) ) =   g (ipol, n) * aux (1, nl (n) )
      enddo
      !
      ! bring back to R-space, (\grad_ipol a)(r) ...
@@ -210,12 +210,12 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   allocate (aux( 2,nrxx))    
   allocate (gaux(2,nrxx))    
 
-  call setv (2 * nrxx, 0.d0, gaux, 1)
+  gaux(:,:) = 0.d0
   do ipol = 1, 3
      !
      ! copy a(ipol,r) to a complex array...
      !
-     call setv (nrxx, 0.d0, aux (2, 1), 2)
+     aux(2,:) = 0.d0
      call DCOPY (nrxx, a (ipol, 1), 3, aux, 2)
      !
      ! bring a(ipol,r) to G-space, a(G) ...

@@ -28,6 +28,13 @@ subroutine print_clock_pw
    call print_clock ('sum_band')
    call print_clock ('v_of_rho')
    call print_clock ('newd')
+#ifdef DEBUG_NEWD
+   write (*,*) nhm*(nhm+1)/2, nbrx*(nbrx+1)/2*lqx
+   call print_clock ('newd:fftvg')
+   call print_clock ('newd:qvan2')
+   call print_clock ('newd:int1')
+   call print_clock ('newd:int2')
+#endif
    if (imix.ge.0) then
       call print_clock ('mix_rho')
    else

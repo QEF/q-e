@@ -6,14 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, &
-     becq, alpq, mode)
+subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, alpq, mode)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due
   !     to the displacement of the augmentation charge. Only the
   !     smooth part is computed here.
-  !
   !
 #include "machine.h"
 
@@ -80,8 +78,8 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, &
      do na = 1, nat
         if (ityp (na) .eq.nt) then
            mu = 3 * (na - 1)
-           if (abs (u (mu + 1, mode) ) + abs (u (mu + 2, mode) ) + abs (u &
-                (mu + 3, mode) ) .gt.1.0d-12) then
+           if (abs(u(mu+1,mode)) + abs(u(mu+2,mode)) &
+                                 + abs(u(mu+3,mode)) .gt.1.0d-12) then
               do ih = 1, nh (nt)
                  ikb = ijkb0 + ih
                  do jh = 1, nh (nt)
@@ -90,10 +88,10 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, &
                        do jbnd = startb, lastb
                           do ipol = 1, 3
                              mu = 3 * (na - 1) + ipol
-                             ps1 (ibnd, jbnd) = ps1 (ibnd, jbnd) - qq (ih, jh, nt) &
-                                  * (alphap (ikb, ibnd, ipol, ik) * conjg (becq (jkb, jbnd, &
-                                  ik) ) + becp1 (ikb, ibnd, ik) * conjg (alpq (jkb, jbnd, &
-                                  ipol, ik) ) ) * wgg (ibnd, jbnd, ik) * u (mu, mode)
+                             ps1(ibnd,jbnd) = ps1(ibnd,jbnd) - qq(ih,jh,nt) * &
+                      ( alphap(ikb,ibnd,ipol,ik) * conjg(becq(jkb,jbnd,ik)) + &
+                        becp1(ikb,ibnd,ik) * conjg(alpq(jkb,jbnd,ipol,ik)) ) * &
+                        wgg (ibnd, jbnd, ik) * u (mu, mode)
                           enddo
                        enddo
                     enddo
@@ -112,20 +110,17 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, &
   wgt = 2.d0 * weight / omega
   do ibnd = 1, nbnd_occ (ikk)
      do jbnd = 1, nbnd
-        call ZAXPY (npwq, ps1 (ibnd, jbnd), evq (1, jbnd), 1, dpsi (1, &
-             ibnd), 1)
+        call ZAXPY (npwq, ps1(ibnd,jbnd), evq(1,jbnd), 1, dpsi(1,ibnd), 1)
      enddo
      call setv (2 * nrxxs, 0.d0, dpsir, 1)
      do ig = 1, npwq
-        dpsir (nls (igkq (ig) ) ) = dpsi (ig, ibnd)
+        dpsir(nls(igkq(ig))) = dpsi (ig, ibnd)
      enddo
 
      call cft3s (dpsir, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
      do ir = 1, nrxxs
-        drhoscf (ir) = drhoscf (ir) + wgt * dpsir (ir) * conjg (evcr (ir, &
-             ibnd) )
+        drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * conjg(evcr(ir,ibnd))
      enddo
-
   enddo
 
   call addusdbec (ik, wgt, dpsi, dbecsum)

@@ -78,9 +78,9 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !
   !  copy total rho in aux
   !
-  call setv (nrxx, 0.d0, aux(2,1), 2)
-  call DCOPY (nrxx, rho(1,1), 1, aux(1,1), 2)
-  if (nspin.eq.2) call DAXPY (nrxx, 1.0d0, rho(1,2), 1, aux(1,1), 2)
+  aux(2,:) = 0.d0
+  aux(1,:) = rho(:,1)
+  if (nspin.eq.2) aux(1,:) = aux(1,:) + rho(:,2)
   !
   !  bring rho (aux) to G space
   !
@@ -195,8 +195,8 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   etxc = 0.d0
   vtxc = 0.d0
+  v(:,:) = 0.d0
 
-  call setv (nspin * nrxx, 0.d0, v, 1)
   if (nspin.eq.1) then
      !
      ! spin-unpolarized case

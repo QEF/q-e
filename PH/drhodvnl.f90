@@ -10,7 +10,6 @@
 subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   !-----------------------------------------------------------------------
   !
-  !
   !  This routine compute the term of the dynamical matrix due to
   !  the orthogonality constraint. Only the part which is due to
   !  the nonlocal terms is computed here
@@ -142,7 +141,6 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 #ifdef __PARA
   call reduce (2 * 3 * nat * 3 * nat, dynwrk)
 #endif
-
   call DAXPY (18 * nat * nat, 1.d0, dynwrk, 1, wdyn, 1)
 
   deallocate (ps2)

@@ -130,17 +130,16 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      !
      do na = 1, natot
         do l = 1, 3
-           ratd (l, na) = zero
+           ratd(l,na) = zero
            do k = 1, 3
-              ratd (l, na) = rat2di (k, na) * sigma (k, l) / vcell + ratd (l, &
-                   na)
+              ratd(l,na) = rat2di(k,na) * sigma(k,l) / vcell + ratd(l,na)
            enddo
         enddo
      enddo
   else
      do na = 1, natot
         do k = 1, 3
-           ratd (k, na) = zero
+           ratd(k,na) = zero
         enddo
      enddo
   endif
@@ -148,10 +147,10 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   ! define (uncorrected) accelerations and initialize rat2di
   !
   do na = 1, natot
-     nt = ityp (na)
+     nt = ityp(na)
      do l = 1, 3
         rat2d (l, na) = force (l, na) / atmass (nt)
-        rat2di (l, na) = zero
+        rat2di(l, na) = zero
      enddo
   enddo
   !
@@ -181,8 +180,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
         !
         do j = 1, 3
            do i = 1, 3
-              piml (i, j) = piml (i, j) + atmass (nt) * ratd (i, na) * ratd ( &
-                   j, na)
+              piml(i,j) = piml(i,j) + atmass(nt) * ratd(i,na) * ratd(j,na)
            enddo
         enddo
      enddo
@@ -194,8 +192,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
            pim (i, j) = zero
            do l = 1, 3
               do m = 1, 3
-                 pim (i, j) = pim (i, j) + avec (i, l) * piml (l, m) * avec (j, &
-                      m)
+                 pim(i,j) = pim(i,j) + avec(i,l) * piml(l,m) * avec(j,m)
               enddo
            enddo
         enddo
@@ -496,8 +493,8 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   ! if variable cell, estimate velocities and set the number of update to
   ! be performed in order to have them accurate. This is needed only for
-  ! variable cell shape dynamics (where accelerations depends on velocitie
-  ! and a few, even just one, iteration is usually enogh
+  ! variable cell shape dynamics (where accelerations depends on velocities)
+  ! and a few, even just one, iteration is usually enough
   !
   if (calc (1:1) .ne.'m') then
      do na = 1, natot
@@ -513,7 +510,6 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      n_update = 19
   else
      n_update = 1
-
   endif
 
   do i_update = 1, n_update
@@ -546,8 +542,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
            !
            do j = 1, 3
               do i = 1, 3
-                 piml (i, j) = piml (i, j) + atmass (nt) * ratd (i, na) * ratd ( &
-                      j, na)
+                 piml(i,j) = piml(i,j) + atmass(nt) * ratd(i,na) * ratd(j,na)
               enddo
            enddo
         enddo
@@ -559,8 +554,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
               pim (i, j) = zero
               do l = 1, 3
                  do m = 1, 3
-                    pim (i, j) = pim (i, j) + avec (i, l) * piml (l, m) * avec (j, &
-                         m)
+                    pim(i,j) = pim(i,j) + avec(i,l) * piml(l,m) * avec(j,m)
                  enddo
               enddo
            enddo
@@ -592,8 +586,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
         !
         !      if new cell dynamics...
         !
-        if (calc (1:1) .eq.'n') call sigp (avec, avecd, avec2d, sigma, &
-             vcell)
+        if (calc (1:1) .eq.'n') call sigp (avec, avecd, avec2d, sigma, vcell)
         !
         !      strain/stress symmetrization
         !
@@ -786,7 +779,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !      write (*,*) ' ekla', ekla, ttol,ts, nst, ntcheck, ntimes
   if (mod (nst, ntcheck) .eq.0) then
      if ( (ts.gt.ttol) .and. (ntimes.gt.0) ) then
-        !            write (*,*) ' ekkkeka ! non dovrei essere qui !'
+        !           write (*,*) ' ekkkeka ! non dovrei essere qui !'
         !           write(6,*) 'nst,ntcheck, ts, ttol,ntimes'
         !           write(6,*) nst,ntcheck, ts, ttol,ntimes
         !
@@ -821,14 +814,38 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   endif
   if (calc (2:2) .eq.'m') then
      !         write(6,109) alpha,nst
-     do na = 1, natot
-        do k = 1, 3
-           xx = rat2di (k, na) * rat2d (k, na)
-           if (xx.lt.zero) then
-              ratd (k, na) = zero
+     if (.false.) then
+        do na = 1, natot
+           do k = 1, 3
+              xx = rat2di (k, na) * rat2d (k, na)
+              if (xx.lt.zero) then
+                 ratd (k, na) = zero
+              endif
+           enddo
+        enddo
+     else
+        do na = 1, natot
+           xx = 0.d0
+           do k=1,3
+              xx = rat2d(1,na) * g(1,k) * ratd(k,na) + &
+                   rat2d(2,na) * g(2,k) * ratd(k,na) + &
+                   rat2d(3,na) * g(3,k) * ratd(k,na)
+           end do
+           if (xx.gt.zero) then
+              ratd (:,na) =  rat2d (:,na) * xx
+              xx = 0.d0
+              do k=1,3
+                 xx = rat2d(1,na) * g(1,k) * rat2d(k,na) + &
+                      rat2d(2,na) * g(2,k) * rat2d(k,na) + &
+                      rat2d(3,na) * g(3,k) * rat2d(k,na)
+              end do
+              ratd(:,na) = ratd(:,na) / xx
+           else
+              ratd(:, na) = zero
            endif
         enddo
-     enddo
+     endif
+
      if (calc (1:1) .ne.'m') then
         do k = 1, 3
            do l = 1, 3

@@ -150,8 +150,7 @@ subroutine phq_init
      ! if there is only one k-point the wavefunctions are read once here
      !
 
-     if (nksq.eq.1.and..not.lgamma) call davcio (evq, lrwfc, iuwfc, &
-          ikq, - 1)
+     if (nksq.eq.1.and..not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, -1)
      call ccalbec (nkb, npwx, npw, nbnd, becp1 (1, 1, ik), vkb, evc)
      !
      !     e') we compute the derivative of the becp term with respect to an
@@ -160,12 +159,11 @@ subroutine phq_init
      do ipol = 1, 3
         do ibnd = 1, nbnd
            do ig = 1, npw
-              aux1 (ig, ibnd) = evc (ig, ibnd) * tpiba * (0.d0, 1.d0) * (xk ( &
-                   ipol, ikk) + g (ipol, igk (ig) ) )
+              aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * & 
+                                ( xk(ipol,ikk) + g(ipol,igk(ig)) )
            enddo
         enddo
-
-        call ccalbec (nkb, npwx, npw, nbnd, alphap (1, 1, ipol, ik),vkb, aux1)
+        call ccalbec (nkb, npwx, npw, nbnd, alphap(1,1,ipol,ik), vkb, aux1)
 
      enddo
 
@@ -175,10 +173,8 @@ subroutine phq_init
 
   call newd
   if (trans) then
-
      call dvanqq
      call drho
-
   endif
   if (epsil.and.okvan) then
      call compute_qdipol

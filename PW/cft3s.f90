@@ -96,7 +96,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         call CFT_1S (f, ncps (me), n3, nx3, sign, aux)
 #endif
         call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
-        call setv (2 * nxxs, 0.0d0, f, 1)
+        f(:) = (0.d0,0.d0)
         do i = 1, ncts
            mc = icpls (i)
            do j = 1, npps (me)
@@ -113,7 +113,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         call CFT_1S (f, nkcp (me), n3, nx3, sign, aux)
 #endif
         call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
-        call setv (2 * nxxs, 0.0d0, f, 1)
+        f(:) = (0.d0,0.d0)
         ii = 0
         do i = 1, nx1
            planes (i) = 0

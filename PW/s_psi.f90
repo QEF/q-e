@@ -49,7 +49,7 @@ subroutine s_psi (lda, n, m, psi, spsi )
   if (nkb.eq.0.or..not.okvan) goto 10
   !
   allocate (ps(nkb,m))    
-  call setv (2 * nkb * m, 0.d0, ps, 1)
+  ps(:,:) = (0.d0,0.d0)
   !
   ijkb0 = 0
   do nt = 1, ntyp

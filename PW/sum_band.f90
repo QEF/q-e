@@ -37,8 +37,8 @@ subroutine sum_band
   ! weight
   !
   call start_clock ('sum_band')
-  call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum, 1)
-  call setv (nrxx * nspin, 0.0d0, rho, 1)
+  becsum(:,:,:) = 0.d0
+  rho(:,:) = 0.d0
   eband = 0.d0
   demet = 0.d0
   !
@@ -93,7 +93,7 @@ subroutine sum_band
         !  which reduces for degauss=0 to the sum of the eigenvalues.
         !  the factors two is for spin degeneracy
         !
-        call setv (2 * nrxx, 0.d0, psic, 1)
+        psic(:) = (0.d0,0.d0)
         do ig = 1, npw
            psic (nls (igk (ig) ) ) = evc (ig, ibnd)
         enddo

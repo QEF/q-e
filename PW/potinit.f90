@@ -94,7 +94,7 @@ subroutine potinit
            close (unit = iunocc, status = 'keep')
 #ifdef __PARA
         else  
-           call setv (nat * nspin * ldim * ldim, 0.d0, ns, 1)  
+           ns(:,:,:,:) = 0.d0
         endif
         call reduce (nat * nspin * ldim * ldim, ns)  
         call poolreduce (nat * nspin * ldim * ldim, ns)  

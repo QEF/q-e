@@ -23,9 +23,8 @@ subroutine ortho
 
   allocate (sevc ( npwx , nbnd))    
   allocate (dummy( npwx , nbnd))    
-  call setv (2 * npwx * nbnd, 0.d0, sevc, 1)
-
-  call setv (2 * npwx * nbnd, 0.d0, dummy, 1)
+  sevc(:,:) = (0.d0,0.d0)
+  dummy(:,:) = (0.d0,0.d0)
   if (nks.gt.1) rewind (iunigk)
   do ik = 1, nks
      if (nks.gt.1) read (iunigk) npw, igk

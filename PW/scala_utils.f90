@@ -106,7 +106,7 @@ subroutine eigen (n, aout, ldaout, a, desca, work)
 
   m = n
 
-  call setv (2 * ldaout * n, 0.d0, aout, 1)
+  aout(:,1:n) = (0.d0,0.d0)
   ictxt = desca (ctxt_)
   call blacs_gridinfo (ictxt, nprow, npcol, myrow, mycol)
   !

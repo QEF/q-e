@@ -59,7 +59,7 @@ subroutine addusdynmat (dynwrk)
               do is = 1, nspin
                  do ijh = 1, dim
                     dynwrk(nu_i, nu_j)=dynwrk(nu_i, nu_j)+ &
-                           int4(ijh,ipol,jpol,na,is)*becsum (ijh, na, is)
+                           int4(ijh,ipol,jpol,na,is) * becsum(ijh,na,is)
                  enddo
               enddo
            enddo
@@ -75,7 +75,7 @@ subroutine addusdynmat (dynwrk)
                  do jh = ih, nh (np)
                     ijh = ijh + 1
                     do is = 1, nspin
-                       term(ipol,jpol) = term(ipol,jpol)+ &
+                       term(ipol,jpol) = term(ipol,jpol) + &
                        conjg(int1(ih,jh,ipol,na,is))*alphasum(ijh,jpol,na,is)
                     enddo
                  enddo
@@ -89,8 +89,8 @@ subroutine addusdynmat (dynwrk)
            nu_i = 3 * (na - 1) + ipol
            do jpol = 1, 3
               nu_j = 3 * (na - 1) + jpol
-              dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + term (ipol, jpol) &
-                   + term (jpol, ipol)
+              dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
+                                    term (ipol, jpol) + term (jpol, ipol)
            enddo
         enddo
         !
@@ -106,9 +106,11 @@ subroutine addusdynmat (dynwrk)
                     do jh = ih, nh (np)
                        ijh = ijh + 1
                        do is = 1, nspin
-                          dyn1(nu_i,nu_j)=dyn1(nu_i,nu_j)+conjg(int2 (ih, jh, &
-                               ipol,nb,na))*alphasum(ijh,jpol,na,is) &
-                             + int5 (ijh,ipol,jpol,nb,na)*becsum(ijh,na,is)
+                          dyn1(nu_i,nu_j)=dyn1(nu_i,nu_j) + &
+                                          conjg(int2(ih,jh,ipol,nb,na)) * &
+                                               alphasum(ijh,jpol,na,is) + &
+                                          int5(ijh,ipol,jpol,nb,na) *     &
+                                                  becsum(ijh,na,is)
                        enddo
                     enddo
                  enddo
@@ -120,8 +122,8 @@ subroutine addusdynmat (dynwrk)
   enddo
   do nu_i = 1, nmodes
      do nu_j = 1, nmodes
-        dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + dyn1 (nu_i, nu_j) &
-             + conjg (dyn1 (nu_j, nu_i) )
+        dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
+                              dyn1 (nu_i, nu_j) + conjg (dyn1 (nu_j, nu_i) )
      enddo
 
   enddo

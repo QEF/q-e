@@ -66,7 +66,7 @@ if (xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0) &
 !   Set to zero some variables
 !
 minus_q = .false.
-call setv (3, 0.d0, zero, 1)
+zero(:) = 0.d0
 !
 !   Transform xq to the crystal basis
 !
@@ -76,42 +76,35 @@ call cryst_to_cart (1, aq, at, - 1)
 !   Test all symmetries to see if this operation send S q in q+G or in -
 !
 do irot = 1, nrot
-
-if (.not.sym (irot) ) goto 100
-call setv (3, 0.d0, raq, 1)
-do ipol = 1, 3
-do jpol = 1, 3
-raq (ipol) = raq (ipol) + float (s (ipol, jpol, irot) ) * aq ( &
- jpol)
-enddo
-
-enddo
-sym (irot) = eqvect (raq, aq, zero)
-!
-!  if "iswitch.le.-3" S must be such that Sq=q exactly !
-!
-if (iswitch.le. - 3.and.sym (irot) ) then
+   if (.not.sym (irot) ) goto 100
+   raq(:) = 0.d0
    do ipol = 1, 3
-   sym (irot) = sym (irot) .and.abs (raq (ipol) - aq (ipol) ) &
-    .lt.1.0d-5
+      do jpol = 1, 3
+         raq(ipol) = raq(ipol) + float( s(ipol,jpol,irot) ) * aq( jpol)
+      enddo
    enddo
-
-endif
-if (sym (irot) .and..not.minus_q) then
-! l'istruzione "originale" ik kreductor era la seguente...
-!         if (.not. minus_q) then
-   call DSCAL (3, - 1.d0, raq, 1)
-   minus_q = eqvect (raq, aq, zero)
-
-endif
-  100 continue
-
+   sym (irot) = eqvect (raq, aq, zero)
+   !
+   !  if "iswitch.le.-3" S must be such that Sq=q exactly !
+   !
+   if (iswitch.le. -3.and.sym (irot) ) then
+      do ipol = 1, 3
+         sym(irot) = sym(irot) .and. abs(raq(ipol)-aq(ipol)).lt.1.0d-5
+      enddo
+   endif
+   if (sym (irot) .and..not.minus_q) then
+   ! l'istruzione "originale" in kreductor era la seguente...
+   !         if (.not. minus_q) then
+      call DSCAL (3, - 1.d0, raq, 1)
+      minus_q = eqvect (raq, aq, zero)
+   endif
+100 continue
 enddo
 !
 !  if "iswitch.le.-3" time reversal symmetry is not included !
 !
 
-if (iswitch.le. - 3) minus_q = .false.
+if (iswitch.le. -3) minus_q = .false.
 return
 end subroutine smallg_q
 

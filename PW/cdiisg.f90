@@ -192,12 +192,12 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
            wfc2buf (ib, 1) = ib
         enddo
         ! workspaces:
-        call setv (2 * diis_steps * diis_steps * buflen, 0.d0, rmat, 1)
-        call setv (2 * diis_steps * diis_steps * buflen, 0.d0, smat, 1)
-        call setv (2 * ndmx * diis_steps * buflen, 0.d0, dwfc, 1)
-        call setv (2 * ndmx * diis_steps * buflen, 0.d0, dres, 1)
-        call setv (2 * ndmx * buflen, 0.d0, psip, 1)
-        call setv (2 * ndmx * buflen, 0.d0, psis, 1)
+        rmat(:,:,:) = (0.d0,0.d0)
+        smat(:,:,:) = (0.d0,0.d0)
+        dwfc(:,:)   = (0.d0,0.d0)
+        dres(:,:)   = (0.d0,0.d0)
+        psip(:,:)   = (0.d0,0.d0)
+        psis(:,:)   = (0.d0,0.d0)
 
         call ZCOPY (ndmx * nopt, psi (1, wfoff), 1, dwfc (1, 1), 1)
         ! diis optimization:
@@ -298,8 +298,8 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
                     nb = buf2wfc (ibuf)
 
                     n = wfoff + nb - 1
-                    call setv (8, 0.d0, hh, 1)
-                    call setv (8, 0.d0, ss, 1)
+                    hh(:,:) = 0.d0
+                    ss(:,:) = 0.d0
                     hh (1, 1) = DCMPLX (ew (ib), 0.d0)
                     hh (1, 2) = ZDOTC (ndim, dwfc (1, ib), 1, psip (1, ib),1)
                     hh (2, 1) = conjg (hh (1, 2) )
@@ -386,7 +386,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
                  enddo
               enddo
               ! new residue
-              call setv (2 * ndmx * nopt, 0.d0, pres, 1)
+              pres(:,1:nopt) = (0.d0,0.d0)
               do ib = 1, nopt
                  ibuf = bufoff + ib - 1
                  nb = buf2wfc (ibuf)
@@ -403,7 +403,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
                  nb = buf2wfc (ibuf)
                  n = wfoff + nb - 1
                  if (conv (n) .eq.1.or.ns.eq.diis_steps) then
-                    call setv (2 * ndmx, 0.d0, psi (1, n), 1)
+                    psi(:,n) = (0.d0,0.d0)
                     do j = 1, ns
                        jbuf = wfc2buf (nb, j)
                        call ZAXPY (ndmx,vcc(j,nb),dwfc(1,jbuf),1,psi(1,n),1)

@@ -19,8 +19,7 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
   use parameters, only : DP
   implicit none
 
-  integer :: nrot, nks, npk, nk1, nk2, nk3, k1, k2, k3, tipo, s (3, &
-       3, 48)
+  integer :: nrot, nks, npk, nk1, nk2, nk3, k1, k2, k3, tipo, s(3,3,48)
   ! input: the number of symmetries
   ! output: the number of k points
   ! input: the dimension of xk and wk
@@ -71,7 +70,7 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
 
   if ( (tipo.ne.1) .and. (tipo.ne.2) ) call errore ('setupkpoint', &
        'wrong tipo', 1)
-  call setv (npkk, 1.d20, esort, 1)
+  esort(:) = 1.d20
   !
   !     set d vector for unique ordering
   !
@@ -102,13 +101,11 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
         do k = 1, nk3
            uk = (k3 + 2.d0 * k - nk3 - 1.d0) / (2.d0 * nk3)
            count = count + 1
-           if (count.gt.npkk) call errore ('setupkpt', 'mpmesh too large', &
-                npkk)
+           if (count.gt.npkk) call errore('setupkpt','mpmesh too large',npkk)
            xknew (1, count) = ui
            xknew (2, count) = uj
            xknew (3, count) = uk
-           call modulo2 (xknew (1, count), bg, xkk (count), d, esort (count) &
-                )
+           call modulo2 (xknew(1,count), bg, xkk(count), d, esort(count) )
            igk (count) = count
         enddo
      enddo
@@ -148,12 +145,12 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
   do kpoint = 1, count
      if (.not. (fatto (kpoint) ) ) then
         !
-        !     We found the first vector of a new shell. Now found all the equiva
-        !     vectors
+        ! We found the first vector of a new shell. 
+        ! Now found all the equivalent vectors
         !
         contatore = contatore+1
         !
-        !    This k point has been found
+        ! This k point has been found
         !
         start = kpoint
         fatto (kpoint) = .true.
@@ -162,22 +159,21 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
         enddo
         wk (contatore) = 1.d0
         !
-        !       Ora applichiamo in successione tutte le simmetrie
+        ! Ora applichiamo in successione tutte le simmetrie
         !
         do irot = 1, nrot
            call prodotto3dk (s (1, 1, irot), xknew (1, kpoint), buffer)
            !
-           !             now we look in the xknew list if there is buffer
+           ! now we look in the xknew list if there is buffer
            !
            do ikprova = start, count
               if (.not. (fatto (ikprova) ) ) then
                  do l = 1, 3
                     dk (l) = abs (xknew (l, ikprova) - buffer (l) )
                  enddo
-                 if ( (abs (dk (1) - int (dk (1) + eps) ) .lt.2.d0 * eps) &
-                      .and. (abs (dk (2) - int (dk (2) + eps) ) .lt.2.d0 * eps) &
-                      .and. (abs (dk (3) - int (dk (3) + eps) ) .lt.2.d0 * eps) ) &
-                      then
+                 if ( (abs (dk(1) - int(dk(1)+eps) ) .lt. 2.d0*eps) .and. &
+                      (abs (dk(2) - int(dk(2)+eps) ) .lt. 2.d0*eps) .and. &
+                      (abs (dk(3) - int(dk(3)+eps) ) .lt. 2.d0*eps) ) then
                     !
                     !   we have found the equivalent vector in the list
                     !
@@ -221,12 +217,11 @@ subroutine modulo2 (vect, bg, modulo, d, esort)
   integer :: l
   modulo = 0.d0
   do l = 1, 3
-     buffer (l) = vect (1) * bg (l, 1) + vect (2) * bg (l, 2) + vect ( &
-          3) * bg (l, 3)
-     modulo = modulo + buffer (l) * buffer (l)
+     buffer(l) = vect(1) * bg(l,1) + vect(2) * bg(l,2) + vect(3) * bg(l,3)
+     modulo = modulo + buffer(l) * buffer(l)
      if (modulo.gt.1.d-8) then
-        esort = 1.d4 * modulo + (buffer (1) * d (1) + buffer (2) &
-             * d (2) + buffer (3) * d (3) ) / sqrt (modulo)
+        esort = 1.d4 * modulo + ( buffer(1) * d(1) + buffer(2) * d(2) + &
+                                  buffer(3) * d(3) ) / sqrt (modulo)
      else
         esort = 0.d0
      endif
@@ -240,19 +235,17 @@ end subroutine modulo2
 subroutine prodotto3dk (a, v, w)
   !-----------------------------------------------------------------------
   !
-  !       This subrutine computes w=A v where A is a 3*3 matrix
+  !  This subrutine computes w=A v where A is a 3*3 matrix
   !
   use parameters, only : DP
   implicit none
   integer :: a (3, 3)
   real(kind=DP) :: v (3)
-
   real(kind=DP) :: w (3)
 
   integer :: l
   do l = 1, 3
      w (l) = a (l, 1) * v (1) + a (l, 2) * v (2) + a (l, 3) * v (3)
-
   enddo
   return
 end subroutine prodotto3dk

@@ -148,10 +148,10 @@ subroutine dynmat_us
               enddo
            enddo
 
-           call ccalbec (nkb, npwx, npw, nbnd, gammap(1,1,icart,jcart) &
-                ,vkb, aux1)
-           if (jcart.lt.icart) call ZCOPY (nkb * nbnd, gammap (1, 1, &
-                icart, jcart), 1, gammap (1, 1, jcart, icart), 1)
+           call ccalbec(nkb,npwx,npw,nbnd,gammap(1,1,icart,jcart),vkb,aux1)
+           if (jcart.lt.icart) &
+               call ZCOPY (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
+                                       gammap (1, 1, jcart, icart), 1)
         enddo
      enddo
      !
@@ -222,8 +222,9 @@ subroutine dynmat_us
         work = (0.0d0, 0.0d0)
         do na_jcart = 1, 3 * nat
            do na_icart = 1, 3 * nat
-              work = work + conjg (u (na_icart, nu_i) ) * dynwrk (na_icart, &
-                   na_jcart) * u (na_jcart, nu_j)
+              work = work + conjg (u (na_icart, nu_i) ) * &
+                            dynwrk (na_icart, na_jcart) * &
+                            u (na_jcart, nu_j)
            enddo
         enddo
         dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + work

@@ -268,8 +268,8 @@ subroutine solve_e
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
            weight = wk (ik)
-           call incdrhoscf (dvscfout (1, current_spin, ipol), weight, &
-                            ik, dbecsum(1,1,current_spin,ipol), 1, 1)
+           call incdrhoscf (dvscfout(1,current_spin,ipol), weight, &
+                            ik, dbecsum(1,1,current_spin,ipol), 1)
         enddo   ! on perturbation
      enddo      ! on k points
 
@@ -279,7 +279,7 @@ subroutine solve_e
      if (doublegrid) then
         do is=1,nspin
            do ipol=1,3
-              call cinterpolate (dvscfout(1,is,ipol),dvscfout(1,is,ipol),1)
+              call cinterpolate (dvscfout(1,is,ipol), dvscfout(1,is,ipol), 1)
            enddo
         enddo
      endif

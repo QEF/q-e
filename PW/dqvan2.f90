@@ -77,15 +77,14 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
      nmb = mb * (mb - 1) / 2 + nb
   endif
   ivl = nhtol (ih, np) * nhtol (ih, np) + nhtom (ih, np)
-
-
   jvl = nhtol (jh, np) * nhtol (jh, np) + nhtom (jh, np)
+
   if (nb.gt.nbrx) call errore (' qvan2 ', ' nb.gt.nbrx ', nb)
   if (mb.gt.nbrx) call errore (' qvan2 ', ' mb.gt.nbrx ', mb)
   if (ivl.gt.nlx) call errore (' qvan2 ', ' ivl.gt.nlx  ', ivl)
-
   if (jvl.gt.nlx) call errore (' qvan2 ', ' jvl.gt.nlx  ', jvl)
-  call setv (2 * ngy, 0.d0, dqg, 1)
+
+  dqg(:) = (0.d0,0.d0) 
   !
   !    and make the sum over the non zero LM
   !

@@ -48,7 +48,7 @@ subroutine dynmat0
   !
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q and of
   !   mode. This is done here, because this part of the dynmical matrix is
-  !   saved with recover and in the other runs the symmetry group might ch
+  !   saved with recover and in the other runs the symmetry group might change
   !
   if (iswitch.eq. - 4) then
 
@@ -63,8 +63,9 @@ subroutine dynmat0
            wrk = (0.d0, 0.d0)
            do nb_jcart = 1, 3 * nat
               do na_icart = 1, 3 * nat
-                 wrk = wrk + conjg (u (na_icart, nu_i) ) * dynwrk (na_icart, &
-                      nb_jcart) * u (nb_jcart, nu_j)
+                 wrk = wrk + conjg (u (na_icart, nu_i) ) * &
+                             dynwrk (na_icart, nb_jcart) * &
+                             u (nb_jcart, nu_j)
               enddo
            enddo
            dyn (nu_i, nu_j) = wrk

@@ -136,8 +136,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do is = 1, nspin
            do ipert = 1, npe
-              call cinterpolate (dvscfin (1, is, ipert), dvscfins (1, is, &
-                   ipert), - 1)
+              call cinterpolate (dvscfin(1,is,ipert), dvscfins(1,is,ipert), -1)
            enddo
         enddo
      endif
@@ -148,9 +147,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
   lmetq0 = degauss.ne.0.d0.and.lgamma
   if (lmetq0) then
-     allocate (ldos ( nrxx   , nspin))    
-     allocate (ldoss(  nrxxs , nspin))    
-     call localdos (ldos, ldoss   , dos_ef)
+     allocate ( ldos ( nrxx  , nspin) )    
+     allocate ( ldoss( nrxxs , nspin) )    
+     call localdos ( ldos , ldoss , dos_ef )
   endif
   !
   !   The outside loop is over the iterations
@@ -230,12 +229,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               call dvqpsi_us (ik, mode, u (1, mode),.false. )
               call davcio (dvpsi, lrbar, iubar, nrec, 1)
               !
-              ! starting threshold for the iterative solution of the linear sistem (li
+              ! starting threshold for the iterative solution of 
+              ! the linear system
               !
               thresh = 1.0d-2
            else
               !
-              !  After the first iteration dvbare_q*psi_kpoint is read from file
+              ! After the first iteration dvbare_q*psi_kpoint is read from file
               !
               call davcio (dvpsi, lrbar, iubar, nrec, - 1)
               !
@@ -272,8 +272,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               ! starting value for delta_psi is read from iudwf
               !
               nrec1 = (ipert - 1) * nksq + ik
-              if (nksq.gt.1.or.npert (irr) .gt.1.or.kter.eq.1) call davcio ( &
-                   dpsi, lrdwf, iudwf, nrec1, - 1)
+              if (nksq.gt.1.or.npert (irr) .gt.1.or.kter.eq.1) &
+                       call davcio ( dpsi, lrdwf, iudwf, nrec1, -1)
            endif
            !
            ! Ortogonalize dvpsi
@@ -354,9 +354,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            enddo
            conv_root = .true.
 
-           call cgsolve_all (ch_psi_all,cg_psi,et(1,ikk),dvpsi,dpsi, &
-                h_diag,npwx,npwq,thresh,ik,lter,conv_root,anorm,nbnd_occ(ikk))
-
+           call cgsolve_all (ch_psi_all, cg_psi, et(1,ikk), dvpsi, dpsi, &
+                             h_diag, npwx, npwq, thresh, ik, lter, conv_root, &
+                             anorm, nbnd_occ(ikk) )
            ltaver = ltaver + lter
            lintercall = lintercall + 1
 
@@ -373,8 +373,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
            weight = wk (ikk)
-           call incdrhoscf (drhoscf (1, current_spin, ipert), weight, ik, &
-                dbecsum (1, 1, current_spin, ipert), mode, 1)
+           call incdrhoscf (drhoscf(1,current_spin,ipert), weight, ik, &
+                            dbecsum(1,1,current_spin,ipert), mode)
            ! on perturbations
         enddo
         ! on k-points
@@ -385,12 +385,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do is = 1, nspin
            do ipert = 1, npert (irr)
-              call cinterpolate (drhoscfh (1, is, ipert), drhoscf (1, is, &
-                   ipert), 1)
+              call cinterpolate (drhoscfh(1,is,ipert), drhoscf(1,is,ipert), 1)
            enddo
         enddo
      else
-        call ZCOPY (npe * nspin * nrxx, drhoscf, 1, drhoscfh, 1)
+        call ZCOPY (npe*nspin*nrxx, drhoscf, 1, drhoscfh, 1)
      endif
      !
      !    Now we compute for all perturbations the total charge and potential
@@ -410,11 +409,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
      if (lmetq0) call ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .false.)
      do ipert = 1, npert (irr)
-        if (fildrho.ne.' ') call davcio_drho (drhoscfh (1, 1, ipert) , &
-             lrdrho, iudrho, imode0 + ipert, + 1)
+        if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
+                                              iudrho, imode0+ipert, +1)
         call ZCOPY (nrxx*nspin, drhoscfh(1,1,ipert), 1, dvscfout(1,1,ipert), 1)
-        call dv_of_drho (imode0 + ipert, dvscfout (1, 1, ipert), .true.)
-
+        call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true.)
      enddo
      !
      !   After the loop over the perturbations we have the change of the pote
@@ -429,12 +427,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !   And we mix with the old potential
      !
 
-     call mix_potential (2 * npert (irr) * nrxx * nspin, dvscfout, &
-          dvscfin, alpha_mix (kter), dr2, npert (irr) * tr2_ph, iter, &
-          nmix_ph, flmixdpot, convt)
-
-     if (lmetq0.and.convt) call ef_shift (drhoscf, ldos, ldoss, dos_ef, &
-          irr, npe, .true.)
+     call mix_potential (2*npert(irr)*nrxx*nspin, dvscfout, dvscfin, &
+                         alpha_mix(kter), dr2, npert(irr)*tr2_ph, iter, &
+                         nmix_ph, flmixdpot, convt)
+     if (lmetq0.and.convt) &
+         call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
      if (doublegrid) then
         do ipert = 1, npe
            do is = 1, nspin
@@ -446,7 +443,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !     with the new change of the potential we compute the integrals
      !     of the change of potential and Q
      !
-
      call newdq (dvscfin, npe)
 #ifdef __PARA
      aux_avg (1) = dfloat (ltaver)

@@ -22,8 +22,8 @@ subroutine remove_atomic_rho
   ! charge
 
   allocate (work( nrxx))    
+  work(:) = 0.d0
   !
-  call setv (nrxx, 0.d0, work, 1)
   if (lsda) call errore ('rmv_at_rho', 'lsda not allowed', 1)
 
   write (6, '(/5x,"remove atomic charge density from scf rho")')

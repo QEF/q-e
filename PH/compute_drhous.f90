@@ -60,8 +60,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !
   call setv (2 * nrxxs * nspin * 3 * nat, 0.d0, drhous, 1)
 
-  call setv (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.d0, dbecsum, &
-       1)
+  call setv (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.d0, dbecsum, 1)
 
   if (nksq.gt.1) rewind (unit = iunigk)
   do ik = 1, nksq
@@ -103,8 +102,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
      !
      !   Read the wavefunctions at k+q
      !
-     if (.not.lgamma.and.nksq.gt.1) call davcio (evq, lrwfc, iuwfc, &
-          ikq, - 1)
+     if (.not.lgamma.and.nksq.gt.1) call davcio (evq, lrwfc, iuwfc, ikq, -1)
      !
      !   And compute the contribution of this k point to the change of
      !   the charge density

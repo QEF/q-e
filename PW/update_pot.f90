@@ -77,7 +77,7 @@ subroutine extrapolate_charge
   ! charge
 
   allocate(work(nrxx))
-  call setv (nrxx, 0.d0, work, 1)
+  work(:) = 0.d0
   !
   !     if order = 1 update the potential subtracting to the charge densit
   !     the "old" atomic charge and summing the new one
@@ -105,7 +105,7 @@ subroutine extrapolate_charge
         call io_pot ( + 1,trim(prefix)//'.oldrho', rho, 1)
      else
         allocate(work1(nrxx))
-        call setv (nrxx, 0.d0, work1, 1)
+        work1(:) = 0.d0
         call io_pot ( - 1,trim(prefix)//'.oldrho', work, 1)
         call io_pot ( + 1,trim(prefix)//'.oldrho', rho, 1)
         if (istep.eq.2) then

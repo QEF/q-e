@@ -107,8 +107,8 @@ subroutine phq_setup
      do ir = 1, nrxx
         rhoup = rho (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho (ir, 2) + 0.5d0 * rho_core (ir)
-        call dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), dmuxc (ir, 2, &
-             1), dmuxc (ir, 1, 2), dmuxc (ir, 2, 2) )
+        call dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
+                                      dmuxc(ir,1,2), dmuxc(ir,2,2) )
      enddo
   else
      do ir = 1, nrxx
@@ -161,10 +161,11 @@ subroutine phq_setup
            if (et (ibnd, ik) .lt.target) nbnd_occ (ik) = ibnd
         enddo
         if (nbnd_occ (ik) .eq.nbnd) write (6, '(5x,/,&
-             &"Possibly too few bands at point ", i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
+             &"Possibly too few bands at point ", i4,3f10.5)') &
+             ik,  (xk (ipol, ik) , ipol = 1, 3)
      enddo
   else
-     if (lsda) call errore ('phq_setup', 'occupation numbers probably wrong',  - 1)
+     if (lsda) call errore('phq_setup','occupation numbers probably wrong', -1)
      do ik = 1, nks
         nbnd_occ (ik) = nint (nelec) / degspin
      enddo
@@ -180,7 +181,7 @@ subroutine phq_setup
   enddo
 #ifdef __PARA
   ! find the minimum across pools
-  call poolextreme (emin, - 1)
+  call poolextreme (emin, -1)
 #endif
   if (degauss.ne.0.d0) then
      emax = target
@@ -217,17 +218,17 @@ subroutine phq_setup
   ! if such a symmetry has been found
   if (iswitch.eq. - 4) then
      call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-          irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, gimq, &
-          iverbosity, modenum)
+          irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+          nirr, gi, gimq, iverbosity, modenum)
   else
      if (nsym.gt.1) then
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, &
-             gimq, iverbosity)
+             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+             nirr, gi, gimq, iverbosity)
      else
-        call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-             irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, &
-             gi, gimq, iverbosity)
+        call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+             nirr, gi, gimq, iverbosity)
      endif
   endif
 
@@ -247,7 +248,6 @@ subroutine phq_setup
   !
   ! 8) Set the ubar
   !
-
 
   call setv (6 * nat, 0.d0, ubar, 1)
   !

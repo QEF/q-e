@@ -15,11 +15,10 @@ subroutine estimate (hessm1, nax3, nat, nat3)
   integer :: nax3, nat3, nat, i
   real(kind=DP) :: hessm1 (nax3, nat3)
 
-  external setv
-  call setv (nax3 * nat3, 0.d0, hessm1, 1)
+  hessm1(:,:) = 0.d0
   do i = 1, nat3
      hessm1 (i, i) = 1.d0
-
   enddo
+
   return
 end subroutine estimate

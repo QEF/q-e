@@ -39,7 +39,7 @@ subroutine atomic_rho (rhoa, nspina)
   ! the integrand function
 
   complex(kind=DP), allocatable :: rhocg (:,:)
-  ! auxiliary var: charge dens. in G spac
+  ! auxiliary var: charge dens. in G space
 
   integer :: ir, is, ig, igl, igl0, nt
   ! counter on mesh points
@@ -56,11 +56,11 @@ subroutine atomic_rho (rhoa, nspina)
   allocate (rhocg(  ngm, nspina))    
   allocate (aux( ndm))    
   allocate (rhocgnt( ngl))    
-
   ! psic is the generic work space
-  call setv (nrxx, 0.d0, rhoa, 1)
 
-  call setv (2 * nspina * ngm, 0.d0, rhocg, 1)
+  rhoa(:,:) = 0.d0
+  rhocg(:,:) = (0.d0,0.d0)
+
   do nt = 1, ntyp
      !
      ! Here we compute the G=0 term
@@ -81,10 +81,9 @@ subroutine atomic_rho (rhoa, nspina)
         gx = sqrt (gl (igl) ) * tpiba
         do ir = 1, msh (nt)
            if (r (ir, nt) .lt.1.0d-8) then
-              aux (ir) = rho_at (ir, nt)
+              aux(ir) = rho_at(ir,nt)
            else
-              aux (ir) = rho_at (ir, nt) * sin (gx * r (ir, nt) ) / (r (ir, &
-                   nt) * gx)
+              aux(ir) = rho_at(ir,nt) * sin(gx*r(ir,nt)) / (r(ir,nt)*gx)
            endif
         enddo
         call simpson (msh (nt), aux, rab (1, nt), rhocgnt (igl) )
@@ -94,20 +93,17 @@ subroutine atomic_rho (rhoa, nspina)
      !
      if (nspina.eq.1) then
         do ig = 1, ngm
-           rhocg (ig, 1) = rhocg (ig, 1) + strf (ig, nt) * rhocgnt ( &
-                igtongl (ig) ) / omega
+           rhocg(ig,1) = rhocg(ig,1) + &
+                         strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
         enddo
      else
-
         do ig = 1, ngm
-
-           rhocg (ig, 1) = rhocg (ig, 1) + 0.5d0 * (1.d0 + &
-                starting_magnetization (nt) ) * strf (ig, nt) * rhocgnt ( &
-                igtongl (ig) ) / omega
-
-           rhocg (ig, 2) = rhocg (ig, 2) + 0.5d0 * (1.d0 - &
-                starting_magnetization (nt) ) * strf (ig, nt) * rhocgnt ( &
-                igtongl (ig) ) / omega
+           rhocg(ig,1) = rhocg(ig,1) + &
+                         0.5d0 * ( 1.d0 + starting_magnetization(nt) ) * &
+                         strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
+           rhocg(ig,2) = rhocg(ig,2) + &
+                         0.5d0 * ( 1.d0 - starting_magnetization(nt) ) * &
+                         strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
         enddo
      endif
   enddo
@@ -118,7 +114,7 @@ subroutine atomic_rho (rhoa, nspina)
      !
      ! and we return to real space
      !
-     call setv (2 * nrxx, 0.d0, psic, 1)
+     psic(:) = (0.d0,0.d0)
      do ig = 1, ngm
         psic (nl (ig) ) = rhocg (ig, is)
      enddo
@@ -133,7 +129,6 @@ subroutine atomic_rho (rhoa, nspina)
         rhoneg = rhoneg + min (0.d0, rhorea)
         rhoima = rhoima + abs (DIMAG (psic (ir) ) )
         rhoa (ir, is) = rhorea
-
      enddo
      rhoneg = rhoneg / (nr1 * nr2 * nr3)
      rhoima = rhoima / (nr1 * nr2 * nr3)
@@ -141,10 +136,9 @@ subroutine atomic_rho (rhoa, nspina)
      call reduce (1, rhoneg)
      call reduce (1, rhoima)
 #endif
-     if (rhoneg.lt. - 1.0d-4.or.rhoima.gt.1.0d-4) &
+     if ( rhoneg.lt.-1.0d-4 .or. rhoima.gt.1.0d-4 ) &
           write (6,'(/"  Warning: negative or imaginary starting charge ",&
           &2f12.6,i3)') rhoneg, rhoima, is
-
   enddo
 
   deallocate (rhocg)

@@ -52,7 +52,7 @@ subroutine h_psi (lda, n, m, psi, hpsi, spsi)
   !
   do ibnd = 1, m
      call start_clock ('firstfft')
-     call setv (2*nrxxs, 0.d0, psic, 1)
+     psic(1:nrxxs) = (0.d0,0.d0)
      do j = 1, n
         psic(nls(igk(j))) = psi(j,ibnd)
      enddo

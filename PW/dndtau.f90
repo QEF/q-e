@@ -81,7 +81,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
       call init_us_2 (npw,igk,xk(1,ik),vkb)
       call ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
 
-      call setv(2*natomwfc*nbnd,0.d0,dproj,1)
+      dproj(:,:) = (0.d0,0.d0)
 
       call s_psi  (npwx, npw, nbnd, evc, spsi )
       call atomic_wfc( ik, wfcatom )

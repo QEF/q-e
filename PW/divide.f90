@@ -17,7 +17,7 @@ subroutine divide (ntodiv, startn, lastn)
 
   integer :: ntodiv, startn, lastn
   ! input: the number to divide
-  ! output: the first band of this processo
+  ! output: the first band of this processor
   ! output: the last band of this processor
 
   integer :: nb, resto, index, ip

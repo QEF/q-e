@@ -60,6 +60,9 @@ subroutine newd
   !
   ! fourier transform of the total effective potential
   !
+#ifdef DEBUG_NEWD
+   call start_clock ('newd:fftvg')
+#endif
   do is = 1, nspin
      vg (:) = vltot (:) + vr (:, is)
      call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
@@ -67,6 +70,9 @@ subroutine newd
         aux (ig, is) = vg (nl (ig) )
      enddo
   enddo
+#ifdef DEBUG_NEWD
+   call stop_clock ('newd:fftvg')
+#endif
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G exp(-iR.G) Q_nm v^*
@@ -75,26 +81,44 @@ subroutine newd
      if (tvanp (nt) ) then
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)
+#ifdef DEBUG_NEWD
+   call start_clock ('newd:qvan2')
+#endif
               call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
+#ifdef DEBUG_NEWD
+   call stop_clock ('newd:qvan2')
+#endif
               do na = 1, nat
                  if (ityp (na) .eq.nt) then
                     !
                     !    The product of the potential and the structure factor
                     !
                     do is = 1, nspin
+#ifdef DEBUG_NEWD
+   call start_clock ('newd:int1')
+#endif
                        do ig = 1, ngm
                           vg (ig) = aux(ig, is) * conjg(eigts1 (ig1(ig), na) &
                                                       * eigts2 (ig2(ig), na) &
                                                       * eigts3 (ig3(ig), na) )
                        enddo
+#ifdef DEBUG_NEWD
+   call stop_clock ('newd:int1')
+#endif
                        !
                        !    and the product with the Q functions
                        !
+#ifdef DEBUG_NEWD
+   call start_clock ('newd:int2')
+#endif
                        deeq (ih, jh, na, is) = fact * omega * &
                             DDOT (2 * ngm, vg, 1, qgm, 1)
                        if (gamma_only .and. gstart==2) &
                             deeq (ih, jh, na, is) = &
                             deeq (ih, jh, na, is) - omega*real(vg(1)*qgm(1))
+#ifdef DEBUG_NEWD
+   call stop_clock ('newd:int2')
+#endif
                     enddo
                  endif
               enddo

@@ -57,9 +57,9 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
   allocate (aux(2, nrxx))
-  call DCOPY (nrxx, rho (1, 1), 1, aux (1, 1), 2)
-  if (nspin.eq.2) call DAXPY (nrxx, 1.d0, rho (1, 2), 1, aux (1, 1), 2)
-  call setv (nrxx, 0.d0, aux (2, 1), 2)
+  aux(1,:) = rho(:,1)
+  if (nspin.eq.2) aux(1,:) = aux(1,:) + rho(:,2)
+  aux(2,:) = 0.d0
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   !    aux contains now  n(G)
@@ -93,4 +93,3 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   deallocate (aux)
   return
 end subroutine force_lc
-

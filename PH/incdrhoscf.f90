@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode, flag)
+subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -26,13 +26,10 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode, flag)
 
   real(kind=DP) :: weight
   ! input: the weight of the k point
-  complex(kind=DP) :: drhoscf (nrxxs), dbecsum (nhm * (nhm + 1) / 2, &
-       nat)
+  complex(kind=DP) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
-  integer :: mode, flag
-  ! flag =1 if dpsi is used (in solve_linte
-  ! flag!=1 if dpsi is not used (in addusdd
+  integer :: mode
   !
   !   here the local variable
   !
@@ -81,7 +78,6 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode, flag)
         drhoscf (ir) = drhoscf (ir) + wgt * conjg (psi (ir) ) * dpsic (ir)
         !            if (ir.lt.20) write (6,*)   drhoscf(ir)
      enddo
-
   enddo
 
 
