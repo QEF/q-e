@@ -19,7 +19,7 @@ PROGRAM pwscf
   USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lneb
   USE io_files,         ONLY : nd_nmbr, iunneb, tmp_dir
   USE neb_variables,    ONLY : conv_neb
-  USE neb_routines,     ONLY : initialize_neb, search_mep
+  USE neb_base,         ONLY : initialize_neb, search_mep
   USE mp_global,        ONLY : me_image, root_image
   USE io_global,        ONLY : ionode
   !

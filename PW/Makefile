@@ -130,7 +130,6 @@ mode_group.o \
 move_ions.o \
 multable.o \
 n_plane_waves.o \
-neb_routines.o \
 new_ns.o \
 ns_adj.o \
 newd.o \

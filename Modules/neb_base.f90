@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#undef DEBUG_ELASTIC_CONSTANTS
 !#define DEBUG_ELASTIC_CONSTANTS
 !
 !-----------------------------------------------------------------------
@@ -366,16 +365,25 @@ MODULE neb_base
       !
       ! ... local variables
       !
-      INTEGER                  :: i
-      REAL(KIND=DP)            :: F_ortho_max, F_ortho_max_i, &
-                                  F_para_max_i, F_para_max, rescale_coeff
-      REAL(KIND=DP), PARAMETER :: rescale_coeff_min = 0.5D0, &
-                                  rescale_coeff_max = 2.0D0
-        ! minimum allowed rescaling coefficient (  50% )
-        ! maximum allowed rescaling coefficient ( 200% )
-      REAL(KIND=DP)            :: delta_E
-      REAL(KIND=DP)            :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
+      INTEGER       :: i
+      REAL(KIND=DP) :: F_ortho_max, F_ortho_max_i, &
+                       F_para_max_i, F_para_max, rescale_coeff        
+      REAL(KIND=DP) :: delta_E
+      REAL(KIND=DP) :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
       !
+      ! ... local parameters
+      !
+      REAL(KIND=DP), PARAMETER :: k_minimal = 0.1D0
+        ! minimum allowed input elastic constant
+      REAL(KIND=DP), PARAMETER :: rescale_coeff_min = 0.5D0, &
+                                  rescale_coeff_max = 1.5D0
+        ! minimum allowed rescaling coefficient (  50% )
+        ! maximum allowed rescaling coefficient ( 150% )
+      !
+      !
+      rescale_coeff = k_max / k_min
+      k_min = MAX( k_min, k_minimal )
+      k_max = MAX( k_max, k_minimal * rescale_coeff )
       !
       IF ( VEC_scheme == "energy-weighted" ) THEN
          !
@@ -391,7 +399,7 @@ MODULE neb_base
          !
          DO i = 1, num_of_images 
             !
-            k(i) = 0.25D0 * ( ( k_max + k_min ) -  ( k_max - k_min ) * &
+            k(i) = 0.5D0 * ( ( k_max + k_min ) -  ( k_max - k_min ) * &
                    COS( pi * ( PES(i) - Emin ) / delta_E ) )
             !
          END DO
@@ -414,7 +422,7 @@ MODULE neb_base
             !
             norm_grad_V = norm( PES_gradient(:,i) )
             !
-            k(i) = 0.25D0 * ( ( k_max + k_min ) - ( k_max - k_min ) * &
+            k(i) = 0.5D0 * ( ( k_max + k_min ) - ( k_max - k_min ) * &
                    COS( pi * ( norm_grad_V - norm_grad_V_min ) / & 
                    ( norm_grad_V_max - norm_grad_V_min ) ) )
             !
@@ -430,7 +438,7 @@ MODULE neb_base
          F_ortho_max_i = MAXVAL( ABS( PES_gradient(:,i) - tangent(:,i) * &
                                     ( PES_gradient(:,i) .dot. tangent(:,i) ) ) )
          !
-         elastic_gradient(:) = tangent(:,i) * &
+         elastic_gradient(:) = tangent(:,i) * 0.5D0 * &
                 ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
                   ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
          !
@@ -496,18 +504,18 @@ MODULE neb_base
                ! ... elastic gradient ( variable elastic consatnt is used )
                ! ... note that this is NOT the NEB recipe
                !
-               elastic_gradient = &
-                       ( ( k(i) + k(i-1) ) * pbc( pos(:,i) - pos(:,(i-1)) ) - &
-                         ( k(i) + k(i+1) ) * pbc( pos(:,(i+1)) - pos(:,i) ) )
+               elastic_gradient = 0.5D0 * &
+                        ( ( k(i) + k(i-1) ) * pbc( pos(:,i) - pos(:,(i-1)) ) - &
+                          ( k(i) + k(i+1) ) * pbc( pos(:,(i+1)) - pos(:,i) ) )
                !
             ELSE
                !
                ! ... elastic gradient only along the path ( variable elastic
                ! ... consatnt is used ) NEB recipe
                !
-               elastic_gradient = tangent(:,i) * &
-               ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
-                 ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
+               elastic_gradient = tangent(:,i) * 0.5D0 * &
+                ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
+                  ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
                !
             END IF
             !
@@ -592,8 +600,8 @@ MODULE neb_base
     SUBROUTINE compute_error( err_out )
       !-----------------------------------------------------------------------
       !
-      USE neb_variables, ONLY : num_of_images, optimization, neb_thr, &
-                                error, norm_grad, deg_of_freedom, frozen
+      USE neb_variables, ONLY : num_of_images, optimization, &
+                                neb_thr, error, grad, frozen
       !
       IMPLICIT NONE
       !
@@ -624,10 +632,10 @@ MODULE neb_base
       !
       DO i = 1, num_of_images
          !
-         ! ... the error is given by the norm of the gradient ( PES + SPRINGS )
-         ! ... divided by square root of the number of degrees of freedom
+         ! ... the error is given by the largest component of the gradient 
+         ! ... vector ( PES + SPRINGS )
          !
-         error(i) = norm_grad(i) / SQRT( REAL( deg_of_freedom ) )
+         error(i) = MAXVAL( ABS( grad(:,i) ) )
          !
          IF ( ( error(i) > err_max ) .AND. &
               ( i >= N_in .AND. i <= N_fin ) ) err_max = error(i)

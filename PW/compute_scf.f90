@@ -287,7 +287,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      CALL mp_bcast( image, root_image, intra_image_comm )
      !        
-     ! ... input values are restored at the end of each iteration
+     ! ... input values are restored at the end of each iteration ( they are
+     ! ... modified in init_run )
      !
      startingpot_ = startingpot
      startingwfc_ = startingwfc
@@ -344,6 +345,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      END IF   
      !     
   END IF      
+  !
+  ! ... afetr the first call to compute_scf the input values of startingpot
+  ! ... and startingwfc are both set to 'file'
+  !
+  startingpot = 'file'
+  startingwfc = 'file'
+  startingpot_ = startingpot
+  startingwfc_ = startingwfc
   !
   RETURN
   !
