@@ -651,8 +651,8 @@
 
             IF( fw_plan_z(icurrent) /= 0 ) CALL DESTROY_PLAN( fw_plan_z(icurrent) )
             IF( bw_plan_z(icurrent) /= 0 ) CALL DESTROY_PLAN( bw_plan_z(icurrent) )
-            idir =  1; CALL CREATE_PLAN( fw_plan_z(icurrent), nz, idir) 
-            idir = -1; CALL CREATE_PLAN( bw_plan_z(icurrent), nz, idir) 
+            idir = -1; CALL CREATE_PLAN( fw_plan_z(icurrent), nz, idir) 
+            idir =  1; CALL CREATE_PLAN( bw_plan_z(icurrent), nz, idir) 
 
 #elif defined __T3E
 
