@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.2 2004-02-23 09:32:06 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.3 2004-02-23 12:05:42 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -1065,6 +1065,7 @@ proc ::tclu::tempFile {what args} {
 }
 proc ::tclu::_tempFile_name {args} {
     variable tempFile
+    global   env
     #
     # returns the name of a tempfile
     #
@@ -1085,27 +1086,30 @@ proc ::tclu::_tempFile_name {args} {
 		    set tmpdir $env(HOME)
 		}
 	    }
+	    set file ${prefix}.[pid].$tempFile(counter)
 	} macintosh {
 	    set tmpdir $env(TRASH_FOLDER) ; # a better place?
+	    set file ${prefix}[pid]n$tempFile(counter)
 	} default {
 	    set tmpdir [pwd]	    
 	    if { ! [catch {set _tmpdir $env(TMP)}] } {
 		if { [file writable $_tmpdir] } { 
-		    set tmpdir $_tmpdir 
+		    set tmpdir $env(TMP) 
 		}
 	    }
 	    if { ! [catch {set _tmpdir $env(TEMP)}] } {
 		if { [file writable $_tmpdir] } { 
-		    set tmpdir $_tmpdir 
+		    set tmpdir $env(TEMP) 
 		}
 	    }
+	    set file ${prefix}[pid]n$tempFile(counter)
 	}
     }
+    set tmpfile [file join $tmpdir $file]
     if { ![file writable $tmpdir] } {
 	error "Failed to get a writable temporary directory"
     }
     
-    set tmpfile [file join $tmpdir $prefix.$tempFile(counter).[pid]]
     incr tempFile(counter)
     lappend tempFile(files) $tmpfile
     return $tmpfile
