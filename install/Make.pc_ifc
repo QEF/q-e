@@ -8,11 +8,11 @@
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -I$(OSHOME)/include/ -DPC -DMKL -DFFTW  \
-           -D"FFTWND_F77_ONE=fftwnd_f77_one" \
-           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan" \
-           -D"FFTW_F77=fftw_f77" \
-           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan"
+CPPFLAGS = -I$(OSHOME)/include/ -DPC -D__INTEL -DMKL -DFFTW  \
+           -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
+           -D"FFTW_F77=fftw_f77_" \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan_"
 #
 # Fortran compiler:
 #
@@ -48,7 +48,7 @@ MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 # (MKL will likely not work for other CPUs like Athlon)
 #
 LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
-      /opt/intel/mkl/lib/32/libmkl_p4.a -lpthread
+      /opt/intel/mkl/lib/32/libmkl_p3.a -lpthread
 #
 # The following is for Atlas optimized blas/lapack libraries
 # You may not actually need -lcblas . See the manual for details

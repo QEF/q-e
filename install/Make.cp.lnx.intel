@@ -11,7 +11,7 @@
 #  ** Preprocessor Macro **
 # Parallel MPI
   CPMACRO=-D__LINUX -D__MPI -D__PARA -D__INTEL -D__FFTW -D__FFTWDRV  \
- -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf
+ -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm \
            -D"fftwnd_f77_one=fftwnd_f77_one_" \
            -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
            -D"fftw_f77=fftw_f77_" \
@@ -19,7 +19,7 @@
 #
 # Serial Code
   CPMACRO=-D__LINUX -D__INTEL -D__FFTW -D__FFTWDRV  \
- -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf \
+ -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm \
            -D"fftwnd_f77_one=fftwnd_f77_one_" \
            -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
            -D"fftw_f77=fftw_f77_" \

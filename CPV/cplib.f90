@@ -2108,8 +2108,8 @@
       real(kind=8) fion(3,nax,nsx), dsr(3,3), esr
 ! local variables
       integer i,j,k,l,m, ii, lax, inf
-      real(kind=8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx, &
-     &             ERFC
+      real(kind=8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
+      real(kind=8), external :: erfc
 !
 !
       esr=0.d0
@@ -2134,7 +2134,7 @@
                   rlmn=sqrt(rlm(1)**2+rlm(2)**2+rlm(3)**2)
 !
                   arg=rlmn/rckj
-                  addesr=zv(k)*zv(j)*ERFC(arg)/rlmn
+                  addesr=zv(k)*zv(j)*erfc(arg)/rlmn
                   esr=esr+addesr
                   addpre=2.d0*zv(k)*zv(j)*exp(-arg*arg)/rckj/sqrt(pi)
                   repand=(addesr+addpre)/rlmn/rlmn

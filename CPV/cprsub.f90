@@ -270,7 +270,8 @@
       real(kind=8), allocatable:: f(:),vscr(:), figl(:)
       real(kind=8) el, ql, par, sp, e1, e2, emax, vpsum, rhopsum, fint, &
      &             fpibg, gps, sfp, xg, dsfp, dgps, r2new, r2max, r21,  &
-     &             r22, r2l, ERF
+     &             r22, r2l
+      real(kind=8), external : erf
       integer is, irmax, ir, ig, ib
       real(kind=8), allocatable:: df(:), dfigl(:)
 !
@@ -322,7 +323,7 @@
 !
             do ir=1,irmax
                vscr(ir)=0.5*rucore(ir,1,is) +                           &
-     &                  zv(is)*ERF(r(ir,is)/rcmax(is))
+     &                  zv(is)*erf(r(ir,is)/rcmax(is))
                f(ir)=vscr(ir)*r(ir,is)
             end do
             do ir=irmax+1,mesh(is)
@@ -494,7 +495,8 @@
       implicit none
 !
       integer nr1, nr2, nr3
-      real(kind=8) b1(3),b2(3),b3(3), gmax, ERF
+      real(kind=8) b1(3),b2(3),b3(3), gmax
+      real(kind=8), external :: erf
 !
       integer i1,i2,i3,ig
 !
@@ -514,7 +516,7 @@
 !
       do ig=1,ngw
          ggp(ig) = g(ig) +                                              &
-     &             (agg/tpiba2)*(1.0+ERF((tpiba2*g(ig)-e0gg)/sgg))
+     &             (agg/tpiba2)*(1.0+erf((tpiba2*g(ig)-e0gg)/sgg))
       enddo
 ! 
       return
