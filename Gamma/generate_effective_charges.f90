@@ -30,10 +30,10 @@ subroutine generate_effective_charges &
   if (no_equivalent_atoms) return
   ! transform to cartesian axis
   do na = 1,nat
-     if (has_equivalent(na).eq.0 ) then 
+     if (has_equivalent(na).eq.0 ) then
         call trntns(zstar(1,1,na),at,bg,-1)
         done(na)=.true.
-     else 
+     else
         call setv(9,0.d0,zstar(1,1,na),1)
         done(na)=.false.
      end if
@@ -41,7 +41,7 @@ subroutine generate_effective_charges &
   !
   ! recalculate S^-1 (once again)
   !
-  call multable (nsym,s,table) 
+  call multable (nsym,s,table)
   call inverse_s(nsym,s,table,invs)
   !
   do isym = 1,nsym

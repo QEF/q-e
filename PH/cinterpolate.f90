@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-subroutine cinterpolate (v, vs, iflag)  
+subroutine cinterpolate (v, vs, iflag)
 !
 !     This subroutine interpolates :
 !     from the smooth mesh (vs) to a  thicker mesh (v)  (iflag>0)
@@ -16,58 +16,57 @@ subroutine cinterpolate (v, vs, iflag)
 !     V and Vs are complex and in real space . V and Vs may coincide
 !
 #include"machine.h"
-use pwcom  
-use allocate
-complex(kind=DP) :: v (nrxx), vs (nrxxs)  
+use pwcom
+complex(kind=DP) :: v (nrxx), vs (nrxxs)
                                  ! function on thick mesh
                                  ! function on smooth mesh
 
-integer :: iflag  
+integer :: iflag
                                  ! gives the direction of the interpolat
 
-complex(kind=DP), pointer :: aux (:), auxs (:)  
+complex(kind=DP), allocatable :: aux (:), auxs (:)
                                  ! work array on thick mesh
                                  ! work array on smooth mesh
 
-integer :: ig  
+integer :: ig
 
-call start_clock ('cinterpolate')  
-if (iflag.le.0) then  
+call start_clock ('cinterpolate')
+if (iflag.le.0) then
 !
 !    from thick to smooth
 !
-   if (doublegrid) then  
-      call mallocate(aux , nrxx)  
-      call ZCOPY (nrxx, v, 1, aux, 1)  
-      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
-      call setv (2 * nrxxs, 0.d0, vs, 1)  
-      do ig = 1, ngms  
-      vs (nls (ig) ) = aux (nl (ig) )  
-      enddo  
-      call cft3s (vs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)  
-      call mfree (aux)  
-   else  
-      call ZCOPY (nrxx, v, 1, vs, 1)  
-   endif  
-else  
+   if (doublegrid) then
+      allocate (aux ( nrxx))    
+      call ZCOPY (nrxx, v, 1, aux, 1)
+      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+      call setv (2 * nrxxs, 0.d0, vs, 1)
+      do ig = 1, ngms
+      vs (nls (ig) ) = aux (nl (ig) )
+      enddo
+      call cft3s (vs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
+      deallocate (aux)
+   else
+      call ZCOPY (nrxx, v, 1, vs, 1)
+   endif
+else
 !
 !   from smooth to thick
 !
-   if (doublegrid) then  
-      call mallocate(auxs , nrxxs)  
-      call ZCOPY (nrxxs, vs, 1, auxs, 1)  
+   if (doublegrid) then
+      allocate (auxs ( nrxxs))    
+      call ZCOPY (nrxxs, vs, 1, auxs, 1)
       call cft3s (auxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
        - 1)
-      call setv (2 * nrxx, 0.d0, v, 1)  
-      do ig = 1, ngms  
-      v (nl (ig) ) = auxs (nls (ig) )  
-      enddo  
-      call cft3 (v, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
-      call mfree (auxs)  
-   else  
-      call ZCOPY (nrxx, vs, 1, v, 1)  
-   endif  
-endif  
-call stop_clock ('cinterpolate')  
-return  
+      call setv (2 * nrxx, 0.d0, v, 1)
+      do ig = 1, ngms
+      v (nl (ig) ) = auxs (nls (ig) )
+      enddo
+      call cft3 (v, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+      deallocate (auxs)
+   else
+      call ZCOPY (nrxx, vs, 1, v, 1)
+   endif
+endif
+call stop_clock ('cinterpolate')
+return
 end subroutine cinterpolate

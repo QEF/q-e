@@ -4,41 +4,40 @@ subroutine compute_qdipol
 ! augmentation charge.
 !
 use pwcom
-use allocate
 use parameters, only: DP
 use phcom
 
 implicit none
 
-real(kind=dp), pointer :: qrad2(:,:,:), qtot(:,:,:), aux(:)
+real(kind=dp), allocatable :: qrad2(:,:,:), qtot(:,:,:), aux(:)
 
 real(kind=dp) :: fact
 
 integer :: nt, l, ir, nb, mb, ilast, ipol, ih, ivl, jh, jvl, lp
 
-call mallocate(qrad2, nbrx , nbrx, ntyp)
-call mallocate(aux, ndm)
-call mallocate(qtot, ndm, nbrx, nbrx)
+allocate (qrad2( nbrx , nbrx, ntyp))    
+allocate (aux( ndm))    
+allocate (qtot( ndm, nbrx, nbrx))    
 
 qrad2(:,:,:)=0.d0
 dpqq=0.d0
 
-do nt = 1, ntyp  
-   if (tvanp (nt) ) then  
+do nt = 1, ntyp
+   if (tvanp (nt) ) then
       l=1
 !
 !   Only l=1 terms enter in the dipole of Q
 !
-      do nb = 1, nbeta (nt)  
-         do mb = nb, nbeta (nt)  
+      do nb = 1, nbeta (nt)
+         do mb = nb, nbeta (nt)
             if ((l.ge.abs(lll(nb,nt)-lll(mb,nt))) .and. &
                 (l.le.lll(nb,nt)+lll(mb,nt))      .and. &
                 (mod (l+lll(nb,nt)+lll(mb,nt),2) .eq.0) ) then
-                do ir = 1, kkbeta (nt)  
-                   if (r(ir, nt).ge.rinner(l+1, nt)) then  
+                do ir = 1, kkbeta (nt)
+                   if (r(ir, nt).ge.rinner(l+1, nt)) then
                       qtot(ir, nb, mb)=qfunc(ir,nb,mb,nt)
-                   else  
-                      ilast = ir  
+                   else
+                      ilast = ir
                    endif
                 enddo
                 if (rinner(l+1, nt).gt.0.d0) &
@@ -47,11 +46,11 @@ do nt = 1, ntyp
             endif
          enddo
       enddo
-      do nb=1, nbeta(nt)  
+      do nb=1, nbeta(nt)
          !
          !    the Q are symmetric with respect to indices
          !
-         do mb=nb, nbeta(nt)  
+         do mb=nb, nbeta(nt)
             if ( (l.ge.abs(lll(nb,nt)-lll(mb,nt) ) )    .and.  &
                  (l.le.lll(nb,nt) + lll(mb,nt) )        .and.  &
                  (mod(l+lll(nb,nt)+lll(mb,nt), 2).eq.0) ) then
@@ -61,7 +60,7 @@ do nt = 1, ntyp
                call simpson (kkbeta(nt),aux,rab(1,nt),qrad2(nb,mb,nt))
             endif
          enddo
-      enddo 
+      enddo
    endif
     ! ntyp
 enddo
@@ -71,7 +70,7 @@ do ipol = 1,3
    fact=-sqrt(fpi/3.d0)
    if (ipol.eq.1) lp=3
    if (ipol.eq.2) lp=4
-   if (ipol.eq.3) then 
+   if (ipol.eq.3) then
        lp=2
        fact=-fact
    endif
@@ -96,9 +95,9 @@ do ipol = 1,3
       endif
    enddo
 enddo
-call mfree(qtot)
-call mfree(aux)
-call mfree(qrad2)
+deallocate(qtot)
+deallocate(aux)
+deallocate(qrad2)
 
 return
 end

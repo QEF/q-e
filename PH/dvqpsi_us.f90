@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us (ik, mode, uact)  
+subroutine dvqpsi_us (ik, mode, uact)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -17,25 +17,24 @@ subroutine dvqpsi_us (ik, mode, uact)
   !
 #include "machine.h"
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
-  implicit none 
+  use pwcom
+  use parameters, only : DP
+  use phcom
+  implicit none
   !
   !   The dummy variables
   !
 
-  integer :: ik, mode  
+  integer :: ik, mode
   ! input: the k point
   ! input: the actual perturbation
-  complex(kind=DP) :: uact (3 * nat)  
+  complex(kind=DP) :: uact (3 * nat)
   ! input: the pattern of displacements
   !
   !   And the local variables
   !
 
-  integer :: na, mu, ikk, ig, nt, ibnd, ir  
+  integer :: na, mu, ikk, ig, nt, ibnd, ir
   ! counter on atoms
   ! counter on modes
   ! the point k
@@ -44,7 +43,7 @@ subroutine dvqpsi_us (ik, mode, uact)
   ! counter on bands
   ! counter on real mesh
 
-  complex(kind=DP) :: gtau, gu  
+  complex(kind=DP) :: gtau, gu
   ! auxiliary variable
   ! auxiliary variable
 
@@ -59,44 +58,44 @@ subroutine dvqpsi_us (ik, mode, uact)
   ! a mesh space for d V_loc /dtau
   ! a mesh space for psi
 
-  call start_clock ('dvqpsi_us')  
-  if (nlcc_any) then  
-     call mallocate(aux, nrxx)  
-     if (doublegrid) then  
-        call mallocate(auxs, nrxxs)  
-     else  
-        auxs => aux  
+  call start_clock ('dvqpsi_us')
+  if (nlcc_any) then
+     allocate (aux( nrxx))    
+     if (doublegrid) then
+        allocate (auxs( nrxxs))    
+     else
+        auxs => aux
      endif
   endif
-  call mallocate(aux1, nrxxs)  
-  call mallocate(aux2, nrxxs)  
+  allocate (aux1( nrxxs))    
+  allocate (aux2( nrxxs))    
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
   !    reciprocal space while the product with the wavefunction is done in
   !    real space
   !
-  if (lgamma) then  
-     ikk = ik  
-  else  
-     ikk = 2 * ik - 1  
+  if (lgamma) then
+     ikk = ik
+  else
+     ikk = 2 * ik - 1
   endif
-  call setv (2 * npwx * nbnd, 0.d0, dvpsi, 1)  
-  call setv (2 * nrxxs, 0.d0, aux1, 1)  
-  do na = 1, nat  
-     fact = tpiba * (0.d0, - 1.d0) * eigqts (na)  
-     mu = 3 * (na - 1)  
+  call setv (2 * npwx * nbnd, 0.d0, dvpsi, 1)
+  call setv (2 * nrxxs, 0.d0, aux1, 1)
+  do na = 1, nat
+     fact = tpiba * (0.d0, - 1.d0) * eigqts (na)
+     mu = 3 * (na - 1)
      if (abs (uact (mu + 1) ) + abs (uact (mu + 2) ) + abs (uact (mu + &
           3) ) .gt.1.0d-12) then
-        nt = ityp (na)  
-        u1 = uact (mu + 1)  
-        u2 = uact (mu + 2)  
-        u3 = uact (mu + 3)  
-        gu0 = xq (1) * u1 + xq (2) * u2 + xq (3) * u3  
-        do ig = 1, ngms  
+        nt = ityp (na)
+        u1 = uact (mu + 1)
+        u2 = uact (mu + 2)
+        u3 = uact (mu + 3)
+        gu0 = xq (1) * u1 + xq (2) * u2 + xq (3) * u3
+        do ig = 1, ngms
            gtau = eigts1 (ig1 (ig), na) * eigts2 (ig2 (ig), na) * eigts3 ( &
                 ig3 (ig), na)
-           gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3  
+           gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
            aux1 (nls (ig) ) = aux1 (nls (ig) ) + vlocq (ig, nt) * gu * &
                 fact * gtau
         enddo
@@ -152,41 +151,41 @@ subroutine dvqpsi_us (ik, mode, uact)
   !
   ! Now we compute dV_loc/dtau in real space
   !
-  call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)  
-  do ibnd = 1, nbnd  
-     call setv (2 * nrxxs, 0.d0, aux2, 1)  
-     do ig = 1, npw  
-        aux2 (nls (igk (ig) ) ) = evc (ig, ibnd)  
+  call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+  do ibnd = 1, nbnd
+     call setv (2 * nrxxs, 0.d0, aux2, 1)
+     do ig = 1, npw
+        aux2 (nls (igk (ig) ) ) = evc (ig, ibnd)
      enddo
      !
      !  This wavefunction is computed in real space
      !
-     call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)  
-     do ir = 1, nrxxs  
-        aux2 (ir) = aux2 (ir) * aux1 (ir)  
+     call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     do ir = 1, nrxxs
+        aux2 (ir) = aux2 (ir) * aux1 (ir)
      enddo
      !
      ! and finally dV_loc/dtau * psi is transformed in reciprocal space
      !
-     call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)  
-     do ig = 1, npwq  
-        dvpsi (ig, ibnd) = aux2 (nls (igkq (ig) ) )  
+     call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+     do ig = 1, npwq
+        dvpsi (ig, ibnd) = aux2 (nls (igkq (ig) ) )
      enddo
   enddo
   !
-  call mfree (aux2)  
-  call mfree (aux1)  
-  if (nlcc_any) then  
-     call mfree (aux)  
-     if (doublegrid) call mfree (auxs)  
+  deallocate (aux2)
+  deallocate (aux1)
+  if (nlcc_any) then
+     deallocate (aux)
+     if (doublegrid) deallocate (auxs)
   endif
   !
   !   We add the contribution of the nonlocal potential in the US form
   !   First a term similar to the KB case.
   !   Then a term due to the change of the D coefficients in the perturbat
   !
-  call dvqpsi_us_only (ik, mode, uact)  
+  call dvqpsi_us_only (ik, mode, uact)
 
-  call stop_clock ('dvqpsi_us')  
-  return  
+  call stop_clock ('dvqpsi_us')
+  return
 end subroutine dvqpsi_us

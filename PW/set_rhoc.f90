@@ -7,30 +7,29 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine set_rhoc  
+subroutine set_rhoc
   !-----------------------------------------------------------------------
   !
   !    This routine compute the core charge on the real space 3D mesh
   !
   !
 #include "machine.h"
-  use pwcom  
-  use allocate 
+  use pwcom
   implicit none
   !
   !     One parameter
   !
-  real(kind=DP) :: eps  
+  real(kind=DP) :: eps
   ! a small number
 
-  parameter (eps = 1.d-10)  
+  parameter (eps = 1.d-10)
 
-  complex(kind=DP) , pointer :: aux (:)  
+  complex(kind=DP) , allocatable :: aux (:)
   ! used for the fft of the core ch
 
-  real(kind=DP) , pointer ::  rhocg(:)
+  real(kind=DP) , allocatable ::  rhocg(:)
   real(kind=DP) ::  rhoima, rhoneg, rhorea
-  real(kind=DP) , pointer ::  dum(:,:) 
+  real(kind=DP) , allocatable ::  dum(:,:)
   real(kind=DP) ::  vtxcc
   ! the radial fourier trasform
   ! used to check the core charge
@@ -39,30 +38,30 @@ subroutine set_rhoc
   ! dummy array containing rho=0
   ! dummy xc energy term
 
-  integer :: ir, nt, ng  
+  integer :: ir, nt, ng
   ! counter on mesh points
   ! counter on atomic types
   ! counter on g vectors
 
-  logical :: no_core_only  
+  logical :: no_core_only
   ! if .f. subtract etxcc from etot
 
-  etxcc = 0.d0  
-  do nt = 1, ntyp  
-     if (nlcc (nt) ) goto 10  
+  etxcc = 0.d0
+  do nt = 1, ntyp
+     if (nlcc (nt) ) goto 10
   enddo
-  call setv (nrxx, 0.d0, rho_core, 1)  
-  return  
+  call setv (nrxx, 0.d0, rho_core, 1)
+  return
 
-10 continue  
-  call mallocate(aux, nrxx)  
-  call mallocate(rhocg,  ngl)  
-  call setv (2 * nrxx, 0.d0, aux, 1)  
+10 continue
+  allocate (aux( nrxx))    
+  allocate (rhocg(  ngl))    
+  call setv (2 * nrxx, 0.d0, aux, 1)
   !
   !    the sum is on atom types
   !
-  do nt = 1, ntyp  
-     if (nlcc (nt) ) then  
+  do nt = 1, ntyp
+     if (nlcc (nt) ) then
         !
         !     drhoc compute the radial fourier transform for each shell of g vec
         !
@@ -72,7 +71,7 @@ subroutine set_rhoc
         !
         !     multiply by the structure factor and sum
         !
-        do ng = 1, ngm  
+        do ng = 1, ngm
            aux (nl (ng) ) = aux (nl (ng) ) + strf (ng, nt) * rhocg (igtongl (ng) )
         enddo
      endif
@@ -80,17 +79,17 @@ subroutine set_rhoc
   !
   !   the core charge in real space
   !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
   !    test on the charge and computation of the core energy
   !
-  rhoneg = 0.d0  
-  rhoima = 0.d0  
-  do ir = 1, nrxx  
-     rhoneg = rhoneg + min (0.d0, DREAL (aux (ir) ) )  
-     rhoima = rhoima + abs (DIMAG (aux (ir) ) )  
-     rhorea = max (DREAL (aux (ir) ), eps)  
-     rho_core(ir) = DREAL (aux(ir))  
+  rhoneg = 0.d0
+  rhoima = 0.d0
+  do ir = 1, nrxx
+     rhoneg = rhoneg + min (0.d0, DREAL (aux (ir) ) )
+     rhoima = rhoima + abs (DIMAG (aux (ir) ) )
+     rhorea = max (DREAL (aux (ir) ), eps)
+     rho_core(ir) = DREAL (aux(ir))
      !
      ! NOTE: Core charge is computed in reciprocal space and brought to real
      ! space by FFT. For non smooth core charges (or insufficient cut-off)
@@ -106,39 +105,39 @@ subroutine set_rhoc
      !         rho_core(ir) = rhorea
      !
   enddo
-  rhoneg = rhoneg / (nr1 * nr2 * nr3)  
-  rhoima = rhoima / (nr1 * nr2 * nr3)  
+  rhoneg = rhoneg / (nr1 * nr2 * nr3)
+  rhoima = rhoima / (nr1 * nr2 * nr3)
 #ifdef PARA
-  call reduce (1, rhoneg)  
-  call reduce (1, rhoima)  
+  call reduce (1, rhoneg)
+  call reduce (1, rhoima)
 #endif
   if (rhoneg.lt. - 1.0d-6.or.rhoima.gt.1.0d-6) &
        write (6, '("  warning: negative or imaginary core charge ",2f12.6)')&
        rhoneg, rhoima
   !
-  no_core_only = .true.  
-  if (no_core_only) then  
-     etxcc = 0.d0  
-  else  
+  no_core_only = .true.
+  if (no_core_only) then
+     etxcc = 0.d0
+  else
      !
      ! calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
      ! This term is present only for compatibility with previous versions
      !
-     call mallocate(dum,nrxx , nspin)  
-     call setv (nspin * nrxx, 0.d0, dum, 1)  
+     allocate (dum(nrxx , nspin))    
+     call setv (nspin * nrxx, 0.d0, dum, 1)
      call v_xc (dum, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
           nrxx, nl, ngm, g, nspin, alat, omega, etxcc, vtxcc, aux)
-     call mfree(dum)  
-     write (6, 9000) etxcc  
-     write (6,  * ) 'BEWARE it will be subtracted from total energy !'  
+     deallocate(dum)
+     write (6, 9000) etxcc
+     write (6,  * ) 'BEWARE it will be subtracted from total energy !'
 
   endif
-  call mfree (rhocg)  
-  call mfree (aux)  
+  deallocate (rhocg)
+  deallocate (aux)
   !
-  return  
+  return
 
-9000 format (5x,'core-only xc energy         = ',f15.8,' ryd')  
+9000 format (5x,'core-only xc energy         = ',f15.8,' ryd')
 
 end subroutine set_rhoc
 

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine drhod2v  
+subroutine drhod2v
   !-----------------------------------------------------------------------
   ! It calls the routines which calculate the term containing the first
   ! variation of the charge and the secon variation of the potential with
@@ -23,33 +23,32 @@ subroutine drhod2v
   use pwcom
   use phcom
   use d3com
-  use allocate
   !
   implicit none
-  integer :: irr, irr1, imode0, ipert, ir  
-  real (8) :: xq0 (3)  
-  complex (8), pointer :: drhoscf (:)  
+  integer :: irr, irr1, imode0, ipert, ir
+  real (8) :: xq0 (3)
+  complex (8), allocatable :: drhoscf (:)
   ! the change of density due to perturbations
 
-  call mallocate (drhoscf, nrxx)  
+  allocate  (drhoscf( nrxx))    
 
-  call read_ef  
-  if (.not.allmodes) then  
-     do ipert = 1, 3 * nat  
-        call davcio_drho (drhoscf, lrdrho, iudrho, ipert, - 1)  
-        call dqrhod2v (ipert, drhoscf)  
+  call read_ef
+  if (.not.allmodes) then
+     do ipert = 1, 3 * nat
+        call davcio_drho (drhoscf, lrdrho, iudrho, ipert, - 1)
+        call dqrhod2v (ipert, drhoscf)
      enddo
 
   endif
-  do ipert = 1, 3 * nat  
-     if (q0mode (ipert) ) then  
-        call davcio_drho (drhoscf, lrdrho, iud0rho, ipert, - 1)  
-        call d0rhod2v (ipert, drhoscf)  
+  do ipert = 1, 3 * nat
+     if (q0mode (ipert) ) then
+        call davcio_drho (drhoscf, lrdrho, iud0rho, ipert, - 1)
+        call d0rhod2v (ipert, drhoscf)
      endif
 
   enddo
 
-  call mfree (drhoscf)  
-  return  
+  deallocate (drhoscf)
+  return
 
 end subroutine drhod2v

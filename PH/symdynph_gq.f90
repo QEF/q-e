@@ -18,7 +18,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
 #include "machine.h"
   use parameters, only : DP
-  implicit none  
+  implicit none
   !
   !    The dummy variables
   !
@@ -31,19 +31,19 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   ! input: the inverse of each matrix
   ! input: the order of the small gro
   ! input: the rotation sending q ->
-  real(kind=DP) :: xq (3), rtau (3, 48, nat)  
+  real(kind=DP) :: xq (3), rtau (3, 48, nat)
   ! input: the q point
   ! input: the R associated at each t
 
-  logical :: minus_q  
+  logical :: minus_q
   ! input: true if a symmetry q->-q+G
-  complex(kind=DP) :: phi (3, 3, nat, nat)  
+  complex(kind=DP) :: phi (3, 3, nat, nat)
   ! inp/out: the matrix to symmetrize
   !
   !     One parameter
   !
-  real(kind=DP) :: tpi  
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)  
+  real(kind=DP) :: tpi
+  parameter (tpi = 2.0d0 * 3.14159265358979d0)
   !
   !   and the local variables
   !
@@ -62,7 +62,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   ! counter on polarizations
   ! used to account for symmetrized e
 
-  real(kind=DP) :: arg  
+  real(kind=DP) :: arg
   ! the argument of the phase
 
   complex(kind=DP) :: phip (3, 3, nat, nat), work (3, 3), fase, faseq ( &
@@ -74,13 +74,13 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
   !    We start by imposing hermiticity
   !
-  do na = 1, nat  
-     do nb = 1, nat  
-        do ipol = 1, 3  
-           do jpol = 1, 3  
+  do na = 1, nat
+     do nb = 1, nat
+        do ipol = 1, 3
+           do jpol = 1, 3
               phi (ipol, jpol, na, nb) = 0.5d0 * (phi (ipol, jpol, na, nb) &
                    + conjg (phi (jpol, ipol, nb, na) ) )
-              phi (jpol, ipol, nb, na) = conjg (phi (ipol, jpol, na, nb) )  
+              phi (jpol, ipol, nb, na) = conjg (phi (ipol, jpol, na, nb) )
            enddo
         enddo
      enddo
@@ -89,27 +89,27 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !    If no other symmetry is present we quit here
   !
 
-  if ( (nsymq.eq.1) .and. (.not.minus_q) ) return  
+  if ( (nsymq.eq.1) .and. (.not.minus_q) ) return
   !
   !    Then we impose the symmetry q -> -q+G if present
   !
-  if (minus_q) then  
-     do na = 1, nat  
-        do nb = 1, nat  
-           do ipol = 1, 3  
-              do jpol = 1, 3  
-                 call setv (18, 0.d0, work, 1)  
-                 sna = irt (irotmq, na)  
-                 snb = irt (irotmq, nb)  
-                 arg = 0.d0  
-                 do kpol = 1, 3  
+  if (minus_q) then
+     do na = 1, nat
+        do nb = 1, nat
+           do ipol = 1, 3
+              do jpol = 1, 3
+                 call setv (18, 0.d0, work, 1)
+                 sna = irt (irotmq, na)
+                 snb = irt (irotmq, nb)
+                 arg = 0.d0
+                 do kpol = 1, 3
                     arg = arg + (xq (kpol) * (rtau (kpol, irotmq, na) - rtau (kpol, &
                          irotmq, nb) ) )
                  enddo
-                 arg = arg * tpi  
-                 fase = DCMPLX (cos (arg), sin (arg) )  
-                 do kpol = 1, 3  
-                    do lpol = 1, 3  
+                 arg = arg * tpi
+                 fase = DCMPLX (cos (arg), sin (arg) )
+                 do kpol = 1, 3
+                    do lpol = 1, 3
                        work (ipol, jpol) = work (ipol, jpol) + s (ipol, kpol, irotmq) &
                             * s (jpol, lpol, irotmq) * phi (kpol, lpol, sna, snb) * fase
                     enddo
@@ -120,38 +120,38 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
            enddo
         enddo
      enddo
-     call ZCOPY (9 * nat * nat, phip, 1, phi, 1)  
+     call ZCOPY (9 * nat * nat, phip, 1, phi, 1)
   endif
 
   !
   !    Here we symmetrize with respect to the small group of q
   !
-  if (nsymq.eq.1) return  
+  if (nsymq.eq.1) return
 
-  do na = 1, nat  
-     do nb = 1, nat  
-        iflb (na, nb) = 0  
+  do na = 1, nat
+     do nb = 1, nat
+        iflb (na, nb) = 0
      enddo
   enddo
-  do na = 1, nat  
-     do nb = 1, nat  
-        if (iflb (na, nb) .eq.0) then  
-           call setv (18, 0.d0, work, 1)  
-           do isymq = 1, nsymq  
-              irot = irgq (isymq)  
-              sna = irt (irot, na)  
-              snb = irt (irot, nb)  
-              arg = 0.d0  
-              do ipol = 1, 3  
+  do na = 1, nat
+     do nb = 1, nat
+        if (iflb (na, nb) .eq.0) then
+           call setv (18, 0.d0, work, 1)
+           do isymq = 1, nsymq
+              irot = irgq (isymq)
+              sna = irt (irot, na)
+              snb = irt (irot, nb)
+              arg = 0.d0
+              do ipol = 1, 3
                  arg = arg + (xq (ipol) * (rtau (ipol, irot, na) - rtau (ipol, &
                       irot, nb) ) )
               enddo
-              arg = arg * tpi  
-              faseq (isymq) = DCMPLX (cos (arg), sin (arg) )  
-              do ipol = 1, 3  
-                 do jpol = 1, 3  
-                    do kpol = 1, 3  
-                       do lpol = 1, 3  
+              arg = arg * tpi
+              faseq (isymq) = DCMPLX (cos (arg), sin (arg) )
+              do ipol = 1, 3
+                 do jpol = 1, 3
+                    do kpol = 1, 3
+                       do lpol = 1, 3
                           work (ipol, jpol) = work (ipol, jpol) + s (ipol, kpol, irot) &
                                * s (jpol, lpol, irot) * phi (kpol, lpol, sna, snb) * faseq ( &
                                isymq)
@@ -160,15 +160,15 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                  enddo
               enddo
            enddo
-           do isymq = 1, nsymq  
-              irot = irgq (isymq)  
-              sna = irt (irot, na)  
-              snb = irt (irot, nb)  
-              do ipol = 1, 3  
-                 do jpol = 1, 3  
-                    phi (ipol, jpol, sna, snb) = (0.d0, 0.d0)  
-                    do kpol = 1, 3  
-                       do lpol = 1, 3  
+           do isymq = 1, nsymq
+              irot = irgq (isymq)
+              sna = irt (irot, na)
+              snb = irt (irot, nb)
+              do ipol = 1, 3
+                 do jpol = 1, 3
+                    phi (ipol, jpol, sna, snb) = (0.d0, 0.d0)
+                    do kpol = 1, 3
+                       do lpol = 1, 3
                           phi (ipol, jpol, sna, snb) = phi (ipol, jpol, sna, snb) &
                                + s (ipol, kpol, invs (irot) ) * s (jpol, lpol, invs (irot) ) &
                                * work (kpol, lpol) * conjg (faseq (isymq) )
@@ -176,11 +176,11 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                     enddo
                  enddo
               enddo
-              iflb (sna, snb) = 1  
+              iflb (sna, snb) = 1
            enddo
         endif
      enddo
   enddo
-  call DSCAL (18 * nat * nat, 1.d0 / nsymq, phi, 1)  
-  return  
+  call DSCAL (18 * nat * nat, 1.d0 / nsymq, phi, 1)
+  return
 end subroutine symdynph_gq

@@ -6,19 +6,19 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine hinit0  
+subroutine hinit0
   !-----------------------------------------------------------------------
   !
   ! configuration-independent hamiltonian initialization
   !
-  use pwcom  
+  use pwcom
   implicit none
   ! counter on k points
-  integer :: ik  
+  integer :: ik
   !
   ! calculate the local part of the pseudopotentials
   !
-  call init_vloc  
+  call init_vloc
   !
   ! bring analytic potentials into numerical form on a radial mesh
   !
@@ -27,10 +27,10 @@ subroutine hinit0
   !
   !   k-point independent parameters of non-local pseudopotentials
   !
-  call init_us_1  
+  call init_us_1
   !
-  rewind (iunigk)  
-  do ik = 1, nks  
+  rewind (iunigk)
+  do ik = 1, nks
      !
      !  g2kin is used here as work space
      !
@@ -41,23 +41,23 @@ subroutine hinit0
      !
      !  if there is only one k-point npw and igk stay in memory
      !
-     if (nks.gt.1) write (iunigk) npw, igk  
+     if (nks.gt.1) write (iunigk) npw, igk
   enddo
   !
-  if (lmovecell.and.startingconfig.eq.'file') then  
+  if (lmovecell.and.startingconfig.eq.'file') then
      !
      !  if lmovecell and restart are both true the cell shape read from the
-     !  restart file and stored in the xxx_old variable should be used 
+     !  restart file and stored in the xxx_old variable should be used
      !  instead of the current (read from input) ones.
      !  swap them, rescale the atomic positions and scale the hamiltonian
      !
-     call cryst_to_cart (nat, tau, bg, - 1)  
-     call swap (9, at, at_old)  
-     call swap (1, omega, omega_old)  
-     call cryst_to_cart (nat, tau, at, + 1)  
+     call cryst_to_cart (nat, tau, bg, - 1)
+     call swap (9, at, at_old)
+     call swap (1, omega, omega_old)
+     call cryst_to_cart (nat, tau, at, + 1)
      call recips (at (1, 1), at (1, 2), at (1, 3), &
                   bg (1, 1), bg (1, 2), bg (1, 3) )
-     call scale_h  
+     call scale_h
   endif
   !
   ! initialize the structure factor
@@ -67,12 +67,12 @@ subroutine hinit0
   !
   !  calculate the total local potential
   !
-  call setlocal  
+  call setlocal
   !
   !  calculate the core charge (if any) for the nonlinear core correction
   !
-  call set_rhoc  
+  call set_rhoc
   !
-  return  
+  return
 end subroutine hinit0
 

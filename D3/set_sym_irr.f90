@@ -31,13 +31,12 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 #include "machine.h"
   use parameters, only : DP
-  use allocate
 #ifdef PARA
   use para
 #endif
   implicit none
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 #endif
 !
 !   first the dummy variables
@@ -71,14 +70,14 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: the pattern vectors
 ! output: the symmetry matrices
 ! output: the matrice sending q -> -q+G
-  logical :: minus_q  
+  logical :: minus_q
 ! output: if true one symmetry send q -
 !
 !   here the local variables
 !
-  real(kind=DP) :: tpi  
+  real(kind=DP) :: tpi
 
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)  
+  parameter (tpi = 2.0d0 * 3.14159265358979d0)
 
   integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
@@ -97,9 +96,9 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   ! counter on rotations
   ! the rotated atom
 
-  integer :: info  
+  integer :: info
 
-  real(kind=DP) :: eigen (3 * nat), modul, arg  
+  real(kind=DP) :: eigen (3 * nat), modul, arg
 ! the eigenvalues of dynamical ma
 ! the modulus of the mode
 ! the argument of the phase
@@ -112,12 +111,12 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! the rotated of one pattern
 ! the phase factor
 
-  logical :: lgamma  
+  logical :: lgamma
 ! if true gamma point
 !
 !   Allocate the necessary quantities
 !
-  lgamma = (xq(1).eq.0.d0 .and. xq(2).eq.0.d0 .and. xq(3).eq.0.d0)  
+  lgamma = (xq(1).eq.0.d0 .and. xq(2).eq.0.d0 .and. xq(3).eq.0.d0)
 !
 !   find the small group of q
 !
@@ -126,54 +125,54 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   And we compute the matrices which represent the symmetry transformat
 !   in the basis of the displacements
 !
-  call setv (2 * 3 * 3 * 48 * 3 * nat, 0.d0, t, 1)  
-  call setv (2 * 3 * 3 * 3 * nat, 0.d0, tmq, 1)  
-  if (minus_q) then  
+  call setv (2 * 3 * 3 * 48 * 3 * nat, 0.d0, t, 1)
+  call setv (2 * 3 * 3 * 3 * nat, 0.d0, tmq, 1)
+  if (minus_q) then
      nsymtot = nsymq + 1
-  else  
-     nsymtot = nsymq  
+  else
+     nsymtot = nsymq
 
   endif
-  do isymq = 1, nsymtot  
-     if (isymq.le.nsymq) then  
-        irot = irgq (isymq)  
-     else  
-        irot = irotmq  
+  do isymq = 1, nsymtot
+     if (isymq.le.nsymq) then
+        irot = irgq (isymq)
+     else
+        irot = irotmq
      endif
-     imode0 = 0  
-     do irr = 1, nirr  
-        do ipert = 1, npert (irr)  
-           imode = imode0 + ipert  
-           do na = 1, nat  
-              do ipol = 1, 3  
-                 jmode = 3 * (na - 1) + ipol  
-                 wrk_u (ipol, na) = u (jmode, imode)  
+     imode0 = 0
+     do irr = 1, nirr
+        do ipert = 1, npert (irr)
+           imode = imode0 + ipert
+           do na = 1, nat
+              do ipol = 1, 3
+                 jmode = 3 * (na - 1) + ipol
+                 wrk_u (ipol, na) = u (jmode, imode)
               enddo
            enddo
 !
 !     transform this pattern to crystal basis
 !
-           do na = 1, nat  
-              call trnvecc (wrk_u (1, na), at, bg, - 1)  
+           do na = 1, nat
+              call trnvecc (wrk_u (1, na), at, bg, - 1)
            enddo
 !
 !     the patterns are rotated with this symmetry
 !
-           call setv (2 * 3 * nat, 0.d0, wrk_ru, 1)  
-           do na = 1, nat  
-              sna = irt (irot, na)  
-              arg = 0.d0  
-              do ipol = 1, 3  
-                 arg = arg + xq (ipol) * rtau (ipol, irot, na)  
+           call setv (2 * 3 * nat, 0.d0, wrk_ru, 1)
+           do na = 1, nat
+              sna = irt (irot, na)
+              arg = 0.d0
+              do ipol = 1, 3
+                 arg = arg + xq (ipol) * rtau (ipol, irot, na)
               enddo
-              arg = arg * tpi  
-              if (isymq.eq.nsymtot.and.minus_q) then  
-                 fase = DCMPLX (cos (arg), sin (arg) )  
-              else  
-                 fase = DCMPLX (cos (arg), - sin (arg) )  
+              arg = arg * tpi
+              if (isymq.eq.nsymtot.and.minus_q) then
+                 fase = DCMPLX (cos (arg), sin (arg) )
+              else
+                 fase = DCMPLX (cos (arg), - sin (arg) )
               endif
-              do ipol = 1, 3  
-                 do jpol = 1, 3  
+              do ipol = 1, 3
+                 do jpol = 1, 3
                     wrk_ru (ipol, sna) = wrk_ru (ipol, sna) + s (jpol, ipol, irot) &
                          * wrk_u (jpol, na) * fase
                  enddo
@@ -182,21 +181,21 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !    Transform back the rotated pattern
 !
-           do na = 1, nat  
-              call trnvecc (wrk_ru (1, na), at, bg, 1)  
+           do na = 1, nat
+              call trnvecc (wrk_ru (1, na), at, bg, 1)
            enddo
 !
 !     Computes the symmetry matrices on the basis of the pattern
 !
-           do jpert = 1, npert (irr)  
-              imode = imode0 + jpert  
-              do na = 1, nat  
-                 do ipol = 1, 3  
-                    jmode = ipol + (na - 1) * 3  
-                    if (isymq.eq.nsymtot.and.minus_q) then  
+           do jpert = 1, npert (irr)
+              imode = imode0 + jpert
+              do na = 1, nat
+                 do ipol = 1, 3
+                    jmode = ipol + (na - 1) * 3
+                    if (isymq.eq.nsymtot.and.minus_q) then
                        tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + conjg (u ( &
                             jmode, imode) * wrk_ru (ipol, na) )
-                    else  
+                    else
                        t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
                             + conjg (u (jmode, imode) ) * wrk_ru (ipol, na)
                     endif
@@ -204,7 +203,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
               enddo
            enddo
         enddo
-        imode0 = imode0 + npert (irr)  
+        imode0 = imode0 + npert (irr)
      enddo
 
   enddo
@@ -229,26 +228,26 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !
-400 continue  
+400 continue
 !-waits for all nodes to be ready
-  call mpi_barrier (MPI_COMM_WORLD, info)  
+  call mpi_barrier (MPI_COMM_WORLD, info)
 !-real*8
-  call mpi_bcast (gi, 144, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (gimq, 3, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
+  call mpi_bcast (gi, 144, MPI_REAL8, 0, MPI_COMM_WORLD, info)
+  call mpi_bcast (gimq, 3, MPI_REAL8, 0, MPI_COMM_WORLD, info)
 !-complex*16
-  call mpi_bcast (t, 2592 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (tmq, 54 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)  
+  call mpi_bcast (t, 2592 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)
+  call mpi_bcast (tmq, 54 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)
   call mpi_bcast (u, 18 * nat * nat, MPI_REAL8, 0, MPI_COMM_WORLD, &
        info)
 !-integer
-  call mpi_bcast (nsymq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (npert, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (nirr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (irotmq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)  
-  call mpi_bcast (irgq, 48, MPI_INTEGER, 0, MPI_COMM_WORLD, info)  
+  call mpi_bcast (nsymq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
+  call mpi_bcast (npert, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
+  call mpi_bcast (nirr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
+  call mpi_bcast (irotmq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
+  call mpi_bcast (irgq, 48, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
 !-logical
 
-  call mpi_bcast (minus_q, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, info)  
+  call mpi_bcast (minus_q, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, info)
 #endif
-  return  
+  return
 end subroutine set_sym_irr

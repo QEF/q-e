@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine d3matrix  
+subroutine d3matrix
   !-----------------------------------------------------------------------
   !
   ! This routine is driver which computes the symmetrized derivative
@@ -19,7 +19,7 @@ subroutine d3matrix
   use d3com
   implicit none
 
-  integer :: nq, isq (48), imq, na, nt, j  
+  integer :: nq, isq (48), imq, na, nt, j
   ! degeneracy of the star of q
   ! index of q in the star of a given sym.op.
   ! index of -q in the star of q (0 if not present)
@@ -27,7 +27,7 @@ subroutine d3matrix
   ! counter on atomic type
   ! generic counter
 
-  real (8) :: sxq (3, 48)  
+  real (8) :: sxq (3, 48)
   ! list of vectors in the star of q
   !
   ! Symmetrizes the dynamical matrix w.r.t. the small group of q
@@ -43,13 +43,13 @@ subroutine d3matrix
   !
   ! Write on file information on the system
   !
-  write (iudyn, '(a)') title  
-  write (iudyn, '(a)') title_ph  
-  write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm  
-  do nt = 1, ntyp  
-     write (iudyn, * ) nt, " '", atm (nt) , "' ", amass (nt)  
+  write (iudyn, '(a)') title
+  write (iudyn, '(a)') title_ph
+  write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
+  do nt = 1, ntyp
+     write (iudyn, * ) nt, " '", atm (nt) , "' ", amass (nt)
   enddo
-  do na = 1, nat  
+  do na = 1, nat
      write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = &
           1, 3)
   enddo
@@ -59,5 +59,5 @@ subroutine d3matrix
 
   call qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, nq, &
        sxq, isq, imq, iudyn, wrmode)
-  return  
+  return
 end subroutine d3matrix

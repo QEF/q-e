@@ -6,39 +6,39 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine save_in_ions  
+subroutine save_in_ions
   !-----------------------------------------------------------------------
-  use pwcom  
+  use pwcom
   implicit none
-  character :: where * 20  
+  character :: where * 20
   ! are we in the right place?
-  integer :: ik, ibnd, ik_, iter  
+  integer :: ik, ibnd, ik_, iter
   ! counters
   ! last completed kpoint
   ! last completed iteration
-  logical :: exst  
+  logical :: exst
 
 
-  real(kind=DP) :: dr2  
-  if (reduce_io.or..not.lscf) return  
+  real(kind=DP) :: dr2
+  if (reduce_io.or..not.lscf) return
   !
   ! open recover file
   !
-  call seqopn (iunres, 'restart', 'unformatted', exst)  
+  call seqopn (iunres, 'restart', 'unformatted', exst)
   !
   ! save restart information
   !
-  where = 'ELECTRONS'  
-  iter = 0  
-  ik_ = 0  
+  where = 'ELECTRONS'
+  iter = 0
+  ik_ = 0
 
-  dr2 = 0.0d0  
-  write (iunres) where  
-  write (iunres) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)  
+  dr2 = 0.0d0
+  write (iunres) where
+  write (iunres) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
 
-  write (iunres) iter, ik_, dr2, tr2, ethr  
+  write (iunres) iter, ik_, dr2, tr2, ethr
 
-  close (unit = iunres, status = 'keep')  
+  close (unit = iunres, status = 'keep')
   !
-  return  
+  return
 end subroutine save_in_ions

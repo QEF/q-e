@@ -10,7 +10,7 @@
 #if defined __NEW_PUNCH
 
 !-----------------------------------------------------------------------
-subroutine read_file  
+subroutine read_file
   !-----------------------------------------------------------------------
   !
   !     This routine allocates space for all quantities already computed
@@ -24,7 +24,6 @@ subroutine read_file
     natomwfc, et, wg, rho, vr, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
     strf, eigts1, eigts2, eigts3, isk, wk
   use parameters, only: dp
-  use allocate, only: mallocate
   use io, only: tmp_dir, prefix
   use restart_module, only: readfile_new
 #ifdef PARA
@@ -41,11 +40,11 @@ subroutine read_file
   !
   ! choose the fortran unit to attach to the file
   !
-  iunpun = 4  
+  iunpun = 4
   !
   !  a value of zero cause the parameter to be read from the ".save" file
   !
-  kunittmp = 0  
+  kunittmp = 0
 
   !  here we read the variables that dimension the system
   !  in parallel execution, only root proc read the file
@@ -71,8 +70,8 @@ subroutine read_file
   allocate(tau (3, nat) )
   allocate(ityp (nat) )
   allocate(force (3, nat) )
-  call mallocate(irt, 48, nat)  
-  call mallocate(tetra,4, MAX(ntetra,1))  
+  allocate (irt( 48, nat))    
+  allocate (tetra(4, MAX(ntetra,1)))    
   !
   !     here we read all the variables defining the system
   !     in parallel execution, only root proc read the file
@@ -91,31 +90,31 @@ subroutine read_file
   ! related variables (not a smart implementation)
   nks = nkstot
   ! nks and nkstot are redefined by the following routine
-  call divide_et_impera (xk, wk, isk, lsda, nkstot, nks) 
+  call divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
 #endif
   !
   !  check whether LSDA
   !
-  if (lsda) then  
-     nspin = 2  
-  else  
-     nspin = 1  
-     current_spin = 1  
+  if (lsda) then
+     nspin = 2
+  else
+     nspin = 1
+     current_spin = 1
   endif
-  cell_factor = 1.d0  
-  lmovecell = .false.  
+  cell_factor = 1.d0
+  lmovecell = .false.
   !
   !   allocate memory for G- and R-space fft arrays
   !
-  call allocate_fft  
-  call ggen  
+  call allocate_fft
+  call ggen
   call set_pencils (nks, xk, ngms, gg, nls, ecutwfc / tpiba2, &
        nrx1s, nr1s, nr2s, nr3s)
   !
   !    allocate the potential
   !
-  call allocate_locpot  
-  call allocate_nlpot  
+  call allocate_locpot
+  call allocate_nlpot
   !
   !    allocate wavefunctions and related quantities (including et and wg)
   !
@@ -123,7 +122,7 @@ subroutine read_file
   !       this is not a good reason - eventually nbndx must be = nbnd
   !
   nbndx = max(nbnd,natomwfc)
-  call allocate_wfc  
+  call allocate_wfc
   !
   et = et_g
   wg = wg_g
@@ -131,17 +130,17 @@ subroutine read_file
   deallocate( et_g, wg_g )
   !
 #ifdef PARA
-  call poolscatter (nbndx, nkstot, et, nks, et)  
-  call poolscatter (nbnd , nkstot, wg, nks, wg)  
+  call poolscatter (nbndx, nkstot, et, nks, et)
+  call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
   !
   ! read the charge density
   !
-  call io_pot ( - 1, trim(prefix)//'.rho', rho, nspin)  
-  ! 
+  call io_pot ( - 1, trim(prefix)//'.rho', rho, nspin)
+  !
   ! read the potential
   !
-  call io_pot ( - 1, trim(prefix)//'.pot', vr, nspin)  
+  call io_pot ( - 1, trim(prefix)//'.pot', vr, nspin)
   !
   ! re-calculate the local part of the pseudopotential vltot
   ! and the core correction charge (if any) - This is done here
@@ -153,7 +152,7 @@ subroutine read_file
   call setlocal
   call set_rhoc
   !
-  return  
+  return
 end subroutine read_file
 
 #else
@@ -167,8 +166,7 @@ subroutine read_file
   !
   !
 #include "machine.h"
-  use pwcom  
-  use allocate
+  use pwcom
   use io
 #ifdef PARA
   use para
@@ -178,16 +176,16 @@ subroutine read_file
   integer, parameter :: nax =1000 ! an unlikely large number of atoms
   integer :: i, ik, ibnd, ios
   !
-  iunpun = 4  
+  iunpun = 4
   open (unit = iunpun, file = trim(tmp_dir)//trim(prefix)//'.pun', &
        form = 'unformatted', status = 'old', iostat = ios)
   call error ('read_file', 'problem reading file '// &
-       &      trim(tmp_dir)//trim(prefix)//'.pun', ios)  
+       &      trim(tmp_dir)//trim(prefix)//'.pun', ios)
   !
   !     here we read all the variables describing the system
   !     in parallel execution, all processors read the same file
   !
-  call saveall (iunpun, - 1)  
+  call saveall (iunpun, - 1)
   !
   !  allocate space for atomic positions, symmetries, forces, tetrahedra
   !
@@ -196,18 +194,18 @@ subroutine read_file
   allocate(tau (3, nat) )
   allocate(ityp (nat) )
   allocate(force (3, nat) )
-  call mallocate(irt, 48, nat)  
-  if (ltetra) call mallocate(tetra,4, ntetra)  
+  allocate (irt( 48, nat))    
+  if (ltetra) allocate (tetra(4, ntetra))    
   !
-  read (iunpun, err = 100, iostat = ios) tau  
-  read (iunpun, err = 101, iostat = ios) ityp  
-  read (iunpun, err = 102, iostat = ios) irt  
-  if (lforce) read (iunpun, err = 103, iostat = ios) force  
-  if (ltetra) read (iunpun, err = 104, iostat = ios) tetra  
+  read (iunpun, err = 100, iostat = ios) tau
+  read (iunpun, err = 101, iostat = ios) ityp
+  read (iunpun, err = 102, iostat = ios) irt
+  if (lforce) read (iunpun, err = 103, iostat = ios) force
+  if (ltetra) read (iunpun, err = 104, iostat = ios) tetra
   !
   read (iunpun, err = 105, iostat = ios) ( (xk (i, ik), i = 1, 3), &
-       ik = 1, nkstot)  
-  read (iunpun, err = 105, iostat = ios) (  wk (ik), ik = 1, nkstot)  
+       ik = 1, nkstot)
+  read (iunpun, err = 105, iostat = ios) (  wk (ik), ik = 1, nkstot)
   read (iunpun, err = 105, iostat = ios) ( isk (ik), ik = 1, nkstot)
 #ifdef PARA
   read (iunpun) kunit
@@ -215,31 +213,31 @@ subroutine read_file
   ! related variables (not a smart implementation)
   nks = nkstot
   ! nks and nkstot are redefined by the following routine
-  call divide_et_impera (xk, wk, isk, lsda, nkstot, nks) 
+  call divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
 #endif
   !
   !  check whether LSDA
   !
-  if (lsda) then  
-     nspin = 2  
-  else  
-     nspin = 1  
-     current_spin = 1  
+  if (lsda) then
+     nspin = 2
+  else
+     nspin = 1
+     current_spin = 1
   endif
-  cell_factor = 1.d0  
-  lmovecell = .false.  
+  cell_factor = 1.d0
+  lmovecell = .false.
   !
   !   allocate memory for G- and R-space fft arrays
   !
-  call allocate_fft  
-  call ggen  
+  call allocate_fft
+  call ggen
   call set_pencils (nks, xk, ngms, gg, nls, ecutwfc / tpiba2, &
        nrx1s, nr1s, nr2s, nr3s)
   !
   !    allocate the potential
   !
-  call allocate_locpot  
-  call allocate_nlpot  
+  call allocate_locpot
+  call allocate_nlpot
   !
   !    allocate wavefunctions and related quantities (including et and wg)
   !
@@ -247,26 +245,26 @@ subroutine read_file
   !       this is not a good reason - eventually nbndx must be = nbnd
   !
   nbndx = max(nbnd,natomwfc)
-  call allocate_wfc  
+  call allocate_wfc
   !
   read (iunpun, err = 106, iostat = ios) ( (et (ibnd, ik), ibnd = 1, &
        nbnd), ik = 1, nkstot)
   read (iunpun, err = 106, iostat = ios) ( (wg (ibnd, ik), ibnd = 1, &
        nbnd), ik = 1, nkstot)
-  close (iunpun)  
+  close (iunpun)
   !
 #ifdef PARA
-  call poolscatter (nbndx, nkstot, et, nks, et)  
-  call poolscatter (nbnd , nkstot, wg, nks, wg)  
+  call poolscatter (nbndx, nkstot, et, nks, et)
+  call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
   !
   ! read the charge density
   !
-  call io_pot ( - 1, trim(prefix)//'.rho', rho, nspin)  
-  ! 
+  call io_pot ( - 1, trim(prefix)//'.rho', rho, nspin)
+  !
   ! read the potential
   !
-  call io_pot ( - 1, trim(prefix)//'.pot', vr, nspin)  
+  call io_pot ( - 1, trim(prefix)//'.pot', vr, nspin)
   !
   ! re-calculate the local part of the pseudopotential vltot
   ! and the core correction charge (if any) - This is done here
@@ -278,14 +276,14 @@ subroutine read_file
   call setlocal
   call set_rhoc
   !
-  return  
-100 call error ('read_file', 'reading tau', abs (ios) )  
-101 call error ('read_file', 'reading ityp', abs (ios) )  
-102 call error ('read_file', 'reading irt', abs (ios) )  
-103 call error ('read_file', 'reading forces', abs (ios) )  
-104 call error ('read_file', 'reading tetrahedra', abs (ios) )  
-105 call error ('read_file', 'reading k-points', abs (ios) )  
-106 call error ('read_file', 'reading eigenvalues', abs (ios) )  
+  return
+100 call error ('read_file', 'reading tau', abs (ios) )
+101 call error ('read_file', 'reading ityp', abs (ios) )
+102 call error ('read_file', 'reading irt', abs (ios) )
+103 call error ('read_file', 'reading forces', abs (ios) )
+104 call error ('read_file', 'reading tetrahedra', abs (ios) )
+105 call error ('read_file', 'reading k-points', abs (ios) )
+106 call error ('read_file', 'reading eigenvalues', abs (ios) )
 end subroutine read_file
 
 #endif

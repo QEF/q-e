@@ -6,5 +6,5 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 module pencils
-integer, pointer :: do_fft_x (:,:), do_fft_y (:)
+integer, allocatable :: do_fft_x (:,:), do_fft_y (:)
 end module pencils

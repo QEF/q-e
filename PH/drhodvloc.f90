@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)  
+subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !-----------------------------------------------------------------------
   ! following comment is obsolete
   !    This subroutine computes the electronic term
@@ -16,13 +16,12 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !
 #include "machine.h"
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
-  implicit none 
+  use pwcom
+  use parameters, only : DP
+  use phcom
+  implicit none
 
-  integer :: nper, nu_i0  
+  integer :: nper, nu_i0
   ! input: the number of perturbation of this repres
   ! input: the initial position of the mode
   complex(kind=DP) :: drhoscf (nrxx, nspin, npertx), wdyn (3 * nat, 3 * &
@@ -31,30 +30,30 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   ! perturbations
   ! auxiliary matrix where drhodv is stored
 
-  integer :: ipert, is, nu_i, nu_j  
+  integer :: ipert, is, nu_i, nu_j
   ! counter on perturbations
   ! counter on spin polarizations
   ! counter on the i modes
   ! counter on the j modes
 
   complex(kind=DP) :: ZDOTC, dynwrk (3 * nat, 3 * nat)
-  complex(kind=DP), pointer :: dvloc (:)  
+  complex(kind=DP), allocatable :: dvloc (:)
   ! the scalar product functions
   ! auxiliary dynamical matrix
   ! d Vloc / dtau
 
-  call mallocate(dvloc, nrxxs)  
+  allocate (dvloc( nrxxs))    
 
-  call setv (2 * 3 * nat * 3 * nat, 0.d0, dynwrk, 1)  
+  call setv (2 * 3 * nat * 3 * nat, 0.d0, dynwrk, 1)
   !
   ! We need a sum over all perturbations
   !
 
-  do nu_j = 1, 3 * nat  
-     call compute_dvloc (nu_j, dvloc)  
-     do ipert = 1, nper  
-        nu_i = nu_i0 + ipert  
-        do is = 1, nspin  
+  do nu_j = 1, 3 * nat
+     call compute_dvloc (nu_j, dvloc)
+     do ipert = 1, nper
+        nu_i = nu_i0 + ipert
+        do is = 1, nspin
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + ZDOTC (nrxxs, drhoscf &
                 (1, is, ipert), 1, dvloc, 1) * omega / (nr1s * nr2s * nr3s)
         enddo
@@ -66,10 +65,10 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
 
-  call reduce (18 * nat * nat, dynwrk)  
+  call reduce (18 * nat * nat, dynwrk)
 #endif
 
-  call DAXPY (18 * nat * nat, 1.d0, dynwrk, 1, wdyn, 1)  
-  call mfree(dvloc)  
-  return  
+  call DAXPY (18 * nat * nat, 1.d0, dynwrk, 1, wdyn, 1)
+  deallocate(dvloc)
+  return
 end subroutine drhodvloc

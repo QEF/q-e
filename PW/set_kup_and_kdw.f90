@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)  
+subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   !-----------------------------------------------------------------------
   !     This routine sets the k vectors for the up and down spin wfc
   !
@@ -18,38 +18,38 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   !                the weights wk are halved !
   !
   use parameters, only : DP
-  implicit none  
+  implicit none
   !
   ! I/O variables first
   !
 
-  integer :: npk, isk (npk), nks  
+  integer :: npk, isk (npk), nks
   ! input-output: maximum allowed number of k
   ! output: spin associated to a given k-point
   ! input-output: starting and ending number of
-  real(kind=DP) :: xk (3, npk), wk (npk)  
+  real(kind=DP) :: xk (3, npk), wk (npk)
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   !
   !    And then the local variables
   !
 
-  integer :: ik, j  
+  integer :: ik, j
   ! counter on k
   ! counter
 
   if (2*nks.gt.npk) call error ('set_kup&kdw','too many k points',nks)
-  do ik = 1, nks  
-     do j = 1, 3  
-        xk(j,ik+nks) = xk(j,ik)  
+  do ik = 1, nks
+     do j = 1, 3
+        xk(j,ik+nks) = xk(j,ik)
      enddo
-     wk (ik)     = 0.5 * wk(ik)  
-     wk (ik+nks) =       wk(ik)  
-     isk(ik)     = 1  
-     isk(ik+nks) = 2  
+     wk (ik)     = 0.5 * wk(ik)
+     wk (ik+nks) =       wk(ik)
+     isk(ik)     = 1
+     isk(ik+nks) = 2
   enddo
 
-  nks = 2 * nks  
-  return  
+  nks = 2 * nks
+  return
 
 end subroutine set_kup_and_kdw

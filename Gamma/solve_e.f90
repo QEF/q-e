@@ -11,27 +11,26 @@ subroutine solve_e
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use cgcom
   !
   implicit none
   !
   integer :: ipol, nrec, i, ibnd, jbnd, info, iter, kpoint
-  real(kind=DP), pointer ::diag(:)
-  complex(kind=DP), pointer :: gr(:,:), h(:,:), work(:,:)
-  real(kind=DP), pointer :: overlap(:,:)
+  real(kind=DP), allocatable ::diag(:)
+  complex(kind=DP), allocatable :: gr(:,:), h(:,:), work(:,:)
+  real(kind=DP), allocatable :: overlap(:,:)
   logical :: orthonormal, precondition,startwith0,here
   character(len=7) :: fildwf, filbar
   external A_h
   !
   call start_clock('solve_e')
   !
-  call mallocate ( diag, npwx)
-  call mallocate ( overlap, nbnd, nbnd)
-  call mallocate ( work, npwx, nbnd)
-  call mallocate ( gr  , npwx, nbnd)
-  call mallocate ( h   , npwx, nbnd)
+  allocate  ( diag( npwx))    
+  allocate  ( overlap( nbnd, nbnd))    
+  allocate  ( work( npwx, nbnd))    
+  allocate  ( gr  ( npwx, nbnd))    
+  allocate  ( h   ( npwx, nbnd))    
   !
   kpoint = 1
   do i = 1,npw
@@ -91,11 +90,11 @@ subroutine solve_e
           &              ipol, iter
   end do
   !
-  call mfree(h)
-  call mfree(gr)
-  call mfree(overlap)
-  call mfree(work)
-  call mfree(diag)
+  deallocate(h)
+  deallocate(gr)
+  deallocate(overlap)
+  deallocate(work)
+  deallocate(diag)
   !
   call stop_clock('solve_e')
   !

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 Module para_const
-  Integer, parameter  :: maxproc  = 128  
+  Integer, parameter  :: maxproc  = 128
   ! maximum number of processors
 End Module para_const
 !
@@ -36,7 +36,7 @@ Module pffts
   Integer :: nkcp (maxproc)
   ! nkcp   : number of (wfs) columns per processor
   Integer :: npps (maxproc), ncps (maxproc), ncp0s (maxproc), &
-       ncplanes, ncts, nxxs 
+       ncplanes, ncts, nxxs
   ! npps   : number of plane per processor
   ! ncps   : number of (density) columns per proc
   ! ncp0s  : starting column for each processor
@@ -53,13 +53,13 @@ Module para
   Use pffts
   Use mp_global, only: nproc
   ! number of processors= # of tasks
-  Integer :: MPI_COMM_POOL, MPI_COMM_ROW  
+  Integer :: MPI_COMM_POOL, MPI_COMM_ROW
   ! comunicator handle intra-pool
   !      "        "    inter-pool
   !
   ! general parallel information
   !
-  Integer :: npool, nprocp, mypool, me, kunit  
+  Integer :: npool, nprocp, mypool, me, kunit
   ! number of pools
   ! number of processors in this task pool
   ! identifier of this task pool

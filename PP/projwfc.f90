@@ -8,10 +8,10 @@
 
 program projwfc
 
-  character :: nodenumber * 3  
-  call start_postproc (nodenumber)  
-  call do_projwfc (nodenumber)  
+  character :: nodenumber * 3
+  call start_postproc (nodenumber)
+  call do_projwfc (nodenumber)
 
-  call stop_pp  
-  stop  
+  call stop_pp
+  stop
 end program projwfc

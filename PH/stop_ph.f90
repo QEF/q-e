@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine stop_ph (flag)  
+subroutine stop_ph (flag)
   !-----------------------------------------------------------------------
   !
   ! Close all files and synchronize processes before stopping.
@@ -15,54 +15,53 @@ subroutine stop_ph (flag)
   ! or during execution with flag=.false. (does not remove 'recover')
   !
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
+  use pwcom
+  use parameters, only : DP
+  use phcom
 #ifdef PARA
   use para
 #endif
   implicit none
-#ifdef PARA  
+#ifdef PARA
   include 'mpif.h'
-  integer :: info  
+  integer :: info
 #endif
   logical :: flag, exst
-  
-  close (unit = iuwfc, status = 'keep')  
-  close (unit = iudwf, status = 'keep')  
-  close (unit = iubar, status = 'keep')  
+
+  close (unit = iuwfc, status = 'keep')
+  close (unit = iudwf, status = 'keep')
+  close (unit = iubar, status = 'keep')
 #ifdef PARA
-  if (me.ne.1) goto 100  
+  if (me.ne.1) goto 100
 #endif
-  if (fildrho.ne.' ') close (unit = iudrho, status = 'keep')  
+  if (fildrho.ne.' ') close (unit = iudrho, status = 'keep')
 #ifdef PARA
-100 continue  
+100 continue
 #endif
 
   if (flag) then
-     call seqopn (iunrec, 'recover','unformatted',exst)  
+     call seqopn (iunrec, 'recover','unformatted',exst)
      close (unit=iunrec,status='delete')
   end if
-  close (unit = iunigk, status = 'delete')  
-  call print_clock_ph  
-  call show_memory ()  
+  close (unit = iunigk, status = 'delete')
+  call print_clock_ph
+  call show_memory ()
 #ifdef PARA
-  call mpi_barrier (MPI_COMM_WORLD, info)  
+  call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call mpi_finalize (info)  
+  call mpi_finalize (info)
 #endif
 #ifdef T3D
   !
   ! set streambuffers off
   !
 
-  call set_d_stream (0)  
+  call set_d_stream (0)
 #endif
-  if (flag) then  
-     stop  
-  else  
-     stop 1  
+  if (flag) then
+     stop
+  else
+     stop 1
   endif
 
 end subroutine stop_ph

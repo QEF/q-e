@@ -11,7 +11,7 @@ subroutine data_structure_para
   !-----------------------------------------------------------------------
   !
   ! distribute columns to processes for parallel fft
-  ! columns are sets of g-vectors along z: g(k) = i1*b1+i2*b2+i3*b3 , 
+  ! columns are sets of g-vectors along z: g(k) = i1*b1+i2*b2+i3*b3 ,
   ! with g^2<gcut and (i1,i2) running over the (xy) plane.
   ! Columns are "active" for a given (i1,i2) if they contain a nonzero
   ! number of wavevectors
@@ -19,13 +19,12 @@ subroutine data_structure_para
 #ifdef PARA
   use para
   use pwcom
-  use allocate
   use mp, only: mp_sum
   use mp_global, only: intra_pool_comm
   !
   implicit none
   !
-  integer, pointer :: &
+  integer, allocatable :: &
        ngc(:),        &! number of g-vectors per column (dense grid)
        ngcs(:),       &! number of g-vectors per column (smooth grid
        ngcw(:),       &! number of wavefct plane waves per colum
@@ -41,17 +40,17 @@ subroutine data_structure_para
        ngps(maxproc), &! number of g-vectors per proc (smooth grid)
        ngpw(maxproc)   ! number of wavefct plane waves per proc
   !
-  integer np, nps1,           &! counters on planes 
+  integer np, nps1,           &! counters on planes
        nq, nqs,               &! counters on planes
        max1,min1,max2,min2,   &! aux. variables
        m1, m2, n1, n2, i, mc, &! generic counter
-       idum, nct_,            &! check variables 
+       idum, nct_,            &! check variables
        j,jj,                  &! counters on processors
        n1m1,n2m1,n3m1,        &! nr1-1 and so on
        i1, i2, i3,            &! counters on G space
        good_fft_dimension      ! a function with obvious meaning
   logical has_gzero
-  real(kind=8), pointer :: aux(:)  ! used to order columns
+  real(kind=8), allocatable :: aux(:)  ! used to order columns
   real(kind=8)  amod, gkcut        ! square modulus of G vectors
   !
   ! set the dimensions of fft arrays
@@ -71,25 +70,25 @@ subroutine data_structure_para
   !
   !    global variables allocated here
   !
-  call mallocate (ipc , ncplane)
-  call mallocate (ipcs, ncplanes)
+  allocate  (ipc ( ncplane))    
+  allocate  (ipcs( ncplanes))    
   !
   !    local variables to be deallocated at the end
   !
-  call mallocate (ngc , ncplane)
-  call mallocate (ngcs, ncplane)
-  call mallocate (ngcw, ncplane)
-  call mallocate (in1 , ncplane)
-  call mallocate (in2 , ncplane)
-  call mallocate (index,ncplane)
-  call mallocate (aux,  ncplane)
+  allocate  (ngc ( ncplane))    
+  allocate  (ngcs( ncplane))    
+  allocate  (ngcw( ncplane))    
+  allocate  (in1 ( ncplane))    
+  allocate  (in2 ( ncplane))    
+  allocate  (index(ncplane))    
+  allocate  (aux(  ncplane))    
   !
   ! set the number of plane per process
   !
   if (nr3.lt.nproc) call error('set_fft_para',                      &
-       &                'some processors have no planes ',-1)      
+       &                'some processors have no planes ',-1)
   if (nr3s.lt.nproc) call error('set_fft_para',                     &
-       &                'some processors have no smooth planes ',-1)      
+       &                'some processors have no smooth planes ',-1)
   !
   if (nproc.eq.1) then
      npp(1) = nr3
@@ -122,7 +121,7 @@ subroutine data_structure_para
   !
   ! NOTA BENE: the exact limits for a correctly sized FFT grid are:
   ! -nr/2,..,+nr/2  for nr even; -(nr-1)/2,..,+(nr-1)/2  for nr odd.
-  ! If the following limits are increased, a slightly undersized fft 
+  ! If the following limits are increased, a slightly undersized fft
   ! grid, with some degree of G-vector refolding, can be used
   ! (at your own risk - a check is done in ggen).
   !
@@ -130,7 +129,7 @@ subroutine data_structure_para
   n2m1=nr2/2
   n3m1=nr3/2
   !
-  gkcut = ecutwfc / tpiba2 
+  gkcut = ecutwfc / tpiba2
   do i1=-n1m1,n1m1
      do i2=-n2m1,n2m1
         !
@@ -145,7 +144,7 @@ subroutine data_structure_para
         do i3 = -n3m1,n3m1
            amod = (bg(1,1)*i1 + bg(1,2)*i2 + bg(1,3)*i3)**2 +  &
                   (bg(2,1)*i1 + bg(2,2)*i2 + bg(2,3)*i3)**2 +  &
-                  (bg(3,1)*i1 + bg(3,2)*i2 + bg(3,3)*i3)**2 
+                  (bg(3,1)*i1 + bg(3,2)*i2 + bg(3,3)*i3)**2
            if (amod.le.gcutm)  ngc (nct)= ngc (nct)+ 1
            if (amod.le.gcutms) ngcs(nct)= ngcs(nct)+ 1
            if (amod.le.gkcut)  ngcw(nct)= ngcw(nct)+ 1
@@ -177,13 +176,13 @@ subroutine data_structure_para
   if(ncts.eq.0) call error('set_fft_para','number smooth column 0', 1)
   !
   !   Sort the columns. First the column with the largest number of G
-  !   vectors on the wavefunction sphere (active columns), 
+  !   vectors on the wavefunction sphere (active columns),
   !   then on the smooth sphere, then on the big sphere. Dirty trick:
   !
   do mc = 1,nct
      aux(mc)=-(ngcw(mc)*nrx3**2 + ngcs(mc)*nrx3 + ngc(mc))
   end do
-  call hpsort(nct,aux,index) 
+  call hpsort(nct,aux,index)
   !
   ! assign columns to processes
   !
@@ -209,7 +208,7 @@ subroutine data_structure_para
      !
      ! only half of the columns, plus column (0,0), are scanned:
      ! column (-i1,-i2) must be assigned to the same proc as column (i1,i2)
-     ! 
+     !
      ! ic  :  position, in fft notation, in dense grid, of column ( i1, i2)
      ! icm :      "         "      "          "    "         "    (-i1,-i2)
      ! ics :      "         "      "        smooth "         "    ( i1, i2)
@@ -243,7 +242,7 @@ subroutine data_structure_para
      if (ngcw(i).gt.0) then
         !
         ! this is an active column: find which processor has currently
-        ! the smallest number of plane waves 
+        ! the smallest number of plane waves
         !
         do j=1,nproc
            if (ngpw(j).lt.ngpw(jj)) jj = j
@@ -341,7 +340,7 @@ subroutine data_structure_para
   do i=1,nproc
      if(ngpw(i).eq.0) call error('set_fft_para', &
           &        'some processors have no pencils, not yet implemented',1)
-     if (i.eq.1) then 
+     if (i.eq.1) then
         ncp0(i) = 0
         ncp0s(i)= 0
      else
@@ -358,8 +357,8 @@ subroutine data_structure_para
   !
   !- active columns first........
   !
-  call mallocate(icpl, nct)
-  call mallocate(icpls, ncts)
+  allocate (icpl( nct))    
+  allocate (icpls( ncts))    
   !
   do j=1,nproc
      ncp_(j) = 0
@@ -368,7 +367,7 @@ subroutine data_structure_para
      if (ipc(mc).gt.0) then
         j = ipc(mc)
         ncp_(j) = ncp_(j) + 1
-        icpl(ncp_(j) + ncp0(j)) = mc 
+        icpl(ncp_(j) + ncp0(j)) = mc
         if (j.eq.me) then
            ipc(mc) = ncp_(j)
         else
@@ -390,7 +389,7 @@ subroutine data_structure_para
      if (ipc(mc).lt.0) then
         j = -ipc(mc)
         ncp_(j) = ncp_(j) + 1
-        icpl(ncp_(j) + ncp0(j)) = mc 
+        icpl(ncp_(j) + ncp0(j)) = mc
         if (j.eq.me) then
            ipc(mc) = ncp_(j)
         else
@@ -410,7 +409,7 @@ subroutine data_structure_para
   if (nct_.ne.nct)                                                  &
        &     call error('set_fft_para','nct_.ne.nct',1)
   !
-  !   now compute the arrays ipcs and icpls 
+  !   now compute the arrays ipcs and icpls
   !   (as ipc and icpls, for the smooth grid)
   !
   !   active columns first...
@@ -464,13 +463,13 @@ subroutine data_structure_para
   if (nct_.ne.ncts)                                                 &
        &     call error('set_fft_para','nct_.ne.ncts',1)
   !
-  call mfree (aux)
-  call mfree (index)
-  call mfree (in2)
-  call mfree (in1)
-  call mfree (ngcw)
-  call mfree (ngcs)
-  call mfree (ngc )
+  deallocate (aux)
+  deallocate (index)
+  deallocate (in2)
+  deallocate (in1)
+  deallocate (ngcw)
+  deallocate (ngcs)
+  deallocate (ngc )
   !
   ngm_l  = ngm
   ngms_l = ngms

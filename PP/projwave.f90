@@ -16,8 +16,8 @@ subroutine do_projwfc (nodenumber)
   ! tmp_dir     temporary directory where files resides
   ! filproj     output file containing the results
   !
-  use pwcom  
-  use io  
+  use pwcom
+  use io
 
   implicit none
   character (len=3)  :: nodenumber
@@ -25,38 +25,37 @@ subroutine do_projwfc (nodenumber)
   integer :: ios
   namelist / inputpp / tmp_dir, prefix, filproj
   !
-  nd_nmbr = nodenumber  
+  nd_nmbr = nodenumber
   !
   !   set default values for variables in namelist
   !
-  prefix = 'pwscf'  
-  tmp_dir = './'  
-  filproj = ' '  
+  prefix = 'pwscf'
+  tmp_dir = './'
+  filproj = ' '
   !
-  read (5, inputpp, err = 200, iostat = ios)  
-200 call error ('projwave', 'reading inputpp namelist', abs (ios) )  
+  read (5, inputpp, err = 200, iostat = ios)
+200 call error ('projwave', 'reading inputpp namelist', abs (ios) )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  call read_file  
-  call openfil  
+  call read_file
+  call openfil
   !
-  call projwave (filproj)  
+  call projwave (filproj)
   !
-  return  
+  return
 end subroutine do_projwfc
 
 !-----------------------------------------------------------------------
-subroutine projwave (filproj)  
+subroutine projwave (filproj)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom  
-  use allocate
-  use becmod  
-  use io  
+  use pwcom
+  use becmod
+  use io
 #ifdef PARA
-  use para  
+  use para
 #endif
   implicit none
   character (len=14) :: filproj
@@ -76,36 +75,36 @@ subroutine projwave (filproj)
   integer, allocatable :: index(:)
   !
   !
-  if (filproj.eq.' ') return  
+  if (filproj.eq.' ') return
   write (6, '(/5x,"Calling projwave .... ", &
        &            /5x,"Projections are written on file ",a)') filproj
 
   !
   allocate(swfcatom (npwx , natomwfc ) )
   allocate(wfcatom (npwx, natomwfc) )
-  allocate(proj (natomwfc, nbnd, nkstot) ) 
+  allocate(proj (natomwfc, nbnd, nkstot) )
   allocate(overlap (natomwfc, natomwfc) )
   allocate(e (natomwfc) )
-  
+
   proj   = 0.d0
   overlap= (0.d0,0.d0)
   !
   ! initialize D_Sl for l=1 and l=2, for l=0 D_S0 is 1
   !
-  call d_matrix (d1, d2)  
+  call d_matrix (d1, d2)
   !
   ! fill structure nlmchi
   !
   allocate (nlmchi(natomwfc))
   nwfc=0
-  lmax_wfc = 0  
-  do na = 1, nat  
-     nt = ityp (na)  
-     do n = 1, nchi (nt)  
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then  
-           l = lchi (n, nt)  
-           lmax_wfc = max (lmax_wfc, l )  
-           do m = 1, 2 * l + 1  
+  lmax_wfc = 0
+  do na = 1, nat
+     nt = ityp (na)
+     do n = 1, nchi (nt)
+        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
+           l = lchi (n, nt)
+           lmax_wfc = max (lmax_wfc, l )
+           do m = 1, 2 * l + 1
               nwfc=nwfc+1
               nlmchi(nwfc)%na = na
               nlmchi(nwfc)%n  =  n
@@ -116,24 +115,24 @@ subroutine projwave (filproj)
      enddo
   enddo
 
-  if (lmax_wfc.gt.2) call error ('projwave', 'l > 2 not yet implemented', 1) 
-  if (nwfc.ne.natomwfc) call error ('projwave', 'wrong # of atomic wfcs?', 1)  
+  if (lmax_wfc.gt.2) call error ('projwave', 'l > 2 not yet implemented', 1)
+  if (nwfc.ne.natomwfc) call error ('projwave', 'wrong # of atomic wfcs?', 1)
   !
   !    loop on k points
   !
-  call init_us_1  
+  call init_us_1
   !
   do ik = 1, nks
      npw = npwx
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)  
+     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
 
-     call atomic_wfc (ik, wfcatom)  
-     call init_us_2 (npw, igk, xk (1, ik), vkb)  
+     call atomic_wfc (ik, wfcatom)
+     call init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     call ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)  
+     call ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
 
-     call s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)  
+     call s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      !
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
@@ -141,23 +140,23 @@ subroutine projwave (filproj)
      call ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
           wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
 #ifdef PARA
-     call reduce (2 * natomwfc * natomwfc, overlap)  
+     call reduce (2 * natomwfc * natomwfc, overlap)
 #endif
      !
      ! calculate O^{-1/2}
      !
-     allocate(work (natomwfc, natomwfc) ) 
-     call cdiagh (natomwfc, overlap, natomwfc, e, work)  
-     do i = 1, natomwfc  
-        e (i) = 1.d0 / dsqrt (e (i) )  
+     allocate(work (natomwfc, natomwfc) )
+     call cdiagh (natomwfc, overlap, natomwfc, e, work)
+     do i = 1, natomwfc
+        e (i) = 1.d0 / dsqrt (e (i) )
      enddo
-     do i = 1, natomwfc  
-        do j = i, natomwfc  
-           overlap (i, j) = (0.d0, 0.d0)  
-           do k = 1, natomwfc  
-              overlap (i, j) = overlap (i, j) + e (k) * work (j, k) * conjg (work (i, k) )  
+     do i = 1, natomwfc
+        do j = i, natomwfc
+           overlap (i, j) = (0.d0, 0.d0)
+           do k = 1, natomwfc
+              overlap (i, j) = overlap (i, j) + e (k) * work (j, k) * conjg (work (i, k) )
            enddo
-           if (j.ne.i) overlap (j, i) = conjg (overlap (i, j))  
+           if (j.ne.i) overlap (j, i) = conjg (overlap (i, j))
         enddo
      enddo
      deallocate (work)
@@ -168,23 +167,23 @@ subroutine projwave (filproj)
           swfcatom, npwx,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx)
      !
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>
-     ! 
+     !
      allocate(proj0(natomwfc,nbnd) )
      call ZGEMM ('c', 'n', natomwfc, nbnd, npw, (1.d0, 0.d0) , &
           wfcatom, npwx, evc, npwx, (0.d0, 0.d0) , proj0, natomwfc)
 #ifdef PARA
-     call reduce (2 * natomwfc * nbnd, proj0)  
+     call reduce (2 * natomwfc * nbnd, proj0)
 #endif
      !
      ! symmetrize the projections
-     !     
+     !
      allocate(work1 (nbnd) )
      do nwfc = 1, natomwfc
         !
         !  atomic wavefunction nwfc is on atom na
         !
         na= nlmchi(nwfc)%na
-        n = nlmchi(nwfc)%n 
+        n = nlmchi(nwfc)%n
         l = nlmchi(nwfc)%l
         m = nlmchi(nwfc)%m
         !
@@ -201,22 +200,22 @@ subroutine projwave (filproj)
            !
            !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
            !
-           if (l.eq.0) then  
+           if (l.eq.0) then
               work1(:) = proj0 (nwfc1 + 1,:)
-           else if (l.eq.1) then 
-              work1(:) = 0.d0  
-              do m1 = 1, 3  
+           else if (l.eq.1) then
+              work1(:) = 0.d0
+              do m1 = 1, 3
                  work1(:) = work1(:) + d1 (m, m1, isym) * &
                       proj0 (nwfc1 + m1,:)
               enddo
-           else if (l.eq.2) then 
-              work1(:) = 0.d0  
-              do m1 = 1, 5  
+           else if (l.eq.2) then
+              work1(:) = 0.d0
+              do m1 = 1, 5
                  work1(:) = work1(:) + d2 (m, m1, isym) * &
                       proj0 (nwfc1 + m1,:)
               enddo
            endif
-           do ibnd = 1, nbnd  
+           do ibnd = 1, nbnd
               proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
                    work1(ibnd) * conjg (work1(ibnd)) / nsym
            enddo
@@ -230,15 +229,15 @@ subroutine projwave (filproj)
   !
   !   recover the vector proj over the pools
   !
-  call poolrecover (et, nbndx, nkstot, nks)  
-  call poolrecover (proj, nbnd * natomwfc, nkstot, nks)  
+  call poolrecover (et, nbndx, nkstot, nks)
+  call poolrecover (proj, nbnd * natomwfc, nkstot, nks)
   !
-  if (me.eq.1.and.mypool.eq.1) then  
+  if (me.eq.1.and.mypool.eq.1) then
 #endif
      !
      ! write on the output file
      !
-     call seqopn (4, filproj, 'formatted', exst)  
+     call seqopn (4, filproj, 'formatted', exst)
      write(4,'(/"Projection on atomic states:"/)')
      do nwfc = 1, natomwfc
         write(4,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
@@ -248,10 +247,10 @@ subroutine projwave (filproj)
      end do
      !
      allocate(index (natomwfc) )
-     do ik = 1, nkstot  
+     do ik = 1, nkstot
         write (4, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
-        do ibnd = 1, nbnd  
-           write (4, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev  
+        do ibnd = 1, nbnd
+           write (4, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev
            !
            ! sort projections by magnitude, in decreasing order
            !
@@ -280,7 +279,7 @@ subroutine projwave (filproj)
            end do
            psum = 0.d0
            do nwfc = 1, natomwfc
-              psum = psum + proj (nwfc, ibnd, ik)  
+              psum = psum + proj (nwfc, ibnd, ik)
            end do
            write (4, '(4x,"|psi|^2 = ",f5.3)') psum
            !
@@ -292,7 +291,7 @@ subroutine projwave (filproj)
      !
      allocate ( charges (nat, 0:lmax_wfc ) )
      charges = 0.0
-     do ik = 1, nkstot  
+     do ik = 1, nkstot
         do ibnd = 1, nbnd
            do nwfc = 1, natomwfc
               na= nlmchi(nwfc)%na
@@ -317,7 +316,7 @@ subroutine projwave (filproj)
              na, totcharge, ( charges(na,l), l= 0,lmax_wfc)
      end do
      psum = psum / nelec
-     write (4, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum  
+     write (4, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
      ! The spilling parameter measures the ability of the basis provided by
@@ -325,7 +324,7 @@ subroutine projwave (filproj)
      ! by measuring how much of the subspace of the Hamiltonian
      ! eigenstates falls outside the subspace spanned by the atomic basis
      !
-     close (unit=4)  
+     close (unit=4)
      deallocate (charges)
 #ifdef PARA
   endif
@@ -334,9 +333,9 @@ subroutine projwave (filproj)
   deallocate (e)
   deallocate (overlap)
   deallocate (proj)
-  deallocate (wfcatom)  
-  deallocate (swfcatom)  
+  deallocate (wfcatom)
+  deallocate (swfcatom)
 
-  return  
+  return
 
 end subroutine projwave

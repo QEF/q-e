@@ -14,25 +14,25 @@ subroutine gweights (nks, wk, nbndx, nbnd, nelec, degauss, ngauss, &
   !--------------------------------------------------------------------
   !     calculates weights with the gaussian spreading technique
   use parameters
-  implicit none  
+  implicit none
   !
-  integer :: nks, nbndx, nbnd, ngauss  
-  real(kind=DP) :: wk (nks), et (nbndx, nks), nelec, degauss  
+  integer :: nks, nbndx, nbnd, ngauss
+  real(kind=DP) :: wk (nks), et (nbndx, nks), nelec, degauss
 
-  real(kind=DP) :: wg (nbnd, nks), ef, demet  
-  real(kind=DP) :: wgauss, w1gauss  
-  integer :: kpoint, ibnd  
+  real(kind=DP) :: wg (nbnd, nks), ef, demet
+  real(kind=DP) :: wgauss, w1gauss
+  integer :: kpoint, ibnd
 
 
 
-  external efermig, wgauss, w1gauss  
+  external efermig, wgauss, w1gauss
   ! Calculate the Fermi energy ef
 
   call efermig (et, nbndx, nbnd, nks, nelec, wk, degauss, ngauss, &
        ef)
-  demet = 0.d0  
-  do kpoint = 1, nks  
-     do ibnd = 1, nbnd  
+  demet = 0.d0
+  do kpoint = 1, nks
+     do ibnd = 1, nbnd
         ! Calculate the gaussian weights
 
 
@@ -45,5 +45,5 @@ subroutine gweights (nks, wk, nbndx, nbnd, nelec, degauss, ngauss, &
      enddo
 
   enddo
-  return  
+  return
 end subroutine gweights

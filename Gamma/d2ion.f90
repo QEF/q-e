@@ -59,7 +59,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      if(upperbound.lt.1.0e-6) go to 20
      !
      gt2 = gg(ng)*tpiba2
-     fac = -e2*fpi*tpiba2/omega*exp(-gt2/alpha/4.0)/gt2 
+     fac = -e2*fpi*tpiba2/omega*exp(-gt2/alpha/4.0)/gt2
      do na = 1,nat
         nta= ityp(na)
         fnat = 0.0

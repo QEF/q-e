@@ -6,75 +6,75 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine stop_pw (flag)  
+subroutine stop_pw (flag)
   !--------------------------------------------------------------------
   !
   ! Close all files and synchronize processes before stopping.
   ! Called at the end of the run with flag=.true. (removes 'restart')
   ! or during execution with flag=.false. (does not remove 'restart')
   !
-  use pwcom  
+  use pwcom
   implicit none
-  logical :: flag  
+  logical :: flag
 #ifdef PARA
-  include 'mpif.h'  
-  integer :: info  
+  include 'mpif.h'
+  integer :: info
 #endif
   logical exst
   !
   !  iunwfc contains wavefunctions and is kept open during
   !  the execution - close and save the file
   !
-  close (unit = iunwfc, status = 'keep')  
+  close (unit = iunwfc, status = 'keep')
   if (flag) then
      !
      !  all other files must be reopened and removed
      !
-     call seqopn (iunres, 'restart','unformatted',exst)  
+     call seqopn (iunres, 'restart','unformatted',exst)
      close (unit=iunres,status='delete')
-     call seqopn (4, 'filebfgs','unformatted',exst)  
+     call seqopn (4, 'filebfgs','unformatted',exst)
      close (unit=4,status='delete')
-     call seqopn (4, 'filemd','formatted',exst)  
+     call seqopn (4, 'filemd','formatted',exst)
      close (unit=4,status='delete')
   endif
   !
   !  iunigk is kept open during the execution - close and remove
   !
-  close (unit = iunigk, status = 'delete')  
-  call print_clock_pw  
+  close (unit = iunigk, status = 'delete')
+  call print_clock_pw
 
-  call show_memory ()  
+  call show_memory ()
 #ifdef PARA
-  call mpi_barrier (MPI_COMM_WORLD, info)  
+  call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call mpi_finalize (info)  
+  call mpi_finalize (info)
 #endif
 #ifdef T3D
   !
   ! set streambuffers off
   !
 
-  call set_d_stream (0)  
+  call set_d_stream (0)
 #endif
-  if (flag) then  
-     stop  
-  else  
-     stop 1  
+  if (flag) then
+     stop
+  else
+     stop 1
   endif
 end subroutine stop_pw
 !
 !--------------------------------------------------------------------
 
-subroutine closefile  
+subroutine closefile
   !--------------------------------------------------------------------
   !
   ! Close all files and synchronize processes before stopping
   ! Called by "sigcatch" when it receives a signal
   !
-  write (6, '(5x,"Signal Received, stopping ... ")')  
+  write (6, '(5x,"Signal Received, stopping ... ")')
 
-  call stop_pw (.false.)  
-  return  
+  call stop_pw (.false.)
+  return
 end subroutine closefile
 
 !--------------------------------------------------------------------

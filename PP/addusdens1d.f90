@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine addusdens1d (plan, prho)  
+subroutine addusdens1d (plan, prho)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the charge density the part which is due to
@@ -17,7 +17,7 @@ subroutine addusdens1d (plan, prho)
   !
 #include "machine.h"
   use parameters, only: DP
-  use pwcom  
+  use pwcom
   !
   !     here the local variables
   !
@@ -46,35 +46,35 @@ subroutine addusdens1d (plan, prho)
   ! imaginary part of qg
   ! the spherical harmonics
 
-  complex(kind=DP) :: skk, prho (nrxx), qg (nrx3), aux (10000)  
+  complex(kind=DP) :: skk, prho (nrxx), qg (nrx3), aux (10000)
   ! auxiliary variables
   ! auxiliary space for the charge
   ! auxiliary variable for FFT
   ! auxiliary variable for rho(G,nspin)
 
-  call ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)  
-  do ig = 1, ngm1d  
-     qmod (ig) = sqrt (gg1d (ig) )  
+  call ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
+  do ig = 1, ngm1d
+     qmod (ig) = sqrt (gg1d (ig) )
   enddo
 
-  call setv (2 * nrx3, 0.d0, aux, 1)  
-  if (ngm1d.gt.0) then  
+  call setv (2 * nrx3, 0.d0, aux, 1)
+  if (ngm1d.gt.0) then
 
-     call ylmr2 (lqx * lqx, ngm1d, g1d, gg1d, ylmk0)  
-     do nt = 1, ntyp  
-        if (tvanp (nt) ) then  
-           ijh = 0  
-           do ih = 1, nh (nt)  
-              do jh = ih, nh (nt)  
-                 call qvan2 (ngm1d, ih, jh, nt, qmod, qgm, ylmk0)  
-                 ijh = ijh + 1  
-                 do na = 1, nat  
+     call ylmr2 (lqx * lqx, ngm1d, g1d, gg1d, ylmk0)
+     do nt = 1, ntyp
+        if (tvanp (nt) ) then
+           ijh = 0
+           do ih = 1, nh (nt)
+              do jh = ih, nh (nt)
+                 call qvan2 (ngm1d, ih, jh, nt, qmod, qgm, ylmk0)
+                 ijh = ijh + 1
+                 do na = 1, nat
 
-                    if (ityp (na) .eq.nt) then  
+                    if (ityp (na) .eq.nt) then
                        !
                        !  Multiply becsum and qg with the correct structure factor
                        !
-                       do ig = 1, ngm1d  
+                       do ig = 1, ngm1d
 
                           skk = eigts1 (ig1 (ig1dto3d (ig) ), na) * eigts2 (ig2 ( &
                                ig1dto3d (ig) ), na) * eigts3 (ig3 (ig1dto3d (ig) ), &
@@ -91,36 +91,36 @@ subroutine addusdens1d (plan, prho)
      !
      !     adds to the charge density and converts to real space
      !
-     call setv (2 * nrx3, 0.d0, qg, 1)  
-     do ig = 1, ngm1d  
-        qg (nl1d (ig) ) = aux (ig) + prho (nl (ig1dto3d (ig) ) )  
+     call setv (2 * nrx3, 0.d0, qg, 1)
+     do ig = 1, ngm1d
+        qg (nl1d (ig) ) = aux (ig) + prho (nl (ig1dto3d (ig) ) )
      enddo
-  else  
-     call setv (2 * nrx3, 0.d0, qg, 1)  
+  else
+     call setv (2 * nrx3, 0.d0, qg, 1)
   endif
 #ifdef PARA
-  call reduce (2 * nrx3, qg)  
+  call reduce (2 * nrx3, qg)
 #endif
-  dimz = alat * celldm (3)  
+  dimz = alat * celldm (3)
 #ifdef PARA
   !
   ! NB1: cft_1 is present only in the parallel case
   ! NB2: cft_1 is no longer in-place
   !
-  call cft_1 (qg, 1, nr3, nrx3, 1, aux)  
-  do ig = 1, nr3  
-     plan (ig) = real (aux (ig) ) * omega / dimz  
+  call cft_1 (qg, 1, nr3, nrx3, 1, aux)
+  do ig = 1, nr3
+     plan (ig) = real (aux (ig) ) * omega / dimz
   enddo
 #else
-  do ig = 1, nr3  
-     qgr (ig) = real (qg (ig) )  
-     qgi (ig) = DIMAG (qg (ig) )  
+  do ig = 1, nr3
+     qgr (ig) = real (qg (ig) )
+     qgi (ig) = DIMAG (qg (ig) )
   enddo
-  call cft (qgr, qgi, nr3, nr3, nr3, 1)  
-  do ig = 1, nr3  
-     plan (ig) = qgr (ig) * omega / dimz  
+  call cft (qgr, qgi, nr3, nr3, nr3, 1)
+  do ig = 1, nr3
+     plan (ig) = qgr (ig) * omega / dimz
   enddo
 #endif
 
-  return  
+  return
 end subroutine addusdens1d

@@ -17,7 +17,6 @@ subroutine generate_dynamical_matrix   &
   !
 #include "machine.h"
   use parameters, only : DP
-  use allocate
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
@@ -26,10 +25,10 @@ subroutine generate_dynamical_matrix   &
   integer :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
        i, j, k, l, mu_k, mu_l
   integer table(48,48), invs(3,3,48)
-  real(kind=DP), pointer :: irreducible_dyn(:,:)
+  real(kind=DP), allocatable :: irreducible_dyn(:,:)
   real(kind=DP) :: work(3,3)
   logical :: no_equivalent_atoms
-  integer, pointer ::done(:,:)
+  integer, allocatable ::done(:,:)
   !
   no_equivalent_atoms=.true.
   do na = 1,nat
@@ -37,12 +36,12 @@ subroutine generate_dynamical_matrix   &
   end do
   if (no_equivalent_atoms) return
   !
-  call mallocate ( irreducible_dyn, 3*nat, 3*nat)
+  allocate  ( irreducible_dyn( 3*nat, 3*nat))    
   call DCOPY(3*nat*3*nat,dyn,1,irreducible_dyn,1)
   !
   ! recalculate S^-1 (once again)
   !
-  call multable (nsym,s,table) 
+  call multable (nsym,s,table)
   call inverse_s(nsym,s,table,invs)
   !
   do na = 1,nat
@@ -66,7 +65,7 @@ subroutine generate_dynamical_matrix   &
      end if
   end do
   !
-  call mallocate (done, 3*nat, 3*nat)
+  allocate  (done( 3*nat, 3*nat))    
   do smu_i = 1,3*nat
      do smu_j = 1,3*nat
         dyn(smu_i,smu_j) = 0.0
@@ -103,8 +102,8 @@ subroutine generate_dynamical_matrix   &
      end do
   end do
   !
-  call mfree(done)
-  call mfree(irreducible_dyn)
+  deallocate(done)
+  deallocate(irreducible_dyn)
   !
   do na = 1,nat
      do nb = 1,nat

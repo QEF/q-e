@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)  
+subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   !-----------------------------------------------------------------------
   !    This routine is a driver for the solution of the linear system whic
   !    defines the change of the wavefunction due to the perturbation.
@@ -32,10 +32,9 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   use pwcom
   use phcom
   use d3com
-  use allocate
- 
+
   implicit none
-  integer :: irr, npe, imode0, isw_sl  
+  integer :: irr, npe, imode0, isw_sl
   ! input: the irreducible representation
   ! input: the number of perturbation
   ! input: the position of the modes
@@ -63,14 +62,14 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! dummy variable
   ! auxiliary dpsi dV matrix element between k+q  and  k wavefunctions
 
-  real (8), pointer :: h_diag (:,:)
+  real (8), allocatable :: h_diag (:,:)
   ! the diagonal part of the Hamiltonian
-  complex (8), pointer :: drhoscf (:,:), dvloc (:,:), spsi (:), auxg (:), &
+  complex (8), allocatable :: drhoscf (:,:), dvloc (:,:), spsi (:), auxg (:), &
        dpsiaux (:,:)
   ! the variation of the charge
   ! variation of local part of the potenti
   ! the function spsi
-  logical :: q0mode_f, conv_root, lmetq0  
+  logical :: q0mode_f, conv_root, lmetq0
   ! if .true. it is useless to compute this
   ! true if linter is converged
   ! true if xq=(0,0,0) in a metal
@@ -92,121 +91,121 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! integer variable for I/O control
   ! mode index
 
-  external ch_psi_all2, cg_psi  
+  external ch_psi_all2, cg_psi
   !
-  call start_clock ('solve_linter')  
-  call mallocate (drhoscf, nrxx, npe)  
-  call mallocate (dvloc, nrxx, npe)  
-  call mallocate (spsi, npwx)  
-  call mallocate (auxg, npwx)  
-  if (degauss.ne.0.d0) call mallocate (dpsiaux, npwx, nbnd)
-  call mallocate (h_diag, npwx, nbnd)  
-  ltaver = 0  
-  lintercall = 0  
-  lmetq0 = (degauss.ne.0.d0) .and. (isw_sl.ge.3)  
+  call start_clock ('solve_linter')
+  allocate  (drhoscf( nrxx, npe))    
+  allocate  (dvloc( nrxx, npe))    
+  allocate  (spsi( npwx))    
+  allocate  (auxg( npwx))    
+  if (degauss.ne.0.d0) allocate  (dpsiaux( npwx, nbnd))    
+  allocate  (h_diag( npwx, nbnd))    
+  ltaver = 0
+  lintercall = 0
+  lmetq0 = (degauss.ne.0.d0) .and. (isw_sl.ge.3)
 
-  thresh = ethr_ph  
-  if (isw_sl.eq.1) then  
-     call DCOPY (3, xq, 1, xq_, 1)  
-  else  
-     call setv (3, 0.d0, xq_, 1)  
+  thresh = ethr_ph
+  if (isw_sl.eq.1) then
+     call DCOPY (3, xq, 1, xq_, 1)
+  else
+     call setv (3, 0.d0, xq_, 1)
   endif
   !
   ! calculates the variation of the local part of the K-S potential
   !
-  do ipert = 1, npe  
-     mode = imode0 + ipert  
-     call dvscf (mode, dvloc (1, ipert), xq_)  
+  do ipert = 1, npe
+     mode = imode0 + ipert
+     call dvscf (mode, dvloc (1, ipert), xq_)
   enddo
-  call setv (2 * npe * nrxx, 0.d0, drhoscf, 1)  
-  rewind (unit = iunigk)  
+  call setv (2 * npe * nrxx, 0.d0, drhoscf, 1)
+  rewind (unit = iunigk)
 
-  do ik = 1, nksq  
-     read (iunigk, err = 100, iostat = ios) npw, igk  
-100  call error ('solve_linter_d3', 'reading igk', abs (ios) )  
-     if (lgamma) then  
-        ikk = ik  
-        ikq = ik  
-        npwq = npw  
-     else  
-        read (iunigk, err = 200, iostat = ios) npwq, igkq  
-200     call error ('solve_linter_d3', 'reading igkq', abs (ios) )  
-        if (isw_sl.eq.1) then  
-           ikk = 2 * ik - 1  
-           ikq = 2 * ik  
-        elseif (isw_sl.eq.2) then  
-           ikk = 2 * ik  
-           ikq = 2 * ik  
-           npw = npwq  
-           do ig = 1, npwx  
-              igk (ig) = igkq (ig)  
+  do ik = 1, nksq
+     read (iunigk, err = 100, iostat = ios) npw, igk
+100  call error ('solve_linter_d3', 'reading igk', abs (ios) )
+     if (lgamma) then
+        ikk = ik
+        ikq = ik
+        npwq = npw
+     else
+        read (iunigk, err = 200, iostat = ios) npwq, igkq
+200     call error ('solve_linter_d3', 'reading igkq', abs (ios) )
+        if (isw_sl.eq.1) then
+           ikk = 2 * ik - 1
+           ikq = 2 * ik
+        elseif (isw_sl.eq.2) then
+           ikk = 2 * ik
+           ikq = 2 * ik
+           npw = npwq
+           do ig = 1, npwx
+              igk (ig) = igkq (ig)
            enddo
-        elseif (isw_sl.eq.3) then  
-           ikk = 2 * ik - 1  
-           ikq = 2 * ik - 1  
-           npwq = npw  
-           do ig = 1, npwx  
-              igkq (ig) = igk (ig)  
+        elseif (isw_sl.eq.3) then
+           ikk = 2 * ik - 1
+           ikq = 2 * ik - 1
+           npwq = npw
+           do ig = 1, npwx
+              igkq (ig) = igk (ig)
            enddo
         endif
      endif
-     call init_us_2 (npw , igk , xk (1, ikk), vkb0)  
-     call init_us_2 (npwq, igkq, xk (1, ikq), vkb )  
+     call init_us_2 (npw , igk , xk (1, ikk), vkb0)
+     call init_us_2 (npwq, igkq, xk (1, ikq), vkb )
      !
      ! reads unperturbed wavefuctions psi(k) and psi(k+q)
      !
-     call davcio (evc, lrwfc, iuwfc, ikk, - 1)  
-     if (.not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, - 1)  
+     call davcio (evc, lrwfc, iuwfc, ikk, - 1)
+     if (.not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, - 1)
      !
      ! compute the kinetic energy
      !
-     do ig = 1, npwq  
+     do ig = 1, npwq
         g2kin (ig) = ( (xk (1, ikq) + g (1, igkq (ig) ) ) **2 + &
                        (xk (2, ikq) + g (2, igkq (ig) ) ) **2 + &
                        (xk (3, ikq) + g (3, igkq (ig) ) ) **2) * tpiba2
      enddo
      !
-     do ipert = 1, npe  
+     do ipert = 1, npe
 
         q0mode_f = (.not.q0mode (imode0 + ipert) ) .and. (.not.lgamma) &
              .and. (isw_sl.ne.1)
-        if (q0mode_f) then  
-           call setv (2 * nbnd * nbnd, 0.d0, psidqvpsi, 1)  
-           call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)  
-           lintercall = 1  
-           goto 120  
+        if (q0mode_f) then
+           call setv (2 * nbnd * nbnd, 0.d0, psidqvpsi, 1)
+           call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
+           lintercall = 1
+           goto 120
         endif
         !
         ! calculates dvscf_q*psi_k in G_space, for all bands
         !
-        mode = imode0 + ipert  
-        call dvdpsi (mode, xq_, dvloc (1, ipert), vkb0, vkb, evc, dvpsi)  
+        mode = imode0 + ipert
+        call dvdpsi (mode, xq_, dvloc (1, ipert), vkb0, vkb, evc, dvpsi)
         !
         ! calculates matrix element of dvscf between k+q and k  wavefunctions,
         ! that will be written on a file
         !
-        if (degauss.ne.0.d0) call setv (2 * npwx * nbnd, 0.d0, dpsiaux, 1)  
-        do ibnd = 1, nbnd  
-           if (isw_sl.ne.2) then  
-              do jbnd = 1, nbnd  
+        if (degauss.ne.0.d0) call setv (2 * npwx * nbnd, 0.d0, dpsiaux, 1)
+        do ibnd = 1, nbnd
+           if (isw_sl.ne.2) then
+              do jbnd = 1, nbnd
                  psidvpsi = ZDOTC(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
 #ifdef PARA
-                 call reduce (2, psidvpsi)  
+                 call reduce (2, psidvpsi)
 #endif
-                 psidqvpsi (jbnd, ibnd) = psidvpsi  
-                 if (degauss.ne.0.d0) then  
-                    deltae = et (ibnd, ikk) - et (jbnd, ikq)  
+                 psidqvpsi (jbnd, ibnd) = psidvpsi
+                 if (degauss.ne.0.d0) then
+                    deltae = et (ibnd, ikk) - et (jbnd, ikq)
                     !            theta = 2.0d0*wgauss(deltae/degauss,0)
-                    theta = 1.0d0  
-                    if (abs (deltae) .gt.1.0d-5) then  
-                       wg1 = wgauss ( (ef-et (ibnd, ikk) ) / degauss, ngauss)  
-                       wg2 = wgauss ( (ef-et (jbnd, ikq) ) / degauss, ngauss)  
-                       wwg = (wg1 - wg2) / deltae  
-                    else  
+                    theta = 1.0d0
+                    if (abs (deltae) .gt.1.0d-5) then
+                       wg1 = wgauss ( (ef-et (ibnd, ikk) ) / degauss, ngauss)
+                       wg2 = wgauss ( (ef-et (jbnd, ikq) ) / degauss, ngauss)
+                       wwg = (wg1 - wg2) / deltae
+                    else
                        wwg = - w0gauss ( (ef - et (ibnd, ikk) ) / degauss, &
                             ngauss) / degauss
                     endif
-                    psidvpsi = 0.5d0 * wwg * psidvpsi * theta  
+                    psidvpsi = 0.5d0 * wwg * psidvpsi * theta
                     call ZAXPY(npwq,psidvpsi,evq(1,jbnd),1,dpsiaux(1,ibnd),1)
                  endif
               enddo
@@ -215,36 +214,36 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         !
         ! Ortogonalize dvpsi
         !
-        call start_clock ('ortho')  
-        wwg = 1.0d0  
-        do ibnd = 1, nbnd_occ (ikk)  
-           call setv (2 * npwx, 0.d0, auxg, 1)  
-           do jbnd = 1, nbnd  
+        call start_clock ('ortho')
+        wwg = 1.0d0
+        do ibnd = 1, nbnd_occ (ikk)
+           call setv (2 * npwx, 0.d0, auxg, 1)
+           do jbnd = 1, nbnd
               ps (jbnd) = - wwg * ZDOTC(npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1)
            enddo
-           call reduce (2 * nbnd, ps)  
-           do jbnd = 1, nbnd  
-              call ZAXPY (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)  
+           call reduce (2 * nbnd, ps)
+           do jbnd = 1, nbnd
+              call ZAXPY (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)
            enddo
-           call ZCOPY (npwq, auxg, 1, spsi, 1)  
-           call DAXPY (2 * npwq, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)  
+           call ZCOPY (npwq, auxg, 1, spsi, 1)
+           call DAXPY (2 * npwq, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
         enddo
-        call stop_clock ('ortho')  
-        call DSCAL (2 * npwx * nbnd, - 1.d0, dvpsi, 1)  
+        call stop_clock ('ortho')
+        call DSCAL (2 * npwx * nbnd, - 1.d0, dvpsi, 1)
         !
         ! solution of the linear system (H-eS)*dpsi=dvpsi,
         ! dvpsi=-P_c^+ (dvscf)*psi
         !
-        call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)  
-        do ibnd = 1, nbnd_occ (ikk)  
-           conv_root = .true.  
-           do ig = 1, npwq  
-              auxg (ig) = g2kin (ig) * evq (ig, ibnd)  
+        call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
+        do ibnd = 1, nbnd_occ (ikk)
+           conv_root = .true.
+           do ig = 1, npwq
+              auxg (ig) = g2kin (ig) * evq (ig, ibnd)
            enddo
-           eprec = 1.35d0 * ZDOTC (npwq, evq (1, ibnd), 1, auxg, 1)  
-           call reduce (1, eprec)  
-           do ig = 1, npwq  
-              h_diag (ig, ibnd) = max (1.0d0, g2kin (ig) / eprec)  
+           eprec = 1.35d0 * ZDOTC (npwq, evq (1, ibnd), 1, auxg, 1)
+           call reduce (1, eprec)
+           do ig = 1, npwq
+              h_diag (ig, ibnd) = max (1.0d0, g2kin (ig) / eprec)
            enddo
         enddo
 
@@ -252,44 +251,44 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
              h_diag, npwx, npwq, thresh, ik, lter, conv_root, anorm, &
              nbnd_occ (ikk) )
 
-        ltaver = ltaver + lter  
-        lintercall = lintercall + 1  
+        ltaver = ltaver + lter
+        lintercall = lintercall + 1
         if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4, &
              & " linter: root not converged ",e10.3)') ikk, ibnd, anorm
-120     continue  
+120     continue
         !
         ! writes psidqvpsi on iupdqvp
         !
-        nrec = imode0 + ipert + (ik - 1) * 3 * nat  
-        if (isw_sl.eq.1) then  
-           call davcio (psidqvpsi, lrpdqvp, iupdqvp, nrec, + 1)  
-        elseif (isw_sl.ge.3) then  
-           call davcio (psidqvpsi, lrpdqvp, iupd0vp, nrec, + 1)  
+        nrec = imode0 + ipert + (ik - 1) * 3 * nat
+        if (isw_sl.eq.1) then
+           call davcio (psidqvpsi, lrpdqvp, iupdqvp, nrec, + 1)
+        elseif (isw_sl.ge.3) then
+           call davcio (psidqvpsi, lrpdqvp, iupd0vp, nrec, + 1)
         endif
         !
         ! writes delta_psi on iunit iudwf, k=kpoint,
         !
-        if (isw_sl.eq.1) then  
-           iuaux = iudqwf  
-        elseif (isw_sl.ge.3) then  
-           iuaux = iudwf  
-        elseif (isw_sl.eq.2) then  
-           iuaux = iud0qwf  
+        if (isw_sl.eq.1) then
+           iuaux = iudqwf
+        elseif (isw_sl.ge.3) then
+           iuaux = iudwf
+        elseif (isw_sl.eq.2) then
+           iuaux = iud0qwf
         endif
-        nrec = (imode0 + ipert - 1) * nksq + ik  
+        nrec = (imode0 + ipert - 1) * nksq + ik
 
-        call davcio (dpsi, lrdwf, iuaux, nrec, + 1)  
-        if (q0mode_f) goto 110  
-        if (isw_sl.ne.2) then  
-           if (degauss.ne.0.d0) then  
-              do ibnd = 1, nbnd  
-                 wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)  
-                 call DSCAL (2 * npwq, wg1, dpsi (1, ibnd), 1)  
+        call davcio (dpsi, lrdwf, iuaux, nrec, + 1)
+        if (q0mode_f) goto 110
+        if (isw_sl.ne.2) then
+           if (degauss.ne.0.d0) then
+              do ibnd = 1, nbnd
+                 wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
+                 call DSCAL (2 * npwq, wg1, dpsi (1, ibnd), 1)
               enddo
-              call DAXPY (2 * npwx * nbnd, 1.0d0, dpsiaux, 1, dpsi, 1)  
+              call DAXPY (2 * npwx * nbnd, 1.0d0, dpsiaux, 1, dpsi, 1)
            endif
         endif
-110     continue  
+110     continue
         !
         ! This is used to calculate Fermi energy shift at q=0 in metals
         !
@@ -298,37 +297,37 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      enddo
 
   enddo
-  if (lmetq0) then  
-     do ipert = 1, npe  
+  if (lmetq0) then
+     do ipert = 1, npe
         call cinterpolate (drhoscf (1, ipert), drhoscf (1, ipert), 1)
      enddo
 
   endif
 #ifdef PARA
-  call poolreduce (2 * npe * nrxx, drhoscf)  
+  call poolreduce (2 * npe * nrxx, drhoscf)
 #endif
 
-  if (lmetq0) call set_efsh (drhoscf, imode0, irr, npe)  
-  aux_avg (1) = dfloat (ltaver)  
-  aux_avg (2) = dfloat (lintercall)  
-  call poolreduce (2, aux_avg)  
+  if (lmetq0) call set_efsh (drhoscf, imode0, irr, npe)
+  aux_avg (1) = dfloat (ltaver)
+  aux_avg (2) = dfloat (lintercall)
+  call poolreduce (2, aux_avg)
 
-  averlt = aux_avg (1) / aux_avg (2)  
-  tcpu = get_clock ('D3TOTEN')  
+  averlt = aux_avg (1) / aux_avg (2)
+  tcpu = get_clock ('D3TOTEN')
 
   write (6, '(//,5x," thresh=",e10.3," total cpu time : ",f7.1, &
        &      " secs   av.it.: ",f5.1)') thresh, tcpu, averlt
 #ifdef FLUSH
 
-  call flush (6)  
+  call flush (6)
 #endif
-  call mfree (h_diag)  
-  if (degauss.ne.0.d0) call mfree (dpsiaux)  
-  call mfree (auxg)  
-  call mfree (spsi)  
-  call mfree (dvloc)  
-  call mfree (drhoscf)  
+  deallocate (h_diag)
+  if (degauss.ne.0.d0) deallocate (dpsiaux)
+  deallocate (auxg)
+  deallocate (spsi)
+  deallocate (dvloc)
+  deallocate (drhoscf)
 
-  call stop_clock ('solve_linter')  
-  return  
+  call stop_clock ('solve_linter')
+  return
 end subroutine solve_linter_d3

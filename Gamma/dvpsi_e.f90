@@ -15,7 +15,6 @@ subroutine dvpsi_e(kpoint,ipol)
   !
 #include "machine.h"
   use parameters, only: DP
-  use allocate
   use pwcom
   use rbecmod
   use cgcom
@@ -24,9 +23,9 @@ subroutine dvpsi_e(kpoint,ipol)
   integer :: kpoint, ipol
   integer :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(kind=DP) :: upol(3,3)
-  real(kind=DP), pointer :: gk(:,:), q(:), ps(:,:,:), overlap(:,:), &
+  real(kind=DP), allocatable :: gk(:,:), q(:), ps(:,:,:), overlap(:,:), &
        bec1(:,:)
-  complex(kind=DP), pointer :: dvkb(:,:), dvkb1(:,:), work(:,:), &
+  complex(kind=DP), allocatable :: dvkb(:,:), dvkb1(:,:), work(:,:), &
        &           gr(:,:), h(:,:)
   logical:: precondition, orthonormal,startwith0
   external H_h
@@ -34,11 +33,11 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   call start_clock('dvpsi_e')
   !
-  call mallocate ( gk   , 3, npwx)
-  call mallocate ( dvkb , npwx, nkb)
-  call mallocate ( dvkb1, npwx, nkb)
-  call mallocate ( bec1 , nkb, nbnd)
-  call mallocate ( ps   , nkb, nbnd, 2)
+  allocate  ( gk   ( 3, npwx))    
+  allocate  ( dvkb ( npwx, nkb))    
+  allocate  ( dvkb1( npwx, nkb))    
+  allocate  ( bec1 ( nkb, nbnd))    
+  allocate  ( ps   ( nkb, nbnd, 2))    
   !
   do i = 1,npw
      gk(1,i) = (xk(1,kpoint)+g(1,igk(i)))*tpiba
@@ -100,20 +99,20 @@ subroutine dvpsi_e(kpoint,ipol)
   call DGEMM ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
        2*npwx, ps(1,1,2), nkb, 1.d0, dpsi, 2*npwx)
   !
-  call mfree(ps)
-  call mfree(bec1)
-  call mfree(dvkb1)
-  call mfree(dvkb)
-  call mfree(gk)
+  deallocate(ps)
+  deallocate(bec1)
+  deallocate(dvkb1)
+  deallocate(dvkb)
+  deallocate(gk)
   !
   !   dpsi contains now [H,x] psi_v  for the three cartesian polarizations.
   !   Now solve the linear systems (H-e_v)*(x*psi_v) = [H,x]*psi_v
   !
-  call mallocate ( overlap, nbnd, nbnd)
-  call mallocate ( work, npwx, nbnd)
-  call mallocate ( gr, npwx, nbnd)
-  call mallocate ( h , npwx, nbnd)
-  call mallocate ( q , npwx)
+  allocate  ( overlap( nbnd, nbnd))    
+  allocate  ( work( npwx, nbnd))    
+  allocate  ( gr( npwx, nbnd))    
+  allocate  ( h ( npwx, nbnd))    
+  allocate  ( q ( npwx))    
   !
   orthonormal = .false.
   precondition= .true.
@@ -135,11 +134,11 @@ subroutine dvpsi_e(kpoint,ipol)
        orthonormal,precondition,q,startwith0,et(1,kpoint),&
        dpsi,gr,h,dpsi,work,niter_ph,tr2_ph,iter,dvpsi)
   !
-  call mfree(q)
-  call mfree(h)
-  call mfree(gr)
-  call mfree(work)
-  call mfree(overlap)
+  deallocate(q)
+  deallocate(h)
+  deallocate(gr)
+  deallocate(work)
+  deallocate(overlap)
   !
   call stop_clock('dvpsi_e')
   !

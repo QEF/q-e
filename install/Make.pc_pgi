@@ -14,6 +14,8 @@ CPP = /lib/cpp
 # the library (one underscore is added by the compiler)
 #
 CPPFLAGS = -P -traditional -I$(OSHOME)/include -DPC -DPGI -DFFTW  \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan" \
+           -D"FFTW_F77=fftw_f77"  \
            -D"FFTWND_F77_ONE=fftwnd_f77_one" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan"
 

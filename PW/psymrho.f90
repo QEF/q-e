@@ -16,23 +16,22 @@ subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
 #ifdef PARA
   use para
   use parameters, only : DP
-  use allocate
-  implicit none  
-  include 'mpif.h'  
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau  
+  implicit none
+  include 'mpif.h'
+  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
 
-  real (kind=DP) :: rho (nxx)  
-  real (kind=DP), pointer :: rrho (:)  
-  call mallocate(rrho, nrx1 * nrx2 * nrx3)  
+  real (kind=DP) :: rho (nxx)
+  real (kind=DP), allocatable :: rrho (:)
+  allocate (rrho( nrx1 * nrx2 * nrx3))    
 
-  call gather (rho, rrho)  
+  call gather (rho, rrho)
   if (me.eq.1) call symrho (rrho, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
        nsym, s, ftau)
 
-  call scatter (rrho, rho)  
+  call scatter (rrho, rho)
 
-  call mfree (rrho)  
+  deallocate (rrho)
 #endif
-  return  
+  return
 end subroutine psymrho
 

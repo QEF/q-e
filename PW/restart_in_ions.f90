@@ -6,11 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine restart_in_ions (iter, ik_, dr2)  
+subroutine restart_in_ions (iter, ik_, dr2)
   !-----------------------------------------------------------------------
-  use pwcom  
+  use pwcom
   implicit none
-  character :: where * 20  
+  character :: where * 20
   ! are we in the right place?
   integer :: ik, ibnd, ik_, iter
   ! counters
@@ -18,30 +18,30 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! last completed iteration
   ! check for bravais lattice
   ! check for number of atoms
-  logical :: exst  
+  logical :: exst
 
-  real(kind=DP) :: dr2, charge  
-  call seqopn (iunres, 'restart', 'unformatted', exst)  
+  real(kind=DP) :: dr2, charge
+  call seqopn (iunres, 'restart', 'unformatted', exst)
 
-  if (.not.exst) goto 10  
-  read (iunres, err = 10, end = 10) where  
+  if (.not.exst) goto 10
+  read (iunres, err = 10, end = 10) where
   !
   ! is this the right place where to restart ?
   !
-  if (where.ne.'IONS') then  
-     close (unit = iunres, status = 'keep')  
-     write (*,*) where, '.......?'  
-     call error ('restart_i', ' we should not be here ...!', 1)  
+  if (where.ne.'IONS') then
+     close (unit = iunres, status = 'keep')
+     write (*,*) where, '.......?'
+     call error ('restart_i', ' we should not be here ...!', 1)
   endif
   !
   !  read recover information
   !
   read (iunres, err=10, end=10) ( (et(ibnd,ik), ibnd=1,nbnd), ik=1,nks)
-  read (iunres, err=10, end=10) etot, tr2  
-  ! vnew = V(in)-V(out) is needed in the scf correction term to forces 
-  read (iunres, err=10, end=10) vnew  
-  close (unit = iunres, status = 'keep')  
-  write (6, '(5x,"Calculation restarted from IONS ",i3)')  
+  read (iunres, err=10, end=10) etot, tr2
+  ! vnew = V(in)-V(out) is needed in the scf correction term to forces
+  read (iunres, err=10, end=10) vnew
+  close (unit = iunres, status = 'keep')
+  write (6, '(5x,"Calculation restarted from IONS ",i3)')
   !
   ! store wavefunctions in memory here if there is just one k-point
   ! (otherwise it is never done)
@@ -50,7 +50,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   ! recalculate rho
   !
-  call sum_band  
+  call sum_band
   !
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
@@ -61,14 +61,14 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !  restart procedure completed
   !
 
-  restart = .false.  
+  restart = .false.
 
-  return  
+  return
   !
   ! in case of problems
   !
 
 10 call error ('restart_i', 'problems in reading recover file', -1)
-  return  
+  return
 
 end subroutine restart_in_ions

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine set_kplusq (xk, wk, xq, nks, npk)  
+subroutine set_kplusq (xk, wk, xq, nks, npk)
   !-----------------------------------------------------------------------
   !     This routine sets the k and k+q points (with zero weight) used in
   !     the preparatory run for a linear response calculation.
@@ -21,15 +21,15 @@ subroutine set_kplusq (xk, wk, xq, nks, npk)
   !     to the k-points
   !
   use parameters, only : DP
-  implicit none  
+  implicit none
   !
   !    First the dummy variables
   !
 
-  integer :: npk, nks  
+  integer :: npk, nks
   ! input-output: maximum allowed number of k
   ! input-output: starting and ending number of
-  real(kind=DP) :: xk (3, npk), wk (npk), eps, xq (3)  
+  real(kind=DP) :: xk (3, npk), wk (npk), eps, xq (3)
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   ! the smallest xq
@@ -38,13 +38,13 @@ subroutine set_kplusq (xk, wk, xq, nks, npk)
   !    And then the local variables
   !
 
-  logical :: lgamma  
+  logical :: lgamma
   ! true if xq is the gamma point
-  integer :: ik, j  
+  integer :: ik, j
   ! counter on k
   ! counter
   !
-  eps = 1.d-12  
+  eps = 1.d-12
   !
   ! shift the k points in the odd positions and fill the even ones with k+
   !
@@ -52,20 +52,20 @@ subroutine set_kplusq (xk, wk, xq, nks, npk)
   lgamma = abs (xq (1) ) .lt.eps.and.abs (xq (2) ) .lt.eps.and.abs ( &
        xq (3) ) .lt.eps
 
-  if (.not.lgamma) then  
+  if (.not.lgamma) then
 
      if (2 * nks.gt.npk) call error ('set_kplusq', 'too many k points', &
           & nks)
-     do ik = nks, 1, - 1  
-        do j = 1, 3  
-           xk (j, 2 * ik - 1) = xk (j, ik)  
-           xk (j, 2 * ik) = xk (j, ik) + xq (j)  
+     do ik = nks, 1, - 1
+        do j = 1, 3
+           xk (j, 2 * ik - 1) = xk (j, ik)
+           xk (j, 2 * ik) = xk (j, ik) + xq (j)
         enddo
-        wk (2 * ik - 1) = wk (ik)  
-        wk (2 * ik) = 0.d0  
+        wk (2 * ik - 1) = wk (ik)
+        wk (2 * ik) = 0.d0
      enddo
-     nks = 2 * nks  
+     nks = 2 * nks
 
   endif
-  return  
+  return
 end subroutine set_kplusq

@@ -12,54 +12,54 @@ real(8) function sumkt (et, nbndx, nbnd, nks, nspin, ntetra, &
   !--------------------------------------------------------------------
   !
   use parameters
-  implicit none  
-  integer :: nbndx, nbnd, nks, nspin, ntetra, tetra (4, ntetra)  
+  implicit none
+  integer :: nbndx, nbnd, nks, nspin, ntetra, tetra (4, ntetra)
 
-  real(kind=DP) :: et (nbndx, nks), e  
-  integer :: nt, nk, ns, ibnd, i  
+  real(kind=DP) :: et (nbndx, nks), e
+  integer :: nt, nk, ns, ibnd, i
 
 
-  real(kind=DP) :: etetra (4), e1, e2, e3, e4  
+  real(kind=DP) :: etetra (4), e1, e2, e3, e4
 
-  sumkt = 0.0  
-  do ns = 1, nspin  
+  sumkt = 0.0
+  do ns = 1, nspin
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
-     if (ns.eq.1) then  
-        nk = 0  
-     else  
-        nk = nks / 2  
+     if (ns.eq.1) then
+        nk = 0
+     else
+        nk = nks / 2
      endif
-     do nt = 1, ntetra  
-        do ibnd = 1, nbnd  
+     do nt = 1, ntetra
+        do ibnd = 1, nbnd
            !
            ! etetra are the energies at the vertexes of the nt-th tetrahedron
            !
-           do i = 1, 4  
-              etetra (i) = et (ibnd, tetra (i, nt) + nk)  
+           do i = 1, 4
+              etetra (i) = et (ibnd, tetra (i, nt) + nk)
            enddo
-           call piksort (4, etetra)  
+           call piksort (4, etetra)
            !
            ! ...sort in ascending order: e1 < e2 < e3 < e4
            !
-           e1 = etetra (1)  
-           e2 = etetra (2)  
-           e3 = etetra (3)  
-           e4 = etetra (4)  
+           e1 = etetra (1)
+           e2 = etetra (2)
+           e3 = etetra (3)
+           e4 = etetra (4)
            !
            ! calculate sum over k of the integrated charge
            !
-           if (e.ge.e4) then  
-              sumkt = sumkt + 1.d0 / ntetra  
-           elseif (e.lt.e4.and.e.ge.e3) then  
+           if (e.ge.e4) then
+              sumkt = sumkt + 1.d0 / ntetra
+           elseif (e.lt.e4.and.e.ge.e3) then
               sumkt = sumkt + 1.d0 / ntetra * (1.0 - (e4 - e) **3 / (e4 - e1) &
                    / (e4 - e2) / (e4 - e3) )
-           elseif (e.lt.e3.and.e.ge.e2) then  
+           elseif (e.lt.e3.and.e.ge.e2) then
               sumkt = sumkt + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) * &
                    ( (e2 - e1) **2 + 3.0 * (e2 - e1) * (e-e2) + 3.0 * (e-e2) **2 - &
                    (e3 - e1 + e4 - e2) / (e3 - e2) / (e4 - e2) * (e-e2) **3)
-           elseif (e.lt.e2.and.e.ge.e1) then  
+           elseif (e.lt.e2.and.e.ge.e1) then
               sumkt = sumkt + 1.d0 / ntetra * (e-e1) **3 / (e2 - e1) / &
                    (e3 - e1) / (e4 - e1)
            endif
@@ -70,29 +70,29 @@ real(8) function sumkt (et, nbndx, nbnd, nks, nspin, ntetra, &
   enddo
   ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
 
-  sumkt = sumkt * 2.d0 / nspin  
-  return  
+  sumkt = sumkt * 2.d0 / nspin
+  return
 
 end function sumkt
 
-subroutine piksort (n, a)  
+subroutine piksort (n, a)
   use parameters
-  implicit none  
-  integer :: n  
+  implicit none
+  integer :: n
 
-  real(kind=DP) :: a (n)  
-  integer :: i, j  
-  real(kind=DP) :: temp  
+  real(kind=DP) :: a (n)
+  integer :: i, j
+  real(kind=DP) :: temp
   !
-  do j = 2, n  
-     temp = a (j)  
-     do i = j - 1, 1, - 1  
-        if (a (i) .le.temp) goto 10  
-        a (i + 1) = a (i)  
+  do j = 2, n
+     temp = a (j)
+     do i = j - 1, 1, - 1
+        if (a (i) .le.temp) goto 10
+        a (i + 1) = a (i)
      enddo
-     i = 0  
-10   a (i + 1) = temp  
+     i = 0
+10   a (i + 1) = temp
   enddo
   !
-  return  
+  return
 end subroutine piksort

@@ -11,7 +11,7 @@ subroutine stres_hub ( sigmah )
    !----------------------------------------------------------------------
    !
    ! This routines computes the Hubbard contribution to the internal stress
-   ! tensor. It gives in output the array sigmah(i,j) which corresponds to 
+   ! tensor. It gives in output the array sigmah(i,j) which corresponds to
    ! the quantity -(1/\Omega)dE_{h}/d\epsilon_{i,j}
    !
 #include "machine.h"
@@ -28,7 +28,7 @@ subroutine stres_hub ( sigmah )
    logical :: exst
    real (kind=DP), allocatable :: dns(:,:,:,:)
    !       dns(nat,nspin,5,5), ! the derivative of the atomic occupations
- 
+
    sigmah(:,:) = 0.d0
 
    allocate (dns(nat,nspin,5,5))
@@ -67,7 +67,7 @@ subroutine stres_hub ( sigmah )
    do ipol = 1,3
       do jpol = 1,ipol
          call dndepsilon(dns,ipol,jpol)
-         do na = 1,nat                 
+         do na = 1,nat
             nt = ityp(na)
             if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
                do is = 1,nspin
@@ -77,7 +77,7 @@ subroutine stres_hub ( sigmah )
 #endif
                   do m2 = 1,5
                      sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
-                           Hubbard_U(nt) * 0.5d0 * dns(na,is,m2,m2) 
+                           Hubbard_U(nt) * 0.5d0 * dns(na,is,m2,m2)
                      do m1 = 1,5
                         sigmah(ipol,jpol) = sigmah(ipol,jpol) + omin1 * &
                            Hubbard_U(nt) * ns(na,is,m2,m1) * dns(na,is,m1,m2)
@@ -105,7 +105,7 @@ subroutine stres_hub ( sigmah )
    close(23,status='delete')
    close(25,status='delete')
 
-   deallocate (dns) 
+   deallocate (dns)
 
    return
 end  subroutine stres_hub

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine add_vuspsi (lda, n, m, psi, hpsi )  
+subroutine add_vuspsi (lda, n, m, psi, hpsi )
   !-----------------------------------------------------------------------
   !
   !    This routine applies the Ultra-Soft Hamiltonian to a
@@ -18,48 +18,47 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
   !     lda   leading dimension of arrays psi, spsi
   !     n     true dimension of psi, spsi
   !     m     number of states psi
-  !     psi   
+  !     psi
   ! output:
   !     hpsi  V_US*psi is added to hpsi
   !
 #include "machine.h"
-  use pwcom  
-  use becmod  
-  use allocate
+  use pwcom
+  use becmod
   implicit none
   !
   !     First the dummy variables
   !
   integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, m), hpsi (lda, m)  
+  complex(kind=DP) :: psi (lda, m), hpsi (lda, m)
   !
   !    here the local variables
   !
-  integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd  
+  integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
   ! counters
-  complex(kind=DP), pointer :: ps (:,:)  
+  complex(kind=DP), allocatable :: ps (:,:)
   ! the product vkb and psi
   !
-  if (nkb.eq.0) return  
-  call start_clock ('add_vuspsi')  
+  if (nkb.eq.0) return
+  call start_clock ('add_vuspsi')
 
-  call mallocate(ps,  nkb, m)  
+  allocate (ps(  nkb, m))    
   ps (:,:) = (0.d0, 0.d0)
-  ijkb0 = 0  
-  do nt = 1, ntyp  
-     do na = 1, nat  
-        if (ityp (na) .eq.nt) then  
+  ijkb0 = 0
+  do nt = 1, ntyp
+     do na = 1, nat
+        if (ityp (na) .eq.nt) then
            do ibnd = 1, m
-              do jh = 1, nh (nt)  
-                 jkb = ijkb0 + jh  
-                 do ih = 1, nh (nt)  
-                    ikb = ijkb0 + ih  
+              do jh = 1, nh (nt)
+                 jkb = ijkb0 + jh
+                 do ih = 1, nh (nt)
+                    ikb = ijkb0 + ih
                     ps (ikb, ibnd) = ps (ikb, ibnd) + &
                          deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
                  enddo
               enddo
            enddo
-           ijkb0 = ijkb0 + nh (nt)  
+           ijkb0 = ijkb0 + nh (nt)
         endif
      enddo
   enddo
@@ -67,8 +66,8 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
   call ZGEMM ('N', 'N', n, m, nkb, (1.d0, 0.d0) , vkb, &
        lda, ps, nkb, (1.d0, 0.d0) , hpsi, lda)
 
-  call mfree (ps)  
-  call stop_clock ('add_vuspsi')  
-  return  
+  deallocate (ps)
+  call stop_clock ('add_vuspsi')
+  return
 end subroutine add_vuspsi
 

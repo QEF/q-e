@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine coset (nrot, table, sym, nsym, irg)  
+subroutine coset (nrot, table, sym, nsym, irg)
   !-----------------------------------------------------------------------
   !
   !  Divides the elements of a given group into left cosets of one
@@ -20,26 +20,26 @@ subroutine coset (nrot, table, sym, nsym, irg)
   !  revised layout 1 may 1995 by A. Dal Corso
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !    first the dummy variables
   !
-  integer :: nrot, table (48, 48), nsym, irg (48)  
+  integer :: nrot, table (48, 48), nsym, irg (48)
   ! input: order of the group
   ! input: multiplication table of the group
   ! output: order of the subgroup
   ! output: gives the correspondence of symme
   ! operations forming a n-th coset
   ! input: flag indicating if an operations
-  logical :: sym (48)  
+  logical :: sym (48)
   ! belongs to the subgroup
   !
   ! here the local variables
   !
-  logical :: done (48)  
+  logical :: done (48)
   ! if true the operation has been already ch
 
-  integer :: irot, ncos, isym, nc, nelm  
+  integer :: irot, ncos, isym, nc, nelm
   ! counter on rotations
   ! number of cosets (=nrot/nsym)
   ! counter on symmetries
@@ -49,36 +49,36 @@ subroutine coset (nrot, table, sym, nsym, irg)
   !    here we count the elements of the subgroup and set the first part o
   !    irg which contain the subgroup
   !
-  nsym = 0  
-  do irot = 1, nrot  
-     done (irot) = sym (irot)  
-     if (sym (irot) ) then  
-        nsym = nsym + 1  
-        irg (nsym) = irot  
+  nsym = 0
+  do irot = 1, nrot
+     done (irot) = sym (irot)
+     if (sym (irot) ) then
+        nsym = nsym + 1
+        irg (nsym) = irot
      endif
   enddo
   !
   !     we check that the order of the subgroup is a divisor of the order
   !     total group. ncos is the number of cosets
   !
-  ncos = nrot / nsym  
+  ncos = nrot / nsym
   if (ncos * nsym.ne.nrot) call error ('coset', &
   'The order'//' of the group is not a multiple of that of the subgroup', 1)
   !
   !     here we set the other elements of irg, by using the multiplication
   !
-  nelm = nsym  
-  do nc = 2, ncos  
-     do irot = 1, nrot  
-        if (.not.done (irot) ) then  
-           do isym = 1, nsym  
-              nelm = nelm + 1  
-              irg (nelm) = table (irot, irg (isym) )  
-              done (irg (nelm) ) = .true.  
+  nelm = nsym
+  do nc = 2, ncos
+     do irot = 1, nrot
+        if (.not.done (irot) ) then
+           do isym = 1, nsym
+              nelm = nelm + 1
+              irg (nelm) = table (irot, irg (isym) )
+              done (irg (nelm) ) = .true.
            enddo
         endif
      enddo
 
   enddo
-  return  
+  return
 end subroutine coset

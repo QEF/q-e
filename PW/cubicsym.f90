@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine cubicsym (at, is, isname, nrot)  
+subroutine cubicsym (at, is, isname, nrot)
   !-----------------------------------------------------------------------
   !
   ! Provides symmetry operations for all cubic and
@@ -17,23 +17,23 @@ subroutine cubicsym (at, is, isname, nrot)
   !
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !     first the input/output variables
   !
-  real(kind=DP) :: at (3, 3)  
+  real(kind=DP) :: at (3, 3)
   ! input: the direct lattice vectors
-  integer :: is (3, 3, 48), nrot  
+  integer :: is (3, 3, 48), nrot
   ! output: the symmetry matrices
   ! output: the number of symmetry matrice
-  character :: isname (48) * 45  
+  character :: isname (48) * 45
   ! output: full name of the rotational pa
   !                               !         each selected symmetry operati
   !
   !    here the local parameters
   !
 
-  real(kind=DP) :: sin3, cos3, msin3, mcos3  
+  real(kind=DP) :: sin3, cos3, msin3, mcos3
   ! sin(pi/3)
   ! cos(pi/3)
   ! -sin(pi/3)
@@ -50,13 +50,13 @@ subroutine cubicsym (at, is, isname, nrot)
   ! the rotated of a direct vector ( carte
   ! the rotated of a direct vector ( in ax
   ! component of the s matrix in axis basi
-  integer :: jpol, kpol, irot, mpol  
+  integer :: jpol, kpol, irot, mpol
   ! counter over the polarizations
   ! counter over the polarizations
   ! counter over the rotations
   ! counter over the polarizations
 
-  character :: sname (48) * 45  
+  character :: sname (48) * 45
   ! full name of the rotational part of
   !                               ! each symmetry operation
 

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine trntnsc (phi, at, bg, iflg)  
+subroutine trntnsc (phi, at, bg, iflg)
   !-----------------------------------------------------------------------
   !
   ! trasforms a COMPLEX tensor (like the dynamical matrix)
@@ -15,58 +15,58 @@ subroutine trntnsc (phi, at, bg, iflg)
   !
 #include"machine.h"
   use parameters, only : DP
-  implicit none  
+  implicit none
 
-  integer :: iflg  
+  integer :: iflg
   ! input: gives the versus of the trans.
 
-  complex(kind=DP) :: phi (3, 3)  
+  complex(kind=DP) :: phi (3, 3)
   ! inp/out: the matrix to transform
 
-  real(kind=DP) :: at (3, 3), bg (3, 3)  
+  real(kind=DP) :: at (3, 3), bg (3, 3)
   ! input: the direct lattice vectors
   ! input: the reciprocal lattice
 
-  integer :: i, j, k, l  
+  integer :: i, j, k, l
   !
   !  counters on polarizations
   ! /
   !/
 
 
-  complex(kind=DP) :: wrk (3, 3)  
+  complex(kind=DP) :: wrk (3, 3)
   ! a working array
-  if (iflg.gt.0) then  
+  if (iflg.gt.0) then
      !
      ! forward transformation (crystal to cartesian axis)
      !
 
-     call ZCOPY (9, phi, 1, wrk, 1)  
-     do i = 1, 3  
-        do j = 1, 3  
-           phi (i, j) = (0.d0, 0.d0)  
-           do k = 1, 3  
-              do l = 1, 3  
-                 phi (i, j) = phi (i, j) + wrk (k, l) * bg (i, k) * bg (j, l)  
+     call ZCOPY (9, phi, 1, wrk, 1)
+     do i = 1, 3
+        do j = 1, 3
+           phi (i, j) = (0.d0, 0.d0)
+           do k = 1, 3
+              do l = 1, 3
+                 phi (i, j) = phi (i, j) + wrk (k, l) * bg (i, k) * bg (j, l)
               enddo
            enddo
         enddo
      enddo
-  else  
+  else
      !
      ! backward transformation (cartesian to crystal axis)
      !
-     do i = 1, 3  
-        do j = 1, 3  
-           wrk (i, j) = (0.d0, 0.d0)  
-           do k = 1, 3  
-              do l = 1, 3  
-                 wrk (i, j) = wrk (i, j) + phi (k, l) * at (k, i) * at (l, j)  
+     do i = 1, 3
+        do j = 1, 3
+           wrk (i, j) = (0.d0, 0.d0)
+           do k = 1, 3
+              do l = 1, 3
+                 wrk (i, j) = wrk (i, j) + phi (k, l) * at (k, i) * at (l, j)
               enddo
            enddo
         enddo
      enddo
-     call ZCOPY (9, wrk, 1, phi, 1)  
+     call ZCOPY (9, wrk, 1, phi, 1)
   endif
-  return  
+  return
 end subroutine trntnsc

@@ -7,20 +7,20 @@
 !
 !
 !-----------------------------------------------------------------------
-function dsum (n, vect, inc)  
+function dsum (n, vect, inc)
   !-----------------------------------------------------------------------
   !
   !     This function compute the sum of all the elements of a vector vect
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !    first the dummy variables
   !
-  integer :: n, inc  
+  integer :: n, inc
   ! input: dimension of the vector
   ! input: distance between the elements
-  real(kind=DP) :: vect (n), dsum  
+  real(kind=DP) :: vect (n), dsum
   ! input: the vector
   ! output: the sum of the elements
   !
@@ -28,13 +28,13 @@ function dsum (n, vect, inc)
   !
 
 
-  integer :: i  
+  integer :: i
   ! counter on the elements
-  dsum = 0.d0  
-  if (n.lt.0.or.inc.le.0) return  
-  do i = 1, n, inc  
-     dsum = dsum + vect (i)  
+  dsum = 0.d0
+  if (n.lt.0.or.inc.le.0) return
+  do i = 1, n, inc
+     dsum = dsum + vect (i)
 
   enddo
-  return  
+  return
 end function dsum

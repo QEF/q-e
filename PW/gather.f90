@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine gather (f_in, f_out)  
+subroutine gather (f_in, f_out)
   !-----------------------------------------------------------------------
   ! gathers nprocp distributed data on the first processor of every pool
   !
@@ -18,30 +18,30 @@ subroutine gather (f_in, f_out)
 #include "machine.h"
   use para
   use parameters, only : DP
-  implicit none  
+  implicit none
 
-  real (8) :: f_in (nxx), f_out ( * )  
-  include 'mpif.h'  
+  real (8) :: f_in (nxx), f_out ( * )
+  include 'mpif.h'
 
 
-  integer :: root, proc, info, displs (nprocp), recvcount (nprocp)  
-  root = 0  
-  call start_clock ('gather')  
-  do proc = 1, nprocp  
-     recvcount (proc) = ncplane * npp (proc)  
-     if (proc.eq.1) then  
-        displs (proc) = 0  
-     else  
-        displs (proc) = displs (proc - 1) + recvcount (proc - 1)  
+  integer :: root, proc, info, displs (nprocp), recvcount (nprocp)
+  root = 0
+  call start_clock ('gather')
+  do proc = 1, nprocp
+     recvcount (proc) = ncplane * npp (proc)
+     if (proc.eq.1) then
+        displs (proc) = 0
+     else
+        displs (proc) = displs (proc - 1) + recvcount (proc - 1)
      endif
 
   enddo
-  call mpi_barrier (MPI_COMM_POOL, info)  
+  call mpi_barrier (MPI_COMM_POOL, info)
 
   call mpi_gatherv (f_in, recvcount (me), MPI_REAL8, f_out, &
        recvcount, displs, MPI_REAL8, root, MPI_COMM_POOL, info)
-  call error ('gather', 'info<>0', info)  
-  call stop_clock ('gather')  
+  call error ('gather', 'info<>0', info)
+  call stop_clock ('gather')
 #endif
-  return  
+  return
 end subroutine gather

@@ -6,26 +6,25 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine phq_readin  
+subroutine phq_readin
   !-----------------------------------------------------------------------
   !
   !    This routine reads the control variables for the program phononq.
   !    from standard input (unit 5).
-  !    A second routine readfile reads the variables saved on a file 
+  !    A second routine readfile reads the variables saved on a file
   !    by the self-consistent program.
   !
 #include "machine.h"
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
+  use pwcom
+  use parameters, only : DP
   use phcom
   use io
 #ifdef PARA
   use para
 #endif
   implicit none
-  integer :: ios, ipol, iter, na, it  
+  integer :: ios, ipol, iter, na, it
   ! integer variable for I/O control
   ! counter on polarizations
   ! counter on iterations
@@ -57,65 +56,65 @@ subroutine phq_readin
   ! fildrho  : output file containing deltarho
 #ifdef PARA
 
-  if (me.ne.1) goto 400  
+  if (me.ne.1) goto 400
 #endif
   !
   !    Read the first line of the input file
   !
   read (5, '(a)', err = 100, iostat = ios) title_ph
   !print*, 'Title -->', title_ph
-100 call error ('phq_readin', 'reading title ', abs (ios) )  
+100 call error ('phq_readin', 'reading title ', abs (ios) )
   !
   !   set default values for variables in namelist
   !
-  tr2_ph = 1.d-10  
-  call setv (ntypx, 0.d0, amass, 1)  
-  call setv (maxter, 0.d0, alpha_mix, 1)  
-  alpha_mix (1) = 0.7d0  
-  niter_ph = maxter  
-  nmix_ph = 4  
-  maxirr = 0  
-  nat_todo = 0  
-  nrapp = 0  
-  iverbosity = 0  
-  trans = .true.  
-  epsil = .false.  
-  zue = .false.  
-  elph = .false.  
-  time_max = 10000000.d0  
+  tr2_ph = 1.d-10
+  call setv (ntypx, 0.d0, amass, 1)
+  call setv (maxter, 0.d0, alpha_mix, 1)
+  alpha_mix (1) = 0.7d0
+  niter_ph = maxter
+  nmix_ph = 4
+  maxirr = 0
+  nat_todo = 0
+  nrapp = 0
+  iverbosity = 0
+  trans = .true.
+  epsil = .false.
+  zue = .false.
+  elph = .false.
+  time_max = 10000000.d0
 
-  reduce_io = .false.  
-  tmp_dir = './'  
-  prefix = 'pwscf'  
-  filelph = ' '  
-  fildyn = 'matdyn'  
-  fildrho = ' '  
+  reduce_io = .false.
+  tmp_dir = './'
+  prefix = 'pwscf'
+  filelph = ' '
+  fildyn = 'matdyn'
+  fildrho = ' '
 
 
-  fildvscf = ' '  
+  fildvscf = ' '
   !
   !     reading the namelist inputph
   !
 #ifdef CRAYY
   !   The Cray does not accept "err" and "iostat" together with a namelist
-  read (5, inputph)  
-  ios = 0  
+  read (5, inputph)
+  ios = 0
 #else
   !
   !   Note: for AIX machine (xlf compiler version 3.0 or higher):
   !   The variable XLFRTEOPTS must be set to "namelist=old"
   !   in order to have "&end" to end the namelist
   !
-  read (5, inputph, err = 200, iostat = ios)  
+  read (5, inputph, err = 200, iostat = ios)
 #endif
 
-200 call error ('phq_readin', 'reading inputph namelist', abs (ios) )  
+200 call error ('phq_readin', 'reading inputph namelist', abs (ios) )
   !
   !     Check all namelist variables
   !
   if (tr2_ph.le.0.d0) call error (' phq_readin', ' Wrong tr2_ph ', &
        1)
-  do iter = 1, maxter  
+  do iter = 1, maxter
      if (alpha_mix (iter) .lt.0.d0.or.alpha_mix (iter) .gt.1.d0) call &
           error ('phq_readin', ' Wrong alpha_mix ', iter)
   enddo
@@ -125,7 +124,7 @@ subroutine phq_readin
        &g nmix_ph ', 1)
   if (iverbosity.ne.0.and.iverbosity.ne.1) call error ('phq_readin', ' Wrong &
        & iverbosity ', 1)
-  if (fildyn.eq.' ') call error ('phq_readin', ' Wrong fildyn ', 1)  
+  if (fildyn.eq.' ') call error ('phq_readin', ' Wrong fildyn ', 1)
   if (time_max.lt.1.d0) call error ('phq_readin', ' Wrong time_max', 1)
 
   if (nat_todo.ne.0.and.nrapp.ne.0) call error ('phq_readin', ' inco &
@@ -133,39 +132,39 @@ subroutine phq_readin
   !
   !    reads the q point
   !
-  read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)  
-300 call error ('phq_readin', 'reading xq', abs (ios) )  
+  read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
+300 call error ('phq_readin', 'reading xq', abs (ios) )
 
 
-  lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0  
+  lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
   if ( (epsil.or.zue) .and..not.lgamma) call error ('phq_readin', &
        'gamma is needed for elec.field', 1)
   if (zue.and..not.trans) call error ('phq_readin', 'trans must be . &
        &t. for Zue calc.', 1)
 #ifdef PARA
-400 continue  
+400 continue
 
-  call bcast_ph_input  
-  call init_pool  
+  call bcast_ph_input
+  call init_pool
 #endif
-  call DCOPY (3, xq, 1, xqq, 1)  
+  call DCOPY (3, xq, 1, xqq, 1)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
-  call read_file  
+  call read_file
   !
-  if (lgamma) then  
-     nksq = nks  
-  else  
-     nksq = nks / 2  
+  if (lgamma) then
+     nksq = nks
+  else
+     nksq = nks / 2
   endif
   !
-  if ( (zue) .and.okvan) then  
+  if ( (zue) .and.okvan) then
      call error ('phq_readin', 'No electric field in US case', &
           - 1)
-     epsil = .false.  
-     zue = .false.  
+     epsil = .false.
+     zue = .false.
   endif
   !
   if (elph.and.degauss.eq.0.0) call error ('phq_readin', 'Electron-p &
@@ -180,28 +179,28 @@ subroutine phq_readin
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  call allocate_part  
+  call allocate_part
 #ifdef PARA
 
-  if (me.ne.1.or.mypool.ne.1) goto 800  
+  if (me.ne.1.or.mypool.ne.1) goto 800
 #endif
   if (nat_todo.lt.0.or.nat_todo.gt.nat) call error ('phq_readin', &
        'nat_todo is wrong', 1)
-  if (nat_todo.ne.0) then  
+  if (nat_todo.ne.0) then
      read (5, *, err = 600, iostat = ios) (atomo (na), na = 1, &
           nat_todo)
-600  call error ('phq_readin', 'reading atoms', abs (ios) )  
+600  call error ('phq_readin', 'reading atoms', abs (ios) )
   endif
   if (nrapp.lt.0.or.nrapp.gt.3 * nat) call error ('phq_readin', &
        'nrapp is wrong', 1)
-  if (nrapp.ne.0) then  
-     read (5, *, err = 700, iostat = ios) (list (na), na = 1, nrapp)  
-700  call error ('phq_readin', 'reading list', abs (ios) )  
+  if (nrapp.ne.0) then
+     read (5, *, err = 700, iostat = ios) (list (na), na = 1, nrapp)
+700  call error ('phq_readin', 'reading list', abs (ios) )
 
   endif
 #ifdef PARA
-800 continue  
-  call bcast_ph_input1  
+800 continue
+  call bcast_ph_input1
 #endif
 
   if (epsil.and.degauss.ne.0.d0) call error ('phq_readin', 'no elec. &
@@ -210,7 +209,7 @@ subroutine phq_readin
   if (iswitch.ne. - 2.and.iswitch.ne. - 3.and.iswitch.ne. - &
        4.and..not.lgamma) call error ('phq_readin', ' Wrong iswitch ', 1 &
        + abs (iswitch) )
-  do it = 1, ntyp  
+  do it = 1, ntyp
      if (amass (it) .le.0.d0) call error ('phq_readin', 'Wrong masses', &
           it)
 
@@ -220,11 +219,11 @@ subroutine phq_readin
        &Wrong maxirr ', abs (maxirr) )
   if (mod (nks, 2) .ne.0.and..not.lgamma) call error ('phq_readin', &
        'k-points are odd', nks)
-  if (iswitch.eq. - 4) then  
-     nrapp = 1  
-     nat_todo = 0  
-     list (1) = modenum  
+  if (iswitch.eq. - 4) then
+     nrapp = 1
+     nat_todo = 0
+     list (1) = modenum
 
   endif
-  return  
+  return
 end subroutine phq_readin

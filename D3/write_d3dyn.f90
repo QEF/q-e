@@ -7,39 +7,39 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine write_d3dyn (xq, phi, nat, iudyn, wrmode)  
+subroutine write_d3dyn (xq, phi, nat, iudyn, wrmode)
   !-----------------------------------------------------------------------
   !
-  implicit none  
+  implicit none
   !
   ! input variables
   !
-  integer :: iudyn, nat  
+  integer :: iudyn, nat
   ! unit number
   ! number of atom in the unit cell
-  complex (8) :: phi (3, 3, 3, nat, nat, nat)  
+  complex (8) :: phi (3, 3, 3, nat, nat, nat)
   !  derivative of the dynamical matrix
-  real (8) :: xq (3)  
+  real (8) :: xq (3)
   ! the q vector
-  logical :: wrmode (3 * nat)  
+  logical :: wrmode (3 * nat)
   ! if .true. this mode is to be written
   !
   ! local variables
   !
-  integer :: na, nb, nc, icar, jcar, kcar, i  
+  integer :: na, nb, nc, icar, jcar, kcar, i
   ! counters on atoms
   ! cartesian coordinate counters
   ! generic counter
-  write (iudyn, 9000) (xq (icar), icar = 1, 3)  
-  do i = 1, 3 * nat  
-     if (wrmode (i) ) then  
-        write (iudyn, '(/,12x,"modo:",i5,/)') i  
-        nc = (i - 1) / 3 + 1  
-        kcar = i - 3 * (nc - 1)  
-        do na = 1, nat  
-           do nb = 1, nat  
-              write (iudyn, '(2i3)') na, nb  
-              do icar = 1, 3  
+  write (iudyn, 9000) (xq (icar), icar = 1, 3)
+  do i = 1, 3 * nat
+     if (wrmode (i) ) then
+        write (iudyn, '(/,12x,"modo:",i5,/)') i
+        nc = (i - 1) / 3 + 1
+        kcar = i - 3 * (nc - 1)
+        do na = 1, nat
+           do nb = 1, nat
+              write (iudyn, '(2i3)') na, nb
+              do icar = 1, 3
                  write (iudyn, '(3e24.12)') (phi (kcar, icar, jcar, nc, na, nb) &
                       , jcar = 1, 3)
               enddo
@@ -49,7 +49,7 @@ subroutine write_d3dyn (xq, phi, nat, iudyn, wrmode)
 
   enddo
 
-  return  
+  return
 9000 format(/,5x,'Third derivative in cartesian axes', &
        &       //,5x,'q = ( ',3f14.9,' ) ',/)
 end subroutine write_d3dyn

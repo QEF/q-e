@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine potinit  
+subroutine potinit
   !-----------------------------------------------------------------------
   !
   !     This routine initializes the self consistent potential in the array
@@ -21,19 +21,19 @@ subroutine potinit
   !        is saved in vr
   !
 #include "machine.h"
-  use pwcom  
+  use pwcom
   use io, only: prefix
 #ifdef PARA
-  use para  
+  use para
   use mp
 #endif
   implicit none
 
-  real(kind=DP) :: charge  
+  real(kind=DP) :: charge
   ! the starting charge
-  integer :: ios, ionode_id=0 
+  integer :: ios, ionode_id=0
   ! integer variable for I/O control
-  logical :: exst  
+  logical :: exst
   !
 #ifdef PARA
   if (me.eq.1.and.mypool.eq.1) then
@@ -51,8 +51,8 @@ subroutine potinit
 #ifdef PARA
   endif
   call mp_bcast( exst, ionode_id )
-#endif  
-  if (startingpot=='file' .and. .not.exst) then 
+#endif
+  if (startingpot=='file' .and. .not.exst) then
      write (6, '(5x,"Cannot read pot/rho file: not found")')
      startingpot='atomic'
   end if
@@ -61,9 +61,9 @@ subroutine potinit
   ! NB: this case applies also for a restarting run, in which case
   !     potential and rho files have been read from the restart file
   !
-  if (startingpot=='file') then  
+  if (startingpot=='file') then
      if (imix.ge.0) then
-        call io_pot ( -1, trim(prefix)//'.rho', rho, nspin)  
+        call io_pot ( -1, trim(prefix)//'.rho', rho, nspin)
         write (6, '(/5x,"The initial density is read from file ", &
                    &    a14)') trim(prefix)//'.rho'
         !
@@ -76,30 +76,30 @@ subroutine potinit
         if (abs (charge-nelec)  / charge.gt.1.0d-4) &
              write (6, '(/5x,"starting charge =",f10.5)') charge
      else
-        call io_pot ( - 1,  trim(prefix)//'.pot', vr, nspin)  
+        call io_pot ( - 1,  trim(prefix)//'.pot', vr, nspin)
         write (6, '(/5x,"The initial potential is read from file ", &
                    &     a14)') trim(prefix)//'.pot'
      end if
      !
      ! The occupations ns also need to be read in order to build up the poten
      !
-     if (lda_plus_u) then  
+     if (lda_plus_u) then
 #ifdef PARA
-        if (me.eq.1.and.mypool.eq.1) then  
+        if (me.eq.1.and.mypool.eq.1) then
 #endif
-           call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)  
-           read (iunocc, * ) ns  
-           close (unit = iunocc, status = 'keep')  
+           call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
+           read (iunocc, * ) ns
+           close (unit = iunocc, status = 'keep')
 #ifdef PARA
-        else  
-           call setv (nat * nspin * 25, 0.d0, ns, 1)  
+        else
+           call setv (nat * nspin * 25, 0.d0, ns, 1)
         endif
-        call reduce (nat * nspin * 25, ns)  
-        call poolreduce (nat * nspin * 25, ns)  
+        call reduce (nat * nspin * 25, ns)
+        call poolreduce (nat * nspin * 25, ns)
 #endif
         call DCOPY(nat*nspin*25,ns,1,nsnew,1)
      endif
-  else  
+  else
      !
      ! Second case, the potential is built from a superposition of atomic
      ! charges contained in the array rho_at and already set in readin-readva
@@ -111,17 +111,17 @@ subroutine potinit
      !
 
      if (lda_plus_u) then
-        call init_ns  
+        call init_ns
         call DCOPY(nat*nspin*25,ns,1,nsnew,1)
      end if
 
-     call atomic_rho (rho, nspin)  
-     if (input_drho.ne.' ') then  
-        if (lsda) call error ('potinit', ' lsda not allowed in drho', 1)  
-        call io_pot ( - 1, input_drho, vr, nspin)  
+     call atomic_rho (rho, nspin)
+     if (input_drho.ne.' ') then
+        if (lsda) call error ('potinit', ' lsda not allowed in drho', 1)
+        call io_pot ( - 1, input_drho, vr, nspin)
         write (6, '(/5x,"a scf correction to at. rho is read from", &
              &          a14)') input_drho
-        call DAXPY (nrxx, 1.d0, vr, 1, rho, 1)  
+        call DAXPY (nrxx, 1.d0, vr, 1, rho, 1)
      endif
      !
      ! here we compute the potential which correspond to the initial charge
@@ -138,23 +138,23 @@ subroutine potinit
   ! define the total local potential (external+scf)
   !
 
-  call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)  
+  call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   !
   ! write on output the parameters used in the lda+U calculation
   !
-  if (lda_plus_u) then  
-     write (6, '(/5x,"Parameters of the lda+U calculation:")')  
+  if (lda_plus_u) then
+     write (6, '(/5x,"Parameters of the lda+U calculation:")')
      write (6, '(5x,"Number of iteration with fixed ns =",i3)') &
           niter_with_fixed_ns
-     write (6, '(5x,"Starting ns and Hubbard U :")')  
-     call write_ns  
+     write (6, '(5x,"Starting ns and Hubbard U :")')
+     call write_ns
 
   endif
 
-  if (imix.ge.0) call io_pot ( +1,  trim(prefix)//'.rho', rho, nspin)  
-  call io_pot ( +1,  trim(prefix)//'.pot', vr, nspin)  
+  if (imix.ge.0) call io_pot ( +1,  trim(prefix)//'.rho', rho, nspin)
+  call io_pot ( +1,  trim(prefix)//'.pot', vr, nspin)
 
-  return  
-20 call error ('potinit', 'error reading '//trim(prefix)//'.pot', abs(ios) )  
+  return
+20 call error ('potinit', 'error reading '//trim(prefix)//'.pot', abs(ios) )
 end subroutine potinit
 

@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine init_pool  
+subroutine init_pool
   !-----------------------------------------------------------------------
   !
   !    This routine initialize the pool
@@ -19,32 +19,32 @@ subroutine init_pool
   use mp_global , only: mp_global_group_start
 
   !
-  implicit none  
+  implicit none
   !
   ! MPI pool division in pools
   !
-  include 'mpif.h'  
-  integer :: ierr, rank  
+  include 'mpif.h'
+  integer :: ierr, rank
   !
   ! set "mypool" and reset "me"
   !
 
-  rank = me  
-  mypool = (me-1) / nprocp + 1  
+  rank = me
+  mypool = (me-1) / nprocp + 1
 
-  me = me- (mypool - 1) * nprocp  
-  call mpi_barrier (MPI_COMM_WORLD, ierr)  
-  call error ('init_pool', 'at the input barrier', ierr)  
+  me = me- (mypool - 1) * nprocp
+  call mpi_barrier (MPI_COMM_WORLD, ierr)
+  call error ('init_pool', 'at the input barrier', ierr)
   call mpi_comm_split (MPI_COMM_WORLD, mypool, rank, MPI_COMM_POOL, ierr)
 
-  call error ('init_pool', 'MPI_COMM_POOL is wrong', ierr)  
+  call error ('init_pool', 'MPI_COMM_POOL is wrong', ierr)
 
-  if (npool.le.1) return  
-  call mpi_barrier (MPI_COMM_WORLD, ierr)  
-  call error ('init_pool', 'at the second barrier', ierr)  
-  call mpi_comm_split (MPI_COMM_WORLD, me, rank, MPI_COMM_ROW, ierr)  
+  if (npool.le.1) return
+  call mpi_barrier (MPI_COMM_WORLD, ierr)
+  call error ('init_pool', 'at the second barrier', ierr)
+  call mpi_comm_split (MPI_COMM_WORLD, me, rank, MPI_COMM_ROW, ierr)
 
-  call error ('init_pool', 'MPI_COMM_ROW is wrong', ierr)  
+  call error ('init_pool', 'MPI_COMM_ROW is wrong', ierr)
   !
   ! Initialize globally accessible pool variables
   !
@@ -52,5 +52,5 @@ subroutine init_pool
        MPI_COMM_ROW, nprocp)
 
 #endif
-  return  
+  return
 end subroutine init_pool

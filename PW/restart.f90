@@ -40,7 +40,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   use mp, only: mp_sum, mp_max, mp_end
   use mp_global, only: mpime, nproc, root, me_pool, my_pool_id, &
         nproc_pool, intra_pool_comm, root_pool, inter_pool_comm
-  
+
 
   USE io_base, only: write_restart_header, write_restart_ions, &
             write_restart_cell, write_restart_electrons, &
@@ -61,11 +61,11 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   integer, intent(in) :: kunit
   !
   integer :: ik, i, ibnd, ia, ispin, ldim, npwt
-  logical :: exst  
+  logical :: exst
   logical :: twrite
-  real(kind=DP) :: trutime 
+  real(kind=DP) :: trutime
   integer :: nelu
-  integer :: neld 
+  integer :: neld
   integer :: na(nsx)
   integer :: ngk_g( npk )
   integer :: ngk_l( npk )
@@ -81,7 +81,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   real(kind=DP) :: bg1_(3), bg2_(3), bg3_(3)
   real(kind=DP), allocatable :: occtmp(:), lambda(:,:), g_g(:)
   integer :: tetratmp(4), strlen
-  integer, allocatable :: mill(:,:) 
+  integer, allocatable :: mill(:,:)
   integer :: ngm_p( nproc_pool )
   character(len=256) :: filename, file_pseudo
   LOGICAL :: twf0, twfm, tupf
@@ -153,7 +153,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
       twrgkvec  = .TRUE.
   END SELECT
 
-  
+
 
 !  ==--------------------------------------------------------------==
 !  ==  WRITE HEADER INFORMATIONS                                   ==
@@ -242,7 +242,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    xhnosm  = 0.0d0
    xhnos0  = 0.0d0
    xhnosp  = 0.0d0
-   ht0 = TRANSPOSE(at) * alat 
+   ht0 = TRANSPOSE(at) * alat
    htm = ht0
    htm2 = ht0
    htvel = 0.0d0
@@ -320,7 +320,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
            upf%r(:), upf%rab(:), upf%rho_atc(:), upf%vloc(:), upf%lll(:), upf%kkbeta(:), &
            upf%beta(:,:), upf%nd, upf%dion(:,:), upf%nqf, upf%nqlc, upf%rinner(:), &
            upf%qqq(:,:), upf%qfunc(:,:,:), upf%qfcoef(:,:,:,:), upf%chi(:,:), upf%rho_at(:) )
-        
+
          CALL deallocate_pseudo_upf( upf )
          close( iunps )
        ELSE
@@ -450,10 +450,10 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   write (6, '(5x,"file written")')
 
   if( ionode ) then
-    close (unit = ndw)  
+    close (unit = ndw)
   end if
   !
-  return  
+  return
 end subroutine writefile_new
 
 
@@ -466,7 +466,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !     programs.
   !
   !
-  use parameters, only: npk, nchix, ndm  
+  use parameters, only: npk, nchix, ndm
   use io, only: prefix, tmp_dir
   use funct, only: iexch, icorr, igcx, igcc
   use pwcom, only: DP, ngk, dual, ecutwfc, nat, istep, iswitch, nr1, nr2, nr3, &
@@ -481,7 +481,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
    nlcc, psd, lsda, bg, xk, wk, isk, tpiba, pi, omega, igk_l2g, nwordwfc, iunwfc, evc, &
    ig_l2g, nbrx, lqmax, nqfm, gamma_only
-  
+
   USE pseudo_types, ONLY: pseudo_upf
 
   use mp, only: mp_sum, mp_bcast, mp_max, mp_end
@@ -564,7 +564,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
     rewind ndr
   end if
   call mp_bcast( ierr, ionode_id )
-  if( ierr /= 0 ) then 
+  if( ierr /= 0 ) then
     return
   end if
 
@@ -793,9 +793,9 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
          CALL set_pseudo( i, upf, ierr)
 
          ! UPF is always numeric
-         numeric (i) = .true.  
+         numeric (i) = .true.
          ! UPF is RRKJ3-like
-         newpseudo (i) = .true.  
+         newpseudo (i) = .true.
 
          DEALLOCATE( upf%els,  upf%lchi, upf%oc, upf%r, upf%rab )
          DEALLOCATE( upf%rho_atc, upf%vloc, upf%lll, upf%kkbeta, upf%beta, &
@@ -855,7 +855,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      END IF
    END DO
 
-!  ==--------------------------------------------------------------== 
+!  ==--------------------------------------------------------------==
 !  ==  G-Vectors                                                   ==
 !  ==--------------------------------------------------------------==
 
@@ -870,7 +870,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      DEALLOCATE( mill )
    ELSE
      CALL read_restart_gvec( ndr )
-   END IF 
+   END IF
 
 !  ==--------------------------------------------------------------==
 !  ==  (G+k)-Vectors                                               ==
@@ -879,7 +879,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    tovrw = .TRUE.
    DO ik = 1, nkstot
      IF ( trdgkvec ) THEN
-       CALL read_restart_gkvec(ndr, tovrw, trdgkvec, & 
+       CALL read_restart_gkvec(ndr, tovrw, trdgkvec, &
          ik_, nkstot_, ngk_g(ik), xk(:,ik), wk(ik), tetratmp, isk(ik))
        IF( ltetra ) THEN
          tetra(:,ik) = tetratmp
@@ -887,7 +887,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      ELSE
        CALL read_restart_gkvec( ndr )
      END IF
-   END DO 
+   END DO
 
    ! .. distribute k points according to the present processor geometry
 
@@ -993,11 +993,11 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 10 continue
    !
    if( ionode ) then
-     close (unit = ndr)  
+     close (unit = ndr)
    end if
-   write (6, '(5x,"read complete")') 
+   write (6, '(5x,"read complete")')
    !
-   return  
+   return
 end subroutine
 
 
@@ -1010,8 +1010,8 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !     programs.
   !
   !
-  use pwcom, only: DP  
-  use parameters, only: npk  
+  use pwcom, only: DP
+  use parameters, only: npk
   use io, only: prefix, tmp_dir
   use io_global, only: ionode, ionode_id
   use mp, only: mp_bcast
@@ -1050,7 +1050,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   integer :: k1_, k2_, k3_, nk1_, nk2_, nk3_, ngauss_
   integer :: na_(nsx), ngk_l(npk), ngk_g(npk)
   integer :: ntetra_, natomwfc_, modenum_
-  integer :: npwx_, nbndx_, nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_ 
+  integer :: npwx_, nbndx_, nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_
   real(kind=DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
   real(kind=DP) :: degauss_, gcutm_, gcutms_, dual_
   real(kind=DP) :: acc_(nacx)
@@ -1077,7 +1077,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
     rewind ndr
   end if
   call mp_bcast( ierr, ionode_id )
-  if( ierr /= 0 ) then 
+  if( ierr /= 0 ) then
     return
   end if
 
@@ -1151,10 +1151,10 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
 
    !
    if( ionode ) then
-     close (unit = ndr)  
+     close (unit = ndr)
    end if
    !
-   return  
+   return
 end subroutine readfile_config
 
 end module restart_module

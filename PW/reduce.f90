@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine reduce (size, ps)  
+subroutine reduce (size, ps)
   !-----------------------------------------------------------------------
   !
   !     sums a distributed variable s(size) over the processors.
@@ -21,73 +21,73 @@ subroutine reduce (size, ps)
   use para
 #endif
   use parameters, only : DP
-  implicit none  
-  integer :: size  
+  implicit none
+  integer :: size
 
-  real (kind=DP) :: ps (size)  
+  real (kind=DP) :: ps (size)
 #ifdef PARA
-  include 'mpif.h'  
-  integer :: info, n, nbuf  
+  include 'mpif.h'
+  integer :: info, n, nbuf
 #define MAXB 10000
-  real (kind=DP) :: buff (MAXB)  
+  real (kind=DP) :: buff (MAXB)
 #ifdef SHMEM
-  include 'mpp/shmem.fh'  
-  integer :: pWrkSync, pWrkData, start  
-  common / SH_SYNC / pWrkSync (SHMEM_BARRIER_SYNC_SIZE)  
-  common / SH_DATA / pWrkData (1024 * 1024)  
-  data pWrkData / 1048576 * 0 /  
-  data pWrkSync / SHMEM_BARRIER_SYNC_SIZE * SHMEM_SYNC_VALUE /  
+  include 'mpp/shmem.fh'
+  integer :: pWrkSync, pWrkData, start
+  common / SH_SYNC / pWrkSync (SHMEM_BARRIER_SYNC_SIZE)
+  common / SH_DATA / pWrkData (1024 * 1024)
+  data pWrkData / 1048576 * 0 /
+  data pWrkSync / SHMEM_BARRIER_SYNC_SIZE * SHMEM_SYNC_VALUE /
   !DIR$ CACHE_ALIGN /SH_SYNC/
   !DIR$ CACHE_ALIGN /SH_DATA/
 #endif
-  if (nprocp.le.1) return  
-  if (size.le.0) return  
-  call start_clock ('reduce')  
+  if (nprocp.le.1) return
+  if (size.le.0) return
+  call start_clock ('reduce')
   !
   !  syncronize processes - maybe unneeded on t3d but necessary on t3e !!!
   !
-  call mpi_barrier (MPI_COMM_POOL, info)  
+  call mpi_barrier (MPI_COMM_POOL, info)
 
-  call error ('reduce', 'error in barrier', info)  
+  call error ('reduce', 'error in barrier', info)
 
-  nbuf = size / MAXB  
+  nbuf = size / MAXB
 #ifdef SHMEM
-  start = (mypool - 1) * nprocp  
+  start = (mypool - 1) * nprocp
 #endif
-  do n = 1, nbuf  
+  do n = 1, nbuf
 #ifdef SHMEM
      call SHMEM_REAL8_SUM_TO_ALL (buff, ps (1 + (n - 1) * MAXB), &
           MAXB, start, 0, nprocp, pWrkData, pWrkSync)
 #else
      call mpi_allreduce (ps (1 + (n - 1) * MAXB), buff, MAXB, &
           MPI_REAL8, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('reduce', 'error in allreduce1', info)  
+     call error ('reduce', 'error in allreduce1', info)
 #endif
-     call DCOPY (MAXB, buff, 1, ps (1 + (n - 1) * MAXB), 1)  
+     call DCOPY (MAXB, buff, 1, ps (1 + (n - 1) * MAXB), 1)
   enddo
   !
   !    possible remaining elements < maxb
   !
-  if (size-nbuf * MAXB.gt.0) then  
+  if (size-nbuf * MAXB.gt.0) then
 #ifdef SHMEM
      call SHMEM_REAL8_SUM_TO_ALL (buff, ps (1 + nbuf * MAXB), &
           size-nbuf * MAXB, start, 0, nprocp, pWrkData, pWrkSync)
 #else
      call mpi_allreduce (ps (1 + nbuf * MAXB), buff, size-nbuf * &
           MAXB, MPI_REAL8, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('reduce', 'error in allreduce2', info)  
+     call error ('reduce', 'error in allreduce2', info)
 #endif
      call DCOPY (size-nbuf * MAXB, buff, 1, ps (1 + nbuf * MAXB), &
           1)
 
   endif
-  call stop_clock ('reduce')  
+  call stop_clock ('reduce')
 #endif
-  return  
+  return
 end subroutine reduce
 !
 !-----------------------------------------------------------------------
-subroutine ireduce (size, is)  
+subroutine ireduce (size, is)
   !-----------------------------------------------------------------------
   !
   !     sums a distributed variable is(size) over the processors.
@@ -96,46 +96,46 @@ subroutine ireduce (size, is)
 #ifdef PARA
   use para
 #endif
-  implicit none  
+  implicit none
 
-  integer :: size, is (size)  
+  integer :: size, is (size)
 #ifdef PARA
-  include 'mpif.h'  
-  integer :: info, n, m, nbuf  
+  include 'mpif.h'
+  integer :: info, n, m, nbuf
 #define MAXI 500
 
-  integer :: buff (MAXI)  
-  if (nprocp.le.1) return  
-  if (size.le.0) return  
+  integer :: buff (MAXI)
+  if (nprocp.le.1) return
+  if (size.le.0) return
   !
   !  syncronize processes
   !
-  call mpi_barrier (MPI_COMM_POOL, info)  
+  call mpi_barrier (MPI_COMM_POOL, info)
 
-  call error ('reduce', 'error in barrier', info)  
+  call error ('reduce', 'error in barrier', info)
 
-  nbuf = size / MAXI  
-  do n = 1, nbuf  
+  nbuf = size / MAXI
+  do n = 1, nbuf
      call mpi_allreduce (is (1 + (n - 1) * MAXI), buff, MAXI, &
           MPI_INTEGER, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('ireduce', 'error in allreduce 1', info)  
-     do m = 1, MAXI  
-        is (m + (n - 1) * MAXI) = buff (m)  
+     call error ('ireduce', 'error in allreduce 1', info)
+     do m = 1, MAXI
+        is (m + (n - 1) * MAXI) = buff (m)
      enddo
   enddo
   !
   !    possible remaining elements < MAXI
   !
-  if (size-nbuf * MAXI.gt.0) then  
+  if (size-nbuf * MAXI.gt.0) then
      call mpi_allreduce (is (1 + nbuf * MAXI), buff, size-nbuf * &
           MAXI, MPI_INTEGER, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('reduce', 'error in allreduce 2', info)  
-     do m = 1, size-nbuf * MAXI  
-        is (m + nbuf * MAXI) = buff (m)  
+     call error ('reduce', 'error in allreduce 2', info)
+     do m = 1, size-nbuf * MAXI
+        is (m + nbuf * MAXI) = buff (m)
      enddo
 
   endif
 #endif
-  return  
+  return
 end subroutine ireduce
 

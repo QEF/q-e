@@ -7,67 +7,67 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine wfcinit  
+subroutine wfcinit
   !-----------------------------------------------------------------------
   !
   ! This routine computes an estimate of the starting wavefunctions
   ! from superposition of atomic wavefunctions.
   !
 #include "machine.h"
-  use pwcom  
+  use pwcom
   implicit none
   !
-  integer :: ik, ibnd, ig, ipol, n_starting_wfc  
+  integer :: ik, ibnd, ig, ipol, n_starting_wfc
   ! counter on k points
   !    "     "   bands
   !    "     "  plane waves
   !    "     "  polarization
   ! number of starting wavefunctions
 
-  real(kind=DP) :: rndm, rr, arg  
+  real(kind=DP) :: rndm, rr, arg
   ! random function generation
 
-  external rndm  
+  external rndm
   !
   ! state what is going to happen
   !
-  if (startingwfc.eq.'file') then  
-     write (6, '(5x,a)') 'Starting wfc from file'  
+  if (startingwfc.eq.'file') then
+     write (6, '(5x,a)') 'Starting wfc from file'
      !
      ! read the wavefunction into memory (if it is not done in c_bands)
      !
      if (nks.eq.1.and.reduce_io) call davcio(evc,nwordwfc,iunwfc,1,-1)
-     return  
+     return
   endif
 
-  call start_clock ('wfcinit')  
-  if (startingwfc.eq.'atomic') then  
-     if (natomwfc.ge.nbnd) then  
-        write (6, '(5x,a)') 'Starting wfc are atomic'  
-     else  
+  call start_clock ('wfcinit')
+  if (startingwfc.eq.'atomic') then
+     if (natomwfc.ge.nbnd) then
+        write (6, '(5x,a)') 'Starting wfc are atomic'
+     else
         write (6, '(5x,a,i3,a)') 'Starting wfc are atomic + ',&
              nbnd-natomwfc, ' random wfc'
      endif
-     n_starting_wfc = max (natomwfc, nbnd)  
-  else  
-     write (6, '(5x,a)') 'Starting wfc are random'  
-     n_starting_wfc = nbnd  
+     n_starting_wfc = max (natomwfc, nbnd)
+  else
+     write (6, '(5x,a)') 'Starting wfc are random'
+     n_starting_wfc = nbnd
   endif
   !
   ! Needed for LDA+U
   !
-  if (lda_plus_u) call orthoatwfc  
-  if (nks.gt.1) rewind (iunigk)  
+  if (lda_plus_u) call orthoatwfc
+  if (nks.gt.1) rewind (iunigk)
   !
   !    we start a loop on k points
   !
-  do ik = 1, nks  
-     if (lsda) current_spin = isk (ik)  
-     if (nks.gt.1) read (iunigk) npw, igk  
+  do ik = 1, nks
+     if (lsda) current_spin = isk (ik)
+     if (nks.gt.1) read (iunigk) npw, igk
      !
      !     here we compute the kinetic energy
      !
-     do ig = 1, npw  
+     do ig = 1, npw
         g2kin (ig) = (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
                      (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
                      (xk (3, ik) + g (3, igk (ig) ) ) **2
@@ -76,19 +76,19 @@ subroutine wfcinit
      ! Put the correct units on the kinetic energy
      !
 
-     call DSCAL (npw, tpiba2, g2kin, 1)  
+     call DSCAL (npw, tpiba2, g2kin, 1)
 
      if (lda_plus_u) call davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
 
-     if (startingwfc.eq.'atomic') then  
+     if (startingwfc.eq.'atomic') then
 
-        call atomic_wfc (ik, evc)  
+        call atomic_wfc (ik, evc)
 
-        if (natomwfc.lt.nbnd) then  
-           do ibnd = natomwfc + 1, nbnd  
-              do ig = 1, npw  
-                 rr = rndm ()  
-                 arg = tpi * rndm ()  
+        if (natomwfc.lt.nbnd) then
+           do ibnd = natomwfc + 1, nbnd
+              do ig = 1, npw
+                 rr = rndm ()
+                 arg = tpi * rndm ()
                  evc (ig, ibnd) = DCMPLX (rr * cos (arg), rr * sin (arg) ) &
                       / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
                           (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
@@ -96,11 +96,11 @@ subroutine wfcinit
               enddo
            enddo
         endif
-     else  
-        do ibnd = 1, nbnd  
-           do ig = 1, npw  
-              rr = rndm ()  
-              arg = tpi * rndm ()  
+     else
+        do ibnd = 1, nbnd
+           do ig = 1, npw
+              rr = rndm ()
+              arg = tpi * rndm ()
               evc (ig, ibnd) = DCMPLX (rr * cos (arg), rr * sin (arg) ) &
                    / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
                        (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
@@ -109,38 +109,38 @@ subroutine wfcinit
         enddo
 
      endif
-     call init_us_2 (npw, igk, xk (1, ik), vkb)  
+     call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
      !   Diagonalize the Hamiltonian on the reduced basis
      !
-     if (isolve.eq.1) then  
+     if (isolve.eq.1) then
         call cinitcgg (npwx, npw, n_starting_wfc, nbnd, evc, et (1, ik))
-     else  
+     else
         call rotate_wfc (npw, npwx, n_starting_wfc, nbnd, et (1, ik), evc)
      endif
-     do ibnd = 1, nbnd  
-        do ig = npw + 1, npwx  
-           evc (ig, ibnd) = (0.d0, 0.d0)  
+     do ibnd = 1, nbnd
+        do ig = npw + 1, npwx
+           evc (ig, ibnd) = (0.d0, 0.d0)
         enddo
      enddo
      if (nks.gt.1.or..not.reduce_io) call davcio (evc, nwordwfc, iunwfc, ik, 1)
 
   enddo
-  if (iprint.eq.1) then  
+  if (iprint.eq.1) then
 #ifdef PARA
-     call poolrecover (et, nbndx, nkstot, nks)  
+     call poolrecover (et, nbndx, nkstot, nks)
 #endif
-     do ik = 1, nkstot  
-        write (6, 9010) (xk (ipol, ik), ipol = 1, 3)  
+     do ik = 1, nkstot
+        write (6, 9010) (xk (ipol, ik), ipol = 1, 3)
         write (6, '(2x,8f9.4)') (et (ibnd, ik) * rytoev, ibnd = 1, nbnd)
      enddo
   endif
 #ifdef FLUSH
-  call flush (6)  
+  call flush (6)
 #endif
-  call stop_clock ('wfcinit')  
+  call stop_clock ('wfcinit')
 
-  return  
-9010 format (/'          k =',3f7.4,'     band energies (ev):'/)  
+  return
+9010 format (/'          k =',3f7.4,'     band energies (ev):'/)
 end subroutine wfcinit
 

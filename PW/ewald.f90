@@ -16,7 +16,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !   first the dummy variables
   !
@@ -53,7 +53,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   real(kind=DP), parameter :: tpi = 2.d0 * 3.141592653589793d0
   real(kind=DP), parameter :: e2 = 2.d0
   ! the square of the electron charge (Ry atomic units)
-  integer :: ng, nr, na, nb, nt, nrm, ipol  
+  integer :: ng, nr, na, nb, nt, nrm, ipol
   ! counter over reciprocal G vectors
   ! counter over direct vectors
   ! counter on atoms
@@ -75,16 +75,16 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! the maximum radius to consider real space sum
   ! buffer variable
   ! used to optimize alpha
-  complex(kind=DP) :: rhon  
-  real(kind=DP), external :: erfc  
+  complex(kind=DP) :: rhon
+  real(kind=DP), external :: erfc
 
-  tpiba2 = (tpi / alat) **2  
-  charge = 0.d0  
-  do na = 1, nat  
-     charge = charge+zv (ityp (na) )  
+  tpiba2 = (tpi / alat) **2
+  charge = 0.d0
+  do na = 1, nat
+     charge = charge+zv (ityp (na) )
   enddo
-  alpha = 2.9d0  
-100 alpha = alpha - 0.1d0  
+  alpha = 2.9d0
+100 alpha = alpha - 0.1d0
   !
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error in the sum over G
@@ -92,35 +92,35 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   if (alpha.le.0.d0) call error ('ewald', 'optimal alpha not found', 1)
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
-  if (upperbound.gt.1.0d-7) goto 100  
+  if (upperbound.gt.1.0d-7) goto 100
   !
   ! G-space sum here.
   ! Determine if this processor contains G=0 and set the constant term
   !
-  if (gstart==2) then  
-     ewaldg = - charge**2 / alpha / 4.0  
-  else  
-     ewaldg = 0.0  
+  if (gstart==2) then
+     ewaldg = - charge**2 / alpha / 4.0
+  else
+     ewaldg = 0.0
   endif
   if (gamma_only) then
      fact = 2.d0
   else
      fact = 1.d0
   end if
-  do ng = gstart, ngm  
-     rhon = (0.d0, 0.d0)  
-     do nt = 1, ntyp  
-        rhon = rhon + zv (nt) * conjg (strf (ng, nt) )  
+  do ng = gstart, ngm
+     rhon = (0.d0, 0.d0)
+     do nt = 1, ntyp
+        rhon = rhon + zv (nt) * conjg (strf (ng, nt) )
      enddo
      ewaldg = ewaldg + fact * abs (rhon) **2 * exp ( - gg (ng) * tpiba2 / &
           alpha / 4.d0) / gg (ng) / tpiba2
   enddo
-  ewaldg = 2.d0 * tpi / omega * ewaldg  
+  ewaldg = 2.d0 * tpi / omega * ewaldg
   !
   !  Here add the other constant term
   !
-  if (gstart.eq.2) then  
-     do na = 1, nat  
+  if (gstart.eq.2) then
+     do na = 1, nat
         ewaldg = ewaldg - zv (ityp (na) ) **2 * sqrt (8.d0 / tpi * &
              alpha)
      enddo
@@ -128,43 +128,43 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
-  ewaldr = 0.d0  
-  if (gstart.eq.2) then  
-     rmax = 4.d0 / sqrt (alpha) / alat  
+  ewaldr = 0.d0
+  if (gstart.eq.2) then
+     rmax = 4.d0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(4) are counted (erfc(4)=2x10^-8
      !
-     do na = 1, nat  
-        do nb = 1, nat  
-           do ipol = 1, 3  
-              dtau (ipol) = tau (ipol, na) - tau (ipol, nb)  
+     do na = 1, nat
+        do nb = 1, nat
+           do ipol = 1, 3
+              dtau (ipol) = tau (ipol, na) - tau (ipol, nb)
            enddo
            !
            ! generates nearest-neighbors shells
            !
-           call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)  
+           call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
            !
            ! and sum to the real space part
            !
-           do nr = 1, nrm  
-              rr = sqrt (r2 (nr) ) * alat  
+           do nr = 1, nrm
+              rr = sqrt (r2 (nr) ) * alat
               ewaldr = ewaldr + zv (ityp (na) ) * zv (ityp (nb) ) * erfc ( &
                    sqrt (alpha) * rr) / rr
            enddo
         enddo
      enddo
   endif
-  ewald = 0.5d0 * e2 * (ewaldg + ewaldr)  
+  ewald = 0.5d0 * e2 * (ewaldg + ewaldr)
 #ifdef PARA
 
 
-  call reduce (1, ewald)  
+  call reduce (1, ewald)
 #endif
   !      call reduce (1,ewaldr)
   !      call reduce (1,ewaldg)
   !      write(6,'(/5x,"alpha used in ewald term: ",f4.2/
   !     + 5x,"R-space term: ",f12.7,5x,"G-space term: ",f12.7/)')
   !     + alpha, ewaldr, ewaldg
-  return  
+  return
 end function ewald
 

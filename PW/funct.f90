@@ -6,10 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 module funct
-character (len=20) :: dft  
+character (len=20) :: dft
                          ! exch-corr name (in human-readable format)
 
-integer :: iexch, icorr, igcx, igcc  
+integer :: iexch, icorr, igcx, igcc
                          ! type of exchange
                          ! type of correlation
                          ! type of gradient correction on exchange

@@ -11,20 +11,20 @@
 module g0aux
   use parameters, only: DP
   real(kind=DP), pointer:: vlocg0(:,:) ! local potential at q+G for q=0
-  complex(kind=DP), pointer:: d0rc(:,:)! contain the rhoc for q=0
   complex(kind=DP), pointer:: vkb0 (:,:) ! contains beta functions at q=0
+  complex(kind=DP), pointer:: d0rc(:,:)! contain the rhoc for q=0
 end module g0aux
 !
 !   the units of the files and the record lengths
 !
 module units_d3
   integer:: iudqwf,        &! the unit with | Pc d/du(q) psi_{k+q} >
-            iud0qwf,       &! the unit with | Pc d/du(0) psi_{k+q} > 
+            iud0qwf,       &! the unit with | Pc d/du(0) psi_{k+q} >
             iud0rho         ! the unit where q=0 delta rho is written
 end module units_d3
 !
 !    the name of the files
-!  
+!
 module d0rho
   character(len=30) :: fild0rho
 end module d0rho
@@ -36,8 +36,8 @@ module modesg0
   integer :: nsymg0,        &! the number of symmetries of the crystal
              nirrg0          ! the number of irreducible representation
 !
-  integer, pointer:: npertg0(:)  ! the number of perturbations per IR
-  complex(kind=DP), pointer:: ug0(:,:), tg0(:,:,:,:)
+  integer, pointer :: npertg0(:)  ! the number of perturbations per IR
+  complex(kind=DP), pointer :: ug0(:,:), tg0(:,:,:,:)
  ! ug0: transformation modes patterns
  ! tg0: the symmetry in the base of pattern (q=0)
 end module modesg0
@@ -46,22 +46,22 @@ end module modesg0
 !
 module d3aux
   use parameters, only: DP
-  complex(kind=DP), pointer :: &
+  complex(kind=DP), allocatable :: &
        d3dyn_aux1(:,:,:), d3dyn_aux2(:,:,:), d3dyn_aux3(:,:,:), &
        d3dyn_aux4(:,:,:), d3dyn_aux5(:,:,:), d3dyn_aux6(:,:,:), &
        d3dyn_aux7(:,:,:), d3dyn_aux8(:,:,:), d3dyn_aux9(:,:,:)
 end module d3aux
 !
-!    third order dynamical matrix  
+!    third order dynamical matrix
 !
 module thirdorder
   use parameters, only: DP
-  complex(kind=DP), pointer ::  d3dyn(:,:,:)
+  complex(kind=DP), allocatable ::  d3dyn(:,:,:)
   ! third order dynamical matrix
-  complex(kind=DP), pointer :: psidqvpsi(:,:)
+  complex(kind=DP), allocatable :: psidqvpsi(:,:)
   !    <psi| dqV |psi>
   real(kind=DP) :: ethr_ph ! eigenvalues convergence threshold
-  real(kind=DP), pointer ::  ef_sh(:) ! E_Fermi shift
+  real(kind=DP), allocatable ::  ef_sh(:) ! E_Fermi shift
   integer :: istop
   logical :: wraux, recv
 end module thirdorder
@@ -89,7 +89,7 @@ module units_d3ph
        lrdpdvp          ! length of <dpsi |  dV |psi> records
 end module units_d3ph
 !
-! In the parallel version of the program some loop on perturbations 
+! In the parallel version of the program some loop on perturbations
 ! may be split betweem pools. npert_i and npert_f are the initial
 ! and final value for a counter on the modes to be split among pools
 !

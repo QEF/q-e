@@ -8,53 +8,52 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine psyme (dvtosym)  
+subroutine psyme (dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the charge density.
   !
 #include "machine.h"
 #ifdef PARA
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
+  use pwcom
+  use parameters, only : DP
   use phcom
   use para
-  implicit none 
+  implicit none
 
-  complex(kind=DP) :: dvtosym (nrxx, nspin, 3)  
+  complex(kind=DP) :: dvtosym (nrxx, nspin, 3)
   ! the potential to symmetrize
   !-local variable
 
-  integer :: i, is, iper, npp0  
+  integer :: i, is, iper, npp0
 
-  complex(kind=DP), pointer :: ddvtosym (:,:,:)
+  complex(kind=DP), allocatable :: ddvtosym (:,:,:)
   ! the potential to symmet
 
-  call mallocate(ddvtosym , nrx1 * nrx2 * nrx3, nspin, 3)  
-  npp0 = 0  
-  do i = 1, me-1  
-     npp0 = npp0 + npp (i)  
+  allocate (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, 3))    
+  npp0 = 0
+  do i = 1, me-1
+     npp0 = npp0 + npp (i)
   enddo
 
-  npp0 = npp0 * ncplane+1  
-  do iper = 1, 3  
-     do is = 1, nspin  
-        call cgather_sym (dvtosym (1, is, iper), ddvtosym (1, is, iper) )  
+  npp0 = npp0 * ncplane+1
+  do iper = 1, 3
+     do is = 1, nspin
+        call cgather_sym (dvtosym (1, is, iper), ddvtosym (1, is, iper) )
      enddo
 
   enddo
 
-  call syme (ddvtosym)  
-  do iper = 1, 3  
-     do is = 1, nspin  
+  call syme (ddvtosym)
+  do iper = 1, 3
+     do is = 1, nspin
         call ZCOPY (npp (me) * ncplane, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      enddo
 
   enddo
 
-  call mfree (ddvtosym)  
+  deallocate (ddvtosym)
 #endif
-  return  
+  return
 end subroutine psyme

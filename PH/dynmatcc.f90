@@ -6,23 +6,22 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine dynmatcc  
+subroutine dynmatcc
   !--------------------------------------------------------------------
   !
   ! diagonal (q-independent) NLCC contribution to the dynamical matrix
   !
 #include "machine.h"
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
-  implicit none 
+  use pwcom
+  use parameters, only : DP
+  use phcom
+  implicit none
 
   complex(kind=DP) ::  dynwrk (3 * nat, 3 * nat),  wrk, exc
-  complex(kind=DP), pointer :: vxc (:), work(:)
+  complex(kind=DP), allocatable :: vxc (:), work(:)
   ! exchange and correlation potential
-  real(kind=DP), pointer :: v (:,:)
+  real(kind=DP), allocatable :: v (:,:)
   real(kind=DP) :: q0(3), arg, etxcd, vtxcd
   !
   integer :: i, j, ir, is, isup, isdw, ig, na, nb, nta, ntb, na_i, na_j, &
@@ -30,56 +29,56 @@ subroutine dynmatcc
   !
   ! return immediately if nlcc is not present
   !
-  if (.not.nlcc_any) return  
-  call start_clock ('dynmatcc')  
+  if (.not.nlcc_any) return
+  call start_clock ('dynmatcc')
   !
   ! allocate workspace
   !
-  call mallocate(vxc, nrxx)  
-  call mallocate(v  , nrxx , nspin)  
+  allocate (vxc( nrxx))    
+  allocate (v  ( nrxx , nspin))    
   !
   call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
              nl, ngm, g, nspin, alat, omega, etxcd, vtxcd, v)
   !
   if (nspin.eq.1) then
      is=1
-     do ir = 1, nrxx  
+     do ir = 1, nrxx
         vxc(ir) = v(ir,is)
      end do
   else
      isup=1
      isdw=2
-     do ir = 1, nrxx  
+     do ir = 1, nrxx
         vxc (ir) = (v(ir,isup) + v(ir,isdw))*0.5d0
      end do
   end if
-  call mfree (v)  
+  deallocate (v)
   !
-  call cft3 (vxc, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+  call cft3 (vxc, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   ! vxc is the spin-averaged XC potential (in G-space)
   !
-  call setv (3, 0.d0, q0, 1)  
-  call set_drhoc (q0)  
+  call setv (3, 0.d0, q0, 1)
+  call set_drhoc (q0)
   !
   ! set_drhoc produces drc=Drho_core(G)/DG , without struct.fact.
   !
-  call setv (18 * nat * nat, 0.d0, dynwrk, 1)  
-  call mallocate(work , nrxx)  
-  do na = 1, nat  
-     nta = ityp (na)  
-     call setv (2 * nrxx, 0.d0, work, 1)  
-     do ig = 1, ngm  
+  call setv (18 * nat * nat, 0.d0, dynwrk, 1)
+  allocate (work ( nrxx))    
+  do na = 1, nat
+     nta = ityp (na)
+     call setv (2 * nrxx, 0.d0, work, 1)
+     do ig = 1, ngm
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
-        exc = DCMPLX (cos (arg), - sin (arg) ) * tpiba2  
-        work (ig) = drc (ig, nta) * exc * conjg (vxc (nl (ig) ) )  
+        exc = DCMPLX (cos (arg), - sin (arg) ) * tpiba2
+        work (ig) = drc (ig, nta) * exc * conjg (vxc (nl (ig) ) )
      enddo
-     do i = 1, 3  
-        na_i = 3 * (na - 1) + i  
-        do j = 1, 3  
-           na_j = 3 * (na - 1) + j  
-           do ig = 1, ngm  
+     do i = 1, 3
+        na_i = 3 * (na - 1) + i
+        do j = 1, 3
+           na_j = 3 * (na - 1) + j
+           do ig = 1, ngm
               dynwrk (na_i, na_j) = dynwrk (na_i, na_j) - g(i, ig) * g(j, ig) &
                    * work (ig)
            enddo
@@ -87,12 +86,12 @@ subroutine dynmatcc
      enddo
   enddo
 #ifdef PARA
-  call reduce (18 * nat * nat, dynwrk)  
+  call reduce (18 * nat * nat, dynwrk)
 #endif
   !
   ! divide by omega
   !
-  call DSCAL (18 * nat * nat, omega, dynwrk, 1)  
+  call DSCAL (18 * nat * nat, omega, dynwrk, 1)
   !
   ! calculate drc for later use in calculation of non diagonal term
   !
@@ -100,21 +99,21 @@ subroutine dynmatcc
   !
   ! rotate in the pattern basis and add to dynmat
   !
-  do nu_i = 1, 3 * nat  
-     do nu_j = 1, 3 * nat  
-        wrk = (0.d0, 0.d0)  
-        do nb_jcart = 1, 3 * nat  
-           do na_icart = 1, 3 * nat  
+  do nu_i = 1, 3 * nat
+     do nu_j = 1, 3 * nat
+        wrk = (0.d0, 0.d0)
+        do nb_jcart = 1, 3 * nat
+           do na_icart = 1, 3 * nat
               wrk = wrk + conjg (u (na_icart, nu_i) ) * dynwrk (na_icart, &
                    nb_jcart) * u (nb_jcart, nu_j)
            enddo
         enddo
-        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + wrk  
+        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + wrk
      enddo
   enddo
   !
-  call mfree (work)  
-  call mfree (vxc)  
-  call stop_clock ('dynmatcc')  
-  return  
+  deallocate (work)
+  deallocate (vxc)
+  call stop_clock ('dynmatcc')
+  return
 end subroutine dynmatcc

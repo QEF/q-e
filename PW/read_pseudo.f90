@@ -1,6 +1,6 @@
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo (is, iunps, ierr)  
+subroutine read_pseudo (is, iunps, ierr)
   !---------------------------------------------------------------------
   !
   !   read "is"-th pseudopotential in the Unified Pseudopotential Format
@@ -17,7 +17,7 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   implicit none
   !
-  integer :: is, iunps, ierr 
+  integer :: is, iunps, ierr
   !
   !     Local variables
   !
@@ -34,7 +34,7 @@ subroutine read_pseudo (is, iunps, ierr)
   tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
   dft = upf%dft
-  call which_dft (upf%dft, iexch, icorr, igcx, igcc)  
+  call which_dft (upf%dft, iexch, icorr, igcx, igcc)
   mesh(is) = upf%mesh
   !
   nchi(is) = upf%nwfc

@@ -6,33 +6,33 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine write_ns  
+subroutine write_ns
   !-----------------------------------------------------------------------
 
-  use pwcom  
+  use pwcom
   implicit none
-  integer :: is, na, nt, m1, m2  
+  integer :: is, na, nt, m1, m2
   ! counter on spin component
   ! counter on atoms and their type
   ! counters on d components
-  complex(kind=DP) :: f (5, 5), vet (5, 5)  
+  complex(kind=DP) :: f (5, 5), vet (5, 5)
 
 
-  real(kind=DP) :: lambda (5), nsum  
+  real(kind=DP) :: lambda (5), nsum
   write (6,'(6(a,i2,a,f8.4,6x))') &
         ('U(',nt,') =', Hubbard_U(nt) * rytoev, nt=1,ntyp)
   write (6,'(6(a,i2,a,f8.4,6x))') &
         ('alpha(',nt,') =', Hubbard_alpha(nt) * rytoev, nt=1,ntyp)
 
-  nsum = 0.d0  
-  do is = 1, nspin  
-     do na = 1, nat  
-        nt = ityp (na)  
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-           do m1 = 1, 5  
-              nsum = nsum + nsnew (na, is, m1, m1)  
-              do m2 = 1, 5  
-                 f (m1, m2) = nsnew (na, is, m1, m2)  
+  nsum = 0.d0
+  do is = 1, nspin
+     do na = 1, nat
+        nt = ityp (na)
+        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
+           do m1 = 1, 5
+              nsum = nsum + nsnew (na, is, m1, m1)
+              do m2 = 1, 5
+                 f (m1, m2) = nsnew (na, is, m1, m2)
               enddo
            enddo
            call cdiagh(5,f,5,lambda,vet)
@@ -50,6 +50,6 @@ subroutine write_ns
      enddo
   enddo
 
-  write (6, '(a,x,f11.7)') 'nsum =', nsum  
-  return  
+  write (6, '(a,x,f11.7)') 'nsum =', nsum
+  return
 end subroutine write_ns

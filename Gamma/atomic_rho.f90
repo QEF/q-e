@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine atomic_rho (rhoa, nspina)  
+subroutine atomic_rho (rhoa, nspina)
   !-----------------------------------------------------------------------
   ! This routine calculates rhoa as the superposition of atomic charges.
   !
@@ -23,27 +23,26 @@ subroutine atomic_rho (rhoa, nspina)
   !
 #include "machine.h"
 
-  use pwcom  
+  use pwcom
   use gamma
-  use allocate 
   implicit none
-  integer :: nspina  
+  integer :: nspina
   ! the number of spin polarizations
 
-  real(kind=DP) :: rhoa (nrxx, nspina), rhoneg, rhorea, rhoima, gx 
-  real(kind=DP), pointer :: rhocgnt (:), aux (:)
+  real(kind=DP) :: rhoa (nrxx, nspina), rhoneg, rhorea, rhoima, gx
+  real(kind=DP), allocatable :: rhocgnt (:), aux (:)
   ! the output atomic charge
   ! negative charge
   ! real charge
   ! imaginary charge
-  ! the modulus of G                
+  ! the modulus of G
   ! the value of the integral
   ! the integrand function
 
-  complex(kind=DP), pointer :: rhocg (:,:)  
+  complex(kind=DP), allocatable :: rhocg (:,:)
   ! auxiliary var: charge dens. in G spac
 
-  integer :: ir, is, ig, igl, igl0, nt  
+  integer :: ir, is, ig, igl, igl0, nt
   ! counter on mesh points
   ! counter on spin polarizations
   ! counter on G vectors
@@ -55,53 +54,53 @@ subroutine atomic_rho (rhoa, nspina)
   ! superposition of atomic charges contained in the array rho_at and
   ! already set in readin-readvan
   !
-  call mallocate(rhocg,  ngm, nspina)  
-  call mallocate(aux, ndm)
-  call mallocate(rhocgnt, ngl) 
+  allocate (rhocg(  ngm, nspina))    
+  allocate (aux( ndm))    
+  allocate (rhocgnt( ngl))    
 
   ! psic is the generic work space
-  call setv (nrxx, 0.d0, rhoa, 1)  
+  call setv (nrxx, 0.d0, rhoa, 1)
 
-  call setv (2 * nspina * ngm, 0.d0, rhocg, 1)  
-  do nt = 1, ntyp  
+  call setv (2 * nspina * ngm, 0.d0, rhocg, 1)
+  do nt = 1, ntyp
      !
      ! Here we compute the G=0 term
      !
-     if (gl (1) .lt.1.0d-8) then  
-        do ir = 1, msh (nt)  
-           aux (ir) = rho_at (ir, nt)  
+     if (gl (1) .lt.1.0d-8) then
+        do ir = 1, msh (nt)
+           aux (ir) = rho_at (ir, nt)
         enddo
-        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (1) )  
-        igl0 = 2  
-     else  
-        igl0 = 1  
+        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (1) )
+        igl0 = 2
+     else
+        igl0 = 1
      endif
      !
      ! Here we compute the G<>0 term
      !
-     do igl = igl0, ngl  
-        gx = sqrt (gl (igl) ) * tpiba  
-        do ir = 1, msh (nt)  
-           if (r (ir, nt) .lt.1.0d-8) then  
-              aux (ir) = rho_at (ir, nt)  
-           else  
+     do igl = igl0, ngl
+        gx = sqrt (gl (igl) ) * tpiba
+        do ir = 1, msh (nt)
+           if (r (ir, nt) .lt.1.0d-8) then
+              aux (ir) = rho_at (ir, nt)
+           else
               aux (ir) = rho_at (ir, nt) * sin (gx * r (ir, nt) ) / &
                    (r (ir, nt) * gx)
            endif
         enddo
-        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (igl) )  
+        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (igl) )
      enddo
      !
      ! we compute the 3D atomic charge in reciprocal space
      !
-     if (nspina.eq.1) then  
-        do ig = 1, ngm  
+     if (nspina.eq.1) then
+        do ig = 1, ngm
            rhocg (ig, 1) = rhocg (ig, 1) + strf (ig, nt) * &
                 rhocgnt ( igtongl (ig) ) / omega
         enddo
-     else  
+     else
 
-        do ig = 1, ngm  
+        do ig = 1, ngm
            rhocg (ig, 1) = rhocg (ig, 1) + 0.5d0 * (1.d0 + &
                 starting_magnetization (nt) ) * strf (ig, nt) * &
                 rhocgnt ( igtongl (ig) ) / omega
@@ -112,42 +111,42 @@ subroutine atomic_rho (rhoa, nspina)
         enddo
      endif
   enddo
-  call mfree (rhocgnt)  
+  deallocate (rhocgnt)
 
-  call mfree (aux)  
-  do is = 1, nspina  
+  deallocate (aux)
+  do is = 1, nspina
      !
      ! and we return to real space
      !
-     call setv (2 * nrxx, 0.d0, psic, 1)  
-     do ig = 1, ngm  
-        psic (nl (ig) ) = rhocg (ig, is)  
+     call setv (2 * nrxx, 0.d0, psic, 1)
+     do ig = 1, ngm
+        psic (nl (ig) ) = rhocg (ig, is)
         psic (nlm(ig) ) = conjg( rhocg (ig, is)  )
      enddo
-     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      !
      ! we check that everything is correct
      !
-     rhoneg = 0.d0  
-     rhoima = 0.d0  
-     do ir = 1, nrxx  
-        rhorea = DREAL (psic (ir) )  
-        rhoneg = rhoneg + min (0.d0, rhorea)  
-        rhoima = rhoima + abs (DIMAG (psic (ir) ) )  
-        rhoa (ir, is) = rhorea  
+     rhoneg = 0.d0
+     rhoima = 0.d0
+     do ir = 1, nrxx
+        rhorea = DREAL (psic (ir) )
+        rhoneg = rhoneg + min (0.d0, rhorea)
+        rhoima = rhoima + abs (DIMAG (psic (ir) ) )
+        rhoa (ir, is) = rhorea
      enddo
-     rhoneg = rhoneg / (nr1 * nr2 * nr3)  
-     rhoima = rhoima / (nr1 * nr2 * nr3)  
+     rhoneg = rhoneg / (nr1 * nr2 * nr3)
+     rhoima = rhoima / (nr1 * nr2 * nr3)
 #ifdef PARA
-     call reduce (1, rhoneg)  
-     call reduce (1, rhoima)  
+     call reduce (1, rhoneg)
+     call reduce (1, rhoima)
 #endif
      if (rhoneg.lt. - 1.0d-4.or.rhoima.gt.1.0d-4) &
           write (6,'(/"  Warning: negative or imaginary starting charge ",&
           &2f12.6,i3)') rhoneg, rhoima, is
   enddo
 
-  call mfree (rhocg)  
-  return  
+  deallocate (rhocg)
+  return
 end subroutine atomic_rho
 

@@ -5,7 +5,6 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
 #include "machine.h"
 
 use pwcom
-use allocate
 use parameters, only : DP
 use phcom
 
@@ -15,10 +14,10 @@ integer, intent(in) :: ipol, kpoint
 complex(kind=dp), intent(in) :: becp2(nkb,nbnd)
 
 real(kind=dp) :: fact
-complex(kind=dp), pointer :: ps(:)
+complex(kind=dp), allocatable :: ps(:)
 integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd
 
-call mallocate(ps,nbnd)
+allocate (ps(nbnd))    
 
 ijkb0 = 0
 do nt = 1, ntyp
@@ -31,7 +30,7 @@ do nt = 1, ntyp
                jkb = ijkb0 + jh
                fact=at(1,ipol)*dpqq(ih,jh,1,nt)+  &
                     at(2,ipol)*dpqq(ih,jh,2,nt)+  &
-                    at(3,ipol)*dpqq(ih,jh,3,nt) 
+                    at(3,ipol)*dpqq(ih,jh,3,nt)
                do ibnd=1, nbnd_occ(kpoint)
                   ps(ibnd) = ps(ibnd)                             &
                      + becp2(jkb,ibnd)*(0.d0,1.d0)*qq(ih,jh,nt)+  &
@@ -48,7 +47,7 @@ do nt = 1, ntyp
 enddo
 if (jkb.ne.nkb) call error ('adddvepsi_us', 'unexpected error', 1)
 
-call mfree(ps)
+deallocate(ps)
 
 return
 end

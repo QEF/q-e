@@ -15,8 +15,7 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
   !  phonon calculation, half G-vectors
 #include "machine.h"
   use parameters, only : DP
-  use allocate
-  implicit none  
+  implicit none
 
   !
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, nspin, &
@@ -27,32 +26,32 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
        dvxc_ss (nrxx,nspin, nspin), dvxc_s (nrxx, nspin, nspin),&
        drho (nrxx,nspin), g (3, ngm), alat, omega
 
-  complex(kind=DP) :: drhoc(nrxx, nspin), dvxc (nrxx, nspin)  
-  integer :: k, ipol, is, js, ks, ls  
-  real(kind=DP) :: epsr, epsg, grho2  
-  complex(kind=DP) :: s1  
+  complex(kind=DP) :: drhoc(nrxx, nspin), dvxc (nrxx, nspin)
+  integer :: k, ipol, is, js, ks, ls
+  real(kind=DP) :: epsr, epsg, grho2
+  complex(kind=DP) :: s1
   complex(kind=DP) :: a (2, 2, 2), b (2, 2, 2, 2), c (2, 2, 2), &
                       ps (2, 2), ps1 (3, 2, 2), ps2 (3, 2, 2, 2)
-  real(kind=DP), pointer  :: gdrho (:,:,:)
-  complex(kind=DP), pointer :: h (:,:,:), dh (:)
-  parameter (epsr = 1.0d-6, epsg = 1.0d-10)  
+  real(kind=DP), allocatable  :: gdrho (:,:,:)
+  complex(kind=DP), allocatable :: h (:,:,:), dh (:)
+  parameter (epsr = 1.0d-6, epsg = 1.0d-10)
 
-  call mallocate(gdrho, 3, nrxx , nspin)  
-  call mallocate(h,  3, nrxx , nspin)  
-  call mallocate(dh, nrxx)  
- 
-  call setv (6 * nrxx * nspin, 0.d0, h, 1)  
-  do is = 1, nspin  
+  allocate (gdrho( 3, nrxx , nspin))    
+  allocate (h(  3, nrxx , nspin))    
+  allocate (dh( nrxx))    
+
+  call setv (6 * nrxx * nspin, 0.d0, h, 1)
+  do is = 1, nspin
      call gradient1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
          drhoc(1, is), ngm, g, nl, nlm, alat, gdrho (1, 1, is) )
   enddo
-  do k = 1, nrxx  
+  do k = 1, nrxx
      grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
-     if (nspin.eq.1) then  
+     if (nspin.eq.1) then
         !
         !    LDA case
         !
-        if (abs (rho (k, 1) ) .gt.epsr.and.grho2.gt.epsg) then  
+        if (abs (rho (k, 1) ) .gt.epsr.and.grho2.gt.epsg) then
            s1 = grho (1, k, 1) * gdrho (1, k, 1) + &
                 grho (2, k, 1) * gdrho (2, k, 1) + &
                 grho (3, k, 1) * gdrho (3, k, 1)
@@ -61,76 +60,76 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
            !
            dvxc (k, 1) = dvxc (k, 1) + dvxc_rr (k, 1, 1) * drho (k, 1) &
                 + dvxc_sr (k, 1, 1) * s1
-           do ipol = 1, 3  
+           do ipol = 1, 3
               h (ipol, k, 1) = (dvxc_sr(k, 1, 1) * drho(k, 1) + &
                                 dvxc_ss(k, 1, 1) * s1 )*grho(ipol, k, 1) + &
                                 dvxc_s (k, 1, 1) * gdrho (ipol, k, 1)
            enddo
-        else  
-           do ipol = 1, 3  
-              h (ipol, k, 1) = (0.d0, 0.d0)  
+        else
+           do ipol = 1, 3
+              h (ipol, k, 1) = (0.d0, 0.d0)
            enddo
         endif
-     else  
+     else
         !
         !    LSDA case
         !
-        call setv (8, 0.d0, ps, 1)  
-        do is = 1, nspin  
-           do js = 1, nspin  
-              do ipol = 1, 3  
-                 ps1(ipol, is, js) = drho (k, is) * grho (ipol, k, js)  
+        call setv (8, 0.d0, ps, 1)
+        do is = 1, nspin
+           do js = 1, nspin
+              do ipol = 1, 3
+                 ps1(ipol, is, js) = drho (k, is) * grho (ipol, k, js)
                  ps(is, js) = ps(is, js) + grho(ipol,k,is)*gdrho(ipol,k,js)
               enddo
-              do ks = 1, nspin  
-                 if (is.eq.js.and.js.eq.ks) then  
-                    a (is, js, ks) = dvxc_sr (k, is, is)  
-                    c (is, js, ks) = dvxc_sr (k, is, is)  
-                 else  
-                    if (is.eq.1) then  
-                       a (is, js, ks) = dvxc_sr (k, 1, 2)  
-                    else  
-                       a (is, js, ks) = dvxc_sr (k, 2, 1)  
+              do ks = 1, nspin
+                 if (is.eq.js.and.js.eq.ks) then
+                    a (is, js, ks) = dvxc_sr (k, is, is)
+                    c (is, js, ks) = dvxc_sr (k, is, is)
+                 else
+                    if (is.eq.1) then
+                       a (is, js, ks) = dvxc_sr (k, 1, 2)
+                    else
+                       a (is, js, ks) = dvxc_sr (k, 2, 1)
                     endif
-                    if (js.eq.1) then  
-                       c (is, js, ks) = dvxc_sr (k, 1, 2)  
-                    else  
-                       c (is, js, ks) = dvxc_sr (k, 2, 1)  
+                    if (js.eq.1) then
+                       c (is, js, ks) = dvxc_sr (k, 1, 2)
+                    else
+                       c (is, js, ks) = dvxc_sr (k, 2, 1)
                     endif
                  endif
-                 do ipol = 1, 3  
-                    ps2 (ipol, is, js, ks) = ps (is, js) * grho (ipol, k, ks)  
+                 do ipol = 1, 3
+                    ps2 (ipol, is, js, ks) = ps (is, js) * grho (ipol, k, ks)
                  enddo
-                 do ls = 1, nspin  
-                    if (is.eq.js.and.js.eq.ks.and.ks.eq.ls) then  
-                       b (is, js, ks, ls) = dvxc_ss (k, is, is)  
-                    else  
-                       if (is.eq.1) then  
-                          b (is, js, ks, ls) = dvxc_ss (k, 1, 2)  
-                       else  
-                          b (is, js, ks, ls) = dvxc_ss (k, 2, 1)  
+                 do ls = 1, nspin
+                    if (is.eq.js.and.js.eq.ks.and.ks.eq.ls) then
+                       b (is, js, ks, ls) = dvxc_ss (k, is, is)
+                    else
+                       if (is.eq.1) then
+                          b (is, js, ks, ls) = dvxc_ss (k, 1, 2)
+                       else
+                          b (is, js, ks, ls) = dvxc_ss (k, 2, 1)
                        endif
                     endif
                  enddo
               enddo
            enddo
         enddo
-        do is = 1, nspin  
-           do js = 1, nspin  
+        do is = 1, nspin
+           do js = 1, nspin
               dvxc (k, is) = dvxc (k, is) + dvxc_rr (k, is, js) * drho (k, &
                    js)
-              do ipol = 1, 3  
+              do ipol = 1, 3
                  h (ipol, k, is) = h (ipol, k, is) + &
                       dvxc_s (k, is, js) * gdrho(ipol, k, js)
               enddo
-              do ks = 1, nspin  
-                 dvxc (k, is) = dvxc (k, is) + a (is, js, ks) * ps (js, ks)  
-                 do ipol = 1, 3  
+              do ks = 1, nspin
+                 dvxc (k, is) = dvxc (k, is) + a (is, js, ks) * ps (js, ks)
+                 do ipol = 1, 3
                     h (ipol, k, is) = h (ipol, k, is) + &
                          c (is, js, ks) * ps1 (ipol, js, ks)
                  enddo
-                 do ls = 1, nspin  
-                    do ipol = 1, 3  
+                 do ls = 1, nspin
+                    do ipol = 1, 3
                        h (ipol, k, is) = h (ipol, k, is) + &
                             b (is, js, ks, ls) * ps2 (ipol, js, ks, ls)
                     enddo
@@ -141,17 +140,17 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
      endif
   enddo
   ! linear variation of the second term
-  do is = 1, nspin  
+  do is = 1, nspin
      call grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
           h (1, 1, is), ngm, g, nl, nlm, alat, dh)
-     do k = 1, nrxx  
-        dvxc (k, is) = dvxc (k, is) - dh (k)  
+     do k = 1, nrxx
+        dvxc (k, is) = dvxc (k, is) - dh (k)
      enddo
   enddo
-  call mfree (dh)  
-  call mfree (h)  
-  call mfree (gdrho)  
-  return  
+  deallocate (dh)
+  deallocate (h)
+  deallocate (gdrho)
+  return
 end subroutine dgradcor1
 !
 !--------------------------------------------------------------------
@@ -160,29 +159,28 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is G-space)
   use parameters, only : DP
-  use allocate
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
         nlm(ngm)
   complex(kind=DP) :: a (nrxx)
   real(kind=DP) :: ga (3, nrxx), g (3, ngm), alat
-  integer :: n, ipol  
-  real(kind=DP) :: tpi, tpiba  
-  parameter (tpi = 2.d0 * 3.14159265358979d0)  
-  complex(kind=DP), pointer :: gaux (:)  
- 
-  call mallocate(gaux,  nrxx)  
+  integer :: n, ipol
+  real(kind=DP) :: tpi, tpiba
+  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  complex(kind=DP), allocatable :: gaux (:)
 
-  tpiba = tpi / alat  
+  allocate (gaux(  nrxx))    
+
+  tpiba = tpi / alat
 
    ! a(G) multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
-  !  do ipol = 1, 3  
+  !  do ipol = 1, 3
   ! x, y
      ipol=1
-     do n = 1, nrxx  
-        gaux (n) = (0.d0, 0.d0)  
+     do n = 1, nrxx
+        gaux (n) = (0.d0, 0.d0)
      enddo
-     do n = 1, ngm  
+     do n = 1, ngm
         gaux(nl (n)) = CMPLX(0.d0, g(ipol  , n))* a (nl(n)) - &
                                    g(ipol+1, n) * a (nl(n))
         gaux(nlm(n)) = CMPLX(0.d0, - g(ipol  , n))* conjg(a (nl(n))) + &
@@ -190,30 +188,30 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
-     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
-     do n = 1, nrxx  
-        ga (ipol  , n) = DREAL(gaux (n)) * tpiba  
-        ga (ipol+1, n) = DIMAG(gaux (n)) * tpiba  
+     do n = 1, nrxx
+        ga (ipol  , n) = DREAL(gaux (n)) * tpiba
+        ga (ipol+1, n) = DIMAG(gaux (n)) * tpiba
      enddo
   ! z
      ipol=3
-     do n = 1, nrxx  
-        gaux (n) = (0.d0, 0.d0)  
+     do n = 1, nrxx
+        gaux (n) = (0.d0, 0.d0)
      enddo
-     do n = 1, ngm  
+     do n = 1, ngm
         gaux(nl (n)) = CMPLX(0.d0, g(ipol, n)) * a (nl(n))
         gaux(nlm(n)) = conjg(gaux(nl(n)))
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
-     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
-     do n = 1, nrxx  
+     do n = 1, nrxx
         ga (ipol, n) = DREAL(gaux (n)) * tpiba
      enddo
 !  enddo
-  call mfree (gaux)  
-  return  
+  deallocate (gaux)
+  return
 
 end subroutine gradient1
 !--------------------------------------------------------------------
@@ -222,66 +220,65 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
   use parameters, only : DP
-  use allocate
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
         nlm(ngm)
-  complex(kind=DP) :: a (3, nrxx), da (nrxx)  
+  complex(kind=DP) :: a (3, nrxx), da (nrxx)
 
-  real(kind=DP) :: g (3, ngm), alat  
-  integer :: n, ipol  
-  real(kind=DP) :: tpi, tpiba  
-  parameter (tpi = 2.d0 * 3.14159265358979d0)  
-  complex(kind=DP), pointer :: aux (:)
+  real(kind=DP) :: g (3, ngm), alat
+  integer :: n, ipol
+  real(kind=DP) :: tpi, tpiba
+  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  complex(kind=DP), allocatable :: aux (:)
   complex(kind=DP) :: fp, fm, aux1, aux2
 
-  call mallocate(aux ,  nrxx)   
+  allocate (aux (  nrxx))    
 
-  tpiba = tpi / alat  
-  do n = 1, nrxx  
-     da(n) = (0.d0, 0.d0)  
+  tpiba = tpi / alat
+  do n = 1, nrxx
+     da(n) = (0.d0, 0.d0)
   enddo
-!!!  do ipol = 1, 3  
+!!!  do ipol = 1, 3
      ! x, y
      ipol=1
      ! copy a(ipol,r) to a complex array...
-     do n = 1, nrxx  
+     do n = 1, nrxx
         aux (n) = CMPLX(DREAL(a(ipol, n)),DREAL(a(ipol+1, n)))
      enddo
      ! bring a(ipol,r) to G-space, a(G) ...
-     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
-     do n = 1, ngm  
+     do n = 1, ngm
         fp = (aux(nl (n)) + aux (nlm(n)))*0.5d0
         fm = (aux(nl (n)) - aux (nlm(n)))*0.5d0
         aux1 = cmplx(DREAL(fp), DIMAG(fm))
         aux2 = cmplx(DIMAG(fp),-DREAL(fm))
         da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol  , n)) * aux1 + &
-                                  CMPLX(0.d0, g(ipol+1, n)) * aux2 
+                                  CMPLX(0.d0, g(ipol+1, n)) * aux2
      end do
      ! z
      ipol=3
      ! copy a(ipol,r) to a complex array...
-     do n = 1, nrxx  
+     do n = 1, nrxx
         aux (n) = a(ipol, n)
      enddo
      ! bring a(ipol,r) to G-space, a(G) ...
-     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
-     do n = 1, ngm  
+     do n = 1, ngm
         da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol, n)) * aux(nl(n))
      enddo
 !!!  enddo
-  do n = 1, ngm  
+  do n = 1, ngm
      da(nlm(n)) = conjg(da(nl(n)))
   enddo
   !  bring back to R-space, (\grad_ipol a)(r) ...
-  call cft3 (da, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+  call cft3 (da, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
-  do n = 1, nrxx  
-     da (n) = da (n) * tpiba  
+  do n = 1, nrxx
+     da (n) = da (n) * tpiba
   enddo
-  call mfree (aux)  
+  deallocate (aux)
 
-  return  
+  return
 end subroutine grad_dot1

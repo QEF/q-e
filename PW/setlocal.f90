@@ -7,40 +7,39 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine setlocal  
+subroutine setlocal
   !----------------------------------------------------------------------
   !
   !    This routine computes the local potential in real space vltot(ir)
   !
 #include "machine.h"
-  use pwcom  
-  use allocate 
+  use pwcom
   implicit none
-  complex(kind=DP), pointer :: aux (:)  
+  complex(kind=DP), allocatable :: aux (:)
   ! auxiliary variable
-  integer :: nt, ng, ir  
+  integer :: nt, ng, ir
   ! counter on atom types
   ! counter on g vectors
   ! counter on r vectors
   !
-  call mallocate(aux, nrxx)  
+  allocate (aux( nrxx))    
   !
-  call setv (2 * nrxx, 0.d0, aux, 1)  
-  do nt = 1, ntyp  
-     do ng = 1, ngm  
+  call setv (2 * nrxx, 0.d0, aux, 1)
+  do nt = 1, ntyp
+     do ng = 1, ngm
         aux (nl (ng) ) = aux (nl (ng) ) + vloc (igtongl (ng), nt) * strf (ng, nt)
      enddo
   enddo
   !
   ! aux = potential in G-space . FFT to real space
   !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
-  do ir = 1, nrxx  
-     vltot (ir) = DREAL (aux (ir) )  
+  do ir = 1, nrxx
+     vltot (ir) = DREAL (aux (ir) )
   enddo
  !
-  call mfree(aux)  
-  return  
+  deallocate(aux)
+  return
 end subroutine setlocal
 

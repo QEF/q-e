@@ -9,9 +9,9 @@
 subroutine delta_e (nr1, nr2, nr3, nrxx, rho, v_in, v_out, omega, &
  de, deband, nspin)
 use parameters
-implicit none  
+implicit none
 
-integer :: nspin, nr1, nr2, nr3, nrxx, i  
+integer :: nspin, nr1, nr2, nr3, nrxx, i
                              ! nspin=1 if LDA, nspin=2 if LSDA
                              ! fft grid dimensions
                              ! counter
@@ -24,37 +24,37 @@ real(kind=DP) :: rho (nrxx, nspin), v_in (nrxx, nspin), v_out (nrxx, &
                              ! ... out potentials from potential mixing
                              ! cell volume
                              ! total energy and band energy corrections
-de = 0.d0  
+de = 0.d0
 
-deband = 0.d0  
-if (nspin.eq.1) then  
+deband = 0.d0
+if (nspin.eq.1) then
 !
 ! LDA case
 !
-   do i = 1, nrxx  
-      de     = de + rho(i,nspin) * ( v_out(i,1) - v_in(i,1) )  
-      deband = deband - rho(i,nspin) * v_in(i,1)  
-   enddo  
-else  
+   do i = 1, nrxx
+      de     = de + rho(i,nspin) * ( v_out(i,1) - v_in(i,1) )
+      deband = deband - rho(i,nspin) * v_in(i,1)
+   enddo
+else
 !
 ! LSDA case
 !
-   do i = 1, nrxx  
+   do i = 1, nrxx
       de     = de + rho(i,1) * ( v_out(i,1) - v_in(i,1) ) + &
                     rho(i,2) * ( v_out(i,2) - v_in(i,2) )
       deband = deband - rho(i,1) * v_in(i,1) - rho(i,2) * v_in(i,2)
-   enddo  
+   enddo
 
-endif  
+endif
 
-de = omega * de / (nr1 * nr2 * nr3)  
-deband = omega * deband / (nr1 * nr2 * nr3)  
- 
+de = omega * de / (nr1 * nr2 * nr3)
+deband = omega * deband / (nr1 * nr2 * nr3)
+
 #ifdef PARA
-call reduce (1, de)  
-call reduce (1, deband)  
+call reduce (1, de)
+call reduce (1, deband)
 #endif
- 
-return  
- 
+
+return
+
 end subroutine delta_e

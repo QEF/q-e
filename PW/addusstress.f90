@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-subroutine addusstres (sigmanlc)  
+subroutine addusstres (sigmanlc)
   !----------------------------------------------------------------------
   !
   !   This routine computes the part of the atomic force which is due
@@ -16,10 +16,10 @@ subroutine addusstres (sigmanlc)
 
   use pwcom
   implicit none
-  real(kind=DP) :: sigmanlc (3, 3)  
+  real(kind=DP) :: sigmanlc (3, 3)
   ! the nonlocal stress
 
-  integer :: ig, ir, dim, nt, ih, jh, ijh, ipol, jpol, is, na  
+  integer :: ig, ir, dim, nt, ih, jh, ijh, ipol, jpol, is, na
   ! counter on g vectors
   ! counter on mesh points
   ! number of composite nm components
@@ -32,7 +32,7 @@ subroutine addusstres (sigmanlc)
   ! counter on spin polarizations
   ! counter on atoms
   complex(kind=DP), allocatable :: aux(:,:), aux1(:), vg(:)
-  complex(kind=DP)              :: cfac 
+  complex(kind=DP)              :: cfac
   ! used to contain the potential
   ! used to compute a product
   ! used to contain the structure fac
@@ -47,26 +47,26 @@ subroutine addusstres (sigmanlc)
   !  of V_eff and dQ
   ! function which compute the scal.
 
-  allocate ( aux(ngm,nspin), aux1(ngm), vg(nrxx), qmod(ngm) ) 
+  allocate ( aux(ngm,nspin), aux1(ngm), vg(nrxx), qmod(ngm) )
   allocate ( ylmk0(ngm,lqx*lqx), dylmk0(ngm,lqx*lqx) )
 
   !
   sus(:,:) = 0.d0
   !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)  
-  do ig = 1, ngm  
-     qmod (ig) = sqrt (gg (ig) )  
+  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  do ig = 1, ngm
+     qmod (ig) = sqrt (gg (ig) )
   enddo
   !
   ! fourier transform of the total effective potential
   !
-  do is = 1, nspin  
-     do ir = 1, nrxx  
-        vg (ir) = vltot (ir) + vr (ir, is)  
+  do is = 1, nspin
+     do ir = 1, nrxx
+        vg (ir) = vltot (ir) + vr (ir, is)
      enddo
-     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
-     do ig = 1, ngm  
-        aux (ig, is) = vg (nl (ig) )  
+     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     do ig = 1, ngm
+        aux (ig, is) = vg (nl (ig) )
      enddo
   enddo
   !
@@ -74,16 +74,16 @@ subroutine addusstres (sigmanlc)
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
   ! (no contribution from G=0)
   !
-  do ipol = 1, 3  
-     call dylmr2 (lqx * lqx, ngm, g, gg, dylmk0, ipol)  
-     do nt = 1, ntyp  
-        if (tvanp (nt) ) then  
-           ijh = 1  
+  do ipol = 1, 3
+     call dylmr2 (lqx * lqx, ngm, g, gg, dylmk0, ipol)
+     do nt = 1, ntyp
+        if (tvanp (nt) ) then
+           ijh = 1
            do ih = 1, nh (nt)
               do jh = ih, nh (nt)
                  call dqvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0, dylmk0, ipol)
-                 do na = 1, nat  
-                    if (ityp (na) .eq.nt) then  
+                 do na = 1, nat
+                    if (ityp (na) .eq.nt) then
                        !
                        do is = 1, nspin
                           do jpol = 1, ipol
@@ -104,7 +104,7 @@ subroutine addusstres (sigmanlc)
                        enddo
                     endif
                  enddo
-                 ijh = ijh + 1  
+                 ijh = ijh + 1
               enddo
            enddo
         endif
@@ -117,10 +117,10 @@ subroutine addusstres (sigmanlc)
   else
      sigmanlc(:,:) = sigmanlc(:,:) + sus(:,:)
   end if
-  deallocate (ylmk0, dylmk0)  
-  deallocate (aux, aux1, vg, qmod)  
+  deallocate (ylmk0, dylmk0)
+  deallocate (aux, aux1, vg, qmod)
 
-  return  
+  return
 
 end subroutine addusstres
 

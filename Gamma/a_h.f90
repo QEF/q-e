@@ -23,8 +23,8 @@ subroutine A_h(e,h,ah)
   complex(kind=DP) :: h(npwx,nbnd), ah(npwx,nbnd)
   !
   complex(kind=DP) :: fp, fm
-  complex(kind=DP), pointer:: dpsic(:), drhoc(:), dvxc(:)
-  real(kind=DP), pointer :: dv(:), drho(:)
+  complex(kind=DP), pointer :: dpsic(:), drhoc(:), dvxc(:)
+  real(kind=DP), pointer  :: dv(:), drho(:)
   !
   call start_clock('a_h')
   !
@@ -36,7 +36,7 @@ subroutine A_h(e,h,ah)
   !
   ! [(k+G)^2 - e ]psi
   do ibnd = 1,nbnd
-     ! set to zero the imaginary part of h at G=0 
+     ! set to zero the imaginary part of h at G=0
      ! needed for numerical stability
      if (gstart==2) h(1,ibnd) = cmplx(DREAL(h(1,ibnd)),0.d0)
      do j = 1,npw
@@ -96,7 +96,7 @@ subroutine A_h(e,h,ah)
   end do
   call cft3(drhoc,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
   !
-  ! drho is deltarho(r), drhoc is deltarho(g) 
+  ! drho is deltarho(r), drhoc is deltarho(g)
   !
   !  mu'(n(r)) psi(r) delta psi(r)
   !
@@ -105,7 +105,7 @@ subroutine A_h(e,h,ah)
      dvxc(j) = drho(j)*dmuxc(j)
   end do
   !
-  !  add gradient correction contribution (if any) 
+  !  add gradient correction contribution (if any)
   !
   call start_clock('dgradcorr')
   if (igcx.ne.0.or.igcc.ne.0) call dgradcor1  &
@@ -134,7 +134,7 @@ subroutine A_h(e,h,ah)
      dv(j) = - DREAL(dvxc(j)) - DREAL(drhoc(j))
   end do
   !
-  call vloc_psi(npwx, npw, nbnd, evc, dv, ah) 
+  call vloc_psi(npwx, npw, nbnd, evc, dv, ah)
   !
   ! set to zero the imaginary part of ah at G=0
   ! needed for numerical stability

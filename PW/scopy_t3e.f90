@@ -7,45 +7,45 @@
 !
 #ifdef T3D_BENCHLIB
 !================================================================
-subroutine scopy_t3e (n, a, ia, b, ib)  
+subroutine scopy_t3e (n, a, ia, b, ib)
 !----------------------------------------------------------------
 ! optimized scopy for t3e system (SC 2/99)
 !
 use parameters
-implicit none  
-integer :: i, ni  
-integer,  intent (in) ::n  
-integer,  intent (in) ::ia  
-integer,  intent (in) ::ib  
-real(kind=DP) :: b (n)  
-real(kind=DP) :: a (n)  
+implicit none
+integer :: i, ni
+integer,  intent (in) ::n
+integer,  intent (in) ::ia
+integer,  intent (in) ::ib
+real(kind=DP) :: b (n)
+real(kind=DP) :: a (n)
 
-integer :: lputp  
-include "mpp/shmem.fh"  
-intrinsic my_pe  
+integer :: lputp
+include "mpp/shmem.fh"
+intrinsic my_pe
 
-external lputp  
+external lputp
 
-if ( (ia.eq.1) .and. (ib.eq.1) ) then  
+if ( (ia.eq.1) .and. (ib.eq.1) ) then
 ! benchlib ...
-   do i = 1, n, 480  
-   ni = min (480, n - i + 1)  
-   call lgetv (a (i), 1, ni)  
-   call lputv (b (i), 1, ni)  
-   enddo  
+   do i = 1, n, 480
+   ni = min (480, n - i + 1)
+   call lgetv (a (i), 1, ni)
+   call lputv (b (i), 1, ni)
+   enddo
 
-  123    if (lputp () .ne.0) goto 123  
+  123    if (lputp () .ne.0) goto 123
 
-else  
-   call scopy (n, a, ia, b, ib)  
+else
+   call scopy (n, a, ia, b, ib)
 
-endif  
-return  
+endif
+return
 
 end subroutine scopy_t3e
 #else
-subroutine dummy  
-return  
+subroutine dummy
+return
 
 end subroutine dummy
 

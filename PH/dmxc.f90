@@ -6,88 +6,88 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-function dmxc (rho)  
+function dmxc (rho)
   !-----------------------------------------------------------------------
   !
   !  derivative of the xc potential with respect to the local density
   !
   use parameters, only : DP
   use funct
-  implicit none  
+  implicit none
   ! I/O variables
 
-  real(kind=DP) :: rho, dmxc  
+  real(kind=DP) :: rho, dmxc
   ! input: the charge density ( positive )
   ! output: the derivative of the xc potential
 
 
-  real(kind=DP) :: dr, vxp, vcp, vxm, vcm, ex, ec  
+  real(kind=DP) :: dr, vxp, vcp, vxm, vcm, ex, ec
   ! delta rrho for numerical derivatives
   ! the potentials for + charge
   ! the potentials for - charge
   ! the energy
   ! DFT functional
   ! auxiliary variables
-  real(kind=DP) :: vx, rs, dpz  
+  real(kind=DP) :: vx, rs, dpz
 
 
-  integer :: iflg  
+  integer :: iflg
   ! parameters
-  real(kind=DP) :: small, e2, pi34, third  
-  parameter (small = 1.d-30, e2 = 2.d0)  
+  real(kind=DP) :: small, e2, pi34, third
+  parameter (small = 1.d-30, e2 = 2.d0)
 
   parameter (pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0 / &
        3.d0)
-  dmxc = 0.d0  
-  if (rho.le.small) then  
-     return  
+  dmxc = 0.d0
+  if (rho.le.small) then
+     return
 
   endif
   !
   !    first case: analytical derivatives available
   !
-  if (iexch.eq.1.and.icorr.eq.1) then  
-     rs = (pi34 / rho) **third  
+  if (iexch.eq.1.and.icorr.eq.1) then
+     rs = (pi34 / rho) **third
      !..exchange
-     call slater (rs, ex, vx)  
-     dmxc = vx / (3.d0 * rho)  
+     call slater (rs, ex, vx)
+     dmxc = vx / (3.d0 * rho)
      !..correlation
-     iflg = 2  
-     if (rs.lt.1.0d0) iflg = 1  
-     dmxc = dmxc + dpz (rs, iflg)  
-  else  
+     iflg = 2
+     if (rs.lt.1.0d0) iflg = 1
+     dmxc = dmxc + dpz (rs, iflg)
+  else
      !
      !     second case: numerical derivatives
      !
-     dr = min (1.d-6, 1.d-4 * rho)  
-     call xc (rho + dr, ex, ec, vxp, vcp)  
-     call xc (rho - dr, ex, ec, vxm, vcm)  
-     dmxc = (vxp + vcp - vxm - vcm) / (2.d0 * dr)  
+     dr = min (1.d-6, 1.d-4 * rho)
+     call xc (rho + dr, ex, ec, vxp, vcp)
+     call xc (rho - dr, ex, ec, vxm, vcm)
+     dmxc = (vxp + vcp - vxm - vcm) / (2.d0 * dr)
   endif
   !
   ! scales to rydberg units
   !
 
-  dmxc = e2 * dmxc  
-  return  
+  dmxc = e2 * dmxc
+  return
 
 end function dmxc
 !-----------------------------------------------------------------------
-function dpz (rs, iflg)  
+function dpz (rs, iflg)
 !-----------------------------------------------------------------------
 !  derivative of the correlation potential with respect to the local den
 !  Perdew and Zunger parameterization of the C.A. functional
 !
 use parameters, only : DP
-implicit none  
-real(kind=DP) :: rs, dpz  
+implicit none
+real(kind=DP) :: rs, dpz
                              ! input : the value of rs
                              ! output: the derivative of the corr. poten
 
-integer :: iflg  
+integer :: iflg
                              ! input : flag to choose the functional for
 
-real(kind=DP) :: b1, b2, a1, a2, gc, a, b, c, d, pi, fpi  
+real(kind=DP) :: b1, b2, a1, a2, gc, a, b, c, d, pi, fpi
                              !\
                              ! \
                              !  \
@@ -104,23 +104,23 @@ parameter (a = 0.0311d0, b = - 0.048d0, c = 0.0020d0, d = - &
  7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0, pi = 3.14159265358979d0, &
  fpi = 4.d0 * pi)
 
-real(kind=DP) :: x, den, dmx, dmrs  
+real(kind=DP) :: x, den, dmx, dmrs
                               ! auxiliary variable
                               ! auxiliary variable
                               ! auxiliary variable
                               ! auxiliary variable
-if (iflg.eq.1) then  
+if (iflg.eq.1) then
    dmrs = a / rs + 2.d0 / 3.d0 * c * (log (rs) + 1.d0) + (2.d0 * &
     d-c) / 3.d0
-else  
-   x = sqrt (rs)  
-   den = 1.d0 + x * (b1 + x * b2)  
+else
+   x = sqrt (rs)
+   den = 1.d0 + x * (b1 + x * b2)
    dmx = gc * ( (a1 + 2.d0 * a2 * x) * den - 2.d0 * (b1 + 2.d0 * &
     b2 * x) * (1.d0 + x * (a1 + x * a2) ) ) / den**3
-   dmrs = 0.5d0 * dmx / x  
-endif  
+   dmrs = 0.5d0 * dmx / x
+endif
 !
 
-dpz = - fpi * rs**4.d0 / 9.d0 * dmrs  
-return  
+dpz = - fpi * rs**4.d0 / 9.d0 * dmrs
+return
 end function dpz

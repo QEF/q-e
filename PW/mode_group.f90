@@ -21,9 +21,9 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   !  input-output variables
   !
   use parameters
-  implicit none  
+  implicit none
 
-  integer :: nat, s (3, 3, 48), irt (48, nat), nrot, modenum  
+  integer :: nat, s (3, 3, 48), irt (48, nat), nrot, modenum
   ! input: the number of atoms of the system
   ! input: the symmetry matrices
   ! input: the rotated atom
@@ -31,12 +31,12 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! input: the displacement pattern
 
 
-  real(kind=DP) :: xq (3), rtau (3, 48, nat), bg (3, 3), at (3, 3)  
+  real(kind=DP) :: xq (3), rtau (3, 48, nat), bg (3, 3), at (3, 3)
   ! input: the q point
   ! input: the translations of each atom
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
-  logical :: minus_q, sym (48)  
+  logical :: minus_q, sym (48)
   ! input: if true minus_q symmetry is used
   ! input-output: .true. if symm. op. do not change
   ! mode
@@ -44,13 +44,13 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   !  local variables
   !
 
-  integer :: isym, nas, ipols, na, sna, ipol, jpol  
+  integer :: isym, nas, ipols, na, sna, ipol, jpol
   ! counters
   ! counter on polarizations
   ! counter on polarizations
 
   real(kind=DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
-  real(kind=DP) :: arg  
+  real(kind=DP) :: arg
   ! auxiliary
 
   complex(kind=DP), allocatable :: u (:,:)
@@ -67,35 +67,35 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
 
   if (modenum.gt.3 * nat.or.modenum.lt.1) call error ('mode_group', &
        'wrong modenum', 1)
-  nas = (modenum - 1) / 3 + 1  
-  ipols = mod (modenum - 1, 3) + 1  
+  nas = (modenum - 1) / 3 + 1
+  ipols = mod (modenum - 1, 3) + 1
   u (:,:) = (0.d0, 0.d0)
-  u (ipols, nas) = (1.d0, 0.d0)  
-  do na = 1, nat  
-     call trnvecc (u (1, na), at, bg, - 1)  
+  u (ipols, nas) = (1.d0, 0.d0)
+  do na = 1, nat
+     call trnvecc (u (1, na), at, bg, - 1)
   enddo
-  do isym = 1, nrot  
-     if (sym (isym) ) then  
-        do na = 1, nat  
-           do ipol = 1, 3  
-              work_u (ipol, na) = u (ipol, na)  
+  do isym = 1, nrot
+     if (sym (isym) ) then
+        do na = 1, nat
+           do ipol = 1, 3
+              work_u (ipol, na) = u (ipol, na)
            enddo
         enddo
         work_ru (:,:) = (0.d0, 0.d0)
-        do na = 1, nat  
-           sna = irt (isym, na)  
-           arg = 0.d0  
-           do ipol = 1, 3  
-              arg = arg + xq (ipol) * rtau (ipol, isym, na)  
+        do na = 1, nat
+           sna = irt (isym, na)
+           arg = 0.d0
+           do ipol = 1, 3
+              arg = arg + xq (ipol) * rtau (ipol, isym, na)
            enddo
-           arg = arg * tpi  
-           if (isym.eq.nrot.and.minus_q) then  
-              fase = DCMPLX (cos (arg), sin (arg) )  
-           else  
-              fase = DCMPLX (cos (arg), - sin (arg) )  
+           arg = arg * tpi
+           if (isym.eq.nrot.and.minus_q) then
+              fase = DCMPLX (cos (arg), sin (arg) )
+           else
+              fase = DCMPLX (cos (arg), - sin (arg) )
            endif
-           do ipol = 1, 3  
-              do jpol = 1, 3  
+           do ipol = 1, 3
+              do jpol = 1, 3
                  work_ru (ipol, sna) = work_ru (ipol, sna) + s (jpol, ipol, &
                       isym) * work_u (jpol, na) * fase
               enddo
@@ -104,27 +104,27 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
         !
         !    Transform back the rotated pattern
         !
-        do na = 1, nat  
-           call trnvecc (work_ru (1, na), at, bg, 1)  
-           call trnvecc (work_u (1, na), at, bg, 1)  
+        do na = 1, nat
+           call trnvecc (work_ru (1, na), at, bg, 1)
+           call trnvecc (work_u (1, na), at, bg, 1)
         enddo
         !
         !   only if the pattern remain the same ap to a phase we keep
         !   the symmetry
         !
-        sum = (0.d0, 0.d0)  
-        do na = 1, nat  
-           do ipol = 1, 3  
-              sum = sum + conjg (work_u (ipol, na) ) * work_ru (ipol, na)  
+        sum = (0.d0, 0.d0)
+        do na = 1, nat
+           do ipol = 1, 3
+              sum = sum + conjg (work_u (ipol, na) ) * work_ru (ipol, na)
            enddo
         enddo
-        sum = abs (sum)  
-        if (abs (sum - 1.d0) .gt.1.d-7) sym (isym) = .false.  
+        sum = abs (sum)
+        if (abs (sum - 1.d0) .gt.1.d-7) sym (isym) = .false.
      endif
 
   enddo
-  deallocate ( work_ru, work_u, u)  
-  return  
+  deallocate ( work_ru, work_u, u)
+  return
 
 end subroutine mode_group
 

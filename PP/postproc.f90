@@ -6,12 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-program postproc  
+program postproc
 
-  character :: nodenumber * 3  
-  call start_postproc (nodenumber)  
-  call do_postproc (nodenumber)  
+  character :: nodenumber * 3
+  call start_postproc (nodenumber)
+  call do_postproc (nodenumber)
 
-  call stop_pp  
-  stop  
+  call stop_pp
+  stop
 end program postproc

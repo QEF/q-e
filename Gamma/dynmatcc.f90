@@ -11,7 +11,6 @@ subroutine dynmatcc(dyncc)
   !--------------------------------------------------------------------
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use cgcom
   implicit none
@@ -20,7 +19,7 @@ subroutine dynmatcc(dyncc)
   integer:: i,j,na,nb,nta,ntb,ir,ig,nt, nu_i,nu_j,mu_i,mu_j
   complex(kind=DP), pointer:: vxc(:), work1(:), gc(:,:)
   complex(kind=DP) :: exc
-  real(kind=DP), pointer:: drhocc(:), dyncc1(:,:,:,:)
+  real(kind=DP), allocatable:: drhocc(:), dyncc1(:,:,:,:)
   real(kind=DP) :: exg
   !
   !
@@ -34,9 +33,9 @@ subroutine dynmatcc(dyncc)
   !
   work1 => psic
   vxc   => aux2
-  call mallocate ( dyncc1, 3,nat,3,nat)
-  call mallocate ( gc    , nrxx, 3)
-  call mallocate ( drhocc, nrxx)
+  allocate  ( dyncc1( 3,nat,3,nat))    
+  allocate  ( gc    ( nrxx, 3))    
+  allocate  ( drhocc( nrxx))    
   !
   call v_xc  (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx,          &
        nl, ngm, g, nspin, alat, omega, etxc, vtxc, vxc)
@@ -98,8 +97,8 @@ subroutine dynmatcc(dyncc)
      end if
   end do
   !
-  call mfree(gc)
-  call mfree(drhocc)
+  deallocate(gc)
+  deallocate(drhocc)
 #ifdef PARA
   call reduce(3*nat*3*nat,dyncc1)
 #endif
@@ -124,7 +123,7 @@ subroutine dynmatcc(dyncc)
         end do
      end if
   end do
-  call mfree(dyncc1)
+  deallocate(dyncc1)
   !
   return
 end subroutine dynmatcc

@@ -13,21 +13,21 @@ subroutine hexsym (at, is, isname, nrot)  !-------------------------------------
   ! The c axis is assumed to be along the z axis
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !     first the input variables
   !
-  real(kind=DP) :: at (3, 3)  
+  real(kind=DP) :: at (3, 3)
   ! input: the direct lattice vectors
-  integer :: is (3, 3, 48), nrot  
+  integer :: is (3, 3, 48), nrot
   ! output: the symmetry matrices
   ! output: the number of symmetry matrice
-  character :: isname (48) * 45  
+  character :: isname (48) * 45
   ! output: full name of the rotational part of each selected sym.op.
   !
   !    here the local parameters
   !
-  real(kind=DP) :: sin3, cos3, msin3, mcos3  
+  real(kind=DP) :: sin3, cos3, msin3, mcos3
   ! sin(pi/3), cos(pi/3), -sin(pi/3), -sin(pi/3)
   parameter (sin3 = 0.866025403784438597d0, cos3 = 0.5d0, msin3 = &
        - 0.866025403784438597d0, mcos3 = - 0.5d0)
@@ -42,7 +42,7 @@ subroutine hexsym (at, is, isname, nrot)  !-------------------------------------
   ! the rotated of a direct vector (crystal axis)
   integer :: jpol, kpol, mpol, irot
   ! counters over polarizations and rotations
-  character :: sname (24) * 45  
+  character :: sname (24) * 45
   ! full name of the rotation part of each symmetry operation
 
   data s / 1.d0, 0.d0, 0.d0, 0.d0, 1.d0, 0.d0, 0.d0, 0.d0, 1.d0, &
@@ -84,8 +84,8 @@ subroutine hexsym (at, is, isname, nrot)  !-------------------------------------
   !
   !   first compute the overlap matrix between direct lattice vectors
   !
-  do jpol = 1, 3  
-     do kpol = 1, 3  
+  do jpol = 1, 3
+     do kpol = 1, 3
         overlap (kpol, jpol) = at (1, kpol) * at (1, jpol) + at (2, kpol) &
              * at (2, jpol) + at (3, kpol) * at (3, jpol)
      enddo
@@ -93,21 +93,21 @@ subroutine hexsym (at, is, isname, nrot)  !-------------------------------------
   !
   !    then its inverse
   !
-  call invmat (overlap, overlap, 3)  
-  nrot = 1  
-  do irot = 1, 12  
+  call invmat (overlap, overlap, 3)
+  nrot = 1
+  do irot = 1, 12
      !
      !   for each possible symmetry
      !
-     do jpol = 1, 3  
-        do mpol = 1, 3  
+     do jpol = 1, 3
+        do mpol = 1, 3
            !
            !   compute, in cartesian coordinates the rotated vector
            !
            rat (mpol) = s (mpol, 1, irot) * at (1, jpol) + s (mpol, 2, irot) &
                 * at (2, jpol) + s (mpol, 3, irot) * at (3, jpol)
         enddo
-        do kpol = 1, 3  
+        do kpol = 1, 3
            !
            !   the rotated vector is projected on the direct lattice
            !
@@ -118,38 +118,38 @@ subroutine hexsym (at, is, isname, nrot)  !-------------------------------------
      !
      !  and the inverse of the overlap matrix is applied
      !
-     do jpol = 1, 3  
-        do kpol = 1, 3  
+     do jpol = 1, 3
+        do kpol = 1, 3
            value = overlap (jpol, 1) * rot (1, kpol) + overlap (jpol, 2) &
                 * rot (2, kpol) + overlap (jpol, 3) * rot (3, kpol)
-           if (abs (float (nint (value) ) - value) .gt.1.0d-8) then  
+           if (abs (float (nint (value) ) - value) .gt.1.0d-8) then
               !
               ! if a noninteger is obtained, this implies that this operation
               ! is not a symmetry operation for the given lattice
               !
-              goto 10  
+              goto 10
            endif
-           is (kpol, jpol, nrot) = nint (value)  
-           isname (nrot) = sname (irot)  
+           is (kpol, jpol, nrot) = nint (value)
+           isname (nrot) = sname (irot)
         enddo
      enddo
-     nrot = nrot + 1  
-10   continue  
+     nrot = nrot + 1
+10   continue
   enddo
-  nrot = nrot - 1  
+  nrot = nrot - 1
   !
   !   set the inversion symmetry ( Bravais lattices have always inversion)
   !
-  do irot = 1, nrot  
-     do kpol = 1, 3  
-        do jpol = 1, 3  
-           is (kpol, jpol, irot + nrot) = - is (kpol, jpol, irot)  
-           isname (irot + nrot) = sname (irot + 12)  
+  do irot = 1, nrot
+     do kpol = 1, 3
+        do jpol = 1, 3
+           is (kpol, jpol, irot + nrot) = - is (kpol, jpol, irot)
+           isname (irot + nrot) = sname (irot + 12)
         enddo
      enddo
 
   enddo
 
-  nrot = 2 * nrot  
-  return  
+  nrot = 2 * nrot
+  return
 end subroutine hexsym

@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)  
+subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
   !-----------------------------------------------------------------------
   !
   ! reads/writes variation of the charge with respect to a perturbation
@@ -18,61 +18,60 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
   !
 #include "machine.h"
   use pwcom
-  use allocate 
-  use parameters, only : DP 
+  use parameters, only : DP
   use phcom
 #ifdef PARA
   use para
 #endif
   implicit none
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 #endif
-  integer :: iunit, lrec, nrec, isw  
-  complex(kind=DP) :: drho (nrxx)  
+  integer :: iunit, lrec, nrec, isw
+  complex(kind=DP) :: drho (nrxx)
 #ifdef PARA
   !
   ! local variables
   !
 
-  integer :: root, errcode, itmp, proc  
+  integer :: root, errcode, itmp, proc
 
-  complex(kind=DP), pointer :: ddrho (:)  
+  complex(kind=DP), allocatable :: ddrho (:)
 
-  call mallocate(ddrho, nrx1 * nrx2 * nrx3 )  
+  allocate (ddrho( nrx1 * nrx2 * nrx3 ))    
 
-  if (isw.eq.1) then  
+  if (isw.eq.1) then
      !
      ! First task of the pool gathers and writes in the file
      !
-     call cgather_sym (drho, ddrho)  
-     root = 0  
-     call MPI_barrier (MPI_COMM_POOL, errcode)  
-     call error ('davcio_drho2', 'at barrier', errcode)  
+     call cgather_sym (drho, ddrho)
+     root = 0
+     call MPI_barrier (MPI_COMM_POOL, errcode)
+     call error ('davcio_drho2', 'at barrier', errcode)
 
-     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, + 1)  
-  elseif (isw.lt.0) then  
+     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, + 1)
+  elseif (isw.lt.0) then
      !
      ! First task of the pool reads ddrho, and broadcasts to all the
      ! processors of the pool
      !
-     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, - 1)  
-     call broadcast (2 * nrx1 * nrx2 * nrx3, ddrho)  
+     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, - 1)
+     call broadcast (2 * nrx1 * nrx2 * nrx3, ddrho)
      !
      ! Distributes ddrho between between the tasks of the pool
      !
-     itmp = 1  
-     do proc = 1, me-1  
-        itmp = itmp + ncplane * npp (proc)  
+     itmp = 1
+     do proc = 1, me-1
+        itmp = itmp + ncplane * npp (proc)
      enddo
-     call setv (2 * nrxx, 0.d0, drho, 1)  
+     call setv (2 * nrxx, 0.d0, drho, 1)
 
-     call ZCOPY (ncplane * npp (me), ddrho (itmp), 1, drho, 1)  
+     call ZCOPY (ncplane * npp (me), ddrho (itmp), 1, drho, 1)
 
   endif
-  call mfree(ddrho)  
+  deallocate(ddrho)
 #else
-  call davcio (drho, lrec, iunit, nrec, isw)  
+  call davcio (drho, lrec, iunit, nrec, isw)
 #endif
-  return  
+  return
 end subroutine davcio_drho2

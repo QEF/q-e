@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-logical function lchk_tauxk (nvec, vec, trmat)  
+logical function lchk_tauxk (nvec, vec, trmat)
   !-----------------------------------------------------------------------
   !
   !     This routine tests that the atomic coordinates and/or k-points
@@ -18,14 +18,13 @@ logical function lchk_tauxk (nvec, vec, trmat)
 #include "machine.h"
   !
   use parameters
-  use allocate 
-  implicit none  
+  implicit none
   !
   !     first the dummy variables
   !
-  integer :: nvec  
+  integer :: nvec
   ! input: number of vectors (atom. pos. or k-p
-  real(kind=DP) :: vec (3, nvec), trmat (3, 3)  
+  real(kind=DP) :: vec (3, nvec), trmat (3, 3)
   ! input: cryst./cart. coord. of the vectors
   !               (atom. pos. or k-points)
   ! input: transf. matrix
@@ -36,31 +35,31 @@ logical function lchk_tauxk (nvec, vec, trmat)
   !
   !    here the local variables
   !
-  integer :: nv1, nv2, kpol  
+  integer :: nv1, nv2, kpol
   ! first counter on vectors
   ! second counter on vectors
   ! counter on polarizations
-  real(kind=DP), pointer :: vaux (:,:)
-  real(kind=DP) :: vdf (3), accep  
+  real(kind=DP), allocatable :: vaux (:,:)
+  real(kind=DP) :: vdf (3), accep
   ! auxiliary vectors (atom. coord. or k-points
   !                    in cryst. units)
   ! auxiliary vector
-  ! acceptance parameter  
+  ! acceptance parameter
   !
   !   Here, set the value of the acceptance parameter
   !
-  parameter (accep = 1.0d-5)  
+  parameter (accep = 1.0d-5)
   !
   !
   !   allocate work space
   !
-  call mallocate(vaux, 3 , nvec)  
+  allocate (vaux( 3 , nvec))    
   !
   !   The vectors are in cart. coordinates; they are transformed
   !   in crystall. units
   !
-  do nv1 = 1, nvec  
-     do kpol = 1, 3  
+  do nv1 = 1, nvec
+     do kpol = 1, 3
         vaux (kpol, nv1) = trmat (1, kpol) * vec (1, nv1) + trmat (2, &
              kpol) * vec (2, nv1) + trmat (3, kpol) * vec (3, nv1)
      enddo
@@ -69,25 +68,25 @@ logical function lchk_tauxk (nvec, vec, trmat)
   !   Test that all the atomic coordinates and/or k-points are different
   !   (if true, set the logical function  lchk_tauxk  as  .true.)
   !
-  do nv1 = 1, nvec - 1  
-     do nv2 = nv1 + 1, nvec  
-        do kpol = 1, 3  
-           vdf (kpol) = vaux (kpol, nv2) - vaux (kpol, nv1)  
-           vdf (kpol) = abs (vdf (kpol) - float (nint (vdf (kpol) ) ) )  
+  do nv1 = 1, nvec - 1
+     do nv2 = nv1 + 1, nvec
+        do kpol = 1, 3
+           vdf (kpol) = vaux (kpol, nv2) - vaux (kpol, nv1)
+           vdf (kpol) = abs (vdf (kpol) - float (nint (vdf (kpol) ) ) )
         enddo
         if ( (vdf (1) .lt.accep) .and. (vdf (2) .lt.accep) .and. (vdf (3) &
              .lt.accep) ) then
-           lchk_tauxk = .false.  
-           goto 10  
+           lchk_tauxk = .false.
+           goto 10
         endif
      enddo
   enddo
   !
-  lchk_tauxk = .true.  
+  lchk_tauxk = .true.
   !
   !   deallocate work space
   !
-10 call mfree(vaux)  
-  return  
+10 deallocate(vaux)
+  return
 end function lchk_tauxk
 

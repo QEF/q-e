@@ -13,7 +13,6 @@ subroutine dvpsi_kb(kpoint,nu)
   !
 #include "machine.h"
   use parameters, only: DP
-  use allocate
   use pwcom
   use gamma
   use cgcom
@@ -22,9 +21,9 @@ subroutine dvpsi_kb(kpoint,nu)
   integer :: ibnd, ir, ih, jkb, ik, na, nu, ng, mu, nt, kpoint
   complex(kind=DP), pointer:: work(:,:), workcc(:), dvloc(:), dvb_cc(:)
   complex(kind=DP) :: exc
-  real(kind=DP), pointer:: bec1(:,:), bec2(:,:), dv(:)
+  real(kind=DP), pointer :: bec1(:,:), bec2(:,:), dv(:)
   real(kind=DP) :: gu, gtau
-  logical :: has_nlcc 
+  logical :: has_nlcc
  !
   call start_clock('dvpsi_kb')
   !
@@ -79,17 +78,17 @@ subroutine dvpsi_kb(kpoint,nu)
   !   vloc_psi calculates dVloc/dtau*psi(G)
   !
   call setv(2*npwx*nbnd,0.d0,dvpsi,1)
-  call vloc_psi(npwx, npw, nbnd, evc, dv, dvpsi) 
+  call vloc_psi(npwx, npw, nbnd, evc, dv, dvpsi)
   !
   !   nonlocal (Kleinman-Bylander) contribution.
   !
-  call mallocate(work, npwx, nhm)
+  allocate (work( npwx, nhm))    
   jkb=0
   do nt = 1,ntyp
      ! bec1 and bec2 are allocated with first dimension nh(nt) :
-     ! maybe obsolete ? 
-     call mallocate(bec1, nh(nt), nbnd)
-     call mallocate(bec2, nh(nt), nbnd)
+     ! maybe obsolete ?
+     allocate (bec1( nh(nt), nbnd))    
+     allocate (bec2( nh(nt), nbnd))    
      do na = 1,nat
         if (ityp(na).eq.nt) then
            mu =3*(na-1)
@@ -127,12 +126,12 @@ subroutine dvpsi_kb(kpoint,nu)
            jkb = jkb + nh(nt)
         end if
      end do
-     call mfree(bec2)
-     call mfree(bec1)
+     deallocate(bec2)
+     deallocate(bec1)
   end do
   if (jkb.ne.nkb) call error('dvpsi_kb','unexpected error',1)
   !
-  call mfree(work)
+  deallocate(work)
   !
   call stop_clock('dvpsi_kb')
   !

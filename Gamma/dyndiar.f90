@@ -11,10 +11,9 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !-----------------------------------------------------------------------
   !
   !   diagonalizes the dynamical matrix "dyn", returns energies in "w2"
-  !   and mode displacements in "dynout". dyn is unchanged on output. 
+  !   and mode displacements in "dynout". dyn is unchanged on output.
   !
 #include "machine.h"
-  use allocate
   use parameters, only: DP
   implicit none
   integer :: nmodes, nat3, nat,ityp(nat), iudyn
@@ -22,11 +21,11 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   real(kind=DP):: dynout(nat3,nmodes), w2(nat3)
   !
   integer:: nu_i, nu_j, mu, na, nb, nt, i, j
-  real(kind=DP), pointer :: m(:,:), z(:,:)
+  real(kind=DP), allocatable :: m(:,:), z(:,:)
   real(kind=DP) :: rydthz, rydcm1, w1, unorm, sum, dif
   !
-  call mallocate ( m  , nat3, nat3)
-  call mallocate ( z  , nat3, nat3)
+  allocate  ( m  ( nat3, nat3))    
+  allocate  ( z  ( nat3, nat3))    
   !
   call DCOPY(nat3*nmodes,dyn,1,dynout,1)
   !
@@ -76,7 +75,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !  Note that z are eigendisplacements in the base of input
   !  modes u and that they are normalized as <z|M|z>=I
   !
-  call rdiaghg (nat3, nmodes, dynout, m, nat3, w2, z)  
+  call rdiaghg (nat3, nmodes, dynout, m, nat3, w2, z)
   !
   !  conversion factors ryd=>thz e ryd=>1/cm
   !
@@ -102,8 +101,8 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   end do
   write(6,'(1x,74("*"))')
   !
-  call mfree(z)
-  call mfree(m)
+  deallocate(z)
+  deallocate(m)
   return
   !
 9000 format ('  Symmetry violation  sum_ij |D_ij-D_ji| :',f15.6)

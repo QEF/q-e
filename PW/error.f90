@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine error (routin, messag, ierr)  
+subroutine error (routin, messag, ierr)
   !----------------------------------------------------------------------
   !
   !    This is a simple routine which writes an error message to
@@ -24,43 +24,43 @@ subroutine error (routin, messag, ierr)
   !    (this will appear in the error files produced by loadleveler).
   !
   use parameters
-  implicit none  
+  implicit none
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 #endif
-  character (len=*) :: routin, messag  
+  character (len=*) :: routin, messag
   ! the name of the calling routine
   ! the output message
 
-  integer :: ierr  
+  integer :: ierr
   ! the error flag
-  if (ierr.eq.0) return  
-  write (6, * ) ' '  
-  write (6, '(1x,78("%"))')  
-  write ( * , '(5x,"from ",a," : error #",i10)') routin, ierr  
-  write ( * , '(5x,a)') messag  
-  write (6, '(1x,78("%"))')  
+  if (ierr.eq.0) return
+  write (6, * ) ' '
+  write (6, '(1x,78("%"))')
+  write ( * , '(5x,"from ",a," : error #",i10)') routin, ierr
+  write ( * , '(5x,a)') messag
+  write (6, '(1x,78("%"))')
 #ifdef PARA
 #ifdef AIX
-  write (0, * ) ' '  
-  write (0, '(1x,78("%"))')  
-  write (0, '(5x,"from ",a," : error #",i10)') routin, ierr  
-  write (0, '(5x,a)') messag  
-  write (0, '(1x,78("%"))')  
+  write (0, * ) ' '
+  write (0, '(1x,78("%"))')
+  write (0, '(5x,"from ",a," : error #",i10)') routin, ierr
+  write (0, '(5x,a)') messag
+  write (0, '(1x,78("%"))')
 #endif
 #endif
-  if (ierr.gt.0) then  
-     write ( * , '("     stopping ...")')  
+  if (ierr.gt.0) then
+     write ( * , '("     stopping ...")')
 #ifdef FLUSH
-     call flush (6)  
+     call flush (6)
 #endif
 #ifdef PARA
-     call mpi_abort (MPI_COMM_WORLD, ierr, ierr)  
+     call mpi_abort (MPI_COMM_WORLD, ierr, ierr)
 #endif
-     stop 2  
-  else  
-     write (6, * ) ' '  
-     return  
+     stop 2
+  else
+     write (6, * ) ' '
+     return
   endif
 end subroutine error
 

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-integer function good_fft_dimension (n)  
+integer function good_fft_dimension (n)
 !
 ! Determines the optimal maximum dimensions of fft arrays
 ! Useful on some machines to avoid memory conflicts
@@ -14,18 +14,18 @@ integer function good_fft_dimension (n)
 #include "machine.h"
 use parameters
 implicit none
-integer :: n, nx  
+integer :: n, nx
 ! this is the default: max dimension = fft dimension
-nx = n  
+nx = n
 #if defined(AIX) || defined(DXML)
 if ( &
  n.eq.8.or.n.eq.16.or.n.eq.32.or.n.eq.64.or.n.eq.128.or.n.eq.256) &
  nx = n + 1
 #endif
 #if defined(CRAYY) || defined(NEC)
-if (mod (nr1, 2) .eq.0) nx = n + 1  
+if (mod (nr1, 2) .eq.0) nx = n + 1
 #endif
-good_fft_dimension = nx  
-return  
+good_fft_dimension = nx
+return
 end function good_fft_dimension
 

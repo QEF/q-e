@@ -79,7 +79,6 @@ subroutine cg_readmodes(iunit)
   !-----------------------------------------------------------------------
 #include "machine.h"
   use parameters, only: DP
-  use allocate
   use pwcom
   use cgcom
   !
@@ -91,11 +90,11 @@ subroutine cg_readmodes(iunit)
   !
   ! allocate space for modes, dynamical matrix, auxiliary stuff
   !
-  call mallocate (u,  3*nat, 3*nat)
-  call mallocate (dyn,3*nat, 3*nat)
-  call mallocate (equiv_atoms, nat, nat)
-  call mallocate (n_equiv_atoms, nat)
-  call mallocate (has_equivalent,nat)
+  allocate  (u(  3*nat, 3*nat))    
+  allocate  (dyn(3*nat, 3*nat))    
+  allocate  (equiv_atoms( nat, nat))    
+  allocate  (n_equiv_atoms( nat))    
+  allocate  (has_equivalent(nat))    
   !
   ! nmodes not given: use defaults (all modes) as normal modes ...
   !

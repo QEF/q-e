@@ -7,21 +7,21 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine h_1psi (lda, n, psi, hpsi, spsi)  
+subroutine h_1psi (lda, n, psi, hpsi, spsi)
   !-----------------------------------------------------------------------
   !
-  !    This routine applies the Hamiltonian and the S matrix 
+  !    This routine applies the Hamiltonian and the S matrix
   !    to a vector psi and puts the result in hpsi and spsi
   !    Wrapper routine - calls h_psi
   use parameters, only: DP
   implicit none
   !
-  integer :: lda, n  
+  integer :: lda, n
   complex(kind=DP) :: psi (n), hpsi (n), spsi(n)
   !
-  call start_clock ('h_1psi')  
+  call start_clock ('h_1psi')
   call h_psi (lda, n, 1, psi, hpsi, spsi)
-  call stop_clock ('h_1psi')  
-  return  
+  call stop_clock ('h_1psi')
+  return
 end subroutine h_1psi
 

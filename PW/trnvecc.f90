@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine trnvecc (u, at, bg, iflg)  
+subroutine trnvecc (u, at, bg, iflg)
   !-----------------------------------------------------------------------
   !
   !  transforms a COMPLEX vector in real space (like a displacement)
@@ -15,53 +15,53 @@ subroutine trnvecc (u, at, bg, iflg)
   !
 #include"machine.h"
   use parameters, only : DP
-  implicit none  
+  implicit none
 
-  integer :: iflg  
+  integer :: iflg
   ! input: gives the versus of the transformatio
 
-  real(kind=DP) :: at (3, 3), bg (3, 3)  
+  real(kind=DP) :: at (3, 3), bg (3, 3)
   ! input: the direct lattice vectors
   ! input: the reciprocal lattice vectors
 
-  complex(kind=DP) :: u (3)  
+  complex(kind=DP) :: u (3)
   ! inp/out: the vector to transform
 
-  integer :: i, j, k  
+  integer :: i, j, k
   ! \
   !  counter on polarizations
   !/
 
-  complex(kind=DP) :: wrk (3)  
+  complex(kind=DP) :: wrk (3)
   ! auxiliary variable
-  if (iflg.gt.0) then  
+  if (iflg.gt.0) then
      !
      ! forward transformation :
      !
-     do i = 1, 3  
-        wrk (i) = u (i)  
+     do i = 1, 3
+        wrk (i) = u (i)
 
      enddo
-     do i = 1, 3  
-        u (i) = 0.d0  
-        do k = 1, 3  
-           u (i) = u (i) + wrk (k) * at (i, k)  
+     do i = 1, 3
+        u (i) = 0.d0
+        do k = 1, 3
+           u (i) = u (i) + wrk (k) * at (i, k)
         enddo
      enddo
-  else  
+  else
      !
      ! backward transformation :
      !
-     do i = 1, 3  
-        wrk (i) = 0.d0  
-        do k = 1, 3  
-           wrk (i) = wrk (i) + u (k) * bg (k, i)  
+     do i = 1, 3
+        wrk (i) = 0.d0
+        do k = 1, 3
+           wrk (i) = wrk (i) + u (k) * bg (k, i)
         enddo
 
      enddo
-     do i = 1, 3  
-        u (i) = wrk (i)  
+     do i = 1, 3
+        u (i) = wrk (i)
      enddo
   endif
-  return  
+  return
 end subroutine trnvecc

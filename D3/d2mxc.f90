@@ -7,16 +7,16 @@
 !
 !
 !-----------------------------------------------------------------------
-function d2mxc (rho)  
+function d2mxc (rho)
   !-----------------------------------------------------------------------
   !
   !  second derivative of the xc potential with respect to the local densi
   !  Perdew and Zunger parameterization of the C.A. functional
   !
 
-  implicit none  
+  implicit none
 
-  real (8) :: rho, d2mxc  
+  real (8) :: rho, d2mxc
   ! input: the charge density ( positive )
   ! output: the second derivative of the xc potent
 
@@ -42,23 +42,23 @@ function d2mxc (rho)
        36.85150d0, tm2 = 105.59107916d0, tm3 = 122.996139546115d0, tm4 = &
        71.30831794516d0, tm5 = 20.4812455967d0, tm6 = 2.371792877056d0)
 
-  real (8) :: rs, x, den  
+  real (8) :: rs, x, den
 
-  rs = thofpi_3 * (1.d0 / rho) **0.3333333333333333d0  
-  if (rs.ge.1.d0) then  
-     x = sqrt (rs)  
-     den = 1.d0 + x * b1 + b2 * x**2  
+  rs = thofpi_3 * (1.d0 / rho) **0.3333333333333333d0
+  if (rs.ge.1.d0) then
+     x = sqrt (rs)
+     den = 1.d0 + x * b1 + b2 * x**2
      d2mxc = - gc * (tm1 * x + tm2 * x**2 + tm3 * x**3 + tm4 * x**4 &
           + tm5 * x**5 + tm6 * x**6) / ( (rho**2) * (den**4) * 216.d0)
-  else  
+  else
      d2mxc = (9.d0 * a + (6.d0 * c + 8.d0 * d) * rs + 8.d0 * c * rs &
           * log (rs) ) / (rho**2) / 27.d0
 
   endif
 
-  rs = rs * fpioth_3  
-  d2mxc = d2mxc + (2.d0 / 9.d0 * thopi_3 * rs**5)  
+  rs = rs * fpioth_3
+  d2mxc = d2mxc + (2.d0 / 9.d0 * thopi_3 * rs**5)
 
-  d2mxc = 2.d0 * d2mxc  
-  return  
+  d2mxc = 2.d0 * d2mxc
+  return
 end function d2mxc

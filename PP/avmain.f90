@@ -5,12 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-program macroscopic  
+program macroscopic
 
-  character :: nodenumber * 3  
-  call start_postproc (nodenumber)  
+  character :: nodenumber * 3
+  call start_postproc (nodenumber)
   !
   !      work in parallel machines but only with one node!!!
   !
-  call average  
+  call average
 end program macroscopic

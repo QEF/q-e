@@ -16,7 +16,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
 #include "machine.h"
   use parameters
-  implicit none  
+  implicit none
   !
   !   First the dummy variables
   !
@@ -47,14 +47,14 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   real(kind=DP) :: forceion (3, nat)
   ! output: the ewald part of the forces
   !
-  integer, parameter :: mxr=50  
+  integer, parameter :: mxr=50
   ! the maximum number of R vectors
 
   real(kind=DP), parameter :: e2=2.d0, tpi = 2.d0 * 3.14159265358979d0
   ! the square of the electron charge
   ! two times pi
 
-  integer :: ig, n, na, nb, nt, nrm, ipol  
+  integer :: ig, n, na, nb, nt, nrm, ipol
   ! counter on G vectos
   ! counter on r vectors
   ! counter on atoms
@@ -82,34 +82,34 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! auxiliary space
   !
   forceion(:,:) = 0.d0
-  tpiba2 = (tpi / alat) **2  
-  charge = 0.d0  
-  do na = 1, nat  
-     charge = charge+zv (ityp (na) )  
+  tpiba2 = (tpi / alat) **2
+  charge = 0.d0
+  do na = 1, nat
+     charge = charge+zv (ityp (na) )
   enddo
   !
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error ON THE ENERGY
   !
-  alpha = 1.1d0  
-10 alpha = alpha - 0.1d0  
+  alpha = 1.1d0
+10 alpha = alpha - 0.1d0
   if (alpha.eq.0.d0) call error ('force_ew', 'optimal alpha not foun &
        &d', 1)
   upperbound = e2 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
-  if (upperbound.gt.1.0d-6) goto 10  
+  if (upperbound.gt.1.0d-6) goto 10
   !
   ! G-space sum here
   !
   allocate(aux(ngm))
   aux(:) = (0.d0, 0.d0)
 
-  do nt = 1, ntyp  
-     do ig = gstart, ngm  
-        aux (ig) = aux (ig) + zv (nt) * conjg (strf (ig, nt) )  
+  do nt = 1, ntyp
+     do ig = gstart, ngm
+        aux (ig) = aux (ig) + zv (nt) * conjg (strf (ig, nt) )
      enddo
   enddo
-  do ig = gstart, ngm  
+  do ig = gstart, ngm
      aux (ig) = aux (ig) * exp ( - gg (ig) * tpiba2 / alpha / 4.d0) &
           / (gg (ig) * tpiba2)
   enddo
@@ -118,56 +118,56 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   else
      fact = 2.d0
   end if
-  do na = 1, nat  
-     do ig = gstart, ngm  
+  do na = 1, nat
+     do ig = gstart, ngm
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
         sumnb = cos (arg) * DIMAG (aux(ig)) - sin (arg) * DREAL (aux(ig) )
-        forceion (1, na) = forceion (1, na) + g (1, ig) * sumnb  
-        forceion (2, na) = forceion (2, na) + g (2, ig) * sumnb  
-        forceion (3, na) = forceion (3, na) + g (3, ig) * sumnb  
+        forceion (1, na) = forceion (1, na) + g (1, ig) * sumnb
+        forceion (2, na) = forceion (2, na) + g (2, ig) * sumnb
+        forceion (3, na) = forceion (3, na) + g (3, ig) * sumnb
      enddo
-     do ipol = 1, 3  
+     do ipol = 1, 3
         forceion (ipol, na) = - zv (ityp (na) ) * fact * e2 * tpi**2 / &
              omega / alat * forceion (ipol, na)
      enddo
   enddo
-  deallocate (aux)  
-  if (gstart.eq.1) goto 100  
+  deallocate (aux)
+  if (gstart.eq.1) goto 100
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
-  rmax = 5.d0 / (sqrt (alpha) * alat)  
+  rmax = 5.d0 / (sqrt (alpha) * alat)
   !
   ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
   !
-  do na = 1, nat  
-     do nb = 1, nat  
-        if (nb.eq.na) goto 50  
-        do ipol = 1, 3  
-           dtau (ipol) = tau (ipol, na) - tau (ipol, nb)  
+  do na = 1, nat
+     do nb = 1, nat
+        if (nb.eq.na) goto 50
+        do ipol = 1, 3
+           dtau (ipol) = tau (ipol, na) - tau (ipol, nb)
         enddo
         !
         ! generates nearest-neighbors shells r(i)=R(i)-dtau(i)
         !
-        call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)  
-        do n = 1, nrm  
-           rr = sqrt (r2 (n) ) * alat  
+        call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
+        do n = 1, nrm
+           rr = sqrt (r2 (n) ) * alat
            factor = zv (ityp (na) ) * zv (ityp (nb) ) * e2 / rr**2 * &
                 (erfc (sqrt (alpha) * rr) / rr + &
                 sqrt (8.0d0 * alpha / tpi) * exp ( - alpha * rr**2) ) * alat
-           do ipol = 1, 3  
-              forceion (ipol, na) = forceion (ipol, na) - factor * r (ipol, n)  
+           do ipol = 1, 3
+              forceion (ipol, na) = forceion (ipol, na) - factor * r (ipol, n)
            enddo
         enddo
-50      continue  
+50      continue
      enddo
   enddo
-100 continue  
+100 continue
 #ifdef PARA
 
-  call reduce (3 * nat, forceion)  
+  call reduce (3 * nat, forceion)
 #endif
-  return  
+  return
 end subroutine force_ew
 

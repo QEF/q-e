@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine allocate_nlpot  
+subroutine allocate_nlpot
   !-----------------------------------------------------------------------
   !
   ! This routine computes the dimension of the Hamiltonian matrix and
@@ -23,13 +23,12 @@ subroutine allocate_nlpot
   !
   !
 #include "machine.h"
-  use pwcom  
-  use allocate
+  use pwcom
   implicit none
   !
   !    a few local variables
   !
-  integer :: nt, na, nb  
+  integer :: nt, na, nb
   ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints
@@ -38,29 +37,29 @@ subroutine allocate_nlpot
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
-  call mallocate(igk, npwx)  
+  allocate (igk( npwx))    
 
-  call mallocate(igk_l2g, npwx, nks)  
+  allocate (igk_l2g( npwx, nks))    
   igk_l2g = 0
 
-  call mallocate(g2kin, npwx)  
+  allocate (g2kin( npwx))    
   !
   !     calculate the number of beta functions for each atomic type
   !
-  lmaxkb = - 1  
-  do nt = 1, ntyp 
-     if (tvanp (nt).or.newpseudo (nt)) then  
-        nh (nt) = 0  
-        do nb = 1, nbeta (nt)  
-           nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1  
-           lmaxkb = max (lmaxkb, lll (nb, nt) )  
+  lmaxkb = - 1
+  do nt = 1, ntyp
+     if (tvanp (nt).or.newpseudo (nt)) then
+        nh (nt) = 0
+        do nb = 1, nbeta (nt)
+           nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
+           lmaxkb = max (lmaxkb, lll (nb, nt) )
         enddo
-     else  
+     else
         nh (nt) = (lmax(nt) + 1) * (lmax(nt) + 1) - (2 * lloc(nt) + 1)
-        if (lloc (nt) .eq.lmax (nt) ) then  
-           lmaxkb = max (lmaxkb, lmax (nt) - 1)  
-        else  
-           lmaxkb = max (lmaxkb, lmax (nt) )  
+        if (lloc (nt) .eq.lmax (nt) ) then
+           lmaxkb = max (lmaxkb, lmax (nt) - 1)
+        else
+           lmaxkb = max (lmaxkb, lmax (nt) )
         endif
      endif
   enddo
@@ -68,47 +67,47 @@ subroutine allocate_nlpot
   !
   ! calculate the maximum number of beta functions
   !
-  nhm = 0  
-  do nt = 1, ntyp  
-     if (nh (nt) .gt.nhm) nhm = nh (nt)  
+  nhm = 0
+  do nt = 1, ntyp
+     if (nh (nt) .gt.nhm) nhm = nh (nt)
   enddo
   !
   ! calculate the number of beta functions of the solid
   !
-  nkb = 0  
-  do na = 1, nat  
-     nkb = nkb + nh (ityp(na))  
+  nkb = 0
+  do na = 1, nat
+     nkb = nkb + nh (ityp(na))
   enddo
   !
-  call mallocate(indv, nhm, ntyp)  
-  call mallocate(nhtol,nhm, ntyp)  
-  call mallocate(nhtom,nhm, ntyp)  
-  call mallocate(qq,   nhm, nhm, ntyp)  
-  call mallocate(dvan, nhm, nhm, ntyp)  
-  call mallocate(deeq, nhm, nhm, nat, nspin)  
+  allocate (indv( nhm, ntyp))    
+  allocate (nhtol(nhm, ntyp))    
+  allocate (nhtom(nhm, ntyp))    
+  allocate (qq(   nhm, nhm, ntyp))    
+  allocate (dvan( nhm, nhm, ntyp))    
+  allocate (deeq( nhm, nhm, nat, nspin))    
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
           / dq + 4) * cell_factor
   !
-  call mallocate(qrad, nqxq, nbrx*(nbrx+1)/2, lqx, ntyp)
-  call mallocate(vkb, npwx,  nkb)  
-  call mallocate(qgm, ngm)  
-  call mallocate(becsum, nhm * (nhm + 1)/2, nat, nspin)  
+  allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lqx, ntyp))    
+  allocate (vkb( npwx,  nkb))    
+  allocate (qgm( ngm))    
+  allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
   !     Allocate space for Hubbard potential
   !
-  if (lda_plus_u) then  
+  if (lda_plus_u) then
      allocate( ns (nat, nspin, 5, 5) )
-     allocate( nsnew (nat, nspin, 5, 5) ) 
+     allocate( nsnew (nat, nspin, 5, 5) )
   endif
   !
   !     Calculate dimensions for array tab (including a possible factor
   !     coming from cell contraction during variable cell relaxation/MD)
   !
-  nqx = (sqrt (ecutwfc) / dq + 4) * cell_factor  
+  nqx = (sqrt (ecutwfc) / dq + 4) * cell_factor
 
-  call mallocate(tab, nqx , nbrx , ntyp)  
+  allocate (tab( nqx , nbrx , ntyp))    
 
-  return  
+  return
 end subroutine allocate_nlpot
 

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine gen_dpdvp  
+subroutine gen_dpdvp
   !-----------------------------------------------------------------------
   !
   ! It calculates the scalar product < Pc dpsi/du | dH/du | psi > and
@@ -21,113 +21,112 @@ subroutine gen_dpdvp
   use pwcom
   use phcom
   use d3com
-  use allocate
 
   implicit none
 
-  integer :: ik, ikk, ikq, ig, nrec, nu_i, nu_j, ibnd, jbnd, ios  
+  integer :: ik, ikk, ikq, ig, nrec, nu_i, nu_j, ibnd, jbnd, ios
 
-  real (8) :: zero (3)  
-  complex (8) :: ZDOTC  
-  complex (8), pointer :: dvloc (:), dpsidvpsi (:,:)
+  real (8) :: zero (3)
+  complex (8) :: ZDOTC
+  complex (8), allocatable :: dvloc (:), dpsidvpsi (:,:)
 
 
-  if (degauss.eq.0.d0) return  
-  call mallocate(dvloc, nrxx)  
-  call mallocate(dpsidvpsi, nbnd, nbnd)  
-  rewind (unit = iunigk)  
+  if (degauss.eq.0.d0) return
+  allocate (dvloc( nrxx))    
+  allocate (dpsidvpsi( nbnd, nbnd))    
+  rewind (unit = iunigk)
 
-  call setv (3, 0.d0, zero, 1)  
+  call setv (3, 0.d0, zero, 1)
 
-  do ik = 1, nksq  
-     read (iunigk, err = 100, iostat = ios) npw, igk  
-     if (lgamma) then  
-        ikk = ik  
-        ikq = ik  
-        npwq = npw  
-     else  
-        ikk = 2 * ik - 1  
-        ikq = 2 * ik  
-        read (iunigk, err = 100, iostat = ios) npwq, igkq  
+  do ik = 1, nksq
+     read (iunigk, err = 100, iostat = ios) npw, igk
+     if (lgamma) then
+        ikk = ik
+        ikq = ik
+        npwq = npw
+     else
+        ikk = 2 * ik - 1
+        ikq = 2 * ik
+        read (iunigk, err = 100, iostat = ios) npwq, igkq
      endif
-100  call error ('gen_dpdvp', 'reading iunigk-iunigkq', abs (ios) )  
-     call init_us_2 (npw, igk, xk (1, ikk), vkb0)  
-     call init_us_2 (npwq, igkq, xk (1, ikq), vkb)  
+100  call error ('gen_dpdvp', 'reading iunigk-iunigkq', abs (ios) )
+     call init_us_2 (npw, igk, xk (1, ikk), vkb0)
+     call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
 
-     call davcio (evc, lrwfc, iuwfc, ikk, - 1)  
+     call davcio (evc, lrwfc, iuwfc, ikk, - 1)
 
-     if (.not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, - 1)  
-     do nu_j = 1, 3 * nat  
-        call dvscf (nu_j, dvloc, xq)  
+     if (.not.lgamma) call davcio (evq, lrwfc, iuwfc, ikq, - 1)
+     do nu_j = 1, 3 * nat
+        call dvscf (nu_j, dvloc, xq)
         call dvdpsi (nu_j, xq, dvloc, vkb0, vkb, evc, dvpsi)
-        do nu_i = 1, 3 * nat  
-           nrec = (nu_i - 1) * nksq + ik  
+        do nu_i = 1, 3 * nat
+           nrec = (nu_i - 1) * nksq + ik
 
-           call davcio (dpsi, lrdwf, iudqwf, nrec, - 1)  
-           do ibnd = 1, nbnd  
-              do jbnd = 1, nbnd  
+           call davcio (dpsi, lrdwf, iudqwf, nrec, - 1)
+           do ibnd = 1, nbnd
+              do jbnd = 1, nbnd
                  dpsidvpsi (ibnd, jbnd) = &
                       ZDOTC (npwq, dpsi (1,ibnd), 1, dvpsi (1,jbnd), 1)
               enddo
            enddo
 #ifdef PARA
-           call reduce (2 * nbnd * nbnd, dpsidvpsi)  
+           call reduce (2 * nbnd * nbnd, dpsidvpsi)
 #endif
-           nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat  
-           call davcio (dpsidvpsi, lrdpdvp, iudpdvp_1, nrec, + 1)  
+           nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
+           call davcio (dpsidvpsi, lrdpdvp, iudpdvp_1, nrec, + 1)
         enddo
 
-        if (.not.lgamma) then  
-           do nu_i = 1, 3 * nat  
-              nrec = (nu_i - 1) * nksq + ik  
-              call davcio (dpsi, lrdwf, iud0qwf, nrec, - 1)  
-              do ibnd = 1, nbnd  
-                 do jbnd = 1, nbnd  
+        if (.not.lgamma) then
+           do nu_i = 1, 3 * nat
+              nrec = (nu_i - 1) * nksq + ik
+              call davcio (dpsi, lrdwf, iud0qwf, nrec, - 1)
+              do ibnd = 1, nbnd
+                 do jbnd = 1, nbnd
                     dpsidvpsi (ibnd, jbnd) = &
                          ZDOTC (npwq, dpsi (1, ibnd), 1, dvpsi (1, jbnd), 1)
                  enddo
               enddo
 #ifdef PARA
-              call reduce (2 * nbnd * nbnd, dpsidvpsi)  
+              call reduce (2 * nbnd * nbnd, dpsidvpsi)
 #endif
-              nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat  
-              call davcio (dpsidvpsi, lrdpdvp, iudpdvp_3, nrec, + 1)  
+              nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
+              call davcio (dpsidvpsi, lrdpdvp, iudpdvp_3, nrec, + 1)
            enddo
         endif
      enddo
 
-     if (.not.lgamma) then  
-        npw = npwq  
-        do ig = 1, npwx  
-           igk (ig) = igkq (ig)  
+     if (.not.lgamma) then
+        npw = npwq
+        do ig = 1, npwx
+           igk (ig) = igkq (ig)
         enddo
-        do nu_j = 1, 3 * nat  
-           call dvscf (nu_j, dvloc, zero)  
+        do nu_j = 1, 3 * nat
+           call dvscf (nu_j, dvloc, zero)
 
-           call dvdpsi (nu_j, zero, dvloc, vkb,vkb, evq, dvpsi)  
-           do nu_i = 1, 3 * nat  
-              nrec = (nu_i - 1) * nksq + ik  
+           call dvdpsi (nu_j, zero, dvloc, vkb,vkb, evq, dvpsi)
+           do nu_i = 1, 3 * nat
+              nrec = (nu_i - 1) * nksq + ik
 
-              call davcio (dpsi, lrdwf, iudqwf, nrec, - 1)  
-              do ibnd = 1, nbnd  
-                 do jbnd = 1, nbnd  
+              call davcio (dpsi, lrdwf, iudqwf, nrec, - 1)
+              do ibnd = 1, nbnd
+                 do jbnd = 1, nbnd
                     dpsidvpsi (ibnd, jbnd) = &
                          ZDOTC (npwq, dpsi (1,ibnd), 1, dvpsi(1,jbnd), 1)
                  enddo
               enddo
 #ifdef PARA
-              call reduce (2 * nbnd * nbnd, dpsidvpsi)  
+              call reduce (2 * nbnd * nbnd, dpsidvpsi)
 #endif
-              nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat  
+              nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
 
-              call davcio (dpsidvpsi, lrdpdvp, iudpdvp_2, nrec, + 1)  
+              call davcio (dpsidvpsi, lrdpdvp, iudpdvp_2, nrec, + 1)
            enddo
         enddo
      endif
   enddo
 
-  call close_open (4)  
-  call mfree (dvloc)
-  call mfree (dpsidvpsi)  
-  return  
+  call close_open (4)
+  deallocate (dvloc)
+  deallocate (dpsidvpsi)
+  return
 end subroutine gen_dpdvp

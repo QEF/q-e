@@ -11,7 +11,7 @@ PWOBJS = ../PW/error.o ../PW/latgen.o ../PW/volume.o ../PW/recips.o \
          ../PW/smallg_q.o ../PW/dsum.o ../PW/trnvecc.o ../PW/invmat.o \
          ../PW/checksym.o ../PW/eqvect.o ../PW/setv.o  \
          ../PW/irrek.o ../PW/mode_group.o ../PW/hpsort.o  \
-         ../PW/cft_3.o ../PW/allocate.o ../PW/error_handler.o
+         ../PW/cft_3.o ../PW/error_handler.o
 MODULES = ../Modules/parameters.o
 #
 # Targets

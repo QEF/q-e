@@ -13,7 +13,6 @@ subroutine rhod2vkb(dyn0)
   !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use rbecmod
   use cgcom
@@ -24,15 +23,15 @@ subroutine rhod2vkb(dyn0)
   integer :: i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, kpoint, &
        ipol, jpol, ijpol
   real(kind=DP) :: weight, fac, gtau
-  real(kind=DP), pointer :: dynloc(:,:), dynkb(:,:)
-  complex(kind=DP), pointer :: dvkb(:,:)
-  real (kind=DP), pointer ::becp1(:,:,:), becp2(:,:,:)
+  real(kind=DP), allocatable :: dynloc(:,:), dynkb(:,:)
+  complex(kind=DP), allocatable :: dvkb(:,:)
+  real (kind=DP), allocatable ::becp1(:,:,:), becp2(:,:,:)
   !
   call start_clock('rhod2vkb')
   !
   ! contribution from local potential
   !
-  call mallocate ( dynloc, 3*nat, nmodes)
+  allocate  ( dynloc( 3*nat, nmodes))    
   call setv(3*nat*nmodes,0.d0,dynloc,1)
   do ir = 1,nrxx
      psic(ir) = rho(ir,current_spin)
@@ -80,11 +79,11 @@ subroutine rhod2vkb(dyn0)
   !
   !   contribution from nonlocal (Kleinman-Bylander) potential
   !
-  call mallocate (dynkb,3*nat,3*nat)
+  allocate  (dynkb(3*nat,3*nat))    
   dynkb=0.d0
-  call mallocate ( dvkb, npwx, nkb)
-  call mallocate ( becp1, nkb, nbnd, 3)
-  call mallocate ( becp2, nkb, nbnd, 6)
+  allocate  ( dvkb( npwx, nkb))    
+  allocate  ( becp1( nkb, nbnd, 3))    
+  allocate  ( becp2( nkb, nbnd, 6))    
   !
   do kpoint = 1,nks
      ! the sum has four terms which can be reduced to two (note factor 2 in weight):
@@ -163,9 +162,9 @@ subroutine rhod2vkb(dyn0)
      end do
   end do
   !
-  call mfree ( becp2)
-  call mfree ( becp1)
-  call mfree ( dvkb)
+  deallocate ( becp2)
+  deallocate ( becp1)
+  deallocate ( dvkb)
   !
   call setv(3*nat*nmodes,0.d0,dyn0,1)
   !
@@ -183,8 +182,8 @@ subroutine rhod2vkb(dyn0)
         end do
      end if
   end do
-  call mfree(dynkb)
-  call mfree(dynloc)
+  deallocate(dynkb)
+  deallocate(dynloc)
   !
   call stop_clock('rhod2vkb')
   !

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine poolbcast (ndata, data)  
+subroutine poolbcast (ndata, data)
   !-----------------------------------------------------------------------
   !
   ! this routine broadcasts the (distributed) real*8 vector 'data'
@@ -17,23 +17,23 @@ subroutine poolbcast (ndata, data)
 #ifdef PARA
   use para
 #endif
-  implicit none  
+  implicit none
   ! on INPUT
-  integer :: ndata  
-  real (8) :: data (ndata)  
+  integer :: ndata
+  real (8) :: data (ndata)
 #ifdef PARA
-  include 'mpif.h'  
-  integer :: root, ierr  
-  if (npool.eq.1) return  
+  include 'mpif.h'
+  integer :: root, ierr
+  if (npool.eq.1) return
   !
   ! root is the "broadcasting" processor.
   !
   ! rank of the MPI_COMM_ROW
-  root = 0  
-  call mpi_barrier (MPI_COMM_ROW, ierr)  
-  call mpi_bcast (data, ndata, MPI_REAL8, root, MPI_COMM_ROW, ierr)  
-  call error ('poolbcast', 'info<>0', ierr)  
+  root = 0
+  call mpi_barrier (MPI_COMM_ROW, ierr)
+  call mpi_bcast (data, ndata, MPI_REAL8, root, MPI_COMM_ROW, ierr)
+  call error ('poolbcast', 'info<>0', ierr)
 #endif
-  return  
+  return
 end subroutine poolbcast
 

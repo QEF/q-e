@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine s_1psi (lda, n, psi, spsi)  
+subroutine s_1psi (lda, n, psi, spsi)
   !-----------------------------------------------------------------------
   !
   !    spsi = S*psi for one wavefunction
@@ -16,12 +16,12 @@ subroutine s_1psi (lda, n, psi, spsi)
   use becmod
   implicit none
   !
-  integer :: lda, n  
-  complex(kind=DP) :: psi (n), spsi (n)  
+  integer :: lda, n
+  complex(kind=DP) :: psi (n), spsi (n)
   !
-  call start_clock ('s_1psi')  
-  call ccalbec (nkb, npwx, n, 1, becp, vkb, psi)  
+  call start_clock ('s_1psi')
+  call ccalbec (nkb, npwx, n, 1, becp, vkb, psi)
   call s_psi (lda, n, 1, psi, spsi)
-  call stop_clock ('s_1psi')  
-  return  
+  call stop_clock ('s_1psi')
+  return
 end subroutine s_1psi

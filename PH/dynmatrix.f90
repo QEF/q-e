@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dynmatrix  
+subroutine dynmatrix
 !-----------------------------------------------------------------------
 !
 ! This routine is a driver which computes the symmetrized dynamical
@@ -16,11 +16,10 @@ subroutine dynmatrix
 !
 #include "machine.h"
 
-use pwcom 
-use allocate 
-use parameters, only : DP 
-use phcom  
-implicit none 
+use pwcom
+use parameters, only : DP
+use phcom
+implicit none
 ! local variables
 
 integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
@@ -36,36 +35,36 @@ integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
                            ! counter on modes
                    ! generic counter
 
-real(kind=DP) :: sxq (3, 48)  
+real(kind=DP) :: sxq (3, 48)
                      ! list of vectors in the star of q
 !
 !     Puts all noncomputed elements to zero
 !
-imode0 = 0  
-do irr = 1, nirr  
-jmode0 = 0  
-do jrr = 1, nirr  
-if (done_irr (irr) .eq.0.and.done_irr (jrr) .eq.0) then  
-   do ipert = 1, npert (irr)  
-   mu = imode0 + ipert  
-   do jpert = 1, npert (jrr)  
-   nu = jmode0 + jpert  
-   dyn (mu, nu) = DCMPLX (0.d0, 0.d0)  
-   enddo  
-   enddo  
-elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then  
-   do ipert = 1, npert (irr)  
-   mu = imode0 + ipert  
-   do jpert = 1, npert (jrr)  
-   nu = jmode0 + jpert  
-   dyn (mu, nu) = conjg (dyn (nu, mu) )  
-   enddo  
-   enddo  
-endif  
-jmode0 = jmode0 + npert (jrr)  
-enddo  
-imode0 = imode0 + npert (irr)  
-enddo  
+imode0 = 0
+do irr = 1, nirr
+jmode0 = 0
+do jrr = 1, nirr
+if (done_irr (irr) .eq.0.and.done_irr (jrr) .eq.0) then
+   do ipert = 1, npert (irr)
+   mu = imode0 + ipert
+   do jpert = 1, npert (jrr)
+   nu = jmode0 + jpert
+   dyn (mu, nu) = DCMPLX (0.d0, 0.d0)
+   enddo
+   enddo
+elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then
+   do ipert = 1, npert (irr)
+   mu = imode0 + ipert
+   do jpert = 1, npert (jrr)
+   nu = jmode0 + jpert
+   dyn (mu, nu) = conjg (dyn (nu, mu) )
+   enddo
+   enddo
+endif
+jmode0 = jmode0 + npert (jrr)
+enddo
+imode0 = imode0 + npert (irr)
+enddo
 !
 !   Symmetrizes the dynamical matrix w.r.t. the small group of q
 !
@@ -75,13 +74,13 @@ call symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
 !
 !  if only one mode is computed write the dynamical matrix and stop
 !
-if (iswitch.eq. - 4) then  
-   do nu = 1, 3 * nat  
-   write (6, '(2i5,2f10.6)') modenum, nu, dyn (modenum, nu)  
-   enddo  
-   call stop_ph (.false.)  
+if (iswitch.eq. - 4) then
+   do nu = 1, 3 * nat
+   write (6, '(2i5,2f10.6)') modenum, nu, dyn (modenum, nu)
+   enddo
+   call stop_ph (.false.)
 
-endif  
+endif
 !
 !   Generates the star of q
 !
@@ -91,16 +90,16 @@ call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
 !
 ! write on file information on the system
 !
-write (iudyn, '(a)') title  
-write (iudyn, '(a)') title_ph  
-write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm  
-do nt = 1, ntyp  
-write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amass (nt)  
-enddo  
-do na = 1, nat  
+write (iudyn, '(a)') title
+write (iudyn, '(a)') title_ph
+write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
+do nt = 1, ntyp
+write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amass (nt)
+enddo
+do na = 1, nat
 write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = &
  1, 3)
-enddo  
+enddo
 !
 !   Rotates and writes on iudyn the dynamical matrices of the star of q
 !
@@ -110,12 +109,12 @@ call q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, nq, &
 !   Writes (if the case) results for quantities involving electric field
 !
 if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
-if (zue.and..not.okvan) call sym_and_write_zue  
+if (zue.and..not.okvan) call sym_and_write_zue
 !
 !   Diagonalizes the dynamical matrix at q
 !
 
 if (all_comp) call dyndia (xq, nmodes, nat, ntyp, ityp, amass, &
  iudyn, dyn, w2)
-return  
+return
 end subroutine dynmatrix

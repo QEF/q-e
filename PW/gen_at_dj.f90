@@ -49,7 +49,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !  ylm = spherical harmonics
    !
    call ylmr2 ((lmax_wfc+1)**2, npw, gk, q, ylm)
-   
+
    q(:) = dsqrt ( q(:) )
 
    do nt=1,ntyp
@@ -75,7 +75,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
                !
                i0 = 1
                if ( r(1,nt) .lt. eps ) i0 = 2
- 
+
                call sph_bes(msh(nt)+1-i0,r(i0,nt),qt,l  ,jl(i0)  )
                call sph_bes(msh(nt)+1-i0,r(i0,nt),qt,l-1,jlm1(i0))
                ! recurrence relation for jl
@@ -94,7 +94,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
       end do
    end do
    deallocate ( gk, q )
- 
+
    allocate ( sk(npw) )
 
    iatw = 0
@@ -111,7 +111,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
                   eigts3(ig3(iig),na) * phase
       end do
       do nb = 1,nchi(nt)
-         if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then        
+         if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then
             l  = lchi(nb,nt)
             pref = (1.d0,0.d0)**l
             pref = (0.d0,1.d0)**l
@@ -119,16 +119,16 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
                lm = l*l+m
                iatw = iatw+1
                do ig=1,npw
-                  dwfcat(ig,iatw)= djl(ig,nb,nt)*sk(ig)*ylm(ig,lm)*pref 
+                  dwfcat(ig,iatw)= djl(ig,nb,nt)*sk(ig)*ylm(ig,lm)*pref
                end do
             enddo
          end if
       enddo
    enddo
- 
+
    if (iatw.ne.natw) then
       write(6,*) 'iatw =',iatw,'natw =',natw
-      call error('gen_at_dj','unexpected error',1)               
+      call error('gen_at_dj','unexpected error',1)
    end if
 
    deallocate ( sk )

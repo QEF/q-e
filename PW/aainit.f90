@@ -9,7 +9,7 @@
 subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
   !-----------------------------------------------------------------------
   !
-  ! this routine computes the coefficients of the expansion of the product 
+  ! this routine computes the coefficients of the expansion of the product
   ! of two real spherical harmonics into real spherical harmonics.
   !
   !     Y_limi(r) * Y_ljmj(r) = \sum_LM  ap(LM,limi,ljmj)  Y_LM(r)
@@ -19,19 +19,18 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
   ! lpx    for each input limi,ljmj is the number of LM in the sum
   ! lpl    for each input limi,ljmj points to the allowed LM
   !
-  ! The indices limi,ljmj and LM assume the order for real spherical harmonics 
+  ! The indices limi,ljmj and LM assume the order for real spherical harmonics
   ! given in routine ylmr2
   !
   use parameters, only : DP
-  use allocate
-  implicit none  
+  implicit none
   !
   ! first the I/O variables
   !
   integer :: &
        lli,            &! input: the maximum li considered
        lqmax,          &! input: array dimension
-       mx,             &! input: array dimension 
+       mx,             &! input: array dimension
        nlx,            &! input: array dimension, must be >= lli**2
        lpx(nlx,nlx),   &! output: maximum number of LM for limi,ljmj
        lpl(nlx,nlx,mx)  ! output: counter on LM couples
@@ -43,7 +42,7 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
   !
   integer :: llx, l, li, lj
 
-  real(kind=DP) , pointer :: r(:,:), rr(:), ylm(:,:), mly(:,:)
+  real(kind=DP) , allocatable :: r(:,:), rr(:), ylm(:,:), mly(:,:)
   ! an array of random vectors: r(3,llx)
   ! the norm of r: rr(llx)
   ! the real spherical harmonics for array r: ylm(llx,llx)
@@ -59,10 +58,10 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
   if (2*lli-1 > lqmax) &
       call error('aainit','ap leading dimension is too small',llx)
 
-  call mallocate(r, 3, llx )
-  call mallocate(rr, llx )
-  call mallocate(ylm, llx, llx )
-  call mallocate(mly, llx, llx )
+  allocate (r( 3, llx ))    
+  allocate (rr( llx ))    
+  allocate (ylm( llx, llx ))    
+  allocate (mly( llx, llx ))    
 
   r(:,:)   = 0.d0
   ylm(:,:) = 0.d0
@@ -91,10 +90,10 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
      end do
   end do
 
-  call mfree(mly)
-  call mfree(ylm)
-  call mfree(rr)
-  call mfree(r)
+  deallocate(mly)
+  deallocate(ylm)
+  deallocate(rr)
+  deallocate(r)
 
   return
 end subroutine aainit
@@ -110,14 +109,14 @@ subroutine gen_rndm_r(llx,r,rr)
   !
   integer :: llx         ! input: the dimension of r and rr
 
-  real(kind=DP) :: & 
+  real(kind=DP) :: &
        r(3,llx),  &! output: an array of random vectors
        rr(llx)    ! output: the norm of r
   !
   ! here the local variables
   !
   integer :: ir
-  real(kind=DP) :: costheta, sintheta, phi, rndm 
+  real(kind=DP) :: costheta, sintheta, phi, rndm
   !
   ! a parameter
   !
@@ -142,7 +141,7 @@ end subroutine gen_rndm_r
 !-----------------------------------------------------------------------
 function compute_ap(l,li,lj,llx,ylm,mly)
   !-----------------------------------------------------------------------
-  !-  given an l and a li,lj pair compute ap(l,li,lj) 
+  !-  given an l and a li,lj pair compute ap(l,li,lj)
   use parameters, only : DP
   implicit none
   !
@@ -152,8 +151,8 @@ function compute_ap(l,li,lj,llx,ylm,mly)
        llx,         &! the dimension of ylm and mly
        l,li,lj       ! the arguments of the array ap
 
-  real(kind=DP) :: & 
-       compute_ap,  &! this function 
+  real(kind=DP) :: &
+       compute_ap,  &! this function
        ylm(llx,llx),&! the real spherical harmonics for array r
        mly(llx,llx)  ! the inverse of ylm considered as a matrix
   !

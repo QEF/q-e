@@ -39,11 +39,11 @@ subroutine writedyn
   !   as above, for dielectric tensor and effective charges
   !
   if (epsil) then
-     write (iudyn, '(/,5x,"Dielectric Tensor:",/)')  
+     write (iudyn, '(/,5x,"Dielectric Tensor:",/)')
      write (iudyn, '(3e24.12)') ( (epsilon0(i,j) , j=1,3), i=1,3)
      write (iudyn, '(/5x, "Effective Charges E-U: Z_{alpha}{s,beta}",/)')
      do na = 1,nat
-        write (iudyn, '(5x,"atom # ",i4)') na  
+        write (iudyn, '(5x,"atom # ",i4)') na
         write (iudyn, '(3e24.12)') ( (zstar (i,j, na),j=1,3),i=1,3)
      end do
   end if

@@ -11,7 +11,6 @@ program cg_raman
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use io
   use cgcom
@@ -19,8 +18,8 @@ program cg_raman
   use para
 #endif
   implicit none
-  real(kind=DP), pointer :: deps_dtau(:,:,:,:), dynout(:,:)
-  real(kind=DP), pointer :: w2(:)
+  real(kind=DP), allocatable :: deps_dtau(:,:,:,:), dynout(:,:)
+  real(kind=DP), allocatable :: w2(:)
   !
   logical :: exst
   integer :: i
@@ -31,7 +30,7 @@ program cg_raman
   call init_clocks(.true.)
   call start_clock('raman')
 #ifdef PARA
-  call startup( nd_nmbr, version ) 
+  call startup( nd_nmbr, version )
 #else
   nd_nmbr='   '
   call date_and_tim(cdate,ctime)
@@ -45,9 +44,9 @@ program cg_raman
   !
   !  calculate eps0, zstar, dynamical matrix for the unperturbed system
   !
-  call mallocate ( dynout,3*nat,3*nat)
-  call mallocate ( zstar, 3, 3, nat)
-  call mallocate ( w2, 3*nat)
+  allocate  ( dynout(3*nat,3*nat))    
+  allocate  ( zstar( 3, 3, nat))    
+  allocate  ( w2( 3*nat))    
   !
   call cg_eps0dyn(w2,dynout)
   !
@@ -56,7 +55,7 @@ program cg_raman
         !
         !  calculate d eps0/d tau with finite differences
         !
-        call mallocate( deps_dtau, 3, 3, 3, nat)
+        allocate ( deps_dtau( 3, 3, 3, nat))    
         call cg_deps(deps_dtau)
         !
         !  calculate nonresonant raman intensities for all modes
@@ -248,7 +247,6 @@ subroutine cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use cgcom
 #ifdef PARA
@@ -310,7 +308,7 @@ subroutine cg_eps0dyn(w2,dynout)
      !
      open (unit=iunres,file='restartph',form='formatted', status='unknown')
      read (iunres,*,err=10,end=10) mode_done
-     if (mode_done.eq.nmodes+1) then 
+     if (mode_done.eq.nmodes+1) then
         read(iunres,*,end=10,err=10) dynout
         read(iunres,*,end=10,err=10) w2
         close(unit=iunres)
@@ -334,7 +332,7 @@ subroutine cg_eps0dyn(w2,dynout)
      call dyndiar(dyn,3*nat,nmodes,u,nat,ityp,amass,w2,dynout)
      !
      !  find new equilibrium positions (in the harmonic approximation)
-     !         if (lforce) 
+     !         if (lforce)
      !     &        call equilib(nat,tau,force,nmodes,w2,dyn,3*nat,dtau,alat)
   end if
 #ifdef PARA
@@ -362,7 +360,7 @@ subroutine cg_neweps
   !
   integer :: i, j
   real(kind=DP) :: rhotot, dmxc
-  !     
+  !
   !  recalculate self-consistent potential etc
   !
   call newscf
@@ -461,17 +459,16 @@ subroutine raman_cs(dynout,deps_dtau)
   !  calculate Raman cross section
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use cgcom
   !
   real(kind=DP) :: dynout(3*nat,3*nat), deps_dtau(3,3,3,nat)
   !
   integer :: nu, na, ipol, jpol, lpol
-  real(kind=DP), pointer :: raman_activity(:,:,:)
+  real(kind=DP), allocatable :: raman_activity(:,:,:)
   !
   !
-  call mallocate ( raman_activity, 3, 3, nmodes)
+  allocate  ( raman_activity( 3, 3, nmodes))    
   write (6,'(/5x, "Raman tensor for mode nu : dX_{alpha,beta}/d nu"/)')
   do nu=1,nmodes
      !
@@ -489,7 +486,7 @@ subroutine raman_cs(dynout,deps_dtau)
      write (6,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
              nu,( ( raman_activity(ipol,jpol,nu),jpol=1,3), ipol=1,3)
   end do
-  call mfree(raman_activity)
+  deallocate(raman_activity)
   !
   return
 end subroutine raman_cs
@@ -501,7 +498,6 @@ subroutine raman_cs2(w2,dynout)
   !  calculate d eps0/d u  (u=phonon mode) with finite differences
   !
 #include "machine.h"
-  use allocate
   use pwcom
   use cgcom
 #ifdef PARA
@@ -510,7 +506,7 @@ subroutine raman_cs2(w2,dynout)
   implicit none
   real(kind=DP) :: dynout(3*nat,3*nat), w2(3*nat)
   !
-  real(kind=DP), pointer :: raman_activity(:,:,:), infrared(:)
+  real(kind=DP), allocatable :: raman_activity(:,:,:), infrared(:)
   real(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
        delta, norm, coeff
   integer iudyn, nd, nu, nd_, nu_, na, ipol, jpol
@@ -525,7 +521,7 @@ subroutine raman_cs2(w2,dynout)
   !
   !  Read partial results (if any)
   !
-  call mallocate( raman_activity, 3, 3, last-first+1)
+  allocate ( raman_activity( 3, 3, last-first+1))    
   open (unit=iunres,file='restart_d',form='formatted',status='unknown')
   read(iunres,*,err=1,end=1) nu_,nd_
   read(iunres,*,err=1,end=1) raman_activity
@@ -638,8 +634,8 @@ subroutine raman_cs2(w2,dynout)
   rydcm1 = 13.6058*8065.5
   cm1thz = 241.796/8065.5
   !
-  !   conversion factor for IR cross sections from 
-  !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu 
+  !   conversion factor for IR cross sections from
+  !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu
   !   1 Ry mass unit = 2 * mass of one electron = 2 amu
   !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
   !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
@@ -647,7 +643,7 @@ subroutine raman_cs2(w2,dynout)
   irfac = 4.80324**2/2.d0
   !
   !   conversion factor for Raman cross sections from Ry atomic units
-  !   to A^4/amu 
+  !   to A^4/amu
   !
   r1fac = 0.529177**4/2.d0
   !
@@ -658,7 +654,7 @@ subroutine raman_cs2(w2,dynout)
   r2fac = 3.d0*omega/(4.d0*3.1415926) *  &
        3.d0 / ( 2.d0 + (epsilon0(1,1) + epsilon0(2,2) + epsilon0(3,3))/3.d0 )
   !
-  call mallocate(infrared,3*nat)
+  allocate (infrared(3*nat))    
   !
   do nu = 1,3*nat
      do ipol=1,3
@@ -703,8 +699,8 @@ subroutine raman_cs2(w2,dynout)
          (45.d0*alpha**2 + 7.0d0*beta2)*r1fac*r2fac
   end do
   !
-  call mfree (infrared)
-  call mfree (raman_activity)
+  deallocate (infrared)
+  deallocate (raman_activity)
   return
 end subroutine raman_cs2
 

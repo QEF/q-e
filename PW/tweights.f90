@@ -14,69 +14,69 @@ subroutine tweights (nks, nspin, nbndx, nbnd, nelec, ntetra, &
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
   use parameters
-  implicit none  
+  implicit none
   !
-  integer :: nks, nspin, nbndx, nbnd, ntetra, tetra (4, ntetra)  
-  real(kind=DP) :: et (nbndx, nks), nelec  
+  integer :: nks, nspin, nbndx, nbnd, ntetra, tetra (4, ntetra)
+  real(kind=DP) :: et (nbndx, nks), nelec
 
-  real(kind=DP) :: wg (nbnd, nks), ef  
-  real(kind=DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef  
+  real(kind=DP) :: wg (nbnd, nks), ef
+  real(kind=DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
 
 
 
-  integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)  
+  integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
   ! Calculate the Fermi energy ef
 
   call efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, tetra, &
        ef)
-  do ik = 1, nks  
-     do ibnd = 1, nbnd  
-        wg (ibnd, ik) = 0.d0  
+  do ik = 1, nks
+     do ibnd = 1, nbnd
+        wg (ibnd, ik) = 0.d0
      enddo
 
   enddo
-  do ns = 1, nspin  
+  do ns = 1, nspin
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
-     if (ns.eq.1) then  
-        nk = 0  
-     else  
-        nk = nks / 2  
+     if (ns.eq.1) then
+        nk = 0
+     else
+        nk = nks / 2
      endif
-     do nt = 1, ntetra  
-        do ibnd = 1, nbnd  
+     do nt = 1, ntetra
+        do ibnd = 1, nbnd
            !
            ! etetra are the energies at the vertexes of the nt-th tetrahedron
            !
-           do i = 1, 4  
-              etetra (i) = et (ibnd, tetra (i, nt) + nk)  
+           do i = 1, 4
+              etetra (i) = et (ibnd, tetra (i, nt) + nk)
            enddo
-           itetra (1) = 0  
-           call hpsort (4, etetra, itetra)  
+           itetra (1) = 0
+           call hpsort (4, etetra, itetra)
            !
            ! ...sort in ascending order: e1 < e2 < e3 < e4
            !
-           e1 = etetra (1)  
-           e2 = etetra (2)  
-           e3 = etetra (3)  
-           e4 = etetra (4)  
+           e1 = etetra (1)
+           e2 = etetra (2)
+           e3 = etetra (3)
+           e4 = etetra (4)
            !
            ! kp1-kp4 are the irreducible k-points corresponding to e1-e4
            !
-           kp1 = tetra (itetra (1), nt) + nk  
-           kp2 = tetra (itetra (2), nt) + nk  
-           kp3 = tetra (itetra (3), nt) + nk  
-           kp4 = tetra (itetra (4), nt) + nk  
+           kp1 = tetra (itetra (1), nt) + nk
+           kp2 = tetra (itetra (2), nt) + nk
+           kp3 = tetra (itetra (3), nt) + nk
+           kp4 = tetra (itetra (4), nt) + nk
            !
            ! calculate weights wg
            !
-           if (ef.ge.e4) then  
-              wg (ibnd, kp1) = wg (ibnd, kp1) + 0.25d0 / ntetra  
-              wg (ibnd, kp2) = wg (ibnd, kp2) + 0.25d0 / ntetra  
-              wg (ibnd, kp3) = wg (ibnd, kp3) + 0.25d0 / ntetra  
-              wg (ibnd, kp4) = wg (ibnd, kp4) + 0.25d0 / ntetra  
-           elseif (ef.lt.e4.and.ef.ge.e3) then  
+           if (ef.ge.e4) then
+              wg (ibnd, kp1) = wg (ibnd, kp1) + 0.25d0 / ntetra
+              wg (ibnd, kp2) = wg (ibnd, kp2) + 0.25d0 / ntetra
+              wg (ibnd, kp3) = wg (ibnd, kp3) + 0.25d0 / ntetra
+              wg (ibnd, kp4) = wg (ibnd, kp4) + 0.25d0 / ntetra
+           elseif (ef.lt.e4.and.ef.ge.e3) then
               c4 = 0.25d0 / ntetra * (e4 - ef) **3 / (e4 - e1) / (e4 - e2) &
                    / (e4 - e3)
               dosef = 3.d0 / ntetra * (e4 - ef) **2 / (e4 - e1) / (e4 - e2) &
@@ -94,8 +94,8 @@ subroutine tweights (nks, nspin, nbndx, nbnd, nelec, ntetra, &
                    (4.d0 - (e4 - ef) * (1.d0 / (e4 - e1) + 1.d0 / (e4 - e2) &
                    + 1.d0 / (e4 - e3) ) ) + dosef * (e1 + e2 + e3 + e4 - 4.d0 * &
                    et (ibnd, kp4) ) / 40.d0
-           elseif (ef.lt.e3.and.ef.ge.e2) then  
-              c1 = 0.25d0 / ntetra * (ef - e1) **2 / (e4 - e1) / (e3 - e1)  
+           elseif (ef.lt.e3.and.ef.ge.e2) then
+              c1 = 0.25d0 / ntetra * (ef - e1) **2 / (e4 - e1) / (e3 - e1)
               c2 = 0.25d0 / ntetra * (ef - e1) * (ef - e2) * (e3 - ef) &
                    / (e4 - e1) / (e3 - e2) / (e3 - e1)
               c3 = 0.25d0 / ntetra * (ef - e2) **2 * (e4 - ef) / (e4 - e2) &
@@ -115,7 +115,7 @@ subroutine tweights (nks, nspin, nbndx, nbnd, nelec, ntetra, &
               wg (ibnd, kp4) = wg (ibnd, kp4) + (c1 + c2 + c3) * (ef - e1) &
                    / (e4 - e1) + c3 * (ef - e2) / (e4 - e2) + dosef * (e1 + e2 + &
                    e3 + e4 - 4.d0 * et (ibnd, kp4) ) / 40.d0
-           elseif (ef.lt.e2.and.ef.ge.e1) then  
+           elseif (ef.lt.e2.and.ef.ge.e1) then
               c4 = 0.25d0 / ntetra * (ef - e1) **3 / (e2 - e1) / (e3 - e1) &
                    / (e4 - e1)
               dosef = 3.d0 / ntetra * (ef - e1) **2 / (e2 - e1) / (e3 - e1) &
@@ -136,11 +136,11 @@ subroutine tweights (nks, nspin, nbndx, nbnd, nelec, ntetra, &
 
   enddo
   ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
-  do ik = 1, nks  
-     do ibnd = 1, nbnd  
-        wg (ibnd, ik) = wg (ibnd, ik) * 2.d0 / nspin  
+  do ik = 1, nks
+     do ibnd = 1, nbnd
+        wg (ibnd, ik) = wg (ibnd, ik) * 2.d0 / nspin
      enddo
 
   enddo
-  return  
+  return
 end subroutine tweights

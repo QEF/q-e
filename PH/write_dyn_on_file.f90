@@ -6,28 +6,28 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine write_dyn_on_file (xq, phi, nat, iudyn)  
+subroutine write_dyn_on_file (xq, phi, nat, iudyn)
   !-----------------------------------------------------------------------
   use parameters, only : DP
-  implicit none  
+  implicit none
   ! input variables
-  integer :: iudyn, nat  
+  integer :: iudyn, nat
   ! unit number
   ! number of atom in the unit cell
-  complex(kind=DP) :: phi (3, 3, nat, nat)  
+  complex(kind=DP) :: phi (3, 3, nat, nat)
   !  the dynamical matrix
-  real(kind=DP) :: xq (3)  
+  real(kind=DP) :: xq (3)
   ! the q vector
   ! local variables
 
-  integer :: na, nb, icar, jcar  
+  integer :: na, nb, icar, jcar
   ! counters on atoms
   ! cartesian coordinate counters
-  write (iudyn, 9000) (xq (icar), icar = 1, 3)  
-  do na = 1, nat  
-     do nb = 1, nat  
-        write (iudyn, '(2i3)') na, nb  
-        do icar = 1, 3  
+  write (iudyn, 9000) (xq (icar), icar = 1, 3)
+  do na = 1, nat
+     do nb = 1, nat
+        write (iudyn, '(2i3)') na, nb
+        do icar = 1, 3
            write (iudyn, '(3e24.12)') (phi (icar, jcar, na, nb) , jcar = 1, &
                 3)
         enddo
@@ -35,7 +35,7 @@ subroutine write_dyn_on_file (xq, phi, nat, iudyn)
 
   enddo
 
-  return  
+  return
 9000 format(/,5x,'Dynamical  Matrix in cartesian axes', &
        &       //,5x,'q = ( ',3f14.9,' ) ',/)
 end subroutine write_dyn_on_file

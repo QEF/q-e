@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine ylmr2 (lmax2, ng, g, gg, ylm)  
+subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !-----------------------------------------------------------------------
   !
   !     Real spherical harmonics ylm(G) up to l=lmax
@@ -14,7 +14,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Numerical recursive algorithm as given in Numerical Recipes
   !
   use parameters
-  implicit none  
+  implicit none
   !
   ! Input
   !
@@ -23,7 +23,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   ! Output
   !
-  real(kind=DP) :: ylm (ng,lmax2)  
+  real(kind=DP) :: ylm (ng,lmax2)
   !
   ! local variables
   !
@@ -38,11 +38,11 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   do lmax = 0, 6
      if ((lmax+1)**2 == lmax2) go to 10
   end do
-  call error (' ylmr', 'l > 6 or wrong number of Ylm required',lmax2)  
+  call error (' ylmr', 'l > 6 or wrong number of Ylm required',lmax2)
 10 continue
   !
   if (lmax == 0) then
-     ylm (:,1) =  sqrt (1.d0 / fpi)  
+     ylm (:,1) =  sqrt (1.d0 / fpi)
      return
   end if
   !
@@ -50,18 +50,18 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   allocate(cost(ng), phi(ng), P(ng,0:lmax,0:lmax) )
   do ig = 1, ng
-     gmod = sqrt (gg (ig) )  
-     if (gmod < eps) then  
+     gmod = sqrt (gg (ig) )
+     if (gmod < eps) then
         cost(ig) = 0.d0
-     else  
+     else
         cost(ig) = g(3,ig)/gmod
      endif
      !
      !  beware the arc tan, it is defined modulo pi
      !
-     if (g(1,ig) > eps) then  
+     if (g(1,ig) > eps) then
         phi (ig) = atan( g(2,ig)/g(1,ig) )
-     else if (g(1,ig) < -1.d-9) then  
+     else if (g(1,ig) < -1.d-9) then
         phi (ig) = atan( g(2,ig)/g(1,ig) ) + pi
      else
         phi (ig) = sign( pi/2.d0,g(2,ig) )
@@ -72,7 +72,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   lm = 0
   do l = 0, lmax
-     c = sqrt (dble(2*l+1) / fpi)  
+     c = sqrt (dble(2*l+1) / fpi)
      if ( l == 0 ) then
         P (:,0,0) = 1.d0
      else if ( l == 1 ) then
@@ -88,22 +88,22 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
         P(:,l,l-1) = cost(:) * (2*l-1) * P(:,l-1,l-1)
         P(:,l,l)   = (-1)**l * semifact(2*l-1) * (max(0.d0,1.d0-cost(:)**2))**(dble(l)/2)
      end if
-     ! 
+     !
      ! Y_lm, m = 0
-     ! 
+     !
      lm = lm + 1
      ylm (:, lm) = c * P(:,l,0)
      !
      do m = 1, l
-        ! 
+        !
         ! Y_lm, m > 0
-        ! 
+        !
         lm = lm + 1
         ylm (:, lm) = c * sqrt(dble(fact(l-m))/dble(fact(l+m))) * &
              sqrt(2.d0) * P(:,l,m) * cos (m*phi(:))
-        ! 
+        !
         ! Y_lm, m < 0
-        ! 
+        !
         lm = lm + 1
         ylm (:, lm) = c * sqrt(dble(fact(l-m))/dble(fact(l+m))) * &
              sqrt(2.d0) * P(:,l,m) * sin (m*phi(:))
@@ -113,7 +113,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   deallocate(cost, phi, P)
   return
   !
-  return  
+  return
 end subroutine ylmr2
 
 integer function fact(n)
@@ -134,7 +134,7 @@ integer function semifact(n)
   integer :: n, i
 
   semifact = 1
-  do i = n, 1, -2 
+  do i = n, 1, -2
      semifact = i*semifact
   end do
   return

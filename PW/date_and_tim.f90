@@ -5,13 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine date_and_tim (cdate, ctime)  
+subroutine date_and_tim (cdate, ctime)
   !
   !     Returns two strings containing the date and the time
   !     in human-readable format. Uses a standard f90 call.
   !
-  implicit none  
-  character (len=9) :: cdate, ctime  
+  implicit none
+  character (len=9) :: cdate, ctime
   !
   character(len=3), dimension(12) :: months
   data months /'Jan','Feb','Mar','Apr','May','Jun',                     &

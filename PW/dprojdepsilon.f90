@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )       
+subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -34,9 +34,9 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
               nworddw, nworddb
    real (kind=DP) :: xyz(3,3), q, eps, a1, a2
    parameter (eps=1.0e-8)
- 
+
    complex (kind=DP) :: ZDOTC
- 
+
    complex (kind=DP), allocatable :: &
            dwfc(:,:), aux(:,:), work(:), dbeta(:,:), aux1(:,:), &
            betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:)
@@ -51,10 +51,10 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    !       wfatbeta(natomwfc,nhm),! <wfc|beta>
    !       wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
 
-   real (kind=DP), allocatable :: gk(:,:), qm1(:) 
+   real (kind=DP), allocatable :: gk(:,:), qm1(:)
    !       gk(3,npwx),
-   !       qm1(npwx) 
- 
+   !       qm1(npwx)
+
    ! xyz are the three unit vectors in the x,y,z directions
    xyz(:,:) = 0.d0
    do i=1,3
@@ -65,7 +65,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    !      write(6,*) 'dprojde: ik =',ik,' ipol =',ipol,' jpol =',jpol
    !
    ! At first the derivatives of the atomic wfcs: we compute the term
-   ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}> 
+   ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>
    !
    allocate ( qm1(npwx), gk(3,npwx) )
    allocate ( dwfc(npwx,natomwfc), aux(npwx,natomwfc) )
@@ -126,7 +126,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
 
    deallocate ( dwfc, aux )
    !
-   ! Now the derivatives of the beta functions: we compute the term 
+   ! Now the derivatives of the beta functions: we compute the term
    ! <\fi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
    !
    allocate (dbeta(npwx,nkb), aux1(npwx,nkb), work(npwx), &
@@ -161,7 +161,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
                   dbeta(ig,jkb2) = - aux1(ig,jkb2)*gk(jpol,ig) - &
                         dbeta(ig,jkb2) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
                   if (ipol.eq.jpol) &
-                     dbeta(ig,jkb2) = dbeta(ig,jkb2) - work(ig)*0.5d0         
+                     dbeta(ig,jkb2) = dbeta(ig,jkb2) - work(ig)*0.5d0
                end do
                do ibnd = 1,nbnd
                   betapsi(ih,ibnd)= becp(jkb2,ibnd)
@@ -184,7 +184,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
                         dproj(iwf,ibnd) = dproj(iwf,ibnd) +               &
                                           qq(ih,jh,nt) *                  &
                                ( wfatdbeta(iwf,ih)*betapsi(jh,ibnd) +     &
-                                 wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )     
+                                 wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )
                      end do
                   end do
                end do

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dynmat_us  
+subroutine dynmat_us
   !-----------------------------------------------------------------------
   !
   !  This routine calculates the electronic term: <psi|V"|psi>
@@ -15,15 +15,14 @@ subroutine dynmat_us
   !
 #include "machine.h"
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
+  use pwcom
+  use parameters, only : DP
+  use phcom
 #ifdef PARA
   use para
 #endif
 
-  implicit none 
+  implicit none
   integer :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &
        ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk
   ! counter on polarizations
@@ -48,7 +47,7 @@ subroutine dynmat_us
   ! counter on beta functions
   ! record position of wfc at k
 
-  real(kind=DP) :: gtau, fac, wgg  
+  real(kind=DP) :: gtau, fac, wgg
   ! the product G*\tau_s
   ! auxiliary variable
   ! the true weight of a K point
@@ -56,7 +55,7 @@ subroutine dynmat_us
   complex(kind=DP) :: work, dynwrk (3 * nat, 3 * nat)
   ! auxiliary space
   ! work space
-  complex(kind=DP), pointer :: rhog (:), &
+  complex(kind=DP), allocatable :: rhog (:), &
        gammap (:,:,:,:), aux1 (:,:), work1 (:), work2 (:)
   ! fourier transform of rho
   ! the second derivative of the beta
@@ -64,39 +63,39 @@ subroutine dynmat_us
   ! auxiliary space
   ! auxiliary space
 
-  call start_clock ('dynmat_us')  
-  call mallocate(rhog  , nrxx)  
-  call mallocate(work1 , npwx)  
-  call mallocate(work2 , npwx)  
-  call mallocate(aux1  , npwx , nbnd)  
-  call mallocate(gammap,  nkb, nbnd , 3 , 3)  
+  call start_clock ('dynmat_us')
+  allocate (rhog  ( nrxx))    
+  allocate (work1 ( npwx))    
+  allocate (work2 ( npwx))    
+  allocate (aux1  ( npwx , nbnd))    
+  allocate (gammap(  nkb, nbnd , 3 , 3))    
 
-  call setv (2 * 3 * 3 * nat * nat, 0.0d0, dynwrk, 1)  
+  call setv (2 * 3 * 3 * nat * nat, 0.0d0, dynwrk, 1)
   !
   !   We first compute the part of the dynamical matrix due to the local
   !   potential
 #ifdef PARA
   !   ... only the first pool does the calculation (no sum over k needed)
-  if (mypool.ne.1) goto 100  
+  if (mypool.ne.1) goto 100
 #endif
   !
-  call setv (2 * nrxx, 0.d0, rhog, 1)  
-  do is = 1, nspin  
-     do ir = 1, nrxx  
-        rhog (ir) = rhog (ir) + DCMPLX (rho (ir, is), 0.d0)  
+  call setv (2 * nrxx, 0.d0, rhog, 1)
+  do is = 1, nspin
+     do ir = 1, nrxx
+        rhog (ir) = rhog (ir) + DCMPLX (rho (ir, is), 0.d0)
      enddo
   enddo
 
-  call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+  call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   ! there is a delta ss'
   !
-  do na = 1, nat  
-     do icart = 1, 3  
-        na_icart = 3 * (na - 1) + icart  
-        do jcart = 1, 3  
-           na_jcart = 3 * (na - 1) + jcart  
-           do ng = 1, ngm  
+  do na = 1, nat
+     do icart = 1, 3
+        na_icart = 3 * (na - 1) + icart
+        do jcart = 1, 3
+           na_jcart = 3 * (na - 1) + jcart
+           do ng = 1, ngm
               gtau = tpi * (g (1, ng) * tau (1, na) + &
                             g (2, ng) * tau (2, na) + &
                             g (3, ng) * tau (3, na) )
@@ -110,39 +109,39 @@ subroutine dynmat_us
      enddo
   enddo
 #ifdef PARA
-  call reduce (18 * nat * nat, dynwrk)  
+  call reduce (18 * nat * nat, dynwrk)
   !
   ! each pool contributes to next term
   !
-100 continue  
+100 continue
 #endif
   !      goto 500
   !
   ! Here we compute  the nonlocal Ultra-soft contribution
   !
-  if (nksq.gt.1) rewind (unit = iunigk)  
-  do ik = 1, nksq  
-     if (lgamma) then  
-        ikk = ik  
-     else  
-        ikk = 2 * ik - 1  
+  if (nksq.gt.1) rewind (unit = iunigk)
+  do ik = 1, nksq
+     if (lgamma) then
+        ikk = ik
+     else
+        ikk = 2 * ik - 1
      endif
-     if (lsda) current_spin = isk (ikk)  
-     if (nksq.gt.1) read (iunigk) npw, igk  
+     if (lsda) current_spin = isk (ikk)
+     if (nksq.gt.1) read (iunigk) npw, igk
      ! npwq and igkq are not actually used
 
-     if (nksq.gt.1.and..not.lgamma) read (iunigk) npwq, igkq  
+     if (nksq.gt.1.and..not.lgamma) read (iunigk) npwq, igkq
 
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ikk, - 1)  
-     call init_us_2 (npw, igk, xk (1, ikk), vkb)  
+     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ikk, - 1)
+     call init_us_2 (npw, igk, xk (1, ikk), vkb)
      !
      !    We first prepare the gamma terms, which are the second derivatives
      !    becp terms.
      !
-     do icart = 1, 3  
-        do jcart = 1, icart  
-           do ibnd = 1, nbnd  
-              do ig = 1, npw  
+     do icart = 1, 3
+        do jcart = 1, icart
+           do ibnd = 1, nbnd
+              do ig = 1, npw
                  aux1 (ig, ibnd) = - evc (ig, ibnd) * tpiba2 * &
                       (xk (icart, ikk) + g (icart, igk (ig) ) ) * &
                       (xk (jcart, ikk) + g (jcart, igk (ig) ) )
@@ -159,20 +158,20 @@ subroutine dynmat_us
      !   And then compute the contribution from the US pseudopotential
      !   which is  similar to the KB one
      !
-     ijkb0 = 0  
-     do nt = 1, ntyp  
-        do na = 1, nat  
-           if (ityp (na) .eq.nt) then  
-              do icart = 1, 3  
-                 na_icart = 3 * (na - 1) + icart  
-                 do jcart = 1, 3  
-                    na_jcart = 3 * (na - 1) + jcart  
-                    do ibnd = 1, nbnd_occ (ikk)  
-                       wgg = wg (ibnd, ikk)  
-                       do ih = 1, nh (nt)  
-                          ikb = ijkb0 + ih  
-                          do jh = 1, nh (nt)  
-                             jkb = ijkb0 + jh  
+     ijkb0 = 0
+     do nt = 1, ntyp
+        do na = 1, nat
+           if (ityp (na) .eq.nt) then
+              do icart = 1, 3
+                 na_icart = 3 * (na - 1) + icart
+                 do jcart = 1, 3
+                    na_jcart = 3 * (na - 1) + jcart
+                    do ibnd = 1, nbnd_occ (ikk)
+                       wgg = wg (ibnd, ikk)
+                       do ih = 1, nh (nt)
+                          ikb = ijkb0 + ih
+                          do jh = 1, nh (nt)
+                             jkb = ijkb0 + jh
                              dynwrk(na_icart,na_jcart) = &
                                   dynwrk(na_icart,na_jcart) + &
                                   (deeq (ih, jh, na, current_spin) - &
@@ -190,7 +189,7 @@ subroutine dynmat_us
                     enddo
                  enddo
               enddo
-              ijkb0 = ijkb0 + nh (nt)  
+              ijkb0 = ijkb0 + nh (nt)
            endif
         enddo
      enddo
@@ -200,9 +199,9 @@ subroutine dynmat_us
   !   derivative which is due to the change of the self consistent D part
   !   when the atom moves. We compute these terms in an additional routine
   !
-  call addusdynmat (dynwrk)  
+  call addusdynmat (dynwrk)
 #ifdef PARA
-  call poolreduce (18 * nat * nat, dynwrk)  
+  call poolreduce (18 * nat * nat, dynwrk)
 #endif
   !      do na = 1,nat
   !         do nb = 1,nat
@@ -218,25 +217,25 @@ subroutine dynmat_us
   !
   !  We rotate the dynamical matrix on the basis of patterns
   !
-  do nu_i = 1, 3 * nat  
-     do nu_j = 1, 3 * nat  
-        work = (0.0d0, 0.0d0)  
-        do na_jcart = 1, 3 * nat  
-           do na_icart = 1, 3 * nat  
+  do nu_i = 1, 3 * nat
+     do nu_j = 1, 3 * nat
+        work = (0.0d0, 0.0d0)
+        do na_jcart = 1, 3 * nat
+           do na_icart = 1, 3 * nat
               work = work + conjg (u (na_icart, nu_i) ) * dynwrk (na_icart, &
                    na_jcart) * u (na_jcart, nu_j)
            enddo
         enddo
-        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + work  
+        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + work
      enddo
 
   enddo
-  call mfree (gammap)  
-  call mfree (aux1)  
-  call mfree (work2)  
-  call mfree (work1)  
-  call mfree (rhog)  
+  deallocate (gammap)
+  deallocate (aux1)
+  deallocate (work2)
+  deallocate (work1)
+  deallocate (rhog)
 
-  call stop_clock ('dynmat_us')  
-  return  
+  call stop_clock ('dynmat_us')
+  return
 end subroutine dynmat_us

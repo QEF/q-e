@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine vhpsi (ldap, np, mp, psip, hpsi)  
+subroutine vhpsi (ldap, np, mp, psip, hpsi)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the Hubbard potential applied to the electronic
@@ -15,7 +15,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   !
 #include "machine.h"
 
-  use pwcom  
+  use pwcom
   implicit none
   integer :: ldap, np, mp
   complex(kind=DP) :: psip (ldap, mp), hpsi (ldap, mp)
@@ -26,35 +26,35 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   complex(kind=DP) :: ZDOTC, temp
   complex(kind=DP), allocatable ::  proj (:,:)
   !
-  allocate ( offset(nat), proj(natomwfc,mp) ) 
-  counter = 0  
-  do na = 1, nat  
-     nt = ityp (na)  
-     do n = 1, nchi (nt)  
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then  
-           l = lchi (n, nt)  
-           if (l.eq.2) offset (na) = counter  
-           counter = counter + 2 * l + 1  
+  allocate ( offset(nat), proj(natomwfc,mp) )
+  counter = 0
+  do na = 1, nat
+     nt = ityp (na)
+     do n = 1, nchi (nt)
+        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
+           l = lchi (n, nt)
+           if (l.eq.2) offset (na) = counter
+           counter = counter + 2 * l + 1
         endif
      enddo
   enddo
   !
   if (counter.ne.natomwfc) call error ('vhpsi', 'nstart<>counter', 1)
-  do ibnd = 1, mp  
-     do i = 1, natomwfc  
+  do ibnd = 1, mp
+     do i = 1, natomwfc
         proj (i, ibnd) = ZDOTC (np, swfcatom (1, i), 1, psip (1, ibnd), 1)
      enddo
   enddo
 #ifdef PARA
-  call reduce (2 * natomwfc * mp, proj)  
+  call reduce (2 * natomwfc * mp, proj)
 #endif
-  do ibnd = 1, mp  
-     do na = 1, nat  
-        nt = ityp (na)  
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-           do m1 = 1, 5  
-              temp = proj (offset(na)+m1, ibnd)  
-              do m2 = 1, 5  
+  do ibnd = 1, mp
+     do na = 1, nat
+        nt = ityp (na)
+        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
+           do m1 = 1, 5
+              temp = proj (offset(na)+m1, ibnd)
+              do m2 = 1, 5
                  temp = temp - 2.d0 * ns (na, current_spin, m1, m2) * &
                                       proj (offset(na)+m2, ibnd)
               enddo
@@ -70,8 +70,8 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
      enddo
 
   enddo
-  deallocate (offset, proj)  
-  return  
+  deallocate (offset, proj)
+  return
 
 end subroutine vhpsi
 

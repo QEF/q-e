@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_vloc  
+subroutine init_vloc
   !----------------------------------------------------------------------
   !
   !    This routine computes the fourier coefficient of the local
@@ -15,15 +15,15 @@ subroutine init_vloc
   !
 #include"machine.h"
 
-  use pwcom  
+  use pwcom
   implicit none
   integer :: nt
   ! counter on atomic types
   !
 
-  call start_clock ('init_vloc')  
+  call start_clock ('init_vloc')
   vloc(:,:) = 0.d0
-  do nt = 1, ntyp  
+  do nt = 1, ntyp
      !
      ! compute V_loc(G) for a given type of atom
      !
@@ -33,7 +33,7 @@ subroutine init_vloc
           alps (1, 0, nt), tpiba2, ngl, gl, omega, vloc (1, nt) )
 
   enddo
-  call stop_clock ('init_vloc')  
-  return  
+  call stop_clock ('init_vloc')
+  return
 end subroutine init_vloc
 

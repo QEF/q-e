@@ -10,7 +10,7 @@
 #if defined __NEW_PUNCH
 
 !----------------------------------------------------------------------
-subroutine punch  
+subroutine punch
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
@@ -27,8 +27,8 @@ subroutine punch
   !
   implicit none
   !
-  integer :: ik, i, ibnd, kunittmp  
-  logical :: exst  
+  integer :: ik, i, ibnd, kunittmp
+  logical :: exst
   !
   filpun = trim(prefix)//'.save'
   write (6, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
@@ -45,7 +45,7 @@ subroutine punch
   ! with few k-points is followed by a non-self-consistent one with added
   ! k-points, whose weight is set to zero.
   !
-  if (.not.lscf) call sum_band  
+  if (.not.lscf) call sum_band
   !
   !  Write: general variables (including dimensions of the arrays),
   !  atomic positions, forces, k-points, eigenvalues
@@ -68,12 +68,12 @@ subroutine punch
   !
   !  Write the charge density on a separate file
   !
-  call io_pot ( + 1, trim(prefix)//'.rho', rho, nspin)  
+  call io_pot ( + 1, trim(prefix)//'.rho', rho, nspin)
 
-  iunpun = 4  
+  iunpun = 4
   call writefile_new( 'all', iunpun, et, wg, kunittmp )
 
-  return  
+  return
 end subroutine punch
 
 
@@ -81,14 +81,14 @@ end subroutine punch
 
 
 !----------------------------------------------------------------------
-subroutine punch  
+subroutine punch
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
   !     the informations needed to the phonon program.
   !
   !
-  use pwcom  
+  use pwcom
   use io, only: prefix
 #ifdef PARA
   use para
@@ -97,8 +97,8 @@ subroutine punch
   !
   implicit none
   !
-  integer :: ik, i, ibnd, kunittmp  
-  logical :: exst  
+  integer :: ik, i, ibnd, kunittmp
+  logical :: exst
   !
   filpun = trim(prefix)//'.pun'
   write (6, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
@@ -115,7 +115,7 @@ subroutine punch
   ! with few k-points is followed by a non-self-consistent one with added
   ! k-points, whose weight is set to zero.
   !
-  if (.not.lscf) call sum_band  
+  if (.not.lscf) call sum_band
   !
   !  Write: general variables (including dimensions of the arrays),
   !  atomic positions, forces, k-points, eigenvalues
@@ -134,36 +134,36 @@ subroutine punch
   !
   if (me.eq.1.and.mypool.eq.1) then
 #endif
-  iunpun = 4  
-  call seqopn (iunpun, filpun, 'unformatted', exst)  
+  iunpun = 4
+  call seqopn (iunpun, filpun, 'unformatted', exst)
   !
-  call saveall (iunpun, 1)  
-  write (iunpun) tau  
-  write (iunpun) ityp  
-  write (iunpun) irt  
-  if (lforce) write (iunpun) force  
-  if (ltetra) write (iunpun) tetra  
-  write (iunpun) ( (xk (i, ik), i = 1, 3), ik = 1, nkstot)  
-  write (iunpun) (  wk (ik), ik = 1, nkstot)  
+  call saveall (iunpun, 1)
+  write (iunpun) tau
+  write (iunpun) ityp
+  write (iunpun) irt
+  if (lforce) write (iunpun) force
+  if (ltetra) write (iunpun) tetra
+  write (iunpun) ( (xk (i, ik), i = 1, 3), ik = 1, nkstot)
+  write (iunpun) (  wk (ik), ik = 1, nkstot)
   write (iunpun) ( isk (ik), ik = 1, nkstot)
 #ifdef PARA
   write (iunpun) kunit
   kunittmp = kunit
 #endif
-  write (iunpun) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nkstot)  
+  write (iunpun) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nkstot)
   write (iunpun) ( (wg (ibnd, ik), ibnd = 1, nbnd), ik = 1, nkstot)
-  close (unit = iunpun)  
+  close (unit = iunpun)
 #ifdef PARA
   end if
 #endif
   !
   !  Write the charge density on a separate file
   !
-  call io_pot ( + 1, trim(prefix)//'.rho', rho, nspin)  
+  call io_pot ( + 1, trim(prefix)//'.rho', rho, nspin)
 
   call writefile_new( 'config', iunpun, et, wg, kunittmp )
 
-  return  
+  return
 end subroutine punch
 
 #endif

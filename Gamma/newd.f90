@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine newd  
+subroutine newd
   !----------------------------------------------------------------------
   !
   !   This routine computes the integral of the effective potential with
@@ -17,10 +17,9 @@ subroutine newd
   !
 #include "machine.h"
 
-  use pwcom  
-  use allocate 
+  use pwcom
   implicit none
-  integer :: ig, ir, nt, ih, jh, na, is  
+  integer :: ig, ir, nt, ih, jh, na, is
   ! counter on g vectors
   ! counter on mesh points
   ! the atom type
@@ -28,71 +27,71 @@ subroutine newd
   ! counter on atomic beta functions
   ! counter on atoms
   ! counter on spin polarizations
-  complex(kind=DP), pointer :: aux (:,:), vg (:)  
+  complex(kind=DP), allocatable :: aux (:,:), vg (:)
   ! used to contain the potential
   ! used to contain the structure
-  real(kind=DP), pointer  :: ylmk0 (:,:), qmod (:)
+  real(kind=DP), allocatable  :: ylmk0 (:,:), qmod (:)
   ! the spherical harmonics
   ! the  modulus of G
-  real(kind=DP) ::  DDOT  
+  real(kind=DP) ::  DDOT
   !
   !
   if (.not.okvan) then
      ! no ultrasoft potentials: use bare coefficients for projectors
-     do na = 1, nat  
-        nt = ityp (na)  
-        do is = 1, nspin  
-           do ih = 1, nh (nt)  
+     do na = 1, nat
+        nt = ityp (na)
+        do is = 1, nspin
+           do ih = 1, nh (nt)
               do jh = ih, nh (nt)
-                 deeq (ih, jh, na, is) = dvan (ih, jh, nt)  
-                 deeq (jh, ih, na, is) = deeq (ih, jh, na, is) 
+                 deeq (ih, jh, na, is) = dvan (ih, jh, nt)
+                 deeq (jh, ih, na, is) = deeq (ih, jh, na, is)
               enddo
            enddo
         enddo
      end do
      return
   end if
-  call start_clock ('newd')  
-  call mallocate(aux  , ngm , nspin)  
-  call mallocate(vg   , nrxx)  
-  call mallocate(qmod , ngm)  
-  call mallocate(ylmk0, ngm , lqx * lqx)  
+  call start_clock ('newd')
+  allocate (aux  ( ngm , nspin))    
+  allocate (vg   ( nrxx))    
+  allocate (qmod ( ngm))    
+  allocate (ylmk0( ngm , lqx * lqx))    
   !
   ! set deeq to zero
   !
-  call setv (nhm * nhm * nat * nspin, 0.d0, deeq, 1)  
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)  
-  do ig = 1, ngm  
-     qmod (ig) = sqrt (gg (ig) )  
+  call setv (nhm * nhm * nat * nspin, 0.d0, deeq, 1)
+  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  do ig = 1, ngm
+     qmod (ig) = sqrt (gg (ig) )
   enddo
   !
   ! fourier transform of the total effective potential
   !
-  do is = 1, nspin  
-     do ir = 1, nrxx  
-        vg (ir) = vltot (ir) + vr (ir, is)  
+  do is = 1, nspin
+     do ir = 1, nrxx
+        vg (ir) = vltot (ir) + vr (ir, is)
      enddo
-     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
-     do ig = 1, ngm  
-        aux (ig, is) = vg (nl (ig) )  
+     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     do ig = 1, ngm
+        aux (ig, is) = vg (nl (ig) )
      enddo
   enddo
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G exp(-iR.G) Q_nm v^*
   !
-  do nt = 1, ntyp  
-     if (tvanp (nt) ) then  
-        do ih = 1, nh (nt)  
-           do jh = ih, nh (nt)  
-              call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)  
-              do na = 1, nat  
-                 if (ityp (na) .eq.nt) then  
+  do nt = 1, ntyp
+     if (tvanp (nt) ) then
+        do ih = 1, nh (nt)
+           do jh = ih, nh (nt)
+              call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
+              do na = 1, nat
+                 if (ityp (na) .eq.nt) then
                     !
                     !    The product of the potential and the structure factor
                     !
-                    do is = 1, nspin  
-                       do ig = 1, ngm  
+                    do is = 1, nspin
+                       do ig = 1, ngm
                           vg (ig) = aux (ig, is) * &
                                conjg (eigts1 (ig1 (ig), na) &
                                     * eigts2 (ig2 (ig), na) &
@@ -113,20 +112,20 @@ subroutine newd
      endif
   enddo
 #ifdef PARA
-  call reduce (nhm * nhm * nat * nspin, deeq)  
+  call reduce (nhm * nhm * nat * nspin, deeq)
 #endif
-  do na = 1, nat  
-     nt = ityp (na)  
+  do na = 1, nat
+     nt = ityp (na)
 
-     do is = 1, nspin  
+     do is = 1, nspin
         !           write(6,'( "dmatrix atom ",i4, " spin",i4)') na,is
         !           do ih = 1, nh(nt)
         !              write(6,'(8f9.4)') (deeq(ih,jh,na,is),jh=1,nh(nt))
         !           end do
-        do ih = 1, nh (nt)  
-           do jh = ih, nh (nt)  
-              deeq (ih, jh, na, is) = deeq (ih, jh, na, is) + dvan (ih, jh, nt)  
-              deeq (jh, ih, na, is) = deeq (ih, jh, na, is)  
+        do ih = 1, nh (nt)
+           do jh = ih, nh (nt)
+              deeq (ih, jh, na, is) = deeq (ih, jh, na, is) + dvan (ih, jh, nt)
+              deeq (jh, ih, na, is) = deeq (ih, jh, na, is)
            enddo
         enddo
      enddo
@@ -136,12 +135,12 @@ subroutine newd
      !        end do
 
   enddo
-  call mfree (ylmk0)  
-  call mfree (qmod)  
-  call mfree (vg)  
-  call mfree (aux)  
-  call stop_clock ('newd')  
+  deallocate (ylmk0)
+  deallocate (qmod)
+  deallocate (vg)
+  deallocate (aux)
+  call stop_clock ('newd')
 
-  return  
+  return
 end subroutine newd
 

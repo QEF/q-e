@@ -113,7 +113,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/addusforce.o  \
 ../PW/addusstress.o  \
 ../PW/add_vuspsi.o  \
-../PW/allocate.o \
 ../PW/allocate_fft.o  \
 ../PW/allocate_locpot.o  \
 ../PW/allocate_nlpot.o  \

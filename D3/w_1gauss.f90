@@ -7,24 +7,24 @@
 !
 !
 !-----------------------------------------------------------------------
-function w_1gauss (x, n)  
+function w_1gauss (x, n)
 !-----------------------------------------------------------------------
 !
 !     the derivative of w0gauss:
 !
 ! --> (n=-99): second derivative of Fermi-Dirac function
 !
-implicit none  
-real (8) :: w_1gauss, x  
+implicit none
+real (8) :: w_1gauss, x
                        ! output: the value of the function
                       ! input: the point where to compute the function
 
-integer :: n  
+integer :: n
                       ! input: the order of the smearing function
 !
 !    here the local variables
 !
-real (8) :: a, arg, hp, hd, pi, aux1, aux2  
+real (8) :: a, arg, hp, hd, pi, aux1, aux2
                       ! the coefficients a_n
                       ! the argument of the exponential
                       ! the hermite function
@@ -32,34 +32,34 @@ real (8) :: a, arg, hp, hd, pi, aux1, aux2
                       ! pi
                       ! auxiliary variable
                       ! auxiliary variable
-integer :: i, ni  
+integer :: i, ni
                       ! counter on n values
                       ! counter on 2n values
 ! Fermi-Dirac smearing
-if (n.eq. - 99) then  
-   aux1 = exp (x)  
-   aux2 = exp ( - x)  
-   w_1gauss = (aux2 - aux1) / (2.d0 + aux1 + aux2) **2  
-   return  
-endif  
+if (n.eq. - 99) then
+   aux1 = exp (x)
+   aux2 = exp ( - x)
+   w_1gauss = (aux2 - aux1) / (2.d0 + aux1 + aux2) **2
+   return
+endif
 !
-pi = 3.14159265358979d0  
-arg = min (200.d0, x**2)  
-w_1gauss = - 2.d0 * x * exp ( - arg) / sqrt (pi)  
-if (n.eq.0) return  
-hd = exp ( - arg)  
-hp = 2.d0 * x * exp ( - arg)  
-ni = 1  
-a = 1.0 / sqrt (pi)  
-do i = 1, n  
-hd = 2.0d0 * x * hp - 2.0d0 * float (ni) * hd  
-ni = ni + 1  
-a = - a / (float (i) * 4.0d0)  
-hp = 2.0d0 * x * hd-2.0d0 * float (ni) * hp  
-ni = ni + 1  
-w_1gauss = w_1gauss - a * hp  
-enddo  
-return  
+pi = 3.14159265358979d0
+arg = min (200.d0, x**2)
+w_1gauss = - 2.d0 * x * exp ( - arg) / sqrt (pi)
+if (n.eq.0) return
+hd = exp ( - arg)
+hp = 2.d0 * x * exp ( - arg)
+ni = 1
+a = 1.0 / sqrt (pi)
+do i = 1, n
+hd = 2.0d0 * x * hp - 2.0d0 * float (ni) * hd
+ni = ni + 1
+a = - a / (float (i) * 4.0d0)
+hp = 2.0d0 * x * hd-2.0d0 * float (ni) * hp
+ni = ni + 1
+w_1gauss = w_1gauss - a * hp
+enddo
+return
 
 
 

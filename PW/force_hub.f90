@@ -12,7 +12,7 @@ subroutine force_hub(forceh)
    !
    ! This routine computes the Hubbard contribution to the force. It gives
    ! in output the product (dE_{hub}/dn_{ij}^{alpha})(dn_{ij}^{alpha}
-   ! /du(alpha,ipol)) which is the force acting on the atom at tau_{alpha} 
+   ! /du(alpha,ipol)) which is the force acting on the atom at tau_{alpha}
    ! (in the unit ceel) along the direction ipol.
    !
 #include "machine.h"
@@ -69,7 +69,7 @@ subroutine force_hub(forceh)
 
    deallocate(dns)
    !
-   ! The symmetry matrices are in the crystal basis so...                      
+   ! The symmetry matrices are in the crystal basis so...
    ! Transform to crystal axis...
    !
    do na=1, nat

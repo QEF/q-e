@@ -45,20 +45,20 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
   ! additional reduced step and see what happens
   !
   use parameters
-  implicit none  
+  implicit none
   !  Input
-  real(kind=DP) :: xold, eold, deold, xtot, etot, detot  
+  real(kind=DP) :: xold, eold, deold, xtot, etot, detot
   !  Output
-  logical :: minimum_ok  
-  real(kind=DP) :: xnew  
+  logical :: minimum_ok
+  real(kind=DP) :: xnew
   !  Local
   ! maximum allowed step size
-  real(kind=DP) :: xmax  
-  parameter (xmax = 10.d0)  
+  real(kind=DP) :: xmax
+  parameter (xmax = 10.d0)
 
 
-  real(kind=DP) :: b, c, c2, d, dbc2, dx, x, enew  
-  write (6, 100) eold, etot, deold, detot  
+  real(kind=DP) :: b, c, c2, d, dbc2, dx, x, enew
+  write (6, 100) eold, etot, deold, detot
   if (deold.gt.0) call error ('linmin', 'search direction is up-hill &
        &', 1)
 
@@ -67,61 +67,61 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
        &          /5x,'Etot  = ',f15.8, &
        &          /5x,'DEold = ',f15.8 &
        &          /5x,'DEtot = ',f15.8)
-  minimum_ok = .true.  
-  dx = xtot - xold  
+  minimum_ok = .true.
+  dx = xtot - xold
   !
   ! the variable x used in the following is x = (xnew-xold)/(xtot-xold)
   !
-  b = deold * dx  
-  c = 3.d0 * etot - detot * dx - 3.d0 * eold-2.d0 * deold * dx  
-  d = - 2.d0 * etot + detot * dx + 2.d0 * eold+deold * dx  
-  dbc2 = 3.d0 * d * b / c**2  
-  c2 = (detot - deold) / 2.d0 * dx  
-  if (dbc2.gt.1.d0) then  
+  b = deold * dx
+  c = 3.d0 * etot - detot * dx - 3.d0 * eold-2.d0 * deold * dx
+  d = - 2.d0 * etot + detot * dx + 2.d0 * eold+deold * dx
+  dbc2 = 3.d0 * d * b / c**2
+  c2 = (detot - deold) / 2.d0 * dx
+  if (dbc2.gt.1.d0) then
      !
      ! NB: since deold.lt.0, dbc2.gt.1.d0 may occour only if detot.lt.0 !!
      !
-     write (6, '(5x,"linmin: no 3rd order solution")')  
-     x = - sign (999.d0, d)  
+     write (6, '(5x,"linmin: no 3rd order solution")')
+     x = - sign (999.d0, d)
      !
      ! 2nd order solution: x = -b/(2.d0*c2)
      !
-  elseif (abs (dbc2) .lt.1.d-2) then  
-     write (6, 110)  
+  elseif (abs (dbc2) .lt.1.d-2) then
+     write (6, 110)
 110  format    (5x,'linmin: 2nd order interpolation', &
           &              ' plus 3rd order corrections')
-     x = - b / (2.d0 * c) * (1.d0 + dbc2 / 2.d0)  
-  else  
+     x = - b / (2.d0 * c) * (1.d0 + dbc2 / 2.d0)
+  else
      !
      ! x is the solution corresponding to the minimum
      !
      x = c * ( - 1.d0 + sign (1.d0, c) * sqrt (1.d0 - dbc2) ) &
           / 3.d0 / d
-     write (6, '(5x,"linmin: 3rd order interpolation")')  
+     write (6, '(5x,"linmin: 3rd order interpolation")')
 
 
   endif
   !c      write(6,'(5x,"b, c, d, dbc2 =",4f12.6)') b, c, d, dbc2
   !c      write(6,'(5x,"x ",f12.6)') x
-  if (detot.gt.0.d0) then  
+  if (detot.gt.0.d0) then
      !
      ! (detot > 0) case: a nice minimum should exist with 0 < x < 1
      !
      if (x.lt.0.d0.or.x.gt.1.d0) call error ('linmin', 'unexpected error', 1)
-  else  
+  else
      !
      ! (detot < 0) cases:
      !
-     if (d.gt.0.d0) then  
+     if (d.gt.0.d0) then
         !
         !   ...     (d > 0) case: a nice minimum should exist with x>1
         !
-        if (x.lt.1.d0) call error ('linmin', 'unexpected error', 2)  
-     else  
+        if (x.lt.1.d0) call error ('linmin', 'unexpected error', 2)
+     else
         !
         !   ...     (d < 0) cases:
         !
-        if (dbc2.gt.1.d0.or.c.lt.0.d0) then  
+        if (dbc2.gt.1.d0.or.c.lt.0.d0) then
            !
            !   ...       ...   dbc2 > 1: No local minimum exists
            !                      c < 0: No local minimum exists for x > 0
@@ -129,20 +129,20 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
            !                             Next step size (x-1) is changed according
            !                             force ratio if not too large
            !
-           minimum_ok = .false.  
-           x = 1.d0 + min (2.d0, abs (detot / deold) )  
-           write (6, '(5x,"linmin: no reliable minimum found")')  
-        else  
+           minimum_ok = .false.
+           x = 1.d0 + min (2.d0, abs (detot / deold) )
+           write (6, '(5x,"linmin: no reliable minimum found")')
+        else
            !
            !   ...       ...  (dbc2 < 1) AND (c > 0): a minimum exists for positive
            !                             if (x>=1): let's hope it is a good one.
            !                             if (x< 1): something strange is happening:
            !                                        let's go there and check
            !
-           if (x.lt.0) call error ('linmin', 'unexpected error', 3)  
-           if (x.lt.1) then  
-              minimum_ok = .false.  
-              write (6, '(5x,"linmin: new pos. on the wrong side")')  
+           if (x.lt.0) call error ('linmin', 'unexpected error', 3)
+           if (x.lt.1) then
+              minimum_ok = .false.
+              write (6, '(5x,"linmin: new pos. on the wrong side")')
            endif
         endif
      endif
@@ -151,20 +151,20 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
   ! In any case, if the new estimated position is too far, better take an
   ! additional reduced step and see what happens
   !
-  if (x.gt.xmax) then  
-     x = xmax  
-     minimum_ok = .false.  
+  if (x.gt.xmax) then
+     x = xmax
+     minimum_ok = .false.
 
   endif
-  if (minimum_ok) then  
-     enew = eold+b * x + c * x**2 + d * x**3  
+  if (minimum_ok) then
+     enew = eold+b * x + c * x**2 + d * x**3
      write (6, '(/5x,"Enext = ",f15.8," Xnext=",f12.6)') enew, &
           x
-  else  
-     write (6, '(5x,"linmin: take another downhill step")')  
+  else
+     write (6, '(5x,"linmin: take another downhill step")')
 
   endif
 
-  xnew = xold+x * dx  
-  return  
+  xnew = xold+x * dx
+  return
 end subroutine linmin

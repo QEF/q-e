@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine set_d3irr  
+subroutine set_d3irr
   !-----------------------------------------------------------------------
   !
   ! It computes a basis for all the irreducible representations of the
@@ -28,32 +28,32 @@ subroutine set_d3irr
   use d3com
 
   implicit none
-  integer :: w_nsymq, w_irotmq  
+  integer :: w_nsymq, w_irotmq
   ! work array
   ! work array
 
-  real (8) :: zero (3), w_gi (3, 48), w_gimq (3)  
+  real (8) :: zero (3), w_gi (3, 48), w_gimq (3)
   ! a null vector
   ! work array
-  complex (8) :: w_tmq (3, 3, 3 * nat)  
+  complex (8) :: w_tmq (3, 3, 3 * nat)
   ! work array
 
-  logical :: w_minus_q  
+  logical :: w_minus_q
   ! work array
 
-  call setv (3, 0.d0, zero, 1)  
+  call setv (3, 0.d0, zero, 1)
 
-  w_minus_q = .true.  
-  if (nsymg0.gt.1) then  
+  w_minus_q = .true.
+  if (nsymg0.gt.1) then
      call io_pattern(fild0rho,nirrg0,npertg0,ug0,-1)
      call set_sym_irr (nat, at, bg, zero, s, invs, nsymg0, rtau, irt, &
           irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, ug0, npertg0, &
           nirrg0, w_gi, w_gimq, iverbosity)
-  else  
+  else
      call set_irr_nosym (nat, at, bg, zero, s, invs, nsymg0, rtau, &
           irt, irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, ug0, &
           npertg0, nirrg0, w_gi, w_gimq, iverbosity)
   endif
 
-  return  
+  return
 end subroutine set_d3irr

@@ -31,7 +31,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   external DDOT, operator
   !
   call start_clock('cgsolve')
-  !     
+  !
   ! starting gradient |u> = (A|x>-|b>)-lambda|psi> (lambda=<Ax-b|psi_i>)
   !
   if (.not.startwith0) then

@@ -6,15 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-subroutine write_igk  
+subroutine write_igk
   !
   use pwcom
   use phcom
   implicit none
-  if (nksq.ne.1) return  
-  rewind (unit = iunigk)  
-  write (iunigk) npw, igk  
+  if (nksq.ne.1) return
+  rewind (unit = iunigk)
+  write (iunigk) npw, igk
 
-  if (.not.lgamma) write (iunigk) npwq, igkq  
-  return  
+  if (.not.lgamma) write (iunigk) npwq, igkq
+  return
 end subroutine write_igk

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine setqf (qfcoef, rho, r, nqf, ltot, mesh)  
+subroutine setqf (qfcoef, rho, r, nqf, ltot, mesh)
   !-----------------------------------------------------------------------
   !
   !   This routine compute the first part of the Q function up to rinner.
@@ -15,35 +15,35 @@ subroutine setqf (qfcoef, rho, r, nqf, ltot, mesh)
   !
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !     first the dummy variables
   !
-  integer :: nqf, ltot, mesh  
+  integer :: nqf, ltot, mesh
   ! input: the number of coefficients
   ! input: the angular momentum
   ! input: the number of mesh point
-  real(kind=DP) :: r (mesh), qfcoef (nqf), rho (mesh)  
+  real(kind=DP) :: r (mesh), qfcoef (nqf), rho (mesh)
   ! input: the radial mesh
   ! input: the coefficients of Q
   ! output: the function to be computed
   !
   !     here the local variables
   !
-  integer :: ir, i  
+  integer :: ir, i
   ! counter on  mesh points
   ! counter on the coeffients
 
-  real(kind=DP) :: rr  
+  real(kind=DP) :: rr
   ! the square of the radius
-  do ir = 1, mesh  
-     rr = r (ir) **2  
-     rho (ir) = qfcoef (1)  
-     do i = 2, nqf  
-        rho (ir) = rho (ir) + qfcoef (i) * rr** (i - 1)  
+  do ir = 1, mesh
+     rr = r (ir) **2
+     rho (ir) = qfcoef (1)
+     do i = 2, nqf
+        rho (ir) = rho (ir) + qfcoef (i) * rr** (i - 1)
      enddo
-     rho (ir) = rho (ir) * r (ir) ** (ltot + 2)  
+     rho (ir) = rho (ir) * r (ir) ** (ltot + 2)
 
   enddo
-  return  
+  return
 end subroutine setqf

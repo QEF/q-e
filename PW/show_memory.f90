@@ -8,15 +8,14 @@
 
 
 
-subroutine show_memory ()  
+subroutine show_memory ()
 #include "machine.h"
-  use allocate
   implicit none
   !      write(6,'(5x,"Current number of allocated pointers:",i8)') nptr
 
-  write (6, '(5x,"Dynamical memory: ",f6.2,"Mb current, ", &
-       &            f6.2,"Mb maximum")') real (totsize)  / 1000000, &
-       &     real (maxsize)  / 1000000
-  return  
+  !write (6, '(5x,"Dynamical memory: ",f6.2,"Mb current, ", &
+  !     &            f6.2,"Mb maximum")') real (totsize)  / 1000000, &
+  !     &     real (maxsize)  / 1000000
+  return
 end subroutine show_memory
 

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine allocate_part  
+subroutine allocate_part
 !-----------------------------------------------------------------------
 !
 ! dynamical allocation of arrays for the control of partial computation
@@ -16,19 +16,18 @@ subroutine allocate_part
 #include "machine.h"
 
 
-use pwcom 
-use allocate 
-use parameters, only : DP 
+use pwcom
+use parameters, only : DP
 use phcom
-implicit none 
+implicit none
 
 !
 !  allocate space for several arrays which control the run
 !
-call mallocate(comp_irr , 3 * nat)  
-call mallocate(ifat     , nat)  
-call mallocate(done_irr ,  3 * nat)  
-call mallocate(list     ,  3 * nat)  
-call mallocate(atomo    ,  nat)  
-return  
+allocate (comp_irr ( 3 * nat))    
+allocate (ifat     ( nat))    
+allocate (done_irr (  3 * nat))    
+allocate (list     (  3 * nat))    
+allocate (atomo    (  nat))    
+return
 end subroutine allocate_part

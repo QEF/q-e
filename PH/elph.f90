@@ -7,5 +7,5 @@
 !
 module el_phon
 use parameters, only : DP
-complex(kind=DP), pointer ::  el_ph_mat(:,:,:,:) !nbnd,nbnd,nks,3*nat)
+complex(kind=DP), allocatable ::  el_ph_mat(:,:,:,:) !nbnd,nbnd,nks,3*nat)
 end module el_phon

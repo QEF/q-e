@@ -6,39 +6,38 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine remove_atomic_rho  
+subroutine remove_atomic_rho
   !-----------------------------------------------------------------------
 #include "machine.h"
 
-  use pwcom  
-  use allocate 
+  use pwcom
   implicit none
-  integer :: ir  
+  integer :: ir
   ! do-loop variable on FFT grid
 
-  real(kind=DP), pointer :: work (:)
-  real(kind=DP)          :: charge  
+  real(kind=DP), allocatable :: work (:)
+  real(kind=DP)          :: charge
   ! workspace, is the difference between t
   ! charge density and the atomic one at t
   ! charge
 
-  call mallocate(work, nrxx)  
+  allocate (work( nrxx))    
   !
-  call setv (nrxx, 0.d0, work, 1)  
-  if (lsda) call error ('rmv_at_rho', 'lsda not allowed', 1)  
+  call setv (nrxx, 0.d0, work, 1)
+  if (lsda) call error ('rmv_at_rho', 'lsda not allowed', 1)
 
-  write (6, '(/5x,"remove atomic charge density from scf rho")')  
+  write (6, '(/5x,"remove atomic charge density from scf rho")')
   !
   !     subtract the old atomic charge density
   !
-  call atomic_rho (work, nspin)  
-  call DSCAL (nrxx, - 1.0d0, work, 1)  
-  call DAXPY (nrxx, + 1.0d0, rho, 1, work, 1)  
+  call atomic_rho (work, nspin)
+  call DSCAL (nrxx, - 1.0d0, work, 1)
+  call DAXPY (nrxx, + 1.0d0, rho, 1, work, 1)
 
-  call io_pot ( + 1, output_drho, work, nspin)  
+  call io_pot ( + 1, output_drho, work, nspin)
 
-  call mfree(work)  
-  return  
+  deallocate(work)
+  return
 
 end subroutine remove_atomic_rho
 

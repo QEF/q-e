@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine seqopn (unit, filename, formatt, exst)  
+subroutine seqopn (unit, filename, formatt, exst)
   !-----------------------------------------------------------------------
   !
   !     this routine opens a file in tmp_dir for sequential I/O access
@@ -19,30 +19,30 @@ subroutine seqopn (unit, filename, formatt, exst)
   !
   !    first the dummy variables
   !
-  character :: filename * ( * ), formatt * ( * )  
+  character :: filename * ( * ), formatt * ( * )
   ! input: name of the file to connect
   ! input: 'formatted' or 'unformatted'
-  integer :: unit  
+  integer :: unit
   ! input: unit to connect
-  logical :: exst  
+  logical :: exst
   ! output: true if the file already exist
   !
   !    here the local variables
   !
-  character :: tempfile * 72  
+  character :: tempfile * 72
   ! complete file name
   integer :: ios
   ! integer variable to test I/O status
-  logical :: opnd  
+  logical :: opnd
   ! true if the file is already opened
 
 
-  if (unit.le.0) call error ('seqopn', 'wrong unit', 1)  
+  if (unit.le.0) call error ('seqopn', 'wrong unit', 1)
   !
   !    test if the file is already opened
   !
-  ios = 0  
-  inquire (unit = unit, opened = opnd)  
+  ios = 0
+  inquire (unit = unit, opened = opnd)
   if (opnd) call error ('seqopn', 'can"t open a connected unit', &
        abs (unit) )
   !
@@ -57,12 +57,12 @@ subroutine seqopn (unit, filename, formatt, exst)
      ! in parallel execution: if only the first processor writes,
      ! we do not want the filename to be dependent on the number
      ! of processors
-     ! 
+     !
      tempfile = trim(tmp_dir) // trim(filename)
   else
-     tempfile = trim(tmp_dir) // trim(filename) // nd_nmbr  
+     tempfile = trim(tmp_dir) // trim(filename) // nd_nmbr
   end if
-  inquire (file = tempfile, exist = exst)  
+  inquire (file = tempfile, exist = exst)
   !
   !    Open the file
   !
@@ -72,5 +72,5 @@ subroutine seqopn (unit, filename, formatt, exst)
 
   if (ios.ne.0) call error ('seqopn', 'error opening '//filename, &
        unit)
-  return  
+  return
 end subroutine seqopn

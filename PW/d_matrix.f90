@@ -6,33 +6,33 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine d_matrix (dy1, dy2)  
+subroutine d_matrix (dy1, dy2)
   !---------------------------------------------------------------
   !
-  use pwcom  
+  use pwcom
   implicit none
   real(kind=DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48)
   !
   integer, parameter :: maxl = 2, maxm = 2*maxl+1, &
        maxlm = (maxl+1)*(maxl+1)
-  ! maxl = max value of l allowed 
+  ! maxl = max value of l allowed
   ! maxm = number of m components for l=maxl
   ! maxlm= number of l,m spherical harmonics for l <= maxl
   integer :: m, n, ipol, isym
   real(kind=DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), &
        yl1_inv (3, 3), yl2_inv(5, 5), ylms(maxm, maxlm),     &
        rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3)
-  real(kind=DP), external :: rndm  
+  real(kind=DP), external :: rndm
   !
   !  randomly distributed points on a sphere
   !
   do m = 1, maxm
-     rl (1, m) = rndm () - 0.5  
-     rl (2, m) = rndm () - 0.5  
-     rl (3, m) = rndm () - 0.5  
+     rl (1, m) = rndm () - 0.5
+     rl (2, m) = rndm () - 0.5
+     rl (3, m) = rndm () - 0.5
      rrl (m) = rl (1,m)**2 + rl (2,m)**2 + rl (3,m)**2
   enddo
-  call ylmr2 ( maxlm, 2*maxl+1, rl, rrl, ylm )  
+  call ylmr2 ( maxlm, 2*maxl+1, rl, rrl, ylm )
   !
   !  invert Yl for each block of definite l (note the transpose operation)
   !
@@ -43,7 +43,7 @@ subroutine d_matrix (dy1, dy2)
         yl1 (m, n) = ylm (n, 1+m)
      end do
   end do
-  call invmat (yl1, yl1_inv, 3)  
+  call invmat (yl1, yl1_inv, 3)
   !
   !  l = 2 block
   !
@@ -52,23 +52,23 @@ subroutine d_matrix (dy1, dy2)
         yl2 (m, n) = ylm (n, 4+m)
      end do
   end do
-  call invmat (yl2, yl2_inv, 5)  
+  call invmat (yl2, yl2_inv, 5)
   !
   ! now for each symmetry operation of the point-group ...
   !
-  do isym = 1, nsym  
+  do isym = 1, nsym
      !
      ! scart = symmetry operation in cartesian axis
      ! srl(:,m) = rotated rl(:,m) vectors
      !
-     call s_axis_to_cart (s (1, 1, isym), scart, at, bg)  
+     call s_axis_to_cart (s (1, 1, isym), scart, at, bg)
      srl = matmul (scart, rl)
      !
-     call ylmr2 ( maxlm, maxm, srl, rrl, ylms )  
+     call ylmr2 ( maxlm, maxm, srl, rrl, ylms )
      !
      !  find  D_S = Yl_S * Yl_inv (again, beware the transpose)
      !
-     !  l = 1 
+     !  l = 1
      !
      do m = 1, 3
         do n = 1, 3
@@ -87,6 +87,6 @@ subroutine d_matrix (dy1, dy2)
      dy2 (:, :, isym) = matmul (yl2(:,:), yl2_inv(:,:))
      !
   enddo
-  return  
+  return
 
 end subroutine d_matrix

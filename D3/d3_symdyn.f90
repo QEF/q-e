@@ -15,8 +15,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   !
   !
 #include "machine.h"
-  use allocate
-  implicit none  
+  implicit none
   integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &
        nsymq, npert_i, npert_f, irotmq
   ! input: the number of atoms
@@ -27,13 +26,13 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   ! input: the order of the small gro
   ! input: the symmetry q -> -q+G
 
-  real (8) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)  
+  real (8) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)
   ! input: the coordinates of q
   ! input: the R associated at each r
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
 
-  logical :: minus_q  
+  logical :: minus_q
   ! input: if true symmetry sends q->
 
   complex (8) :: d3dyn (3 * nat, 3 * nat, 3 * nat), &
@@ -42,7 +41,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   ! input: the q=0 patterns
   ! input: the patterns
 
-  integer :: i, j, i1, icart, jcart, kcart, na, nb, nc, mu, nu, om  
+  integer :: i, j, i1, icart, jcart, kcart, na, nb, nc, mu, nu, om
   ! counter on modes
   ! counter on modes
   ! counter on modes
@@ -58,46 +57,46 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
 
   complex (8) :: work, wrk (3, 3)
   ! auxiliary variables
-  complex (8), pointer :: phi (:,:,:,:,:,:)
+  complex (8), allocatable :: phi (:,:,:,:,:,:)
   ! the dynamical matrix
 
-  call mallocate (phi, 3, 3, 3, nat, nat, nat)
+  allocate  (phi( 3, 3, 3, nat, nat, nat))    
   !
   ! First we transform in the cartesian coordinates
   !
-  call setv (2 * 27 * nat * nat * nat, 0.d0, phi, 1)  
-  do i1 = npert_i, npert_f  
-     nc = (i1 - 1) / 3 + 1  
-     kcart = i1 - 3 * (nc - 1)  
-     do i = 1, 3 * nat  
-        na = (i - 1) / 3 + 1  
-        icart = i - 3 * (na - 1)  
-        do j = 1, 3 * nat  
-           nb = (j - 1) / 3 + 1  
-           jcart = j - 3 * (nb - 1)  
-           work = (0.d0, 0.d0)  
-           do om = 1, 3 * nat  
-              do mu = 1, 3 * nat  
-                 do nu = 1, 3 * nat  
+  call setv (2 * 27 * nat * nat * nat, 0.d0, phi, 1)
+  do i1 = npert_i, npert_f
+     nc = (i1 - 1) / 3 + 1
+     kcart = i1 - 3 * (nc - 1)
+     do i = 1, 3 * nat
+        na = (i - 1) / 3 + 1
+        icart = i - 3 * (na - 1)
+        do j = 1, 3 * nat
+           nb = (j - 1) / 3 + 1
+           jcart = j - 3 * (nb - 1)
+           work = (0.d0, 0.d0)
+           do om = 1, 3 * nat
+              do mu = 1, 3 * nat
+                 do nu = 1, 3 * nat
                     work = work + conjg (ug0 (i1, om) ) * u (i, mu) * d3dyn (om, mu, &
                          nu) * conjg (u (j, nu) )
                  enddo
               enddo
            enddo
-           phi (kcart, icart, jcart, nc, na, nb) = work  
+           phi (kcart, icart, jcart, nc, na, nb) = work
         enddo
      enddo
   enddo
 #ifdef PARA
-  call poolreduce (2 * 27 * nat * nat * nat, phi)  
+  call poolreduce (2 * 27 * nat * nat * nat, phi)
 #endif
   !
   ! Then we transform to the crystal axis
   !
-  do nc = 1, nat  
-     do na = 1, nat  
-        do nb = 1, nat  
-           call trntnsc_3 (phi (1, 1, 1, nc, na, nb), at, bg, - 1)  
+  do nc = 1, nat
+     do na = 1, nat
+        do nb = 1, nat
+           call trntnsc_3 (phi (1, 1, 1, nc, na, nb), at, bg, - 1)
         enddo
      enddo
   enddo
@@ -109,32 +108,32 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   !
   !  Back to cartesian coordinates
   !
-  do nc = 1, nat  
-     do na = 1, nat  
-        do nb = 1, nat  
-           call trntnsc_3 (phi (1, 1, 1, nc, na, nb), at, bg, + 1)  
+  do nc = 1, nat
+     do na = 1, nat
+        do nb = 1, nat
+           call trntnsc_3 (phi (1, 1, 1, nc, na, nb), at, bg, + 1)
         enddo
      enddo
   enddo
   !
   !  rewrite the dynamical matrix on the array dyn with dimension 3nat x 3
   !
-  do i1 = 1, 3 * nat  
-     nc = (i1 - 1) / 3 + 1  
-     kcart = i1 - 3 * (nc - 1)  
-     do i = 1, 3 * nat  
-        na = (i - 1) / 3 + 1  
-        icart = i - 3 * (na - 1)  
-        do j = 1, 3 * nat  
-           nb = (j - 1) / 3 + 1  
-           jcart = j - 3 * (nb - 1)  
-           d3dyn (i1, i, j) = phi (kcart, icart, jcart, nc, na, nb)  
+  do i1 = 1, 3 * nat
+     nc = (i1 - 1) / 3 + 1
+     kcart = i1 - 3 * (nc - 1)
+     do i = 1, 3 * nat
+        na = (i - 1) / 3 + 1
+        icart = i - 3 * (na - 1)
+        do j = 1, 3 * nat
+           nb = (j - 1) / 3 + 1
+           jcart = j - 3 * (nb - 1)
+           d3dyn (i1, i, j) = phi (kcart, icart, jcart, nc, na, nb)
         enddo
      enddo
 
   enddo
-  call mfree (phi)  
+  deallocate (phi)
 
-  return  
+  return
 
 end subroutine d3_symdyn

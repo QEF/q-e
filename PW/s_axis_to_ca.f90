@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine s_axis_to_cart (s, sr, at, bg)  
+subroutine s_axis_to_cart (s, sr, at, bg)
   !----------------------------------------------------------------------
   !
   !     This routine transform a symmetry matrix expressed in the
@@ -17,13 +17,13 @@ subroutine s_axis_to_cart (s, sr, at, bg)
   !
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !     first the input parameters
   !
-  integer :: s (3, 3)  
+  integer :: s (3, 3)
   ! input: matrix in crystal axis
-  real(kind=DP) :: sr (3, 3), at (3, 3), bg (3, 3)  
+  real(kind=DP) :: sr (3, 3), at (3, 3), bg (3, 3)
   ! output: matrix in cartesian axis
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
@@ -31,21 +31,21 @@ subroutine s_axis_to_cart (s, sr, at, bg)
   !     here the local variable
   !
 
-  integer :: apol, bpol, kpol, lpol  
+  integer :: apol, bpol, kpol, lpol
   !\
   !
   !     counters on polarizations
   !/
-  do apol = 1, 3  
-     do bpol = 1, 3  
-        sr (apol, bpol) = 0.d0  
-        do kpol = 1, 3  
-           do lpol = 1, 3  
+  do apol = 1, 3
+     do bpol = 1, 3
+        sr (apol, bpol) = 0.d0
+        do kpol = 1, 3
+           do lpol = 1, 3
               sr (apol, bpol) = sr (apol, bpol) + at (apol, kpol) * float (s ( &
                    lpol, kpol) ) * bg (bpol, lpol)
            enddo
         enddo
      enddo
   enddo
-  return  
+  return
 end subroutine s_axis_to_cart

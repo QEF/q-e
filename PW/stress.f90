@@ -7,36 +7,36 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine stress  
+subroutine stress
   !----------------------------------------------------------------------
   !
 #include "machine.h"
   !
-  use pwcom  
+  use pwcom
   implicit none
   !
   real(kind=DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3)
 
-  integer :: l, m  
-  call start_clock ('stress')  
-  write (6, '(//5x,"entering subroutine stress ..."/)')  
+  integer :: l, m
+  call start_clock ('stress')
+  write (6, '(//5x,"entering subroutine stress ..."/)')
 
   !
   !   contribution from local  potential
   !
-  call stres_loc (sigmaloc)  
+  call stres_loc (sigmaloc)
   !
   !  hartree contribution
   !
-  call stres_har (sigmahar)  
+  call stres_har (sigmahar)
   !
   !  xc contribution (diagonal)
   !
   sigmaxc(:,:) = 0.d0
-  do l = 1, 3  
-     sigmaxc (l, l) = - (etxc - vtxc) / omega  
+  do l = 1, 3
+     sigmaxc (l, l) = - (etxc - vtxc) / omega
   enddo
   !
   !  xc contribution: add gradient corrections (non diagonal)
@@ -46,7 +46,7 @@ subroutine stress
   !
   ! core correction contribution
   !
-  call stres_cc (sigmaxcc)  
+  call stres_cc (sigmaxcc)
   !
   !  ewald contribution
   !
@@ -55,11 +55,11 @@ subroutine stress
   !
   !  kinetic + nonlocal contribuition
   !
-  call stres_knl (sigmanlc, sigmakin)  
+  call stres_knl (sigmanlc, sigmakin)
   !
-  do l = 1, 3  
-     do m = 1, 3  
-        sigmabare (l, m) = sigmaloc (l, m) + sigmanlc (l, m)  
+  do l = 1, 3
+     do m = 1, 3
+        sigmabare (l, m) = sigmaloc (l, m) + sigmanlc (l, m)
      enddo
   enddo
   !
@@ -89,9 +89,9 @@ subroutine stress
      (sigmaewa(l,1)*uakbar,sigmaewa(l,2)*uakbar,sigmaewa(l,3)*uakbar, l=1,3),&
      (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3)
 
-  call stop_clock ('stress')  
+  call stop_clock ('stress')
 
-  return  
+  return
 9000 format (10x,'total   stress  (a.u.)',25x,'(kbar)', &
              &5x,'P=',f8.2/3 (3f13.8,4x,3f10.2/))
 9005 format &

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine forces  
+subroutine forces
   !----------------------------------------------------------------------
   !
   !    This routine is a driver routine which computes the forces
@@ -21,8 +21,7 @@ subroutine forces
   !
 #include "machine.h"
 
-  use pwcom  
-  use allocate
+  use pwcom
   implicit none
 
   real(kind=DP), allocatable :: forcenl (:,:), forcelc (:,:), forcecc (:,:), &
@@ -30,22 +29,22 @@ subroutine forces
   ! nonlocal, local, core-correction, ewald, and scf correction terms
   real(kind=DP) :: sum, sumscf
 
-  integer :: ipol, na  
+  integer :: ipol, na
   ! counter on polarization
   ! counter on atoms
 
-  call start_clock ('forces')  
+  call start_clock ('forces')
 
   allocate ( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), forceh(3,nat), &
              forceion(3,nat), forcescc(3,nat) )
   forcescc(:,:) = 0.d0
   forceh(:,:) = 0.d0
 
-  write (6, '(/,5x,"Forces acting on atoms (Ry/au):", / )')  
+  write (6, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
   !
   !    The  nonlocal contribution is computed here
   !
-  call force_us (forcenl)  
+  call force_us (forcenl)
   !
   !    The local contribution
   !
@@ -56,7 +55,7 @@ subroutine forces
   !
   !    The NLCC contribution
   !
-  call force_cc (forcecc)  
+  call force_cc (forcecc)
   !
   !    The Hubbard contribution
   !
@@ -69,65 +68,65 @@ subroutine forces
   !
   !    The SCF contribution
   !
-  call force_corr (forcescc)  
+  call force_corr (forcescc)
 
   !
   !  here we sum all the contributions and compute the total force acting
   !  on the crstal
   !
-  do ipol = 1, 3  
-     sum = 0.d0  
-     do na = 1, nat  
+  do ipol = 1, 3
+     sum = 0.d0
+     do na = 1, nat
         force(ipol,na) = forcenl (ipol, na) + &
                          forceion(ipol, na) + &
                          forcelc (ipol, na) + &
                          forcecc (ipol, na) + &
                          forceh (ipol, na) + &
                          forcescc(ipol, na)
-        sum = sum + force (ipol, na)  
+        sum = sum + force (ipol, na)
      enddo
      !         write(6,*) 'sum = ', sum
      !
      ! impose total force = 0
      !
-     do na = 1, nat  
-        force (ipol, na) = force (ipol, na) - sum / nat  
+     do na = 1, nat
+        force (ipol, na) = force (ipol, na) - sum / nat
      enddo
   enddo
   !
   ! resymmetrize (should not be needed, but...)
   !
-  if (nsym.gt.1) then  
-     do na = 1, nat  
-        call trnvect (force (1, na), at, bg, - 1)  
+  if (nsym.gt.1) then
+     do na = 1, nat
+        call trnvect (force (1, na), at, bg, - 1)
      enddo
-     call symvect (nat, force, nsym, s, irt)  
-     do na = 1, nat  
-        call trnvect (force (1, na), at, bg, 1)  
+     call symvect (nat, force, nsym, s, irt)
+     do na = 1, nat
+        call trnvect (force (1, na), at, bg, 1)
      enddo
   endif
   !
   !   write on output the forces
   !
-  do na = 1, nat  
-     write (6, 9035) na, ityp (na), (force (ipol, na), ipol = 1, 3)  
+  do na = 1, nat
+     write (6, 9035) na, ityp (na), (force (ipol, na), ipol = 1, 3)
   enddo
 #ifdef DEBUG
-  write (6, '(5x,"The SCF correction term to forces")')  
-  do na = 1, nat  
-     write (6, 9035) na, ityp (na), (forcescc (ipol, na), ipol = 1, 3)  
+  write (6, '(5x,"The SCF correction term to forces")')
+  do na = 1, nat
+     write (6, 9035) na, ityp (na), (forcescc (ipol, na), ipol = 1, 3)
   enddo
-  write (6, '(5x,"The Hubbard contribution to forces")')  
-  do na = 1, nat  
-     write (6, 9035) na, ityp (na), (forceh(ipol, na), ipol = 1, 3)  
+  write (6, '(5x,"The Hubbard contribution to forces")')
+  do na = 1, nat
+     write (6, 9035) na, ityp (na), (forceh(ipol, na), ipol = 1, 3)
   enddo
 #endif
-  sum = 0.d0  
-  sumscf = 0.d0  
-  do ipol = 1, 3  
-     do na = 1, nat  
-        sum = sum + abs (force (ipol, na) )  
-        sumscf = sumscf + abs (forcescc (ipol, na) )  
+  sum = 0.d0
+  sumscf = 0.d0
+  do ipol = 1, 3
+     do na = 1, nat
+        sum = sum + abs (force (ipol, na) )
+        sumscf = sumscf + abs (forcescc (ipol, na) )
      enddo
   enddo
 
@@ -135,15 +134,15 @@ subroutine forces
        &                "Total SCF correction = ",f12.6)') sum, sumscf
 #ifdef PARA
 
-  call check (3 * nat, force)  
+  call check (3 * nat, force)
 #endif
-  
-  deallocate (forcenl, forcelc, forcecc, forceh, forceion, forcescc)  
 
-  lforce = .true.  
-  call stop_clock ('forces')  
+  deallocate (forcenl, forcelc, forcecc, forceh, forceion, forcescc)
 
-  return  
-9035 format (5x,'atom ',i3,' type ',i2,'   force = ',3f14.8)  
+  lforce = .true.
+  call stop_clock ('forces')
+
+  return
+9035 format (5x,'atom ',i3,' type ',i2,'   force = ',3f14.8)
 end subroutine forces
 

@@ -6,25 +6,25 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine stop_pp  
+subroutine stop_pp
   !--------------------------------------------------------------------
   !
   ! Synchronize processes before stopping.
   !
 #ifdef PARA
-  include 'mpif.h'  
-  integer :: info  
-  call mpi_barrier (MPI_COMM_WORLD, info)  
+  include 'mpif.h'
+  integer :: info
+  call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call mpi_finalize (info)  
+  call mpi_finalize (info)
 #endif
 #ifdef T3D
   !
   ! set streambuffers off
   !
 
-  call set_d_stream (0)  
+  call set_d_stream (0)
 #endif
 
-  stop  
+  stop
 end subroutine stop_pp

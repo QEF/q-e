@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine stop_d3 (flag)  
+subroutine stop_d3 (flag)
 !-----------------------------------------------------------------------
 !
 !    This routine closes all files before stopping
@@ -21,44 +21,44 @@ subroutine stop_d3 (flag)
 #endif
   implicit none
 #ifdef PARA
-  include 'mpif.h'  
-  integer :: info  
+  include 'mpif.h'
+  integer :: info
 #endif
   logical :: flag
 
-  close (unit = iuwfc, status = 'keep')  
-  close (unit = iubar, status = 'keep')  
-  close (unit = iudwf, status = 'keep')  
+  close (unit = iuwfc, status = 'keep')
+  close (unit = iubar, status = 'keep')
+  close (unit = iudwf, status = 'keep')
 #ifdef PARA
-  if (me.ne.1) goto 100  
+  if (me.ne.1) goto 100
 #endif
-  close (unit = iudrho, status = 'keep')  
-  if (.not.lgamma) close (unit = iud0rho, status = 'keep')  
+  close (unit = iudrho, status = 'keep')
+  if (.not.lgamma) close (unit = iud0rho, status = 'keep')
 #ifdef PARA
-100 continue  
+100 continue
 #endif
-  close (unit = iunigk, status = 'delete')  
-  if (.not.lgamma) then  
-     close (unit = iud0qwf, status = 'keep')  
-     close (unit = iudqwf, status = 'keep')  
+  close (unit = iunigk, status = 'delete')
+  if (.not.lgamma) then
+     close (unit = iud0qwf, status = 'keep')
+     close (unit = iudqwf, status = 'keep')
   endif
-  close (unit = iupdqvp, status = 'keep')  
-  if (.not.lgamma) close (unit = iupd0vp, status = 'keep')  
-  if (degauss.ne.0.d0) then  
-     close (unit = iudpdvp_1, status = 'keep')  
-     if (.not.lgamma) then  
-        close (unit = iudpdvp_2, status = 'keep')  
-        close (unit = iudpdvp_3, status = 'keep')  
+  close (unit = iupdqvp, status = 'keep')
+  if (.not.lgamma) close (unit = iupd0vp, status = 'keep')
+  if (degauss.ne.0.d0) then
+     close (unit = iudpdvp_1, status = 'keep')
+     if (.not.lgamma) then
+        close (unit = iudpdvp_2, status = 'keep')
+        close (unit = iudpdvp_3, status = 'keep')
      endif
   endif
-  call print_clock_d3  
-  call show_memory ()  
+  call print_clock_d3
+  call show_memory ()
 
 #ifdef PARA
-  call mpi_barrier (MPI_COMM_WORLD, info)  
-  call mpi_finalize (info)  
+  call mpi_barrier (MPI_COMM_WORLD, info)
+  call mpi_finalize (info)
 #endif
 
-  stop  
-  return  
+  stop
+  return
 end subroutine stop_d3

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine broadcast (ndata, data)  
+subroutine broadcast (ndata, data)
   !-----------------------------------------------------------------------
   !
   ! this routine broadcasts the real*8 vector 'data' from the first proces
@@ -16,24 +16,24 @@ subroutine broadcast (ndata, data)
 #ifdef PARA
   use para
 #endif
-  implicit none  
+  implicit none
   ! on INPUT
-  integer :: ndata  
-  real (8) :: data (ndata)  
+  integer :: ndata
+  real (8) :: data (ndata)
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 
-  integer :: root, ierr  
-  if (nprocp.le.1) return  
+  integer :: root, ierr
+  if (nprocp.le.1) return
   !
   ! root is the "broadcasting" processors.
   ! N.B. in MPI the processors are labeled from 0 to nproc-1
   !
-  root = 0  
-  call mpi_barrier (MPI_COMM_POOL, ierr)  
-  call mpi_bcast (data, ndata, MPI_REAL8, root, MPI_COMM_POOL, ierr)  
-  call error ('broadcast', 'info<>0', ierr)  
+  root = 0
+  call mpi_barrier (MPI_COMM_POOL, ierr)
+  call mpi_bcast (data, ndata, MPI_REAL8, root, MPI_COMM_POOL, ierr)
+  call error ('broadcast', 'info<>0', ierr)
 #endif
-  return  
+  return
 end subroutine broadcast
 

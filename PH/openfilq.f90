@@ -6,29 +6,28 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine openfilq  
+subroutine openfilq
   !-----------------------------------------------------------------------
   !
   !     This subroutine opens all the files necessary for the phononq
   !     calculation.
   !
 
-  use pwcom 
+  use pwcom
   use mp, only: mp_end
   use io, only: prefix
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
+  use parameters, only : DP
+  use phcom
 #ifdef PARA
   use para
 #endif
   use restart_module, only: readfile_new
   implicit none
-  integer :: ios  
+  integer :: ios
   ! integer variable for I/O control
-  character (len=20) :: filint  
+  character (len=20) :: filint
   ! the name of the file
-  logical :: exst  
+  logical :: exst
   ! logical variable to check file existe
   !
   real(kind=DP) :: edum(1,1), wdum(1,1)
@@ -37,15 +36,15 @@ subroutine openfilq
   !
   !     There are six direct access files to be opened in the tmp area
   !
-  if (len_trim(filpun).eq.0) call error ('openfilq', 'wrong filpun name', 1)  
+  if (len_trim(filpun).eq.0) call error ('openfilq', 'wrong filpun name', 1)
   !
   !     The file with the wavefunctions
   !
-  iuwfc = 20  
+  iuwfc = 20
 
-  lrwfc = 2 * nbnd * npwx  
-  filint = trim(prefix)//'.wfc'  
-  call diropn (iuwfc, filint, lrwfc, exst)  
+  lrwfc = 2 * nbnd * npwx
+  filint = trim(prefix)//'.wfc'
+  call diropn (iuwfc, filint, lrwfc, exst)
 
   if (.not.exst) then
 
@@ -63,7 +62,7 @@ subroutine openfilq
 
     call error ('openfilq', 'file '//filint//' not found', 1)
 
-#endif 
+#endif
 
   end if
 
@@ -71,45 +70,45 @@ subroutine openfilq
   !
   !    The file with deltaV_{bare} * psi
   !
-  iubar = 21  
-  lrbar = 2 * nbnd * npwx  
-  filint = trim(prefix) //'.bar'  
-  call diropn (iubar, filint, lrbar, exst)  
+  iubar = 21
+  lrbar = 2 * nbnd * npwx
+  filint = trim(prefix) //'.bar'
+  call diropn (iubar, filint, lrbar, exst)
   if (recover.and..not.exst) call error ('openfilq', 'file bar not f &
        &ound', 1)
   !
   !    The file with the solution delta psi
   !
-  iudwf = 22  
-  lrdwf = 2 * nbnd * npwx  
-  filint = trim(prefix) //'.dwf'  
-  call diropn (iudwf, filint, lrdwf, exst)  
+  iudwf = 22
+  lrdwf = 2 * nbnd * npwx
+  filint = trim(prefix) //'.dwf'
+  call diropn (iudwf, filint, lrdwf, exst)
   if (recover.and..not.exst) call error ('openfilq', 'file dwf not f &
        &ound', 1)
   !
   !   open a file with the static change of the charge
   !
-  if (okvan.and.trans) then  
-     iudrhous = 25  
-     lrdrhous = 2 * nrxx * nspin  
-     filint = trim(prefix) //'.prd'  
-     call diropn (iudrhous, filint, lrdrhous, exst)  
+  if (okvan.and.trans) then
+     iudrhous = 25
+     lrdrhous = 2 * nrxx * nspin
+     filint = trim(prefix) //'.prd'
+     call diropn (iudrhous, filint, lrdrhous, exst)
      if (recover.and..not.exst) call error ('openfilq', 'file prod not &
           &found', 1)
   endif
   !
   !   An optional file for testing purposes containing the deltarho
   !
-  if (fildrho.ne.' ') then  
-     iudrho = 23  
-     lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin  
+  if (fildrho.ne.' ') then
+     iudrho = 23
+     lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
 #ifdef PARA
-     if (me.ne.1) goto 300  
+     if (me.ne.1) goto 300
 #endif
-     filint = trim(fildrho)  
-     call diropn (iudrho, filint, lrdrho, exst)  
+     filint = trim(fildrho)
+     call diropn (iudrho, filint, lrdrho, exst)
 #ifdef PARA
-300  continue  
+300  continue
 #endif
   endif
   !
@@ -117,9 +116,9 @@ subroutine openfilq
   !
   !   The igk at a given k (and k+q if q!=0)
   !
-  iunigk = 24  
-  filint = trim(prefix) //'.igk'  
-  call seqopn (iunigk, filint, 'unformatted', exst)  
+  iunigk = 24
+  filint = trim(prefix) //'.igk'
+  call seqopn (iunigk, filint, 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
@@ -128,26 +127,26 @@ subroutine openfilq
   !   exception: electron-phonon calculation from saved data
   !  (iudyn is read, not written, by all nodes)
   !
-  if ( (me.ne.1.or.mypool.ne.1) .and. (.not.elph.or.trans) ) then  
-     iudyn = 6  
-     goto 400  
+  if ( (me.ne.1.or.mypool.ne.1) .and. (.not.elph.or.trans) ) then
+     iudyn = 6
+     goto 400
   endif
 #endif
-  if (trans.or.elph) then  
-     iudyn = 26  
+  if (trans.or.elph) then
+     iudyn = 26
      open (unit = iudyn, file = fildyn, status = 'unknown', err = &
           100, iostat = ios)
-100  call error ('openfilq', 'opening file'//fildyn, abs (ios) )  
-     rewind (iudyn)  
+100  call error ('openfilq', 'opening file'//fildyn, abs (ios) )
+     rewind (iudyn)
   endif
   !
   !   An optional file for electron-phonon calculations containing deltaVs
   !
-400 if (fildvscf.ne.' ') then  
-     iudvscf = 27  
-     call seqopn (iudvscf, fildvscf, 'unformatted', exst)  
-     rewind (iudvscf)  
+400 if (fildvscf.ne.' ') then
+     iudvscf = 27
+     call seqopn (iudvscf, fildvscf, 'unformatted', exst)
+     rewind (iudvscf)
 
   endif
-  return  
+  return
 end subroutine openfilq

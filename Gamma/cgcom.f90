@@ -21,12 +21,12 @@ end module flags
 module dielectric
   use parameters, only: DP
   real(kind=DP) :: epsilon0(3,3)
-  real(kind=DP), pointer :: zstar(:,:,:)
+  real(kind=DP), allocatable :: zstar(:,:,:)
 end module dielectric
 module modes1
   use parameters, only: DP
   integer :: nmodes
-  real(kind=DP), pointer::  dyn(:,:), u(:,:)
+  real(kind=DP), allocatable::  dyn(:,:), u(:,:)
 end module modes1
 
 module cgconv
@@ -37,13 +37,13 @@ end module cgconv
 
 module AA
   use parameters, only: DP
-  complex(kind=DP), pointer :: aux2(:), aux3(:)
-  real(kind=DP), pointer :: auxr(:)
+  complex(kind=DP), allocatable, target :: aux2(:), aux3(:)
+  real(kind=DP), allocatable, target :: auxr(:)
 end module AA
 
 module dmu
   use parameters, only: DP
-  real(kind=DP), pointer:: &
+  real(kind=DP), allocatable:: &
        dmuxc(:),   &! d V_xc / d rho
        grho(:,:,:), &! gradient of the unperturbed density
        dvxc_rr(:,:,:), &!
@@ -54,13 +54,13 @@ end module dmu
 
 module phon
   use parameters, only: DP
-  complex(kind=DP), pointer:: dvpsi(:,:), dpsi(:,:)
+  complex(kind=DP), allocatable:: dvpsi(:,:), dpsi(:,:)
 end module phon
 
 module symmetry
   integer :: n_diff_sites, nasr
-  integer, pointer::  equiv_atoms(:,:), n_equiv_atoms(:)
-  integer, pointer:: has_equivalent(:)
+  integer, allocatable::  equiv_atoms(:,:), n_equiv_atoms(:)
+  integer, allocatable:: has_equivalent(:)
 end module symmetry
 
 module diffs

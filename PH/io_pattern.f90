@@ -15,7 +15,7 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
 #endif
   implicit none
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 #endif
 !
 !   the i/o variables first
@@ -54,5 +54,5 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
 
   close (iunit)
 
-  return  
+  return
 end subroutine io_pattern

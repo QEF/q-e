@@ -8,55 +8,55 @@
 !
 !----------------------------------------------------------------------
 
-subroutine stres_har (sigmahar)  
+subroutine stres_har (sigmahar)
   !----------------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom  
+  use pwcom
   implicit none
   !
   real(kind=DP) :: sigmahar (3, 3), shart, g2
   real(kind=DP), parameter :: eps = 1.d-8
-  integer :: is, ig, igl0, l, m  
+  integer :: is, ig, igl0, l, m
 
   sigmahar(:,:) = 0.d0
   psic (:) = (0.d0, 0.d0)
-  do is = 1, nspin  
-     call DAXPY (nrxx, 1.d0, rho (1, is), 1, psic, 2)  
+  do is = 1, nspin
+     call DAXPY (nrxx, 1.d0, rho (1, is), 1, psic, 2)
   enddo
 
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   ! psic contains now the charge density in G space
   ! the  G=0 component is not computed
-  do ig = gstart, ngm  
-     g2 = gg (ig) * tpiba2  
-     shart = psic (nl (ig) ) * conjg (psic (nl (ig) ) ) / g2  
-     do l = 1, 3  
-        do m = 1, l  
+  do ig = gstart, ngm
+     g2 = gg (ig) * tpiba2
+     shart = psic (nl (ig) ) * conjg (psic (nl (ig) ) ) / g2
+     do l = 1, 3
+        do m = 1, l
            sigmahar (l, m) = sigmahar (l, m) + shart * tpiba2 * 2 * &
                 g (l, ig) * g (m, ig) / g2
         enddo
      enddo
   enddo
 #ifdef PARA
-  call reduce (9, sigmahar)  
+  call reduce (9, sigmahar)
 #endif
   if (gamma_only) then
      sigmahar(:,:) =       fpi * e2 * sigmahar(:,:)
   else
      sigmahar(:,:) = 0.5 * fpi * e2 * sigmahar(:,:)
   end if
-  do l = 1, 3  
-     sigmahar (l, l) = sigmahar (l, l) - ehart / omega  
+  do l = 1, 3
+     sigmahar (l, l) = sigmahar (l, l) - ehart / omega
   enddo
-  do l = 1, 3  
-     do m = 1, l - 1  
-        sigmahar (m, l) = sigmahar (l, m)  
+  do l = 1, 3
+     do m = 1, l - 1
+        sigmahar (m, l) = sigmahar (l, m)
      enddo
   enddo
 
   sigmahar(:,:) = -sigmahar(:,:)
-  
-  return  
+
+  return
 end subroutine stres_har
 

@@ -16,7 +16,7 @@ module error_handler
    type(chain), pointer :: previous_link
   end type chain
 
-  type(chain), pointer  :: routine_chain
+  type(chain), pointer :: routine_chain
 
 contains
 
@@ -72,7 +72,7 @@ contains
           return
        end if
     end if
-    
+
     routine_chain => routine_chain%previous_link
     call trace_back(error_code)
 
@@ -94,7 +94,7 @@ contains
        write(unit=*,fmt=*) " "
        write(unit=*,fmt=*) &
             " +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++"
-       
+
        if( action_code > 0 ) then
           write(unit=*,fmt=*) "   Fatal error in routine `", &
                trim(routine_chain%routine_name),"': ",message

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine symvect (nat, vect, nsym, s, irt)  
+subroutine symvect (nat, vect, nsym, s, irt)
    !-----------------------------------------------------------------------
    !
    ! This routine symmetrizes a vector (like forces which in the crystal
@@ -17,7 +17,7 @@ subroutine symvect (nat, vect, nsym, s, irt)
    !
 #include "machine.h"
    use parameters
-   implicit none  
+   implicit none
    !
    !    I/O variables first
    !
@@ -33,30 +33,30 @@ subroutine symvect (nat, vect, nsym, s, irt)
               nar,             & ! the rotated of each atom
               isym,            & ! counter on symmetries
               ipol               ! counter on polarization
-   
-   real(kind=DP), allocatable :: work (:,:)  
-   
-   external DCOPY, DSCAL  
-   
-   if (nsym.eq.1) return 
 
-   allocate(work(3,nat))  
+   real(kind=DP), allocatable :: work (:,:)
+
+   external DCOPY, DSCAL
+
+   if (nsym.eq.1) return
+
+   allocate(work(3,nat))
    work(:,:) = 0.d0
-   do na = 1, nat  
-      do isym = 1, nsym  
-         nar = irt (isym, na)  
-         do ipol = 1, 3  
+   do na = 1, nat
+      do isym = 1, nsym
+         nar = irt (isym, na)
+         do ipol = 1, 3
             work (ipol, na) = work (ipol, na) + &
                              s (ipol, 1, isym) * vect (1, nar) + &
                              s (ipol, 2, isym) * vect (2, nar) + &
                              s (ipol, 3, isym) * vect (3, nar)
-         enddo  
-      enddo  
-   enddo  
-   call DSCAL (3 * nat, 1.d0 / nsym, work, 1)  
-   call DCOPY (3 * nat, work, 1, vect, 1)  
-   
-   deallocate (work)  
-   return  
+         enddo
+      enddo
+   enddo
+   call DSCAL (3 * nat, 1.d0 / nsym, work, 1)
+   call DCOPY (3 * nat, work, 1, vect, 1)
+
+   deallocate (work)
+   return
 end subroutine symvect
 

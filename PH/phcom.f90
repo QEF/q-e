@@ -18,31 +18,31 @@ module modes
   ! the number of irreducible representation
   !    contained in the dynamical matrix
   ! the number of modes
-  integer, pointer :: npert (:) !3 * nat )
+  integer, allocatable, target :: npert (:) !3 * nat )
   ! the number of perturbations per IR
   integer :: npertx, invs(48)
   ! max number of perturbations per IR
   ! the inver of each matrix
 
-  real (kind=DP), pointer    :: rtau (:,:,:) !3, 48, nat)
+  real (kind=DP), allocatable    :: rtau (:,:,:) !3, 48, nat)
   ! coordinates of direct translations
-  real (kind=DP) :: gi(3,48), gimq(3)  
+  real (kind=DP) :: gi(3,48), gimq(3)
   ! the possible G associated to each symmetry
   ! the G associated to the symmetry q<->-q+G
 
-  integer , parameter :: max_irr_dim = 4    ! maximal allowed dimension for 
+  integer , parameter :: max_irr_dim = 4    ! maximal allowed dimension for
                                            ! irreducible representattions
 
-  complex (kind=DP), pointer :: u (:,:), & ! 3 * nat, 3 * nat), 
+  complex (kind=DP), pointer :: u (:,:), & ! 3 * nat, 3 * nat),
        ubar(:),&                           ! 3 * nat), &
-       t (:,:,:,:),&                       ! max_irr_dim, max_irr_dim, 48,3 * nat), 
+       t (:,:,:,:),&                       ! max_irr_dim, max_irr_dim, 48,3 * nat),
        tmq (:,:,:)                         ! max_irr_dim, max_irr_dim, 3 * nat)
   ! the transformation modes patterns
   ! the mode for deltarho
   ! the symmetry in the base of the pattern
   ! the symmetry q<->-q in the base of the pa
 
-  logical :: minus_q  
+  logical :: minus_q
   ! if true there is the symmetry sending q<->-q
 end module modes
 
@@ -51,12 +51,12 @@ end module modes
 !
 module dynmat
   use parameters, only : DP
-  complex (kind=DP), pointer :: dyn00 (:,:),& ! 3 * nat, 3 * nat), 
-       dyn (:,:)                              ! 3 * nat, 3 * nat)  
+  complex (kind=DP), allocatable :: dyn00 (:,:),& ! 3 * nat, 3 * nat),
+       dyn (:,:)                              ! 3 * nat, 3 * nat)
   ! the initial dynamical matrix
   ! the dynamical matrix
 
-  real (kind=DP), pointer    :: w2 (:)        ! 3 * nat)  
+  real (kind=DP), allocatable    :: w2 (:)        ! 3 * nat)
   ! omega^2
 end module dynmat
 
@@ -67,14 +67,14 @@ module qpoint
   use parameters, only : DP
   integer, pointer :: igkq (:)     ! npwx)
   ! correspondence k+q+G <-> G
-  integer :: nksq, npwq  
+  integer :: nksq, npwq
   ! the real number of k points
   ! the number of plane waves for q
 
-  real (kind=DP) :: xq(3)  
+  real (kind=DP) :: xq(3)
   ! the coordinates of the q point
 
-  complex (kind=DP), pointer :: eigqts (:) ! nat)  
+  complex (kind=DP), allocatable :: eigqts (:) ! nat)
   ! the phases associated to the q
 end module qpoint
 !
@@ -82,18 +82,18 @@ end module qpoint
 !
 module eqv
   use parameters, only : DP
-  complex (kind=DP), pointer :: evq (:,:) ! npwx, nbndx)  
+  complex (kind=DP), pointer :: evq (:,:) ! npwx, nbndx)
 !
 !    The variable describing the linear response problem
 !
 
-  complex (kind=DP), pointer :: dvpsi (:,:),& ! npwx, nbndx),
-       dpsi (:,:)                             ! npwx, nbndx)  
+  complex (kind=DP), allocatable :: dvpsi (:,:),& ! npwx, nbndx),
+       dpsi (:,:)                             ! npwx, nbndx)
   ! the product of dV psi
   ! the change of the wavefunctions
 
-  real (kind=DP), pointer    :: dmuxc (:,:,:),& ! nrxx, nspin, nspin), 
-       vlocq (:,:)                              ! ngm, ntyp)
+  real (kind=DP), allocatable :: dmuxc (:,:,:) ! nrxx, nspin, nspin),
+  real (kind=DP), allocatable, target :: vlocq (:,:) ! ngm, ntyp)
   ! the derivative of the xc potential
   ! the local potential at q+G
 end module eqv
@@ -104,14 +104,14 @@ end module eqv
 module efield
   use parameters, only : DP
   real (kind=DP) :: epsilon (3, 3)
-  real (kind=DP), pointer ::  zstareu (:,:,:),& ! 3, 3, nat), 
+  real (kind=DP), allocatable ::  zstareu (:,:,:),& ! 3, 3, nat),
        zstarue (:,:,:)                          ! 3, nat, 3)
   ! the dielectric constant
   ! the effective charges Z(E,Us) (E=scf,Us=bare)
   ! the effective charges Z(Us,E) (Us=scf,E=bare)
 
-  complex (kind=DP), pointer :: zstareu0 (:,:),& ! 3, 3 * nat),
-       zstarue0 (:,:)                            ! 3 * nat, 3)  
+  complex (kind=DP), allocatable :: zstareu0 (:,:),& ! 3, 3 * nat),
+       zstarue0 (:,:)                            ! 3 * nat, 3)
   ! the effective charges
   ! the effective charges
 end module efield
@@ -121,9 +121,9 @@ end module efield
 !
 module nlcc_ph
   use parameters, only : DP
-  complex (kind=DP), pointer :: drc (:,:) ! ngm, ntyp)  
+  complex (kind=DP), allocatable, target :: drc (:,:) ! ngm, ntyp)
   ! contain the rhoc (without structure fac) for all atomic types
-  logical           :: nlcc_any  
+  logical           :: nlcc_any
   ! .t. if any atom-type has nlcc
 end module nlcc_ph
 
@@ -132,9 +132,9 @@ end module nlcc_ph
 !
 module gc_ph
   use parameters, only : DP
-  real (kind=DP), pointer :: grho (:,:,:),& ! 3, nrxx, nspin), 
+  real (kind=DP), allocatable :: grho (:,:,:),& ! 3, nrxx, nspin),
        dvxc_rr (:,:,:),&           ! nrxx, nspin, nspin), &
-       dvxc_sr (:,:,:),&           ! nrxx, nspin, nspin), 
+       dvxc_sr (:,:,:),&           ! nrxx, nspin, nspin),
        dvxc_ss (:,:,:),&           ! nrxx, nspin, nspin), &
        dvxc_s (:,:,:)              ! nrxx, nspin, nspin)
   ! gradient of the unpert. density
@@ -150,16 +150,18 @@ end module gc_ph
 !
 module phus
   use parameters, only : DP
-  real (kind=DP), pointer  :: alphasum (:,:,:,:),&! nhm*(nhm+1)/2,3,nat,nspin)  
+  real (kind=DP), allocatable  :: alphasum (:,:,:,:),&! nhm*(nhm+1)/2,3,nat,nspin)
                                                   ! used to compute modes
        dpqq(:,:,:,:)                              ! dipole moment of each Q
-  complex (kind=DP), pointer :: int1 (:,:,:,:,:),&! nhm, nhm, 3, nat, nspin),&
-       int2 (:,:,:,:,:),&                 ! nhm, nhm, 3,nat, nat),&
-       int3 (:,:,:,:,:),&                 ! nhm, nhm, 3, nat, nspin),&
-       int4 (:,:,:,:,:),&                 ! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
-       int5 (:,:,:,:,:),&                 ! nhm*(nhm+1)/2, 3, 3, nat, nat),&
-       becp1 (:,:,:),   &                 ! nkbtot, nbnd, nksq),&
-       alphap (:,:,:,:)                   ! nkbtot, nbnd, 3, nksq)
+  complex (kind=DP), allocatable :: &
+       int1 (:,:,:,:,:),&  ! nhm, nhm, 3, nat, nspin),&
+       int2 (:,:,:,:,:),&  ! nhm, nhm, 3,nat, nat),&
+       int3 (:,:,:,:,:),&  ! nhm, nhm, 3, nat, nspin),&
+       int4 (:,:,:,:,:),&  ! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
+       int5 (:,:,:,:,:)    ! nhm*(nhm+1)/2, 3, 3, nat, nat),&
+  complex (kind=DP), allocatable, target :: &
+       becp1 (:,:,:),   &  ! nkbtot, nbnd, nksq),&
+       alphap (:,:,:,:)    ! nkbtot, nbnd, 3, nksq)
   ! integrals of dQ and V_eff
   ! integrals of dQ and V_loc
   ! integrals of Q and dV_Hxc
@@ -173,8 +175,8 @@ end module phus
 !
 module partial
   use parameters, only : DP
-  integer, pointer :: comp_irr (:),& ! 3 * nat ),
-       ifat (:),&                    ! nat), 
+  integer, allocatable :: comp_irr (:),& ! 3 * nat ),
+       ifat (:),&                    ! nat),
        done_irr (:),&                ! 3 * nat), &
        list (:),&                    ! 3 * nat),
        atomo (:)                     ! nat)
@@ -183,10 +185,10 @@ module partial
   ! if 1 this representation has been done
   ! a list of representations
   ! which atom
-  integer ::   nat_todo, nrapp 
+  integer ::   nat_todo, nrapp
   ! number of atoms to compute
   ! The representation to do
-  logical :: all_comp  
+  logical :: all_comp
   ! if true all representation have been computed
 end module partial
 
@@ -195,7 +197,7 @@ end module partial
 !
 module control_ph
   use parameters, only : DP, maxter, npk
-  integer :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, iter0, maxirr  
+  integer :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, iter0, maxirr
   ! maximum number of iterations
   ! mixing type
   ! occupated bands in metals
@@ -203,13 +205,13 @@ module control_ph
   ! starting iteration
   ! maximum number of representation
 
-  real (kind=DP) :: tr2_ph, alpha_mix(maxter), time_now, alpha_pv  
+  real (kind=DP) :: tr2_ph, alpha_mix(maxter), time_now, alpha_pv
   ! convergence threshold
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
 
-  logical :: lgamma, convt, epsil, trans, elph, zue, recover  
+  logical :: lgamma, convt, epsil, trans, elph, zue, recover
   ! if true this is a q=0 computation
   ! if true the phonon has converged
   ! if true computes dielec. const and eff. c
@@ -224,7 +226,7 @@ end module control_ph
 ! a character common for phonon
 !
 module char_ph
-  character(len=75) :: title_ph! * 75  
+  character(len=75) :: title_ph! * 75
   ! title of the phonon run
 end module char_ph
 !
@@ -257,7 +259,7 @@ end module units_ph
 !    the name of the files
 !
 module output
-  character (len=14) :: fildyn, filelph, fildvscf, fildrho  
+  character (len=14) :: fildyn, filelph, fildvscf, fildrho
   ! output file for the dynamical matrix
   ! output file for electron-phonon coefficie
   ! output file for deltavscf

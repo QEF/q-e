@@ -8,7 +8,7 @@
 #ifdef PARA
 !
 !----------------------------------------------------------------------
-subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)  
+subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !----------------------------------------------------------------------
   !
   !   sign = +-1 : parallel 3d fft for rho and for the potential
@@ -35,18 +35,18 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !   and all planes(i) are set to 1
   !
 #include "machine.h"
+  use parameters, only: DP
   use para
-  use allocate
-  implicit none  
-  integer :: n1, n2, n3, nx1, nx2, nx3, sign  
-  complex (kind=DP) :: f (nxxs)  
+  implicit none
+  integer :: n1, n2, n3, nx1, nx2, nx3, sign
+  complex (kind=DP) :: f (nxxs)
   !
-  include 'mpif.h'  
-  integer :: nxx_save, mc, i, j, ii, iproc, k, nppx  
-  complex (kind=DP), pointer :: aux (:)  
-  integer :: planes (nx1)  
-  data nxx_save / 0 /  
-  save nxx_save, aux  
+  include 'mpif.h'
+  integer :: nxx_save, mc, i, j, ii, iproc, k, nppx
+  complex (kind=DP), allocatable :: aux (:)
+  integer :: planes (nx1)
+  data nxx_save / 0 /
+  save nxx_save, aux
 #if defined(FFTW)
 #define CFT_1S cft_1s
 #else
@@ -59,100 +59,100 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #endif
   !
 
-  call start_clock ('cft3s')  
-  if (nxx_save.ne.nxxs) then  
-     if (nxx_save.ne.0) call mfree (aux)  
-     nxx_save = nxxs  
-     call mallocate(aux, nxxs)  
+  call start_clock ('cft3s')
+  if (nxx_save.ne.nxxs) then
+     if (nxx_save.ne.0) deallocate (aux)
+     nxx_save = nxxs
+     allocate (aux( nxxs))    
   endif
   !
   ! see comments in cft3.F for the logic (or lack of it) of the following
   !
-  if (nprocp.eq.1) then  
-     nppx = nx3  
-  else  
-     nppx = npps (me)  
+  if (nprocp.eq.1) then
+     nppx = nx3
+  else
+     nppx = npps (me)
 
   endif
-  if (sign.gt.0) then  
-     if (sign.ne.2) then  
-        call CFT_1S (f, ncps (me), n3, nx3, sign, aux)  
-        call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)  
-        call setv (2 * nxxs, 0.0d0, f, 1)  
-        do i = 1, ncts  
-           mc = icpls (i)  
-           do j = 1, npps (me)  
-              f (mc + (j - 1) * ncplanes) = aux (j + (i - 1) * nppx)  
+  if (sign.gt.0) then
+     if (sign.ne.2) then
+        call CFT_1S (f, ncps (me), n3, nx3, sign, aux)
+        call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
+        call setv (2 * nxxs, 0.0d0, f, 1)
+        do i = 1, ncts
+           mc = icpls (i)
+           do j = 1, npps (me)
+              f (mc + (j - 1) * ncplanes) = aux (j + (i - 1) * nppx)
            enddo
         enddo
-        do i = 1, nx1  
-           planes (i) = 1  
+        do i = 1, nx1
+           planes (i) = 1
         enddo
-     else  
-        call CFT_1S (f, nkcp (me), n3, nx3, sign, aux)  
-        call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)  
-        call setv (2 * nxxs, 0.0d0, f, 1)  
-        ii = 0  
-        do i = 1, nx1  
-           planes (i) = 0  
+     else
+        call CFT_1S (f, nkcp (me), n3, nx3, sign, aux)
+        call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
+        call setv (2 * nxxs, 0.0d0, f, 1)
+        ii = 0
+        do i = 1, nx1
+           planes (i) = 0
         enddo
-        do iproc = 1, nprocp  
-           do i = 1, nkcp (iproc)  
-              mc = icpls (i + ncp0s (iproc) )  
-              ii = ii + 1  
-              k = mod (mc - 1, nx1) + 1  
-              planes (k) = 1  
-              do j = 1, npps (me)  
-                 f (mc + (j - 1) * ncplanes) = aux (j + (ii - 1) * nppx)  
+        do iproc = 1, nprocp
+           do i = 1, nkcp (iproc)
+              mc = icpls (i + ncp0s (iproc) )
+              ii = ii + 1
+              k = mod (mc - 1, nx1) + 1
+              planes (k) = 1
+              do j = 1, npps (me)
+                 f (mc + (j - 1) * ncplanes) = aux (j + (ii - 1) * nppx)
               enddo
            enddo
         enddo
      endif
-     call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)  
-  else  
-     if (sign.ne. - 2) then  
-        do i = 1, nx1  
-           planes (i) = 1  
+     call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+  else
+     if (sign.ne. - 2) then
+        do i = 1, nx1
+           planes (i) = 1
         enddo
-     else  
-        do i = 1, nx1  
-           planes (i) = 0  
+     else
+        do i = 1, nx1
+           planes (i) = 0
         enddo
-        do iproc = 1, nprocp  
-           do i = 1, nkcp (iproc)  
-              mc = icpls (i + ncp0s (iproc) )  
-              k = mod (mc - 1, nx1) + 1  
-              planes (k) = 1  
+        do iproc = 1, nprocp
+           do i = 1, nkcp (iproc)
+              mc = icpls (i + ncp0s (iproc) )
+              k = mod (mc - 1, nx1) + 1
+              planes (k) = 1
            enddo
         enddo
      endif
-     call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)  
-     if (sign.ne. - 2) then  
-        do i = 1, ncts  
-           mc = icpls (i)  
-           do j = 1, npps (me)  
-              aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplanes)  
+     call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+     if (sign.ne. - 2) then
+        do i = 1, ncts
+           mc = icpls (i)
+           do j = 1, npps (me)
+              aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplanes)
            enddo
         enddo
-        call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)  
-        call CFT_1S (aux, ncps (me), n3, nx3, sign, f)  
-     else  
-        ii = 0  
-        do iproc = 1, nprocp  
-           do i = 1, nkcp (iproc)  
-              mc = icpls (i + ncp0s (iproc) )  
-              ii = ii + 1  
-              do j = 1, npps (me)  
-                 aux (j + (ii - 1) * nppx) = f (mc + (j - 1) * ncplanes)  
+        call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
+        call CFT_1S (aux, ncps (me), n3, nx3, sign, f)
+     else
+        ii = 0
+        do iproc = 1, nprocp
+           do i = 1, nkcp (iproc)
+              mc = icpls (i + ncp0s (iproc) )
+              ii = ii + 1
+              do j = 1, npps (me)
+                 aux (j + (ii - 1) * nppx) = f (mc + (j - 1) * ncplanes)
               enddo
            enddo
         enddo
-        call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)  
-        call CFT_1S (aux, nkcp (me), n3, nx3, sign, f)  
+        call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
+        call CFT_1S (aux, nkcp (me), n3, nx3, sign, f)
      endif
   endif
-  call stop_clock ('cft3s')  
-  return  
+  call stop_clock ('cft3s')
+  return
 end subroutine cft3s
 #else
 #define CFT_WITH_PENCILS cft_3
@@ -170,37 +170,36 @@ end subroutine cft3s
 #endif
 !
 !----------------------------------------------------------------------
-subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)  
+subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   !----------------------------------------------------------------------
   !
   use parameters
-  use allocate 
-  implicit none  
-  integer :: n1, n2, n3, nx1, nx2, nx3, sign  
+  implicit none
+  integer :: n1, n2, n3, nx1, nx2, nx3, sign
 
-  complex(kind=DP) :: f (nx1 * nx2 * nx3)  
-  call start_clock ('cft3s')  
+  complex(kind=DP) :: f (nx1 * nx2 * nx3)
+  call start_clock ('cft3s')
   !
   !   sign = +-1 : complete 3d fft (for rho and for the potential)
   !
-  if (sign.eq.1) then  
-     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)  
-  elseif (sign.eq. - 1) then  
-     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1)  
+  if (sign.eq.1) then
+     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
+  elseif (sign.eq. - 1) then
+     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 2, - 1)
      !
      !   sign = +-2 : if available, call the "short" fft (for psi's)
      !
-  elseif (sign.eq.2) then  
-     call CFT_WITH_PENCILS (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)  
-  elseif (sign.eq. - 2) then  
+  elseif (sign.eq.2) then
+     call CFT_WITH_PENCILS (f, n1, n2, n3, nx1, nx2, nx3, 2, 1)
+  elseif (sign.eq. - 2) then
      call CFT_WITH_PENCILS (f, n1, n2, n3, nx1, nx2, nx3, 2, &
           - 1)
-  else  
-     call error ('cft3', 'what should i do?', 1)  
+  else
+     call error ('cft3', 'what should i do?', 1)
   endif
 
-  call stop_clock ('cft3s')  
-  return  
+  call stop_clock ('cft3s')
+  return
 end subroutine cft3s
 #endif
 

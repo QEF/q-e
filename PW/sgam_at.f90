@@ -22,12 +22,12 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
 #include "machine.h"
   use parameters
-  implicit none  
+  implicit none
   !
   !     input variables
   !
   integer :: nrot, s (3, 3, 48), nat, ityp (nat), nr1, nr2, nr3
-  real(kind=DP) :: tau (3, nat), at (3, 3), bg (3, 3)  
+  real(kind=DP) :: tau (3, nat), at (3, 3), bg (3, 3)
   ! nrot : order of the parent group
   ! s    : symmetry operations of parent group
   ! nat  : number of atoms in the unit cell
@@ -40,7 +40,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     output variables
   !
   integer :: irt (48, nat), ftau (3, 48)
-  logical :: sym (48)  
+  logical :: sym (48)
   ! irt(isym,na) : sym.op. isym sends atom na into atom irt(isym,na)
   ! ftau(:,isym) : fractional translation associated to sym.op. isym
   !                (in FFT coordinates: crystal axis, multiplied by nr*)
@@ -49,23 +49,23 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
   !    local variables
   !
-  integer :: na, kpol, nb, irot, i, j  
+  integer :: na, kpol, nb, irot, i, j
   ! counters
   real(kind=DP) , allocatable :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
-  logical :: fractional_translations  
-  real(kind=DP) :: ft (3), ft1, ft2, ft3  
+  logical :: fractional_translations
+  real(kind=DP) :: ft (3), ft1, ft2, ft3
   !
-  external checksym  
+  external checksym
   !
   allocate(xau(3,nat))
   allocate(rau(3,nat))
   !
-  !     Compute the coordinates of each atom in the basis of 
+  !     Compute the coordinates of each atom in the basis of
   !     the direct lattice vectors
   !
-  do na = 1, nat  
-     do kpol = 1, 3  
+  do na = 1, nat
+     do kpol = 1, 3
         xau (kpol, na) = bg (1, kpol) * tau (1, na) + bg (2, kpol) &
              * tau (2, na) + bg (3, kpol) * tau (3, na)
      enddo
@@ -77,29 +77,29 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !      because there is no guarantee that the generated sym.ops.
   !      form a group
   !
-  nb = 1  
-  irot = 1  
-  fractional_translations = .true.  
-  do na = 2, nat  
-     if (ityp (nb) .eq.ityp (na) ) then  
+  nb = 1
+  irot = 1
+  fractional_translations = .true.
+  do na = 2, nat
+     if (ityp (nb) .eq.ityp (na) ) then
         ft (1) = xau (1, na) - xau (1, nb) - nint (xau (1, na) - xau ( 1, nb) )
         ft (2) = xau (2, na) - xau (2, nb) - nint (xau (2, na) - xau ( 2, nb) )
 
         ft (3) = xau (3, na) - xau (3, nb) - nint (xau (3, na) - xau ( 3, nb) )
 
 
-        call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)  
+        call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)
 
         if (sym (irot) .and. (abs (ft (1) **2 + ft (2) **2 + ft (3) ** &
              2) ) .lt.1.d-8) call error ('sgam_at', 'overlapping atoms', na)
-        if (sym (irot) ) then  
-           fractional_translations = .false.  
+        if (sym (irot) ) then
+           fractional_translations = .false.
            write (6, '(5x,"Found additional translation:",3f10.4)') ft
         endif
      endif
 
   enddo
-  do irot = 1, nrot  
+  do irot = 1, nrot
      !
      ! check that the grid is compatible with the S rotation
      !
@@ -107,15 +107,15 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
           * nr1, nr3) .ne.0.or.mod (s (1, 2, irot) * nr2, nr1) .ne.0.or.mod &
           (s (3, 2, irot) * nr2, nr3) .ne.0.or.mod (s (1, 3, irot) * nr3, &
           nr1) .ne.0.or.mod (s (2, 3, irot) * nr3, nr2) .ne.0) then
-        sym (irot) = .false.  
+        sym (irot) = .false.
         write (6, '(5x,"warning: symmetry operation # ",i2, &
              &            " not compatible with FFT grid. ")') irot
-        write (6, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)  
-        goto 100  
+        write (6, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)
+        goto 100
 
      endif
-     do na = 1, nat  
-        do kpol = 1, 3  
+     do na = 1, nat
+        do kpol = 1, 3
            ! rau = rotated atom coordinates
            rau (kpol, na) = s (1, kpol, irot) * xau (1, na) + s (2, kpol, &
                 irot) * xau (2, na) + s (3, kpol, irot) * xau (3, na)
@@ -124,17 +124,17 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
      !
      !      first attempt: no fractional translation
      !
-     do kpol = 1, 3  
-        ftau (kpol, irot) = 0  
+     do kpol = 1, 3
+        ftau (kpol, irot) = 0
         ! input for checksym
-        ft (kpol) = 0.d0  
+        ft (kpol) = 0.d0
      enddo
 
-     call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)  
-     if (.not.sym (irot) .and.fractional_translations) then  
-        nb = 1  
-        do na = 1, nat  
-           if (ityp (nb) .eq.ityp (na) ) then  
+     call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)
+     if (.not.sym (irot) .and.fractional_translations) then
+        nb = 1
+        do na = 1, nat
+           if (ityp (nb) .eq.ityp (na) ) then
               !
               !      second attempt: check all possible fractional translations
               !
@@ -146,13 +146,13 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
               ft (3) = rau (3, na) - xau (3, nb) - nint (rau (3, na) &
                    - xau (3, nb) )
 
-              call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)  
-              if (sym (irot) ) then  
+              call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)
+              if (sym (irot) ) then
                  ! convert ft to FFT coordinates
                  ! for later use in symmetrization
-                 ft1 = ft (1) * nr1  
-                 ft2 = ft (2) * nr2  
-                 ft3 = ft (3) * nr3  
+                 ft1 = ft (1) * nr1
+                 ft2 = ft (2) * nr2
+                 ft3 = ft (3) * nr3
                  ! check if the fractional transaltions are commensurate
                  ! with the FFT grid, discard sym.op. if not
                  if (abs (ft1 - nint (ft1) ) / nr1.gt.1.0d-5.or.abs (ft2 - &
@@ -162,25 +162,25 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
                          &     " # ",i2," not allowed.   fractional ", &
                          &     "translation:"/5x,3f11.7,"  in crystal", &
                          &     " coordinates")') irot, ft
-                    sym (irot) = .false.  
+                    sym (irot) = .false.
                  endif
-                 ftau (1, irot) = nint (ft1)  
-                 ftau (2, irot) = nint (ft2)  
-                 ftau (3, irot) = nint (ft3)  
-                 goto 100  
+                 ftau (1, irot) = nint (ft1)
+                 ftau (2, irot) = nint (ft2)
+                 ftau (3, irot) = nint (ft3)
+                 goto 100
               endif
            endif
         enddo
 
      endif
-100  continue  
+100  continue
   enddo
   !
   !   deallocate work space
   !
-  deallocate (rau) 
-  deallocate (xau)  
+  deallocate (rau)
+  deallocate (xau)
   !
-  return  
+  return
 end subroutine sgam_at
 

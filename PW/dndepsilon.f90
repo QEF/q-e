@@ -15,12 +15,12 @@ subroutine dndepsilon ( dns,ipol,jpol )
 #include "machine.h"
    use pwcom
    use becmod
-   use io  
+   use io
 #ifdef PARA
    use para
 #endif
    implicit none
-   ! 
+   !
    ! I/O variables first
    !
    real (kind=DP) :: dns(nat,nspin,5,5)
@@ -34,11 +34,11 @@ subroutine dndepsilon ( dns,ipol,jpol )
               i, na, nt, n, counter, m1, m2, l
    complex (kind=DP) :: ZDOTC
 
-   integer, allocatable :: offset(:) 
+   integer, allocatable :: offset(:)
    ! offset(nat)  ! offset of d electrons of atom d in the natomwfc ordering
    complex (kind=DP), allocatable :: &
                       proj(:,:), wfcatom(:,:), spsi(:,:), dproj(:,:)
-   ! proj(natomwfc,nbnd), wfcatom(npwx,natomwfc), 
+   ! proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),
    ! spsi(npwx,nbnd), dproj(natomwfc,nbnd)
 
    allocate (offset(nat), proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),  &
@@ -62,34 +62,34 @@ subroutine dndepsilon ( dns,ipol,jpol )
    end do
 
    if(counter.ne.natomwfc) call error('new_ns','nstart<>counter',1)
- 
+
    dns(:,:,:,:) = 0.d0
    !
    !    we start a loop on k points
    !
    if (nks.gt.1) rewind (iunigk)
- 
+
    do ik = 1, nks
 
       if (nks.gt.1) read (iunigk) npw, igk
 
       !
-      ! now we need the first derivative of proj with respect to 
+      ! now we need the first derivative of proj with respect to
       ! epsilon(ipol,jpol)
       !
       call davcio(evc,nwordwfc,iunwfc,ik,-1)
       call init_us_2 (npw,igk,xk(1,ik),vkb)
       call ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
- 
+
       call s_psi  (npwx, npw, nbnd, evc, spsi )
       call atomic_wfc( ik, wfcatom )
 
       dproj(:,:) = (0.d0,0.d0)
- 
-      call dprojdepsilon(ik,dproj,wfcatom,spsi,ipol,jpol)    
- 
+
+      call dprojdepsilon(ik,dproj,wfcatom,spsi,ipol,jpol)
+
       call davcio(swfcatom,nwordatwfc,iunat,ik,-1)
- 
+
       do ibnd = 1, nbnd
          do i=1,natomwfc
             proj(i,ibnd) = ZDOTC(npw,swfcatom(1,i),1,evc(1,ibnd),1)
@@ -105,7 +105,7 @@ subroutine dndepsilon ( dns,ipol,jpol )
       !
       do na = 1,nat
          nt = ityp(na)
-         if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then        
+         if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
             do m1 = 1,5
                do m2 = m1,5
                   do ibnd = 1,nbnd
@@ -114,15 +114,15 @@ subroutine dndepsilon ( dns,ipol,jpol )
                               DREAL( proj(offset(na)+m1,ibnd) *      &
                               conjg(dproj(offset(na)+m2,ibnd) ) +    &
                                     dproj(offset(na)+m1,ibnd)*       &
-                              conjg( proj(offset(na)+m2,ibnd) ) )           
+                              conjg( proj(offset(na)+m2,ibnd) ) )
                   end do
                end do
             end do
          end if
       end do
- 
+
    end do                 ! on k-points
- 
+
 #ifdef PARA
    call poolreduce(nat*nspin*25,dns)
 #endif
@@ -138,8 +138,8 @@ subroutine dndepsilon ( dns,ipol,jpol )
          end do
       end do
    end do
- 
+
    deallocate (offset, proj, wfcatom, spsi, dproj )
- 
+
    return
 end subroutine dndepsilon

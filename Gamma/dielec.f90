@@ -15,22 +15,21 @@ subroutine dielec(do_zstar)
 #include "machine.h"
   use pwcom
   use cgcom
-  use allocate
   implicit none
   logical :: do_zstar
   !
   integer :: ibnd,ipol,jpol,na,nu,kpoint
   character(len=7) :: filbar, fildwf
   real(kind=DP) ::  w, weight
-  real(kind=DP), pointer ::  work(:,:)
-  complex(kind=DP), pointer :: dpsi2(:,:), dpsi3(:,:)
+  real(kind=DP), allocatable ::  work(:,:)
+  complex(kind=DP), allocatable :: dpsi2(:,:), dpsi3(:,:)
   logical :: done
   !
   call start_clock('dielec')
   !
-  call mallocate(dpsi2, npwx, nbnd)
-  call mallocate(dpsi3, npwx, nbnd)
-  call mallocate(work, nbnd, 3)
+  allocate (dpsi2( npwx, nbnd))    
+  allocate (dpsi3( npwx, nbnd))    
+  allocate (work( nbnd, 3))    
   !
   call setv(9,0.d0,epsilon0,1)
   if (do_zstar) call setv(9*nat,0.d0,zstar,1)
@@ -69,7 +68,7 @@ subroutine dielec(do_zstar)
   do nu = 1,nmodes
      na  = (nu-1)/3+1
      if (has_equivalent(na).eq.0) then
-        !     DeltaV*psi(ion) for mode nu is recalculated 
+        !     DeltaV*psi(ion) for mode nu is recalculated
         call dvpsi_kb(kpoint,nu)
         !
         jpol= mod(nu-1,3)+1
@@ -109,9 +108,9 @@ subroutine dielec(do_zstar)
   if (do_zstar) call reduce(3*3*nat,zstar)
   call reduce(3*3,epsilon0)
 #endif
-  call mfree(work)
-  call mfree(dpsi3)
-  call mfree(dpsi2)
+  deallocate(work)
+  deallocate(dpsi3)
+  deallocate(dpsi2)
   !
   ! add the diagonal part
   !

@@ -10,10 +10,10 @@ subroutine kpoint_grid &
      ( nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
 !-----------------------------------------------------------------------
 !
-!  Automatic generation of a uniform grid of k-points 
+!  Automatic generation of a uniform grid of k-points
 !
-#include "machine.h" 
-  use allocate
+#include "machine.h"
+  use parameters, only: DP
   implicit none
   ! INPUT:
   integer nrot, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3
@@ -25,13 +25,13 @@ subroutine kpoint_grid &
   real(kind=DP), parameter :: degspin=2.d0, eps=1.0e-5
   ! degspin: spin degeneracy used to normalize k-points
   real(kind=DP) xkr(3), deltap(3), deltam(3), fact
-  real(kind=DP), pointer:: xkg(:,:)
+  real(kind=DP), allocatable:: xkg(:,:)
   integer nkr, i,j,k, ns, n, nk
-  integer, pointer :: equiv(:)
+  integer, allocatable :: equiv(:)
   !
   nkr=nk1*nk2*nk3
-  call mallocate(xkg, 3,nkr)
-  call mallocate(equiv, nkr)
+  allocate (xkg( 3,nkr))    
+  allocate (equiv( nkr))    
   !
   do i=1,nk1
      do j=1,nk2
@@ -83,7 +83,7 @@ subroutine kpoint_grid &
                       sqrt ( deltam(1)**2 +  &
                              deltam(2)**2 +  &
                              deltam(3)**2 ) .lt. eps      ) then
-                    !  equivalent k-point found: 
+                    !  equivalent k-point found:
                     !  add 1 to the weight and go to next k-point
                     equiv(n) = nk
                     wk(nk)=wk(nk)+1.0
@@ -106,7 +106,7 @@ subroutine kpoint_grid &
         if (nks.gt.npk) call error('kpoint_grid','too many k-points',1)
         wk(nks) = wk(nk)
         fact    = fact+wk(nks)
-        !  bring back into to the first BZ 
+        !  bring back into to the first BZ
         do i=1,3
            xk(i,nks) = xkg(i,nk)-nint(xkg(i,nk))
         end do
@@ -119,9 +119,9 @@ subroutine kpoint_grid &
      wk(nk) = degspin * wk(nk)/fact
   end do
 
-  call mfree(equiv)
-  call mfree(xkg)
-  
+  deallocate(equiv)
+  deallocate(xkg)
+
   return
 end subroutine kpoint_grid
 !
@@ -132,8 +132,8 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   !
   ! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994)
   !
-#include "machine.h" 
-  use allocate
+#include "machine.h"
+  use parameters, only: DP
   implicit none
   ! INPUT:
   integer nks, nsym, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3, ntetra
@@ -144,17 +144,17 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   ! LOCAL:
   real(kind=DP) :: xkr(3), deltap(3), deltam(3)
   real(kind=DP), parameter:: eps=1.0d-5
-  real(kind=DP), pointer :: xkg(:,:)
+  real(kind=DP), allocatable :: xkg(:,:)
   integer :: nkr, i,j,k, ns, n, nk, ip1,jp1,kp1, &
        n1,n2,n3,n4,n5,n6,n7,n8
-  integer, pointer:: equiv(:)
+  integer, allocatable:: equiv(:)
   !
   ! Re-generate a uniform grid of k-points xkg
   !
   nkr=nk1*nk2*nk3
   !      ntetra=6*nkr
-  call mallocate(xkg, 3,nkr)
-  call mallocate(equiv, nkr)
+  allocate (xkg( 3,nkr))    
+  allocate (equiv( nkr))    
 !
   do i=1,nk1
      do j=1,nk2
@@ -239,32 +239,32 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
            n8 = (kp1-1) + (jp1-1)*nk3 + (ip1-1)*nk2*nk3 + 1
            !  there are 6 tetrahedra per cube (and nk1*nk2*nk3 cubes)
            n  = 6 * ( (k-1) + (j-1)*nk3 + (i-1)*nk3*nk2 )
-           
+
            tetra (1,n+1) = equiv(n1)
            tetra (2,n+1) = equiv(n2)
            tetra (3,n+1) = equiv(n3)
            tetra (4,n+1) = equiv(n6)
-                                                     
+
            tetra (1,n+2) = equiv(n2)
            tetra (2,n+2) = equiv(n3)
            tetra (3,n+2) = equiv(n4)
            tetra (4,n+2) = equiv(n6)
-                                                     
+
            tetra (1,n+3) = equiv(n1)
            tetra (2,n+3) = equiv(n3)
            tetra (3,n+3) = equiv(n5)
            tetra (4,n+3) = equiv(n6)
-                                                     
+
            tetra (1,n+4) = equiv(n3)
            tetra (2,n+4) = equiv(n4)
            tetra (3,n+4) = equiv(n6)
            tetra (4,n+4) = equiv(n8)
-                                                     
+
            tetra (1,n+5) = equiv(n3)
            tetra (2,n+5) = equiv(n6)
            tetra (3,n+5) = equiv(n7)
            tetra (4,n+5) = equiv(n8)
-                                                     
+
            tetra (1,n+6) = equiv(n3)
            tetra (2,n+6) = equiv(n5)
            tetra (3,n+6) = equiv(n6)
@@ -282,8 +282,8 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
      end do
   end do
 
-  call mfree(equiv)
-  call mfree(xkg)
-  
+  deallocate(equiv)
+  deallocate(xkg)
+
   return
 end subroutine tetrahedra

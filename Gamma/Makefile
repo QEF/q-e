@@ -194,7 +194,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/scatter.o \
 ../PW/init_pool.o
 
-MODULES = ../Modules/*.o ../PW/allocate.o ../PW/error_handler.o \
+MODULES = ../Modules/*.o ../PW/error_handler.o \
           ../PW/restart.o ../PW/upf_to_internal.o
 
 GAMMA=rbecmod.o \

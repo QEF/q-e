@@ -25,11 +25,11 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
   !
 #include "machine.h"
   use parameters
-  implicit none  
+  implicit none
   !
   !    first the dummy variables
   !
-  integer :: nlc, nnl, ngl, lloc, lmax, mesh, msh  
+  integer :: nlc, nnl, ngl, lloc, lmax, mesh, msh
   ! input: analytic, number of erf functions
   ! input: analytic, number of gaussian functions
   ! input: the number of shell of G vectors
@@ -53,13 +53,13 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
   ! input: the volume of the unit cell
   ! input: the moduli of g vectors for each shekk
   ! output: the fourier transform of the potential
-  logical :: numeric  
+  logical :: numeric
   ! input: if true the pseudo is numeric
   !
   !   here the parameters
   !
 
-  real(kind=DP) :: pi, fpi, e2, eps  
+  real(kind=DP) :: pi, fpi, e2, eps
   ! pi
   ! four times pi
   ! the square of the charge
@@ -72,115 +72,115 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vnl, &
   real(kind=DP) :: vlcp, fac, den1, den2, g2a, erf, gx
   real(kind=DP), allocatable :: aux (:), aux1 (:)
   !  auxiliary variables
-  integer :: i, igl, igl0, l, ir  
+  integer :: i, igl, igl0, l, ir
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
   ! first shells with g != 0
   ! the angular momentum
   ! counter on mesh points
 
-  if (.not.numeric) then  
+  if (.not.numeric) then
 
-     call setv (ngl, 0.d0, vloc, 1)  
-     do i = 1, nlc  
-        if (gl (1) .lt.eps) then  
+     call setv (ngl, 0.d0, vloc, 1)
+     do i = 1, nlc
+        if (gl (1) .lt.eps) then
            !
            !    This is the G=0 component of the local potential
            !    giving rise to the so-called "alpha*Z" term in the energy
            !
-           vloc (1) = vloc (1) + cc (i) * tpiba2 * 0.25d0 / alpc (i)  
-           igl0 = 2  
-        else  
-           igl0 = 1  
+           vloc (1) = vloc (1) + cc (i) * tpiba2 * 0.25d0 / alpc (i)
+           igl0 = 2
+        else
+           igl0 = 1
         endif
         !
         !    here the G<>0 terms
         !
-        den1 = 0.25d0 * tpiba2 / alpc (i)  
-        do igl = igl0, ngl  
-           vlcp = - cc (i) * exp ( - gl (igl) * den1) / gl (igl)  
-           vloc (igl) = vloc (igl) + vlcp  
+        den1 = 0.25d0 * tpiba2 / alpc (i)
+        do igl = igl0, ngl
+           vlcp = - cc (i) * exp ( - gl (igl) * den1) / gl (igl)
+           vloc (igl) = vloc (igl) + vlcp
         enddo
      enddo
-     den1 = zp * e2 * fpi / tpiba2 / omega  
-     call DSCAL (ngl, den1, vloc, 1)  
+     den1 = zp * e2 * fpi / tpiba2 / omega
+     call DSCAL (ngl, den1, vloc, 1)
      !
      ! Add the local part l=lloc term (only if l <= lmax)
      !
-     l = lloc  
-     if (l.le.lmax) then  
-        do i = 1, nnl  
-           fac = (pi / alps (i, l) ) **1.5d0 * e2 / omega  
-           den1 = aps (i + 3, l) / alps (i, l)  
+     l = lloc
+     if (l.le.lmax) then
+        do i = 1, nnl
+           fac = (pi / alps (i, l) ) **1.5d0 * e2 / omega
+           den1 = aps (i + 3, l) / alps (i, l)
 
-           den2 = 0.25d0 * tpiba2 / alps (i, l)  
-           if (gl (1) .lt.eps) then  
+           den2 = 0.25d0 * tpiba2 / alps (i, l)
+           if (gl (1) .lt.eps) then
               !
               !      first the G=0 component
               !
-              vloc (1) = vloc (1) + fac * (aps (i, l) + den1 * 1.5d0)  
-              igl0 = 2  
-           else  
-              igl0 = 1  
+              vloc (1) = vloc (1) + fac * (aps (i, l) + den1 * 1.5d0)
+              igl0 = 2
+           else
+              igl0 = 1
            endif
            !
            !   and here all the other g components
            !
-           do igl = igl0, ngl  
-              g2a = gl (igl) * den2  
+           do igl = igl0, ngl
+              g2a = gl (igl) * den2
               vlcp = fac * exp ( - g2a) * (aps (i, l) + den1 * (1.5d0 - g2a) )
-              vloc (igl) = vloc (igl) + vlcp  
+              vloc (igl) = vloc (igl) + vlcp
            enddo
         enddo
      endif
-  else  
+  else
      !
      ! Pseudopotentials in numerical form (Vnl(lloc) contain the local part)
      ! in order to perform the Fourier transform, a term erf(r)/r is
      ! subtracted in real space and added again in G space
      !
      allocate ( aux(mesh), aux1(mesh) )
-     if (gl (1) .lt.eps) then  
+     if (gl (1) .lt.eps) then
         !
         ! first the G=0 term
         !
-        do ir = 1, msh  
-           aux (ir) = r (ir) * (r (ir) * vnl (ir) + zp * e2)  
+        do ir = 1, msh
+           aux (ir) = r (ir) * (r (ir) * vnl (ir) + zp * e2)
         enddo
-        call simpson (msh, aux, rab, vlcp)  
-        vloc (1) = vlcp  
-        igl0 = 2  
-     else  
-        igl0 = 1  
+        call simpson (msh, aux, rab, vlcp)
+        vloc (1) = vlcp
+        igl0 = 2
+     else
+        igl0 = 1
      endif
      !
      !   here the G<>0 terms, we first compute the part of the integrand func
      !   indipendent of |G| in real space
      !
-     do ir = 1, msh  
-        aux1 (ir) = r (ir) * vnl (ir) + zp * e2 * erf (r (ir) )  
+     do ir = 1, msh
+        aux1 (ir) = r (ir) * vnl (ir) + zp * e2 * erf (r (ir) )
      enddo
-     fac = zp * e2 / tpiba2  
+     fac = zp * e2 / tpiba2
      !
      !    and here we perform the integral, after multiplying for the |G|
      !    dependent  part
      !
-     do igl = igl0, ngl  
-        gx = sqrt (gl (igl) * tpiba2)  
-        do ir = 1, msh  
-           aux (ir) = aux1 (ir) * sin (gx * r (ir) ) / gx  
+     do igl = igl0, ngl
+        gx = sqrt (gl (igl) * tpiba2)
+        do ir = 1, msh
+           aux (ir) = aux1 (ir) * sin (gx * r (ir) ) / gx
         enddo
-        call simpson (msh, aux, rab, vlcp)  
+        call simpson (msh, aux, rab, vlcp)
         !
         !     here we add the analytic fourier transform of the erf function
         !
         vlcp = vlcp - fac * exp ( - gl (igl) * tpiba2 * 0.25d0) &
              / gl (igl)
-        vloc (igl) = vlcp  
+        vloc (igl) = vlcp
      enddo
-     call DSCAL (ngl, fpi / omega, vloc, 1)  
+     call DSCAL (ngl, fpi / omega, vloc, 1)
      deallocate (aux, aux1)
   endif
-  return  
+  return
 end subroutine vloc_of_g
 

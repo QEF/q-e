@@ -35,7 +35,7 @@ subroutine H_h(e,h,Ah)
      end do
   end do
   ! V_Loc psi
-  call vloc_psi(npwx, npw, nbnd, h, vrs(1,current_spin), ah) 
+  call vloc_psi(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
   ! V_NL psi
    call pw_gemm ('Y', nkb, nbnd, npw, vkb, npwx, h, npwx, becp, nkb)
   if (nkb.gt.0) call add_vuspsi (npwx, npw, nbnd, h, ah)

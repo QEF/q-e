@@ -18,13 +18,13 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !
 #include "machine.h"
-use parameters, only : DP 
+use parameters, only : DP
 #ifdef PARA
 use para
 #endif
-implicit none  
+implicit none
 #ifdef PARA
-include 'mpif.h'  
+include 'mpif.h'
 #endif
   !
   !   first the dummy variables
@@ -59,40 +59,40 @@ include 'mpif.h'
   ! output: the symmetry matrices
   ! output: the matrice sending q -> -q+G
 
-  logical :: minus_q  
+  logical :: minus_q
   ! output: if true one symmetry send q -
-  integer :: imode  
+  integer :: imode
   ! counter on modes
   !
   !    set the information on the symmetry group
   !
-  nsymq = 1  
-  minus_q = .false.  
-  gi (1, 1) = 0.d0  
-  gi (2, 1) = 0.d0  
-  gi (3, 1) = 0.d0  
-  irgq (1) = 1  
+  nsymq = 1
+  minus_q = .false.
+  gi (1, 1) = 0.d0
+  gi (2, 1) = 0.d0
+  gi (3, 1) = 0.d0
+  irgq (1) = 1
   !
   !     set the modes
   !
-  call setv (18 * nat * nat, 0.d0, u, 1)  
-  do imode = 1, 3 * nat  
-     u (imode, imode) = (1.d0, 0.d0)  
+  call setv (18 * nat * nat, 0.d0, u, 1)
+  do imode = 1, 3 * nat
+     u (imode, imode) = (1.d0, 0.d0)
   enddo
-  nirr = 3 * nat  
-  do imode = 1, 3 * nat  
-     npert (imode) = 1  
+  nirr = 3 * nat
+  do imode = 1, 3 * nat
+     npert (imode) = 1
   enddo
   !
   !   And we compute the matrices which represent the symmetry transformat
   !   in the basis of the displacements
   !
-  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)  
+  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)
 
-  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)  
-  do imode = 1, 3 * nat  
-     t (1, 1, 1, imode) = (1.d0, 0.d0)  
+  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)
+  do imode = 1, 3 * nat
+     t (1, 1, 1, imode) = (1.d0, 0.d0)
   enddo
 
-  return  
+  return
 end subroutine set_irr_nosym

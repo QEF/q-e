@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine scatter (f_in, f_out)  
+subroutine scatter (f_in, f_out)
   !-----------------------------------------------------------------------
   ! scatters data from the first processor of every pool
   !
@@ -17,33 +17,33 @@ subroutine scatter (f_in, f_out)
 #ifdef PARA
 #include "machine.h"
   use para
-  implicit none  
+  implicit none
 
-  real (8) :: f_in ( * ), f_out (nxx)  
-  include 'mpif.h'  
+  real (8) :: f_in ( * ), f_out (nxx)
+  include 'mpif.h'
 
 
-  integer :: root, proc, info, displs (nprocp), sendcount (nprocp)  
-  root = 0  
-  call start_clock ('scatter')  
-  do proc = 1, nprocp  
-     sendcount (proc) = ncplane * npp (proc)  
-     if (proc.eq.1) then  
-        displs (proc) = 0  
-     else  
-        displs (proc) = displs (proc - 1) + sendcount (proc - 1)  
+  integer :: root, proc, info, displs (nprocp), sendcount (nprocp)
+  root = 0
+  call start_clock ('scatter')
+  do proc = 1, nprocp
+     sendcount (proc) = ncplane * npp (proc)
+     if (proc.eq.1) then
+        displs (proc) = 0
+     else
+        displs (proc) = displs (proc - 1) + sendcount (proc - 1)
      endif
 
   enddo
-  call mpi_barrier (MPI_COMM_POOL, info)  
+  call mpi_barrier (MPI_COMM_POOL, info)
   call mpi_scatterv (f_in, sendcount, displs, MPI_REAL8, f_out, &
        sendcount (me), MPI_REAL8, root, MPI_COMM_POOL, info)
-  call error ('gather_pot', 'info<>0', info)  
+  call error ('gather_pot', 'info<>0', info)
 
   if (sendcount (me) .ne.nxx) call setv (nxx - sendcount (me), &
        0.d0, f_out (sendcount (me) + 1), 1)
-  call stop_clock ('scatter')  
+  call stop_clock ('scatter')
 #endif
-  return  
+  return
 end subroutine scatter
 

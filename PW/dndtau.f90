@@ -11,7 +11,7 @@ subroutine dndtau(dns,alpha,ipol)
    !
    ! This routine computes the derivative of the ns with respect to the ionic
    ! displacement u(alpha,ipol) used to obtain the Hubbard contribution to the
-   ! atomic forces. 
+   ! atomic forces.
    !
 #include "machine.h"
    use pwcom
@@ -31,11 +31,11 @@ subroutine dndtau(dns,alpha,ipol)
              dns(nat,nspin,5,5), &
              t0, scnds       ! cpu time spent
    complex (kind=DP) :: ZDOTC
-   integer, allocatable :: offset(:) 
+   integer, allocatable :: offset(:)
    ! offset(nat): offset of d electrons of atom d in the natomwfc ordering
    complex (kind=DP), allocatable :: &
                       proj(:,:), wfcatom(:,:), spsi(:,:),dproj(:,:)
-   !                  proj(natomwfc,nbnd), wfcatom(npwx,natomwfc), 
+   !                  proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),
    !                  spsi(npwx,nbnd), dproj(natomwfc,nbnd)
 
    t0 = scnds()
@@ -45,7 +45,7 @@ subroutine dndtau(dns,alpha,ipol)
               spsi(npwx,nbnd), wfcatom(npwx,natomwfc) )
 
    !
-   ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1 
+   ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
    counter = 0
    do na=1,nat
@@ -66,7 +66,7 @@ subroutine dndtau(dns,alpha,ipol)
    !
    !    we start a loop on k points
    !
-   if (nks.gt.1) rewind (iunigk) 
+   if (nks.gt.1) rewind (iunigk)
 
    do ik = 1, nks
 
@@ -119,7 +119,7 @@ subroutine dndtau(dns,alpha,ipol)
          end if
       end do
 
-   end do                 ! on k-points 
+   end do                 ! on k-points
 
 #ifdef PARA
    call poolreduce(nat*nspin*25,dns)

@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine phq_init  
+subroutine phq_init
   !-----------------------------------------------------------------------
   !
   !     This subroutine computes the quantities necessary to describe the
@@ -33,13 +33,12 @@ subroutine phq_init
 #include"machine.h"
 
 
-  use pwcom 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
-  implicit none 
+  use pwcom
+  use parameters, only : DP
+  use phcom
+  implicit none
 
-  integer :: nt, ik, ikq, ipol, ibnd, ikk, na, ig  
+  integer :: nt, ik, ikq, ipol, ibnd, ikk, na, ig
   ! counter on atom types
   ! counter on k points
   ! counter on k+q points
@@ -49,40 +48,40 @@ subroutine phq_init
   ! counter on atoms
   ! counter on G vectors
 
-  real(kind=DP) :: arg  
+  real(kind=DP) :: arg
   ! the argument of the phase
 
 
-  complex(kind=DP), pointer :: aux1 (:,:)  
+  complex(kind=DP), allocatable :: aux1 (:,:)
   ! used to compute alphap
 
-  call start_clock ('phq_init')  
-  call mallocate(aux1, npwx , nbnd)  
+  call start_clock ('phq_init')
+  allocate (aux1( npwx , nbnd))    
   !
   !  initialize structure factor array
   !
   call struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
        strf, eigts1, eigts2, eigts3)
-  do na = 1, nat  
+  do na = 1, nat
      arg = (xq (1) * tau (1, na) + &
             xq (2) * tau (2, na) + &
             xq (3) * tau (3, na) ) * tpi
-     eigqts (na) = DCMPLX (cos (arg), - sin (arg) )  
+     eigqts (na) = DCMPLX (cos (arg), - sin (arg) )
   enddo
   !
   !   a0) compute rhocore for each atomic-type if needed for nlcc
   !
 
-  if (nlcc_any) call set_drhoc (xq)  
+  if (nlcc_any) call set_drhoc (xq)
   !
   !   a) the fourier components of the local potential for each |G|
   !
-  call init_vloc  
+  call init_vloc
   !
   !   b) the fourier components of the local potential at q+G
   !
-  call setv (ngm * ntyp, 0.d0, vlocq, 1)  
-  do nt = 1, ntyp  
+  call setv (ngm * ntyp, 0.d0, vlocq, 1)
+  do nt = 1, ntyp
      call setlocq (xq, lloc (nt), lmax (nt), numeric (nt), mesh (nt), &
           msh (nt), rab (1, nt), r (1, nt), vnl (1, lloc (nt), nt), &
           cc (1, nt), alpc (1, nt), nlc (nt), nnl (nt), zp (nt), &
@@ -101,19 +100,19 @@ subroutine phq_init
   !   which are independent of the k point for the US case
   !
 
-  call init_us_1  
+  call init_us_1
 
-  if (nksq.gt.1) rewind (iunigk)  
-  do ik = 1, nksq  
-     if (lgamma) then  
-        ikk = ik  
-        ikq = ik  
-        npwq = npw  
-     else  
-        ikk = 2 * ik - 1  
-        ikq = ikk + 1  
+  if (nksq.gt.1) rewind (iunigk)
+  do ik = 1, nksq
+     if (lgamma) then
+        ikk = ik
+        ikq = ik
+        npwq = npw
+     else
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
      endif
-     if (lsda) current_spin = isk (ikk)  
+     if (lsda) current_spin = isk (ikk)
      !
      !  g2kin is used here as work space
      !
@@ -121,32 +120,32 @@ subroutine phq_init
      !
      !  if there is only one k-point evc, evq, npw, igk stay in memory
      !
-     if (nksq.gt.1) write (iunigk) npw, igk  
-     if (.not.lgamma) then  
+     if (nksq.gt.1) write (iunigk) npw, igk
+     if (.not.lgamma) then
         call gk_sort (xk (1, ikq), ngm, g, ecutwfc / tpiba2, npwq, igkq, g2kin)
-        if (nksq.gt.1) write (iunigk) npwq, igkq  
+        if (nksq.gt.1) write (iunigk) npwq, igkq
         if (abs (xq (1) - (xk (1, ikq) - xk (1, ikk) ) ) &
              .gt.1.d-8.or.abs (xq (2) - (xk (2, ikq) - xk (2, ikk) ) ) &
              .gt.1.d-8.or.abs (xq (3) - (xk (3, ikq) - xk (3, ikk) ) ) &
              .gt.1.d-8) then
-           write (6, * ) ikk, ikq, nksq  
-           write (6, * ) (xq (ipol), ipol = 1, 3)  
-           write (6, * ) (xk (ipol, ikq), ipol = 1, 3)  
-           write (6, * ) (xk (ipol, ikk), ipol = 1, 3)  
-           call error ('phq_init', 'wrong order of k points', 1)  
+           write (6, * ) ikk, ikq, nksq
+           write (6, * ) (xq (ipol), ipol = 1, 3)
+           write (6, * ) (xk (ipol, ikq), ipol = 1, 3)
+           write (6, * ) (xk (ipol, ikk), ipol = 1, 3)
+           call error ('phq_init', 'wrong order of k points', 1)
         endif
      endif
      !
      !   d) The functions vkb(k+G)
      !
-     call init_us_2 (npw, igk, xk (1, ikk), vkb)  
+     call init_us_2 (npw, igk, xk (1, ikk), vkb)
      !
      !     e) we compute also the becp terms which are used in the rest of
      !     the code
      !
      ! read the wavefunctions at k
      !
-     call davcio (evc, lrwfc, iuwfc, ikk, - 1)  
+     call davcio (evc, lrwfc, iuwfc, ikk, - 1)
      !
      ! if there is only one k-point the wavefunctions are read once here
      !
@@ -158,9 +157,9 @@ subroutine phq_init
      !     e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
      !
-     do ipol = 1, 3  
-        do ibnd = 1, nbnd  
-           do ig = 1, npw  
+     do ipol = 1, 3
+        do ibnd = 1, nbnd
+           do ig = 1, npw
               aux1 (ig, ibnd) = evc (ig, ibnd) * tpiba * (0.d0, 1.d0) * (xk ( &
                    ipol, ikk) + g (ipol, igk (ig) ) )
            enddo
@@ -172,18 +171,18 @@ subroutine phq_init
 
   enddo
 
-  call mfree (aux1)  
+  deallocate (aux1)
 
-  call newd  
-  if (trans) then  
+  call newd
+  if (trans) then
 
-     call dvanqq  
-     call drho  
+     call dvanqq
+     call drho
 
   endif
   if (epsil.and.okvan) then
      call compute_qdipol
   endif
-  call stop_clock ('phq_init')  
-  return  
+  call stop_clock ('phq_init')
+  return
 end subroutine phq_init

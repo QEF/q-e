@@ -9,6 +9,6 @@ module g_psi_mod
   use parameters, only : DP
   implicit none
   ! These are the variables needed in g_psi
-  real(kind=DP), pointer :: h_diag (:),& ! diagonal part of the Hamiltonian
+  real(kind=DP), allocatable :: h_diag (:),& ! diagonal part of the Hamiltonian
        s_diag (:)                        ! diagonal part of the overlap matrix
 end module g_psi_mod

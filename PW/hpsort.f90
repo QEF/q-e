@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-subroutine hpsort (n, ra, ind)  
+subroutine hpsort (n, ra, ind)
   !---------------------------------------------------------------------
   ! sort an array ra(1:n) into ascending order using heapsort algorithm.
   ! n is input, ra is replaced on output by its sorted rearrangement.
@@ -25,91 +25,91 @@ subroutine hpsort (n, ra, ind)
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
   use parameters
-  implicit none  
+  implicit none
   !-input/output variables
-  integer :: n  
-  integer :: ind (n)  
-  real(kind=DP) :: ra (n)  
+  integer :: n
+  integer :: ind (n)
+  real(kind=DP) :: ra (n)
   !-local variables
-  integer :: i, ir, j, l, iind  
-  real(kind=DP) :: rra  
+  integer :: i, ir, j, l, iind
+  real(kind=DP) :: rra
   ! initialize index array
-  if (ind (1) .eq.0) then  
-     do i = 1, n  
-        ind (i) = i  
+  if (ind (1) .eq.0) then
+     do i = 1, n
+        ind (i) = i
      enddo
   endif
   ! nothing to order
-  if (n.lt.2) return  
+  if (n.lt.2) return
   ! initialize indices for hiring and retirement-promotion phase
-  l = n / 2 + 1  
-  ir = n  
-10 continue  
+  l = n / 2 + 1
+  ir = n
+10 continue
   ! still in hiring phase
-  if (l.gt.1) then  
-     l = l - 1  
-     rra = ra (l)  
-     iind = ind (l)  
+  if (l.gt.1) then
+     l = l - 1
+     rra = ra (l)
+     iind = ind (l)
      ! in retirement-promotion phase.
-  else  
+  else
      ! clear a space at the end of the array
-     rra = ra (ir)  
+     rra = ra (ir)
      !
-     iind = ind (ir)  
+     iind = ind (ir)
      ! retire the top of the heap into it
-     ra (ir) = ra (1)  
+     ra (ir) = ra (1)
      !
-     ind (ir) = ind (1)  
+     ind (ir) = ind (1)
      ! decrease the size of the corporation
-     ir = ir - 1  
+     ir = ir - 1
      ! done with the last promotion
-     if (ir.eq.1) then  
+     if (ir.eq.1) then
         ! the least competent worker at all !
-        ra (1) = rra  
+        ra (1) = rra
         !
-        ind (1) = iind  
-        return  
+        ind (1) = iind
+        return
      endif
   endif
   ! wheter in hiring or promotion phase, we
-  i = l  
+  i = l
   ! set up to place rra in its proper level
-  j = l + l  
+  j = l + l
   !
-  do while (j.le.ir)  
-     if (j.lt.ir) then  
+  do while (j.le.ir)
+     if (j.lt.ir) then
         ! compare to better underling
-        if (ra (j) .lt.ra (j + 1) ) then  
-           j = j + 1  
-        elseif (ra (j) .eq.ra (j + 1) ) then  
-           if (ind (j) .lt.ind (j + 1) ) j = j + 1  
+        if (ra (j) .lt.ra (j + 1) ) then
+           j = j + 1
+        elseif (ra (j) .eq.ra (j + 1) ) then
+           if (ind (j) .lt.ind (j + 1) ) j = j + 1
         endif
      endif
      ! demote rra
-     if (rra.lt.ra (j) ) then  
-        ra (i) = ra (j)  
-        ind (i) = ind (j)  
-        i = j  
-        j = j + j  
-     elseif (rra.eq.ra (j) ) then  
+     if (rra.lt.ra (j) ) then
+        ra (i) = ra (j)
+        ind (i) = ind (j)
+        i = j
+        j = j + j
+     elseif (rra.eq.ra (j) ) then
         ! demote rra
-        if (iind.lt.ind (j) ) then  
-           ra (i) = ra (j)  
-           ind (i) = ind (j)  
-           i = j  
-           j = j + j  
-        else  
+        if (iind.lt.ind (j) ) then
+           ra (i) = ra (j)
+           ind (i) = ind (j)
+           i = j
+           j = j + j
+        else
            ! set j to terminate do-while loop
-           j = ir + 1  
+           j = ir + 1
         endif
         ! this is the right place for rra
-     else  
+     else
         ! set j to terminate do-while loop
-        j = ir + 1  
+        j = ir + 1
      endif
   enddo
-  ra (i) = rra  
-  ind (i) = iind  
-  goto 10  
+  ra (i) = rra
+  ind (i) = iind
+  goto 10
   !
 end subroutine hpsort

@@ -14,7 +14,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! Ewald contribution, both real- and reciprocal-space terms are present
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !   first the dummy variables
   !
@@ -43,14 +43,14 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   !    here the local variables
   !
-  integer, parameter :: mxr = 50 
+  integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r sum
   real(kind=DP), parameter :: e2 = 2.d0, eps = 1.0d-6, &
        tpi = 2.d0 * 3.141592653589793d0
   ! e2 = e^2 (Ry atomic units)
   ! eps = convergence tolerance
   ! tpi = 2 times pi
-  integer :: ng,  nr, na, nb, l, m, nrm  
+  integer :: ng,  nr, na, nb, l, m, nrm
   ! counter over reciprocal G vectors
   ! counter over direct vectors
   ! counter on atoms
@@ -73,36 +73,36 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! auxiliary variables
   ! diagonal term
   ! nondiagonal term
-  complex(kind=DP) :: rhostar  
+  complex(kind=DP) :: rhostar
   real(kind=DP), external :: erfc
   ! the erfc function
   !
-  tpiba2 = (tpi / alat) **2  
+  tpiba2 = (tpi / alat) **2
   sigmaewa(:,:) = 0.d0
-  charge = 0.d0  
-  do na = 1, nat  
-     charge = charge+zv (ityp (na) )  
+  charge = 0.d0
+  do na = 1, nat
+     charge = charge+zv (ityp (na) )
   enddo
   !
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error ON THE ENERGY
   !
-  alpha = 2.9  
-12 alpha = alpha - 0.1  
+  alpha = 2.9
+12 alpha = alpha - 0.1
   if (alpha.eq.0.0) call error ('stres_ew', 'optimal alpha not found &
        &', 1)
   upperbound = e2 * charge**2 * sqrt (2 * alpha / tpi) * erfc (sqrt &
        (tpiba2 * gcutm / 4.0 / alpha) )
-  if (upperbound.gt.eps) goto 12  
+  if (upperbound.gt.eps) goto 12
   !
   ! G-space sum here
   !
   ! Determine if this processor contains G=0 and set the constant term
   !
-  if (gstart == 2) then  
-     sdewald = tpi * e2 / 4.d0 / alpha * (charge / omega) **2  
-  else  
-     sdewald = 0.d0  
+  if (gstart == 2) then
+     sdewald = tpi * e2 / 4.d0 / alpha * (charge / omega) **2
+  else
+     sdewald = 0.d0
   endif
   ! sdewald is the diagonal term
   if (gamma_only) then
@@ -110,52 +110,52 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   else
     fact = 1.d0
   end if
-  do ng = gstart, ngm  
-     g2 = gg (ng) * tpiba2  
-     g2a = g2 / 4.d0 / alpha  
-     rhostar = (0.d0, 0.d0)  
-     do na = 1, nat  
+  do ng = gstart, ngm
+     g2 = gg (ng) * tpiba2
+     g2a = g2 / 4.d0 / alpha
+     rhostar = (0.d0, 0.d0)
+     do na = 1, nat
         arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) + &
                g (3, ng) * tau (3, na) ) * tpi
         rhostar = rhostar + zv (ityp (na) ) * DCMPLX (cos (arg), sin (arg))
      enddo
-     rhostar = rhostar / omega  
-     sewald = fact * tpi * e2 * exp ( - g2a) / g2 * abs (rhostar) **2  
-     sdewald = sdewald-sewald  
-     do l = 1, 3  
-        do m = 1, l  
+     rhostar = rhostar / omega
+     sewald = fact * tpi * e2 * exp ( - g2a) / g2 * abs (rhostar) **2
+     sdewald = sdewald-sewald
+     do l = 1, 3
+        do m = 1, l
            sigmaewa (l, m) = sigmaewa (l, m) + sewald * tpiba2 * 2.d0 * &
                 g (l, ng) * g (m, ng) / g2 * (g2a + 1)
         enddo
      enddo
   enddo
-  do l = 1, 3  
-     sigmaewa (l, l) = sigmaewa (l, l) + sdewald  
+  do l = 1, 3
+     sigmaewa (l, l) = sigmaewa (l, l) + sdewald
   enddo
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
-  if (gstart.eq.2) then  
-     rmax = 5.0 / sqrt (alpha) / alat  
+  if (gstart.eq.2) then
+     rmax = 5.0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
-     do na = 1, nat  
-        do nb = 1, nat  
-           do l = 1, 3  
-              dtau (l) = tau (l, na) - tau (l, nb)  
+     do na = 1, nat
+        do nb = 1, nat
+           do l = 1, 3
+              dtau (l) = tau (l, na) - tau (l, nb)
            enddo
            !
            !     generates nearest-neighbors shells r(i)=R(i)-dtau(i)
            !
-           call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)  
-           do nr = 1, nrm  
-              rr = sqrt (r2 (nr) ) * alat  
+           call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
+           do nr = 1, nrm
+              rr = sqrt (r2 (nr) ) * alat
               fac = - e2 / 2.0 / omega * alat**2 * zv (ityp (na) ) * &
                    zv ( ityp (nb) ) / rr**3 * (erfc (sqrt (alpha) * rr) + &
                    rr * sqrt (8 * alpha / tpi) * exp ( - alpha * rr**2) )
-              do l = 1, 3  
-                 do m = 1, l  
+              do l = 1, 3
+                 do m = 1, l
                     sigmaewa (l, m) = sigmaewa (l, m) + fac * r(l,nr) * r(m,nr)
                  enddo
               enddo
@@ -164,20 +164,20 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   endif
   !
-  do l = 1, 3  
-     do m = 1, l - 1  
-        sigmaewa (m, l) = sigmaewa (l, m)  
+  do l = 1, 3
+     do m = 1, l - 1
+        sigmaewa (m, l) = sigmaewa (l, m)
      enddo
 
   enddo
-  do l = 1, 3  
-     do m = 1, 3  
-        sigmaewa (l, m) = - sigmaewa (l, m)  
+  do l = 1, 3
+     do m = 1, 3
+        sigmaewa (l, m) = - sigmaewa (l, m)
      enddo
   enddo
 #ifdef PARA
-  call reduce (9, sigmaewa)  
+  call reduce (9, sigmaewa)
 #endif
-  return  
+  return
 end subroutine stres_ewa
 

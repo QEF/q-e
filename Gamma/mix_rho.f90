@@ -15,10 +15,9 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   ! Modified Broyden's method for charge density mixing
   !             d.d. johnson prb 38, 12807 (1988)
-  ! On output: the mixed density is in rhoin, rhout is UNCHANGED 
+  ! On output: the mixed density is in rhoin, rhout is UNCHANGED
   !
   use parameters, only : DP
-  use allocate
   use pwcom
   use gamma
   !
@@ -43,32 +42,32 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 conv        ! (out) if true the convergence has been reached
   !
   integer, parameter:: &
-                maxmix = 25 ! max number of iterations for charge mixing 
+                maxmix = 25 ! max number of iterations for charge mixing
 
-  ! 
-  !   Here the local variables 
+  !
+  !   Here the local variables
   !
   integer ::    &
                 iunmix,    &! I/O unit number of charge density file
                 iunmix2,   &! I/O unit number of ns file
-                iunit,     &! counter on I/O unit numbers  
+                iunit,     &! counter on I/O unit numbers
                 iter_used, &! actual number of iterations used
                 ipos,      &! index of the present iteration
                 inext,     &! index of the next iteration
-                i, j,      &! counters on number of iterations 
+                i, j,      &! counters on number of iterations
                 is,        &! counter on spin component
                 ig,        &! counter on G-vectors
-                iwork(maxmix),&! dummy array used as output by libr. routines 
+                iwork(maxmix),&! dummy array used as output by libr. routines
                 info        ! flag saying if the exec. of libr. routines was ok
 
   complex (kind=DP), allocatable  :: aux(:), rhocin(:,:), rhocout(:,:), &
                 rhoinsave(:), rhoutsave(:),  &
                 nsinsave(:,:,:,:),  nsoutsave(:,:,:,:)
-  complex (kind=DP), allocatable, save :: df(:,:), dv(:,:), & 
-                                          df_ns(:,:,:,:,:), dv_ns(:,:,:,:,:) 
+  complex (kind=DP), allocatable, save :: df(:,:), dv(:,:), &
+                                          df_ns(:,:,:,:,:), dv_ns(:,:,:,:,:)
                 ! aux(nrxx)            : auxiliary array used for FFT
-                ! rhocin(ngm0,nspin) 
-                ! rhocout(ngm0,nspin)  
+                ! rhocin(ngm0,nspin)
+                ! rhocout(ngm0,nspin)
                 ! rhoinsave(ngm0*nspin): work space
                 ! rhoutsave(ngm0*nspin): work space
                 ! df(ngm0*nspin,n_iter): information from preceding iterations
@@ -86,7 +85,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   real (kind=DP) :: rho_dot_product
 
-  external DCOPY, DSYTRF, DSYTRI, DSCAL 
+  external DCOPY, DSYTRF, DSYTRI, DSCAL
   external diropn, davcio, error, rho_dot_product, fn_dehar
 
   call start_clock('mix_rho')
@@ -180,7 +179,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      if (lda_plus_u) allocate(nsinsave(nat,nspin,5,5),nsoutsave(nat,nspin,5,5))
   end if
   !
-  ! copy only the high frequency Fourier component into rhoin 
+  ! copy only the high frequency Fourier component into rhoin
   !                                                (NB: rhout=rhout-rhoin)
   !
   rhoin(:,:) = rhout(:,:)
@@ -199,7 +198,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   iter_used=min(iter-1,n_iter)
   !
-  ! ipos is the position in which results from the present iteration 
+  ! ipos is the position in which results from the present iteration
   ! are stored. ipos=iter-1 until ipos=n_iter, then back to 1,2,...
   !
   ipos =iter-1-((iter-2)/n_iter)*n_iter
@@ -359,7 +358,6 @@ function rho_dot_product (rho1,rho2)
   ! this function evaluates the dot product between two input densities
   !
   use parameters, only : DP
-  use allocate
   use pwcom
   !
   ! I/O variables
@@ -419,7 +417,6 @@ function fn_dehar (drho)
   ! this function evaluates the residual hartree energy of drho
   !
   use parameters, only : DP
-  use allocate
   use pwcom
   !
   ! I/O variables
@@ -465,18 +462,17 @@ subroutine approx_screening (drho)
   ! apply an average TF preconditioning to drho
   !
   use parameters, only : DP
-  use allocate
   use pwcom
   !
   ! I/O
   !
-  complex (kind=DP) drho(ngm0,nspin) ! (in/out) 
+  complex (kind=DP) drho(ngm0,nspin) ! (in/out)
   !
   ! and the local variables
   !
-  real (kind=DP) :: rrho, rmag, rs, agg0 
+  real (kind=DP) :: rrho, rmag, rs, agg0
 
-  integer :: is, ig 
+  integer :: is, ig
 
   rs = (3.d0*omega/fpi/nelec)**(1.d0/3.d0)
   agg0 = (12.d0/pi)**(2.d0/3.d0)/tpiba2/rs
@@ -509,7 +505,6 @@ end subroutine approx_screening
   ! apply a local-density dependent TF preconditioning to drho
   !
   use parameters, only : DP
-  use allocate
   use pwcom
   use gamma
   !
@@ -531,7 +526,7 @@ end subroutine approx_screening
 
   complex (kind=DP), allocatable :: aux(:), v(:,:), w(:,:), dv(:), &
                                 vbest(:), wbest(:)
-  ! aux(nrxx), v(ngm0,mmx), w(ngm0,mmx), dv(ngm0), vbest(ngm0), wbest(ngm0) 
+  ! aux(nrxx), v(ngm0,mmx), w(ngm0,mmx), dv(ngm0), vbest(ngm0), wbest(ngm0)
   real (kind=DP), allocatable :: alpha(:)
   ! alpha(nrxx)
 
@@ -570,7 +565,7 @@ end subroutine approx_screening
   !
   ! - calculate alpha from density smoothed with a lambda=0 a.u.
   !
-  l2smooth = 0.d0 
+  l2smooth = 0.d0
   aux(:) = (0.d0, 0.d0)
   if (nspin.eq.1) then
      do ig=1,ngm0
@@ -652,10 +647,10 @@ end subroutine approx_screening
      aux(nlm(ig)) = conjg(aux(nl (ig)))
   end do
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-  aux(:) = aux(:)*fpi*e2/alpha(:) 
+  aux(:) = aux(:)*fpi*e2/alpha(:)
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   do ig=1,ngm0
-     w(ig,m) = w(ig,m) + aux(nl(ig)) 
+     w(ig,m) = w(ig,m) + aux(nl(ig))
   end do
 
   !
@@ -689,7 +684,7 @@ end subroutine approx_screening
   end do
   ! -
   vbest(:) = (0.d0,0.d0)
-  wbest(:) = dv(:) 
+  wbest(:) = dv(:)
   do i=1,m
      call DAXPY(2*ngm0, vec(i), v(1,i),1, vbest,1)
      call DAXPY(2*ngm0,-vec(i), w(1,i),1, wbest,1)
@@ -712,13 +707,13 @@ end subroutine approx_screening
         aux(nlm(ig)) = conjg(aux(nl (ig)))
      end do
      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-     aux(:) = aux(:)/alpha(:) 
+     aux(:) = aux(:)/alpha(:)
      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      do ig=1,ngm0
         drho(ig,is) = aux(nl(ig))
      end do
      nspin = nspin_save
-     if (nspin.eq.2) then 
+     if (nspin.eq.2) then
         do ig=1,ngm0
            rrho = drho(ig,1)
            rmag = drho(ig,2)

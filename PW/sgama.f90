@@ -37,7 +37,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !
 #include "machine.h"
   use parameters, only : DP
-  implicit none  
+  implicit none
   !
   !    First the I/O variables
   !
@@ -70,14 +70,14 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   logical :: invsym, minus_q
   ! output: if true the crystal has inversion
   ! output: if true a symmetry sends q->-q+G
-  character :: sname (48) * 45  
+  character :: sname (48) * 45
   ! input: name of the rotat. part of each sel
   !                           !        symmetry operation
   !
   !    And then the local variables
   !
 
-  real(kind=DP), pointer :: rtau (:,:,:)  
+  real(kind=DP), allocatable :: rtau (:,:,:)
   ! direct translations of each point
   integer :: table (48, 48), irot, jrot, ipol, jpol, invs (3, 3, 48) &
        , irg (48), temp, na
@@ -92,7 +92,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   ! auxilary variable
   ! counter on atoms
 
-  logical :: sym (48)  
+  logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
 
 
@@ -112,8 +112,8 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   call smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
        sym, minus_q)
 
-  if (iswitch.eq. - 4) then  
-     call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)  
+  if (iswitch.eq. - 4) then
+     call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)
      call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, rtau, &
           sym, minus_q)
 
@@ -121,15 +121,15 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !
   !    We compute the multiplication table of the group
   !
-  call multable (nrot, s, table)  
+  call multable (nrot, s, table)
   !
   !   And we set the matrices of the inverse
   !
-  call inverse_s (nrot, s, table, invs)  
+  call inverse_s (nrot, s, table, invs)
   !
   !    Find the coset in the point group of the Bravais lattice
   !
-  call coset (nrot, table, sym, nsym, irg)  
+  call coset (nrot, table, sym, nsym, irg)
   !
   !    here we set the k-points in the irreducible wedge of the point grou
   !    of the crystal
@@ -141,33 +141,33 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   ! s(i,j,irot) , irot <= nsym          are the sym.ops. of the crystal
   !               nsym+1 < irot <= nrot are the sym.ops. of the lattice
   !
-  jrot = 0  
-  do irot = 1, nrot  
-     if (sym (irot) ) then  
-        jrot = jrot + 1  
-        do ipol = 1, 3  
-           do jpol = 1, 3  
-              temp = s (ipol, jpol, jrot)  
-              s (ipol, jpol, jrot) = s (ipol, jpol, irot)  
-              s (ipol, jpol, irot) = temp  
+  jrot = 0
+  do irot = 1, nrot
+     if (sym (irot) ) then
+        jrot = jrot + 1
+        do ipol = 1, 3
+           do jpol = 1, 3
+              temp = s (ipol, jpol, jrot)
+              s (ipol, jpol, jrot) = s (ipol, jpol, irot)
+              s (ipol, jpol, irot) = temp
            enddo
-           ftau (ipol, jrot) = ftau (ipol, irot)  
+           ftau (ipol, jrot) = ftau (ipol, irot)
         enddo
-        do na = 1, nat  
-           irt (jrot, na) = irt (irot, na)  
+        do na = 1, nat
+           irt (jrot, na) = irt (irot, na)
         enddo
-        sname (jrot) = sname (irot)  
+        sname (jrot) = sname (irot)
      endif
   enddo
-  if (jrot.ne.nsym) call error ('sgama', 'unexpected', 1)  
+  if (jrot.ne.nsym) call error ('sgama', 'unexpected', 1)
   !
   ! Sets to zero the first matrix that is not a symmetry of the crystal.
   ! This will be used by d3toten program.
   !
-  if (nrot.lt.48) then  
-     do ipol = 1, 3  
-        do jpol = 1, 3  
-           s (ipol, jpol, nrot + 1) = 0  
+  if (nrot.lt.48) then
+     do ipol = 1, 3
+        do jpol = 1, 3
+           s (ipol, jpol, nrot + 1) = 0
         enddo
      enddo
   endif
@@ -175,48 +175,48 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   ! check if inversion (I) is a symmetry.
   ! If so, it should be the (nsym/2+1)-th operation of the group
   !
-  invsym = .true.  
-  irot = nsym / 2 + 1  
-  do ipol = 1, 3  
-     do jpol = 1, 3  
-        invsym = invsym.and.s (ipol, jpol, irot) .eq. - s (ipol, jpol, 1)  
+  invsym = .true.
+  irot = nsym / 2 + 1
+  do ipol = 1, 3
+     do jpol = 1, 3
+        invsym = invsym.and.s (ipol, jpol, irot) .eq. - s (ipol, jpol, 1)
      enddo
 
   enddo
 
-  deallocate (rtau)  
-  return  
+  deallocate (rtau)
+  return
 
 end subroutine sgama
 !-----------------------------------------------------------------------
 
-subroutine inverse_s (nrot, s, table, invs)  
+subroutine inverse_s (nrot, s, table, invs)
   !-----------------------------------------------------------------------
-  implicit none  
-  integer :: nrot, s (3, 3, 48), table (48, 48), invs (3, 3, 48)  
+  implicit none
+  integer :: nrot, s (3, 3, 48), table (48, 48), invs (3, 3, 48)
   ! input: number of symmetries of the original
   ! input: matrices of the symmetry operations
   ! input: multiplication table of the group
   ! output: contains the inverse of each rotati
 
 
-  integer :: irot, jrot, ipol, jpol  
+  integer :: irot, jrot, ipol, jpol
   ! counter over the rotations
   ! counter over the rotations
   ! counter over the polarizations
   ! counter over the polarizations
-  do irot = 1, nrot  
-     do jrot = 1, nrot  
-        if (table (irot, jrot) .eq.1) then  
-           do ipol = 1, 3  
-              do jpol = 1, 3  
-                 invs (ipol, jpol, irot) = s (ipol, jpol, jrot)  
+  do irot = 1, nrot
+     do jrot = 1, nrot
+        if (table (irot, jrot) .eq.1) then
+           do ipol = 1, 3
+              do jpol = 1, 3
+                 invs (ipol, jpol, irot) = s (ipol, jpol, jrot)
               enddo
            enddo
         endif
      enddo
 
   enddo
-  return  
+  return
 end subroutine inverse_s
 

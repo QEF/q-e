@@ -7,20 +7,19 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine setlocal  
+subroutine setlocal
   !----------------------------------------------------------------------
   !
   !    This routine computes the local potential in real space vltot(ir)
   !
 #include "machine.h"
-  use pwcom  
+  use pwcom
   use gamma
-  use allocate 
   implicit none
-  complex(kind=DP), pointer :: aux (:)  
+  complex(kind=DP), allocatable :: aux (:)
   ! auxiliary variable used to contain the potential
 
-  integer :: nt, ng, ir  
+  integer :: nt, ng, ir
   ! counter on atomtypes
   ! counter on g vectors
   ! counter on r vectors
@@ -29,12 +28,12 @@ subroutine setlocal
   !  pseudopotential
   !
 
-  call mallocate(aux, nrxx)  
+  allocate (aux( nrxx))    
   !
   !    here we compute the local potential in real space
   !
-  call setv (2 * nrxx, 0.d0, aux, 1)  
-  do nt = 1, ntyp  
+  call setv (2 * nrxx, 0.d0, aux, 1)
+  do nt = 1, ntyp
      do ng =1, ngm
         aux (nl(ng) ) = aux (nl(ng) ) + vloc (igtongl(ng), nt) * strf (ng, nt)
      enddo
@@ -42,14 +41,14 @@ subroutine setlocal
   do ng = 1, ngm
      aux (nlm(ng)) = conjg (aux (nl(ng)))
   enddo
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
   ! vltot is the local part of the electron-ion interaction in real space
   !
-  do ir = 1, nrxx  
-     vltot (ir) = DREAL (aux (ir) )  
+  do ir = 1, nrxx
+     vltot (ir) = DREAL (aux (ir) )
   enddo
-  call mfree(aux)  
-  return  
+  deallocate(aux)
+  return
 end subroutine setlocal
 

@@ -7,42 +7,41 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine d3_init  
+subroutine d3_init
 !-----------------------------------------------------------------------
 #include"machine.h"
   use pwcom
   use phcom
   use d3com
-  use allocate
 #ifdef PARA
   use para
 #endif
   implicit none
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 #endif
-  integer :: nt, irr, irr1, ipert, imode0, errcode  
+  integer :: nt, irr, irr1, ipert, imode0, errcode
 ! counter on atom types
   real (8) :: work (3)                 ! working area
 
-  complex (8), pointer :: drhoscf (:,:)  
+  complex (8), allocatable :: drhoscf (:,:)
 
-  call mallocate(drhoscf, nrxx, 3)  
+  allocate (drhoscf( nrxx, 3))    
 !
 !  the fourier trasform of the core charge both for q=0 and q.ne.0
 !
-  if (nlcc_any) then  
+  if (nlcc_any) then
 !
 !  drc is allocated in phq_setup
 !
-     if (.not.lgamma) then  
+     if (.not.lgamma) then
 
-        call mallocate(d0rc, ngm, ntyp)  
-        call setv (3, 0.d0, work, 1)  
-        call set_drhoc (work)  
-        call ZCOPY (ngm * ntyp, drc, 1, d0rc, 1)  
-     else  
-        d0rc => drc  
+        allocate (d0rc( ngm, ntyp))    
+        call setv (3, 0.d0, work, 1)
+        call set_drhoc (work)
+        call ZCOPY (ngm * ntyp, drc, 1, d0rc, 1)
+     else
+        d0rc => drc
      endif
 !
 !  drc is calculated in phq_init
@@ -51,15 +50,15 @@ subroutine d3_init
 !
 ! uses the same initialization routines as the phonon program
 !
-  call phq_init  
-  call write_igk  
+  call phq_init
+  call write_igk
 !
 !  the fourier components of the local potential at q+G for q=0
 !
-  if (.not.lgamma) then  
-     call setv (ngm * ntyp, 0.d0, vlocg0, 1)  
-     call setv (3, 0.d0, work, 1)  
-     do nt = 1, ntyp  
+  if (.not.lgamma) then
+     call setv (ngm * ntyp, 0.d0, vlocg0, 1)
+     call setv (3, 0.d0, work, 1)
+     do nt = 1, ntyp
         call setlocq (work, lloc(nt), lmax(nt), numeric(nt), &
              mesh(nt), msh(nt), rab(1,nt), r(1,nt), vnl(1,lloc(nt),nt), &
              cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), zp(nt), aps(1,0,nt), &
@@ -70,24 +69,24 @@ subroutine d3_init
 ! Reads the q=0 variation of the charge --d0rho-- and symmetrizes it
 !
 #ifdef PARA
-!  if (mypool.ne.1) goto 100  
+!  if (mypool.ne.1) goto 100
 #endif
-  do irr = 1, nirrg0  
-     imode0 = 0  
-     do irr1 = 1, irr - 1  
-        imode0 = imode0 + npertg0 (irr1)  
+  do irr = 1, nirrg0
+     imode0 = 0
+     do irr1 = 1, irr - 1
+        imode0 = imode0 + npertg0 (irr1)
      enddo
-     do ipert = 1, npertg0 (irr)  
+     do ipert = 1, npertg0 (irr)
         call davcio_drho2 (drhoscf(1,ipert), lrdrho, iud0rho, &
                            imode0+ipert, - 1)
      enddo
 #ifdef PARA
-     call psymd0rho (npertg0(irr), irr, drhoscf)  
+     call psymd0rho (npertg0(irr), irr, drhoscf)
 #else
      call symd0rho (npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
           irgq, tg0, nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
 #endif
-     do ipert = 1, npertg0 (irr)  
+     do ipert = 1, npertg0 (irr)
         call davcio_drho2 (drhoscf(1,ipert), lrdrho, iud0rho, &
                            imode0+ipert, +1)
      enddo
@@ -95,35 +94,35 @@ subroutine d3_init
 !
 ! Reads the variation of the charge --drho-- and symmetrizes it
 !
-  if (.not.lgamma) then  
-     do irr = 1, nirr  
-        imode0 = 0  
-        do irr1 = 1, irr - 1  
-           imode0 = imode0 + npert (irr1)  
+  if (.not.lgamma) then
+     do irr = 1, nirr
+        imode0 = 0
+        do irr1 = 1, irr - 1
+           imode0 = imode0 + npert (irr1)
         enddo
-        do ipert = 1, npert (irr)  
+        do ipert = 1, npert (irr)
            call davcio_drho2 (drhoscf(1,ipert), lrdrho, iudrho, &
                               imode0+ipert, -1)
         enddo
 #ifdef PARA
-        call psymdvscf (npert(irr), irr, drhoscf)  
+        call psymdvscf (npert(irr), irr, drhoscf)
 #else
-        call symdvscf (npert(irr), irr, drhoscf)  
+        call symdvscf (npert(irr), irr, drhoscf)
 #endif
-        do ipert = 1, npert(irr)  
+        do ipert = 1, npert(irr)
            call davcio_drho2 (drhoscf(1,ipert), lrdrho, iudrho, &
                               imode0+ipert, +1)
         enddo
      enddo
   endif
 #ifdef PARA
-100 continue  
-  call MPI_barrier (MPI_COMM_WORLD, errcode)  
+100 continue
+  call MPI_barrier (MPI_COMM_WORLD, errcode)
 
-  call error ('d3_init', 'at barrier', errcode)  
+  call error ('d3_init', 'at barrier', errcode)
 #endif
 
-  call mfree(drhoscf)  
-  return  
+  deallocate(drhoscf)
+  return
 
 end subroutine d3_init

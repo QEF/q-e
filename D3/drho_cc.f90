@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine drho_cc (iflag)  
+subroutine drho_cc (iflag)
   !-----------------------------------------------------------------------
   !
   !   Used when non_linear_core_correction are present to change the files
@@ -27,16 +27,16 @@ subroutine drho_cc (iflag)
   use d3com
 
   implicit none
-  integer :: iflag  
-  real (8) :: xq0 (3), scale  
+  integer :: iflag
+  real (8) :: xq0 (3), scale
 
-  if (.not.nlcc_any) return  
-  scale = 1.d0  
+  if (.not.nlcc_any) return
+  scale = 1.d0
 
-  if (iflag.eq. - 1) scale = - 1.d0  
-  call setv (3, 0.d0, xq0, 1)  
-  call drho_drc (iud0rho, ug0, xq0, d0rc, scale)  
+  if (iflag.eq. - 1) scale = - 1.d0
+  call setv (3, 0.d0, xq0, 1)
+  call drho_drc (iud0rho, ug0, xq0, d0rc, scale)
 
-  if (.not.lgamma) call drho_drc (iudrho, u, xq, drc, scale)  
-  return  
+  if (.not.lgamma) call drho_drc (iudrho, u, xq, drc, scale)
+  return
 end subroutine drho_cc

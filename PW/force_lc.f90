@@ -14,7 +14,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
 #include "machine.h"
   use parameters
-  implicit none  
+  implicit none
   !
   !   first the dummy variables
   !
@@ -43,7 +43,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   real(kind=DP) :: forcelc (3, nat)
   ! output: the local forces on atoms
 
-  integer :: ipol, ig, na  
+  integer :: ipol, ig, na
   ! counter on polarizations
   ! counter on G vectors
   ! counter on atoms
@@ -57,10 +57,10 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
   allocate (aux(2, nrxx))
-  call DCOPY (nrxx, rho (1, 1), 1, aux (1, 1), 2)  
+  call DCOPY (nrxx, rho (1, 1), 1, aux (1, 1), 2)
   if (nspin.eq.2) call DAXPY (nrxx, 1.d0, rho (1, 2), 1, aux (1, 1), 2)
-  call setv (nrxx, 0.d0, aux (2, 1), 2)  
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)  
+  call setv (nrxx, 0.d0, aux (2, 1), 2)
+  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   !    aux contains now  n(G)
   !
@@ -69,28 +69,28 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   else
      fact = 1.d0
   end if
-  do na = 1, nat  
-     do ipol = 1, 3  
-        forcelc (ipol, na) = 0.d0  
+  do na = 1, nat
+     do ipol = 1, 3
+        forcelc (ipol, na) = 0.d0
      enddo
      ! contribution from G=0 is zero
-     do ig = gstart, ngm  
+     do ig = gstart, ngm
         arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) + &
                g (3, ig) * tau (3, na) ) * tpi
-        do ipol = 1, 3  
+        do ipol = 1, 3
            forcelc (ipol, na) = forcelc (ipol, na) + &
                 g (ipol, ig) * vloc (igtongl (ig), ityp (na) ) * &
                 (sin (arg) * aux(1,nl(ig)) + cos (arg) * aux(2,nl(ig)) )
         enddo
      enddo
-     do ipol = 1, 3  
-        forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat  
+     do ipol = 1, 3
+        forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat
      enddo
   enddo
 #ifdef PARA
-  call reduce (3 * nat, forcelc)  
+  call reduce (3 * nat, forcelc)
 #endif
   deallocate (aux)
-  return  
+  return
 end subroutine force_lc
 

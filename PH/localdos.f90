@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine localdos (ldos, ldoss, dos_ef)  
+subroutine localdos (ldos, ldoss, dos_ef)
   !-----------------------------------------------------------------------
   !
   !    This routine compute the local and total density of state at Ef
@@ -19,24 +19,23 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !
 #include "machine.h"
 
-  use pwcom 
-  use becmod 
-  use allocate 
-  use parameters, only : DP 
-  use phcom  
-  implicit none 
+  use pwcom
+  use becmod
+  use parameters, only : DP
+  use phcom
+  implicit none
 
-  complex(kind=DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)  
+  complex(kind=DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
   ! output: the local density of states at
   ! output: the local density of states at
   !         without augmentation
-  real(kind=DP) :: dos_ef  
+  real(kind=DP) :: dos_ef
   ! output: the density of states at Ef
   !
   !    local variables for Ultrasoft PP's
   !
 
-  integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt  
+  integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
   ! counter on beta functions
   ! counter on beta functions
   ! auxiliary variable for ijkb0
@@ -45,77 +44,77 @@ subroutine localdos (ldos, ldoss, dos_ef)
   ! counter on atoms
   ! counter on composite beta functions
   ! counter on atomic types
-  real(kind=DP), pointer :: becsum1 (:,:,:)   
+  real(kind=DP), allocatable :: becsum1 (:,:,:)
   ! the becsum1 terms
   !
   ! local variables
   !
 
-  real(kind=DP) :: weight, w1, wdelta, w0gauss  
+  real(kind=DP) :: weight, w1, wdelta, w0gauss
   ! kpoint wheight
   ! weight
   ! delta function weight
   ! delta function
 
-  real(kind=DP) :: check  
+  real(kind=DP) :: check
 
 
-  integer :: ik, is, ig, ibnd, j  
+  integer :: ik, is, ig, ibnd, j
   ! kpoint index
   ! counter on spin polarizations
   ! g vector index
   ! band index
   ! fft index
 
-  integer :: ios  
+  integer :: ios
   ! status flag for i/o
 
   !
   !  initialize ldos and dos_ef
   !
-  call start_clock ('localdos')  
-  call mallocate(becsum1, (nhm * (nhm + 1)) / 2, nat, nspin)  
+  call start_clock ('localdos')
+  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))    
 
   call setv ( (nhm * (nhm + 1) ) / 2 * nat * nspin, 0.d0, becsum1, &
        1)
-  call setv (2 * nrxx * nspin, 0.d0, ldos, 1)  
-  call setv (2 * nrxxs * nspin, 0.d0, ldoss, 1)  
-  dos_ef = 0.d0  
+  call setv (2 * nrxx * nspin, 0.d0, ldos, 1)
+  call setv (2 * nrxxs * nspin, 0.d0, ldoss, 1)
+  dos_ef = 0.d0
   !
   !  loop over kpoints
   !
-  if (nksq.gt.1) rewind (unit = iunigk)  
-  do ik = 1, nksq  
-     if (lsda) current_spin = isk (ik)  
-     if (nksq.gt.1) then  
-        read (iunigk, err = 100, iostat = ios) npw, igk  
-100     call error ('solve_linter', 'reading igk', abs (ios) )  
+  if (nksq.gt.1) rewind (unit = iunigk)
+  do ik = 1, nksq
+     if (lsda) current_spin = isk (ik)
+     if (nksq.gt.1) then
+        read (iunigk, err = 100, iostat = ios) npw, igk
+100     call error ('solve_linter', 'reading igk', abs (ios) )
      endif
-     weight = wk (ik)  
+     weight = wk (ik)
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
 
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)  
-     call init_us_2 (npw, igk, xk (1, ik), vkb)  
+     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     call init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)  
-     do ibnd = 1, nbnd_occ (ik)  
+     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     do ibnd = 1, nbnd_occ (ik)
         wdelta = w0gauss ( (ef - et (ibnd, ik) ) / degauss, ngauss) &
              / degauss
         !
         ! unperturbed wf from reciprocal to real space
         !
 
-        call setv (2 * nrxxs, 0.d0, psic, 1)  
-        do ig = 1, npw  
-           psic (nls (igk (ig) ) ) = evc (ig, ibnd)  
+        call setv (2 * nrxxs, 0.d0, psic, 1)
+        do ig = 1, npw
+           psic (nls (igk (ig) ) ) = evc (ig, ibnd)
 
         enddo
 
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)  
-        w1 = weight * wdelta / omega  
-        do j = 1, nrxxs  
+        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+        w1 = weight * wdelta / omega
+        do j = 1, nrxxs
            ldoss (j, current_spin) = ldoss (j, current_spin) + w1 * (DREAL ( &
                 psic (j) ) **2 + DIMAG (psic (j) ) **2)
 
@@ -124,57 +123,57 @@ subroutine localdos (ldos, ldoss, dos_ef)
         !    If we have a US pseudopotential we compute here the sumbec term
         !
 
-        w1 = weight * wdelta  
-        ijkb0 = 0  
-        do nt = 1, ntyp  
-           if (tvanp (nt) ) then  
-              do na = 1, nat  
-                 if (ityp (na) .eq.nt) then  
-                    ijh = 1  
-                    do ih = 1, nh (nt)  
-                       ikb = ijkb0 + ih  
+        w1 = weight * wdelta
+        ijkb0 = 0
+        do nt = 1, ntyp
+           if (tvanp (nt) ) then
+              do na = 1, nat
+                 if (ityp (na) .eq.nt) then
+                    ijh = 1
+                    do ih = 1, nh (nt)
+                       ikb = ijkb0 + ih
                        becsum1 (ijh, na, current_spin) = &
                             becsum1 (ijh, na, current_spin) + w1 * &
                             DREAL (conjg(becp(ikb,ibnd))*becp(ikb,ibnd) )
-                       ijh = ijh + 1  
-                       do jh = ih + 1, nh (nt)  
-                          jkb = ijkb0 + jh  
+                       ijh = ijh + 1
+                       do jh = ih + 1, nh (nt)
+                          jkb = ijkb0 + jh
                           becsum1 (ijh, na, current_spin) = &
                                becsum1 (ijh, na, current_spin) + w1 * 2.d0 * &
                                DREAL(conjg(becp(ikb,ibnd))*becp(jkb,ibnd) )
-                          ijh = ijh + 1  
+                          ijh = ijh + 1
                        enddo
                     enddo
-                    ijkb0 = ijkb0 + nh (nt)  
+                    ijkb0 = ijkb0 + nh (nt)
                  endif
               enddo
-           else  
-              do na = 1, nat  
-                 if (ityp (na) .eq.nt) ijkb0 = ijkb0 + nh (nt)  
+           else
+              do na = 1, nat
+                 if (ityp (na) .eq.nt) ijkb0 = ijkb0 + nh (nt)
               enddo
            endif
 
         enddo
-        dos_ef = dos_ef + weight * wdelta  
+        dos_ef = dos_ef + weight * wdelta
      enddo
 
   enddo
-  if (doublegrid) then  
-     do is = 1, nspin  
-        call cinterpolate (ldos (1, is), ldoss (1, is), 1)  
+  if (doublegrid) then
+     do is = 1, nspin
+        call cinterpolate (ldos (1, is), ldoss (1, is), 1)
      enddo
-  else  
-     call ZCOPY (nrxx * nspin, ldoss, 1, ldos, 1)  
+  else
+     call ZCOPY (nrxx * nspin, ldoss, 1, ldos, 1)
   endif
 
-  call addusldos (ldos, becsum1)  
+  call addusldos (ldos, becsum1)
 #ifdef PARA
   !
   !    Collects partial sums on k-points from all pools
   !
-  call poolreduce (2 * nrxxs * nspin, ldoss)  
-  call poolreduce (2 * nrxx * nspin, ldos)  
-  call poolreduce (1, dos_ef)  
+  call poolreduce (2 * nrxxs * nspin, ldoss)
+  call poolreduce (2 * nrxx * nspin, ldos)
+  call poolreduce (1, dos_ef)
 #endif
   !check
   !      check =0.d0
@@ -186,7 +185,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !      write (*,*) ' check ', check, dos_ef
   !check
   !
-  call mfree(becsum1)  
-  call stop_clock ('localdos')  
-  return  
+  deallocate(becsum1)
+  call stop_clock ('localdos')
+  return
 end subroutine localdos

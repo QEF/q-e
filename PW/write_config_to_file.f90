@@ -11,26 +11,26 @@ subroutine write_config_to_file_old
   use pwcom
   use io, only : prefix
   implicit none
-  logical :: exst  
+  logical :: exst
   integer :: iunit
   !
   ! do not modify the file if in a non-scf run..
   ! probably not needed precaution
-  if (.not.lscf) return  
+  if (.not.lscf) return
   !
   ! open configuration file
   !
   iunit= 1
-  call seqopn (iunit, trim(prefix)//'.config', 'unformatted', exst)  
+  call seqopn (iunit, trim(prefix)//'.config', 'unformatted', exst)
   !
   ! save restart information
   !
   write (iunres) ibrav, nat
-  write (iunres) alat, at, tau  
+  write (iunres) alat, at, tau
 
-  close (unit = iunres, status = 'keep')  
+  close (unit = iunres, status = 'keep')
   !
-  return  
+  return
 end subroutine write_config_to_file_old
 
 !-----------------------------------------------------------------------
@@ -42,7 +42,7 @@ subroutine write_config_to_file
   !
   implicit none
   !
-  logical :: exst  
+  logical :: exst
   integer :: iunit
   integer :: kunittmp
   real(kind=DP) :: et_g(1,1), wg_g(1,1)
@@ -51,14 +51,14 @@ subroutine write_config_to_file
   ! do not modify the file if in a non-scf run..
   ! probably not needed precaution
   !
-  if ( lscf ) then  
+  if ( lscf ) then
     !
-    ! write configuration information directly to the general pourpose 
+    ! write configuration information directly to the general pourpose
     ! ".save" file
     !
     kunittmp = 1
     call writefile_new( 'config', iunres, et_g, wg_g, kunittmp )
   end if
   !
-  return  
+  return
 end subroutine write_config_to_file

@@ -6,32 +6,32 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine swap (n, x, x1)  
+subroutine swap (n, x, x1)
   !-----------------------------------------------------------------------
   ! swap array x with array x1
   !
   use parameters
-  implicit none  
+  implicit none
   !
   !   I/O variables
   !
-  integer :: n  
+  integer :: n
   ! input: dimension of the vector
-  real(kind=DP) :: x (n), x1 (n)  
+  real(kind=DP) :: x (n), x1 (n)
   ! I/O: the vectors
   !
   !   local variables
   !
-  integer :: i  
+  integer :: i
   ! counter on the elements
 
-  real(kind=DP) :: xswap  
+  real(kind=DP) :: xswap
   ! work
-  do i = 1, n  
-     xswap = x (i)  
-     x (i) = x1 (i)  
-     x1 (i) = xswap  
+  do i = 1, n
+     xswap = x (i)
+     x (i) = x1 (i)
+     x1 (i) = xswap
 
   enddo
-  return  
+  return
 end subroutine swap

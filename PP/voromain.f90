@@ -6,13 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-program voronoy  
+program voronoy
 
-  character :: nodenumber * 3  
-  call start_postproc (nodenumber)  
+  character :: nodenumber * 3
+  call start_postproc (nodenumber)
   !
   ! Works on parallel machines but only with one node !!!
   !
   call do_voronoy
-  stop  
+  stop
 end program voronoy

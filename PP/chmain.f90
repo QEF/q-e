@@ -6,14 +6,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-program chdens  
+program chdens
 
-  character :: nodenumber * 3  
-  call start_postproc (nodenumber)  
+  character :: nodenumber * 3
+  call start_postproc (nodenumber)
   !
   ! Works on parallel machines but only with one node !!!
   !
-  call do_chdens  
-  call stop_pp  
-  stop  
+  call do_chdens
+  call stop_pp
+  stop
 end program chdens

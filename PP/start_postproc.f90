@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-subroutine start_postproc (nodenumber)  
+subroutine start_postproc (nodenumber)
   !
   !  Usage: [mpirun, mpprun, whatever] postproc [-npool N] [filename]
   !
@@ -14,42 +14,42 @@ subroutine start_postproc (nodenumber)
   !  On parallel machines filename is needed
   !
 #include "machine.h"
-  implicit none  
-  integer :: nargs  
+  implicit none
+  integer :: nargs
 #ifdef T3D
-  integer :: ipxfargc, ierr, ilen  
+  integer :: ipxfargc, ierr, ilen
 #else
-  integer :: iargc  
+  integer :: iargc
 #endif
-  logical :: exst  
+  logical :: exst
 
 
-  character :: filin * 14, nodenumber * 3, version * 12  
-  version = 'POSTPROC-120'  
-  filin = ' '  
-  nodenumber = '   '  
+  character :: filin * 14, nodenumber * 3, version * 12
+  version = 'POSTPROC-120'
+  filin = ' '
+  nodenumber = '   '
   !
   !  Read the number of arguments of the command
   !
 #ifdef T3D
-  nargs = ipxfargc ()  
+  nargs = ipxfargc ()
 #else
-  nargs = iargc ()  
+  nargs = iargc ()
 #endif
   if (nargs.gt.3) call error ('postproc', 'wrong no. of arguments', &
        nargs)
   !
-  if (nargs.eq.1.or.nargs.eq.3) then  
+  if (nargs.eq.1.or.nargs.eq.3) then
      !
      !  Read the input file name (if any). It must be the last argument
      !
 #ifdef T3D
-     call pxfgetarg (nargs, filin, ilen, ierr)  
+     call pxfgetarg (nargs, filin, ilen, ierr)
 #else
-     call getarg (nargs, filin)  
+     call getarg (nargs, filin)
 #endif
-     if (filin.ne.' ') then  
-        inquire (file = filin, exist = exst)  
+     if (filin.ne.' ') then
+        inquire (file = filin, exist = exst)
         if (.not.exst) call error ('postproc', 'file '//filin//' not found', 1)
         open (unit = 5, form = 'formatted', status = 'old', file = filin)
      endif
@@ -58,9 +58,9 @@ subroutine start_postproc (nodenumber)
 
   if (filin.eq.' ') call error ('postproc','Usage: postproc [-npool N] filename',2)
 
-  call startup (nodenumber, version)  
+  call startup (nodenumber, version)
 
-  call init_pool  
+  call init_pool
 #endif
-  return  
+  return
 end subroutine start_postproc

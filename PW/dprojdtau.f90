@@ -9,7 +9,7 @@
 subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    !-----------------------------------------------------------------------
    !
-   ! This routine computes the first derivative of the projection 
+   ! This routine computes the first derivative of the projection
    ! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the atomic displacement
    ! u(alpha,ipol) (we remember that ns_{I,s,m1,m2} = \sum_{k,v}
    ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
@@ -59,11 +59,11 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
       do ig = 1,npw
          gvec = g(ipol,igk(ig)) * tpiba
-   
+
          ! in the expression of dwfc we don't need (k+G) but just G; k always
          ! multiplies the underived quantity and gives an opposite contribution
          ! in c.c. term because the sign of the imaginary unit.
-   
+
          do m1 = 1,5
             dwfc(ig,m1) = dcmplx(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
          end do

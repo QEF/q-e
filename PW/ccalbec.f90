@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine ccalbec (nkb, npwx, npw, nbnd, bec, vkb, psi)  
+subroutine ccalbec (nkb, npwx, npw, nbnd, bec, vkb, psi)
   !-----------------------------------------------------------------------
   !
   !    This subroutine computes the dot product of the beta functions
@@ -15,11 +15,11 @@ subroutine ccalbec (nkb, npwx, npw, nbnd, bec, vkb, psi)
   !
 #include "machine.h"
   use parameters, only: DP
-  implicit none  
+  implicit none
   !
   !   here the dummy variables
   !
-  integer :: nkb, npwx, npw, nbnd  
+  integer :: nkb, npwx, npw, nbnd
   ! input: the total number of beta functions
   ! input: the maximum number of plane waves
   ! input: the length of the vectors
@@ -30,17 +30,17 @@ subroutine ccalbec (nkb, npwx, npw, nbnd, bec, vkb, psi)
   ! output: dot product of the beta and the wavefunctions
   complex(kind=DP) :: alpha, beta
   !
-  if (nkb.eq.0) return  
+  if (nkb.eq.0) return
 
-  call start_clock ('ccalbec')  
-  alpha= (1.d0, 0.d0)  
-  beta = (0.d0, 0.d0)  
+  call start_clock ('ccalbec')
+  alpha= (1.d0, 0.d0)
+  beta = (0.d0, 0.d0)
   call ZGEMM ('C', 'N', nkb, nbnd, npw, alpha, vkb, npwx, psi, &
        npwx, beta, bec, nkb)
 #ifdef PARA
-  call reduce (2 * nkb * nbnd, bec)  
+  call reduce (2 * nkb * nbnd, bec)
 #endif
-  call stop_clock ('ccalbec')  
-  return  
+  call stop_clock ('ccalbec')
+  return
 end subroutine ccalbec
 

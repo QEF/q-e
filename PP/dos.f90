@@ -5,18 +5,18 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-program dos_e  
+program dos_e
 
-  character :: nodenumber * 3  
-  call start_postproc (nodenumber)  
-  call dos (nodenumber)  
+  character :: nodenumber * 3
+  call start_postproc (nodenumber)
+  call dos (nodenumber)
 
-  call stop_pp  
-  stop  
+  call stop_pp
+  stop
 end program dos_e
 !
 !--------------------------------------------------------------------
-subroutine dos (nodenumber)  
+subroutine dos (nodenumber)
   !--------------------------------------------------------------------
   !
   ! Input (namelist &inputpp ... &end):                Default value
@@ -38,7 +38,7 @@ subroutine dos (nodenumber)
   ! Parallel case implemented only for one processor!
   !
   use pwcom
-  use io  
+  use io
 
   character(len=3) :: nodenumber
   character(len=14) :: fildos
@@ -49,7 +49,7 @@ subroutine dos (nodenumber)
        Emin, Emax, DeltaE
   logical :: minus_q
   !
-  nd_nmbr = nodenumber  
+  nd_nmbr = nodenumber
   !
   !   set default values for variables in namelist
   !
@@ -65,9 +65,9 @@ subroutine dos (nodenumber)
   read (5, inputpp, err=200, iostat=ios )
 200 call error('dos','reading inputpp namelist',abs(ios))
   !
-  call read_file  
+  call read_file
   !
-  if (nks.ne.nkstot) call error ('dos', 'not implemented', 1)  
+  if (nks.ne.nkstot) call error ('dos', 'not implemented', 1)
   !
   if (degauss1.ne.0.d0) then
      degauss=degauss1
@@ -87,45 +87,45 @@ subroutine dos (nodenumber)
   !
   ! find band extrema
   !
-  Elw = et (1, 1)  
-  Eup = et (nbnd, 1)  
-  do ik = 2, nks  
-     Elw = min (Elw, et (1, ik) )  
-     Eup = max (Eup, et (nbnd, ik) )  
+  Elw = et (1, 1)
+  Eup = et (nbnd, 1)
+  do ik = 2, nks
+     Elw = min (Elw, et (1, ik) )
+     Eup = max (Eup, et (nbnd, ik) )
   enddo
-  if (degauss.ne.0.d0) then  
-     Eup = Eup + 3d0 * degauss  
-     Elw = Elw - 3d0 * degauss  
+  if (degauss.ne.0.d0) then
+     Eup = Eup + 3d0 * degauss
+     Elw = Elw - 3d0 * degauss
   endif
   !
   Emin=max(Emin/13.6058,Elw)
   Emax=min(Emax/13.6058,Eup)
-  DeltaE = DeltaE / 13.6058  
-  ndos = nint ( (Emax - Emin) / DeltaE+0.500001)  
-  DOSint = 0.0  
+  DeltaE = DeltaE / 13.6058
+  ndos = nint ( (Emax - Emin) / DeltaE+0.500001)
+  DOSint = 0.0
   !
   open (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
-  if (nspin.eq.1) then 
+  if (nspin.eq.1) then
      write(4,'("#  E (eV)   dos(E)     Int dos(E)")')
   else
      write(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)")')
   end if
-  do n= 1, ndos  
-     E = Emin + (n - 1) * DeltaE  
-     if (ltetra) then  
+  do n= 1, ndos
+     E = Emin + (n - 1) * DeltaE
+     if (ltetra) then
         call dos_t(et,nspin,nbndx,nbnd, nks,ntetra,tetra, E, DOSofE)
-     else  
+     else
         call dos_g(et,nspin,nbndx,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
      endif
-     if (nspin.eq.1) then  
-        DOSint = DOSint + DOSofE (1) * DeltaE  
-        write (4, '(f7.3,2e12.4)') E * 13.6058, DOSofE (1) , DOSint  
-     else  
-        DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE  
-        write (4, '(f7.3,3e12.4)') E * 13.6058, DOSofE, DOSint  
+     if (nspin.eq.1) then
+        DOSint = DOSint + DOSofE (1) * DeltaE
+        write (4, '(f7.3,2e12.4)') E * 13.6058, DOSofE (1) , DOSint
+     else
+        DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
+        write (4, '(f7.3,3e12.4)') E * 13.6058, DOSofE, DOSint
      endif
   enddo
 
-  close (unit = 4)  
-  return  
+  close (unit = 4)
+  return
 end subroutine dos

@@ -87,7 +87,7 @@ subroutine iosys
   real (kind=8) :: conv_thr
   character(len=80) :: diagonalization
   integer :: diago_cg_maxiter, diago_david_ndim, diago_diis_buff, &
-       diago_diis_start 
+       diago_diis_start
   logical :: diago_diis_keep
 
   NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
@@ -140,9 +140,9 @@ subroutine iosys
   calculation='scf'
   verbosity = 'default'
   max_seconds  = 1.d+6
-  restart_mode = 'from_scratch' 
+  restart_mode = 'from_scratch'
   nstep  = 50
-  iprint = 100000 
+  iprint = 100000
   isave  = 100
   tstress = .FALSE.
   tprnfor = .FALSE.
@@ -210,7 +210,7 @@ subroutine iosys
   electron_dynamics = 'none'
   electron_damping = 0.1d0
   electron_velocities = 'default' ! ( 'zero' | 'default' )
-  electron_temperature = 'not_controlled' 
+  electron_temperature = 'not_controlled'
   ! ( 'nose' | 'not_controlled' | 'rescaling')
   ekincw = 0.001d0
   fnosee = 1.0d0
@@ -229,7 +229,7 @@ subroutine iosys
   diis_delt = 0.0d0
   diis_maxstep = 0
   diis_rot = .FALSE.
-  diis_fthr = 0.0d0 
+  diis_fthr = 0.0d0
   diis_temp = 0.0d0
   diis_achmix = 0.0d0
   diis_g0chmix = 0.0d0
@@ -276,7 +276,7 @@ subroutine iosys
   !
   ! ...   Variables initialization for CELL
   !
-  cell_parameters = 'default' 
+  cell_parameters = 'default'
   cell_dynamics = 'none'      ! ( 'sd' | 'md' | 'damp' | 'md-w' | 'damp-w' | 'none' )
   cell_velocities = 'default' ! ( 'zero' | 'default' )
   press = 0.0d0
@@ -285,7 +285,7 @@ subroutine iosys
   temph = 0.0d0
   fnoseh = 0.0d0
   greash = 1.0d0
-  cell_dofree = 'all' 
+  cell_dofree = 'all'
   ! ('all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz' )
   nraise = 100
   delta_t = 1.d0
@@ -299,10 +299,10 @@ subroutine iosys
   if (me == 1)  then
 #endif
      ios = 0
-     READ (unit, control, iostat = ios ) 
+     READ (unit, control, iostat = ios )
      if (ios /= 0) call error ('reading','namelist &control',1)
      !
-     ! reset default values for ion_dynamics according to definition 
+     ! reset default values for ion_dynamics according to definition
      ! of calculation in &control
      !
      if (TRIM(calculation) == 'relax' ) then
@@ -318,30 +318,30 @@ subroutine iosys
         ion_dynamics ='beeman'
      end if
      ! reset defaulf value of startingpot according to calculation value
-  
+
      if (TRIM(calculation) == 'nscf' .or. TRIM(calculation) == 'phonon' ) then
         startingpot = 'file'
      else
         startingpot = 'atomic'
      end if
 
-     READ (unit, system, iostat = ios ) 
+     READ (unit, system, iostat = ios )
      if (ios /= 0) call error ('reading','namelist &system',2)
-     READ (unit, electrons, iostat = ios ) 
+     READ (unit, electrons, iostat = ios )
      if (ios /= 0) call error ('reading','namelist &electrons',3)
      if ( TRIM(calculation) == 'relax'   .or. TRIM(calculation) == 'md'    .or.&
           TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md' .or.&
           TRIM(calculation) == 'cpmd' .or. TRIM(calculation) == 'vc-cpmd' ) then
-        READ (unit, ions, iostat = ios ) 
+        READ (unit, ions, iostat = ios )
         if (ios /= 0) call error ('reading','namelist &ions',4)
      end if
      if ( TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md' .or.&
           TRIM(calculation) == 'vc-cpmd' ) then
-        READ (unit, cell, iostat = ios ) 
+        READ (unit, cell, iostat = ios )
         if (ios /= 0) call error ('reading','namelist &cell',5)
      end if
      if (TRIM(calculation) == 'phonon' ) then
-        READ (unit, phonon, iostat = ios ) 
+        READ (unit, phonon, iostat = ios )
         if (ios /= 0) call error ('reading','namelist &phonon',5)
      end if
 #ifdef PARA
@@ -516,9 +516,9 @@ subroutine iosys
      CALL error(' iosys ',' ibrav out of range ', 1 )
   END IF
 
-  ! ...   Set Values for electron and bands          
+  ! ...   Set Values for electron and bands
 
-  SELECT CASE ( TRIM(occupations) ) 
+  SELECT CASE ( TRIM(occupations) )
      CASE ('fixed')
         ngauss = 0
         ltetra = .false.
@@ -533,7 +533,7 @@ subroutine iosys
            CALL error(' iosys ',&
                 ' smearing requires gaussian broadening', 1 )
         END IF
-        SELECT CASE ( TRIM(smearing) ) 
+        SELECT CASE ( TRIM(smearing) )
         CASE ('gaussian', 'gauss')
            ngauss = 0
         CASE ('methfessel-paxton', 'm-p', 'mp')
@@ -577,7 +577,7 @@ subroutine iosys
      end if
   end if
 
-  SELECT CASE ( TRIM(restart_mode) ) 
+  SELECT CASE ( TRIM(restart_mode) )
   CASE ('from_scratch')
      restart = .false.
      startingconfig = 'input'
@@ -594,7 +594,7 @@ subroutine iosys
      CALL error(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
   END SELECT
 
-  SELECT CASE ( TRIM(disk_io) ) 
+  SELECT CASE ( TRIM(disk_io) )
   CASE ('high')
      reduce_io = .false.
   CASE DEFAULT
@@ -605,10 +605,10 @@ subroutine iosys
   Hubbard_U(:)    = Hubbard_U(:)/rytoev
   Hubbard_alpha(:)= Hubbard_alpha(:)/rytoev
 
-  SELECT CASE ( TRIM(calculation) ) 
+  SELECT CASE ( TRIM(calculation) )
   CASE ('scf' )
      lscf = .true.
-     iswitch = 0 
+     iswitch = 0
      lforce = tprnfor
      lmovecell=.false.
      nstep = 1
@@ -648,7 +648,7 @@ subroutine iosys
      iswitch = -4
   end if
 
-  if ( startingpot.ne.'atomic' .and. startingpot.ne.'file' ) then 
+  if ( startingpot.ne.'atomic' .and. startingpot.ne.'file' ) then
      call error(' iosys','wrong startingpot: use default',-1)
      if (      lscf ) startingpot = 'atomic'
      if ( .not.lscf ) startingpot = 'file'
@@ -665,7 +665,7 @@ subroutine iosys
      startingwfc='atomic'
   end if
 
-  SELECT CASE ( TRIM(electron_dynamics) ) 
+  SELECT CASE ( TRIM(electron_dynamics) )
   CASE ('none' )
      continue
   CASE DEFAULT
@@ -673,7 +673,7 @@ subroutine iosys
           trim(electron_dynamics),1)
   END SELECT
 
-  SELECT CASE ( TRIM(diagonalization) ) 
+  SELECT CASE ( TRIM(diagonalization) )
   CASE ('cg')
      isolve = 1
      max_cg_iter= diago_cg_maxiter
@@ -702,7 +702,7 @@ subroutine iosys
   tr2  = conv_thr
   niter= electron_maxstep
 
-  SELECT CASE ( TRIM(potential_extrapolation) ) 
+  SELECT CASE ( TRIM(potential_extrapolation) )
   CASE ('none')
      order = 0
   CASE ('atomic')
@@ -722,7 +722,7 @@ subroutine iosys
 
   calc = ' '
   if ( TRIM(calculation) == 'relax' ) then
-     SELECT CASE ( TRIM(ion_dynamics) ) 
+     SELECT CASE ( TRIM(ion_dynamics) )
      CASE ('bfgs')
         iswitch = 1
         epse = etot_conv_thr
@@ -743,7 +743,7 @@ subroutine iosys
      END SELECT
   endif
   if ( TRIM(calculation) == 'md' ) then
-     SELECT CASE ( TRIM(ion_dynamics) ) 
+     SELECT CASE ( TRIM(ion_dynamics) )
      CASE ('verlet')
         iswitch = 3
      CASE ('constrained-verlet')
@@ -758,7 +758,7 @@ subroutine iosys
      END SELECT
   endif
   if ( TRIM(calculation) == 'vc-relax' ) then
-     SELECT CASE ( TRIM(cell_dynamics) ) 
+     SELECT CASE ( TRIM(cell_dynamics) )
      CASE ('none')
         epse = etot_conv_thr
         epsf = forc_conv_thr
@@ -787,7 +787,7 @@ subroutine iosys
      end if
   endif
   if ( TRIM(calculation) == 'vc-md' ) then
-     SELECT CASE ( TRIM(cell_dynamics) ) 
+     SELECT CASE ( TRIM(cell_dynamics) )
      CASE ('none')
         iswitch = 3
         calc = 'md'
@@ -809,10 +809,10 @@ subroutine iosys
 &             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
      end if
   endif
-     
+
   !
 
-  SELECT CASE ( TRIM(ion_temperature) ) 
+  SELECT CASE ( TRIM(ion_temperature) )
   CASE ('not_controlled')
      continue
   CASE ('rescaling' )
@@ -823,7 +823,7 @@ subroutine iosys
           trim(ion_temperature), 1 )
   END SELECT
 
-  SELECT CASE ( TRIM(cell_temperature) ) 
+  SELECT CASE ( TRIM(cell_temperature) )
   CASE ('not_controlled')
      continue
   CASE DEFAULT
@@ -921,8 +921,8 @@ subroutine iosys
 
   ! If  ltaucry = .true. , the input atomic positions in crystallographic
   ! units are transformed in cartesian coordinates
-  !  
-  if (ltaucry) call cryst_to_cart (nat, tau, at, 1)   
+  !
+  if (ltaucry) call cryst_to_cart (nat, tau, at, 1)
   !
   ! set default value of wmass
   !
@@ -937,7 +937,7 @@ subroutine iosys
         do ia=1,nat
            wmass = wmass + amass(ityp(ia))
         end do
-        wmass =  0.75d0 * wmass / pi / pi 
+        wmass =  0.75d0 * wmass / pi / pi
      end if
   end if
   !
@@ -1027,7 +1027,7 @@ subroutine read_cards (pseudop, atomic_positions)
         read (input_line,*) atom_label(is), amass(is), pseudop(is)
 
         IF( amass(is) <= 0.d0 ) THEN
-           CALL error(' iosys ',' invalid  mass ', is) 
+           CALL error(' iosys ',' invalid  mass ', is)
         END IF
         atm(is) = atom_label(is)
 
@@ -1074,7 +1074,7 @@ subroutine read_cards (pseudop, atomic_positions)
      ! TEMP: calculate fixatom
      !
      fixatom = 0
-     fix1: DO ia = nat, 1, -1 
+     fix1: DO ia = nat, 1, -1
         if ( iforce_inp(1,ia) /= 0 .or. &
              iforce_inp(2,ia) /= 0 .or. &
              iforce_inp(3,ia) /= 0 ) EXIT fix1

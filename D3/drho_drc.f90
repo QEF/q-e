@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)  
+subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   !-----------------------------------------------------------------------
   !  Reads the variation of the charge saved on a file and changes
   !  it according to the variation of the core_charge
@@ -17,13 +17,12 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   use pwcom
   use phcom
   use d3com
-  use allocate
 #ifdef PARA
   use para
 #endif
   implicit none
 #ifdef PARA
-  include 'mpif.h'  
+  include 'mpif.h'
 #endif
 
   integer :: iudrho_x
@@ -35,30 +34,30 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   !input: the transformation modes patterns
   !input: contain the rhoc (without structu
 
-  integer :: ipert, na, mu, nt, ig, errcode  
-  real (8) :: gtau  
+  integer :: ipert, na, mu, nt, ig, errcode
+  real (8) :: gtau
   complex (8) :: guexp
-  complex (8), pointer :: drhoc (:), drhov (:), uact (:)
+  complex (8), allocatable :: drhoc (:), drhov (:), uact (:)
 
 
-  call mallocate (drhoc, nrxx)  
-  call mallocate (drhov, nrxx)  
-  call mallocate (uact, 3 * nat)  
+  allocate  (drhoc( nrxx))    
+  allocate  (drhov( nrxx))    
+  allocate  (uact( 3 * nat))    
 #ifdef PARA
-!  if (mypool.ne.1) goto 100  
+!  if (mypool.ne.1) goto 100
 #endif
 
-  do ipert = 1, 3 * nat  
-     call setv (2 * nrxx, 0.d0, drhoc, 1)  
+  do ipert = 1, 3 * nat
+     call setv (2 * nrxx, 0.d0, drhoc, 1)
 
-     call ZCOPY (3 * nat, u_x (1, ipert), 1, uact, 1)  
-     do na = 1, nat  
-        mu = 3 * (na - 1)  
+     call ZCOPY (3 * nat, u_x (1, ipert), 1, uact, 1)
+     do na = 1, nat
+        mu = 3 * (na - 1)
         if (abs (uact (mu + 1) ) + abs (uact (mu + 2) ) + abs (uact (mu + &
              3) ) .gt.1.0d-12) then
-           nt = ityp (na)  
-           if (nlcc (nt) ) then  
-              do ig = 1, ngm  
+           nt = ityp (na)
+           if (nlcc (nt) ) then
+              do ig = 1, ngm
                  gtau = tpi * ( (g (1, ig) + xq_x (1) ) * tau (1, na) &
                       + (g (2, ig) + xq_x (2) ) * tau (2, na) + (g (3, ig) &
                       + xq_x (3) ) * tau (3, na) )
@@ -73,20 +72,20 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
         endif
 
      enddo
-     call cft3 (drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)  
-     call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, - 1)  
-     call DAXPY (2 * nrxx, scale, drhoc, 1, drhov, 1)  
+     call cft3 (drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+     call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, - 1)
+     call DAXPY (2 * nrxx, scale, drhoc, 1, drhov, 1)
 
-     call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)  
+     call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)
   enddo
 #ifdef PARA
-100 continue  
-  call MPI_barrier (MPI_COMM_WORLD, errcode)  
+100 continue
+  call MPI_barrier (MPI_COMM_WORLD, errcode)
 
-  call error ('drho_drc', 'at barrier', errcode)  
+  call error ('drho_drc', 'at barrier', errcode)
 #endif
-  call mfree (drhoc)  
-  call mfree (drhov)  
-  call mfree (uact)  
-  return  
+  deallocate (drhoc)
+  deallocate (drhov)
+  deallocate (uact)
+  return
 end subroutine drho_drc

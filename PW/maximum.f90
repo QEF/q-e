@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 
 
-subroutine extreme (ps, iflag)  
+subroutine extreme (ps, iflag)
   !-----------------------------------------------------------------------
   !
   !     Finds the maximum (iflag.gt.0) or the minimum (iflag.le.0) value o
@@ -19,25 +19,25 @@ subroutine extreme (ps, iflag)
 #ifdef PARA
   use para
   use parameters, only : DP
-  implicit none  
-  include 'mpif.h'  
+  implicit none
+  include 'mpif.h'
 
-  real (kind=DP) :: ps, psr  
+  real (kind=DP) :: ps, psr
 
-  integer :: iflag, info  
-  call mpi_barrier (MPI_COMM_WORLD, info)  
-  if (iflag.gt.0) then  
+  integer :: iflag, info
+  call mpi_barrier (MPI_COMM_WORLD, info)
+  if (iflag.gt.0) then
      call mpi_allreduce (ps, psr, 1, MPI_REAL8, MPI_MAX, &
           MPI_COMM_WORLD, info)
-  else  
+  else
      call mpi_allreduce (ps, psr, 1, MPI_REAL8, MPI_MIN, &
           MPI_COMM_WORLD, info)
 
   endif
 
-  ps = psr  
+  ps = psr
 #endif
-  return  
+  return
 
 end subroutine extreme
 

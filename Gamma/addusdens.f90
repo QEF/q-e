@@ -14,15 +14,14 @@ subroutine addusdens
   !  the US augmentation.
   !
 #include "machine.h"
-  use pwcom 
+  use pwcom
   use gamma
-  use allocate 
   implicit none
   !
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ijh, ir, is  
+  integer :: ig, na, nt, ih, jh, ijh, ir, is
   ! counter on G vectors
   ! counter on atoms
   ! the atom type
@@ -32,42 +31,42 @@ subroutine addusdens
   ! counter on mesh points
   ! counter on spin polarization
 
-  real(kind=DP), pointer :: qmod (:), ylmk0 (:,:)  
+  real(kind=DP), allocatable :: qmod (:), ylmk0 (:,:)
   ! the modulus of G
   ! the spherical harmonics
 
   complex(kind=DP) :: skk
-  complex(kind=DP), pointer ::  qg (:), aux (:,:)  
+  complex(kind=DP), allocatable ::  qg (:), aux (:,:)
   ! work space for FFT
   ! work space for rho(G,nspin)
 
 
-  call start_clock ('addusdens')  
+  call start_clock ('addusdens')
 
-  call mallocate(aux , ngm, nspin)
-  call mallocate(qg, nrxx) 
-  call mallocate(qmod, ngm)
-  call mallocate(ylmk0, ngm, lqx * lqx)
+  allocate (aux ( ngm, nspin))    
+  allocate (qg( nrxx))    
+  allocate (qmod( ngm))    
+  allocate (ylmk0( ngm, lqx * lqx))    
 
-  call setv (2 * ngm * nspin, 0.d0, aux, 1)  
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)  
-  do ig = 1, ngm  
-     qmod (ig) = sqrt (gg (ig) )  
+  call setv (2 * ngm * nspin, 0.d0, aux, 1)
+  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  do ig = 1, ngm
+     qmod (ig) = sqrt (gg (ig) )
   enddo
-  do nt = 1, ntyp  
-     if (tvanp (nt) ) then  
-        ijh = 0  
-        do ih = 1, nh (nt)  
-           do jh = ih, nh (nt)  
-              call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)  
-              ijh = ijh + 1  
-              do na = 1, nat  
-                 if (ityp (na) .eq.nt) then  
+  do nt = 1, ntyp
+     if (tvanp (nt) ) then
+        ijh = 0
+        do ih = 1, nh (nt)
+           do jh = ih, nh (nt)
+              call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
+              ijh = ijh + 1
+              do na = 1, nat
+                 if (ityp (na) .eq.nt) then
                     !
                     !  Multiply becsum and qg with the correct structure factor
                     !
-                    do is = 1, nspin  
-                       do ig = 1, ngm  
+                    do is = 1, nspin
+                       do ig = 1, ngm
                           skk = eigts1 (ig1 (ig), na) * &
                                 eigts2 (ig2 (ig), na) * &
                                 eigts3 (ig3 (ig), na)
@@ -83,26 +82,26 @@ subroutine addusdens
   !
   !     convert aux to real space and add to the charge density
   !
-  if (okvan) then  
-     do is = 1, nspin  
-        call setv (2 * nrxx, 0.d0, qg, 1)  
-        do ig = 1, ngm  
-           qg (nl (ig) ) = aux (ig, is)  
+  if (okvan) then
+     do is = 1, nspin
+        call setv (2 * nrxx, 0.d0, qg, 1)
+        do ig = 1, ngm
+           qg (nl (ig) ) = aux (ig, is)
            qg (nlm(ig) ) = conjg(aux(ig, is))
         enddo
-        call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)  
-        do ir = 1, nrxx  
-           rho (ir, is) = rho (ir, is) + DREAL (qg (ir) )  
+        call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        do ir = 1, nrxx
+           rho (ir, is) = rho (ir, is) + DREAL (qg (ir) )
         enddo
      enddo
   endif
 
-  call mfree (ylmk0)  
-  call mfree (qmod)  
-  call mfree (qg)  
-  call mfree (aux)  
+  deallocate (ylmk0)
+  deallocate (qmod)
+  deallocate (qg)
+  deallocate (aux)
 
-  call stop_clock ('addusdens')  
-  return  
+  call stop_clock ('addusdens')
+  return
 end subroutine addusdens
 

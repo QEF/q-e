@@ -1,6 +1,6 @@
 
 ! This module is used, for the time being, as an interface
-! between the UPF pseudo type and the pseudo variables internal representation 
+! between the UPF pseudo type and the pseudo variables internal representation
 
 !=----------------------------------------------------------------------------=!
   MODULE upf_to_internal
@@ -15,7 +15,7 @@
 
 !
 !---------------------------------------------------------------------
-subroutine set_pseudo (is, upf, ierr)  
+subroutine set_pseudo (is, upf, ierr)
   !---------------------------------------------------------------------
   !
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
@@ -48,7 +48,7 @@ subroutine set_pseudo (is, upf, ierr)
   tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
   dft = upf%dft
-  call which_dft (upf%dft, iexch, icorr, igcx, igcc)  
+  call which_dft (upf%dft, iexch, icorr, igcx, igcc)
   mesh(is) = upf%mesh
   !
   nchi(is) = upf%nwfc

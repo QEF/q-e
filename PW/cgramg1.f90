@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)  
+subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
   !-----------------------------------------------------------------------
   !
   !      This routine orthogonalizes several vectors with the method of
@@ -17,12 +17,11 @@ subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
   !
 #include "machine.h"
   use parameters
-  use allocate 
-  implicit none  
+  implicit none
   !
   !     first the dummy variables
   !
-  integer :: lda, n, nvecx, start, finish  
+  integer :: lda, n, nvecx, start, finish
   ! input: leading dimension of the vectors
   ! input: physical dimension
   ! input: dimension of psi
@@ -34,67 +33,67 @@ subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
   !
   !    two parameters
   !
-  integer :: ierrx  
+  integer :: ierrx
   ! maximum number of errors
-  real(kind=DP) :: eps  
+  real(kind=DP) :: eps
   ! a small number
-  parameter (ierrx = 3, eps = 1.0d-6)  
+  parameter (ierrx = 3, eps = 1.0d-6)
   !
   !    here the local variables
   !
-  integer :: vec, vecp, ierr  
+  integer :: vec, vecp, ierr
   ! counter on vectors
   ! counter on vectors
   ! counter on errors
-  complex(kind=DP), pointer :: ps (:)
-  complex(kind=DP) ::  ZDOTC  
+  complex(kind=DP), allocatable :: ps (:)
+  complex(kind=DP) ::  ZDOTC
   ! the scalar products
   ! function which computes scalar products
 
-  real(kind=DP) :: norm, DDOT  
+  real(kind=DP) :: norm, DDOT
   ! the norm of a vector
   ! function computing the dot product of two v
 
-  call start_clock ('cgramg1')  
+  call start_clock ('cgramg1')
 
-  call mallocate(ps, finish)  
-  do vec = start, finish  
-     ierr = 0  
-1    continue  
-     do vecp = 1, vec  
-        ps (vecp) = ZDOTC (n, psi (1, vecp), 1, spsi (1, vec), 1)  
+  allocate (ps( finish))    
+  do vec = start, finish
+     ierr = 0
+1    continue
+     do vecp = 1, vec
+        ps (vecp) = ZDOTC (n, psi (1, vecp), 1, spsi (1, vec), 1)
      enddo
 #ifdef PARA
-     call reduce (2 * vec, ps)  
+     call reduce (2 * vec, ps)
 #endif
-     do vecp = 1, vec - 1  
+     do vecp = 1, vec - 1
         call ZAXPY (n, - ps (vecp), psi (1, vecp), 1, psi (1, vec), 1)
         call ZAXPY (n, - ps (vecp), spsi (1, vecp), 1, spsi (1, vec), 1)
         call ZAXPY (n, - ps (vecp), hpsi (1, vecp), 1, hpsi (1, vec), 1)
      enddo
-     norm = ps (vec) - DDOT (2 * (vec - 1), ps, 1, ps, 1)  
+     norm = ps (vec) - DDOT (2 * (vec - 1), ps, 1, ps, 1)
      !        print*,norm,vec
      !        norm = DDOT( 2*n, psi(1,vec), 1, spsi(1,vec), 1 )
 #ifdef PARA
      !        call reduce (1,norm)
 #endif
-     if (norm.lt.0.d0) then  
-        print * , 'norma = ', norm, vec  
-        call error ('cgramg1', ' negative norm in S ', 1)  
+     if (norm.lt.0.d0) then
+        print * , 'norma = ', norm, vec
+        call error ('cgramg1', ' negative norm in S ', 1)
      endif
-     norm = 1.d0 / sqrt (norm)  
-     call DSCAL (2 * n, norm, psi (1, vec), 1)  
-     call DSCAL (2 * n, norm, spsi (1, vec), 1)  
-     call DSCAL (2 * n, norm, hpsi (1, vec), 1)  
-     if (1.d0 / norm.lt.eps) then  
-        ierr = ierr + 1  
-        if (ierr.le.ierrx) goto 1  
-        call error ('cgramg1', ' absurd correction vector', vec)  
+     norm = 1.d0 / sqrt (norm)
+     call DSCAL (2 * n, norm, psi (1, vec), 1)
+     call DSCAL (2 * n, norm, spsi (1, vec), 1)
+     call DSCAL (2 * n, norm, hpsi (1, vec), 1)
+     if (1.d0 / norm.lt.eps) then
+        ierr = ierr + 1
+        if (ierr.le.ierrx) goto 1
+        call error ('cgramg1', ' absurd correction vector', vec)
      endif
 
   enddo
-  call mfree(ps)  
-  call stop_clock ('cgramg1')  
-  return  
+  deallocate(ps)
+  call stop_clock ('cgramg1')
+  return
 end subroutine cgramg1
 

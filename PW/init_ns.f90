@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine init_ns  
+subroutine init_ns
    !-----------------------------------------------------------------------
    !
    ! This routine computes the starting ns (for lda+U calculation) filling
@@ -18,49 +18,49 @@ subroutine init_ns
    !
 #include "machine.h"
 
-   use pwcom  
+   use pwcom
    implicit none
 
-   real(kind=DP) :: totoc  
+   real(kind=DP) :: totoc
 
-   integer :: na, nt, is, m1, majs, mins, i  
+   integer :: na, nt, is, m1, majs, mins, i
    logical :: nm        ! true if the atom is non magnetic
 
    ns(:,:,:,:) = 0.d0
 
-   do na = 1, nat  
-      nt = ityp (na)  
-      if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-         call tabd (nt, totoc)  
+   do na = 1, nat
+      nt = ityp (na)
+      if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
+         call tabd (nt, totoc)
          nm=.false.
-         if (starting_magnetization (nt) .gt.0.d0) then  
-            majs = 1  
-            mins = 2  
-         elseif (starting_magnetization (nt) .lt.0.d0) then  
-            majs = 2  
-            mins = 1  
-         else  
-            nm = .true.  
-         endif  
-         if (.not.nm) then  
-            if (totoc.gt.5.d0) then  
-               do m1 = 1, 5  
-                  ns (na, majs, m1, m1) = 1.d0  
-                  ns (na, mins, m1, m1) = (totoc - 5.d0) / 5.d0  
-               enddo  
-            else  
-               do m1 = 1, 5  
-                  ns (na, majs, m1, m1) = totoc / 5.d0  
-               enddo  
-            endif  
-         else  
-            do m1 = 1, 5  
-               ns (na, 1, m1, m1) = totoc / 10.d0  
-               ns (na, 2, m1, m1) = ns (na, 1, m1, m1)  
-            enddo  
-         endif  
-      endif  
-   enddo  
-   return  
+         if (starting_magnetization (nt) .gt.0.d0) then
+            majs = 1
+            mins = 2
+         elseif (starting_magnetization (nt) .lt.0.d0) then
+            majs = 2
+            mins = 1
+         else
+            nm = .true.
+         endif
+         if (.not.nm) then
+            if (totoc.gt.5.d0) then
+               do m1 = 1, 5
+                  ns (na, majs, m1, m1) = 1.d0
+                  ns (na, mins, m1, m1) = (totoc - 5.d0) / 5.d0
+               enddo
+            else
+               do m1 = 1, 5
+                  ns (na, majs, m1, m1) = totoc / 5.d0
+               enddo
+            endif
+         else
+            do m1 = 1, 5
+               ns (na, 1, m1, m1) = totoc / 10.d0
+               ns (na, 2, m1, m1) = ns (na, 1, m1, m1)
+            enddo
+         endif
+      endif
+   enddo
+   return
 end subroutine init_ns
 

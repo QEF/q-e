@@ -12,13 +12,12 @@ subroutine deriv_drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, &
 !-----------------------------------------------------------------------
 #include "machine.h"
 use parameters
-use allocate
 implicit none
 !
 !    first the dummy variables
 !
 
-integer :: ngl, mesh  
+integer :: ngl, mesh
                                ! input: the number of g shell
                                ! input: the number of radial mesh points
 
@@ -34,63 +33,63 @@ real(kind=DP) :: gl (ngl), r (mesh), rab (mesh), rhoc (mesh), omega, &
                                ! input: the b_c of the analitical form
                                ! input: the alpha of the analytical form
                                ! output: fourier transform of d Rho_c/dG
-logical :: numeric  
+logical :: numeric
                               ! input: if true the charge is in numeric
 !
 !     two parameters
 !
-real(kind=DP) :: pi, fpi  
-parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi)  
+real(kind=DP) :: pi, fpi
+parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi)
 !
 !     here the local variables
 !
 
 real(kind=DP) :: gx, g2a, rhocg1
-real(kind=DP), pointer :: aux (:)  
+real(kind=DP), allocatable :: aux (:)
                                  ! the modulus of g for a given shell
                                  ! the argument of the exponential
                                  ! the fourier transform
                                  ! auxiliary memory for integration
 
-integer :: igl, igl0  ,i 
+integer :: igl, igl0  ,i
                                  ! counter on g shells
                                  ! lower limit for loop on ngl
 
 !
 ! G=0 term
 !
-if (gl (1) .lt.1.0e-8) then  
-   drhocg (1) = 0.0  
-   igl0 = 2  
-else  
-   igl0 = 1  
+if (gl (1) .lt.1.0e-8) then
+   drhocg (1) = 0.0
+   igl0 = 2
+else
+   igl0 = 1
 
-endif  
+endif
 
-if (numeric) then  
+if (numeric) then
 
-   call mallocate(aux, mesh)  
-   do igl = igl0, ngl  
-   gx = sqrt (gl (igl) * tpiba2)  
-   do i = 1, mesh  
+   allocate (aux( mesh))    
+   do igl = igl0, ngl
+   gx = sqrt (gl (igl) * tpiba2)
+   do i = 1, mesh
    aux (i) = r (i) * rhoc (i) * (r (i) * cos (gx * r (i) ) &
     / gx - sin (gx * r (i) ) / gx**2)
-   enddo  
-   call simpson (mesh, aux, rab, rhocg1)  
-   drhocg (igl) = fpi / omega * rhocg1  
+   enddo
+   call simpson (mesh, aux, rab, rhocg1)
+   drhocg (igl) = fpi / omega * rhocg1
 
-   enddo  
+   enddo
 
-   call mfree (aux)  
-else  
-   do igl = igl0, ngl  
-   g2a = gl (igl) * tpiba2 / 4.0 / alpha_nlcc  
+   deallocate (aux)
+else
+   do igl = igl0, ngl
+   g2a = gl (igl) * tpiba2 / 4.0 / alpha_nlcc
    drhocg (igl) = - (pi / alpha_nlcc) **1.5 * exp ( - g2a) &
     * (a_nlcc + b_nlcc / alpha_nlcc * (2.5 - g2a) ) * sqrt (gl ( &
     igl) * tpiba2) / 2.0 / alpha_nlcc / omega
-   enddo  
+   enddo
 
-endif  
-return  
+endif
+return
 end subroutine deriv_drhoc
 

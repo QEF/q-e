@@ -12,7 +12,6 @@ subroutine cg_setup
   !
 #include "machine.h"
   use parameters, only: DP
-  use allocate
   use pwcom
   use io, only: prefix
   use cgcom
@@ -22,7 +21,7 @@ subroutine cg_setup
   !
   integer :: i, l, nt, kpoint
   logical :: exst
-  character (len=20) :: filint  
+  character (len=20) :: filint
   real(kind=DP) :: rhotot, dmxc
   external dmxc
   !
@@ -38,21 +37,21 @@ subroutine cg_setup
   !
   !  allocate memory for various arrays
   !
-  call mallocate (dmuxc, nrxx)
-  call mallocate (dvpsi, npwx, nbnd)
-  call mallocate ( dpsi, npwx, nbnd)
-  call mallocate ( auxr, nrxx)
-  call mallocate ( aux2, nrxx)
-  call mallocate ( aux3, nrxx)
+  allocate  (dmuxc( nrxx))    
+  allocate  (dvpsi( npwx, nbnd))    
+  allocate  ( dpsi( npwx, nbnd))    
+  allocate  ( auxr( nrxx))    
+  allocate  ( aux2( nrxx))    
+  allocate  ( aux3( nrxx))    
   !
   !  allocate memory for gradient corrections (if needed)
   !
   if (igcx.ne.0 .or. igcc.ne.0) then
-     call mallocate ( dvxc_rr,nrxx,nspin,nspin)
-     call mallocate ( dvxc_sr,nrxx,nspin,nspin)
-     call mallocate ( dvxc_ss,nrxx,nspin,nspin)
-     call mallocate ( dvxc_s ,nrxx,nspin,nspin)
-     call mallocate ( grho   ,3, nrxx, nspin)
+     allocate  ( dvxc_rr(nrxx,nspin,nspin))    
+     allocate  ( dvxc_sr(nrxx,nspin,nspin))    
+     allocate  ( dvxc_ss(nrxx,nspin,nspin))    
+     allocate  ( dvxc_s (nrxx,nspin,nspin))    
+     allocate  ( grho   (3, nrxx, nspin))    
   end if
   !
   !
@@ -61,7 +60,7 @@ subroutine cg_setup
   call struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg,               &
        &                  nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
   !
-  !  compute drhocore/dtau for each atom type (if needed)      
+  !  compute drhocore/dtau for each atom type (if needed)
   !
   nlcc_any = .false.
   do nt=1,ntyp
@@ -98,7 +97,7 @@ subroutine cg_setup
   !   open the wavefunction file (already existing)
   !
   lrwfc=2*nbnd*npwx
-  filint = trim(prefix) //'.wfc'  
+  filint = trim(prefix) //'.wfc'
   call diropn(iunpun,filint,lrwfc,exst)
   if(.not.exst) call error('main','file '//filpun//' not found',1)
   !
