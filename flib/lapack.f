@@ -27869,3 +27869,661 @@ CIBM           PREFER SCALAR
 *     End of ZLANHS
 *
       END
+      SUBROUTINE ZROT( N, CX, INCX, CY, INCY, C, S )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      INTEGER            INCX, INCY, N
+      DOUBLE PRECISION   C
+      COMPLEX*16         S
+*     ..
+*     .. Array Arguments ..
+      COMPLEX*16         CX( * ), CY( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZROT   applies a plane rotation, where the cos (C) is real and the
+*  sin (S) is complex, and the vectors CX and CY are complex.
+*
+*  Arguments
+*  =========
+*
+*  N       (input) INTEGER
+*          The number of elements in the vectors CX and CY.
+*
+*  CX      (input/output) COMPLEX*16 array, dimension (N)
+*          On input, the vector X.
+*          On output, CX is overwritten with C*X + S*Y.
+*
+*  INCX    (input) INTEGER
+*          The increment between successive values of CY.  INCX <> 0.
+*
+*  CY      (input/output) COMPLEX*16 array, dimension (N)
+*          On input, the vector Y.
+*          On output, CY is overwritten with -CONJG(S)*X + C*Y.
+*
+*  INCY    (input) INTEGER
+*          The increment between successive values of CY.  INCX <> 0.
+*
+*  C       (input) DOUBLE PRECISION
+*  S       (input) COMPLEX*16
+*          C and S define a rotation
+*             [  C          S  ]
+*             [ -conjg(S)   C  ]
+*          where C*C + S*CONJG(S) = 1.0.
+*
+* =====================================================================
+*
+*     .. Local Scalars ..
+      INTEGER            I, IX, IY
+      COMPLEX*16         STEMP
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          DCONJG
+*     ..
+*     .. Executable Statements ..
+*
+      IF( N.LE.0 )
+     $   RETURN
+      IF( INCX.EQ.1 .AND. INCY.EQ.1 )
+     $   GO TO 20
+*
+*     Code for unequal increments or equal increments not equal to 1
+*
+      IX = 1
+      IY = 1
+      IF( INCX.LT.0 )
+     $   IX = ( -N+1 )*INCX + 1
+      IF( INCY.LT.0 )
+     $   IY = ( -N+1 )*INCY + 1
+      DO 10 I = 1, N
+         STEMP = C*CX( IX ) + S*CY( IY )
+         CY( IY ) = C*CY( IY ) - DCONJG( S )*CX( IX )
+         CX( IX ) = STEMP
+         IX = IX + INCX
+         IY = IY + INCY
+   10 CONTINUE
+      RETURN
+*
+*     Code for both increments equal to 1
+*
+   20 CONTINUE
+      DO 30 I = 1, N
+         STEMP = C*CX( I ) + S*CY( I )
+         CY( I ) = C*CY( I ) - DCONJG( S )*CX( I )
+         CX( I ) = STEMP
+   30 CONTINUE
+      RETURN
+      END
+      SUBROUTINE ZGETRF( M, N, A, LDA, IPIV, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGETRF computes an LU factorization of a general M-by-N matrix A
+*  using partial pivoting with row interchanges.
+*
+*  The factorization has the form
+*     A = P * L * U
+*  where P is a permutation matrix, L is lower triangular with unit
+*  diagonal elements (lower trapezoidal if m > n), and U is upper
+*  triangular (upper trapezoidal if m < n).
+*
+*  This is the right-looking Level 3 BLAS version of the algorithm.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the M-by-N matrix to be factored.
+*          On exit, the factors L and U from the factorization
+*          A = P*L*U; the unit diagonal elements of L are not stored.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  IPIV    (output) INTEGER array, dimension (min(M,N))
+*          The pivot indices; for 1 <= i <= min(M,N), row i of the
+*          matrix was interchanged with row IPIV(i).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+*                has been completed, but the factor U is exactly
+*                singular, and division by zero will occur if it is used
+*                to solve a system of equations.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      COMPLEX*16         ONE
+      PARAMETER          ( ONE = ( 1.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, IINFO, J, JB, NB
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZGEMM, ZGETF2, ZLASWP, ZTRSM
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGETRF', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( M.EQ.0 .OR. N.EQ.0 )
+     $   RETURN
+*
+*     Determine the block size for this environment.
+*
+      NB = ILAENV( 1, 'ZGETRF', ' ', M, N, -1, -1 )
+      IF( NB.LE.1 .OR. NB.GE.MIN( M, N ) ) THEN
+*
+*        Use unblocked code.
+*
+         CALL ZGETF2( M, N, A, LDA, IPIV, INFO )
+      ELSE
+*
+*        Use blocked code.
+*
+         DO 20 J = 1, MIN( M, N ), NB
+            JB = MIN( MIN( M, N )-J+1, NB )
+*
+*           Factor diagonal and subdiagonal blocks and test for exact
+*           singularity.
+*
+            CALL ZGETF2( M-J+1, JB, A( J, J ), LDA, IPIV( J ), IINFO )
+*
+*           Adjust INFO and the pivot indices.
+*
+            IF( INFO.EQ.0 .AND. IINFO.GT.0 )
+     $         INFO = IINFO + J - 1
+            DO 10 I = J, MIN( M, J+JB-1 )
+               IPIV( I ) = J - 1 + IPIV( I )
+   10       CONTINUE
+*
+*           Apply interchanges to columns 1:J-1.
+*
+            CALL ZLASWP( J-1, A, LDA, J, J+JB-1, IPIV, 1 )
+*
+            IF( J+JB.LE.N ) THEN
+*
+*              Apply interchanges to columns J+JB:N.
+*
+               CALL ZLASWP( N-J-JB+1, A( 1, J+JB ), LDA, J, J+JB-1,
+     $                      IPIV, 1 )
+*
+*              Compute block row of U.
+*
+               CALL ZTRSM( 'Left', 'Lower', 'No transpose', 'Unit', JB,
+     $                     N-J-JB+1, ONE, A( J, J ), LDA, A( J, J+JB ),
+     $                     LDA )
+               IF( J+JB.LE.M ) THEN
+*
+*                 Update trailing submatrix.
+*
+                  CALL ZGEMM( 'No transpose', 'No transpose', M-J-JB+1,
+     $                        N-J-JB+1, JB, -ONE, A( J+JB, J ), LDA,
+     $                        A( J, J+JB ), LDA, ONE, A( J+JB, J+JB ),
+     $                        LDA )
+               END IF
+            END IF
+   20    CONTINUE
+      END IF
+      RETURN
+*
+*     End of ZGETRF
+*
+      END
+      SUBROUTINE ZGETRS( TRANS, N, NRHS, A, LDA, IPIV, B, LDB, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          TRANS
+      INTEGER            INFO, LDA, LDB, N, NRHS
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      COMPLEX*16         A( LDA, * ), B( LDB, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGETRS solves a system of linear equations
+*     A * X = B,  A**T * X = B,  or  A**H * X = B
+*  with a general N-by-N matrix A using the LU factorization computed
+*  by ZGETRF.
+*
+*  Arguments
+*  =========
+*
+*  TRANS   (input) CHARACTER*1
+*          Specifies the form of the system of equations:
+*          = 'N':  A * X = B     (No transpose)
+*          = 'T':  A**T * X = B  (Transpose)
+*          = 'C':  A**H * X = B  (Conjugate transpose)
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  NRHS    (input) INTEGER
+*          The number of right hand sides, i.e., the number of columns
+*          of the matrix B.  NRHS >= 0.
+*
+*  A       (input) COMPLEX*16 array, dimension (LDA,N)
+*          The factors L and U from the factorization A = P*L*U
+*          as computed by ZGETRF.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  IPIV    (input) INTEGER array, dimension (N)
+*          The pivot indices from ZGETRF; for 1<=i<=N, row i of the
+*          matrix was interchanged with row IPIV(i).
+*
+*  B       (input/output) COMPLEX*16 array, dimension (LDB,NRHS)
+*          On entry, the right hand side matrix B.
+*          On exit, the solution matrix X.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      COMPLEX*16         ONE
+      PARAMETER          ( ONE = ( 1.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            NOTRAN
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZLASWP, ZTRSM
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      NOTRAN = LSAME( TRANS, 'N' )
+      IF( .NOT.NOTRAN .AND. .NOT.LSAME( TRANS, 'T' ) .AND. .NOT.
+     $    LSAME( TRANS, 'C' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( NRHS.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -8
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGETRS', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 .OR. NRHS.EQ.0 )
+     $   RETURN
+*
+      IF( NOTRAN ) THEN
+*
+*        Solve A * X = B.
+*
+*        Apply row interchanges to the right hand sides.
+*
+         CALL ZLASWP( NRHS, B, LDB, 1, N, IPIV, 1 )
+*
+*        Solve L*X = B, overwriting B with X.
+*
+         CALL ZTRSM( 'Left', 'Lower', 'No transpose', 'Unit', N, NRHS,
+     $               ONE, A, LDA, B, LDB )
+*
+*        Solve U*X = B, overwriting B with X.
+*
+         CALL ZTRSM( 'Left', 'Upper', 'No transpose', 'Non-unit', N,
+     $               NRHS, ONE, A, LDA, B, LDB )
+      ELSE
+*
+*        Solve A**T * X = B  or A**H * X = B.
+*
+*        Solve U'*X = B, overwriting B with X.
+*
+         CALL ZTRSM( 'Left', 'Upper', TRANS, 'Non-unit', N, NRHS, ONE,
+     $               A, LDA, B, LDB )
+*
+*        Solve L'*X = B, overwriting B with X.
+*
+         CALL ZTRSM( 'Left', 'Lower', TRANS, 'Unit', N, NRHS, ONE, A,
+     $               LDA, B, LDB )
+*
+*        Apply row interchanges to the solution vectors.
+*
+         CALL ZLASWP( NRHS, B, LDB, 1, N, IPIV, -1 )
+      END IF
+*
+      RETURN
+*
+*     End of ZGETRS
+*
+      END
+      SUBROUTINE ZGETF2( M, N, A, LDA, IPIV, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZGETF2 computes an LU factorization of a general m-by-n matrix A
+*  using partial pivoting with row interchanges.
+*
+*  The factorization has the form
+*     A = P * L * U
+*  where P is a permutation matrix, L is lower triangular with unit
+*  diagonal elements (lower trapezoidal if m > n), and U is upper
+*  triangular (upper trapezoidal if m < n).
+*
+*  This is the right-looking Level 2 BLAS version of the algorithm.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the m by n matrix to be factored.
+*          On exit, the factors L and U from the factorization
+*          A = P*L*U; the unit diagonal elements of L are not stored.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  IPIV    (output) INTEGER array, dimension (min(M,N))
+*          The pivot indices; for 1 <= i <= min(M,N), row i of the
+*          matrix was interchanged with row IPIV(i).
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -k, the k-th argument had an illegal value
+*          > 0: if INFO = k, U(k,k) is exactly zero. The factorization
+*               has been completed, but the factor U is exactly
+*               singular, and division by zero will occur if it is used
+*               to solve a system of equations.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      COMPLEX*16         ONE, ZERO
+      PARAMETER          ( ONE = ( 1.0D+0, 0.0D+0 ),
+     $                   ZERO = ( 0.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            J, JP
+*     ..
+*     .. External Functions ..
+      INTEGER            IZAMAX
+      EXTERNAL           IZAMAX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZGERU, ZSCAL, ZSWAP
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZGETF2', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( M.EQ.0 .OR. N.EQ.0 )
+     $   RETURN
+*
+      DO 10 J = 1, MIN( M, N )
+*
+*        Find pivot and test for singularity.
+*
+         JP = J - 1 + IZAMAX( M-J+1, A( J, J ), 1 )
+         IPIV( J ) = JP
+         IF( A( JP, J ).NE.ZERO ) THEN
+*
+*           Apply the interchange to columns 1:N.
+*
+            IF( JP.NE.J )
+     $         CALL ZSWAP( N, A( J, 1 ), LDA, A( JP, 1 ), LDA )
+*
+*           Compute elements J+1:M of J-th column.
+*
+            IF( J.LT.M )
+     $         CALL ZSCAL( M-J, ONE / A( J, J ), A( J+1, J ), 1 )
+*
+         ELSE IF( INFO.EQ.0 ) THEN
+*
+            INFO = J
+         END IF
+*
+         IF( J.LT.MIN( M, N ) ) THEN
+*
+*           Update trailing submatrix.
+*
+            CALL ZGERU( M-J, N-J, -ONE, A( J+1, J ), 1, A( J, J+1 ),
+     $                  LDA, A( J+1, J+1 ), LDA )
+         END IF
+   10 CONTINUE
+      RETURN
+*
+*     End of ZGETF2
+*
+      END
+      SUBROUTINE ZLASWP( N, A, LDA, K1, K2, IPIV, INCX )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INCX, K1, K2, LDA, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZLASWP performs a series of row interchanges on the matrix A.
+*  One row interchange is initiated for each of rows K1 through K2 of A.
+*
+*  Arguments
+*  =========
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the matrix of column dimension N to which the row
+*          interchanges will be applied.
+*          On exit, the permuted matrix.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.
+*
+*  K1      (input) INTEGER
+*          The first element of IPIV for which a row interchange will
+*          be done.
+*
+*  K2      (input) INTEGER
+*          The last element of IPIV for which a row interchange will
+*          be done.
+*
+*  IPIV    (input) INTEGER array, dimension (M*abs(INCX))
+*          The vector of pivot indices.  Only the elements in positions
+*          K1 through K2 of IPIV are accessed.
+*          IPIV(K) = L implies rows K and L are to be interchanged.
+*
+*  INCX    (input) INTEGER
+*          The increment between successive values of IPIV.  If IPIV
+*          is negative, the pivots are applied in reverse order.
+*
+*  Further Details
+*  ===============
+*
+*  Modified by
+*   R. C. Whaley, Computer Science Dept., Univ. of Tenn., Knoxville, USA
+*
+* =====================================================================
+*
+*     .. Local Scalars ..
+      INTEGER            I, I1, I2, INC, IP, IX, IX0, J, K, N32
+      COMPLEX*16         TEMP
+*     ..
+*     .. Executable Statements ..
+*
+*     Interchange row I with row IPIV(I) for each of rows K1 through K2.
+*
+      IF( INCX.GT.0 ) THEN
+         IX0 = K1
+         I1 = K1
+         I2 = K2
+         INC = 1
+      ELSE IF( INCX.LT.0 ) THEN
+         IX0 = 1 + ( 1-K2 )*INCX
+         I1 = K2
+         I2 = K1
+         INC = -1
+      ELSE
+         RETURN
+      END IF
+*
+      N32 = ( N / 32 )*32
+      IF( N32.NE.0 ) THEN
+         DO 30 J = 1, N32, 32
+            IX = IX0
+            DO 20 I = I1, I2, INC
+               IP = IPIV( IX )
+               IF( IP.NE.I ) THEN
+                  DO 10 K = J, J + 31
+                     TEMP = A( I, K )
+                     A( I, K ) = A( IP, K )
+                     A( IP, K ) = TEMP
+   10             CONTINUE
+               END IF
+               IX = IX + INCX
+   20       CONTINUE
+   30    CONTINUE
+      END IF
+      IF( N32.NE.N ) THEN
+         N32 = N32 + 1
+         IX = IX0
+         DO 50 I = I1, I2, INC
+            IP = IPIV( IX )
+            IF( IP.NE.I ) THEN
+               DO 40 K = N32, N
+                  TEMP = A( I, K )
+                  A( I, K ) = A( IP, K )
+                  A( IP, K ) = TEMP
+   40          CONTINUE
+            END IF
+            IX = IX + INCX
+   50    CONTINUE
+      END IF
+*
+      RETURN
+*
+*     End of ZLASWP
+*
+      END
