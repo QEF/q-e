@@ -1,0 +1,42 @@
+Pt
+Pt
+ &control
+    calculation = 'nscf'
+    restart_mode='from_scratch',
+    prefix='Pt',
+    tprnfor = .true.
+    pseudo_dir = '/home/dalcorso/O-sesame/pseudo/',
+    outdir='/home/dalcorso/tmp/'
+ /
+ &system    
+    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
+    lspinorb=.true.,
+    noncolin=.true.,
+    starting_magnetization=0.0,
+    occupations='smearing',
+    degauss=0.02,
+    smearing='mp',
+    ecutwfc =30.0, 
+    ecutrho =250.0, 
+ /
+ &electrons
+    mixing_beta = 0.7, 
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+Pt  79.90    Ptrel.RRKJ3.UPF
+ATOMIC_POSITIONS
+Pt  0.0000000   0.00000000   0.0  
+K_POINTS 
+11
+0.0 0.0 0.0 0.0
+0.0 0.0 0.1 0.1
+0.0 0.0 0.2 0.2
+0.0 0.0 0.3 0.3
+0.0 0.0 0.4 0.4
+0.0 0.0 0.5 0.5
+0.0 0.0 0.6 0.6
+0.0 0.0 0.7 0.7
+0.0 0.0 0.8 0.8
+0.0 0.0 0.9 0.9
+0.0 0.0 1.0 1.0

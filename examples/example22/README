@@ -1,0 +1,11 @@
+This example shows how to use pwnc.x to calculate the total energy
+and the band structure of fcc-Pt with a fully relativistic US-PP
+which includes spin-orbit effects.
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for Pt (input=pt.scf.in,
+   output=pt.scf.out). 
+
+2) make a band structure calculation for Pt (input=pt.band.in,
+   output=pt.band.out).
