@@ -40,9 +40,9 @@ subroutine poolscatter (nsize, nkstot, f_in, nks, f_out)
   !
   ! distribute the vector on the first node of each pool
   !
-  rest = nkstot - (nkstot / npool) * npool
+  rest = nkstot/kunit - (nkstot / kunit / npool) * npool 
   nbase = nks * (mypool - 1)
-  if (mypool.gt.rest) nbase = nbase+rest
+  if (mypool.gt.rest) nbase = nbase + rest*kunit
   call DCOPY (nsize * nks, f_in (1, nbase+1), 1, f_out, 1)
   !
   ! copy from the first node  of every pool
