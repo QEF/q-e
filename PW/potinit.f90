@@ -101,13 +101,27 @@ SUBROUTINE potinit()
         !       
         !
         IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
-           !
-           WRITE( stdout, &
-              '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
-               charge, nelec
-           !
-           rho = rho / charge * nelec
-           !
+         !
+         WRITE( stdout, &
+            '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+             charge, nelec
+         !
+         rho = rho / charge * nelec
+         !
+         ! and compute v_of_rho again
+         !
+         IF (noncolin) then
+            CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+               nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
+               ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons,   &
+               pointlist, pointnum, factlist, nat, ntyp, ityp)
+         ELSE
+            CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                      nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
+                      ehart, etxc, vtxc, etotefield, charge, vr )
+         ENDIF
+         !   
+
         END IF
         !
      ELSE
@@ -207,6 +221,20 @@ SUBROUTINE potinit()
         !
         rho = rho / charge * nelec
         !
+        !aAnd compute v_of_rho again
+        !
+        IF (noncolin) then
+           CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+              nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
+              ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons,   &
+              pointlist, pointnum, factlist, nat, ntyp, ityp)
+        ELSE
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
+                     ehart, etxc, vtxc, etotefield, charge, vr )
+        ENDIF
+        !   
+
      END IF
      !
   END IF
