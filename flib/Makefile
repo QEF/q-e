@@ -32,7 +32,7 @@ lapack_t3e : lapack_t3e.o
 lapack_mkl : lapack_mkl.o 
 	$(AR) $(ARFLAGS) flib.a $?
 
-eispack : eispack.o
+eispack : eispack.o 
 	echo eispack
 
 dlamch.o : dlamch.f
