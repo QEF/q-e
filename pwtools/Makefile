@@ -4,6 +4,7 @@ include ../make.sys
 include ../make.rules
 
 PWOBJS = \
+../PW/pwcom.o \
 ../PW/cft_3.o \
 ../PW/checksym.o \
 ../PW/coset.o \
@@ -37,6 +38,7 @@ MODULES = \
 ../Modules/formats.o \
 ../Modules/kind.o \
 ../Modules/mp.o \
+../Modules/mp_global.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/splinelib.o 
