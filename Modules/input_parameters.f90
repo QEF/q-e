@@ -950,6 +950,8 @@ MODULE input_parameters
         LOGICAL :: use_freezing   = .FALSE.
         
         LOGICAL :: fixed_tan      = .FALSE.
+        
+        LOGICAL :: free_energy    = .FALSE.
                 
         LOGICAL :: write_save     = .FALSE.
         
@@ -961,10 +963,11 @@ MODULE input_parameters
           ! 'damped-dyn'  damped molecular dynamics
           ! 'mol-dyn'     constant temperature molecular dynamics
           ! 'sd'          steepest descent
+          ! 'broyden'     broyden acceleration
           ! 'langevin'    langevin dynamics
 
-        CHARACTER(LEN=80) :: opt_scheme_allowed(5)
-        DATA opt_scheme_allowed / 'quick-min', 'damped-dyn', &
+        CHARACTER(LEN=80) :: opt_scheme_allowed(6)
+        DATA opt_scheme_allowed / 'quick-min', 'damped-dyn', 'broyden', &
                                   'mol-dyn', 'sd', 'langevin' /  
 
         REAL (KIND=DP)  :: damp = 1.D0
@@ -1056,7 +1059,7 @@ MODULE input_parameters
           wfc_extrapolation, delta_t, nraise,                                  &
           num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
           reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,   &
-          init_num_of_images, fixed_tan, use_freezing,                         &
+          init_num_of_images, free_energy, fixed_tan, use_freezing,            &
           trust_radius_max, trust_radius_min, trust_radius_ini,                &
           trust_radius_end, w_1, w_2, lbfgs_ndim, sic_rloc,                    &
           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2,        &

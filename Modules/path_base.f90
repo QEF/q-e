@@ -7,6 +7,8 @@
 !
 #include "f_defs.h"
 !
+!#define NEW_TANGENT
+!#define NEW_VEC
 #define IPRINT 1
 !
 !---------------------------------------------------------------------------
@@ -50,15 +52,18 @@ MODULE path_base
                                    pes, grad_pes, tangent, error, path_length, &
                                    path_thr, deg_of_freedom, ds, react_coord,  &
                                    first_last_opt, reset_vel, llangevin,       &
-                                   temp_req, use_freezing, tune_load_balance
+                                   temp_req, use_freezing, tune_load_balance,  &
+                                   lbroyden
       USE path_variables,   ONLY : climbing_ => climbing,                  &
                                    CI_scheme, vel, grad, elastic_grad,     &
                                    norm_grad, k, k_min, k_max, Emax_index, &
                                    vel_zeroed, frozen, pos_old, grad_old,  &
-                                   lquick_min, ldamped_dyn, lmol_dyn, lbroyden
-      USE path_variables,   ONLY : num_of_modes, pos_av_in, pos_av_fin, &
+                                   lquick_min, ldamped_dyn, lmol_dyn
+      USE path_variables,   ONLY : num_of_modes, pos_in_av, pos_fin_av, &
                                    ft_pos, ft_pos_av, Nft, fixed_tan,   &
-                                   ft_coeff, Nft_smooth, use_multistep
+                                   ft_coeff, Nft_smooth, use_multistep, &
+                                   free_energy, pos_in_h, pos_fin_h,    &
+                                   ft_pos_h, av_counter
       USE path_formats,     ONLY : summary_fmt
       USE mp_global,        ONLY : nimage
       USE io_global,        ONLY : meta_ionode
@@ -74,8 +79,8 @@ MODULE path_base
         ! ... specify the calling program
       !
       ! ... local variables
-      !      
-      INTEGER                     :: i, j, mode
+      !
+      INTEGER                     :: i
       REAL (KIND=DP)              :: inter_image_dist, k_ratio
       REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER (LEN=20)          :: num_of_images_char, nstep_path_char
@@ -113,21 +118,32 @@ MODULE path_base
          !
       END IF
       !
-      IF ( lneb .AND. &
-           ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
+      IF ( lneb ) THEN
          !
          ! ... elastic constants are rescaled here on
          ! ... the base of the input time step ds ( m = 4 ) :
          !
          k_ratio = k_min / k_max
          !
-         k_max = ( pi / ds )**2 / 16.D0 
+         IF ( lbroyden ) THEN
+            !
+            k_max = ( pi / 2.D0 )**2 / 16.D0
+            !
+         ELSE
+            !
+            k_max = ( pi / ds )**2 / 16.D0
+            !
+         END IF
          !
          k_min = k_max * k_ratio
          !
       ELSE IF ( lsmd ) THEN
          !
-         IF ( fixed_tan ) THEN
+         av_counter = 0
+         !
+         IF ( free_energy) THEN
+            !
+            fixed_tan = .TRUE.
             !
             use_multistep = .FALSE.
             !
@@ -139,7 +155,7 @@ MODULE path_base
          !
          Nft = ( num_of_images - 1 )
          !
-         Nft_smooth = 1000
+         Nft_smooth = 50
          !
          num_of_modes = ( Nft - 1 )
          !
@@ -184,20 +200,26 @@ MODULE path_base
          pes        = 0.D0
          grad_pes   = 0.D0
          tangent    = 0.D0
-         !
          error      = 0.D0
-         frozen     = .FALSE.
          vel        = 0.D0
-         vel_zeroed = .FALSE.
          grad       = 0.D0
          norm_grad  = 0.D0
          pos_old    = 0.D0
          grad_old   = 0.D0
          !
+         frozen     = .FALSE.
+         vel_zeroed = .FALSE.
+         !
          ! ... fourier components
          !
          ft_pos     = 0.D0
          ft_pos_av  = 0.D0
+         ft_pos_h   = 0.D0
+         !
+         pos_in_av  = 0.D0
+         pos_fin_av = 0.D0
+         pos_in_h   = 0.D0
+         pos_fin_h  = 0.D0
          !
       END IF
       !
@@ -205,16 +227,16 @@ MODULE path_base
       ! ... or generated from the input images ( restart_mode = "from_scratch" )
       ! ... It is alway read from file in the case of "free-energy" calculations
       !
-      IF ( fixed_tan .OR. restart_mode == "restart" ) THEN
+      IF ( free_energy .OR. restart_mode == "restart" ) THEN
          !
          ALLOCATE( image_spacing( num_of_images - 1 ) )
          !
          CALL read_restart()
          !
-         IF ( fixed_tan ) THEN
+         IF ( free_energy ) THEN
             !
-            pos_av_in  = pos_(:,1)
-            pos_av_fin = pos_(:,num_of_images)
+            pos_in_av  = pos_(:,1)
+            pos_fin_av = pos_(:,num_of_images)
             !
          END IF
          !
@@ -346,6 +368,7 @@ MODULE path_base
           IMPLICIT NONE
           !
           REAL (KIND=DP) :: s
+          INTEGER        :: i, j
           !
           ! ... linear interpolation
           !
@@ -416,12 +439,95 @@ MODULE path_base
     !
     ! ... neb specific routines
     !
+    !-----------------------------------------------------------------------
+    FUNCTION neb_tangent( index )
+      !-----------------------------------------------------------------------
+      !
+      USE supercell,      ONLY : pbc
+      USE path_variables, ONLY : pos, dim, num_of_images, pes
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: index
+      REAL (KIND=DP)      :: neb_tangent(dim)
+      !
+      ! ... local variables
+      !
+      INTEGER        :: n
+      REAL (KIND=DP) :: x, pi_n
+      REAL (KIND=DP) :: V_previous, V_actual, V_next
+      REAL (KIND=DP) :: abs_next, abs_previous
+      REAL (KIND=DP) :: delta_V_max, delta_V_min
+      !
+      !
+      ! ... NEB definition of the tangent
+      !
+      IF ( index == 1 ) THEN
+         !
+         neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,index) )
+         !
+         RETURN
+         !
+      ELSE IF ( index == num_of_images ) THEN
+         !
+         neb_tangent = pbc( pos(:,index ) - pos(:,( index - 1 )) )
+         !
+         RETURN
+         !
+      END IF
+      !
+      V_previous = pes( index - 1 )
+      V_actual   = pes( index )
+      V_next     = pes( index + 1 )
+      !
+      IF ( ( V_next > V_actual ) .AND. ( V_actual > V_previous ) ) THEN
+         !
+         neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,index) )
+         !
+      ELSE IF ( ( V_next < V_actual ) .AND. ( V_actual < V_previous ) ) THEN
+         !
+         neb_tangent = pbc( pos(:,index) - pos(:,( index - 1 )) )
+         !
+      ELSE
+         !
+         abs_next     = ABS( V_next - V_actual ) 
+         abs_previous = ABS( V_previous - V_actual ) 
+         !
+         delta_V_max = MAX( abs_next , abs_previous ) 
+         delta_V_min = MIN( abs_next , abs_previous )
+         !
+         IF ( V_next > V_previous ) THEN
+            !
+            neb_tangent = &
+                   pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_max + & 
+                   pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_min
+            !
+         ELSE IF ( V_next < V_previous ) THEN
+            !
+            neb_tangent = &
+                   pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_min + &
+                   pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_max
+            !
+         ELSE
+            !
+            neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,( index - 1 )) ) 
+            !
+         END IF
+         !
+      END IF
+      !
+      RETURN
+      !
+    END FUNCTION neb_tangent
+    !
     !------------------------------------------------------------------------
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
       ! 
       USE path_variables,  ONLY : pos, num_of_images, Emax, Emin, &
-                                  k_max, k_min, k, pes
+                                  k_max, k_min, k, pes, dim
       !
       IMPLICIT NONE
       !
@@ -431,13 +537,45 @@ MODULE path_base
       REAL(KIND=DP) :: delta_E
       REAL(KIND=DP) :: k_sum, k_diff
       !
+      REAL(KIND=DP) :: omega( num_of_images ), v1( dim ), v2( dim )
+      REAL(KIND=DP) :: omega_max
       !
-      delta_E = Emax - Emin
       !
       k_sum  = k_max + k_min
       k_diff = k_max - k_min
       !
       k(:) = k_min
+      !
+#if defined (NEW_VEC)
+      !
+      ! ... here the curvature is computed
+      !
+      omega = 0.D0
+      !
+      DO i = 2, num_of_images - 1
+         !
+         v1 = ( pos(:,i+1) - pos(:,i) ) / norm( pos(:,i+1) - pos(:,i) )
+         v2 = ( pos(:,i) - pos(:,i-1) ) / norm( pos(:,i) - pos(:,i-1) )
+         !
+         omega(i) = norm( v1 - v2 ) / norm( pos(:,i+1) - pos(:,i-1) )
+         !
+      END DO
+      !
+      omega_max = MAXVAL( omega )
+      !
+      IF ( omega_max > eps32 ) THEN
+         !
+         DO i = 1, num_of_images 
+            !
+            k(i) = 0.5D0 * ( k_sum - k_diff * COS( pi * omega(i) / omega_max ) )
+            !
+         END DO
+         !
+      END IF
+      !
+#else
+      !
+      delta_E = Emax - Emin
       !
       IF ( delta_E > eps32 ) THEN
          !
@@ -450,6 +588,8 @@ MODULE path_base
          !
       END IF
       !
+#endif
+      !
       k(:) = 0.5D0 * k(:)
       !
       RETURN
@@ -461,8 +601,9 @@ MODULE path_base
       !------------------------------------------------------------------------
       !
       USE supercell,      ONLY : pbc
-      USE path_variables, ONLY : pos, grad, norm_grad, elastic_grad, grad_pes, &
-                                 k, lmol_dyn, num_of_images, climbing, tangent
+      USE path_variables, ONLY : pos, grad, norm_grad, elastic_grad,   &
+                                 grad_pes, k, lmol_dyn, num_of_images, &
+                                 climbing, tangent
       !
       IMPLICIT NONE
       !
@@ -473,7 +614,7 @@ MODULE path_base
       !
       tangent = 0
       !
-      DO i = 2, ( num_of_images - 1 )
+      DO i = 1, num_of_images
          !
          ! ... tangent to the path ( normalised )
          !
@@ -524,78 +665,6 @@ MODULE path_base
       !
     END SUBROUTINE neb_gradient
     !
-    !-----------------------------------------------------------------------
-    FUNCTION neb_tangent( index )
-      !-----------------------------------------------------------------------
-      !
-      USE supercell,      ONLY : pbc
-      USE path_variables, ONLY : pos, dim, num_of_modes, num_of_images,    &
-                                 pes, path_length, path_length_av, ft_pos, &
-                                 ft_pos_av, pos_av_in, pos_av_fin, Nft,    &
-                                 fixed_tan
-      !
-      IMPLICIT NONE
-      !
-      ! ... I/O variables
-      !
-      INTEGER, INTENT(IN) :: index
-      REAL (KIND=DP)      :: neb_tangent(dim)
-      !
-      ! ... local variables
-      !
-      INTEGER        :: n
-      REAL (KIND=DP) :: x, pi_n
-      REAL (KIND=DP) :: V_previous, V_actual, V_next
-      REAL (KIND=DP) :: abs_next, abs_previous
-      REAL (KIND=DP) :: delta_V_max, delta_V_min
-      !
-      !
-      ! ... NEB definition of the tangent
-      !
-      V_previous = pes( index - 1 )
-      V_actual   = pes( index )
-      V_next     = pes( index + 1 )
-      !
-      IF ( ( V_next > V_actual ) .AND. ( V_actual > V_previous ) ) THEN
-         !
-         neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,index) )
-         !
-      ELSE IF ( ( V_next < V_actual ) .AND. ( V_actual < V_previous ) ) THEN
-         !
-         neb_tangent = pbc( pos(:,index) - pos(:,( index - 1 )) )
-         !
-      ELSE
-         !
-         abs_next     = ABS( V_next - V_actual ) 
-         abs_previous = ABS( V_previous - V_actual ) 
-         !
-         delta_V_max = MAX( abs_next , abs_previous ) 
-         delta_V_min = MIN( abs_next , abs_previous )
-         !
-         IF ( V_next > V_previous ) THEN
-            !
-            neb_tangent = &
-                   pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_max + & 
-                   pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_min
-            !
-         ELSE IF ( V_next < V_previous ) THEN
-            !
-            neb_tangent = &
-                   pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_min + &
-                   pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_max
-            !
-         ELSE
-            !
-            neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,( index - 1 )) ) 
-            !
-         END IF
-         !
-      END IF
-      !
-      RETURN
-      !
-    END FUNCTION neb_tangent
-    !
     ! ... smd specific routines
     !
     !-----------------------------------------------------------------------
@@ -606,7 +675,7 @@ MODULE path_base
       USE path_variables,   ONLY : istep_path, num_of_images, &
                                    path_thr, Nft, ft_coeff, pos, pes, &
                                    use_multistep, grad_pes, err_max,  &
-                                   frozen, vel, vel_zeroed
+                                   frozen, vel, vel_zeroed, reset_broyden
       USE io_global,        ONLY : meta_ionode
       !
       IMPLICIT NONE
@@ -659,12 +728,15 @@ MODULE path_base
             !
             vel(:,N_in:N_fin) = 0.D0
             !
-            frozen(N_in:N_fin)     = .FALSE.
+            frozen(N_in:N_fin) = .FALSE.
+            !
             vel_zeroed(N_in:N_fin) = .FALSE.
             !
             images_updated = .TRUE.
             !
             num_of_images = new_num_of_images
+            !
+            reset_broyden = .TRUE.
             !
          END IF
          !
@@ -761,10 +833,6 @@ MODULE path_base
          !
       END DO
       !
-      r_n(:) = pos(:,num_of_images)
-      !
-      path_length = path_length + norm( r_n - r_h )
-      !
       DEALLOCATE( r_h )
       DEALLOCATE( r_n )
       DEALLOCATE( delta_pos)
@@ -777,7 +845,7 @@ MODULE path_base
     SUBROUTINE to_real_space()
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_modes, num_of_images, dim, tangent, &
+      USE path_variables, ONLY : num_of_modes, num_of_images, dim, &
                                  pos, ft_pos, Nft, Nft_smooth, path_length
       !
       IMPLICIT NONE
@@ -798,8 +866,6 @@ MODULE path_base
       image = 1
       !
       s_image = path_length / DBLE( Nft )
-      !
-      CALL the_tangent( image, 0.D0 )
       !
       r_h(:) = pos(:,1)
       !
@@ -827,9 +893,7 @@ MODULE path_base
                !
                pos(:,image) = r_n(:)
                !
-               CALL the_tangent( image, x )
-               !
-               s_image = DBLE( image ) * path_length / DBLE( Nft )
+               s_image = s_image + path_length / DBLE( Nft )
                !
             END IF
             !
@@ -839,45 +903,12 @@ MODULE path_base
          !
       END DO
       !
-      image = num_of_images
-      !
-      CALL the_tangent( image, 1.D0 )
-      !
       DEALLOCATE( r_h )
       DEALLOCATE( r_n )
       DEALLOCATE( delta_pos)
       !
       RETURN
       !
-      CONTAINS
-         !
-         !-------------------------------------------------------------------
-         SUBROUTINE the_tangent( image, s )
-           !-------------------------------------------------------------------
-           !
-           IMPLICIT NONE
-           !
-           INTEGER,        INTENT(IN) :: image
-           REAL (KIND=DP), INTENT(IN) :: s
-           !
-           !
-           tangent(:,image) = ( pos(:,num_of_images) - pos(:,1) )
-           !
-           DO n = 1, num_of_modes
-              !
-              pi_n = pi * DBLE( n )
-              !
-              tangent(:,image) = tangent(:,image) + &
-                                 ft_pos(:,n) * pi_n * COS( pi_n * s )
-              !
-           END DO
-           !
-           tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
-           !
-           RETURN
-           !
-         END SUBROUTINE the_tangent
-         !
     END SUBROUTINE to_real_space
     !
     !------------------------------------------------------------------------
@@ -944,6 +975,91 @@ MODULE path_base
     END SUBROUTINE to_reciprocal_space
     !
     !-----------------------------------------------------------------------
+    SUBROUTINE smd_tangent( image )
+      !-----------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : pos, ft_pos, pos_in_av, pos_fin_av, &
+                                 ft_pos_av,  num_of_modes, num_of_images, &
+                                 tangent
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,        INTENT(IN) :: image
+      INTEGER                    :: n
+      REAL (KIND=DP)             :: s, pi_n
+      !
+      !
+      s = DBLE( image - 1 ) / DBLE( num_of_images - 1 )
+      !
+#if defined (NEW_TANGENT)
+      !
+      tangent(:,image) = ( pos_fin_av - pos_in_av )
+      !
+      DO n = 1, num_of_modes
+         !
+         pi_n = pi * DBLE( n )
+         !
+         tangent(:,image) = tangent(:,image) + &
+                            ft_pos_av(:,n) * pi_n * COS( pi_n * s )
+         !
+      END DO
+      !
+#else
+      !
+      tangent(:,image) = ( pos(:,num_of_images) - pos(:,1) )
+      !
+      DO n = 1, num_of_modes
+         !
+         pi_n = pi * DBLE( n )
+         !
+         tangent(:,image) = tangent(:,image) + &
+                            ft_pos(:,n) * pi_n * COS( pi_n * s )
+         !
+      END DO
+      !
+#endif
+      !
+      tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
+      !
+      RETURN
+      !
+    END SUBROUTINE smd_tangent
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE update_history()
+      !-----------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : istep_path, av_counter, num_of_images,    &
+                                 pos, ft_pos, pos_in_av, pos_fin_av,       &
+                                 ft_pos_av, pos_in_h, pos_fin_h, ft_pos_h, &
+                                 history_ndim
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, SAVE :: ipos
+      !
+      !
+      av_counter = MIN( av_counter + 1, history_ndim )
+      !
+      ipos = MOD( istep_path, history_ndim ) + 1
+      !
+      ! ... history update
+      !
+      pos_in_h(:,ipos)  = pos(:,1)
+      pos_fin_h(:,ipos) = pos(:,num_of_images)
+      !
+      ft_pos_h(:,:,ipos) = ft_pos(:,:)
+      !
+      ! ... average path
+      !
+      pos_in_av  = SUM( ARRAY = pos_in_h,  DIM = 2 ) / av_counter
+      pos_fin_av = SUM( ARRAY = pos_fin_h, DIM = 2 ) / av_counter
+      !
+      ft_pos_av  = SUM( ARRAY = ft_pos_h, DIM = 3 ) / av_counter
+      !
+    END SUBROUTINE update_history
+    !
+    !-----------------------------------------------------------------------
     SUBROUTINE smd_gradient()
       !-----------------------------------------------------------------------
       !
@@ -970,9 +1086,19 @@ MODULE path_base
       INTEGER :: i
       !
       !
+      IF ( .NOT. fixed_tan ) THEN
+         !
+         CALL to_reciprocal_space()
+         !
+         CALL update_history()
+         !
+      END IF
+      !
       ! ... we project pes gradients and gaussian noise
       !
       DO i = 1, num_of_images
+         !
+         CALL smd_tangent( i )
          !
          IF ( llangevin ) THEN
             !
@@ -1440,14 +1566,6 @@ MODULE path_base
             !
             CALL compute_path_length()
             !
-            IF ( fixed_tan .AND. istep_path == 0 ) THEN
-               !
-               ft_pos_av = ft_pos
-               !
-               path_length_av = path_length
-               !
-            END IF
-            !
             ! ... back to real space
             !
             CALL to_real_space()
@@ -1569,20 +1687,9 @@ MODULE path_base
       !
       INTEGER :: image
       !
-      IF ( lbroyden ) THEN 
+      IF ( lbroyden ) THEN
          !
-         IF ( istep_path >= 50 ) THEN
-            !
-            lsteep_des = .FALSE.
-            !
-            CALL broyden()
-            !
-         ELSE
-            !
-            lsteep_des     = .TRUE.
-            first_last_opt = .TRUE.
-            !
-         END IF
+         CALL broyden()
          !
       END IF
       !

@@ -374,6 +374,7 @@ MODULE read_namelists_module
        init_num_of_images = 3
        use_multistep      = .FALSE.
        fixed_tan          = .FALSE.
+       free_energy        = .FALSE.
        !
        ! ... BFGS defaults
        !
@@ -761,6 +762,7 @@ MODULE read_namelists_module
        CALL mp_bcast( use_multistep, ionode_id )
        CALL mp_bcast( use_freezing, ionode_id )
        CALL mp_bcast( fixed_tan, ionode_id )
+       CALL mp_bcast( free_energy, ionode_id )
        CALL mp_bcast( write_save, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
        CALL mp_bcast( opt_scheme, ionode_id )

@@ -101,7 +101,7 @@ cat > H2+H.in << EOF
   mixing_beta = 0.3D0,
 /
 &IONS
-  ds                = 2.D0,
+  opt_scheme        = "broyden",
   num_of_images     = 7,
   k_max             = 0.3D0,
   k_min             = 0.2D0,
@@ -162,7 +162,7 @@ cat > symmetric_H2+H.in << EOF
   mixing_beta = 0.3D0,
 /
 &IONS
-  ds                = 2.D0,
+  opt_scheme        = "broyden",
   num_of_images     = 8,
   k_max             = 0.3D0,
   k_min             = 0.2D0,
@@ -230,9 +230,8 @@ cat > asymmetric_H2+H.in << EOF
   mixing_beta = 0.3D0,
 /
 &IONS
+  opt_scheme        = "broyden",
   num_of_images     = 8,
-  reset_vel         = .TRUE.,
-  ds                = 2.D0,
   k_max             = 0.3D0,
   k_min             = 0.2D0,
   CI_scheme         = "manual",

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,52 +20,59 @@ SUBROUTINE potinit()
   ! ...    as a sum of atomic charges, and the corresponding potential
   ! ...    is saved in vr
   !
-  USE kinds,         ONLY : DP
-  USE io_global,     ONLY : stdout
-  USE cell_base,     ONLY : alat, omega
-  USE ions_base,     ONLY : nat, ityp, ntyp => nsp
-  USE basis,         ONLY : startingpot
-  USE klist,         ONLY : nelec
-  USE lsda_mod,      ONLY : lsda, nspin
-  USE gvect,         ONLY:  ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                            nrxx, nl, g, gg
-  USE gsmooth,       ONLY : doublegrid
-  USE control_flags, ONLY : imix, lscf
-  USE scf,           ONLY : rho, rho_core, vltot, vr, vrs
-  USE ener,          ONLY : ehart, etxc, vtxc
-  USE ldaU,          ONLY : niter_with_fixed_ns
-  USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
-  USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, mcons,&
-                               i_cons, lambda, vtcon, report
-  USE io_files,      ONLY : prefix, iunocc, input_drho
-  USE mp,            ONLY : mp_bcast
-  USE mp_global,     ONLY : intra_image_comm
-  USE io_global,     ONLY : ionode, ionode_id
+  USE kinds,            ONLY : DP
+  USE io_global,        ONLY : stdout
+  USE cell_base,        ONLY : alat, omega
+  USE ions_base,        ONLY : nat, ityp, ntyp => nsp
+  USE basis,            ONLY : startingpot
+  USE klist,            ONLY : nelec
+  USE lsda_mod,         ONLY : lsda, nspin
+  USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                               nrxx, nl, g, gg
+  USE gsmooth,          ONLY : doublegrid
+  USE control_flags,    ONLY : imix, lscf
+  USE scf,              ONLY : rho, rho_core, vltot, vr, vrs
+  USE ener,             ONLY : ehart, etxc, vtxc
+  USE ldaU,             ONLY : niter_with_fixed_ns
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
+  USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, &
+                               mcons, i_cons, lambda, vtcon, report
+  USE io_files,         ONLY : prefix, iunocc, input_drho
+  USE mp,               ONLY : mp_bcast
+  USE mp_global,        ONLY : intra_image_comm
+  USE io_global,        ONLY : ionode, ionode_id
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  REAL (KIND=DP) :: charge               ! the starting charge
-  REAL (KIND=DP) :: etotefield           ! 
+  REAL (KIND=DP) :: charge           ! the starting charge
+  REAL (KIND=DP) :: etotefield       ! 
   INTEGER        :: ios
-  INTEGER        :: ldim                 ! integer variable for I/O control
+  INTEGER        :: ldim             ! integer variable for I/O control
   LOGICAL        :: exst 
-  !
-  ! ... end of local variables
   !
   !
   IF ( ionode ) THEN
      !
      IF ( imix >= 0 .AND. lscf ) THEN
+        !
         CALL seqopn( 4, TRIM( prefix )//'.rho', 'UNFORMATTED', exst )
+        !
      ELSE
+        !
         CALL seqopn( 4, TRIM( prefix )//'.pot', 'UNFORMATTED', exst )
+        !
      END IF
+     !
      IF ( exst ) THEN
+        !
         CLOSE( UNIT = 4, STATUS = 'KEEP' )
+        !
      ELSE
+        !
         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+        !
      END IF
      !
   END IF
@@ -88,40 +95,49 @@ SUBROUTINE potinit()
         ! ... here we compute the potential which correspond to the 
         ! ... initial charge
         !
-        IF (noncolin) THEN
-          CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-               nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-               ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons, &
-               pointlist, pointnum, factlist, nat, ntyp, ityp)
+        IF ( noncolin ) THEN
+           !
+           CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                             nrxx, nl, ngm, gstart, nspin, g, gg, alat,      &
+                             omega, ehart, etxc, vtxc, charge, vr, lambda,   &
+                             vtcon, i_cons, mcons, pointlist, pointnum,      &
+                             factlist, nat, ntyp, ityp )
+           !
         ELSE
-          CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
-        ENDIF
+           !
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vr )
+           !
+        END IF
         !       
         !
         IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
-         !
-         WRITE( stdout, &
-            '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
-             charge, nelec
-         !
-         rho = rho / charge * nelec
-         !
-         ! and compute v_of_rho again
-         !
-         IF (noncolin) then
-            CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-               nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
-               ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons,   &
-               pointlist, pointnum, factlist, nat, ntyp, ityp)
-         ELSE
-            CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                      nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
-                      ehart, etxc, vtxc, etotefield, charge, vr )
-         ENDIF
-         !   
-
+           !
+           WRITE( stdout, &
+                 '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+               charge, nelec
+           !
+           rho = rho / charge * nelec
+           !
+           ! ... and compute v_of_rho again
+           !
+           IF ( noncolin ) THEN
+              !
+              CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,&
+                                nrxx, nl, ngm, gstart, nspin, g, gg, alat,     &
+                                omega, ehart, etxc, vtxc, charge, vr, lambda,  &
+                                vtcon, i_cons, mcons, pointlist, pointnum,     &
+                                factlist, nat, ntyp, ityp )
+              !
+           ELSE
+              !
+              CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                             ehart, etxc, vtxc, etotefield, charge, vr )
+              !
+           END IF
+           !
         END IF
         !
      ELSE
@@ -202,39 +218,48 @@ SUBROUTINE potinit()
      ! ... here we compute the potential which corresponds to the 
      ! ... initial charge
      !
-     IF (noncolin) then
-        CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
-           ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons,   &
-           pointlist, pointnum, factlist, nat, ntyp, ityp)
+     IF ( noncolin ) THEN
+        !
+        CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat,      &
+                          omega, ehart, etxc, vtxc, charge, vr, lambda,   &
+                          vtcon, i_cons, mcons, pointlist, pointnum,      &
+                          factlist, nat, ntyp, ityp )
+        !
      ELSE
+        !
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                  nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
-                  ehart, etxc, vtxc, etotefield, charge, vr )
-     ENDIF
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                       ehart, etxc, vtxc, etotefield, charge, vr )
+        !
+     END IF
      !   
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         !
         WRITE( stdout, &
-           '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+            '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
             charge, nelec
         !
         rho = rho / charge * nelec
         !
-        !aAnd compute v_of_rho again
+        ! ... and compute v_of_rho again
         !
-        IF (noncolin) then
-           CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-              nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
-              ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons,   &
-              pointlist, pointnum, factlist, nat, ntyp, ityp)
+        IF ( noncolin ) THEN
+           !
+           CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                             nrxx, nl, ngm, gstart, nspin, g, gg, alat,      &
+                             omega, ehart, etxc, vtxc, charge, vr, lambda,   &
+                             vtcon, i_cons, mcons, pointlist, pointnum,      &
+                             factlist, nat, ntyp, ityp )
+           !
         ELSE
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
-                     ehart, etxc, vtxc, etotefield, charge, vr )
-        ENDIF
-        !   
-
+           !
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vr )
+           !
+        END IF
+        !
      END IF
      !
   END IF
@@ -256,7 +281,7 @@ SUBROUTINE potinit()
      !
   END IF
   !
-  IF (report.NE.0.AND.noncolin.AND.lscf) CALL report_mag
+  IF ( report /= 0 .AND. noncolin .AND. lscf ) CALL report_mag()
   !
   RETURN
   !

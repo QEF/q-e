@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF group
+! Copyright (C) 2002-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -130,7 +130,7 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : twfcollect 
   !
-  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min , &
+  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
                              ldamped_dyn, lmol_dyn, llangevin, &
                              ds_                 => ds, &
                              write_save_         => write_save, &
@@ -139,6 +139,7 @@ SUBROUTINE iosys()
                              use_multistep_      => use_multistep, &
                              CI_scheme_          => CI_scheme, &
                              fixed_tan_          => fixed_tan, &
+                             free_energy_        => free_energy, &
                              use_freezing_       => use_freezing, &
                              k_max_              => k_max, & 
                              k_min_              => k_min, &
@@ -210,7 +211,7 @@ SUBROUTINE iosys()
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
                                init_num_of_images, temp_req, k_max, k_min, ds, &
-                               use_freezing, fixed_tan,                        &
+                               use_freezing, fixed_tan, free_energy,           &
                                write_save, trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, w_1, w_2,   &
                                lbfgs_ndim
@@ -669,6 +670,7 @@ SUBROUTINE iosys()
      !
      lsteep_des  = .FALSE.     
      lquick_min  = .FALSE.
+     lbroyden    = .FALSE.
      ldamped_dyn = .FALSE.
      lmol_dyn    = .FALSE.     
      !
@@ -680,6 +682,11 @@ SUBROUTINE iosys()
      CASE( "quick-min" )
         !
         lquick_min = .TRUE.
+        !
+     CASE( "broyden" )
+        !
+        lbroyden     = .TRUE.
+        use_freezing = .FALSE.
         !
      CASE( "damped-dyn" )
         !
@@ -877,6 +884,7 @@ SUBROUTINE iosys()
   init_num_of_images_ = init_num_of_images
   use_multistep_      = use_multistep
   fixed_tan_          = fixed_tan
+  free_energy_        = free_energy
   !
   ! ... new BFGS specific
   !

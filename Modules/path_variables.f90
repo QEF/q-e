@@ -19,6 +19,8 @@ MODULE path_variables
   !
   SAVE
   !
+  INTEGER, PARAMETER :: history_ndim = 8
+  !
   ! ... "general" variables :
   !
   LOGICAL :: &
@@ -31,6 +33,7 @@ MODULE path_variables
        use_multistep,            &! .TRUE. if multistep has to be used in smd
                                   !        optimization
        write_save,               &! .TRUE. if the save file has to be written
+       free_energy,              &! .TRUE. for free-energy calculations
        fixed_tan,                &! if. TRUE. the projection is done using the
                                   !           tangent of the average path
        use_freezing,             &! if .TRUE. images are optimised according
@@ -67,6 +70,8 @@ MODULE path_variables
        istep_path,               &! iteration in the optimization procedure
        nstep_path,               &! maximum number of iterations
        av_counter                 ! number of steps used to compute averages
+  LOGICAL :: &
+       reset_broyden = .FALSE.    ! used to reset the broyden subspace
   !
   ! ... "general" real space arrays
   !
@@ -130,8 +135,10 @@ MODULE path_variables
   ! ... real space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &
-       pos_av_in(:),             &!
-       pos_av_fin(:)              !
+       pos_in_av(:),             &!
+       pos_fin_av(:),            &!
+       pos_in_h(:,:),            &!
+       pos_fin_h(:,:)             !
   REAL (KIND=DP), ALLOCATABLE :: &
        pos_star(:,:)              !
   !
@@ -139,7 +146,8 @@ MODULE path_variables
   !
   REAL (KIND=DP), ALLOCATABLE :: &
        ft_pos(:,:),              &!
-       ft_pos_av(:,:)             !
+       ft_pos_av(:,:),           &!
+       ft_pos_h(:,:,:)            !
   !
   ! ... Y. Kanai variabiles for combined smd/cp dynamics :
   !
@@ -209,13 +217,18 @@ MODULE path_variables
           !
           ! ... real space arrays
           !
-          ALLOCATE( pos_av_in(  dim ) )
-          ALLOCATE( pos_av_fin( dim ) )        
+          ALLOCATE( pos_in_av(  dim ) )
+          ALLOCATE( pos_fin_av( dim ) )
+          !
+          ALLOCATE( pos_in_h(  dim, history_ndim ) )
+          ALLOCATE( pos_fin_h( dim, history_ndim ) )
           !
           ALLOCATE( pos_star( dim, 0:( Nft - 1 ) ) )
           !
           ALLOCATE( ft_pos(    dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_pos_av( dim, ( Nft - 1 ) ) )
+          !
+          ALLOCATE( ft_pos_h( dim, ( Nft - 1 ), history_ndim ) )
           !
           IF ( llangevin ) THEN
              !
@@ -256,8 +269,11 @@ MODULE path_variables
        !
        IF ( method == "smd" ) THEN
           !
-          IF ( ALLOCATED( pos_av_in ) )   DEALLOCATE( pos_av_in )
-          IF ( ALLOCATED( pos_av_fin ) )  DEALLOCATE( pos_av_fin )
+          IF ( ALLOCATED( pos_in_av ) )   DEALLOCATE( pos_in_av )
+          IF ( ALLOCATED( pos_fin_av ) )  DEALLOCATE( pos_fin_av )
+          !
+          IF ( ALLOCATED( pos_in_h ) )    DEALLOCATE( pos_in_h )
+          IF ( ALLOCATED( pos_fin_h ) )   DEALLOCATE( pos_fin_h )
           !
           IF ( ALLOCATED( pos_star ) )    DEALLOCATE( pos_star )
           !

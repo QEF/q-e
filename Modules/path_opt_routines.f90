@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define USE_SMART_STEP
+!#define USE_SMART_STEP
 !#define DEBUG_SMART_STEP
 !
 !--------------------------------------------------------------------------
@@ -97,7 +97,6 @@ MODULE path_opt_routines
        !
      END SUBROUTINE velocity_Verlet_first_step
      !
-     !
      !----------------------------------------------------------------------
      SUBROUTINE velocity_Verlet_second_step( index )
        !----------------------------------------------------------------------
@@ -181,10 +180,10 @@ MODULE path_opt_routines
                     ( s .dot. grad(:,index) ) / ( norm( s ) * norm_grad(index) )
 #  endif
                 !
-                IF ( ABS( y .dot. s ) > eps8 ) THEN
+                IF ( ( y .dot. s ) > eps8 ) THEN
                    !
                    grad(:,index) = 2.D0 * s * &
-                                ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
+                                   ( s .dot. grad(:,index) ) / ( y .dot. s )
                    !
                 END IF
                 !
@@ -217,25 +216,32 @@ MODULE path_opt_routines
        !-----------------------------------------------------------------------
        !
        USE io_files,       ONLY : prefix
-       USE path_variables, ONLY : dim, num_of_images
+       USE path_variables, ONLY : dim, num_of_images, reset_broyden
        !
        IMPLICIT NONE
        !
        REAL (KIND=DP), ALLOCATABLE :: g(:), s(:,:)
        INTEGER                     :: j
        INTEGER                     :: k
+       REAL (KIND=DP)              :: s_norm
        LOGICAL                     :: exists
-       INTEGER, PARAMETER          :: broyden_ndim = 4
+       REAL (KIND=DP), PARAMETER   :: J0       = 4.0D0
+       REAL (KIND=DP), PARAMETER   :: step_max = 1.0D0
+       INTEGER,        PARAMETER   :: broyden_ndim = 32
        !
        !
-       PRINT *, "BROYDEN"
-       !
-       ALLOCATE( g( dim ) )
+       ALLOCATE( g( dim * num_of_images ) )
        ALLOCATE( s( dim * num_of_images, broyden_ndim ) )
+       !
+       g(:) = RESHAPE( SOURCE = grad, SHAPE = (/ dim * num_of_images /) )
+       !
+       IF ( norm( g ) == 0.D0 ) RETURN
        !
        ! ... open the file containing the old configurations of the path
        !
        INQUIRE( FILE = TRIM( prefix ) // ".broyden", EXIST = exists )
+       !
+       IF ( reset_broyden ) exists = .FALSE.
        !
        IF ( exists ) THEN
           !
@@ -254,13 +260,13 @@ MODULE path_opt_routines
           !
           k = 1
           !
+          reset_broyden = .FALSE.
+          !
        END IF
        !
        ! ... Broyden update
        !
-       g(:) = RESHAPE( SOURCE = grad, SHAPE = (/ dim * num_of_images /) )
-       !
-       s(:,k) = - ds * g(:)
+       s(:,k) = - J0 * g(:)
        !
        DO j = 1, k - 2
           !
@@ -280,15 +286,17 @@ MODULE path_opt_routines
           !
           ! ... uphill step :  reset history
           !
-          PRINT *, "RESETTING HISTORY"
-          !
           k = 1
           !
           s = 0.D0
           !
-          s(:,k) = - ds * g(:)
+          s(:,k) = - J0 * g(:)
           !
        END IF
+       !
+       s_norm = norm( s(:,k) )
+       !
+       s(:,k) = s(:,k) / s_norm * MIN( s_norm, step_max )
        !
        pos = pos + RESHAPE( SOURCE = s(:,k), &
                             SHAPE = (/ dim, num_of_images /) )
@@ -311,8 +319,6 @@ MODULE path_opt_routines
        WRITE( 999, * ) s
        !
        CLOSE( UNIT = 999 )
-       !
-       PRINT *, "BROYDEN COMPLETED"
        !
        DEALLOCATE( g )
        DEALLOCATE( s )
