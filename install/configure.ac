@@ -36,10 +36,23 @@ if test "$topdir" = "" ; then topdir="`pwd`" ; fi
 # check system type (no cross-compilation for now)
 AC_CANONICAL_BUILD
 
+# many HPC systems are configured so that running programs interactively
+# is disabled: on those systems, AC_PROG_F77 and AC_PROG_CC would fail
+# because they can't run the compiled executables
+# to work around that, let's pretend we are cross-compiling even if we aren't
+if test "$host" = "" -o "$host" = "$build"
+then
+	# fake cross-compilation
+	# this relies on undocumented Autoconf behavior!!!
+	# (if you know a better way, please tell me)
+	host=$build
+	cross_compiling=maybe
+fi
+
 if test "$arch" = ""
 then
 	# identify architecture
-	case $build in
+	case $host in
 		ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
 		*-pc-linux-gnu )                        arch=linux32 ;;
 		*-ibm-aix* )                            arch=aix     ;;
@@ -120,7 +133,7 @@ mac )
 	AC_MSG_WARN(unsupported architecture)
 	problems="$problems\\
 		  unsupported architecture:\\
-		  $build\\"
+		  $host\\"
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
