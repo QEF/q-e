@@ -99,7 +99,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        ! ... Here the product with the non local potential V_NL psi
        !
-       CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, becp, nkb )
+       IF ( nkb > 0 ) &
+          CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, becp, nkb )
        !
        IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
        !
@@ -125,7 +126,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        CALL start_clock( 'init' )
        !
-       CALL ccalbec( nkb, lda, n, m, becp, vkb, psi )   
+       IF ( nkb > 0 ) &
+          CALL ccalbec( nkb, lda, n, m, becp, vkb, psi )   
        !
        ! ... Here we apply the kinetic energy (k+G)^2 psi
        !

@@ -39,13 +39,13 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   CALL start_clock( 'pw_gemm' )
   !
   CALL DGEMM( 'C', 'N', na, nb, 2 * n, 2.D0, a, 2 * lda, b, &
-              2 * ldb, 0.d0, c, ldc )
+              2 * ldb, 0.D0, c, ldc )
   !
   IF ( gstart == 2 ) &
-     CALL DGER(  na, nb, -1.D0, a, 2 * lda, b, 2 * ldb, c, ldc )
+     CALL DGER(  na, nb, -1.D0, a, ( 2 * lda ), b, ( 2 * ldb ), c, ldc )
   !
 #ifdef __PARA
-  if ( sum_over_nodes == 'y' .OR. sum_over_nodes == 'Y' ) &
+  IF ( sum_over_nodes == 'y' .OR. sum_over_nodes == 'Y' ) &
      CALL reduce( ldc * nb, c )
 #endif
   !

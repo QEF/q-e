@@ -60,7 +60,7 @@ SUBROUTINE force_us( forcenl )
        !
        REAL(KIND=DP), ALLOCATABLE    :: becp(:,:), dbecp (:,:,:)
        ! auxiliary variables contain <beta|psi> and <dbeta|psi>
-       COMPLEX(KIND=DP), ALLOCATABLE :: vkb1 (:,:)
+       COMPLEX(KIND=DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
        REAL(KIND=DP) :: ps
        INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
@@ -82,20 +82,23 @@ SUBROUTINE force_us( forcenl )
           IF ( nks > 1 ) THEN
              READ( iunigk ) npw, igk
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
-             CALL init_us_2( npw, igk, xk(1,ik), vkb )
+             IF ( nkb > 0 ) &
+                CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
-          CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb )
+          IF ( nkb > 0 ) &
+             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb )
           !
           DO ipol = 1, 3
-             DO jkb = 1,nkb
+             DO jkb = 1, nkb
                 DO ig = 1, npw
                    vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk(ig))
                 END DO
              END DO
              !
-             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb1, npwx, evc, npwx, &
-                           dbecp(1,1,ipol), nkb )
+             IF ( nkb > 0 ) &
+                CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb1, npwx, evc, npwx, &
+                              dbecp(1,1,ipol), nkb )
              !
           END DO
           !
@@ -213,20 +216,23 @@ SUBROUTINE force_us( forcenl )
           IF ( nks > 1 ) THEN
              READ( iunigk ) npw, igk
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
-             CALL init_us_2( npw, igk, xk(1,ik), vkb )
+             IF ( nkb > 0 ) &
+                CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
           CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
           !
           DO ipol = 1, 3
-             DO jkb = 1,nkb
+             DO jkb = 1, nkb
                 DO ig = 1, npw
                    vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk(ig))
                 END DO
              END DO
              !
-             CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, (1.D0, 0.D0), vkb1, npwx, &
-                         evc, npwx, (0.D0, 0.D0), dbecp(1,1,ipol), nkb )
+             IF ( nkb > 0 ) &
+                CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, ( 1.D0, 0.D0 ), &
+                            vkb1, npwx, evc, npwx, ( 0.D0, 0.D0 ),    &
+                            dbecp(1,1,ipol), nkb )
           END DO
           !
           ijkb0 = 0
@@ -319,4 +325,3 @@ SUBROUTINE force_us( forcenl )
      END SUBROUTINE force_us_k
      !     
 END SUBROUTINE force_us
-

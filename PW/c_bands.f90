@@ -149,7 +149,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... various initializations
           !
-          CALL init_us_2( npw, igk, xk(1,ik), vkb )
+          IF ( nkb > 0 ) &
+             CALL init_us_2( npw, igk, xk(1,ik), vkb )
           !
           ! ... read in wavefunctions from the previous iteration
           !
@@ -355,7 +356,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... various initializations
           !
-          CALL init_us_2( npw, igk, xk(1,ik), vkb )
+          IF ( nkb > 0 ) &
+             CALL init_us_2( npw, igk, xk(1,ik), vkb )
           !
           ! ... read in wavefunctions from the previous iteration
           !
