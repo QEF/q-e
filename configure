@@ -1436,7 +1436,7 @@ sparc )
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
-	try_dflags="-DSUN"
+	try_dflags="-D__SUN"
 	;;
 crayx1 )
 	try_f90="ftn"
