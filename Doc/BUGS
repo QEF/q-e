@@ -3,7 +3,7 @@
 
   *  cell minimization with steepest descent was not working (CP/FPMD)
 
-  *  various Alpha compilation problems
+  *  various Alpha and SUN compilation problems
 
 Fixed in version 2.1:
 

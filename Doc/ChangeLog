@@ -1,3 +1,8 @@
+28 Sep 2004  release.sh script updated: Raman/ added (PG)
+             SUN compilation problem in mp.f90 (PG)
+             More cleanup of parallel variables and pwcom/phcom references.
+             (C.S.)
+
 27 Sep 2004  Documentation updated (PG)
 
 27 Sep 2004  XLF workarounds no longer needed (the bug in the compiler has
@@ -12,7 +17,7 @@
             - CPV/wf.f90:
               need to include 'f_defs.h' to get MPI_REAL8
             - Modules/wave_base.f90:
-            - include "f_defs.h" instead of "../include/f_defs.h" to be
+              include "f_defs.h" instead of "../include/f_defs.h" to be
               consistent with other files (and allow out-of-place compilation).
             - flib/transto.f90:
               include "opt_param.h" instead of "../include/opt_param.h" to be
@@ -53,7 +58,7 @@
             Doc updated (C.S.)
 
 24 Sep 2004 atomic_number : patch from Axel, fixes the case of 
-            atomic symobols with one letter
+            atomic symbols with one letter
 
 23 Sep 2004 "make tar" was not saving atomic_doc
             Misc. Alpha compilation errors and warning (PG)

@@ -5,7 +5,7 @@ INSTALLATION/PORTING
 
 - expand configure to cover as many configurations as possible
 
-- too many options for SGI machines
+- __FUJITSU vs FUJ64,  SUN, HITACHI
 
 COMMON
 
