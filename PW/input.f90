@@ -89,7 +89,7 @@ SUBROUTINE iosys
                             nosym_       => nosym, &
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, noinv, time_max, restart
-  USE wvfct,         ONLY : nbnd_ => nbnd
+  USE wvfct,         ONLY : ibm_baco2, nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
   USE control_flags, ONLY : twfcollect 
   USE noncollin_module,     ONLY : baco_ibm_xlf, &
