@@ -1017,12 +1017,10 @@ SUBROUTINE upf2ncpp( upf, ap )
   DO l = 1, ap%lnl
 
     !  find out the angular momentum (il-1) of the component stored in position l
-
-    il = ap%indl(l)  
-     
+    !  il = ap%indl(l)  
     !  vrps(i, il) = ( vnl(i, il) - vloc(i) ) * rps(i, il)
      
-    ap%vrps( 1:upf%mesh, l ) = upf%beta( 1:upf%mesh, il ) / 2.0d0 
+    ap%vrps( 1:upf%mesh, l ) = upf%beta( 1:upf%mesh, l ) / 2.0d0 
 
   END DO
  
