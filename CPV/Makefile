@@ -32,7 +32,7 @@ cp90 : $(FOBJS) cpflush.o
 
 
 clean_:
-	- rm -f *.o *.i core* fort* *.mod *.s *.d work.pc
+	- rm -f *.o *.i core* fort* *.mod *.s *.d work.pc cp.x
 
 include .dependencies
 include ../make.rules
