@@ -146,9 +146,9 @@ MODULE minimization_routines
              !
              vel(:,index) = 0.D0
              !
-             vel_zeroed(index) = .TRUE.
-             !
 #if defined (USE_SMART_STEP)
+             !
+             vel_zeroed(index) = .TRUE.
              !
              ! ... an approximate newton-raphson step is performed
              !
@@ -178,9 +178,9 @@ MODULE minimization_routines
                 !
                 DEALLOCATE( y, s )
                 !
+             END IF
+             !
 #endif
-                !
-             END IF   
              !
           END IF
           !
