@@ -23,8 +23,7 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
    USE klist,                ONLY : nks, xk
-   USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
-                                    Hubbard_U, Hubbard_alpha
+   USE ldaU,                 ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb, qq
@@ -51,7 +50,7 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    COMPLEX (kind=DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
                                      betapsi(:,:), dbetapsi(:,:), &
                                      wfatbeta(:,:), wfatdbeta(:,:)
-   !      dwfc(npwx,ldim),          ! the derivative of the atomic d wfc
+   !      dwfc(npwx,ldim),       ! the derivative of the atomic d wfc
    !      work(npwx),            ! the beta function
    !      dbeta(npwx),           ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
@@ -70,7 +69,6 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
-
    IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
       DO ig = 1,npw
          gvec = g(ipol,igk(ig)) * tpiba

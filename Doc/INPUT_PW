@@ -299,7 +299,7 @@ starting_ns_eigenvalue(m,ispin,I) REAL (default = -1.d0 that means NOT SET)
                the desired orbital occupations when the default choice
                takes another path.
 
-U_projector_type   CHARACTER   (default='atomic')
+U_projection_type   CHARACTER   (default='atomic')
                Only active when lda_plus_U is .true., specifies the type
                of projector on localized orbital to be used in the LDA+U
                scheme.
