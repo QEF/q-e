@@ -52,8 +52,7 @@ subroutine add_zstar_ue (imode0, npe)
            ! read DeltaV*psi(scf) for phonon mode # mode
            !
 
-           if (nksq.gt.1.or.npe.gt.1) call davcio (dpsi, lrdwf, iudwf, nrec, &
-                - 1)
+           call davcio (dpsi, lrdwf, iudwf, nrec, -1)
            do ibnd = 1, nbnd
               zstarue0 (mode, jpol) = zstarue0 (mode, jpol) - 2.d0 * weight * &
                    ZDOTC (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
