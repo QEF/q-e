@@ -24,7 +24,8 @@ t3e     : Cray T3E, Cray compiler
 origin  : SGI Origin 2000/3000, SGI compiler
 sunmpi  : Sun parallel machines, Sun compiler
 alphaMPI: HP-Compaq alpha parallel machines, HP-Compaq compiler
-hp      : HP PA-RISC workstations (also parallel), HP compiler (experimental)
+hp      : HP PA-RISC workstations, HP compiler
+hpMPI   : HP PA-RISC parallel machines, HP compiler
 beowulf : Linux Beowulf (PC cluster), Portland compiler
 beo_ifc : As above, Intel compiler
 alpha   : HP-Compaq alpha workstations, HP-Compaq compiler

@@ -290,3 +290,43 @@
 
 #endif
 
+#if defined __HP
+
+#  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d
+#  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d
+#  define FFTW_INPLACE_DRV_3D fftw_inplace_drv_3d
+#  define CP_GETENV cp_getenv
+#  define CP_DATE cp_date
+#  define CREATE_PLAN_2D create_plan_2d
+#  define CREATE_PLAN_3D create_plan_3d
+#  define CREATE_PLAN_1D create_plan_1d
+#  define DESTROY_PLAN_1D destroy_plan_1d
+#  define DESTROY_PLAN_2D destroy_plan_2d
+#  define DESTROY_PLAN_3D destroy_plan_3d
+#  define FFT_X_STICK fft_x_stick
+#  define FFT_XY_STICK fft_xy_stick
+#  define FFT_XY fft_xy
+#  define FFT_Y_STICK fft_y_stick
+#  define FFT_Y_STICK2 fft_y_stick2
+#  define FFT_Z_STICK fft_z_stick
+#  define FFT_Z fft_z
+#  define FFT_STICK fft_stick
+#  define CPFLUSH cpflush
+#  define CPTIMER cptimer
+#  define ELAPSED_SECONDS elapsed_seconds
+#  define CCLOCK cclock
+#  define FACTOR235 factor235
+#  define FACTOR2 factor2
+#  define LN_ALLOC ln_alloc
+#  define LN_DEALLOC ln_dealloc
+#  define LN_SET ln_set
+#  define LN_ACTIVATE ln_activate
+#  define LN_IND ln_ind
+#  define MEMSTAT memstat
+#  define READOCC readocc
+#  define ROUND2 round2
+#  define MYUNITNAME myunitname
+#  define CP_ITOA cp_itoa
+
+#endif
+

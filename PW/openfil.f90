@@ -93,7 +93,7 @@ subroutine openfil
   !
   !    iunigk contains the number of PW and the indices igk
   !
-  iunigk = 7
+  iunigk = 24
   call seqopn (iunigk, trim(prefix)//'.igk', 'unformatted', exst)
   !
   return
