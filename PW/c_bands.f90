@@ -21,11 +21,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   !
   USE kinds,                ONLY : DP
+  USE constants,            ONLY : eps4
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
-  USE cell_base,                ONLY : tpiba2 
-  USE klist,                ONLY : nkstot, nks, xk
+  USE cell_base,            ONLY : tpiba2 
+  USE klist,                ONLY : nkstot, nks, xk, nelec
   USE us,                   ONLY : okvan, vkb, nkb
   USE gvect,                ONLY : g, gstart, ecfixed, qcutz, q2sigma, nrxx, &
                                    nr1, nr2, nr3  
@@ -38,6 +39,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc  
   USE g_psi_mod,            ONLY : h_diag, s_diag
+  USE diis_module,          ONLY : cdiisg, rdiisg
   !
   IMPLICIT NONE
   !
@@ -54,13 +56,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   REAL(KIND=DP) :: avg_iter, v_of_0
     ! average number of iterations
     ! the average of the potential
-  INTEGER :: ik, ig, ibnd, dav_iter, ntry, notconv
+  INTEGER :: ik, ig, ibnd, dav_iter, diis_iter, ntry, notconv
     ! counter on k points
     ! counter on G vectors
     ! counter on bands
     ! number of iterations in Davidson
+    ! number of iterations in DIIS
     ! number or repeated call to diagonalization in case of non convergence
     ! number of notconverged elements
+  INTEGER, ALLOCATABLE :: btype(:)
+    ! type of band: conduction (1) or valence (0)  
   !
   ! ... external functions
   !
@@ -81,7 +86,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   ! ... allocate arrays
   !
   ALLOCATE( h_diag( npwx ) )    
-  ALLOCATE( s_diag( npwx ) )      
+  ALLOCATE( s_diag( npwx ) )   
+  !
+  ! ... allocate specific array for DIIS
+  !
+  IF ( isolve == 2 ) ALLOCATE( btype(  nbnd ) )       
   !
   IF ( gamma_only ) THEN
      !
@@ -97,6 +106,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
+  !
+  IF ( isolve == 2 ) DEALLOCATE( btype )
   !       
   CALL stop_clock( 'c_bands' )  
   !
@@ -113,13 +124,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... This routine is a driver for the diagonalization routines of the
        ! ... total Hamiltonian at Gammma point only
        ! ... It reads the Hamiltonian and an initial guess of the wavefunctions
-       ! ... from a file and computes initialization quantities for Davidson
-       ! ... iterative diagonalization.
+       ! ... from a file and computes initialization quantities for the
+       ! ... diagonalization routines.
+       ! ... There are two types of iterative diagonalization:
+       ! ... a) Davidson algorithm (all-band)
+       ! ... c) DIIS algorithm (all-band) 
        !
        USE rbecmod, ONLY: becp, becp_
        !
        IMPLICIT NONE
-       !
+       !     
        !
        ! ... becp, becp_ contain <beta|psi> - used in h_psi and s_psi
        ! ... they are allocate once here in order to reduce overhead
@@ -127,21 +141,26 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ALLOCATE( becp( nkb, nbnd ), becp_( nkb, nbnd ) )
        !
        IF ( isolve == 0 ) THEN
-          WRITE( stdout, '("     Davidson diagonalization with overlap")' )
+          !
+          WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
+          !
+       ELSE IF ( isolve == 2 ) THEN
+          !
+          WRITE( stdout, '(5X,"DIIS style diagonalization")')
+          !       
        ELSE
-          CALL errore( 'c_bands', &
-                     & 'CG and DIIS diagonalization not implemented', 1 )
+          !
+          CALL errore( 'c_bands', 'CG diagonalization not implemented', 1 )
+          !
        END IF
        !
        avg_iter = 0.D0
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = SUM ( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = SUM( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
        !
-#if defined (__PARA)
        CALL reduce( 1, v_of_0 )
-#endif
        !
        IF ( nks > 1 ) REWIND( iunigk )
        !
@@ -194,41 +213,95 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
           END IF
           !
-          ! ... h_diag are the diagonal matrix elements of the 
-          ! ... hamiltonian used in g_psi to evaluate the correction 
-          ! ... to the trial eigenvectors
-          !
-          h_diag(1:npw) = g2kin(1:npw) + v_of_0
-          !
-          CALL usnldiag( h_diag, s_diag )
-          !
-          ntry = 0
-          !
-          david_loop: DO
+          IF ( isolve == 2 ) THEN
              !
-             CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, gstart, &
-                           et(1,ik), notconv, dav_iter )
+             ! ... RMM-DIIS method
              !
-             avg_iter = avg_iter + dav_iter
+             h_diag(1:npw) = g2kin(1:npw) + v_of_0
              !
-             ! ... save wave-functions to be used as input for the
-             ! ... iterative diagonalization of the next scf iteration 
-             ! ... and for rho calculation
+             CALL usnldiag( h_diag, s_diag )
              !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-             !  
-             ntry = ntry + 1
+             ntry = 0
+             diis_iter = 0.D0
              !
-             ! ... exit condition
+             btype(:) = 1
              !
-             IF ( test_exit_cond() ) EXIT  david_loop
+             IF ( iter == 1 ) THEN
+                !
+                ! ... at the first iteration a static criterium is used to
+                ! ... define whether or not a band is occupied
+                !
+                FORALL( ibnd = 1 : nbnd, &
+                        ibnd > ( INT( nelec / 2.D0 ) + 4 ) ) btype(ibnd) = 0
+                !
+             ELSE
+                !
+                ! ... a band is considered empty when its occupation is less 
+                ! ... than 1.0 %
+                !   
+                WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+                !
+             END IF   
              !
-          END DO david_loop
-          !
-          IF ( notconv /= 0 ) &
-             WRITE( stdout, '(" warning : ",I3," eigenvectors not",&
-                  &" converged after ",I3," attemps")') notconv, ntry
+             RMMDIIS_loop: DO
+                !
+                CALL rdiisg( npw, npwx, nbnd, diis_ndim, evc, &
+                             et(:,ik), ethr, btype, notconv, diis_iter, iter )
+                !  
+                avg_iter = avg_iter + diis_iter
+                !
+                ! ... save wave-functions to be used as input for the
+                ! ... iterative diagonalization of the next scf iteration 
+                ! ... and for rho calculation
+                !
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                !
+                ntry = ntry + 1                
+                !
+                ! ... exit condition
+                !
+                IF ( test_exit_cond() ) EXIT  RMMDIIS_loop
+                !
+             END DO RMMDIIS_loop
+             !
+          ELSE
+             !
+             ! ... Davidson diagonalization
+             !
+             ! ... h_diag are the diagonal matrix elements of the 
+             ! ... hamiltonian used in g_psi to evaluate the correction 
+             ! ... to the trial eigenvectors
+             !
+             h_diag(1:npw) = g2kin(1:npw) + v_of_0
+             !
+             CALL usnldiag( h_diag, s_diag )
+             !
+             ntry = 0
+             !
+             david_loop: DO
+                !
+                CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                              okvan, gstart, et(1,ik), notconv, dav_iter )
+                !
+                avg_iter = avg_iter + dav_iter
+                !
+                ! ... save wave-functions to be used as input for the
+                ! ... iterative diagonalization of the next scf iteration 
+                ! ... and for rho calculation
+                !
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                !   
+                ntry = ntry + 1
+                !
+                ! ... exit condition
+                !
+                IF ( test_exit_cond() ) EXIT  david_loop
+                !
+             END DO david_loop
+             !
+          END IF
           !
           IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
              !
@@ -245,9 +318,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ik_ = 0
        !
-#if defined (__PARA)
        CALL poolreduce( 1, avg_iter )
-#endif
        !
        avg_iter = avg_iter / nkstot
        !
@@ -282,32 +353,22 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... here the local variables
        !
-       REAL(KIND=DP) :: cg_iter, diis_iter
+       REAL(KIND=DP) :: cg_iter
          ! number of iteration in CG
-         ! number of iteration in DIIS
-       INTEGER, ALLOCATABLE :: btype(:)
-         ! type of band: conduction (1) or valence (0)
        !
-       !
-       ! ... allocate specific array for DIIS
-       !
-       IF ( isolve == 2 ) &
-          ALLOCATE( btype(  nbnd ) )    
        !
        IF ( isolve == 0 ) THEN
           !
-          WRITE( stdout, '("     Davidson diagonalization (with overlap)")')
+          WRITE( stdout, '(5X,"Davidson diagonalization (with overlap)")')
           !
        ELSE IF ( isolve == 1 ) THEN
           !
-          WRITE( stdout, '("     Conjugate-gradient style diagonalization")')
+          WRITE( stdout, '(5X,"Conjugate-gradient style diagonalization")')
           !
        ELSE IF ( isolve == 2 ) THEN
           !
-          WRITE( stdout, '("     DIIS style diagonalization")')
-          IF ( ethr > diis_ethr_cg ) &
-             WRITE( stdout, '(6X,"use conjugate-gradient method ", &
-                               & "until ethr <",1PE9.2)' ) diis_ethr_cg
+          WRITE( stdout, '(5X,"DIIS style diagonalization")')
+          !
        ELSE
           !
           CALL errore( 'c_bands', 'isolve not implemented', 1 )
@@ -318,11 +379,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = SUM ( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = SUM( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
        !
-#if defined (__PARA)
        CALL reduce( 1, v_of_0 )
-#endif
        !
        if ( nks > 1 ) REWIND( iunigk )
        !
@@ -374,11 +433,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              END DO
           END IF
           !
-          IF ( ( isolve == 1 ) .OR. &
-               ( isolve == 2 .AND. ethr > diis_ethr_cg ) ) THEN
+          IF ( isolve == 1 ) THEN
              !
              ! ... Conjugate-Gradient diagonalization
-             ! ... and first steps of RMM-DIIS diagonalization
              !
              ! ... h_diag is the precondition matrix
              !
@@ -418,7 +475,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
           ELSE IF ( isolve == 2 ) THEN
              !
-             ! ... when ethr <= diis_ethr_cg  start the RMM-DIIS method
+             ! ... RMM-DIIS method
              !
              h_diag(1:npw) = g2kin(1:npw) + v_of_0
              !
@@ -427,15 +484,29 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              ntry = 0
              diis_iter = 0.D0
              !
-             btype(:) = 0
+             btype(:) = 1
              !
-             IF ( iter > 1 ) &
-                WHERE( wg(:,ik) < 1.0D-4 ) btype(:) = 1
+             IF ( iter == 1 ) THEN
+                !
+                ! ... at the first iteration a static criterium is used to
+                ! ... define whether or not a band is occupied
+                !
+                FORALL( ibnd = 1 : nbnd, &
+                        ibnd > ( INT( nelec / 2.D0 ) + 4 ) ) btype(ibnd) = 0
+                !
+             ELSE
+                !
+                ! ... a band is considered empty when its occupation is less 
+                ! ... than 1.0 %
+                !   
+                WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+                !
+             END IF   
              !
              RMMDIIS_loop: DO
                 !
-                CALL cdiisg( npw, npwx, nbnd, diis_ndim, evc, et(1,ik), ethr, &
-                             btype, notconv, diis_iter, iter )
+                CALL cdiisg( npw, npwx, nbnd, diis_ndim, evc, &
+                             et(:,ik), ethr, btype, notconv, diis_iter, iter )
                 !  
                 avg_iter = avg_iter + diis_iter
                 !
@@ -470,8 +541,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              david_loop: DO
                 !
-                CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                              et(1,ik), notconv, dav_iter )
+                CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                              okvan, et(1,ik), notconv, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter
                 !
@@ -492,10 +563,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
           END IF
           !
-          IF ( notconv /= 0 ) &
-             WRITE( stdout, '(" warning : ",i3," eigenvectors not",&
-                  &" converged after ",i3," attemps")') notconv, ntry
-          !
           IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
              !
              CALL errore( 'c_bands', &
@@ -511,18 +578,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ik_ = 0
        !
-#if defined (__PARA)
        CALL poolreduce( 1, avg_iter )
-#endif
        !
        avg_iter = avg_iter / nkstot
        !
        WRITE( stdout, &
               '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
            ethr, avg_iter
-       !
-       IF ( isolve == 2 ) &
-          DEALLOCATE( btype )
        !
        RETURN
        !

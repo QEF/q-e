@@ -163,7 +163,6 @@ SUBROUTINE electrons()
      WRITE( stdout, 9000 ) tcpu
      !
      IF ( imix >= 0 ) rho_save = rho
-     !IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho, 1, rho_save, 1 )
      !  
      iter = iter + 1
      !
@@ -271,7 +270,6 @@ SUBROUTINE electrons()
            !
            ldim2 = ( 2 * Hubbard_lmax + 1 )**2
            nsnew = ns 
-           !CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )
            !
         END IF
         !
@@ -330,8 +328,7 @@ SUBROUTINE electrons()
            IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
               !
               ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-              nsnew = ns
-              !CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )                 
+              nsnew = ns             
               !
            END IF
            !
@@ -343,7 +340,6 @@ SUBROUTINE electrons()
         END IF             
         !
         vnew =  vnew - vr
-        !CALL DAXPY( ( nspin * nrxx ), -1.D0, vr, 1, vnew, 1 )
         !
         CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
@@ -372,7 +368,6 @@ SUBROUTINE electrons()
         ldim2 = ( 2 * Hubbard_lmax + 1 )**2
         !
         IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) ns = nsnew
-        !   CALL DCOPY( ( ldim2 * nspin * nat ), nsnew, 1, ns, 1 )    
         !
         IF ( me_image == root_image ) THEN
            !
@@ -408,8 +403,6 @@ SUBROUTINE electrons()
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
           iswitch <= 2 ) THEN
-        !  
-        !IF ( lda_plus_u ) CALL write_ns()
         !
 #if defined (__PARA)
         !
@@ -528,7 +521,6 @@ SUBROUTINE electrons()
      !CALL forces()
      !
      IF ( imix >= 0 ) rho = rho_save
-     !IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho_save, 1, rho, 1 )
      !
   END DO
   !

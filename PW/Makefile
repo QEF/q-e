@@ -34,7 +34,6 @@ ccalbec.o \
 ccgdiagg.o \
 cdiagh.o \
 cdiaghg.o \
-cdiisg.o \
 cegterg.o \
 cft3.o \
 cft3s.o \
@@ -61,6 +60,7 @@ data_structure.o \
 davcio.o \
 delta_e.o \
 deriv_drhoc.o \
+diis_module.o \
 diropn.o \
 divide.o \
 divide_et_impera.o \

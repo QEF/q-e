@@ -1,15 +1,20 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module g_psi_mod
+MODULE g_psi_mod
+  !
+  ! ... These are the variables needed in g_psi
+  !  
   USE kinds, only : DP
-  implicit none
-  ! These are the variables needed in g_psi
-  real(kind=DP), allocatable :: h_diag (:),& ! diagonal part of the Hamiltonian
-                                s_diag (:)   ! diagonal part of the overlap matrix
-  logical                    :: test_new_preconditioning=.false.
-end module g_psi_mod
+  !
+  IMPLICIT NONE
+  !
+  REAL(KIND=DP), ALLOCATABLE :: &
+    h_diag (:),&   ! diagonal part of the Hamiltonian
+    s_diag (:)     ! diagonal part of the overlap matrix
+  !
+END MODULE g_psi_mod

@@ -104,7 +104,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'add_vuspsi' )
       CALL print_clock( 's_psi' )
       !
-   ELSE
+   ELSE IF ( isolve == 1 ) THEN
       !
       CALL print_clock( 'h_1psi' )
       CALL print_clock( 's_1psi' )
@@ -118,6 +118,22 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'secondfft' )
       CALL print_clock( 'add_vuspsi' )
       !
+   ELSE
+      !
+      CALL print_clock( 'h_psi' )
+      CALL print_clock( 's_psi' )
+      CALL print_clock( 'g_psi' )
+      CALL print_clock( 'cdiaghg' )
+      CALL print_clock( 'cgramg1' )
+      !
+      WRITE( stdout, * )
+      !
+      CALL print_clock( 'h_psi' )
+      CALL print_clock( 'init' )
+      CALL print_clock( 'firstfft' )
+      CALL print_clock( 'secondfft' )
+      CALL print_clock( 'add_vuspsi' )
+      !   
    END IF
    !
    WRITE( stdout, * )

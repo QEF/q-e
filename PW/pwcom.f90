@@ -17,7 +17,7 @@ MODULE basis
        ntyp => nsp,      &! number of different types of atoms
        tau,              &! the positions of each atom
        atm,              &! name of the type of the atoms
-       ityp              ! the type of each atom
+       ityp               ! the type of each atom
   !
   SAVE
   !

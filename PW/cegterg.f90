@@ -88,8 +88,6 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   ! allocate the work arrays
   !
 
-  test_new_preconditioning = .true.
-
   call start_clock ('cegterg')
   allocate( psi (ndmx,  nvecx))
   allocate(hpsi (ndmx,  nvecx))
