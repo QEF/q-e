@@ -262,7 +262,7 @@ subroutine convert_cpmd
 
   allocate (vloc0(mesh))
   ! the factor 2 converts from Hartree to Rydberg
-  vloc0(:) = vnl(:,lloc)
+  vloc0(:) = vnl(:,lloc)*2.d0
 
   if (nbeta > 0) then
 

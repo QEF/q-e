@@ -98,7 +98,6 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use wvfct
   use units
   use us
-  use wavefunctions
   use becmod
   use io_files, only: nd_nmbr, prefix, tmp_dir
   use wavefunctions, only: evc

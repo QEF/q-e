@@ -83,7 +83,6 @@ subroutine punch_band (filband)
   use klist
   use units
   use wvfct
-  use wavefunctions
   use us
   use becmod
   use wavefunctions, only: evc
@@ -131,7 +130,7 @@ subroutine punch_band (filband)
 #ifdef __PARA
   endif
 #endif
-
+  !
   allocate (psiold( npwx, nbnd))    
   allocate (old(ngm), new(ngm))    
   allocate (becpold(nkb, nbnd))    
@@ -261,6 +260,10 @@ subroutine punch_band (filband)
 #ifdef __PARA
      if (me == 1) then
 #endif
+     if (ik == 1) then
+        write (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
+             nbnd, nks
+     end if
      write (iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
      write (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
              * rytoev, ibnd = 1, nbnd)

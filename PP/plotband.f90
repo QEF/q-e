@@ -2,19 +2,15 @@
 program read_bands
 
   implicit none
-  integer, parameter:: maxk=100
-  real :: k(3,maxk), e_in(maxk), kx(maxk)
-  real, allocatable :: e(:,:)
+  real, allocatable :: e(:,:), k(:,:), e_in(:), kx(:)
   real :: k1(3), k2(3), xk1, xk2, ps
-  integer :: npoints(maxk)
-  integer :: npk, nbands, nlines, n,i,ni,nf,nl, iargc
-  logical :: high_symmetry(maxk)
-  logical, allocatable :: is_in_range(:)
+  integer, allocatable :: npoints(:)
+  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,ni,nf,nl, iargc
+  logical, allocatable :: high_symmetry(:), is_in_range(:)
   character(len=80) :: filename, prgname
-
-  integer, parameter ::  max_interp=4*maxk
+  namelist /plot/ nks, nbnd
   integer :: n_interp, init
-  real :: k_interp(max_interp), e_interp(max_interp), coef_interp(maxk,4)
+  real, allocatable :: k_interp(:), e_interp(:), coef_interp(:,:)
 
   real :: emin = 1.e10, emax =-1.e10,  etic, eref, deltaE, Ef
   real, parameter :: cm=28.453, xdim=15.0*cm, ydim=10.0*cm, &
@@ -31,14 +27,22 @@ program read_bands
   else
      print '("usage:",a20," [input file] ")',prgname
   end if
-  open(unit=1,file=filename,form='formatted')
 
-  print '("number of bands > ",$)'
-  read(5,*) nbands
-  allocate (e(nbands,maxk))
-  do n=1,maxk
-     read(1,*,end=20,err=30) ( k(i,n), i=1,3 )
-     read(1,*,end=30,err=30) (e(i,n),i=1,nbands)
+  open(unit=1,file=filename,form='formatted')
+  read (1, plot, iostat=ios)
+  !
+  if (nks <= 0 .or. nbnd <= 0 .or. ios /= 0) then
+     stop 'Error reading file header'
+  else
+     print '("Reading ",i4," bands at ",i4," k-points")', nbnd, nks
+  end if
+  !
+  allocate (e(nbnd,nks))
+  allocate (k(3,nks), e_in(nks), kx(nks), npoints(nks), high_symmetry(nks))
+
+  do n=1,nks
+     read(1,*,end=20,err=20) ( k(i,n), i=1,3 )
+     read(1,*,end=20,err=20) (e(i,n),i=1,nbnd)
      if (n==1) then
         kx(n) = 0.0
      else
@@ -48,31 +52,24 @@ program read_bands
      end if
   end do
   close(unit=1)
-  print '("Warning: max # of k-point (",i3,") read")', maxk
-20 npk=n-1
-  print '(i3," k-point read")', npk
 
-  do n=1,npk
-     do i=1,nbands
+  do n=1,nks
+     do i=1,nbnd
         emin = min(emin, e(i,n))
         emax = max(emax, e(i,n))
      end do
   end do
   print '("Range:",2f8.4,"eV  Emin, Emax > ",$)', emin, emax
   read(5,*) emin, emax
-  print '("Efermi > ",$)'
-  read(5,*) Ef
-  print '("deltaE, reference E (for tics) ",$)'
-  read(5,*) deltaE, eref
 
-  allocate (is_in_range(nbands))
+  allocate (is_in_range(nbnd))
   is_in_range(:) = .false.
-  do i=1,nbands
-     is_in_range(i) = any (e(i,1:npk) >= emin .and. e(i,1:npk) <= emax)
+  do i=1,nbnd
+     is_in_range(i) = any (e(i,1:nks) >= emin .and. e(i,1:nks) <= emax)
   end do
 
-  do n=1,npk
-     if (n==1 .or. n==npk) then
+  do n=1,nks
+     if (n==1 .or. n==nks) then
         high_symmetry(n) = .true.
      else
         do i=1,3
@@ -89,7 +86,7 @@ program read_bands
         if (n==1) then
            nlines=0
            npoints(1)=1
-        else if (n==npk) then
+        else if (n==nks) then
            npoints(nlines+1) = npoints(nlines+1)+1
            nlines=nlines+1
         else
@@ -102,13 +99,42 @@ program read_bands
         npoints(nlines+1) = npoints(nlines+1)+1
      end if
   end do
-
+  !
+  print '("output file (xmgr) > ",$)'
+  read(5,'(a)', end=25, err=25)  filename
+  if (filename == ' ' ) then
+     print '("skipping ...")'
+     go to 25
+  end if
+  open (unit=2,file=filename,form='formatted',status='unknown',&
+       iostat=ios)  
+  ! draw bands
+  do i=1,nbnd
+     if (is_in_range(i)) then
+        if ( mod(i,2) /= 0) then
+           write (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
+        else
+           write (2,'(2f10.4)') (kx(n), e(i,n),n=nks,1,-1)
+        end if
+     end if
+  end do
+  close (unit = 2)
+  print '("bands in xmgr format written to file ",a)', filename
+  !
 25 continue
-  print '("output file > ",$)'
-  read(5,'(a)',end=25,err=25)  filename
-
-  open (unit=1,file=filename,form='formatted',status='unknown')
-
+  print '("output file (ps) > ",$)'
+  read(5,'(a)',end=30,err=30)  filename
+  if (filename == ' ' ) then
+     print '("stopping ...")'
+     go to 30
+  end if
+  open (unit=1,file=filename,form='formatted',status='unknown',&
+       iostat=ios)  
+  print '("Efermi > ",$)'
+  read(5,*) Ef
+  print '("deltaE, reference E (for tics) ",$)'
+  read(5,*) deltaE, eref
+  !
   write (1,'(a)') '%! PS-Adobe-1.0'
   write (1,*) '/localdict 100 dict def'
   write (1,*) 'localdict begin'
@@ -125,7 +151,6 @@ program read_bands
   write (1,*) ' 90 rotate 0 21 neg 28.451 mul translate 1.5 1.5 scale'
   write (1,*) '% Landscape:   comment next line'
   write (1,*) '% 1.2 1.2 scale'
-
   write (1,'(2(f8.3,x)," translate")') x0, y0
   write (1,*) '0 setgray 0.5 setlinewidth'
   ! draw tics on axis
@@ -153,23 +178,24 @@ program read_bands
   write (1,*) 'newpath moveto lineto lineto lineto closepath clip stroke'
   write (1,*) '0.5 setlinewidth'
   ! draw high-symmetry lines
-  do n=1,npk
+  do n=1,nks
      if (high_symmetry(n)) then
         write (1,'(4(f8.3,x)," riga")') &
-             kx(n)*xdim/kx(npk), 0.0, kx(n)*xdim/kx(npk), ydim
+             kx(n)*xdim/kx(nks), 0.0, kx(n)*xdim/kx(nks), ydim
      end if
-     do i=1,nbands
+     do i=1,nbnd
         if (is_in_range(i)) write (1,'(2(f8.3,x)," dot")' ) &
-             kx(n)*xdim/kx(npk), (e(i,n)-emin)*ydim/(emax-emin)
+             kx(n)*xdim/kx(nks), (e(i,n)-emin)*ydim/(emax-emin)
      end do
   end do
   ! draw bands
-  do i=1,nbands
+  allocate (k_interp(4*nks), e_interp(4*nks), coef_interp(nks,4))
+  do i=1,nbnd
      if (is_in_range(i)) then
         ! No interpolation:
-        !         write (1,'(9(f8.3,x))') ( kx(n)*xdim/kx(npk), &
-        !             (e(i,n)-emin)*ydim/(emax-emin),n=npk,1,-1)
-        !         write (1,'(i4," banda")' ) npk-1
+        !         write (1,'(9(f8.3,x))') ( kx(n)*xdim/kx(nks), &
+        !             (e(i,n)-emin)*ydim/(emax-emin),n=nks,1,-1)
+        !         write (1,'(i4," banda")' ) nks-1
         ! Spline interpolation with twice as many points:
         !
         ni=1
@@ -186,7 +212,7 @@ program read_bands
            end do
            call spline_interpol ( kx(ni), e_in, nf-ni+1, &
                 k_interp, e_interp, n_interp )
-           write (1,'(9(f8.3,x))') ( k_interp(n)*xdim/kx(npk), &
+           write (1,'(9(f8.3,x))') ( k_interp(n)*xdim/kx(nks), &
                 (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
            write (1,'(i4," banda")' ) n_interp-1
         end do
@@ -198,9 +224,11 @@ program read_bands
   write (1,'(a)') '%%Page'
   write (1,*) 'showpage'
   close (unit=1)
+  print '("bands in PostScript format written to file ",a)', filename
+30 continue
 
   stop
-30 print '("Error reading k-point # ",i4)', n
+20 print '("Error reading k-point # ",i4)', n
   stop
 
 end program read_bands
