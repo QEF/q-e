@@ -158,7 +158,7 @@ subroutine c_bands (iter, ik_, dr2)
         ntry = 0
 10      continue
         if (iter.ne.1.or.istep.ne.1.or.ntry.gt.0) then
-           call cinitcgg (npwx, npw, nbnd, nbnd, evc, et (1, ik) )
+           call cinitcgg (npwx, npw, nbnd, nbnd, evc, evc, et (1, ik) )
            avg_iter = avg_iter + 1.d0
         endif
         call ccgdiagg (npwx, npw, nbnd, evc, et (1, ik), h_diag, ethr, &

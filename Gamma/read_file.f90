@@ -120,9 +120,7 @@ subroutine read_file
   !
   ! TEMP: dimension natomwfc required in projwave by variable becp
   !       this is not a good reason - eventually nbndx must be = nbnd
-  ! TEMP2:dimension david*nbnd required by iterative diagonalization
-  !       if raman coefficients are calculated
-  nbndx = max(4*nbnd,natomwfc)
+  nbndx = max(nbnd,natomwfc)
   call allocate_wfc
   !
   et = et_g
@@ -131,8 +129,8 @@ subroutine read_file
   deallocate( et_g, wg_g )
   !
 #ifdef __PARA
-  call poolscatter (nbndx, nkstot, et, nks, et)
-  call poolscatter (nbnd , nkstot, wg, nks, wg)
+  call poolscatter (nbnd, nkstot, et, nks, et)
+  call poolscatter (nbnd, nkstot, wg, nks, wg)
 #endif
   !
   ! read the charge density
@@ -255,7 +253,7 @@ subroutine read_file
   close (iunpun)
   !
 #ifdef __PARA
-  call poolscatter (nbndx, nkstot, et, nks, et)
+  call poolscatter (nbnd, nkstot, et, nks, et)
   call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
   !

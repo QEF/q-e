@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,69 +7,78 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine rotate_wfc (ndim, ndmx, nvec, nbnd, en, psi)
+subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, evc, e)
   !----------------------------------------------------------------------
   !
   !   Hamiltonian diagonalization in the subspace spanned
-  !   by nvec states psi.
-  !   Produces on output nbnd eigenvectors
-  !   (nbnd <= nvec). Calls h_psi to calculate H|psi> ans S|psi>
+  !   by nstart states psi (atomic or random wavefunctions).
+  !   Produces on output nbnd eigenvectors (nbnd <= nstart) in evc.
+  !   Calls h_psi to calculate H|psi> ans S|psi>
   !
 #include "machine.h"
   use parameters
   implicit none
   !
 
-  integer :: ndim, ndmx, nvec, nbnd
+  integer :: npw, npwx, nstart, nbnd
   ! dimension of the matrix to be diagonalized
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
   ! output number of states
 
-  real(kind=DP) :: en (nvec)
+  complex(kind=DP) :: psi (npwx, nstart), evc (npwx,nbnd)
+  ! input and output eigenvectors (may overlap)
+
+  real(kind=DP) :: e (nbnd)
   ! eigenvalues
 
-  complex(kind=DP) :: psi (ndmx,nbnd)
-  ! eigenvectors
-
   ! auxiliary variables:
-  complex(kind=DP), allocatable :: psip (:,:), psis (:,:), &
+  complex(kind=DP), allocatable :: hpsi (:,:), spsi (:,:), &
        hc (:,:), sc (:,:), vc (:,:)
+  real(kind=DP), allocatable :: en (:)
   !
   !
   call start_clock ('wfcrot')
-  allocate (psip(  ndmx , nvec))    
-  allocate (psis(  ndmx , nvec))    
-  allocate (hc( nvec , nvec))    
-  allocate (sc( nvec , nvec))    
-  allocate (vc( nvec , nvec))    
+  allocate (hpsi(  npwx , nstart))    
+  allocate (spsi(  npwx , nstart))    
+  allocate (hc( nstart , nstart))    
+  allocate (sc( nstart , nstart))    
+  allocate (vc( nstart , nstart))    
+  allocate (en( nstart ))
+  !
+  ! Set up the Hamiltonian and Overlap matrix
+  !
+  call h_psi (npwx, npw, nstart, psi, hpsi, spsi)
 
-  call h_psi (ndmx, ndim, nvec, psi, psip, psis)
-
-  hc(:,:) = (0.d0, 0.d0)
-  sc(:,:) = (0.d0, 0.d0)
-  call ZGEMM ('c', 'n', nvec, nvec, ndim, (1.d0, 0.d0) , psi, ndmx, &
-       psip, ndmx, (0.d0, 0.d0) , hc, nvec)
+  call ZGEMM ('c', 'n', nstart, nstart, npw, (1.d0, 0.d0) , psi, npwx, &
+       hpsi, npwx, (0.d0, 0.d0) , hc, nstart)
 #ifdef __PARA
-  call reduce (2 * nvec * nvec, hc)
+  call reduce (2 * nstart * nstart, hc)
 #endif
-  call ZGEMM ('c', 'n', nvec, nvec, ndim, (1.d0, 0.d0) , psi, ndmx, &
-       psis, ndmx, (0.d0, 0.d0) , sc, nvec)
+  call ZGEMM ('c', 'n', nstart, nstart, npw, (1.d0, 0.d0) , psi, npwx, &
+       spsi, npwx, (0.d0, 0.d0) , sc, nstart)
 #ifdef __PARA
-  call reduce (2 * nvec * nvec, sc)
+  call reduce (2 * nstart * nstart, sc)
 #endif
+  !
+  ! Diagonalize
+  !
+  call cdiaghg (nstart, nbnd, hc, sc, nstart, en, vc)
+  !
+  e (:) = en(1:nbnd)
+  !
+  !   update the basis set
+  !  
+  call ZGEMM ('n', 'n', npw, nbnd, nstart, (1.d0, 0.d0) , psi, npwx, &
+       vc, nstart, (0.d0, 0.d0) , hpsi, npwx)
+  evc(:, :) = hpsi(:, 1:nbnd)
 
-  call cdiaghg (nvec, nbnd, hc, sc, nvec, en, vc)
-
-  call ZGEMM ('n', 'n', ndim, nbnd, nvec, (1.d0, 0.d0) , psi, ndmx, &
-       vc, nvec, (0.d0, 0.d0) , psip, ndmx)
-  psi(:,:) = psip(:,1:nbnd)
-
+  deallocate (en)
   deallocate (vc)
   deallocate (sc)
   deallocate (hc)
-  deallocate (psis)
-  deallocate (psip)
+  deallocate (spsi)
+  deallocate (hpsi)
 
   call stop_clock ('wfcrot')
   return

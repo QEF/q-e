@@ -21,7 +21,7 @@ subroutine allocate_wfc
   !
   allocate (et( nbnd, nkstot))    
   allocate (wg( nbnd, nkstot))    
-  allocate (evc(npwx, nbndx))    
+  allocate (evc(npwx, nbnd))    
   allocate(becp(nkb, nbndx))
   !
   ! Needed for LDA+U

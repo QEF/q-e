@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,12 +33,12 @@ subroutine allocate_phq
      !
      !  q!=0 : evq, igkq are allocated and calculated at point k+q
      !
-     allocate (evq ( npwx , nbndx))    
+     allocate (evq ( npwx , nbnd))    
      allocate (igkq ( npwx))    
 
   endif
-  allocate (dvpsi ( npwx , nbndx))    
-  allocate (dpsi ( npwx , nbndx))    
+  allocate (dvpsi ( npwx , nbnd))    
+  allocate ( dpsi ( npwx , nbnd))    
 
   allocate (vlocq ( ngm , ntyp))    
   allocate (dmuxc ( nrxx , nspin , nspin))    

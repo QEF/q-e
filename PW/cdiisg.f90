@@ -167,7 +167,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
 
      if (kter.eq.1) nvectot = nvec
 
-     call rotate_wfc (ndim, ndmx, nvectot, nvectot, et, psi)
+     call rotate_wfc (ndmx, ndim, nvectot, nvectot, psi, psi, et)
      !        write(*,'(4f12.6)')(et(n),n=1,nvec)
      ! save bands
      if (keep_flag) then
@@ -446,7 +446,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
 
 100 continue
   !
-  call rotate_wfc (ndim, ndmx, nvectot, nvectot, et, psi)
+  call rotate_wfc (ndmx, ndim, nvectot, nvectot, psi, psi, et)
   !
   do n = 1, nvec
      e (n) = et (n)

@@ -292,7 +292,7 @@ module wvfct
   !
   integer                  ::  &
        npwx,             &! maximum number of PW for wavefunctions
-       nbndx,            &! maximum number of bands
+       nbndx,            &! max number of bands use in iterative diag
        nbnd,             &! number of bands
        npw                ! the number of plane waves
   integer, allocatable, target :: &
@@ -583,7 +583,7 @@ module ldaU
        conv_ns              ! .true. if ns are converged
 end module ldaU
 
-module efield_0
+module extfield
   use parameters
   logical :: tefield        ! if true a finite electric field is added to the
                             ! local potential
@@ -593,7 +593,7 @@ module efield_0
       eopreg,        &      ! amplitude of the inverse region (0<eopreg<1)
       eamp                  ! field amplitude (in a.u.) (1 a.u.=51.44 10^11 V/m)
 
-end module efield_0
+end module extfield
 
 
 module pwcom
@@ -624,6 +624,6 @@ module pwcom
   use filnam
   use us
   use ldaU
-  use efield_0
+  use extfield
 end module pwcom
 !

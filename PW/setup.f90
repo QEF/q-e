@@ -18,7 +18,7 @@ subroutine setup
   !  zv        the charge of each atomtype
   !  nelec     the total number of electrons
   !  nbnd      the total number of bands
-  !  nbndx     the maximum number of bands
+  !  nbndx     the max number of bands used in iterative diagonalization
   !  alat      the measure of length
   !  tpiba     the measure unit in reciprocal space
   !  tpiba2    the square of tpiba
@@ -142,7 +142,7 @@ subroutine setup
   !
   natomwfc = n_atom_wfc (nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi)
   !
-  !    set the maximum number of bands
+  !    set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
   if (isolve.eq.0) then

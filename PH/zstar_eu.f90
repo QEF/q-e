@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -57,7 +57,7 @@ subroutine zstar_eu
      do irr = 1, nirr
         do imode = 1, npert (irr)
            mode = imode+imode0
-           call setv (2 * npwx * nbndx, 0.d0, dvpsi, 1)
+           dvpsi(:,:) = (0.d0, 0.d0)
            !
            ! recalculate  DeltaV*psi(ion) for mode nu
            !

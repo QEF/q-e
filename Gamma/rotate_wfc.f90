@@ -7,11 +7,12 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine rotate_wfc (ndim, ndmx, nvec, gstart, nbnd, en, psi)
+subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
   !----------------------------------------------------------------------
   !
   !   Hamiltonian diagonalization in the subspace spanned
-  !   by nvec states psi. Produces on output nbnd eigenvectors
+  !   by nstart states psi (atomic or random wavefunctions).
+  !   Produces on output nbnd eigenvectors (nbnd <= nstart) in evc.
   !   (nbnd <= nvec). Calls h_psi to calculate H|psi> and S|psi>.
   !   This version assumes real wavefunctions (k=0) with only
   !   half plane waves stored: psi(-G)=psi*(G), except G=0
@@ -20,50 +21,62 @@ subroutine rotate_wfc (ndim, ndmx, nvec, gstart, nbnd, en, psi)
   use parameters
   implicit none
   !
-  integer :: ndim, ndmx, nvec, nbnd, gstart
+  integer :: npw, npwx, nstart, nbnd, gstart
   ! dimension of the matrix to be diagonalized
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
   ! output number of states
-  real(kind=DP) :: en (nvec)
-  ! energy eigenvalues
-  complex(kind=DP) :: psi (ndmx,nbnd)
-  ! eigenvectors
+
+  complex(kind=DP) :: psi (npwx, nstart), evc (npwx,nbnd)
+  ! input and output eigenvectors (may overlap)
+
+  real(kind=DP) :: e (nbnd)
+  ! eigenvalues
+
   ! auxiliary variables:
   complex(kind=DP), allocatable :: hpsi (:,:), spsi (:,:)
-  real(kind=8), allocatable :: hr (:,:), sr (:,:), vr (:,:)
+  real(kind=8), allocatable :: hr (:,:), sr (:,:), vr (:,:), en(:)
   !
   call start_clock ('wfcrot')
-  allocate (hpsi(  ndmx , nvec))    
-  allocate (spsi(  ndmx , nvec))    
-  allocate (hr( nvec , nvec))    
-  allocate (sr( nvec , nvec))    
-  allocate (vr( nvec , nvec))    
+  allocate (hpsi(  npwx , nstart))    
+  allocate (spsi(  npwx , nstart))    
+  allocate (hr( nstart , nstart))    
+  allocate (sr( nstart , nstart))    
+  allocate (vr( nstart , nstart))    
+  allocate (en( nstart ))
+  !
+  ! Set up the Hamiltonian and Overlap matrix
+  !
+  call h_psi (npwx, npw, nstart, psi, hpsi, spsi)
 
-  call h_psi (ndmx, ndim, nvec, psi, hpsi, spsi)
-
-  call DGEMM ('t', 'n', nvec, nvec, 2*ndim, 2.d0 , psi, 2*ndmx, &
-       hpsi, 2*ndmx, 0.d0, hr, nvec)
-  if (gstart==2) call DGER (nvec, nvec,-1.d0, psi, 2*ndmx, &
-       hpsi, 2*ndmx, hr, nvec)
+  call DGEMM ('t', 'n', nstart, nstart, 2*npw, 2.d0 , psi, 2*npwx, &
+       hpsi, 2*npwx, 0.d0, hr, nstart)
+  if (gstart==2) call DGER (nstart, nstart,-1.d0, psi, 2*npwx, &
+       hpsi, 2*npwx, hr, nstart)
 #ifdef __PARA
-  call reduce (nvec * nvec, hr)
+  call reduce (nstart * nstart, hr)
 #endif
-  call DGEMM ('t', 'n', nvec, nvec, 2*ndim, 2.d0 , psi, 2*ndmx, &
-       spsi, 2*ndmx, 0.d0, sr, nvec)
-  if (gstart==2) call DGER (nvec, nvec,-1.d0, psi, 2*ndmx, &
-       spsi, 2*ndmx, sr, nvec)
+  call DGEMM ('t', 'n', nstart, nstart, 2*npw, 2.d0 , psi, 2*npwx, &
+       spsi, 2*npwx, 0.d0, sr, nstart)
+  if (gstart==2) call DGER (nstart, nstart,-1.d0, psi, 2*npwx, &
+       spsi, 2*npwx, sr, nstart)
 #ifdef __PARA
-  call reduce (nvec * nvec, sr)
+  call reduce (nstart * nstart, sr)
 #endif
   !
-  call rdiaghg (nvec, nbnd, hr, sr, nvec, en, vr)
+  ! Diagonalize
   !
-  hpsi(:,:) = (0.d0, 0.d0)
-  call DGEMM ('n', 'n', 2*ndim, nbnd, nvec, 1.d0, psi, 2*ndmx, &
-       vr, nvec, 0.d0, hpsi, 2*ndmx)
-  psi(:,1:nbnd) = hpsi(:,1:nbnd)
+  call rdiaghg (nstart, nbnd, hr, sr, nstart, en, vr)
   !
+  e (:) = en(1:nbnd)
+  !
+  !   update the basis set
+  !
+  call DGEMM ('n', 'n', 2*npw, nbnd, nstart, 1.d0, psi, 2*npwx, &
+       vr, nstart, 0.d0, hpsi, 2*npwx)
+  evc(:, :) = hpsi(:, 1:nbnd)
+  !
+  deallocate (en)
   deallocate (vr)
   deallocate (sr)
   deallocate (hr)

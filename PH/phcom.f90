@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -82,13 +82,12 @@ end module qpoint
 !
 module eqv
   use parameters, only : DP
-  complex (kind=DP), pointer :: evq (:,:) ! npwx, nbndx)
+  complex (kind=DP), pointer :: evq (:,:)
 !
 !    The variable describing the linear response problem
 !
 
-  complex (kind=DP), allocatable :: dvpsi (:,:),& ! npwx, nbndx),
-       dpsi (:,:)                             ! npwx, nbndx)
+  complex (kind=DP), allocatable :: dvpsi (:,:), dpsi (:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
 

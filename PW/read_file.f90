@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -130,7 +130,7 @@ subroutine read_file
   deallocate( et_g, wg_g )
   !
 #ifdef __PARA
-  call poolscatter (nbndx, nkstot, et, nks, et)
+  call poolscatter (nbnd , nkstot, et, nks, et)
   call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
   !
@@ -254,7 +254,7 @@ subroutine read_file
   close (iunpun)
   !
 #ifdef __PARA
-  call poolscatter (nbndx, nkstot, et, nks, et)
+  call poolscatter (nbnd , nkstot, et, nks, et)
   call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
   !

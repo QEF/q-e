@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,26 +23,26 @@ subroutine wfcinit
   !    "     "  plane waves
   !    "     "  polarization
   ! number of starting wavefunctions
-
-  real(kind=DP) :: rndm, rr, arg
+  complex(kind=DP), allocatable  ::  wfcatom(:,:)
+  ! atomic wfcs for initialization
+  real(kind=DP) ::rr, arg
+  real(kind=DP), external :: rndm
   ! random function generation
-
-  external rndm
   !
   ! state what is going to happen
   !
-  if (startingwfc.eq.'file') then
+  if (startingwfc == 'file') then
      write (6, '(5x,a)') 'Starting wfc from file'
      !
-     ! read the wavefunction into memory (it is not done in c_bands)
+     ! read the wavefunction into memory (if it is not done in c_bands)
      !
      if (nks.eq.1.and.reduce_io) call davcio(evc,nwordwfc,iunwfc,1,-1)
      return
   endif
 
   call start_clock ('wfcinit')
-  if (startingwfc.eq.'atomic') then
-     if (natomwfc.ge.nbnd) then
+  if (startingwfc == 'atomic') then
+     if (natomwfc >= nbnd) then
         write (6, '(5x,a)') 'Starting wfc are atomic'
      else
         write (6, '(5x,a,i3,a)') 'Starting wfc are atomic + ',&
@@ -56,14 +56,16 @@ subroutine wfcinit
   !
   ! Needed for LDA+U
   !
-!!!  if (lda_plus_u) call orthoatwfc
-  if (nks.gt.1) rewind (iunigk)
+  !!! if (lda_plus_u) call orthoatwfc
+  if (nks > 1) rewind (iunigk)
   !
   !    we start a loop on k points
   !
+  allocate (wfcatom( npwx, n_starting_wfc))
+  !
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
-     if (nks.gt.1) read (iunigk) npw, igk
+     if (nks > 1) read (iunigk) npw, igk
      !
      !     here we compute the kinetic energy
      !
@@ -76,32 +78,33 @@ subroutine wfcinit
      ! Put the correct units on the kinetic energy
      !
 
-     call DSCAL (npw, tpiba2, g2kin, 1)
+     g2kin(:) = g2kin(:)*tpiba2
 
-     if (lda_plus_u) call davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
+     !!! if (lda_plus_u) call davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
 
-     if (startingwfc.eq.'atomic') then
+     if (startingwfc == 'atomic') then
+        call atomic_wfc (ik, wfcatom)
 
-        call atomic_wfc (ik, evc)
-
-        if (natomwfc.lt.nbnd) then
-           do ibnd = natomwfc + 1, nbnd
-              do ig = 1, npw
-                 rr = rndm ()
-                 arg = tpi * rndm ()
-                 evc (ig, ibnd) = DCMPLX (rr * cos (arg), rr * sin (arg) ) &
-                      / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
-                          (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
-                          (xk (3, ik) + g (3, igk (ig) ) ) **2 + 1.0d0)
-              enddo
+        !
+        !  if not enough atomic wfc are available, complete with random wfcs
+        !
+        do ibnd = natomwfc + 1, nbnd
+           do ig = 1, npw
+              rr = rndm ()
+              arg = tpi * rndm ()
+              wfcatom (ig, ibnd) = DCMPLX (rr * cos (arg), rr * sin (arg) )&
+                   / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
+                   (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
+                   (xk (3, ik) + g (3, igk (ig) ) ) **2 + 1.0d0)
            enddo
-        endif
+        enddo
+
      else
         do ibnd = 1, nbnd
            do ig = 1, npw
               rr = rndm ()
               arg = tpi * rndm ()
-              evc (ig, ibnd) = DCMPLX (rr * cos (arg), rr * sin (arg) ) &
+              wfcatom (ig, ibnd) = DCMPLX (rr * cos (arg), rr * sin (arg) ) &
                    / ( (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
                        (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
                        (xk (3, ik) + g (3, igk (ig) ) ) **2 + 1.0d0)
@@ -111,14 +114,16 @@ subroutine wfcinit
      endif
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
-     !   Diagonalize the Hamiltonian on the reduced basis
+     !   Diagonalize the Hamiltonian on the basis of atomic wfcs
      !
-!!!     if (isolve.eq.1) then
-!!!        call cinitcgg (npwx, npw, n_starting_wfc, nbnd, evc, et (1, ik))
-!!!     else
+     !!! if (isolve.eq.1) then
+     !!!   call cinitcgg &
+     !!!        (npwx, npw, n_starting_wfc, nbnd, wfcatom, evc, et (1, ik))
+     !!! else
         call rotate_wfc &
-            (npw, npwx, n_starting_wfc, gstart, nbnd, et (1, ik), evc)
-!!!     endif
+             (npwx, npw, n_starting_wfc, gstart, nbnd, wfcatom, evc, et(1, ik))
+     !!! endif
+
      do ibnd = 1, nbnd
         do ig = npw + 1, npwx
            evc (ig, ibnd) = (0.d0, 0.d0)
@@ -127,6 +132,7 @@ subroutine wfcinit
      if (nks.gt.1.or..not.reduce_io) call davcio (evc, nwordwfc, iunwfc, ik, 1)
 
   enddo
+  deallocate (wfcatom)
   if (iprint.eq.1) then
 #ifdef __PARA
      call poolrecover (et, nbnd, nkstot, nks)
