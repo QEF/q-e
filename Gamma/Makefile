@@ -160,6 +160,7 @@ PWOBJS = \
 ../PW/seqopn.o \
 ../PW/set_fft_dim.o \
 ../PW/set_hubbard_l.o \
+../PW/set_kplusb.o \
 ../PW/set_kplusq.o \
 ../PW/set_kup_and_kdw.o \
 ../PW/setlocal.o \
