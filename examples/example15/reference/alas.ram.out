@@ -1,6 +1,6 @@
 
-     Program RAMAN     v.2.0    starts ...
-     Today is 27May2004 at 13:28: 5 
+     Program RAMAN     v.2.1    starts ...
+     Today is 26Aug2004 at 20:10: 6 
 
 
      **********************************************
@@ -16,7 +16,7 @@
 
      nbndx  =     4  nbnd   =     4  natomwfc =    13  npwx   =     165
      nelec  =    8.00 nkb   =     8  ngl    =      39
- WRITING PATTERNS ON FILE alas.drhoe.pat                                        
+ WRITING PATTERNS ON FILE alas.drho.pat                                         
                                                                                 
                                                                                 
                                              
@@ -154,14 +154,14 @@
 
 
 The vectors for the finite differences are:
-in cartesian axises:
+in cartesian axes:
        0.0010000  0.0000000  0.0000000     500000.000
        0.0000000  0.0010000  0.0000000     500000.000
        0.0000000  0.0000000  0.0010000     500000.000
       -0.0010000  0.0000000  0.0000000     500000.000
        0.0000000 -0.0010000  0.0000000     500000.000
        0.0000000  0.0000000 -0.0010000     500000.000
-in crystall axises:
+in crystal axes:
       -0.0005000  0.0000000 -0.0005000     500000.000
        0.0000000  0.0005000  0.0005000     500000.000
        0.0005000  0.0005000  0.0000000     500000.000
@@ -210,26 +210,30 @@ in crystall axises:
 
      Finished this calculation
  
-     RAMAN        :  2m19.60s CPU time
+     RAMAN        : 29m 2.02s CPU time
 
      INITIALIZATION: 
      phq_setup    :     0.01s CPU
-     phq_init     :     0.24s CPU
-     ram_init     :     0.02s CPU
+     phq_init     :     0.22s CPU
+     ram_init     :     0.03s CPU
  
      NSCF ROUTINES:
-     nscf_e       :    38.24s CPU
-     nscf_u       :    47.69s CPU (       2 calls,  23.845 s avg)
+     nscf_e       :    39.89s CPU
+     nscf_u       :    49.36s CPU (       2 calls,  24.680 s avg)
  
      NONL. SUSCEPT.:
+     pdvp_dpdp    :     0.01s CPU
+     dpsidvdpsi   :     0.54s CPU
+     sus_xc       :     0.27s CPU
+     sus_findif   :   247.95s CPU
  
      RAMAN TENSOR:
-     dpE_dvu_dpE  :     1.01s CPU (      60 calls,   0.017 s avg)
+     dpE_dvu_dpE  :     1.05s CPU (      60 calls,   0.017 s avg)
      dpE_dpu_dHE  :     0.02s CPU (       2 calls,   0.010 s avg)
-     dpE_dpE_dHu  :     0.02s CPU (       2 calls,   0.010 s avg)
-     dpE_dhE_dpu  :     1.78s CPU (       2 calls,   0.890 s avg)
-     dpE_dHu_dpE  :     1.76s CPU (       2 calls,   0.880 s avg)
-     ram_xc       :     0.31s CPU
-     findif_el    :    16.80s CPU (       2 calls,   8.400 s avg)
-     findif_at    :    14.81s CPU (       2 calls,   7.405 s avg)
-     findif_both  :    17.86s CPU (       2 calls,   8.930 s avg)
+     dpE_dpE_dHu  :     0.03s CPU (       2 calls,   0.015 s avg)
+     dpE_dhE_dpu  :     1.88s CPU (       2 calls,   0.940 s avg)
+     dpE_dHu_dpE  :     1.85s CPU (       2 calls,   0.925 s avg)
+     ram_xc       :     0.37s CPU
+     findif_el    :   481.17s CPU (       2 calls, 240.585 s avg)
+     findif_at    :   413.35s CPU (       2 calls, 206.675 s avg)
+     findif_both  :   505.02s CPU (       2 calls, 252.510 s avg)

@@ -115,50 +115,27 @@ $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < alas.scf.in > alas.scf.out
 $ECHO " done"
 
-# response calculation for electric field
+# response calculation 
 
-cat > alas.phE.in << EOF
+cat > alas.ph.in << EOF
 phonons of AlAs at Gamma
  &inputph
   tr2_ph=1.0d-12,
   prefix='alas',
   epsil=.true.,
-  trans=.false.,
+  trans=.true.,
   zue=.false.,
   amass(1)=69.72,
   amass(2)=26.98,
   outdir='$TMP_DIR/',
   fildyn='alas.dynG',
-  fildrho='alas.drhoe',
+  fildrho='alas.drho',
  /
 0.0 0.0 0.0
 EOF
 
-$ECHO "  running the electric-field response calculation...\c"
-$PH_COMMAND < alas.phE.in > alas.phE.out
-$ECHO " done"
-
-# response calculation for atomic displacement
-
-cat > alas.phA.in << EOF
-phonons of AlAs at Gamma
- &inputph
-  tr2_ph=1.0d-12,
-  prefix='alas',
-  epsil=.false.,
-  trans=.true., 
-  zue=.true., 
-  amass(1)=69.72,
-  amass(2)=26.98,
-  outdir='$TMP_DIR/',
-  fildyn='alas.dynG',
-  fildrho='alas.drhou',
- /
-0.0 0.0 0.0
-EOF
-
-$ECHO "  running the atomic displacement response calculation...\c"
-$PH_COMMAND < alas.phA.in > alas.phA.out
+$ECHO "  running the response calculation...\c"
+$PH_COMMAND < alas.ph.in > alas.ph.out
 $ECHO " done"
 
 #
@@ -213,7 +190,7 @@ phonons of AlAs at Gamma
   amass(2)=26.98,
   outdir='$TMP_DIR/',
   fildyn='alas.dynG',
-  fildrho='alas.drhoe',
+  fildrho='alas.drho',
  /
 0.0 0.0 0.0
  &inputram
@@ -224,7 +201,6 @@ phonons of AlAs at Gamma
   lboth = .true.,
   latomic = .true.,
   lelfield = .true.,	
-  fildrhou='alas.drhou',
   filsus = 'alas.sus',
   filram = 'alas.ram'	
  /

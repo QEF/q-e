@@ -5,12 +5,12 @@ susceptibilty and the Raman tensor with the help of the 2n+1
 theorem.
 Therefore, different calculations are performed.
 First, a normal self-consistent calculation of the groundstate.
-Second, a calculation of the electric-field perturbation.
-Third, a calclulation of the linear response for an atomic displacement.
-All these calculations mentioned above are done in teh standard way like 
+Second, a response calculation for electric-field and atomic-displacement 
+perturbations. 
+All these calculations mentioned above are done in the standard way like 
 in the calculation of phonon frequencies and the dielectric constant.
 
-Fourth, a non-self-consistent calculation of the ground state is performed.
+Then a non-self-consistent calculation of the ground state is performed.
 Therin, the wavefunctions of a standard k-point mesh are computed, which is
 given in the usual way in the input of PW by K_POINTS.
 Additional, for each k-point, points k+b are calculated, where b is a small
