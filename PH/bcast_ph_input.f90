@@ -51,7 +51,6 @@ subroutine bcast_ph_input
   ! characters
   !
   call mp_bcast (title_ph, root)
-  call mp_bcast (filpun, root)
   call mp_bcast (filelph, root)
   call mp_bcast (fildyn, root)
   call mp_bcast (fildvscf, root)

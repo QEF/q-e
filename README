@@ -39,8 +39,7 @@ Directory structure of the PWscf package:
 PW/        Source files for scf calculations (pw.x)
 PH/        Source files for phonon calculations (ph.x)
 PP/        Source files for post-processing of pw.x data file
-Gamma/     Source files for experimental Gamma-only scf (pwg.x) 
-           and phonon calculation (phcg.x)
+Gamma/     Source files for Gamma-only phonon calculation (phcg.x)
 D3/        Source files for third-order derivatives calculation (d3.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs

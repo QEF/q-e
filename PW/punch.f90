@@ -18,10 +18,9 @@ subroutine punch
   !
   !
   USE io_global, ONLY : stdout
-  use pwcom, only: nks, filpun, reduce_io, nwordwfc, iunwfc, lscf, &
-    rho, nspin, iunpun, et, wg, nbnd, nkstot
+  use pwcom, only: nks, reduce_io, lscf, rho, nspin, et, wg, nbnd, nkstot
   USE wavefunctions_module,    ONLY : evc
-  use io_files, only: prefix, filpun, iunpun, iunwfc, nwordwfc
+  use io_files, only: prefix, iunpun, iunwfc, nwordwfc
 #ifdef __PARA
   use para
 #endif
@@ -32,8 +31,8 @@ subroutine punch
   integer :: ik, i, ibnd, kunittmp
   logical :: exst
   !
-  filpun = trim(prefix)//'.save'
-  WRITE( stdout, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
+  WRITE( stdout, '(/,5x,"Writing file ",a14,"for program phonon")') &
+     trim(prefix)//'.save'
   !
   kunittmp = 1
   !
@@ -93,7 +92,7 @@ subroutine punch
   USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions_module,    ONLY : evc
-  use io_files, only: prefix, filpun, iunpun, iunwfc, nwordwfc
+  use io_files, only: prefix, iunpun, iunwfc, nwordwfc
 #ifdef __PARA
   use para
 #endif
@@ -101,6 +100,7 @@ subroutine punch
   !
   implicit none
   !
+  CHARACTER(LEN=80) :: filpun
   integer :: ik, i, ibnd, kunittmp
   logical :: exst
   !

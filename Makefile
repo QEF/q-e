@@ -8,9 +8,8 @@ default :
 	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
 	@echo '  ph           phonon code'
 	@echo '  pp           postprocessing programs'
-	@echo '  gamma        Gamma-only version of pw and ph'
+	@echo '  gamma        Gamma-only version of phonon code'
 	@echo '  nc           non collinear magnetic version of pw code'
-	@echo '  pwneb        version of pw with NEB'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
 	@echo '  tools        misc tools for data analysis'
@@ -36,9 +35,6 @@ gamma : pw
 	( cd Gamma; make all )
 nc : pw
 	( cd PWNC;  make all )
-pwneb : pw gamma
-	( cd NEB; make all )
-
 pwcond : pw pp
 	( cd PWCOND; make all )
 d3 : pw ph
@@ -50,7 +46,7 @@ upf : libs
 	( cd upftools ; make all )
 
 all : pw ph pp gamma pwcond d3 tools
-all_ : all fpmd cp nc pwneb upf
+all_ : all fpmd cp nc upf
 
 modules :
 	( cd Modules; make all )
@@ -62,8 +58,8 @@ libs : modules
 links :
 	test -d bin || mkdir bin
 	( cd bin/ ; \
-	  for exe in ../PW/pw.x ../PW/memory.x ../NEB/pwneb.x ../NEB/pwgneb.x \
-	             ../PH/ph.x ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x \
+	  for exe in ../PW/pw.x ../PW/memory.x \
+	             ../PH/ph.x ../D3/d3.x ../Gamma/phcg.x \
 		     ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x \
 		     ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x \
 		     ../PP/projwfc.x ../PP/voronoy.x ../PP/plotband.x \

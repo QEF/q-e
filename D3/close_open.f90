@@ -16,7 +16,7 @@ subroutine close_open (isw)
 #include"machine.h"
   use pwcom, only: degauss
   use phcom, only: iudwf, lrdwf, lgamma
-  use io_files, only: filpun
+  use io_files, only: prefix
   use d3com
 #ifdef __PARA
   use para
@@ -26,9 +26,9 @@ subroutine close_open (isw)
   character (len=256) :: filint
   ! the name of the file
   logical :: exst
-  ! logical variable to check file existenc
+  ! logical variable to check file existence
 
-  if (len_trim(filpun).eq.0) call errore ('recv', 'wrong filpun name', 1)
+  if (len_trim(prefix) == 0) call errore ('close_open', 'wrong prefix', 1)
   if (isw.eq.3) then
      !
      ! This is to be used after gen_dwf(3)
@@ -38,7 +38,7 @@ subroutine close_open (isw)
 #endif
      if (degauss.ne.0.d0) then
         close (unit = iuef, status = 'keep')
-        filint = trim(filpun) //'.efs'
+        filint = trim(prefix) //'.efs'
         call seqopn (iuef, filint, 'unformatted', exst)
      endif
 #ifdef __PARA
@@ -46,12 +46,12 @@ subroutine close_open (isw)
 210  continue
 #endif
      close (unit = iupd0vp, status = 'keep')
-     filint = trim(filpun) //'.p0p'
-     if (lgamma) filint = trim(filpun) //'.pdp'
+     filint = trim(prefix) //'.p0p'
+     if (lgamma) filint = trim(prefix) //'.pdp'
 
      call diropn (iupd0vp, filint, lrpdqvp, exst)
      close (unit = iudwf, status = 'keep')
-     filint = trim(filpun) //'.dwf'
+     filint = trim(prefix) //'.dwf'
 
      call diropn (iudwf, filint, lrdwf, exst)
   elseif (isw.eq.1) then
@@ -61,11 +61,11 @@ subroutine close_open (isw)
 
      if (lgamma) call errore (' close_open ', ' isw=1 ; lgamma', 1)
      close (unit = iupdqvp, status = 'keep')
-     filint = trim(filpun) //'.pdp'
+     filint = trim(prefix) //'.pdp'
 
      call diropn (iupdqvp, filint, lrpdqvp, exst)
      close (unit = iudqwf, status = 'keep')
-     filint = trim(filpun) //'.dqwf'
+     filint = trim(prefix) //'.dqwf'
 
      call diropn (iudqwf, filint, lrdwf, exst)
   elseif (isw.eq.2) then
@@ -74,7 +74,7 @@ subroutine close_open (isw)
      !
      if (lgamma) call errore (' close_open ', ' isw=2 ; lgamma', 1)
      close (unit = iud0qwf, status = 'keep')
-     filint = trim(filpun) //'.d0wf'
+     filint = trim(prefix) //'.d0wf'
      call diropn (iud0qwf, filint, lrdwf, exst)
   elseif (isw.eq.4) then
      !
@@ -83,16 +83,16 @@ subroutine close_open (isw)
 
      if (degauss.eq.0.d0) return
      close (unit = iudpdvp_1, status = 'keep')
-     filint = trim(filpun) //'.pv1'
+     filint = trim(prefix) //'.pv1'
 
      call diropn (iudpdvp_1, filint, lrdpdvp, exst)
      if (.not.lgamma) then
         close (unit = iudpdvp_2, status = 'keep')
-        filint = trim(filpun) //'.pv2'
+        filint = trim(prefix) //'.pv2'
 
         call diropn (iudpdvp_2, filint, lrdpdvp, exst)
         close (unit = iudpdvp_3, status = 'keep')
-        filint = trim(filpun) //'.pv3'
+        filint = trim(prefix) //'.pv3'
         call diropn (iudpdvp_3, filint, lrdpdvp, exst)
      endif
 

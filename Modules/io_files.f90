@@ -27,7 +27,6 @@
      CHARACTER(len=80) :: scradir = './'
      CHARACTER(len=80) :: outdir  = './'
 
-     CHARACTER(LEN=80) :: filpun = ' '       ! name of the punch file
      CHARACTER(LEN=80) :: input_drho = ' '   ! name of the file with the input drho
      CHARACTER(LEN=80) :: output_drho = ' '  ! name of the file with the output drho
 

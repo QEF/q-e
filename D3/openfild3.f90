@@ -17,7 +17,7 @@ subroutine openfild3
   use pwcom
   use phcom
   use d3com
-  USE io_files,      ONLY : iunigk, filpun
+  USE io_files,      ONLY : iunigk, prefix
 #ifdef __PARA
   use para
 #endif
@@ -30,15 +30,14 @@ subroutine openfild3
   logical :: exst
   ! logical variable to check file existe
 
-
-  if (len_trim(filpun).eq.0) call errore ('openfild3', 'wrong filpun name', 1)
+  if (len_trim(prefix) == 0) call errore ('openfild3', 'wrong prefix', 1)
   !
   !     The file with the wavefunctions
   !
   iuwfc = 20
 
   lrwfc = 2 * nbnd * npwx
-  filint = trim(filpun) //'.wfc'
+  filint = trim(prefix) //'.wfc'
   call diropn (iuwfc, filint, lrwfc, exst)
   if (.not.exst) call errore ('openfild3', 'file '//filint//' not found', 1)
   !
@@ -46,7 +45,7 @@ subroutine openfild3
   !
   iubar = 21
   lrbar = 2 * nbnd * npwx
-  filint = trim(filpun) //'.bar'
+  filint = trim(prefix) //'.bar'
   call diropn (iubar, filint, lrbar, exst)
   if (recover.and..not.exst) call errore ('openfild3', 'file bar not &
        &found', 1)
@@ -55,7 +54,7 @@ subroutine openfild3
   !
   iudwf = 22
   lrdwf = 2 * nbnd * npwx
-  filint = trim(filpun) //'.dwf'
+  filint = trim(prefix) //'.dwf'
   call diropn (iudwf, filint, lrdwf, exst)
   if (recover.and..not.exst) call errore ('openfild3', 'file dwf not &
        &found', 1)
@@ -65,7 +64,7 @@ subroutine openfild3
   !   The igk at a given k (and k+q if q!=0)
   !
   iunigk = 24
-  filint = trim(filpun) //'.igk'
+  filint = trim(prefix) //'.igk'
   call seqopn (iunigk, filint, 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
@@ -128,13 +127,13 @@ subroutine openfild3
      !    Open the file with the solution q=0 delta psi
      !
      iud0qwf = 34
-     filint = trim(filpun) //'.d0wf'
+     filint = trim(prefix) //'.d0wf'
      call diropn (iud0qwf, filint, lrdwf, exst)
      !
      !    Open the file with the solution q=0 delta psi
      !
      iudqwf = 35
-     filint = trim(filpun) //'.dqwf'
+     filint = trim(prefix) //'.dqwf'
      call diropn (iudqwf, filint, lrdwf, exst)
   endif
   !
@@ -142,7 +141,7 @@ subroutine openfild3
   !
   iupdqvp = 36
   lrpdqvp = 2 * nbnd * nbnd
-  filint = trim(filpun) //'.pdp'
+  filint = trim(prefix) //'.pdp'
   call diropn (iupdqvp, filint, lrpdqvp, exst)
   !
   !    The file with   <psi| d0V |psi>
@@ -150,7 +149,7 @@ subroutine openfild3
   iupd0vp = iupdqvp
   if (.not.lgamma) then
      iupd0vp = 37
-     filint = trim(filpun) //'.p0p'
+     filint = trim(prefix) //'.p0p'
      call diropn (iupd0vp, filint, lrpdqvp, exst)
 
   endif
@@ -160,7 +159,7 @@ subroutine openfild3
      !
      iudpdvp_1 = 38
      lrdpdvp = 2 * nbnd * nbnd
-     filint = trim(filpun) //'.pv1'
+     filint = trim(prefix) //'.pv1'
      call diropn (iudpdvp_1, filint, lrdpdvp, exst)
      !
      !    The file with   <dqpsi| d0V |psi>
@@ -169,13 +168,13 @@ subroutine openfild3
      iudpdvp_3 = iudpdvp_1
      if (.not.lgamma) then
         iudpdvp_2 = 39
-        filint = trim(filpun) //'.pv2'
+        filint = trim(prefix) //'.pv2'
         call diropn (iudpdvp_2, filint, lrdpdvp, exst)
         !
         !    The file with   <d0psi| dqV |psi>
         !
         iudpdvp_3 = 40
-        filint = trim(filpun) //'.pv3'
+        filint = trim(prefix) //'.pv3'
         call diropn (iudpdvp_3, filint, lrdpdvp, exst)
      endif
      !
@@ -187,7 +186,7 @@ subroutine openfild3
      if (me.ne.1.or.mypool.ne.1) goto 130
 #endif
      iuef = 41
-     filint = trim(filpun) //'.efs'
+     filint = trim(prefix) //'.efs'
      call seqopn (iuef, filint, 'unformatted', exst)
 #ifdef __PARA
 

@@ -13,12 +13,12 @@ program dos
   !
   !    prefix        prefix of input file produced by pw.x  'pwscf'
   !                    (wavefunctions are not needed)
-  !    outdir        directory where filpun is searched   ./
-  !    ngauss1,      gaussian broadening parameters       0
-  !     degauss1       if absent, read from file          0.d0
-  !    Emin, Emax    min, max energy (eV) for DOS plot    band extrema
-  !    DeltaE        energy grid step (eV)                none
-  !    fildos        output file containing DOS(E)        dos.out
+  !    outdir        directory containing the input file    ./
+  !    ngauss1,      gaussian broadening parameters         0
+  !     degauss1       if absent, read from file            0.d0
+  !    Emin, Emax    min, max energy (eV) for DOS plot      band extrema
+  !    DeltaE        energy grid step (eV)                  none
+  !    fildos        output file containing DOS(E)          dos.out
   !
   ! In order to use tetrahedron method, the input file must
   ! contain information on tetrahedra (option ltetra=.true.)

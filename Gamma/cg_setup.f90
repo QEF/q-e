@@ -14,7 +14,7 @@ subroutine cg_setup
   use parameters, only: DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  use io_files, only: prefix, filpun, iunpun, iunres
+  use io_files, only: prefix, iunpun, iunres
   use cgcom
   use funct
   !
@@ -100,7 +100,7 @@ subroutine cg_setup
   lrwfc=2*nbnd*npwx
   filint = trim(prefix) //'.wfc'
   call diropn(iunpun,filint,lrwfc,exst)
-  if(.not.exst) call errore('main','file '//filpun//' not found',1)
+  if(.not.exst) call errore('main','file '//filint//' not found',1)
   !
   !  read wave functions and calculate indices
   !

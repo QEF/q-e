@@ -77,14 +77,12 @@ This is identical to step 3 of the old installation procedure.
 
 Here is a list of available compilation targets:
 
-  make pw           compile PW/pw.x (electronic and ionic
-                      optimization), PW/memory.x (checks memory usage
-                      and tests input)
+  make pw           compile PW/pw.x (electronic and ionic optimization), 
+                      PW/memory.x (checks memory usage and tests input)
   make ph           compile PH/ph.x (phonons)
   make pp           compile PP/pp.x and other postprocessing codes
   make d3           compile D3/d3.x (third-order energy derivatives)
-  make gamma        compile Gamma/pwg.x and Gamma/phcg.x
-                      (Gamma-only versions of pw.x and ph.x)
+  make gamma        compile Gamma/phcg.x (Gamma-only version of ph.x)
   make fpmd         compile FPMD/par2.x (Car-Parrinello MD)
   make cp           compile CPV/cp.x (Car-Parrinello MD with ultrasoft
                       pseudopotentials)
@@ -217,14 +215,12 @@ Third step : compiling
 
 Here is a list of available compilation targets:
 
-  make pw           compile PW/pw.x (electronic and ionic
-                      optimization), PW/memory.x (checks memory usage
-                      and tests input)
+  make pw           compile PW/pw.x (electronic and ionic optimization),
+                      PW/memory.x (checks memory usage and tests input)
   make ph           compile PH/ph.x (phonons)
   make pp           compile PP/pp.x and other postprocessing codes
   make d3           compile D3/d3.x (third-order energy derivatives)
-  make gamma        compile Gamma/pwg.x and Gamma/phcg.x
-                      (Gamma-only versions of pw.x and ph.x)
+  make gamma        compile Gamma/phcg.x (Gamma-only version of ph.x)
   make fpmd         compile FPMD/par2.x (Car-Parrinello MD)
   make cp           compile CPV/cp.x (Car-Parrinello MD with ultrasoft
                       pseudopotentials)

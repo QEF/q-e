@@ -19,7 +19,7 @@ subroutine bcast_d3_input
   use phcom
   use d3com
   use mp, only: mp_bcast
-  use io_files, only: prefix, tmp_dir, filpun
+  use io_files, only: prefix, tmp_dir
 
   implicit none
   integer :: root = 0
@@ -48,7 +48,6 @@ subroutine bcast_d3_input
   ! characters
   !
   call mp_bcast (title_ph, root)
-  call mp_bcast (filpun, root)
   call mp_bcast (fildyn, root)
   call mp_bcast (fildrho, root)
   call mp_bcast (fild0rho, root)

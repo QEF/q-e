@@ -14,7 +14,7 @@ subroutine read_file
   !-----------------------------------------------------------------------
   !
   !     This routine allocates space for all quantities already computed
-  !     in the pwscf program and reads them from the filpun file.
+  !     in the pwscf program and reads them from the data file.
   !
   !
 #include "machine.h"
@@ -161,7 +161,7 @@ subroutine read_file
   !-----------------------------------------------------------------------
   !
   !     This routine allocates space for all quantities already computed
-  !     in the pwscf program and reads them from the filpun file.
+  !     in the pwscf program and reads them from the data file.
   !
   !
 #include "machine.h"

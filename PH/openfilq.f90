@@ -15,8 +15,7 @@ subroutine openfilq
 
   use pwcom
   use mp, only: mp_end
-  use io_files, only: prefix
-  USE io_files, ONLY: iunigk, filpun
+  use io_files, only: prefix, iunigk
   use parameters, only : DP
   use phcom
 #ifdef __PARA
@@ -34,10 +33,10 @@ subroutine openfilq
   real(kind=DP) :: edum(1,1), wdum(1,1)
   integer :: ndr, ierr, kunittmp
 
+  if (len_trim(prefix) == 0) call errore ('openfilq', 'wrong prefix', 1)
+
   !
   !     There are six direct access files to be opened in the tmp area
-  !
-  if (len_trim(filpun).eq.0) call errore ('openfilq', 'wrong filpun name', 1)
   !
   !     The file with the wavefunctions
   !

@@ -12,7 +12,7 @@ subroutine d3_readin
   !    This routine reads the control variables for the program phononq. T
   !    input is read from unit 5. A namelist is used on the machine which
   !    allows it. A second routine readfile reads the variables saved
-  !    on the filpun file by the self-consistent program.
+  !    on the data file by the self-consistent program.
   !
 #include "machine.h"
   use pwcom
