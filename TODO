@@ -1,4 +1,4 @@
-TODO LIST - 27 Aug 2004
+TODO LIST - 7 Sept 2004
 (does not include new developments!)
 
 INSTALLATION/PORTING
@@ -9,11 +9,16 @@ INSTALLATION/PORTING
 
 COMMON
 
-- fix shift in eigenvalues between CP/FPMD and PW
-  The eigenvalues should be the same!!!
+- adding/removing/modifying input variables is way too complex
 
-- fix shift in total energy between CP, FPMD and PW
-  for charged systems. 
+- data files: modifying their format (e.g. adding a variable) 
+  is way too complex right now
+  add version information for future compatibility
+  what is the status of file compatibility between PW and CP/FPMD?
+
+- fix shift in eigenvalues between CP/FPMD and PW
+  The eigenvalues should be the same
+  Total energies for charged systems should also be the same
 
 - merge (standard) diagonalization routines
   use parallel diagonalization in CP and PW
@@ -39,8 +44,6 @@ COMMON
 
 - cleanup and merge of routines reading and processing PPs;
   merge uspp-related stuff ("small box") of CP into PW
-
-- restart file compatibility between PW and CP/FPMD
 
 PW
 

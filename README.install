@@ -195,7 +195,7 @@ Here is a list:
 
   make pw           compile PW/pw.x (electronic and ionic optimization), 
                       PW/memory.x (checks memory usage and tests input)
-  make fpmd         compile FPMD/par2.x (Car-Parrinello MD)
+  make fpmd         compile FPMD/fpmd.x (Car-Parrinello MD)
   make cp           compile CPV/cp.x (Car-Parrinello MD with ultrasoft
                       pseudopotentials)
   make ph           compile PH/ph.x (phonons)
