@@ -11,11 +11,8 @@
 SUBROUTINE psyme (dvtosym)
   !-----------------------------------------------------------------------
   !
-  !  p-symmetrize the charge density.
+  ! ...  p-symmetrize the charge density.
   !
-
-#if defined (__PARA)
-
   USE pwcom
   USE kinds,     ONLY : DP
   USE phcom
@@ -23,16 +20,18 @@ SUBROUTINE psyme (dvtosym)
   USE pfft,      ONLY : npp, ncplane
   !
   IMPLICIT NONE
-
+  !
   COMPLEX(kind=DP) :: dvtosym (nrxx, nspin, 3)
-  ! the potential to symmetrize
-  !-local variable
-
+    ! the potential to symmetrize
+    !-local variable
+  !
+#if defined (__PARA)
+  !
   INTEGER :: i, is, iper, npp0
-
   COMPLEX(kind=DP), ALLOCATABLE :: ddvtosym (:,:,:)
-  ! the potential to symmet
-
+    ! the potential to symmet
+  !
+  !
   ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, 3))    
   npp0 = 0
   DO i = 1, me_pool

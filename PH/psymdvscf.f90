@@ -11,27 +11,25 @@
 SUBROUTINE psymdvscf (nper, irr, dvtosym)
   !-----------------------------------------------------------------------
   !
-  !  p-symmetrize the charge density.
+  ! ...  p-symmetrize the charge density.
   !
-#if defined (__PARA)
-
   USE pwcom
   USE kinds,     ONLY : DP
   USE phcom
   USE mp_global, ONLY : me_pool
   USE pfft,      ONLY : npp, ncplane
-
+  !
   IMPLICIT NONE
-
+  !
   INTEGER :: nper, irr
-  ! the number of perturbations
-  ! the representation under consideration
-
-
+    ! the number of perturbations
+    ! the representation under consideration
   COMPLEX(kind=DP) :: dvtosym (nrxx, nspin, nper)
-  ! the potential to symmetrize
-  !-local variable
-
+    ! the potential to symmetrize
+    !-local variable
+  !
+#if defined (__PARA)
+  !
   INTEGER :: i, is, iper, npp0
 
   COMPLEX(kind=DP), ALLOCATABLE :: ddvtosym (:,:,:)
