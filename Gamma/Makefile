@@ -29,6 +29,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/cft_sp.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
+../PW/clean_pw.o \
 ../PW/constrain.o \
 ../PW/conv_to_num.o \
 ../PW/coset.o \

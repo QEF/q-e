@@ -199,6 +199,7 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/check.o  \
 ../PW/checksym.o  \
 ../PW/cinitcgg.o  \
+../PW/clean_pw.o  \
 ../PW/compute_dip.o  \
 ../PW/constrain.o  \
 ../PW/conv_to_num.o  \
