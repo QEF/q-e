@@ -5,7 +5,6 @@ include ../make.rules
 
 OBJS = \
 c_mkdir.o \
-c_getenv.o \
 c_today.o \
 cpflush.o \
 cptimer.o \

@@ -141,9 +141,7 @@ subroutine phq_readin
   tmp_dir = trim(outdir)
 #ifdef __PARA
 400 continue
-
   call bcast_ph_input
-  call init_pool
 #endif
   xqq(:) = xq(:) 
   !
