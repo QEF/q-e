@@ -2,6 +2,8 @@
 
 DIR=install
 
+make moduledep.x 
+
 cd ../Modules
 rm -f .dependencies
 touch .dependencies

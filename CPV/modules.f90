@@ -121,16 +121,16 @@ end module gvec
 
 module ions_module
   use parameters, only: nsx, natx
+  use ions_base, only nsp, na, nas => nax, zv, pmass, rcmax
   !     nsp       = number of species
   !     na(is)    = number of atoms of species is
   !     nas       = max number of atoms of a given species
   !     nat       = total number of atoms of all species
   !     ipp(is)   = PP type for species is (see INPUT)
-  integer nat, nas, nsp, na(nsx), ipp(nsx)
+  integer ipp(nsx)
   !     zv(is)    = (pseudo-)atomic charge
   !     pmass(is) = mass (converted to a.u.) of ions
   !     rcmax(is) = Ewald radius (for ion-ion interactions)
-  real(kind=8) zv(nsx), pmass(nsx), rcmax(nsx)
 end module ions_module
 
 module ncprm

@@ -82,7 +82,8 @@ program q2r
                     ntyp,nat,ibrav,celldm,atm,amass,ityp,tau)
      if (ifile.eq.1) then
         lrigid_save=lrigid
-        call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3))
+        call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+        at = at / celldm(1)  !  bring at in units of alat 
         call volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
         call recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
         if (lrigid.and.zasr) then

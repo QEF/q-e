@@ -912,7 +912,8 @@ subroutine iosys
         at(:,:) = at(:,:) / celldm(1)
      end if
   else
-     CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3))
+     CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+     at = at / celldm(1) !  bring at in units of alat
   end if
   alat = celldm(1)
   CALL volume(alat,at(1,1),at(1,2),at(1,3),omega)

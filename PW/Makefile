@@ -128,7 +128,6 @@ io_pot.o  \
 irrek.o  \
 iweights.o  \
 kpoint_grid.o  \
-latgen.o  \
 lchk_tauxk.o  \
 linmin.o  \
 lsda_functionals.o  \
@@ -239,7 +238,6 @@ vcsubs.o  \
 vhpsi.o  \
 vloc_of_g.o  \
 v_of_rho.o  \
-volume.o  \
 vpack.o  \
 w0gauss.o  \
 w1gauss.o  \

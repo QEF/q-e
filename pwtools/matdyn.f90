@@ -345,8 +345,9 @@ subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
   !
   read(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
   if (nat.gt.nax) call errore ('readfc','too many atoms',nat)
-  call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3))
+  call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   alat = celldm(1)
+  at = at / alat !  bring at in units of alat
   call volume(alat,at(1,1),at(1,2),at(1,3),omega)
   !
   !  read atomic types, positions and masses

@@ -115,8 +115,11 @@ subroutine average
   endif
 
   nspin = 1
-  if (ibrav.gt.0) call latgen (ibrav, celldm, at (1, 1), &
-                                              at (1, 2), at (1, 3) )
+  if (ibrav.gt.0) then
+    call latgen (ibrav, celldm, at (1, 1), at (1, 2), at (1, 3), omega )
+    at = at / alat  !  bring at in units of alat
+  end if
+
   call recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
        , bg (1, 3) )
 

@@ -122,7 +122,8 @@
       read(1,*) ntyp,nat,ibrav,celldm
       if (nat.gt.nax) stop ' too many atoms '
       a0=celldm(1)
-      call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3))
+      call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+      at = at / a0 !  bring at in units of alat
       call volume(a0,at(1,1),at(1,2),at(1,3),omega)
       do nt=1,ntyp
          read(1,*) i,atm(nt),amass(nt)

@@ -29,6 +29,7 @@ control_flags.o \
 recvec.o \
 smallbox.o \
 griddim.o \
+ions_base.o \
 energies.o
 #
 include ../make.rules

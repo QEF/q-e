@@ -219,7 +219,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/irrek.o  \
 ../PW/iweights.o  \
 ../PW/kpoint_grid.o  \
-../PW/latgen.o  \
 ../PW/lchk_tauxk.o  \
 ../PW/linmin.o  \
 ../PW/lsda_functionals.o  \
@@ -331,7 +330,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/vhpsi.o  \
 ../PW/vloc_of_g.o  \
 ../PW/v_of_rho.o  \
-../PW/volume.o  \
 ../PW/vpack.o  \
 ../PW/w0gauss.o  \
 ../PW/w1gauss.o  \
