@@ -180,7 +180,6 @@ scala_cdiaghg.o  \
 scala_utils.o  \
 scale_h.o  \
 scatter.o  \
-scnds.o  \
 scopy_t3e.o  \
 seqopn.o  \
 set_fft_dim.o  \
