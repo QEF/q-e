@@ -1,3 +1,12 @@
+  *  The phonon code was yielding incorrect results when 4-dimensional
+     irreps were present (i.e. A point in graphite) and ultrasoft PP used
+
+  *  in some cases ld1 was writing a bad UPF file
+
+  *  in some cases the charge density was not conserved during
+     the charge mixing
+
+  *  various problems with potential extrapolation in neb and smd
 
   *  variable-cell dynamics and optimization was not working in parallel
 

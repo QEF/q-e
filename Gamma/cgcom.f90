@@ -41,7 +41,8 @@ MODULE flags
       raman,     &!
       equil,     &!
       nlcc_any,  &!
-      asr         !
+      asr,       &!
+      recover
   !    
 END MODULE flags
 !

@@ -24,7 +24,7 @@ SUBROUTINE cg_readin()
   CHARACTER(len=256) :: outdir
   NAMELIST /inputph/ prefix, fildyn, trans, epsil, raman, nmodes,     &
             tr2_ph, niter_ph, amass, outdir, asr, deltatau, nderiv, &
-            first, last
+            first, last, recover
                                              
   CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
@@ -47,6 +47,7 @@ SUBROUTINE cg_readin()
   nderiv = 2
   first  = 1
   last   = 0
+  recover=.FALSE.
   !
   IF ( ionode ) THEN
      !
@@ -94,6 +95,7 @@ SUBROUTINE cg_readin()
   CALL mp_bcast(nderiv,ionode_id)
   CALL mp_bcast(first,ionode_id)
   CALL mp_bcast(last,ionode_id)
+  CALL mp_bcast(recover,ionode_id)
   !
   !  read the input file produced by the pwscf program
   !  allocate memory and recalculate what is needed
@@ -117,8 +119,6 @@ SUBROUTINE cg_readin()
        &     CALL errore('cg_readin','wrong number of normal modes',1)
   IF (epsil .AND. nmodes.NE.0) CALL errore('cg_readin','not allowed',1)
   !
-  IF (raman) CALL errore &
-      ('phcg.x','Raman with finite differences no longer maintained',1)
   IF (raman .AND. deltatau.LE.0.d0)                                 &
        &     CALL errore('cg_readin','deltatau > 0 needed for raman CS',1)
   IF (nderiv.NE.2 .AND. nderiv.NE.4) &

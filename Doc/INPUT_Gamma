@@ -21,8 +21,8 @@ Note that:
   C60 has just 3 inequivalent atoms when put into in a cubic cell with 
   standard orientation (the isolated molecule has 1 inequivalent atom)
 - the code saves partial and final results in files "restart_e" and 
-  "restartph". Remove those files if you want to start from scratch, 
-  otherwise the code will restart from previous data.
+  "restartph". Specify "recover=.true." in the input data in order to
+  restart from saved data.
 
 Input:
   title (a string of characters)
@@ -36,6 +36,7 @@ Input variables as in the phonon code:
   fildyn
   epsil 
   trans
+  recover
   tr2_ph   Note that Conjugate-Gradient algorithm stops when 
            || A\delta\psi - B || < tr2_ph, where A and B define
            the DFT functional expanded at second order:

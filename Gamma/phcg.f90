@@ -14,6 +14,7 @@ PROGRAM phcg
   USE ions_base, ONLY : nat, tau
   USE pwcom
   USE io_files
+  USE io_global,  ONLY : ionode
   USE cgcom
   USE mp,             ONLY : mp_end
   USE global_version
@@ -69,9 +70,9 @@ PROGRAM phcg
   CALL stop_clock('phcg')
   CALL print_clock(' ')
   !
-  !  close everything and stop
+  !  close and delete temporary files, stop
   !
-  IF (epsil) THEN
+  IF (epsil .AND. ionode) THEN
      iubar=1
      CALL seqopn (iubar,'filbar1','unformatted',exst)
      CLOSE(unit=iubar,status='delete')
@@ -112,6 +113,7 @@ SUBROUTINE cg_deps(deps_dtau)
   REAL(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
        delta, coeff
   INTEGER iudyn, nd, na, ipol, nd_, na_, ipol_, jpol, kpol
+  LOGICAL :: exst
   DATA delta2/-1.d0, 1.d0/, coeff2/-0.5d0, 0.5d0/
   DATA delta4/-2.d0, -1.d0, 1.d0, 2.d0/
   DATA coeff4/ 0.08333333333333d0,-0.66666666666666d0,              &
@@ -121,25 +123,30 @@ SUBROUTINE cg_deps(deps_dtau)
   !
   !  Read partial results (if any)
   !
-  OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
-  READ(iunres,*,err=1,END=1) na_,ipol_,nd_
-  READ(iunres,*,err=1,END=1) deps_dtau
-  CLOSE(unit=iunres)
-  IF (na_.LE.nat) THEN
-     WRITE( stdout,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
-          &        ", nd=",i1)') na_,ipol_,nd_
-  ELSE
-     WRITE( stdout,'(5x,"Reading saved data")')
-  END IF
-  go to 2
-1 CLOSE(unit=iunres)
   na_  =1
   ipol_=1
   nd_  =1
   deps_dtau(:,:,:,:) = 0.d0
-  WRITE( stdout,'(5x,"Starting over from the beginning")')
-2 CONTINUE
+  IF (recover) THEN
+     OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
+     READ(iunres,*,err=1,END=1) na_,ipol_,nd_
+     READ(iunres,*,err=1,END=1) deps_dtau
+     CLOSE(unit=iunres)
+     IF (na_.LE.nat) THEN
+        WRITE( stdout,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
+          &        ", nd=",i1)') na_,ipol_,nd_
+     ELSE
+        WRITE( stdout,'(5x,"Reading saved data")')
+     END IF
+     CLOSE(unit=iunres)
+     GO TO 2
+1    WRITE( stdout,'(/5x,"Restart failed, starting new calculation")')
+     CLOSE(unit=iunres)
+  ELSE
+     WRITE( stdout,'(5x,"Starting new calculation")')
+  END IF
   !
+2 CONTINUE
   DO na=na_,nat
      DO ipol=1,3
         IF (na.EQ.na_.AND.ipol.LT.ipol_) go to 11
@@ -200,10 +207,7 @@ SUBROUTINE cg_deps(deps_dtau)
      END DO
   END DO
   !
-  iudyn = 20
-  OPEN(unit=iudyn,file=fildyn,form='formatted',status='old',position='append')
   WRITE( stdout,'(/5x, "Raman tensors (atomic)"/)')
-  WRITE (iudyn,'(/5x,"Raman: D eps_{alpha,beta}/D tau_{s,gamma}"/)')
   DO na=1,nat
      DO ipol=1,3
         WRITE( stdout,'(/5x,"D eps(i,j)",5x,3e14.6     &
@@ -211,13 +215,29 @@ SUBROUTINE cg_deps(deps_dtau)
              &    /5x,"D tau(",i2,")_",i1,4x,3e14.6)')             &
              &  (( deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,2),&
              &     na,ipol, (deps_dtau(3,jpol,ipol,na), jpol=1,3)
-        WRITE (iudyn,'("atom # ",i4,"   pol. ",i2)') na, ipol
-        WRITE (iudyn,'(3e24.12)') &
-             ( (deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,3)
      END DO
   END DO
   WRITE( stdout,*)
-  CLOSE (unit=iudyn)
+  !
+  if (ionode) then
+     iudyn = 20
+     INQUIRE (FILE = fildyn, EXIST = exst)
+     IF (exst) THEN
+        OPEN( unit=iudyn, file=fildyn, form='formatted', status='old', &
+          position='append')
+     ELSE
+        OPEN( unit=iudyn, file=fildyn, form='formatted', status='new')
+     END IF
+     WRITE (iudyn,'(/5x,"Raman: D eps_{alpha,beta}/D tau_{s,gamma}"/)')
+     DO na=1,nat
+        DO ipol=1,3
+           WRITE (iudyn,'("atom # ",i4,"   pol. ",i2)') na, ipol
+           WRITE (iudyn,'(3e24.12)') &
+                ( (deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,3)
+        END DO
+     END DO
+     CLOSE (unit=iudyn)
+  end if
   !
   RETURN
 END SUBROUTINE cg_deps
@@ -244,13 +264,15 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !
      !   verify if already calculated
      !
-     OPEN (unit=iunres,file='restart_e',form='formatted', status='unknown')
-     READ(iunres,*,END=1,err=1) epsilon0
-     READ(iunres,*,END=1,err=1) zstar
-     CLOSE(unit=iunres)
-     go to 2
-     !
-1    CLOSE(unit=iunres)
+     IF (recover) THEN
+        OPEN (unit=iunres,file='restart_e',form='formatted', status='unknown')
+        READ(iunres,*,END=1,err=1) epsilon0
+        READ(iunres,*,END=1,err=1) zstar
+        CLOSE(unit=iunres)
+        go to 2
+        !
+1       CLOSE(unit=iunres)
+     END IF
      CALL macro
      CALL solve_e
      !
@@ -271,8 +293,8 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
         !
      END IF
      !
-     WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.3,  &
-       &        /37x,3f10.3/37x,3f10.3)') ((epsilon0(i,j),j=1,3),i=1,3)
+     WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.7,  &
+       &        /37x,3f10.7/37x,3f10.7)') ((epsilon0(i,j),j=1,3),i=1,3)
      WRITE( stdout,'(/5x,"z*(",i2,")",3f10.3,/11x,3f10.3/11x,3f10.3)') &
              (na, ((zstar(i,j,na),j=1,3),i=1,3), na=1,nat)
   END IF
@@ -285,16 +307,18 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !
      !   verify if already calculated
      !
-     OPEN (unit=iunres,file='restartph',form='formatted', status='unknown')
-     READ (iunres,*,err=10,END=10) mode_done
-     IF (mode_done.EQ.nmodes+1) THEN
-        READ(iunres,*,END=10,err=10) dynout
-        READ(iunres,*,END=10,err=10) w2
-        CLOSE(unit=iunres)
-        go to 20
+     IF (recover) THEN
+        OPEN (unit=iunres,file='restartph',form='formatted', status='unknown')
+        READ (iunres,*,err=10,END=10) mode_done
+        IF (mode_done.EQ.nmodes+1) THEN
+           READ(iunres,*,END=10,err=10) dynout
+           READ(iunres,*,END=10,err=10) w2
+           CLOSE(unit=iunres)
+           go to 20
+        END IF
+        !
+10      CLOSE(unit=iunres)
      END IF
-     !
-10   CLOSE(unit=iunres)
      CALL solve_ph
      !
      !   get the complete dynamical matrix from the irreducible part
@@ -374,8 +398,8 @@ SUBROUTINE cg_neweps
   WRITE( stdout,'(/5x,"displaced atomic positions :")')
   WRITE( stdout,'(5x,3f12.6)') ((tau(i,j),i=1,3),j=1,nat)
   !
-  WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.3,       &
-       &        /37x,3f10.3/37x,3f10.3)') ((epsilon0(i,j),j=1,3),i=1,3)
+  WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.7,       &
+       &        /37x,3f10.7/37x,3f10.7)') ((epsilon0(i,j),j=1,3),i=1,3)
   WRITE( stdout,*)
   !
 END SUBROUTINE cg_neweps
@@ -385,6 +409,7 @@ SUBROUTINE newscf
   !-----------------------------------------------------------------------
   !
   USE pwcom
+  USE noncollin_module, ONLY: report
   USE funct
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
   USE control_flags, ONLY : restart, reduce_io, lscf, istep, iprint, &
@@ -408,10 +433,11 @@ SUBROUTINE newscf
   qcutz=0.0
   istep=1
   iprint=10000
-  pot_order=1
+  pot_order=0
   wfc_order=0
   input_drho=' '
   output_drho=' '
+  report=1
   !
   !  since we use only Gamma we don't need symmetries
   !
@@ -514,24 +540,29 @@ SUBROUTINE raman_cs2(w2,dynout)
   !  Read partial results (if any)
   !
   ALLOCATE ( raman_activity( 3, 3, last-first+1))    
-  OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
-  READ(iunres,*,err=1,END=1) nu_,nd_
-  READ(iunres,*,err=1,END=1) raman_activity
-  CLOSE(unit=iunres)
-  IF (nu_.LE.last) THEN
-     WRITE( stdout,'(5x,"Restarting from mode ",i3,", nd=",i1)') &
-          nu_,nd_
-  ELSE
-     WRITE( stdout,'(5x,"Reading saved data")')
-  END IF
-  go to 2
-1 CLOSE(unit=iunres)
   nu_=1
   nd_=1
   raman_activity(:,:,:) = 0.d0
-  WRITE( stdout,'(5x,"Starting over from the beginning")')
-2 CONTINUE
+  IF (recover) THEN
+     OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
+     READ(iunres,*,err=1,END=1) nu_,nd_
+     READ(iunres,*,err=1,END=1) raman_activity
+     CLOSE(unit=iunres)
+     IF (nu_.LE.last) THEN
+        WRITE( stdout,'(5x,"Restarting from mode ",i3,", nd=",i1)') &
+             nu_,nd_
+     ELSE
+        WRITE( stdout,'(5x,"Reading saved data")')
+     END IF
+     CLOSE(unit=iunres)
+     GO TO 2
+1    WRITE( stdout,'(/5x,"Restart failed, starting new calculation")')
+     CLOSE(unit=iunres)
+  ELSE
+     WRITE( stdout,'(5x,"Starting new calculation")')
+  END IF
   !
+2 CONTINUE
   DO nu=first,last
      IF (nu.LT.nu_) go to 11
      !
