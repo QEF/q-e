@@ -11,7 +11,7 @@ subroutine read_ncpp (np, iunps)
   !-----------------------------------------------------------------------
   !
   USE kinds, only: dp
-  USE parameters, ONLY: nchix, lmaxx, ndm
+  USE parameters, ONLY: nchix, lmaxx, ndmx
   use atom,  only: zmesh, mesh, xmin, dx, r, rab, vnl, chi, oc, nchi, &
        lchi, rho_at, rho_atc, numeric
   use char, only: psd
@@ -64,7 +64,7 @@ subroutine read_ncpp (np, iunps)
   endif
   read (iunps, *, err=300, iostat=ios) zmesh(np), xmin(np), dx(np), &
                                        mesh(np), nchi(np)
-  if (mesh(np).gt.ndm .or. mesh(np).le.0) &
+  if (mesh(np) > ndmx .or. mesh(np) <= 0) &
                          call errore ('read_ncpp', 'mesh too big', np)
   if ( nchi(np).gt.nchix .or. &
       (nchi(np).lt.lmax(np)   .and. lloc(np).eq.lmax(np)) .or. & 

@@ -15,7 +15,7 @@ subroutine init_paw_1
   !
 #include "machine.h"
   USE kinds , only: dp
-  use parameters , only : lqmax , nbrx, lmaxx, ndm
+  use parameters , only : lqmax , nbrx, lmaxx
   use cell_base , only : omega
   use basis , only : ntyp, nat, ityp
   use constants , only : fpi
@@ -31,7 +31,7 @@ subroutine init_paw_1
   !
 
   integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
-       lastq, ilast,  na, j, n1, n2
+       lastq, ilast,  na, j, n1, n2, ndm
   ! various counters
   real(kind=DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
   ! various work space
@@ -51,7 +51,7 @@ subroutine init_paw_1
   !
   !    Initialization of the variables
   !
-
+  ndm = MAXVAL (msh(1:ntyp))
   paw_nhm = 0
   paw_nh = 0
   paw_lmaxkb = 0
@@ -62,8 +62,6 @@ subroutine init_paw_1
      enddo
      if (paw_nh (nt) .gt.paw_nhm) paw_nhm = paw_nh (nt)
   enddo
-
-
 
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    

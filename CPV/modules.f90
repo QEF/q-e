@@ -138,14 +138,14 @@ end module gvec
 
 module ncprm
 
-  use parameters, only: nsx, mmaxx, nqfx, nbrx, lqmax
+  use parameters, only: nsx, ndmx, nqfx, nbrx, lqmax
   implicit none
   save
 !
 !  lqmax:  maximum angular momentum of Q (Vanderbilt augmentation charges)
 !  nqfx :  maximum number of coefficients in Q smoothing
 !  nbrx :  maximum number of distinct radial beta functions
-!  mmaxx:  maximum number of points in the radial grid
+!  ndmx:  maximum number of points in the radial grid
 ! 
 
 !  ifpcor   1 if "partial core correction" of louie, froyen,
@@ -174,14 +174,14 @@ module ncprm
 !              angular momentum (for r<rinner)
 !  rucore   bare local potential
 
-  real(kind=8) :: rscore(mmaxx,nsx), dion(nbrx,nbrx,nsx), &
-       betar(mmaxx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
-       qfunc(mmaxx,nbrx,nbrx,nsx), rucore(mmaxx,nbrx,nsx), &
+  real(kind=8) :: rscore(ndmx,nsx), dion(nbrx,nbrx,nsx), &
+       betar(ndmx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
+       qfunc(ndmx,nbrx,nbrx,nsx), rucore(ndmx,nbrx,nsx), &
        qfcoef(nqfx,lqmax,nbrx,nbrx,nsx), rinner(lqmax,nsx)
 !
 ! qrl       q(r) functions
 !
-  real(kind=8) :: qrl(mmaxx,nbrx,nbrx,lqmax,nsx)
+  real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
 
 !  mesh     number of radial mesh points
 !  r        logarithmic radial mesh
@@ -189,7 +189,7 @@ module ncprm
 !  cmesh    used only for Herman-Skillman mesh (old format)
 
   integer :: mesh(nsx)
-  real(kind=8) :: r(mmaxx,nsx), rab(mmaxx,nsx), cmesh(nsx)
+  real(kind=8) :: r(ndmx,nsx), rab(ndmx,nsx), cmesh(nsx)
 end module ncprm
 
 module pseu
@@ -227,7 +227,7 @@ end module qradb_mod
 
 module wfc_atomic
   use parameters, only:nsx
-  use ncprm, only:mmaxx
+  use ncprm, only:ndmx
   implicit none
   save
   !  nchix=  maximum number of pseudo wavefunctions
@@ -236,7 +236,7 @@ module wfc_atomic
   !  chi  =  atomic (pseudo-)wavefunctions
   integer :: nchix
   parameter (nchix=6)
-  real(kind=8) :: chi(mmaxx,nchix,nsx)
+  real(kind=8) :: chi(ndmx,nchix,nsx)
   integer :: lchi(nchix,nsx), nchi(nsx)
 end module wfc_atomic
 

@@ -13,7 +13,7 @@ PROGRAM pwscf
   ! ... Plane Wave Self-Consistent Field code 
   !
   USE io_global,        ONLY : stdout
-  USE parameters,       ONLY : ntypx, npk, lmaxx, nchix, ndm, nqfx, nbrx
+  USE parameters,       ONLY : ntypx, npk, lmaxx, nchix, ndmx, nqfx, nbrx
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
@@ -45,7 +45,7 @@ PROGRAM pwscf
             FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
      !
      WRITE( unit = stdout, FMT = 9010 ) &
-         ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfx
+         ntypx, npk, lmaxx, nchix, ndmx, nbrx, nqfx
      !
   END IF   
   !
@@ -117,6 +117,6 @@ PROGRAM pwscf
   !
 9010 FORMAT( /5X,'Current dimensions of program pwscf are:' &
              /5X,'ntypx =',I2,'   npk =',I5,'  lmax =',I2   &
-             /5X,'nchix =',I2,'  ndim =',I5,'  nbrx =',I2,' nqfx =',I2 )
+             /5X,'nchix =',I2,'  ndmx =',I5,'  nbrx =',I2,' nqfx =',I2 )
   !
 END PROGRAM pwscf

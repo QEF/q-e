@@ -238,7 +238,7 @@ MODULE atom
   ! ... The variables needed to describe the atoms and related quantities
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx, ndm, lmaxx, nchix
+  USE parameters, ONLY : npsx, ndmx, lmaxx, nchix
   !
   SAVE
   !
@@ -246,13 +246,13 @@ MODULE atom
        zmesh(npsx),              &! the atomic charge for mesh generation
        xmin(npsx),               &! initial linear mesh point
        dx(npsx),                 &! linear interval for logaritmic mesh
-       r(0:ndm,npsx),            &! radial logaritmic mesh
-       rab(0:ndm,npsx),          &! derivative of the radial mesh
-       vnl(0:ndm,0:lmaxx,npsx),  &! non local radial potential (KB type)
-       chi(0:ndm,nchix,npsx),    &! radial atomic orbitals
+       r(ndmx,npsx),             &! radial logaritmic mesh
+       rab(ndmx,npsx),           &! derivative of the radial mesh
+       vnl(ndmx,0:lmaxx,npsx),   &! non local radial potential (KB type)
+       chi(ndmx,nchix,npsx),     &! radial atomic orbitals
        oc(nchix,npsx),           &! atomic level occupation
-       rho_at(0:ndm,npsx),       &! radial atomic charge density
-       rho_atc(0:ndm,npsx)        ! radial core charge density
+       rho_at(ndmx,npsx),        &! radial atomic charge density
+       rho_atc(ndmx,npsx)        ! radial core charge density
   INTEGER :: &
        mesh(npsx),               &! number of mesh points
        msh(npsx),                &! the point at rcut
@@ -492,7 +492,7 @@ MODULE us
   ! ... These parameters are needed with the US pseudopotentials
   !  
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lmaxx, lqmax, nbrx, npsx, nqfx, ndm
+  USE parameters, ONLY : lmaxx, lqmax, nbrx, npsx, nqfx, ndmx
   !
   SAVE
   !
@@ -501,10 +501,10 @@ MODULE us
   REAL(KIND=DP) :: &
        dion(nbrx,nbrx,npsx),              &! D_{mu,nu} parameters (in the 
                                            !  atomic case)
-       betar(0:ndm,nbrx,npsx),            &! radial beta_{mu} functions
+       betar(ndmx,nbrx,npsx),            &! radial beta_{mu} functions
        qqq(nbrx,nbrx,npsx),               &! q_{mu,nu} parameters (in the 
                                            !  atomic case)
-       qfunc(0:ndm,nbrx,nbrx,npsx),       &! Q_{mu,nu}(|r|) function for 
+       qfunc(ndmx,nbrx,nbrx,npsx),       &! Q_{mu,nu}(|r|) function for 
                                            !  |r|> r_L
        qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q in region 
                                            !  |r|<r_L

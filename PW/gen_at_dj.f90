@@ -15,7 +15,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !
 #include "machine.h"
    USE kinds, ONLY: DP
-   USE parameters, ONLY: ndm, nchix
+   USE parameters, ONLY: nchix
    USE io_global,  ONLY : stdout
    USE constants, ONLY: tpi, fpi
    USE atom, ONLY: msh, r, rab, lchi, nchi, oc, chi
@@ -35,7 +35,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    ! local variables
    !
    integer :: l, na, nt, nb, iatw, iig, i, ig, i0, i1, i2 ,i3, m, lm
-   real (kind=DP) :: jl(ndm), jlm1(ndm), eps, dv, qt, arg, px, ux, vx, wx
+   real (kind=DP) :: eps, dv, qt, arg, px, ux, vx, wx
    parameter (eps=1.0e-8)
    complex (kind=DP) :: phase, pref
    real (kind=DP), allocatable :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)

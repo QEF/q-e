@@ -16,7 +16,7 @@ subroutine atomic_wfc (ik, wfcatom)
 #include "machine.h"
 
   USE kinds, ONLY: DP
-  USE parameters, ONLY: ndm, nchix
+  USE parameters, ONLY: nchix
   USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
   USE constants, ONLY: tpi, fpi
   USE cell_base, ONLY: omega, tpiba
@@ -41,7 +41,7 @@ subroutine atomic_wfc (ik, wfcatom)
 
   call start_clock ('atomic_wfc')
 
-  allocate (qg(npw),chiq(npw,nchix,ntyp),gk(3,npw),aux(ndm),vchi(ndm),sk(npw))
+  allocate ( qg(npw), chiq(npw,nchix,ntyp), gk(3,npw), sk(npw))
 
   ! calculate max angular momentum required in wavefunctions
   lmax_wfc = 0
@@ -132,7 +132,7 @@ subroutine atomic_wfc (ik, wfcatom)
   if (n_starting_wfc.ne.natomwfc) call errore ('atomic_wfc', &
        'something wrong', 1)
 
-  deallocate(qg, chiq ,gk ,aux ,vchi ,sk ,ylm)
+  deallocate(qg, chiq ,gk, sk ,ylm)
 
   call stop_clock ('atomic_wfc')
   return

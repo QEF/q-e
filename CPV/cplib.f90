@@ -82,17 +82,16 @@
       complex(kind=8), intent(in) ::  eigr(ngw,nas,nsp)
       complex(kind=8), intent(out):: wfc(ngw,n_atomic_wfc)
 !
-      integer natwfc, is, ia, ir, nb, l, m, lm, i
+      integer natwfc, ndm, is, ia, ir, nb, l, m, lm, i
       real(kind=8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
      &     chiq(:)
 !
 !
       allocate(ylm(ngw,(lmaxkb+1)**2))
       call ylmr2 ((lmaxkb+1)**2, ngw, gx, g, ylm)
-      allocate(q(ngw))
-      allocate(jl(mmaxx))
-      allocate(vchi(mmaxx))
-      allocate(chiq(ngw))
+      ndm = MAXVAL(mesh(1:nsp))
+      allocate(jl(ndm), vchi(ndm))
+      allocate(q(ngw), chiq(ngw))
 !
       do i=1,ngw
          q(i) = sqrt(g(i))*tpiba
@@ -131,11 +130,7 @@
       if (natwfc.ne.n_atomic_wfc)                                       &
      &     call errore('atomic_wfc','unexpected error',natwfc)
 !
-      deallocate(chiq)
-      deallocate(vchi)
-      deallocate(jl)
-      deallocate(q)
-      deallocate(ylm)
+      deallocate(q, chiq, vchi, jl, ylm)
 !
       return
       end
@@ -5008,12 +5003,12 @@
 !     Output parameters in module "ncprm"
 !     info on DFT level in module "dft"
 !
-      use parameters, only: nsx, natx, lqmax
+      use parameters, only: nsx, natx, lqmax, ndmx
       use ncprm, only: rscore, nqlc, qfunc, rucore, r, rab, rinner, &
                        qrl, qqq, nbeta, nbrx, ifpcor, mesh, betar,  &
                        dion, lll, kkbeta
       use funct, only: dft, iexch, icorr, igcx, igcc
-      use wfc_atomic, only: lchi, chi, nchi, nchix, mmaxx
+      use wfc_atomic, only: lchi, chi, nchi, nchix
       use ions_base, only: zv
       use io_global, only: stdout
 !
@@ -5051,7 +5046,7 @@
 !
       real(kind=8)  xmin, zmesh, dx,&! mesh parameters
      &        oc(nchix,nsx),  &! occupancies
-     &        rsatom(mmaxx)    ! charge density of pseudoatom
+     &        rsatom(ndmx)    ! charge density of pseudoatom
       integer mfxcx, mfxcc,   &!
      &        mgcx, mgcc,     &! exch-corr functional indices 
      &        exfact,         &
@@ -5088,7 +5083,7 @@
       read( iunps, '(4e17.11,i5)',err=100, iostat=ios )                 &
      &                       xmin,rdum,zmesh,dx,mesh(is)
 !
-      if (mesh(is).gt.mmaxx.or. mesh(is).lt.0)                          &
+      if (mesh(is) > ndmx .or. mesh(is) < 0)                            &
      &   call errore('readAdC', 'wrong mesh',is)
 !
       read( iunps, '(2i5)', err=100, iostat=ios ) nchi(is), nbeta(is)
@@ -5274,7 +5269,7 @@
 !
 !
       use kinds, only: DP
-      use parameters, only: nchix, lmaxx, nbrx, mmaxx, nsx, lqmax, nqfx
+      use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
       use ncprm, only: qfunc, qfcoef, qqq, betar, dion, rucore, cmesh, &
                        qrl, rab, rscore, r, mesh, ifpcor,  &
                        rinner, kkbeta, lll, nbeta, nqf, nqlc
@@ -5307,8 +5302,8 @@
      &       eee(nbrx),     &! energies of the beta function
      &       ddd(nbrx,nbrx),&! the screened D_{\mu,\nu} parameters
      &       rcloc,         &! the cut-off radius of the local potential 
-     &       vloc0(mmaxx),  &! the screened local potential
-     &       rsatom(mmaxx), &! the charge density of pseudoatom
+     &       vloc0(ndmx),  &! the screened local potential
+     &       rsatom(ndmx), &! the charge density of pseudoatom
      &       z(nsx)          ! atomic charge
       integer                                                           &
      &       iver(3),       &! contains the version of the code
@@ -5371,7 +5366,7 @@
      &     call errore( 'readvan', 'increase nchix', nchi(is) )
       if ( nchi(is).lt. 1 )                                             &
      &     call errore( 'readvan', 'wrong nchi ', is )
-      if ( mesh(is).gt.mmaxx .or. mesh(is).lt.0 )                       &
+      if ( mesh(is) > ndmx .or. mesh(is) < 0 )                          &
      &     call errore( 'readvan','wrong mesh', is )
 !
 !     nnlz, wwnl, ee  give info (not used) on pseudo eigenstates

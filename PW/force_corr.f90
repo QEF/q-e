@@ -19,7 +19,6 @@ subroutine force_corr (forcescc)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE parameters,  ONLY : ndm
   USE constants, ONLY: tpi
   USE atom, ONLY: rho_at, msh, r, rab
   USE basis, ONLY: nat, ntyp, ityp, tau
@@ -38,7 +37,7 @@ subroutine force_corr (forcescc)
   ! work space
   real(kind=DP) ::  gx, arg, fact
   ! temp factors
-  integer :: ir, isup, isdw, ig, igl0, nt, na, ipol
+  integer :: ir, isup, isdw, ig, igl0, nt, na, ipol, ndm
   ! counters
   !
   ! vnew is V_out - V_in, psic is the temp space
@@ -51,6 +50,7 @@ subroutine force_corr (forcescc)
      psic(:) = (vnew (:, isup) + vnew (:, isdw)) * 0.5d0
   end if
   !
+  ndm = MAXVAL ( msh(1:ntyp) )
   allocate ( aux(ndm), rhocgnt(ngl) )
 
   forcescc(:,:) = 0.d0

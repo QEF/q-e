@@ -23,7 +23,6 @@ subroutine atomic_rho (rhoa, nspina)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE parameters, ONLY: ndm
   USE io_global,  ONLY : stdout
   USE atom, ONLY: r, rab, msh, rho_at
   USE basis, ONLY: ntyp
@@ -45,7 +44,7 @@ subroutine atomic_rho (rhoa, nspina)
   real(kind=DP) :: rhoneg, rhorea, rhoima, gx
   real(kind=DP), allocatable :: rhocgnt (:), aux (:)
   complex(kind=DP), allocatable :: rhocg (:,:)
-  integer :: ir, is, ig, igl, nt
+  integer :: ir, is, ig, igl, nt, ndm
   !
   ! superposition of atomic charges contained in the array rho_at
   ! (read from pseudopotential files)
@@ -53,7 +52,8 @@ subroutine atomic_rho (rhoa, nspina)
   ! allocate work space (psic must already be allocated)
   !
   allocate (rhocg(  ngm, nspina))    
-  allocate (aux( ndm))    
+  ndm = MAXVAL ( msh(1:ntyp) )
+  allocate (aux(ndm))    
   allocate (rhocgnt( ngl))    
   rhoa(:,:) = 0.d0
   rhocg(:,:) = (0.d0,0.d0)

@@ -104,7 +104,7 @@ SUBROUTINE phq_init()
   !
   ! ... for the analytic potentials we need to convert in a radial mesh
   !
-  CALL convert_to_num( ntyp, numeric, ndm, mesh, r, lmaxx, lmax, &
+  CALL convert_to_num( ntyp, numeric, ndmx, mesh, r, lmaxx, lmax, &
                        lloc, nnl, aps, alps, vnl )
   !
   ! ... then we compute the denominators of the KB types, or the

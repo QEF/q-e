@@ -23,7 +23,7 @@ MODULE parameters
        npk    = 40000, &! max number of k-points               
        lmaxx  = 3,     &! max non local angular momentum       
        nchix  = 6,     &! max number of atomic wavefunctions per atom
-       ndm    = 2000    ! max number of points in the atomic radial mesh
+       ndmx   = 2000    ! max number of points in the atomic radial mesh
 
   INTEGER, PARAMETER :: &
        nbrx = 8,           &! max number of beta functions
@@ -34,7 +34,6 @@ MODULE parameters
   ! ...   More parameter for the CP codes
   !
 
-  INTEGER, PARAMETER :: mmaxx   = ndm        ! maximum mesh size for pseudo
   INTEGER, PARAMETER :: cp_lmax = lmaxx + 1  ! maximum number of channels
                                              ! (s,p,d,f)
   INTEGER, PARAMETER :: nacx    = 10         ! maximum number of averaged 

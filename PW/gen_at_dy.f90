@@ -15,7 +15,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !
 #include "machine.h"
    USE kinds, ONLY: DP
-   USE parameters, ONLY: ndm, nchix
+   USE parameters, ONLY: nchix
    USE io_global,  ONLY : stdout
    USE constants, ONLY: tpi, fpi
    USE atom, ONLY: msh, r, rab, lchi, nchi, oc, chi
@@ -50,7 +50,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    complex (kind=DP), allocatable :: sk(:)
    !          sk(npw)
 
-   allocate ( q(npw), gk(3,npw), auxjl(ndm), vchi(ndm), chiq(npwx,nchix,ntyp) )
+   allocate ( q(npw), gk(3,npw), chiq(npwx,nchix,ntyp) )
 
    dwfcat(:,:) = (0.d0,0.d0)
 
@@ -136,7 +136,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
 
    deallocate (sk)
    deallocate (dylm_u)
-   deallocate ( q, gk, auxjl, vchi, chiq )
+   deallocate ( q, gk, chiq )
 
    return
 end subroutine gen_at_dy

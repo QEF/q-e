@@ -7,7 +7,7 @@ subroutine compute_qdipol
   USE constants, ONLY: fpi
   USE atom, ONLY: r, rab
   USE ions_base, ONLY: ntyp => nsp
-  USE us, only: nbrx, ndm, tvanp, nbeta, lll, kkbeta, qfunc, rinner, &
+  USE us, only: nbrx, tvanp, nbeta, lll, kkbeta, qfunc, rinner, &
        qfcoef, nh, nhtol, nhtom, nqf, indv
   USE uspp, ONLY: nlx, ap
   USE phus, ONLY: dpqq
@@ -16,9 +16,10 @@ subroutine compute_qdipol
 
   real(kind=dp), allocatable :: qrad2(:,:,:), qtot(:,:,:), aux(:)
   real(kind=dp) :: fact
-  integer :: nt, l, ir, nb, mb, ilast, ipol, ih, ivl, jh, jvl, lp
+  integer :: nt, l, ir, nb, mb, ilast, ipol, ih, ivl, jh, jvl, lp, ndm
 
   call start_clock('cmpt_qdipol')
+  ndm = MAXVAL (kkbeta(1:ntyp))
   allocate (qrad2( nbrx , nbrx, ntyp))    
   allocate (aux( ndm))    
   allocate (qtot( ndm, nbrx, nbrx))    

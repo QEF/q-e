@@ -9,7 +9,7 @@
       use atom, only: r, rab, dx
       use basis, only: ntyp
       use cell_base, only: omega
-      USE parameters, only:  ndm, nbrx
+      USE parameters, only:  ndmx, nbrx
       USE kinds, only: DP
       use constants, only: fpi
       use us, only: lqx, tvanp, qfunc, qfcoef, nqf, rinner, lll, nbeta, &
@@ -18,7 +18,7 @@
       implicit none
       integer :: ik,  msh_bp, i, np, m, k, l
       integer :: n,idbes,ilmin,ilmax,iv,jv
-      real(DP)  :: jl(ndm), ql, sum, jlp1(ndm), aux(ndm), &
+      real(DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
              qr_k(nbrx,nbrx,lqx,ntyp)
 
 ! declaration readvan quantities

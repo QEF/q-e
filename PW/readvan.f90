@@ -18,7 +18,7 @@ subroutine readvan (is, iunps)
   !     It assume multiple rinner values.
   !
   USE kinds, only: dp
-  USE parameters, ONLY: nchix, lmaxx, nbrx, ndm, npsx, nqfx, lqmax
+  USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, nqfx, lqmax
   use atom,  only: zmesh, mesh,dx, r, rab, vnl, chi, oc, nchi, lchi, &
        rho_at, rho_atc
   use char,  only: psd
@@ -42,7 +42,7 @@ subroutine readvan (is, iunps)
   !
 
   real(kind=DP) :: exfact, etotpseu, wwnl (nchix), ee (nchix), eloc, &
-       dummy, rc (lmaxx + 1), eee (nbrx), ddd (nbrx, nbrx), rcloc, ru (0:ndm)
+       dummy, rc (lmaxx + 1), eee (nbrx), ddd (nbrx, nbrx), rcloc, ru(ndmx)
   ! index of the exchange and correlation use
   ! total pseudopotential energy
   ! the occupation of the valence states
@@ -112,7 +112,7 @@ subroutine readvan (is, iunps)
   if (nchi (is) .gt.nchix) call errore ('readvan', 'nchi> nchix', &
        nchi (is) )
   if (nchi (is) .lt.0) call errore ('readvan', 'wrong nchi ', is)
-  if (mesh (is) .gt.ndm.or.mesh (is) .lt.0) call errore ('readvan', &
+  if (mesh (is) > ndmx .or. mesh (is) <= 0) call errore ('readvan', &
        'wrong mesh', is)
   if (zp (is) .le.0.d0) call errore ('readvan', 'wrong zp', is)
   !

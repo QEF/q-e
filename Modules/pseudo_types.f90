@@ -15,7 +15,7 @@
 !  together with their allocation/deallocation routines
 
         USE kinds, ONLY: dbl
-        USE parameters, ONLY: mmaxx, cp_lmax
+        USE parameters, ONLY: ndmx, cp_lmax
 
         IMPLICIT NONE
         SAVE
@@ -72,17 +72,17 @@
           INTEGER :: igau
           INTEGER :: lloc
           INTEGER :: lnl 
-          INTEGER :: indl(mmaxx)
+          INTEGER :: indl(ndmx)
           INTEGER :: nchan
           INTEGER :: mesh
           REAL(dbl) ::  zv
           REAL(dbl) ::  raggio
           REAL(dbl) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
-          REAL(dbl) ::  rab(mmaxx)
-          REAL(dbl) ::  rw(mmaxx)
-          REAL(dbl) ::  vnl(mmaxx, cp_lmax)
-          REAL(dbl) ::  vloc(mmaxx)
-          REAL(dbl) ::  vrps(mmaxx, cp_lmax)
+          REAL(dbl) ::  rab(ndmx)
+          REAL(dbl) ::  rw(ndmx)
+          REAL(dbl) ::  vnl(ndmx, cp_lmax)
+          REAL(dbl) ::  vloc(ndmx)
+          REAL(dbl) ::  vrps(ndmx, cp_lmax)
           REAL(dbl) ::  wgv(cp_lmax)
           REAL(dbl) ::  rc(2)
           REAL(dbl) ::  wrc(2)
@@ -92,8 +92,8 @@
           INTEGER :: nrps                     ! number of atomic wave function
           INTEGER :: lrps(cp_lmax)            ! angular momentum
           REAL(dbl) :: oc(cp_lmax)            ! occupation for each rps
-          REAL(dbl) :: rps(mmaxx, cp_lmax)  ! atomic pseudo wave function
-          REAL(dbl) :: rhoc(mmaxx)          ! core charge
+          REAL(dbl) :: rps(ndmx, cp_lmax)  ! atomic pseudo wave function
+          REAL(dbl) :: rhoc(ndmx)          ! core charge
         END TYPE pseudo_ncpp
 
 !  ----------------------------------------------

@@ -28,7 +28,7 @@ subroutine init_us_1
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE parameters, ONLY: lmaxx, ndm, nbrx, lqmax
+  USE parameters, ONLY: lmaxx, nbrx, lqmax
   USE constants, ONLY: fpi
   USE atom, ONLY: r, rab, vnl, chi, msh
   USE basis, ONLY: ntyp
@@ -46,7 +46,7 @@ subroutine init_us_1
   !
 
   integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
-       lastq, ilast
+       lastq, ilast, ndm
   ! various counters
   real(kind=DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
   ! various work space
@@ -65,6 +65,7 @@ subroutine init_us_1
   !
   !    Initialization of the variables
   !
+  ndm = MAXVAL (msh(1:ntyp))
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    
   allocate (besr( ndm))    

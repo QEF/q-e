@@ -15,7 +15,7 @@ subroutine readnewvan (is, iunps)
   !     It is compatible only with the ld1 atomic code
   !
   USE kinds, only: dp
-  USE parameters, ONLY: nchix, lmaxx, nbrx, ndm, npsx, lqmax
+  USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, lqmax
   use constants, only: fpi
   use atom,  only: zmesh, mesh, xmin, dx, r, rab, vnl, chi, oc, nchi, &
        lchi, rho_at, rho_atc
@@ -78,7 +78,7 @@ subroutine readnewvan (is, iunps)
        rdum, zmesh (is) , dx (is) , mesh (is)
 
 
-  if (mesh (is) .gt.ndm) call errore ('readnewvan', 'mesh is too big', 1)
+  if (mesh (is) > ndmx) call errore ('readnewvan', 'mesh is too big', 1)
 
   read (iunps, '(2i5)', err = 100, iostat = ios) nwfs, nbeta (is)
   if (nbeta (is) .gt.nbrx) call errore ('readnewvan', 'nbeta is too large', 1)

@@ -14,7 +14,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE parameters, ONLY: ndm, nbrx
+  USE parameters, ONLY: nbrx
   USE io_global,  ONLY :  stdout
   USE constants, ONLY: tpi
   USE basis, ONLY: nat, ntyp, tau, ityp

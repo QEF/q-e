@@ -228,7 +228,7 @@
      &             fpibg, gps, sfp, xg, dsfp, dgps, r2new, r2max, r21,  &
      &             r22, r2l
       real(kind=8), external :: erf
-      integer is, irmax, ir, ig, ib
+      integer is, irmax, ir, ig, ib, ndm
       real(kind=8), allocatable:: df(:), dfigl(:)
 !
 !     ==================================================================
@@ -245,12 +245,13 @@
       endif
  1200 format(2x,'formf: eself=',f10.5)
 !
+      ndm = MAXVAL (mesh(1:nsp))
       allocate(figl(ngs))
-      allocate(f(mmaxx))
-      allocate(vscr(mmaxx))
+      allocate(f(ndm))
+      allocate(vscr(ndm))
       if (tpre) then
          allocate(dfigl(ngs))
-         allocate(df(mmaxx))
+         allocate(df(ndm))
       end if
 !
 !     ==================================================================

@@ -15,7 +15,7 @@ subroutine init_at_1
   !
 #include "machine.h"
 
-  USE parameters, ONLY: ndm, nchix
+  USE parameters, ONLY: nchix
   USE kinds, ONLY: dp
   USE atom, ONLY: nchi, lchi, chi, oc, r, rab, msh
   USE constants, ONLY: fpi
@@ -24,13 +24,14 @@ subroutine init_at_1
   USE us, ONLY: tab_at, nqx, dq, newpseudo
   implicit none
   !
-  integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq
+  integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq, ndm
   !
   real(kind=DP), allocatable :: aux (:), vchi (:)
   real(kind=DP) :: vqint, pref, q
 
   call start_clock ('init_at_1')
 
+  ndm = MAXVAL (msh(1:ntyp))
   allocate (aux(ndm),vchi(ndm))
 
   !

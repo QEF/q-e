@@ -113,7 +113,7 @@ end subroutine setup2
 subroutine memory_estimate ( )
   !-----------------------------------------------------------------------
   USE kinds, ONLY: DP
-  USE parameters, ONLY: ndm, npsx, lmaxx, nchix, nbrx, nqfx, lqmax
+  USE parameters, ONLY: ndmx, npsx, lmaxx, nchix, nbrx, nqfx, lqmax
   USE basis, ONLY: nat, ntyp, natomwfc
   USE cellmd,ONLY: lmovecell
   USE klist, ONLY: npk, nks, nkstot
@@ -149,8 +149,8 @@ subroutine memory_estimate ( )
        real_size * 2 * 3 * nat +  int_size * nat +   & ! tau force ityp
        int_size * 48 * nat + int_size * 4 * ntetra + & ! irt tetra
        real_size * 4 * npk + int_size * 2 * npk +    & ! xk wk ngk isk
-       real_size * (ndm+1) * npsx * (4+(lmaxx+1)+nchix)+ & ! atomic PP
-       real_size * (ndm+1) * npsx * (nbrx + nbrx*nbrx) + & ! atomic USPP
+       real_size * ndmx * npsx * (4+(lmaxx+1)+nchix)+ & ! atomic PP
+       real_size * ndmx * npsx * (nbrx + nbrx*nbrx) + & ! atomic USPP
        real_size * nqfx * lqmax * nbrx * nbrx * npsx       ! qfcoef
   !
   ! dynamically allocated memory that does not scale with N CPUs

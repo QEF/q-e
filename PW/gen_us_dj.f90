@@ -14,7 +14,7 @@ subroutine gen_us_dj (ik, dvkb)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE parameters, ONLY: ndm, nbrx
+  USE parameters, ONLY: nbrx
   USE constants, ONLY: tpi
   USE basis, ONLY: nat, ntyp, tau, ityp
   USE cell_base, ONLY: tpiba
@@ -46,7 +46,7 @@ subroutine gen_us_dj (ik, dvkb)
 
   integer :: na, i, m, l, iig, lm
   real(kind=DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
-  real(kind=DP) ::  jl (ndm), jlm1 (ndm), qt, dv, eps
+  real(kind=DP) ::  qt, dv, eps
   parameter (eps = 1.0e-8)
 
   complex(kind=DP), allocatable :: sk (:)

@@ -47,10 +47,10 @@ implicit none
   complex(kind=DP), allocatable :: wadd(:,:)
 
 
-  allocate( x1(0:ndm) )
-  allocate( x2(0:ndm) )
-  allocate( x3(0:ndm) )
-  allocate( x4(0:ndm) ) 
+  allocate( x1(0:ndmx) )
+  allocate( x2(0:ndmx) )
+  allocate( x3(0:ndmx) )
+  allocate( x4(0:ndmx) ) 
   allocate( fx1( nz1 ) )
   allocate( fx2( nz1 ) )
   allocate( fx3( nz1 ) )

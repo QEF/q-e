@@ -25,10 +25,10 @@ subroutine set_drhoc (q)
 
   integer :: ir, ng, nt
   ! counter on radial mesh points
-  ! conuter on plane waves
+  ! counter on plane waves
   ! counter on atomic types
-  ! .true. if some nlcc-pseudo is numeric
   logical :: some_numeric
+  ! .true. if some nlcc-pseudo is numeric
   ! in this case an auxiliary vector is needed
   real(kind=DP), allocatable :: aux (:)
 
@@ -39,11 +39,11 @@ subroutine set_drhoc (q)
   some_numeric = .false.
   do nt = 1, ntyp
      some_numeric = some_numeric.or. (nlcc (nt) .and.numeric (nt) )
-     if (nlcc (nt) .and.numeric (nt) .and.msh (nt) .gt.ndm) call errore &
+     if (nlcc (nt) .and. numeric (nt) .and. msh (nt) > ndmx) call errore &
           ('set_drhoc', 'too many mesh points', msh (nt) )
   enddo
 
-  if (some_numeric) allocate (aux ( ndm))    
+  if (some_numeric) allocate (aux ( ndmx))
   drc (:,:) = (0.d0, 0.d0)
   do ng = 1, ngm
      gq2 = (g (1, ng) + q (1) ) **2 + (g (2, ng) + q (2) ) **2 + &

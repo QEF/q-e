@@ -1,14 +1,14 @@
 MODULE paw
 
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nbrx, npsx, ndm
+  USE parameters, ONLY: nbrx, npsx, ndmx
   !
   ! ... These parameters are needed for the paw variables
   !
   SAVE
   !
   REAL(KIND=DP) :: &
-       paw_betar(0:ndm,nbrx,npsx)            ! radial beta_{mu} functions
+       paw_betar(ndmx,nbrx,npsx)  ! radial beta_{mu} functions
   INTEGER :: &
        paw_nh(npsx),             &! number of beta functions per atomic type
        paw_nbeta(npsx),          &! number of beta functions
