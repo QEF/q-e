@@ -45,7 +45,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
   integer :: lwork, nb, ILAENV, mm, info
   ! ILAENV returns optimal block size "nb"
   ! mm = number of calculated eigenvectors
-  external ZCOPY, ZHEGV, ILAENV, error
+  external ZCOPY, ZHEGV, ILAENV
 
   integer, allocatable :: iwork (:), ifail (:)
   real(kind=DP), allocatable :: rwork (:)
