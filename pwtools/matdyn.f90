@@ -91,7 +91,8 @@ PROGRAM matdyn
                   w2(3*nax,nqx),              &! frequencies (square)
                   atws(3,3),      &! lattice vector for WS initialization
                   rws(0:3,nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
-  REAL(KIND=DP), ALLOCATABLE:: tetra(:,:), freq(:,:)
+  INTEGER, ALLOCATABLE:: tetra(:,:)
+  REAL(KIND=DP), ALLOCATABLE:: freq(:,:)
   !
   INTEGER :: nat, nat_blk,                 & 
              ityp_blk(nax_blk), ityp(nax), &
