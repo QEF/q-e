@@ -1,48 +1,76 @@
 #
-# System-dependent definitions for IBM AIX (RISC6000)
+# System-dependent definitions for IBM AIX (RISC6000) parallel machines
 # Edit according to your needs
 #
-CPPFLAGS = -DAIX,-DHAS_ZHEGVX
-
+# Macros for conditional compilation
+# If the mass library is available, use
+# CPPFLAGS = -D__AIX,-D__MASS,-DHAS_ZHEGVX
+#
+CPPFLAGS = -D__AIX,-DHAS_ZHEGVX
 #
 # Fortran compiler:
+#
 # Use -g -C without -s in LDFLAGS for debugging
 # Use -O            for optimization
 # Use -O3 -qstrict  for higher optimization (may not go faster)
 # Use -qarch=auto -qtune=auto for processor-specific optimization
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
+#
 F90 = xlf
-F77 = xlf
-CC = xlc
-FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
-         -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto \
-         -qsuffix=cpp=f90
-F77FLAGS = -qdpc=e -qddim -qnosave -qalias=noaryovrlp \
-         -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto 
-F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
+F77 = $(F90)
+#
+# Fortran compiler flags
+#
+# CP and FPMD flags
+# FFLAGS = -qalias=noaryovrlp -I../include \
+#          -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+#          -qdpc -Q
+# PW flags
+FFLAGS =  -qalias=noaryovrlp -I../include \
+          -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+          -qdpc=e -qalias=nointptr -qinit=f90ptr -qddim -qnosave
+#
+# Fortran77 compiler flags
+#
+F77FLAGS = $(FFLAGS)
+F77FLAGS_NOOPT = -O0
+#
+# Fortran90 compiler flags
+#
+F90FLAGS = $(FFLAGS) -qfree=f90 -I$(OSHOME)/install -WF,$(CPPFLAGS)
+#
+# C compiler flags
+#
+CCFLAGS  = -Wp,$(CPPFLAGS) -O2
 #
 # This is needed to tell the compiler where modules are
 #
+# MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/CPV
+# MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/FPMD
 MODULEFLAG = -I$(OSHOME)/Modules -I$(OSHOME)/PW/ -I$(OSHOME)/PH/ 
 #
 # Libraries:
+#
 # We assume that essl is installed and that lapack is in /usr/local/lib
 # NOTA BENE: essl must be loaded BEFORE lapack in order to load the correct
 #            version of diagonalization routines
-# use esslp2 if available on power2 machines
+#            use esslp2 if available on power2 machines
 #
-LIBS = -lessl -L/usr/local/lib -llapack 
-
+# For Cineca machines:
+# LIBS = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass -lmassvp4 -lmass
+#
+LIBS = -lessl  -L/usr/local/lib -llapack
+#
+# Linker flags
 #
 # Loader: use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
-#         use -s for stripped executable (smaller file)
 #         use -bnso -bI:/usr/lib/syscalls.exp for static linking
+#         use -s for stripped executable (smaller file but no debugging)
 #
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
-#LDFLAGS = $(LIBS) -s -bmaxdata:512000000
-
+#LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
+LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s -bmaxdata:512000000
 #
 # ar:
 #

@@ -23,11 +23,11 @@ F77 = $(F90)
 # Fortran compiler flags
 #
 # CP and FPMD flags
-# FFLAGS = -qfree=f90 -qalias=noaryovrlp -I../include \
+# FFLAGS = -qalias=noaryovrlp -I../include \
 #          -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
 #          -qdpc -Q
 # PW flags
-FFLAGS =  -qfree=f90 -qalias=noaryovrlp -I../include \
+FFLAGS =  -qalias=noaryovrlp -I../include \
           -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
           -qdpc=e -qalias=nointptr -qinit=f90ptr -qddim -qnosave
 #
@@ -38,7 +38,7 @@ F77FLAGS_NOOPT = -O0
 #
 # Fortran90 compiler flags
 #
-F90FLAGS = $(FFLAGS) -I$(OSHOME)/install -WF,$(CPPFLAGS)
+F90FLAGS = $(FFLAGS) -qfree=f90 -I$(OSHOME)/install -WF,$(CPPFLAGS)
 #
 # C compiler flags
 #
