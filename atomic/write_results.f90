@@ -6,7 +6,7 @@ subroutine write_results
   implicit none
 
   integer :: i, j, n, m, im(40), l, ios
-  real(kind=dp):: work(ndm), dum, int_0_inf_dr, ravg, r2avg, sij, ene
+  real(kind=dp):: work(ndm), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
   logical :: ok
   !
   !
@@ -61,6 +61,16 @@ subroutine write_results
   write(6,*)
   write(6,'(5x,''Etot ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        etot, etot*0.5_dp, etot*13.6058_dp
+  if (lsd.eq.1) then
+     mm=0.d0
+     do n=1,nwf
+        if (oc(n).gt.0.0_dp) then
+           if (isw(n).eq.1) mm=mm+oc(n)
+           if (isw(n).eq.2) mm=mm-oc(n)
+        endif
+     enddo
+     write(6,'(5x,''Total magnetization:'',f8.2,'' Bohr mag. '')') mm
+  endif
   write(6,'(/,5x,''Ekin ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
        ekin, ekin*0.5_dp,  ekin*13.6058_dp
   write(6,'(5x,''Encl ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
