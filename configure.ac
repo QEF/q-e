@@ -1045,9 +1045,8 @@ echo setting MYLIB... $mylib
 # generate dependencies
 if test -x $topdir/makedeps.sh
 then
-	echo $ECHO_N "checking module dependencies... $ECHO_C"
+	echo checking dependencies...
 	( cd $topdir ; ./makedeps.sh )
-	echo "${ECHO_T}done"
 fi
 
 # export settings to generated files

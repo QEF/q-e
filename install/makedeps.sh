@@ -42,6 +42,13 @@ do
     # check for missing dependencies
     if grep @ make.depend
     then
+	notfound=1
 	echo WARNING: dependencies not found in directory $DIR
+    else
+        echo directory $DIR : ok
     fi
 done
+if test "$notfound" = ""
+then
+    echo all dependencies updated successfully
+fi
