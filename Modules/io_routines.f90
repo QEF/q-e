@@ -21,23 +21,25 @@ MODULE io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,    ONLY : istep, nstep
+       USE control_flags,    ONLY : istep, nstep, conv_elec
        USE io_files,         ONLY : iunneb, iunrestart, neb_file   
        USE input_parameters, ONLY : if_pos
-       USE neb_variables,    ONLY : pos, vel, num_of_images, dim, PES, &
-                                    PES_gradient, suspended_image, Emax, &
-                                    Emin, Emax_index, istep_neb, nstep_neb, &
-                                    lquick_min , ldamped_dyn, lmol_dyn, &
-                                    reset_vel
+       USE neb_variables,    ONLY : pos, vel, num_of_images, dim, PES, frozen, &
+                                    PES_gradient, suspended_image, Emax,       &
+                                    Emin, Emax_index, istep_neb, nstep_neb,    &
+                                    lquick_min , ldamped_dyn, lmol_dyn,        &
+                                    reset_vel, k_min, k_max, pos_old, grad_old
        USE io_global,        ONLY : ionode, ionode_id
        USE mp,               ONLY : mp_bcast
+       USE parser,           ONLY : matches
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !    
-       INTEGER :: i, j, ia
-       LOGICAL :: file_exists
+       INTEGER              :: i, j, ia
+       CHARACTER (LEN=256)  :: input_line
+       LOGICAL              :: file_exists
        !
        ! ... end of local variables
        !
@@ -50,14 +52,48 @@ MODULE io_routines
           OPEN( UNIT = iunrestart, FILE = neb_file, STATUS = "OLD", &
                 ACTION = "READ" )
           !
-          READ( UNIT = iunrestart, FMT = * )
-          READ( UNIT = iunrestart, FMT = * ) istep_neb
-          READ( UNIT = iunrestart, FMT = * ) nstep_neb
-          READ( UNIT = iunrestart, FMT = * ) suspended_image 
+          READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+          !
+          IF ( matches( "RESTART INFORMATION", input_line ) ) THEN
+             !
+             READ( UNIT = iunrestart, FMT = * ) istep_neb
+             READ( UNIT = iunrestart, FMT = * ) nstep_neb
+             READ( UNIT = iunrestart, FMT = * ) suspended_image
+             READ( UNIT = iunrestart, FMT = * ) conv_elec
+             !
+          ELSE   
+             !
+             ! ... mandatory fields
+             !
+             CALL errore( 'read_restart()', 'RESTART INFORMATION missing', 1 )
+             !
+          END IF   
+          !
+          READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+          !
+          IF ( matches( "ELSATIC CONSTANTS", input_line ) ) THEN
+             !
+             ! ... optional fields
+             !
+             READ( UNIT = iunrestart, FMT = * ) k_max
+             READ( UNIT = iunrestart, FMT = * ) k_min
+             !
+             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+             !
+          END IF 
+          !
+          IF ( .NOT. ( matches( "ENERGIES, POSITIONS AND GRADIENTS", &
+                                 input_line ) ) ) THEN
+             !
+             ! ... mandatory fields
+             !
+             CALL errore( 'read_restart()', &
+                          'ENERGIES, POSITIONS AND GRADIENTS missing', 1 )
+             !
+          END IF
           !
           READ( UNIT = iunrestart, FMT = * )
-          !
-          READ( UNIT = iunrestart, FMT = * )
+          READ( UNIT = iunrestart, FMT = * ) frozen(1)
           READ( UNIT = iunrestart, FMT = * ) PES(1)
           !
           ia = 0  
@@ -89,6 +125,7 @@ MODULE io_routines
           DO i = 2, num_of_images
              !
              READ( UNIT = iunrestart, FMT = * )
+             READ( UNIT = iunrestart, FMT = * ) frozen(i)
              READ( UNIT = iunrestart, FMT = * ) PES(i)
              !
              DO j = 1, dim, 3 
@@ -121,24 +158,39 @@ MODULE io_routines
           IF ( .NOT. reset_vel .AND. &
                ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
              !
-             READ( UNIT = iunrestart, FMT = * )
-             ! 
-             DO i = 1, num_of_images
+             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+             !
+             IF ( matches( "QUICK-MIN FIELDS", input_line ) ) THEN
                 !
-                READ( UNIT = iunrestart, FMT = * )
+                ! ... optional fields
                 !
-                DO j = 1, dim, 3
+                DO i = 1, num_of_images
                    !
-                   READ( UNIT = iunrestart, FMT = * ) &
-                       vel(j,i),                & 
-                       vel((j+1),i),            &
-                       vel((j+2),i)
+                   READ( UNIT = iunrestart, FMT = * )
+                   !
+                   DO j = 1, dim, 3
+                      !
+                      READ( UNIT = iunrestart, FMT = * ) &
+                          vel(j,i),                & 
+                          vel((j+1),i),            &
+                          vel((j+2),i),            &
+                          pos_old(j,i),            &
+                          pos_old((j+1),i),        &
+                          pos_old((j+2),i),        &
+                          grad_old(j,i),           &
+                          grad_old((j+1),i),       &
+                          grad_old((j+2),i)
+                      !
+                   END DO
+                   !
+                   vel(:,i)      = vel(:,i) * &
+                                   REAL( RESHAPE( if_pos, (/ dim /) ) )
+                   grad_old(:,i) = grad_old(:,i) * &
+                                   REAL( RESHAPE( if_pos, (/ dim /) ) )
                    !
                 END DO
                 !
-                vel(:,i) = vel(:,i) * REAL( RESHAPE( if_pos, (/ dim /) ) )
-                !
-             END DO
+             END IF
              !
           END IF
           !
@@ -151,18 +203,31 @@ MODULE io_routines
        CALL mp_bcast( istep_neb,       ionode_id )
        CALL mp_bcast( nstep_neb,       ionode_id )
        CALL mp_bcast( suspended_image, ionode_id )
-       ! 
+       CALL mp_bcast( conv_elec,       ionode_id )
+       !
+       CALL mp_bcast( k_max, ionode_id )
+       CALL mp_bcast( k_min, ionode_id )
+       !
+       CALL mp_bcast( frozen,       ionode_id )  
        CALL mp_bcast( pos,          ionode_id )  
        CALL mp_bcast( if_pos,       ionode_id )  
        CALL mp_bcast( PES,          ionode_id )
        CALL mp_bcast( PES_gradient, ionode_id )
        !
-       IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) &
-          CALL mp_bcast( vel, ionode_id )
+       IF ( .NOT. reset_vel .AND. &
+            ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
+          !
+          CALL mp_bcast( vel,      ionode_id )
+          CALL mp_bcast( pos_old,  ionode_id )
+          CALL mp_bcast( grad_old, ionode_id )
+          !
+       END IF
        !   
        CALL mp_bcast( Emax,       ionode_id )  
        CALL mp_bcast( Emin,       ionode_id )
        CALL mp_bcast( Emax_index, ionode_id )
+       !
+       RETURN
        !
      END SUBROUTINE read_restart
      !
@@ -173,12 +238,14 @@ MODULE io_routines
        !
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, neb_file, tmp_dir 
-       USE neb_variables,    ONLY : pos, vel, num_of_images, PES, &
-                                    PES_gradient, dim, suspended_image, &
-                                    lquick_min , ldamped_dyn, lmol_dyn, &
-                                    istep_neb, nstep_neb
+       USE control_flags,    ONLY : conv_elec
+       USE neb_variables,    ONLY : pos, vel, num_of_images, PES, frozen, &
+                                    PES_gradient, dim, suspended_image,   &
+                                    lquick_min , ldamped_dyn, lmol_dyn,   &
+                                    istep_neb, nstep_neb, k_min, k_max,   &
+                                    pos_old, grad_old
        USE formats,          ONLY : energy, restart_first, restart_others, &
-                                    velocities
+                                    quick_min
        USE io_global,        ONLY : ionode
        USE parser,           ONLY : int_to_char
        !
@@ -204,13 +271,20 @@ MODULE io_routines
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_neb
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
+          WRITE( UNIT = iunrestart, FMT = '(L1)' ) conv_elec
+          !
+          WRITE( UNIT = iunrestart, FMT = '("ELSATIC CONSTANTS")' )
+          !
+          WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_max
+          WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min
           !
           WRITE( UNIT = iunrestart, &
-                 FMT = '("ENERGY, POSITIONS AND GRADIENTS")' )
+                 FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
           !
           DO i = 1, num_of_images
              !
              WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+             WRITE( UNIT = iunrestart, FMT = '(L1)' ) frozen(i)
              WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
              !
              ia = 0
@@ -250,7 +324,7 @@ MODULE io_routines
           !
           IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
              !
-             WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' )
+             WRITE( UNIT = iunrestart, FMT = '("QUICK-MIN FIELDS")' )
              !
              DO i = 1, num_of_images
                 !
@@ -258,10 +332,16 @@ MODULE io_routines
                 !
                 DO j = 1, dim, 3
                    !
-                   WRITE( UNIT = iunrestart, FMT = velocities ) &
-                       vel(j,i),                          & 
-                       vel((j+1),i),                      &
-                       vel((j+2),i)
+                   WRITE( UNIT = iunrestart, FMT = quick_min ) &
+                       vel(j,i),                & 
+                       vel((j+1),i),            &
+                       vel((j+2),i),            &
+                       pos_old(j,i),            &
+                       pos_old((j+1),i),        &
+                       pos_old((j+2),i),        &
+                       grad_old(j,i),           &
+                       grad_old((j+1),i),       &
+                       grad_old((j+2),i)
                    !
                 END DO
                 !
@@ -288,12 +368,18 @@ MODULE io_routines
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
              !
+             WRITE( UNIT = iunrestart, FMT = '("ELSATIC CONSTANTS")' )
+             !
+             WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_max
+             WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min             
+             !
              WRITE( UNIT = iunrestart, &
                     FMT = '("ENERGY, POSITIONS AND GRADIENTS")' )
              !
              DO i = 1, num_of_images
                 !
                 WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+                WRITE( UNIT = iunrestart, FMT = '(L1)' ) frozen(i)
                 WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
                 !
                 ia = 0
@@ -333,7 +419,7 @@ MODULE io_routines
              !
              IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
                 !
-                WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' )
+                WRITE( UNIT = iunrestart, FMT = '("QUICK-MIN FIELDS")' )
                 !
                 DO i = 1, num_of_images
                    !
@@ -341,10 +427,16 @@ MODULE io_routines
                    !
                    DO j = 1, dim, 3
                       !
-                      WRITE( UNIT = iunrestart, FMT = velocities ) &
-                          vel(j,i),                          & 
-                          vel((j+1),i),                      &
-                          vel((j+2),i)
+                      WRITE( UNIT = iunrestart, FMT = quick_min ) &
+                          vel(j,i),                & 
+                          vel((j+1),i),            &
+                          vel((j+2),i),            &
+                          pos_old(j,i),            &
+                          pos_old((j+1),i),        &
+                          pos_old((j+2),i),        &
+                          grad_old(j,i),           &
+                          grad_old((j+1),i),       &
+                          grad_old((j+2),i)
                       !
                    END DO
                    !
@@ -560,18 +652,26 @@ MODULE io_routines
        !-----------------------------------------------------------------------
        !
        USE io_files,       ONLY : iunneb
-       USE neb_variables,  ONLY : num_of_images, PES, error
+       USE neb_variables,  ONLY : num_of_images, PES, error, pos
        USE formats,        ONLY : final_output
+       USE basic_algebra_routines
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER  :: image
+       INTEGER        :: image
+       REAL (KIND=DP) :: path_length, inter_image_distance
        !
        ! ... end of local variables
        !
+       !
+       path_length = 0.D0
+       !
        DO image = 1, num_of_images
+          !
+          IF ( image > 1 ) &
+             path_length = path_length + norm( pos(:,image) - pos(:,image-1) )
           !
           WRITE( UNIT = iunneb, FMT = final_output ) &
               image, &
@@ -579,6 +679,15 @@ MODULE io_routines
               error(image) * ( AU / BOHR_RADIUS_ANGS )
           !
        END DO
+       !
+       inter_image_distance = path_length / REAL( num_of_images - 1 )
+       !
+       WRITE( UNIT = iunneb, &
+                FMT = '(/,5X,"path length",&
+                      & T26," = ",F6.3," bohr")' ) path_length   
+       WRITE( UNIT = iunneb, &
+                FMT = '(5X,"inter-image distance", &
+                      & T26," = ",F6.3," bohr")' ) inter_image_distance
        !
        WRITE( UNIT = iunneb, FMT = '(/,5X,75("-")/)' )       
        !

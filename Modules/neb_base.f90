@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #undef DEBUG_ELASTIC_CONSTANTS
+!#define DEBUG_ELASTIC_CONSTANTS
 !
 !-----------------------------------------------------------------------
 MODULE neb_base
@@ -36,6 +37,7 @@ MODULE neb_base
       !
       USE input_parameters, ONLY : pos, restart_mode, calculation, &
                                    minimization_scheme, climbing, nstep, ds
+      USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : nat                                   
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
                                    dat_file, int_file, xyz_file, axsf_file
@@ -43,13 +45,14 @@ MODULE neb_base
       USE neb_variables,    ONLY : ds_       => ds, &
                                    pos_      => pos, &
                                    climbing_ => climbing, &
-                                   pos_old, grad_old, frozen, reset_vel, &
+                                   pos_old, grad_old, frozen, reset_vel,       &
                                    vel, num_of_images, dim, PES, PES_gradient, &
                                    elastic_gradient, tangent, grad, norm_grad, &
                                    error, mass, free_minimization, CI_scheme,  &
                                    optimization, k, k_min, k_max,  Emax_index, &
                                    VEC_scheme, neb_thr, lquick_min, lmol_dyn,  &
-                                   ldamped_dyn, nstep_neb, istep_neb, new_step
+                                   ldamped_dyn, nstep_neb, istep_neb,          &
+                                   suspended_image
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
@@ -85,6 +88,7 @@ MODULE neb_base
       ! ... istep is initialized to zero
       !
       istep_neb = 0
+      conv_elec = .TRUE.
       !
       ! ... the dimension of all neb arrays is set 
       ! ... ( It corresponds to the dimension of the configurational space )
@@ -121,7 +125,6 @@ MODULE neb_base
       mass             = 1.D0
       k                = k_min
       frozen           = .FALSE.
-      new_step         = .FALSE.
       !
       IF ( ALLOCATED( climbing ) ) THEN
          !
@@ -147,6 +150,10 @@ MODULE neb_base
          vel = 0.D0
          !
       END IF
+      !
+      ! ... pos_old is initialized
+      !
+      pos_old = pos_      
       !
       ! ... initial path is read ( restart_mode == "restart" ) 
       ! ... or generated ( restart_mode = "from_scratch" )
@@ -179,11 +186,32 @@ MODULE neb_base
             !
          END IF
          !
+         ! ... path length is computed here
+         !
+         path_length = 0.D0
+         !
+         DO i = 2, num_of_images
+            !
+            path_length = path_length + norm( pos_(:,i) - pos_(:,( i - 1 )) )
+            !
+         END DO
+         !
+         inter_image_distance = path_length / REAL( num_of_images - 1 )
+         !
+         IF ( suspended_image == 0 ) THEN
+            !
+            ! ... NEB forces are computed for the first iteration
+            !
+            CALL compute_tangent()
+            CALL gradient()
+            !
+         END IF   
+         !
       ELSE
          !
          ! ... linear interpolation
          !
-         ALLOCATE( d_R(dim) )        
+         ALLOCATE( d_R(dim) )
          !
          d_R(:) = ( pos_(:,num_of_images) - pos_(:,1) )
          !
@@ -202,10 +230,6 @@ MODULE neb_base
          DEALLOCATE( d_R )
          !
       END IF
-      !
-      ! ... pos_old is initialized
-      !
-      pos_old = pos_
       !
       ! ... the actual number of degrees of freedom is computed
       !
@@ -243,10 +267,10 @@ MODULE neb_base
                 FMT = '(5X,"neb_thr",T35," = ",F6.4," eV / A")' ) neb_thr
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"initial path length",&
-                      & T35," = ",F6.4," bohr")' ) path_length   
+                      & T35," = ",F6.3," bohr")' ) path_length   
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"initial inter-image distance", &
-                      & T35," = ",F6.4," bohr")' ) inter_image_distance
+                      & T35," = ",F6.3," bohr")' ) inter_image_distance
          !
          IF ( CI_scheme == "manual" ) THEN
             !
@@ -273,7 +297,9 @@ MODULE neb_base
       !
       CONTAINS
          !
+         !-------------------------------------------------------------------
          SUBROUTINE compute_deg_of_freedom()
+           !-------------------------------------------------------------------
            !
            USE input_parameters, ONLY :  if_pos
            USE neb_variables,    ONLY :  deg_of_freedom
@@ -536,25 +562,26 @@ MODULE neb_base
     !
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE compute_error( err )
+    SUBROUTINE compute_error( err_out )
       !-----------------------------------------------------------------------
       !
-      USE neb_variables, ONLY : num_of_images, optimization, &
+      USE neb_variables, ONLY : num_of_images, optimization, neb_thr, &
                                 error, norm_grad, deg_of_freedom, frozen
       !
       IMPLICIT NONE
       !
       ! ... I/O variables
       !
-      REAL (KIND=DP), INTENT(OUT)  :: err
+      REAL (KIND=DP), OPTIONAL, INTENT(OUT) :: err_out
       !
       ! ... local variables
       !
-      INTEGER :: N_in, N_fin
-      INTEGER :: i
+      INTEGER        :: N_in, N_fin
+      INTEGER        :: i
+      REAL (KIND=DP) :: err_max
       !
       !
-      err = 0.D0
+      err_max = 0.D0
       !
       IF ( optimization ) THEN
          !
@@ -575,15 +602,18 @@ MODULE neb_base
          !
          error(i) = norm_grad(i) / SQRT( REAL( deg_of_freedom ) )
          !
-         IF ( ( error(i) > err ) .AND. &
-              ( i >= N_in .AND. i <= N_fin ) ) err = error(i)
+         IF ( ( error(i) > err_max ) .AND. &
+              ( i >= N_in .AND. i <= N_fin ) ) err_max = error(i)
          !
       END DO
       !
       ! ... an image is "frozen" if the error is less than 50% of the
       ! ... largest error
       !
-      frozen(:) = ( error(:) < 0.5D0 * err )
+      frozen(:) = ( error(:) < MAX( 0.5D0 * err_max, &
+                                    neb_thr * BOHR_RADIUS_ANGS / AU ) )
+      !
+      IF ( PRESENT( err_out ) ) err_out = err_max
       !
       RETURN
       !

@@ -16,12 +16,12 @@ MODULE formats
     lattice_vectors  = "(3(2X,F14.10),/,3(2X,F14.10),/,3(2X,F14.10))"
   !
   CHARACTER (LEN=*), PARAMETER :: &
-    restart_first  = "(3(2X,F14.10),3(2X,F14.10),3(2X,I1))", &
-    restart_others = "(3(2X,F14.10),3(2X,F14.10))"
+    restart_first  = "(3(2X,F16.12),3(2X,F16.12),3(2X,I1))", &
+    restart_others = "(3(2X,F16.12),3(2X,F16.12))"
   !  
   CHARACTER (LEN=*), PARAMETER :: &  
-    velocities = "(3(2X,F14.10))", &
-    energy     = "(2X,F16.8)"
+    quick_min = "(9(2X,F16.12))", &
+    energy    = "(2X,F18.10)"
   !  
   CHARACTER (LEN=*), PARAMETER :: &  
     dat_fmt  = "(3(2X,F16.10))",    &

@@ -19,8 +19,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE control_flags,    ONLY : conv_elec, istep, history, alpha0, beta0, ethr
   USE check_stop,       ONLY : check_stop_now
   USE cell_base,        ONLY : alat
-  USE basis,            ONLY : tau, ityp, nat, &
-                               startingwfc_ => startingwfc, &
+  USE ions_base,        ONLY : tau, ityp, nat
+  USE basis,            ONLY : startingwfc_ => startingwfc, &
                                startingpot_ => startingpot    
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
@@ -107,11 +107,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !     
      suspended_image = image
      !
-     IF ( check_stop_now() ) THEN
+     IF ( check_stop_now( iunneb ) ) THEN
         !   
         istat = 1
         !
-        CALL stop_other_images()        
+        ! ... in case of parallelization on images a stop signal
+        ! ... is sent via the "EXIT" file
+        !
+        IF ( nimage > 1 ) CALL stop_other_images()        
         !
         EXIT scf_loop
         !    
@@ -189,24 +192,37 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
               history = 0
               tauold  = 0.D0
               !
+              WRITE( UNIT = iunupdate, FMT = * ) history
+              WRITE( UNIT = iunupdate, FMT = * ) tauold
+              !
            END IF
            !
-           CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )  
-           !
-           ! ... find the best coefficients for the extrapolation of 
-           ! ... the potential
-           !
-           CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )        
+           CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
            !
         END IF
         !
-        CALL mp_bcast( alpha0,  root_image, intra_image_comm )
-        CALL mp_bcast( beta0,   root_image, intra_image_comm ) 
-        CALL mp_bcast( history, root_image, intra_image_comm )    
+        CALL mp_bcast( history, root_image, intra_image_comm )
         !
-        ! ... potential and wavefunctions are extrapolated
-        !
-        CALL update_pot()
+        IF ( conv_elec ) THEN
+           !
+           ! ... potential and wavefunctions are extrapolated only if
+           ! ... scf on the previous image was achieved :
+           !
+           IF ( me_image == root_image ) THEN 
+              !
+              ! ... find the best coefficients for the extrapolation of 
+              ! ... the potential
+              !
+              CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )        
+              !
+           END IF
+           !
+           CALL mp_bcast( alpha0, root_image, intra_image_comm )
+           CALL mp_bcast( beta0,  root_image, intra_image_comm )                
+           !
+           CALL update_pot()
+           !
+        END IF
         !
         ! ... self-consistency loop
         !

@@ -61,7 +61,7 @@ MODULE minimization_routines
        vel(:,index) = vel(:,index) - &
                       ds(index) / 2.D0 * grad(:,index) / mass(:)
        pos(:,index) = pos(:,index) + ds(index) * vel(:,index)
-       !
+       !       
        RETURN
        !
      END SUBROUTINE velocity_Verlet_first_step
@@ -98,7 +98,8 @@ MODULE minimization_routines
      SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE neb_variables, ONLY : pos_old, grad_old, vel, mass, dim, new_step
+       USE constants,     ONLY : eps8
+       USE neb_variables, ONLY : pos_old, grad_old, vel, mass, dim
        !
        IMPLICIT NONE
        !
@@ -119,11 +120,9 @@ MODULE minimization_routines
           !
           vel_component = ( vel(:,index) .dot. force_versor )
           !
-          IF ( vel_component > 0.D0 .OR. new_step(index) ) THEN
+          IF ( vel_component > 0.D0 ) THEN
              ! 
              vel(:,index) = vel_component * force_versor
-             !
-             new_step(index) = .FALSE.
              !
           ELSE
              !
@@ -133,24 +132,31 @@ MODULE minimization_routines
              !             
              ! ... an approximate newton-raphson step is performed
              !
-             ALLOCATE( y( dim ), s( dim ) )
-             !
-             y = grad(:,index) - grad_old(:,index)
-             s =  pos(:,index) -  pos_old(:,index)
-             !
-             ds(index) = 1.D0
-             !
-            ! PRINT '(5X,"projection = ",F7.4)',( s .dot. grad(:,index) ) / &
-            !                                   ( norm( s ) * norm_grad(index) )
-             !             
-             grad(:,index) = 2.D0 * s * &
-                             ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
-             !             
-            ! PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
-             !
-             new_step(index) = .TRUE.
-             !
-             DEALLOCATE( y, s )
+             IF ( norm( pos_old(:,index) ) > 0.D0 .AND. &
+                  norm( grad_old(:,index) ) > 0.D0 ) THEN
+                !
+                ALLOCATE( y( dim ), s( dim ) )
+                !
+                y = grad(:,index) - grad_old(:,index)
+                s =  pos(:,index) -  pos_old(:,index)
+                !
+               ! PRINT '(5X,"projection = ",F7.4)',( s .dot. grad(:,index) ) / &
+               !                                   ( norm( s ) * norm_grad(index) )
+                !
+                IF ( ABS( y .dot. s ) > eps8 ) THEN
+                   !
+                   ds(index) = 1.D0
+                   !
+                   grad(:,index) = 2.D0 * s * &
+                                ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
+                   !
+                END IF
+                !             
+               ! PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
+                !
+                DEALLOCATE( y, s )
+                !
+             END IF   
              !
           END IF
           !
