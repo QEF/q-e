@@ -1,11 +1,10 @@
 # @configure_input@
-TOPDIR         = @topdir@
 CC             = @cc@
 CCFLAGS        = @cflags@ @pre_dflags@$(DFLAGS) $(IFLAGS)
 # See include/machine.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
 DFLAGS         = @dflags@
-IFLAGS         = -I. -I$(TOPDIR)/include -I$(TOPDIR)/Modules -I$(TOPDIR)/PW -I$(TOPDIR)/PH @ifftw@
+IFLAGS         = -I. -I../include -I../Modules -I../PW -I../PH @ifftw@
 CPP            = @cpp@
 CPPFLAGS       = @cppflags@ @pre_dflags@$(DFLAGS) $(IFLAGS)
 F77            = @f77@
@@ -16,7 +15,7 @@ F90FLAGS       = @f90flags@ @pre_f_dflags@$(DFLAGS)
 F77FLAGS_NOOPT = @fflags_noopt@
 LD             = @ld@
 LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
-LIBOBJS        = $(TOPDIR)/flib/ptools.a $(TOPDIR)/flib/flib.a $(TOPDIR)/clib/clib.a
+LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 # LIBS must contain the location of all needed external libraries
 LIBS           = @libs@
 # MYLIB can be one of the following (depending on LIBS):

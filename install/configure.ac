@@ -428,7 +428,7 @@ then
 		LIBS="$libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 have_essl=1 have_blas=1
 			       libs="$LIBS")
-	elif test $is_linux
+	elif test $is_linux && test $is_ifc
 	then
 		# check for mkl (in several directories)
 		for dir in none $try_libdirs
@@ -481,7 +481,7 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 			LDFLAGS="$c_ldflags $try_loption"
 			LIBS="$libs"
 			AC_SEARCH_LIBS(fftwnd, fftw, have_fftw=1
-				       libs="$try_loption $LIBS")
+				       libs="$try_loption $LIBS", , -lm)
 			if test "$ac_cv_search_fftwnd" != "no"
 			then break ; fi
 		done
@@ -659,7 +659,6 @@ AC_CHECK_SIZEOF(char)
 AC_CHECK_SIZEOF(void *)
 
 # export settings to generated files
-AC_SUBST(topdir)
 AC_SUBST(cc)
 AC_SUBST(cflags)
 AC_SUBST(dflags)

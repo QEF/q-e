@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP topdir cc cflags dflags pre_dflags cpp cppflags f77 f90 fflags f90flags fflags_noopt pre_f_dflags ifftw ld ldflags libs mylib ar arflags f90rule LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP cc cflags dflags pre_dflags cpp cppflags f77 f90 fflags f90flags fflags_noopt pre_f_dflags ifftw ld ldflags libs mylib ar arflags f90rule LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -3192,7 +3192,7 @@ if test "$ac_cv_search_dcft" != no; then
 			       libs="$LIBS"
 fi
 
-	elif test $is_linux
+	elif test $is_linux && test $is_ifc
 	then
 		# check for mkl (in several directories)
 		for dir in none $try_libdirs
@@ -3438,7 +3438,7 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 if test "$ac_cv_search_fftwnd" = no; then
   for ac_lib in fftw; do
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lm $ac_func_search_save_LIBS"
     cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
 /* confdefs.h.  */
@@ -6971,7 +6971,6 @@ _ACEOF
 
 
 
-
                     ac_config_files="$ac_config_files make.sys make.rules"
 
 
@@ -7625,7 +7624,6 @@ s,@CPPFLAGS@,$CPPFLAGS,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
-s,@topdir@,$topdir,;t t
 s,@cc@,$cc,;t t
 s,@cflags@,$cflags,;t t
 s,@dflags@,$dflags,;t t
