@@ -63,6 +63,8 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! auxiliary variables for intepolation
   ! auxiliary variable
   !
+  LOGICAL :: ltest
+  !
   !     compute the indices which correspond to ih,jh
   !
   sixth = 1.d0 / 6.d0
@@ -112,7 +114,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
         !
         ! calculate quantites depending on the module of G only when needed
         !
-        if (ig.eq.1.or.abs (qmod (ig) - qmod (ig - 1) ) .gt.1.0d-6) then
+	IF ( ig > 1 ) ltest = ABS( qmod(ig) - qmod(ig-1) ) > 1.0D-6
+	!
+        IF ( ig == 1 .OR. ltest ) THEN
            qm = qmod (ig) * dqi
            px = qm - int (qm)
            ux = 1.d0 - px
