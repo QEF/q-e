@@ -101,7 +101,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   use parameters, only: nacx, natx, nsx, nbndxx
   use constants, only: pi, factem
   use io_files, only: psfile, pseudo_dir
-  use input_cp, only: smiosys
+  use input_cp, only: iosys
   use qgb_mod, only: deallocate_qgb_mod
   use dqgb_mod, only: deallocate_dqgb_mod
   use qradb_mod, only: deallocate_qradb_mod
@@ -177,6 +177,12 @@ subroutine smdmain( tau, fion_out, etot_out )
   real(kind=8), allocatable:: emaver(:)
   real(kind=8), allocatable:: emainv(:)
   real(kind=8)  emaec
+
+  !
+  !  ionic positions, center of mass position
+  !
+  real(kind=8) tau0(3,natx,nsx)
+
   !
   !  iforce, 
   ! 
@@ -277,13 +283,13 @@ subroutine smdmain( tau, fion_out, etot_out )
   !     read input from standard input (unit 5)
   !     ==================================================================
 
-  call smiosys( nbeg , ndr , ndw , nomore , iprint                       &
+  call iosys( nbeg , ndr , ndw , nomore , iprint                       &
        & , delt , emass , emaec  , tsde , frice , grease , twall         &
        & , tortho , eps , maxit , trane , ampre , tranp , amprp          &
        & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
        & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
        & , tpre , thdyn , thdiag , twmass , wmass , frich , greash , press   &
-       & , tnoseh , qnh , temph , celldm , ibrav , ecutw , ecut , iforce &
+       & , tnoseh , qnh , temph , celldm , ibrav , tau0, ecutw , ecut , iforce &
        & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
        & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
        & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &

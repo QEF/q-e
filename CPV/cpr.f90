@@ -121,6 +121,8 @@
       use cp_electronic_mass, only: emass, emaec => emass_cutoff
       use cp_electronic_mass, only: emass_precond
       use cpr_subroutines
+      use smd_variables, only: sm_p, smcp, smlm, smopt, linr, polm, kwnp, &
+                               codfreq, forfreq, smwfreq, sm_tol => tol, lmfreq, maxlm 
 
 ! wavefunctions
 !
@@ -286,7 +288,9 @@
      & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
      & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
      & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &
-     & , psfile , pseudo_dir, iprsta, ispin_ )
+     & , psfile , pseudo_dir, iprsta, ispin_ &
+     & , sm_p, smcp, smlm, smopt, linr, polm, kwnp, codfreq, forfreq, smwfreq &
+     & , sm_tol, lmfreq, maxlm )
       allocate( f( nx ) )
       f( :   ) = 0.0d0
       f( 1:n ) = f_( 1:n )
@@ -1285,10 +1289,12 @@
          acc(i)=acc(i) / dble( nfi )
       end do
 !
-      WRITE( stdout,1949)
+      if( ionode ) then
+        WRITE( stdout,1949)
+        WRITE( stdout,1950) (acc(i),i=1,nacc)
+      end if
  1949 format(//'              averaged quantities :',/,                 &
      &       9x,'ekinc',10x,'ekin',10x,'epot',10x,'etot',5x,'tempp')
-      WRITE( stdout,1950) (acc(i),i=1,nacc)
  1950 format(4f14.5,f10.1)
 !
       call print_clock( 'initialize' )
@@ -1328,35 +1334,39 @@
 
 !
       if(iprsta.gt.1) then
-         WRITE( stdout,*)
-         WRITE( stdout,3370)'    lambda   n = ',n
-         do i=1,n
-            WRITE( stdout,3380) (lambda(i,j),j=1,n)
-         end do
+         if( ionode ) then
+           WRITE( stdout,*)
+           WRITE( stdout,3370)'    lambda   n = ',n
+           do i=1,n
+              WRITE( stdout,3380) (lambda(i,j),j=1,n)
+           end do
+         end if
 3370     format(26x,a,i4)
 3380     format(9f8.4)      
       endif
 !
       if( tfor .or. tprnfor ) then
-         WRITE( stdout,1970) ibrav, alat
-         WRITE( stdout,1971)
-         do i=1,3
-            WRITE( stdout,1972) (h(i,j),j=1,3)
-         enddo
-         WRITE( stdout,1973)
-         do is=1,nsp
-            do ia=1,na(is)
-               WRITE( stdout,1974) is,ia,(tau0(i,ia,is),i=1,3),               &
-     &            ((ainv(j,1)*fion(1,ia,is)+ainv(j,2)*fion(2,ia,is)+    &
-     &              ainv(j,3)*fion(3,ia,is)),j=1,3)
-            end do
-         end do
-         WRITE( stdout,1975)
-         do is=1,nsp
-            do ia=1,na(is)
-               WRITE( stdout,1976) is,ia,(taus(i,ia,is),i=1,3)
-            end do
-         end do
+         if( ionode ) then
+           WRITE( stdout,1970) ibrav, alat
+           WRITE( stdout,1971)
+           do i=1,3
+              WRITE( stdout,1972) (h(i,j),j=1,3)
+           enddo
+           WRITE( stdout,1973)
+           do is=1,nsp
+              do ia=1,na(is)
+                 WRITE( stdout,1974) is,ia,(tau0(i,ia,is),i=1,3),               &
+     &              ((ainv(j,1)*fion(1,ia,is)+ainv(j,2)*fion(2,ia,is)+    &
+     &                ainv(j,3)*fion(3,ia,is)),j=1,3)
+              end do
+           end do
+           WRITE( stdout,1975)
+           do is=1,nsp
+              do ia=1,na(is)
+                 WRITE( stdout,1976) is,ia,(taus(i,ia,is),i=1,3)
+              end do
+           end do
+         end if
       endif
       conv_elec = .TRUE.
 
@@ -1372,7 +1382,8 @@
  1974 format(1x,2i5,3f10.4,2x,3f10.4)
  1975 format(/1x,'Scaled coordinates '/1x,'species',' atom #')
  1976 format(1x,2i5,3f10.4)
-      WRITE( stdout,1977) 
+
+      if( ionode ) WRITE( stdout,1977) 
 
 !
  600  continue

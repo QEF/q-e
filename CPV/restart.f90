@@ -107,6 +107,16 @@ CONTAINS
 
 
 !
+! Do not write restart file if the unit number 
+! is negative, this is used mainly for benchmarks
+! and tests
+!
+
+      if ( ndw < 1 ) then
+        return
+      end if
+
+!
 ! Only the first node writes
 !
       if (ionode) then
