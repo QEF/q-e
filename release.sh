@@ -51,14 +51,14 @@ tar -czf ../$GUI.tar.gz $GUI
 tar -czf ../pw.tar.gz bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ Doc/ Modules/ clib/ flib/ \
-                      PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/
+                      PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ Raman/ pwtools/
 
 tar -czf ../examples.tar.gz examples/ pseudo/
 
 tar -czf ../espresso.tar.gz  bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ Doc/ Modules/ clib/ flib/ \
-                      PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/ \
+                      PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ Raman/ pwtools/ \
 		      CPV/ FPMD/ atomic/ atomic_doc/ examples/ pseudo/ $GUI
 
 scp Doc/README Doc/ChangeLog Doc/BUGS Doc/manual.tex \
