@@ -29,7 +29,6 @@
   PREPROCESSING = -qsuffix=cpp=f90 -WF,$(CPMACRO)
   FREEFORM  = -qfree=f90
   ARCHFLAGS = -qarch=auto -qdpc
-  ARFLAGS   = rv
   F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS)
   F90FLAGS  = $(ARCHFLAGS) $(PREPROCESSING) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS)
   LDFLAGS = $(ARCHFLAGS) -bmaxdata:0x70000000
@@ -37,6 +36,9 @@
 # Flag for the compilation of the c source files
   CCFLAGS   = $(INCLUDEPATH) -Wp,$(CPMACRO) -O2
 #
+  AR = ar
+  ARFLAGS   = rv
+
 # Name of the fortran compiler
   FC= xlf
   F90= xlf90
@@ -47,8 +49,3 @@
   LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #
-# OTHER settings
-  RANLIB=echo
-  .SUFFIXES:
-  .SUFFIXES: .F .f90 .c .f .o
-######################################################################

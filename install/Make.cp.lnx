@@ -44,7 +44,6 @@ CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -D
 # to link -lfmpich compiled with PGI compiler
   PGIFLAG = -r8 -Mr8intrinsics 
   ARCHFLAGS = 
-  ARFLAGS   = rv
   F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   F90FLAGS  = $(ARCHFLAGS) ${PGIFLAG} $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) ${INCLUDE}
   LDFLAGS = $(ARCHFLAGS)
@@ -54,9 +53,11 @@ CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -D
 #
 # --- Preprocessor ---
   CPP= /lib/cpp
-  CPP_FLAG=-P -C -traditional
-  CPP_MACRO=$(CPMACRO)
+  CPPFLAGS=-P -C -traditional
 #
+  AR = ar
+  ARFLAGS   = rv
+
 # --- Name of the fortran compiler ---
   F77= pgf90
   F90= pgf90
@@ -70,8 +71,3 @@ CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -D
 # --- Modules --
   MODULEFLAG=-module $(OSHOME)/CPV -module $(OSHOME)/Modules
 #
-# OTHER settings
-  RANLIB=echo
-  .SUFFIXES :
-  .SUFFIXES : .out .a .ln .o .c .cc .C .cpp .p .f .F .r .y .l .s .S .h .f90
-######################################################################

@@ -8,8 +8,7 @@ OBJS = c_getenv.o c_today.o cpflush.o factor.o indici.o \
 
 
 clib.a : $(OBJS) 
-	ar $(ARFLAGS) $@ $?
-	$(RANLIB) $@
+	$(AR) $(ARFLAGS) $@ $?
 
 source:
 	co -l $(OBJS:.o=.c)

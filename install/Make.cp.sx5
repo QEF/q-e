@@ -27,7 +27,6 @@
   COPTIM= -O2
   FREEFORM= -f4
   PRECOMP= -EP
-  ARFLAGS   = rv
 #
 # Flag for the compilation of the fortran source files
   FFLAG=    $(FARCHFLAG) $(FMISC) $(FOPTIM)
@@ -38,6 +37,9 @@
 # Flag for the compilation of the c source files
   CFLAG=    $(CARCHFLAG) $(CPMACRO) $(COPTIM)
 #
+  AR = ar
+  ARFLAGS   = rv
+
 # Libraries
   LIB= -leispack_64 -llinpack_64 -lfft_64 -lblas_64
 #  LIB= -llapack -lblas -lmpi
@@ -52,6 +54,3 @@
 # Name of the c compiler
   CC= cc
 #
-# Other
-  RANLIB=echo
-  .SUFFIXES: .f90

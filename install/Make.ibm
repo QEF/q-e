@@ -48,10 +48,3 @@ LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
 #
 AR = ar
 ARFLAGS = ruv
-
-
-#
-# ranlib:
-#
-RANLIB=echo
-

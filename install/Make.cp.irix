@@ -23,7 +23,6 @@
 #
 # General Flags
   ARCHFLAGS= -mips4 -64 -r8
-  ARFLAGS   = rv
   DEBUGFLAGS=
   PREPROCESSING= -cpp $(CPMACRO)
   OPTIMIZATIONS= -O3 -OPT:ALIAS=RESTRICT 
@@ -42,6 +41,9 @@
 #
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #
+  AR = ar
+  ARFLAGS   = rv
+
 # Name of the fortran compiler
   FC= f90
   F77= f90
@@ -51,6 +53,3 @@
 # Name of the c compiler
   CC=cc
 #
-# Other
-  RANLIB=echo
-  .SUFFIXES: .F .f90

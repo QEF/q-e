@@ -26,7 +26,6 @@ CPUTYPE=-r14000
 #
 # General Flags
   ARCHFLAGS= -mips4 -n32 $(CPUTYPE) -r8
-  ARFLAGS   = rv
   DEBUGFLAGS=
   PREPROCESSING= -cpp $(CPMACRO)
   OPTIMIZATIONS= -O3 -OPT:ALIAS=RESTRICT 
@@ -40,6 +39,8 @@ CPUTYPE=-r14000
 # Flag for the compilation of the c source files
   CCFLAGS=    $(ARCHFLAGS) $(INCLUDEFFTW) $(CPMACRO) $(OPTIMIZATIONS)
 #
+  AR = ar
+  ARFLAGS   = rv
 
 # Libraries
   LIB=  $(COMMLIB) $(SCILIB) 
@@ -54,6 +55,3 @@ CPUTYPE=-r14000
 # Name of the c compiler
   CC=cc
 #
-# Other
-  RANLIB=echo
-  .SUFFIXES: .F .f90

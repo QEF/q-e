@@ -22,7 +22,6 @@
 ######################################################################
 # General Flags
   ARCHFLAGS= -arch $(CPUTYPE)
-  ARFLAGS   = rv
   PRECISION= -double_size 64 -fpconstant -real_size 64 
   DEBUGFLAGS=
   PREPROCESSING= -cpp $(CPMACRO)
@@ -41,16 +40,16 @@
 #
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #
-# Name of the fortran compiler
+# archivier
+#
+  AR = ar
+  ARFLAGS = rv
+#
+# compilers
+#
   FC= f90
   F77= f90
   F90= f90
+  CC=cc
   LD= f90
 #
-# Name of the c compiler
-  CC=cc
-#
-# Other
-  RANLIB=echo
-  .SUFFIXES:
-  .SUFFIXES: .F .f90 .c .o .f

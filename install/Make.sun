@@ -28,8 +28,3 @@ LDFLAGS = $(OSHOME)/flib/flib.a -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic
 #
 AR = ar
 ARFLAGS = ruv
-#
-# ranlib:
-#
-RANLIB=echo
-

@@ -26,13 +26,15 @@
   PREPROCESSING = -F -eZ
   FREEFORM = -f free
   ARCHFLAGS = -dp -Xm -M 1110 
-  ARFLAGS   = rv
   F77FLAGS = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   F90FLAGS = $(ARCHFLAGS) $(PREPROCESSING) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   LDFLAGS = $(ARCHFLAGS)
 #
 # Flag for the compilation of the c source files
   CCFLAGS= -O2 $(CPMACRO)
+
+  AR = ar
+  ARFLAGS = rv
 #
 # Libraries
   LIB= $(BENCHLIB)
@@ -45,6 +47,3 @@
   LD= f90
 #
 #
-# Other
-  RANLIB=ranlib
-######################################################################

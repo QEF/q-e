@@ -69,7 +69,6 @@
   FREEFORM  = -FR 
   INTELFLAG = -autodouble -i4 -w -static -Vaxlib
   ARCHFLAGS = -v
-  ARFLAGS   = rv
   ARCHFLAGS = 
   F77FLAGS  = $(ARCHFLAGS) $(INTELFLAG) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
   F77FLAGS_NOOPT  = $(ARCHFLAGS) $(INTELFLAG) $(DEBUGFLAGS) $(NOOPTIMIZATIONS) 
@@ -81,9 +80,11 @@
 #
 # --- Preprocessor ---
   CPP= /lib/cpp
-  CPP_FLAG=-P -C -traditional
-  CPP_MACRO=$(CPMACRO)
+  CPPFLAGS=-P -C -traditional
 #
+  AR = ar
+  ARFLAGS   = rv
+
 # --- Name of the fortran compiler ---
   F77= ifc
   F90= ifc
@@ -97,8 +98,3 @@
 # to link -lfmpich compiled with GNU compiler
   LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -Vaxlib -lm -lc
 #
-# OTHER settings
-  RANLIB=echo
-  .SUFFIXES :
-  .SUFFIXES : .out .a .ln .o .c .cc .C .cpp .p .f .F .r .y .l .s .S .h .f90
-######################################################################

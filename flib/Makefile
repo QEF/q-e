@@ -13,26 +13,21 @@ POBJS = gridsetup.o blockset.o hangup.o reduce.o \
 
 
 flib.a : $(OBJS)
-	ar $(ARFLAGS) $@ $?
-	$(RANLIB) $@
+	$(AR) $(ARFLAGS) $@ $?
 
 blas_and_lapack : blas lapack
 
 blas : blas.o dlamch.o
-	ar $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
+	$(AR) $(ARFLAGS) flib.a $?
 
 lapack : lapack.o dlamch.o
-	ar $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
+	$(AR) $(ARFLAGS) flib.a $?
 
 lapack_ibm : lapack_ibm.o dlamch.o
-	ar $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
+	$(AR) $(ARFLAGS) flib.a $?
 
 lapack_t3e : lapack_t3e.o 
-	ar $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
+	$(AR) $(ARFLAGS) flib.a $?
 
 eispack : eispack.o
 	echo eispack
@@ -41,7 +36,7 @@ dlamch.o : dlamch.f
 	$(F77) $(F77FLAGS_NOOPT) -c $<
 
 ptools.a : $(POBJS)
-	ar $(ARFLAGS) $@ $?
+	$(AR) $(ARFLAGS) $@ $?
 
 include .dependencies
 include ../make.rules
