@@ -81,7 +81,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   IF ( nb == 1 .OR. nb >= n ) THEN
      !
-     lwork = 2 * n - 1
+     lwork = 2 * n
      !
   ELSE
      !
