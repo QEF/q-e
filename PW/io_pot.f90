@@ -14,7 +14,7 @@ subroutine io_pot (iop, filename, pot, nc)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE gvect, ONLY: nrxx
+  USE gvect, ONLY: nrxx, nrx1, nrx2, nrx3
 #ifdef __PARA
   use para
 #endif
