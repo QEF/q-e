@@ -89,6 +89,10 @@ POSTPROCESSING
 
 - dos, projected dos, etc: input data should be more uniform
 
+- the dynamical matrix written by the phonon code does not contain
+  the information on lattice basis vectors if ibrav=0.
+  As a consequence most postprocessing codes will not work 
+
 PH
 
 - Tone: ntyp in input needed for phonon GUI ?
@@ -97,7 +101,7 @@ PH
 
 D3 
 
-- not working, no example !!!
+- does it work? no example available !
 
 DOCUMENTATION
 

@@ -111,7 +111,7 @@ pwNucleiCharges() {
     
     # do we have PW-INPUT or PW-OUTPUT file ???
     
-    if [ "`cat $1 | egrep '&input|&system'`" != "" ]; then
+    if [ "`cat $1 | egrep -i '&input|&system'`" != "" ]; then
 	# it is PW-INPUT
 	ntyp=`cat "$1" | awk '{gsub(",","\n"); print}' | grep ntyp \
 		| awk '{split($0,a,"=|,"); print a[2];}'`
