@@ -434,27 +434,15 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   ELSE
      !
      ! ... case det = 0 : the two increments are linearly dependent, 
-     ! ...                chose solution with alpha = 0 and beta = 0 
+     ! ...                chose solution with alpha = b1 / a11 and beta = 0 
      ! ...                ( discard oldest configuration )
      !
-     alpha0 = b1 / a11
+     alpha0 = 0.D0
      beta0  = 0.D0
      !
+     IF ( a11 /= 0.D0 ) alpha0 = b1 / a11
+     !
   END IF
-  !
-  chi = 0.D0
-  !
-  DO na = 1, nat
-     !
-     DO ipol = 1, 3
-        !
-        chi = chi + ( ( 1.D0  + alpha0 ) * tauold(ipol,na,1) + &
-                      ( beta0 - alpha0 ) * tauold(ipol,na,2) - & 
-                      beta0 * tauold(ipol, na, 3) - tau(ipol,na) )**2
-        !
-     END DO
-     !
-  END DO
   !
   RETURN
   !
