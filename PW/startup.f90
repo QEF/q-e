@@ -24,14 +24,17 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !  mpprun -n 16 pw.x -npool 8 < input
   !  IBM SP :
   !  poe pw.x -procs 16 -npool 8 < input
-  !  ORIGIN :
+  !  ORIGIN /PC clusters using "mpirun" :
   !  mpirun -np 16 pw.x -npool 8 < input
   !  COMPAQ :
   !  prun -n 16 sh -c 'pw.x -npool 8 < input'
-  !  Some PC clusters:
+  !  PC clusters using "mpiexec" :
   !  mpiexec -n 16 pw.x -npool 8 < input  
   !  In this example you will use 16 processors divided into 8 pools
   !  of 2 processors each (in this case you must have at least 8 k-points)
+  !
+  !  Use "-input filename" to read input from file "filename":
+  !  may be useful if you have trouble reading from standard input
   !-----------------------------------------------------------------------
   !
   ! ... The following two modules hold global information about processors
@@ -99,6 +102,15 @@ SUBROUTINE startup( nd_nmbr, code, version )
           CALL GETARG( ( iiarg + 1 ), np )  
           READ(np,*) npool  
         END IF
+        IF ( TRIM( np ) == '-input' .OR. TRIM( np ) == '-inp' .OR. &
+             TRIM( np ) == '-in' ) THEN
+           CALL GETARG( ( iiarg + 1 ) , np )  
+           OPEN ( UNIT = 5, FILE = np, FORM = 'formatted', &
+                STATUS = 'old', IOSTAT = ierr)
+           CALL errore( 'startup', 'input file '//TRIM(np)//' not found',&
+                ierr )
+        end if
+
      END DO
      npool = MAX( npool, 1 )
      npool = MIN( npool, nproc )

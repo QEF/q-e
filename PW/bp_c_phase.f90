@@ -339,7 +339,7 @@ SUBROUTINE c_phase
             CALL errore('c_phase','Wrong k-strings?',1)
          IF (ABS(xk(3,kindex)-xk(3,kindex-1)-dk(3)) > eps) &
             CALL errore('c_phase','Wrong k-strings?',1)
-         IF (ABS(wk(kindex)-wk(kindex-1)-dk(1)) > eps) &
+         IF (ABS(wk(kindex)-wk(kindex-1)) > eps) &
             CALL errore('c_phase','Wrong k-strings weights?',1)
       END DO
    END DO

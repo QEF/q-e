@@ -29,35 +29,46 @@ SUBROUTINE kp_strings &
    REAL(dp), INTENT(OUT) :: wk(npk)
 
 !  --- Internal definitions ---
+   INTEGER :: i
    INTEGER :: ipar
    INTEGER :: iort
    INTEGER :: kindex
    INTEGER :: nkpol
-   REAL(dp) :: dk
+   REAL(dp) :: dk(3)
    REAL(dp) :: xk0(3,npk)
    REAL(dp) :: wk0(npk)
 
 !  --- Generate a k-point grid in the two dimensions other than gdir ---
    IF (gdir == 1) THEN
       CALL kpoint_grid(nrot,s,bg,npk,k1,k2,k3,1,nk2,nk3,nks,xk0,wk0) 
+!     DO i=1,nk2*nk3
+!        xk0(1,i)=0.0
+!     END DO
    ELSE IF (gdir == 2) THEN
       CALL kpoint_grid(nrot,s,bg,npk,k1,k2,k3,nk1,1,nk3,nks,xk0,wk0) 
+!     DO i=1,nk1*nk3
+!        xk0(2,i)=0.0
+!     END DO
    ELSE IF (gdir == 3) THEN
       CALL kpoint_grid(nrot,s,bg,npk,k1,k2,k3,nk1,nk2,1,nks,xk0,wk0) 
+!     DO i=1,nk1*nk2
+!        xk0(3,i)=0.0
+!     END DO
    ELSE
       CALL errore('kp_strings','gdir different from 1, 2, or 3',1)
    END IF
 
 !  --- Generate a string of k-points for every k-point in the 2D grid ---
    kindex=0
-   dk=1.0_dp/REAL(nppstr-1,dp)
+   dk(1)=bg(1,gdir)/REAL(nppstr-1,dp)
+   dk(2)=bg(2,gdir)/REAL(nppstr-1,dp)
+   dk(3)=bg(3,gdir)/REAL(nppstr-1,dp)
    DO iort=1,nks
       DO ipar=1,nppstr
          kindex=kindex+1
-         xk(1,kindex)=xk0(1,iort)
-         xk(2,kindex)=xk0(2,iort)
-         xk(3,kindex)=xk0(3,iort)
-         xk(gdir,kindex)=REAL(ipar-1,dp)*dk
+         xk(1,kindex)=xk0(1,iort)+REAL(ipar-1,dp)*dk(1)
+         xk(2,kindex)=xk0(2,iort)+REAL(ipar-1,dp)*dk(2)
+         xk(3,kindex)=xk0(3,iort)+REAL(ipar-1,dp)*dk(3)
          wk(kindex)=wk0(iort)/REAL(nppstr,dp)
       END DO
    END DO
