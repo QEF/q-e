@@ -13,6 +13,7 @@ CPPFLAGS = -DAIX,-DPARA,-D__MPI,-DHAS_ZHEGVX
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
 F90 = mpxlf
+F77 = $(F90)
 FFLAGS = -qdpc=e -qddim -qnosave -qfree=f90 -qinit=f90ptr -qalias=noaryovrlp \
          -qalias=nointptr -I../include -O3 -qstrict -qarch=auto -qtune=auto  \
          -qsuffix=cpp=f90
@@ -38,9 +39,8 @@ LIBS = -lessl  -L/usr/local/lib -llapack
 #         use -s for stripped executable (smaller file but no debugging)
 #
 LD=$(F90)
-LFLAGS = $(LIBS) -s
-#LFLAGS = $(LIBS) -s -bmaxdata:512000000
-
+LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s
+#LFLAGS = $(OSHOME)/flib/flib.a $(LIBS) -s -bmaxdata:512000000
 #
 # ar:
 #
