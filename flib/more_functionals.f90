@@ -1754,6 +1754,8 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   integer :: neg(3), ipol
   real(dbl), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
 
+  !
+
   e2  = 1.0d0
   etxc = 0.0d0
   if( nspin == 1 ) then
@@ -1817,7 +1819,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
           segno = sign (1.d0, rhor (k, 1) )
           if (arho.gt.epsr.and.grho2 (1) .gt.epsg) then
 
-             call gcxc (arho, grho2, sx, sc, v1x, v2x, v1c, v2c)
+             call gcxc (arho, grho2(1), sx, sc, v1x, v2x, v1c, v2c)
              !
              ! first term of the gradient correction : D(rho*Exc)/D(rho)
 
@@ -1827,6 +1829,8 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
              etxc = etxc + e2 * (sx + sc) * segno
           else
              h (k, 1, 1) = 0.d0
+             sx = 0.0d0
+             sc = 0.0d0
           endif
           !
           !

@@ -460,12 +460,13 @@
 
         CALL pfwfft( rhoeg(:,ispin), rhoe(:,:,:,ispin) )
 
+
 ! ...   add core contribution to the charge
 
-        CALL ZCOPY( gv%ng_l, rhoeg(1,ispin), 1, rhoetg(1,ispin), 1 )
+        CALL ZCOPY( SIZE(rhoetg,1), rhoeg(1,ispin), 1, rhoetg(1,ispin), 1 )
         CALL DCOPY( SIZE(rhoe(:,:,:,ispin)), rhoe(1,1,1,ispin), 1, rhoetr(1,1,1,ispin), 1 )
 
-        IF(ANY(ps%tnlcc)) THEN
+        IF( ANY(ps%tnlcc) ) THEN
 
           ! ...     add core correction
           ! ...     rhoetg = rhoeg + cc

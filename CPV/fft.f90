@@ -175,7 +175,7 @@
 
       CALL pc3fft_drv(cpsi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
 
-      CALL psi2c( zwrk, SIZE( zwrk ), c, c, ng, 10 )
+      CALL psi2c( zwrk, SIZE( zwrk ), c(1), c(1), ng, 10 )
 
       DEALLOCATE( zwrk )
 
@@ -187,7 +187,7 @@
 
       CALL fwfft( psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
-      CALL psi2c( psi, dfftp%nnr, c, c, ng, 10 )
+      CALL psi2c( psi, dfftp%nnr, c(1), c(1), ng, 10 )
 
       DEALLOCATE( psi )
 
@@ -211,6 +211,7 @@
      USE fft_types, ONLY: fft_dlay_descriptor
      USE stick, ONLY: dfftp
      USE mp_global, ONLY: mpime
+     use recvecs_indexes, only: nm, np
 
       IMPLICIT NONE
 
@@ -220,7 +221,7 @@
       COMPLEX(dbl), allocatable :: psi(:,:,:)
       COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
       REAL(dbl) :: t1
-      INTEGER :: ierr
+      INTEGER :: ierr, ig, k, is
 
       T1 = cclock()
 
@@ -245,14 +246,24 @@
 
       CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
 
-      CALL psi2c( zwrk, SIZE( zwrk ), c, c, ng, 10 )
+      CALL psi2c( zwrk(1), SIZE( zwrk ), c(1), c(1), ng, 10 )
+
+      !DO ig=1,ng
+      !    is = ( np( ig ) - 1 ) / dfftp%nr3x + 1
+      !    k  = MOD( ( np( ig ) - 1 ), dfftp%nr3x ) + 1
+      !    WRITE( 201, fmt="( 4I6,4D22.14 )" ) ig, is, k, np( ig ), &
+      !    C( ig ), zwrk( np( ig ) )
+      !    ! C( ig ), zwrk( k + (is-1) * dfftp%nr3x )
+      !END DO
+      !CLOSE( 201 )
 
       DEALLOCATE( zwrk )
+
 
 #else
 
       CALL fwfft( psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-      CALL psi2c( psi, dfftp%nnr, c, c, ng, 10 )
+      CALL psi2c( psi, dfftp%nnr, c(1), c(1), ng, 10 )
 
 #endif
 
@@ -308,9 +319,9 @@
       ALLOCATE( zwrk( dfftp%nsp( mpime + 1 ) * dfftp%nr3x ) )
 
       IF( tk ) THEN
-        CALL c2psi( zwrk, SIZE( zwrk ), a, a, ng, 10 )
+        CALL c2psi( zwrk, SIZE( zwrk ), a(1), a(1), ng, 10 )
       ELSE
-        CALL c2psi( zwrk, SIZE( zwrk ), a, a, ng, 11 )
+        CALL c2psi( zwrk, SIZE( zwrk ), a(1), a(1), ng, 11 )
       END IF
 
       CALL pc3fft_drv(psi(1,1,1), zwrk, +1, dfftp, FFT_MODE_POTE)
@@ -320,9 +331,9 @@
 #else
 
       IF( tk ) THEN
-        CALL c2psi( psi, dfftp%nnr, a, a, ng, 10 )
+        CALL c2psi( psi, dfftp%nnr, a(1), a(1), ng, 10 )
       ELSE
-        CALL c2psi( psi, dfftp%nnr, a, a, ng, 11 )
+        CALL c2psi( psi, dfftp%nnr, a(1), a(1), ng, 11 )
       END IF
 
       CALL invfft( psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
@@ -388,9 +399,9 @@
      CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dffts, FFT_MODE_WAVE)
 
      IF( PRESENT( ca ) ) THEN
-       CALL psi2c( zwrk, SIZE( zwrk ), c, ca, ngw, 2 )
+       CALL psi2c( zwrk, SIZE( zwrk ), c(1), ca(1), ngw, 2 )
      ELSE
-       CALL psi2c( zwrk, SIZE( zwrk ), c, c, ngw, 0 )
+       CALL psi2c( zwrk, SIZE( zwrk ), c(1), c(1), ngw, 0 )
      END IF
 
      DEALLOCATE( zwrk )
@@ -404,9 +415,9 @@
      CALL fwfftw( psitmp, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
      IF( PRESENT( ca ) ) THEN
-       CALL psi2c( psitmp, dffts%nnr, c, ca, ngw, 2 )
+       CALL psi2c( psitmp, dffts%nnr, c(1), ca(1), ngw, 2 )
      ELSE
-       CALL psi2c( psitmp, dffts%nnr, c, c, ngw, 0 )
+       CALL psi2c( psitmp, dffts%nnr, c(1), c(1), ngw, 0 )
      END IF
 
      DEALLOCATE( psitmp )
@@ -455,12 +466,12 @@
      ALLOCATE( zwrk( dffts%nsp( mpime + 1 ) * dffts%nr3x ) )
 
      IF( PRESENT( ca ) ) THEN
-       CALL c2psi( zwrk, SIZE( zwrk ), c, ca, ngw, 2 )
+       CALL c2psi( zwrk, SIZE( zwrk ), c(1), ca(1), ngw, 2 )
      ELSE
        IF( tk ) THEN
-         CALL c2psi( zwrk, SIZE( zwrk ), c, c, ngw, 0 )
+         CALL c2psi( zwrk, SIZE( zwrk ), c(1), c(1), ngw, 0 )
        ELSE
-         CALL c2psi( zwrk, SIZE( zwrk ), c, c, ngw, 1 )
+         CALL c2psi( zwrk, SIZE( zwrk ), c(1), c(1), ngw, 1 )
        END IF
      END IF
 
@@ -471,12 +482,12 @@
 #else
  
      IF( PRESENT( ca ) ) THEN
-       CALL c2psi( psi, dffts%nnr, c, ca, ngw, 2 )
+       CALL c2psi( psi, dffts%nnr, c(1), ca(1), ngw, 2 )
      ELSE
        IF( tk ) THEN
-         CALL c2psi( psi, dffts%nnr, c, c, ngw, 0 )
+         CALL c2psi( psi, dffts%nnr, c(1), c(1), ngw, 0 )
        ELSE
-         CALL c2psi( psi, dffts%nnr, c, c, ngw, 1 )
+         CALL c2psi( psi, dffts%nnr, c(1), c(1), ngw, 1 )
        END IF
      END IF
 
@@ -858,8 +869,8 @@
            !
            CASE ( 10 )
              !
-             do ig=1,ng
-               c(ig) = psi(np(ig))
+             do ig = 1, ng
+               c( ig ) = psi( np( ig ) )
              end do
              !
            CASE ( 11 )

@@ -488,7 +488,9 @@ end module qrl_mod
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
 !        DO ig=1,ng
-!          WRITE( 201, fmt="( I6, 2I6 )" ) ig, np(ig), nm(ig)
+!          WRITE( 201, fmt="( 3I6 )" ) ig, &
+!             ( np( ig ) - 1 ) / dfftp%nr3x + 1, &
+!             MOD( ( np( ig ) - 1 ), dfftp%nr3x ) + 1
 !        END DO
 !        CLOSE( 201 )
 !      END IF

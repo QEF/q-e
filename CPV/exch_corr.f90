@@ -365,7 +365,8 @@
           nnr   = SIZE( rhoetr, 1 ) * SIZE( rhoetr, 2 ) * SIZE( rhoetr, 3 )
           nspin = SIZE( rhoetr, 4 )
           !
-          CALL exch_corr_wrapper( nnr, nspin, grho, rhoetr, sxc, vpot, v2xc )
+          CALL exch_corr_wrapper( nnr, nspin, grho(1,1,1,1,1), rhoetr(1,1,1,1), &
+                                  sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
           !
           vxc = SUM( vpot * rhoetr )
           !

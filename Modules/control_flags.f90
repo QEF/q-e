@@ -108,7 +108,7 @@
         LOGICAL :: tscreen   = .FALSE.  ! Use screened coulomb potentials for cluster calculations
         LOGICAL :: twfcollect = .FALSE. ! Collect wave function in the restart file at the end of run.
         LOGICAL :: tuspp = .FALSE.      ! Ultra-soft pseudopotential are being used
-        LOGICAL :: printwfc = .FALSE.   ! Print wave functions, temporarely used only by ensemble-dft
+        INTEGER :: printwfc = -1        ! Print wave functions, temporarely used only by ensemble-dft
         LOGICAL :: force_pairing = .FALSE.   ! ...   Force pairing
         LOGICAL :: tchi2 = .FALSE.      ! Compute Chi^2
 

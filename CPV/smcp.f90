@@ -235,6 +235,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   type(ptr), allocatable :: p_tan(:)
   !
   real(kind=8), allocatable :: mat_z(:,:,:)
+
+#ifdef __SMD
   !
   !
   !     CP loop starts here
@@ -1782,6 +1784,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         CLOSE(sm_file)
      ENDDO
   end if
+
+#endif
 
   !
   return

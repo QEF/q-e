@@ -66,7 +66,8 @@
 
    !  ----------------------------------------------
 
-   subroutine iosys_pseudo( )
+   SUBROUTINE iosys_pseudo( )
+
         use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, prefix, scradir
         use control_flags, only:  program_name
         use parameters, only: nsx
@@ -106,21 +107,10 @@
      USE control_flags, ONLY: program_name
      USE io_global, ONLY: stdout
 
-     USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
-        tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
-        tnewnfi_card, newnfi_card, ampre, nstep, restart_mode, ion_positions, &
-        startingwfc, printwfc, orthogonalization, electron_velocities, &
-        electron_dynamics, electron_damping, diis_rot, electron_temperature, &
-        ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep, &
-        electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
-        amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,  &
-        cell_parameters, cell_velocities, cell_temperature, force_pairing, &
-        tapos, tavel, ecutwfc, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
-        ortho_max, ntyp, tolp, tchi2_inp
 
      USE control_flags, ONLY: &
-        ndr_     => ndr, &
         ndw_     => ndw, &
+        ndr_     => ndr, &
         iprint_  => iprint, &
         isave_   => isave, &
         tstress_ => tstress, &
@@ -204,6 +194,21 @@
      USE wave_base, ONLY: frice_ => frice
      USE ions_base, ONLY: fricp_ => fricp
      USE cell_base, ONLY: frich_ => frich
+
+     USE input_parameters, ONLY: &
+        electron_dynamics, electron_damping, diis_rot, electron_temperature, &
+        ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep, &
+        electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
+        amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,  &
+        cell_parameters, cell_velocities, cell_temperature, force_pairing, &
+        tapos, tavel, ecutwfc, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
+        ortho_max, ntyp, tolp, tchi2_inp
+
+     USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
+        tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
+        tnewnfi_card, newnfi_card, ampre, nstep, restart_mode, ion_positions, &
+        startingwfc, printwfc, orthogonalization, electron_velocities
+
 
      !
      IMPLICIT NONE
