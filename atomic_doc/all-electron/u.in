@@ -1,0 +1,12 @@
+ &input
+        title='U',
+        zed=92.,
+        rmax=500,
+        xmin=-6,
+        rel=2,
+        isic=1,
+        latt=0,
+        iswitch=1,
+        config='[Rn] 5f3 6d1 7s2',
+        dft='PBE'
+ /

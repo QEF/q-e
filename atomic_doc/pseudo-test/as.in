@@ -1,0 +1,14 @@
+ &input
+   title='As',
+   zed=33.,
+   rel=2,
+   iswitch=2,
+   config='[Ar] 3d10 4s2 4p3 '
+   dft='LDA',
+ /
+ &test
+   nconf=1
+   pseudotype=2,
+   file_pseudo='Asrel.RRKJ3.UPF',
+   configts(1)= '4s2 4p3'
+ /

@@ -1,0 +1,19 @@
+This directory contains few examples of pseudo-potentials tests.
+The outputs are in the directory reference.
+Any pseudo-potential format readable by ld1 can be converted to the UPF
+format by the ld1 program.
+
+s.in       Test a NC pseudo-potential (old format)
+ni.in      Test a US pseudo-potential pseudotype=3 (old format)
+rh.in      Test a US pseudo-potentials with NLCC (UPF format)
+al.in      Test a NC pseudo-potential pseudotype=1 (old format)
+ga.in      Test a NC relativistic pseudo-potential pseudotype=1
+as.in      Test a NC relativistic pseudo-potential (UPF format)
+
+The script test.job runs ld1.x on these examples and compares the
+outputs and the pseudo-potentials with those contained in reference.
+The differences between these files is written into the difference file.
+
+NB: The PWscf program can read UPF pseudo-potentials, non relativistic,
+and scalar relativistic. Spin-orbit splitted pseudo-potentials are
+supported by the non-collinear version of pw.x in the PWNC directory.

@@ -1,0 +1,19 @@
+ &input
+        title='Mg',
+        zed=12.0,
+	xmin=-6.0, 
+        dx=0.0200, 
+        rmax=80,
+        rel=2,
+        beta=0.5,
+        lsd=0,
+        isic=0,
+        latt=1,
+        iswitch=1,
+        dft='SL1-NOC',
+ /
+4
+1S  1  0  2.0  0.0
+2S  2  0  2.0  0.0
+2P  2  1  6.0  0.0
+3S  3  0  2.0  0.0

@@ -1,0 +1,29 @@
+ &input
+   title='As',
+   zed=33.,
+   rel=2,
+   rlderiv=2.50,
+   eminld=-4.0,
+   emaxld=4.0,
+   deld=0.02,
+   nld=5,
+   iswitch=3,
+   config='[Ar] 3d10 4s2 4p3 4d-1'
+   dft='LDA',
+ /
+ &test
+   nconf=1
+   pseudotype=2,
+   configts(1)= '4s2 4p3'
+ /
+ &inputp
+   lloc=2,
+   file_pseudopw='Asrel.RRKJ3',
+   zval=5.d0,
+ /
+5
+4S  1  0  2.00  0.00  2.20  2.20  0.50 
+4P  2  1  2.00  0.00  2.20  2.20  0.50
+4P  2  1  1.00  0.00  2.20  2.20  1.50
+4D  3  2  0.00  0.05  2.30  2.30  1.50
+4D  3  2  0.00  0.05  2.30  2.30  2.50

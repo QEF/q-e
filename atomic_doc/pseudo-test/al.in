@@ -1,0 +1,22 @@
+ &input
+     title='Al',
+     zed=13.0,
+     rel=0,
+     beta=0.5,
+     rlderiv=2.4,
+     eminld=-4.0,
+     emaxld=4.0,
+     deld=0.02d0,
+     nld=3,
+     config='[Ne] 3s2 3p1 3d0 ',
+     iswitch=2,
+     dft='LDA',
+ /
+ &test
+    pseudotype=1,
+    file_pseudo='Al.rrkj3',
+    nconf=1,
+ / 
+2
+3S  1  0  2.00  0.00  2.60  2.60  1
+3P  2  1  1.00  0.00  2.90  2.90  1

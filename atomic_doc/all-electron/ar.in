@@ -1,0 +1,13 @@
+ &input
+        title='Ar',
+        zed=18.0,
+        xmin=-6,
+        rel=0,
+        beta=0.3,
+        config='1s2 2s2 2p6 3s2 3p6 '
+        lsd=1,
+        isic=1,
+        latt=0,
+        iswitch=1,
+        dft='LDA',
+ /

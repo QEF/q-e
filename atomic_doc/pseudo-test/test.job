@@ -1,0 +1,26 @@
+#!/bin/bash
+
+work=./results
+reference=./reference
+ld1dir=../../
+
+
+mkdir $work
+rm -f $work/*
+
+$ld1dir/ld1.x < s.in > $work/s.out 
+$ld1dir/ld1.x < ni.in > $work/ni.out
+$ld1dir/ld1.x < rh.in > $work/rh.out 
+$ld1dir/ld1.x < al.in > $work/al.out 
+$ld1dir/ld1.x < ga.in > $work/ga.out 
+$ld1dir/ld1.x < as.in > $work/as.out 
+
+diff $work/s.out $reference/s.out   > difference
+diff $work/ni.out $reference/ni.out   >> difference
+diff $work/rh.out $reference/rh.out   >> difference
+diff $work/al.out $reference/al.out   >> difference
+diff $work/ga.out $reference/ga.out   >> difference
+diff $work/as.out $reference/as.out   >> difference
+
+mv Garel.tm.UPF $work
+diff $work/Garel.tm.UPF $reference/Garel.tm.UPF   >> difference

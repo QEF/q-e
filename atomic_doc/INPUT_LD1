@@ -1,0 +1,300 @@
+The ld1 program runs in three different modes:
+
+1) All-electron atomic calculation.
+   It receives as input:
+     a) the atomic charge, or the atomic symbol
+     b) the electron configuration (nl, oc, (spin), (j) )
+     c) the flags which control the calculation (optional)
+     d) the parameters of the radial mesh (optional)
+   It provides as output:
+     a) the eigenvalue and eigenvector of each state
+     b) the DFT total energy
+     c) the DFT charge density and self-consistent potential
+
+2) Several pseudo-potential atomic calculations.
+   It receives as input, in addition to the parameters at point 1):
+     a) the number of test calculations
+     b) the pseudo-potential type + the parameters of the pseudo-potential
+     c) the electron configurations for the test
+   It provides as output:
+     a) the eigenvalues and eigenvectors for each valence state
+     b) the DFT pseudo total energy
+     c) the DFT pseudo charge density and self-consistent potential
+     d) a comparison between all-electron and pseudo-potential results 
+     e) If file_pseudopw is given it writes on this file the pseudo-potential
+        in a format suitable to PWscf (in UPF format if file_pseudopw has
+        this extension)
+
+3) The computation of pseudo-potential parameters.
+   It receives as input, in addition to the variables at point 1-2:
+     a) the electronic valence configuration of the pseudo-potential
+     c) the control of the pseudo-potential type
+   It provides as output:
+     a) the pseudo-potential parameters in a file
+     b) the eigenvalues and eigenvectors for each valence state
+     c) the DFT pseudo total energy
+     d) the DFT pseudo charge density and self-consistent potential
+     e) A comparison between all-electron and pseudo-potential results 
+
+There are additional parameters which control the run (to be defined
+in the input namelist):
+     a) iswitch (1,2,3): put the program in modes 1,2,or 3
+     b) beta: the mixing parameter for self-consistency
+     c) tr2: self-consistency accuracy 
+     d) rel: 0 non relativistic calculation
+             1 scalar relativistic calculation
+             2 relativistic (Dirac) calculation
+     e) lsd: 0 non spin polarized 
+             1 spin-polarized calculation (only iswitch=1,2 and rel=0,1)
+     f) dft: a string which specify exchange and correlation
+     g) isic: 0 (default) 1 apply self-interaction correction (only iswitch=1)
+     h) latt: 0 (default) 1 apply Latter correction (only iswitch=1)
+
+- the atomic charge is a real number (zed) 1 < zed < 100
+
+- the atomic symbol is a character variable: atom='H', 'He', 'Be', etc
+
+- the electronic configuration for all-electron is:
+      nwf   : the number of orbitals 
+      for each orbital
+        nn,ll,oc,isw or jj: main quantum number, angular momentum, occupation,
+                            spin index (lsd=1) or total angular momentum 
+                            (rel=2)         
+
+- the parameters of the radial mesh are:
+      xmin : the starting point of the linear mesh (default: -7.0)
+      dx   : the step of the linear mesh           (default:  0.0125)
+      rmax : the maximum r of the mesh             (default:  100.0)
+
+in mode 2 
+- the number of test calculations
+     nconf:  an integer
+
+- the pseudo-potential type + the corresponding parameters  
+      pseudotype: the pseudo-potential type 1,2,3
+      the pseudo-potential parameters are:  
+
+      type 1 Norm Conserving pseudo-potential with old format, or a
+             Pseudopotential generated with Troulier Martins code
+             and transformed with the convert routine (in tool)
+           dft:    the string of the xc energy 
+           zval:   the valence charge
+           lmax:   the maximum angular moment
+           lloc:   the channel of the local potential
+           nlcc:   if true the potential has core charge
+           zed:    the atomic all-electron charge
+           atom:   the atomic symbol (specify either zed or atom)
+           xmin,dx,mesh,rmax: the parameters for the mesh
+           nbeta:
+           if (rel != 2)
+              vnl(i,l)   0<l<lmax the potentials on the radial mesh
+           else
+              do l=0, lmax
+                 vnlo(i,l,1) pseudo-potentials for l=j-1/2 (l!=0) or j=1/2 (l=0)
+                 vnlo(i,l,2) pseudo-potentials for l=j+1/2 (l!=0) 
+              enddo
+           endif 
+           vpsloc(i)  the local potential if lloc=-1
+           rhoc(i)   the core charge if nlcc e' true
+
+      type 2 (Norm conserving pseudo-potentials (multiple projectors allowed):
+           mfxcx, mfxcc, mgcx, mgcc: the type of xc energy
+           zval: the valence charge
+           lmax: the maximum angular momentum
+           nlcc: if true the potential has core charge
+           zed: the atomic all-electron charge
+           xmin,dx,mesh,rmax: the parameters for the mesh
+           rcut,rcutus: the cut-off radii for each channel
+           nwfs: the number of wavefunctions
+           nbeta: the number of beta functions
+           ikk: for each beta the point where it is zero
+           betas: the beta functions
+           bmat: the energies of the nonlocal pseudo-potential (nbeta x nbeta)
+           vpsloc: the local pseudo-potential on a mesh
+           rhos: the atomic charge
+           rhoc: the core charge if nlcc is true
+           phis: the pseudowavefunctions (nwfs)
+
+      type 3 (ultra-soft pseudo-potential):
+           as type 2 +
+           qvan: the augmentation part Q. Defined on the radial mesh.
+           qq: the integrals of the qvan ( nbeta x nbeta ).
+
+- the electronic valence test configuration:
+      nwfts: the number of orbital to compute
+      for each orbital
+          nnts,llts,octs,rdum,rcutts,rcutusts,iswts or jjts: 
+               main quantum number,angular momentum,occupation, dummy, 
+               cut-off for norm conserving,
+               cut-off for ultrasoft, spin index (lsd=1) or total angular
+               momentum (rel=2)
+
+only in mode 3
+- the electronic valence configuration
+      nwfs   : the orbitals number
+      for each orbital
+          nns,lls,ocs,ener,rcut,rcutus,jjs: main quantum number, 
+                      angular momentum, occupations, fitting energy, 
+                      cut-off for norm conserving, cut-off for ultrasoft,
+                      (total angular momentum with rel=2)
+
+- the control variable for pseudo-potential generation
+      zval: the valence charge
+      nlcc: if true non-linear core correction is used
+      rcore: the point for smoothing core charge
+      lloc: the local channel
+      rcloc: if lloc=-1 the point where the local potential is cut
+ 
+- There are several files which can be specified:
+
+    file_pseudo*80,          & ! the file of the input pseudo-potential
+    file_pseudopw*80,        & ! the file with output pseudo-potential
+    file_wavefunctions*80,   & ! the file with output wavefunctions
+    file_wavefunctionsps*80, & ! the file with output pseudo-wavefunctions
+    file_logderae*80,        & ! the file with all-electron log der 
+    file_logderps*80,        & ! the file with pseudo-potential log der 
+    file_tests*80,           & ! the file with the tests
+    file_recon*80              ! the file for paw reconstruction
+
+NB: a lsd calculation with iswitch=3 is not supported.
+    Presently rel=2 with lsd is not supported.
+
+The input card are organized in three namelists and some lines of code:
+
+namelist "input"
+      title = a string with the title
+      zed   = the nuclear charge         
+      xmin  = mesh parameter                       (default: -7.0)
+      dx    =   "    "   "                         (default: 0.0125)
+              the mesh is: r(i+1) = exp(xmin+i*dx)/zed
+      rmax  = outermost mesh point                 (default: 100.0)
+      beta  = parameter for potential mixing       (default: 0.5)
+      tr2   = convergence threshold for scf        (default: 1e-14)
+      iswitch = 
+            1    all-electron calculation
+            2    pseudo-potential test calculation
+            3    pseudo-potential generation
+
+      nld = the number of logaritmic derivatives
+      rlderiv = the radius for log der
+      eminld = minimum energy for log der
+      emaxld = maximum energy for log der
+      deld   = delta e of energy for log der
+     
+      rel =  0 non relativistic calculation 
+             1 scalar relativistic calculation
+             2 relativistic calculation
+               default: 1 for Z > 18  0 for Z < 18
+      lsd  = 1   : a local spin density calculation
+             default: 0
+      dft = a string containing keywords such as
+            PZ:    Perdew and Zunger formula for LDA
+            PW:    Perdew and Wang GGA
+            BP:    Becke and Perdew GGA
+            PBE:   Perdew, Becke and Ernzerhof GGA
+            BLYP:  ...
+            For the complete list, see module "which_dft" in ../Modules/
+ 
+      latt= 1 (0) : (no) Latter correction           (default: no)
+      isic= 1 (0) : (no) Self-interaction correction (default: no)
+
+      file_wavefunctions  (default: ' ')
+      file_logderae    contains log der for all-electron
+      config : a string with the electronic configuration
+               ex: [Ar] 3d10 4s2.1 3p2.9             (default: empty)
+      if config is empty reads the next card
+
+card(s) 4:nwf            number of wavefunctions
+        nl,n,l,oc(nl),isw(nl)  format(a2,2i3,f6.2) if (rel !=2)
+        nl,n,l,oc(nl),jj(nl)   format(a2,2i3,2f9.5) if (rel=2)
+        nl= electron label
+        n,l= principal and angular quantum numbers
+        oc= occupation number
+        isw = the spin index (1-2) used only in the lsda case
+        jj = the total angular momentum (0.0 is allowed for complete shell
+                                 the codes splits the two states)
+             
+
+cards  5: the namelist "test"
+        nconf: the number of configurations to be tested
+        pseudotype:
+             1    norm-conserving 1 projector (old form)
+             2    norm-conserving nonlocal (1 or more projectors)
+             3    ultrasoft                
+        file_pseudo:  the file with pseudo-potential  (default: ' ')
+        file_pseudopw: the file where the pseudo-potential 
+                       contained in file_pseudo is written in a
+                       format readable by PWscf  (default: ' ')
+        file_tests :  contains transferability tests
+	file_recon : produce the appropriate file to perform a paw 
+	             reconstruction of all-electrons response
+        configts(..) : a string as described above for each test
+                       configuration. If configts()=' ' reads
+                       the following cards.
+
+cards  6: repeated for each configuration
+        nwfts: the number of pseudo wavefunctions 
+        nlts,nnts,llts,octs(nl),rdum,rdum,rdum,iswts or jjts  
+        nlts= electron label
+        nts,lts= principal and angular quantum numbers
+        octs = occupation number
+        rdum = is read but not used. It is there to have the same format
+               of the pseudo input 
+        iswts = the spin index (used in lsda case)
+        jjts = (only with rel=2) the total angular momentum of the state
+
+cards  7: the namelist "inputp"
+        ltest: allows a test for ghosts states
+        file_pseudopw: where the pseudo is written  (default: ' ')
+        file_logderps    contains log der for pseudo
+        zval:  the valence charge
+        lloc: the angular momentum of the local channel (def.-1)
+              (-1 pseudizes the all-electron potential)
+        rcloc: the cut-off for the local pseudo-potential
+        nlcc:  if true computes core charge
+        rcore: the smoothing of the core charge
+cards  8: nwfs: the number of pseudo wavefunctions 
+        nls,nns,lls,ocs(nl),ener,rcut,rcutus  
+        nls= electron label
+        nns,lls= principal and angular quantum numbers
+        ocs= occupation number
+        energy of the state, 0.d0 if coincide with all-electron state
+        rcut   the cut-off radius (norm conserving)
+        rcutus: the cut-off us radius (ultrasoft) not used if 
+                pseudotype<>3 
+
+NB: lsda is not compatible with pseudo-potential generation 
+    isic can be used only with all-electron calculation
+
+
+Here are some recipies to reproduce old all-electron atomic results
+with the ld1 program.
+
+The Herman-Skillman tables can be reproduced with:
+   rel=0,
+   isic=0,
+   latt=1,
+   dft='SL1-NOC'
+
+Data on the paper Liberman, Waber, Cromer Phys. Rev. 137, A27 (1965) can be 
+reproduced with:
+
+   rel=2,
+   isic=0,
+   latt=1,
+   dft='SL1-NOC'
+
+Data on the paper S. Cohen Phys. Rev. 118, 489 (1960) can be reproduced with:
+
+   rel=2,
+   isic=1,
+   latt=0,
+   dft='NOX-NOC'
+
+The revised PBE described in PRL 80, 890 (1998) can be obtained with:
+
+   isic=0
+   latt=0
+   dft='SLA-PW-RPB-PBC' or 'dft='revPBE'
+
+

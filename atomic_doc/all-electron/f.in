@@ -1,0 +1,11 @@
+ &input
+        title='F',
+        zed=9.0,
+        xmin=-6,
+        rel=1,
+        lsd=1,
+        isic=1,
+        iswitch=1,
+        config='[He] 2s2 2p5',
+        dft='LDA',
+ /

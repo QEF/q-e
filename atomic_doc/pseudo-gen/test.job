@@ -1,0 +1,27 @@
+#!/bin/bash
+
+work=./results
+reference=./reference
+ld1dir=../../
+
+mkdir $work
+rm -f $work/*
+
+$ld1dir/ld1.x < o.in > $work/o.out
+$ld1dir/ld1.x < al.in > $work/al.out
+$ld1dir/ld1.x < as.in > $work/as.out
+$ld1dir/ld1.x < pt.in > $work/pt.out
+
+
+diff $work/o.out $reference/o.out   > difference
+diff $work/al.out $reference/al.out   >> difference
+diff $work/as.out $reference/as.out   >> difference
+diff $work/pt.out $reference/pt.out   >> difference
+mv OPBE.RRKJ3 $work 
+diff $work/OPBE.RRKJ3 $reference/OPBE.RRKJ3 >> difference
+mv Al.rrkj3 $work 
+diff $work/Al.rrkj3 $reference/Al.rrkj3 >> difference
+mv Asrel.RRKJ3.UPF $work 
+diff $work/Asrel.RRKJ3.UPF $reference/Asrel.RRKJ3.UPF >> difference
+mv Ptrel.RRKJ3.UPF $work 
+diff $work/Ptrel.RRKJ3.UPF $reference/Ptrel.RRKJ3.UPF >> difference

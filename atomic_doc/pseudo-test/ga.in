@@ -1,0 +1,32 @@
+ &input
+   title='Ga',
+   zed=31.,
+   rel=2,
+   rlderiv=2.50,
+   eminld=-4.0,
+   emaxld=4.0,
+   deld=0.02,
+   nld=3,
+   iswitch=2,
+   dft='LDA',
+ /
+9
+1S  1  0  2.0   0.0
+2S  2  0  2.0   0.0
+2P  2  1  6.0   0.0
+3S  3  0  2.0   0.0
+3P  3  1  6.0   0.0
+3D  3  2 10.0   0.0
+4S  4  0  2.0   0.0
+4P  4  1  0.33  0.5  
+4P  4  1  0.67  1.5
+ &test
+   nconf=1,
+   pseudotype=1,
+   file_pseudo='Garel.ld1',
+   file_pseudopw='Garel.tm',
+ /
+3
+4S  1  0  2.00  0.00  2.20  2.20  0.00
+4P  2  1  0.33  0.00  2.40  2.40  0.50
+4P  2  1  0.67  0.00  2.40  2.40  1.50

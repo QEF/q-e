@@ -1,0 +1,26 @@
+ &input
+        title='O',
+        zed=8.0,
+        rel=0,
+        beta=0.5,
+        rlderiv=1.5,
+        eminld=-4.0,
+        emaxld=4.0,
+        deld=0.02d0,
+        nld=3,
+        iswitch=2,
+        dft='PBE',
+ /
+4
+1S  1  0  2.0  1
+2S  2  0  2.0  1
+2P  2  1  4.0  1
+3D  3  2  0.0  1
+ &test
+  pseudotype=3,
+  file_pseudo='OPBE.RRKJ3.UPF',
+  nconf=1,
+ / 
+2
+2S  1  0  2.00  0.00  1.40  1.60  1
+2P  2  1  4.00  0.00  1.40  1.60  1

@@ -1,0 +1,13 @@
+ &input
+        title='Fe',
+        zed=26.,
+        xmin=-6,
+        rmax=180,
+        rel=2,
+        lsd=0,
+        isic=1,
+        latt=0,
+        config='[Ar] 3d6 4s2 ',
+        iswitch=1,
+        dft='NOX-NOC',
+ /

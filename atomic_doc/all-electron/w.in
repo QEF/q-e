@@ -1,0 +1,12 @@
+ &input
+        title='W',
+        zed=74.0,
+        rel=2,
+        xmin=-6.0,
+        nld=0,
+        isic=0,
+        latt=1,
+        iswitch=1,
+        config='[Xe] 4f14 5d3 6s2',
+        dft='SL1-NOC'
+ /

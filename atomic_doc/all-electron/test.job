@@ -1,0 +1,34 @@
+#!/bin/bash
+
+work=./results
+reference=./reference
+ld1dir=../../
+
+mkdir $work
+rm -f $work/*
+
+$ld1dir/ld1.x < ar.in > $work/ar.out
+$ld1dir/ld1.x < f.in  > $work/f.out
+$ld1dir/ld1.x < he.in > $work/he.out
+$ld1dir/ld1.x < fe.in  > $work/fe.out
+$ld1dir/ld1.x < cu.in  > $work/cu.out
+$ld1dir/ld1.x < cu1.in  > $work/cu1.out
+$ld1dir/ld1.x < h.in  > $work/h.out
+$ld1dir/ld1.x < pt.in  > $work/pt.out
+$ld1dir/ld1.x < mg.in  > $work/mg.out
+$ld1dir/ld1.x < u1.in  > $work/u1.out
+$ld1dir/ld1.x < u.in  > $work/u.out
+$ld1dir/ld1.x < w.in  > $work/w.out
+
+diff $work/ar.out $reference/ar.out   > difference
+diff $work/f.out $reference/f.out    >> difference
+diff $work/he.out $reference/he.out  >> difference
+diff $work/fe.out $reference/fe.out    >> difference
+diff $work/cu.out $reference/cu.out    >> difference
+diff $work/cu1.out $reference/cu1.out    >> difference
+diff $work/h.out $reference/h.out    >> difference
+diff $work/pt.out $reference/pt.out  >> difference
+diff $work/mg.out $reference/mg.out  >> difference
+diff $work/u1.out $reference/u1.out    >> difference
+diff $work/u.out $reference/u.out    >> difference
+diff $work/w.out $reference/w.out    >> difference

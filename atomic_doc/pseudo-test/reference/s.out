@@ -1,0 +1,79 @@
+
+     program ld1 starts. version 12-Feb-04
+     today is 22Feb2004 at 19:27:19 
+
+     -------------------- All-electron run ------------------------------
+
+     S                                                                          
+     scalar relativistic calculation
+
+     atomic number is 16.00
+     dft =LDA   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 475 r(mesh) =  58.99256 xmin = -5.00 dx = 0.02500
+
+     n l     nl                  e(Ryd)         e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -176.1669       -88.0834     -2396.8912
+     2 0     2S 1( 2.00)       -15.4913        -7.7457      -210.7718
+     2 1     2P 1( 6.00)       -11.5040        -5.7520      -156.5214
+     3 0     3S 1( 2.00)        -1.2702        -0.6351       -17.2820
+     3 1     3P 1( 4.00)        -0.5228        -0.2614        -7.1125
+
+     eps = 6.5E-15  iter = 22
+ 
+     Etot =    -795.601878 Ry,    -397.800939 Ha,  -10824.800036 eV
+
+     Ekin =     797.903976 Ry,     398.951988 Ha,   10856.121922 eV
+     Encl =   -1899.302245 Ry,    -949.651122 Ha,  -25841.526479 eV
+     Eh   =     354.213519 Ry,     177.106760 Ha,    4819.358298 eV
+     Exc  =     -48.417129 Ry,     -24.208565 Ha,    -658.753776 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.0972  <r2> =    0.0127  r(max) =   0.0641
+     s(1S/2S) = -0.001060
+     s(1S/3S) = -0.000329
+     s(2S/2S) =  1.000000  <r> =   0.4811  <r2> =    0.2755  r(max) =   0.3877
+     s(2S/3S) = -0.000170
+     s(2P/2P) =  1.000000  <r> =   0.4434  <r2> =    0.2461  r(max) =   0.3254
+     s(2P/3P) = -0.000119
+     s(3S/3S) =  1.000000  <r> =   1.6940  <r2> =    3.3478  r(max) =   1.4225
+     s(3P/3P) =  1.000000  <r> =   2.0724  <r2> =    5.1847  r(max) =   1.6119
+
+     -------------------- End of All-electron run ----------------------
+
+     Computing logaritmic derivative in   2.49675
+
+     -------------- Testing the pseudopotential ------------------------
+
+     l=   0 ns=   1 Node at 0.28010557
+     S                                                                          
+     scalar relativistic calculation
+
+     atomic number is 16.00
+     dft =LDA   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 475 r(mesh) =  58.99256 xmin = -5.00 dx = 0.02500
+
+     n l     nl             e AE (Ryd)       e PS (Ryd)   De AE-PS (Ryd) 
+     1 0     3S   1( 2.00)       -1.27019       -1.26940       -0.00079
+     2 1     3P   1( 4.00)       -0.52275       -0.52284        0.00009
+
+     eps = 3.1E-15  iter = 18
+ 
+     Etot =    -795.601878 Ry,    -397.800939 Ha,  -10824.800036 eV
+     Etotps =   -20.149511 Ry,     -10.074756 Ha,    -274.150219 eV
+     dEtot_ae =       0.000000 Ry
+     dEtot_ps =     -20.149511 Ry,   Delta E=      20.149511
+
+     Ekin =     -32.840249 Ry,     -16.420125 Ha,    -446.817864 eV
+     Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ehrt =      16.763849 Ry,       8.381925 Ha,     228.085578 eV
+     Ecxc =      -4.073111 Ry,      -2.036555 Ha,     -55.417933 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+     -------------- End of pseudopotential test ------------------------
+
+     Computing logaritmic derivative in   2.49675

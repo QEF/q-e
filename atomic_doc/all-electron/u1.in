@@ -1,0 +1,12 @@
+ &input
+        title='U',
+        zed=92.,
+        xmin=-6.0,
+        rmax=200,
+        rel=2,
+        isic=0,
+        latt=1,
+        iswitch=1,
+        config='[Rn] 5f4 7s2',
+        dft='SL1-NOC'
+ /

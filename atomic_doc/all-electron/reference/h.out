@@ -1,0 +1,42 @@
+
+     program ld1 starts. version 24-Sep-02
+     today is 23Dec2003 at 10:46:14 
+
+     -------------------- All-electron run ------------------------------
+
+     H                                                                          
+
+     atomic number is  1.00
+     dft =PW91   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 849 r(mesh) =  99.48432 ibound = 0 xmin = -6.00 dx = 0.01250
+
+     n l     nl                  e(Ryd)         e(Ha)          e(eV)
+     1 0     1S 1( 1.00)        -1.0000        -0.5000       -13.6058
+
+     eps = 8.4E-15  iter = 87
+ 
+     Etot =      -1.000000 Ry,      -0.500000 Ha,     -13.605803 eV
+
+     Ekin =       1.000000 Ry,       0.500000 Ha,      13.605797 eV
+     Encl =      -2.000000 Ry,      -1.000000 Ha,     -27.211600 eV
+     Eh   =       0.625000 Ry,       0.312500 Ha,       8.503625 eV
+     Exc  =      -0.625000 Ry,      -0.312500 Ha,      -8.503625 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+ 
+     SIC information:
+     Esich=      -0.625000 Ry,      -0.312500 Ha,      -8.503625 eV
+     Esicxc=      0.658133 Ry,       0.329066 Ha,       8.954424 eV
+     Esictot=     0.033133 Ry,       0.016566 Ha,       0.450799 eV
+ 
+     tot-Exc=    -0.658133 Ry,      -0.329066 Ha,      -8.954424 eV
+     int-Exc=     0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     int-Eh=      0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   1.5000  <r2> =    3.0000  r(max) =   1.0000
+
+     -------------------- End of All-electron run ----------------------
+

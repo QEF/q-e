@@ -1,0 +1,19 @@
+ &input
+   title='Ni',
+   zed=28.,
+   rel=1,
+   iswitch=2,
+   rlderiv=2.40,
+   eminld=-4.0,
+   emaxld=4.0,
+   deld=0.02,
+   nld=3,
+   config='[Ar] 3d9 4s1 4p0'
+   dft='PBE',
+ /
+ &test
+   nconf=1
+   pseudotype=3,
+   file_pseudo='NiUSPBE.RRKJ3',
+   configts(1)= '3d9 4s1 4p0'
+ /

@@ -1,0 +1,45 @@
+
+     program ld1 starts. version 24-Sep-02
+     today is 23Dec2003 at 10:46: 8 
+
+     -------------------- All-electron run ------------------------------
+
+     He                                                                         
+
+     atomic number is  2.00
+     dft =PBE   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 905 r(mesh) = 100.16840 ibound = 0 xmin = -6.00 dx = 0.01250
+
+     n l     nl                  e(Ryd)         e(Ha)          e(eV)
+     1 0     1S 1( 1.00)        -1.8372        -0.9186       -24.9969
+     1 0     1S 2( 1.00)        -1.8372        -0.9186       -24.9969
+
+     eps = 7.2E-15  iter =100
+ 
+     Etot =      -5.698716 Ry,      -2.849358 Ha,     -77.535585 eV
+
+     Ekin =       5.688532 Ry,       2.844266 Ha,      77.397028 eV
+     Encl =     -13.461705 Ry,      -6.730853 Ha,    -183.157267 eV
+     Eh   =       4.100017 Ry,       2.050008 Ha,      55.784005 eV
+     Exc  =      -2.025559 Ry,      -1.012780 Ha,     -27.559351 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+ 
+     SIC information:
+     Esich=      -2.050008 Ry,      -1.025004 Ha,     -27.892002 eV
+     Esicxc=      2.133092 Ry,       1.066546 Ha,      29.022430 eV
+     Esictot=     0.083084 Ry,       0.041542 Ha,       1.130427 eV
+ 
+     tot-Exc=    -2.108643 Ry,      -1.054322 Ha,     -28.689779 eV
+     int-Exc=     0.024449 Ry,       0.012225 Ha,       0.332651 eV
+     int-Eh=      2.050008 Ry,       1.025004 Ha,      27.892002 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.9268  <r2> =    1.1804  r(max) =   0.5737
+     s(1S/1S) =  1.000000
+     s(1S/1S) =  1.000000  <r> =   0.9268  <r2> =    1.1804  r(max) =   0.5737
+
+     -------------------- End of All-electron run ----------------------
+

@@ -1,0 +1,11 @@
+ &input
+        zed=1.0,
+        title='H',
+        xmin=-6,
+        rel=0,
+        lsd=1,
+        isic=1,
+        iswitch=1,
+        config='1s1'
+        dft='PW91',
+ /

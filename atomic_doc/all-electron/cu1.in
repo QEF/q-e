@@ -1,0 +1,12 @@
+ &input
+        title='Cu +',
+        zed=29.,
+        xmin=-6,
+        rel=2,
+        lsd=0,
+        isic=0,
+        latt=1,
+        iswitch=1,
+        config='[Ar] 3d10'
+        dft='SL1-NOC',
+ /

@@ -1,0 +1,137 @@
+
+     program ld1 starts. version 12-Feb-04
+     today is 22Feb2004 at 18:47:47 
+
+     -------------------- All-electron run ------------------------------
+
+     Al                                                                         
+
+     atomic number is 13.00
+     dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
+
+     n l     nl                  e(Ryd)         e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -110.3120       -55.1560     -1500.8835
+     2 0     2S 1( 2.00)        -7.8681        -3.9341      -107.0524
+     2 1     2P 1( 6.00)        -5.1266        -2.5633       -69.7515
+     3 0     3S 1( 2.00)        -0.5742        -0.2871        -7.8123
+     3 1     3P 1( 1.00)        -0.2055        -0.1028        -2.7965
+     3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
+
+     eps = 9.2E-15  iter = 12
+ 
+     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404145 eV
+
+     Ekin =     481.327863 Ry,     240.663932 Ha,    6548.850642 eV
+     Encl =   -1154.410176 Ry,    -577.205088 Ha,  -15706.673973 eV
+     Eh   =     225.339070 Ry,     112.669535 Ha,    3065.918325 eV
+     Exc  =     -34.874769 Ry,     -17.437385 Ha,    -474.499139 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1210  <r2> =    0.0197  r(max) =   0.0789
+     s(1S/2S) =  0.000000
+     s(1S/3S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.6310  <r2> =    0.4777  r(max) =   0.5016
+     s(2S/3S) =  0.000000
+     s(2P/2P) =  1.000000  <r> =   0.6051  <r2> =    0.4661  r(max) =   0.4264
+     s(2P/3P) =  0.000000
+     s(3S/3S) =  1.000000  <r> =   2.5388  <r2> =    7.5466  r(max) =   2.0597
+     s(3P/3P) =  1.000000  <r> =   3.4362  <r2> =   14.2348  r(max) =   2.6447
+     s(3D/3D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) = 100.4892
+
+     -------------------- End of All-electron run ----------------------
+
+
+     --------------- Generating NC pseudopotential ---------------
+
+
+      Generating local potential, lloc=    2
+
+
+      Wfc   3S  rcut= 2.600  Estimated cut-off energy=       18.52 Ry
+      This function has    0 nodes between 0 and r=   2.612
+
+
+      Wfc   3P  rcut= 2.900  Estimated cut-off energy=       20.94 Ry
+      This function has    0 nodes between 0 and r=   2.887
+
+     ------------ End of pseudopotential generation --------------------
+
+     -------------------- All-electron run ------------------------------
+
+     Al                                                                         
+
+     atomic number is 13.00
+     dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
+
+     n l     nl                  e(Ryd)         e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -110.3120       -55.1560     -1500.8835
+     2 0     2S 1( 2.00)        -7.8681        -3.9341      -107.0524
+     2 1     2P 1( 6.00)        -5.1266        -2.5633       -69.7515
+     3 0     3S 1( 2.00)        -0.5742        -0.2871        -7.8123
+     3 1     3P 1( 1.00)        -0.2055        -0.1028        -2.7965
+     3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
+
+     eps = 9.2E-15  iter = 12
+ 
+     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404145 eV
+
+     Ekin =     481.327863 Ry,     240.663932 Ha,    6548.850642 eV
+     Encl =   -1154.410176 Ry,    -577.205088 Ha,  -15706.673973 eV
+     Eh   =     225.339070 Ry,     112.669535 Ha,    3065.918325 eV
+     Exc  =     -34.874769 Ry,     -17.437385 Ha,    -474.499139 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1210  <r2> =    0.0197  r(max) =   0.0789
+     s(1S/2S) =  0.000000
+     s(1S/3S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.6310  <r2> =    0.4777  r(max) =   0.5016
+     s(2S/3S) =  0.000000
+     s(2P/2P) =  1.000000  <r> =   0.6051  <r2> =    0.4661  r(max) =   0.4264
+     s(2P/3P) =  0.000000
+     s(3S/3S) =  1.000000  <r> =   2.5388  <r2> =    7.5466  r(max) =   2.0597
+     s(3P/3P) =  1.000000  <r> =   3.4362  <r2> =   14.2348  r(max) =   2.6447
+     s(3D/3D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) = 100.4892
+
+     -------------------- End of All-electron run ----------------------
+
+     Computing logaritmic derivative in   2.40806
+
+     -------------- Testing the pseudopotential ------------------------
+
+     Al                                                                         
+
+     atomic number is 13.00
+     dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ryd)       e PS (Ryd)   De AE-PS (Ryd) 
+     1 0     3S   1( 2.00)       -0.57419       -0.57419        0.00000
+     2 1     3P   1( 1.00)       -0.20554       -0.20554        0.00000
+
+     eps = 1.4E-24  iter =  1
+ 
+     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404145 eV
+     Etotps =    -3.885009 Ry,      -1.942504 Ha,     -52.858649 eV
+     dEtot_ae =       0.000000 Ry
+     dEtot_ps =      -3.885009 Ry,   Delta E=       3.885009
+
+     Ekin =      -0.316470 Ry,      -0.158235 Ha,      -4.305834 eV
+     Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ehrt =       2.885281 Ry,       1.442640 Ha,      39.256555 eV
+     Ecxc =      -1.174642 Ry,      -0.587321 Ha,     -15.981942 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=      -5.279177 Ry,      -2.639589 Ha,     -71.827428 eV
+
+     -------------- End of pseudopotential test ------------------------
+
+     Computing logaritmic derivative in   2.40806

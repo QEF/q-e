@@ -1,0 +1,36 @@
+This is the distribution of the ld1 code for electronic structure 
+atomic calculations and pseudo-potentials generation.
+
+- the LD1 package, mantained by Andrea Dal Corso (SISSA, Trieste) 
+  is the result of several additions to the original 
+  P. Giannozzi ld1 code for pseudopotentials generation. 
+  (See http://www.sns.it/~giannozz/software.html) 
+
+- Two new features are implemented:
+  a) Generation and test of norm-conserving and ultrasoft 
+     pseudo-potentials with the RRKJ3 recipe.
+  b) Generation of spin-orbit splitted pseudo-potentials.
+
+- Some features, present in the pseudo-potential code of P. Giannozzi, are
+  not available in this package. The most relevant missing feature
+  is the possibility to generate pseudo-potentials with the 
+  TM recipe. (This will hopefully change in the next releases of the ld1 code).
+
+Input variables are described in file INPUT_LD1.
+Directories all-electron/, pseudo-gen/, pseudo-test/, 
+contain tests for the three modes of operation, respectively:
+all-electron run, pseudo-potential generation, pseudo-potential testing. 
+
+All the material included in this distribution is free software;
+you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.

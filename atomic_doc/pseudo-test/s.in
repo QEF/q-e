@@ -1,0 +1,19 @@
+ &input
+   title='S',
+   zed=16.,
+   rel=1,
+   rlderiv=2.50,
+   eminld=-4.0,
+   emaxld=4.0,
+   deld=0.02,
+   nld=3,
+   iswitch=2,
+   config='[Ne] 3s2 3p4'
+   dft='LDA',
+ /
+ &test
+   nconf=1
+   pseudotype=1,
+   file_pseudo='S.gon',
+   configts(1)= '3s2 3p4'
+ /

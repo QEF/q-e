@@ -1,0 +1,25 @@
+This directory contains a few examples of all-electron inputs.
+The output are in the routine reference.
+
+h.in       Non-relativistic, sic correction,  sigma-GGA (PW91)
+he.in      Non-relativistic, sic correction,  sigma-GGA (PBE)
+f.in       Scalar relativistic, sic correction, LDA
+mg.in      Dirac relativistic, latter correction, as in the HS tables [1]
+fe.in      Dirac-relativistic, Hartree calculation, no exchange       [1]
+cu1.in     Dirac relativistic, latter correction, as in the HS tables [1]
+cu.in      Non-relativistic, Hartree calculation, no exchange         
+ar.in      Non-relativistic, sic correction,  LDA                     [3]
+pt.in      Dirac relativistic, latter correction, as in the HS tables [1]
+u1.in      Dirac relativistic, latter correction, as in the HS tables [1]
+u.in       Dirac relativistic, sic correction, PBE
+w.in       Dirac relativistic, latter correction, as in the HS tables [1]
+
+The script test.job runs ld1.x on these examples and compares the
+outputs and the pseudo-potentials with those contained in reference.
+The differences between these files is written into the difference file.
+
+References:
+
+[1] D. Liberman, J.T. Waber, and Don T. Cromer, Phys. Rev. 137, A27 (1965).
+
+[2] J. Perdew and A. Zunger, Phys. Rev. B 23, 5048 (1981).
