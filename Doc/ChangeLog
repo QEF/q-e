@@ -1,3 +1,10 @@
+27 Sep 2004  Documentation updated (PG)
+
+27 Sep 2004  XLF workarounds no longer needed (the bug in the compiler has
+             been fixed).
+             Added a serial fft driver for FFTW needed by parallel PWCOND.
+             (C.S.)
+
 27 Sep 2004 Atoms are refolded using PBC in "cubefile" format.
             Several minor problems emerged with multiple compilations: 
             - CPV/compute_scf.f90 / FPMD/compute_scf.f90:

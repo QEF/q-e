@@ -17,8 +17,8 @@ the strong support of the CINECA National Supercomputing Center in
 Bologna (http://www.cineca.it/), under the responsibility of Carlo
 Cavazzoni (c.cavazzoni@cineca.it).
 
-Currently active developers include Gerardo Ballabio (CINECA), Gernot
-Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA,
+Currently active developers include Gerardo Ballabio (CINECA), 
+Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA,
 Trieste), Anton Kokalj (Joszef Stefan Institute, Ljubljana).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
@@ -46,11 +46,12 @@ the original code by Paolo Giannozzi.
 A list of further contributors includes:
 Dario Alfe', Francesco Antoniella, Mauro Boero, Claudia Bungaro, 
 Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni,
-Alberto Debernardi, Oswaldo Dieguez, Guido Fratesi, Ralph Gebauer,
-Yosuke Kanai, Axel Kohlmeyer, Konstantin Kudin, Michele Lazzeri,
-Kurt Maeder, Francesco Mauri, Pasquale Pavone, Mickael Profeta,
-Guido Roma, Manu Sharme, Kurt Stokbro, Antonio Tilocca, 
-Renata Wentzcovitch, Yudong Wu, Xiaofei Wang,
+Alberto Debernardi, Gernot Deinzer, Oswaldo Dieguez, Guido Fratesi,
+Ralph Gebauer, Yosuke Kanai, Axel Kohlmeyer, Konstantin Kudin,
+Michele Lazzeri, Kurt Maeder, Francesco Mauri, Pasquale Pavone, 
+Mickael Profeta, Guido Roma, Manu Sharma, Alexander Smogunov,
+Kurt Stokbro, Antonio Tilocca, Renata Wentzcovitch, Yudong Wu,
+Xiaofei Wang,
 and let us apologize to everybody we have forgotten.
 
 All the material included in this distribution is free software;

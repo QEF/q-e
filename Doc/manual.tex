@@ -140,7 +140,7 @@ under the responsibility of Carlo Cavazzoni\break
                    {mailto:c.cavazzoni@cineca.it}).
 Currently active developers include
 Gerardo Ballabio (CINECA),
-Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
+Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
 (SISSA, Trieste),
 Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
@@ -186,10 +186,12 @@ Paolo Cazzato,
 Gabriele Cipriani,
 Matteo Cococcioni,
 Alberto Debernardi,
+Gernot Deinzer.
 Oswaldo Dieguez,
 Guido Fratesi,
 Ralph Gebauer,
 Yosuke Kanai,
+Axel Kohlmeyer,
 Konstantin Kudin,
 Michele Lazzeri,
 Kurt Maeder,
@@ -197,6 +199,8 @@ Francesco Mauri,
 Pasquale Pavone,
 Mickael Profeta,
 Guido Roma,
+Manu Sharma,
+Alexander Smogunov,
 Kurt Stokbro,
 Antonio Tilocca,
 Renata Wentzcovitch,
@@ -436,7 +440,11 @@ ATLAS library
 Note that ATLAS is not a complete replacement for LAPACK: it contains
 all of the BLAS, plus the LU code, plus the full storage Cholesky
 code.  Follow the instructions in the ATLAS distributions to produce a
-full LAPACK replacement.
+full LAPACK replacement. Axel Kohlmeyer maintains a set of ATLAS libraries, 
+containing all of LAPACK and no external reference to fortran libraries:\\
+\htmladdnormallink%
+{\texttt{http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html\#atlas}}%
+{http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html\#atlas}.
 
 Sergei Lisenkov reported success and good performances with
 optimized BLAS by Kazushige Goto.
@@ -447,8 +455,9 @@ They can be downloaded freely (but not redistributed!) from:
 
 The FFTW library can also be replaced by vendor-specific FFT
 libraries, when available, or you can link to a precompiled FFTW
-library.  Please note that you must use FFTW version 2: version 3 has
-incompatible changes, and isn't supported yet.
+library.  Please note that you must use FFTW version 2.
+Support for version 3 is in progress:
+contact the developers if you want to try.
 
 The \texttt{configure} script attempts to find optimized libraries,
 but may fail if they have been installed in non-standard places.
@@ -638,7 +647,7 @@ Here is a list:
 
     \texttt{ram.x} calculates nonresonant Raman tensor coefficients
     (derivatives of the polarizability wrt atomic displacements)
-    using the $(2n+1)$ theorem (written by Gernot Deinzer).
+    using the $(2n+1)$ theoremi.
   \item
     \texttt{make pp} produces several codes for data postprocessing, in
     \texttt{PP/} (see list below).
@@ -801,6 +810,18 @@ on Linux Alphas, check the following page:
 
 \paragraph{Linux PC}
 
+On newer Linux machines, even statically linked binaries will try 
+to open some shared libraries, which will lead to all kinds of 
+problems (i.e. crashes) if libc/libm/libpthreads are not linked 
+dynamically. Machines using glibc-2.2.4 and older seem ok. So if
+one wants to share precompiled binaries, they should be compiled 
+on the oldest available machine. Crashes due to multithreading 
+(e.g. when using a multithreaded ATLAS or MKL) on machines with 
+the newer threads (nptl) can be worked around by setting the 
+environment variable \texttt{LD\_ASSUME\_KERNEL} to '2.2.5'. For 
+the newest Intel compilers, \texttt{-static-libcxa} does the 
+trick most of the time. (info from Axel Kohlmeyer)
+
 Since there is no standard compiler for Linux, different compilers
 have different ideas about the right way to call external libraries.
 As a consequence you may have a mismatch between what your compiler
@@ -897,10 +918,18 @@ and ifc may yield a lot of "undefined references" when statically
 loaded: use \texttt{configure --enable-shared}, 
 or remove the \texttt{-static} option in \texttt{make.sys}.
 
-The I/O libraries used by the Intel compiler ifc are incompatible with
-those called by most precompiled BLAS/LAPACK libraries (including
-ATLAS): you get error messages at linking stage.
-The workaround is to recompile BLAS/LAPACK with ifc, or (better) to
+When using/testing/benchmarking MKL on SMP (multiprocessor)
+machines, one should set the environmental variable 
+\texttt{OMP\_NUM\_THREADS} to 1, unless the OpenMP 
+parallelization is desired. MKL by default sets the
+variable to the number of CPUs installed and thus gives
+the impression of a much better performance, as the CPUu time
+is only measured for the master thread (info from Axel Kohlmeyer).
+
+The I/O libraries used by the Intel compiler ifc are incompatible 
+with those called by most precompiled BLAS/LAPACK libraries 
+(including ATLAS): you get error messages at linking stage.
+A workaround is to recompile BLAS/LAPACK with ifc, or (better) to
 replace the BLAS routine \texttt{xerbla} and LAPACK routine
 \texttt{dlamch} (the only two containing I/O calls) with recompiled
 objects:
@@ -947,17 +976,16 @@ something appropriate to your configuration):
  -L/location/of/atlas/lib -lf77blas -llapack -lcblas -latlas \
  -L/location/of/gnu32_nosse2/lib -lacml -lg2c
 \end{verbatim}
-AMD Opteron CPUs should run in 64-bit mode with the Portland compiler:
-\texttt{-D\_\_LINUX64} is needed among the preprocessing flags.
-It is also known to run with the Intel compiler in 32-bit emulation.
-64-bit executables can address a much larger memory space, but
-apparently they are not especially faster than 32-bit executables.
-There are rumors that the just released Intel compiler v.~8.1
-available via Intel Premier support, works fine with Opterons in 
-64-bit mode.
-
-Intel Itanium is untested, but it should work, provided that
-\texttt{-D\_\_LINUX64} is used (if 64-bit execution is desired).
+64-bit CPUs like the AMD Opteron and the Intel Itanium are
+supported and should work both in 32-bit emulation and in
+64-bit mode (in the latter case, \texttt{-D\_\_LINUX64} is 
+needed among the preprocessing flags). Both the PGI and the
+Intel compiler (v8.1 EM64T-edition, available via Intel Premier 
+support) should work. 64-bit executables can address a 
+much larger memory space, but apparently they are not especially
+faster than 32-bit executables. The Intel compiler has been 
+reported to be mor reliable and to produce faster executables 
+wrt the PGI compiler.
 
 \paragraph{T3E}
 
