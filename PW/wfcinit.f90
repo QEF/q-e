@@ -112,7 +112,7 @@ SUBROUTINE wfcinit()
        !
        ! ... Needed for LDA+U (not yet in gamma)
        !
-       !!!IF ( lda_plus_u ) CALL orthoatwfc()
+       IF ( lda_plus_u ) CALL orthoatwfc()
        !
        IF ( nks > 1 ) REWIND( iunigk )
        !
@@ -142,8 +142,8 @@ SUBROUTINE wfcinit()
           !
           g2kin(:) = g2kin(:) * tpiba2
           !
-          !!!IF ( lda_plus_u ) &
-          !!!   CALL davcio( swfcatom, nwordatwfc, iunat, ik, - 1 )
+          IF ( lda_plus_u ) &
+               CALL davcio( swfcatom, nwordatwfc, iunat, ik, - 1 )
           !
           IF ( startingwfc == 'atomic' ) THEN
              !

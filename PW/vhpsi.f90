@@ -21,6 +21,8 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   USE lsda_mod, ONLY: nspin, current_spin
   USE basis, ONLY: nat, ntyp, ityp, natomwfc
   USE us, ONLY: newpseudo
+  USE wvfct, ONLY: gamma_only
+  USE gvect,   ONLY : gstart
 
   implicit none
   integer :: ldap, np, mp
@@ -30,6 +32,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   integer, allocatable ::  offset (:)
   ! offset of localized electrons of atom na in the natomwfc ordering
   complex(kind=DP) :: ZDOTC, temp
+  real(kind=DP), external :: DDOT
   complex(kind=DP), allocatable ::  proj (:,:)
   !
   allocate ( offset(nat), proj(natomwfc,mp) ) 
@@ -48,7 +51,14 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   if (counter.ne.natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
   do ibnd = 1, mp
      do i = 1, natomwfc
-        proj (i, ibnd) = ZDOTC (np, swfcatom (1, i), 1, psip (1, ibnd), 1)
+        if (gamma_only) then
+           proj (i, ibnd) = 2.d0 * &
+                DDOT(2*np, swfcatom (1, i), 1, psip (1, ibnd), 1) 
+           if (gstart.eq.2) proj (i, ibnd) = proj (i, ibnd) - &
+                swfcatom (1, i) * psip (1, ibnd)
+        else
+           proj (i, ibnd) = ZDOTC (np, swfcatom (1, i), 1, psip (1, ibnd), 1)
+        endif
      enddo
   enddo
 #ifdef __PARA
@@ -67,12 +77,16 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
 
               temp = temp * Hubbard_U(nt)/2.d0
               temp = temp + proj(offset(na)+m1,ibnd) * Hubbard_alpha(nt)
-              call ZAXPY (np, temp, swfcatom(1,offset(na)+m1), 1, &
+              if (gamma_only) then
+                 call DAXPY (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
+              else
+                 call ZAXPY (np, temp, swfcatom(1,offset(na)+m1), 1, &
+                                    hpsi(1,ibnd),              1)
+              endif
            enddo
         endif
      enddo
-
   enddo
   deallocate (offset, proj)
   return

@@ -25,9 +25,10 @@ subroutine new_ns
        Hubbard_alpha, swfcatom, eth, d1, d2, d3
   USE lsda_mod,  ONLY: lsda, current_spin, nspin, isk
   USE symme,     ONLY: nsym, irt
-  USE wvfct,     ONLY: nbnd, npw, npwx, igk, wg
+  USE wvfct,     ONLY: nbnd, npw, npwx, igk, wg, gamma_only
   USE wavefunctions_module,    ONLY : evc
   USE us,        ONLY: newpseudo
+  USE gvect,   ONLY : gstart
   use io_files
 #ifdef __PARA
   use para
@@ -45,6 +46,7 @@ subroutine new_ns
   real(kind=DP) ::  t0, scnds
   ! cpu time spent
 
+  real(kind=DP), external :: DDOT
   complex(kind=DP) :: ZDOTC
   complex(kind=DP) , allocatable :: proj(:,:)
 
@@ -82,19 +84,28 @@ subroutine new_ns
      if (lsda) current_spin = isk(ik)
      if (nks.gt.1) read (iunigk) npw, igk
      if (nks.gt.1) call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-
+     
      call davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
      !
      ! make the projection
      !
-     do ibnd = 1, nbnd
-        do i = 1, natomwfc
-           proj (i, ibnd) = ZDOTC (npw, swfcatom (1, i), 1, evc (1, ibnd), 1)
+        do ibnd = 1, nbnd
+           do i = 1, natomwfc
+              if ( gamma_only ) then 
+                 proj (i, ibnd) = 2.d0 * &
+                      DDOT(2*npw, swfcatom (1, i), 1, evc (1, ibnd), 1) 
+                 if (gstart.eq.2) proj (i, ibnd) = proj (i, ibnd) - &
+                      swfcatom (1, i) * evc (1, ibnd)
+              else 
+                 proj (i, ibnd) = ZDOTC (npw, swfcatom (1, i), 1, evc (1, ibnd), 1)
+              endif
+           enddo
         enddo
-     enddo
+
 #ifdef __PARA
-     call reduce (2 * natomwfc * nbnd, proj)
+        call reduce (2 * natomwfc * nbnd, proj)
 #endif
+
      !
      ! compute the occupation numbers (the quantities n(m1,m2)) of the
      ! atomic orbitals
@@ -106,15 +117,14 @@ subroutine new_ns
               do m2 = m1, 2 * Hubbard_l(nt) + 1
                  do ibnd = 1, nbnd  
                     nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) + &
-                            wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
-                                           conjg(proj(offset(na)+m1,ibnd)) )
+                         wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
+                         conjg(proj(offset(na)+m1,ibnd)) )
                  enddo
               enddo
            enddo
         endif
-
-     enddo
-     ! on k-points
+    enddo
+! on k-points
 
   enddo
 #ifdef __PARA
@@ -196,8 +206,9 @@ subroutine new_ns
               enddo
            enddo
         enddo
-     endif
+     endif 
   enddo
+
   !
   ! Now the contribution to the total energy is computed. The corrections
   ! needed to obtain a variational expression are already included
@@ -216,6 +227,7 @@ subroutine new_ns
         enddo
      endif
   enddo
+
   deallocate ( offset, proj, nr )
   if (nspin.eq.1) eth = 2.d0 * eth
 

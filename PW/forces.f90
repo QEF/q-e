@@ -81,6 +81,7 @@ SUBROUTINE forces
   !
   ! ... The Hubbard contribution
   !
+  IF ( lda_plus_u .AND. gamma_only) STOP 'gamma-only calculation of forces for LDA+U is not implemented'
   IF ( lda_plus_u ) CALL force_hub( forceh )
   !
   ! ... The ionic contribution is computed here
