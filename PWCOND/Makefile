@@ -34,6 +34,7 @@ kbloch.o \
 local.o \
 local_set.o \
 poten.o \
+print_clock_pwcond.o \
 rotate.o \
 rotproc.o \
 scatter_back.o \
@@ -42,6 +43,8 @@ slabcpu.o \
 summary_band.o \
 summary_tran.o \
 transmit.o
+
+
 
 MODULES = \
 ../Modules/atom.o \

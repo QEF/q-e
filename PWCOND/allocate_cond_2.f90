@@ -1,9 +1,11 @@
-!
+
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
 subroutine allocate_cond_2
 !
@@ -11,10 +13,11 @@ subroutine allocate_cond_2
 ! after reduction (ngper --> n2d) of XY basis set
 !
 #include "f_defs.h"
+  USE noncollin_module, ONLY : npol
   use cond 
   implicit none
 
-  allocate( newbg(ngper, n2d) )
+  allocate( newbg(ngper*npol, n2d) )
   allocate( psiper( n2d, n2d, nrzp ) )
   allocate( zk( n2d, nrzp ) )
   allocate( zkr( n2d, nrzp ) )
@@ -24,26 +27,26 @@ subroutine allocate_cond_2
   allocate( fund0(n2d, 2*n2d) )
   allocate( fund1(n2d, 2*n2d) ) 
 
-  allocate( funl0(n2d, norbf) )     
-  allocate( funl1(n2d, norbf) )
-  allocate( fundl0(n2d, norbf) )
-  allocate( fundl1(n2d, norbf) )
+  allocate( funl0(n2d, norbf*npol) )     
+  allocate( funl1(n2d, norbf*npol) )
+  allocate( fundl0(n2d, norbf*npol) )
+  allocate( fundl1(n2d, norbf*npol) )
 
-  allocate( intw1(norbf, 2*n2d) )
-  allocate( intw2(norbf, norbf) )
+  allocate( intw1(norbf*npol, 2*n2d) )
+  allocate( intw2(norbf*npol, norbf*npol) )
 
-  allocate( kvall(2*(n2d+nocrosl)) )
-  allocate( kfunl(n2d, 2*(n2d+nocrosl)) ) 
-  allocate( kfundl(n2d, 2*(n2d+nocrosl)) )  
-  allocate( kintl(nocrosl, 2*(n2d+nocrosl)) )  
-  allocate( kcoefl(nocrosl, 2*(n2d+nocrosl)) )  
+  allocate( kvall(2*(n2d+npol*nocrosl)) )
+  allocate( kfunl(n2d, 2*(n2d+npol*nocrosl)) ) 
+  allocate( kfundl(n2d, 2*(n2d+npol*nocrosl)) )  
+  allocate( kintl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
+  allocate( kcoefl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
 
   if(ikind.ne.0) then
-    allocate( kvalr(2*(n2d+nocrosr)) ) 
-    allocate( kfunr(n2d, 2*(n2d+nocrosr)) )
-    allocate( kfundr(n2d, 2*(n2d+nocrosr)) )
-    allocate( kintr(nocrosr, 2*(n2d+nocrosr)) )
-    allocate( kcoefr(nocrosr, 2*(n2d+nocrosr)) )      
+    allocate( kvalr(2*(n2d+npol*nocrosr)) ) 
+    allocate( kfunr(n2d, 2*(n2d+npol*nocrosr)) )
+    allocate( kfundr(n2d, 2*(n2d+npol*nocrosr)) )
+    allocate( kintr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )
+    allocate( kcoefr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )      
   endif
 
   return

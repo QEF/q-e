@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -15,21 +16,22 @@ subroutine transmit(ik, ien)
 #include "f_defs.h"
   USE io_global,  ONLY :  stdout
   USE uspp_param, ONLY :  tvanp
+  USE noncollin_module, ONLY : noncolin, npol
   use pwcom
   use cond
 implicit none
 
   integer :: ik, ien, n, iorb, iorb1, iorb2, nt, &
-             ih, ih1, orbin, ig, ntran, info
+             ih, ih1, orbin, ig, ntran, ij, is, js, info
   integer, allocatable :: ipiv(:)
   real(kind=DP) :: tk, tj, tij, eev
   real(kind=DP), allocatable :: zps(:,:), eigen(:)
   complex(kind=DP) :: x1, x2
   complex(kind=DP), allocatable :: amat(:,:), vec1(:,:), &
-                     tchan(:,:), veceig(:,:)
+                     tchan(:,:), veceig(:,:), zps_nc(:,:)
 
   eev = earr(ien)
-  ntran=4*n2d+norbs+nocrosl+nocrosr
+  ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)
 
   if(nchanl*nchanr.eq.0) then
     tk = 0.d0
@@ -48,6 +50,7 @@ implicit none
   allocate( tchan( nchanr, nchanl ) )
   allocate( veceig( nchanl, nchanl ) )
   allocate( eigen( nchanl ) ) 
+  if (noncolin) allocate( zps_nc( norbs*npol, norbs*npol ) )
 
   amat=(0.d0,0.d0)
 !
@@ -55,7 +58,18 @@ implicit none
 !                                                                            
   do iorb=1, norbs
     do iorb1=1, norbs
-      zps(iorb, iorb1)=zpseu(orbin+iorb,orbin+iorb1,iofspin)
+      if (noncolin) then
+        ij=0
+        do is=1,npol
+          do js=1,npol
+            ij=ij+1
+            zps_nc(npol*(iorb-1)+is, npol*(iorb1-1)+js)=  &
+                 zpseu_nc(orbin+iorb, orbin+iorb1,ij)
+          enddo
+        enddo
+      else
+         zps(iorb, iorb1)=zpseu(orbin+iorb,orbin+iorb1,iofspin)
+      endif
     enddo
   enddo
   do iorb=1, norbs-nocrosr
@@ -65,8 +79,27 @@ implicit none
         ih=natih(orbin+iorb,2)
         if (natih(orbin+iorb,1).eq.natih(orbin+iorb1,1)) then
           ih1=natih(orbin+iorb1,2)
-          zps(iorb,iorb1)=zps(iorb,iorb1)-                &
+          if (noncolin) then
+            ij=0
+            do is=1,npol
+              do js=1,npol
+                ij=ij+1
+                if (lspinorb) then
+                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
+                        zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                                -eryd*qq_so(ih,ih1,ij,nt)
+                else
+                  if (is.eq.js) &
+                      zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
+                          zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                                 -eryd*qq(ih,ih1,nt)
+                endif
+              enddo
+            enddo
+          else
+             zps(iorb,iorb1)=zps(iorb,iorb1)-                &
                                     eryd*qq(ih,ih1,nt)
+          endif
         endif
       enddo
     endif
@@ -74,12 +107,31 @@ implicit none
   do iorb=norbs-nocrosr+1, norbs
     nt=itnew(orbin+iorb)
     if(tvanp(nt)) then
+      ih=natih(orbin+iorb,2)
       do iorb1=norbs-nocrosr+1, norbs
-        ih=natih(orbin+iorb,2)
         if (natih(orbin+iorb,1).eq.natih(orbin+iorb1,1)) then
           ih1=natih(orbin+iorb1,2)
-          zps(iorb,iorb1)=zps(iorb,iorb1)-              &
+          if (noncolin) then
+            ij=0
+            do is=1, npol
+              do js=1,npol
+                ij=ij+1
+                if (lspinorb) then
+                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
+                    zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                                         -eryd*qq_so(ih,ih1,ij,nt)
+                else
+                  if (is.eq.js)  &
+                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
+                    zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)- &
+                               eryd*qq(ih,ih1,nt)
+                endif
+              enddo
+            enddo
+          else
+             zps(iorb,iorb1)=zps(iorb,iorb1)-              &
                                    eryd*qq(ih,ih1,nt)
+          endif
         endif
       enddo
     endif
@@ -102,7 +154,7 @@ implicit none
     enddo
   enddo
 !     2) nonlocal functions
-  do iorb=1, norbs
+  do iorb=1, norbs*npol
     do ig=1, n2d
       amat(ig,2*n2d+iorb)=funl0(ig, iorb)
       amat(ig+n2d,2*n2d+iorb)=fundl0(ig, iorb)
@@ -112,54 +164,68 @@ implicit none
   enddo                                                                 
 !     4) to add reflection and transmission parts
   do ig=1, n2d
-    do n=1, n2d+nocrosl
-      amat(ig,2*n2d+norbs+n)=-kfunl(ig,n2d+nocrosl+n)
-      amat(ig+n2d,2*n2d+norbs+n)=-kfundl(ig,n2d+nocrosl+n)
+    do n=1, n2d+npol*nocrosl
+      amat(ig,2*n2d+npol*norbs+n)=-kfunl(ig,n2d+npol*nocrosl+n)
+      amat(ig+n2d,2*n2d+npol*norbs+n)=-kfundl(ig,n2d+npol*nocrosl+n)
     enddo
-    do n=1, n2d+nocrosr
-      amat(ig+2*n2d,3*n2d+norbs+nocrosl+n)=-kfunr(ig,n)
-      amat(ig+3*n2d,3*n2d+norbs+nocrosl+n)=-kfundr(ig,n)
+    do n=1, n2d+npol*nocrosr
+      amat(ig+2*n2d,3*n2d+npol*(norbs+nocrosl)+n)=-kfunr(ig,n)
+      amat(ig+3*n2d,3*n2d+npol*(norbs+nocrosl)+n)=-kfundr(ig,n)
     enddo
   enddo
 !
 !     3) Part coming from the definion of C_alpha 
 !
-  do iorb=1, norbs
+  do iorb=1, norbs*npol
     do n=1, 2*n2d
-      do iorb1=1, norbs
-        amat(4*n2d+iorb,n)=amat(4*n2d+iorb,n)-             &
+      do iorb1=1, norbs*npol
+        if (noncolin) then
+           amat(4*n2d+iorb,n)=amat(4*n2d+iorb,n)-             &
+                    zps_nc(iorb,iorb1)*intw1(iorb1,n)
+        else
+           amat(4*n2d+iorb,n)=amat(4*n2d+iorb,n)-             &
                     zps(iorb,iorb1)*intw1(iorb1,n)
+        endif
       enddo
     enddo
-    do iorb1=1, norbs
-      do iorb2=1, norbs
-        amat(4*n2d+iorb,2*n2d+iorb1)=amat(4*n2d+iorb,2*n2d+iorb1)-     &
+    do iorb1=1, norbs*npol
+      do iorb2=1, norbs*npol
+        if (noncolin) then
+           amat(4*n2d+iorb,2*n2d+iorb1)=amat(4*n2d+iorb,2*n2d+iorb1)-     &
+                     zps_nc(iorb,iorb2)*intw2(iorb2, iorb1)
+        else
+           amat(4*n2d+iorb,2*n2d+iorb1)=amat(4*n2d+iorb,2*n2d+iorb1)-     &
                      zps(iorb,iorb2)*intw2(iorb2, iorb1)
+        endif
       enddo
     enddo
     amat(4*n2d+iorb,2*n2d+iorb)=amat(4*n2d+iorb,2*n2d+iorb)+(1.d0,0.d0)
   enddo
 !     To set up terms depending on kint and kcoef of
 !     5) left tip
-  do ig=1, nocrosl
-    do n=1, n2d+nocrosl
-      amat(4*n2d+ig,2*n2d+norbs+n)=-kintl(ig,n2d+nocrosl+n)
-      amat(4*n2d+norbs+ig,2*n2d+norbs+n)=-kcoefl(ig,n2d+nocrosl+n)
+  do ig=1, nocrosl*npol
+    do n=1, n2d+nocrosl*npol
+      amat(4*n2d+ig,2*n2d+npol*norbs+n)=-kintl(ig,n2d+npol*nocrosl+n)
+      amat(4*n2d+npol*norbs+ig,2*n2d+npol*norbs+n)= &
+                               -kcoefl(ig,n2d+npol*nocrosl+n)
     enddo
   enddo
 !     6) right tip
-  do ig=1, nocrosr
-    do n=1, n2d+nocrosr
-      amat(4*n2d+nocrosl+noinss+ig,3*n2d+norbs+nocrosl+n)=-kintr(ig,n)
-      amat(4*n2d+norbs+nocrosl+ig,3*n2d+norbs+nocrosl+n)=-kcoefr(ig,n)
+  do ig=1, nocrosr*npol
+    do n=1, n2d+nocrosr*npol
+      amat(4*n2d+npol*(nocrosl+noinss)+ig,3*n2d+npol*(norbs+nocrosl)+n)= &
+                         -kintr(ig,n)
+      amat(4*n2d+npol*(norbs+nocrosl)+ig,3*n2d+npol*(norbs+nocrosl)+n)= &
+                         -kcoefr(ig,n)
     enddo
   enddo                                                                 
 !     7) to match C_alpha for crossing orbitals with the tips ones
-  do ig=1, nocrosl
-    amat(4*n2d+norbs+ig,2*n2d+ig)=(1.d0,0.d0)
+  do ig=1, nocrosl*npol
+    amat(4*n2d+norbs*npol+ig,2*n2d+ig)=(1.d0,0.d0)
   enddo
-  do ig=1, nocrosr
-    amat(4*n2d+norbs+nocrosl+ig,2*n2d+nocrosl+noinss+ig)=(1.d0,0.d0)
+  do ig=1, nocrosr*npol
+    amat(4*n2d+npol*(norbs+nocrosl)+ig,2*n2d+npol*(nocrosl+noinss)+ig)= &
+           (1.d0,0.d0)
   enddo
 !
 ! Form the vector of free coefficients
@@ -170,9 +236,9 @@ implicit none
       vec1(ig,n)=kfunl(ig,n)
       vec1(n2d+ig,n)=kfundl(ig,n)
     enddo
-    do ig=1, nocrosl
+    do ig=1, nocrosl*npol
       vec1(4*n2d+ig,n)=kintl(ig,n)
-      vec1(4*n2d+norbs+ig,n)=kcoefl(ig,n)
+      vec1(4*n2d+npol*norbs+ig,n)=kcoefl(ig,n)
     enddo
   enddo
 !
@@ -185,7 +251,7 @@ implicit none
 !
   do n=1, nchanl
     do ig=1, nchanr
-      tchan(ig,n)=vec1(ntran-n2d-nocrosr+ig,n)
+      tchan(ig,n)=vec1(ntran-n2d-npol*nocrosr+ig,n)
     enddo
   enddo
 !
@@ -229,6 +295,7 @@ implicit none
   deallocate(tchan)
   deallocate(veceig)
   deallocate(eigen)
+  if (noncolin) deallocate(zps_nc)
 
   return
 end subroutine transmit                                     

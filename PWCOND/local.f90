@@ -1,9 +1,13 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
+!
 !
 subroutine local
 !
@@ -13,9 +17,10 @@ subroutine local
 !
 #include "f_defs.h"
   USE io_global,  ONLY :  stdout
-  use pwcom
-  use io_files
-  use cond
+  USE pwcom
+  USE noncollin_module, ONLY : npol
+  USE io_files
+  USE cond
 #ifdef __PARA
   USE mp_global, ONLY: nproc
   use para
@@ -26,18 +31,20 @@ subroutine local
 
   integer :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
              ios, index, number, nprob, nteam, nteamnow,     &
-             status, info, kin, kfin
+             status, info, kin, kfin, is, js
   integer, allocatable :: fftxy(:,:) 
   real(kind=DP), parameter :: eps=1.d-6
   real(kind=DP), allocatable :: el(:), gp(:)
-  complex(kind=DP), allocatable :: amat(:,:), ymat(:,:),     &
+  complex(kind=DP), allocatable :: amat(:,:), amat1(:,:), ymat(:,:),     &
                                    psibase(:,:), psiprob(:,:)
+  complex(kind=DP),parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
   complex(kind=DP) :: aij, xfact, ZDOTC
   logical :: exst
 
 !
 ! To divide the slabs between CPU
 !
+  call start_clock('local')
   call slabcpu(nrz, nrzp, nkofz, bdl1, bdl2, bdr1, bdr2, z)
 
 !
@@ -49,7 +56,7 @@ subroutine local
     read(4) n2d
 !   Allocate variables depending on n2d
     call allocate_cond_2
-    read(4) ((newbg(ig,il), ig=1, ngper), il=1, n2d) 
+    read(4) ((newbg(ig,il), ig=1, ngper*npol), il=1, n2d) 
 !    WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
     read(4) (((psiper(ig,il,k),ig=1,n2d),il=1,n2d), &
                                                k=1,nrzp)
@@ -60,10 +67,10 @@ subroutine local
   endif
 
   allocate( gp( 2 ) )
-  allocate( el( ngper ) )  
-  allocate( amat( ngper, ngper ) )
-  allocate( psibase( ngper, ngper ) )
-  allocate( psiprob( ngper, ngper ) )
+  allocate( el( ngper * npol ) )  
+  allocate( amat( ngper * npol, ngper * npol ) )
+  allocate( psibase( ngper * npol, ngper * npol ) )
+  allocate( psiprob( ngper * npol, ngper * npol ) )
   allocate( fftxy(-(nrx-1)/2:nrx/2,-(nry-1)/2:nry/2) )  
 
 !
@@ -104,33 +111,51 @@ subroutine local
   psibase=(0.d0,0.d0)
 
   do while(kin.le.kfin) 
-    amat=(0.d0,0.d0)
-    do ig=1, ngper
+     amat=(0.d0,0.d0)
+     do ig=1, ngper
         do jg=ig, ngper
            do ipol=1, 2
               gp(ipol)=gper(ipol,ig)-gper(ipol,jg)
            enddo
            index=number(gp, at, fftxy, nrx, nry)
            if (index.gt.0) then
-              amat(ig,jg)=vppot(kin,index)
-              amat(jg,ig)=conjg(amat(ig,jg))
+              do is=1,npol
+                 do js=1,npol
+                    amat(ig+(is-1)*ngper,jg+(js-1)*ngper)=vppot(kin,index,is,js)
+                    amat(jg+(js-1)*ngper,ig+(is-1)*ngper)= &
+                        DCONJG(amat(ig+(is-1)*ngper,jg+(js-1)*ngper))
+                 enddo
+              enddo
            endif
         enddo
-        amat(ig,ig)=amat(ig,ig)+(gper(1,ig)**2+   &
-                        gper(2,ig)**2)*tpiba2
-    enddo       
-    call hev_ab(ngper, amat, ngper, el, psiprob,      &
+        do is=1,npol
+           amat(ig+(is-1)*ngper,ig+(is-1)*ngper)=    &
+             amat(ig+(is-1)*ngper,ig+(is-1)*ngper)+ &
+                   (gper(1,ig)**2 + gper(2,ig)**2)*tpiba2
+        enddo
+     enddo       
+     call hev_ab(ngper*npol, amat, ngper*npol, el, psiprob,      &
                      -1.d1, eryd+ewind, nprob)
+
+!     do is=1,ngper*npol
+!        write(6,'("------------------------------",i5,f15.7)') is, el(is)
+!        do ig=1,ngper*npol
+!           if (ig.eq.ngper+1) write(6,'("----")')
+!           write(6,'(i5,2f15.7)') ig, psiprob(ig,is)
+!        enddo
+!     enddo
+!     stop
+
 #ifdef __PARA
-    if( me.ne.1 ) then
-      call mpi_send(nprob,1,MPI_INTEGER,0,17,     &
+     if ( me.ne.1 ) then
+        call mpi_send(nprob,1,MPI_INTEGER,0,17,     &
                                     MPI_COMM_WORLD,info )
       call errore ('n2d reduction','info<>0 in send',info)       
-      call mpi_send(psiprob,2*ngper*ngper,MPI_REAL8,0,18, &
+      call mpi_send(psiprob,2*ngper*npol*ngper*npol,MPI_REAL8,0,18, &
                                     MPI_COMM_WORLD,info )           
       call errore ('n2d reduction','info<>0 in send',info)
     else
-      call gramsh(ngper,nprob,1,nprob,           &
+      call gramsh(ngper*npol,nprob,1,nprob,           &
                  psibase,psiprob,n2d,epsproj) 
 
       nteamnow=kfin-kin+1
@@ -140,16 +165,15 @@ subroutine local
         call mpi_recv(nprob,1,MPI_INTEGER,       &
                        ig,17,MPI_COMM_WORLD,status,info )
         call errore ('n2d reduction','info<>0 in recv',info)
-        call mpi_recv(psiprob,2*ngper*ngper,MPI_REAL8,  &
+        call mpi_recv(psiprob,2*ngper*npol*ngper*npol,MPI_REAL8,  &
                        ig,18,MPI_COMM_WORLD,status,info )         
         call errore ('n2d reduction','info<>0 in recv',info)
-        call gramsh(ngper,nprob,1,nprob,         &
+        call gramsh(ngper*npol,nprob,1,nprob,         &
                  psibase,psiprob,n2d,epsproj)  
       enddo
     endif
 #else
-    call gramsh(ngper,nprob,1,nprob,             &
-                 psibase,psiprob,n2d,epsproj) 
+    call gramsh(ngper*npol,nprob,1,nprob,psibase,psiprob,n2d,epsproj) 
 #endif
     kin=kin+nteam
   enddo
@@ -158,7 +182,7 @@ subroutine local
   call mpi_barrier( MPI_COMM_WORLD, info )
   call mpi_bcast(n2d,1,MPI_INTEGER,0,MPI_COMM_WORLD,info)
   call errore ('reduction','mpi_bcast 1',info) 
-  call mpi_bcast(psibase,2*ngper*ngper,MPI_REAL8,0,  &
+  call mpi_bcast(psibase,2*ngper*npol*ngper*npol,MPI_REAL8,0,  &
                   MPI_COMM_WORLD,info)
   call errore ('reduction','mpi_bcast 1',info)       
 #endif
@@ -167,21 +191,21 @@ subroutine local
 ! Allocate variables depending on n2d
 !
   call allocate_cond_2
-  WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
-
+  if (npol.eq.2) then
+     WRITE( stdout,*) 'ngper, ngper*npol, n2d = ', ngper, ngper*npol, n2d
+  else
+     WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
+  endif
 !
 ! Construct components of basis vector set on G_per
 !
-  do ig=1, n2d 
-    call DCOPY(2*ngper,psibase(1,ig),1,newbg(1,ig),1)
-  enddo
+  call DCOPY(2*ngper*npol*n2d,psibase,1,newbg,1)
 
 !
 ! set and solve the eigenvalue equation for each slab
 !
-  deallocate( amat )
-  allocate( amat( n2d, n2d ) )
-  allocate( ymat( ngper, n2d ) )
+  allocate( amat1( n2d, n2d ) )
+  allocate( ymat( ngper*npol, n2d ) )
 
 ! for reduced basis set H'_{ab}=e*^i_aH_{ij}e^j_b
   do k=1, nrz
@@ -191,42 +215,42 @@ subroutine local
 !     First compute y_{ib}=H_{ij}e_{jb}
 !
       do ig=1, ngper
-        do jg=1, ngper
-           do ipol=1, 2
-              gp(ipol)=gper(ipol,ig)- gper(ipol,jg)
-           enddo
-           index=number(gp, at, fftxy, nrx, nry)
-           if (index.gt.0) then
-              aij=vppot(k,index)
-           else
-              aij=(0.d0,0.d0)
-           endif
-           if (ig.eq.jg)                      &
-              aij=aij+(gper(1,ig)**2+         &
-                       gper(2,ig)**2)*tpiba2
-           do il=1, n2d
-              ymat(ig,il)=ymat(ig,il)+aij*newbg(jg,il)
-           enddo
-        enddo
+         do jg=1, ngper
+            do ipol=1, 2
+               gp(ipol) = gper(ipol,ig) - gper(ipol,jg)
+            enddo
+            index=number(gp, at, fftxy, nrx, nry)
+            do is=1,npol
+               do js=1,npol
+                  if (index.gt.0) then
+                     aij=vppot(k,index,is,js)
+                  else
+                     aij=(0.d0,0.d0)
+                  endif
+                  if ((ig.eq.jg).and.(is.eq.js))          &
+                     aij=aij+(gper(1,ig)**2+              &
+                              gper(2,ig)**2)*tpiba2
+                     amat(ig+(is-1)*ngper,jg+(js-1)*ngper)= aij
+               enddo
+            enddo
+         enddo
       enddo
+      call ZGEMM('n','n',ngper*npol,n2d,ngper*npol,one,amat,ngper*npol, &
+                         newbg,ngper*npol,zero,ymat,ngper*npol)
 !
 !     and construct H'_{ab}=<e_a|y_b>
 !
       do il=1, n2d
         do jl=il, n2d
-          amat(il,jl)=ZDOTC(ngper,newbg(1,il),1,ymat(1,jl),1)
-        enddo
-      enddo
-      do il=1, n2d
-        do jl=1, il-1
-          amat(il,jl)=conjg(amat(jl,il))
+          amat1(il,jl)=ZDOTC(ngper*npol,newbg(1,il),1,ymat(1,jl),1)
+          amat1(jl,il)=conjg(amat1(il,jl))
         enddo
       enddo
 !
 !     Solving the eigenvalue problem and construction zk
 !
       info=-1
-      call hev_ab(n2d, amat, n2d, zkr(1,nkofz(k)),       &
+      call hev_ab(n2d, amat1, n2d, zkr(1,nkofz(k)),       &
                   psiper(1,1,nkofz(k)), 0.d0, 0.d0, info)
 
     endif
@@ -243,7 +267,7 @@ subroutine local
     if(fil_loc.eq.' ') call errore ('local','fil_loc no name',1)
     call seqopn(4,fil_loc,'unformatted',exst)
     write(4) n2d
-    write(4) ((newbg(ig,il), ig=1, ngper), il=1, n2d)
+    write(4) ((newbg(ig,il), ig=1, ngper*npol), il=1, n2d)
 
     write(4) (((psiper(ig,il,k),ig=1,n2d),il=1,n2d), &
                                                 k=1,nrzp)
@@ -252,6 +276,7 @@ subroutine local
   endif
 
   deallocate(amat)
+  deallocate(amat1)
   deallocate(ymat)
   deallocate(gp)
   deallocate(psibase)
@@ -259,6 +284,7 @@ subroutine local
   deallocate(el)
   deallocate(fftxy)
 
+  call stop_clock('local')
   return 
 end subroutine local
 !-----------------------------------

@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Optimized Aug. 2004 (ADC)
+!
+!
 function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
 !
 ! This function computes the integral of beta function with the
@@ -22,6 +25,7 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
   complex(kind=DP) ::  &
       zk,              & ! the exponential k
       fun(nz1),        & ! the beta function on the slab points
+      fact,fact0,      & ! auxiliary
       arg,             & ! auxiliary
       int1d              ! output: the value of the integral
 
@@ -29,8 +33,11 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
 
   int1d = (0.d0,0.d0)
   arg = sign*tpi*cim*zk*dz1
+  fact0=exp(arg)
+  fact=fact0
   do ik=1, nz1
-    int1d = int1d+conjg(fun(ik))*exp(arg*ik)    
+    int1d = int1d+conjg(fun(ik))*fact
+    fact=fact*fact0
   enddo
   if (abs(real(zk))+abs(DIMAG(zk)).gt.eps) then
     int1d =-sign*cim*int1d*(1.d0-exp(-arg))/(zk*tpiba)
@@ -42,8 +49,8 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
   return
 end function int1d
 !-----------------------------------
-
-function int2d(fun1, fun2, zk, dz1, nz1, tpiba)
+!
+function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
 !
 ! This function computes the 2D integrals of beta functions with
 ! exponential
@@ -54,50 +61,66 @@ function int2d(fun1, fun2, zk, dz1, nz1, tpiba)
      nz1,       &  ! number of points for the slab integration 
      ik, ik1       ! counters on the slab points
   real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP) :: dz1, tpiba, tpi
-  complex(kind=DP), parameter :: cim=(0.d0,1.d0)
+  real(kind=DP),parameter :: tpi=2.d0*3.141592653589793d0
+  real(kind=DP) :: dz1, tpiba
+  complex(kind=DP), parameter :: cim=(0.d0,1.d0), one=(1.d0,0.d0)
   complex(kind=DP) ::       &
      fun1(nz1), fun2(nz1),  &  ! the two arrays to be integrated
-     arg, s1, s2, s3, s,    &  ! auxyliary for integration
-     zk,                    &  ! the complex k of the exponent
+     int1(nz1), int2(nz1),  &  ! auxiliary arrays for integration
+     fact1(nz1), fact2(nz1),&
+     s1, s2, s3, ff,        &  ! auxiliary for integration
+     fact,fact0,            &  ! auxiliary 
+     f1, f2, zk, ezk, emzk, &  ! the complex k of the exponent
      int2d                     ! output: the result of the integration
 
-  int2d=(0.d0, 0.d0)
-  tpi=8.d0*atan(1.d0)
-  s1=0.d0
-  s2=0.d0
-  s3=0.d0 
-  arg=tpi*cim*zk*dz1
+  s1=(0.d0,0.d0)
+  s2=(0.d0,0.d0)
+  s3=(0.d0,0.d0) 
 !
 ! integral for i > = j
 !
+  fact=fact1(1)
+  fact0=fact2(1)
   do ik=1, nz1
-    s=0.d0
-    do ik1=1, ik-1
-       s=s+fun2(ik1)*exp(arg*(ik-ik1))
-    enddo
-    s1=s1+s*conjg(fun1(ik))
-    s3=s3+conjg(fun1(ik))*fun2(ik)
+    ff=conjg(fun1(ik))
+    s1=s1+int1(ik)*ff*fact1(ik)
+    s2=s2+int2(ik)*ff*fact2(ik)
+    s3=s3+fun2(ik)*ff
   enddo
-!
-! integral for i < j
-!
-  do ik=1, nz1
-    s=0.d0
-    do ik1=ik+1, nz1
-      s=s+fun2(ik1)*exp(arg*(ik1-ik))
-    enddo
-    s2=s2+s*conjg(fun1(ik))
-  enddo 
 !
 ! complete integral
 !
-  if (abs(DREAL(zk))+abs(DIMAG(zk)).gt.eps) then
-     int2d=((1.d0-exp(arg)+cim*zk*dz1*tpi)*s3*2.d0+      &
-           (2.d0-exp(arg)-exp(-arg))*(s1+s2))/((zk*tpiba)**2)
+  f1=cim*zk*dz1*tpi
+  f2=one/(zk*tpiba)**2
+  if (abs(f1).gt.eps) then
+     int2d=((1.d0-fact+f1)*s3*2.d0+(2.d0-fact-fact0)*(s1+s2))*f2
   else
      int2d=(s1+s2+s3)*(dz1*tpi/tpiba)**2
   endif
 
   return
 end function int2d
+
+subroutine setint(fun,int1,int2,fact1,fact2,nz1)
+
+  USE kinds, only : DP 
+  implicit none
+  integer ::    &
+     nz1,       &  ! number of points for the slab integration 
+     ik            ! counters on the slab points
+  complex(kind=DP) ::       &
+     fun(nz1),              &  ! the arrays to be integrated
+     int1(nz1), int2(nz1),  &  ! auxiliary arrays for integration
+     fact1(nz1), fact2(nz1)    !
+!
+  int1(1)=(0.d0, 0.d0)
+  int2(nz1)=(0.d0, 0.d0)
+  do ik=2, nz1
+     int1(ik)=int1(ik-1)+fun(ik-1)*fact2(ik-1)
+  enddo
+  do ik=nz1-1,1,-1
+     int2(ik)=int2(ik+1)+fun(ik+1)*fact1(ik+1)
+  enddo
+   
+  return
+end subroutine setint

@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -11,9 +12,10 @@ subroutine init_cond
 !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, tau 
   USE io_global,  ONLY : stdout
-  use pwcom
+  USE pwcom
+  USE noncollin_module, ONLY : noncolin
   USE uspp_param,    ONLY : dion, nbeta, lll, tvanp
-  use cond
+  USE cond
   implicit none
   integer :: nt, ib, ir, is, na, iorb, iorb1, m, ih, ih1, ioins, &
              iocros, k, ipol, apol 
@@ -192,6 +194,7 @@ subroutine init_cond
 !    To form zpseu
 !
   zpseu=0.d0
+  if (noncolin) zpseu_nc=0.d0
 
   iocros=nocrosr
   if (ikind.eq.0) iocros=0
@@ -199,20 +202,28 @@ subroutine init_cond
   do iorb=nocrosl+1, norb-iocros
      ib=nbnew(iorb)
      nt=itnew(iorb) 
-     if(tvanp(nt)) then
+     if(tvanp(nt).or.lspinorb) then
       na=natih(iorb,1)
       ih=natih(iorb,2)
       do iorb1=nocrosl+1, norb-iocros
         if (na.eq.natih(iorb1,1)) then
           ih1=natih(iorb1,2)               
           do is=1, nspin
-            zpseu(iorb,iorb1,is)=deeq(ih,ih1,na,is) 
+            if (noncolin) then
+               zpseu_nc(iorb,iorb1,is)=deeq_nc(ih,ih1,na,is) 
+            else
+               zpseu(iorb,iorb1,is)=deeq(ih,ih1,na,is) 
+            endif
           enddo
         endif 
       enddo
      else
       do is=1, nspin
-       zpseu(iorb,iorb,is)=dion(ib,ib,nt) 
+       if (noncolin) then
+          zpseu_nc(iorb,iorb,is)=dion(ib,ib,nt) 
+       else
+          zpseu(iorb,iorb,is)=dion(ib,ib,nt) 
+       endif
       enddo
      endif
   enddo 
@@ -220,8 +231,13 @@ subroutine init_cond
   do iorb=1, nocrosl
     do iorb1=1, nocrosl
       do is=1, nspin
-        zpseu(iorb,iorb1,is)= &
-          zpseu(nocrosl+noinsl+iorb,nocrosl+noinsl+iorb1,is)
+        if (noncolin) then
+           zpseu_nc(iorb,iorb1,is)= &
+             zpseu_nc(nocrosl+noinsl+iorb,nocrosl+noinsl+iorb1,is)
+        else
+           zpseu(iorb,iorb1,is)= &
+             zpseu(nocrosl+noinsl+iorb,nocrosl+noinsl+iorb1,is)
+        endif
       enddo
     enddo
   enddo             
@@ -233,8 +249,13 @@ subroutine init_cond
     do iorb=1, nocrosr
       do iorb1=1, nocrosr
         do is=1, nspin
-          zpseu(norb-nocrosr+iorb,norb-nocrosr+iorb1,is)= &
+          if (noncolin) then
+             zpseu_nc(norb-nocrosr+iorb,norb-nocrosr+iorb1,is)= &
+                 zpseu_nc(iocros+iorb,iocros+iorb1,is)  
+          else
+             zpseu(norb-nocrosr+iorb,norb-nocrosr+iorb1,is)= &
                  zpseu(iocros+iorb,iocros+iorb1,is)  
+          endif
         enddo         
       enddo
     enddo 
@@ -346,8 +367,10 @@ subroutine init_cond
        &      mnew(iorb), iorb,                                 &     
        &    (taunew(ipol,iorb),ipol=1,3), iorb=1, norb )          
 
-  WRITE( stdout, 301) energy0, denergy, nenergy, ecut2d, ewind, epsproj 
+  WRITE( stdout, 301) ef*rytoev, energy0, denergy, nenergy, ecut2d, &
+                      ewind, epsproj 
 301   format (/,5x,                                         &
+        &      'Fermi energy          = ',1pe15.5,/,5x,     &
         &      'energy0               = ',1pe15.1,/,5x,     &
         &      'denergy               = ',1pe15.1,/,5x,     & 
         &      'nenergy               = ',i10,/,5x,         &

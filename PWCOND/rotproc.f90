@@ -1,9 +1,13 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
+!
 !
 subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  & 
                    fundl1, intw1, intw2, n2d, norbf, norbnow)
@@ -28,7 +32,8 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   USE kinds, only : DP
 #ifdef __PARA
   USE mp_global, ONLY: nproc
-  use para
+  USE noncollin_module, ONLY : npol
+  USE para
   USE parallel_include
   
   implicit none 
@@ -41,12 +46,12 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                       fund0(n2d, 2*n2d),   & ! phi'_n(0)  
                       fun1(n2d, 2*n2d),    & ! phi_n(d) 
                       fund1(n2d, 2*n2d),   & ! phi'_n(d) 
-                      funl0(n2d, norbf),   & ! phi_alpha(0) 
-                      fundl0(n2d, norbf),  & ! phi'_alpha(0) 
-                      funl1(n2d, norbf),   & ! phi_alpha(d) 
-                      fundl1(n2d, norbf),  & ! phi'_alpha(d) 
-                      intw1(norbf, 2*n2d), & ! integrals on phi_n 
-                      intw2(norbf, norbf)    ! integrals on phi_alpha
+                      funl0(n2d, npol*norbf), & ! phi_alpha(0) 
+                      fundl0(n2d, npol*norbf),& ! phi'_alpha(0) 
+                      funl1(n2d, npol*norbf), & ! phi_alpha(d) 
+                      fundl1(n2d, npol*norbf),  & ! phi'_alpha(d) 
+                      intw1(norbf*npol, 2*n2d), & ! integrals on phi_n 
+                      intw2(norbf*npol, norbf*npol) ! integrals on phi_alpha
 
   complex(kind=DP), allocatable :: x(:), y(:), amat(:,:), vec(:,:),  &
                                amat_aux(:,:), vec_aux(:,:)
@@ -57,8 +62,8 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   allocate( y( n2d ) )    
   allocate( amat( 2*n2d, 2*n2d ) )
   allocate( amat_aux( 2*n2d, 2*n2d ) ) 
-  allocate( vec( 2*n2d, 2*n2d+norbnow ) )
-  allocate( vec_aux( 2*n2d, 2*n2d+norbnow ) )
+  allocate( vec( 2*n2d, 2*n2d+npol*norbnow ) )
+  allocate( vec_aux( 2*n2d, 2*n2d+npol*norbnow ) )
   allocate( ipiv( 2*n2d ) )
 
   numb=0
@@ -86,7 +91,7 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
           vec(lam, lam1)=fun0(lam, lam1)
           vec(n2d+lam, lam1)=fund0(lam, lam1)
         enddo
-        do iorb=1, norbnow
+        do iorb=1, npol*norbnow
           vec(lam, 2*n2d+iorb)=funl0(lam, iorb)
           vec(n2d+lam, 2*n2d+iorb)=fundl0(lam, iorb)
         enddo
@@ -101,7 +106,7 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
           vec(lam, n2d+lam1)=-fun1(lam, n2d+lam1)
           vec(n2d+lam, n2d+lam1)=-fund1(lam, n2d+lam1)
         enddo
-        do iorb=1, norbnow
+        do iorb=1, npol*norbnow
           vec(lam, 2*n2d+iorb)=-funl1(lam, iorb)
           vec(n2d+lam, 2*n2d+iorb)=-fundl1(lam, iorb)
         enddo
@@ -110,11 +115,11 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
     endif
     call mpi_allreduce(amat, amat_aux, 2*2*n2d*2*n2d, MPI_REAL8,     &
                        MPI_SUM, new_comm, info)
-    call mpi_allreduce(vec, vec_aux, 2*2*n2d*(2*n2d+norbnow),        &
+    call mpi_allreduce(vec, vec_aux, 2*2*n2d*(2*n2d+npol*norbnow),        &
                        MPI_REAL8, MPI_SUM, new_comm, info)
     call DCOPY(2*2*n2d*2*n2d, amat_aux, 1, amat, 1)  
-    call DCOPY(2*2*n2d*(2*n2d+norbnow), vec_aux, 1, vec, 1) 
-    call ZGESV(2*n2d, 2*n2d+norbnow, amat, 2*n2d, ipiv,              &
+    call DCOPY(2*2*n2d*(2*n2d+npol*norbnow), vec_aux, 1, vec, 1) 
+    call ZGESV(2*n2d, 2*n2d+npol*norbnow, amat, 2*n2d, ipiv,              &
                vec, 2*n2d, info)          
 !
 !   recalculate the functions for CPU which is left to matching 
@@ -130,7 +135,7 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                            vec(n2d+lam, n)*fund1(ig, n2d+lam)
        enddo
       enddo
-      do iorb=1, norbnow
+      do iorb=1, npol*norbnow
        do lam=1, n2d
         funl1(ig, iorb)=funl1(ig, iorb)+  &
                 vec(n2d+lam, 2*n2d+iorb)*fun1(ig, n2d+lam)
@@ -168,7 +173,7 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                            vec(lam, n2d+n)*fund0(ig, lam)
        enddo
       enddo
-      do iorb=1, norbnow
+      do iorb=1, npol*norbnow
        do lam=1, n2d
         funl0(ig, iorb)=funl0(ig, iorb)+  &
                      vec(lam, 2*n2d+iorb)*fun0(ig, lam)
@@ -196,15 +201,15 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 !  to recalculate the integrals for a given group of CPU
 !
     if(me.ge.ib) then
-     do iorb=1, norbnow
-      do iorb1=1, norbnow
+     do iorb=1, npol*norbnow
+      do iorb1=1, npol*norbnow
        do lam=1, n2d
         intw2(iorb,iorb1)=intw2(iorb,iorb1)+           &
            vec(n2d+lam, 2*n2d+iorb1)*intw1(iorb, n2d+lam)
        enddo
       enddo
      enddo
-     do iorb=1, norbnow
+     do iorb=1, npol*norbnow
        x=(0.d0,0.d0)
        do n=1, n2d
          do lam=1, n2d
@@ -218,15 +223,15 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
        enddo
      enddo                            
     else
-     do iorb=1, norbnow
-      do iorb1=1, norbnow
+     do iorb=1, npol*norbnow
+      do iorb1=1, npol*norbnow
        do lam=1, n2d
         intw2(iorb, iorb1)=intw2(iorb, iorb1)+           &
              vec(lam, 2*n2d+iorb1)*intw1(iorb, lam)
        enddo
       enddo
      enddo
-     do iorb=1, norbnow
+     do iorb=1, npol*norbnow
        x=(0.d0,0.d0)
        do n=1, n2d
          do lam=1, n2d
@@ -263,25 +268,25 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                  MPI_COMM_WORLD, info)
   call mpi_bcast(fund0, 2*n2d*2*n2d, MPI_REAL8, 0,          &
                  MPI_COMM_WORLD, info)   
-  call mpi_bcast(funl0, 2*n2d*norbf, MPI_REAL8,  0,         &
+  call mpi_bcast(funl0, 2*n2d*npol*norbf, MPI_REAL8,  0,         &
                  MPI_COMM_WORLD, info)   
-  call mpi_bcast(fundl0, 2*n2d*norbf, MPI_REAL8, 0,         &
+  call mpi_bcast(fundl0, 2*n2d*npol*norbf, MPI_REAL8, 0,         &
                  MPI_COMM_WORLD, info)   
 
   call mpi_bcast(fun1, 2*n2d*2*n2d, MPI_REAL8,  nproc-1,    &
                  MPI_COMM_WORLD, info)
   call mpi_bcast(fund1, 2*n2d*2*n2d, MPI_REAL8, nproc-1,    &
                  MPI_COMM_WORLD, info)
-  call mpi_bcast(funl1, 2*n2d*norbf, MPI_REAL8,  nproc-1,   &
+  call mpi_bcast(funl1, 2*n2d*npol*norbf, MPI_REAL8,  nproc-1,   &
                  MPI_COMM_WORLD, info)
-  call mpi_bcast(fundl1, 2*n2d*norbf, MPI_REAL8, nproc-1,   &
+  call mpi_bcast(fundl1, 2*n2d*npol*norbf, MPI_REAL8, nproc-1,   &
                  MPI_COMM_WORLD, info)                         
 
 !
 ! Gathering of the integrals
 !
-  call reduce(2*norbf*2*n2d, intw1)
-  call reduce(2*norbf*norbf, intw2)
+  call reduce(2*norbf*npol*2*n2d, intw1)
+  call reduce(2*norbf*npol*norbf*npol, intw2)
 
   deallocate(x)
   deallocate(y)
@@ -294,5 +299,3 @@ subroutine rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 #endif
   return
 end subroutine rotproc
-
-

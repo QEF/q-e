@@ -12,6 +12,7 @@ subroutine allocate_cond
 #include "f_defs.h"
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   use pwcom
+  USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, ONLY : nbrx, nbeta, lll, betar, tvanp
   use atom, only: mesh, r
   use cond 
@@ -209,7 +210,7 @@ subroutine allocate_cond
     norbf=max(norbf, norbs)
   endif 
 
-  allocate( vppot(nrz, nrx * nry) )
+  allocate( vppot(nrz, nrx * nry, npol, npol) )
   allocate( itnew(norb) )
   allocate( nbnew(norb) )
   allocate( natih(norb, 2) )
@@ -218,6 +219,7 @@ subroutine allocate_cond
   allocate( cross(norb, nrz) )
   allocate( taunew(3, norb) )
   allocate( zpseu(norb, norb, nspin) )
+  if (noncolin) allocate(zpseu_nc(norb, norb, nspin))
   
   allocate( nkofz(nrz) ) 
 

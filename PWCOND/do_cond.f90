@@ -34,11 +34,14 @@ implicit none
                        denergy, ecut2d, ewind, epsproj, delgep,cutplot,&
                        llapack
                                                                                 
-  CHARACTER (LEN=256) :: input_file
+  CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 
   nd_nmbr=nodenumber
+  call init_clocks(.TRUE.)
+  call start_clock('PWCOND')
+  call start_clock('init')
 !
 !   set default values for variables in namelist
 !                                             
@@ -67,7 +70,6 @@ implicit none
    delgep = 0.d0
    cutplot = 2.d0
 
-   call start_clock('cond')
 
 
 #ifdef __PARA
@@ -197,6 +199,7 @@ implicit none
 !
   call allocate_cond
   call init_cond
+  call stop_clock('init')
 
   if (llocal) &
     call local_set(nocrosl,noinsl,noinss,nocrosr,noinsr,norb,norbs)
@@ -218,6 +221,7 @@ implicit none
       call scatter_forw(bdl1, bdl2, orbin, orbfin)
       orbin=1
       orbfin=orbin-1+2*nocrosl+noinsl   
+      
       call compbs(0, bdl1, bdl2, nocrosl,   & 
               orbfin-orbin+1, orbin, nchanl, kvall,    &
               kfunl, kfundl, kintl, kcoefl)
@@ -243,11 +247,11 @@ implicit none
 
   enddo
 
-  if(ikind.gt.0)  &
+  if(ikind.gt.0.and.tran_file.ne.' ')  &
    call summary_tran(tran_file,nenergy,earr,tran_tot)
 
-  call print_clock('cond')          
-  call stop_clock('cond')
+  call print_clock_pwcond()
+  call stop_clock('PWCOND')
   return
 end subroutine do_cond                                    
 

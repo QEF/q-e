@@ -1,9 +1,13 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
+!
 !
 subroutine poten 
 !
@@ -12,6 +16,7 @@ subroutine poten
 !
 #include "f_defs.h"
   use pwcom
+  use noncollin_module, ONLY : noncolin, npol
   use cond
 #ifdef __PARA
   use para
@@ -20,25 +25,29 @@ subroutine poten
 
   integer ::                                                & 
              i, j, ij, ijx, k, n, p, il, ik, kstart, klast, &
-             ix, jx, kx, ir, ir1, is, ixy, info
+             ix, jx, kx, ir, ir1, ixy, info
+  integer :: iis, jjs, is(4), js(4), ispin, nspin_eff
   integer :: ionode_id
   integer, allocatable :: ipiv(:) 
 
   real(kind=DP), parameter :: eps = 1.d-8
-  real(kind=DP) :: arg, bet   
+  real(kind=DP) :: arg, bet
   real(kind=DP), allocatable :: gz(:), auxr(:)
 
   complex(kind=DP), parameter :: cim = (0.d0,1.d0)
   complex(kind=DP) :: caux
-  complex(kind=DP), allocatable :: aux(:), amat(:,:)
+  complex(kind=DP), allocatable :: aux(:), amat(:,:), amat0(:,:)
+  complex(kind=DP), allocatable :: vppot0(:,:,:,:)
 
   logical :: lg
 
+  call start_clock('poten')
   allocate( ipiv( nrz ) )
   allocate( gz( nrz ) )
   allocate( aux( nrx1*nrx2*nrx3 ) )
   allocate( auxr( nrxx ) )
   allocate( amat( nrz, nrz ) )
+  allocate( amat0( nrz, nrz ) )
 
 !
 !  Compute the Gz vectors in the z direction
@@ -48,16 +57,55 @@ subroutine poten
      if (il.gt.nrz/2) il = il-nrz
      gz(k) = il*bg(3,3)
   enddo
-
+!
+! set up the matrix for the linear system
+!
+do n=1,nrz
+   do p=1,nrz
+      arg=gz(n)*z(p)*tpi
+      bet=gz(n)*(z(p+1)-z(p))*tpi
+      if (abs(gz(n)).gt.eps) then
+        caux=cim*(CMPLX(cos(bet),-sin(bet))-(1.d0,0.d0))  &
+                                    /zl/gz(n)/tpi
+      else
+        caux=(z(p+1)-z(p))/zl
+      endif
+      amat0(n,p)=CMPLX(cos(arg),-sin(arg))*caux
+   enddo
+enddo
+if (noncolin) then
+   nspin_eff=4
+   ij=0
+   do iis=1,2
+      do jjs=1,2
+         ij=ij+1
+         is(ij)=iis
+         js(ij)=jjs
+      enddo
+   enddo
+else
+   nspin_eff=1
+   is(1)=1
+   js(1)=1
+endif
 !
 !     To form local potential on the real space mesh
 !
-  auxr(:) = vltot(:) + vr(:,iofspin) 
-
+vppot = 0.d0
+do ispin=1,nspin_eff
+   if (noncolin) then
+      if (ispin==1) then
+         auxr(:) = vltot(:)+vr(:,1)
+      else
+         auxr(:) = vr(:,ispin)
+      endif
+   else
+      auxr(:) = vltot(:) + vr(:,iofspin) 
+   endif
 !
 ! To collect the potential from different CPUs
 !
-  aux(:) = (0.d0,0.d0)
+   aux(:) = (0.d0,0.d0)
 #ifdef __PARA
   kstart = 1
   do i=1, me-1
@@ -100,7 +148,6 @@ subroutine poten
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
 #endif
 
-  vppot(:,:) = 0.d0
   do i = 1, nrx
     if(i.gt.nrx/2+1) then
         ix = nr1-(nrx-i) 
@@ -126,46 +173,44 @@ subroutine poten
          else
             kx = k
          endif 
-         vppot(k, ij) = aux(ijx+(kx-1)*nrx1*nrx2)
+         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*nrx1*nrx2)
 
         endif
       enddo
     enddo
   enddo
-
-!
-! set up the matrix for the linear system
-!
-
-  do n=1,nrz
-    do p=1,nrz
-      arg=gz(n)*z(p)*tpi
-      bet=gz(n)*(z(p+1)-z(p))*tpi
-      if (abs(gz(n)).gt.eps) then
-        caux=cim*(CMPLX(cos(bet),-sin(bet))-(1.d0,0.d0))  &
-                                    /zl/gz(n)/tpi
-      else
-        caux=(z(p+1)-z(p))/zl
-      endif
-      amat(n,p)=CMPLX(cos(arg),-sin(arg))*caux
-    enddo
-  enddo
-
 !
 ! solve the linear system
 !
-  call ZGESV(nrz, nrx*nry, amat, nrz, ipiv, vppot, nrz, info)
+  amat=amat0
+  call ZGESV(nrz, nrx*nry, amat, nrz, ipiv, vppot(1,1,is(ispin),js(ispin)),&
+                                             nrz, info)
   call errore ('poten','info different from zero',abs(info))
+enddo
 
- ! do p = 1, nrz
- !   write(6,'(i5,2f12.6)') p, real(vppot(p,2)), imag(vppot(p,2))
- ! enddo
+if (noncolin) then
+   allocate( vppot0(nrz, nrx * nry, npol, npol) )
+   vppot0=vppot
+   vppot(:,:,1,1)=vppot0(:,:,1,1)+vppot0(:,:,2,2)
+   vppot(:,:,1,2)=vppot0(:,:,1,2)-(0.d0,1.d0)*vppot0(:,:,2,1)
+   vppot(:,:,2,1)=vppot0(:,:,1,2)+(0.d0,1.d0)*vppot0(:,:,2,1)
+   vppot(:,:,2,2)=vppot0(:,:,1,1)-vppot0(:,:,2,2)
+   deallocate( vppot0 )
+endif
+
+!  do p = 1, nrz
+!    write(6,'(i5,2f12.6)') p, real(vppot(p,105,2,2)), imag(vppot(p,105,2,2))
+!  enddo
+!  stop
 
   deallocate(ipiv) 
   deallocate(gz) 
   deallocate(aux) 
   deallocate(auxr) 
   deallocate(amat) 
+  deallocate(amat0) 
+
+  call stop_clock('poten')
 
   return
 end subroutine poten

@@ -12,7 +12,7 @@ subroutine summary_tran(tran_file, nenergy, earr, tran_tot)
   USE kinds, only : DP
   implicit none
 
-  character(len=256) :: tran_file
+  character(len=80) :: tran_file
   integer ::  nenergy, i
   real(kind=DP) :: earr(nenergy), tran_tot(nenergy)
 !

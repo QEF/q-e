@@ -32,6 +32,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
                       auxa(:), auxb(:), auxc(:),    &
                       hmat(:,:), hmt(:,:), vecaux(:,:)
 
+  call start_clock('compbs_2')
   noins = norbnow-2*nocros
 
   allocate( bmt( ntot, ntot ) )
@@ -227,6 +228,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
   deallocate(amt)
   deallocate(bmt)
   deallocate(ipiv)
+  call stop_clock('compbs_2')
 
   return
 end subroutine compbs_2 

@@ -1,3 +1,10 @@
+30 Oct 2004 - pwcond can now deal with spinor wavefunctions and with
+             fully relativistic PPs with spin-orbit. Initial 
+             implementation (still quite experimental). (ADC)
+             Added an example to calculate the complex band structure
+             of Pt with spin-orbit. (ADC)
+             Several improvements to the pwcond code. Now much faster. (ADC)
+
 26 Oct 2004  Patches from Axel Kohlmayer:
              - removed another call to check()
              - iotk_scan in iotk_module had a mixed up 'intent' statement.

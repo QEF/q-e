@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -200,9 +201,9 @@ implicit none
       if (lb.eq.0) then
         w0(kz,ig,1)=s1*w0(kz,ig,1)
       elseif (lb.eq.1) then
-        w0(kz,ig,2)=-cim*s1*w0(kz,ig,2)
+        w0(kz,ig,2)=cim*s1*w0(kz,ig,2)
         w0(kz,ig,1)=s1*zsl(kz)*w0(kz,ig,1)
-        w0(kz,ig,3)=-cim*s1*w0(kz,ig,3)
+        w0(kz,ig,3)=cim*s1*w0(kz,ig,3)
       elseif (lb.eq.2) then
         w0(kz,ig,5)=s1*w0(kz,ig,5)
         w0(kz,ig,2)=-2.d0*cim*s1*zsl(kz)*w0(kz,ig,2)

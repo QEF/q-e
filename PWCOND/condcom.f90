@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -47,7 +48,7 @@ MODULE perp_cond
        nry,            &!             --             in y direction
        ngper,          &!  number of perpendicular G vectors
        ngpsh,          &!  number of shells for G
-       nkpts,          &!
+       nkpts,          &!  number of kpts in the perpendicular direction
        n2d              !  dimension of reduced vector space in XY
   INTEGER, ALLOCATABLE :: &
        ninsh(:)         !  number of G in shell 
@@ -70,7 +71,7 @@ MODULE eigen_cond
   SAVE
   !
   COMPLEX(KIND=DP), ALLOCATABLE :: &
-       vppot(:,:),     &!  Fourier comp. of local potential in each slab
+       vppot(:,:,:,:), &!  Fourier comp. of local potential in each slab
        psiper(:,:,:),  &!  eigenvectors in each slab
        newbg(:,:),     &!  basis of reduced set --> exp(G)
        zk(:,:)          !  the k for each eigenvalue (computed through zkr)
@@ -139,6 +140,8 @@ MODULE cross_cond
       rsph(:,:),       &!  the radius of nonlocal sphere
       taunew(:,:),     &!  center of each orbital
       zpseu(:,:,:)      !  coefficients of nonlocal pseudopotential
+  COMPLEX(KIND=DP), ALLOCATABLE :: &
+      zpseu_nc(:,:,:)   !  coefficients of nonlocal pseudopotential (nc case)
   !    
 END MODULE cross_cond
 !

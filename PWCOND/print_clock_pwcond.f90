@@ -35,13 +35,14 @@ SUBROUTINE print_clock_pwcond()
    CALL print_clock( 'scatter_forw' )
    CALL print_clock( 'integrals' )
    CALL print_clock( 'scatter' )
-   CALL print_clock( 'rotate' )
+   CALL print_clock( 'rotatef' )
+   CALL print_clock( 'rotateb' )
    CALL print_clock( 'scatter_back' )
    !
    WRITE( stdout, * )
 
    CALL print_clock( 'compbs' )
-   CALL print_clock( 'diago' )
+   CALL print_clock( 'compbs_2' )
    !
    WRITE( stdout, * )
 
@@ -50,12 +51,6 @@ SUBROUTINE print_clock_pwcond()
       CALL print_clock( 'set_ls' )
       CALL print_clock( 'solve_ls' )
    endif
-
-   WRITE( stdout, * )
-
-   CALL print_clock( 'four' )
-   CALL print_clock( 'rot2' )
-   CALL print_clock( 'second' )
    !
    RETURN
    !

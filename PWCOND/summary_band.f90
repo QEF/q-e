@@ -12,6 +12,7 @@ subroutine summary_band(ik,ien)
 ! 
 #include "f_defs.h"
   USE io_global,  ONLY :  stdout
+  USE noncollin_module, ONLY : npol
   USE io_files, ONLY: band_file
   use pwcom
   use cond
@@ -23,8 +24,8 @@ subroutine summary_band(ik,ien)
 
   eev = earr(ien)
 
-  nstl = n2d+nocrosl
-  nstr = n2d+nocrosr
+  nstl = n2d+npol*nocrosl
+  nstr = n2d+npol*nocrosr
 !
 !  Output of complex bands in a separate file
 !
@@ -95,4 +96,3 @@ subroutine summary_band(ik,ien)
 
   return
 end subroutine summary_band            
-
