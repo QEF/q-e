@@ -246,7 +246,7 @@ SUBROUTINE setup()
         !
 #else
         !
-        iocc = SUM( f_inp(:,1) )
+        iocc = iocc + SUM( f_inp(1:nbnd,1) )
         !
 #endif        
         !
@@ -263,7 +263,7 @@ SUBROUTINE setup()
 #else
            !
            iocc = iocc + SUM( f_inp(1:nbnd,is) )
-           !
+           !       
 #endif
            !
         END DO
