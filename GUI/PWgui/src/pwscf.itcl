@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.2 2004-02-23 12:16:26 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.3 2004-09-20 07:06:05 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -138,12 +138,24 @@ $gui extra {
     $mb add menubutton .view -text "View" -menu {
 	options -tearoff false
     }
-    $mb add command  .view.xcrysden -label "Structure with XCRYSDEN" -command [list ::pwscf::view::structByXcrysden $this]
+    $mb add command  .view.xcrysden -label "Structure with XCrySDen" -command [list ::pwscf::view::structByXcrysden $this]
     $mb add command  .view.input    -label "Input file" -command [list ::pwscf::view::inputByPager $this]
     # t.k.
     #$mb add separator .view.sep1
     #$mb add command  .view.xc -label "XCRYSDEN" -command [list ::pwscf::XCRYSDEN $this]
     #/
+
+    #
+    # RUN menubutton
+    #
+    $mb add menubutton .run -text "Run" -menu {
+	options -tearoff false
+    }
+    $mb add command   .run.run     -label "Run calculation" -command [list ::pwscf::run::run $this]
+    $mb add command   .run.runAs   -label "Configure & Run calculation" -command [list ::pwscf::run::runAs $this]
+    $mb add separator .run.sep1
+    $mb add command   .run.runXC   -label "Run calculation + XCrySDen's display" -command [list ::pwscf::run::runAndXC $this]
+    $mb add command   .run.runAsXC -label "Configure & Run calculation + XCrySDen's display" -command [list ::pwscf::run::runAsAndXC $this]
 
     #
     # add a PWscf's logo to TOOLBAR
@@ -171,9 +183,15 @@ $gui state {
     # syntax: menubar path command
     menubar .edit.editOrig ::pwscf::menustate::editable
     menubar .edit.editCopy ::pwscf::menustate::editable
+
     menubar .view.input    ::pwscf::menustate::editable
     menubar .view.xcrysden ::pwscf::menustate::xcrysden
-    
+
+    menubar .run.run     ::pwscf::menustate::runnable
+    menubar .run.runAs   ::pwscf::menustate::runnable   
+    menubar .run.runXC   ::pwscf::menustate::runnableXC
+    menubar .run.runAsXC ::pwscf::menustate::runnableXC   
+
     # syntax: toolbar label command
     #...
 }
