@@ -1,4 +1,6 @@
 19 Aug 2004  Manual update (PHG)
+             DIIS: fixed some bugs in the diis procedure.
+             Davidson: minor cleanup. (CS)
 
 18 Aug 2004  Duplicated routines "matches", "capital" removed,
              unused case calculation='dispersion' removed (PG)
