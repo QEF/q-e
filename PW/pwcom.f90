@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,14 +10,6 @@
 MODULE basis
   !
   ! ... The variables needed to describe the atoms in the unit cell
-  !
- ! USE ions_base,  ONLY : &
- !      zv,               &! the valence charge of the atom
- !      nat,              &! number of atoms in the unit cell
- !      ntyp => nsp,      &! number of different types of atoms
- !      tau,              &! the positions of each atom
- !      atm,              &! name of the type of the atoms
- !      ityp               ! the type of each atom
   !
   SAVE
   !

@@ -1,298 +1,344 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
-program phonon
+PROGRAM phonon
   !-----------------------------------------------------------------------
   !
-  !   This is the main driver of the phonon program. It controls
-  !   the initialization routines and the self-consistent cycle.
-  !   At the end of the self-consistent run the dynamical matrix is
-  !   computed. In the case q=0 the dielectric constant and the effective
-  !   charges are computed.
+  ! ... This is the main driver of the phonon program. It controls
+  ! ... the initialization routines and the self-consistent cycle.
+  ! ... At the end of the self-consistent run the dynamical matrix is
+  ! ... computed. In the case q=0 the dielectric constant and the effective
+  ! ... charges are computed.
   !
-  USE io_global,  ONLY : stdout
-  use pwcom
-  use io_files
-  USE io_global, ONLY: ionode_id
-  USE mp, ONLY: mp_bcast
-  use para
-  USE ions_base,  ONLY : nat
-  USE kinds, only : DP
-  USE parser,           ONLY : int_to_char
-  USE control_flags, ONLY : iswitch,  restart, lphonon, tr2, &
-       mixing_beta, lscf, david, isolve
-  use phcom
-  use global_version
-  implicit none
-
-  integer :: iq, iq_start, iustat
-
-  integer :: nks_start
-  ! number of initial k points
-
-  real(kind = dp), dimension(:), allocatable :: wk_start
-  ! initial weight of k points
-  real(kind = dp), dimension(:,:), allocatable :: xk_start
-  ! initial coordinates of k points
-
+  USE kinds,           ONLY : DP
+  USE io_global,       ONLY : stdout, ionode, ionode_id
+  USE wvfct,           ONLY : gamma_only
+  USE klist,           ONLY : xk, wk, xqq, degauss, nks
+  USE relax,           ONLY : restart_bfgs
+  USE basis,           ONLY : startingwfc, startingpot, startingconfig
+  USE force_mod,       ONLY : force
+  USE io_files,        ONLY : prefix, nd_nmbr
+  USE mp,              ONLY : mp_bcast
+  USE ions_base,       ONLY : nat
+  USE parser,          ONLY : int_to_char
+  USE control_flags,   ONLY : iswitch,  restart, lphonon, tr2, &
+                              mixing_beta, lscf, david, isolve, modenum
+  USE qpoint,          ONLY : xq, nksq
+  USE disp,            ONLY : nqs, x_q
+  USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
+                              elph, zue, recover, maxirr, irr0
+  USE output,          ONLY : fildyn, fildrho
+  USE parser,          ONLY : delete_if_present
+  USE global_version,  ONLY : version_number
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iq, iq_start, iustat, ierr
+  INTEGER :: nks_start
+    ! number of initial k points
+  REAL(KIND = DP), ALLOCATABLE :: wk_start(:)
+    ! initial weight of k points
+  REAL(KIND = DP), ALLOCATABLE :: xk_start(:,:)
+    ! initial coordinates of k points
   LOGICAL :: exst
-
-  character (len=9) :: cdate, ctime, code = 'PHONON'
-  CHARACTER (LEN=80) :: auxdyn
-  
-  character (len=256) :: filname
-
-  external date_and_tim
-  !      call sigcatch( )
-  ! use ".false." to disable all clocks except the total cpu time clock
-  ! use ".true."  to enable clocks
-  !      call init_clocks (.false.)
-
-  call init_clocks (.true.)
-  call start_clock ('PHONON')
-  gamma_only = .false.
-  call startup (nd_nmbr, code, version_number)
-  WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+  CHARACTER (LEN=9)   :: code = 'PHONON'
+  CHARACTER (LEN=80)  :: auxdyn
+  CHARACTER (LEN=256) :: filname
   !
-  !   and begin with the initialization part
+  EXTERNAL date_and_tim
   !
-  call phq_readin
   !
-  !  Checking the status of the calculation
+  CALL init_clocks( .TRUE. )
+  !
+  CALL start_clock( 'PHONON' )
+  !
+  gamma_only = .FALSE.
+  !
+  CALL startup( nd_nmbr, code, version_number )
+  !
+  WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
+  !
+  ! ... and begin with the initialization part
+  !
+  CALL phq_readin()
+  !
+  ! ... Checking the status of the calculation
   !
   iustat = 98
-#ifdef __PARA
-  if (me  /= 1 .or. mypool /= 1) goto 100
-#endif  
-  filname = trim(prefix) //'.stat'
-  call seqopn (iustat, filname, 'formatted', exst)
-  if(exst) then
-     read(iustat, *, end=10, err=10) iq_start
-     if (iq_start <= 0) go to 10
-     write(stdout, "(//5x,' STARTING FROM AN OLD RUN')")
-     write(stdout, "(5x,' Doing now the calculation for q point nr',i3)")  &
-          iq_start
-     go to 20
-10   iq_start = 1
-20   continue
-  else
-     iq_start = 1
-  end if
-  close (unit = iustat, status = 'keep')
-#ifdef __PARA
-100 continue
-#endif
-  call mp_bcast (iq_start, ionode_id)
   !
-  if (ldisp) then
+  IF ( ionode ) THEN
      !
-     ! Calculate the q-points for the dispersion
+     filname = TRIM( prefix ) // '.stat'
      !
-     call q_points
+     CALL seqopn( iustat, filname, 'FORMATTED', exst )
      !
-     ! Store the name of the matdyn file in auxdyn
+     IF ( exst ) THEN
+        !
+        READ( UNIT = iustat, FMT = *, IOSTAT = ierr ) iq_start
+        !
+        IF ( ierr /= 0 ) THEN
+           !
+           iq_start = 1
+           !
+        ELSE IF ( iq_start > 0 ) THEN
+           !
+           WRITE( UNIT = stdout, FMT = "(/,5X,'starting from an old run')")
+           !
+           WRITE( UNIT = stdout, &
+                  FMT = "(5X,'Doing now the calculation ', &
+                           & 'for q point nr ',I3)" ) iq_start
+           !
+        ELSE
+           !
+           iq_start = 1          
+           !   
+        END IF
+        !
+     ELSE
+        !
+        iq_start = 1
+        !
+     END IF
+     !
+     CLOSE( UNIT = iustat, STATUS = 'KEEP' )
+     !
+  END IF
+  !   
+  CALL mp_bcast( iq_start, ionode_id )
+  !
+  IF ( ldisp ) THEN
+     !
+     ! ... Calculate the q-points for the dispersion
+     !
+     CALL q_points()
+     !
+     ! ... Store the name of the matdyn file in auxdyn
      !
      auxdyn = fildyn
      !
-     ! Save the starting k points 
+     ! ... Save the starting k points 
      !
      nks_start = nks
-     if(.not. allocated(xk_start)) allocate(xk_start(3,nks_start))
-     if(.not. allocated(wk_start)) allocate(wk_start(nks_start))
+     !
+     IF ( .NOT. ALLOCATED( xk_start ) ) ALLOCATE( xk_start( 3, nks_start ) )
+     IF ( .NOT. ALLOCATED( wk_start ) ) ALLOCATE( wk_start( nks_start ) )
+     !
      xk_start(:,1:nks_start) = xk(:,1:nks_start)
-     wk_start(1:nks_start) = wk(1:nks_start)
+     wk_start(1:nks_start)   = wk(1:nks_start)
      !
-     ! do always a non scf calculation
+     ! ... do always a non-scf calculation
      !
-     lnscf = .true.
-  else
+     lnscf = .TRUE.
+     !
+  ELSE
+     !
      nqs = 1
-  end if
-
-  if (lnscf) CALL start_clock('PWSCF')
-
-  do iq = iq_start, nqs
-
-#ifdef __PARA
-  if (me  /= 1 .or. mypool /= 1) goto 200
-#endif  
-     call seqopn (iustat, filname, 'formatted', exst)
-     REWIND (IUSTAT)
-     write(iustat,*) iq
-     close(unit = iustat, status = 'keep')
-#ifdef __PARA
-200 continue
-#endif
-
-     if (ldisp) then
+     !
+  END IF
+  !
+  IF ( lnscf ) CALL start_clock( 'PWSCF' )
+  !
+  DO iq = iq_start, nqs
+     !
+     IF ( ionode ) THEN
         !
-        ! set the name for the output file
+        CALL seqopn( iustat, filname, 'FORMATTED', exst )
         !
-        fildyn = trim(auxdyn) // TRIM( int_to_char( iq ))
+        REWIND( iustat )
         !
-        ! set the q point
+        WRITE( iustat, * ) iq
+        !
+        CLOSE( UNIT = iustat, STATUS = 'KEEP' )
+        !
+     END IF
+     !
+     IF ( ldisp ) THEN
+        !
+        ! ... set the name for the output file
+        !
+        fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
+        !
+        ! ... set the q point
         !
         xqq(1:3) = x_q(1:3,iq)
         xq(1:3)  = x_q(1:3,iq)
-        lgamma = xqq (1) .eq.0.d0.and.xqq (2) .eq.0.d0.and.xqq (3) .eq.0.d0
         !
-        ! in the case of an insulator one has to calculate 
-        ! the dielectric constant and the Born eff. charges
+        lgamma = ( xqq(1) == 0.D0 .AND. xqq(2) == 0.D0 .AND. xqq(3) == 0.D0 )
         !
-        if (lgamma .and. degauss.eq.0.d0) then
-           epsil = .true.
-           zue = .true.
-        end if
+        ! ... in the case of an insulator one has to calculate 
+        ! ... the dielectric constant and the Born eff. charges
         !
-        ! for q != 0 no calculation of the dielectric tensor 
-        !            and Born eff. charges
+        IF ( lgamma .AND. degauss == 0.D0 ) THEN
+           !
+           epsil = .TRUE.
+           zue   = .TRUE.
+           !
+        END IF
         !
-        if(.not. lgamma) then
-           epsil = .false.
-           zue = .false.
-        end if
-
-        call mp_bcast (epsil, ionode_id)
-        call mp_bcast (zue, ionode_id)
-        call mp_bcast (lgamma, ionode_id)
-
+        ! ... for q != 0 no calculation of the dielectric tensor 
+        ! ...           and Born eff. charges
+        !
+        IF ( .NOT. lgamma ) THEN
+           !
+           epsil = .FALSE.
+           zue   = .FALSE.
+           !
+        END IF
+        !
+        CALL mp_bcast( epsil,  ionode_id )
+        CALL mp_bcast( zue,    ionode_id )
+        CALL mp_bcast( lgamma, ionode_id )
+        !
         nks = nks_start
+        !
         xk(:,1:nks_start) = xk_start(:,1:nks_start)
-        wk(1:nks_start) = wk_start(1:nks_start)
-
-     end if
+        wk(1:nks_start)   = wk_start(1:nks_start)
+        !
+     END IF
      !
-     !  In the case of q != 0, we make first an non selfconsistent run
+     ! ... In the case of q != 0, we make first an non selfconsistent run
      !
-     if (.not. lgamma .and. lnscf) then
-
-        WRITE(stdout,'("Calculation of q = ",3f8.4)') XQQ
-
-        call clean_pw(.false.)
+     IF ( lnscf .OR. ( modenum == 0 .AND. .NOT. lgamma .AND. lnscf ) ) THEN
+        !
+        WRITE( stdout, '(/,5X,"Calculation of q = ",3F8.4)') xqq
+        !
+        CALL clean_pw( .FALSE. )
+        !
         CALL close_files()
-     
         !
-        !  Setting the values for the nscf run
+        ! ... Setting the values for the nscf run
         !
-        lphonon   = .TRUE.
-        lscf = .false.
-     
+        lphonon        = .TRUE.
+        lscf           = .FALSE.
         restart        = .FALSE.
         restart_bfgs   = .FALSE.
         startingconfig = 'input'
-
-        startingpot = 'file'
-        startingwfc = 'atomic'
-        tr2 = 1.0e-8_dp
-     
-
-        if(.not. allocated(force)) allocate(force(3,nat))
+        startingpot    = 'file'
+        startingwfc    = 'atomic'
         !
-        ! Set the value for the david
+        ! ... tr2 is set to a default value of 1.D-8
         !
-        if (isolve == 0)  david = 4
-
+        tr2 = 1.D-8
+        !
+        IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
+        !
+        ! ... Set the value for davidson diagonalization
+        !
+        IF ( isolve == 0 )  david = 4
+        !
         CALL init_run()
-        
-        call electrons()
-     
-        CALL hinit1()
-
-        call sum_band
-    
-        call close_files()
-
-     end if
+        !
+        CALL electrons()
+        !
+        CALL sum_band()
+        !
+        CALL close_files()
+        !
+     END IF
      !
-     ! Setting nksq
+     ! ... Setting nksq
      !
-     if (lgamma) then
+     IF ( lgamma ) THEN
+        !
         nksq = nks
-     else
+        !
+     ELSE
+        !
         nksq = nks / 2
-     endif
+        !
+     END IF
      !
-     ! Calculation of the dispersion: do all modes 
+     ! ... Calculation of the dispersion: do all modes 
      !
      maxirr = 0
      !
-     call allocate_phq
-     call phq_setup
-     call phq_recover
-     call phq_summary
-
-     call openfilq
-
-     call phq_init
-     call show_memory ()
-
-     call print_clock ('PHONON')
-     if (trans.and..not.recover) call dynmat0
-
-     if (epsil.and.irr0.le.0) then
-        
-        WRITE( stdout, '(/,5x," Computing electric fields")')
-
-        call solve_e
-        if (convt) then
-           !
-           ! calculate the dielectric tensor epsilon
-           !
-           call dielec
-           !
-           ! calculate the effective charges Z(E,Us) (E=scf,Us=bare)
-           !
-           call zstar_eu
-           if (fildrho.ne.' ') call punch_plot_e
-        else
-           call stop_ph (.false.)
-        endif
-        
-     endif
-
-     if (trans) then
-        call phqscf
-        call dynmatrix
-        if (fildrho.ne.' ') call punch_plot_ph
-     endif
-     if (elph) then
-        if (.not.trans) then 
-           call dvanqq
-           call elphon
-        end if
-        call elphsum
-     endif
+     CALL allocate_phq()
+     CALL phq_setup()
+     CALL phq_recover()
+     CALL phq_summary()
      !
-     ! cleanup of the variables
+     CALL openfilq()
      !
-     call clean_pw(.false.)
-     call deallocate_phq()
+     CALL phq_init()
+     CALL show_memory()
      !
-     !  Close the files
+     CALL print_clock( 'PHONON' )
      !
-     call close_phq(.true.)
-
-  end do
-
-#ifdef __PARA
-  if (me  /= 1 .or. mypool /= 1) goto 300
-#endif  
-  call seqopn (iustat, filname, 'formatted', exst)
-  close (unit = iustat, status='delete')
-#ifdef __PARA
-300 continue
-#endif
-
-  if (allocated(xk_start)) deallocate (xk_start)
-  if (allocated(wk_start)) deallocate (wk_start)
-  
-  if (lnscf) call print_clock_pw()
-
-  call stop_ph (.true.)
-end program phonon
+     IF ( trans .AND. .NOT. recover ) CALL dynmat0()
+     !
+     IF ( epsil .AND. irr0 <=  0 ) THEN
+        !
+        WRITE( stdout, '(/,5X,"Computing electric fields")' )
+        !
+        CALL solve_e()
+        !
+        IF ( convt ) THEN
+           !
+           ! ... calculate the dielectric tensor epsilon
+           !
+           CALL dielec()
+           !
+           ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
+           !
+           CALL zstar_eu()
+           !
+           IF ( fildrho /= ' ' ) CALL punch_plot_e()
+           !
+        ELSE
+           !
+           CALL stop_ph( .FALSE. )
+           !
+        END IF
+        !
+     END IF
+     !
+     IF ( trans ) THEN
+        !
+        CALL phqscf()
+        CALL dynmatrix()
+        !
+        IF ( fildrho /= ' ' ) CALL punch_plot_ph()
+        !
+     END IF
+     !
+     IF ( elph ) THEN
+        !
+        IF ( .NOT. trans ) THEN
+           ! 
+           CALL dvanqq()
+           CALL elphon()
+           !
+        END IF
+        !
+        CALL elphsum()
+        !
+     END IF
+     !
+     ! ... cleanup of the variables
+     !
+     CALL clean_pw( .FALSE. )
+     CALL deallocate_phq()
+     !
+     ! ... Close the files
+     !
+     CALL close_phq( .TRUE. )
+     !
+  END DO
+  !
+  IF ( ionode ) CALL delete_if_present( filname )
+  !
+  IF ( ALLOCATED( xk_start ) ) DEALLOCATE( xk_start )
+  IF ( ALLOCATED( wk_start ) ) DEALLOCATE( wk_start )
+  !
+  IF ( lnscf ) CALL print_clock_pw()
+  !
+  CALL stop_ph( .TRUE. )
+  !
+  STOP
+  !
+END PROGRAM phonon
