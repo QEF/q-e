@@ -33,7 +33,7 @@ MODULE mp_global
   INTEGER :: my_image_id = 0  ! index of my image
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
-  INTEGER :: nimage      = 1  ! number of "neb-images"-pools
+  INTEGER :: nimage      = 1  ! number of "path-images"-pools
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
   INTEGER :: nproc_image = 1  ! number of processor within an image
   !

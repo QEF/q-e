@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 ! 
-!
 !----------------------------------------------------------------------------
 MODULE path_io_routines
   !----------------------------------------------------------------------------
@@ -87,7 +86,6 @@ MODULE path_io_routines
        !
      END SUBROUTINE io_path_stop
      !
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
@@ -102,7 +100,8 @@ MODULE path_io_routines
        USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed, &
                                     Emax, Emin, Emax_index, k_min, k_max
        USE path_variables,   ONLY : ft_vel, ft_pos_old, ft_grad_old, &
-                                    ft_vel_zeroed, ft_frozen, Nft
+                                    ft_vel_zeroed, ft_frozen, Nft,   &
+                                    ft_coeff, num_of_modes
        USE io_global,        ONLY : meta_ionode, meta_ionode_id
        USE mp,               ONLY : mp_bcast
        !
@@ -153,7 +152,23 @@ MODULE path_io_routines
              !
              READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
              !
-          END IF 
+          ELSE IF( lsmd .AND. matches( "SMD MULTIGRID", input_line ) ) THEN
+             !
+             ! ... optional fields
+             !
+             READ( UNIT = iunrestart, FMT = * ) num_of_images
+             !
+             ! ... fourier dimensions updated
+             !
+             Nft = ( num_of_images - 1 )
+             !
+             num_of_modes = ( Nft - 1 )
+             !
+             ft_coeff = 2.D0 / REAL( Nft )
+             !
+             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+             !
+          END IF          
           !
           IF ( .NOT. ( matches( "ENERGIES, POSITIONS AND GRADIENTS", &
                                  input_line ) ) ) THEN
@@ -266,7 +281,7 @@ MODULE path_io_routines
                    !
                    ! ... quick-min data are read in reciprocal space
                    !
-                   DO i = 1, ( Nft - 1 )
+                   DO i = 1, num_of_modes
                       !
                       READ( UNIT = iunrestart, FMT = * )
                       READ( UNIT = iunrestart, FMT = * ) ft_frozen(i), &
@@ -386,6 +401,13 @@ MODULE path_io_routines
           CALL mp_bcast( Emin,       meta_ionode_id )
           CALL mp_bcast( Emax_index, meta_ionode_id )
           !
+       ELSE IF ( lsmd ) THEN
+          !
+          CALL mp_bcast( num_of_images, meta_ionode_id )
+          CALL mp_bcast( num_of_modes, meta_ionode_id )
+          CALL mp_bcast( Nft,          meta_ionode_id )
+          CALL mp_bcast( ft_coeff,     meta_ionode_id )
+          !
        END IF
        !
        IF ( .NOT. reset_vel .AND. &
@@ -430,7 +452,6 @@ MODULE path_io_routines
        !
      END SUBROUTINE read_restart
      !
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE write_restart()
        !-----------------------------------------------------------------------
@@ -445,7 +466,7 @@ MODULE path_io_routines
        USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed, &
                                     k_min, k_max
        USE path_variables,   ONLY : ft_vel, ft_pos_old, ft_grad_old, &
-                                    ft_vel_zeroed, ft_frozen, Nft
+                                    ft_vel_zeroed, ft_frozen, Nft, num_of_modes
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : meta_ionode
@@ -527,6 +548,12 @@ MODULE path_io_routines
               !
               WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_max
               WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_min
+              !
+           ELSE IF ( lsmd ) THEN
+              !
+              WRITE( UNIT = in_unit, FMT = '("SMD MULTIGRID")' )
+              !
+              WRITE( UNIT = in_unit, FMT = '(I4)' ) num_of_images
               !
            END IF
            !
@@ -615,7 +642,7 @@ MODULE path_io_routines
               !
            ELSE IF ( lsmd ) THEN
               !
-              DO i = 1, ( Nft - 1 )
+              DO i = 1, num_of_modes
                  !
                  WRITE( UNIT = in_unit, FMT = '("Mode: ",I4)' ) i
                  WRITE( UNIT = in_unit, &
@@ -721,7 +748,6 @@ MODULE path_io_routines
          END SUBROUTINE write_quick_min_filelds
          !
      END SUBROUTINE write_restart
-     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE write_dat_files()
@@ -959,7 +985,6 @@ MODULE path_io_routines
        CLOSE( UNIT = iunaxsf )
        !
      END SUBROUTINE write_dat_files
-     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE write_output()

@@ -39,7 +39,7 @@ MODULE path_variables
        temp,                     &! actual temperature ( average over images )
        temp_req,                 &! required temperature
        activation_energy,        &! forward activatation energy
-
+       err_max,                  &! the largest error
        path_length                ! lentgth of the path
   LOGICAL :: &
        lsteep_des,               &! .TRUE. if minimization_scheme = "sd"
@@ -194,25 +194,25 @@ MODULE path_variables
           !
           ALLOCATE( pes_star( 0:( Nft - 1 ) ) )
           !       
-          ALLOCATE( pos_star(       dim, 0:( Nft - 1 ) ) )       
-          ALLOCATE( grad_proj_star( dim, 0:( Nft - 1 ) ) )          
+          ALLOCATE( pos_star(       dim, 0:( Nft - 1 ) ) )
+          ALLOCATE( grad_proj_star( dim, 0:( Nft - 1 ) ) )
+          !
+          ALLOCATE( ft_sin( ( Nft - 1 ), 0:( Nft - 1 ) ) )
+          ALLOCATE( ft_cos( ( Nft - 1 ), 0:( Nft - 1 ) ) )
           !
           ! ... reciprocal space arrays
           !
           ALLOCATE( ft_pes(        ( Nft - 1 ) ) )
-          ALLOCATE( norm_ft_grad(  ( Nft - 1 ) ) )  
+          ALLOCATE( norm_ft_grad(  ( Nft - 1 ) ) )
           ALLOCATE( ft_error(      ( Nft - 1 ) ) )
           ALLOCATE( ft_frozen(     ( Nft - 1 ) ) )
           ALLOCATE( ft_vel_zeroed( ( Nft - 1 ) ) )
           !
-          ALLOCATE( ft_pos(      dim, ( Nft - 1 ) ) )       
+          ALLOCATE( ft_pos(      dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_grad(     dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_vel(      dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_pos_old(  dim, ( Nft - 1 ) ) )
           ALLOCATE( ft_grad_old( dim, ( Nft - 1 ) ) )
-          !
-          ALLOCATE( ft_sin( ( Nft - 1 ), 0:Nft ) )
-          ALLOCATE( ft_cos( ( Nft - 1 ), 0:Nft ) )
           !
           IF ( first_last_opt ) THEN
              ! 

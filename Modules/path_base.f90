@@ -5,7 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define  USE_ELASTIC_CONSTANTS_RESCALING
+#define USE_ELASTIC_CONSTANTS_RESCALING
+!#define NO_MULTISCALE
 !
 !-----------------------------------------------------------------------
 MODULE path_base
@@ -72,7 +73,7 @@ MODULE path_base
       ! ... local variables
       !      
       INTEGER                     :: i, j, mode
-      REAL (KIND=DP)              :: s, inter_image_dist
+      REAL (KIND=DP)              :: inter_image_dist
       REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER (LEN=20)          :: num_of_images_char, nstep_path_char
       !
@@ -90,14 +91,14 @@ MODULE path_base
       istep_path = 0
       conv_elec  = .TRUE.
       !
-      ! ... the dimension of all neb arrays is set 
+      ! ... the dimension of all "path" arrays is set here
       ! ... ( It corresponds to the dimension of the configurational space )
       !
       dim = 3 * nat
-      !      
-      ! ... some coefficients for string dynamics
       !
       IF ( lsmd ) THEN
+         !
+         ! ... some coefficients for string dynamics
          !
          Nft = ( num_of_images - 1 )
          !
@@ -214,72 +215,11 @@ MODULE path_base
          !
       ELSE
          !
-         ! ... linear interpolation
-         !
-         ALLOCATE( image_spacing( input_images - 1 ) )
-         ALLOCATE( d_R( dim,    ( input_images - 1 ) ) )
-         !
-         DO i = 1, ( input_images - 1 )
-            !
-            d_R(:,i) = ( pos(1:dim,i+1) - pos(1:dim,i) )
-            !
-            image_spacing(i) = norm( d_R(:,i) )
-            !
-         END DO   
-         !
-         path_length = SUM( image_spacing(:) )
-         !
-         inter_image_dist = SUM( image_spacing(:) ) / REAL( num_of_images - 1  )
-         !
-         FORALL( i = 1: ( input_images - 1 ) )
-            !
-            d_R(:,i) = d_R(:,i) / image_spacing(i)
-            !
-         END FORALL   
-         !
-         pos_(:,1) = pos(1:dim,1)
-         !
-         i = 1
-         s = 0.D0
-         !
-         DO j = 2, ( num_of_images - 1 )
-            !
-            s = s + inter_image_dist
-            !
-            IF ( s > image_spacing(i) ) THEN
-               !
-               s = s - image_spacing(i)
-               !
-               i = i + 1
-               !
-            END IF   
-            !
-            IF ( i >= input_images ) &
-               CALL errore( 'initialize_path', ' i >= input_images ', i )
-            !
-            pos_(:,j) = pos(1:dim,i) + s * d_R(:,i)
-            !
-         END DO
-         !
-         pos_(:,num_of_images) = pos(1:dim,input_images)
-         !
-         ! ... coordinates must be in bohr ( pwscf uses alat units )
-         !
-         IF ( prog == 'PW' ) THEN
-            !
-            path_length = path_length * alat
-            !
-            inter_image_dist = inter_image_dist * alat
-            !
-            pos_(:,:) = pos_(:,:) * alat
-            !
-         END IF
+         CALL initial_guess()
          !
       END IF
       !
       DEALLOCATE( image_spacing )
-      !
-      nstep_path_char = int_to_char( nstep_path )
       !
       ! ... the actual number of degrees of freedom is computed
       !
@@ -306,6 +246,7 @@ MODULE path_base
       !
       IF ( meta_ionode ) THEN
          !
+         nstep_path_char   = int_to_char( nstep_path )
          num_of_images_char = int_to_char( num_of_images )
          !
          WRITE( UNIT = iunpath, FMT = * )
@@ -362,6 +303,81 @@ MODULE path_base
       !
       RETURN
       !
+      CONTAINS
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE initial_guess()
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          REAL (KIND=DP) :: s
+          !
+          ! ... linear interpolation
+          !
+          ALLOCATE( image_spacing( input_images - 1 ) )
+          ALLOCATE( d_R( dim,    ( input_images - 1 ) ) )
+          !
+          DO i = 1, ( input_images - 1 )
+             !
+             d_R(:,i) = ( pos(1:dim,i+1) - pos(1:dim,i) )
+             !
+             image_spacing(i) = norm( d_R(:,i) )
+             !
+          END DO   
+          !
+          path_length = SUM( image_spacing(:) )
+          !
+          inter_image_dist = path_length / REAL( num_of_images - 1  )
+          !
+          FORALL( i = 1: ( input_images - 1 ) )
+             !
+             d_R(:,i) = d_R(:,i) / image_spacing(i)
+             !
+          END FORALL   
+          !
+          pos_(:,1) = pos(1:dim,1)
+          !
+          i = 1
+          s = 0.D0
+          !
+          DO j = 2, ( num_of_images - 1 )
+             !
+             s = s + inter_image_dist
+             !
+             IF ( s > image_spacing(i) ) THEN
+                !
+                s = s - image_spacing(i)
+                !
+                i = i + 1
+                !
+             END IF   
+             !
+             IF ( i >= input_images ) &
+                CALL errore( 'initialize_path', ' i >= input_images ', i )
+             !
+             pos_(:,j) = pos(1:dim,i) + s * d_R(:,i)
+             !
+          END DO
+          !
+          pos_(:,num_of_images) = pos(1:dim,input_images)
+          !
+          ! ... coordinates must be in bohr ( pwscf uses alat units )
+          !
+          IF ( prog == 'PW' ) THEN
+             !
+             path_length = path_length * alat
+             !
+             inter_image_dist = inter_image_dist * alat
+             !
+             pos_(:,:) = pos_(:,:) * alat
+             !
+          END IF
+          !
+          RETURN
+          !
+        END SUBROUTINE initial_guess
+        !
     END SUBROUTINE initialize_path
     !
     ! ... neb specific routines
@@ -596,9 +612,9 @@ MODULE path_base
       !
       pi_over_Nft = pi / REAL( Nft )
       !
-      DO j = 0, Nft
+      DO n = 1, num_of_modes
          !
-         DO n = 1, num_of_modes
+         DO j = 0, ( Nft - 1 )
             !
             x = pi_over_Nft * REAL( n * j )
             !
@@ -697,7 +713,7 @@ MODULE path_base
       !
       arc_length = 0.D0
       !
-      scale = path_length / REAL( Nft )
+      scale = path_length / REAL( num_of_images - 1 )
       !
       r_h(:) = pos(:,1)
       !
@@ -717,7 +733,7 @@ MODULE path_base
             !
             arc_length = arc_length + norm( r_n - r_h )
             !
-            IF ( arc_length > REAL( image ) * scale ) THEN
+            IF ( arc_length >= REAL( image ) * scale ) THEN
                !
                image = image + 1
                !
@@ -743,35 +759,29 @@ MODULE path_base
     SUBROUTINE to_reciprocal_space()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft, pos, &
-                                 pes, ft_pos, ft_pes, ft_sin, ft_coeff, &
-                                 pos_star, pes_star
-      !
-      IMPLICIT NONE
-      !
-      ! ... local variables
-      !
-      INTEGER        :: j, n
-      REAL (KIND=DP) :: ratio, delta_pes
-      !
-      ! ... initialization
-      !
-      ft_pos  = 0.D0
-      ft_pes  = 0.D0      
-      !      
-      !
       ! ... functions that are fourier transformed are defined here :
       !
       ! ... f(j), j = 1,...,N   is the function in real space (it starts from 1)
       !
-      ! ... f(1) /= f(N)
+      ! ... where :  f(1) /= f(N)
       !
       ! ... f_star(j) = f(j+1) - f(0) + j/(N-1) * ( f(N) - f(0) )
       !
-      ! ... j = 0,...,N-1 
+      ! ... with index running in  j = 0,..., N-1  and :
       !
       ! ... f_star(0) = f_star(N-1) = 0   so that f_star(j) is stroed between
-      ! ...                               0  and  Nft = N - 1
+      ! ...                               0  and  Nft - 1 ( = N - 2 )
+      !
+      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft, &
+                                 pos, ft_pos, ft_sin, ft_coeff, pos_star
+      !
+      IMPLICIT NONE
+      !
+      INTEGER        :: j, n
+      REAL (KIND=DP) :: ratio
+      !
+      !
+      ft_pos  = 0.D0
       !
       DO j = 0, ( Nft - 1 )
          !
@@ -780,20 +790,15 @@ MODULE path_base
          pos_star(:,j) = pos(:,j+1) - pos(:,1) - &
                          ratio * ( pos(:,num_of_images) - pos(:,1) )
          !
-         pes_star(j) = pes(j+1) - pes(1) - &
-                       ratio * ( pes(num_of_images) - pes(1) )
-         !
       END DO
       !
-      ! ... fourier components of pos_star and pes_star are computed
+      ! ... fourier components of pos_star are computed
       !
       DO n = 1, num_of_modes
          !
          DO j = 0, ( Nft - 1 )
             !
             ft_pos(:,n) = ft_pos(:,n) + pos_star(:,j) * ft_sin(n,j)
-            !
-            ft_pes(n) = ft_pes(n) + pes_star(j) * ft_sin(n,j)
             !
          END DO
          !
@@ -802,7 +807,6 @@ MODULE path_base
       ! ... normalization
       !
       ft_pos = ft_pos * ft_coeff
-      ft_pes = ft_pes * ft_coeff
       !
       RETURN
       !
@@ -812,10 +816,23 @@ MODULE path_base
     SUBROUTINE smd_gradient()
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft, &
-                                 grad_pes, grad_proj, tangent, ft_grad, &
-                                 norm_ft_grad,  ft_sin, ft_coeff,       &
-                                 grad_proj_star
+      ! ... functions that are fourier transformed are defined here :
+      !
+      ! ... f(j), j = 1,...,N   is the function in real space (it starts from 1)
+      !
+      ! ... where :  f(1) /= f(N)
+      !
+      ! ... f_star(j) = f(j+1) - f(0) + j/(N-1) * ( f(N) - f(0) )
+      !
+      ! ... with index running in  j = 0,..., N-1  and :
+      !
+      ! ... f_star(0) = f_star(N-1) = 0   so that f_star(j) is stroed between
+      ! ...                               0  and  Nft - 1 ( = N - 2 )
+      !
+      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft,     &
+                                 pes, grad_pes, grad_proj, tangent, ft_pes, &
+                                 ft_grad, norm_ft_grad,  ft_sin, ft_coeff,  &
+                                 pes_star, grad_proj_star
       USE basic_algebra_routines
       !
       IMPLICIT NONE
@@ -824,6 +841,7 @@ MODULE path_base
       REAL (KIND=DP) :: ratio
       !
       !
+      ft_pes  = 0.D0
       ft_grad = 0.D0
       !
       ! ... we compute the tangent to the path and project pes gradients 
@@ -844,23 +862,27 @@ MODULE path_base
          !
       END DO
       !
-      ! ... here we compute grad_proj_star
+      ! ... here we compute pes_star and grad_proj_star
       !
       DO j = 0, ( Nft - 1 )
          !
          ratio = REAL( j ) / REAL( Nft )
          !
-         grad_proj_star(:,j) = grad_proj(:,j+1) - &
-                               grad_proj(:,1) - ratio * &
+         pes_star(j) = pes(j+1) - pes(1) - &
+                       ratio * ( pes(num_of_images) - pes(1) )
+         !
+         grad_proj_star(:,j) = grad_proj(:,j+1) - grad_proj(:,1) - ratio * &
                                ( grad_proj(:,num_of_images) - grad_proj(:,1) )
          !
       END DO
       !
-      ! ... here we compute fourier components for grad_proj_star
+      ! ... here we compute fourier components for pes_star and grad_proj_star
       !
       DO n = 1, num_of_modes
          !
          DO j = 0, ( Nft - 1 )
+            !
+            ft_pes(n) = ft_pes(n) + pes_star(j) * ft_sin(n,j)
             !
             ft_grad(:,n) = ft_grad(:,n) + grad_proj_star(:,j) * ft_sin(n,j)
             !
@@ -872,8 +894,9 @@ MODULE path_base
          !
       END DO
       !
-      ! ... normalization
+      ! ... normalizations
       !
+      ft_pes  = ft_pes  * ft_coeff
       ft_grad = ft_grad * ft_coeff
       !
       norm_ft_grad = norm_ft_grad * ft_coeff
@@ -881,6 +904,105 @@ MODULE path_base
       RETURN
       !
     END SUBROUTINE smd_gradient
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE path_in_real_space()
+      !-----------------------------------------------------------------------
+      !
+      USE input_parameters, ONLY : num_of_images_inp => num_of_images
+      USE path_variables,   ONLY : istep_path, num_of_images, num_of_modes, &
+                                   Nft, ft_coeff, pos, pes, grad_pes,       &
+                                   err_max, path_thr, first_last_opt, error, &
+                                   frozen, vel, vel_zeroed, grad, norm_grad
+      !
+      IMPLICIT NONE
+      !
+      REAL (KIND=DP) :: limit_path_thr
+      REAL (KIND=DP) :: multistep_coeff = 3.D0
+      INTEGER        :: new_num_of_images
+      LOGICAL        :: images_updated
+      INTEGER        :: init_num_of_images = 3
+      !
+      !
+#if defined (NO_MULTISCALE)
+      !
+      init_num_of_images = num_of_images
+      !
+#endif
+      !
+      images_updated = .FALSE.
+      !
+      limit_path_thr = multistep_coeff * &
+                       REAL( num_of_images_inp - num_of_images ) * path_thr
+      !
+      IF ( istep_path == 0 ) THEN
+         !
+         ! ... initialization
+         !
+         pos(:,init_num_of_images)      = pos(:,num_of_images)
+         pes(init_num_of_images)        = pes(num_of_images)
+         grad_pes(:,init_num_of_images) = grad_pes(:,num_of_images)
+         !
+         IF ( first_last_opt ) THEN
+            !
+            error(init_num_of_images)      = error(num_of_images)
+            frozen(init_num_of_images)     = frozen(num_of_images)
+            vel(:,init_num_of_images)      = vel(:,num_of_images)
+            vel_zeroed(init_num_of_images) = vel_zeroed(num_of_images)
+            grad(:,init_num_of_images)     = grad(:,num_of_images)
+            norm_grad(init_num_of_images)  = norm_grad(num_of_images)
+            !
+         END IF
+         !
+         num_of_images = init_num_of_images
+         !
+         images_updated = .TRUE.
+         !
+      ELSE IF ( err_max < limit_path_thr ) THEN
+         !
+         new_num_of_images = MIN( num_of_images_inp, num_of_images + 2 )
+         !
+         pos(:,new_num_of_images)      = pos(:,num_of_images)
+         pes(new_num_of_images)        = pes(num_of_images)
+         grad_pes(:,new_num_of_images) = grad_pes(:,num_of_images)
+         !
+         IF ( first_last_opt ) THEN
+            !
+            error(new_num_of_images)      = error(num_of_images)
+            frozen(new_num_of_images)     = frozen(num_of_images)
+            vel(:,new_num_of_images)      = vel(:,num_of_images)
+            vel_zeroed(new_num_of_images) = vel_zeroed(num_of_images)
+            grad(:,new_num_of_images)     = grad(:,num_of_images)
+            norm_grad(new_num_of_images)  = norm_grad(num_of_images)
+            !
+         END IF
+         !
+         IF ( new_num_of_images > num_of_images ) images_updated = .TRUE.
+         !
+         num_of_images = new_num_of_images
+         !
+      END IF
+      !
+      ! ... the path in real space with the new number of images is obtained 
+      ! ... interpolating with the old number of modes
+      !
+      CALL to_real_space()
+      !
+      IF ( images_updated ) THEN
+         !
+         ! ... reciprocal space dimensions updated
+         !
+         Nft = ( num_of_images - 1 )
+         !
+         num_of_modes = ( Nft - 1 )
+         !
+         ft_coeff = 2.D0 / REAL( Nft )
+         !
+         CALL compute_fourier_sin_and_cos()
+         !
+      END IF
+      !
+    END SUBROUTINE path_in_real_space
     !
     ! ... shared routines
     !
@@ -1129,8 +1251,7 @@ MODULE path_base
             !
          END DO
          !
-         pos_ts(:) = pos(:,1) + &
-                     x_ts * ( pos(:,num_of_images) - pos(:,1) )
+         pos_ts(:) = pos(:,1) + x_ts * ( pos(:,num_of_images) - pos(:,1) )
          !
          DO n = 1, num_of_modes
             !
@@ -1216,7 +1337,7 @@ MODULE path_base
                                    activation_energy, first_last_opt,        &
                                    lquick_min, ldamped_dyn, lmol_dyn,        &
                                    suspended_image, path_thr, num_of_images, &
-                                   grad_pes
+                                   grad_pes, err_max
       USE path_variables,   ONLY : grad, climbing, CI_scheme, Emax_index
       USE path_variables,   ONLY : num_of_modes
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
@@ -1226,9 +1347,8 @@ MODULE path_base
       !
       ! ... local variables
       !
-      REAL (KIND=DP) :: err_max
-      INTEGER        :: mode, image
-      LOGICAL        :: stat
+      INTEGER :: mode, image
+      LOGICAL :: stat
       !
       ! ... external functions
       !
@@ -1311,14 +1431,10 @@ MODULE path_base
             !
          ELSE IF ( lsmd ) THEN
             !
-            ! ... the fourier components of pos, pes are computed here
-            !
             CALL to_reciprocal_space()
             !
-            ! ... the fourier components of the projected gradient
-            ! ... are computed here
-            !
-            CALL compute_path_length()
+            ! ... the fourier components of the pes and of the projected 
+            ! ... gradient are computed here
             !
             CALL smd_gradient()
             !
@@ -1398,16 +1514,20 @@ MODULE path_base
             !
          ELSE IF ( lsmd ) THEN
             !
-            ! ... the fourier components of pos, pes are computed here
+            ! ... the fourier components of pos are computed here
             !
             CALL to_reciprocal_space()
+            !
+            ! ... the path-length is computed here
+            !
+            CALL compute_path_length()
             !
             ! ... the fourier components of the projected gradient
             ! ... are computed here
             !
-            CALL compute_path_length()
-            !
             CALL smd_gradient()
+            !
+            CALL path_in_real_space()
             !
             IF ( first_last_opt ) grad(:,:) = grad_pes(:,:)
             !
@@ -1501,7 +1621,8 @@ MODULE path_base
       !------------------------------------------------------------------------
       !
       USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : first_last_opt, num_of_images, num_of_modes, &
+      USE path_variables, ONLY : istep_path, &
+                                 first_last_opt, num_of_images, num_of_modes, &
                                  lsteep_des, lquick_min, ldamped_dyn, lmol_dyn
       USE path_opt_routines
       !
@@ -1509,6 +1630,8 @@ MODULE path_base
       !
       INTEGER :: image, mode
       !
+      !
+      IF ( istep_path == 0 ) RETURN
       !
       IF ( first_last_opt ) THEN
          !
@@ -1562,9 +1685,9 @@ MODULE path_base
          !
          CALL compute_path_length()
          !
-         ! ... back to real space
+         ! ... the number of images is updated (if necessary) here
          !
-         CALL to_real_space()
+         CALL path_in_real_space()
          !
       END IF
       !
