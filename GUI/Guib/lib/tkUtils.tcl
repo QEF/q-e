@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.3 2004-09-03 07:52:26 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.4 2004-09-04 08:01:00 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -48,6 +48,7 @@ package provide tku 0.1
 
 namespace eval ::tku:: {
     variable cursor 
+    variable widgetCounter 0
 
     set cursor(default) [. cget -cursor]
     set cursor(watch)   watch
@@ -101,7 +102,7 @@ namespace eval ::tku:: {
 #------------------------------------------------------------------------
 
 proc ::tku::widgetName {{wid {}} {lastName {}}} {
-    set widgetCounter 0
+    variable widgetCounter
     while {1} { 
 	if { [winfo exists ${wid}.${lastName}$widgetCounter] } {
 	    incr widgetCounter
