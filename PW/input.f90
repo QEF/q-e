@@ -119,6 +119,9 @@ SUBROUTINE iosys()
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
+
+  USE spin_orb, ONLY : lspinorb_ => lspinorb
+
   USE bfgs_module,   ONLY : bfgs_xlf_bug, &
                             lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -150,7 +153,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type, &
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, i_cons, mcons, angle1, &
-                               angle2, report
+                               angle2, report, lspinorb
   !
   ! ELECTRONS namelist
   !
@@ -762,6 +765,7 @@ SUBROUTINE iosys()
   degauss_ = degauss
   nelec_   = nelec
   !
+  lspinorb_ = noncolin
   noncolin_ = noncolin
   angle1_   = angle1
   angle2_   = angle2
@@ -981,7 +985,7 @@ SUBROUTINE iosys()
      lstres    = .TRUE.
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      IF ( cmass <= 0.D0 ) &
-        CALL errore( 'readin', &
+        CALL errore( 'iosys', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
   ELSE
      cell_factor_ = 1.D0

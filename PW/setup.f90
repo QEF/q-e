@@ -67,6 +67,7 @@ SUBROUTINE setup()
   USE char,          ONLY : sname
   USE para,          ONLY : kunit
   USE mp_global,     ONLY : nimage
+  USE spin_orb,      ONLY : lspinorb
   !
   IMPLICIT NONE
   !
@@ -104,6 +105,7 @@ SUBROUTINE setup()
   ! ... end of local variables
   !
   !
+  IF (lspinorb) call errore('setup','spin-orbit not allowed',1)
   IF ( nimage > 1 .AND. .NOT. lneb ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
   !

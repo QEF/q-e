@@ -43,14 +43,28 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   !
   !
   CALL nullify_pseudo_upf( upf )
+  !
+  ! First check if this pseudo-potential has spin-orbit information 
+  !
+  ierr = 1  
+  ios = 0
+  upf%has_so=.true.
+  addinfo_loop: do while (ios == 0)  
+     read (iunps, *, iostat = ios, err = 200) dummy  
+     if (matches ("<PP_ADDINFO>", dummy) ) then  
+        ierr = 0
+        exit addinfo_loop
+     endif
+  enddo addinfo_loop
+  if (ierr == 1) upf%has_so=.false. 
 
   !------->Search for Header
   !     This version doesn't use the new routine scan_begin
   !     because this search must set extra flags for
   !     compatibility with other pp format reading
-
   ierr = 1  
   ios = 0
+  rewind(iunps)
   header_loop: do while (ios == 0)  
      read (iunps, *, iostat = ios, err = 200) dummy  
      if (matches ("<PP_HEADER>", dummy) ) then  
@@ -96,6 +110,12 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   call scan_begin (iunps, "RHOATOM", .true.)  
   call read_pseudo_rhoatom (upf, iunps)  
   call scan_end (iunps, "RHOATOM")  
+  !-------->Search for add_info
+  if (upf%has_so) then
+     call scan_begin (iunps, "ADDINFO", .true.)  
+     call read_pseudo_addinfo (upf, iunps)  
+     call scan_end (iunps, "ADDINFO")  
+  endif
 
 200 return  
 
@@ -457,6 +477,47 @@ subroutine read_pseudo_rhoatom (upf, iunps)
 
 100 call errore ('read_pseudo_rhoatom','Reading pseudo file',abs(ios))
 end subroutine read_pseudo_rhoatom
+!
+!---------------------------------------------------------------------
+  subroutine read_pseudo_addinfo (upf, iunps)
+!---------------------------------------------------------------------
+!
+!     This routine reads from the new UPF file,
+!     and the total angual momentum jjj of the beta and jchi of the
+!     wave-functions.
+!
+USE pseudo_types, ONLY: pseudo_upf
+USE kinds
+implicit none
+integer :: iunps
+
+TYPE (pseudo_upf), INTENT(INOUT) :: upf
+integer :: nb, ios
+
+ALLOCATE( upf%nn(upf%nwfc), upf%rcut(upf%nwfc), upf%rcutus(upf%nwfc) )
+ALLOCATE( upf%epseu(upf%nwfc), upf%jchi(upf%nwfc) )
+ALLOCATE( upf%jjj(upf%nbeta) )
+
+upf%nn=0
+upf%rcut=0.d0
+upf%rcutus=0.d0
+upf%epseu=0.d0
+upf%jchi=0.d0
+do nb = 1, upf%nwfc
+  read (iunps, '(a2,2i3,2f6.2)',err=100,iostat=ios) upf%els(nb),  &
+       upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
+enddo
+
+upf%jjj=0.d0
+do nb = 1, upf%nbeta
+  read (iunps, '(i5,f6.2)', err=100,iostat=ios) upf%lll(nb), upf%jjj(nb)
+enddo
+
+read(iunps, '(4f15.8)') upf%xmin, upf%rmax, upf%zmesh, upf%dx
+
+return
+100 call errore ('read_pseudo_addinfo','Reading pseudo file', abs(ios))
+end subroutine read_pseudo_addinfo
 
 !=----------------------------------------------------------------------------=!
       END MODULE read_pseudo_module

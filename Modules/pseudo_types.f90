@@ -36,6 +36,19 @@
           REAL(dbl) :: etotps           ! total energy
           REAL(dbl) :: ecutwfc          ! suggested cut-off for wfc
           REAL(dbl) :: ecutrho          ! suggested cut-off for rho
+
+          LOGICAL :: has_so             ! if .true. includes spin-orbit
+          REAL(dbl) :: xmin             ! the minimum x of the linear mesh
+          REAL(dbl) :: rmax             ! the maximum radius of the mesh
+          REAL(dbl) :: zmesh            ! the nuclear charge used for mesh
+          REAL(dbl) :: dx               ! the deltax of the linear mesh
+          INTEGER, POINTER :: nn(:)      ! nn(nwfc)
+          REAL(dbl), POINTER :: rcut(:)  ! cut-off radius(nwfc)
+          REAL(dbl), POINTER :: rcutus(:)! cut-off ultrasoft radius (nwfc)
+          REAL(dbl), POINTER :: epseu(:) ! energy (nwfc)
+          REAL(dbl), POINTER :: jchi(:)  ! jchi(nwfc)
+          REAL(dbl), POINTER :: jjj(:)   ! jjj(nbeta)
+
           INTEGER :: nv                 ! UPF file version number
           INTEGER :: lmax               ! maximum angular momentum component
           INTEGER :: mesh               ! number of point in the radial mesh
@@ -110,10 +123,12 @@
 
         SUBROUTINE nullify_pseudo_upf( upf )
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
-          NULLIFY( upf%els, upf%lchi, upf%oc )
+          NULLIFY( upf%els, upf%lchi, upf%jchi, upf%oc )
           NULLIFY( upf%r, upf%rab )  
           NULLIFY( upf%rho_atc, upf%vloc )  
-          NULLIFY( upf%lll, upf%kkbeta, upf%beta, upf%dion )  
+          NULLIFY( upf%nn, upf%rcut)
+          NULLIFY( upf%rcutus, upf%epseu)
+          NULLIFY( upf%lll, upf%jjj, upf%kkbeta, upf%beta, upf%dion )  
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
@@ -124,12 +139,18 @@
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
           IF( ASSOCIATED( upf%els ) ) DEALLOCATE( upf%els )
           IF( ASSOCIATED( upf%lchi ) ) DEALLOCATE( upf%lchi )
+          IF( ASSOCIATED( upf%jchi ) ) DEALLOCATE( upf%jchi )
           IF( ASSOCIATED( upf%oc ) ) DEALLOCATE( upf%oc )
           IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
           IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
+          IF( ASSOCIATED( upf%nn ) ) DEALLOCATE( upf%nn )
+          IF( ASSOCIATED( upf%rcut ) ) DEALLOCATE( upf%rcut )
+          IF( ASSOCIATED( upf%rcutus ) ) DEALLOCATE( upf%rcutus )
+          IF( ASSOCIATED( upf%epseu ) ) DEALLOCATE( upf%epseu )
           IF( ASSOCIATED( upf%rho_atc ) ) DEALLOCATE( upf%rho_atc )
           IF( ASSOCIATED( upf%vloc ) ) DEALLOCATE( upf%vloc )
           IF( ASSOCIATED( upf%lll ) ) DEALLOCATE( upf%lll )
+          IF( ASSOCIATED( upf%jjj ) ) DEALLOCATE( upf%jjj )
           IF( ASSOCIATED( upf%kkbeta ) ) DEALLOCATE( upf%kkbeta )
           IF( ASSOCIATED( upf%beta ) ) DEALLOCATE( upf%beta )
           IF( ASSOCIATED( upf%dion ) ) DEALLOCATE( upf%dion )

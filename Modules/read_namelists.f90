@@ -170,6 +170,7 @@ MODULE read_namelists_module
        ! ... non collinear program variables
        !
        noncolin = .FALSE.
+       lspinorb = .FALSE.
        mcons = 0.0
        lambda = 1.0
        i_cons = 0
@@ -517,6 +518,7 @@ MODULE read_namelists_module
        !
        ! ... non collinear broadcast
        !
+       CALL mp_bcast( lspinorb, ionode_id )
        CALL mp_bcast( noncolin, ionode_id )
        CALL mp_bcast( angle1, ionode_id )
        CALL mp_bcast( angle2, ionode_id )

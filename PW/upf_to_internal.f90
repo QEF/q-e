@@ -24,13 +24,14 @@ subroutine set_pseudo_upf (is, upf)
   ! PWSCF modules
   !
   USE atom,  ONLY: zmesh, mesh, msh, dx, r, rab, &
-       chi, oc, nchi, lchi, rho_at, rho_atc, nlcc
+       chi, oc, nchi, lchi, jchi, rho_at, rho_atc, nlcc
   USE pseud, ONLY: lloc, lmax, zp
   USE us,    ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nh, nbeta, kkbeta, lll, tvanp, psd
+       rinner, nh, nbeta, kkbeta, lll, jjj, tvanp, psd
   USE funct, ONLY: dft, which_dft
   !
   USE ions_base, ONLY: zv
+  USE spin_orb, ONLY: lspinorb
   USE pseudo_types
   !
   implicit none
@@ -78,6 +79,18 @@ subroutine set_pseudo_upf (is, upf)
   !
   r  (1:upf%mesh, is) = upf%r  (1:upf%mesh)
   rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
+
+  if (lspinorb.and..not.upf%has_so) &
+     call errore('set_pseudo_upf','At least one pseudo has not s.o.',-1)
+   
+  lspinorb=lspinorb.and.upf%has_so
+  if (upf%has_so) then
+     jchi(1:upf%nwfc, is) = upf%jchi(1:upf%nwfc)
+     jjj(1:upf%nbeta, is) = upf%jjj(1:upf%nbeta)
+  else
+     jchi(1:upf%nwfc, is) = 0.d0
+     jjj(1:upf%nbeta, is) = 0.d0
+  endif
   !
   if ( upf%nlcc) then
      rho_atc(1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
