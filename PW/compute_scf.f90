@@ -20,8 +20,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot, &
                                diago_thr_init
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : lneb, lsmd, conv_elec, istep, &
-                               history, alpha0, beta0, ethr, pot_order
+  USE control_flags,    ONLY : conv_elec, istep, history, &
+                               alpha0, beta0, ethr, pot_order
   USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
@@ -82,10 +82,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... vectors pes and grad_pes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
   !
-  IF ( ( my_image_id == root ) .AND. &
-       ( lneb .OR. ( lsmd .AND. first_last_opt ) ) ) THEN
+  IF ( my_image_id == root ) THEN
      !
-     FORALL( image = N_in:N_fin, ( .NOT. frozen(image) ) )
+     FORALL( image = N_in : N_fin, ( .NOT. frozen(image) ) )
         !
         pes(image)        = 0.D0
         grad_pes(:,image) = 0.D0
@@ -133,7 +132,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... self-consistency ( for non-frozen images only, in neb case )
      !
-     IF ( lsmd .OR. ( lneb .AND. .NOT. frozen(image) ) ) THEN
+     IF ( .NOT. frozen(image) ) THEN
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                   TRIM( int_to_char( image ) ) // "/"

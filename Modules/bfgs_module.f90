@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF group
+! Copyright (C) 2003-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -135,7 +135,7 @@ MODULE bfgs_module
       REAL(KIND=DP),     INTENT(INOUT) :: energy       
       REAL(KIND=DP),     INTENT(INOUT) :: gradient(:)
       CHARACTER (LEN=*), INTENT(IN)    :: scratch
-      INTEGER,           INTENT(IN)    :: stdout   
+      INTEGER,           INTENT(IN)    :: stdout
       REAL(KIND=DP),     INTENT(IN)    :: energy_thr, gradient_thr  
       REAL(KIND=DP),     INTENT(OUT)   :: energy_error, gradient_error       
       LOGICAL,           INTENT(OUT)   :: step_accepted, conv_bfgs
@@ -749,7 +749,7 @@ MODULE bfgs_module
          gradient_old(:,lbfgs_ndim) = gradient
          bfgs_step_old              = 0.D0
          trust_radius_old           = trust_radius_ini
-         inverse_hessian            = identity(dim)
+         inverse_hessian            = identity( dim )
          !
          hess_file = TRIM( scratch ) // TRIM( prefix ) // '.hess_in'
          !
@@ -940,7 +940,7 @@ MODULE bfgs_module
               & "update_inverse_hessian")' )
          WRITE( stdout, '(5X,"         resetting bfgs history",/)' )
          !
-         inverse_hessian = identity(dim)
+         inverse_hessian = identity( dim )
          !
          RETURN
          !
@@ -965,7 +965,7 @@ MODULE bfgs_module
       ! ... BFGS update
       !
       inverse_hessian = inverse_hessian + 1.D0 / sdoty * &
-                      ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s )  - &
+                      ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
                         ( matrix( s, yH ) +  matrix( Hy, s ) ) )
 #endif
       !
@@ -978,7 +978,7 @@ MODULE bfgs_module
       coeff = ABS( s .dot. aux )/ ( norm( s ) * norm( aux ) )
       !
       H_bfgs = 1.D0 / sdoty * &
-               ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s )  - &
+               ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
                  ( matrix( s, yH ) +  matrix( Hy, s ) ) )
       !
       H_ms = matrix( aux, aux ) / ( s .dot. aux )

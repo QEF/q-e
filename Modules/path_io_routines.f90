@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF-FPMD-CPV group
+! Copyright (C) 2002-2005 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,9 +12,9 @@ MODULE path_io_routines
   !----------------------------------------------------------------------------
   !
   ! ... This module contains all subroutines used for I/O in path
-  ! ... optimizations
+  ! ... optimisations
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2004 )
+  ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : au, bohr_radius_angs
@@ -28,7 +28,7 @@ MODULE path_io_routines
   !
   PUBLIC :: io_path_start, io_path_stop
   PUBLIC :: read_restart
-  PUBLIC :: write_restart, write_dat_files, write_output, write_ts_config
+  PUBLIC :: write_restart, write_dat_files, write_output
   !
   CONTAINS
      !
@@ -103,10 +103,8 @@ MODULE path_io_routines
                                     reset_vel, frozen , lquick_min, lmol_dyn, &
                                     ldamped_dyn, first_last_opt
        USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed, &
-                                    Emax, Emin, Emax_index, k_min, k_max
-       USE path_variables,   ONLY : ft_vel, ft_pos_old, ft_grad_old, &
-                                    ft_vel_zeroed, ft_frozen, Nft,   &
-                                    ft_coeff, num_of_modes
+                                    Emax, Emin, Emax_index
+       USE path_variables,   ONLY : Nft, ft_coeff, num_of_modes
        USE io_global,        ONLY : meta_ionode, meta_ionode_id
        USE mp,               ONLY : mp_bcast
        !
@@ -175,17 +173,6 @@ MODULE path_io_routines
              !
           END IF
           !
-          IF ( lneb .AND. matches( "ELASTIC CONSTANTS", input_line ) ) THEN
-             !
-             ! ... optional fields
-             !
-             READ( UNIT = iunrestart, FMT = * ) k_max
-             READ( UNIT = iunrestart, FMT = * ) k_min
-             !
-             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
-             !
-          END IF
-          !
           IF ( .NOT. ( matches( "ENERGIES, POSITIONS AND GRADIENTS", &
                                  input_line ) ) ) THEN
              !
@@ -245,39 +232,39 @@ MODULE path_io_routines
              !
           END DO
           !
-          IF ( lneb .AND. ( suspended_image == 0 ) ) THEN
-            !
+          IF ( suspended_image == 0 ) THEN
+             !
 #if defined (__PGI)
-            !
-            Emax_index = 1
-            !
-            Emax = pes(1)
-            Emin = pes(1)
-            !   
-            DO i = 2, num_of_images
-               !
-               val = pes(i)
-               !
-               IF ( val < Emin ) Emin = val
-               !
-               IF ( val > Emax ) THEN
-                  !
-                  Emax = val
-                  !
-                  Emax_index = i
-                  !
-               END IF
-               !
-            END DO
-            !
+             !
+             Emax_index = 1
+             !
+             Emax = pes(1)
+             Emin = pes(1)
+             !   
+             DO i = 2, num_of_images
+                !
+                val = pes(i)
+                !
+                IF ( val < Emin ) Emin = val
+                !
+                IF ( val > Emax ) THEN
+                   !
+                   Emax = val
+                   !
+                   Emax_index = i
+                   !
+                END IF
+                !
+             END DO
+             !
 #else
-            !
-            Emin       = MINVAL( pes(:) )
-            Emax       = MAXVAL( pes(:) )
-            Emax_index = MAXLOC( pes(:), 1 )
-            !
+             !
+             Emin       = MINVAL( pes(:) )
+             Emax       = MAXVAL( pes(:) )
+             Emax_index = MAXLOC( pes(:), 1 )
+             !
 #endif
-            !
+             !
           END IF
           !
           READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
@@ -289,133 +276,34 @@ MODULE path_io_routines
                 !
                 ! ... optional fields
                 !
-                IF ( lneb ) THEN
+                DO i = 1, num_of_images
                    !
-                   ! ... quick-min data are read in real space
+                   READ( UNIT = iunrestart, FMT = * )
+                   READ( UNIT = iunrestart, FMT = * ) frozen(i), &
+                                                      vel_zeroed(i)
                    !
-                   DO i = 1, num_of_images
+                   DO j = 1, dim, 3
                       !
-                      READ( UNIT = iunrestart, FMT = * )
-                      READ( UNIT = iunrestart, FMT = * ) frozen(i), &
-                                                         vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         READ( UNIT = iunrestart, FMT = * ) &
-                             vel(j,i),                & 
-                             vel((j+1),i),            &
-                             vel((j+2),i),            &
-                             pos_old(j,i),            &
-                             pos_old((j+1),i),        &
-                             pos_old((j+2),i),        &
-                             grad_old(j,i),           &
-                             grad_old((j+1),i),       &
-                             grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                      vel(:,i) = vel(:,i) * &
-                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                      grad_old(:,i) = grad_old(:,i) * &
-                                      DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                      READ( UNIT = iunrestart, FMT = * ) &
+                          vel(j,i),                & 
+                          vel((j+1),i),            &
+                          vel((j+2),i),            &
+                          pos_old(j,i),            &
+                          pos_old((j+1),i),        &
+                          pos_old((j+2),i),        &
+                          grad_old(j,i),           &
+                          grad_old((j+1),i),       &
+                          grad_old((j+2),i)
                       !
                    END DO
                    !
-                ELSE IF ( lsmd ) THEN
+                   vel(:,i) = vel(:,i) * &
+                              DBLE( RESHAPE( if_pos, (/ dim /) ) )
                    !
-                   ! ... quick-min data are read in reciprocal space
+                   grad_old(:,i) = grad_old(:,i) * &
+                                   DBLE( RESHAPE( if_pos, (/ dim /) ) )
                    !
-                   DO i = 1, num_of_modes
-                      !
-                      READ( UNIT = iunrestart, FMT = * )
-                      READ( UNIT = iunrestart, FMT = * ) ft_frozen(i), &
-                                                         ft_vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         READ( UNIT = iunrestart, FMT = * ) &
-                             ft_vel(j,i),             & 
-                             ft_vel((j+1),i),         &
-                             ft_vel((j+2),i),         &
-                             ft_pos_old(j,i),         &
-                             ft_pos_old((j+1),i),     &
-                             ft_pos_old((j+2),i),     &
-                             ft_grad_old(j,i),        &
-                             ft_grad_old((j+1),i),    &
-                             ft_grad_old((j+2),i)
-                             
-                             
-                         !
-                      END DO
-                      !
-                      ft_vel(:,i) = ft_vel(:,i) * &
-                                    DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                      ft_grad_old(:,i) = ft_grad_old(:,i) * &
-                                         DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                   END DO
-                   !
-                   IF ( first_last_opt ) THEN
-                      !
-                      i = 1
-                      !
-                      READ( UNIT = iunrestart, FMT = * )
-                      READ( UNIT = iunrestart, FMT = * ) frozen(i), &
-                                                         vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         READ( UNIT = iunrestart, FMT = * ) &
-                             vel(j,i),                & 
-                             vel((j+1),i),            &
-                             vel((j+2),i),            &
-                             pos_old(j,i),            &
-                             pos_old((j+1),i),        &
-                             pos_old((j+2),i),        &
-                             grad_old(j,i),           &
-                             grad_old((j+1),i),       &
-                             grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                      vel(:,i) = vel(:,i) * &
-                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                      grad_old(:,i) = grad_old(:,i) * &
-                                      DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                      i = num_of_images
-                      !
-                      READ( UNIT = iunrestart, FMT = * )
-                      READ( UNIT = iunrestart, FMT = * ) frozen(i), &
-                                                         vel_zeroed(i)
-                      !
-                      DO j = 1, dim, 3
-                         !
-                         READ( UNIT = iunrestart, FMT = * ) &
-                             vel(j,i),                & 
-                             vel((j+1),i),            &
-                             vel((j+2),i),            &
-                             pos_old(j,i),            &
-                             pos_old((j+1),i),        &
-                             pos_old((j+2),i),        &
-                             grad_old(j,i),           &
-                             grad_old((j+1),i),       &
-                             grad_old((j+2),i)
-                         !
-                      END DO
-                      !
-                      vel(:,i) = vel(:,i) * &
-                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                      grad_old(:,i) = grad_old(:,i) * &
-                                      DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                      !
-                   END IF
-                   !
-                END IF
+                END DO
                 !
              END IF
              !
@@ -439,16 +327,11 @@ MODULE path_io_routines
        !
        CALL mp_bcast( num_of_images, meta_ionode_id )
        !
-       IF ( lneb ) THEN
-          !
-          CALL mp_bcast( k_max, meta_ionode_id )
-          CALL mp_bcast( k_min, meta_ionode_id )
-          !
-          CALL mp_bcast( Emax,       meta_ionode_id )  
-          CALL mp_bcast( Emin,       meta_ionode_id )
-          CALL mp_bcast( Emax_index, meta_ionode_id )
-          !
-       ELSE IF ( lsmd ) THEN
+       CALL mp_bcast( Emax,       meta_ionode_id )  
+       CALL mp_bcast( Emin,       meta_ionode_id )
+       CALL mp_bcast( Emax_index, meta_ionode_id )
+       !
+       IF ( lsmd ) THEN
           !          
           CALL mp_bcast( num_of_modes, meta_ionode_id )
           CALL mp_bcast( Nft,          meta_ionode_id )
@@ -459,36 +342,12 @@ MODULE path_io_routines
        IF ( .NOT. reset_vel .AND. &
             ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
           !
-          IF ( lneb ) THEN
-             !
-             CALL mp_bcast( frozen,     meta_ionode_id )
-             CALL mp_bcast( vel_zeroed, meta_ionode_id )
-             !
-             CALL mp_bcast( vel,        meta_ionode_id )
-             CALL mp_bcast( pos_old,    meta_ionode_id )
-             CALL mp_bcast( grad_old,   meta_ionode_id )
-             !
-          ELSE IF ( lsmd ) THEN
-             !
-             CALL mp_bcast( ft_frozen,     meta_ionode_id )
-             CALL mp_bcast( ft_vel_zeroed, meta_ionode_id )
-             !
-             CALL mp_bcast( ft_vel,        meta_ionode_id )
-             CALL mp_bcast( ft_pos_old,    meta_ionode_id )
-             CALL mp_bcast( ft_grad_old,   meta_ionode_id )
-             !
-             IF ( first_last_opt ) THEN
-                !
-                CALL mp_bcast( frozen,     meta_ionode_id )
-                CALL mp_bcast( vel_zeroed, meta_ionode_id )
-                !
-                CALL mp_bcast( vel,        meta_ionode_id )
-                CALL mp_bcast( pos_old,    meta_ionode_id )
-                CALL mp_bcast( grad_old,   meta_ionode_id )
-                !
-             END IF
-             !
-          END IF
+          CALL mp_bcast( frozen,     meta_ionode_id )
+          CALL mp_bcast( vel_zeroed, meta_ionode_id )
+          !
+          CALL mp_bcast( vel,        meta_ionode_id )
+          CALL mp_bcast( pos_old,    meta_ionode_id )
+          CALL mp_bcast( grad_old,   meta_ionode_id )
           !
        END IF
        !
@@ -507,10 +366,8 @@ MODULE path_io_routines
                                     dim, num_of_images, pos, pes, grad_pes,   &
                                     reset_vel, frozen , lquick_min, lmol_dyn, &
                                     ldamped_dyn, first_last_opt
-       USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed, &
-                                    k_min, k_max
-       USE path_variables,   ONLY : ft_vel, ft_pos_old, ft_grad_old, &
-                                    ft_vel_zeroed, ft_frozen, Nft, num_of_modes
+       USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed
+       USE path_variables,   ONLY : Nft, num_of_modes
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : meta_ionode
@@ -521,7 +378,6 @@ MODULE path_io_routines
        !
        INTEGER             :: i, j, ia
        CHARACTER (LEN=256) :: file
-       !
        !
        IF ( meta_ionode ) THEN
           !
@@ -587,15 +443,6 @@ MODULE path_io_routines
            !
            WRITE( UNIT = in_unit, FMT = '(I4)' ) num_of_images
            !
-           IF ( lneb ) THEN
-              !
-              WRITE( UNIT = in_unit, FMT = '("ELASTIC CONSTANTS")' )
-              !
-              WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_max
-              WRITE( UNIT = in_unit, FMT = '(F12.8)' ) k_min
-              !
-           END IF
-           !
            WRITE( UNIT = in_unit, &
                   FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
            !
@@ -654,133 +501,28 @@ MODULE path_io_routines
            !
            WRITE( UNIT = in_unit, FMT = '("QUICK-MIN FIELDS")' )
            !
-           IF ( lneb ) THEN
+           DO i = 1, num_of_images
               !
-              DO i = 1, num_of_images
+              WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
+              WRITE( UNIT = in_unit, &
+                     FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
+              !
+              DO j = 1, dim, 3
                  !
-                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
-                 WRITE( UNIT = in_unit, &
-                        FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                 !
-                 DO j = 1, dim, 3
-                    !
-                    WRITE( UNIT = in_unit, FMT = quick_min ) &
-                        vel(j,i),                & 
-                        vel((j+1),i),            &
-                        vel((j+2),i),            &
-                        pos_old(j,i),            &
-                        pos_old((j+1),i),        &
-                        pos_old((j+2),i),        &
-                        grad_old(j,i),           &
-                        grad_old((j+1),i),       &
-                        grad_old((j+2),i)
-                    !
-                 END DO
+                 WRITE( UNIT = in_unit, FMT = quick_min ) &
+                     vel(j,i),                & 
+                     vel((j+1),i),            &
+                     vel((j+2),i),            &
+                     pos_old(j,i),            &
+                     pos_old((j+1),i),        &
+                     pos_old((j+2),i),        &
+                     grad_old(j,i),           &
+                     grad_old((j+1),i),       &
+                     grad_old((j+2),i)
                  !
               END DO
               !
-           ELSE IF ( lsmd ) THEN
-              !
-              DO i = 1, num_of_modes
-                 !
-                 WRITE( UNIT = in_unit, FMT = '("Mode: ",I4)' ) i
-                 WRITE( UNIT = in_unit, &
-                        FMT = '(2(L1,1X))' ) ft_frozen(i), ft_vel_zeroed(i)
-                 !
-                 DO j = 1, dim, 3
-                    !
-                    WRITE( UNIT = in_unit, FMT = quick_min ) &
-                        ft_vel(j,i),              & 
-                        ft_vel((j+1),i),          &
-                        ft_vel((j+2),i),          &
-                        ft_pos_old(j,i),          &
-                        ft_pos_old((j+1),i),      &
-                        ft_pos_old((j+2),i),      &
-                        ft_grad_old(j,i),         &
-                        ft_grad_old((j+1),i),     &
-                        ft_grad_old((j+2),i)
-                    !
-                 END DO
-                 !
-              END DO
-              !
-              IF ( first_last_opt ) THEN
-                 !
-                 i = 1
-                 !
-                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
-                 WRITE( UNIT = in_unit, &
-                        FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                 !
-                 DO j = 1, dim, 3
-                    !
-                    WRITE( UNIT = in_unit, FMT = quick_min ) &
-                        vel(j,i),                & 
-                        vel((j+1),i),            &
-                        vel((j+2),i),            &
-                        pos_old(j,i),            &
-                        pos_old((j+1),i),        &
-                        pos_old((j+2),i),        &
-                        grad_old(j,i),           &
-                        grad_old((j+1),i),       &
-                        grad_old((j+2),i)
-                    !
-                 END DO
-                 !
-                 i = num_of_images
-                 !
-                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
-                 WRITE( UNIT = in_unit, &
-                        FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
-                 !
-                 DO j = 1, dim, 3
-                    !
-                    WRITE( UNIT = in_unit, FMT = quick_min ) &
-                        vel(j,i),                & 
-                        vel((j+1),i),            &
-                        vel((j+2),i),            &
-                        pos_old(j,i),            &
-                        pos_old((j+1),i),        &
-                        pos_old((j+2),i),        &
-                        grad_old(j,i),           &
-                        grad_old((j+1),i),       &
-                        grad_old((j+2),i)
-                    !
-                 END DO
-                 !
-              ELSE
-                 !
-                 i = 1
-                 !
-                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
-                 WRITE( UNIT = in_unit, FMT = '(2("F",1X))' )
-                 !
-                 DO j = 1, dim, 3
-                    !
-                    WRITE( UNIT = in_unit, &
-                           FMT = quick_min ) 0.D0, 0.D0, 0.D0, &
-                                             0.D0, 0.D0, 0.D0, &
-                                             0.D0, 0.D0, 0.D0
-                    !
-                 END DO
-                 !
-                 i = num_of_images
-                 !
-                 WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
-                 WRITE( UNIT = in_unit, FMT = '(2("F",1X))' )
-                 !
-                 DO j = 1, dim, 3
-                    !
-                    WRITE( UNIT = in_unit, &
-                           FMT = quick_min ) 0.D0, 0.D0, 0.D0, &
-                                             0.D0, 0.D0, 0.D0, &
-                                             0.D0, 0.D0, 0.D0
-                    !
-                 END DO
-                 !
-              END IF
-              !
-           END IF
+           END DO
            !
            RETURN
            !
@@ -794,14 +536,12 @@ MODULE path_io_routines
        !
        USE constants,        ONLY : pi
        USE input_parameters, ONLY : atom_label
-       USE control_flags,    ONLY : lneb, lsmd
        USE cell_base,        ONLY : alat, at
        USE ions_base,        ONLY : ityp, nat
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     path_length, react_coord
        USE path_variables,   ONLY : tangent, dim, Emax_index, error
-       USE path_variables,   ONLY : num_of_modes, Nft, Nft_smooth, ft_pes
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
@@ -828,121 +568,84 @@ MODULE path_io_routines
        OPEN( UNIT = iunint, FILE = int_file, STATUS = "UNKNOWN", &
              ACTION = "WRITE" )
        !
-       IF ( lneb ) THEN
+       ALLOCATE( d_R( dim ) )
+       !
+       ALLOCATE( a( num_of_images - 1 ) )
+       ALLOCATE( b( num_of_images - 1 ) )
+       ALLOCATE( c( num_of_images - 1 ) )
+       ALLOCATE( d( num_of_images - 1 ) )
+       ALLOCATE( F( num_of_images ) )
+       !
+       F = 0.D0
+       !
+       DO image = 2, ( num_of_images - 1 )
           !
-          ALLOCATE( d_R( dim ) )
+          F(image) = - ( grad_pes(:,image) .dot. tangent(:,image) )
           !
-          ALLOCATE( a( num_of_images - 1 ) )
-          ALLOCATE( b( num_of_images - 1 ) )
-          ALLOCATE( c( num_of_images - 1 ) )
-          ALLOCATE( d( num_of_images - 1 ) )
-          ALLOCATE( F( num_of_images ) )
+       END DO
+       !
+       react_coord(1) = 0.D0
+       !
+       DO image = 1, ( num_of_images - 1 )
           !
-          F = 0.D0
+          d_R = pbc( pos(:,( image + 1 )) - pos(:,image) ) 
           !
-          DO image = 2, ( num_of_images - 1 )
-             !
-             F(image) = - ( grad_pes(:,image) .dot. tangent(:,image) )
-             !
-          END DO
+          R = norm( d_R )
           !
-          react_coord(1) = 0.D0
+          react_coord(image+1) = react_coord(image) + R
           !
-          DO image = 1, ( num_of_images - 1 )
-             !
-             d_R = pbc( pos(:,( image + 1 )) - pos(:,image) ) 
-             !
-             R = norm( d_R )
-             !
-             react_coord(image+1) = react_coord(image) + R
-             !
-             ! ... cubic interpolation
-             !
-             a(image) = 2.D0 * ( pes(image) - pes(image+1) ) / R**(3) - &
-                        ( F(image) + F(image+1) ) / R**(2)
-             !
-             b(image) = 3.D0 * ( pes(image+1) - pes(image) ) / R**(2) + &
-                        ( 2.D0 * F(image) + F(image+1) ) / R
-             !
-             c(image) = - F(image)
-             !
-             d(image) = pes(image)
-             !
-          END DO          
+          ! ... cubic interpolation
           !
-          DO image = 1, num_of_images
-             !
-             WRITE( UNIT = iundat, FMT = dat_fmt ) &
-                 ( react_coord(image) / react_coord(num_of_images) ), &
-                 ( pes(image) - pes(1) ) * au, error(image)
-             !
-          END DO
+          a(image) = 2.D0 * ( pes(image) - pes(image+1) ) / R**(3) - &
+                     ( F(image) + F(image+1) ) / R**(2)
           !
-          image = 1
+          b(image) = 3.D0 * ( pes(image+1) - pes(image) ) / R**(2) + &
+                     ( 2.D0 * F(image) + F(image+1) ) / R
           !
-          delta_R = react_coord(num_of_images) / DBLE( max_i )
+          c(image) = - F(image)
           !
-          DO j = 0, max_i
-             !
-             R = DBLE( j ) * delta_R 
-             !
-             IF ( ( R > react_coord(image+1) ) .AND. &
-                  ( image < ( num_of_images - 1 ) ) ) image = image + 1
-             !
-             x = R - react_coord(image)
-             !
-             ener = a(image)*(x**3) + b(image)*(x**2) + c(image)*x + d(image) 
-             !
-             IF ( j == 0 ) ener_0 = ener
-             !
-             WRITE( UNIT = iunint, FMT = int_fmt ) &
-                 ( R / react_coord(num_of_images) ), &
-                 ( ener - ener_0 ) * au
-             !
-          END DO
+          d(image) = pes(image)
           !
-          DEALLOCATE( d_R )
+       END DO          
+       !
+       DO image = 1, num_of_images
           !
-          DEALLOCATE( a )
-          DEALLOCATE( b )
-          DEALLOCATE( c )
-          DEALLOCATE( d )
-          DEALLOCATE( F )
+          WRITE( UNIT = iundat, FMT = dat_fmt ) &
+              ( react_coord(image) / react_coord(num_of_images) ), &
+              ( pes(image) - pes(1) ) * au, error(image)
           !
-       ELSE IF ( lsmd ) THEN
+       END DO
+       !
+       image = 1
+       !
+       delta_R = react_coord(num_of_images) / DBLE( max_i )
+       !
+       DO j = 0, max_i
           !
-          delta_e = pes(num_of_images) - pes(1)
+          R = DBLE( j ) * delta_R 
           !
-          delta_x = 1.D0 / DBLE( Nft_smooth * Nft )
+          IF ( ( R > react_coord(image+1) ) .AND. &
+               ( image < ( num_of_images - 1 ) ) ) image = image + 1
           !
-          WRITE( UNIT = iundat, FMT = dat_fmt ) 0.D0, 0.D0
+          x = R - react_coord(image)
           !
-          DO i = 1, Nft
-             !
-             DO j = 1, Nft_smooth
-                !
-                x = delta_x * DBLE( Nft_smooth * ( i - 1 ) + j )
-                !
-                ener = x * delta_e
-                !
-                DO n = 1, num_of_modes
-                   !
-                   ener = ener + ft_pes(n) * SIN( DBLE( n ) * pi * x )
-                   !
-                END DO
-                !
-                WRITE( UNIT = iunint, FMT = int_fmt ) x, ener * au
-                !
-             END DO
-             !
-             WRITE( UNIT = iundat, FMT = dat_fmt ) &
-                 x, ( pes(i+1) - pes(1) ) * au
-             !
-          END DO
+          ener = a(image)*(x**3) + b(image)*(x**2) + c(image)*x + d(image) 
           !
-          WRITE( UNIT = iunint, FMT = int_fmt ) 1.D0, delta_e * au
+          IF ( j == 0 ) ener_0 = ener
           !
-       END IF
+          WRITE( UNIT = iunint, FMT = int_fmt ) &
+              ( R / react_coord(num_of_images) ), &
+              ( ener - ener_0 ) * au
+          !
+       END DO
+       !
+       DEALLOCATE( d_R )
+       !
+       DEALLOCATE( a )
+       DEALLOCATE( b )
+       DEALLOCATE( c )
+       DEALLOCATE( d )
+       DEALLOCATE( F )
        !
        CLOSE( UNIT = iundat )
        CLOSE( UNIT = iunint )
@@ -1020,14 +723,10 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE io_files,       ONLY : iunpath
-       USE control_flags,  ONLY : lneb, lsmd
-       USE path_variables, ONLY : num_of_modes, num_of_images, error, &
-                                  path_length, activation_energy, pes, &
-                                  pos, frozen, ft_pos, ft_pes, ft_grad, &
-                                  ft_error, first_last_opt, CI_scheme, &
-                                  Emax_index
-       USE path_formats,   ONLY : real_space_run_info, real_space_run_output, &
-                                  fourier_run_info, fourier_run_output
+       USE path_variables, ONLY : num_of_images, error, path_length, &
+                                  activation_energy, pes, pos, frozen, &
+                                  first_last_opt, CI_scheme, Emax_index
+       USE path_formats,   ONLY : run_info, run_output
        USE io_global,      ONLY : meta_ionode
        !
        IMPLICIT NONE
@@ -1047,96 +746,34 @@ MODULE path_io_routines
               FMT = '(5X,"activation energy (<-) = ",F10.6," eV",/)' ) &
               activation_energy + ( pes(1) - pes(num_of_images) ) * au
        !
-       IF ( lneb ) THEN
-          !
-          WRITE( UNIT = iunpath, FMT = real_space_run_info )
-          !
-          path_length = 0.D0
-          !
-          DO image = 1, num_of_images
-             !
-             IF ( image > 1 ) &
-                path_length = path_length + &
-                              norm( pos(:,image) - pos(:,image-1) )
-             !
-             WRITE( UNIT = iunpath, FMT = real_space_run_output ) &
-                 image, pes(image) * au, error(image), frozen(image)
-             !
-          END DO
-          !
-          inter_image_distance = path_length / DBLE( num_of_images - 1 )
-          !
-          IF ( CI_scheme == "highest-TS" ) &
-             WRITE( UNIT = iunpath, &
-                    FMT = '(/,5X,"climbing image = ",I2)' ) Emax_index
-
-          !
-          WRITE( UNIT = iunpath, &
-                 FMT = '(/,5X,"path length",&
-                         & T26," = ",F6.3," bohr")' ) path_length
-          WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"inter-image distance", &
-                         & T26," = ",F6.3," bohr")' ) inter_image_distance
-          !
-       ELSE IF ( lsmd ) THEN
-          !
-          IF ( first_last_opt ) THEN
-             !
-             WRITE( UNIT = iunpath, FMT = real_space_run_info )
-             !
-             image = 1
-             !
-             WRITE( UNIT = iunpath, FMT = real_space_run_output ) &
-                 image, pes(image) * au, error(image), frozen(image)
-             !
-             image = num_of_images
-             !
-             WRITE( UNIT = iunpath, FMT = real_space_run_output ) &
-                 image, pes(image) * au, error(image), frozen(image)
-             !
-             WRITE( UNIT = iunpath, FMT = * )
-             !
-          END IF
-          !
-          WRITE( UNIT = iunpath, FMT = fourier_run_info )
-          !
-          DO mode = 1, num_of_modes
-             !
-             WRITE( UNIT = iunpath, FMT = fourier_run_output ) &
-                 mode, norm( ft_pos(:,mode) ), &
-                 ABS( ft_pes(mode) ), norm( ft_grad(:,mode) ), ft_error(mode)
-             !
-          END DO
-          !
-       END IF
+       WRITE( UNIT = iunpath, FMT = run_info )
        !
-     END SUBROUTINE write_output
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE write_ts_config( pos_ts )
-       !-----------------------------------------------------------------------
+       path_length = 0.D0
        !
-       USE io_files,       ONLY : iunpath
-       USE path_variables, ONLY : dim
-       USE ions_base,      ONLY : nat, ityp, atm
-       !
-       IMPLICIT NONE
-       !
-       REAL (KIND=DP), INTENT(IN) :: pos_ts(3,nat)
-       !
-       INTEGER :: na
-       !
-       !
-       WRITE( iunpath, '(/,5X,"transition-state coordinates (bohr)",/)' )
-       !
-       DO na = 1, nat
+       DO image = 1, num_of_images
           !
-          WRITE( iunpath, '(A3,3X,3F14.9)' ) atm(ityp(na)), pos_ts(:,na)
+          IF ( image > 1 ) &
+             path_length = path_length + &
+                           norm( pos(:,image) - pos(:,image-1) )
+          !
+          WRITE( UNIT = iunpath, FMT = run_output ) &
+              image, pes(image) * au, error(image), frozen(image)
           !
        END DO
        !
-       RETURN
+       inter_image_distance = path_length / DBLE( num_of_images - 1 )
        !
-     END SUBROUTINE write_ts_config
+       IF ( CI_scheme == "highest-TS" ) &
+          WRITE( UNIT = iunpath, &
+                 FMT = '(/,5X,"climbing image = ",I2)' ) Emax_index
+       !
+       WRITE( UNIT = iunpath, &
+              FMT = '(/,5X,"path length",&
+                     & T26," = ",F6.3," bohr")' ) path_length
+       WRITE( UNIT = iunpath, &
+              FMT = '(5X,"inter-image distance", &
+                      & T26," = ",F6.3," bohr")' ) inter_image_distance
+       !
+     END SUBROUTINE write_output
      !
 END MODULE path_io_routines

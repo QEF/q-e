@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF-FPMD-CPV group
+! Copyright (C) 2003-2005 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,13 +14,13 @@ MODULE path_opt_routines
   !
   ! ... This module contains all subroutines and functions needed for
   ! ... the optimization of the reaction path (NEB and SMD calculations)
-  ! ... Written by Carlo Sbraccia ( 2003-2004 )  
+  !
+  ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
   USE kinds,          ONLY : DP
   USE constants,      ONLY : eps32
   USE path_variables, ONLY : ds
   USE path_variables, ONLY : pos, grad, norm_grad, frozen
-  USE path_variables, ONLY : ft_pos, ft_grad, norm_ft_grad, ft_frozen
   !
   USE basic_algebra_routines
   !  
@@ -28,10 +28,8 @@ MODULE path_opt_routines
   !
   CONTAINS
      !
-     ! ... "real space" routines
-     !
      !----------------------------------------------------------------------
-     SUBROUTINE r_steepest_descent( index )
+     SUBROUTINE steepest_descent( index )
        !----------------------------------------------------------------------
        !
        ! ... this routine is also used for the langevin dynamics
@@ -52,13 +50,13 @@ MODULE path_opt_routines
        !
        RETURN
        !
-     END SUBROUTINE r_steepest_descent 
+     END SUBROUTINE steepest_descent 
      !
      ! ... Molecular Dynamics based algorithms 
      ! ... velocity Verlet and quick min       
      !
      !----------------------------------------------------------------------
-     SUBROUTINE r_velocity_Verlet_first_step( index )
+     SUBROUTINE velocity_Verlet_first_step( index )
        !---------------------------------------------------------------------- 
        !
        USE path_variables, ONLY : vel, vel_zeroed, pos_old, grad_old
@@ -68,7 +66,13 @@ MODULE path_opt_routines
        INTEGER, INTENT(IN) :: index
        !
        !
-       IF ( frozen(index) ) RETURN
+       IF ( frozen(index) ) THEN
+          !
+          vel_zeroed(index) = .FALSE.
+          !
+          RETURN
+          !
+       END IF
        !
        ! ... pos_old and grad_old are updated here
        !   
@@ -77,9 +81,7 @@ MODULE path_opt_routines
        !
        IF ( vel_zeroed(index) ) THEN
           !
-          vel(:,index) = vel(:,index) - 0.5D0 * grad(:,index)
-          !
-          pos(:,index) = pos(:,index) + vel(:,index)
+          pos(:,index) = pos(:,index) - 0.5D0 * grad(:,index)
           !
           vel_zeroed(index) = .FALSE.
           !
@@ -93,11 +95,11 @@ MODULE path_opt_routines
        !       
        RETURN
        !
-     END SUBROUTINE r_velocity_Verlet_first_step
+     END SUBROUTINE velocity_Verlet_first_step
      !
      !
      !----------------------------------------------------------------------
-     SUBROUTINE r_velocity_Verlet_second_step( index )
+     SUBROUTINE velocity_Verlet_second_step( index )
        !----------------------------------------------------------------------
        !
        USE path_variables, ONLY : vel, damp, ldamped_dyn, lmol_dyn
@@ -111,8 +113,7 @@ MODULE path_opt_routines
        !
        IF ( ldamped_dyn ) THEN
           !
-          vel(:,index) = damp * ( vel(:,index) - &
-                                  0.5D0 * ds * grad(:,index) )
+          vel(:,index) = damp * ( vel(:,index) - 0.5D0 * ds * grad(:,index) )
           !
        ELSE IF ( lmol_dyn ) THEN
           !       
@@ -122,15 +123,14 @@ MODULE path_opt_routines
        !
        RETURN
        !
-     END SUBROUTINE r_velocity_Verlet_second_step
+     END SUBROUTINE velocity_Verlet_second_step
      !
      !----------------------------------------------------------------------
-     SUBROUTINE r_quick_min_second_step( index )
+     SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
        USE constants,       ONLY : eps8
-       USE path_variables,  ONLY : pos_old, grad_old, vel, &
-                                   dim, vel_zeroed
+       USE path_variables,  ONLY : pos_old, grad_old, vel, dim, vel_zeroed
        !
        IMPLICIT NONE
        !
@@ -156,13 +156,13 @@ MODULE path_opt_routines
              !
           ELSE
              !
-#if defined (DEBUG_SMART_STEP) && defined (USE_SMART_STEP)
-             PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
-#endif
-             !
              vel(:,index) = 0.D0
              !
 #if defined (USE_SMART_STEP)
+             !
+#  if defined (DEBUG_SMART_STEP)
+             PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
+#  endif             
              !
              vel_zeroed(index) = .TRUE.
              !
@@ -178,8 +178,7 @@ MODULE path_opt_routines
                 !
 #  if defined (DEBUG_SMART_STEP)
                 PRINT '(5X,"projection = ",F7.4)', &
-                    ( s .dot. grad(:,index) ) / &
-                    ( norm( s ) * norm_grad(index) )
+                    ( s .dot. grad(:,index) ) / ( norm( s ) * norm_grad(index) )
 #  endif
                 !
                 IF ( ABS( y .dot. s ) > eps8 ) THEN
@@ -209,191 +208,117 @@ MODULE path_opt_routines
        !
        RETURN
        !
-     END SUBROUTINE r_quick_min_second_step
+     END SUBROUTINE quick_min_second_step
      !
-     ! ... "reciprocal space" routines
+     ! ... Broyden (rank one) optimisation
      !
-     ! ... steepest descent 
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE ft_steepest_descent( mode )
-       !----------------------------------------------------------------------
+     !-----------------------------------------------------------------------
+     SUBROUTINE broyden()
+       !-----------------------------------------------------------------------
        !
-       ! ... this routine is also used for the langevin dynamics
-       !
-       USE path_variables, ONLY : llangevin, ft_lang
+       USE io_files,       ONLY : prefix
+       USE path_variables, ONLY : dim, num_of_images
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN) :: mode
+       REAL (KIND=DP), ALLOCATABLE :: g(:), s(:,:)
+       INTEGER                     :: j
+       INTEGER                     :: k
+       LOGICAL                     :: exists
+       INTEGER, PARAMETER          :: broyden_ndim = 4
        !
        !
-       IF ( ft_frozen(mode) ) RETURN
+       PRINT *, "BROYDEN"
        !
-       ft_pos(:,mode) = ft_pos(:,mode) - ds * ft_grad(:,mode)
+       ALLOCATE( g( dim ) )
+       ALLOCATE( s( dim * num_of_images, broyden_ndim ) )
        !
-       IF ( llangevin ) &
-          ft_pos(:,mode) = ft_pos(:,mode) + SQRT( ds ) * ft_lang(:,mode)
-       !      
-       RETURN
+       ! ... open the file containing the old configurations of the path
        !
-     END SUBROUTINE ft_steepest_descent 
-     !
-     ! ... Molecular Dynamics based algorithms 
-     ! ... velocity Verlet and quick min
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE ft_velocity_Verlet_first_step( mode )
-       !---------------------------------------------------------------------- 
+       INQUIRE( FILE = TRIM( prefix ) // ".broyden", EXIST = exists )
        !
-       USE path_variables, ONLY : ft_vel, ft_vel_zeroed, &
-                                  ft_pos_old, ft_grad_old
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(IN) :: mode
-       !
-       !
-       IF ( ft_frozen(mode) ) RETURN
-       !
-       ! ... ft_pos_old  and  ft_grad_old  are updated here
-       !   
-       ft_pos_old(:,mode)  = ft_pos(:,mode)
-       ft_grad_old(:,mode) = ft_grad(:,mode)
-       !
-       IF ( ft_vel_zeroed(mode) ) THEN
+       IF ( exists ) THEN
           !
-          ft_vel(:,mode) = ft_vel(:,mode) - 0.5D0 * ft_grad(:,mode)
+          OPEN( UNIT = 999, FILE = TRIM( prefix ) // ".broyden" )
           !
-          ft_pos(:,mode) = ft_pos(:,mode) + ft_vel(:,mode)
+          READ( 999 , * ) k
+          READ( 999 , * ) s
           !
-          ft_vel_zeroed(mode) = .FALSE.
+          CLOSE( UNIT = 999 )
+          !
+          k = MIN( k + 1, broyden_ndim )
           !
        ELSE
           !
-          ft_vel(:,mode) = ft_vel(:,mode) - &
-                           0.5D0 * ds * ft_grad(:,mode)
+          s = 0.D0
           !
-          ft_pos(:,mode) = ft_pos(:,mode) + ds * ft_vel(:,mode)
-          !
-       END IF
-       !       
-       RETURN
-       !
-     END SUBROUTINE ft_velocity_Verlet_first_step
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE ft_velocity_Verlet_second_step( mode )
-       !----------------------------------------------------------------------
-       !
-       USE path_variables, ONLY : ft_vel, damp, ldamped_dyn, lmol_dyn
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(IN) :: mode
-       !
-       !
-       IF ( ft_frozen(mode) ) RETURN
-       !
-       IF ( ldamped_dyn ) THEN
-          !
-          ft_vel(:,mode) = damp * ( ft_vel(:,mode) - &
-                                    0.5D0 * ds * ft_grad(:,mode) )
-          !
-       ELSE IF ( lmol_dyn ) THEN
-          !       
-          ft_vel(:,mode) = ft_vel(:,mode) - 0.5D0 * ds * ft_grad(:,mode)
+          k = 1
           !
        END IF
        !
-       RETURN
+       ! ... Broyden update
        !
-     END SUBROUTINE ft_velocity_Verlet_second_step
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE ft_quick_min_second_step( mode )
-       !----------------------------------------------------------------------
+       g(:) = RESHAPE( SOURCE = grad, SHAPE = (/ dim * num_of_images /) )
        !
-       USE constants,      ONLY : eps8
-       USE path_variables, ONLY : ft_pos_old, ft_grad_old, &
-                                  ft_vel, dim, ft_vel_zeroed
+       s(:,k) = - ds * g(:)
        !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(IN)         :: mode
-       REAL (KIND=DP)              :: ft_force_versor(dim)
-       REAL (KIND=DP)              :: ft_vel_component
-       REAL (KIND=DP), ALLOCATABLE :: y(:), s(:)
-       !
-       !
-       IF ( ft_frozen(mode) ) RETURN
-       !
-       ft_vel(:,mode) = ft_vel(:,mode) - 0.5D0 * ds * ft_grad(:,mode)
-       !
-       IF ( norm_ft_grad(mode) > eps32 ) THEN
+       DO j = 1, k - 2
           !
-          ft_force_versor = - ft_grad(:,mode) / norm_ft_grad(mode)
+          s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
+                            ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
           !
-          ft_vel_component = ( ft_vel(:,mode) .dot. ft_force_versor )
+       END DO
+       !
+       IF ( k > 1 ) THEN
           !
-          IF ( ft_vel_component > 0.D0 ) THEN
-             ! 
-             ft_vel(:,mode) = ft_vel_component * ft_force_versor
-             !
-          ELSE
-             !
-#if defined (DEBUG_SMART_STEP) && defined (USE_SMART_STEP)
-             PRINT '(/5X,"MODE = ",I2,"  resetting velocity"/)', mode
-#endif
-             !
-             ft_vel(:,mode) = 0.D0
-             !
-#if defined (USE_SMART_STEP)
-             !
-             ft_vel_zeroed(mode) = .TRUE.
-             !
-             ! ... an approximate newton-raphson step is performed
-             !
-             IF ( norm( ft_pos_old(:,mode) ) > 0.D0 .AND. &
-                  norm( ft_grad_old(:,mode) ) > 0.D0 ) THEN
-                !
-                ALLOCATE( y( dim ), s( dim ) )
-                !
-                y = ft_grad(:,mode) - ft_grad_old(:,mode)
-                s =  ft_pos(:,mode) -  ft_pos_old(:,mode)
-                !
-#  if defined (DEBUG_SMART_STEP)
-                PRINT '(5X,"projection = ",F7.4)', &
-                ( s .dot. ft_grad(:,mode) ) / ( norm( s ) * norm_ft_grad(mode) )
-#  endif
-                !
-                IF ( ABS( y .dot. s ) > eps8 ) THEN
-                   !
-                   ft_grad(:,mode) = 2.D0 * s * &
-                              ABS( ( s .dot. ft_grad(:,mode) ) / ( y .dot. s ) )
-                   !
-                END IF
-                !
-#  if defined (DEBUG_SMART_STEP)
-                PRINT '(5X,"step length:  ",F12.8)', norm( ft_grad(:,mode) )
-#  endif
-                !
-                DEALLOCATE( y, s )
-                !
-             END IF
-             !
-#endif
-             !
-          END IF
-          !
-       ELSE
-          !
-          ft_vel(:,mode) = 0.D0
+          s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / &
+                   ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) ) * s(:,k)
           !
        END IF
        !
+       IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
+          !
+          ! ... uphill step :  reset history
+          !
+          PRINT *, "RESETTING HISTORY"
+          !
+          k = 1
+          !
+          s = 0.D0
+          !
+          s(:,k) = - ds * g(:)
+          !
+       END IF
+       !
+       pos = pos + RESHAPE( SOURCE = s(:,k), &
+                            SHAPE = (/ dim, num_of_images /) )
+       !
+       IF ( k == broyden_ndim ) THEN
+          !
+          DO j = k, 2, -1
+             !
+             s(:,j-1) = s(:,j)
+             !
+          END DO
+          !
+       END IF
+       !
+       ! ... save the file containing the history
+       !
+       OPEN( UNIT = 999, FILE = TRIM( prefix ) // ".broyden" )
+       !
+       WRITE( 999, * ) k
+       WRITE( 999, * ) s
+       !
+       CLOSE( UNIT = 999 )
+       !
+       PRINT *, "BROYDEN COMPLETED"
+       !
+       DEALLOCATE( g )
+       DEALLOCATE( s )
+       !
        RETURN
        !
-     END SUBROUTINE ft_quick_min_second_step
+     END SUBROUTINE broyden
      !
 END MODULE path_opt_routines

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF-FPMD-CPV group
+! Copyright (C) 2003-2005 PWSCF-FPMD-CPV group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,6 +7,8 @@
 !
 #include "f_defs.h"
 !
+#define IPRINT 1
+#define USE_FROZEN
 !#define DEBUG_ELASTIC_CONSTANTS
 !
 !---------------------------------------------------------------------------
@@ -17,9 +19,9 @@ MODULE path_base
   ! ... the implementation of "NEB" and "SMD" methods into the 
   ! ... PWSCF-FPMD-CPV codes
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2004 )
+  ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
-  USE io_global, ONLY : stdout
+  USE io_files,  ONLY : iunpath
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps32, pi, au, bohr_radius_angs, eV_to_kelvin
   !
@@ -42,23 +44,23 @@ MODULE path_base
                                    opt_scheme, climbing, nstep, input_images
       USE control_flags,    ONLY : conv_elec, lneb, lsmd
       USE ions_base,        ONLY : nat, if_pos
-      USE io_files,         ONLY : prefix, iunpath, path_file, &
-                                   dat_file, int_file, xyz_file, axsf_file
+      USE io_files,         ONLY : prefix, path_file, dat_file, &
+                                   int_file, xyz_file, axsf_file
       USE cell_base,        ONLY : alat
       USE path_variables,   ONLY : pos_ => pos, &
                                    istep_path, nstep_path, dim, num_of_images, &
-                                   pes, grad_pes, grad_proj, tangent, error,   &
-                                   path_length, path_thr, deg_of_freedom, ds,  &
-                                   first_last_opt, reset_vel, react_coord,     &
-                                   llangevin, temp_req, use_multistep
+                                   pes, grad_pes, tangent, error, path_length, &
+                                   path_thr, deg_of_freedom, ds, react_coord,  &
+                                   first_last_opt, reset_vel, llangevin,       &
+                                   temp_req
       USE path_variables,   ONLY : climbing_ => climbing,                  &
                                    CI_scheme, vel, grad, elastic_grad,     &
                                    norm_grad, k, k_min, k_max, Emax_index, &
-                                   vel_zeroed, frozen, pos_old, grad_old
-      USE path_variables,   ONLY : num_of_modes, ft_vel_zeroed, ft_pos,ft_pes,&
-                                   ft_vel, ft_grad, Nft, ft_coeff, ft_frozen,  &
-                                   ft_error, norm_ft_grad, Nft_smooth,         &
-                                   ft_pos_old, ft_grad_old
+                                   vel_zeroed, frozen, pos_old, grad_old,  &
+                                   lquick_min, ldamped_dyn, lmol_dyn, lbroyden
+      USE path_variables,   ONLY : num_of_modes, pos_av_in, pos_av_fin, &
+                                   ft_pos, ft_pos_av, Nft, fixed_tan,   &
+                                   ft_coeff, Nft_smooth, use_multistep
       USE path_formats,     ONLY : summary_fmt   
       USE io_global,        ONLY : meta_ionode
       USE parser,           ONLY : int_to_char
@@ -79,7 +81,7 @@ MODULE path_base
       REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER (LEN=20)          :: num_of_images_char, nstep_path_char
       !
-      !    
+      !
       ! ... output files are set
       !
       path_file = TRIM( prefix ) // ".path"
@@ -88,7 +90,7 @@ MODULE path_base
       xyz_file  = TRIM( prefix ) // ".xyz"
       axsf_file = TRIM( prefix ) // ".axsf"
       !
-      ! ... istep is initialized to zero
+      ! ... istep is initialised to zero
       !
       istep_path = 0
       conv_elec  = .TRUE.
@@ -98,17 +100,27 @@ MODULE path_base
       !
       dim = 3 * nat
       !
-      IF ( lneb ) THEN
+      IF ( lneb .AND. &
+           ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
          !
-         ! ... elastic constants are defined here ( m = 4 ) starting from ds :
+         ! ... elastic constants are rescaled here on
+         ! ... the base of the input time step ds ( m = 4 ) :
          !
          k_ratio = k_min / k_max
          !
-         k_max = pi**2 / 16.D0 / ds**2
+         k_max = ( pi / ds )**2 / 16.D0 
          !
          k_min = k_max * k_ratio
          !
       ELSE IF ( lsmd ) THEN
+         !
+         IF ( fixed_tan ) THEN
+            !
+            use_multistep = .FALSE.
+            !
+            first_last_opt = .TRUE.
+            !
+         END IF
          !
          ! ... some coefficients for string dynamics
          !
@@ -122,7 +134,7 @@ MODULE path_base
          !
       END IF
       !  
-      ! ... dynamical allocation of arrays and initialization
+      ! ... dynamical allocation of arrays and initialisation
       !
       IF ( lneb ) THEN
          !
@@ -156,47 +168,42 @@ MODULE path_base
          !
          CALL path_allocation( 'smd' )
          !
-         pes           = 0.D0
-         grad_pes      = 0.D0
-         grad_proj     = 0.D0
-         tangent       = 0.D0
-         ft_vel_zeroed = .FALSE.
+         pes        = 0.D0
+         grad_pes   = 0.D0
+         tangent    = 0.D0
          !
-         IF ( first_last_opt ) THEN
-            !
-            error       = 0.D0
-            frozen      = .FALSE.
-            vel         = 0.D0
-            vel_zeroed  = .FALSE.
-            grad        = 0.D0
-            norm_grad   = 0.D0
-            pos_old     = 0.D0
-            grad_old    = 0.D0
-            !
-         END IF
+         error      = 0.D0
+         frozen     = .FALSE.
+         vel        = 0.D0
+         vel_zeroed = .FALSE.
+         grad       = 0.D0
+         norm_grad  = 0.D0
+         pos_old    = 0.D0
+         grad_old   = 0.D0
          !
          ! ... fourier components
          !
-         ft_pos       = 0.D0
-         ft_pes       = 0.D0
-         ft_vel       = 0.D0
-         ft_grad      = 0.D0
-         norm_ft_grad = 0.D0
-         ft_error     = 0.D0
-         ft_pos_old   = 0.D0
-         ft_grad_old  = 0.D0
-         ft_frozen    = .FALSE.
+         ft_pos     = 0.D0
+         ft_pos_av  = 0.D0
          !
       END IF
       !
-      ! ... initial path is read ( restart_mode == "restart" ) 
-      ! ... or generated ( restart_mode = "from_scratch" )
+      ! ... initial path is read from file ( restart_mode == "restart" ) 
+      ! ... or generated from the input images ( restart_mode = "from_scratch" )
+      ! ... It is alway read from file in the case of "free-energy" calculations
       !
-      IF ( restart_mode == "restart" ) THEN
+      IF ( fixed_tan .OR. restart_mode == "restart" ) THEN
          !
          ALLOCATE( image_spacing( num_of_images - 1 ) )
          !
          CALL read_restart()
+         !
+         IF ( fixed_tan ) THEN
+            !
+            pos_av_in  = pos_(:,1)
+            pos_av_fin = pos_(:,num_of_images)
+            !
+         END IF
          !
          ! ... consistency between the input value of nstep and the value
          ! ... of nstep_path read from the restart_file is checked
@@ -461,7 +468,7 @@ MODULE path_base
       !
       DO i = 2, ( num_of_images - 1 )
          !
-         ! ... tangent to the path ( normalized )
+         ! ... tangent to the path ( normalised )
          !
          tangent(:,i) = path_tangent( i )
          !
@@ -475,25 +482,12 @@ MODULE path_base
          !
          IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
             !
-            IF ( lmol_dyn ) THEN
-               !
-               ! ... elastic gradient ( variable elastic consatnt is used )
-               ! ... note that this is NOT the NEB recipe
-               !
-               elastic_grad = 0.5D0 * &
-                        ( ( k(i) + k(i-1) ) * pbc( pos(:,i) - pos(:,(i-1)) ) - &
-                          ( k(i) + k(i+1) ) * pbc( pos(:,(i+1)) - pos(:,i) ) )
-               !
-            ELSE
-               !
-               ! ... elastic gradient only along the path ( variable elastic
-               ! ... consatnt is used ) NEB recipe
-               !
-               elastic_grad = tangent(:,i) * 0.5D0 * &
+            ! ... elastic gradient only along the path ( variable elastic
+            ! ... consatnt is used ) NEB recipe
+            !
+            elastic_grad = tangent(:,i) * 0.5D0 * &
                 ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
                   ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
-               !
-            END IF
             !
          END IF
          !
@@ -530,17 +524,19 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
-      USE path_variables,   ONLY : istep_path, num_of_images, num_of_modes, &
-                                   path_thr, Nft, ft_coeff, ft_vel, pos,    &
-                                   pes, use_multistep, grad_pes, err_max
+      USE path_variables,   ONLY : istep_path, num_of_images, &
+                                   path_thr, Nft, ft_coeff, pos, pes, &
+                                   use_multistep, grad_pes, err_max,  &
+                                   frozen, vel, vel_zeroed
                                    
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP) :: chamge_image_thr
-      REAL (KIND=DP) :: multistep_coeff = 3.D0
+      REAL (KIND=DP) :: change_image_thr
+      REAL (KIND=DP) :: multistep_coeff = 2.D0
       INTEGER        :: new_num_of_images
       LOGICAL        :: images_updated
+      INTEGER        :: N_in, N_fin
       INTEGER        :: init_num_of_images = 3
       !
       !
@@ -548,12 +544,16 @@ MODULE path_base
       !
       images_updated = .FALSE.
       !
-      chamge_image_thr = multistep_coeff * &
+      change_image_thr = multistep_coeff * &
                          DBLE( num_of_images_inp - num_of_images ) * path_thr
       !
       IF ( istep_path == 0 ) THEN
          !
-         ! ... initialization
+         ! ... initialisation
+         !
+         WRITE( UNIT = iunpath, &
+                FMT = '(5X,"initial number of images = ",I3,/)' ) &
+             init_num_of_images
          !
          CALL redispose_last_image( init_num_of_images )
          !
@@ -561,19 +561,29 @@ MODULE path_base
          !
          images_updated = .TRUE.
          !
-      ELSE IF ( err_max < chamge_image_thr ) THEN
+      ELSE IF ( err_max < change_image_thr ) THEN
          !
          new_num_of_images = MIN( num_of_images_inp, num_of_images + 2 )
          !
-         CALL redispose_last_image( new_num_of_images )
-         !
          IF ( new_num_of_images > num_of_images ) THEN
+            !
+            WRITE( UNIT = iunpath, &
+                   FMT = '(5X,"new number of images = ",I3,/)' ) &
+                new_num_of_images
+            !
+            CALL redispose_last_image( new_num_of_images )
+            !
+            N_in  = 2
+            N_fin = new_num_of_images - 1
+            !
+            vel(:,N_in:N_fin) = 0.D0
+            !
+            frozen(N_in:N_fin)     = .FALSE.
+            vel_zeroed(N_in:N_fin) = .FALSE.
             !
             images_updated = .TRUE.
             !
             num_of_images = new_num_of_images
-            !
-            ft_vel = 0.D0
             !
          END IF
          !
@@ -597,8 +607,7 @@ MODULE path_base
         SUBROUTINE redispose_last_image( n )
           !--------------------------------------------------------------------
           !
-          USE path_variables, ONLY : first_last_opt, error, frozen, &
-                                     vel, vel_zeroed, grad, norm_grad
+          USE path_variables, ONLY : error, grad, norm_grad, pos_old, grad_old
           !
           IMPLICIT NONE
           !
@@ -609,16 +618,13 @@ MODULE path_base
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
           !
-          IF ( first_last_opt ) THEN
-             !
-             error(n)      = error(num_of_images)
-             frozen(n)     = frozen(num_of_images)
-             vel(:,n)      = vel(:,num_of_images)
-             vel_zeroed(n) = vel_zeroed(num_of_images)
-             grad(:,n)     = grad(:,num_of_images)
-             norm_grad(n ) = norm_grad(num_of_images)
-             !
-          END IF
+          error(n)      = error(num_of_images)
+          vel(:,n)      = vel(:,num_of_images)
+          grad(:,n)     = grad(:,num_of_images)
+          norm_grad(n)  = norm_grad(num_of_images)
+          !
+          pos_old(:,n)  = pos_old(:,num_of_images)
+          grad_old(:,n) = grad_old(:,num_of_images)
           !
           RETURN
           !
@@ -690,13 +696,13 @@ MODULE path_base
     SUBROUTINE to_real_space()
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_modes, num_of_images, dim, &
+      USE path_variables, ONLY : num_of_modes, num_of_images, dim, tangent, &
                                  pos, ft_pos, Nft, Nft_smooth, path_length
       !
       IMPLICIT NONE
       !
       REAL (KIND=DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
-      REAL (KIND=DP)              :: x, delta_x, s, s_image
+      REAL (KIND=DP)              :: x, delta_x, s, s_image, pi_n
       INTEGER                     :: i, j, n, image
       !
       !
@@ -711,6 +717,8 @@ MODULE path_base
       image = 1
       !
       s_image = path_length / DBLE( Nft )
+      !
+      CALL the_tangent( image, 0.D0 )
       !
       r_h(:) = pos(:,1)
       !
@@ -738,6 +746,8 @@ MODULE path_base
                !
                pos(:,image) = r_n(:)
                !
+               CALL the_tangent( image, x )
+               !
                s_image = DBLE( image ) * path_length / DBLE( Nft )
                !
             END IF
@@ -748,12 +758,47 @@ MODULE path_base
          !
       END DO
       !
+      image = num_of_images
+      !
+      CALL the_tangent( image, 1.D0 )
+      !
       DEALLOCATE( r_h )
       DEALLOCATE( r_n )
       DEALLOCATE( delta_pos)
       !
       RETURN
       !
+      CONTAINS
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE the_tangent( image, s )
+           !-------------------------------------------------------------------
+           !
+           IMPLICIT NONE
+           !
+           INTEGER,        INTENT(IN) :: image
+           REAL (KIND=DP), INTENT(IN) :: s
+           !
+           !
+           tangent(:,image) = ( pos(:,num_of_images) - pos(:,1) )
+           !
+           DO n = 1, num_of_modes
+              !
+              pi_n = pi * DBLE( n )
+              !
+              tangent(:,image) = tangent(:,image) + &
+                                 ft_pos(:,n) * pi_n * COS( pi_n * s )
+              !
+           END DO
+           !
+           tangent(:,image) = tangent(:,image) / path_length
+           !
+           tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
+           !
+           RETURN
+           !
+         END SUBROUTINE the_tangent
+         !
     END SUBROUTINE to_real_space
     !
     !------------------------------------------------------------------------
@@ -779,14 +824,14 @@ MODULE path_base
       IMPLICIT NONE
       !
       INTEGER        :: j, n
-      REAL (KIND=DP) :: x, coeff
+      REAL (KIND=DP) :: x, coeff, inv_Nft
       !
       !
-      ft_pos  = 0.D0
+      inv_Nft = 1.D0 / DBLE( Nft )
       !
       DO j = 0, ( Nft - 1 )
          !
-         x = DBLE( j ) / DBLE( Nft )
+         x = DBLE( j ) * inv_Nft
          !
          pos_star(:,j) = pos(:,j+1) - pos(:,1) - &
                          x * ( pos(:,num_of_images) - pos(:,1) )
@@ -795,22 +840,23 @@ MODULE path_base
       !
       ! ... fourier components of pos_star are computed
       !
+      ft_pos  = 0.D0
+      !
       DO n = 1, num_of_modes
          !
-         coeff = DBLE( n ) * pi / DBLE( Nft )
+         coeff = DBLE( n ) * pi * inv_Nft
          !
          DO j = 0, ( Nft - 1 )
             !
             x = DBLE( j )
             !
-            ft_pos(:,n) = ft_pos(:,n) + &
-                          pos_star(:,j) * SIN( coeff * x )
+            ft_pos(:,n) = ft_pos(:,n) + pos_star(:,j) * SIN( coeff * x )
             !
          END DO
          !
       END DO
       !
-      ! ... normalization
+      ! ... normalisation
       !
       ft_pos = ft_pos * ft_coeff
       !
@@ -836,120 +882,51 @@ MODULE path_base
       ! ...                               0  and  Nft - 1 ( = N - 2 )
       !
       USE ions_base,      ONLY : if_pos
-      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft,  &
-                                 Nft_smooth, pes, grad_pes, grad_proj,   &
-                                 tangent, ft_pes, ft_grad, norm_ft_grad, &
-                                 ft_coeff, pes_star, grad_proj_star,     &
-                                 llangevin, lang_proj, lang_proj_star,   &
-                                 ft_lang, lang, grad, first_last_opt, ds
+      USE path_variables, ONLY : dim, num_of_images, grad_pes,   &
+                                 tangent, llangevin, lang, grad, &
+                                 norm_grad, first_last_opt, fixed_tan
       !
       IMPLICIT NONE
       !
-      INTEGER        :: j, n
-      REAL (KIND=DP) :: x, coeff
+      INTEGER :: i
       !
       !
-      ft_pes  = 0.D0
-      ft_grad = 0.D0
+      ! ... we project pes gradients and gaussian noise
       !
-      IF ( first_last_opt ) THEN
-         !
-         grad(:,:) = grad_pes(:,:)
-         !
-      END IF
-      !
-      IF ( llangevin ) THEN
-         !
-         lang    = 0.D0
-         ft_lang = 0.D0
-         !
-      END IF
-      !
-      ! ... we compute the tangent to the path and project pes gradients 
-      ! ... (in real space)
-      !
-      DO j = 1, num_of_images
-         !
-         ! ... tangent to the path ( normalized )
-         !
-         tangent(:,j) = path_tangent( j )
-         !
-         tangent(:,j) = tangent(:,j) / norm( tangent(:,j) )
-         !
-         ! ... projection of the pes gradients
-         !
-         grad_proj(:,j) = grad_pes(:,j) - &
-                          tangent(:,j) * ( tangent(:,j) .dot. grad_pes(:,j) )
+      DO i = 1, num_of_images
          !
          IF ( llangevin ) THEN
             !
             ! ... the random term used in langevin dynamics is generated here
             !
-            lang(:,j) = gaussian_vect() * DBLE( RESHAPE( if_pos, (/ dim /) ) )
-            !
-            lang_proj(:,j) = lang(:,j) - &
-                             tangent(:,j) * ( tangent(:,j) .dot. lang(:,j) )
+            lang(:,i) = gaussian_vect() * DBLE( RESHAPE( if_pos, (/ dim /) ) )
             !
          END IF
          !
-      END DO
-      !
-      ! ... here we compute pes_star, grad_proj_star and lang_proj_star
-      !
-      DO j = 0, ( Nft - 1 )
-         !
-         x = DBLE( j ) / DBLE( Nft )
-         !
-         pes_star(j) = pes(j+1) - pes(1) - &
-                       x * ( pes(num_of_images) - pes(1) )
-         !
-         grad_proj_star(:,j) = grad_proj(:,j+1) - grad_proj(:,1) - x * &
-                               ( grad_proj(:,num_of_images) - grad_proj(:,1) )
-         !
-         IF ( llangevin ) THEN
-            !            
-            lang_proj_star(:,j) = lang_proj(:,j+1) - lang_proj(:,1) - x * &
-                                 ( lang_proj(:,num_of_images) - lang_proj(:,1) )
+         IF ( fixed_tan .OR. &
+              ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+            !
+            ! ... projection of the pes gradients 
+            !
+            grad(:,i) = grad_pes(:,i) - &
+                        tangent(:,i) * ( tangent(:,i) .dot. grad_pes(:,i) )
+            !
+            IF ( llangevin ) THEN
+               !
+               lang(:,i) = lang(:,i) - &
+                           tangent(:,i) * ( tangent(:,i) .dot. lang(:,i) )
+               !
+            END IF
+            !
+         ELSE
+            !
+            grad(:,i) = grad_pes(:,i)
             !
          END IF
          !
-      END DO
-      !
-      ! ... here we compute fourier components for pes_star and grad_proj_star
-      !
-      DO n = 1, num_of_modes
-         !
-         coeff = DBLE( n ) * pi / DBLE( Nft )
-         !
-         DO j = 0, ( Nft - 1 )
-            !
-            x = DBLE( j )
-            !
-            ft_pes(n) = ft_pes(n) + pes_star(j) * SIN( coeff * x )
-            !
-            ft_grad(:,n) = ft_grad(:,n) + &
-                           grad_proj_star(:,j) * SIN( coeff * x )
-            !
-            IF ( llangevin ) &
-               ft_lang(:,n) = ft_lang(:,n) + &
-                              lang_proj_star(:,j) * SIN( coeff * x )
-            !
-         END DO
-         !
-         ! ... and the norm of the fourier component of the gradient
-         !
-         norm_ft_grad(n) = norm( ft_grad(:,n) )
+         norm_grad(i) = norm( grad(:,i) )
          !
       END DO
-      !
-      ! ... normalizations
-      !
-      ft_pes  = ft_pes  * ft_coeff
-      ft_grad = ft_grad * ft_coeff      
-      !
-      norm_ft_grad = norm_ft_grad * ft_coeff
-      !
-      IF ( llangevin ) ft_lang = ft_lang * ft_coeff
       !
       RETURN
       !
@@ -961,10 +938,8 @@ MODULE path_base
     SUBROUTINE compute_error( err_out )
       !-----------------------------------------------------------------------
       !
-      USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : num_of_images, num_of_modes, grad, &
-                                 first_last_opt, path_thr, error, ft_error, &
-                                 ft_pes, ft_grad, frozen, ft_frozen, llangevin
+      USE path_variables, ONLY : num_of_images, grad, llangevin, &
+                                 first_last_opt, path_thr, error, frozen
       !
       IMPLICIT NONE
       !
@@ -979,65 +954,42 @@ MODULE path_base
       REAL (KIND=DP) :: err_max
       !
       !
-      err_max = 0.D0
+      IF ( first_last_opt ) THEN
+         !
+         N_in  = 1
+         N_fin = num_of_images
+         !
+      ELSE
+         !
+         N_in  = 2
+         N_fin = ( num_of_images - 1 )      
+         !   
+      END IF   
       !
-      IF ( lneb ) THEN
+      DO i = 1, num_of_images
          !
-         IF ( first_last_opt ) THEN
-            !
-            N_in  = 1
-            N_fin = num_of_images
-            !
-         ELSE
-            !
-            N_in  = 2
-            N_fin = ( num_of_images - 1 )      
-            !   
-         END IF   
+         ! ... the error is given by the largest component of the gradient 
+         ! ... vector ( PES + SPRINGS in the neb case )
          !
-         DO i = 1, num_of_images
-            !
-            ! ... the error is given by the largest component of the gradient 
-            ! ... vector ( PES + SPRINGS )
-            !
-            error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * au
-            !
-         END DO
+         error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * au
          !
-         err_max = MAXVAL( error(N_in:N_fin), 1 )
+      END DO
+      !
+      err_max = MAXVAL( error(N_in:N_fin), 1 )
+      !
+#if defined (USE_FROZEN)
+      !
+      IF ( llangevin ) THEN
+         !
+         frozen = .FALSE.
+         !
+      ELSE
          !
          frozen(:) = ( error(:) < MAX( 0.5D0 * err_max, path_thr ) )
          !
-      ELSE IF ( lsmd ) THEN
-         !
-         DO n = 1, num_of_modes
-            !
-            ! ... the error ( in eV / A ) is given by the largest component 
-            ! ... of the gradient vector (in reciprocal space)
-            !
-            ft_error(n) = MAXVAL( ABS( ft_grad(:,n) ) ) / bohr_radius_angs * au
-            !
-            IF ( ft_error(n) > err_max ) err_max = ft_error(n)
-            !
-         END DO
-         !
-         err_max = MAXVAL( ft_error, 1 )
-         !
-         IF ( first_last_opt ) THEN
-            !
-            error(1) = MAXVAL( ABS( grad(:,1) ) )
-            !
-            error(num_of_images) = MAXVAL( ABS( grad(:,num_of_images) ) )
-            !
-            error = error / bohr_radius_angs * au
-            !
-            IF ( .NOT. llangevin ) frozen(:) = ( error(:) < path_thr )
-            !
-            err_max = MAX( error(1), error(num_of_images), err_max )
-            !
-         END IF
-         !
       END IF
+      !
+#endif
       !
       IF ( PRESENT( err_out ) ) err_out = err_max
       !
@@ -1051,8 +1003,10 @@ MODULE path_base
       !
       USE supercell,      ONLY : pbc
       USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : pos, dim, num_of_modes, num_of_images, &
-                                 pes, path_length, ft_pos, Nft
+      USE path_variables, ONLY : pos, dim, num_of_modes, num_of_images,    &
+                                 pes, path_length, path_length_av, ft_pos, &
+                                 ft_pos_av, pos_av_in, pos_av_fin, Nft,    &
+                                 fixed_tan
       !
       IMPLICIT NONE
       !
@@ -1121,18 +1075,37 @@ MODULE path_base
          !
          x = DBLE( index - 1 ) / DBLE( Nft )
          !
-         path_tangent(:) = ( pos(:,num_of_images) - pos(:,1) )
-         !
-         DO n = 1, num_of_modes
+         IF ( fixed_tan ) THEN
             !
-            pi_n = pi * DBLE( n )
+            path_tangent(:) = ( pos_av_fin(:) - pos_av_in(:) )
             !
-            path_tangent(:) = path_tangent(:) + &
-                              ft_pos(:,n) * pi_n * COS( pi_n * x )
+            DO n = 1, num_of_modes
+               !
+               pi_n = pi * DBLE( n )
+               !
+               path_tangent(:) = path_tangent(:) + &
+                                 ft_pos_av(:,n) * pi_n * COS( pi_n * x )
+               !
+            END DO
             !
-         END DO
-         !
-         path_tangent(:) = path_tangent(:) / path_length
+            path_tangent(:) = path_tangent(:) / path_length_av
+            !
+         ELSE
+            !
+            path_tangent(:) = ( pos(:,num_of_images) - pos(:,1) )
+            !
+            DO n = 1, num_of_modes
+               !
+               pi_n = pi * DBLE( n )
+               !
+               path_tangent(:) = path_tangent(:) + &
+                                 ft_pos(:,n) * pi_n * COS( pi_n * x )
+               !
+            END DO
+            !
+            path_tangent(:) = path_tangent(:) / path_length
+            !
+         END IF
          !
       END IF
       !
@@ -1184,96 +1157,15 @@ MODULE path_base
       !
     END FUNCTION gaussian_vect
     !
-    !-----------------------------------------------------------------------
-    SUBROUTINE find_saddle()
-      !-----------------------------------------------------------------------
-      !
-      ! ... the transition state configuration and the forward activation 
-      ! ... energy are computed here
-      !
-      USE control_flags,    ONLY : lneb, lsmd
-      USE path_variables,   ONLY : dim, num_of_images, num_of_modes, Nft, &
-                                   Nft_smooth, pes, ft_pes, pos, ft_pos,  &
-                                   activation_energy, Emax_index
-      USE path_io_routines, ONLY : write_ts_config
-      !
-      IMPLICIT NONE
-      !
-      INTEGER                     :: i, j, n
-      REAL (KIND=DP)              :: ener, delta_e, x, x_ts, delta_x
-      REAL (KIND=DP), ALLOCATABLE :: pos_ts(:)
-      !
-      !
-      IF ( lneb ) THEN
-         !
-         activation_energy = ( pes(Emax_index) - pes(1) ) * au
-         !
-      ELSE IF ( lsmd ) THEN
-         !
-         ALLOCATE( pos_ts( dim ) )
-         !
-         delta_x = 1.D0 / DBLE( Nft_smooth * Nft )
-         !
-         delta_e = pes(num_of_images) - pes(1)
-         !
-         activation_energy = 0.D0
-         !
-         x_ts = 0.D0
-         !
-         DO i = 1, Nft
-            !
-            DO j = 0, ( Nft_smooth - 1 )
-               !
-               x = delta_x * DBLE( Nft_smooth * ( i - 1 ) + j ) 
-               !
-               ener = x * delta_e
-               !
-               DO n = 1, num_of_modes
-                  !
-                  ener = ener + ft_pes(n) * SIN( DBLE( n ) * pi * x )
-                  !
-               END DO
-               !
-               ener = ener * au
-               !
-               IF ( ener > activation_energy ) THEN
-                  !
-                  activation_energy = ener
-                  !
-                  x_ts = x
-                  !
-               END IF
-               !
-            END DO
-            !
-         END DO
-         !
-         pos_ts(:) = pos(:,1) + x_ts * ( pos(:,num_of_images) - pos(:,1) )
-         !
-         DO n = 1, num_of_modes
-            !
-            pos_ts(:) = pos_ts(:) + ft_pos(:,n) * SIN( DBLE( n ) * pi * x_ts )
-            !
-         END DO
-         !
-         CALL write_ts_config( pos_ts )
-         !
-         DEALLOCATE( pos_ts )
-         !
-      END IF
-      !
-      RETURN
-      !
-    END SUBROUTINE find_saddle
-    !
     !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
-      USE control_flags,  ONLY : lneb
-      USE path_variables, ONLY : num_of_images, suspended_image, istep_path, &
-                                 pes, first_last_opt, Emin , Emax, Emax_index, &
-                                 frozen
+      USE path_variables, ONLY : num_of_images, suspended_image,  &
+                                 istep_path, pes, first_last_opt, &
+                                 Emin , Emax, Emax_index, frozen, &
+                                 error
+      USE mp_global,      ONLY : nimage
       !
       IMPLICIT NONE
       !
@@ -1283,7 +1175,7 @@ MODULE path_base
       !
       ! ... local variables
       !
-      INTEGER        :: N_in, N_fin, i
+      INTEGER        :: N_in, N_fin, i, free_me, num_of_scf_images
       REAL (KIND=DP) :: val
       !
       !
@@ -1310,44 +1202,59 @@ MODULE path_base
       !
       IF ( suspended_image /= 0 ) N_in = suspended_image
       !
+      IF ( nimage > 1 ) THEN
+         !
+         ! ... in the case of image-parallelisation the number of images to
+         ! ... be optimised must be larger than nimage
+         !
+         find_scf_images: DO
+            !
+            num_of_scf_images = COUNT( .NOT. frozen )
+            !
+            IF ( num_of_scf_images > nimage ) EXIT find_scf_images
+            !
+            free_me = MAXLOC( error, 1, frozen == .TRUE. )
+            !
+            frozen(free_me) = .FALSE.
+            !
+         END DO find_scf_images
+         !
+      END IF
+      !
       CALL compute_scf( N_in, N_fin, stat )
       !
       IF ( .NOT. stat ) RETURN
       !
-      IF ( lneb ) THEN
-         !
 #if defined (__PGI)
+      !
+      Emax_index = 1
+      !
+      Emax = pes(1)
+      Emin = pes(1)
+      !   
+      DO i = 2, num_of_images
          !
-         Emax_index = 1
+         val = pes(i)
          !
-         Emax = pes(1)
-         Emin = pes(1)
-         !   
-         DO i = 2, num_of_images
-            !
-            val = pes(i)
-            !
-            IF ( val < Emin ) Emin = val
-            !
-            IF ( val > Emax ) THEN
-               !
-               Emax = val
-               !
-               Emax_index = i
-               !
-            END IF
-            !
-         END DO
+         IF ( val < Emin ) Emin = val
          !
+         IF ( val > Emax ) THEN
+            !
+            Emax = val
+            !
+            Emax_index = i
+            !
+         END IF
+         !
+      END DO
+      !
 #else
-         !
-         Emin       = MINVAL( pes(:) )
-         Emax       = MAXVAL( pes(:) )
-         Emax_index = MAXLOC( pes(:), 1 )
-         !
+      !
+      Emin       = MINVAL( pes(1:num_of_images) )
+      Emax       = MAXVAL( pes(1:num_of_images) )
+      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      !
 #endif
-         !
-      END IF
       !
       RETURN
       !
@@ -1358,13 +1265,13 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE control_flags,    ONLY : lneb, lsmd
-      USE path_variables,   ONLY : conv_path, istep_path, nstep_path, &
-                                   lquick_min, ldamped_dyn, lmol_dyn, &
-                                   suspended_image, err_max
-      USE path_variables,   ONLY : climbing, CI_scheme, Emax_index
+      USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
+                                   lquick_min, ldamped_dyn, lmol_dyn,  &
+                                   suspended_image, activation_energy, &
+                                   err_max, num_of_modes, Nft, pes,    &
+                                   climbing, CI_scheme, Emax_index, fixed_tan
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
       USE check_stop,       ONLY : check_stop_now
-      USE io_files,         ONLY : iunpath
       USE io_global,        ONLY : meta_ionode
       USE path_formats,     ONLY : scf_iter_fmt
       !
@@ -1398,24 +1305,51 @@ MODULE path_base
          !
       END IF
       !
-      ! ... path optimization loop
+      ! ... path optimisation loop
       !
-      optimization: DO
+      optimisation: DO
          !
          IF ( meta_ionode ) &
             WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep_path + 1
          !
          ! ... the restart file is written (in real space)
          !
-         CALL write_restart()
+         IF ( MOD( istep_path, IPRINT ) == 0 ) CALL write_restart()
          !
          IF ( suspended_image == 0 ) THEN
             !
-            ! ... minimization step is done only in case of no suspended images
+            ! ... minimisation step is done only in case of no suspended images
             ! ... when the simulation is started from scratch all gradients are
-            ! ... zero and fourier components are not optimized.
+            ! ... zero.
             !
             CALL first_opt_step()
+            !
+            IF ( lsmd .AND. .NOT. fixed_tan ) THEN
+               !
+               ! ... fourier components of the path
+               !
+               CALL to_reciprocal_space()
+               !
+               ! ... the path-length is computed here
+               !
+               CALL compute_path_length()
+               !
+               ! ... real space representation of the path :
+               !
+               CALL update_num_of_images()
+               !               
+               ! ... the path in real space with the new number of images is 
+               ! ... obtained interpolating with the "old" number of modes
+               !
+               ! ... here the parametrisation of the path is enforced
+               !
+               CALL to_real_space()
+               !
+               ! ... the number of modes is updated (if necessary)
+               !
+               num_of_modes = ( Nft - 1 )
+               !
+            END IF
             !
          END IF
          !
@@ -1439,7 +1373,7 @@ MODULE path_base
             !
             conv_path = .FALSE.
             !
-            EXIT optimization
+            EXIT optimisation
             !
          END IF         
          !
@@ -1461,21 +1395,15 @@ MODULE path_base
             !
          ELSE IF ( lsmd ) THEN
             !
-            ! ... reparametrized path in reciprocal space
-            !
-            CALL to_reciprocal_space()
-            !
-            ! ... the fourier components of the pes and of the projected 
-            ! ... gradient are computed here
+            ! ... the projected gradients are computed here
             !
             CALL smd_gradient()
             !
          END IF
          !
-         ! ... the transition state configuration and the forward activation 
-         ! ... energy are computed here
+         ! ... the forward activation energy is computed here
          !
-         CALL find_saddle()
+         activation_energy = ( pes(Emax_index) - pes(1) ) * au
          !
          ! ... the error is computed here
          !
@@ -1483,7 +1411,7 @@ MODULE path_base
          !
          IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
             !
-            ! ... a second minimization step is needed for those algorithms
+            ! ... a second minimisation step is needed for those algorithms
             ! ... based on a velocity Verlet scheme 
             !
             CALL second_opt_step()
@@ -1500,13 +1428,13 @@ MODULE path_base
          !
          ! ... exit conditions
          !
-         IF ( check_exit( err_max ) ) EXIT optimization
+         IF ( check_exit( err_max ) ) EXIT optimisation
          !
          suspended_image = 0
          !
-      END DO optimization
+      END DO optimisation
       !
-      ! ... the restart file is written before exit (again in real space)
+      ! ... the restart file is written before exit
       !
       CALL write_restart()
       !
@@ -1518,11 +1446,10 @@ MODULE path_base
     SUBROUTINE search_mep_init()
       !------------------------------------------------------------------------
       !
-      USE control_flags,    ONLY : lneb, lsmd
-      USE path_variables,   ONLY : istep_path, nstep_path, &
-                                   suspended_image, reset_vel
-      USE path_variables,   ONLY : ft_pos, ft_grad, ft_pos_old, ft_grad_old
-      USE path_io_routines, ONLY : write_dat_files, write_output
+      USE control_flags,  ONLY : lneb, lsmd
+      USE path_variables, ONLY : istep_path, suspended_image, reset_vel, &
+                                 fixed_tan, ft_pos_av, ft_pos, path_length, &
+                                 path_length_av
       !
       IMPLICIT NONE
       !
@@ -1551,8 +1478,19 @@ MODULE path_base
             !
             CALL compute_path_length()
             !
-            ! ... the fourier components of the projected gradient
-            ! ... are computed here
+            IF ( fixed_tan .AND. istep_path == 0 ) THEN
+               !
+               ft_pos_av = ft_pos
+               !
+               path_length_av = path_length
+               !
+            END IF
+            !
+            ! ... back to real space
+            !
+            CALL to_real_space()
+            !
+            ! ... projected gradients are computed here
             !
             CALL smd_gradient()
             !
@@ -1560,11 +1498,6 @@ MODULE path_base
             ! ... from scratch
             !
             IF ( istep_path > 0 ) CALL compute_error()
-            !
-            ! ... ft_pos_old  and  ft_grad_old  are initialized here
-            !
-            ft_pos_old(:,:)  = ft_pos(:,:)
-            ft_grad_old(:,:) = ft_grad(:,:)
             !
          END IF
          !
@@ -1580,7 +1513,6 @@ MODULE path_base
       !
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE control_flags,    ONLY : lneb, lsmd
-      USE io_files,         ONLY : iunpath
       USE io_global,        ONLY : ionode
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
                                    conv_path, suspended_image, &
@@ -1658,44 +1590,29 @@ MODULE path_base
     SUBROUTINE first_opt_step()
       !------------------------------------------------------------------------
       !
-      USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : istep_path, first_last_opt, &
-                                 num_of_images, num_of_modes, Nft, &
+      USE path_variables, ONLY : first_last_opt, num_of_images, &
                                  lsteep_des, lquick_min, ldamped_dyn, &
-                                 lmol_dyn, llangevin
+                                 lmol_dyn, lbroyden, llangevin, istep_path
       USE path_opt_routines
       !
       IMPLICIT NONE
       !
-      INTEGER :: image, mode
+      INTEGER :: image
       !
-      !
-      IF ( istep_path == 0 ) THEN
+      IF ( lbroyden ) THEN 
          !
-         IF ( lsmd ) THEN
+         IF ( istep_path >= 50 ) THEN
             !
-            ! ... the number of images is initialized
+            lsteep_des = .FALSE.
             !
-            CALL update_num_of_images()
+            CALL broyden()
             !
-            ! ... real space representation of the path :
+         ELSE
             !
-            ! ... the path-length is computed here
-            !
-            CALL compute_path_length()
-            !
-            ! ... the path in real space with the new number of images is 
-            ! ... obtained interpolating with the "old" number of modes
-            !
-            CALL to_real_space()
-            !
-            ! ... the number of modes is updated (if necessary)
-            !
-            num_of_modes = ( Nft - 1 )
+            lsteep_des     = .TRUE.
+            first_last_opt = .TRUE.
             !
          END IF
-         !
-         RETURN
          !
       END IF
       !
@@ -1703,70 +1620,31 @@ MODULE path_base
          !
          IF ( lsteep_des .OR. llangevin ) THEN
             !
-            CALL r_steepest_descent( 1 )
-            CALL r_steepest_descent( num_of_images )
+            CALL steepest_descent( 1 )
+            CALL steepest_descent( num_of_images )
             !
          ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
             !
-            CALL r_velocity_Verlet_first_step( 1 )
-            CALL r_velocity_Verlet_first_step( num_of_images )
+            CALL velocity_Verlet_first_step( 1 )
+            CALL velocity_Verlet_first_step( num_of_images )
             !
          END IF
          !
       END IF
       !
-      IF ( lneb ) THEN
+      DO image = 2, ( num_of_images - 1 )
          !
-         first_r_opt_loop: DO image = 2, ( num_of_images - 1 )
+         IF ( lsteep_des .OR. llangevin ) THEN
             !
-            IF ( lsteep_des ) THEN
-               !
-               CALL r_steepest_descent( image )
-               !
-            ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
-               !
-               CALL r_velocity_Verlet_first_step( image )
-               !
-            END IF
+            CALL steepest_descent( image )
             !
-         END DO first_r_opt_loop
-         !
-      ELSE IF ( lsmd ) THEN
-         !
-         ! ... the number of images is updated
-         !
-         CALL update_num_of_images()
-         !
-         first_ft_opt_loop: DO mode = 1, num_of_modes
+         ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
             !
-            IF ( lsteep_des .OR. llangevin ) THEN
-               !
-               CALL ft_steepest_descent( mode )
-               !
-            ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
-               !
-               CALL ft_velocity_Verlet_first_step( mode )
-               !
-            END IF
+            CALL velocity_Verlet_first_step( image )
             !
-         END DO first_ft_opt_loop
+         END IF
          !
-         ! ... real space representation of the path :
-         !
-         ! ... the path-length is computed here
-         !
-         CALL compute_path_length()
-         !
-         ! ... the path in real space with the new number of images is 
-         ! ... obtained interpolating with the "old" number of modes
-         !
-         CALL to_real_space()
-         !
-         ! ... the number of modes is updated (if necessary)
-         !
-         num_of_modes = ( Nft - 1 )
-         !
-      END IF
+      END DO
       !
       RETURN
       !
@@ -1776,65 +1654,44 @@ MODULE path_base
     SUBROUTINE second_opt_step()
       !------------------------------------------------------------------------
       !
-      USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : first_last_opt, num_of_images, num_of_modes, &
-                                 lquick_min, ldamped_dyn, lmol_dyn, llangevin
+      USE path_variables, ONLY : first_last_opt, num_of_images, &
+                                 lquick_min, ldamped_dyn, lmol_dyn
       USE path_opt_routines
       !
       IMPLICIT NONE
       !
-      INTEGER :: image, mode
+      INTEGER :: image
       !
       !
       IF ( first_last_opt ) THEN
          !
          IF ( lquick_min ) THEN
             !
-            CALL r_quick_min_second_step( 1 )
-            CALL r_quick_min_second_step( num_of_images )
+            CALL quick_min_second_step( 1 )
+            CALL quick_min_second_step( num_of_images )
             !
          ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
             !
-            CALL r_velocity_Verlet_second_step( 1 )
-            CALL r_velocity_Verlet_second_step( num_of_images )
+            CALL velocity_Verlet_second_step( 1 )
+            CALL velocity_Verlet_second_step( num_of_images )
             !
          END IF
          !
       END IF
       !
-      IF ( lneb ) THEN
+      DO image = 2, ( num_of_images - 1 )
          !
-         second_r_opt_loop: DO image = 2, ( num_of_images - 1 )
+         IF ( lquick_min ) THEN
             !
-            IF ( lquick_min ) THEN
-               !
-               CALL r_quick_min_second_step( image )
-               !
-            ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
-               !
-               CALL r_velocity_Verlet_second_step( image )
-               !
-            END IF
+            CALL quick_min_second_step( image )
             !
-         END DO second_r_opt_loop
+         ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
+            !
+            CALL velocity_Verlet_second_step( image )
+            !
+         END IF
          !
-      ELSE IF ( lsmd ) THEN
-         !
-         second_ft_opt_loop: DO mode = 1, num_of_modes
-            !
-            IF ( lquick_min ) THEN
-               !
-               CALL ft_quick_min_second_step( mode )
-               !
-            ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
-               !
-               CALL ft_velocity_Verlet_second_step( mode )
-               !
-            END IF
-            !
-         END DO second_ft_opt_loop
-         !
-      END IF
+      END DO
       !
       RETURN
       !
