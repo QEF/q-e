@@ -80,3 +80,4 @@ LD = $(F90)
 LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/ptools.a \
           $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a \
           -p -Wl" -f zero " $(LIBS)
+RANLIB         = echo

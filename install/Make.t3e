@@ -73,3 +73,4 @@ MYLIB = lapack_t3e
 #
 AR = ar
 ARFLAGS = ruv
+RANLIB         = echo

@@ -317,8 +317,8 @@ If you use FFTW, you can either compile the copy that comes with the
 distribution (this is the default configuration) or link to a
 precompiled FFTW library.
 In the latter case, follow the instructions in the files
-\texttt{Install/Make.*}, and remember that only FFTW version $<3$ is
-supported: FFTW version 3 requires changes in the code.
+\texttt{Install/Make.*}, and remember that only FFTW v.~$<3$ is
+supported: FFTW v.~3 requires changes in the code.
 
 If you want to use external precompiled libraries, you need to
 correctly specify their location in the \texttt{make.sys} file.
@@ -443,14 +443,18 @@ depending on your system configuration.
 If this happens and no executable is produced, add the following to
 \texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
 
-Intel compiler version 7 and later use a different method to locate
-where modules are with respect to version $< 7$.
+Intel compiler v.~7 and later use a different method to locate
+where modules are with respect to v.~$< 7$.
 In \texttt{make.sys}, choose the appropriate line
 \texttt{MODULEFLAG=...} (obsolete with automatic configuration).
 
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
 Note that MKL also contains optimized FFT routines, but they are
-presently not supported: use FFTW instead.
+presently not supported: use FFTW instead. Also note that Intel 
+compiler v.~8 fails to load with MKL v.~5.2 or earlier versions,
+because some symbols that are referenced by MKL are missing. There
+is a fix for this (info from Konstantin Kudin): add libF90.a from 
+ifc 7.1 at the linking stage, as the last library (info from Konstantin Kudin).
 
 The I/O libraries used by the Intel compiler ifc are incompatible with
 those called by most precompiled BLAS/LAPACK libraries (including
@@ -496,6 +500,9 @@ AMD Opteron CPUs should run in 64-bit mode with the Portland compiler:
 It is also known to run with the Intel compiler in 32-bit emulation.
 64-bit executables can address a much larger memory space, but
 apparently they are not especially faster than 32-bit executables.
+There are rumors that the just released Intel compiler v.~8.1
+available via Intel Premier support, works fine with Opterons in 
+64-bit mode.
 
 Intel Itanium is untested, but it should work, provided that
 \texttt{-D\_\_LINUX64} is used (if 64-bit execution is desired).
@@ -755,7 +762,8 @@ in the calculation is read from PP files.
 All PP's must have been generated using the same exchange-correlation. 
 
 In the following, ``Example N'' refers to the contents of directory\\
-\texttt{pw\_examples/exampleN}.
+\texttt{examples/example0N} if N$<10$; \texttt{examples/exampleN}
+otherwise.
 
 \subsection{Electronic and ionic structure calculations}
 
@@ -895,11 +903,14 @@ We may distinguish the following typical cases for \texttt{pw.x}:
 
 \end{description}
 
+The output data files are written in the directory specified
+by variable \texttt{outdir}, with names specified by variable 
+\texttt{prefix} (a string that is prepended to all file names,
+whose default value is: \texttt{prefix='pwscf'}).
+
 The execution stops if you create a file \texttt{prefix.EXIT} in the
-working directory, where \texttt{prefix} is a string that is prepended
-to all file names (default value: \texttt{prefix='pwscf'}).
-Note that just killing the process may left the output files in an
-unusable state.
+working directory. Note that just killing the process may leave the 
+output files in an unusable state.
 
 \subsection{Phonon calculations}
 
@@ -1136,7 +1147,7 @@ local scratch directories: there is presently no way to ensure that
 the distribution of processes on processors will follow the same
 pattern for different jobs).
 
-Some implementation of the MPI library may give some trouble with
+Some implementations of the MPI library may have problems with
 input redirection in parallel.
 If this happens, use the option \texttt{-in} (or \texttt{-inp} or
 \texttt{-input}), followed by the input file name.

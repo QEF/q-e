@@ -1,3 +1,6 @@
+11 Aug 2004  Manual update and cleanup (GB, PG). 
+             Added RANLIB=echo to old Make.* (PG)
+
  9 Aug 2004  Support for mac-osx added (contributed by Pascal Thibaudeau)
              Extensive documentation update and reshuffling : pwdocs
              and cpdocs merged into Doc (PG)

@@ -67,3 +67,4 @@ LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a +
 #
 AR = ar
 ARFLAGS = ruv
+RANLIB         = echo
