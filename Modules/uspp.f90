@@ -74,12 +74,13 @@ MODULE uspp
        nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
   !
   COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
-       vkb(:,:),              &! all beta functions in reciprocal space
+       vkb(:,:)                ! all beta functions in reciprocal space
+  COMPLEX(KIND=DP), ALLOCATABLE :: &
        dvan(:,:,:,:),         &! the D functions of the solid
        deeq(:,:,:,:)           ! the integral of V_eff and Q_{nm}
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
-       becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
+  ! NB: dvan and deeq are complex because of spin-orbit
   REAL(KIND=DP), ALLOCATABLE :: &
+       becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !

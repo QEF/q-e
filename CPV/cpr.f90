@@ -59,7 +59,7 @@
       use core, only: deallocate_core
       use uspp_param, only: nhm
       use cvan, only: nvb
-      use uspp, only : nhsa=> nkb, deeq, betae => vkb
+      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum
       use uspp, only: deallocate_uspp
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
@@ -166,7 +166,8 @@
 !
       real(kind=8), allocatable:: bec(:,:), becdr(:,:,:)
       real(kind=8), allocatable:: bephi(:,:), becp(:,:)
-      real(kind=8), allocatable:: rhovan(:,:,:)
+! TEMP: complex in module uspp
+      real(kind=8), allocatable:: deeq(:,:,:,:)
 !
 !  mass preconditioning
 !
@@ -1621,7 +1622,6 @@
       IF( ALLOCATED( becdr ) ) DEALLOCATE( becdr )
       IF( ALLOCATED( bephi ) ) DEALLOCATE( bephi )
       IF( ALLOCATED( becp ) ) DEALLOCATE( becp )
-      IF( ALLOCATED( rhovan ) ) DEALLOCATE( rhovan )
       IF( ALLOCATED( ema0bg ) ) DEALLOCATE( ema0bg )
       IF( ALLOCATED( lambda ) ) DEALLOCATE( lambda )
       IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )
