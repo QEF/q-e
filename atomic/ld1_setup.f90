@@ -26,6 +26,8 @@ subroutine ld1_setup
      do n=1,nwf
         oc_old(n)=oc(n)
      enddo
+  else
+     jj=0.d0
   endif
   !
   !  make the correspondence all-electron pseudopotential

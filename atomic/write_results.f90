@@ -119,10 +119,16 @@ subroutine write_results
 
   do i=1,nwf
      do j=i,nwf
-        if (ll(i).eq.ll(j)) then
-           do m=1,mesh
-              work(m)=psi(m,1,i)*psi(m,1,j)
-           enddo
+        if (ll(i)==ll(j).and.jj(i)==jj(j)) then
+           if (rel<2) then
+              do m=1,mesh
+                 work(m)=psi(m,1,i)*psi(m,1,j)
+              enddo
+           else
+              do m=1,mesh
+                 work(m)=psi(m,1,i)*psi(m,1,j)+psi(m,2,i)*psi(m,2,j)
+              enddo
+           endif
            sij = int_0_inf_dr(work,r,r2,dx,mesh,2*ll(i)+2)
            if (i.eq.j) then
               do m=1,mesh
