@@ -187,10 +187,6 @@ SUBROUTINE do_initial_state (excite)
      CALL symscalar( nat, shift, nsym, s, irt )
   END IF
   !
-#ifdef __PARA
-  CALL check( ( nat ), shift )
-#endif
-  !
   ! ... write on output the initial state core level shifts
   !
   DO na = 1, nat
