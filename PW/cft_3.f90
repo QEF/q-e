@@ -1,158 +1,259 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! ... This is a collection of serial fft drivers for several 
+! ... machine-specific libraries (including some obsolete ones). 
+! ... The performance of the code may depend heavily upon the
+! ... performance of these routines.
 !
-! This is a collection of serial fft drivers for several 
-! machine-specific libraries (including some obsolete ones). 
-! The performance of the code may depend heavily upon the
-! performance of these routines.
+! ... For FFTW and AIX ESSL, there are no serial drivers: 
+! ... parallel drivers are used also in the serial case
 !
-! For FFTW and AIX ESSL, there are no serial drivers: 
-! parallel drivers are used also in the serial case
-!
-! If a machine-specific routine is not available, a fake
-! routine issuing an error message is compiled.
+! ... If a machine-specific routine is not available, a fake
+! ... routine issuing an error message is compiled.
 !
 #include "f_defs.h"
-
+!
 #undef PRESENT
-
-#if defined(__SGI) || defined(__ORIGIN)
+!
+! ... FFTW case
+!
+#if defined (__FFTW)
 #define PRESENT
-!----------------------------------------------------------------------
-
-subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
-  !     ===============
-  !     silicon graphics  driver routine for 3d complex fft (complib)
+!----------------------------------------------------------------------------
+SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
+  !----------------------------------------------------------------------------
   !
-  !----------------------------------------------------------------------
-
-  USE kinds, only : DP
-  implicit none
-  integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
-
-  complex(kind=DP) :: f (nm1, nm2, nm3)
-  integer, parameter :: ngrid =2, nmax = 1000
-  logical, save :: first (ngrid)
-  complex(kind=DP), save :: aux (nmax, ngrid)
-  real(kind=DP) :: fac
-  data first / ngrid * .true. /
-
-  !save first, aux
-  !first = (/(.true.,i=1,ngrid)/)
-  if (n1 + n2 + n3 + 45 > nmax) &
-       call errore ('cft_3', 'increase nmax', n1 + n2 + n3 + 45)
-  if (first (igrid) ) then
-     call zfft3di (n1, n2, n3, aux (1, igrid) )
-     first (igrid) = .false.
-  endif
-
-  call zfft3d (sign, n1, n2, n3, f, nm1, nm2, aux (1, igrid) )
-  if (sign.lt.0) then
-     fac = 1.0d0 / dble (n1 * n2 * n3)
-     call DSCAL (2 * nm1 * nm2 * n3, fac, f, 1)
-
-  endif
-  return
-
-end subroutine cft_3
+  USE fft_scalar, ONLY : cfft3d
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER          :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
+  COMPLEX(KIND=DP) :: f( nx1*nx2*nx3 )
+  !
+  !
+  !   sign = +-1 : complete 3d fft (for rho and for the potential)
+  !
+  IF ( sign == 1 ) THEN
+     !
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
+     !
+  ELSE IF ( sign == - 1 ) THEN
+     !
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, - 1 )
+     !
+  ELSE
+     !
+     CALL errore( 'cft_3', 'what should i do?', 1 )
+     !
+  END IF
+  !
+  RETURN
+  !
+END SUBROUTINE cft_3
 #endif
-#if defined(EXEMPLAR)
+!
+! ... AIX case
+!
+#if defined (__AIX)
 #define PRESENT
-!----------------------------------------------------------------------
-
-subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
-  !     ===============
-  !     exemplar graphics  driver routine for 3d complex fft (veclib)
-  !
+!----------------------------------------------------------------------------
+SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   !----------------------------------------------------------------------
-
-  USE kinds, only : DP
-  implicit none
-  integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
-
-  complex(kind=DP) :: f (nm1, nm2, nm3)
-
-  integer :: ier
-  call z3dfft (f, n1, n2, n3, nm1, nm2, sign, ier)
-
-  if (ier.ne.0) call errore ('cft_3', ' fft error ', abs (ier) )
-  return
-
-end subroutine cft_3
+  !
+  ! ... ibm driver routine for 3d complex fft (essl library)
+  ! ... nx1=n1+1 is allowed (in order to avoid memory conflicts)
+  ! ... for compatibility: nx2=n2, nx3=n3. nx2 and nx3 are not used
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER            :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
+  COMPLEX(KIND=DP)   :: f( nx1 * nx2 * nx3 )
+  INTEGER            :: isign
+  INTEGER, PARAMETER :: naux = 60000
+  REAL(KIND=DP)      :: aux(naux), scale
+  !
+  !
+  IF ( sign /= - 1 .AND. sign /= 1 ) &
+     CALL errore( 'cft_3', 'which fft ?', 1 )
+  !
+  ! ... ESSL sign convention for fft's is the opposite of the "usual" one
+  !
+  isign = - sign
+  !
+  IF ( isign > 0 ) THEN
+     !
+     scale = 1.D0 / ( n1 * n2 * n3 )
+     !
+  ELSE
+     !
+     scale = 1.D0
+     !
+  ENDIF
+  !
+  CALL dcft3( f, nx1, nx1 * nx2, f, nx1, nx1 * nx2, &
+              n1, n2, n3, isign, scale, aux, naux )
+  !
+  RETURN
+  !
+END SUBROUTINE cft_3
 #endif
+!
+! ... Silicon Graphics case
+!
+#if defined (__SGI) || defined (__ORIGIN)
+#define PRESENT
+!----------------------------------------------------------------------------
+SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
+  !----------------------------------------------------------------------------
+  !
+  ! ... silicon graphics  driver routine for 3d complex fft (complib)
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER                :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
+  COMPLEX(KIND=DP)       :: f( nm1, nm2, nm3 )
+  INTEGER, PARAMETER     :: ngrid = 2, nmax = 1000
+  LOGICAL, SAVE          :: first( ngrid )
+  COMPLEX(KIND=DP), SAVE :: aux( nmax, ngrid )
+  REAL(KIND=DP)          :: fac
+  !
+  DATA first / ngrid * .TRUE. /
+  !
+  !
+  IF ( n1 + n2 + n3 + 45 > nmax ) &
+     CALL errore( 'cft_3', 'increase nmax', n1 + n2 + n3 + 45 )
+  !
+  IF ( first(igrid) ) THEN
+     !
+     CALL zfft3di( n1, n2, n3, aux(1,igrid) )
+     !
+     first( igrid ) = .FALSE.
+     !
+  END IF
+  !
+  CALL zfft3d( sign, n1, n2, n3, f, nm1, nm2, aux(1,igrid) )
+  !
+  IF ( sign < 0 ) THEN
+     !
+     fac = 1.D0 / REAL( n1 * n2 * n3 )
+     !
+     CALL DSCAL( 2 * nm1 * nm2 * n3, fac, f, 1 )
+     !
+  END IF
+  !
+  RETURN
+  !
+END SUBROUTINE cft_3
+#endif
+!
+! ... EXEMPLAR case
+!
+#if defined (EXEMPLAR)
+#define PRESENT
+!----------------------------------------------------------------------------
+SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
+  !----------------------------------------------------------------------------
+  !
+  ! ... exemplar graphics  driver routine for 3d complex fft (veclib)
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER          :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
+  COMPLEX(KIND=DP) :: f( nm1, nm2, nm3 )
+  INTEGER          :: ier
+  !
+  !
+  CALL z3dfft( f, n1, n2, n3, nm1, nm2, sign, ier )
+  !
+  IF ( ier /= 0 ) CALL errore( 'cft_3', ' fft error ', ABS( ier ) )
+  !
+  RETURN
+  !
+END SUBROUTINE cft_3
+#endif
+!
+! ... CRAYY case
+!
 #ifdef CRAYY
 #define PRESENT
 !----------------------------------------------------------------------
-subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
+SUBROUTINE cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   !----------------------------------------------------------------------
   !
   !      3d fft - cray scilib version
   !
-  USE kinds, only : DP
-  implicit none
-  integer :: n1, n2, n3, nm1, nm2, nm3, igrid, isign
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER :: n1, n2, n3, nm1, nm2, nm3, igrid, isign
 
-  real :: ac (2, nm1, nm2, nm3)
-  integer, parameter :: ngrid = 2, nmax = 256
-  integer, save :: ifax (19, 3, ngrid), np1
-  integer       :: inc, lot, jump, j, k
-  real, save    :: trig (2 * nmax, 3, ngrid)
-  real ::  work (4 * nm1 * n2 * n3), fac
-  logical, save :: first (ngrid)
-  data first / ngrid * .true. /
+  REAL :: ac (2, nm1, nm2, nm3)
+  INTEGER, PARAMETER :: ngrid = 2, nmax = 256
+  INTEGER, SAVE :: ifax (19, 3, ngrid), np1
+  INTEGER       :: inc, lot, jump, j, k
+  REAL, SAVE    :: trig (2 * nmax, 3, ngrid)
+  REAL ::  work (4 * nm1 * n2 * n3), fac
+  LOGICAL, SAVE :: first (ngrid)
+  DATA first / ngrid * .TRUE. /
   !save trig, ifax, first, np1
-  external sscal
+  EXTERNAL sscal
   !
   !
   !first = (/(.true.,i=1,ngrid)/)
 
-  if (igrid.le.0.or.igrid.gt.ngrid) call errore ('cft_3', 'which grid?', 1)
-  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?', 2)
+  IF (igrid.LE.0.OR.igrid.GT.ngrid) CALL errore ('cft_3', 'which grid?', 1)
+  IF (sign.NE. - 1.AND.sign.NE.1) CALL errore ('cft_3', 'which fft ?', 2)
 
-  if (n1.gt.nmax.or.n2.gt.nmax.or.n3.gt.nmax) call errore ('cft_3', &
+  IF (n1.GT.nmax.OR.n2.GT.nmax.OR.n3.GT.nmax) CALL errore ('cft_3', &
        'increase nmax', 3)
   !
-  if (first (igrid) ) then
-     if (mod (n1, 2) .eq.0) then
+  IF (first (igrid) ) THEN
+     IF (MOD (n1, 2) .EQ.0) THEN
         np1 = n1 + 1
-     else
+     ELSE
         np1 = n1
-     endif
-     if (np1.gt.nm1) call errore ('cft3', 'too large input dimension', np1)
-     if (n2.gt.nm2) call errore ('cft3', 'too large input dimension', &
+     ENDIF
+     IF (np1.GT.nm1) CALL errore ('cft3', 'too large input dimension', np1)
+     IF (n2.GT.nm2) CALL errore ('cft3', 'too large input dimension', &
           n2)
-     if (n3.gt.nm3) call errore ('cft3', 'too large input dimension', &
+     IF (n3.GT.nm3) CALL errore ('cft3', 'too large input dimension', &
           n3)
      !
-     call cftfax (n1, ifax (1, 1, igrid), trig (1, 1, igrid) )
-     call cftfax (n2, ifax (1, 2, igrid), trig (1, 2, igrid) )
-     call cftfax (n3, ifax (1, 3, igrid), trig (1, 3, igrid) )
-     first (igrid) = .false.
-  endif
+     CALL cftfax (n1, ifax (1, 1, igrid), trig (1, 1, igrid) )
+     CALL cftfax (n2, ifax (1, 2, igrid), trig (1, 2, igrid) )
+     CALL cftfax (n3, ifax (1, 3, igrid), trig (1, 3, igrid) )
+     first (igrid) = .FALSE.
+  ENDIF
   !
 
-  if (np1.ne.nm1.or.n2.ne.nm2) call errore ('cft_3', 'no longer implemented', 1)
+  IF (np1.NE.nm1.OR.n2.NE.nm2) CALL errore ('cft_3', 'no longer implemented', 1)
   !     & call mcpack(ac,nm1,nm2,nm3,ac,np1,n2,n3,1)
-  if (n1.ne.np1) then
-     do k = 1, n3
-        do j = 1, n2
+  IF (n1.NE.np1) THEN
+     DO k = 1, n3
+        DO j = 1, n2
            ac (1, np1, j, k) = 0.0
            ac (2, np1, j, k) = 0.0
-        enddo
-     enddo
-  endif
+        ENDDO
+     ENDDO
+  ENDIF
   !
   !     ... i-direction
   !
   inc = 2
   jump = 2 * np1
   lot = n2 * n3
-  call cfftmlt (ac (1, 1, 1, 1), ac (2, 1, 1, 1), work, trig (1, 1, &
+  CALL cfftmlt (ac (1, 1, 1, 1), ac (2, 1, 1, 1), work, trig (1, 1, &
        igrid), ifax (1, 1, igrid), inc, jump, n1, lot, isign)
   !
   !     ... j-direction
@@ -160,10 +261,10 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   inc = 2 * np1
   jump = 2
   lot = n1
-  do k = 1, n3
-     call cfftmlt (ac (1, 1, 1, k), ac (2, 1, 1, k), work, trig (1, 2, &
+  DO k = 1, n3
+     CALL cfftmlt (ac (1, 1, 1, k), ac (2, 1, 1, k), work, trig (1, 2, &
           igrid), ifax (1, 2, igrid), inc, jump, n2, lot, isign)
-  enddo
+  ENDDO
   !
   !     ... k-direction
   !
@@ -171,35 +272,36 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   jump = 2
   lot = np1 * n2
 
-  call cfftmlt (ac (1, 1, 1, 1), ac (2, 1, 1, 1), work, trig (1, 3, &
+  CALL cfftmlt (ac (1, 1, 1, 1), ac (2, 1, 1, 1), work, trig (1, 3, &
        igrid), ifax (1, 3, igrid), inc, jump, n3, lot, isign)
   !      if( np1.ne.nm1 .or. n2.ne.nm2 )
   !     & call mcpack(ac,nm1,nm2,nm3,ac,np1,n2,n3,-1)
   !
-  if (isign.lt.0) then
+  IF (isign.LT.0) THEN
      fac = 1.0 / (n1 * n2 * n3)
-     call sscal (2 * nm1 * nm2 * nm3, fac, ac, 1)
-  endif
+     CALL sscal (2 * nm1 * nm2 * nm3, fac, ac, 1)
+  ENDIF
   !
-  return
+  RETURN
 
-end subroutine cft_3
+END SUBROUTINE cft_3
 #endif
-
+!
+! ... SX4 case
+!
 #ifdef __SX4
 #define PRESENT
 !----------------------------------------------------------------------
-subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
+SUBROUTINE cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !----------------------------------------------------------------------
   !
   !      3d fft for NEC:
   !      uses GPFA routines
   !
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
 
-  USE kinds, only : DP
-  implicit none
-
-  integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign
+  INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign
   !
   ! input: the logical dimension of the FFT
   !
@@ -209,27 +311,27 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   ! input: grid used (1=thick, 2=smooth)
   ! input: the sign of the transformation
 
-  real(kind=DP) :: f (2, nrx1, nrx2, nrx3)
+  REAL(KIND=DP) :: f (2, nrx1, nrx2, nrx3)
   ! inp/out: the function to transform
-  integer, parameter :: ngrid = 2, nmax = 256
+  INTEGER, PARAMETER :: ngrid = 2, nmax = 256
   ! max number of different grid allowed
   ! max value of n1, n2, n3 allowed
-  integer :: k, inc, jump, lot
+  INTEGER :: k, inc, jump, lot
   ! counter on z direction
   ! the increment between different values
   ! the jump between fft arrays
   ! how many fft
 
-  real(kind=DP), save :: trig1 (2 * nmax, ngrid), trig2 (2 * nmax, ngrid), &
+  REAL(KIND=DP), SAVE :: trig1 (2 * nmax, ngrid), trig2 (2 * nmax, ngrid), &
        trig3 (2 * nmax, ngrid), fact
   !
   !    trigonometric factors
   !
   !    the multiplication factor
-  logical, save :: first (ngrid)
+  LOGICAL, SAVE :: first (ngrid)
   ! is true at the first iteration
 
-  data first / ngrid * .true. /
+  DATA first / ngrid * .TRUE. /
   !save first, trig1, trig2, trig3
   !
   !    test the sign and put the correct normalization on f
@@ -237,32 +339,32 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
 
   !first = (/(.true.,i=1,ngrid)/)
 
-  if (sign.eq. - 1) then
-     fact = 1.d0 / dble (nr1 * nr2 * nr3)
-     call sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
-  elseif (sign.ne.1) then
-     call errore ('cft_3', 'wrong isign', 1)
-  endif
-  if (igrid.le.0.or.igrid.gt.ngrid) call errore ('cft_3', 'which grid?', 1)
+  IF (sign.EQ. - 1) THEN
+     fact = 1.d0 / DBLE (nr1 * nr2 * nr3)
+     CALL sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
+  ELSEIF (sign.NE.1) THEN
+     CALL errore ('cft_3', 'wrong isign', 1)
+  ENDIF
+  IF (igrid.LE.0.OR.igrid.GT.ngrid) CALL errore ('cft_3', 'which grid?', 1)
 
-  if (nr1.gt.nmax.or.nr2.gt.nmax.or.nr3.gt.nmax) call errore ( &
+  IF (nr1.GT.nmax.OR.nr2.GT.nmax.OR.nr3.GT.nmax) CALL errore ( &
        'cft_3', 'increase nmax', 3)
   !
   !   At the first iteration initialize
   !
-  if (first (igrid) ) then
-     call setgpfa (trig1 (1, igrid), nr1)
-     call setgpfa (trig2 (1, igrid), nr2)
-     call setgpfa (trig3 (1, igrid), nr3)
-     first (igrid) = .false.
-  endif
+  IF (first (igrid) ) THEN
+     CALL setgpfa (trig1 (1, igrid), nr1)
+     CALL setgpfa (trig2 (1, igrid), nr2)
+     CALL setgpfa (trig3 (1, igrid), nr3)
+     first (igrid) = .FALSE.
+  ENDIF
   !
   !     i-direction
   !
   inc = 2
   jump = 2 * nrx1
   lot = nr2 * nr3
-  call gpfa (f (1, 1, 1, 1), f (2, 1, 1, 1), trig1 (1, igrid), &
+  CALL gpfa (f (1, 1, 1, 1), f (2, 1, 1, 1), trig1 (1, igrid), &
        inc, jump, nr1, lot, sign)
   !
   !     ... j-direction ...
@@ -270,10 +372,10 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   inc = 2 * nrx1
   jump = 2
   lot = nr1
-  do k = 1, nr3
-     call gpfa (f (1, 1, 1, k), f (2, 1, 1, k), trig2 (1, igrid), &
+  DO k = 1, nr3
+     CALL gpfa (f (1, 1, 1, k), f (2, 1, 1, k), trig2 (1, igrid), &
           inc, jump, nr2, lot, sign)
-  enddo
+  ENDDO
   !
   !     ... k-direction
   !
@@ -281,44 +383,49 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   jump = 2
   lot = nrx1 * nr2
 
-  call gpfa (f (1, 1, 1, 1), f (2, 1, 1, 1), trig3 (1, igrid), &
+  CALL gpfa (f (1, 1, 1, 1), f (2, 1, 1, 1), trig3 (1, igrid), &
        inc, jump, nr3, lot, sign)
-  return
+  RETURN
 
-end subroutine cft_3
+END SUBROUTINE cft_3
 #endif
-
+!
+! ... SX6 case
+!
 #ifdef __SX6
 #define PRESENT
 
-module afftnec
-
+MODULE afftnec
+  !
   USE kinds
-  implicit none
-
-  integer, parameter :: ngrid=2
-  integer, parameter :: dim_iw=60
-  integer:: nrz1(ngrid),nrz2(ngrid),nrz3(ngrid)
-  logical :: first(ngrid)        ! is true at the first iteration
-  data first/ngrid*.true./
-  real(kind=DP), dimension(ngrid) :: fact
-  real(kind=DP), allocatable, target, dimension(:,:) :: auxp
-  integer, target, dimension(dim_iw,ngrid) :: iw0
-
-end module afftnec
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, PARAMETER :: ngrid = 2
+  INTEGER, PARAMETER :: dim_iw = 60
+  INTEGER            :: nrz1(ngrid), nrz2(ngrid), nrz3(ngrid)
+  LOGICAL            :: first(ngrid)        ! is true at the first iteration
+  !
+  DATA first/ngrid*.TRUE./
+  !
+  REAL(KIND=DP), DIMENSION(ngrid) :: fact
+  REAL(KIND=DP), ALLOCATABLE, TARGET, DIMENSION(:,:) :: auxp
+  INTEGER, TARGET, DIMENSION(dim_iw,ngrid) :: iw0
+  !
+END MODULE afftnec
 !
 !----------------------------------------------------------------------
-subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
+SUBROUTINE cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   !----------------------------------------------------------------------
   !
   !      3d fft for NEC SX6 - uses ASL library routines
   !      contributed by Guido Roma
   !
-  USE kinds, only : DP
-  use afftnec
-  implicit none
+  USE kinds, ONLY : DP
+  USE afftnec
+  IMPLICIT NONE
 
-  integer :: &
+  INTEGER :: &
        &       nr1,&       !
        &       nr2,&       ! input: the logical dimension of the FFT
        &       nr3,&       !
@@ -329,65 +436,65 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
        &       sign,&      ! input: the sign of the transformation
        &       ierr,&      ! 
        isw 
-  complex(kind=DP) :: &       
+  COMPLEX(KIND=DP) :: &       
        &       f(nrx1,nrx2,nrx3)    ! inp/out: the function to transform
-  complex(kind=DP), allocatable, dimension(:,:,:) :: f1 ! for ASL Library FFT routines 
+  COMPLEX(KIND=DP), ALLOCATABLE, DIMENSION(:,:,:) :: f1 ! for ASL Library FFT routines 
 #ifdef ASL
-  integer, pointer, dimension(:) :: iw
+  INTEGER, POINTER, DIMENSION(:) :: iw
 #if defined MICRO
-  common/NEC_ASL_PARA/nbtasks
-  integer :: nbtasks
+  COMMON/NEC_ASL_PARA/nbtasks
+  INTEGER :: nbtasks
 #endif
 #endif
-  real(kind=DP), pointer, dimension(:) :: cw1
-  complex(kind=DP), dimension(:), allocatable :: cw2   
+  REAL(KIND=DP), POINTER, DIMENSION(:) :: cw1
+  COMPLEX(KIND=DP), DIMENSION(:), ALLOCATABLE :: cw2   
 
   !     allocate auxp at the first call (independently of the grid)
-  if (.not.allocated(auxp)) then
-     allocate(auxp(195+2*(nr1+nr2+nr3),ngrid))
-  end if
+  IF (.NOT.ALLOCATED(auxp)) THEN
+     ALLOCATE(auxp(195+2*(nr1+nr2+nr3),ngrid))
+  END IF
 
   !
   !    test the sign and put the correct normalization on f
   !
-  if (first(igrid)) then
+  IF (first(igrid)) THEN
      nrz1(igrid)=nrx1
      nrz2(igrid)=nrx2
      nrz3(igrid)=nrx3
-     if (mod(nrx1,2)==0) nrz1(igrid)=nrx1+1
-     if (mod(nrx2,2)==0) nrz2(igrid)=nrx2+1
-     if (mod(nrx3,2)==0) nrz3(igrid)=nrx3+1
-  end if
+     IF (MOD(nrx1,2)==0) nrz1(igrid)=nrx1+1
+     IF (MOD(nrx2,2)==0) nrz2(igrid)=nrx2+1
+     IF (MOD(nrx3,2)==0) nrz3(igrid)=nrx3+1
+  END IF
 #ifdef ASL
-  allocate(cw2(nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
+  ALLOCATE(cw2(nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
 #else
-  allocate(cw2(6*nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
+  ALLOCATE(cw2(6*nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
 #endif
-  allocate(f1(nrz1(igrid),nrz2(igrid),nrz3(igrid)))
+  ALLOCATE(f1(nrz1(igrid),nrz2(igrid),nrz3(igrid)))
 
-  if ( sign.eq.-1 ) then
-     fact(igrid)=1.0_8/dble(nr1*nr2*nr3)
-     call DSCAL(2*nrx1*nrx2*nrx3,fact(igrid),f,1)
-  else if ( sign.ne.1) then
-     call errore('cft_3', 'wrong isign',1)
-  endif
-  if (igrid.le.0.or.igrid.gt.ngrid)&
-       &  call errore('cft_3','which grid ?',1)
+  IF ( sign.EQ.-1 ) THEN
+     fact(igrid)=1.0_8/DBLE(nr1*nr2*nr3)
+     CALL DSCAL(2*nrx1*nrx2*nrx3,fact(igrid),f,1)
+  ELSE IF ( sign.NE.1) THEN
+     CALL errore('cft_3', 'wrong isign',1)
+  ENDIF
+  IF (igrid.LE.0.OR.igrid.GT.ngrid)&
+       &  CALL errore('cft_3','which grid ?',1)
 
   !     copy f in the auxiliary f1 with odd dimensions
   !      call ZCOPY(nrx1*nrx2*nrx3,f,1,f1(1:nrx1,1:nrx2,1:nrx3),1)
   f1(1:nrx1,1:nrx2,1:nrx3)=f
 
 #ifdef ASL
-  call zfc3cl(f1,nr1,nr2,nr3,nrz1(igrid),nrz2(igrid),nrz3(igrid),ierr)
-  call errore('cft_3', 'initialisation problem',ierr)
+  CALL zfc3cl(f1,nr1,nr2,nr3,nrz1(igrid),nrz2(igrid),nrz3(igrid),ierr)
+  CALL errore('cft_3', 'initialisation problem',ierr)
   iw=>iw0(:,igrid)
 #endif
   cw1=>auxp(:,igrid)
 
-  if (first(igrid)) then
+  IF (first(igrid)) THEN
      isw=0
-     first(igrid)=.false.
+     first(igrid)=.FALSE.
      !         WRITE( stdout,*)'________________________________________________________'
      !         WRITE( stdout,*) 'igrid = ',igrid
      !         WRITE( stdout,*) '  nrxs => ',nrx1,nrx2,nrx3
@@ -399,32 +506,32 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
      !         WRITE( stdout,*)'________________________________________________________'
 #ifdef ASL
 #if defined MICRO
-     call hfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+     CALL hfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
           &            isw,iw,cw1,cw2,nbtasks,ierr)
 #else
-     call zfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+     CALL zfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
           &            isw,iw,cw1,cw2,ierr)
 #endif
-     if (ierr.ne.0) call errore('cft_3','ierr=',ierr)
+     IF (ierr.NE.0) CALL errore('cft_3','ierr=',ierr)
 #else
-     call ZZFFT3D(0,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
+     CALL ZZFFT3D(0,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
           &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
 #endif
-  endif
+  ENDIF
 
 #ifdef ASL
   isw=-sign
 #if defined MICRO
-  call hfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+  CALL hfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
        &            isw,iw,cw1,cw2,nbtasks,ierr)
 #else
-  call zfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+  CALL zfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
        &            isw,iw,cw1,cw2,ierr)     
 #endif
-  if (ierr.ne.0) call errore('cft_3','ierr=',ierr)
+  IF (ierr.NE.0) CALL errore('cft_3','ierr=',ierr)
 #else
   isw=sign
-  call ZZFFT3D(isw,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
+  CALL ZZFFT3D(isw,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
        &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
 #endif
 
@@ -432,118 +539,75 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   !     copy f1 back in f with odd dimensions
   !      call zcopy(nrx1*nrx2*nrx3,f1(1:nrx1,1:nrx2,1:nrx3),1,f,1)
   f(:,:,:)=f1(1:nrx1,1:nrx2,1:nrx3)
-  deallocate(f1)
-  deallocate(cw2)
-  nullify(cw1)
+  DEALLOCATE(f1)
+  DEALLOCATE(cw2)
+  NULLIFY(cw1)
 #ifdef ASL
-  nullify(iw)
+  NULLIFY(iw)
 #endif
   !
-  return
+  RETURN
 #endif
-
-#ifdef __AIX
-#define PRESENT
-!----------------------------------------------------------------------
-
-
-subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
-  !     ===============
-  !
-  !     ibm driver routine for 3d complex fft (essl library)
-  !     nx1=n1+1 is allowed (in order to avoid memory conflicts)
-  !     for compatibility: nx2=n2, nx3=n3. nx2 and nx3 are not used
-  !----------------------------------------------------------------------
-  USE kinds, only : DP
-  implicit none
-  integer :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
-
-  complex(kind=DP) :: f (nx1 * nx2 * nx3)
-  integer :: isign, naux
-  parameter (naux = 60000)
-
-  real(kind=DP) :: aux (naux), scale
-  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?' &
-       &, 1)
-  !
-  !  ESSL sign convention for fft's is the opposite of the "usual" one
-  !
-
-  isign = - sign
-  if (isign.gt.0) then
-     scale = 1.0d0 / (n1 * n2 * n3)
-  else
-     scale = 1.0d0
-
-  endif
-
-  call dcft3 (f, nx1, nx1 * nx2, f, nx1, nx1 * nx2, n1, n2, n3, &
-       isign, scale, aux, naux)
-  return
-
-
-
-end subroutine cft_3
-#endif
+!
+! ... SUN case
+!
 #ifdef SUN
 #define PRESENT
 !----------------------------------------------------------------------
-
-
-subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
-  !     ===============
-  !
-  ! SUNperf library
-  !
+SUBROUTINE cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   !----------------------------------------------------------------------
-  USE kinds, only : DP
+  !
+  ! ... SUNperf library
+  !
+  USE kinds, ONLY : DP
 
-  implicit none
+  IMPLICIT NONE
 
-  integer :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
-  complex(kind=DP) :: f ( nx1 , nx2 , nx3 )
+  INTEGER :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
+  COMPLEX(KIND=DP) :: f ( nx1 , nx2 , nx3 )
 
-  external zfft3i, zfft3f, zfft3b, zdscal
+  EXTERNAL zfft3i, zfft3f, zfft3b, zdscal
 !
 ! Local variables
 !
-  integer :: lwork
-  complex(kind=DP) ::  work ( 4*(nx1 + nx2 + nx3) + 45 )
-  real(kind=DP) :: scale
+  INTEGER :: lwork
+  COMPLEX(KIND=DP) ::  work ( 4*(nx1 + nx2 + nx3) + 45 )
+  REAL(KIND=DP) :: scale
 
   lwork = 4 * ( nx1 + nx2 + nx3 ) + 45
 
-  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?', 1)
+  IF (sign.NE. - 1.AND.sign.NE.1) CALL errore ('cft_3', 'which fft ?', 1)
 
-  call zfft3i ( nx1, nx2, nx3, work )
+  CALL zfft3i ( nx1, nx2, nx3, work )
 
-  if( sign.eq. 1 ) then
-   call zfft3b ( n1, n2, n3, f, nx1, nx2, work, lwork )
-  else
-   call zfft3f ( n1, n2, n3, f, nx1, nx2, work, lwork )
-   scale = 1.0d0 /dble( n1 * n2 * n3 )
-   call zdscal ( nx1*nx2*nx3, scale, f, 1 )
-  endif
+  IF( sign.EQ. 1 ) THEN
+   CALL zfft3b ( n1, n2, n3, f, nx1, nx2, work, lwork )
+  ELSE
+   CALL zfft3f ( n1, n2, n3, f, nx1, nx2, work, lwork )
+   scale = 1.0d0 /DBLE( n1 * n2 * n3 )
+   CALL zdscal ( nx1*nx2*nx3, scale, f, 1 )
+  ENDIF
 
-  return
+  RETURN
 
-end subroutine cft_3
+END SUBROUTINE cft_3
 #endif
+!
+! ... DXML case
+!
 #ifdef DXML
 #define PRESENT
 !----------------------------------------------------------------------
-
-subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
-  !     ===============
-  !     driver routine for 3d complex fft using DXML/CXML libraries
-  !
+SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   !----------------------------------------------------------------------
+  !
+  ! ... driver routine for 3d complex fft using DXML/CXML libraries
+  !
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
-  USE kinds, only : DP
-  implicit none
-  integer :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
-
-  complex(kind=DP) :: f (nm1, nm2, nm3)
+  COMPLEX(KIND=DP) :: f (nm1, nm2, nm3)
   STRUCTURE / DXML_Z_FFT_STRUCTURE /
   INTEGER :: N
   LOGICAL :: STRIDE_1_FLAG
@@ -566,122 +630,154 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   INTEGER :: FUTURE_USE (20)
   INTEGER :: GK (0:11)
   ENDSTRUCTURE
-  integer :: ngrid
-  parameter (ngrid = 2)
+  INTEGER :: ngrid
+  PARAMETER (ngrid = 2)
   record / DXML_Z_FFT_STRUCTURE / fft_struct (ngrid)
-  integer :: status, zfft_init_3d, zfft_exit_3d
-  real(kind=DP) :: norm
-  character (len=1) :: direction
-  logical :: first (ngrid)
-  data first / ngrid * .true. /
-  save first, fft_struct
+  INTEGER :: status, zfft_init_3d, zfft_exit_3d
+  REAL(KIND=DP) :: norm
+  CHARACTER (len=1) :: direction
+  LOGICAL :: first (ngrid)
+  DATA first / ngrid * .TRUE. /
+  SAVE first, fft_struct
 
-  norm = dble (n1 * n2 * n3)
-  if (sign.eq.1) then
-     call dscal (2 * nm1 * nm2 * nm3, norm, f, 1)
+  norm = DBLE (n1 * n2 * n3)
+  IF (sign.EQ.1) THEN
+     CALL dscal (2 * nm1 * nm2 * nm3, norm, f, 1)
      direction = 'b'
-  elseif (sign.eq. - 1) then
-     call dscal (2 * nm1 * nm2 * nm3, 1.0d0 / norm, f, 1)
+  ELSEIF (sign.EQ. - 1) THEN
+     CALL dscal (2 * nm1 * nm2 * nm3, 1.0d0 / norm, f, 1)
      direction = 'f'
-  else
-     call errore ('cft_3', 'sign unexpected',1)
-  endif
+  ELSE
+     CALL errore ('cft_3', 'sign unexpected',1)
+  ENDIF
 
-  if (first (igrid) ) then
+  IF (first (igrid) ) THEN
      status = zfft_exit_3d (fft_struct (igrid) )
      ! not sure whether the above call is useful or not
-     status = zfft_init_3d (n1, n2, n3, fft_struct (igrid), .true.)
-     first (igrid) = .false.
-  endif
+     status = zfft_init_3d (n1, n2, n3, fft_struct (igrid), .TRUE.)
+     first (igrid) = .FALSE.
+  ENDIF
 
-  call zfft_apply_3d ('C', 'C', direction, f, f, nm1, nm2, &
+  CALL zfft_apply_3d ('C', 'C', direction, f, f, nm1, nm2, &
        fft_struct (igrid) , 1, 1, 1)
-  return
+  RETURN
 
-end subroutine cft_3
+END SUBROUTINE cft_3
 #endif
-
+!
+! ... FUJ64 case
+!
 #ifdef FUJ64
 #define PRESENT
-!
-!---------------------------------------------------------------
-      subroutine cft_3(ac,n1,n2,n3,nm1,nm2,nm3,igrid,isign)
-!---------------------------------------------------------------
-!
-!      3d fft - FUJITSU, FFTVPLIB version (GRoma, 2001)
-!
-  USE kinds, only: DP
-  implicit none
-  integer :: n1,n2,n3,nm1,nm2,nm3,igrid,isign
-  integer, parameter :: ngrid=2, nmax=256
-  real(kind=DP) ::  ac(2,nm1,nm2,nm3)
-  real(kind=DP) :: workarray(2*nm1*nm2*nm3)
-  real(kind=DP) :: trig(2*3*nmax+2*120,ngrid),norm(ngrid)
-
-  integer :: iopt,ierr,trigdim(ngrid)
-  integer :: idim(3,ngrid)
-  character(len=2) :: init
-  character(len=1), dimension(-1:1),      &
-  parameter :: mode=(/'m','x','p'/),scale=(/'n','s','i'/)
-  logical first(ngrid)
-  data first/ngrid*.true./
-  save first,trig,idim,trigdim,norm
-!
-!
-  iopt=sign(1,isign)
-  if(nm1/=n1)  &
-    call errore('cft_3','not any more implemented',nm1)
-  if (igrid.le.0.or.igrid.gt.ngrid)  &
-    call errore('cft_3','which grid ?',1)
-  if (isign.ne.-1 .and. isign.ne.1)  &
-    call errore('cft_3','which fft ?', 2)
-  if (n1.gt.nmax .or. n2.gt.nmax .or. n3.gt.nmax)  &
-    call errore('cft_3','increase nmax',3)
-!
-  init(2:2)=scale(iopt)
-  if(first(igrid)) then
-    init(1:1)='i'
-    idim(1,igrid)=nm1
-    idim(2,igrid)=nm2
-    idim(3,igrid)=nm3
-    norm(igrid)=sqrt(dble(nm1*nm2*nm3))
-    trigdim(igrid)= &
-      2*(idim(1,igrid)+idim(2,igrid)+idim(3,igrid))+120
-    if(n1.gt.nm1) call errore  &
-      ('cft3','too large input dimension',n1)
-    if( n2.gt.nm2) call errore &
-      ('cft3','too large input dimension',n2)
-    if( n3.gt.nm3) call errore &
-      ('cft3','too large input dimension',n3)
-!
-!   The FFTVP library stores idim in a common (a single one)
-!   so every time you change grid you have to reinitialise!!!
-!   That's why the following line.
-!   first = .true.
-!   which in fact is not needed if one uses the modified version, fftvplib2
-
-    first(igrid) = .false.
-  else
-    init(1:1)='r'
-  end if
-  call dftcbm(ac(1,:,:,:),ac(2,:,:,:),3,idim(:,igrid),workarray, &
-    trig(:trigdim(igrid),igrid),mode(iopt),init,ierr)
-  call errore('cft_3','problems in fft',ierr)
-  if (iopt>0) then
-    call DSCAL(2*nm1*nm2*nm3,norm(igrid),ac,1)
-  else if(iopt<0) then
-    call DSCAL(2*nm1*nm2*nm3,1.0_8/norm(igrid),ac,1)
-  end if
-!
-  return
-end subroutine cft_3
+!----------------------------------------------------------------------------
+SUBROUTINE cft_3( ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign )
+  !----------------------------------------------------------------------------
+  !
+  ! ... 3d fft - FUJITSU, FFTVPLIB version (GRoma, 2001)
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER            :: n1,n2,n3,nm1,nm2,nm3,igrid,isign
+  INTEGER, PARAMETER :: ngrid=2, nmax=256
+  REAL(KIND=DP)      ::  ac(2,nm1,nm2,nm3)
+  REAL(KIND=DP)      :: workarray(2*nm1*nm2*nm3)
+  REAL(KIND=DP)      :: trig(2*3*nmax+2*120,ngrid),norm(ngrid)
+  INTEGER            :: iopt,ierr,trigdim(ngrid)
+  INTEGER            :: idim(3,ngrid)
+  CHARACTER(LEN=2)   :: init
+  LOGICAL            :: first(ngrid)
+  !
+  CHARACTER(LEN=1), DIMENSION(-1:1), PARAMETER :: &
+    mode  = (/'m','x','p'/), &
+    scale = (/'n','s','i'/)
+  !
+  DATA first/ngrid*.TRUE./
+  !
+  SAVE first, trig, idim, trigdim, norm
+  !
+  !
+  iopt = SIGN( 1, isign )
+  !
+  IF ( nm1 /= n1 ) &
+     CALL errore( 'cft_3', 'not any more implemented', nm1 )
+  !
+  IF ( igrid <= 0 .OR. igrid > ngrid ) &
+     CALL errore( 'cft_3', 'which grid ?', 1 )
+  !
+  IF ( isign /= -1 .AND. isign /= 1 ) &
+     CALL errore( 'cft_3', 'which fft ?', 2 )
+  !
+  IF ( n1 > nmax .OR. n2 > nmax .OR. n3 > nmax )  &
+     CALL errore( 'cft_3', 'increase nmax', 3 )
+  !
+  init(2:2) = scale(iopt)
+  !
+  IF (first(igrid)) THEN
+     !
+     init(1:1)='i'
+     !
+     idim(1,igrid)=nm1
+     idim(2,igrid)=nm2
+     idim(3,igrid)=nm3
+     !
+     norm(igrid) = SQRT( REAL( nm1*nm2*nm3 ) )
+     !
+     trigdim(igrid)= 2*( idim(1,igrid) + idim(2,igrid) + idim(3,igrid) ) + 120
+     !
+     IF( n1 > nm1 ) CALL errore( 'cft3', 'too large input dimension', n1 )
+     IF( n2 > nm2 ) CALL errore( 'cft3', 'too large input dimension', n2 )
+     IF( n3 > nm3 ) CALL errore( 'cft3', 'too large input dimension', n3 )
+     !
+     ! ... The FFTVP library stores idim in a common (a single one)
+     ! ... so every time you change grid you have to reinitialise!!!
+     ! ... That's why the following line.
+     ! ... first = .true.
+     ! ... which in fact is not needed if one uses the modified version, 
+     ! ... fftvplib2
+     !
+     first(igrid) = .FALSE.
+     !
+  ELSE
+     !
+     init(1:1) = 'r'
+     !
+  END IF
+  !
+  CALL dftcbm( ac(1,:,:,:), ac(2,:,:,:), 3, idim(:,igrid), workarray, &
+               trig(:trigdim(igrid),igrid), mode(iopt), init, ierr )
+  !
+  CALL errore( 'cft_3', 'problems in fft', ierr )
+  !
+  IF ( iopt > 0 ) THEN
+     !
+     CALL DSCAL( 2*nm1*nm2*nm3, norm(igrid), ac, 1 )
+     !
+  ELSE IF ( iopt < 0 ) THEN
+     !
+     CALL DSCAL( 2*nm1*nm2*nm3, 1.D0 / norm(igrid), ac, 1 )
+     !
+  END IF
+  !
+  RETURN
+  !
+END SUBROUTINE cft_3
 #endif
-
-#ifndef PRESENT
-subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
-  USE kinds, only : DP
-  call errore ('cft_3', 'machine-specific routine not available', 1)
-  return
-
-end subroutine cft_3
+!
+! ... error routine
+!
+#if ! defined (PRESENT)
+!----------------------------------------------------------------------------
+SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
+  !---------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : DP
+  !
+  !
+  CALL errore( 'cft_3', 'machine-specific routine not available', 1 )
+  !
+  RETURN
+  !
+END SUBROUTINE cft_3
 #endif
