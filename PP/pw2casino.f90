@@ -3,6 +3,29 @@
 ! This subroutine writes the file pwfn.data containing the plane wave
 ! coefficients and other stuff needed by the QMC code CASINO. 
 program pw2casino
+
+  use io_files, only: nd_nmbr,prefix
+
+  implicit none
+  integer :: ios
+ 
+  namelist / inputpp / prefix
+
+  read (5, inputpp, err=200, iostat=ios)
+200 call errore('pw2casino', 'reading inputpp namelist', abs(ios))
+  call start_postproc(nd_nmbr)
+  call read_file
+  call openfil
+
+  call compute_casino
+
+ call stop_pp
+ stop
+
+end program pw2casino
+
+ 
+subroutine compute_casino
  
   use kinds, ONLY: DP
   use pwcom
@@ -19,14 +42,6 @@ program pw2casino
   integer :: ios
   REAL (KIND=DP), EXTERNAL :: ewald
 
-  namelist / inputpp / prefix
-
-  read (5, inputpp, err=200, iostat=ios)
-200 call errore('pw2casino', 'reading inputpp namelist', abs(ios))
-  call start_postproc(nd_nmbr)
-  call read_file
-  call openfil
-  
  call init_us_1
  call newd
   io = 77
@@ -77,15 +92,15 @@ program pw2casino
      !     calculate the local contribution to the total energy
      !
      do nt=1,ntyp
-        do ig = 1, ngm
+        do ig = gstart, ngm
            eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
                 * conjg(aux(nl(ig)))
         enddo
      enddo
-     eloc = eloc * omega 
-#ifdef PARA
+
      call reduce(1,eloc)
-#endif
+
+     eloc = eloc * omega 
   do ik = 1, nk
      ikk = ik + nk*(ispin-1)
      call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -100,26 +115,19 @@ program pw2casino
      enddo
 
 
-!        ikk = ik + nk*(ispin-1)
-!       if( nks > 1 ) then
-!           read(iunigk) npw, igk
-!           call davcio(evc,nwordwfc,iunwfc,ikk,-1)
-!        endif
-!        call init_vkb_2(npw,igk,xk(1,ikk),vkb)
         !
         ! calculate the kinetic energy
         !
-!        do ig = 1, npw
-!           g2kin(ig) = ( ( xk(1,ikk)+g(1,igk(ig)) )**2 + &
-!                ( xk(2,ikk)+g(2,igk(ig)) )**2 + &
-!                ( xk(3,ikk)+g(3,igk(ig)) )**2 ) * tpiba2
-!        enddo
         do ibnd = 1, nbnd
            do j = 1, npw
               hpsi(j,ibnd) =  g2kin(j) * evc(j,ibnd)
               ek = ek +  conjg(evc(j,ibnd))*hpsi(j,ibnd) * wg(ibnd,ikk)
            end do
-           ijkb0 = 0
+        
+	!
+	! Calculate Non-local energy
+	!
+	   ijkb0 = 0
            do nt = 1, ntyp
               do na = 1, nat
                  if (ityp (na) .eq.nt) then
@@ -127,10 +135,7 @@ program pw2casino
                        ikb = ijkb0 + ih
                        enl=enl+conjg(becp(ikb,ibnd))*becp(ikb,ibnd) &
                        *wg(ibnd,ikk)* &
-!                            (deeq(ih,ih,na,ispin) - &
-!                              et(ibnd,ikk) * qq(ih,ih,nt))
                             dvan(ih,ih,nt)
-!                       print *,deeq(ih,ih,na,ispin),et(ibnd,ikk), qq(ih,ih,nt)
                        DO jh = ( ih + 1 ), nh(nt)
                             jkb = ijkb0 + jh
                             enl=enl+ &
@@ -138,8 +143,6 @@ program pw2casino
                                  conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
                                  * wg(ibnd,ikk) * &
                                  dvan(ih,jh,nt)
-!                                 (deeq(ih,jh,na,ispin) - &
-!                                 et(ibnd,ikk) * qq(ih,jh,nt))
                             
                          END DO
 
@@ -150,14 +153,8 @@ program pw2casino
            enddo
         enddo
 
-#ifdef PARA
         call reduce(1,ek)
-#endif
-!        print *,ek
-        !
-        ! calculate the non-local energy
-        !
- !       call compute_enl (npwx, npw, evc, nbnd, enl, ikk)
+
      enddo
   enddo
 
@@ -171,7 +168,6 @@ program pw2casino
      endif
   enddo
 
-!print *,ngtot
 
 #ifdef PARA
   call poolreduce(1,ek)
@@ -295,10 +291,6 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   print *, 'Total energy', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
 
 
-end program pw2casino
-
-
-
-
+end subroutine compute_casino
 
 
