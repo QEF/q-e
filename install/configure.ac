@@ -756,7 +756,8 @@ then
 			AC_SEARCH_LIBS(vexp, massvp4 massv, , , -lmass)
 			if test "$ac_cv_search_vexp" = "-lmassvp4" -or \
 			    "$ac_cv_search_vexp" = "-lmassv"
-			then libs="$try_loption $ac_cv_search_vexp -lmass"
+			then libs="$try_loption $ac_cv_search_vexp -lmass \
+$libs"
 			fi
 			if test "$ac_cv_search_vexp" != "no"
 			then break ; fi
@@ -866,7 +867,8 @@ then
 			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1, ,
 				       -latlas -lg2c)
 			if test "$ac_cv_search_dgemm" = "-lf77blas"
-			then libs="$try_loption -lf77blas -latlas -lg2c" ; fi
+			then libs="$try_loption -lf77blas -latlas -lg2c \
+$libs" ; fi
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
