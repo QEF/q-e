@@ -1184,11 +1184,18 @@ MODULE path_base
          N_in  = 1
          N_fin = num_of_images
          !
+         frozen = .FALSE.
+         !
       ELSE
          !
          N_in  = 2
          N_fin = ( num_of_images - 1 )      
-         !   
+         !
+         frozen = .FALSE.
+         !
+         frozen( N_in  - 1 ) = .TRUE.
+         frozen( N_fin + 1 ) = .TRUE.
+         !
       END IF   
       !
       DO i = 1, num_of_images
@@ -1204,11 +1211,8 @@ MODULE path_base
       !
       IF ( use_freezing ) THEN
          !
-         frozen(:) = ( error(:) < MAX( 0.5D0 * err_max, path_thr ) )
-         !
-      ELSE
-         !
-         frozen = .FALSE.
+         frozen(N_in:N_fin) = ( error(N_in:N_fin) < &
+                                MAX( 0.5D0 * err_max, path_thr ) )
          !
       END IF
       !
@@ -1225,11 +1229,11 @@ MODULE path_base
             !
             find_scf_images: DO
                !
-               num_of_scf_images = COUNT( .NOT. frozen )
+               num_of_scf_images = COUNT( .NOT. frozen(N_in:N_fin) )
                !
                IF ( num_of_scf_images >= nimage ) EXIT find_scf_images
                !
-               free_me = MAXLOC( error, 1, frozen(N_in:N_fin) )
+               free_me = MAXLOC( error(N_in:N_fin), 1, frozen(N_in:N_fin) )
                !
                frozen(free_me) = .FALSE.
                !
