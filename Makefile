@@ -1,6 +1,6 @@
 default :
 	@echo 'to install, type at the shell prompt:'
-	@echo '  ./configure.new'
+	@echo '  ./configure'
 	@echo '  make target'
 	@echo 'where target is one of the following:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
@@ -23,24 +23,24 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
 pw : modules libs
-	( cd PW; make all )
+	if test -d PW  ; then  ( cd PW  ; make all ) ; fi
 fpmd : modules libs
-	( cd FPMD; make all )
+	if test -d FPMD; then  ( cd FPMD; make all ) ; fi
 cp : modules libs
-	( cd CPV; make all )
+	if test -d CP  ; then  ( cd CP  ; make all ) ; fi
 
 ph : pw
-	( cd PH; make all )
+	if test -d PH  ; then  ( cd PH  ; make all ) ; fi
 pp : pw
-	( cd PP; make all )
+	if test -d PP  ; then  ( cd PP  ; make all ) ; fi
 gamma : pw
-	( cd Gamma; make all )
+	if test -d Gamma;then  ( cd Gamma; make all ); fi
 nc : pw
-	( cd PWNC;  make all )
+	if test -d PWNC; then  ( cd PWNC; make all ) ; fi
 pwcond : pw pp
-	( cd PWCOND; make all )
+	if test -d PWCOND;then ( cd PWCOND; make all );fi
 d3 : pw ph
-	( cd D3; make all )
+	if test -d D3  ; then  ( cd D3  ; make all ) ; fi
 
 tools : libs
 	( cd pwtools ; make all )
@@ -90,7 +90,7 @@ veryclean : clean
 		      config.log config.status */dum1 */dum2 bin/*.x \
 		      autom4te.cache pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
-	- cd GUI; $(MAKE) veryclean
+	- if test -d GUI ; then ( cd GUI; make veryclean ) ; fi
 
 tar :
 	tar cvf pw.tar \
@@ -110,7 +110,7 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 		cd GUI/PWgui; \
-		$(MAKE) clean cvsinit pwgui-source-notcl; \
+		make clean cvsinit pwgui-source-notcl; \
 		mv PWgui-*.tgz ../../; \
 	else \
 		echo ""; \
