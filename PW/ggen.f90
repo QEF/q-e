@@ -133,7 +133,7 @@ subroutine ggen
 
 #ifndef __OLD_GGEN_LOOP
 
-  write(6, fmt="(//,' --- Executing new GGEN Loop ---',//)" )
+  ! write(6, fmt="(//,' --- Executing new GGEN Loop ---',//)" )
 
   ngm = 0
   ngms = 0

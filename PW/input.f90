@@ -1004,8 +1004,8 @@ subroutine iosys
   !
   call verify_tmpdir
   !
-  write (6,'(/5x,"current restart_mode = ",a)') trim(restart_mode)
-  write (6,'( 5x,"current disk_io mode = ",a)') trim(disk_io)
+  ! write (6,'(/5x,"current restart_mode = ",a)') trim(restart_mode)
+  ! write (6,'( 5x,"current disk_io mode = ",a)') trim(disk_io)
   call restart_from_file
   if (startingconfig.eq.'file') call read_config_from_file
   call write_config_to_file

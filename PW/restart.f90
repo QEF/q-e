@@ -104,7 +104,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !
   !
   filename = trim(prefix)//'.save'
-  write (6, '(/,5x,"Writing file ",a14)') filename
+  ! write (6, '(/,5x,"Writing file ",a14)') filename
   !
   if( ionode ) THEN
     call seqopn (ndw, filename, 'unformatted', exst)
@@ -449,7 +449,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
    END IF
 
-  write (6, '(5x,"file written")')
+  ! write (6, '(5x,"file written")')
 
   if( ionode ) then
     close (unit = ndw)

@@ -17,7 +17,6 @@ program pwscf
   implicit none
   character :: cdate * 9, ctime * 9, version * 12
   external date_and_tim
-  !      call sigcatch ( )
   ! use ".false." to disable all clocks except the total cpu time clock
   ! use ".true."  to enable clocks
   !      call init_clocks(.false.)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001,2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,9 +19,9 @@ subroutine restart_from_file
   !
   iunres = 1
   if (.not.restart) then
-     write (6, '(/5x,"RECOVER from restart file has been switched off on input")')
+     ! write (6, '(/5x,"RECOVER from restart file has been switched off on input")')
      call seqopn (iunres, 'restart', 'unformatted', exst)
-     if (exst) write (6,'(/5x,"Existing restart file has been removed")')
+     ! if (exst) write (6,'(/5x,"Existing restart file has been removed")')
      close (unit = iunres, status = 'delete')
      return
   endif
