@@ -28,6 +28,7 @@ subroutine iosys
        force, at_old, omega_old, starting_scf_threshold, title, crystal,  &
        atm, nk1, nk2, nk3, k1, k2, k3
   use io, only : tmp_dir, prefix, pseudo_dir, pseudop
+  use constants, only: pi
 #ifdef PARA
   use para, only: me
   use mp
