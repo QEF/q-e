@@ -69,7 +69,9 @@ SUBROUTINE iosys()
   USE klist,         ONLY : xk, wk, nks, ngauss,&
                             xqq_     => xqq, &
                             degauss_ => degauss, &
-                            nelec_   => nelec
+                            nelec_   => nelec, &
+                            b_length_ => b_length, &
+                            lcart_   => lcart
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
@@ -95,7 +97,7 @@ SUBROUTINE iosys()
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
                             noinv, restart, loldbfgs, lconstrain,   &
-                            ldamped
+                            ldamped, lraman
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
@@ -185,6 +187,10 @@ SUBROUTINE iosys()
   ! PHONON namelist
   !
   USE input_parameters, ONLY : phonon, modenum, xqq
+  !
+  ! RAMAN namelist
+  !
+  USE input_parameters, ONLY : b_length, lcart
   !
   ! ... NEB specific
   !
@@ -367,7 +373,8 @@ SUBROUTINE iosys()
   lneb      = .FALSE.     
   lforce    = tprnfor
   lmovecell = .FALSE.
-  lphonon   = .FALSE.  
+  lphonon   = .FALSE.
+  lraman    = .FALSE.
   !
   SELECT CASE ( TRIM( calculation ) )
   CASE ( 'scf' )
@@ -396,6 +403,9 @@ SUBROUTINE iosys()
  CASE ( 'phonon' )
      iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lphonon   = .TRUE.
+     nstep     = 1
+  CASE ( 'raman' )
+     lraman    = .TRUE.
      nstep     = 1
   !
   ! ... NEB specific
@@ -787,6 +797,9 @@ SUBROUTINE iosys()
   cell_factor_ = cell_factor
   modenum_     = modenum
   xqq_         = xqq
+  !
+  b_length_    = b_length
+  lcart_       = lcart
   !
   ! ... NEB specific
   !

@@ -47,7 +47,7 @@ SUBROUTINE setup()
   USE gvect,         ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,       ONLY : doublegrid, gcutms
   USE klist,         ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, lxkcry, &
-                            nkstot
+                            nkstot, b_length, lcart
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
   USE symme,         ONLY : s, irt, ftau, nsym, invsym
@@ -56,7 +56,7 @@ SUBROUTINE setup()
   USE wvfct,         ONLY : nbnd, nbndx
   USE control_flags, ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
                             lneb, lphonon, david, isolve, imix, niter, noinv, &
-                            restart, nosym, modenum
+                            restart, nosym, modenum, lraman
   USE relax,         ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,        ONLY : calc
   USE us,            ONLY : tvanp,okvan,newpseudo,psd,betar,nbeta,dion,jjj,lll
@@ -182,7 +182,7 @@ SUBROUTINE setup()
   !
   ltest = ( ethr == 0.D0 )
   !
-  IF ( lphonon ) THEN
+  IF ( lphonon .or. lraman) THEN
      !
      ! ... in the case of a phonon calculation ethr can not be specified
      ! ... in the input file
@@ -468,6 +468,10 @@ SUBROUTINE setup()
   !
   IF ( iswitch <= -2 ) CALL set_kplusq( xk, wk, xqq, nks, npk ) 
   !
+  ! ... raman calculation: add k+b to the list of k
+  !
+  IF ( lraman ) CALL set_kplusb(ibrav, xk, wk, b_length, nks, npk, lcart)
+  !
   IF ( lsda ) THEN
      !
      ! ... LSDA case: two different spin polarizations, 
@@ -494,6 +498,16 @@ SUBROUTINE setup()
   ELSE
      kunit = 2
   ENDIF
+  
+  if (lraman) then
+     if(lcart) then
+        kunit = 7
+     else
+        if (ibrav .eq. 1) kunit =  7
+        if (ibrav .eq. 2) kunit =  9
+        if (ibrav .eq. 3) kunit = 13
+     end if
+  end if
   !
   ! ... distribute the k-points (and their weights and spin indices)
   !

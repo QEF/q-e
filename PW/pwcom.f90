@@ -155,7 +155,8 @@ MODULE klist
        wk(npk),        &! weight of k points
        xqq(3),         &! coordinates of q point (used with iswitch=-2)
        degauss,        &! smearing parameter
-       nelec            ! number of electrons
+       nelec,          &! number of electrons
+       b_length         ! length of the b vectors
   INTEGER :: &
        ngk(npk),       &! number of plane waves for each k point
        nks,            &! number of k points in this pool
@@ -163,7 +164,8 @@ MODULE klist
        ngauss           ! type of smearing technique
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
-       lxkcry           ! if .TRUE.:k-pnts in cryst. basis accepted in input
+       lxkcry,         &! if .TRUE.:k-pnts in cryst. basis accepted in input
+       lcart            ! if .TRUE.: b vectors in cartesian coordinates
   !
 END MODULE klist
 !

@@ -106,9 +106,9 @@ MODULE input_parameters
           ! 'neb'      = VEC-CI-NEB search of the Minimum Energy Path (MEP)
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(10)
+        CHARACTER(LEN=80) :: calculation_allowed(11)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'neb' /
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb' /
           ! Allowed value for calculation parameters
 
 
@@ -1042,6 +1042,17 @@ MODULE input_parameters
           ! coordinates of q point for phonon calculation
 
         NAMELIST / phonon / modenum, xqq
+
+ !=----------------------------------------------------------------------------=!  
+ !  RAMAN Namelist Input Parameters
+ !=----------------------------------------------------------------------------=!  
+ 
+         real(dbl) :: b_length
+           ! length of the b-vector
+         logical :: lcart
+           ! cartesian directions
+ 
+         NAMELIST / raman / b_length, lcart
 
 !  END manual
 ! ----------------------------------------------------------------------
