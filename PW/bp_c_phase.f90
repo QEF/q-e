@@ -800,7 +800,7 @@ SUBROUTINE c_phase
        &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
 
 !  --- End of information relative to polarization calculation ---
-   WRITE(6,"(/,/,15X,50('=')/,/,)")
+   WRITE(6,"(/,/,15X,50('=')/,/)")
 
 
 !  -------------------------------------------------------------------------   !
