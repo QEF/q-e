@@ -30,7 +30,7 @@ MODULE path_formats
     axsf_fmt = "(A2,6(2X,F14.10))"
   !  
   CHARACTER (LEN=*), PARAMETER :: &  
-    scf_iter_fmt       = "(/,5X,30('-'),(X,'iteration ',I3,X),30('-'),/)", &
+    scf_iter_fmt       = "(/,5X,30('-'),(1X,'iteration ',I3,1X),30('-'),/)", &
     scf_fmt            = "(5X,'tcpu = ',F8.1," // &
                        & "';  self-consistency for image ', I3)", &
     scf_fmt_para       = "(5X,'cpu = ',I2,'; tcpu = ',F8.1," // &
