@@ -170,7 +170,7 @@ subroutine do_efg(Q)
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efg_ion", &
-             (real(efg_io(1,alpha,beta)) , alpha =1,3 )
+             (real(efg_io(na,alpha,beta)) , alpha =1,3 )
 
      enddo
      write (stdout,*)
@@ -198,7 +198,7 @@ subroutine do_efg(Q)
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efg_corr", &
-             (2*real(efg_corr_tens(alpha,beta,1)) , alpha =1,3 )
+             (2*real(efg_corr_tens(alpha,beta,na)) , alpha =1,3 )
 
      enddo
      write (stdout,*)
@@ -216,7 +216,7 @@ subroutine do_efg(Q)
 
      do alpha=1,3
         do beta=1,3
-           work(beta,alpha)=cmplx(efg(alpha,beta,1),0.d0)
+           work(beta,alpha)=cmplx(efg(alpha,beta,na),0.d0)
         enddo
      enddo
 
@@ -247,7 +247,7 @@ subroutine do_efg(Q)
      write (stdout,1200) atm(ityp(na)), na, Q(ityp(na)),Cq,eta
      write (stdout,*)
   enddo
-1200 FORMAT(1x,a,1x,i3,5x,'Q= ',f6.3,5x,' Cq= ',f9.6,' MHz',5x,' eta= ',f9.6)
+1200 FORMAT(1x,a,1x,i3,5x,'Q= ',f5.2,' 10e-30 m^2',5x,' Cq=',f9.4,' MHz',5x,'eta= ',f8.5)
 
 end subroutine do_efg
 
@@ -366,11 +366,11 @@ subroutine efg_correction(efg_corr_tens)
   efg_corr_tens(2,2,:)=real(-sqrt(3.d0)*efg_corr(8,:)&
        - efg_corr(5,:))
   efg_corr_tens(3,3,:)=real(2.d0*efg_corr(5,:))
-  efg_corr_tens(1,2,:)=real(-sqrt(3.d0)*efg_corr(9,:))
+  efg_corr_tens(1,2,:)=real(sqrt(3.d0)*efg_corr(9,:))
   efg_corr_tens(2,1,:)=efg_corr_tens(1,2,:)
-  efg_corr_tens(1,3,:)=real(efg_corr(6,:)*sqrt(3.d0))
+  efg_corr_tens(1,3,:)=real(-efg_corr(6,:)*sqrt(3.d0))
   efg_corr_tens(3,1,:)=efg_corr_tens(1,3,:)
-  efg_corr_tens(2,3,:)=real(efg_corr(7,:)*sqrt(3.d0))
+  efg_corr_tens(2,3,:)=real(-efg_corr(7,:)*sqrt(3.d0))
   efg_corr_tens(3,2,:)=efg_corr_tens(2,3,:)
 
   efg_corr_tens=-sqrt(4.d0*pi/5.d0)*efg_corr_tens
