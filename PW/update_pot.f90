@@ -70,7 +70,7 @@ SUBROUTINE extrapolate_charge()
   !----------------------------------------------------------------------------
   !
   USE io_global,   ONLY :  stdout
-  USE kinds,  ONLY :  DP
+  USE kinds,       ONLY :  DP
   USE brilz,       ONLY :  omega, bg, alat
   USE basis,       ONLY :  nat, tau, ntyp, ityp
   USE gvect,       ONLY :  nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
@@ -113,9 +113,9 @@ SUBROUTINE extrapolate_charge()
   !
   CALL atomic_rho( work, 1 )
   !
-  CALL DAXPY( nrxx, -1.D0, work, 1, rho, 1 )
+  rho(:,1) = rho(:,1) - work(:)
   !
-  IF ( lmovecell ) CALL DSCAL( nrxx, omega_old, rho, 1 )
+  IF ( lmovecell ) rho(:,1) = rho(:,1) * omega_old
   !
   ! ... if dynamics extrapolate the difference between the atomic charge a
   ! ... the self-consistent one
@@ -153,7 +153,7 @@ SUBROUTINE extrapolate_charge()
      !
   END IF
   !
-  IF ( lmovecell ) CALL DSCAL( nrxx, 1.0D0 / omega, rho, 1 )
+  IF ( lmovecell ) rho(:,1) = rho(:,1) / omega
   !
   ! ... calculate structure factors for the new positions
   !
@@ -165,7 +165,7 @@ SUBROUTINE extrapolate_charge()
   ! ... add atomic charges in the new positions
   !
   CALL atomic_rho( work, 1 )
-  CALL DAXPY( nrxx, 1.D0, work, 1, rho, 1 )
+  rho(:,1) = rho(:,1) + work(:)
   CALL set_rhoc()
   !
   ! ... reset up and down charge densities in the LSDA case
@@ -194,16 +194,16 @@ SUBROUTINE extrapolate_wfcs()
   !-----------------------------------------------------------------------
   !
   ! ... This routine extrapolate the wfc's after a "parallel alignment"
-  ! ... of the basis of the t-dt and t time steps, according to the Mead
-  ! ... recipe, see Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.2
+  ! ... of the basis of the t-dt and t time steps, according to a recipe
+  ! ... by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.29
   !
 #define ONE (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)  
   !
   USE io_global,            ONLY : stdout
-  USE kinds,           ONLY : DP
+  USE kinds,                ONLY : DP
   USE klist,                ONLY : nks
-  USE control_flags,                ONLY : isolve, istep, order, alpha0, beta0
+  USE control_flags,        ONLY : isolve, istep, order, alpha0, beta0
   USE basis,                ONLY : startingwfc
   USE wvfct,                ONLY : nbnd, npw, npwx, igk
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
@@ -214,61 +214,43 @@ SUBROUTINE extrapolate_wfcs()
   !
   ! ... local variables
   !
-  INTEGER :: j, i, ik, zero_ew
+  INTEGER :: j, i, ik, zero_ew, lwork, info
     ! do-loop variables
     ! counter on k-points
-    ! number of zero eigenvalues of the sp_m * s_m matrix
-  COMPLEX(KIND=DP), ALLOCATABLE :: u_m(:,:), s_m(:,:), sp_m(:,:), temp(:,:)
-    ! the unitary matrix (eq. 3.21)
+    ! number of zero 'eigenvalues' of the s_m matrix
+    ! used by singular value decomposition (ZGESVD)
+    ! flag returned by ZGESVD
+  COMPLEX(KIND=DP), ALLOCATABLE :: s_m(:,:), sp_m(:,:), u_m(:,:), w_m(:,:), &
+                                   work(:)
     ! the overlap matrix s (eq. 3.24)
     ! its dagger
-    ! workspace
+    ! left unitary matrix in the SVD of sp_m
+    ! right unitary matrix in the SVD of sp_m
+    ! workspace for ZGESVD
   COMPLEX(KIND=DP), ALLOCATABLE :: evcold(:,:)
     ! wavefunctions at previous iteration
-  REAL(KIND=DP), ALLOCATABLE :: ew(:)
-    ! the eigenvalues of sp_m*s_m
-  LOGICAL :: first
-    ! Used for initialization
-  DATA first / .TRUE. /
-  SAVE first
-  !
-  !
+  REAL(KIND=DP), ALLOCATABLE :: ew(:), rwork(:)
+    ! the eigenvalues of s_m
+    ! workspace for ZGESVD
+
   ! ... istep = 0 when extrapolate_wfcs() is called in neb 
   !
-  IF ( istep == 0 ) RETURN   
-  !
-  IF ( first ) THEN
+  IF ( istep == 0 ) THEN
      !
-     first = .FALSE.
+     RETURN
      !
-     IF ( isolve == 1 .AND. startingwfc == 'atomic' ) THEN
-        !
-        DEALLOCATE( evc )
-        ALLOCATE( evc(npwx,nbnd) )
-        !
-     END IF
-     !
-  END IF
-  !
-  ALLOCATE( evcold(npwx,nbnd) )
-  !
-  IF ( istep == 1 ) THEN
-     !
-     IF ( nks > 1 ) REWIND( iunigk )
+  ELSE IF ( istep == 1 ) THEN
      !
      DO ik = 1, nks
         !
-        IF ( nks > 1 ) READ( iunigk ) npw, igk
-        !
         CALL davcio( evc, nwordwfc, iunwfc, ik, - 1 )
-        !
-        CALL ZCOPY( npwx * nbnd, evc, 1, evcold, 1 )
-        !
-        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, 1 )
+        CALL davcio( evc, nwordwfc, iunoldwfc, ik, 1 )
         !
      END DO
      !
   ELSE
+     !
+     ALLOCATE( evcold(npwx,nbnd) )
      !
      IF ( order == 2 ) THEN
         WRITE( stdout, '(5X,"Extrapolating wave-functions (first order) ...")' )
@@ -276,8 +258,9 @@ SUBROUTINE extrapolate_wfcs()
         WRITE( stdout, '(5X,"Extrapolating wave-functions (second order) ...")' )
      END IF
      !
-     ALLOCATE( u_m(nbnd,nbnd), s_m(nbnd,nbnd), sp_m(nbnd,nbnd), &
-               temp(nbnd,nbnd), ew(nbnd) )
+     lwork = 5*nbnd
+     ALLOCATE( s_m(nbnd,nbnd), sp_m(nbnd,nbnd), u_m(nbnd,nbnd), &
+               w_m(nbnd,nbnd), work(lwork), ew(nbnd), rwork(lwork) )
      !
      IF ( nks > 1 ) REWIND( iunigk )
      !
@@ -290,9 +273,6 @@ SUBROUTINE extrapolate_wfcs()
         CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
         CALL davcio( evc, nwordwfc, iunwfc, ik, - 1 )
         !
-        IF ( istep == 2 .AND. order > 2 ) &
-           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, 1 )
-        !
         ! ... construct s_m = <evcold|evc>
         !
         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, evcold, npwx, evc, &
@@ -301,16 +281,21 @@ SUBROUTINE extrapolate_wfcs()
         CALL reduce( 2 * nbnd * nbnd, s_m )
 #endif
         !
-        ! ... temp = sp_m * s_m
+        ! ... construct sp_m
         !
-        CALL ZGEMM( 'C', 'N', nbnd, nbnd, nbnd, ONE, s_m, nbnd, s_m, &
-                    nbnd, ZERO, temp, nbnd )
+        DO i = 1, nbnd
+          ! 
+          sp_m(:,i) = CONJG( s_m (i,:) )
+          !
+        END DO
         !
-        ! ... diagonalize temp, use u_m as workspace to accomodate the 
-        ! ... eigenvect matrix which diagonalizes temp, sp_m is its hermitean 
-        ! ... conjugate
+        ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29)
+        ! ... by means the singular value decomposition (SVD) of
+        ! ... sp_m = u_m * diag(ew) * w_m 
+        ! ... becomes u_m * w_m
         !
-        CALL cdiagh( nbnd, temp, nbnd, ew, u_m )
+        CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, nbnd, &
+                    w_m, nbnd, work, lwork, rwork, info )
         !
         ! ... check on eigenvalues
         !
@@ -320,57 +305,48 @@ SUBROUTINE extrapolate_wfcs()
           !
         END DO
         !
-        DO i = 1, nbnd
-          ! 
-          sp_m(:,i) = CONJG( u_m (i,:) ) / SQRT( ABS( ew(:) ) )
-          !
-        END DO
+        ! ... use sp_m to store u_m * w_m
         !
-        ! ... temp = u_m * sp_m
+        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, u_m, nbnd, w_m, &
+                    nbnd, ZERO, sp_m, nbnd )
         !
-        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, u_m, nbnd, sp_m, &
-                    nbnd, ZERO, temp, nbnd )
+        ! ... now use evcold as workspace to calculate "aligned" wavefcts:
         !
-        ! ... temp = [ sp_m * s_m ]^(-1/2)
+        ! ... evcold_i = sum_j evc_j*sp_m_ji (eq.3.21)
         !
-        CALL ZGEMM( 'N', 'C', nbnd, nbnd, nbnd, ONE, temp, nbnd, s_m, &
-                    nbnd, ZERO, u_m, nbnd )
-        !
-        ! ... and u_m is the unitary matrix [ sp_m * s_m ]^(-1/2)*sp_m (eq.3.29)
-        ! ... now use evcold as workspace to calculate
-        !
-        ! ... evcold_i = sum_j evc_j*u_m_ji
-        !
-        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, evc, npwx, u_m, &
+        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, evc, npwx, sp_m, &
                     nbnd, ZERO, evcold, npwx )
         !
-        ! ... and copy evcold in evc
+        ! ... save on file the aligned wavefcts
         !
-        CALL ZCOPY( npwx * nbnd, evcold, 1, evc, 1 )
+        CALL davcio( evcold, nwordwfc, iunwfc, ik, 1 )
         !
-        ! ... save on file evc
+        ! ... re-read from file the wavefcts at (t-dt)
         !
-        CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+        CALL davcio( evc, nwordwfc, iunoldwfc, ik, - 1 )
         !
-        ! ... re-read from file the right evcold
-        !
-        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
-        !
-        ! ... extrapolate the wfc's, if order=3 use the second order 
-        ! ... extrapolati formula, alpha0 and beta0 are calculated in 
-        ! ... "dynamics"
+        ! ... extrapolate the wfc's,
+        ! ... if order=3 use the second order extrapolation formula
+        ! ... alpha0 and beta0 are calculated in "dynamics"
         !
         IF ( order > 2 ) THEN
            !
-           evc = ( 1 + alpha0 ) * evc + ( beta0 - alpha0 ) * evcold
-           !
-           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
-           !
-           evc = evc - beta0 * evcold
+           IF ( istep == 2 ) THEN
+              !
+              evc = ( 1 + alpha0 ) * evcold - alpha0 * evc
+              !
+           ELSE
+              !
+              evc = ( 1 + alpha0 ) * evcold + ( beta0 - alpha0 ) * evc
+              !
+              CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
+              !
+              evc = evc - beta0 * evcold
+           END IF
            !
         ELSE
            !
-           evc = 2 * evc - evcold
+           evc = 2 * evcold - evc
            !
         END IF
         !
@@ -391,16 +367,15 @@ SUBROUTINE extrapolate_wfcs()
      END DO
      !
      IF ( zero_ew > 0 ) &
-        WRITE( stdout, '(/,5X,"from extrapolate_wfcs : WARNING",/,     &
+        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,     &
                         &  5X,"the matrix <psi(t-dt)|psi(t)> has ",I2, &
-                        &     " zero eigenvalues",/,                   &
-                        &  5X,"change the number of bands ( nbnd )")' ) zero_ew     
+                        &     " zero eigenvalues")' ) zero_ew     
      !
-     DEALLOCATE( u_m, s_m, sp_m, temp, ew )
+     DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
+     !
+     DEALLOCATE( evcold )
      !
   END IF
-  !
-  DEALLOCATE( evcold )
   !
   RETURN
   !
