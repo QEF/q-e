@@ -248,11 +248,14 @@
 !     read pseudopotentials and wavefunctions
 ! 
       call readpp
+
 !     ==================================================================
 !     initialize g-vectors, fft grids
 !     ==================================================================
+
       call init(ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,tfirst,  &
            twmass,thdiag,iforceh,tau0,taus,delt)
+
       write(6,*) ' out from init'
 !
 !     more initialization requiring atomic positions

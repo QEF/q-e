@@ -2510,11 +2510,14 @@
 !
 !   the g's are in units of 2pi/a.
 !
-      use gvec
-      use gvecs
+      use gvec, only: g, gx, np, igl, nm, ng, ng_g, mill_g, g2_g, ngl, gl
+      use gvec, only: in1p, in2p, in3p, mill_l, ig_l2g
+      use gvecs, only: ngs, nms, ngsl, nps
       use gvecw, only: ngw, ngwl, ngwt
       use reciprocal_vectors, only: ng0 => gstart
+
       use elct
+
 #ifdef __PARA
       use para_mod
 #endif     
@@ -3014,7 +3017,9 @@
 ! As ggen, for the box grid. A "b" is appended to box variables.
 ! The documentation for ggen applies
 !
-      use gvecb
+      use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, gxnb, glb, npb, nmb
+      use gvecb, only: iglb, in1pb, in2pb, in3pb
+
 !
       implicit none
 !

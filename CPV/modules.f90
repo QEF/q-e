@@ -90,7 +90,8 @@ module gvec
         tpiba2, &
         ng => ngm, &
         ngl => ngml, &
-        ng_g => ngmt
+        ng_g => ngmt, &
+        gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
 
   !     tpiba   = 2*pi/alat
   !     tpiba2  = (2*pi/alat)**2
@@ -101,24 +102,21 @@ module gvec
   !     g       = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
   !     gl      = shells of G^2           ( "   "   "    "      "      )
   !     gx      = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
-  real(kind=8), allocatable:: gl(:), g(:), gx(:,:)
   !
-  real(kind=8), allocatable:: g2_g(:)
   !     g2_g    = all G^2 in increasing order, replicated on all procs
-  integer, allocatable :: mill_g(:,:)
   !     mill_g  = miller index of G vecs (increasing order), replicated on all procs
-  integer, allocatable :: mill_l(:,:)
   !     mill_l  = miller index of G vecs local to the processors
-  integer, allocatable :: ig_l2g(:)
   !     ig_l2g  = "l2g" means local to global, this array convert a local
   !               G-vector index into the global index, in other words
   !               the index of the G-v. in the overall array of G-vectors
+  !     bi?     = base vector used to generate the reciprocal space
+  !
   !     np      = fft index for G>
   !     nm      = fft index for G<
   !     in1p,in2p,in3p = G components in crystal axis
-  integer,allocatable:: np(:), nm(:), in1p(:),in2p(:),in3p(:), igl(:)
-  real(kind=8) :: bi1(3), bi2(3), bi3(3)
-  !     bi?     = base vector used to generate the reciprocal space
+  !
+  integer,allocatable:: np(:), nm(:), in1p(:),in2p(:),in3p(:)
+
 end module gvec
 
 
@@ -331,7 +329,7 @@ module cdvan
 end module cdvan
 
 module pres_mod
-  real(kind=8) agg, sgg, e0gg
+  use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
   real(kind=8),allocatable:: ggp(:)
 end module pres_mod
 
