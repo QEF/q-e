@@ -120,7 +120,7 @@ MODULE path_io_routines
        !
        !
        IF ( meta_ionode ) THEN
-
+          !
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"reading file ", A,/)') TRIM( path_file )
           !
@@ -320,14 +320,14 @@ MODULE path_io_routines
        CALL mp_bcast( suspended_image, meta_ionode_id )
        CALL mp_bcast( conv_elec,       meta_ionode_id )
        !
-       CALL mp_bcast( pos,      meta_ionode_id )  
-       CALL mp_bcast( if_pos,   meta_ionode_id )  
+       CALL mp_bcast( pos,      meta_ionode_id )
+       CALL mp_bcast( if_pos,   meta_ionode_id )
        CALL mp_bcast( pes,      meta_ionode_id )
        CALL mp_bcast( grad_pes, meta_ionode_id )
        !
        CALL mp_bcast( num_of_images, meta_ionode_id )
        !
-       CALL mp_bcast( Emax,       meta_ionode_id )  
+       CALL mp_bcast( Emax,       meta_ionode_id )
        CALL mp_bcast( Emin,       meta_ionode_id )
        CALL mp_bcast( Emax_index, meta_ionode_id )
        !

@@ -1337,7 +1337,7 @@ SUBROUTINE verify_tmpdir()
   USE control_flags,    ONLY : lpath
   USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr, exit_file
   USE path_variables,   ONLY : num_of_images
-  USE mp_global,        ONLY : mpime
+  USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
   !
@@ -1345,7 +1345,7 @@ SUBROUTINE verify_tmpdir()
   !
   IMPLICIT NONE
   !
-  INTEGER            :: l, ios, image
+  INTEGER            :: l, ios, image, proc
   CHARACTER (LEN=80) :: file_path, tmp_dir_saved
   INTEGER, EXTERNAL  :: c_mkdir
   !
@@ -1436,22 +1436,20 @@ SUBROUTINE verify_tmpdir()
      ! 
      DO image = 1, num_of_images
         !
-        ios = 0
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
                   TRIM( int_to_char( image ) ) // '/'
         !
-        IF ( ionode ) THEN
+        DO proc = 0, nproc - 1
            !
-           ! ... a scratch directory for this image of the elastic band is
-           ! ... created ( only by the master node )
+           ! ... a scratch directory for this image is created sequentially
+           ! ... by all the cpus
            !
-           ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
+           IF ( proc == mpime ) &
+              ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
            !
-        END IF
-        !
-        ! ... all jobs are syncronized
-        !
-        CALL mp_barrier()
+           CALL mp_barrier()
+           !
+        END DO
         !
         ! ... each job checks whether the scratch directory is accessible
         ! ... or not
@@ -1466,22 +1464,28 @@ SUBROUTINE verify_tmpdir()
                       & ' non existent or non writable', 1 )
         !
         ! ... if starting from scratch all temporary files are removed 
-        ! ... from tmp_dir ( only by the master node )
+        ! ... from tmp_dir ( by all the cpus in sequence )
         !
         IF ( restart_mode == 'from_scratch' ) THEN
            !
-           IF ( ionode ) THEN
+           DO proc = 0, nproc - 1
               !
-              ! ... wfc-extrapolation file is removed
-              !     
-              CALL delete_if_present( TRIM( tmp_dir ) // &
-                                    & TRIM( prefix ) // '.update' )
+              IF ( proc == mpime ) THEN
+                 !
+                 ! ... wfc-extrapolation file is removed
+                 !     
+                 CALL delete_if_present( TRIM( tmp_dir ) // &
+                                       & TRIM( prefix ) // '.update' )
+                 !
+                 ! ... standard output of the self-consistency is removed
+                 !      
+                 CALL delete_if_present( TRIM( tmp_dir ) // 'PW.out' )
+                 !
+              END IF
               !
-              ! ... standard output of the self-consistency is removed
-              !      
-              CALL delete_if_present( TRIM( tmp_dir ) // 'PW.out' )
+              CALL mp_barrier()
               !
-           END IF
+           END DO
            !
         END IF  
         !
