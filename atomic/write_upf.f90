@@ -20,7 +20,7 @@ subroutine write_upf(ounps)
   call write_pseudo_nl(ounps)  
   call write_pseudo_pswfc(ounps)
   call write_pseudo_rhoatom(ounps)  
-  if (rel > 2) call write_pseudo_addinfo(ounps)  
+  if (rel == 2) call write_pseudo_addinfo(ounps)  
   !
   !
 end subroutine write_upf

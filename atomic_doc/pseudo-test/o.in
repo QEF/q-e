@@ -17,7 +17,6 @@
 2P  2  1  4.0  1
 3D  3  2  0.0  1
  &test
-  pseudotype=3,
   file_pseudo='OPBE.RRKJ3.UPF',
   nconf=1,
  / 

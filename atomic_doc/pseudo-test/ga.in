@@ -22,9 +22,7 @@
 4P  4  1  0.67  1.5
  &test
    nconf=1,
-   pseudotype=1,
    file_pseudo='Garel.ld1',
-   file_pseudopw='Garel.tm',
  /
 3
 4S  1  0  2.00  0.00  2.20  2.20  0.00

@@ -29,6 +29,7 @@ subroutine ld1_readin
   character(len=80) :: config, configts(ncmax1)
   character(len=2) :: atom
   logical, dimension(nwfsx) :: unbound
+  logical :: found
   character, external :: atom_name*2
   integer, external :: atomic_number
   logical, external :: matches
@@ -221,6 +222,7 @@ subroutine ld1_readin
 
      nconf=1
      configts=' '
+     file_wavefunctionsps= ' '
      file_pseudo=' '
      file_tests=' '
 
@@ -268,12 +270,23 @@ subroutine ld1_readin
         !
         !    Old RRKJ format
         !
-        call read_newpseudo
+        call read_newpseudo (ios)
         !
-        lmax=0
-        do ns=1,nwfs
-           lmax=max(lmax,lls(ns))
-        enddo
+        if (ios /= 0) then
+           !
+           !    try old Norm-Conserving format
+           !
+           call read_pseudo  &
+                (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
+                dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
+           pseudotype = 1
+           !
+        else
+           lmax=0
+           do ns=1,nwfs
+              lmax=max(lmax,lls(ns))
+           enddo
+        end if
      else
         !
         !    Old Norm-Conserving format
@@ -283,6 +296,11 @@ subroutine ld1_readin
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
         pseudotype = 1
      endif
+     !
+     ! initialize a few variables that may cause trouble otherwise
+     !
+     file_pseudopw=' '
+     file_logderps=' '
      
   else if (iswitch == 3) then
      !
@@ -325,7 +343,7 @@ subroutine ld1_readin
         !
         ! flag unbound states, i.e. those with negative occupancy
         ! and those with zero occupancy and nonzero reference energy
-        ! WARNING: this is VERY bad and MUST be done in a cleaner way
+        ! WARNING: this should be done in a cleaner way
         !
         unbound(ns) = (ocs(ns) < 0.0_dp) .or. &
              (ocs(ns) == 0.0_dp .and. enls(ns) /= 0.0_dp) 
@@ -355,27 +373,58 @@ subroutine ld1_readin
      file_wavefunctionsps= ' '
      file_tests=' '
      nconf=1
-     nwftsc = 0
+     ns1 = 0
      do n=1,nwfs
         if (.not.unbound(n)) then
            !
-           ! copy states used in the PP generation to the testing configuration
-           ! Only bound states must be copied ! Note that this WILL NOT WORK
+           ! copy states used in the PP generation to testing configuration
+           ! Only bound states must be copied. Note that this WILL NOT WORK
            ! if bound states are not used in the generation of the PP
            !
-           nwftsc = nwftsc + 1
-           eltsc (nwftsc,1)= els (n)
-           nntsc (nwftsc,1)= nns (n)
-           lltsc (nwftsc,1)= lls (n)
-           octsc (nwftsc,1)= ocs (n)
-           iswtsc(nwftsc,1)= isws(n)
-           jjtsc (nwftsc,1)= jjs (n)
+           ns1 = ns1 + 1
+           eltsc (ns1,1)= els (n)
+           nntsc (ns1,1)= nns (n)
+           lltsc (ns1,1)= lls (n)
+           octsc (ns1,1)= ocs (n)
+           iswtsc(ns1,1)= isws(n)
+           jjtsc (ns1,1)= jjs (n)
         end if
      end do
+     !
+     ! add additional valence states for PAW reconstruction, if not used
+     ! in PP generation. They must appear last in the list of all-electron
+     ! states and must be empty. To be done in a cleaner way !
+     !
+     do n=nwf,1,-1
+        found = .false.
+        do ns=1,nwfs
+           if ( el(n) == els(ns) ) found = .true.
+        end do
+        if (found) exit
+        !
+        ns1 = ns1 + 1
+        eltsc (ns1,1)= el (n)
+        lltsc (ns1,1)= ll (n)
+        if (oc(n) > 0.0_dp) &
+             call errore('ld1_readin','state'//el(n)//'should not be there',n)
+        octsc (ns1,1)= oc (n)
+        iswtsc(ns1,1)= isw(n)
+        jjtsc (ns1,1)= jj (n)
+        !
+        nntsc (ns1,1)= lltsc (ns1,1) + 1
+        do ns=1,ns1-1
+           if ( lltsc(ns,1) == lltsc(ns1,1) ) &
+                nntsc(ns1,1) = nntsc(ns1,1) + 1
+        end do
+        !
+     enddo
+     !
+     nwftsc(1) = ns1
+     !
      do n=1,nwf
         oc_old(n)=oc(n)
      enddo
-
+     !
   endif
 
   return

@@ -1,6 +1,6 @@
 !     
 !---------------------------------------------------------------------
-      subroutine read_newpseudo
+      subroutine read_newpseudo (ios)
 !---------------------------------------------------------------------
 !
 !     This routine reads from input the quantities which defines 
@@ -15,7 +15,7 @@ use funct
              nb,mb, &  ! counters on beta functions
              n,     &  ! counter on mesh points
              ir,    &  ! counters on mesh points
-             ios,   &  ! I/O control
+             ios,   &  ! I/O control: ios /= 0 means error
              iunps    ! the unit with the pseudopotential
 
       logical :: reldum
@@ -30,7 +30,7 @@ use funct
       read( iunps, '(a75)', err=100, iostat=ios ) title
 
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
-      if (pseudotype.ne.2.and.pseudotype.ne.3) &
+      if (pseudotype < 1 .or. pseudotype > 3) &
          call errore('read_newpseudo','pseudotype is wrong',1)
 
       read( iunps, '(2l5)',err=100, iostat=ios ) reldum, nlcc
@@ -111,8 +111,12 @@ use funct
 !      
       read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                    ((phis(ir,nb),ir=1,mesh),nb=1,nwfs)
-100   call errore('read_newpseudo','Reading pseudo file', &
-                                               abs(ios))
+100   continue
+      !
+      ! do not stop with error message here: return error code instead
+      !
+      !call errore('read_newpseudo','Reading pseudo file', &
+      !                                         abs(ios))
       close(iunps)
 
       return

@@ -39,11 +39,17 @@ subroutine ld1_writeout
   if (oldformat) then
      !
      if (pseudotype == 1) then
+       !
+       ! write old "NC" format (semilocal)
+       !
         call write_pseudo &
              (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
              dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
              rhoc,vnl,phis,vpsloc,llts,octs,etots,nwfts)
      else
+       !
+       ! write old "RRKJ" format (nonlocal)
+       !
         call write_rrkj ( iunps )
      end if
      !

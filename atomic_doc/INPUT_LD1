@@ -92,8 +92,8 @@ Needed for PP generation:
                     If the file name contains "upf" or "UPF",
                     the file is assumed to be in UPF format; 
                     otherwise, if the file name contains "rrkj3" or "RRKJ3",
-                    the file is assumed to be in the old RRKJ format;
-                    otherwise, in the old NC format
+                    the old RRKJ format is first tried;
+                    otherwise, the old NC format is read
       file_tests =  file containing the results of transferability tests
       file_wavefunctionps = file containing output PP wavefunctions
       configts(nc) = a string containing the test valence electronic
@@ -135,7 +135,10 @@ Needed for PP generation:
                      in the old RRKJ format if  pseudotype=2 or 3
                      (default: ' ')
       file_recon =  file containing data needed for PAW reconstruction 
-                    of all-electron wavefunctions from PP results
+                    of all-electron wavefunctions from PP results.
+                    If you want to use addtional states to perform the
+                    reconstruction, add them at the end of the list
+                    of all-electron states
       ltest=.true. : test for ghosts states                  (default: .false.)
       lloc = angular momentum of the local channel           (default -1)
            lloc=-1 pseudizes the all-electron potential

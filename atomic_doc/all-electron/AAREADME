@@ -1,3 +1,9 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ h.in: numerical problems with PW91 - not related to SIC but to LSD
+he.in: convergence problems apparently related to SIC, worse with LSD
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 This directory contains a few examples of all-electron inputs.
 The output are in the routine reference.
 

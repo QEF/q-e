@@ -13,7 +13,6 @@
  /
  &test
    nconf=1
-   pseudotype=3,
    file_pseudo='NiUSPBE.RRKJ3',
    configts(1)= '3d9 4s1 4p0'
  /

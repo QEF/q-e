@@ -13,7 +13,6 @@
  /
  &test
    nconf=1
-   pseudotype=1,
    file_pseudo='S.gon',
    configts(1)= '3s2 3p4'
  /

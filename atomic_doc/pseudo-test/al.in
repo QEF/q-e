@@ -13,7 +13,6 @@
      dft='LDA',
  /
  &test
-    pseudotype=1,
     file_pseudo='Al.rrkj3',
     nconf=1,
  / 
