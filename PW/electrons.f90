@@ -10,7 +10,7 @@
 ! ... uncomment the following line to use the "old ethr" 
 ! ... for the first iteration  
 !
-!#define OLDSTYLE
+!#define __OLDSTYLE
 !
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
@@ -56,7 +56,7 @@ SUBROUTINE electrons()
   USE extfield,             ONLY : tefield, etotefield  
   USE bp,                   ONLY : lberry  
   USE wavefunctions_module, ONLY : evc
-#ifdef __PARA
+#if defined (__PARA)
   USE para,                 ONLY : me, mypool, npp, ncplane
   USE mp,                   ONLY : mp_barrier
 #endif
@@ -65,7 +65,7 @@ SUBROUTINE electrons()
   !
   ! ... a few local variables
   !  
-#ifdef __PARA
+#if defined (__PARA)
   INTEGER :: &
       ngkp(npk)       !  number of plane waves summed on all nodes
 #define NRXX ncplane*npp(me)
@@ -151,7 +151,7 @@ SUBROUTINE electrons()
   ! ... for the first scf iteration of each ionic step (except than for the
   ! ... first) the threshold is fixed to a default value of 1.D-5
   !
-#if defined (OLDSTYLE)
+#if defined (__OLDSTYLE)
   IF ( .FALSE. ) THEN
 #else
   IF ( istep > 1 ) THEN
@@ -181,8 +181,8 @@ SUBROUTINE electrons()
      ELSE
         WRITE( stdout, 9009 )
      END IF
-#ifdef FLUSH
-     CALL flush( 6 )
+#if defined (__FLUSH)
+     CALL cpflush()
 #endif
      !
      ! ... Convergence threshold for iterative diagonalization
@@ -214,7 +214,7 @@ SUBROUTINE electrons()
         !
         conv_elec = .TRUE.
         !
-#ifdef __PARA
+#if defined (__PARA)
         CALL poolrecover( et, nbnd, nkstot, nks )
 #endif
         !
@@ -275,7 +275,7 @@ SUBROUTINE electrons()
            !
         END IF
         !
-#if defined (OLDSTYLE)
+#if defined (__OLDSTYLE)
         IF ( .FALSE. ) THEN
 #else
         IF ( iter == 1 ) THEN
@@ -301,7 +301,7 @@ SUBROUTINE electrons()
         ! ... for the first scf iteration it is controlled that the threshold 
         ! ... is small enought for the diagonalization to be adequate
         !
-#if defined (OLDSTYLE)
+#if defined (__OLDSTYLE)
         IF ( .FALSE. ) THEN
 #else
         IF ( iter == 1 .AND. ethr >= ethr_min ) THEN
@@ -310,7 +310,8 @@ SUBROUTINE electrons()
            ! ... a new diagonalization is needed       
            !
            WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
-          &  "too large:",/, 5X,"Diagonalizing with lowered threshold",/)' )
+                            &    "too large:",/,                         &
+                            & 5X,"Diagonalizing with lowered threshold",/)' )
            !
            CALL c_bands( iter, ik_, dr2 )
            !
@@ -381,13 +382,13 @@ SUBROUTINE electrons()
         !
         IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) &
            CALL DCOPY( ( ldim2 * nspin * nat ), nsnew, 1, ns, 1 )    
-#ifdef __PARA
+#if defined (__PARA)
         IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif
            CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'formatted', exst )
            WRITE( iunocc, * ) ns
            CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-#ifdef __PARA
+#if defined (__PARA)
         END IF
 #endif
      END IF
@@ -416,7 +417,7 @@ SUBROUTINE electrons()
         !  
         !IF ( lda_plus_u ) CALL write_ns()
         !
-#ifdef __PARA
+#if defined (__PARA)
         DO ik = 1, nks
            ngkp(ik) = ngk(ik)
         END DO
@@ -434,7 +435,7 @@ SUBROUTINE electrons()
            END IF
            !
            IF ( conv_elec ) THEN
-#ifdef __PARA
+#if defined (__PARA)
               WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngkp(ik)
 #else
               WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngk(ik)
@@ -496,8 +497,8 @@ SUBROUTINE electrons()
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
-#ifdef FLUSH
-     CALL flush( 6 )
+#if defined (__FLUSH)
+     CALL cpflush()
 #endif
      IF ( conv_elec ) THEN
         !
@@ -591,7 +592,7 @@ SUBROUTINE electrons()
        magtot = magtot * omega / ( nr1 * nr2 * nr3 )
        absmag = absmag * omega / ( nr1 * nr2 * nr3 )
        !
-#ifdef __PARA
+#if defined (__PARA)
        CALL reduce( 1, magtot )
        CALL reduce( 1, absmag )
 #endif
@@ -637,7 +638,7 @@ SUBROUTINE electrons()
        !
        IF ( file_exists ) THEN
           !
-#ifdef __PARA
+#if defined (__PARA)
           !
           ! ... all jobs are syncronized
           !
@@ -647,7 +648,7 @@ SUBROUTINE electrons()
 #endif
              OPEN( UNIT = iunexit, FILE = TRIM( exit_file ), STATUS = "OLD" )
              CLOSE( UNIT = iunexit, STATUS = "DELETE" )
-#ifdef __PARA
+#if defined (__PARA)
           END IF
 #endif
           !
