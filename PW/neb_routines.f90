@@ -14,9 +14,9 @@ MODULE neb_routines
   ! ... the NEB implementation into the PWSCF code
   ! ... Written by Carlo Sbraccia ( 04-11-2003 )
   !
-  USE io_global,  ONLY :  stdout
-  USE kinds, ONLY :  DP
-  USE constants,  ONLY :  AU, BOHR_RADIUS_ANGS, eV_to_kelvin
+  USE io_global,  ONLY : stdout
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : AU, BOHR_RADIUS_ANGS, eV_to_kelvin
   !
   PRIVATE
   !
@@ -29,7 +29,7 @@ MODULE neb_routines
     SUBROUTINE initialize_neb()
       !-----------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : istep
+      USE control_flags,    ONLY : istep
       USE input_parameters, ONLY : pos, nat, restart_mode, calculation, &
                                    minimization_scheme, climbing
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
@@ -221,18 +221,18 @@ MODULE neb_routines
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE control_flags,          ONLY : time_max, istep, nstep
-      USE io_files,       ONLY : iunneb, iunexit, exit_file     
-      USE formats,        ONLY : run_output, run_output_T_const
-      USE neb_variables,  ONLY : num_of_images, dim, pos, PES, error,       &
-                                 climbing, optimization,  CI_scheme,        &
-                                 Emax_index, temp, Emax, neb_thr, conv_neb, &
-                                 suspended_image, lsteep_des, lquick_min ,  &
-                                 ldamped_dyn, lmol_dyn 
-      USE io_routines,    ONLY : write_restart, write_dat_files, write_output 
+      USE control_flags, ONLY : time_max, istep, nstep
+      USE io_files,      ONLY : iunneb, iunexit, exit_file     
+      USE formats,       ONLY : run_output, run_output_T_const
+      USE neb_variables, ONLY : num_of_images, dim, pos, PES, error,       &
+                                climbing, optimization,  CI_scheme,        &
+                                Emax_index, temp, Emax, neb_thr, conv_neb, &
+                                suspended_image, lsteep_des, lquick_min ,  &
+                                ldamped_dyn, lmol_dyn 
+      USE io_routines,   ONLY : write_restart, write_dat_files, write_output 
 #if defined (__PARA)
-      USE para,           ONLY : me, mypool
-      USE mp,             ONLY : mp_barrier      
+      USE para,          ONLY : me, mypool
+      USE mp,            ONLY : mp_barrier      
 #endif
       USE minimization_routines
       !
@@ -412,7 +412,7 @@ MODULE neb_routines
          !
          istep = istep + 1
          !
-         ! ... informations are writte on the standard output
+         ! ... informations are written on the standard output
          !
          IF ( lmol_dyn ) THEN
             !
@@ -466,8 +466,8 @@ MODULE neb_routines
     SUBROUTINE compute_tangent()
       !------------------------------------------------------------------------
       !
-      USE neb_variables,  ONLY : num_of_images, tangent
-      USE miscellany,     ONLY : norm
+      USE neb_variables, ONLY : num_of_images, tangent
+      USE miscellany,    ONLY : norm
       !
       IMPLICIT NONE
       !
@@ -484,7 +484,9 @@ MODULE neb_routines
          !
          ! ... tangent to the path ( normalized )
          !
-         tangent(:,image) = path_tangent(image)
+         !tangent(:,image) = path_tangent( image )
+         CALL path_tangent_( image, tangent(:,image) )
+         !
          tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
          !
       END DO
@@ -498,11 +500,11 @@ MODULE neb_routines
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
       ! 
-      USE constants,      ONLY : pi, eps32
-      USE neb_variables,  ONLY : num_of_images, Emax, Emin, &
-                                 k_max, k_min, k, PES, PES_gradient, &
-                                 VEC_scheme
-      USE miscellany,     ONLY : norm
+      USE constants,     ONLY : pi, eps32
+      USE neb_variables, ONLY : num_of_images, Emax, Emin, &
+                                k_max, k_min, k, PES, PES_gradient, &
+                                VEC_scheme
+      USE miscellany,    ONLY : norm
       !
       IMPLICIT NONE
       !
@@ -569,12 +571,11 @@ MODULE neb_routines
     SUBROUTINE gradient()
       !------------------------------------------------------------------------
       !
-      USE supercell,       ONLY : pbc
-      USE neb_variables,   ONLY : pos, grad, norm_grad, elastic_gradient, &
-                                  PES_gradient, k, num_of_images, &
-                                  free_minimization, climbing, tangent, &
-                                  lmol_dyn
-      USE miscellany,      ONLY : norm   
+      USE supercell,     ONLY : pbc
+      USE neb_variables, ONLY : pos, grad, norm_grad, elastic_gradient, &
+                                PES_gradient, k, num_of_images, &
+                                free_minimization, climbing, tangent, lmol_dyn
+      USE miscellany,    ONLY : norm   
       !
       IMPLICIT NONE
       !
@@ -644,8 +645,8 @@ MODULE neb_routines
     SUBROUTINE search_stationary_points()
       !-----------------------------------------------------------------------
       !
-      USE neb_variables,   ONLY : num_of_images, PES, climbing, &
-                                  free_minimization, optimization 
+      USE neb_variables, ONLY : num_of_images, PES, climbing, &
+                                free_minimization, optimization 
       !
       IMPLICIT NONE
       !
@@ -693,8 +694,8 @@ MODULE neb_routines
     SUBROUTINE compute_error( err )
       !-----------------------------------------------------------------------
       !
-      USE neb_variables,   ONLY :  num_of_images, optimization, &
-                                   error, norm_grad
+      USE neb_variables, ONLY :  num_of_images, optimization, &
+                                 error, norm_grad
       !
       IMPLICIT NONE
       !
@@ -738,11 +739,12 @@ MODULE neb_routines
     !
     !
     !-----------------------------------------------------------------------
-    FUNCTION path_tangent( index )
+    !FUNCTION path_tangent( index )
+    SUBROUTINE path_tangent_( index, path_tangent )
       !-----------------------------------------------------------------------
       !
-      USE supercell,       ONLY : pbc
-      USE neb_variables,   ONLY : pos, dim, PES
+      USE supercell,     ONLY : pbc
+      USE neb_variables, ONLY : pos, dim, PES
       !
       IMPLICIT NONE
       !
@@ -800,7 +802,8 @@ MODULE neb_routines
       !
       RETURN
       !
-    END FUNCTION path_tangent
+    !END FUNCTION path_tangent
+    END SUBROUTINE path_tangent_
     !
     !
     !-----------------------------------------------------------------------
@@ -814,10 +817,10 @@ MODULE neb_routines
       !
       ! ... local variables
       !
-      LOGICAL, INTENT(IN)        :: flag
-      LOGICAL, INTENT(OUT)       :: stat
-      INTEGER                    :: i, image
-      INTEGER                    :: N_in, N_fin
+      LOGICAL, INTENT(IN)   :: flag
+      LOGICAL, INTENT(OUT)  :: stat
+      INTEGER               :: i, image
+      INTEGER               :: N_in, N_fin
       ! 
       ! ... end of local variables
       !
@@ -866,38 +869,38 @@ MODULE neb_routines
     SUBROUTINE compute_scf( N_in, N_fin, stat  )
       !-----------------------------------------------------------------------
       !
-      USE input_parameters,  ONLY : if_pos, sp_pos, startingwfc, startingpot
-      USE constants,         ONLY : e2
-      USE control_flags,             ONLY : time_max, conv_elec, ethr
-      USE brilz,             ONLY : alat
-      USE basis,             ONLY : tau, ityp, nat, &
-                                    startingwfc_ => startingwfc, &
-                                    startingpot_ => startingpot    
-      USE ener,              ONLY : etot
-      USE force_mod,         ONLY : force
-      USE relax,             ONLY : if_pos_ => if_pos
-      USE extfield,          ONLY : tefield, forcefield
-      USE io_files,          ONLY : prefix, tmp_dir, &
-                                    iunneb, iunexit, exit_file
-      USE formats,           ONLY : scf_fmt
-      USE neb_variables,     ONLY : pos, PES, PES_gradient, num_of_images, &
-                                    dim, suspended_image
-      USE miscellany,        ONLY : int_to_char
+      USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot
+      USE constants,        ONLY : e2
+      USE control_flags,    ONLY : time_max, conv_elec, ethr
+      USE brilz,            ONLY : alat
+      USE basis,            ONLY : tau, ityp, nat, &
+                                   startingwfc_ => startingwfc, &
+                                   startingpot_ => startingpot    
+      USE ener,             ONLY : etot
+      USE force_mod,        ONLY : force
+      USE relax,            ONLY : if_pos_ => if_pos
+      USE extfield,         ONLY : tefield, forcefield
+      USE io_files,         ONLY : prefix, tmp_dir, &
+                                   iunneb, iunexit, exit_file
+      USE formats,          ONLY : scf_fmt
+      USE neb_variables,    ONLY : pos, PES, PES_gradient, num_of_images, &
+                                   dim, suspended_image
+      USE miscellany,       ONLY : int_to_char
 #ifdef __PARA
-      USE para,              ONLY : me, mypool
-      USE mp,                ONLY : mp_barrier
+      USE para,             ONLY : me, mypool
+      USE mp,               ONLY : mp_barrier
 #endif        
       !
       IMPLICIT NONE
       !
       ! ... local variables definition
       !
-      INTEGER, INTENT(IN)    :: N_in, N_fin
-      LOGICAL, INTENT(OUT)   :: stat
-      INTEGER                :: image, ia
-      REAL (KIND=DP)         :: tcpu 
-      CHARACTER (LEN=80)     :: tmp_dir_saved
-      LOGICAL                :: file_exists, opnd 
+      INTEGER, INTENT(IN)  :: N_in, N_fin
+      LOGICAL, INTENT(OUT) :: stat
+      INTEGER              :: image, ia
+      REAL (KIND=DP)       :: tcpu 
+      CHARACTER (LEN=80)   :: tmp_dir_saved
+      LOGICAL              :: file_exists, opnd 
       !
       ! ... end of local variables definition
       !
