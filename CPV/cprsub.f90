@@ -737,10 +737,6 @@
          endif
       endif
 !
-! with variable-cell we always assume "unspecified" bravais lattice
-! 
-      ibrav=0
-!
       if(nbeg.ge.0) then
 !
 ! read only h and hold from file ndr
@@ -759,7 +755,7 @@
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 !
-         write(6,344)
+         write(6,344) ibrav
          do i=1,3
             write(6,345) (h(i,j),j=1,3)
          enddo
@@ -816,7 +812,7 @@
       endif
  998  format(' wmass (read from input) = ',f15.2,/)
  999  format(' wmass (calculated) = ',f15.2,/)
- 344  format(' ibrav = 0       cell parameters ',/)
+ 344  format(' ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))
       return
       end
@@ -888,7 +884,7 @@
 !     ==============================================================
       if(iprsta.ge.4)then
          write(6,34) ibrav,alat,omega
-         if(ibrav.eq.0)then
+         if(ibrav.eq.0) then
             write(6,344)
             do i=1,3
                write(6,345) (h(i,j),j=1,3)
@@ -899,7 +895,7 @@
 ! 
  34   format(' initialization ',//,                                     &
      &       ' ibrav=',i3,' alat=',f7.3,' omega=',f10.4,//)
- 344  format(' ibrav = 0       cell parameters ',/)
+ 344  format(' cell parameters ',/)
  345  format(3(4x,f10.5))
 !
       return

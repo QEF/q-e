@@ -1032,7 +1032,6 @@
          if(thdyn) then
             hold=h
             h=hnew
-            ibrav=0
             call newinit(ibrav)
             call newnlinit
          else
@@ -1464,55 +1463,42 @@
 3380     format(9f8.4)      
       endif
 !
-      if(ibrav.eq.0) then
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  taus(i,ia,is)=ainv(i,1)*tau0(1,ia,is)                 &
-     &                         +ainv(i,2)*tau0(2,ia,is)                 &
-     &                         +ainv(i,3)*tau0(3,ia,is)
-               end do
-            end do
-         end do
-      else
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  taus(i,ia,is)=tau0(i,ia,is)
-               end do
-            end do
-         end do
-      endif
       if(tfor) then
-         if(ibrav.eq.0) then
-            write(6,1978)
-            do i=1,3
-               write(6,1979) (h(i,j),j=1,3)
-            enddo
-         else
-            write(6,1977) alat
-         endif
-         write(6,*)
+         write(6,1970) ibrav, alat
+         write(6,1971)
+         do i=1,3
+            write(6,1972) (h(i,j),j=1,3)
+         enddo
          write(6,1973)
          do is=1,nsp
             do ia=1,na(is)
-               write(6,1972) is,ia,(taus(i,ia,is),i=1,3),               &
+               write(6,1974) is,ia,(tau0(i,ia,is),i=1,3),               &
      &            ((ainv(j,1)*fion(1,ia,is)+ainv(j,2)*fion(2,ia,is)+    &
      &              ainv(j,3)*fion(3,ia,is)),j=1,3)
             end do
          end do
+         write(6,1975)
+         do is=1,nsp
+            do ia=1,na(is)
+               write(6,1976) is,ia,(taus(i,ia,is),i=1,3)
+            end do
+         end do
       endif
- 1977 format(1x,'alat : ',f10.4,/)
- 1978 format(1x,'lattice vectors',/)
- 1979 format(1x,3f10.4)
- 1973 format(1x,'   species',' # of atom','   x-coord',                 &
-     &                       '   y-coord','   z-coord',/)
- 1972 format(1x,2i5,3f10.4,2x,3f10.4)
-      write (6,1974) 
+ 1970 format(1x,'ibrav :',i4,'  alat : ',f10.4,/)
+ 1971 format(1x,'lattice vectors',/)
+ 1972 format(1x,3f10.4)
+ 1973 format(/1x,'Cartesian coordinates (a.u.)              forces' &
+     &       /1x,'species',' atom #', &
+     &           '   x         y         z      ', &
+     &           '   fx        fy        fz'/)
+ 1974 format(1x,2i5,3f10.4,2x,3f10.4)
+ 1975 format(/1x,'Scaled coordinates '/1x,'species',' atom #')
+ 1976 format(1x,2i5,3f10.4)
+      write (6,1977) 
 !
       call memory
 !      
- 1974 format(5x,//'====================== end cprvan ',                 &
+ 1977 format(5x,//'====================== end cprvan ',                 &
      &            '======================',//)
 #ifdef __MPI
       call mpi_finalize(i)

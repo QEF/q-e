@@ -3,7 +3,7 @@
 #define FLUSH
 #endif
 
-#if defined(CRAYY) || defined(SGI) || defined(PC) || defined(AIX) || defined(T3D) ||defined(HITACHI)
+#if defined(CRAYY) || defined(SGI) || defined(PC) || defined(AIX) || defined(T3D) ||defined(HITACHI) || defined(SUN)
 #define C_POINTER  integer
 #endif
 #if defined(ORIGIN) || defined (FUJ64)|| defined (DEC)

@@ -1,0 +1,106 @@
+OSHOME=/home/giannozz/O-sesame
+######################################################################
+# LINUX INTEL Compilers
+#
+# Architecture
+  ARCH=lnx.intel
+#
+######################################################################
+
+# --- Change Variables according to your system --- #
+
+#  ** Preprocessor Macro **
+# Parallel MPI
+  CPMACRO=-D__LINUX -D__MPI -D__PARA -D__INTEL -D__FFTW \
+ -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf
+           -D"fftwnd_f77_one=fftwnd_f77_one_" \
+           -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
+           -D"fftw_f77=fftw_f77_" \
+           -D"fftw_f77_create_planefftw_f77_create_plan_"
+#
+# Serial Code
+  CPMACRO=-D__LINUX -D__INTEL -D__FFTW \
+ -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf \
+           -D"fftwnd_f77_one=fftwnd_f77_one_" \
+           -D"fftw3d_f77_create_plan=fftw3d_f77_create_plan_" \
+           -D"fftw_f77=fftw_f77_" \
+           -D"fftw_f77_create_planefftw_f77_create_plan_"
+#
+# PentiumIII
+  CPUTYPE=-tpp6
+# PentiumIV
+  CPUTYPE=-tpp7
+#
+# Module, Intel Compiler Version option
+# use this for version < 7
+  MODULEOPT= -cl,./intel.pcl
+# use this for version >= 7
+#  MODULEOPT= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/FPMD
+#
+# ** Scientific Libraries **
+  FFT=fftw.o
+# Use System Lapack and blas
+  LAPACK= /opt/intel/mkl/lib/32/libmkl_lapack.a \
+          /opt/intel/mkl/lib/32/libmkl_p4.a -lguide -lpthread  -lfftw
+  MYLIB=
+# Use blas and lapack from the source code
+#  MYLIB=blas_and_lapack
+# Use System lapack and Atlas 
+#  ATLAS=/cineca/lib/ATLAS
+#  LAPACK= -L/cineca/lib/intel -llapack -L$(ATLAS) -lf77blas -latlas 
+#
+# ** Communication Libraries **
+# mpich compiled with  GNU compiler
+#  MPICH = /usr/local/mpich/gnu/
+#  INCLUDE = -I/$(MPICH)/include
+#  LIBMPI=-L$(MPICH)/lib -lfmpich -lmpich 
+#  LIBGM=-L/usr/gm/lib -lgm 
+#
+# ** Include **
+  INCLUDEPATH=-I$(OSHOME)/include -I$(OSHOME)/clib
+#
+######################################################################
+# ***  Usually you don't need to edit variables below this line **** #
+######################################################################
+#
+# Flag for the compilation of the fortran source files
+  OPTIMIZATIONS = -O2 $(CPUTYPE)
+  NOOPTIMIZATIONS = -O0
+  DEBUGFLAGS =
+  PREPROCESSING = -fpp $(CPMACRO)
+  FREEFORM  = -FR 
+  INTELFLAG = -autodouble -i4 -w -static -Vaxlib
+  ARCHFLAGS = -v
+  ARFLAGS   = rv
+  ARCHFLAGS = 
+  F77FLAGS  = $(ARCHFLAGS) $(INTELFLAG) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
+  F77FLAGS_NOOPT  = $(ARCHFLAGS) $(INTELFLAG) $(DEBUGFLAGS) $(NOOPTIMIZATIONS) 
+  F90FLAGS  = $(PREPROCESSING) $(ARCHFLAGS) $(INTELFLAG) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) $(INCLUDE)
+  LNKFLAGS = $(ARCHFLAGS) $(DEBUGFLAGS)
+#
+# Flag for the compilation of the c source files
+  CCFLAGS   = $(INCLUDEPATH) $(ARCHFLAGS) $(DEBUGFLAGS) $(CPMACRO) -O3 -fomit-frame-pointer 
+#
+# --- Preprocessor ---
+  CPP= /lib/cpp
+  CPP_FLAG=-P -C -traditional
+  CPP_MACRO=$(CPMACRO)
+#
+# --- Name of the fortran compiler ---
+  F77= ifc
+  F90= ifc
+  CC= gcc
+  LNK= ifc
+#
+# --- Modules --
+  MODULEFLAG= $(MODULEOPT)
+#
+# --- Library ---
+# to link -lfmpich compiled with GNU compiler
+  LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -Vaxlib
+#
+# OTHER settings
+  RANLIB=echo
+  .SUFFIXES :
+  .SUFFIXES : .out .a .ln .o .c .cc .C .cpp .p .f .F .r .y .l .s .S .h .f90
+######################################################################
