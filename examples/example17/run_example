@@ -102,7 +102,6 @@ cat > H2+H.in << EOF
 /
 &IONS
   num_of_images           = 7,
-  minimization_scheme     = "quick-min",
   k_max                   = 0.6D0,
   k_min                   = 0.4D0,
   potential_extrapolation = "wfc2",
@@ -162,8 +161,6 @@ cat > symmetric_H2+H.in << EOF
 /
 &IONS
   num_of_images           = 8,
-  minimization_scheme     = "quick-min",
-  ds                      = 1.2D0,
   k_max                   = 0.6D0,
   k_min                   = 0.4D0,
   potential_extrapolation = "wfc2",
@@ -230,7 +227,7 @@ cat > asymmetric_H2+H.in << EOF
 /
 &IONS
   num_of_images           = 8,
-  minimization_scheme     = "quick-min",
+  reset_vel               = .TRUE.,
   ds                      = 1.D0,
   k_max                   = 0.6D0,
   k_min                   = 0.4D0,
