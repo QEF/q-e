@@ -44,7 +44,7 @@ MODULES = \
 ../Modules/splinelib.o 
 
 all : band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x \
-      kpoints.x pwi2xsf pwi2xsf_new path_int.x
+      kpoints.x pwi2xsf.x path_int.x
 
 band_plot.x : band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
@@ -70,15 +70,11 @@ ev.x : ev.o
 kpoints.x : kpoints.o
 	$(LD) -o kpoints.x kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-pwi2xsf : pwi2xsf.o pwi2xsflib.o
-	$(LD) -o pwi2xsf pwi2xsf.o pwi2xsflib.o $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-pwi2xsf_new : pwi2xsf_new.o pwi2xsflib.o
-	$(LD) -o pwi2xsf_new pwi2xsf_new.o pwi2xsflib.o \
-        $(PWOBJS) $(MODULES) $(LDFLAGS)
+pwi2xsf.x : pwi2xsf.o
+	$(LD) -o pwi2xsf.x pwi2xsf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 path_int.x : path_int.o
 	$(LD) -o path_int.x path_int.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean :
-	- /bin/rm -f pwi2xsf pwi2xsf_new *.x *.o *~ *.F90 *.mod *.d *.i work.pc
+	- /bin/rm -f pwi2xsf pwi2xsf_old *.x *.o *~ *.F90 *.mod *.d *.i work.pc
