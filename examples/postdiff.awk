@@ -138,8 +138,7 @@ function check_key()
 	{
 	  split(line1[j], x1);
 	  split(line2[j], x2);
-	  delta = x1[12] - x2[12];
-	  if (delta*delta > tolerance*tolerance)
+	  if (check_tol(x1[12] - x2[12], tolerance))
 	    return 0;
 	}
 
@@ -161,8 +160,7 @@ function check_key()
 
       split(line1[0], x1);
       split(line2[0], x2);
-      delta = x1[7] - x2[7];
-      if (delta*delta > tolerance*tolerance)
+      if (check_tol(x1[7] - x2[7], tolerance))
 	return 0;
 
       # check passed
@@ -185,8 +183,7 @@ function check_key()
 	  for (k in x1)
 	    if (k > 2 && match(x1[k], "[=<]"))
 	      break;
-	  delta = x1[k+1] - x2[k+1];
-	  if (delta*delta > tolerance*tolerance)
+	  if (check_tol(x1[k+1] - x2[k+1], tolerance))
 	    return 0;
 	}
 
@@ -210,8 +207,7 @@ function check_key()
 	  for (k in x1)
 	    if (k > 2 && match(x1[k], "="))
 	      break;
-	  delta = x1[k+1] - x2[k+1];
-	  if (delta*delta > tolerance*tolerance)
+	  if (check_tol(x1[k+1] - x2[k+1], tolerance))
 	    return 0;
 	}
 
@@ -241,8 +237,7 @@ function check_key()
 	  # compare all eigenvalues but the last two
 	  for (k=2; k<=f1-2; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tolerance*tolerance)
+	      if (check_tol(x1[k] - x2[k], tolerance))
 		return 0;
 	    }
 	}
@@ -260,8 +255,7 @@ function check_key()
 
       split(line1[0], x1);
       split(line2[0], x2);
-      delta = x1[8] - x2[8];
-      if (delta*delta > tolerance*tolerance)
+      if (check_tol(x1[8] - x2[8], tolerance))
 	return 0;
 
       # check passed
@@ -269,8 +263,8 @@ function check_key()
     }
   else if (key == "STRESS")
     {
-      tol_au   = 1e-5;
-      tol_kbar = 1e-0;
+      tolerance_au   = 1e-5;
+      tolerance_kbar = 1e-0;
 
       # number of lines must match
       if (i1 != i2)
@@ -284,14 +278,12 @@ function check_key()
 	  split(line2[j], x2);
 	  for (k=3; k<=5; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tol_au*tol_au)
+	      if (check_tol(x1[k] - x2[k], tolerance_au))
 		return 0;
 	    }
 	  for (k=6; k<=8; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tol_kbar*tol_kbar)
+	      if (check_tol(x1[k] - x2[k], tolerance_kbar))
 		return 0;
 	    }
 	}
@@ -309,8 +301,7 @@ function check_key()
 
       split(line1[0], x1);
       split(line2[0], x2);
-      delta = x1[10] - x2[10];
-      if (delta*delta > tolerance*tolerance)
+      if (check_tol(x1[10] - x2[10], tolerance))
 	return 0;
 
       # check passed
@@ -332,8 +323,7 @@ function check_key()
 	  split(line2[j], x2);
 	  for (k=4; k<=6; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tolerance*tolerance)
+	      if (check_tol(x1[k] - x2[k], tolerance))
 		return 0;
 	    }
 	}
@@ -357,8 +347,7 @@ function check_key()
 	  split(line2[j], x2);
 	  for (k=4; k<=6; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tolerance*tolerance)
+	      if (check_tol(x1[k] - x2[k], tolerance))
 		return 0;
 	    }
 	}
@@ -382,8 +371,7 @@ function check_key()
 	  split(line2[j], x2);
 	  for (k=5; k<=6; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tolerance*tolerance)
+	      if (check_tol(x1[k] - x2[k], tolerance))
 		return 0;
 	    }
 	}
@@ -393,8 +381,8 @@ function check_key()
     }
   else if (key == "OMEGA")
     {
-      tol_thz = 2e-1;
-      tol_cm  = 5e-0;
+      tolerance_thz = 2e-1;
+      tolerance_cm  = 5e-0;
 
       # number of lines must match
       if (i1 != i2)
@@ -408,10 +396,8 @@ function check_key()
 	  for (k in x1)
 	    if (k > 2 && match(x1[k], "THz"))
 	      break;
-	  delta1 = x1[k-1] - x2[k-1];
-	  delta2 = x1[k+2] - x2[k+2];
-	  if (delta1*delta1 > tol_thz*tol_thz \
-	      || delta2*delta2 > tol_cm*tol_cm)
+	  if (check_tol(x1[k-1] - x2[k-1], tolerance_thz) \
+	      || check_tol(x1[k+2] - x2[k+2], tolerance_cm))
 	    return 0;
 	}
 
@@ -434,8 +420,7 @@ function check_key()
 	  split(line2[j], x2);
 	  for (k=9; k<=11; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tolerance*tolerance)
+	      if (check_tol(x1[k] - x2[k], tolerance))
 		return 0;
 	    }
 	}
@@ -445,8 +430,8 @@ function check_key()
     }
   else if (key == "TFORCE")
     {
-      tol_force = 1e-4;
-      tol_scf   = 2e-3;
+      tolerance_force = 1e-4;
+      tolerance_scf   = 2e-3;
 
       # there must be exactly one line
       if (i1 != 1 || i2 != 1)
@@ -454,10 +439,8 @@ function check_key()
 
       split(line1[0], x1);
       split(line2[0], x2);
-      delta1 = x1[6] - x2[6];
-      delta2 = x1[11] - x2[11];
-      if (delta1*delta1 > tol_force*tol_force \
-	  || delta2*delta2 > tol_scf*tol_scf)
+      if (check_tol(x1[6] - x2[6], tolerance_force) \
+	  || check_tol(x1[11] - x2[11], tolerance_scf))
 	return 0;
 
       # check passed
@@ -465,9 +448,9 @@ function check_key()
     }
   else if (key == "TEMPERATURE")
     {
-      tol_ekin = 1e-6;
-      tol_t    = 2e-1;
-      tol_etot = 1e-5;
+      tolerance_ekin = 1e-6;
+      tolerance_t    = 2e-1;
+      tolerance_etot = 1e-5;
 
       # there must be exactly one line
       if (i1 != 1 || i2 != 1)
@@ -475,11 +458,9 @@ function check_key()
 
       split(line1[0], x1);
       split(line2[0], x2);
-      delta1 = x1[5] - x2[5];
-      delta2 = x1[9] - x2[9];
-      delta3 = x1[13] - x2[13];
-      if (delta1*delta1 > tol_ekin*tol_ekin || delta2*delta2 > tol_t*tol_t \
-	  || delta3*delta3 > tol_etot*tol_etot)
+      if (check_tol(x1[5] - x2[5], tolerance_ekin) \
+	  || check_tol(x1[9] - x2[9], tolerance_t) \
+	  || check_tol(x1[13] - x2[13], tolerance_etot))
 	return 0;
 
       # check passed
@@ -501,8 +482,7 @@ function check_key()
 	  split(line2[j], x2);
 	  for (k=4; k<=6; k++)
 	    {
-	      delta = x1[k] - x2[k];
-	      if (delta*delta > tolerance*tolerance)
+	      if (check_tol(x1[k] - x2[k], tolerance))
 		return 0;
 	    }
 	}
@@ -520,8 +500,7 @@ function check_key()
 
       split(line1[0], x1);
       split(line2[0], x2);
-      delta = x1[7] - x2[7];
-      if (delta*delta > tolerance*tolerance)
+      if (check_tol(x1[7] - x2[7], tolerance))
 	return 0;
 
       # check passed
@@ -656,4 +635,11 @@ function strip_key(line)
 {
   sub("@.*@ ", "", line);
   return line;
+}
+
+function check_tol(delta, tol)
+{
+  # tol = 0.0; # require exact equality (for debugging)
+
+  return (delta < -tol || delta > tol);
 }

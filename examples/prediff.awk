@@ -28,14 +28,14 @@ function check_line()
     }
   else if (match($0, "Parallel version"))
     {
-      print_key_n("PARALLEL", 2);
-
-      # see /Reading header from file/ below
-      getline; $0 = ""; print_key("PARALLEL");
-
-      while (getline && NF == 0)
-	print_key("PARALLEL");
-      print;
+      print_key_n("PARALLEL", 4);
+      getline;
+      if (match($0, "Reading header from file"))
+	{
+	  print;
+	  getline;
+	}
+      print_key("PARALLEL");
     }
   else if (match($0, "Planes per process"))
     {
@@ -47,9 +47,11 @@ function check_line()
       while (getline && NF > 0)
 	print_key("PARALLEL");
       print_key("PARALLEL");
-
-      # see /Reading header from file/ below
-      getline; $0 = ""; print_key("PARALLEL");
+      getline;
+      if (NF == 0)
+	print_key("PARALLEL");
+      else
+	print;
     }
   else if (match($0, "Parallel routines"))
     {
@@ -58,13 +60,6 @@ function check_line()
   else if (match($0, "npwx   =") || match($0, "ngl    ="))
     {
       print_key("PARALLEL");
-    }
-  else if (match($0, "Reading header from file") \
-	   || match($0, "Reading data from file"))
-    {
-      # must erase these lines because of a subtle problem with
-      # blank lines before/after parallel data
-      $0 = ""; print;
     }
   else if (match($0, "FFT grid") || match($0, "smooth grid"))
     {
