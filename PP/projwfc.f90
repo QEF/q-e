@@ -21,7 +21,7 @@ PROGRAM projwfc
   !            =  0  Simple Gaussian (default)
   !            =  1  Methfessel-Paxton of order 1
   !            = -1  Marzari-Vanderbilt "cold smearing"
-  !            = 99  Fermi-Dirac function
+  !            =-99  Fermi-Dirac function
   !    degauss       gaussian broadening, Ry (not eV!)          0.0
   !    Emin, Emax    min, max energy (eV) for DOS plot          band extrema
   !    DeltaE        energy grid step (eV)                      none
