@@ -1346,12 +1346,9 @@
           write(77,'(3f12.8)') (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
           write(78,'(3f12.8)') (((fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
           write(79,3340) ((stress(i,j),i=1,3),j=1,3)
-#if defined (__ORIGIN) || defined (__T3E)
+#if defined (__AIX) || defined (__ABSOFT) || defined (__ORIGIN) || defined (__T3E)
           call flush(77)
           call flush(78)
-#elif defined (__AIX) || defined (__ABSOFT)
-          call flush_(77)
-          call flush_(78)
 #endif
  3340     format(9(1x,f9.5))
         endif

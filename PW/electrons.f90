@@ -129,7 +129,6 @@ SUBROUTINE electrons()
   CALL flush( stdout )
 #endif
   !
-
   IF ( .NOT. lscf ) THEN
      !
      WRITE( stdout, 9002 )
@@ -186,7 +185,6 @@ SUBROUTINE electrons()
      RETURN
      !
   END IF
-
   !
   ! ... calculates the ewald contribution to total energy
   !
@@ -226,9 +224,17 @@ SUBROUTINE electrons()
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
+     IF ( lneb ) THEN
+        !
+        CALL flush( stdout )
+        !
+     ELSE
+        !
 #if defined (FLUSH)
-     CALL flush( stdout )
+        CALL flush( stdout )
 #endif
+        !
+     END IF
      !
      ! ... Convergence threshold for iterative diagonalization
      ! ... is automatically updated during self consistency
@@ -421,9 +427,17 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
      !
+     IF ( lneb ) THEN
+        !
+        CALL flush( stdout )
+        !
+     ELSE
+        !
 #if defined (FLUSH)
-     CALL flush( stdout )
+        CALL flush( stdout )
 #endif
+        !
+     END IF
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
           iswitch <= 2 ) THEN
@@ -533,9 +547,18 @@ SUBROUTINE electrons()
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
+     IF ( lneb ) THEN
+        !
+        CALL flush( stdout )
+        !
+     ELSE
+        !
 #if defined (FLUSH)
-     CALL flush( stdout )
+        CALL flush( stdout )
 #endif
+        !
+     END IF
+     !
      IF ( conv_elec ) THEN
         !
         WRITE( stdout, 9110 )
@@ -562,9 +585,17 @@ SUBROUTINE electrons()
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 )
   !
+  IF ( lneb ) THEN
+     !
+     CALL flush( stdout )
+     !
+  ELSE
+     !
 #if defined (FLUSH)
-  CALL flush( stdout )
+     CALL flush( stdout )
 #endif
+     !
+  END IF
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho
   !

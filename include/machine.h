@@ -1,3 +1,11 @@
+!
+!  Copyright (C) 2002-2004 PWSCF,FPMD,CPV groups
+!  This file is distributed under the terms of the
+!  GNU General Public License. See the file `License'
+!  in the root directory of the present distribution,
+!  or http://www.gnu.org/copyleft/gpl.txt .
+!
+
 
 #if defined (__SX4) || defined (__ORIGIN) || defined (__T3E) || defined (FUJ64) || defined (HITACHI)
 #  define FLUSH
@@ -261,7 +269,12 @@
 
 #endif
 
+#if defined (__AIX)
+#  define flush  flush_
+#endif
+
 #if defined(__ABSOFT)
+#  define flush  flush_
 #  define getenv getenv_
 #  define getarg getarg_
 #  define iargc  iargc_
