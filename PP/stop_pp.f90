@@ -26,7 +26,7 @@ subroutine stop_pp
      if (twfcollect) then
         close (unit = iunwfc, status = 'delete')
      else
-        close (unit = iuwfc, status = 'keep')
+        close (unit = iunwfc, status = 'keep')
      end if
   end if 
 
