@@ -68,7 +68,11 @@ The Itcl, Itk, and Iwidgets stand for: [incr Tcl], [incr Tk], and
 modern Linux distributions, otherwise their RPMs (DEBs) can be easily
 found on the WEB. 
 
-See for example: http://incrtcl.sourceforge.net/
+For Tcl/Tk see:             http://www.scriptics.com/
+For ITcl/Itk/Iwidgets see:  http://incrtcl.sourceforge.net/
+
+Alternatively you may install ActiveTcl which includes all the
+Tcl/Tk/Itcl/Itk/Iwidgets. See:  http://aspn.activestate.com/ASPN/Tcl
 
 
 Troubleshooting
