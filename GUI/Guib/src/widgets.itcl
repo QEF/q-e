@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: widgets.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: widgets.itcl,v 1.2 2004-09-20 07:24:32 kokalj Exp $ 
 #
 
 
@@ -490,9 +490,10 @@ body ::guib::widgets::Entrydirselect::_dirselect {} {
 	}
     }
 
+    # try first with PWD
     if { ! [info exists IniDir] } {
 	global env
-	set IniDir $env(HOME)
+	set IniDir $env(PWD)
     }
 	
     set dir [tk_chooseDirectory -initialdir $IniDir \
