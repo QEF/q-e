@@ -55,7 +55,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        iter, &  ! counter on iteration
        ns,   &  ! counter on beta functions
        ncross,& ! the number of nodes
-       count   ! counter on energy intervals 
+       count,&  ! counter on energy intervals 
+       count0   ! counter on attempts with wrong number of nodes
 
   logical :: &
        nosol
@@ -70,6 +71,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   eup0=0.0_DP
   elw0=0.0_DP
   nosol=.false.
+  count0=0
   do iter=1,maxter
 
      elw=e
@@ -172,7 +174,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
                 r,r2,sqr,vpot,beta,ddd,qq, &
                 nbeta,nwfx,lls,jjs,ikk,detlw)
            if (count.gt.6) &
-                call errore('ascheqps','too many attempts ',1)
+                call errore('ascheqps','too many attempts ',2)
            goto 100
         endif
      endif
@@ -223,9 +225,14 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      return
   endif
   !
-  !    if the program arrives here the number of nodes is wrong, try bisection 
-  !    with the new limits
+  !    if the program arrives here the number of nodes is wrong
+  !    try bisection with the new limits
   !
-  goto 800
+  if (count0 > 5) then
+     call errore('ascheqps','too many attempts ',3)
+  else
+     count0 = count0 + 1
+     goto 800
+  end if
   return
 end subroutine ascheqps

@@ -204,52 +204,33 @@ subroutine gener_pseudo
 
   if (pseudotype == 1) then
      !
-     !     NC potential with one projector per angular momentum:
-     !     construct the potential 
+     !     NC single-projector PP: construct the semilocal potential 
      !
      vnl=0.0_dp
      do ns=1,nbeta
         lam=lls(ns)
         do n=1,ikk(ns)
-           vnl(n,lam)=chis(n,ns)/phis(n,ns)
+           vnl(n,lam) = chis(n,ns)/phis(n,ns)
         enddo
-        !
      enddo
-     !
-     !    unscreen the local potential, add it to all channels
-     !
-     call descreening
-     !
-     do n=1,mesh
-        vnl(n,:)=vnl(n,:)+vpsloc(n)
-     enddo
-     vpsloc=0.0_dp
-     !
-     goto 500
      !
   else if (pseudotype == 2) then
      !
      !     symmetrize the B matrix
      !
      do ns=1,nbeta
-        do ns1=1,ns
-           b(ns,ns1)=0.5_dp*(bmat(ns,ns1)+bmat(ns1,ns))
-           b(ns1,ns)=b(ns,ns1)
+        do ns1=1,ns-1
+           bmat(ns,ns1)=0.5_dp*(bmat(ns,ns1)+bmat(ns1,ns))
+           bmat(ns1,ns)=bmat(ns,ns1)
         enddo
      enddo
-     do ns=1,nbeta
-        do ns1=1,nbeta
-           bmat(ns,ns1)=b(ns,ns1)
-        enddo
+  end if
+  !
+  do ns=1,nbeta
+     do ns1=1,nbeta
+        b(ns,ns1)=bmat(ns,ns1)
      enddo
-  elseif (pseudotype == 3) then
-     !
-     do ns=1,nbeta
-        do ns1=1,nbeta
-           b(ns,ns1)=bmat(ns,ns1)
-        enddo
-     enddo
-  endif
+  enddo
   !
   !   compute the inverse of the matrix B_{ij}^-1
   !
@@ -265,7 +246,8 @@ subroutine gener_pseudo
         enddo
      enddo
   enddo
-
+  deallocate (b, binv)
+  !
   qq=0.0_dp
   if (pseudotype == 3) then
      !
@@ -362,11 +344,9 @@ subroutine gener_pseudo
      !
   endif
   !
-  !    descreening the local potential and the D coefficients
+  !    unscreen the local potential and the D coefficients
   !
   call descreening
-  !
-500 deallocate (b, binv)
   !
   !     print the main functions on files
   !

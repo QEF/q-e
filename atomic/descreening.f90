@@ -53,13 +53,13 @@ subroutine descreening
      new(n)=.false.
   enddo
 
-  do ns=1,nwfts
+  do ns=1,nwfs
      do n=1,mesh
         phist(n,ns)=phis(n,ns)
      enddo
   enddo
   !
-  !    compute the pseudowavefunction in the test configuration
+  !    compute the pseudowavefunctions in the test configuration
   !
   if (pseudotype.eq.1) then
      nbf=0
@@ -136,7 +136,7 @@ subroutine descreening
   !
   !  copy the phis used to construct the pseudopotential
   !
-  do ns=1,nwfts
+  do ns=1,nwfs
      do n=1,mesh
         phis(n,ns)=phist(n,ns)
      enddo

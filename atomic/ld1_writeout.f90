@@ -77,8 +77,6 @@ subroutine ld1_writeout
         !
         if (rel == 2 ) then
            call copy_ncpp_so ()
-        else
-           call copy_ncpp ()
         end if
         !
      endif
@@ -255,55 +253,3 @@ subroutine copy_ncpp_so ()
 
   return
 end subroutine copy_ncpp_so
-
-!---------------------------------------------------------------------
-subroutine copy_ncpp ()
-  !---------------------------------------------------------------------
-  !
-  use ld1inc
-  implicit none
-  !
-  integer :: n,     & ! counter on wavefunctions
-             nch,   & ! counter on chi functions
-             l,     & ! counter on angular momentum
-             ir       ! counter on mesh points
-  real(kind=dp), external :: int_0_inf_dr
-  real(kind=dp) :: aux(ndm)
-  !
-  if ( lloc > -1) then
-     do ir=1,mesh
-        vpsloc(ir)=vnl (ir,lloc)
-     enddo
-  endif
-  nbeta=0
-  do l=0,lmax
-     if (l /= lloc) then
-        nch=0
-        do n=1,nwfts
-           if (llts(n) == l) nch=n
-        enddo
-        if (nch == 0) call errore('copy_ncpp','l not found',1)
-        !
-        nbeta=nbeta+1
-        do ir=1,mesh
-           betas(ir,nbeta) = (vnl(ir,l)-vpsloc(ir)) * phis(ir, nch)
-        enddo
-        lls(nbeta)=l
-        ikk(nbeta)=mesh
-        do ir=mesh-1,1,-1
-           if (abs(betas(ir,nbeta)) < 1.e-11_dp)then
-              ikk(nbeta)=ir
-           else
-              goto 203
-           endif
-        enddo
-203     continue
-        do ir = 1, mesh
-           aux (ir) = phis(ir, nch) * betas (ir, nbeta)
-        enddo
-        bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
-     endif
-  end do
-
-  return
-end subroutine copy_ncpp

@@ -65,7 +65,7 @@ subroutine write_pseudo &
      do l = 0, lmax
         write( iunps, "(' Pseudopot. l=',i1)") l
         write( iunps, '(4e19.11)', err=300, iostat=ios ) &
-             (vnl(ir,l),ir=1,mesh)
+             (vnl(ir,l)+vpsloc(ir),ir=1,mesh)
      enddo
      if (lloc.eq.-1) then
         write( iunps, "(' Local PP')", err=300, iostat=ios )
