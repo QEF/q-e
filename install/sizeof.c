@@ -1,13 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
-#if defined __FFTWDRV
+#if defined __FFTWDRV 
 #include"../clib/fftw.h"
 #endif
 
 
 int main()
 {
-#if defined __FFTWDRV | defined __FFTW
+#if defined __FFTWDRV
   printf("SIZEOF ( fftw_plan * ). . = %d\n",sizeof(fftw_plan *));
   printf("SIZEOF ( FFTW_COMPLEX * ) = %d\n",sizeof(FFTW_COMPLEX *));
   printf("SIZEOF ( FFTW_COMPLEX ) . = %d\n",sizeof(FFTW_COMPLEX));

@@ -74,7 +74,7 @@ clean:
 clean_:
 
 veryclean: clean
-	/bin/rm make.rules make.sys */.dependencies */dum1 */dum2 bin/*
+	/bin/rm -f make.rules make.sys */.dependencies */dum1 */dum2 bin/*
 
 tar:
 	tar -cf - License Makefile README */*.f90 \

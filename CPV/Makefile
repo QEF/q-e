@@ -17,14 +17,14 @@ WRAPPERS= wrapper.o
 FOBJS= modules.o $(FFT) para.o \
 read_pseudo.o cplib.o cpr.o input.o sort.o \
 macdep.o which_dft.o $(WRAPPERS) \
-restart.o cpr_mod.o cell_module.o cprsub.o cpflush.o
+restart.o cpr_mod.o cell_module.o cprsub.o
 
 ######################################################################
 
 default:
 	make $(PROGNAME)
 
-cp90 : $(FOBJS)
+cp90 : $(FOBJS) cpflush.o
 	$(LNK) -o $(PROGNAME) $(LNKFLAGS) $(FOBJS) ../Modules/*.o cpflush.o \
           ../flib/eispack.o $(LIB)
 	chmod a+r $(PROGNAME)

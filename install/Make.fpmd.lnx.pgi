@@ -1,11 +1,11 @@
-######################################################################
+####################################################
 # LINUX PORTLAND Compilers
-#
+ 
 # Architecture
-  ARCH=lnx.pgi
-#
-######################################################################
 
+  ARCH=lnx.pgi
+ 
+#####################################################
 # --- Change Variables according to your system --- #
 
 #---------------------------#
@@ -13,10 +13,10 @@
 #---------------------------#
 
 # Parallel MPI
-  CPMACRO=-D__LINUX -D__MPI -D__PARA -D__PORTLAND -D__FFTWDRV 
+  CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTWDRV -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -DERF=derf
 
 # Serial Code
-#  CPMACRO=-D__LINUX -D__PORTLAND -D__FFTWDRV 
+# Undefine -D__PARA -D__MPI
 
 #-------------------------------#
 # ** Communication Libraries ** #
@@ -49,7 +49,12 @@
 #   ICTP Cluster Settings 
   MYLIB=
   ATLAS=/usr/local/lib/pgi/
-  LAPACK= -L$(ATLAS)/ -llapack_pgi -lf77blas -latlas
+  LAPACK= -L$(ATLAS)/ -llapack_pgi -lf77blas -latlas -lg2c
+
+# path to search for fftw.h
+  INCLUDEPATH=
+  FFT=fftw.o
+  LIBFFTW= -L/usr/local/lib/pgi/ -lfftw
 
 
 ######################################################################
@@ -88,10 +93,10 @@
 #
 # --- Library ---
 # to link -lfmpich compiled with PGI compiler
-  LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -lm -lc 
+  LIB= $(LAPACK) $(LIBFFTW) $(LIBMPI) $(LIBGM) -lm -lc
 #
 # --- Modules --
-  MODULEFLAG=-module $(OSHOME)/Modules -module $(OSHOME)/FPMD
+  MODULEFLAG=-module $(OSHOME)/Modules
 #
 # OTHER settings
   RANLIB=echo

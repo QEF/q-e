@@ -27,8 +27,7 @@ function scnds ()
   !
 #if defined(PGI) || defined (DEC)
   t1 = etime( tarry )
-#endif
-#if defined(HITACHI)
+#elif defined(HITACHI)
   call CLOCK(IT,2)
   t1 = it
 # else

@@ -171,7 +171,7 @@
       ngwk_l, ngwk_g, nspin, nbnd, nel, nelu, neld, nat, ntyp, na, acc, nacc, &
       ecutwfc, ecutrho, alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, &
       ngauss, lgauss, ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
-      modenum, lforce, lstres, title, crystal, tmp_dir, tupf )
+      modenum, lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only )
 !
       USE io_global, ONLY: ionode
 !
@@ -214,7 +214,12 @@
       CHARACTER(LEN=*), INTENT(IN) :: title
       CHARACTER(LEN=*), INTENT(IN) :: crystal
       CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
-      LOGICAL, INTENT(IN) :: tupf   !  .TRUE. if pseudo are saved restart in upf format
+
+      !  tupf is .TRUE. if pseudo in restart file are saved in upf format
+      LOGICAL, INTENT(IN) :: tupf        
+
+      !  gamma_only is .TRUE. if calculation is at gamma (G-vecs span only half space)
+      LOGICAL, INTENT(IN) :: gamma_only  
 
       INTEGER :: i
       INTEGER :: idum
@@ -241,7 +246,7 @@
             nspin, nbnd, &
             nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
             kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra,  &
-            natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf
+            natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, gamma_only 
           WRITE(iuni) (na(i),i=1,ntyp), (ngwk_l(i),i=1,nk_g), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
           WRITE(iuni) t_, c_, tmp_dir_
         ELSE
@@ -283,7 +288,7 @@
       nat, ntyp, na, acc, nacc, ecutwfc, ecutrho, alat, ekinc, kunit, &
       k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
       natomwfc, gcutm, gcuts, dual, doublegrid, modenum, &
-      lforce, lstres, title, crystal, tmp_dir, tupf )
+      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only )
 
 ! .. Subroutine output:
 !    if tread is true then on output the following variables are overwritten
@@ -330,6 +335,7 @@
       CHARACTER(LEN=*), INTENT(INOUT) :: crystal
       CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
       LOGICAL, INTENT(INOUT) :: tupf
+      LOGICAL, INTENT(INOUT) :: gamma_only
 
       INTEGER :: nfi_, nbeg_, nr1_, nr2_, nr3_, ngl_, ngg_, nkl_, nkg_, nspin_
       INTEGER :: nr1s_, nr2s_, nr3s_
@@ -352,7 +358,7 @@
       INTEGER :: modenum_ 
       LOGICAL :: lstres_, lforce_
       CHARACTER(LEN=80) :: t_, c_, tmp_dir_
-      LOGICAL :: tupf_
+      LOGICAL :: tupf_, gamma_only_
 !
       INTEGER :: i
       INTEGER :: idum
@@ -377,7 +383,7 @@
             nspin_, nbnd_, nel_, nelu_, neld_, nat_, ntyp_, nacc_, trutim_, ecutwfc_, ecutrho_, &
             alat_, ekinc_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, lgauss_, &
             ntetra_, ltetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, modenum_, lstres_, &
-            lforce_, tupf_
+            lforce_, tupf_, gamma_only_
         END IF
 !
         CALL mp_bcast( nfi_, ionode_id )
@@ -426,6 +432,7 @@
         CALL mp_bcast( lstres_, ionode_id )
         CALL mp_bcast( lforce_, ionode_id )
         CALL mp_bcast( tupf_, ionode_id )
+        CALL mp_bcast( gamma_only_, ionode_id )
 !
         IF( ntyp_ > SIZE( na_ ) ) &
           CALL error(sub_name,' too many types ', ntyp_ )
@@ -538,6 +545,7 @@
           title = t_
           crystal = c_
           tmp_dir = tmp_dir_
+          gamma_only = gamma_only_
         END IF
 
       ELSE

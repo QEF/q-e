@@ -33,7 +33,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
    nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, kkbeta, &
    nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
-   nlcc, psd, lsda, bg, xk, wk, isk, evc, igk_l2g, nwordwfc, iunwfc
+   nlcc, psd, lsda, bg, xk, wk, isk, evc, igk_l2g, nwordwfc, iunwfc, gamma_only
   use io, only: prefix, tmp_dir, pseudo_dir, pseudop
   use funct, only: iexch, icorr, igcx, igcc
   use io_global, only: ionode
@@ -97,6 +97,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
   INTEGER :: iunps, ios, flen, ierr
   LOGICAL :: opnd
+  LOGICAL :: lgamma
   TYPE (pseudo_upf) :: upf
 
 ! ... end of declarations
@@ -220,13 +221,14 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
    tupf = .FALSE.  ! the pseudopotential are not saved in UPF format
    ! tupf = .TRUE.  ! the pseudopotential are saved in UPF format
+   lgamma = gamma_only
 
    CALL write_restart_header(ndw, twrhead, istep, trutime, iswitch, nr1, nr2, nr3, &
      nr1s, nr2s, nr3s, ngm, ngm_g, nks, nkstot, ngk_l, ngk_g, nspin, nbnd, nelec, nelu, neld, &
      nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
      kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
      natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
-     title, crystal, tmp_dir, tupf)
+     title, crystal, tmp_dir, tupf, lgamma)
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==
@@ -481,7 +483,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, kkbeta, &
    nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
    nlcc, psd, lsda, bg, xk, wk, isk, tpiba, pi, omega, igk_l2g, nwordwfc, iunwfc, evc, &
-   ig_l2g, nbrx, lqmax, nqfm
+   ig_l2g, nbrx, lqmax, nqfm, gamma_only
   
   USE pseudo_types, ONLY: pseudo_upf
 
@@ -544,6 +546,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   LOGICAL :: trdhead, trdxdim, trdcell, trdpos, trdpseudo, trdchden
   LOGICAL :: trdocc, trdgvec, trdgkvec, trdwfc, trdsym, tupf
   INTEGER :: npw, npw_g
+  LOGICAL :: lgamma
+
   real(kind=DP) :: wfc_scal
 
   TYPE( pseudo_upf ) :: upf
@@ -627,7 +631,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
        natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
-       title_, crystal_, tmp_dir_, tupf)
+       title_, crystal_, tmp_dir_, tupf, lgamma)
 
      title = title_
      crystal = crystal_
@@ -1057,7 +1061,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   real(kind=DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
   real(kind=DP) :: degauss_, gcutm_, gcutms_, dual_
   real(kind=DP) :: acc_(nacx)
-  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf
+  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf, lgamma
   character(len=80) :: title_, crystal_, tmp_dir_
 
   real(kind=DP) :: celldm_(6)
@@ -1096,7 +1100,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
      neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
      kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, ntetra_, ltetra_, &
      natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, lforce_, &
-     title_, crystal_, tmp_dir_, tupf)
+     title_, crystal_, tmp_dir_, tupf, lgamma)
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==

@@ -89,6 +89,7 @@ CONTAINS
       LOGICAL :: tmill
       LOGICAL :: lgauss
       LOGICAL :: ltetra
+      LOGICAL :: lgamma
       INTEGER, ALLOCATABLE :: ityp(:)
       INTEGER :: isk, tetra(4)
       REAL(dbl) :: zmesh_, xmin_, dx_
@@ -137,12 +138,13 @@ CONTAINS
       ltetra = .FALSE.
       twrite = .TRUE.
       tupf   = .TRUE.
+      lgamma = .TRUE.
       CALL write_restart_header(ndw, twrite, nfi, trutime, nbeg, nr1, nr2, nr3, &
         nr1, nr2, nr3, ng, ng_g, nk, nk, ngwkl, ngwkg, nspin, nbnd, rnel, nelu, &
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
         natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
-        title, crystal, tmp_dir, tupf)
+        title, crystal, tmp_dir, tupf, lgamma)
 
 !     ==--------------------------------------------------------------==
 !     ==  MAX DIMENSIONS                                              ==
@@ -403,7 +405,7 @@ CONTAINS
       character(len=80) :: filename
       LOGICAL :: tread
       LOGICAL :: tscal
-      LOGICAL :: tmill, tigl
+      LOGICAL :: tmill, tigl, lgamma
       LOGICAL :: teig, tupf
       INTEGER, ALLOCATABLE :: ityp(:)
       REAL(dbl) :: wfc_scal, wfc_scal_cp90
@@ -457,7 +459,10 @@ CONTAINS
         nat, ntyp, na, acc_, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
         natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
-        title, crystal, tmp_dir, tupf)
+        title, crystal, tmp_dir, tupf, lgamma)
+
+      if( .not. lgamma ) &
+        call error(' readfile ',' restart contains a system not at gamma ',1)
 
       if (flag > -1) then
         nfi = nfi_
