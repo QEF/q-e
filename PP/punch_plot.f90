@@ -12,10 +12,8 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
      stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
   !-----------------------------------------------------------------------
   !
-  !     This subroutine writes on output several three dimensional quantit
-  !     in a real space mesh which can be read by chdens.f which cuts a
-  !     bidimensional plane to plot contour levels, or selects a line
-  !     for a usual line plot.
+  !     This subroutine writes on output several quantities
+  !     in a real space 3D mesh which can be plotted using ch.x
   !     The integer variable plot_num is used to chose the output quantity
   !
   !           plot_num                  quantity
@@ -32,7 +30,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !             10                 integrated local dos from emin to emax
   !             11                 the V_bare + V_H potential
   !
-  !     The output quantity is written on file filplot.
+  !     The output quantity is written (formatted) on file filplot.
   !
 #include "machine.h"
 

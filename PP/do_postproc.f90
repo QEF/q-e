@@ -10,53 +10,11 @@
 subroutine do_postproc (nodenumber)
   !-----------------------------------------------------------------------
   !
-  !    This routine performs various postprocessing steps. The action
-  !    is controlled through the following variables in namelist inputpp:
+  !    This routine reads the output file produced by pw.x
+  !    extracts and calculates the desired quantity (rho, V, ...)
+  !    writes it to a file for further processing or plotting
   !
-  ! prefix      prefix of files saved by program pwscf
-  ! outdir      temporary directory where pwscf files resides
-  !
-  ! filplot     punch file, contains the quantity selected by plot_num
-  ! plot_num    selects what is saved in filplot:
-  !                0=charge
-  !                1=total potential V_bare+V_H + V_xc
-  !                2=local ionic potential
-  !                3=local density of states at e_fermi
-  !                4=local density of electronic entropy
-  !                5=STM images
-  !                6=spin polarization (rho(up)-rho(down))
-  !                7=|psi|^2
-  !                8=electron localization function (ELF)
-  !                9=planar average of all |psi|^2
-  !               10=integrated local density of states from
-  !                  emin to emax (emin, emax in eV)
-  !                  if emax is not specified, emax=E_fermi
-  !               11=the V_bare + V_H potential
-  !
-  !             Options for total charge
-  !
-  ! spin_component 0=total charge (default value),
-  !                1=spin up charge,
-  !                2=spin down charge.
-  !
-  !             Options for total potential
-  !
-  ! spin_component 0=spin averaged potential (default value),
-  !                1=spin up potential,
-  !                2=spin down potential.
-  !
-  !             Options for STM images:
-  !
-  ! sample_bias    the bias of the sample (Ryd) in stm images
-  ! stm_wfc_matching     if .t. match the wavefunctions
-  ! z           height of matching (in celldm(3) units)
-  ! dz          distance of next stm image calculation
-  !
-  !             Options for |psi|^2:
-  !
-  ! kpoint      which k-point
-  ! kband       which band
-  ! lsign       if true and k point is Gamma, save |psi|^2 sign(psi)
+  !    DESCRIPTION of the INPUT: see file pwdocs/INPUT_PP
   !
   use pwcom
   use io
