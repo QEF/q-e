@@ -127,8 +127,6 @@ subroutine ld1_setup
      endif
   endif
 
-  nstoaes(:)=nstoae(:)
-
   !
   !     zero the external potential and total energies
   !

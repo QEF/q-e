@@ -70,7 +70,6 @@ module ld1inc
        nsloc,      & ! the wavefunction which correspond to the loc pot
        lloc,       & ! the l component considered as local
        pseudotype, &  ! the type of pseudopotential
-       nstoaes(nwfsx), &  ! for each pseudo the all-electron (save variable)
        nstoae(nwfsx)  ! for each pseudo the all-electron
 
   character(len=2) :: &
