@@ -1,3 +1,4 @@
+#include "machine.h"
      SUBROUTINE RS(nm, n, a, w, matz, z, fv1, fv2, ierr)
 
         INTEGER n,nm,ierr,matz
@@ -37,4 +38,3 @@
 
         RETURN
       END SUBROUTINE
-
