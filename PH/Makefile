@@ -168,10 +168,8 @@ PWOBJS = \
 ../PW/bachel.o \
 ../PW/becmod.o \
 ../PW/bfgs.o \
-../PW/bp_bess.o \
 ../PW/bp_c_phase.o \
 ../PW/bp_calc_btq.o \
-../PW/bp_dbess.o \
 ../PW/bp_qvan3.o \
 ../PW/bp_radin.o \
 ../PW/bp_strings.o \

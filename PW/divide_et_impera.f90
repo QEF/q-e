@@ -32,10 +32,7 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
 #if defined (__PARA)
   !
-  INTEGER :: ik, nbase
-    ! counter on kpoints
-    ! the position in the original list of the fi
-    ! point that belongs to this pool - 1
+  INTEGER :: ik, nbase, rest
   !
   !
   IF ( MOD( nks, kunit ) /= 0 ) &

@@ -94,7 +94,7 @@ SUBROUTINE cg_readin()
   CALL mp_bcast(first,ionode_id)
   CALL mp_bcast(last,ionode_id)
   !
-  !  read the input file produced by 'punch' subroutine in pwscf program
+  !  read the input file produced by the pwscf program
   !  allocate memory and recalculate what is needed
   !
   CALL read_file

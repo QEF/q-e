@@ -722,8 +722,8 @@ SUBROUTINE poolextreme( ps, iflag )
   !
 #if defined (__PARA)  
   !
-  INTEGER        :: iflag, info
-  REAL (KIND=DP) :: ps, psr 
+  INTEGER        :: info
+  REAL (KIND=DP) :: psr 
   !
   !
   IF ( npool <= 1 ) RETURN
