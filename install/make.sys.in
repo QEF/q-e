@@ -15,6 +15,7 @@ FFLAGS         = @fflags@ $(IFLAGS)
 F77FLAGS       = $(FFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS)
 F77FLAGS_NOOPT = @fflags_noopt@
+F90FLAGS_NOOPT = @f90flags_noopt@ @pre_fdflags@$(FDFLAGS)
 LD             = @ld@
 LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a

@@ -325,6 +325,7 @@ linux64:ifort )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -335,6 +336,7 @@ linux64:ifc )
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -345,6 +347,7 @@ linux64:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
@@ -353,6 +356,7 @@ linux32:ifort )
         try_fflags="-O2 -tpp6 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -363,6 +367,7 @@ linux32:ifc )
         try_fflags="-Vaxlib -O2 -tpp6"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -401,6 +406,7 @@ linux32:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
@@ -409,6 +415,7 @@ linux*:g95 )
 	try_fflags="-O3"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	#try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__G95"
@@ -418,6 +425,7 @@ aix:*xlf* )
 -qarch=auto -qtune=auto -qsuffix=cpp=f90 -qdpc -Q -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
+	try_f90flags_noopt="-q64 -O0 -qfree=f90"
 	try_ldflags="-q64"
 	# try_ldflags_static="-bstatic"
 	pre_fdflags="-WF,"
@@ -428,6 +436,7 @@ mips:f90 )
 	try_fflags="-mips4 -64 -O2 -r10000 -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-mips4 -64 -O0"
+	try_f90flags_noopt="-mips4 -64 -O0"
 	try_ldflags="-mips4 -64"
 	pre_fdflags="-cpp "
 	have_cpp=1
@@ -452,13 +461,15 @@ sparc:mpf90 | sparc:f90 )
 -xlic_lib=sunperf"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 \
 -O scalar3,stream3,vector3,nointerchange -Z -O inline5"
         try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="FFLAGS = -s default64 -dp -rma -e0 -O0 -Z"
+        try_fflags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
+        try_f90flags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
         try_ldflags="-s default64 -f nan64"
         try_dflags="$try_dflags -D__X1_COA"
         pre_fdflags="-e Z -F"
@@ -469,6 +480,7 @@ mac:* )
 -qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	pre_fdflags="-WF,"
 	xlf_flags=1
@@ -479,16 +491,20 @@ mac:* )
 	try_fflags="-O"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
+	try_f90flags_noopt="-O0"
 	try_ldflags=""
 	;;
 esac
 if test $no_shared ; then try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
-if test "$fflags" = ""       ; then fflags=$try_fflags             ; fi
-if test "$f90flags" = ""     ; then f90flags=$try_f90flags         ; fi
-if test "$fflags_noopt" = "" ; then fflags_noopt=$try_fflags_noopt ; fi
+if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
+if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
+if test "$fflags_noopt" = ""   ; then fflags_noopt=$try_fflags_noopt     ; fi
+if test "$f90flags_noopt" = "" ; then f90flags_noopt=$try_f90flags_noopt ; fi
 echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
+echo setting FFLAGS_NOOPT... $fflags_noopt
+echo setting F90FLAGS_NOOPT... $f90flags_noopt
 
 case "$arch:$cc_id" in
 linux*:icc )
@@ -1010,6 +1026,7 @@ AC_SUBST(f90)
 AC_SUBST(fflags)
 AC_SUBST(f90flags)
 AC_SUBST(fflags_noopt)
+AC_SUBST(f90flags_noopt)
 AC_SUBST(pre_fdflags)
 AC_SUBST(ifftw)
 AC_SUBST(ld)
