@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -326,22 +326,24 @@ MODULE output
   !
 END MODULE output
 !
+!
 MODULE disp
-
+  !
   USE kinds, ONLY: DP
-
-  save
-
-  integer, parameter :: nqmax = 1000
-
-  integer :: nq1, nq2, nq3
-  ! number of q-points in each direction
-  integer :: nqs
-  ! number of q points to be calculated 
-  real (kind = dp), allocatable, dimension(:,:) :: x_q
-  ! coordinates of the q points
-
+  !
+  SAVE
+  !
+  INTEGER, PARAMETER :: nqmax = 1000
+  !
+  INTEGER :: nq1, nq2, nq3
+    ! number of q-points in each direction
+  INTEGER :: nqs
+    ! number of q points to be calculated 
+  REAL (KIND=DP), ALLOCATABLE :: x_q(:,:)
+    ! coordinates of the q points
+  !
 END MODULE disp
+!
 !
 MODULE phcom
   USE modes
