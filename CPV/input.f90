@@ -96,10 +96,9 @@ CONTAINS
 
       use io_global, only: ionode, stdout
 
-      USE control_flags, ONLY: tconvthrs, lneb, lsmd 
-      use control_flags, only: taurdr, tprnfor_ => tprnfor
-      use control_flags, only: tzerop, tzeroe, tzeroc, nbeg
-      use control_flags, only: &
+      use control_flags, only:  &
+            tconvthrs, lneb, lsmd, taurdr, tzerop, tzeroe, tzeroc, nbeg,  &
+            tprnfor_ => tprnfor, &
             ndr_ => ndr, &
             ndw_ => ndw, &
             nomore_ => nomore, &
@@ -136,6 +135,7 @@ CONTAINS
            rcmax_ => rcmax, &
            fricp_ => fricp, &
            greasp_ => greasp
+      !
       USE ions_positions, ONLY: &
            tau0_ => tau0
       ! 
@@ -175,21 +175,6 @@ CONTAINS
       USE electrons_nose, ONLY: &
            qne_ => qne, &
            ekincw_ => ekincw
-      USE grid_dimensions, ONLY: &
-           nr1_ => nr1, &
-           nr2_ => nr2, &
-           nr3_ => nr3
-      USE smallbox_grid_dimensions, ONLY: &
-           nr1b_ => nr1b, &
-           nr2b_ => nr2b, &
-           nr3b_ => nr3b
-      USE smooth_grid_dimensions, ONLY: &
-           nr1s_ => nr1s, &
-           nr2s_ => nr2s, &
-           nr3s_ => nr3s
-      USE io_files, ONLY: &
-           psfile_ => psfile, &
-           pseudo_dir_ => pseudo_dir
       USE path_variables, ONLY: &
            sm_p_ => smd_p, &
            smcp_ => smd_cp, &
@@ -208,6 +193,29 @@ CONTAINS
            ene_fin_ => smd_ene_fin
       USE printout_base, ONLY: &
            title_ => title
+
+#ifdef __PPPP
+#endif
+      USE grid_dimensions, ONLY: &
+           nnrx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+           nr1_ => nr1, &
+           nr2_ => nr2, &
+           nr3_ => nr3
+      USE smallbox_grid_dimensions, ONLY: &
+           nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+           nr1b_ => nr1b, &
+           nr2b_ => nr2b, &
+           nr3b_ => nr3b
+      USE smooth_grid_dimensions, ONLY: &
+           nnrsx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+           nr1s_ => nr1s, &
+           nr2s_ => nr2s, &
+           nr3s_ => nr3s
+      !
+      USE io_files, ONLY: &
+           ntypx, &     !  variable is used to workaround internal compiler error (IBM xlf)
+           pseudo_dir_ => pseudo_dir , &
+           psfile_     => psfile
 
       !
       implicit none

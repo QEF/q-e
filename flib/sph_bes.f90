@@ -116,7 +116,7 @@ SUBROUTINE sph_bes( msh, r, q, l, jl )
         CALL vcos( cos_qr, qr, msh )
         CALL vsin( sin_qr, qr, msh )
         !
-        jl(ir0:) = ( sin_qr(ir) / ( q * r(ir0:) ) - &
+        jl(ir0:) = ( sin_qr(ir0:) / ( q * r(ir0:) ) - &
                      cos_qr(ir0:) ) / ( q * r(ir0:) )
         !
 #else
