@@ -8,9 +8,6 @@
      ntypx =10   npk =40000  lmax = 3
      nchix = 6  ndmx = 2000  nbrx =14 nqfx = 8
 
-     Only input k-points are used (inequivalent points not generated)
-
-
 
      bravais-lattice index     =            2
      lattice parameter (a_0)   =       7.5000  a.u.
