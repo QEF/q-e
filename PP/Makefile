@@ -21,7 +21,7 @@ start_postproc.o \
 stm.o \
 stop_pp.o \
 work_function.o \
-xsf.o
+xsf.o 
 
 MODULES = ../Modules/*.o
 
@@ -276,7 +276,7 @@ PWOBJS = \
 ../PW/ylmr2.o
 
 all : pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x \
-      bands.x plotband.x pw2wan.x
+      bands.x plotband.x pw2wan.x pw2casino.x
 
 pp.x : $(PPOBJS) postproc.o
 	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
@@ -308,6 +308,8 @@ plotrho.x : $(PPOBJS) plotrho.o
 pw2wan.x : $(PPOBJS) pw2wan.o
 	$(LD) -o pw2wan.x pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
+pw2casino.x : $(PPOBJS) pw2casino.o
+	$(LD) -o pw2casino.x pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
