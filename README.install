@@ -2,6 +2,12 @@
 INSTALLATION INSTRUCTIONS
 ----------------------------------------------------------------------
 
+More detailed instructions can be found in the ESPRESSO User's Guide:
+you can find it in the "Doc/" directory of the ESPRESSO source
+distribution, or download it from http://www.pwscf.org/guide.htm
+
+----------------------------------------------------------------------
+
 To install ESPRESSO, you must:
 
 1. configure the source package for your system, compilers and
@@ -21,6 +27,7 @@ the detailed instructions below.
 
 ----------------------------------------------------------------------
 CONFIGURE
+----------------------------------------------------------------------
 
 To configure the ESPRESSO source package, run the "configure" script.
 It will (try to) detect compilers and libraries available on your
@@ -53,6 +60,8 @@ You should always be able to compile the ESPRESSO suite of programs
 without having to edit any of the generated files.  However you may
 have to tune "configure" by specifying appropriate environment
 variables and/or command-line options.
+Usually the most tricky part is to get external libraries recognized
+and used: see the next section for details and hints.
 
 Environment variables may be set in any of these ways:
 
@@ -77,8 +86,8 @@ For example, the following command line:
   ./configure F90=ifort FFLAGS="-Vaxlib -O2 -assume byterecl" \
               CC=gcc CFLAGS=-O3 LDFLAGS="-Vaxlib -static"
 
-instructs "configure" to use ifort as Fortran 90 compiler with flags
-"-Vaxlib -O2 -assume byterecl", gcc as C compiler with flags "-O3",
+instructs "configure" to use "ifort" as Fortran 90 compiler with flags
+"-Vaxlib -O2 -assume byterecl", "gcc" as C compiler with flags "-O3",
 and to use flags "-Vaxlib -static" when linking.  Note that the values
 of FFLAGS and LDFLAGS must be quoted, because they contain spaces.
 
@@ -89,26 +98,52 @@ of FFLAGS and LDFLAGS must be quoted, because they contain spaces.
   --disable-shared : compile statically (don't use shared libraries)
   --enable-shared : use shared libraries
 
-*** IMPORTANT ***
-ESPRESSO can take advantage of several optimized numerical libraries:
-- ESSL on AIX systems (shipped by IBM)
-- MKL together with Intel compilers (shipped by Intel, free for
-  non-commercial use)
-- ATLAS (free software, http://math-atlas.sourceforge.net/)
-- FFTW (free software, http://www.fftw.org/)
-and a few others.  Note that FFTW must be version 2; version 3 is not
-yet supported.
+----------------------------------------------------------------------
+LIBRARIES
 
-A reference implementation of all required external libraries is
-bundled with the ESPRESSO distribution, which means that you'll always
-be able to compile the programs at least; but using optimized
-libraries can often provide huge performance increases.
+ESPRESSO makes use of the following external libraries:
 
-"configure" attempts to find those libraries, but may fail if they
-have been installed at non-standard places.  You should examine the
-final value of LIBS (either in the output of "configure", or in the
-generated "make.sys") to check whether all available libraries were
-found.
+  BLAS (http://www.netlib.org/blas/) and LAPACK
+    (http://www.netlib.org/lapack/) for linear algebra
+  FFTW (http://www.fftw.org/) for Fast Fourier Transforms
+
+A copy of the needed routines is provided with the distribution.
+However, when available, optimized vendor-specific libraries can be
+used instead: this often yields huge performance gains.
+
+ESPRESSO can use the following architecture-specific replacements for
+BLAS and LAPACK:
+
+  essl for IBM machines
+  complib.sgimath for SGI Origin
+  scilib for Cray/T3e
+  sunperf for Sun
+  MKL for Intel Linux PCs
+  ACML for AMD Linux PCs
+  cxml for HP-Compaq Alphas.
+
+If none of these is available, we suggest that you use the optimized
+ATLAS library (http://math-atlas.sourceforge.net/).
+Note that ATLAS is not a complete replacement for LAPACK: it contains
+all of the BLAS, plus the LU code, plus the full storage Cholesky
+code.  Follow the instructions in the ATLAS distributions to produce a
+full LAPACK replacement.
+
+Sergei Lisenkov reported success and good performances with
+optimized BLAS by Kazushige Goto.
+They can be downloaded freely (but not redistributed!) from:
+http://www.cs.utexas.edu/users/flame/goto/
+
+The FFTW library can also be replaced by vendor-specific FFT
+libraries, when available, or you can link to a precompiled FFTW
+library.  Please note that you must use FFTW version 2: version 3 has
+incompatible changes, and isn't supported yet.
+
+The "configure" script attempts to find optimized libraries, but may
+fail if they have been installed in non-standard places.
+You should examine the final value of LIBS (either in the output of
+"configure", or in the generated "make.sys") to check whether it found
+all the libraries that you intend to use.
 
 If any libraries weren't found, you can specify a list of directories
 to search in the environment variable LIBDIRS, and rerun "configure";
@@ -119,7 +154,7 @@ directories in the list must be separated by spaces.  For example:
 If this still fails, you may set the environment variable LIBS
 manually and retry.  For example:
 
-  ./configure LIBS="-L/usr/lib/math -lfftw -llapack -lblas"
+  ./configure LIBS="-L/usr/lib/math -lfftw -lf77blas -latlas"
 
 Beware that in this case, you must specify *all* the libraries that
 you want to link to.  "configure" will blindly accept the specified
@@ -127,28 +162,25 @@ value, and won't search for any extra libraries.  (This is so that if
 "configure" finds any library that you don't want to use, you can
 override it.)
 
-If you want to use the FFTW library, the "fftw.h" include file is also
-required.  If the configuration script wasn't able to find it, you can
+If you want to use a precompiled FFTW library, the "fftw.h" include
+file is also required.  If "configure" wasn't able to find it, you may
 specify its location in the INCLUDEFFTW environment variable.
 For example:
 
   ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
 
 If everything else fails, you'll have to write the "make.sys" file
-manually.  The "install/" directory contains several examples (named
-"Make.*"): you may choose the one that looks most appropriate for your
-machine, copy it to "make.sys", and tweak it until you obtain
-successful compilation.  If this ever happens, please let us know, and
-we'll try to support your machine in the next version of "configure".
+manually: see the ESPRESSO User's Guide for instructions.
 
 *** Please Note ***
-If you change any compilation flags after a previous (successful or
-failed) compilation, you must run "make clean" before recompiling,
-unless you know exactly which routines are affected by the changed
-options and how to force their recompilation.
+If you change any settings after a previous (successful or failed)
+compilation, you must run "make clean" before recompiling, unless you
+know exactly which routines are affected by the changed settings and
+how to force their recompilation.
 
 ----------------------------------------------------------------------
 COMPILE
+----------------------------------------------------------------------
 
 There are a few adjustable parameters in "Modules/parameters.f90".
 The present values will work for most cases.  All other variables are
@@ -187,5 +219,4 @@ Here is a list:
   make veryclean    remove configuration files too
   make tar          build a tarball of the current source tree
 
-For more detailed information, see the ESPRESSO manual in the "Doc/"
-directory, or on-line at http://www.pwscf.org/guide.htm
+For more detailed information, see the ESPRESSO User's Guide.

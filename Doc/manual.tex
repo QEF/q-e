@@ -26,7 +26,7 @@
 
 \section{Introduction}
 
-This manual covers the installation and usage of ESPRESSO (opEn-Source
+This guide covers the installation and usage of ESPRESSO (opEn-Source
 Package for Research in Electronic Structure, Simulation, and
 Optimization), version \version. The ESPRESSO package contains the
 following codes for the calculation of electronic-structure properties
@@ -44,8 +44,8 @@ Moreover it contains auxiliary codes:
   \item atomic: a program for atomic calculations and generation of
         pseudopotentials.
 \end{itemize}
-Documentation, in addition to what provided in this manual,
-can be found in:
+Documentation, in addition to what provided in this guide, can be
+found in:
 \begin{itemize}
   \item the \texttt{Doc/} directory of the ESPRESSO distribution
 
@@ -204,7 +204,7 @@ Yudong Wu,
 Xiaofei Wang,
 and let us apologize to everybody we have forgotten.
 
-This manual was written (mostly) by Paolo Giannozzi, Gerardo Ballabio,
+This guide was written (mostly) by Paolo Giannozzi, Gerardo Ballabio,
 Carlo Cavazzoni.
 
 \subsection{Terms of use}
@@ -215,7 +215,7 @@ License
                    {http://www.pwscf.org/License.txt},
 or the file \texttt{License} in the distribution).
 
-All trademarks mentioned in this manual belong to their respective
+All trademarks mentioned in this guide belong to their respective
 owners.
 
 We shall greatly appreciate if scientific work done using this code
@@ -278,7 +278,7 @@ The bravest may access the (unstable) development version via
 anonymous CVS: see the file \texttt{README.cvs} contained in the
 distribution.
 
-Now, to install ESPRESSO, you must:
+To install ESPRESSO, you must:
 \begin{enumerate}
   \item configure the source package for your system, compilers and
         libraries;
@@ -317,7 +317,7 @@ you may also want to edit \texttt{make.sys.in} and
 \texttt{make.rules.in}.  See instructions in
 \texttt{README.configure}.
 
-Specifically, "configure" generates the following files:
+Specifically, \texttt{configure} generates the following files:
 \begin{quote}
   \texttt{make.sys}: compilation settings and flags\\
   \texttt{make.rules}: compilation rules\\
@@ -332,6 +332,8 @@ You should always be able to compile the ESPRESSO suite of programs
 without having to edit any of the generated files.  However you may
 have to tune \texttt{configure} by specifying appropriate environment
 variables and/or command-line options.
+Usually the most tricky part is to get external libraries recognized
+and used: see the next section for details and hints.
 
 Environment variables may be set in any of these ways:
 \begin{verbatim}
@@ -378,34 +380,63 @@ contain spaces.
     use shared libraries
 \end{quote}
 
-\paragraph{IMPORTANT:}
+\subsubsection{Libraries}
 
-ESPRESSO can take advantage of several optimized numerical libraries:
+ESPRESSO makes use of the following external libraries:
 \begin{itemize}
-  \item ESSL on AIX systems (shipped by IBM)
-  \item MKL together with Intel compilers (shipped by Intel, free for
-        non-commercial use)
-  \item ATLAS (free software,
-        \htmladdnormallink%
-        {\texttt{http://math-atlas.sourceforge.net/}}%
-        {http://math-atlas.sourceforge.net/})
-  \item FFTW (free software,
-        \htmladdnormallink{\texttt{http://www.fftw.org/}}%
-        {http://www.fftw.org/})
+  \item BLAS
+        (\htmladdnormallink{\texttt{http://www.netlib.org/blas/}}%
+                           {http://www.netlib.org/blas/})
+        and LAPACK\hfill\break
+        (\htmladdnormallink{\texttt{http://www.netlib.org/lapack/}}%
+                           {http://www.netlib.org/lapack/})
+        for linear algebra
+  \item FFTW
+        (\htmladdnormallink{\texttt{http://www.fftw.org/}}%
+                           {http://www.fftw.org/})
+        for Fast Fourier Transforms
 \end{itemize}
-and a few others.  Note that FFTW must be version 2; version 3 is not
-yet supported.
+A copy of the needed routines is provided with the distribution.
+However, when available, optimized vendor-specific libraries can be
+used instead: this often yields huge performance gains.
 
-A reference implementation of all required external libraries is
-bundled with the ESPRESSO distribution, which means that you'll always
-be able to compile the programs at least; but using optimized
-libraries can often provide huge performance increases.
+ESPRESSO can use the following architecture-specific replacements for
+BLAS and LAPACK:
+\begin{quote}
+  \texttt{essl} for IBM machines\\
+  \texttt{complib.sgimath} for SGI Origin\\
+  \texttt{scilib} for Cray/T3e\\
+  \texttt{sunperf} for Sun\\
+  \texttt{MKL} for Intel Linux PCs\\
+  \texttt{ACML} for AMD Linux PCs\\
+  \texttt{cxml} for HP-Compaq Alphas.
+\end{quote}
+If none of these is available, we suggest that you use the optimized
+ATLAS library
+(\htmladdnormallink{\texttt{http://math-atlas.sourceforge.net/}}%
+                   {http://math-atlas.sourceforge.net/}).
+Note that ATLAS is not a complete replacement for LAPACK: it contains
+all of the BLAS, plus the LU code, plus the full storage Cholesky
+code.  Follow the instructions in the ATLAS distributions to produce a
+full LAPACK replacement.
 
-\texttt{configure} attempts to find those libraries, but may fail if
-they have been installed at non-standard places.  You should examine
-the final value of \texttt{LIBS} (either in the output of
-\texttt{configure}, or in the generated \texttt{make.sys}) to check
-whether all available libraries were found.
+Sergei Lisenkov reported success and good performances with
+optimized BLAS by Kazushige Goto.
+They can be downloaded freely (but not redistributed!) from:
+\htmladdnormallink%
+{\texttt{http://www.cs.utexas.edu/users/flame/goto/}}%
+{http://www.cs.utexas.edu/users/flame/goto/}
+
+The FFTW library can also be replaced by vendor-specific FFT
+libraries, when available, or you can link to a precompiled FFTW
+library.  Please note that you must use FFTW version 2: version 3 has
+incompatible changes, and isn't supported yet.
+
+The \texttt{configure} script attempts to find optimized libraries,
+but may fail if they have been installed in non-standard places.
+You should examine the final value of \texttt{LIBS} (either in the
+output of \texttt{configure}, or in the generated \texttt{make.sys})
+to check whether it found all the libraries that you intend to use.
 
 If any libraries weren't found, you can specify a list of directories
 to search in the environment variable \texttt{LIBDIRS}, and rerun
@@ -417,7 +448,7 @@ spaces.  For example:
 If this still fails, you may set the environment variable
 \texttt{LIBS} manually and retry.  For example:
 \begin{verbatim}
-  ./configure LIBS="-L/usr/lib/math -lfftw -llapack -lblas"
+  ./configure LIBS="-L/usr/lib/math -lfftw -lf77blas -latlas"
 \end{verbatim}
 Beware that in this case, you must specify \emph{all} the libraries
 that you want to link to.  \texttt{configure} will blindly accept the
@@ -425,83 +456,23 @@ specified value, and won't search for any extra libraries.  (This is
 so that if \texttt{configure} finds any library that you don't want to
 use, you can override it.)
 
-If you want to use the FFTW library, the \texttt{fftw.h} include file
-is also required.  If the configuration script wasn't able to find it,
-you can specify its location in the \texttt{INCLUDEFFTW} environment
-variable.
+If you want to use a precompiled FFTW library, the corresponding
+\texttt{fftw.h} include file is also required.
+If \texttt{configure} wasn't able to find it, you may specify its
+location in the \texttt{INCLUDEFFTW} environment variable.
 For example:
 \begin{verbatim}
   ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
 \end{verbatim}
 If everything else fails, you'll have to write the \texttt{make.sys}
-file manually.  The \texttt{install/} directory contains several
-examples (named \texttt{Make.*}): you may choose the one that looks
-most appropriate for your machine, copy it to \texttt{make.sys}, and
-tweak it until you obtain successful compilation.  If this ever
-happens, please let us know, and we'll try to support your machine in
-the next version of \texttt{configure}.
+file manually: see next section.
 
 \paragraph{Please Note:}
 
-If you change any compilation flags after a previous (successful or
-failed) compilation, you must run \texttt{make clean} before
-recompiling, unless you know exactly which routines are affected by
-the changed options and how to force their recompilation.
-
-\subsubsection{Libraries}
-
-ESPRESSO uses the well-known linear algebra BLAS (Basic Linear Algebra 
-Subroutines) and LAPACK (Linear Algebra PACKage) libraries.
-A copy of the needed routines is provided with the distribution.
-It is however very convenient to use optimized BLAS/LAPACK contained
-in vendor-specific mathematical libraries, such as:
-
-\begin{quote}
-  \texttt{essl} for IBM\\
-  \texttt{complib.sgimath} for SGI Origin\\
-  \texttt{scilib} for Cray/T3e\\
-  \texttt{sunperf} for Sun\\
-  \texttt{MKL} for Intel Linux PCs\\
-  \texttt{ACML} for AMD Linux PCs\\
-  \texttt{cxml} for HP-Compaq Alphas.
-\end{quote}
-
-Otherwise, it is a good idea to use optimized ATLAS libraries instead
-of the standard BLAS and LAPACK.
-Download the appropriate binaries from:
-\htmladdnormallink{\texttt{http://www.netlib.org/}}%
-                  {http://www.netlib.org/},
-or download and compile the sources (this may take some time and
-effort). 
-Note that ATLAS is not a complete replacement for LAPACK: ATLAS
-contains all of the BLAS, plus the LU code, plus the full storage
-Cholesky code.
-Follow the instructions in the ATLAS distributions to produce a full
-LAPACK replacement.
-
-Sergei Lisenkov reported success and good performances with
-optimized BLAS by Kazushige Goto.
-They can be downloaded freely (but not redistributed!) from:
-\htmladdnormallink%
-{\texttt{http://www.cs.utexas.edu/users/flame/goto/}}%
-{http://www.cs.utexas.edu/users/flame/goto/}
-
-ESPRESSO uses the Fast Fourier Transform from the FFTW library
-(\htmladdnormallink{\texttt{http://www.fftw.org/}}%
-                   {http://www.fftw.org/})
-or from vendor-specific mathematical libraries.
-If you use FFTW, you can either compile the copy that comes with the
-distribution (this is the default configuration) or link to a
-precompiled FFTW library.
-In the latter case, follow the instructions in the files
-\texttt{Install/Make.*}, and remember that only FFTW v.~$<3$ is
-supported: FFTW v.~3 requires changes in the code. 
-
-In general, if you want to use external precompiled libraries, 
-you need to correctly specify their location in the 
-\texttt{make.sys} file.
-The \texttt{configure} scripts tries to guess where your libraries
-are, but it cannot find libraries in nonstandard places.
+If you change any settings after a previous (successful or failed)
+compilation, you must run \texttt{make clean} before recompiling,
+unless you know exactly which routines are affected by the changed
+settings and how to force their recompilation.
 
 \subsubsection{Manual configuration}
 
