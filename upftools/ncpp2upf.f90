@@ -251,7 +251,7 @@ subroutine convert_ncpp
   use ncpp
   use upf
   implicit none
-  character(len=1), dimension(0:2) :: convel=(/'S','P','D'/)
+  character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
   real(kind=8), parameter :: rmax = 10.0
   real(kind=8), allocatable :: aux(:)
   real(kind=8) :: vll
