@@ -171,6 +171,7 @@ subroutine do_chdens
   fileout       = ' '
   epsilon       = 1.0d0
   filepol       = ' '
+  fast3d        = .false.
 
   !
   !    read and check input data
