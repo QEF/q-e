@@ -12,6 +12,8 @@ SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
   !
   ! ...  this subroutine reads input data from standard input ( unit 5 )
+  ! ...  Use "-input filename" to read input from file "filename":
+  ! ...  may be useful if you have trouble reading from standard input
   ! ...  ---------------------------------------------------------------
   !
   ! ...  access the modules renaming the variables that have the same name 
@@ -20,6 +22,7 @@ SUBROUTINE iosys()
   !
   !
   USE constants,     ONLY : AU, eV_to_kelvin
+  USE para,          ONLY : npool  
   !
   USE io_global,     ONLY : stdout
   USE bp,            ONLY : nppstr_ => nppstr, &
@@ -186,9 +189,6 @@ SUBROUTINE iosys()
   !
   USE read_namelists_module, ONLY: read_namelists
   !
-#if defined (__PARA)
-  USE para,             ONLY : npool
-#endif  
   IMPLICIT NONE
   !
   ! ... local variables
@@ -224,6 +224,8 @@ SUBROUTINE iosys()
      END IF
      !
   END DO
+  !
+  ! ... all namelists are read
   !
   CALL read_namelists( 'PW' )
   !
@@ -304,7 +306,7 @@ SUBROUTINE iosys()
   !
   DO ia = 1, ntyp
      IF ( starting_magnetization(ia) == -2.D0 ) &
-        starting_magnetization(ia) = 0.d0 
+        starting_magnetization(ia) = 0.D0 
   END DO  
   !
   IF ( ecutrho <= 0.D0 ) THEN
@@ -355,7 +357,7 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   !
-  ! ... initialization
+  ! ... initialization of logical variables
   !
   lscf      = .FALSE.
   lbfgs     = .FALSE.
@@ -476,7 +478,7 @@ SUBROUTINE iosys()
                 & ' fixed occupations and lsda not implemented ', 1 )
   END IF
   !
-  ! ... initialization
+  ! ... initialization of logical variables
   !
   calc        = ' '
   lbfgs       = .FALSE.
@@ -635,7 +637,7 @@ SUBROUTINE iosys()
         !
      END IF
      !
-     ! ... initialization
+     ! ... initialization of logical variables
      !
      lsteep_des  = .FALSE.     
      lquick_min  = .FALSE.
@@ -722,10 +724,8 @@ SUBROUTINE iosys()
   tmp_dir = TRIM( outdir )
   lstres = ( tstress .AND. lscf )
   !
-#if defined (__PARA)
   IF ( lberry_ .AND. npool > 1 ) &
      CALL errore( ' iosys ', ' Berry Phase not implemented with pools ', 1 )
-#endif  
   !
   ! ... Copy values from input module to PW internals
   !
@@ -1230,10 +1230,8 @@ SUBROUTINE verify_tmpdir()
   USE control_flags,            ONLY : lneb
   USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr
   USE neb_variables,    ONLY : num_of_images
-#if defined (__PARA)
   USE para,             ONLY : me, mypool
   USE mp,               ONLY : mp_barrier
-#endif  
   !
   USE parser,           ONLY : int_to_char, delete_if_present
   !
@@ -1270,9 +1268,7 @@ SUBROUTINE verify_tmpdir()
   !
   IF ( restart_mode == 'from_scratch' ) THEN
      !
-#if defined (__PARA)
      IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif   
         !
         ! ... wfc-extrapolation file is removed
         !     
@@ -1286,9 +1282,7 @@ SUBROUTINE verify_tmpdir()
         !     
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
         !
-#if defined (__PARA)
      END IF
-#endif 
      !
   END IF    
   !
@@ -1306,22 +1300,18 @@ SUBROUTINE verify_tmpdir()
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
                   TRIM( int_to_char( image ) ) // '/'
         !
-#if defined (__PARA)
         IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif   
            !
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
            !
            ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
            !
-#if defined (__PARA)
         END IF
         !
         ! ... all jobs are syncronized
         !
         CALL mp_barrier()
-#endif          
         !
         ! ... each job checks whether the scratch directory is accessible
         ! ... or not
@@ -1339,17 +1329,13 @@ SUBROUTINE verify_tmpdir()
         !
         IF ( restart_mode == 'from_scratch' ) THEN
            !
-#if defined (__PARA)
            IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif                 
               !
               ! ... standard output of the self-consistency is removed
               !      
               CALL delete_if_present( TRIM( tmp_dir ) // 'PW.out' )
               !
-#if defined (__PARA)
            END IF
-#endif      
            !
         END IF  
         !

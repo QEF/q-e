@@ -9,95 +9,99 @@
 #include "machine.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE reduce( size, ps )
+SUBROUTINE reduce( dim, ps )
   !----------------------------------------------------------------------------
   !
-  ! ... sums a distributed variable ps(size) over the processors.
-  ! ... This version uses a fixed-length buffer of appropriate (?) size
+  ! ... sums a distributed variable ps(dim) over the processors.
+  ! ... This version uses a fixed-length buffer of appropriate (?) dim
   ! ...              uses SHMEM for the T3D/T3E, MPI otherwhise
   !
 #if defined (__PARA)
-  USE para,  ONLY : MPI_COMM_POOL, mypool, nprocp
-  USE mp,    ONLY : mp_barrier
-#endif
-  USE kinds, ONLY : DP
+  !
+  USE mp_global, ONLY : intra_pool_comm, my_pool_id, nproc_pool
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
   !
   IMPLICIT NONE
   !
-  INTEGER        :: size
-  REAL (KIND=DP) :: ps(size)
+  INCLUDE 'mpif.h'    
+  INTEGER            :: dim
+  REAL (KIND=DP)     :: ps(dim)
+  INTEGER            :: info, n, nbuf
+  INTEGER, PARAMETER :: maxb = 10000
+  REAL (KIND=DP)     :: buff(maxb)  
   !
-#if defined (__PARA)
-  !
-  ! ... MPI specific
-  !
-  INCLUDE 'mpif.h'  
-  INTEGER        :: info, n, nbuf
-#define MAXB 10000
-  REAL (KIND=DP) :: buff(MAXB)  
-#if defined (SHMEM)
+#  if defined (SHMEM)
   !
   ! ... SHMEM specific 
   !
   INCLUDE 'mpp/shmem.fh'
   INTEGER :: pWrkSync, pWrkData, start
-  COMMON / SH_SYNC / pWrkSync (SHMEM_BARRIER_SYNC_SIZE)
-  COMMON / SH_DATA / pWrkData (1024 * 1024)
+  COMMON / SH_SYNC / pWrkSync(SHMEM_BARRIER_SYNC_dim)
+  COMMON / SH_DATA / pWrkData(1024*1024)
   DATA pWrkData / 1048576 * 0 /
-  DATA pWrkSync / SHMEM_BARRIER_SYNC_SIZE * SHMEM_SYNC_VALUE /
+  DATA pWrkSync / SHMEM_BARRIER_SYNC_dim * SHMEM_SYNC_VALUE /
 !DIR$ CACHE_ALIGN /SH_SYNC/
 !DIR$ CACHE_ALIGN /SH_DATA/
-#endif
+  !
+#  endif
   !
   !
-  IF ( nprocp <= 1 ) RETURN
-  IF ( size <= 0 ) RETURN
+  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
   !
   CALL start_clock( 'reduce' )
   !
   ! ... syncronize processes - maybe unneeded on T3D but necessary on T3E !!!
   !
-  CALL mp_barrier( MPI_COMM_POOL )
+  CALL mp_barrier( intra_pool_comm )
   !
-  nbuf = size / MAXB
+  nbuf = dim / maxb
   !
-#if defined (SHMEM)
+#  if defined (SHMEM)
   !
-  start = ( mypool - 1 ) * nprocp
+  start = my_pool_id * nproc_pool
   !
-#endif
+#  endif
   !
   DO n = 1, nbuf
      !
-#if defined (SHMEM)
-     CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+(n-1)*MAXB), &
-                                  MAXB, start, 0, nprocp, pWrkData, pWrkSync )
-#else
-     CALL MPI_allreduce( ps(1+(n-1)*MAXB), buff, MAXB, &
-                         MPI_REAL8, MPI_SUM, MPI_COMM_POOL, info )
-     CALL errore( 'reduce', 'error in allreduce1', info )
-#endif
+#  if defined (SHMEM)
      !
-     ps((1+(n-1)*MAXB):(n*MAXB)) = buff(1:MAXB)
+     CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+(n-1)*maxb), &
+                                  maxb, start, 0, nprocp, pWrkData, pWrkSync )
+     !                             
+#  else
+     !
+     CALL MPI_allreduce( ps(1+(n-1)*maxb), buff, maxb, &
+                         MPI_REAL8, MPI_SUM, intra_pool_comm, info )
+     !                    
+     CALL errore( 'reduce', 'error in allreduce1', info )
+     !
+#  endif
+     !
+     ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
      !
   END DO
   !
   ! ... possible remaining elements < maxb
   !
-  IF ( ( size - nbuf * MAXB ) > 0 ) THEN
+  IF ( ( dim - nbuf * maxb ) > 0 ) THEN
      !
-#if defined (SHMEM)
+#  if defined (SHMEM)
      !
-     CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+nbuf*MAXB), (size-nbuf*MAXB), &
+     CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+nbuf*maxb), (dim-nbuf*maxb), &
                                   start, 0, nprocp, pWrkData, pWrkSync )
-#else
-     CALL MPI_allreduce( ps(1+nbuf*MAXB), buff, (size-nbuf*MAXB), &
-                         MPI_REAL8, MPI_SUM, MPI_COMM_POOL, info )
+     !                             
+#  else
+     !
+     CALL MPI_allreduce( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), &
+                         MPI_REAL8, MPI_SUM, intra_pool_comm, info )
      !
      CALL errore( 'reduce', 'error in allreduce2', info )
-#endif
      !
-     ps((1+nbuf*MAXB):(1+size)) = buff(1:(size-nbuf*MAXB))
+#  endif
+     !
+     ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
      !
   END IF
   !
@@ -111,57 +115,55 @@ END SUBROUTINE reduce
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ireduce( size, is )
+SUBROUTINE ireduce( dim, is )
   !----------------------------------------------------------------------------
   !
-  ! ... sums a distributed variable is(size) over the processors.
+  ! ... sums a distributed variable is(dim) over the processors.
   !
 #if defined (__PARA)
   !
-  USE para,   ONLY : MPI_COMM_POOL, nprocp
-  USE mp,     ONLY : mp_barrier
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool
+  USE mp,        ONLY : mp_barrier
   !
   IMPLICIT NONE
   !
   INCLUDE 'mpif.h'
-  !
-#define MAXI 500  
   !  
-  INTEGER :: size, is(size)
-  INTEGER :: info, n, m, nbuf
-  INTEGER :: buff(MAXI)
+  INTEGER            :: dim, is(dim)
+  INTEGER            :: info, n, m, nbuf
+  INTEGER, PARAMETER :: maxi = 500
+  INTEGER            :: buff(maxi)
   !
   !
-  IF ( nprocp <= 1 ) RETURN
-  IF ( size <= 0 ) RETURN
+  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
   !
   ! ... syncronize processes
   !
-  CALL mp_barrier( MPI_COMM_POOL )
+  CALL mp_barrier( intra_pool_comm )
   !
-  nbuf = size / MAXI
+  nbuf = dim / maxi
   !
-  do n = 1, nbuf
+  DO n = 1, nbuf
      !
-     CALL MPI_allreduce( is(1+(n-1)*MAXI), buff, MAXI, &
-                         MPI_INTEGER, MPI_SUM, MPI_COMM_POOL, info )
+     CALL MPI_allreduce( is(1+(n-1)*maxi), buff, maxi, &
+                         MPI_INTEGER, MPI_SUM, intra_pool_comm, info )
      !   
      CALL errore( 'ireduce', 'error in allreduce 1', info )
      !
-     is((1+(n-1)*MAXI):(n*MAXI)) = buff(1:MAXI)
+     is((1+(n-1)*maxi):(n*maxi)) = buff(1:maxi)
      !
   END DO
   !
-  ! ... possible remaining elements < MAXI
+  ! ... possible remaining elements < maxi
   !
-  IF ( ( size - nbuf * MAXI ) > 0 ) THEN
+  IF ( ( dim - nbuf * maxi ) > 0 ) THEN
      !
-     CALL MPI_allreduce( is(1+nbuf*MAXI), buff, (size-nbuf*MAXI), &
-                         MPI_INTEGER, MPI_SUM, MPI_COMM_POOL, info )
+     CALL MPI_allreduce( is(1+nbuf*maxi), buff, (dim-nbuf*maxi), &
+                         MPI_INTEGER, MPI_SUM, intra_pool_comm, info )
      !
      CALL errore( 'reduce', 'error in allreduce 2', info )
      !
-     is((1+nbuf*MAXB):(1+size)) = buff(1:(size-nbuf*MAXB))
+     is((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxi))
      !
   END IF
   !

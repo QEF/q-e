@@ -80,7 +80,6 @@ PWOBJS = \
 ../PW/error.o \
 ../PW/estimate.o \
 ../PW/ewald.o \
-../PW/fft_scatter.o \
 ../PW/force_cc.o \
 ../PW/force_corr.o \
 ../PW/force_ew.o \
@@ -90,7 +89,6 @@ PWOBJS = \
 ../PW/force_us.o \
 ../PW/functionals.o \
 ../PW/funct.o \
-../PW/gather.o \
 ../PW/gen_at_dj.o \
 ../PW/gen_at_dy.o \
 ../PW/gen_us_dj.o \
@@ -124,7 +122,6 @@ PWOBJS = \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
 ../PW/lsda_functionals.o \
-../PW/maximum.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \
@@ -139,10 +136,6 @@ PWOBJS = \
 ../PW/orthoatwfc.o \
 ../PW/output_tau.o \
 ../PW/para.o \
-../PW/poolextreme.o \
-../PW/poolrecover.o \
-../PW/poolreduce.o \
-../PW/poolscatter.o \
 ../PW/potinit.o \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
@@ -160,7 +153,6 @@ PWOBJS = \
 ../PW/readnewvan.o \
 ../PW/read_pseudo.o \
 ../PW/readvan.o \
-../PW/reduce.o \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/restart_from_file.o \
@@ -178,7 +170,6 @@ PWOBJS = \
 ../PW/save_in_ions.o \
 ../PW/s_axis_to_ca.o \
 ../PW/scale_h.o \
-../PW/scatter.o \
 ../PW/scopy_t3e.o \
 ../PW/seqopn.o \
 ../PW/set_fft_dim.o \

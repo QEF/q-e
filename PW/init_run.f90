@@ -44,7 +44,6 @@ SUBROUTINE init_run()
   CALL stop_clock ( 'init_run' )
   !
   CALL show_memory()
-
   !
   RETURN
   !

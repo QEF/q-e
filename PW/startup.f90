@@ -11,64 +11,65 @@
 SUBROUTINE startup( nd_nmbr, code, version )
   !----------------------------------------------------------------------------
   !
-  !  This subroutine initializes MPI
-  !  Processes are organized in NPOOL pools each dealing with a subset of
-  !  kpoints. Within each pool R & G space distribution is performed.
-  !  NPROC is read from command line or can be set with the appropriate
-  !  environment variable ( for example use 'setenv MP_PROCS 8' on IBM SP
-  !  machine to run on NPROC=8 processors ) and NPOOL is read from command
-  !  line.
-  !  NPOOL must be a whole divisor of NPROC
-  !  An example without any environment variable set is the following:
-  !  T3E :
-  !  mpprun -n 16 pw.x -npool 8 < input
-  !  IBM SP :
-  !  poe pw.x -procs 16 -npool 8 < input
-  !  ORIGIN /PC clusters using "mpirun" :
-  !  mpirun -np 16 pw.x -npool 8 < input
-  !  COMPAQ :
-  !  prun -n 16 sh -c 'pw.x -npool 8 < input'
-  !  PC clusters using "mpiexec" :
-  !  mpiexec -n 16 pw.x -npool 8 < input  
-  !  In this example you will use 16 processors divided into 8 pools
-  !  of 2 processors each (in this case you must have at least 8 k-points)
+  !  ... This subroutine initializes MPI
   !
-  !  Use "-input filename" to read input from file "filename":
-  !  may be useful if you have trouble reading from standard input
-  !-----------------------------------------------------------------------
+  !  ... Processes are organized in NPOOL pools each dealing with a subset of
+  !  ... kpoints. Within each pool R & G space distribution is performed.
+  !  ... NPROC is read from command line or can be set with the appropriate
+  !  ... environment variable ( for example use 'setenv MP_PROCS 8' on IBM SP
+  !  ... machine to run on NPROC=8 processors ) and NPOOL is read from command
+  !  ... line.
+  !  ... NPOOL must be a whole divisor of NPROC
+  !
+  !  ... An example without any environment variable set is the following:
+  !
+  !  ... T3E :
+  !  ...      mpprun -n 16 pw.x -npool 8 < input
+  !
+  !  ... IBM SP :
+  !  ...      poe pw.x -procs 16 -npool 8 < input
+  !
+  !  ... ORIGIN /PC clusters using "mpirun" :
+  !  ...      mpirun -np 16 pw.x -npool 8 < input
+  !
+  !  ... COMPAQ :
+  !  ...      prun -n 16 sh -c 'pw.x -npool 8 < input'
+  !
+  !  ... PC clusters using "mpiexec" :
+  !  ...      mpiexec -n 16 pw.x -npool 8 < input 
+  ! 
+  !  ... In this example you will use 16 processors divided into 8 pools
+  !  ... of 2 processors each (in this case you must have at least 8 k-points)
   !
   ! ... The following two modules hold global information about processors
   ! ... number, IDs and communicators
   !
   USE io_global,  ONLY :  stdout, io_global_start, ionode_id
-  USE mp_global,  ONLY :  mp_global_start
+  USE mp_global,  ONLY :  mp_global_start, nproc
   USE mp,         ONLY :  mp_start, mp_env, mp_barrier, mp_bcast
-#ifdef __PARA
   USE para_const, ONLY :  maxproc
-  USE para,       ONLY :  me, mypool, nproc, npool, nprocp 
-#endif  
+  USE para,       ONLY :  me, mypool, npool, nprocp 
   !
   IMPLICIT NONE
   !
   CHARACTER :: nd_nmbr*3, code*9, version*6
   INTEGER   :: gid
-#if ! defined __PARA
-  INTEGER   :: me, nproc
-#endif
-  CHARACTER :: np*80, cdate * 9, ctime * 9
+  CHARACTER :: np*80, cdate*9, ctime*9
   EXTERNAL     date_and_tim
-#ifdef __PARA
   INTEGER   :: ierr, ilen, iargc, nargs, iiarg
   !
   !
-#  ifdef __T3E
+#if defined (__PARA)
+  !
+  ! ... prallel case
+  !  
+#  if defined (__T3E)
   !
   ! ... set streambuffers on
   !
   CALL set_d_stream( 1 )
-#  endif
   !
-#endif
+#  endif
   !
   CALL mp_start()
   !
@@ -87,8 +88,6 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   me = me + 1
   !
-#ifdef __PARA
-  !
   IF ( me == 1 ) THEN
      !
      ! ... How many pools ?
@@ -98,7 +97,8 @@ SUBROUTINE startup( nd_nmbr, code, version )
      !
      DO iiarg = 1, ( nargs - 1 )
         !
-        CALL getarg( iiarg, np )  
+        CALL getarg( iiarg, np )
+        !
         IF ( TRIM( np ) == '-npool' .OR. TRIM( np ) == '-npools' ) THEN
           !
           CALL getarg( ( iiarg + 1 ), np )  
@@ -111,9 +111,10 @@ SUBROUTINE startup( nd_nmbr, code, version )
      npool = MAX( npool, 1 )
      npool = MIN( npool, nproc )
      !
-     ! ... set number of processes per pool (must be equal for all pools)
+     ! ... set number of processes per pool ( must be equal for all pools )
      !
      nprocp = nproc / npool
+     !
      IF ( nproc /= ( nprocp * npool ) ) &
         CALL errore( 'startup', 'nproc /= nprocp*npool', 1 )
      !
@@ -130,17 +131,24 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   IF ( nproc > maxproc ) &
      CALL errore( 'startup', ' too many processors', nproc )
+  !   
   nd_nmbr = '   '
+  !
   IF ( nproc < 10 ) THEN
+     !
      WRITE( nd_nmbr(1:1) , '(I1)' ) me
+     !
   ELSE IF ( nproc < 100 ) THEN
+     !
      IF ( me < 10 ) THEN
         nd_nmbr = '0'
         WRITE( nd_nmbr(2:2) , '(I1)' ) me
      ELSE
         WRITE( nd_nmbr(1:2) , '(I2)' ) me
      END IF
+     !
   ELSE
+     !
      IF ( me < 10 ) THEN
         nd_nmbr = '00'
         WRITE( nd_nmbr(3:3) , '(I1)' ) me
@@ -150,38 +158,47 @@ SUBROUTINE startup( nd_nmbr, code, version )
      ELSE
         WRITE( nd_nmbr, '(I3)' ) me
      END IF
+     !
   END IF
   !
-  ! ... pools are initialized
+  ! ... pools are initialized here
   !
   CALL init_pool()  
   !
-#  ifdef DEBUG
+  ! ... stdout is printed only by the first cpu ( me == 1, mypool == 1 )
+  !
+#  if defined (DEBUG)
+  !
   IF ( me /= 1 .OR. mypool /= 1 ) &
      OPEN( UNIT = stdout, FILE = './out_'//nd_nmbr, STATUS = 'UNKNOWN' )
+  !   
 #  else
+  !
   IF ( me /= 1 .OR. mypool /= 1 ) &
      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
+  !   
 #  endif
   !
-  IF ( me == 1 ) THEN
-     !
-     CALL date_and_tim( cdate, ctime )
-     !
-     WRITE( stdout, 9000 ) code, version, cdate, ctime
-     WRITE( stdout, '(/5X,"Parallel version (MPI)")' )
-     WRITE( stdout, '(5X,"Number of processors in use:   ",I4)' ) nproc
-     IF ( npool /= 1 ) &
-        WRITE( stdout, '(5X,"K-points division:    npool  = ",i4)' ) npool
-     IF ( nprocp /= 1 ) &
-        WRITE( stdout, '(5X,"R & G space division: nprocp = ",i4/)' ) nprocp
-     !
-  END IF
+  ! ... information printout
+  !
+  CALL date_and_tim( cdate, ctime )
+  !
+  WRITE( stdout, 9000 ) code, version, cdate, ctime
+  WRITE( stdout, '(/5X,"Parallel version (MPI)")' )
+  WRITE( stdout, '(5X,"Number of processors in use:   ",I4)' ) nproc
+  IF ( npool /= 1 ) &
+     WRITE( stdout, '(5X,"K-points division:    npool  = ",i4)' ) npool
+  IF ( nprocp /= 1 ) &
+     WRITE( stdout, '(5X,"R & G space division: nprocp = ",i4/)' ) nprocp
   !
 #else
   !
+  ! ... serial case :  only information printout
+  !
   nd_nmbr = '   '
+  !
   CALL date_and_tim( cdate, ctime )
+  !
   WRITE( stdout, 9000 ) code, version, cdate, ctime
   !
 #endif
@@ -192,4 +209,3 @@ SUBROUTINE startup( nd_nmbr, code, version )
            &     'Today is ',A9,' at ',A9)
   !     
 END SUBROUTINE startup
-

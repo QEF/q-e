@@ -7,30 +7,30 @@
 !
 #include "machine.h"
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE scatter( f_in, f_out )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   ! ... scatters data from the first processor of every pool
   !
-  ! ... REAL*8 f_in  = gathered variable (nrx1*nrx2*nrx3)
-  ! ... REAL*8 f_out = distributed variable (nxx)
+  ! ... REAL*8  f_in  = gathered variable (nrx1*nrx2*nrx3)
+  ! ... REAL*8  f_out = distributed variable (nxx)
   !
 #if defined (__PARA)
   !
-  USE pfft,   ONLY : ncplane, npp, nxx 
-  USE para,   ONLY : me, MPI_COMM_POOL, nprocp
-  USE mp,     ONLY : mp_barrier
-  USE kinds,  ONLY : DP
+  USE pfft,      ONLY : ncplane, npp, nxx 
+  USE mp_global, ONLY : intra_pool_comm
+  USE io_global, ONLY : ionode_id
+  USE para,      ONLY : me, nprocp
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
   !
   IMPLICIT NONE
   !
   INCLUDE 'mpif.h'    
-  REAL (KIND=DP) :: f_in( * ), f_out(nxx)
-  INTEGER :: root, proc, info, displs(nprocp), sendcount(nprocp)
+  REAL (KIND=DP) :: f_in(*), f_out(nxx)
+  INTEGER        :: proc, info, displs(nprocp), sendcount(nprocp)
   !
-  !
-  root = 0
   !
   CALL start_clock( 'scatter' )
   !
@@ -50,10 +50,10 @@ SUBROUTINE scatter( f_in, f_out )
      !
   END DO
   !
-  CALL mp_barrier( MPI_COMM_POOL )
+  CALL mp_barrier( intra_pool_comm )
   !  
-  CALL MPI_scatterv( f_in, sendcount, displs, MPI_REAL8, f_out, &
-                     sendcount(me), MPI_REAL8, root, MPI_COMM_POOL, info )
+  CALL MPI_scatterv( f_in, sendcount, displs, MPI_REAL8, f_out, sendcount(me), &
+                     MPI_REAL8, ionode_id, intra_pool_comm, info )
   !
   CALL errore( 'scatter', 'info<>0', info )
   !

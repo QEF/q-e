@@ -373,8 +373,7 @@ SUBROUTINE setup()
   ! ... if dynamics is done the system should have no symmetries
   ! ... (inversion symmetry alone is allowed)
   !
-
-  if ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
+  IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
      CALL errore( 'setup', 'Dynamics, you should have no symmetries', -1 )
   !

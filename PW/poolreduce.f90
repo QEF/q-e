@@ -5,59 +5,69 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-
-subroutine poolreduce (size, ps)
-  !-----------------------------------------------------------------------
-  !
-  !     Sums a distributed variable ps(size) over the pools.
-  !     This MPI-only version uses a fixed-length buffer
-  !
-  !-----------------------------------------------------------------------
 #include "machine.h"
-#ifdef __PARA
-  use para
-#endif
-  USE kinds, only : DP
-  implicit none
-  integer :: size
-
-  real (kind=DP) :: ps (size)
-#ifdef __PARA
-
-  include 'mpif.h'
-  integer :: MAXB
-  parameter (MAXB = 10000)
-  real (8) :: buff (MAXB)
-
-  integer :: info, nbuf, n
-  if (size.le.0.or.npool.le.1) return
-  call start_clock ('poolreduce')
+!
+!------------------------------------------------------------------------
+SUBROUTINE poolreduce( dim, ps )
+  !-----------------------------------------------------------------------
   !
-  !  MPI syncronize processes
+  ! ... Sums a distributed variable ps(dim) over the pools.
+  ! ... This MPI-only version uses a fixed-length buffer
+  !       
+#if defined (__PARA)
+  !  
+  USE mp_global, ONLY : inter_pool_comm, my_pool_id, nproc_pool
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
   !
-
-  call mpi_barrier (MPI_COMM_WORLD, info)
-
-  call errore ('poolreduce', 'info<>0 at barrier', info)
-  nbuf = size / MAXB
-  do n = 1, nbuf
-     call mpi_allreduce (ps (1 + (n - 1) * MAXB), buff, MAXB, &
-          MPI_REAL8, MPI_SUM, MPI_COMM_ROW, info)
-     call errore ('poolreduce', 'info<>0 at allreduce1', info)
-     call DCOPY (MAXB, buff, 1, ps (1 + (n - 1) * MAXB), 1)
-  enddo
-  if (size-nbuf * MAXB.gt.0) then
-     call mpi_allreduce (ps (1 + nbuf * MAXB), buff, size-nbuf * &
-          MAXB, MPI_REAL8, MPI_SUM, MPI_COMM_ROW, info)
-     call errore ('poolreduce', 'info<>0 at allreduce2', info)
-     call DCOPY (size-nbuf * MAXB, buff, 1, ps (1 + nbuf * MAXB), &
-          1)
-
-  endif
-  call stop_clock ('poolreduce')
+  IMPLICIT NONE
+  !
+  INCLUDE 'mpif.h'
+  INTEGER            :: dim
+  REAL (KIND=DP)     :: ps(*)
+  INTEGER, PARAMETER :: maxb = 10000
+  REAL (KIND=DP)     :: buff(maxb)
+  INTEGER            :: info, nbuf, n
+  !
+  !
+  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
+  !
+  CALL start_clock( 'poolreduce' )
+  !
+  ! ... MPI syncronize processes
+  !
+  CALL mp_barrier()
+  !
+  nbuf = dim / maxb
+  !
+  DO n = 1, nbuf
+     !
+     CALL MPI_allreduce( ps(1+(n-1)*maxb), buff, maxb, &
+                         MPI_REAL8, MPI_SUM, inter_pool_comm, info )
+     !
+     CALL errore( 'poolreduce', 'info<>0 at allreduce1', info )
+     !
+     ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     !CALL DCOPY( maxb, buff, 1, ps(1+(n-1)*maxb), 1 )
+     !
+  END DO
+  !
+  IF ( ( dim - nbuf * maxb ) > 0 ) THEN
+     !
+     CALL MPI_allreduce( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), &
+                         MPI_REAL8, MPI_SUM, inter_pool_comm, info )
+     !
+     CALL errore( 'poolreduce', 'info<>0 at allreduce2', info )
+     !
+     ps((1+nbuf*maxb):dim) = buff(1:dim-nbuf*maxb)
+     !CALL DCOPY( dim-nbuf*maxb, buff, 1, ps(1+nbuf*maxb), 1 )
+     !
+  END IF
+  !
+  CALL stop_clock( 'poolreduce' )
+  !
 #endif
-  return
-
-end subroutine poolreduce
-
+  !
+  RETURN
+  !
+END SUBROUTINE poolreduce

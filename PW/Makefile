@@ -45,7 +45,6 @@ cft_sp.o \
 cft_sun.o \
 cft_t3e.o \
 cfts_3.o \
-cgather_sym.o \
 cgramg1.o \
 check.o \
 checkallsym.o \
@@ -88,7 +87,6 @@ error_handler.o \
 estimate.o \
 ewald.o \
 ewald_dipole.o \
-fft_scatter.o \
 fftw.o \
 force_cc.o \
 force_corr.o \
@@ -101,7 +99,6 @@ funct.o \
 functionals.o \
 g_psi.o \
 g_psi_mod.o \
-gather.o \
 gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \
@@ -135,7 +132,6 @@ kpoint_grid.o \
 lchk_tauxk.o \
 linmin.o \
 lsda_functionals.o \
-maximum.o \
 mix_pot.o \
 mix_rho.o \
 mode_group.o \
@@ -153,10 +149,6 @@ orthoatwfc.o \
 output_tau.o \
 para.o \
 paw.o \
-poolextreme.o \
-poolrecover.o \
-poolreduce.o \
-poolscatter.o \
 potinit.o \
 print_clock_pw.o \
 psymrho.o \
@@ -175,7 +167,6 @@ readin.o \
 readnewvan.o \
 readvan.o \
 regterg.o \
-reduce.o \
 remove_atomic_rho.o \
 reset_k_points.o \
 restart.o \
@@ -199,7 +190,6 @@ scala_cdiag.o \
 scala_cdiaghg.o \
 scala_utils.o \
 scale_h.o \
-scatter.o \
 scopy_t3e.o \
 seqopn.o \
 set_fft_dim.o \

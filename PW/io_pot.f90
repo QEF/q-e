@@ -14,12 +14,15 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   ! ... This routine reads (iop=-1) or write (iop=1) the potential
   ! ... in real space onto a file
   !
+  ! ... rewritten to use mp wrappers
+  !
   USE kinds,        ONLY : DP
   USE gvect,        ONLY : nrxx, nrx1, nrx2, nrx3
 #if defined (__PARA)
-  USE para,         ONLY : me, mypool, MPI_COMM_ROW,npool
+  USE para,         ONLY : me, mypool
+  USE mp_global,    ONLY : intra_pool_comm, inter_pool_comm
   USE io_global,    ONLY : ionode_id
-  USE mp,           ONLY : mp_bcast
+  USE mp,           ONLY : mp_bcast, mp_gather
 #endif
   !
   IMPLICIT NONE
@@ -45,8 +48,10 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   IF ( iop == 1 ) THEN
      !
+     ! ... CALL mp_gather( pot(:,:), allv(:,:), ionode_id, intra_pool_comm )
+     !
      DO ic = 1, nc
-        !   
+        !
         CALL gather( pot(1,ic), allv(1,ic) )
         !
      END DO
@@ -78,11 +83,10 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   IF ( iop == -1 ) THEN
      !
-     IF ( me == 1 .AND. npool /=1 ) &
-	CALL mp_bcast( allv, ionode_id, MPI_COMM_ROW )
+     IF ( me == 1 ) CALL mp_bcast( allv, ionode_id, inter_pool_comm )
      !
      DO ic = 1, nc
-        !
+        !        
         CALL scatter( allv(1,ic), pot(1,ic) )
         !
      END DO
@@ -114,11 +118,6 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   RETURN
   !
 10 CALL errore( 'io_pot', 'error writing '//filename, 1 )
-  !
-  RETURN
-  !
 20 CALL errore( 'io_pot', 'error reading '//filename, 2 )
-  !
-  RETURN
   !
 END SUBROUTINE io_pot
