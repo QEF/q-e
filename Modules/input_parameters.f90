@@ -1,27 +1,30 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2003 FPMD & PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-!=----------------------------------------------------------------------------=!  
-   MODULE input_parameters
-!=----------------------------------------------------------------------------=!  
-
+!
+!=----------------------------------------------------------------------------=!
+!
+MODULE input_parameters
+!
+!=----------------------------------------------------------------------------=!
+!
 !  this module contains the definitions of all input parameters for FPMD code
 !  Written by Carlo Cavazzoni
-
-!=----------------------------------------------------------------------------=!  
-
-        USE kinds
-        USE parameters
-
-        IMPLICIT NONE
-        SAVE
-
-!=----------------------------------------------------------------------------=!  
+!
+!=----------------------------------------------------------------------------=!
+  !
+  USE kinds
+  USE parameters,  ONLY :  DP, nsx, natx, npkx, nbndxx, nspinx
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+!=----------------------------------------------------------------------------=!
 ! BEGIN manual
 ! 
 !
@@ -78,9 +81,9 @@
 !
 !  -- end of input file --
 !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  CONTROL Namelist Input Parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
 !       ( when appropriate default values are marked with a "*" )
 !
@@ -89,7 +92,8 @@
           ! title = 'title for this simulation'
 
         CHARACTER(LEN=80) :: calculation = 'none'  
-          ! calculation = 'scf', 'relax', 'md', 'cp'*, 'vc-relax', 'vc-md', 'vc-cp'
+          ! calculation = 'scf', 'relax', 'md', 'cp'*, 'vc-relax', 'vc-md', 
+          !               'vc-cp', 'neb' 
           ! Specify the type of the simulation
           ! 'scf'      = electron minimization
           ! 'relax'    = ionic minimization
@@ -98,11 +102,12 @@
           ! 'vc-relax' = ionic + cell minimization
           ! 'vc-cp'    = variable-cell Car-Parrinello (-Rahman) dynamics
           ! 'vc-md'    = variable-cell Car-Parrinello (-Rahman) dynamics
+          ! 'neb'      = VEC-CI-NEB search of the Minimum Energy Path (MEP)
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(9)
+        CHARACTER(LEN=80) :: calculation_allowed(10)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon' /
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'neb' /
           ! Allowed value for calculation parameters
 
 
@@ -115,6 +120,10 @@
           ! specify how to start/restart the simulation
           !   'from_scratch'    start a new simulation from scratch,
           !                     with random wave functions
+	  !                     for NEB only : a simulation is started
+          !                     from scratch and the initial guess for the
+          !                     path is the linear interpolation between
+          !                     the initial and the final images
           !   'restart'         continue a previous simulation,
           !                     and performs  "nstep" new steps,
           !   'reset_counters'  continue a previous simulation,
@@ -219,13 +228,14 @@
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
-          pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, wf_collect
+          pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
+          wf_collect
 
 
 !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
         INTEGER :: ibrav = 14
           ! index the Bravais lattice:
@@ -389,19 +399,19 @@
 
         REAL(dbl) :: eopreg = 0.0d0
 
-        REAL(dbl) :: eamp = 0.0d0
+        REAL(dbl) :: eamp = 0.0d0 
 
         LOGICAL :: noncolin = .FALSE.
 
-        REAL(dbl) :: lambda = 1.0
+        REAL(dbl) :: lambda = 1.0D0
 
         INTEGER :: i_cons = 0
 
-        REAL(dbl) :: mcons(3,nsx) = 0.0 
+        REAL(dbl) :: mcons(3,nsx) = 0.0D0 
 
-        REAL(dbl) :: angle1(nsx) = 0.0
+        REAL(dbl) :: angle1(nsx) = 0.0D0
 
-        REAL(dbl) :: angle2(nsx) = 0.0
+        REAL(dbl) :: angle2(nsx) = 0.0D0
 
         INTEGER :: report = 1
 
@@ -413,9 +423,10 @@
              edir, emaxpos, eopreg, eamp, smearing, &
              noncolin, mcons, lambda, i_cons, angle1, angle2, report
 
-!=----------------------------------------------------------------------------=!  
+
+!=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 
         REAL(dbl) :: emass = 0.0d0
           ! effective electron mass in the CP Lagrangian, 
@@ -701,9 +712,9 @@
           startingpot, startingwfc , conv_thr, diago_diis_ndim
 
 !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  IONS Namelist Input Parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
 
         CHARACTER(LEN=80) :: ion_dynamics = 'none' 
@@ -795,9 +806,65 @@
           !  This variable is used only by PWSCF
           ! NOT used in FPMD
 
+        !
+        ! ... variable added for NEB  ( C.S. 17/10/2003 )
+        !
+        
+        INTEGER   :: num_of_images = 0
+
+        CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 
+          ! CI_scheme = 'no-CI' | 'highest-TS' | 'all-SP' | 'manual'
+          ! set the Climbing Image scheme
+          ! 'no-CI'       Climbing Image is not used
+          ! 'highest-TS'  Standard Climbing Image
+          ! 'all-SP'      not implemented
+          ! 'manual'      not implemented
+        
+        CHARACTER(LEN=80) :: CI_scheme_allowed(4)
+        DATA CI_scheme_allowed / 'no-CI', 'highest-TS', 'all-SP', 'manual' /
+       
+        CHARACTER(LEN=80) :: VEC_scheme = 'energy-weighted' 
+          ! CI_scheme = 'energy-weighted' | 'gradient-weighted'
+          ! set the Variable Elastic Constant scheme
+          ! 'energy-weighted'       Standard Variable Elastic Constant scheme
+          ! 'gradient-weighted'     Gradient Based Variable Elastic Constant 
+          !                         scheme
+        
+        CHARACTER(LEN=80) :: VEC_scheme_allowed(2)
+        DATA VEC_scheme_allowed / 'energy-weighted', 'gradient-weighted' /
+        
+        LOGICAL :: optimization = .FALSE.
+
+        CHARACTER(LEN=80) :: minimization_scheme = 'quick-min' 
+          ! minimization_scheme = 'quick-min' | 'damped-verlet' | 
+          !                       'sim-annealing'
+          ! set the minimization algorithm
+          ! 'quick-min'       
+          ! 'damped-verlet'  
+          ! 'sim-annealing'    
+
+        CHARACTER(LEN=80) :: minimization_scheme_allowed(3)
+        DATA minimization_scheme_allowed / 'quick-min', 'damped-verlet', &
+                                           'sim-annealing' /  
+
+        REAL (KIND=DP)  :: damp = 1.D0
+          ! meaningful only when minimization_scheme = 'damped-verlet'
+        
+        REAL (KIND=DP)  :: temp_req = 0.D0
+          ! meaningful only when minimization_scheme = 'sim-annealing'
+
+        REAL (KIND=DP)  :: ds = 0.6D0
+
+        REAL (KIND=DP)  :: k_max = 0.1D0, k_min = 0.1D0
+
+        REAL (KIND=DP)  :: neb_thr = 0.05D0
+
+
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
-          ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, tolp, &
-          ion_nstepe, ion_maxstep, upscale, potential_extrapolation
+          ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
+          tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
+          num_of_images, CI_scheme, VEC_scheme, minimization_scheme, &
+          optimization, damp, temp_req, ds, k_max, k_min, neb_thr
 
 !
 !=----------------------------------------------------------------------------=!  
@@ -941,6 +1008,12 @@
           ! atomic_positions = 'bohr' | 'armstrong' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin
 
+        !
+        ! ... variable added for NEB  ( C.S. 17/10/2003 )
+        !
+ 
+        REAL (KIND=DP), ALLOCATABLE :: pos(:,:) 
+
 !
 !    ION_VELOCITIES
 !
@@ -1082,7 +1155,20 @@
 
 !  END manual
 ! ----------------------------------------------------------------------
-
+  !
+  CONTAINS
+     !
+     SUBROUTINE deallocate_input_parameters()
+       !
+       IMPLICIT NONE
+       !
+       !
+       IF ( ALLOCATED( pos ) )       DEALLOCATE( pos )
+       !  
+     END SUBROUTINE deallocate_input_parameters
+     !
 !=----------------------------------------------------------------------------=!  
-   END MODULE input_parameters
+!
+END MODULE input_parameters
+!
 !=----------------------------------------------------------------------------=!  
