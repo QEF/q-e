@@ -87,8 +87,9 @@ clean:
 
 # remove configuration files too
 veryclean: clean
-	- /bin/rm -f make.rules make.sys */.dependencies \
-		     config.log config.status */dum1 */dum2 bin/*.x
+	- /bin/rm -rf make.rules make.sys */.dependencies \
+		      config.log config.status */dum1 */dum2 bin/*.x \
+		      autom4te.cache pw.tar.gz FPMD/version.h
 
 tar:
 	tar cvf pw.tar \
