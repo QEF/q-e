@@ -533,9 +533,9 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, tpi, fpi
   USE cell_base,     ONLY : omega, tpiba2
-  USE gvect,         ONLY : gg, gstart, gi => gstart
+  USE gvect,         ONLY : gg, gstart
   USE lsda_mod,      ONLY : nspin
-  USE control_flags, ONLY : ngm0, gf => ngm0
+  USE control_flags, ONLY : ngm0
   USE wvfct,         ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -548,8 +548,11 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   ! ... and the local variables
   !
   REAL(KIND=DP) :: fac   ! a multiplicative factors
-  INTEGER       :: ig
+  INTEGER       :: ig, gi, gf
   !
+  !
+  gi = gstart
+  gf = ngm0
   !
   rho_ddot = 0.D0
   !
