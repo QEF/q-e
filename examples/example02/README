@@ -18,7 +18,7 @@ variables see the appropriate INPUT_* file)
    default name is 'matdyn', here overwritten to si.dynG)
 
    The Gamma point is the ONLY one for which the phonon code can be run
-   directly after the scf run (provided filpun was defined).
+   directly after the scf run (provided save file was defined).
    For all other points in the BZ a non-scf preparatory run is needed,
    as it is shown here for the X point.
 

@@ -212,7 +212,6 @@ PWOBJS = \
 ../PW/setlocal.o \
 ../PW/setqf.o \
 ../PW/setupkpt.o \
-../PW/show_memory.o \
 ../PW/smallg_q.o \
 ../PW/spinor.o \
 ../PW/sph_ind.o \

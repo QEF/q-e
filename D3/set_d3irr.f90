@@ -21,7 +21,7 @@ subroutine set_d3irr
   ! Calculates:          ug0, tg0, npertg0, nirrg0, irgq
   !
   ! NB: It assumes that the phonon calculation for the q=0 case, has been
-  ! performed with iswitch=-2. If this is not the case the following
+  ! performed with iswitch=-2 (modenum=0). If this is not the case the following
   ! routine does not work.
   !
   USE ions_base,  ONLY : nat

@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
      nr1, nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xq, &
-     iswitch, modenum, noncolin, m_loc)
+     modenum, noncolin, m_loc)
   !-----------------------------------------------------------------------
   !
   !     This routine performs the following tasks:
@@ -43,7 +43,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !
 
   integer :: nrot, nat, s (3, 3, 48), ityp (nat), nsym, nr1, nr2, &
-       nr3, irt (48, nat), ftau (3, 48), npk, nks, modenum, iswitch
+       nr3, irt (48, nat), ftau (3, 48), npk, nks, modenum
   ! input: number of symmetries of the original
   ! input: number of atoms in the cell
   ! input: matrices of the symmetry operations
@@ -112,7 +112,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !    that do not belong to it
   !
 
-  call smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
+  call smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
        sym, minus_q)
   IF (noncolin) THEN
      minus_q=.false.
@@ -123,7 +123,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
      ! that in non collinear case the symmetry k -> -k is not
      ! always allowed as in collinear case. Adriano
   ENDIF
-  if (iswitch.eq. - 4) then
+  if (modenum .ne. 0) then
      call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)
      call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, rtau, &
           sym, minus_q)

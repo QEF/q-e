@@ -18,7 +18,7 @@ SUBROUTINE d3_readin()
   !
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE pwcom
-  USE control_flags, ONLY : iverbosity, iswitch
+  USE control_flags, ONLY : iverbosity
   USE phcom
   USE d3com
   USE io_files,      ONLY : tmp_dir, prefix
@@ -131,9 +131,8 @@ SUBROUTINE d3_readin()
   !
   CALL allocate_part
 
-  IF (iswitch.NE. - 2.AND.iswitch.NE. - 3.AND.iswitch.NE. - &
-       4.AND..NOT.lgamma) CALL errore ('d3_readin', ' Wrong iswitch ', 1 + &
-       ABS (iswitch) )
+  !IF (.NOT.(lphonon.OR.lgamma)) &
+  !   CALL errore ('d3_readin', ' Wrong calculation ', 1 )
   DO it = 1, ntyp
      IF (amass (it) .LE.0.d0) CALL errore ('d3_readin', 'Wrong masses', &
           it)

@@ -51,7 +51,7 @@ subroutine phq_setup
   USE constants,     ONLY : degspin
   USE kinds,         ONLY : DP
   use phcom
-  USE control_flags, ONLY : iswitch, iverbosity, modenum
+  USE control_flags, ONLY : iverbosity, modenum
   
   implicit none
 
@@ -222,10 +222,10 @@ subroutine phq_setup
   call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
-  minus_q = (iswitch.gt. - 3)
+  minus_q = (modenum .eq. 0)
   ! Sq=-q+G symmetry. On output minus_q=.t.
   ! if such a symmetry has been found
-  if (iswitch.eq. - 4) then
+  if (modenum .ne. 0) then
      call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)

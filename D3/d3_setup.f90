@@ -48,7 +48,7 @@ SUBROUTINE d3_setup()
   USE kinds,         ONLY : DP
   USE pwcom
   USE atom,          ONLY : nlcc
-  USE control_flags, ONLY : iswitch, iverbosity, modenum
+  USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
   USE phcom
   USE d3com
@@ -188,10 +188,10 @@ SUBROUTINE d3_setup()
   CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
-  minus_q = (iswitch > - 3)
+  minus_q = (modenum .eq. 0)
   ! Sq=-q+G symmetry. On output minus_q=.t.
   ! if such a symmetry has been found
-  IF (iswitch ==  - 4) THEN
+  IF (modenum .ne. 0) THEN
      CALL set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
           npert, nirr, gi, gimq, iverbosity, modenum)

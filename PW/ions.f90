@@ -9,7 +9,7 @@
 subroutine ions
   !-----------------------------------------------------------------------
   !
-  USE control_flags, ONLY: conv_ions, restart, iswitch
+  USE control_flags, ONLY: conv_ions, restart, lscf, lmd, lbfgs, loldbfgs
   USE force_mod, ONLY: lforce, lstres
   !
   implicit none
@@ -19,13 +19,13 @@ subroutine ions
   !
   ! recover from a previous run, if appropriate
   !
-  if (restart.and.iswitch.ge.0) call restart_in_ions
+  if (restart.and.lscf) call restart_in_ions
   !
   if (lforce) call forces
   !
   if (lstres) call stress
   !
-  if (iswitch.gt.0) then
+  if (lmd .OR. lbfgs .OR. loldbfgs) then
      call move_ions
       !
       ! save restart information

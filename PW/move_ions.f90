@@ -11,8 +11,8 @@ SUBROUTINE move_ions()
   !
   ! ... This routine moves the ions according to the requested scheme:
   !
-  ! ... iswitch = 1      bfgs minimizations
-  ! ... iswitch = 2      constrained bfgs minimization:
+  ! ... l(old)bfgs       bfgs minimizations
+  ! ... ?iswitch=2       constrained bfgs minimization:
   ! ...                  the user must supply the routine 'constrain' which
   ! ...                  defines the constraint equation and the gradient
   ! ...                  the constraint function gv(tau), dgv(i,tau) such
@@ -26,8 +26,8 @@ SUBROUTINE move_ions()
   ! ...                            dgv(i,na) = ---------------.
   ! ...                                         D tau(i,na)
   !
-  ! ... iswitch = 3      molecular dynamics, ( verlet of vcsmd )
-  ! ... iswitch = 4      molecular dynamics with one constraint,
+  ! ... lmd              molecular dynamics, ( verlet of vcsmd )
+  ! ... lmd+lconstrain   molecular dynamics with one constraint,
   ! ...                  the same conventions as iswitch = 2
   !
   ! ... coefficients for potential and wavefunctions extrapolation are

@@ -43,7 +43,6 @@ program d3toten
   call d3_summary
   call openfild3
   call d3_init
-  call show_memory ()
   call print_clock ('D3TOTEN')
   !
   ! Used for testing purposes: if wraux=.true. it writes

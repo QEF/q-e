@@ -46,7 +46,7 @@ SUBROUTINE setup()
   USE constants,        ONLY : pi, degspin
   USE cell_base,        ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
   USE ions_base,        ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,            ONLY : startingwfc, startingpot, natomwfc
+  USE basis,            ONLY : startingpot, natomwfc
   USE gvect,            ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,          ONLY : doublegrid, gcutms
   USE klist,            ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
@@ -58,9 +58,9 @@ SUBROUTINE setup()
   USE atom,             ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
   USE pseud,            ONLY : zp, nlc, nnl, alps, aps, lmax
   USE wvfct,            ONLY : nbnd, nbndx
-  USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, &
+  USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, lscf, &
                                lmd, lpath, lphonon, david, isolve, imix, &
-                               niter, noinv, restart, nosym, modenum, lraman
+                               niter, noinv,  nosym, modenum, lraman
   USE relax,            ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,           ONLY : calc
   USE uspp_param,       ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
@@ -663,7 +663,7 @@ SUBROUTINE setup()
   !
   CALL sgama( nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
               nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, &
-              xqq, iswitch, modenum, noncolin, m_loc )
+              xqq, modenum, noncolin, m_loc )
   !
   CALL checkallsym( nsym, s, nat, tau, ityp, at, &
                     bg, nr1, nr2, nr3, irt, ftau )
@@ -708,7 +708,7 @@ SUBROUTINE setup()
   !
   ! ... phonon calculation: add k+q to the list of k
   !
-  IF ( iswitch <= -2 ) CALL set_kplusq( xk, wk, xqq, nks, npk ) 
+  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nks, npk ) 
   !
   ! ... raman calculation: add k+b to the list of k
   !
@@ -747,7 +747,7 @@ SUBROUTINE setup()
   ! ... set the granularity for k-point distribution
   !
   IF ( ( ABS( xqq(1) ) < eps .AND. ABS( xqq(2) ) < eps .AND. &
-         ABS( xqq(3) ) < eps) .OR. ( iswitch > - 2 ) ) THEN
+         ABS( xqq(3) ) < eps) .OR. ( .NOT. lphonon ) ) THEN
      !
      kunit = 1
      !

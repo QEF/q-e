@@ -210,8 +210,7 @@
        nstep,            &! number of minimization steps
        istep,            &! current minimization step
        isolve,           &! Davidson or CG diagonalization
-       iswitch,          &! general switch for the calculation type
-       modenum,          &! used with iswitch=-4
+       modenum,          &! for single mode phonon calculation
        max_cg_iter,      &! maximum number of iterations in a CG di
        diis_buff,        &! dimension of the buffer in diis
        diis_ndim,        &! dimension of reduced basis in DIIS

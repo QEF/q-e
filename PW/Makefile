@@ -194,7 +194,6 @@ sgam_at.o \
 sgam_at_mag.o \
 sgam_ph.o \
 sgama.o \
-show_memory.o \
 smallg_q.o \
 spinor.o \
 sph_ind.o \

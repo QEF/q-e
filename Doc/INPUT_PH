@@ -29,7 +29,9 @@ c nmix_ph     number of iterations used in potential mixing          4
 c
 c iverbosity  iverbosity=0 short output, iverbosity=1 verbose output 0
 c
-c max_seconds maximum allowed run time before the job stops smoothly
+c reduce_io   reduce I/O to the strict minimum                       .false.
+c
+c max_seconds maximum allowed run time before the job stops smoothly 1.d7
 c
 c fildyn      file where the dynamical matrix is written           'matdyn'
 c
@@ -42,6 +44,12 @@ c             (for later use in electron-phonon calculation)
 c
 c maxirr      maximum number of irreducible representation to be      0 i.e. all
 c             computed in a single run 
+c
+c nrapp       the representations to do                               0
+c             (nrapp and nat_todo are not compatible)
+c
+c nat_todo    number of atom to be displaced                          0
+c             (nrapp and nat_todo are not compatible)
 c
 c epsil       if .true. in a q=0 calculation for a non metal the      .false.
 c             macroscopic dielectric constant of the system is 
@@ -65,9 +73,27 @@ c             density responses. Note that if trans.and.epsil
 c             effective charges are calculated using a different
 c             algorithm. The results should be the same within
 c             numerical noise.
+c
+c lnscf       If .TRUE. the run makes first a nscf calculation        .false.
+c
+c ldisp       If .TRUE. the run calculates the points for dispersion  .false.
+c             (ldisp and modenum are not compatible)
+c
+c nq1, nq2, nq3 number of q-points in each direction                  0, 0, 0
+c
+c modenum     for single mode calculation                             -1
+c             If not set here, will be read from file .save           
+c             (if modenum.ne.0 => nat_todo = 0; nrapp = 1; list(1) = 
+c             modenum)
+c
 
 c                    End of namelist "inputph"
 c
 c card 2   xq(3)   the phonon wavevector; must be equal to the one used
-c                  in the non-selfconsistent calculation.
+c                  in the non-selfconsistent calculation (not read if 
+c                  ldisp is true).
+c
+c card 3   list(na), na = 1, nrapp
+c
+c card 3   atomo(na), na = 1, nat_todo
 c

@@ -12,7 +12,6 @@ subroutine hinit1
   !  Atomic configuration dependent hamiltonian initialization
   !
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau
-  USE basis,         ONLY : startingconfig
   USE cell_base,     ONLY : at, bg, omega, tpiba2
   USE cellmd,        ONLY : lmovecell 
   USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g, &

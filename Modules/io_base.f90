@@ -181,7 +181,7 @@
 ! ecutrho       = charge density cutoff cutoff
 
     SUBROUTINE write_restart_header1(iuni, &
-      nfi, iswitch, trutim, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
+      nfi, trutim, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
       ngwk_g, nspin, nbnd, nel, nelu, neld, nat, ntyp, na, acc, nacc, &
       ecutwfc, ecutrho, alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, &
       ngauss, lgauss, ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
@@ -195,7 +195,6 @@
 !
       INTEGER, INTENT(IN) :: iuni  
       INTEGER, INTENT(IN) :: nfi   
-      INTEGER, INTENT(IN) :: iswitch   
       INTEGER, INTENT(IN) :: nr1, nr2, nr3
       INTEGER, INTENT(IN) :: nr1s, nr2s, nr3s
       INTEGER, INTENT(IN) :: ng_g
@@ -267,7 +266,7 @@
 
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version, section_name
-        WRITE(iuni) nfi, iswitch, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
+        WRITE(iuni) nfi, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
           nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
           kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra,  &
           natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, &
@@ -308,7 +307,7 @@
 
 ! ..  This subroutine read from disk dimensions, and status variables
 !
-    SUBROUTINE read_restart_header1(iuni, nfi, iswitch, trutim, nr1, nr2, nr3, &
+    SUBROUTINE read_restart_header1(iuni, nfi, trutim, nr1, nr2, nr3, &
       nr1s, nr2s, nr3s, ng_g, nk_g, ngwk_g, nspin, nbnd, nel, nelu, neld, &
       nat, ntyp, na, acc, nacc, ecutwfc, ecutrho, alat, ekinc, kunit, &
       k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
@@ -326,7 +325,6 @@
 !
       INTEGER, INTENT(IN) :: iuni
       INTEGER, INTENT(OUT) :: nfi
-      INTEGER, INTENT(OUT) :: iswitch
       INTEGER, INTENT(OUT) :: nr1, nr2, nr3, ng_g
       INTEGER, INTENT(OUT) :: nr1s, nr2s, nr3s
       REAL(dbl), INTENT(OUT) :: trutim
@@ -390,7 +388,7 @@
         CALL errore(sub_name,' Data Section not present in restart file ', 1)
 !
         IF( ionode ) THEN
-          READ(iuni) nfi, iswitch, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
+          READ(iuni) nfi, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
             nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, &
             alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, &
             ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, &
@@ -399,7 +397,6 @@
         END IF
 !
         CALL mp_bcast( nfi, ionode_id )
-        CALL mp_bcast( iswitch, ionode_id )
         CALL mp_bcast( nr1, ionode_id )
         CALL mp_bcast( nr2, ionode_id )
         CALL mp_bcast( nr3, ionode_id )

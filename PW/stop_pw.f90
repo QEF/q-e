@@ -57,8 +57,8 @@ SUBROUTINE stop_pw( flag )
      CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, TRIM( prefix ) // '.para', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     !CALL seqopn( 4, TRIM( prefix ) // '.para', 'FORMATTED', exst )
+     !CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
      CALL seqopn( 4, TRIM( prefix ) // '.BLOCK', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
@@ -70,8 +70,6 @@ SUBROUTINE stop_pw( flag )
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
   CALL print_clock_pw()
-  !
-  CALL show_memory()
   !
   CALL mp_barrier()
   !

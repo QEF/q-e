@@ -47,7 +47,7 @@ SUBROUTINE electrons()
                                    etxcc, ewld, demet, ef  
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
-                                   niter, nmix, imix, iprint, istep, iswitch, &
+                                   niter, nmix, imix, iprint, istep, &
                                    lscf, lpath, lmd, conv_elec, restart, &
                                    reduce_io
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
@@ -444,7 +444,7 @@ SUBROUTINE electrons()
      END IF
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
-          iswitch <= 2 ) THEN
+          ( .NOT. lmd ) ) THEN
         !
 #if defined (__PARA)
         !
@@ -492,7 +492,7 @@ SUBROUTINE electrons()
      IF ( tefield ) etot = etot + etotefield
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
-          ( iswitch <= 2 ) ) THEN
+          ( .NOT. lmd ) ) THEN
         !  
         IF ( imix >= 0 ) THEN
            !
@@ -515,7 +515,7 @@ SUBROUTINE electrons()
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
         IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
         !
-     ELSE IF ( conv_elec .AND. iswitch > 2 ) THEN
+     ELSE IF ( conv_elec .AND. lmd ) THEN
         !
         IF ( imix >= 0 ) THEN
            !   

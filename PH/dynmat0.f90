@@ -21,7 +21,7 @@ subroutine dynmat0
   !
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   use pwcom
-  USE control_flags, ONLY : iswitch
+  USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   use phcom
   implicit none
@@ -52,7 +52,7 @@ subroutine dynmat0
   !   mode. This is done here, because this part of the dynmical matrix is
   !   saved with recover and in the other runs the symmetry group might change
   !
-  if (iswitch.eq. - 4) then
+  if (modenum .ne. 0) then
 
      call symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
           nsymq, nat, irotmq, minus_q)

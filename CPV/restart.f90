@@ -138,7 +138,6 @@
       INTEGER :: isk
       REAL(kind=8) :: zmesh_, xmin_, dx_
       REAL(kind=8) :: ainv(3,3), deth
-      INTEGER :: iswitch = 0
       LOGICAL :: tfixed_occ_, tefield_, dipfield_
       INTEGER :: edir_
       REAL(kind=8) :: emaxpos_, eopreg_, eamp_
@@ -211,7 +210,7 @@
       emaxpos_ = 0.0d0
       eopreg_ = 0.0d0
       eamp_ = 0.0d0
-      CALL write_restart_header(ndw, nfi, iswitch, tps, nr1, nr2, nr3, &
+      CALL write_restart_header(ndw, nfi, tps, nr1, nr2, nr3, &
         nr1s, nr2s, nr3s, ng_g, nk, ngwkg, nspin, nbnd, rnel, nelu, &
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
@@ -508,9 +507,6 @@
       REAL(kind=8) :: alat_, ekincm_ 
       LOGICAL :: twfcollect_
 
-      INTEGER :: iswitch_ 
-
-
 !
 ! Only the first node read
 !
@@ -540,7 +536,7 @@
 !     ==  READ HEADER INFORMATION                                     ==
 !     ==--------------------------------------------------------------==
 
-      CALL read_restart_header( ndr, nfi_, iswitch_, tps, &
+      CALL read_restart_header( ndr, nfi_, tps, &
         nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, nk_, ngwkg_, nspin_, nbnd_, &
         rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
         alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
@@ -1029,7 +1025,6 @@
         INTEGER :: isk
         LOGICAL :: tmill, tupf, lgamma, lda_plus_u
         LOGICAL :: noncolin, lspinorb
-        INTEGER :: iswitch = 0
         LOGICAL :: tfixed_occ_, tefield_, dipfield_
         INTEGER :: edir_
         REAL(dbl) :: emaxpos_, eopreg_, eamp_
@@ -1139,7 +1134,7 @@
         eopreg_ = 0.0d0
         eamp_ = 0.0d0
 
-        CALL write_restart_header( ndw, nfi, iswitch, trutime, nr1, nr2, nr3, &
+        CALL write_restart_header( ndw, nfi, trutime, nr1, nr2, nr3, &
           nr1, nr2, nr3, ng_g, nkt, ngwk_g, nspin, nbnd, rnel, nelu_, &
           neld_, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
           kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
@@ -1551,7 +1546,6 @@
         INTEGER  :: ngw_g, nb_g, nk, nx, ns, nb_g_
         INTEGER  :: nxu, nxd, ispin, ng, ng_l, ng_g, maxig
         INTEGER  :: i, ik, ig, ip, ios, ierr, ia, j, ib
-        INTEGER  :: iswitch_
         REAL(dbl) :: rr1, rr2, rranf 
         EXTERNAL rranf
 
@@ -1593,7 +1587,7 @@
 !       ==  READ HEADER INFORMATION                                    ==
 !       ==--------------------------------------------------------------==
 
-        CALL read_restart_header( ndr, nfi_, iswitch_, trutime_, nr1_, nr2_, nr3_, &
+        CALL read_restart_header( ndr, nfi_, trutime_, nr1_, nr2_, nr3_, &
           nr1s_, nr2s_, nr3s_, ngg_, nk_, ngwk_g_, nspin_, nbnd_, rnel_, &
           nelu_, neld_, nat_, ntyp_, na_, acc_, nacc_, ecutwfc_, ecutrho_, alat_, dum_, &
           kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, lgauss_, ntetra_, ltetra_, & 

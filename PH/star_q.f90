@@ -58,7 +58,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! Local variables
   !
   integer :: nsq (48), ftau(3,48), nrot, isym, jsym, ism1, table (48, 48), &
-       iq, i, j, nks, npk, izero
+       iq, i, j, nks, npk
   ! number of symmetry ops. of bravais lattice.
   ! counters on symmetry ops.
   ! index of inverse of isym
@@ -67,7 +67,6 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! generic counter
   ! number of dummy k-points
   ! maximum allowed number of dummy k-points
-  ! dummy (zero) value of iswitch passed to sgama
   real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3), &
        mdum(3,nat)
   ! auxiliary list of q (crystal coordinates)
@@ -90,7 +89,6 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   !
   !  initialize dummy k-point list and zero vector
   !
-  izero = 0
   npk = 1
   nks = 1
   wk(:) = 1.d0
@@ -133,7 +131,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   nosym = .false.
   call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       izero, modenum, .false., mdum)
+       modenum, .false., mdum)
   do isym = 1, nsym
      sym (isym) = .true.
   enddo

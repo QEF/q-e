@@ -38,7 +38,7 @@ PROGRAM pwscf
   !
   CALL startup( nd_nmbr, code, version_number )
   !
-  IF ( ionode) THEN
+  IF ( ionode ) THEN
      !
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
@@ -56,8 +56,6 @@ PROGRAM pwscf
   IF ( ionode .AND. gamma_only ) &
     WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
-  !
-  CALL show_memory()
   !
   IF ( lpath ) THEN
      !

@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
+subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, &
      nr3, sym, minus_q)
   !-----------------------------------------------------------------------
   !
@@ -27,7 +27,7 @@ subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
   ! input: the q point of the crystal
 
   integer :: s (3, 3, 48), nrot, nr1, nr2, nr3, ftau (3, 48), &
-       iswitch
+       modenum
   ! input: the symmetry matrices
   ! input: number of symmetry operations
   ! input: fft grid dimension (units for ftau)
@@ -84,9 +84,9 @@ subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
      enddo
      sym (irot) = eqvect (raq, aq, zero)
      !
-     !  if "iswitch.le.-3" S must be such that Sq=q exactly !
+     !  if "iswitch.le.-3" (modenum.ne.0) S must be such that Sq=q exactly !
      !
-     if (iswitch.le. -3.and.sym (irot) ) then
+     if (modenum.ne.0 .and. sym(irot) ) then
         do ipol = 1, 3
            sym(irot) = sym(irot) .and. (abs(raq(ipol)-aq(ipol)) < 1.0d-5)
         enddo
@@ -100,9 +100,9 @@ subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
 100  continue
   enddo
   !
-  !  if "iswitch.le.-3" time reversal symmetry is not included !
+  !  if "iswitch.le.-3" (modenum.ne.0) time reversal symmetry is not included !
   !
-  if (iswitch <=  -3) minus_q = .false.
+  if (modenum.ne.0) minus_q = .false.
   !
   return
 end subroutine smallg_q

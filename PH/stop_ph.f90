@@ -24,8 +24,6 @@ SUBROUTINE stop_ph( flag )
   !
   CALL print_clock_ph()
   !
-  CALL show_memory()
-  !
   CALL mp_barrier()
   !
   CALL mp_end()

@@ -163,9 +163,9 @@ help makov -vartype logical -helpfmt txt2html -helptext {
                 WARNING: - not thoroughly tested
                          - the correction works only for clusters
                          embedded within a cubic supercell
-                         - the cluster MUST be CENTRED within the
-                         cell, otherwise meaningless results are
-                         printed
+                         - the cluster (and the plotting box) MUST be
+                         CENTERED around (0,0,0), otherwise meaningless
+                         results are printed
                          - always check that the printed total charge
                          is the right one
                          - for impurities in bulk crystals the

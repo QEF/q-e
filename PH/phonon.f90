@@ -28,7 +28,7 @@ PROGRAM phonon
   USE lsda_mod,        ONLY : nspin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
   USE parser,          ONLY : int_to_char
-  USE control_flags,   ONLY : iswitch,  restart, lphonon, tr2, &
+  USE control_flags,   ONLY : restart, lphonon, tr2, &
                               mixing_beta, lscf, david, isolve, modenum
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
@@ -207,7 +207,7 @@ PROGRAM phonon
      !
      ! ... In the case of q != 0, we make first an non selfconsistent run
      !
-     IF ( lnscf .OR. ( modenum == 0 .AND. .NOT. lgamma .AND. lnscf ) ) THEN
+     IF ( lnscf .AND. .NOT. lgamma ) THEN
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F8.4)') xqq
         !
@@ -269,7 +269,6 @@ PROGRAM phonon
      CALL openfilq()
      !
      CALL phq_init()
-     CALL show_memory()
      !
      CALL print_clock( 'PHONON' )
      !

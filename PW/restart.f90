@@ -59,7 +59,7 @@ CONTAINS
          eamp
     USE wavefunctions_module, ONLY : evc, evc_nc
     USE fixed_occ,            ONLY : tfixed_occ 
-    USE control_flags,        ONLY : twfcollect, noinv, istep, iswitch, modenum
+    USE control_flags,        ONLY : twfcollect, noinv, istep, modenum
     USE io_files,             ONLY : prefix, tmp_dir, pseudo_dir, psfile, &
          iunwfc, nwordwfc
     USE funct,                ONLY : iexch, icorr, igcx, igcc
@@ -245,7 +245,7 @@ CONTAINS
     lgamma = gamma_only
 
     IF( twrhead ) THEN
-       CALL write_restart_header(ndw, istep, iswitch, trutime, nr1, nr2, nr3, &
+       CALL write_restart_header(ndw, istep, trutime, nr1, nr2, nr3, &
             nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
             nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
             kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
@@ -589,7 +589,7 @@ CONTAINS
     USE extfield,             ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
     USE wavefunctions_module, ONLY : evc, evc_nc
     USE fixed_occ,            ONLY : tfixed_occ 
-    USE control_flags,        ONLY : twfcollect, noinv, istep, iswitch, modenum
+    USE control_flags,        ONLY : twfcollect, noinv, istep, modenum
     USE funct,                ONLY : iexch, icorr, igcx, igcc
     USE pseudo_types,         ONLY : pseudo_upf
     USE mp,                   ONLY : mp_sum, mp_bcast, mp_max, mp_end
@@ -742,7 +742,7 @@ CONTAINS
 
     IF( trdhead ) THEN
 
-       CALL read_restart_header(ndr, istep, iswitch, trutime_, nr1, nr2, nr3, &
+       CALL read_restart_header(ndr, istep, trutime_, nr1, nr2, nr3, &
             nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu_, &
             neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
             kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
@@ -1213,7 +1213,7 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ityp_(:)
     CHARACTER(len=256) :: filename
 
-    INTEGER :: istep_, iswitch_, nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ngm_, ngmg_, nkstot_
+    INTEGER :: istep_, nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ngm_, ngmg_, nkstot_
     INTEGER :: nspin_, nbnd_, nelu_, neld_, nat_, ntyp_, nacx_, kunit_, nks_
     INTEGER :: k1_, k2_, k3_, nk1_, nk2_, nk3_, ngauss_
     INTEGER :: na_(nsx), ngk_l(npk), ngk_g(npk)
@@ -1267,7 +1267,7 @@ CONTAINS
     !  ==  HEADER INFORMATION                                          ==
     !  ==--------------------------------------------------------------==
 
-    CALL read_restart_header(ndr, istep_, iswitch_, trutime_, nr1_, nr2_, nr3_, &
+    CALL read_restart_header(ndr, istep_, trutime_, nr1_, nr2_, nr3_, &
          nr1s_, nr2s_, nr3s_, ngmg_, nkstot_, ngk_g, nspin_, nbnd_, nelec_, nelu_, &
          neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
          kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, &

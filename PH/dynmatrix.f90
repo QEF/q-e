@@ -18,7 +18,7 @@ subroutine dynmatrix
   !
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : iswitch, modenum, noinv
+  USE control_flags, ONLY : modenum, noinv
   use pwcom
   USE kinds,         ONLY : DP
   use phcom
@@ -78,7 +78,7 @@ subroutine dynmatrix
   !
   !  if only one mode is computed write the dynamical matrix and stop
   !
-  if (iswitch.eq. - 4) then
+  if (modenum .ne. 0) then
      WRITE( stdout, '(/,5x,"Dynamical matrix:")')
      do nu = 1, 3 * nat
         WRITE( stdout, '(5x,2i5,2f10.6)') modenum, nu, dyn (modenum, nu)

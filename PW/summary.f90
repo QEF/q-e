@@ -94,11 +94,8 @@ subroutine summary
        &     'number of iterations used = ',i12,2x,a,' mixing')
   WRITE( stdout, '(5x,"Exchange-correlation      = ",a, &
        &       " (",4i1,")")') trim(dft) , iexch, icorr, igcx, igcc
-  if (iswitch.gt.0) then
-     WRITE( stdout, '(5x,"iswitch = ",i2,"  nstep  = ",i4,/)') iswitch, nstep
-  else
-     WRITE( stdout, '(5x,"iswitch = ",i2/)') iswitch
-  endif
+  if (lmd.or.lbfgs.or.loldbfgs.or.lneb.or.lsmd) &
+     WRITE( stdout, '(5x,"  nstep  = ",i4,/)') nstep
   if (lspinorb) write(stdout, &
                '(5x,"Noncollinear calculation with spin-orbit",/)')
 

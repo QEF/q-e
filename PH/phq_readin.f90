@@ -37,7 +37,7 @@ SUBROUTINE phq_readin()
   USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix
-  USE control_flags, ONLY : iverbosity, reduce_io, iswitch, modenum
+  USE control_flags, ONLY : iverbosity, reduce_io, modenum
   USE io_global,     ONLY : ionode
   !
   IMPLICIT NONE
@@ -214,22 +214,14 @@ SUBROUTINE phq_readin()
      'cannot start from pw.x data file using Gamma-point tricks',1)
   !
   !  workaround if modenum is set here
-  !  and set the right iswitch
   !
   IF (modenum_aux .NE. -1) THEN
      modenum = modenum_aux     
-     iswitch = -4
-  ELSE IF(modenum .EQ. 0) THEN
-     iswitch = -2
-  ELSE
-     iswitch = -4
   END IF
   !
-  ! broadcast the two values
+  ! broadcast the  value
   !
-  CALL mp_bcast( iswitch, ionode_id )
   CALL mp_bcast( modenum, ionode_id )
-  
   !
   !
   IF (lgamma) THEN
@@ -276,11 +268,7 @@ SUBROUTINE phq_readin()
 
 
   IF (epsil.AND.degauss.NE.0.D0) &
-	CALL errore ('phq_readin', 'no elec. field with metals', 1)
-
-!  if (iswitch.ne. - 2 .and. iswitch.ne. - 3 .and. iswitch.ne. -4 &
-!       .and. .not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', &
-!       & 1 + abs (iswitch) )
+        CALL errore ('phq_readin', 'no elec. field with metals', 1)
 
   DO it = 1, ntyp
      IF (amass (it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
@@ -290,13 +278,13 @@ SUBROUTINE phq_readin()
        &Wrong maxirr ', ABS (maxirr) )
   IF (MOD (nks, 2) .NE.0.AND..NOT.lgamma) CALL errore ('phq_readin', &
        'k-points are odd', nks)
-  IF (iswitch.EQ. - 4) THEN
+  IF (modenum .ne. 0) THEN
      nrapp = 1
      nat_todo = 0
      list (1) = modenum
   ENDIF
   
-  IF (iswitch == -4 .AND. ldisp) &
+  IF (modenum.ne.0 .AND. ldisp) &
        CALL errore('phq_readin','Dispersion calculation and &
        & single mode calculation not possibile !',1)
   !

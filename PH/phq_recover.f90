@@ -20,7 +20,7 @@ subroutine phq_recover
   use pwcom
   USE kinds,         ONLY : DP
   use phcom
-  USE control_flags, ONLY : iswitch
+  USE control_flags, ONLY : modenum
   
   implicit none
 
@@ -42,7 +42,7 @@ subroutine phq_recover
           zstarue0
 
      read (iunrec) irr0, iter0, convt, done_irr, comp_irr0, ifat0
-     if (iter0 == 0 .and. iswitch == - 4) then
+     if (iter0 == 0 .and. modenum .ne. 0) then
         call errore ('recover', 'recover not possible', 1)
         dyn = dyn00
         do irr = 1, nirr

@@ -55,7 +55,6 @@ SUBROUTINE stop_d3 (flag)
      ENDIF
   ENDIF
   CALL print_clock_d3
-  CALL show_memory ()
 
   CALL mp_barrier()
 

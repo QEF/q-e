@@ -112,7 +112,7 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
-                            iverbosity, tr2, niter, order, iswitch, &
+                            iverbosity, tr2, niter, order, &
                             upscale_     => upscale, &
                             mixing_beta_ => mixing_beta, &
                             nstep_       => nstep, &
@@ -418,13 +418,10 @@ SUBROUTINE iosys()
   calc      = ' '
   !
   SELECT CASE ( TRIM( calculation ) )
-     ! ... iswitch is obsolescent: do not use in new code ( 29/10/2003 C.S.)
   CASE ( 'scf' )
      lscf      = .TRUE.   
-     iswitch   = 0
      nstep     = 1
   CASE ( 'nscf' )
-     iswitch   = -1
      lforce    = .FALSE.
      nstep     = 1
   CASE ( 'relax' )
@@ -436,7 +433,6 @@ SUBROUTINE iosys()
      SELECT CASE ( TRIM( ion_dynamics ) )
         !
      CASE ( 'bfgs' )
-        iswitch   = 1
         lbfgs    = .TRUE.
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
@@ -444,7 +440,6 @@ SUBROUTINE iosys()
                       & ' conv_thr must be reduced', 1 )   
         !
      CASE ( 'old-bfgs' )
-        iswitch   = 1
         loldbfgs = .TRUE.
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
@@ -452,12 +447,10 @@ SUBROUTINE iosys()
                       & ' conv_thr must be reduced', 1 )   
         !
      CASE ( 'constrained-damp' )
-        iswitch = 4
         lmd         = .TRUE.
         ldamped     = .TRUE.
         lconstrain  = .TRUE.
      CASE ( 'damp' )
-        iswitch = 3
         lmd     = .TRUE.
         ldamped = .TRUE.
         ntcheck = nstep + 1
@@ -475,12 +468,9 @@ SUBROUTINE iosys()
      SELECT CASE ( TRIM( ion_dynamics ) )
         !
      CASE ( 'verlet' )
-        iswitch = 3
      CASE ( 'constrained-verlet' )
         lconstrain = .TRUE.
-        iswitch = 4
      CASE ( 'beeman' )
-        iswitch = 3
         calc = 'md'
         ntcheck = nstep + 1
      CASE DEFAULT
@@ -490,7 +480,6 @@ SUBROUTINE iosys()
      END SELECT
 
   CASE ( 'vc-relax' )
-     iswitch   = 3
      lscf      = .TRUE.
      lmd       = .TRUE.
      lmovecell = .TRUE.
@@ -525,7 +514,6 @@ SUBROUTINE iosys()
   CASE ( 'vc-md' )
      lscf      = .TRUE.
      lmd       = .TRUE.
-     iswitch   = 3
      lmovecell = .TRUE.
      lforce    = .TRUE.
      ntcheck = nstep + 1
@@ -551,7 +539,6 @@ SUBROUTINE iosys()
      END IF
      !
   CASE ( 'phonon' )
-     iswitch   = -2
      lphonon   = .TRUE.
      nstep     = 1
   CASE ( 'raman' )
@@ -561,12 +548,10 @@ SUBROUTINE iosys()
   ! ... "path" specific
   !   
   CASE ( 'neb' )
-     iswitch   = 1
      lscf      = .TRUE.
      lpath     = .TRUE.
      lneb      = .TRUE.
   CASE ( 'smd' )
-     iswitch   = 1
      lscf      = .TRUE.
      lpath     = .TRUE.
      lsmd      = .TRUE.
@@ -574,10 +559,6 @@ SUBROUTINE iosys()
      CALL errore( ' iosys ', ' calculation ' // &
                 & TRIM( calculation ) // ' not implemented', 1 )
   END SELECT
-  !
-  IF ( modenum /= 0 ) THEN
-     iswitch = - 4
-  END IF
   !
   IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
      CALL errore( ' iosys', 'wrong startingpot: use default', -1 )
