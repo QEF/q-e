@@ -768,8 +768,8 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP) :: vec(length,nkstot)
   INTEGER        :: length, nks, nkstot
+  REAL (KIND=DP) :: vec(length,nkstot)
   !
 #if defined (__PARA)  
   !
@@ -843,8 +843,8 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   !
   IMPLICIT NONE
   !
-  INTEGER :: ivec(length,nkstot)
   INTEGER :: length, nks, nkstot
+  INTEGER :: ivec(length,nkstot)
   !
 #if defined (__PARA)  
   !
