@@ -15,8 +15,8 @@ subroutine init_run
   call start_clock ('init_run')
 
   if (gamma_only) then
-     write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials, ",&
-                     "Gamma point")')
+     write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials, ", &
+                 &   "Gamma point")')
   else
      write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   end if
