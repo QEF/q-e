@@ -248,7 +248,6 @@ PWOBJS = \
 ../PW/dprojdtau.o \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
-../PW/dsum.o \
 ../PW/dvloc_of_g.o \
 ../PW/dylmr2.o \
 ../PW/efermig.o \

@@ -72,7 +72,6 @@ dprojdepsilon.o \
 dprojdtau.o \
 dqvan2.o \
 drhoc.o \
-dsum.o \
 dvloc_of_g.o \
 dylmr2.o \
 dynamics.o \

@@ -64,8 +64,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... external functions
   !
-  REAL(KIND=DP), EXTERNAL :: dsum, erf
-    ! summation function
+  REAL(KIND=DP), EXTERNAL :: erf
     ! error function  
   !
   !
@@ -138,7 +137,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = dsum( nrxx, vltot, 1 ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = SUM ( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
        !
 #if defined (__PARA)
        CALL reduce( 1, v_of_0 )
@@ -319,7 +318,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = dsum( nrxx, vltot, 1 ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = SUM ( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
        !
 #if defined (__PARA)
        CALL reduce( 1, v_of_0 )

@@ -4,13 +4,11 @@ include ../make.sys
 include ../make.rules
 
 PWOBJS = \
-../PW/pwcom.o \
 ../PW/cft_3.o \
 ../PW/checksym.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
-../PW/dsum.o \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/hexsym.o \
