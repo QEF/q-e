@@ -18,6 +18,7 @@ subroutine stop_ph (flag)
   use pwcom
   use parameters, only : DP
   use phcom
+  use mp, only: mp_stop
 #ifdef __PARA
   use para
 #endif
@@ -49,8 +50,11 @@ subroutine stop_ph (flag)
 #ifdef __PARA
   call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call mpi_finalize (info)
+  ! call mpi_finalize (info)
 #endif
+
+  call mp_end()
+
 #ifdef __T3E
   !
   ! set streambuffers off

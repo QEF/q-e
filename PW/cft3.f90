@@ -5,11 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef __PARA
 
 # if defined __AIX || defined __FFTW || defined __SGI
 #  define __FFT_MODULE_DRV
 # endif
+
+#ifdef __PARA
+
 !
 !----------------------------------------------------------------------
 subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)

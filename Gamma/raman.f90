@@ -14,6 +14,7 @@ program cg_raman
   use pwcom
   use io
   use cgcom
+  use mp, only: mp_end
 #ifdef __PARA
   use para
 #endif
@@ -104,8 +105,9 @@ program cg_raman
 !!!      close(unit=iunres,status='delete')
 #ifdef __PARA
   end if
-  call mpi_finalize(i)
+  ! call mpi_finalize(i)
 #endif
+  call mp_end()
   stop
   !
 9000 format (/5x,'Program ',a12,' starts ...',/5x,                     &

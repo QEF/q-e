@@ -62,7 +62,12 @@ subroutine startup (nd_nmbr, version)
 
 #  endif
 
+#endif
+
   call mp_start()
+
+#ifdef __PARA
+
   call mp_env( nproc, me, gid )
 
   !

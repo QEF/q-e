@@ -16,6 +16,7 @@ subroutine stop_d3 (flag)
   use pwcom
   use phcom
   use d3com
+  use mp, only: mp_end
 #ifdef __PARA
   use para
 #endif
@@ -56,8 +57,10 @@ subroutine stop_d3 (flag)
 
 #ifdef __PARA
   call mpi_barrier (MPI_COMM_WORLD, info)
-  call mpi_finalize (info)
+  ! call mpi_finalize (info)
 #endif
+
+  call mp_end()
 
   stop
   return

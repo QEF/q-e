@@ -12,6 +12,12 @@
 ! Last update April 2003
 !----------------------------------------------------------------------
 
+#if defined __HPM
+#  include "/cineca/prod/hpm/include/f_hpm.h"
+#endif
+
+
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar
 !=----------------------------------------------------------------------=!
@@ -612,6 +618,10 @@
      INTEGER, SAVE :: icurrent = 1
      INTEGER :: isys = 0
 
+#if defined __HPM
+            CALL f_hpmstart( 30 + ABS(sgn), 'cft_1z' )
+#endif
+
      IF( nsl < 0 ) THEN
        CALL errore(" fft_scalar: cft_1 ", " nsl out of range ", nsl)
      END IF
@@ -660,9 +670,9 @@
 #elif defined __AIX
 
        tscale = 1.0d0 / nz
-       CALL DCFT ( 1, c(1), 1, ldc, c(1), 1, ldc, nz, nsl,  1, &
+       CALL DCFT ( 1, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl,  1, &
           tscale, fw_tablez(1,icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, c(1), 1, ldc, c(1), 1, ldc, nz, nsl, -1, &
+       CALL DCFT ( 1, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, -1, &
           1.0d0, bw_tablez(1,icurrent), ltabl, work(1), lwork)
 
 #else 
@@ -721,12 +731,12 @@
      IF( isign > 0 ) THEN
        tscale = 1.0d0 / nz
        idir   = 1
-       CALL DCFT (0, c(1), 1, ldc, c(1), 1, ldc, nz, nsl, idir, &
+       CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
           tscale, fw_tablez(1,ip), ltabl, work, lwork)
      ELSE IF( isign < 0 ) THEN
        idir   = -1
        tscale = 1.0d0
-       CALL DCFT (0, c(1), 1, ldc, c(1), 1, ldc, nz, nsl, idir, &
+       CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
           tscale, bw_tablez(1,ip), ltabl, work, lwork)
      END IF
 
@@ -736,7 +746,13 @@
 
 #endif
 
+#if ! defined __AIX
      cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
+#endif
+
+#if defined __HPM
+            CALL f_hpmstop( 30 + ABS(sgn) )
+#endif
 
      RETURN
    END SUBROUTINE cft_1z
@@ -770,17 +786,24 @@
      INTEGER, INTENT(IN) :: sgn, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (dbl) :: r(:)
-     COMPLEX (dbl) :: yt(ny)
      INTEGER :: i, k, j, err, idir, ip, isign
      REAL(dbl) :: tscale
      INTEGER, SAVE :: icurrent = 1
-     INTEGER, SAVE :: dims(4,ndims) = -1
+     INTEGER, SAVE :: dims( 4, ndims) = -1
+     LOGICAL, SAVE :: dofft( nfftx )
+
+#if defined __T3E
      INTEGER :: isys = 0
-     LOGICAL :: dofft( ldx )
+     COMPLEX (dbl) :: yt(ny)
+#endif
+
+#if defined __HPM
+      CALL f_hpmstart( 40 + ABS(sgn), 'cft_2xy' )
+#endif
 
      isign = - sgn
 
-     dofft = .TRUE.
+     dofft( 1 : nx ) = .TRUE.
      IF( PRESENT( pl2ix ) ) THEN
        IF( SIZE( pl2ix ) < nx ) &
          CALL errore( ' cft_2xy ', ' wrong dimension for arg no. 8 ', 1 )
@@ -833,12 +856,13 @@
 
 #elif defined __AIX
 
-       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0d0, &
+       tscale = 1.0d0 / ( nx * ny )
+       CALL DCFT ( 1, r(1), ldx, ldx*ldy, r(1), ldx, ldx*ldy, ny, nzl,  1, 1.0d0, &
           fw_tabley(1,icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1, -1, 1.0d0, &
+       CALL DCFT ( 1, r(1), ldx, ldx*ldy, r(1), ldx, ldx*ldy, ny, nzl, -1, 1.0d0, &
           bw_tabley(1,icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl,  1, &
-          1.0d0, fw_tablex(1,icurrent), ltabl, work(1), lwork)
+          tscale, fw_tablex(1,icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl, -1, &
           1.0d0, bw_tablex(1,icurrent), ltabl, work(1), lwork)
 
@@ -899,35 +923,27 @@
      IF( isign > 0 ) THEN
 
        idir = 1
-       CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, nzl*ny, idir, &
-           1.0d0, fw_tablex( 1, ip ), ltabl, work, lwork)
-       do i = 1, nx
-         do k = 1, nzl
-           IF( dofft( i ) ) THEN
-             j = i + ldx*ldy * ( k - 1 )
-             call DCFT ( 0, r(j), ldx, 1, r(j), ldx, 1, ny, 1, &
-                 idir, 1.0d0, fw_tabley(1,ip), ltabl, work, lwork)
-           END IF
-         end do
-       end do
        tscale = 1.0d0 / ( nx * ny )
-       CALL zdscal(SIZE(r), tscale, r(1), 1)
+       CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, nzl*ny, idir, &
+           tscale, fw_tablex( 1, ip ), ltabl, work, lwork)
+       do i = 1, nx
+         IF( dofft( i ) ) THEN
+           call DCFT ( 0, r(i), ldx, ldx*ldy, r(i), ldx, ldx*ldy, ny, nzl, &
+               idir, 1.0d0, fw_tabley(1, ip), ltabl, work, lwork)
+         END IF
+       end do
 
      ELSE IF( isign < 0 ) THEN
 
        idir = -1
        do i = 1, nx
-         dofft = .TRUE.
-         do k = 1, nzl
-           IF( dofft( i ) ) THEN
-             j = i + ldx*ldy * ( k - 1 )
-             call DCFT ( 0, r(j), ldx, 1, r(j), ldx, 1, ny, 1, &
-               idir, 1.0d0, bw_tabley(1,ip), ltabl, work, lwork)
-           END IF
-         end do
+         IF( dofft( i ) ) THEN
+           call DCFT ( 0, r(i), ldx, ldx*ldy, r(i), ldx, ldx*ldy, ny, nzl, &
+               idir, 1.0d0, bw_tabley(1, ip), ltabl, work, lwork)
+         END IF
        end do
        CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, ny*nzl, idir, &
-         1.0d0, bw_tablex(1,ip), ltabl, work, lwork)
+         1.0d0, bw_tablex(1, ip), ltabl, work, lwork)
          
      END IF
 
@@ -1023,6 +1039,10 @@
 
 #endif
 
+#if defined __HPM
+            CALL f_hpmstop( 40 + ABS(sgn)  )
+#endif
+
      return
    end subroutine cft_2xy
 
@@ -1062,6 +1082,9 @@
 
 #endif
 
+#if defined __HPM
+            CALL f_hpmstart( 50 + ABS(sgn), 'cfft3d' )
+#endif
 
      isign = -sgn
 
@@ -1151,6 +1174,10 @@
        call ZDSCAL( nr1x * nr2x * nr3x, tscale, f(1), 1)
      END IF
  
+#endif
+
+#if defined __HPM
+            CALL f_hpmstop( 50 + ABS(sgn) )
 #endif
       
      RETURN

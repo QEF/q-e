@@ -6,6 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#if defined __HPM
+#  include "/cineca/prod/hpm/include/f_hpm.h"
+#endif
+
+
+
 !------------------------------------------------------------------------------!
     MODULE mp
 !------------------------------------------------------------------------------!
@@ -197,12 +203,24 @@
 
 ! ...
         IMPLICIT NONE
-        INTEGER :: ierr
+        INTEGER :: ierr, taskid
 ! ...
         ierr = 0
+        taskid = 0
+
 #if defined(__MPI)
         CALL MPI_INIT(ierr)
         IF (ierr/=0) CALL mp_stop(8000)
+#endif
+
+#if defined __HPM && defined __AIX
+
+        !   initialize the IBM Harware performance monitor
+      
+#  if defined(__MPI)
+        CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
+#  endif
+        CALL f_hpminit( taskid, 'profiling' )
 #endif
 ! ...
 
@@ -210,11 +228,24 @@
 !
 !------------------------------------------------------------------------------!
 !..mp_end
+
       SUBROUTINE mp_end
         IMPLICIT NONE
-        INTEGER :: ierr
+        INTEGER :: ierr, taskid
 
         ierr = 0
+        taskid = 0
+
+#if defined __HPM && defined __AIX
+
+        !   terminate the IBM Harware performance monitor
+
+#  if defined(__MPI)
+        CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
+#  endif
+        CALL f_hpmterminate( taskid )
+#endif
+
 #if defined(__MPI)
         CALL mpi_finalize(ierr)
         IF (ierr/=0) CALL mp_stop(8904)
@@ -224,6 +255,7 @@
 !
 !------------------------------------------------------------------------------!
 !..mp_env
+
       SUBROUTINE mp_env(numtask, taskid, groupid)
         IMPLICIT NONE
         INTEGER, INTENT (OUT) :: numtask, taskid, groupid

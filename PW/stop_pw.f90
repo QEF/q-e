@@ -15,6 +15,7 @@ subroutine stop_pw (flag)
   !
   use pwcom
   use io, only : prefix
+  use mp, only : mp_end
   logical :: flag
 #ifdef __PARA
   include 'mpif.h'
@@ -47,8 +48,11 @@ subroutine stop_pw (flag)
 #ifdef __PARA
   call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call mpi_finalize (info)
+  ! call mpi_finalize (info)
 #endif
+ 
+  call mp_end()
+
 #ifdef __T3E
   !
   ! set streambuffers off

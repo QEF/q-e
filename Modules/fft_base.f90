@@ -14,7 +14,7 @@
 !
 
 #if defined __HPM
-#  include "/cineca/prod/hpm_2_4_2/include/f_hpm.h"
+#  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
 
 #undef __FFT_BASE_TS1 
@@ -123,6 +123,9 @@
 
           INTEGER, SAVE :: dfft_id = -1
 
+#if defined __HPM
+            CALL f_hpmstart( 11, 'transpose' )
+#endif
 !
 ! ... SUBROUTINE BODY
 !
@@ -156,9 +159,6 @@
 
             r = 0.0d0
 
-#if defined __HPM
-            CALL f_hpmstart( 1, 'pack_1' )
-#endif
 
               DO ipz = 1, npz
                 k_start = (ipz-1)  * nz_l + 1
@@ -172,15 +172,9 @@
                 END DO
               END DO
 
-#if defined __HPM
-            CALL f_hpmstop( 1 )
-#endif
 
               CALL mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
 
-#if defined __HPM
-            CALL f_hpmstart( 2, 'pack_1' )
-#endif
 
               DO ipz = 1, npz
                 offset = (ipz-1) * msgsiz 
@@ -199,10 +193,6 @@
                 END DO
               END DO
 
-
-#if defined __HPM
-            CALL f_hpmstop( 2 )
-#endif
 
           ELSE IF ( iopt > 0 ) THEN
 
@@ -241,6 +231,9 @@
 
           CALL mp_deallocate_buffers()
 
+#if defined __HPM
+            CALL f_hpmstop( 11 )
+#endif
 
           RETURN 
         END SUBROUTINE fft_transpose
@@ -277,6 +270,11 @@
 !
 ! ... SUBROUTINE BODY
 !
+
+#if defined __HPM
+            CALL f_hpmstart( 12, 'transpose' )
+#endif
+
 
           IF( iopt == 0 ) THEN
             CALL transpose_setup( dfft, me, nproc )
@@ -333,10 +331,6 @@
             r = 0.0d0
             rdone = .FALSE.
 
-#if defined __HPM
-            CALL f_hpmstart( 1, 'unpack_1' )
-#endif
-
    111      CONTINUE
             DO IPZ = 1, NPZ
               call mpi_test(irhand(ipz), rtest(ipz), istatus(1,ipz), ierr)
@@ -375,9 +369,6 @@
             END DO
             IF( .NOT. ALL( rtest ) ) GO TO 111
 
-#if defined __HPM
-            CALL f_hpmstop( 1 )
-#endif
 
           ELSE IF ( iopt > 0 ) THEN
 
@@ -407,10 +398,6 @@
                 MPI_COMM_WORLD, ishand(ipz), ierr )
             END DO
 
-#if defined __HPM
-            CALL f_hpmstart( 2, 'unpack_2' )
-#endif
-
             rdone = .FALSE.
 
    112      CONTINUE
@@ -431,9 +418,6 @@
             END DO
             IF( .NOT. ALL( rtest ) ) GO TO 112
 
-#if defined __HPM
-            CALL f_hpmstop( 2 )
-#endif
 
           END IF
 
@@ -442,6 +426,10 @@
           END DO
 
           DEALLOCATE(sndbuf, rcvbuf, ishand, irhand, rtest, rdone, istatus)
+
+#if defined __HPM
+            CALL f_hpmstop( 12 )
+#endif
 
           RETURN 
         END SUBROUTINE fft_transpose
@@ -578,6 +566,11 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
        sdispls (nproc), recvcount (nproc), rdispls (nproc), &
        proc, ierr, me, nprocp
   !
+
+#if defined __HPM
+            CALL f_hpmstart( 10, 'scatter' )
+#endif
+
   me     = me_pool + 1
   nprocp = nproc_pool
   !
@@ -663,6 +656,10 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
 
   call stop_clock ('fft_scatter')
 
+#endif
+
+#if defined __HPM
+            CALL f_hpmstop( 10 )
 #endif
 
   return

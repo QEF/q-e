@@ -5,11 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef __PARA
 
 # if defined __AIX || __FFTW || __SGI
 #  define __FFT_MODULE_DRV
 # endif
+
+
+#ifdef __PARA
 
 !
 !----------------------------------------------------------------------
@@ -209,6 +211,10 @@ end subroutine cft3s
 #  endif
 # endif
 
+#if defined __HPM
+#  include "/cineca/prod/hpm/include/f_hpm.h"
+#endif
+
 !
 !----------------------------------------------------------------------
 subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -220,6 +226,11 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 
   complex(kind=DP) :: f (nx1 * nx2 * nx3)
   call start_clock ('cft3s')
+
+#if defined __HPM
+            CALL f_hpmstart( 20, 'cft3s' )
+#endif
+
   !
   !   sign = +-1 : complete 3d fft (for rho and for the potential)
   !
@@ -238,6 +249,10 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   else
      call errore ('cft3', 'what should i do?', 1)
   endif
+
+#if defined __HPM
+            CALL f_hpmstop( 20 )
+#endif
 
   call stop_clock ('cft3s')
   return

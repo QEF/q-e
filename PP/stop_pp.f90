@@ -11,13 +11,17 @@ subroutine stop_pp
   !
   ! Synchronize processes before stopping.
   !
+  use mp, only: mp_end
 #ifdef __PARA
   include 'mpif.h'
   integer :: info
   call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call mpi_finalize (info)
+  ! call mpi_finalize (info)
 #endif
+ 
+  call mp_end()
+
 #ifdef __T3E
   !
   ! set streambuffers off
