@@ -25,8 +25,8 @@ SUBROUTINE dynamics()
   ! ... delta_T, nraise are used to change the temperature as follows:
   !
   ! ... delta_T = 1 :                  nothing is done.
-  ! ... delta_T <> 1 and delta_T > 0 : every step the actual temperature is
-  ! ...                                multiplied by delta_T, this is done
+  ! ... delta_T /= 1 and delta_T > 0 : at each step the actual temperature is
+  ! ...                                multiplied by delta_T; this is done
   ! ...                                rescaling all the velocities
   ! ... delta_T < 0 :                  every 'nraise' step the temperature
   ! ...                                reduced by -delta_T
@@ -47,6 +47,8 @@ SUBROUTINE dynamics()
   USE control_flags, ONLY : alpha0, beta0, istep, nstep, conv_ions, &
                             lconstrain, ldamped, lfixatom
   USE io_files,      ONLY : prefix
+  !
+  USE basic_algebra_routines
   !
   IMPLICIT NONE
   !
@@ -85,19 +87,22 @@ SUBROUTINE dynamics()
      !
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     WRITE( stdout, '(/,5X,"Starting temperature = ",F8.2," K")' ) &
+     WRITE( UNIT = stdout, &
+            FMT = '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
          temperature
      !
      DO na = 1, ntyp
         !
-        WRITE( stdout, '(5X,"amass(",I1,") = ",F6.2)' ) na, amass(na)
+        WRITE( UNIT = stdout, &
+               FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
         !
      END DO
      !
-     WRITE( stdout, '(5X,"Time step = ",F6.2," a.u.,   ",F6.4, &
-                       & " femto-seconds")' ) dt, ( dt * 0.0484D0 )
+     WRITE( UNIT = stdout, &
+            FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
+                     & " femto-seconds")' ) dt, ( dt * 0.0484D0 )
      !
-     ! ...  masses in atomic rydberg units
+     ! ...  masses in rydberg atomic units
      !
      total_mass = 0.D0
      !
@@ -180,8 +185,10 @@ SUBROUTINE dynamics()
      !   
   END IF
   !
-  WRITE( stdout, '(/,5X,"Entering Dynamics;  it = ",I5,"   time = ", &
-                  &F8.5," pico-seconds",/)' ) istep, elapsed_time
+  WRITE( UNIT = stdout, &
+         FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37" = ",I5,/, &
+                & T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
+      istep, elapsed_time
   !
   ! ... calculate accelerations in a.u. units / alat
   !
@@ -198,7 +205,7 @@ SUBROUTINE dynamics()
   !
   ! ... constrains ( atoms kept fixed ) are reinforced 
   !
-  vel =vel * REAL( if_pos )
+  vel = vel * REAL( if_pos )
   !
   tau = tau + dt * vel + 0.5D0 * dt**2 * acc
   !
@@ -251,7 +258,7 @@ SUBROUTINE dynamics()
   !
   ! ... total linear momentum must be zero if all atoms move
   !
-  mlt = ABS( ml(1) ) + ABS( ml(2) ) + ABS( ml(3) )
+  mlt = norm( ml(:) )
   !
   IF ( ( mlt > eps8 ) .AND. &
        .NOT. ( ldamped .OR. lconstrain .OR. lfixatom ) ) &
@@ -274,8 +281,7 @@ SUBROUTINE dynamics()
      SUBROUTINE project_velocity()
        !-----------------------------------------------------------------------
        !
-       USE constants,             ONLY : eps32
-       USE basic_algebra_routines
+       USE constants, ONLY : eps32
        !
        IMPLICIT NONE
        !
@@ -286,10 +292,11 @@ SUBROUTINE dynamics()
        ! ... external functions
        !
        REAL (KIND=DP), EXTERNAL :: DNRM2, DDOT
-       !    
+       !
+       !
        norm_acc = DNRM2( 3*nat, acc, 1 )
        !
-       IF ( norm_acc >= eps32 ) THEN
+       IF ( norm_acc > eps32 ) THEN
           !
           acc_versor = acc / norm_acc
           !
@@ -316,11 +323,12 @@ SUBROUTINE dynamics()
        !
        ! ... local variables
        !
-       INTEGER                    :: na, nb
-       REAL(KIND=DP)              :: total_mass, aux, velox, ek, &
-                                     ml(3), dir_x, dir_y, dir_z, module
+       INTEGER                :: na, nb
+       REAL(KIND=DP)          :: total_mass, aux, velox, ek, &
+                                 ml(3), dir_x, dir_y, dir_z, module
          ! ek = kinetic energy
-       REAL(KIND=DP),EXTERNAL     :: rndm
+       !  
+       REAL(KIND=DP),EXTERNAL :: rndm
        !
        !    
        aux = temperature / convert_E_to_temp
@@ -338,15 +346,15 @@ SUBROUTINE dynamics()
           dir_y = rndm() - 0.5D0
           dir_z = rndm() - 0.5D0
           !
-          module = SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
+          module = 1.D0 / SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
           !
-          vel(1,na) = velox * dir_x / module
-          vel(2,na) = velox * dir_y / module
-          vel(3,na) = velox * dir_z / module
+          vel(1,na) = velox * dir_x * module
+          vel(2,na) = velox * dir_y * module
+          vel(3,na) = velox * dir_z * module
           !
        END DO
        !
-       ! ... if there is inversion symmetry equivalent atoms have 
+       ! ... if there is inversion symmetry, equivalent atoms have 
        ! ... opposite velocities
        !
        ml(:) = 0.D0
@@ -355,7 +363,7 @@ SUBROUTINE dynamics()
           !
           DO na = 1, nat
              !
-             nb = irt( nsym / 2 + 1, na )
+             nb = irt( ( nsym / 2 + 1 ), na )
              !
              IF ( nb > na ) vel(:,nb) = - vel(:,na)
              !

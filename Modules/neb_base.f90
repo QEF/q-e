@@ -814,7 +814,7 @@ MODULE neb_base
       !------------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
-                                PES, PES_gradient, suspended_image
+                                PES, suspended_image
       !
       IMPLICIT NONE
       !
@@ -825,8 +825,8 @@ MODULE neb_base
       !
       ! ... local variables
       !
-      INTEGER              :: i, image
-      INTEGER              :: N_in, N_fin
+      INTEGER  :: i, image
+      INTEGER  :: N_in, N_fin
       !
       !
       IF ( flag ) THEN
@@ -843,26 +843,13 @@ MODULE neb_base
       !
       IF ( suspended_image /= 0 ) N_in = suspended_image
       !
-      Emin = + 1.0D16
-      Emax = - 1.0D16
-      !
       CALL compute_scf( N_in, N_fin, stat )
       !
       IF ( .NOT. stat ) RETURN
       !
-      DO image = 1, num_of_images
-         !
-         IF ( PES(image) <= Emin ) Emin = PES(image)
-         !
-         IF ( PES(image) >= Emax ) THEN
-            !
-            Emax = PES(image)
-            !
-            Emax_index = image
-            !
-         END IF
-         !
-      END DO
+      Emin       = MAXVAL( PES(:) )
+      Emax       = MINVAL( PES(:) )
+      Emax_index = MAXLOC( PES(:), 1 )
       !
       RETURN
       !
@@ -889,11 +876,11 @@ MODULE neb_base
       !
       ! ... local variables
       !
-      REAL (KIND=DP)      :: err
-      INTEGER             :: image
-      LOGICAL             :: stat
-      INTEGER             :: N_in, N_fin
-      LOGICAL             :: file_exists
+      REAL (KIND=DP) :: err
+      INTEGER        :: image
+      LOGICAL        :: stat
+      INTEGER        :: N_in, N_fin
+      LOGICAL        :: file_exists
       !
       ! ... external functions
       !
