@@ -302,7 +302,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/s_gemm.o  \
 ../PW/show_memory.o  \
 ../PW/smallg_q.o  \
-../PW/sph_bes.o  \
 ../PW/s_psi.o  \
 ../PW/startup.o  \
 ../PW/stop_pw.o  \

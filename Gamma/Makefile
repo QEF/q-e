@@ -136,7 +136,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/sgam_ph.o \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
-../PW/sph_bes.o \
 ../PW/stop_pw.o \
 ../PW/struct_fact.o \
 ../PW/sumkg.o \

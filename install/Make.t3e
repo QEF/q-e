@@ -51,7 +51,10 @@ MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 LD=$(F90)
 LIBS = -lfftw -lmpi
 LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
-
+#
+# this accounts for missing auxiliary lapack routines
+#
+MYLIB = lapack_t3e
 #
 # ar:
 #
