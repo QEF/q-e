@@ -19,8 +19,8 @@ For the impatient:
   ./configure
   make all
 
-A "bin/" directory will be generated, containing all the compiled
-executable programs (actually, symlinks to them).
+Executable programs (actually, symlinks to them) will be placed in the
+"bin/" directory.
 
 If you have problems or would like to tweak the default settings, read
 the detailed instructions below.

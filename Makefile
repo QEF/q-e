@@ -23,43 +23,43 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
-pw : bindir mods libs
+pw : mods libs
 	if test -d PW   ; then ( cd PW   ; make all ) ; fi
 
-fpmd : bindir mods libs
+fpmd : mods libs
 	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
 
-cp : bindir mods libs
+cp : mods libs
 	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
 
-ph : bindir mods libs pw
+ph : mods libs pw
 	if test -d PH ; then ( cd PH ; make all ) ; fi
 
-pp : bindir mods libs pw
+pp : mods libs pw
 	if test -d PP ; then ( cd PP ; make all ) ; fi
 
-gamma : bindir mods libs pw
+gamma : mods libs pw
 	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
 
-nc : bindir mods libs pw
+nc : mods libs pw
 	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
 
-pwcond : bindir mods libs pw pp
+pwcond : mods libs pw pp
 	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
 
-d3 : bindir mods libs pw ph
+d3 : mods libs pw ph
 	if test -d D3 ; then ( cd D3 ; make all ) ; fi
 
-raman : bindir mods libs pw ph
+raman : mods libs pw ph
 	if test -d Raman ; then ( cd Raman ; make all ) ; fi
 
-tools : bindir mods libs pw
+tools : mods libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
 
-ld1 : bindir mods libs pw
+ld1 : mods libs pw
 	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
-upf : bindir mods libs
+upf : mods libs
 	if test -d upftools ; then ( cd upftools ; make all ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 raman tools
@@ -70,25 +70,24 @@ mods :
 libs : mods
 	( cd clib ; make all )
 	( cd flib ; make all )
-bindir :
-	test -d bin || mkdir bin
 
 # remove object files and executables
 clean :
 	touch make.rules make.sys 
-        # make complains if they aren't there; same with .dependencies below
+	# make complains if they aren't there; same with .dependencies below
 	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools atomic \
 		   Modules install clib flib FPMD CPV Raman ; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch .dependencies ; make clean ) \
 	    fi \
 	done
+	- /bin/rm -rf bin/*.x
 
 # remove configuration files too
 veryclean : clean
 	- /bin/rm -rf make.rules make.sys */.dependencies \
-		      config.log config.status bin/*.x \
-		      autom4te.cache pw.tar.gz FPMD/version.h \
+		      config.log config.status autom4te.cache \
+		      pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
 	- if test -d GUI ; then ( cd GUI; make veryclean ) ; fi
@@ -99,9 +98,9 @@ tar :
 	    configure configure.ac config.guess config.sub install-sh \
 	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure.old \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
-	    pwtools/*.awk pwtools/*.sh
+	    pwtools/*.awk pwtools/*.sh bin
 	# archive a few entire directories, but without CVS subdirs
-	find install *docs examples pseudo -type f \
+	find install Doc *docs examples pseudo -type f \
 		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
 	gzip pw.tar
 
