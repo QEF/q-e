@@ -11,7 +11,10 @@ subroutine remove_atomic_rho
 #include "machine.h"
   USE io_global, ONLY: stdout
   USE io_files, ONLY: output_drho
-  use pwcom
+  USE parameters, ONLY: DP
+  USE gvect, ONLY: nrxx
+  USE lsda_mod, ONLY: lsda, nspin
+  USE scf, ONLY: rho
   implicit none
   integer :: ir
   ! do-loop variable on FFT grid

@@ -17,7 +17,14 @@ subroutine readvan (is, iunps)
   !     In particular the Herman Skillman mesh is no more supported.
   !     It assume multiple rinner values.
   !
-  use pwcom
+  use parameters, only: dp, nchix, lmaxx, nbrx, ndm, npsx, nqfm, lqmax
+  use atom,  only: zmesh, mesh,dx, r, rab, vnl, chi, oc, nchi, lchi, &
+       rho_at, rho_atc
+  use char,  only: psd
+  use pseud, only: zp, lmax, lloc
+  use nl_c_c,only: nlcc
+  use us,    only: dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, rinner, &
+       nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt
   use funct
   implicit none
 

@@ -10,7 +10,12 @@
 subroutine read_ncpp (np, iunps)
   !-----------------------------------------------------------------------
   !
-  use pwcom
+  use parameters, only: dp, nchix, lmaxx, ndm
+  use atom,  only: zmesh, mesh, xmin, dx, r, rab, vnl, chi, oc, nchi, &
+       lchi, rho_at, rho_atc, numeric
+  use char, only: psd
+  use nl_c_c,only: nlcc, a_nlcc, b_nlcc, alpha_nlcc
+  use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, bhstype
   use funct
   implicit none
 

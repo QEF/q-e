@@ -9,7 +9,13 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   ! PWSCF modules
   !
-  use pwcom
+  use atom,  only: zmesh, mesh,dx, r, rab, vnl, chi, oc, nchi, lchi, &
+       rho_at, rho_atc
+  use char,  only: psd
+  use pseud, only: zp, lmax, lloc
+  use nl_c_c,only: nlcc
+  use us,    only: dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, rinner, &
+       nh, nbeta, kkbeta, lll, tvanp
   use funct
   !
   use pseudo_types
