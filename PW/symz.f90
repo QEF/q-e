@@ -36,7 +36,8 @@ subroutine symz (phi, nsym, s, nat, irt)
   !
 
   if (nsym.eq.1) return
-  call setv (9 * nat, 0.d0, work, 1)
+  work = 0.d0      
+  ! call setv (9 * nat, 0.d0, work, 1)
   !
   do na = 1, nat
      do isym = 1, nsym

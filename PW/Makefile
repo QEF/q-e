@@ -215,7 +215,6 @@ setlocal.o \
 setqf.o \
 setup.o \
 setupkpt.o \
-setv.o \
 sgam_at.o \
 sgam_ph.o \
 sgama.o \

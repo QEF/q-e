@@ -228,7 +228,6 @@ PWOBJS = \
 ../PW/setqf.o \
 ../PW/setup.o \
 ../PW/setupkpt.o \
-../PW/setv.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
