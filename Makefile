@@ -1,3 +1,5 @@
+include make.sys
+
 default :
 	@echo 'to install, type at the shell prompt:'
 	@echo '  ./configure'
