@@ -93,13 +93,13 @@ veryclean: clean
 
 tar:
 	tar cvf pw.tar \
-	    License README */README INSTALL configure \
-	    makedeps.sh moduledep.sh Makefile */Makefile */.dependencies \
+	    License README */README README.cvs INSTALL Makefile */Makefile \
 	    configure.new configure.ac config.guess config.sub install-sh \
-	    make.rules.in make.sys.in \
-	    */*.f90 */*.c */*.f clib/*.h include/*.h*
+	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure \
+	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
+	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs
-	find install upftools *docs *_examples pseudo -type f | \
+	find install *docs *_examples pseudo -type f | \
 		grep -v /CVS/ | xargs tar rvf pw.tar
 	gzip pw.tar
 
