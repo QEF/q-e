@@ -240,6 +240,8 @@ SUBROUTINE setup()
         neldw= (nelec-mcons(3,1))*0.5d0
      ENDIF
 
+     IF (i_cons.NE.0.AND.i_cons.NE.5) &
+        call errore('setup','this i_cons requires a non colinear run',1)
      IF (i_cons==5.AND.nspin.NE.2) &
         call errore('setup','i_cons can be 5 only with nspin=2',1)
   END IF
