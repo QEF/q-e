@@ -83,8 +83,6 @@ PWOBJS = \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
 ../PW/addusdens.o \
-../PW/addusforce.o \
-../PW/addusstress.o \
 ../PW/allocate_fft.o \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
@@ -125,7 +123,6 @@ PWOBJS = \
 ../PW/divide_et_impera.o \
 ../PW/dndepsilon.o \
 ../PW/dndtau.o \
-../PW/dndtau_of_k.o \
 ../PW/dprojdepsilon.o \
 ../PW/dprojdtau.o \
 ../PW/dqvan2.o \
@@ -138,13 +135,6 @@ PWOBJS = \
 ../PW/estimate.o \
 ../PW/ewald.o \
 ../PW/fftw.o \
-../PW/force_cc.o \
-../PW/force_corr.o \
-../PW/force_ew.o \
-../PW/force_hub.o \
-../PW/force_lc.o \
-../PW/force_us.o \
-../PW/forces.o \
 ../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_mod.o \

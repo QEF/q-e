@@ -65,8 +65,6 @@ PWOBJS = \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
 ../PW/addusdens.o \
-../PW/addusforce.o \
-../PW/addusstress.o \
 ../PW/allocate_fft.o \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
@@ -117,7 +115,6 @@ PWOBJS = \
 ../PW/divide_et_impera.o \
 ../PW/dndepsilon.o \
 ../PW/dndtau.o \
-../PW/dndtau_of_k.o \
 ../PW/dprojdepsilon.o \
 ../PW/dprojdtau.o \
 ../PW/dqvan2.o \
@@ -131,13 +128,6 @@ PWOBJS = \
 ../PW/ewald.o \
 ../PW/ewald_dipole.o \
 ../PW/fftw.o \
-../PW/force_cc.o \
-../PW/force_corr.o \
-../PW/force_ew.o \
-../PW/force_hub.o \
-../PW/force_lc.o \
-../PW/force_us.o \
-../PW/forces.o \
 ../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_mod.o \
@@ -227,15 +217,6 @@ PWOBJS = \
 ../PW/spinor.o \
 ../PW/sph_ind.o \
 ../PW/startup.o \
-../PW/stres_cc.o \
-../PW/stres_ewa.o \
-../PW/stres_gradcorr.o \
-../PW/stres_har.o \
-../PW/stres_hub.o \
-../PW/stres_knl.o \
-../PW/stres_loc.o \
-../PW/stres_us.o \
-../PW/stress.o \
 ../PW/struct_fact.o \
 ../PW/sum_band.o \
 ../PW/sumkg.o \

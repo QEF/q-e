@@ -95,10 +95,10 @@ SUBROUTINE openfilq()
   !
   !   An optional file for testing purposes containing the deltarho
   !
+  lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
+  !
   IF (fildrho.NE.' ') THEN
      iudrho = 23
-     lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
-
      IF ( me_pool == 0 ) THEN
         !
         IF(epsil) THEN
@@ -145,8 +145,11 @@ SUBROUTINE openfilq()
   !
 400 IF (fildvscf.NE.' ') THEN
      iudvscf = 27
-     CALL seqopn (iudvscf, fildvscf, 'unformatted', exst)
-     REWIND (iudvscf)
+     !!! CALL seqopn (iudvscf, fildvscf, 'unformatted', exst)
+     !!! REWIND (iudvscf)
+     IF ( me_pool == 0 ) THEN
+        CALL diropn (iudvscf, fildvscf, lrdrho, exst)
+     END IF
   END IF
   !
   !    In the USPP case we need two files for the Commutator, the first is

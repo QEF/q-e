@@ -1,9 +1,11 @@
-26/10/2004  Bug fix: the lenght of dft in readpseudo was 50. Problem 
+01/11/2004  p wavefunctions added to the Pt pseudopotential. (ACC)
+
+29/10/2004  clean-up. Some routines are in flib. (ADC)
+
+26/10/2004  Bug fix: the length of dft in readpseudo was 50. Problem 
             introduced by merging ld1 with PWscf.  (ADC)
 
 25/10/2004  Added few additional checks for pseudopotential generation. (ADC)
-
-29/10/2004  clean-up. Some routines are in flib. (ADC)
 
 13/07/2004  Various cleanup, documentation (PG)
 

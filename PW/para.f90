@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#undef SHMEM
+#undef __SHMEM
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ SUBROUTINE reduce( dim, ps )
   INTEGER, PARAMETER :: maxb = 10000
   REAL (KIND=DP)     :: buff(maxb)  
   !
-#  if defined (SHMEM)
+#  if defined __SHMEM
   !
   ! ... SHMEM specific 
   !
@@ -143,7 +143,7 @@ SUBROUTINE reduce( dim, ps )
   !
   nbuf = dim / maxb
   !
-#  if defined (SHMEM)
+#  if defined __SHMEM
   !
   start = my_pool_id * nproc_pool
   !
@@ -151,7 +151,7 @@ SUBROUTINE reduce( dim, ps )
   !
   DO n = 1, nbuf
      !
-#  if defined (SHMEM)
+#  if defined __SHMEM
      !
      CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+(n-1)*maxb), &
                                   maxb, start, 0, nprocp, pWrkData, pWrkSync )
@@ -173,7 +173,7 @@ SUBROUTINE reduce( dim, ps )
   !
   IF ( ( dim - nbuf * maxb ) > 0 ) THEN
      !
-#  if defined (SHMEM)
+#  if defined __SHMEM
      !
      CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+nbuf*maxb), (dim-nbuf*maxb), &
                                   start, 0, nprocp, pWrkData, pWrkSync )

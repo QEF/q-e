@@ -31,11 +31,15 @@ subroutine elphon
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
-  rewind (iudvscf)
+  !!! rewind (iudvscf)
   imode0 = 0
   do irr = 1, nirr
      allocate (dvscfin ( nrxx , nspin , npert(irr)) )
-     read (iudvscf) dvscfin
+     !!! read (iudvscf) dvscfin
+     do ipert = 1, npert (irr)
+        call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
+                           imode0 + ipert, -1 )
+     end do
      if (doublegrid) then
         allocate (dvscfins ( nrxxs , nspin , npert(irr)) )
         do is = 1, nspin

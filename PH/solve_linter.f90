@@ -521,8 +521,14 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   if (convt) then
      call drhodvus (irr, imode0, dvscfin, npe)
-     if (fildvscf.ne.' ') write (iudvscf) dvscfin
-     if (elph) call elphel (npe, imode0, dvscfins)
+     !!! if (fildvscf.ne.' ') write (iudvscf) dvscfin
+     if (fildvscf.ne.' ') then
+        do ipert = 1, npert (irr)
+           call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
+                              imode0 + ipert, +1 )
+        end do
+        if (elph) call elphel (npe, imode0, dvscfins)
+     end if
   endif
   if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
   if (lmetq0) deallocate (ldoss)

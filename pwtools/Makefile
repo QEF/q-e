@@ -37,7 +37,6 @@ MODULES = \
 ../Modules/mp.o \
 ../Modules/mp_global.o \
 ../Modules/parallel_include.o \
-../Modules/shmem_include.o \
 ../Modules/parameters.o \
 ../Modules/supercell.o \
 ../Modules/splinelib.o

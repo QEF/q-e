@@ -1,3 +1,12 @@
+1 Nov 2004   more CP/FPMD merging, cleanup (CC)
+             Calculation of LDA+U contribution to forces modified:
+             should be faster (SdG)
+             Example 22 uses the same pseudo generated in
+             atomic/gen-pseudo (ADC)
+             Makefile and ChangeLog cleanup (PG)
+             Electron-phonon coefficient calculation should 
+             work also after a restart - to be tested (PG)
+
 30 Oct 2004 - pwcond can now deal with spinor wavefunctions and with
              fully relativistic PPs with spin-orbit. Initial 
              implementation (still quite experimental). (ADC)
@@ -6,10 +15,9 @@
              Several improvements to the pwcond code. Now much faster. (ADC)
 
 26 Oct 2004  Patches from Axel Kohlmayer:
-             - removed another call to check()
              - iotk_scan in iotk_module had a mixed up 'intent' statement.
              - sun ultra fire 3 compiler warnings
-             - cleanup in filename lenght (256)
+             - cleanup in filename lenght (brought to 256)
              - cleanup in include files
              Added lapack_atlas for Mac/OS (Pascal Thibadeau)
 
