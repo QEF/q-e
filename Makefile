@@ -89,22 +89,15 @@ veryclean: clean
 	- /bin/rm -f make.rules make.sys */.dependencies \
 		     config.log config.status */dum1 */dum2 bin/*.x
 
-# build list of files to archive and pass it to tar
-# don't archive CVS directories
-# use xargs because arguments list may exceed the shell's limits
-# must use tar rvf, NOT cvf because xargs may call tar multiple times
-# for the same reason can't pipe directly to gzip
 tar:
-	rm -f pw.tar pw.tar.gz
-	touch pw.tar
-	tar cvf pw.tar pw.tar # create empty archive to start with
-	find License README */README INSTALL configure \
-	     makedeps.sh moduledep.sh Makefile */Makefile */.dependencies \
-	     configure.new configure.ac config.guess config.sub \
-	     install-sh make.rules.in make.sys.in \
-	     */*.f90 */*.c */*.f clib/*.h include/*.h* \
-	     install upftools *docs *_examples pseudo \
-	     -type f | \
-	grep -v /CVS/ | xargs tar rvf pw.tar
+	tar cvf pw.tar \
+	    License README */README INSTALL configure \
+	    makedeps.sh moduledep.sh Makefile */Makefile */.dependencies \
+	    configure.new configure.ac config.guess config.sub install-sh \
+	    make.rules.in make.sys.in \
+	    */*.f90 */*.c */*.f clib/*.h include/*.h*
+	# archive a few entire directories, but without CVS subdirs
+	find install upftools *docs *_examples pseudo -type f | \
+		grep -v /CVS/ | xargs tar rvf pw.tar
 	gzip pw.tar
 
