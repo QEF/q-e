@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -182,11 +182,15 @@ MODULE bfgs_module
           !
        END IF
        !
-       WRITE( stdout, '(/,5X,"scf  iteration = ",I3)' ) scf_iter
-       WRITE( stdout, '(  5X,"bfgs iteration = ",I3)' ) bfgs_iter
-       WRITE( stdout, '(  5X,"energy new     = ",F18.10)' ) energy
+       WRITE( UNIT = stdout, &
+            & FMT = '(/,5X,"number of ionic steps",T30,"= ",I3)' ) scf_iter
+       WRITE( UNIT = stdout, &
+            & FMT = '(  5X,"number of bfgs  steps",T30,"= ",I3,/)' ) bfgs_iter
        IF ( scf_iter > 1 ) &
-          WRITE( stdout, '(  5X,"energy old     = ",F18.10)' ) energy_old
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"energy old",T30,"= ",F18.10," ryd")' ) energy_old
+       WRITE( UNIT = stdout, &
+            & FMT = '(5X,"energy new",T30,"= ",F18.10," ryd",/)' ) energy
        !
        IF ( energy > energy_old ) THEN
           !
@@ -196,19 +200,22 @@ MODULE bfgs_module
           !	  
           lin_iter = lin_iter + 1
           !
-          WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old",/)' )
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"CASE: energy_new > energy_old",/)' )
           !
           ! ... the old trust radius is reduced by a factor 2
           !
           trust_radius = 0.5D0 * trust_radius_old
           !
-          WRITE( stdout, '(5X,"trust_radius = ",F14.10)' ) trust_radius
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
+              trust_radius
           !
           IF ( trust_radius < trust_radius_min ) THEN
              !
              ! ... the history is reset
              !     
-             WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
+             WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
              !
              inverse_hessian = identity(dim)
              !
@@ -239,17 +246,28 @@ MODULE bfgs_module
           lin_iter  = 1
           bfgs_iter = bfgs_iter + 1
           !
-          WRITE( stdout, '(/,5X,"CASE: energy_new < energy_old",/)' )
-          !
           IF ( bfgs_iter > 1 ) THEN
+             !
+             WRITE( UNIT = stdout, &
+                  & FMT = '(5X,"CASE: energy_new < energy_old",/)' )
              !
              CALL check_wolfe_conditions( lwolfe, energy, gradient )
              !
-             WRITE( stdout, '(5X,"lwolfe       = ",L1)' ) lwolfe
+             IF ( lwolfe ) THEN
+                !
+                WRITE( UNIT = stdout, &
+                     & FMT = '(5X,"Wolfe conditions satisfied",/)' )
+                !
+             ELSE
+                !
+                WRITE( UNIT = stdout, &
+                     & FMT = '(5X,"Wolfe conditions not satisfied",/)' )
+                !
+             END IF     
              !
              CALL update_inverse_hessian( gradient, dim, stdout )
              !
-          END IF   
+          END IF
           !
           ! ... bfgs direction ( not normalized ) 
           !
@@ -261,11 +279,11 @@ MODULE bfgs_module
              !
              bfgs_step = - bfgs_step
              !
-             WRITE( stdout, '(/,5X,"search direction reversed",/)' )
+             WRITE( UNIT = stdout, FMT = '(5X,"search direction reversed",/)' )
              !
              ! ... the history is reset
              !     
-             WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
+             WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
              !
              inverse_hessian = identity(dim)
              !
@@ -294,7 +312,9 @@ MODULE bfgs_module
              !
           END IF
           !
-          WRITE( stdout, '(5X,"trust_radius = ",F14.10)' ) trust_radius
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
+              trust_radius
           !
        END IF  
        !
@@ -302,7 +322,8 @@ MODULE bfgs_module
        !
        IF ( norm( bfgs_step ) < eps16 ) THEN
           !
-          WRITE( stdout, '(5X,"WARNING : norm( bfgs_step ) = ",F14.10)' ) &
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"WARNING : norm( bfgs_step )",T30,"= ",F18.10)' ) &
               norm( bfgs_step )
           !
           bfgs_step = - gradient
@@ -417,11 +438,15 @@ MODULE bfgs_module
           !
        END IF
        !
-       WRITE( stdout, '(/,5X,"scf  iteration = ",I3)' ) scf_iter
-       WRITE( stdout, '(  5X,"bfgs iteration = ",I3)' ) bfgs_iter
-       WRITE( stdout, '(  5X,"energy new     = ",F18.10)' ) energy
+       WRITE( UNIT = stdout, &
+            & FMT = '(/,5X,"number of ionic steps",T30,"= ",I3)' ) scf_iter
+       WRITE( UNIT = stdout, &
+            & FMT = '(  5X,"number of bfgs  steps",T30,"= ",I3,/)' ) bfgs_iter
        IF ( scf_iter > 1 ) &
-          WRITE( stdout, '(  5X,"energy old     = ",F18.10)' ) energy_old
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"energy old",T30,"= ",F18.10," ryd")' ) energy_old
+       WRITE( UNIT = stdout, &
+            & FMT = '(5X,"energy new",T30,"= ",F18.10," ryd",/)' ) energy
        !
        IF ( energy > energy_old ) THEN
           !
@@ -431,19 +456,22 @@ MODULE bfgs_module
           !	  
           lin_iter = lin_iter + 1
           !
-          WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old",/)' )
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"CASE: energy_new > energy_old",/)' )
           !
           ! ... the old trust radius is reduced by a factor 2
           !
           trust_radius = 0.5D0 * trust_radius_old
           !
-          WRITE( stdout, '(5X,"trust_radius = ",F14.10)' ) trust_radius
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
+              trust_radius
           !
           IF ( trust_radius < trust_radius_min ) THEN
              !
              ! ... the history is reset
              !     
-             WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
+             WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
              !
              pos_old      = 0.D0
              gradient_old = 0.D0
@@ -475,7 +503,8 @@ MODULE bfgs_module
           lin_iter  = 1
           bfgs_iter = bfgs_iter + 1
           !
-          WRITE( stdout, '(/,5X,"CASE: energy_new < energy_old",/)' )
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"CASE: energy_new < energy_old",/)' )
           !
           ! ... Wolfe conditions and hessian update are needed after
           ! ... the first bfgs iteration
@@ -488,7 +517,17 @@ MODULE bfgs_module
              !
              CALL check_wolfe_conditions( lwolfe, energy, gradient )
              !
-             WRITE( stdout, '(5X,"lwolfe       = ",L1)' ) lwolfe
+             IF ( lwolfe ) THEN
+                !
+                WRITE( UNIT = stdout, &
+                     & FMT = '(5X,"Wolfe conditions satisfied",/)' )
+                !
+             ELSE
+                !
+                WRITE( UNIT = stdout, &
+                     & FMT = '(5X,"Wolfe conditions not satisfied",/)' )
+                !
+             END IF
              !
              CALL lbfgs_update( pos, gradient, dim )
              !
@@ -500,11 +539,11 @@ MODULE bfgs_module
              !
              bfgs_step = - bfgs_step
              !
-             WRITE( stdout, '(/,5X,"search direction reversed")' )
+             WRITE( UNIT = stdout, FMT = '(5X,"search direction reversed")' )
              !
              ! ... the history is reset
              !     
-             WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
+             WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
              !
              pos_old      = 0.D0
              gradient_old = 0.D0
@@ -535,7 +574,9 @@ MODULE bfgs_module
              !
           END IF
           !
-          WRITE( stdout, '(5X,"trust_radius = ",F14.10)' ) trust_radius
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
+              trust_radius
           !
        END IF  
        !
@@ -543,7 +584,8 @@ MODULE bfgs_module
        !
        IF ( norm( bfgs_step ) < eps16 ) THEN
           !
-          WRITE( stdout, '(5X,"WARNING : norm( bfgs_step ) = ",F14.10)' ) &
+          WRITE( UNIT = stdout, &
+               & FMT = '(5X,"WARNING : norm( bfgs_step )",T30,"= ",F18.10)' ) &
               norm( bfgs_step )
           !
           bfgs_step = - gradient
@@ -938,7 +980,7 @@ MODULE bfgs_module
           !
           ! ... the history is reset
           !
-          WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
+          WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
           !
           IF ( ALLOCATED( inverse_hessian ) ) THEN
              !
@@ -977,13 +1019,16 @@ MODULE bfgs_module
        CHARACTER (LEN=*), INTENT(IN) :: scratch       
        !       
        !
-       WRITE( stdout, '(/,5X,"bfgs converged in ",I3," scf iterations, and ", &
-                        & I3," bfgs iterations" )' ) scf_iter, bfgs_iter
-       WRITE( stdout, '(/,5X,"Final energy: ",F18.10," ryd"/)' ) energy
+       WRITE( UNIT = stdout, &
+            & FMT = '(/,5X,"bfgs converged in ",I3," ionic steps and ", &
+            &         I3," bfgs steps",/)' ) scf_iter, bfgs_iter
+       WRITE( UNIT = stdout, &
+            & FMT = '(5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
        !
        IF ( ALLOCATED( inverse_hessian ) ) THEN
           !
-          WRITE( stdout, '(/,5X,"Saving the approssimate hessian")' )
+          WRITE( UNIT = stdout, &
+               & FMT = '(/,5X,"Saving the approssimate hessian",/)' )
           !
           OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
               & '.hess', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  

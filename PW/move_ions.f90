@@ -140,7 +140,7 @@ SUBROUTINE move_ions()
               !       
            END IF       
            !
-           WRITE( stdout, '(5X,"new conv_thr = ",F14.10,/)' ) tr2
+           WRITE( stdout, '(5X,"new conv_thr",T30,"= ",F18.10,/)' ) tr2
            !
         END IF
         !   
