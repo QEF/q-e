@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  8Jul2004 at 17:29:32 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:29:56 
 
      -------------------- All-electron run ------------------------------
 
@@ -12,7 +12,7 @@
      mesh =1277 r(mesh) =  98.81913 xmin = -7.00 dx = 0.01250
 
      n l j   nl                  e(Ryd)         e(Ha)          e(eV)
-     Spin orbit splitted results
+     Spin orbit split results
      1 0 0.5 1S 1( 2.00)     -5751.4244     -2875.7122    -78252.7300
      2 0 0.5 2S 1( 2.00)     -1009.8481      -504.9240    -13739.7908
      2 1 0.5 2P 1( 2.00)      -968.0890      -484.0445    -13171.6253
@@ -59,7 +59,7 @@
      Etot =  -36872.530432 Ry,  -18436.265216 Ha, -501680.274547 eV
 
      Ekin =   42190.739575 Ry,   21095.369787 Ha,  574038.764505 eV
-     Encl =  -92731.420913 Ry,  -46365.710457 Ha,-1261685.166663 eV
+     Encl =  -92731.420913 Ry,  -46365.710457 Ha,-1261685.166662 eV
      Eh   =   14361.465533 Ry,    7180.732767 Ha,  195399.227752 eV
      Exc  =    -693.314626 Ry,    -346.657313 Ha,   -9433.100141 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -175,16 +175,14 @@
      --------------- Generating US pseudopotential ---------------------
 
 
-      Generating local potential, lloc=    0
+      Generating local potential: lloc=0, matching radius rcloc =   2.6000
 
       Computing core charge for nlcc: 
 
        r > 1.21 : true rho core
        r < 1.21 : rho core = a sin(br)/r    a=  13.12  b=   2.13
 
- ***                                                                            
-     ***
-             integrated charge :  10.50
+             integrated core pseudo-charge :  10.50
 
 
       Wfc   5D  rcut= 2.100  Estimated cut-off energy=       53.37 Ry
@@ -250,7 +248,7 @@
      mesh =1277 r(mesh) =  98.81913 xmin = -7.00 dx = 0.01250
 
      n l j   nl                  e(Ryd)         e(Ha)          e(eV)
-     Spin orbit splitted results
+     Spin orbit split results
      1 0 0.5 1S 1( 2.00)     -5751.4244     -2875.7122    -78252.7300
      2 0 0.5 2S 1( 2.00)     -1009.8481      -504.9240    -13739.7908
      2 1 0.5 2P 1( 2.00)      -968.0890      -484.0445    -13171.6253
@@ -297,7 +295,7 @@
      Etot =  -36872.530432 Ry,  -18436.265216 Ha, -501680.274547 eV
 
      Ekin =   42190.739575 Ry,   21095.369787 Ha,  574038.764505 eV
-     Encl =  -92731.420913 Ry,  -46365.710457 Ha,-1261685.166663 eV
+     Encl =  -92731.420913 Ry,  -46365.710457 Ha,-1261685.166662 eV
      Eh   =   14361.465533 Ry,    7180.732767 Ha,  195399.227752 eV
      Exc  =    -693.314626 Ry,    -346.657313 Ha,   -9433.100141 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -410,30 +408,31 @@
      -------------------- End of All-electron run ----------------------
 
      Computing logarithmic derivative in   2.48945
+     Core only energy    -15.77261148
+     Computing logarithmic derivative in   2.48945
 
      -------------- Testing the pseudopotential ------------------------
 
-      Core only energy    -15.77261148
      Pt                                                                         
      dirac relativistic calculation
 
-     atomic number is 78.00
+     atomic number is 78.00   valence charge is 10.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
      mesh =1277 r(mesh) =  98.81913 xmin = -7.00 dx = 0.01250
 
      n l  j  nl             e AE (Ryd)       e PS (Ryd)   De AE-PS (Ryd) 
      3 2 1.5 5D   1( 4.00)       -0.66391       -0.66394        0.00003
      3 2 2.5 5D   1( 4.00)       -0.55964       -0.55966        0.00002
-     1 0 0.5 6S   1( 2.00)       -0.49700       -0.49700        0.00000
      2 1 0.5 6P   1( 0.00)       -0.13223       -0.13226        0.00003
      2 1 1.5 6P   1( 0.00)       -0.08345       -0.08348        0.00003
+     1 0 0.5 6S   1( 2.00)       -0.49700       -0.49700        0.00000
 
      eps = 4.6E-15  iter = 16
  
      Etot =  -36872.530432 Ry,  -18436.265216 Ha, -501680.274547 eV
      Etotps =   -53.164910 Ry,     -26.582455 Ha,    -723.351139 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =     -53.164910 Ry,   Delta E=      53.164910
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =      17.794335 Ry,       8.897167 Ha,     242.106158 eV
      Encl =     -86.175497 Ry,     -43.087748 Ha,   -1172.486576 eV
@@ -444,4 +443,3 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logarithmic derivative in   2.48945

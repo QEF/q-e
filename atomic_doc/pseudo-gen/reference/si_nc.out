@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is 20Aug2004 at 16:53:50 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:29:59 
 
      -------------------- All-electron run ------------------------------
 
@@ -17,13 +17,13 @@
      3 0     3S 1( 2.00)        -1.0791        -0.5395       -14.6814
      3 1     3P 1( 1.50)        -0.5650        -0.2825        -7.6873
 
-     eps = 5.4E-15  iter = 14
+     eps = 6.6E-15  iter = 14
  
-     Etot =    -578.191762 Ry,    -289.095881 Ha,   -7866.761474 eV
+     Etot =    -578.191762 Ry,    -289.095881 Ha,   -7866.761470 eV
 
-     Ekin =     577.344423 Ry,     288.672212 Ha,    7855.232752 eV
+     Ekin =     577.344423 Ry,     288.672212 Ha,    7855.232756 eV
      Encl =   -1373.995424 Ry,    -686.997712 Ha,  -18694.306938 eV
-     Eh   =     259.432642 Ry,     129.716321 Ha,    3529.788638 eV
+     Eh   =     259.432642 Ry,     129.716321 Ha,    3529.788637 eV
      Exc  =     -40.973403 Ry,     -20.486701 Ha,    -557.475926 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
      Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -47,7 +47,7 @@
      --------------- Generating NC pseudopotential ---------------
 
 
-      Generating local potential, lloc=    1
+      Generating local potential: lloc=1, matching radius rcloc =   2.4000
 
 
       Wfc   3S  rcut= 2.400  Using Troullier-Martins method 
@@ -70,13 +70,13 @@
      3 0     3S 1( 2.00)        -1.0791        -0.5395       -14.6814
      3 1     3P 1( 1.50)        -0.5650        -0.2825        -7.6873
 
-     eps = 5.4E-15  iter = 14
+     eps = 2.4E-15  iter = 15
  
-     Etot =    -578.191762 Ry,    -289.095881 Ha,   -7866.761474 eV
+     Etot =    -578.191761 Ry,    -289.095881 Ha,   -7866.761468 eV
 
-     Ekin =     577.344423 Ry,     288.672212 Ha,    7855.232752 eV
-     Encl =   -1373.995424 Ry,    -686.997712 Ha,  -18694.306938 eV
-     Eh   =     259.432642 Ry,     129.716321 Ha,    3529.788638 eV
+     Ekin =     577.344424 Ry,     288.672212 Ha,    7855.232759 eV
+     Encl =   -1373.995424 Ry,    -686.997712 Ha,  -18694.306939 eV
+     Eh   =     259.432642 Ry,     129.716321 Ha,    3529.788637 eV
      Exc  =     -40.973403 Ry,     -20.486701 Ha,    -557.475926 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
      Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -96,12 +96,14 @@
 
      -------------------- End of All-electron run ----------------------
 
+     Computing logarithmic derivative in   1.49887
+     Computing logarithmic derivative in   1.49887
 
      -------------- Testing the pseudopotential ------------------------
 
      Si                                                                         
 
-     atomic number is 14.00
+     atomic number is 14.00   valence charge is  4.00
      dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1141 r(mesh) = 100.57892 xmin = -7.00 dx = 0.01250
 
@@ -111,17 +113,17 @@
 
      eps = 2.1E-16  iter =  6
  
-     Etot =    -578.191762 Ry,    -289.095881 Ha,   -7866.761474 eV
-     Etotps =    -7.270509 Ry,      -3.635254 Ha,     -98.921088 eV
+     Etot =    -578.191761 Ry,    -289.095881 Ha,   -7866.761468 eV
+     Etotps =    -7.270509 Ry,      -3.635254 Ha,     -98.921087 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =      -7.270509 Ry,   Delta E=       7.270509
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
-     Ekin =       1.299292 Ry,       0.649646 Ha,      17.677903 eV
+     Ekin =       1.299292 Ry,       0.649646 Ha,      17.677902 eV
      Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
      Ehrt =       4.774163 Ry,       2.387082 Ha,      64.956309 eV
      Ecxc =      -1.750360 Ry,      -0.875180 Ha,     -23.815054 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=     -11.593603 Ry,      -5.796802 Ha,    -157.740247 eV
+     Epseu=     -11.593603 Ry,      -5.796802 Ha,    -157.740245 eV
 
      -------------- End of pseudopotential test ------------------------
 

@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 19:19:13 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:29:54 
 
      -------------------- All-electron run ------------------------------
 
@@ -49,7 +49,7 @@
      --------------- Generating NC pseudopotential ---------------
 
 
-      Generating local potential, lloc=    2
+      Generating local potential: lloc=2, matching radius rcloc =   2.1000
 
 
       Wfc   3S  rcut= 2.600  Estimated cut-off energy=       18.52 Ry
@@ -105,12 +105,13 @@
      -------------------- End of All-electron run ----------------------
 
      Computing logarithmic derivative in   2.40806
+     Computing logarithmic derivative in   2.40806
 
      -------------- Testing the pseudopotential ------------------------
 
      Al                                                                         
 
-     atomic number is 13.00
+     atomic number is 13.00   valence charge is  3.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
 
@@ -118,12 +119,12 @@
      1 0     3S   1( 2.00)       -0.57419       -0.57419        0.00000
      2 1     3P   1( 1.00)       -0.20554       -0.20554        0.00000
 
-     eps = 2.1E-25  iter =  1
+     eps = 2.9E-24  iter =  1
  
      Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404145 eV
      Etotps =    -3.885009 Ry,      -1.942504 Ha,     -52.858649 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =      -3.885009 Ry,   Delta E=       3.885009
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =      -0.316470 Ry,      -0.158235 Ha,      -4.305834 eV
      Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -134,4 +135,3 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logarithmic derivative in   2.40806

@@ -15,7 +15,6 @@
         pseudotype=3,
         lloc=0,
         file_pseudopw='Ptrel.RRKJ3',
-        zval=10.d0,
         nlcc=.true.,
         rcore=1.2,
         rcloc=2.5

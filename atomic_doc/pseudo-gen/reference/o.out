@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 19:19:13 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:29:53 
 
      -------------------- All-electron run ------------------------------
 
@@ -16,12 +16,12 @@
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
      3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 2.4E-15  iter = 15
+     eps = 8.4E-15  iter = 14
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386924 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386923 eV
 
-     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640595 eV
-     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835275 eV
+     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640596 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835274 eV
      Eh   =      72.821009 Ry,      36.410504 Ha,     990.788079 eV
      Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.980324 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -42,7 +42,7 @@
      --------------- Generating US pseudopotential ---------------------
 
 
-      Generating local potential, lloc=    2
+      Generating local potential: lloc=2, matching radius rcloc =   1.4000
 
 
       Wfc   2S  rcut= 1.400  Estimated cut-off energy=       64.20 Ry
@@ -98,12 +98,12 @@
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
      3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 2.4E-15  iter = 15
+     eps = 7.3E-15  iter = 14
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386924 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386923 eV
 
-     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640595 eV
-     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835275 eV
+     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640596 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835274 eV
      Eh   =      72.821009 Ry,      36.410504 Ha,     990.788079 eV
      Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.980324 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -121,12 +121,13 @@
      -------------------- End of All-electron run ----------------------
 
      Computing logarithmic derivative in   1.49455
+     Computing logarithmic derivative in   1.49455
 
      -------------- Testing the pseudopotential ------------------------
 
      O                                                                          
 
-     atomic number is  8.00
+     atomic number is  8.00   valence charge is  6.00
      dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
@@ -136,13 +137,13 @@
 
      eps = 2.2E-17  iter =  6
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386924 eV
-     Etotps =   -31.376651 Ry,     -15.688326 Ha,    -426.904443 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386923 eV
+     Etotps =   -31.376651 Ry,     -15.688326 Ha,    -426.904442 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =     -31.376651 Ry,   Delta E=      31.376651
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =      11.634538 Ry,       5.817269 Ha,     158.297197 eV
-     Encl =     -71.744648 Ry,     -35.872324 Ha,    -976.143329 eV
+     Encl =     -71.744648 Ry,     -35.872324 Ha,    -976.143327 eV
      Ehrt =      27.107741 Ry,      13.553870 Ha,     368.822499 eV
      Ecxc =      -6.463014 Ry,      -3.231507 Ha,     -87.934482 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -150,4 +151,3 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logarithmic derivative in   1.49455

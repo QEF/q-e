@@ -22,7 +22,6 @@
    lloc=1,
    tm=.true.,
    file_pseudopw='SiPBE_nc',
-   zval=4.d0,
  /
 2
 3S  1  0  2.00  0.00  2.40  2.40
