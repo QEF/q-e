@@ -7,36 +7,21 @@
 
 \begin{document} 
 
-% front page: no page number
-% enlarge page a little to let table of contents fit within
-%\thispagestyle{empty}
-%\enlargethispage*{1.5cm}
-
-\begin{center}
+\author{}
+\date{}
+\title{
   % PWscf and Democritos logos, raise the latter to align
   \epsfig{figure=pwscf,width=4cm}\hfill%
   \raisebox{0.5cm}{\epsfig{figure=democritos,width=8cm}}
+  \vspace{1.5cm}
   \\
   % title
-  \huge User's Guide for PWscf v.\version
-\end{center}
-
-%\author{}
-%\date{}
-%\title{
-%  % PWscf and Democritos logos, raise the latter to align
-%  \epsfig{figure=pwscf,width=4cm}\hfill%
-%  \raisebox{0.5cm}{\epsfig{figure=democritos,width=8cm}}
-%  \vspace{2cm}
-%  \\
-%  % title
-%  \huge User's Guide for ESPRESSO v.\version
-%}
-%\maketitle
+  \huge User's Guide for ESPRESSO v.\version
+}
+\maketitle
 
 \tableofcontents
 
-% end of front page
 \clearpage
 
 \section{Introduction}
@@ -305,6 +290,63 @@ configuring \texttt{configure} scares you, or if you don't know what
 to do with the \texttt{make.sys} file, you may want to try the manual
 configuration, described below.
 
+The file \texttt{make.sys} may still require some tweaking if produced
+by the automatic configuration; if produced by manual configuration,
+it MUST be edited.
+In most cases you will need to specify the name and location of
+libraries (see next section).
+In some cases you may need to change preprocessing options
+(\texttt{CPPFLAGS}) and compiler options (\texttt{FFLAGS}).
+
+\paragraph{Please Note:}
+
+if you change \texttt{CPPFLAGS} or \texttt{FFLAGS} after the first
+compilation, run \texttt{make clean} and recompile everything, unless
+you know exactly which routines are affected and how to force their
+recompilation.
+
+\subsubsection{Libraries}
+
+ESPRESSO uses the linear algebra BLAS/LAPACK libraries.
+A copy of the needed routines is provided with the distribution.
+It is however very convenient to use optimized BLAS/LAPACK contained
+in vendor-specific mathematical libraries, such as:
+
+\begin{quote}
+  \texttt{essl} for IBM\\
+  \texttt{complib.sgimath} for SGI Origin\\
+  \texttt{scilib} for Cray/T3e\\
+  \texttt{sunperf} for Sun\\
+  \texttt{MKL} for Intel Linux PCs\\
+  \texttt{ACML} for AMD Linux PCs\\
+  \texttt{cxml} for HP-Compaq Alphas.
+\end{quote}
+
+Otherwise, it is a good idea to use optimized ATLAS libraries instead
+of plain BLAS/LAPACK.
+If these are not installed or not satisfactory on your system,
+download the appropriate binaries from
+\htmladdnormallink{\texttt{http://www.netlib.org/}}%
+                  {http://www.netlib.org/}
+or download and compile the sources.
+This may take some time and effort.
+
+ESPRESSO uses the Fast Fourier Transform from the FFTW library
+(\htmladdnormallink{\texttt{http://www.fftw.org/}}%
+                   {http://www.fftw.org/})
+or from vendor-specific mathematical libraries.
+If you use FFTW, you can either compile the copy that comes with the
+distribution (this is the default configuration) or link to a
+precompiled FFTW library.
+In the latter case, follow the instructions in the files
+\texttt{Install/Make.*}, and remember that only FFTW v.~$<3$ is
+supported: FFTW v.~3 requires changes in the code.
+
+If you want to use external precompiled libraries, you need to
+correctly specify their location in the \texttt{make.sys} file.
+The \texttt{configure} scripts tries to guess where your libraries
+are, but it cannot find libraries in nonstandard places.
+
 \subsubsection{Manual configuration}
 
 From the top directory, type:
@@ -375,66 +417,170 @@ The former step could also be avoided in principle (distributions like
 Knoppix run directly from the CD-ROM) but for serious use you will
 need to have disk access.
 
-\subsection{Adapt to your local configuration}
+\subsection{Compile}
 
-The file \texttt{make.sys} may still require some tweaking if produced
-by the automatic configuration; if produced by manual configuration,
-it MUST be edited.
-In most cases you will need to specify the name and location of
-libraries.
-In some cases you may need to change preprocessing options
-(\texttt{CPPFLAGS}) and compiler options (\texttt{FFLAGS}).
+There are a few adjustable parameters in
+\texttt{Modules/parameters.f90}.
+The present values will work for most cases.
+All other variables are dynamically allocated: you do not need to
+recompile your code for a different system.
 
-\paragraph{Please Note:}
+\texttt{make} with no arguments yields a list of valid
+targets:
 
-if you change \texttt{CPPFLAGS} or \texttt{FFLAGS} after the first
-compilation, run \texttt{make clean} and recompile everything, unless
-you know exactly which routines are affected and how to force their
-recompilation.
+\begin{itemize}
+  \item
+    \texttt{make pw} produces \texttt{PW/pw.x} and
+    \texttt{PW/memory.x}.
 
-\subsubsection{Libraries}
+    \texttt{pw.x} calculates electronic structure, structural
+    optimization, molecular dynamics, barriers with NEB.
+    \texttt{memory.x} is an auxiliary program that checks the input of
+    \texttt{pw.x} for correctness and yields a rough (under-) estimate
+    of the required memory.
+  \item
+    \texttt{make ph} produces \texttt{PH/ph.x}.
 
-ESPRESSO uses the linear algebra BLAS/LAPACK libraries.
-A copy of the needed routines is provided with the distribution.
-It is however very convenient to use optimized BLAS/LAPACK contained
-in vendor-specific mathematical libraries, such as:
+    \texttt{ph.x} calculates phonon frequencies and displacement
+    patterns, dielectric tensors, effective charges (uses data
+    produced by \texttt{pw.x}).
+  \item
+    \texttt{make d3} produces \texttt{D3/d3.x}
 
-\begin{quote}
-  \texttt{essl} for IBM\\
-  \texttt{complib.sgimath} for SGI Origin\\
-  \texttt{scilib} for Cray/T3e\\
-  \texttt{sunperf} for Sun\\
-  \texttt{MKL} for Intel Linux PCs\\
-  \texttt{ACML} for AMD Linux PCs\\
-  \texttt{cxml} for HP-Compaq Alphas.
-\end{quote}
+    \texttt{d3.x} calculates anharmonic phonon lifetimes (third-order
+    derivatives of the energy), using data produced by \texttt{pw.x}
+    and \texttt{ph.x}.
+  \item
+    \texttt{make gamma} produces \texttt{Gamma/phcg.x}.
 
-Otherwise, it is a good idea to use optimized ATLAS libraries instead
-of plain BLAS/LAPACK.
-If these are not installed or not satisfactory on your system,
-download the appropriate binaries from
-\htmladdnormallink{\texttt{http://www.netlib.org/}}%
-                  {http://www.netlib.org/}
-or download and compile the sources.
-This may take some time and effort.
+    \texttt{phcg.x} is a version of \texttt{ph.x} that calculates
+    phonons at $\mathbf{q}=0$ using conjugate-gradient minimization of
+    the density functional expanded to second-order.
+    Only the $\Gamma$ ($\mathbf{q}=0$) point is used for Brillouin
+    zone integration.
+    It is faster and takes less memory than \texttt{ph.x}, but does
+    not support Ultrasoft pseudopotentials.
+  \item
+    \texttt{make raman} produces \texttt{Raman/ram.x}.
 
-ESPRESSO uses the Fast Fourier Transform from the FFTW library
-(\htmladdnormallink{\texttt{http://www.fftw.org/}}%
-                   {http://www.fftw.org/})
-or from vendor-specific mathematical libraries.
-If you use FFTW, you can either compile the copy that comes with the
-distribution (this is the default configuration) or link to a
-precompiled FFTW library.
-In the latter case, follow the instructions in the files
-\texttt{Install/Make.*}, and remember that only FFTW v.~$<3$ is
-supported: FFTW v.~3 requires changes in the code.
+    \texttt{ram.x} calculates nonresonant Raman tensor coefficients
+    (derivatives of the polarizability wrt atomic displacements)
+    using the $(2n+1)$ theorem (written by Gernot Deinzer).
+  \item
+    \texttt{make pp} produces several codes for data postprocessing, in
+    \texttt{PP/} (see list below).
+  \item
+    \texttt{make tools} produces several utility programs, mostly for
+    phonon calculations, in \texttt{pwtools/} (see list below).
+  \item
+    \texttt{make nc} produces \texttt{PWNC/pw.x}, the version of
+    \texttt{pw.x} that works with noncolinear magnetism
+     and spin-orbit splitting (experimental).
+  \item
+    \texttt{make pwcond} produces \texttt{PWCOND/pwcond.x}, for
+    ballistic conductance calculations (experimental).
+  \item
+    \texttt{make pwall} produces all of the above.
+  \item
+    \texttt{make ld1} produces utilities for pseudopotential
+    generation in directory \texttt{atomic/} (see the specific
+    documentation in \texttt{atomic\_doc/}).
+  \item
+    \texttt{make upf} produces utilities for pseudopotential
+    conversion in directory \texttt{upftools/} (see
+    ``Pseudopotential'' section).
+  \item
+    \texttt{make links} produces links to all executables in directory
+    \texttt{bin/}.
+  \item
+    \texttt{make all} produces all of the above, plus the CP and FPMD
+    codes (if present).
+\end{itemize}
+For the setup of the GUI, refer to the
+\texttt{PWgui-}\emph{X.Y.Z}\texttt{/INSTALL} file, where \emph{X.Y.Z}
+stands for the version number of the GUI (presently 0.6.2).
+If you are using the CVS-sources, then see the \texttt{GUI/README}
+file instead.
 
-If you want to use external precompiled libraries, you need to
-correctly specify their location in the \texttt{make.sys} file.
-The \texttt{configure} scripts tries to guess where your libraries
-are, but it cannot find libraries in nonstandard places.
+The codes for data postprocessing in \texttt{PP/} are:
+\begin{itemize}
+  \item \texttt{pp.x} extracts the specified data from files
+        produced by \texttt{pw.x} for further processing
+  \item \texttt{bands.x} extracts eigenvalues from files produced
+        by \texttt{pw.x} for band structure plotting
+  \item \texttt{projwfc.x} calculates projections of wavefunction
+        over atomic orbitals, performs L\"owdin population
+        analysis and calculates projected density of states
+  \item \texttt{chdens.x} plots data produced by \texttt{pp.x},
+        writing them into a format that is suitable for several
+        plotting programs
+  \item \texttt{plotrho.x} reads the output of \texttt{chdens.x},
+        produces PostScript 2-d contour plots
+  \item \texttt{plotband.x} reads the output of \texttt{bands.x},
+        produces band structure PostScript plots
+  \item \texttt{average.x} calculates planar averages of
+        potentials
+  \item \texttt{voronoy.x} divides the charge density into Voronoy
+        polyhedra (obsolete, use at your own risk)
+  \item \texttt{dos.x} calculates electronic Density of States
+        (DOS).
+  \item \texttt{pw2wan.x}: interface with a code calculating
+        Wannier functions, soon to be released: see 
+        \htmladdnormallink{\texttt{http://www.wannier-transport.org/}}%
+                       {http://www.wannier-transport.org/}.
+  \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
+        for Quantum Monte Carlo calculation
+        (\htmladdnormallink%
+         {\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}}%
+         {http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html}).
+\end{itemize}
 
-\subsubsection{Installation issues}
+The utility programs in \texttt{pwtools/} are:
+\begin{itemize}
+  \item \texttt{dynmat.x} calculates LO-TO splitting at
+        $\mathbf{q}=0$ in insulator, IR cross sections, from the
+        dynamical matrix produced by \texttt{ph.x}
+  \item \texttt{q2r.x} calculates Interatomic Force Constants ion
+        real space from dynamical matrices produced by
+        \texttt{ph.x} on a regular \textbf{q}-grid
+  \item \texttt{matdyn.x} produces phonon frequencies at a generic
+        wave vector using the Interatomic Force Constants
+        calculated by \texttt{q2r.x}; may also calculate phonon
+        DOS
+  \item \texttt{fqha.x} for quasi-harmonic calculations
+  \item \texttt{lambda.x} calculates the electron-phonon coefficient
+        $\lambda$ and the function $\alpha^2F(\omega)$
+  \item \texttt{dist.x} calculates distances and angles between
+        atoms in a cell, taking into account periodicity
+  \item \texttt{ev.x} fits energy-vs-volume data to an equation of
+        state
+  \item \texttt{kpoints.x} produces lists of k-points
+  \item \texttt{pwi2xsf.sh}, \texttt{pwo2xsf.sh} process
+        respectively input and output files (not data files!) for
+        \texttt{pw.x} and produce an XSF-formatted file suitable
+        for plotting with XCrySDen, a powerful crystalline and
+        molecular structure visualization program 
+        (\texttt{http://www.xcrysden.org/}).
+        BEWARE: the \texttt{pwi2xsf.sh} shell script requires the
+        \texttt{pwi2xsf.x} executables to be located somewhere in
+        your \texttt{\$PATH}.
+  \item \texttt{band\_plot.x}: undocumented and possibly obsolete
+  \item \texttt{bs.awk}, \texttt{mv.awk} are scripts that process
+        the output of \texttt{pw.x} (not data files!).
+        Usage:
+\begin{verbatim}
+  awk -f bs.awk < my-pw-file > myfile.bs
+  awk -f mv.awk < my-pw-file > myfile.mv
+\end{verbatim}
+        The files so produced are suitable for use with
+        \texttt{xbs}, a very simple X-windows utility to display
+        molecules, available at:\\
+        \htmladdnormallink%
+        {\texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}}%
+        {http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
+\end{itemize}
+
+\subsection{Installation issues}
 
 The main development platforms are IBM SP and Intel/AMD PC with Linux
 and Intel compiler.
@@ -636,169 +782,6 @@ If you get errors at loading because symbols \texttt{LPUTP},
 \texttt{LGETV}, \texttt{LSETV} are undefined, you either need to link
 ``benchlib'', or to remove \texttt{-D\_\_BENCHLIB} and recompile
 (after a \texttt{make clean}).
-
-\subsection{Compile}
-
-There are a few adjustable parameters in
-\texttt{Modules/parameters.f90}.
-The present values will work for most cases.
-All other variables are dynamically allocated: you do not need to
-recompile your code for a different system.
-
-\texttt{make} with no arguments yields a list of valid
-targets:
-
-\begin{itemize}
-  \item
-    \texttt{make pw} produces \texttt{PW/pw.x} and
-    \texttt{PW/memory.x}.
-
-    \texttt{pw.x} calculates electronic structure, structural
-    optimization, molecular dynamics, barriers with NEB.
-    \texttt{memory.x} is an auxiliary program that checks the input of
-    \texttt{pw.x} for correctness and yields a rough (under-) estimate
-    of the required memory.
-  \item
-    \texttt{make ph} produces \texttt{PH/ph.x}.
-
-    \texttt{ph.x} calculates phonon frequencies and displacement
-    patterns, dielectric tensors, effective charges (uses data
-    produced by \texttt{pw.x}).
-  \item
-    \texttt{make d3} produces \texttt{D3/d3.x}
-
-    \texttt{d3.x} calculates anharmonic phonon lifetimes (third-order
-    derivatives of the energy), using data produced by \texttt{pw.x}
-    and \texttt{ph.x}.
-  \item
-    \texttt{make gamma} produces \texttt{Gamma/phcg.x}.
-
-    \texttt{phcg.x} is a version of \texttt{ph.x} that calculates
-    phonons at $\mathbf{q}=0$ using conjugate-gradient minimization of
-    the density functional expanded to second-order.
-    Only the $\Gamma$ ($\mathbf{q}=0$) point is used for Brillouin
-    zone integration.
-    It is faster and takes less memory than \texttt{ph.x}, but does
-    not support Ultrasoft pseudopotentials.
-  \item
-    \texttt{make raman} produces \texttt{Raman/ram.x}.
-
-    \texttt{ram.x} calculates nonresonant Raman tensor coefficients
-    (derivatives of the polarizability wrt atomic displacements)
-    using the $(2n+1)$ theorem (written by Gernot Deinzer).
-  \item
-    \texttt{make pp} produces several codes for data postprocessing, in
-    \texttt{PP/} (see list below).
-  \item
-    \texttt{make tools} produces several utility programs, mostly for
-    phonon calculations, in \texttt{pwtools/} (see list below).
-  \item
-    \texttt{make nc} produces \texttt{PWNC/pw.x}, the version of
-    \texttt{pw.x} that works with noncolinear magnetism
-     and spin-orbit splitting (experimental).
-  \item
-    \texttt{make pwcond} produces \texttt{PWCOND/pwcond.x}, for
-    ballistic conductance calculations (experimental).
-  \item
-    \texttt{make pwall} produces all of the above.
-  \item
-    \texttt{make ld1} produces utilities for pseudopotential
-    generation in directory \texttt{atomic/} (see the specific
-    documentation in \texttt{atomic\_doc/}).
-  \item
-    \texttt{make upf} produces utilities for pseudopotential
-    conversion in directory \texttt{upftools/} (see
-    ``Pseudopotential'' section).
-  \item
-    \texttt{make links} produces links to all executables in directory
-    \texttt{bin/}.
-  \item
-    \texttt{make all} produces all of the above, plus the CP and FPMD
-    codes (if present).
-\end{itemize}
-For the setup of the GUI, refer to the
-\texttt{PWgui-}\emph{X.Y.Z}\texttt{/INSTALL} file, where \emph{X.Y.Z}
-stands for the version number of the GUI (presently 0.6.2).
-If you are using the CVS-sources, then see the \texttt{GUI/README}
-file instead.
-
-The codes for data postprocessing in \texttt{PP/} are:
-\begin{itemize}
-  \item \texttt{pp.x} extracts the specified data from files
-        produced by \texttt{pw.x} for further processing
-  \item \texttt{bands.x} extracts eigenvalues from files produced
-        by \texttt{pw.x} for band structure plotting
-  \item \texttt{projwfc.x} calculates projections of wavefunction
-        over atomic orbitals, performs L\"owdin population
-        analysis and calculates projected density of states
-  \item \texttt{chdens.x} plots data produced by \texttt{pp.x},
-        writing them into a format that is suitable for several
-        plotting programs
-  \item \texttt{plotrho.x} reads the output of \texttt{chdens.x},
-        produces PostScript 2-d contour plots
-  \item \texttt{plotband.x} reads the output of \texttt{bands.x},
-        produces band structure PostScript plots
-  \item \texttt{average.x} calculates planar averages of
-        potentials
-  \item \texttt{voronoy.x} divides the charge density into Voronoy
-        polyhedra (obsolete, use at your own risk)
-  \item \texttt{dos.x} calculates electronic Density of States
-        (DOS).
-  \item \texttt{pw2wan.x}: interface with a code calculating
-        Wannier functions, soon to be released: see 
-        \htmladdnormallink{\texttt{http://www.wannier-transport.org/}}%
-                       {http://www.wannier-transport.org/}.
-  \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
-        for Quantum Monte Carlo calculation
-        (\htmladdnormallink%
-         {\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}}%
-         {http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html}).
-\end{itemize}
-
-The utility programs in \texttt{pwtools/} are:
-\begin{itemize}
-  \item \texttt{dynmat.x} calculates LO-TO splitting at
-        $\mathbf{q}=0$ in insulator, IR cross sections, from the
-        dynamical matrix produced by \texttt{ph.x}
-  \item \texttt{q2r.x} calculates Interatomic Force Constants ion
-        real space from dynamical matrices produced by
-        \texttt{ph.x} on a regular \textbf{q}-grid
-  \item \texttt{matdyn.x} produces phonon frequencies at a generic
-        wave vector using the Interatomic Force Constants
-        calculated by \texttt{q2r.x}; may also calculate phonon
-        DOS
-  \item \texttt{fqha.x} for quasi-harmonic calculations
-  \item \texttt{lambda.x} calculates the electron-phonon coefficient
-        $\lambda$ and the function $\alpha^2F(\omega)$
-  \item \texttt{dist.x} calculates distances and angles between
-        atoms in a cell, taking into account periodicity
-  \item \texttt{ev.x} fits energy-vs-volume data to an equation of
-        state
-  \item \texttt{kpoints.x} produces lists of k-points
-  \item \texttt{pwi2xsf.sh}, \texttt{pwo2xsf.sh} process
-        respectively input and output files (not data files!) for
-        \texttt{pw.x} and produce an XSF-formatted file suitable
-        for plotting with XCrySDen, a powerful crystalline and
-        molecular structure visualization program 
-        (\texttt{http://www.xcrysden.org/}).
-        BEWARE: the \texttt{pwi2xsf.sh} shell script requires the
-        \texttt{pwi2xsf.x} executables to be located somewhere in
-        your \texttt{\$PATH}.
-  \item \texttt{band\_plot.x}: undocumented and possibly obsolete
-  \item \texttt{bs.awk}, \texttt{mv.awk} are scripts that process
-        the output of \texttt{pw.x} (not data files!).
-        Usage:
-\begin{verbatim}
-  awk -f bs.awk < my-pw-file > myfile.bs
-  awk -f mv.awk < my-pw-file > myfile.mv
-\end{verbatim}
-        The files so produced are suitable for use with
-        \texttt{xbs}, a very simple X-windows utility to display
-        molecules, available at:\\
-        \htmladdnormallink%
-        {\texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}}%
-        {http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
-\end{itemize}
 
 \clearpage
 
