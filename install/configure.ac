@@ -25,12 +25,8 @@ includefftw=$INCLUDEFFTW
 # command-line arguments
 for arg in $*
 do
-	if test "$arg" = "--disable-parallel"
-	then
-		no_parallel=1
-	elif test "$arg" = "--disable-shared"
-	then
-		no_shared=1
+	if   test "$arg" = "--disable-parallel" ; then no_parallel=1
+	elif test "$arg" = "--disable-shared"   ; then no_shared=1
 	fi
 done
 
@@ -42,7 +38,15 @@ AC_CANONICAL_BUILD
 
 # check compiling environment
 case $build in
-*-pc-linux-* )
+ia64-*-linux-gnu )
+	is_linux64=1
+	try_f90_parallel="mpif90"
+	try_f90="ifort ifc f90 f77 g77"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__LINUX64"
+	;;
+*-pc-linux-gnu )
 	is_linux=1
 	try_f90_parallel="mpif90"
 	try_f90="ifort ifc pgf90 f90 pgf77 f77 g77"
@@ -96,6 +100,12 @@ AC_PROG_F77($f90)
 f90=$F77
 
 case "$build:$f90" in
+ia64-*-linux-gnu:ifort )
+	is_ifc=1
+	version=8
+	try_cc="icc gcc cc mpicc pgcc"
+	try_f77="$f90"
+	;;
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
 	try_cc="pgcc gcc cc icc"
@@ -179,15 +189,17 @@ cc=$CC
 # check whether the C and Fortran compilers are compatible
 case "$build:$cc:$f90" in
 	# list supported combinations here
-*-ibm-aix*:mpcc_r:mpxlf*_r | *-ibm-aix*:mpcc:mpxlf* | \
-*-ibm-aix*:xlc:*xlf* | *-ibm-aix*:cc:*xlf* )            ;;
-*-pc-linux-*:*cc:mpif90 )                               ;;
-*-pc-linux-*:pgcc:pgf90 )                               ;;
-*-pc-linux-*:icc:ifc | *-pc-linux-*:gcc:ifc | \
-*-pc-linux-*:icc:ifort | *-pc-linux-*:gcc:ifort )       ;;
-mips-sgi-*:cc:f90 )                                     ;;
-alphaev*-dec-osf*:cc:f90 )				;;
-# sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )           ;;
+ia64-*-linux-gnu:icc:ifort )                          ;;
+ia64-*-linux-gnu:gcc:ifort )                          ;;
+*-pc-linux-gnu:*cc:mpif90 )                           ;;
+*-pc-linux-gnu:pgcc:pgf90 )                           ;;
+*-pc-linux-gnu:icc:ifc | *-pc-linux-*:icc:ifort )     ;;
+*-pc-linux-gnu:gcc:ifc | *-pc-linux-*:gcc:ifort )     ;;
+*-ibm-aix*:mpcc_r:mpxlf*_r | *-ibm-aix*:mpcc:mpxlf* ) ;;
+*-ibm-aix*:xlc:*xlf* | *-ibm-aix*:cc:*xlf* )          ;;
+mips-sgi-*:cc:f90 )                                   ;;
+alphaev*-dec-osf*:cc:f90 )                            ;;
+# sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )         ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
@@ -199,6 +211,15 @@ esac
 
 # check compilers flags
 case "$build:$f90" in
+ia64-*-linux-gnu:ifort )
+	try_fflags="-Vaxlib -O2"
+	try_fflags_noopt="-O0"
+	try_ldflags="-Vaxlib"
+	try_ldflags_static="-static"
+	try_dflags="$try_dflags -D__INTEL"
+	pre_f_dflags="-fpp "
+	have_cpp=1
+	;;
 *-pc-linux-gnu:* )
 	if test $is_pgi
 	then
@@ -311,7 +332,11 @@ echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 
 case "$build:$cc" in
-*-pc-linux-*:mpicc )
+ia64-*-linux-gnu:icc )
+	try_cflags="-O3"
+	c_ldflags="-Vaxlib"
+	;;
+*-pc-linux-gnu:mpicc )
 	if test $is_pgi
 	then
 		try_cflags="-fast"
@@ -322,11 +347,11 @@ case "$build:$cc" in
 		c_ldflags="-Vaxlib"
 	fi
 	;;
-*-pc-linux-*:pgcc )
+*-pc-linux-gnu:pgcc )
 	try_cflags="-fast"
 	c_ldflags=""
 	;;
-*-pc-linux-*:icc )
+*-pc-linux-gnu:icc )
 	try_cflags="-O3"
 	c_ldflags="-Vaxlib"
 	;;
@@ -412,9 +437,11 @@ F77=$f90 # use Fortran 90 actually (autoconf only knows Fortran 77!)
 if test "$libs" = ""
 then
 	# build list of directories to search
-	if test $is_aix
+	if test $is_linux64 && test $is_ifc
 	then
-		try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass"
+		try_libdirs="/usr/local/lib
+			     /opt/intel/mkl/mkl61/lib/64 /opt/intel/mkl/lib/64
+			     /opt/intel/mkl61/lib/64"
 	elif test $is_linux && test $is_ifc
 	then
 		try_libdirs="/usr/local/lib
@@ -427,6 +454,9 @@ then
 			     /usr/local/pgi/linux86/lib
 			     /opt/pgi/linux86/5.1/lib
 			     /cineca/lib /cineca/prod/pgi/lib"
+	elif test $is_aix
+	then
+		try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass"
 	elif test $is_mips
 	then
 		try_libdirs="/usr/local/lib /cineca/lib"
@@ -449,7 +479,53 @@ then
 	fi
 
 	# use vendor libraries if available
-	if test $is_aix
+	if test $is_linux64 && test $is_ifc
+	then
+		# check for mkl (in several directories)
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_zggev # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(zggev, mkl_lapack,
+				       have_blas=1 have_lapack=1
+				       libs="$try_loption \
+$ac_cv_search_zggev -lmkl_ipf -lguide $libs", , -lmkl_ipf -lguide)
+			if test "$ac_cv_search_zggev" != "no"
+			then break ; fi
+		done
+	elif test $is_linux && test $is_ifc
+	then
+		# check for mkl (in several directories)
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_zggev # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS="$libs"
+			AC_SEARCH_LIBS(zggev, mkl_lapack,
+				       have_blas=1 have_lapack=1
+				       libs="$try_loption \
+$ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
+			if test "$ac_cv_search_zggev" != "no"
+			then break ; fi
+		done
+	elif test $is_aix
 	then
 		# check for mass (in several directories)
 		for dir in none $try_libdirs
@@ -478,29 +554,6 @@ then
 		LIBS="$libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 have_essl=1 have_blas=1
 			       libs="$LIBS")
-	elif test $is_linux && test $is_ifc
-	then
-		# check for mkl (in several directories)
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_zggev # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="$libs"
-			AC_SEARCH_LIBS(zggev, mkl_lapack,
-				       have_blas=1 have_lapack=1
-				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
-			if test "$ac_cv_search_zggev" != "no"
-			then break ; fi
-		done
 	elif test $is_mips
 	then
 		# check for complib.sgimath
