@@ -1,10 +1,9 @@
-TODO LIST -  3 June 2003
+TODO LIST - 13 June 2003
 
 INSTALLATION
 
-- compile fftw by default for PW and CP as well
-  (a che serve FFTW_INC_DIR ?)
-- Make.irix ?
+- Linux Alpha ?
+- Make.irix ? SGI-SGI64-ORIGIN ?
 
 COMMON
 
@@ -65,8 +64,6 @@ PW
   Use more standard choices for crystal axis
 
 - fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
-
-- complete and verify memory estimator
 
 - ultrasoft PP: import "small boxes" from CP ?
 

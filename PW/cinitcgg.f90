@@ -29,7 +29,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, evc, e)
   complex(kind=DP) :: psi (npwx, nstart), evc(npwx, nbnd)
   ! input and output eigenvectors (may overlap) 
 
-  real(kind=DP) :: e (nstart)
+  real(kind=DP) :: e (nbnd)
   ! eigenvalues
   !
   !   local variables
@@ -71,8 +71,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, evc, e)
   !
   call cdiaghg (nstart, nbnd, hc, sc, nstart, en, hc (1, 1, 2))
   !
-  ! print *,' nbnd, nstart ', nbnd, nstart
-  e (1:nbnd) = en(1:nbnd)  ! qui era e(:) = en(1:nbnd) ed incasinava l'sp4
+  e (1:nbnd) = en(1:nbnd)
   !
   !   update the basis set
   !  
