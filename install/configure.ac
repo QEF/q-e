@@ -1080,7 +1080,7 @@ echo -----------------------------------------------------------------
 if ! test $no_parallel && ! test $parallel
 then
 	echo ----------------------------------------------
-	echo WARNING: parallel environment not detected
+	echo Parallel environment not detected
 	echo this program will run in single-processor mode
 	echo ----------------------------------------------
 fi
