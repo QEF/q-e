@@ -168,13 +168,20 @@
           CALL mp_sum(sts ,intra_pool_comm )
 
 ! Test sticks
-!          WRITE( stdout,*) 'testtesttesttesttesttesttesttesttesttest'
+!          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
+!          WRITE( 6,*) 'lb = ', lb(1), lb(2)
+!          WRITE( 6,*) 'ub = ', ub(1), ub(2)
+!          WRITE( 6,*) 'counts    = ', COUNT( st > 0 ), COUNT( stw > 0 ), COUNT( sts > 0 )
+!          WRITE( 6,*) 'cut-offs  = ', gcut, gcutw, gcuts
+!          WRITE( 6,*) 'b1  = ', b1(1:3)
+!          WRITE( 6,*) 'b2  = ', b2(1:3)
+!          WRITE( 6,*) 'b3  = ', b3(1:3)
 !          DO i = lb(1), ub(1)
 !            DO j = lb(2), ub(2)
-!              WRITE( stdout,'(2I4,I6)') i,j,stw(i,j)
+!              WRITE( 6,'(2I4,I6)') i,j,stw(i,j)
 !            END DO
 !          END DO
-!          WRITE( stdout,*) 'testtesttesttesttesttesttesttesttesttest'
+!          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
 ! Test sticks
 
         RETURN

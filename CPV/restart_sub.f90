@@ -275,6 +275,9 @@ CONTAINS
     REAL(kind=8) :: fcell(3,3)
 
 
+    ! We are restarting from file re compute ainv
+    CALL invmat( 3, h, ainv, deth )
+
     IF( taurdr ) THEN
       ! Input positions read from input file and stored in tau0
       call r_to_s( tau0, taus, na, nsp, h )
@@ -282,7 +285,6 @@ CONTAINS
 
     IF( ANY( tranp( 1:nsp ) ) ) THEN
       ! Input positions are randomized
-      call invmat( 3, h, ainv, deth )
       call randpos(taus, na, nsp, tranp, amprp, ainv, iforce )
     END IF
 
