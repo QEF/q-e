@@ -261,7 +261,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
 
   ! compute the global number of G+k vectors for each k point
   allocate( ngk_g( nkstot ) )
-  allocate( ngk_gw( nkstot/2 ) )
+  allocate( ngk_gw( nkstot/nspin ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
   CALL mp_sum( ngk_g )
@@ -328,6 +328,8 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
  
   ei_k(1:nbnd,:) = et(1:nbnd,:) / 2.0d0  !  Rydberg to Hartree conversion
 
+  !WRITE( stdout, * ) isk
+
   if( ionode ) then
     ikw = 0
     DO ik = 1, nkstot
@@ -341,12 +343,14 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
     write (40) ( ngk_gw( ik ), ik = 1, ikw )
     write (40) ( nbnd, ik = 1, ikw )
     write (40) nr1, nr2, nr3, ngm_g, npw_g
-    WRITE( stdout,*) 'Grid  ( nr1, nr2, nr3, ngm_g, npw_g ) = ', nr1, nr2, nr3, ngm_g, npw_g
+    WRITE( stdout,*) 'Grid  ( nr1, nr2, nr3, ngm_g, npw_g, ikw ) = ', nr1, nr2, nr3, ngm_g, npw_g, ikw
   end if
 
   wfc_scal = 1.0d0
   twf0 = .true.
   twfm = .false.
+
+  ! WRITE( stdout, * ) ispinw, iks, ike, nkstot
 
   do ik = 1, nkstot
      IF( (ik >= iks) .AND. (ik <= ike) ) THEN
