@@ -20,9 +20,10 @@ PROGRAM bands
   !
   CHARACTER (len=256) :: filband
   CHARACTER (len=256) :: outdir
+  INTEGER :: spin_component
   INTEGER :: ios
   !
-  NAMELIST / inputpp / outdir, prefix, filband
+  NAMELIST / inputpp / outdir, prefix, filband, spin_component
   !                                  
   CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
@@ -36,6 +37,7 @@ PROGRAM bands
   prefix = 'pwscf'
   outdir = './'
   filband = 'bands.out'
+  spin_component = 1
   !
   IF ( npool > 1 ) CALL errore('bands','pools not implemented',npool)
   !
@@ -74,6 +76,7 @@ PROGRAM bands
   CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( filband, ionode_id )
+  CALL mp_bcast( spin_component, ionode_id )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -81,14 +84,14 @@ PROGRAM bands
   CALL openfil_pp
   CALL init_us_1
   !
-  CALL punch_band (filband)
+  CALL punch_band (filband, spin_component)
   !
   CALL stop_pp
   STOP
 END PROGRAM bands
 !
 !-----------------------------------------------------------------------
-SUBROUTINE punch_band (filband)
+SUBROUTINE punch_band (filband, spin_component)
   !-----------------------------------------------------------------------
   !
   !    This routine writes the band energies on a file. The routine orders
@@ -108,7 +111,8 @@ SUBROUTINE punch_band (filband)
   USE wvfct
   USE uspp,                 ONLY : nkb, vkb, qq
   USE uspp_param,           ONLY : tvanp, nh, nhm
-  USE wavefunctions_module, ONLY : evc
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE wavefunctions_module, ONLY : evc, evc_nc
   USE io_global,            ONLY : ionode 
 
   IMPLICIT NONE
@@ -117,21 +121,24 @@ SUBROUTINE punch_band (filband)
   ! the best overlap product
   COMPLEX(kind=DP) :: pro
   ! the product of wavefunctions
+  INTEGER :: spin_component
 
-  COMPLEX(kind=DP), ALLOCATABLE :: psiold (:,:), old (:), NEW (:)
+  COMPLEX(kind=DP), ALLOCATABLE :: psiold (:,:), old (:), new (:)
   ! psiold: eigenfunctions at previous k-point, ordered
   ! old, new: contain one band resp. at previous and current k-point
   COMPLEX(kind=DP), ALLOCATABLE :: becp(:,:), becpold (:,:)
   ! becp   : <psi|beta> at current  k-point
   ! becpold: <psi|beta> at previous k-point
-
-  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios
+  COMPLEX(KIND=DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
+  COMPLEX(KIND=DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
+  ! as above for the noncolinear case
+  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol
   ! counters
   INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:)
   ! ok: keeps track of which bands have been already ordered
   ! igkold: indices of k+G at previous k-point
   ! il: band ordering
-  INTEGER, PARAMETER :: maxdeg = 4
+  INTEGER :: maxdeg 
   ! maxdeg : max allowed degeneracy
   INTEGER :: ndeg, deg, nd
   ! ndeg : number of degenerate states
@@ -140,12 +147,12 @@ SUBROUTINE punch_band (filband)
   REAL(kind=DP), ALLOCATABLE:: edeg(:)
   REAL(kind=DP), PARAMETER :: eps = 0.001
   ! threshold (Ry) for degenerate states 
-  COMPLEX(kind=DP), EXTERNAL :: cgracsc
+  COMPLEX(kind=DP), EXTERNAL :: cgracsc, cgracsc_nc
  ! scalar product with the S matrix
 
   IF (filband == ' ') RETURN
-  IF (nspin == 2) CALL errore('bands','LSDA bands not implemented',-nspin)
   iunpun = 18
+  maxdeg = 4 * npol 
   !
   IF ( ionode ) THEN
      !
@@ -156,15 +163,38 @@ SUBROUTINE punch_band (filband)
      !
   END IF
   !
-  ALLOCATE (psiold( npwx, nbnd))    
-  ALLOCATE (old(ngm), NEW(ngm))    
-  ALLOCATE (becp(nkb, nbnd), becpold(nkb, nbnd))    
+  IF (noncolin) THEN
+     ALLOCATE (psiold_nc( npwx, npol, nbnd))
+     ALLOCATE (becp_nc(nkb, npol, nbnd), becpold_nc(nkb, npol, nbnd))
+     ALLOCATE (old_nc(ngm,npol), new_nc(ngm,npol))
+  ELSE
+     ALLOCATE (psiold( npwx, nbnd))    
+     ALLOCATE (old(ngm), new(ngm))    
+     ALLOCATE (becp(nkb, nbnd), becpold(nkb, nbnd))    
+  END IF
+
   ALLOCATE (igkold (npwx))    
   ALLOCATE (ok (nbnd), il (nbnd))    
   ALLOCATE (degeneracy(nbnd), edeg(nbnd))
   ALLOCATE (INDEX(maxdeg), degbands(nbnd,maxdeg))
   !
-  DO ik = 1, nks
+  IF (nspin==1.OR.nspin==4) THEN
+     nks1=1
+     nks2=nks
+  ELSE IF (nspin.eq.2) THEN
+     IF (spin_component == 1) THEN
+        nks1=1
+        nks2=nks/2
+     ELSE IF (spin_component==2) THEN
+        nks1=nks/2 + 1
+        nks2=nks
+     ELSE
+        CALL errore('punch_bands','uncorrect spin_component',1)
+     END IF
+  ELSE
+     CALL errore('punch_bands','nspin not allowed in bands', 1)
+  END IF
+  DO ik = nks1, nks2
      !
      !    prepare the indices of this k point
      !
@@ -173,14 +203,22 @@ SUBROUTINE punch_band (filband)
      !
      !   read eigenfunctions
      !
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     IF (noncolin) THEN
+        CALL davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
+     ELSE
+        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     END IF
      !
      ! calculate becp = <psi|beta> 
      ! 
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
-     CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     IF (noncolin) THEN
+        CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc)
+     ELSE
+        CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     END IF
      !
-     IF (ik == 1) THEN
+     IF (ik == nks1) THEN
         !
         !  first k-point in the list:
         !  save eigenfunctions in the current order (increasing energy)
@@ -197,27 +235,54 @@ SUBROUTINE punch_band (filband)
            ok (ibnd) = 0
         ENDDO
         DO ibnd = 1, nbnd
-           old(:) = (0.d0, 0.d0)
-           DO ig = 1, npwold
-              old (igkold (ig) ) = psiold (ig, ibnd)
-           ENDDO
-           proold = 0.d0
-           DO jbnd = 1, nbnd
-              IF (ok (jbnd) == 0) THEN
-                 NEW (:) = (0.d0, 0.d0)
-                 DO ig = 1, npw
-                    NEW (igk (ig) ) = evc (ig, jbnd)
-                 ENDDO
-                 pro = cgracsc (nkb, becp (1, jbnd), becpold (1, ibnd), &
-                      nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, tvanp)
-                 IF (ABS (pro) > proold) THEN
-                    il (ibnd) = jbnd
-                    proold = ABS (pro)
-                 ENDIF
-              ENDIF
-           ENDDO
-           ok (il (ibnd) ) = 1
-        ENDDO
+           IF (noncolin) THEN
+              old_nc = (0.d0, 0.d0)
+              DO ipol=1, npol
+                 DO ig = 1, npwold
+                    old_nc(igkold(ig),ipol)=psiold_nc(ig,ipol,ibnd)
+                 END DO
+              END DO
+              proold = 0.d0
+              DO jbnd = 1, nbnd
+                 IF (ok (jbnd) == 0) THEN
+                    new_nc = (0.d0, 0.d0)
+                    DO ipol=1,npol
+                       DO ig = 1, npw
+                          new_nc (igk (ig),ipol ) = evc_nc (ig,ipol, jbnd)
+                       END DO
+                    END DO
+                    pro = cgracsc_nc (nkb,becp_nc(1,1,jbnd), &
+                              becpold_nc(1,1,ibnd), nhm, ntyp, nh, &
+                              nat, ityp, ngm, npol, new_nc, old_nc, tvanp)
+                    IF (abs (pro) > proold) THEN
+                       il (ibnd) = jbnd
+                       proold = abs (pro)
+                    END IF
+                 END IF
+              END DO
+           ELSE
+              old = (0.d0, 0.d0)
+              DO ig = 1, npwold
+                 old (igkold (ig) ) = psiold (ig, ibnd)
+              END DO
+              proold = 0.d0
+              DO jbnd = 1, nbnd
+                 IF (ok (jbnd) == 0) THEN
+                    new (:) = (0.d0, 0.d0)
+                    DO ig = 1, npw
+                       new (igk (ig) ) = evc (ig, jbnd)
+                    END DO
+                    pro = cgracsc (nkb, becp (1, jbnd), becpold (1, ibnd), &
+                         nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, tvanp)
+                    IF (ABS (pro) > proold) THEN
+                       il (ibnd) = jbnd
+                       proold = ABS (pro)
+                    END IF
+                 END IF
+              END DO
+              ok (il (ibnd) ) = 1
+           END IF
+        END DO
         !
         !  if there were bands crossing at degenerate eigenvalues
         !  at previous k-point, re-order those bands so as to keep
@@ -239,13 +304,24 @@ SUBROUTINE punch_band (filband)
      !   for this k-point -- prepare data for next k point
      !
      DO ibnd = 1, nbnd
-        DO ig = 1, npw
-           psiold (ig, ibnd) = evc (ig, il (ibnd) )
-        ENDDO
-        DO ikb = 1, nkb
-           becpold (ikb, ibnd) = becp (ikb, il (ibnd) )
-        ENDDO
-     ENDDO
+        IF (noncolin) THEN
+           DO ipol=1,npol
+              DO ig = 1, npw
+                 psiold_nc(ig, ipol, ibnd) = evc_nc(ig, ipol, il (ibnd))
+              END DO
+              DO ikb = 1, nkb
+                 becpold_nc(ikb, ipol, ibnd) = becp_nc(ikb, ipol, il(ibnd))
+              END DO
+           END DO
+        ELSE
+           DO ig = 1, npw
+              psiold (ig, ibnd) = evc (ig, il (ibnd) )
+           END DO
+           DO ikb = 1, nkb
+              becpold (ikb, ibnd) = becp (ikb, il (ibnd) )
+           END DO
+        END IF
+     END DO
      DO ig = 1, npw
         igkold (ig) = igk (ig)
      ENDDO
@@ -294,15 +370,21 @@ SUBROUTINE punch_band (filband)
         !
      END IF
      !
-  ENDDO
+  END DO
   !
   DEALLOCATE (index, degbands)
   DEALLOCATE (edeg, degeneracy)
   DEALLOCATE (il, ok)
   DEALLOCATE (igkold)
-  DEALLOCATE (becpold, becp)
-  DEALLOCATE (NEW, old)
-  DEALLOCATE (psiold)
+  IF (noncolin) THEN
+     DEALLOCATE (becpold_nc, becp_nc)
+     DEALLOCATE (new_nc, old_nc)
+     DEALLOCATE (psiold_nc)
+  ELSE
+     DEALLOCATE (becpold, becp)
+     DEALLOCATE (new, old)
+     DEALLOCATE (psiold)
+  END IF
   !
   IF ( ionode ) CLOSE (iunpun)
   !
