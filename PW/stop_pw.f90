@@ -19,7 +19,7 @@ SUBROUTINE stop_pw( flag )
   USE io_files,         ONLY : prefix, iunwfc, iunigk, iunres
   USE input_parameters, ONLY : deallocate_input_parameters
   USE path_variables,   ONLY : path_deallocation
-  USE path_base,        ONLY : io_path_stop
+  USE path_io_routines, ONLY : io_path_stop
   USE mp,               ONLY : mp_barrier, mp_end
   !
   IMPLICIT NONE

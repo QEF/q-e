@@ -19,8 +19,8 @@ PROGRAM pwscf
   USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lpath
   USE io_files,         ONLY : nd_nmbr, iunpath, tmp_dir
   USE path_variables,   ONLY : conv_path
-  USE path_base,        ONLY : io_path_start, io_path_stop, &
-                               initialize_path, search_mep
+  USE path_base,        ONLY : initialize_path, search_mep
+  USE path_io_routines, ONLY : io_path_start, io_path_stop
   USE io_global,        ONLY : ionode
   !
   IMPLICIT NONE

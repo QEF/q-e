@@ -25,62 +25,12 @@ MODULE path_base
   !
   PRIVATE
   !
-  PUBLIC :: io_path_start, io_path_stop
   PUBLIC :: initialize_path
   PUBLIC :: search_mep
   !   
   CONTAINS
     !
     ! ... module procedures    
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE io_path_start()
-      !-----------------------------------------------------------------------
-      !
-      USE io_global, ONLY : stdout, io_global_start
-      USE mp_global, ONLY : me_image, my_image_id, root_image
-      !
-      IMPLICIT NONE
-      !
-      !
-      ! ... the I/O node is set again according to the number of parallel
-      ! ... images that have been required: for each parallel image there
-      ! ... is only one node that does I/O
-      !
-      CALL io_global_start( my_image_id, root_image )
-      !
-      ! ... stdout is connected to a file ( different for each image ) 
-      ! ... via unit 17 ( only root_image performes I/O )
-      !
-      IF ( me_image == root_image ) stdout = 17
-      !
-      RETURN
-      !
-    END SUBROUTINE io_path_start
-    !
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE io_path_stop()
-      !-----------------------------------------------------------------------
-      !
-      USE io_global,  ONLY : stdout, io_global_start
-      USE mp_global,  ONLY : mpime, root
-      !
-      IMPLICIT NONE
-      !
-      !
-      ! ... the original I/O node set 
-      !
-      CALL io_global_start( mpime, root )
-      !
-      ! ... stdout is reconnected to standard output
-      !
-      stdout = 6
-      !
-      RETURN
-      !
-    END SUBROUTINE io_path_stop
-    !
     !
     !-----------------------------------------------------------------------
     SUBROUTINE initialize_path( prog )
