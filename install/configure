@@ -1803,8 +1803,8 @@ f90=$F77
 case "$build:$f90" in
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
-	try_cc="mpicc pgcc gcc cc icc"
-	try_f77="mpif77 pgf77 $f90"
+	try_cc="pgcc gcc cc icc"
+	try_f77="pgf77 $f90"
 	;;
 *-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
@@ -3197,7 +3197,7 @@ fi
 		# check for mkl (in several directories)
 		for dir in none $try_libdirs
 		do
-			unset ac_cv_search_zhegv # clear cached value
+			unset ac_cv_search_zggev # clear cached value
 			if test "$dir" = "none"
 			then
 				try_loption=
@@ -3208,16 +3208,16 @@ fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
-			echo "$as_me:$LINENO: checking for library containing zhegv" >&5
-echo $ECHO_N "checking for library containing zhegv... $ECHO_C" >&6
-if test "${ac_cv_search_zhegv+set}" = set; then
+			echo "$as_me:$LINENO: checking for library containing zggev" >&5
+echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
+if test "${ac_cv_search_zggev+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_func_search_save_LIBS=$LIBS
-ac_cv_search_zhegv=no
+ac_cv_search_zggev=no
 cat >conftest.$ac_ext <<_ACEOF
       program main
-      call zhegv
+      call zggev
       end
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
@@ -3232,19 +3232,19 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_zhegv="none required"
+  ac_cv_search_zggev="none required"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-if test "$ac_cv_search_zhegv" = no; then
+if test "$ac_cv_search_zggev" = no; then
   for ac_lib in mkl_lapack; do
     LIBS="-l$ac_lib -lmkl_ia32 -lguide $ac_func_search_save_LIBS"
     cat >conftest.$ac_ext <<_ACEOF
       program main
-      call zhegv
+      call zggev
       end
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
@@ -3259,7 +3259,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_zhegv="-l$ac_lib"
+  ac_cv_search_zggev="-l$ac_lib"
 break
 else
   echo "$as_me: failed program was:" >&5
@@ -3271,16 +3271,16 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
 LIBS=$ac_func_search_save_LIBS
 fi
-echo "$as_me:$LINENO: result: $ac_cv_search_zhegv" >&5
-echo "${ECHO_T}$ac_cv_search_zhegv" >&6
-if test "$ac_cv_search_zhegv" != no; then
-  test "$ac_cv_search_zhegv" = "none required" || LIBS="$ac_cv_search_zhegv $LIBS"
+echo "$as_me:$LINENO: result: $ac_cv_search_zggev" >&5
+echo "${ECHO_T}$ac_cv_search_zggev" >&6
+if test "$ac_cv_search_zggev" != no; then
+  test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
   have_blas=1 have_lapack=1
 				       libs="$try_loption \
-$ac_cv_search_zhegv -lmkl_ia32 -lguide $libs"
+$ac_cv_search_zggev -lmkl_ia32 -lguide $libs"
 fi
 
-			if test "$ac_cv_search_zhegv" != "no"
+			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
 	elif test $is_mips
@@ -3681,7 +3681,7 @@ fi
 		# check for lapack (in several directories)
 		for dir in none $try_libdirs
 		do
-			unset ac_cv_search_zhegv # clear cached value
+			unset ac_cv_search_zggev # clear cached value
 			if test "$dir" = "none"
 			then
 				try_loption=
@@ -3692,16 +3692,16 @@ fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
-			echo "$as_me:$LINENO: checking for library containing zhegv" >&5
-echo $ECHO_N "checking for library containing zhegv... $ECHO_C" >&6
-if test "${ac_cv_search_zhegv+set}" = set; then
+			echo "$as_me:$LINENO: checking for library containing zggev" >&5
+echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
+if test "${ac_cv_search_zggev+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_func_search_save_LIBS=$LIBS
-ac_cv_search_zhegv=no
+ac_cv_search_zggev=no
 cat >conftest.$ac_ext <<_ACEOF
       program main
-      call zhegv
+      call zggev
       end
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
@@ -3716,19 +3716,19 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_zhegv="none required"
+  ac_cv_search_zggev="none required"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-if test "$ac_cv_search_zhegv" = no; then
+if test "$ac_cv_search_zggev" = no; then
   for ac_lib in lapack; do
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
     cat >conftest.$ac_ext <<_ACEOF
       program main
-      call zhegv
+      call zggev
       end
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
@@ -3743,7 +3743,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_zhegv="-l$ac_lib"
+  ac_cv_search_zggev="-l$ac_lib"
 break
 else
   echo "$as_me: failed program was:" >&5
@@ -3755,15 +3755,15 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
 LIBS=$ac_func_search_save_LIBS
 fi
-echo "$as_me:$LINENO: result: $ac_cv_search_zhegv" >&5
-echo "${ECHO_T}$ac_cv_search_zhegv" >&6
-if test "$ac_cv_search_zhegv" != no; then
-  test "$ac_cv_search_zhegv" = "none required" || LIBS="$ac_cv_search_zhegv $LIBS"
+echo "$as_me:$LINENO: result: $ac_cv_search_zggev" >&5
+echo "${ECHO_T}$ac_cv_search_zggev" >&6
+if test "$ac_cv_search_zggev" != no; then
+  test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
   have_lapack=1
 				       libs="$try_loption $LIBS"
 fi
 
-			if test "$ac_cv_search_zhegv" != "no"
+			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
 	fi
@@ -3925,16 +3925,16 @@ fi
 
 
 if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
-echo "$as_me:$LINENO: checking for library containing zhegv" >&5
-echo $ECHO_N "checking for library containing zhegv... $ECHO_C" >&6
-if test "${ac_cv_search_zhegv+set}" = set; then
+echo "$as_me:$LINENO: checking for library containing zggev" >&5
+echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
+if test "${ac_cv_search_zggev+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_func_search_save_LIBS=$LIBS
-ac_cv_search_zhegv=no
+ac_cv_search_zggev=no
 cat >conftest.$ac_ext <<_ACEOF
       program main
-      call zhegv
+      call zggev
       end
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
@@ -3949,19 +3949,19 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_zhegv="none required"
+  ac_cv_search_zggev="none required"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-if test "$ac_cv_search_zhegv" = no; then
+if test "$ac_cv_search_zggev" = no; then
   for ac_lib in ""; do
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
     cat >conftest.$ac_ext <<_ACEOF
       program main
-      call zhegv
+      call zggev
       end
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
@@ -3976,7 +3976,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_zhegv="-l$ac_lib"
+  ac_cv_search_zggev="-l$ac_lib"
 break
 else
   echo "$as_me: failed program was:" >&5
@@ -3988,10 +3988,10 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
 LIBS=$ac_func_search_save_LIBS
 fi
-echo "$as_me:$LINENO: result: $ac_cv_search_zhegv" >&5
-echo "${ECHO_T}$ac_cv_search_zhegv" >&6
-if test "$ac_cv_search_zhegv" != no; then
-  test "$ac_cv_search_zhegv" = "none required" || LIBS="$ac_cv_search_zhegv $LIBS"
+echo "$as_me:$LINENO: result: $ac_cv_search_zggev" >&5
+echo "${ECHO_T}$ac_cv_search_zggev" >&6
+if test "$ac_cv_search_zggev" != no; then
+  test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
 
 else
   mylib="blas_and_lapack"

@@ -75,8 +75,8 @@ f90=$F77
 case "$build:$f90" in
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
-	try_cc="mpicc pgcc gcc cc icc"
-	try_f77="mpif77 pgf77 $f90"
+	try_cc="pgcc gcc cc icc"
+	try_f77="pgf77 $f90"
 	;;
 *-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
@@ -433,7 +433,7 @@ then
 		# check for mkl (in several directories)
 		for dir in none $try_libdirs
 		do
-			unset ac_cv_search_zhegv # clear cached value
+			unset ac_cv_search_zggev # clear cached value
 			if test "$dir" = "none"
 			then
 				try_loption=
@@ -444,11 +444,11 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
-			AC_SEARCH_LIBS(zhegv, mkl_lapack,
+			AC_SEARCH_LIBS(zggev, mkl_lapack,
 				       have_blas=1 have_lapack=1
 				       libs="$try_loption \
-$ac_cv_search_zhegv -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
-			if test "$ac_cv_search_zhegv" != "no"
+$ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
+			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
 	elif test $is_mips
@@ -527,7 +527,7 @@ $ac_cv_search_dgemm -latlas $libs", , -latlas)
 		# check for lapack (in several directories)
 		for dir in none $try_libdirs
 		do
-			unset ac_cv_search_zhegv # clear cached value
+			unset ac_cv_search_zggev # clear cached value
 			if test "$dir" = "none"
 			then
 				try_loption=
@@ -538,9 +538,9 @@ $ac_cv_search_dgemm -latlas $libs", , -latlas)
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
-			AC_SEARCH_LIBS(zhegv, lapack, have_lapack=1
+			AC_SEARCH_LIBS(zggev, lapack, have_lapack=1
 				       libs="$try_loption $LIBS")
-			if test "$ac_cv_search_zhegv" != "no"
+			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
 	fi
@@ -564,7 +564,7 @@ AC_SEARCH_LIBS(mpi_init, "", parallel=1
 	       try_dflags="$try_dflags -D__MPI -D__PARA")
 
 if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
-AC_SEARCH_LIBS(zhegv, "", , mylib="blas_and_lapack")
+AC_SEARCH_LIBS(zggev, "", , mylib="blas_and_lapack")
 
 AC_SEARCH_LIBS(zhegvx, "", try_dflags="$try_dflags -DHAS_ZHEGVX")
 AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
