@@ -15,7 +15,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     To this end uses a matched exponential behaved wavefunction, in the
   !     spirit of the Tersoff and Hamann approximation (PRB 31, 805 (1985)
   !     The matching with the true wavefunction is decided by the variable
-  !     z in celldm(1) units, then stm images are calculateted every dz.
+  !     z in celldm(1) units, then stm images are calculated every dz.
   !     The bias of the sample is decided by sample_bias, states between
   !     ef and ef + sample_bias are taken into account.
   !     It needs the workfunction wf. On output wf contains the number of
@@ -221,7 +221,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            !     reconstruct the wfc for the z of interest for this k-point
            !     and this band. Uses nr3/2 planes only, the other nr3/2 are 
            !     empty -> only the upper surface is used.
-           !     N.B. it may not properly work if the upper surfacw
+           !     N.B. it may not properly work if the upper surface
            !     is connected to the lower surface by a symmetry operation
            !     (one should take the average of the two surfaces...).
            !

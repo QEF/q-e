@@ -16,7 +16,6 @@ From the root directory (the one where this file is), give the command:
 ./configure "your-system"
 
 "./configure" with no argument will yield a list of valid arguments.
-Temporarily there are different installation files for PWscf, CP, FPMD.
 
 Select one of the following as "your-system" :
 
@@ -24,11 +23,12 @@ ibmsp   : IBM SP2/3/4, IBM compiler
 t3e     : Cray T3E, Cray compiler
 origin  : SGI Origin 2000/3000, SGI compiler
 sunmpi  : Sun parallel machines, Sun compiler
-alphaMPI: Compaq alpha parallel machines, Compaq compiler
+alphaMPI: HP-Compaq alpha parallel machines, HP-Compaq compiler
 beowulf : Linux Beowulf (PC cluster), Portland compiler
 beo_ifc : As above, Intel compiler
-alpha   : Compaq alpha workstations, Compaq compiler
+alpha   : HP-Compaq alpha workstations, HP-Compaq compiler
 ibm     : IBM RS6000 workstations, IBM compiler
+irix    : SGI workstations, SGI compiler
 pc_abs  : Linux PCs, Absoft compiler
 pc_pgi  : Linux PCs, Portland compiler
 pc_ifc  : Linux PCs, Intel compiler
@@ -37,12 +37,6 @@ sun     : Sun workstations, Sun compiler
 sxcross : NEC SX-6, cross-compilation
 fujitsu : Fujitsu vector machines, Fujitsu compiler
 hitachi : Hitachi SR8000
-
-For CP and FPMD only:
-
-cp.qsw  : Linux Alpha QSW cluster, Compaq compiler
-irix    : SGI workstations (possibly obsolete)
-cp.sx5  : NEC SX-5 (possibly obsolete)
 
 This will generate dependencies and produce a file "make.sys"
 in the root directory. 
@@ -63,8 +57,9 @@ Third step : compile
 make        gives a list of possible commands.
 
 make pw     produces PW/pw.x (electronic and ionic optimization)
+            and PW/memory.x (memory estimator and test of input file) 
 make ph     produces PH/ph.x (phonons)
-make pp     produces PP/pp.x (postprocessing) and other codes
+make pp     produces PP/pp.x and other postprocessing codes
 make d3     produces D3/d3.x (third-order energy derivatives)
 make gamma  produces Gamma/pwg.x and Gamma/phcg.x
             (Gamma-only versions of pw.x and ph.x)

@@ -67,8 +67,7 @@ then
 
         case "$1" in
           pc_ifc | beo_ifc | ibm    | ibmsp | origin | nec | t3e | \
-          alpha  | alphaMPI| hitachi | \
-          irix | cp.qsw | cp.sx5 )
+          alpha  | alphaMPI| hitachi | irix )
     # f90 compilers that support C-style preprocessing 
             cp install/Rules.nocpp make.rules
           ;;
