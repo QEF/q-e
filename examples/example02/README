@@ -1,6 +1,7 @@
 
 This example illustrates how to use pw.x and ph.x to calculate phonon
-frequencies at Gamma and X for Si in diamond structure.
+frequencies at Gamma and X for Si and C in the diamond structure and 
+for fcc-Ni.
 
 The calculation proceeds as follows (for the meaning of the cited input
 variables see the appropriate INPUT_* file)
@@ -66,3 +67,20 @@ variables see the appropriate INPUT_* file)
    overwrite the previous files. The total dynamical matrix is not
    computed and matdyn is actually left empty.
 
+7) make a scf calculation of C (described with US-PP) in the diamond
+   structure. 
+   (input=c.scf.in, output=c.scf.out).
+
+8) make a phonon calculation at Gamma point for C in the diamond structure. 
+   Note that epsil=.true. and the response to an electric field and 
+   the dielectric constant are also calculated.
+   (input=c.phG.in, output=c.phG.out).
+
+9) make a scf calculation at of magnetic fcc-Ni.
+   (input=ni.scf.in, output=ni.scf.out).
+
+10) make a non-scf calculation at X point for magnetic fcc-Ni.
+   (input=ni.nscf.in, output=ni.nscf.out). 
+
+11) make a phonon calculations at X point for magnetic fcc-Ni.
+   (input=ni.phX.in, output=ni.phX.out). 

@@ -11,7 +11,8 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x and ph.x to calculate phonon"
-$ECHO "frequencies at Gamma and X for Si, C in diamond structure and fcc-Ni."
+$ECHO "frequencies at Gamma and X for Si and C in the diamond structure and"
+$ECHO "for fcc-Ni."
 
 # set the needed environment variables
 . ../environment_variables
@@ -299,10 +300,6 @@ $ECHO "  running the phonon calculation at Gamma...\c"
 $PH_COMMAND < c.phG.in > c.phG.out
 $ECHO " done"
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
-$ECHO " done"
 
 # self-consistent calculation for Ni with US-PP
 cat > ni.scf.in << EOF
@@ -393,6 +390,10 @@ $ECHO "  running the phonon calculation at X...\c"
 $PH_COMMAND < ni.phX.in > ni.phX.out
 $ECHO " done"
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

@@ -120,7 +120,8 @@ example01:
 
 example02:
     This example shows how to use pw.x and ph.x to calculate phonon
-    frequencies at Gamma and X for Si in diamond structure.
+    frequencies at Gamma and X for Si and C in the diamond structure and 
+    for fcc-Ni.
 
 example03:
     This example shows how to use pw.x to compute the equilibrium
