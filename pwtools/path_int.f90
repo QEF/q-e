@@ -311,7 +311,7 @@ PROGRAM images_interpolator
   DO i = 1, new_num_of_images
      !
      WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-     WRITE( UNIT = iunrestart, FMT = '("F")' )       
+     WRITE( UNIT = iunrestart, FMT = '("F,  F")' )       
      WRITE( UNIT = iunrestart, FMT = energy ) new_V(i)
      !
      ia = 0

@@ -27,7 +27,9 @@ MODULE neb_variables
        climbing(:),              &! .TRUE. if the image is required to climb
        free_minimization(:),     &! .TRUE. if the image is required to be
                                   !       optimized (no springs, no projections)
-       frozen(:)                  ! .TRUE. if the image is not optimized
+       frozen(:),                &! .TRUE. if the image is not optimized
+       vel_zeroed(:)              ! .TRUE. if the velocity of this image has
+                                  ! been reset
   CHARACTER (LEN=20) :: &
        CI_scheme,                &! Climbing Image scheme
        VEC_scheme                 ! Variable Elastic Constant scheme
@@ -71,8 +73,8 @@ MODULE neb_variables
        Emax,                     &!
        Emin                       !
   !
-  INTEGER        :: istep_neb
-  INTEGER        :: nstep_neb
+  INTEGER :: istep_neb
+  INTEGER :: nstep_neb
   !
   CONTAINS
      !
@@ -90,7 +92,8 @@ MODULE neb_variables
        !
        IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
           !
-          ALLOCATE( vel( dim, num_of_images ) )     
+          ALLOCATE( vel( dim, num_of_images ) ) 
+          ALLOCATE( vel_zeroed( num_of_images ) )    
           !
        END IF
        !
@@ -137,6 +140,7 @@ MODULE neb_variables
        IF ( ALLOCATED( climbing ) )          DEALLOCATE( climbing )
        IF ( ALLOCATED( free_minimization ) ) DEALLOCATE( free_minimization )
        IF ( ALLOCATED( frozen ) )            DEALLOCATE( frozen )
+       IF ( ALLOCATED( vel_zeroed ) )        DEALLOCATE( vel_zeroed )
        !
      END SUBROUTINE neb_deallocation
      !

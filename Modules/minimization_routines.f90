@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#define USE_SMART_STEP
+!#define DEBUG_SMART_STEP
 !
 !--------------------------------------------------------------------------
 MODULE minimization_routines
@@ -15,7 +17,7 @@ MODULE minimization_routines
   ! ... Written by Carlo Sbraccia ( 04-11-2003 )  
   !
   USE kinds,          ONLY :  DP
-  USE constants,      ONLY :  AU, eV_to_kelvin, eps32  
+  USE constants,      ONLY :  au, eV_to_kelvin, eps32  
   USE neb_variables,  ONLY :  ds, pos, grad, norm_grad
   USE basic_algebra_routines
   !  
@@ -34,7 +36,7 @@ MODULE minimization_routines
        INTEGER, INTENT(IN) :: index
        !
        !
-       IF ( norm_grad(index) >= eps32 ) THEN
+       IF ( norm_grad(index) > eps32 ) THEN
           !
           pos(:,index) = pos(:,index) - ds(index) * grad(:,index)
           !
@@ -51,16 +53,29 @@ MODULE minimization_routines
      SUBROUTINE velocity_Verlet_first_step( index )
        !---------------------------------------------------------------------- 
        !
-       USE neb_variables, ONLY : vel, mass
+       USE neb_variables, ONLY : vel, mass, vel_zeroed
        !
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
        !
        !
-       vel(:,index) = vel(:,index) - &
-                      ds(index) / 2.D0 * grad(:,index) / mass(:)
-       pos(:,index) = pos(:,index) + ds(index) * vel(:,index)
+       IF ( vel_zeroed(index) ) THEN
+          !
+          vel(:,index) = vel(:,index) - 0.5D0 * grad(:,index) / mass(:)
+          !
+          pos(:,index) = pos(:,index) + vel(:,index)
+          !
+          vel_zeroed(index) = .FALSE.
+          !
+       ELSE
+          !
+          vel(:,index) = vel(:,index) - &
+                         0.5D0 * ds(index) * grad(:,index) / mass(:)
+          !
+          pos(:,index) = pos(:,index) + ds(index) * vel(:,index)
+          !
+       END IF
        !       
        RETURN
        !
@@ -81,12 +96,12 @@ MODULE minimization_routines
        IF ( ldamped_dyn ) THEN
           !
           vel(:,index) = damp * ( vel(:,index) - &
-                                  ds(index) / 2.D0 * grad(:,index) / mass(:) )
+                                  0.5D0 * ds(index) * grad(:,index) / mass(:) )
           !
        ELSE IF ( lmol_dyn ) THEN
           !       
           vel(:,index) = vel(:,index) - &
-                         ds(index) / 2.D0 * grad(:,index) / mass(:)
+                         0.5D0 * ds(index) * grad(:,index) / mass(:)
           !
        END IF
        !
@@ -98,8 +113,9 @@ MODULE minimization_routines
      SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE constants,     ONLY : eps8
-       USE neb_variables, ONLY : pos_old, grad_old, vel, mass, dim
+       USE constants,        ONLY : eps8
+       USE neb_variables,    ONLY : pos_old, grad_old, vel, &
+                                    mass, dim, vel_zeroed
        !
        IMPLICIT NONE
        !
@@ -108,13 +124,11 @@ MODULE minimization_routines
        REAL (KIND=DP)              :: vel_component
        REAL (KIND=DP), ALLOCATABLE :: y(:), s(:)
        !
-       !        
-      ! ds(index) = optimal_time_step( index )
        !
        vel(:,index) = vel(:,index) - &
-                      ds(index) / 2.D0 * grad(:,index) / mass(:)               
+                      0.5D0 * ds(index) * grad(:,index) / mass(:)               
        !
-       IF ( norm_grad(index) >= eps32 ) THEN
+       IF ( norm_grad(index) > eps32 ) THEN
           !
           force_versor = - grad(:,index) / norm_grad(index)
           !
@@ -126,10 +140,16 @@ MODULE minimization_routines
              !
           ELSE
              !
-            ! PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
+#if defined (DEBUG_SMART_STEP) && defined (USE_SMART_STEP)
+             PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
+#endif
              !
              vel(:,index) = 0.D0
-             !             
+             !
+             vel_zeroed(index) = .TRUE.
+             !
+#if defined (USE_SMART_STEP)
+             !
              ! ... an approximate newton-raphson step is performed
              !
              IF ( norm( pos_old(:,index) ) > 0.D0 .AND. &
@@ -140,21 +160,25 @@ MODULE minimization_routines
                 y = grad(:,index) - grad_old(:,index)
                 s =  pos(:,index) -  pos_old(:,index)
                 !
-               ! PRINT '(5X,"projection = ",F7.4)',( s .dot. grad(:,index) ) / &
-               !                                   ( norm( s ) * norm_grad(index) )
+#  if defined (DEBUG_SMART_STEP)
+                PRINT '(5X,"projection = ",F7.4)', &
+                    ( s .dot. grad(:,index) ) / ( norm( s ) * norm_grad(index) )
+#  endif
                 !
                 IF ( ABS( y .dot. s ) > eps8 ) THEN
-                   !
-                   ds(index) = 1.D0
                    !
                    grad(:,index) = 2.D0 * s * &
                                 ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
                    !
                 END IF
-                !             
-               ! PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
+                !
+#  if defined (DEBUG_SMART_STEP)
+                PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
+#  endif
                 !
                 DEALLOCATE( y, s )
+                !
+#endif
                 !
              END IF   
              !
@@ -207,7 +231,7 @@ MODULE minimization_routines
        !
 #if defined ( _DEBUG ) || ( _DEBUG_THERMALIZATION )
        !
-       PRINT *, "temperature before thermalization", temp * AU * eV_to_kelvin
+       PRINT *, "temperature before thermalization", temp * au * eV_to_kelvin
        !
        temp = 0.D0  
        !
@@ -219,7 +243,7 @@ MODULE minimization_routines
        !
        temp = temp / REAL( ( N_fin - N_in ) * deg_of_freedom )      
        !
-       PRINT *, "temperature after thermalization", temp * AU * eV_to_kelvin
+       PRINT *, "temperature after thermalization", temp * au * eV_to_kelvin
        !
 #endif
        !

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#define USE_ELASTIC_CONSTANTS_RESCALING
 !#define DEBUG_ELASTIC_CONSTANTS
 !
 !-----------------------------------------------------------------------
@@ -102,7 +103,7 @@ MODULE neb_base
                                    optimization, k, k_min, k_max,  Emax_index, &
                                    VEC_scheme, neb_thr, lquick_min, lmol_dyn,  &
                                    ldamped_dyn, nstep_neb, istep_neb,          &
-                                   suspended_image
+                                   suspended_image, vel_zeroed
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
@@ -184,6 +185,8 @@ MODULE neb_base
       IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
          !     
          vel = 0.D0
+         !
+         vel_zeroed = .FALSE.
          !
       END IF
       !
@@ -323,8 +326,6 @@ MODULE neb_base
          WRITE( UNIT = iunneb, FMT = stringfmt ) &
              "CI_scheme", TRIM( CI_scheme )
          WRITE( UNIT = iunneb, FMT = stringfmt ) &
-             "VEC_scheme", TRIM( VEC_scheme )
-         WRITE( UNIT = iunneb, FMT = stringfmt ) &
              "minimization_scheme", TRIM( minimization_scheme )
          WRITE( UNIT = iunneb, FMT = stringfmt ) &
              "num_of_images", TRIM( num_of_images_char )
@@ -408,7 +409,7 @@ MODULE neb_base
       USE constants,              ONLY : pi, eps32
       USE neb_variables,          ONLY : pos, num_of_images, Emax, Emin, &
                                          k_max, k_min, k, PES, PES_gradient, &
-                                         VEC_scheme, elastic_gradient, tangent
+                                         elastic_gradient, tangent
       USE supercell,              ONLY : pbc
       USE basic_algebra_routines
       !
@@ -419,7 +420,8 @@ MODULE neb_base
       INTEGER       :: i
       REAL(KIND=DP) :: F_ortho_max, F_ortho_max_i, &
                        F_para_max_i, F_para_max, rescale_coeff        
-      REAL(KIND=DP) :: delta_E
+      REAL(KIND=DP) :: delta_E, delta_norm_grad
+      REAL(KIND=DP) :: k_sum, k_diff
       REAL(KIND=DP) :: norm_grad_V, norm_grad_V_min, norm_grad_V_max
       !
       ! ... local parameters
@@ -433,53 +435,57 @@ MODULE neb_base
       !
       !
       rescale_coeff = k_max / k_min
+      !
       k_min = MAX( k_min, k_minimal )
       k_max = MAX( k_max, k_minimal * rescale_coeff )
       !
-      IF ( VEC_scheme == "energy-weighted" ) THEN
-         !
-         delta_E = Emax - Emin     
-         !
-         IF ( delta_E <= eps32 ) THEN
-            !
-            k = k_min
-            !
-            RETURN
-            !
-         END IF
+      delta_E = Emax - Emin
+      !
+      k_sum  = k_max + k_min
+      k_diff = k_max - k_min
+      !
+      k(:) = k_min
+      !
+      IF ( delta_E > eps32 ) THEN
          !
          DO i = 1, num_of_images 
             !
-            k(i) = 0.5D0 * ( ( k_max + k_min ) -  ( k_max - k_min ) * &
-                   COS( pi * ( PES(i) - Emin ) / delta_E ) )
+            k(i) = 0.5D0 * ( k_sum - k_diff * &
+                             COS( pi * ( PES(i) - Emin ) / delta_E ) )
             !
          END DO
          !
-      ELSE
+      END IF
+      !
+      norm_grad_V_min = + 1.0D32
+      norm_grad_V_max = - 1.0D32
+      !
+      DO i = 1, num_of_images 
+         !  
+         norm_grad_V = norm( PES_gradient(:,i) )
          !
-         norm_grad_V_min = + 1.0D32
-         norm_grad_V_max = - 1.0D32
+         IF ( norm_grad_V < norm_grad_V_min ) norm_grad_V_min = norm_grad_V
+         IF ( norm_grad_V > norm_grad_V_max ) norm_grad_V_max = norm_grad_V
+         !
+      END DO
+      !
+      delta_norm_grad = norm_grad_V_max - norm_grad_V_min
+      !
+      IF ( delta_norm_grad > eps32 ) THEN
          !
          DO i = 1, num_of_images 
-            !  
-            norm_grad_V = norm( PES_gradient(:,i) )
-            !
-            IF ( norm_grad_V < norm_grad_V_min ) norm_grad_V_min = norm_grad_V
-            IF ( norm_grad_V > norm_grad_V_max ) norm_grad_V_max = norm_grad_V
-            !
-         END DO   
-         !    
-         DO i = 1, num_of_images 
             !
             norm_grad_V = norm( PES_gradient(:,i) )
             !
-            k(i) = 0.5D0 * ( ( k_max + k_min ) - ( k_max - k_min ) * &
-                   COS( pi * ( norm_grad_V - norm_grad_V_min ) / & 
-                   ( norm_grad_V_max - norm_grad_V_min ) ) )
+            k(i) = k(i) + 0.5D0 * ( k_sum - k_diff * &
+                          COS( pi * ( norm_grad_V - norm_grad_V_min ) / & 
+                          delta_norm_grad ) )
             !
-         END DO      
+         END DO
          !
       END IF
+      !
+      k(:) = 0.5D0 * k(:)
       !
       F_ortho_max = 0.D0
       F_para_max  = 0.D0
@@ -503,9 +509,13 @@ MODULE neb_base
       rescale_coeff = MAX( ( F_ortho_max / F_para_max ), rescale_coeff_min )
       rescale_coeff = MIN( rescale_coeff, rescale_coeff_max )
       !
+#if defined (USE_ELASTIC_CONSTANTS_RESCALING)
+      !
       k     = k * rescale_coeff
       k_max = k_max * rescale_coeff
       k_min = k_min * rescale_coeff
+      !
+#endif
       !
 #if defined (DEBUG_ELASTIC_CONSTANTS)
       !
@@ -1067,9 +1077,14 @@ MODULE neb_base
          END IF
          !
          ! ... the programs checks if the maximum number of iterations has
-         ! ... been reached or if the user has required a soft exit
+         ! ... been reached
          !
          IF ( istep_neb >= nstep_neb ) THEN
+            !
+            IF ( ionode ) &
+               WRITE( UNIT = iunneb, &
+                      FMT = '(/,5X,"NEB: reached the maximum number of ", &
+                             &     "steps")' )
             !
             suspended_image = 0
             !

@@ -28,7 +28,8 @@ MODULE io_routines
                                     PES_gradient, suspended_image, Emax,       &
                                     Emin, Emax_index, istep_neb, nstep_neb,    &
                                     lquick_min , ldamped_dyn, lmol_dyn,        &
-                                    reset_vel, k_min, k_max, pos_old, grad_old
+                                    k_min, k_max, pos_old, grad_old,           &
+                                    reset_vel, vel_zeroed
        USE io_global,        ONLY : ionode, ionode_id
        USE mp,               ONLY : mp_bcast
        !
@@ -36,7 +37,7 @@ MODULE io_routines
        !
        ! ... local variables
        !    
-       INTEGER              :: i, j, ia
+       INTEGER              :: i, j, ia, ierr
        CHARACTER (LEN=256)  :: input_line
        LOGICAL, EXTERNAL    :: matches
        !
@@ -92,7 +93,7 @@ MODULE io_routines
           END IF
           !
           READ( UNIT = iunrestart, FMT = * )
-          READ( UNIT = iunrestart, FMT = * ) frozen(1)
+          READ( UNIT = iunrestart, FMT = * ) frozen(1), vel_zeroed(1)
           READ( UNIT = iunrestart, FMT = * ) PES(1)
           !
           ia = 0  
@@ -124,7 +125,7 @@ MODULE io_routines
           DO i = 2, num_of_images
              !
              READ( UNIT = iunrestart, FMT = * )
-             READ( UNIT = iunrestart, FMT = * ) frozen(i)
+             READ( UNIT = iunrestart, FMT = * ) frozen(i), vel_zeroed(i)
              READ( UNIT = iunrestart, FMT = * ) PES(i)
              !
              DO j = 1, dim, 3 
@@ -154,10 +155,10 @@ MODULE io_routines
              !  
           END DO
           !
-          IF ( .NOT. reset_vel .AND. &
+          READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
+          !
+          IF ( .NOT. reset_vel .AND. ( ierr == 0 ) .AND. &
                ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
-             !
-             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
              !
              IF ( matches( "QUICK-MIN FIELDS", input_line ) ) THEN
                 !
@@ -250,7 +251,7 @@ MODULE io_routines
                                     PES_gradient, dim, suspended_image,   &
                                     lquick_min , ldamped_dyn, lmol_dyn,   &
                                     istep_neb, nstep_neb, k_min, k_max,   &
-                                    pos_old, grad_old
+                                    pos_old, grad_old, vel_zeroed
        USE formats,          ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : ionode
@@ -291,7 +292,8 @@ MODULE io_routines
           DO i = 1, num_of_images
              !
              WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-             WRITE( UNIT = iunrestart, FMT = '(L1)' ) frozen(i)
+             WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
+                                                           vel_zeroed(i)
              WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
              !
              ia = 0
@@ -387,7 +389,8 @@ MODULE io_routines
              DO i = 1, num_of_images
                 !
                 WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                WRITE( UNIT = iunrestart, FMT = '(L1)' ) frozen(i)
+                WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
+                                                              vel_zeroed(i)
                 WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
                 !
                 ia = 0
