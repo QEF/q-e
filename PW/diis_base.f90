@@ -69,11 +69,13 @@ MODULE diis_base
     ! number of trial steps per sweep
   INTEGER,        PARAMETER :: ncgbnd = 2
     ! number of empty bands used by the holes filler
-  REAL (KIND=DP), PARAMETER :: lambda = 2.5D0
-    ! diis step length  
-  REAL (KIND=DP), PARAMETER :: ortho_win_min = 0.05D0 
+  REAL (KIND=DP), PARAMETER :: sweeps_lambda = 2.D0
+    ! sweeps step-length  
+  REAL (KIND=DP), PARAMETER :: diis_lambda = 2.5D0
+    ! diis step-length  
+  REAL (KIND=DP), PARAMETER :: ortho_win_min = 0.03674930873264048097D0 
     ! minimum energy window (Ry) for orthogonalization
-  REAL (KIND=DP), PARAMETER :: holes_filler_ethr = 1.D-7
+  REAL (KIND=DP), PARAMETER :: holes_filler_ethr = 1.D-6
     ! convergence threshold for the holes filler
   REAL (KIND=DP), PARAMETER :: empty_bands_ethr_min = 1.D-5
     ! minimum convergence threshold on empty bands

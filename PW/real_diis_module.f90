@@ -140,6 +140,18 @@ MODULE real_diis_module
          !
          CALL init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
          !
+         ! ... first check on convergence
+         !
+         IF ( ALL( conv(:) ) ) THEN
+            !
+            notcnv = 0
+            !
+            CALL terminate()
+            !
+            RETURN
+            !
+         END IF
+         !
       ELSE
          !
          ! ... initialization step for DIIS
@@ -193,75 +205,12 @@ MODULE real_diis_module
          !
          spsi(:,:) = aux(:,:)
          !
-         ! ... the first step in the DIIS history is saved
-         !
-         FORALL( ib = 1: nbnd_diis )
-            !
-            e_old(1,ib)      = e(ib)
-            psi_old(:,1,ib)  = psi(:,ib)
-            hpsi_old(:,1,ib) = hpsi(:,ib)
-            spsi_old(:,1,ib) = spsi(:,ib)
-            !
-         END FORALL
-         !
-         nbase = 1
-         !
-         ! ... new residual vectors
-         !
-         FORALL( ib = 1 : nbnd )
-            !
-            aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
-            !
-         END FORALL
-         !
-         ! ... preconditioning of all the residual vecotrs
-         !
-         CALL g_psi( ndmx, ndim, nbnd, aux, e )
-         !
-         ! ... new trial wavefunctions
-         !
-         FORALL( ib = 1 : nbnd )
-            !
-            psi(:,ib) = psi(:,ib) - lambda * aux(:,ib)
-            !
-         END FORALL
-         !
-         diis_iter = diis_iter + 1
-         !
-      END IF
-      !
-      ! ... first check on convergence
-      !
-      IF ( ALL( conv(:) ) ) THEN
-         !
-#if defined (DIIS_DEBUG)
-         PRINT *, "final eigenvalues :"
-         PRINT *, e(:)
-         PRINT *, "variation :"
-         PRINT *, ABS( e(:) - e_ref(:) )
-         PRINT *, conv(:)
-#endif
-         !
-         notcnv = 0
-         !
-         ! ... work-space deallocation
-         !
-         CALL deallocate_base()
-         !
-         DEALLOCATE( vr )
-         DEALLOCATE( sr )
-         DEALLOCATE( hr )
-         !
-         CALL stop_clock( 'diis' )
-         !
-         RETURN
-         !
       END IF
       !
       ! ... then DIIS-diagonalization is performed only on the lowest 
       ! ... "nbnd_diis" bands
       !
-      CALL diis_with_ortho( ndim, ndmx, nbnd_diis, psi, e, btype, diis_iter )
+      CALL diis_with_ortho( ndim, ndmx, psi, e, btype, diis_iter )
       !
       ! ... finally, all eventual holes left by the DIIS-diagonalization are
       ! ... filled with a CG-based diagonalization of the topmost "ncgbnd" 
@@ -275,35 +224,45 @@ MODULE real_diis_module
          ! 
       END DO  holes_sniffer
       !
-     ! CALL rotate_wfc_gamma( ndmx, ndim, nbnd, &
-     !                        gstart, nbnd, psi, .TRUE., psi, e )
-      !
-#if defined (DIIS_DEBUG)
-      PRINT *, "final eigenvalues :"
-      PRINT *, e(:)
-      PRINT *, "variation :"
-      PRINT *, ABS( e(:) - e_ref(:) )
-      PRINT *, conv(:)
-#endif
-      !
       ! ... the number of not-converged bands is computed
       !
       notcnv = COUNT( .NOT. conv(:) )
       !
-      ! ... work-space deallocation
-      !
-      CALL deallocate_base()
-      !
-      DEALLOCATE( vr )
-      DEALLOCATE( sr )
-      DEALLOCATE( hr )
-      !
-      CALL stop_clock( 'diis' )
+      CALL terminate()
       !
       RETURN
       !
+      CONTAINS
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE terminate()
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          ! ... work-space deallocation
+          !
+          CALL deallocate_base()
+          !
+          DEALLOCATE( vr )
+          DEALLOCATE( sr )
+          DEALLOCATE( hr )
+          !
+          CALL stop_clock( 'diis' )
+          !
+#if defined (DIIS_DEBUG)
+          PRINT *, "final eigenvalues :"
+          PRINT *, e(:)
+          PRINT *, "variation :"
+          PRINT *, ABS( e(:) - e_ref(:) )
+          PRINT *, conv(:)
+#endif          
+          !
+          RETURN
+          !
+        END SUBROUTINE terminate
+        !
     END SUBROUTINE rdiisg
-    !
     !
     !------------------------------------------------------------------------
     SUBROUTINE init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
@@ -330,14 +289,10 @@ MODULE real_diis_module
       !
       ! ... local variables
       !
-      INTEGER :: sweep, trial_step
-        ! counters on iterations
-      INTEGER :: ib
-        ! counter on bands
-      INTEGER :: notcnv
-        ! number of unconverged bands  
+      INTEGER        :: sweep, trial_step
+      INTEGER        :: ib
+      INTEGER        :: notcnv
       REAL (KIND=DP) :: psiSpsi
-        ! squared normalization of psi
       !
       !
       sweep = 0
@@ -395,7 +350,7 @@ MODULE real_diis_module
             !
             FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
                !
-               psi(:,ib) = psi(:,ib) - aux(:,ib)
+               psi(:,ib) = psi(:,ib) - sweeps_lambda * aux(:,ib)
                !
             END FORALL
             !
@@ -511,7 +466,7 @@ MODULE real_diis_module
             !
             CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
             !
-            psi(:,ib) = psi(:,ib) - lambda * aux(:,ib)
+            psi(:,ib) = psi(:,ib) - diis_lambda * aux(:,ib)
             !
          END DO   
          !
@@ -525,9 +480,8 @@ MODULE real_diis_module
       !
     END SUBROUTINE init_steps
     !
-    !
     !------------------------------------------------------------------------
-    SUBROUTINE diis_with_ortho( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+    SUBROUTINE diis_with_ortho( ndim, ndmx, psi, e, btype, diis_iter )
       !------------------------------------------------------------------------
       !
       USE control_flags, ONLY : diis_ndim, ethr
@@ -536,32 +490,24 @@ MODULE real_diis_module
       !
       ! ... I/O variables
       !
-      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd
+      INTEGER, INTENT(IN) :: ndim, ndmx
         ! dimension of the matrix to be diagonalized
         ! leading dimension of matrix psi, as declared in the calling pgm unit
-        ! integer number of searched low-lying roots
-      INTEGER, INTENT(INOUT) :: btype(nbnd)
+      INTEGER, INTENT(INOUT) :: btype(nbnd_diis)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd_diis)
         !  psi contains the refined estimates of the eigenvectors
-      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd_diis)
         ! contains the estimated eigenvalues
       INTEGER, INTENT(INOUT) :: diis_iter  
         ! average number of iterations performed per band                 
       !
       ! ... local variables
       !
-      INTEGER :: kter, ib, jb
-        ! counter on iterations
-        ! counters on bands
-      INTEGER :: notcnv
-        ! number of unconverged bands        
+      INTEGER        :: kter, ib, jb
+      INTEGER        :: notcnv
       REAL (KIND=DP) :: psi_norm, overlap
       !
-      !
-      ! ... initialization of control variables
-      !
-      kter = 0
       !
 #if defined (WINDOW_ORTHO)
       !
@@ -569,6 +515,41 @@ MODULE real_diis_module
                        0.05D0 * ( MAXVAL( e(:) - MINVAL( e(:) ) ) ) )
       !
 #endif
+      !
+      ! ... the first step in the DIIS history is saved
+      !
+      FORALL( ib = 1: nbnd_diis )
+         !
+         e_old(1,ib)      = e(ib)
+         psi_old(:,1,ib)  = psi(:,ib)
+         hpsi_old(:,1,ib) = hpsi(:,ib)
+         spsi_old(:,1,ib) = spsi(:,ib)
+         !
+      END FORALL
+      !
+      nbase = 1
+      !
+      ! ... new residual vectors
+      !
+      FORALL( ib = 1 : nbnd_diis )
+         !
+         aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
+         !
+      END FORALL
+      !
+      ! ... preconditioning of all the residual vecotrs
+      !
+      CALL g_psi( ndmx, ndim, nbnd_diis, aux, e )
+      !
+      ! ... new trial wavefunctions
+      !
+      FORALL( ib = 1 : nbnd_diis )
+         !
+         psi(:,ib) = psi(:,ib) - diis_lambda * aux(:,ib)
+         !
+      END FORALL
+      !
+      kter = 1
       !
       ! ... DIIS loop
       !
@@ -584,7 +565,7 @@ MODULE real_diis_module
          !
          ! ... reference eigenvalues are saved
          !
-         e_ref(1:nbnd) = e(1:nbnd)
+         e_ref(1:nbnd_diis) = e(1:nbnd_diis)
          !
          ! ... the size of the history-subspace is increased
          !
@@ -592,7 +573,7 @@ MODULE real_diis_module
          !
          ! ... bands are reordered so that converged bands come first
          !
-         CALL reorder_bands( psi, notcnv, nbnd, +1 )
+         CALL reorder_bands( psi, notcnv, nbnd_diis, +1 )
          !
          ! ... here we compute H|psi> and S|psi> for not converged bands
          !
@@ -601,7 +582,7 @@ MODULE real_diis_module
          !
          ! ... bands are back-ordered
          !
-         CALL reorder_bands( psi, notcnv, nbnd, -1 )
+         CALL reorder_bands( psi, notcnv, nbnd_diis, -1 )
          !
          ! ... DIIS step : the best |psi>, H|psi> and S|spi> are computed here
          !
@@ -614,7 +595,7 @@ MODULE real_diis_module
          !
          CALL start_clock( 'cgramg1' )
          !
-         DO ib = 1, nbnd
+         DO ib = 1, nbnd_diis
             !
 #if defined (SHOW_OVERLAP)
             WRITE( 999, '(//"VECTOR = ",I3)' ) ib
@@ -667,37 +648,37 @@ MODULE real_diis_module
          !
 #else
          !
-         CALL cgramg1( ndmx, nbnd, ndim, 1, nbnd, psi, spsi, hpsi )
+         CALL cgramg1( ndmx, nbnd_diis, ndim, 1, nbnd_diis, psi, spsi, hpsi )
          !
 #endif
          !         
          ! ... convergence is checked here
          !
-         WHERE( btype(1:nbnd) == 1 )
+         WHERE( btype(1:nbnd_diis) == 1 )
             !
-            conv(1:nbnd) = ( ABS( e(1:nbnd) - e_ref(1:nbnd) ) < ethr )
+            conv(1:nbnd_diis) = ( ABS( e(1:nbnd_diis) - e_ref(1:nbnd_diis) ) < ethr )
             !
          ELSEWHERE
             !
-            conv(1:nbnd) = ( ABS( e(1:nbnd) - e_ref(1:nbnd) ) < empty_ethr )
+            conv(1:nbnd_diis) = ( ABS( e(1:nbnd_diis) - e_ref(1:nbnd_diis) ) < empty_ethr )
             !
          END WHERE
          !
 #if defined (DIIS_DEBUG)
          PRINT *, "eigenvalues :"
-         PRINT *, e(1:nbnd)
+         PRINT *, e(1:nbnd_diis)
          PRINT *, "variation :"
-         PRINT *, ABS( e(1:nbnd) - e_ref(1:nbnd) )
-         PRINT *, conv(1:nbnd)
+         PRINT *, ABS( e(1:nbnd_diis) - e_ref(1:nbnd_diis) )
+         PRINT *, conv(1:nbnd_diis)
 #endif         
          !
          ! ... exit if all bands are converged
          !
-         IF ( ALL( conv(1:nbnd) ) ) EXIT iterate
+         IF ( ALL( conv(1:nbnd_diis) ) ) EXIT iterate
          !
          ! ... new preconditioned residual vectors
          !
-         DO ib = 1, nbnd
+         DO ib = 1, nbnd_diis
             !
             IF ( conv(ib) ) CYCLE
             !
@@ -710,9 +691,9 @@ MODULE real_diis_module
          ! ... here we compute the new eigenvectors for not converged
          ! ... bands only 
          !
-         FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
+         FORALL( ib = 1: nbnd_diis, ( .NOT. conv(ib) ) )
             !
-            psi(:,ib) = psi(:,ib) - lambda * aux(:,ib)
+            psi(:,ib) = psi(:,ib) - diis_lambda * aux(:,ib)
             !
          END FORALL
          !
@@ -722,7 +703,7 @@ MODULE real_diis_module
       !
       WRITE( 999, '(//"FINAL CHECK ON ORTHOGONALIZATION ")' )
       !
-      DO ib = 1, nbnd
+      DO ib = 1, nbnd_diis
          !
          WRITE( 999, '(//"VECTOR = ",I3)' ) ib
          !          
@@ -795,7 +776,7 @@ MODULE real_diis_module
           all_spsi = ZERO
           all_res  = ZERO
           !
-          bands_loop: DO ib = 1, nbnd
+          bands_loop: DO ib = 1, nbnd_diis
              !
              IF ( conv(ib) ) CYCLE bands_loop
              !
@@ -950,7 +931,6 @@ MODULE real_diis_module
         !
     END SUBROUTINE diis_with_ortho
     !
-    !
     !------------------------------------------------------------------------
     SUBROUTINE holes_filler( ndmx, ndim, nbnd, psi, e, precondition, diis_iter )
       !------------------------------------------------------------------------
@@ -997,14 +977,17 @@ MODULE real_diis_module
          PRINT *, "CG: BAND = ", ib
 #endif
          !
-         ! ... random wavefunction
+         ! ... add some noise to |psi>
+         !
+         rr = DDOT( ndim2, aux(1,ib), 1, aux(1,ib), 1 )
+         !
+         rr = SQRT( rr )
          !
          DO i = 1, ndim
             !
-            rr  = rndm()
             arg = tpi * rndm()
             !
-            psi(i,ib) = CMPLX( rr * COS( arg ), rr * SIN( arg ) )
+            psi(i,ib) = psi(i,ib) + rr * CMPLX( COS( arg ), SIN( arg ) )
             !
          END DO
          !
