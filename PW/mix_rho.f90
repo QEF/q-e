@@ -63,16 +63,17 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   complex (kind=DP), allocatable :: rhocin(:,:), rhocout(:,:), &
                 rhoinsave(:), rhoutsave(:), &
                 nsinsave(:,:,:,:),  nsoutsave(:,:,:,:)
-  complex (kind=DP), allocatable, save :: df(:,:), dv(:,:), &
-                                      df_ns(:,:,:,:,:), dv_ns(:,:,:,:,:)
+
+  real (kind=DP), allocatable, save :: df_ns(:,:,:,:,:), dv_ns(:,:,:,:,:)  
+                ! df_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
+                ! dv_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem  
+  complex (kind=DP), allocatable, save :: df(:,:), dv(:,:)
                 ! rhocin(ngm0,nspin)
                 ! rhocout(ngm0,nspin)
                 ! rhoinsave(ngm0*nspin): work space
                 ! rhoutsave(ngm0*nspin): work space
                 ! df(ngm0*nspin,n_iter): information from preceding iterations
                 ! dv(ngm0*nspin,n_iter):    "  "       "     "        "  "
-                ! df_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
-                ! dv_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
 
   integer :: ldim
 
