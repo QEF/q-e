@@ -565,7 +565,7 @@ MODULE spin_orb
   SAVE
 
   LOGICAL :: &
-      lspinorb           ! if .TRUE. this is a spin-robit calculation
+      lspinorb, domag    ! if .TRUE. this is a spin-robit calculation
 
   COMPLEX (kind=dp) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)  ! transform real
                          ! spherical harmonics into complex ones
