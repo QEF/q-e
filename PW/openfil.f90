@@ -10,8 +10,9 @@
 SUBROUTINE openfil()
   !----------------------------------------------------------------------------
   !
-  ! ... This routine opens all files needed to the self consistent run,
+  ! ... This routine opens some files needed to the self consistent run,
   ! ... sets various file names, units, record lengths
+  ! ... All units are set in Modules/io_files.f90
   !
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
@@ -19,16 +20,15 @@ SUBROUTINE openfil()
   USE wvfct,          ONLY : nbnd, npwx
   USE control_flags,  ONLY : order, lneb
   USE ldaU,           ONLY : lda_plus_U
-  USE io_files,       ONLY : prefix, &
-                             iunat, iunocc, iunwfc, iunoldwfc, iunoldwfc2, &
-                             iunigk, nwordwfc, nwordatwfc, iunneb
+  USE io_files,       ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
+                             nwordwfc, nwordatwfc
   USE restart_module, ONLY : readfile_new
   USE para,           ONLY : kunit
   !
   IMPLICIT NONE
   !
   LOGICAL       :: exst
-  INTEGER       :: ndr, kunittmp, ierr
+  INTEGER       :: ierr
   REAL(KIND=DP) :: edum(1,1), wdum(1,1)
   !
   !
@@ -40,39 +40,34 @@ SUBROUTINE openfil()
   CALL diropn( iunwfc, TRIM( prefix )//'.wfc', nwordwfc, exst )
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
-     ndr      = 4
-     kunittmp = 1
-#  ifdef __PARA
-     kunittmp = kunit
-#  endif
      !
-     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, nwordwfc, &
+     CALL readfile_new( 'wave', iunpun, edum, wdum, kunit, nwordwfc, &
                         iunwfc, ierr )
+     !                   
      IF ( ierr > 0 ) THEN
+        !
         WRITE( stdout, '(5X,"Cannot read wfc file: not found")' )
+        !
         startingwfc = 'atomic'
+        !
      END IF
+     !
   END IF
   !
   ! ... Needed for LDA+U
   !
   ! ... iunat contains the orthogonalized wfcs
+  ! ... iunocc contains the atomic occupations computed in new_ns
+  ! ... it is opened and closed for each reading-writing operation  
   !
-  iunat = 13
   nwordatwfc = 2 * npwx * natomwfc
   !
   IF ( lda_plus_u ) &
      CALL diropn( iunat, TRIM( prefix )//'.atwfc', nwordatwfc, exst )
   !
-  ! ... iunocc contains the atomic occupations computed in new_ns
-  ! ... it is opened and closed for each reading-writing operation
-  !
-  iunocc = 14
-  !
   ! ... iunigk contains the number of PW and the indices igk
   ! ... Note that unit 15 is reserved for error messages 
   !
-  iunigk = 16
   CALL seqopn( iunigk, TRIM( prefix )//'.igk', 'UNFORMATTED', exst )
   !
   RETURN
