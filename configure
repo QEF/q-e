@@ -3007,6 +3007,7 @@ then
 	then
 		try_libdirs="/usr/local/lib
 			     /usr/local/pgi/linux86/lib
+			     /opt/pgi/linux86/5.1/lib
 			     /cineca/lib /cineca/prod/pgi/lib"
 	elif test $is_mips
 	then
@@ -3118,6 +3119,7 @@ fi
 		done
 
 		# check for essl
+		unset ac_cv_search_dcft # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
@@ -3286,6 +3288,7 @@ fi
 	elif test $is_mips
 	then
 		# check for complib.sgimath
+		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
@@ -3601,6 +3604,7 @@ fi
 	if ! test $have_blas
 	then
 		# check for blas
+		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
@@ -3772,6 +3776,7 @@ fi
 	then libs="-lessl $libs" ; fi
 
 	# check for mpi
+	unset ac_cv_search_mpi_init # clear cached value
 	LDFLAGS="$test_ldflags"
 	LIBS="$libs"
 	echo "$as_me:$LINENO: checking for library containing mpi_init" >&5

@@ -381,6 +381,7 @@ then
 	then
 		try_libdirs="/usr/local/lib
 			     /usr/local/pgi/linux86/lib
+			     /opt/pgi/linux86/5.1/lib
 			     /cineca/lib /cineca/prod/pgi/lib"
 	elif test $is_mips
 	then
@@ -423,6 +424,7 @@ then
 		done
 
 		# check for essl
+		unset ac_cv_search_dcft # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
@@ -454,6 +456,7 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 	elif test $is_mips
 	then
 		# check for complib.sgimath
+		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
@@ -516,6 +519,7 @@ $ac_cv_search_dgemm -latlas $libs", , -latlas)
 	if ! test $have_blas
 	then
 		# check for blas
+		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
@@ -544,11 +548,12 @@ $ac_cv_search_dgemm -latlas $libs", , -latlas)
 			then break ; fi
 		done
 	fi
-	# essl must precede lapack (if present)	
+	# essl must precede lapack (if present)
 	if test $have_essl && test $have_lapack
 	then libs="-lessl $libs" ; fi
 
 	# check for mpi
+	unset ac_cv_search_mpi_init # clear cached value
 	LDFLAGS="$test_ldflags"
 	LIBS="$libs"
 	AC_SEARCH_LIBS(mpi_init, mpi, libs="$LIBS")
