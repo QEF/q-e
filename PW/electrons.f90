@@ -298,7 +298,7 @@ SUBROUTINE electrons()
                       ethr_min, iter, nmix, flmix, conv_elec )
         !
         ! ... for the first scf iteration it is controlled that the threshold 
-        ! ... is small enought for the diagonalization to be adeguate
+        ! ... is small enought for the diagonalization to be adequate
         !
 #if defined (OLDSTYLE)
         IF ( .FALSE. ) THEN
@@ -308,7 +308,7 @@ SUBROUTINE electrons()
            !
            ! ... a new diagonalization is needed       
            !
-           WRITE( stdout, '(/,5X,"WARNING: ethr not adeguate")' )
+           WRITE( stdout, '(/,5X,"WARNING: ethr not adequate")' )
            WRITE( stdout, '(5X,"         a new diagonalization is needed",/)' )
            !
            CALL c_bands( iter, ik_, dr2 )
