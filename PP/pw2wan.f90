@@ -29,11 +29,12 @@ subroutine do_wannier(nodenumber)
 
   implicit none
   character(len=3) :: nodenumber
+  character(len=80) :: prefix
   integer , dimension(3):: nk
   real(kind=8), dimension(3):: s0
   integer :: ik, i
 
-  namelist / inputpp / tmp_dir, filpun, nk, s0
+  namelist / inputpp / tmp_dir, filpun, nk, s0, prefix
   !
   nd_nmbr = nodenumber  
   !
@@ -41,6 +42,7 @@ subroutine do_wannier(nodenumber)
   !
   filpun = ' '  
   tmp_dir = './'
+  prefix = ' '
   nk = 0
   s0 = 0.d0
   !
