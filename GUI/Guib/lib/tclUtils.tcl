@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.2 2004-02-23 09:32:06 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -1086,11 +1086,19 @@ proc ::tclu::_tempFile_name {args} {
 		}
 	    }
 	} macintosh {
-	    set tmpdir $env(TRASH_FOLDER)  ;# a better place?
+	    set tmpdir $env(TRASH_FOLDER) ; # a better place?
 	} default {
-	    set tmpdir [pwd]
-	    catch {set tmpdir $env(TMP)}
-	    catch {set tmpdir $env(TEMP)}
+	    set tmpdir [pwd]	    
+	    if { ! [catch {set _tmpdir $env(TMP)}] } {
+		if { [file writable $_tmpdir] } { 
+		    set tmpdir $_tmpdir 
+		}
+	    }
+	    if { ! [catch {set _tmpdir $env(TEMP)}] } {
+		if { [file writable $_tmpdir] } { 
+		    set tmpdir $_tmpdir 
+		}
+	    }
 	}
     }
     if { ![file writable $tmpdir] } {
