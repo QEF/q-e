@@ -39,12 +39,18 @@ set ::guib::settings(FILENAME.only_tail)  0
 #  (Tk)PWscf settings ...
 # ------------------------------------------------------------------------
 
-set ::pwscf::settings(EDITOR)          emacs
-set ::pwscf::settings(PAGER)           {xterm -e less}
+if { $tcl_platform(platform) == "unix" } {
+    set ::pwscf::settings(EDITOR) emacs
+    set ::pwscf::settings(PAGER)  {xterm -e less}
+} else {
+    set ::pwscf::settings(EDITOR) PWgui
+    set ::pwscf::settings(PAGER)  PWgui
+
+}    
 set ::pwscf::settings(HTMLVIEWER)      PWgui
 
-set ::pwscf::settings(EDITOR.list)     {emacs gedit nedit {xterm -e vi}}
-set ::pwscf::settings(PAGER.list)      {{xterm -e less} {xterm -e more}}
+set ::pwscf::settings(EDITOR.list)     {PWgui emacs gedit nedit {xterm -e vi}}
+set ::pwscf::settings(PAGER.list)      {PWgui {xterm -e less} {xterm -e more}}
 set ::pwscf::settings(HTMLVIEWER.list) {PWgui}
 
 
