@@ -52,7 +52,7 @@ subroutine symz (phi, nsym, s, nat, irt)
      enddo
   enddo
   !
-  phi(:, :, :) = work (:, :, :) / float (nsym)
+  phi(:, :, :) = work (:, :, :) / dble (nsym)
   !
   return
 end subroutine symz

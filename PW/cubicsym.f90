@@ -135,8 +135,8 @@ subroutine cubicsym (at, is, isname, nrot)
   do jpol = 1,3
      do kpol = 1,3
         overlap(kpol,jpol) = at(1,kpol)*at(1,jpol) +&
-        &                           at(2,kpol)*at(2,jpol) +&
-        &                           at(3,kpol)*at(3,jpol)
+                             at(2,kpol)*at(2,jpol) +&
+                             at(3,kpol)*at(3,jpol)
      enddo
   enddo
   !
@@ -155,8 +155,8 @@ subroutine cubicsym (at, is, isname, nrot)
            !   compute, in cartesian coordinates the rotated vector
            !
            rat(mpol) = s(mpol,1,irot)*at(1,jpol) +&
-           &                     s(mpol,2,irot)*at(2,jpol) +&
-           &                     s(mpol,3,irot)*at(3,jpol)
+                       s(mpol,2,irot)*at(2,jpol) +&
+                       s(mpol,3,irot)*at(3,jpol)
         enddo
 
         do kpol = 1,3
@@ -174,9 +174,9 @@ subroutine cubicsym (at, is, isname, nrot)
      do jpol = 1,3
         do kpol = 1,3
            value = overlap(jpol,1)*rot(1,kpol) +&
-           &                 overlap(jpol,2)*rot(2,kpol) +&
-           &                 overlap(jpol,3)*rot(3,kpol)
-           if ( abs(float(nint(value))-value).gt.1.0d-8) then
+           &       overlap(jpol,2)*rot(2,kpol) +&
+           &       overlap(jpol,3)*rot(3,kpol)
+           if ( abs(dble(nint(value))-value) > 1.0d-8) then
               !
               ! if a noninteger is obtained, this implies that this operation
               ! is not a symmetry operation for the given lattice

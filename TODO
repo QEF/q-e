@@ -1,4 +1,5 @@
-TODO LIST - 26 February 2004
+TODO LIST - 3 April 2004
+(does not include new developments!)
 
 INSTALLATION/PORTING
 
@@ -26,13 +27,16 @@ COMMON
 
 - variable declarations : real(kind=DP), or real(dbl), everywhere
 
-- real vs dreal, cmplx vs dcmplx, dfloat etc
+- real vs dreal, cmplx vs dcmplx, dfloat vs dble vs float etc
 
 - calculation of <psi|exp(iGr)|psi'>
 
-- process numbering: 1 to nproc or 0 to nproc-1 ?
+- error is in flib/ but requires modules: not a good solution,
+  things in flib/ should not use modules except maybe kinds   
 
 PW
+
+- cleanup of parallel stuff: removal of old-style variables
 
 - remove iswitch, replace with existing (minus_q, lscf)
   or new logical variables
@@ -49,14 +53,12 @@ PW
 
 - remove analytical PPs and related variables
 
-- remove residual direct calls to MPI routines,
-  use (or merge with) existing routines in mp.f90 instead
-
-- remove all calls to setv in PH and D3; all calls to zero and SSUM in
-  CPV; calls to level-1 blas copy, scal
+- replace calls to level-1 blas copy, scal, axpy, with f90 syntax
+  (same in CP)
 
 - remove potential mixing, save and start from rho instead of V,
-  at least for scf calculations. For non-scf calculations: we may
+  at least for scf calculations. Requires fixing the noncolinear
+  and electric-field cases. For non-scf calculations: we may
   still start from V, but the output file MUST include the scf rho,
   not a bogus rho as it may happen now
 
@@ -79,8 +81,8 @@ PW
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)
   - shift structure factor from beta to psi when computing becp (reduce memory)
-  - use real BLAS routine instead of COMPLEX one in hpsi/spsi (at least 2 times 
-    faster).
+  - use real BLAS routine instead of COMPLEX one in hpsi/spsi 
+    (at least 2 times faster).
   - use only half of the G's when computing real integrals (2 times faster)
   - seek for CG and DIIS algoritms that only use (H-eS)|psi> and not
     the two vector separately ... compute it in one single call. (this way
@@ -89,16 +91,12 @@ PW
 - output should be more informative and less confused
   the printout with UPF PP is incomplete or misleading (lloc=0)
 
-- the various *bfgs, dynamics, vcsmd should be rewritten in a more
-  uniform way with respect to what they print and how the parallel
-  case is treated. 
-
 - write explicitly and unambiguosly the units of output quantities
 
 POSTPROCESSING
 
-- postprocessing/pwtools in the parallel case
-  and with new_punch must be verified
+- postprocessing/pwtools in the parallel case and with new_punch 
+  must be verified - complete Gamma case
 
 - stm_wfc_matching not working
 
@@ -112,9 +110,7 @@ POSTPROCESSING
 
 PH
 
-- Tone: ntyp in input needed for phonon GUI ?
-
-- better algorithm for electron-phonon (Malgorzata)
+- better algorithm for electron-phonon (Malgorzata?)
 
 DOCUMENTATION
 
@@ -138,8 +134,6 @@ CPV:
   (leave either UPF or old-format Vanderbilt)
 
 - check on small box size
-
-- replace calls to zero, ssum, csum, blas copy, scal, with f90 commands
 
 - the output is horrible
 

@@ -121,9 +121,9 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
 
      enddo
 
-     ft (1) = ftau (1, isym) / float (nr1)
-     ft (2) = ftau (2, isym) / float (nr2)
-     ft (3) = ftau (3, isym) / float (nr3)
+     ft (1) = ftau (1, isym) / dble (nr1)
+     ft (2) = ftau (2, isym) / dble (nr2)
+     ft (3) = ftau (3, isym) / dble (nr3)
 
      call checksym (isym, nat, ityp, xau, rau, ft, loksym, irt)
      if (.not.loksym (isym) ) call errore ('checkallsym', &

@@ -511,7 +511,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
   !
   if (plot_out.eq.1) then
      do i = 1, nx
-        write (ounit, '(2f20.10)') deltax*float(i-1), real(carica(i))
+        write (ounit, '(2f20.10)') deltax*dble(i-1), real(carica(i))
      enddo
   else
      rhoint = 0.d0
@@ -520,7 +520,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
         !       simple trapezoidal rule: rhoint=int carica(i) r^2(i) dr
         !
         rhoint = rhoint + real(carica(i)) * (i-1)**2 * (deltax*alat)**3 
-        write (ounit, '(3f20.10)') deltax*float(i-1), real(carica(i)), rhoint
+        write (ounit, '(3f20.10)') deltax*dble(i-1), real(carica(i)), rhoint
      enddo
 
   endif

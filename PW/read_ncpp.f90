@@ -116,7 +116,7 @@ subroutine read_ncpp (np, iunps)
   r (0, np) = 0.d0
   rab (0, np) = 0.d0
   do ir = 1, mesh (np)
-     x = xmin (np) + float (ir - 1) * dx (np)
+     x = xmin (np) + dble (ir - 1) * dx (np)
      r (ir, np) = exp (x) / zmesh (np)
      rab (ir, np) = dx (np) * r (ir, np)
   enddo

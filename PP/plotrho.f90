@@ -103,13 +103,13 @@ program plotrho
   xmin = xi (0)
   xmax = xi (nxi)
   do i = 0, nx
-     x (i) = (xi (nxi) - xi (0) ) * float (i) / float (nx)
+     x (i) = (xi (nxi) - xi (0) ) * dble (i) / dble (nx)
   enddo
 
   ymin = yi (0)
   ymax = yi (nyi)
   do i = 0, ny
-     y (i) = (yi (nyi) - yi (0) ) * float (i) / float (ny)
+     y (i) = (yi (nyi) - yi (0) ) * dble (i) / dble (ny)
   enddo
 #ifdef __AIX
   call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nximax + 1, x, y, nx &
@@ -147,11 +147,11 @@ program plotrho
   if (logarithmic_scale) then
      do k = 0, nlevels - 1
         z (k) = exp (log (rhoomin) + (log (rhoomax) - log (rhoomin) ) &
-             * float (k) / (nlevels - 1) )
+             * dble (k) / (nlevels - 1) )
      enddo
   else
      do k = 0, nlevels - 1
-        z (k) = rhoomin + (rhoomax - rhoomin) * float (k) / (nlevels - 1)
+        z (k) = rhoomin + (rhoomax - rhoomin) * dble (k) / (nlevels - 1)
      enddo
   endif
 
@@ -266,10 +266,10 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
 
   call hatch (0.d0, xdim, 0.d0, ydim)
   do i = 0, iub
-     x (i) = xdim * float (i) / iub
+     x (i) = xdim * dble (i) / iub
   enddo
   do j = 0, jub
-     y (j) = ydim * float (j) / jub
+     y (j) = ydim * dble (j) / jub
   enddo
 
   call conrec (imax, iub, jmax, jub, x, y, d, nc, z)
@@ -756,10 +756,10 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
        xdim/2, ydim+1.5
   !
   do i=0,iub
-     x(i)=xdim*float(i)/iub
+     x(i)=xdim*dble(i)/iub
   end do
   do j=0,jub
-     y(j)=ydim*float(j)/jub
+     y(j)=ydim*dble(j)/jub
   end do
 
   do k=1,nlevels-1

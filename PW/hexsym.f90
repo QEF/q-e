@@ -123,7 +123,7 @@ subroutine hexsym (at, is, isname, nrot)
         do kpol = 1, 3
            value = overlap (jpol, 1) * rot (1, kpol) + overlap (jpol, 2) &
                 * rot (2, kpol) + overlap (jpol, 3) * rot (3, kpol)
-           if (abs (float (nint (value) ) - value) .gt.1.0d-8) then
+           if (abs (dble (nint (value) ) - value) > 1.0d-8) then
               !
               ! if a noninteger is obtained, this implies that this operation
               ! is not a symmetry operation for the given lattice

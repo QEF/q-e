@@ -205,7 +205,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   ! how many fft
 
   real(kind=DP), allocatable, save :: trig1 (2 * nr1), trig2 (2 * nr2), &
-                                      trig3 (2 * nr3), fact
+       trig3 (2 * nr3), fact
   !
   !    trigonometric factors
   !
@@ -220,7 +220,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   !    test the sign and put the correct normalization on f
   !
   if (sign.eq. - 1) then
-     fact = 1.d0 / float (nr1 * nr2 * nr3)
+     fact = 1.d0 / dble (nr1 * nr2 * nr3)
      call sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
   elseif (sign.ne.1) then
      call errore ('cft_3', 'wrong sign', 1)

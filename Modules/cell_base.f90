@@ -187,63 +187,6 @@
           RETURN
         END SUBROUTINE S_TO_R
 
-!------------------------------------------------------------------------------!
-!  BEGIN manual
-
-        SUBROUTINE recips2( a1, a2, a3, b1, b2, b3, alat, omega )
-
-!  this routine computes:
-!   b1, b2, b3 the reciprocal lattice base vectors
-!   in units of [2pi / alat], given the direct lattice
-!   vector in cartesian coordinates
-!
-!                 a2 x a3
-!   b1 = alat --------------  [ 2pi / alat ] 
-!             a1 ( a2 x a3 )
-!
-!  ----------------------------------------------
-!  END manual
-
-          REAL(dbl), INTENT(IN)  :: a1(3), a2(3), a3(3)
-          REAL(dbl), INTENT(OUT) :: b1(3), b2(3), b3(3)
-          REAL(dbl), INTENT(IN), OPTIONAL  :: alat
-          REAL(dbl), INTENT(OUT), OPTIONAL :: omega
-          REAL(dbl) :: al, den
-          REAL(dbl) :: S
-
-          al = 1.0d0
-          IF( PRESENT( alat ) ) al = alat
-
-          DEN = 0.D0
-          DEN =       A1(1) * A2(2) * A3(3)
-          DEN = DEN + A1(2) * A2(3) * A3(1)
-          DEN = DEN + A1(3) * A2(1) * A3(2)
-          DEN = DEN - A1(2) * A2(1) * A3(3)
-          DEN = DEN - A1(1) * A2(3) * A3(2)
-          DEN = DEN - A1(3) * A2(2) * A3(1)
-
-          IF( den == 0.0d0 ) &
-            CALL errore(' recips ', ' input vector are linear dependent ', 1 )
-
-          DEN = AL / ABS( DEN )
-
-          B1(1) = DEN * ( A2(2) * A3(3) - A2(3) * A3(2) )
-          B2(1) = DEN * ( A3(2) * A1(3) - A3(3) * A1(2) )
-          B3(1) = DEN * ( A1(2) * A2(3) - A1(3) * A2(2) )
-
-          B1(2) = DEN * ( A2(3) * A3(1) - A2(1) * A3(3) )
-          B2(2) = DEN * ( A3(3) * A1(1) - A3(1) * A1(3) )
-          B3(2) = DEN * ( A1(3) * A2(1) - A1(1) * A2(3) )
-
-          B1(3) = DEN * ( A2(1) * A3(2) - A2(2) * A3(1) )
-          B2(3) = DEN * ( A3(1) * A1(2) - A3(2) * A1(1) )
-          B3(3) = DEN * ( A1(1) * A2(2) - A1(2) * A2(1) )
-
-          IF( PRESENT( omega ) ) omega = den
-
-          RETURN
-        END SUBROUTINE RECIPS2
-
 !
 !------------------------------------------------------------------------------!
 !
@@ -293,7 +236,7 @@
         s = s - box%perd*nint(s)
         rout = matmul(box%hmat(:,:),s)
         IF (present(nl)) THEN
-          s = float(nl)
+          s = dble(nl)
           rout = rout + matmul(box%hmat(:,:),s)
         END IF
       END FUNCTION pbc

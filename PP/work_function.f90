@@ -79,12 +79,12 @@ subroutine work_function (wf)
               wx2 = wx2 + (vaux1 (ni) - vx) **2
            enddo
         enddo
-        wmean1 = wmean1 / dfloat (nr1 * nr2)
-        wmean2 = wmean2 / dfloat (nr1 * nr2)
-        meancharge = meancharge / dfloat (nr1 * nr2)
-        wx1 = dsqrt (wx1 / dfloat (nr1 * nr2) - wmean1 * wmean1)
-        wx2 = dsqrt (wx2 / dfloat (nr1 * nr2) - wmean2 * wmean2)
-        wxm = dsqrt (wxm / dfloat (nr1 * nr2) - meancharge**2)
+        wmean1 = wmean1 / dble (nr1 * nr2)
+        wmean2 = wmean2 / dble (nr1 * nr2)
+        meancharge = meancharge / dble (nr1 * nr2)
+        wx1 = dsqrt (wx1 / dble (nr1 * nr2) - wmean1 * wmean1)
+        wx2 = dsqrt (wx2 / dble (nr1 * nr2) - wmean2 * wmean2)
+        wxm = dsqrt (wxm / dble (nr1 * nr2) - meancharge**2)
         if (nmean.eq. (nr3 + 1) / 2) wf = wmean2 - ef
         write (17, * ) nmean, (wmean1 - ef) * rytoev, wx1 * rytoev, &
              (wmean2 - ef) * rytoev, wx2 * rytoev

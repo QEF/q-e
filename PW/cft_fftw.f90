@@ -43,7 +43,7 @@ subroutine cft_1 (f, m, n, nx, isign, fout)
   call FFTW_F77 (plan (ibid), m, f, 1, nx, fout, 1, nx)
   !
   if (isign.eq. - 1) then
-     fac = 1.0 / float (n)
+     fac = 1.0 / dble (n)
      call DSCAL (2 * nx * m, fac, fout, 1)
 
   endif
@@ -89,7 +89,7 @@ subroutine cft_1s (f, m, n, nx, isign, fout)
   call FFTW_F77 (plan (ibid), m, f, 1, nx, fout, 1, nx)
   !
   if (isign1.eq. - 1) then
-     fac = 1.0 / float (n)
+     fac = 1.0 / dble (n)
      call DSCAL (2 * nx * m, fac, fout, 1)
 
   endif
@@ -169,7 +169,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
              fout, 0, 0)
      enddo
      !
-     fac = 1.0 / float (n1 * n2)
+     fac = 1.0 / dble (n1 * n2)
      call DSCAL (2 * nx1 * nx2 * mplane, fac, f, 1)
      !
 
@@ -262,7 +262,7 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
         endif
      enddo
      !
-     fac = 1.0 / float (n1 * n2)
+     fac = 1.0 / dble (n1 * n2)
      call DSCAL (2 * nx1 * nx2 * mplane, fac, f, 1)
      !
 

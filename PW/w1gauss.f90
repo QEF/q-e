@@ -81,13 +81,13 @@ function w1gauss (x, n)
   ni = 0
   a = 1.d0 / sqrt (pi)
   do i = 1, n
-     hd = 2.0d0 * x * hp - 2.0d0 * float (ni) * hd
+     hd = 2.0d0 * x * hp - 2.0d0 * dble (ni) * hd
      ni = ni + 1
      hpm1 = hp
-     hp = 2.0d0 * x * hd-2.0d0 * float (ni) * hp
+     hp = 2.0d0 * x * hd-2.0d0 * dble (ni) * hp
      ni = ni + 1
-     a = - a / (float (i) * 4.0d0)
-     w1gauss = w1gauss - a * (0.5d0 * hp + float (ni) * hpm1)
+     a = - a / (dble (i) * 4.0d0)
+     w1gauss = w1gauss - a * (0.5d0 * hp + dble (ni) * hpm1)
   enddo
   return
 

@@ -53,7 +53,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
 
   call zfft3d (sign, n1, n2, n3, f, nm1, nm2, aux (1, igrid) )
   if (sign.lt.0) then
-     fac = 1.0d0 / dfloat (n1 * n2 * n3)
+     fac = 1.0d0 / dble (n1 * n2 * n3)
      call DSCAL (2 * nm1 * nm2 * n3, fac, f, 1)
 
   endif
@@ -238,7 +238,7 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !first = (/(.true.,i=1,ngrid)/)
 
   if (sign.eq. - 1) then
-     fact = 1.d0 / float (nr1 * nr2 * nr3)
+     fact = 1.d0 / dble (nr1 * nr2 * nr3)
      call sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
   elseif (sign.ne.1) then
      call errore ('cft_3', 'wrong isign', 1)
@@ -576,7 +576,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   data first / ngrid * .true. /
   save first, fft_struct
 
-  norm = dfloat (n1 * n2 * n3)
+  norm = dble (n1 * n2 * n3)
   if (sign.eq.1) then
      call dscal (2 * nm1 * nm2 * nm3, norm, f, 1)
      direction = 'b'
@@ -644,7 +644,7 @@ end subroutine cft_3
     idim(1,igrid)=nm1
     idim(2,igrid)=nm2
     idim(3,igrid)=nm3
-    norm(igrid)=sqrt(dfloat(nm1*nm2*nm3))
+    norm(igrid)=sqrt(dble(nm1*nm2*nm3))
     trigdim(igrid)= &
       2*(idim(1,igrid)+idim(2,igrid)+idim(3,igrid))+120
     if(n1.gt.nm1) call errore  &

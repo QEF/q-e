@@ -34,7 +34,7 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   allocate (grho( 3, nrxx, nspin))    
 
   ! calculate the gradient of rho+rho_core in real space
-  fac = 1.d0 / float (nspin)
+  fac = 1.d0 / dble (nspin)
   do is = 1, nspin
      call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
      call gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho (1, is), &

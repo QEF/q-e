@@ -70,10 +70,10 @@ function w0gauss (x, n)
   ni = 0
   a = 1.0 / sqrt (pi)
   do i = 1, n
-     hd = 2.0d0 * x * hp - 2.0d0 * float (ni) * hd
+     hd = 2.0d0 * x * hp - 2.0d0 * dble (ni) * hd
      ni = ni + 1
-     a = - a / (float (i) * 4.0d0)
-     hp = 2.0d0 * x * hd-2.0d0 * float (ni) * hp
+     a = - a / (dble (i) * 4.0d0)
+     hp = 2.0d0 * x * hd-2.0d0 * dble (ni) * hp
      ni = ni + 1
      w0gauss = w0gauss + a * hp
   enddo

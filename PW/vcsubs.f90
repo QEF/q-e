@@ -752,17 +752,17 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   ack = ack + ekint
   acp = acp + p
   acpv = acpv + pv
-  avu = acu / dfloat (nzero)
-  avk = ack / dfloat (nzero)
-  avp = acp / dfloat (nzero)
-  avpv = acpv / dfloat (nzero)
+  avu = acu / dble (nzero)
+  avk = ack / dble (nzero)
+  avp = acp / dble (nzero)
+  avpv = acpv / dble (nzero)
   !
   !       choose # of degrees of freedom and calculate tnew
   !
   if (calc (1:1) .ne.'m') then
-     tnew = dois / tres / dfloat (natot + 1) * avk / boltz
+     tnew = dois / tres / dble (natot + 1) * avk / boltz
   else
-     tnew = dois / tres / dfloat (natot - 1) * avk / boltz
+     tnew = dois / tres / dble (natot - 1) * avk / boltz
   endif
   !
   !       careful with zero temperature
@@ -1015,9 +1015,9 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
               p (3) = p (3) + v (3, na)
            endif
         enddo
-        p (1) = p (1) / dfloat (natom)
-        p (2) = p (2) / dfloat (natom)
-        p (3) = p (3) / dfloat (natom)
+        p (1) = p (1) / dble (natom)
+        p (2) = p (2) / dble (natom)
+        p (3) = p (3) / dble (natom)
         !
         !       zero linear momentum for atom type nt
         !
@@ -1042,7 +1042,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
      !
      !     rescale velocities to give correct temperature
      !
-     atemp = dois * ekint / tres / dfloat (natot - 1) / boltz
+     atemp = dois * ekint / tres / dble (natot - 1) / boltz
      tfac = dsqrt (t / atemp)
      if (temp.lt.1d-14) tfac = zero
      !         WRITE( stdout,*) 'atemp = ',atemp,' k'
@@ -1071,12 +1071,12 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
         enddo
 
         if (natom.gt.0) then
-           vmean (nt) = vmean (nt) / dfloat (natom)
+           vmean (nt) = vmean (nt) / dble (natom)
            rms (nt) = dsqrt ( (vx2 (nt) + vy2 (nt) + vz2 (nt) ) /  &
-                      dfloat ( natom) )
-           vx2 (nt) = dsqrt (vx2 (nt) / dfloat (natom) )
-           vy2 (nt) = dsqrt (vy2 (nt) / dfloat (natom) )
-           vz2 (nt) = dsqrt (vz2 (nt) / dfloat (natom) )
+                      dble ( natom) )
+           vx2 (nt) = dsqrt (vx2 (nt) / dble (natom) )
+           vy2 (nt) = dsqrt (vy2 (nt) / dble (natom) )
+           vz2 (nt) = dsqrt (vz2 (nt) / dble (natom) )
         else
            vmean (nt) = zero
            rms (nt) = zero

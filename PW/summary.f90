@@ -230,11 +230,11 @@ subroutine summary
                  at(3,3)*ftau(3,isym)/nr3
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                  &        " )    f =( ",f10.7," )")') &
-                 isym, (s(1,ipol,isym),ipol=1,3), float(ftau(1,isym))/float(nr1)
+                 isym, (s(1,ipol,isym),ipol=1,3), dble(ftau(1,isym))/dble(nr1)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                       (s(2,ipol,isym),ipol=1,3), float(ftau(2,isym))/float(nr2)
+                       (s(2,ipol,isym),ipol=1,3), dble(ftau(2,isym))/dble(nr2)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                       (s(3,ipol,isym),ipol=1,3), float(ftau(3,isym))/float(nr3)
+                       (s(3,ipol,isym),ipol=1,3), dble(ftau(3,isym))/dble(nr3)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                  &        " )    f =( ",f10.7," )")') &
                  isym, (sr(1,ipol),ipol=1,3), ft1

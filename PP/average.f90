@@ -225,7 +225,7 @@ program average
               funcr (i) = funcr (i) + real (psic(ir))
            enddo
         enddo
-        funcr (i) = funcr (i) / (float (nr2 * nr3))
+        funcr (i) = funcr (i) / (dble (nr2 * nr3))
      enddo
   elseif (idir.eq.2) then
      do j = 1, nr2
@@ -237,7 +237,7 @@ program average
               funcr (j) = funcr (j) + real (psic (ir) )
            enddo
         enddo
-        funcr (j) = funcr (j) / (float (nr1 * nr3) )
+        funcr (j) = funcr (j) / (dble (nr1 * nr3) )
      enddo
   elseif (idir.eq.3) then
      do k = 1, nr3
@@ -249,7 +249,7 @@ program average
               funcr (k) = funcr (k) + real (psic (ir) )
            enddo
         enddo
-        funcr (k) = funcr (k) / (float (nr1 * nr2) )
+        funcr (k) = funcr (k) / (dble (nr1 * nr2) )
      enddo
   else
      call errore('average','wrong idir',1)
@@ -298,15 +298,15 @@ program average
         macros (i) = macros (i) + gre (k)
      enddo
      if (mod (nmacro, 2) .eq.0) then
-        macros (i) = macros (i) / float (nmacro + 1)
+        macros (i) = macros (i) / dble (nmacro + 1)
      else
-        macros (i) = macros (i) / float (nmacro)
+        macros (i) = macros (i) / dble (nmacro)
      endif
   enddo
   !
   !     print the results on output
   !
-  deltaz = leng / float (npt)
+  deltaz = leng / dble (npt)
 
 
   WRITE( stdout, '(3f15.9)') (deltaz * (i - 1) , gre (i) , macros (i) , &

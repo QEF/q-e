@@ -32,7 +32,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   sigma_gradcorr(:,:) = 0.d0
 
   allocate (grho( 3, nrxx, nspin))    
-  fac = 1.d0 / float (nspin)
+  fac = 1.d0 / dble (nspin)
   !
   !    calculate the gradient of rho+rhocore in real space
   !

@@ -176,7 +176,7 @@ subroutine readnewvan (is, iunps)
   r (0, is) = 0.d0
   rab (0, is) = 0.d0
   do ir = 1, mesh (is)
-     x = xmin (is) + float (ir - 1) * dx (is)
+     x = xmin (is) + dble (ir - 1) * dx (is)
      r (ir, is) = exp (x) / zmesh (is)
      rab (ir, is) = dx (is) * r (ir, is)
   enddo

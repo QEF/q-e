@@ -808,15 +808,15 @@ SUBROUTINE c_phase
 !  --- Give polarization in units of (e/Omega).bohr ---
    fac=rmod
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
-        fac*pdl_tot,fac*float(mod_tot)
+        fac*pdl_tot,fac*dble(mod_tot)
 !  --- Give polarization in units of e.bohr ---
    fac=rmod/omega
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
-        fac*pdl_tot,fac*float(mod_tot)
+        fac*pdl_tot,fac*dble(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
    fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
-        fac*pdl_tot,fac*float(mod_tot)
+        fac*pdl_tot,fac*dble(mod_tot)
 !  --- Write polarization direction ---
    WRITE( stdout,"(/,8X,'The polarization direction is:  ( ', &
        &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)

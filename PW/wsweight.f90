@@ -45,6 +45,6 @@ function wsweight(r,rws,nrws)
      if ( ck .gt. eps ) return
      if ( abs(ck) .lt. eps ) nreq = nreq + 1
   end do
-  wsweight = 1.d0/float(nreq)
+  wsweight = 1.d0/dble(nreq)
   return
 end function wsweight
