@@ -1,6 +1,9 @@
-#source commands.tcl
+source commands.tcl
 
 module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
+
+    readfilter ::pwscf::projwfcReadFilter
+
     namelist inputpp -name "INPUTPP" {
 	optional {
 	    var prefix {
