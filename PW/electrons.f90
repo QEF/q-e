@@ -55,6 +55,7 @@ implicit none
   ! dummy counter on iterations
   ! counter on iterations
   ! used to read ik   from restart file
+  integer :: ldim2 
 
   real (kind=DP) :: ehart_new,etxc_new,vtxc_new, charge_new
   real (kind=DP), external :: ewald, get_clock
@@ -212,9 +213,10 @@ implicit none
      !
      call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
 
-     if (lda_plus_u) then
+     if (lda_plus_u) then  
+        ldim2 = ( 2 * Hubbard_lmax + 1 )**2
         if (iter.gt.niter_with_fixed_ns .and. imix.lt.0) &
-            call DCOPY(nat*nspin*25,nsnew,1,ns,1)
+            call DCOPY(nat*nspin*ldim2,nsnew,1,ns,1)
 #ifdef PARA
         if (me.eq.1.and.mypool.eq.1) then
 #endif

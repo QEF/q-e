@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dndtau(dns,alpha,ipol)
+subroutine dndtau(dns,ldim,alpha,ipol)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the derivative of the ns with respect to the ionic
@@ -27,8 +27,9 @@ subroutine dndtau(dns,alpha,ipol)
               ibnd,         & !    "    "  bands
               is,           & !    "    "  spins
               i, na, nt, n, alpha, ipol, counter, m1,m2, l
+   integer :: ldim
    real (kind=DP) :: &
-             dns(nat,nspin,5,5), &
+             dns(nat,nspin,ldim,ldim), &
              t0, scnds       ! cpu time spent
    complex (kind=DP) :: ZDOTC
    integer, allocatable :: offset(:)
@@ -54,7 +55,7 @@ subroutine dndtau(dns,alpha,ipol)
       do n=1,nchi(nt)
          if (oc(n,nt).gt.0.d0.or..not.newpseudo(nt)) then
             l=lchi(n,nt)
-            if (l.eq.2) offset(na) = counter
+            if (l.eq.Hubbard_l(nt)) offset(na) = counter
             counter = counter + 2 * l + 1
          end if
       end do
@@ -104,8 +105,8 @@ subroutine dndtau(dns,alpha,ipol)
       do na = 1,nat
          nt = ityp(na)
          if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
-            do m1 = 1,5
-               do m2 = m1,5
+            do m1 = 1,ldim
+               do m2 = m1,ldim
                   do ibnd = 1,nbnd
                      dns(na,isk(ik),m1,m2) = dns(na,isk(ik),m1,m2) +  &
                                              wg(ibnd,ik) *            &
@@ -122,15 +123,15 @@ subroutine dndtau(dns,alpha,ipol)
    end do                 ! on k-points
 
 #ifdef PARA
-   call poolreduce(nat*nspin*25,dns)
+   call poolreduce(nat*nspin*ldim*ldim,dns)
 #endif
    !
    ! impose hermiticity of dn_{m1,m2}
    !
    do na = 1,nat
       do is = 1,nspin
-         do m1 = 1,5
-            do m2 = m1+1,5
+         do m1 = 1,ldim
+            do m2 = m1+1,ldim
                dns(na,is,m2,m1) = dns(na,is,m1,m2)
             end do
          end do

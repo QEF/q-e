@@ -31,7 +31,8 @@ subroutine potinit
 
   real(kind=DP) :: charge
   ! the starting charge
-  integer :: ios, ionode_id=0
+  integer :: ios, ionode_id=0 
+  integer :: ldim
   ! integer variable for I/O control
   logical :: exst
   !
@@ -83,7 +84,8 @@ subroutine potinit
      !
      ! The occupations ns also need to be read in order to build up the poten
      !
-     if (lda_plus_u) then
+     if (lda_plus_u) then  
+        ldim = 2 * Hubbard_lmax + 1
 #ifdef PARA
         if (me.eq.1.and.mypool.eq.1) then
 #endif
@@ -91,13 +93,13 @@ subroutine potinit
            read (iunocc, * ) ns
            close (unit = iunocc, status = 'keep')
 #ifdef PARA
-        else
-           call setv (nat * nspin * 25, 0.d0, ns, 1)
+        else  
+           call setv (nat * nspin * ldim * ldim, 0.d0, ns, 1)  
         endif
-        call reduce (nat * nspin * 25, ns)
-        call poolreduce (nat * nspin * 25, ns)
+        call reduce (nat * nspin * ldim * ldim, ns)  
+        call poolreduce (nat * nspin * ldim * ldim, ns)  
 #endif
-        call DCOPY(nat*nspin*25,ns,1,nsnew,1)
+        call DCOPY(nat*nspin*ldim*ldim,ns,1,nsnew,1)
      endif
   else
      !
@@ -111,8 +113,9 @@ subroutine potinit
      !
 
      if (lda_plus_u) then
-        call init_ns
-        call DCOPY(nat*nspin*25,ns,1,nsnew,1)
+        ldim = 2 * Hubbard_lmax + 1
+        call init_ns  
+        call DCOPY(nat*nspin*ldim*ldim,ns,1,nsnew,1)
      end if
 
      call atomic_rho (rho, nspin)

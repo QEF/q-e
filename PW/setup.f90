@@ -61,7 +61,8 @@ subroutine setup
   ! lchk_tauxk tests that atomic coordinates do not overlap
   !
   logical, external :: lchk_tauxk
-  logical :: minus_q
+  logical :: minus_q  
+  integer, external :: set_Hubbard_l
 
   do nt = 1, ntyp
      do ir = 1, mesh (nt)
@@ -390,7 +391,20 @@ subroutine setup
   ! initialize d1 and d2 to rotate the spherical harmonics
   !
 
-  if (lda_plus_u) call d_matrix (d1, d2)
+  if (lda_plus_u) then
+     Hubbard_lmax = -1
+     do nt=1,ntyp
+        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
+           Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
+           Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(nt))
+           write (6,*) ' HUBBARD L FOR TYPE ',psd(nt),' IS ', Hubbard_l(nt)
+        end if
+     end do
+     write (6,*) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
+     if (Hubbard_lmax.eq.-1) &
+        call error ('setup','lda_plus_u calculation but Hubbard_l not set',1)
+     call d_matrix (d1, d2, d3)  
+  end if
   !
   return
 end subroutine setup

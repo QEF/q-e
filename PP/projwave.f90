@@ -89,9 +89,9 @@ subroutine projwave (filproj)
   proj   = 0.d0
   overlap= (0.d0,0.d0)
   !
-  ! initialize D_Sl for l=1 and l=2, for l=0 D_S0 is 1
+  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
   !
-  call d_matrix (d1, d2)
+  call d_matrix (d1, d2, d3)  
   !
   ! fill structure nlmchi
   !
@@ -202,17 +202,20 @@ subroutine projwave (filproj)
            !
            if (l.eq.0) then
               work1(:) = proj0 (nwfc1 + 1,:)
-           else if (l.eq.1) then
-              work1(:) = 0.d0
-              do m1 = 1, 3
-                 work1(:) = work1(:) + d1 (m, m1, isym) * &
-                      proj0 (nwfc1 + m1,:)
+           else if (l.eq.1) then 
+              work1(:) = 0.d0  
+              do m1 = 1, 3  
+                 work1(:) = work1(:) + d1 (m, m1, isym) * proj0 (nwfc1 + m1,:)
               enddo
-           else if (l.eq.2) then
-              work1(:) = 0.d0
-              do m1 = 1, 5
-                 work1(:) = work1(:) + d2 (m, m1, isym) * &
-                      proj0 (nwfc1 + m1,:)
+           else if (l.eq.2) then 
+              work1(:) = 0.d0  
+              do m1 = 1, 5  
+                 work1(:) = work1(:) + d2 (m, m1, isym) * proj0 (nwfc1 + m1,:)
+              enddo
+           else if (l.eq.3) then 
+              work1(:) = 0.d0  
+              do m1 = 1, 7  
+                 work1(:) = work1(:) + d3 (m, m1, isym) * proj0 (nwfc1 + m1,:)
               enddo
            endif
            do ibnd = 1, nbnd

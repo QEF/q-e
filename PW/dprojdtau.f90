@@ -30,7 +30,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
            spsi(npwx,nbnd),        &! input: S|evc>
            dproj(natomwfc,nbnd)     ! output: the derivative of the projection
 
-   integer :: ig, jkb2, na, m1, ibnd, iwf, nt, ib, ih,jh
+   integer :: ig, jkb2, na, m1, ibnd, iwf, nt, ib, ih,jh, ldim
 
    real (kind=DP) :: gvec, a1, a2
 
@@ -39,7 +39,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    complex (kind=DP), allocatable :: dwfc(:,:), work(:), dbeta(:), &
                                      betapsi(:,:), dbetapsi(:,:), &
                                      wfatbeta(:,:), wfatdbeta(:,:)
-   !      dwfc(npwx,5),          ! the derivative of the atomic d wfc
+   !      dwfc(npwx,ldim),          ! the derivative of the atomic d wfc
    !      work(npwx),            ! the beta function
    !      dbeta(npwx),           ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
@@ -47,14 +47,17 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    !      wfatbeta(natomwfc,nhm),! <wfc|beta>
    !      wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
 
-   allocate ( dwfc(npwx,5), work(npwx), dbeta(npwx), betapsi(nhm,nbnd), &
+   nt = ityp(alpha)
+
+   ldim = 2 * Hubbard_l(nt) + 1
+
+   allocate ( dwfc(npwx,ldim), work(npwx), dbeta(npwx), betapsi(nhm,nbnd), &
          dbetapsi(nhm,nbnd), wfatbeta(natomwfc,nhm), wfatdbeta(natomwfc,nhm) )
 
    dproj(:,:) = (0.d0, 0.d0)
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
-   nt = ityp(alpha)
 
    if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
       do ig = 1,npw
@@ -63,14 +66,15 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
          ! in the expression of dwfc we don't need (k+G) but just G; k always
          ! multiplies the underived quantity and gives an opposite contribution
          ! in c.c. term because the sign of the imaginary unit.
-
-         do m1 = 1,5
+   
+         do m1 = 1, ldim
             dwfc(ig,m1) = dcmplx(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
          end do
       end do
 
-      call ZGEMM('C','N',5, nbnd, npw, (1.d0,0.d0), dwfc, npwx, spsi, npwx, &
-                 (0.d0,0.d0), dproj(offset+1,1), natomwfc)
+      call ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+                  dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
+                  dproj(offset+1,1), natomwfc)
    end if
 
 #ifdef PARA

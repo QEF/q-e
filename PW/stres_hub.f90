@@ -24,14 +24,16 @@ subroutine stres_hub ( sigmah )
    real (kind=DP) :: sigmah(3,3)        ! output: the Hubbard stresses
 
    integer :: ipol, jpol, nworddw, nworddb, na, nt, is,isi, m1,m2,m3,m4
+   integer :: ldim
    real (kind=DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
    logical :: exst
    real (kind=DP), allocatable :: dns(:,:,:,:)
-   !       dns(nat,nspin,5,5), ! the derivative of the atomic occupations
-
+   !       dns(nat,nspin,ldim,ldim), ! the derivative of the atomic occupations
+ 
    sigmah(:,:) = 0.d0
 
-   allocate (dns(nat,nspin,5,5))
+   ldim = 2 * Hubbard_lmax + 1
+   allocate (dns(nat,nspin,ldim,ldim))
    dns(:,:,:,:) = 0.d0
 
 #ifdef PARA
@@ -58,7 +60,9 @@ subroutine stres_hub ( sigmah )
          nt = ityp(na)
          if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
             write (*,'(a,2i3)') 'NS(NA,IS) ', na,is
-            write (*,'(5f10.4)') ((ns(na,is,m1,m2),m2=1,5),m1=1,5)
+            do m1=1,ldim
+               write (*,'(7f10.4)') (ns(na,is,m1,m2),m2=1,ldim)
+            end do
          end if
       end do
    end do
@@ -66,8 +70,8 @@ subroutine stres_hub ( sigmah )
    omin1 = 1.d0/omega
    do ipol = 1,3
       do jpol = 1,ipol
-         call dndepsilon(dns,ipol,jpol)
-         do na = 1,nat
+         call dndepsilon(dns,ldim,ipol,jpol)
+         do na = 1,nat                 
             nt = ityp(na)
             if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
                do is = 1,nspin
@@ -75,10 +79,10 @@ subroutine stres_hub ( sigmah )
                   write (*,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
                   write (*,'(5f10.4)') ((dns(na,is,m1,m2),m2=1,5),m1=1,5)
 #endif
-                  do m2 = 1,5
+                  do m2 = 1, 2 * Hubbard_l(nt) + 1
                      sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
-                           Hubbard_U(nt) * 0.5d0 * dns(na,is,m2,m2)
-                     do m1 = 1,5
+                           Hubbard_U(nt) * 0.5d0 * dns(na,is,m2,m2) 
+                     do m1 = 1, 2 * Hubbard_l(nt) + 1
                         sigmah(ipol,jpol) = sigmah(ipol,jpol) + omin1 * &
                            Hubbard_U(nt) * ns(na,is,m2,m1) * dns(na,is,m1,m2)
                      end do

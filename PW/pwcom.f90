@@ -572,15 +572,18 @@ module ldaU
   real(kind=DP), allocatable     :: &
        ns(:,:,:,:),   &! the occupation matrix used in h_psi
        nsnew(:,:,:,:)  ! the occupation matrix computed by at
-  real(kind=DP) :: &
-       d1(3,3,48),          &! matrices for rotating spherical
-       d2(5,5,48),          &! harmonics
+  real(kind=DP) :: &       
+       d1(3,3,48),          &! matrices for rotating spherical     
+       d2(5,5,48),          &! harmonics                           
+       d3(7,7,48),          &! 
        eth,                 &! the (corrected) Hubbard contribution
        Hubbard_U(ntypx),    &! the Hubbard U
        Hubbard_alpha(ntypx)  ! the Hubbard alpha (used to calculate U)
-  integer           :: &
-       niter_with_fixed_ns  ! no. of iterations with fixed ns
-  logical           :: &
+  integer           :: &                                                
+       niter_with_fixed_ns, &! no. of iterations with fixed ns
+       Hubbard_l(ntypx),    &! the agular momentum of Hubbard states
+       Hubbard_lmax          ! maximum agular momentum of Hubbard states
+  logical           :: &                                                
        lda_plus_u,          &! .true. if lda+u calculation is performed
        conv_ns              ! .true. if ns are converged
 end module ldaU

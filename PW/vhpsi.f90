@@ -26,15 +26,15 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   complex(kind=DP) :: ZDOTC, temp
   complex(kind=DP), allocatable ::  proj (:,:)
   !
-  allocate ( offset(nat), proj(natomwfc,mp) )
-  counter = 0
-  do na = 1, nat
-     nt = ityp (na)
-     do n = 1, nchi (nt)
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
-           l = lchi (n, nt)
-           if (l.eq.2) offset (na) = counter
-           counter = counter + 2 * l + 1
+  allocate ( offset(nat), proj(natomwfc,mp) ) 
+  counter = 0  
+  do na = 1, nat  
+     nt = ityp (na)  
+     do n = 1, nchi (nt)  
+        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then  
+           l = lchi (n, nt)  
+           if (l.eq.Hubbard_l(nt)) offset (na) = counter  
+           counter = counter + 2 * l + 1  
         endif
      enddo
   enddo
@@ -48,13 +48,13 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
 #ifdef PARA
   call reduce (2 * natomwfc * mp, proj)
 #endif
-  do ibnd = 1, mp
-     do na = 1, nat
-        nt = ityp (na)
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-           do m1 = 1, 5
-              temp = proj (offset(na)+m1, ibnd)
-              do m2 = 1, 5
+  do ibnd = 1, mp  
+     do na = 1, nat  
+        nt = ityp (na)  
+        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
+           do m1 = 1, 2 * Hubbard_l(nt) + 1 
+              temp = proj (offset(na)+m1, ibnd)  
+              do m2 = 1, 2 * Hubbard_l(nt) + 1 
                  temp = temp - 2.d0 * ns (na, current_spin, m1, m2) * &
                                       proj (offset(na)+m2, ibnd)
               enddo

@@ -186,6 +186,7 @@ scnds.o  \
 scopy_t3e.o  \
 seqopn.o  \
 set_fft_dim.o  \
+set_hubbard_l.o  \
 set_kplusq.o  \
 set_kup_and_kdw.o  \
 setlocal.o  \

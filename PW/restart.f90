@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
+#include "machine.h"
 module restart_module
 
   implicit none
@@ -96,6 +96,8 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   LOGICAL :: opnd
   LOGICAL :: lgamma
   TYPE (pseudo_upf) :: upf
+
+  external DSCAL
 
 ! ... end of declarations
 
@@ -976,7 +978,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        ! WRITE(6,*) ' *** DEBUG readfile ', evc(1,1), nsizwfc, iunitwfc, (ik-iks+1)
        IF( (ik >= iks) .AND. (ik <= ike) ) THEN
          IF( wfc_scal /= 1.0d0 ) THEN
-           CALL dscal( 2*nsizwfc, wfc_scal, evc, 1)
+           CALL DSCAL( 2*nsizwfc, wfc_scal, evc, 1)
          END IF
          call davcio (evc(1,1), nsizwfc, iunitwfc, (ik-iks+1), 1)
        END IF

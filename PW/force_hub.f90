@@ -25,14 +25,15 @@ subroutine force_hub(forceh)
    implicit none
    real (kind=DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
-   integer :: alpha, na, nt, is, m1, m2, ipol
+   integer :: alpha, na, nt, is, m1, m2, ipol, ldim
 
    logical ::  exst
 
    real (kind=DP), allocatable :: dns(:,:,:,:)
    !       dns(nat,nspin,5,5) ! the derivative of the atomic occupations
 
-   allocate(dns(nat,nspin,5,5))
+   ldim= 2 * Hubbard_lmax + 1
+   allocate(dns(nat,nspin,ldim,ldim))
    forceh(:,:) = 0.d0
    dns(:,:,:,:) = 0.d0
 
@@ -48,15 +49,15 @@ subroutine force_hub(forceh)
 
    do alpha = 1,nat                    ! the displaced atom
       do ipol = 1,3
-         call dndtau(dns,alpha,ipol)
+         call dndtau(dns,ldim,alpha,ipol)
          do na = 1,nat                 ! the Hubbard atom
             nt = ityp(na)
             if (Hubbard_U(nt).ne.0.d0.or. Hubbard_alpha(nt).ne.0.d0) then
                do is = 1,nspin
-                  do m2 = 1,5
+                  do m2 = 1,ldim
                      forceh(ipol,alpha) = forceh(ipol,alpha) -  &
                            Hubbard_U(nt) * 0.5d0           * dns(na,is,m2,m2)
-                     do m1 = 1,5
+                     do m1 = 1,ldim
                         forceh(ipol,alpha) = forceh(ipol,alpha) +    &
                            Hubbard_U(nt) * ns(na,is,m2,m1) * dns(na,is,m1,m2)
                      end do

@@ -7,34 +7,42 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine tabd (nt, occd)
+subroutine tabd (nt, occ_loc)  
 !-----------------------------------------------------------------------
 !
 ! This routine is a table (far from being complete) for the total number
-! of d electrons in transition metals (PPs usually are built on non
-! physical configurations)
+! of localized electrons in transition metals or rare earths 
+! (PPs usually are built on non physical configurations)
 !
 use pwcom
 implicit none
-real(kind=DP) :: occd
+real(kind=DP) :: occ_loc  
                          ! output: the total number of d electrons
 
-integer :: nt
-if (psd (nt) .eq.'Mn') then
-   occd = 5.d0
-elseif (psd (nt) .eq.'Fe') then
-   occd = 6.d0
-elseif (psd (nt) .eq.'Co') then
-   occd = 9.d0
-elseif (psd (nt) .eq.'Ni') then
-   occd = 8.d0
-elseif (psd (nt) .eq.'Cu') then
-   occd = 10.d0
-else
-   occd = 0.d0
-   call error ('tabd', 'pseudopotential not yet inserted', - 1)
-
-endif
-return
+integer :: nt  
+!
+! TRANSITION METALS
+!
+if (psd (nt) .eq.'Mn') then  
+   occ_loc = 5.d0  
+elseif (psd (nt) .eq.'Fe') then  
+   occ_loc = 6.d0  
+elseif (psd (nt) .eq.'Co') then  
+   occ_loc = 9.d0  
+elseif (psd (nt) .eq.'Ni') then  
+   occ_loc = 8.d0  
+elseif (psd (nt) .eq.'Cu') then  
+   occ_loc = 10.d0  
+!
+! RARE EARTHS
+!
+elseif (psd (nt) .eq.'Ce') then  
+   occ_loc = 2.d0  
+!
+else  
+   occ_loc = 0.d0  
+   call error ('tabd', 'pseudopotential not yet inserted', 1)
+endif  
+return  
 end subroutine tabd
 

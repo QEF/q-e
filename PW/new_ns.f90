@@ -23,7 +23,7 @@ subroutine new_ns
 #endif
   implicit none
   integer :: ik, ibnd, is, i, na, nb, nt, isym, n, counter, m1, m2, &
-       m0, m00, l
+       m0, m00, l, ldim
   integer, allocatable ::  offset (:)
   ! counter on k points
   !    "    "  bands
@@ -39,19 +39,20 @@ subroutine new_ns
 
   real(kind=DP) :: psum
 
-  t0 = scnds ()
-  allocate( offset(nat), proj(natomwfc,nbnd), nr(nat,nspin,5,5) )
+  t0 = scnds ()  
+  ldim = 2 * Hubbard_lmax + 1
+  allocate( offset(nat), proj(natomwfc,nbnd), nr(nat,nspin,ldim,ldim) )  
   !
-  ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
+  ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
   !
-  counter = 0
-  do na = 1, nat
-     nt = ityp (na)
-     do n = 1, nchi (nt)
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
-           l = lchi (n, nt)
-           if (l.eq.2) offset (na) = counter
-           counter = counter + 2 * l + 1
+  counter = 0  
+  do na = 1, nat  
+     nt = ityp (na)  
+     do n = 1, nchi (nt)  
+        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then  
+           l = lchi (n, nt)  
+           if (l.eq.Hubbard_l(nt)) offset (na) = counter  
+           counter = counter + 2 * l + 1  
         endif
      enddo
 
@@ -86,12 +87,12 @@ subroutine new_ns
      ! compute the occupation numbers (the quantities n(m1,m2)) of the
      ! atomic orbitals
      !
-     do na = 1, nat
-        nt = ityp (na)
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-           do m1 = 1, 5
-              do m2 = m1, 5
-                 do ibnd = 1, nbnd
+     do na = 1, nat  
+        nt = ityp (na)  
+        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
+           do m1 = 1, 2 * Hubbard_l(nt) + 1  
+              do m2 = m1, 2 * Hubbard_l(nt) + 1
+                 do ibnd = 1, nbnd  
                     nr(na,isk(ik),m1,m2) = nr(na,isk(ik),m1,m2) + &
                             wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
                                            conjg(proj(offset(na)+m1,ibnd)) )
@@ -105,35 +106,53 @@ subroutine new_ns
 
   enddo
 #ifdef PARA
-  call poolreduce (nat * nspin * 25, nr)
+  call poolreduce (nat * nspin * ldim * ldim, nr)  
 #endif
   !
   ! impose hermiticity of n_{m1,m2}
   !
-  do na = 1, nat
-     do is = 1, nspin
-        do m1 = 1, 5
-           do m2 = m1 + 1, 5
-              nr (na, is, m2, m1) = nr (na, is, m1, m2)
+  do na = 1, nat  
+     nt = ityp(na)
+     do is = 1, nspin  
+        do m1 = 1, 2 * Hubbard_l(nt) + 1
+           do m2 = m1 + 1, 2 * Hubbard_l(nt) + 1  
+              nr (na, is, m2, m1) = nr (na, is, m1, m2)  
            enddo
         enddo
      enddo
   enddo
 
   ! symmetryze the quantities nr -> nsnew
-  do na = 1, nat
-     nt = ityp (na)
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-        do is = 1, nspin
-           do m1 = 1, 5
-              do m2 = 1, 5
-                 do isym = 1, nsym
-                    nb = irt (isym, na)
-                    do m0 = 1, 5
-                       do m00 = 1, 5
-                          nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
+  do na = 1, nat  
+     nt = ityp (na)  
+     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
+        do is = 1, nspin  
+           do m1 = 1, 2 * Hubbard_l(nt) + 1  
+              do m2 = 1, 2 * Hubbard_l(nt) + 1  
+                 do isym = 1, nsym  
+                    nb = irt (isym, na)  
+                    do m0 = 1, 2 * Hubbard_l(nt) + 1  
+                       do m00 = 1, 2 * Hubbard_l(nt) + 1  
+                          if (Hubbard_l(nt).eq.0) then
+                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
+                                   nr(nb,is,m0,m00) / nsym
+                          else if (Hubbard_l(nt).eq.1) then
+                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
+                                   d1(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
+                                   d1(m2,m00,isym) / nsym
+                          else if (Hubbard_l(nt).eq.2) then
+                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
                                    d2(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
                                    d2(m2,m00,isym) / nsym
+                          else if (Hubbard_l(nt).eq.3) then
+                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
+                                   d3(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
+                                   d3(m2,m00,isym) / nsym
+                          else
+                             call error ('new_ns', &
+                                         'angular momentum not implemented', &
+                                          abs(Hubbard_l(nt)) )
+                          end if
                        enddo
                     enddo
                  enddo
@@ -144,19 +163,19 @@ subroutine new_ns
   enddo
 
   ! Now we make the matrix ns(m1,m2) strictly hermitean
-  do na = 1, nat
-     nt = ityp (na)
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-        do is = 1, nspin
-           do m1 = 1, 5
-              do m2 = m1, 5
-                 psum = abs ( nsnew(na,is,m1,m2) - nsnew(na,is,m2,m1) )
-                 if (psum.gt.1.d-10) then
-                    write (6, * ) na, is, m1, m2
-                    write (6, * ) nsnew (na, is, m1, m2)
-                    write (6, * ) nsnew (na, is, m2, m1)
-                    call error ('new_ns', 'non hermitean matrix', 1)
-                 else
+  do na = 1, nat  
+     nt = ityp (na)  
+     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
+        do is = 1, nspin  
+           do m1 = 1, 2 * Hubbard_l(nt) + 1  
+              do m2 = m1, 2 * Hubbard_l(nt) + 1  
+                 psum = abs ( nsnew(na,is,m1,m2) - nsnew(na,is,m2,m1) )  
+                 if (psum.gt.1.d-10) then  
+                    write (6, * ) na, is, m1, m2  
+                    write (6, * ) nsnew (na, is, m1, m2)  
+                    write (6, * ) nsnew (na, is, m2, m1)  
+                    call error ('new_ns', 'non hermitean matrix', 1)  
+                 else  
                     nsnew(na,is,m1,m2) = 0.5d0 * (nsnew(na,is,m1,m2) + &
                                                   nsnew(na,is,m2,m1) )
                     nsnew(na,is,m2,m1) = nsnew(na,is,m1,m2)
@@ -170,13 +189,13 @@ subroutine new_ns
   ! Now the contribution to the total energy is computed. The corrections
   ! needed to obtain a variational expression are already included
   !
-  eth = 0.d0
-  do na = 1, nat
-     nt = ityp (na)
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-        do is = 1, nspin
-           do m1 = 1, 5
-              do m2 = 1, 5
+  eth = 0.d0  
+  do na = 1, nat  
+     nt = ityp (na)  
+     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
+        do is = 1, nspin  
+           do m1 = 1, 2 * Hubbard_l(nt) + 1  
+              do m2 = 1, 2 * Hubbard_l(nt) + 1  
                  eth = eth + Hubbard_U(nt) * nsnew(na,is,m1,m2) * &
                           (ns(na,is,m2,m1) - nsnew(na,is,m2,m1) * 0.5d0)
               enddo

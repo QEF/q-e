@@ -28,7 +28,7 @@ subroutine allocate_nlpot
   !
   !    a few local variables
   !
-  integer :: nt, na, nb
+  integer :: nt, na, nb, ldim  
   ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints
@@ -96,9 +96,10 @@ subroutine allocate_nlpot
   !
   !     Allocate space for Hubbard potential
   !
-  if (lda_plus_u) then
-     allocate( ns (nat, nspin, 5, 5) )
-     allocate( nsnew (nat, nspin, 5, 5) )
+  if (lda_plus_u) then  
+     ldim = 2 * Hubbard_lmax + 1
+     allocate( ns (nat, nspin, ldim, ldim) )
+     allocate( nsnew (nat, nspin, ldim, ldim) ) 
   endif
   !
   !     Calculate dimensions for array tab (including a possible factor

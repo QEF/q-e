@@ -6,21 +6,21 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine d_matrix (dy1, dy2)
+subroutine d_matrix (dy1, dy2, dy3)  
   !---------------------------------------------------------------
   !
   use pwcom
   implicit none
-  real(kind=DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48)
+  real(kind=DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   !
-  integer, parameter :: maxl = 2, maxm = 2*maxl+1, &
+  integer, parameter :: maxl = 3, maxm = 2*maxl+1, &
        maxlm = (maxl+1)*(maxl+1)
   ! maxl = max value of l allowed
   ! maxm = number of m components for l=maxl
   ! maxlm= number of l,m spherical harmonics for l <= maxl
   integer :: m, n, ipol, isym
-  real(kind=DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), &
-       yl1_inv (3, 3), yl2_inv(5, 5), ylms(maxm, maxlm),     &
+  real(kind=DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
+       yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3)
   real(kind=DP), external :: rndm
   !
@@ -54,6 +54,15 @@ subroutine d_matrix (dy1, dy2)
   end do
   call invmat (yl2, yl2_inv, 5)
   !
+  !  l = 3 block
+  !
+  do m = 1, 7
+     do n = 1, 7
+        yl3 (m, n) = ylm (n, 9+m)
+     end do
+  end do
+  call invmat (yl3, yl3_inv, 7)  
+  !
   ! now for each symmetry operation of the point-group ...
   !
   do isym = 1, nsym
@@ -85,6 +94,15 @@ subroutine d_matrix (dy1, dy2)
         end do
      end do
      dy2 (:, :, isym) = matmul (yl2(:,:), yl2_inv(:,:))
+     !
+     !  l = 3 block
+     !
+     do m = 1, 7
+        do n = 1, 7
+           yl3 (m, n) = ylms (n, 9+m)
+        end do
+     end do
+     dy3 (:, :, isym) = matmul (yl3(:,:), yl3_inv(:,:))
      !
   enddo
   return
