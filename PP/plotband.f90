@@ -95,8 +95,9 @@ program read_bands
      end if
   end do
 
+25 continue
   print '("output file > ",$)'
-  read(5,'(a)',end=10,err=10)  filename
+  read(5,'(a)',end=25,err=25)  filename
 
   open (unit=1,file=filename,form='formatted',status='unknown')
 
