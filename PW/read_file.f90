@@ -70,6 +70,7 @@ subroutine read_file
   allocate(tau (3, nat) )
   allocate(ityp (nat) )
   allocate(force (3, nat) )
+  if (tefield) allocate(forcefield (3, nat) )
   allocate (irt( 48, nat))    
   allocate (tetra(4, MAX(ntetra,1)))    
   !
@@ -192,6 +193,7 @@ subroutine read_file
   allocate(tau (3, nat) )
   allocate(ityp (nat) )
   allocate(force (3, nat) )
+  if (tefield) allocate(forcefield (3, nat) )
   allocate (irt( 48, nat))    
   if (ltetra) allocate (tetra(4, ntetra))    
   !
