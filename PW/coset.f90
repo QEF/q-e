@@ -61,6 +61,8 @@ subroutine coset (nrot, table, sym, nsym, irg)
   !     we check that the order of the subgroup is a divisor of the order
   !     total group. ncos is the number of cosets
   !
+  IF ( nsym == 0 ) CALL errore( 'coset', 'nsym == 0', 1 ) 
+  !
   ncos = nrot / nsym
   if (ncos * nsym.ne.nrot) call errore ('coset', &
   'The order'//' of the group is not a multiple of that of the subgroup', 1)
