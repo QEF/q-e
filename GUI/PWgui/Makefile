@@ -1,15 +1,15 @@
-TCL_VERSION      = 8.3
-ITCL_VERSION     = 3.1
-IWIDGETS_VERSION = 3.1.0
+# what is our Tcl/Tk version (see Make.include) ?
+include Make.include
 
 HERE    = $(shell pwd)
 REPACK  = $(HERE)/sys_utils/repack.sh
+STARKIT = $(HERE)/sys_utils/starkit.sh
 SCRATCH = .scratch
 
 PWGUI_VERSION    = $(shell cat VERSION)
 PWGUI_TARNAME    = PWgui-$(PWGUI_VERSION)
 PWGUI_DIRNAME    = PWgui-$(PWGUI_VERSION)
-
+PWGUI_VFS        = pwgui_vfs
 
 ROOT_FILES = \
 	pwgui pwgui.bat pwgui.tcl pwgui.settings \
@@ -94,13 +94,14 @@ clean:
 
 veryclean: 
 	$(MAKE) clean
-	cd doc/pwdocs; $(MAKE) clean
-	cd external/src; $(MAKE) clean
-	for file in `find . | egrep ~$$`; do echo "cleaning ...  $$file"; rm -f $$file; done 
+	-cd doc/pwdocs; $(MAKE) clean
+	-cd external/src; $(MAKE) clean
+	-cd $(PWGUI_VFS); $(MAKE) clean
+	-for file in `find . | egrep ~$$`; do echo "cleaning ...  $$file"; rm -f $$file; done 
 
 distclean: veryclean
-	cd lib/; rm -f *
-	cd external/lib; $(MAKE) clean
+	-cd lib/; rm -f *
+	-cd external/lib; $(MAKE) clean
 	if test -d bin/ ; then rm -rf bin/ ; fi
 
 _GUIB_DIR      = $(shell cd ../Guib; pwd)
@@ -135,6 +136,12 @@ pwgui-source-all:    \
 	_add_guib \
 	_repack_pwgui
 	mv $(PWGUI_TARNAME).tgz $(PWGUI_TARNAME)_all.tgz
+
+pwgui-starkit-vfs: \
+	_message-starkit \
+	_create_pwgui-notcl_tar \
+	_add_guib \
+	_create_starkit_vfs
 
 pwgui-linux-i386-bin: \
 	_message-bin \
@@ -176,6 +183,11 @@ _repack_pwgui:
 	$(REPACK) pwgui $(PWGUI_TARNAME) $(PWGUI_DIRNAME)
 	rm pwgui.tar
 
+_create_starkit_vfs: _clean_scratch
+	TOPDIR=$(HERE) PWGUI_VFS=$(PWGUI_VFS) \
+	PWGUI_VERSION=$(PWGUI_VERSION) PWGUI_DIRNAME=$(PWGUI_DIRNAME) \
+	GUIB_VERSION=$(_GUIB_VERSION) GUIB_DIRNAME=$(_GUIB_DIRNAME) $(STARKIT)
+
 _clean_scratch:
 	if test -d $(SCRATCH) ; then rm -rf $(SCRATCH); fi
 
@@ -192,6 +204,14 @@ _message-all: _check_guib _check_lib-links
 	@echo "# ------------------------------------------------------------"
 	@echo "#"
 	@echo "# Creating pwgui-source-all package"
+	@echo "#"
+	@echo "# ------------------------------------------------------------"
+
+_message-starkit: _check_guib
+	@echo ""
+	@echo "# ------------------------------------------------------------"
+	@echo "#"
+	@echo "# Creating pwgui strakit (StandAlone Runtime tclKIT) VFS"
 	@echo "#"
 	@echo "# ------------------------------------------------------------"
 
