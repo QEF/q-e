@@ -2,15 +2,21 @@
 # moduledep.sh -- script that computes dependencies on Fortran 90 modules
 
 # files whose dependencies must be computed
-sources=`ls *.f90`
+sources=`echo *.f90 |
+sed 's/\*\.f90//g'`   # remove the "*.f90" that remains
+#                     # when there are no such files
+if test "$sources" = "" ; then exit ; fi
 
 # files that may contain modules
 # extra directories can be specified on the command line
 sources_all="$sources"
 for dir in $*
 do
-  sources_all="$sources_all `ls $dir/*.f90`"
+  sources_all="$sources_all `echo $dir/*.f90`"
 done
+sources_all=`echo $sources_all |
+sed 's/[^ ]*\*\.f90//g'`     # remove the "dir/*.f90" that remain
+#                            # when there are no such files
 
 rm -f moduledep.tmp1 moduledep.tmp2 # destroy previous contents
 

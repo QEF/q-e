@@ -10,11 +10,12 @@ for DIR in Modules PW CPV flib pwtools upftools PP PWCOND \
 do
     # set inter-directory dependencies
     case $DIR in
-	Modules )                         DEPENDS=""                       ;;
+	Modules )         DEPENDS="../include"                        ;;
 	PW | CPV | flib | pwtools | upftools | atomic )
-	                                  DEPENDS="../Modules"             ;;
-	PP | PWCOND | Gamma | PH ) DEPENDS="../Modules ../PW"       ;;
-	D3 | Raman | Nmr)                 DEPENDS="../Modules ../PW ../PH" ;;
+	                  DEPENDS="../include ../Modules"             ;;
+	PP | PWCOND | Gamma | PH )
+                          DEPENDS="../include ../Modules ../PW"       ;;
+	D3 | Raman | Nmr) DEPENDS="../include ../Modules ../PW ../PH" ;;
     esac
 
     # generate dependencies file
@@ -22,11 +23,18 @@ do
     then
 	cd $TOPDIR/$DIR
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
+	$TOPDIR/includedep.sh $DEPENDS >> make.depend
     fi
+
+    # handle special case
+    mv make.depend make.depend.tmp
+    sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
+        make.depend.tmp > make.depend
+    rm -f make.depend.tmp
 
     # check for missing dependencies
     if grep @ make.depend
     then
-	echo WARNING: modules not found in directory $DIR
+	echo WARNING: dependencies not found in directory $DIR
     fi
 done
