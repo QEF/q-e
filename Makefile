@@ -42,6 +42,8 @@ pwcond : modules libs pw pp
 	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
 d3 : modules libs pw ph
 	if test -d D3 ; then ( cd D3 ; make all ) ; fi
+raman : modules libs pw ph
+	if test -d Raman ; then ( cd Raman ; make all ) ; fi
 
 tools : modules libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
@@ -65,7 +67,7 @@ links :
 	( cd bin/ ; \
 	  for exe in \
 	      ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x \
-	      ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x \
+	      ../Gamma/phcg.x ../Raman/ram.x ../CPV/cp.x ../FPMD/par2.x \
 	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
 	      ../PP/efg.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
 	      ../PP/plotband.x ../PP/pmw.x ../PP/pw2casino.x \
@@ -84,7 +86,7 @@ clean :
 	touch make.rules make.sys # make complains if they aren't there
 	#                         # same with .dependencies below
 	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools atomic \
-		   Modules install clib flib FPMD CPV ; do \
+		   Modules install clib flib FPMD CPV Raman ; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch .dependencies ; make clean ) \
 	    fi \
