@@ -13,8 +13,11 @@ CPP = /lib/cpp
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
+#FFTW_INC_DIR=/cineca/lib/fftw-2.1.3/fftw
+#FFTW_LIB_DIR=/cineca/lib/
+#
 FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
-FFTW_LIB_DIR=/usr/local/src/fftw-2.1.3/fftw/.libs
+FFTW_LIB_DIR=/usr/local/lib/
 #
 CPPFLAGS = -P -traditional -I$(OSHOME)/include \
            -D__LINUX -D__PGI -D__PARA -D__MPI -D__FFTW \
@@ -51,7 +54,7 @@ LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -lblas -L$(FFTW_LIB_DIR) -lfftw
 #LIBS = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS -lf77blas -latlas -L$(FFTW_LIB_DIR) -lfftw 
 #
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(OSHOME)/flib/clib.a $(LIBS) $(MODULEFLAG)
+LDFLAGS = $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS) $(MODULEFLAG)
 
 #
 # ar:
