@@ -186,6 +186,7 @@ Francesco Antoniella,
 Mauro Boero,
 Claudia Bungaro,
 Paolo Cazzato,
+Davide Ceresoli,
 Gabriele Cipriani,
 Matteo Cococcioni,
 Alberto Debernardi,
@@ -261,9 +262,13 @@ Providing binaries for $\nu-$ESPRESSO would require too much effort and
 would work only for a small number of machines anyway.
 
 To install $\nu-$ESPRESSO, you need working C and fortran-95 compilers 
-(fortran-90 is not sufficient, but most "fortran-90" compilers 
-are actually fortran-95-compliant). You will also need basic unix 
-facilities: a shell, the \texttt{make} and \texttt{awk} utilities.
+(fortran-90 is not sufficient, but most "fortran-90" compilers are 
+actually fortran-95-compliant). If you do not have any, try the free 
+\texttt{g95} compiler (\htmladdnormallink{\texttt{http://www.g95.org}}%
+{http://www.pwscf.org/download.htm}):
+it is still unfinished but already usable. You will also need basic unix
+facilities: a shell, the \texttt{make} 
+and \texttt{awk} utilities.
 
 The latest stable release of the $\nu-$ESPRESSO source package (currently
 version \version) can be downloaded from this URL:
@@ -922,9 +927,7 @@ subdirectories have been created, they aren't deleted.
 In each example's directory, the \texttt{reference} subdirectory
 contains verified output files, that you can check your results
 against.
-They were generated on a 1.7 GHz Pentium IV using Intel compiler
-(\texttt{ifc}) v.6 and MKL libraries v.5.1.
-
+They were generated on a Linux PC using the Intel compiler.
 On different architectures the precise numbers could be slightly
 different, in particular if different FFT dimensions are automatically
 selected.  For this reason, a plain \texttt{diff} of your results
@@ -1179,7 +1182,7 @@ support) should work. 64-bit executables can address a
 much larger memory space, but apparently they are not especially
 faster than 32-bit executables. The Intel compiler has been 
 reported to be more reliable and to produce faster executables 
-wrt the PGI compiler.
+wrt the PGI compiler. You may also try with g95.
 
 \paragraph{Linux PC clusters with MPI}
 
@@ -1370,8 +1373,7 @@ or otherwise it must be generated. Since version 2.1, $\nu-$ESPRESSO
 includes a PP generation package, in the
 directory \texttt{atomic/} (sources) and \texttt{atomic\_doc/}
 (documentation, tests and examples). 
-The package can generate both NC and US PPs in UPF (and older, not 
-recommended) format.
+The package can generate both NC and US PPs in UPF format.
 We refer to its documentation for instructions on how to generate PPs
 with the \texttt{atomic/} code.
 
@@ -2570,6 +2572,17 @@ Possible reasons:
     better, Marzari-Vanderbilt ``cold smearing''.
 \end{itemize}
 
+\paragraph{in parallel execution, \texttt{pw.x} stops complaining that
+           ``some processors have no planes'' or ``smooth planes'' or
+           some other strange error.}
+
+Your system does not require that many processors: reduce the number
+of processors to a more sensible value.
+In particular, both $N_3$ and $Nr_3$ must be $\geq N_{pr}$ (see
+section \ref{performance}, ``Performance Issues'', and in particular
+section \ref{parissues}, ``Parallelization issues'', for the meaning
+of these variables).
+
 \paragraph{the FFT grids in \texttt{pw.x} are machine-dependent.}
 
 Yes, they are!
@@ -2678,17 +2691,6 @@ may vary quite a lot for the same job.
 Also note that what is printed is supposed to be the CPU time per
 process, but with some compilers it is actually the wall time.
 
-\paragraph{on parallel execution, \texttt{pw.x} stops complaining that
-           ``some processors have no planes'' or ``smooth planes'' or
-           some other strange error.}
-
-Your system does not require that many processors: reduce the number
-of processors to a more sensible value.
-In particular, both $N_3$ and $Nr_3$ must be $\geq N_{pr}$ (see
-section \ref{performance}, ``Performance Issues'', and in particular
-section \ref{parissues}, ``Parallelization issues'', for the meaning
-of these variables).
-
 \paragraph{``warning : N eigenvectors not converged ...''}
 
 This is a warning message that can be safely ignored if it
@@ -2699,10 +2701,10 @@ part of the total, it may signal serious trouble in self-consistency
 (see next point) or something badly wrong in input data.
 
 \paragraph{``warning : negative or imaginary charge...'', or
-``...core charge ...''}
+``...core charge ...'', or ``npt with rhoup$<$0...'' or ''rhodw$<$0...'' }
 
-This is a warning message that can be safely ignored 
-unless the negative or imaginary charge is sizable,
+These are warning messages that can be safely ignored unless the 
+negative or imaginary charge is sizable,
 let us say {\cal O(0.1)}. If it is, something seriously 
 wrong is going on. Otherwise, the origin of the negative
 charge is the following. When one transforms a positive 
@@ -2737,7 +2739,6 @@ to either the pseudization procedure of the augmentation part or to
 truncation at finite cutoff may give convergence problems.
 Raising the \texttt{ecutrho} cutoff for charge density will usually
 help, especially in gradient-corrected calculations.
-
 
 \paragraph{structural optimization is slow or does not converge.}
 
