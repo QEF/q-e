@@ -97,6 +97,6 @@ ld1.x: $(LD1OBJS) ld1.o
 	- ( cd ../bin ; ln -fs ../atomic/ld1.x . )
 
 clean:
-	- /bin/rm -f *.o *.x $(LIB) *~ *.d *.mod *.tmp.* make.* work.pc
+	- /bin/rm -f *.o *.x $(LIB) *~ *.d *.mod *.tmp.* work.pc
 
 include make.depend

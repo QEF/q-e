@@ -39,6 +39,6 @@ cp.x : $(FOBJS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 clean :
-	- /bin/rm -f *.o *.i core* fort* *.mod *.s *.d work.pc cp.x
+	- /bin/rm -f *.o *.F90 *.i core* fort* *.mod *.s *.d work.pc cp.x
 
 include make.depend
