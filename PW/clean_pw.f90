@@ -6,36 +6,36 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE clean_pw
+SUBROUTINE clean_pw()
   !----------------------------------------------------------------------
   !    
   !    This routine deallocates all dynamically allocated arrays
   !
-  USE basis,              ONLY : ityp, tau
-  USE gvect,              ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &
-                                 eigts1, eigts2, eigts3
-  USE gsmooth,            ONLY : nls, nlsm, doublegrid
-  USE ktetra,             ONLY : tetra
-  USE reciprocal_vectors, ONLY : ig_l2g
-  USE symme,              ONLY : irt
-  USE vlocal,             ONLY : strf, vloc, vnew
-  USE wvfct,              ONLY : igk, igk_l2g, g2kin, et, wg, gamma_only
-  USE force_mod,          ONLY : force
-  USE scf,                ONLY : rho, rho_save,vr, vltot, rho_core, vrs
-  USE relax,              ONLY : if_pos
-  USE wavefunctions_module,      ONLY : evc, psic
-  USE us,                 ONLY : indv, nhtol, nhtom, qq, dvan, deeq, qrad, &
-                                 vkb, qgm, becsum, tab
-  USE ldaU,               ONLY : ns, nsnew, swfcatom
-  USE extfield,           ONLY : forcefield
-  USE becmod,             ONLY : becp
-  USE sticks,             ONLY : dfftp, dffts  
-  USE stick_base,         ONLY : sticks_deallocate
-  USE berry_phase,        ONLY : berry_closeup
-#ifdef __SX6
-  USE afftnec,            ONLY : auxp
+  USE basis,                ONLY : ityp, tau
+  USE gvect,                ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &
+                                   eigts1, eigts2, eigts3
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE ktetra,               ONLY : tetra
+  USE reciprocal_vectors,   ONLY : ig_l2g
+  USE symme,                ONLY : irt
+  USE vlocal,               ONLY : strf, vloc, vnew
+  USE wvfct,                ONLY : igk, igk_l2g, g2kin, et, wg, gamma_only
+  USE force_mod,            ONLY : force
+  USE scf,                  ONLY : rho, rho_save,vr, vltot, rho_core, vrs
+  USE relax,                ONLY : if_pos
+  USE wavefunctions_module, ONLY : evc, psic
+  USE us,                   ONLY : indv, nhtol, nhtom, qq, dvan, deeq, qrad, &
+                                   vkb, qgm, becsum, tab, tab_at
+  USE ldaU,                 ONLY : ns, nsnew, swfcatom
+  USE extfield,             ONLY : forcefield
+  USE becmod,               ONLY : becp
+  USE sticks,               ONLY : dfftp, dffts  
+  USE stick_base,           ONLY : sticks_deallocate
+  USE berry_phase,          ONLY : berry_closeup
+#if defined (__SX6)
+  USE afftnec,              ONLY : auxp
 #endif  
-  USE fft_types,          ONLY : fft_dlay_deallocate
+  USE fft_types,            ONLY : fft_dlay_deallocate
   !
   IMPLICIT NONE
   !
@@ -107,6 +107,7 @@ SUBROUTINE clean_pw
   IF ( ALLOCATED( ns ) )         DEALLOCATE( ns )
   IF ( ALLOCATED( nsnew ) )      DEALLOCATE( nsnew )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
+  IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
