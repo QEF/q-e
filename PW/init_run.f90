@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,12 +13,14 @@ subroutine init_run
   implicit none
 
   call start_clock ('init_run')
-  write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
 
-  gamma_only =.false.
-  write (6, '(5x,"Complex Hamiltonian")')
-  write (6, 9010) ntypx, npsx, lmaxx, npk
-  write (6, 9200) nbrx, lqmax, nqfm
+  if (gamma_only) then
+     write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials, ",&
+                     "Gamma point")')
+  else
+     write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+  end if
+  write (6, 9010) ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
 
   call iosys
   call setup
@@ -40,9 +42,8 @@ subroutine init_run
   call show_memory ()
 
   return
-9010 format (/5x,'current dimensions of program pwscf are:'/5x, &
-       &'ntypx=',i5,' npsx =',i5,' lmax =',i5,' npk =',i5)
-
-9200 format( 5x,'nbrx =',i6,' lqmax =',i6,' nqfm =',i6 )
+9010 format (/5x,'Current dimensions of program pwscf are:' &
+             /5x,'ntypx =',i2,'   npk =',i5,'  lmax =',i2   &
+             /5x,'nchix =',i2,'  ndim =',i5,'  nbrx =',i2,' nqfm =',i2)
 end subroutine init_run
 

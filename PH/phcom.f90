@@ -195,9 +195,11 @@ end module partial
 !   the variable controlling the phonon run
 !
 module control_ph
-  use parameters, only : DP, maxter, npk
-  integer :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, iter0, maxirr
+  use parameters, only : DP, npk
+  integer, parameter :: maxter = 100
   ! maximum number of iterations
+  integer :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, iter0, maxirr
+  ! maximum number of iterations (read from input)
   ! mixing type
   ! occupated bands in metals
   ! starting representation

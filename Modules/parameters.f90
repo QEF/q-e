@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,19 +16,18 @@ module parameters
   !       First all the parameter declaration
   !
   integer , parameter ::                                                 &
-       ntypx  = 6,     &! maximum number of different types of atom
-       lmaxx  = 3,     &! maximum non local angular momentum       
-       nchix  = 6,     &! maximum number of functions in the NL pot
-       npsx   = 6,     &! maximum number of different pseudopotenti
-       maxter = 100,   &! maximum number of iterations             
-       npk    = 40000, &! maximum number of k-points               
-       ndm    = 2000   ! maximum number of points in the radial mesh
+       ntypx  = 6,     &! max number of different types of atom
+       npsx   = ntypx, &! max number of different PPs (obsolete)
+       npk    = 40000, &! max number of k-points               
+       lmaxx  = 3,     &! max non local angular momentum       
+       nchix  = 6,     &! max number of atomic wavefunctions per atom
+       ndm    = 2000    ! max number of points in the atomic radial mesh
   integer , parameter :: DP = kind(0.0d0)
 
   integer, parameter  :: &
-       nbrx = 8,           &! maximum number of beta functions
-       lqmax= 2*lmaxx+1,   &! maximum number of angular momenta of Q
-       nqfm = 8             ! maximum number of coefficients in Q smoothing
+       nbrx = 8,           &! max number of beta functions
+       lqmax= 2*lmaxx+1,   &! max number of angular momenta of Q
+       nqfm = 8             ! max number of coefficients in Q smoothing
 
   !
   ! ...   More parameter for the CP codes

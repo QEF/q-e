@@ -74,6 +74,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
 ../PW/init_ns.o \
+../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
 ../PW/init_vloc.o \
@@ -212,7 +213,6 @@ force_us.o \
 ggen.o \
 gradcorr.o \
 h_psi.o \
-init_run.o \
 interpolate.o \
 mix_rho.o \
 pw_gemm.o \
