@@ -6,6 +6,9 @@ subroutine close_phq(flag)
   use control_flags, ONLY : twfcollect
   use phcom
   use us, only : okvan
+#ifdef __PARA
+  use para
+#endif
 
   implicit none
 
