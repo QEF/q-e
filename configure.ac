@@ -440,11 +440,13 @@ then
 	if test $is_linux64 && test $is_ifc
 	then
 		try_libdirs="/usr/local/lib
+			     /opt/intel/mkl70/lib/64
 			     /opt/intel/mkl/mkl61/lib/64 /opt/intel/mkl/lib/64
 			     /opt/intel/mkl61/lib/64"
 	elif test $is_linux && test $is_ifc
 	then
 		try_libdirs="/usr/local/lib
+			     /opt/intel/mkl70/lib/32
 			     /opt/intel/mkl/mkl61/lib/32 /opt/intel/mkl/lib/32
 			     /opt/intel/mkl61/lib/32
 			     /cineca/lib /cineca/prod/intel/lib"
