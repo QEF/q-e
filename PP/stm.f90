@@ -66,11 +66,13 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     exponential behaviour, otherwise uses the true wfc's on fft grid
   !
   stmdos(:) = 0.d0
-  if (.not.stm_wfc_matching) rho(:,:) = 0.d0
-  if (stm_wfc_matching) then
-     write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-     write ( * ,  * ) '! stm_wfc_matching untested since a long time !'
-     write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+  if (.not.stm_wfc_matching) then
+     rho(:,:) = 0.d0
+     write (6, '(5x,"Use the true wfcs")')
+     write (6, '(5x,"Sample bias          =",f8.4, &
+          &       " eV")') sample_bias * rytoev
+  else 
+     call errore('stm','option stm_wfc_matching does not work',1)
      z = z * alat
      dz = dz * alat
      write (6, '(5x,"Matching plane at z  =",f6.2, &
@@ -79,11 +81,6 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
           &       " atomic units")') dz
      write (6, '(5x,"Sample bias          =",f8.4, &
           &       " eV")') sample_bias * rytoev
-  else
-     write (6, '(5x,"Use the true wfcs")')
-     write (6, '(5x,"Sample bias          =",f8.4, &
-          &       " eV")') sample_bias * rytoev
-
   endif
   !
   if (.not.lgauss) then

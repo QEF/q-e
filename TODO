@@ -1,4 +1,4 @@
-TODO LIST -  16 July 2003
+TODO LIST -  29 July 2003
 
 INSTALLATION
 
@@ -83,21 +83,21 @@ POSTPROCESSING
 - postprocessing/pwtools in the parallel case
   and with new_punch must be verified
 
-- stm in non-scf calculations to be verified
+- stm_wfc_matching not working
 
 - add more scripts that process output files
 
 - dos, projected dos, etc: input data should be more uniform
-
-- non scf calculations: there must be an option to distinguish
-  the case of a few selected k-points (bands) from the case of
-  a grid of k-points covering the entire BZ (DOS, STM): nosym?
 
 PH
 
 - Tone: ntyp in input needed for phonon GUI ?
 
 - better algorithm for electron-phonon (Malgorzata)
+
+D3 
+
+- not working, no example !!!
 
 DOCUMENTATION
 
