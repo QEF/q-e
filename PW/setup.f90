@@ -70,8 +70,7 @@ SUBROUTINE setup()
   USE bp,               ONLY : gdir, lberry, nppstr
   USE fixed_occ,        ONLY : f_inp, tfixed_occ   
   USE char,             ONLY : sname
-  USE para,             ONLY : kunit
-  USE mp_global,        ONLY : nimage
+  USE mp_global,        ONLY : nimage, kunit
   USE spin_orb,         ONLY : lspinorb, domag
   USE noncollin_module, ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                angle1, angle2

@@ -37,7 +37,7 @@ PROGRAM phonon
   USE output,          ONLY : fildyn, fildrho
   USE units_ph,        ONLY : iudrho, lrdrho
   USE parser,          ONLY : delete_if_present
-  USE para,            ONLY : me
+  USE mp_global,       ONLY : me_pool, root_pool
   USE global_version,  ONLY : version_number
   !
   IMPLICIT NONE
@@ -295,22 +295,22 @@ PROGRAM phonon
            !
            ! close the file with drho_E
            !
-           if (fildrho.ne.' ') then
-              close (unit = iudrho, status = 'keep')
+           IF (fildrho.NE.' ') THEN
+              CLOSE (unit = iudrho, status = 'keep')
               !
               ! open the file with drho_u
               !
               iudrho = 23
               lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
-#ifdef __PARA
-              if (me.ne.1) goto 300
-#endif
-              filint = trim(fildrho)//".u"
-              call diropn (iudrho, filint, lrdrho, exst)
-#ifdef __PARA
-300           continue
-#endif
-           end if
+
+              IF ( me_pool == root_pool ) THEN
+
+                 filint = TRIM(fildrho)//".u"
+                 CALL diropn (iudrho, filint, lrdrho, exst)
+
+              END IF
+
+           END IF
            !
         ELSE
            !

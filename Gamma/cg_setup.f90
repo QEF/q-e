@@ -5,132 +5,132 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine cg_setup
+SUBROUTINE cg_setup
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
-  USE kinds, only: DP
+  USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
-  use pwcom
+  USE pwcom
   USE atom, ONLY: nlcc
   USE restart_module, ONLY: readfile_new
-  USE para,           ONLY : kunit
+  USE mp_global,           ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
-  use io_files, only: prefix, iunpun, iunres
-  use cgcom
-  use funct
+  USE io_files, ONLY: prefix, iunpun, iunres
+  USE cgcom
+  USE funct
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: i, l, nt, kpoint
-  logical :: exst
-  character (len=256) :: filint
-  real(kind=DP) :: rhotot, dmxc
-  external dmxc
+  INTEGER :: i, l, nt, kpoint
+  LOGICAL :: exst
+  CHARACTER (len=256) :: filint
+  REAL(kind=DP) :: rhotot, dmxc
+  EXTERNAL dmxc
   INTEGER       :: ndr, kunittmp, ierr
   REAL(KIND=DP) :: edum(1,1), wdum(1,1)
   !
-  call start_clock('cg_setup')
+  CALL start_clock('cg_setup')
   !
   !  convert masses to atomic units
   !
-  call DSCAL(ntyp,amconv,amass,1)
+  CALL DSCAL(ntyp,amconv,amass,1)
   !
   !  sum self-consistent part (vr) and local part (vltot) of potential
   !
-  call set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
   !
   !  allocate memory for various arrays
   !
-  allocate  (dmuxc( nrxx))    
-  allocate  (dvpsi( npwx, nbnd))    
-  allocate  ( dpsi( npwx, nbnd))    
-  allocate  ( auxr( nrxx))    
-  allocate  ( aux2( nrxx))    
-  allocate  ( aux3( nrxx))    
+  ALLOCATE  (dmuxc( nrxx))    
+  ALLOCATE  (dvpsi( npwx, nbnd))    
+  ALLOCATE  ( dpsi( npwx, nbnd))    
+  ALLOCATE  ( auxr( nrxx))    
+  ALLOCATE  ( aux2( nrxx))    
+  ALLOCATE  ( aux3( nrxx))    
   !
   !  allocate memory for gradient corrections (if needed)
   !
-  if (igcx.ne.0 .or. igcc.ne.0) then
-     allocate  ( dvxc_rr(nrxx,nspin,nspin))    
-     allocate  ( dvxc_sr(nrxx,nspin,nspin))    
-     allocate  ( dvxc_ss(nrxx,nspin,nspin))    
-     allocate  ( dvxc_s (nrxx,nspin,nspin))    
-     allocate  ( grho   (3, nrxx, nspin))    
-  end if
+  IF (igcx.NE.0 .OR. igcc.NE.0) THEN
+     ALLOCATE  ( dvxc_rr(nrxx,nspin,nspin))    
+     ALLOCATE  ( dvxc_sr(nrxx,nspin,nspin))    
+     ALLOCATE  ( dvxc_ss(nrxx,nspin,nspin))    
+     ALLOCATE  ( dvxc_s (nrxx,nspin,nspin))    
+     ALLOCATE  ( grho   (3, nrxx, nspin))    
+  END IF
   !
   !
   !  initialize structure factor array
   !
-  call struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg,               &
+  CALL struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg,               &
        &                  nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
   !
   !  compute drhocore/dtau for each atom type (if needed)
   !
-  nlcc_any = .false.
-  do nt=1,ntyp
-     nlcc_any = nlcc_any .or. nlcc(nt)
-  end do
+  nlcc_any = .FALSE.
+  DO nt=1,ntyp
+     nlcc_any = nlcc_any .OR. nlcc(nt)
+  END DO
 !!!      if (nlcc_any) call set_drhoc(xq)
   !
   !  local potential
   !
-  call init_vloc
+  CALL init_vloc
   !
-  call init_us_1
+  CALL init_us_1
   !
-  call newd
+  CALL newd
   !
   !  derivative of the xc potential
   !
   dmuxc(:) = 0.d0
-  do i = 1,nrxx
+  DO i = 1,nrxx
      rhotot = rho(i,current_spin)+rho_core(i)
-     if ( rhotot.gt. 1.d-30 ) dmuxc(i)= dmxc( rhotot)
-     if ( rhotot.lt.-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
-  end do
+     IF ( rhotot.GT. 1.d-30 ) dmuxc(i)= dmxc( rhotot)
+     IF ( rhotot.LT.-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
+  END DO
   !
   !  initialize data needed for gradient corrections
   !
-  call cg_setupdgc
+  CALL cg_setupdgc
   !
   iunres=88
   !
   !   open the wavefunction file (already existing)
   !
   lrwfc=2*nbnd*npwx
-  filint = trim(prefix) //'.wfc'
-  call diropn(iunpun,filint,lrwfc,exst)
-  if(.not.exst) then 
+  filint = TRIM(prefix) //'.wfc'
+  CALL diropn(iunpun,filint,lrwfc,exst)
+  IF(.NOT.exst) THEN 
      ndr      = 34
      kunittmp = 1
 #  ifdef __PARA
      kunittmp = kunit
 #  endif
      !
-     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
+     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
                         iunpun, ierr )
-     if ( ierr > 0 ) &
-        call errore('main','file '//filint//' not found',1)
-  end if
+     IF ( ierr > 0 ) &
+        CALL errore('main','file '//filint//' not found',1)
+  END IF
   !  read wave functions and calculate indices
   !
   kpoint=1
-  call davcio(evc,lrwfc,iunpun,kpoint,-1)
-  if ( exst ) then
-     close(unit=iunpun,status='keep')
-  else 
-     close(unit=iunpun,status='delete')
-  end if
-  call gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)
+  CALL davcio(evc,lrwfc,iunpun,kpoint,-1)
+  IF ( exst ) THEN
+     CLOSE(unit=iunpun,status='keep')
+  ELSE 
+     CLOSE(unit=iunpun,status='delete')
+  END IF
+  CALL gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)
   !
   !  Kleinman-Bylander PPs
   !
-  call init_us_2 (npw, igk, xk(1,kpoint), vkb)
+  CALL init_us_2 (npw, igk, xk(1,kpoint), vkb)
   !
-  call stop_clock('cg_setup')
+  CALL stop_clock('cg_setup')
   !
-  return
-end subroutine cg_setup
+  RETURN
+END SUBROUTINE cg_setup

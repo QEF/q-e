@@ -17,9 +17,8 @@ SUBROUTINE init_pool()
                         intra_image_comm, inter_image_comm, &
                         intra_pool_comm, inter_pool_comm
   USE parallel_include
-  
+  !
   USE mp_global, ONLY : mp_global_group_start
-  USE para,      ONLY : me, mypool, nprocp, npool_ => npool
   !
   IMPLICIT NONE
   !
@@ -92,17 +91,6 @@ SUBROUTINE init_pool()
                        me_pool, me_image, inter_pool_comm, ierr )
   !
   call errore( 'init_pool', 'inter_pool_comm is wrong', ierr )
-  !
-  ! ... compatibility with old PWscf routines
-  !
-  ! ... me      =>  me_pool + 1
-  ! ... mypool  =>  my_pool_id + 1
-  ! ... nprocp  =>  nproc_pool
-  !
-  me     = me_pool + 1
-  mypool = my_pool_id + 1
-  nprocp = nproc_pool
-  npool_ = npool
   !
 #endif
   !

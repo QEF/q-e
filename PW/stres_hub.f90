@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------
-subroutine stres_hub ( sigmah )
+SUBROUTINE stres_hub ( sigmah )
    !----------------------------------------------------------------------
    !
    ! This routines computes the Hubbard contribution to the internal stress
@@ -24,100 +24,94 @@ subroutine stres_hub ( sigmah )
   USE symme,     ONLY : s, nsym
   USE io_files,  ONLY : prefix, iunocc
   USE wvfct,     ONLY : gamma_only   
-#ifdef DEBUG
-  USE io_global, ONLY : stdout
-#endif
-#ifdef __PARA
-   USE para
-#endif
+  USE io_global, ONLY : stdout, ionode
    !
-   implicit none
+   IMPLICIT NONE
    !
-   real (kind=DP) :: sigmah(3,3)        ! output: the Hubbard stresses
+   REAL (kind=DP) :: sigmah(3,3)        ! output: the Hubbard stresses
 
-   integer :: ipol, jpol, na, nt, is,isi, m1,m2,m3,m4
-   integer :: ldim
-   real (kind=DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
-   logical :: exst
-   real (kind=DP), allocatable :: dns(:,:,:,:)
+   INTEGER :: ipol, jpol, na, nt, is,isi, m1,m2,m3,m4
+   INTEGER :: ldim
+   REAL (kind=DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
+   LOGICAL :: exst
+   REAL (kind=DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
  
-   if (U_projection .ne. "atomic") call errore("stres_hub", &
+   IF (U_projection .NE. "atomic") CALL errore("stres_hub", &
                    " stress for this U_projection_type not implemented",1)
 
-   if (gamma_only) call errore('stres_hub',&
+   IF (gamma_only) CALL errore('stres_hub',&
                    ' LDA+U, stress AND gamma-only not implemented yet',1)
 
    sigmah(:,:) = 0.d0
 
    ldim = 2 * Hubbard_lmax + 1
-   allocate (dns(ldim,ldim,nspin,nat))
+   ALLOCATE (dns(ldim,ldim,nspin,nat))
    dns(:,:,:,:) = 0.d0
 
-#ifdef __PARA
-   if (me.eq.1.and.mypool.eq.1) then
-#endif
-   call seqopn(iunocc,trim(prefix)//'.occup','formatted',exst)
-   read(iunocc,*) ns
-   close(unit=iunocc,status='keep')
-#ifdef __PARA
-   end if
-#endif
+   IF ( ionode ) THEN
+
+      CALL seqopn(iunocc,TRIM(prefix)//'.occup','formatted',exst)
+      READ(iunocc,*) ns
+      CLOSE(unit=iunocc,status='keep')
+
+   END IF
+
 
 #ifdef DEBUG
-   do na=1,nat
-      do is=1,nspin
+   DO na=1,nat
+      DO is=1,nspin
          nt = ityp(na)
-         if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
+         IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
             WRITE( stdout,'(a,2i3)') 'NS(NA,IS) ', na,is
-            do m1=1,ldim
+            DO m1=1,ldim
                WRITE( stdout,'(7f10.4)') (ns(m1,m2,is,na),m2=1,ldim)
-            end do
-         end if
-      end do
-   end do
+            END DO
+         END IF
+      END DO
+   END DO
 #endif
    omin1 = 1.d0/omega
-   do ipol = 1,3
-      do jpol = 1,ipol
-         call dndepsilon(dns,ldim,ipol,jpol)
-         do na = 1,nat                 
+   DO ipol = 1,3
+      DO jpol = 1,ipol
+         CALL dndepsilon(dns,ldim,ipol,jpol)
+         DO na = 1,nat                 
             nt = ityp(na)
-            if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
-               do is = 1,nspin
+            IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
+               DO is = 1,nspin
 #ifdef DEBUG
                   WRITE( stdout,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
                   WRITE( stdout,'(5f10.4)') ((dns(m1,m2,is,na),m2=1,5),m1=1,5)
 #endif
-                  do m2 = 1, 2 * Hubbard_l(nt) + 1
+                  DO m2 = 1, 2 * Hubbard_l(nt) + 1
                      sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
                            Hubbard_U(nt) * 0.5d0 * dns(m2,m2,is,na) 
-                     do m1 = 1, 2 * Hubbard_l(nt) + 1
+                     DO m1 = 1, 2 * Hubbard_l(nt) + 1
                         sigmah(ipol,jpol) = sigmah(ipol,jpol) + omin1 * &
                            Hubbard_U(nt) * ns(m2,m1,is,na) * dns(m1,m2,is,na)
-                     end do
-                  end do
-               end do
-            end if
-         end do
-      end do
-   end do
-   if (nspin.eq.1) sigmah(:,:) = 2.d0 * sigmah(:,:)
+                     END DO
+                  END DO
+               END DO
+            END IF
+         END DO
+      END DO
+   END DO
+   IF (nspin.EQ.1) sigmah(:,:) = 2.d0 * sigmah(:,:)
 
    !
    ! Symmetryze the stress tensor
    !
-   do ipol = 1,3
-      do jpol = ipol,3
+   DO ipol = 1,3
+      DO jpol = ipol,3
          sigmah(ipol,jpol) = sigmah(jpol,ipol)
-      end do
-   end do
+      END DO
+   END DO
    
-   call trntns(sigmah,at,bg,-1)
-   call symtns(sigmah,nsym,s)
-   call trntns(sigmah,at,bg,1)
+   CALL trntns(sigmah,at,bg,-1)
+   CALL symtns(sigmah,nsym,s)
+   CALL trntns(sigmah,at,bg,1)
 
-   deallocate (dns)
+   DEALLOCATE (dns)
 
-   return
-end  subroutine stres_hub
+   RETURN
+END  SUBROUTINE stres_hub

@@ -22,9 +22,9 @@ SUBROUTINE openfil_pp()
   USE io_files,       ONLY : prefix, &
                              iunat, iunwfc, &
                              iunigk, nwordwfc, nwordatwfc
-  USE restart_module, ONLY : readfile_new
-  USE para,           ONLY : kunit
-  USE noncollin_module,  ONLY : npol
+  USE restart_module,   ONLY : readfile_new
+  USE mp_global,        ONLY : kunit
+  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !

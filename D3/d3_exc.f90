@@ -20,9 +20,9 @@ SUBROUTINE d3_exc
   USE pwcom
   USE phcom
   USE d3com
-  USE para
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_image_id, me_pool, root_image
+  USE mp_global, ONLY : inter_pool_comm, my_image_id, me_pool, &
+                        root_image, npool
   USE mp,        ONLY : mp_bcast  
 
   IMPLICIT NONE

@@ -5,21 +5,22 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-
 subroutine psymd0rho (nper, irr, dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the charge density.
   !
-#include "f_defs.h"
+
 #ifdef __PARA
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
   USE pwcom
   USE phcom
   USE d3com
-  USE para
+  USE mp_global, ONLY : me_pool
+  USE pfft,      ONLY : npp, ncplane
 
   IMPLICIT NONE
 
@@ -42,7 +43,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
 
   allocate ( ddvtosym( nrx1 * nrx2 * nrx3, nper))    
   npp0 = 0
-  do i = 1, me-1
+  do i = 1, me_pool
      npp0 = npp0 + npp (i)
   enddo
 
@@ -54,7 +55,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   call symd0rho (max_irr_dim, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
        nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   do iper = 1, nper
-     call ZCOPY (npp (me) * ncplane, ddvtosym (npp0, iper), 1, dvtosym &
+     call ZCOPY (npp (me_pool+1) * ncplane, ddvtosym (npp0, iper), 1, dvtosym &
           (1, iper), 1)
   enddo
   deallocate(ddvtosym)

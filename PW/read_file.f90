@@ -8,45 +8,43 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine read_file
+SUBROUTINE read_file
   !-----------------------------------------------------------------------
   !
   !     This routine allocates space for all quantities already computed
   !     in the pwscf program and reads them from the data file.
   !
   !
-  USE kinds,          ONLY : DP
-  USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau
-  USE basis,          ONLY : natomwfc
-  USE cell_base,      ONLY : tpiba2, bg
-  USE force_mod,      ONLY : force
-  USE klist,          ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,       ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,          ONLY : nbnd, nbndx, et, wg
-  USE symme,          ONLY : irt 
-  USE ktetra,         ONLY : tetra, ntetra 
-  USE extfield,       ONLY : forcefield, tefield
-  USE cellmd,         ONLY : cell_factor, lmovecell
-  USE gvect,          ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, &
-                             eigts1, eigts2, eigts3
-  USE gsmooth,        ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
-  USE scf,            ONLY : rho, vr
-  USE vlocal,         ONLY : strf
-  USE io_files,       ONLY : tmp_dir, prefix, iunpun
-  USE restart_module, ONLY : readfile_new
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
+  USE basis,            ONLY : natomwfc
+  USE cell_base,        ONLY : tpiba2, bg
+  USE force_mod,        ONLY : force
+  USE klist,            ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
+  USE wvfct,            ONLY : nbnd, nbndx, et, wg
+  USE symme,            ONLY : irt 
+  USE ktetra,           ONLY : tetra, ntetra 
+  USE extfield,         ONLY : forcefield, tefield
+  USE cellmd,           ONLY : cell_factor, lmovecell
+  USE gvect,            ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, &
+                               eigts1, eigts2, eigts3
+  USE gsmooth,          ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
+  USE scf,              ONLY : rho, vr
+  USE vlocal,           ONLY : strf
+  USE io_files,         ONLY : tmp_dir, prefix, iunpun
+  USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : noncolin, npol
-#ifdef __PARA
-  USE para
-#endif
+  USE mp_global,        ONLY : kunit
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer, parameter :: nax =1000 ! an unlikely large number of atoms
-  integer :: i, ik, ibnd, ios, ierr
+  INTEGER, PARAMETER :: nax =1000 ! an unlikely large number of atoms
+  INTEGER :: i, ik, ibnd, ios, ierr
   !
-  real(kind=DP), allocatable :: et_g(:,:), wg_g(:,:)
-  real(kind=DP) :: rdum(1,1)
-  integer :: kunittmp
+  REAL(kind=DP), ALLOCATABLE :: et_g(:,:), wg_g(:,:)
+  REAL(kind=DP) :: rdum(1,1)
+  INTEGER :: kunittmp
   !
   ! choose the fortran unit to attach to the file
   !
@@ -60,10 +58,10 @@ subroutine read_file
   !  in parallel execution, only root proc reads the file
   !  and then broadcasts the values to all other procs
   !
-  call readfile_new( 'dim', iunpun, rdum, rdum, kunittmp, 0, 0, ierr )
+  CALL readfile_new( 'dim', iunpun, rdum, rdum, kunittmp, 0, 0, ierr )
   IF( ierr /= 0 ) THEN
-    call errore ('read_file', 'problem reading file '// &
-      &      trim(tmp_dir)//trim(prefix)//'.save', ierr)
+    CALL errore ('read_file', 'problem reading file '// &
+      &      TRIM(tmp_dir)//TRIM(prefix)//'.save', ierr)
   END IF
   !
 #ifdef __PARA
@@ -72,26 +70,26 @@ subroutine read_file
   !
   !  allocate space for atomic positions, symmetries, forces, tetrahedra
   !
-  if ( nat <= 0 .or. nat > nax ) &
-       call errore ('read_file', 'wrong number of atoms', 1)
+  IF ( nat <= 0 .OR. nat > nax ) &
+       CALL errore ('read_file', 'wrong number of atoms', 1)
   !
-  allocate( et_g(nbnd,  nkstot), wg_g(nbnd,  nkstot) )
+  ALLOCATE( et_g(nbnd,  nkstot), wg_g(nbnd,  nkstot) )
 
-  allocate(tau (3, nat) )
-  allocate(ityp (nat) )
-  allocate(force (3, nat) )
-  if (tefield) allocate(forcefield (3, nat) )
-  allocate (irt( 48, nat))    
-  allocate (tetra(4, MAX(ntetra,1)))    
+  ALLOCATE(tau (3, nat) )
+  ALLOCATE(ityp (nat) )
+  ALLOCATE(force (3, nat) )
+  IF (tefield) ALLOCATE(forcefield (3, nat) )
+  ALLOCATE (irt( 48, nat))    
+  ALLOCATE (tetra(4, MAX(ntetra,1)))    
   !
   !     here we read all the variables defining the system
   !     in parallel execution, only root proc read the file
   !     and then broadcast the values to all ather procs
   !
-  call readfile_new( 'nowave', iunpun, et_g, wg_g, kunittmp, 0, 0, ierr )
+  CALL readfile_new( 'nowave', iunpun, et_g, wg_g, kunittmp, 0, 0, ierr )
   IF( ierr /= 0 ) THEN
-    call errore ('read_file', 'problem reading file '// &
-      &      trim(tmp_dir)//trim(prefix)//'.save', ierr)
+    CALL errore ('read_file', 'problem reading file '// &
+      &      TRIM(tmp_dir)//TRIM(prefix)//'.save', ierr)
   END IF
   !
   !
@@ -101,68 +99,68 @@ subroutine read_file
   ! related variables (not a smart implementation)
   nks = nkstot
   ! nks and nkstot are redefined by the following routine
-  call divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
+  CALL divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
 #endif
   !
   !  check whether LSDA
   !
-  if (lsda) then
+  IF (lsda) THEN
      nspin = 2
      npol=1
-  elseif (noncolin) then
+  ELSEIF (noncolin) THEN
      nspin=4
      npol = 2
      current_spin=1
-  else
+  ELSE
      nspin = 1
      npol=1
      current_spin = 1
-  endif
+  ENDIF
   cell_factor = 1.d0
-  lmovecell = .false.
+  lmovecell = .FALSE.
   !
   !   allocate memory for G- and R-space fft arrays
   !
-  call allocate_fft
-  call ggen
+  CALL allocate_fft
+  CALL ggen
   !
   !    allocate the potential
   !
-  call allocate_locpot
-  call allocate_nlpot
+  CALL allocate_locpot
+  CALL allocate_nlpot
   !
   !    allocate wavefunctions and related quantities (including et and wg)
   !
   nbndx = nbnd
-  call allocate_wfc
+  CALL allocate_wfc
   !
   et = et_g
   wg = wg_g
   !
-  deallocate( et_g, wg_g )
+  DEALLOCATE( et_g, wg_g )
   !
 #ifdef __PARA
-  call poolscatter (nbnd , nkstot, et, nks, et)
-  call poolscatter (nbnd , nkstot, wg, nks, wg)
+  CALL poolscatter (nbnd , nkstot, et, nks, et)
+  CALL poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
   !
   ! read the charge density
   !
-  call io_pot ( - 1, trim(prefix)//'.rho', rho, nspin)
+  CALL io_pot ( - 1, TRIM(prefix)//'.rho', rho, nspin)
   !
   ! read the potential
   !
-  call io_pot ( - 1, trim(prefix)//'.pot', vr, nspin)
+  CALL io_pot ( - 1, TRIM(prefix)//'.pot', vr, nspin)
   !
   ! re-calculate the local part of the pseudopotential vltot
   ! and the core correction charge (if any) - This is done here
   ! for compatibility with the previous version of read_file
   !
-  call init_vloc
-  call struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
+  CALL init_vloc
+  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
        nr3, strf, eigts1, eigts2, eigts3)
-  call setlocal
-  call set_rhoc
+  CALL setlocal
+  CALL set_rhoc
   !
-  return
-end subroutine read_file
+  RETURN
+END SUBROUTINE read_file
