@@ -1,99 +1,83 @@
 !----------------------------------------------------------------------
-      subroutine calc_btq(ql,qr_k,idbes)
-!----------------------------------------------------------------------
-!
-!   Calculates the Bessel-transform (or its derivative if idbes=1) 
-!   of the augmented qrad charges at a given ql point.
-!   Rydberg atomic units are  used.
-!
-      use atom, only: r, rab, dx
-      USE ions_base, ONLY : ntyp => nsp
-      use cell_base, only: omega
-      USE parameters, only:  ndmx, nbrx
-      USE kinds, only: DP
-      use constants, only: fpi
-      USE uspp_param, only: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
-           nbeta, kkbeta, tvanp
-      !
-      implicit none
-      !
-      integer :: ik,  msh_bp, i, np, m, k, l
-      integer :: n,idbes,ilmin,ilmax,iv,jv
-      real(kind=DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
-             qr_k(nbrx,nbrx,lmaxq,ntyp)
+SUBROUTINE calc_btq(ql,qr_k,idbes)
+  !----------------------------------------------------------------------
+  !
+  !   Calculates the Bessel-transform (or its derivative if idbes=1) 
+  !   of the augmented qrad charges at a given ql point.
+  !   Rydberg atomic units are  used.
+  !
+  USE atom, ONLY: r, rab, dx
+  USE ions_base, ONLY : ntyp => nsp
+  USE cell_base, ONLY: omega
+  USE parameters, ONLY:  ndmx, nbrx
+  USE kinds, ONLY: DP
+  USE constants, ONLY: fpi
+  USE uspp_param, ONLY: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
+       nbeta, kkbeta, tvanp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ik,  msh_bp, i, np, m, k, l
+  INTEGER :: n,idbes,ilmin,ilmax,iv,jv
+  REAL(kind=DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
+       qr_k(nbrx,nbrx,lmaxq,ntyp)
 
-! declaration readvan quantities
-!      integer NBETA,KKBETA,iver,nqf,ifqopt,nqlc,lll
-!      real*8 DION,BETAR,QQQ,QFUNC,qfcoef,rinner
-!      COMMON/NCPRM/DION(NBRX,NBRX,NPSX),
-!     C           BETAR(0:ndm,NBRX,NPSX),QQQ(NBRX,NBRX,NPSX),
-!     C           QFUNC(0:ndm,NBRX,NBRX,NPSX),
-!     C           NBETA(NPSX),KKBETA(NPSX),NVALES(NPSX),lll(nbrx,npsx),
-!     C           iver(3,npsx),nqf(npsx),ifqopt(npsx),nqlc(npsx),
-!     C           qfcoef(nqfx,lmaxq,NBRX,NBRX,npsx),rinner(lmaxq,npsx)
-!      common/ncprm/dion(nbrx,nbrx,npsx),
-!     +           betar(0:ndm,nbrx,npsx), qqq(nbrx,nbrx,npsx),
-!     +           qfunc(0:ndm,nbrx,nbrx,npsx),
-!     +           qfcoef(nqfx,lmaxq,nbrx,nbrx,npsx), rinner(lmaxq,npsx),
-!     +           nbeta(npsx), kkbeta(npsx),
-!     +           nqf(npsx), nqlc(npsx), ifqopt(npsx), lll(nbrx,npsx),
-!     +           iver(3,npsx)
+  !
+  DO np=1,ntyp
+     msh_bp=kkbeta(np)
+     IF (tvanp(np)) THEN
+        DO iv =1, nbeta(np)
+           DO jv =iv, nbeta(np)
+              ilmin = iabs(lll(iv,np)-lll(jv,np))
+              ilmax = iabs(lll(iv,np)+lll(jv,np))
+              !       only need to calculate for for lmin,lmin+2 ...lmax-2,lmax
+              DO l = ilmin,ilmax,2
+                 DO i =  msh_bp,2,-1
+                    IF (r(i,np) .LT. rinner(l+1,np)) GOTO 100
+                    aux(i) = qfunc(i,iv,jv,np)
+                 ENDDO
+100              CALL setqf(qfcoef(1,l+1,iv,jv,np),aux(1),r(1,np) &
+                      ,nqf(np),l,i)
 
+                 IF (idbes .EQ. 1) THEN
+                    !
+                    CALL sph_dbes( msh_bp, r(1,np), ql, l, jl )
+                    !
+                    ! ... this is the old call
+                    !
+                    ! CALL dbess( ql, l+1, msh_bp, r(1,np), jl )
+                    !
+                 ELSE
+                    !
+                    CALL sph_bes( msh_bp, r(1,np), ql, l, jl )
+                    !
+                    ! ... this is the old call
+                    !
+                    ! CALL bess( ql, l+1, msh_bp, r(1,np), jl )
+                    !
+                 ENDIF
 
-!
-      do np=1,ntyp
-         msh_bp=kkbeta(np)
-         if (tvanp(np)) then
-            do iv =1, nbeta(np)
-               do jv =iv, nbeta(np)
-                  ilmin = iabs(lll(iv,np)-lll(jv,np))
-                  ilmax = iabs(lll(iv,np)+lll(jv,np))
-!       only need to calculate for for lmin,lmin+2 ...lmax-2,lmax
-                  do l = ilmin,ilmax,2
-                     do i =  msh_bp,2,-1
-                        if (r(i,np) .lt. rinner(l+1,np)) goto 100
-                        aux(i) = qfunc(i,iv,jv,np)
-                     enddo
- 100                 call setqf(qfcoef(1,l+1,iv,jv,np),aux(1),r(1,np) &
-                         ,nqf(np),l,i)
+                 ! jl is the Bessel function (or its derivative) calculated at ql
+                 ! now integrate qfunc*jl*r^2 = Bessel transform of qfunc
 
-                        if (idbes .eq. 1) then
-                           !
-                           CALL sph_dbes( msh_bp, r(1,np), ql, l+1, jl )                          
-                          ! call dbess(ql,l+1,msh_bp,r(1,np), jl)
-                           !
-                        else
-                           !
-                           CALL sph_bes( msh_bp, r(1,np), ql, l+1, jl )
-                          ! call bess(ql,l+1,msh_bp,r(1,np), jl)
-                           !
-                        endif
+                 DO i=1, msh_bp
+                    jlp1(i) = jl(i)*aux(i)
+                 ENDDO
+                 !                        if (tlog(np)) then
+                 IF(tvanp(np)) THEN
+                    CALL radlg1(msh_bp,jlp1,rab(1,np),sum) 
+                 ELSE
+                    CALL radlg(msh_bp,jlp1,r(1,np),dx(np),sum)
+                 ENDIF
 
-! jl is the Bessel function (or its derivative) calculated at ql
-! now integrate qfunc*jl*r^2 = Bessel transform of qfunc
+                 qr_k(iv,jv,l+1,np) = sum*fpi/omega
+                 qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)
 
-                        do i=1, msh_bp
-                           jlp1(i) = jl(i)*aux(i)
-                        enddo
-!                        if (tlog(np)) then
-                           if(tvanp(np)) then
-                              call radlg1(msh_bp,jlp1,rab(1,np),sum) 
-                           else
-                              call radlg(msh_bp,jlp1,r(1,np),dx(np),sum)
-                           endif
-!                        else
-!                           call radin(msh_bp,dx(np),jlp1,sum)
-!                        endif
-                        qr_k(iv,jv,l+1,np) = sum*fpi/omega
-                        qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)
-                   
-!c                       WRITE( stdout,*) 'qr_k=',qr_k(iv,jv,l+1,np)
-
-                  end do
-               end do
-            enddo
-         endif
-      enddo
-!
-      return
-      end
+              END DO
+           END DO
+        ENDDO
+     ENDIF
+  ENDDO
+  !
+  RETURN
+END SUBROUTINE calc_btq
