@@ -19,12 +19,12 @@ MODULE basic_algebra_routines
   !
   ! ... List of public methods :
   !
-  !  x .dot. y          implements the dot product between vectors ( <x|y> )
-  !  norm( x )          computes the norm of a vector ( SQRT(<x|x>) )
-  !  A .times. x        implements the matrix-vector multiplication ( A|x> )
-  !  x .times. A        implements the vector-matrix multiplication ( <x|A )
-  !  matrix( x, y )     implements the vector-vector multiplication ( |x><y| )
-  !  identity( N )      the identity matrix in dimension N
+  !  x .dot. y		implements the dot product between vectors ( <x|y> )
+  !  norm( x )		computes the norm of a vector ( SQRT(<x|x>) )
+  !  A .times. x	implements the matrix-vector multiplication ( A|x> )
+  !  x .times. A	implements the vector-matrix multiplication ( <x|A )
+  !  matrix( x, y )	implements the vector-vector multiplication ( |x><y| )
+  !  identity( N )	the identity matrix in dimension N
   !
   !
   USE parameters,  ONLY : DP
@@ -53,15 +53,17 @@ MODULE basic_algebra_routines
        !
        REAL (KIND=DP), INTENT(IN) :: vector1(:), vector2(:)
        REAL (KIND=DP)             :: internal_dot_product
-#if ! defined (__NOBLAS)              
+#if defined (__NOBLAS)              
+       !
+       !
+       internal_dot_product = DOT_PRODUCT( vector1, vector2 )
+#else
        REAL (KIND=DP)             :: DDOT
        EXTERNAL                      DDOT
        !
        !
        internal_dot_product = DDOT( SIZE( vector1 ), vector1, 1, vector2, 1 )
-#else
-       internal_dot_product = DOT_PRODUCT( vector1, vector2 )
-#endif       
+#endif
        !
      END FUNCTION internal_dot_product
      !
@@ -74,15 +76,17 @@ MODULE basic_algebra_routines
        !
        REAL (KIND=DP), INTENT(IN) :: vector(:)
        REAL (KIND=DP)             :: norm
-#if ! defined (__NOBLAS)       
+#if  defined (__NOBLAS)       
+       !
+       !
+       norm = SQRT( vector .dot. vector )
+#else
        REAL (KIND=DP)             :: DNRM2
        EXTERNAL                      DNRM2   
        !
        !
        norm = DNRM2( SIZE( vector ), vector, 1 )
-#else
-       norm = SQRT( vector .dot. vector )
-#endif       
+#endif
        !
      END FUNCTION norm
      !
@@ -104,15 +108,15 @@ MODULE basic_algebra_routines
        !
        dim = SIZE( vector )
        !
-#if ! defined (__NOBLAS)              
-       CALL DGEMV( 'N', dim, dim, 1.D0, matrix, dim, vector, 1, &
-                   0.D0, matrix_times_vector, 1 )       
-#else
+#if defined (__NOBLAS)              
        DO i = 1, dim
           !
           matrix_times_vector(i) = matrix(i,:) .dot. vector(:)
           !
        END DO
+#else
+       CALL DGEMV( 'N', dim, dim, 1.D0, matrix, dim, vector, 1, &
+                   0.D0, matrix_times_vector, 1 )       
 #endif
        !
      END FUNCTION  matrix_times_vector
@@ -127,16 +131,24 @@ MODULE basic_algebra_routines
        REAL (KIND=DP), INTENT(IN) :: vector(:)
        REAL (KIND=DP), INTENT(IN) :: matrix(:,:)
        REAL (KIND=DP)             :: vector_times_matrix(SIZE( vector ))
-       INTEGER                    :: i, dim
+       INTEGER                    :: dim
+#if defined (__NOBLAS)
+       INTEGER                    :: i
+#endif       
        !
        !
        dim = SIZE( vector )
        !
+#if defined (__NOBLAS)              
        DO i = 1, dim
           !
           vector_times_matrix(i) = vector(:) .dot. matrix(:,i)
           !
        END DO
+#else
+       CALL DGEMV( 'T', dim, dim, 1.D0, matrix, dim, vector, 1, &
+                   0.D0, matrix_times_vector, 1 )       
+#endif
        !
      END FUNCTION vector_times_matrix
      !
@@ -158,10 +170,7 @@ MODULE basic_algebra_routines
        dim1 = SIZE( vector1 )
        dim2 = SIZE( vector2 )
        !
-#if ! defined (__NOBLAS)              
-       CALL DGER( dim1, dim2, 1.D0, &
-                  vector1, 1, vector2, 1, matrix, MAX( dim1, dim2 )  )
-#else
+#if defined (__NOBLAS)              
        DO i = 1, dim1
           !
           DO j = 1, dim2
@@ -170,8 +179,11 @@ MODULE basic_algebra_routines
              !
           END DO
           !
-       END DO     
-#endif       
+       END DO      
+#else
+       CALL DGER( dim1, dim2, 1.D0, &
+                  vector1, 1, vector2, 1, matrix, MAX( dim1, dim2 )  )
+#endif
        !
      END FUNCTION matrix
      !
