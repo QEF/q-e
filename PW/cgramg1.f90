@@ -87,7 +87,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        DO vec = start, finish
           !
-          DO vecp = 1, vec
+          DO vecp = 1, ( vec - 1 )
              !
              ps(vecp) = 2.D0 * DDOT( 2 * n, psi(1,vecp), 1, spsi(1,vec), 1 )
              !
@@ -95,7 +95,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END DO
           !
-          CALL reduce( vec, ps )
+          CALL reduce( ( vec - 1 ), ps )
           !
           DO vecp = 1, ( vec - 1 )
              !
@@ -105,7 +105,6 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END DO
           !
-         !! psi_norm = ps(vec) - DDOT( ( vec - 1 ), ps(1), 1, ps(1), 1 )
           psi_norm = 2.D0 * DDOT( 2 * n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
           IF ( gstart == 2 ) psi_norm = psi_norm - psi(1,vec) * spsi(1,vec)
@@ -171,13 +170,13 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        DO vec = start, finish
           !
-          DO vecp = 1, vec
+          DO vecp = 1, ( vec - 1 )
              !
              ps(vecp) = ZDOTC( n, psi(1,vecp), 1, spsi(1,vec), 1 )
              !
           END DO
           !
-          CALL reduce( 2 * vec, ps )
+          CALL reduce( 2 * ( vec - 1 ), ps )
           !
           DO vecp = 1, ( vec - 1 )
              !
@@ -187,11 +186,9 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END DO
           !
-         !! psi_norm = ps(vec) - DDOT( 2 * ( vec - 1 ), ps(1), 1, ps(1), 1 )
           psi_norm = DDOT( 2 * n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
           CALL reduce( 1, psi_norm )
-          !
           !
           IF ( psi_norm < 0.D0 ) THEN
              !

@@ -578,7 +578,7 @@ SUBROUTINE electrons()
      !
      !CALL forces()
      !
-     IF ( imix >= 0 ) rho = rho_save()
+     IF ( imix >= 0 ) rho = rho_save
      !
   END DO
   !
