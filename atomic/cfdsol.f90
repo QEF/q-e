@@ -4,125 +4,125 @@
 !
 !-----------------------------------------------------------------------
 !
-  subroutine cfdsol(zz,yy,jj1,jj2,idim1)
-!
-!-----------------------------------------------------------------------
-!
-!     routine for solving coupled first order differential equations
-!
-!      d yy(x,1)
-!      ---------   =  zz(x,1,1) * yy(x,1) + zz(x,1,2) * yy(2,1)
-!         dx
-!
-!      d yy(x,2)
-!      ---------   =  zz(x,2,1) * yy(x,1) + zz(x,2,2) * yy(2,1)
-!         dx
-!     
-!
-!     using fifth order predictor corrector algorithm
-!
-!     routine integrates from jj1 to jj2 and can cope with both cases
-!     jj1 < jj2 and jj1 > jj2.  first five starting values of yy must 
-!     be provided by the calling program.
-!
-!-----------------------------------------------------------------------
-!
-!
-implicit none
-integer,parameter :: dp = kind(1.d0)
-integer :: idim1, jj1, jj2, ip
-real(kind=dp):: zz(idim1,2,2),yy(idim1,2)
-real(kind=dp):: fa(0:5),fb(0:5),abp(1:5),amc(0:4)
-real(kind=dp):: arp, brp
+subroutine cfdsol(zz,yy,jj1,jj2,idim1)
+  !
+  !-----------------------------------------------------------------------
+  !
+  !     routine for solving coupled first order differential equations
+  !
+  !      d yy(x,1)
+  !      ---------   =  zz(x,1,1) * yy(x,1) + zz(x,1,2) * yy(2,1)
+  !         dx
+  !
+  !      d yy(x,2)
+  !      ---------   =  zz(x,2,1) * yy(x,1) + zz(x,2,2) * yy(2,1)
+  !         dx
+  !     
+  !
+  !     using fifth order predictor corrector algorithm
+  !
+  !     routine integrates from jj1 to jj2 and can cope with both cases
+  !     jj1 < jj2 and jj1 > jj2.  first five starting values of yy must 
+  !     be provided by the calling program.
+  !
+  !-----------------------------------------------------------------------
+  !
+  !
+  use kinds, only : DP
+  implicit none
+  integer :: idim1, jj1, jj2, ip
+  real(kind=dp):: zz(idim1,2,2),yy(idim1,2)
+  real(kind=dp):: fa(0:5),fb(0:5),abp(1:5),amc(0:4)
+  real(kind=dp):: arp, brp
 
-integer :: isgn, i, j
-!
-!
-!-----------------------------------------------------------------------
-!
-!                   i n i t i a l i s a t i o n
-!
-!     decide whether integrating from:
-!            left to right ---> isgn = + 1
-!        or  right to left ---> isgn = - 1
-!
-      isgn = ( jj2 - jj1 ) / iabs( jj2 - jj1 )
-!
-!     run some test just to be conservative
-      if ( isgn .eq. + 1 ) then
-        if ( jj1 .le. 5 .or. jj2 .gt. idim1 ) then
-          write(6,10) isgn,jj1,jj2,idim1
-          call errore('cfdsol','stopping 1',1)
-        endif
-      elseif ( isgn .eq. - 1 ) then
-        if ( jj1 .ge. ( idim1 - 4 ) .or. jj2 .lt. 1 ) then
-          write(6,10) isgn,jj1,jj2,idim1
-          call errore('cfdsol','stopping -1',1)
-        endif
-      else
+  integer :: isgn, i, j
+  !
+  !
+  !-----------------------------------------------------------------------
+  !
+  !                   i n i t i a l i s a t i o n
+  !
+  !     decide whether integrating from:
+  !            left to right ---> isgn = + 1
+  !        or  right to left ---> isgn = - 1
+  !
+  isgn = ( jj2 - jj1 ) / iabs( jj2 - jj1 )
+  !
+  !     run some test just to be conservative
+  if ( isgn .eq. + 1 ) then
+     if ( jj1 .le. 5 .or. jj2 .gt. idim1 ) then
         write(6,10) isgn,jj1,jj2,idim1
-      endif
- 
-  10  format(' ***error in subroutine difsol',/,   &
-    &  ' isgn =',i2,' jj1 =',i5,' jj2 =',i5,' idim1 =',i5, &
-    &  ' are not allowed')
-!
-!     integration coefficients
-!
-      abp(1) = 1901.d0 / 720.d0
-      abp(2) = -1387.d0 / 360.d0
-      abp(3) = 109.d0 / 30.d0
-      abp(4) = -637.d0 / 360.d0
-      abp(5) = 251.d0 / 720.d0
-      amc(0) = 251.d0 / 720.d0
-      amc(1) = 323.d0 / 360.d0
-      amc(2) = -11.d0 / 30.d0
-      amc(3) = 53.d0 / 360.d0
-      amc(4) = -19.d0 / 720.d0
-!
-!     set up the arrays of derivatives
-      do j = 1,5
-        ip = jj1 - isgn * j
-        fa(j) = zz(ip,1,1) * yy(ip,1) + zz(ip,1,2) * yy(ip,2)
-        fb(j) = zz(ip,2,1) * yy(ip,1) + zz(ip,2,2) * yy(ip,2)
-      enddo
-!
-!-----------------------------------------------------------------------
-!
-!                i n t e g r a t i o n  l o o p
-!
-  do j = jj1,jj2,isgn
-!
-!       predictor (adams-bashforth)
-!
-     arp = yy(j-isgn,1)
-     brp = yy(j-isgn,2)
-     do i = 1,5
-       arp = arp + dble(isgn) * abp(i) * fa(i)
-       brp = brp + dble(isgn) * abp(i) * fb(i)
-     enddo
- 
-     fa(0) = zz(j,1,1) * arp + zz(j,1,2) * brp
-     fb(0) = zz(j,2,1) * arp + zz(j,2,2) * brp
-!
-!       corrector (adams-moulton)
-!
-     yy(j,1) = yy(j-isgn,1)
-     yy(j,2) = yy(j-isgn,2)
-     do i = 0,4,1
-        yy(j,1) = yy(j,1) + dble(isgn) * amc(i) * fa(i)
-        yy(j,2) = yy(j,2) + dble(isgn) * amc(i) * fb(i)
-     enddo
-!
-!       book keeping
-!
-     do i = 5,2,-1
-       fa(i) = fa(i-1)
-       fb(i) = fb(i-1)
-     enddo
-     fa(1) = zz(j,1,1) * yy(j,1) + zz(j,1,2) * yy(j,2)
-     fb(1) = zz(j,2,1) * yy(j,1) + zz(j,2,2) * yy(j,2)
-  enddo
- 
-  return
-  end
+        call errore('cfdsol','stopping 1',1)
+     endif
+  elseif ( isgn .eq. - 1 ) then
+     if ( jj1 .ge. ( idim1 - 4 ) .or. jj2 .lt. 1 ) then
+        write(6,10) isgn,jj1,jj2,idim1
+        call errore('cfdsol','stopping -1',1)
+     endif
+  else
+     write(6,10) isgn,jj1,jj2,idim1
+  endif
+
+10 format(' ***error in subroutine cfdsol',/,   &
+       &  ' isgn =',i2,' jj1 =',i5,' jj2 =',i5,' idim1 =',i5, &
+       &  ' are not allowed')
+  !
+  !     integration coefficients
+  !
+    abp(1) = 1901.0_dp / 720.0_dp
+    abp(2) = -1387.0_dp / 360.0_dp
+    abp(3) = 109.0_dp / 30.0_dp
+    abp(4) = -637.0_dp / 360.0_dp
+    abp(5) = 251.0_dp / 720.0_dp
+    amc(0) = 251.0_dp / 720.0_dp
+    amc(1) = 323.0_dp / 360.0_dp
+    amc(2) = -11.0_dp / 30.0_dp
+    amc(3) = 53.0_dp / 360.0_dp
+    amc(4) = -19.0_dp / 720.0_dp
+    !
+    !     set up the arrays of derivatives
+    do j = 1,5
+       ip = jj1 - isgn * j
+       fa(j) = zz(ip,1,1) * yy(ip,1) + zz(ip,1,2) * yy(ip,2)
+       fb(j) = zz(ip,2,1) * yy(ip,1) + zz(ip,2,2) * yy(ip,2)
+    enddo
+    !
+    !-----------------------------------------------------------------------
+    !
+    !                i n t e g r a t i o n  l o o p
+    !
+    do j = jj1,jj2,isgn
+       !
+       !       predictor (adams-bashforth)
+       !
+       arp = yy(j-isgn,1)
+       brp = yy(j-isgn,2)
+       do i = 1,5
+          arp = arp + dble(isgn) * abp(i) * fa(i)
+          brp = brp + dble(isgn) * abp(i) * fb(i)
+       enddo
+
+       fa(0) = zz(j,1,1) * arp + zz(j,1,2) * brp
+       fb(0) = zz(j,2,1) * arp + zz(j,2,2) * brp
+       !
+       !       corrector (adams-moulton)
+       !
+       yy(j,1) = yy(j-isgn,1)
+       yy(j,2) = yy(j-isgn,2)
+       do i = 0,4,1
+          yy(j,1) = yy(j,1) + dble(isgn) * amc(i) * fa(i)
+          yy(j,2) = yy(j,2) + dble(isgn) * amc(i) * fb(i)
+       enddo
+       !
+       !       book keeping
+       !
+       do i = 5,2,-1
+          fa(i) = fa(i-1)
+          fb(i) = fb(i-1)
+       enddo
+       fa(1) = zz(j,1,1) * yy(j,1) + zz(j,1,2) * yy(j,2)
+       fb(1) = zz(j,2,1) * yy(j,1) + zz(j,2,2) * yy(j,2)
+    enddo
+
+    return
+end subroutine cfdsol

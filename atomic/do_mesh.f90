@@ -4,13 +4,13 @@
                          mesh,r,r2,sqr)
 !---------------------------------------------------------------
 !
+      use kinds, only : DP
       implicit none
-      integer, parameter :: dp = kind(1.d0)
       integer::  ibound, ndm, mesh, i
       real(kind=dp) :: zmesh, xmin, xmax, x, dx, rmax, &
              r(ndm), r2(ndm), sqr(ndm)
 !      
-      xmax=dlog(rmax*zmesh)
+      xmax=log(rmax*zmesh)
       mesh=(xmax-xmin)/dx+1
 !
 !      mesh must be odd for simpson integration. 

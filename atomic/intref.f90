@@ -10,9 +10,8 @@
 !
 !
 !
+      use kinds, only : DP
       implicit none
-
-      integer, parameter :: dp=kind(1.d0)
       integer :: &
               mesh,    &     ! the mesh size
               lam           ! the angular momentum
@@ -46,7 +45,7 @@
       call series(al,r,r2,b)
 
 
-      lamsq=(lam+0.5d0)**2
+      lamsq=(lam+0.5_DP)**2
       xl1=lam+1
       x4l6=4*lam+6
       x6l12=6*lam+12
@@ -59,24 +58,24 @@
       c(2)=(c(1)*ze2+b0e)/x4l6
       c(3)=(c(2)*ze2+c(1)*b0e+b(1))/x6l12
       c(4)=(c(3)*ze2+c(2)*b0e+c(1)*b(1)+b(2))/x8l20
-      rr1=(1.d0+r(1)*(c(1)+r(1)* &
+      rr1=(1.0_DP+r(1)*(c(1)+r(1)* &
                      (c(2)+r(1)*(c(3)+r(1)*c(4)))))*r(1)**(lam+1)
-      rr2=(1.d0+r(2)*(c(1)+r(2)* &
+      rr2=(1.0_DP+r(2)*(c(1)+r(2)* &
                      (c(2)+r(2)*(c(3)+r(2)*c(4)))))*r(2)**(lam+1)
       chi(1)=rr1/sqr(1)
       chi(2)=rr2/sqr(2)
 
       do n=1,mesh
          al(n)=( (vpot(n)-e)*r2(n) + &
-                      lamsq )*dx**2/12.d0
-         al(n)=1.d0-al(n)
+                      lamsq )*dx**2/12.0_DP
+         al(n)=1.0_DP-al(n)
       enddo
 !
 !     Integrate forward the equation:
 !     c) integrate the equation from 0 to matching radius
 !
       do n=2,mesh-1
-         chi(n+1)=((12.d0-10.d0*al(n))*chi(n) &
+         chi(n+1)=((12.0_DP-10.0_DP*al(n))*chi(n) &
                    -al(n-1)*chi(n-1))/al(n+1)
       enddo
 !

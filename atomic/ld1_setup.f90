@@ -88,7 +88,7 @@ subroutine ld1_setup
         enddo
         if (nstoae(n).eq.0) call errore('ld1_setup', &
              'no all electron for this ps',n)
-        if (enls(n).ne.0.d0) then
+        if (enls(n).ne.0.0_dp) then
            new(n)=.true.
         else
            new(n)=.false.
@@ -131,9 +131,9 @@ subroutine ld1_setup
   !
   !     zero the external potential and total energies
   !
-  vxt=0.d0
-  etot0=0.d0
-  etots0=0.d0
+  vxt=0.0_dp
+  etot0=0.0_dp
+  etots0=0.0_dp
   !
   !    open file test if the name is available, otherwise the tests
   !    go on file.13
@@ -152,9 +152,8 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   ! This subroutine splits the states according to their j as needed to
   ! make a spin orbit calculation.
   !
-
+  use kinds, only : DP
   implicit none
-  integer, parameter :: dp=kind(1.d0)
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
   real(kind=dp) :: oc(nwfx), jj(nwfx)
   character(len=2) :: el(nwfx)
@@ -165,15 +164,15 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   nwftot=0
   do n=1,nwf
      nwftot=nwftot+1
-     if (ll(n).gt.0 .and. abs(jj(n)).lt.1.d-2) nwftot=nwftot+1
+     if (ll(n).gt.0 .and. abs(jj(n)).lt.1.e-2_dp) nwftot=nwftot+1
   enddo
   ok=.true.
   nwf0=nwf
   do n=1,nwftot
      if (ok) then
-        if (ll(n).gt.0.and.abs(jj(n)).lt.1.d-2) then
+        if (ll(n).gt.0.and.abs(jj(n)).lt.1.e-2_dp) then
            ok=.false.
-           jj(n)=ll(n)-0.5d0
+           jj(n)=ll(n)-0.5_dp
            nwf0=nwf0+1
            if (nwf0.gt.nwfx) call errore('ld1_setup','too many wfc',1)
            do m=nwf0-1,n+1,-1
@@ -186,17 +185,17 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
            enddo
            nn(n+1)=nn(n)
            ll(n+1)=ll(n)
-           jj(n+1)=ll(n)+0.5d0  
+           jj(n+1)=ll(n)+0.5_dp  
            el(n+1)=el(n)
            isw(n+1)=isw(n)
-           if (oc(n).gt.-1.d-3) then
-              oc(n+1)=max(0.d0,oc(n)-min(2.d0*ll(n),oc(n)))
-              oc(n)=min(2.d0*ll(n),oc(n))
+           if (oc(n).gt.-1.e-3_dp) then
+              oc(n+1)=max(0.0_dp,oc(n)-min(2.0_dp*ll(n),oc(n)))
+              oc(n)=min(2.0_dp*ll(n),oc(n))
            else
               oc(n+1)=oc(n)
            endif
         else
-           if (abs( jj(n) ).lt. 1.d-2) jj(n)=0.5d0
+           if (abs( jj(n) ).lt. 1.e-2_dp) jj(n)=0.5_dp
         endif
      else
         ok=.true.
@@ -211,8 +210,8 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
   ! This subroutine splits the states according to their j as needed to
   ! make a spin orbit calculation.
   !
+  use kinds, only : DP
   implicit none
-  integer, parameter :: dp=kind(1.d0)
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
   real(kind=dp) :: oc(nwfx), jj(nwfx), rcut(nwfx), rcutus(nwfx), enls(nwfx)
   character(len=2) :: el(nwfx)
@@ -223,15 +222,15 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
   nwftot=0
   do n=1,nwf
      nwftot=nwftot+1
-     if (ll(n).gt.0.and.abs(jj(n)).lt.1.d-2) nwftot=nwftot+1
+     if (ll(n).gt.0.and.abs(jj(n)).lt.1.e-2_dp) nwftot=nwftot+1
   enddo
   ok=.true.
   nwf0=nwf
   do n=1,nwftot
      if (ok) then
-        if (ll(n).gt.0.and.abs(jj(n)).lt.1.d-2) then
+        if (ll(n).gt.0.and.abs(jj(n)).lt.1.e-2_dp) then
            ok=.false.
-           jj(n)=ll(n)-0.5d0
+           jj(n)=ll(n)-0.5_dp
            nwf0=nwf0+1
            if (nwf0.gt.nwfx) call errore('ld1_setup','too many wfc',1)
            do m=nwf0-1,n+1,-1
@@ -247,16 +246,16 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
            enddo
            nn(n+1)=nn(n)
            ll(n+1)=ll(n)
-           jj(n+1)=ll(n)+0.5d0
+           jj(n+1)=ll(n)+0.5_dp
            el(n+1)=el(n)
            rcut(n+1)=rcut(n)
            rcutus(n+1)=rcutus(n)
            enls(n+1)=enls(n)
            isw(n+1)=isw(n)
-           oc(n+1)=max(0.d0,oc(n)-min(2.d0*ll(n),oc(n)))
-           oc(n)=min(2.d0*ll(n),oc(n))
+           oc(n+1)=max(0.0_dp,oc(n)-min(2.0_dp*ll(n),oc(n)))
+           oc(n)=min(2.0_dp*ll(n),oc(n))
         else
-           if (abs(jj(n)).lt.1.d-2) jj(n)=0.5d0
+           if (abs(jj(n)).lt.1.e-2_dp) jj(n)=0.5_dp
         endif
      else
         ok=.true.

@@ -33,8 +33,8 @@ subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,dx,snl,r,rab,ruae)
 !
 !----------------------------------------------------------------------------
 !
+use kinds, only : DP
 implicit none
-integer,parameter :: dp = kind(1.d0)
 integer :: idim1 
 real(kind=dp) :: r(idim1),     &   ! the radial mesh
                  rab(idim1),   &   ! derivative of the radial mesh
@@ -84,25 +84,25 @@ enddo
 itmax = 100
 !
 !     set ( 2 / fine structure constant )
-tbya = 2.0d0 * 137.04d0
+tbya = 2.0_DP * 137.04_DP
 !     set ( fine structure constant / 2 )
-abyt = 1.0d0 / tbya
+abyt = 1.0_DP / tbya
 
 r2=r**2
 
-if (jcur.eq.lcur+0.5d0) then
+if (jcur.eq.lcur+0.5_DP) then
     kcur = - ( lcur + 1 )
 else
     kcur = lcur
 endif
 !
 !       set initial upper and lower bounds for the eigen value
-emin = - 1.0d10
-emax = 1.0d0
+emin = - 1.0e10_DP
+emax = 1.0_DP
 ecur=e0
 !
 do iter = 1,itmax
-   yy = 0.0d0
+   yy = 0.0_DP
 !
 !         define the zz array
 !         ===================
@@ -123,7 +123,7 @@ do iter = 1,itmax
 !   ==============================================
 !
   do nctp = mesh,10,-1
-     if ( zz(nctp,1,2) .lt. 0.0d0 ) goto 240
+     if ( zz(nctp,1,2) .lt. 0.0_DP ) goto 240
   enddo
   call errore('dirsol', 'no classical turning point found', 1)
 !
@@ -134,11 +134,11 @@ do iter = 1,itmax
 !     write(6,*) 'State nlk=', ncur, lcur, kcur, nctp, mesh
 !     write(6,*) 'ecur, ecurmax=', ecur, ruae(mesh-10)/r(mesh-10)
      write(6,*) 'classical turning point too close to mesh',ncur,lcur,kcur
-     e0=0.d0
+     e0=0.0_DP
      goto 700
   endif
 !
-  tolinf = dlog(thresh) ** 2
+  tolinf = log(thresh) ** 2
   do ninf = nctp+10,mesh
      alpha2 = (ruae(ninf)/r(ninf)-ecur) * (r(ninf) - r(nctp))**2
      if ( alpha2 .gt. tolinf ) goto 260
@@ -251,10 +251,10 @@ do iter = 1,itmax
 !         write(6,*) 'energy too low'
 !         write(6,'(i5,3f12.5,2i5)') &
 !    &         iter,emin,ecur,emax,nodes,ncur-lcur-1
-     if ( ecur * 0.9d0 .gt. emax ) then
-         ecur = 0.5d0 * ecur + 0.5d0 * emax 
+     if ( ecur * 0.9_DP .gt. emax ) then
+         ecur = 0.5_DP * ecur + 0.5_DP * emax 
      else
-         ecur = 0.9d0 * ecur
+         ecur = 0.9_DP * ecur
      endif
      goto 370
   endif
@@ -266,10 +266,10 @@ do iter = 1,itmax
 !         write(6,*) 'energy too high'
 !         write(6,'(i5,3f12.5,2i5)') &
 !    &         iter,emin,ecur,emax,nodes,ncur-lcur-1
-     if ( ecur * 1.1d0 .lt. emin ) then
-        ecur = 0.5d0 * ecur + 0.5d0 * emin
+     if ( ecur * 1.1_DP .lt. emin ) then
+        ecur = 0.5_DP * ecur + 0.5_DP * emin
      else
-        ecur = 1.1d0 * ecur
+        ecur = 1.1_DP * ecur
      endif
      goto 370
   endif
@@ -294,12 +294,12 @@ do iter = 1,itmax
 !         to prevent convergence problems:
 !         do not allow decur to exceed 20% of | ecur |
 !         do not allow decur to exceed 70% of distance to emin or emax
-   if (decur.gt.0.d0) then
+   if (decur.gt.0.0_DP) then
       emin=ecur
-      decurp=min(decur,-0.2d0*ecur,0.7d0*(emax-ecur))
+      decurp=min(decur,-0.2_DP*ecur,0.7_DP*(emax-ecur))
    else
       emax=ecur
-      decurp=-min(-decur,-0.2d0*ecur,0.7d0*(ecur-emin))
+      decurp=-min(-decur,-0.2_DP*ecur,0.7_DP*(ecur-emin))
    endif
 !
 !         write(6,'(i5,3f12.5,1p2e12.4)') &
@@ -336,7 +336,7 @@ enddo
 !
 !   normalize the wavefunction and exit
 !      
-snl=0.d0
+snl=0.0_DP
 do ir=1,mesh
    snl(ir,1)=yy(ir,1)/sqrt(factor)
    snl(ir,2)=yy(ir,2)/sqrt(factor)

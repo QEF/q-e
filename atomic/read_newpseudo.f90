@@ -64,7 +64,7 @@ use funct
          read ( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
                             ( betas(ir,nb), ir=1,ikk(nb))
          do ir=ikk(nb)+1,mesh
-            betas(ir,nb)=0.d0
+            betas(ir,nb)=0.0_dp
          enddo
          do mb=1,nb
             read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
@@ -80,8 +80,8 @@ use funct
                  qvan(n,mb,nb)=qvan(n,nb,mb)
               enddo
             else
-              qq(nb,mb)=0.d0
-              qq(mb,nb)=0.d0
+              qq(nb,mb)=0.0_dp
+              qq(mb,nb)=0.0_dp
               ddd(nb,mb,1)=bmat(nb,mb)
               ddd(mb,nb,1)=bmat(mb,nb)
             endif
@@ -104,7 +104,7 @@ use funct
          read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                                ( rhoc(ir), ir=1,mesh )
       else
-         rhoc = 0.d0
+         rhoc = 0.0_dp
       endif
 !
 !    read the pseudo wavefunctions of the atom

@@ -23,8 +23,8 @@ subroutine vpack (ndim, ndimx, nspin, vin, vout, iflag)
         vout (n + ndimx) = vout (n + ndim)
      enddo
      do n = ndim + 1, ndimx
-        vin (n) = 0.d0
-        vout (n) = 0.d0
+        vin (n) = 0.0_DP
+        vout (n) = 0.0_DP
      enddo
   else
      call errore ('vpack', ' wrong flag ', 1)

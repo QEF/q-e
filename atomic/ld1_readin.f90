@@ -83,20 +83,20 @@ subroutine ld1_readin
   !   read the namelist input and set default values 
   !
   atom  = '  '
-  zed   = 0.d0
-  xmin  = -7.d0
-  dx    =  0.0125d0
-  rmax  =100.0d0
+  zed   = 0.0_dp
+  xmin  = -7.0_dp
+  dx    =  0.0125_dp
+  rmax  =100.0_dp
 
-  beta  =  0.2d0
-  tr2   = 1.0d-14
+  beta  =  0.2_dp
+  tr2   = 1.0e-14_dp
   iswitch=1
 
-  rlderiv=4.d0
-  eminld=-3.d0
-  emaxld=3.d0
+  rlderiv=4.0_dp
+  eminld=-3.0_dp
+  emaxld=3.0_dp
   nld=0
-  deld=0.03
+  deld=0.03_dp
 
   rel = 5 
   lsd   = 0
@@ -112,10 +112,10 @@ subroutine ld1_readin
 
   call which_dft(dft)
 
-  if (zed == 0.d0 .and. atom /= ' ') then
+  if (zed == 0.0_dp .and. atom /= ' ') then
      zed = dble(atomic_number(atom))
-  else if (zed /= 0.d0 .and. atom == ' ') then
-     if(dble(int(zed)) /= zed .or. zed < 1.d0 .or. zed > 100) &
+  else if (zed /= 0.0_dp .and. atom == ' ') then
+     if(dble(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 100) &
           call errore('ld1_readin','wrong zed',1)
      atom = atom_name(nint(zed))
   else
@@ -127,12 +127,12 @@ subroutine ld1_readin
        call errore('ld1_readin','wrong iswitch',1)
   if (eminld > emaxld) &
        call errore('ld1_readin','eminld or emaxld wrong',1)
-  if (deld < 0.d0) &
+  if (deld < 0.0_dp) &
        call errore('ld1_readin','negative deld',1)
   if (nld > nwfsx) &
        call errore('ld1_readin','too many nld',1)
   if (xmin > -2) call errore('ld1_readin','wrong xmin',1)
-  if (dx <=0.d0) call errore('ld1_readin','wrong dx',1)
+  if (dx <=0.0_dp) call errore('ld1_readin','wrong dx',1)
 
   if (isic == 1 .and. latt == 1) call errore('ld1_readin', &
        &    'isic and latter correction not allowed',1)
@@ -142,7 +142,7 @@ subroutine ld1_readin
 
   zmesh=zed
   if (rel == 5 ) then
-     if (zed >= 19.d0) then
+     if (zed >= 19.0_dp) then
         rel=0
      else
         rel=1
@@ -179,9 +179,9 @@ subroutine ld1_readin
                  if (ll(n) > 0) then
                     jj(n) = ll(n) + (isw(n)-1.5)
                     jj(i) = ll(i) + (isw(i)-1.5)
-                    if ( oc(n) > (2.d0*jj(n)+1.d0) ) &
+                    if ( oc(n) > (2.0_dp*jj(n)+1.0_dp) ) &
                          call errore('ld1_readin','occupation wrong',n)
-                    if ( oc(i) > (2.d0*jj(i)+1.d0) ) &
+                    if ( oc(i) > (2.0_dp*jj(i)+1.0_dp) ) &
                          call errore('ld1_readin','occupation wrong',i)
                  else
                     call errore('ld1_readin',el(i)//' appears twice',i)
@@ -194,7 +194,7 @@ subroutine ld1_readin
 
   if (iswitch /= 2) then
      call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,sqr)
-     rhoc=0.d0
+     rhoc=0.0_dp
   endif
   !
   !  In the spin polarized case adjust the occupations
@@ -203,9 +203,9 @@ subroutine ld1_readin
 
   if (iswitch == 1) return
 
-  jjs=0.d0
-  jjts=0.d0
-  jjtsc=0.d0
+  jjs=0.0_dp
+  jjts=0.0_dp
+  jjtsc=0.0_dp
 
   do n=1,nwf
      oc_old(n)=oc(n)
@@ -259,7 +259,7 @@ subroutine ld1_readin
   !    reading the pseudopotential
   !
   if (iswitch == 2) then
-     jjs=0.d0
+     jjs=0.0_dp
      if (file_pseudo == ' ') &
           call errore('ld1_readin','iswitch=2 and file_pseudo?',1)
      if (matches('upf',file_pseudo) .or. matches('UPF', file_pseudo)) then
@@ -292,12 +292,12 @@ subroutine ld1_readin
      file_chi=' '
      file_beta=' '
      file_qvan=' '
-     zval=0.d0
+     zval=0.0_dp
      lloc=-1
-     rcloc=1.5d0
+     rcloc=1.5_dp
      nlcc=.false.
-     rcore=0.d0
-     rho0=0.d0
+     rcore=0.0_dp
+     rho0=0.0_dp
      tm  = .false.
 
      read(5,inputp,err=500,iostat=ios)
@@ -305,7 +305,7 @@ subroutine ld1_readin
 
      if (file_pseudopw == ' ') &
           call errore('ld1_readin','iswitch=3 and file_pseudopw?',1)
-     if (rcloc <=0.d0) &
+     if (rcloc <=0.0_dp) &
           call errore('ld1_readin','rcloc is negative',1)
 
      call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
@@ -318,7 +318,7 @@ subroutine ld1_readin
                 call errore('ld1_readin','two wavefunctions for same l',1)
         enddo
         lmax=max(lmax,lls(ns))
-        if (enls(ns).ne.0.d0.and.ocs(ns).gt.0.d0) &
+        if (enls(ns).ne.0.0_dp.and.ocs(ns).gt.0.0_dp) &
                 call errore('ld1_readin','unbound states must be empty',1)
         if (rcut(ns).ne.rcutus(ns)) then
 !
@@ -353,8 +353,8 @@ subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
   !  nothing, otherwise 2*l+1 states are assumed with spin up and
   !  the difference with spin down. 
   !
+  use kinds, only : DP
   implicit none
-  integer, parameter :: dp=kind(1.d0)
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
   real(kind=dp) :: oc(nwfx)
   character(len=2) :: el(nwfx)
@@ -395,7 +395,7 @@ subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
            el(nwf)=el(n)
            nn(nwf)=nn(n)
            ll(nwf)=ll(n)
-           oc(nwf)=0.d0
+           oc(nwf)=0.0_dp
            if (isw(n) == 1) isw(nwf)=2 
            if (isw(n) == 2) isw(nwf)=1 
         endif
@@ -448,10 +448,10 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
         read(5,'(a2,2i3,2f6.2)',err=22,end=22,iostat=ios) &
              el(n), nn(n), ll(n), oc(n), jj(n)
         isw(n)=1
-        if ((abs(ll(n)+0.5d0-jj(n)) > 1.d-3) .and. &
-            (abs(ll(n)-0.5d0-jj(n)) > 1.d-3) .and. abs(jj(n)) > 1.d-3)  &
+        if ((abs(ll(n)+0.5_dp-jj(n)) > 1.e-3_dp) .and. &
+            (abs(ll(n)-0.5_dp-jj(n)) > 1.e-3_dp) .and. abs(jj(n)) > 1.e-3_dp)  &
             call errore('read_config','jj wrong',n)
-        if (oc(n) > (2.d0*jj(n)+1.d0) .and. abs(jj(n)) > 1d-3) &
+        if (oc(n) > (2.0_dp*jj(n)+1.0_dp) .and. abs(jj(n)) > 1e-3_dp) &
              call errore('read_config','occupations wrong',n)
 22      call errore('read_config','reading orbital (rel)',abs(ios))
      endif
@@ -462,7 +462,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
          capital(label(2:2)) == 'P' .and. ll(n) /= 1 .or. &
          capital(label(2:2)) == 'D' .and. ll(n) /= 2 .or. &
          capital(label(2:2)) == 'F' .and. ll(n) /= 3 .or. &
-         oc(n) > 2.d0*(2*ll(n)+1) .or. nn(n) < ll(n)+1  ) &
+         oc(n) > 2.0_dp*(2*ll(n)+1) .or. nn(n) < ll(n)+1  ) &
          call errore('read_config',label//' wrong?',n)
   enddo
   !
@@ -503,26 +503,26 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
                 rcut(n), rcutus(n), isws(n)
            if (isws(n) > 2 .or. isws(n) < 1) &
                 call errore('read_psconfig', 'spin variable wrong ',n)
-           if (ocs(n) > (2.d0*lls(n)+1.d0))                 &
+           if (ocs(n) > (2.0_dp*lls(n)+1.0_dp))                 &
              call errore('read_psconfig','occupations (ls) wrong',n)
         else
            read(5,'(a2,2i3,4f6.2)',err=30,end=30,iostat=ios) &
                 els(n), nns(n), lls(n), ocs(n), enls(n), &
                 rcut(n), rcutus(n)
            isws(n)=1
-           if (ocs(n) > 2.d0*(2.d0*lls(n)+1.d0))                 &
+           if (ocs(n) > 2.0_dp*(2.0_dp*lls(n)+1.0_dp))                 &
              call errore('read_psconfig','occupations (l) wrong',n)
         end if
-        jjs(n)=0.d0
+        jjs(n)=0.0_dp
      else
         read(5,'(a2,2i3,5f6.2)',err=30,end=30,iostat=ios) &
              els(n), nns(n), lls(n), ocs(n), enls(n),     &
              rcut(n), rcutus(n), jjs(n)
         isws(n)=1
-        if ((abs(lls(n)+0.5d0-jjs(n)) > 1.d-3).and.      &
-            (abs(lls(n)-0.5d0-jjs(n)) > 1.d-3).and. abs(jjs(n)) > 1.d-3) &
+        if ((abs(lls(n)+0.5_dp-jjs(n)) > 1.e-3_dp).and.      &
+            (abs(lls(n)-0.5_dp-jjs(n)) > 1.e-3_dp).and. abs(jjs(n)) > 1.e-3_dp) &
              call errore('read_psconfig', 'jjs wrong',n)
-        if (ocs(n) > (2.d0*jjs(n)+1.d0).and. abs(jjs(n)) > 1.d-3) &
+        if (ocs(n) > (2.0_dp*jjs(n)+1.0_dp).and. abs(jjs(n)) > 1.e-3_dp) &
              call errore('read_psconfig','occupations (j) wrong',n)
      endif
      write(label,'(a2)') els(n)

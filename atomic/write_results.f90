@@ -27,29 +27,29 @@ subroutine write_results
 1000 format(/5x, &
           'n l     nl                  e(Ryd)','         e(Ha)          e(eV)')
      write(6,1100) &
-          (nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5d0, &
-          enl(n)*13.6058d0, n=1,nwf)
+          (nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+          enl(n)*13.6058_dp, n=1,nwf)
   else
      write(6,1001)
 1001 format(/5x, &
           'n l j   nl                  e(Ryd)','         e(Ha)          e(eV)')
      write(6,'(5x,"Spin orbit split results")')
      write(6,1120) &
-          (nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5d0, &
-          enl(n)*13.6058d0, n=1,nwf)
+          (nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+          enl(n)*13.6058_dp, n=1,nwf)
      write(6,'(5x,"Averaged results")')
      ok=.true.
      do n=1,nwf
         if (ll(n).gt.0.and.ok) then
-           ene=(enl(n)*2.d0*ll(n) &
-                + enl(n+1)*(2.d0*ll(n)+2.d0))/(4.d0*ll(n)+2.d0)
+           ene=(enl(n)*2.0_dp*ll(n) &
+                + enl(n+1)*(2.0_dp*ll(n)+2.0_dp))/(4.0_dp*ll(n)+2.0_dp)
            write(6,1100) nn(n),ll(n),el(n), isw(n),oc(n)+oc(n+1), &
-                ene,ene*0.5d0, ene*13.6058d0
+                ene,ene*0.5_dp, ene*13.6058_dp
            ok=.false.
         else
            if (ll(n).eq.0) &
                 write(6,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
-                enl(n),enl(n)*0.5d0,enl(n)*13.6058d0
+                enl(n),enl(n)*0.5_dp,enl(n)*13.6058_dp
            ok=.true.
         endif
      enddo
@@ -60,35 +60,35 @@ subroutine write_results
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
   write(6,*)
   write(6,'(5x,''Etot ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       etot, etot*0.5d0, etot*13.6058d0
+       etot, etot*0.5_dp, etot*13.6058_dp
   write(6,'(/,5x,''Ekin ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
-       ekin, ekin*0.5d0,  ekin*13.6058d0
+       ekin, ekin*0.5_dp,  ekin*13.6058_dp
   write(6,'(5x,''Encl ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
-       encl, encl*0.5d0, encl*13.6058d0
+       encl, encl*0.5_dp, encl*13.6058_dp
   write(6,'(5x,''Eh   ='',f15.6,'' Ry,'',f15.6, '' Ha,'',f15.6,'' eV'')') &
-       ehrt, ehrt*0.5d0, ehrt*13.6058d0
+       ehrt, ehrt*0.5_dp, ehrt*13.6058_dp
   write(6,&
        '(5x,''Exc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       ecxc, ecxc*0.5d0, ecxc*13.6058d0
+       ecxc, ecxc*0.5_dp, ecxc*13.6058_dp
   write(6,&
        '(5x,''Evxt ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       evxt, evxt*0.5d0, evxt*13.6058d0
+       evxt, evxt*0.5_dp, evxt*13.6058_dp
   write(6,&
        '(5x,''Epseu='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       epseu, epseu*0.5d0, epseu*13.6058d0
+       epseu, epseu*0.5_dp, epseu*13.6058_dp
   if (isic.ne.0) then
      write(6,*)
      write(6,'(5x,"SIC information:")') 
-     write(6,1300) dhrsic, dhrsic*0.5d0, dhrsic*13.6058d0  
-     write(6,2310) dxcsic, dxcsic*0.5d0, dxcsic*13.6058d0  
-     write(6,2320) dxcsic+dhrsic,(dxcsic+dhrsic)*0.5d0,(dxcsic+dhrsic)*13.6058d0  
+     write(6,1300) dhrsic, dhrsic*0.5_dp, dhrsic*13.6058_dp  
+     write(6,2310) dxcsic, dxcsic*0.5_dp, dxcsic*13.6058_dp
+     write(6,2320) dxcsic+dhrsic,(dxcsic+dhrsic)*0.5_dp,(dxcsic+dhrsic)*13.6058_dp  
      write(6,*)
      write(6,2311) ecxc-dxcsic-dhrsic, &
-          &               (ecxc-dxcsic-dhrsic)*0.5d0, (ecxc-dxcsic-dhrsic)*13.6058d0  
+          &               (ecxc-dxcsic-dhrsic)*0.5_dp, (ecxc-dxcsic-dhrsic)*13.6058_dp  
      write(6,2312) ecxc-dhrsic, &
-          &               (ecxc-dhrsic)*0.5d0, (ecxc-dhrsic)*13.6058d0  
+          &               (ecxc-dhrsic)*0.5_dp, (ecxc-dhrsic)*13.6058_dp 
      write(6,2313) ehrt+dhrsic, &
-          &              (ehrt+dhrsic)*0.5d0, (ehrt+dhrsic)*13.6058d0  
+          &              (ehrt+dhrsic)*0.5_dp, (ehrt+dhrsic)*13.6058_dp 
 1300 format(5x,'Esich=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
 2310 format(5x,'Esicxc=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
 2311 format(5x,'tot-Exc=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
@@ -100,7 +100,7 @@ subroutine write_results
 1310 format(//5x,'normalization and overlap integrals'/)
 
   do i=1,nwf
-     dum=0.d0
+     dum=0.0_dp
      do m=1,mesh
         dum=max(dum,abs(psi(m,i)))
         if(dum.eq.abs(psi(m,i)))im(i)=m

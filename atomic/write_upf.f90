@@ -88,6 +88,7 @@ end subroutine write_upf
     !
     use ld1inc
     use funct
+    use kinds, only : DP
     implicit none
     integer :: ounps  
     !
@@ -120,8 +121,8 @@ end subroutine write_upf
          dft, shortname," Exchange-Correlation functional"
     write (ounps, '(f17.11,t24,a)') zval , "Z valence"  
     write (ounps, '(f17.11,t24,a)') etots, "Total energy"  
-    ecutrho=0.d0
-    ecutwfc=0.d0
+    ecutrho=0.0_DP
+    ecutwfc=0.0_DP
     write (ounps, '(2f11.7,t24,a)') ecutrho, ecutwfc, &
          "Suggested cutoff for wfc and rho"  
 
@@ -185,13 +186,14 @@ end subroutine write_upf
     !     correction of the new UPF file
     !
     use ld1inc
+    use kinds, only : DP
     implicit none
     integer :: ounps  
     !
     integer :: ir, ios  
     real(kind=dp) :: fpi
 
-    fpi=16.d0*atan(1.d0)
+    fpi=16.0_DP*atan(1.0_DP)
 
     write (ounps, '(//a9)', err = 100, iostat = ios) "<PP_NLCC>"  
 
@@ -254,14 +256,14 @@ end subroutine write_upf
     nd = 0  
     do nb = 1, nbeta  
        do mb = nb, nbeta  
-          if ( abs(bmat(nb,mb)) .gt. 1.0d-12 )  nd = nd + 1 
+          if ( abs(bmat(nb,mb)) .gt. 1.0e-12_dp )  nd = nd + 1 
        enddo
     enddo
     write (ounps, '(1p,i5,t24,a)', err=100, iostat=ios) &
                                    nd, "Number of nonzero Dij"
     do nb = 1, nbeta
        do mb = nb, nbeta  
-          if ( abs(bmat(nb,mb)) .gt. 1.0d-12 ) &
+          if ( abs(bmat(nb,mb)) .gt. 1.0e-12_dp ) &
              write(ounps,'(1p,2i5,e19.11)', err=100, iostat=ios) &
                                    nb, mb, bmat(nb,mb)
        enddo

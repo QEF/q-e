@@ -26,7 +26,7 @@ real(kind=dp) :: &
         int_0_inf_dr ! the integral function
      
 real(kind=dp), parameter :: &
-               thresh= 1.d-12          ! the selfconsisten limit
+               thresh= 1.e-12_dp          ! the selfconsisten limit
 
 integer  :: &
         m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
@@ -69,7 +69,7 @@ else
 endif
 
 do ns=1,nwfts
-   if (octs(ns).gt.0.d0) then
+   if (octs(ns).gt.0.0_dp) then
       is=iswts(ns)
       if (pseudotype.eq.1) then
          do n=1,mesh
@@ -93,7 +93,7 @@ enddo
 if (pseudotype.eq.3) then
    do ib=1,nbeta
       do jb=1,ib
-         if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.d-7) then
+         if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.e-7_dp) then
             lam=lls(ns)
             nst=(lam+1)*2
             do n=1,ikk(ib)
@@ -117,7 +117,7 @@ iwork=1
 call normalize
 call chargeps(nwfts,llts,jjts,octs,iwork)
 
-call new_potential(ndm,mesh,r,r2,sqr,dx,0.d0,vxt,lsd,nlcc,latt,enne, &
+call new_potential(ndm,mesh,r,r2,sqr,dx,0.0_dp,vxt,lsd,nlcc,latt,enne, &
                    rhoc,rhos,vh,gi)
 
 do n=1,mesh

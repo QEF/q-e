@@ -6,6 +6,7 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !     This routine computes the chi functions:
   !          |chi> = (\epsilon -T -V_{loc)) |psi>
   !      
+  use kinds, only : DP
   use ld1inc
 
   implicit none
@@ -42,7 +43,7 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
              d2pr(xc,xc(7),r(n)) + dpoly**2 - vpsloc(n))*phis(n,ns)
      enddo
      do n = ik+1,mesh
-        chis(n,ns) =0.d0
+        chis(n,ns) =0.0_dp
      enddo
      return
   end if
@@ -53,7 +54,7 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !   the asymptotic expansion
   !
   !
-  ddx12=dx*dx/12.d0
+  ddx12=dx*dx/12.0_dp
   x4l6=4*lam+6
   x6l12=6*lam+12
 
@@ -62,54 +63,50 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   enddo
   call seriesbes(j1,r,r2,6,c)
   !
-  if (lam.eq.0) then
-     if(lbes4.or.rho0.eq.0.d0)then
-        c(1)=xc(1)+  &
-             xc(2)+  &
-             xc(3)
-        c(2)=0.d0
-        c(3)=-xc(1)*(xc(4)**2/6.d0) &
-             -xc(2)*(xc(5)**2/6.d0) &
-             -xc(3)*(xc(6)**2/6.d0)
-        c(4)=0.d0
+  if (lam == 0) then
+     if(lbes4.or.rho0.eq.0.0_dp)then
+        c(1)=xc(1)+xc(2)+xc(3)
+        c(2)=0.0_dp
+        c(3)=-xc(1)*(xc(4)**2/6.0_dp) &
+             -xc(2)*(xc(5)**2/6.0_dp) &
+             -xc(3)*(xc(6)**2/6.0_dp)
+        c(4)=0.0_dp
      else
-        c(1)=xc(1)+  &
-             xc(2)+  &
-             xc(3)+xc(4)
-        c(2)=0.d0
-        c(3)=-xc(1)*(xc(5)**2/6.d0)  &
-             -xc(2)*(xc(6)**2/6.d0)  &
-             -xc(3)*(xc(7)**2/6.d0)  &
-             -xc(4)*(xc(8)**2/6.d0)
-        c(4)=0.d0
+        c(1)=xc(1)+xc(2)+xc(3)+xc(4)
+        c(2)=0.0_dp
+        c(3)=-xc(1)*(xc(5)**2/6.0_dp)  &
+             -xc(2)*(xc(6)**2/6.0_dp)  &
+             -xc(3)*(xc(7)**2/6.0_dp)  &
+             -xc(4)*(xc(8)**2/6.0_dp)
+        c(4)=0.0_dp
      endif
-  elseif (lam.eq.3) then
-     c(1)=xc(1)*(48.d0*xc(4)**3/5040.d0)+   &
-          xc(2)*(48.d0*xc(5)**3/5040.d0)+   &
-          xc(3)*(48.d0*xc(6)**3/5040.d0)
-     c(2)=0.d0
-     c(3)=-xc(1)*(192.d0*xc(4)**5/362880.d0)  &
-          -xc(2)*(192.d0*xc(5)**5/362880.d0)  &
-          -xc(3)*(192.d0*xc(6)**5/362880.d0)
-     c(4)=0.d0
-  elseif (lam.eq.2) then
-     c(1)=xc(1)*(xc(4)**2/15.d0)+   &
-          xc(2)*(xc(5)**2/15.d0)+   &
-          xc(3)*(xc(6)**2/15.d0)
-     c(2)=0.d0
-     c(3)=-xc(1)*(xc(4)**4/210.d0)  &
-          -xc(2)*(xc(5)**4/210.d0)  &
-          -xc(3)*(xc(6)**4/210.d0)
-     c(4)=0.d0
-  elseif (lam.eq.1) then
-     c(1)=xc(1)*(xc(4)/3.d0)+  &
-          xc(2)*(xc(5)/3.d0)+  &
-          xc(3)*(xc(6)/3.d0)
-     c(2)=0.d0
-     c(3)=-xc(1)*(xc(4)**3/30.d0) &
-          -xc(2)*(xc(5)**3/30.d0) &
-          -xc(3)*(xc(6)**3/30.d0)
-     c(4)=0.d0
+  elseif (lam == 3) then
+     c(1)=xc(1)*(48.0_dp*xc(4)**3/5040.0_dp)+   &
+          xc(2)*(48.0_dp*xc(5)**3/5040.0_dp)+   &
+          xc(3)*(48.0_dp*xc(6)**3/5040.0_dp)
+     c(2)=0.0_dp
+     c(3)=-xc(1)*(192.0_dp*xc(4)**5/362880.0_dp)  &
+          -xc(2)*(192.0_dp*xc(5)**5/362880.0_dp)  &
+          -xc(3)*(192.0_dp*xc(6)**5/362880.0_dp)
+     c(4)=0.0_dp
+  elseif (lam == 2) then
+     c(1)=xc(1)*(xc(4)**2/15.0_dp)+   &
+          xc(2)*(xc(5)**2/15.0_dp)+   &
+          xc(3)*(xc(6)**2/15.0_dp)
+     c(2)=0.0_dp
+     c(3)=-xc(1)*(xc(4)**4/210.0_dp)  &
+          -xc(2)*(xc(5)**4/210.0_dp)  &
+          -xc(3)*(xc(6)**4/210.0_dp)
+     c(4)=0.0_dp
+  elseif (lam == 1) then
+     c(1)=xc(1)*(xc(4)/3.0_dp)+  &
+          xc(2)*(xc(5)/3.0_dp)+  &
+          xc(3)*(xc(6)/3.0_dp)
+     c(2)=0.0_dp
+     c(3)=-xc(1)*(xc(4)**3/30.0_dp) &
+          -xc(2)*(xc(5)**3/30.0_dp) &
+          -xc(3)*(xc(6)**3/30.0_dp)
+     c(4)=0.0_dp
   else
      call errore('compute_chi','lam not programmed',1) 
   endif
@@ -142,23 +139,23 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
      phis(n,ns)=phis(n,ns)/sqr(n)
   enddo
   do n=1,mesh
-     j1(n)=r2(n)*(vpsloc(n)-enls(ns))+(lam+0.5d0)**2
-     j1(n)=1.d0-ddx12*j1(n)
+     j1(n)=r2(n)*(vpsloc(n)-enls(ns))+(lam+0.5_dp)**2
+     j1(n)=1.0_dp-ddx12*j1(n)
   enddo
 
   do n=nstart,mesh-3
      drow(n)= phis(n+1,ns)*j1(n+1)   &
-          + phis(n,ns)*(-12.d0+10.d0*j1(n))+ &
+          + phis(n,ns)*(-12.0_dp+10.0_dp*j1(n))+ &
           phis(n-1,ns)*j1(n-1)
 
-     brow(n)=10.d0*ddx12
+     brow(n)=10.0_dp*ddx12
      crow(n)=ddx12
      arow(n)=ddx12
   enddo
   drow(nstart)=drow(nstart)-ddx12*chis(nstart-1,ns)
-  chis(mesh-2,ns)=0.d0
-  chis(mesh-1,ns)=0.d0
-  chis(mesh,ns)=0.d0
+  chis(mesh-2,ns)=0.0_dp
+  chis(mesh-1,ns)=0.0_dp
+  chis(mesh,ns)=0.0_dp
   !
   !    and solve it
   !
@@ -180,11 +177,11 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !
   do n=nstart,mesh
      if (abs(chis(n,ns)/r(n)**(lam+1)-aux(n))  &
-          .lt.1.d-3*abs(aux(n)) ) goto 100
+          .lt.1.e-3_dp*abs(aux(n)) ) goto 100
      chis(n,ns)=aux(n)*r(n)**(lam+1)
   enddo
 
-100 if (n.eq.mesh+1.or.r(n).gt.0.05d0)then
+100 if (n.eq.mesh+1.or.r(n).gt.0.05_dp)then
      print*,lam,ns,n,mesh,r(n)
      call errore('compute_chi','n is too large',1)
   endif
@@ -192,8 +189,8 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !    clean also after 9 a.u.
   !
   do n=mesh,1,-1
-     if (r(n).lt.9.d0) goto 200
-     chis(n,ns)=0.d0
+     if (r(n).lt.9.0_dp) goto 200
+     chis(n,ns)=0.0_dp
   enddo
 200 continue
   return
@@ -204,8 +201,8 @@ subroutine tridiag(a,b,c,r,u,n)
   !
   !     See Numerical Recipes.
   !
+  use kinds, only : DP
   implicit none
-  integer, parameter :: dp=kind(1.d0)
 
   integer :: n
   real(kind=dp) :: a(n),b(n),c(n),r(n),u(n)
@@ -213,7 +210,7 @@ subroutine tridiag(a,b,c,r,u,n)
 
   integer j
 
-  if (abs(b(1)).lt.1.d-10)  &
+  if (abs(b(1)).lt.1.e-10_DP)  &
        call errore('tridiag','b(1) is too small',1)
 
   bet=b(1)
@@ -221,7 +218,7 @@ subroutine tridiag(a,b,c,r,u,n)
   do j=2,n
      gam(j)=c(j-1)/bet
      bet=b(j)-a(j)*gam(j)
-     if (abs(bet) < 1.d-10) &
+     if (abs(bet) < 1.e-10_DP) &
           call errore('tridiag','bet is too small',1)
      u(j)=(r(j)-a(j)*u(j-1))/bet
   enddo

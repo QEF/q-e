@@ -39,33 +39,33 @@ do nc=1,nconf
 !
    do n=1,nwfts
       do n1=1,nbeta
-         if (els(n1).eq.elts(n).and.rcut(n1).gt.1.d-3) then
+         if (els(n1).eq.elts(n).and.rcut(n1).gt.1.e-3_dp) then
             rcutts(n)=rcut(n1)
             rcutusts(n)=rcutus(n1)
             goto 20
          endif
       enddo
-      dum=0.d0
+      dum=0.0_dp
       do ir=1,mesh-1
          dum=abs(psi(ir+1,nstoae(n)))
          if(dum.gt.abs(psi(ir,nstoae(n)))) im=ir+1
       enddo
       if (pseudotype.lt.3) then
-        rcutts(n)=r(im)*1.1d0
-        rcutusts(n)=r(im)*1.1d0
+        rcutts(n)=r(im)*1.1_dp
+        rcutusts(n)=r(im)*1.1_dp
       else
         if (ll(nstoae(n)).eq.0) then
-           rcutts(n)=r(im)*1.6d0
-           rcutusts(n)=r(im)*1.7d0
+           rcutts(n)=r(im)*1.6_dp
+           rcutusts(n)=r(im)*1.7_dp
         elseif (ll(nstoae(n)).eq.1) then
-           rcutts(n)=r(im)*1.6d0
-           rcutusts(n)=r(im)*1.7d0
+           rcutts(n)=r(im)*1.6_dp
+           rcutusts(n)=r(im)*1.7_dp
         elseif (ll(nstoae(n)).eq.2) then
-           rcutts(n)=r(im)*2.0d0
-           rcutusts(n)=r(im)*2.2d0
+           rcutts(n)=r(im)*2.0_dp
+           rcutusts(n)=r(im)*2.2_dp
            if (el(nstoae(n)).eq.'3D') then
-              rcutts(n)=r(im)*2.5d0
-              rcutusts(n)=r(im)*3.0d0
+              rcutts(n)=r(im)*2.5_dp
+              rcutusts(n)=r(im)*3.0_dp
            endif
         endif
       endif

@@ -39,7 +39,7 @@ implicit none
       logical :: &
              gga                ! if true it is a gga calculation
 
-      real(kind=dp), parameter :: fourpi = 4.d0 * 3.141592653589793d0  
+      real(kind=dp), parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
       gga=igcx.ne.0.or.igcc.ne.0
       allocate(vgc(ndm,2),stat=ierr)
@@ -51,18 +51,18 @@ implicit none
       allocate(f3(mesh), stat=ierr)
       allocate(f4(mesh), stat=ierr)
       allocate(f8(mesh), stat=ierr)
-      vgc=0.d0
-      egc=0.d0
+      vgc=0.0_DP
+      egc=0.0_DP
       if (gga.and.nlcc) then
-         f1=0.d0
+         f1=0.0_DP
          call vxcgc(ndm,mesh,nspin,r,r2,f1,rhoc,vgc,egcc)
       endif
 
       if (gga) call vxcgc(ndm,mesh,nspin,r,r2,rhos,rhoc,vgc,egc)
 
-      rh0(1)=0.d0
-      rh0(2)=0.d0
-      rhc=0.d0
+      rh0(1)=0.0_DP
+      rh0(2)=0.0_DP
+      rhc=0.0_DP
       do i=1,mesh
          rho_tot=rhos(i,1)
          if (lsd.eq.1) rho_tot=rho_tot+rhos(i,2)
@@ -111,7 +111,7 @@ implicit none
       enddo
 
       encl=    int_0_inf_dr(f1,r,r2,dx,mesh,1)
-      ehrt=0.5d0*int_0_inf_dr(vh,r,r2,dx,mesh,2)
+      ehrt=0.5_DP*int_0_inf_dr(vh,r,r2,dx,mesh,2)
       ecxc=    int_0_inf_dr(f3,r,r2,dx,mesh,2)
       evxt=    int_0_inf_dr(f4,r,r2,dx,mesh,2)
       if (nlcc) then
@@ -119,12 +119,12 @@ implicit none
          write(6,'(5x,'' Core only energy '',f15.8 )') ecc
       endif
 !
-      epseu=0.d0
+      epseu=0.0_DP
       if (pseudotype.eq.1) then
          do ns=1,nwfts
-            f1=0.d0
+            f1=0.0_DP
             lam=llts(ns)
-            if (octs(ns).gt.0.d0) then
+            if (octs(ns).gt.0.0_DP) then
                do n=1, mesh
                   f1(n,1) = f1(n,1) + phis(n,ns)**2 * octs(ns)
                enddo
@@ -137,10 +137,10 @@ implicit none
          enddo
       elseif ((pseudotype.eq.2).or.(pseudotype.eq.3)) then
          do ns=1,nwfts
-            if (octs(ns).gt.0.d0) then
+            if (octs(ns).gt.0.0_DP) then
                do n1=1,nbeta
                   if (llts(ns).eq.lls(n1).and.   &
-                                   abs(jjts(ns)-jjs(n1)).lt.1.d-7) then
+                                   abs(jjts(ns)-jjs(n1)).lt.1.e-7_DP) then
                      nst=(llts(ns)+1)*2
                      ikl=ikk(n1)
                      do n=1,ikl
@@ -148,7 +148,7 @@ implicit none
                      enddo
                      work(n1)=int_0_inf_dr(gi,r,r2,dx,ikl,nst)
                   else
-                     work(n1)=0.d0
+                     work(n1)=0.0_DP
                   endif
                enddo
                do n1=1,nbeta
@@ -162,7 +162,7 @@ implicit none
       endif 
       ekin = int_0_inf_dr(f2,r,r2,dx,mesh,2) - epseu
       do ns=1,nwfts
-         if (octs(ns).gt.0.d0) then
+         if (octs(ns).gt.0.0_DP) then
             ekin=ekin+octs(ns)*enls(ns)
          endif
       end do

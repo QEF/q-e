@@ -16,16 +16,16 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   real(kind=dp):: exc_t, vxcp(2)
   logical :: gga
 
-  vhn1=0.d0
-  vhn2=0.d0
-  fpi=16.d0*atan(1.d0)
+  vhn1=0.0_dp
+  vhn2=0.0_dp
+  fpi=16.0_dp*atan(1.0_dp)
   gga=igcx.ne.0.or.igcc.ne.0
   nspin=1
   if (lsd.eq.1) nspin=2
   !
   !   compute hartree potential with the total charge
   !
-  rhotot=0.d0
+  rhotot=0.0_dp
   if (rel.eq.2) then
      do i=1,mesh
         rhotot(i,1)=psi_dir(i,1,n)**2+psi_dir(i,2,n)**2
@@ -40,8 +40,8 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !
   !    add exchange and correlation potential: LDA or LSDA only
   !
-  rhc=0.d0
-  rh=0.d0
+  rhc=0.0_dp
+  rh=0.0_dp
   do i=1,mesh
      vhn1(i) = e2*vhn1(i)
      rh(1) = rhotot(i,1)/r2(i)/fpi

@@ -15,26 +15,26 @@ subroutine scf
        rab(ndm), ze2
   real(kind=dp), allocatable ::  vsic(:,:), vsicnew(:)
   integer, parameter :: maxter=200
-  real(kind=dp), parameter :: thresh=1.0d-10
+  real(kind=dp), parameter :: thresh=1.0e-10_dp
   !
   ! 
   ze2 = - zed * e2
-  rhoc1=0.d0
+  rhoc1=0.0_dp
   id=3
-  psi_dir=0.d0
+  psi_dir=0.0_dp
   rab=dx*r
   !
   if (isic /= 0) then
      allocate(vsic(ndm,nwf))
      allocate(vsicnew(ndm))
-     vsic=0.d0
+     vsic=0.0_dp
      id=1
   endif
   do iter=1,maxter
      nerr=0
      vnew = vpot
      do n=1,nwf
-        if (oc(n) >= 0.d0) then
+        if (oc(n) >= 0.0_dp) then
            is=isw(n)
            if (isic /= 0 .and. iter > 1) vnew(:,is)=vsic(:,n)
            if (rel == 0) then
@@ -50,14 +50,14 @@ subroutine scf
               psi(:,n)=psi_dir(:,2,n)
               nstop=0
            else
-              call errore('scf','rel not programmed',1)
+              call errore('scf','relativistic not programmed',1)
            endif
            !      write(6,*) el(n),enl(n)
            if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
            nerr=nerr+nstop
         else
-           enl(n)=0.d0
-           psi(:,n)=0.d0
+           enl(n)=0.0_dp
+           psi(:,n)=0.0_dp
         endif
      enddo
 
@@ -72,7 +72,7 @@ subroutine scf
 
      if (isic /= 0) then
         do n=1,nwf
-           if (oc(n) >= 0.d0) then
+           if (oc(n) >= 0.0_dp) then
               is=isw(n)
               call sic_correction(n,vhn1,vsicnew,egc)
               vsicnew(:) = vnew(:,is)-vsicnew(:)

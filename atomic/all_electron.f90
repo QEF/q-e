@@ -8,6 +8,7 @@ subroutine all_electron(ild)
   !
   !
   use  ld1inc
+  use kinds, only : DP
   implicit none
 
   logical :: ild    ! if true compute log der
@@ -37,6 +38,6 @@ subroutine all_electron(ild)
   !
   !  compute logarithmic derivative
   !
-  if (deld > 0.d0 .and. ild) call lderiv
+  if (deld > 0.0_DP .and. ild) call lderiv
   return
 end subroutine all_electron

@@ -33,8 +33,8 @@ subroutine dir_outward(idim1,mesh,lcur,jcur,e0,dx,snl,r,rab,ruae)
 !
 !----------------------------------------------------------------------------
 !
+use kinds, only : DP
 implicit none
-integer,parameter :: dp = kind(1.d0)
 integer :: idim1 
 real(kind=dp) :: r(idim1),     &   ! the radial mesh
                  rab(idim1),   &   ! derivative of the radial mesh
@@ -68,13 +68,13 @@ do ir=1,mesh
 enddo
 !
 !     set ( 2 / fine structure constant )
-tbya = 2.0d0 * 137.04d0
+tbya = 2.0_DP * 137.04_DP
 !     set ( fine structure constant / 2 )
-abyt = 1.0d0 / tbya
+abyt = 1.0_DP / tbya
 
 r2=r**2
 
-if (jcur.eq.lcur+0.5d0) then
+if (jcur.eq.lcur+0.5_DP) then
     kcur = - ( lcur + 1 )
 else
     kcur = lcur
@@ -83,7 +83,7 @@ endif
 !       set initial upper and lower bounds for the eigen value
 ecur=e0
 !
-yy = 0.0d0
+yy = 0.0_DP
 !
 !         define the zz array
 !         ===================
@@ -147,7 +147,7 @@ call cfdsol(zz,yy,6,mesh,idim1)
 !         copy the wavefunction 
 !         =======================================================
 !
-snl=0.d0
+snl=0.0_DP
 do ir=1,mesh
    snl(ir,1)=yy(ir,1)
    snl(ir,2)=yy(ir,2)

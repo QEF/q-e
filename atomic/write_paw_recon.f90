@@ -29,11 +29,11 @@ implicit none
 
 ! Check sign of ae-wfct (max should be >0)
 
-         wmax=0.d0
+         wmax=0.0_dp
          do n=1,mesh
-            if(abs(psi(n,iae)).gt.wmax.and.r(n).lt.4.d0)then
+            if(abs(psi(n,iae)).gt.wmax.and.r(n).lt.4.0_dp)then
                wmax=abs(psi(n,iae))
-               if(psi(n,iae).lt.0.d0)then
+               if(psi(n,iae).lt.0.0_dp)then
                   isign=-1
                else
                   isign=+1
@@ -47,11 +47,11 @@ implicit none
 
 ! check sign of pseudo wfct (max should be >0)
 
-         wmax=0.d0
+         wmax=0.0_dp
          do n=1,mesh
-            if(abs(phis(n,i)).gt.wmax.and.r(n).lt.4.d0)then
+            if(abs(phis(n,i)).gt.wmax.and.r(n).lt.4.0_dp)then
                wmax=abs(phis(n,i))
-               if(phis(n,i).lt.0.d0)then
+               if(phis(n,i).lt.0.0_dp)then
                   isign=-1
                else
                   isign=+1
@@ -70,11 +70,3 @@ implicit none
 
       return
     end subroutine write_paw_recon
-
-
-
-
-
-
-
-

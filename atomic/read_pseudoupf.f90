@@ -65,7 +65,7 @@ subroutine read_pseudoupf
      zmesh=upf%zmesh
      rmax=exp(xmin+(mesh-1)*dx)/zmesh
   endif
-  if (abs(exp(xmin+(mesh-1)*dx)/zed-rmax).gt.1.d-6) &
+  if (abs(exp(xmin+(mesh-1)*dx)/zed-rmax).gt.1.e-6_dp) &
    &   call errore('read_pseudoup','mesh not supported',1)
 
   nwfs = upf%nwfc
@@ -74,7 +74,7 @@ subroutine read_pseudoupf
   lls(1:nbeta)=upf%lll(1:nbeta)
 
   if (rel.lt.2) then
-     jjs=0.d0
+     jjs=0.0_dp
   else
      jjs(1:nbeta)=upf%jjj(1:nbeta)
   endif
@@ -91,18 +91,18 @@ subroutine read_pseudoupf
      qvan (1:mesh, 1:nbeta, 1:nbeta) = &
           upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
   else
-     qq=0.d0
+     qq=0.0_dp
      ddd(1:nbeta,1:nbeta,1)=bmat(1:nbeta,1:nbeta)
   endif
   !
   !
   if ( upf%nlcc) then
-     fpi=16.d0*atan(1.d0)
+     fpi=16.0_dp*atan(1.0_dp)
      rhoc(1:mesh) = upf%rho_atc(1:upf%mesh)*fpi*r2(1:upf%mesh)
   else
-     rhoc(:) = 0.d0
+     rhoc(:) = 0.0_dp
   end if
-  rhos=0.d0
+  rhos=0.0_dp
   rhos (1:mesh,1) = upf%rho_at (1:upf%mesh)
   phis(1:mesh,1:nwfs)=upf%chi(1:mesh,1:nwfs)
   !!! TEMP

@@ -51,10 +51,10 @@ use ld1inc
 !
 !    compute first and second derivative
 !
-      ff=1-dx**2/48.d0
-!      fae=(psipsus(ik+1,ns)+psipsus(ik,ns))*0.5d0
+      ff=1-dx**2/48.0_dp
+!      fae=(psipsus(ik+1,ns)+psipsus(ik,ns))*0.5_dp
 !      f1aep1=psipsus(ik+1,ns)*ff/sqr(ik+1)
-!      f1ae=psipsus(ik,ns)*(-12.d0+10.d0*ff)/sqr(ik)
+!      f1ae=psipsus(ik,ns)*(-12.0_dp+10.0_dp*ff)/sqr(ik)
 !      f1aem1=psipsus(ik-1,ns)*ff/sqr(ik-1)
 !      f2ae=(f1aep1+f1ae+f1aem1)/dx**2
 !      f1ae=(psipsus(ik+1,ns)-psipsus(ik,ns))/(r(ik+1)-r(ik))
@@ -86,16 +86,16 @@ use ld1inc
        
       do nc=1,2
 !          f1aep1=j1(ik+1,nc)*ff/sqr(ik+1)
-!          f1ae=j1(ik,nc)*(-12.d0+10.d0*ff)/sqr(ik)
+!          f1ae=j1(ik,nc)*(-12.0_dp+10.0_dp*ff)/sqr(ik)
 !          f1aem1=j1(ik-1,nc)*ff/sqr(ik-1)
 !          bm(nc)=(f1aep1+f1ae+f1aem1)/dx**2
          bm(nc)=deriv2_7pts(j1(1,nc),ik,r(ik),dx)
       enddo
 
       xc(2)=(f2ae-bm(1))/(bm(2)-bm(1))
-      xc(1)=1.d0-xc(2)
+      xc(1)=1.0_dp-xc(2)
       if (iflag.eq.1) then
-         write(6,110) els(ns),rcutus(ns),2.d0*xc(5)**2
+         write(6,110) els(ns),rcutus(ns),2.0_dp*xc(5)**2
 110      format (5x, ' Wfc-us ',a3,' rcutus=',f6.3, &
                 '  Estimated cut-off energy= ', f8.2,' Ry')
       endif
@@ -113,10 +113,10 @@ use ld1inc
       do nc=1,2
          xc(nc)=xc(nc)*fact(nc)
       enddo
-      xc(3)=0.d0
-      xc(6)=0.d0
-      xc(7)=0.d0
-      xc(8)=0.d0
+      xc(3)=0.0_dp
+      xc(6)=0.0_dp
+      xc(7)=0.0_dp
+      xc(8)=0.0_dp
 
       return
       end

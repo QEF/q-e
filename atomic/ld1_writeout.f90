@@ -130,8 +130,8 @@ subroutine ld1_writeout
                  enddo
               else
                  do ir=1,mesh
-                    vpsloc(ir)=((lloc+1.d0)*vnlo(ir,lloc,2)+lloc*vnlo(ir,lloc,1))/&
-                         (2.d0*lloc + 1.d0)
+                    vpsloc(ir)=((lloc+1.0_dp)*vnlo(ir,lloc,2)+lloc*vnlo(ir,lloc,1))/&
+                         (2.0_dp*lloc + 1.0_dp)
                  enddo
               endif
            endif
@@ -141,7 +141,7 @@ subroutine ld1_writeout
                  nbeta=nbeta+1
                  nch=0
                  do n=1,nwfts
-                    if (llts(n).eq.l.and.abs(jjts(n)-l+0.5d0).lt.1d-3) nch=n
+                    if (llts(n).eq.l.and.abs(jjts(n)-l+0.5_dp).lt.1e-3_dp) nch=n
                  enddo
                  if (l==0) nch=1
                  if (nch.eq.0) call errore('convert','jj not found',1)
@@ -152,7 +152,7 @@ subroutine ld1_writeout
                  jjs(nbeta)=jjts(nch)
                  ikk(nbeta)=mesh
                  do ir=mesh-1,1,-1
-                    if (abs(betas(ir,nbeta)).lt.1.d-11)then
+                    if (abs(betas(ir,nbeta)).lt.1.e-11_dp)then
                        ikk(nbeta)=ir
                     else
                        goto 203
@@ -162,12 +162,12 @@ subroutine ld1_writeout
                  do ir = 1, mesh
                     aux (ir) = phis(ir, nch) * betas (ir, nbeta)
                  enddo
-                 bmat(nbeta,nbeta)=1.d0/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
+                 bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
                  if (l.ne.0) then
                     nbeta=nbeta+1
                     nch=0
                     do n=1,nwfts
-                       if (llts(n).eq.l.and.abs(jjts(n)-l-0.5d0).lt.1d-3) nch=n
+                       if (llts(n).eq.l.and.abs(jjts(n)-l-0.5_dp).lt.1e-3_dp) nch=n
                     enddo
                     if (nch.eq.0) call errore('convert','jj not found',1)
                     do ir=1,mesh
@@ -177,7 +177,7 @@ subroutine ld1_writeout
                     jjs(nbeta)=jjts(nch)
                     ikk(nbeta)=mesh
                     do ir=mesh-1,1,-1
-                       if (abs(betas(ir,nbeta)).lt.1.d-11) then
+                       if (abs(betas(ir,nbeta)).lt.1.e-11_dp) then
                           ikk(nbeta)=ir
                        else
                           goto 204
@@ -187,7 +187,7 @@ subroutine ld1_writeout
                     do ir = 1, mesh
                        aux(ir) = phis(ir,nch)*betas(ir,nbeta)
                     enddo
-                    bmat(nbeta,nbeta)=1.d0/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
+                    bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
                  endif
               endif
            enddo

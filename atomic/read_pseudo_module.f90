@@ -27,6 +27,7 @@ CONTAINS
     !   read pseudopotential "upf" in the Unified Pseudopotential Format
     !   from unit "iunps" - return error code in "ierr" (success: ierr=0)
     !
+    use kinds, only : DP
     use pseudo_types_ld1
     !
     implicit none
@@ -76,7 +77,7 @@ CONTAINS
        call scan_end (iunps, "NLCC")  
     else
        allocate( upf%rho_atc( 0:upf%mesh ) )
-       upf%rho_atc = 0.0d0
+       upf%rho_atc = 0.0_dp
     endif
     !-------->Search for Local potential
     call scan_begin (iunps, "LOCAL", .true.)  
@@ -106,6 +107,7 @@ CONTAINS
     !   read pseudopotential "upf" in the Unified Pseudopotential Format
     !   from unit "iunps" - return error code in "ierr" (success: ierr=0)
     !
+    use kinds, only : DP
     use pseudo_types_ld1
     !
     implicit none
@@ -133,6 +135,7 @@ CONTAINS
   subroutine scan_begin (iunps, string, rew)  
     !---------------------------------------------------------------------
     !
+    use kinds, only : DP
     implicit none
     ! Unit of the input file
     logical:: matches
@@ -231,6 +234,7 @@ CONTAINS
   subroutine read_pseudo_mesh (upf, iunps)  
     !---------------------------------------------------------------------
     !
+    USE kinds, ONLY: DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
 
     implicit none
@@ -242,8 +246,8 @@ CONTAINS
     character (len=75) :: dummy  
 
     ALLOCATE( upf%r( 0:upf%mesh ), upf%rab( 0:upf%mesh ) )
-    upf%r   = 0.0d0
-    upf%rab = 0.0d0
+    upf%r   = 0.0_dp
+    upf%rab = 0.0_dp
 
     call scan_begin (iunps, "R", .false.)  
     read (iunps, *, err = 100, iostat = ios) (upf%r(ir), ir=1,upf%mesh )
@@ -262,6 +266,7 @@ CONTAINS
   subroutine read_pseudo_nlcc (upf, iunps)
     !---------------------------------------------------------------------
     !
+    USE kinds, ONLY: DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
 
     implicit none
@@ -272,7 +277,7 @@ CONTAINS
     integer :: ir, ios
     !
     ALLOCATE( upf%rho_atc( 0:upf%mesh ) )
-    upf%rho_atc = 0.0d0
+    upf%rho_atc = 0.0_dp
 
     read (iunps, *, err = 100, iostat = ios) (upf%rho_atc(ir), ir=1,upf%mesh )
     !
@@ -286,6 +291,7 @@ CONTAINS
   subroutine read_pseudo_local (upf, iunps)
     !---------------------------------------------------------------------
     !
+    USE kinds, only : DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
 
     implicit none
@@ -297,7 +303,7 @@ CONTAINS
     character (len=75) :: dummy
     !
     ALLOCATE( upf%vloc( 0:upf%mesh ) )
-    upf%vloc = 0.0d0
+    upf%vloc = 0.0_dp
 
     read (iunps, *, err=100, iostat=ios) (upf%vloc(ir) , ir=1,upf%mesh )
 
@@ -312,6 +318,7 @@ CONTAINS
   subroutine read_pseudo_nl (upf, iunps)  
     !---------------------------------------------------------------------
     !
+    USE kinds, only : DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
 
     implicit none
@@ -334,8 +341,8 @@ CONTAINS
     ALLOCATE( upf%dion( upf%nbeta, upf%nbeta ) )
     upf%kkbeta = 0  
     upf%lll    = 0  
-    upf%beta   = 0.0d0
-    upf%dion   = 0.0d0
+    upf%beta   = 0.0_dp
+    upf%dion   = 0.0_dp
 
     do nb = 1, upf%nbeta 
        call scan_begin (iunps, "BETA", .false.)  
@@ -363,10 +370,10 @@ CONTAINS
        ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
        ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
        ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
-       upf%rinner = 0.0d0
-       upf%qqq    = 0.0d0
-       upf%qfunc  = 0.0d0
-       upf%qfcoef = 0.0d0
+       upf%rinner = 0.0_dp
+       upf%qqq    = 0.0_dp
+       upf%qfunc  = 0.0_dp
+       upf%qfcoef = 0.0_dp
        if ( upf%nqf /= 0) then
           call scan_begin (iunps, "RINNER", .false.)  
           read (iunps,*,err=100,iostat=ios) ( idum, upf%rinner(i), i=1,upf%nqlc )
@@ -407,10 +414,10 @@ CONTAINS
        ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
        ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
        ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
-       upf%rinner = 0.0d0
-       upf%qqq    = 0.0d0
-       upf%qfunc  = 0.0d0
-       upf%qfcoef = 0.0d0
+       upf%rinner = 0.0_dp
+       upf%qqq    = 0.0_dp
+       upf%qfunc  = 0.0_dp
+       upf%qfcoef = 0.0_dp
     endif
 
     return  
@@ -423,6 +430,7 @@ CONTAINS
   subroutine read_pseudo_pswfc (upf, iunps)  
     !---------------------------------------------------------------------
     !
+    USE kinds, only : DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
     !
     implicit none
@@ -434,7 +442,7 @@ CONTAINS
     integer :: nb, ir, ios 
 
     ALLOCATE( upf%chi( 0:upf%mesh, upf%nwfc ) )
-    upf%chi = 0.0d0
+    upf%chi = 0.0_dp
     do nb = 1, upf%nwfc  
        read (iunps, *, err=100, iostat=ios) dummy  !Wavefunction labels
        read (iunps, *, err=100, iostat=ios) ( upf%chi(ir,nb), ir=1,upf%mesh )
@@ -449,6 +457,7 @@ CONTAINS
   subroutine read_pseudo_rhoatom (upf, iunps)  
     !---------------------------------------------------------------------
     !
+    USE kinds, only : DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
     !
     implicit none
@@ -459,7 +468,7 @@ CONTAINS
     integer :: ir, ios  
     !
     ALLOCATE( upf%rho_at( 0:upf%mesh ) )
-    upf%rho_at = 0.0d0
+    upf%rho_at = 0.0_dp
     read (iunps,*,err=100,iostat=ios) ( upf%rho_at(ir), ir=1,upf%mesh )
     !
     return  
@@ -474,6 +483,7 @@ CONTAINS
     !     This routine reads the additional info for the pseudopotential
     !     which are needed in the atomic code.
     !
+    USE kinds, only : DP
     USE pseudo_types_ld1, ONLY: pseudo_upf
     implicit none
     integer :: iunps  
@@ -486,16 +496,16 @@ CONTAINS
     ALLOCATE( upf%jjj(upf%nbeta) )
 
     upf%nn=0
-    upf%rcut=0.d0
-    upf%rcutus=0.d0
-    upf%epseu=0.d0
-    upf%jchi=0.d0
+    upf%rcut=0.0_dp
+    upf%rcutus=0.0_dp
+    upf%epseu=0.0_dp
+    upf%jchi=0.0_dp
     do nb = 1, upf%nwfc
        read (iunps, '(a2,2i3,2f6.2)',err=100,iostat=ios) upf%els(nb),  &
             upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb) 
     enddo
 
-    upf%jjj=0.d0
+    upf%jjj=0.0_dp
     do nb = 1, upf%nbeta
        read (iunps, '(i5,f6.2)', err=100,iostat=ios) upf%lll(nb), upf%jjj(nb)
     enddo

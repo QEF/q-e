@@ -16,6 +16,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   !
   !
   !      
+  use kinds, only : DP
   use ld1inc
   implicit none
 
@@ -30,7 +31,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   real(kind=dp) :: &
        xc(8), occ
   !
-  real(kind=dp), parameter :: pi=3.14159265358979d0
+  real(kind=dp), parameter :: pi=3.14159265358979_DP
   real(kind=dp) :: &
        fae,    & ! the value of the all-electron function
        f1ae,   & ! its first derivative
@@ -57,7 +58,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   !
   !   decide whether to use 4 Bessel functions or 3 (default)
   !
-  if ( (rho0 /= 0.d0) .and. (lam == 0) ) then
+  if ( (rho0 /= 0.0_dp) .and. (lam == 0) ) then
      nbes = 4
   else
      nbes = 3
@@ -68,17 +69,17 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   !   compute the reference wavefunction
   !
   if (new(ns)) then
-     if (rel.eq.1) then
+     if (rel == 1) then
         call lschps(3,zed,exp(dx),dx,mesh,mesh,mesh,  &
              1,lam,enls(ns),chir(1,ns),r,vpot)
-     elseif (rel.eq.2) then
+     elseif (rel == 2) then
         do i=1,mesh
            rab(i)=r(i)*dx
         enddo
         call dir_outward(ndm,mesh,lam,jjs(ns),enls(ns),dx,chi_dir,r,rab,vpot)
         chir(:,ns)=chi_dir(:,2)
      else
-        ze2=-zed*2.d0
+        ze2=-zed*2.0_dp
         call intref(lam,enls(ns),mesh,dx,r,r2,sqr,vpot,ze2,chir(1,ns))
      endif
      !
@@ -86,7 +87,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      !
      jnor=chir(ik,ns)
      do n=1,mesh
-        chir(n,ns)=chir(n,ns)*0.5d0/jnor
+        chir(n,ns)=chir(n,ns)*0.5_dp/jnor
     enddo
   else 
      do n=1,mesh
@@ -157,11 +158,11 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      !    solve the second order equation
      !
      if (nbes == 4) then
-        wmax=0.d0
+        wmax=0.0_dp
         do n=1,mesh
-           if (abs(chir(n,ns)) > wmax .and. r(n) < 4.d0) then
+           if (abs(chir(n,ns)) > wmax .and. r(n) < 4.0_dp) then
               wmax=abs(chir(n,ns))
-              if(chir(n,ns).lt.0.d0)then
+              if(chir(n,ns).lt.0.0_dp)then
                  isign=-1
               else
                  isign=+1
@@ -172,34 +173,34 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
         lamda3=(bm(3)-bm(1))/(bm(2)-bm(1))
         lamda4=(bm(4)-bm(1))/(bm(2)-bm(1))
         if (new(ns)) then
-           den=1.d0
+           den=1.0_dp
         else
            den=abs(occ)
         endif
-        mu0=(isign*sqrt(rho0*4.d0*pi/den) &
+        mu0=(isign*sqrt(rho0*4.0_dp*pi/den) &
              -fact(1)+fact(1)*lamda0-fact(2)*lamda0)  &
              /(fact(1)*lamda3-fact(1)-fact(2)*lamda3+fact(3))
         mu4=(fact(1)*lamda4-fact(1)-fact(2)*lamda4+fact(4)) &
              /(fact(1)*lamda3-fact(1)-fact(2)*lamda3+fact(3))
         s0=lamda0-mu0*lamda3
         s4=lamda4-mu4*lamda3
-        t0=1.d0-lamda0+mu0*lamda3-mu0
-        t4=1.d0+mu4*lamda3-mu4-lamda4
+        t0=1.0_dp-lamda0+mu0*lamda3-mu0
+        t4=1.0_dp+mu4*lamda3-mu4-lamda4
 
         a=cm(1)*t4**2+cm(3)*s4**2+cm(6)*mu4**2+cm(10)  &
-             +2.d0*cm(4)*t4*mu4+2.d0*cm(2)*t4*s4+2.d0*cm(5)*s4*mu4 &
-             -2.d0*cm(7)*t4-2.d0*cm(8)*s4-2.d0*cm(9)*mu4
+             +2.0_dp*cm(4)*t4*mu4+2.0_dp*cm(2)*t4*s4+2.0_dp*cm(5)*s4*mu4 &
+             -2.0_dp*cm(7)*t4-2.0_dp*cm(8)*s4-2.0_dp*cm(9)*mu4
         
-        b=-2.d0*cm(1)*t0*t4-2.d0*cm(3)*s0*s4-2.d0*cm(6)*mu0*mu4  &
-             -2.d0*cm(4)*t0*mu4-2.d0*cm(4)*t4*mu0-2.d0*cm(2)*t0*s4  &
-             -2.d0*cm(2)*t4*s0-2.d0*cm(5)*s0*mu4-2.d0*cm(5)*s4*mu0  &
-             +2.d0*cm(7)*t0+2.d0*cm(8)*s0+2.d0*cm(9)*mu0
+        b=-2.0_dp*cm(1)*t0*t4-2.0_dp*cm(3)*s0*s4-2.0_dp*cm(6)*mu0*mu4  &
+             -2.0_dp*cm(4)*t0*mu4-2.0_dp*cm(4)*t4*mu0-2.0_dp*cm(2)*t0*s4  &
+             -2.0_dp*cm(2)*t4*s0-2.0_dp*cm(5)*s0*mu4-2.0_dp*cm(5)*s4*mu0  &
+             +2.0_dp*cm(7)*t0+2.0_dp*cm(8)*s0+2.0_dp*cm(9)*mu0
         
-        c=cm(1)*t0**2+cm(3)*s0**2+cm(6)*mu0**2+2.d0*cm(4)*t0*mu0 &
-             +2.d0*cm(2)*t0*s0+2.d0*cm(5)*s0*mu0-faenor
+        c=cm(1)*t0**2+cm(3)*s0**2+cm(6)*mu0**2+2.0_dp*cm(4)*t0*mu0 &
+             +2.0_dp*cm(2)*t0*s0+2.0_dp*cm(5)*s0*mu0-faenor
         
-        deter=b**2-4.d0*a*c
-        if (deter < 0.d0) then
+        deter=b**2-4.0_dp*a*c
+        if (deter < 0.0_dp) then
            call errore('compute phi','negative determinant',-1) 
            write(6,100) ns,f1ae/fae, f2ae, faenor
 100        format(/5x,i5,' ld= ',f10.6,' f2ae',f10.6,' faenor',f10.6)
@@ -207,7 +208,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
            return
         endif
         
-        xc(4)=(-b+sqrt(deter))/(2.d0*a)
+        xc(4)=(-b+sqrt(deter))/(2.0_dp*a)
         xc(3)=mu0-mu4*xc(4)
         xc(2)=s0-s4*xc(4)
         xc(1)=t0-t4*xc(4)
@@ -221,21 +222,21 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
         gamma=(bm(3)-bm(1))/(bm(2)-bm(1))
         delta=(f2ae-bm(1))/(bm(2)-bm(1))
        
-        a=(gamma-1.d0)**2*cm(1)+gamma**2*cm(3)  &
-             -2.d0*gamma*(gamma-1.d0)*cm(2) &
-             +2.d0*(gamma-1.d0)*cm(4)-2.d0*gamma*cm(5)+cm(6)
+        a=(gamma-1.0_dp)**2*cm(1)+gamma**2*cm(3)  &
+             -2.0_dp*gamma*(gamma-1.0_dp)*cm(2) &
+             +2.0_dp*(gamma-1.0_dp)*cm(4)-2.0_dp*gamma*cm(5)+cm(6)
         
-        b=2.d0*(1.d0-delta)*(gamma-1.d0)*cm(1) &
-             -2.d0*gamma*delta*cm(3) &
-             -2.d0*gamma*(1.d0-delta)*cm(2) &
-             +2.d0*delta*(gamma-1.d0)*cm(2) & 
-             +2.d0*(1.d0-delta)*cm(4)+2.d0*delta*cm(5)
+        b=2.0_DP*(1.0_dp-delta)*(gamma-1.0_dp)*cm(1) &
+             -2.0_dp*gamma*delta*cm(3) &
+             -2.0_dp*gamma*(1.0_dp-delta)*cm(2) &
+             +2.0_dp*delta*(gamma-1.0_dp)*cm(2) & 
+             +2.0_dp*(1.0_dp-delta)*cm(4)+2.0_dp*delta*cm(5)
         
-        c=-faenor+(1.d0-delta)**2*cm(1)+delta**2*cm(3) &
-             +2.d0*delta*(1.d0-delta)*cm(2)
+        c=-faenor+(1.0_dp-delta)**2*cm(1)+delta**2*cm(3) &
+             +2.0_dp*delta*(1.0_dp-delta)*cm(2)
         
-        deter=b**2-4.d0*a*c
-        if (deter < 0.d0) then
+        deter=b**2-4.0_dp*a*c
+        if (deter < 0.0_dp) then
            call errore('compute phi','negative determinant',-1) 
            write(6,110) ns,f1ae/fae, f2ae, faenor
 110        format (/5x,i5,' ld= ',f10.6,' f2ae',f10.6, ' faenor',f10.6)
@@ -243,9 +244,9 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
            return
         endif
         
-        xc(3)=(-b+sqrt(deter))/(2.d0*a)
+        xc(3)=(-b+sqrt(deter))/(2.0_dp*a)
         xc(2)=-xc(3)*gamma+delta
-        xc(1)=1.d0-xc(2)-xc(3)
+        xc(1)=1.0_dp-xc(2)-xc(3)
         
         do n=1,ik
            phis(n,ns)= xc(1)*j1(n,1) + xc(2)*j1(n,2) &
@@ -277,7 +278,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
 120     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Using Troullier-Martins method ')
      else
-        write(6,130) els(ns),rcut(ns),2.d0*xc(6)**2 
+        write(6,130) els(ns),rcut(ns),2.0_dp*xc(6)**2 
 130     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Estimated cut-off energy= ', f11.2,' Ry')
         if (nbes == 4) write(6,140) rho0

@@ -9,9 +9,9 @@
 !   atomic pseudopotentials with nonlinear core correction are allowed
 !   gradient correction allowed (A. Dal Corso fecit AD 1993)
 !
+use kinds, only : DP
 use funct
 implicit none
-integer,parameter :: dp=kind(1.d0)
 integer:: ndm,mesh,nwf,i,n,ll(nwf),lam,lmax,lsd,nspin,is
 logical:: nlcc, gga
 real(kind=dp):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
@@ -22,7 +22,7 @@ real(kind=dp):: enl(nwf),oc(nwf), rhotot, exc_t, &
 real(kind=dp),allocatable :: f1(:), f2(:), f3(:), f4(:)
 real(kind=dp),allocatable :: vgc(:,:), egc(:), rhoc(:)
 integer:: mgcx,mgcc,ierr
-real(kind=dp),parameter :: fourpi = 4.d0 * 3.141592653589793d+00  
+real(kind=dp),parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
 gga=igcx.ne.0.or.igcc.ne.0
 
@@ -34,14 +34,14 @@ allocate(f2(mesh),stat=ierr)
 allocate(f3(mesh),stat=ierr)
 allocate(f4(mesh),stat=ierr)
 
-rhoc=0.d0
+rhoc=0.0_DP
 call vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
 
-rhc=0.d0
+rhc=0.0_DP
 do i=1,mesh
    rhotot=rho(i,1)
    if (lsd.eq.1) rhotot=rhotot+rho(i,2) 
-   f1(i)=-2.d0*zed/r(i) * rhotot
+   f1(i)=-2.0_DP*zed/r(i) * rhotot
    f4(i)= vxt(i)       * rhotot
    vh(i)= vh (i)       * rhotot
    do is=1, nspin
@@ -60,11 +60,11 @@ do i=1,mesh
 enddo
 
 encl=    int_0_inf_dr(f1,r,r2,dx,mesh,1)
-ehrt=0.5d0*int_0_inf_dr(vh,r,r2,dx,mesh,2)
+ehrt=0.5_DP*int_0_inf_dr(vh,r,r2,dx,mesh,2)
 ecxc=    int_0_inf_dr(f3,r,r2,dx,mesh,2)
 evxt=    int_0_inf_dr(f4,r,r2,dx,mesh,2)
 !
-epseu=0.d0
+epseu=0.0_DP
 ekin = int_0_inf_dr(f2,r,r2,dx,mesh,1)
 
 do n=1,nwf

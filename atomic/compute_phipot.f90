@@ -20,7 +20,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
   real(kind=dp) :: &
        xc(8)
   !
-  real(kind=dp), parameter :: pi=3.14159265358979d0
+  real(kind=dp), parameter :: pi=3.14159265358979_dp
   real(kind=dp) :: &
        fae,    & ! the value of the all-electron function
        ff,     & ! compute the second derivative
@@ -45,17 +45,17 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
   !   bessel function before r_c
   !
 
-  ff=1.d0-dx**2/48.d0
-  ze2=-zed*2.d0
+  ff=1.0_dp-dx**2/48.0_dp
+  ze2=-zed*2.0_dp
   nst=(lam+1)*2
   !
   !   compute the reference wavefunction
   !
   if (new(ns)) then
-     if (rel.eq.1) then
+     if (rel == 1) then
         call lschps(3,zed,exp(dx),dx,mesh,mesh,mesh, &
              1,lam,enls(ns),chir(1,ns),r,vpot)
-     elseif (rel.eq.2) then
+     elseif (rel == 2) then
         do i=1,mesh
            rab(i)=r(i)*dx
         enddo
@@ -71,7 +71,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
      !
      jnor=chir(ik,ns)
      do n=1,mesh
-        chir(n,ns)=chir(n,ns)*0.5d0/jnor
+        chir(n,ns)=chir(n,ns)*0.5_dp/jnor
         !            write(6,*) r(n),chir(n,ns)
      enddo
   else 
@@ -91,7 +91,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
   !
   !   pseudowavefunction found
   !
-  signo= 1.d0 !chir(ik+1,ns)/abs(chir(ik+1,ns))
+  signo= 1.0_dp !chir(ik+1,ns)/abs(chir(ik+1,ns))
   do i=1,ik
      phis(i,ns)=signo*r(i)**(lam+1)*exp(pr(cn,c2,r(i)))
   end do

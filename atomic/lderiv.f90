@@ -40,7 +40,7 @@ subroutine lderiv
   if (nld == 0 .or. file_logderae == ' ') return
   if (nld > nwfsx) call errore('lderiv','nld is too large',1)
 
-  ze2=-zed*2.d0
+  ze2=-zed*2.0_dp
 
   do n=1,mesh
      if (r(n) > rlderiv) go to 10
@@ -48,7 +48,7 @@ subroutine lderiv
   call errore('lderiv','wrong rlderiv?',1)
 10 ikrld = n-1
   write(6,'(5x,''Computing logarithmic derivative in'',f10.5)') &
-       (r(ikrld)+r(ikrld+1))*0.5d0
+       (r(ikrld)+r(ikrld+1))*0.5_dp
 
   npte= (emaxld-eminld)/deld + 1
   allocate ( dlchi(npte, nld) )
@@ -57,14 +57,14 @@ subroutine lderiv
      do nc=1,nld
         if (rel < 2) then
            lam=nc-1
-           j=0.d0
+           j=0.0_dp
         else
            lam=nc/2
-           if (mod(nc,2)==0) j=lam-0.5d0
-           if (mod(nc,2)==1) j=lam+0.5d0
+           if (mod(nc,2)==0) j=lam-0.5_dp
+           if (mod(nc,2)==1) j=lam+0.5_dp
         endif
         do ie=1,npte
-           e=eminld+deld*(ie-1.d0)
+           e=eminld+deld*(ie-1.0_dp)
            !
            !    integrate outward up to ikrld+1
            !

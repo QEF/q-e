@@ -81,7 +81,7 @@ subroutine gener_pseudo
   !   pseudo
   !
   do n=1,nwfs
-     if (enls(n) == 0.d0) enls(n)=enl(nstoae(n))
+     if (enls(n) == 0.0_dp) enls(n)=enl(nstoae(n))
   enddo
   !
   !   compute the pseudowavefunctions by expansion in spherical
@@ -134,17 +134,17 @@ subroutine gener_pseudo
      !    check that the chi are zero beyond ikk
      nst=0
      do n=1,mesh
-        gi(n,1)=0.d0
+        gi(n,1)=0.0_dp
      enddo
      !   do n=ikk(ns)+1,min(ikk(ns)+20,mesh)
      do n=ikk(ns)+1,mesh
         gi(n,1)=chis(n,ns)**2
      enddo
      do n=min(ikk(ns)+20,mesh),mesh
-        chis(n,ns)=0.d0
+        chis(n,ns)=0.0_dp
      enddo
      sum=int_0_inf_dr(gi,r,r2,dx,mesh,nst)
-     if (sum > 2.d-6) then
+     if (sum > 2.e-6_dp) then
         write(6, '(5x,''ns='',i4,'' l='',i4, '' sum='',f15.9, &
              & '' r(ikk) '',f15.9)') ns, lam, sum, r(ikk(ns))
         call errore('gener_pseudo ','chi too large beyond r_c',-1)
@@ -175,7 +175,7 @@ subroutine gener_pseudo
   !     construct the potential 
   !
   if (pseudotype == 1) then
-     vnl=0.d0
+     vnl=0.0_dp
      do ns=1,nbeta
         lam=lls(ns)
         do n=1,ikk(ns)
@@ -186,10 +186,10 @@ subroutine gener_pseudo
   !
   !     construct B_{ij}
   !
-  bmat=0.d0
+  bmat=0.0_dp
   do ns=1,nbeta
      do ns1=1,nbeta
-        if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.d-7) then
+        if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.e-7_dp) then
            nst=(lls(ns)+1)*2
            ikl=ikk(ns1)
            do n=1,mesh
@@ -208,7 +208,7 @@ subroutine gener_pseudo
      !
      do ns=1,nbeta
         do ns1=1,ns
-           b(ns,ns1)=0.5d0*(bmat(ns,ns1)+bmat(ns1,ns))
+           b(ns,ns1)=0.5_dp*(bmat(ns,ns1)+bmat(ns1,ns))
            b(ns1,ns)=b(ns,ns1)
         enddo
      enddo
@@ -234,7 +234,7 @@ subroutine gener_pseudo
   !
   !   compute the beta functions
   !
-  betas=0.d0
+  betas=0.0_dp
   do ns=1,nbeta
      do ns1=1,nbeta
         do n=1,mesh
@@ -245,7 +245,7 @@ subroutine gener_pseudo
 
   deallocate (b, binv)
 
-  qq=0.d0
+  qq=0.0_dp
   if (pseudotype == 3) then
      !
      !    compute the Q functions
@@ -259,12 +259,12 @@ subroutine gener_pseudo
               gi(n,1)=qvan(n,ns,ns1)
            enddo
            do n=ikl+1,mesh
-              qvan(n,ns,ns1)=0.d0
+              qvan(n,ns,ns1)=0.0_dp
            enddo
            !
            !     and puts its integral in qq
            !
-           if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.d-8) then
+           if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.e-8_dp) then
               nst=(lls(ns)+1)*2
               qq(ns,ns1)=int_0_inf_dr(gi,r,r2,dx,ikk(ns),nst)
            endif
@@ -314,7 +314,7 @@ subroutine gener_pseudo
            vnl(n,l)=vnl(n,l)+vpsloc(n)
         enddo
      enddo
-     vpsloc=0.d0
+     vpsloc=0.0_dp
   endif
   !
   !     print the main functions on files

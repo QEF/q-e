@@ -16,14 +16,14 @@ subroutine set_rho_core
   integer :: i, ik, n, ns, ios
 
   write(6,'(/,5x,'' Computing core charge for nlcc: '')')
-  pi = 4.d0*atan(1.d0)
+  pi = 4.0_dp*atan(1.0_dp)
   allocate (rhov(mesh), rhoco(mesh))
   !
   !      calculates core charge density
   !
   do n=1,mesh
-     rhov(n) = 0.d0
-     rhoc(n) = 0.d0
+     rhov(n) = 0.0_dp
+     rhoc(n) = 0.0_dp
      do ns=1,nwf
         if (core_state(ns)) then
            rhoc(n) = rhoc(n) + oc(ns)*psi(n,ns)**2
@@ -34,7 +34,7 @@ subroutine set_rho_core
   enddo
   rhoco(:) = rhoc(1:mesh)
   !
-  if (rcore > 0.d0) then
+  if (rcore > 0.0_dp) then
      !      rcore read on input
      do ik=1,mesh
         if (r(ik) > rcore) go to 100
@@ -56,26 +56,26 @@ subroutine set_rho_core
   !      rhoc(r) = core charge        for r > rcore
   !      rhoc(r) = r^2 a sin(b r)/r   for r < rcore
   !
-  if (drho > 0.d0) then
+  if (drho > 0.0_dp) then
      call errore('set_rho_core','d rho/ d r > 0',-1)
      return
   endif
-  const= r(ik)*drho / ( rhoc(ik)/r2(ik) ) + 1.d0
-  if (const > 0.d0) then
-     br1 = 0.00001d0
-     br2 = pi/2.d0-0.00001d0
+  const= r(ik)*drho / ( rhoc(ik)/r2(ik) ) + 1.0_dp
+  if (const > 0.0_dp) then
+     br1 = 0.00001_dp
+     br2 = pi/2.0_dp-0.00001_dp
   else
-     br1 = pi/2.d0+0.00001d0
+     br1 = pi/2.0_dp+0.00001_dp
      br2 = pi
   end if
   do n=1, 15
      eps1 = br1 - const*tan(br1)
      eps2 = br2 - const*tan(br2)
-     br12 = (br1+br2)/2.d0
+     br12 = (br1+br2)/2.0_dp
      eps12 = br12 - const*tan(br12)
-     if(eps1*eps12 < 0.d0) then
+     if(eps1*eps12 < 0.0_dp) then
         br2 = br12
-     else if(eps12*eps2 < 0.d0) then
+     else if(eps12*eps2 < 0.0_dp) then
         br1 = br12
      else
         call errore('set_rho_core','error in bisection',n)
