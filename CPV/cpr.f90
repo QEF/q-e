@@ -1088,7 +1088,7 @@
         DEALLOCATE( tauw )
 
         WRITE(33,2948) tps, ekinc,int(temphc),int(tempp),enthal,econs,econt
-        WRITE(39,2948) tps, vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
+        WRITE(39,2949) tps, vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
 
         ! ...   Close and flush unit 30, ... 40
         CALL printout_base_close()
@@ -1299,7 +1299,7 @@
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 
 !
-    if( iprsta >= 1 ) CALL print_lambda( lambda, n, n, 1.0d0 )
+    if( iprsta > 1 ) CALL print_lambda( lambda, n, n, 1.0d0 )
 !
     conv_elec = .TRUE.
 
