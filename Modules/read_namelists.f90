@@ -1244,6 +1244,7 @@ MODULE read_namelists_module
                calculation == 'phonon' ) THEN
              !
              startingpot = 'file'
+             startingwfc = 'file'
              !
           END IF   
           !      
