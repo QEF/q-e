@@ -89,7 +89,6 @@ force_hub.o \
 force_lc.o \
 force_us.o \
 forces.o \
-funct.o \
 functionals.o \
 g_psi.o \
 g_psi_mod.o \
@@ -258,6 +257,7 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/formats.o \
+../Modules/functionals.o \
 ../Modules/input_parameters.o \
 ../Modules/io_base.o \
 ../Modules/io_files.o \

@@ -926,25 +926,35 @@
       return
       end
 !-----------------------------------------------------------------------
-      subroutine dftname(xctype)
+      subroutine dftname (exfact, dft)
 !-----------------------------------------------------------------------
-      use dft_mod
 !
       implicit none
-      character(len=20) xctype
+      integer :: exfact
+      character(len=20) dft
 !
-                        xctype = ' unknown exch.-corr.'
-      if (dft.eq.lda)   xctype = '      Ceperley-Alder'
-      if (dft.eq.-1.)   xctype = '              Wigner'
-      if (dft.eq.-2.)   xctype = '     Hedin-Lundqvist'
-      if (dft.eq.-3.)   xctype = ' Gunnarson-Lundqvist'
-      if (dft.eq.-4.)   xctype = ' no exch-corr at all'
-      if (dft.eq.blyp)  xctype = ' C-A + B88gx + LYPgc'
-      if (dft.eq.becke) xctype = ' C-A + B88gx        '
-      if (dft.eq.bp88)  xctype = ' C-A + B88gx + P86gc'
-      if (dft.eq.pw91)  xctype = ' Perdew Wang 1991   '
-      if (dft.eq.pbe)   xctype = ' PBE - GGA          '
-!
+      if (exfact == 0) then
+         dft = 'PZ'
+      elseif (exfact == 1) then
+         dft = 'BLYP'
+      elseif (exfact == 2) then
+         dft = 'B88'
+      elseif (exfact ==  - 5 .or. exfact == 3) then
+         dft = 'BP'
+      elseif (exfact ==  - 6 .or. exfact == 4) then
+         dft = 'PW91'
+      elseif (exfact == 5) then
+         dft = 'PBE'
+      elseif (exfact ==-1) then
+         dft = 'WIG'
+      elseif (exfact ==-2) then
+         dft = 'HL'
+      elseif (exfact ==-3) then
+         dft = 'GL'
+      else
+         call errore ('dftname','unknown exch-corr functional',exfact)
+      end if
+
       return
       end
 !
@@ -2892,6 +2902,7 @@
 !     initialize G-vectors and related quantities
 !
       use gvec
+      use funct, only: dft
       use parameters, only: natx, nsx
       use ions_base, only: pmass, rcmax, nsp, na
       use grid_dimensions, only: nr1, nr2, nr3, &
@@ -2918,7 +2929,6 @@
       integer ibrav
       real(kind=8) tau(3,natx,nsx), celldm(6), ecut
 !
-      character (len=20) xctype
       integer idum, ik, k, iss, i, in, is, ia
       real(kind=8) gcut, gcutw, gcuts, ecutw, dual, fsum, ocp, ddum
       real(kind=8) qk(3), rat1, rat2, rat3
@@ -3057,8 +3067,7 @@
      &            nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,                     &
      &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
 !
-      call dftname(xctype)
-      WRITE( stdout,38) xctype
+      WRITE( stdout,38) dft
       WRITE( stdout,334) ecutw,dual*ecutw,ecut
 !
       if(nspin.eq.1)then
@@ -4729,13 +4738,13 @@
       use cvan, only: nvb
       use ions_base, only: ipp, nsp
       use io_files, only: psfile, pseudo_dir
-      use dft_mod, only: dft
+      use funct, only: iexch, icorr, igcx, igcc
       use io_global, only: stdout
 !
       implicit none
 !
       character(len=256) :: filename
-      integer :: is, ierr, dft_, iunit=14
+      integer :: is, ierr, iexch_, icorr_, igcx_, igcc_, iunit=14
 !
 !     -----------------------------------------------------------------
 !     first vanderbilt species , then norm-conserving are read !!
@@ -4796,10 +4805,19 @@
                call errore('readpp', 'wrong pseudo type',ipp(is))
          end select
          close (unit=iunit)
+!
+! check for consistency of DFT
+!
          if (is == 1) then
-            dft_ = dft
-         else if ( dft /= dft_) then
-            call errore('reapp','inconsistent DFT read',is)
+            iexch_ = iexch
+            icorr_ = icorr
+            igcx_ = igcx
+            igcc_ = igcc
+         else
+            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
+                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
+               CALL errore( 'readpp','inconsistent DFT read',is)
+            end if
          end if
       end do
 !
@@ -4813,7 +4831,7 @@
       use ncprm, only: ifpcor, rscore, betar, rab, dion, rucore, r, &
                        lll, nbeta, mesh, kkbeta, cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
-      use dft_mod, only: dft
+      use funct, only: dft, which_dft
       use ions_base, only: zv
       use io_global, only: stdout
 
@@ -4824,7 +4842,6 @@
       integer is, iunps
 !
       integer meshp, ir, ib, il, i, j, jj
-      character(len=20) xctype
       real(kind=8), allocatable:: fint(:)
       real(kind=8) rdum, alpha, z, zval, cmeshp, exfact
 !
@@ -4835,7 +4852,9 @@
       if (zv(is) < 1 .or. zv(is) > 100 ) then
          call errore('readpp','wrong potential read',15)
       endif
-      dft=exfact
+
+      call dftname (exfact, dft)
+      call which_dft (dft)
 !
       if(lloc(is).eq.2)then 
          lll(1,is)=0
@@ -4944,8 +4963,8 @@
 !     ------------------------------------------------------------------
       WRITE( stdout,3000) z,zv(is)
 3000  format(2x,'bhs pp for z=',f3.0,2x,'zv=',f3.0)
-      call dftname(xctype)
-      WRITE( stdout,'(2x,a20)') xctype
+
+      WRITE( stdout,'(2x,a20)') dft
       WRITE( stdout,3002) lloc(is)-1 
 3002  format(2x,'   local angular momentum: l=',i3)
       WRITE( stdout,3005) nbeta(is)
@@ -4993,7 +5012,7 @@
       use ncprm, only: rscore, nqlc, qfunc, rucore, r, rab, rinner, &
                        qrl, qqq, nbeta, nbrx, ifpcor, mesh, betar,  &
                        dion, lll, kkbeta
-      use dft_mod, only: dft
+      use funct, only: dft, iexch, icorr, igcx, igcc
       use wfc_atomic, only: lchi, chi, nchi, nchix, mmaxx
       use ions_base, only: zv
       use io_global, only: stdout
@@ -5037,7 +5056,6 @@
      &        mgcx, mgcc,     &! exch-corr functional indices 
      &        exfact,         &
      &        lmin, lmax       ! min and max l
-      integer, external :: cpv_dft
       logical nlcc             ! core correction flag (same as ifpcor)
 !
 !
@@ -5058,10 +5076,10 @@
       else
          ifpcor(is)=0
       end if
-      read( iunps, '(4i5)',err=100, iostat=ios ) mfxcx, mfxcc,          &
-     &                                            mgcx, mgcc
+      read( iunps, '(4i5)',err=100, iostat=ios )  iexch, icorr, igcx,  &
+           igcc
 !
-      dft = cpv_dft(mfxcx, mfxcc, mgcx, mgcc)
+      dft = '?'
 !
       read( iunps, '(2e17.11,i5)') zv(is), etotps, lmax
       if ( zv(is) < 1 .or. zv(is) > 100 )                               &
@@ -5204,7 +5222,7 @@
 !     Read Vanderbilt pseudopotential of type "ipp" for species "is" 
 !     from unit "iunps"
 !     Output parameters in module "ncprm"
-!     info on DFT level in module "dft"
+!     info on DFT level in module "funct"
 !
 !
 !     ------------------------------------------------------
@@ -5260,7 +5278,7 @@
       use ncprm, only: qfunc, qfcoef, qqq, betar, dion, rucore, cmesh, &
                        qrl, rab, rscore, r, mesh, ifpcor,  &
                        rinner, kkbeta, lll, nbeta, nqf, nqlc
-      use dft_mod, only: dft, bp88, pw91
+      use funct, only: dft, which_dft
       use wfc_atomic, only: nchi, chi, lchi
       use ions_base, only: zv
       use io_global, only: stdout
@@ -5313,8 +5331,7 @@
      &       ir              ! mesh points counter
 !
       character(len=20)                                                &
-     &        title,        &! name of the chemical element
-     &        xctype         ! Name of the exchange-correlation
+     &        title
       character(len=60)                                                &
      &        fmt            ! format string
 !
@@ -5344,10 +5361,9 @@
       if ( exfact.lt.-6.or.exfact.gt.5)                                 &
      &     call errore('readvan','Wrong xc in pseudopotential',1)
 ! convert from "our" conventions to Vanderbilt conventions
-      if (exfact.eq.-5) exfact=bp88
-      if (exfact.eq.-6) exfact=pw91
 !
-      dft = exfact
+      call dftname (exfact, dft)
+      call which_dft (dft)
 !
       read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &
      &     nchi(is), mesh(is), etotpseu
@@ -5594,15 +5610,14 @@
 !
 !    Here we write on output information on the pseudopotential 
 !
-      call dftname(xctype)
-!
+
       WRITE( stdout,200) is
 200   format (/4x,60('=')/4x,'|  pseudopotential report',               &
      &        ' for atomic species:',i3,11x,'|')
       WRITE( stdout,300) 'pseudo potential version', iver(1),                 &
      &     iver(2), iver(3)
 300   format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
-      WRITE( stdout,400) title, xctype
+      WRITE( stdout,400) title, dft
 400   format (4x,'|  ',2a20,' exchange-corr  |')
       WRITE( stdout,500) z(is), is, zv(is), exfact
 500   format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
@@ -6967,7 +6982,6 @@
       use core
       use ncprm
       use gvecb
-      use dft_mod
       use work, only: wrk1
       use work_box
 !
@@ -8948,24 +8962,3 @@
 #endif
       return
       end
-
-  integer function cpv_dft (iexch, icorr, igcx, igcc)
-  use dft_mod
-  implicit none
-  integer :: iexch, icorr, igcx, igcc
-
-  if (iexch==1.and.icorr==1.and.igcx==0.and.igcc==0) then
-     cpv_dft = lda
-  else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
-     cpv_dft = blyp
-  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==1) then
-     cpv_dft = bp88
-  else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
-     cpv_dft = pw91
-  else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
-     cpv_dft = pbe
-  else
-     call errore('cpv_dft','which functional is this?',1)
-  end if
-  return
-end function cpv_dft

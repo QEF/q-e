@@ -12,9 +12,9 @@ subroutine read_pseudo (is, iunps, ierr)
   use ncprm, only: qfunc, qfcoef, rinner, qqq, rscore, rucore, r, rab, &
                    lll, nbeta, kkbeta, ifpcor, mesh, nqlc, nqf, &
                    betar, dion
-  use dft_mod, only: dft
   use wfc_atomic, only: chi, lchi, nchi
   use ions_base, only: zv
+  use funct, only: dft, which_dft
   !
   use pseudo_types
   use read_pseudo_module
@@ -25,8 +25,7 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   !     Local variables
   !
-  integer :: nb, iexch, icorr, igcx, igcc, exfact
-  integer, external :: cpv_dft
+  integer :: nb, exfact
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -46,10 +45,8 @@ subroutine read_pseudo (is, iunps, ierr)
      ifpcor(is) = 0
   end if
   !
-  call which_dft (upf%dft, iexch, icorr, igcx, igcc)  
-  !
-  dft = cpv_dft (iexch, icorr, igcx, igcc)
-
+  dft = upf%dft
+  call which_dft (upf%dft)
   !
   mesh(is) = upf%mesh
   if (mesh(is) > mmaxx) call errore('read_pseudo','increase mmaxx',mesh(is))

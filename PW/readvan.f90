@@ -26,7 +26,7 @@ subroutine readvan (is, iunps)
   use nl_c_c,only: nlcc
   use us,    only: dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, rinner, &
        nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt
-  use funct
+  use funct, only: dft, which_dft
   implicit none
 
   !
@@ -103,7 +103,7 @@ subroutine readvan (is, iunps)
   else
      call errore ('readvan', 'Wrong xc in pseudopotential', 1)
   endif
-  call which_dft (dft, iexch, icorr, igcx, igcc)
+  call which_dft (dft)
   read (iunps, '(2i5,1pe19.11)', err = 100, iostat = ios) nchi (is) &
        , mesh (is) , etotpseu
   !

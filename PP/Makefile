@@ -34,6 +34,7 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/formats.o \
+../Modules/functionals.o \
 ../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
@@ -133,7 +134,6 @@ PWOBJS = \
 ../PW/force_lc.o \
 ../PW/force_us.o \
 ../PW/forces.o \
-../PW/funct.o \
 ../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_mod.o \

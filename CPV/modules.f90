@@ -62,14 +62,6 @@ contains
   end subroutine
 end module cvan
 
-module dft_mod
-  implicit none
-  save
-  integer :: lda, blyp, becke, bp88, pw91, pbe
-  parameter (lda=0, blyp=1, becke=2, bp88=3, pw91=4, pbe=5)
-  integer :: dft
-end module dft_mod
-
 module elct
   use electrons_base, only: nspin, nel, nupdwn, iupdwn
   use electrons_base, only: n => nbnd, nx => nbndx

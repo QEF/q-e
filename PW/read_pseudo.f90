@@ -16,7 +16,7 @@ subroutine read_pseudo (is, iunps, ierr)
   use nl_c_c,only: nlcc
   use us,    only: dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, rinner, &
        nh, nbeta, kkbeta, lll, tvanp
-  use funct
+  use funct, only: dft, which_dft
   !
   use pseudo_types
   use read_pseudo_module
@@ -40,7 +40,7 @@ subroutine read_pseudo (is, iunps, ierr)
   tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
   dft = upf%dft
-  call which_dft (upf%dft, iexch, icorr, igcx, igcc)
+  call which_dft (upf%dft)
   mesh(is) = upf%mesh
   !
   nchi(is) = upf%nwfc

@@ -17,7 +17,7 @@ subroutine read_ncpp (np, iunps)
   use char, only: psd
   use nl_c_c,only: nlcc, a_nlcc, b_nlcc, alpha_nlcc
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, bhstype
-  use funct
+  use funct, only: dft, which_dft
   implicit none
 
   integer :: iunps, np
@@ -26,7 +26,7 @@ subroutine read_ncpp (np, iunps)
   !
   read (iunps, '(a)', end=300, err=300, iostat=ios) dft
   if (dft (1:2) .eq.'**') dft = 'PZ'
-  call which_dft (dft, iexch, icorr, igcx, igcc)
+  call which_dft (dft)
   !
   read (iunps, *, err=300, iostat=ios) psd(np), zp(np), lmax(np), nlc(np), &
                                        nnl(np), nlcc(np), lloc(np), bhstype(np)

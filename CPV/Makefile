@@ -22,7 +22,6 @@ modules.o \
 para.o \
 read_pseudo.o \
 restart.o \
-which_dft.o \
 neb_routines.o \
 stop_pw.o \
 $(WRAPPERS)

@@ -102,7 +102,7 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !
-      use dft_mod
+      use funct, only: iexch, icorr, igcx, igcc
       use gvec, only: ng
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
       use cell_base, only: ainv
@@ -127,22 +127,26 @@
 !
 !     filling of gradr with the gradient of rho using fft's
 !
-      if (dft.ne.lda) then
+      if (igcx /= 0 .or. igcc /= 0) then
          allocate(gradr(nnr,3,nspin))
          call fillgrad(nspin,rhog,gradr)
       end if
 !
       exc=0.0
-      if (dft.eq.lda) then
+      if (iexch==1.and.icorr==1.and.igcx==0.and.igcc==0) then
+         ! LDA (Perdew-Zunger)
          call expxc(nnr,nspin,rhor,exc)
-      else if (dft.eq.pw91) then
+      else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
+         ! PW91
          call ggapwold(nspin,rhog,gradr,rhor,exc)
-      else if (dft.eq.blyp) then
+      else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
+         ! BLYP
          call ggablyp4(nspin,rhog,gradr,rhor,exc)
-      else if (dft.eq.pbe) then
+      else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
+         ! PBE
          call ggapbe(nspin,rhog,gradr,rhor,exc)
       else
-         call errore('exc-cor','no such exch-corr',dft)
+         call errore('exc-cor','no such exch-corr',1)
       end if
       exc=exc*omega/dble(nr1*nr2*nr3)
 !
@@ -172,7 +176,7 @@
 !
 !     second part of the xc-potential
 !
-      if (dft.ne.lda) then
+      if (igcx /= 0 .or. igcc /= 0) then
          call gradh(nspin,gradr,rhog,rhor,dexc)
          if (tpre) then
 #ifdef __PARA

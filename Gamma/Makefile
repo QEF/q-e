@@ -82,7 +82,6 @@ PWOBJS = \
 ../PW/forces.o \
 ../PW/force_us.o \
 ../PW/functionals.o \
-../PW/funct.o \
 ../PW/gen_at_dj.o \
 ../PW/gen_at_dy.o \
 ../PW/gen_us_dj.o \
@@ -231,6 +230,7 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/formats.o \
+../Modules/functionals.o \
 ../Modules/input_parameters.o \
 ../Modules/io_base.o \
 ../Modules/io_files.o \

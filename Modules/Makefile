@@ -18,6 +18,7 @@ fft_base.o \
 fft_scalar.o \
 fft_types.o \
 formats.o \
+functionals.o \
 griddim.o \
 input_parameters.o \
 io_base.o \

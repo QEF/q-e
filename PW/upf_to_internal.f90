@@ -30,7 +30,7 @@ subroutine set_pseudo (is, upf, ierr)
   USE nl_c_c, ONLY: nlcc
   USE atom
   USE us
-  USE funct
+  USE funct, ONLY: which_dft, dft
   !
   USE ions_base, ONLY: zv
   USE pseudo_types
@@ -54,7 +54,7 @@ subroutine set_pseudo (is, upf, ierr)
   tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
   dft = upf%dft
-  call which_dft (upf%dft, iexch, icorr, igcx, igcc)
+  call which_dft (upf%dft)
   mesh(is) = upf%mesh
   !
   nchi(is) = upf%nwfc
