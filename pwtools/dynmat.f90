@@ -265,9 +265,13 @@ subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
  !
  r1fac = 911.444
  !
- !   conversion factor for IR cross sections from Ry au to (Debye/A)^2/amu
+ !   conversion factor for IR cross sections from
+ !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu
+ !   1 Ry mass unit = 2 * mass of one electron = 2 amu
+ !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
+ !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
  !
- irfac = 10514.0155
+ irfac = 4.80324**2/2.d0*r1fac
  !
  write (6,'(/5x,"Polarizability (A^3 units)")')
  !
