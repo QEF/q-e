@@ -158,11 +158,9 @@ end subroutine write_upf
     use ld1inc
     implicit none
     integer :: ounps  
-    real(kind=dp) :: rab(ndm)
     !
     integer :: ir, ios  
     !
-    rab=dx*r
     write (ounps, '(//a9)', err = 100, iostat = ios) "<PP_MESH>"  
 
     write (ounps, '(t3,a6)', err = 100, iostat = ios) "<PP_R>"  

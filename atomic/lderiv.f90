@@ -22,7 +22,6 @@ subroutine lderiv
        n,ie        ! generic counter 
 
   real(kind=dp) ::           &
-       rab(ndm),         & ! derivative of the radial mesh
        aux(ndm),         & ! the square of the wavefunction
        aux_dir(ndm,2),   & ! the square of the wavefunction
        ze2,              & ! the nuclear charge in Ry units
@@ -73,7 +72,6 @@ subroutine lderiv
               call lschps(3,zed,exp(dx),dx,mesh,idum,ikrld+5, &
                    1,lam,e,aux,r,vpot(1,is)) 
            else if (rel == 2) then
-              rab=r*dx
               call dir_outward(ndm,ikrld+5,lam,j,e,dx,&
                    aux_dir,r,rab,vpot(1,is))
               aux(:)=aux_dir(:,2)

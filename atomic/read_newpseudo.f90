@@ -47,7 +47,7 @@ use funct
       read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
                                    xmin,rmax,zmesh,dx,mesh
 
-      call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,sqr)
+      call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,rab,sqr)
 
       read( iunps, '(2i5)', err=100, iostat=ios ) nwfs, nbeta
       read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &

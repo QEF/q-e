@@ -50,9 +50,10 @@ subroutine read_pseudoupf
   etots=upf%etotps
   lmax = upf%lmax
   mesh = upf%mesh
-  r(1:mesh) = upf%r  (1:upf%mesh)
-  r2(1:mesh)= r(1:mesh)**2
-  sqr(1:mesh)=sqrt(r(1:mesh))
+  r  (1:mesh) = upf%r  (1:upf%mesh)
+  rab(1:mesh) = upf%rab(1:upf%mesh)
+  r2 (1:mesh) = r(1:mesh)**2
+  sqr(1:mesh) = sqrt(r(1:mesh))
   if (.not.upf%has_so) then
      if (r(1) > 0.0_dp) then
         !

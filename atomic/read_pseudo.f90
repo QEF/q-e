@@ -1,7 +1,7 @@
 
 !-----------------------------------------------------------------------
 subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
-     r,r2,sqr,dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
+     r,r2,rab,sqr,dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
   !-----------------------------------------------------------------------
   !
   use kinds, only : DP
@@ -19,6 +19,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
        xmin,dx,        & ! output: the mesh 
        rmax,           & ! output: the maximum mesh value
        r(ndm),r2(ndm), & ! output: the mesh
+       rab(ndm),       & ! output: derivative of the mesh
        sqr(ndm),       & ! output: the square root of the mesh
        vnl(ndm,0:3,2), & ! output: the potential in numerical form
        vpsloc(ndm),    & ! output: the local pseudopotential
@@ -105,7 +106,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
   !    and generate the mesh: this overwrites the mesh defined in the
   !    input parameters
   !
-  call do_mesh(rmax,zed,xmin,dx,0,ndm,mesh1,r,r2,sqr)
+  call do_mesh(rmax,zed,xmin,dx,0,ndm,mesh1,r,r2,rab,sqr)
   if (mesh.ne.mesh1) &
        call errore('read_pseudo','something wrong in mesh',1)
   !

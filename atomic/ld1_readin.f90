@@ -199,9 +199,12 @@ subroutine ld1_readin
         end do
      end do
   end if
-
+  !
+  ! generate the radial grid - note that if iswitch = 2 the radial grid
+  ! is not generated but read from the pseudopotential file
+  !
   if (iswitch /= 2) then
-     call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,sqr)
+     call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,rab,sqr)
      rhoc=0.0_dp
   endif
   !
@@ -418,7 +421,7 @@ subroutine ld1_readin
      if (pseudotype == 1) then
         !
         call read_pseudo  &
-             (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
+             (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,rab,sqr, &
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
         !
         do ns=1,lmax+1

@@ -11,7 +11,7 @@ subroutine scf
 
   logical:: conv
   integer:: nerr, nstop, n, i, is, id, nin, mch
-  real(kind=dp) ::  vnew(ndm,2), rhoc1(ndm), rab(ndm), ze2
+  real(kind=dp) ::  vnew(ndm,2), rhoc1(ndm), ze2
   real(kind=dp), allocatable ::  vsic(:,:), vsicnew(:), vhn1(:), egc(:)
   integer, parameter :: maxter=200
   real(kind=dp), parameter :: thresh=1.0e-10_dp
@@ -21,7 +21,6 @@ subroutine scf
   rhoc1=0.0_dp
   id=3
   psi=0.0_dp
-  rab=dx*r
   !
   if (isic /= 0) then
      allocate(vsic(ndm,nwf), vsicnew(ndm), vhn1(ndm), egc(ndm))

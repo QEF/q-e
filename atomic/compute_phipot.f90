@@ -34,8 +34,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
        jnor,psnor,fact(4), f2aep,f2aem,f3ae, &
        gi(ndm),j1(ndm,4),cm(10),bm(4),ze2,cn(6),c2, &
        delta, chir(ndm,nwfx), dpoly, &
-       lamda0,lamda3,lamda4,mu0,mu4,s0,s4,t0,t4, rab(ndm), &
-       chi_dir(ndm,2)
+       lamda0,lamda3,lamda4,mu0,mu4,s0,s4,t0,t4, chi_dir(ndm,2)
 
   integer :: &
        i, m, n, nst, nnode, nc, nc1, ij, imax, iq
@@ -56,9 +55,6 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
         call lschps(3,zed,exp(dx),dx,mesh,mesh,mesh, &
              1,lam,enls(ns),chir(1,ns),r,vpot)
      elseif (rel == 2) then
-        do i=1,mesh
-           rab(i)=r(i)*dx
-        enddo
         call dir_outward(ndm,mesh,lam,jjs(ns),enls(ns),dx, &
              chi_dir,r,rab,vpot)
         chir(:,ns)=chi_dir(:,1)

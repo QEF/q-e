@@ -42,6 +42,7 @@ module ld1inc
   real(kind=dp) :: &
        r(ndm),     & ! the radial mesh
        r2(ndm),    & ! the square of the radial mesh 
+       rab(ndm),   & ! d r(x) / d x where x is the linear grid
        sqr(ndm),   & ! the square root of the radial mesh
        xmin,       & ! the minimum x
        rmax,       & ! the maximum radial point
