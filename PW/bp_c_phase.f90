@@ -189,7 +189,7 @@ SUBROUTINE c_phase
    INTEGER :: mk1
    INTEGER :: mk2
    INTEGER :: mk3
-   INTEGER , ALLOCATABLE :: mod_elec(:)
+   INTEGER , ALLOCATABLE :: mod_elec(:), ln(:,:,:)
    INTEGER :: mod_elec_dw
    INTEGER :: mod_elec_tot
    INTEGER :: mod_elec_up
@@ -224,7 +224,6 @@ SUBROUTINE c_phase
    REAL(KIND=DP) :: gpar(3)
    REAL(KIND=DP) :: gtr(3)
    REAL(KIND=DP) :: gvec
-   REAL(KIND=DP) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
    REAL(KIND=DP), ALLOCATABLE :: loc_k(:)
    REAL(KIND=DP) , ALLOCATABLE :: pdl_elec(:)
    REAL(KIND=DP) :: pdl_elec_dw
@@ -285,6 +284,7 @@ SUBROUTINE c_phase
    eps=1.0E-6_dp
 
 !  --- Recalculate FFT correspondence (see ggen.f90) ---
+   ALLOCATE (ln (-nr1:nr1, -nr2:nr2, -nr3:nr3) )
    DO ng=1,ngm
       mk1=nint(g(1,ng)*at(1,1)+g(2,ng)*at(2,1)+g(3,ng)*at(3,1))
       mk2=nint(g(1,ng)*at(1,2)+g(2,ng)*at(2,2)+g(3,ng)*at(3,2))
@@ -827,6 +827,7 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
 
 !  --- Free memory ---
+   DEALLOCATE(ln)
    DEALLOCATE(pdl_elec)
    DEALLOCATE(mod_elec)
    DEALLOCATE(wstring)

@@ -12,7 +12,8 @@ SUBROUTINE move_ions()
   ! ... This routine moves the ions according to the requested scheme:
   !
   ! ... l(old)bfgs       bfgs minimizations
-  ! ... ?iswitch=2       constrained bfgs minimization:
+  ! ... lmd              molecular dynamics ( verlet of vcsmd )
+  ! ... lmd+lconstrain   molecular dynamics with one constraint,
   ! ...                  the user must supply the routine 'constrain' which
   ! ...                  defines the constraint equation and the gradient
   ! ...                  the constraint function gv(tau), dgv(i,tau) such
@@ -25,10 +26,6 @@ SUBROUTINE move_ions()
   ! ...                                         D gv( {tau} )
   ! ...                            dgv(i,na) = ---------------.
   ! ...                                         D tau(i,na)
-  !
-  ! ... lmd              molecular dynamics, ( verlet of vcsmd )
-  ! ... lmd+lconstrain   molecular dynamics with one constraint,
-  ! ...                  the same conventions as iswitch = 2
   !
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
@@ -46,7 +43,7 @@ SUBROUTINE move_ions()
   USE force_mod,     ONLY : force
   USE bfgs_module,   ONLY : lbfgs_ndim
   USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lconstrain, &
-                            lmd, conv_ions, history, alpha0, beta0, tr2
+                            lmd, conv_ions, history, alpha0, beta0, tr2, istep
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,      ONLY : lsda, absmag
   USE mp_global,     ONLY : intra_image_comm
@@ -241,11 +238,15 @@ SUBROUTINE move_ions()
      CALL checkallsym( nsym, s, nat, tau, ityp, &
                        at, bg, nr1, nr2, nr3, irt, ftau )
      !
+     ! ... history is updated (a new ionic step has been done)
+     !
      history = MIN( 3, ( history + 1 ) )
      !
      ! ... find the best coefficients for the extrapolation of the potential
      !
      CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+     !
+     ! ... old positions are written on file
      !
      CALL seqopn( iunupdate, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
      !
@@ -260,7 +261,7 @@ SUBROUTINE move_ions()
   !  
   ! ... broadcast calculated quantities to all nodes
   !
-  CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
+  CALL mp_bcast( istep,     ionode_id, intra_image_comm )
   CALL mp_bcast( tau,       ionode_id, intra_image_comm )
   CALL mp_bcast( force,     ionode_id, intra_image_comm )
   CALL mp_bcast( tr2,       ionode_id, intra_image_comm )
@@ -268,12 +269,15 @@ SUBROUTINE move_ions()
   CALL mp_bcast( alpha0,    ionode_id, intra_image_comm )
   CALL mp_bcast( beta0,     ionode_id, intra_image_comm )
   CALL mp_bcast( history,   ionode_id, intra_image_comm )
+  !
   IF (lmovecell) THEN
+     !
      CALL mp_bcast( at,        ionode_id, intra_image_comm )
      CALL mp_bcast( at_old,    ionode_id, intra_image_comm )
      CALL mp_bcast( omega,     ionode_id, intra_image_comm )
      CALL mp_bcast( omega_old, ionode_id, intra_image_comm )
      CALL mp_bcast( bg,        ionode_id, intra_image_comm )
+     !
   END IF
   ! 
   RETURN
@@ -348,7 +352,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   ! ...    tau' = tau(t) + alpha0 * ( tau(t) - tau(t-dt) )
   ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
   !
-  USE constants,     ONLY : eps8
+  USE constants,     ONLY : eps16
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : order, history
@@ -410,7 +414,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !
   det = a11 * a22 - a12 * a21
   !
-  IF ( det < - eps8 ) THEN
+  IF ( det < - eps16 ) THEN
      !
      alpha0 = 0.D0
      beta0  = 0.D0
@@ -422,7 +426,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !
   ! ... case det > 0:  a well defined minimum exists
   !
-  IF ( det > eps8 ) THEN
+  IF ( det > eps16 ) THEN
      !
      alpha0 = ( b1 * a22 - b2 * a12 ) / det
      beta0  = ( a11 * b2 - a21 * b1 ) / det
@@ -433,10 +437,8 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      ! ...                chose solution with alpha = 0 and beta = 0 
      ! ...                ( discard oldest configuration )
      !
-     alpha0 = 0.D0
+     alpha0 = b1 / a11
      beta0  = 0.D0
-     !
-     IF ( a11 > 0.D0 ) alpha0 = b1 / a11
      !
   END IF
   !
