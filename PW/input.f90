@@ -612,7 +612,7 @@ subroutine iosys
   !
   if (celldm_ (1) == 0.d0 .and. a /= 0.d0) then
      if (ibrav_ == 0) ibrav = 14 
-     celldm_ (1) = a*bohr_radius_angs
+     celldm_ (1) = a/bohr_radius_angs
      celldm_ (2) = b/a
      celldm_ (3) = c/a
      celldm_ (4) = cosab
