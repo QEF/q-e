@@ -14,8 +14,14 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   ! of the current k-point, the result is added to hpsi
   !
 #include "machine.h"
+  USE parameters, ONLY: DP
+  USE atom, ONLY: oc, lchi, nchi
+  USE ldaU, ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+       ns, nsnew, swfcatom
+  USE lsda_mod, ONLY: nspin, current_spin
+  USE basis, ONLY: nat, ntyp, ityp, natomwfc
+  USE varie, ONLY: newpseudo
 
-  use pwcom
   implicit none
   integer :: ldap, np, mp
   complex(kind=DP) :: psip (ldap, mp), hpsi (ldap, mp)
@@ -31,7 +37,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   do na = 1, nat  
      nt = ityp (na)  
      do n = 1, nchi (nt)  
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then  
+        if (oc (n, nt) > 0.d0 .or. .not.newpseudo (nt) ) then  
            l = lchi (n, nt)  
            if (l.eq.Hubbard_l(nt)) offset (na) = counter  
            counter = counter + 2 * l + 1  

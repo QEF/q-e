@@ -11,6 +11,7 @@ function bessj(n,x)
 !
   use parameters, only : DP
   
+  implicit none
   integer, parameter :: iacc=40 
   integer :: n, j, jsum, m   
   real(kind=DP), parameter :: bigno=1.d10, bigni=1.d-10

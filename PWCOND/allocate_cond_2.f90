@@ -12,6 +12,7 @@ subroutine allocate_cond_2
 !
 #include "machine.h"
   use cond 
+  implicit none
 
   allocate( newbg(ngper, n2d) )
   allocate( psiper( n2d, n2d, nrzp ) )

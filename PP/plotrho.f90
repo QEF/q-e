@@ -162,15 +162,17 @@ program plotrho
   xs = 4.0
   ys = 3.0
 
-  ! contour lines plus gray levels (shading for negative values)
+  ! uncomment the call to "cplot" if you want contour lines,
+  ! plus gray levels and shading for negative values
 
-  !call cplot (rhoo, nxmax, nymax, x, xmin, xmax, nx, y, ymin, ymax, &
-  !     ny, nlevels, z, xdim, ydim, xs, ys, filename, fileout)
+  call cplot (rhoo, nxmax, nymax, x, xmin, xmax, nx, y, ymin, ymax, &
+       ny, nlevels, z, xdim, ydim, xs, ys, filename, fileout)
 
-  ! contour lines of  various kinds (solid, dashed, etc)
+  ! uncomment the call to "psplot" if you want contour lines
+  ! of various kinds: solid, dashed, etc
 
-  call psplot ( rhoo, nxmax, x, nx, y, ny, nlevels, z, xdim, ydim, &
-       xs, ys, fileout)
+  ! call psplot ( rhoo, nxmax, x, nx, y, ny, nlevels, z, xdim, ydim, &
+  !      xs, ys, fileout)
 
   call atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
 20 stop

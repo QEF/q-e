@@ -428,6 +428,7 @@ SUBROUTINE c_phase
             IF (kpar /= 1) THEN
 
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
+               npw0 = npwx
                CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
                CALL davcio(psi,nwordwfc,iunwfc,kpoint-1,-1)
@@ -436,6 +437,7 @@ SUBROUTINE c_phase
 
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= nppstr) THEN
+                  npw1 = npwx
                   CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)        
                   CALL davcio(evc,nwordwfc,iunwfc,kpoint,-1)
@@ -443,6 +445,7 @@ SUBROUTINE c_phase
                   CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
                ELSE
                   kstart = kpoint-nppstr+1
+                  npw1 = npwx
                   CALL gk_sort(xk(1,kstart),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)  
                   CALL davcio(evc,nwordwfc,iunwfc,kstart,-1)

@@ -6,6 +6,7 @@
 ! global index is ig. If the G vector is not local to the current
 ! processor, then the function returns -1
 !
+          IMPLICIT NONE
           INTEGER, INTENT(IN) :: ig
           INTEGER, INTENT(IN) :: ng
           INTEGER, INTENT(IN) :: ig_l2g( ng ), sortedig_l2g( ng )

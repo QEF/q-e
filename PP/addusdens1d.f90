@@ -21,7 +21,7 @@ subroutine addusdens1d (plan, prho)
   !
   !     here the local variables
   !
-
+  implicit none
   integer :: ig, na, nt, ih, jh, ijh, ngm1d, ig1dto3d (nr3), &
        igtongl1d (nr3), nl1d (nr3)
   ! counter on G vectors

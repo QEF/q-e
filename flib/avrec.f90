@@ -14,7 +14,9 @@
 ! ...
 
       USE kinds
+      IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
+      INTEGER :: i
       REAL(dbl), INTENT(IN) :: alpha 
       REAL(dbl), INTENT(IN) :: v(*)
       REAL(dbl), INTENT(OUT) :: av(*)

@@ -14,7 +14,9 @@ subroutine output_tau
   use constants, only: bohr_radius_angs
   use brilz, only: alat, at, bg
   use basis, only: nat, tau, atomic_positions, ityp, atm
+  implicit none
   real (kind=DP), allocatable:: tau_out (:, :)
+  integer :: na, i
   !
   ! tau in output format
   !

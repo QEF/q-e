@@ -6,9 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-! trasforma un numero intero in una stringa
+! trasform an integer number into a string
 
        subroutine cpitoa(n,str)
+
+       implicit none
        integer, intent(in) :: n
        character(LEN=*) str
        integer i, npow, j, nq, ntmp

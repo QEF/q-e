@@ -8,6 +8,7 @@
 !
       use pwcom
 !
+      implicit none
       integer :: ik,  msh_bp, i, np, m, k, l
       integer :: n,idbes,ilmin,ilmax,iv,jv
       real(DP)  :: jl(ndm), ql, sum, jlp1(ndm), aux(ndm), &

@@ -141,6 +141,7 @@ subroutine punch_band (filband)
      !
      !    prepare the indices of this k point
      !
+     npw=npwx
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
           igk, g2kin)
      !

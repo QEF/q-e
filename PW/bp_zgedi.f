@@ -1,7 +1,7 @@
 c
       subroutine zgedi(a,lda,n,ipvt,det,work,job)
-      integer lda,n,ipvt(1),job
-      complex*16 a(lda,1),det(2),work(1)
+      integer lda,n,ipvt(n),job
+      complex*16 a(lda,n),det(2),work(n)
 c
 c     zgedi computes the determinant and inverse of a matrix
 c     using the factors computed by zgeco or zgefa.

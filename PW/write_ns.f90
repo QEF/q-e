@@ -9,12 +9,17 @@
 subroutine write_ns
   !-----------------------------------------------------------------------
 
+  USE parameters, only : DP
+  USE constants, ONLY : rytoev
+  USE basis, ONLY : nat, ntyp, ityp
+  USE lsda_mod, ONLY : nspin
   USE io_global,  ONLY :  stdout
-  use pwcom
+  USE ldaU, ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+       nsnew
   implicit none
   integer :: is, na, nt, m1, m2, ldim
   ! counter on spin component
-  ! counter on atoms and their type
+  ! counters on atoms and their type
   ! counters on d components
   integer, parameter :: ldmx = 7
   complex(kind=DP) :: f (ldmx, ldmx), vet (ldmx, ldmx)

@@ -14,7 +14,7 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   !
 
   use pwcom
-
+  implicit none
   integer :: ngm1d, ig1dto3d (nr3), igtongl1d (nr3), nl1d (nr3)
   ! output: the number of 1D G vectors on this proce
   ! output: correspondence 1D with 3D G vectors

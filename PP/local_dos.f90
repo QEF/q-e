@@ -96,6 +96,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   do ik = 1, nks
      if (ik.eq.kpoint.or.iflag.ne.0) then
         if (lsda) current_spin = isk (ik)
+        npw=npwx
         call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
         call davcio (evc, nwordwfc, iunwfc, ik, - 1)
         call init_us_2 (npw, igk, xk (1, ik), vkb)

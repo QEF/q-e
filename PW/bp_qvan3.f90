@@ -6,6 +6,7 @@
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
 
       use pwcom
+      implicit none
       integer :: iv,jv,is
       complex(DP) :: qg,sig
       real(DP) :: ylm_k(lqx*lqx)

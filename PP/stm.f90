@@ -154,6 +154,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     of the wavefunctions to the stm dos
   !
   do ik = 1, nks
+     npw=npwx
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
      !

@@ -17,9 +17,15 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !             d.d. johnson prb 38, 12807 (1988)
   ! On output: the mixed density is in rhoin, rhout is UNCHANGED
   !
-  use parameters, only : DP
-  use pwcom
+  USE parameters, ONLY : DP
+  USE basis, ONLY: nat
+  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
+  USE ldaU, ONLY: lda_plus_u, Hubbard_lmax
+  USE lsda_mod, ONLY: nspin
+  USE varie, ONLY: imix, ngm0, tr2
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
+  implicit none
   !
   !   First the I/O variable
   !
@@ -271,7 +277,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   do i=1,iter_used
      do j=i,iter_used
-        betamix(i,j) = rho_dot_product(df(1,j),df(1,i)) + &
+        betamix(i,j) = rho_dot_product(df(1,j),df(1,i)) 
+        if (lda_plus_u) betamix(i,j) = betamix(i,j) + &
                        ns_dot_product(df_ns(1,1,1,1,j),df_ns(1,1,1,1,i))
      end do
   end do
@@ -288,7 +295,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   end do
   !
   do i=1,iter_used
-     work(i) = rho_dot_product(df(1,i),rhocout) + &
+     work(i) = rho_dot_product(df(1,i),rhocout)
+     if (lda_plus_u) work(i) = work(i) + &
                ns_dot_product(df_ns(1,1,1,1,i),nsout)
   end do
   !
@@ -375,11 +383,17 @@ function rho_dot_product (rho1,rho2)
   !--------------------------------------------------------------------
   ! this function evaluates the dot product between two input densities
   !
-  use parameters, only : DP
-  use pwcom
+  USE parameters, ONLY : DP
+  USE constants, ONLY : e2, tpi, fpi
+  USE brilz, ONLY: omega, tpiba2
+  USE gvect, ONLY: gstart, gg
+  USE lsda_mod, ONLY: nspin
+  USE varie, ONLY: ngm0
+  USE wvfct, ONLY: gamma_only
   !
   ! I/O variables
   !
+  implicit none
   real (kind=DP) :: rho_dot_product ! (out) the function value
 
   complex (kind=DP) :: rho1(ngm0,nspin), rho2(ngm0,nspin) ! (in) the two densities
@@ -437,11 +451,15 @@ function ns_dot_product (ns1,ns2)
   !--------------------------------------------------------------------
   ! this function evaluates the dot product between two input densities
   !
-  use parameters, only : DP
-  use pwcom
+  USE parameters, ONLY : DP
+  USE ldaU, ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
+       Hubbard_alpha
+  USE basis, ONLY: nat, ityp
+  USE lsda_mod, ONLY: nspin
   !
   ! I/O variables
   !
+  implicit none
   real (kind=DP) :: ns_dot_product ! (out) the function value
 
   real (kind=DP) :: ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
@@ -480,8 +498,15 @@ function fn_dehar (drho)
   !--------------------------------------------------------------------
   ! this function evaluates the residual hartree energy of drho
   !
-  use parameters, only : DP
-  use pwcom
+  USE parameters, ONLY : DP
+  USE constants, ONLY : e2, fpi
+  USE brilz, ONLY: omega, tpiba2
+  USE gvect, ONLY: gstart, gg
+  USE lsda_mod, ONLY: nspin
+  USE varie, ONLY: ngm0
+  USE wvfct, ONLY: gamma_only
+
+  implicit none
   !
   ! I/O variables
   !
@@ -527,11 +552,17 @@ subroutine approx_screening (drho)
   !--------------------------------------------------------------------
   ! apply an average TF preconditioning to drho
   !
-  use parameters, only : DP
-  use pwcom
+  USE parameters, ONLY : DP
+  USE constants, ONLY : e2, pi, fpi
+  USE brilz, ONLY: omega, tpiba2
+  USE gvect, ONLY: gstart, gg
+  USE klist, ONLY: nelec
+  USE lsda_mod, ONLY: nspin
+  USE varie, ONLY: ngm0
   !
   ! I/O
   !
+  implicit none
   complex (kind=DP) drho(ngm0,nspin) ! (in/out)
   !
   ! and the local variables
@@ -570,19 +601,24 @@ end subroutine approx_screening
   !--------------------------------------------------------------------
   ! apply a local-density dependent TF preconditioning to drho
   !
-  use parameters, only : DP
-  use pwcom
+  USE parameters, ONLY : DP
+  USE constants, ONLY : e2, pi, tpi, fpi
+  USE brilz, ONLY: omega, tpiba2
+  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, gg
+  USE klist, ONLY: nelec
+  USE lsda_mod, ONLY: nspin
+  USE varie, ONLY: ngm0
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   !
   ! I/O
   !
-  !
+  implicit none
   complex (kind=DP) ::  drho(ngm0,nspin), rhobest(ngm0,nspin)
   !
   !    and the local variables
   !
-  integer :: mmx
-  parameter (mmx=12)
+  integer, parameter :: mmx=12
   integer :: iwork(mmx),i,j,m,info, nspin_save
   real (kind=DP) :: rs, min_rs, max_rs, avg_rsm1, target, &
                     dr2_best, ccc, cbest, l2smooth

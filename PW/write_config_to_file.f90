@@ -8,8 +8,10 @@
 !-----------------------------------------------------------------------
 subroutine write_config_to_file_old
   !-----------------------------------------------------------------------
-  use pwcom
-  use io_files, only : prefix, iunres
+  USE brilz, ONLY : ibrav, alat, at
+  USE basis, ONLY : nat, tau
+  USE varie, ONLY : lscf
+  USE io_files, ONLY : prefix, iunres
   implicit none
   logical :: exst
   integer :: iunit
@@ -36,9 +38,10 @@ end subroutine write_config_to_file_old
 !-----------------------------------------------------------------------
 subroutine write_config_to_file
   !-----------------------------------------------------------------------
-  use pwcom, only: lscf, dp
-  use io_files, only : prefix, iunres
-  use restart_module, only : writefile_new
+  USE varie, ONLY : lscf
+  USE parameters, ONLY : DP
+  USE io_files, ONLY : prefix, iunres
+  USE restart_module, ONLY : writefile_new
   !
   implicit none
   !

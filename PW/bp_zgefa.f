@@ -1,7 +1,7 @@
 c
       subroutine zgefa(a,lda,n,ipvt,info)
-      integer lda,n,ipvt(1),info
-      complex*16 a(lda,1)
+      integer lda,n,ipvt(n),info
+      complex*16 a(lda,n)
 c
 c     zgefa factors a complex*16 matrix by gaussian elimination.
 c

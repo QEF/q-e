@@ -11,6 +11,7 @@ subroutine free_mem
 !
 #include "machine.h"
   use cond
+  implicit none
 !
 ! From local_2
 !

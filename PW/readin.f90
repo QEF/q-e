@@ -12,10 +12,15 @@ subroutine readpp
   !    Read pseudopotentials
   !
 #include "machine.h"
-  use pwcom
-  use io_files, only: pseudo_dir, psfile
+  USE atom, ONLY: numeric, xmin, dx
+  USE us, ONLY: tvanp, iver
+  USE basis, ONLY: ntyp
+  USE varie, ONLY: newpseudo
+  USE funct, ONLY: iexch, icorr, igcx, igcc
+  USE io_files, ONLY: pseudo_dir, psfile
   !
-  character :: file_pseudo * 256
+  implicit none
+  character(len=256) :: file_pseudo
   ! file name complete with path
   integer :: iunps, isupf, l, nt, ios, pseudo_type
   integer :: iexch_, icorr_, igcx_, igcc_
@@ -51,8 +56,8 @@ subroutine readpp
         !    *.RRKJ3         Andrea's   US new code              pseudo_type=2
         !    none of the above: PWSCF norm-conserving format     pseudo_type=0
         !
-        if (pseudo_type (psfile (nt) ) .eq.1 &
-             .or.pseudo_type (psfile (nt) ) .eq.2) then
+        if ( pseudo_type (psfile (nt) ) == 1 .or. &
+             pseudo_type (psfile (nt) ) == 2 ) then
            !
            !    The vanderbilt pseudopotential is always in numeric form
            !
@@ -65,12 +70,12 @@ subroutine readpp
            !    produced by Vanderbilt code and those produced
            !    by Andrea's atomic code.
            !
-           if (pseudo_type (psfile (nt) ) .eq.1) then
+           if (pseudo_type (psfile (nt) ) == 1) then
               newpseudo (nt) = .false.
               tvanp (nt) = .true.
               call readvan (nt, iunps)
            endif
-           if (pseudo_type (psfile (nt) ) .eq.2) then
+           if (pseudo_type (psfile (nt) ) == 2) then
               newpseudo (nt) = .true.
               ! tvanp is read inside readnewvan
               call readnewvan (nt, iunps)
@@ -96,11 +101,11 @@ subroutine readpp
      if (nt == 1) then
         iexch_ = iexch
         icorr_ = icorr
-        igxc_ = igxc
+        igcx_ = igcx
         igcc_ = igcc
      else
         if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
-             igxc_  /= igxc  .or.  igcc_ /= igcc ) then
+             igcx_  /= igcx  .or.  igcc_ /= igcc ) then
            CALL errore( 'readpp','inconsistent DFT read',nt)
         end if
      end if
