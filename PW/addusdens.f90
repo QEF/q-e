@@ -93,8 +93,9 @@ subroutine addusdens
   do is = 1, nspin
      psic(:) = (0.d0, 0.d0)
      psic( nl(:) ) = aux(:,is)
+     if (gamma_only) psic( nlm(:) ) = conjg(aux(:,is))
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     call DAXPY (nrxx, 1.d0, psic, 2, rho(1,is), 1)
+     rho (:, is) = rho (:, is) + DREAL (psic (:) )
   enddo
   deallocate (aux)
 

@@ -188,18 +188,15 @@ PWOBJS=../PW/pwcom.o \
 ../PW/gather.o  \
 ../PW/scatter.o \
 ../PW/init_pool.o \
-../PW/bp_bess.o \
-../PW/bp_calc_btq.o \
-../PW/bp_c_phase.o \
-../PW/bp_dbess.o \
-../PW/bp_qvan3.o \
-../PW/bp_radin.o \
-../PW/bp_strings.o \
-../PW/bp_ylm_q.o \
-../PW/bp_zgedi.o \
-../PW/bp_zgefa.o \
-../PW/ccalbec.o \
-../PW/becmod.o
+../PW/addusdens.o \
+../PW/allocate_fft.o \
+../PW/atomic_rho.o \
+../PW/gradcorr.o \
+../PW/interpolate.o \
+../PW/mix_rho.o \
+../PW/set_rhoc.o \
+../PW/setlocal.o \
+../PW/v_of_rho.o 
 
 
 MODULES = ../Modules/*.o ../PW/error_handler.o \
@@ -208,26 +205,17 @@ MODULES = ../Modules/*.o ../PW/error_handler.o \
 GAMMA=rbecmod.o \
 fake.o \
 add_vuspsi.o \
-addusdens.o \
-allocate_fft.o \
 allocate_wfc.o \
-atomic_rho.o \
 c_bands.o \
 rdiaghg.o \
 regterg.o \
 force_us.o \
-gradcorr.o \
 h_psi.o \
-interpolate.o \
-mix_rho.o \
 pw_gemm.o \
 rotate_wfc.o \
 s_psi.o \
-set_rhoc.o \
-setlocal.o \
 stres_us.o \
 sum_band.o \
-v_of_rho.o \
 vloc_psi.o \
 wfcinit.o
 

@@ -11,10 +11,16 @@ subroutine start_postproc (nodenumber)
   !
   !  Wrapper routine for postprocessing initialization
   !
-  use global_version
+  USE global_version, ONLY: version_number
+  USE wvfct,  ONLY: gamma_only
   implicit none
   character(len=3) :: nodenumber
   character(len=9) :: code = 'POST-PROC'
+  !
+  ! presently no postprocessing code is expected to work with
+  ! half G-vector sphere
+  !
+  gamma_only = .FALSE.
   !
   call startup (nodenumber, code, version_number)
 #ifdef __PARA

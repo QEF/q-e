@@ -26,3 +26,11 @@ subroutine stres_hub
   call errore('Gamma','stres_hub not implemented',1)
 end subroutine stres_hub
 
+subroutine c_phase
+  call errore('Gamma','Berry Phase not implemented',1)
+end subroutine c_phase
+
+subroutine kp_strings
+  call errore('Gamma','Berry Phase not implemented',2)
+end subroutine kp_strings
+

@@ -26,7 +26,7 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
        v2xup, v2xdw, v1cup, v1cdw , etxcgc, vtxcgc, segno, arho, fac
   real(kind=DP), parameter :: e2 = 2.d0, epsr = 1.0d-6, epsg = 1.0d-10
 
-  if (igcx.eq.0.and.igcc.eq.0) return
+  if (igcx == 0 .and. igcc == 0) return
   etxcgc = 0.d0
   vtxcgc = 0.d0
 
@@ -44,7 +44,7 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
      do is = 1, nspin
         grho2 (is) = grho(1, k, is)**2 + grho(2, k, is)**2 + grho(3, k, is)**2
      enddo
-     if (nspin.eq.1) then
+     if (nspin == 1) then
         !
         !    This is the spin-unpolarised case
         !
@@ -142,6 +142,8 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !
   ! Calculates ga = \grad a in R-space (a is also in R-space)
   use parameters
+  use gvect, only: nlm
+  use wvfct, only: gamma_only
   implicit none
 
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
@@ -175,6 +177,12 @@ subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
         gaux (1, nl (n) ) = - g (ipol, n) * aux (2, nl (n) )
         gaux (2, nl (n) ) =   g (ipol, n) * aux (1, nl (n) )
      enddo
+     if (gamma_only) then
+        do n = 1, ngm
+           gaux (1, nlm(n) ) =   gaux (1, nl(n) )
+           gaux (2, nlm(n) ) = - gaux (2, nl(n) )
+        enddo
+     end if
      !
      ! bring back to R-space, (\grad_ipol a)(r) ...
      !
@@ -199,6 +207,8 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
   !
   ! Calculates da = \sum_i \grad_i a_i in R-space
   use parameters
+  use gvect, only: nlm
+  use wvfct, only: gamma_only
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   real(kind=DP) :: a (3, nrxx), g (3, ngm), da (nrxx), alat
@@ -229,6 +239,12 @@ subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
         gaux (2, nl (n) ) = gaux (2, nl (n) ) + g (ipol, n) * aux (1,nl(n))
      enddo
   enddo
+  if (gamma_only) then
+     do n = 1, ngm
+        gaux (1, nlm(n) ) =   gaux (1, nl (n) )
+        gaux (2, nlm(n) ) = - gaux (2, nl (n) )
+     enddo
+  end if
   !
   !  bring back to R-space, (\grad_ipol a)(r) ...
   !

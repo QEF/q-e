@@ -16,7 +16,11 @@ subroutine interpolate (v, vs, iflag)
   !     V and Vs are real and in real space . V and Vs may coincide
   !
 #include"machine.h"
-  use pwcom
+  USE parameters, ONLY: DP
+  USE wvfct,  ONLY: gamma_only
+  USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
+  USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
+       nls, nlsm, doublegrid
   implicit none
   real(kind=DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh
@@ -27,12 +31,12 @@ subroutine interpolate (v, vs, iflag)
   ! work array on smooth mesh
 
   integer :: iflag
-  ! gives the direction of the interpolat
+  ! gives the direction of the interpolation
 
   integer :: ig, ir
 
   call start_clock ('interpolate')
-  if (iflag.le.0) then
+  if (iflag <= 0) then
      !
      !    from thick to smooth
      !
@@ -45,6 +49,11 @@ subroutine interpolate (v, vs, iflag)
         do ig = 1, ngms
            auxs (nls (ig) ) = aux (nl (ig) )
         enddo
+        if (gamma_only) then
+           do ig = 1, ngms
+              auxs (nlsm(ig) ) = aux (nlm(ig) )
+           enddo
+        end if
         call cft3s (auxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
         vs (:) = auxs (:)
         deallocate (auxs)
@@ -67,6 +76,11 @@ subroutine interpolate (v, vs, iflag)
         do ig = 1, ngms
            aux (nl (ig) ) = auxs (nls (ig) )
         enddo
+        if (gamma_only) then
+           do ig = 1, ngms
+              aux (nlm(ig) ) = aux (nlsm(ig) )
+           enddo
+        end if
         call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
         v (:) = aux (:)
         deallocate (auxs)
@@ -91,7 +105,11 @@ subroutine cinterpolate (v, vs, iflag)
   !     V and Vs are complex and in real space . V and Vs may coincide
   !
 #include"machine.h"
-  use pwcom
+  USE parameters, ONLY: DP
+  USE wvfct,  ONLY: gamma_only
+  USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
+  USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
+       nls, nlsm, doublegrid
   complex(kind=DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh
   ! function on smooth mesh
@@ -105,8 +123,9 @@ subroutine cinterpolate (v, vs, iflag)
 
   integer :: ig
 
+  if (gamma_only) call errore ('cinterpolate','not implemented', 1)
   call start_clock ('cinterpolate')
-  if (iflag.le.0) then
+  if (iflag <= 0) then
      !
      !    from thick to smooth
      !

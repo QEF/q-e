@@ -194,6 +194,11 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      do ig=1,ngm0
         psic(nl(ig)) = rhocin(ig,is)+rhocout(ig,is)
      end do
+     if (gamma_only) then
+        do ig=1,ngm0
+           psic(nlm(ig)) = conjg ( psic(nl(ig)) )
+        end do
+     end if
      call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      call DAXPY(nrxx,-1.d0,psic,2,rhoin(1,is),1)
   end do
@@ -344,6 +349,11 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      do ig=1,ngm0
         psic(nl(ig)) = rhocin(ig,is)
      end do
+     if (gamma_only) then
+        do ig=1,ngm0
+           psic(nlm(ig)) = conjg ( psic(nl(ig)) )
+        end do
+     end if
      call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      call DAXPY(nrxx,1.d0,psic,2,rhoin(1,is),1)
   end do
@@ -388,6 +398,7 @@ function rho_dot_product (rho1,rho2)
         rho_dot_product = rho_dot_product +  fac * &
                           DREAL(conjg(rho1(ig,is))*rho2(ig,is))
      end do
+     if (gamma_only) rho_dot_product = 2.d0*rho_dot_product
   else
      do ig = gstart,ngm0
         fac = e2*fpi / (tpiba2*gg(ig))
@@ -395,9 +406,17 @@ function rho_dot_product (rho1,rho2)
                           DREAL(conjg(rho1(ig,1)+rho1(ig,2))* &
                                      (rho2(ig,1)+rho2(ig,2)))
      end do
+     if (gamma_only) rho_dot_product = 2.d0*rho_dot_product
      fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
-     do ig = 1,ngm0
-        rho_dot_product = rho_dot_product +  fac * &
+     ! G=0 term
+     if (gstart == 2) then
+        rho_dot_product = rho_dot_product + fac * &
+                          DREAL(conjg(rho1(1,1)-rho1(1,2))* &
+                                     (rho2(1,1)-rho2(1,2)))
+     end if
+     if (gamma_only) fac = 2.d0*fac
+     do ig = gstart,ngm0
+        rho_dot_product = rho_dot_product + fac * &
                           DREAL(conjg(rho1(ig,1)-rho1(ig,2))* &
                                      (rho2(ig,1)-rho2(ig,2)))
      end do
@@ -490,8 +509,11 @@ function fn_dehar (drho)
      end do
   end if
 
-  fn_dehar = fn_dehar * omega / 2.d0
-
+  if (gamma_only) then
+     fn_dehar = fn_dehar * omega
+  else
+     fn_dehar = fn_dehar * omega / 2.d0
+  end if
 #ifdef __PARA
   call reduce(1,fn_dehar)
 #endif
@@ -619,6 +641,12 @@ end subroutine approx_screening
                                     * exp(-0.5*l2smooth*tpiba2*gg(ig))
      end do
   end if
+  if (gamma_only) then
+     do ig=1,ngm0
+        psic(nlm(ig)) = conjg( psic(nl(ig)) )
+     end do
+  end if
+
   call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   alpha(:) = real(psic(:))
 
@@ -661,6 +689,12 @@ end subroutine approx_screening
   do ig=1,ngm0
      psic(nl(ig)) = drho(ig,is)
   end do
+  if (gamma_only) then
+     do ig=1,ngm0
+        psic(nlm(ig)) = conjg( psic(nl(ig)) )
+     end do
+  end if
+  
   call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   do ir=1,nrxx
     psic(ir) = psic(ir) * alpha(ir)
@@ -686,6 +720,11 @@ end subroutine approx_screening
   do ig=1,ngm0
      psic(nl(ig)) = v(ig,m)
   end do
+  if (gamma_only) then
+     do ig=1,ngm0
+        psic(nlm(ig)) = conjg( psic(nl(ig)) )
+     end do
+  end if
   call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   do ir=1,nrxx
      psic(ir) = psic(ir)*fpi*e2/alpha(ir)
@@ -747,6 +786,11 @@ end subroutine approx_screening
      do ig=1,ngm0
         psic(nl(ig)) = vbest(ig)
      end do
+     if (gamma_only) then
+        do ig=1,ngm0
+           psic(nlm(ig)) = conjg( psic(nl(ig)) )
+        end do
+     end if
      call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      do ir=1,nrxx
         psic(ir) = psic(ir)/alpha(ir)

@@ -34,6 +34,7 @@ program phonon
 
   call init_clocks (.true.)
   call start_clock ('PHONON')
+  gamma_only = .false.
   call startup (nd_nmbr, code, version_number)
   write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   !

@@ -132,7 +132,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   vtxc = 0.d0
   v(:,:) = 0.d0
 
-  if (nspin.eq.1) then
+  if (nspin == 1) then
      !
      ! spin-unpolarized case
      !
@@ -162,8 +162,8 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
               neg(3) = neg(3) + 1
               zeta = sign(1.d0,zeta)
            endif
-           if (rho(ir,1) .lt.0.d0) neg(1) = neg(1) + 1
-           if (rho(ir,2) .lt.0.d0) neg(2) = neg(2) + 1
+           if (rho(ir,1) < 0.d0) neg(1) = neg(1) + 1
+           if (rho(ir,2) < 0.d0) neg(2) = neg(2) + 1
            call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
            do is = 1, nspin
               v(ir,is) = e2 * (vx(is) + vc(is) )
@@ -212,7 +212,9 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !     Hartree potential VH(r) from n(r)
   !
-  use parameters, only: DP
+  USE parameters,  ONLY: DP
+  USE gvect, ONLY: nlm
+  USE wvfct, ONLY: gamma_only
   implicit none
   !
   !    input
@@ -263,7 +265,11 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      aux1(1,ig) = fac * aux(1,nl(ig))
      aux1(2,ig) = fac * aux(2,nl(ig))
   enddo
-  ehart = ehart * omega / 2.d0
+  if (gamma_only) then
+     ehart = ehart * omega
+  else
+     ehart = ehart * omega / 2.d0
+  end if
 #ifdef __PARA
   call reduce (1, ehart)
 #endif
@@ -272,6 +278,12 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      aux(1,nl(ig)) = aux1(1,ig)
      aux(2,nl(ig)) = aux1(2,ig)
   enddo
+  if (gamma_only) then
+     do ig = 1, ngm
+        aux(1,nlm(ig)) =   aux1(1,ig)
+        aux(2,nlm(ig)) = - aux1(2,ig)
+     enddo
+  end if
   !
   !      transform hartree potential to real space
   !

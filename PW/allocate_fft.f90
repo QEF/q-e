@@ -15,12 +15,12 @@ subroutine allocate_fft
   !
 #include "machine.h"
   use pwcom
-  USE wavefunctions,    ONLY : evc, psic
+  USE wavefunctions,    ONLY : psic
   implicit none
   !
   !     determines the data structure for fft arrays
   !
-  call data_structure( .FALSE. )
+  call data_structure( gamma_only )
   !
   if (nrxx.lt.ngm) then
      write (6, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
@@ -34,17 +34,18 @@ subroutine allocate_fft
      call errore ('allocate_fft', 'the nrs"s are too small!', 1)
 
   endif
-  if (ngm.le.0) call errore ('allocate_fft', 'wrong ngm', 1)
-  if (ngms.le.0) call errore ('allocate_fft', 'wrong ngms', 1)
-  if (nrxx.le.0) call errore ('allocate_fft', 'wrong nrxx', 1)
-  if (nrxxs.le.0) call errore ('allocate_fft', 'wrong nrxxs', 1)
-  if (nspin.le.0) call errore ('allocate_fft', 'wrong nspin', 1)
+  if (ngm  <= 0) call errore ('allocate_fft', 'wrong ngm', 1)
+  if (ngms <= 0) call errore ('allocate_fft', 'wrong ngms', 1)
+  if (nrxx <= 0) call errore ('allocate_fft', 'wrong nrxx', 1)
+  if (nrxxs<= 0) call errore ('allocate_fft', 'wrong nrxxs', 1)
+  if (nspin<= 0) call errore ('allocate_fft', 'wrong nspin', 1)
   !
   !     Allocate memory for all kind of stuff.
   !
   allocate (g( 3, ngm))    
   allocate (gg( ngm))    
   allocate (nl(  ngm))    
+  if (gamma_only) allocate (nlm(ngm))
   allocate (igtongl(  ngm))    
   allocate (ig1(  ngm))    
   allocate (ig2(  ngm))    
@@ -59,8 +60,10 @@ subroutine allocate_fft
   allocate (vrs( nrxx, nspin))    
   if (doublegrid) then
      allocate (nls( ngms))    
+     if (gamma_only) allocate (nlsm(ngm))
   else
      nls => nl
+     if (gamma_only) nlsm=> nlm
   endif
   return
 end subroutine allocate_fft

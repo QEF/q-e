@@ -67,6 +67,11 @@ subroutine set_rhoc
         enddo
      endif
   enddo
+  if (gamma_only) then
+     do ng = 1, ngm
+        aux(nlm(ng)) = conjg(aux(nl (ng)))
+     end do
+  end if
   !
   !   the core charge in real space
   !
