@@ -24,7 +24,6 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   USE constants,        ONLY : pi
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin, npol
-  USE us,               ONLY : okvan
   USE uspp,             ONLY : vkb, nkb
   USE becmod,           ONLY : becp_nc
   !
