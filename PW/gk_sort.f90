@@ -15,16 +15,17 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
   USE parameters, ONLY : DP
   USE constants,  ONLY : eps8
+  USE wvfct,      ONLY : npwx
   !
   IMPLICIT NONE
   !
   ! ... Here the dummy variables
   !
-  INTEGER :: ngm, ngk, igk(ngk)
+  INTEGER :: ngm, ngk, igk(npwx)
     ! input        : the number of g vectors
     ! input/output : the number of k+G vectors inside the "ecut sphere"
     ! output       : the correspondence k+G <-> G
-  REAL(KIND=DP) :: k(3), g(3,ngm), ecut, gk(ngk)
+  REAL(KIND=DP) :: k(3), g(3,ngm), ecut, gk(npwx)
     ! input  : the k point
     ! input  : the coordinates of G vectors
     ! input  : the cut-off energy
@@ -32,10 +33,9 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
   ! ... here the local variables
   !
-  INTEGER :: ng, nk, ngk_in
+  INTEGER :: ng, nk
     ! counter on   G vectors
     ! counter on k+G vectors
-    ! the size of vector gk (ngk is overwritten)
   REAL(KIND=DP) :: q, q2x
     ! |k+G|^2
     ! upper bound for |G|
@@ -45,8 +45,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
   q2x = ( SQRT( k(1)**2 + k(2)**2 + k(3)**2 ) + SQRT( ecut ) )**2
   !
-  ngk_in = ngk
-  ngk    = 0
+  ngk = 0
   !
   DO ng = 1, ngm
      !
@@ -60,7 +59,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
         !
         ! ... gk is a fake quantity giving the same ordering on all machines
         !
-        IF ( ngk > ngk_in ) &
+        IF ( ngk > npwx ) &
            CALL errore( 'gk_sort', 'array gk out-of-bounds', 1 )
         !
         IF ( q > eps8 ) THEN 
@@ -75,7 +74,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
         !
         ! ... set the initial value of index array
         !
-        igk (ngk) = ng
+        igk(ngk) = ng
         !
      ELSE
         !
