@@ -1402,6 +1402,7 @@ esac
 
 # check Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
+unset F77 # otherwise it may interfere with the check
 ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
 ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -1494,7 +1495,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1497:" \
+echo "$as_me:1498:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -1802,8 +1803,8 @@ f90=$F77
 case "$build:$f90" in
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
-	try_cc="mpicc pgcc gcc cc icc"
-	try_f77="mpif77 pgf77 $f90"
+	try_cc="pgcc gcc cc icc"
+	try_f77="pgf77 $f90"
 	;;
 *-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
@@ -1960,7 +1961,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1963:" \
+echo "$as_me:1964:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7766,21 +7767,20 @@ fi
 
 
 # final warnings
-echo ------------------------------------------------------------------
+echo -------------------------------------------------------------------
 echo PWscf can take advantage of several optimized numerical libraries
 echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
 echo but may fail if they have been installed in non-standard locations.
+echo
 echo The following libraries have been found:
 echo "  LIBS=$libs"
-echo If any libraries are missing, try setting the environment variable
-echo "  LIBDIRS=\"list of directories, separated by spaces\""
-echo and rerunning configure.
-echo Bourne shell syntax:
-echo "  export LIBDIRS=\"...\" ; ./configure"
-echo C shell syntax:
-echo "  setenv LIBDIRS \"...\" ; ./configure"
-echo If this still fails, set the environment variable LIBS manually.
-echo ------------------------------------------------------------------
+echo
+echo If any libraries are missing, you may specify a list of directories
+echo to search and retry, as follows:
+echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
+echo
+echo \(For more information, read the INSTALL file or the PWscf manuals.\)
+echo -------------------------------------------------------------------
 
 if ! test $parallel
 then
