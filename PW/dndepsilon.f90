@@ -70,7 +70,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    if (nks.gt.1) rewind (iunigk)
 
    do ik = 1, nks
-
+      if (lsda) current_spin = isk(ik)
       if (nks.gt.1) read (iunigk) npw, igk
 
       !
@@ -109,7 +109,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
             do m1 = 1, 2 * Hubbard_l(nt) + 1
                do m2 = m1, 2 * Hubbard_l(nt) + 1
                   do ibnd = 1,nbnd
-                     dns(na,isk(ik),m1,m2) = dns(na,isk(ik),m1,m2) + &
+                     dns(na,current_spin,m1,m2) = dns(na,current_spin,m1,m2) + &
                                              wg(ibnd,ik) *           &
                               DREAL( proj(offset(na)+m1,ibnd) *      &
                               conjg(dproj(offset(na)+m2,ibnd) ) +    &

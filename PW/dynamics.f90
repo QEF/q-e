@@ -45,9 +45,8 @@ subroutine dynamics
   real(kind=DP)  ::  ml (3),  mlt  ! total linear momentum and its modulus
   integer :: na, ipol, it ! counters
   logical :: exst
-  real(kind=DP)  ::  mass_proton, convert_E_to_temp, eps
-  parameter (mass_proton = 1836.151553d0, eps = 1.d-6, &
-       convert_E_to_temp = 315642.28d0 * 0.5d0)
+  real(kind=DP)  ::  convert_E_to_temp, eps
+  parameter ( eps = 1.d-6, convert_E_to_temp = 315642.28d0 * 0.5d0)
 
   allocate (mass(   nat))    
   allocate (a(  3, nat))    
@@ -76,7 +75,6 @@ subroutine dynamics
      !
      total_mass = 0.d0
      do na = 1, nat
-        !            mass(na) = amass(ityp(na)) * mass_proton * 0.5d0
         mass (na) = amass (ityp (na) ) * amconv
         total_mass = total_mass + mass (na)
      enddo
@@ -156,8 +154,7 @@ subroutine dynamics
   !
   ! find the new temperature
   !
-  temp_new = 2.d0 / 3.d0 * ekin * alat**2 / natoms * &
-       convert_E_to_temp
+  temp_new = 2.d0 / 3.d0 * ekin * alat**2 / natoms * convert_E_to_temp
   !
   ! save on file needed quantity
   !
@@ -336,8 +333,7 @@ subroutine start_therm (mass, tauold)
   !     temperature is usually changed. Set again the temperature to the
   !     right value.
   !
-  temp_new = 2.d0 * ek / (3.d0 * natoms) * alat**2 * &
-       convert_E_to_temp
+  temp_new = 2.d0 * ek / (3.d0 * natoms) * alat**2 * convert_E_to_temp
 
   call thermalize (temp_new, temperature, tauold)
 

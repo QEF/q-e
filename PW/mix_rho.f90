@@ -453,11 +453,10 @@ function ns_dot_product (ns1,ns2)
               enddo
            enddo
         end do
-        if (nspin.eq.1) sum = 2.d0 * sum
         ns_dot_product = ns_dot_product + 0.5d0*Hubbard_U(nt) * sum
      endif
-
   end do
+  if (nspin.eq.1) ns_dot_product = 2.d0 * ns_dot_product
 
   return
 end function ns_dot_product

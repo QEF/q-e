@@ -22,7 +22,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   !
   integer :: ibnd, i, na, nt, n, counter, m1, m2, l
   integer, allocatable ::  offset (:)
-  ! offset of d electrons of atom na in the natomwfc ordering
+  ! offset of localized electrons of atom na in the natomwfc ordering
   complex(kind=DP) :: ZDOTC, temp
   complex(kind=DP), allocatable ::  proj (:,:)
   !
@@ -60,9 +60,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
               enddo
 
               temp = temp * Hubbard_U(nt)/2.d0
-              temp = temp + &
-                     proj(offset(na)+m1,ibnd) * Hubbard_alpha(nt)
-
+              temp = temp + proj(offset(na)+m1,ibnd) * Hubbard_alpha(nt)
               call ZAXPY (np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
            enddo

@@ -68,6 +68,7 @@ subroutine new_ns
   if (nks.gt.1) rewind (iunigk)
 
   do ik = 1, nks
+     if (lsda) current_spin = isk(ik)
      if (nks.gt.1) read (iunigk) npw, igk
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
 
@@ -93,7 +94,7 @@ subroutine new_ns
            do m1 = 1, 2 * Hubbard_l(nt) + 1  
               do m2 = m1, 2 * Hubbard_l(nt) + 1
                  do ibnd = 1, nbnd  
-                    nr(na,isk(ik),m1,m2) = nr(na,isk(ik),m1,m2) + &
+                    nr(na,current_spin,m1,m2) = nr(na,current_spin,m1,m2) + &
                             wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
                                            conjg(proj(offset(na)+m1,ibnd)) )
                  enddo
@@ -202,10 +203,10 @@ subroutine new_ns
            enddo
         enddo
      endif
-
   enddo
   deallocate ( offset, proj, nr )
+  if (nspin.eq.1) eth = 2.d0 * eth
+
   return
 
 end subroutine new_ns
-

@@ -977,11 +977,15 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
               enddo
            endif
         enddo
-        if (natom.eq.0) stop 'natom=0 in sub ranv (1) !!!! '
         !
         p (1) = zero
         p (2) = zero
         p (3) = zero
+        ekin (nt) = zero
+        if (natom.eq.0) then
+           write (6,*) 'natom=0 for type',nt,'in sub ranv (1) !!!! '
+           go to 111
+        end if
         !
         !       calculate linear-momentum.
         !
@@ -1014,6 +1018,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
         !            write(6,*) 'ekin(nt)',ekin(nt)
         ekin (nt) = atmass (nt) * ekin (nt)
         ekint = ekint + ekin (nt)
+ 111    continue
      enddo
      !
      !     rescale velocities to give correct temperature
@@ -1046,13 +1051,20 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
            if (ityp (na) .eq.nt) natom = natom + 1
         enddo
 
-        if (natom.eq.0) stop 'natom=0 in sub ranv (2) !!!! '
-        vmean (nt) = vmean (nt) / dfloat (natom)
-        rms (nt) = dsqrt ( (vx2 (nt) + vy2 (nt) + vz2 (nt) ) / dfloat ( &
-             natom) )
-        vx2 (nt) = dsqrt (vx2 (nt) / dfloat (natom) )
-        vy2 (nt) = dsqrt (vy2 (nt) / dfloat (natom) )
-        vz2 (nt) = dsqrt (vz2 (nt) / dfloat (natom) )
+        if (natom.gt.0) then
+           vmean (nt) = vmean (nt) / dfloat (natom)
+           rms (nt) = dsqrt ( (vx2 (nt) + vy2 (nt) + vz2 (nt) ) /  &
+                      dfloat ( natom) )
+           vx2 (nt) = dsqrt (vx2 (nt) / dfloat (natom) )
+           vy2 (nt) = dsqrt (vy2 (nt) / dfloat (natom) )
+           vz2 (nt) = dsqrt (vz2 (nt) / dfloat (natom) )
+        else
+           vmean (nt) = zero
+           rms (nt) = zero
+           vx2 (nt) = zero
+           vy2 (nt) = zero
+           vz2 (nt) = zero
+        end if
      enddo
      ekint = ekint * tfac * tfac
   else

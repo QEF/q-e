@@ -32,16 +32,18 @@ subroutine init_ns
       nt = ityp (na)
       if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
          call tabd (nt, totoc)
-         nm=.false.
-         if (starting_magnetization (nt) .gt.0.d0) then  
-            majs = 1  
-            mins = 2  
-         elseif (starting_magnetization (nt) .lt.0.d0) then  
-            majs = 2  
-            mins = 1  
-         else  
-            nm = .true.  
-         endif  
+         nm=.true.
+         if (nspin.eq.2) then
+            if (starting_magnetization (nt) .gt.0.d0) then  
+               nm=.false.
+               majs = 1  
+               mins = 2  
+            elseif (starting_magnetization (nt) .lt.0.d0) then  
+               nm=.false.
+               majs = 2  
+               mins = 1  
+            endif  
+         endif
          if (.not.nm) then  
             if (totoc.gt.2*Hubbard_l(nt)+1) then  
                do m1 = 1, 2*Hubbard_l(nt)+1  
@@ -55,9 +57,10 @@ subroutine init_ns
                enddo  
             endif  
          else  
-            do m1 = 1, 2*Hubbard_l(nt)+1  
-               ns (na, 1, m1, m1) = totoc /  2.d0 / (2*Hubbard_l(nt)+1)
-               ns (na, 2, m1, m1) = ns (na, 1, m1, m1)  
+            do is = 1,nspin
+               do m1 = 1, 2*Hubbard_l(nt)+1  
+                  ns (na, is, m1, m1) = totoc /  2.d0 / (2*Hubbard_l(nt)+1)
+               enddo  
             enddo  
          endif  
       endif  

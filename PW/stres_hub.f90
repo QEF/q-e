@@ -92,6 +92,8 @@ subroutine stres_hub ( sigmah )
          end do
       end do
    end do
+   if (nspin.eq.1) sigmah(:,:) = 2.d0 * sigmah(:,:)
+
    !
    ! Symmetryze the stress tensor
    !
@@ -101,7 +103,7 @@ subroutine stres_hub ( sigmah )
          sigmah(ipol,jpol) = sigmah(jpol,ipol)
       end do
    end do
-
+   
    call trntns(sigmah,at,bg,-1)
    call symtns(sigmah,nsym,s)
    call trntns(sigmah,at,bg,1)

@@ -69,6 +69,8 @@ subroutine force_hub(forceh)
    end do
 
    deallocate(dns)
+   
+   if (nspin.eq.1) forceh(:,:) = 2.d0 * forceh(:,:)
    !
    ! The symmetry matrices are in the crystal basis so...
    ! Transform to crystal axis...

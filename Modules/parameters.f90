@@ -26,7 +26,7 @@ module parameters
   integer , parameter :: DP = kind(0.0d0)
 
   integer, parameter  :: &
-       nbrx = 6,           &! maximum number of beta functions
+       nbrx = 8,           &! maximum number of beta functions
        lqmax= 2*lmaxx+1,   &! maximum number of angular momenta of Q
        nqfm = 8             ! maximum number of coefficients in Q smoothing
 

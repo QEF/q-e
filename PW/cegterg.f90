@@ -176,6 +176,9 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      do n = 1, notcnv
         call DSCAL (2 * ndim, 1.d0 / sqrt (ew (n) ), psi (1, nbase+n), 1)
      enddo
+#ifdef DEBUG_DAVIDSON
+     write (6,'(a,18f10.6)') 'NRM=',(ew(n),n=1,notcnv)
+#endif
      !
      !   here compute the hpsi and spsi of the new functions
      !
@@ -224,6 +227,11 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
            enddo
         enddo
         call cdiaghg (nbase, nvec, hc, smat, nvecx, ew, vc)
+#ifdef DEBUG_DAVIDSON
+        write (6,'(a,18f10.6)') 'EIG=',(e(n),n=1,nvec)
+        write (6,'(a,18f10.6)') 'EIG=',(ew(n),n=1,nvec)
+        write (6,*) 
+#endif
      else
         call cdiagh (nbase, hc, nvecx, ew, vc)
      endif
@@ -232,16 +240,17 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      !
      notcnv = 0
      do n = 1, nvec
-        if (conv (n) .eq.0) then
+!        if (conv (n) .eq.0) then
            if (.not.abs (ew (n) - e (n) ) .le.ethr) then
-              notcnv = notcnv + 1
               e (n) = ew (n)
+              conv (n) = 0
+              notcnv = notcnv + 1
            else
               e (n) = ew (n)
               ! root converged
               conv (n) = 1
            endif
-        endif
+!        endif
      enddo
      !     if overall convergence has been achieved or the dimension of the
      !     reduced basis set is becoming too large, then refresh the basis
@@ -288,6 +297,15 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
         enddo
      endif
   enddo
+  !
+  !  replace the first nvec elements with the current estimate of 
+  !  the eigenvectors before quiting also when overall convergence 
+  !  has not been achieved
+  !
+  aux(:) = (0.d0,0.d0)
+  call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , psi, &
+             ndmx, vc, nvecx, (0.d0, 0.d0) , aux, ndmx)
+  call ZCOPY (ndmx * nvec, aux, 1, psi, 1)
 
   do n = 1, nvec
      if (conv (n) .eq.0) write (6, '("   WARNING: e(",i3,") =",&

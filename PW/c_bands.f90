@@ -189,6 +189,9 @@ subroutine c_bands (iter, ik_, dr2)
 
         if (isolve.eq.0.or. (isolve.eq.2.and.iter.le.diis_start_dav) ) &
              then
+#ifdef DEBUG_DAVIDSON
+           write (6,*) 'KPOINT=',ik
+#endif
            call cegterg (npw, npwx, nbnd, nbndx, evc, ethr, loverlap, &
                 et (1, ik), notconv, ntrt)
         else

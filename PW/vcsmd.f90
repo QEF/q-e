@@ -138,7 +138,7 @@ subroutine vcsmd
   if (calc.eq.'mm') then
      conv_ions = eold - etot .lt. epse
      do i = 1, 3
-        do na = 1, nat
+        do na = 1, nat - fixatom
            conv_ions = conv_ions.and.abs (force (i, na) ) .lt. epsf
         enddo
      enddo
@@ -166,7 +166,7 @@ subroutine vcsmd
      epsp = 0.5  ! kbar
      conv_ions = eold - etot .lt. epse
      do i = 1, 3
-        do na = 1, nat
+        do na = 1, nat - fixatom
            conv_ions = conv_ions.and.abs (force (i, na) ) .lt. epsf
         enddo
      enddo
@@ -304,7 +304,7 @@ subroutine vcsmd
      write (45,*) 'edyn=',edyn
 #endif
 
-     call init (ntyp, nat, ntyp, nat, rat, ityp, avec, vcell, force, &
+     call init (ntyp, nat, ntyp, nat-fixatom, rat, ityp, avec, vcell, force, &
           sigma, calc, temperature, vx2, vy2, vz2, rms, vmean, ekin, &
           avmod, theta, amass, cmass, press, p, dt, aveci, avecd, avec2d, &
           avec2di, sigmamet, sig0, avec0, v0, rati, ratd, rat2d, rat2di, &
@@ -427,7 +427,7 @@ subroutine vcsmd
           avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d, &
           rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint, &
           edyn, temperature, ttol, ntcheck, ntimes, istep, tnew, nzero, &
-          nat, acu, ack, acp, acpv, avu, avk, avp, avpv)
+          nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv)
 
 #ifdef DEBUG_VCSMD
      write (46,*) 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'

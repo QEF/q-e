@@ -17,7 +17,7 @@ subroutine write_ns
   ! counters on d components
   integer, parameter :: ldmx = 7
   complex(kind=DP) :: f (ldmx, ldmx), vet (ldmx, ldmx)
-  real(kind=DP) :: lambda (ldmx), nsum
+  real(kind=DP) :: lambda (ldmx), nsum, nsuma
 
   write (*,*) 'enter write_ns'
 
@@ -30,13 +30,21 @@ subroutine write_ns
         ('alpha(',nt,') =', Hubbard_alpha(nt) * rytoev, nt=1,ntyp)
 
   nsum = 0.d0
-  do is = 1, nspin
-     do na = 1, nat
-        nt = ityp (na)
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-           ldim = 2 * Hubbard_l(nt) + 1
+  do na = 1, nat
+     nt = ityp (na)
+     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
+        ldim = 2 * Hubbard_l(nt) + 1
+        nsuma = 0.d0
+        do is = 1, nspin
            do m1 = 1, ldim
-              nsum = nsum + nsnew (na, is, m1, m1)
+              nsuma = nsuma + nsnew (na, is, m1, m1)
+           end do
+        end do
+        if (nspin.eq.1) nsuma = 2.d0 * nsuma
+        write(6,'(a,x,i2,2x,a,f11.7)') 'atom', na, ' Tr[ns(na)]= ', nsuma
+        nsum = nsum + nsuma
+        do is = 1, nspin
+           do m1 = 1, ldim
               do m2 = 1, ldim
                  f (m1, m2) = nsnew (na, is, m1, m2)
               enddo
@@ -52,8 +60,8 @@ subroutine write_ns
            do m1 = 1, ldim
               write (6,'(7(f6.3,x))') (nsnew(na,is,m1,m2),m2=1,ldim)
            end do
-        endif
-     enddo
+        enddo
+     endif
   enddo
 
   write (6, '(a,x,f11.7)') 'nsum =', nsum

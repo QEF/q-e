@@ -16,7 +16,7 @@ module pseudo
   ! lmaxx : maximum non local angular momentum in PP      
   ! nchix : maximum number of atomic wavefunctions per PP
   ! ndm   : maximum number of points in the radial mesh
-  integer, parameter :: nbrx = 6, lqx = 5, nqfm = 8
+  integer, parameter :: nbrx = 8, lqx = 5, nqfm = 8
   ! nbrx  : maximum number of beta functions         
   ! lqx   : maximum number of angular momentum of Q  
   ! nqfm  : maximum number of coefficients in Q smoothing

@@ -120,16 +120,18 @@ subroutine setup
   !
   ! Here we  set the precision of the diagonalization
   !
-  if (startingpot=='file') then
-     ! starting potential is expected to be a good one :
-     ! do not spoil it with a lousy first diagonalization
-     if (imix.ge.0) ethr = 0.1d0 * min (1.d-2, tr2/nelec)
-     if (imix.lt.0) ethr = 0.1d0 * min (1.0d-6, sqrt (tr2) )
-  else
-     ! starting atomic potential is probably far from scf..
-     ! do not waste iterations in the first diagonalizations
-     if (imix.ge.0) ethr = 1.0d-2
-     if (imix.lt.0) ethr = 1.0d-5
+  if (ethr.eq.0.d0) then
+     if (startingpot=='file') then
+        ! starting potential is expected to be a good one :
+        ! do not spoil it with a lousy first diagonalization
+        if (imix.ge.0) ethr = 0.1d0 * min (1.d-2, tr2/nelec)
+        if (imix.lt.0) ethr = 0.1d0 * min (1.0d-6, sqrt (tr2) )
+     else
+        ! starting atomic potential is probably far from scf..
+        ! do not waste iterations in the first diagonalizations
+        if (imix.ge.0) ethr = 1.0d-2
+        if (imix.lt.0) ethr = 1.0d-5
+     end if
   end if
 
   if (.not.lscf) niter = 1

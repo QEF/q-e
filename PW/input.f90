@@ -605,6 +605,7 @@ subroutine iosys
   Hubbard_U(:)    = Hubbard_U(:)/rytoev
   Hubbard_alpha(:)= Hubbard_alpha(:)/rytoev
 
+  ethr = 0.d0
   SELECT CASE ( TRIM(calculation) )
   CASE ('scf' )
      lscf = .true.
@@ -618,6 +619,11 @@ subroutine iosys
      lforce = .false.
      lmovecell=.false.
      nstep = 1
+!     ethr = 1.d-6
+! I think ethr should not be more strict than that in a simple band
+! structure calculation but there is still something unsatisfactory 
+! in the Davidson diagonalization convergence. SdG 20/03/2003
+!
   CASE ('relax')
      lscf = .true.
      iswitch = 1
@@ -698,7 +704,6 @@ subroutine iosys
      loverlap =.true.
   END SELECT
 
-  ethr = 0.d0
   tr2  = conv_thr
   niter= electron_maxstep
 

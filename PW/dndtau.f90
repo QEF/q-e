@@ -71,6 +71,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
 
    do ik = 1, nks
 
+      if (lsda) current_spin = isk(ik)
       !
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -108,7 +109,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
             do m1 = 1,ldim
                do m2 = m1,ldim
                   do ibnd = 1,nbnd
-                     dns(na,isk(ik),m1,m2) = dns(na,isk(ik),m1,m2) +  &
+                     dns(na,current_spin,m1,m2) = dns(na,current_spin,m1,m2) + &
                                              wg(ibnd,ik) *            &
                                 DREAL(  proj(offset(na)+m1,ibnd)  *   &
                                 conjg(dproj(offset(na)+m2,ibnd))  +   &
