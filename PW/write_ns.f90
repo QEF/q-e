@@ -47,7 +47,7 @@ subroutine write_ns
            end do
         end do
         if (nspin.eq.1) nsuma = 2.d0 * nsuma
-        WRITE( stdout,'(a,x,i2,2x,a,f11.7)') 'atom', na, ' Tr[ns(na)]= ', nsuma
+        WRITE( stdout,'(a,1x,i2,2x,a,f11.7)') 'atom', na, ' Tr[ns(na)]= ', nsuma
         nsum = nsum + nsuma
         do is = 1, nspin
            do m1 = 1, ldim
@@ -56,21 +56,21 @@ subroutine write_ns
               enddo
            enddo
            call cdiagh(ldim, f, ldmx, lambda, vet)
-           WRITE( stdout,'(a,x,i2,2x,a,x,i2)') 'atom', na, 'spin', is
+           WRITE( stdout,'(a,1x,i2,2x,a,1x,i2)') 'atom', na, 'spin', is
            WRITE( stdout,'(a,7f10.7)') 'eigenvalues: ',(lambda(m1),m1=1,ldim)
            WRITE( stdout,*) 'eigenvectors'
            do m2 = 1, ldim
-              WRITE( stdout,'(i2,2x,7(f10.7,x))') m2,(dreal(vet(m1,m2)),m1=1,ldim)
+              WRITE( stdout,'(i2,2x,7(f10.7,1x))') m2,(dreal(vet(m1,m2)),m1=1,ldim)
            end do
            WRITE( stdout,*) 'occupations'
            do m1 = 1, ldim
-              WRITE( stdout,'(7(f6.3,x))') (nsnew(m1,m2,is,na),m2=1,ldim)
+              WRITE( stdout,'(7(f6.3,1x))') (nsnew(m1,m2,is,na),m2=1,ldim)
            end do
         enddo
      endif
   enddo
 
-  WRITE( stdout, '(a,x,f11.7)') 'nsum =', nsum
+  WRITE( stdout, '(a,1x,f11.7)') 'nsum =', nsum
   WRITE( stdout,*) 'exit write_ns'
   return
 end subroutine write_ns
