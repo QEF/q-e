@@ -1,5 +1,9 @@
+Version: 0.2.2
+* improved syntax-error handling mechanism for reading the input file.
+
 Version: 0.2.1
-* addapting the package to work with Tcl/Tk8.4, Itcl/Itk 3.2, and Iwidgets 4.0
+* addapting the package to work with Tcl/Tk8.4, Itcl/Itk 3.2, 
+	and Iwidgets 4.0
 * porting the package to MS-Windows
 
 Version: 0.2.0

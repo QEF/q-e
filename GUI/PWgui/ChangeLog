@@ -1,3 +1,12 @@
+Mon Apr 05 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* Makefile, sys_utils/starkit.sh, pwgui_vfs/: adding support for
+		building starpack binaries
+	* pw.tcl, pw-help.tcl: correction of format of last_image
+		coordinates for calculation='neb'
+	
+Thu Apr 01 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl: correcting typo "minization" -> "minimization"
+	
 Wed Mar 03 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* Makefile: cvsinit target: cd doc/pwdocs --> -cd /doc/pwdocs
 	
@@ -9,7 +18,7 @@ Mon Feb 21 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	
 Mon Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding the defaultPager and defaultEditor. i.e., internal editor
-	and pager (better porting to non-unix systems)
+		and pager (better porting to non-unix systems)
 
 Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* package was renamed from TkPWscf to PWgui 
@@ -18,7 +27,7 @@ Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 Wed Feb 18 2004 Anton Kokalj (tone.kokalj@ijs.si)	
 	* src-tcl/ directory renamed to src/
 	* CVS: moving the PWgui and GUIB repositories to O-sesame
-	repository. Some changes of Makefile etc. were required		
+		repository. Some changes of Makefile etc. were required
 	
 Tue Feb 17 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* ChangeLog: the beginning of the ChangeLog
