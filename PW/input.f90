@@ -106,7 +106,6 @@ SUBROUTINE iosys()
   USE neb_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
                             num_of_images_  => num_of_images, &
                             CI_scheme_      => CI_scheme, &
-                            VEC_scheme_     => VEC_scheme, &
                             optimization_   => optimization, &
                             damp_           => damp, &
                             temp_req_       => temp_req, &
@@ -171,7 +170,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
                                tempw, tolp, upscale, potential_extrapolation, &
-                               CI_scheme, VEC_scheme, minimization_scheme, &
+                               CI_scheme, minimization_scheme, &
                                num_of_images, optimization, damp, temp_req, &
                                k_max, k_min, neb_thr, &
                                trust_radius_max, trust_radius_min, &
@@ -640,13 +639,6 @@ SUBROUTINE iosys()
                    & ': unknown CI_scheme', 1 )  
         !   
      END IF
-     IF ( ( VEC_scheme /= "energy-weighted" )   .AND. &
-          ( VEC_scheme /= "gradient-weighted" ) ) THEN
-        !
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': unknown VEC_scheme', 1 )
-        !
-     END IF
      !
      ! ... initialization of logical variables
      !
@@ -805,7 +797,6 @@ SUBROUTINE iosys()
   !
   num_of_images_ = num_of_images
   CI_scheme_     = CI_scheme
-  VEC_scheme_    = VEC_scheme
   optimization_  = optimization
   damp_          = damp
   temp_req_      = temp_req

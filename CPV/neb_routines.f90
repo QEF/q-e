@@ -16,7 +16,7 @@ MODULE neb_routines
   !
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP, dbl
-  USE constants,  ONLY : AU, BOHR_RADIUS_ANGS, eV_to_kelvin
+  USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
   USE neb_base,   ONLY : initialize_neb, compute_action, compute_tangent, &
                          elastic_constants, gradient, search_stationary_points, &
                          compute_error, path_tangent_, born_oppenheimer_PES, &
@@ -39,7 +39,6 @@ MODULE neb_routines
       USE neb_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
                             num_of_images_  => num_of_images, &
                             CI_scheme_      => CI_scheme, &
-                            VEC_scheme_     => VEC_scheme, &
                             optimization_   => optimization, &
                             damp_           => damp, &
                             temp_req_       => temp_req, &
@@ -49,7 +48,7 @@ MODULE neb_routines
                             neb_thr_        => neb_thr, &
                             nstep_neb 
       !
-      USE input_parameters, ONLY : CI_scheme, VEC_scheme, minimization_scheme, &
+      USE input_parameters, ONLY : CI_scheme, minimization_scheme, &
                             num_of_images, optimization, damp, temp_req, &
                             ds, k_max, k_min, neb_thr
       !
@@ -94,14 +93,7 @@ MODULE neb_routines
                    & ': unknown CI_scheme', 1 )
          !
       END IF
-      IF ( ( VEC_scheme /= "energy-weighted" )   .AND. &
-           ( VEC_scheme /= "gradient-weighted" ) ) THEN
-         !
-         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': unknown VEC_scheme', 1 )
-        !
-      END IF
-
+      !
       SELECT CASE ( minimization_scheme )
       !
       CASE ( "sd" )
@@ -127,7 +119,7 @@ MODULE neb_routines
          IF ( temp_req == 0 ) &
             WRITE( stdout,'(/,T2,"WARNING: tepm_req has not been set" )')
          !
-         temp_req = temp_req / ( eV_to_kelvin * AU )
+         temp_req = temp_req / ( eV_to_kelvin * au )
          !
       CASE default
          !
@@ -146,7 +138,6 @@ MODULE neb_routines
 
       num_of_images_ = num_of_images
       CI_scheme_     = CI_scheme
-      VEC_scheme_    = VEC_scheme
       optimization_  = optimization
       damp_          = damp
       temp_req_      = temp_req

@@ -101,9 +101,9 @@ MODULE neb_base
                                    elastic_gradient, tangent, grad, norm_grad, &
                                    error, mass, free_minimization, CI_scheme,  &
                                    optimization, k, k_min, k_max,  Emax_index, &
-                                   VEC_scheme, neb_thr, lquick_min, lmol_dyn,  &
-                                   ldamped_dyn, nstep_neb, istep_neb,          &
-                                   suspended_image, vel_zeroed
+                                   neb_thr, lquick_min, lmol_dyn, ldamped_dyn, &
+                                   nstep_neb, istep_neb, suspended_image,      &
+                                   vel_zeroed
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart

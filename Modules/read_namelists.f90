@@ -328,7 +328,6 @@ MODULE read_namelists_module
        ! 
        num_of_images       = 0
        CI_scheme           = 'no-CI'
-       VEC_scheme          = 'energy-weighted'
        optimization        = .FALSE.
        reset_vel           = .FALSE.
        minimization_scheme = 'quick-min'
@@ -701,7 +700,6 @@ MODULE read_namelists_module
        CALL mp_bcast( optimization, ionode_id )
        CALL mp_bcast( reset_vel, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
-       CALL mp_bcast( VEC_scheme, ionode_id )
        CALL mp_bcast( minimization_scheme, ionode_id )
        CALL mp_bcast( damp, ionode_id )
        CALL mp_bcast( temp_req, ionode_id )
@@ -1188,13 +1186,6 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' CI_scheme '''// &
                        & TRIM( CI_scheme )//''' not allowed ', 1 )        
        !
-       DO i = 1, SIZE( VEC_scheme_allowed )
-          IF ( TRIM( VEC_scheme ) == VEC_scheme_allowed(i) ) allowed = .TRUE.
-       END DO
-       IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' VEC_scheme '''// &
-                       & TRIM( VEC_scheme )//''' not allowed ', 1 )       
-       !       
        DO i = 1, SIZE( minimization_scheme_allowed )
           IF ( TRIM( minimization_scheme ) == &
                minimization_scheme_allowed(i) ) allowed = .TRUE.

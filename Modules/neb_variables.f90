@@ -31,8 +31,7 @@ MODULE neb_variables
        vel_zeroed(:)              ! .TRUE. if the velocity of this image has
                                   ! been reset
   CHARACTER (LEN=20) :: &
-       CI_scheme,                &! Climbing Image scheme
-       VEC_scheme                 ! Variable Elastic Constant scheme
+       CI_scheme                  ! Climbing Image scheme
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
