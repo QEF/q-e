@@ -1,445 +1,472 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-program q2r
-  !
 #include "f_defs.h"
+!
+!----------------------------------------------------------------------------
+PROGRAM q2r
+  !----------------------------------------------------------------------------
   !
-  implicit none
+  USE kinds,      ONLY : DP
+  USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
+  USE mp_global,  ONLY : nproc, mpime, mp_global_start
   !
-  integer, parameter ::  nax=16, nrx1=8, nrx2=8, nrx3=8
-  real(kind=8), parameter :: eps=1.0d-5
-  integer ::  nr1, nr2, nr3, nr(3)
+  IMPLICIT NONE
   !
-  character(len=20) :: crystal
-  character(len=80) :: title
-  character(len=80) :: filin,filj,filf,fild
-  character(len=3)  :: atm(nax)
+  INTEGER,       PARAMETER :: nax = 16, nrx1 = 8, nrx2 = 8, nrx3 = 8
+  REAL(kind=DP), PARAMETER :: eps=1.D-5
+  INTEGER                  :: nr1, nr2, nr3, nr(3)
   !
-  logical :: lq,lrigid,zasr, lrigid_save 
-  integer :: m1, m2, m3, l1, l2, l3, i, j, j1, j2, na1, na2, ipol
-  integer :: nat, nq, ntyp, iq, icar, nfile, nqtot, ifile, nqs
-  integer :: na, nt
+  CHARACTER(len=20) :: crystal
+  CHARACTER(len=80) :: title
+  CHARACTER(len=80) :: filin,filj,filf,fild
+  CHARACTER(len=3)  :: atm(nax)
   !
-  integer :: m(3), nc(nrx1,nrx2,nrx3),ibrav,ityp(nax)
+  LOGICAL :: lq,lrigid,zasr, lrigid_save 
+  INTEGER :: m1, m2, m3, l1, l2, l3, i, j, j1, j2, na1, na2, ipol
+  INTEGER :: nat, nq, ntyp, iq, icar, nfile, nqtot, ifile, nqs
+  INTEGER :: na, nt
   !
-  real(kind=8) :: celldm(6), at(3,3), bg(3,3), tau(3,nax)
-  real(kind=8) :: q(3,48),omega, xq, amass(nax), resi,sum
-  real(kind=8) :: epsil(3,3),zeu(3,3,nax)
+  INTEGER :: gid
   !
-  complex(kind=8) :: phiq(3,3,nax,nax,48)
-  complex(kind=8) :: phid(nrx1,nrx2,nrx3,3,3,nax,nax)
+  INTEGER :: m(3), nc(nrx1,nrx2,nrx3),ibrav,ityp(nax)
   !
-  namelist / input / nr1,nr2,nr3,fild, zasr
-                                                                                
+  REAL(KIND=DP) :: celldm(6), at(3,3), bg(3,3), tau(3,nax)
+  REAL(KIND=DP) :: q(3,48),omega, xq, amass(nax), resi,sum
+  REAL(KIND=DP) :: epsil(3,3),zeu(3,3,nax)
+  !
+  COMPLEX(KIND=DP) :: phiq(3,3,nax,nax,48)
+  COMPLEX(KIND=DP) :: phid(nrx1,nrx2,nrx3,3,3,nax,nax)
+  !
+  NAMELIST / input / nr1, nr2, nr3, fild, zasr
+  !
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ilen
+  INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
-
   !
-  nr1=0
-  nr2=0
-  nr3=0
-
   !
-  ! ... Input from file ?
+  CALL mp_start()
   !
-  nargs = iargc()
+  CALL mp_env( nproc, mpime, gid )
   !
-  DO iiarg = 1, ( nargs - 1 )
+  IF ( mpime == 0 ) THEN
      !
-     CALL getarg( iiarg, input_file )
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
+     ! ... all calculations are done by the first cpu
+     !
+     nr1 = 0
+     nr2 = 0
+     nr3 = 0
+     !
+     ! ... Input from file ?
+     !
+     nargs = iargc()
+     !
+     DO iiarg = 1, ( nargs - 1 )
         !
-        CALL getarg( ( iiarg + 1 ) , input_file )
-        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
+        CALL getarg( iiarg, input_file )
         !
+        IF ( TRIM( input_file ) == '-input' .OR. &
+             TRIM( input_file ) == '-inp'   .OR. &
+             TRIM( input_file ) == '-in' ) THEN
+           !
+           CALL getarg( ( iiarg + 1 ) , input_file )
+           !
+           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+                STATUS = 'OLD', IOSTAT = ierr )
+           !
+           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                & ' not found' , ierr )
+           !
+        END IF
+        !
+     END DO
+     !
+     READ ( 5, input )
+     !
+     ! check input
+     !
+     IF (nr1 > nrx1) CALL errore ('q2r',' nr1 too big, increase nrx1',nrx1)
+     IF (nr2 > nrx2) CALL errore ('q2r',' nr2 too big, increase nrx2',nrx2)
+     IF (nr3 > nrx3) CALL errore ('q2r',' nr3 too big, increase nrx3',nrx3)
+     IF (nr1 < 1) CALL errore ('q2r',' nr1 wrong or missing',1)
+     IF (nr2 < 1) CALL errore ('q2r',' nr2 wrong or missing',1)
+     IF (nr3 < 1) CALL errore ('q2r',' nr3 wrong or missing',1)
+     !
+     ! copy nrX -> nr(X)
+     !
+     nr(1) = nr1
+     nr(2) = nr2
+     nr(3) = nr3
+     !
+     ! D matrix (analytical part)
+     !
+     !
+     nqtot = 0
+     !
+     DO l1=1,nr1
+        DO l2=1,nr2
+           DO l3=1,nr3
+              nc(l1,l2,l3)=0
+           END DO
+        END DO
+     END DO
+     !
+     ! Reciprocal space dyn.mat. read from file
+     !
+     READ (5,*) nfile
+     DO ifile=1,nfile
+        READ(5,'(a)') filin
+        WRITE (6,*) ' reading dyn.mat. from file ',filin
+        OPEN(unit=1,file=filin,status='old',form='formatted')
+        CALL read_file(nqs,q,phiq,nax,epsil,zeu,lrigid,  &
+             ntyp,nat,ibrav,celldm,atm,amass,ityp,tau)
+        IF (ifile.EQ.1) THEN
+           lrigid_save=lrigid
+           CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+           at = at / celldm(1)  !  bring at in units of alat 
+           CALL volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
+           CALL recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
+           IF (lrigid.AND.zasr) THEN
+              DO i=1,3
+                 DO j=1,3
+                    sum=0.d0
+                    DO na=1,nat
+                       sum=sum+zeu(i,j,na)
+                    END DO
+                    DO na=1,nat
+                       zeu(i,j,na)=zeu(i,j,na)-sum/nat
+                    END DO
+                 END DO
+              END DO
+           END IF
+        END IF
+        IF (lrigid.AND..NOT.lrigid_save) CALL errore('main',            &
+             &          'in this case Gamma must be the first file ',1)
+        !
+        WRITE (6,*) ' nqs= ',nqs
+        CLOSE(unit=1)
+        DO nq = 1,nqs
+           WRITE(6,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
+           lq = .TRUE.
+           DO ipol=1,3
+              xq = 0.0
+              DO icar=1,3
+                 xq = xq + at(icar,ipol) * q(icar,nq) * nr(ipol)
+              END DO
+              lq = lq .AND. (ABS(NINT(xq) - xq) .LT. eps)
+              iq = NINT(xq)
+              !
+              m(ipol)= MOD(iq,nr(ipol)) + 1
+              IF (m(ipol) .LT. 1) m(ipol) = m(ipol) + nr(ipol) 
+           END DO
+           IF (.NOT.lq) CALL errore('init','q not allowed',1)
+           IF(nc(m(1),m(2),m(3)).EQ.0) THEN
+              nc(m(1),m(2),m(3))=1
+              IF (lrigid) CALL rgd_blk (nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
+                   tau,epsil,zeu,bg,omega,-1.d0)
+              CALL trasl(phid,phiq,nq,nrx1,nrx2,nrx3,nat,m(1),m(2),m(3),nax)
+              nqtot=nqtot+1
+           ELSE
+              WRITE (*,'(3i4)') (m(i),i=1,3)
+              CALL errore('init',' nc already filled: wrong q grid or wrong nr',1)
+           END IF
+        END DO
+     END DO
+     !
+     ! Check grid dimension
+     !
+     IF (nqtot .EQ. nr1*nr2*nr3) THEN
+        WRITE (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nqtot
+     ELSE
+        CALL errore('init',' missing q-point(s)!',1)
      END IF
      !
-  END DO
-
-  !
-  read (5,input)
-  !
-  ! check input
-  !
-  if (nr1 > nrx1) call errore ('q2r',' nr1 too big, increase nrx1',nrx1)
-  if (nr2 > nrx2) call errore ('q2r',' nr2 too big, increase nrx2',nrx2)
-  if (nr3 > nrx3) call errore ('q2r',' nr3 too big, increase nrx3',nrx3)
-  if (nr1 < 1) call errore ('q2r',' nr1 wrong or missing',1)
-  if (nr2 < 1) call errore ('q2r',' nr2 wrong or missing',1)
-  if (nr3 < 1) call errore ('q2r',' nr3 wrong or missing',1)
-  !
-  !
-  ! copy nrX -> nr(X)
-  !
-  nr(1) = nr1
-  nr(2) = nr2
-  nr(3) = nr3
-  !
-  ! D matrix (analytical part)
-  !
-  !
-  nqtot = 0
-  !
-  do l1=1,nr1
-     do l2=1,nr2
-        do l3=1,nr3
-           nc(l1,l2,l3)=0
-        end do
-     end do
-  end do
-  !
-  ! Reciprocal space dyn.mat. read from file
-  !
-  read (5,*) nfile
-  do ifile=1,nfile
-     read(5,'(a)') filin
-     write (6,*) ' reading dyn.mat. from file ',filin
-     open(unit=1,file=filin,status='old',form='formatted')
-     call read_file(nqs,q,phiq,nax,epsil,zeu,lrigid,  &
-                    ntyp,nat,ibrav,celldm,atm,amass,ityp,tau)
-     if (ifile.eq.1) then
-        lrigid_save=lrigid
-        call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
-        at = at / celldm(1)  !  bring at in units of alat 
-        call volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
-        call recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
-        if (lrigid.and.zasr) then
-           do i=1,3
-              do j=1,3
-                 sum=0.d0
-                 do na=1,nat
-                    sum=sum+zeu(i,j,na)
-                 end do
-                 do na=1,nat
-                    zeu(i,j,na)=zeu(i,j,na)-sum/nat
-                 end do
-              end do
-           end do
-        end if
-     end if
-     if (lrigid.and..not.lrigid_save) call errore('main',            &
-          &          'in this case Gamma must be the first file ',1)
+     ! dyn.mat. FFT
      !
-     write (6,*) ' nqs= ',nqs
-     close(unit=1)
-     do nq = 1,nqs
-        write(6,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
-        lq = .true.
-        do ipol=1,3
-           xq = 0.0
-           do icar=1,3
-              xq = xq + at(icar,ipol) * q(icar,nq) * nr(ipol)
-           end do
-           lq = lq .and. (abs(nint(xq) - xq) .lt. eps)
-           iq = nint(xq)
-           !
-           m(ipol)= mod(iq,nr(ipol)) + 1
-           if (m(ipol) .lt. 1) m(ipol) = m(ipol) + nr(ipol) 
-        end do
-        if (.not.lq) call errore('init','q not allowed',1)
-        if(nc(m(1),m(2),m(3)).eq.0) then
-           nc(m(1),m(2),m(3))=1
-           if (lrigid) call rgd_blk (nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
-                                     tau,epsil,zeu,bg,omega,-1.d0)
-           call trasl(phid,phiq,nq,nrx1,nrx2,nrx3,nat,m(1),m(2),m(3),nax)
-           nqtot=nqtot+1
-        else
-           write (*,'(3i4)') (m(i),i=1,3)
-           call errore('init',' nc already filled: wrong q grid or wrong nr',1)
-        end if
-     end do
-  end do
-  !
-  ! Check grid dimension
-  !
-  if (nqtot .eq. nr1*nr2*nr3) then
-     write (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nqtot
-  else
-     call errore('init',' missing q-point(s)!',1)
-  end if
-  !
-  ! dyn.mat. FFT
-  !
-  do j1=1,3
-     do j2=1,3
-        do na1=1,nat
-           do na2=1,nat
-              call tolerant_cft3(phid(1,1,1,j1,j2,na1,na2), &
-                   nr1,nr2,nr3,nrx1,nrx2,nrx3,1)
-              call DSCAL(2*nrx1*nrx2*nrx3,1.d0/(nr1*nr2*nr3),       &
-                         phid(1,1,1,j1,j2,na1,na2),1)
-           end do
-        end do
-     end do
-  end do
-  !
-  ! Real space force constants written to file (analytical part)
-  !
-  resi = 0
-  open(unit=2,file=fild,status='unknown',form='formatted')
-  write(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
-  do nt = 1,ntyp
-     write(2,*) nt," '",atm(nt),"' ",amass(nt)
-  end do
-  do na=1,nat
-     write(2,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)
-  end do
-  write (2,*) lrigid
-  if (lrigid) then
-     write(2,'(3f15.7)') ((epsil(i,j),j=1,3),i=1,3)
-     do na=1,nat
-        write(2,'(i5)') na
-        write(2,'(3f15.7)') ((zeu(i,j,na),j=1,3),i=1,3)
-     end do
-  end if
-  write (2,'(4i4)') nr1, nr2, nr3 
-  do j1=1,3
-     do j2=1,3
-        do na1=1,nat
-           do na2=1,nat
-              do m1=1,nr1
-                 do m2=1,nr2
-                    do m3=1,nr3
-                       resi = resi + dabs(dimag(phid(m1,m2,m3,j1,j2,na1,na2)))
-                    end do
-                 end do
-              end do
-              write (2,'(4i4)') j1,j2,na1,na2
-              write (2,'(3i4,2x,1pe18.11)')   &
-                   (((m1,m2,m3,real(phid(m1,m2,m3,j1,j2,na1,na2)), &
-                   m1=1,nr1),m2=1,nr2),m3=1,nr3)
-           end do
-        end do
-     end do
-  end do
-  close(2)
-  write (6,"(/5x,' fft-check: imaginary sum = ',e12.7)") resi
+     DO j1=1,3
+        DO j2=1,3
+           DO na1=1,nat
+              DO na2=1,nat
+                 CALL tolerant_cft3(phid(1,1,1,j1,j2,na1,na2), &
+                      nr1,nr2,nr3,nrx1,nrx2,nrx3,1)
+                 CALL DSCAL(2*nrx1*nrx2*nrx3,1.d0/(nr1*nr2*nr3),       &
+                      phid(1,1,1,j1,j2,na1,na2),1)
+              END DO
+           END DO
+        END DO
+     END DO
+     !
+     ! Real space force constants written to file (analytical part)
+     !
+     resi = 0
+     OPEN(unit=2,file=fild,status='unknown',form='formatted')
+     WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
+     DO nt = 1,ntyp
+        WRITE(2,*) nt," '",atm(nt),"' ",amass(nt)
+     END DO
+     DO na=1,nat
+        WRITE(2,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)
+     END DO
+     WRITE (2,*) lrigid
+     IF (lrigid) THEN
+        WRITE(2,'(3f15.7)') ((epsil(i,j),j=1,3),i=1,3)
+        DO na=1,nat
+           WRITE(2,'(i5)') na
+           WRITE(2,'(3f15.7)') ((zeu(i,j,na),j=1,3),i=1,3)
+        END DO
+     END IF
+     WRITE (2,'(4i4)') nr1, nr2, nr3 
+     DO j1=1,3
+        DO j2=1,3
+           DO na1=1,nat
+              DO na2=1,nat
+                 DO m1=1,nr1
+                    DO m2=1,nr2
+                       DO m3=1,nr3
+                          resi = resi + &
+                                 dabs(dimag(phid(m1,m2,m3,j1,j2,na1,na2)))
+                       END DO
+                    END DO
+                 END DO
+                 WRITE (2,'(4i4)') j1,j2,na1,na2
+                 WRITE (2,'(3i4,2x,1pe18.11)')   &
+                      (((m1,m2,m3,REAL(phid(m1,m2,m3,j1,j2,na1,na2)), &
+                      m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              END DO
+           END DO
+        END DO
+     END DO
+     CLOSE(2)
+     WRITE (6,"(/5x,' fft-check: imaginary sum = ',e12.7)") resi
+     !
+  END IF
   ! 
-end program q2r
-!
-!-----------------------------------------------------------------------
-subroutine read_file(nqs,xq,phi,nax,epsil,zeu,lrigid,             &
-     &           ntyp,nat,ibrav,celldm,atm,amass,ityp,tau)
-  !-----------------------------------------------------------------------
+  CALL mp_barrier()
   !
-  implicit none
+  CALL mp_end()
+  !
+END PROGRAM q2r
+!
+!----------------------------------------------------------------------------
+SUBROUTINE read_file( nqs, xq, phi, nax, epsil, zeu, lrigid, &
+                      ntyp, nat, ibrav, celldm, atm, amass, ityp, tau )
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
   !
   ! I/O variables
-  logical :: lrigid
-  integer :: nqs, nax, ntyp, nat, ibrav, ityp(nax)
-  real(kind=8) :: epsil(3,3),zeu(3,3,nax)
-  real(kind=8) :: xq(3,48), celldm(6), amass(nax), tau(3,nax)
-  complex(kind=8) :: phi(3,3,nax,nax,48)
-  character(len=3) atm(nax)
+  LOGICAL :: lrigid
+  INTEGER :: nqs, nax, ntyp, nat, ibrav, ityp(nax)
+  REAL(KIND=DP) :: epsil(3,3),zeu(3,3,nax)
+  REAL(KIND=DP) :: xq(3,48), celldm(6), amass(nax), tau(3,nax)
+  COMPLEX(KIND=DP) :: phi(3,3,nax,nax,48)
+  CHARACTER(LEN=3) atm(nax)
   ! local variables
-  integer :: ntyp1,nat1,ibrav1,ityp1
-  integer :: i, j, na, nb, nt
-  real(kind=8) :: tau1(3), amass1, celldm1(6),q2
-  real(kind=8) :: phir(3),phii(3)
-  complex(kind=8) dcmplx
-  character(len=75) :: line
-  character(len=3)  :: atm1
-  logical :: first
-  data first/.true./
-  save first
+  INTEGER :: ntyp1,nat1,ibrav1,ityp1
+  INTEGER :: i, j, na, nb, nt
+  REAL(KIND=DP) :: tau1(3), amass1, celldm1(6),q2
+  REAL(KIND=DP) :: phir(3),phii(3)
+  COMPLEX(KIND=DP) dcmplx
+  CHARACTER(LEN=75) :: line
+  CHARACTER(LEN=3)  :: atm1
+  LOGICAL :: first
+  DATA first/.TRUE./
+  SAVE first
   !
-  read(1,*) 
-  read(1,*) 
-  if (first) then
+  READ(1,*) 
+  READ(1,*) 
+  IF (first) THEN
      !
      ! read cell information from file
      !
-     read(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-     if (nat.gt.nax) call errore('read_f','nax too small',nat)
-     if (ntyp.gt.nat) call errore('read_f','ntyp.gt.nat!!',ntyp)
-     do nt = 1,ntyp
-        read(1,*) i,atm(nt),amass(nt)
-        if (i.ne.nt) call errore('read_f','wrong data read',nt)
-     end do
-     do na=1,nat
-        read(1,*) i,ityp(na),(tau(j,na),j=1,3)
-        if (i.ne.na) call errore('read_f','wrong data read',na)
-     end do
+     READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+     IF (nat.GT.nax) CALL errore('read_f','nax too small',nat)
+     IF (ntyp.GT.nat) CALL errore('read_f','ntyp.gt.nat!!',ntyp)
+     DO nt = 1,ntyp
+        READ(1,*) i,atm(nt),amass(nt)
+        IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)
+     END DO
+     DO na=1,nat
+        READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+        IF (i.NE.na) CALL errore('read_f','wrong data read',na)
+     END DO
      !
-     first=.false.
-     lrigid=.false.
+     first=.FALSE.
+     lrigid=.FALSE.
      !
-  else
+  ELSE
      !
      ! check cell information with previous one
      !
-     read(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
-     if (ntyp1.ne.ntyp) call errore('read_f','wrong ntyp',1)
-     if (nat1.ne.nat) call errore('read_f','wrong nat',1)
-     if (ibrav1.ne.ibrav) call errore('read_f','wrong ibrav',1)
-     do i=1,6
-        if(celldm1(i).ne.celldm(i)) call errore('read_f','wrong celldm',i)
-     end do
-     do nt = 1,ntyp
-        read(1,*) i,atm1,amass1
-        if (i.ne.nt) call errore('read_f','wrong data read',nt)
-        if (atm1.ne.atm(nt)) call errore('read_f','wrong atm',nt)
-        if (amass1.ne.amass(nt)) call errore('read_f','wrong amass',nt)
-     end do
-     do na=1,nat
-        read(1,*) i,ityp1,(tau1(j),j=1,3)
-        if (i.ne.na) call errore('read_f','wrong data read',na)
-        if (ityp1.ne.ityp(na)) call errore('read_f','wrong ityp',na)
-        if (tau1(1).ne.tau(1,na)) call errore('read_f','wrong tau1',na)
-        if (tau1(2).ne.tau(2,na)) call errore('read_f','wrong tau2',na)
-        if (tau1(3).ne.tau(3,na)) call errore('read_f','wrong tau3',na)
-     end do
-  end if
+     READ(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
+     IF (ntyp1.NE.ntyp) CALL errore('read_f','wrong ntyp',1)
+     IF (nat1.NE.nat) CALL errore('read_f','wrong nat',1)
+     IF (ibrav1.NE.ibrav) CALL errore('read_f','wrong ibrav',1)
+     DO i=1,6
+        IF(celldm1(i).NE.celldm(i)) CALL errore('read_f','wrong celldm',i)
+     END DO
+     DO nt = 1,ntyp
+        READ(1,*) i,atm1,amass1
+        IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)
+        IF (atm1.NE.atm(nt)) CALL errore('read_f','wrong atm',nt)
+        IF (amass1.NE.amass(nt)) CALL errore('read_f','wrong amass',nt)
+     END DO
+     DO na=1,nat
+        READ(1,*) i,ityp1,(tau1(j),j=1,3)
+        IF (i.NE.na) CALL errore('read_f','wrong data read',na)
+        IF (ityp1.NE.ityp(na)) CALL errore('read_f','wrong ityp',na)
+        IF (tau1(1).NE.tau(1,na)) CALL errore('read_f','wrong tau1',na)
+        IF (tau1(2).NE.tau(2,na)) CALL errore('read_f','wrong tau2',na)
+        IF (tau1(3).NE.tau(3,na)) CALL errore('read_f','wrong tau3',na)
+     END DO
+  END IF
   !
   !
   nqs = 0
-100 continue
-  read(1,*)
-  read(1,'(a)') line
-  if (line(6:14).ne.'Dynamical') then
-     if (nqs.eq.0) call errore('read',' stop with nqs=0 !!',1)
+100 CONTINUE
+  READ(1,*)
+  READ(1,'(a)') line
+  IF (line(6:14).NE.'Dynamical') THEN
+     IF (nqs.EQ.0) CALL errore('read',' stop with nqs=0 !!',1)
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
-     if (q2.ne.0.d0) return
-     do while (line(6:15).ne.'Dielectric') 
-        read(1,'(a)',err=200, end=200) line
-     end do
-     lrigid=.true.
-     read(1,*) ((epsil(i,j),j=1,3),i=1,3)
-     read(1,*)
-     read(1,*)
-     read(1,*)
-     write (*,*) 'macroscopic fields =',lrigid
-     write (*,'(3f10.5)') ((epsil(i,j),j=1,3),i=1,3)
-     do na=1,nat
-        read(1,*)
-        read(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
-        write (*,*) ' na= ', na
-        write (*,'(3f10.5)') ((zeu(i,j,na),j=1,3),i=1,3)
-     end do
-     return
-200  write (*,*) ' Dielectric Tensor not found'
-     lrigid=.false.     
-     return
-  end if
+     IF (q2.NE.0.d0) RETURN
+     DO WHILE (line(6:15).NE.'Dielectric') 
+        READ(1,'(a)',err=200, END=200) line
+     END DO
+     lrigid=.TRUE.
+     READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
+     READ(1,*)
+     READ(1,*)
+     READ(1,*)
+     WRITE (*,*) 'macroscopic fields =',lrigid
+     WRITE (*,'(3f10.5)') ((epsil(i,j),j=1,3),i=1,3)
+     DO na=1,nat
+        READ(1,*)
+        READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
+        WRITE (*,*) ' na= ', na
+        WRITE (*,'(3f10.5)') ((zeu(i,j,na),j=1,3),i=1,3)
+     END DO
+     RETURN
+200  WRITE (*,*) ' Dielectric Tensor not found'
+     lrigid=.FALSE.     
+     RETURN
+  END IF
   !
   nqs = nqs + 1
-  read(1,*) 
-  read(1,'(a)') line
-  read(line(11:75),*) (xq(i,nqs),i=1,3)
-  read(1,*) 
+  READ(1,*) 
+  READ(1,'(a)') line
+  READ(line(11:75),*) (xq(i,nqs),i=1,3)
+  READ(1,*) 
   !
-  do na=1,nat
-     do nb=1,nat
-        read(1,*) i,j
-        if (i.ne.na) call errore('read_f','wrong na read',na)
-        if (j.ne.nb) call errore('read_f','wrong nb read',nb)
-        do i=1,3
-           read (1,*) (phir(j),phii(j),j=1,3)
-           do j = 1,3
+  DO na=1,nat
+     DO nb=1,nat
+        READ(1,*) i,j
+        IF (i.NE.na) CALL errore('read_f','wrong na read',na)
+        IF (j.NE.nb) CALL errore('read_f','wrong nb read',nb)
+        DO i=1,3
+           READ (1,*) (phir(j),phii(j),j=1,3)
+           DO j = 1,3
               phi(i,j,na,nb,nqs) = dcmplx(phir(j),phii(j))
-           end do
-        end do
-     end do
-  end do
+           END DO
+        END DO
+     END DO
+  END DO
   !
   go to 100
   !
-end subroutine read_file
+END SUBROUTINE read_file
 !
-!---------------------------------------------------------------------
-subroutine trasl (phi,phiq,nq,nrx1,nrx2,nrx3,nat,m1,m2,m3,nax)
-  !---------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE trasl( phi, phiq, nq, nrx1, nrx2, nrx3, nat, m1, m2, m3, nax )
+  !----------------------------------------------------------------------------
   !
-  implicit none
-  integer:: j1,j2, m1, m2, m3, nrx1, nrx2, nrx3, na1, na2, nat, nax, nq
+  USE kinds, ONLY : DP
   !
-  complex(kind=8) :: phi(nrx1,nrx2,nrx3,3,3,nax,nax)
-  complex(kind=8) :: phiq(3,3,nax,nax,48)
+  IMPLICIT NONE
+  INTEGER:: j1,j2, m1, m2, m3, nrx1, nrx2, nrx3, na1, na2, nat, nax, nq
   !
-  do j1=1,3
-     do j2=1,3
-        do na1=1,nat
-           do na2=1,nat
+  COMPLEX(KIND=DP) :: phi(nrx1,nrx2,nrx3,3,3,nax,nax)
+  COMPLEX(KIND=DP) :: phiq(3,3,nax,nax,48)
+  !
+  DO j1=1,3
+     DO j2=1,3
+        DO na1=1,nat
+           DO na2=1,nat
               phi(m1,m2,m3,j1,j2,na1,na2) = &
                    0.5 * (      phiq(j1,j2,na1,na2,nq) +  &
-                          conjg(phiq(j2,j1,na2,na1,nq)))
-           end do
-        end do
-     end do
-  end do
+                          CONJG(phiq(j2,j1,na2,na1,nq)))
+           END DO
+        END DO
+     END DO
+  END DO
   !
-  return 
-end subroutine trasl
+  RETURN 
+END SUBROUTINE trasl
 
 # if defined __AIX || defined __FFTW || defined __SGI
 #  define __FFT_MODULE_DRV
 # endif
 
-!-------------------------------------------------------------------
-subroutine tolerant_cft3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg)
-  !-------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, nrx1, nrx2, nrx3, iflg )
+  !----------------------------------------------------------------------------
   !
   !  cft3 called for vectors with arbitrary maximal dimensions
   !
-
+  USE kinds,      ONLY : DP
 #if defined __FFT_MODULE_DRV
-  use fft_scalar, only : cfft3d
+  USE fft_scalar, ONLY : cfft3d
 #endif
 
-  implicit none
-  integer :: nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg
-  complex(kind=8) :: f(nrx1,nrx2,nrx3)
+  IMPLICIT NONE
+  INTEGER :: nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg
+  COMPLEX(KIND=DP) :: f(nrx1,nrx2,nrx3)
 #if defined __FFT_MODULE_DRV
-  complex(kind=8) :: ftmp(nrx1*nrx2*nrx3)
+  COMPLEX(KIND=DP) :: ftmp(nrx1*nrx2*nrx3)
 #endif
-  integer :: i0,i1,i2,i3
+  INTEGER :: i0,i1,i2,i3
   !
   i0=0
-  do i3=1,nr3
-     do i2=1,nr2
-        do i1=1,nr1
+  DO i3=1,nr3
+     DO i2=1,nr2
+        DO i1=1,nr1
            i0 = i0 + 1
 #if defined __FFT_MODULE_DRV
            ftmp(i0) = f(i1,i2,i3)
 #else
            f(i0,1,1) = f(i1,i2,i3)
 #endif
-        enddo
-     enddo
-  enddo
+        ENDDO
+     ENDDO
+  ENDDO
   !
-  if (nr1.ne.1 .or. nr2.ne.1 .or. nr3.ne.1)                         &
+  IF (nr1.NE.1 .OR. nr2.NE.1 .OR. nr3.NE.1)                         &
 #if defined __FFT_MODULE_DRV
-       &    call cfft3d(ftmp,nr1,nr2,nr3,nr1,nr2,nr3,1)
+       &    CALL cfft3d(ftmp,nr1,nr2,nr3,nr1,nr2,nr3,1)
 #else
-       &    call cft_3(f,nr1,nr2,nr3,nr1,nr2,nr3,1,iflg)
+       &    CALL cft_3(f,nr1,nr2,nr3,nr1,nr2,nr3,1,iflg)
 #endif
   !
   i0=nr1*nr2*nr3
-  do i3=nr3,1,-1
-     do i2=nr2,1,-1
-        do i1=nr1,1,-1
+  DO i3=nr3,1,-1
+     DO i2=nr2,1,-1
+        DO i1=nr1,1,-1
 #if defined __FFT_MODULE_DRV
            f(i1,i2,i3) = ftmp(i0)
 #else
            f(i1,i2,i3) = f(i0,1,1)
 #endif
            i0 = i0 - 1
-        enddo
-     enddo
-  enddo
+        ENDDO
+     ENDDO
+  ENDDO
 
   !
-  return
-end subroutine tolerant_cft3
+  RETURN
+END SUBROUTINE tolerant_cft3

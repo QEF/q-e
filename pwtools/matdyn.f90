@@ -1,13 +1,14 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !---------------------------------------------------------------------
-program matdyn
+PROGRAM matdyn
   !-----------------------------------------------------------------------
   !  this program calculates the phonon frequencies for a list of generic 
   !  q vectors starting from the interatomic force constants generated 
@@ -56,23 +57,28 @@ program matdyn
   !  For low-symmetry crystals, specify twice q = 0 in the list
   !  if you want to have q = 0 results for two different directions
   !
-#include "f_defs.h"
-  implicit none
+  USE kinds,      ONLY : DP
+  USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
+  USE mp_global,  ONLY : nproc, mpime, mp_global_start  
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: gid
   !
   ! variables *_blk refer to the original cell, other variables
   ! to the (super)cell (which may coincide with the original cell)
   !
-  integer, parameter:: nax=16, nax_blk=16, nrx=8, nqx=500, nrwsx=200, &
+  INTEGER, PARAMETER:: nax=16, nax_blk=16, nrx=8, nqx=500, nrwsx=200, &
                        nax3=3*nax
-  real(kind=8), parameter :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
+  REAL(KIND=DP), PARAMETER :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
        amconv = 1.66042e-24/9.1095e-28*0.5
-  integer :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
-  character(len=30) :: flfrc, flfrq, flvec, fltau, fldos
-  logical :: asr, dos, has_zstar
-  complex(kind=8) :: dyn(3,3,nax,nax), dyn_blk(3,3,nax_blk,nax_blk)
-  complex(kind=8) :: z(3*nax,3*nax)         ! eigenvalues
-  real(kind=8) :: frc(nrx,nrx,nrx,3,3,nax_blk,nax_blk) ! force constants
-  real(kind=8) :: at(3,3), bg(3,3), omega,   &! cell parameters and volume
+  INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
+  CHARACTER(LEN=30) :: flfrc, flfrq, flvec, fltau, fldos
+  LOGICAL :: asr, dos, has_zstar
+  COMPLEX(KIND=DP) :: dyn(3,3,nax,nax), dyn_blk(3,3,nax_blk,nax_blk)
+  COMPLEX(KIND=DP) :: z(3*nax,3*nax)         ! eigenvalues
+  REAL(KIND=DP) :: frc(nrx,nrx,nrx,3,3,nax_blk,nax_blk) ! force constants
+  REAL(KIND=DP) :: at(3,3), bg(3,3), omega,   &! cell parameters and volume
                   alat, tau(3,nax),          &! atomic positions 
                   at_blk(3,3), bg_blk(3,3),  &! original cell
                   omega_blk,                 &! original cell volume
@@ -85,478 +91,497 @@ program matdyn
                   w2(3*nax,nqx),              &! frequencies (square)
                   atws(3,3),      &! lattice vector for WS initialization
                   rws(0:3,nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
-  real(kind=8), allocatable:: tetra(:,:), freq(:,:)
+  REAL(KIND=DP), ALLOCATABLE:: tetra(:,:), freq(:,:)
   !
-  integer :: nat, nat_blk,                 & 
+  INTEGER :: nat, nat_blk,                 & 
              ityp_blk(nax_blk), ityp(nax), &
              ntyp, ntyp_blk,               &
              itau_blk(nax),                &
              l1, l2, l3,                   &! supercell dimensions
              nrws                          ! number of nearest neighbor
   !
-  logical :: readtau
+  LOGICAL :: readtau
   !
-  real(kind=8) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
-  integer :: n, i, j, it, nq, na, nb, ndos, iout
-  namelist /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
+  REAL(KIND=DP) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
+  INTEGER :: n, i, j, it, nq, na, nb, ndos, iout
+  NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ilen
+  INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
   !
-  ! set namelist default
   !
-  dos = .false.
-  deltaE = 1.0
-  nk1 = 0 
-  nk2 = 0 
-  nk3 = 0 
-  asr  =.false.
-  readtau=.false.
-  flfrc=' '
-  fldos='matdyn.dos'
-  flfrq='matdyn.freq'
-  flvec='matdyn.modes'
-  fltau=' '
-  amass(:) =0.d0
-  amass_blk(:) =0.d0
-  at(:,:) = 0.d0
-  ntyp=0
-  l1=1
-  l2=1
-  l3=1
-
+  CALL mp_start()
   !
-  ! ... Input from file ?
+  CALL mp_env( nproc, mpime, gid )
   !
-  nargs = iargc()
-  !
-  DO iiarg = 1, ( nargs - 1 )
+  IF ( mpime == 0 ) THEN
      !
-     CALL getarg( iiarg, input_file )
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
+     ! ... all calculations are done by the first cpu
+     !
+     ! set namelist default
+     !
+     dos = .FALSE.
+     deltaE = 1.0
+     nk1 = 0 
+     nk2 = 0 
+     nk3 = 0 
+     asr  =.FALSE.
+     readtau=.FALSE.
+     flfrc=' '
+     fldos='matdyn.dos'
+     flfrq='matdyn.freq'
+     flvec='matdyn.modes'
+     fltau=' '
+     amass(:) =0.d0
+     amass_blk(:) =0.d0
+     at(:,:) = 0.d0
+     ntyp=0
+     l1=1
+     l2=1
+     l3=1
+     !
+     ! ... Input from file ?
+     !
+     nargs = iargc()
+     !
+     DO iiarg = 1, ( nargs - 1 )
         !
-        CALL getarg( ( iiarg + 1 ) , input_file )
-        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
+        CALL getarg( iiarg, input_file )
+        IF ( TRIM( input_file ) == '-input' .OR. &
+             TRIM( input_file ) == '-inp'   .OR. &
+             TRIM( input_file ) == '-in' ) THEN
+           !
+           CALL getarg( ( iiarg + 1 ) , input_file )
+           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+                STATUS = 'OLD', IOSTAT = ierr )
+           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                & ' not found' , ierr )
+           !
+        END IF
         !
+     END DO
+
+     !
+     READ (5,input)
+     !
+     ! convert masses to atomic units
+     !
+     amass(:) = amass(:) * amconv
+     !
+     ! read force constants 
+     !
+     CALL readfc ( flfrc, nr1, nr2, nr3, nrx, frc, epsil, zeu, nat_blk, &
+          nax_blk, ibrav, alat, tau_blk, at_blk, ntyp_blk, ityp_blk,    &
+          amass_blk, omega_blk, has_zstar)
+     !
+     CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
+          bg_blk(1,1),bg_blk(1,2),bg_blk(1,3) )
+     !
+     ! set up (super)cell
+     !
+     ! types of atoms
+     ! 
+     IF (ntyp < 0) THEN
+        CALL errore ('matdyn','wrong ntyp ', ABS(ntyp))
+     ELSE IF (ntyp == 0) THEN
+        ntyp=ntyp_blk
      END IF
      !
-  END DO
+     ! masses (for mass approximation)
+     ! 
+     DO it=1,ntyp
+        IF (amass(it) < 0.d0) THEN
+           CALL errore ('matdyn','wrong mass in the namelist',it)
+        ELSE IF (amass(it) == 0.d0) THEN
+           IF (it.LE.ntyp_blk) THEN
+              WRITE (*,'(a,i3,a,a)') ' mass for atomic type ',it,      &
+                   &                     ' not given; uses mass from file ',flfrc
+              amass(it) = amass_blk(it)
+           ELSE
+              CALL errore ('matdyn','missing mass in the namelist',it)
+           END IF
+        END IF
+     END DO
+     !
+     ! lattice vectors
+     !
+     IF (SUM(ABS(at(:,:))) == 0.d0) THEN
+        IF (l1.LE.0 .OR. l2.LE.0 .OR. l3.LE.0) CALL                    &
+             &             errore ('matdyn',' wrong l1,l2 or l3',1)
+        at(:,1) = at_blk(:,1)*DBLE(l1)
+        at(:,2) = at_blk(:,2)*DBLE(l2)
+        at(:,3) = at_blk(:,3)*DBLE(l3)
+     END IF
+     !
+     CALL check_at(at,bg_blk,alat,omega)
+     !
+     ! the supercell contains "nsc" times the original unit cell
+     !
+     nsc = NINT(omega/omega_blk)
+     IF (ABS(omega/omega_blk-nsc) > eps) &
+          CALL errore ('matdyn', 'volume ratio not integer', 1)
+     !
+     ! read/generate atomic positions of the (super)cell
+     !
+     nat = nat_blk * nsc
+     IF (nat.GT.nax) CALL errore ('matdyn','nat.gt.nax',nat)
+     !
+     IF (readtau) THEN
+        CALL read_tau (nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
+     ELSE
+        CALL set_tau  (nat,nat_blk,at,at_blk,tau,tau_blk,ityp,ityp_blk,itau_blk)
+     ENDIF
+     !
+     IF (fltau.NE.' ') CALL write_tau(fltau,nat,tau,ityp)
+     !
+     ! reciprocal lattice vectors
+     !
+     CALL recips (at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
+     !
+     ! build the WS cell corresponding to the force constant grid
+     !
+     atws(:,1) = at_blk(:,1)*DBLE(nr1)
+     atws(:,2) = at_blk(:,2)*DBLE(nr2)
+     atws(:,3) = at_blk(:,3)*DBLE(nr3)
+     ! initialize WS r-vectors
+     CALL wsinit(rws,nrwsx,nrws,atws)
+     !
+     ! end of (super)cell setup
+     !
+     IF (dos) THEN
+        IF (nk1 < 1 .OR. nk2 < 1 .OR. nk3 < 1) &
+             CALL errore  ('matdyn','specify correct q-point grid!',1)
+        ntetra = 6 * nk1 * nk2 * nk3
+        ALLOCATE ( tetra(4,ntetra) )
+        CALL gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
+             ntetra, nqx, nq, q, tetra)
+     ELSE
+        !
+        ! read q-point list
+        !
+        READ (5,*) nq
+        IF (nq.GT.nqx) CALL errore ('matdyn','too many k-points',nq)
+        DO n = 1,nq
+           READ (5,*) (q(i,n),i=1,3)
+        END DO
+     END IF
+     !
+     IF(asr) CALL set_asr(nr1,nr2,nr3,nrx,frc,zeu,nat_blk,nax_blk)
+     !
+     IF (flvec.EQ.' ') THEN
+        iout=6
+     ELSE
+        iout=4
+        OPEN (unit=iout,file=flvec,status='unknown',form='formatted')
+     END IF
+     DO n=1, nq
+        dyn(:,:,:,:) = (0.d0, 0.d0)
 
-  !
-  read (5,input)
-  !
-  ! convert masses to atomic units
-  !
-  amass(:) = amass(:) * amconv
-  !
-  ! read force constants 
-  !
-  call readfc ( flfrc, nr1, nr2, nr3, nrx, frc, epsil, zeu, nat_blk, &
-       nax_blk, ibrav, alat, tau_blk, at_blk, ntyp_blk, ityp_blk,    &
-       amass_blk, omega_blk, has_zstar)
-  !
-  call recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
-                bg_blk(1,1),bg_blk(1,2),bg_blk(1,3) )
-  !
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! set up (super)cell
-  !
-  ! types of atoms
-  ! 
-  if (ntyp < 0) then
-     call errore ('matdyn','wrong ntyp ', abs(ntyp))
-  else if (ntyp == 0) then
-     ntyp=ntyp_blk
-  end if
-  !
-  ! masses (for mass approximation)
-  ! 
-  do it=1,ntyp
-     if (amass(it) < 0.d0) then
-        call errore ('matdyn','wrong mass in the namelist',it)
-     else if (amass(it) == 0.d0) then
-        if (it.le.ntyp_blk) then
-           write (*,'(a,i3,a,a)') ' mass for atomic type ',it,      &
-                &                     ' not given; uses mass from file ',flfrc
-           amass(it) = amass_blk(it)
-        else
-           call errore ('matdyn','missing mass in the namelist',it)
-        end if
-     end if
-  end do
-  !
-  ! lattice vectors
-  !
-  if (SUM(abs(at(:,:))) == 0.d0) then
-     if (l1.le.0 .or. l2.le.0 .or. l3.le.0) call                    &
-          &             errore ('matdyn',' wrong l1,l2 or l3',1)
-     at(:,1) = at_blk(:,1)*dble(l1)
-     at(:,2) = at_blk(:,2)*dble(l2)
-     at(:,3) = at_blk(:,3)*dble(l3)
-  end if
-  !
-  call check_at(at,bg_blk,alat,omega)
-  !
-  ! the supercell contains "nsc" times the original unit cell
-  !
-  nsc = nint(omega/omega_blk)
-  if (abs(omega/omega_blk-nsc) > eps) &
-       call errore ('matdyn', 'volume ratio not integer', 1)
-  !
-  ! read/generate atomic positions of the (super)cell
-  !
-  nat = nat_blk * nsc
-  if (nat.gt.nax) call errore ('matdyn','nat.gt.nax',nat)
-  !
-  if (readtau) then
-     call read_tau (nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
-  else
-     call set_tau  (nat,nat_blk,at,at_blk,tau,tau_blk,ityp,ityp_blk,itau_blk)
-  endif
-  !
-  if (fltau.ne.' ') call write_tau(fltau,nat,tau,ityp)
-  !
-  ! reciprocal lattice vectors
-  !
-  call recips (at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
-  !
-  ! build the WS cell corresponding to the force constant grid
-  !
-  atws(:,1) = at_blk(:,1)*dble(nr1)
-  atws(:,2) = at_blk(:,2)*dble(nr2)
-  atws(:,3) = at_blk(:,3)*dble(nr3)
-  ! initialize WS r-vectors
-  call wsinit(rws,nrwsx,nrws,atws)
-  !
-  ! end of (super)cell setup
-  !
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  if (dos) then
-     if (nk1 < 1 .or. nk2 < 1 .or. nk3 < 1) &
-          call errore  ('matdyn','specify correct q-point grid!',1)
-     ntetra = 6 * nk1 * nk2 * nk3
-     allocate ( tetra(4,ntetra) )
-     call gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
-          ntetra, nqx, nq, q, tetra)
-  else
-  !
-  ! read q-point list
-  !
-     read (5,*) nq
-     if (nq.gt.nqx) call errore ('matdyn','too many k-points',nq)
-     do n = 1,nq
-        read (5,*) (q(i,n),i=1,3)
-     end do
-  end if
-  !
-  if(asr) call set_asr(nr1,nr2,nr3,nrx,frc,zeu,nat_blk,nax_blk)
-  !
-  if (flvec.eq.' ') then
-     iout=6
-  else
-     iout=4
-     open (unit=iout,file=flvec,status='unknown',form='formatted')
-  end if
-  do n=1, nq
-     dyn(:,:,:,:) = (0.d0, 0.d0)
-
-     call setupmat (q(1,n),dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
+        CALL setupmat (q(1,n),dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
              dyn_blk,nat_blk,nax_blk,at_blk,bg_blk,tau_blk,omega_blk,  &
              epsil,zeu,frc,nr1,nr2,nr3,nrx,has_zstar,rws,nrws)
 
-     if (q(1,n)==0.d0 .and. q(2,n)==0.d0 .and. q(3,n)==0.d0) then
-        !
-        ! q = 0 : we need the direction q => 0 for the non-analytic part
-        !
-        if ( (n == 1 .and. nq > 1) .or. &
-             (n > 1 .and. n < nq .and.  &
-              q(1,n-1)==0.d0.and.q(2,n-1)==0.d0.and.q(3,n-1)==0.d0) ) then
+        IF (q(1,n)==0.d0 .AND. q(2,n)==0.d0 .AND. q(3,n)==0.d0) THEN
+           !
+           ! q = 0 : we need the direction q => 0 for the non-analytic part
+           !
+           IF ( (n == 1 .AND. nq > 1) .OR. &
+                (n > 1 .AND. n < nq .AND.  &
+                q(1,n-1)==0.d0.AND.q(2,n-1)==0.d0.AND.q(3,n-1)==0.d0) ) THEN
               ! if q is the first point in the list, or
               ! if preceding q is also 0 :
-           qhat(:) = q(:,n) - q(:,n+1)
-        else if ( n > 1 ) then
+              qhat(:) = q(:,n) - q(:,n+1)
+           ELSE IF ( n > 1 ) THEN
               ! if q is not the first point in the list
-           qhat(:) = q(:,n) - q(:,n-1)
-        else
-           qhat(:) = 0.d0
-        end if
-        qh = sqrt(qhat(1)**2+qhat(2)**2+qhat(3)**2)
-        if (qh /= 0.d0) qhat(:) = qhat(:) / qh
-        if (qh /= 0.d0 .and. .not. has_zstar) call errore  &
-             ('matdyn','non-analytic term for q=0 missing !', -1)
+              qhat(:) = q(:,n) - q(:,n-1)
+           ELSE
+              qhat(:) = 0.d0
+           END IF
+           qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
+           IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
+           IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL errore  &
+                ('matdyn','non-analytic term for q=0 missing !', -1)
+           !
+           CALL nonanal (nax,nat,dyn,qhat,itau_blk,nax_blk,epsil,zeu,omega)
+           !
+        END IF
         !
-        call nonanal (nax,nat,dyn,qhat,itau_blk,nax_blk,epsil,zeu,omega)
+        CALL dyndiag(nax,nat,amass,ityp,dyn,w2(1,n),z)
         !
-     end if
+        CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
+        !
+     END DO
      !
-     call dyndiag(nax,nat,amass,ityp,dyn,w2(1,n),z)
+     IF(iout .NE. 6) CLOSE(unit=iout)
      !
-     call writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
+     ALLOCATE (freq(3*nat, nq))
+     DO n=1,nq
+        ! freq(i,n) = frequencies in cm^(-1)
+        !             negative sign if omega^2 is negative
+        DO i=1,3*nat
+           freq(i,n)= SQRT(ABS(w2(i,n)))*rydcm1
+           IF (w2(i,n).LT.0.0) freq(i,n) = -freq(i,n)
+        END DO
+     END DO
      !
-  end do
-  !
-  if(iout .ne. 6) close(unit=iout)
-  !
-  allocate (freq(3*nat, nq))
-  do n=1,nq
-     ! freq(i,n) = frequencies in cm^(-1)
-     !             negative sign if omega^2 is negative
-     do i=1,3*nat
-        freq(i,n)= sqrt(abs(w2(i,n)))*rydcm1
-        if (w2(i,n).lt.0.0) freq(i,n) = -freq(i,n)
-     end do
-  end do
-  !
-  if(flfrq.ne.' ') then
-     open (unit=2,file=flfrq ,status='unknown',form='formatted')
-     write(2,*) nq, 3*nat
-     do n=1, nq
-        write(2,'(6f10.4)') (freq(i,n),i=1,3*nat)
-     end do
-     close(unit=2)
-  end if
-  !
-  if (dos) then
-     Emin = 0.0 
-     Emax = 0.0
-     do n=1,nq
-        do i=1, 3*nat
-           Emin = min (Emin, freq(i,n))
-           Emax = max (Emax, freq(i,n))
-        end do
-     end do
+     IF(flfrq.NE.' ') THEN
+        OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
+        WRITE(2,*) nq, 3*nat
+        DO n=1, nq
+           WRITE(2,'(6f10.4)') (freq(i,n),i=1,3*nat)
+        END DO
+        CLOSE(unit=2)
+     END IF
      !
-     ndos = nint ( (Emax - Emin) / DeltaE+0.500001)  
-     open (unit=2,file=fldos,status='unknown',form='formatted')
-     do n= 1, ndos  
-        E = Emin + (n - 1) * DeltaE  
-        call dos_t(freq, 1, 3*nat, nq, ntetra, tetra, E, DOSofE)
-        write (2, '(2e12.4)') E, DOSofE (1)
-     end do
-     close(unit=2)
-  end if
+     IF (dos) THEN
+        Emin = 0.0 
+        Emax = 0.0
+        DO n=1,nq
+           DO i=1, 3*nat
+              Emin = MIN (Emin, freq(i,n))
+              Emax = MAX (Emax, freq(i,n))
+           END DO
+        END DO
+        !
+        ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)  
+        OPEN (unit=2,file=fldos,status='unknown',form='formatted')
+        DO n= 1, ndos  
+           E = Emin + (n - 1) * DeltaE  
+           CALL dos_t(freq, 1, 3*nat, nq, ntetra, tetra, E, DOSofE)
+           WRITE (2, '(2e12.4)') E, DOSofE (1)
+        END DO
+        CLOSE(unit=2)
+     END IF
+     !
+  END IF
+  ! 
+  CALL mp_barrier()
   !
-  stop
-end program matdyn
+  CALL mp_end()
+  !
+  STOP
+  !
+END PROGRAM matdyn
 !
 !-----------------------------------------------------------------------
-subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
+SUBROUTINE readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
                    ibrav,alat,tau,at,ntyp,ityp,amass,omega,has_zstar)
   !-----------------------------------------------------------------------
   !
-  implicit none
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
   ! I/O variable
-  character(len=30) flfrc
-  integer ibrav, nr1,nr2,nr3,nrx, nat, nax, ntyp, ityp(nax)
-  real(kind=8) frc(nrx,nrx,nrx,3,3,nax,nax), epsil(3,3),zeu(3,3,nax)
-  real(kind=8) alat, at(3,3), tau(3,nax)
-  logical has_zstar
+  CHARACTER(LEN=30) flfrc
+  INTEGER ibrav, nr1,nr2,nr3,nrx, nat, nax, ntyp, ityp(nax)
+  REAL(KIND=DP) frc(nrx,nrx,nrx,3,3,nax,nax), epsil(3,3),zeu(3,3,nax)
+  REAL(KIND=DP) alat, at(3,3), tau(3,nax)
+  LOGICAL has_zstar
   ! local variables
-  integer i, j, na, nb, m1,m2,m3
-  integer ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
-  real(kind=8) amass(nax), amass_from_file, celldm(6), omega
-  integer nt
-  character(len=3) atm
+  INTEGER i, j, na, nb, m1,m2,m3
+  INTEGER ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
+  REAL(KIND=DP) amass(nax), amass_from_file, celldm(6), omega
+  INTEGER nt
+  CHARACTER(LEN=3) atm
   !
   !
-  open (unit=1,file=flfrc,status='old',form='formatted')
+  OPEN (unit=1,file=flfrc,status='old',form='formatted')
   !
   !
   !  read cell data
   !
-  read(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-  if (nat.gt.nax) call errore ('readfc','too many atoms',nat)
-  call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+  READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+  IF (nat.GT.nax) CALL errore ('readfc','too many atoms',nat)
+  CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   alat = celldm(1)
   at = at / alat !  bring at in units of alat
-  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
+  CALL volume(alat,at(1,1),at(1,2),at(1,3),omega)
   !
   !  read atomic types, positions and masses
   !
-  do nt = 1,ntyp
-     read(1,*) i,atm,amass_from_file
-     if (i.ne.nt) call errore ('readfc','wrong data read',nt)
-     if (amass(nt).eq.0.d0) then
+  DO nt = 1,ntyp
+     READ(1,*) i,atm,amass_from_file
+     IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
+     IF (amass(nt).EQ.0.d0) THEN
         amass(nt) = amass_from_file
-     else
-        write(*,*) 'for atomic type',nt,' mass from file not used'
-     end if
-  end do
-  do na=1,nat
-     read(1,*) i,ityp(na),(tau(j,na),j=1,3)
-     if (i.ne.na) call errore ('readfc','wrong data read',na)
-  end do
+     ELSE
+        WRITE(*,*) 'for atomic type',nt,' mass from file not used'
+     END IF
+  END DO
+  DO na=1,nat
+     READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+     IF (i.NE.na) CALL errore ('readfc','wrong data read',na)
+  END DO
   !
   !  read macroscopic variable
   !
-  read (1,*) has_zstar
-  if (has_zstar) then
-     read(1,*) ((epsil(i,j),j=1,3),i=1,3)
-     do na=1,nat
-        read(1,*) 
-        read(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
-     end do
-  else
+  READ (1,*) has_zstar
+  IF (has_zstar) THEN
+     READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
+     DO na=1,nat
+        READ(1,*) 
+        READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
+     END DO
+  ELSE
      zeu  (:,:,:) = 0.d0
      epsil(:,:) = 0.d0
-  end if
+  END IF
   !
   !  read real space part
   !
-  read (1,*) nr1,nr2,nr3
-  if (nr1.gt.nrx)  call errore ('readin','nr1 .gt. nrx ',+1)
-  if (nr2.gt.nrx)  call errore ('readin','nr2 .gt. nrx ',+1)
-  if (nr3.gt.nrx)  call errore ('readin','nr3 .gt. nrx ',+1)
+  READ (1,*) nr1,nr2,nr3
+  IF (nr1.GT.nrx)  CALL errore ('readin','nr1 .gt. nrx ',+1)
+  IF (nr2.GT.nrx)  CALL errore ('readin','nr2 .gt. nrx ',+1)
+  IF (nr3.GT.nrx)  CALL errore ('readin','nr3 .gt. nrx ',+1)
   !
-  if(nat.gt.nax) call errore  ('readfc','nax too small', nat)
+  IF(nat.GT.nax) CALL errore  ('readfc','nax too small', nat)
   !
   !  read real-space interatomic force constants
   !
   frc(:,:,:,:,:,:,:) = 0.d0
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              read (1,*) ibid, jbid, nabid, nbbid
-              if(i .ne.ibid  .or. j .ne.jbid .or.                   &
-                 na.ne.nabid .or. nb.ne.nbbid)                      &
-                 call errore  ('readfc','error in reading',1)
-              read (1,*) (((m1bid, m2bid, m3bid,                    &
+  DO i=1,3
+     DO j=1,3
+        DO na=1,nat
+           DO nb=1,nat
+              READ (1,*) ibid, jbid, nabid, nbbid
+              IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
+                 na.NE.nabid .OR. nb.NE.nbbid)                      &
+                 CALL errore  ('readfc','error in reading',1)
+              READ (1,*) (((m1bid, m2bid, m3bid,                    &
                           frc(m1,m2,m3,i,j,na,nb),                  &
                            m1=1,nr1),m2=1,nr2),m3=1,nr3)
-           end do
-        end do
-     end do
-  end do
+           END DO
+        END DO
+     END DO
+  END DO
   !
-  close(unit=1)
+  CLOSE(unit=1)
   !
-  return
-end subroutine readfc
+  RETURN
+END SUBROUTINE readfc
 !
 !-----------------------------------------------------------------------
-subroutine frc_blk(nax,dyn,q,tau,nat,                             &
+SUBROUTINE frc_blk(nax,dyn,q,tau,nat,                             &
      &                   nr1,nr2,nr3,nrx,frc,at,bg,rws,nrws)
   !-----------------------------------------------------------------------
   ! calculates the dynamical matrix at q from the (short-range part of the)
   ! force constants 
   !
-  implicit none
-  integer nr1, nr2, nr3, nrx, nax, nat, n1, n2, n3, &
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
+  INTEGER nr1, nr2, nr3, nrx, nax, nat, n1, n2, n3, &
           ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws
-  complex(kind=8) dyn(3,3,nax,nax), cmplx
-  real(kind=8) frc(nrx,nrx,nrx,3,3,nax,nax), tau(3,nax), q(3), arg, &
+  COMPLEX(KIND=DP) dyn(3,3,nax,nax), cmplx
+  REAL(KIND=DP) frc(nrx,nrx,nrx,3,3,nax,nax), tau(3,nax), q(3), arg, &
                at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
                total_weight, rws(0:3,nrws)
-  real(kind=8), parameter:: tpi = 2.0*3.14159265358979d0
-  real(kind=8), external :: wsweight
+  REAL(KIND=DP), PARAMETER:: tpi = 2.0*3.14159265358979d0
+  REAL(KIND=DP), EXTERNAL :: wsweight
   !
-  do na=1, nat
-     do nb=1, nat
+  DO na=1, nat
+     DO nb=1, nat
         total_weight=0.0d0
-        do n1=-2*nrx,2*nrx
-           do n2=-2*nrx,2*nrx
-              do n3=-2*nrx,2*nrx
+        DO n1=-2*nrx,2*nrx
+           DO n2=-2*nrx,2*nrx
+              DO n3=-2*nrx,2*nrx
                  !
                  ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
                  !
-                 do i=1, 3
+                 DO i=1, 3
                     r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
                     r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
-                 end do
+                 END DO
                  weight = wsweight(r_ws,rws,nrws)
-                 if (weight .gt. 0.0) then
+                 IF (weight .GT. 0.0) THEN
                     !
                     ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
                     !
-                    m1 = mod(n1+1,nr1)
-                    if(m1.le.0) m1=m1+nr1
-                    m2 = mod(n2+1,nr2)
-                    if(m2.le.0) m2=m2+nr2
-                    m3 = mod(n3+1,nr3)
-                    if(m3.le.0) m3=m3+nr3
+                    m1 = MOD(n1+1,nr1)
+                    IF(m1.LE.0) m1=m1+nr1
+                    m2 = MOD(n2+1,nr2)
+                    IF(m2.LE.0) m2=m2+nr2
+                    m3 = MOD(n3+1,nr3)
+                    IF(m3.LE.0) m3=m3+nr3
                     !
                     ! FOURIER TRANSFORM
                     !
                     arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
-                    do ipol=1, 3
-                       do jpol=1, 3
+                    DO ipol=1, 3
+                       DO jpol=1, 3
                           dyn(ipol,jpol,na,nb) =                 &
                                dyn(ipol,jpol,na,nb) +            &
                                frc(m1,m2,m3,ipol,jpol,na,nb)     &
-                               *cmplx(cos(arg),-sin(arg))*weight
-                       end do
-                    end do
-                 end if
+                               *CMPLX(COS(arg),-SIN(arg))*weight
+                       END DO
+                    END DO
+                 END IF
                  total_weight=total_weight + weight
-              end do
-           end do
-        end do
-        if (abs(total_weight-nr1*nr2*nr3).gt.1.0d-8) then
-           write(*,*) total_weight
-           call errore ('frc_blk','wrong total_weight',1)
-        end if
-     end do
-  end do
+              END DO
+           END DO
+        END DO
+        IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
+           WRITE(*,*) total_weight
+           CALL errore ('frc_blk','wrong total_weight',1)
+        END IF
+     END DO
+  END DO
   !
-  return
-end subroutine frc_blk
+  RETURN
+END SUBROUTINE frc_blk
 !
 !-----------------------------------------------------------------------
-subroutine setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
+SUBROUTINE setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,nax_blk,at_blk,bg_blk,tau_blk,omega_blk, &
      &                 epsil,zeu,frc,nr1,nr2,nr3,nrx,has_zstar,rws,nrws)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
-  implicit none
-  real(kind=8), parameter :: tpi=2.d0*3.14159265358979d0
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
+  REAL(KIND=DP), PARAMETER :: tpi=2.d0*3.14159265358979d0
   !
   ! I/O variables
   !
-  integer:: nr1, nr2, nr3, nrx, nax, nat, nat_blk, nax_blk, &
+  INTEGER:: nr1, nr2, nr3, nrx, nax, nat, nat_blk, nax_blk, &
        &    nsc, nrws, itau_blk(nat)
-  real(kind=8) :: q(3), tau(3,nax), at(3,3), bg(3,3), alat,      &
+  REAL(KIND=DP) :: q(3), tau(3,nax), at(3,3), bg(3,3), alat,      &
                   epsil(3,3), zeu(3,3,nax_blk), rws(0:3,nrws),   &
                   frc(nrx,nrx,nrx,3,3,nax_blk,nax_blk)
-  real(kind=8) :: tau_blk(3,nax_blk), at_blk(3,3), bg_blk(3,3), omega_blk
-  complex(kind=8) dyn_blk(3,3,nax_blk,nax_blk)
-  complex(kind=8) ::  dyn(3,3,nax,nax)
-  logical has_zstar
+  REAL(KIND=DP) :: tau_blk(3,nax_blk), at_blk(3,3), bg_blk(3,3), omega_blk
+  COMPLEX(KIND=DP) dyn_blk(3,3,nax_blk,nax_blk)
+  COMPLEX(KIND=DP) ::  dyn(3,3,nax,nax)
+  LOGICAL has_zstar
   !
   ! local variables
   !
-  real(kind=8) :: arg
-  complex(kind=8) :: cfac(nat)
-  integer :: i,j,k, na,nb, na_blk, nb_blk, iq
-  real(kind=8) qp(3), qbid(3,nsc) ! automatic array
+  REAL(KIND=DP) :: arg
+  COMPLEX(KIND=DP) :: cfac(nat)
+  INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq
+  REAL(KIND=DP) qp(3), qbid(3,nsc) ! automatic array
   !
   !
-  call q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
+  CALL q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
   !
-  do iq=1,nsc
+  DO iq=1,nsc
      !
-     do k=1,3
+     DO k=1,3
         qp(k)= q(k) + qbid(k,iq)
-     end do
+     END DO
      !
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
-     call frc_blk (nax_blk,dyn_blk,qp,tau_blk,nat_blk,              &
+     CALL frc_blk (nax_blk,dyn_blk,qp,tau_blk,nat_blk,              &
           &              nr1,nr2,nr3,nrx,frc,at_blk,bg_blk,rws,nrws)
-     if (has_zstar) &
-          call rgd_blk(nax_blk,nat_blk,dyn_blk,qp,tau_blk,   &
+     IF (has_zstar) &
+          CALL rgd_blk(nax_blk,nat_blk,dyn_blk,qp,tau_blk,   &
                        epsil,zeu,bg_blk,omega_blk,+1.d0)
      !
-     do na=1,nat
+     DO na=1,nat
         na_blk = itau_blk(na)
-        do nb=1,nat
+        DO nb=1,nat
            nb_blk = itau_blk(nb)
            !
            arg=tpi* ( qp(1) * ( (tau(1,na)-tau_blk(1,na_blk)) -   &
@@ -566,140 +591,144 @@ subroutine setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
                       qp(3) * ( (tau(3,na)-tau_blk(3,na_blk)) -   &
                                 (tau(3,nb)-tau_blk(3,nb_blk)) ) )
            !
-           cfac(nb) = cmplx(cos(arg),sin(arg))/nsc
+           cfac(nb) = CMPLX(COS(arg),SIN(arg))/nsc
            !
-        end do ! nb
+        END DO ! nb
         !
-        do i=1,3
-           do j=1,3
+        DO i=1,3
+           DO j=1,3
               !
-              do nb=1,nat
+              DO nb=1,nat
                  nb_blk = itau_blk(nb)
                  dyn(i,j,na,nb) = dyn(i,j,na,nb) + cfac(nb) * &
                       dyn_blk(i,j,na_blk,nb_blk)
-              end do ! nb
+              END DO ! nb
               !
-           end do ! j
-        end do ! i
-     end do ! na
+           END DO ! j
+        END DO ! i
+     END DO ! na
      !
-  end do ! iq
+  END DO ! iq
   !
-  return
-end subroutine setupmat
+  RETURN
+END SUBROUTINE setupmat
 !----------------------------------------------------------------------
-subroutine set_asr(nr1,nr2,nr3,nrx,frc,zeu,nat,nax)
+SUBROUTINE set_asr(nr1,nr2,nr3,nrx,frc,zeu,nat,nax)
   !-----------------------------------------------------------------------
   !
-  implicit none
-  integer nr1, nr2, nr3, nrx, nr, i, j, na, nb, n1,n2,n3, nat, nax
-  real(kind=8) frc(nrx,nrx,nrx,3,3,nax,nax), sum, zeu(3,3,nax)
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
+  INTEGER nr1, nr2, nr3, nrx, nr, i, j, na, nb, n1,n2,n3, nat, nax
+  REAL(KIND=DP) frc(nrx,nrx,nrx,3,3,nax,nax), sum, zeu(3,3,nax)
   !
   ! Acoustic Sum Rule on effective charges
   !
-  do i=1,3
-     do j=1,3
+  DO i=1,3
+     DO j=1,3
         sum=0.0
-        do na=1,nat
+        DO na=1,nat
            sum = sum + zeu(i,j,na)
-        end do
-        do na=1,nat
+        END DO
+        DO na=1,nat
            zeu(i,j,na) = zeu(i,j,na) - sum/nat
-        end do
-     end do
-  end do
+        END DO
+     END DO
+  END DO
   !
   ! Acoustic Sum Rule on force constants in real space
   !
-  do i=1,3
-     do j=1,3
-        do na=1,nat
+  DO i=1,3
+     DO j=1,3
+        DO na=1,nat
            sum=0.0
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
+           DO nb=1,nat
+              DO n1=1,nr1
+                 DO n2=1,nr2
+                    DO n3=1,nr3
                        sum=sum+frc(n1,n2,n3,i,j,na,nb)
-                    end do
-                 end do
-              end do
-           end do
+                    END DO
+                 END DO
+              END DO
+           END DO
            frc(1,1,1,i,j,na,na) = frc(1,1,1,i,j,na,na) - sum
            !               write(6,*) ' na, i, j, sum = ',na,i,j,sum
-        end do
-     end do
-  end do
+        END DO
+     END DO
+  END DO
   !
-  return
-end subroutine set_asr
+  RETURN
+END SUBROUTINE set_asr
 !
 !-----------------------------------------------------------------------
-subroutine q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
+SUBROUTINE q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
   !-----------------------------------------------------------------------
   ! generate list of q (qbid) that are G-vectors of the supercell
   ! but not of the bulk
   !
-  implicit none
-  integer :: nsc
-  real(kind=8) qbid(3,nsc), at_blk(3,3), bg_blk(3,3), at(3,3), bg(3,3)
+  USE kinds,      ONLY : DP
   !
-  integer, parameter:: nr1=4, nr2=4, nr3=4, &
+  IMPLICIT NONE
+  INTEGER :: nsc
+  REAL(KIND=DP) qbid(3,nsc), at_blk(3,3), bg_blk(3,3), at(3,3), bg(3,3)
+  !
+  INTEGER, PARAMETER:: nr1=4, nr2=4, nr3=4, &
                        nrm=(2*nr1+1)*(2*nr2+1)*(2*nr3+1)
-  real(kind=8), parameter:: eps=1.0e-7
-  integer :: i, j, k,i1, i2, i3, idum(nrm), iq
-  real(kind=8) :: qnorm(nrm), qbd(3,nrm) ,qwork(3), delta
-  logical lbho
+  REAL(KIND=DP), PARAMETER:: eps=1.0e-7
+  INTEGER :: i, j, k,i1, i2, i3, idum(nrm), iq
+  REAL(KIND=DP) :: qnorm(nrm), qbd(3,nrm) ,qwork(3), delta
+  LOGICAL lbho
   !
   i = 0
-  do i1=-nr1,nr1
-     do i2=-nr2,nr2
-        do i3=-nr3,nr3
+  DO i1=-nr1,nr1
+     DO i2=-nr2,nr2
+        DO i3=-nr3,nr3
            i = i + 1
-           do j=1,3
+           DO j=1,3
               qwork(j) = i1*bg(j,1) + i2*bg(j,2) + i3*bg(j,3)
-           end do ! j
+           END DO ! j
            !
            qnorm(i)  = qwork(1)**2 + qwork(2)**2 + qwork(3)**2
            !
-           do j=1,3
+           DO j=1,3
               !
               qbd(j,i) = at_blk(1,j)*qwork(1) + &
                          at_blk(2,j)*qwork(2) + &
                          at_blk(3,j)*qwork(3)
-           end do ! j
+           END DO ! j
            !
            idum(i) = 1
            !
-        end do ! i3
-     end do ! i2
-  end do ! i1
+        END DO ! i3
+     END DO ! i2
+  END DO ! i1
   !
-  do i=1,nrm-1
-     if (idum(i).eq.1) then
-        do j=i+1,nrm
-           if (idum(j).eq.1) then
-              lbho=.true.
-              do k=1,3
+  DO i=1,nrm-1
+     IF (idum(i).EQ.1) THEN
+        DO j=i+1,nrm
+           IF (idum(j).EQ.1) THEN
+              lbho=.TRUE.
+              DO k=1,3
                  delta = qbd(k,i)-qbd(k,j)
-                 lbho = lbho.and. (abs(nint(delta)-delta).lt.eps)
-              end do ! k
-              if (lbho) then
-                 if(qnorm(i).gt.qnorm(j)) then
+                 lbho = lbho.AND. (ABS(NINT(delta)-delta).LT.eps)
+              END DO ! k
+              IF (lbho) THEN
+                 IF(qnorm(i).GT.qnorm(j)) THEN
                     qbd(1,i) = qbd(1,j)
                     qbd(2,i) = qbd(2,j)
                     qbd(3,i) = qbd(3,j)
                     qnorm(i) = qnorm(j)
-                 end if
+                 END IF
                  idum(j) = 0
-              end if
-           end if
-        end do ! j
-     end if
-  end do ! i
+              END IF
+           END IF
+        END DO ! j
+     END IF
+  END DO ! i
   !
   iq = 0
-  do i=1,nrm
-     if (idum(i).eq.1) then
+  DO i=1,nrm
+     IF (idum(i).EQ.1) THEN
         iq=iq+1
         qbid(1,iq)= bg_blk(1,1)*qbd(1,i) +  &
                     bg_blk(1,2)*qbd(2,i) +  &
@@ -710,196 +739,212 @@ subroutine q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
         qbid(3,iq)= bg_blk(3,1)*qbd(1,i) +  &
                     bg_blk(3,2)*qbd(2,i) +  &
                     bg_blk(3,3)*qbd(3,i)
-     end if
-  end do ! i
+     END IF
+  END DO ! i
   !
-  if (iq.ne.nsc) call errore('q_gen',' probably nr1,nr2,nr3 too small ', iq)
-  return
-end subroutine q_gen
+  IF (iq.NE.nsc) CALL errore('q_gen',' probably nr1,nr2,nr3 too small ', iq)
+  RETURN
+END SUBROUTINE q_gen
 !
 !-----------------------------------------------------------------------
-subroutine check_at(at,bg_blk,alat,omega)
+SUBROUTINE check_at(at,bg_blk,alat,omega)
   !-----------------------------------------------------------------------
-  implicit none
   !
-  real(kind=8) :: at(3,3), bg_blk(3,3), alat, omega
-  real(kind=8) :: work(3,3)
-  integer :: i,j
-  real(kind=8), parameter :: small=1.d-6
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  REAL(KIND=DP) :: at(3,3), bg_blk(3,3), alat, omega
+  REAL(KIND=DP) :: work(3,3)
+  INTEGER :: i,j
+  REAL(KIND=DP), PARAMETER :: small=1.d-6
   !
   work(:,:) = at(:,:)
-  call cryst_to_cart(3,work,bg_blk,-1)
+  CALL cryst_to_cart(3,work,bg_blk,-1)
   !
-  do j=1,3
-     do i =1,3
-        if ( abs(work(i,j)-nint(work(i,j))) > small) then
-           write (*,'(3f9.4)') work(:,:)
-           call errore ('check_at','at not multiple of at_blk',1)
-        end if
-     end do
-  end do
+  DO j=1,3
+     DO i =1,3
+        IF ( ABS(work(i,j)-NINT(work(i,j))) > small) THEN
+           WRITE (*,'(3f9.4)') work(:,:)
+           CALL errore ('check_at','at not multiple of at_blk',1)
+        END IF
+     END DO
+  END DO
   !
-  omega =alat**3 * abs(at(1,1)*(at(2,2)*at(3,3)-at(3,2)*at(2,3))- &
+  omega =alat**3 * ABS(at(1,1)*(at(2,2)*at(3,3)-at(3,2)*at(2,3))- &
                        at(1,2)*(at(2,1)*at(3,3)-at(2,3)*at(3,1))+ &
                        at(1,3)*(at(2,1)*at(3,2)-at(2,2)*at(3,1)))
   !
-  return
-end subroutine check_at
+  RETURN
+END SUBROUTINE check_at
 !
 !-----------------------------------------------------------------------
-subroutine set_tau                                                &
+SUBROUTINE set_tau                                                &
      &        (nat,nat_blk,at,at_blk,tau,tau_blk,ityp,ityp_blk,itau_blk)
   !-----------------------------------------------------------------------
-  implicit none
-  integer nat, nat_blk,ityp(nat),ityp_blk(nat_blk), itau_blk(nat)
-  real(kind=8) at(3,3),at_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
   !
-  real(kind=8) bg(3,3), r(3) ! work vectors
-  integer i,i1,i2,i3,na,na_blk
-  real(kind=8) small
-  integer NN1,NN2,NN3
-  parameter (NN1=8, NN2=8, NN3=8, small=1.d-8)
+  USE kinds,      ONLY : DP
   !
-  call recips (at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
+  IMPLICIT NONE
+  INTEGER nat, nat_blk,ityp(nat),ityp_blk(nat_blk), itau_blk(nat)
+  REAL(KIND=DP) at(3,3),at_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
+  !
+  REAL(KIND=DP) bg(3,3), r(3) ! work vectors
+  INTEGER i,i1,i2,i3,na,na_blk
+  REAL(KIND=DP) small
+  INTEGER NN1,NN2,NN3
+  PARAMETER (NN1=8, NN2=8, NN3=8, small=1.d-8)
+  !
+  CALL recips (at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
   !
   na = 0
   !
-  do i1 = -NN1,NN1
-     do i2 = -NN2,NN2
-        do i3 = -NN3,NN3
+  DO i1 = -NN1,NN1
+     DO i2 = -NN2,NN2
+        DO i3 = -NN3,NN3
            r(1) = i1*at_blk(1,1) + i2*at_blk(1,2) + i3*at_blk(1,3)
            r(2) = i1*at_blk(2,1) + i2*at_blk(2,2) + i3*at_blk(2,3)
            r(3) = i1*at_blk(3,1) + i2*at_blk(3,2) + i3*at_blk(3,3)
-           call cryst_to_cart(1,r,bg,-1)
+           CALL cryst_to_cart(1,r,bg,-1)
            !
-           if ( r(1).gt.-small .and. r(1).lt.1.d0-small .and.          &
-                r(2).gt.-small .and. r(2).lt.1.d0-small .and.          &
-                r(3).gt.-small .and. r(3).lt.1.d0-small ) then
-              call cryst_to_cart(1,r,at,+1)
+           IF ( r(1).GT.-small .AND. r(1).LT.1.d0-small .AND.          &
+                r(2).GT.-small .AND. r(2).LT.1.d0-small .AND.          &
+                r(3).GT.-small .AND. r(3).LT.1.d0-small ) THEN
+              CALL cryst_to_cart(1,r,at,+1)
               !
-              do na_blk=1, nat_blk
+              DO na_blk=1, nat_blk
                  na = na + 1
-                 if (na.gt.nat) call errore('set_tau','too many atoms',na)
+                 IF (na.GT.nat) CALL errore('set_tau','too many atoms',na)
                  tau(1,na)    = tau_blk(1,na_blk) + r(1)
                  tau(2,na)    = tau_blk(2,na_blk) + r(2)
                  tau(3,na)    = tau_blk(3,na_blk) + r(3)
                  ityp(na)     = ityp_blk(na_blk)
                  itau_blk(na) = na_blk
-              end do
+              END DO
               !
-           end if
+           END IF
            !
-        end do
-     end do
-  end do
+        END DO
+     END DO
+  END DO
   !
-  if (na.ne.nat) call errore('set_tau','too few atoms: increase NNs',na)
+  IF (na.NE.nat) CALL errore('set_tau','too few atoms: increase NNs',na)
   !
-  return
-end subroutine set_tau
+  RETURN
+END SUBROUTINE set_tau
 !
 !-----------------------------------------------------------------------
-subroutine read_tau(nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
+SUBROUTINE read_tau(nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
   !---------------------------------------------------------------------
-  implicit none
-  integer nat, nat_blk, ntyp, ityp(nat),itau_blk(nat)
-  real(kind=8) bg_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
   !
-  real(kind=8) r(3) ! work vectors
-  integer i,na,na_blk
+  USE kinds,      ONLY : DP
   !
-  real(kind=8) small
-  parameter ( small = 1.d-6 )
+  IMPLICIT NONE
   !
-  do na=1,nat
-     read(*,*) (tau(i,na),i=1,3), ityp(na)
-     if (ityp(na).le.0 .or. ityp(na) .gt. ntyp) &
-          call errore('read_tau',' wrong atomic type', na)
-     do na_blk=1,nat_blk
+  INTEGER nat, nat_blk, ntyp, ityp(nat),itau_blk(nat)
+  REAL(KIND=DP) bg_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
+  !
+  REAL(KIND=DP) r(3) ! work vectors
+  INTEGER i,na,na_blk
+  !
+  REAL(KIND=DP) small
+  PARAMETER ( small = 1.d-6 )
+  !
+  DO na=1,nat
+     READ(*,*) (tau(i,na),i=1,3), ityp(na)
+     IF (ityp(na).LE.0 .OR. ityp(na) .GT. ntyp) &
+          CALL errore('read_tau',' wrong atomic type', na)
+     DO na_blk=1,nat_blk
         r(1) = tau(1,na) - tau_blk(1,na_blk)
         r(2) = tau(2,na) - tau_blk(2,na_blk)
         r(3) = tau(3,na) - tau_blk(3,na_blk)
-        call cryst_to_cart(1,r,bg_blk,-1)
-        if (abs( r(1)-nint(r(1)) ) .lt. small .and.                 &
-            abs( r(2)-nint(r(2)) ) .lt. small .and.                 &
-            abs( r(3)-nint(r(3)) ) .lt. small ) then
+        CALL cryst_to_cart(1,r,bg_blk,-1)
+        IF (ABS( r(1)-NINT(r(1)) ) .LT. small .AND.                 &
+            ABS( r(2)-NINT(r(2)) ) .LT. small .AND.                 &
+            ABS( r(3)-NINT(r(3)) ) .LT. small ) THEN
            itau_blk(na) = na_blk
            go to 999
-        end if
-     end do
-     call errore ('read_tau',' wrong atomic position ', na)
-999  continue
-  end do
+        END IF
+     END DO
+     CALL errore ('read_tau',' wrong atomic position ', na)
+999  CONTINUE
+  END DO
   !
-  return
-end subroutine read_tau
+  RETURN
+END SUBROUTINE read_tau
 !
 !-----------------------------------------------------------------------
-subroutine write_tau(fltau,nat,tau,ityp)
+SUBROUTINE write_tau(fltau,nat,tau,ityp)
   !-----------------------------------------------------------------------
-  implicit none
-  integer nat, ityp(nat)
-  real(kind=8) tau(3,nat)
-  character(len=*) fltau
   !
-  integer i,na
+  USE kinds,      ONLY : DP
   !
-  open (unit=4,file=fltau, status='new')
-  do na=1,nat
-     write(4,'(3(f12.6),i3)') (tau(i,na),i=1,3), ityp(na)
-  end do
-  close (4)
+  IMPLICIT NONE
   !
-  return 
-end subroutine write_tau
+  INTEGER nat, ityp(nat)
+  REAL(KIND=DP) tau(3,nat)
+  CHARACTER(LEN=*) fltau
+  !
+  INTEGER i,na
+  !
+  OPEN (unit=4,file=fltau, status='new')
+  DO na=1,nat
+     WRITE(4,'(3(f12.6),i3)') (tau(i,na),i=1,3), ityp(na)
+  END DO
+  CLOSE (4)
+  !
+  RETURN 
+END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
-subroutine gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
+SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
      ntetra, nqx, nq, q, tetra)
   !-----------------------------------------------------------------------
   !
-  implicit none
+  USE kinds,      ONLY : DP
+  !
+  IMPLICIT NONE
   ! input 
-  integer :: ibrav, nat, nqx, nk1, nk2, nk3, ntetra, ityp(*)
-  real(kind=8) :: at(3,3), bg(3,3), tau(3,nat)
+  INTEGER :: ibrav, nat, nqx, nk1, nk2, nk3, ntetra, ityp(*)
+  REAL(KIND=DP) :: at(3,3), bg(3,3), tau(3,nat)
   ! output 
-  integer :: nq, tetra(4,ntetra)
-  real(kind=8) :: q(3,nqx)
+  INTEGER :: nq, tetra(4,ntetra)
+  REAL(KIND=DP) :: q(3,nqx)
   ! local
-  integer :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
-  logical :: minus_q, invsym
-  real(kind=8) :: xqq(3), wk(nqx), mdum(3,nat)
-  character(len=45)   ::  sname(48)
+  INTEGER :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
+  LOGICAL :: minus_q, invsym
+  REAL(KIND=DP) :: xqq(3), wk(nqx), mdum(3,nat)
+  CHARACTER(LEN=45)   ::  sname(48)
   !
   xqq (:) =0.d0
-  if (ibrav == 4 .or. ibrav == 5) then  
+  IF (ibrav == 4 .OR. ibrav == 5) THEN  
      !
      !  hexagonal or trigonal bravais lattice
      !
-     call hexsym (at, s, sname, nrot)  
-  elseif (ibrav >= 1 .and. ibrav <= 14) then  
+     CALL hexsym (at, s, sname, nrot)  
+  ELSEIF (ibrav >= 1 .AND. ibrav <= 14) THEN  
      !
      !  cubic bravais lattice
      !
-     call cubicsym (at, s, sname, nrot)  
-  elseif (ibrav == 0) then  
-     call errore ('gen_qpoints', 'assuming cubic symmetry',-1)  
-     call cubicsym (at, s, sname, nrot)  
-  else  
-     call errore ('gen_qpoints', 'wrong ibrav', 1)  
-  endif
+     CALL cubicsym (at, s, sname, nrot)  
+  ELSEIF (ibrav == 0) THEN  
+     CALL errore ('gen_qpoints', 'assuming cubic symmetry',-1)  
+     CALL cubicsym (at, s, sname, nrot)  
+  ELSE  
+     CALL errore ('gen_qpoints', 'wrong ibrav', 1)  
+  ENDIF
   !
-  call kpoint_grid ( nrot, s, bg, nqx, 0,0,0, nk1,nk2,nk3, nq, q, wk)
+  CALL kpoint_grid ( nrot, s, bg, nqx, 0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
-  call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, 6, &
+  CALL sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, 6, &
        6, 6, irt, ftau, nqx, nq, q, wk, invsym, minus_q, xqq, &
-       0, 0, .false., mdum)
+       0, 0, .FALSE., mdum)
   
-  if (ntetra /= 6 * nk1 * nk2 * nk3) &
-       call errore ('gen_qpoints','inconsistent ntetra',1)
+  IF (ntetra /= 6 * nk1 * nk2 * nk3) &
+       CALL errore ('gen_qpoints','inconsistent ntetra',1)
 
-  call tetrahedra (nsym, s, minus_q, at, bg, nqx, 0, 0, 0, &
+  CALL tetrahedra (nsym, s, minus_q, at, bg, nqx, 0, 0, 0, &
        nk1, nk2, nk3, nq, q, wk, ntetra, tetra)
   !
-  return
-end subroutine gen_qpoints
+  RETURN
+END SUBROUTINE gen_qpoints
