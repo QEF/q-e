@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 18:29:31 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:33:19 
 
      -------------------- All-electron run ------------------------------
 
@@ -12,7 +12,7 @@
      mesh =1137 r(mesh) = 117.45001 xmin = -6.00 dx = 0.01250
 
      n l j   nl                  e(Ryd)         e(Ha)          e(eV)
-     Spin orbit splitted results
+     Spin orbit split results
      1 0 0.5 1S 1( 2.00)      -750.2485      -375.1242    -10207.7304
      2 0 0.5 2S 1( 2.00)       -92.5766       -46.2883     -1259.5792
      2 1 0.5 2P 1( 2.00)       -82.0483       -41.0241     -1116.3327
@@ -87,14 +87,15 @@
      -------------------- End of All-electron run ----------------------
 
      Computing logarithmic derivative in   2.51502
+     l=   0 ns=   1 Node at 0.45658189
+     Computing logarithmic derivative in   2.51502
 
      -------------- Testing the pseudopotential ------------------------
 
-     l=   0 ns=   1 Node at 0.45658189
      Ga                                                                         
      dirac relativistic calculation
 
-     atomic number is 31.00
+     atomic number is 31.00   valence charge is  3.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
      mesh =1137 r(mesh) = 117.45001 xmin = -6.00 dx = 0.01250
 
@@ -108,7 +109,7 @@
      Etot =   -3882.372664 Ry,   -1941.186332 Ha,  -52822.785994 eV
      Etotps =    -4.251064 Ry,      -2.125532 Ha,     -57.839129 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =      -4.251064 Ry,   Delta E=       4.251064
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =      -6.083772 Ry,      -3.041886 Ha,     -82.774590 eV
      Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -119,4 +120,3 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logarithmic derivative in   2.51502

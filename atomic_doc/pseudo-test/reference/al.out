@@ -1,26 +1,16 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 18:29:31 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:33:19 
 
-     3     3     2    50
-     4     3     2   200
-     5     3     2   200
-     6     3     2   200
-     7     3     2   200
-     8     3     2   200
-     9     3     2   200
-    10     3     2   200
-    11     3     2   200
-    12     3     2   200
-  
+
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     from scf_nr : error #        -1
-     errors in cscheq
+     from scf : error #        -1
+     errors in KS equations
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
      -------------------- All-electron run ------------------------------
 
-     Al                                                                         
+     LDA                                                                        
 
      atomic number is 13.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
@@ -62,13 +52,14 @@
      -------------------- End of All-electron run ----------------------
 
      Computing logarithmic derivative in   2.40806
+     l=   0 ns=   1 Node at 0.20909860
+     Computing logarithmic derivative in   2.40806
 
      -------------- Testing the pseudopotential ------------------------
 
-     l=   0 ns=   1 Node at 0.20909860
-     Al                                                                         
+     LDA                                                                        
 
-     atomic number is 13.00
+     atomic number is 13.00   valence charge is  3.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
 
@@ -81,7 +72,7 @@
      Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404143 eV
      Etotps =    -3.885009 Ry,      -1.942504 Ha,     -52.858652 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =      -3.885009 Ry,   Delta E=       3.885009
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =      -5.595648 Ry,      -2.797824 Ha,     -76.133264 eV
      Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -92,4 +83,3 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logarithmic derivative in   2.40806

@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 18:29:32 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:33:20 
 
      -------------------- All-electron run ------------------------------
 
@@ -12,7 +12,7 @@
      mesh =1209 r(mesh) =  99.83237 xmin = -7.00 dx = 0.01250
 
      n l j   nl                  e(Ryd)         e(Ha)          e(eV)
-     Spin orbit splitted results
+     Spin orbit split results
      1 0 0.5 1S 1( 2.00)      -859.5609      -429.7804    -11695.0134
      2 0 0.5 2S 1( 2.00)      -109.0403       -54.5201     -1483.5802
      2 1 0.5 2P 1( 2.00)       -97.5214       -48.7607     -1326.8570
@@ -40,7 +40,7 @@
      Etot =   -4515.757841 Ry,   -2257.878921 Ha,  -61440.498039 eV
 
      Ekin =    4615.989015 Ry,    2307.994508 Ha,   62804.223346 eV
-     Encl =  -10907.173882 Ry,   -5453.586941 Ha, -148400.826410 eV
+     Encl =  -10907.173882 Ry,   -5453.586941 Ha, -148400.826409 eV
      Eh   =    1936.609607 Ry,     968.304804 Ha,   26349.122995 eV
      Exc  =    -161.182582 Ry,     -80.591291 Ha,   -2193.017970 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -86,14 +86,14 @@
 
      -------------------- End of All-electron run ----------------------
 
+     l=   0 ns=   1 Node at 0.46231557
 
      -------------- Testing the pseudopotential ------------------------
 
-     l=   0 ns=   1 Node at 0.46231557
      As                                                                         
      dirac relativistic calculation
 
-     atomic number is 33.00
+     atomic number is 33.00   valence charge is  5.00
      dft = SLA  PZ   NOGX NOGC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
      mesh =1209 r(mesh) =  99.83237 xmin = -7.00 dx = 0.01250
 
@@ -107,7 +107,7 @@
      Etot =   -4515.757841 Ry,   -2257.878921 Ha,  -61440.498039 eV
      Etotps =   -12.387022 Ry,      -6.193511 Ha,    -168.535348 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =     -12.387022 Ry,   Delta E=      12.387022
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =       4.238887 Ry,       2.119443 Ha,      57.673447 eV
      Encl =     -24.128570 Ry,     -12.064285 Ha,    -328.288496 eV

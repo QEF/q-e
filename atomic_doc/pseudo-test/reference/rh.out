@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 20-May-04
-     today is  6Jul2004 at 18:29:29 
+     program ld1 starts. version 08-Feb-05
+     today is  8Feb2005 at 14:33:18 
 
      -------------------- All-electron run ------------------------------
 
@@ -70,14 +70,15 @@
      -------------------- End of All-electron run ----------------------
 
      Computing logarithmic derivative in   2.50515
+     Core only energy     -7.47352520
+     Computing logarithmic derivative in   2.50515
 
      -------------- Testing the pseudopotential ------------------------
 
-      Core only energy     -7.47352520
      Rh                                                                         
      scalar relativistic calculation
 
-     atomic number is 45.00
+     atomic number is 45.00   valence charge is  9.00
      dft = SLA  PW   PBE  PBE   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
      mesh =1491 r(mesh) =  59.93961 xmin = -7.00 dx = 0.01000
 
@@ -91,7 +92,7 @@
      Etot =   -9568.051888 Ry,   -4784.025944 Ha, -130181.000380 eV
      Etotps =   -43.854645 Ry,     -21.927322 Ha,    -596.677524 eV
      dEtot_ae =       0.000000 Ry
-     dEtot_ps =     -43.854645 Ry,   Delta E=      43.854645
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
      Ekin =      12.331960 Ry,       6.165980 Ha,     167.786176 eV
      Encl =     -66.422877 Ry,     -33.211439 Ha,    -903.736386 eV
@@ -102,4 +103,3 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logarithmic derivative in   2.50515
