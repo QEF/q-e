@@ -50,6 +50,7 @@ upf: libs
 	( cd upftools ; make all )
 
 all: pw ph pp gamma pwcond d3 tools
+all_: all fpmd cp nc pwneb upf
 
 modules:
 	( cd Modules; make all )
