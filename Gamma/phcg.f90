@@ -144,12 +144,12 @@ SUBROUTINE cg_dchi(dchi_dtau)
 1    WRITE( stdout,'(/5x,"Restart failed, starting new calculation")')
      CLOSE(unit=iunres)
   ELSE
-     WRITE( stdout,'(5x,"Starting new calculation")')
+     WRITE( stdout,'(5x,"Starting calculation of Raman coeficients")')
   END IF
   !
 2 CONTINUE
   !
-  convfact = omega/fpi*0.529177**2
+  convfact = 0.529177**2
   !
   DO na=na_,nat
      DO ipol=1,3
@@ -183,7 +183,8 @@ SUBROUTINE cg_dchi(dchi_dtau)
               DO jpol=1,3
                  dchi_dtau(kpol,jpol,ipol,na) =  &
                       dchi_dtau(kpol,jpol,ipol,na) + &
-                      epsilon0(kpol,jpol)*coeff/deltatau * convfact
+                      epsilon0(kpol,jpol)*coeff/deltatau * &
+                      omega/fpi * convfact
               END DO
            END DO
            !
@@ -213,7 +214,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
      END DO
   END DO
   !
-  WRITE( stdout,'(/5x, "Raman tensors (A^2)"/)')
+  WRITE( stdout,'(/5x, "Raman tensor (A^2)"/)')
   !
   DO na=1,nat
      DO ipol=1,3
@@ -544,7 +545,7 @@ END SUBROUTINE raman_cs
 SUBROUTINE raman_cs2(w2,dynout)
   !-----------------------------------------------------------------------
   !
-  !  calculate d eps0/d u  (u=phonon mode) with finite differences
+  !  calculate d X/d u  (u=phonon mode) with finite differences
   !
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY :  stdout, ionode
@@ -564,7 +565,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   DATA delta4/-2.d0, -1.d0, 1.d0, 2.d0/
   DATA coeff4/ 0.08333333333333d0,-0.66666666666666d0,              &
        &       0.66666666666667d0,-0.08333333333337d0 /
-  REAL(kind=8):: polar(3), rydcm1, cm1thz, freq, r1fac, r2fac, irfac
+  REAL(kind=8):: polar(3), rydcm1, cm1thz, freq, r1fac, cmfac, irfac
   REAL(kind=8):: alpha, beta2
   !
   CALL start_clock('raman_cs2')
@@ -591,12 +592,18 @@ SUBROUTINE raman_cs2(w2,dynout)
 1    WRITE( stdout,'(/5x,"Restart failed, starting new calculation")')
      CLOSE(unit=iunres)
   ELSE
-     WRITE( stdout,'(5x,"Starting new calculation")')
+     WRITE( stdout,'(5x,"Starting calculation of Raman coeficients")')
   END IF
   !
 2 CONTINUE
   !
-  convfact = omega/fpi*0.529177**2
+  !   conversion factor from (Ry au for mass)^(-1) to amu(-1) 
+  !
+  r1fac = 911.444
+  !
+  !   conversion factor from bohr^2*(Ry au for mass)^(-1/2) to A^2 amu(-1/2)
+  !
+  convfact = 0.529177**2*sqrt(r1fac)
   !
   DO nu=first,last
      IF (nu.LT.nu_) go to 11
@@ -653,7 +660,8 @@ SUBROUTINE raman_cs2(w2,dynout)
            DO jpol=1,3
               raman_activity(ipol,jpol,nu-first+1) =  &
                    raman_activity(ipol,jpol,nu-first+1) + &
-                   epsilon0(ipol,jpol)*coeff/deltatau * norm * convfact
+                   epsilon0(ipol,jpol)*coeff/deltatau * norm * &
+                   omega/fpi * convfact
            END DO
         END DO
         !
@@ -680,7 +688,7 @@ SUBROUTINE raman_cs2(w2,dynout)
 11   CONTINUE
   END DO
   !
-  WRITE( stdout,'(/5x, "Raman tensors for mode nu : dX_{alpha,beta}/d nu"/)')
+  WRITE( stdout,'(/5x, "Raman tensor dX_{alpha,beta}/dQ_nu (A^2/amu^1/2)"/)')
   DO nu=first,last
      WRITE( stdout,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
           nu,( ( raman_activity(ipol,jpol,nu-first+1),jpol=1,3), ipol=1,3)
@@ -691,15 +699,11 @@ SUBROUTINE raman_cs2(w2,dynout)
   rydcm1 = 13.6058*8065.5
   cm1thz = 241.796/8065.5
   !
-  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
-  !
-  r1fac = 911.444
-  !
   !  derivatives of epsilon are translated into derivatives of molecular
   !  polarizabilities by assuming a Clausius-Mossotti behavior
   !  (for anisotropic systems epsilon is replaced by its trace)
   !
-  r2fac = 3.d0/( 2.d0 + (epsilon0(1,1) + epsilon0(2,2) + epsilon0(3,3))/3.d0 )
+  cmfac = 3.d0/( 2.d0 + (epsilon0(1,1) + epsilon0(2,2) + epsilon0(3,3))/3.d0 )
   !
   !   conversion factor for IR cross sections from
   !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu
@@ -732,6 +736,8 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   WRITE( stdout,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
   WRITE( stdout,'(5x,"Raman cross sections are in A^4/amu units")')
+  WRITE( stdout,'(5x,"multiply by",f9.6," for Clausius-Mossotti correction")')&
+        cmfac**2
   WRITE( stdout,'(/"#  mode   [cm-1]     [THz]       IR      Raman")')
   !
   DO nu = 1,3*nat
@@ -758,7 +764,7 @@ SUBROUTINE raman_cs2(w2,dynout)
      END IF
      WRITE( stdout,'(i5,f10.2,f12.4,2f10.4)') &
           nu, freq, freq*cm1thz, infrared(nu), &
-          (45.d0*alpha**2 + 7.0d0*beta2)*r1fac*r2fac
+          (45.d0*alpha**2 + 7.0d0*beta2)
   END DO
   !
   DEALLOCATE (infrared)
