@@ -176,7 +176,7 @@ example13:
     case: Fe, Cu, Ni, O.
 
 example14:
-    This example shows how to use pw.x, ph.x and d3 to calculate the
+    This example shows how to use pw.x, ph.x and d3.x to calculate the
     third-order expansion coefficients of the total energy of Si.
 
 example15:
@@ -220,3 +220,11 @@ example24:
     This example shows how to use efg.x to calculate the electric field 
     gradient, and to obtain the quadrupolar parameters of an NMR experiment.
     The solid in example is quartz. 
+
+example25:
+    This example shows how to use pw.x to perform LDA+U calculations.
+
+example26:
+    This example shows how to use cp.x to do String method (SMD) to find
+    the minimum energy path (MEP).
+    (contributed by Yosuke Kanai)

@@ -1,0 +1,1464 @@
+************************************************************************
+****                                                                ****
+****  CPV: variable-cell Car-Parrinello molecular dynamics          ****
+****  using ultrasoft Vanderbilt pseudopotentials - v.2.1           ****
+****                                                                ****
+************************************************************************
+
+     Parallel version (MPI)
+     Number of processors in use:      1
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  ions_checkin        : error #        -1
+      SMCP ? 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  ions_checkin        : error #        -1
+      SMLM ? 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Warning: card K_POINTS ( GAMMA ) ignored
+reading ppot for species #  1 from file /home/ballabio/espresso/pseudo/Si.vbc.UPF
+reading ppot for species #  2 from file /home/ballabio/espresso/pseudo/H.vbc.UPF
+   
+  INIT_PATH : linear interpolation used 
+   
+   wmass (calculated) =        36015.99
+
+
+
+ nbeg=  1 nomore=    200    iprint= 100
+ reads from 60 writes on 60
+ time step =   10.0000
+
+ parameters for electron dynamics:
+ emass=     500.00  emaec=       2.50ry
+ orthog. with lagrange multipliers: eps=  0.10E-07 max= 20
+ verlet algorithm for electron dynamics
+ with friction frice =  0.1000 , grease =  1.0000
+
+
+ ions are not allowed to move
+
+ iprsta =  1
+
+                                                  
+  ================================================
+                                                  
+  CPSMD : replica = 0 ..            9
+                                                  
+                                                  
+  String Method : 
+                                                  
+                                                  
+       SMLM    =  T
+       CPMD    =  T
+       LINR    =  T
+       POLM    =  F Pt =            2
+       STCD    =  F
+       SMfile  =           20
+       TFOR  =  F
+                                                  
+       CONST. TOL  =   1.000000000000000E-005
+       Frequency   =            1
+                                                  
+  ================================================
+  UNIT8 = 
+ /home/ballabio/tmp//fort.8                                                     
+                                                                                
+                                                                                
+                    
+ 
+ unit vectors of full simulation cell
+ in real space:                         in reciprocal space:
+   14.3967    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000   14.3967    0.0000              0.0000    1.0000    0.0000
+    0.0000    0.0000   18.7157              0.0000    0.0000    0.7692
+ 
+   Stick Mesh
+   ----------
+   nst =   397,  nstw =    97, nsts =   397
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1     793     193     793   21737    2709   21737
+          0     793     193     793   21737    2709   21737
+ 
+ 
+   Real Mesh Report 
+   ---------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    32    32    45      32    32    45       1     1     1
+   nr3l =    45
+ 
+   Smooth Real Mesh Report 
+   ----------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    32    32    45      32    32    45       1     1     1
+   nr3sl =    45
+ 
+   Small Box Real Mesh Report 
+   -------------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    16    16    16      16    16    16       1     1     1
+ 
+ ggen:  # of g vectors < gcut   ng=  10869
+ ggen:  # of g vectors < gcuts ngs=  10869
+ ggen:  # of g vectors < gcutw ngw=   1355
+ ggen:  # of g shells  < gcut  ngl=   1412
+ 
+ 
+ unit vectors of box grid cell
+ in real space:                         in reciprocal space:
+    7.1983    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000    7.1983    0.0000              0.0000    1.0000    0.0000
+    0.0000    0.0000    6.6545              0.0000    0.0000    1.0817
+ 
+ ggenb: # of gb vectors < gcutb ngb =    972
+ ggenb: # of gb shells  < gcutb ngbl=    169
+ initialization 
+
+ ibrav= 14 alat= 14.397 omega= 3879.1111
+ gcut=  252.00    gcuts=  252.00 gcutw=   63.00
+ k-points: nkpt= 1
+
+
+ meshes:
+  dense grid: nr1 ,nr2, nr3  =   32  32  45  nr1x, nr2x, nr3x =   32  32  45
+ smooth grid: nr1s,nr2s,nr3s =   32  32  45  nr1sx,nr2sx,nr3sx=   32  32  45
+    box grid: nr1b,nr2b,nr3b =   16  16  16  nr1bx,nr2bx,nr3bx=   16  16  16
+
+ exchange-correlation potential:  SLA  PZ   NOGX NOGC
+
+ ecutw=   12.0 ryd    ecuts=   48.0 ryd    ecut=   48.0 ryd
+
+ # of electrons=   80 # of states=   40
+
+
+ nspin= 1
+ occupation numbers:
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+
+ # of atomic species    2
+ is=  1
+  na=  18  atomic mass= 10.00 gaussian rcmax=  1.00
+ atomic coordinates:
+      10.78   1.06   3.34
+      10.75   6.06   3.33
+       8.38   0.02  -0.34
+       8.25   7.04  -0.25
+      13.28   7.17  -0.22
+      13.20   0.15  -0.33
+       7.18   3.53  -2.61
+       7.31  -3.66  -2.45
+      14.39   3.68  -2.59
+      14.26  -3.54  -2.43
+      10.79   3.60  -5.16
+      10.79  -3.61  -5.16
+      17.98  -3.60  -4.90
+      17.98   3.60  -5.10
+      10.80   7.20  -7.60
+      18.00   7.20  -7.60
+      10.80   0.00  -7.60
+      18.00   0.00  -7.60
+ is=  2
+  na=   8  atomic mass= 10.00 gaussian rcmax=  1.00
+ atomic coordinates:
+      12.90   7.20  -9.40
+       8.70   7.20  -9.40
+      20.10   7.20  -9.40
+      15.90   7.20  -9.40
+      12.90   0.00  -9.40
+       8.70   0.00  -9.40
+      20.10   0.00  -9.40
+      15.90   0.00  -9.40
+    NOTA BENE: refg, mmx =   9.599999999999999E-003        5001
+ ibrav =   14       cell parameters 
+
+      14.39670       0.00000       0.00000
+       0.00000      14.39670       0.00000
+       0.00000       0.00000      18.71571
+ 
+  out from init
+   betagx  
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  1
+   3  indv=  2   ang. mom=  1
+   4  indv=  2   ang. mom=  1
+ 
+                        dion 
+   0.7619   0.0000
+   0.0000   1.8417
+   betagx  
+ 
+                        dion 
+  out from nlinit
+  Allocation begun, smpm =            8
+  Allocation for W.F. s : successful 
+  Allocation for CP core : successful 
+  Allocation for SM variables : successful 
+  Allocation for pointers : successful 
+  Allocation ended 
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  formf: eself= 118.08691
+  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
+  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
+  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
+  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+  
+  Center of mass 
+  
+   0 13.00312 2.48911-5.01791
+   1 13.00200 2.48942-5.03929
+   2 13.00088 2.48974-5.06066
+   3 12.99976 2.49005-5.08204
+   4 12.99864 2.49037-5.10341
+   5 12.99752 2.49068-5.12479
+   6 12.99640 2.49100-5.14616
+   7 12.99529 2.49131-5.16754
+   8 12.99417 2.49163-5.18892
+   9 12.99305 2.49195-5.21029
+  
+  _____________________________________________
+  
+  *****    Entering SMD LOOP   ***** 
+  _____________________________________________
+  
+  -----------  REPLICA :            1
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.96011 a.u.
+              kinetic energy =       31.47256 a.u.
+        electrostatic energy =      -86.68775 a.u.
+                         esr =        0.07050 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.15278 a.u.
+  n-l pseudopotential energy =       17.41847 a.u.
+ exchange-correlation energy =      -24.01061 a.u.
+           average potential =       -0.34480 a.u.
+
+
+  
+  -----------  REPLICA :            2
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.96492 a.u.
+              kinetic energy =       31.62154 a.u.
+        electrostatic energy =      -86.76441 a.u.
+                         esr =        0.07079 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.18473 a.u.
+  n-l pseudopotential energy =       17.43928 a.u.
+ exchange-correlation energy =      -24.07660 a.u.
+           average potential =       -0.34397 a.u.
+
+
+  
+  -----------  REPLICA :            3
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.93003 a.u.
+              kinetic energy =       31.77580 a.u.
+        electrostatic energy =      -86.83850 a.u.
+                         esr =        0.07183 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.24341 a.u.
+  n-l pseudopotential energy =       17.51028 a.u.
+ exchange-correlation energy =      -24.13420 a.u.
+           average potential =       -0.34330 a.u.
+
+
+  
+  -----------  REPLICA :            4
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.88116 a.u.
+              kinetic energy =       31.91176 a.u.
+        electrostatic energy =      -86.90680 a.u.
+                         esr =        0.07390 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.31704 a.u.
+  n-l pseudopotential energy =       17.61389 a.u.
+ exchange-correlation energy =      -24.18296 a.u.
+           average potential =       -0.34280 a.u.
+
+
+  
+  -----------  REPLICA :            5
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.85889 a.u.
+              kinetic energy =       31.98673 a.u.
+        electrostatic energy =      -86.95375 a.u.
+                         esr =        0.07529 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.36367 a.u.
+  n-l pseudopotential energy =       17.68586 a.u.
+ exchange-correlation energy =      -24.21406 a.u.
+           average potential =       -0.34249 a.u.
+
+
+  
+  -----------  REPLICA :            6
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.89217 a.u.
+              kinetic energy =       31.98700 a.u.
+        electrostatic energy =      -86.97426 a.u.
+                         esr =        0.07413 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.35315 a.u.
+  n-l pseudopotential energy =       17.67404 a.u.
+ exchange-correlation energy =      -24.22580 a.u.
+           average potential =       -0.34221 a.u.
+
+
+  
+  -----------  REPLICA :            7
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.95885 a.u.
+              kinetic energy =       31.93750 a.u.
+        electrostatic energy =      -86.97175 a.u.
+                         esr =        0.07207 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.30539 a.u.
+  n-l pseudopotential energy =       17.60590 a.u.
+ exchange-correlation energy =      -24.22512 a.u.
+           average potential =       -0.34190 a.u.
+
+
+  
+  -----------  REPLICA :            8
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -75.01223 a.u.
+              kinetic energy =       31.88040 a.u.
+        electrostatic energy =      -86.95332 a.u.
+                         esr =        0.07103 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.26089 a.u.
+  n-l pseudopotential energy =       17.54020 a.u.
+ exchange-correlation energy =      -24.21863 a.u.
+           average potential =       -0.34167 a.u.
+
+
+  
+
+  nfi   SUM(E)   con_ite     con_usat     cons_pls     max_ekinc   deviation   maxforce
+  
+  101     -749.51181     0  0.00000E+00   1  0.00000  0.00000  0.95667E-02  0.13077E-01
+  
+  ---------------------- Replica :            1
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.11   -9.76   -9.27   -9.05   -8.95   -8.83   -8.35   -8.18   -7.20   -7.15
+   -7.10   -6.26   -6.22   -5.68   -5.52   -5.44   -5.32   -4.72   -4.25   -3.98
+   -3.41   -2.94   -2.84   -2.67   -2.41   -2.03   -1.95   -1.92   -1.63   -1.49
+   -1.35   -1.08   -0.96   -0.67   -0.61   -0.58   -0.52   -0.36   -0.11    0.55
+ 
+ 
+  
+  ---------------------- Replica :            2
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.17   -9.86   -9.25   -9.08   -9.03   -8.78   -8.38   -8.32   -7.18   -7.14
+   -7.08   -6.41   -6.23   -5.67   -5.56   -5.47   -5.25   -4.71   -4.23   -4.17
+   -3.34   -2.91   -2.85   -2.68   -2.46   -2.03   -1.94   -1.92   -1.72   -1.57
+   -1.33   -0.94   -0.93   -0.67   -0.60   -0.59   -0.52   -0.37   -0.30    0.38
+ 
+ 
+  
+  ---------------------- Replica :            3
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.27  -10.02   -9.28   -9.13   -9.09   -8.74   -8.56   -8.31   -7.18   -7.16
+   -7.10   -6.56   -6.23   -5.68   -5.62   -5.51   -5.20   -4.70   -4.24   -4.22
+   -3.31   -2.94   -2.85   -2.73   -2.52   -2.04   -1.96   -1.94   -1.76   -1.66
+   -1.34   -0.92   -0.84   -0.69   -0.64   -0.59   -0.55   -0.37   -0.29    0.27
+ 
+ 
+  
+  ---------------------- Replica :            4
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.38  -10.18   -9.32   -9.21   -9.13   -8.71   -8.66   -8.29   -7.21   -7.16
+   -7.12   -6.65   -6.24   -5.70   -5.67   -5.54   -5.15   -4.69   -4.24   -4.21
+   -3.27   -2.99   -2.84   -2.79   -2.60   -2.06   -2.00   -1.98   -1.77   -1.73
+   -1.37   -0.91   -0.84   -0.71   -0.67   -0.59   -0.56   -0.37   -0.31    0.29
+ 
+ 
+  
+  ---------------------- Replica :            5
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.49  -10.27   -9.36   -9.26   -9.15   -8.69   -8.69   -8.27   -7.27   -7.16
+   -7.15   -6.67   -6.25   -5.76   -5.69   -5.56   -5.10   -4.69   -4.28   -4.12
+   -3.23   -3.02   -2.87   -2.82   -2.68   -2.11   -2.03   -2.02   -1.81   -1.71
+   -1.37   -0.91   -0.90   -0.73   -0.70   -0.60   -0.58   -0.38   -0.36    0.33
+ 
+ 
+  
+  ---------------------- Replica :            6
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.55  -10.28   -9.41   -9.29   -9.18   -8.71   -8.66   -8.26   -7.34   -7.19
+   -7.18   -6.62   -6.26   -5.82   -5.72   -5.57   -5.04   -4.69   -4.33   -4.00
+   -3.19   -3.05   -2.91   -2.83   -2.71   -2.15   -2.07   -2.03   -1.84   -1.63
+   -1.36   -0.99   -0.92   -0.77   -0.74   -0.62   -0.60   -0.41   -0.37    0.23
+ 
+ 
+  
+  ---------------------- Replica :            7
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.56  -10.20   -9.46   -9.30   -9.20   -8.75   -8.53   -8.25   -7.42   -7.23
+   -7.20   -6.54   -6.27   -5.89   -5.74   -5.55   -4.97   -4.71   -4.40   -3.89
+   -3.15   -3.07   -2.96   -2.83   -2.67   -2.19   -2.11   -2.01   -1.86   -1.53
+   -1.34   -1.09   -0.93   -0.82   -0.76   -0.64   -0.64   -0.44   -0.34    0.04
+ 
+ 
+  
+  ---------------------- Replica :            8
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.57  -10.09   -9.50   -9.34   -9.20   -8.80   -8.33   -8.25   -7.51   -7.27
+   -7.20   -6.45   -6.29   -5.97   -5.74   -5.45   -4.92   -4.71   -4.44   -3.84
+   -3.10   -3.07   -2.99   -2.82   -2.58   -2.24   -2.13   -1.99   -1.90   -1.50
+   -1.34   -1.19   -0.94   -0.85   -0.74   -0.68   -0.65   -0.45   -0.36    0.00
+ 
+ 
+  102     -749.51755     0  0.19429E-15   1  0.00083  0.00083  0.00000E+00  0.00000E+00
+  103     -749.52464     0  0.19429E-15   1  0.00169  0.00086  0.00000E+00  0.00000E+00
+  104     -749.53232     0  0.19429E-15   1  0.00257  0.00088  0.00000E+00  0.00000E+00
+  105     -749.54000     0  0.19429E-15   1  0.00334  0.00077  0.00000E+00  0.00000E+00
+  106     -749.54724     0  0.19429E-15   1  0.00392  0.00059  0.00000E+00  0.00000E+00
+  107     -749.55378     0  0.19429E-15   1  0.00431  0.00039  0.00000E+00  0.00000E+00
+  108     -749.55952     0  0.19429E-15   1  0.00451  0.00020  0.00000E+00  0.00000E+00
+  109     -749.56443     0  0.19429E-15   1  0.00456  0.00005  0.00000E+00  0.00000E+00
+  110     -749.56857     0  0.19429E-15   1  0.00448 -0.00007  0.00000E+00  0.00000E+00
+  111     -749.57204     0  0.19429E-15   1  0.00433 -0.00015  0.00000E+00  0.00000E+00
+  112     -749.57494     0  0.19429E-15   1  0.00411 -0.00014  0.00000E+00  0.00000E+00
+  113     -749.57738     0  0.19429E-15   1  0.00387 -0.00012  0.00000E+00  0.00000E+00
+  114     -749.57947     0  0.19429E-15   1  0.00362 -0.00010  0.00000E+00  0.00000E+00
+  115     -749.58128     0  0.19429E-15   1  0.00338 -0.00007  0.00000E+00  0.00000E+00
+  116     -749.58286     0  0.19429E-15   1  0.00314 -0.00005  0.00000E+00  0.00000E+00
+  117     -749.58427     0  0.19429E-15   1  0.00291 -0.00003  0.00000E+00  0.00000E+00
+  118     -749.58553     0  0.19429E-15   1  0.00269 -0.00002  0.00000E+00  0.00000E+00
+  119     -749.58667     0  0.19429E-15   1  0.00248 -0.00001  0.00000E+00  0.00000E+00
+  120     -749.58769     0  0.19429E-15   1  0.00229  0.00000  0.00000E+00  0.00000E+00
+  121     -749.58861     0  0.19429E-15   1  0.00210  0.00000  0.00000E+00  0.00000E+00
+  122     -749.58943     0  0.19429E-15   1  0.00191  0.00000  0.00000E+00  0.00000E+00
+  123     -749.59016     0  0.19429E-15   1  0.00174  0.00000  0.00000E+00  0.00000E+00
+  124     -749.59081     0  0.19429E-15   1  0.00158  0.00000  0.00000E+00  0.00000E+00
+  125     -749.59138     0  0.19429E-15   1  0.00142  0.00000  0.00000E+00  0.00000E+00
+  126     -749.59189     0  0.19429E-15   1  0.00127  0.00000  0.00000E+00  0.00000E+00
+  127     -749.59233     0  0.19429E-15   1  0.00114  0.00000  0.00000E+00  0.00000E+00
+  128     -749.59272     0  0.19429E-15   1  0.00101  0.00000  0.00000E+00  0.00000E+00
+  129     -749.59306     0  0.19429E-15   1  0.00090  0.00000  0.00000E+00  0.00000E+00
+  130     -749.59335     0  0.19429E-15   1  0.00079  0.00000  0.00000E+00  0.00000E+00
+  131     -749.59361     0  0.19429E-15   1  0.00070  0.00000  0.00000E+00  0.00000E+00
+  132     -749.59384     0  0.19429E-15   1  0.00061  0.00000  0.00000E+00  0.00000E+00
+  133     -749.59404     0  0.19429E-15   1  0.00054  0.00000  0.00000E+00  0.00000E+00
+  134     -749.59422     0  0.19429E-15   1  0.00047  0.00000  0.00000E+00  0.00000E+00
+  135     -749.59438     0  0.19429E-15   1  0.00041  0.00000  0.00000E+00  0.00000E+00
+  136     -749.59452     0  0.19429E-15   1  0.00036  0.00000  0.00000E+00  0.00000E+00
+  137     -749.59464     0  0.19429E-15   1  0.00032  0.00000  0.00000E+00  0.00000E+00
+  138     -749.59475     0  0.19429E-15   1  0.00028  0.00000  0.00000E+00  0.00000E+00
+  139     -749.59485     0  0.19429E-15   1  0.00024  0.00000  0.00000E+00  0.00000E+00
+  140     -749.59495     0  0.19429E-15   1  0.00021  0.00000  0.00000E+00  0.00000E+00
+  141     -749.59503     0  0.19429E-15   1  0.00019  0.00000  0.00000E+00  0.00000E+00
+  142     -749.59510     0  0.19429E-15   1  0.00017  0.00000  0.00000E+00  0.00000E+00
+  143     -749.59517     0  0.19429E-15   1  0.00015  0.00000  0.00000E+00  0.00000E+00
+  144     -749.59524     0  0.19429E-15   1  0.00013  0.00000  0.00000E+00  0.00000E+00
+  145     -749.59530     0  0.19429E-15   1  0.00012  0.00000  0.00000E+00  0.00000E+00
+  146     -749.59535     0  0.19429E-15   1  0.00011  0.00000  0.00000E+00  0.00000E+00
+  147     -749.59540     0  0.19429E-15   1  0.00010  0.00000  0.00000E+00  0.00000E+00
+  148     -749.59545     0  0.19429E-15   1  0.00009  0.00000  0.00000E+00  0.00000E+00
+  149     -749.59549     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  150     -749.59554     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  151     -749.59558     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  152     -749.59562     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  153     -749.59565     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  154     -749.59569     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  155     -749.59572     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  156     -749.59576     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  157     -749.59579     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  158     -749.59582     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  159     -749.59585     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  160     -749.59588     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  161     -749.59591     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  162     -749.59594     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  163     -749.59597     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  164     -749.59600     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  165     -749.59603     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  166     -749.59606     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  167     -749.59609     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  168     -749.59612     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  169     -749.59615     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  170     -749.59618     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  171     -749.59621     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  172     -749.59624     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  173     -749.59627     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  174     -749.59630     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  175     -749.59634     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  176     -749.59637     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  177     -749.59640     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  178     -749.59644     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  179     -749.59647     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  180     -749.59651     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  181     -749.59655     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  182     -749.59658     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  183     -749.59662     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  184     -749.59666     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  185     -749.59670     0  0.19429E-15   1  0.00009  0.00000  0.00000E+00  0.00000E+00
+  186     -749.59675     0  0.19429E-15   1  0.00009  0.00000  0.00000E+00  0.00000E+00
+  187     -749.59679     0  0.19429E-15   1  0.00009  0.00000  0.00000E+00  0.00000E+00
+  188     -749.59684     0  0.19429E-15   1  0.00010  0.00000  0.00000E+00  0.00000E+00
+  189     -749.59688     0  0.19429E-15   1  0.00010  0.00000  0.00000E+00  0.00000E+00
+  190     -749.59693     0  0.19429E-15   1  0.00010  0.00000  0.00000E+00  0.00000E+00
+  191     -749.59698     0  0.19429E-15   1  0.00011  0.00000  0.00000E+00  0.00000E+00
+  192     -749.59703     0  0.19429E-15   1  0.00011  0.00000  0.00000E+00  0.00000E+00
+  193     -749.59708     0  0.19429E-15   1  0.00011  0.00000  0.00000E+00  0.00000E+00
+  194     -749.59714     0  0.19429E-15   1  0.00012  0.00000  0.00000E+00  0.00000E+00
+  195     -749.59719     0  0.19429E-15   1  0.00012  0.00000  0.00000E+00  0.00000E+00
+  196     -749.59725     0  0.19429E-15   1  0.00013  0.00000  0.00000E+00  0.00000E+00
+  197     -749.59731     0  0.19429E-15   1  0.00013  0.00000  0.00000E+00  0.00000E+00
+  198     -749.59738     0  0.19429E-15   1  0.00014  0.00001  0.00000E+00  0.00000E+00
+  199     -749.59744     0  0.19429E-15   1  0.00014  0.00001  0.00000E+00  0.00000E+00
+  200     -749.59751     0  0.19429E-15   1  0.00015  0.00001  0.00000E+00  0.00000E+00
+ Creating dir : RESTART61
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART61                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART61/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART61/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART62
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART62                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART62/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART62/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART63
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART63                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART63/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART63/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART64
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART64                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART64/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART64/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART65
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART65                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART65/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART65/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART66
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART66                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART66/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART66/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART67
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART67                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART67/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART67/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART68
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART68                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART68/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART68/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+  
+  -----------  REPLICA :            1
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.99390 a.u.
+              kinetic energy =       31.47033 a.u.
+        electrostatic energy =      -86.68579 a.u.
+                         esr =        0.07050 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.13698 a.u.
+  n-l pseudopotential energy =       17.38096 a.u.
+ exchange-correlation energy =      -24.02242 a.u.
+           average potential =       -0.34468 a.u.
+
+
+  
+  -----------  REPLICA :            2
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.97839 a.u.
+              kinetic energy =       31.63499 a.u.
+        electrostatic energy =      -86.76382 a.u.
+                         esr =        0.07079 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.17736 a.u.
+  n-l pseudopotential energy =       17.41156 a.u.
+ exchange-correlation energy =      -24.08376 a.u.
+           average potential =       -0.34391 a.u.
+
+
+  
+  -----------  REPLICA :            3
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.93911 a.u.
+              kinetic energy =       31.78535 a.u.
+        electrostatic energy =      -86.83792 a.u.
+                         esr =        0.07183 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.24022 a.u.
+  n-l pseudopotential energy =       17.49341 a.u.
+ exchange-correlation energy =      -24.13972 a.u.
+           average potential =       -0.34323 a.u.
+
+
+  
+  -----------  REPLICA :            4
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.88923 a.u.
+              kinetic energy =       31.91743 a.u.
+        electrostatic energy =      -86.90265 a.u.
+                         esr =        0.07390 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.31339 a.u.
+  n-l pseudopotential energy =       17.59696 a.u.
+ exchange-correlation energy =      -24.18758 a.u.
+           average potential =       -0.34273 a.u.
+
+
+  
+  -----------  REPLICA :            5
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.86648 a.u.
+              kinetic energy =       31.99064 a.u.
+        electrostatic energy =      -86.95006 a.u.
+                         esr =        0.07529 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.36077 a.u.
+  n-l pseudopotential energy =       17.67175 a.u.
+ exchange-correlation energy =      -24.21803 a.u.
+           average potential =       -0.34241 a.u.
+
+
+  
+  -----------  REPLICA :            6
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.89829 a.u.
+              kinetic energy =       31.99138 a.u.
+        electrostatic energy =      -86.97454 a.u.
+                         esr =        0.07413 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.35226 a.u.
+  n-l pseudopotential energy =       17.66636 a.u.
+ exchange-correlation energy =      -24.22922 a.u.
+           average potential =       -0.34214 a.u.
+
+
+  
+  -----------  REPLICA :            7
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -74.96301 a.u.
+              kinetic energy =       31.94144 a.u.
+        electrostatic energy =      -86.97354 a.u.
+                         esr =        0.07207 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.30530 a.u.
+  n-l pseudopotential energy =       17.60206 a.u.
+ exchange-correlation energy =      -24.22766 a.u.
+           average potential =       -0.34184 a.u.
+
+
+  
+  -----------  REPLICA :            8
+  
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 80.000000     in r-space = 80.000000
+
+
+                total energy =      -75.01574 a.u.
+              kinetic energy =       31.88110 a.u.
+        electrostatic energy =      -86.95392 a.u.
+                         esr =        0.07103 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.26079 a.u.
+  n-l pseudopotential energy =       17.53786 a.u.
+ exchange-correlation energy =      -24.21999 a.u.
+           average potential =       -0.34163 a.u.
+
+
+  201     -749.59758     0  0.19429E-15   1  0.00015  0.00001  0.00000E+00  0.00000E+00
+  
+  ---------------------- Replica :            1
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.12   -9.75   -9.24   -9.09   -8.94   -8.79   -8.36   -8.14   -7.19   -7.11
+   -7.09   -6.25   -6.21   -5.67   -5.51   -5.45   -5.27   -4.72   -4.24   -3.98
+   -3.38   -2.89   -2.88   -2.65   -2.42   -2.03   -1.95   -1.93   -1.63   -1.57
+   -1.29   -1.03   -0.95   -0.67   -0.60   -0.60   -0.54   -0.39   -0.37    0.55
+ 
+ 
+  
+  ---------------------- Replica :            2
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.15   -9.83   -9.22   -9.05   -9.03   -8.75   -8.36   -8.30   -7.15   -7.10
+   -7.05   -6.39   -6.22   -5.65   -5.54   -5.45   -5.25   -4.68   -4.21   -4.15
+   -3.33   -2.88   -2.84   -2.66   -2.45   -2.00   -1.92   -1.90   -1.70   -1.55
+   -1.35   -0.94   -0.91   -0.66   -0.60   -0.56   -0.51   -0.38   -0.35    0.33
+ 
+ 
+  
+  ---------------------- Replica :            3
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.25  -10.01   -9.26   -9.13   -9.07   -8.71   -8.55   -8.29   -7.16   -7.14
+   -7.08   -6.55   -6.23   -5.66   -5.61   -5.49   -5.20   -4.68   -4.24   -4.20
+   -3.30   -2.93   -2.83   -2.72   -2.52   -2.03   -1.94   -1.93   -1.76   -1.67
+   -1.35   -0.90   -0.84   -0.69   -0.64   -0.57   -0.54   -0.36   -0.33    0.23
+ 
+ 
+  
+  ---------------------- Replica :            4
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.37  -10.17   -9.30   -9.22   -9.10   -8.69   -8.65   -8.28   -7.20   -7.14
+   -7.10   -6.64   -6.23   -5.69   -5.67   -5.52   -5.16   -4.68   -4.23   -4.20
+   -3.27   -2.97   -2.83   -2.78   -2.61   -2.06   -1.98   -1.98   -1.76   -1.75
+   -1.36   -0.89   -0.84   -0.71   -0.66   -0.58   -0.56   -0.36   -0.34    0.27
+ 
+ 
+  
+  ---------------------- Replica :            5
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.48  -10.27   -9.35   -9.27   -9.14   -8.69   -8.68   -8.26   -7.26   -7.15
+   -7.14   -6.66   -6.25   -5.75   -5.69   -5.54   -5.11   -4.67   -4.26   -4.12
+   -3.23   -3.02   -2.86   -2.81   -2.68   -2.11   -2.02   -2.02   -1.80   -1.71
+   -1.37   -0.91   -0.89   -0.73   -0.70   -0.59   -0.57   -0.39   -0.37    0.30
+ 
+ 
+  
+  ---------------------- Replica :            6
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.54  -10.28   -9.41   -9.29   -9.17   -8.71   -8.65   -8.26   -7.34   -7.19
+   -7.17   -6.62   -6.26   -5.81   -5.72   -5.56   -5.04   -4.69   -4.32   -3.99
+   -3.19   -3.06   -2.91   -2.83   -2.70   -2.16   -2.07   -2.03   -1.83   -1.63
+   -1.35   -0.99   -0.91   -0.77   -0.75   -0.61   -0.61   -0.41   -0.38    0.20
+ 
+ 
+  
+  ---------------------- Replica :            7
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.56  -10.20   -9.46   -9.30   -9.20   -8.75   -8.53   -8.25   -7.43   -7.23
+   -7.20   -6.54   -6.27   -5.88   -5.74   -5.54   -4.97   -4.70   -4.39   -3.89
+   -3.15   -3.07   -2.96   -2.83   -2.67   -2.19   -2.11   -2.02   -1.86   -1.52
+   -1.34   -1.08   -0.93   -0.82   -0.77   -0.65   -0.63   -0.44   -0.34    0.02
+ 
+ 
+  
+  ---------------------- Replica :            8
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.57  -10.09   -9.50   -9.34   -9.20   -8.80   -8.32   -8.25   -7.51   -7.27
+   -7.20   -6.45   -6.29   -5.97   -5.74   -5.45   -4.92   -4.71   -4.44   -3.84
+   -3.10   -3.07   -3.00   -2.82   -2.58   -2.24   -2.12   -1.99   -1.90   -1.50
+   -1.34   -1.19   -0.94   -0.85   -0.75   -0.68   -0.65   -0.45   -0.37   -0.01
+ 
+ 
+  202     -749.59765     0  0.19429E-15   1  0.00016  0.00001  0.00000E+00  0.00000E+00
+  203     -749.59773     0  0.19429E-15   1  0.00017  0.00001  0.00000E+00  0.00000E+00
+  204     -749.59781     0  0.19429E-15   1  0.00017  0.00001  0.00000E+00  0.00000E+00
+  205     -749.59789     0  0.19429E-15   1  0.00018  0.00001  0.00000E+00  0.00000E+00
+  206     -749.59797     0  0.19429E-15   1  0.00019  0.00001  0.00000E+00  0.00000E+00
+  207     -749.59806     0  0.19429E-15   1  0.00019  0.00001  0.00000E+00  0.00000E+00
+  208     -749.59815     0  0.19429E-15   1  0.00020  0.00001  0.00000E+00  0.00000E+00
+  209     -749.59825     0  0.19429E-15   1  0.00021  0.00001  0.00000E+00  0.00000E+00
+  210     -749.59835     0  0.19429E-15   1  0.00022  0.00001  0.00000E+00  0.00000E+00
+  211     -749.59845     0  0.19429E-15   1  0.00023  0.00001  0.00000E+00  0.00000E+00
+  212     -749.59856     0  0.19429E-15   1  0.00024  0.00001  0.00000E+00  0.00000E+00
+  213     -749.59867     0  0.19429E-15   1  0.00025  0.00001  0.00000E+00  0.00000E+00
+  214     -749.59878     0  0.19429E-15   1  0.00026  0.00001  0.00000E+00  0.00000E+00
+  215     -749.59890     0  0.19429E-15   1  0.00027  0.00001  0.00000E+00  0.00000E+00
+  216     -749.59903     0  0.19429E-15   1  0.00028  0.00001  0.00000E+00  0.00000E+00
+  217     -749.59915     0  0.19429E-15   1  0.00029  0.00001  0.00000E+00  0.00000E+00
+  218     -749.59929     0  0.19429E-15   1  0.00030  0.00001  0.00000E+00  0.00000E+00
+  219     -749.59943     0  0.19429E-15   1  0.00031  0.00001  0.00000E+00  0.00000E+00
+  220     -749.59957     0  0.19429E-15   1  0.00032  0.00001  0.00000E+00  0.00000E+00
+  221     -749.59972     0  0.19429E-15   1  0.00033  0.00001  0.00000E+00  0.00000E+00
+  222     -749.59988     0  0.19429E-15   1  0.00035  0.00001  0.00000E+00  0.00000E+00
+  223     -749.60004     0  0.19429E-15   1  0.00036  0.00001  0.00000E+00  0.00000E+00
+  224     -749.60020     0  0.19429E-15   1  0.00037  0.00001  0.00000E+00  0.00000E+00
+  225     -749.60038     0  0.19429E-15   1  0.00039  0.00001  0.00000E+00  0.00000E+00
+  226     -749.60056     0  0.19429E-15   1  0.00040  0.00001  0.00000E+00  0.00000E+00
+  227     -749.60074     0  0.19429E-15   1  0.00042  0.00001  0.00000E+00  0.00000E+00
+  228     -749.60093     0  0.19429E-15   1  0.00043  0.00001  0.00000E+00  0.00000E+00
+  229     -749.60113     0  0.19429E-15   1  0.00045  0.00001  0.00000E+00  0.00000E+00
+  230     -749.60133     0  0.19429E-15   1  0.00046  0.00002  0.00000E+00  0.00000E+00
+  231     -749.60154     0  0.19429E-15   1  0.00048  0.00002  0.00000E+00  0.00000E+00
+  232     -749.60175     0  0.19429E-15   1  0.00049  0.00002  0.00000E+00  0.00000E+00
+  233     -749.60198     0  0.19429E-15   1  0.00051  0.00002  0.00000E+00  0.00000E+00
+  234     -749.60220     0  0.19429E-15   1  0.00052  0.00002  0.00000E+00  0.00000E+00
+  235     -749.60244     0  0.19429E-15   1  0.00054  0.00002  0.00000E+00  0.00000E+00
+  236     -749.60268     0  0.19429E-15   1  0.00055  0.00001  0.00000E+00  0.00000E+00
+  237     -749.60292     0  0.19429E-15   1  0.00057  0.00001  0.00000E+00  0.00000E+00
+  238     -749.60317     0  0.19429E-15   1  0.00058  0.00001  0.00000E+00  0.00000E+00
+  239     -749.60342     0  0.19429E-15   1  0.00060  0.00001  0.00000E+00  0.00000E+00
+  240     -749.60368     0  0.19429E-15   1  0.00061  0.00001  0.00000E+00  0.00000E+00
+  241     -749.60395     0  0.19429E-15   1  0.00062  0.00001  0.00000E+00  0.00000E+00
+  242     -749.60421     0  0.19429E-15   1  0.00063  0.00001  0.00000E+00  0.00000E+00
+  243     -749.60448     0  0.19429E-15   1  0.00064  0.00001  0.00000E+00  0.00000E+00
+  244     -749.60476     0  0.19429E-15   1  0.00065  0.00001  0.00000E+00  0.00000E+00
+  245     -749.60503     0  0.19429E-15   1  0.00066  0.00001  0.00000E+00  0.00000E+00
+  246     -749.60531     0  0.19429E-15   1  0.00067  0.00001  0.00000E+00  0.00000E+00
+  247     -749.60559     0  0.19429E-15   1  0.00068  0.00001  0.00000E+00  0.00000E+00
+  248     -749.60586     0  0.19429E-15   1  0.00068  0.00001  0.00000E+00  0.00000E+00
+  249     -749.60614     0  0.19429E-15   1  0.00069  0.00000  0.00000E+00  0.00000E+00
+  250     -749.60642     0  0.19429E-15   1  0.00069  0.00000  0.00000E+00  0.00000E+00
+  251     -749.60669     0  0.19429E-15   1  0.00069  0.00000  0.00000E+00  0.00000E+00
+  252     -749.60696     0  0.19429E-15   1  0.00069  0.00000  0.00000E+00  0.00000E+00
+  253     -749.60723     0  0.19429E-15   1  0.00069  0.00000  0.00000E+00  0.00000E+00
+  254     -749.60750     0  0.19429E-15   1  0.00068  0.00000  0.00000E+00  0.00000E+00
+  255     -749.60776     0  0.19429E-15   1  0.00067  0.00000  0.00000E+00  0.00000E+00
+  256     -749.60801     0  0.19429E-15   1  0.00067  0.00000  0.00000E+00  0.00000E+00
+  257     -749.60826     0  0.19429E-15   1  0.00066  0.00000  0.00000E+00  0.00000E+00
+  258     -749.60851     0  0.19429E-15   1  0.00065  0.00000  0.00000E+00  0.00000E+00
+  259     -749.60874     0  0.19429E-15   1  0.00063  0.00000  0.00000E+00  0.00000E+00
+  260     -749.60897     0  0.19429E-15   1  0.00062  0.00000  0.00000E+00  0.00000E+00
+  261     -749.60919     0  0.19429E-15   1  0.00060  0.00000  0.00000E+00  0.00000E+00
+  262     -749.60940     0  0.19429E-15   1  0.00059  0.00000  0.00000E+00  0.00000E+00
+  263     -749.60961     0  0.19429E-15   1  0.00057  0.00000  0.00000E+00  0.00000E+00
+  264     -749.60980     0  0.19429E-15   1  0.00055  0.00000  0.00000E+00  0.00000E+00
+  265     -749.60999     0  0.19429E-15   1  0.00053  0.00000  0.00000E+00  0.00000E+00
+  266     -749.61017     0  0.19429E-15   1  0.00051  0.00000  0.00000E+00  0.00000E+00
+  267     -749.61034     0  0.19429E-15   1  0.00049  0.00000  0.00000E+00  0.00000E+00
+  268     -749.61050     0  0.19429E-15   1  0.00047  0.00000  0.00000E+00  0.00000E+00
+  269     -749.61065     0  0.19429E-15   1  0.00044  0.00000  0.00000E+00  0.00000E+00
+  270     -749.61079     0  0.19429E-15   1  0.00042  0.00000  0.00000E+00  0.00000E+00
+  271     -749.61093     0  0.19429E-15   1  0.00040  0.00000  0.00000E+00  0.00000E+00
+  272     -749.61105     0  0.19429E-15   1  0.00038  0.00000  0.00000E+00  0.00000E+00
+  273     -749.61117     0  0.19429E-15   1  0.00036  0.00000  0.00000E+00  0.00000E+00
+  274     -749.61128     0  0.19429E-15   1  0.00033  0.00000  0.00000E+00  0.00000E+00
+  275     -749.61138     0  0.19429E-15   1  0.00031  0.00000  0.00000E+00  0.00000E+00
+  276     -749.61147     0  0.19429E-15   1  0.00029  0.00000  0.00000E+00  0.00000E+00
+  277     -749.61156     0  0.19429E-15   1  0.00027  0.00000  0.00000E+00  0.00000E+00
+  278     -749.61164     0  0.19429E-15   1  0.00026  0.00000  0.00000E+00  0.00000E+00
+  279     -749.61171     0  0.19429E-15   1  0.00024  0.00000  0.00000E+00  0.00000E+00
+  280     -749.61178     0  0.19429E-15   1  0.00022  0.00000  0.00000E+00  0.00000E+00
+  281     -749.61184     0  0.19429E-15   1  0.00020  0.00000  0.00000E+00  0.00000E+00
+  282     -749.61190     0  0.19429E-15   1  0.00019  0.00000  0.00000E+00  0.00000E+00
+  283     -749.61195     0  0.19429E-15   1  0.00017  0.00000  0.00000E+00  0.00000E+00
+  284     -749.61200     0  0.19429E-15   1  0.00016  0.00000  0.00000E+00  0.00000E+00
+  285     -749.61204     0  0.19429E-15   1  0.00015  0.00000  0.00000E+00  0.00000E+00
+  286     -749.61208     0  0.19429E-15   1  0.00013  0.00000  0.00000E+00  0.00000E+00
+  287     -749.61212     0  0.19429E-15   1  0.00012  0.00000  0.00000E+00  0.00000E+00
+  288     -749.61215     0  0.19429E-15   1  0.00011  0.00000  0.00000E+00  0.00000E+00
+  289     -749.61218     0  0.19429E-15   1  0.00010  0.00000  0.00000E+00  0.00000E+00
+  290     -749.61221     0  0.19429E-15   1  0.00009  0.00000  0.00000E+00  0.00000E+00
+  291     -749.61223     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  292     -749.61225     0  0.19429E-15   1  0.00008  0.00000  0.00000E+00  0.00000E+00
+  293     -749.61227     0  0.19429E-15   1  0.00007  0.00000  0.00000E+00  0.00000E+00
+  294     -749.61229     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  295     -749.61230     0  0.19429E-15   1  0.00006  0.00000  0.00000E+00  0.00000E+00
+  296     -749.61232     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  297     -749.61233     0  0.19429E-15   1  0.00005  0.00000  0.00000E+00  0.00000E+00
+  298     -749.61234     0  0.19429E-15   1  0.00004  0.00000  0.00000E+00  0.00000E+00
+  299     -749.61235     0  0.19429E-15   1  0.00004  0.00000  0.00000E+00  0.00000E+00
+  
+  -----------  REPLICA :            1
+  
+
+
+                total energy =      -75.00865 a.u.
+              kinetic energy =       31.45825 a.u.
+        electrostatic energy =      -86.71905 a.u.
+                         esr =        0.07050 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.15275 a.u.
+  n-l pseudopotential energy =       17.42732 a.u.
+ exchange-correlation energy =      -24.02242 a.u.
+           average potential =       -0.34451 a.u.
+
+
+  
+  -----------  REPLICA :            2
+  
+
+
+                total energy =      -74.97841 a.u.
+              kinetic energy =       31.63549 a.u.
+        electrostatic energy =      -86.76387 a.u.
+                         esr =        0.07079 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.17733 a.u.
+  n-l pseudopotential energy =       17.41116 a.u.
+ exchange-correlation energy =      -24.08385 a.u.
+           average potential =       -0.34391 a.u.
+
+
+  
+  -----------  REPLICA :            3
+  
+
+
+                total energy =      -74.93911 a.u.
+              kinetic energy =       31.78537 a.u.
+        electrostatic energy =      -86.83783 a.u.
+                         esr =        0.07183 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.24018 a.u.
+  n-l pseudopotential energy =       17.49325 a.u.
+ exchange-correlation energy =      -24.13973 a.u.
+           average potential =       -0.34324 a.u.
+
+
+  
+  -----------  REPLICA :            4
+  
+
+
+                total energy =      -74.88923 a.u.
+              kinetic energy =       31.91739 a.u.
+        electrostatic energy =      -86.90255 a.u.
+                         esr =        0.07390 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.31335 a.u.
+  n-l pseudopotential energy =       17.59684 a.u.
+ exchange-correlation energy =      -24.18756 a.u.
+           average potential =       -0.34273 a.u.
+
+
+  
+  -----------  REPLICA :            5
+  
+
+
+                total energy =      -74.86648 a.u.
+              kinetic energy =       31.99063 a.u.
+        electrostatic energy =      -86.95005 a.u.
+                         esr =        0.07529 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.36077 a.u.
+  n-l pseudopotential energy =       17.67173 a.u.
+ exchange-correlation energy =      -24.21803 a.u.
+           average potential =       -0.34241 a.u.
+
+
+  
+  -----------  REPLICA :            6
+  
+
+
+                total energy =      -74.89829 a.u.
+              kinetic energy =       31.99138 a.u.
+        electrostatic energy =      -86.97454 a.u.
+                         esr =        0.07413 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.35226 a.u.
+  n-l pseudopotential energy =       17.66636 a.u.
+ exchange-correlation energy =      -24.22922 a.u.
+           average potential =       -0.34214 a.u.
+
+
+  
+  -----------  REPLICA :            7
+  
+
+
+                total energy =      -74.96301 a.u.
+              kinetic energy =       31.94144 a.u.
+        electrostatic energy =      -86.97354 a.u.
+                         esr =        0.07207 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.30530 a.u.
+  n-l pseudopotential energy =       17.60206 a.u.
+ exchange-correlation energy =      -24.22766 a.u.
+           average potential =       -0.34184 a.u.
+
+
+  
+  -----------  REPLICA :            8
+  
+
+
+                total energy =      -75.01574 a.u.
+              kinetic energy =       31.88110 a.u.
+        electrostatic energy =      -86.95392 a.u.
+                         esr =        0.07103 a.u.
+                       eself =      118.08691 a.u.
+      pseudopotential energy =      -13.26079 a.u.
+  n-l pseudopotential energy =       17.53786 a.u.
+ exchange-correlation energy =      -24.21999 a.u.
+           average potential =       -0.34163 a.u.
+
+
+  300     -749.61236     0  0.19429E-15   1  0.00003  0.00000  0.00000E+00  0.00000E+00
+  
+  ---------------------- Replica :            1
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.19   -9.79   -9.34   -9.14   -8.99   -8.87   -8.38   -8.20   -7.24   -7.20
+   -7.20   -6.32   -6.20   -5.73   -5.53   -5.47   -5.32   -4.75   -4.26   -4.04
+   -3.43   -2.99   -2.90   -2.72   -2.44   -2.07   -2.00   -1.98   -1.65   -1.43
+   -1.35   -1.07   -0.98   -0.78   -0.66   -0.65   -0.63   -0.42   -0.38    0.29
+ 
+ 
+  
+  ---------------------- Replica :            2
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.15   -9.83   -9.22   -9.05   -9.03   -8.75   -8.36   -8.30   -7.15   -7.10
+   -7.05   -6.38   -6.22   -5.65   -5.54   -5.45   -5.25   -4.68   -4.21   -4.15
+   -3.33   -2.88   -2.83   -2.66   -2.45   -2.00   -1.92   -1.90   -1.70   -1.55
+   -1.36   -0.94   -0.91   -0.66   -0.60   -0.56   -0.51   -0.38   -0.35    0.33
+ 
+ 
+  
+  ---------------------- Replica :            3
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.25  -10.01   -9.26   -9.14   -9.07   -8.71   -8.55   -8.29   -7.16   -7.14
+   -7.08   -6.55   -6.23   -5.66   -5.61   -5.49   -5.20   -4.68   -4.24   -4.20
+   -3.30   -2.93   -2.83   -2.72   -2.52   -2.03   -1.94   -1.93   -1.76   -1.67
+   -1.35   -0.90   -0.84   -0.68   -0.64   -0.57   -0.54   -0.36   -0.33    0.23
+ 
+ 
+  
+  ---------------------- Replica :            4
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.37  -10.17   -9.30   -9.22   -9.10   -8.69   -8.65   -8.28   -7.20   -7.14
+   -7.10   -6.64   -6.23   -5.69   -5.67   -5.52   -5.16   -4.68   -4.23   -4.20
+   -3.27   -2.97   -2.83   -2.78   -2.61   -2.06   -1.98   -1.98   -1.76   -1.75
+   -1.36   -0.89   -0.84   -0.71   -0.66   -0.58   -0.56   -0.36   -0.34    0.27
+ 
+ 
+  
+  ---------------------- Replica :            5
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.48  -10.27   -9.35   -9.27   -9.14   -8.69   -8.68   -8.26   -7.26   -7.15
+   -7.14   -6.66   -6.25   -5.75   -5.69   -5.54   -5.11   -4.67   -4.26   -4.12
+   -3.23   -3.02   -2.86   -2.81   -2.68   -2.11   -2.02   -2.02   -1.80   -1.71
+   -1.37   -0.91   -0.89   -0.73   -0.70   -0.59   -0.57   -0.39   -0.37    0.30
+ 
+ 
+  
+  ---------------------- Replica :            6
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.54  -10.28   -9.41   -9.29   -9.17   -8.71   -8.65   -8.26   -7.34   -7.19
+   -7.17   -6.62   -6.26   -5.81   -5.72   -5.56   -5.04   -4.69   -4.32   -3.99
+   -3.19   -3.06   -2.91   -2.83   -2.70   -2.16   -2.07   -2.03   -1.83   -1.63
+   -1.35   -0.99   -0.91   -0.77   -0.75   -0.61   -0.61   -0.41   -0.38    0.20
+ 
+ 
+  
+  ---------------------- Replica :            7
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.56  -10.20   -9.46   -9.30   -9.20   -8.75   -8.53   -8.25   -7.43   -7.23
+   -7.20   -6.54   -6.27   -5.88   -5.74   -5.54   -4.97   -4.70   -4.39   -3.89
+   -3.15   -3.07   -2.96   -2.83   -2.67   -2.19   -2.11   -2.02   -1.86   -1.52
+   -1.34   -1.08   -0.93   -0.82   -0.77   -0.65   -0.63   -0.44   -0.34    0.02
+ 
+ 
+  
+  ---------------------- Replica :            8
+  
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -11.57  -10.09   -9.50   -9.34   -9.20   -8.80   -8.32   -8.25   -7.51   -7.27
+   -7.20   -6.45   -6.29   -5.97   -5.74   -5.45   -4.92   -4.71   -4.44   -3.84
+   -3.10   -3.07   -3.00   -2.82   -2.58   -2.24   -2.12   -1.99   -1.90   -1.50
+   -1.34   -1.19   -0.94   -0.85   -0.75   -0.68   -0.65   -0.45   -0.37   -0.01
+ 
+ 
+ Creating dir : RESTART61
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART61                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART61/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART61/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART62
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART62                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART62/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART62/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART63
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART63                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART63/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART63/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART64
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART64                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART64/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART64/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART65
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART65                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART65/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART65/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART66
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART66                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART66/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART66/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+ Creating dir : RESTART67
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART67                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART67/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART67/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+     initialize   :    23.61s CPU
+     formf        :    10.45s CPU (       8 calls,   1.306 s avg)
+     rhoofr       :  1496.21s CPU (    1600 calls,   0.935 s avg)
+     vofrho       :   261.66s CPU (    1600 calls,   0.164 s avg)
+     dforce       :  2890.92s CPU (   32000 calls,   0.090 s avg)
+     calphi       :    18.17s CPU (    1600 calls,   0.011 s avg)
+     ortho        :    78.47s CPU (    1600 calls,   0.049 s avg)
+     updatc       :    51.82s CPU (    1600 calls,   0.032 s avg)
+     newd         :     6.28s CPU (    1600 calls,   0.004 s avg)
+     calbec       :    68.10s CPU (    1616 calls,   0.042 s avg)
+     prefor       :    32.27s CPU (    3200 calls,   0.010 s avg)
+     strucf       :    34.37s CPU (    1608 calls,   0.021 s avg)
+     nlsm1        :    68.09s CPU (    4816 calls,   0.014 s avg)
+     fft          :   175.65s CPU (    4800 calls,   0.037 s avg)
+     ffts         :   118.49s CPU (    3200 calls,   0.037 s avg)
+     fftw         :  3517.84s CPU (   96000 calls,   0.037 s avg)
+     rsg          :     4.13s CPU (    1600 calls,   0.003 s avg)
+ Creating dir : RESTART68
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART68                                                                                                                                                                                                                                                       
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Creating dir : RESTART68/K00001
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from  cp_writefile  : error #        -1
+      unable to create directory RESTART68/K00001                                                                                                                                                                                                                                                
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ Opening file restart.xml
+     CP           :     1h23m CPU time
+
+
+   MEMORY STATISTICS FROM PE(1) : 

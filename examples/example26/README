@@ -1,0 +1,13 @@
+This example shows how to run cp.x to do String method (SMD) to find
+the minimum energy path (MEP).
+
+To used this method, one must know the initial and the final state.
+They should be obtained using regular CPMD optimization before running
+the SMD.
+
+The example first optimize the electronic degrees of freedom of the
+string, and then start SMD optimization to find the MEP, sequentially.
+
+Details can be found in JCP 121, 3359 (2004). 
+
+Contributed by Yosuke Kanai
