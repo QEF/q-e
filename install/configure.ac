@@ -108,7 +108,7 @@ ia64-*-linux-gnu:ifort )
 	echo "${ECHO_T}$version"
 
 	is_intel=1
-	try_cc="icc gcc cc mpicc pgcc"
+	try_cc="icc gcc cc"
 	try_f77="$f90"
 	;;
 *-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
@@ -119,12 +119,12 @@ ia64-*-linux-gnu:ifort )
 	echo "${ECHO_T}$version"
 
 	is_intel=1
-	try_cc="icc gcc cc mpicc pgcc"
+	try_cc="icc gcc cc"
 	try_f77="$f90"
 	;;
 *-pc-linux-gnu:pgf* )
 	is_pgi=1
-	try_cc="pgcc gcc cc icc"
+	try_cc="pgcc gcc cc"
 	try_f77="pgf77 $f90"
 	;;
 *-pc-linux-gnu:mpif* )
@@ -138,8 +138,10 @@ ia64-*-linux-gnu:ifort )
 		echo "${ECHO_T}ifc $version"
 
 		is_intel=1
-		try_cc="mpicc icc gcc cc pgcc"
-		try_f77="mpif77 ifort ifc $f90"
+		try_cc_parallel="mpicc"
+		try_cc="icc gcc cc"
+		try_f77_parallel="mpif77"
+		try_f77="ifort ifc $f90"
 	elif test "$pgi_version" != ""
 	then
 		name=`echo $pgi_version | awk '{print $1}'`
@@ -147,17 +149,23 @@ ia64-*-linux-gnu:ifort )
 		echo "${ECHO_T}$name $version"
 
 		is_pgi=1
-		try_cc="mpicc pgcc gcc cc icc"
-		try_f77="mpif77 pgf77 $f90"
+		try_cc_parallel="mpicc"
+		try_cc="pgcc gcc cc"
+		try_f77_parallel="mpif77"
+		try_f77="pgf77 $f90"
 	else
 		echo "${ECHO_T}unknown"
-		try_cc="mpicc gcc cc pgcc icc"
-		try_f77="mpif77 $f90"
+		try_cc_parallel="mpicc"
+		try_cc="gcc cc"
+		try_f77_parallel="mpif77"
+		try_f77="f77 $f90"
 	fi
 	;;
 *-ibm-aix*:* )
-	try_cc="mpcc_r mpcc xlc cc gcc"
-	try_f77="mpxlf_r mpxlf xlf f77 $f90"
+	try_cc_parallel="mpcc_r mpcc"
+	try_cc="xlc cc gcc"
+	try_f77_parallel="mpxlf_r mpxlf"
+	try_f77="xlf f77 $f90"
 	;;
 mips-sgi-*:* )
 	try_cc="cc gcc"
@@ -168,8 +176,10 @@ alphaev*-dec-osf* )
 	try_f77="f77 $f90"
 	;;
 sparc-sun-*:* )
-	try_cc="mpcc cc gcc"
-	try_f77="mpf77 f77 $f90"
+	try_cc_parallel="mpcc"
+	try_cc="cc gcc"
+	try_f77_parallel="mpf77"
+	try_f77="f77 $f90"
 	;;
 * )
 	# unknown
@@ -177,6 +187,11 @@ sparc-sun-*:* )
 	try_f77="f77 $f90"
 	;;
 esac
+if ! test $no_parallel
+then
+	try_f77="$try_f77_parallel $try_f77"
+	try_cc="$try_cc_parallel $try_cc"
+fi
 
 # clear cached values
 unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
