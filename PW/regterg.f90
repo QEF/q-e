@@ -246,7 +246,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      DO n = 1, notcnv
         !
-        psi(1,nbase+n) = psi(1,nbase+n) / SQRT( ew(n) )
+        psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
      END DO
      !

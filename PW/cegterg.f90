@@ -237,7 +237,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      DO n = 1, notcnv
         !
-        psi(1,nbase+n) = psi(1,nbase+n) / SQRT( ew(n) )
+        psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
      END DO
      !
