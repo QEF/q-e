@@ -72,7 +72,7 @@ program projwfc
   USE klist,      ONLY : degauss, ngauss, lgauss
   use io_files,   only : nd_nmbr, prefix, tmp_dir 
 #ifdef __PARA 
-  use para, only : me 
+  use para, only : me, mypool
   use mp,   only : mp_bcast      
 #endif 
   implicit none 
