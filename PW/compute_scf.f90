@@ -47,12 +47,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   ! ... local variables definition
   !
-  INTEGER              :: image, ia, istat
+  INTEGER                    :: image, ia, istat
+  REAL (KIND=DP)             :: tcpu 
+  CHARACTER (LEN=80)         :: tmp_dir_saved
+  LOGICAL                    :: file_exists, opnd   
   REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
-  REAL (KIND=DP)       :: tcpu 
-  CHARACTER (LEN=80)   :: tmp_dir_saved
-  LOGICAL              :: file_exists, opnd 
   !
   ! ... end of local variables definition
   !
@@ -216,6 +216,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !   
            istat = 1
            !
+           WRITE( UNIT = iunneb, &
+                  FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
+           !
            CALL stop_other_images()
            !
            EXIT scf_loop
@@ -285,10 +288,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   tmp_dir = tmp_dir_saved
   !
   IF ( nimage > 1 ) THEN
-        !
-        WRITE( UNIT = iunneb, &
-               FMT = '(/"image ",I2," waiting at the barrier")' ) my_image_id
-        !
+     !
+     WRITE( UNIT = iunneb, &
+            FMT = '(/"image ",I2," waiting at the barrier")' ) my_image_id
+     !
   END IF   
   !     
   CALL mp_barrier( intra_image_comm )
