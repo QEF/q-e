@@ -73,8 +73,8 @@ subroutine d3_exc
 
   enddo
 #ifdef __PARA
-100 continue
-  CALL mp_bcast( d3dyn1, ionode_id, MPI_COMM_ROW )
+100 continue  
+  IF ( npool /= 1 ) CALL mp_bcast( d3dyn1, ionode_id, MPI_COMM_ROW )
 #endif
 
   d3dyn = d3dyn  + d3dyn1
