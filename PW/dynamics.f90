@@ -100,19 +100,16 @@ subroutine dynamics
      istep = it + 1
   endif
   tempo = tempo + dt * 0.0000484
-
   it = it + 1
   if (mod (it, nraise) .eq.0.and.delta_T.lt.0) then
      WRITE( stdout, '(/5x,"Thermalization: delta_T = ",f6.3, &
           &  ", T = ",f6.1)')  - delta_T, temp_new - delta_T
      call thermalize (temp_new, temp_new - delta_T, tauold)
-
   endif
   if (delta_T.ne.1.d0.and.delta_T.ge.0) then
      WRITE( stdout, '(/5x,"Thermalization: delta_T = ",f6.3, &
           &  ", T = ",f6.1)') delta_T, temp_new * delta_T
      call thermalize (temp_new, temp_new * delta_T, tauold)
-
   endif
   WRITE( stdout, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
        &                          f8.5," pico-seconds"/)') it, tempo
@@ -203,7 +200,7 @@ subroutine verlet (rnew, rold, a, n, ec, mass, ml, dt)
   !
   ! Verlet algorithm to update atomic position
   !
-  USE kinds
+  USE kinds, ONLY: DP
   implicit none
   ! INPUT
   integer :: n  ! number of particles
@@ -365,6 +362,9 @@ subroutine thermalize (temp_old, temp_new, tauold)
   !-------------------------------------------------------------------
   USE kinds, ONLY: DP
   USE basis, ONLY: nat, tau
+  USE relax, ONLY: fixatom
+  USE dynam, ONLY: dt
+  implicit none
   real(kind=DP) :: tauold (3, nat), temp_new, temp_old
   !
   integer :: na, natoms
@@ -387,6 +387,7 @@ subroutine thermalize (temp_old, temp_new, tauold)
      velox = (tau (3, na) - tauold (3, na) ) / dt
      tauold (3, na) = tau (3, na) - dt * aux * velox
   enddo
+
   !
   return
 
@@ -402,7 +403,7 @@ subroutine find_alpha_and_beta (nat, tau, tauold, alpha0, beta0)
   !     tau' = alpha0 * ( tau(t) - tau(t-dt) ) +
   !             beta0 * ( tau(t-dt) - tau(t-2*dt) )
   !
-  USE kinds
+  USE kinds, ONLY: DP
   implicit none
 
   integer :: nat, na, ipol

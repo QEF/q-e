@@ -354,11 +354,11 @@ MODULE neb_routines
          !
          IF ( istep == 0 ) THEN
             !
-            CALL born_oppenhimer_PES( .TRUE., stat )
+            CALL born_oppenheimer_PES( .TRUE., stat )
             !
          ELSE
             !
-            CALL born_oppenhimer_PES( optimization, stat )
+            CALL born_oppenheimer_PES( optimization, stat )
             !
          END IF
          !
@@ -807,7 +807,7 @@ MODULE neb_routines
     !
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE born_oppenhimer_PES( flag, stat )
+    SUBROUTINE born_oppenheimer_PES( flag, stat )
       !-----------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
@@ -862,7 +862,7 @@ MODULE neb_routines
       !
       RETURN
       !
-    END SUBROUTINE born_oppenhimer_PES
+    END SUBROUTINE born_oppenheimer_PES
     !
     !
     !-----------------------------------------------------------------------

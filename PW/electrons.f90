@@ -309,8 +309,8 @@ SUBROUTINE electrons()
            !
            ! ... a new diagonalization is needed       
            !
-           WRITE( stdout, '(/,5X,"WARNING: ethr not adequate")' )
-           WRITE( stdout, '(5X,"         a new diagonalization is needed",/)' )
+           WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
+          &  "too large:",/, 5X,"Diagonalizing with lowered threshold",/)' )
            !
            CALL c_bands( iter, ik_, dr2 )
            !
