@@ -1,3 +1,26 @@
+25 Nov 2004 workaround for configure problem with systems where you
+            can't run interactively [Gerardo]
+            All files in FPMD/ moved to CPV/ (CC)
+            Documentation updated (PG)
+
+24 Nov 2004 - complete experimental common CP/FPMD XML-like restart .
+              CP and FPMD are now linked to a common XML-like
+              restart subroutine (see Module/cp_restart.f90 )
+            - sph_bes.f90  fix for parallel compilation
+            - CPV/input.f90 workaround for xlf internal compiler error
+             - imported iotk version 3.1
+             - pw_export updated
+             (CC)
+             Fixed a bug in the way the bessel functions were called.
+             Now example10 works again. (C.S.)
+             Fixed a bug in the convergence check (highlighted by Nicola 
+             Bonini). (C.S.)
+             iotk_config.h: Added definitions for lahey compiler. (C.S.)
+             Installation mecanism: added F90FLAGS_NOOPT flag [Gerardo]
+
+23 Nov 2004 ion_radius input parameter now specify the real space spread 
+            of the pseudocharge gaussian in both cp and fpmd code (CC)
+
 23 Nov 2004 Incorrect call to v_of_rho in pw2casino
             Check on occupancy in lsda calculations re-introduced
             Documentation updated (PG)

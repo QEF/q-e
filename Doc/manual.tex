@@ -693,8 +693,8 @@ Here is a list:
     \texttt{CPV/cp.x}.
   \item
     \texttt{make fpmd} produces the Car-Parrinello code FPMD
-    \texttt{FPMD/fpmd.x} and the postprocessing code 
-    \texttt{FPMD/fpmdpp.x}.
+    \texttt{CPV/fpmd.x} and the postprocessing code 
+    \texttt{CPV/fpmdpp.x}.
   \item
     \texttt{make all} produces all of the above.
 \end{itemize}
@@ -1451,6 +1451,17 @@ specified:
   \texttt{ecutwfc} (real): kinetic energy cutoff (Ry) for
     wavefunctions.
 \end{quote}
+For metallic systems, you have to specify how metallicity
+is treated by setting variable \texttt{occupations}. If you choose
+\texttt{occupations='smearing'}, you have to specify the 
+smearing width \texttt{degauss} and optionally the smearing 
+type \texttt{smearing}. If you choose \texttt{occupations='tetrahedra'},
+you need to specify a suitable uniform k-point grid (card 
+\texttt{K\_POINTS} with option \texttt{automatic}). 
+Spin-polarized systems must be treated as metallic system,
+except the special cases of a single k-point for which
+occupancies can be fixed (\texttt{occupations='from_input'}
+and card \texttt{OCCUPATIONS}).
 
 Explanations for the meaning of variables \texttt{ibrav} and
 \texttt{celldm} are in file \texttt{INPUT\_PW}.
@@ -1466,6 +1477,7 @@ with self-explanatory names:
   \texttt{ATOMIC\_POSITIONS}\\
   \texttt{K\_POINTS}\\
   \texttt{CELL\_PARAMETERS} (optional)\\
+  \texttt{OCCUPATIONS} (optional) \\
   \texttt{CLIMBING\_IMAGES} (optional)
 \end{quote}
 
@@ -2394,12 +2406,15 @@ Possible reasons:
     a failure of the algorithm performing subspace diagonalization. 
     The LAPACK algorithms used by cdiagh or cdiaghg are very robust 
     and extensively tested. Still, it may seldom happen that such
-    algorithms fail, for unclar reasons. The error is not reproducible
-    on a different architecture and usually disappears if the
-    calculation is repeated with even minimal changes in its
-    parameters. If this happen, use conjugate-gradient diagonalization
-    (\texttt{diagonalization='cg'}), slower but very robust, and see
-    what happens. 
+    algorithms fail. In at least one case the failures was tracked
+    to the non-positiveness of the S matrix appearing in the US-PP
+    formalism. In other cases, the error is found to be non reproducible
+    on different architectures and disappearing if the calculation
+    is repeated with even minimal changes in its parameters. 
+    In both cases, the reasons for such behavior are unclear and
+    the only advice is to use conjugate-gradient diagonalization
+    (\texttt{diagonalization='cg'}), a slower but very robust
+    algorithm, and see what happens.
   \item
     HP-Compaq alphas with \texttt{cxml} libraries: try to use compiled
     BLAS and LAPACK (or better, ATLAS) instead of those contained in
@@ -2514,17 +2529,11 @@ Possible solutions:
 
 You did not specify state occupations, but you need to, since your
 system appears to have an odd number of electrons.
-The variable controlling occupations is, obviously,
+The variable controlling how metallicity is treated is
 \texttt{occupations} in namelist \texttt{\&SYSTEM}.
 The default, \texttt{occupations='fixed'}, occupies the lowest
 \texttt{nelec/2} states and works only for insulators with a gap.
 In all other cases, use \texttt{'smearing'} or \texttt{'tetrahedra'}.
-If you choose \texttt{'smearing'}, you must provide the smearing
-width: \texttt{degauss} (required!) and the smearing type:
-\texttt{smearing} (optional).
-If you choose \texttt{'tetrahedra'}, you need to specify a suitable
-uniform k-point grid (card \texttt{K\_POINTS} with option
-\texttt{automatic}).
 See file \texttt{INPUT\_PW} for more details.
 
 \paragraph{\texttt{pw.x} stops with ``unexpected error'' in
@@ -2748,6 +2757,15 @@ processors.
 
 You have a bad restart file from a preceding failed execution.
 Remove all files \texttt{recover*} in \texttt{outdir}.
+
+\paragraph{\texttt{ph.x} says ``occupation numbers probably wrong''
+and continues; or ``phonon + tetrahedra not implemented'' and stops}
+
+You have a metallic or spin-polarized system but occupations are not 
+set to ``smearing''. Note that the correct way to calculate occupancies 
+must be specified in the input data of the non-selfconsistent 
+calculation, if the phonon code reads data from it. The non-selfconsistent 
+calculation will not use this information but the phonon code will.
 
 \paragraph{\texttt{ph.x} does not yield acoustic modes with $\omega=0$
            at $\mathbf{q}=0$.}
