@@ -352,11 +352,8 @@
      if (ios /= 0) call errore ('reading','namelist &system',2)
      READ (unit, electrons, iostat = ios ) 
      if (ios /= 0) call errore ('reading','namelist &electrons',3)
-     if ( TRIM(calculation) == 'relax' .or. TRIM(calculation) == 'vc-relax' &
-     .or. TRIM(calculation) == 'cp'    .or. TRIM(calculation) == 'vc-cp' ) then
-        READ (unit, ions, iostat = ios ) 
-        if (ios /= 0) call errore ('reading','namelist &ions',4)
-     end if
+     READ (unit, ions, iostat = ios ) 
+     if (ios /= 0) call errore ('reading','namelist &ions',4)
      if ( TRIM(calculation) == 'vc-cp' .or. &
           TRIM(calculation) == 'vc-relax'  ) then
         READ (unit, cell, iostat = ios ) 

@@ -233,6 +233,7 @@
 !     general variables
 !
       tfirst=.true.
+      tlast =.false.
       nacc=5
 !
       gausp=delt*sqrt(tempw/factem)
@@ -721,6 +722,12 @@
       tlast=(nfi.eq.nomore)
 !
       call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos)
+!
+#ifdef __PARA     
+      if(trhow .and. tlast) call write_rho(47,nspin,rhor)
+#else
+      if(trhow .and. tlast) write(47) ((rhor(i,is),i=1,nnr),is=1,nspin)
+#endif
 !
 !     put core charge (if present) in rhoc(r)
 !

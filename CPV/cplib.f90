@@ -6752,12 +6752,6 @@
          if (tpre) call drhov(irb,eigrb,rhovan,rhog,rhor)
 !
          call rhov(irb,eigrb,rhovan,rhog,rhor)
-!
-#ifdef __PARA     
-         if(trhow) call write_rho(47,nspin,rhor)
-#else
-         if(trhow) write(47) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
-#endif
       endif
 !     ======================================endif for trhor=============
 !
