@@ -748,14 +748,14 @@ MODULE bfgs_module
           trust_radius_old           = trust_radius_ini
           inverse_hessian            = identity(dim)
           !
-          hess_file = TRIM( scratch ) // TRIM( prefix ) // '.hess'
+          hess_file = TRIM( scratch ) // TRIM( prefix ) // '.hess_in'
           !
           INQUIRE( FILE = TRIM( hess_file ) , EXIST = file_exists )
           !
           IF ( file_exists ) THEN
              !
-             OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
-                   & '.hess', STATUS = 'UNKNOWN', ACTION = 'READ' )  
+             OPEN( UNIT = iunbfgs, FILE = TRIM( hess_file ), &
+                   STATUS = 'UNKNOWN', ACTION = 'READ' )  
              !
              READ( iunbfgs, * ) rank1, rank2
              !
@@ -1131,7 +1131,8 @@ MODULE bfgs_module
      SUBROUTINE terminate_bfgs( energy, stdout, scratch )
        !-----------------------------------------------------------------------
        !
-       USE io_files, ONLY : prefix             
+       USE io_files, ONLY : prefix
+       USE parser,   ONLY : delete_if_present
        !
        IMPLICIT NONE
        !
@@ -1152,7 +1153,7 @@ MODULE bfgs_module
                & FMT = '(/,5X,"Saving the approximate inverse hessian",/)' )
           !
           OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
-              & '.hess', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
+              & '.hess_out', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
           !
           WRITE( iunbfgs, * ) SHAPE( inverse_hessian )
           WRITE( iunbfgs, * ) inverse_hessian
@@ -1173,10 +1174,8 @@ MODULE bfgs_module
           DEALLOCATE( bfgs_step_old )  
           !
        END IF
-       !    
-       OPEN( UNIT = iunbfgs, &
-             FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs' )
-       CLOSE( UNIT = iunbfgs, STATUS = 'DELETE' )    
+       !
+       CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
        !
      END SUBROUTINE terminate_bfgs
      !
