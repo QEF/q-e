@@ -98,6 +98,11 @@
 !
       !use cell_base
       use gvec
+
+      ! this isn't really needed, but if I remove it, ifc 7.1
+      ! gives an "internal compiler error"
+      use reciprocal_vectors, only: ng0 => gstart
+
       use constants, only: pi, fpi
       use cell_base, only: ainv
       implicit none
