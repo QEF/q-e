@@ -19,16 +19,36 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: edit.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+# $Id: edit.itcl,v 1.2 2004-02-23 12:14:43 kokalj Exp $ 
 #
-
+    
 proc ::pwscf::edit::inputByEditor {what guiObj} {
-    variable ::pwscf::settings
+    variable ::pwscf::settings 
+    variable edit 
+    variable counter
+
+    if { ! [info exists counter] } {
+	set counter 0
+    } else {
+	incr counter
+    }
 
     set moduleObj   [$guiObj getSelected moduleObj]
     set moduleIdent [$guiObj getSelected moduleIdent]    
-    set tmpFile [::tclu::tempFile name pwscf.$moduleIdent]
+    set tmpFile [::tclu::tempFile name pwscf_$moduleIdent]
     namespace eval ::guib "$moduleObj save $tmpFile 1"
+
+    # check if EDITOR is OK
+    
+    if { [auto_execok [lindex $::pwscf::settings(EDITOR) 0]] == "" } {
+	# rescue me ...
+	set editor PWgui
+    } else {
+	# EDITOR is OK
+	set editor $::pwscf::settings(EDITOR)
+    }
+
+    # do the editing
 
     switch -exact -- $what {
 	original {
@@ -39,9 +59,14 @@ proc ::pwscf::edit::inputByEditor {what guiObj} {
 	    $guiObj page disable $index
 
 	    # load file into editor ...
-	    set id [::tclu::nonblocking open]
-	    eval ::tclu::nonblocking exec $id $::pwscf::settings(EDITOR) $tmpFile
-	    ::tclu::nonblocking unset $id    
+	    if { [string match -nocase "PWgui" $editor] } {
+		defaultEditor $tmpFile $counter
+		tkwait variable ::pwscf::edit::edit(done,$counter)
+	    } else {
+		set id [::tclu::nonblocking open]
+		eval ::tclu::nonblocking exec $id $editor $tmpFile
+		::tclu::nonblocking unset $id    
+	    }
 
 	    # enable pack previously disabled page ...
 	    $guiObj page enable $index
@@ -52,11 +77,95 @@ proc ::pwscf::edit::inputByEditor {what guiObj} {
 
 	copy {
 	    # edit copy of input with EDITOR
-	    eval exec $::pwscf::settings(EDITOR) $tmpFile &
+	    if { [string match -nocase "PWgui" $editor] } {
+		defaultEditor $tmpFile
+	    } else {
+		if { [catch {eval exec $editor $tmpFile &}] } {
+		    defaultEditor $tmpFile
+		}
+	    }
 	}
 
 	default {
 	    ::tclu::ERROR "wrong mode $what, must be original or copy"
 	}
     }
+}
+
+
+proc ::pwscf::edit::defaultEditor {file {counter ""}} {
+    variable edit
+
+    set t [::guib::widgets::toplevel [::tku::widgetName] -title "File: $file" -transient 0]
+
+    set edit(saveFile,$t) $file
+    set edit(counter,$t)  $counter    
+    
+    set text [::iwidgets::scrolledtext $t.text \
+		  -hscrollmode dynamic -vscrollmode dynamic \
+		  -wrap none -state normal]
+    $text import $file
+
+    set bb  [::iwidgets::buttonbox $t.bb]
+    $bb add Cancel -text "Cancel"       -command [list ::pwscf::edit::_defaultEditorCancel $t]
+    $bb add Save   -text "Save"         -command [list ::pwscf::edit::_defaultEditorSave   $t $text]
+    $bb add SaveAs -text "Save As"      -command [list ::pwscf::edit::_defaultEditorSaveAs $t $text]
+    $bb add Close  -text "Save & Close" -command [list ::pwscf::edit::_defaultEditorClose  $t $text]
+    $bb default Close
+
+    pack $text -side top -fill both -expand 1    
+    pack $bb   -side top -fill x -expand 1    
+}
+proc ::pwscf::edit::_defaultEditorCancel {t} {
+    variable edit
+    set button [tk_messageBox \
+		    -message "Changes will be lost. Really close this window?" \
+                    -type yesno -icon question]
+    if { $button == "yes" } {
+	_defaultEditorDone $t
+    }
+}
+proc ::pwscf::edit::_defaultEditorClose {t textWid} {
+    _defaultEditorSave $t $textWid
+    _defaultEditorDone $t
+
+}
+proc ::pwscf::edit::_defaultEditorDone {t} {
+    variable edit
+    set counter $edit(counter,$t)
+    array unset edit *,$t
+    if { $counter != "" } {
+	set edit(done,$counter) 1
+    }
+    destroy $t
+}
+proc ::pwscf::edit::_defaultEditorSave {t textWid} {
+    variable edit
+    if { [info exists edit(saveFile,$t)] } {
+	$textWid export $edit(saveFile,$t)
+    }
+}
+proc ::pwscf::edit::_defaultEditorSaveAs {t textWid} {
+    variable ::pwscf::pwscf
+    variable edit
+
+    set filetypes {
+        {{Input Files}         {.inp}}
+        {{Input Files}         {.in} }
+        {{All Files}           *     }
+    }
+
+    set saveFile [tk_getSaveFile \
+		      -initialdir $::pwscf::pwscf(PWD) \
+		      -title      "Save File As" \
+		      -defaultextension .inp \
+		      -filetypes $filetypes]
+    # maybe Cancel button was pressed    
+    if { $saveFile == "" } {     
+        return
+    }
+    # now save the file
+    set edit(saveFile,$t) $saveFile
+    _defaultEditorSave $t $textWid
+    $t configure -title "File: [file tail $saveFile]"
 }
