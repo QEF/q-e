@@ -347,6 +347,8 @@ Environment variables may be set in any of these ways:
 \end{verbatim}
 Some environment variables that are relevant to \texttt{configure} are:
 \begin{quote}
+  \texttt{ARCH}:
+    label identifying the machine type (see below)\\
   \texttt{F90}, \texttt{F77}, \texttt{CC}:
     names of Fortran 90, Fortran 77, and C compilers\\
   \texttt{CPP}:
@@ -370,7 +372,23 @@ compiler with flags \texttt{"-Vaxlib -O2 -assume byterecl"},
 of \texttt{FFLAGS} and \texttt{LDFLAGS} must be quoted, because they
 contain spaces.
 
-\texttt{configure} also recognizes the following command-line options:
+If your machine type is unknown to \texttt{configure}, you may use the
+\texttt{ARCH} variable to suggest an architecture among supported
+ones.  Try the one that looks more similar to your machine type
+(you'll probably have to do some additional tweaking).
+Currently supported architectures are:
+\begin{quote}
+  \texttt{linux64}: Linux 64-bit machines (Itanium, Opteron)\\
+  \texttt{linux32}: Linux PCs\\
+  \texttt{aix}:     IBM AIX machines\\
+  \texttt{mips}:    SGI MIPS machines\\
+  \texttt{alpha}:   HP-Compaq alpha machines\\
+  \texttt{sparc}:   Sun SPARC machines\\
+  \texttt{crayx1}:  Cray X1 machines\\
+  \texttt{mac}:     Apple PowerPC running Mac OS X
+\end{quote}
+Finally, \texttt{configure} recognizes the following command-line
+options:
 \begin{quote}
   \texttt{-disable-parallel}:
     compile serial code, even if parallel environment is available\\

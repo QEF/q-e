@@ -75,6 +75,7 @@ Environment variables may be set in any of these ways:
 
 Some environment variables that are relevant to "configure" are:
 
+  ARCH : label identifying the machine type (see below)
   F90, F77, CC : names of Fortran 90, Fortran 77, and C compilers
   CPP : source file preprocessor (defaults to "$CC -E")
   LD : linker (defaults to $F90)
@@ -91,7 +92,22 @@ instructs "configure" to use "ifort" as Fortran 90 compiler with flags
 and to use flags "-Vaxlib -static" when linking.  Note that the values
 of FFLAGS and LDFLAGS must be quoted, because they contain spaces.
 
-"configure" also recognizes the following command-line options:
+If your machine type is unknown to "configure", you may use the "ARCH"
+variable to suggest an architecture among supported ones.
+Try the one that looks more similar to your machine type (you'll
+probably have to do some additional tweaking).
+Currently supported architectures are:
+
+  linux64    Linux 64-bit machines (Itanium, Opteron)
+  linux32    Linux PCs
+  aix        IBM AIX machines
+  mips       SGI MIPS machines
+  alpha      HP-Compaq alpha machines
+  sparc      Sun SPARC machines
+  crayx1     Cray X1 machines
+  mac        Apple PowerPC running Mac OS X
+
+Finally, "configure" recognizes the following command-line options:
 
   --disable-parallel : compile serial code, even if parallel
                        environment is available
