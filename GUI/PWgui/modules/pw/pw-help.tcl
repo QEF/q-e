@@ -663,7 +663,7 @@ set _k {
 	       this is useful to rise the resolution around the saddle point
 <p> ( default = 0.1D0 Hartree atomic units )
 }
-foreach var {k_max kmin} {
+foreach var {k_max k_min} {
     help $var -vartype real -helpfmt txt2html -helptext $_k
 }
 
@@ -805,11 +805,13 @@ set _pos {
        crystal : atomic positions are in crystal coordinates (see below)
        angstrom: atomic positions are in ANGSTROMS    
 }
-foreach var {atomic_coordinates atomic_coordinates2} {
-    help $var \
-	-vartype {character, real, real, real, \[ingeter, ingteger, integer\]} \
-	-helpfmt txt2html -helptext $_pos
-}
+help atomic_coordinates \
+    -vartype {character, real, real, real, \[ingeter, ingteger, integer\]} \
+    -helpfmt txt2html -helptext $_pos
+help atomic_coordinates2 \
+    -vartype {character, real, real, real} \
+    -helpfmt txt2html -helptext $_pos
+
 
 
 # ==============================================================================
