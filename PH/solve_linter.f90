@@ -226,8 +226,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !  dvbare_q*psi_kpoint is calculated and written to file
               !
               call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
-              call setv (2 * nrxx * nspin, 0.d0, dvscfin (1, 1, ipert), &
-                   1)
+              call setv (2 * nrxx * nspin, 0.d0, dvscfin (1, 1, ipert), 1)
               call dvqpsi_us (ik, mode, u (1, mode),.false. )
               call davcio (dvpsi, lrbar, iubar, nrec, 1)
               !
@@ -249,22 +248,20 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                  do ig = 1, npw
                     aux1 (nls (igk (ig) ) ) = evc (ig, ibnd)
                  enddo
-                 call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
-                      + 2)
+                 call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
                  do ir = 1, nrxxs
                     aux1 (ir) = aux1 (ir) * dvscfins (ir, current_spin, ipert)
                  enddo
-                 call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
-                      - 2)
+                 call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
                  do ig = 1, npwq
-                    dvpsi (ig, ibnd) = dvpsi (ig, ibnd) + aux1 (nls (igkq (ig) ) )
+                    dvpsi(ig,ibnd) = dvpsi(ig,ibnd) + aux1(nls(igkq(ig)))
                  enddo
               enddo
               call stop_clock ('vpsifft')
               !
-              !  In the case of US pseudopotentials there is an additional selfconsist
-              !  term which comes from the dependence of D on V_{eff} on the bare
-              !  change of the potential
+              !  In the case of US pseudopotentials there is an additional 
+              !  selfconsist term which comes from the dependence of D on 
+              !  V_{eff} on the bare change of the potential
               !
               call adddvscf (ipert, ik)
               !
@@ -284,9 +281,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            call start_clock ('ortho')
            do ibnd = 1, nbnd_occ (ikk)
               if (degauss.ne.0.d0) then
-                 wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
-                 w0g = w0gauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss) &
-                      / degauss
+                 wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
+                 w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
               endif
               call setv (2 * npwx, 0.d0, auxg, 1)
               do jbnd = 1, nbnd
@@ -301,7 +297,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                           wwg = wwg + alpha_pv * theta * (wgp - wg1) / deltae
                        else
                           !
-                          !  if the two energies are too close takes the limit of the 0/0 ratio
+                          !  if the two energies are too close takes the limit
+                          !  of the 0/0 ratio
                           !
                           wwg = wwg - alpha_pv * theta * w0g
                        endif
@@ -314,8 +311,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                        wwg = 0.0d0
                     endif
                  endif
-                 ps (jbnd) = - wwg * ZDOTC (npwq, evq (1, jbnd), 1, dvpsi (1, ibnd) &
-                      , 1)
+                 ps(jbnd) = - wwg * ZDOTC(npwq,evq(1,jbnd),1,dvpsi(1,ibnd),1)
               enddo
 #ifdef __PARA
               call reduce (2 * nbnd, ps)
@@ -323,8 +319,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               do jbnd = 1, nbnd
                  call ZAXPY (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)
               enddo
-              if (degauss.ne.0.d0) call DSCAL (2 * npwq, wg1, dvpsi (1, ibnd), &
-                   1)
+              if (degauss.ne.0.d0) call DSCAL (2*npwq, wg1, dvpsi(1,ibnd), 1)
               call ZCOPY (npwq, auxg, 1, spsi, 1)
               !
               !   In the US case at the end we have to apply the S matrix
@@ -365,9 +360,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            ltaver = ltaver + lter
            lintercall = lintercall + 1
 
-           if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4, &
-                &                      " linter: root not converged ",e10.3)') ik &
-                &, ibnd, anorm
+           if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4,  &
+                &              " linter: root not converged ",e10.3)') &
+                &              ik , ibnd, anorm
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
@@ -407,20 +402,17 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !   Reduce the delta rho across pools
      !
      call poolreduce (2 * npe * nspin * nrxx, drhoscf)
-
      call poolreduce (2 * npe * nspin * nrxx, drhoscfh)
 #endif
      !
      ! q=0 in metallic case deserve special care (e_Fermi can shift)
      !
 
-     if (lmetq0) call ef_shift (drhoscfh, ldos, ldoss, dos_ef, irr, &
-          npe, .false.)
+     if (lmetq0) call ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .false.)
      do ipert = 1, npert (irr)
         if (fildrho.ne.' ') call davcio_drho (drhoscfh (1, 1, ipert) , &
              lrdrho, iudrho, imode0 + ipert, + 1)
-        call ZCOPY (nrxx * nspin, drhoscfh (1, 1, ipert), 1, dvscfout (1, &
-             1, ipert), 1)
+        call ZCOPY (nrxx*nspin, drhoscfh(1,1,ipert), 1, dvscfout(1,1,ipert), 1)
         call dv_of_drho (imode0 + ipert, dvscfout (1, 1, ipert), .true.)
 
      enddo
@@ -446,8 +438,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do ipert = 1, npe
            do is = 1, nspin
-              call cinterpolate (dvscfin (1, is, ipert), dvscfins (1, is, &
-                   ipert), - 1)
+              call cinterpolate (dvscfin(1,is,ipert), dvscfins(1,is,ipert), -1)
            enddo
         enddo
      endif
@@ -471,7 +462,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
      dr2 = dr2 / npert (irr)
      write (6, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
-          &               " |ddv_scf|^2 = ",e10.3 )') thresh, alpha_mix (kter) , dr2
+          &      " |ddv_scf|^2 = ",e10.3 )') thresh, alpha_mix (kter) , dr2
      !
      !    Here we save the informations for recovering the run from this poin
      !
@@ -482,8 +473,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      if (okvan) write (iunrec) int1, int2
 
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, &
-          zstarue0
+     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
      if (reduce_io) then
         write (iunrec) irr, 0, convt, done_irr, comp_irr, ifat
      else
@@ -502,8 +492,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   enddo
 155 continue
   if (tcpu.gt.time_max.and..not.convt) then
-     write (6, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, &
-          time_max
+     write (6, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, time_max
      call stop_ph (.false.)
   endif
   !
@@ -516,8 +505,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      call drhodvus (irr, imode0, dvscfin, npe)
      if (fildvscf.ne.' ') write (iudvscf) dvscfins
      if (elph) call elphon (npe, imode0, dvscfins)
-
-
   endif
   if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
   if (lmetq0) deallocate (ldoss)

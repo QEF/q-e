@@ -97,8 +97,7 @@ subroutine dynmatrix
      write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amass (nt)
   enddo
   do na = 1, nat
-     write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = &
-          1, 3)
+     write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
   enddo
   !
   !   Rotates and writes on iudyn the dynamical matrices of the star of q
@@ -114,7 +113,6 @@ subroutine dynmatrix
   !   Diagonalizes the dynamical matrix at q
   !
 
-  if (all_comp) call dyndia (xq, nmodes, nat, ntyp, ityp, amass, &
-       iudyn, dyn, w2)
+  if (all_comp) call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   return
 end subroutine dynmatrix

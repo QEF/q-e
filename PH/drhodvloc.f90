@@ -24,8 +24,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   integer :: nper, nu_i0
   ! input: the number of perturbation of this repres
   ! input: the initial position of the mode
-  complex(kind=DP) :: drhoscf (nrxx, nspin, npertx), wdyn (3 * nat, 3 * &
-       nat)
+  complex(kind=DP) :: drhoscf (nrxx, nspin, npertx), wdyn (3 * nat, 3 * nat)
   ! the change of density due to
   ! perturbations
   ! auxiliary matrix where drhodv is stored
