@@ -724,7 +724,7 @@
 !     ==== generate reference g-space                           ==== 
 !     ==============================================================
 !
-      call init1 (tau0,ibrav,celldm,ecutw,ecut)
+      call init1 ( tau0, ibrav, celldm, ecutw, ecut )
 !
 ! taus = scaled, tau0 = alat units
 !
@@ -752,19 +752,10 @@
          endif
       endif
 !
-      if(nbeg.ge.0) then
+      if( nbeg >= 0 ) then
 !
 ! read only h and hold from file ndr
 !
-#ifdef __PARA
-!         call readpfile                                                 &
-#else
-!         call readfile                                                  &
-#endif
-!     &     (-1,ndr,h,hold,nfi,c0,cm,tau0,taum,vel,velm,acc,             &
-!     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-!     &       xnhh0,xnhhm,vnhh,velh)
-
          call readfile_new                                              &
      &     (-1,ndr,h,hold,nfi,c0,cm,tau0,taum,vel,velm,acc,             &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
@@ -775,25 +766,28 @@
             WRITE( stdout,345) (h(i,j),j=1,3)
          enddo
          WRITE( stdout,*)
+
       else
 !
 ! with variable-cell we use h to describe the cell
 !
-         do i=1,3
-            h(i,1)=a1(i)
-            h(i,2)=a2(i)
-            h(i,3)=a3(i)
+         do i = 1, 3
+            h(i,1) = a1(i)
+            h(i,2) = a2(i)
+            h(i,3) = a3(i)
          enddo
-         hold=h
+
+         hold = h
+
       end if
 !
-      allocate(ggp(ngw))
+      allocate( ggp(ngw) )
 !
 !     ==============================================================
 !     ==== generate true g-space                                ==== 
 !     ==============================================================
 !
-      call newinit(ibrav)
+      call newinit( ibrav )
 !
       do is=1,nsp
          if(tranp(is)) then

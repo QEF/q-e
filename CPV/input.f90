@@ -73,7 +73,7 @@ CONTAINS
            nstep, ecutwfc, ecutrho, ampre, ortho_eps, ortho_max, wmass, qcutz, q2sigma, &
            ecfixed, ekincw, fnosep, nat, tstress, disk_io, fnosee, ion_temperature, &
            cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
-           dt, emass, emass_cutoff, ion_radius, isave, verbosity
+           dt, emass, emass_cutoff, ion_radius, isave, verbosity, tprnfor
 
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
@@ -81,6 +81,8 @@ CONTAINS
       use constants, only: pi, scmass, factem, eps8
       use parameters, only: nsx, natx, nbndxx
       use io_global, only: ionode, stdout
+      use ions_base, only: isort_pos
+      use control_flags, only: taurdr, tprnfor_ => tprnfor
       use mp, only: mp_bcast
 
       !
@@ -114,7 +116,7 @@ CONTAINS
 
       real(kind=8), parameter:: terahertz = 2.418D-5
       real(kind=8) :: taus( 3, natx, nsx ), ocp, fsum
-      integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in
+      integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in, isa
 
 
       IF( TRIM( calculation ) == 'nscf' ) trhor_ = .true.
@@ -148,7 +150,6 @@ CONTAINS
       SELECT CASE ( restart_mode ) 
          CASE ('from_scratch')
             nbeg_ = -2
-            if ( ion_positions == 'from_input' ) nbeg_ = -1
             nomore_ = nstep
             trane_  = ( startingwfc == 'random' )
             if ( ampre_ == 0.d0 ) ampre_ = 0.02
@@ -158,9 +159,14 @@ CONTAINS
          CASE ('restart')
             nbeg_ = 1
             nomore_ = nstep
+            if ( ion_positions == 'from_input' ) then
+              taurdr = .TRUE.
+              nbeg_ = -1
+            end if
          CASE DEFAULT
             CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
       END SELECT
+
 
       ndr_ = ndr
       ndw_ = ndw
@@ -353,6 +359,7 @@ CONTAINS
       ! compatibility between FPMD and CP90
       !
       iprint_ = isave 
+      tprnfor_ = tprnfor
       if ( trim( verbosity ) == 'high' ) then
          iprsta_ = 3
       else
@@ -409,6 +416,7 @@ CONTAINS
       ! cards parameters
 
       tau0_  = 0.0
+      isort_pos = 0
       iforce_= 0
       ipp_   = 0
       psfile_= ' '
@@ -421,15 +429,18 @@ CONTAINS
       ipp_ ( 1:nsp_ ) = atom_ptyp( 1:nsp_ )
 
       na_ = 0
+      isa = 0
       do is = 1, nsp_
           do ia = 1, nat_
              if ( sp_pos(ia) == is) then
                 na_(is) = na_(is) + 1
+                isa = isa + 1
                 if( na_(is) > natx ) call errore(' cards',' na > natx', na_ (is) )
                 do i = 1, 3
                    tau0_ (i, na_ (is), is ) = rd_pos(i, ia)
                    iforce_ (i, na_ (is), is ) = if_pos(i, ia)
                 end do
+                isort_pos( na_(is), is ) = isa
              end if
           end do
        end do
@@ -763,6 +774,10 @@ CONTAINS
         ipp_ ( 1:nsp_ ) = atom_ptyp( 1:nsp_ )
         psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
         pseudo_dir_ = pseudo_dir
+        !
+        !  read in pseudopotentials and wavefunctions files
+        !
+        call readpp()
         return
       end subroutine
 

@@ -77,16 +77,11 @@
 
       !
       !  copy pseudopotential input parameter into internal variables
+      !  and read in pseudopotentials and wavefunctions files
       !
 
       call iosys_pseudo( psfile, pseudo_dir, ipp, nsp )
 
-      !
-      !  read in pseudopotentials and wavefunctions files
-      !
-
-      call readpp()
-      
       call cpr_loop( 1 )
 
       call mp_end()
@@ -95,13 +90,36 @@
       end program
 
 
-      SUBROUTINE cpr_loop( nloop )
-        IMPLICIT NONE
-        INTEGER, INTENT(IN) :: nloop
-        INTEGER :: iloop
-        DO iloop = 1, nloop
-          call cprmain()
-          call memstat( 1 )
-        END DO
-        RETURN
-      END SUBROUTINE
+    SUBROUTINE cpr_loop( nloop )
+      USE input_parameters, ONLY: nat, tprnfor
+      USE input_parameters, ONLY: ion_positions, rd_pos
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: nloop
+      INTEGER :: iloop
+      REAL(kind=8), ALLOCATABLE :: tau( :, : )
+      REAL(kind=8), ALLOCATABLE :: fion( :, : )
+      REAL(kind=8) :: etot
+
+      IF( nat > 0 ) THEN
+        ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
+      ELSE
+        CALL errore( ' cpr_loop ', ' nat less or equal 0 ', 1 )
+      END IF
+
+      ! ... set tprnfor = .true. to get atomic forces
+      ! ... even if the atoms do not move
+
+      ! ... set ion_positions = 'from_input'
+      ! ... and rd_pos = +your_positions+
+      ! ... to force cprmain to compute forces for  
+      ! ... +your_position+ configuration
+
+      DO iloop = 1, nloop
+        call cprmain( tau(1,1), fion(1,1), etot)
+        call memstat( 1 )
+      END DO
+
+      DEALLOCATE( tau, fion )
+
+      RETURN
+    END SUBROUTINE

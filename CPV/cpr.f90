@@ -11,7 +11,7 @@
 !
 !=======================================================================
 !
-   subroutine cprmain()
+   subroutine cprmain( tau, fion_out, etot_out )
 !
 !=======================================================================
 !***  Molecular Dynamics using Density-Functional Theory   ****
@@ -51,7 +51,7 @@
 !***********************************************************************
 !
       use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
-            tfor, tvlocw, trhow
+            tfor, tvlocw, trhow, taurdr, tprnfor
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
 
@@ -69,6 +69,7 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
+      use ions_base, only: isort_pos
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
@@ -108,6 +109,14 @@
 !
 !
       implicit none
+!
+! input variables
+!
+      real(kind=8) :: tau(3,*)
+      real(kind=8) :: fion_out(3,*)
+      real(kind=8) :: etot_out
+
+!
 !
 ! control variables
 !
@@ -193,7 +202,7 @@
      &       frice,  grease, emass, delt, ccc, bigr, dt2,               &
      &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
-      integer nnn, is, nacc, ia, j, iter, nfi, i
+      integer nnn, is, nacc, ia, j, iter, nfi, i, isa, ipos
 !
 ! work variables, 2
 !
@@ -216,6 +225,7 @@
 !     CP loop starts here
 !
       call tictac(2,0)
+      etot_out = 0.0d0
 
 !
 !     ==================================================================
@@ -325,7 +335,9 @@
 !     ==================================================================
 !     allocate and initialize nonlocal potentials
 !     ==================================================================
+
       call nlinit
+
       WRITE( stdout,*) ' out from nlinit'
 !
 !     ==================================================================
@@ -411,25 +423,26 @@
          if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
       end do
 !
-      if (nbeg < 0) then
-!======================================================================
-!       nbeg = -1 or nbeg = -2 or nbeg = -3
-!======================================================================
-!
-         if(nbeg.eq.-1) then
+      if ( nbeg < 0 ) then
+
+         !======================================================================
+         !    nbeg = -1 or nbeg = -2 or nbeg = -3
+         !======================================================================
+
+         if( nbeg == -1 ) then
            call readfile_new                                            &
      &     ( 0, ndr,h,hold,nfi,cm(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
          endif
 !     
-         call phfac(tau0,ei1,ei2,ei3,eigr)
+         call phfac( tau0, ei1, ei2, ei3, eigr )
 !
          call initbox ( tau0, taub, irb )
 !
-         call phbox(taub,eigrb)
+         call phbox( taub, eigrb )
 !
-         if(iprsta.gt.2)then
+         if( iprsta > 2 ) then
             do is=1,nvb
                WRITE( stdout,'(/,2x,''species= '',i2)') is 
                do ia=1,na(is)
@@ -445,6 +458,7 @@
 !     random initialization
 !
             call randin(1,n,ng0,ngw,ampre,cm)
+
          else if(nbeg.eq.-3) then
 !       
 !     gaussian initialization
@@ -515,7 +529,7 @@
 !
 !     nlfq needs deeq calculated in newd
 !
-         if (tfor) call nlfq(cm,deeq,eigr,bec,becdr,fion)
+         if ( tfor .or. tprnfor ) call nlfq(cm,deeq,eigr,bec,becdr,fion)
          WRITE( stdout,*) ' out from nlfq'
 ! 
 !     imposing the orthogonality
@@ -535,7 +549,7 @@
 !
 !     nlfl needs lambda becdr and bec
 !
-         if (tfor) call nlfl(bec,becdr,lambda,fion)
+         if ( tfor .or. tprnfor ) call nlfl(bec,becdr,lambda,fion)
          WRITE( stdout,*) ' out from nlfl'
 !
          if(iprsta.ge.3) then
@@ -581,7 +595,7 @@
             call invmat3( h, ainv, deth )
          endif
 !
-         if(tfor) then
+         if( tfor ) then
             do is=1,nsp
                do ia=1,na(is)
                   do i=1,3
@@ -648,6 +662,7 @@
          lambdam(:,:)=lambda(:,:)
 !     
       else
+
 !======================================================================
 !       nbeg = 0, nbeg = 1 or nbeg = 2
 !======================================================================
@@ -694,24 +709,24 @@
 !     =================================================================
 !     restart with new averages and nfi=0
 !     =================================================================
-      if(nbeg.le.0) then
+      if( nbeg <= 0 ) then
          acc = 0.0d0
          nfi=0
       end if
 !
-      if(.not.tfor) then
+      if( ( .not. tfor ) .and. ( .not. tprnfor ) ) then
          fion (:,:,:) = 0.d0
       end if
 !
-      if(.not.tpre) then
+      if( .not. tpre ) then
          stress (:,:) = 0.d0
       endif
 !         
-      fccc=1.
+      fccc = 1.0d0
       !
       nomore = nomore + nfi
 !
-      call cofmass(taus,cdm0)
+      call cofmass( taus, cdm0 )
 !
 !======================================================================
 !
@@ -720,7 +735,9 @@
 !======================================================================
 !
       call tictac(2,1)
+
  1000 continue
+
       call tictac(1,0)
 !
 !     calculation of velocity of nose-hoover variables
@@ -738,12 +755,12 @@
          velh(:,:)=2.*(h(:,:)-hold(:,:))/delt-velh(:,:)
       endif
 ! 
-      if (tfor.or.thdyn.or.tfirst) then 
+      if ( tfor .or. thdyn .or. tfirst ) then 
          call initbox ( tau0, taub, irb )
          call phbox(taub,eigrb)
       endif
 !
-      if(tfor.or.thdyn) call phfac(tau0,ei1,ei2,ei3,eigr) 
+      if( tfor .or. thdyn ) call phfac(tau0,ei1,ei2,ei3,eigr) 
 !
 !     strucf calculates the structure factor sfac
 !
@@ -842,9 +859,9 @@
 !
 !     nlfq needs deeq bec
 !
-      if (tfor) call nlfq(c0,deeq,eigr,bec,becdr,fion)
+      if ( tfor .or. tprnfor ) call nlfq(c0,deeq,eigr,bec,becdr,fion)
 !
-      if(tfor.or.thdyn) then
+      if( tfor .or. thdyn ) then
 !
 ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
 !
@@ -862,7 +879,7 @@
 !
 !       nlfl and nlfh need: lambda (guessed) becdr
 !
-      if (tfor) call nlfl(bec,becdr,lambda,fion)
+      if ( tfor .or. tprnfor ) call nlfl(bec,becdr,lambda,fion)
       if(tpre) then
          if(iprsta.ge.4) then
             if((nfi.eq.0).or.tfirst.or.tlast                            &
@@ -958,7 +975,7 @@
       endif
 !
 !======================================================================
-      if(tfor) then
+      if( tfor ) then
 !
 !==== set friction ====
 !
@@ -1044,14 +1061,14 @@
 !  if thdyn=true g vectors and pseudopotentials are recalculated for 
 !  the new cell parameters
 !
-      if (tfor.or.thdyn) then
-         if(thdyn) then
-            hold=h
-            h=hnew
+      if ( tfor .or. thdyn ) then
+         if( thdyn ) then
+            hold = h
+            h = hnew
             call newinit(ibrav)
             call newnlinit
          else
-            hold=h
+            hold = h
          endif
 !
 !       phfac calculates eigr
@@ -1102,7 +1119,7 @@
 !
 !     ionic kinetic energy 
 !
-      if(tfor) then
+      if( tfor ) then
          do is=1,nsp
             do ia=1,na(is)
                do i=1,3
@@ -1125,7 +1142,7 @@
 !     ionic temperature
 !
       call cofmass(vels,cdmvel)
-      if(tfor) then
+      if( tfor ) then
          do i=1,3
             do j=1,3
                do ii=1,3
@@ -1296,7 +1313,7 @@
  1948 format(i5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5),4(1x,f7.4))
  2948 format(f8.5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5),4(1x,f7.4))
 !
-      if(tfor) then
+      if( tfor ) then
         if ( ionode ) then
           write(77,3340) ((h(i,j),i=1,3),j=1,3)
           write(77,'(3f12.8)') (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
@@ -1363,8 +1380,8 @@
 !
 !     write on file ndw each iprint
 !
-      if(mod(nfi,iprint).eq.0) then
-!
+      if( ( mod( nfi, iprint ) == 0 ) .and. ( nfi < nomore ) ) then
+
          call writefile_new                                         &
      &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
@@ -1375,6 +1392,7 @@
 !     =====================================================================
 !     automatic adapt of friction using grease and twall
 !     =====================================================================
+
       epre=enow
       enow=etot
       tbump=.false.
@@ -1411,9 +1429,33 @@
 !     =====================================================
       call tictac(1,1)
 !
-      if(nfi.lt.nomore) go to 1000
+      if( nfi < nomore ) go to 1000
+!
 !=============================end of main loop of molecular dynamics====
 !
+
+      ! 
+      !  Here copy relevant physical quantities into the output arrays/variables
+      !
+
+      etot_out = etot
+      do is = 1, nsp
+        do ia = 1, na(is)
+          ipos = isort_pos( ia, is )
+          tau( 1, ipos ) = tau0( 1, ia, is )
+          tau( 2, ipos ) = tau0( 2, ia, is )
+          tau( 3, ipos ) = tau0( 3, ia, is )
+          ! ftmp = ainv(1,1)*fion(1,ia,is)+ainv(1,2)*fion(2,ia,is)+ainv(1,3)*fion(3,ia,is)
+          fion_out( 1, ipos ) = fion( 1, ia, is )
+          ! ftmp = ainv(2,1)*fion(1,ia,is)+ainv(2,2)*fion(2,ia,is)+ainv(2,3)*fion(3,ia,is)
+          fion_out( 2, ipos ) = fion( 2, ia, is )
+          ! ftmp = ainv(3,1)*fion(1,ia,is)+ainv(3,2)*fion(2,ia,is)+ainv(3,3)*fion(3,ia,is)
+          fion_out( 3, ipos ) = fion( 3, ia, is )
+        end do
+      end do
+
+      !  Calculate statistics
+
       anor=1.d0/dfloat(nfi)
       do i=1,nacc
          acc(i)=acc(i)*anor
@@ -1448,7 +1490,7 @@
 3380     format(9f8.4)      
       endif
 !
-      if(tfor) then
+      if( tfor .or. tprnfor ) then
          WRITE( stdout,1970) ibrav, alat
          WRITE( stdout,1971)
          do i=1,3

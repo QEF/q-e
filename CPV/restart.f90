@@ -454,9 +454,9 @@ CONTAINS
  10      FORMAT(/,3X,'READING FROM RESTART FILE ...')
       end if
 
-      if (flag.eq.-1) then
+      if ( flag == -1 ) then
          WRITE( stdout,'((a,i3,a))') ' ### reading from file ',ndr,' only h  ##'
-      else if (flag.eq.0) then
+      else if ( flag == 0 ) then
          WRITE( stdout,'((a,i3,a))') ' ## reading from file ',ndr,' only c0  ##'
       else
          WRITE( stdout,'((a,i3))') ' ## reading from file ',ndr
@@ -483,7 +483,7 @@ CONTAINS
         call errore(' readfile ',' inconsistent number of kpoints in restart ',1)
 
       ekincm = ekincm_
-      if (flag > -1) then
+      if ( flag > -1 ) then
         nfi = nfi_
         acc = acc_
       end if

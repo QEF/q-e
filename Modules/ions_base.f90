@@ -11,7 +11,7 @@
 !------------------------------------------------------------------------------!
 
       USE kinds, ONLY: dbl
-      USE parameters, ONLY: nsx
+      USE parameters, ONLY: nsx, natx
 !
       IMPLICIT NONE
       SAVE
@@ -25,6 +25,7 @@
       INTEGER :: na(nsx) = 0    
       INTEGER :: nax     = 0
       INTEGER :: nat     = 0
+      INTEGER :: isort_pos(natx,nsx) = 0
 
       !     zv(is)    = (pseudo-)atomic charge
       !     pmass(is) = mass (converted to a.u.) of ions

@@ -3783,7 +3783,7 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use qgb_mod
       use elct
-      use control_flags, only: iprint, thdyn, tfor
+      use control_flags, only: iprint, thdyn, tfor, tprnfor
       use work_box
 #ifdef __PARA
       use para_mod
@@ -3872,7 +3872,7 @@
 #ifdef __PARA
       call reduce(nat*nhx*nhx*nspin,deeq)
 #endif
-      if (.not.(tfor.or.thdyn)) go to 10
+      if (.not.( tfor .or. thdyn .or. tprnfor ) ) go to 10
 !
 ! calculation of fion_i = \int V_eff(r) \sum_lm rho_lm (dq_i,lm(r)/dR_i) dr
 !
@@ -7463,7 +7463,7 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
-      use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor
+      use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
       use ions_base, only: nas => nax, nsp, na
@@ -7535,7 +7535,9 @@
 !     ===================================================================
 !     forces on ions, ionic term in real space
 !     -------------------------------------------------------------------
-      if(tfor.or.tfirst.or.thdyn) call force_ion(tau0,esr,fion,dsr)
+      if( tprnfor .or. tfor .or. tfirst .or. thdyn ) then
+        call force_ion(tau0,esr,fion,dsr)
+      end if
 !
       if(nspin.eq.1) then
          iss=1
@@ -7609,7 +7611,7 @@
 !     ===================================================================
 !     forces on ions, ionic term in reciprocal space
 !     -------------------------------------------------------------------
-      if(tfor.or.thdyn)                                                  &
+      if( tprnfor .or. tfor .or. thdyn)                                                  &
      &    call force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
 !     ===================================================================
 !     calculation hartree + local pseudo potential
@@ -7675,7 +7677,7 @@
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
-      if(tfor) then
+      if( tprnfor .or. tfor ) then
          if (nlcc.gt.0) call force_cc(irb,eigrb,rhor,fion1)
 #ifdef __PARA
          call reduce(3*natx*nsp,fion1)
