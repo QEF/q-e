@@ -29,7 +29,7 @@
 !
       implicit none
       integer, parameter :: nax=30
-      character(len=50):: fildyn, filout, filmol
+      character(len=256):: fildyn, filout, filmol
       character(len=3) :: atm(nax)
       logical :: asr, lread, gamma
       complex(kind=8) :: dyn(3,3,nax,nax), z(3*nax,3*nax)

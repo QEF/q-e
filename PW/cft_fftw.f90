@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+
 #ifdef __FFTW
 !----------------------------------------------------------------------
 subroutine cft_1 (f, m, n, nx, isign, fout)
@@ -12,7 +14,6 @@ subroutine cft_1 (f, m, n, nx, isign, fout)
   !     driver routine for m 1d complex fft's (dense grid) - fftw
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
-#include "f_defs.h"
   use fftw_mod
   USE kinds, only : DP
   implicit none
@@ -56,7 +57,6 @@ subroutine cft_1s (f, m, n, nx, isign, fout)
   !     driver routine for m 1d complex fft's (dense grid) - fftw
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
-#include "f_defs.h"
   use fftw_mod
   USE kinds, only : DP
   implicit none
@@ -105,7 +105,6 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
   !     for compatibility: nx2=n2, nx2 is not used
   !
   !----------------------------------------------------------------------
-#include "f_defs.h"
   use fftw_mod
   USE kinds, only : DP
   implicit none
@@ -189,7 +188,6 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, isign, planes (nx1)
   complex (kind=DP) :: f (nx1 * nx2 * mplane)
-#include "f_defs.h"
   integer, parameter :: nmax = 256
   complex (kind=DP) :: fout (nmax)
   real (kind=DP) :: fac

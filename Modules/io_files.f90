@@ -17,20 +17,20 @@ MODULE io_files
   !
   SAVE
   !
-  CHARACTER(len=80) :: tmp_dir = './'  ! directory for temporary files
-  CHARACTER(len=80) :: prefix  = 'os'  ! prepended to file names
-  CHARACTER(len=3)  :: nd_nmbr = '000' ! node number (used only in parallel case)
-  CHARACTER(len=80) :: pseudo_dir = './'
-  CHARACTER(len=80) :: psfile( ntypx ) = 'UPF'
-  CHARACTER(len=80) :: scradir = './'
-  CHARACTER(len=80) :: outdir  = './'
+  CHARACTER(len=256) :: tmp_dir = './'  ! directory for temporary files
+  CHARACTER(len=256) :: prefix  = 'os'  ! prepended to file names
+  CHARACTER(len=3)   :: nd_nmbr = '000' ! node number (used only in parallel case)
+  CHARACTER(len=256) :: pseudo_dir = './'
+  CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
+  CHARACTER(len=256) :: scradir = './'
+  CHARACTER(len=256) :: outdir  = './'
   !
-  CHARACTER(LEN=80) :: input_drho = ' '   ! name of the file with the input drho
-  CHARACTER(LEN=80) :: output_drho = ' '  ! name of the file with the output drho
+  CHARACTER(LEN=256) :: input_drho = ' '   ! name of the file with the input drho
+  CHARACTER(LEN=256) :: output_drho = ' '  ! name of the file with the output drho
   !
-  CHARACTER(LEN=80) :: band_file = ' '
-  CHARACTER(LEN=80) :: tran_file = ' '
-  CHARACTER(LEN=80) :: fil_loc = ' '      !  file with 2D eigenvectors and eigenvalues
+  CHARACTER(LEN=256) :: band_file = ' '
+  CHARACTER(LEN=256) :: tran_file = ' '
+  CHARACTER(LEN=256) :: fil_loc = ' '      !  file with 2D eigenvectors and eigenvalues
   !
   CHARACTER(LEN=14), PARAMETER :: rho_name      = 'CHARGE_DENSITY'
   CHARACTER(LEN=17), PARAMETER :: rho_name_up   = 'CHARGE_DENSITY.UP'
@@ -46,13 +46,13 @@ MODULE io_files
   CHARACTER(LEN=2 ), PARAMETER :: ks_file       = 'KS'
   CHARACTER(LEN=6 ), PARAMETER :: ks_emp_file   = 'KS_EMP'
   CHARACTER(LEN=16), PARAMETER :: sfac_file     = 'STRUCTURE_FACTOR'
-  CHARACTER (LEN=80) :: &
+  CHARACTER (LEN=256) :: &
     dat_file  = 'os.dat',   &! file containing the enegy profile
     int_file  = 'os.int',   &! file containing the interpolated energy profile
     path_file = 'os.path',  &! file containing informations needed to restart a string simulation
     xyz_file  = 'os.xyz',   &! file containing coordinates of all images in xyz format
     axsf_file = 'os.axsf'    ! file containing coordinates of all images in axsf format
-  CHARACTER (LEN=85) :: &
+  CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
   !
   ! ... The units where various variables are saved

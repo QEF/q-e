@@ -313,7 +313,7 @@ MODULE read_cards_module
        CHARACTER(LEN=2)   :: prog
        INTEGER            :: is, ip, i
        CHARACTER(LEN=4)   :: lb_pos
-       CHARACTER(LEN=80)  :: psfile
+       CHARACTER(LEN=256) :: psfile
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine kpoint_grid &
      ( nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
@@ -12,7 +13,6 @@ subroutine kpoint_grid &
 !
 !  Automatic generation of a uniform grid of k-points
 !
-#include "f_defs.h"
   USE kinds, only: DP
   USE noncollin_module, ONLY: noncolin
   implicit none
@@ -146,7 +146,6 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   !
   ! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994)
   !
-#include "f_defs.h"
   USE kinds, only: DP
   implicit none
   ! INPUT:

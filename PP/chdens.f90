@@ -38,7 +38,7 @@ program chdens
   real(kind=DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), epsilon
 
-  character (len=80) :: fileout, filepol, filename (nfilemax)
+  character (len=256) :: fileout, filepol, filename (nfilemax)
 
   real(kind=DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
   real(kind=DP), allocatable :: taus (:,:), rhor(:)
@@ -47,7 +47,7 @@ program chdens
   integer :: idpol               ! dipole moment flag
   integer, allocatable :: ityps (:)
   character (len=3) :: atms(ntypx)
-  character (len=80) :: filepp(nfilemax)
+  character (len=256) :: filepp(nfilemax)
   real(kind=DP) :: rhodum, dipol(0:3), quadrupol, rhotot
   complex(kind=DP), allocatable:: rhog (:)
   ! rho or polarization in G space
@@ -57,7 +57,7 @@ program chdens
        nfile, filepp, weight, iflag, idpol, e1, e2, e3, nx, ny, nz, x0, &
        makov, plot_out, output_format, fileout, epsilon, filepol
 
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256)  :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 

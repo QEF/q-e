@@ -69,7 +69,7 @@ program virtual
   implicit none
   integer :: is, ios, iunps = 4
   real (kind=8) :: x
-  character (len=75) :: filein(2), fileout
+  character (len=256) :: filein(2), fileout
   print '('' '')'
   print '('' Generate the UPF pseudopotential for a virtual atom '')'
   print '('' combining two pseudopootentials in UPF format '')'
@@ -133,7 +133,7 @@ subroutine compute_virtual(x,filein)
   use splinelib
   implicit none
   integer :: i, j, ib, iexch_, icorr_, igcx_, igcc_
-  character (len=75) :: filein(2)
+  character (len=256) :: filein(2)
   character (len=5) :: xlabel
   real (kind=8) :: x, capel
   real (kind=8), allocatable :: aux1(:,:), aux2(:,:)

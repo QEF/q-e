@@ -248,9 +248,10 @@
       LOGICAL, INTENT(IN) :: twfcollect
 
       INTEGER :: i, j
-      CHARACTER(LEN=80) :: t_ , c_ , tmp_dir_
-      CHARACTER(LEN=30) :: sub_name = ' write_restart_header '
-      CHARACTER(LEN=20) :: section_name = 'header'
+      CHARACTER(LEN=80)  :: t_ , c_ 
+      CHARACTER(LEN=256) :: tmp_dir_
+      CHARACTER(LEN=30)  :: sub_name = ' write_restart_header '
+      CHARACTER(LEN=20)  :: section_name = 'header'
       LOGICAL :: twrite = .TRUE.
 
       t_ = title
@@ -370,7 +371,8 @@
       REAL(dbl), INTENT(OUT) :: eamp
       LOGICAL, INTENT(OUT) :: twfcollect
 
-      CHARACTER(LEN=80) :: t_, c_, tmp_dir_
+      CHARACTER(LEN=80)  :: t_, c_
+      CHARACTER(LEN=256) :: tmp_dir_
 !
       INTEGER :: i, j, ierr
       INTEGER :: idum = 0

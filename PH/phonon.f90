@@ -51,7 +51,7 @@ PROGRAM phonon
     ! initial coordinates of k points
   LOGICAL :: exst
   CHARACTER (LEN=9)   :: code = 'PHONON'
-  CHARACTER (LEN=80)  :: auxdyn
+  CHARACTER (LEN=256) :: auxdyn
   CHARACTER (LEN=256) :: filname, filint
   !
   EXTERNAL date_and_tim

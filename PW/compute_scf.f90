@@ -55,7 +55,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   INTEGER                    :: image, ia, istat
   REAL (KIND=DP)             :: tcpu 
-  CHARACTER (LEN=80)         :: tmp_dir_saved
+  CHARACTER (LEN=256)        :: tmp_dir_saved
   LOGICAL                    :: file_exists, opnd   
   REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)

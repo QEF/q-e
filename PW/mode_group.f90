@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 
 subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
@@ -16,7 +17,6 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! For the moment it assume that the mode modenum displaces the atom
   ! modenum/3 in the direction mod(modenum,3)+1
   ! Also the minus_q operation is tested.
-#include"f_defs.h"
   !
   !  input-output variables
   !

@@ -8,6 +8,9 @@
 
 #include <stdlib.h>
 #include <malloc.h>
+
+#include <stdio.h>
+
 #include "c_defs.h"
 
 void MEMSTAT(int *me)

@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine trntnsc_3 (phi, at, bg, iflg)
   !-----------------------------------------------------------------------
@@ -14,7 +15,6 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
   !(like the derivative of the dynamical matrix)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
-#include"f_defs.h"
   USE kinds, only : DP
   implicit none
 

@@ -35,7 +35,7 @@ subroutine lderiv
   real(kind=dp), allocatable ::        &
        dlchi(:, :)         ! the logarithmic derivative
 
-  character(len=80) :: flld   ! auxiliary variable
+  character(len=256) :: flld   ! auxiliary variable
 
   if (nld == 0 .or. file_logderae == ' ') return
   if (nld > nwfsx) call errore('lderiv','nld is too large',1)

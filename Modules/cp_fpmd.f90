@@ -293,7 +293,6 @@ end module qrl_mod
       use gvecb
 !
       implicit none
-      integer nr1b,nr2b,nr3b
       real(kind=8) b1b(3),b2b(3),b3b(3)
 !
       integer i, i1,i2,i3,ig
@@ -1002,7 +1001,7 @@ END SUBROUTINE
           b1b = b1b * alatb
           b2b = b2b * alatb
           b3b = b3b * alatb
-          call gcalb(b1b,b2b,b3b,nr1b,nr2b,nr3b)
+          call gcalb(b1b,b2b,b3b)
 !
           do i=1,3
             ainvb(1,i)=b1b(i)/alatb

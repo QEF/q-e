@@ -29,7 +29,7 @@ program postproc
   use mp
 #endif
   implicit none
-  character(len=80) :: filplot
+  character(len=256) :: filplot
 
   integer :: plot_num, kpoint, kband, spin_component, ios
   logical :: stm_wfc_matching, lsign
@@ -43,7 +43,7 @@ program postproc
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
        filplot, lsign
 
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 

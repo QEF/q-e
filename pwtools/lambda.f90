@@ -21,7 +21,7 @@ program elph
        lambda(nsigx), alpha2F(nex,nsigx), logavg
   real(kind=8) qread(3), dosef1, ef1, degauss1, gammaq, lambda2, &
        degaussq, emax, deltae, e, omega, sum
-  character(len=80) :: filelph
+  character(len=256) :: filelph
   real(kind=8), external :: w0gauss
 
   ! INPUT from standard input:

@@ -1157,7 +1157,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   IMPLICIT NONE
   !
-  CHARACTER (LEN=80) :: psfile(ntyp)
+  CHARACTER (LEN=256) :: psfile(ntyp)
   CHARACTER (LEN=30) :: atomic_positions_
   !
   LOGICAL :: tcell = .FALSE.

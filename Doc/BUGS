@@ -1,5 +1,8 @@
   *  init_paw_1 fails for atom without non-local part
 
+  *  electron-phonon calculation was not working if called directly
+     after a phonon calculation
+
   *  PWCOND + FFTW + parallel execution = not good
 
   *  cell minimization with steepest descent was not working (CP/FPMD)

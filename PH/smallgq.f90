@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
+#include "f_defs.h"
 
 subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
      minus_q, gi, gimq)
@@ -20,7 +21,6 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   ! Modified 22 April 1997 by SdG: minus_q is sought also among sym.op.
   !                such that Sq=q+G (i.e. the case q=-q+G is dealt with).
   !
-#include"f_defs.h"
   !
   !  The dummy variables
   !

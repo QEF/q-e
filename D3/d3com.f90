@@ -26,7 +26,7 @@ end module units_d3
 !    the name of the files
 !
 module d0rho
-  character(len=80) :: fild0rho
+  character(len=256) :: fild0rho
 end module d0rho
 !
 !     the variable needed to describe the patterns when q=0

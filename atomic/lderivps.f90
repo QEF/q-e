@@ -43,7 +43,7 @@ subroutine lderivps
        ios,           &  ! used for I/O control
        is, ind           ! counters on index
 
-  character(len=80) :: flld
+  character(len=256) :: flld
 
 
   if (nld == 0 .or. file_logderps == ' ') return

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !---------------------------------------------------------------------
 subroutine sym_def1 (def, irr)
   !---------------------------------------------------------------------
@@ -14,7 +15,6 @@ subroutine sym_def1 (def, irr)
   !
   ! Used in the q=0 metallic case only.
   !
-#include"f_defs.h"
   USE kinds, only : DP
   use pwcom
   use phcom

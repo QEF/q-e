@@ -1,6 +1,17 @@
+26 Oct 2004  Patches from Axel Kohlmayer:
+             - removed another call to check()
+             - iotk_scan in iotk_module had a mixed up 'intent' statement.
+             - sun ultra fire 3 compiler warnings
+             - cleanup in filename lenght (256)
+             - cleanup in include files
+             Added lapack_atlas for Mac/OS (Pascal Thibadeau)
+
 25 Oct 2004  removed call to check()
              workarounds for g95 bug [Gerardo]
              Print correct CPU time for runs of more than 100h (PG)
+             Wrong routine (elphon instead of elphel) called in
+             solve_linter: electron-phonon calculation would not work
+             if called directly after a phonon calculation (PG)
 
 19 Oct 2004  Minor format changes: examples updated (GB)
 

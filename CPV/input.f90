@@ -51,7 +51,7 @@ CONTAINS
         use input_parameters, only:  atom_pfile, pseudo_dir, ntyp
         use parameters, only: nsx
         implicit none
-        character(len=80) :: psfile_ ( nsx ) , pseudo_dir_
+        character(len=256) :: psfile_ ( nsx ) , pseudo_dir_
         integer :: nsp_
         nsp_ = ntyp
         psfile_= ' '
@@ -141,7 +141,7 @@ CONTAINS
      &     omega_ , alat_ , a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 )
 
 
-      character(len=80) :: psfile_ ( nsx ) , pseudo_dir_
+      character(len=256) :: psfile_ ( nsx ) , pseudo_dir_
 
       !
       ! local variables

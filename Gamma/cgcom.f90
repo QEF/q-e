@@ -13,7 +13,7 @@ MODULE phunits
   !
   SAVE
   !
-  CHARACTER(len=80) :: &
+  CHARACTER(len=256) :: &
       fildyn
   CHARACTER(len=75) :: &
       title_ph

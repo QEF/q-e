@@ -68,7 +68,7 @@ program read_ps
   !
   implicit none
   integer :: is, ios, iunps = 4
-  character (len=75) :: filein
+  character (len=256) :: filein
   !
   is = 0
 10 print '(''  Input PP file # '',i2,'' in UPF format > '',$)', is+1

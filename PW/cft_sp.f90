@@ -6,6 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#include "f_defs.h"
+
 #ifdef __FFTW
 subroutine bidon_sp
   stop 'cft_sp'
@@ -20,7 +22,6 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     nx=n+1 is allowed (in order to avoid memory conflicts)
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
-#include "f_defs.h"
   implicit none
   integer :: m, n, nx, sgn
 
@@ -76,7 +77,6 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !     for compatibility: nx2=n2, nx2 is not used - sp2 version
   !
   !----------------------------------------------------------------------
-#include "f_defs.h"
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn
 
@@ -181,7 +181,6 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, sgn, planes)
   !     for compatibility: nx2=n2, nx2 is not used
   !
   !----------------------------------------------------------------------
-#include "f_defs.h"
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn, planes (nx1)
 

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine phq_summary
@@ -16,7 +17,6 @@ subroutine phq_summary
   !
   !    if iverbosity = 0 only a partial summary is done.
   !
-#include"f_defs.h"
   !
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp
   USE io_global,     ONLY : stdout

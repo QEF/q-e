@@ -6,13 +6,13 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include<stdio.h>
-#include<time.h>
-#include<ctype.h>
-#include<sys/types.h>
-#include<sys/time.h>
+#include <stdio.h>
+#include <time.h>
+#include <ctype.h>
+#include <sys/types.h>
+#include <sys/time.h>
 
-#include"c_defs.h"
+#include "c_defs.h"
 
 
 double ELAPSED_SECONDS()

@@ -2446,7 +2446,7 @@ subroutine iotk_scan(unit,direction,control,name,attr,binary,ierr)
   integer,                 intent(in)  :: unit
   integer,                 intent(in)  :: direction
   integer,                 intent(in)  :: control
-  character(iotk_namlenx), intent(out) :: name
+  character(iotk_namlenx), intent(in)  :: name
   character(iotk_attlenx), intent(out) :: attr
   logical,                 intent(in)  :: binary
   integer,                 intent(out) :: ierr

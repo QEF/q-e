@@ -21,10 +21,10 @@ PROGRAM q2r
   REAL(kind=DP), PARAMETER :: eps=1.D-5
   INTEGER                  :: nr1, nr2, nr3, nr(3)
   !
-  CHARACTER(len=20) :: crystal
-  CHARACTER(len=80) :: title
-  CHARACTER(len=80) :: filin,filj,filf,fild
-  CHARACTER(len=3)  :: atm(nax)
+  CHARACTER(len=20)  :: crystal
+  CHARACTER(len=80)  :: title
+  CHARACTER(len=256) :: filin,filj,filf,fild
+  CHARACTER(len=3)   :: atm(nax)
   !
   LOGICAL :: lq,lrigid,zasr, lrigid_save 
   INTEGER :: m1, m2, m3, l1, l2, l3, i, j, j1, j2, na1, na2, ipol
@@ -44,7 +44,7 @@ PROGRAM q2r
   !
   NAMELIST / input / nr1, nr2, nr3, fild, zasr
   !
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
   !
@@ -120,7 +120,7 @@ PROGRAM q2r
      READ (5,*) nfile
      DO ifile=1,nfile
         READ(5,'(a)') filin
-        WRITE (6,*) ' reading dyn.mat. from file ',filin
+        WRITE (6,*) ' reading dyn.mat. from file ',TRIM(filin)
         OPEN(unit=1,file=filin,status='old',form='formatted')
         CALL read_file(nqs,q,phiq,nax,epsil,zeu,lrigid,  &
              ntyp,nat,ibrav,celldm,atm,amass,ityp,tau)

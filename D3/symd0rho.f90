@@ -5,14 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+#include "f_defs.h"
 !---------------------------------------------------------------------
 subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, &
      irgq, t, nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   !---------------------------------------------------------------------
   !  symmetrizes q=0 drho
   !
-#include"f_defs.h"
   !
   USE kinds, only : DP
   implicit none

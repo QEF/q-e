@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine trntnsc (phi, at, bg, iflg)
@@ -13,7 +14,6 @@ subroutine trntnsc (phi, at, bg, iflg)
   ! trasforms a COMPLEX tensor (like the dynamical matrix)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
-#include"f_defs.h"
   USE kinds, only : DP
   implicit none
 

@@ -205,20 +205,20 @@ module ld1inc
   !
   !   the files and relative names
   !
-  character ::                  &
-       title*75,                & ! the title of the run
-       file_pseudo*80,          & ! the file of input pseudopotential
-       file_wavefunctions*80,   & ! the file with output wavefunctions
-       file_wavefunctionsps*80, & ! the file with output pseudowavefunctions
-       file_pseudopw*80,        & ! the file with output pseudopotential
-       file_chi*80,             & ! the file with the chi-functions
-       file_beta*80,            & ! the file with the beta-functions
-       file_qvan*80,            & ! the file with the qvan-functions
-       file_logderae*80,        & ! the file with all-electron log der 
-       file_logderps*80,        & ! the file with pseudo log der 
-       file_screen*80,          & ! the file with the screening potential
-       file_core*80,            & ! the file with the core charge
-       file_tests*80,           & ! the file with the tests
-       file_recon*80              ! the file for paw reconstruction
+  character(len=75)  :: title  ! the title of the run
+  character(len=256) ::      &
+       file_pseudo,          & ! the file of input pseudopotential
+       file_wavefunctions,   & ! the file with output wavefunctions
+       file_wavefunctionsps, & ! the file with output pseudowavefunctions
+       file_pseudopw,        & ! the file with output pseudopotential
+       file_chi,             & ! the file with the chi-functions
+       file_beta,            & ! the file with the beta-functions
+       file_qvan,            & ! the file with the qvan-functions
+       file_logderae,        & ! the file with all-electron log der 
+       file_logderps,        & ! the file with pseudo log der 
+       file_screen,          & ! the file with the screening potential
+       file_core,            & ! the file with the core charge
+       file_tests,           & ! the file with the tests
+       file_recon              ! the file for paw reconstruction
 
 end module ld1inc

@@ -18,7 +18,7 @@ program efg
 #endif 
 
   implicit none
-  character (len=80) :: filerec(ntypx)
+  character (len=256) :: filerec(ntypx)
   real(kind=DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
   integer :: ios , ionode_id = 0
   integer :: nt, il

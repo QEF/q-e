@@ -34,7 +34,7 @@ implicit none
                        denergy, ecut2d, ewind, epsproj, delgep,cutplot,&
                        llapack
                                                                                 
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 

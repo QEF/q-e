@@ -15,7 +15,7 @@ program oldcp2upf
   !     (without core correction) to unified pseudopotential format
   !
   implicit none
-  character(len=75) filein, fileout
+  character(len=256) filein, fileout
   logical exst
   integer :: i,ilen,ierr
   integer, external :: iargc

@@ -10,7 +10,7 @@
 ! main subroutine for SMD by Yosuke Kanai
 !
 
-#include "../include/f_defs.h"
+#include "f_defs.h"
 
 !
 !=======================================================================

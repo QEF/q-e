@@ -36,8 +36,8 @@ program nmr
 !
  implicit none 
  !
- CHARACTER (LEN=9)  :: code = 'NMR'
- character (len=80) :: filerec(ntypx)
+ CHARACTER (LEN=9)   :: code = 'NMR'
+ character (len=256) :: filerec(ntypx)
  integer :: ios
 
 

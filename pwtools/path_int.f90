@@ -23,7 +23,7 @@ MODULE int_global_variables
   REAL (KIND=DP), ALLOCATABLE  :: a(:), b(:), c(:), d(:), F(:)
   REAL (KIND=DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
   REAL (KIND=DP), ALLOCATABLE  :: tangent(:)
-  CHARACTER(LEN=80)            :: old_restart_file, new_restart_file
+  CHARACTER(LEN=256)           :: old_restart_file, new_restart_file
   !
 END MODULE int_global_variables
 !

@@ -60,7 +60,7 @@ program dos
   use mp,         ONLY : mp_bcast
 #endif
   implicit none
-  character(len=80) :: fildos
+  character(len=256) :: fildos
   character(len=256) :: outdir
   real(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
        degauss1
@@ -69,7 +69,7 @@ program dos
        Emin, Emax, DeltaE
   logical :: minus_q
                                                     
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
   !

@@ -17,12 +17,12 @@ program bands
 #endif
   implicit none
   !
-  character (len=80) :: filband
-  character(len=256) :: outdir
+  character (len=256) :: filband
+  character (len=256) :: outdir
   integer :: ios
   namelist / inputpp / outdir, prefix, filband
                                                                                 
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 

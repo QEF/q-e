@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 
 #ifdef __FFTW
 subroutine bidon_sun
@@ -20,7 +21,6 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     nx is the actual dimension of f (may differ from n)
   !     SUN (using sunperf library)
   !----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 
@@ -75,7 +75,6 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
 USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn

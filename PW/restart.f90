@@ -628,7 +628,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   integer :: na_(nsx), ngk_l(npk), ngk_g(npk)
   real(kind=DP) :: trutime_, ecutrho_, ekincm_
   real(kind=DP) :: acc_(nacx), bg_(3,3)
-  character(len=80) :: title_, crystal_, tmp_dir_
+  character(len=80) :: title_, crystal_
+  character(len=256) :: tmp_dir_
   real(kind=DP), allocatable :: occtmp(:), lambda(:,:)
 
   integer :: ntau
@@ -1208,7 +1209,8 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   real(kind=DP) :: acc_(nacx)
   logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, &
              lgamma_, noncolin_, lspinorb_, lda_plus_u_
-  character(len=80) :: title_, crystal_, tmp_dir_
+  character(len=80) :: title_, crystal_
+  character(len=256) :: tmp_dir_
 
   real(kind=DP) :: celldm_(6)
   integer :: ibrav_

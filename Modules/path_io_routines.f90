@@ -516,7 +516,7 @@ MODULE path_io_routines
        ! ... local variables
        !
        INTEGER             :: i, j, ia
-       CHARACTER (LEN=120) :: file
+       CHARACTER (LEN=256) :: file
        !
        ! ... end of local variables
        !

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "../include/f_defs.h"
+#include "f_defs.h"
 
 !
 !=======================================================================

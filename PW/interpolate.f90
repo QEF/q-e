@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 subroutine interpolate (v, vs, iflag)
   !
@@ -15,7 +16,6 @@ subroutine interpolate (v, vs, iflag)
   !        v  is unchanged on output
   !     V and Vs are real and in real space . V and Vs may coincide
   !
-#include"f_defs.h"
   USE kinds, ONLY: DP
   USE wvfct,  ONLY: gamma_only
   USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
@@ -104,7 +104,6 @@ subroutine cinterpolate (v, vs, iflag)
   !        v  is unchanged on output
   !     V and Vs are complex and in real space . V and Vs may coincide
   !
-#include"f_defs.h"
   USE kinds, ONLY: DP
   USE wvfct,  ONLY: gamma_only
   USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm

@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine close_open (isw)
   !-----------------------------------------------------------------------
@@ -13,7 +13,6 @@ subroutine close_open (isw)
   ! Close and open some units. It is useful in case of interrupted run
   !
   !
-#include"f_defs.h"
   use pwcom, only: degauss
   use phcom, only: iudwf, lrdwf, lgamma
   use io_files, only: prefix

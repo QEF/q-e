@@ -19,7 +19,7 @@ contains
   subroutine read_pseudo_fpmd( ap, psfile )
     USE pseudo_types, ONLY: pseudo_ncpp
     type(pseudo_ncpp) :: ap
-    character(len=80) :: psfile
+    character(len=256) :: psfile
     character(len=80) :: error_msg
     integer :: info, iunit
 
@@ -752,7 +752,7 @@ program fpmd2upf
   IMPLICIT NONE
 
   TYPE (pseudo_ncpp) :: ap
-  CHARACTER(LEN=80) :: psfile
+  CHARACTER(LEN=256) :: psfile
   INTEGER :: nsp, nspnl, i, lloc, l, ir, iv, kkbeta
   REAL(kind=8) :: rmax = 10
   REAL(kind=8) :: vll

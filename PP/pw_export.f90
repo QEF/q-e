@@ -274,7 +274,7 @@ program pp_punch
   integer :: ik, i, kunittmp, ios
   integer :: ionode_id = 0
 
-  character(len=200) :: pp_file
+  character(len=256) :: pp_file
   character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii
 

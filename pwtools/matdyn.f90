@@ -73,7 +73,7 @@ PROGRAM matdyn
   REAL(KIND=DP), PARAMETER :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
        amconv = 1.66042e-24/9.1095e-28*0.5
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
-  CHARACTER(LEN=30) :: flfrc, flfrq, flvec, fltau, fldos
+  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
   LOGICAL :: asr, dos, has_zstar
   COMPLEX(KIND=DP) :: dyn(3,3,nax,nax), dyn_blk(3,3,nax_blk,nax_blk)
   COMPLEX(KIND=DP) :: z(3*nax,3*nax)         ! eigenvalues
@@ -107,7 +107,7 @@ PROGRAM matdyn
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
 
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256)  :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
   !
@@ -374,7 +374,7 @@ SUBROUTINE readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
   !
   IMPLICIT NONE
   ! I/O variable
-  CHARACTER(LEN=30) flfrc
+  CHARACTER(LEN=256) flfrc
   INTEGER ibrav, nr1,nr2,nr3,nrx, nat, nax, ntyp, ityp(nax)
   REAL(KIND=DP) frc(nrx,nrx,nrx,3,3,nax,nax), epsil(3,3),zeu(3,3,nax)
   REAL(KIND=DP) alat, at(3,3), tau(3,nax)

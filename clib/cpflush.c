@@ -6,8 +6,8 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include<stdio.h>
-#include"c_defs.h"
+#include <stdio.h>
+#include "c_defs.h"
 
 
 int CPFLUSH(void)

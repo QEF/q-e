@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
      nr3, sym, minus_q)
@@ -14,7 +15,6 @@ subroutine smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, &
   ! of a crystal, the symmetry operations which leave q unchanged.
   ! Furthermore it checks if one of the above matrices send q --> -q+G.
   ! In this case minus_q is set true.
-#include"f_defs.h"
   !
   !  input-output variables
   !

@@ -15,7 +15,7 @@ program fqha
   real(kind=8) :: dos(ndivx),nu(ndivx),T,a1,a2,a3,Ftot,norm,F0
   real(kind=8) :: de, emax
   integer :: i,ndiv
-  character(len=80) :: filename
+  character(len=256) :: filename
   !
   a1=0.5d0/13.6058d0/8065.5d0
   a2=8.617d-5/13.6058d0

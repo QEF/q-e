@@ -94,7 +94,7 @@ CONTAINS
   USE io_global,  ONLY : stdout
   implicit none
 
-  character (len=80) :: filerec(ntypx)
+  character (len=256) :: filerec(ntypx)
   integer :: l,j,i,jtyp,kkphi,nbetam
 
   do jtyp=1,ntyp

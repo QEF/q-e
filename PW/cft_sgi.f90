@@ -6,6 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#include "f_defs.h"
+
 #ifdef __FFTW
 subroutine bidon_sgi
   stop 'cft_sgi'
@@ -21,7 +23,6 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   !     sgi origin-2000 version
   !     NOTA BENE: not in-place! output in fout
   !----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 
@@ -66,7 +67,6 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
 USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn

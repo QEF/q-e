@@ -6,8 +6,10 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include<stdio.h>
-#include"c_defs.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "c_defs.h"
 
 #define MAX_INDEX 32768
 

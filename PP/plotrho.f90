@@ -32,7 +32,7 @@ program plotrho
   real(kind=DP) :: xdim, ydim, xs, ys
   real(kind=DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
   real(kind=DP) :: at (3, 3), a0
-  character (len=80) :: filename, fileout, ans * 1
+  character (len=256) :: filename, fileout, ans * 1
   integer, external :: iargc
   logical :: logarithmic_scale
 
@@ -712,7 +712,7 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   integer :: npoints(ncontourmax), ncontours, i, j, k, l, npts
   real(kind=DP), parameter :: cm = 28.453
   logical ::  lwork(npointmax*ncontourmax)
-  character (len=80) :: filename, linetype(nmaxtypes)
+  character (len=256) :: filename, linetype(nmaxtypes)
   data linetype &
        / '[1 2    ] 0 setdash 0.5 setlinewidth', &
        '[1 2 4 2] 0 setdash', &

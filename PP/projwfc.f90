@@ -76,14 +76,14 @@ program projwfc
   use mp,   only : mp_bcast      
 #endif 
   implicit none 
-  character (len=80) :: filpdos, io_choice 
-  character(len=256) :: outdir 
-  real (kind=DP)     :: Emin, Emax, DeltaE, degauss1, smoothing
+  character (len=256) :: filpdos, io_choice 
+  character (len=256) :: outdir 
+  real (kind=DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
   integer :: ngauss1, ios, ionode_id = 0  
   namelist / inputpp / outdir, prefix, ngauss, degauss,&
              Emin, Emax, DeltaE, io_choice, smoothing
 
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 
@@ -605,7 +605,7 @@ subroutine  partialdos (Emin, Emax, DeltaE, filpdos)
   USE projections
   !
   implicit none 
-  character (len=80) :: filpdos
+  character (len=256) :: filpdos
   real(kind=DP) :: Emin, Emax, DeltaE
   !
   character (len=33) :: filextension 

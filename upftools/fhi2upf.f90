@@ -18,7 +18,7 @@ program fhi2upf
   !     Adapted from the converter written by Andrea Ferretti 
   !
   implicit none
-  character(len=75) filein, fileout
+  character(len=256) filein, fileout
   logical exst
   integer :: i, ilen, ierr
   integer, external :: iargc

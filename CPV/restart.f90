@@ -76,11 +76,11 @@ CONTAINS
       complex(kind=8), allocatable :: rhog(:), vg(:)
 
       LOGICAL :: lstres, lforce
-      character(len=80) :: title, crystal, tmp_dir
-!
+      character(len=80) :: title, crystal
+      character(len=256) :: tmp_dir !
       integer i, ia, is, j, ispin, ik
       integer :: strlen
-      character(len=80) :: filename
+      character(len=256) :: filename
 
       INTEGER ::  k1, k2, k3, nk1, nk2, nk3
       REAL(kind=8) :: dgauss
@@ -443,7 +443,8 @@ CONTAINS
       INTEGER :: modenum_
       REAL(kind=8) :: ef, rnel
       LOGICAL :: lstres_, lforce_
-      character(len=80) :: title_, crystal_, tmp_dir_
+      character(len=80) :: title_, crystal_
+      character(len=256) :: tmp_dir_
       character(len=4) :: atom_label(nsp)
       real(kind=8) :: bi1_(3), bi2_(3), bi3_(3)
 !

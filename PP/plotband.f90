@@ -11,7 +11,7 @@ program read_bands
   integer :: nks = 0, nbnd = 0, ios, nlines, n,i,ni,nf,nl, ierr, ilen
   integer, external :: iargc
   logical, allocatable :: high_symmetry(:), is_in_range(:)
-  character(len=80) :: filename, prgname
+  character(len=256) :: filename, prgname
   namelist /plot/ nks, nbnd
   integer :: n_interp, init
   real, allocatable :: k_interp(:), e_interp(:), coef_interp(:,:)

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine trnvecc (u, at, bg, iflg)
@@ -13,7 +14,6 @@ subroutine trnvecc (u, at, bg, iflg)
   !  transforms a COMPLEX vector in real space (like a displacement)
   !  from crystal to cartesian axis (iflag.gt.0) and viceversa (iflag.le.0
   !
-#include"f_defs.h"
   USE kinds, only : DP
   implicit none
 

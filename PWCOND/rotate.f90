@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
                    n2d, norbf, norbnow)
 !
@@ -12,7 +14,6 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
 ! in such a way that bpp at this slab becomes a delta symbol.
 ! It works for forward iterative process. 
 !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer :: norbf, n2d, norbnow, lam, n, n1, iorb, iorb1, info
@@ -112,7 +113,6 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow)
 ! in such a way that app at this slab becomes a delta symbol.
 ! It works for backward iterative process.
 !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none 
 

@@ -97,7 +97,7 @@ program average
 
   integer :: nfft, nfftx, idir
 
-  character (len=80) :: filename (nfilemax)
+  character (len=256) :: filename (nfilemax)
   ! names of the files with the charge
   !
   call start_postproc (nd_nmbr)

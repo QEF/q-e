@@ -40,7 +40,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! 
   INTEGER               :: image
   REAL (KIND=DP)        :: tcpu 
-  CHARACTER (LEN=80)    :: outdir_saved, restart_mode_saved
+  CHARACTER (LEN=256)   :: outdir_saved
+  CHARACTER (LEN=80)    :: restart_mode_saved
   LOGICAL               :: file_exists, opnd, tstop 
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)

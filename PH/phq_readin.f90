@@ -81,7 +81,7 @@ SUBROUTINE phq_readin()
   !
   ! ... local variables
   !
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256) :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
   INTEGER, EXTERNAL   :: iargc
   !

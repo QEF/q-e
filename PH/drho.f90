@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
+#include "f_defs.h"
 
 subroutine drho
   !-----------------------------------------------------------------------
@@ -16,7 +17,6 @@ subroutine drho
   !    computed change.
   !
   !
-#include"f_defs.h"
   !
   USE ions_base, ONLY : nat
   use pwcom

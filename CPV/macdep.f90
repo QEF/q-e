@@ -15,7 +15,7 @@
 !
       use io_global, only: stdout, ionode
       implicit none
-      character(len=80) :: command
+      character(len=256) :: command
       integer :: pid
 
 #ifdef __AIX

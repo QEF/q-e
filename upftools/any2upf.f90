@@ -15,7 +15,7 @@ program mypp2upf
   !     to unified pseudopotential format - sample program
   !
   implicit none
-  character(len=75) filein, fileout
+  character(len=256) filein, fileout
   logical exst
   integer :: i,ierr,ilen
   integer, external :: iargc

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !---------------------------------------------------------------------
 subroutine symdvscf (nper, irr, dvtosym)
@@ -12,8 +13,6 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! symmetrize the self-consistent potential of the perturbations
   ! belonging to an irreproducible representation
   !
-#include"f_defs.h"
-
   use pwcom
   USE kinds, only : DP
   use phcom
