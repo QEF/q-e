@@ -26,6 +26,7 @@ clocks.o \
 parallel_types.o \
 descriptors.o \
 control_flags.o \
+recvec.o \
 energies.o
 #
 include ../make.rules
