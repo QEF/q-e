@@ -24,7 +24,7 @@ for DIR in $DIRS ; do
 done
 
 # directories that depend on Modules/, PW/
-DIRS="PP PWCOND PWNC Gamma PH NEB"
+DIRS="PP PWCOND PWNC Gamma PH"
 DEPENDS="../Modules ../PW"
 for DIR in $DIRS ; do
   if test -d $TOPDIR/$DIR ; then

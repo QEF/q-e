@@ -874,7 +874,7 @@ MODULE input_parameters
         REAL(KIND=DP)  :: trust_radius_end = 1.D-7
                                
         REAL(KIND=DP)  :: w_1 = 0.5D-1
-        REAL(KIND=DP)  :: w_2 = 0.5D0 	
+        REAL(KIND=DP)  :: w_2 = 0.5D0 
 
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &

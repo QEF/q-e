@@ -472,7 +472,7 @@ MODULE varie
        conv_ions,        &! if .TRUE.    ionic convergence has been reached
        nosym,            &! if .TRUE. no symmetry is used
        newpseudo(npsx),  &! if .TRUE. done with the new pseudopotentials
-       noinv,            &! if .TRUE. eliminates inversion symmetry
+       noinv = .FALSE.,  &! if .TRUE. eliminates inversion symmetry
        diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
        restart,          &! if .TRUE. restart from results of a preceding run
        reduce_io          ! if .TRUE. reduce the I/O to the strict minimum

@@ -428,6 +428,8 @@ SUBROUTINE setup
         CALL errore( 'setup', &
                    & 'lda_plus_u calculation but Hubbard_l not set', 1 )
      CALL d_matrix( d1, d2, d3 )  
+  ELSE
+     Hubbard_lmax = 0
   END IF
   !
   RETURN

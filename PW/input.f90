@@ -1230,7 +1230,7 @@ SUBROUTINE verify_tmpdir()
         !
 #if defined (__PARA)
      END IF
-#endif	      	
+#endif 
      !
   END IF    
   !
@@ -1286,14 +1286,14 @@ SUBROUTINE verify_tmpdir()
 #endif                 
               !
               ! ... standard output of the self consistency is removed
-              !	      
+              !      
               OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'PW.out', &
                     STATUS = 'UNKNOWN' )
               CLOSE( UNIT = 4, STATUS = 'DELETE' )
               !
 #if defined (__PARA)
            END IF
-#endif	      
+#endif      
            !
         END IF  
         !

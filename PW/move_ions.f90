@@ -139,7 +139,7 @@ SUBROUTINE move_ions()
                                 ( gradient_error / ( epsf * upscale ) ) )
               tr2  = MAX( ( starting_scf_threshold / upscale ), tr2 ) 
               ethr = MIN( ethr, tr2 / nelec )               
-              ! 	       
+              !       
            END IF       
            !
            WRITE( stdout, '(5X,"new conv_thr = ",F14.10,/)' ) tr2
@@ -164,7 +164,7 @@ SUBROUTINE move_ions()
      CALL mp_bcast( tr2, ionode_id )
      CALL mp_bcast( ethr, ionode_id )
      CALL mp_bcast( conv_ions, ionode_id )
-#endif 	
+#endif 
      !
   ELSE
     !

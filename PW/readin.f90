@@ -24,6 +24,12 @@ subroutine readpp
   iunps = 4
   l = len_trim (pseudo_dir)
   do nt = 1, ntyp
+     !
+     ! iver, xmin, dx are not read from UPF format
+     !
+     iver(:,nt) = 0
+     xmin(nt) = 0.d0
+     dx(nt) = 0.d0
      ! add / if needed
      if (pseudo_dir (l:l) .ne.'/') then
         file_pseudo = pseudo_dir (1:l) //'/'//psfile (nt)

@@ -86,9 +86,9 @@ SUBROUTINE wfcinit()
           !
           IF ( nks == 1 .AND. reduce_io ) &
              CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
-	  !   
+          !   
           RETURN
-	  !
+          !
        END IF
        !
        IF ( startingwfc == 'atomic' ) THEN
@@ -99,13 +99,13 @@ SUBROUTINE wfcinit()
              WRITE( stdout, '(5X,A,I3,A)' ) &
                  'Starting wfc are atomic + ', nbnd-natomwfc, ' random wfc'
           END IF
-	  !
+          !
           n_starting_wfc = MAX( natomwfc, nbnd )
-	  !
+          !
        ELSE
           !
           WRITE( stdout, '(5X,A)' ) 'Starting wfc are random'
-	  !
+          !
           n_starting_wfc = nbnd
           !
        END IF
@@ -127,7 +127,7 @@ SUBROUTINE wfcinit()
        DO ik = 1, nks
           !
           IF ( lsda ) current_spin = isk(ik)
-	  !
+          !
           IF ( nks > 1 ) READ( iunigk ) npw, igk
           !
           ! ... here we compute the kinetic energy
@@ -263,6 +263,7 @@ SUBROUTINE wfcinit()
           !
        END IF
        !
+
        IF ( startingwfc == 'atomic' ) THEN
           IF ( natomwfc >= nbnd ) THEN
              WRITE( stdout, '(5X,A)' ) 'Starting wfc are atomic'

@@ -305,7 +305,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           WRITE( stdout, '("     DIIS style diagonalization")')
           IF ( ethr > diis_ethr_cg ) &
              WRITE( stdout, '(6X,"use conjugate-gradient method ", &
-	                       &,"until ethr <",1PE9.2)' ) diis_ethr_cg
+                             &,"until ethr <",1PE9.2)' ) diis_ethr_cg
        ELSE
           !
           CALL errore( 'c_bands', 'isolve not implemented', 1 )
@@ -436,7 +436,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              CALL cdiisg( npw, npwx, nbnd, diis_ndim, evc, et(1,ik), ethr, &
                           btype, notconv, diis_iter, iter )
-             !	  
+             !  
              avg_iter = avg_iter + diis_iter
              ntry = ntry + 1
              !

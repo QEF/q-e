@@ -255,7 +255,7 @@ MODULE read_cards_module
           CALL card_climbing_images( input_line )
           IF ( ( prog == 'FPMD' .OR. prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          !	  
+          !  
        ELSE
           !
           IF ( ionode ) &

@@ -19,12 +19,12 @@ MODULE basic_algebra_routines
   !
   ! ... List of public methods :
   !
-  !  x .dot. y		implements the dot product between vectors ( <x|y> )
-  !  norm( x )		computes the norm of a vector ( SQRT(<x|x>) )
-  !  A .times. x	implements the matrix-vector multiplication ( A|x> )
-  !  x .times. A	implements the vector-matrix multiplication ( <x|A )
-  !  matrix( x, y )	implements the vector-vector multiplication ( |x><y| )
-  !  identity( N )	the identity matrix in dimension N
+  !  x .dot. y          implements the dot product between vectors ( <x|y> )
+  !  norm( x )          computes the norm of a vector ( SQRT(<x|x>) )
+  !  A .times. x        implements the matrix-vector multiplication ( A|x> )
+  !  x .times. A        implements the vector-matrix multiplication ( <x|A )
+  !  matrix( x, y )     implements the vector-vector multiplication ( |x><y| )
+  !  identity( N )      the identity matrix in dimension N
   !
   !
   USE parameters,  ONLY : DP

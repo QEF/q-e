@@ -144,7 +144,6 @@ subroutine init_us_1
      enddo
 
   enddo
-
   !
   !  compute Clebsch-Gordan coefficients
   !
