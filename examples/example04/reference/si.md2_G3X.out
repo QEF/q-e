@@ -47,8 +47,8 @@
    Cartesian axes
 
      site n.     atom                  positions (a_0 units)
-         1           Si  tau(  1) = ( -0.1230000 -0.1230000 -0.1230000  )
-         2           Si  tau(  2) = (  0.1230000  0.1230000  0.1230000  )
+         1           Si  tau(  1) = (  -0.1230000  -0.1230000  -0.1230000  )
+         2           Si  tau(  2) = (   0.1230000   0.1230000   0.1230000  )
 
      number of k points=    4
                        cart. coord. in units 2pi/a_0

@@ -52,8 +52,8 @@
    Cartesian axes
 
      site n.     atom                  positions (a_0 units)
-         1           Al  tau(  1) = (  0.0000000  0.0000000  0.0000000  )
-         2           As  tau(  2) = (  0.2500000  0.2500000  0.2500000  )
+         1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
+         2           As  tau(  2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    2
                        cart. coord. in units 2pi/a_0

@@ -63,8 +63,8 @@
    Cartesian axes
 
      site n.     atom                  positions (a_0 units)
-         1           Ni  tau(  1) = (  0.0000000  0.0000000  0.0000000  )
-         2           Ni  tau(  2) = (  0.5000000  0.5000000  0.7070000  )
+         1           Ni  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
+         2           Ni  tau(  2) = (   0.5000000   0.5000000   0.7070000  )
 
      number of k points=   12  gaussian broad. (ryd)=  0.0100     ngauss =   1
                        cart. coord. in units 2pi/a_0

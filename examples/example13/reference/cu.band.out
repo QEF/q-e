@@ -55,7 +55,7 @@
    Cartesian axes
 
      site n.     atom                  positions (a_0 units)
-         1           Cu  tau(  1) = (  0.0000000  0.0000000  0.0000000  )
+         1           Cu  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
      number of k points=   28
                        cart. coord. in units 2pi/a_0
