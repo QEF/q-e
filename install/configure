@@ -1408,7 +1408,7 @@ case $build in
 ia64-*-linux-gnu )
 	is_linux64=1
 	try_f90_parallel="mpif90"
-	try_f90="ifort ifc f90 f77"
+	try_f90="ifort ifc efc f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
@@ -1928,7 +1928,7 @@ ia64-*-linux-gnu:* | x86_64-*-linux-gnu:* | *-pc-linux-gnu:* )
 
 		is_ifort=1
 		try_cc="icc gcc cc"
-		try_f77="ifort ifc $f90"
+		try_f77="ifort ifc efc $f90"
 	elif test "$pgf_version" != ""
 	then
 		f90_id=`echo $pgf_version | awk '{print $1}'`
@@ -2800,20 +2800,20 @@ esac
 # check whether the C and Fortran compilers are compatible
 case "$build:$cc_id:$f90_id" in
 	# list supported combinations here
-ia64-*-linux-gnu:icc:ifort )                      ;;
-ia64-*-linux-gnu:gcc:ifort )                      ;;
-x86_64-*-linux-gnu:pgcc:pgf90 )                   ;;
-*-pc-linux-gnu:icc:ifort | *-pc-linux-*:icc:ifc ) ;;
-*-pc-linux-gnu:gcc:ifort | *-pc-linux-*:gcc:ifc ) ;;
-*-pc-linux-gnu:pgcc:pgf90 )                       ;;
-*-pc-linux-gnu:gcc:g95 )                          ;;
-*-ibm-aix*:mpcc*:mpxlf* )                         ;;
-*-ibm-aix*:xlc*:*xlf* | *-ibm-aix*:cc:*xlf* )     ;;
-mips-sgi-*:cc:f90 )                               ;;
-alphaev*-dec-osf*:cc:f90 )                        ;;
-powerpc-apple-darwin*:gcc:xlf90 )                 ;;
-# sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )     ;;
-# *cray-unicosmp*:cc:ftn )                          ;;
+ia64-*-linux-gnu:icc:ifort )                            ;;
+ia64-*-linux-gnu:gcc:ifort | ia64-*-linux-gnu:gcc:efc ) ;;
+x86_64-*-linux-gnu:pgcc:pgf90 )                         ;;
+*-pc-linux-gnu:icc:ifort | *-pc-linux-*:icc:ifc )       ;;
+*-pc-linux-gnu:gcc:ifort | *-pc-linux-*:gcc:ifc )       ;;
+*-pc-linux-gnu:pgcc:pgf90 )                             ;;
+*-pc-linux-gnu:gcc:g95 )                                ;;
+*-ibm-aix*:mpcc*:mpxlf* )                               ;;
+*-ibm-aix*:xlc*:*xlf* | *-ibm-aix*:cc:*xlf* )           ;;
+mips-sgi-*:cc:f90 )                                     ;;
+alphaev*-dec-osf*:cc:f90 )                              ;;
+powerpc-apple-darwin*:gcc:xlf90 )                       ;;
+# sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )           ;;
+# *cray-unicosmp*:cc:ftn )                                ;;
 
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported C/Fortran compilers combination" >&5
@@ -2826,7 +2826,7 @@ esac
 
 # check Fortran compiler flags
 case "$build:$f90_id" in
-ia64-*-linux-gnu:ifort )
+ia64-*-linux-gnu:ifort | ia64-*-linux-gnu:efc )
 	try_fflags="-Vaxlib -O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
