@@ -801,9 +801,17 @@ set _pos {
 help atomic_coordinates \
     -vartype {character, real, real, real, \[ingeter, ingteger, integer\]} \
     -helpfmt txt2html -helptext $_pos
-help atomic_coordinates2 \
+help atomic_coordinates_last \
     -vartype {character, real, real, real} \
     -helpfmt txt2html -helptext $_pos
+
+# BEWARE: is is assumed that 50 intermediate images is the
+# largest allowed number (this is dirty)
+for {set i 1} {$i <= 50} {incr i} {
+    help atomic_coordinates_${i}_inter \
+	-vartype {character, real, real, real} \
+	-helpfmt txt2html -helptext $_pos
+}
 
 
 

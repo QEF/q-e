@@ -76,11 +76,21 @@ proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
 # ------------------------------------------------------------------------
 proc ::pwscf::pwLoadAtomCoor {moduleObj} {
     set file [pwLoadAtomCoor:_init $moduleObj]
-    pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates
+    if { $file != "" } {
+	pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates
+    }
 }
-proc ::pwscf::pwLoadAtomCoor2 {moduleObj} {
+proc ::pwscf::pwLoadAtomCoorInter {ith moduleObj} {
     set file [pwLoadAtomCoor:_init $moduleObj]
-    pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates2
+    if { $file != "" } {
+	pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates_${ith}_inter
+    }
+}
+proc ::pwscf::pwLoadAtomCoorLast {moduleObj} {
+    set file [pwLoadAtomCoor:_init $moduleObj]
+    if { $file != "" } {
+	pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates_last
+    }
 }
 proc ::pwscf::pwLoadAtomCoor:_init {moduleObj} {
     variable pwscf
@@ -105,20 +115,16 @@ proc ::pwscf::pwLoadAtomCoor:_init {moduleObj} {
 proc ::pwscf::pwLoadAtomCoor:_read {moduleObj file coorVar} {
     variable pwscf
 
+    set _readCoor 0
+    set IA(0)     0
+    set ntyp_list {}
+    set _UNIT     ""    
+    set nimage 0
+
     # read the file
 
     set channel [open $file r]
-    
-    set _readCoor 0
-    set IA(0)     0
-    set IA(1)     0
-    set IA(2)     0
-    set ntyp_list {}
-    set _UNIT     ""    
-    set image 0
-    set first_image 0
-    set last_image 0
-
+        
     while {1} {
 	set res [gets $channel _line]
 	if { $res == -1 && $_line == "" } {
@@ -142,25 +148,28 @@ proc ::pwscf::pwLoadAtomCoor:_read {moduleObj file coorVar} {
 	if { $_readCoor } {
 	    if { $_len == 4 || $_len == 7 } {
 		# read coordinates
-		incr IA($image)
-		set ia $IA($image)
-		set len($ia,$image) $_len
+		incr IA($nimage)
+		set ia $IA($nimage)
+		set len($ia,$nimage) $_len
 		for {set i 1} {$i <= $_len} {incr i} {
-		    set Atoms($ia,$i,$image) [lindex $_line [expr $i - 1]]
+		    set Atoms($ia,$i,$nimage) [lindex $_line [expr $i - 1]]
 		}
-		if { [lsearch -exact $ntyp_list $Atoms($ia,1,$image)] == -1 } {
-		    lappend ntyp_list $Atoms($ia,1,$image)
+		if { [lsearch -exact $ntyp_list $Atoms($ia,1,$nimage)] == -1 } {
+		    lappend ntyp_list $Atoms($ia,1,$nimage)
 		}
 	    } elseif { $_len == 1 } {
-		# might be first_image or last_image string (NEB)
-		if { [string match *first_image* $_line] && $image == 0 } {
-		    incr image
-		    set first_image 1
-		} elseif { [string match *last_image* $_line] && $image == 1 } {
-		    incr image
-		    set last_image  1
+		# might be first_image/intermediate_image/last_image string (NEB || SMD)
+		if { [string match *first_image* $_line] } {
+		    # do nothing so far ...
+		    ;
+		} elseif { [string match *intermediate_image* $_line] } {
+		    incr nimage
+		    set IA($nimage) 0
+		} elseif { [string match *last_image* $_line] } {
+		    incr nimage
+		    set IA($nimage) 0
 		} else {
-		    # no, it is not first_image/last_image string 
+		    # no, it is not first_image/intermediate_image/last_image string 
 		    break
 		}
 	    } else {
@@ -171,11 +180,13 @@ proc ::pwscf::pwLoadAtomCoor:_read {moduleObj file coorVar} {
     }
     #/reading done
 
+
     # assign the "atomic-position" variables
     
     set ia $IA(0)
-    if { $image >= 1 } {  if { $IA(1) > $ia } { set ia $IA(1) }  }
-    if { $image == 2 } {  if { $IA(2) > $ia } { set ia $IA(2) }  }	
+    for {set i 1} {$i <= $nimage} {incr i} {
+	if { $IA($nimage) > $ia } { set ia $IA($nimage) }
+    }
     $moduleObj varset nat -value $ia
     #$moduleObj varset ntyp -value $NTYP
 
@@ -209,42 +220,59 @@ proc ::pwscf::pwLoadAtomCoor:_read {moduleObj file coorVar} {
 	}
     }
 
-    # load the "atomic_coordinates" or "atomic_coordinates2" table 
+    # load the "atomic_coordinates" or "atomic_coordinates_inter_*" or "atomic_coordinates_last" table 
 
-    if { $coorVar == "atomic_coordinates" } {
-	if { ! $first_image } {
-	    set ith 0
-	} elseif { $first_image && $last_image } {
-	    set ith {1 2}
-	} elseif { $first_image } {
-	    set ith 1
-	}
-    } elseif { $coorVar == "atomic_coordinates2" } {
-	if { ! $last_image } {
-	    set ith 0
-	} elseif { $first_image && $last_image } {
-	    set ith {1 2}	
-	} elseif { $last_image } {
-	    set ith 2
+    if { $coorVar == "atomic_coordinates"      } { set start_index 0 }
+    if { $coorVar == "atomic_coordinates_last" } { set start_index $nimage }
+    if { [string match "atomic_coordinates_*_inter" $coorVar] } { 
+	set start_index [regsub {[a-zA-Z_]*} $coorVar {}]
+	if { $start_index > $nimage } { 
+	    set start_index $nimage 
 	}
     }
-    
-    puts stderr "ITH: $ith"
-    foreach ii $ith {
+	    
+    for {set ii $start_index} {$ii <= $nimage} {incr ii} { 
+	# loop over images ...
+
 	for {set ia 1} {$ia <= $IA($ii)} {incr ia} {
+	    # loop over atoms ...
+
 	    if { ! [info exists len($ia,$ii)] } { 
 		break 
 	    }
+
 	    for {set i 1} {$i <= $len($ia,$ii)} {incr i} {
+		# loop over fields ...
+
 		if { ! [info exists Atoms($ia,$i,$ii)] } { 
 		    break 
 		}
-		if { $ii == 0 } {
-		    $moduleObj varset "${coorVar}($ia,$i)" -value $Atoms($ia,$i,$ii)
-		} elseif { $ii == 1 } {
-		    $moduleObj varset "atomic_coordinates($ia,$i)"  -value $Atoms($ia,$i,$ii)
-		} elseif { $ii == 2 } {
-		    $moduleObj varset "atomic_coordinates2($ia,$i)" -value $Atoms($ia,$i,$ii)
+		
+		if { $coorVar == "atomic_coordinates" } {
+		    # in this case load all the coordinates
+
+		    if { $ii == 0 } {
+			$moduleObj varset "atomic_coordinates($ia,$i)"  -value $Atoms($ia,$i,$ii)
+		    } elseif { $ii == $nimage } {
+			$moduleObj varset "atomic_coordinates_last($ia,$i)"  -value $Atoms($ia,$i,$ii)
+		    } else {			
+			$moduleObj varset "atomic_coordinates_${ii}_inter($ia,$i)"  -value $Atoms($ia,$i,$ii)
+		    }
+		} elseif { [string match "atomic_coordinates_*_inter" $coorVar] } {
+		    # in this case load only the coordinates from start_index --> nimage
+		    
+		    if { $ii < $start_index || $start_index == $nimage } {
+			set ind $ii
+			# pathological case: ind == 0 , but smallest possible is 1
+			if { $ind == 0 } { set ind 1 }
+			$moduleObj varset "atomic_coordinates_${ind}_inter($ia,$i)"  -value $Atoms($ia,$i,$ii)
+		    } else {
+			$moduleObj varset "atomic_coordinates_last($ia,$i)"  -value $Atoms($ia,$i,$ii)
+		    }
+		} elseif { $coorVar == "atomic_coordinates_last" } {
+		    # load only the last coordinates
+
+		    $moduleObj varset "atomic_coordinates_last($ia,$i)"  -value $Atoms($ia,$i,$ii)
 		}
 	    }
 	}
@@ -366,6 +394,19 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	}
     }
 
+    #
+    # count the number of intermediate images
+    #
+    seek $channel 0 start
+    set ni 0
+    while { ! [eof $channel] } {
+	gets $channel _line
+	if { [string match "*intermediate_image*" $_line] } {
+	    incr ni
+	}
+    }
+    $moduleObj varset path_inter_nimages -value $ni
+
     #if { ! [info exists SYSTEM_namelist_content] } {	
     #	# there is no SYSTEM namlist. The input file is not a pw.x
     #	# input file	
@@ -376,11 +417,12 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     foreach record [split $SYSTEM_namelist_content ,\n] {
 	set var [lindex [split $record =] 0]
 	if { [::tclu::stringMatch celldm* $var $::guib::settings(INPUT.nocase)] } {
-	    varset how_lattice -value celldm
+	    $moduleObj varset how_lattice -value celldm
 	} elseif  { [::tclu::stringMatch A $var $::guib::settings(INPUT.nocase)] } {
-	    varset how_lattice -value abc
+	    $moduleObj varset how_lattice -value abc
 	}
     }    
+
     seek $channel 0 start
 
     #
