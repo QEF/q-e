@@ -98,6 +98,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !   
         istat = 1
         !
+        CALL stop_other_images()        
+        !
         EXIT scf_loop
         !    
      END IF
@@ -202,6 +204,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !   
         istat = 1
         !
+        CALL stop_other_images()
+        !
         EXIT scf_loop
         !
      END IF
@@ -296,7 +300,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... internal procedures
      !
+     !-----------------------------------------------------------------------
      SUBROUTINE para_file_init()
+       !-----------------------------------------------------------------------
        !
        ! ... this subroutine initializes the file needed for the 
        ! ... parallelization among images
@@ -318,14 +324,15 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        !
      END SUBROUTINE para_file_init
      !
+     !-----------------------------------------------------------------------
      SUBROUTINE get_new_image( image )
+       !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to get the new image to work on
        ! ... the *.BLOCK file is needed to avoid (when present) that 
        ! ... other jobs try to read/write on file "para" 
        !
        USE io_files,  ONLY : iunpara, iunblock
-       USE mp_global, ONLY : my_image_id
        !
        IMPLICIT NONE
        !
@@ -377,5 +384,58 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        RETURN
        !
      END SUBROUTINE get_new_image
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE stop_other_images()
+       !-----------------------------------------------------------------------
+       !
+       ! ... this subroutine is used to send a stop signal to other images
+       ! ... the *.BLOCK file is needed to avoid (when present) that 
+       ! ... other jobs try to read/write on file "para" 
+       !
+       USE io_files,  ONLY : iunpara, iunblock
+       !
+       IMPLICIT NONE
+       !
+       INTEGER              :: ioerr
+       LOGICAL              :: opened, exists
+       !
+       !
+       open_loop: DO
+          !          
+          OPEN( UNIT = iunblock, FILE = TRIM( tmp_dir_saved ) // &
+              & TRIM( prefix ) // '.BLOCK' , IOSTAT = ioerr, STATUS = 'NEW' )
+          !
+          IF ( ioerr > 0 ) CYCLE open_loop
+          !
+          INQUIRE( UNIT = iunpara, OPENED = opened )
+          !
+          IF ( .NOT. opened ) THEN
+             !
+             INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.para', EXIST = exists )
+             !
+             IF ( exists ) THEN
+                !
+                OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.para' , STATUS = 'UNKNOWN' )
+                !
+                WRITE( iunpara, * ) N_fin + 1
+                ! 
+                CLOSE( UNIT = iunpara, STATUS = 'KEEP' )
+                !
+                EXIT open_loop
+                !
+             END IF
+             !
+          END IF
+          !
+       END DO open_loop
+       !
+       CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+       !
+       RETURN       
+       !
+     END SUBROUTINE stop_other_images
      !
 END SUBROUTINE compute_scf

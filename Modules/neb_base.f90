@@ -11,7 +11,7 @@ MODULE neb_base
   !-----------------------------------------------------------------------
   !
   ! ... This module contains all subroutines and functions needed for
-  ! ... the NEB implementation into the PWSCF code
+  ! ... the NEB implementation into the PWSCF-FPMD-CPV codes
   ! ... Written by Carlo Sbraccia ( 04-11-2003 )
   !
   USE io_global,  ONLY : stdout
@@ -24,7 +24,6 @@ MODULE neb_base
   PUBLIC :: elastic_constants, gradient, search_stationary_points
   PUBLIC :: compute_error, path_tangent_
   PUBLIC :: born_oppenheimer_PES, search_mep
-
   !   
   CONTAINS
     !
@@ -35,7 +34,7 @@ MODULE neb_base
       !-----------------------------------------------------------------------
       !
       USE input_parameters, ONLY : pos, nat, restart_mode, calculation, &
-                                   minimization_scheme, climbing
+                                   minimization_scheme, climbing, nstep
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
                                    dat_file, int_file, xyz_file, axsf_file
       USE cell_base,        ONLY : alat
@@ -46,7 +45,7 @@ MODULE neb_base
                                    error, mass, free_minimization, CI_scheme,  &
                                    optimization, k, k_min, k_max,  Emax_index, &
                                    VEC_scheme, ds, neb_thr, lquick_min ,       &
-                                   ldamped_dyn, lmol_dyn, istep_neb
+                                   ldamped_dyn, lmol_dyn, nstep_neb, istep_neb
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
@@ -92,9 +91,13 @@ MODULE neb_base
       ! ... coordinates must be in bohr ( pwscf uses alat units )
       !
       IF( prog == 'PW' ) THEN
+        !
         pos_ = pos(1:dim,:) * alat   
+        !
       ELSE
+        !
         pos_ = pos(1:dim,:)
+        !
       END IF
       !
       ! ... all other arrays are initialized 
@@ -141,6 +144,18 @@ MODULE neb_base
          !
          CALL read_restart()
          !
+         ! ... consistency between the input value of nstep and the value
+         ! ... of nstep_neb read from the restart_file is checked
+         !
+         IF ( nstep == 0 ) THEN
+            !
+            istep_neb = 0
+            nstep_neb = nstep
+            !
+         END IF   
+         !
+         IF ( nstep > nstep_neb ) nstep_neb = nstep
+         !
          IF ( CI_scheme == "highest-TS" ) THEN
             !
             climbing_ = .FALSE.
@@ -169,7 +184,7 @@ MODULE neb_base
          !
          DEALLOCATE( d_R )
          !
-      END IF    
+      END IF
       !
       CALL compute_deg_of_freedom()
       !
@@ -700,9 +715,6 @@ MODULE neb_base
       USE io_routines,   ONLY : write_restart, write_dat_files, write_output
       USE check_stop,    ONLY : check_stop_now
       USE io_global,     ONLY : ionode
-#if defined (__LANGEVIN)
-      USE parser,        ONLY : int_to_char
-#endif
       USE minimization_routines
       !
       IMPLICIT NONE
@@ -714,24 +726,11 @@ MODULE neb_base
       LOGICAL             :: stat
       INTEGER             :: N_in, N_fin
       LOGICAL             :: file_exists
-#if defined (__LANGEVIN)
-      REAL (KIND=DP)      :: langevin_action( num_of_images )
-      INTEGER, PARAMETER  :: iunlangevin = 666
-      CHARACTER(LEN=20)   :: langevin_fmt
-#endif
       !
       ! ... external functions
       !
       REAL (kind=DP), EXTERNAL :: get_clock
       !
-      !
-#if defined (__LANGEVIN)
-      !
-      langevin_fmt = "(I3," // TRIM( int_to_char( num_of_images - 2 ) ) // &
-                   & "(F8.5))"
-      !
-      OPEN( UNIT = iunlangevin, FILE = "langevin", STATUS = "UNKNOWN" )
-#endif
       !
       conv_neb = .FALSE.
       !
@@ -864,32 +863,9 @@ MODULE neb_base
          !
          CALL write_dat_files()
          !
-#if defined (__LANGEVIN)
-         CALL compute_action( langevin_action )
-#endif
-         !
          istep_neb = istep_neb + 1
          !
          ! ... informations are written on the standard output
-         !
-#if defined (__LANGEVIN)
-         WRITE( UNIT = iunlangevin, FMT = langevin_fmt ) &
-             istep_neb, &
-             langevin_action(2:num_of_images-1) * ( AU * BOHR_RADIUS_ANGS )
-         !
-         WRITE( UNIT = iunneb, FMT = '(/)' )
-         !
-         DO image = 2, ( num_of_images - 1 )
-            !
-            WRITE( UNIT = iunneb, &
-                   FMT = '(5X,"image = ", I2, "   action = ",F14.8)' ) &
-                image, langevin_action(image)  * ( AU * BOHR_RADIUS_ANGS )
-            !
-         END DO
-         !
-         WRITE( UNIT = iunneb, FMT = '(/,5X,"langevin action = ",F14.8)' ) &
-             SUM( langevin_action )  * ( AU * BOHR_RADIUS_ANGS )
-#endif
          !
          IF ( ionode ) THEN
             !
@@ -919,7 +895,8 @@ MODULE neb_base
             !
             IF ( ionode ) &
                WRITE( UNIT = iunneb, &
-                      FMT = '(/,5X,"NEB convergence achieved")' )
+                      FMT = '(/,5X,"NEB: convergence achieved in ",I3, &
+                             &     " iterations" )' )
             !
             conv_neb = .TRUE.
             !
@@ -941,11 +918,6 @@ MODULE neb_base
          suspended_image = 0
          !
       END DO minimization
-      !
-      !
-#if defined (__LANGEVIN)
-      CLOSE( UNIT = iunlangevin )
-#endif
       !
       RETURN
       !

@@ -25,8 +25,8 @@ MODULE io_routines
        USE io_files,         ONLY : iunneb, iunrestart, neb_file   
        USE input_parameters, ONLY : if_pos
        USE neb_variables,    ONLY : pos, vel, num_of_images, dim, PES, &
-                                    PES_gradient, suspended_image,     &
-                                    Emax, Emin, Emax_index,            &
+                                    PES_gradient, suspended_image, Emax, &
+                                    Emin, Emax_index, istep_neb, nstep_neb, &
                                     lquick_min , ldamped_dyn, lmol_dyn
        USE io_global,        ONLY : ionode, ionode_id
        USE mp,               ONLY : mp_bcast
@@ -50,8 +50,8 @@ MODULE io_routines
                 ACTION = "READ" )
           !
           READ( UNIT = iunrestart, FMT = * )
-          READ( UNIT = iunrestart, FMT = * ) istep
-          READ( UNIT = iunrestart, FMT = * ) nstep
+          READ( UNIT = iunrestart, FMT = * ) istep_neb
+          READ( UNIT = iunrestart, FMT = * ) nstep_neb
           READ( UNIT = iunrestart, FMT = * ) suspended_image 
           !
           READ( UNIT = iunrestart, FMT = * )
@@ -146,8 +146,8 @@ MODULE io_routines
        !
        ! ... broadcast to all nodes
        !
-       CALL mp_bcast( istep,           ionode_id )
-       CALL mp_bcast( nstep,           ionode_id )
+       CALL mp_bcast( istep_neb,       ionode_id )
+       CALL mp_bcast( nstep_neb,       ionode_id )
        CALL mp_bcast( suspended_image, ionode_id )
        ! 
        CALL mp_bcast( pos,          ionode_id )  
@@ -169,12 +169,12 @@ MODULE io_routines
      SUBROUTINE write_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,    ONLY : istep, nstep
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, neb_file 
        USE neb_variables,    ONLY : pos, vel, num_of_images, PES, &
                                     PES_gradient, dim, suspended_image, &
-                                    lquick_min , ldamped_dyn, lmol_dyn
+                                    lquick_min , ldamped_dyn, lmol_dyn, &
+                                    istep_neb, nstep_neb
        USE formats,          ONLY : energy, restart_first, restart_others, &
                                     velocities
        USE io_global,        ONLY : ionode
@@ -195,8 +195,8 @@ MODULE io_routines
           !
           WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATIONS")' )
           !
-          WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep
-          WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep
+          WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_neb
+          WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
           !
           WRITE( UNIT = iunrestart, &
