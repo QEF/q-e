@@ -134,7 +134,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      enddo
   enddo
 
-  if (lmax_wfc.gt.2) call errore ('projwave', 'l > 2 not yet implemented', 1)
+  if (lmax_wfc.gt.3) call errore ('projwave', 'l > 3 not yet implemented', 1)
   if (nwfc.ne.natomwfc) call errore ('projwave', 'wrong # of atomic wfcs?', 1)
   !
   !    loop on k points
