@@ -223,5 +223,5 @@ ${new_restart_file}.axsf
 #
 rm -f input 
 rm -f CELL_PARAMETERS
-rm -f from_restart_to_xmol.gawk \
+rm -f from_restart_to_xyz.gawk \
       from_restart_to_axsf.gawk
