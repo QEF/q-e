@@ -14,7 +14,8 @@ default :
 	@echo '  d3           third-order derivatives'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  upf          utilities for pseudopotential conversion'
-	@echo '  all          same as "make pw ph pp gamma pwcond d3 tools"'
+	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 tools"'
+	@echo '  all          same as "make pwall fpmd cp nc upf"'
 	@echo '  links        creates links to executables in bin/'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
@@ -45,8 +46,8 @@ tools : libs
 upf : libs
 	( cd upftools ; make all )
 
-all : pw ph pp gamma pwcond d3 tools
-all_ : all fpmd cp nc upf
+pwall : pw ph pp gamma pwcond d3 tools
+all   : pwall fpmd cp nc upf
 
 modules :
 	( cd Modules; make all )
