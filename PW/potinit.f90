@@ -80,7 +80,7 @@ SUBROUTINE potinit()
         !      
         CALL io_pot( -1, TRIM( prefix )//'.rho', rho, nspin )
         !       
-        WRITE( stdout, '(/5X,"The initial density is read from file ", A14)' ) &
+        WRITE( stdout, '(/5X,"The initial density is read from file ",A20)' ) &
             TRIM( prefix ) // '.rho'
         !
         ! ... here we compute the potential which correspond to the 
@@ -89,21 +89,31 @@ SUBROUTINE potinit()
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                        ehart, etxc, vtxc, etotefield, charge, vr )
-        !       
-        IF ( ABS( charge - nelec ) / charge > 1.0D-4 ) &
-           WRITE( stdout, '(/5X,"starting charge =",F10.5)') charge
-        !    
+        !
+        IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
+           !
+           WRITE( stdout, &
+                  '(/,5X,"starting charge =",F10.5)') charge
+           !
+           WRITE( stdout, &
+                  '(/,5X,"starting charge renormalised to ",F10.5,/)') nelec
+           !
+           rho = rho / charge * nelec
+           !
+        END IF
+        !
      ELSE
         !
         CALL io_pot( -1, TRIM( prefix )//'.pot', vr, nspin )
         !
-        WRITE( stdout, '(/5X,"The initial potential is read from file ", A14)' ) &
+        WRITE( stdout, &
+               '(/5X,"The initial potential is read from file ",A20)' ) &
             TRIM( prefix ) // '.pot'
         !    
      END IF
      !
      ! ... The occupations ns also need to be read in order to build up 
-     ! ... the poten
+     ! ... the potential
      !
      IF ( lda_plus_u ) THEN  
         !
@@ -121,10 +131,10 @@ SUBROUTINE potinit()
            !
         END IF
         !
-        CALL reduce( ( ldim * ldim * nspin * nat ), ns )  
+        CALL reduce(     ( ldim * ldim * nspin * nat ), ns )  
         CALL poolreduce( ( ldim * ldim * nspin * nat ), ns )  
         !
-        CALL DCOPY( ( ldim * ldim * nspin * nat ), ns, 1, nsnew, 1 )
+        nsnew = ns
         !
      END IF
      !
@@ -145,8 +155,10 @@ SUBROUTINE potinit()
      IF ( lda_plus_u ) THEN
         !
         ldim = 2 * Hubbard_lmax + 1
-        CALL init_ns  
-        CALL DCOPY( ( ldim * ldim * nspin * nat ), ns, 1, nsnew, 1 )
+        !
+        CALL init_ns()
+        !
+        nsnew = ns
         !
      END IF
      !
@@ -158,11 +170,11 @@ SUBROUTINE potinit()
         !
         CALL io_pot( -1, input_drho, vr, nspin )
         !
-        WRITE( UNIT = stdout, &
-               FMT = '(/5X,"a scf correction to at. rho is read from", A14)' ) &
+        WRITE( stdout, &
+               '(/5X,"a scf correction to at. rho is read from",A20)' ) &
             input_drho
         !
-        CALL DAXPY( nrxx, 1.D0, vr, 1, rho, 1 )
+        rho = rho + vr
         !
      END IF
      !
@@ -172,9 +184,18 @@ SUBROUTINE potinit()
      CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                     ehart, etxc, vtxc, etotefield, charge, vr )
-     !   
-     IF ( ABS( charge - nelec ) / charge > 1.0D-4 ) &
-          WRITE( stdout, '(/5X,"starting charge =",F10.5)') charge
+     !
+     IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
+        !
+        WRITE( stdout, &
+               '(/,5X,"starting charge =",F10.5)') charge
+        !
+        WRITE( stdout, &
+               '(/,5X,"starting charge renormalised to ",F10.5,/)') nelec
+        !
+        rho = rho / charge * nelec
+        !
+     END IF
      !
   END IF
   !
@@ -186,17 +207,14 @@ SUBROUTINE potinit()
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(/5X,"Parameters of the lda+U calculation:")')
-     WRITE( stdout, '(5X,"Number of iteration with fixed ns =",I3)') &
+     WRITE( stdout, '(/5X,"Parameters of the lda+U calculation:")' )
+     WRITE( stdout, '(5X,"Number of iteration with fixed ns = ",I3)' ) &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting ns and Hubbard U :")')
-     CALL write_ns
+     WRITE( stdout, '(5X,"Starting ns and Hubbard U :")' )
+     !
+     CALL write_ns()
      !
   END IF
-  !
-  IF ( imix >= 0 ) CALL io_pot( +1,  TRIM( prefix )//'.rho', rho, nspin )
-  !
-  CALL io_pot( +1,  TRIM( prefix )//'.pot', vr, nspin )
   !
   RETURN
   !

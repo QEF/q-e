@@ -74,6 +74,37 @@ MODULE parser
   !
   !
   !--------------------------------------------------------------------------
+  FUNCTION find_free_unit()
+    !--------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: find_free_unit
+    INTEGER :: iunit
+    LOGICAL :: opnd
+    !
+    !
+    unit_loop: DO iunit = 99, 1, -1
+       !
+       INQUIRE( UNIT = iunit, OPENED = opnd )
+       !
+       IF ( .NOT. opnd ) THEN
+          !
+          find_free_unit = iunit
+          !
+          RETURN
+          !
+       END IF
+       !
+    END DO unit_loop
+    !
+    CALL errore( 'find_free_unit()', 'free unit not found ?!?', 1 )
+    !
+    RETURN
+    !
+  END FUNCTION find_free_unit
+  !
+  !--------------------------------------------------------------------------
   SUBROUTINE delete_if_present( filename, in_warning )
     !--------------------------------------------------------------------------
     !
@@ -81,37 +112,25 @@ MODULE parser
     !
     CHARACTER(LEN=*),  INTENT(IN) :: filename
     LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
-    LOGICAL                       :: exst, opnd, warning
+    LOGICAL                       :: exst, warning
     INTEGER                       :: iunit
     !
     INQUIRE( FILE = filename, EXIST = exst )
     !
     IF ( exst ) THEN
        !
-       unit_loop: DO iunit = 99, 1, - 1
-          !
-          INQUIRE( UNIT = iunit, OPENED = opnd )
-          !
-          IF ( .NOT. opnd ) THEN
-             !
-             warning = .FALSE.
-             !
-             IF ( PRESENT( in_warning ) ) warning = in_warning
-             !
-             OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
-             CLOSE( UNIT = iunit, STATUS = 'DELETE' )
-             !
-             IF ( warning ) &
-                WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
-                     & " file was present; old file deleted")' ) filename
-             !
-             RETURN
-             !
-          END IF
-          !
-       END DO unit_loop
+       iunit = find_free_unit()
        !
-       CALL errore( 'delete_if_present', 'free unit not found ?!?', 1 )
+       warning = .FALSE.
+       !
+       IF ( PRESENT( in_warning ) ) warning = in_warning
+       !
+       OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
+       CLOSE( UNIT = iunit, STATUS = 'DELETE' )
+       !
+       IF ( warning ) &
+          WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
+               & " file was present; old file deleted")' ) filename
        !
     END IF
     !

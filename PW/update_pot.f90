@@ -7,6 +7,9 @@
 !
 #include "f_defs.h"
 !
+#define ONE  (1.D0,0.D0)
+#define ZERO (0.D0,0.D0)
+!
 !----------------------------------------------------------------------------
 SUBROUTINE update_pot()
   !----------------------------------------------------------------------------
@@ -42,11 +45,12 @@ SUBROUTINE update_pot()
   !
   !
   USE control_flags, ONLY : order, history
-  USE io_files,      ONLY : prefix, tmp_dir
+  USE io_files,      ONLY : prefix, tmp_dir, nd_nmbr
+  USE io_global,     ONLY : ionode, ionode_id
+  USE mp,            ONLY : mp_bcast
+  USE mp_global,     ONLY : intra_image_comm
   !
   IMPLICIT NONE
-  !
-  ! ... local variables
   !
   INTEGER :: rho_order, wfc_order
   LOGICAL :: exists
@@ -75,37 +79,35 @@ SUBROUTINE update_pot()
      rho_order = MIN( 2, history )
      !
      INQUIRE( FILE = TRIM( tmp_dir ) // &
-            & TRIM( prefix ) // '.oldrho2', EXIST = exists )     
+            & TRIM( prefix ) // '.old2rho', EXIST = exists )     
      !
-     IF ( exists ) THEN
-        !
-        rho_order = MIN( 3, history )
-        !
-     END IF   
+     IF ( exists ) rho_order = MIN( 3, history )
      !
-  END IF   
-  !
-  wfc_order = MIN( 1, history, order ) 
-  !  
-  INQUIRE( FILE = TRIM( tmp_dir ) // &
-         & TRIM( prefix ) // '.oldwfc', EXIST = exists )
-  !
-  IF ( exists ) THEN
-     !
-     wfc_order = MIN( 2, history, order  )
-     !
-     INQUIRE( FILE = TRIM( tmp_dir ) // &
-            & TRIM( prefix ) // '.oldwfc2', EXIST = exists )     
-     !
-     IF ( exists ) THEN
-        !
-        wfc_order = MIN( 3, history, order )
-        !
-     END IF   
-     !
-  END IF   
+  END IF
   !
   CALL extrapolate_charge( rho_order )
+  !
+  IF ( ionode ) THEN
+     !
+     wfc_order = MIN( 1, history, order ) 
+     !
+     INQUIRE( FILE = TRIM( tmp_dir ) // &
+            & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
+     !
+     IF ( exists ) THEN
+        !
+        wfc_order = MIN( 2, history, order  )
+        !
+        INQUIRE( FILE = TRIM( tmp_dir ) // &
+               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )     
+        !
+        IF ( exists ) wfc_order = MIN( 3, history, order )
+        !
+     END IF
+     !
+  END IF
+  !
+  CALL mp_bcast( wfc_order, ionode_id, intra_image_comm )
   !
   IF ( order >= 2 ) CALL extrapolate_wfcs( wfc_order )
   !
@@ -134,12 +136,11 @@ SUBROUTINE extrapolate_charge( rho_order )
   USE cellmd,        ONLY : lmovecell, omega_old
   USE vlocal,        ONLY : strf
   USE io_files,      ONLY : prefix
+  USE klist,         ONLY : nelec
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: rho_order
-  !
-  ! ... local variables
   !
   REAL(KIND=DP), ALLOCATABLE :: work(:), work1(:)
     ! work is the difference between charge density and atomic charge 
@@ -191,7 +192,7 @@ SUBROUTINE extrapolate_charge( rho_order )
      ! ...   work  ->  oldrho2     
      !
      CALL io_pot( + 1, TRIM( prefix )//'.oldrho',  rho,  1 )
-     CALL io_pot( + 1, TRIM( prefix )//'.oldrho2', work, 1 )
+     CALL io_pot( + 1, TRIM( prefix )//'.old2rho', work, 1 )
      !
      ! ... alpha0 has been calculated in move_ions
      !
@@ -206,14 +207,14 @@ SUBROUTINE extrapolate_charge( rho_order )
      ! ...   oldrho2  ->  work1
      ! ...   oldrho   ->  work
      !
-     CALL io_pot( - 1, TRIM( prefix )//'.oldrho2', work1, 1 )
+     CALL io_pot( - 1, TRIM( prefix )//'.old2rho', work1, 1 )
      CALL io_pot( - 1, TRIM( prefix )//'.oldrho',  work,  1 )
      !
      ! ...   rho   ->  oldrho     
      ! ...   work  ->  oldrho2     
      !
      CALL io_pot( + 1, TRIM( prefix )//'.oldrho',  rho,  1 )
-     CALL io_pot( + 1, TRIM( prefix )//'.oldrho2', work, 1 )
+     CALL io_pot( + 1, TRIM( prefix )//'.old2rho', work, 1 )
      !
      ! ... alpha0 and beta0 have been calculated in move_ions
      !
@@ -249,6 +250,18 @@ SUBROUTINE extrapolate_charge( rho_order )
                  nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
+  IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
+     !
+     WRITE( stdout, &
+            '(/,5X,"extrapolated charge =",F10.5)') charge
+     !
+     WRITE( stdout, &
+            '(/,5X,"extrapolated charge renormalised to ",F10.5,/)') nelec
+     !
+     rho = rho / charge * nelec
+     !
+  END IF
+  !
   ! ... write potential (and rho) on file
   !
   IF ( imix >= 0 ) CALL io_pot( + 1, TRIM( prefix )//'.rho', rho, nspin )
@@ -270,9 +283,6 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
   ! ... of the basis of the t-dt and t time steps, according to a recipe
   ! ... by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.29
   !
-#define ONE  (1.D0,0.D0)
-#define ZERO (0.D0,0.D0)  
-  !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE klist,                ONLY : nks
@@ -285,8 +295,6 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: wfc_order
-  !
-  ! ... local variables
   !
   INTEGER :: j, i, ik, zero_ew, lwork, info
     ! do-loop variables
@@ -333,7 +341,7 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
      CALL diropn( iunoldwfc, TRIM( prefix ) // '.oldwfc', nwordwfc, exst )
      !
      IF ( order > 2 ) &
-        CALL diropn( iunoldwfc2, TRIM( prefix ) // '.oldwfc2', nwordwfc, exst )
+        CALL diropn( iunoldwfc2, TRIM( prefix ) // '.old2wfc', nwordwfc, exst )
      !
      ALLOCATE( evcold(npwx,nbnd) )
      !
@@ -450,7 +458,7 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
      ! ... case :  wfc_order = 3
      !
      CALL diropn( iunoldwfc, TRIM( prefix ) // '.oldwfc', nwordwfc, exst )
-     CALL diropn( iunoldwfc2, TRIM( prefix ) // '.oldwfc2', nwordwfc, exst )
+     CALL diropn( iunoldwfc2, TRIM( prefix ) // '.old2wfc', nwordwfc, exst )
      !
      ALLOCATE( evcold(npwx,nbnd) )
      !

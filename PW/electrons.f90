@@ -29,7 +29,8 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
-  USE parameters,           ONLY : npk 
+  USE parameters,           ONLY : npk
+  USE constants,            ONLY : eps8, rytoev
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, ntyp => nsp, ityp, tau
@@ -170,7 +171,7 @@ SUBROUTINE electrons()
         END IF
         !
         WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-        WRITE( stdout, 9030 ) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
+        WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
         !
      END DO
      !
@@ -475,16 +476,19 @@ SUBROUTINE electrons()
               WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
            END IF
            !
-           WRITE( stdout, 9030 ) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
+           WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
            !
         END DO
         !
-        IF ( lgauss .OR. ltetra ) WRITE( stdout, 9040 ) ef * 13.6058
+        IF ( lgauss .OR. ltetra ) WRITE( stdout, 9040 ) ef * rytoev
         !
      END IF
-     !
+     !     
      IF ( ( ABS( charge - nelec ) / charge ) > 1.D-7 ) &
         WRITE( stdout, 9050 ) charge
+     !
+     IF ( ( ABS( charge_new - nelec ) / charge_new ) > 1.D-7 ) &
+        WRITE( stdout, 9051 ) charge_new   
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
      !
@@ -497,7 +501,7 @@ SUBROUTINE electrons()
         !  
         IF ( imix >= 0 ) THEN
            !
-           IF ( dr2 > 1.D-8 ) THEN
+           IF ( dr2 > eps8 ) THEN
               !
               WRITE( stdout, 9081 ) etot, dr2
               !
@@ -524,7 +528,7 @@ SUBROUTINE electrons()
         !
         IF ( imix >= 0 ) THEN
            !   
-           IF ( dr2 > 1.D-8 ) THEN
+           IF ( dr2 > eps8 ) THEN
               WRITE( stdout, 9081 ) etot, dr2
            ELSE
               WRITE( stdout, 9083 ) etot, dr2
@@ -540,7 +544,7 @@ SUBROUTINE electrons()
         !
         IF ( imix >=  0 ) THEN
            !   
-           IF ( dr2 > 1.D-8 ) THEN
+           IF ( dr2 > eps8 ) THEN
               !
               WRITE( stdout, 9080 ) etot, dr2
               !
@@ -632,6 +636,7 @@ SUBROUTINE electrons()
 9030 FORMAT( '  ',8F9.4)
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
 9050 FORMAT(/'     integrated charge         =',F15.8)
+9051 FORMAT(/'     integrated charge_new     =',F15.8)
 9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
             /'     one-electron contribution =',  F15.8,' ryd' &
             /'     hartree contribution      =',  F15.8,' ryd' &
