@@ -80,8 +80,10 @@ program phonon
      if (fildrho.ne.' ') call punch_plot_ph
   endif
   if (elph) then
-     call dvanqq
-     if (.not.trans) call elphon
+     if (.not.trans) then 
+         call dvanqq
+         call elphon
+     end if
      call elphsum
   endif
   call stop_ph (.true.)

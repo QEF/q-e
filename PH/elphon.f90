@@ -18,26 +18,38 @@ subroutine elphon
   use phcom
   use el_phon
   implicit none
-  integer :: irr, imode0
+  integer :: irr, imode0, ipert, is
   ! counter on the representations
   ! counter on the modes
   ! the change of Vscf due to perturbations
-  complex(kind=DP), allocatable :: dvscf (:,:,:)
+  complex(kind=DP), pointer :: dvscfin(:,:,:), dvscfins (:,:,:)
 
   call start_clock ('elphon')
+
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
   rewind (iudvscf)
   imode0 = 0
   do irr = 1, nirr
-     allocate (dvscf( nrxxs , nspin , npert(irr)))    
-     read (iudvscf) dvscf
-     !
-     call elphel (npert (irr), imode0, dvscf)
+     allocate (dvscfin ( nrxx , nspin , npert(irr)) )
+     read (iudvscf) dvscfin
+     if (doublegrid) then
+        allocate (dvscfins ( nrxxs , nspin , npert(irr)) )
+        do is = 1, nspin
+           do ipert = 1, npert(irr)
+              call cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
+           enddo 
+        enddo
+     else
+        dvscfins => dvscfin
+     endif
+     call newdq (dvscfin, npert(irr))
+     call elphel (npert (irr), imode0, dvscfins)
      !
      imode0 = imode0 + npert (irr)
-     deallocate (dvscf)
+     if (doublegrid) deallocate (dvscfins)
+     deallocate (dvscfin)
   enddo
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
@@ -163,8 +175,6 @@ subroutine elphel (npe, imode0, dvscfins)
        ios
   complex(kind=DP) , allocatable :: aux1 (:), elphmat (:,:,:)
   complex(kind=DP) :: ZDOTC
-
-  !
   !
   allocate (aux1    ( nrxxs))    
   allocate (elphmat ( nbnd , nbnd , npe))    
@@ -238,9 +248,13 @@ subroutine elphel (npe, imode0, dvscfins)
            do ig = 1, npwq
               dvpsi (ig, ibnd) = dvpsi (ig, ibnd) + aux1 (nls (igkq (ig) ) )
            enddo
-           !
-           ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
-           !
+        end do
+        call adddvscf (ipert, ik)
+
+        !
+        ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
+        !
+        do ibnd =1, nbnd
            do jbnd = 1, nbnd
               elphmat (jbnd, ibnd, ipert) = ZDOTC (npwq, evq (1, jbnd), 1, &
                    dvpsi (1, ibnd), 1)
@@ -257,8 +271,7 @@ subroutine elphel (npe, imode0, dvscfins)
      do ipert = 1, npe
         do jbnd = 1, nbnd
            do ibnd = 1, nbnd
-              el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, &
-                   ipert)
+              el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
            enddo
         enddo
      enddo
@@ -297,7 +310,7 @@ subroutine elphsum
        ef1, phase_space, lambda, gamma
   external dos_ef
   !
-  complex(kind=DP) :: el_ph_sum (3 * nat, 3 * nat)
+  complex(kind=DP) :: el_ph_sum (3*nat,3*nat)
 
   !
   write (6, '(5x,"electron-phonon interaction  ..."/)')
@@ -339,6 +352,7 @@ subroutine elphsum
      ! Sum over bands with gaussian weights
      !
      do ik = 1, nksq
+
         !
         ! see subroutine elphel for the logic of indices
         !
@@ -359,14 +373,15 @@ subroutine elphsum
               weight = wk (ikk) * w0g1 * w0g2
               do jpert = 1, 3 * nat
                  do ipert = 1, 3 * nat
-                    el_ph_sum (ipert, jpert) = el_ph_sum (ipert, jpert) + weight * &
-                         conjg (el_ph_mat (jbnd, ibnd, ik, ipert) ) * el_ph_mat (jbnd, &
-                         ibnd, ik, jpert)
+                    el_ph_sum (ipert, jpert) = el_ph_sum (ipert, jpert)  +  weight * &
+                                        conjg (el_ph_mat (jbnd, ibnd, ik, ipert) ) * &
+                                               el_ph_mat (jbnd, ibnd, ik, jpert)
                  enddo
               enddo
               phase_space = phase_space+weight
            enddo
         enddo
+
      enddo
      !
      ! el_ph_sum(mu,nu)=\sum_k\sum_{i,j}[ <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}>
@@ -435,8 +450,8 @@ subroutine elphsum
 9006 format(5x,'double delta at Ef =',f10.6)
 9010 format(5x,'lambda(',i2,')=',f10.6,'   gamma=',f10.6,' GHz')
   !
-  if (iuelph.ne.0) close (unit = iuelph)
   !
+  if (iuelph.ne.0) close (unit = iuelph)
   return
 end subroutine elphsum
 !
