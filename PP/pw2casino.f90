@@ -260,9 +260,9 @@ subroutine compute_casino
      write(io,'(i6,3f20.14)') int(zmesh(ityp(na))), (alat*tau(j,na),j=1,3)
   enddo
   write(io,'(a)') ' Primitive lattice vectors (au) '
-  write(io,*) alat*at(1,1), alat*at(2,1), alat*at(3,1)
-  write(io,*) alat*at(1,2), alat*at(2,2), alat*at(3,2)
-  write(io,*) alat*at(1,3), alat*at(2,3), alat*at(3,3)
+  write(io,100) alat*at(1,1), alat*at(2,1), alat*at(3,1)
+  write(io,100) alat*at(1,2), alat*at(2,2), alat*at(3,2)
+  write(io,100) alat*at(1,3), alat*at(2,3), alat*at(3,3)
   write(io,'(a)') ' '
   write(io,'(a)') ' G VECTORS'
   write(io,'(a)') ' ---------'
