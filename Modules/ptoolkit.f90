@@ -725,13 +725,18 @@
 
 !  ......  COSTRUZIONE DEL VETTORE U
 
+#if defined __T3E
 !DIR$ UNROLL 8
+#endif
              DO k = 1,L          
                vtmp(k) = 0.0d0 
              END DO
 
              k = ME + 1
+
+#if defined __T3E
 !DIR$ UNROLL 4
+#endif
              DO kl = 1,is(l)          
                vtmp(k)   = A(kl,I)
                UL(kl) = A(kl,I)
@@ -757,18 +762,28 @@
 !  ......  COSTRUZIONE DEL VETTORE P
 
              KAPPA = 0.0d0
+
              DO J = 1,L
+
                vtmp(j) = 0.0d0
+
+#if defined __T3E
 !DIR$ UNROLL 8
+#endif
                DO KL = 1, IS(J)
                  vtmp(J) = vtmp(J) + A(KL,J) * UL(KL)
                END DO
+
                IF(L.GT.J .AND. ME.EQ.RI(J)) then
+
+#if defined __T3E
 !DIR$ UNROLL 8
+#endif
                  DO K = J+1,L
                    vtmp(J) = vtmp(J) + A(IS(J),K) * U(K)
                  END DO
                END IF
+
                vtmp(J) = vtmp(J) * ONE_OVER_H
                KAPPA = KAPPA + vtmp(J) * U(J) * 0.5d0 * ONE_OVER_H
              END DO 
@@ -792,7 +807,9 @@
              CALL DAXPY(l, -kappa, u, 1, p, 1)
 
              k = me + 1
+#if defined __T3E
 !DIR$ UNROLL 8
+#endif
              DO kl = 1,is(l)          
                PL(kl) = P(k)
                k      = k + NPROC
@@ -801,7 +818,9 @@
              DO J = 1,L
                tu= U(J)
                tp= P(J)
+#if defined __T3E
 !DIR$ UNROLL 12
+#endif
                DO KL = 1,is(l)
                  A(KL,j) = A(KL,j) - UL(KL) * tp 
                  A(KL,j) = A(KL,j) - PL(KL) * tu 
@@ -844,7 +863,9 @@
 !      t1 = mclock()
 
       DO J = 1,N
+#if defined __T3E
 !DIR$ UNROLL 12
+#endif
         DO I = 1,NRL
           V(I,J) = 0.0d0
         END DO
@@ -1079,15 +1100,21 @@
           end do
 
           do i=m-1,l,-1
+#if defined __T3E
 !DIR$ UNROLL 12
+#endif
             do k=1,nrl
               fv2(k)  =z(k,i+1)
             end do
+#if defined __T3E
 !DIR$ UNROLL 12
+#endif
             do k=1,nrl
               fv1(k)  =z(k,i)
             end do
+#if defined __T3E
 !DIR$ UNROLL 12
+#endif
             do k=1,nrl
               z(k,i+1)  =sv(i)*fv1(k) + cv(i)*fv2(k)
               z(k,i)    =cv(i)*fv1(k) - sv(i)*fv2(k)
@@ -1145,7 +1172,9 @@
 !
 !         Exchange local elements of eigenvectors.
 !
+#if defined __T3E
 !DIR$ UNROLL 12
+#endif
           do j=1,nrl
             p=v(j,i)
             v(j,i)=v(j,k)
