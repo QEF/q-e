@@ -610,7 +610,7 @@ END MODULE us
 !
 MODULE ldaU
   USE kinds, ONLY: DP
-  USE parameters, ONLY: ntypx
+  USE parameters, ONLY: lqmax, nspinx, ntypx
   !
   ! ... The quantities needed in lda+U calculations
   !
@@ -627,7 +627,8 @@ MODULE ldaU
        d3(7,7,48),           &! 
        eth,                  &! the (corrected) Hubbard contribution
        Hubbard_U(ntypx),     &! the Hubbard U
-       Hubbard_alpha(ntypx)   ! the Hubbard alpha (used to calculate U)
+       Hubbard_alpha(ntypx), &! the Hubbard alpha (used to calculate U)
+       starting_ns(lqmax,nspinx,ntypx) !
   INTEGER :: &                                                
        niter_with_fixed_ns,  &! no. of iterations with fixed ns
        Hubbard_l(ntypx),     &! the agular momentum of Hubbard states

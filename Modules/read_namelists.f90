@@ -155,6 +155,9 @@ MODULE read_namelists_module
        ELSE
           starting_magnetization = 0.0D0
        ENDIF
+       IF ( prog == 'PW' ) THEN
+          starting_ns_eigenvalue=-1.d0
+       ENDIF
        lda_plus_U = .FALSE.
        Hubbard_U = 0.0D0
        Hubbard_alpha = 0.0D0
@@ -491,6 +494,7 @@ MODULE read_namelists_module
        CALL mp_bcast( q2sigma, ionode_id )
        CALL mp_bcast( xc_type, ionode_id )
        CALL mp_bcast( starting_magnetization, ionode_id ) 
+       CALL mp_bcast( starting_ns_eigenvalue, ionode_id ) 
        CALL mp_bcast( lda_plus_U, ionode_id ) 
        CALL mp_bcast( Hubbard_U, ionode_id ) 
        CALL mp_bcast( Hubbard_alpha, ionode_id ) 

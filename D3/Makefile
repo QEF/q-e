@@ -302,6 +302,7 @@ PWOBJS = \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
 ../PW/new_ns.o \
+../PW/ns_adj.o \
 ../PW/neb_variables.o \
 ../PW/newd.o \
 ../PW/noncol.o \

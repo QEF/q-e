@@ -70,7 +70,7 @@ SUBROUTINE iosys()
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
-                            niter_with_fixed_ns, &
+                            niter_with_fixed_ns, starting_ns, &
                             lda_plus_u_ => lda_plus_u
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -142,7 +142,7 @@ SUBROUTINE iosys()
                                occupations, degauss, smearing, &
                                nspin, ecfixed, qcutz, q2sigma, &
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
-                               edir, emaxpos, eopreg, eamp, &
+                               edir, emaxpos, eopreg, eamp, starting_ns_eigenvalue, &
                                noncolin, lambda, i_cons, mcons, angle1, &
                                angle2, report
   !
@@ -188,7 +188,7 @@ SUBROUTINE iosys()
   ! ... local variables
   !
   INTEGER             :: unit = 5, &! standard input unit
-                         i, iiarg, nargs, ia, ios, ierr, ilen, is, image
+                         i, iiarg, nargs, ia, ios, ierr, ilen, is, image, nt
   INTEGER             :: iargc
   EXTERNAL               iargc                 
   CHARACTER (LEN=80)  :: input_file
@@ -784,6 +784,7 @@ SUBROUTINE iosys()
   lda_plus_u_                = lda_plus_u
   nspin_                     = nspin
   starting_magnetization_    = starting_magnetization
+  starting_ns                = starting_ns_eigenvalue
   nosym_                     = nosym
   nbnd_                      = nbnd
   !

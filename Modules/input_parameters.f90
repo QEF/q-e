@@ -12,13 +12,14 @@ MODULE input_parameters
 !
 !=----------------------------------------------------------------------------=!
 !
-!  this module contains the definitions of all input parameters for FPMD code
-!  Written by Carlo Cavazzoni
+!  this module contains the definitions of all input parameters for CP, FPMD & 
+!  PWSCF codes.
+!  Originally written by Carlo Cavazzoni for FPMD
 !
 !=----------------------------------------------------------------------------=!
   !
   USE kinds
-  USE parameters,  ONLY :  nsx, natx, npkx, nbndxx, nspinx
+  USE parameters,  ONLY :  nsx, natx, npkx, nbndxx, nspinx, lqmax
   !
   IMPLICIT NONE
   !
@@ -375,6 +376,9 @@ MODULE input_parameters
         LOGICAL :: lda_plus_u = .FALSE.
           ! ONLY PWSCF
 
+        REAL(dbl) :: starting_ns_eigenvalue(lqmax,nspinx,nsx)=-1.0
+          ! ONLY PWSCF
+
         REAL(dbl) :: hubbard_u(nsx) = 0.0d0
           ! ONLY PWSCF
 
@@ -420,7 +424,7 @@ MODULE input_parameters
              nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
              occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
-             edir, emaxpos, eopreg, eamp, smearing, &
+             edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
              noncolin, mcons, lambda, i_cons, angle1, angle2, report
 
 

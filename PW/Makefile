@@ -144,6 +144,7 @@ n_plane_waves.o \
 neb_routines.o \
 neb_variables.o \
 new_ns.o \
+ns_adj.o \
 newd.o \
 noncol.o \
 openfil.o \

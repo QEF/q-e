@@ -30,7 +30,7 @@ SUBROUTINE electrons()
   USE parameters,           ONLY : npk 
   USE io_global,            ONLY : stdout
   USE brilz,                ONLY : at, bg, alat, omega, tpiba2
-  USE basis,                ONLY : nat, ntyp, ityp, tau   
+  USE basis,                ONLY : nat, ntyp, ityp, tau, startingpot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid  
@@ -252,8 +252,8 @@ SUBROUTINE electrons()
      !
      IF ( lda_plus_u ) CALL write_ns()
      !
-     !IF ( iter == 1 .AND. lda_plus_u .AND. &
-     !     input_pot /=  ' ' .AND. istep == 1 ) CALL ns_adj()
+     IF ( iter == 1 .AND. lda_plus_u .AND. &
+          startingpot=='atomic' .AND. istep == 1 ) CALL ns_adj()
      !
      ! ... calculate total and absolute magnetization
      !
