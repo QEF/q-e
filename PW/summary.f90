@@ -138,7 +138,8 @@ subroutine summary
         enddo
         WRITE( stdout, '(5x,"Q(r) pseudized with ", &
              &          i2," coefficients,  rinner = ",3f8.3,/ &
-             &          58x,2f8.3)') nqf(nt), (rinner(i,nt), i=1,nqlc(nt) )
+             &          52x,3f8.3,/ &
+             &          52x,3f8.3)') nqf(nt), (rinner(i,nt), i=1,nqlc(nt) )
      else
         if (nlc (nt) .eq.1.and.nnl (nt) .eq.1) then
            ps = '(vbc)'
