@@ -9,8 +9,8 @@
 
 % front page: no page number
 % enlarge page a little to let table of contents fit within
-\thispagestyle{empty}
-\enlargethispage*{1cm}
+%\thispagestyle{empty}
+%\enlargethispage*{1.5cm}
 
 \begin{center}
   % PWscf and Democritos logos, raise the latter to align
@@ -21,6 +21,19 @@
   \huge User's Guide for PWscf v.\version
 \end{center}
 
+%\author{}
+%\date{}
+%\title{
+%  % PWscf and Democritos logos, raise the latter to align
+%  \epsfig{figure=pwscf,width=4cm}\hfill%
+%  \raisebox{0.5cm}{\epsfig{figure=democritos,width=8cm}}
+%  \vspace{2cm}
+%  \\
+%  % title
+%  \huge User's Guide for ESPRESSO v.\version
+%}
+%\maketitle
+
 \tableofcontents
 
 % end of front page
@@ -28,18 +41,33 @@
 
 \section{Introduction}
 
-This manual covers the installation and usage of PWscf (Plane-Wave
-Self-Consistent Field): a set of programs for electronic structure
-calculations within Density-Functional Theory and Density-Functional
-Perturbation Theory, using a Plane-Wave basis set and
-pseudopotentials.
-PWscf is a component of the ESPRESSO (opEn-Source Package for Research
-in Electronic Structure, Simulation, and Optimization) suite of codes,
-including, in addition to PWscf, the Car-Parrinello codes CP and FPMD.
+This manual covers the installation and usage of ESPRESSO (opEn-Source
+Package for Research in Electronic Structure, Simulation, and
+Optimization), version \version.
 
+ESPRESSO is composed of the following packages:
+\begin{description}
+  \item [PWscf] (Plane-Wave Self-Consistent Field):
+    a set of programs for electronic structure calculations within
+    Density-Functional Theory and Density-Functional Perturbation
+    Theory, using a Plane-Wave basis set and pseudopotentials.
+
+  \item [FPMD] (First Principles Molecular Dynamics) and \textbf{CP}:
+    two programs for Car-Parrinello \emph{ab initio} molecular
+    dynamics, also with a Plane-Wave basis set and pseudopotentials.
+    (It is our long-term goal to merge FPMD and CP into a single
+    program.)
+
+  \item [PWgui] (Graphical User Interface for PWscf):
+    a graphical interface for producing input data files for PWscf.
+
+  \item [atomic]:
+    a set of programs for atomic calculations and generation of
+    pseudopotentials.
+\end{description}
 Other sources of documentation can be found in:
 \begin{itemize}
-  \item the \texttt{Doc/} directory of the PWscf distribution
+  \item the \texttt{Doc/} directory of the ESPRESSO distribution
   \item the various \texttt{README} files found in the distribution
   \item the PWscf web site
         (\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
@@ -55,8 +83,15 @@ Other sources of documentation can be found in:
          {\texttt{http://www.democritos.it/scientific.php}}%
          {http://www.democritos.it/scientific.php})
 \end{itemize}
+The ESPRESSO codes work on many different types of Unix machines,
+including parallel machines using Message Passing Interface (MPI).
+Running ESPRESSO on MS-Windows is possible in principle, but not
+supported: a \texttt{Makefile} is provided (from an old release of
+PWscf), but has not been tested with the current version and may not
+work.
 
-PWscf can currently perform the following kind of calculations:
+\paragraph{}
+PWscf can currently perform the following kinds of calculations:
 
 \begin{itemize}
   \item ground-state energy and one-electron (Kohn-Sham) orbitals
@@ -74,21 +109,33 @@ PWscf can currently perform the following kind of calculations:
   \item Nudged Elastic Band (NEB) for energy barriers and reaction
         paths
 \end{itemize}
-
 All of the above work for both insulators and metals, in any crystal
 structure, for many exchange-correlation functionals (including spin
 polarization), for both norm-conserving (Hamann-Schl\"uter-Chiang)
 pseudopotentials in separable form, and --- with very few exceptions
 --- for Ultrasoft (Vanderbilt) pseudopotentials.
-Non-colinear magnetism and spin-orbit interactions are also implemented, 
-although at an experimental stage.
+Non-colinear magnetism and spin-orbit interactions are also
+implemented, although at an experimental stage.
 Various postprocessing programs are available.
-The PWscf codes work on many different types of machines, including
-parallel machines using Message Passing Interface (MPI).
 
-Starting from version 2.0, a Graphical User Interface (GUI) is
-included in the package.
-The GUI may be used in producing input data files needed to run PWscf.
+\paragraph{}
+FPMD and CP can currently perform the following kinds of calculations:
+
+\begin{itemize}
+  \item Car-Parrinello molecular dynamics simulation
+  \item geometry optimization by damped dynamics
+  \item constant-temperature simulation with Nos\`e thermostats
+  \item variable-cell dynamics (FPMD only (*** \`e vero? ***))
+  \item spin-polarized and/or many-k-points calculation
+  \item Nudged Elastic Band (NEB) for energy barriers and reaction
+        paths
+  \item *** altro? ***
+\end{itemize}
+CP works with both norm-conserving and Ultrasoft pseudopotentials,
+while FPMD is currently limited to norm-conserving (*** \`e vero?
+***).
+The restart files of the two programs are compatible: you can run FPMD
+with a restart file from CP, and vice versa.
 
 \subsection{People}
 
@@ -109,16 +156,30 @@ and Paolo Giannozzi\\
 (Scuola Normale Superiore, Pisa)
 who are the copyleft holders.
 
+The FPMD and CP packages are both derived from the original code by
+Roberto Car and Michele Parrinello (then at SISSA).
+FPMD has been subsequently developed by
+*** Chiarotti? Scandolo? Focher? ***
+(SISSA)
+and Carlo Cavazzoni
+\htmladdnormallink{(\texttt{c.cavazzoni@cineca.it})}%
+                  {mailto:c.cavazzoni@cineca.it}
+(SISSA, then CINECA),
+while CP has been developed by *** ??? ***
+
+PWgui was written by Anton Kokalj.
+
+\hyphenation{gian-noz-zi}
 The maintenance and further development of the ESPRESSO code is
 promoted by the DEMOCRITOS National Simulation Center of the Italian
 INFM
 (\htmladdnormallink{\texttt{http://www.democritos.it/}}%
                    {http://www.democritos.it/})
 under the coordination of Paolo Giannozzi, with the strong support of
-the CINECA National Supercomputing Center in Bologna, under the
-responsibility of Carlo Cavazzoni\\
-\htmladdnormallink{(\texttt{c.cavazzoni@cineca.it})}%
-                  {mailto:c.cavazzoni@cineca.it}.
+the CINECA National Supercomputing Center in Bologna
+(\htmladdnormallink{\texttt{http://www.cineca.it/}}%
+                   {http://www.cineca.it/}),
+under the responsibility of Carlo Cavazzoni.
 \hyphenation{ge-rar-do}
 Currently active developers include
 Gerardo Ballabio (CINECA), 
@@ -127,7 +188,7 @@ Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
 Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 Several other people, mostly but not exclusively former SISSA students, 
-contribute or have contributed to it. Among them we mention:
+contribute or have contributed to PWscf. Among them we mention:
 \begin{quote}
 \hyphenation{laz-ze-ri}
 Dario Alf\`e, Francesco Antoniella, Mauro Boero, Claudia Bungaro,
@@ -142,16 +203,15 @@ The Berry phase calculation was implemented by Oswaldo Dieguez,
 Alessio Filippetti, Lixin He, Jeff Neaton, in David Vanderbilt's 
 group at Rutgers University (Piscataway, NJ).
 
-The GUI for PWscf was written by Anton Kokalj.
-
 This manual was (mostly) written by Paolo Giannozzi.
 
 \subsection{Terms of Use}
 
-PWscf is free software, released under the GNU General Public License
+ESPRESSO is free software, released under the GNU General Public
+License
 (\htmladdnormallink{\texttt{http://www.pwscf.org/License.txt}}%
                    {http://www.pwscf.org/License.txt},
-or the file \texttt{License} in the top directory of the PWscf
+or the file \texttt{License} in the top directory of the ESPRESSO
 distribution).
 All trademarks belong to their respective owners.
 
@@ -163,7 +223,7 @@ Our preferred form for the acknowledgment is the following:
 \begin{quote}
 \emph{Acknowledgments:}
 \par\noindent
-Calculations in this work have been done using the PWscf package
+Calculations in this work have been done using the ESPRESSO package
 [\emph{ref}].
 \par\noindent
 \emph{Bibliography:}
@@ -176,22 +236,23 @@ P.~Giannozzi, \texttt{http://www.pwscf.org/}.
 
 \section{Installation}
 
-Presently, the PWscf package is only distributed in source form; some
-precompiled executables (binary files) are provided only for the GUI.
-Providing binaries for PWscf would require too much effort and would
-work only for a small number of machines anyway.
+Presently, the ESPRESSO package is only distributed in source form;
+some precompiled executables (binary files) are provided only for
+PWgui.
+Providing binaries for ESPRESSO would require too much effort and
+would work only for a small number of machines anyway.
 
 To install it, you must follow these steps:
 \begin{enumerate}
-  \item download and unpack the PWscf source distribution;
-  \item configure PWscf for your system, compilers and libraries;
-  \item compile some or all of the executables in the package.
+  \item download and unpack the ESPRESSO source distribution;
+  \item configure ESPRESSO for your system, compilers and libraries;
+  \item compile some or all the executables in the package.
 \end{enumerate}
 
-\subsection{Download and unpack PWscf}
+\subsection{Download and unpack}
 
-The latest stable release of the PWscf source package can be
-downloaded from the PWscf web site at this URL:
+The latest stable release of the ESPRESSO source package (currently
+version \version) can be downloaded from this URL:
 \medskip
 
 \htmladdnormallink{\texttt{http://www.pwscf.org/download.htm}}%
@@ -199,9 +260,9 @@ downloaded from the PWscf web site at this URL:
 \medskip
 
 \noindent
-The release corresponding to this manual is version \version. The
-bravest may access the version under development via anonymous CVS: 
-see file \texttt{README.cvs} contained in the distribution.
+The bravest may access the (unstable) development version via
+anonymous CVS: see the file \texttt{README.cvs} contained in the
+distribution.
 
 To uncompress and unpack the source package, move it to an empty
 directory of your choice, \texttt{cd} to that directory, and run the
@@ -218,11 +279,12 @@ use this instead:
 
 \texttt{gunzip -c pw.\version.tgz | tar xvf -}
 
-\subsection{Automatic configuration}
+\subsection{Configure}
 
+\hyphenation{es-pres-so}
 An automatic configuration procedure, generated with the GNU Autoconf
 package, is available since version 2.0.
-From the top directory of the PWscf source tree, just type:
+From the top directory of the ESPRESSO source tree, just type:
 \begin{verbatim}
   ./configure
 \end{verbatim}
@@ -234,15 +296,16 @@ Origin, some HP-Compaq Alpha machines, Cray X1.
 See also the \texttt{README.install} file.
 
 If \texttt{configure} completes but it doesn't recognize your 
-configuration, you may either edit the \texttt{make.sys} file,
-or try to generate a new \texttt{configure} file following 
-the instructions in \texttt{README.configure} (please report 
-success to the developers). If \texttt{configure} stops with an error
-and the nontrivial task of configuring \texttt{configure} scares you,
-or if you don't know what to do with the \texttt{make.sys} file, 
-you may want to try the manual configuration, described in the next section.
+configuration, you may either edit the \texttt{make.sys} file, or try
+to generate a new \texttt{configure} file following the instructions
+in \texttt{README.configure} (please report success to the
+developers).
+If \texttt{configure} stops with an error and the nontrivial task of
+configuring \texttt{configure} scares you, or if you don't know what
+to do with the \texttt{make.sys} file, you may want to try the manual
+configuration, described below.
 
-\subsection{Manual configuration}
+\subsubsection{Manual configuration}
 
 From the top directory, type:
 \medskip
@@ -281,16 +344,18 @@ know if they do, C-style preprocessing directives.
 If your machine/compiler combination is not in the list, choose what
 looks like the most similar combination.  You may need to define your
 own preprocessing flags and to delve into the code, but usually very
-minor changes are needed to port PWscf to an unsupported machine.
+minor changes are needed to port ESPRESSO to an unsupported machine.
 See also the {\tt install/README.install} file.
 
-\textbf{Note for HP PA-RISC users:} 
+\paragraph{Note for HP PA-RISC users:} 
+
 The Makefile for HP PA-RISC workstations and parallel machines is
 based on a Makefile contributed by Sergei Lysenkov.
 It assumes that you have HP compiler with MLIB libraries installed on
 a machine running HP-UX.
 
-\textbf{Note for MS-Windows users:} 
+\paragraph{Note for MS-Windows users:} 
+
 The Makefile for Windows PCs is based on a Makefile written for an
 earlier version of PWscf (1.2.0), contributed by Lu Fu-Fa, CCIT,
 Taiwan.
@@ -300,6 +365,7 @@ You will need the CygWin package (a UNIX environment for PC which runs
 in Windows).
 The provided Makefiles assumes that you have the Intel compiler with
 MKL libraries installed.
+
 Another possibility is to install Linux, either in dual-boot mode, or
 running from a CD-ROM. 
 You will need to create a partition for Linux and to install a
@@ -319,7 +385,8 @@ libraries.
 In some cases you may need to change preprocessing options
 (\texttt{CPPFLAGS}) and compiler options (\texttt{FFLAGS}).
 
-\textbf{Please Note:}
+\paragraph{Please Note:}
+
 if you change \texttt{CPPFLAGS} or \texttt{FFLAGS} after the first
 compilation, run \texttt{make clean} and recompile everything, unless
 you know exactly which routines are affected and how to force their
@@ -327,7 +394,7 @@ recompilation.
 
 \subsubsection{Libraries}
 
-PWscf uses the linear algebra BLAS/LAPACK libraries.
+ESPRESSO uses the linear algebra BLAS/LAPACK libraries.
 A copy of the needed routines is provided with the distribution.
 It is however very convenient to use optimized BLAS/LAPACK contained
 in vendor-specific mathematical libraries, such as:
@@ -351,7 +418,7 @@ download the appropriate binaries from
 or download and compile the sources.
 This may take some time and effort.
 
-PWscf uses FFT's from the FFTW library
+ESPRESSO uses the Fast Fourier Transform from the FFTW library
 (\htmladdnormallink{\texttt{http://www.fftw.org/}}%
                    {http://www.fftw.org/})
 or from vendor-specific mathematical libraries.
@@ -446,8 +513,8 @@ You must either recompile your own libraries, or change the
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
-PWscf does not work reliably, or not at all, with some versions of the
-Portland Group compiler.
+ESPRESSO does not work reliably, or not at all, with some versions of
+the Portland Group compiler.
 In particular, with some versions PWscf works only for small systems,
 but not for larger systems.
 We think that this is a compiler bug.
@@ -570,7 +637,7 @@ If you get errors at loading because symbols \texttt{LPUTP},
 ``benchlib'', or to remove \texttt{-D\_\_BENCHLIB} and recompile
 (after a \texttt{make clean}).
 
-\subsection{Compilation}
+\subsection{Compile}
 
 There are a few adjustable parameters in
 \texttt{Modules/parameters.f90}.
@@ -737,26 +804,26 @@ The utility programs in \texttt{pwtools/} are:
 
 \section{Pseudopotentials}
 
-Currently PWSCF supports both Ultrasoft (US) Vanderbilt
+Currently PWscf supports both Ultrasoft (US) Vanderbilt
 pseudopotentials (PPs) and Norm-Conserving (NC)
 Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
 implemented with US PPs.
 
-PWSCF uses a unified pseudopotential format (UPF)\\
+PWscf uses a unified pseudopotential format (UPF)\\
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
                    {http://www.pwscf.org/format.htm})
 for all types of PPs, but still accepts a number of other formats
 (\htmladdnormallink{\texttt{http://www.pwscf.org/oldformat.htm}}%
                    {http://www.pwscf.org/oldformat.htm}):
 \begin{enumerate}
-  \item the ``old PWSCF'' format for NC PPs
+  \item the ``old PWscf'' format for NC PPs
   \item the ``Vanderbilt'' format (formatted, not binary) for NC and
         US PPs
-  \item the ``new PWSCF'' format for NC and US PPs.
+  \item the ``new PWscf'' format for NC and US PPs.
 \end{enumerate}
 
-PPs for selected elements can be downloaded from the PWSCF PP page
+PPs for selected elements can be downloaded from the PWscf PP page
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.html}}%
                    {http://www.pwscf.org/pseudo.html}).
 If you do not find there the PP you need (because there is no PP for
@@ -775,9 +842,9 @@ tables, such as e.g.:
 or otherwise it must be generated.
 This is not as daunting a task as most people think.
 
-Since PWscf v.~2.1, a PP generation package is provided with PWscf, in
-the directory \texttt{atomic/} (sources) and \texttt{atomic\_doc/}
-(documentation, tests and examples). 
+Since ESPRESSO v.~2.1, a PP generation package is provided with
+ESPRESSO, in the directory \texttt{atomic/} (sources) and
+\texttt{atomic\_doc/} (documentation, tests and examples). 
 The package can generate both NC and US PPs, in various formats that
 are directly read by PWscf.
 We refer to its documentation for instructions on how to generate PPs
@@ -1144,7 +1211,401 @@ script.
 
 \clearpage
 
-\section{Running PWscf on parallel machines}
+\section{Using FPMD and CP}
+
+This section is intended to explain how to perform basic
+Car-Parrinello (CP) simulations using the FPMD and CP codes.
+
+It is important to understand that a CP simulation is a sequence of 
+different runs, some of them used to "prepare" the initial state
+of the system, and other performed to collect statistics,
+or to modify the state of the system itself, i.e. modify the temperature
+or the pressure.
+
+To prepare and run a CP simulation you should:
+
+\begin{enumerate}
+  \item
+    define the system:
+    \begin{enumerate}
+      \item atomic positions
+      \item system cell
+      \item pseudopotentials
+      \item number of electrons and bands
+      \item cut-offs 
+      \item FFT grids (CP code only)
+    \end{enumerate}
+
+  \item
+    The first run, when starting from scratch, is always an electronic
+    minimization, with fixed ions and cell, to bring the electronic
+    system on the ground state (GS) relative to the starting atomic
+    configuration.
+    Example of input file (Benzene Molecule):
+\begin{verbatim}
+ &control
+    title = ' Benzene Molecule ',
+    calculation = 'cp',
+    restart_mode = 'from_scratch',
+    ndr = 51,
+    ndw = 51,
+    nstep  = 100,
+    iprint = 10, 
+    isave  = 100,
+    tstress = .TRUE.,
+    tprnfor = .TRUE.,
+    dt    = 5.0d0,
+    etot_conv_thr = 1.d-9,
+    ekin_conv_thr = 1.d-4,
+    prefix = 'c6h6'
+    pseudo_dir='/scratch/acv0/benzene/',
+    outdir='/scratch/acv0/benzene/Out/'
+ /
+ &system
+    ibrav = 14, 
+    celldm(1) = 16.0, 
+    celldm(2) = 1.0, 
+    celldm(3) = 0.5, 
+    celldm(4) = 0.0, 
+    celldm(5) = 0.0, 
+    celldm(6) = 0.0, 
+    nat  = 12,
+    ntyp = 2,
+    nbnd = 15,
+    nelec = 30,
+    ecutwfc = 40.0,
+    nr1b= 10, nr2b = 10, nr3b = 10,
+    xc_type = 'BLYP'
+ /
+ &electrons
+    emass = 400.d0,
+    emass_cutoff = 2.5d0,
+    electron_dynamics = 'sd',
+ /
+ &ions
+    ion_dynamics = 'none',
+ /
+ &cell
+    cell_dynamics = 'none',
+    press = 0.0d0,
+ /
+ATOMIC_SPECIES
+ C 12.0d0 c_blyp_gia.pp
+ H 1.00d0 h.ps
+ATOMIC_POSITIONS (bohr)
+   C     2.6  0.0 0.0
+   C     1.3 -1.3 0.0
+   C    -1.3 -1.3 0.0
+   C    -2.6  0.0 0.0
+   C    -1.3  1.3 0.0
+   C     1.3  1.3 0.0
+   H     4.4  0.0 0.0
+   H     2.2 -2.2 0.0
+   H    -2.2 -2.2 0.0
+   H    -4.4  0.0 0.0
+   H    -2.2  2.2 0.0
+   H     2.2  2.2 0.0
+\end{verbatim}
+
+    You can find the description of the input variables in files
+    \texttt{INPUT.FPMD}, \texttt{INPUT.HOWTO} and \texttt{INPUT}.
+
+  \item
+    Sometimes a single run is not enough to reach the GS.
+    In this case, you need to re-run the electronic minimization
+    stage.
+    Use the input of the first run, changing \texttt{restart\_mode =
+    'from\_scratch'} to \texttt{restart\_mode = 'restart'}.
+
+    Important: unless you are already experienced with the system you
+    are studying or with the code internals, usually you need to tune
+    some input parameters, like \texttt{emass}, \texttt{dt}, and
+    cut-offs.
+    For this purpose, a few trial runs could be useful: you can
+    perform short minimizations (say, 10 steps) changing and adjusting
+    these parameters to your need.
+
+    You could specify the degree of convergence with these two
+    thresholds:
+
+    \texttt{etot\_conv\_thr}: total energy difference between two
+    consecutive steps
+
+    \texttt{ekin\_conv\_thr}: value of the fictitious kinetic energy
+    of the electrons
+
+    Usually we consider the system on the GS when
+    \texttt{ekin\_conv\_thr}${} < \sim 10^{-5}$.
+    You could check the value of the fictitious kinetic energy on the 
+    standard output (column EKINC).
+
+    Different strategies are available to minimize electrons, but the
+    most used ones are:
+    \begin{itemize}
+      \item
+        steepest descent:
+\begin{verbatim}
+  electron_dynamics = 'sd'
+\end{verbatim}
+      \item
+         damped dynamics:
+\begin{verbatim}
+  electron_dynamics = 'damp', 
+  electron_damping = 0.1,
+\end{verbatim}
+         See input description to compute damping factor, usually the
+         value is between 0.1 and 0.5.
+    \end{itemize}
+
+  \item
+    Once your system is in the GS, depending on how you have prepared
+    the starting atomic configuration, you should do several things:
+    \begin{itemize}
+      \item
+        if you have set the atomic positions ``by hand'' and/or from a
+        classical code, check the forces on atoms, and if they are
+        large ($\sim 0.1 - 1.0$ atomic units), you should perform an
+        ionic minimization, otherwise the sistem could break-up during
+        the dynamics.
+      \item
+        if you have taken the positions from a previous run or a
+        previous ab-initio simulation, check the forces, and if they
+        are too small ($\sim 10^{-4}$ atomic units), this means that
+        atoms are already in equilibrium positions and, even if left
+        free, they will not move.
+        Then you need to randomize positions a little bit. see below.
+    \end{itemize}
+
+  \item
+    Minimize ionic positions.
+
+    As we pointed out in 4) if the interatomic forces are too high,
+    the system could "explode" if we switch on the ionic dynamics.
+    To avoid that we need to relax the system. 
+
+    Again there are different strategies to relax the system, but the
+    most used are again steepest descent or damped dynamics for ions
+    and electrons.
+    You could also mix electronic and ionic minimization scheme
+    freely, i.e. ions in steepest and electron in damping or vice
+    versa.
+   
+    \begin{enumerate}
+      \item
+        suppose we want to perform a steepest for ions.
+        Then we should specify the following section for ions:
+\begin{verbatim}
+ &ions
+    ion_dynamics = 'sd',
+ /
+\end{verbatim}
+        Change also the ionic masses to accelerate the minimization:
+\begin{verbatim}
+ATOMIC_SPECIES
+ C 2.0d0 c_blyp_gia.pp
+ H 2.00d0 h.ps
+\end{verbatim}
+        while leaving unchanged other input parameters.   
+
+        Note that if the forces are really high ($> 1.0$ atomic
+        units), you should always use stepest descent for the first
+        relaxation steps ($\sim 100$).
+   
+      \item
+        as the system approaches the equilibrium positions, the
+        steepest descent scheme slows down, so is better to switch to
+        damped dynamics:
+\begin{verbatim}
+ &ions
+    ion_dynamics = 'damp',
+    ion_damping = 0.2,
+    ion_velocities = 'zero',
+ /
+\end{verbatim}
+        A value of \texttt{ion\_damping} between 0.05 and 0.5 is
+        usually used for many systems.
+        It is also better to specify to restart with zero ionic and
+        electronic velocities, since we have changed the masses.
+        Change further the ionic masses to accelerate the
+        minimization:
+\begin{verbatim}
+ATOMIC_SPECIES
+ C 0.1d0 c_blyp_gia.pp
+ H 0.1d0 h.ps
+\end{verbatim}
+
+      \item
+        when the system is really close to the equilibrium, the damped
+        dynamics slow down too, especially because, since we are
+        moving electron and ions together, the ionic forces are not
+        properly correct, then it is often better to perform a ionic
+        step every $N$ electronic steps, or to move ions only when
+        electron are in their GS (within the chosen threshold).
+
+        This can be specified adding, in the ionic section, the
+        \texttt{ion\_nstepe} parameter, then the ionic input section
+        become as follows:
+\begin{verbatim}
+ &ions
+    ion_dynamics = 'damp',
+    ion_damping = 0.2,
+    ion_velocities = 'zero',
+    ion_nstepe = 10,
+ /
+\end{verbatim}
+        Then we specify in the control input section:
+\begin{verbatim}
+    etot_conv_thr = 1.d-6,
+    ekin_conv_thr = 1.d-5,
+    forc_conv_thr = 1.d-3
+\end{verbatim}
+        As a result, the code checks every 10 electronic steps whether
+        the electronic system satisfies the two thresholds
+        \texttt{etot\_conv\_thr}, \texttt{ekin\_conv\_thr}: if it
+        does, the ions are advanced by one step.
+        The process thus continues until the forces become smaller
+        than \texttt{forc\_conv\_thr}.
+
+        Note that to fully relax the system you need many run, and
+        different strategies, that you shold mix and change in order
+        to speed-up the convergence.
+        The process is not automatic, but is strongly based on
+        experience, and trial and error.
+     
+        Remember also that the convergence to the equilibrium
+        positions depends on the energy threshold for the electronic
+        GS, in fact correct forces (required to move ions toward the
+        minimum) are obtained only when electrons are in their GS.
+        Then a small threshold on forces could not be satisfied, if
+        you do not require an even smaller threshold on total energy.
+    \end{enumerate}
+
+  \item
+    randomization of positions.
+
+    If you have relaxed the system or if the starting system is
+    already in the equilibrium positions, then you need to move ions
+    from the equilibrium positions, otherwise they won't move in a
+    dynamics simulation.
+    After the randomization you should bring electrons on the GS
+    again, in order to start a dynamic with the correct forces and
+    with electrons in the GS.
+    Then you should switch off the ionic dynamics and activate the
+    randomization for each species, specifying the amplitude of the
+    randomization itself.
+    This could be done with the following ionic input section:
+\begin{verbatim}
+ &ions
+    ion_dynamics = 'none',
+    tranp(1) = .TRUE.,
+    tranp(2) = .TRUE.,
+    amprp(1) = 0.01
+    amprp(2) = 0.01
+ /
+\end{verbatim}
+    In this way a random displacement (of max 0.01 a.u.) is added to
+    atoms of specie 1 and 2.
+    All other input parameters could remain the same.
+
+    Note that the difference in the total energy (\texttt{etot})
+    between relaxed and randomized positions can be used to estimate
+    the temperature that will be reached by the system.
+    In fact, starting with zero ionic velocities, all the difference
+    is potential energy, but in a dynamics simulation, the energy will
+    be equipartitioned between kinetic and potential, then to estimate
+    the temperature take the difference in energy (de), convert it in
+    Kelvins, divide for the number of atoms and multiply by 2/3.
+
+    Randomization could be useful also while we are relaxing the
+    system, especially when we suspect that the ions are in a local
+    minimum or in an energy plateau.
+   
+  \item
+    Start the Car-Parrinello dynamics.
+
+    At this point after having minimized the electrons, and with ions
+    displaced from their equilibrium positions, we are ready to start
+    a CP dynamics.
+    We need to specify \texttt{'verlet'} both in ionic and electronic
+    dynamics.
+    The threshold in control input section will be ignored, like any
+    parameter related to minimization strategy.
+    The first time we perform a CP run after a minimization, it is
+    always better to put velocities equal to zero, unless we have
+    velocities, from a previous simulation, to specify in the input
+    file.
+    Restore the proper masses for the ions.
+    In this way we will sample the microcanonical ensemble.
+    The input section changes as follow:
+\begin{verbatim}
+ &electrons
+    emass = 400.d0,
+    emass_cutoff = 2.5d0,
+    electron_dynamics = 'verlet',
+    electron_velocities = 'zero',
+ /
+ &ions
+    ion_dynamics = 'verlet',
+    ion_velocities = 'zero',
+ /
+ATOMIC_SPECIES
+C 12.0d0 c_blyp_gia.pp
+H 1.00d0 h.ps
+\end{verbatim}
+    If you want to specify the initial velocities for ions, you have
+    to set \texttt{ion\_velocities = 'from\_input'}, and add the
+    \texttt{IONIC\_VELOCITIES}\\ card, with the list of velocities in
+    atomic units.
+
+    IMPORTANT: in restarting the dynamics after the first CP run,
+    remember to remove or comment the velocities parameters:
+\begin{verbatim}
+ &electrons
+    emass = 400.d0,
+    emass_cutoff = 2.5d0,
+    electron_dynamics = 'verlet',
+    ! electron_velocities = 'zero',
+ /
+ &ions
+    ion_dynamics = 'verlet',
+    ! ion_velocities = 'zero',
+ /
+\end{verbatim}
+    otherwise you will quench the system interrupting the sampling of
+    the microcanonical ensemble.
+
+  \item
+    Changing the temperature of the system.
+
+    It is possible to change the temperature of the system or to
+    sample the canonical ensemble fixing the average temperature, this
+    is done using the Nos\`e thermostat.
+    To activate this thermostat for ions you have to specify in the
+    ions input section:
+\begin{verbatim}
+ &ions
+    ion_dynamics = 'verlet',
+    ion_temperature = 'nose',
+    fnosep = 60.0,
+    tempw  = 300.0,
+    ! ion_velocities = 'zero',
+ /
+\end{verbatim}
+    where \texttt{fnosep} is the frequency of the thermostat in THz,
+    this should be chosen to be comparable with the center of the
+    vibrational spectrum of the system, in order to excite as many
+    vibrational modes as possible.
+    \texttt{tempw} is the desired average temperature in Kelvin.
+
+    It is possible to specify also the thermostat for the electrons,
+    this is usually activated in metal or in system where we have a
+    transfer of energy between ionic and electronic degrees of
+    freedom.
+\end{enumerate}
+
+\clearpage
+
+\section{Running on parallel machines}
 
 Parallel execution is strongly system- and installation-dependent.
 Typically one has to specify:
