@@ -52,7 +52,7 @@ MODULE path_formats
     fourier_run_output = "(5X,I4,6X,F10.6,9X,F10.6,9X,F10.6,5X,F8.3)"
   !    
   CHARACTER (LEN=*), PARAMETER :: &
-    summary_fmt = "(5X,A,T35,' = ',X,A)"
+    summary_fmt = "(5X,A,T35,' = ',1X,A)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
     final_fmt = "(/,5X,75('-'),/)"
