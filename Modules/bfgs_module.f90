@@ -214,7 +214,7 @@ MODULE bfgs_module
              !
              bfgs_step = - inverse_hessian .times. gradient
              !
-             trust_radius = trust_radius_ini
+             trust_radius = trust_radius_min
              !
           ELSE 
              !
@@ -442,7 +442,7 @@ MODULE bfgs_module
              !
              bfgs_step = - gradient
              !
-             trust_radius = trust_radius_ini
+             trust_radius = trust_radius_min
              !
           ELSE 
              !
@@ -930,7 +930,7 @@ MODULE bfgs_module
              !
              bfgs_step = - inverse_hessian .times. gradient
              !
-             trust_radius = trust_radius_ini
+             trust_radius = trust_radius_min
              !
           ELSE
              !
@@ -939,7 +939,7 @@ MODULE bfgs_module
              !     
              bfgs_step = - gradient
              !
-             trust_radius = trust_radius_ini
+             trust_radius = trust_radius_min
              !
           END IF      
           !

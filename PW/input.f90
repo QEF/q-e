@@ -506,7 +506,7 @@ SUBROUTINE iosys()
         epse    = etot_conv_thr
         epsf    = forc_conv_thr
         !
-        IF ( epse < ( tr2 / upscale ) ) &
+        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
         !
@@ -517,7 +517,7 @@ SUBROUTINE iosys()
         epse    = etot_conv_thr
         epsf    = forc_conv_thr
         !
-        IF ( epse < ( tr2 / upscale ) ) &
+        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
         !
