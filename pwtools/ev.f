@@ -22,8 +22,8 @@
 !      V0, a0, etot in atomic (Rydberg) units ; bulk modulus in kbar
 !
       implicit none
-      integer nmaxpar, nmaxpt, nseek/10000/, nmin/4/, npar,npt,istat
-      parameter( nmaxpar=4, nmaxpt=100)
+      integer nmaxpar, nmaxpt, nseek, nmin, npar,npt,istat
+      parameter(nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4)
       character bravais*3, filin*20
       real*8 par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar),
      &       parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), 

@@ -38,7 +38,8 @@
       real*8 at(3,3), bg(3,3), celldm(6), omega, d(ndistx)
       real*8 tau(3,nax), dr(3), dd, dn1, dn2, dn3, dmin, dmax, scale
       real*8 angolo(nnx*(nnx-1)/2), drv(3), drn(3,nnx), temp, rtemp(3)
-      real*8 fact /0.529177/, pi/3.1415926/
+      real*8 fact, pi
+      parameter (fact=0.529177d0, pi=3.141592653589793d0)
       logical crys, matches
       external capital, matches, iargc
 !
@@ -377,8 +378,9 @@
       implicit none  
       character*1 capital, character
 !
-      character*26 minuscole/'abcdefghijklmnopqrstuvwxyz'/,             
-     &             maiuscole/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
+      character*26 minuscole, maiuscole
+      parameter (minuscole='abcdefghijklmnopqrstuvwxyz',
+     &           maiuscole='ABCDEFGHIJKLMNOPQRSTUVWXYZ')
       integer  i
 !
       do i=1,26
