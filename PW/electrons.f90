@@ -283,7 +283,7 @@ implicit none
         enddo
         if (lgauss.or.ltetra) write (6, 9040) ef * 13.6058
      endif
-     if (abs (charge-nelec) / charge.gt.1.0e-7) write (6, 9050) charge
+     if (abs (charge-nelec) / charge > 1.0e-7) write (6, 9050) charge
      etot = eband+ (etxc - etxcc) + ewld+ehart + deband+demet + eth
 
      if ( (conv_elec.or.mod (iter, iprint) .eq.0) .and.iswitch.le.2) &
@@ -352,7 +352,7 @@ implicit none
 9021 format (/'          k =',3f7.4,' (',i5,' PWs)   bands (ev):'/)
 9030 format ( '  ',8f9.4)
 9040 format (/'     the Fermi energy is ',f10.4,' ev')
-9050 format (/'     integrated charge         =',f12.5)
+9050 format (/'     integrated charge         =',f15.8)
 9060 format (/'     band energy sum           =',  f15.8,' ryd' &
        &     /'     one-electron contribution =',  f15.8,' ryd' &
        &     /'     hartree contribution      =',  f15.8,' ryd' &

@@ -23,7 +23,7 @@ program pwscf
 
   call init_clocks (.true.)
   call start_clock ('PWSCF')
-  version = 'PWSCF 1.2.0'
+  version = 'PWSCF 1.2.1'
   gamma_only =.false.
   call startup (nd_nmbr, version)
   call init_run

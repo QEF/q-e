@@ -133,7 +133,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/cft_3.o  \
 ../PW/cft3.o  \
 ../PW/cft3s.o  \
-../PW/cft_fftw.o  \
 ../PW/cfts_3.o  \
 ../PW/cft_sgi.o  \
 ../PW/cft_sp.o  \

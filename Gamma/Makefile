@@ -50,6 +50,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/dynamics.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
+../PW/electrons.o \
 ../PW/eqvect.o \
 ../PW/error.o \
 ../PW/estimate.o \
@@ -202,7 +203,6 @@ rdiaghg.o \
 regterg.o \
 data_structure_para.o \
 data_structure_scal.o \
-electrons.o \
 force_us.o \
 ggen.o \
 gradcorr.o \
