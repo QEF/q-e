@@ -78,7 +78,7 @@ case "$build:$f90" in
 *-pc-linux-*:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
-	ifc_version=`$f90 -V 2>&1 1>/dev/null | grep Intel`
+	ifc_version=`$f90 -V 2>&1 1>/dev/null | grep "Intel(R)"`
 	version=`echo $ifc_version | awk '{print $8}'`
 	echo "${ECHO_T}$version"
 
@@ -90,7 +90,7 @@ case "$build:$f90" in
 	# which compiler is actually under the hood?
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
 	pgi_version=`$f90 -V 2>/dev/null | grep -e pgf`
-	ifc_version=`$f90 -V 2>&1 1>/dev/null | grep Intel`
+	ifc_version=`$f90 -V 2>&1 1>/dev/null | grep "Intel(R)"`
 	if test "$pgi_version" != ""
 	then
 		name=`echo $pgi_version | awk '{print $1}'`
