@@ -34,20 +34,44 @@ MODULE paw
        paw_tab(:,:,:)              ! interpolation table for PPs
   !
   type wfc_label
-     integer  :: na = 0, & ! Atom number
-          nt = 0,        &   ! Type
-          n  = 0,        &   ! Chi index
-          l  = -99,      &   ! l
-          m  = -99           ! m
+     integer  :: na , &   ! Atom number
+          nt ,        &   ! Type
+          n  ,        &   ! Chi index
+          l  ,        &   ! l
+          m               ! m
   end type wfc_label
 
   type at_wfc
      type(wfc_label)          :: label
-     integer                  :: kkpsi = 0
+     integer                  :: kkpsi
 !     real(kind=DP)            :: rmt   = 0.0_DP ! Like FLAPW or LMTO Muffin Tinradius
      real(kind=DP)  , pointer :: psi(:)
   end type at_wfc
 
   type(at_wfc),pointer :: aephi(:,:), psphi(:,:) ! Atom
 
+CONTAINS
+
+  subroutine paw_wfc_init(phi)
+    type(at_wfc) :: phi(:,:)
+
+    phi%label%na = 0
+    phi%label%nt = 0
+    phi%label%n  = 0
+    phi%label%l  = -99
+    phi%label%m  = -99
+    phi%kkpsi    = 0
+
+    return
+  end subroutine paw_wfc_init
+
+
 END MODULE paw
+
+
+
+
+
+
+
+

@@ -68,7 +68,7 @@ subroutine read_recon(filerec)
 
   use read_pseudo_module , only: scan_begin, scan_end
   use basis, only:ntyp
-  use paw , only: aephi, psphi, paw_nbeta
+  use paw , only: aephi, psphi, paw_nbeta, paw_wfc_init
   use atom, only: mesh 
   use kinds, only: DP
   use parameters, only : ntypx
@@ -88,6 +88,9 @@ subroutine read_recon(filerec)
      nbetam=maxval(paw_nbeta)
   allocate( psphi(ntyp,nbetam) )
   allocate( aephi(ntyp,nbetam) )
+
+  call paw_wfc_init(psphi)
+  call paw_wfc_init(aephi)
 
 
   recphi_read: do jtyp=1,ntyp
