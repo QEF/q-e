@@ -1,3 +1,8 @@
+Tue Apr 06 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* open.itcl: adding ::guib::moduleObj::readFileError and
+		::guib::moduleObj::readFileWrongFormat for dealing with
+		wrong-formatted input files
+	
 Mon Apr 05 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* guibKeywords.itcl: adding a check if help's $ident is valid
 	

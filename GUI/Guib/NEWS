@@ -1,3 +1,7 @@
+Version: 0.2.3
+* further improved syntax-error handling mechanism for reading corrupted
+	input file.
+
 Version: 0.2.2
 * improved syntax-error handling mechanism for reading the input file.
 

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.2 2004-04-06 13:20:38 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.3 2004-09-03 07:52:26 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -66,6 +66,8 @@ namespace eval ::tku:: {
     namespace export setCursor
     namespace export resetCursor
     namespace export watchExec
+    namespace export getOpenFile
+    namespace export getSaveFile
 }
 
 #proc ::tku::_init {} {
@@ -213,22 +215,23 @@ proc ::tku::enableAll {wlist} {
     }
 }
 
-
+# NOTE: use ::tclu::errorDialog instead
 # ------------------------------------------------------------------------
 #  print error message and returns from the caller proc
 # ------------------------------------------------------------------------
-proc ::tku::errorDialog {text} {
-    tk_messageBox -title ERROR -message "ERROR: $text" -type ok -icon error
-    return -code return ""
-}
+#proc ::tku::errorDialog {text} {
+#    tk_messageBox -title ERROR -message "ERROR: $text" -type ok -icon error
+#    return -code return ""
+#}
 
+# NOTE: use ::tclu::warningDialog instead
 # ------------------------------------------------------------------------
 #  print warning message and returns from the caller proc
 # ------------------------------------------------------------------------
-proc ::tku::warningDialog {text} {
-    tk_messageBox -title WARNING -message "WARNING: $text" -type ok -icon warning
-    return -code return ""
-}
+#proc ::tku::warningDialog {text} {
+#    tk_messageBox -title WARNING -message "WARNING: $text" -type ok -icon warning
+#    return -code return ""
+#}
 
 # ------------------------------------------------------------------------
 #  Centers the toplevel with respect to another widget or the screen
@@ -342,4 +345,67 @@ proc ::tku::watchExec {script} {
     set result [uplevel 1 $script]
     ::tku::resetCursor
     return $result
+}
+
+
+proc ::tku::getOpenFile {file args} {
+    #
+    # if $file == "" --> query file
+    # else           --> check if file exists
+    #
+
+    if { $file == {} } {
+	
+	# query file ...
+	
+	set file [eval tk_getOpenFile $args]
+	if { $file == "" } {
+	    return -code return
+	}
+    } else {
+	
+	# check if file exists
+	
+	if { ![file exists $file] } {
+	    # note: tku's errorDialog should not use return
+	    warningDialog "file \"$file\" does not exists !!!"
+	    return -code return
+	}
+    }
+
+    return $file
+}
+
+
+proc ::tku::getSaveFile {file args} {
+    #
+    # if $file == "" --> query file
+    # else           --> check if file exists
+    #
+
+    if { $file == {} } {
+		
+	# query file ...
+	
+	set file [eval tk_getSaveFile $args]
+	if { $file == "" } {
+	    return -code return
+	}
+    } else {
+	
+	# check if dirnamefile exists
+	
+	set dirname [file dirname $file]
+	if { ! [file writable $dirname] } {
+	    errorDialog "can't create file \"$file\". Permission denied !!!"
+	    return -code return ""
+	}
+	if { ! [file isdirectory $dirname] } {
+	    # note: tku's errorDialog should not use return
+	    errorDialog "can't create \"$file\". Directory $dirname does not exists. !!!"
+	    return -code return ""
+	}
+    }
+    
+    return $file
 }

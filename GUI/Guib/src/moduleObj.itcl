@@ -35,7 +35,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: moduleObj.itcl,v 1.3 2004-04-06 13:22:43 kokalj Exp $ 
+# $Id: moduleObj.itcl,v 1.4 2004-09-03 07:51:25 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -1171,7 +1171,7 @@ body ::guib::moduleObj::_checkIdentChars {ident {allowComma 0}} {
 	set match [regexp {^[[:alnum:]_.:]+$} $ident]
     }
     if { ! $match } {
-	::tku::errorDialog "identifier \"$ident\" is composed from non-allowed characters. Due to this the program might behave erratically"
+	::tclu::errorDialog "identifier \"$ident\" is composed from non-allowed characters. Due to this the program might behave erratically"
     }
 }
 

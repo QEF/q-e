@@ -10,6 +10,7 @@ DONE ------------------------------------------------------------------- DONE
 DONE -----below this point are items that were already implemented------ DONE
 DONE ------------------------------------------------------------------- DONE
 
+* check in readfilters if the input file is right format DONE
 * NEB: button "read coordinates" should be adjusted to NEB specialties DONE
 * write fortranreal-to-real translation for cards-input DONE
 * check the modules definition. Instead of -infmt/-outfmt use -validate. DONE.

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.5 2004-04-06 13:19:57 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.6 2004-09-03 07:52:26 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -59,12 +59,14 @@ namespace eval ::tclu:: {
     set tempFile(dirs)    {}
     set nonblocking(counter) -1
 
+    namespace export absolutePath
     namespace export usage
     namespace export writeFile
     namespace export readFile
     namespace export DEBUG
     namespace export ERROR
     namespace export errorDialog
+    namespace export warningDialog
     namespace export putsFlush
     namespace export printf
     namespace export printfFlush
@@ -90,6 +92,9 @@ namespace eval ::tclu:: {
     namespace export nonblocking
 }
 
+proc ::tclu::absolutePath {pathname} {
+    return [file join [pwd] $pathname]
+}
 
 #------------------------------------------------------------------------
 #****f* ::tclu/::tclu::usage
@@ -268,7 +273,8 @@ proc ::tclu::DEBUG {args} {
 proc ::tclu::ERROR {errMsg {info {}} {code {}}} {    
     variable error
     variable _line
-    set error(errMsg) "\n$_line\nERROR: $errMsg\n$_line\n"
+    #set error(errMsg) "\n$_line\nERROR: $errMsg\n$_line\n"
+    set error(errMsg) "ERROR: $errMsg"
     set error(info) $info
     set error(code) $code
     uplevel 1 {
@@ -285,29 +291,64 @@ proc ::tclu::ERROR {errMsg {info {}} {code {}}} {
 #    ::tclu::errorDialog -- prints an error message
 #  USAGE
 #    ::tclu::errorDialog errMsg
-#
 #  DESCRIPTION
-#    Prints an errorDialog message either to stderr or makes a call to
-# ::tku::errorDialog when Tk package is present
-#
+# Prints an error message either to stderr or into tk_messageBox
+# when Tk package is present
 #  ARGUMENTS
-#    errMsg  - error message
+#    errMsg -- error message
 #  RETURN VALUE
-#    Returns "-code returns", hence the caller proc will return.
+#    None.
 #  EXAMPLE
-#    ::tclu::errorDialog {an error hac occurred because variable xyz is not define}
+#    ::tclu::errorDialog "an error hac occurred because variable xyz is not define"
 #********
 #------------------------------------------------------------------------
 
 proc ::tclu::errorDialog {errMsg} {
-    if { [catch {package present Tk}] } {
-	puts stderr "ERROR: $errMsg"
-	flush stderr
-    } else {
-	tk_messageBox -title ERROR -message "ERROR: $errMsg" -type ok -icon error
-    }
-    return -code return ""
+    _error_or_warning_dialog error $errMsg
 }
+
+#------------------------------------------------------------------------
+#****f* ::tclu/::tclu::warningDialog
+#  NAME
+#    ::tclu::warningDialog -- prints an warning message
+#  USAGE
+#    ::tclu::warningDialog warnMsg
+#  DESCRIPTION
+# Prints a warning message either to stderr or into tk_messageBox
+# when Tk package is present
+#  ARGUMENTS
+#    warnMsg -- warning message
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    ::tclu::warningDialog "file \"$file\" does not exist"
+#********
+#------------------------------------------------------------------------
+
+proc ::tclu::warningDialog {warnMsg} {
+    _error_or_warning_dialog warning $warnMsg
+}
+
+proc ::tclu::_error_or_warning_dialog {type msg} {
+    variable _line
+    
+    set types {error warning}
+
+    if { [lsearch -exact $types $type] } {
+
+	set TYPE [string toupper $type]
+	
+	if { [catch {package present Tk}] } {
+	    puts stderr "\n$_line\n$TYPE: $msg\n$_line\n"
+	    flush stderr
+	} else {
+	    tk_messageBox -title $TYPE -message "$TYPE: $msg" -type ok -icon $type
+	}
+    } else {
+	error "wrong type \"$type\" in ::tclu::_error_or_warning_dialog, whould be [joing $types ,]"
+    }
+}
+
 
 
 #------------------------------------------------------------------------
