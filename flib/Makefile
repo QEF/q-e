@@ -21,6 +21,7 @@ transto.o \
 date_and_tim.o \
 sort_gvec.o \
 volume.o \
+dylmr2.o \
 ylmr2.o
 
 POBJS = \

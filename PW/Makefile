@@ -72,7 +72,6 @@ dprojdtau.o \
 dqvan2.o \
 drhoc.o \
 dvloc_of_g.o \
-dylmr2.o \
 dynamics.o \
 efermig.o \
 efermit.o \
