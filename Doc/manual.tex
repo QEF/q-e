@@ -624,7 +624,7 @@ Here is a list:
     \texttt{CPV/cp.x}.
   \item
     \texttt{make fpmd} produces the Car-Parrinello code FPMD
-    \texttt{FPMD/par2.x} and the postprocessing code 
+    \texttt{FPMD/fpmd.x} and the postprocessing code 
     \texttt{FPMD/fpmdpp.x}.
   \item
     \texttt{make all} produces all of the above.
@@ -898,7 +898,7 @@ something appropriate to your configuration):
 \begin{verbatim}
  -L/location/of/fftw/lib/ -lfftw \
  -L/location/of/atlas/lib -lf77blas -llapack -lcblas -latlas \
- -L/location/of/gnu32_nosse2/lib -lacml -lg2c }
+ -L/location/of/gnu32_nosse2/lib -lacml -lg2c
 \end{verbatim}
 AMD Opteron CPUs should run in 64-bit mode with the Portland compiler:
 \texttt{-D\_\_LINUX64} is needed among the preprocessing flags.

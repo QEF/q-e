@@ -1,6 +1,16 @@
+ 6 Sep 2004 Example 9 updated (PG)
+            changed name par2.x to fpmd.x, documentation updated [Gerardo]
+
+ 4 Sep 2004 PWgui updated (TK)
+
+ 3 Sep 2004 Manual update, Makefile restructuring (GB)
+            Fixed a bug in constrained dynamics (CS)
+            dynmat.x: more sensible names for input variables (PG)
+
  2 Sep 2004 Wrong format in cp fixed (PG).
             INPUT_PW updated, GUI updated to new pwscf version,
             example 17 updated, minor changes to string method dynamics (C.S.)
+            Replicated code caused problems with dependencies, fixed;
             added support for efc (alias ifort); README,install updated [GB]
             Examples 12, 13, 22 updated (SF)
             Bug fix: The dipole correction was not working with a 
