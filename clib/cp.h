@@ -204,46 +204,47 @@
 
 #endif
 
-#if defined __QSW
 
-#  if defined __TRU64
+#if defined __TRU64
 
-#    define CREATE_PLAN create_plan_
-#    define CREATE_PLANX create_planx_
-#    define CREATE_PLANY create_plany_
-#    define CREATE_PLANZ create_planz_
-#    define DESTROY_PLAN destroy_plan_
-#    define DESTROY_PLANX destroy_planx_
-#    define DESTROY_PLANY destroy_plany_
-#    define DESTROY_PLANZ destroy_planz_
-#    define FFT_X_STICK fft_x_stick_
-#    define FFT_XY_STICK fft_xy_stick_
-#    define FFT_XY fft_xy_
-#    define FFT_Y_STICK fft_y_stick_
-#    define FFT_Y_STICK2 fft_y_stick2_
-#    define FFT_Z_STICK fft_z_stick_
-#    define FFT_Z fft_z_
-#    define FFT_STICK fft_stick_
-#    define CP_GETENV cp_getenv_
-#    define CP_DATE cp_date_
-#    define CPFLUSH cpflush_
-#    define CPTIMER cptimer_
-#    define ELAPSED_SECONDS elapsed_seconds_
-#    define CCLOCK cclock_
-#    define FACTOR235 factor235_
-#    define FACTOR2 factor2_
-#    define LN_ALLOC ln_alloc_
-#    define LN_DEALLOC ln_dealloc_
-#    define LN_SET ln_set_
-#    define LN_ACTIVATE ln_activate_
-#    define LN_IND ln_ind_
-#    define MEMSTAT memstat_
-#    define READOCC readocc_
-#    define ROUND2 round2_
-#    define MYUNITNAME myunitname_
-#    define CP_ITOA cp_itoa_
+#  define CREATE_PLAN create_plan_
+#  define CREATE_PLANX create_planx_
+#  define CREATE_PLANY create_plany_
+#  define CREATE_PLANZ create_planz_
+#  define DESTROY_PLAN destroy_plan_
+#  define DESTROY_PLANX destroy_planx_
+#  define DESTROY_PLANY destroy_plany_
+#  define DESTROY_PLANZ destroy_planz_
+#  define FFT_X_STICK fft_x_stick_
+#  define FFT_XY_STICK fft_xy_stick_
+#  define FFT_XY fft_xy_
+#  define FFT_Y_STICK fft_y_stick_
+#  define FFT_Y_STICK2 fft_y_stick2_
+#  define FFT_Z_STICK fft_z_stick_
+#  define FFT_Z fft_z_
+#  define FFT_STICK fft_stick_
+#  define CP_GETENV cp_getenv_
+#  define CP_DATE cp_date_
+#  define CPFLUSH cpflush_
+#  define CPTIMER cptimer_
+#  define ELAPSED_SECONDS elapsed_seconds_
+#  define CCLOCK cclock_
+#  define FACTOR235 factor235_
+#  define FACTOR2 factor2_
+#  define LN_ALLOC ln_alloc_
+#  define LN_DEALLOC ln_dealloc_
+#  define LN_SET ln_set_
+#  define LN_ACTIVATE ln_activate_
+#  define LN_IND ln_ind_
+#  define MEMSTAT memstat_
+#  define READOCC readocc_
+#  define ROUND2 round2_
+#  define MYUNITNAME myunitname_
+#  define CP_ITOA cp_itoa_
 
-#  else
+#endif
+
+#if defined __QSW && defined __LINUX
 
 #    define CREATE_PLAN create_plan_
 #    define CREATE_PLANX create_planx__
@@ -280,6 +281,5 @@
 #    define MYUNITNAME myunitname_
 #    define CP_ITOA cp_itoa_
 
-#  endif
-
 #endif
+

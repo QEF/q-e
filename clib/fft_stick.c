@@ -11,7 +11,7 @@
 
 #if defined __FFTW
 
-#if ! defined __USE_INSTALLED_FFTW
+#if defined __USE_INTERNAL_FFTW
 #  include "fftw.c"
 #else
 #  include <fftw.h>
