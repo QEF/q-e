@@ -51,6 +51,9 @@
 #ifndef __IOTK_NEWLINE
 #  define __IOTK_NEWLINE achar(10)
 #endif
+#ifndef __IOTK_NL_LEN
+#  define __IOTK_NL_LEN 1
+#endif
 ! Character for EOF
 ! it is used internally by iotk to delimit attributes
 ! the only requirement is that it should not be present in attributes values
@@ -143,8 +146,8 @@ character(100), parameter :: iotk_version = "0.3.1"
 ! This line set the binary_format string
 character(100), parameter :: iotk_binary_format = __IOTK_BINARY_FORMAT
 
-character(len=len(__IOTK_NEWLINE)), parameter :: iotk_newline = __IOTK_NEWLINE ! not yet used
-character,                          parameter :: iotk_eof     = __IOTK_EOF     ! not used yet
+character(len=__IOTK_NL_LEN), parameter :: iotk_newline = __IOTK_NEWLINE ! not yet used
+character,                    parameter :: iotk_eof     = __IOTK_EOF     ! not used yet
 
 ! Max number of controls
 integer, parameter :: iotk_ncontrol = 255 ! (2**8-1)
