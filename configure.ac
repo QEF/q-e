@@ -458,6 +458,7 @@ sparc-sun-*:mpcc | sparc-sun-*:cc )
 	;;
 *:gcc )
 	try_cflags="-O3 -fomit-frame-pointer"
+	try_cpp="cpp"
 	;;
 * )
 	try_cflags="-O"
