@@ -4,10 +4,13 @@
 # --------------------------------------------------
 
 
-#source commands.tcl
+source commands.tcl
 #set ::guib::settings(filename_only_tail) 1
 
 module ChDens\#auto -title "PWSCF GUI: module ChDens.x" -script {
+
+    readfilter ::pwscf::chdensReadFilter
+
     namelist input -name "INPUT" {
 
 	var nfile {
