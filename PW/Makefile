@@ -5,6 +5,7 @@ include ../make.rules
 include ../make.sys
 #
 PWOBJS = pwcom.o  \
+noncol.o  \
 para.o  \
 becmod.o  \
 wavefunctions.o  \

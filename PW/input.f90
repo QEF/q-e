@@ -90,6 +90,14 @@ SUBROUTINE iosys
   USE wvfct,         ONLY : nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
   USE control_flags, ONLY : twfcollect 
+  USE noncollin,     ONLY : noncolin_  => noncolin, &
+                            lambda_    => lambda, &
+                            i_cons_    => i_cons, &
+                            mcons_     => mcons, &
+                            angle1_    => angle1, &
+                            angle2_    => angle2, &
+                            report_    => report
+
   !
   ! CONTROL namelist
   !
@@ -109,7 +117,9 @@ SUBROUTINE iosys
                                occupations, degauss, smearing, &
                                nspin, ecfixed, qcutz, q2sigma, &
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
-                               edir, emaxpos, eopreg, eamp
+                               edir, emaxpos, eopreg, eamp, &
+                               noncolin, lambda, i_cons, mcons, angle1, &
+                               angle2, report
   !
   ! ELECTRONS namelist
   !
@@ -220,6 +230,13 @@ SUBROUTINE iosys
      CALL errore(' iosys ',' nelec less than 0 ', nelec )
   END IF
   lsda = ( nspin == 2 )
+  !noncolin = ( nspin == 4 )
+  IF (noncolin) THEN
+    write(*,*) 'noncolin = true'
+  ELSE
+    write(*,*) 'noncolin = false'
+  ENDIF
+
   !
   IF ( ecutrho <= 0.D0 ) THEN
      dual = 4.D0
@@ -561,6 +578,13 @@ SUBROUTINE iosys
   nr3s_    = nr3s
   degauss_ = degauss
   nelec_   = nelec
+  noncolin_ = noncolin
+  angle1_  = angle1
+  angle2_  = angle2
+  report_  = report
+  i_cons_  = i_cons
+  mcons_   = mcons
+  lambda_  = lambda
   !
   Hubbard_U_( 1 : ntyp )     = hubbard_u( 1 : ntyp )
   Hubbard_alpha_( 1 : ntyp ) = hubbard_alpha( 1 : ntyp )
