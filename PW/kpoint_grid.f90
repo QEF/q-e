@@ -24,13 +24,14 @@ subroutine kpoint_grid &
   ! LOCAL:
   real(kind=DP), parameter :: degspin=2.d0, eps=1.0e-5
   ! degspin: spin degeneracy used to normalize k-points
-  real(kind=DP) xkr(3), deltap(3), deltam(3), fact
-  real(kind=DP), allocatable:: xkg(:,:)
+  real(kind=DP) xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
+  real(kind=DP), allocatable:: xkg(:,:), wkk(:)
   integer nkr, i,j,k, ns, n, nk
   integer, allocatable :: equiv(:)
+  logical :: in_the_list
   !
   nkr=nk1*nk2*nk3
-  allocate (xkg( 3,nkr))    
+  allocate (xkg( 3,nkr),wkk(nkr))    
   allocate (equiv( nkr))    
   !
   do i=1,nk1
@@ -56,42 +57,53 @@ subroutine kpoint_grid &
   do nk=1,nkr
      !  check if this k-point has already been found equivalent to another
      if (equiv(nk).eq.nk) then
-        wk(nk)   = 1.0
-        do n=nk+1,nkr
-           !  check if there are equivalent k-point to this in the list
-           !  (excepted those previously found to be equivalent to another)
-           if (equiv(n).eq.n) then
-              do ns=1,nrot
-                 do i=1,3
-                    xkr(i) = s(i,1,ns) * xkg(1,n) &
-                           + s(i,2,ns) * xkg(2,n) &
-                           + s(i,3,ns) * xkg(3,n)
-                 end do
-                 ! xkr are the components in crystal axis of the rotated k-point
-                 do i=1,3
-                    deltap(i) = xkr(i)-xkg(i,nk) - &
-                          nint (xkr(i)-xkg(i,nk) )
-                    deltam(i) = xkr(i)+xkg(i,nk) - &
-                          nint (xkr(i)+xkg(i,nk) )
-                 end do
-                 !  deltap is the difference vector,
-                 !  brought back in the first BZ
-                 !  deltam is the same but with k => -k (for time reversal)
-                 if ( sqrt ( deltap(1)**2 +  &
-                             deltap(2)**2 +  &
-                             deltap(3)**2 ) .lt. eps .or. &
-                      sqrt ( deltam(1)**2 +  &
-                             deltam(2)**2 +  &
-                             deltam(3)**2 ) .lt. eps      ) then
-                    !  equivalent k-point found:
-                    !  add 1 to the weight and go to next k-point
-                    equiv(n) = nk
-                    wk(nk)=wk(nk)+1.0
-                    go to 10
-                 end if
-              end do
+        wkk(nk)   = 1.0
+        !  check if there are equivalent k-point to this in the list
+        !  (excepted those previously found to be equivalent to another)
+        !  check both k and -k
+        do ns=1,nrot
+           do i=1,3
+              xkr(i) = s(i,1,ns) * xkg(1,nk) &
+                     + s(i,2,ns) * xkg(2,nk) &
+                     + s(i,3,ns) * xkg(3,nk)
+              xkr(i) = xkr(i) - nint( xkr(i) )
+           end do
+           xx = xkr(1)*nk1 - 0.5d0*k1
+           yy = xkr(2)*nk2 - 0.5d0*k2
+           zz = xkr(3)*nk3 - 0.5d0*k3
+           in_the_list = abs(xx-nint(xx)).le.eps .and. abs(yy-nint(yy)).le.eps &
+                                                 .and. abs(zz-nint(zz)).le.eps 
+           if (in_the_list) then
+              i = mod ( nint ( xkr(1)*nk1 - 0.5d0*k1 + 2*nk1), nk1 ) + 1
+              j = mod ( nint ( xkr(2)*nk2 - 0.5d0*k2 + 2*nk2), nk2 ) + 1
+              k = mod ( nint ( xkr(3)*nk3 - 0.5d0*k3 + 2*nk3), nk3 ) + 1
+              n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+              if (n.gt.nk .and. equiv(n).eq.n) then
+                 equiv(n) = nk
+                 wkk(nk)=wkk(nk)+1.0
+              else
+                 if (equiv(n).ne.nk .or. n.lt.nk ) call errore('kpoint_grid', &
+                    'something wrong in the checking algorithm',1)
+              end if
            end if
-10         continue
+           xx =-xkr(1)*nk1 - 0.5d0*k1
+           yy =-xkr(2)*nk2 - 0.5d0*k2
+           zz =-xkr(3)*nk3 - 0.5d0*k3
+           in_the_list = abs(xx-nint(xx)).le.eps .and. abs(yy-nint(yy)).le.eps &
+                                                 .and. abs(zz-nint(zz)).le.eps 
+           if (in_the_list) then
+              i = mod ( nint (-xkr(1)*nk1 - 0.5 * k1 + 2*nk1), nk1 ) + 1
+              j = mod ( nint (-xkr(2)*nk2 - 0.5 * k2 + 2*nk2), nk2 ) + 1
+              k = mod ( nint (-xkr(3)*nk3 - 0.5 * k3 + 2*nk3), nk3 ) + 1
+              n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+              if (n.gt.nk .and. equiv(n).eq.n) then
+                 equiv(n) = nk
+                 wkk(nk)=wkk(nk)+1.0
+              else
+                 if (equiv(n).ne.nk .or. n.lt.nk ) call errore('kpoint_grid', &
+                    'something wrong in the checking algorithm',2)
+              end if
+           end if
         end do
      end if
   end do
@@ -104,7 +116,7 @@ subroutine kpoint_grid &
      if (equiv(nk).eq.nk) then
         nks=nks+1
         if (nks.gt.npk) call errore('kpoint_grid','too many k-points',1)
-        wk(nks) = wk(nk)
+        wk(nks) = wkk(nk)
         fact    = fact+wk(nks)
         !  bring back into to the first BZ
         do i=1,3
@@ -120,7 +132,7 @@ subroutine kpoint_grid &
   end do
 
   deallocate(equiv)
-  deallocate(xkg)
+  deallocate(xkg,wkk)
 
   return
 end subroutine kpoint_grid
