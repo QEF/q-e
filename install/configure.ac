@@ -568,6 +568,7 @@ echo setting AR... $ar
 echo setting ARFLAGS... $arflags
 
 # compilation rules
+AC_PROG_MAKE_SET
 echo $ECHO_N "checking whether Fortran files must be preprocessed... $ECHO_C"
 if test $have_cpp
 then

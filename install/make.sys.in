@@ -1,4 +1,5 @@
 # @configure_input@
+@SET_MAKE@
 CC             = @cc@
 CCFLAGS        = @cflags@ $(DFLAGS) $(IFLAGS)
 # See include/defs.h.README for a list of precompilation options
