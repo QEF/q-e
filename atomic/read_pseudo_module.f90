@@ -14,7 +14,6 @@ MODULE read_pseudo_module_ld1
   !  this module handles the reading of pseudopotential data
 
   ! ...   declare modules
-  USE kinds, ONLY: dbl => dp
   IMPLICIT NONE
   SAVE
 
