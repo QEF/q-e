@@ -11,14 +11,14 @@
 !     performance of these routines. Therefore it is convenient always
 !     to use machine-specific routines
 !
-!     If FFTW is defined, the fftw library is used. Otherwise, if
-!     CERNFFT is defined, a fortran (slow) version is used. Otherwise
+!     If __FFTW is defined, the fftw library is used. Otherwise, if
+!     __CERNFFT is defined, a fortran (slow) version is used. Otherwise
 !     machine-specific routines are used (if available).
 !     If a machine-specific routine is not available either a fake
 !     routine issuing an error message is compiled.
 !
 #include "machine.h"
-#ifdef FFTW
+#ifdef __FFTW
 !
 !-----------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ subroutine cft_3 (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, igrid, isign)
 
 end subroutine cft_3
 #else
-#if defined(CERNFFT)
+#if defined(__CERNFFT)
 !
 !----------------------------------------------------------------------
 subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)

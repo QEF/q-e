@@ -9,7 +9,7 @@
 
 # Macro
   CPMACRO=-D__MPI -D__PARA -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
-#  CPMACRO=-D__QSW -D__FFTWDRV
+#  CPMACRO=-D__QSW 
 #
   CPUTYPE=ev67
 #

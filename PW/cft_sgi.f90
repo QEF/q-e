@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#ifdef FFTW
+#ifdef __FFTW
 subroutine bidon_sgi
   stop 'cft_sgi'
 end subroutine bidon_sgi

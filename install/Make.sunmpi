@@ -2,7 +2,7 @@
 # System-dependent Make definitions, sun parallel mpi
 # 
 # To use fftw instead of the sunperf library fft subroutine
-# add -DFFTW to CPPFLAGS
+# add -D__FFTW to CPPFLAGS
 #
 CPP = fpp
 CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -DHAS_ZHEGVX -I$(OSHOME)/include

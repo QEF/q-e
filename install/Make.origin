@@ -2,7 +2,7 @@
 # System-dependent definitions for origin (parallel, MPI)
 # Edit according to your needs
 #
-# Add -DFFTW if you want to use fft routines from fftw library
+# Add -D__FFTW if you want to use fft routines from fftw library
 # instead of fft from complib library
 #
 CPPFLAGS = -DORIGIN -DPARA -D__MPI -I$(OSHOME)/include

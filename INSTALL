@@ -36,7 +36,7 @@ sun     : Sun workstations, Sun compiler
 fujitsu : Fujitsu vector machines, Fujitsu compiler
 hitachi : Hitachi SR8000
 
-For CP:
+For CP and FPMD:
 
 cp.ibmsp   : IBM SP2/3/4, IBM compiler
 cp.t3e     : Cray T3E, Cray compiler
@@ -51,8 +51,6 @@ cp.lnx.absoft : Linux PCs (also beowulf), Absoft compiler
 cp.lnx.pgi    : Linux PCs (also beowulf), Portland compiler
 cp.lnx.intel  : Linux PCs (also beowulf), Intel compiler
 cp.sx5        : NEC SX-5
-
-For FPMD: as above, with "cp" replaced by "fpmd"
 
 This will generate dependencies and produce a file "make.sys"
 in the root directory. 

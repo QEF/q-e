@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#ifdef FFTW
+#ifdef __FFTW
 subroutine bidon_sun
   stop 'cft_sun'
 end subroutine bidon_sun

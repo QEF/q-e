@@ -158,7 +158,7 @@
       ! ...   Variables initialization for CONTROL
       !
       title = ' '
-      calculation = ' cp'
+      calculation = 'cp'
       verbosity = 'default'
       max_seconds  = 1.d+6
       restart_mode = 'restart' 

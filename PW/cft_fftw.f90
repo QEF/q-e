@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef FFTW
+#ifdef __FFTW
 !----------------------------------------------------------------------
 subroutine cft_1 (f, m, n, nx, isign, fout)
   !     ===============

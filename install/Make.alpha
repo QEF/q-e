@@ -5,7 +5,7 @@
 # Use -DDXML if you use fft routines from the dxml or cxml library
 # (add -DNOPENCILS if you do not want to use the FFT with pencils:
 #  in some cases it is slower than the full 3d FFT)
-# Use -DFFTW instead of -DDXML if you use fft routines from fftw library
+# Use -D__FFTW instead of -DDXML if you use fft routines from fftw library
 #
 CPPFLAGS = -DDEC -DDXML -DNOPENCILS -I$(OSHOME)/include
 

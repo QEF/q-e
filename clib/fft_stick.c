@@ -9,7 +9,7 @@
 #include"cp.h"
 
 
-#if defined __FFTWDRV
+#if defined __FFTW
 
 #if ! defined __USE_INSTALLED_FFTW
 #  include "fftw.c"

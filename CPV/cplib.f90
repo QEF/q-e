@@ -5468,7 +5468,7 @@
              filename=trim(pseudo_dir)//trim(psfile(is))
          end if
          write(6,"('reading ppot for species # ',i2, &
-        &          ' from file ',a)") is, filename
+        &          ' from file ',a)") is, trim(filename)
          open (unit=iunit,file=filename,status='old',form='formatted')
 !
          select case (ipp(is))

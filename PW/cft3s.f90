@@ -47,12 +47,12 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   integer :: planes (nx1)
   data nxx_save / 0 /
   save nxx_save, aux
-#if defined(FFTW)
+#if defined(__FFTW)
 #define CFT_1S cft_1s
 #else
 #define CFT_1S cft_1
 #endif
-#if defined(FFTW) || defined(AIX)
+#if defined(__FFTW) || defined(AIX)
 #define CFT_2S cft_2s
 #else
 #define CFT_2S cft_2

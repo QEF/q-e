@@ -7,9 +7,9 @@
 CPP = /opt/ctl/bin/cpp
 #
 # add -DT3D_BENCHLIB if the benchlib is installed
-# remove -DFFTW if fftw is not installed and you cannot compile it
+# remove -D__FFTW if fftw is not installed and you cannot compile it
 # (you will use the fft's contained in standard t3e libraries)
-CPPFLAGS = -I$(OSHOME)/include/ -DT3D -DPARA -D__MPI -DFFTW
+CPPFLAGS = -I$(OSHOME)/include/ -DT3D -DPARA -D__MPI -D__FFTW
 
 #
 # Fortran compiler:

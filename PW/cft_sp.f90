@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#ifdef FFTW
+#ifdef __FFTW
 subroutine bidon_sp
   stop 'cft_sp'
 end subroutine bidon_sp
