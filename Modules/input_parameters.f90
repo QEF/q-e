@@ -836,16 +836,17 @@ MODULE input_parameters
         LOGICAL :: optimization = .FALSE.
 
         CHARACTER(LEN=80) :: minimization_scheme = 'quick-min' 
-          ! minimization_scheme = 'quick-min' | 'damped-verlet' | 
-          !                       'sim-annealing'
+          ! minimization_scheme = 'quick-min' | 'damped-dyn' | 
+          !                       'mol-dyn'   | 'sd'
           ! set the minimization algorithm
-          ! 'quick-min'       
-          ! 'damped-verlet'  
-          ! 'sim-annealing'    
+          ! 'quick-min'   projected molecular dynamics
+          ! 'damped-dyn'  damped molecular dynamics
+          ! 'mol-dyn'     constant temperature molecular dynamics
+          ! 'sd'          steepest descent
 
-        CHARACTER(LEN=80) :: minimization_scheme_allowed(3)
-        DATA minimization_scheme_allowed / 'quick-min', 'damped-verlet', &
-                                           'sim-annealing' /  
+        CHARACTER(LEN=80) :: minimization_scheme_allowed(4)
+        DATA minimization_scheme_allowed / 'quick-min', 'damped-dyn', &
+                                           'mol-dyn', 'sd' /  
 
         REAL (KIND=DP)  :: damp = 1.D0
           ! meaningful only when minimization_scheme = 'damped-verlet'
