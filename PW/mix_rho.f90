@@ -397,7 +397,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, dr2, ethr, ethr_min, &
         IF ( lda_plus_u ) &
            betamix(i,j) = betamix(i,j) + &
                           ns_dot_product( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i) )
-        !	
+        !
      END DO
   END DO
   !

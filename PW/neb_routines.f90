@@ -369,11 +369,11 @@ MODULE neb_routines
          !
          IF ( istep == 0 ) THEN
             !
-            CALL born_oppenhimer_PES( .TRUE., stat )
+            CALL born_oppenheimer_PES( .TRUE., stat )
             !
          ELSE
             !
-            CALL born_oppenhimer_PES( optimization, stat )
+            CALL born_oppenheimer_PES( optimization, stat )
             !
          END IF
          !
@@ -563,7 +563,8 @@ MODULE neb_routines
          !
          ! ... tangent to the path ( normalized )
          !
-         !tangent(:,image) = path_tangent( image )
+         !!! tangent(:,image) = path_tangent( image )
+         !!! workaround for ifc8 compiler internal error
          CALL path_tangent_( image, tangent(:,image) )
          !
          tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
@@ -822,7 +823,8 @@ MODULE neb_routines
     !
     !
     !-----------------------------------------------------------------------
-    !FUNCTION path_tangent( index )
+    !!! FUNCTION path_tangent( index )
+    !!! workaround for ifc8 compiler internal error
     SUBROUTINE path_tangent_( index, path_tangent )
       !-----------------------------------------------------------------------
       !
@@ -888,12 +890,13 @@ MODULE neb_routines
       !
       RETURN
       !
-    !END FUNCTION path_tangent
+    !!! END FUNCTION path_tangent
+    !!! workaround for ifc8 compiler internal error
     END SUBROUTINE path_tangent_
     !
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE born_oppenhimer_PES( flag, stat )
+    SUBROUTINE born_oppenheimer_PES( flag, stat )
       !-----------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
@@ -951,7 +954,7 @@ MODULE neb_routines
       !
       RETURN
       !
-    END SUBROUTINE born_oppenhimer_PES
+    END SUBROUTINE born_oppenheimer_PES
     !
     !
     !-----------------------------------------------------------------------
