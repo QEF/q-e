@@ -10,24 +10,24 @@
 dir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 prediff=$dir/prediff.awk
 postdiff=$dir/postdiff.awk
-if ! test -f "$prediff"
+if test ! -f "$prediff"
 then
     echo error: file prediff.awk not found
     exit -1
 fi
-if ! test -f "$postdiff"
+if test ! -f "$postdiff"
 then
     echo error: file postdiff.awk not found
     exit -1
 fi
 
 # check that files exist
-if ! test -f "$1"
+if test ! -f "$1"
 then
     echo $0: file $1 does not exist
     exit 1
 fi
-if ! test -f "$2"
+if test ! -f "$2"
 then
     echo $0: file $2 does not exist
     exit 1
@@ -48,7 +48,7 @@ check1=1
 check2=1
 
 # check preprocessed files
-while test $check1 -gt 0 || test $check2 -gt 0
+while test $check1 -gt 0 -a $check2 -gt 0
 do
     # look for next checkpoints
     check1=`grep -n "@CHECKPOINT@" pwdiff.sh.tmp1 | head -1 | sed 's/:.*//'`

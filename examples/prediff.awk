@@ -89,6 +89,14 @@ function check_line()
 	print_key("ITERATION");
       print_key("ITERATION");
     }
+  else if (match($0, "Electric Fields Calculation"))
+    {
+      print_key("ITERATION");
+      while (getline && ! match($0, "End of electric fields calculation"))
+	print_key("ITERATION");
+      print_key("ITERATION");
+      print "@CHECKPOINT@";
+    }
   else if (match($0, "band energies") || match($0, "bands"))
     {
       print;
@@ -124,6 +132,17 @@ function check_line()
       print;
       getline; print;
       getline; print_key_n("DIELECTRIC", 3);
+    }
+  else if (match($0, "Effective charges E-U"))
+    {
+      print;
+      getline; print;
+      while (getline && match($0, "atom"))
+	{
+	  print;
+	  getline; print_key_n("EFFECTIVE", 3);
+	}
+      print;
     }
   else if (match($0, "omega"))
     {
