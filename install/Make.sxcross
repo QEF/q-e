@@ -52,8 +52,9 @@ F77FLAGS=-f3 $(FFLAGS)
 #
 #CC = sxc++
 #CFLAGS = -DLANGUAGE_C -DNEC -DSX -I$(INC_DIR) -hfloat0,0,acct
-CC = cc
-CCFLAGS = -DSXCROSS -I$(INC_DIR)  
+CC = sxcc
+CCLOCAL=cc
+CCFLAGS = -D__SX6 -I$(INC_DIR)  
 
 #
 # Libraries:
@@ -70,4 +71,5 @@ LIBS = -llapack -lblas -L$(HOME)/mylocal/lib -ljmfft
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 
 LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/ptools.a \
-          $(OSHOME)/flib/flib.a $(LIBS) -p -Wl" -f zero " $(LIBS)
+          $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a \
+          -p -Wl" -f zero " $(LIBS)
