@@ -26,7 +26,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... to the standard error, unit 0.
   ! ... (the message will appear in the error files produced by loadleveler).
   !
-  USE io_global,  ONLY : stdout
   USE io_files,   ONLY : crashunit, crash_file
   USE parallel_include
   !
@@ -83,7 +82,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   IF ( ierr > 0 ) THEN
      !
-     WRITE( stdout , '("     stopping ...")' )
+     WRITE( *, '("     stopping ...")' )
      !
 #if defined (FLUSH)
      CALL flush( 6 )
