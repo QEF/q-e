@@ -271,6 +271,7 @@
       startingwfc = 'random'
       input_pot = ' '
       conv_thr = 1.d-6
+      trhor =.false.
 
 ! ...   Variables initialization for IONS
 !
@@ -340,6 +341,9 @@
          electron_dynamics = 'verlet'
          ion_dynamics = 'verlet'
          cell_dynamics = 'pr'
+      CASE ('nscf')
+         electron_dynamics = 'damp'
+         trhor =.true.
       CASE DEFAULT
          CALL error(' iosys ',' calculation not implemented', 1 )
       END SELECT
@@ -435,6 +439,7 @@
       CALL mp_bcast( ampre, ionode_id )
       CALL mp_bcast( grease, ionode_id )
       CALL mp_bcast( twall, ionode_id )
+      CALL mp_bcast( trhor, ionode_id )
       CALL mp_bcast( empty_states_nbnd, ionode_id )
       CALL mp_bcast( empty_states_maxstep, ionode_id )
       CALL mp_bcast( empty_states_delt, ionode_id )
@@ -795,8 +800,7 @@
       ! wmass is calculated in "init"
       twmass = wmass.eq.0.d0
       if (tstress) tpre=.true.
-      trhor = trim(verbosity).eq.'high'
-      trhow =.false. ! temporaneo
+      trhow = trim(disk_io).eq.'high'
       tvlocw=.false. ! temporaneo
       !
       qne = 4.d0*ekincw/(fnosee*(2.d0*pi)*terahertz)**2
