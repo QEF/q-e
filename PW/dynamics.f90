@@ -257,7 +257,7 @@ SUBROUTINE dynamics()
        .NOT. ( ldamped .OR. lconstrain .OR. lfixatom ) ) &
      CALL errore( 'dynamics', 'Total linear momentum <> 0', - 1 )
   !
-  WRITE( stdout, '(/,5X,"Linear momentum :",3(2XF14.10))' ) ml
+  WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
   !
   DEALLOCATE( mass )
   DEALLOCATE( vel )         
