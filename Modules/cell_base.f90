@@ -449,27 +449,30 @@
     !  frich  = frich_   ! for the time being this is set elsewhere
     greash = greash_
 
-    WRITE( stdout, * )
-    WRITE( stdout, * )
+    WRITE( stdout, 105 )
     WRITE( stdout, 110 ) press_
-110 format('   external pressure       = ',f15.2,' [GPa]')
+105 format(/,3X,'Simulation Cell Parameters (from input)')
+110 format(  3X,'external pressure       = ',f15.2,' [GPa]')
 
     wmass  = wc_
     IF( wmass == 0.d0 ) THEN
       wmass = 3.d0 / (4.d0 * pi**2 ) * total_ions_mass
       wmass = wmass * UMA_AU
-      WRITE( stdout,999) wmass
+      WRITE( stdout,130) wmass
     ELSE
-      WRITE( stdout,998) wmass
+      WRITE( stdout,120) wmass
     END IF
-998 format('   wmass (read from input) = ',f15.2,' [AU]',/)
-999 format('   wmass (calculated)      = ',f15.2,' [AU]',/)
+120 format(3X,'wmass (read from input) = ',f15.2,' [AU]')
+130 format(3X,'wmass (calculated)      = ',f15.2,' [AU]')
 
 
     ! ... if celldm(1) /= 0  rd_ht should be in unit of alat
 
     IF ( trd_ht ) THEN
       symm_type = cell_symmetry
+      !
+      !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
+      !
       at        = TRANSPOSE( rd_ht )
       WRITE( stdout, 210 )
       WRITE( stdout, 220 ) ( rd_ht( 1, j ), j = 1, 3 )
@@ -485,10 +488,10 @@
         b = 0.0d0
         c = 0.0d0
       END IF
-210   format('   initial cell from CELL_PARAMETERS card')
+210   format(3X,'initial cell from CELL_PARAMETERS card')
 220   format(3X,3F14.8)
-230   format('   celldm(1:6) are ignored')
-240   format('   a, b, c are ignored')
+230   format(3X,'celldm(1:6) are ignored')
+240   format(3X,'a, b, c are ignored')
     END IF
 
     IF ( ibrav == 0 .AND. .NOT. trd_ht ) &
@@ -554,6 +557,9 @@
     bg( :, 2 ) = b2( : )
     bg( :, 3 ) = b3( : )
 
+    ! ...     The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
+    !           
+
     tcell_base_init = .TRUE.
 
     thdiag = .false.
@@ -597,6 +603,25 @@
 
     END SELECT
 
+    WRITE( stdout, 300 ) ibrav
+    WRITE( stdout, 305 ) alat
+    WRITE( stdout, 310 ) a1
+    WRITE( stdout, 320 ) a2
+    WRITE( stdout, 330 ) a3
+    WRITE( stdout, *   )
+    WRITE( stdout, 350 ) b1
+    WRITE( stdout, 360 ) b2
+    WRITE( stdout, 370 ) b3
+    WRITE( stdout, 340 ) omega
+300 FORMAT( 3X, 'ibrav = ',I4)
+305 FORMAT( 3X, 'alat  = ',F14.8)
+310 FORMAT( 3X, 'a1    = ',3F14.8)
+320 FORMAT( 3X, 'a2    = ',3F14.8)
+330 FORMAT( 3X, 'a3    = ',3F14.8)
+350 FORMAT( 3X, 'b1    = ',3F14.8)
+360 FORMAT( 3X, 'b2    = ',3F14.8)
+370 FORMAT( 3X, 'b3    = ',3F14.8)
+340 FORMAT( 3X, 'omega = ',F14.8)
 
 
     RETURN
@@ -819,12 +844,11 @@ CONTAINS
     return
   end subroutine
 
-  subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
+  subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt )
     implicit none
-    real(kind=8), intent(inout) :: vnhh(3,3), velh(3,3)
-    real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, h(3,3), hold(3,3)
+    real(kind=8), intent(inout) :: vnhh(3,3)
+    real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
     vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
-    velh(:,:)=2.*(h(:,:)-hold(:,:))/delt-velh(:,:)
     return
   end subroutine
 
@@ -871,6 +895,43 @@ CONTAINS
       xnhh0 = xnhhp
     return
   end subroutine
+
+
+  SUBROUTINE cell_nose_info()
+
+      use constants,     only: factem, terahertz, pi
+      use time_step,     only: delt
+      USE io_global,     ONLY: stdout
+      USE control_flags, ONLY: tnoseh
+
+      IMPLICIT NONE
+
+      INTEGER   :: nsvar, i
+      REAL(dbl) :: wnoseh
+
+      IF( tnoseh ) THEN
+        !
+        IF( fnoseh <= 0.D0) &
+          CALL errore(' cell_nose_info ', ' fnoseh less than zero ', 1)
+        IF( delt <= 0.D0) &
+          CALL errore(' cell_nose_info ', ' delt less than zero ', 1)
+
+        wnoseh = fnoseh * ( 2.d0 * pi ) * terahertz
+        nsvar  = ( 2.d0 * pi ) / ( wnoseh * delt )
+
+        WRITE( stdout,563) temph, nsvar, fnoseh, qnh
+      END IF
+
+ 563  format( //, &
+            & 3X,'cell dynamics with nose` temperature control:', /, &
+            & 3X,'Kinetic energy required   = ', f10.5, ' (Kelvin) ', /, &
+            & 3X,'time steps per nose osc.  = ', i5, /, &
+            & 3X,'nose` frequency           = ', f10.3, ' (THz) ', /, &
+            & 3X,'nose` mass(es)            = ', 20(1X,f10.3),//)
+
+    RETURN
+  END SUBROUTINE cell_nose_info
+
 
 !
 !------------------------------------------------------------------------------!

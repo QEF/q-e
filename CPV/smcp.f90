@@ -267,6 +267,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 
   call iosys( )
 
+  call init_dimensions( )
   !
   !     ==================================================================
   !
@@ -953,7 +954,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            CALL elec_nosevel( vnhe(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, fccc(sm_k) )
         endif
         if(tnoseh) then
-           CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
+           CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
+           velh(:,:)=2.0d0*(h(:,:)-hold(:,:))/delt-velh(:,:)
         endif
         ! 
         !

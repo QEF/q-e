@@ -11,7 +11,7 @@
   MODULE input
 ! ----------------------------------------------------------------
 
-   USE kinds, ONLY: dbl
+   USE kinds,     ONLY: dbl
    USE io_global, ONLY: ionode, stdout
 
    IMPLICIT NONE
@@ -34,9 +34,10 @@
    SUBROUTINE read_input_file( lneb, lsmd, lwf )
       !
       USE read_namelists_module, ONLY: read_namelists
-      USE read_cards_module, ONLY: read_cards
-      USE input_parameters, ONLY: calculation
-      USE control_flags, ONLY: program_name
+      USE read_cards_module,     ONLY: read_cards
+      USE input_parameters,      ONLY: calculation, title
+      USE control_flags,         ONLY: program_name
+      USE printout_base,         ONLY: title_ => title
       !
       IMPLICIT NONE
 
@@ -67,7 +68,15 @@
         lwf  = ( TRIM( calculation ) == 'cp-wf' )
       END IF
 
-       has_been_read = .TRUE.
+      !
+      !  Set job title and print it on standard output
+      !
+
+      title_ = title
+      WRITE( stdout, 400 ) TRIM( title_ )
+400   FORMAT(/  3X, 'Job Title: ', A )
+
+      has_been_read = .TRUE.
 
       RETURN
    END SUBROUTINE
@@ -78,7 +87,7 @@
    !
    SUBROUTINE iosys_pseudo( )
 
-        use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, prefix, scradir, xc_type
+        use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, nat, prefix, scradir, xc_type
         use control_flags, only:  program_name
         use parameters, only: nsx
         use read_pseudo_module_fpmd, only: readpp
@@ -87,7 +96,7 @@
               pseudo_dir_ => pseudo_dir, &
               scradir_ => scradir, &
               prefix_ => prefix
-        USE ions_base, ONLY: nsp_ => nsp
+        USE ions_base, ONLY: nsp_ => nsp, nat_ => nat
 
         implicit none
 
@@ -97,7 +106,12 @@
         prefix_  = TRIM( prefix  )
         scradir_ = TRIM( scradir )
 
+        !
+        !  Set internal variables for the number of species and number of atoms
+        !
         nsp_   = ntyp
+        nat_   = nat
+
         psfile_= ' '
         psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
         pseudo_dir_        = TRIM( pseudo_dir  )
@@ -129,6 +143,12 @@
 
         CALL set_control_flags( )
 
+        !
+        ! . Write to stdout basic simulation parameters .....................!
+        !
+
+        CALL input_info()
+
         ! . CALL the Module specific setup routine ..........................!
 
         CALL modules_setup()
@@ -145,12 +165,7 @@
         !
         ! . Write to stdout input module information ........................!
         !
-        IF( program_name == 'FPMD' ) THEN
-          CALL input_info()
-          CALL modules_info()
-        ELSE
-          CALL input_info_cp()
-        END IF
+        CALL modules_info()
         !
      RETURN
    END SUBROUTINE iosys
@@ -161,10 +176,7 @@
    !
    SUBROUTINE set_control_flags( )
      !
-     USE kinds, ONLY: dbl
      USE control_flags, ONLY: program_name
-     USE io_global, ONLY: stdout
-
 
      USE control_flags, ONLY: &
         ndw_     => ndw, &
@@ -184,7 +196,6 @@
         nomore_  => nomore, &
         memchk_  => memchk, &
         tpre_    => tpre, &
-        prn_     => prn, &
         timing_  => timing, &
         iprsta_  => iprsta, &
         taurdr_  => taurdr, &
@@ -254,6 +265,11 @@
      USE wave_base, ONLY: frice_ => frice
      USE ions_base, ONLY: fricp_ => fricp
      USE cell_base, ONLY: frich_ => frich
+     USE time_step, ONLY: set_time_step
+     USE cp_electronic_mass,       only: &
+           emass_ => emass, &
+           emaec_ => emass_cutoff
+
 
      USE input_parameters, ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature, &
@@ -261,8 +277,8 @@
         electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
         amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,  &
         cell_parameters, cell_velocities, cell_temperature, force_pairing, &
-        tapos, tavel, ecutwfc, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
-        ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io
+        tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
+        ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt
 
      USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
         tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
@@ -294,12 +310,22 @@
 !     etot_maxiter_ = etot_maxiter, &
 !     forc_maxiter_ = forc_maxiter
 
+     ! ...   Set internal time step variables ( delt, twodelt, dt2 ... )
+
+     CALL set_time_step( dt )
+
+     ! ...   Set electronic fictitius mass and its cut-off for fourier
+     !       acceleration
+
+     emass_ = emass
+     emaec_ = emass_cutoff
+
+
      !
      !  set the level of output, the code verbosity 
      !
 
      iprsta_ = 1
-     prn_    = .FALSE.
      timing_ = .FALSE.
           ! The code write to files fort.8 fort.41 fort.42 fort.43
           ! a detailed report of subroutines timing
@@ -320,18 +346,17 @@
 
      SELECT CASE ( TRIM(verbosity) )
        CASE ('minimal')
-         prn_ = .FALSE.
+         iprsta_ = 0
        CASE ('low', 'default')
-         prn_ = .FALSE.
+         iprsta_ = 1
          timing_ = .TRUE.
        CASE ('medium')
-         prn_ = .FALSE.
+         iprsta_ = 2
          timing_ = .TRUE.
          rhoout_ = .TRUE.
          tprnsfac_ = .TRUE.
        CASE ('high')
          iprsta_ = 3
-         prn_ = .TRUE.
          memchk_ = .TRUE.
          timing_ = .TRUE.
          rhoout_ = .TRUE.
@@ -735,16 +760,14 @@
    !
    SUBROUTINE modules_setup( )
      !
-     USE kinds,            ONLY: dbl
      USE control_flags,    ONLY: lneb, program_name
      USE constants,        ONLY: UMA_AU, pi
-     USE io_global,        ONLY: stdout
    
-     USE input_parameters, ONLY: title, max_seconds, ibrav , celldm , trd_ht, &
+     USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
            atomic_positions, id_loc, sic, sic_epsilon, sic_rloc, ecutwfc,     &
-           ecutrho, ecfixed, qcutz, q2sigma, tk_inp, dt, wmass,               &
+           ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
            tturbo_inp, nturbo_inp, outdir, prefix, woptical,                  &
@@ -770,7 +793,6 @@
      !
      USE check_stop,       ONLY: check_stop_init
      !
-     USE printout_base,    ONLY: title_ => title
      !
      USE cell_base,        ONLY: cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY: cell_nose_init
@@ -780,17 +802,12 @@
      USE wave_base,        ONLY: grease_ => grease
      USE electrons_nose,   ONLY: electrons_nose_init
      USE printout_base,    ONLY: printout_base_init
-     USE time_step,        ONLY: set_time_step
      USE turbo,            ONLY: turbo_init
      USE efield_module,    ONLY: efield_init
      USE cg_module,        ONLY: cg_init
      !
      USE reciprocal_space_mesh,    ONLY: recvecs_units
      !
-     USE cp_electronic_mass,       only: &
-           emass_ => emass, &
-           emaec_ => emass_cutoff
-
      USE smallbox_grid_dimensions, ONLY: &
            nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1b_ => nr1b, &
@@ -838,7 +855,6 @@
      IF( .NOT. has_been_read ) &
        CALL errore( ' modules_setup ', ' input file has not been read yet! ', 1 )
      !
-     title_ = title
      !
      IF( .NOT. lneb ) THEN
         CALL check_stop_init( max_seconds )
@@ -872,13 +888,6 @@
      CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
 
      CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )
-
-     emass_ = emass
-     emaec_ = emass_cutoff
-
-     ! ...   Set internal time step variables ( delt, twodelt, dt2 ... )
-
-     CALL set_time_step( dt )
 
      ! ... 
 
@@ -999,8 +1008,6 @@
       !     this subroutine copies SMD variables from input module to path_variables
       !     -------------------------------------------------------------------
 
-      USE kinds, ONLY: dbl
-
       USE input_parameters, only: calculation, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
@@ -1107,257 +1114,174 @@
   !     print out heading
   !
   !
-  SUBROUTINE input_info_cp()
+  !
+  SUBROUTINE input_info()
 
-      use constants, only: pi, scmass, factem, eps8, uma_au, terahertz, gpa_au
+    ! this subroutine print to standard output some parameters read from input
+    ! ----------------------------------------------
 
-      use parameters, only: natx
+    USE input_parameters,   ONLY: restart_mode
+    USE control_flags,      ONLY: nbeg, iprint, ndr, ndw, nomore
+    USE time_step,          ONLY: delt
+    USE cp_electronic_mass, ONLY: emass, emass_cutoff
 
-      use io_global, only: ionode, stdout
+    IMPLICIT NONE
 
-      use control_flags, only:  &
-            tconvthrs, lneb, lsmd, tzerop, tzeroe, tzeroc, nbeg,  &
-            ndr_ => ndr, &
-            ndw_ => ndw, &
-            nomore_ => nomore, &
-            iprint_ => iprint, &
-            iprsta_ => iprsta, &
-            tortho_ => tortho, &
-            ortho_eps_ => ortho_eps, &
-            ortho_max_ => ortho_max, &
-            trane_ => trane, &
-            ampre_ => ampre, &
-            tranp_ => tranp, &
-            amprp_ => amprp, &
-            tfor_ => tfor, &
-            tsdp_ => tsdp, &
-            tcp_ => tcp, &
-            tcap_ => tcap, &
-            tolp_ => tolp, &
-            trhor_ => trhor, &
-            trhow_ => trhow, &
-            tvlocw_ => tvlocw, &
-            tnosep_ => tnosep, &
-            tnosee_ => tnosee, &
-            tnoseh_ => tnoseh, &
-            tpre_ => tpre, &
-            thdyn_ => thdyn, &
-            tsde_ => tsde
+    IF( .NOT. has_been_read ) &
+      CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
 
-      use mp, only: mp_bcast
+    IF( ionode ) THEN
+      WRITE( stdout, 500) nbeg, restart_mode, nomore, iprint, ndr, ndw
+      WRITE( stdout, 505) delt
+      WRITE( stdout, 510) emass
+      WRITE( stdout, 511) emass_cutoff
+    END IF
+
+500 FORMAT(   3X,'Restart Mode       = ',I7, 3X, A15, /, &
+              3X,'Number of MD Steps = ',I7,  /, &
+              3X,'Print out every      ',I7, ' MD Steps',/  &
+              3X,'Reads from unit    = ',I7,  /, &
+              3X,'Writes to unit     = ',I7)
+505 FORMAT(   3X,'MD Simulation time step            = ',F10.2)
+510 FORMAT(   3X,'Electronic fictitious mass (emass) = ',F10.2)
+511 FORMAT(   3X,'emass cut-off                      = ',F10.2)
+509 FORMAT(   3X,'Verlet algorithm for electron dynamics')
+502 FORMAT(   3X,'An initial quench is performed')
+
+    RETURN
+  END SUBROUTINE input_info
+  !
+  !
+  ! ----------------------------------------------------------------
+  !
+  !
+  SUBROUTINE modules_info()
+
+    USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
+      orthogonalization
+
+    USE control_flags, ONLY:  program_name, tortho, tnosee, trane, ampre, &
+                              trhor, trhow, tvlocw, tfor, tnosep, iprsta, &
+                              thdyn, tnoseh
+    !
+    USE ions_module,          ONLY: constraints_print_info
+    USE electrons_nose,       ONLY: electrons_nose_info
+    USE empty_states,         ONLY: empty_print_info
+    USE diis,                 ONLY: diis_print_info
+    USE potentials,           ONLY: potential_print_info
+    USE brillouin,            ONLY: kpoint_info
+    USE runcg_module,         ONLY: runcg_info
+    USE sic_module,           ONLY: sic_info
+    USE wave_base,            ONLY: frice, grease
+    USE ions_base,            ONLY: fricp
+    USE ions_nose,            ONLY: ions_nose_info
+    USE cell_nose,            ONLY: cell_nose_info
+    USE cell_base,            ONLY: frich
       !
-      USE ions_base, ONLY: &
-           rcmax_ => rcmax, &
-           fricp_ => fricp, &
-           greasp_ => greasp, &
-           nsp
+    IMPLICIT NONE
+
+    INTEGER :: is
+
+    IF( .NOT. has_been_read ) &
+      CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
+
+    IF( ionode ) THEN
       !
-      USE cell_base, ONLY: cell_alat, a1, a2, a3, &
-           press_ => press, &
-           frich_ => frich, &
-           greash_ => greash, &
-           thdiag_ => thdiag, &
-           iforceh_ => iforceh
-      USE cell_nose, ONLY: &
-           qnh_ => qnh, &
-           temph_ => temph
-
-      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
-
-      USE time_step, ONLY: set_time_step, &
-           delt_ => delt
-      USE cp_electronic_mass, only: &
-           emass_ => emass, &
-           emaec_ => emass_cutoff
-      USE wave_base, ONLY: &
-           frice_ => frice, &
-           grease_ => grease
-      USE ions_nose, ONLY: &
-           ndega_ => ndega, &
-           tempw, &
-           ions_nose_info
-      USE electrons_nose, ONLY: electrons_nose_info
-      USE path_variables, ONLY: &
-           sm_p_ => smd_p, &
-           smcp_ => smd_cp, &
-           smlm_ => smd_lm, &
-           smopt_ => smd_opt, &
-           linr_ => smd_linr, &
-           polm_ => smd_polm, &
-           kwnp_ => smd_kwnp, &
-           codfreq_ => smd_codfreq, &
-           forfreq_ => smd_forfreq, &
-           smwfreq_ => smd_wfreq, &
-           tol_ => smd_tol, &
-           lmfreq_ => smd_lmfreq, &
-           maxlm_ => smd_maxlm, &
-           ene_ini_ => smd_ene_ini, &
-           ene_fin_ => smd_ene_fin
-
-      USE grid_dimensions, ONLY: &
-           nnrx, &  !  variable is used to workaround internal compiler error (IBM xlf)
-           nr1_ => nr1, &
-           nr2_ => nr2, &
-           nr3_ => nr3
-      USE smooth_grid_dimensions, ONLY: &
-           nnrsx, &  !  variable is used to workaround internal compiler error (IBM xlf)
-           nr1s_ => nr1s, &
-           nr2s_ => nr2s, &
-           nr3s_ => nr3s
+      CALL cutoffs_print_info( )
       !
-      USE io_files, ONLY: &
-           ntypx, &     !  variable is used to workaround internal compiler error (IBM xlf)
-           pseudo_dir_ => pseudo_dir , &
-           psfile_     => psfile
-
-      USE ensemble_dft, ONLY: &
-           tens_ => tens, &
-           tgrand_ => tgrand, &
-           ninner_ => ninner, &
-           ismear_ => ismear, &
-           etemp_ => etemp, &
-           ef_  => ef, &
-           tdynz_ => tdynz, &
-           tdynf_ => tdynf, &
-           zmass_ => zmass, &
-           fmass_ => fmass, &
-           fricz_ => fricz, &
-           fricf_ => fricf
-      USE cg_module, ONLY: &
-           tcg_ => tcg, &
-           maxiter_ => maxiter, &
-           etresh_ => etresh, &
-           passop_ => passop
-
+      IF( tortho ) THEN
+        CALL orthogonalize_info( )
+      ELSE
+        WRITE( stdout,512)
+      END IF
       !
-
-      IMPLICIT NONE
+      IF(      TRIM(electron_dynamics) == 'diis' ) THEN
+          CALL diis_print_info( stdout )
+      ELSE IF( TRIM(electron_dynamics) == 'cg'  ) THEN
+          CALL runcg_info( stdout )
+      ELSE IF( TRIM(electron_dynamics) == 'sd' ) THEN
+          WRITE( stdout,513)
+      ELSE IF( TRIM(electron_dynamics) == 'verlet' ) THEN
+          WRITE( stdout,510)
+          frice = 0.
+      ELSE IF( TRIM(electron_dynamics) == 'damp' ) THEN
+          tnosee = .false.
+          WRITE( stdout,509)
+          WRITE( stdout,514) frice, grease
+      ELSE
+          CALL errore(' input_info ', ' unknown electron dynamics ', 1 )
+      END IF
       !
-
-      INTEGER :: is, i
-
-      WRITE( stdout,500) nbeg , nomore_ , iprint_ , ndr_ , ndw_
-      WRITE( stdout,505) delt_
-      WRITE( stdout,510) emass_ , emaec_
-!
-      if( tortho_ ) then
-         WRITE( stdout,511) ortho_eps_ , ortho_max_
-      else
-         WRITE( stdout,512)
+      IF( tnosee ) THEN
+        WRITE( stdout,590)
+        CALL electrons_nose_info()
+      ELSE 
+        WRITE( stdout,535)
+      END IF
+      !
+      if( trane ) then
+         WRITE( stdout,515) ampre
       endif
-!
-      if( tsde_ ) then
-         WRITE( stdout,513)
-      else
-         if ( tnosee_ ) frice_ = 0.
-         WRITE( stdout,509)
-         WRITE( stdout,514) frice_ , grease_
-      endif
-!
-      if ( trhor_ ) then
+      !
+      CALL electrons_print_info( )
+      !
+      CALL exch_corr_print_info( )
+
+      if ( trhor ) then
          WRITE( stdout,720)
       endif
-!
-      if( .not. trhor_ .and. trhow_ )then
+      if( .not. trhor .and. trhow )then
          WRITE( stdout,721)
       endif
-!
-      if( tvlocw_ )then
+      if( tvlocw )then
          WRITE( stdout,722)
       endif
-!
-      if( trane_ ) then
-         WRITE( stdout,515) ampre_
-      endif
-      WRITE( stdout,516)
-      do is =1, nsp
-         if(tranp_(is)) WRITE( stdout,517) is, amprp_(is)
-      end do
-!
-      if(tfor_) then
-         if(tnosep_) fricp_ = 0.
-         WRITE( stdout,520)
-         WRITE( stdout,523) ndega_
-         if(tsdp_)then
-            WRITE( stdout,521)
-         else
-            WRITE( stdout,522) fricp_ , greasp_
-         endif
-      else
-         WRITE( stdout,518)
-      endif
-!
-      if( tfor_ ) then
-         if(( tcp_ .or. tcap_ .or. tnosep_ ) .and. tsdp_ ) then
-            call errore(' main',' t contr. for ions when tsdp=.t.',0)
-         endif
-         if(.not. tcp_ .and. .not. tcap_ .and. .not. tnosep_ ) then
-            WRITE( stdout,550)
-         else if(tcp_ .and. tcap_ ) then
-            call errore(' main',' tcp and tcap both true',0)
-         else if(tcp_ .and. tnosep_ ) then
-            call errore(' main',' tcp and tnosep both true',0)
-         else if(tcap_ .and. tnosep_ ) then
-            call errore(' main',' tcap and tnosep both true',0)
-         else if(tcp_ ) then
-            WRITE( stdout,555) tempw , tolp_
-         else if(tcap_) then
-            WRITE( stdout,560) tempw , tolp_
-         else if(tnosep_ ) then
-            CALL ions_nose_info()
-         end if
-         if(tnosee_) then
-            CALL electrons_nose_info()
-         end if
-      end if
-!
-      if(tpre_) then
-         WRITE( stdout,600)
-         if(thdyn_) then
-            if(thdiag_) WRITE( stdout,608)
-            if(tnoseh_) then
-               frich_=0.
-               WRITE( stdout,604) temph_,qnh_,press_ / gpa_au
-            else
-               WRITE( stdout,602) frich_,greash_,press_ / gpa_au
-            endif
-         else
-            WRITE( stdout,606)
-         endif
-      endif
-      if ( agg .ne. 0.d0) then
-            WRITE( stdout,650) agg, sgg, e0gg
-      end if
-      WRITE( stdout,700) iprsta_
+      !
+      IF( program_name == 'FPMD' ) THEN
+        CALL empty_print_info( stdout )
+        CALL kpoint_info( stdout )
+      END IF
+      !
+      if( tfor .AND. tnosep ) fricp = 0.0d0
+      !
+      CALL ions_print_info( )
+      !
+      if( tfor .AND. tnosep ) CALL ions_nose_info()
+      !
+      if( thdyn .AND. tnoseh ) frich = 0.0d0
+      !
+      CALL cell_print_info( )
+      !
+      if( thdyn .AND. tnoseh ) CALL cell_nose_info()
+      !
+      IF( program_name == 'FPMD' ) THEN
+        CALL constraints_print_info( )
+        CALL potential_print_info( stdout )
+        CALL sic_info( )
+      END IF
+      !
+      WRITE( stdout,700) iprsta
 
-!     
+    END IF
 
- 500  format(//                                                         &
-     &       ' nbeg=',i3,' nomore=',i7,3x,' iprint=',i4,/               &
-     &       ' reads from',i3,' writes on',i3)
- 505  format(' time step = ',f9.4/)
- 510  format(' parameters for electron dynamics:'/                      &
-     &       ' emass= ',f10.2,2x,'emaec= ',f10.2,'ry')
- 511  format(' orthog. with lagrange multipliers: eps=',e10.2,          &
-     &         ' max=',i3)
- 512  format(' orthog. with gram-schmidt')
- 513  format(' electron dynamics with steepest descent')
- 509  format(' verlet algorithm for electron dynamics')
- 514  format(' with friction frice = ',f7.4,' , grease = ',f7.4)
- 720  format(' charge density is read from unit 47',/)
- 721  format(' charge density is written in unit 47',/)
- 722  format(' local potential is written in unit 46',/)
- 515  format(' initial random displacement of el. coordinates with ',   &
-     &       ' amplitude=',f10.6,/                                      &
-     &       ' trane not to be used with mass preconditioning')
- 516  format(/)
- 517  format(' initial random displacement of ionic coord. for species ',&
-     &       i4,' : amplitude=',f10.6)
- 518  format(' ions are not allowed to move'/)
- 520  format(' ions are allowed to move')
- 521  format(' ion dynamics with steepest descent')
- 522  format(' ion dynamics with fricp = ',f7.4,' and greasp = ',f7.4)
- 523  format(' the temperature is computed for ',i5,' degrees of freedom')
+
+    RETURN
+
+ 509  FORMAT(   3X,'verlet algorithm for electron dynamics')
+ 510  FORMAT(   3X,'Electron dynamics with newton equations')
+ 512  FORMAT(   3X,'Orthog. with Gram-Schmidt')
+ 513  FORMAT(   3X,'Electron dynamics with steepest descent')
+ 514  format(   3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
+ 515  format(   3X,'initial random displacement of el. coordinates with ',   &
+     &       ' amplitude=',f10.6,/,                                      &
+     &       3X,'trane not to be used with mass preconditioning')
+ 535   FORMAT(   3X,'Electron dynamics : the temperature is not controlled')
+ 540   FORMAT(   3X,'Electron dynamics with rescaling of velocities :',/ &
+               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
+                  ,'Tolerance = ',F11.6)
+ 545   FORMAT(   3X,'Electron dynamics with canonical temp. control : ',/ &
+               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
+                  ,'Tolerance = ',F11.6)
  550  format(' ion dynamics: the temperature is not controlled'//)
  555  format(' ion dynamics with rescaling of velocities:'/             &
      &       ' temperature required=',f10.5,'(kelvin)',' tolerance=',   &
@@ -1375,141 +1299,17 @@
  566  format(' electronic dynamics with nose` temp. control:'/          &
      &       ' elec. kin. en. required=',f10.5,'(hartree)',             &
      &       ' nose` mass = ',f10.3//)
- 600  format(' internal stress tensor calculated')
- 602  format(' cell parameters dynamics with frich = ',f7.4,            &
-     &       ' and greash = ',f7.4,/                                    &
-     &       ' external pressure = ',f11.7,'(gpa)'//)
- 604  format(' cell parameters dynamics with nose` temp. control:'/     &
-     &       ' cell temperature required = ',f10.5,'(kelvin)',          &
-     &       ' nose` mass = ',f10.3,/                                   &
-     &       ' external pressure = ',f11.7,'(gpa)'//)
- 606  format(' cell parameters are not allowed to move'//)
- 608  format(' frozen off-diagonal cell parameters'//)
- 650  format(' modified kinetic energy functional, with parameters:'/   &
-           & ' agg = ',f8.4,'  sgg = ', f7.4,'  e0gg = ',f6.2)
- 700  format(' iprsta = ',i2/)
-
-      RETURN
-
-  END SUBROUTINE
-  !
-  !
-  ! ----------------------------------------------------------------
-  !
-  !
-  SUBROUTINE input_info()
-
-    ! this subroutine print to standard output some parameters read from input
-    ! ----------------------------------------------
-
-    USE input_parameters, ONLY: restart_mode, nstep, iprint, ndr, ndw, &
-      celldm, dt, emass, title
-
-    IMPLICIT NONE
-
-    IF( ionode ) THEN
-      WRITE( stdout, 400) title
-      WRITE( stdout, 500) restart_mode, nstep, iprint, ndr, ndw
-      WRITE( stdout, 501) celldm(1), celldm
-      WRITE( stdout, 505) dt
-      WRITE( stdout, 510) emass
-      WRITE( stdout, 509)
-    END IF
-
-    RETURN
-
-400   FORMAT(/  3X, 'Job Title: ', A )
-500   FORMAT(   3X,'Restart Mode = ',A15,', Number of MD Steps = ',I7,/ &
-               ,3X,'Print out every ',I4,' MD Steps',/  &
-               ,3X,'Reads from unit = ',I3,', Writes to unit = ',I3)
-501   FORMAT( 3X,'Alat   = ', F10.6,/  &
-               ,3X,'Celldm = ',6F10.6)
-502   FORMAT(   3X,'An initial quench is performed')
-505   FORMAT(   3X,'MD Simulation time step    = ',F9.4)
-509   FORMAT(   3X,'Verlet algorithm for electron dynamics')
-510   FORMAT(   3X,'Electronic fictitious MASS = ',F10.2)
-
-  END SUBROUTINE input_info
-  !
-  !
-  ! ----------------------------------------------------------------
-  !
-  !
-  SUBROUTINE modules_info()
-
-    USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
-      orthogonalization
-
-    USE cell_module, ONLY: metric_print_info
-    USE cutoffs, ONLY: cutoffs_print_info
-    USE ions_module, ONLY: print_scaled_positions, ions_print_info
-    USE ions_nose, ONLY: ions_nose_info
-    USE electrons_nose, ONLY: electrons_nose_info
-    USE empty_states, ONLY: empty_print_info
-    USE electrons_module, ONLY: electrons_print_info
-    USE exchange_correlation, ONLY: exch_corr_print_info
-    USE diis, ONLY:  diis_print_info
-    USE potentials, ONLY:  potential_print_info
-    USE orthogonalize, ONLY: orthogonalize_info
-    USE brillouin, ONLY: kpoint_info
-    USE runcg_module, ONLY: runcg_info
-    USE sic_module, ONLY: sic_info
-
-    IMPLICIT NONE
-
-! ..  Write summary input infos on stdout
-      IF( ionode ) THEN
-        CALL cutoffs_print_info( stdout )
-        CALL electrons_print_info( stdout )
-        CALL empty_print_info( stdout )
-        IF( TRIM(electron_dynamics) == 'diis' ) THEN
-          CALL diis_print_info( stdout )
-        ELSE IF( TRIM(electron_dynamics) == 'cg'  ) THEN
-          CALL runcg_info( stdout )
-        ELSE IF( TRIM(electron_dynamics) == 'sd' ) THEN
-          WRITE( stdout,513)
-        ELSE
-          WRITE( stdout,514)
-        END IF
-        IF( TRIM(electron_temperature) /= 'nose') THEN
-          WRITE( stdout,535)
-        ELSE 
-          WRITE( stdout,590)
-        END IF
-        IF( TRIM(orthogonalization) == 'ortho' ) THEN
-          CALL orthogonalize_info( stdout )
-        ELSE
-          WRITE( stdout,512)
-        END IF
-        CALL kpoint_info( stdout )
-        CALL exch_corr_print_info( stdout )
-        CALL ions_print_info( stdout )
-        CALL ions_nose_info()
-        CALL electrons_nose_info()
-        CALL potential_print_info( stdout )
-        CALL metric_print_info( stdout )
-        CALL sic_info( )
-      END IF
-
-
-
-    RETURN
-  512   FORMAT(   3X,'Orthog. with Gram-Schmidt')
-  513   FORMAT(   3X,'Electron dynamics with steepest descent')
-  514   FORMAT(   3X,'Electron dynamics with newton equations')
-  523   FORMAT(   3X,'Dynamic quenching for ions/cell')
-  535   FORMAT(   3X,'Electron dynamics : the temperature is not controlled')
-  540   FORMAT(   3X,'Electron dynamics with rescaling of velocities :',/ &
-               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
-                  ,'Tolerance = ',F11.6)
-  545   FORMAT(   3X,'Electron dynamics with canonical temp. control : ',/ &
-               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
-                  ,'Tolerance = ',F11.6)
-  580   FORMAT(   3X,'Nstepe = ',I3  &
+ 580   FORMAT(   3X,'Nstepe = ',I3  &
                   ,' purely electronic steepest descent steps',/ &
                ,3X,'are performed for every ionic step in the program')
-  590   FORMAT(   3X,'Electron temperature control via nose thermostat')
+ 590   FORMAT(   3X,'Electron temperature control via nose thermostat')
     !
+
+ 700  format( /,3X, 'Verbosity: iprsta = ',i2,/)
+ 720  format( 3X, 'charge density is read from unit 47')
+ 721  format( 3X, 'charge density is written in unit 47')
+ 722  format( 3X, 'local potential is written in unit 46')
+
   END SUBROUTINE modules_info
 
 

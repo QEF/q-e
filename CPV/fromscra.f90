@@ -63,7 +63,7 @@
       USE orthogonalize, ONLY: ortho
       USE brillouin, ONLY: kpoints
       USE pseudo_projector, ONLY: projector
-      USE control_flags, ONLY: tcarpar, tfor, thdyn, tortho, prn, force_pairing
+      USE control_flags, ONLY: tcarpar, tfor, thdyn, tortho, force_pairing
       USE charge_types, ONLY: charge_descriptor
       USE time_step, ONLY: delt
       USE runcp_module, ONLY: runcp_ncpp
@@ -108,7 +108,7 @@
       CALL strucf(sfac, atoms, eigr, gv)
       edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
       CALL rhoofr(gv, kp, cm, cdesc, fi, rhoe, desc, ht)
-      CALL vofrhos(ttprint, prn, rhoe, desc, tfor, thdyn, ttforce, atoms, &
+      CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
            gv, kp, fnl, vpot, ps, cm, cdesc, fi, eigr, sfac, timepre, ht, edft)
 
       ! CALL debug_energies( edft ) ! DEBUG

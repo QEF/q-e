@@ -42,7 +42,7 @@
 
 
    SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, toptical, ht, kp, &
-                prn, avgs, avgs_run, edft) 
+                avgs, avgs_run, edft) 
 
       USE cell_module, only: s_to_r, boxdimensions, press
       use constants, only: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
@@ -55,7 +55,7 @@
       USE ions_module, ONLY: displacement, cdm_displacement
       USE polarization, ONLY: pdipole, pdipolt, p
       USE optical_properties, ONLY:  WRITE_DIELEC
-      USE control_flags, ONLY: tdipole, tnosee, tnosep, tnoseh
+      USE control_flags, ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta
       USE atoms_type_module, ONLY: atoms_type
       USE sic_module, ONLY: ind_localisation, pos_localisation, nat_localisation, self_interaction
       USE sic_module, ONLY: rad_localisation
@@ -72,7 +72,7 @@
       INTEGER, INTENT(IN) :: nfi
       TYPE (atoms_type) :: atoms
       REAL(dbl) ::   ekinc, ekcell
-      LOGICAL   ::   tprint, prn, toptical, ttsic
+      LOGICAL   ::   tprint, toptical, ttsic
       type (boxdimensions), intent(in) :: ht
       type (kpoints), intent(in) :: kp
       REAL(dbl) :: avgs(:), avgs_run(:)
@@ -185,7 +185,7 @@
 
 ! ...   Check Memory
 
-      IF( prn ) CALL memstat(mpime)
+      IF( iprsta > 1 ) CALL memstat(mpime)
 
 ! ...   Print physical variables to fortran units
 
@@ -413,7 +413,6 @@
 
   SUBROUTINE printmain( tbeg, taurdr, atoms )
 
-      USE cell_module, only: metric_print_info
       use ions_module, only: print_scaled_positions
       USE atoms_type_module, ONLY: atoms_type
 
@@ -432,7 +431,6 @@
         ELSE
           WRITE( stdout,*) '  Initial cell (HT0) from input file'
         END IF
-        !call metric_print_info( stdout )
 
         WRITE( stdout,*)
         IF(TAURDR) THEN

@@ -183,7 +183,7 @@
       END SUBROUTINE vofmean
 
 !  -------------------------------------------------------------------------
-      SUBROUTINE kspotential( tprint, prn, tforce, tstress, rhoe, desc, &
+      SUBROUTINE kspotential( tprint, tforce, tstress, rhoe, desc, &
         atoms, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht, fi, fnl, vpot, edft, timepre )
 
         USE charge_density, ONLY: rhoofr
@@ -198,7 +198,7 @@
         USE charge_types, ONLY: charge_descriptor
 
 ! ...   declare subroutine arguments
-        LOGICAL   :: prn, tcel
+        LOGICAL   :: tcel
         TYPE (atoms_type),    INTENT(INOUT) :: atoms
         COMPLEX(dbl),         INTENT(INOUT) :: c0(:,:,:,:)
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
@@ -221,7 +221,7 @@
 
         CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht)
 
-        CALL vofrhos(tprint, prn, rhoe, desc, tforce, tstress, tforce, atoms, gv, &
+        CALL vofrhos(tprint, rhoe, desc, tforce, tstress, tforce, atoms, gv, &
           kp, fnl, vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, ht, edft)
 
         RETURN
@@ -232,7 +232,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE vofrhos(tprint, prn, rhoe, desc, tfor, thdyn, tforce, atoms, &
+      SUBROUTINE vofrhos(tprint, rhoe, desc, tfor, thdyn, tforce, atoms, &
               gv, kp, fnl, vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, box, edft)
 
 !  this routine computes:
@@ -269,7 +269,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE stick, ONLY: dfftp
       USE charge_types, ONLY: charge_descriptor
-      USE control_flags, ONLY: tscreen, tchi2
+      USE control_flags, ONLY: tscreen, tchi2, iprsta
       USE io_global, ONLY: ionode
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE io_global, ONLY: stdout
@@ -278,7 +278,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL, INTENT(IN) :: tprint, prn, tfor, thdyn, tforce
+      LOGICAL, INTENT(IN) :: tprint, tfor, thdyn, tforce
       REAL(dbl) :: vpot(:,:,:,:)
 
       TYPE (atoms_type), INTENT(INOUT) :: atoms
@@ -367,8 +367,8 @@
       nr3x = dfftp%npl
 
       edft%evdw = 0.0d0
-      ttstress = thdyn.OR.prn.OR.tprint
-      ttforce  = tfor.OR.prn.OR.tprint.OR.tforce
+      ttstress = thdyn.OR.(iprsta>2).OR.tprint
+      ttforce  = tfor.OR.(iprsta>2).OR.tprint.OR.tforce
       !ttscreen = .TRUE.
       ttscreen = .FALSE.
       ttsic    = ( ABS(self_interaction) /= 0 )
@@ -734,7 +734,7 @@
 ! ... compute stress tensor
       IF( ttstress .AND. kp%gamma_only ) THEN
         s8 = cclock()
-        CALL pstress(prn, strvxc, rhoeg, rhoetg, pail, desr, gv, fnl, &
+        CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, gv, fnl, &
           ps, c0, cdesc, fi, eigr, sfac, grho, v2xc, box, edft)
         timepre = cclock() - s8
       END IF
@@ -764,7 +764,7 @@
         CALL deallocate_chi2
       END IF
 
-      IF(prn) THEN
+      IF(iprsta>2) THEN
         CALL memstat(mpime)
       END IF
 

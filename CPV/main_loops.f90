@@ -186,7 +186,7 @@
       USE input_parameters, ONLY: restart_mode
       USE io_files,         ONLY: outdir
       USE ions_base,        ONLY: nat
-      USE io_global,        ONLY:  stdout
+      USE io_global,        ONLY: stdout
 
       IMPLICIT NONE
 

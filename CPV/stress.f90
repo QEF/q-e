@@ -57,7 +57,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE pstress(prn, strvxc, rhoeg, vxc, pail, desr, &
+      SUBROUTINE pstress( strvxc, rhoeg, vxc, pail, desr, &
         gv, fnl, ps, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
 
 !  this routine computes stress tensor from dft total energy
@@ -76,11 +76,11 @@
       USE cell_base, ONLY: tpiba2
       USE io_global, ONLY: ionode
       USE exchange_correlation, ONLY: stress_xc
+      USE control_flags, ONLY: iprsta
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL, INTENT(IN) :: prn
       REAL(dbl) :: pail(:,:), desr(:), strvxc
       REAL(dbl) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
       COMPLEX(dbl) :: rhoeg(:,:), vxc(:,:)
@@ -161,7 +161,9 @@
 
       IF(timing) s7 = cclock()
 
-      ! .. CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
+      IF( iprsta > 2 ) THEN
+      CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
+      END IF
 
 ! ... total stress (pai-lowercase)
       DO k=1,6

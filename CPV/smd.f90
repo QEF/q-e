@@ -83,22 +83,10 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   integer :: sm_k,smpm 
   !
   !
-  !     ==============================================================
-  !     ==== generate reference g-space                           ==== 
-  !     ==============================================================
-  !
   smpm = sm_p -1
-  !
-  !
-  !     ... initialize G-vectors and related quantities
-  !
-  call init1 ( rep(0)%tau0, ibrav, celldm, ecutw, ecut )
-
-  !
   !
   ! taus = scaled, tau0 = alat units
   !
-
   DO sm_k=0, sm_p
      call r_to_s( rep(sm_k)%tau0, rep(sm_k)%taus, na, nsp, ainv )
   ENDDO

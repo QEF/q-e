@@ -78,7 +78,7 @@
       USE control_flags, ONLY: tbeg, nomore, &
                   nbeg, newnfi, tnewnfi, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
-                  ndw, tortho, tstress, prn, timing, memchk, &
+                  ndw, tortho, tstress, timing, memchk, iprsta, &
                   tconjgrad, tprnsfac, toptical, tcarpar, &
                   rhoout, tdipole, t_diis, t_diis_simple, t_diis_rot, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
@@ -257,13 +257,17 @@
 ! ... end of declarations
 !  ----------------------------------------------
 
-! *** INITIALIZATION SECTION ***
-
       s1 = cclock()
 
-! ... input parameter setup routine
+!     ====================================================
+!     copy-in input parameters from input_parameter module
+!     ====================================================
 
       CALL iosys()
+
+!     ==================================================================
+!     initialize g-vectors, fft grids
+!     ==================================================================
 
       CALL init_dimensions( )
 
@@ -347,7 +351,7 @@
           ht_0, atoms_0, fnl, vpot, edft )
 
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, &
-          toptical, ht_0, kp, prn, avgs, avgs_this_run, edft)
+          toptical, ht_0, kp, avgs, avgs_this_run, edft)
 
       ELSE
 
@@ -387,7 +391,7 @@
         tps = tps + delt * au_ps
 
 ! ...   set the right flags for the current MD step
-        ttprint   = ( MOD(nfi, iprint) == 0)  .OR. prn
+        ttprint   = ( MOD(nfi, iprint) == 0)  .OR. (iprsta>2)
         ttsave    =   MOD(nfi, isave) == 0
         ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep) == 0 )
         ttdipole  =  ttprint .AND. tdipole
@@ -406,7 +410,8 @@
         IF(memchk) CALL memstat(0)
 
         IF( thdyn .AND. tnoseh ) THEN
-          CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, ht_0%hmat, ht_m%hmat )
+          CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
+          velh(:,:)=2.*(ht_0%hmat(:,:)-ht_m%hmat(:,:))/delt-velh(:,:)
         END IF
 
         IF( thdyn ) THEN
@@ -435,28 +440,28 @@
 
         IF( ttdiis .AND. t_diis_simple ) THEN
 ! ...     perform DIIS minimization on electronic states
-          CALL runsdiis(ttprint, prn, rhoe, desc, atoms_0, gv, kp, &
+          CALL runsdiis(ttprint, rhoe, desc, atoms_0, gv, kp, &
                ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft )
         ELSE IF (ttdiis .AND. t_diis_rot) THEN
 ! ...     perform DIIS minimization with wavefunctions rotation
           IF(nspin.GT.1) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
-          CALL rundiis(ttprint, prn, rhoe, desc, atoms_0, gv, kp, &
+          CALL rundiis(ttprint, rhoe, desc, atoms_0, gv, kp, &
                ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft )
         ELSE IF ( tconjgrad ) THEN
 ! ...     on entry c0 should contain the wavefunctions to be optimized
-          CALL runcg(tortho, ttprint, prn, rhoe, desc, atoms_0, gv, kp, &
+          CALL runcg(tortho, ttprint, rhoe, desc, atoms_0, gv, kp, &
                ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, ekin_maxiter, etot_conv_thr )
 ! ...     on exit c0 and cp both contain the updated wave function
 ! ...     cm are overwritten (used as working space)
         ELSE IF ( tsteepdesc ) THEN
-          CALL runsd(tortho, ttprint, ttforce, prn, rhoe, desc, atoms_0, gv, kp, &
+          CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms_0, gv, kp, &
                ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
         ELSE IF ( tconjgrad_ion%active ) THEN
-          CALL runcg_ion(nfi, tortho, ttprint, prn, rhoe, desc, atoms_p, atoms_0, &
+          CALL runcg_ion(nfi, tortho, ttprint, rhoe, desc, atoms_p, atoms_0, &
                atoms_m, gv, kp, ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
                tconvthrs%ekin, tconjgrad_ion%nstepex )
@@ -489,7 +494,7 @@
 
 ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
 ! ...   ionc forces "fion" and stress "pail".
-        CALL vofrhos(ttprint, prn, rhoe, desc, tfor, thdyn, ttforce, atoms_0, &
+        CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms_0, &
           gv, kp, fnl, vpot, ps, c0, wfill, fi, eigr, sfac, timepre, ht_0, edft)
 
         ! .. WRITE( stdout,*) 'DEBUG MAIN', atoms_0%for( 1:3, 1:atoms_0%nat )
@@ -624,7 +629,7 @@
 
         ! ...   printout 
         !
-        CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, prn, &
+        CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, &
           avgs, avgs_this_run, edft)
 
         IF(memchk) CALL memstat(11)
@@ -720,7 +725,7 @@
           ! When code stop write to stdout quantities regardles of the value of nfi
           ! but do not print if MOD( nfi, iprint ) == 0  
           !
-          CALL printout( -nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, prn, &
+          CALL printout( -nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, &
             avgs, avgs_this_run, edft)
           !
         END IF

@@ -30,7 +30,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-   SUBROUTINE runcg_ion(nfi, tortho, tprint, prn, rhoe, desc, atomsp, atoms0, atomsm, &
+   SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, desc, atomsp, atoms0, atomsm, &
       gv, kp, ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
       fnl, vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
 
@@ -65,7 +65,7 @@
       ! ... declare subroutine arguments
 
       INTEGER   :: nfi
-      LOGICAL   :: tortho, tprint, prn, tcel, doions
+      LOGICAL   :: tortho, tprint, tcel, doions
       TYPE (atoms_type) :: atomsp
       TYPE (atoms_type) :: atoms0
       TYPE (atoms_type) :: atomsm
@@ -126,7 +126,6 @@
       ttsde       = .TRUE.
       ttprint     = .FALSE.
       ttstress    = .FALSE.
-      prn     = .FALSE.
       tcel    = .FALSE.
       ttortho = .TRUE.
       ttforce = .TRUE.
@@ -161,7 +160,7 @@
       s1 = cclock()
       old_clock_value = s1
 
-      CALL runsd(ttortho, ttprint, ttforce, prn, rhoe, desc, atoms0, gv, kp, &
+      CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, gv, kp, &
          ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
          fnl, vpot, doions, edft, maxnstep, sdthr )
 
@@ -204,7 +203,7 @@
           IF( ionode ) WRITE( stdout, fmt='(8X,"cgion: bad step")')  ! perform steepest descent
           displ = displ / 2.0d0
 
-          CALL runsd(ttortho, ttprint, ttforce, prn, rhoe, desc, atoms0, gv, kp, &
+          CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, gv, kp, &
             ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
             fnl, vpot, doions, edft, maxnstep, sdthr )
         
@@ -236,7 +235,7 @@
         END IF
 
         CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., &
-          .false., ht, kp, prn, avgs, avgs_this_run, edft)
+          .false., ht, kp, avgs, avgs_this_run, edft)
 
         fp  = fret
         xi(1:3,1:nat) = - atoms0%for(1:3,1:nat) 
@@ -281,7 +280,7 @@
       END IF
 
       CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., &
-        .false., ht, kp, prn, avgs, avgs_this_run, edft)
+        .false., ht, kp, avgs, avgs_this_run, edft)
 
       DEALLOCATE( hacca, gnew, xi, STAT=ierr )
       IF( ierr/=0 ) CALL errore(' runcg_ion ', ' deallocating hacca ',ierr)
@@ -524,12 +523,11 @@
          ! ... LOCALS
 
            INTEGER      ia, is, isa, k
-           LOGICAL      ttprint, prn, ttforce, ttstress, tcel, ttortho, doions
+           LOGICAL      ttprint, ttforce, ttstress, tcel, ttortho, doions
            REAL(dbl) :: fions(3), dumm
 
          ! ... SUBROUTINE BODY
 
-           prn     = .FALSE.
            tcel    = .FALSE.
            ttortho = .TRUE.
            ttprint = .FALSE.
@@ -557,7 +555,7 @@
          ! ...  Calculate Forces (fion) and DFT Total Energy (edft) for the new ionic
          ! ...  positions (atomsp)
 
-           CALL runsd(ttortho, ttprint, ttforce, prn, rhoe, desc, atomsp, gv, kp, &
+           CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atomsp, gv, kp, &
              ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
              fnl, vpot, doions, edft, maxnstep, sdthr )
 

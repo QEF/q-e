@@ -36,7 +36,7 @@
         REAL(dbl)  :: delthal, twodelt, fordt2, dt2, dt2by2, delt
         REAL(dbl)  :: tps ! elapsed simulated time in picoseconds
 
-        PUBLIC :: set_time_step, tps, delt
+        PUBLIC :: set_time_step, tps, delt, twodelt, dt2, dt2by2
 
 !  end of module-scope declarations
 !  ----------------------------------------------

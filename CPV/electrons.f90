@@ -59,7 +59,6 @@
 
         PUBLIC :: electrons_setup, eigs, cp_eigs
         PUBLIC :: electron_mass_init, band_init, bmeshset
-        PUBLIC :: electrons_print_info
         PUBLIC :: deallocate_electrons, fermi_energy
         PUBLIC :: pmss, n_emp, emass, emp_desc, ei_emp
         PUBLIC :: occ_desc, ei, nspin, nelt, nupdwn
@@ -233,37 +232,6 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-        SUBROUTINE electrons_print_info( unit )
-
-          INTEGER, INTENT(IN) :: unit
-          INTEGER :: i
-
-          IF( nspin == 1) THEN
-            WRITE(unit,6) nelt, nbnd
-            WRITE(unit,7) ( f( i ), i = 1, nbnd )
-          ELSE
-            WRITE(unit,8) nelt
-            WRITE(unit,9) nel(1)
-            WRITE(unit,7) ( f( i ), i = 1, nupdwn(1))
-            WRITE(unit,10) nel(2)
-            WRITE(unit,7) ( f( i ), i = iupdwn(2), ( iupdwn(2) + nupdwn(2) - 1 ) )
-          END IF
-6         FORMAT(/,3X,'Electronic states',/  &
-                  ,3X,'-----------------',/  &
-                  ,3X,'Number of Electron = ',I5,', of States = ',I5,/ &
-                  ,3X,'Occupation numbers :')
-7         FORMAT(2X,10F5.2)
-8         FORMAT(/,3X,'Electronic states',/  &
-                  ,3X,'-----------------',/  &
-                  ,3X,'Local Spin Density calculation',/ &
-                  ,3X,'Number of Electron = ',I5)
-9         FORMAT(  3X,'Spins up   = ', I5, ', occupations: ')  
-10        FORMAT(  3X,'Spins down = ', I5, ', occupations: ')  
-
-          RETURN
-        END SUBROUTINE electrons_print_info
-
-!  ----------------------------------------------
 !
 !
 !

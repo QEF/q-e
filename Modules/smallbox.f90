@@ -63,11 +63,11 @@
 
        WRITE( stdout,*)
        WRITE( stdout,220)
-220    format(' unit vectors of box grid cell',/,                        &
-     &       ' in real space:',25x,'in reciprocal space:')
-       WRITE( stdout,'(3f10.4,10x,3f10.4)') a1b, b1b
-       WRITE( stdout,'(3f10.4,10x,3f10.4)') a2b, b2b
-       WRITE( stdout,'(3f10.4,10x,3f10.4)') a3b, b3b
+220    format( 3X, 'unit vectors of box grid cell',/,                        &
+     &         3X, 'in real space:',25x,'in reciprocal space:')
+       WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') a1b, b1b
+       WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') a2b, b2b
+       WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') a3b, b3b
 
        ainvb(1,:) = b1b(:) / alatb
        ainvb(2,:) = b2b(:) / alatb

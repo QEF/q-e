@@ -29,7 +29,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE runsd(tortho, tprint, tforce, prn, rhoe, desc, atoms_0, gv, kp, &
+      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, gv, kp, &
                  ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                  fnl, vpot, doions, edft, maxnstep, sdthr )
 
@@ -58,7 +58,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL   :: tortho, tprint, tforce, prn, tcel, doions
+      LOGICAL   :: tortho, tprint, tforce, tcel, doions
       TYPE (atoms_type), INTENT(INOUT) :: atoms_0
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
@@ -126,7 +126,7 @@
 
         s1 = cclock()
 
-        CALL kspotential( ttprint, prn, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
           atoms_0, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
@@ -170,7 +170,7 @@
 
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
-        CALL kspotential( ttprint, prn, tforce, ttstress, rhoe, desc, &
+        CALL kspotential( ttprint, tforce, ttstress, rhoe, desc, &
           atoms_0, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot

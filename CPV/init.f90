@@ -62,7 +62,7 @@
       USE wave_types, ONLY: wave_descriptor, wave_descriptor_init, &
         wave_descriptor_info
       USE descriptors_module, ONLY: get_local_dims, get_global_dims
-      USE control_flags, ONLY: nbeg, prn, tbeg, timing, t_diis
+      USE control_flags, ONLY: nbeg, tbeg, timing, t_diis, iprsta
       USE input_parameters, ONLY: rd_ht
       USE turbo, ONLY: tturbo, allocate_turbo
       USE ions_base, ONLY: tau_srt, tau_units, ind_srt, if_pos, atm
@@ -177,7 +177,7 @@
       CALL wave_descriptor_init( wempt, gv%ngw_l, gv%ngw_g, neupdwn, neupdwn, &
              kp%nkpt, kp%nkpt, nspin, isym, gv%gzero )
 
-      IF( prn ) THEN
+      IF( iprsta > 2 ) THEN
         CALL wave_descriptor_info( wfill, 'wfill', stdout )
         CALL wave_descriptor_info( wempt, 'wempt', stdout )
       END IF
@@ -225,7 +225,7 @@
       USE brillouin, ONLY: kpoints
       USE wave_types, ONLY: wave_descriptor
       USE descriptors_module, ONLY: get_local_dims, get_global_dims
-      USE control_flags, ONLY: nbeg, prn, tbeg, timing, t_diis
+      USE control_flags, ONLY: nbeg, tbeg, timing, t_diis
 
       IMPLICIT NONE
 
@@ -300,112 +300,6 @@
 !=----------------------------------------------------------------------=!
 
 
-!-----------------------------------------------------------------------
-  subroutine init1( tau )
-!-----------------------------------------------------------------------
-!
-!     initialize G-vectors and related quantities
-!
-      use control_flags, only: iprint
-      use constants, only: scmass
-      use io_global, only: stdout
-      use funct, only: dft
-      use parameters, only: natx, nsx
-      use ions_base, only: pmass, rcmax, nsp, na
-      use cell_base, only: ainv, a1, a2, a3
-      use cell_base, only: omega, alat, ibrav, celldm
-      use electrons_base, only: n => nbsp, f, nspin, nel, nupdwn, iupdwn
-      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      USE gvecw, ONLY: ecutw, gcutw
-      USE gvecp, ONLY: ecut => ecutp, gcut => gcutp
-      USE gvecs, ONLY: gcuts, dual
-      use gvecb, only: gcutb
-
-      implicit none
-! 
-      real(kind=8) tau(3,natx)
-!
-      integer idum, ik, k, iss, i, in, is, ia, isat
-      real(kind=8) fsum, ocp, ddum
-      real(kind=8) qk(3), rat1, rat2, rat3
-      real(kind=8) b1(3), b2(3), b3(3)
-      integer :: ng_ , ngs_ , ngm_ , ngw_
-
-!
-!     ==============================================================
-!
-      WRITE( stdout,34) ibrav,alat,omega,gcut,gcuts,gcutw,1
-      WRITE( stdout,81) nr1, nr2, nr3, nr1x, nr2x, nr3x,                      &
-     &            nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,                     &
-     &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
-!
-      WRITE( stdout,38) dft
-      WRITE( stdout,334) ecutw, dual * ecutw, ecut
-!
-      if(nspin.eq.1)then
-         WRITE( stdout,6) nel(1),n
-         WRITE( stdout,166) nspin
-         WRITE( stdout,74)
-         WRITE( stdout,77) (f(i),i=1,n)
-      else
-         WRITE( stdout,7) nel(1),nel(2), n
-         WRITE( stdout,167) nspin,nupdwn(1),nupdwn(2)
-         WRITE( stdout,75) 
-         WRITE( stdout,77) (f(i),i=iupdwn(1),nupdwn(1))
-         WRITE( stdout,76) 
-         WRITE( stdout,77) (f(i),i=iupdwn(2),iupdwn(2)-1+nupdwn(2))
-      endif
-      WRITE( stdout,878) nsp
-      isat = 0
-      do is=1,nsp
-         WRITE( stdout,33) is, na(is), pmass(is)/scmass, rcmax(is)
-         WRITE( stdout,9)
-         do ia = ( 1 + isat ), ( na(is) + isat )
-            WRITE( stdout,555) ( tau(k,ia), k = 1, 3 )
-         end do
-         isat = isat + na(is)
- 555     format((4x,3(1x,f6.2)))
-      end do
-!
-!
-   33 format(' is=',i3,/,'  na=',i4,                                    &
-     &       '  atomic mass=',f6.2,' gaussian rcmax=',f6.2)
-   34 format(' initialization ',//,                                     &
-     &       ' ibrav=',i3,' alat=',f7.3,' omega=',f10.4,                &
-     &       /,' gcut=',f8.2,3x,' gcuts=',                              &
-     &       f8.2,' gcutw=',f8.2,/,                                     &
-     &       ' k-points: nkpt=',i2,//)
-   81 format(' meshes:',/,                                              &
-     &       '  dense grid: nr1 ,nr2, nr3  = ',3i4,                     &
-     &                   '  nr1x, nr2x, nr3x = ',3i4,/,                 &
-     &       ' smooth grid: nr1s,nr2s,nr3s = ',3i4,                     &
-     &                   '  nr1sx,nr2sx,nr3sx= ',3i4,/,                 &
-     &       '    box grid: nr1b,nr2b,nr3b = ',3i4,                     &
-     &                   '  nr1bx,nr2bx,nr3bx= ',3i4,/)
-    6 format(/' # of electrons=',i5,' # of states=',i5,/)
-    7 format(/' # of up electrons=',i5,'  of down electrons=',i5,         &
-              ' # of states=',i5,/)
-   38 format(' exchange-correlation potential: ',a20/)
-  334 format(' ecutw=',f7.1,' ryd',3x,                                  &
-     &       ' ecuts=',f7.1,' ryd',3x,' ecut=',f7.1,' ryd')
-  166 format(/,' nspin=',i2)
-  167 format(/,' nspin=',i2,5x,' nup=',i5,5x,' ndown=',i5)
-   74 format(' occupation numbers:')
-   75 format(' occupation numbers up:')
-   76 format(' occupation numbers down:')
-   77 format(20f4.1)
-  878 format(/' # of atomic species',i5)
-    9 format(' atomic coordinates:')
-!
-      return
-      end subroutine
-
-
-!-----------------------------------------------------------------------
-
   subroutine init_dimensions(  )
 
       !
@@ -445,6 +339,11 @@
       real(kind=8) :: b1(3), b2(3), b3(3)
       integer :: ng_ , ngs_ , ngm_ , ngw_
 
+      IF( ionode ) THEN
+        WRITE( stdout, 100 )
+ 100    FORMAT( 3X,'Simulation dimensions initialization',/, &
+                3X,'------------------------------------' )
+      END IF
       !
       ! ... Initialize processor grid for parallel linear algebra 
       !     used electronic states lagrange multiplier matrixes
@@ -493,9 +392,9 @@
         WRITE( stdout,210) 
 210     format(/,3X,'unit vectors of full simulation cell',&
               &/,3X,'in real space:',25x,'in reciprocal space (units 2pi/alat):')
-        WRITE( stdout,'(I1,1X,3f10.4,10x,3f10.4)') 1,a1,b1
-        WRITE( stdout,'(I1,1X,3f10.4,10x,3f10.4)') 2,a2,b2
-        WRITE( stdout,'(I1,1X,3f10.4,10x,3f10.4)') 3,a3,b3
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 1,a1,b1
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 2,a2,b2
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 3,a3,b3
 
       END IF
 
@@ -576,6 +475,10 @@
       !
       CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
       
+      IF( ionode ) THEN
+        WRITE( stdout, 110 )
+ 110    FORMAT( /,3X,'Simulation dimensions initialization completed',// )
+      END IF
       !
       !   Flush stdout
       !
@@ -584,3 +487,175 @@
 
       return
       end subroutine
+
+
+
+!-----------------------------------------------------------------------
+      subroutine init ( ibrav, celldm, ecut, ecutw, ndr, nbeg,  &
+                        tfirst, tau0, taus, delt, tps, iforce )
+!-----------------------------------------------------------------------
+!
+!     initialize G-vectors and related quantities
+!     use ibrav=0 for generic cell vectors given by the matrix h(3,3)
+!
+      use control_flags, only: iprint, thdyn
+      use io_global, only: stdout
+      use gvecw, only: ngw
+      use ions_base, only: na, pmass, nsp
+      use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
+      use constants, only: pi, fpi
+      use cell_base, only: hold, h
+      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use betax, only: mmx, refg
+      use cp_restart, only: cp_read_cell
+      use parameters, only: nacx, nsx, natx, nhclm
+      use electrons_base, only: f
+
+      implicit none
+! input/output
+      integer ibrav, ndr, nbeg
+      logical tfirst
+      real(kind=8) tau0(3,natx), taus(3,natx)
+      integer iforce(3,natx)
+      real(kind=8) celldm(6), ecut, ecutw
+      real(kind=8) delt, tps
+! local
+      integer i, j, ia, is, nfi, isa, isat
+      real(kind=8) gvel(3,3)
+      real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+!
+!
+! taus = scaled, tau0 = alat units
+!
+      CALL r_to_s( tau0, taus, na, nsp, ainv )
+!
+      refg = 1.0d0 * ecut / ( mmx - 1 )
+      WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
+!
+      if( nbeg >= 0 ) then
+
+        !
+        ! read only h and hold from file ndr
+        !
+
+        CALL cp_read_cell( ndr, ' ', .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
+
+        h     = TRANSPOSE( h    )
+        hold  = TRANSPOSE( hold )
+        velh  = TRANSPOSE( velh )
+
+        WRITE( stdout,344) ibrav
+        do i=1,3
+          WRITE( stdout,345) (h(i,j),j=1,3)
+        enddo
+        WRITE( stdout,*)
+
+      else
+
+        !
+        ! with variable-cell we use h to describe the cell
+        !
+
+        do i = 1, 3
+            h(i,1) = a1(i)
+            h(i,2) = a2(i)
+            h(i,3) = a3(i)
+        enddo
+
+        hold = h
+
+      end if
+!
+!     ==============================================================
+!     ==== generate true g-space                                ====
+!     ==============================================================
+!
+      call newinit( ibrav )
+!
+      !
+ 344  format(' ibrav = ',i4,'       cell parameters ',/)
+ 345  format(3(4x,f10.5))
+      return
+      end
+
+
+
+!-----------------------------------------------------------------------
+      subroutine newinit(ibrav)
+!-----------------------------------------------------------------------
+!     re-initialization of lattice parameters and g-space vectors.
+!     Note that direct and reciprocal lattice primitive vectors
+!     a1,a2,a3, ainv, and corresponding quantities for small boxes
+!     are recalculated according to the value of cell parameter h
+!
+      use control_flags, only: iprint, iprsta
+      use io_global, only: stdout
+      use gvec
+      use grid_dimensions, only: nr1, nr2, nr3
+      use cell_base, only: ainv, a1, a2, a3
+      use cell_base, only: omega, alat
+      use constants, only: pi, fpi
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
+      use small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
+      use cell_base, only: h, deth
+      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
+!
+      implicit none
+      integer ibrav
+!
+! local
+      integer i, j
+      real(kind=8) alatb, gmax, b1(3),b2(3),b3(3), b1b(3),b2b(3),b3b(3)
+      real(kind=8) ddum
+!
+!
+      alat = sqrt( h(1,1)*h(1,1) + h(2,1)*h(2,1) + h(3,1)*h(3,1) )
+
+!     ==============================================================
+      tpiba  = 2.d0 * pi / alat
+      tpiba2 = tpiba * tpiba
+
+!     ==============================================================
+!     ==== generate g-space                                     ====
+!     ==============================================================
+      call invmat (3, h, ainv, deth)
+      omega = deth
+!
+      do i = 1, 3
+         a1(i) = h(i,1)
+         a2(i) = h(i,2)
+         a3(i) = h(i,3)
+      enddo
+!
+      call recips( a1, a2, a3, b1, b2, b3 )
+      b1 = b1 * alat
+      b2 = b2 * alat
+      b3 = b3 * alat
+      call gcal( b1, b2, b3, gmax )
+!
+!     ==============================================================
+!     generation of little box g-vectors
+!     ==============================================================
+!
+      call newgb( a1, a2, a3, omega, alat )
+
+!     ==============================================================
+      if(iprsta.ge.4)then
+         WRITE( stdout,34) ibrav,alat,omega
+         if(ibrav.eq.0) then
+            WRITE( stdout,344)
+            do i=1,3
+               WRITE( stdout,345) (h(i,j),j=1,3)
+            enddo
+            WRITE( stdout,*)
+         endif
+      endif
+!
+ 34   format(' initialization ',//,                                     &
+     &       ' ibrav=',i3,' alat=',f7.3,' omega=',f10.4,//)
+ 344  format(' cell parameters ',/)
+ 345  format(3(4x,f10.5))
+!
+      return
+      end
+

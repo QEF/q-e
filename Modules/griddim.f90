@@ -237,7 +237,9 @@
         WRITE( stdout,*) '  Real Mesh Report '
         WRITE( stdout,*) '  ---------------- '
         WRITE( stdout,1000) nr1, nr2, nr3, nr1l, nr2l, nr3l, 1, 1, nproc
-
+        WRITE( stdout,1010) nr1x, nr2x, nr3x
+        WRITE( stdout,1020) nnrx
+        WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) ( dfftp%npp( i ), i = 1, nproc )
       END IF
 
@@ -246,12 +248,17 @@
         WRITE( stdout,*) '  Smooth Real Mesh Report '
         WRITE( stdout,*) '  ----------------------- '
         WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1sl, nr2sl, nr3sl, 1, 1, nproc
+        WRITE( stdout,1010) nr1sx, nr2sx, nr3sx
+        WRITE( stdout,1020) nnrsx
+        WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc )
 
         WRITE( stdout,*)
         WRITE( stdout,*) '  Small Box Real Mesh Report '
         WRITE( stdout,*) '  -------------------------- '
         WRITE( stdout,1000) nr1b, nr2b, nr3b, nr1bl, nr2bl, nr3bl, 1, 1, 1
+        WRITE( stdout,1010) nr1bx, nr2bx, nr3bx
+        WRITE( stdout,1020) nnrbx
 
       END IF
 
@@ -259,6 +266,8 @@
          'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
          '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
          3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
+1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5) )
+1020  FORMAT(3X, 'Local number of cell to store the grid ( nnrx ) = ', 1X, I5 )
 
       RETURN
       END SUBROUTINE realspace_grids_para

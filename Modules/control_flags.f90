@@ -44,7 +44,7 @@ MODULE control_flags
   !
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
             newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
-            ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor, prn,   &
+            ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,    &
             timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar, rhoout,  &
             trane, ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,      &
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
@@ -71,7 +71,6 @@ MODULE control_flags
   LOGICAL :: trhor     = .FALSE. ! read rho from      unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! write rho to       unit 47 (only cp, seldom used)
   !
-  LOGICAL :: prn           = .FALSE. ! verbosity
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
   LOGICAL :: tfor          = .FALSE. ! move the ions ( calculate forces )

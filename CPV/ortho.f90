@@ -51,27 +51,13 @@
          MODULE PROCEDURE ortho_s, ortho_v, ortho_m
        END INTERFACE
 
-       PUBLIC :: ortho, orthogonalize_info
+       PUBLIC :: ortho
        PUBLIC :: print_ortho_time
 
 !=----------------------------------------------------------------------------=!
      CONTAINS
 !=----------------------------------------------------------------------------=!
 
-
-       SUBROUTINE orthogonalize_info( unit )
-         USE control_flags, ONLY: ortho_eps, ortho_max
-         INTEGER, INTENT(IN) :: unit
-           WRITE(unit,585)
-           WRITE(unit,511) ortho_eps, ortho_max
-         RETURN
-  511    FORMAT(   3X,'Orthog. with lagrange multipliers : eps = ',E10.2 &
-                  ,',  max = ',I3)
-  585    FORMAT(   3X,'Eigenvalues calculated without the kinetic term ' &
-                  ,'contribution')
-       END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
 
        SUBROUTINE ortho_s( ispin, c0, cp, cdesc, pmss, emass, success)
 

@@ -28,7 +28,6 @@ cpr.o \
 cprsub.o \
 cptypes.o \
 crayfft.o \
-cutoffs.o \
 diis.o \
 dipol_matrix.o \
 dforceb.o \

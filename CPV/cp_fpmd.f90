@@ -96,7 +96,9 @@ end module qrl_mod
 !
       use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
       use gvecb, only: iglb, mill_b
-      use io_global, only: stdout
+      use io_global, only: stdout, ionode
+      use mp_global, only: nproc
+      use control_flags, only: iprsta
 
 !
       implicit none
@@ -106,7 +108,7 @@ end module qrl_mod
 !
       integer, allocatable:: index(:)
       integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
-      integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum
+      integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
 !       cray:
 !      integer jwork(257)
       real(kind=8) t(3), g2
@@ -190,9 +192,11 @@ end module qrl_mod
          end do
       end do
 
-      WRITE( stdout,*)
-      WRITE( stdout,170) ngb
- 170  format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
+      IF( iprsta > 3 ) THEN
+        WRITE( stdout,*)
+        WRITE( stdout,170) ngb
+ 170    format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
+      END IF
 
       call kb07ad_cp90 (gb,ngb,index)
 
@@ -265,8 +269,10 @@ end module qrl_mod
 
       CALL gshcount( ngbl, idum, idum, iglb, ngb, gb, -1.0d0, -1.0d0 )
 
-      WRITE( stdout,180) ngbl
- 180  format(' ggenb: # of gb shells  < gcutb ngbl= ',i6)
+      IF( iprsta > 3 ) THEN
+        WRITE( stdout,180) ngbl
+ 180    format(' ggenb: # of gb shells  < gcutb ngbl= ',i6)
+      END IF
 !
 ! then allocate the array glb
 !
@@ -290,6 +296,16 @@ end module qrl_mod
          gxb(3,ig)=i*b1b(3)+j*b2b(3)+k*b3b(3)
       end do
 !
+      IF(ionode) THEN
+        WRITE( stdout,1000)
+        DO ip = 1, nproc
+          WRITE( stdout,1010) ip, ngb, ngb, ngb
+        END DO
+1000    FORMAT(/,16X,'Small box Mesh Number of G',/, &
+                3X,'PE       Global       Local   Max Local' )
+1010    FORMAT( I5,1X,3I12 )
+      END IF
+
       return
       end subroutine
 
@@ -413,6 +429,7 @@ end module qrl_mod
       use mp, ONLY: mp_sum, mp_max
       use io_global, only: ionode
       use constants, only: eps8
+      use control_flags, only: iprsta
 
       implicit none
       integer nr1,nr2,nr3, nr1s,nr2s,nr3s
@@ -468,13 +485,15 @@ end module qrl_mod
 !
       CALL glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
-      WRITE( stdout,*)
-      WRITE( stdout,150) ng
- 150  format(' ggen:  # of g vectors < gcut   ng= ',i6)
-      WRITE( stdout,160) ngs
- 160  format(' ggen:  # of g vectors < gcuts ngs= ',i6)
-      WRITE( stdout,170) ngw
- 170  format(' ggen:  # of g vectors < gcutw ngw= ',i6)
+      IF( iprsta > 3 ) THEN
+        WRITE( stdout,*)
+        WRITE( stdout,150) ng
+ 150    format(' ggen:  # of g vectors < gcut   ng= ',i6)
+        WRITE( stdout,160) ngs
+ 160    format(' ggen:  # of g vectors < gcuts ngs= ',i6)
+        WRITE( stdout,170) ngw
+ 170    format(' ggen:  # of g vectors < gcutw ngw= ',i6)
+      END IF
 
 !
 ! check for the presence of refolded G-vectors (dense grid)
@@ -566,9 +585,11 @@ end module qrl_mod
       IF( ichk /= 2 ) &
         CALL errore( ' ggencp ', ' inconsistent value for gstart ', ichk )
 !
-      WRITE( stdout,180) ngl
- 180  format(' ggen:  # of g shells  < gcut  ngl= ',i6)
-      WRITE( stdout,*)
+      IF( iprsta > 3 ) THEN
+        WRITE( stdout,180) ngl
+ 180    format(' ggen:  # of g shells  < gcut  ngl= ',i6)
+        WRITE( stdout,*)
+      END IF
 !
 ! calculation of G-vectors
 !
@@ -1188,4 +1209,407 @@ END SUBROUTINE
         END SUBROUTINE gcutoffs_setup
 
 !  ----------------------------------------------
+
+      SUBROUTINE cutoffs_print_info()
+
+        !  Print out informations about different cut-offs
+
+        USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
+        USE gvecp, ONLY: ecutrho => ecutp,  gcutp
+        USE gvecw, ONLY: ecfix, gcfix, ecutz, gcutz, ecsig, gcsig, tecfix
+        USE gvecw, ONLY: ekcut, gkcut
+        USE gvecs, ONLY: ecuts, gcuts
+        USE gvecb, ONLY: ecutb, gcutb
+        USE io_global, ONLY: stdout
+
+        WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), sqrt(gcutp), sqrt(gcuts)
+        IF( tecfix ) THEN
+          WRITE( stdout, 150 ) ecutz, ecsig, ecfix
+        END IF
+100     FORMAT(/,3X,'Energy Cut-offs',/ &
+                ,3X,'---------------',/ &
+                ,3X,'Ecutwfc = ',F6.1,' Ryd., ', 3X,'Ecutrho = ',F6.1,' Ryd., ', 3X,'Ecuts = ',F6.1,' Ryd.',/ &
+                ,3X,'Gcutwfc = ',F6.1,'     , ', 3X,'Gcutrho = ',F6.1,'       ', 3X,'Gcuts = ',F6.1)
+150     FORMAT(  3X,'modified kinetic energy functional, with parameters:',/,   &
+                 3X,'ecutz = ',f8.4,'  ecsig = ', f7.4,'  ecfix = ',f6.2)
+
+        RETURN
+      END SUBROUTINE cutoffs_print_info
+
+!  ----------------------------------------------
+
+      SUBROUTINE orthogonalize_info( )
+        USE control_flags, ONLY: ortho_eps, ortho_max
+        USE io_global, ONLY: stdout
+        IMPLICIT NONE
+           WRITE(stdout, 585)
+           WRITE(stdout, 511) ortho_eps, ortho_max
+  511   FORMAT(   3X,'Orthog. with lagrange multipliers : eps = ',E10.2, ',  max = ',I3)
+  585   FORMAT(   3X,'Eigenvalues calculated without the kinetic term contribution')
+        RETURN
+      END SUBROUTINE
+
+
+!  ----------------------------------------------
+
+
+      SUBROUTINE electrons_print_info( )
+
+          USE electrons_base, ONLY: nbnd, nspin, nel, nelt, nupdwn, iupdwn, f
+          USE io_global, ONLY: stdout
+
+          IMPLICIT NONE
+          INTEGER :: i
+
+          IF( nspin == 1) THEN
+            WRITE(stdout,6) nelt, nbnd
+            WRITE(stdout,7) ( f( i ), i = 1, nbnd )
+          ELSE
+            WRITE(stdout,8) nelt
+            WRITE(stdout,9) nel(1)
+            WRITE(stdout,7) ( f( i ), i = 1, nupdwn(1))
+            WRITE(stdout,10) nel(2)
+            WRITE(stdout,7) ( f( i ), i = iupdwn(2), ( iupdwn(2) + nupdwn(2) - 1 ) )
+          END IF
+6         FORMAT(/,3X,'Electronic states',/  &
+                  ,3X,'-----------------',/  &
+                  ,3X,'Number of Electron = ',I5,', of States = ',I5,/ &
+                  ,3X,'Occupation numbers :')
+7         FORMAT(2X,10F5.2)
+8         FORMAT(/,3X,'Electronic states',/  &
+                  ,3X,'-----------------',/  &
+                  ,3X,'Local Spin Density calculation',/ &
+                  ,3X,'Number of Electron = ',I5)
+9         FORMAT(  3X,'Spins up   = ', I5, ', occupations: ')
+10        FORMAT(  3X,'Spins down = ', I5, ', occupations: ')
+
+          RETURN
+      END SUBROUTINE electrons_print_info
+
+
+!  ----------------------------------------------
+
+
+      SUBROUTINE exch_corr_print_info()
+
+        USE funct, ONLY: dft, iexch, icorr, igcx, igcc
+        USE io_global, ONLY: stdout
+
+        IMPLICIT NONE
+
+        CHARACTER(LEN = 60) :: exch_info
+        CHARACTER(LEN = 60) :: corr_info
+        CHARACTER(LEN = 60) :: exgc_info
+        CHARACTER(LEN = 60) :: cogc_info
+
+        WRITE(stdout,800)
+
+          ! ...     iexch => Exchange functional form
+          ! ...     icorr => Correlation functional form
+          ! ...     igcx  => Gradient Correction to the Exchange potential
+          ! ...     igcc  => Gradient Correction to the Correlation potential
+
+          SELECT CASE ( iexch )
+            CASE (0)
+              exch_info = 'NONE'
+            CASE (1)
+              exch_info = 'SLATER'
+            CASE (2)
+              exch_info = 'SLATER (alpha=1)'
+            CASE DEFAULT
+              exch_info = 'UNKNOWN'
+          END SELECT
+          SELECT CASE ( icorr )
+            CASE (0)
+              corr_info = 'NONE'
+            CASE (1)
+              corr_info = 'PERDEW AND ZUNGER'
+            CASE (2)
+              corr_info = 'VOSKO, WILK AND NUSAIR'
+            CASE (3)
+              corr_info = 'LEE, YANG, AND PARR'
+            CASE (4)
+              corr_info = 'PERDEW AND WANG'
+            CASE (9)
+              corr_info = 'PADE APPROXIMATION'
+            CASE DEFAULT
+              corr_info = 'UNKNOWN'
+          END SELECT
+          SELECT CASE ( igcx )
+            CASE (0)
+              exgc_info = 'NONE'
+            CASE (1)
+              exgc_info = 'BECKE'
+            CASE (2)
+              exgc_info = 'PERDEW'
+            CASE (3)
+              exgc_info = 'PERDEW BURKE ERNZERHOF'
+            CASE DEFAULT
+              exgc_info = 'UNKNOWN'
+          END SELECT
+          SELECT CASE ( igcc )
+            CASE (0)
+              cogc_info = 'NONE'
+            CASE (1)
+              cogc_info = 'PERDEW'
+            CASE (2)
+              cogc_info = 'LEE, YANG AND PARR'
+            CASE (3)
+              cogc_info = 'PERDEW AND WANG'
+            CASE (4)
+              cogc_info = 'PERDEW BURKE ERNZERHOF'
+            CASE DEFAULT
+              cogc_info = 'UNKNOWN'
+          END SELECT
+
+          WRITE(stdout,910)
+          WRITE(stdout,fmt='(5X,"Exchange functional: ",A)') exch_info
+          WRITE(stdout,fmt='(5X,"Correlation functional: ",A)') corr_info
+          IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
+            WRITE(stdout,810)
+            WRITE(stdout,fmt='(5X,"Exchange functional: ",A)') exgc_info
+            WRITE(stdout,fmt='(5X,"Correlation functional: ",A)') cogc_info
+          END IF
+
+        WRITE( stdout, '(5x,"Exchange-correlation      = ",a, &
+       &       " (",4i1,")")') trim(dft) , iexch, icorr, igcx, igcc
+
+800 FORMAT(//,3X,'Exchange and correlations functionals',/ &
+             ,3X,'-------------------------------------')
+810 FORMAT(   3X,'Using Generalized Gradient Corrections with')
+910 FORMAT(   3X,'Using Local Density Approximation with')
+
+        RETURN
+      END SUBROUTINE exch_corr_print_info
+
+
+
+!  ----------------------------------------------
+
+
+
+       SUBROUTINE ions_print_info( )
+            
+         !  Print info about input parameter for ion dynamic
+
+         USE io_global,     ONLY: ionode, stdout
+         USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, tzerop, &
+                                  tv0rd, taurdr, nv0rd, nbeg, tcp, tcap, &
+                                  program_name
+         USE ions_base,     ONLY: tau_srt, tau_units, if_pos, ind_srt, nsp, na, &
+                                  pmass, nat, fricp, greasp
+         USE ions_nose,     ONLY: tempw, ndega
+         USE constants,     ONLY: scmass
+
+         IMPLICIT NONE
+              
+         integer is, ia, k, ic, isa
+         LOGICAL :: ismb( 3 ) 
+                
+         WRITE( stdout, 50 ) 
+
+         IF( .NOT. tfor ) THEN
+           WRITE( stdout, 518 )
+         ELSE
+           WRITE( stdout, 520 )
+           IF( tsdp ) THEN
+             WRITE( stdout, 521 )
+           ELSE
+             WRITE( stdout, 522 )
+           END IF
+           WRITE( stdout, 523 ) ndega
+           WRITE( stdout, 524 ) fricp, greasp
+           IF( tzerop ) then
+             IF( tv0rd ) THEN
+               WRITE( stdout, 850 ) nv0rd
+               IF( program_name == 'CP90' ) &
+                 CALL errore( ' ions_print_info ', ' ions velocities from stdin not implemented yet ', 1 )
+             ELSE
+               WRITE( stdout, 635 )
+             ENDIF 
+           ENDIF
+         END IF 
+              
+         DO is = 1, nsp
+           IF( tranp(is) ) THEN
+             WRITE( stdout,510)
+             WRITE( stdout,512) is, amprp(is)
+           END IF
+         END DO
+
+         WRITE(stdout,660) 
+         isa = 0
+         DO IS = 1, nsp
+           WRITE(stdout,1000) is, na(is), pmass(is), pmass(is) / scmass
+           DO IA = 1, na(is)
+             isa = isa + 1
+             WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )
+           END DO
+         END DO    
+
+         IF ( ( nbeg > 0 ) .AND. ( .NOT. taurdr ) ) THEN
+            WRITE(stdout,661)
+         ENDIF
+
+         IF( tfor ) THEN
+
+            IF( ANY( ( if_pos( 1:3, 1:nat ) == 0 )  ) ) THEN
+
+              WRITE(stdout,1020)
+              WRITE(stdout,1022)
+
+              DO isa = 1, nat
+                ia = ind_srt( isa )
+                ismb( 1 ) = ( if_pos(1,ia) /= 0 )
+                ismb( 2 ) = ( if_pos(2,ia) /= 0 )
+                ismb( 3 ) = ( if_pos(3,ia) /= 0 )
+                IF( .NOT. ALL( ismb ) ) THEN
+                  WRITE( stdout, 1023 ) isa, ( ismb(k), K = 1, 3 )
+                END IF
+              END DO
+
+            ELSE
+
+              WRITE(stdout,1021)
+
+            END IF
+         END IF
+
+         IF( tfor ) THEN
+           if( ( tcp .or. tcap .or. tnosep ) .and. tsdp ) then
+             call errore(' ions_print_info',' t contr. for ions when tsdp=.t.',1)
+           endif
+           IF(.not. tcp .and. .not. tcap .and. .not. tnosep ) THEN
+              WRITE( stdout,550)
+           ELSE IF( tcp .and. tcap ) then
+             call errore(' ions_print_info',' tcp and tcap both true',1)
+           ELSE IF( tcp .and. tnosep ) then
+             call errore(' ions_print_info',' tcp and tnosep both true',1)
+           ELSE IF(tcap .and. tnosep ) then
+             call errore(' ions_print_info',' tcap and tnosep both true',1)
+           ELSE IF(tcp) THEN
+             WRITE( stdout,555) tempw,tolp
+           ELSE IF(tcap) THEN
+             WRITE( stdout,560) tempw,tolp
+           ELSE IF(tnosep) THEN
+             WRITE( stdout,595)
+           ELSE
+             WRITE( stdout,550)
+           END IF
+         END IF
+
+   50 FORMAT(//,3X,'Ions Simulation Parameters',/ &
+               ,3X,'--------------------------')
+
+  510 FORMAT(   3X,'Initial random displacement of ionic coordinates',/, & 
+                3X,' specie  amplitude')
+  512 FORMAT(   3X,I7,2X,F9.6)
+
+  518 FORMAT(   3X,'Ions are not allowed to move')
+  520 FORMAT(   3X,'Ions are allowed to move')
+  521 FORMAT(   3X,'Ions dynamics with steepest descent')
+  522 FORMAT(   3X,'Ions dynamics with newton equations')
+  523 format(   3X,'the temperature is computed for ',i5,' degrees of freedom')
+  524 format(   3X,'ion dynamics with fricp = ',f7.4,' and greasp = ',f7.4)
+  550 FORMAT(   3X,'Ionic temperature is not controlled')
+  555 FORMAT(   3X,'Ionic temperature control via ', &
+                   'rescaling of velocities :',/ &
+               ,3X,'temperature required = ',F10.5,'K, ', &
+                   'tolerance = ',F10.5,'K')
+  560 FORMAT(   3X,'Ionic temperature control via ', &
+                   'canonical velocities rescaling :',/ &
+               ,3X,'temperature required = ',F10.5,'K, ', &
+                   'tolerance = ',F10.5,'K')
+  595 FORMAT(   3X,'Ionic temperature control via nose thermostat')
+  635 FORMAT(   3X,'Zero initial momentum for ions')
+
+  660 FORMAT(   3X,'Ionic position (from input)', /, &
+                3X,'sorted by specie, and converted to real a.u. coordinates')
+  661 FORMAT(   3X,'Ionic position will be re-read from restart file')
+
+  850 FORMAT(   3X,'Initial ion velocities read from unit : ',I4)
+
+ 1000 FORMAT(3X,'Species ',I3,' atoms = ',I4,' mass = ',F12.2, ' (a.u.), ', F12.2, ' (uma)' )
+ 1010 FORMAT(3X,3(1X,F12.6))
+ 1020 FORMAT(/,3X,'NOT all atoms are allowed to move ')
+ 1021 FORMAT(/,3X,'All atoms are allowed to move')
+ 1022 FORMAT(  3X,' indx  ..x.. ..y.. ..z..')
+ 1023 FORMAT(  3X,I4,3(1X,L5))
+
+
+
+         RETURN
+       END SUBROUTINE ions_print_info
+
+
+!  ----------------------------------------------
+
+        subroutine cell_print_info( )
+
+          USE constants, ONLY: au_gpa
+          USE control_flags, ONLY: thdyn, tsdc, tzeroc, tbeg, nbeg, tpre
+          USE control_flags, ONLY: tnoseh
+          USE io_global, ONLY: stdout
+          USE cell_base, ONLY: press, frich, greash, wmass
+
+          IMPLICIT NONE
+
+          WRITE(stdout,545 )
+          IF ( tpre ) WRITE( stdout, 600 )
+          IF ( tbeg ) THEN
+            WRITE(stdout,546)
+          ELSE
+            WRITE(stdout,547)
+            IF( nbeg > -1 ) WRITE( stdout, 548 )
+          END IF
+
+          IF( .NOT. thdyn ) THEN
+            WRITE( stdout,525)
+            WRITE( stdout,606)
+          ELSE
+            IF( tsdc ) THEN
+              WRITE( stdout,526)
+            ELSE
+              IF( frich /= 0.0d0 ) THEN
+                WRITE( stdout,602) frich, greash
+              ELSE
+                WRITE( stdout,527)
+              END IF
+              IF( tnoseh ) then
+                WRITE( stdout,604) 
+              ELSE
+                WRITE( stdout,565)
+              END IF
+              ! if( thdiag ) WRITE( stdout,608)
+              IF( tzeroc ) THEN
+                WRITE( stdout,563)
+              ENDIF
+            END IF
+            WRITE( stdout,530) press * au_gpa, wmass
+          END IF
+
+
+ 545     FORMAT(//,3X,'Cell Dynamics Parameters (from STDIN)',/ &
+                  ,3X,'-------------------------------------')
+ 546     FORMAT(   3X,'Simulation cell read from STDIN')
+ 547     FORMAT(   3X,'Starting cell generated from CELLDM')
+ 548     FORMAT(   3X,'Cell parameters will be re-read from restart file')
+ 525     FORMAT(   3X,'Constant VOLUME Molecular dynamics')
+ 606     format(   3X,'cell parameters are not allowed to move')
+ 526     FORMAT(   3X,'Volume dynamics with steepest descent')
+ 527     FORMAT(   3X,'Volume dynamics with newton equations')
+ 530     FORMAT(   3X,'Constant PRESSURE Molecular dynamics:',/ &
+                  ,3X,'External pressure (GPa) = ',F11.2,/ &
+                  ,3X,'Volume mass             = ',F11.2)
+ 563     FORMAT(   3X,'Zero initial momentum for cell variables')
+ 565     FORMAT(   3X,'Volume dynamics: the temperature is not controlled')
+ 604     format(   3X,'cell parameters dynamics with nose` temp. control' )
+
+ 600  format( 3X, 'internal stress tensor calculated')
+ 602  format( 3X, 'cell parameters dynamics with frich = ',f7.4,            &
+     &        3X, 'and greash = ',f7.4 )
+ 608  format( 3X, 'frozen off-diagonal cell parameters'//)
+
+        return
+      end subroutine cell_print_info
 

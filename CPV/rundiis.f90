@@ -28,7 +28,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE rundiis(tprint, prn, rhoe, desc, atoms, gv, kp, &
+      SUBROUTINE rundiis(tprint, rhoe, desc, atoms, gv, kp, &
                  ps, eigr, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  fnl, vpot, doions, edft )
 
@@ -103,7 +103,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL    :: prn, tcel, tprint, doions
+      LOGICAL    :: tcel, tprint, doions
       TYPE (atoms_type) :: atoms
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
@@ -232,7 +232,7 @@
 ! ...     self consistent energy
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
           CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht0)
-          CALL vofrhos(.FALSE., prn, rhoe, desc, tforce, tstress, tforce, atoms, gv, &
+          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, gv, &
             kp, fnl, vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, ht0, edft)
 
 ! ...     density upgrade
@@ -245,7 +245,7 @@
 
 ! ...     recalculate potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
-          CALL vofrhos(.FALSE., prn, rhoe, desc, tforce, tstress, tforce, atoms, gv, kp, fnl, &
+          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, gv, kp, fnl, &
             vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, ht0, edft)
 
           IF( idiis /= 1 )THEN
@@ -392,7 +392,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE runsdiis(tprint, prn, rhoe, desc, atoms, gv, kp, &
+      SUBROUTINE runsdiis(tprint, rhoe, desc, atoms, gv, kp, &
                  ps, eigr, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  fnl, vpot, doions, edft )
 
@@ -463,7 +463,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL   :: tprint, prn, tcel, doions
+      LOGICAL   :: tprint, tcel, doions
       TYPE (atoms_type) :: atoms
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
@@ -539,7 +539,7 @@
           EXIT DIIS_LOOP
         END IF
 
-        CALL kspotential( .FALSE., prn, tforce, tstress, rhoe, desc, &
+        CALL kspotential( .FALSE., tforce, tstress, rhoe, desc, &
           atoms, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, fi, fnl, vpot, edft, timepre )
 
         s0 = cclock()

@@ -54,7 +54,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-   SUBROUTINE runcg_new(tortho, tprint, prn, rhoe, desc, atoms_0, gv, kp, &
+   SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, gv, kp, &
                 ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                 fnl, vpot, doions, edft, maxnstep, cgthr )
 
@@ -90,7 +90,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL   :: tortho, tprint, prn, tcel, doions
+      LOGICAL   :: tortho, tprint, tcel, doions
       TYPE (atoms_type) :: atoms_0
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
@@ -181,7 +181,7 @@
 
         s1 = cclock()
 
-        CALL kspotential( ttprint, prn, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
           atoms_0, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
@@ -590,14 +590,13 @@
 
         ! ... LOCALS
 
-        LOGICAL      ttprint, prn, ttforce, ttstress, tcel
+        LOGICAL      ttprint, ttforce, ttstress, tcel
         REAL(dbl) :: timepre
 
         ! ...      SUBROUTINE BODY
 
         ttprint = .FALSE.
         ttforce = .FALSE.
-        prn     = .FALSE.
         tcel     = .FALSE.
         ttstress = .FALSE.
 
@@ -606,7 +605,7 @@
         CALL fixwave( cp, cdesc, gv%kg_mask_l )
         CALL gram( cp, cdesc )
 
-        CALL kspotential( ttprint, prn, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
             atoms, gv, kp, ps, eigr, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
 
         cgenergy = edft%etot

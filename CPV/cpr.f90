@@ -164,7 +164,7 @@
       USE gvecw, ONLY: ecutw
       USE gvecp, ONLY: ecutp
 
-      USE time_step, ONLY: delt
+      USE time_step, ONLY: delt, tps, dt2, dt2by2, twodelt
       USE runcp_module, ONLY: runcp_uspp
       USE wave_constrains, ONLY: interpolate_lambda
       USE electrons_module, ONLY: cp_eigs
@@ -200,8 +200,8 @@
 !
       real(kind=8)                                                      & 
      &       tempp,  fccc, savee, saveh, savep,             &
-     &       enthal, epot, epre, enow, tps, econs, econt, &
-     &       ettt, ccc, bigr, dt2, dt2by2, twodel, dt2bye, dt2hbe
+     &       enthal, epot, epre, enow, econs, econt, &
+     &       ettt, ccc, bigr, dt2bye, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc
       real(kind=8) temps(nsx)
       real(kind=8) ekinh, temphc, temp1, temp2, randy
@@ -242,34 +242,20 @@
 
       call start_clock( 'initialize' )
 
-      etot_out = 0.0d0
-
-      tps     = 0.0d0
 
 !     general variables
 !
-      tfirst = .true.
-      tlast  = .false.
-      nacc = 5
 !
-!     ==================================================================
-!     read input from standard input (unit 5)
-!     ==================================================================
+!     ====================================================
+!     copy-in input parameters from input_parameter module
+!     ====================================================
 
       call iosys( )
 
       if( lwf ) then
         call read_efwan_param( nbeg )
       end if
-
-!     ==================================================================
 !
-      twodel = 2.d0 * delt
-      dt2    = delt * delt
-      dt2by2 = .5d0 * dt2
-      dt2bye = dt2/emass
-      dt2hbe = dt2by2/emass
-
 !
 !     ==================================================================
 !     initialize g-vectors, fft grids
@@ -277,7 +263,12 @@
 
       call init_dimensions( )
 
-      call init1 ( tau0 )
+      dt2bye   = dt2/emass
+      dt2hbe   = dt2by2/emass
+      etot_out = 0.0d0
+      tfirst   = .true.
+      tlast    = .false.
+      nacc     = 5
 
       call init( ibrav, celldm, ecutp, ecutw, ndr, nbeg, tfirst,  &
            tau0, taus, delt, tps, iforce )
@@ -473,7 +464,8 @@
          fccc=1./(1.+0.5*delt*vnhe)
       endif
       if(tnoseh) then
-         call cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
+         call cell_nosevel( vnhh, xnhh0, xnhhm, delt )
+         velh(:,:)=2.0d0*(h(:,:)-hold(:,:))/delt-velh(:,:)
       endif
       ! 
       if ( tfor .or. thdyn .or. tfirst ) then 
@@ -651,7 +643,7 @@
          !
          call cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
          !
-         velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
+         velh(:,:) = (hnew(:,:)-hold(:,:))/twodelt
          !
          call cell_gamma( hgamma, ainv, h, velh )
          !

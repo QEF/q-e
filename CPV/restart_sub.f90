@@ -348,7 +348,6 @@ CONTAINS
       USE energies, ONLY: dft_energy_type
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE pseudopotential, ONLY: formf
-      USE cell_module, ONLY: metric_print_info
       USE cell_module, only: boxdimensions, gethinv, alat
       USE cell_base, ONLY: r_to_s, s_to_r
       USE print_out_module, ONLY: printmain
@@ -364,9 +363,9 @@ CONTAINS
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE control_flags, ONLY: tcarpar, nbeg, tranp, amprp, &
-          tfor, tsdp, thdyn, tsdc, tbeg, tsde, tortho, prn, tzeroe, &
+          tfor, tsdp, thdyn, tsdc, tbeg, tsde, tortho, tzeroe, &
           tzerop, tzeroc, taurdr, tv0rd, nv0rd, trane, ampre, &
-          force_pairing
+          force_pairing, iprsta
       USE parameters, ONLY: nacx
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
@@ -456,7 +455,7 @@ CONTAINS
               WRITE( stdout,160)
             END IF
           END IF
-          IF ( prn ) THEN
+          IF ( iprsta > 1 ) THEN
             CALL print_scaled_positions(atoms_0, 6, 'from restart module' )
           END IF
           IF(.NOT.tsde) THEN
@@ -506,13 +505,13 @@ CONTAINS
 ! ...     set right initial conditions when c0=cm or stau0=staum
 ! ...     (the cell is kept fixed)
 
-        ttforce = (tfor .OR. prn)
+        ttforce = (tfor .OR. ( iprsta > 1 ) )
 
 
           atoms_0%for = 0.0d0
           edft%enl = nlrh_m(c0, cdesc, ttforce, atoms_0, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
           CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht_0)
-          CALL vofrhos(prn, prn, rhoe, desc, tfor, thdyn, ttforce, atoms_0, gv, kp, fnl, vpot, ps, &
+          CALL vofrhos( ( iprsta > 1), rhoe, desc, tfor, thdyn, ttforce, atoms_0, gv, kp, fnl, vpot, ps, &
             c0, cdesc, fi, eigr, sfac, timepre, ht_0, edft)
 
           IF( tzeroe ) THEN

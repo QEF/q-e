@@ -70,7 +70,7 @@
         PUBLIC :: neighbo, print_scaled_positions, displacement
         PUBLIC :: cdm_displacement, set_velocities
         PUBLIC :: set_reference_positions, ions_setup, atoms_init
-        PUBLIC :: ions_print_info, deallocate_ions, constraints_setup
+        PUBLIC :: constraints_print_info, deallocate_ions, constraints_setup
         PUBLIC :: apply_constraints, update_ions
         PUBLIC :: velocity_scaling
         PUBLIC :: max_ion_forces, moveions
@@ -534,101 +534,15 @@
        END SUBROUTINE atoms_init
 
 
-!  BEGIN manual -------------------------------------------------------------   
+! -------------------------------------------------------------   
 
-       SUBROUTINE ions_print_info( iunit )
+       SUBROUTINE constraints_print_info( )
 
-!  Print info about input parameter for ion dynamic
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
+         USE io_global, ONLY: ionode, stdout
 
-         USE io_global, ONLY: ionode
-         USE control_flags, ONLY: tranp, amprp, tnosep, tolp, &
-             tfor, tsdp, tzerop, tv0rd, taurdr, nv0rd, nbeg, tcp, tcap
-         USE ions_base, ONLY: tau_srt, tau_units, if_pos, ind_srt
-         USE ions_nose, ONLY: tempw
+         IMPLICIT NONE
 
-         integer, intent(in) :: iunit
-         integer is, ia, k, ic, isa
-         LOGICAL :: ismb( 3 )
-
-          WRITE(iunit,50)
-          IF(.NOT.tfor) THEN
-            WRITE(iunit,518)
-          ELSE
-            WRITE(iunit,520)
-            IF(tsdp) THEN
-              WRITE(iunit,521)
-            ELSE
-              WRITE(iunit,522)
-            END IF
-            IF(tzerop) then 
-              IF(tv0rd) THEN
-                WRITE(iunit,850) nv0rd
-              ELSE
-                WRITE(iunit,635)
-              ENDIF
-            ENDIF
-          END IF
-
-          DO is = 1, nsp
-            IF(tranp(is)) THEN
-              WRITE( stdout,510)
-              WRITE( stdout,512) is, amprp(is)
-            END IF
-          END DO
-
-          IF (nbeg < 0 .OR. taurdr) THEN
-            WRITE(iunit,660) tau_units
-            isa = 0
-            DO IS = 1, nsp
-              WRITE(iunit,1000) is, na(is), pmass(is)
-              DO IA = 1, na(is)
-                isa = isa + 1
-                WRITE(iunit,1010) ( tau_srt(k,isa), K = 1,3 )
-              END DO
-            END DO
-          ELSE
-            WRITE(iunit,661)
-          ENDIF
-
-          IF( tfor ) THEN
-
-            IF( ANY( ( if_pos( 1:3, 1:nat ) == 0 )  ) ) THEN
-
-              WRITE(iunit,1020)
-              WRITE(iunit,1022)
-
-              DO isa = 1, nat
-                ia = ind_srt( isa )
-                ismb( 1 ) = ( if_pos(1,ia) /= 0 )
-                ismb( 2 ) = ( if_pos(2,ia) /= 0 )
-                ismb( 3 ) = ( if_pos(3,ia) /= 0 )
-                IF( .NOT. ALL( ismb ) ) THEN
-                  WRITE( iunit, 1023 ) isa, ( ismb(k), K = 1, 3 )
-                END IF
-              END DO
-
-            ELSE
-
-              WRITE(iunit,1021)
-
-            END IF
-
-          END IF
-
-
-          IF(tfor) THEN
-            IF(tcp) THEN
-              WRITE( stdout,555) tempw,tolp
-            ELSE IF(tcap) THEN
-              WRITE( stdout,560) tempw,tolp
-            ELSE IF(tnosep) THEN
-              WRITE( stdout,595)
-            ELSE
-              WRITE( stdout,550)
-            END IF
-          END IF
+         integer ic
 
           IF( constrains%nc  >  0 ) THEN
             IF( ionode ) THEN
@@ -647,47 +561,14 @@
             END DO
           END IF
     
- 1000     FORMAT(3X,'Species ',I3,' atoms = ',I4,' mass (a.u.) = ',F12.2)
- 1010     FORMAT(3X,3(1X,F12.6))
- 1020     FORMAT(/,3X,'NOT all atoms are allowed to move ')
- 1021     FORMAT(/,3X,'All atoms are allowed to move')
- 1022     FORMAT(  3X,' indx  ..x.. ..y.. ..z..')
- 1023     FORMAT(  3X,I4,3(1X,L5))
-
  10   FORMAT(/,3X,'Constraints ionic dynamics', /, &
              3X,'--------------------------', /, &
              3X,'number of constraints = ',I3,' tolerance = ',D14.6)
  30   FORMAT(4X,I5,', type ',I2)
  40   FORMAT(4X,'atoms (', I3, ',', I2, ') and (', I3, ',', I2, ')' )
-   50 FORMAT(//,3X,'Ions Simulation Parameters',/ &
-               ,3X,'--------------------------') 
-  115 FORMAT(   3X,'Ewald sum over ',I1,'*',I1,'*',I1,' cells')
-  510 FORMAT(   3X,'Initial random displacement of ionic coordinates',/ &
-               ,3X,' specie  amplitude')
-  512 FORMAT(   3X,I7,2X,F9.6)
-  518 FORMAT(   3X,'Ions are not allowed to move')
-  520 FORMAT(   3X,'Ions are allowed to move')
-  521 FORMAT(   3X,'Ions dynamics with steepest descent')
-  522 FORMAT(   3X,'Ions dynamics with newton equations')
-  550 FORMAT(   3X,'Ionic temperature is not controlled')
-  555 FORMAT(   3X,'Ionic temperature control via ', &
-                   'rescaling of velocities :',/ &
-               ,3X,'temperature required = ',F10.5,'K, ', &
-                   'tolerance = ',F10.5,'K')
-  560 FORMAT(   3X,'Ionic temperature control via ', &
-                   'canonical velocities rescaling :',/ &
-               ,3X,'temperature required = ',F10.5,'K, ', &
-                   'tolerance = ',F10.5,'K')
-  595 FORMAT(   3X,'Ionic temperature control via nose thermostat')
-  635 FORMAT(   3X,'Zero initial momentum for ions')
-  660 FORMAT(   3X,'Ionic position from standard input',/ &
-                3X,'( ',A10,' )')
-  661 FORMAT(   3X,'Ionic position read from restart file')
-  850 FORMAT(   3X,'Initial ion velocities read from unit : ',I4)
-
 
          RETURN
-       END SUBROUTINE ions_print_info
+       END SUBROUTINE constraints_print_info
 
 !  --------------------------------------------------------------------------   
 
