@@ -15,7 +15,7 @@ subroutine readpp
   use pwcom
   use io, only: pseudo_dir, pseudop
   !
-  character :: file_pseudo * 80
+  character :: file_pseudo * 256
   ! file name complete with path
   integer :: iunps, isupf, l, nt, ios, pseudo_type
   external pseudo_type
@@ -35,6 +35,7 @@ subroutine readpp
 
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', iostat = ios)
+     call errore ('readin', 'file '//trim(file_pseudo)//' not found', ios)
      call read_pseudo (nt, iunps, isupf)
      if (isupf /= 0) then
         rewind (unit = iunps)
@@ -53,8 +54,6 @@ subroutine readpp
            open (unit = iunps, file = file_pseudo, status = 'old', &
                 form = 'formatted', iostat = ios)
 
-           call errore ('readin', 'file '//file_pseudo (1:len_trim ( &
-                file_pseudo) ) //' not found', ios)
            !
            !    newpseudo distinguishes beteween US pseudopotentials
            !    produced by Vanderbilt code and those produced
@@ -75,9 +74,7 @@ subroutine readpp
            tvanp (nt) = .false.
            newpseudo (nt) = .false.
            open (unit = iunps, file = file_pseudo, status = 'old', &
-                err = 350, iostat = ios)
-350        call errore ('readin', &
-          'file '//file_pseudo (1:len_trim(file_pseudo) ) //' not found', ios)
+                form='formatted', iostat = ios)
            ! numeric is read inside read_ncpp
            call read_ncpp (nt, iunps)
            close (iunps)

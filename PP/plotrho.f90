@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,8 +24,8 @@ program plotrho
        nat, ierr, ilen
   real(kind=DP) :: rhoi (0:nximax, 0:nyimax), xi (0:nximax), yi (0: &
        nyimax), rhoo (0:nxmax, 0:nymax), x (0:nxmax), y (0:nymax), &
-       z (0:nlevelx), wrk (nwrk), xmin, xmax, ymin, ymax, rhoomin, &
-       rhoomax
+       z (0:nlevelx), wrk (nwrk), xmin, xmax, ymin, ymax, rhomin, &
+       rhomax, rhoomin, rhoomax
   real(kind=DP) :: xdim, ydim, xs, ys
   real(kind=DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
   real(kind=DP) :: at (3, 3), a0
@@ -35,26 +35,25 @@ program plotrho
 
 
   i = iargc ()
-  if (i.eq.0) then
-     print '("  input file > ",$)'
+  if (i == 0) then
+     write(6, '("input file > ",$)')
      read (5, '(a)', end = 20, err = 20) filename
-  elseif (i.eq.1) then
+  elseif (i == 1) then
      call getarg (1, filename)
   else
-     print '("   usage: plotrho  [input file] ")'
+     write(6, '("usage: plotrho  [input file] ")')
   endif
   open (unit = 1, file = filename, form = 'formatted', status = &
        'old', iostat = i)
-  if (i.ne.0) then
-     print '("   file not found ")'
+  if (i /= 0) then
+     write(6, '("Error: file not found ")')
      stop
-
   endif
-  read (1, * ) nxi, nyi
-  if (nxi.gt.nximax.or.nyi.gt.nyimax) then
-     print '(" nx or ny too big ")'
-     stop
 
+  read (1, * ) nxi, nyi
+  if (nxi > nximax .or. nyi > nyimax) then
+     write(6, '("Error: nx or ny too big ")')
+     stop
   endif
   read (1, * ) (xi (i), i = 0, nxi)
   read (1, * ) (yi (j), j = 0, nyi)
@@ -63,32 +62,41 @@ program plotrho
   read (1, * ) tau1
   read (1, * ) tau2
   read (1, * ) nat
-  if (nat.gt.nax) then
-     print '(" too many atoms ")'
+  if (nat > nax) then
+     write(6, '("Error: too many atoms (",i4,", max:",i4,")")') nat, nax
      stop
   endif
   read (1, * ) ( (tau (j, na), j = 1, 3), ityp (na), na = 1, nat)
   read (1, * ) a0
   read (1, * ) at
-
   close (unit = 1)
-  write (6, '(" r0   : ",3f8.4)') r0
-  write (6, '(" tau1 : ",3f8.4)') tau1
-  write (6, '(" tau2 : ",3f8.4)') tau2
-
-  write (6, '(i4," atomic positions read")') nat
-  !      write(6,'(" Atomic positions:")')
+  !
+  write (6, '("r0   : ",3f8.4)') r0
+  write (6, '("tau1 : ",3f8.4)') tau1
+  write (6, '("tau2 : ",3f8.4)') tau2
+  !
+  write (6, '("read",i4," atomic positions")') nat
+  !      write(6,'("Atomic positions:")')
   !      write(6,'(3f8.4)') ( (tau(j,na),j=1,3),na=1,nat)
-  write (6, '("   output file > ",$)')
+  write (6, '("output file > ",$)')
 
   read (5, '(a)') fileout
-  write (6, '("   nx, ny (output) > ",$)')
-  read (5, * ) nx, ny
-  if (nx.gt.nxmax.or.ny.gt.nymax) then
-     write (6, * ) 'Error: nx or ny too big '
-     stop
 
+  write (6, '("Read ",i3," *",i3,"  grid")') nxi+1, nyi+1
+#ifdef __AIX
+  !
+  ! interpolation implemented only for ESSL routines ...
+  !
+  write (6, '("nx, ny (output) > ",$)')
+  read (5, * ) nx, ny
+  if (nx > nxmax .or. ny > nymax) then
+     write (6, '("Error: nx or ny too big ")')
+     stop
   endif
+#else
+  nx = nxi
+  ny = nyi
+#endif
   xmin = xi (0)
   xmax = xi (nxi)
   do i = 0, nx
@@ -104,35 +112,35 @@ program plotrho
   call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nximax + 1, x, y, nx &
        + 1, ny + 1, rhoo, nxmax + 1, wrk, nwrk)
 #else
-  if (nx.ne.nxi.or.ny.ne.nyi) then
-     print '("Sorry, interpolation not (yet) supported")'
-     nx = nxi
-     ny = nyi
-  else
-     do j = 0, ny
-        do i = 0, nx
-           rhoo (i, j) = rhoi (i, j)
-        enddo
-     enddo
-  endif
+  rhoo (0:nx, 0:ny) = rhoi (0:nx, 0:ny)
 #endif
-  rhoomin = 1.0e+20
-  rhoomax = - 1.0e+20
-  do j = 0, ny
-     do i = 0, nx
-        rhoomin = min (rhoomin, rhoo (i, j) )
-        rhoomax = max (rhoomax, rhoo (i, j) )
-     enddo
-  enddo
+  rhomin = minval (rhoo(0:nx, 0:ny))
+  rhomax = maxval (rhoo(0:nx, 0:ny))
 
-  print '("   Logarithmic scale (y/n)? > ",$)'
-  read (5, '(a)') ans
-  logarithmic_scale = ans.ne.'n'.and.ans.ne.'N'
-  print '("   Bounds: ",2f12.6)', rhoomin, rhoomax
-  print '("   min, max, # of levels > ",$)'
-
+  if (rhomin > 0.d0) then
+     write (6,'("Logarithmic scale (y/n)? > ",$)')
+     read (5, '(a)') ans
+     logarithmic_scale = ans.ne.'n'.and.ans.ne.'N'
+  else
+     logarithmic_scale = .false.
+  end if
+10 continue
+  write (6, '("Bounds: ",2f12.6)') rhomin, rhomax
+  write (6, '("min, max, # of levels > ",$)')
   read (5, * ) rhoomin, rhoomax, nlevels
-  if (nlevels.gt.nlevelx) stop ' too many levels '
+  if ( rhoomax <= rhoomin .or. &
+       rhoomin >= rhomax .or. rhoomax <= rhomin ) then
+     write (6, '("Out of Bounds! try again")')
+     go to 10
+  end if
+  if (nlevels > nlevelx) then
+     write (6, '("Too many levels, reducing to allowed max:",i4))') &
+          nlevelx
+     nlevels = nlevelx
+  else if (nlevels < 1) then
+     write (6, '("Too few levels! assuming 1 level"))') 
+     nlevels = 1
+  end if
   if (logarithmic_scale) then
      do k = 0, nlevels - 1
         z (k) = exp (log (rhoomin) + (log (rhoomax) - log (rhoomin) ) &
@@ -159,8 +167,6 @@ program plotrho
 end program plotrho
 !
 !-----------------------------------------------------------------------
-
-
 subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
      ymax, jub, nc, z, xdim, ydim, xs, ys, str, filename)
   !-----------------------------------------------------------------------
