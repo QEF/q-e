@@ -46,30 +46,19 @@
 #ifdef __LINUX
 #   ifdef __INTEL
 #         define __IOTK_BINARY_FORMAT "PC-LINUX/IFC"
-#         undef __IOTK_LOGICAL1 1
-#         undef __IOTK_LOGICAL2 2
-#         define __IOTK_LOGICAL3 4
-#         undef __IOTK_LOGICAL4 8
-#         undef __IOTK_INTEGER1 1
-#         undef __IOTK_INTEGER2 2
+#         define __IOTK_INTEGER1 1
+#         define __IOTK_INTEGER2 2
 #         define __IOTK_INTEGER3 4
-#         undef __IOTK_INTEGER4 8
-#         undef __IOTK_REAL1    4
+#         define __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
-#         undef __IOTK_REAL3    16
 #         define __IOTK_WORKAROUND1
 #         define __IOTK_WORKAROUND3
 #   endif
 #   ifdef __G95
 #         define __IOTK_BINARY_FORMAT "PC-LINUX/G95"
-#         define __IOTK_LOGICAL1 1
-#         define __IOTK_LOGICAL2 2
-#         define __IOTK_LOGICAL3 4
-#         define __IOTK_LOGICAL4 8
 #         define __IOTK_INTEGER1 1
 #         define __IOTK_INTEGER2 2
 #         define __IOTK_INTEGER3 4
-#         define __IOTK_INTEGER4 8
 #         define __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
 #   endif
