@@ -1,4 +1,6 @@
 
+  *  PWCOND + FFTW + parallel execution = not good
+
   *  cell minimization with steepest descent was not working (CP/FPMD)
 
   *  various Alpha compilation problems

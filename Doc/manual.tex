@@ -810,12 +810,18 @@ on Linux Alphas, check the following page:
 
 \paragraph{Linux PC}
 
+The web site of Axel Kohlmeyer contains a very informative section 
+on CPMD with Linux. Most of its contents applies to the ESPRESSO
+code as well:
+\htmladdnormallink%
+{\texttt{http://www.theochem.rub.de/i\~{}axel.kohlmeyer/cpmd-linux.html}}%
+{http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html}.
+
 On newer Linux machines, even statically linked binaries will try 
-to open some shared libraries, which will lead to all kinds of 
-problems (i.e. crashes) if libc/libm/libpthreads are not linked 
-dynamically. Machines using glibc-2.2.4 and older seem ok. So if
-one wants to share precompiled binaries, they should be compiled 
-on the oldest available machine. Crashes due to multithreading 
+to open some shared libraries, which will lead to crashes
+if libc/libm/libpthreads are not linked dynamically. Machines 
+using glibc-2.2.4 and older seem ok: compile on these machines
+if you want to share precompiled binaries. Crashes due to multithreading 
 (e.g. when using a multithreaded ATLAS or MKL) on machines with 
 the newer threads (nptl) can be worked around by setting the 
 environment variable \texttt{LD\_ASSUME\_KERNEL} to '2.2.5'. For 
@@ -834,26 +840,22 @@ as in the following examples:%
 \end{verbatim}
 where typical location and name of libraries is assumed.
 Most precompiled libraries have lowercase names with one or two
-underscores (\_) appended.
-You can select the appropriate preprocessing options in 
-\texttt{make.sys}, knowing that:
+underscores (\_) appended. \texttt{configure} should select the 
+appropriate preprocessing options in \texttt{make.sys}, but in
+case of trouble, be aware that:
 \begin{itemize}
   \item the Absoft compiler is case-sensitive (like C and unlike
         other Fortran compilers) and does not add an underscore
-        to symbol names;
+        to symbol names (note that if your libraries contain 
+        uppercase or mixed case names, you are out of luck:
+        You must either recompile your own libraries, or change 
+        the \texttt{\#define}'s in \texttt{include/f\_defs.h});
   \item both Portland compiler (pgf90) and Intel compiler (ifort/ifc)
-        are case insensitive and add an underscore to symbol names,
-\end{itemize} 
-if \texttt{configure} doesn't do it for you.
+        are case insensitive and add an underscore to symbol names.
+\end{itemize}
 
-If you have precompiled lapack libraries, you may need to add
+With some precompiled lapack libraries, you may need to add
 \texttt{-lg2c} or \texttt{-lm} or both.
-
-\textbf{Note for Absoft compiler}: 
-If your libraries contain uppercase or mixed case names, you are out
-of luck.
-You must either recompile your own libraries, or change the
-\texttt{\#define}'s in \texttt{include/f\_defs.h}.
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
@@ -878,7 +880,7 @@ the appropriate script --- located in the directory containing the
 compiler executable --- in your initialization files.
 Consult the documentation provided by Intel. 
 
-Note that each major release of the Intel compiler differs a lot from
+Each major release of the Intel compiler differs a lot from
 the previous one. Do not mix compiled objects from different releases: 
 they are incompatible. Intel compiler v.~7 and later use a different 
 method to locate where modules are with respect to v.~$< 7$: if you
@@ -894,7 +896,7 @@ Update to the last version (presently 7.1.41, 8.0.046 or
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}
 
-Also note that \texttt{pwcond.x} does not work with some (but not all)
+Note that \texttt{pwcond.x} does not work with some (but not all)
 releases of Intel compiler v.~7 and 8, for no apparent good reason.
 
 Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
@@ -913,7 +915,7 @@ compiler v.~8 fails to load with MKL v.~5.2 or earlier versions,
 because some symbols that are referenced by MKL are missing. There
 is a fix for this (info from Konstantin Kudin): add libF90.a from 
 ifc 7.1 at the linking stage, as the last library.
-Also note that some combinations of not-so-recent versions of MKL 
+Note that some combinations of not-so-recent versions of MKL 
 and ifc may yield a lot of "undefined references" when statically 
 loaded: use \texttt{configure --enable-shared}, 
 or remove the \texttt{-static} option in \texttt{make.sys}.
@@ -944,7 +946,7 @@ in the following example:
     ar rv libatlas.a xerbla.o dlamch.o
 \end{verbatim}
 (assuming that the library and the two object files are in the same
-directory).
+directory). See also Axel Kohlmeyer's web site.
 Note that if you have a PC cluster running MPI, you may have to
 recompile MPI libraries as well, using the Intel C compiler (icc).
 
