@@ -61,7 +61,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !
   !  add a magnetic field 
   !
-  if (noncolin) call add_bfield(v)
+  if (noncolin) call add_bfield(v,rho)
   !
   !  calculate hartree potential
   !

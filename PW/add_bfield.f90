@@ -1,4 +1,4 @@
-SUBROUTINE add_bfield (v)
+SUBROUTINE add_bfield (v,rho)
 !--------------------------------------------------------------------
 !
 ! If noncolinear is set, one can calculate constrains either on 
@@ -17,25 +17,29 @@ SUBROUTINE add_bfield (v)
 !
 !
 USE kinds,            ONLY : dp
+USE io_global,        ONLY : stdout
 USE ions_base,        ONLY : nat, ntyp => nsp, ityp
 USE cell_base,        ONLY : omega
 USE gvect,            ONLY : nr1, nr2, nr3, nrxx 
 USE lsda_mod,         ONLY : nspin
 USE noncollin_module, ONLY : magtot_nc, bfield, lambda, i_cons, mcons, &
-                             pointlist, pointnum, factlist, m_loc, r_loc 
+                             pointlist, pointnum, factlist 
 IMPLICIT NONE
   !
-REAL(KIND=dp) :: v(nrxx, nspin)
-REAL(KIND=dp) :: ma, xx, xxx, fact, m1(3)
+REAL(KIND=dp) :: v(nrxx, nspin), rho(nrxx,nspin)
+REAL(KIND=dp) :: ma, xx, xxx, fact, m1(3), m_loc(3,nat), r_loc(nat)
+
 
 INTEGER :: ir, ipol, nt, na
-! counters
+REAL(KIND=DP) :: etcon
+
 
 IF (i_cons==0) RETURN
 !
 ! get the actual values of the local integrated quantities
+etcon=0.d0
 IF (i_cons.LT.3) THEN
-   CALL get_locals(r_loc, m_loc)
+   CALL get_locals(r_loc, m_loc, rho)
 
    DO na = 1,ntyp
       nt = ityp(na)
@@ -43,24 +47,23 @@ IF (i_cons.LT.3) THEN
          ! i_cons = 1 means that the 3 components of the magnetization
          ! are constrained, they are given in the input-file
          DO ipol = 1,3
-            m1(ipol) = m_loc(ipol,nt) - mcons(ipol,nt)
+            m1(ipol) = m_loc(ipol,na) - mcons(ipol,nt)
          END DO
+         etcon = etcon + &
+                 lambda * (m1(1)*m1(1) + m1(2)*m1(2) + m1(3)*m1(3) )
       ELSE IF (i_cons==2) THEN
          ! i_cons = 2 means that the angle theta between the local
          ! magn. moment and the z-axis is constrained
          ! mcons (1,nt) is the cos of the constraining angle theta
          ! the penalty functional in this case is
          ! lambda*(acos(m_loc(z)/|m_loc|) - theta )^2
-         ma = dsqrt(m_loc(1,nt)**2+m_loc(2,nt)**2+m_loc(3,nt)**2)
-         xx = m_loc(3,nt)/ma
-         IF (ABS(xx - 1.D0).GT.1.D-10) THEN
-            xxx = - (ACOS(xx) - mcons(1,nt))/SQRT(1.D0 - xx*xx)
-         ELSE
-            xxx = -1.D0
-         END IF
-         m1(1) = - xxx * m_loc(1,nt)*m_loc(3,nt) / (ma*ma*ma)
-         m1(2) = - xxx * m_loc(2,nt)*m_loc(3,nt) / (ma*ma*ma)
-         m1(3) =   xxx * (ma*ma-m_loc(3,nt)*m_loc(3,nt)) / (ma*ma*ma)
+            ma = dsqrt(m_loc(1,na)**2+m_loc(2,na)**2+m_loc(3,na)**2)
+            m1(1) = - m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
+            m1(2) = - m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
+            m1(3) = - m_loc(3,na)*m_loc(3,na) / (ma*ma*ma) + 1.d0/ma
+            etcon = etcon + &
+                      lambda * (m_loc(3,na)/ma - mcons(3,nt))**2
+
       END IF
 
       DO ir = 1,pointnum(na)
@@ -71,6 +74,7 @@ IF (i_cons.LT.3) THEN
          END DO       ! ipol
       END DO      ! points
    END DO      ! na
+   write (stdout,'(4x,a,F15.8)' ) " constraint energy (Ryd) = ", etcon
 ELSE IF (i_cons==3) THEN
    fact = 2.D0*lambda
    DO ipol=1,3
