@@ -72,7 +72,9 @@ subroutine punch_band (filband)
   !
   !
 #include "machine.h"
-
+#ifdef __PARA
+  use para, only: me
+#endif
   use pwcom
   use becmod
 
@@ -240,9 +242,15 @@ subroutine punch_band (filband)
         degeneracy (nd) = deg
      end do
      !
+#ifdef __PARA
+     if (me =1) then
+#end if
      write (iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
      write (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
              * rytoev, ibnd = 1, nbnd)
+#ifdef __PARA
+     endif
+#end if
   enddo
 
   deallocate (edeg, index)

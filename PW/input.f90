@@ -936,17 +936,25 @@ subroutine iosys
      celldm (6) = cosbc 
   else if (celldm (1) /= 0.d0 .and. a /= 0.d0) then
      call errore('input', ' do not specify both celldm and a,b,c!',1)
- end if
-  !
-  if (ibrav == 0) then
-     if (celldm (1) == 0.d0) then
-        celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
-    end if
-  else
-     CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   end if
-  at(:,:) = at(:,:) / celldm(1)   !  bring at in units of alat
-  alat = celldm(1)
+  !
+  if (ibrav == 0 .and. celldm (1) /= 0.d0) then
+     ! input at are in units of alat
+     alat = celldm(1)
+  else if (ibrav == 0 .and. celldm (1) == 0.d0) then
+     ! input at are in atomic units: define alat
+     celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
+     alat = celldm(1)
+     ! bring at to alat units
+     at(:,:) = at(:,:) / alat
+  else
+     ! generate at (atomic units)
+     CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+     alat = celldm(1) 
+     ! bring at to alat units
+     at(:,:) = at(:,:) / alat
+  end if
+  !
   CALL volume(alat,at(1,1),at(1,2),at(1,3),omega)
   !
   SELECT CASE ( atomic_positions )
