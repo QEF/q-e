@@ -248,7 +248,7 @@ SUBROUTINE print_this_clock( n )
   ! ... some trouble could arise if a clock is not started on all nodes
   !
   ! ... by uncommenting the following line the extreme operation is removed
-  ! ... may be useful for testing purpouses :
+  ! ... may be useful for testing purposes :
   !
 !#define DEBUG
   !
