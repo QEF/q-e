@@ -130,9 +130,9 @@ CONTAINS
       nat = SUM( na(1:ntyp) )
       ecutwfc = ecutw
       ecutrho = ecut
-      title = ''
-      crystal = ''
-      tmp_dir = ''
+      title   = ' '
+      crystal = ' '
+      tmp_dir = ' '
       kunit = 1
       lgauss = .FALSE.
       ltetra = .FALSE.

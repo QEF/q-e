@@ -9,7 +9,7 @@
 # --- Change Variables according to your system --- #
 
 # ** Preprocessor Macro **
-  CPMACRO=-D__AIX,-D__LIBMASS,-D__ESSL
+  CPMACRO=-D__AIX,-D__LIBMASS
 #
 # Uncomment to Use IBM mass
   MASS= -L /cineca/lib/mass -lmassv -lmass

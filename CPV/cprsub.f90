@@ -258,7 +258,7 @@
       use ions_module
       use pseu
       use elct, only: ng0
-      use ener, only: eself
+      use energies, only: eself
       use ncprm
 !
       use dpseu
@@ -333,7 +333,7 @@
             if (ipp(is).eq.0) then
                call herman_skillman_int(mesh(is),cmesh(is),f,fint)
             else
-               call simpson(mesh(is),f,rab(1,is),fint)
+               call simpson_cp90(mesh(is),f,rab(1,is),fint)
             end if
 !
             if (ng0.eq.2) then
@@ -364,8 +364,8 @@
                   if(tpre) call herman_skillman_int                     &
      &                          (mesh(is),cmesh(is),df,dfigl(ig))
                else
-                  call simpson(mesh(is),f,rab(1,is),figl(ig))
-                  if(tpre) call simpson(mesh(is),df,rab(1,is),dfigl(ig))
+                  call simpson_cp90(mesh(is),f,rab(1,is),figl(ig))
+                  if(tpre) call simpson_cp90(mesh(is),df,rab(1,is),dfigl(ig))
                end if
             end do
 !
@@ -1090,7 +1090,7 @@
                do ir=1,kkbeta(is)
                   fint(ir)=r(ir,is)**2*rscore(ir,is)*jl(ir)
                end do
-               call simpson(kkbeta(is),fint,rab(1,is),qgbs(ig))
+               call simpson_cp90(kkbeta(is),fint,rab(1,is),qgbs(ig))
             end do
             do ig=1,ngb
                rhocb(ig,is)=c*qgbs(ig)
@@ -1367,7 +1367,7 @@
                         call herman_skillman_int                        &
      &                    (kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
                      else
-                        call simpson                                    &
+                        call simpson_cp90                               &
      &                    (kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
                      end if
                      qradx(il,jv,iv,l,is)=qradx(il,iv,jv,l,is)
@@ -1381,7 +1381,7 @@
      &                          (kkbeta(is),cmesh(is),dfint,            &
      &                          dqradx(il,iv,jv,l,is))
                         else
-                           call simpson                                 &
+                           call simpson_cp90                            &
      &                          (kkbeta(is),dfint,rab(1,is),            &
      &                          dqradx(il,iv,jv,l,is))
                         end if
@@ -1465,7 +1465,7 @@
                   call herman_skillman_int                              &
      &                 (kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
                else
-                  call simpson                                          &
+                  call simpson_cp90                                     &
      &                 (kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
                endif
 !
@@ -1477,7 +1477,7 @@
                      call herman_skillman_int                           &
      &                 (kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
                   else
-                     call simpson                                       &
+                     call simpson_cp90                                  &
      &                 (kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
                   end if
                endif

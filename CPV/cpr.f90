@@ -54,7 +54,7 @@
       use core
       use cnst
       use cvan
-      use ener
+      use energies
       use elct
       use gvec
       use gvecs

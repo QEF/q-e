@@ -238,7 +238,7 @@
 !
 ! this is the default: max dimension = fft dimension
       nx=n
-#if defined(__ESSL)
+#if defined(__AIX)
       if ( n.eq. 8 .or. n.eq.16  .or. n.eq.32 .or.                      &
      &     n.eq.64 .or. n.eq.128 .or. n.eq.256       )  nx=n+1
 #endif
@@ -293,7 +293,7 @@
          good=.false.
       else
 ! specific (machine- and library-dependent cases)
-#ifdef __ESSL
+#ifdef __AIX
 !
 ! IBM machines with essl libraries
 !

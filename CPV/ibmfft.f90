@@ -10,7 +10,7 @@
 !  Note that the three routines are equal, and that no initialization
 !  is needed (the initialization arrays are recalculated every time).
 !
-#if defined (__ESSL)
+#if defined (__AIX)
 !
 !----------------------------------------------------------------------
       subroutine cfft3 (f,nr1,nr2,nr3,nr1x,nr2x,nr3x,sign)

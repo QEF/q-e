@@ -492,7 +492,7 @@
                do ir=1,mesh(is)
                   vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
                enddo
-               call simpson(mesh(is),vchi,rab(1,is),chiq(i))
+               call simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
             enddo
 !
 !   multiply by angular part and structure factor
@@ -5628,7 +5628,7 @@
             fint(ir)=betar(ir,il,is)**2*rucore(ir,il,is)
             betar(ir,il,is)=rucore(ir,il,is)*betar(ir,il,is)
          end do
-         call simpson(mesh(is),fint,rab(1,is),dion(il,il,is))
+         call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
          dion(il,il,is)=1.0/dion(il,il,is)
       end do
       deallocate(fint)
@@ -6471,7 +6471,7 @@
       use elct
       use cnst
       use pseu
-      use ener
+      use energies
       use work1
 !
       use cdvan
@@ -7374,63 +7374,6 @@
 !
       return
       end
-!-----------------------------------------------------------------------
-      subroutine simpson( mesh, func, rab, intg )
-!-----------------------------------------------------------------------
-!
-!    This routine computes the integral of a function defined on a
-!    logaritmic mesh, by using the open simpson formula given on 
-!    pag. 109 of Numerical Recipes. In principle it is used to
-!    perform integrals from zero to infinity. The first point of
-!    the function should be the closest to zero but not the value
-!    in zero. The formula used here automatically includes the 
-!    contribution from the zero point and no correction is required.
-!
-!    At least 8 integrating points are required.
-!
-!
-!    last revised 12 May 1995 by Andrea Dal Corso
-!
-!
-      implicit none
-!
-!    first the dummy variables
-!
-      integer                                                           &
-     &       mesh                   ! input: the number of mesh points
-      real(kind=8)                                                      &
-     &       func(mesh),           &! input: the function to be integrated
-     &       rab(mesh),            &! input: the derivative of the log mesh 
-     &       intg                   ! output: the value of the integral
-!
-!    the parameters
-!
-      real(kind=8)                                                      &
-     &      c(4)                    ! the coefficients of the expansion
-!
-!    here the local variables
-!
-      integer                                                           &
-     &       i
-!
-      if ( mesh .lt. 8 )                                                &
-     &   call errore('simpson','few mesh points',8)
-!
-      c(1) = 109.0 / 48.d0
-      c(2) = -5.d0 / 48.d0
-      c(3) = 63.d0 / 48.d0
-      c(4) = 49.d0 / 48.d0 
-!
-      intg = ( func(1)*rab(1) + func(mesh  )*rab(mesh  ) )*c(1)         &
-     &     + ( func(2)*rab(2) + func(mesh-1)*rab(mesh-1) )*c(2)         &
-     &     + ( func(3)*rab(3) + func(mesh-2)*rab(mesh-2) )*c(3)         &
-     &     + ( func(4)*rab(4) + func(mesh-3)*rab(mesh-3) )*c(4)
-      do i=5,mesh-4
-         intg = intg + func(i)*rab(i)
-      end do
-!
-      return
-      end
 !
 !-----------------------------------------------------------------------
       subroutine spinsq (c,bec,rhor)
@@ -7780,7 +7723,7 @@
       use parms
       use elct
       use cnst
-      use ener
+      use energies
       use pseu
       use core
       use ncprm

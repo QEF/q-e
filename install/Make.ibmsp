@@ -5,7 +5,7 @@
 # Macros for conditional compilation
 #
 # CP and FPMD macro
-# CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-D__ESSL
+# CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-D__MASS
 # PW macro
 CPPFLAGS = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
 #

@@ -115,9 +115,9 @@ module elct
   integer, allocatable:: ispin(:)
 end module elct
 
-module ener
-  real(kind=8) etot,ekin,eht,epseu,enl,exc,esr,eself
-end module ener
+module energies
+  real(kind=8) :: etot,ekin,eht,epseu,enl,exc,esr,eself
+end module energies
 
 module gvec
   !     G-vector quantities for the thick grid - see also doc in ggen 
