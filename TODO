@@ -1,4 +1,4 @@
-TODO LIST - 13 June 2003
+TODO LIST - 25 June 2003
 
 INSTALLATION
 
@@ -82,8 +82,6 @@ PW
 - output should be more informative and less confused
 
 POSTPROCESSING
-
-- bands.x must either be finished or removed
 
 - postprocessing/pwtools in the parallel case
   and with new_punch must be verified

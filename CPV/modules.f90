@@ -121,7 +121,7 @@ end module gvec
 
 module ions_module
   use parameters, only: nsx, natx
-  use ions_base, only nsp, na, nas => nax, zv, pmass, rcmax
+  use ions_base, only: nsp, na, nat, nas => nax, zv, pmass, rcmax
   !     nsp       = number of species
   !     na(is)    = number of atoms of species is
   !     nas       = max number of atoms of a given species
