@@ -4,8 +4,9 @@ include ../make.rules
 include ../make.sys
 
 OBJS = write_upf.o
-MODS = ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
-       ../Modules/mp.o
+MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
+       ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
+       ../Modules/mp.o 
 
 all : rrkj2upf.x ncpp2upf.x vdb2upf.x uspp2upf.x fhi2upf.x cpmd2upf.x oldcp2upf.x fpmd2upf.x
 
