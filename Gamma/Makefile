@@ -33,7 +33,6 @@ PWOBJS = \
 ../PW/ccgdiagg.o \
 ../PW/cdiaghg.o \
 ../PW/cdiagh.o \
-../PW/cdiisg.o \
 ../PW/cegterg.o \
 ../PW/cft_3.o \
 ../PW/cft3.o \
@@ -55,6 +54,7 @@ PWOBJS = \
 ../PW/davcio.o \
 ../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
+../PW/diis_module.o \
 ../PW/diropn.o \
 ../PW/divide_et_impera.o \
 ../PW/divide.o \

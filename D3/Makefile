@@ -216,7 +216,6 @@ PWOBJS = \
 ../PW/ccgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
-../PW/cdiisg.o \
 ../PW/cegterg.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \

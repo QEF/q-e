@@ -100,13 +100,11 @@ PWOBJS = \
 ../PW/bp_ylm_q.o \
 ../PW/bp_zgedi.o \
 ../PW/bp_zgefa.o \
-../PW/c_bands.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
 ../PW/ccgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
-../PW/cdiisg.o \
 ../PW/cegterg.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
