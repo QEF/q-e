@@ -516,6 +516,13 @@ SUBROUTINE c_phase
                         ENDIF
                      END DO
                      mat(nb,mb) = ZDOTC (ngm,aux0,1,aux,1)
+                  end do
+               end do
+#ifdef __PARA
+               call reduce(2*nbnd*nbnd,mat)
+#endif
+               DO nb=1,nbnd
+                  DO mb=1,nbnd
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---

@@ -183,6 +183,9 @@ SUBROUTINE iosys()
   !
   USE read_namelists_module, ONLY: read_namelists
   !
+#if defined (__PARA)
+  USE para,             ONLY : npool
+#endif  
   IMPLICIT NONE
   !
   ! ... local variables
@@ -240,7 +243,7 @@ SUBROUTINE iosys()
             '(5x,"Presently stress not available with electric field",/)' )
   END IF
   IF ( tefield .AND. ( nspin == 2 ) ) THEN
-     CALL errore( 'input', 'LSDA not available with electric field' , 1 )
+     CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
   END IF
   !
   twfcollect = wf_collect
@@ -724,7 +727,7 @@ SUBROUTINE iosys()
   END SELECT
 
   IF ( dipfield .AND. imix.ne.-1  ) THEN
-     CALL errore( 'input', 'use mixing_mod=potential with dipfield' , 1 )
+     CALL errore( 'iosys', 'use mixing_mod=potential with dipfield' , 1 )
   END IF
   !
   nmix = mixing_ndim
@@ -745,6 +748,10 @@ SUBROUTINE iosys()
   nppstr_     = nppstr
   gdir_       = gdir
   lberry_     = lberry
+#ifdef __PARA
+  if ( lberry_ .AND. npool > 1 ) &
+     CALL errore (' iosys ', ' Berry Phase not implemented with pools ', 1)
+#endif
   title_      = title
   dt_         = dt
   tefield_    = tefield

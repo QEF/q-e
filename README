@@ -8,8 +8,8 @@ INFM (http://www.democritos.it). It includes all or part of the following:
 
 - the CP code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
   Kari Laasonen (Oulu), Andrea Trave (UCBerkeley), Roberto Car
-  (Princeton), Paolo Giannozzi and others, for Car-Parrinello
-  variable-cell molecular dynamics 
+  (Princeton), Paolo Giannozzi, Nicola Marzari (MIT) and others,
+  for Car-Parrinello variable-cell molecular dynamics 
 
 - the FPMD code, developed by Carlo Cavazzoni (CINECA, Bologna),
   Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 
