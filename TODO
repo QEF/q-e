@@ -73,6 +73,16 @@ PW
 - ultrasoft PP: newd and addusdens are too slow
   import "small boxes" from CP
 
+- make hpsi/spsi/newd/addusdens/CG/DIIS  faster
+  - remove complex factor i**l from beta fct and q(r) (preliminary)
+  - shift structure factor from beta to psi when computing becp (reduce memory)
+  - use real BLAS routine instead of COMPLEX one in hpsi/spsi (at least 2 times 
+    faster).
+  - use only half of the G's when computing real integrals (2 times faster)
+  - seek for CG and DIIS algoritms that only use (H-eS)|psi> and not
+    the two vector separately ... compute it in one single call. (this way
+    S|psi> is  inexpensive)
+
 - output should be more informative and less confused
 
 POSTPROCESSING
