@@ -301,8 +301,6 @@
             nsx_l = MAXVAL( dfft%nsp( : ) )
           END IF
 
-          
-
           ALLOCATE( sndbuf( nsx_l * nz_l, npz ), ishand( npz ) )
           ALLOCATE( rcvbuf( nsx_l * nz_l, npz ), irhand( npz ) )
           ALLOCATE( rtest( npz ), rdone( npz ) )

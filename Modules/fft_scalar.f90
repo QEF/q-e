@@ -978,12 +978,8 @@
        CALL DCFT ( 0, r(1), 1, ldx, r(1), 1, ldx, nx, nzl*ny, idir, &
            1.0d0, fw_tablex( 1, ip ), ltabl, work, lwork)
        do i = 1, nx
-         dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
          do k = 1, nzl
-           IF( dofft ) THEN
+           IF( dofft( i ) ) THEN
              j = i + ldx*ldy * ( k - 1 )
              call DCFT ( 0, r(j), ldx, 1, r(j), ldx, 1, ny, 1, &
                  idir, 1.0d0, fw_tabley(1,ip), ltabl, work, lwork)
@@ -998,11 +994,8 @@
        idir = -1
        do i = 1, nx
          dofft = .TRUE.
-         IF( PRESENT( pl2ix ) ) THEN
-           IF( pl2ix( i ) < 1 ) dofft = .FALSE.
-         END IF
          do k = 1, nzl
-           IF( dofft ) THEN
+           IF( dofft( i ) ) THEN
              j = i + ldx*ldy * ( k - 1 )
              call DCFT ( 0, r(j), ldx, 1, r(j), ldx, 1, ny, 1, &
                idir, 1.0d0, bw_tabley(1,ip), ltabl, work, lwork)
