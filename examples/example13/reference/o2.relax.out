@@ -400,7 +400,7 @@
 
      Total force =     0.419923     Total SCF correction =     0.003138
 
-     BFGS Geometry Calculation
+     BFGS Geometry Optimization
 
      number of scf cycles    =   1
      number of bfgs steps    =   0
@@ -2394,7 +2394,7 @@ O2       0.188523053   0.188523065   0.188523065
 
      bfgs converged in   8 scf cycles and   5 bfgs steps
 
-     End of BFGS geometry calculation
+     End of BFGS Geometry Optimization
 
      Final energy            =     -63.4794002903 ryd
 

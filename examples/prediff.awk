@@ -108,10 +108,10 @@ function check_line()
       print_key("ITERATION");
       print "@CHECKPOINT@";
     }
-  else if (match($0, "BFGS Geometry Calculation"))
+  else if (match($0, "BFGS Geometry Optimization"))
     {
       print_key("ITERATION");
-      while (getline && ! match($0, "End of BFGS geometry calculation"))
+      while (getline && ! match($0, "End of BFGS Geometry Optimization"))
 	print_key("ITERATION");
       print_key("ITERATION");
       print "@CHECKPOINT@";
@@ -212,7 +212,7 @@ function check_line()
 	print_key("POSITIONS");
       print;
     }
-  else if (match($0, "Efinal ="))
+  else if (match($0, "Final Energy ="))
     {
       print_key("EFINAL");
     }
