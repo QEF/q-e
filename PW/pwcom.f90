@@ -385,7 +385,6 @@ MODULE cellmd
   !
   REAL(KIND=DP) :: &
        press, cmass,     &! target pressure and cell mass,
-       ttol,             &! tollerance for temperature rescaling
        at_old(3,3),      &! the lattice vectors at the previous ste
        omega_old,        &! the cell volume at the previous step
        cell_factor        ! maximum expected (linear) cell contraction

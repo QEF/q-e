@@ -33,12 +33,12 @@ SUBROUTINE vcsmd()
   USE cell_base,     ONLY : omega, alat, at, bg
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,        ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
-                            cmass, ttol, ntcheck, lmovecell
+                            cmass, ntcheck, lmovecell
   USE dynam,         ONLY : dt, temperature, amass
   USE ions_base,     ONLY : fixatom
   USE relax,         ONLY : epse, epsf
   USE force_mod,     ONLY : force, sigma
-  USE control_flags, ONLY : istep, conv_ions 
+  USE control_flags, ONLY : istep, tolp, conv_ions 
   USE parameters,    ONLY : ntypx
   USE ener,          ONLY : etot
   USE io_files,      ONLY : prefix
@@ -308,7 +308,7 @@ SUBROUTINE vcsmd()
                 sigma, calc, avmod, theta, amass, cmass, press, p, dt, avecd,  &
                 avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d,&
                 rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint,  &
-                edyn, temperature, ttol, ntcheck, ntimes, istep, tnew, nzero,  &
+                edyn, temperature, tolp, ntcheck, ntimes, istep, tnew, nzero,  &
                 nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv)
      !
   END IF

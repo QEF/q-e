@@ -384,7 +384,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      force, frr, calc, avmod, theta, atmass, cmass, press, p, dt, &
      avecd, avec2d, aveci, avec2di, sigma, sig0, avec0, v0, ratd, &
      rat2d, rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, &
-     ekint, etot, temp, ttol, ntcheck, ntimes, nst, tnew, nzero, natot, &
+     ekint, etot, temp, tolp, ntcheck, ntimes, nst, tnew, nzero, natot, &
      acu, ack, acp, acpv, avu, avk, avp, avpv)
   !
   !      rmw (18/8/99)
@@ -455,7 +455,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
        ntcheck, ntype, i_update, n_update
 
   real(kind=DP) :: factem, avpv, boltz, ptmass, pv, ww, ts, xx, alpha, x, &
-       tr, tnew, ttol, temp, avk, avu, ekk, avp, ack, acu, acpv, acp, dt, &
+       tr, tnew, tolp, temp, avk, avu, ekk, avp, ack, acu, acpv, acp, dt, &
        p, enew, v0, vcell, press, ut, etl, etot, ekint, utl, uta, cmass, &
        eka, ekla, eta
   logical :: symmetrize_stress
@@ -769,7 +769,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   if (temp.lt.1d-14) then
      ts = zero
-     ttol = zero
+     tolp = zero
   else
      ts = dabs (tnew / temp - um)
   endif
@@ -777,12 +777,12 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   !       rescale velocities
   !
-  !      WRITE( stdout,*) ' ekla', ekla, ttol,ts, nst, ntcheck, ntimes
+  !      WRITE( stdout,*) ' ekla', ekla, tolp,ts, nst, ntcheck, ntimes
   if (mod (nst, ntcheck) .eq.0) then
-     if ( (ts.gt.ttol) .and. (ntimes.gt.0) ) then
+     if ( (ts.gt.tolp) .and. (ntimes.gt.0) ) then
         !           WRITE( stdout,*) ' ekkkeka ! non dovrei essere qui !'
-        !           WRITE( stdout,*) 'nst,ntcheck, ts, ttol,ntimes'
-        !           WRITE( stdout,*) nst,ntcheck, ts, ttol,ntimes
+        !           WRITE( stdout,*) 'nst,ntcheck, ts, tolp,ntimes'
+        !           WRITE( stdout,*) nst,ntcheck, ts, tolp,ntimes
         !
         if (tnew.le.0.1d-12) then
            alpha = zero

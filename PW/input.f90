@@ -47,7 +47,7 @@ SUBROUTINE iosys()
   USE char,          ONLY : title_ => title, &
                             crystal
   !
-  USE cellmd,        ONLY : cmass, ttol, omega_old, at_old, ntcheck, &
+  USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
                             press_       => press, &
                             calc, lmovecell
@@ -113,6 +113,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
                             iverbosity, tr2, niter, pot_order, wfc_order, &
+                            tolp_        => tolp, &
                             upscale_     => upscale, &
                             mixing_beta_ => mixing_beta, &
                             nstep_       => nstep, &
@@ -719,7 +720,7 @@ SUBROUTINE iosys()
      CONTINUE
   CASE ( 'rescaling' )
      temperature = tempw
-     ttol        = tolp
+     tolp_       = tolp
   CASE DEFAULT
      CALL errore( ' iosys ', ' unknown ion_temperature ' // &
                 & TRIM( ion_temperature ), 1 )
