@@ -765,7 +765,7 @@ SUBROUTINE iosys()
   degauss_ = degauss
   nelec_   = nelec
   !
-  lspinorb_ = noncolin
+  lspinorb_ = lspinorb
   noncolin_ = noncolin
   angle1_   = angle1
   angle2_   = angle2

@@ -36,6 +36,7 @@ subroutine saveall (iun, iflag)
                      Hubbard_U, Hubbard_alpha
   USE io_files
   USE funct
+  USE spin_orb,  ONLY: lspinorb
   implicit none
 
   integer :: iun, iflag
@@ -69,6 +70,7 @@ subroutine saveall (iun, iflag)
      write (iun) tefield, dipfield
      write (iun) edir
      write (iun) emaxpos, eopreg, eamp
+     write (iun) jjj, jchi, lspinorb
      write (iun) title, crystal, atm, psd, sname, tmp_dir
   else
      read (iun, err = 100, iostat = ios) celldm, at, bg, alat, &
@@ -102,6 +104,7 @@ subroutine saveall (iun, iflag)
      read (iun, err = 100, iostat = ios) tefield, dipfield 
      read (iun, err = 100, iostat = ios) edir
      read (iun, err = 100, iostat = ios) emaxpos, eopreg, eamp
+     read (iun, err = 100, iostat = ios) jjj, jchi, lspinorb
      read (iun, err = 100, iostat = ios) title, crystal, atm, psd, &
           sname, dummy_tmp_dir
      !

@@ -36,6 +36,7 @@ subroutine summary
   USE symme, ONLY: nsym, invsym, s, ftau
   USE control_flags
   USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll, psd
+  USE spin_orb, only: lspinorb
   USE funct
   implicit none
   !
@@ -97,6 +98,8 @@ subroutine summary
   else
      WRITE( stdout, '(5x,"iswitch = ",i2/)') iswitch
   endif
+  if (lspinorb) write(stdout, &
+               '(5x,"Noncollinear calculation with spin-orbit",/)')
 
   if (qcutz.gt.0.d0) then
      WRITE( stdout, 110) ecfixed, qcutz, q2sigma

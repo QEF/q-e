@@ -51,7 +51,7 @@ SUBROUTINE setup()
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
   USE symme,         ONLY : s, irt, ftau, nsym, invsym
-  USE atom,          ONLY : r, oc, nchi, lchi, mesh, msh
+  USE atom,          ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
   USE pseud,         ONLY : zp, nlc, nnl, alps, aps, lmax
   USE wvfct,         ONLY : nbnd, nbndx
   USE control_flags, ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
@@ -59,7 +59,7 @@ SUBROUTINE setup()
                             restart, nosym, modenum
   USE relax,         ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,        ONLY : calc
-  USE us,            ONLY : tvanp, okvan, newpseudo, psd
+  USE us,            ONLY : tvanp,okvan,newpseudo,psd,betar,nbeta,dion,jjj,lll
   USE ldaU,          ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
                             Hubbard_alpha, Hubbard_lmax
   USE bp,            ONLY : gdir, lberry, nppstr
@@ -68,6 +68,7 @@ SUBROUTINE setup()
   USE para,          ONLY : kunit
   USE mp_global,     ONLY : nimage
   USE spin_orb,      ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin
   !
   IMPLICIT NONE
   !
@@ -90,11 +91,16 @@ SUBROUTINE setup()
       jpol,           &!
       tipo,           &!
       is,             &!
+      nb,             &!
+      nbe,            &
+      l,              &!
       ibnd             !
   LOGICAL :: &
+      so(npsx),       &
       minus_q,        &!
       ltest            !
   REAL(KIND=DP) :: &
+      vionl,       &   !
       iocc             !
   INTEGER, EXTERNAL :: &
       n_atom_wfc,     &!
@@ -105,7 +111,6 @@ SUBROUTINE setup()
   ! ... end of local variables
   !
   !
-  IF (lspinorb) call errore('setup','spin-orbit not allowed',1)
   IF ( nimage > 1 .AND. .NOT. lneb ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
   !
@@ -233,6 +238,69 @@ SUBROUTINE setup()
   IF ( .NOT. lscf ) niter = 1
   !
   starting_diag_threshold = ethr
+  !  only pwnc.x can do spin-orbit calculations. Here
+  !  all pseudopotentials which include spin-orbit are transformed 
+  !  into standard pseudopotentials
+  !
+  lspinorb=.false.
+  noncolin=.false.
+  do nt=1,ntyp
+     so(nt)=.true.
+     do nb=1,nbeta(nt)
+        so(nt)=so(nt).and.(abs(jjj(nb,nt)).gt.1.d-7)
+     enddo
+  enddo
+  do nt=1,ntyp
+    if (so(nt)) then
+      if (tvanp(nt)) call errore('setup','US j-average not yet implemented',1)
+      nbe=0
+      do nb=1,nbeta(nt)
+        nbe=nbe+1
+        if (lll(nb,nt).ne.0.and.abs(jjj(nb,nt)-lll(nb,nt)-0.5d0) &
+                          .lt.1.d-7) nbe=nbe-1
+      enddo
+      nbeta(nt)=nbe
+      nbe=0
+      do nb=1,nbeta(nt)
+        nbe=nbe+1
+        l=lll(nbe,nt)
+        if (l.ne.0) then
+          vionl=((l+1.d0)*dion(nbe+1,nbe+1,nt)+l*dion(nbe,nbe,nt))/      &
+                                                 (2.d0*l+1.d0)
+          betar(1:mesh(nt),nb,nt)=((l+1.d0)*sqrt(dion(nbe+1,nbe+1,nt)/   &
+                vionl)* betar(1:mesh(nt),nbe+1,nt)+ &
+                l*sqrt(dion(nbe,nbe,nt)/vionl)*betar(1:mesh(nt),nbe,nt))/&
+                                                  (2.d0*l+1.d0)
+          dion(nb,nb,nt)=vionl
+          nbe=nbe+1
+        else
+          betar(1:mesh(nt),nb,nt)=betar(1:mesh(nt),nbe,nt)
+          dion(nb,nb,nt)=dion(nbe,nbe,nt)
+!          qfun(1:mesh(nt),nb,nb,nt)=qfunc(1:mesh(nt),nbe,nbe,nt)
+        endif
+      enddo
+      nbe=0
+      do nb=1,nchi(nt)
+        nbe=nbe+1
+        if (lchi(nb,nt).ne.0.and.abs(jchi(nb,nt)-lchi(nb,nt)-0.5d0) &
+                       .lt.1.d-7) nbe=nbe-1
+      enddo
+      nchi(nt)=nbe 
+      nbe=0
+      do nb=1,nchi(nt)
+        nbe=nbe+1
+        l=lchi(nbe,nt)
+        if (l.ne.0) then
+          chi(1:mesh(nt),nb,nt)=((l+1.d0)*chi(1:mesh(nt),nbe+1,nt)+ &
+                               l*chi(1:mesh(nt),nbe,nt))/(2.d0*l+1.d0)
+          nbe=nbe+1
+        else
+          chi(1:mesh(nt),nb,nt)=chi(1:mesh(nt),nbe,nt)
+        endif
+      enddo
+    endif
+!    write(6,*) 'after nt, nchi, nbeta', nt, nchi(nt), nbeta(nt)
+  enddo
   !
   ! ... set number of atomic wavefunctions
   !

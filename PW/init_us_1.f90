@@ -35,10 +35,12 @@ subroutine init_us_1
   USE cell_base, ONLY: omega, tpiba
   USE gvect, ONLY: g, gg
   USE pseud, ONLY: lloc, lmax
+  USE lsda_mod, ONLY : nspin
   USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
-       kkbeta, nqf, nqlc, lll, tvanp, okvan, newpseudo, lmaxkb, &
-       nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, nhtolm, qrad, indv, nhm
+       kkbeta, nqf, nqlc, lll, jjj, tvanp, okvan, newpseudo, lmaxkb, &
+       nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, nhtoj, nhtolm, qrad, indv, nhm
   USE uspp, ONLY : ap, aainit
+  USE spin_orb, ONLY : lspinorb, rot_ylm, qq_spinorb, fcoef
   implicit none
   !
   !     here a few local variables
@@ -56,9 +58,13 @@ subroutine init_us_1
   ! q-point grid for interpolation
   real(kind=DP), allocatable :: ylmk0 (:)
   ! the spherical harmonics
-  real(kind=DP) ::  vll (0:lmaxx),vqint
+  real(kind=DP) ::  vll (0:lmaxx), vqint, sqrt2, j
   ! the denominator in KB case
   ! interpolated value
+  integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
+             lk, mk, vk, kh, lh, sph_ind
+  complex(kind=DP) :: coeff
+  real(kind=dp) :: spinor, ji, jk
 
   call start_clock ('init_us_1')
   !
@@ -70,25 +76,48 @@ subroutine init_us_1
   allocate (besr( ndm))    
   allocate (qtot( ndm , nbrx , nbrx))    
   allocate (ylmk0( lqx * lqx))    
-  dvan (:,:,:,:) = 0.d0
+  dvan = 0.d0
   qq (:,:,:)   = 0.d0
   ap (:,:,:)   = 0.d0
   if (lqx > 0) qrad(:,:,:,:)= 0.d0
 
   prefr = fpi / omega
+  if (lspinorb) then
+!
+!  In the spin-orbit case we need the unitary matrix u which rotates the
+!  real spherical harmonics and yields the complex ones.
+!
+     sqrt2=1.d0/dsqrt(2.d0)
+     rot_ylm=(0.d0,0.d0)
+     l=lmaxx
+     rot_ylm(l+1,1)=(1.d0,0.d0)
+     do n1=2,2*l+1,2
+       m=n1/2
+       n=l+1-m
+       rot_ylm(n,n1)=dcmplx((-1.d0)**m*sqrt2,0.d0)
+       rot_ylm(n,n1+1)=dcmplx(0.d0,-(-1.d0)**m*sqrt2)
+       n=l+1+m
+       rot_ylm(n,n1)=dcmplx(sqrt2,0.d0)
+       rot_ylm(n,n1+1)=dcmplx(0.d0, sqrt2)
+     enddo
+     fcoef=(0.d0,0.d0)
+     qq_spinorb=(0.d0,0.d0)
+  endif
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtolm,
-  !   indv, and if the pseudopotential is of KB type we initialize the
+  !   nhtoj, indv, and if the pseudopotential is of KB type we initialize the
   !   atomic D terms
   !
   do nt = 1, ntyp
      ih = 1
      do nb = 1, nbeta (nt)
         l = lll (nb, nt)
+        j = jjj (nb, nt)
         do m = 1, 2 * l + 1
            nhtol (ih, nt) = l
            nhtolm(ih, nt) = l*l+m
-           indv (ih, nt) = nb
+           nhtoj (ih, nt) = j
+           indv  (ih, nt) = nb
            ih = ih + 1
         enddo
      enddo
@@ -98,17 +127,66 @@ subroutine init_us_1
      !
      !    Here we initialize the D of the solid
      !
-     do ih = 1, nh (nt)
-        do jh = 1, nh (nt)
-           if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
-               nhtolm(ih, nt) == nhtolm(jh, nt) ) then
+     if (lspinorb) then
+     !
+     !  first calculate the fcoef coefficients
+     !
+       do ih = 1, nh (nt)
+          li = nhtol(ih, nt)
+          ji = nhtoj(ih, nt)
+          mi = nhtolm(ih, nt)-li*li
+          vi = indv (ih, nt)
+          do kh=1,nh(nt)
+            lk = nhtol(kh, nt)
+            jk = nhtoj(kh, nt)
+            mk = nhtolm(kh, nt)-lk*lk
+            vk = indv (kh, nt)
+            if (li.eq.lk.and.abs(ji-jk).lt.1.d-7) then
+              do is1=1,2
+                do is2=1,2
+                  coeff = (0.d0, 0.d0)
+                  do m=-li-1, li
+                    m0= sph_ind(li,ji,m,is1) + lmaxx + 1
+                    m1= sph_ind(lk,jk,m,is2) + lmaxx + 1
+                    coeff=coeff + rot_ylm(m0,mi)*spinor(li,ji,m,is1)* &
+                            conjg(rot_ylm(m1,mk))*spinor(lk,jk,m,is2)
+                  enddo
+                  fcoef(ih,kh,is1,is2,nt)=coeff
+                enddo
+              enddo
+            endif
+          enddo
+        enddo
+!
+!   and calculate the bare coefficients
+!
+        do ih = 1, nh (nt)
+           vi = indv (ih, nt)
+           do jh = 1, nh (nt)
+              vj = indv (jh, nt)
+              ijs=0
+              do is1=1,2
+                 do is2=1,2
+                    ijs=ijs+1
+                    dvan(ih,jh,ijs,nt)=dion(vi,vj,nt)*fcoef(ih,jh,is1,is2,nt)
+                    if (vi.ne.vj) fcoef(ih,jh,is1,is2,nt)=(0.d0,0.d0)
+                 enddo
+              enddo
+           enddo
+        enddo
+     else
+        do ih = 1, nh (nt)
+          do jh = 1, nh (nt)
+            if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
+              nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
               dvan (ih, jh, 1, nt) = dion (ir, is, nt)
-           endif
+              if (nspin.eq.4) dvan(ih, jh, 4, nt) = dion(ir, is, nt)
+            endif
+          enddo
         enddo
-     enddo
-
+     endif
   enddo
   !
   !  compute Clebsch-Gordan coefficients
@@ -192,20 +270,46 @@ subroutine init_us_1
 #endif
   call ylmr2 (lqx * lqx, 1, g, gg, ylmk0)
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
-        do ih = 1, nh (nt)
-           do jh = ih, nh (nt)
-              call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-              qq (ih, jh, nt) = omega * DREAL (qgm (1) )
-              qq (jh, ih, nt) = qq (ih, jh, nt)
-              !                  WRITE( stdout,*) ih,jh,nt,qq(ih,jh,nt)
-           enddo
+    if (tvanp (nt) ) then
+      if (lspinorb) then
+        do ih=1,nh(nt)
+          do jh=1,nh(nt)
+            call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
+            do kh=1,nh(nt)
+              do lh=1,nh(nt)
+                ijs=0
+                do is1=1,2
+                  do is2=1,2
+                    ijs=ijs+1
+                    do is=1,2
+                      qq_spinorb(kh,lh,ijs,nt) = qq_spinorb(kh,lh,ijs,nt) &
+                          + omega*DREAL(qgm(1))*fcoef(kh,ih,is1,is,nt)    &
+                                               *fcoef(jh,lh,is,is2,nt)
+                    enddo
+                  enddo
+                enddo
+              enddo
+            enddo
+          enddo
         enddo
-     endif
+      else
+        do ih = 1, nh (nt)
+          do jh = ih, nh (nt)
+             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
+             qq (ih, jh, nt) = omega * DREAL (qgm (1) )
+             qq (jh, ih, nt) = qq (ih, jh, nt)
+          enddo
+        enddo
+      endif
+    endif
   enddo
 #ifdef __PARA
 100 continue
-  call reduce (nhm * nhm * ntyp, qq)
+  if (lspinorb) then
+    call reduce ( nhm * nhm * ntyp * 8, qq_spinorb )
+  else
+    call reduce ( nhm * nhm * ntyp, qq )
+  endif
 #endif
   !
   !     fill the interpolation table tab
