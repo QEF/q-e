@@ -1,3 +1,8 @@
+#ifdef __ICC
+/* Workaround for icc and incompatible includes (glibc 2.3) */
+#include <time.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "cp.h"
