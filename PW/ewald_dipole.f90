@@ -41,7 +41,7 @@ subroutine ewald_dipole (tens,dipole)
   ewaldg=(0.d0,0.d0)  
   ewaldr=(0.d0,0.d0)
 
-!  print *,'dipole',dipole
+
 !  e2=1.d0 !hartree
   charge = 0.d0
   do na = 1, nat
@@ -84,7 +84,7 @@ subroutine ewald_dipole (tens,dipole)
   enddo
   ewaldg = e2 / 2.d0 * fpi / omega * ewaldg !Temp to compare with paratec
 !  ewaldg = e2 * fpi / omega * ewaldg
-!  print *,"ewaldg",ewaldg
+
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
@@ -126,17 +126,9 @@ subroutine ewald_dipole (tens,dipole)
  endif
 ewaldr = e2 *  ewaldr
 #ifdef __PARA
-
-
   call reduce (1, ewaldr)
 #endif
-  !      call reduce (1,ewaldr)
-  !      call reduce (1,ewaldg)
-  !      write(6,'(/5x,"eta used in ewald term: ",f4.2/
-  !     + 5x,"R-space term: ",f12.7,5x,"G-space term: ",f12.7/)')
-  !     + eta, ewaldr, ewaldg
 
-!print *,'ewaldr',ewaldr
  tens=ewaldg+ewaldr
 
 end subroutine ewald_dipole

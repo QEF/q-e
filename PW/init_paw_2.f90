@@ -10,12 +10,10 @@
 subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   !----------------------------------------------------------------------
   !
-  !   Calculates beta functions (Kleinman-Bylander projectors), with
+  !   Calculates paw_beta functions (paw projectors), with
   !   structure factor, for all atoms, in reciprocal space
   !
 #include "machine.h"
-!  use pwcom
-!  use parameters
   use kinds , only : dp
   use constants , only :tpi
   use wvfct , only : npwx
@@ -47,7 +45,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   !
   !
   if (paw_lmaxkb.lt.0) return
-  call start_clock ('init_us_2')
+  call start_clock ('init_paw_2')
   allocate (vkb1( npw_,paw_nhm))    
   allocate (  sk( npw_))    
   allocate (  qg( npw_))    
@@ -96,12 +94,6 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
               lm = l * l + paw_nhtom (ih, nt)
               do ig = 1, npw_
                  vkb1 (ig,ih) = ylm (ig, lm) * vq (ig)
- !                print *,ih,ylm(ig,lm)
- !                if (vkb1 (ig,ih)**2 .gt.1.D10)&
- !                     then
- !                  print *,'vkb1',vkb1 (ig,ih),ylm (ig, lm),vq (ig),ig,lm &
- !                        ,size(ylm(ig,:))
- !                endif
               enddo 
            endif
         enddo
@@ -128,11 +120,8 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
               pref = (0.d0, - 1.d0) ** paw_nhtol (ih, nt) * phase
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
-
-                   write(52,*) qg(ig), abs(vkb_(ig, jkb)**2)
-
-             enddo
-             write (52,*)
+              enddo
+              
            enddo
         endif
  
@@ -145,7 +134,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   deallocate (sk)
   deallocate (vkb1)
 
-  call stop_clock ('init_us_2')
+  call stop_clock ('init_paw_2')
   return
 end subroutine init_paw_2
 

@@ -10,26 +10,11 @@
 subroutine init_paw_1
   !----------------------------------------------------------------------
   !
-  !   This routine performs the following tasks:
-  !   a) For each non vanderbilt pseudopotential it computes the D and
-  !      the betar in the same form of the Vanderbilt pseudopotential.
-  !   b) It computes the indices indv which establish the correspondence
-  !      nh <-> beta in the atom
-  !   c) It computes the indices nhtol which establish the correspondence
-  !      nh <-> angular momentum of the beta function
-  !   d) It computes the indices nhtom which establish the correspondence
-  !      nh <-> magnetic angular momentum of the beta function.
-  !   e) It computes the coefficients c_{LM}^{nm} which relates the
-  !      spherical harmonics in the Q expansion
-  !   f) It computes the radial fourier transform of the Q function on
-  !      all the g vectors
-  !   g) It computes the q terms which define the S matrix.
-  !   h) It fills the interpolation table for the beta functions
+  ! This routine initialize the variables of the paw projector
+  ! and create the projectors in radial part (paw_betar) 
   !
 #include "machine.h"
-!  use pwcom
   USE kinds , only: dp
-!  use pseud
   use parameters , only : lqmax , nbrx, lmaxx, ndm
   use brilz , only : omega
   use basis , only : ntyp, nat, ityp
@@ -65,9 +50,6 @@ subroutine init_paw_1
   !
   !    Initialization of the variables
   !
-!  lmaxp=maxval(lmax)
-
-
 
   paw_nhm = 0
   paw_nh = 0
@@ -93,9 +75,6 @@ subroutine init_paw_1
   allocate (paw_nl(0:paw_lmaxkb, ntyp))
   allocate (paw_iltonh(0:paw_lmaxkb,paw_nhm, ntyp))
 
-!  dvan (:,:,:) = 0.d0
-!  qq (:,:,:)   = 0.d0
-!  qrad(:,:,:,:)= 0.d0
   ap (:,:,:)   = 0.d0
 
   ! calculate the number of beta functions of the solid
@@ -126,9 +105,6 @@ subroutine init_paw_1
               ih = ih + 1
            enddo
         enddo
-!        do ih=1,paw_nh(nt)
-!           print *,'nhtom',paw_nhtom(ih,nt),ih,nt
-!        enddo
 
   ! Rescale the wavefunctions so that int_0^rc f|psi|^2=1
   ! 
@@ -136,25 +112,14 @@ subroutine init_paw_1
 
         rc=1.6d0
         rs=1.d0/3.d0*rc
-!        rs=0.d0
         pow=1.d0
         do j = 1, paw_nbeta (nt)
-            do ih=1,msh(nt)
-              write(53,*) r(ih,nt),psphi(nt,j)%psi(ih),aephi(nt,j)%psi(ih)
-           enddo
-           write(53,*)
-!
            call step_f(aux,psphi(nt,j)%psi**2,r(:,nt),rs,rc,pow,msh(nt))
            call simpson (msh (nt), aux, rab (1, nt), norm )
            
            psphi(nt,j)%psi = psphi(nt,j)%psi/ sqrt(norm)
            aephi(nt,j)%psi = aephi(nt,j)%psi / sqrt(norm)
 
-           do ih=1,msh(nt)
-              write(51,*) r(ih,nt),psphi(nt,j)%psi(ih),aux(ih)
-           enddo
-           write(51,*)
-!           endif
         enddo
         
         !
@@ -176,8 +141,6 @@ subroutine init_paw_1
            enddo
            call invmat (s, sinv,paw_nl(l,nt)) 
 
-!           print *,'s',s
-!           print *,'sinv',sinv
 
            do ih=1,paw_nl(l,nt)
               n1=paw_iltonh(l,ih,nt)
@@ -195,16 +158,9 @@ subroutine init_paw_1
            deallocate (s)
 
 
-           do ih=1,paw_nl(l,nt)
-              n1=paw_iltonh(l,ih,nt)
-              do jh=1,msh(nt)
-                 write(50,*) r(jh,nt), paw_betar(jh,n1,nt)
-              enddo
-              write(50,*)
-           enddo
         enddo
      enddo
-!
+
 !    Check the orthogonality for projectors
 !
 !     nt=1
@@ -254,7 +210,6 @@ subroutine init_paw_1
   call reduce (nqx * nbrx * ntyp, paw_tab)
 #endif
   deallocate (ylmk0)
-!  deallocate (qtot)
   deallocate (besr)
   deallocate (aux1)
   deallocate (aux)
@@ -267,7 +222,11 @@ end subroutine init_paw_1
 subroutine step_f(f2,f,r,rs,rc,pow,mesh)
 
   use kinds , only : dp
- 
+
+  !
+  ! This routine apply a fonction which go smoothly to zero from rs to rc
+  ! 
+
   implicit none
   integer :: mesh
   real(kind=dp), Intent(out):: f2(mesh)
@@ -277,16 +236,12 @@ subroutine step_f(f2,f,r,rs,rc,pow,mesh)
   Integer :: n,i,nrc,nrs
   real(kind=dp) :: rcp, rsp
   
-!  print *,'step_f',n,size(f),size(f2),size(r)
-
   nrc = Count(r(:).le.rc)
   nrs = Count(r(:).le.rs)
 
   rcp = r(nrc)
   rsp = r(nrs)
 
-!  print *,"nrc etc..",nrc,nrs,rcp, rsp
-!  print *,"r",r
       Do i=1,mesh
        If(r(i).Le.rsp) Then
           f2(i) = f(i)

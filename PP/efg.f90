@@ -1,25 +1,62 @@
 program efg
   use kinds, only: DP
-  use io_files, only: nd_nmbr,prefix
+  use io_files, only: nd_nmbr,prefix, outdir, tmp_dir
   use parameters, only: ntypx
+#ifdef __PARA 
+  use para,       only : me 
+  use mp, only: mp_bcast
+#endif 
 
   implicit none
   character (len=80) :: filerec(ntypx)
   real(kind=DP) :: Q(ntypx)
-  integer :: ios
+  integer :: ios , ionode_id = 0
 
-  namelist / inputpp / prefix, filerec, Q
-  ! set default value
+  namelist / inputpp / prefix, filerec, Q, outdir
 
-  Q=0.d0
-
-  read (5, inputpp, err=200, iostat=ios)
-
-200 call errore('efg.x', 'reading inputpp namelist', abs(ios))
   call start_postproc(nd_nmbr)
+  !
+  ! set default value
+  !
+  prefix = 'pwscf'
+  outdir = './'
+  Q=1.d0
+
+#ifdef __PARA 
+  if (me == 1)  then 
+#endif 
+  read (5, inputpp, err=200, iostat=ios)
+200 call errore('efg.x', 'reading inputpp namelist', abs(ios))
+  tmp_dir = trim(outdir)
+#ifdef __PARA 
+  end if
+  ! 
+  ! ... Broadcast variables 
+  ! 
+  CALL mp_bcast( prefix, ionode_id ) 
+  CALL mp_bcast(tmp_dir, ionode_id ) 
+  CALL mp_bcast(filerec, ionode_id )
+  CALL mp_bcast(      Q, ionode_id )   
+#endif 
+
   call read_file
   call openfil
+
+#ifdef __PARA 
+  if (me == 1)  then 
+#endif 
   call read_recon(filerec)
+#ifdef __PARA 
+  end if
+  ! 
+  ! ... Broadcast variables 
+  !
+  CALL mp_bcast( paw_nbeta, ionode_id )
+  CALL mp_bcast(     aephi, ionode_id )
+  CALL mp_bcast(     psphi, ionode_id )
+#endif 
+
+
 
   call do_efg(Q) 
 
@@ -32,13 +69,12 @@ subroutine read_recon(filerec)
   use read_pseudo_module , only: scan_begin, scan_end
   use basis, only:ntyp
   use paw , only: aephi, psphi, paw_nbeta
-  use atom, only: mesh  !!! to be remove I think
+  use atom, only: mesh 
   use kinds, only: DP
   use parameters, only : ntypx
   USE io_global,  ONLY : stdout
   implicit none
 
-  real(kind=DP), allocatable :: tmp(:)
   character (len=80) :: filerec(ntypx)
   integer :: l,j,i,jtyp,kkphi,nbetam
 
@@ -52,7 +88,6 @@ subroutine read_recon(filerec)
      nbetam=maxval(paw_nbeta)
   allocate( psphi(ntyp,nbetam) )
   allocate( aephi(ntyp,nbetam) )
-  allocate( tmp(1:maxval(mesh(1:ntyp))) )
 
 
   recphi_read: do jtyp=1,ntyp
@@ -68,26 +103,19 @@ subroutine read_recon(filerec)
         call scan_end(14,'kkbeta')
         aephi(jtyp,i)%kkpsi=kkphi
         call scan_begin(14,'L',.false.)        
-        read(14,*)  l
+        read(14,*)  aephi(jtyp,i)%label%l
         call scan_end(14,'L')
         call scan_begin(14,'REC_AE',.false.)
-        read(14,*) (tmp(j),j=1,kkphi)
-        aephi(jtyp,i)%psi(1:kkphi)=tmp(1:kkphi)
-        aephi(jtyp,i)%label%l=l
+        read(14,*) (aephi(jtyp,i)%psi(j),j=1,kkphi)
         call scan_end(14,'REC_AE')
-!        call find_mt_radius(aephi(jtyp,i))
-!        call save_psi(32,aephi(jtyp,i))
         allocate (psphi(jtyp,i)%psi(maxval(mesh(1:ntyp))))
         psphi(jtyp,i)%label%nt=jtyp
         psphi(jtyp,i)%label%n=i
-        psphi(jtyp,i)%label%l=l
+        psphi(jtyp,i)%label%l=aephi(jtyp,i)%label%l
         psphi(jtyp,i)%kkpsi=kkphi
         call scan_begin(14,'REC_PS',.false.)
-        read(14,*) (tmp(j),j=1,kkphi)
-        psphi(jtyp,i)%psi(1:kkphi)= tmp(1:kkphi)
+        read(14,*) (psphi(jtyp,i)%psi(j),j=1,kkphi)
         call scan_end(14,'REC_PS')
-!        call find_mt_radius(psphi(jtyp,i))
-!        call save_psi(32,psphi(jtyp,i))
         call scan_end(14,'REC')
      end do recphi_loop
      close(14)
@@ -114,7 +142,6 @@ subroutine do_efg(Q)
   real(kind=DP) :: Q(ntypx), eta, Cq
   real(kind=DP) :: fac, trace, arg, e2
   integer :: alpha, beta, ig, na, i
-!  real(kind=DP), allocatable:: aux(:,:)
   complex(kind=DP), allocatable:: aux(:)
   complex(kind=DP), allocatable:: efgg_el(:,:,:),efgr_el(:,:,:)
   complex(kind=DP), allocatable:: efg_io(:,:,:)
@@ -122,7 +149,6 @@ subroutine do_efg(Q)
   real(kind=DP):: efg_eig(3), v(3)
   complex(kind=DP) :: work(3,3), efg_vect(3,3)
 
-!  allocate(aux(2,nrxx))
   allocate(aux(nrxx))
   allocate(efgg_el(nrxx,3,3))
   allocate(efgr_el(nat,3,3))
@@ -135,15 +161,14 @@ subroutine do_efg(Q)
 !  e2 = 2.d0 ! rydberg
   e2 = 1.d0  ! hartree
   fac= fpi * e2
-!  aux(2,:)=0.d0
-!  aux(1,:)= rho(:,1)
   aux(:)= rho(:,1)
   efgg_el(:,:,:)=(0.d0,0.d0)
   
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
 
+!
 !calculation of the electic field gradient in the G-space
-
+!
   do ig= gstart, ngm
      trace = 1.d0/3.d0 * gg(ig)
      do alpha=1,3
@@ -152,13 +177,15 @@ subroutine do_efg(Q)
            efgg_el(ig,alpha,beta)=(efgg_el(ig,alpha,beta) + &
                 g(alpha,ig) * g(beta,ig)) &
                 * fac * (aux(nl(ig)))/gg(ig)
-!                * fac * CMPLX(aux(1,nl(ig)),aux(2,nl(ig)))/gg(ig) 
+
         enddo
      enddo
   enddo
-!print *,trace, efgg_el(ig,1,1)
- 
+
+! 
 !fourier transform on the atomic position
+!
+
 efgr_el=(0.d0,0.d0)
   do alpha=1,3
      do beta=1,3
@@ -191,7 +218,10 @@ efgr_el=(0.d0,0.d0)
 
 1000 FORMAT(1x,a,i3,2x,a,3(1x,f9.6))
 
-!  zion(1)=6.0
+!
+! Ionic contribution
+!
+
   call ewald_dipole (efg_io, zv)
   
   do na=1,nat
@@ -216,6 +246,10 @@ efgr_el=(0.d0,0.d0)
   do na = 1,nat
      call trntns (efg_corr_tens(:,:,na),at, bg, 1)
   enddo
+
+!
+! print results
+!
 
   do na=1,nat
      do beta=1,3
@@ -242,7 +276,10 @@ efgr_el=(0.d0,0.d0)
         work(beta,alpha)=cmplx(efg(alpha,beta,1),0.d0)
      enddo
   enddo
-!  print *,work
+
+!
+! diagonalise the tensor to extract the quadrupolar parameters Cq and eta
+!
 
   call cdiagh(3,work,3,efg_eig,efg_vect)
 
@@ -278,15 +315,12 @@ subroutine efg_correction(efg_corr_tens)
   use us ,only: ap
   use parameters, only: lmaxx, ntypx
   use atom , only: r,rab,msh
-!  use becmod
   use gvect, only: g,ngm,ecutwfc
   use klist, only: nks, xk
-!  use units
-  use brilz, only: tpiba2
+  use cell_base, only: tpiba2
   use basis, only: nat, ntyp,ityp
   use wvfct, only:npwx, nbnd, npw, igk, g2kin
   use wavefunctions_module, only: evc
-!  use wfc_utils
   use paw, only: paw_vkb, paw_becp, paw_nkb, aephi, psphi, paw_nh, paw_nhtol, &
        paw_nhtom, paw_indv, paw_nbeta
   use constants, only: pi
@@ -298,8 +332,8 @@ subroutine efg_correction(efg_corr_tens)
   integer :: ijkb0,ijkb,ih,jh,na,np,ikb,jkb
   real(kind=dp), allocatable :: at_efg(:,:,:), work(:)
   real(kind=dp) ,intent(out):: efg_corr_tens(3,3,nat)
-  complex(kind=dp) , allocatable :: efg_corr(:,:), u(:,:)
-  real(kind=dp) :: sqrt2,rc
+  complex(kind=dp) , allocatable :: efg_corr(:,:)
+  real(kind=dp) :: rc
 
   allocate (efg_corr(lmaxx**2,nat))
 
@@ -314,17 +348,14 @@ subroutine efg_correction(efg_corr_tens)
   allocate (paw_vkb( npwx,  paw_nkb))
   allocate (paw_becp(paw_nkb, nbnd))
 
-!        do j = 1, paw_nbeta (1)
-!            do ih=1,msh(1)
-!              write(59,*) r(ih,1),psphi(1,j)%psi(ih)
-!           enddo
-!           write(59,*)
-!        enddo
-
-
 rc=1.6d0
 nrc=count(r(1:msh(1),1).le.rc)
-!print *,'nrc',nrc, size(r(:,1)),r(nrc,1)
+
+  !
+  ! calculate radial integration on atom site 
+  ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
+  !
+
 at_efg=0.d0
   do nt=1,ntyp
      do il1=1,paw_nbeta(nt)
@@ -335,14 +366,14 @@ at_efg=0.d0
                 psphi(nt,il1)%psi(j)*psphi(nt,il2)%psi(j))/r(j,nt)**3
            enddo
            work(1)=0.d0
-!           print *,work(1:20)
            call simpson(nrc,work,rab(:,nt),at_efg(il1,il2,nt))
-!           print *,"at_efg",at_efg(il1,il2,nt), il1, il2
         enddo
      enddo
   enddo
 
-
+!
+!  calculation of the reconstruction part
+!
 
   do ik = 1, nks
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -350,28 +381,6 @@ at_efg=0.d0
      call init_paw_2 (npw, igk, xk (1, ik), paw_vkb)
      call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
 
-     allocate(u(2*lmaxx+1, 2*lmaxx+1))
-!
-!  In the spin-orbit case we need the unitary matrix u which rotates the
-!  real spherical harmonics and yields the complex ones.
-!
-     sqrt2=1.d0/dsqrt(2.d0)
-     u=(0.d0,0.d0)
-     l=lmaxx
-     u(l+1,1)=(1.d0,0.d0)
-     do n1=2,2*l+1,2
-        m=n1/2
-        n=l+1-m
-        u(n,n1)=dcmplx((-1.d0)**m*sqrt2,0.d0)
-        u(n,n1+1)=dcmplx(0.d0,-(-1.d0)**m*sqrt2)
-        n=l+1+m
-        u(n,n1)=dcmplx(sqrt2,0.d0)
-        u(n,n1+1)=dcmplx(0.d0, sqrt2)
-     enddo
-
-
-!at_efg=1.d0
-!paw_becp=1.d0
 do ibnd = 1, nbnd
    ijkb0 = 0
    do nt = 1, ntyp
@@ -390,17 +399,10 @@ do ibnd = 1, nbnd
                   m2=paw_nhtom(jh,nt)
                   lm2=m2+l2**2 
                   do lm=5,9
-!                     do m3=-l1,l1
-!                        do m4=-l2,l2
-!                     efg_corr(lm,na)=efg_corr(lm,na)+ap(lm1,lm,lm2)
-!                     print *,lm1,lm,lm2,ap(lm1,lm,lm2)
                      efg_corr(lm,na) =  efg_corr(lm,na) + &
                           (paw_becp(jkb,ibnd) * conjg(paw_becp(ikb,ibnd))) &
                           * at_efg(nbs1,nbs2,nt) * &
-!                          (u(m3+l+1,m1)) *  conjg(u(m4+l+1,m2)) * &
                           ap(lm,lm1,lm2)
-!                     enddo
-!                     enddo
                   enddo
                enddo
             enddo
@@ -412,9 +414,10 @@ enddo
  
 enddo 
 
+!
+!  transforme in cartesian coordinates
+!
 
-!  print *,efg_corr(:,1)
- 
   efg_corr_tens(1,1,:)=real(sqrt(3.d0)*efg_corr(8,:) &
        - efg_corr(5,:))
   efg_corr_tens(2,2,:)=real(-sqrt(3.d0)*efg_corr(8,:)&
@@ -436,3 +439,4 @@ deallocate(at_efg)
 deallocate(paw_vkb)
  
 end subroutine efg_correction
+
