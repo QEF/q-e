@@ -62,8 +62,6 @@ writed3dyn_5.o
 PHOBJS = \
 ../PH/add_dkmds.o \
 ../PH/add_for_charges.o \
-../PH/add_zstar_ue.o \
-../PH/add_zstar_ue_us.o \
 ../PH/addcore.o \
 ../PH/adddvepsi_us.o \
 ../PH/adddvscf.o \
@@ -75,8 +73,8 @@ PHOBJS = \
 ../PH/addusdynmat.o \
 ../PH/addusldos.o \
 ../PH/allocate_part.o \
-../PH/allocate_phq.o \
 ../PH/bcast_ph_input.o \
+../PH/allocate_phq.o \
 ../PH/bcast_ph_input1.o \
 ../PH/cg_psi.o \
 ../PH/cgsolve_all.o \
@@ -106,14 +104,12 @@ PHOBJS = \
 ../PH/dv_of_drho.o \
 ../PH/dvanqq.o \
 ../PH/dvkb3.o \
-../PH/dvpsi_e.o \
 ../PH/dvqpsi_us.o \
 ../PH/dvqpsi_us_only.o \
 ../PH/dyndia.o \
 ../PH/dynmat0.o \
 ../PH/dynmat_us.o \
 ../PH/dynmatcc.o \
-../PH/dynmatrix.o \
 ../PH/ef_shift.o \
 ../PH/elph.o \
 ../PH/elphon.o \
@@ -123,14 +119,11 @@ PHOBJS = \
 ../PH/io_pattern.o \
 ../PH/localdos.o \
 ../PH/newdq.o \
-../PH/openfilq.o \
 ../PH/phcom.o \
 ../PH/phq_init.o \
-../PH/phq_readin.o \
 ../PH/phq_recover.o \
 ../PH/phq_setup.o \
 ../PH/phq_summary.o \
-../PH/phqscf.o \
 ../PH/print_clock_ph.o \
 ../PH/psidspsi.o \
 ../PH/psymdvscf.o \
@@ -138,6 +131,7 @@ PHOBJS = \
 ../PH/punch_plot_e.o \
 ../PH/punch_plot_ph.o \
 ../PH/q2qstar_ph.o \
+../PH/ramanm.o \
 ../PH/random_matrix.o \
 ../PH/rotate_and_add_dyn.o \
 ../PH/set_drhoc.o \
@@ -148,7 +142,6 @@ PHOBJS = \
 ../PH/setqmod.o \
 ../PH/setup_dgc.o \
 ../PH/smallgq.o \
-../PH/solve_e.o \
 ../PH/solve_linter.o \
 ../PH/star_q.o \
 ../PH/stop_ph.o \
