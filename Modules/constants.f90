@@ -45,8 +45,8 @@ MODULE constants
   REAL(dbl), PARAMETER :: KB_AU            = 1.0D0/294210.0D0  ! au
   REAL(dbl), PARAMETER :: AU               = 27.212D0    ! eV
   REAL(dbl), PARAMETER :: RY               = 13.606D0    ! eV
-  ! REAL(dbl), PARAMETER :: AU               = 27.211652d0    ! eV
-  ! REAL(dbl), PARAMETER :: RY               = 13.605826d0    ! eV
+  ! REAL(dbl), PARAMETER :: AU               = 27.211652D0    ! eV
+  ! REAL(dbl), PARAMETER :: RY               = 13.605826D0    ! eV
   REAL(dbl), PARAMETER :: SCMASS           = 1822.89D0   ! uma to au ( mass of a proton )
   REAL(dbl), PARAMETER :: UMA_AU           = 1822.89D0   ! au
   REAL(dbl), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! THz
@@ -65,15 +65,23 @@ MODULE constants
   REAL(dbl), PARAMETER :: rhothr = 1.0e-5_dbl ! tolerance
   REAL(dbl), PARAMETER :: gsmall = 1.0d-12
   !
-  REAL(dbl), parameter :: e2 = 2.d0      ! the square of the electron charge
-  REAL(dbl), parameter :: degspin = 2.d0 ! the number of spins per level
-  REAL(dbl), parameter :: rytoev=13.6058d0      ! conversion from Ry to eV
-  !  mass conversion: a.m.u to a.u. (Ry)
-  REAL(dbl), parameter :: amconv= 1.66042d-24/9.1095d-28*0.5d0 
-  !  pressure conversion from Ry/(a.u)^3 to K
-  REAL(dbl), parameter :: uakbar= 147105.d0
+  REAL(dbl), PARAMETER :: e2 = 2.D0      ! the square of the electron charge
+  REAL(dbl), PARAMETER :: degspin = 2.D0 ! the number of spins per level
+  REAL(dbl), PARAMETER :: rytoev=13.6058d0      ! conversion from Ry to eV
   !
-  REAL(dbl), parameter :: eps8 = 1.0d-8
+  ! ... mass conversion: a.m.u to a.u. (Ry)
+  !
+  REAL(dbl), PARAMETER :: amconv= 1.66042d-24/9.1095d-28*0.5d0 
+  !
+  ! ... pressure conversion from Ry/(a.u)^3 to K
+  !
+  REAL(dbl), PARAMETER :: uakbar= 147105.d0
+  !
+  ! ... zero up to a given accuracy
+  !
+  REAL(dbl), PARAMETER :: eps8  = 1.0D-8
+  REAL(dbl), PARAMETER :: eps16 = 1.0D-16
+  REAL(dbl), PARAMETER :: eps32 = 1.0D-32
   !
   REAL(dbl), PARAMETER :: eV_to_kelvin = 1.1604D4  ! from eV to Kelvin
   !
