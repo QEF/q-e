@@ -5,12 +5,14 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-------------------------------------------------------------------
+!--------------------------------------------------------------------------
 !
 MODULE brilz
   USE parameters
   !
   ! ... The variables needed to describe the lattice
+  !
+  SAVE
   !
   REAL(KIND=DP) :: &
        celldm(6),      &! dimensions of the unit cell
@@ -32,6 +34,8 @@ MODULE basis
   USE parameters
   !
   ! ... The variables needed to describe the atoms in the unit cell
+  !
+  SAVE
   !
   INTEGER :: &
        nat,               &! number of atoms in the unit cell
@@ -58,6 +62,8 @@ MODULE dynam
   !
   ! ... Variables needed for the dynamics
   !
+  SAVE
+  !
   REAL(KIND=DP) :: &
        amass(ntypx),  &! mass of atoms
        dt,            &! time step
@@ -74,6 +80,8 @@ MODULE gvect
   USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
   !
   ! ...The variables describing the reciprocal lattice vectors
+  !
+  SAVE
   !
   INTEGER :: &
        ngm,           &! number of g vectors
@@ -128,6 +136,8 @@ MODULE gsmooth
   ! ... the variables for the smooth mesh of the wavefunction. It can
   ! ... be different from the large mesh if dual > 4
   !
+  SAVE
+  !
   INTEGER :: &
        ngms,        &! the number of smooth G vectors
        ngms_g,      &! the global number of smooth G vectors 
@@ -157,6 +167,8 @@ MODULE klist
   !
   ! ... The variables for the k-points
   !
+  SAVE
+  !
   REAL(KIND=DP) :: &
        xk(3,npk),      &! coordinates of k points
        wk(npk),        &! weight of k points
@@ -180,6 +192,8 @@ MODULE lsda_mod
   !
   ! ... The variables needed for the lsda calculation
   !
+  SAVE
+  !
   LOGICAL :: &
        lsda
   REAL(KIND=DP) :: &
@@ -196,6 +210,8 @@ MODULE ktetra
   USE parameters
   !
   ! ... The variables for the tetrahedron method
+  !
+  SAVE
   !
   INTEGER :: &
        nk1, nk2, nk3,   &! the special-point grid
@@ -215,6 +231,8 @@ MODULE symme
   !
   ! ... The variables needed to describe the symmetry properties
   !
+  SAVE
+  !
   INTEGER :: &
        s(3,3,48),              &! simmetry matrices
        ftau(3,48),             &! fractional translations
@@ -231,6 +249,8 @@ MODULE atom
   USE parameters
   !
   ! ... The variables needed to describe the atoms and related quantities
+  !
+  SAVE
   !
   REAL(KIND=DP) :: &
        zmesh(npsx),              &! the atomic charge for mesh generation
@@ -259,6 +279,8 @@ MODULE pseud
   !
   ! ... The variables needed to compute the BHS pseudopotentials
   !
+  SAVE
+  !
   REAL(KIND=DP) :: &
        cc(2,npsx),            &! the coefficients of the erf functions
        alpc(2,npsx),          &! the alpha of the erf functions
@@ -282,6 +304,8 @@ MODULE nl_c_c
   !
   ! ... The variable needed for the Non Linear Core Correction
   !
+  SAVE
+  !
   REAL(KIND=DP) :: &
        a_nlcc(npsx),         &! the a_c coefficient of the gaussian
        b_nlcc(npsx),         &! the b_c coefficient of the gaussian
@@ -297,6 +321,8 @@ MODULE vlocal
   !
   ! ... The variables needed for the local potential in reciprocal space
   !
+  SAVE
+  !
   COMPLEX(KIND=DP), ALLOCATABLE :: &
        strf(:,:)              ! the structure factor
   REAL(KIND=DP), ALLOCATABLE :: &
@@ -310,6 +336,8 @@ MODULE wvfct
   USE parameters
   !
   ! ... The variables needed to compute the band structure
+  !
+  SAVE
   !
   INTEGER ::  &
        npwx,             &! maximum number of PW for wavefunctions
@@ -335,6 +363,8 @@ MODULE ener
   !
   ! ... The variables needed to compute the energies
   !
+  SAVE
+  !
   REAL(KIND=DP) :: &
        etot,           &! the total energy of the solid
        eband,          &! the band energy
@@ -355,6 +385,8 @@ MODULE force_mod
   !
   ! ... The variables for the first derivative of the energy
   !
+  SAVE
+  !
   REAL(KIND=DP), ALLOCATABLE :: &
        force(:,:)       ! the force on each atom
   REAL(KIND=DP) :: &
@@ -371,6 +403,8 @@ MODULE scf
   !
   ! ... The variables needed to define the self-consistent cycle
   !
+  SAVE
+  !
   REAL(KIND=DP), ALLOCATABLE :: &
        rho(:,:),       &! the charge density in real space
        rho_save(:,:),  &! another charge density in real space
@@ -385,6 +419,8 @@ END MODULE scf
 MODULE workspace
   USE parameters
   !
+  SAVE
+  !
   ! ... additional memory needed in h_psi
   !
 END MODULE workspace
@@ -394,6 +430,8 @@ MODULE varie
   USE parameters
   !
   ! ... Several variables controlling the run
+  !
+  SAVE
   !
   REAL(KIND=DP)  :: &
        mixing_beta,      &! the mixing parameter
@@ -441,6 +479,8 @@ MODULE relax
   !
   ! ... The variables used to control ionic relaxations
   !
+  SAVE
+  !
   INTEGER :: &
        fixatom                   ! last "fixatom" are kept fixed
   INTEGER, ALLOCATABLE :: &
@@ -461,6 +501,8 @@ MODULE cellmd
   USE parameters
   !
   ! ... The variables used to control cell relaxation
+  !
+  SAVE
   !
   REAL(KIND=DP) :: &
        press, cmass,     &! target pressure and cell mass,
@@ -487,6 +529,8 @@ MODULE units
   !
   ! ... The units where various variables are saved
   !
+  SAVE
+  !
   INTEGER :: &
        iunpun,           &! unit for saving the final results
        iunwfc,           &! unit with wavefunctions
@@ -507,6 +551,8 @@ MODULE char
   !
   ! ... The names of the atoms, of the solid and of the symmetries
   !
+  SAVE
+  !
   CHARACTER(LEN=75) ::  title       ! title of the run
   CHARACTER(LEN=20) ::  crystal     ! type of the solid
   CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
@@ -520,6 +566,8 @@ MODULE filnam
   !
   ! ... The name of the files
   !
+  SAVE
+  !
   CHARACTER(LEN=80) :: &
        filpun,         &! name of the punch file
        input_drho,     &! name of the file with the input drho
@@ -532,6 +580,8 @@ MODULE us
   USE parameters
   !
   ! ... These parameters are needed with the US pseudopotentials
+  !
+  SAVE
   !
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
@@ -596,6 +646,8 @@ MODULE ldaU
   !
   ! ... The quantities needed in lda+U calculations
   !
+  SAVE
+  !
   COMPLEX(KIND=DP), ALLOCATABLE :: &
        swfcatom(:,:)          ! orthogonalized atomic wfcs
   REAL(KIND=DP), ALLOCATABLE :: &
@@ -624,6 +676,8 @@ MODULE extfield
   !
   ! ... 
   !
+  SAVE
+  !
   LOGICAL :: &
        tefield,      &! if .TRUE. a finite electric field is added to the
                       ! local potential
@@ -645,6 +699,8 @@ END MODULE extfield
 MODULE sticks
   USE fft_types, ONLY : fft_dlay_descriptor
   !
+  SAVE
+  !
   TYPE ( fft_dlay_descriptor ) :: dfftp   ! dense grid
   TYPE ( fft_dlay_descriptor ) :: dffts   ! smooth grid
   !
@@ -660,6 +716,8 @@ MODULE bp
   !
   ! ... The variables needed for the Berry phase polarization calculation
   !
+  SAVE
+  !
   LOGICAL :: &
        lberry        ! if .TRUE., calculate polarization 
   INTEGER :: &
@@ -673,6 +731,8 @@ MODULE fixed_occ
   USE parameters
   !
   ! ...
+  !
+  SAVE
   !
   REAL(KIND=DP) :: &
        f_inp(nbndxx,nspinx)   ! the occupations for each spin

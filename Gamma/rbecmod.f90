@@ -5,9 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module rbecmod
-  use parameters, only: DP
-  real(kind=DP) , allocatable ::  becp(:,:)
-  ! contains products of wavefunctions and beta
-end module rbecmod
+!----------------------------------------------------------------------------
 !
+MODULE rbecmod
+  USE parameters, ONLY :  DP
+  !
+  SAVE
+  !
+  REAL(KIND=DP), ALLOCATABLE :: &
+       becp(:,:)    !  contains products of wavefunctions and beta
+  !     
+END MODULE rbecmod
+

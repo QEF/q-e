@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module gamma
-  use pwcom, only: nlm, nlsm
-end module gamma
+!----------------------------------------------------------------------------
+!
+MODULE gamma
+  USE gvect,   ONLY :  nlm
+  USE gsmooth, ONLY :  nlsm
+  !
+END MODULE gamma

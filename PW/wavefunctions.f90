@@ -5,14 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-------------------------------------------------------------------
+!---------------------------------------------------------------------------
 !
-module wavefunctions
-  use parameters, only: DP
+MODULE wavefunctions
+  USE parameters, ONLY :  DP
   !
-  complex(kind=DP) , allocatable, target :: &
+  SAVE
+  !
+  COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
        evc(:,:)     ! wavefunctions in the PW basis
   !
-  complex(kind=DP) , allocatable, target :: &
-       psic(:)     ! additional memory for FFT
-end module wavefunctions
+  COMPLEX(KIND=DP) , ALLOCATABLE, TARGET :: &
+       psic(:)      ! additional memory for FFT
+  !
+END MODULE wavefunctions
