@@ -342,6 +342,7 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/scopy_t3e.o  \
 ../PW/seqopn.o  \
 ../PW/set_fft_dim.o  \
+../PW/set_hubbard_l.o  \
 ../PW/set_kplusq.o  \
 ../PW/set_kup_and_kdw.o  \
 ../PW/setlocal.o  \
