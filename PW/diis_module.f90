@@ -199,7 +199,10 @@ MODULE diis_module
          !
          ! ... bands are reordered so that converged bands come first
          !
-         CALL reorder_bands()
+! work around an ifort bug
+!         CALL reorder_bands()
+         CALL reorder_bands_( notcnv, ndmx, nbands, kter, conv, &
+                              psi, hpsi, spsi, aux )
          !
          ! ... here we compute H|psi> and S|psi> for not converged bands
          !
@@ -354,7 +357,11 @@ MODULE diis_module
                ! ... DIIS step :  the best eigenvector and residual vector 
                ! ...              are computed
                !
-               CALL diis_step( ib )           
+! work around an ifort bug
+!               CALL diis_step( ib )           
+               CALL diis_step_( ndmx, diis_ndim, nbands, ndim, nbase, &
+                                psi, hpsi, spsi, aux, e, &
+                                psi_old, hpsi_old, spsi_old, e_old, ib )
                !
             END IF
             !
@@ -392,11 +399,18 @@ MODULE diis_module
          ! ... only 
          ! ... ( the highest two bands are always optimized, even if converged )
          !
-         FORALL( ib = 1: nbands, .NOT. conv(ib) .OR. ib > ( nbands - 2 ) )
-            !
-            psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
-            !
-         END FORALL   
+! work around a g95 bug
+!         FORALL( ib = 1: nbands, .NOT. conv(ib) .OR. ib > ( nbands - 2 ) )
+!            !
+!            psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
+!            !
+!         END FORALL   
+!         !
+          DO ib = 1, nbands
+             IF (.NOT. conv(ib) .OR. ib > ( nbands - 2 ) ) THEN
+                psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
+             END IF
+          END DO
          !
       END DO iterate
       !
@@ -436,56 +450,11 @@ MODULE diis_module
       !
       RETURN
       !
+#if defined (CG_STEP)
+      !      
       CONTAINS
         !
         ! ... internal procedures
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE reorder_bands()
-          !--------------------------------------------------------------------
-          !
-          ! ... this routine is used to reorder the bands :
-          ! ... converged bands come first.
-          ! ... for this pourpose an auxiliary vector is used
-          !
-          IMPLICIT NONE
-          !
-          !
-          cnv    = 0
-          notcnv = nbands
-          !
-          IF ( ( kter <= 2 ) .OR. ( .NOT. ANY( conv(:) ) ) ) RETURN
-          !
-          DO ib = 1, nbands
-             !
-             IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) THEN
-                !
-                cnv = cnv + 1
-                !
-                aux(:,cnv) = psi(:,ib)
-                !
-                hpsi(:,cnv) = hpsi(:,ib)
-                spsi(:,cnv) = spsi(:,ib)              
-                !
-             ELSE
-                !
-                aux(:,notcnv) = psi(:,ib)
-                !
-                notcnv = notcnv - 1
-                !
-             END IF
-             !
-          END DO
-          !
-          notcnv = nbands - notcnv
-          !
-          psi(:,:) = aux(:,:)
-          !
-          RETURN
-          !
-        END SUBROUTINE reorder_bands
-        !      
-#if defined (CG_STEP)
         !
         !--------------------------------------------------------------------
         SUBROUTINE cg_step()
@@ -550,128 +519,363 @@ MODULE diis_module
         END SUBROUTINE cg_step
         !
 #endif
-        !          
-        !--------------------------------------------------------------------
-        SUBROUTINE diis_step( ib )
-          !--------------------------------------------------------------------
-          !
-          IMPLICIT NONE
-          !
-          INTEGER, INTENT(IN)            :: ib
-          INTEGER                        :: dim, n
-          REAL (KIND=DP)                 :: psiSpsi
-          REAL (KIND=DP), ALLOCATABLE    :: e_small(:)
-          REAL (KIND=DP), ALLOCATABLE    :: rr_small(:,:), &
-                                            sr_small(:,:), &
-                                            vr_small(:,:)
-          COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:),  &
-                                            all_hpsi(:,:), &
-                                            all_spsi(:,:), &
-                                            all_res(:,:)
-          !
-          REAL (KIND=DP), EXTERNAL :: DDOT
-          !
-          !
-          dim = nbase(ib)
-          !
-          ! ... internal work-space allocation
-          !
-          ALLOCATE( e_small( dim ) )
-          ALLOCATE( rr_small( dim, dim ) )
-          ALLOCATE( sr_small( dim, dim ) )
-          ALLOCATE( vr_small( dim, dim ) )
-          ALLOCATE( all_psi(  ndmx, dim ) )
-          ALLOCATE( all_hpsi( ndmx, dim ) )
-          ALLOCATE( all_spsi( ndmx, dim ) )
-          ALLOCATE( all_res(  ndmx, dim ) )
-          !
-          ! ... the history of this band is recostructed
-          !
-          !
-          ! ... the history of this band is reconstructed
-          !
-          all_psi(:,1)  = psi(:,ib)
-          all_hpsi(:,1) = hpsi(:,ib)
-          all_spsi(:,1) = spsi(:,ib)
-          e_small(1)    = e(ib)
-          !
-          all_psi(:,2:dim)  = psi_old(:,:,ib)
-          all_hpsi(:,2:dim) = hpsi_old(:,:,ib)
-          all_spsi(:,2:dim) = spsi_old(:,:,ib)
-          e_small(2:dim)    = e_old(:,ib)
-          !
-          ! ... orthogonalization
-          !
-          CALL cgramg1( ndmx, dim, ndim, 1, dim, all_psi, all_spsi, all_hpsi )
-          !
-          FORALL( n = 1: dim ) &
-             all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
-          !   
-          ! ... here we construct the matrices :
-          ! ...    rr_ij = <res_i|res_j>  and  sr_ij = <psi_i|S|psi_j>
-          !
-          CALL DGEMM( 'T', 'N', dim, dim, 2*ndim, 2.D0, all_res(:,:), &
-                      2*ndmx, all_res(:,:), 2*ndmx, 0.D0, rr_small, dim )
-          !
-          IF ( gstart == 2 ) &
-             CALL DGER( dim, dim, -1.D0, all_res(:,:), &
-                        2*ndmx, all_res(:,:), 2*ndmx, rr_small, dim )
-          !
-          CALL reduce( dim * dim, rr_small )
-          !
-          sr_small(n,n) = 0.D0
-          !
-          FORALL( n = 1: dim ) sr_small(n,n) = 1.D0
-          ! 
-          ! ... diagonalize the reduced hamiltonian
-          !
-          CALL rdiaghg( dim, 1, rr_small, sr_small, dim, e_small, vr_small )
-          !
-          ! ... here we compute the best estimate of the |psi>, H|psi>, S|psi>
-          !
-          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_psi(:,:), &
-                      2*ndmx, vr_small(:,1), dim, 0.D0, psi(:,ib), 2*ndmx )
-          !
-          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_hpsi(:,:), &
-                      2*ndmx, vr_small(:,1), dim, 0.D0, hpsi(:,ib), 2*ndmx )
-          !
-          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_spsi(:,:), &
-                      2*ndmx, vr_small(:,1), dim, 0.D0, spsi(:,ib), 2*ndmx )
-          !
-          psiSpsi = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, spsi(:,ib), 1 )
-          !
-          IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
-          !
-          CALL reduce( 1, psiSpsi )
-          !          
-          e(ib) = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, hpsi(:,ib), 1 )
-          !
-          IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
-          !
-          CALL reduce( 1, e(ib) )          
-          !
-          e(ib) = e(ib) / psiSpsi
-          !
-          ! ... here we compute the best estimate of the residual vector
-          !
-          aux(:,ib) = ( hpsi(:,ib) - e(ib) * spsi(:,ib) ) / psiSpsi
-          !
-          ! ... internal work-space deallocation
-          !
-          DEALLOCATE( e_small )
-          DEALLOCATE( rr_small )
-          DEALLOCATE( sr_small )
-          DEALLOCATE( vr_small )
-          DEALLOCATE( all_psi )
-          DEALLOCATE( all_hpsi )
-          DEALLOCATE( all_spsi )
-          DEALLOCATE( all_res )
-          !   
-          RETURN
-          !
-        END SUBROUTINE diis_step
+        !      
+! work around an ifort bug
+!      !      
+!      CONTAINS
+!        !
+!        !--------------------------------------------------------------------
+!        SUBROUTINE reorder_bands()
+!          !--------------------------------------------------------------------
+!          !
+!          ! ... this routine is used to reorder the bands :
+!          ! ... converged bands come first.
+!          ! ... for this purpose an auxiliary vector is used
+!          !
+!          IMPLICIT NONE
+!          !
+!          !
+!          cnv    = 0
+!          notcnv = nbands
+!          !
+!          IF ( ( kter <= 2 ) .OR. ( .NOT. ANY( conv(:) ) ) ) RETURN
+!          !
+!          DO ib = 1, nbands
+!             !
+!             IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) THEN
+!                !
+!                cnv = cnv + 1
+!                !
+!                aux(:,cnv) = psi(:,ib)
+!                !
+!                hpsi(:,cnv) = hpsi(:,ib)
+!                spsi(:,cnv) = spsi(:,ib)              
+!                !
+!             ELSE
+!                !
+!                aux(:,notcnv) = psi(:,ib)
+!                !
+!                notcnv = notcnv - 1
+!                !
+!             END IF
+!             !
+!          END DO
+!          !
+!          notcnv = nbands - notcnv
+!          !
+!          psi(:,:) = aux(:,:)
+!          !
+!          RETURN
+!          !
+!        END SUBROUTINE reorder_bands
+!        !          
+!        !--------------------------------------------------------------------
+!        SUBROUTINE diis_step( ib )
+!          !--------------------------------------------------------------------
+!          !
+!          IMPLICIT NONE
+!          !
+!          INTEGER, INTENT(IN)            :: ib
+!          INTEGER                        :: dim, n
+!          REAL (KIND=DP)                 :: psiSpsi
+!          REAL (KIND=DP), ALLOCATABLE    :: e_small(:)
+!          REAL (KIND=DP), ALLOCATABLE    :: rr_small(:,:), &
+!                                            sr_small(:,:), &
+!                                            vr_small(:,:)
+!          COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:),  &
+!                                            all_hpsi(:,:), &
+!                                            all_spsi(:,:), &
+!                                            all_res(:,:)
+!          !
+!          REAL (KIND=DP), EXTERNAL :: DDOT
+!          !
+!          !
+!          dim = nbase(ib)
+!          !
+!          ! ... internal work-space allocation
+!          !
+!          ALLOCATE( e_small( dim ) )
+!          ALLOCATE( rr_small( dim, dim ) )
+!          ALLOCATE( sr_small( dim, dim ) )
+!          ALLOCATE( vr_small( dim, dim ) )
+!          ALLOCATE( all_psi(  ndmx, dim ) )
+!          ALLOCATE( all_hpsi( ndmx, dim ) )
+!          ALLOCATE( all_spsi( ndmx, dim ) )
+!          ALLOCATE( all_res(  ndmx, dim ) )
+!          !
+!          ! ... the history of this band is recostructed
+!          !
+!          !
+!          ! ... the history of this band is reconstructed
+!          !
+!          all_psi(:,1)  = psi(:,ib)
+!          all_hpsi(:,1) = hpsi(:,ib)
+!          all_spsi(:,1) = spsi(:,ib)
+!          e_small(1)    = e(ib)
+!          !
+!          all_psi(:,2:dim)  = psi_old(:,:,ib)
+!          all_hpsi(:,2:dim) = hpsi_old(:,:,ib)
+!          all_spsi(:,2:dim) = spsi_old(:,:,ib)
+!          e_small(2:dim)    = e_old(:,ib)
+!          !
+!          ! ... orthogonalization
+!          !
+!          CALL cgramg1( ndmx, dim, ndim, 1, dim, all_psi, all_spsi, all_hpsi )
+!          !
+!          FORALL( n = 1: dim ) &
+!             all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
+!          !   
+!          ! ... here we construct the matrices :
+!          ! ...    rr_ij = <res_i|res_j>  and  sr_ij = <psi_i|S|psi_j>
+!          !
+!          CALL DGEMM( 'T', 'N', dim, dim, 2*ndim, 2.D0, all_res(:,:), &
+!                      2*ndmx, all_res(:,:), 2*ndmx, 0.D0, rr_small, dim )
+!          !
+!          IF ( gstart == 2 ) &
+!             CALL DGER( dim, dim, -1.D0, all_res(:,:), &
+!                        2*ndmx, all_res(:,:), 2*ndmx, rr_small, dim )
+!          !
+!          CALL reduce( dim * dim, rr_small )
+!          !
+!          sr_small(n,n) = 0.D0
+!          !
+!          FORALL( n = 1: dim ) sr_small(n,n) = 1.D0
+!          ! 
+!          ! ... diagonalize the reduced hamiltonian
+!          !
+!          CALL rdiaghg( dim, 1, rr_small, sr_small, dim, e_small, vr_small )
+!          !
+!          ! ... here we compute the best estimate of the |psi>, H|psi>, S|psi>
+!          !
+!          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_psi(:,:), &
+!                      2*ndmx, vr_small(:,1), dim, 0.D0, psi(:,ib), 2*ndmx )
+!          !
+!          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_hpsi(:,:), &
+!                      2*ndmx, vr_small(:,1), dim, 0.D0, hpsi(:,ib), 2*ndmx )
+!          !
+!          CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_spsi(:,:), &
+!                      2*ndmx, vr_small(:,1), dim, 0.D0, spsi(:,ib), 2*ndmx )
+!          !
+!          psiSpsi = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, spsi(:,ib), 1 )
+!          !
+!          IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
+!          !
+!          CALL reduce( 1, psiSpsi )
+!          !          
+!          e(ib) = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, hpsi(:,ib), 1 )
+!          !
+!          IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
+!          !
+!          CALL reduce( 1, e(ib) )          
+!          !
+!          e(ib) = e(ib) / psiSpsi
+!          !
+!          ! ... here we compute the best estimate of the residual vector
+!          !
+!          aux(:,ib) = ( hpsi(:,ib) - e(ib) * spsi(:,ib) ) / psiSpsi
+!          !
+!          ! ... internal work-space deallocation
+!          !
+!          DEALLOCATE( e_small )
+!          DEALLOCATE( rr_small )
+!          DEALLOCATE( sr_small )
+!          DEALLOCATE( vr_small )
+!          DEALLOCATE( all_psi )
+!          DEALLOCATE( all_hpsi )
+!          DEALLOCATE( all_spsi )
+!          DEALLOCATE( all_res )
+!          !   
+!          RETURN
+!          !
+!        END SUBROUTINE diis_step
         !
     END SUBROUTINE rdiisg    
+    !
+    !--------------------------------------------------------------------
+    SUBROUTINE reorder_bands_( notcnv, ndmx, nbands, kter, conv, &
+                               psi, hpsi, spsi, aux )
+      !--------------------------------------------------------------------
+      !
+      ! ... this routine is used to reorder the bands :
+      ! ... converged bands come first.
+      ! ... for this purpose an auxiliary vector is used
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: notcnv, ndmx, nbands, kter
+      LOGICAL :: conv(nbands)
+      COMPLEX (KIND=DP) :: psi(ndmx,nbands)
+      COMPLEX (KIND=DP) :: hpsi(ndmx,nbands), spsi(ndmx,nbands), &
+                           aux(ndmx,nbands)
+      !
+      ! local variables
+      INTEGER :: cnv, ib
+      !
+      cnv    = 0
+      notcnv = nbands
+      !
+      IF ( ( kter <= 2 ) .OR. ( .NOT. ANY( conv(:) ) ) ) RETURN
+      !
+      DO ib = 1, nbands
+         !
+         IF ( conv(ib) .AND. ( ib <= ( nbands - 2 ) ) ) THEN
+            !
+            cnv = cnv + 1
+            !
+            aux(:,cnv) = psi(:,ib)
+            !
+            hpsi(:,cnv) = hpsi(:,ib)
+            spsi(:,cnv) = spsi(:,ib)              
+            !
+         ELSE
+            !
+            aux(:,notcnv) = psi(:,ib)
+            !
+            notcnv = notcnv - 1
+            !
+         END IF
+         !
+      END DO
+      !
+      notcnv = nbands - notcnv
+      !
+      psi(:,:) = aux(:,:)
+      !
+      RETURN
+      !
+    END SUBROUTINE reorder_bands_
+    !      
+    !--------------------------------------------------------------------
+    SUBROUTINE diis_step_( ndmx, diis_ndim, nbands, ndim, nbase, &
+                           psi, hpsi, spsi, aux, e, &
+                           psi_old, hpsi_old, spsi_old, e_old, ib )
+    !--------------------------------------------------------------------
+    !
+    USE gvect, ONLY : gstart
+    !
+    IMPLICIT NONE
+    !
+    INTEGER           :: ndmx, diis_ndim, nbands, ndim
+    INTEGER           :: nbase(nbands)
+    COMPLEX (KIND=DP) :: psi(ndmx,nbands)
+    COMPLEX (KIND=DP) :: hpsi(ndmx,nbands), spsi(ndmx,nbands), &
+                         aux(ndmx,nbands)
+    REAL (KIND=DP)    :: e(nbands)
+    COMPLEX (KIND=DP) :: psi_old(ndmx,diis_ndim,nbands), &
+                         hpsi_old(ndmx,diis_ndim,nbands), &
+                         spsi_old(ndmx,diis_ndim,nbands)
+    REAL (KIND=DP)    :: e_old(diis_ndim,nbands)
+
+    INTEGER, INTENT(IN)            :: ib
+    INTEGER                        :: dim, n
+    REAL (KIND=DP)                 :: psiSpsi
+    REAL (KIND=DP), ALLOCATABLE    :: e_small(:)
+    REAL (KIND=DP), ALLOCATABLE    :: rr_small(:,:), sr_small(:,:), &
+                                      vr_small(:,:)
+    COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:), all_hpsi(:,:), &
+                                      all_spsi(:,:), all_res(:,:)
+    !
+    REAL (KIND=DP), EXTERNAL :: DDOT
+    !
+    !
+    dim = nbase(ib)
+    !
+    ! ... internal work-space allocation
+    !
+    ALLOCATE( e_small( dim ) )
+    ALLOCATE( rr_small( dim, dim ) )
+    ALLOCATE( sr_small( dim, dim ) )
+    ALLOCATE( vr_small( dim, dim ) )
+    ALLOCATE( all_psi(  ndmx, dim ) )
+    ALLOCATE( all_hpsi( ndmx, dim ) )
+    ALLOCATE( all_spsi( ndmx, dim ) )
+    ALLOCATE( all_res(  ndmx, dim ) )
+    !
+    ! ... the history of this band is recostructed
+    !
+    !
+    ! ... the history of this band is reconstructed
+    !
+    all_psi(:,1)  = psi(:,ib)
+    all_hpsi(:,1) = hpsi(:,ib)
+    all_spsi(:,1) = spsi(:,ib)
+    e_small(1)    = e(ib)
+    !
+    all_psi(:,2:dim)  = psi_old(:,:,ib)
+    all_hpsi(:,2:dim) = hpsi_old(:,:,ib)
+    all_spsi(:,2:dim) = spsi_old(:,:,ib)
+    e_small(2:dim)    = e_old(:,ib)
+    !
+    ! ... orthogonalization
+    !
+    CALL cgramg1( ndmx, dim, ndim, 1, dim, all_psi, all_spsi, all_hpsi )
+    !
+    FORALL( n = 1: dim ) &
+       all_res(:,n) = ( all_hpsi(:,n) - e_small(n) * all_spsi(:,n) )
+    !   
+    ! ... here we construct the matrices :
+    ! ...    rr_ij = <res_i|res_j>  and  sr_ij = <psi_i|S|psi_j>
+    !
+    CALL DGEMM( 'T', 'N', dim, dim, 2*ndim, 2.D0, all_res(:,:), &
+                2*ndmx, all_res(:,:), 2*ndmx, 0.D0, rr_small, dim )
+    !
+    IF ( gstart == 2 ) &
+       CALL DGER( dim, dim, -1.D0, all_res(:,:), &
+                  2*ndmx, all_res(:,:), 2*ndmx, rr_small, dim )
+    !
+    CALL reduce( dim * dim, rr_small )
+    !
+    sr_small(n,n) = 0.D0
+    !
+    FORALL( n = 1: dim ) sr_small(n,n) = 1.D0
+    ! 
+    ! ... diagonalize the reduced hamiltonian
+    !
+    CALL rdiaghg( dim, 1, rr_small, sr_small, dim, e_small, vr_small )
+    !
+    ! ... here we compute the best estimate of the |psi>, H|psi>, S|psi>
+    !
+    CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_psi(:,:), &
+                2*ndmx, vr_small(:,1), dim, 0.D0, psi(:,ib), 2*ndmx )
+    !
+    CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_hpsi(:,:), &
+                2*ndmx, vr_small(:,1), dim, 0.D0, hpsi(:,ib), 2*ndmx )
+    !
+    CALL DGEMM( 'N', 'N', 2*ndim, 1, dim, 1.D0, all_spsi(:,:), &
+                2*ndmx, vr_small(:,1), dim, 0.D0, spsi(:,ib), 2*ndmx )
+    !
+    psiSpsi = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, spsi(:,ib), 1 )
+    !
+    IF ( gstart == 2 ) psiSpsi = psiSpsi - psi(1,ib) * spsi(1,ib)
+    !
+    CALL reduce( 1, psiSpsi )
+    !          
+    e(ib) = 2.D0 * DDOT( 2*ndim, psi(:,ib), 1, hpsi(:,ib), 1 )
+    !
+    IF ( gstart == 2 ) e(ib) = e(ib) - psi(1,ib) * hpsi(1,ib)
+    !
+    CALL reduce( 1, e(ib) )          
+    !
+    e(ib) = e(ib) / psiSpsi
+    !
+    ! ... here we compute the best estimate of the residual vector
+    !
+    aux(:,ib) = ( hpsi(:,ib) - e(ib) * spsi(:,ib) ) / psiSpsi
+    !
+    ! ... internal work-space deallocation
+    !
+    DEALLOCATE( e_small )
+    DEALLOCATE( rr_small )
+    DEALLOCATE( sr_small )
+    DEALLOCATE( vr_small )
+    DEALLOCATE( all_psi )
+    DEALLOCATE( all_hpsi )
+    DEALLOCATE( all_spsi )
+    DEALLOCATE( all_res )
+    !   
+    RETURN
+    !
+  END SUBROUTINE diis_step_
     !
     ! ... complex routines
     !
@@ -1005,12 +1209,18 @@ MODULE diis_module
          ! ... bands only 
          ! ... ( the highest two bands are always optimized, even if converged )
          !
-         FORALL( ib = 1: nbands, &
-                 ( .NOT. conv(ib) ) .OR. ( ib > ( nbands - 2 ) ) )
-            !
-            psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
-            !
-         END FORALL   
+! work around a g95 bug
+!         FORALL( ib = 1: nbands, .NOT. conv(ib) .OR. ib > ( nbands - 2 ) )
+!            !
+!            psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
+!            !
+!         END FORALL   
+!         !
+          DO ib = 1, nbands
+             IF (.NOT. conv(ib) .OR. ib > ( nbands - 2 ) ) THEN
+                psi(:,ib) = psi(:,ib) - lambda(ib) * aux(:,ib)
+             END IF
+          END DO
          !
       END DO iterate
       !
