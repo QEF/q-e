@@ -18,8 +18,5 @@ subroutine start_postproc (nodenumber)
   character(len=9) :: code = 'POST-PROC'
   !
   call startup (nodenumber, code, version_number)
-#ifdef __PARA
-  call init_pool
-#endif
   return
 end subroutine start_postproc

@@ -108,7 +108,6 @@ subroutine d3_readin
 #ifdef __PARA
 400 continue
   call bcast_d3_input
-  call init_pool
 #endif
   xqq (:) = xq(:)
   !
