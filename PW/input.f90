@@ -752,9 +752,9 @@ SUBROUTINE iosys()
   tmp_dir = TRIM( outdir )
   lstres = ( tstress .AND. lscf )
   !
-  IF ( lberry_ .AND. npool > 1 ) &
+  IF ( lberry .AND. npool > 1 ) &
      CALL errore( ' iosys ', ' Berry Phase not implemented with pools ', 1 )
-  IF ( lberry_ .AND. nproc_pool > 1 .AND. gdir /= 3 ) &
+  IF ( lberry .AND. nproc_pool > 1 .AND. gdir /= 3 ) &
      CALL errore( ' iosys ', ' Berry Phase in parallel only for gdir=3', 1 )
   !
   ! ... Copy values from input module to PW internals

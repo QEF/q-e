@@ -1,4 +1,6 @@
 
+  * Berry phase calculation in parallel should have been disabled
+
   * bug in readfile_config when restarting without a "*.save" file
 
   * LDA+U forces not working for unppolarized (nspin=1) calculations
