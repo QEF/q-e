@@ -64,7 +64,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
     ! do-loop counters
-  REAL (KIND=DP), ALLOCATABLE :: hr(:,:),  sr(:,:), vr(:,:),  ew(:)
+  REAL (KIND=DP), ALLOCATABLE :: hr(:,:),  sr(:,:), vr(:,:), ew(:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
@@ -78,6 +78,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! true if the root is converged
   REAL (KIND=DP) :: empty_ethr 
     ! threshold for empty bands
+  INTEGER :: ndim2, ndmx2
   !
   ! ... Called routines:
   !
@@ -114,9 +115,11 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   ! ... prepare the hamiltonian for the first iteration
   !
+  ndim2  = 2 * ndim
+  ndmx2  = 2 * ndmx
   notcnv = nvec
   nbase  = nvec
-  CONV   = .FALSE.
+  conv   = .FALSE.
   !
   IF ( overlap ) spsi = ZERO
   psi  = ZERO
@@ -135,11 +138,11 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   hr(:,:) = 0.D0
   vr(:,:) = 0.D0
   !
-  CALL DGEMM( 'T', 'N', nbase, nbase, 2*ndim, 2.D0 , &
-              psi, 2*ndmx, hpsi, 2*ndmx, 0.D0, hr, nvecx )
+  CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0 , &
+              psi, ndmx2, hpsi, ndmx2, 0.D0, hr, nvecx )
   !
   IF ( gstart == 2 ) &
-     CALL DGER( nbase, nbase, -1.D0, psi, 2*ndmx, hpsi, 2*ndmx, hr, nvecx )
+     CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, hpsi, ndmx2, hr, nvecx )
   !
   CALL reduce( nbase * nvecx, hr )
   !
@@ -147,30 +150,31 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IF ( overlap ) THEN
      !
-     CALL DGEMM( 'T', 'N', nbase, nbase, 2*ndim, 2.D0, &
-                 psi, 2*ndmx, spsi, 2*ndmx, 0.D0, sr, nvecx )
+     CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0, &
+                 psi, ndmx2, spsi, ndmx2, 0.D0, sr, nvecx )
      !
      IF ( gstart == 2 ) &
-        CALL DGER( nbase, nbase, -1.D0, psi, 2*ndmx, spsi, 2*ndmx, sr, nvecx )
+        CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, spsi, ndmx2, sr, nvecx )
      !
   ELSE
      !
-     CALL DGEMM( 'T', 'N', nbase, nbase, 2*ndim, 2.D0, &
-                 psi, 2*ndmx, psi, 2*ndmx, 0.D0, sr, nvecx )
+     CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0, &
+                 psi, ndmx2, psi, ndmx2, 0.D0, sr, nvecx )
      !
      IF ( gstart == 2 ) &
-        CALL DGER( nbase, nbase, -1.D0, psi, 2*ndmx, psi, 2*ndmx, sr, nvecx )
+        CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, psi, ndmx2, sr, nvecx )
      !
   END IF
   !
   CALL reduce( nbase * nvecx, sr )
   !
-  DO n = 1, nbase
+  FORALL( n = 1 : nbase )
      !
-     e(n)    = hr(n,n)
+     e(n) = hr(n,n)
+     !
      vr(n,n) = 1.D0
      !
-  END DO
+  END FORALL
   !
   ! ... iterate
   !
@@ -204,25 +208,25 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
      END DO
      !
-     ! ... expand the basis set with new basis vectors ( H - e S)|psi> ...
+     ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
      IF ( overlap ) THEN
         !
-        CALL DGEMM( 'N', 'N', 2*ndim, notcnv, nbase, 1.D0, spsi, &
-                    2*ndmx, vr, nvecx, 0.D0, psi(1,nbase+1), 2*ndmx )
+        CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, spsi, &
+                    ndmx2, vr, nvecx, 0.D0, psi(1,nbase+1), ndmx2 )
         !
      ELSE
         !
-        CALL DGEMM( 'N', 'N', 2*ndim, notcnv, nbase, 1.D0, psi, &
-                    2*ndmx, vr, nvecx, 0.D0, psi(1,nbase+1), 2*ndmx )
+        CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, psi, &
+                    ndmx2, vr, nvecx, 0.D0, psi(1,nbase+1), ndmx2 )
         !
      END IF
      !
      FORALL( np = 1: notcnv ) &
         psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
      !
-     CALL DGEMM( 'N', 'N', 2*ndim, notcnv, nbase, 1.D0, hpsi, &
-                 2*ndmx, vr, nvecx, 1.D0, psi(1,nbase+1), 2*ndmx )
+     CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, hpsi, &
+                 ndmx2, vr, nvecx, 1.D0, psi(1,nbase+1), ndmx2 )
      !
      CALL stop_clock( 'update' )
      !
@@ -230,13 +234,13 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL g_psi( ndmx, ndim, notcnv, psi(1,nbase+1), ew(nbase+1) )
      !
-     ! ... "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
+     ! ... "normalize" correction vectors psi(:,nbase+1:nbase+notcnv) in order
      ! ... to improve numerical stability of subspace diagonalization rdiaghg
      ! ... ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
      !
      DO n = 1, notcnv
         !
-        ew(n) = 2.D0 * DDOT( 2*ndim, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
+        ew(n) = 2.D0 * DDOT( ndim2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
         !
         IF ( gstart == 2 ) ew(n) = ew(n) - psi(1,nbase+n) * psi(1,nbase+n)
         !
@@ -244,11 +248,11 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL reduce( notcnv, ew )
      !
-     DO n = 1, notcnv
+     FORALL( n = 1 : notcnv )
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
-     END DO
+     END FORALL
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
@@ -261,32 +265,32 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL start_clock( 'overlap' )
      !
-     CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, 2*ndim, 2.D0, psi, &
-                 2*ndmx, hpsi(1,nbase+1), 2*ndmx, 0.D0, hr(1,nbase+1), nvecx )
+     CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
+                 ndmx2, hpsi(1,nbase+1), ndmx2, 0.D0, hr(1,nbase+1), nvecx )
      !
      IF ( gstart == 2 ) &
-        CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, 2*ndmx, &
-                   hpsi(1,nbase+1), 2*ndmx, hr(1,nbase+1), nvecx )
+        CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, ndmx2, &
+                   hpsi(1,nbase+1), ndmx2, hr(1,nbase+1), nvecx )
      !
      CALL reduce( nvecx * notcnv, hr(1,nbase+1) )
      !
      IF ( overlap ) THEN
         !
-        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, 2*ndim, 2.D0, psi, 2*ndmx, &
-                    spsi(1,nbase+1), 2*ndmx, 0.D0, sr(1,nbase+1), nvecx )
+        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, ndmx2, &
+                    spsi(1,nbase+1), ndmx2, 0.D0, sr(1,nbase+1), nvecx )
         !
         IF ( gstart == 2 ) &
-           CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, 2*ndmx, &
-                      spsi(1,nbase+1), 2*ndmx, sr(1,nbase+1), nvecx )
+           CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, ndmx2, &
+                      spsi(1,nbase+1), ndmx2, sr(1,nbase+1), nvecx )
         !
      ELSE
         !
-        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, 2*ndim, 2.D0, psi, 2*ndmx, &
-                    psi(1,nbase+1), 2*ndmx, 0.D0, sr(1,nbase+1) , nvecx )
+        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, ndmx2, &
+                    psi(1,nbase+1), ndmx2, 0.D0, sr(1,nbase+1) , nvecx )
         !
         IF ( gstart == 2 ) &
-           CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, 2*ndmx, &
-                      psi(1,nbase+1), 2*ndmx, sr(1,nbase+1), nvecx )
+           CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, ndmx2, &
+                      psi(1,nbase+1), ndmx2, sr(1,nbase+1), nvecx )
         !
      END IF
      !
@@ -296,16 +300,16 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      nbase = nbase + notcnv
      !
-     DO n = 1, nbase
+     FORALL( n = 1 : nbase )
         !
-        DO m = n + 1, nbase
+        FORALL( m = n + 1 : nbase )
            !
            hr(m,n) = hr(n,m)
            sr(m,n) = sr(n,m)
            !
-        END DO
+        END FORALL
         !
-     END DO
+     END FORALL
      !
      ! ... diagonalize the reduced hamiltonian
      !
@@ -338,8 +342,8 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         CALL start_clock( 'last' )
         !
-        CALL DGEMM( 'N', 'N', 2*ndim, nvec, nbase, 1.D0, &
-                    psi, 2*ndmx, vr, nvecx, 0.D0, evc, 2*ndmx )
+        CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, &
+                    psi, ndmx2, vr, nvecx, 0.D0, evc, ndmx2 )
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -369,15 +373,15 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         IF ( overlap ) THEN
            !
-           CALL DGEMM( 'N', 'N', 2*ndim, nvec, nbase, 1.D0, spsi, &
-                       2*ndmx, vr, nvecx, 0.D0, psi(1,nvec+1), 2*ndmx )
+           CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, spsi, &
+                       ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
            !
            spsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
            !
         END IF
         !
-        CALL DGEMM( 'N', 'N', 2*ndim, nvec, nbase, 1.D0, hpsi, &
-                    2*ndmx, vr, nvecx, 0.D0, psi(1,nvec+1), 2*ndmx )
+        CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, hpsi, &
+                    ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
         !
         hpsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
         !
@@ -389,13 +393,13 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         sr(:,1:nbase) = 0.D0
         vr(:,1:nbase) = 0.D0
         !
-        DO n = 1, nbase
+        FORALL( n = 1 : nbase )
            !
            hr(n,n) = e(n)
            sr(n,n) = 1.D0
            vr(n,n) = 1.D0
            !
-        END DO
+        END FORALL
         !
         CALL stop_clock( 'last' )
         !

@@ -39,7 +39,7 @@
 ! ...    nbnd2 bands. Orthogonalization of the eigenvectors is done at
 ! ...    each step. The possibility of orthogonalizing a given band only to
 ! ...    those inside an energy window is also implemented.
-!
+! 
 ! ... 3) The topmost two bands are converged using a standard 
 ! ...    conjugate-gradient procedure. This ensures that eventual holes
 ! ...    left by the DIIS algorithm can be identified and filled.
@@ -279,26 +279,26 @@ MODULE diis_base
       !
       ! ... this routine is used to reorder the bands :
       ! ... converged bands come first.
-      ! ... for this pourpose an auxiliary vector is used
+      ! ... for this pourpose an auxiliary vector (aux) is used
       !
       IMPLICIT NONE
       !
       INTEGER,           INTENT(IN)    :: order  
       INTEGER,           INTENT(IN)    :: nbnd
       COMPLEX (KIND=DP), INTENT(INOUT) :: psi(:,:)
-      INTEGER,           INTENT(OUT)   :: notcnv
+      INTEGER,           INTENT(INOUT) :: notcnv
       !
       INTEGER :: ib
       !
       !
-      cnv    = 0
-      notcnv = nbnd
-      !
-      ! ... return if no eigenvector is converged
-      !
-      IF ( .NOT. ANY( conv(1:nbnd) ) ) RETURN
-      !
       IF ( order > 0 ) THEN
+         !
+         cnv    = 0
+         notcnv = nbnd
+         !
+         ! ... return if no eigenvector is converged
+         !
+         IF ( .NOT. ANY( conv(1:nbnd) ) ) RETURN
          !
          DO ib = 1, nbnd
             !
@@ -316,10 +316,12 @@ MODULE diis_base
                spsi(:,cnv) = spsi(:,ib)              
                !
             ELSE
-               !
+               ! 
                mask(ib) = notcnv
                !
                aux(:,notcnv) = psi(:,ib)
+               !
+               ! ... notcnv is used as a counter
                !
                notcnv = notcnv - 1
                !
@@ -327,15 +329,29 @@ MODULE diis_base
             !
          END DO
          !
-         notcnv = nbnd - notcnv
+         psi(:,1:nbnd) = aux(:,1:nbnd)
          !
-         psi(:,1:nbnd) = aux(:,1:nbnd)             
+         ! ... the correct number of not-converged bands is computed here
+         !
+         notcnv = nbnd - notcnv
          !
       ELSE
          !
-         psi(:,1:nbnd)  = psi(:,mask(1:nbnd))
-         hpsi(:,1:nbnd) = hpsi(:,mask(1:nbnd))
-         spsi(:,1:nbnd) = spsi(:,mask(1:nbnd))
+         ! ... return if no eigenvector is converged
+         !
+         IF ( .NOT. ANY( conv(1:nbnd) ) ) RETURN
+         !
+         aux(:,1:nbnd) = psi(:,mask(1:nbnd))
+         !
+         psi(:,1:nbnd) = aux(:,1:nbnd)
+         !
+         aux(:,1:nbnd) = hpsi(:,mask(1:nbnd))
+         !
+         hpsi(:,1:nbnd) = aux(:,1:nbnd)
+         !
+         aux(:,1:nbnd) = spsi(:,mask(1:nbnd))
+         !
+         spsi(:,1:nbnd) = aux(:,1:nbnd)
          !
       END IF
       !
@@ -1081,7 +1097,7 @@ MODULE real_diis_module
           !
           IMPLICIT NONE
           !
-          INTEGER                        :: ib, n, dim
+          INTEGER                        :: ib, n, dim, dim_new
           REAL (KIND=DP)                 :: psiSpsi
           REAL (KIND=DP),    ALLOCATABLE :: e_small(:)
           REAL (KIND=DP),    ALLOCATABLE :: rr_small(:,:), &
@@ -1094,7 +1110,8 @@ MODULE real_diis_module
           REAL (KIND=DP),    ALLOCATABLE :: ps(:)
           !
           !
-          dim = MIN( nbase, diis_ndim1 )
+          dim     = MIN( ( nbase - 1 ), diis_ndim1 )
+          dim_new = MIN( nbase, diis_ndim1 )
           !
           ! ... internal work-space allocation
           !
@@ -1129,9 +1146,9 @@ MODULE real_diis_module
              all_hpsi(:,1) = hpsi(:,ib)
              all_spsi(:,1) = spsi(:,ib)
              !
-             all_psi(:,2:nbase)  = psi_old(:,:,ib)
-             all_hpsi(:,2:nbase) = hpsi_old(:,:,ib)
-             all_spsi(:,2:nbase) = spsi_old(:,:,ib)
+             all_psi(:,2:nbase)  = psi_old(:,1:dim,ib)
+             all_hpsi(:,2:nbase) = hpsi_old(:,1:dim,ib)
+             all_spsi(:,2:nbase) = spsi_old(:,1:dim,ib)
              !
              ! ... orthogonalization of the new wavefunction to the history
              !
@@ -1184,14 +1201,14 @@ MODULE real_diis_module
              ! ... the "energy" history of this band is reconstructed
              !
              e_small(1)       = e(ib)
-             e_small(2:nbase) = e_old(:,ib)
+             e_small(2:nbase) = e_old(1:dim,ib)
              !
              ! ... DIIS work-space is refreshed
              !
-             psi_old(:,1:dim,ib)  = all_psi(:,1:dim)
-             hpsi_old(:,1:dim,ib) = all_hpsi(:,1:dim)
-             spsi_old(:,1:dim,ib) = all_spsi(:,1:dim)
-             e_old(1:dim,ib)      = e_small(1:dim)
+             psi_old(:,1:dim_new,ib)  = all_psi(:,1:dim_new)
+             hpsi_old(:,1:dim_new,ib) = all_hpsi(:,1:dim_new)
+             spsi_old(:,1:dim_new,ib) = all_spsi(:,1:dim_new)
+             e_old(1:dim_new,ib)      = e_small(1:dim_new)
              !
              ! ... residual vectors are finally computed
              !
@@ -1850,7 +1867,7 @@ MODULE complex_diis_module
       END IF
       !
       ! ... then DIIS-diagonalization is performed only on the
-      ! ... lowest nbnd2 bands
+      ! ... lowest ( nbnd - 2 ) bands
       !
       CALL diis_with_ortho( ndim, ndmx, nbnd2, psi, e, btype, diis_iter )
       !
@@ -2330,7 +2347,7 @@ MODULE complex_diis_module
           !
           IMPLICIT NONE
           !
-          INTEGER                        :: ib, n, dim
+          INTEGER                        :: ib, n, dim, dim_new
           REAL (KIND=DP)                 :: psiSpsi
           REAL (KIND=DP),    ALLOCATABLE :: e_small(:)
           COMPLEX (KIND=DP), ALLOCATABLE :: rc_small(:,:), &
@@ -2342,7 +2359,8 @@ MODULE complex_diis_module
           COMPLEX (KIND=DP), ALLOCATABLE :: ps(:)
           !
           !
-          dim = MIN( nbase, diis_ndim1 )
+          dim     = MIN( ( nbase - 1 ), diis_ndim1 )
+          dim_new = MIN( nbase, diis_ndim1 )
           !
           ! ... internal work-space allocation
           !
@@ -2375,9 +2393,9 @@ MODULE complex_diis_module
              all_hpsi(:,1) = hpsi(:,ib)
              all_spsi(:,1) = spsi(:,ib)
              !
-             all_psi(:,2:nbase)  = psi_old(:,:,ib)
-             all_hpsi(:,2:nbase) = hpsi_old(:,:,ib)
-             all_spsi(:,2:nbase) = spsi_old(:,:,ib)
+	     all_psi(:,2:nbase)  = psi_old(:,1:dim,ib)
+             all_hpsi(:,2:nbase) = hpsi_old(:,1:dim,ib)
+             all_spsi(:,2:nbase) = spsi_old(:,1:dim,ib)
              !
              ! ... orthogonalization of the new wavefunction to the history
              !
@@ -2424,14 +2442,14 @@ MODULE complex_diis_module
              ! ... the "energy" history of this band is reconstructed
              !
              e_small(1)       = e(ib)
-             e_small(2:nbase) = e_old(:,ib)
+             e_small(2:nbase) = e_old(1:dim,ib)
              !
              ! ... DIIS work-space is refreshed
              !
-             psi_old(:,1:dim,ib)  = all_psi(:,1:dim)
-             hpsi_old(:,1:dim,ib) = all_hpsi(:,1:dim)
-             spsi_old(:,1:dim,ib) = all_spsi(:,1:dim)
-             e_old(1:dim,ib)      = e_small(1:dim)
+             psi_old(:,1:dim_new,ib)  = all_psi(:,1:dim_new)
+             hpsi_old(:,1:dim_new,ib) = all_hpsi(:,1:dim_new)
+             spsi_old(:,1:dim_new,ib) = all_spsi(:,1:dim_new)
+             e_old(1:dim_new,ib)      = e_small(1:dim_new)
              !
              ! ... residual vectors are finally computed
              !

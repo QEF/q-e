@@ -158,12 +158,13 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   !
   CALL reduce( 2 * nbase * nvecx, sc )
   !
-  DO n = 1, nbase
+  FORALL( n = 1 : nbase )
      !
-     e(n)    = hc(n,n)
+     e(n) = hc(n,n)
+     !
      vc(n,n) = ONE
      !
-  END DO
+  END FORALL
   !
   ! ... iterate
   !
@@ -197,7 +198,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
         !
      END DO
      !
-     ! ... expand the basis set with new basis vectors ( H - e S)|psi> ...
+     ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
      IF ( overlap ) THEN
         !
@@ -223,7 +224,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      CALL g_psi( ndmx, ndim, notcnv, psi(1,nbase+1), ew(nbase+1) )
      !
-     ! ... "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
+     ! ... "normalize" correction vectors psi(:,nbase+1:nbase+notcnv) in order
      ! ... to improve numerical stability of subspace diagonalization cdiaghg
      ! ... ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
      !
@@ -235,11 +236,11 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      CALL reduce( notcnv, ew )
      !
-     DO n = 1, notcnv
+     FORALL( n = 1 : notcnv )
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
-     END DO
+     END FORALL
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
@@ -275,21 +276,21 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      nbase = nbase + notcnv
      !
-     DO n = 1, nbase
+     FORALL( n = 1 : nbase )
         !
         ! ... the diagonal of hc and sc must be strictly real 
         !
         hc(n,n) = DCMPLX( DREAL( hc(n,n) ), 0.D0 )
         sc(n,n) = DCMPLX( DREAL( sc(n,n) ), 0.D0 )
         !
-        DO m = n + 1, nbase
+        FORALL(  m = n + 1 : nbase )
            !
            hc(m,n) = CONJG( hc(n,m) )
            sc(m,n) = CONJG( sc(n,m) )
            !
-        END DO
+        END FORALL
         !
-     END DO
+     END FORALL
      !
      ! ... diagonalize the reduced hamiltonian
      !
@@ -373,13 +374,13 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
         sc(:,1:nbase) = ZERO
         vc(:,1:nbase) = ZERO
         !
-        DO n = 1, nbase
+        FORALL( n = 1 : nbase )
            !
            hc(n,n) = e(n)
            sc(n,n) = ONE
            vc(n,n) = ONE
            !
-        END DO
+        END FORALL
         !
         CALL stop_clock( 'last' )
         !
