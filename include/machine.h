@@ -11,11 +11,11 @@
 #  define FLUSH
 #endif
 
-#if defined(CRAYY) || defined(__LINUX) || defined(__AIX) || defined(__T3E) ||defined(HITACHI) || defined(SUN)
+#if defined(CRAYY) || defined(__LINUX) || defined(__AIX) || defined(HITACHI) || defined(SUN)
 #  define C_POINTER  integer(kind=4)
 #endif
 
-#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64)
+#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64) || defined(__T3E)
 #  define C_POINTER  integer(kind=8)
 #endif
 
@@ -65,6 +65,7 @@
 #  define DSPEV       sspev
 #  define DSYTRF      ssytrf
 #  define DSYTRI      ssytri
+#  define DSYEV       ssyev
 #  define DSYGV       ssygv
 #  define DSYGVX      ssygvx
 #  define DSWAP       sswap
@@ -134,6 +135,7 @@
 #    define DSPEV       dspev__
 #    define DSYTRF      dsytrf__
 #    define DSYTRI      dsytri__
+#    define DSYEV       dsyev__
 #    define DSYGV       dsygv__
 #    define DSYGVX      dsygvx__
 #    define DSWAP       dswap__
@@ -182,6 +184,7 @@
 #    define DSPEV       dspev_
 #    define DSYTRF      dsytrf_
 #    define DSYTRI      dsytri_
+#    define DSYEV       dsyev_
 #    define DSYGV       dsygv_
 #    define DSYGVX      dsygvx_
 #    define DSWAP       dswap_
@@ -230,6 +233,7 @@
 #    define DSPEV       dspev
 #    define DSYTRF      dsytrf
 #    define DSYTRI      dsytri
+#    define DSYEV       dsyev
 #    define DSYGV       dsygv
 #    define DSYGVX      dsygvx
 #    define DSWAP       dswap
