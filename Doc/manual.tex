@@ -70,7 +70,7 @@ found in:
 The ESPRESSO codes work on many different types of Unix machines,
 including parallel machines using Message Passing Interface (MPI).
 Running ESPRESSO on MS-Windows is possible, but not supported: 
-see the Installation section.
+see section \ref{installation}, ``Installation''.
 
 \subsection{Codes}
 
@@ -246,6 +246,7 @@ A.~Kokalj, % PWgui
 \clearpage
 
 \section{Installation}
+  \label{installation}
 
 Presently, the ESPRESSO package is only distributed in source form;
 some precompiled executables (binary files) are provided only for
@@ -337,7 +338,8 @@ without having to edit any of the generated files.  However you may
 have to tune \texttt{configure} by specifying appropriate environment
 variables and/or command-line options.
 Usually the most tricky part is to get external libraries recognized
-and used: see the next section for details and hints.
+and used: see section \ref{libraries}, ``Libraries'', for details and
+hints.
 
 Environment variables may be set in any of these ways:
 \begin{verbatim}
@@ -403,6 +405,7 @@ options:
 \end{quote}
 
 \subsubsection{Libraries}
+  \label{libraries}
 
 ESPRESSO makes use of the following external libraries:
 \begin{itemize}
@@ -496,7 +499,7 @@ For example:
   ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
 \end{verbatim}
 If everything else fails, you'll have to write the \texttt{make.sys}
-file manually: see next section.
+file manually: see section \ref{manualconf}, ``Manual configuration''.
 
 \paragraph{Please Note:}
 
@@ -506,6 +509,7 @@ unless you know exactly which routines are affected by the changed
 settings and how to force their recompilation.
 
 \subsubsection{Manual configuration}
+  \label{manualconf}
 
 To configure ESPRESSO manually, you have to write working
 \texttt{make.sys} and \texttt{make.rules}, and generate
@@ -673,8 +677,8 @@ Here is a list:
     documentation in \texttt{atomic\_doc/}).
   \item
     \texttt{make upf} produces utilities for pseudopotential
-    conversion in directory \texttt{upftools/} (see
-    ``Pseudopotential'' section).
+    conversion in directory \texttt{upftools/} (see section
+    \ref{pseudopotentials}, ``Pseudopotentials'').
   \item
     \texttt{make cp} produces the Car-Parrinello code CP in
     \texttt{CPV/cp.x}.
@@ -771,7 +775,167 @@ The utility programs in \texttt{pwtools/} are:
         {http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
 \end{itemize}
 
+\subsection{Run examples}
+  \label{runexamples}
+
+As a final check that compilation was successful, you may want to run
+some or all of the examples contained within the \texttt{examples}
+directory of the ESPRESSO distribution.
+Those examples try to exercise all the programs and features of the
+ESPRESSO package: for details, see the \texttt{README} file in each
+example's directory.
+If you find that any relevant feature isn't being tested, please
+contact us (or even better, write and send us a new example
+yourself!).
+
+If you haven't downloaded the full ESPRESSO distribution and don't
+have the examples, you can get them from the Test and Examples Page of
+the ESPRESSO web site
+(\htmladdnormallink{\texttt{http://www.pwscf.org/tests.htm}}%
+                   {http://www.pwscf.org/tests.htm}).
+The necessary pseudopotentials are included.
+
+To run the examples, you should follow this procedure:
+
+\begin{enumerate}
+  \item
+Go to the \texttt{examples} directory and edit the
+\texttt{environment\_variables} file, setting the following variables
+as needed:
+\begin{quote}
+  \texttt{BIN\_DIR=} directory where ESPRESSO executables reside\\
+  \texttt{PSEUDO\_DIR=} directory where pseudopotential files reside\\
+  \texttt{TMP\_DIR=} directory to be used as temporary storage area
+\end{quote}
+If you have downloaded the full ESPRESSO distribution, you may set
+\texttt{BIN\_DIR=\$TOPDIR/bin} and
+\texttt{PSEUDO\_DIR=\$TOPDIR/pseudo}, where \texttt{\$TOPDIR} is the
+root of the ESPRESSO source tree.
+
+The \texttt{PSEUDO\_DIR} directory must contain the following files:    
+\begin{quote}
+  \begin{flushleft}
+%
+% to regenerate this list:
+% grep UPF */run_example | grep -v PSEUDO_LIST | grep -o "[^ ]*UPF" | \
+% sed 's/_/\\_/g' | sort | uniq | awk '{print "    \\texttt{" $0 "},"}'
+%
+    \texttt{Al.vbc.UPF},
+    \texttt{As.gon.UPF},
+    \texttt{C.pz-rrkjus.UPF},
+    \texttt{Cu.pz-d-rrkjus.UPF},
+    \texttt{Fe.pz-nd-rrkjus.UPF},
+    \texttt{H.fpmd.UPF},
+    \texttt{H.vbc.UPF},
+    \texttt{N.BLYP.UPF},
+    \texttt{Ni.pbe-nd-rrkjus.UPF},
+    \texttt{NiUS.RRKJ3.UPF},
+    \texttt{O.BLYP.UPF},
+    \texttt{O.LDA.US.RRKJ3.UPF},
+    \texttt{O.pbe-rrkjus.UPF},
+    \texttt{O.vdb.UPF},
+    \texttt{OPBE\_nc.UPF},
+    \texttt{Pb.vdb.UPF},
+    \texttt{Ptrel.RRKJ3.UPF},
+    \texttt{Si.vbc.UPF},
+    \texttt{SiPBE\_nc.UPF},
+    \texttt{Ti.vdb.UPF}
+  \end{flushleft}
+\end{quote}
+
+If any of these are missing, you may not be able to run some of the
+examples.  You can download them from the Pseudopotentials Page of the
+ESPRESSO web site
+(\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
+                   {http://www.pwscf.org/pseudo.htm}).
+
+\texttt{TMP\_DIR} must be a directory you have read and write access
+to, with enough available space to host the temporary files produced
+by the example runs, and possibly offering high I/O performance (i.e.,
+don't use an NFS-mounted directory).
+
+  \item
+If you have compiled the parallel version of ESPRESSO (that is the
+default), you'll usually have to specify a driver program (such as
+\texttt{poe} or \texttt{mpiexec}) and the number of processors: read
+section \ref{runparallel}, ``Running on parallel machines'' for
+details.
+
+In order to do that, edit again the \texttt{environment\_variables}
+file and set the \texttt{PARA\_PREFIX} and \texttt{PARA\_POSTFIX}
+variables as needed.
+Parallel executables will be run by a command like this:
+\begin{verbatim}
+  $PARA_PREFIX pw.x $PARA_POSTFIX < file.in > file.out
+\end{verbatim}
+
+For example, if the command line is like this (as for an IBM SP4):
+\begin{verbatim}
+  poe pw.x -procs 4 < file.in > file.out
+\end{verbatim}
+you should set \texttt{PARA\_PREFIX="poe"},
+\texttt{PARA\_POSTFIX="-procs 4"}.
+
+Furthermore, if your machine does not support interactive use, you
+must run the commands specified below through the batch queueing
+system installed on that machine.
+Ask your system administrator for instructions.
+
+  \item
+To run a single example, go to the corresponding directory (for
+instance, \texttt{example/example01}) and execute:
+\begin{verbatim}
+  ./run_example
+\end{verbatim}
+This will create a subdirectory \texttt{results}, containing the input
+and output files generated by the calculation.
+
+Some examples take only a few seconds to run, while others may require
+several minutes depending on your system.
+
+To run all the examples in one go, execute:
+\begin{verbatim}
+  ./run_all_examples
+\end{verbatim}
+from the \texttt{examples} directory.
+On a single-processor machine, this typically takes one to three
+hours.
+
+The \texttt{make\_clean} script cleans the examples tree, by removing
+all the \texttt{results} subdirectories.  However, if additional
+subdirectories have been created, they aren't deleted.
+
+  \item
+In each example's directory, the \texttt{reference} subdirectory
+contains verified output files, that you can check your results
+against.
+They were generated on a 1.7 GHz Pentium IV using Intel compiler
+(\texttt{ifc}) v.6 and MKL libraries v.5.1.
+
+On different architectures the precise numbers could be slightly
+different, in particular if different FFT dimensions are automatically
+selected.  For this reason, a plain \texttt{diff} of your results
+against the reference data doesn't work, or at least, it requires
+human inspection of the results.
+
+Instead, you can run the \texttt{check\_example} script in the
+\texttt{examples} directory:
+\medskip
+
+\quad\texttt{./check\_example} \emph{example\_dir}
+\medskip
+
+\noindent
+where \emph{example\_dir} is the directory of the example that you
+want to check (e.g., \texttt{./check\_example example01}).
+You can specify multiple directories.
+
+Note: at the moment \texttt{check\_example} is in early development
+and (should be) guaranteed to work only on examples 01 to 04.
+\end{enumerate}
+
 \subsection{Installation issues}
+  \label{installissues}
 
 The main development platforms are IBM SP and Intel/AMD PC with Linux
 and Intel compiler.  For other machines, we rely on user's feedback.
@@ -1031,7 +1195,111 @@ If you get errors at loading because symbols \texttt{LPUTP},
 
 \clearpage
 
+\section{Running on parallel machines}
+  \label{runparallel}
+
+Parallel execution is strongly system- and installation-dependent.
+Typically one has to specify:
+
+\begin{itemize}
+  \item a launcher program, such as \texttt{poe}, \texttt{mpirun}, or
+        \texttt{mpiexec};
+  \item the number of processors, typically as an option to the
+        launcher program, but in some cases \emph{after} the program
+        to be executed;
+  \item the program to be executed, with the proper path if needed:
+        for instance, \texttt{pw.x}, or \texttt{./pw.x}, or
+        \texttt{\$(HOME)/bin/pw.x}, or whatever applies;
+  \item the number of ``pools'' into which processors are to be
+        grouped (see section \ref{parissues}, ``Parallelization
+        Issues'', for an explanation of what a pool~is).
+\end{itemize}
+
+The last item is optional and is read by the code.
+The first and second items are machine- and installation-dependent,
+and may be different for interactive and batch execution.
+
+\paragraph{Please note:}
+Your machine might be configured so as to disallow interactive
+execution: if in doubt, ask your system administrator.
+\bigskip
+
+For illustration, here's how to run \texttt{pw.x} on 16 processors
+partitioned into 8 pools (2 processors each), for several typical
+cases.
+For convenience, we also give the corresponding values of
+\texttt{PARA\_PREFIX}, \texttt{PARA\_POSTFIX} to be used in running
+the examples distributed with ESPRESSO (see section \ref{runexamples},
+``Run examples'').
+
+\begin{description}
+  \item [IBM SP machines,] batch:
+\begin{verbatim}
+pw.x -npool 8 < input
+
+PARA_PREFIX="", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+    This should also work interactively, with environment variables
+    \texttt{NPROC} set to 16, \texttt{MP\_HOSTFILE} set to the file
+    containing a list of processors.
+  \item [IBM SP machines,] interactive, using \texttt{poe}:
+\begin{verbatim}
+poe pw.x -procs 16 -npool 8 < input
+
+PARA_PREFIX="poe", PARA_POSTFIX="-procs 16 -npool 8"
+\end{verbatim}
+  \item [SGI Origin and PC clusters] using \texttt{mpirun}:
+\begin{verbatim}
+mpirun -np 16 pw.x -npool 8 < input
+
+PARA_PREFIX="mpirun -np 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+  \item [PC clusters] using \texttt{mpiexec}:
+\begin{verbatim}
+mpiexec -n 16 pw.x -npool 8 < input
+
+PARA_PREFIX="mpiexec -n 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+  \item [Cray T3E] (old):
+\begin{verbatim}
+mpprun -n 16 pw.x -npool 8 < input
+
+PARA_PREFIX="mpprun -n 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+\end{description}
+
+Note that each processor writes its own set of temporary wavefunction
+files during the calculation.
+If \texttt{wf\_collect=.true.} (in namelist \texttt{control}), the
+final result is collected into a single file, whose format is
+independent on the number of processors; otherwise, one wavefunction
+file per processor is left on the disk.
+In the latter case, the files are readable only by a job running on
+the same number of processors and pools, and if all files are on a
+file system that is visible to all processors (i.e., you cannot use
+local scratch directories: there is presently no way to ensure that
+the distribution of processes on processors will follow the same
+pattern for different jobs).
+
+Some implementations of the MPI library may have problems with
+input redirection in parallel.
+If this happens, use the option \texttt{-in} (or \texttt{-inp} or
+\texttt{-input}), followed by the input file name.
+Example: \texttt{pw.x -in input -npool 4 > output}.
+
+Please note that all postprocessing codes \emph{not} reading data
+files produced by \texttt{pw.x} --- that is, \texttt{chdens.x},
+\texttt{average.x}, \texttt{voronoy.x}, \texttt{dos.x} --- the
+plotting codes \texttt{plotrho.x}, \texttt{plotband.x}, and all
+executables in \texttt{pwtools/}, should be executed on just one
+processor.
+Unpredictable results may follow if those codes are run on more than
+one processor.
+
+\clearpage
+
 \section{Pseudopotentials}
+  \label{pseudopotentials}
 
 Currently PWscf and CP support both Ultrasoft (US) Vanderbilt
 pseudopotentials (PPs) and Norm-Conserving (NC)
@@ -1056,7 +1324,8 @@ for all types of PPs, but still accepts a number of other formats:
 Note however that PWscf accept the first, fourth and fifth in the
 above list; CP the second, fourth and fifth; FPMD the third only.
 
-PPs for selected elements can be downloaded from the PWscf PP page
+PPs for selected elements can be downloaded from the Pseudopotentials
+Page of the ESPRESSO web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
                    {http://www.pwscf.org/pseudo.htm}).
 If you do not find there the PP you need (because there is no PP for
@@ -1116,26 +1385,23 @@ proceeding to serious calculations.
 
 \section{Using PWscf}
 
-Input data for the PWscf can be easily produced using the graphical
-user interface \texttt{PWgui}, by Anton Kokalj, distributed together
-with the PWscf package.
-See \texttt{PWgui-X.Y.Z/INSTALL} for more info on this subject (or
-\texttt{GUI/README} if you are using CVS sources).
+Input files for the PWscf codes may be either written by hand (the
+good old way), or produced via the ``PWgui'' graphical user interface
+by Anton Kokalj, included in the ESPRESSO distribution.
+See \texttt{PWgui-}\emph{x.y.z}\texttt{/INSTALL} (where \emph{x.y.z}
+is the version number) for more info on PWgui, or \texttt{GUI/README}
+if you are using CVS sources.
 
-Tests and examples can be downloaded from the Test and Examples Page
-(\htmladdnormallink{\texttt{http://www.pwscf.org/tests.htm}}%
-                   {http://www.pwscf.org/tests.htm}).
-The necessary pseudopotentials are included.
-See the documentation contained there.
-The examples assume that all executables reside in a subdirectory
-\texttt{bin/}. The Makefile should automatically take care of this.
+You may take the examples distributed with ESPRESSO as templates for
+writing your own input files: see section \ref{runexamples}, ``Run
+examples''.  In the following, whenever we mention ``Example N'', we
+refer to those.
+Input files are those in the \texttt{results} directories, with names
+ending in \texttt{.in} (they'll appear after you've run the examples).
 
 Note about exchange-correlation: the type of exchange-correlation used
 in the calculation is read from PP files.
 All PP's must have been generated using the same exchange-correlation. 
-
-In the following, ``Example N'' refers to the contents of the directory
-\texttt{examples/exampleN}.
 
 \subsection{Electronic and ionic structure calculations}
 
@@ -1840,107 +2106,8 @@ H 1.00d0 h.ps
 
 \clearpage
 
-\section{Running on parallel machines}
-
-Parallel execution is strongly system- and installation-dependent.
-Typically one has to specify:
-
-\begin{itemize}
-  \item a launcher program, such as \texttt{poe}, \texttt{mpirun}, or
-        \texttt{mpiexec};
-  \item the number of processors, typically as an option to the
-        launcher program, but in some cases \emph{after} the program
-        to be executed;
-  \item the program to be executed, with the proper path if needed:
-        for instance, \texttt{pw.x}, or \texttt{./pw.x}, or
-        \texttt{\$(HOME)/bin/pw.x}, or whatever applies;
-  \item the number of ``pools'' into which processors are to be
-        grouped (see Section ``Parallelization Issues'' below for an
-        explanation of what a pool is).
-\end{itemize}
-
-The last item is optional and is read by the code.
-The first and second items are machine- and installation-dependent,
-and may be different for interactive and batch execution.
-To run the examples, one has to set \texttt{PARA\_PREFIX} and
-\texttt{PARA\_POSTFIX} in file
-\texttt{examples/environment\_variables} to the proper values.
-
-Let us consider the case of execution of \texttt{pw.x} on 16
-processors divided into 8 pools (2 processors each).
-Some typical cases:
-
-\begin{itemize}
-  \item
-    IBM SP machines, batch:
-\begin{verbatim}
-pw.x -npool 8 < input
-\end{verbatim}
-    (\texttt{PARA\_PREFIX=""}, \texttt{PARA\_POSTFIX="-npool 8"}). 
-    This might also work interactively, with environment variables
-    \texttt{NPROC} set to 16, \texttt{MP\_HOSTFILE} set to the file
-    containing a list of processors.
-  \item
-    IBM SP machines, interactive, using \texttt{poe}:
-\begin{verbatim}
-poe pw.x -procs 16 -npool 8 < input
-\end{verbatim}
-    (\texttt{PARA\_PREFIX="poe"}, \texttt{PARA\_POSTFIX="-procs 16
-    -npool 8"}).
-  \item
-    SGI Origin, PC clusters using \texttt{mpirun}:
-\begin{verbatim}
-mpirun -np 16 pw.x -npool 8 < input
-\end{verbatim}
-    (\texttt{PARA\_PREFIX="mpirun -np 16"},
-    \texttt{PARA\_POSTFIX="-npool 8"}).
-  \item
-    Cray T3E (old):
-\begin{verbatim}
-mpprun -n 16 pw.x -npool 8 < input
-\end{verbatim}
-    (\texttt{PARA\_PREFIX="mpprun -n 16"},
-    \texttt{PARA\_POSTFIX="-npool 8"}).
-  \item
-    PC clusters using \texttt{mpiexec}:
-\begin{verbatim}
-mpiexec -n 16 pw.x -npool 8 < input
-\end{verbatim}
-    (\texttt{PARA\_PREFIX="mpiexec -n 16"},
-    \texttt{PARA\_POSTFIX="-npool 8"}).
-\end{itemize}
-
-Note that each processor writes its own set of temporary wavefunction
-files during the calculation.
-If \texttt{wf\_collect=.true.} (in namelist \texttt{control}), the
-final result is collected into a single file, whose format is
-independent on the number of processors; otherwise, one wavefunction
-file per processor is left on the disk.
-In the latter case, the files are readable only by a job running on
-the same number of processors and pools, and if all files are on a
-file system that is visible to all processors (i.e., you cannot use
-local scratch directories: there is presently no way to ensure that
-the distribution of processes on processors will follow the same
-pattern for different jobs).
-
-Some implementations of the MPI library may have problems with
-input redirection in parallel.
-If this happens, use the option \texttt{-in} (or \texttt{-inp} or
-\texttt{-input}), followed by the input file name.
-Example: \texttt{pw.x -in input -npool 4 > output}.
-
-Please note that all postprocessing codes \emph{not} reading data
-files produced by \texttt{pw.x} --- that is, \texttt{chdens.x},
-\texttt{average.x}, \texttt{voronoy.x}, \texttt{dos.x} --- the
-plotting codes \texttt{plotrho.x}, \texttt{plotband.x}, and all
-executables in \texttt{pwtools/}, should be executed on just one
-processor.
-Unpredictable results may follow if those codes are run on more than
-one processor.
-
-\clearpage
-
 \section{Performance issues (PWscf)}
+  \label{performance}
 
 \subsection{CPU time requirements}
 
@@ -2064,6 +2231,7 @@ self-consistency, default value $=8$) if \texttt{disk\_io} is set to
 $q=0$ if \texttt{disk\_io='low'} or \texttt{'minimal'}.
 
 \subsection{Parallelization issues}
+  \label{parissues}
 
 \texttt{pw.x} can run in principle on any number of processors (up to
 \texttt{maxproc}, presently fixed at 128 in \texttt{PW/para.f90}). 
@@ -2265,7 +2433,8 @@ Possible reasons:
   \item
     buggy compiler.
     If you are using Portland or Intel compilers on Linux PC's or
-    clusters, see the ``Installation issues'' section.
+    clusters, see section \ref{installissues}, ``Installation
+    issues''.
 \end{itemize}
 
 \paragraph{\texttt{pw.x} works for simple systems, but not for large
@@ -2276,8 +2445,7 @@ Possible solutions:
   \item
     increase the amount of RAM you are authorized to use (which may be
     much smaller than the available RAM).
-    Inquire with your system administrator if you don't know what to
-    do.
+    Ask your system administrator if you don't know what to do.
   \item
     reduce \texttt{nbnd} to the strict minimum, or reduce the cutoffs,
     or the cell size.
@@ -2482,9 +2650,10 @@ process, but with some compilers it is actually the wall time.
 
 Your system does not require that many processors: reduce the number
 of processors to a more sensible value.
-In particular, both $N_3$ and $Nr_3$ must be $\geq N_{pr}$ (see the
-``Performance Issues'' section, and in particular ``Parallelization
-issues'', for the meaning of these variables).
+In particular, both $N_3$ and $Nr_3$ must be $\geq N_{pr}$ (see
+section \ref{performance}, ``Performance Issues'', and in particular
+section \ref{parissues}, ``Parallelization issues'', for the meaning
+of these variables).
 
 \paragraph{``warning : N eigenvectors not converged ...''}
 
