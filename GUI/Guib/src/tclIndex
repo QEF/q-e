@@ -197,6 +197,8 @@ set auto_index(::guib::moduleObj::_getAllVar) [list source [file join $dir modul
 set auto_index(::guib::moduleObj::optionSetDefault) [list source [file join $dir moduleObj.itcl]]
 set auto_index(::guib::moduleObj::openFile) [list source [file join $dir open.itcl]]
 set auto_index(::guib::moduleObj::readFile) [list source [file join $dir open.itcl]]
+set auto_index(::guib::moduleObj::readFileError) [list source [file join $dir open.itcl]]
+set auto_index(::guib::moduleObj::readFileWrongFormat) [list source [file join $dir open.itcl]]
 set auto_index(::guib::moduleObj::_openSyntaxError) [list source [file join $dir open.itcl]]
 set auto_index(::guib::moduleObj::_open) [list source [file join $dir open.itcl]]
 set auto_index(::guib::moduleObj::_openCompareStr) [list source [file join $dir open.itcl]]

@@ -21,7 +21,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: open.itcl,v 1.2 2004-04-05 13:20:58 kokalj Exp $ 
+# $Id: open.itcl,v 1.3 2004-04-06 13:23:22 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -63,22 +63,32 @@ body ::guib::moduleObj::openFile {fileName} {
 # called.
 #
 #  RETURN VALUE
-#    None.
+#    OK           -- input file is OK
+#    SYNTAX_ERROR -- input file contains syntax errors
+#    WRONG_FORMAT -- input file is not in appropriate format
+#
 #  EXAMPLE
 #    $moduleObj readFile $fID myFile.inp
 #******
 # ------------------------------------------------------------------------
 
 body ::guib::moduleObj::readFile {fileChannel {fileName {}}} {
+    variable ::guib::status
+
+    set readNewLine  1
+    set readError    0
+
     if { $readFilter != "" } {
 	set fileChannel [$readFilter $this $fileChannel]
     }
-    set readNewLine  1
-    set readError    0
-    #set line         0
-    ::tku::setCursor watch
-    _open $this $fileChannel
-    ::tku::resetCursor
+
+    if { $readError == 1 } { 
+	# a fatal syntax error in input file was detected in
+	# readfilter routine. Skip reading the file.
+	return WRONG_FORMAT
+    }
+
+    ::tku::watchExec {_open $this $fileChannel}
     
     if { [winfo exists $toplevel] } {
 	# a moduleObj has its own toplevel (i.e. ::guib::simpleTplwGUI mechanism)
@@ -87,6 +97,66 @@ body ::guib::moduleObj::readFile {fileChannel {fileName {}}} {
 	set toplevelTitle "$title $postfix"
 	$toplevel configure -title $toplevelTitle    
     }
+
+    if { $readError } {
+	return SYNTAX_ERROR
+    }
+
+    return OK  
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/readFileError
+#  NAME
+#    ::guib::moduleObj::readFileError --  method for dealing with file-read errors
+#
+#  USAGE
+#    readFileError errMsg
+#
+#  DESCRIPTION
+#    When an error occurs while reading an input file, this method
+# should be called to display an error and skip the reading of the
+# input file. This method is supposed to be used from readfilter routines.
+# 
+#  ARGUMENTS
+#     errMsg     -- error message to display when syntax error is encountered
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::readFileError {errMsg} {
+    set readError 1
+    ::tku::errorDialog "while reading input file: $errMsg"
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/readFileWrongFormat
+#  NAME
+#    ::guib::moduleObj::readFileWrongFormat --  method for dealing with wrong-formatted input file
+#
+#  USAGE
+#    readFileWrongFormat formatName ?diagnosisText?
+# DESCRIPTION 
+# When an input-file is not in a proper format, this method should be
+# called to display an appropriate error-message and skip the reading
+# of the input file. This method is supposed to be used from
+# readfilter routines.
+# 
+#  ARGUMENTS
+#     formatName     -- name of the format (i.e. an arbitrary string)
+#     diagnosisText  -- a text containing a diagnose of the syntax errors [OPTIONAL]
+#******
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::readFileWrongFormat {formatName {diagnosisText {}}} {
+    set readError 1
+    set errMsg "selected file is not a ${formatName}-formatted or contains severe syntax errors."
+    if { $diagnosisText != "" } {
+	append errMsg "\n\nDiagnosis:\n$diagnosisText"
+    }
+    tk_messageBox -title ERROR -message "Read ERROR: $errMsg" -type ok -icon error
+    #::tku::errorDialog $errMsg
 }
 
 
@@ -110,14 +180,14 @@ body ::guib::moduleObj::readFile {fileChannel {fileName {}}} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::_openSyntaxError {text {addSkipMsg 1}} {
+body ::guib::moduleObj::_openSyntaxError {errMsg {addSkipMsg 1}} {
     
     set readError 1
     
     if { $addSkipMsg == 1 } {
-	::tku::errorDialog "SYNTAX ERROR in the input file: ${text}\n\nSkipping the rest of the input file !!!"
+	::tku::errorDialog "SYNTAX ERROR in the input file: ${errMsg}\n\nSkipping the rest of the input file !!!"
     } else {
-	::tku::errorDialog $text
+	::tku::errorDialog $errMsg
     }
 }
 
