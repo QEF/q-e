@@ -50,51 +50,11 @@
 !     dt2bye         = 2*delt/emass
 !***********************************************************************
 !
-      use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
-            tfor, tvlocw, trhow
-      use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
-            tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
-
-      use core, only: nlcc
-      use cvan, only: nvb, nhx, nhsa
-      use energies, only: eht, epseu, exc, etot, eself, enl, ekin
-      use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
-      use gvec, only: tpiba2, ng
-      use gvecs, only: ngs
-      use gvecb, only: ngb
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
-      use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
-      use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
-      use cell_base, only: ainv, a1, a2, a3
-      use cell_base, only: omega, alat
-      use cell_base, only: h, hold, deth, wmass
-      use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
-      use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
-      use pseu, only: vps, rhops
-      use work1, only: wrk1
-      use work_box, only: qv
-      use work2, only: wrk2
-      use io_global, ONLY: io_global_start, stdout
+      use input_cp, only: read_input_file
+      use io_global, ONLY: io_global_start
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
-      use para_mod
-      use work_fft
-      use dener
-      use derho
-      use dpseu
-      use cdvan
-      use stre
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      use restart
-      use parameters, only: nacx, natx, nsx, nbndxx
-      use constants, only: pi, factem
-      use io_files, only: psfile, pseudo_dir
-      use input_cp, only: iosys, read_input_file
-
-! wavefunctions
-!
-      use wavefunctions_module, only: c0, cm, phi => cp
+      use para_mod, ONLY: me, mygroup, nproc
 !
       implicit none
 !
@@ -109,9 +69,20 @@
 
       call read_input_file( lneb )
       
-      call cprmain()
+      call cpr_loop( 1 )
 
       call mp_end()
 
       stop
-      end
+      end program
+
+
+      SUBROUTINE cpr_loop( nloop )
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: nloop
+        INTEGER :: iloop
+        DO iloop = 1, nloop
+          call cprmain()
+        END DO
+        RETURN
+      END SUBROUTINE

@@ -48,6 +48,12 @@
 
      REAL(dbl), ALLOCATABLE :: ggp(:)
 
+   CONTAINS
+
+     SUBROUTINE deallocate_gvecw
+       IF( ALLOCATED( ggp ) ) DEALLOCATE( ggp )
+     END SUBROUTINE
+
 !=----------------------------------------------------------------------------=!
    END MODULE gvecw
 !=----------------------------------------------------------------------------=!
@@ -94,6 +100,13 @@
      REAL(dbl) :: ecuts = 0.0d0
      REAL(dbl) :: gcuts = 0.0d0
 
+   CONTAINS
+
+     SUBROUTINE deallocate_gvecs()
+       IF( ALLOCATED( nps ) ) DEALLOCATE( nps )
+       IF( ALLOCATED( nms ) ) DEALLOCATE( nms )
+     END SUBROUTINE
+
 !=----------------------------------------------------------------------------=!
    END MODULE gvecs
 !=----------------------------------------------------------------------------=!
@@ -118,6 +131,21 @@
 
      REAL(dbl) :: ecutb = 0.0d0
      REAL(dbl) :: gcutb = 0.0d0
+
+   CONTAINS
+
+     SUBROUTINE deallocate_gvecb()
+       IF( ALLOCATED( gb ) ) DEALLOCATE( gb )
+       IF( ALLOCATED( gxb ) ) DEALLOCATE( gxb )
+       IF( ALLOCATED( gxnb ) ) DEALLOCATE( gxnb )
+       IF( ALLOCATED( glb ) ) DEALLOCATE( glb )
+       IF( ALLOCATED( npb ) ) DEALLOCATE( npb )
+       IF( ALLOCATED( nmb ) ) DEALLOCATE( nmb )
+       IF( ALLOCATED( iglb ) ) DEALLOCATE( iglb )
+       IF( ALLOCATED( in1pb ) ) DEALLOCATE( in1pb )
+       IF( ALLOCATED( in2pb ) ) DEALLOCATE( in2pb )
+       IF( ALLOCATED( in3pb ) ) DEALLOCATE( in3pb )
+     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecb
@@ -189,6 +217,23 @@
      REAL(dbl) :: bi1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
      REAL(dbl) :: bi2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
      REAL(dbl) :: bi3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+
+   CONTAINS
+
+     SUBROUTINE deallocate_recvecs
+       IF( ALLOCATED( g ) ) DEALLOCATE( g )
+       IF( ALLOCATED( gl ) ) DEALLOCATE( gl )
+       IF( ALLOCATED( gx ) ) DEALLOCATE( gx )
+       IF( ALLOCATED( g2_g ) ) DEALLOCATE( g2_g )
+       IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
+       IF( ALLOCATED( mill_l ) ) DEALLOCATE( mill_l )
+       IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
+       IF( ALLOCATED( sortedig_l2g ) ) DEALLOCATE( sortedig_l2g )
+       IF( ALLOCATED( igl ) ) DEALLOCATE( igl )
+       CALL deallocate_gvecw( )
+       CALL deallocate_gvecs( )
+       CALL deallocate_gvecb( )
+     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
    END MODULE reciprocal_vectors

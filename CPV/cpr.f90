@@ -56,10 +56,14 @@
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
 
       use core, only: nlcc
+      use core, only: deallocate_core
       use cvan, only: nvb, nhx, nhsa
+      use cvan, only: deallocate_cvan
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
+      use elct, only: deallocate_elct
       use gvec, only: tpiba2, ng
+      use gvec, only: deallocate_gvec
       use gvecs, only: ngs
       use gvecb, only: ngb
       use gvecw, only: ngw
@@ -72,14 +76,13 @@
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
-      use work1, only: wrk1
-      use work_box, only: qv
-      use work2, only: wrk2
+      use pseu, only: deallocate_pseu
+      use work
+      use work_box, only: qv, deallocate_work_box
       use io_global, ONLY: io_global_start, stdout
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
       use para_mod
-      use work_fft
       use dener
       use derho
       use dpseu
@@ -91,10 +94,16 @@
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir
       use input_cp, only: iosys
+      use qgb_mod, only: deallocate_qgb_mod
+      use dqgb_mod, only: deallocate_dqgb_mod
+      use qradb_mod, only: deallocate_qradb_mod
+      use dqrad_mod, only: deallocate_dqrad_mod
+      use betax, only: deallocate_betax
 
 ! wavefunctions
 !
       use wavefunctions_module, only: c0, cm, phi => cp
+      use wavefunctions_module, only: deallocate_wavefunctions
 !
 !
       implicit none
@@ -256,11 +265,12 @@
       dt2by2 = .5d0 * dt2
       dt2bye = dt2/emass
       dt2hbe = dt2by2/emass
+
 ! 
 !     read pseudopotentials and wavefunctions
 ! 
       call readpp
-
+!
 !     ==================================================================
 !     initialize g-vectors, fft grids
 !     ==================================================================
@@ -331,6 +341,8 @@
       deeq(:,:,:,:) = 0.d0
 !
  666  continue
+
+!
 !
       temp1=tempw+tolp
       temp2=tempw-tolp
@@ -1439,11 +1451,56 @@
  1975 format(/1x,'Scaled coordinates '/1x,'species',' atom #')
  1976 format(1x,2i5,3f10.4)
       WRITE( stdout,1977) 
+
+!
+ 600  continue
 !
       call memory
 !      
  1977 format(5x,//'====================== end cprvan ',                 &
      &            '======================',//)
+
+      IF( ALLOCATED( ei1 ) ) DEALLOCATE( ei1 )
+      IF( ALLOCATED( ei2 ) ) DEALLOCATE( ei2 )
+      IF( ALLOCATED( ei3 ) ) DEALLOCATE( ei3 )
+      IF( ALLOCATED( eigr ) ) DEALLOCATE( eigr )
+      IF( ALLOCATED( sfac ) ) DEALLOCATE( sfac )
+      IF( ALLOCATED( eigrb ) ) DEALLOCATE( eigrb )
+      IF( ALLOCATED( rhor ) ) DEALLOCATE( rhor )
+      IF( ALLOCATED( rhos ) ) DEALLOCATE( rhos )
+      IF( ALLOCATED( rhog ) ) DEALLOCATE( rhog )
+      IF( ALLOCATED( rhoc ) ) DEALLOCATE( rhoc )
+      IF( ALLOCATED( betae ) ) DEALLOCATE( betae )
+      IF( ALLOCATED( bec ) ) DEALLOCATE( bec )
+      IF( ALLOCATED( becdr ) ) DEALLOCATE( becdr )
+      IF( ALLOCATED( bephi ) ) DEALLOCATE( bephi )
+      IF( ALLOCATED( becp ) ) DEALLOCATE( becp )
+      IF( ALLOCATED( rhovan ) ) DEALLOCATE( rhovan )
+      IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
+      IF( ALLOCATED( ema0bg ) ) DEALLOCATE( ema0bg )
+      IF( ALLOCATED( lambda ) ) DEALLOCATE( lambda )
+      IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )
+      IF( ALLOCATED( lambdap ) ) DEALLOCATE( lambdap )
+      IF( ALLOCATED( c2 ) ) DEALLOCATE( c2 )
+      IF( ALLOCATED( c3 ) ) DEALLOCATE( c3 )
+
+      CALL deallocate_elct()
+      CALL deallocate_core()
+      CALL deallocate_cvan()
+      CALL deallocate_gvec()
+      CALL deallocate_pseu()
+      CALL deallocate_qgb_mod()
+      CALL deallocate_qradb_mod()
+      CALL deallocate_work()
+      CALL deallocate_work_box()
+      CALL deallocate_derho()
+      CALL deallocate_dqgb_mod()
+      CALL deallocate_dpseu()
+      CALL deallocate_cdvan()
+      CALL deallocate_dqrad_mod()
+      CALL deallocate_betax()
+      CALL deallocate_para_mod()
+      CALL deallocate_wavefunctions()
 
 !
       return

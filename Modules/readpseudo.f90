@@ -34,7 +34,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   implicit none
   !
   integer :: iunps, ierr 
-  TYPE (pseudo_upf) :: upf
+  TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
   !     Local variables
   !
@@ -59,6 +59,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
         exit header_loop
      endif
   enddo header_loop
+
 
   if (ierr .ne. 0) return
   
@@ -304,6 +305,14 @@ subroutine read_pseudo_nl (upf, iunps)
   if ( upf%nbeta == 0) then
      upf%nqf = 0
      upf%nqlc= 0
+     ALLOCATE( upf%kkbeta( 1 ) )
+     ALLOCATE( upf%lll( 1 ) )
+     ALLOCATE( upf%beta( 0:upf%mesh, 1 ) )
+     ALLOCATE( upf%dion( 1, 1 ) )
+     ALLOCATE( upf%rinner( 1 ) )
+     ALLOCATE( upf%qqq   ( 1, 1 ) )
+     ALLOCATE( upf%qfunc ( 0:upf%mesh, 1, 1 ) )
+     ALLOCATE( upf%qfcoef( 1, 1, 1, 1 ) )
      return
   end if
   ALLOCATE( upf%kkbeta( upf%nbeta ) )
@@ -324,6 +333,7 @@ subroutine read_pseudo_nl (upf, iunps)
      call scan_end (iunps, "BETA")  
   enddo
 
+
   call scan_begin (iunps, "DIJ", .false.)  
   read (iunps, *, err = 100, iostat = ios) upf%nd, dummy  
   do icon = 1, upf%nd  
@@ -332,6 +342,7 @@ subroutine read_pseudo_nl (upf, iunps)
   enddo
   call scan_end (iunps, "DIJ")  
 
+
   if ( upf%tvanp ) then  
      call scan_begin (iunps, "QIJ", .false.)  
      read (iunps, *, err = 100, iostat = ios) upf%nqf
@@ -339,7 +350,7 @@ subroutine read_pseudo_nl (upf, iunps)
      ALLOCATE( upf%rinner( upf%nqlc ) )
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
      ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
-     ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
+     ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
      upf%rinner = 0.0d0
      upf%qqq    = 0.0d0
      upf%qfunc  = 0.0d0
@@ -390,6 +401,7 @@ subroutine read_pseudo_nl (upf, iunps)
      upf%qfcoef = 0.0d0
   endif
 
+
   return  
 
 100 call errore ('read_pseudo_nl', 'Reading pseudo file', abs (ios) )  
@@ -411,7 +423,7 @@ subroutine read_pseudo_pswfc (upf, iunps)
   character (len=75) :: dummy  
   integer :: nb, ir, ios 
 
-  ALLOCATE( upf%chi( 0:upf%mesh, upf%nwfc ) )
+  ALLOCATE( upf%chi( 0:upf%mesh, MAX( upf%nwfc, 1 ) ) )
   upf%chi = 0.0d0
   do nb = 1, upf%nwfc  
      read (iunps, *, err=100, iostat=ios) dummy  !Wavefunction labels

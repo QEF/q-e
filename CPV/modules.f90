@@ -33,6 +33,10 @@ module core
   !     rhocb = core charge in G space (box grid)
   integer nlcc
   real(kind=8), allocatable:: rhocb(:,:)
+contains
+  subroutine deallocate_core()
+      IF( ALLOCATED( rhocb ) ) DEALLOCATE( rhocb )
+  end subroutine
 end module core
 
 module cvan
@@ -63,6 +67,15 @@ module cvan
   !     qq   = ionic Q_ij for each species (Vanderbilt only)
   !     dvan = ionic D_ij for each species (Vanderbilt only)
   real(kind=8), allocatable:: beta(:,:,:), qq(:,:,:), dvan(:,:,:)
+contains
+  subroutine deallocate_cvan()
+      IF( ALLOCATED( nhtol ) ) DEALLOCATE( nhtol )
+      IF( ALLOCATED( indv ) ) DEALLOCATE( indv )
+      IF( ALLOCATED( indlm ) ) DEALLOCATE( indlm )
+      IF( ALLOCATED( beta ) ) DEALLOCATE( beta )
+      IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
+      IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
+  end subroutine
 end module cvan
 
 module dft_mod
@@ -92,6 +105,14 @@ module elct
   !     ispin = spin of each state
   integer, allocatable:: ispin(:)
   !
+contains
+
+  subroutine deallocate_elct()
+      IF( ALLOCATED( f ) ) DEALLOCATE( f )
+      IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
+      return
+  end subroutine
+  !
 end module elct
 
 module gvec
@@ -99,6 +120,7 @@ module gvec
   use cell_base, only: tpiba, tpiba2
   use reciprocal_vectors, only: &
         gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
+  use reciprocal_vectors, only: deallocate_recvecs
   use gvecp, only: &
         ng => ngm, &
         ngl => ngml, &
@@ -130,6 +152,15 @@ module gvec
   save
   integer,allocatable:: np(:), nm(:), in1p(:),in2p(:),in3p(:)
 
+contains
+  subroutine deallocate_gvec
+      IF( ALLOCATED( np ) ) DEALLOCATE( np )
+      IF( ALLOCATED( nm ) ) DEALLOCATE( nm )
+      IF( ALLOCATED( in1p ) ) DEALLOCATE( in1p )
+      IF( ALLOCATED( in2p ) ) DEALLOCATE( in2p )
+      IF( ALLOCATED( in3p ) ) DEALLOCATE( in3p )
+      CALL deallocate_recvecs( )
+  end subroutine
 end module gvec
 
 
@@ -194,18 +225,31 @@ module pseu
   !    rhops = ionic pseudocharges (for Ewald term)
   !    vps   = local pseudopotential in G space for each species
   real(kind=8), allocatable:: rhops(:,:), vps(:,:)
+contains
+  subroutine deallocate_pseu
+      IF( ALLOCATED( rhops ) ) DEALLOCATE( rhops )
+      IF( ALLOCATED( vps ) ) DEALLOCATE( vps )
+  end subroutine
 end module pseu
 
 module qgb_mod
   implicit none
   save
   complex(kind=8), allocatable::  qgb(:,:,:)
+contains
+  subroutine deallocate_qgb_mod
+      IF( ALLOCATED( qgb ) ) DEALLOCATE( qgb )
+  end subroutine
 end module qgb_mod
 
 module qradb_mod
   implicit none
   save
   real(kind=8), allocatable:: qradb(:,:,:,:,:)
+contains
+  subroutine deallocate_qradb_mod
+      IF( ALLOCATED( qradb ) ) DEALLOCATE( qradb )
+  end subroutine
 end module qradb_mod
 
 module timex_mod
@@ -265,29 +309,30 @@ module wfc_atomic
   integer lchi(nchix,nsx), nchi(nsx)
 end module wfc_atomic
 
-module work1
+module work
+  use pseudo_types
   implicit none
   save
   complex(kind=8), allocatable, target:: wrk1(:)
-end module work1
+  complex(kind=8), allocatable, target:: wrk2(:,:)
+  complex(kind=8), allocatable:: aux(:)
+contains
+  subroutine deallocate_work
+      IF( ALLOCATED( wrk1 ) ) DEALLOCATE( wrk1 )
+      IF( ALLOCATED( wrk2 ) ) DEALLOCATE( wrk2 )
+      IF( ALLOCATED( aux ) ) DEALLOCATE( aux )
+  end subroutine
+end module work
 
 module work_box
   implicit none
   save
   complex(kind=8), allocatable, target:: qv(:)
+contains
+  subroutine deallocate_work_box
+      IF( ALLOCATED( qv ) ) DEALLOCATE( qv )
+  end subroutine
 end module work_box
-
-module work_fft
-  implicit none
-  save
-  complex(kind=8), allocatable:: aux(:)
-end module work_fft
-
-module work2
-  implicit none
-  save
-  complex(kind=8), allocatable, target:: wrk2(:,:)
-end module work2
 
 ! Variable cell
 module derho
@@ -295,6 +340,11 @@ module derho
   save
   complex(kind=8),allocatable:: drhog(:,:,:,:)
   real(kind=8),allocatable::     drhor(:,:,:,:)
+contains
+  subroutine deallocate_derho
+      IF( ALLOCATED( drhog ) ) DEALLOCATE( drhog )
+      IF( ALLOCATED( drhor ) ) DEALLOCATE( drhor )
+  end subroutine
 end module derho
 
 module dener
@@ -308,12 +358,21 @@ module dqgb_mod
   implicit none
   save
   complex(kind=8),allocatable:: dqgb(:,:,:,:,:)
+contains
+  subroutine deallocate_dqgb_mod
+      IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
+  end subroutine
 end module dqgb_mod
 
 module dpseu
   implicit none
   save
   real(kind=8),allocatable:: dvps(:,:), drhops(:,:)
+contains
+  subroutine deallocate_dpseu
+      IF( ALLOCATED( dvps ) ) DEALLOCATE( dvps )
+      IF( ALLOCATED( drhops ) ) DEALLOCATE( drhops )
+  end subroutine
 end module dpseu
 
 module cdvan
@@ -321,5 +380,11 @@ module cdvan
   save
   real(kind=8),allocatable:: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
                              drhovan(:,:,:,:,:)
+contains
+  subroutine deallocate_cdvan
+      IF( ALLOCATED( dbeta ) ) DEALLOCATE( dbeta )
+      IF( ALLOCATED( dbec ) ) DEALLOCATE( dbec )
+      IF( ALLOCATED( drhovan ) ) DEALLOCATE( drhovan )
+  end subroutine
 end module cdvan
 

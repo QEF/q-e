@@ -28,11 +28,21 @@
       real(kind=8), allocatable:: work(:)
       real(kind=8) fac
       integer inc, jump, lot, i, istart
+      integer, save :: nr1_old = -1
+      integer, save :: nr2_old = -1
+      integer, save :: nr3_old = -1
 !
       save    first, ifax1, ifax2, ifax3, trig1, trig2, trig3, work
 !
+      if( ( nr1_old /= nr1 ) .OR. ( nr2_old /= nr2 ) .OR. ( nr3_old /= nr3 ) ) then
+        first = .true.
+      end if
 !
       if (first) then
+         IF( ALLOCATED( work ) ) DEALLOCATE( work )
+         IF( ALLOCATED( trig1 ) ) DEALLOCATE( trig1 )
+         IF( ALLOCATED( trig2 ) ) DEALLOCATE( trig2 )
+         IF( ALLOCATED( trig3 ) ) DEALLOCATE( trig3 )
          allocate(work(4*nr1x*nr2x*nr3x))
          allocate(trig1(2*nr1))
          allocate(trig2(2*nr2))
@@ -40,7 +50,7 @@
          call cftfax(nr1,ifax1,trig1)
          call cftfax(nr2,ifax2,trig2)
          call cftfax(nr3,ifax3,trig3)
-         first=.false.
+         first = .false.
       end if
 !                           x - direction
       inc=2
@@ -103,10 +113,20 @@
       real(kind=8), allocatable:: work(:)
       real(kind=8)  fac
       integer inc, jump, lot, i, istart
+      integer, save :: nr1b_old = -1
+      integer, save :: nr2b_old = -1
+      integer, save :: nr3b_old = -1
       save    first, ifax1, ifax2,ifax3, trig1, trig2, trig3, work
 !
+      if( ( nr1b_old /= nr1 ) .OR. ( nr2b_old /= nr2 ) .OR. ( nr3b_old /= nr3 ) ) then
+        first = .true.
+      end if
 !
       if (first) then
+         IF( ALLOCATED( work ) ) DEALLOCATE( work )
+         IF( ALLOCATED( trig1 ) ) DEALLOCATE( trig1 )
+         IF( ALLOCATED( trig2 ) ) DEALLOCATE( trig2 )
+         IF( ALLOCATED( trig3 ) ) DEALLOCATE( trig3 )
          allocate(work(4*nr1bx*nr2bx*nr3bx))
          allocate(trig1(2*nr1b))
          allocate(trig2(2*nr2b))
@@ -168,11 +188,21 @@
       real(kind=8), allocatable:: work(:)
       real(kind=8) fac
       integer inc, jump, lot, i, istart
+      integer, save :: nr1s_old = -1
+      integer, save :: nr2s_old = -1
+      integer, save :: nr3s_old = -1
 !
       save    first, ifax1, ifax2, ifax3, trig1, trig2, trig3, work
 !
+      if( ( nr1s_old /= nr1 ) .OR. ( nr2s_old /= nr2 ) .OR. ( nr3s_old /= nr3 ) ) then
+        first = .true.
+      end if
 !
       if (first) then
+         IF( ALLOCATED( work ) ) DEALLOCATE( work )
+         IF( ALLOCATED( trig1 ) ) DEALLOCATE( trig1 )
+         IF( ALLOCATED( trig2 ) ) DEALLOCATE( trig2 )
+         IF( ALLOCATED( trig3 ) ) DEALLOCATE( trig3 )
          allocate(work(4*nr1sx*nr2sx*nr3sx))
          allocate(trig1(2*nr1s))
          allocate(trig2(2*nr2s))

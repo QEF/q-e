@@ -39,6 +39,19 @@
      COMPLEX(dbl), ALLOCATABLE :: cp(:,:,:,:)  ! wave functions at time t+delta t
      COMPLEX(dbl), ALLOCATABLE :: ce(:,:,:,:)  ! empty states wave func. at time t
 
+   CONTAINS
+
+     SUBROUTINE deallocate_wavefunctions
+       IF( ALLOCATED( c0 ) ) DEALLOCATE( c0 )
+       IF( ALLOCATED( cm ) ) DEALLOCATE( cm )
+       IF( ALLOCATED( cp ) ) DEALLOCATE( cp )
+       IF( ALLOCATED( ce ) ) DEALLOCATE( ce )
+       IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
+       IF( ALLOCATED( evc_nc ) ) DEALLOCATE( evc_nc )
+       IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
+       IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
+     END SUBROUTINE
+
 !=----------------------------------------------------------------------------=!
    END MODULE wavefunctions_module
 !=----------------------------------------------------------------------------=!

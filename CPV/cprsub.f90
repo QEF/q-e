@@ -24,7 +24,7 @@
       use constants, only: pi, fpi
       use cvan
       use cdvan
-      use work2
+      use work, only: wrk2
 !
       implicit none
       integer nspmn, nspmx
@@ -579,7 +579,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, &
             nr1x, nr2x, nr3x
       use cell_base, only: ainv
-      use work1
+      use work, only: wrk1
       !use cell_module
       use cell_base, only: omega
       use derho

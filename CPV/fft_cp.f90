@@ -10,8 +10,7 @@
 
 MODULE fft_cp
 
-  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_deallocate, &
-                       fft_dlay_set
+  USE fft_types, ONLY: fft_dlay_descriptor
 
   IMPLICIT NONE
   SAVE
@@ -48,7 +47,7 @@ CONTAINS
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
       use mp_global, only: mpime, nproc
-      use work_fft
+      use work, only: aux
       use fft_base, only: fft_scatter
       use fft_scalar, only: cft_1z, cft_2xy
 !
@@ -68,8 +67,6 @@ CONTAINS
       if ( nr1x /= dfft%nr1x ) call errore(' cfft ',' wrong dims ', 4)
       if ( nr2x /= dfft%nr2x ) call errore(' cfft ',' wrong dims ', 5)
       if ( nr3x /= dfft%nr3x ) call errore(' cfft ',' wrong dims ', 6)
-
-      if ( dfft%tptr < 1 .OR. dfft%tptr > 2 ) call errore(' cfft ',' wrong table pointer ', 6)
 
       me = mpime + 1
 

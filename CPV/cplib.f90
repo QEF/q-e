@@ -409,7 +409,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       !use parm
-      use work1
+      use work, only: wrk1
 !
       implicit none
       real(kind=8), intent(in)   :: rhoc(nnr)
@@ -1184,7 +1184,7 @@
       use elct
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
-      use work1
+      use work, only: wrk1
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
 !
       implicit none
@@ -1433,7 +1433,7 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use cell_base, only: ainv
       use qgb_mod
-      use work1
+      use work, only: wrk1
       use work_box
 #ifdef __PARA
       use para_mod
@@ -2893,6 +2893,8 @@
          gx(ig,2)=i*b1(2)+j*b2(2)+k*b3(2)
          gx(ig,3)=i*b1(3)+j*b2(3)+k*b3(3)
       end do
+
+      IF( ALLOCATED( index ) ) deallocate( index )
 !
       return
       end
@@ -4175,7 +4177,7 @@
       use reciprocal_vectors, only: ng0 => gstart
       use constants, only: pi, fpi
       use cvan
-      use work2
+      use work, only: wrk2
 !
       implicit none
       integer n, nspmn, nspmx
@@ -4253,7 +4255,7 @@
       use reciprocal_vectors, only: ng0 => gstart
       use constants, only: pi, fpi
       use cvan
-      use work2
+      use work, only: wrk2
 !
       implicit none
       real(kind=8)  eigr(2,ngw,nas,nsp),c(2,ngw,n), becdr(nhsa,n,3)
@@ -6183,7 +6185,7 @@
       use elct
       use constants, only: pi, fpi
       use pseu
-      use work1
+      use work, only: wrk1
 !
       use cdvan
       use dener
@@ -6553,7 +6555,7 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint, iprsta
       use qgb_mod
-      use work1
+      use work, only: wrk1
       use work_box
 #ifdef __PARA
       use para_mod
@@ -6825,7 +6827,7 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint
       use core
-      use work1
+      use work, only: wrk1
       use work_box
 #ifdef __PARA
       use para_mod
@@ -7362,7 +7364,7 @@
       use cvan
       use gvecw, only: ngw
       use elct
-      use work2
+      use work, only: wrk2
       use control_flags, only: iprint, iprsta
 !
       implicit none
@@ -7470,7 +7472,7 @@
       use ncprm
       use gvecb
       use dft_mod
-      use work1
+      use work, only: wrk1
       use work_box
 !
       use dener
@@ -9345,7 +9347,7 @@
       !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use work1
+      use work, only: wrk1
 !
       implicit none
 ! input
@@ -9403,7 +9405,7 @@
       !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use work1
+      use work, only: wrk1
 !
       implicit none
 ! input

@@ -33,6 +33,10 @@ void MEMSTAT(int *me)
 #endif
 }
 
+void print_ptr( void * ptr ) {
+  printf("\n   PRTVAL: %p", ptr );
+}
+
 #if defined __T3E
 
 void MEMORY_STATISTICS(int *me)

@@ -30,7 +30,10 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   call read_pseudo_upf(iunps, upf, ierr)
   !
-  if (ierr .ne. 0) return
+  if (ierr .ne. 0) then
+    CALL deallocate_pseudo_upf( upf )
+    return
+  end if
   !
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
@@ -44,6 +47,7 @@ subroutine read_pseudo (is, iunps, ierr)
   call which_dft (upf%dft, iexch, icorr, igcx, igcc)  
   !
   dft = cpv_dft (iexch, icorr, igcx, igcc)
+
   !
   mesh(is) = upf%mesh
   if (mesh(is) > mmaxx) call errore('read_pseudo','increase mmaxx',mesh(is))
@@ -52,6 +56,7 @@ subroutine read_pseudo (is, iunps, ierr)
   lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
   ! oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
   chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
+
   !
   nbeta(is)= upf%nbeta
   kkbeta(is)=0
@@ -61,6 +66,7 @@ subroutine read_pseudo (is, iunps, ierr)
   betar(1:upf%mesh, 1:upf%nbeta, is) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !
+
   ! lmax(is) = upf%lmax
   nqlc(is) = upf%nqlc
   nqf (is) = upf%nqf
@@ -71,6 +77,7 @@ subroutine read_pseudo (is, iunps, ierr)
        upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
   qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
        upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
+
   !
   r  (1:upf%mesh, is) = upf%r  (1:upf%mesh)
   rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
@@ -82,13 +89,18 @@ subroutine read_pseudo (is, iunps, ierr)
   end if
   ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   ! lloc(is) = 1
+
   !
   ! compatibility with Vanderbilt format: Vloc => r*Vloc
   rucore(1:upf%mesh, 1,is) = upf%vloc(1:upf%mesh) * upf%r  (1:upf%mesh)
   !
+
   ! compatibility with old Vanderbilt formats
   call fill_qrl(is)
+
   !
   CALL deallocate_pseudo_upf( upf )
+
+  return
 
 end subroutine read_pseudo

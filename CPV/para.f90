@@ -77,6 +77,14 @@ module para_mod
 !  PRIVATE :: ipcs, icpls, ipc, icpl, ncp0s, ncp0, npp, npps, ncp, ncps, &
 !    ncplane, ncplanes, n3, ncpw, nnr_, nnrs_, nct, ncts
 
+contains
+
+  subroutine deallocate_para_mod
+    use stick_base, only: sticks_deallocate
+    call fft_dlay_deallocate( dfftp )
+    call fft_dlay_deallocate( dffts )
+    call sticks_deallocate()
+  end subroutine
 
 end module para_mod
 !

@@ -16,6 +16,10 @@ module dqrad_mod
   implicit none 
   save
   real(kind=8),allocatable:: dqrad(:,:,:,:,:,:,:)
+contains
+  subroutine deallocate_dqrad_mod
+      IF( ALLOCATED( dqrad ) ) DEALLOCATE( dqrad )
+  end subroutine
 end module dqrad_mod
 
 module betax
@@ -25,6 +29,13 @@ module betax
   real(kind=8) :: refg
   real(kind=8),allocatable:: betagx(:,:,:), dbetagx(:,:,:), &
                        qradx(:,:,:,:,:), dqradx(:,:,:,:,:)
+contains
+  subroutine deallocate_betax
+      IF( ALLOCATED( betagx ) ) DEALLOCATE( betagx )
+      IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
+      IF( ALLOCATED( qradx ) ) DEALLOCATE( qradx )
+      IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
+  end subroutine
 end module betax
 
 
