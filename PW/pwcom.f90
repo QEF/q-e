@@ -462,6 +462,9 @@ MODULE varie
   !
   LOGICAL :: &
        lscf,             &! if .TRUE. the calculation is selfconsistent
+       lbfgs,            &! if .TRUE. the calculation is a bfgs-type relaxation
+       lmd,              &! if .TRUE. the calculation is a dynamics            
+       lneb,             &! if .TRUE. the calculation is neb
        conv_elec,        &! if .TRUE. electron convergence has been reached
        conv_ions,        &! if .TRUE.    ionic convergence has been reached
        nosym,            &! if .TRUE. no symmetry is used
