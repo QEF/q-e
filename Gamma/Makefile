@@ -284,7 +284,7 @@ generate_effective_charges.o \
 h_h.o \
 macro.o \
 pw_dot.o \
-raman.o \
+phcg.o \
 rhod2vkb.o \
 solve_e.o \
 solve_ph.o \

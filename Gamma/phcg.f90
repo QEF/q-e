@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-program cg_raman
+program phcg
   !-----------------------------------------------------------------------
   !
 #include "f_defs.h"
@@ -109,7 +109,7 @@ program cg_raman
   !
 9000 format (/5x,'Program ',a12,' starts ...',/5x,                     &
        &            'Today is ',a9,' at ',a9)
-end program cg_raman
+end program phcg
 !
 !-----------------------------------------------------------------------
 subroutine cg_deps(deps_dtau)
