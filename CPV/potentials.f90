@@ -38,8 +38,7 @@
         PUBLIC :: vofrhos, potential_setup, potential_print_info, &
                   kspotential, print_vofrho_time, localisation
 
-        REAL(dbl) :: cclock
-        EXTERNAL  :: cclock
+        REAL(dbl), EXTERNAL :: cclock
 
 !=----------------------------------------------------------------------------=!
   CONTAINS

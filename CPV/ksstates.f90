@@ -276,8 +276,7 @@
         COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:)
         REAL(dbl), ALLOCATABLE :: fi(:,:)
 
-        REAL(dbl) :: cclock
-        EXTERNAL  :: cclock
+        REAL(dbl), EXTERNAL :: cclock
 
 
 ! ...   end of declarations
@@ -444,8 +443,7 @@
         COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:,:)
         REAL(dbl), ALLOCATABLE :: fi(:,:)
 
-        REAL(dbl) :: cclock
-        EXTERNAL  :: cclock
+        REAL(dbl), EXTERNAL :: cclock
 
 
 ! ...   end of declarations

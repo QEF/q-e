@@ -247,8 +247,7 @@
       INTEGER :: ibrav
       INTEGER :: lds_wfc
 
-      REAL(dbl) :: cclock
-      EXTERNAL  :: cclock
+      REAL(dbl), EXTERNAL  :: cclock
 
 
 ! ... end of declarations

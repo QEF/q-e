@@ -712,11 +712,11 @@
   555 FORMAT(   3X,'Ionic temperature control via ', &
                    'rescaling of velocities :',/ &
                ,3X,'temperature required = ',F10.5,'K, ', &
-                   'tollerance = ',F10.5,'K')
+                   'tolerance = ',F10.5,'K')
   560 FORMAT(   3X,'Ionic temperature control via ', &
                    'canonical velocities rescaling :',/ &
                ,3X,'temperature required = ',F10.5,'K, ', &
-                   'tollerance = ',F10.5,'K')
+                   'tolerance = ',F10.5,'K')
   595 FORMAT(   3X,'Ionic temperature control via nose thermostat')
   635 FORMAT(   3X,'Zero initial momentum for ions')
   660 FORMAT(   3X,'Ionic position from standard input',/ &

@@ -23,8 +23,7 @@
        PRIVATE       
        SAVE
 
-       REAL(dbl) :: cclock
-       EXTERNAL  :: cclock
+       REAL(dbl), EXTERNAL :: cclock
 
        PUBLIC :: init1s, init0s
 

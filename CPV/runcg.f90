@@ -34,8 +34,7 @@
           MODULE PROCEDURE runcg_new
         END INTERFACE
 
-        REAL(dbl) :: cclock
-        EXTERNAL  :: cclock
+        REAL(dbl), EXTERNAL :: cclock
 
         PUBLIC :: runcg, runcg_info
 

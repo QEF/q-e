@@ -1783,7 +1783,7 @@
       real(kind=8) :: anorm, cscnorm
       real(kind=8), allocatable :: csc( : )
       integer :: i,k
-      external :: cscnorm
+      external cscnorm
 !
       call start_clock( 'graham' )
 

@@ -73,8 +73,7 @@
      INTEGER, SAVE :: FFT_MODE = 0
      INTEGER :: ierr
      REAL(dbl) :: s1, s2, s3, s4, s5
-     REAL(dbl) :: cclock
-     EXTERNAL  :: cclock
+     REAL(dbl), EXTERNAL :: cclock
 
      INTEGER, PARAMETER :: FFT_MODE_WAVE = 2
      INTEGER, PARAMETER :: FFT_MODE_POTE = 1

@@ -113,8 +113,7 @@
       REAL(dbl) ::  avgs_this_run(nacx)
       INTEGER   ::  nat
 
-      REAL(dbl) :: cclock
-      EXTERNAL  :: cclock
+      REAL(dbl), EXTERNAL :: cclock
 
 
 ! ... end of declarations

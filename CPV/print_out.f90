@@ -29,8 +29,7 @@
         REAL(dbl) :: timeorto = 0.0d0, timeloop = 0.0d0
         INTEGER   :: timecnt = 0
 
-        REAL(dbl) :: cclock
-        EXTERNAL  :: cclock
+        REAL(dbl), EXTERNAL :: cclock
 
 
         PUBLIC :: printout, printmain

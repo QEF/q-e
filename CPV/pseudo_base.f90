@@ -312,8 +312,7 @@
         REAL(dbl) :: erf, erfc
         EXTERNAL erf, erfc
 
-        REAL(dbl) :: cclock
-        EXTERNAL  :: cclock
+        REAL(dbl), EXTERNAL :: cclock
 
 ! ...   declare other variables
         REAL(dbl), ALLOCATABLE :: jl(:), djl(:), fint(:), func(:)

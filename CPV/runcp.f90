@@ -88,8 +88,7 @@
       COMPLEX(dbl), ALLOCATABLE :: cgam(:,:,:)
       REAL(dbl),    ALLOCATABLE :: gam(:,:,:)
 
-      REAL(dbl) :: cclock
-      EXTERNAL  :: cclock
+      REAL(dbl), EXTERNAL :: cclock
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -458,8 +457,7 @@
       REAL(dbl),    ALLOCATABLE :: prod(:)
       REAL(dbl),    ALLOCATABLE :: ei_t(:,:,:)
 
-      REAL(dbl) :: cclock
-      EXTERNAL  :: cclock
+      REAL(dbl), EXTERNAL :: cclock
 
 ! ...   end of declarations
 !  ----------------------------------------------

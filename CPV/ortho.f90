@@ -45,8 +45,7 @@
        REAL(dbl) :: timtot = 0.0d0
        INTEGER   :: timcnt = 0
 
-       REAL(dbl) :: cclock
-       EXTERNAL  :: cclock
+       REAL(dbl), EXTERNAL :: cclock
 
        INTERFACE ortho
          MODULE PROCEDURE ortho_s, ortho_v, ortho_m

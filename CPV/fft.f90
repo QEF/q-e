@@ -43,8 +43,7 @@
      LOGICAL    :: first          = .true.
      LOGICAL    :: tk             = .false.
 
-     REAL(dbl) :: cclock
-     EXTERNAL  :: cclock
+     REAL(dbl), EXTERNAL :: cclock
 
      PUBLIC :: pfwfft, pinvfft, fft_closeup, fft_setup
      PUBLIC :: pw_fwfft, pw_invfft, fft_time_stat

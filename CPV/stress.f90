@@ -50,8 +50,7 @@
        REAL(dbl) :: timetot = 0.0d0
        INTEGER   :: timcnt = 0
 
-       REAL(dbl) :: cclock
-       EXTERNAL  :: cclock
+       REAL(dbl), EXTERNAL  :: cclock
 
      CONTAINS
 
