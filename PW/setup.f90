@@ -237,7 +237,12 @@ subroutine setup
      call setupkpoint (s, nrot, xk, wk, nks, npk, nk1, &
           nk2, nk3, k1, k2, k3, at, bg, tipo)
   else if (nks == 0) then
-     call kpoint_grid ( nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
+     if (lberry) then
+       call kp_strings &
+       ( nppstr, gdir, nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
+     else
+       call kpoint_grid ( nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
+     end if
   end if
   !
   input_nks = nks

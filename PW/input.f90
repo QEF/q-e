@@ -27,7 +27,8 @@ subroutine iosys
        lmovecell, imix, at, omega, ityp, tau, nks, xk, wk, uakbar, amconv, &
        force, at_old, omega_old, starting_scf_threshold, title, crystal,  &
        atm, nk1, nk2, nk3, k1, k2, k3, &
-       tefield, edir, emaxpos, eopreg, eamp 
+       tefield, edir, emaxpos, eopreg, eamp, &
+       lberry, gdir, nppstr
   use io, only : tmp_dir, prefix, pseudo_dir, pseudop
   use constants, only: pi
 #ifdef __PARA
@@ -54,7 +55,8 @@ subroutine iosys
   NAMELIST / control / title, calculation, verbosity, &
        restart_mode, nstep, iprint, isave, tstress, tprnfor, &
        dt, ndr, ndw, outdir, prefix, max_seconds, ekin_conv_thr,&
-       etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io, tefield
+       etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io, tefield, &
+       lberry, gdir, nppstr
 
   ! SYSTEM namelist
 
@@ -159,6 +161,9 @@ subroutine iosys
   disk_io = 'default'
   tefield=.false.
   noinv = .false.    ! not actually used
+  lberry=.false.
+  gdir=0
+  nppstr=0
   !
 #ifdef __T3E
   call pxfgetenv('HOME',0,pseudo_dir,i,ios)
@@ -390,6 +395,9 @@ subroutine iosys
   CALL mp_bcast( pseudo_dir, ionode_id )
   CALL mp_bcast( disk_io, ionode_id )
   CALL mp_bcast( tefield, ionode_id )
+  CALL mp_bcast( lberry, ionode_id )
+  CALL mp_bcast( gdir, ionode_id )
+  CALL mp_bcast( nppstr, ionode_id )
   !
   ! ...   SYSTEM Variables Broadcast
   !

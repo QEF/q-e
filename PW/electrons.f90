@@ -126,6 +126,7 @@ implicit none
 
      !
      call c_bands (iter, ik_, dr2)
+
      !
      !! skip all the rest if not lscf
      if (.not.lscf) then
@@ -143,6 +144,12 @@ implicit none
            write (6, 9020) (xk (i, ik), i = 1, 3)
            write (6, 9030) (et (ibnd, ik) * 13.6058, ibnd = 1, nbnd)
         enddo
+
+        ! Do a Berry phase polarization calculation if required
+        if ((lberry).and.(iswitch /= -1)) call errore('electrons', &
+                     'calculation=''nscf'' is mandatory if lberry=''.true.''',1)
+        if (lberry) call c_phase
+
         ! jump to the end
         goto 999
 

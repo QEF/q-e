@@ -604,6 +604,18 @@ module sticks
   !   potential grid, and its wave functions sub-grid.
 end module
   
+module bp
+  use parameters
+  !
+  !    The variables needed for the Berry phase polarization calculation
+  !
+  logical      :: &
+       lberry                  ! if true, calculate polarization 
+  integer      :: &
+       gdir,      &            ! G-vector for polarization calculation
+       nppstr                  ! number of k-points (parallel vector)
+end module bp
+!
 
 
 module pwcom
@@ -636,5 +648,6 @@ module pwcom
   use ldaU
   use extfield
   use sticks
+  use bp
 end module pwcom
 !
