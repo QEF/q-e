@@ -260,5 +260,5 @@ include .dependencies
 all: $(PWOBJS)
 	$(LD) -o pw.x $(PWOBJS) $(MODULES) $(LFLAGS)
 clean_:
-	-/bin/rm -f pw.x *.o *.d *~ *.F90 *.mod
+	-/bin/rm -f pw.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #

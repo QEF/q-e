@@ -360,5 +360,5 @@ include .dependencies
 all: $(PHOBJS)
 	$(LD) -o ph.x $(PHOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
 clean_:
-	-/bin/rm -f ph.x *.o *.d *~ *.F90 *.mod
+	-/bin/rm -f ph.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #

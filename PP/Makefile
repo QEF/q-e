@@ -309,5 +309,5 @@ plotrho.x: $(PPOBJS) plotrho.o
 	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LFLAGS)
 
 clean_:
-	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod
+	-/bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #

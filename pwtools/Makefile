@@ -34,4 +34,4 @@ fqha.x:  fqha.o
 	$(LD) -o fqha.x fqha.o  $(LFLAGS)
 
 clean_:
-	rm -f *.x *.o  *.mod *.d *.F90
+	rm -f *.x *.o *~ *.F90 *.mod *.d *.i work.pc

@@ -37,7 +37,7 @@ read_upf:
 	$(LD) -o $@  read_upf.o $(LFLAGS)
 
 clean_:
-	rm -f  *2upf *.o *.mod *.d *.F90
+	rm -f  *2upf *.o *~ *.F90 *.mod *.d *.i work.pc
 
 any2upf.o:  $(OBJS)
 cpmd2upf.o: $(OBJS)
