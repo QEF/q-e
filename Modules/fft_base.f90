@@ -241,18 +241,19 @@
 #  else
 
 
-        SUBROUTINE fft_transpose( zstick, r, dfft, me, nproc, iopt)
+        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
 
           IMPLICIT NONE
 
           include 'mpif.h'
 
-          COMPLEX (dbl) :: zstick(:,:)
-          COMPLEX (dbl) :: r(:,:,:)
+          COMPLEX (dbl) :: zstick( * )
+          COMPLEX (dbl) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
           INTEGER, INTENT(IN) :: iopt
+          INTEGER, INTENT(IN) :: ldz, ldx, ldy
 
           INTEGER :: i, j, k, ipz, offset, k_start, k_end, is, is_start, is_end
           INTEGER :: npz, nz_l, ns_l, ns_lp, nbuf, ierr, itag, mype, nsx_l
@@ -319,7 +320,7 @@
               offset  = - k_start + 1
               DO is = 1, ns_l
                 DO k = k_start , k_end
-                  sndbuf(k + offset, ipz) = zstick(k, is)
+                  sndbuf(k + offset, ipz) = zstick( k + (is-1)*ldz )
                 END DO
                 offset = offset + nz_l
               END DO
@@ -328,7 +329,7 @@
                 MPI_COMM_WORLD, ishand(ipz), ierr )
             END DO
 
-            r = 0.0d0
+            r( 1 : ldx*ldy*nz_l ) = 0.0d0
             rdone = .FALSE.
 
    111      CONTINUE
@@ -347,11 +348,11 @@
                   i2 = stmask(1,is+1,ipz) ! descz%mask(1,is,ipz)
                   j2 = stmask(2,is+1,ipz) ! descz%mask(2,is,ipz)
                   DO k = 1 , nz_l
-                    r(i1,j1,k) = rcvbuf(k + offset, ipz)
+                    r( i1 + (j1-1)*ldx + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
                   offset = offset + nz_l
                   DO k = 1 , nz_l
-                    r(i2,j2,k) = rcvbuf(k + offset, ipz)
+                    r( i2 + (j2-1)*ldx + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
                   offset = offset + nz_l
                 END DO
@@ -360,7 +361,7 @@
                   i = stmask(1,is,ipz) ! descz%mask(1,is,ipz)
                   j = stmask(2,is,ipz) ! descz%mask(2,is,ipz)
                   DO k = 1 , nz_l
-                    r(i,j,k) = rcvbuf(k + offset, ipz)
+                    r( i + (j-1)*ldx + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
                   offset = offset + nz_l
                 END IF
@@ -389,7 +390,7 @@
                 i = stmask(1,is,ipz) 
                 j = stmask(2,is,ipz) 
                 DO k = 1 , nz_l
-                  sndbuf( k + offset, ipz ) = r(i,j,k)
+                  sndbuf( k + offset, ipz ) = r( i + (j-1)*ldx + (k-1)*ldx*ldy )
                 END DO
                 offset = offset + nz_l
               END DO
@@ -409,7 +410,7 @@
                 offset  = - k_start + 1
                 DO is = 1, ns_l
                   DO k = k_start , k_end
-                    zstick(k,is) = rcvbuf( k + offset, ipz )
+                    zstick( k + (is-1)*ldz ) = rcvbuf( k + offset, ipz )
                   END DO
                   offset = offset + nz_l
                 END DO
@@ -441,12 +442,12 @@
 
 !     Scalar code
 
-        SUBROUTINE fft_transpose( zstick, r, dfft, me, nproc, iopt)
+        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
 
           IMPLICIT NONE
 
-          COMPLEX (dbl) :: zstick(:,:)
-          COMPLEX (dbl) :: r(:,:,:)
+          COMPLEX (dbl) :: zstick( * )
+          COMPLEX (dbl) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
@@ -474,7 +475,7 @@
 
           IF ( iopt < 0 ) THEN
 
-            r = CMPLX(0.0d0,0.0d0)
+            r( 1 : ldx*ldy*nz ) = CMPLX(0.0d0,0.0d0)
 
             IF( iopt == 2 ) THEN
               ns = dfft%nsw( me )
@@ -486,7 +487,7 @@
               i = stmask( 1, is, 1 )
               j = stmask( 2, is, 1 )
               DO k = 1 , nz
-                r( i, j, k ) = zstick( k, is )
+                r( i + (j-1)*ldx + (k-1)*ldx*ldy ) = zstick( k + (is-1)*ldz )
               END DO
             END DO
 
@@ -502,7 +503,7 @@
               i = stmask( 1, is, 1 )
               j = stmask( 2, is, 1 )
               DO k = 1 , nz
-                zstick( k, is ) = r( i, j, k )
+                zstick( k + (is-1)*ldz ) = r( i + (j-1)*ldx + (k-1)*ldx*ldy )
               END DO
             END DO
 
