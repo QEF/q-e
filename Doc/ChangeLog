@@ -1,3 +1,8 @@
+26 Nov 2004 Cleanup of the pwscf molecular dynamics stuff. Velocity 
+            rescaling fully implemented.
+            Documentation updated. Unused variables and routines removed.
+	    (CS)
+
 25 Nov 2004 workaround for configure problem with systems where you
             can't run interactively [Gerardo]
             All files in FPMD/ moved to CPV/ (CC)
