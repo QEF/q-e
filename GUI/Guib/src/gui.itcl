@@ -31,7 +31,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.4 2004-04-06 13:21:48 kokalj Exp $ 
+# $Id: gui.itcl,v 1.5 2004-09-20 07:20:03 kokalj Exp $ 
 #
 
 
@@ -274,13 +274,13 @@ body ::guib::moduleObj::makeSimpleTplwGUI {} {
 #      newGUI    -- 
 #      component -- 
 #      extra     -- 
+#      save      -- 
+#      saveAs    -- 
 # 
 #   2. Protected/Private methods
 #      2.1 Menu methods
 #         _newInput    -- 
 #         _openInput   -- 
-#         _save        -- 
-#         _saveAs      -- 
 #         _closeTab    -- 
 #         _closeWindow -- 
 #         _help        --
@@ -346,6 +346,9 @@ class ::guib::GUI {
     #public method get {what args}
     #public method set {what args}
 
+    public method save   {{nocomplain 0}}
+    public method saveAs {}
+
     # --------------------------------------------------
     # PROTECTED/PRIVATE methods
     # --------------------------------------------------
@@ -358,9 +361,6 @@ class ::guib::GUI {
 
     protected method _openInput  {moduleIdent moduleName moduleFile}
     #private   method __openInput {moduleName moduleFile}
-
-    protected method _save   {}
-    protected method _saveAs {}
 
     protected method _closeTab        {index}
     protected method _closeCurrentTab {}
@@ -455,10 +455,10 @@ body ::guib::GUI::constructor {args} {
     
     # Save -------------------------------------------------- Save
     $mb add separator .file.sep2
-    $mb add command .file.save   -label "Save" -command [code $this _save] \
+    $mb add command .file.save   -label "Save" -command [code $this save] \
 	-helpstr "Save the current input"
     $mb add command .file.saveas -label "Save As" \
-	-command [code $this _saveAs] \
+	-command [code $this saveAs] \
 	-helpstr "Save the current input under the different name"
     
     # Close -------------------------------------------------- Close
@@ -496,12 +496,12 @@ body ::guib::GUI::constructor {args} {
     $tb add button filesave   -borderwidth 1 -relief flat -image filesave \
 	-helpstr    "Save the current input" \
 	-balloonstr "Save the current input" \
-	-command [code $this _save]
+	-command [code $this save]
 
     $tb add button filesaveas -borderwidth 1 -relief flat -image filesaveas \
 	-helpstr    "Save the current input under the different name" \
 	-balloonstr "Save the current input under the different name" \
-	-command [code $this _saveAs]
+	-command [code $this saveAs]
 
     $tb add button fileclose  -borderwidth 1 -relief flat -image fileclose \
 	-helpstr    "Close the current tab" \
@@ -852,7 +852,10 @@ body ::guib::GUI::getSelected {what} {
 		return $module(OBJ.moduleName,$index)
 	    } else {
 		return ""
-	    }
+	    }	
+	}
+	saveFile {
+	    return $saveFile($currentTab(index))
 	}
 	tabIndex {
 	    return $currentTab(index)
@@ -1139,17 +1142,17 @@ body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_save {} {
+body ::guib::GUI::save {{nocomplain 0}} {
 
     set moduleObj $module(OBJ,$currentTab(index))
     if { $saveFile($currentTab(index)) == "" } {
-	_saveAs
+	saveAs
     } else {
-	namespace eval ::guib [list $moduleObj save $saveFile($currentTab(index))]
+	namespace eval ::guib [list $moduleObj save $saveFile($currentTab(index)) $nocomplain]
     }
 }
 
-body ::guib::GUI::_saveAs {} {
+body ::guib::GUI::saveAs {} {
 
     set moduleObj  $module(OBJ,$currentTab(index))
     set fileTypes  $module(FILETYPES,$module(OBJ.moduleName,$currentTab(index)))
@@ -1161,6 +1164,7 @@ body ::guib::GUI::_saveAs {} {
 	set ind [string first ":" $currentTab(name) 0]
 	__setCurrentTabName "[string range  $currentTab(name) 0 $ind] [file tail $saveFile($currentTab(index))]"
     }
+    return $result
 }
 
 
