@@ -771,8 +771,6 @@ fi
 if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
 AC_SEARCH_LIBS(zggev, "", , mylib="blas_and_lapack")
 
-AC_SEARCH_LIBS(zhegvx, "", try_dflags="$try_dflags -DHAS_ZHEGVX")
-
 if test $is_aix
 then
 	AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
