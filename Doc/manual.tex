@@ -49,6 +49,9 @@ Other sources of documentation can be found in:
                            {mailto:pw_forum@pwscf.org}):
         see the PWscf web site for instructions on how to register and
         how to search the archives of the mailing list.
+  \item the ``Scientific Software'' page of the Democritos web site:\\
+        (\htmladdnormallink{\texttt{http://www.democritos.it/scientific.php}}%
+                           {http://www.democritos.it/scientific.php});
 \end{itemize}
 
 PWscf can currently perform the following kind of calculations:
@@ -75,8 +78,8 @@ structure, for many exchange-correlation functionals (including spin
 polarization), for both norm-conserving (Hamann-Schl\"uter-Chiang)
 pseudopotentials in separable form, and --- with very few exceptions
 --- for Ultrasoft (Vanderbilt) pseudopotentials.
-Non-colinear magnetism is also implemented, although at an
-experimental stage.
+Non-colinear magnetism and spin-orbit interactions are also implemented, 
+although at an experimental stage.
 Various postprocessing programs are available.
 The PWscf codes work on many different types of machines, including
 parallel machines using Message Passing Interface (MPI).
@@ -107,11 +110,11 @@ who are the copyleft holders.
 The maintenance and further development of the ESPRESSO code is
 promoted by the DEMOCRITOS National Simulation Center of the Italian
 INFM
-(\htmladdnormallink{\texttt{http://www.democritos.it/scientific.php}}%
-                   {http://www.democritos.it/scientific.php})
+(\htmladdnormallink{\texttt{http://www.democritos.it/}}%
+                   {http://www.democritos.it/})
 under the coordination of Paolo Giannozzi, with the strong support of
 the CINECA National Supercomputing Center in Bologna, under the
-responsibility of Carlo Cavazzoni
+responsibility of Carlo Cavazzoni\\
 \htmladdnormallink{(\texttt{c.cavazzoni@cineca.it})}%
                   {mailto:c.cavazzoni@cineca.it}.
 \hyphenation{ge-rar-do}
@@ -129,7 +132,7 @@ Dario Alf\`e, Francesco Antoniella, Mauro Boero, Claudia Bungaro,
 Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto
 Debernardi, Guido Fratesi, Ralph Gebauer, Michele Lazzeri, Kurt
 M\"ader, Nicola Marzari, Francesco Mauri, Pasquale Pavone, Mickael
-Profeta, Guido Roma, Kurt Stokbro, Renata Wentzcovitch.
+Profeta, Guido Roma, Kurt Stokbro, Pascal Thibaudeau, Renata Wentzcovitch.
 \end{quote}
 
 \hyphenation{a-les-sio}
@@ -185,16 +188,18 @@ To install it, you must follow these steps:
 
 \subsection{Download and unpack PWscf}
 
-The latest release of the PWscf source package can be downloaded from
-the PWscf web site at this URL:
+The latest stable release of the PWscf source package can be downloaded 
+from the PWscf web site at this URL:
 \smallskip
 
-\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-                  {http://www.pwscf.org/}
+\htmladdnormallink{\texttt{http://www.pwscf.org/download.htm}}%
+                  {http://www.pwscf.org/download.htm}
 \smallskip
 
 \noindent
-The release corresponding to this manual is version \version.
+The release corresponding to this manual is version \version. The
+bravest may access the version under development via anonymous CVS: 
+see file \texttt{README.cvs} contained in the distribution.
 
 To uncompress and unpack the source package, move it to an empty
 directory of your choice, \texttt{cd} to that directory, and run the
@@ -240,7 +245,7 @@ you may want to try the manual configuration, described in the next section.
 
 \subsection{Manual configuration}
 
-From the root directory, type:
+From the top directory, type:
 \smallskip
 
 \texttt{./configure.old} \emph{your-system}
@@ -418,15 +423,16 @@ as in the following examples:%
 where typical location and name of libraries is assumed.
 Most precompiled libraries have lowercase names with one or two
 underscores (\_) appended.
-Knowing that:
+You can select the appropriate preprocessing options in 
+\texttt{make.sys}, knowing that:
 \begin{itemize}
   \item the Absoft compiler is case-sensitive (like C and unlike
         other Fortran compilers) and does not add an underscore
         to symbol names;
   \item both Portland compiler (pgf90) and Intel compiler (ifort/ifc)
-        are case insensitive and add an underscore to symbol names;
-\end{itemize}
-you can select the appropriate preprocessing options in {\tt make.sys}.
+        are case insensitive and add an underscore to symbol names,
+\end{itemize} 
+if \texttt{configure} doesn't do it for you.
 
 If you have precompiled lapack libraries, you may need to add
 \texttt{-lg2c} or \texttt{-lm} or both.
@@ -460,8 +466,11 @@ compiler executable --- in your initialization files.
 Consult the documentation provided by Intel. 
 
 Note that each major release of the Intel compiler differs a lot from
-the previous one.
-Do not mix executables from different releases: they are incompatible.
+the previous one. Do not mix compiled objects from different releases: 
+they are incompatible. Intel compiler v.~7 and later use a different 
+method to locate where modules are with respect to v.~$< 7$: if you
+are using the manual configuration, bchoose the appropriate line
+\texttt{MODULEFLAG=...} in \texttt{make.sys}.
 
 Some releases of Intel compiler v.~7 and 8 yield ``Compiler Internal 
 Error''.
@@ -479,18 +488,13 @@ depending on your system configuration.
 If this happens and no executable is produced, add the following to
 \texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
 
-Intel compiler v.~7 and later use a different method to locate
-where modules are with respect to v.~$< 7$.
-In \texttt{make.sys}, choose the appropriate line
-\texttt{MODULEFLAG=...} (obsolete with automatic configuration).
-
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
 Note that MKL also contains optimized FFT routines, but they are
 presently not supported: use FFTW instead. Also note that Intel 
 compiler v.~8 fails to load with MKL v.~5.2 or earlier versions,
 because some symbols that are referenced by MKL are missing. There
 is a fix for this (info from Konstantin Kudin): add libF90.a from 
-ifc 7.1 at the linking stage, as the last library (info from Konstantin Kudin).
+ifc 7.1 at the linking stage, as the last library.
 
 The I/O libraries used by the Intel compiler ifc are incompatible with
 those called by most precompiled BLAS/LAPACK libraries (including
@@ -567,7 +571,8 @@ The present values will work for most cases.
 All other variables are dynamically allocated: you do not need to
 recompile your code for a different system.
 
-You can compile the following codes:
+\texttt{make} with no arguments yields a list of valid
+targets:
 
 \begin{itemize}
   \item
@@ -604,90 +609,28 @@ You can compile the following codes:
   \item
     \texttt{make raman} produces \texttt{Raman/ram.x}.
 
-    \texttt{ra.x} calculates nonresonant Raman tensor coefficients
-    (derivatives f the polarizability wrt atomic displacements)
+    \texttt{ram.x} calculates nonresonant Raman tensor coefficients
+    (derivatives of the polarizability wrt atomic displacements)
     using the $(2n+1)$ theorem (written by Gernot Deinzer).
   \item
-    \texttt{make pp} produces the following postprocessing codes in
-    \texttt{PP/}:
-    \begin{itemize}
-      \item \texttt{pp.x} extracts data from files produced by
-            \texttt{pw.x} for further processing
-      \item \texttt{bands.x} extracts eigenvalues from files produced
-            by \texttt{pw.x} for further processing
-      \item \texttt{projwfc.x} calculates projections of wavefunction
-            over atomic orbitals, performs L\"owdin population
-            analysis and calculates projected density of states.
-      \item \texttt{chdens.x} plots data produced by \texttt{pp.x},
-            writing them into a format that is suitable for several
-            plotting programs
-      \item \texttt{plotrho.x} reads the output of \texttt{chdens.x},
-            produces PostScript 2-d contour plots
-      \item \texttt{plotband.x} reads the output of \texttt{bands.x},
-            produces band structure PostScript plots
-      \item \texttt{average.x} calculates planar averages of
-            potentials
-      \item \texttt{voronoy.x} divides the charge density into Voronoy
-            polyhedra
-      \item \texttt{dos.x} calculates electronic Density of States
-            (DOS).
-      \item \texttt{pw2wan.x}: interface with a code calculating
-            Wannier functions
-      \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
-            for Quantum Monte Carlo calculation.
-    \end{itemize}
+    \texttt{make pp} produces several codes for data postprocessing, in
+    \texttt{PP/} (see list below).
   \item
-    \texttt{make tools} produces utility programs, mostly for phonon
-    calculations, in \texttt{pwtools/}:
-    \begin{itemize}
-      \item \texttt{dynmat.x} calculates LO-TO splitting at
-            $\mathbf{q}=0$ in insulator, IR cross sections, from the
-            dynamical matrix produced by \texttt{ph.x}
-      \item \texttt{q2r.x} calculates Interatomic Force Constants ion
-            real space from dynamical matrices produced by
-            \texttt{ph.x} on a regular \textbf{q}-grid
-      \item \texttt{matdyn.x} produces phonon frequencies at a generic
-            wave vector using the Interatomic Force Constants
-            calculated by \texttt{q2r.x}; may also calculate phonon
-            DOS
-      \item \texttt{fqha.x} for quasi-harmonic calculations
-      \item \texttt{dist.x} calculates distances and angles between
-            atoms in a cell, taking into account periodicity
-      \item \texttt{ev.x} fits energy-vs-volume data to an equation of
-            state
-      \item \texttt{kpoints.x} produces lists of k-points
-      \item \texttt{pwi2xsf.sh}, \texttt{pwo2xsf.sh} process
-            respectively input and output files (not data files!) for
-            \texttt{pw.x} and produce an XSF-formatted file suitable
-            for plotting with XCrySDen, a powerful crystalline and
-            molecular structure visualization program\\
-            (\texttt{http://www.xcrysden.org/}).
-            BEWARE: the \texttt{pwi2xsf.sh} shell script requires the
-            \texttt{pwi2xsf.x} executables to be located somewhere in
-            your \texttt{\$PATH}.
-      \item \texttt{band\_plot.x}: undocumented
-      \item \texttt{bs.awk}, \texttt{mv.awk} are scripts that process
-            the output of \texttt{pw.x} (not data files!).
-            Usage: \\
-            \texttt{awk -f bs.awk < my-pw-file > myfile.bs } (basic
-            file)\\
-            \texttt{awk -f mv.awk < my-pw-file > myfile.mv } (movie
-            file)\\
-            The files so produced are suitable for use with
-            \texttt{xbs}, a very simple X-windows utility to display
-            molecules, available at:\\
-            \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/\\%
-                    README.shtml}.
-    \end{itemize}
+    \texttt{make tools} produces several utility programs, mostly for phonon
+    calculations, in \texttt{pwtools/} (see list below).
   \item
     \texttt{make nc} produces \texttt{PWNC/pw.x}, the version of
     \texttt{pw.x} that works with noncolinear magnetism
-    (experimental).
+     and spin-orbit splitting (experimental).
   \item
     \texttt{make pwcond} produces \texttt{PWCOND/pwcond.x}, for
     ballistic conductance calculations (experimental).
   \item
     \texttt{make pwall} produces all of the above.
+  \item
+    \texttt{make ld1} produces utilities for pseudopotential
+    generation in directory \texttt{atomic/} (see the specific
+    documentation in \texttt{atomic\_doc/}).
   \item
     \texttt{make upf} produces utilities for pseudopotential
     conversion in directory \texttt{upftools/} (see
@@ -701,9 +644,84 @@ You can compile the following codes:
 \end{itemize}
 For the setup of the GUI, refer to the
 \texttt{PWgui-}\emph{X.Y.Z}\texttt{/INSTALL} file, where \emph{X.Y.Z}
-stands for the version number.
+stands for the version number of the GUI (presently 0.6.2).
 If you are using the CVS-sources, then see the \texttt{GUI/README}
 file instead.
+
+The codes for data postprocessing in \texttt{PP/} are:
+\begin{itemize}
+  \item \texttt{pp.x} extracts the specified data from files
+        produced by \texttt{pw.x} for further processing
+  \item \texttt{bands.x} extracts eigenvalues from files produced
+        by \texttt{pw.x} for band structure plotting
+  \item \texttt{projwfc.x} calculates projections of wavefunction
+        over atomic orbitals, performs L\"owdin population
+        analysis and calculates projected density of states
+  \item \texttt{chdens.x} plots data produced by \texttt{pp.x},
+        writing them into a format that is suitable for several
+        plotting programs
+  \item \texttt{plotrho.x} reads the output of \texttt{chdens.x},
+        produces PostScript 2-d contour plots
+  \item \texttt{plotband.x} reads the output of \texttt{bands.x},
+        produces band structure PostScript plots
+  \item \texttt{average.x} calculates planar averages of
+        potentials
+  \item \texttt{voronoy.x} divides the charge density into Voronoy
+        polyhedra (obsolete, use at your own risk)
+  \item \texttt{dos.x} calculates electronic Density of States
+        (DOS).
+  \item \texttt{pw2wan.x}: interface with a code calculating
+        Wannier functions, soon to be released: see 
+        \htmladdnormallink{\texttt{http://www.wannier-transport.org/}}%
+                       {http://www.wannier-transport.org/}.
+  \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
+        for Quantum Monte Carlo calculation (
+\htmladdnormallink{\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}}%
+                          {http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html}).
+\end{itemize}
+
+The utility programs in \texttt{pwtools/} are:
+\begin{itemize}
+  \item \texttt{dynmat.x} calculates LO-TO splitting at
+        $\mathbf{q}=0$ in insulator, IR cross sections, from the
+        dynamical matrix produced by \texttt{ph.x}
+  \item \texttt{q2r.x} calculates Interatomic Force Constants ion
+        real space from dynamical matrices produced by
+        \texttt{ph.x} on a regular \textbf{q}-grid
+  \item \texttt{matdyn.x} produces phonon frequencies at a generic
+        wave vector using the Interatomic Force Constants
+        calculated by \texttt{q2r.x}; may also calculate phonon
+        DOS
+  \item \texttt{fqha.x} for quasi-harmonic calculations
+  \item \texttt{lambda.x} calculates the electron-phonon coefficient
+        $\lambda$ and the function $\alpha^2F(\omega)$
+  \item \texttt{dist.x} calculates distances and angles between
+        atoms in a cell, taking into account periodicity
+  \item \texttt{ev.x} fits energy-vs-volume data to an equation of
+        state
+  \item \texttt{kpoints.x} produces lists of k-points
+  \item \texttt{pwi2xsf.sh}, \texttt{pwo2xsf.sh} process
+        respectively input and output files (not data files!) for
+        \texttt{pw.x} and produce an XSF-formatted file suitable
+        for plotting with XCrySDen, a powerful crystalline and
+        molecular structure visualization program 
+        (\texttt{http://www.xcrysden.org/}).
+        BEWARE: the \texttt{pwi2xsf.sh} shell script requires the
+        \texttt{pwi2xsf.x} executables to be located somewhere in
+        your \texttt{\$PATH}.
+  \item \texttt{band\_plot.x}: undocumented and possibly obsolete
+  \item \texttt{bs.awk}, \texttt{mv.awk} are scripts that process
+        the output of \texttt{pw.x} (not data files!).
+        Usage: \\
+        \texttt{awk -f bs.awk < my-pw-file > myfile.bs } (basic
+        file)\\
+        \texttt{awk -f mv.awk < my-pw-file > myfile.mv } (movie
+        file)\\
+        The files so produced are suitable for use with
+        \texttt{xbs}, a very simple X-windows utility to display
+        molecules, available at:\\
+        \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}.
+\end{itemize}
 
 \clearpage
 
@@ -796,7 +814,7 @@ downloaded from the
 {http://www.pwscf.org/tests.htm}.
 See the documentation contained there.
 The examples assume that all executables reside in a subdirectory
-\texttt{bin/}: use command \texttt{make links} in the root directory
+\texttt{bin/}: use command \texttt{make links} in the top directory
 to create links to all executables in \texttt{bin/}.
 
 Note about exchange-correlation: the type of exchange-correlation used
@@ -1029,13 +1047,12 @@ Finally the electron-phonon calculation is performed by specifying
 The electron-phonon coefficients are calculated using several values
 of gaussian broadening (see \texttt{PH/elphon.f90}) because this
 quickly shows whether results are converged or not with respect to the
-k-point grid and Gaussian broadening.
+k-point grid and Gaussian broadening. See Example 07.
 
 All of the above must be repeated for all desired \textbf{q}-vectors
-and the final result is summed over all \textbf{q}-vectors (code not
-yet available).
-
-See Example 07.
+and the final result is summed over all \textbf{q}-vectors, using
+\texttt{pwtools/lambda.x}. The input data for the latter is
+described in the header of \texttt{pwtools/lambda.f90}.
 
 \subsection{Post Processing}
 
@@ -1074,8 +1091,8 @@ The output file can be directly read by the free plotting system
 Gnuplot (1D or 2D plots), or by code \texttt{plotrho.x} that comes
 with PWscf (2D plots), or by advanced plotting software XCrySDen and
 gOpenMol (3D plots).
-More details on the input data are written in the header of file
-\texttt{PP/chdens.f90}.
+More details on the input data are contained in file
+\texttt{INPUT\_CHDENS}.
 See Example 05 for a charge density plot.
 
 The postprocessing code \texttt{bands.x} reads data file(s), extracts
@@ -1428,7 +1445,9 @@ Possible reasons:
     If you are \emph{not} running on the same machines on which the
     code was compiled: you need either to have the same shared
     libraries installed on both machines, or to load statically all
-    libraries (using appropriate compiler or loader options).
+    libraries (using appropriate compiler or loader options). The
+    same applies to Beowulf-style parallel machines: the needed 
+    shared libraries must be present on all PC's.
 \end{itemize}
 
 \paragraph{\texttt{pw.x} stops with error in reading.}
@@ -1442,6 +1461,7 @@ Also note that input data files containing \texttt{\^{}M} (Control-M)
 characters at the end of lines (typically, files coming from Windows
 PC) may yield error in reading.
 If none of the above applies and the code stops at the first namelist
+(``control'')
 and you are running on a PC cluster: your communication library
 (LAM-MPI or MPICH) might not be properly configured to allow input
 redirection (so that you are effectively reading an empty file).
@@ -1450,8 +1470,9 @@ Inquire with your local computer wizard.
 \paragraph{\texttt{pw.x} mumbles something like ``cannot recover'' or
            ``error reading recover file''.}
 
-You have a bad restart file from a preceding failed execution.
-Remove all files \texttt{restart*} in \texttt{outdir}.
+You are trying to restart from a previous job that either produced 
+corrupted files, or did not do what you think it did. No luck:
+you have to restart from scratch.
 
 \paragraph{\texttt{pw.x} stops with error in cdiagh or cdiaghg.}
 
@@ -1470,14 +1491,15 @@ Possible reasons:
     on a different architecture and usually disappears if the
     calculation is repeated with even minimal changes in its
     parameters. If this happen, use conjugate-gradient diagonalization
-   (\texttt{diagonalization='cg'}) and see what happens. 
+    (\texttt{diagonalization='cg'}), slower but very robust, and see
+    what happens. 
   \item
     HP-Compaq alphas with \texttt{cxml} libraries: try to use compiled
     BLAS and LAPACK (or better, ATLAS) instead of those contained in
     \texttt{cxml} (just load them before \texttt{cxml}).
 \end{itemize}
 
-\paragraph{\texttt{pw.x} crashes with ``floating invalid''.}
+\paragraph{\texttt{pw.x} crashes with ``floating invalid'' or ``floating divide by zero''.}
 
 If this happens on HP-Compaq\\ True64 Alpha machines with an old
 version of the compiler: the compiler is most likely buggy.
@@ -1530,9 +1552,10 @@ Possible solutions:
     reduce \texttt{nbnd} to the strict minimum, or reduce the cutoffs,
     or the cell size.
   \item
-    use conjugate-gradient or DIIS diagonalization\\
-    (\texttt{diagonalization='cg'} or \texttt{'diis'}): slower, but
-    requires less memory.
+    use conjugate-gradient (\texttt{diagonalization='cg'}: slow 
+    but very robust) or DIIS (\texttt{diagonalization='diis'}: 
+    fast but not very robust):
+    both requires less memory than the default Davidson algorithm.
   \item
     in parallel execution, use more processors, or use the same number
     of processors with less pools.
@@ -1560,6 +1583,8 @@ Possible reasons:
     and goes on producing NaN's (Not a Number) forever unless
     exception handling is on (and usually it isn't).
     In both cases, look for one of the reasons given above.
+  \item
+    maybe your calculation will take more time than you expect.
 \end{itemize}
 
 \paragraph{\texttt{pw.x} yields weird results.}
@@ -1658,7 +1683,7 @@ This is done by rotating (and translating if needed) the atoms in
 the unit cell and verifying if the rotated unit cell coincides
 with the original one. 
 
-If a symmetry operations contain a
+If a symmetry operation contains a
 fractional translation that is incompatible with the FFT grid,
 it is discarded in order to prevent problems with symmetrization.
 Typical fractional translations are 1/2 or 1/3 of a lattice
@@ -1719,7 +1744,7 @@ load, on communication load (for parallel machines), on various other
 factors (including maybe the phase of the moon), reported CPU times
 may vary quite a lot for the same job.
 Also note that what is printed is supposed to be the CPU time per
-process, but on at least some machines it is actually the wall time.
+process, but with some compilers it is actually the wall time.
 
 \paragraph{on parallel execution, \texttt{pw.x} stops complaining that
            ``some processors have no planes'' or ``smooth planes'' or
@@ -1737,7 +1762,7 @@ This is a warning message that can be safely ignored if it
 is not present in the last steps of self-consistency. If it 
 is still present in the last steps of self-consistency, and
 if the number of unconverged eigevector is a significant 
-part of the total,it may signal serious trouble in self-consistency
+part of the total, it may signal serious trouble in self-consistency
 (see next point) or something badly wrong in input data.
 
 \paragraph{self-consistency is slow or does not converge.}
@@ -1752,10 +1777,10 @@ memory you need.
 If the above doesn't help: verify if your system is metallic or is
 close to a metallic state, especially if you have few k-points.
 If the highest occupied and lowest unoccupied state(s) keep exchanging
-place during self-consistency, convergence is hopeless: a typical sign
-is that the self-consistency error goes down, down, down, than all of
-a sudden up again, and so on.
-Usually this behaviour disappears if you add a few empty bands and a
+place during self-consistency, forget about reaching convergence. A 
+typical sign of such behavious is that the self-consistency error 
+goes down, down, down, than all of a sudden up again, and so on.
+Usually one can solve the problem by adding a few empty bands and a
 broadening.
 
 Specific to US PP: the presence of negative charge density regions due
@@ -1826,9 +1851,10 @@ reach a well converged structure, no matter what.
 
 The data file produced by \texttt{pw.x} is bad or incomplete or
 produced by an incompatible version of the code.
-In parallel execution: the number of processors and pools for the
-phonon run should be the same as for the self-consistent run; all
-files must be visible to all processors.
+In parallel execution: if you did not set \texttt{wf\_collect=.true.},
+the number of processors and pools for the phonon run should be the 
+same as for the self-consistent run; all files must be visible to all 
+processors.
 
 \paragraph{\texttt{ph.x} mumbles something like ``cannot recover'' or
            ``error reading recover file''.}
@@ -1888,7 +1914,7 @@ In order to check whether a symmetry operation belongs to the small
 group of \textbf{q}, the code compares \textbf{q} and the rotated
 \textbf{q}, with an acceptance tolerance of $10^{-5}$ (set in routine
 \texttt{PW/eqvect.f90}).
-You may enconter trouble if your \textbf{q}-point differs from a
+You may run into trouble if your \textbf{q}-point differs from a
 high-symmetry point by an amount in that order of magnitude.
 
 \end{document}

@@ -3,7 +3,7 @@
 
 This is a very short manual about FPMD and CP codes, 
 and it is intended to explain how to perform basic Car-Parrinello 
-simulations (in waht follow CP).
+simulations (in what follow CP).
 
 It is important to understand that a CP simulation is a sequence of 
 different runs, some of them used to "prepare" the initial state
@@ -142,7 +142,7 @@ ATOMIC_POSITIONS (bohr)
       positions a little bit. see below
 
 5) Minimize ionic positions
-   As we pointed out in 4) if the interatomic forces are to high
+   As we pointed out in 4) if the interatomic forces are too high
    the system could "explode" if we switch on the ionic dynamics,
    to avoid that we need to relax the system. 
    Again there are different strategies to relax teh system, but
