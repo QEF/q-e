@@ -77,8 +77,10 @@ bindir :
 clean :
 	touch make.rules make.sys 
 	# make complains if they aren't there; same with .dependencies below
-	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools atomic \
-		   Modules install clib flib FPMD CPV Raman ; do \
+	for dir in \
+		CPV D3 FPMD Gamma Modules PH PP PW PWCOND PWNC Raman \
+		atomic clib flib pwtools upftools \
+	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch .dependencies ; make clean ) \
 	    fi \
