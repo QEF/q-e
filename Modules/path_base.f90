@@ -330,25 +330,25 @@ MODULE path_base
              "nstep", TRIM( nstep_path_char )   
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"first_last_opt",T35," = ",X,L1))' ) first_last_opt
+                FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"reset_vel",T35," = ",X,L1))' ) reset_vel
+                FMT = '(5X,"reset_vel",T35," = ",1X,L1))' ) reset_vel
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"ds",T35," = ",X,F6.4," a.u.")' ) ds
+                FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
          !
          IF ( lneb ) THEN
             !
             WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"k_max",T35," = ",X,F6.4," a.u.")' ) k_max
+                   FMT = '(5X,"k_max",T35," = ",1X,F6.4," a.u.")' ) k_max
             WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"k_min",T35," = ",X,F6.4," a.u.")' ) k_min
+                   FMT = '(5X,"k_min",T35," = ",1X,F6.4," a.u.")' ) k_min
             !
          END IF
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"path_thr",T35," = ",X,F6.4," eV / A")' ) path_thr
+                FMT = '(5X,"path_thr",T35," = ",1X,F6.4," eV / A")' ) path_thr
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"initial path length",&
