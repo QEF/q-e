@@ -8,6 +8,8 @@
 # Use -D__FFTW instead of -DDXML if you use fft routines from fftw library
 #
 CPPFLAGS = -DDEC -DDXML -DNOPENCILS -I$(OSHOME)/include
+# Use this flags for FPMD
+# CPPFLAGS = -D__QSW -D__FFTW -D__PARA -D__MPI -D__TRU64 -I$(OSHOME)/include
 
 #
 # Fortran compiler:
@@ -21,13 +23,20 @@ CC = cc
 #        -align dcommons -align records
 #  -big_endian allows to read files generated on other (big endian) machines
 FFLAGS = -O -real_size 64 -align dcommons -align records
+# Flags for FPMD
+# FFLAGS = -double_size 64 -fpconstant -real_size 64 -fast \
+#        -math_library fast -tune ev68
 #
 F77FLAGS = $(FFLAGS)
-F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
+F90FLAGS = $(FFLAGS) -free -cpp $(CPPFLAGS)
+
+CCFLAGS = -O $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #
 MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+# MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/FPMD
+# MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/CPV
 #
 # Libraries:
 # If you have dxml or cxml libraries, use

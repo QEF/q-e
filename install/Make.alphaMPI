@@ -8,6 +8,8 @@
 # (in some cases it is slower than the full 3d FFT)
 #
 CPPFLAGS = -DDEC -D__FFTW -D__PARA -D__MPI -I$(OSHOME)/include
+# Use this flags for FPMD
+# CPPFLAGS = -D__QSW -D__FFTW -D__PARA -D__MPI -D__TRU64 -I$(OSHOME)/include
 
 #
 # Fortran compiler:
@@ -15,18 +17,27 @@ CPPFLAGS = -DDEC -D__FFTW -D__PARA -D__MPI -I$(OSHOME)/include
 F90 = f90
 F77 = f90
 CC = cc
+
 #
 # Fortran options:
 #
 FFLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
 	-align records
+# Flags for FPMD
+# FFLAGS = -double_size 64 -fpconstant -real_size 64 -fast \
+#        -math_library fast -tune ev68
+
 #
 F77FLAGS = $(FFLAGS)
-F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
+F90FLAGS = $(FFLAGS) -free -cpp $(CPPFLAGS)
+
+CCFLAGS = -O $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #
 MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+# MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/FPMD
+# MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/CPV
 
 #
 # Libraries (mpi + cxml + fftw) :
