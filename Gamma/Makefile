@@ -112,6 +112,7 @@ PWOBJS = \
 ../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
+../PW/init_at_1.o \
 ../PW/init_vloc.o \
 ../PW/input.o \
 ../PW/interpolate.o \

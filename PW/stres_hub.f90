@@ -22,6 +22,9 @@ subroutine stres_hub ( sigmah )
   USE lsda_mod, ONLY: nspin
   USE symme,    ONLY: s, nsym
   USE io_files, ONLY : prefix, iunocc
+#ifdef DEBUG
+  USE io_global,      ONLY : stdout
+#endif
 #ifdef __PARA
    use para
 #endif

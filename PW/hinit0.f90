@@ -39,6 +39,7 @@ subroutine hinit0
   !   k-point independent parameters of non-local pseudopotentials
   !
   call init_us_1
+  call init_at_1
   !
   rewind (iunigk)
   do ik = 1, nks

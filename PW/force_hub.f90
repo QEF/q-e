@@ -51,8 +51,8 @@ subroutine force_hub(forceh)
    end if
 #endif
 
-   do alpha = 1,nat                    ! the displaced atom
-      do ipol = 1,3
+   do ipol = 1,3
+      do alpha = 1,nat                 ! the displaced atom
          call dndtau(dns,ldim,alpha,ipol)
          do na = 1,nat                 ! the Hubbard atom
             nt = ityp(na)

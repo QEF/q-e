@@ -606,7 +606,8 @@ MODULE us
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm}
        becsum(:,:,:),         &! the sum of bec functions
        qrad(:,:,:,:),         &! radial FT of Q functions
-       tab(:,:,:)              ! interpolation table for PPs
+       tab(:,:,:),            &! interpolation table for PPs
+       tab_at(:,:,:)           ! interpolation table for atomic wfc
   REAL(KIND=DP) :: &
        ap(lqmax*lqmax,nlx,nlx) ! Clebsch-Gordan coefficients for spher.harm.
   LOGICAL :: &

@@ -34,8 +34,8 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !
    ! local variables
    !
-   integer :: l, na, nt, nb, iatw, iig, i, ig, i0, m, lm
-   real (kind=DP) :: jl(ndm), jlm1(ndm), eps, dv, qt, arg
+   integer :: l, na, nt, nb, iatw, iig, i, ig, i0, i1, i2 ,i3, m, lm
+   real (kind=DP) :: jl(ndm), jlm1(ndm), eps, dv, qt, arg, px, ux, vx, wx
    parameter (eps=1.0e-8)
    complex (kind=DP) :: phase, pref
    real (kind=DP), allocatable :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
@@ -64,43 +64,25 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
 
    do nt=1,ntyp
       do nb=1,nchi(nt)
-         l =lchi(nb,nt)
-         do ig=1, npw
-            qt=q(ig)*tpiba
-            if (qt.lt.eps) then
-               if (l.ne.1) then
-                  do i=1, msh(nt)
-                     jl(i) = 0.0d0
-                  end do
-               else
-                  ! Note that dj_1/dx (x=0) = 1/3
-                  do i=1, msh(nt)
-                     jl(i) = 1.0d0/3.d0
-                  end do
-               end if
-            else
-               !
-               ! in order to avoid a division by zero i0 is defined as the first
-               ! non-zero point in the radial mesh
-               !
-               i0 = 1
-               if ( r(1,nt) .lt. eps ) i0 = 2
-
-               call sph_bes(msh(nt)+1-i0,r(i0,nt),qt,l  ,jl(i0)  )
-               call sph_bes(msh(nt)+1-i0,r(i0,nt),qt,l-1,jlm1(i0))
-               ! recurrence relation for jl
-               do i = i0, msh(nt)
-                  jl(i) = jlm1(i) - (l+1)/(qt*r(i,nt)) * jl(i)
-               end do
-               if (i0.eq.2) jl(1) = jl(2)
-            end if
-            ! jl is now the derivative of the Bessel functions
-            do i=1,msh(nt)
-               jlm1(i) = jl(i) * chi(i,nb,nt) * r(i,nt)**2
-            end do
-            call simpson (msh(nt),jlm1,rab(1,nt),dv)
-            djl(ig,nb,nt) =dv*fpi/dsqrt(omega)
-         end do
+         if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then
+            l =lchi(nb,nt)
+            do ig = 1, npw
+               qt=q(ig)*tpiba
+               px = qt / dq - int (qt / dq)
+               ux = 1.d0 - px
+               vx = 2.d0 - px
+               wx = 3.d0 - px
+               i0 = qt / dq + 1
+               i1 = i0 + 1
+               i2 = i0 + 2
+               i3 = i0 + 3
+               djl(ig,nb,nt) = &
+                     ( tab_at (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                       tab_at (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                       tab_at (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                       tab_at (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
+            enddo
+         end if
       end do
    end do
    deallocate ( gk, q )

@@ -36,9 +36,8 @@ subroutine dndtau(dns,ldim,alpha,ipol)
               i, na, nt, n, alpha, ipol, counter, m1,m2, l
    integer :: ldim
    real (kind=DP) :: &
-             dns(ldim,ldim,nspin,nat), &
-             t0, scnds       ! cpu time spent
-   complex (kind=DP) :: ZDOTC
+             dns(ldim,ldim,nspin,nat)
+   complex (kind=DP) :: ZDOTC, c_one, c_zero
    integer, allocatable :: offset(:)
    ! offset(nat): offset of d electrons of atom d in the natomwfc ordering
    complex (kind=DP), allocatable :: &
@@ -46,7 +45,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    !                  proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),
    !                  spsi(npwx,nbnd), dproj(natomwfc,nbnd)
 
-   t0 = scnds()
+   CALL start_clock('dndtau')
 
    allocate ( offset(nat) )
    allocate ( proj(natomwfc,nbnd), dproj(natomwfc,nbnd), &
@@ -84,28 +83,27 @@ subroutine dndtau(dns,ldim,alpha,ipol)
       !
 
       if (nks.gt.1) read (iunigk) npw, igk
+
       call davcio(evc,nwordwfc,iunwfc,ik,-1)
-      call init_us_2 (npw,igk,xk(1,ik),vkb)
-      call ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
-
-      dproj(:,:) = (0.d0,0.d0)
-
-      call s_psi  (npwx, npw, nbnd, evc, spsi )
-      call atomic_wfc( ik, wfcatom )
-
-      call dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset(alpha))
-
       call davcio(swfcatom,nwordatwfc,iunat,ik,-1)
-
-      do ibnd = 1, nbnd
-         do i=1,natomwfc
-            proj(i,ibnd) = ZDOTC(npw,swfcatom(1,i),1,evc(1,ibnd),1)
-         enddo
-      enddo
-
+      c_one= (1.d0, 0.d0)
+      c_zero = (0.d0, 0.d0)
+      call ZGEMM ('C', 'N', natomwfc, nbnd, npw, c_one, &
+                            swfcatom, npwx, evc, npwx, c_zero, proj, natomwfc)
 #ifdef __PARA
       call reduce(2*natomwfc*nbnd,proj)
 #endif
+
+      call init_us_2 (npw,igk,xk(1,ik),vkb)
+
+      call ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
+
+      call s_psi  (npwx, npw, nbnd, evc, spsi )
+
+      call atomic_wfc( ik, wfcatom )
+
+      dproj(:,:) = (0.d0,0.d0)
+      call dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset(alpha))
       !
       ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
       ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -127,7 +125,6 @@ subroutine dndtau(dns,ldim,alpha,ipol)
             end do
          end if
       end do
-
    end do                 ! on k-points
 
 #ifdef __PARA
@@ -149,6 +146,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    deallocate ( proj, dproj, spsi, wfcatom )
    deallocate ( offset )
 
+   CALL stop_clock('dndtau')
    return
 end subroutine dndtau
 

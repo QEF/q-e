@@ -35,8 +35,8 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !
    ! local variables
    !
-   integer :: ig, na, nt, nb, l, lm, m, i, iig, ipol, iatw
-   real (kind=DP) :: arg, vqint
+   integer :: ig, na, nt, nb, l, lm, m, i, iig, ipol, iatw, i0, i1, i2, i3
+   real (kind=DP) :: arg, vqint, px, ux, vx, wx
    complex (kind=8) :: phase, pref
 
    real (kind=DP), allocatable :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
@@ -81,27 +81,19 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
       do nb = 1,nchi(nt)
          if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then
             l = lchi(nb,nt)
-            !
-            !     here the  first term
-            !
-            call sph_bes( msh(nt), r(1,nt), q(1), l, auxjl )
-            do i=1,msh(nt)
-               vchi(i) = chi(i,nb,nt) * auxjl(i) * r(i,nt)
-            enddo
-            call simpson( msh(nt), vchi, rab(1,nt), vqint )
-            chiq(1,nb,nt) = vqint
-            !
-            !    here the other terms
-            !
-            do ig = 2, npw
-               if ( abs(q(ig)-q(ig-1)).gt.1.0d-8 ) then
-                  call sph_bes( msh(nt), r(1,nt), q(ig), l, auxjl )
-                  do i = 1, msh(nt)
-                     vchi(i) = chi(i,nb,nt) * auxjl(i) * r(i,nt)
-                  enddo
-                  call simpson( msh(nt), vchi, rab(1,nt), vqint )
-               endif
-               chiq(ig,nb,nt) = vqint
+            do ig = 1, npw
+               px = q (ig) / dq - int (q (ig) / dq)
+               ux = 1.d0 - px
+               vx = 2.d0 - px
+               wx = 3.d0 - px
+               i0 = q (ig) / dq + 1
+               i1 = i0 + 1
+               i2 = i0 + 2
+               i3 = i0 + 3
+               chiq(ig,nb,nt) = tab_at (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                                tab_at (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                                tab_at (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                                tab_at (i3, nb, nt) * px * ux * vx / 6.d0
             enddo
          endif
       enddo
@@ -123,8 +115,8 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
       do nb = 1,nchi(nt)
          if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then
             l  = lchi(nb,nt)
-            pref = (fpi/dsqrt(omega))*(1.d0,0.d0)**l
-            pref = (fpi/dsqrt(omega))*(0.d0,1.d0)**l
+            pref = (1.d0,0.d0)**l
+            pref = (0.d0,1.d0)**l
             do m = 1,2*l+1
                lm = l*l+m
                iatw = iatw+1

@@ -120,6 +120,7 @@ init_pool.o \
 init_run.o \
 init_us_1.o \
 init_us_2.o \
+init_at_1.o \
 init_vloc.o \
 input.o \
 interpolate.o \

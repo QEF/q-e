@@ -64,7 +64,6 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    real (kind=DP), allocatable :: gk(:,:), qm1(:)
    !       gk(3,npwx),
    !       qm1(npwx)
-
    ! xyz are the three unit vectors in the x,y,z directions
    xyz(:,:) = 0.d0
    do i=1,3
@@ -91,20 +90,9 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    end do
 
    ! here the derivative of the Bessel function
-   if (ipol*jpol.eq.1) then
       call gen_at_dj (ik,natomwfc,lmax_wfc,dwfc)
-      call davcio(dwfc,nworddw,23,ik*2-1,1)
-   else
-      call davcio(dwfc,nworddw,23,ik*2-1,-1)
-   end if
-
    ! and here the derivative of the spherical harmonic
-   if (jpol.eq.1) then
       call gen_at_dy (ik,natomwfc,lmax_wfc,xyz(1,ipol),aux)
-      call davcio(aux,nworddw,23,ik*2,1)
-   else
-      call davcio(aux,nworddw,23,ik*2,-1)
-   end if
 
    do ig = 1,npw
       gk(1,ig) = (xk(1,ik)+g(1,igk(ig)))*tpiba
@@ -144,20 +132,9 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
              wfatdbeta(natomwfc,nhm) )
 
    ! here the derivative of the Bessel function
-   if (ipol*jpol.eq.1) then
       call gen_us_dj (ik,dbeta)
-      call davcio(dbeta,nworddb,25,ik*2-1,1)
-   else
-      call davcio(dbeta,nworddb,25,ik*2-1,-1)
-   end if
-
    ! and here the derivative of the spherical harmonic
-   if (jpol.eq.1) then
       call gen_us_dy (ik,xyz(1,ipol),aux1)
-      call davcio(aux1,nworddb,25,ik*2,1)
-   else
-      call davcio(aux1,nworddb,25,ik*2,-1)
-   end if
 
    jkb2 = 0
    do nt=1,ntyp

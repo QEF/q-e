@@ -24,23 +24,24 @@ subroutine atomic_wfc (ik, wfcatom)
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE klist, ONLY: xk
   USE wvfct, ONLY: npwx, npw, nbnd, igk
-  USE us, ONLY: newpseudo
+  USE us,    ONLY: tab_at, dq, newpseudo
   implicit none
   integer :: ik
   ! input: k-point
   complex(kind=DP) :: wfcatom (npwx, natomwfc) ! output: atomic wavefunctions
   !
-  integer :: n_starting_wfc, lmax_wfc, nt, l, nb, ir, na, m, lm, ig, iig, nw
+  integer :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
+             i0, i1, i2, i3
   !
-  real(kind=DP), allocatable :: q (:), ylm (:,:), chiq (:,:,:), aux (:), &
+  real(kind=DP), allocatable :: qg(:), ylm (:,:), chiq (:,:,:), aux (:), &
        gk (:,:), vchi (:)
   complex(kind=DP), allocatable :: sk (:)
-  real(kind=DP) :: vqint, arg
+  real(kind=DP) :: vqint, arg, px, ux, vx, wx
   complex(kind=DP) :: kphase  , lphase
 
   call start_clock ('atomic_wfc')
 
-  allocate (q(npw),chiq(npw,nchix,ntyp),gk(3,npw),aux(ndm),vchi(ndm),sk(npw))
+  allocate (qg(npw),chiq(npw,nchix,ntyp),gk(3,npw),aux(ndm),vchi(ndm),sk(npw))
 
   ! calculate max angular momentum required in wavefunctions
   lmax_wfc = 0
@@ -56,17 +57,17 @@ subroutine atomic_wfc (ik, wfcatom)
      gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
      gk (2,ig) = xk(2, ik) + g(2, igk(ig) )
      gk (3,ig) = xk(3, ik) + g(3, igk(ig) )
-     q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
+     qg(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   enddo
   !
   !  ylm = spherical harmonics
   !
-  call ylmr2 ((lmax_wfc+1)**2, npw, gk, q, ylm)
+  call ylmr2 ((lmax_wfc+1)**2, npw, gk, qg, ylm)
   !
   ! set now q=|k+G| in atomic units
   !
   do ig = 1, npw
-     q (ig) = sqrt(q(ig))*tpiba
+     qg(ig) = sqrt(qg(ig))*tpiba
   enddo
   !
   n_starting_wfc = 0
@@ -76,46 +77,35 @@ subroutine atomic_wfc (ik, wfcatom)
   do nt = 1, ntyp
      do nb = 1, nchi (nt)
         if (.not.newpseudo (nt) .or.oc (nb, nt) .gt.0.d0) then
-           l = lchi (nb, nt)
-           !
-           !     here the  first term
-           !
-           call sph_bes (msh (nt), r (1, nt), q (1), l, aux)
-           do ir = 1, msh (nt)
-              vchi (ir) = chi (ir, nb, nt) * aux (ir) * r (ir, nt)
-           enddo
-           call simpson (msh (nt), vchi, rab (1, nt), vqint)
-           chiq (1, nb, nt) = vqint
-           !
-           !    here the other terms
-           !
-           do ig = 2, npw
-              ! dirty trick to speed up calculation:
-              !    do not recalculate if |k+G_i|=|k+G_{i-1}|
-              if (abs (q (ig) - q (ig - 1) ) .gt.1.0d-8) then
-                 call sph_bes (msh (nt), r (1, nt), q (ig), l, aux)
-                 do ir = 1, msh (nt)
-                    vchi (ir) = chi (ir, nb, nt) * aux (ir) * r (ir, nt)
-                 enddo
-                 call simpson (msh (nt), vchi, rab (1, nt), vqint)
-              endif
-              chiq (ig, nb, nt) = vqint
+           do ig = 1, npw
+              px = qg (ig) / dq - int (qg (ig) / dq)
+              ux = 1.d0 - px
+              vx = 2.d0 - px
+              wx = 3.d0 - px
+              i0 = qg (ig) / dq + 1
+              i1 = i0 + 1
+              i2 = i0 + 2
+              i3 = i0 + 3
+              chiq (ig, nb, nt) = &
+                     tab_at (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                     tab_at (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                     tab_at (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                     tab_at (i3, nb, nt) * px * ux * vx / 6.d0
            enddo
         endif
      enddo
   enddo
 
   do na = 1, nat
-     arg = (xk (1, ik) * tau (1, na) + xk (2, ik) * tau (2, na) &
-          + xk (3, ik) * tau (3, na) ) * tpi
+     arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi
      kphase = DCMPLX (cos (arg), - sin (arg) )
      !
      !     sk is the structure factor
      !
      do ig = 1, npw
         iig = igk (ig)
-        sk (ig) = kphase * eigts1 (ig1 (iig), na) * eigts2 (ig2 (iig), &
-             na) * eigts3 (ig3 (iig), na)
+        sk (ig) = kphase * eigts1 (ig1 (iig), na) * eigts2 (ig2 (iig), na) * &
+                           eigts3 (ig3 (iig), na)
      enddo
      !
      nt = ityp (na)
@@ -142,14 +132,7 @@ subroutine atomic_wfc (ik, wfcatom)
   if (n_starting_wfc.ne.natomwfc) call errore ('atomic_wfc', &
        'something wrong', 1)
 
-  ! normalize atomic wfcs (not a bad idea in general and necessary to
-  ! compute correctly lda+U projections)
-
-  do nw = 1,natomwfc
-     call DSCAL(2*npw,fpi/sqrt(omega),wfcatom(1,nw),1)
-  end do
-
-  deallocate(q, chiq ,gk ,aux ,vchi ,sk ,ylm)
+  deallocate(qg, chiq ,gk ,aux ,vchi ,sk ,ylm)
 
   call stop_clock ('atomic_wfc')
   return

@@ -23,7 +23,7 @@ subroutine allocate_nlpot
   !
   !
 #include "machine.h"
-  USE parameters, ONLY: nbrx
+  USE parameters, ONLY: nbrx, nchix
   USE pseud, ONLY: lmax, lloc
   USE basis, ONLY: ntyp, nat, ityp
   USE brilz, ONLY: tpiba2
@@ -34,7 +34,7 @@ subroutine allocate_nlpot
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
   USE us, ONLY: nh, indv, nhtol, nhtom, qq, dvan, deeq, qrad, vkb, tab, &
-       dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
+       tab_at, dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
        tvanp, newpseudo
   implicit none
   !
@@ -125,6 +125,8 @@ subroutine allocate_nlpot
   nqx = (sqrt (ecutwfc) / dq + 4) * cell_factor
 
   allocate (tab( nqx , nbrx , ntyp))    
+
+  allocate (tab_at( nqx , nchix , ntyp))
 
   return
 end subroutine allocate_nlpot
