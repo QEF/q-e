@@ -109,11 +109,12 @@ subroutine average
 
   nspin = 1
   if (ibrav.gt.0) call latgen (ibrav, celldm, at (1, 1), &
-                                              at (1, 2), at (1, 3) )
+                                       at (1, 2), at (1, 3), omega )
+  alat = celldm(1)
+  at=at/alat
   call recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
        , bg (1, 3) )
 
-  alat = celldm(1)
   tpiba = 2.d0 * pi / alat
   tpiba2 = tpiba**2
 
@@ -145,6 +146,7 @@ subroutine average
 
 
   call volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
+
   call set_fft_dim
 
   call allocate_fft
