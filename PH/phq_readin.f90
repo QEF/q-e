@@ -60,8 +60,7 @@ subroutine phq_readin
   ! fildvscf : output file containing deltavsc
   ! fildrho  : output file containing deltarho
 #ifdef __PARA
-
-  if (me.ne.1) goto 400
+  if (me /= 1 .and. mypool /= 1) goto 400
 #endif
   !
   !    Read the first line of the input file
