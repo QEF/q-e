@@ -683,7 +683,8 @@ $ac_cv_search_zggev -lmkl_ipf -lguide $libs", , -lmkl_ipf -lguide)
 			AC_SEARCH_LIBS(zggev, mkl_lapack,
 				       have_blas=1 have_lapack=1
 				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
+$ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
+				       -lmkl_ia32 -lguide -lpthread)
 			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done

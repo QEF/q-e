@@ -3569,7 +3569,7 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 if test "$ac_cv_search_zggev" = no; then
   for ac_lib in mkl_lapack; do
-    LIBS="-l$ac_lib -lmkl_ia32 -lguide $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_ia32 -lguide -lpthread $ac_func_search_save_LIBS"
     cat >conftest.$ac_ext <<_ACEOF
       program main
       call zggev
@@ -3615,7 +3615,7 @@ if test "$ac_cv_search_zggev" != no; then
   test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
   have_blas=1 have_lapack=1
 				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ia32 -lguide $libs"
+$ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs"
 fi
 
 			if test "$ac_cv_search_zggev" != "no"
