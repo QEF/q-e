@@ -8,37 +8,50 @@
 
 # --- Change Variables according to your system --- #
 
-#  ** Preprocessor Macro **
+#---------------------------#
+#  ** Preprocessor Macro ** #
+#---------------------------#
+
 # Parallel MPI
   CPMACRO=-D__LINUX -D__MPI -D__PARA -D__PORTLAND -D__FFTWDRV 
+
 # Serial Code
 #  CPMACRO=-D__LINUX -D__PORTLAND -D__FFTWDRV 
-#
-# ** Communication Libraries **
+
+#-------------------------------#
+# ** Communication Libraries ** #
+#-------------------------------#
+
+#    CINECA Cluster Settings 
+#  MPICH = /usr/local/mpich/1.2.1..7/gm-1.5.1_Linux-2.4.9-13hpc/smp/pgi/ssh
+#  INCLUDE = -I$(MPICH)/include 
 
 #    ICTP Cluster Settings 
   MPICH = /usr/local/mpich/1.2.4..8a/gm-1.5.2.1_Linux-2.4.18-3smp/smp/intel32/ssh
   INCLUDE = -I/$(MPICH)/include -I/usr/local/include/
+#
   LIBMPI=-L$(MPICH)/lib -lfmpich -lmpich
   LIBGM=-L/usr/gm/lib -lgm
 
-#
-# ** Scientific Libraries **
-# Uncomment to Use blas and lapack from the source code
+
+#----------------------------#
+# ** Scientific Libraries ** #
+#----------------------------#
+
+#    Uncomment to Use blas and lapack from the source code
 #  MYLIB=blas_and_lapack
-#
-# Uncomment to Use system lapack and blas
+
+#    CINECA Cluster Settings 
 #  MYLIB=
-#  LAPACK= -L/cineca/lib/pgi -llapack -lblas
-#
-# Uncomment to Use Atlas and system lapack
+#  ATLAS=/usr/local/lib/pgi/
+#  LAPACK= -L$(ATLAS)/ -llapack_pgi -lf77blas -latlas
 
 #   ICTP Cluster Settings 
   MYLIB=
   ATLAS=/usr/local/lib/pgi/
   LAPACK= -L$(ATLAS)/ -llapack_pgi -lf77blas -latlas
-#
-#
+
+
 ######################################################################
 # ***  Usually you don't need to edit variables below this line **** #
 ######################################################################
@@ -57,7 +70,7 @@
   ARCHFLAGS = 
   ARFLAGS   = rv
   F77FLAGS  = $(ARCHFLAGS) $(DEBUGFLAGS) $(OPTIMIZATIONS) 
-  F90FLAGS  = $(ARCHFLAGS) ${PGIFLAG} $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) ${INCLUDE}
+  F90FLAGS  = $(ARCHFLAGS) $(PGIFLAG) $(FREEFORM) $(DEBUGFLAGS) $(OPTIMIZATIONS) $(INCLUDE)
   LNKFLAGS = $(ARCHFLAGS)
 #
 # Flag for the compilation of the c source files
@@ -75,7 +88,7 @@
 #
 # --- Library ---
 # to link -lfmpich compiled with PGI compiler
-  LIB= $(LAPACK) ${LIBMPI} ${LIBGM} -lm -lc 
+  LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -lm -lc 
 #
 # --- Modules --
   MODULEFLAG=-module $(OSHOME)/Modules -module $(OSHOME)/FPMD
