@@ -35,7 +35,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: moduleObj.itcl,v 1.2 2004-04-05 13:20:15 kokalj Exp $ 
+# $Id: moduleObj.itcl,v 1.3 2004-04-06 13:22:43 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -132,6 +132,8 @@
 #        saveToVar           -- store the value of all GUIB-variables into GUIB-variables
 #        openFile            -- opens an input-file and calls readFile
 #        readFile            -- reads an input-file from a given file-channel
+#        readFileError       -- method for dealing with file-read errors
+#        readFileWrongFormat -- method for dealing with wrong-formatted input file
 #        isNotDisabledWidget -- checks is a given widget associated with a particular input-variable is not disabled
 #        getWidgetFromVarident -- returns a widget-pathname of a given input-variable
 #        varnameToVarident     -- tries to return a GUIB-variable's identifier on the basis of "varName"
@@ -381,6 +383,8 @@ class ::guib::moduleObj {
     public method getOutput             {} ; # similar to print but instead returns the content
     public method openFile              {fileName}
     public method readFile              {fileChannel {fileName {}}}
+    public method readFileError         {errMsg}
+    public method readFileWrongFormat   {formatName {diagnosisText {}}}
     public method isNotDisabledWidget   {widget}
     public method getWidgetFromVarident {varIdent} 
     public method varnameToVarident     {obj varName {nocase 0}}  
