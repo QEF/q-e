@@ -27,7 +27,7 @@ subroutine gener_pseudo
   integer ::   &
        ik,    &  ! the point corresponding to rc
        ikus,  &  ! the point corresponding to rc ultrasoft
-       ikloc, &  ! the point corresponding to rc locale
+       ikloc, &  ! the point corresponding to rc local
        ns,    &  ! counter on pseudo functions
        ns1,   &  ! counter on pseudo functions
        ib,jb, &  ! counter on beta functions
@@ -88,7 +88,6 @@ subroutine gener_pseudo
   !   bessel function before r_c
   !
   do ns=1,nbeta
-     lbes4=.false.
      lam=lls(ns)
      nst=(lam+1)*2
      nwf0=nstoae(ns)
@@ -127,8 +126,10 @@ subroutine gener_pseudo
      if (ikus.ne.ik) then
         call compute_phius(lam,ikus,ns,xc,1)
         lbes4=.true.
+     else
+        lbes4=.false.
      endif
-     call compute_chi(lam,ns,xc,lbes4)
+     call compute_chi(lam,ik,ns,xc,lbes4)
      !
      !    check that the chi are zero beyond ikk
      nst=0
@@ -143,11 +144,10 @@ subroutine gener_pseudo
         chis(n,ns)=0.d0
      enddo
      sum=int_0_inf_dr(gi,r,r2,dx,mesh,nst)
-     if (sum.gt.2.d-6) then
-        write(6, &
-             &  '(5x,''ns='',i4,'' l='',i4, '' sum='',f15.9,'' r(ikk) '',f15.9)') &
-             ns,lam,sum,r(ikk(ns))
-        call errore('gener_pseudo ','chi too large beyon r_c',-1)
+     if (sum > 2.d-6) then
+        write(6, '(5x,''ns='',i4,'' l='',i4, '' sum='',f15.9, &
+             & '' r(ikk) '',f15.9)') ns, lam, sum, r(ikk(ns))
+        call errore('gener_pseudo ','chi too large beyond r_c',-1)
         do n=ikk(ns),mesh  
            write(6,*) r(n),gi(n,1)
         enddo

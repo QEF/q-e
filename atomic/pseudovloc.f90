@@ -103,11 +103,6 @@ implicit none
          do n=ik+1,mesh
             vpsloc(n)=vpot(n,1)
          enddo
-!         do n=1,mesh
-!            write(6,*) r(n),vpot(n,1),vpsloc(n)
-!         enddo
-!         stop 
-
 
       else
 !
@@ -138,7 +133,6 @@ implicit none
 !   compute the phi functions
 !
             call compute_phipot(lloc,ik,nwf0,nsloc+indi,xc)
-!           call compute_chi(lloc,nsloc+indi,xc,.false.)
 !
 !     set the local potential equal to the all-electron one at large r
 !
@@ -149,7 +143,6 @@ implicit none
                if (r(n).lt.9.d0) then
                   vaux(n,indi+1)=chis(n,nsloc+indi)/phis(n,nsloc+indi)
                endif
-!              write(6,*) r(n),chis(n,nsloc),phis(n,nsloc)
             enddo
          enddo
          if (rep==0) then
@@ -163,11 +156,6 @@ implicit none
             enddo
          endif
       endif
-
-!      do n=1,mesh
-!        write(6,*) r(n), vpot(n,1), vpsloc(n)
-!      enddo
-!      stop
 
       return
       end

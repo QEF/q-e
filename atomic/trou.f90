@@ -79,7 +79,7 @@
       real(kind=dp) :: amat(6,6),rc
       integer :: l
 !      
-!     this routine fills the matrix withn the coefficients taken
+!     this routine fills the matrix with the coefficients taken
 !     from  p,p',p'',p''', p(iv), where p is
 !     p(r)= c0 + c4 r^4 + c6 r^6 + c8 r^8 + ...
       integer pr1(6),cr1(6),pr(6),cr(6),i,j
@@ -114,7 +114,7 @@
       subroutine eval_coeff (r,psi,ik,l,energy,dx,vpot,y)
 ! ----------------------------------------------------------------
 !    calcule les coefficients dependant de la fct d'onde calculee
-!    avec tous les electrons. ces coefficients ervent a la resolution
+!    avec tous les electrons. ces coefficients servent a la resolution
 !    du systeme lineaire.
 !    en entree : ik,nx,vpot comme dans le programme principal
 !    en sortie : une matrice colonne y contenant les coefficients
@@ -229,8 +229,8 @@
 !    cette fonction calcule de plus a chaque fois les ci qui 
 !    verifient les equations lineaires avec un c2 donne.
 !    en entree : une valeur de c2 donnee dans x
-!    en sortie, la valeur de la fonction pour cette valeur de x
-!    : c'est la fonction qui correspond a l'equation integrale
+!    en sortie, la valeur de la fonction pour cette valeur de x:
+!    c'est la fonction qui correspond a l'equation integrale
 !
       implicit none
       integer,parameter :: dp=kind(1.d0)

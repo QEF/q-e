@@ -3,7 +3,7 @@
 subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   !--------------------------------------------------------------------------
   !
-  !     This routine computes the phi functions by pseusizing the
+  !     This routine computes the phi functions by pseudizing the
   !     all_electron chi functions. In input it receives, the point
   !     ik where the cut is done, the angular momentum lam,
   !     and the correspondence with the all electron wavefunction
@@ -81,12 +81,11 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      jnor=chir(ik,ns)
      do n=1,mesh
         chir(n,ns)=chir(n,ns)*0.5d0/jnor
-     enddo
+    enddo
   else 
      do n=1,mesh
         chir(n,ns)=psi(n,nwf0)
      enddo
-     !            if (lam.eq.3) stop
   endif
   !
   !   compute the first and second derivative of all-electron function
@@ -110,7 +109,8 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      call find_coefficients &
           (ik, chir(1,ns), enls(ns), r, dx, faenor, vpot, cn, c2, lam, mesh)
       do i=1,ik
-         phis(i,ns) = r(i)**(lam+1)*exp(pr(cn,c2,r(i)))
+         phis(i,ns) =sign( r(i)**(lam+1)*exp(pr(cn,c2,r(i))), &
+                          chir(ik,ns) )
       end do
       xc(1:6) = cn(:)
       xc(7) = c2
@@ -278,6 +278,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
 140        format (5x,' Using 4 Bessel functions for this wfc,', &
                 ' rho(0) =',f6.3)
      end if
+     ! write(6,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
   end if
   !
   !      check for absence of nodes in the pseudo wavefunction
@@ -287,6 +288,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      if ( phis(n,ns) .ne. sign(phis(n,ns),phis(n+1,ns)) ) then
         write(6,150) lam,ns,r(n)
 150     format (5x,'l=',i4,' ns=',i4,' Node at ',f10.8)
+        print *, n, r(n), phis(n,ns), phis(n+1,ns)
         nnode=nnode+1
      endif
   enddo

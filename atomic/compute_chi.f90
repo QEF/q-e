@@ -1,15 +1,17 @@
 !
 !--------------------------------------------------------------------------
-subroutine compute_chi(lam,ns,xc,lbes4)
+subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !--------------------------------------------------------------------------
   !
-  !     This routine computes the chi functions by inversion of
-  !     the schroedinger equation with the RRKJ3 method.
+  !     This routine computes the chi functions:
+  !          |chi> = (\epsilon -T -V_{loc)) |psi>
   !      
   use ld1inc
 
+  implicit none
   integer :: &
-       ns, &    ! the wavefunction
+       ik,    & ! the point corresponding to rc
+       ns,    & ! the wavefunction
        lam      ! the angular momentum
   logical :: &
        lbes4 
@@ -29,23 +31,25 @@ subroutine compute_chi(lam,ns,xc,lbes4)
        n, nstart
 
   !
+  !   Troullier-Martins: use the analytic formula
+  !
   if (tm) then
-     do i=1,ik
-        dpoly = dpr(xc,xc(7),r(i))    ! first derivate of polynomial
-        chis(i,ns) = (enls(ns) + (2*lam+2)/r(i)*dpoly + &
-             d2pr(xc,xc(7),r(i)) + dpoly**2)*phis(i,ns)
+     do n=1,ik
+        dpoly = dpr(xc,xc(7),r(n))
+        ! dpr =  first derivate of polynomial pr
+        ! d2pr= second derivate of polynomial pr
+        chis(n,ns) = (enls(ns) + (2*lam+2)/r(n)*dpoly + &
+             d2pr(xc,xc(7),r(n)) + dpoly**2 - vpsloc(n))*phis(n,ns)
      enddo
-     do i = ik+1,mesh
-        chis(i,ns) = vpot(i,1)*phis(i,ns)
+     do n = ik+1,mesh
+        chis(n,ns) =0.d0
      enddo
      return
   end if
   !
-  !   compute the projectors by inverting the schroedinger equation
-  !
-  !   first expand in a taylor series the phis function
-  !   Since we know that the phis functions are a sum of
-  !   bessel function with coeeficients xc, we compute analiticaly
+  !   RRKJ: first expand in a taylor series the phis function
+  !   Since we know that the phis functions are a sum of Bessel 
+  !   functions with coefficients xc, we compute analytically
   !   the asymptotic expansion
   !
   !
@@ -57,8 +61,7 @@ subroutine compute_chi(lam,ns,xc,lbes4)
      j1(n)=phis(n,ns)/r(n)**(lam+1)
   enddo
   call seriesbes(j1,r,r2,6,c)
-  !      write(6,'(''phi(serie)= '',4e15.7)') c
-
+  !
   if (lam.eq.0) then
      if(lbes4.or.rho0.eq.0.d0)then
         c(1)=xc(1)+  &
@@ -110,7 +113,6 @@ subroutine compute_chi(lam,ns,xc,lbes4)
   else
      call errore('compute_chi','lam not programmed',1) 
   endif
-  !      write(6,'(''phi(compu)= '',4e15.7)') c
   !
   !     and the potential
   !
@@ -200,18 +202,16 @@ end subroutine compute_chi
 
 subroutine tridiag(a,b,c,r,u,n)
   !
-  !     See Numerical Recipies.
+  !     See Numerical Recipes.
   !
   implicit none
+  integer, parameter :: dp=kind(1.d0)
 
   integer :: n
-  integer, parameter :: nmax=5000, dp=kind(1.d0)
-
-  real(kind=dp) :: a(n),b(n),c(n),r(n),u(n), gam(nmax), bet
+  real(kind=dp) :: a(n),b(n),c(n),r(n),u(n)
+  real(kind=dp) :: gam(n), bet
 
   integer j
-  if (n.gt.nmax)  &
-       call errore('tridiag','nmax is too small',1)
 
   if (abs(b(1)).lt.1.d-10)  &
        call errore('tridiag','b(1) is too small',1)
@@ -221,9 +221,8 @@ subroutine tridiag(a,b,c,r,u,n)
   do j=2,n
      gam(j)=c(j-1)/bet
      bet=b(j)-a(j)*gam(j)
-     if (abs(bet).lt.1.d-10) &
+     if (abs(bet) < 1.d-10) &
           call errore('tridiag','bet is too small',1)
-
      u(j)=(r(j)-a(j)*u(j-1))/bet
   enddo
   do j=n-1,1,-1

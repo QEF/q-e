@@ -1,3 +1,9 @@
+09/07/2004  Troullier-Martins sort of working, more cleaning (PG)
+            Pt pseudopotential updated (AdC)
+
+06/07/2004  indentation, spelling,Troullier-Martins implementation added
+            (incomplete and untested), examples updated (PG)
+
 19/06/2004  Update of the output files. Added the possibility to write on file
             the beta functions (file_beta), the qvan functions (file_qvan),
             the chi functions (file_chi). (ADC)
