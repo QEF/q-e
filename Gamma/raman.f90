@@ -358,8 +358,11 @@ subroutine cg_neweps
   !
 #include "machine.h"
   USE io_global,  ONLY :  stdout
+  USE ions_base, ONLY : nat, tau
   use pwcom
   use cgcom
+  !
+  implicit none
   !
   integer :: i, j
   real(kind=DP) :: rhotot, dmxc
