@@ -167,10 +167,10 @@ program chdens
           e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3) > 1d-6 )    &
          call errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
 
-     if ((iflag.eq.3) .and.(output_format < 3 .or. output_format > 5)) &
+     if ((iflag.eq.3) .and.(output_format < 3 .or. output_format > 6)) &
         call errore ('chdens', 'incompatible iflag/output_format', 1)
-     if ((iflag.ne.3) .and. (output_format == 5) ) &
-        call errore ('chdens', 'output_format=5, iflag<>3', 1)
+     if ((iflag.ne.3) .and. ((output_format == 5) .or. (output_format == 6))) &
+        call errore ('chdens', 'output_format=5/6, iflag<>3', 1)
 
   else if (iflag  == 4) then
 
@@ -392,6 +392,13 @@ program chdens
         call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
         call xsf_fast_datagrid_3d &
              (rhor, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
+
+     elseif (output_format == 6 ) then
+        !
+        ! GAUSSIAN CUBE FORMAT
+        call write_cubefile (alat, at, nat, tau, atm, ityp, rhor, &
+             nrx1, nrx2, nrx3, ounit)
+
      else
         !
         ! GOPENMOL FORMAT

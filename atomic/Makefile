@@ -10,7 +10,6 @@ all_electron.o \
 ascheq.o \
 ascheqlocps.o \
 ascheqps.o \
-atomic_number.o \
 cfdsol.o \
 charge.o \
 chargeps.o \

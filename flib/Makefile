@@ -5,6 +5,7 @@ include ../make.rules
 
 OBJS = \
 avrec.o \
+atomic_number.o \
 capital.o \
 dost.o \
 erf.o \

@@ -43,6 +43,8 @@
   !                4  format suitable for gOpenMol  (3D)
   !                   (formatted: convert to unformatted *.plt)
   !                5  format suitable for XCRYSDEN  (3D)
+  !                6  format as gaussian cube file  (3D)
+  !                   (can be read by many programs)
   !
   !-IF iflag = 1
   !                   REQUIRED:

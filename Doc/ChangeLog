@@ -1,6 +1,10 @@
 -------------------------------------------------------------------
-Date: 15 Sep 2004    Version: pw-2-1
+Date: 20 Sep 2004    Version: pw-2-1
 -------------------------------------------------------------------
+
+20 Sep 2004 Major improvement of PWgui (TK)
+            chdens can produce "cubefile" format (Gaussian)
+            (contributed by Axel Kohlmeyer)
 
 15 Sep 2004 All examples updated (CC)
             added mpf90, mpcc for Mac, support for ifort 8.1,

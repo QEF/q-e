@@ -7,6 +7,7 @@ PPOBJS = \
 addusdens1d.o \
 cft.o \
 cgracsc.o \
+cube.o \
 dosg.o \
 elf.o \
 ggen1d.o \
