@@ -36,29 +36,33 @@ tar -xzf ../O-sesame/pw.tar.gz
 tar -xzf ../O-sesame/$GUI.tgz
 find $GUI -name CVS -exec /bin/rm -r {} \;
 
-#tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
-#                      install-sh install/ moduledep.sh License upftools/ \
-#                      include/ Doc/ examples/ Modules/ clib/ flib/ CPV/
+tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
+                      install-sh install/ moduledep.sh License upftools/ \
+                      include/ Doc/ Modules/ clib/ flib/ \
+                      CPV/
 
-#tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
-#                      install-sh install/ moduledep.sh License upftools/ \
-#                      include/ Doc/ examples/ Modules/ clib/ flib/ FPMD/
+tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
+                      install-sh install/ moduledep.sh License upftools/ \
+                      include/ Doc/ Modules/ clib/ flib/ \
+                      FPMD/
 
 tar -czf ../$GUI.tar.gz $GUI
 
-tar -czf ../pw.tar.gz bin/ config*  flib/ README* Make* make* \
+tar -czf ../pw.tar.gz bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ Doc/ Modules/ clib/ flib/ \
                       PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/
 
 tar -czf ../examples.tar.gz examples/ pseudo/
 
-tar -czf ../espresso.tar.gz    bin/ config* README* Make* make* \
+tar -czf ../espresso.tar.gz  bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
-                      include/ Doc/ Modules/ PW/ PP/     \
-                      PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/ clib/ flib/  \
+                      include/ Doc/ Modules/ clib/ flib/ \
+                      PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/ \
 		      CPV/ FPMD/ atomic/ atomic_doc/ examples/ pseudo/ $GUI
 
 scp Doc/README Doc/ChangeLog Doc/BUGS Doc/manual.tex \
-    Doc/*.png  Doc/manual.pdf ../*.tar.gz cibs:public_html/pw
+    Doc/*.png  Doc/manual.pdf ../pw.tar.gz ../espresso.tar.gz \
+    ../examples.tar.gz ../$GUI.tar.gz ../fpmd.tar.gz ../cp.tar.gz \
+    cibs:public_html/pw
 
