@@ -146,7 +146,15 @@ MODULE read_namelists_module
        qcutz   = 0.D0
        q2sigma = 0.01D0
        xc_type = 'PZ'
-       starting_magnetization = 0.0D0
+       IF ( prog == 'PW' ) THEN
+          !
+          ! set to an invalid value:
+          ! starting_magnetization MUST be set for at least one atomic type
+          !
+          starting_magnetization =-2.0D0
+       ELSE
+          starting_magnetization = 0.0D0
+       ENDIF
        lda_plus_U = .FALSE.
        Hubbard_U = 0.0D0
        Hubbard_alpha = 0.0D0
@@ -848,6 +856,14 @@ MODULE read_namelists_module
              CALL errore( sub_name ,' Hubbard_alpha is not used in FPMD ',-1)
           IF( nosym ) &
              CALL errore( sub_name ,' nosym not implemented in FPMD ', -1)
+       END IF
+       IF( prog == 'PW' ) THEN
+          !
+          ! stop if starting_magnetization is set to -2 for all atomic types
+          !
+          IF( nspin == 2 .AND. SUM(starting_magnetization) ==-2.0d0 * &
+              SIZE(starting_magnetization) ) CALL errore( sub_name ,&
+               & ' starting_magnetization MUST be set ', 1)
        END IF
        !
        ! ... non collinear check

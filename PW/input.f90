@@ -14,7 +14,7 @@ SUBROUTINE iosys
   !     ------------------------------------------------------------------
   !
   !    access the modules renaming the variables that have the same name 
-  !    as the input parameters, this is required in order to use a conde
+  !    as the input parameters, this is required in order to use a code-
   !    independent input parser
   !
   !
@@ -239,7 +239,11 @@ SUBROUTINE iosys
   ELSE
     WRITE( stdout,*) 'noncolin = false'
   ENDIF
-
+  !  starting_magnetization(ia) = -2.d0 means "not set" -- set it to 0
+  DO ia = 1, ntyp
+     IF (starting_magnetization(ia) == -2.d0) &
+          starting_magnetization(ia) = 0.d0 
+  END DO
   !
   IF ( ecutrho <= 0.D0 ) THEN
      dual = 4.D0
@@ -594,6 +598,7 @@ SUBROUTINE iosys
   lda_plus_u_                = lda_plus_u
   nspin_                     = nspin
   starting_magnetization_    = starting_magnetization
+  
   nosym_                     = nosym
   nbnd_                      = nbnd
   !
