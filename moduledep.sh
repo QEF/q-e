@@ -17,22 +17,23 @@ rm -f moduledep.tmp1 moduledep.tmp2 # destroy previous contents
 # create list of module dependencies
 # each line is of the form:
 # file_name.o : @module_name@
-egrep -i "^ *use " $sources |     # look for "USE name"
+# cast all module names to lowercase because Fortran is case insensitive
+egrep -i "^ *use " $sources |             # look for "USE name"
 sed 's/f90:/o /
-     s/,/ /' |                   # replace extension, insert space
-#                                #   and remove trailing comma
-awk '{print $1 " : @" $3 "@"}' | # create dependency entry
-sort | uniq > moduledep.tmp1     # remove duplicates
+     s/,/ /' |                            # replace extension, insert space
+#                                         #   and remove trailing comma
+awk '{print $1 " : @" tolower($3) "@"}' | # create dependency entry
+sort | uniq > moduledep.tmp1              # remove duplicates
 
 # create list of available modules
 # for each module, create a line of the form:
 # s/@module_name@/file_name/g
-egrep -i "^ *module " $sources_all |   # look for "MODULE name"
+egrep -i "^ *module " $sources_all |           # look for "MODULE name"
 sed 's/f90:/o /
-     s/\//\\\//g' |                   # replace extension, insert space
-#                                     #   and escape slashes
-awk '{print "s/@" $3 "@/" $1 "/" }' | # create substitution line
-sort | uniq > moduledep.tmp2          # remove duplicates
+     s/\//\\\//g' |                            # replace extension, insert
+#                                              #   space and escape slashes
+awk '{print "s/@" tolower($3) "@/" $1 "/" }' | # create substitution line
+sort | uniq > moduledep.tmp2                   # remove duplicates
 
 # replace module names with file names
 # by applying the file of substitution patterns just created
