@@ -212,11 +212,11 @@ cat > fe.pen.in << EOF
     occupations='smearing', smearing='gaussian', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
-    angle1(1) = 90.0
+    angle1(1) = 85.0
     angle2(1) =  0.0
     mcons(1,1) = 0.0
-    mcons(2,1) = 0.5
-    mcons(3,1) = 0.0
+    mcons(2,1) = 0.0
+    mcons(3,1) = 0.5
     i_cons = 1
     lambda = 1
  /
