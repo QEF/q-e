@@ -98,10 +98,11 @@ module gvec
 
   use cell_base, only: tpiba, tpiba2
   use reciprocal_vectors, only: &
+        gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
+  use gvecp, only: &
         ng => ngm, &
         ngl => ngml, &
-        ng_g => ngmt, &
-        gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
+        ng_g => ngmt
 
   !     tpiba   = 2*pi/alat
   !     tpiba2  = (2*pi/alat)**2
