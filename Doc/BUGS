@@ -1,3 +1,8 @@
+  *  When imposing hermiticity in matdyn.x and dynmat.x codes in pwtools
+     routine dyndiag was actually computing the complex conjugate of
+     the dynamical matrix. Eigenvectors were therefore wrong, while
+     eigenvalues were fine.
+
   *  The phonon code was yielding incorrect results when 4-dimensional
      irreps were present (i.e. A point in graphite) and ultrasoft PP used
 

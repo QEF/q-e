@@ -238,8 +238,8 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
           diff = dif1
           difrel=diff / min ( abs(dyn2(i,j)), abs(dyn2(j,i)))
        end if
-       dyn2(j,i) = 0.5* (dyn2(i,j)+conjg(dyn2(j,i)))
-       dyn2(i,j) = conjg(dyn2(j,i))
+       dyn2(i,j) = 0.5* (dyn2(i,j)+conjg(dyn2(j,i)))
+       dyn2(j,i) = conjg(dyn2(i,j))
     end do
  end do
  if ( diff > 1.d-6 ) write (6,'(5x,"Max |d(i,j)-d*(j,i)| = ",f9.6,/,5x, &
