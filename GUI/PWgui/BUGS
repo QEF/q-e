@@ -1,5 +1,6 @@
 BUGS -- known bugs. 
 
+* GUI freeze when read a PW input file with an empty namelist
 * strange behaviour of checkbox widgets for atomic-coordinates (iforce
 components)
 
