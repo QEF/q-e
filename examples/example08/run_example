@@ -1,0 +1,223 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x to calculate the DOS of Ni."
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x dos.x projwfc.x"
+PSEUDO_LIST="NiUS.RRKJ3.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if ! test -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if ! test -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if ! test -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+ 
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if ! test -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+DOS_COMMAND="$PARA_PREFIX $BIN_DIR/dos.x $PARA_POSTFIX"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:      $PW_COMMAND"
+$ECHO "  running dos.x as:     $DOS_COMMAND"
+$ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
+$ECHO
+ 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation
+cat > ni.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='ni',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin = 2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0,
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Ni 58.69 NiUS.RRKJ3.UPF
+ATOMIC_POSITIONS
+ Ni 0.0 0.0 0.0
+K_POINTS
+  60
+   0.0625000  0.0625000  0.0625000   1.00
+   0.0625000  0.0625000  0.1875000   3.00
+   0.0625000  0.0625000  0.3125000   3.00
+   0.0625000  0.0625000  0.4375000   3.00
+   0.0625000  0.0625000  0.5625000   3.00
+   0.0625000  0.0625000  0.6875000   3.00
+   0.0625000  0.0625000  0.8125000   3.00
+   0.0625000  0.0625000  0.9375000   3.00
+   0.0625000  0.1875000  0.1875000   3.00
+   0.0625000  0.1875000  0.3125000   6.00
+   0.0625000  0.1875000  0.4375000   6.00
+   0.0625000  0.1875000  0.5625000   6.00
+   0.0625000  0.1875000  0.6875000   6.00
+   0.0625000  0.1875000  0.8125000   6.00
+   0.0625000  0.1875000  0.9375000   6.00
+   0.0625000  0.3125000  0.3125000   3.00
+   0.0625000  0.3125000  0.4375000   6.00
+   0.0625000  0.3125000  0.5625000   6.00
+   0.0625000  0.3125000  0.6875000   6.00
+   0.0625000  0.3125000  0.8125000   6.00
+   0.0625000  0.3125000  0.9375000   6.00
+   0.0625000  0.4375000  0.4375000   3.00
+   0.0625000  0.4375000  0.5625000   6.00
+   0.0625000  0.4375000  0.6875000   6.00
+   0.0625000  0.4375000  0.8125000   6.00
+   0.0625000  0.4375000  0.9375000   6.00
+   0.0625000  0.5625000  0.5625000   3.00
+   0.0625000  0.5625000  0.6875000   6.00
+   0.0625000  0.5625000  0.8125000   6.00
+   0.0625000  0.6875000  0.6875000   3.00
+   0.0625000  0.6875000  0.8125000   6.00
+   0.0625000  0.8125000  0.8125000   3.00
+   0.1875000  0.1875000  0.1875000   1.00
+   0.1875000  0.1875000  0.3125000   3.00
+   0.1875000  0.1875000  0.4375000   3.00
+   0.1875000  0.1875000  0.5625000   3.00
+   0.1875000  0.1875000  0.6875000   3.00
+   0.1875000  0.1875000  0.8125000   3.00
+   0.1875000  0.3125000  0.3125000   3.00
+   0.1875000  0.3125000  0.4375000   6.00
+   0.1875000  0.3125000  0.5625000   6.00
+   0.1875000  0.3125000  0.6875000   6.00
+   0.1875000  0.3125000  0.8125000   6.00
+   0.1875000  0.4375000  0.4375000   3.00
+   0.1875000  0.4375000  0.5625000   6.00
+   0.1875000  0.4375000  0.6875000   6.00
+   0.1875000  0.4375000  0.8125000   6.00
+   0.1875000  0.5625000  0.5625000   3.00
+   0.1875000  0.5625000  0.6875000   6.00
+   0.1875000  0.6875000  0.6875000   3.00
+   0.3125000  0.3125000  0.3125000   1.00
+   0.3125000  0.3125000  0.4375000   3.00
+   0.3125000  0.3125000  0.5625000   3.00
+   0.3125000  0.3125000  0.6875000   3.00
+   0.3125000  0.4375000  0.4375000   3.00
+   0.3125000  0.4375000  0.5625000   6.00
+   0.3125000  0.4375000  0.6875000   6.00
+   0.3125000  0.5625000  0.5625000   3.00
+   0.4375000  0.4375000  0.4375000   1.00
+   0.4375000  0.4375000  0.5625000   3.00
+EOF
+$ECHO "  running the scf calculation for Ni...\c"
+$PW_COMMAND < ni.scf.in > ni.scf.out
+$ECHO " done"
+
+# DOS calculation for Ni
+cat > ni.dos.in << EOF
+ &control
+    calculation='nscf'
+    prefix='ni',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin = 2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0, nbnd=8,
+    occupations='tetrahedra'
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Ni 58.69 NiUS.RRKJ3.UPF
+ATOMIC_POSITIONS
+ Ni 0.0 0.0 0.0
+K_POINTS {automatic}
+ 12 12 12 0 0 0
+EOF
+
+cat > ni.dos2.in << EOF
+ &inputpp
+    outdir='$TMP_DIR/'
+    prefix='ni'
+    fildos='ni.dos'
+    Emin=5.0, Emax=25.0,DeltaE=0.1
+ /
+EOF
+
+$ECHO "  running DOS calculation for Ni...\c"
+$PW_COMMAND < ni.dos.in > ni.dos.out
+$DOS_COMMAND < ni.dos2.in > ni.dos2.out
+$ECHO " done"
+
+cat > ni.pdos.in << EOF
+ &inputpp
+    outdir='$TMP_DIR/'
+    prefix='ni'
+    io_choice='both'
+    Emax=25.0, DeltaE=0.1, smoothing=0.3
+ /
+EOF
+$ECHO "  running PDOS calculation for Ni...\c"
+$PROJWFC_COMMAND < ni.pdos.in > ni.pdos.out
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

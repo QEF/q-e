@@ -1,0 +1,28 @@
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    pseudo_dir='/home/giannozz/O-sesame/pseudo//'
+    outdir='/home/giannozz/tmp//'
+ /
+ &system
+   ibrav=1,
+   celldm(1)=20.0,
+   nat=1,
+   ntyp=1,
+   nbnd=6,
+   nosym=.true.,
+   ecutwfc=15.0,
+   occupations='from_input',
+ /
+ &electrons
+   mixing_beta=0.35,
+   conv_thr=1.0E-8,
+ /
+ATOMIC_SPECIES
+Al     26.98154    Al.vbc.UPF
+ATOMIC_POSITIONS   
+Al      0.0000000000   0.0000000000     0.000
+K_POINTS  AUTOMATIC
+1   1   1   0   0   0
+OCCUPATIONS
+2.0 0.3333333333333 0.333333333333 0.3333333333333 0.0 0.0 

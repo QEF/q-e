@@ -1,0 +1,44 @@
+This example shows how to use the pwcond.x program to calculate
+the complex band structure of a system and its transmittance.
+The ballistic conductance is then given by the Landauer-Buttiker formula.
+In this example four systems are calculated:
+
+1) The complex band structure of Al bulk along the (001) direction.
+
+2) The complex band structure of a monatomic Al nanowire.
+
+3) The complex band structure of Ni bulk along the (001) direction.
+
+4) The transmittance of an Al wire with an H impurity.
+
+NB: In order to make the tests faster, these calculations are not fully 
+    converged with respect to k points, cut-off and size of the cell.
+
+The calculation proceeds in this way:
+
+1.a) A pw.x calculation provides the self-consistent potential of a two 
+     atom tetragonal Al(001) super-cell. Al is described by norm conserving
+     pseudo-potentials.
+
+1.b) A pwcond.x calculation provides for every energy in the chosen
+     region the values of the k vectors (in general complex) which 
+     correspond to those energies.
+
+2.a) A pw.x calculation provides the self-consistent potential of a 
+     monatomic Al wire, described by a unit cell with a single atom.
+
+2.b) A pwcond.x calculation provides the real and complex k vectors 
+     which correspond to those energies.
+
+3.a) A pw.x calculation provides the self-consistent potential of a two 
+     atom tetragonal Ni(001) super-cell.  Ni is described by an ultrasoft
+     pseudo-potential.
+
+3.b) A pwcond.x calculation provides the real and complex k vectors which 
+     correspond to those energies.
+
+4.a) A pw.x calculation provides the self-consistent potential of 
+     an Al wire (6 atoms long) with an H atom impurity.
+
+4.b) A pwcond.x calculation gives for every energy in the chosen region 
+     the transmittance at that energy. 

@@ -1,0 +1,13 @@
+
+This example shows how to use the Gamma-only version of pw.x and ph.x
+(respectively pw.x and phcg.x) to calculate the normal modes of SiH4
+
+1) make a self-consistent calculation at Gamma.
+   (input=sih4.scf.in, output=sih4.scf.out)
+
+2) make a phonon calculation for the Gamma point.
+   (input=sih4.nm.in, output=sih4.nm.in)
+
+Note that the calculation is not intended to be a good one,
+but just a test one! Rotation modes have negative frequencies.
+This is a consequence of the supercell approach.

@@ -1,0 +1,34 @@
+
+This example shows how to use pw.x to calculate the minimum energy path (MEP) in
+a simple activated reaction i.e. the collinear proton transfer reaction :
+
+H2 + H  <==> H + H2
+
+The MEP is obtained by means of the Climbing Image Nudged Elastic Band (CI-NEB)
+method and two different climbing image algorithms are used (highest-TS and
+manual).
+
+(for the meaning of the cited input variables see the appropriate INPUT_* file)
+
+The symmetric reaction path H2 + H  <==> H + H2 is calculated in three 
+different ways:
+
+1) The path connecting the initial and the final configurations is discretized
+   with an odd number of images (7) so that the standard CI_scheme (highest-TS)
+   will give rise to a symmetric MEP (3 images on the left of the saddle point
+   and 3 images on the right). Note that in this system the use of the climbing
+   image is not neccesary. Indeed using CI_scheme = "no-CI" the result is the 
+   same.
+
+2) The path connecting the initial and the final configurations is discretized
+   with an even number of images (8) and no climbing image is used. The
+   resulting path is symmetric, but no image is at the saddle point.
+
+3) The path connecting the initial and the final configurations is again 
+   discretized with an even number of images (8), but the "manual" CI_scheme is
+   used so that the resulting path is asymmetric. The image 5 now is at the
+   saddle point.
+   
+Given the low accuracy of these calculations (plane waves cut-off and 
+thresholds) and the small box employed, these results can not be compared with
+experiments or with other "ab initio" calculations.

@@ -1,0 +1,272 @@
+************************************************************************
+****                                                                ****
+****  CPV: variable-cell Car-Parrinello molecular dynamics          ****
+****  using ultrasoft Vanderbilt pseudopotentials - v.2.0           ****
+****                                                                ****
+************************************************************************
+
+     Parallel version (MPI)
+     Number of processors in use:      1
+reading ppot for species #  1 from file /home/ballabio/O-sesame/pseudo/O.LDA.US.RRKJ3.UPF
+reading ppot for species #  2 from file /home/ballabio/O-sesame/pseudo/Si.vbc.UPF
+
+
+ nbeg= -2 nomore=     20    iprint=  20
+ reads from 90 writes on 91
+ time step =    5.0000
+
+ parameters for electron dynamics:
+ emass=     700.00  emaec=       3.00ry
+ orthog. with lagrange multipliers: eps=  0.10E-07 max= 20
+ verlet algorithm for electron dynamics
+ with friction frice =  0.2000 , grease =  1.0000
+ initial random displacement of el. coordinates with  amplitude=  0.010000
+ trane not to be used with mass preconditioning
+
+
+ ions are not allowed to move
+
+ modified kinetic energy functional, with parameters:
+ agg = 150.0000  sgg =  2.0000  e0gg =  16.00
+ iprsta =  1
+
+  UNIT8 = 
+ /home/ballabio/tmp/intel//fort.8                                               
+                                                                                
+                                                                                
+                    
+ 
+ unit vectors of full simulation cell
+ in real space:                         in reciprocal space:
+    9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
+    0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
+ 
+ ggen:  # of g vectors < gcut   ng=  23643
+ ggen:  # of g vectors < gcuts ngs=   9216
+ ggen:  # of g vectors < gcutw ngw=   1153
+ ggen:  # of g shells  < gcut  ngl=   6537
+ 
+ 
+ unit vectors of box grid cell
+ in real space:                         in reciprocal space:
+    3.7160    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000    4.0227    0.0000              0.0000    0.9238    0.0000
+    0.0000    0.0000    4.0859              0.0000    0.0000    0.9095
+ 
+ ggenb: # of gb vectors < gcutb ngb =    948
+ ggenb: # of gb shells  < gcutb ngbl=    312
+ initialization 
+
+ ibrav=  8 alat=  9.290 omega= 1526.9015
+ gcut=  327.91    gcuts=  174.88 gcutw=   43.72
+ k-points: nkpt= 1
+
+
+ meshes:
+  dense grid: nr1 ,nr2, nr3  =   40  64  40  nr1x, nr2x, nr3x =   40  64  40
+ smooth grid: nr1s,nr2s,nr3s =   27  45  30  nr1sx,nr2sx,nr3sx=   27  45  30
+    box grid: nr1b,nr2b,nr3b =   16  16  16  nr1bx,nr2bx,nr3bx=   16  16  16
+
+ exchange-correlation potential:  SLA  PZ   NOGX NOGC
+
+ ecutw=   20.0 ryd    ecuts=   80.0 ryd    ecut=  150.0 ryd
+
+ # of electrons=   96 # of states=   48
+
+
+ nspin= 1
+ occupation numbers:
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+
+ # of atomic species    2
+ is=  1
+  na=  12  atomic mass= 16.00 gaussian rcmax=  1.00
+ atomic coordinates:
+       3.19  14.83   1.23       7.83   6.79   1.23       2.07   6.00   4.74
+       6.72  14.04   4.74       3.96  11.27   7.88       8.61   3.22   7.88
+       3.96   4.82   9.15       8.61  12.86   9.15       3.19   1.26   5.58
+       7.83   9.30   5.58       2.08  10.09   2.07       6.72   2.05   2.07
+ is=  2
+  na=   6  atomic mass= 28.00 gaussian rcmax=  1.00
+ atomic coordinates:
+       0.29   8.05   3.40       4.93   0.00   3.40       2.13  12.28  -0.04
+       6.78   4.23  -0.04       2.13   3.81   6.85       6.78  11.86   6.85
+    NOTA BENE: refg, mmx =   3.000000000000000E-002        5001
+ wmass (calculated) =        49868.29
+
+  out from init
+  nlinit  nh(is),ngb,is,kkbeta,lmaxq =            8         948           1
+         865           5
+ 
+                        qqq 
+  -0.0987   0.4865   0.0000   0.0000
+   0.4865  -2.1787   0.0000   0.0000
+   0.0000   0.0000   0.2330   0.2950
+   0.0000   0.0000   0.2950   0.3737
+ 
+   betagx  
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  0
+   3  indv=  3   ang. mom=  1
+   4  indv=  3   ang. mom=  1
+   5  indv=  3   ang. mom=  1
+   6  indv=  4   ang. mom=  1
+   7  indv=  4   ang. mom=  1
+   8  indv=  4   ang. mom=  1
+ 
+                        dion 
+   0.4817  -1.2813   0.0000   0.0000
+  -1.2813   2.3075   0.0000   0.0000
+   0.0000   0.0000   0.6338   0.8752
+   0.0000   0.0000   0.8752   1.2039
+   betagx  
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  1
+   3  indv=  2   ang. mom=  1
+   4  indv=  2   ang. mom=  1
+ 
+                        dion 
+   0.7619   0.0000
+   0.0000   1.8417
+  out from nlinit
+  formf: eself= 210.64152
+  formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
+  formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
+  formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
+  formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 96.000000     in r-space = 96.000000
+  out from rhoofr
+
+
+                total energy =      119.50338 a.u.
+              kinetic energy =      283.39712 a.u.
+        electrostatic energy =     -121.71212 a.u.
+                         esr =        0.42692 a.u.
+                       eself =      210.64152 a.u.
+      pseudopotential energy =      -18.67284 a.u.
+  n-l pseudopotential energy =        9.76799 a.u.
+ exchange-correlation energy =      -33.27677 a.u.
+           average potential =       -0.62496 a.u.
+
+
+  out from vofrho
+  out from newd
+  out from dforce
+  out from nlfq
+  out from calphi
+  out from nlfl
+  out from updatc
+  out from calbec
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 96.000000     in r-space = 96.000000
+
+
+                total energy =       99.87941 a.u.
+              kinetic energy =      270.32900 a.u.
+        electrostatic energy =     -127.13194 a.u.
+                         esr =        0.42692 a.u.
+                       eself =      210.64152 a.u.
+      pseudopotential energy =      -20.79246 a.u.
+  n-l pseudopotential energy =       10.78381 a.u.
+ exchange-correlation energy =      -33.30900 a.u.
+           average potential =       -0.62476 a.u.
+
+
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -3.92   -1.06    0.59    4.23    5.06    7.60    9.64   11.26   11.43   13.12
+   13.95   15.61   17.17   17.71   18.66   19.80   20.50   21.93   23.44   23.61
+   24.00   25.20   26.44   28.11   28.60   29.69   30.78   32.64   33.17   34.18
+   34.81   35.54   37.23   38.03   39.30   39.85   40.59   41.28   41.81   42.99
+   45.05   46.03   46.90   47.27   48.44   49.47   51.58   53.47
+ 
+ 
+ 
+  nfi    ekinc  temph tempp      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+    1 15.65069      0     0    99.87941    99.87941   115.53010  0.0000  0.0000  0.0000  0.0000
+    2 36.98285      0     0    55.97891    55.97891    92.96176  0.0000  0.0000  0.0000  0.0000
+    3 53.86628      0     0     1.08173     1.08173    54.94801  0.0000  0.0000  0.0000  0.0000
+    4 61.00349      0     0   -53.35006   -53.35006     7.65342  0.0000  0.0000  0.0000  0.0000
+    5 58.46781      0     0   -99.30422   -99.30422   -40.83641  0.0000  0.0000  0.0000  0.0000
+    6 49.41129      0     0  -133.46113  -133.46113   -84.04985  0.0000  0.0000  0.0000  0.0000
+    7 37.84647      0     0  -156.46062  -156.46062  -118.61415  0.0000  0.0000  0.0000  0.0000
+    8 26.91685      0     0  -170.96247  -170.96247  -144.04562  0.0000  0.0000  0.0000  0.0000
+    9 18.25194      0     0  -179.93311  -179.93311  -161.68117  0.0000  0.0000  0.0000  0.0000
+   10 12.19009      0     0  -185.73261  -185.73261  -173.54252  0.0000  0.0000  0.0000  0.0000
+   11  8.32535      0     0  -189.87894  -189.87894  -181.55359  0.0000  0.0000  0.0000  0.0000
+   12  6.00051      0     0  -193.18044  -193.18044  -187.17994  0.0000  0.0000  0.0000  0.0000
+   13  4.60936      0     0  -195.98484  -195.98484  -191.37548  0.0000  0.0000  0.0000  0.0000
+   14  3.71857      0     0  -198.40413  -198.40413  -194.68555  0.0000  0.0000  0.0000  0.0000
+   15  3.07343      0     0  -200.46458  -200.46458  -197.39115  0.0000  0.0000  0.0000  0.0000
+   16  2.55153      0     0  -202.18315  -202.18315  -199.63162  0.0000  0.0000  0.0000  0.0000
+   17  2.10771      0     0  -203.59284  -203.59284  -201.48513  0.0000  0.0000  0.0000  0.0000
+   18  1.73122      0     0  -204.74143  -204.74143  -203.01021  0.0000  0.0000  0.0000  0.0000
+   19  1.42027      0     0  -205.68139  -205.68139  -204.26112  0.0000  0.0000  0.0000  0.0000
+
+
+                total energy =     -206.46067 a.u.
+              kinetic energy =      100.13181 a.u.
+        electrostatic energy =     -198.82199 a.u.
+                         esr =        0.42692 a.u.
+                       eself =      210.64152 a.u.
+      pseudopotential energy =      -97.72123 a.u.
+  n-l pseudopotential energy =       38.24021 a.u.
+ exchange-correlation energy =      -48.28947 a.u.
+           average potential =       -0.53680 a.u.
+
+
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -24.29  -23.73  -23.51  -23.09  -22.76  -22.51  -22.50  -22.14  -21.99  -21.92
+  -21.73  -21.60  -11.61  -11.46  -11.25  -10.51   -9.38   -8.79   -8.72   -8.53
+   -8.47   -8.11   -7.95   -7.59   -6.44   -6.15   -6.03   -5.78   -5.61   -5.42
+   -4.93   -4.82   -4.74   -4.62   -4.40   -4.13   -4.02   -3.87   -3.63   -3.08
+   -2.65   -1.30   -0.76    0.00    1.04    3.23    4.96    7.71
+ 
+ 
+   20  1.17110      0     0  -206.46067  -206.46067  -205.28957  0.0000  0.0000  0.0000  0.0000
+
+
+              averaged quantities :
+         ekinc          ekin          epot          etot     tempp
+      20.26484     135.34494    -309.40677    -141.14183       0.0
+     initialize   :    23.39s CPU
+     total_time   :    52.65s CPU (      20 calls,   2.632 s avg)
+     formf        :     2.33s CPU
+     rhoofr       :    14.41s CPU (      21 calls,   0.686 s avg)
+     vofrho       :     5.74s CPU (      21 calls,   0.273 s avg)
+     dforce       :    22.61s CPU (     504 calls,   0.045 s avg)
+     calphi       :     1.00s CPU (      21 calls,   0.048 s avg)
+     ortho        :     4.10s CPU (      21 calls,   0.195 s avg)
+     updatc       :     0.67s CPU (      21 calls,   0.032 s avg)
+     graham       :     0.51s CPU
+     newd         :     5.39s CPU (      21 calls,   0.257 s avg)
+     calbec       :     0.54s CPU (      22 calls,   0.025 s avg)
+     prefor       :     0.31s CPU (      22 calls,   0.014 s avg)
+     strucf       :     0.21s CPU (      21 calls,   0.010 s avg)
+     rhov         :     2.52s CPU (      21 calls,   0.120 s avg)
+     nlsm1        :     3.11s CPU (      64 calls,   0.049 s avg)
+     fft          :     5.00s CPU (      84 calls,   0.060 s avg)
+     ffts         :     0.48s CPU (      42 calls,   0.011 s avg)
+     fftw         :    16.82s CPU (    1512 calls,   0.011 s avg)
+     fftb         :     1.45s CPU (    4662 calls,   0.000 s avg)
+     rsg          :     0.15s CPU (      21 calls,   0.007 s avg)
+
+
+====================== end cprvan ======================
+
+
+     CP           :  1m16.25s CPU time
+
+
+   MEMORY STATISTICS FROM PE(1) : 

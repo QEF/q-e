@@ -1,0 +1,8 @@
+phonons of si at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='si',
+  amass(1)=28.08,
+  outdir='/home/giannozz/tmp//'
+ /
+1.0 0.0 0.0

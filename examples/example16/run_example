@@ -1,0 +1,267 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows a calculation of STM maps."
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pp.x chdens.x plotrho.x"
+PSEUDO_LIST="Al.vbc.UPF As.gon.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if ! test -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if ! test -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if ! test -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+ 
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if ! test -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PP_COMMAND="$PARA_PREFIX $BIN_DIR/pp.x $PARA_POSTFIX"
+CHDENS_COMMAND="$BIN_DIR/chdens.x"
+PLOTRHO_COMMAND="$BIN_DIR/plotrho.x"
+$ECHO
+$ECHO "  running pw.x as:      $PW_COMMAND"
+$ECHO "  running pp.x as:      $PP_COMMAND"
+$ECHO "  running chdens.x as:  $CHDENS_COMMAND"
+$ECHO "  running plotrho.x as: $PLOTRHO_COMMAND"
+$ECHO
+ 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation
+cat > AlAs110re.scf.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    title='AlAs 110 surface slab, relaxed (central plane fixed)'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='AlAs110'
+ /
+ &system
+    ibrav=  8, celldm(1) =7.424621202, celldm(2)=1.414213576,
+    celldm(3)= 6.00000,
+    nat= 14, ntyp= 2,
+    ecutwfc =14.0,
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.7 
+    conv_thr =  1.0d-6
+ /
+ ATOMIC_SPECIES
+ Al  26.98  Al.vbc.UPF
+ As  74.92  As.gon.UPF
+ATOMIC_POSITIONS
+ As  0.000000000  -0.044777195  -0.058158722
+ Al  0.500000000   0.251460333   0.113525468
+ As  0.500000000   0.712279009   0.504183885
+ Al  0.000000000   1.067633546   0.480460620
+ As  0.000000000  -0.003937059   0.995826731
+ Al  0.500000000   0.351400965   1.004220212
+ As  0.000000000  -0.003937059   2.004173269
+ Al  0.500000000   0.351400965   1.995779788
+ As  0.500000000   0.712279009   2.495816115
+ Al  0.000000000   1.067633546   2.519539380
+ As  0.000000000  -0.044777195   3.058158722
+ Al  0.500000000   0.251460333   2.886474532
+ As  0.500000000   0.707106800   1.500000000
+ Al  0.000000000   1.060660200   1.500000000
+K_POINTS {automatic}
+ 6 2 1 0 0 0
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND < AlAs110re.scf.in > AlAs110re.scf.out
+$ECHO " done"
+
+cat > AlAs110re.nonscf.in << EOF
+ &control
+    calculation = 'nscf'
+    restart_mode='from_scratch',
+    title='AlAs 110 surface slab, relaxed (central plane fixed)'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='AlAs110'
+ /
+ &system
+    ibrav=  8, celldm(1) =7.424621202, celldm(2)=1.414213576,
+    celldm(3)= 6.00000,
+    nat= 14, ntyp= 2,
+    occupations='smearing', smearing='gaussian', degauss=0.01, nbnd=34, 
+    ecutwfc =14.0,
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.7 
+    conv_thr =  1.0d-6
+ /
+ ATOMIC_SPECIES
+ Al  26.98  Al.vbc.UPF
+ As  74.92  As.gon.UPF
+ATOMIC_POSITIONS
+ As  0.000000000  -0.044777195  -0.058158722
+ Al  0.500000000   0.251460333   0.113525468
+ As  0.500000000   0.712279009   0.504183885
+ Al  0.000000000   1.067633546   0.480460620
+ As  0.000000000  -0.003937059   0.995826731
+ Al  0.500000000   0.351400965   1.004220212
+ As  0.000000000  -0.003937059   2.004173269
+ Al  0.500000000   0.351400965   1.995779788
+ As  0.500000000   0.712279009   2.495816115
+ Al  0.000000000   1.067633546   2.519539380
+ As  0.000000000  -0.044777195   3.058158722
+ Al  0.500000000   0.251460333   2.886474532
+ As  0.500000000   0.707106800   1.500000000
+ Al  0.000000000   1.060660200   1.500000000
+K_POINTS {automatic}
+ 12 4 1 0 0 0
+EOF
+$ECHO "  running the non-scf calculation...\c"
+$PW_COMMAND < AlAs110re.nonscf.in > AlAs110re.nonscf.out
+$ECHO " done"
+
+# post-processing for stm images (sample bias given in Ry!)
+cat > AlAs110.pp_stm-.in << EOF
+ &inputpp
+    prefix  = 'AlAs110'
+    outdir='$TMP_DIR/',
+    filplot = 'AlAsresm-1.0'
+    sample_bias=-0.0735d0,
+    stm_wfc_matching=.false.,
+    plot_num= 5
+ /
+EOF
+$ECHO "  running the post-processing phase, negative bias...\c"
+$PP_COMMAND < AlAs110.pp_stm-.in > AlAs110.pp_stm-.out
+$ECHO " done"
+
+# post-processing for stm images (as before, but positive bias)
+cat > AlAs110.pp_stm+.in << EOF
+ &inputpp
+    prefix  = 'AlAs110'
+    outdir='$TMP_DIR/',
+    filplot = 'AlAsresm+1.0'
+    sample_bias=0.0735d0,
+    stm_wfc_matching=.false.,
+    plot_num= 5
+ &/
+EOF
+$ECHO "  running the post-processing phase, positive bias...\c"
+$PP_COMMAND < AlAs110.pp_stm+.in > AlAs110.pp_stm+.out
+$ECHO " done"
+
+# run chdens for 2D plot of STM data
+cat > AlAs110.chdens-.in << EOF
+ &input
+   nfile=1
+   filepp(1)='AlAsresm-1.0'
+   weight(1)=1.0
+   iflag=2
+   plot_out=1
+   output_format=2
+   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
+   e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
+   x0(1)=0.0, x0(2)=-0.18,   x0(3)=3.25
+   nx=36 ,ny=56     
+   fileout='AlAs110-1.0'
+ /
+EOF
+$ECHO "  running chdens on negative bias data...\c"
+$CHDENS_COMMAND < AlAs110.chdens-.in > AlAs110.chdens-.out
+$ECHO " done"
+
+# chdens
+cat > AlAs110.chdens+.in << EOF
+ &input
+   nfile=1
+   filepp(1)='AlAsresm+1.0'
+   weight(1)=1.0
+   iflag=2
+   plot_out=1
+   output_format=2
+   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
+   e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
+   x0(1)=0.0, x0(2)=-0.18,   x0(3)=3.25
+   nx=36 ,ny=56     
+   fileout='AlAs110+1.0'
+ /
+EOF
+$ECHO "  running chdens on positive bias data...\c"
+$CHDENS_COMMAND < AlAs110.chdens+.in > AlAs110.chdens+.out
+$ECHO " done"
+
+# run plotrho to do the figure
+cat > AlAs110.plotrho-.in << EOF
+AlAs110-1.0
+AlAs110-1.0eV.ps
+n  
+0.00005 0.0078  8 
+EOF
+$ECHO "  running plotrho on negative bias data...\c"
+$PLOTRHO_COMMAND < AlAs110.plotrho-.in > AlAs110.plotrho-.out
+$ECHO " done"
+
+# plotrho
+cat > AlAs110.plotrho+.in << EOF
+AlAs110+1.0
+AlAs110+1.0eV.ps
+n  
+0.00002 0.0021  8 
+EOF
+$ECHO "  running plotrho on positive bias data...\c"
+$PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

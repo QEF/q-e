@@ -1,0 +1,68 @@
+
+This example illustrates how to use pw.x and ph.x to calculate phonon
+frequencies at Gamma and X for Si in diamond structure.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation (input=si.scf.in,
+   output=si.scf.out)
+
+2) make a phonon calculation for gamma point (input=si.phG.in,
+   output=si.phG.out). Note that outdir and prefix have the same
+   values as in the input for scf calculation.
+   Note that the q-point (the Gamma point in this case) is read
+   after the namelist inputph. 
+   Dynamical matrix will be saved for further analysis in fildyn (whose
+   default name is 'matdyn', here overwritten to si.dynG)
+
+   The Gamma point is the ONLY one for which the phonon code can be run
+   directly after the scf run (provided filpun was defined).
+   For all other points in the BZ a non-scf preparatory run is needed,
+   as it is shown here for the X point.
+
+3) make a non-scf calculation for X point (input=si.nscfX.in,
+   output=si.nscfX.out).
+   Note in the input that the same outdir and prefix are given, and
+   calculation='phonon' is defined. Note that the previous output file
+   that is present in outdir will be overwritten... you could rename
+   it if you prefer. Note the q-point for phonon calculation (X point
+   in this case) in the namelist "phonon".
+
+4) make a phonon calculation for X point (input=si.phX.in,
+   output=si.phX.out). Note that outdir and prefix have the same
+   values as in the input of the non-scf run.
+   Note that the q-point (the X point in this case) is read after
+   the namelist inputph.
+   Dynamical matrices will be saved for further analysis in fildyn
+   (whose default name is 'matdyn', here overwritten to si.dynX). 
+   The fildyn file contains the dynamical matrices for q-points that
+   are equivalent by symmetry to the q-point given in input (in this
+   case the three X points), therefore when calculating phonons in the
+   whole BZ the code needs to be run only on inequivalent points.
+
+   The phonon code can perform also a 'single-mode' calculation where
+   only a single atom is moved in a single direction and the corresponding
+   column of the dynamical matrix is calculated. This may be useful when
+   studying vibrational properties of defects and/or surfaces.
+   This feature is illustrated in the last part of the test.
+
+5) make a non-scf calculation at X point for a single mode
+   (input=si.nscfXsingle.in, output=si.nscfXsingle.out).
+   Note that the same outdir and prefix are given, calculation is set
+   to 'phonon', modenum is set to 3 (corresponding to a displacement in
+   the z direction of the first atom) are defined. Note that the previous 
+   output file that is present in outdir will be overwritten... you could 
+   rename. Note the q-point for phonon calculation (X point
+   in this case) in the namelist "phonon".
+
+6) make a phonon calculation at X point for a single mode
+   (input=si.phXsingle.in, output=si.phXsingle.out). 
+   Note that outdir and prefix have the same values as in the input
+   for the non-scf run. Note that the q-point
+   (the X point in this case) is read after the namelist inputph.  
+   The input is identical to case 4), the only difference is that 
+   fildyn is given a different name, the default one, in order not to
+   overwrite the previous files. The total dynamical matrix is not
+   computed and matdyn is actually left empty.
+

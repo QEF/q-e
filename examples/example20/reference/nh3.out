@@ -1,0 +1,1306 @@
+=------------------------------------------------------------------------------=
+                  AB-INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
+                         A Car-Parrinello Parallel Code
+=------------------------------------------------------------------------------=
+
+  Version: 2.0 - Fri Jun 4 14:39:18 CEST 2004                          
+  Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,
+    Paolo Focher, Gerardo Ballabio
+
+=------------------------------------------------------------------------------=
+
+                  THIS RUN WAS STARTED ON:  18:11:30   9Jun2004
+
+   Tasks =    1  This task id =    0
+     from  system_checkin      : info #        10
+      nr1b is not used in FPMD 
+     from  system_checkin      : info #        10
+      nr2b is not used in FPMD 
+     from  system_checkin      : info #        10
+      nr3b is not used in FPMD 
+Warning: card  &CELL ignored
+Warning: card     CELL_DYNAMICS = 'NONE', ignored
+Warning: card     CELL_VELOCITIES = 'ZERO', ignored
+Warning: card     PRESS = 0.0D0, ignored
+Warning: card  / ignored
+ 
+
+
+   MD PARAMETERS READ FROM STANDARD INPUT
+   -------------------------------------
+
+   Job Title:  Ammonia Molecule                                                               
+   Restart Mode = from_scratch   , Number of MD Steps =     100
+   Print out every   10 MD Steps
+   Reads from unit =  51, Writes to unit =  51
+   Alat   =  12.000000
+   Celldm =  12.000000  1.000000  1.000000  0.000000  0.000000  0.000000
+   MD Simulation time step    =    5.0000
+   Electronic fictitious MASS =     400.00
+   Verlet algorithm for electron dynamics
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   ATOMIC PSEUDOPOTENTIAL for SPECIE :  1
+   Read from file /home/ballabio/O-sesame/pseudo//N.BLYP.UPF                  
+   Type is UPF        and NONLOCAL. 
+   Local component is ..... :   2
+   Non local components are :   1
+   Pseudo charge :    5.000, pseudo radius :    0.800
+
+   Pseudopotentials Grid    : Channels =  2, Mesh =   624
+                              dx   = 0.01734863835748
+   point      radius        pseudopotential
+       1   0.0008928571-20.208424  0.000000
+     156   0.0131406470-19.041095  0.000000
+     312   0.1967822600-15.768247  0.000000
+     624  44.1290250000 -0.113304  0.000000
+
+   Atomic wavefunction Grid : Channels =  2, Mesh =   624
+                              dx   = 0.01734863835748
+   Channels occupation number :     0.0000    0.0000
+   point      radius        wavefunction
+       1   0.0008928571  0.000214  0.000001
+     156   0.0131406470  0.003147  0.000209
+     312   0.1967822600  0.048628  0.042968
+     624  44.1290250000  0.000000  0.000000
+
+   ATOMIC PSEUDOPOTENTIAL for SPECIE :  2
+   Read from file /home/ballabio/O-sesame/pseudo//H.fpmd.UPF                  
+   Type is UPF        and LOCAL. 
+   Local component is ..... :   1
+   Pseudo charge :    1.000, pseudo radius :    0.800
+
+   Pseudopotentials Grid    : Channels =  1, Mesh =   809
+                              dx   = 0.02500000000000
+   point      radius        pseudopotential
+       1   0.0011229912 -6.475054
+     202   0.1708858534 -5.252943
+     404  26.6620319966 -0.037507
+     809*************** -0.000002
+
+   Atomic wavefunction Grid : Channels =  1, Mesh =   809
+                              dx   = 0.02500000000000
+   Channels occupation number :     0.0000
+   point      radius        wavefunction
+       1   0.0011229912  0.000000
+     202   0.1708858534  0.000000
+     404  26.6620319966  0.000000
+     809***************  0.000000
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   80.0Ryd.,    Ecutrho =  320.0Ryd., 
+   Gcutwfc =   17.1Ryd.,    Gcutrho =   34.2Ryd.
+
+   Electronic states
+   -----------------
+   Number of Electron =     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+   Electron dynamics with steepest descent
+   Electron dynamics : the temperature is not controlled
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.50E-07,  max =  15
+ 
+   K points
+   --------
+   Gamma-point calculation
+   Wavefunction type: REAL
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: LEE, YANG, AND PARR                                         
+   Using Generalized Gradient Corrections with
+     Exchange functional: BECKE                                                       
+     Correlation functional: LEE, YANG AND PARR                                          
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   Zero initial momentum for ions
+   Ionic position from standard input
+   ( bohr       )
+   Species   1 atoms =    1 mass (a.u.) =     29166.24
+        0.009900     0.009900     0.000000
+   Species   2 atoms =    3 mass (a.u.) =      1822.89
+        1.918600    -0.244300    -0.220800
+       -0.230500     1.921400    -0.214400
+       -0.179500    -0.180700     1.923600
+
+   All atoms are allowed to move
+   Ionic temperature is not controlled
+
+
+   Potentials Parameters
+   ---------------------
+   Ewald sum over 3*3*3 cells
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   Starting cell generated from CELLDM
+   Lattice index (ibrav) =  14 Volume =    1728.0000
+   Ht0  : 
+   A1 =       12.0000   0.0000   0.0000
+   A2 =        0.0000  12.0000   0.0000
+   A3 =        0.0000   0.0000  12.0000
+   Htm1 : 
+   B1 =        0.0833   0.0000   0.0000
+   B2 =        0.0000   0.0833   0.0000
+   B3 =        0.0000   0.0000   0.0833
+   Constant VOLUME Molecular dynamics
+ 
+   Real Mesh Report 
+   ---------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    72       1     1     1
+ 
+   Smooth Real Mesh Report 
+   ----------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    72       1     1     1
+ 
+   Small Box Real Mesh Report 
+   -------------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    10    10    10      10    10    10       1     1     1
+ 
+   Stick Mesh
+   ----------
+   nst =  1837,  nstw =   459, nsts =  1837
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1    1837     459    3673   83519   10408  167037
+          0    1837     459    3673   83519   10408  167037
+ 
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh Number of G               Small Mesh Number of G
+   PE       Global       Local   Max Local       Global       Local   Max Local
+    1        83519       83519       83519        10408       10408       10408
+
+
+   Estimated Sizes of the problem
+   ------------------------------
+   dimension of the problem (byte/pe) :   53880360
+ 
+ unit vectors of box grid cell
+ in real space:                         in reciprocal space:
+    1.6667    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000    1.6667    0.0000              0.0000    1.0000    0.0000
+    0.0000    0.0000    1.6667              0.0000    0.0000    1.0000
+
+ * Reciprocal space initialization ( from ggen ) :
+
+
+   Real Space vectors (cart. coord., units: ALAT):
+          A1 =     1.00    0.00    0.00
+          A2 =     0.00    1.00    0.00
+          A3 =     0.00    0.00    1.00
+
+   Primitive vectors (units: 2*PI/ALAT):
+          B1 =     1.00    0.00    0.00
+          B2 =     0.00    1.00    0.00
+          B3 =     0.00    0.00    1.00
+
+   MAXIMUM INDICES (N1H,..., IND1,... ) :
+             35   72   72      72   72   72
+
+   Scaled atomic positions                                from standard input
+   Species   1 atoms =    1
+   N        0.000825     0.000825     0.000000
+   Species   2 atoms =    3
+   H        0.159883    -0.020358    -0.018400
+   H       -0.019208     0.160117    -0.017867
+   H       -0.014958    -0.015058     0.160300
+
+   ggen   (sec) :    0.491
+   newg   (sec) :    0.119
+   strucf (sec) :    0.039
+   formf  (sec) :   48.269
+   Occupation number from init
+   nbnd =     4
+    2.00 2.00 2.00 2.00
+
+   Wave Initialization: random initial wave-functions
+ 
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]  - step index
+   EKINC  [A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMP   [K]    - ionic temperature
+   ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   EKCELL [A.U.] - kinetic energy of the fictitious cell dynamics
+   ECONS  [A.U.] - Total Energy + ionic kinetic energy
+   ETTT   [A.U.] - Constant of motion for the CP lagrangian
+ 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+
+   Integral Simulation Time (AU):         0.00
+
+
+                      TOTAL ENERGY =      65.2624240257 A.U.
+                    KINETIC ENERGY =      76.2994920592 A.U.
+              ELECTROSTATIC ENERGY =      -4.8609852627 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -3.9682157792 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       0.0070642136 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -2.2149312052 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =  276681.7569925831 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.187883E+01  -0.136389E+01  -0.947449E+00
+   H     0.996546E+00  -0.788971E-01  -0.105174E+00
+   H    -0.202250E+00   0.111233E+01  -0.176370E+00
+   H    -0.178023E+00  -0.174342E+00   0.111202E+01
+
+   Total Stress (KB)
+
+           7408.87246505       -255.18131620       -118.68898433
+           -255.18131620       8278.45351023       -143.56936173
+           -118.68898433       -143.56936173       8456.66875959
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+    0.00    0.00    0.00    0.00
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+     0   0.00000    0.0     65.26242  0.0000     65.26242     65.26242     60.8
+   MAIN: doions = F
+     1   4.64640    0.0     56.10448  0.0000     56.10448     60.75088      9.7
+   MAIN: doions = F
+     2   4.92478    0.0     46.13442  0.0000     46.13442     51.05920      8.1
+   MAIN: doions = F
+     3   4.70610    0.0     36.43198  0.0000     36.43198     41.13808      7.8
+   MAIN: doions = F
+     4   4.19428    0.0     27.70304  0.0000     27.70304     31.89732      7.7
+   MAIN: doions = F
+     5   3.60743    0.0     20.16492  0.0000     20.16492     23.77235      8.7
+   MAIN: doions = F
+     6   3.05269    0.0     13.77124  0.0000     13.77124     16.82394      7.8
+   MAIN: doions = F
+     7   2.55105    0.0      8.40947  0.0000      8.40947     10.96052      7.7
+   MAIN: doions = F
+     8   2.09097    0.0      3.98930  0.0000      3.98930      6.08027      8.5
+   MAIN: doions = F
+     9   1.66757    0.0      0.44061  0.0000      0.44061      2.10818     10.3
+
+
+ * MD STEP  <>     10 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):        50.00
+
+
+                      TOTAL ENERGY =      -2.3251173561 A.U.
+                    KINETIC ENERGY =      16.2257089613 A.U.
+              ELECTROSTATIC ENERGY =     -11.0223466625 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.2782500994 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       0.7159023850 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -2.9661319405 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   35601.6046806859 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.640158E+00  -0.544626E-01  -0.397420E-01
+   H     0.391016E+00  -0.172299E-01   0.398194E-01
+   H    -0.381706E-01   0.532891E+00  -0.151650E+00
+   H    -0.335111E-01   0.109372E+00   0.432927E+00
+
+   Total Stress (KB)
+
+            779.03891375        -51.38611017        -44.63674153
+            -51.38611017        976.24238224        -69.20954267
+            -44.63674153        -69.20954267        860.11742830
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -17.83   -3.65   10.88   26.69
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    10   1.29262    0.0     -2.32512  0.0000     -2.32512     -1.03250     15.8
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.129262D+01  0.1D-03  0.276573D+01  0.1D-08  0.640158D+00  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    11   0.98060    0.0     -4.42965  0.0000     -4.42965     -3.44904     10.3
+   MAIN: doions = F
+    12   0.73559    0.0     -6.00954  0.0000     -6.00954     -5.27395     11.4
+   MAIN: doions = F
+    13   0.55071    0.0     -7.19132  0.0000     -7.19132     -6.64061      9.3
+   MAIN: doions = F
+    14   0.41415    0.0     -8.07840  0.0000     -8.07840     -7.66425     11.0
+   MAIN: doions = F
+    15   0.31411    0.0     -8.74954  0.0000     -8.74954     -8.43543      7.6
+   MAIN: doions = F
+    16   0.24085    0.0     -9.26269  0.0000     -9.26269     -9.02184      7.6
+   MAIN: doions = F
+    17   0.18695    0.0     -9.65979  0.0000     -9.65979     -9.47284      7.6
+   MAIN: doions = F
+    18   0.14703    0.0     -9.97111  0.0000     -9.97111     -9.82408      7.6
+   MAIN: doions = F
+    19   0.11720    0.0    -10.21848  0.0000    -10.21848    -10.10127      7.6
+
+
+ * MD STEP  <>     20 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       100.00
+
+
+                      TOTAL ENERGY =     -10.4177039099 A.U.
+                    KINETIC ENERGY =      10.0724773339 A.U.
+              ELECTROSTATIC ENERGY =     -12.6129635048 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.5003114824 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0704601323 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.4473663889 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   15416.3796088144 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.711734E-01   0.225534E+00  -0.567148E-01
+   H     0.113428E+00  -0.837855E-01   0.275483E-01
+   H     0.635194E-01   0.126399E+00  -0.113459E+00
+   H     0.214827E-01   0.621281E-01   0.438986E-01
+
+   Total Stress (KB)
+
+            134.55474944         -8.15205289        -20.54606442
+             -8.15205289        142.15429933        -14.46956011
+            -20.54606442        -14.46956011         80.97450058
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -23.86  -11.60  -10.41   -0.76
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    20   0.09470    0.0    -10.41770  0.0000    -10.41770    -10.32301      9.3
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.946963D-01  0.1D-03  0.199226D+00  0.1D-08  0.225534D+00  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    21   0.07753    0.0    -10.58031  0.0000    -10.58031    -10.50278     11.0
+   MAIN: doions = F
+    22   0.06428    0.0    -10.71473  0.0000    -10.71473    -10.65045      7.7
+   MAIN: doions = F
+    23   0.05393    0.0    -10.82720  0.0000    -10.82720    -10.77327      7.6
+   MAIN: doions = F
+    24   0.04575    0.0    -10.92237  0.0000    -10.92237    -10.87662      7.7
+   MAIN: doions = F
+    25   0.03920    0.0    -11.00373  0.0000    -11.00373    -10.96453      8.1
+   MAIN: doions = F
+    26   0.03390    0.0    -11.07393  0.0000    -11.07393    -11.04004      8.1
+   MAIN: doions = F
+    27   0.02955    0.0    -11.13501  0.0000    -11.13501    -11.10546      7.9
+   MAIN: doions = F
+    28   0.02594    0.0    -11.18854  0.0000    -11.18854    -11.16260      7.8
+   MAIN: doions = F
+    29   0.02291    0.0    -11.23576  0.0000    -11.23576    -11.21285      7.6
+
+
+ * MD STEP  <>     30 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       150.00
+
+
+                      TOTAL ENERGY =     -11.2776547087 A.U.
+                    KINETIC ENERGY =       9.4186392257 A.U.
+              ELECTROSTATIC ENERGY =     -12.7811394084 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4241977825 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0381420350 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5290987785 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   13149.8797863666 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.371729E-01   0.872454E-01  -0.509638E-01
+   H     0.272787E-01  -0.758626E-01  -0.141828E-01
+   H     0.511311E-01   0.677137E-01  -0.506098E-01
+   H     0.549662E-02   0.220365E-01   0.232865E-02
+
+   Total Stress (KB)
+
+             59.70112081        -11.01530920        -11.07165630
+            -11.01530920         32.45514466         -7.70880500
+            -11.07165630         -7.70880500          7.69988278
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -22.30  -11.43  -10.69   -4.31
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    30   0.02035    0.0    -11.27765  0.0000    -11.27765    -11.25730      9.2
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.203550D-01  0.1D-03  0.418952D-01  0.1D-08  0.872454D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    31   0.01817    0.0    -11.31501  0.0000    -11.31501    -11.29684      7.6
+   MAIN: doions = F
+    32   0.01629    0.0    -11.34847  0.0000    -11.34847    -11.33218      8.2
+   MAIN: doions = F
+    33   0.01466    0.0    -11.37855  0.0000    -11.37855    -11.36389      8.1
+   MAIN: doions = F
+    34   0.01324    0.0    -11.40569  0.0000    -11.40569    -11.39246      8.5
+   MAIN: doions = F
+    35   0.01199    0.0    -11.43025  0.0000    -11.43025    -11.41827      7.9
+   MAIN: doions = F
+    36   0.01088    0.0    -11.45254  0.0000    -11.45254    -11.44166      7.8
+   MAIN: doions = F
+    37   0.00991    0.0    -11.47281  0.0000    -11.47281    -11.46291      7.6
+   MAIN: doions = F
+    38   0.00903    0.0    -11.49130  0.0000    -11.49130    -11.48226      7.7
+   MAIN: doions = F
+    39   0.00826    0.0    -11.50818  0.0000    -11.50818    -11.49992      8.1
+
+
+ * MD STEP  <>     40 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       200.00
+
+
+                      TOTAL ENERGY =     -11.5236274656 A.U.
+                    KINETIC ENERGY =       9.2556589542 A.U.
+              ELECTROSTATIC ENERGY =     -12.8310108456 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4173636607 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0313359130 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5622478264 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12535.4083354543 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.347355E-01   0.355391E-01  -0.272244E-01
+   H    -0.130267E-01  -0.505603E-01  -0.246258E-01
+   H     0.298278E-01   0.457178E-01  -0.222956E-01
+   H     0.515469E-04   0.776018E-02  -0.104926E-02
+
+   Total Stress (KB)
+
+             29.71110804         -8.90978667         -7.10590878
+             -8.90978667          4.14012153         -6.42181795
+             -7.10590878         -6.42181795         -4.65880694
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -21.40  -10.92  -10.80   -5.16
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    40   0.00756    0.0    -11.52363  0.0000    -11.52363    -11.51607      9.5
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.755843D-02  0.1D-03  0.154484D-01  0.1D-08  0.505603D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    41   0.00693    0.0    -11.53779  0.0000    -11.53779    -11.53086      7.9
+   MAIN: doions = F
+    42   0.00636    0.0    -11.55078  0.0000    -11.55078    -11.54442      7.8
+   MAIN: doions = F
+    43   0.00585    0.0    -11.56273  0.0000    -11.56273    -11.55688      8.2
+   MAIN: doions = F
+    44   0.00539    0.0    -11.57373  0.0000    -11.57373    -11.56834     10.9
+   MAIN: doions = F
+    45   0.00496    0.0    -11.58386  0.0000    -11.58386    -11.57889      9.0
+   MAIN: doions = F
+    46   0.00458    0.0    -11.59320  0.0000    -11.59320    -11.58862     11.0
+   MAIN: doions = F
+    47   0.00423    0.0    -11.60183  0.0000    -11.60183    -11.59760      9.1
+   MAIN: doions = F
+    48   0.00391    0.0    -11.60981  0.0000    -11.60981    -11.60589      8.0
+   MAIN: doions = F
+    49   0.00362    0.0    -11.61718  0.0000    -11.61718    -11.61356      8.0
+
+
+ * MD STEP  <>     50 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       250.00
+
+
+                      TOTAL ENERGY =     -11.6240114046 A.U.
+                    KINETIC ENERGY =       9.1933613485 A.U.
+              ELECTROSTATIC ENERGY =     -12.8513019091 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4251293118 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0350968174 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5760383496 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12319.3888077182 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.186830E-01   0.149883E-01  -0.111850E-01
+   H    -0.272540E-01  -0.323328E-01  -0.230038E-01
+   H     0.168854E-01   0.327960E-01  -0.115945E-01
+   H    -0.782616E-03   0.153642E-02   0.539426E-03
+
+   Total Stress (KB)
+
+             13.34090346         -5.63674443         -4.68156049
+             -5.63674443         -3.79445203         -5.36353379
+             -4.68156049         -5.36353379         -6.65276094
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -21.03  -10.83  -10.64   -5.54
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    50   0.00335    0.0    -11.62401  0.0000    -11.62401    -11.62066      9.3
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.335064D-02  0.1D-03  0.682959D-02  0.1D-08  0.327960D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    51   0.00311    0.0    -11.63034  0.0000    -11.63034    -11.62723      7.6
+   MAIN: doions = F
+    52   0.00288    0.0    -11.63621  0.0000    -11.63621    -11.63333      7.6
+   MAIN: doions = F
+    53   0.00267    0.0    -11.64165  0.0000    -11.64165    -11.63898      7.8
+   MAIN: doions = F
+    54   0.00248    0.0    -11.64671  0.0000    -11.64671    -11.64423      8.6
+   MAIN: doions = F
+    55   0.00231    0.0    -11.65140  0.0000    -11.65140    -11.64910      7.6
+   MAIN: doions = F
+    56   0.00214    0.0    -11.65577  0.0000    -11.65577    -11.65363      8.6
+   MAIN: doions = F
+    57   0.00200    0.0    -11.65983  0.0000    -11.65983    -11.65784      7.9
+   MAIN: doions = F
+    58   0.00186    0.0    -11.66362  0.0000    -11.66362    -11.66176      7.7
+   MAIN: doions = F
+    59   0.00173    0.0    -11.66714  0.0000    -11.66714    -11.66541      8.8
+
+
+ * MD STEP  <>     60 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       300.00
+
+
+                      TOTAL ENERGY =     -11.6704187678 A.U.
+                    KINETIC ENERGY =       9.1648062220 A.U.
+              ELECTROSTATIC ENERGY =     -12.8616696079 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4330736170 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0414457099 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5819274748 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12233.8783009181 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N    -0.316657E-02   0.640441E-02  -0.210686E-02
+   H    -0.291502E-01  -0.210559E-01  -0.189177E-01
+   H     0.988255E-02   0.235773E-01  -0.749023E-02
+   H    -0.101862E-02  -0.144220E-02   0.136877E-02
+
+   Total Stress (KB)
+
+              4.54974399         -3.08085081         -3.11259223
+             -3.08085081         -5.62124865         -4.44992317
+             -3.11259223         -4.44992317         -6.44675616
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -20.87  -10.80  -10.54   -5.75
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    60   0.00161    0.0    -11.67042  0.0000    -11.67042    -11.66881      9.6
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.161230D-02  0.1D-03  0.328131D-02  0.1D-08  0.291502D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    61   0.00150    0.0    -11.67348  0.0000    -11.67348    -11.67197      7.8
+   MAIN: doions = F
+    62   0.00140    0.0    -11.67633  0.0000    -11.67633    -11.67493      8.0
+   MAIN: doions = F
+    63   0.00131    0.0    -11.67899  0.0000    -11.67899    -11.67768      7.6
+   MAIN: doions = F
+    64   0.00122    0.0    -11.68148  0.0000    -11.68148    -11.68026      7.7
+   MAIN: doions = F
+    65   0.00114    0.0    -11.68380  0.0000    -11.68380    -11.68266      7.7
+   MAIN: doions = F
+    66   0.00107    0.0    -11.68597  0.0000    -11.68597    -11.68490      7.6
+   MAIN: doions = F
+    67   0.00100    0.0    -11.68799  0.0000    -11.68799    -11.68700      7.7
+   MAIN: doions = F
+    68   0.00093    0.0    -11.68989  0.0000    -11.68989    -11.68896      7.6
+   MAIN: doions = F
+    69   0.00087    0.0    -11.69166  0.0000    -11.69166    -11.69079      7.6
+
+
+ * MD STEP  <>     70 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       350.00
+
+
+                      TOTAL ENERGY =     -11.6933192420 A.U.
+                    KINETIC ENERGY =       9.1497113560 A.U.
+              ELECTROSTATIC ENERGY =     -12.8674823188 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4385365412 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0476446133 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5846563514 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12193.8152937195 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N     0.674971E-02   0.321900E-02   0.306550E-02
+   H    -0.261526E-01  -0.141912E-01  -0.151919E-01
+   H     0.596255E-02   0.167268E-01  -0.586502E-02
+   H    -0.142813E-02  -0.293748E-02   0.128138E-02
+
+   Total Stress (KB)
+
+             -0.01876609         -1.48640543         -2.17346376
+             -1.48640543         -5.68908951         -3.74326652
+             -2.17346376         -3.74326652         -5.87527199
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -20.79  -10.76  -10.50   -5.87
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    70   0.00082    0.0    -11.69332  0.0000    -11.69332    -11.69250      9.2
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.815607D-03  0.1D-03  0.165825D-02  0.1D-08  0.261526D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    71   0.00076    0.0    -11.69487  0.0000    -11.69487    -11.69411      7.7
+   MAIN: doions = F
+    72   0.00071    0.0    -11.69632  0.0000    -11.69632    -11.69561      7.8
+   MAIN: doions = F
+    73   0.00067    0.0    -11.69769  0.0000    -11.69769    -11.69702      8.0
+   MAIN: doions = F
+    74   0.00063    0.0    -11.69896  0.0000    -11.69896    -11.69833      8.1
+   MAIN: doions = F
+    75   0.00059    0.0    -11.70015  0.0000    -11.70015    -11.69957      7.6
+   MAIN: doions = F
+    76   0.00055    0.0    -11.70127  0.0000    -11.70127    -11.70072      7.6
+   MAIN: doions = F
+    77   0.00052    0.0    -11.70232  0.0000    -11.70232    -11.70181      7.6
+   MAIN: doions = F
+    78   0.00048    0.0    -11.70331  0.0000    -11.70331    -11.70282      7.6
+   MAIN: doions = F
+    79   0.00045    0.0    -11.70423  0.0000    -11.70423    -11.70378      7.8
+
+
+ * MD STEP  <>     80 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       400.00
+
+
+                      TOTAL ENERGY =     -11.7050999502 A.U.
+                    KINETIC ENERGY =       9.1404331071 A.U.
+              ELECTROSTATIC ENERGY =     -12.8707584537 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4416559468 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0528901369 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5860087937 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12170.4272853739 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N     0.117198E-01   0.251346E-02   0.619546E-02
+   H    -0.217635E-01  -0.993797E-02  -0.123615E-01
+   H     0.361904E-02   0.116823E-01  -0.523460E-02
+   H    -0.196817E-02  -0.371776E-02   0.792231E-03
+
+   Total Stress (KB)
+
+             -2.33887234         -0.61653368         -1.66274341
+             -0.61653368         -5.35742908         -3.21862269
+             -1.66274341         -3.21862269         -5.37426875
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -20.76  -10.73  -10.49   -5.93
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    80   0.00043    0.0    -11.70510  0.0000    -11.70510    -11.70467     11.0
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.426590D-03  0.1D-03  0.866731D-03  0.1D-08  0.217635D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    81   0.00040    0.0    -11.70591  0.0000    -11.70591    -11.70551      7.8
+   MAIN: doions = F
+    82   0.00038    0.0    -11.70668  0.0000    -11.70668    -11.70630      7.6
+   MAIN: doions = F
+    83   0.00035    0.0    -11.70739  0.0000    -11.70739    -11.70704      7.6
+   MAIN: doions = F
+    84   0.00033    0.0    -11.70807  0.0000    -11.70807    -11.70774      7.6
+   MAIN: doions = F
+    85   0.00031    0.0    -11.70870  0.0000    -11.70870    -11.70839      7.7
+   MAIN: doions = F
+    86   0.00029    0.0    -11.70929  0.0000    -11.70929    -11.70900      7.8
+   MAIN: doions = F
+    87   0.00027    0.0    -11.70985  0.0000    -11.70985    -11.70958     12.8
+   MAIN: doions = F
+    88   0.00026    0.0    -11.71038  0.0000    -11.71038    -11.71012      8.1
+   MAIN: doions = F
+    89   0.00024    0.0    -11.71087  0.0000    -11.71087    -11.71063     10.5
+
+
+ * MD STEP  <>     90 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       450.00
+
+
+                      TOTAL ENERGY =     -11.7113339883 A.U.
+                    KINETIC ENERGY =       9.1339637084 A.U.
+              ELECTROSTATIC ENERGY =     -12.8725501073 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4431394458 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0570817668 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5866899105 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12154.0054560817 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N     0.135604E-01   0.286526E-02   0.821266E-02
+   H    -0.174604E-01  -0.722870E-02  -0.103356E-01
+   H     0.213044E-02   0.801960E-02  -0.502539E-02
+   H    -0.251837E-02  -0.414203E-02   0.225312E-03
+
+   Total Stress (KB)
+
+             -3.49145956         -0.19801919         -1.41518237
+             -0.19801919         -5.02092487         -2.83183485
+             -1.41518237         -2.83183485         -5.01357172
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -20.74  -10.71  -10.48   -5.97
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+    90   0.00023    0.0    -11.71133  0.0000    -11.71133    -11.71111     11.6
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.228354D-03  0.1D-03  0.463741D-03  0.1D-08  0.174604D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+   MAIN: doions = F
+    91   0.00021    0.0    -11.71177  0.0000    -11.71177    -11.71156      8.0
+   MAIN: doions = F
+    92   0.00020    0.0    -11.71218  0.0000    -11.71218    -11.71198      7.7
+   MAIN: doions = F
+    93   0.00019    0.0    -11.71257  0.0000    -11.71257    -11.71238      8.7
+   MAIN: doions = F
+    94   0.00018    0.0    -11.71293  0.0000    -11.71293    -11.71275     11.6
+   MAIN: doions = F
+    95   0.00017    0.0    -11.71327  0.0000    -11.71327    -11.71310     11.4
+   MAIN: doions = F
+    96   0.00016    0.0    -11.71359  0.0000    -11.71359    -11.71343      7.9
+   MAIN: doions = F
+    97   0.00015    0.0    -11.71389  0.0000    -11.71389    -11.71374     10.8
+   MAIN: doions = F
+    98   0.00014    0.0    -11.71418  0.0000    -11.71418    -11.71404     11.1
+   MAIN: doions = F
+    99   0.00013    0.0    -11.71445  0.0000    -11.71445    -11.71431      8.1
+
+
+ * MD STEP  <>    100 <> 
+
+
+   Total integrated electronic density
+   in G-space =   8.000000    in R-space =   8.000000
+   MAIN: doions = F
+
+   Integral Simulation Time (AU):       500.00
+
+
+                      TOTAL ENERGY =     -11.7146987359 A.U.
+                    KINETIC ENERGY =       9.1290971666 A.U.
+              ELECTROSTATIC ENERGY =     -12.8734841591 A.U.
+              ESELF                =      13.9629798141 A.U.
+              ESR                  =       0.1187019496 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4436385366 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0603446698 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5870178767 A.U.
+              VAN DER WAALS ENERGY =       0.0000000000 A.U.
+              EMASS KINETIC ENERGY =   12141.2881575660 A.U.
+       SIC HARTREE ELECTRON ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA ENERGY =       0.0000000000 A.U.
+       SIC EXCHANGE-CORRELA POTENT =       0.0000000000 A.U.
+       IONIC ELECTROSTATIC  ENERGY =      15.1835222698 A.U.
+
+
+
+   Atomic Positions and Velocities (AU)
+
+   N      0.0099    0.0099    0.0000  0.0000E+00  0.0000E+00  0.0000E+00
+   H      1.9186   -0.2443   -0.2208  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.2305    1.9214   -0.2144  0.0000E+00  0.0000E+00  0.0000E+00
+   H     -0.1795   -0.1807    1.9236  0.0000E+00  0.0000E+00  0.0000E+00
+
+   Center of mass displacement (a.u.):   0.000000
+
+   Cell Variables (AU)
+
+             12.00000000          0.00000000          0.00000000
+              0.00000000         12.00000000          0.00000000
+              0.00000000          0.00000000         12.00000000
+
+   System Density [g/cm^3] :     0.1232
+
+   Forces on Ions (AU)
+
+   N     0.137315E-01   0.358942E-02   0.957556E-02
+   H    -0.137655E-01  -0.545136E-02  -0.891194E-02
+   H     0.114019E-02   0.538409E-02  -0.499651E-02
+   H    -0.300904E-02  -0.438395E-02  -0.284688E-03
+
+   Total Stress (KB)
+
+             -4.04572299         -0.03263095         -1.31715720
+             -0.03263095         -4.76713768         -2.54526508
+             -1.31715720         -2.54526508         -4.77167662
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -20.73  -10.70  -10.48   -5.99
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   MSD (AU)
+        1       0.00     0.0000
+        2       0.00     0.0000
+
+
+   NFI     EKINC   TEMP         ETOT  EKCELL        ECONS         ETTT     SEC.
+   100   0.00012    0.0    -11.71470  0.0000    -11.71470    -11.71457      9.5
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.124265D-03  0.1D-03  0.252271D-03  0.1D-08  0.137655D-01  0.1D-02
+   MAIN: convergence NOT achieved for system relaxation
+
+   RESTART FILE WRITTEN ON UNIT fort.51  COMPLETED IN    0.792 SEC.
+
+ 
+   Execution time statistics (SEC)
+   MD step mean time ..       8.601
+   Total time .........      86.012
+ 
+   Statistica FFT sulle wave functions
+   Numero totale di fft .       606
+   Tempo medio per fft ..   0.20135
+   Tempo totale fft ..... 122.01770
+ 
+ 
+   Statistica FFT sui potenziali
+   Numero totale di fft .       911
+   Tempo medio per fft ..   0.36874
+   Tempo totale fft ..... 335.92518
+ 
+
+   PC3FFT TIMINGS
+    FFTXW    FFTYW    FFTZW    TRASW    FFTXP    FFTYP    FFTZP    TRASP
+    0.000   74.969    8.465   29.838    0.000  184.402   53.261   43.217
+
+
+   Averaged Physical Quantities
+                 accomulated    this run
+   EKINC             0.37143     0.37143 (AU)
+   TOTEL ENERGY     -7.97897    -7.97897 (AU)
+   TEMPERATURE       0.00000     0.00000 (K )
+   ENTHALPY         -7.97897    -7.97897 (AU)
+   ECONS            -7.97897    -7.97897 (AU)
+   PRESSURE        826.25211   826.25211 (Kbar)
+   VOLUME         1728.00000  1728.00000 (AU)
+
+
+ 
+   mp_buffers: high_watermark (bytes):            0
+ 
+   mp: high_watermark (bytes):           24
+   From cploop, etot =   -11.7146987359040     
+ 
+     FPMD         : 13m55.07s CPU time
+
+ 
+               THIS RUN WAS TERMINATED ON:  18:26:51   9Jun2004
+
+=------------------------------------------------------------------------------=
+   ELAPSED SECONDS:   921.0
+   JOB DONE.
+=------------------------------------------------------------------------------=

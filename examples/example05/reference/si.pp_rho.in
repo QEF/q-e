@@ -1,0 +1,6 @@
+ &inputpp
+    prefix  = 'si'
+    outdir = '/home/giannozz/tmp//'
+    filplot = 'sicharge'
+   plot_num= 0
+ /

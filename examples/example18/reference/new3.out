@@ -1,0 +1,355 @@
+************************************************************************
+****                                                                ****
+****  CPV: variable-cell Car-Parrinello molecular dynamics          ****
+****  using ultrasoft Vanderbilt pseudopotentials - v.2.0           ****
+****                                                                ****
+************************************************************************
+
+     Parallel version (MPI)
+     Number of processors in use:      1
+reading ppot for species #  1 from file /home/ballabio/O-sesame/pseudo/O.LDA.US.RRKJ3.UPF
+reading ppot for species #  2 from file /home/ballabio/O-sesame/pseudo/Si.vbc.UPF
+
+
+ nbeg=  0 nomore=     10    iprint=  10
+ reads from 92 writes on 93
+ time step =   12.0000
+
+ parameters for electron dynamics:
+ emass=     700.00  emaec=       3.00ry
+ orthog. with lagrange multipliers: eps=  0.10E-07 max= 30
+ verlet algorithm for electron dynamics
+ with friction frice =  0.0000 , grease =  1.0000
+
+
+ ions are allowed to move
+ ion dynamics with fricp =  0.0000 and greasp =  1.0000
+ ion dynamics with nose` temp. control:
+ temperature required= 300.00000(kelvin) nose` mass = 100013.420
+
+
+ internal stress tensor calculated
+ cell parameters dynamics with nose` temp. control:
+ cell temperature required =  300.00000(kelvin) nose` mass =  10000.049
+ external pressure =   1.0000000(gpa)
+
+
+ modified kinetic energy functional, with parameters:
+ agg = 150.0000  sgg =  2.0000  e0gg =  16.00
+ iprsta =  1
+
+  UNIT8 = 
+ /home/ballabio/tmp/intel//fort.8                                               
+                                                                                
+                                                                                
+                    
+ 
+ unit vectors of full simulation cell
+ in real space:                         in reciprocal space:
+    9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
+    0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
+ 
+ ggen:  # of g vectors < gcut   ng=  23643
+ ggen:  # of g vectors < gcuts ngs=   9216
+ ggen:  # of g vectors < gcutw ngw=   1153
+ ggen:  # of g shells  < gcut  ngl=   6537
+ 
+ 
+ unit vectors of box grid cell
+ in real space:                         in reciprocal space:
+    3.7160    0.0000    0.0000              1.0000    0.0000    0.0000
+    0.0000    4.0227    0.0000              0.0000    0.9238    0.0000
+    0.0000    0.0000    4.0859              0.0000    0.0000    0.9095
+ 
+ ggenb: # of gb vectors < gcutb ngb =    948
+ ggenb: # of gb shells  < gcutb ngbl=    312
+ initialization 
+
+ ibrav=  8 alat=  9.290 omega= 1526.9015
+ gcut=  327.91    gcuts=  174.88 gcutw=   43.72
+ k-points: nkpt= 1
+
+
+ meshes:
+  dense grid: nr1 ,nr2, nr3  =   40  64  40  nr1x, nr2x, nr3x =   40  64  40
+ smooth grid: nr1s,nr2s,nr3s =   27  45  30  nr1sx,nr2sx,nr3sx=   27  45  30
+    box grid: nr1b,nr2b,nr3b =   16  16  16  nr1bx,nr2bx,nr3bx=   16  16  16
+
+ exchange-correlation potential:  SLA  PZ   NOGX NOGC
+
+ ecutw=   20.0 ryd    ecuts=   80.0 ryd    ecut=  150.0 ryd
+
+ # of electrons=   96 # of states=   48
+
+
+ nspin= 1
+ occupation numbers:
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+ 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
+
+ # of atomic species    2
+ is=  1
+  na=  12  atomic mass= 16.00 gaussian rcmax=  1.00
+ atomic coordinates:
+       3.19  14.83   1.23       7.83   6.79   1.23       2.07   6.00   4.74
+       6.72  14.04   4.74       3.96  11.27   7.88       8.61   3.22   7.88
+       3.96   4.82   9.15       8.61  12.86   9.15       3.19   1.26   5.58
+       7.83   9.30   5.58       2.08  10.09   2.07       6.72   2.05   2.07
+ is=  2
+  na=   6  atomic mass= 28.00 gaussian rcmax=  1.00
+ atomic coordinates:
+       0.29   8.05   3.40       4.93   0.00   3.40       2.13  12.28  -0.04
+       6.78   4.23  -0.04       2.13   3.81   6.85       6.78  11.86   6.85
+    NOTA BENE: refg, mmx =   3.000000000000000E-002        5001
+
+   READING FROM RESTART FILE ...
+ ### reading from file  92 only h  ##
+ ibrav =    8       cell parameters 
+
+       9.28990       0.00000       0.00000
+       0.00000      16.09066       0.00000
+       0.00000       0.00000      10.21471
+ 
+ wmass (calculated) =        49868.29
+
+  out from init
+  nlinit  nh(is),ngb,is,kkbeta,lmaxq =            8         948           1
+         865           5
+ 
+                        qqq 
+  -0.0987   0.4865   0.0000   0.0000
+   0.4865  -2.1787   0.0000   0.0000
+   0.0000   0.0000   0.2330   0.2950
+   0.0000   0.0000   0.2950   0.3737
+ 
+   betagx  
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  0
+   3  indv=  3   ang. mom=  1
+   4  indv=  3   ang. mom=  1
+   5  indv=  3   ang. mom=  1
+   6  indv=  4   ang. mom=  1
+   7  indv=  4   ang. mom=  1
+   8  indv=  4   ang. mom=  1
+ 
+                        dion 
+   0.4817  -1.2813   0.0000   0.0000
+  -1.2813   2.3075   0.0000   0.0000
+   0.0000   0.0000   0.6338   0.8752
+   0.0000   0.0000   0.8752   1.2039
+   betagx  
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  1
+   3  indv=  2   ang. mom=  1
+   4  indv=  2   ang. mom=  1
+ 
+                        dion 
+   0.7619   0.0000
+   0.0000   1.8417
+  out from nlinit
+
+   READING FROM RESTART FILE ...
+ ## reading from file  92
+  formf: eself= 210.64152
+  formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
+  formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
+  formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
+  formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+  formf: eself= 210.64152
+  formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
+  formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
+  formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
+  formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space = 96.000000     in r-space = 96.000000
+
+
+                total energy =     -211.98238 a.u.
+              kinetic energy =       94.60073 a.u.
+        electrostatic energy =     -198.25264 a.u.
+                         esr =        0.42692 a.u.
+                       eself =      210.64152 a.u.
+      pseudopotential energy =      -96.26637 a.u.
+  n-l pseudopotential energy =       36.46553 a.u.
+ exchange-correlation energy =      -48.52963 a.u.
+           average potential =       -0.53150 a.u.
+
+
+ cell parameters h
+      9.28990      0.00000      0.00000
+      0.00000     16.09066      0.00000
+      0.00000      0.00000     10.21471
+
+
+ 
+ derivative of e(tot)
+      0.08522     -0.00001      0.00002
+     -0.00001      0.07374      0.00341
+      0.00002      0.00217      0.15898
+
+
+ 
+ 
+  internal stress tensor:
+      0.01143     -0.00004      0.00000
+     -0.00004      0.01115     -0.00003
+      0.00000     -0.00003      0.01092
+
+
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -23.66  -23.19  -22.79  -22.33  -22.27  -22.24  -21.79  -21.78  -21.76  -21.74
+  -21.71  -21.71  -11.61  -11.55  -11.39  -10.72   -9.14   -8.68   -8.68   -8.65
+   -8.63   -8.44   -8.40   -7.73   -6.23   -6.09   -6.07   -6.00   -5.94   -5.68
+   -5.63   -5.24   -5.18   -4.79   -4.77   -4.40   -4.37   -4.34   -4.17   -4.02
+   -3.99   -3.96   -3.67   -3.62   -3.25   -3.24   -3.17   -2.98
+ 
+ 
+ 
+  nfi    ekinc  temph tempp      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+    1  0.00000    184     6  -211.93048  -211.92733  -211.92733  0.0000  0.0000  0.0000  0.0000
+    2  0.00009    720    23  -211.93012  -211.91785  -211.91776  0.0000  0.0000  0.0000 -0.0001
+    3  0.00056    686    20  -211.92977  -211.91819  -211.91763  0.0000  0.0001  0.0000 -0.0002
+    4  0.00132    655    19  -211.92995  -211.91898  -211.91765  0.0000  0.0003  0.0000 -0.0004
+    5  0.00163    638    19  -211.93004  -211.91930  -211.91766  0.0000  0.0006  0.0000 -0.0007
+    6  0.00115    639    21  -211.92970  -211.91872  -211.91755  0.0000  0.0009  0.0000 -0.0010
+    7  0.00052    650    26  -211.92956  -211.91807  -211.91752  0.0000  0.0013  0.0000 -0.0015
+    8  0.00022    655    29  -211.92975  -211.91785  -211.91760  0.0000  0.0017  0.0000 -0.0019
+    9  0.00017    646    31  -211.92968  -211.91779  -211.91758  0.0000  0.0022  0.0000 -0.0025
+
+
+                total energy =     -211.98182 a.u.
+              kinetic energy =       94.34282 a.u.
+        electrostatic energy =     -198.25048 a.u.
+                         esr =        0.40534 a.u.
+                       eself =      210.64152 a.u.
+      pseudopotential energy =      -95.97609 a.u.
+  n-l pseudopotential energy =       36.33388 a.u.
+ exchange-correlation energy =      -48.43194 a.u.
+           average potential =       -0.52830 a.u.
+
+
+ cell parameters h
+      9.33949     -0.00009      0.00000
+     -0.00015     16.11667     -0.00046
+      0.00000     -0.00029     10.25047
+
+
+ 
+ derivative of e(tot)
+      0.12913     -0.00013      0.00032
+     -0.00023      0.08667      0.00310
+      0.00035      0.00197      0.17547
+
+
+ 
+ 
+  internal stress tensor:
+     -0.00008      0.00000      0.00000
+      0.00000     -0.00021     -0.00002
+      0.00000     -0.00002     -0.00047
+
+
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -23.63  -23.16  -22.79  -22.34  -22.29  -22.22  -21.81  -21.77  -21.76  -21.75
+  -21.74  -21.71  -11.63  -11.55  -11.38  -10.74   -9.16   -8.71   -8.68   -8.65
+   -8.63   -8.43   -8.38   -7.73   -6.26   -6.13   -6.09   -6.00   -5.98   -5.69
+   -5.66   -5.24   -5.23   -4.83   -4.81   -4.43   -4.39   -4.37   -4.23   -4.06
+   -4.05   -4.03   -3.70   -3.69   -3.30   -3.29   -3.22   -3.04
+ 
+ 
+   10  0.00040    621    30  -211.92937  -211.91792  -211.91747  0.0000  0.0027 -0.0001 -0.0031
+
+
+              averaged quantities :
+         ekinc          ekin          epot          etot     tempp
+       0.00061      94.49025    -342.88982    -211.98202      22.8
+     initialize   :    38.28s CPU
+     total_time   :   107.41s CPU (      10 calls,  10.741 s avg)
+     formf        :    54.36s CPU (      11 calls,   4.942 s avg)
+     rhoofr       :    18.44s CPU (      10 calls,   1.844 s avg)
+     vofrho       :     6.85s CPU (      10 calls,   0.685 s avg)
+     dforce       :    10.60s CPU (     240 calls,   0.044 s avg)
+     calphi       :     0.45s CPU (      10 calls,   0.045 s avg)
+     ortho        :     2.03s CPU (      10 calls,   0.203 s avg)
+     updatc       :     0.31s CPU (      10 calls,   0.031 s avg)
+     newd         :     3.79s CPU (      10 calls,   0.379 s avg)
+     calbec       :     0.28s CPU (      11 calls,   0.025 s avg)
+     prefor       :     0.26s CPU (      20 calls,   0.013 s avg)
+     strucf       :     0.12s CPU (      11 calls,   0.011 s avg)
+     nlfl         :     0.07s CPU (      10 calls,   0.007 s avg)
+     nlfq         :     2.54s CPU (      10 calls,   0.254 s avg)
+     rhov         :     1.06s CPU (      10 calls,   0.106 s avg)
+     nlsm1        :     1.49s CPU (      31 calls,   0.048 s avg)
+     nlsm2        :     2.45s CPU (      10 calls,   0.245 s avg)
+     fft          :     6.20s CPU (     130 calls,   0.048 s avg)
+     ffts         :     0.23s CPU (      20 calls,   0.012 s avg)
+     fftw         :     7.87s CPU (     720 calls,   0.011 s avg)
+     fftb         :     1.06s CPU (    2940 calls,   0.000 s avg)
+     rsg          :     0.08s CPU (      10 calls,   0.008 s avg)
+ ibrav :   8  alat :     9.3452
+
+ lattice vectors
+
+     9.3452   -0.0001    0.0000
+    -0.0002   16.1194   -0.0006
+     0.0000   -0.0004   10.2537
+
+ Cartesian coordinates (a.u.)              forces
+ species atom #   x         y         z         fx        fy        fz
+
+     1    1    3.1993   14.8702    1.2296      0.0012   -0.0005    0.0003
+     1    2    7.8729    6.8057    1.2258      0.0009    0.0000    0.0009
+     1    3    2.1009    6.0098    4.7491     -0.0015   -0.0002    0.0005
+     1    4    6.7760   14.0661    4.7505     -0.0018    0.0003    0.0002
+     1    5    3.9830   11.2779    7.9029      0.0003    0.0005   -0.0002
+     1    6    8.6574    3.2189    7.9041      0.0000    0.0003   -0.0004
+     1    7    3.9782    4.8334    9.1883      0.0011   -0.0001    0.0000
+     1    8    8.6517   12.8989    9.1895      0.0008   -0.0006   -0.0002
+     1    9    3.2010    1.2510    5.6059      0.0009    0.0001   -0.0004
+     1   10    7.8764    9.3078    5.6056      0.0005    0.0004   -0.0003
+     1   11    2.0984   10.1094    2.0827     -0.0010   -0.0001    0.0001
+     1   12    6.7678    2.0531    2.0880     -0.0007   -0.0004   -0.0005
+     2    1    0.2900    8.0591    3.4173     -0.0003    0.0000   -0.0001
+     2    2    4.9626   -0.0007    3.4176     -0.0002   -0.0001    0.0001
+     2    3    2.1460   12.2987   -0.0423     -0.0001    0.0000   -0.0002
+     2    4    6.8187    4.2388   -0.0421     -0.0002   -0.0001   -0.0002
+     2    5    2.1461    3.8196    6.8780     -0.0001    0.0001   -0.0001
+     2    6    6.8187   11.8792    6.8778     -0.0001    0.0000    0.0001
+
+ Scaled coordinates 
+ species atom #
+     1    1    0.3424    0.9225    0.1200
+     1    2    0.8425    0.4222    0.1196
+     1    3    0.2248    0.3729    0.4632
+     1    4    0.7251    0.8726    0.4633
+     1    5    0.4262    0.6997    0.7708
+     1    6    0.9264    0.1997    0.7709
+     1    7    0.4257    0.2999    0.8961
+     1    8    0.9258    0.8003    0.8962
+     1    9    0.3425    0.0776    0.5467
+     1   10    0.8428    0.5775    0.5467
+     1   11    0.2245    0.6272    0.2031
+     1   12    0.7242    0.1274    0.2036
+     2    1    0.0310    0.5000    0.3333
+     2    2    0.5310    0.0000    0.3333
+     2    3    0.2296    0.7630   -0.0041
+     2    4    0.7296    0.2630   -0.0041
+     2    5    0.2296    0.2370    0.6708
+     2    6    0.7297    0.7370    0.6708
+
+
+====================== end cprvan ======================
+
+
+     CP           :  2m25.92s CPU time
+
+
+   MEMORY STATISTICS FROM PE(1) : 

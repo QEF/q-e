@@ -1,0 +1,32 @@
+# environment_variables -- settings for running PWscf examples
+
+######## YOU MUST EDIT THIS FILE TO MATCH YOUR CONFIGURATION ########
+
+# BIN_DIR = path of compiled PWscf executables
+#     Usually this is $TOPDIR/bin, where $TOPDIR is the root of the
+#     PWscf source tree.  (You must have run "make links".)
+# PSEUDO_DIR = path of pseudopotentials required by the examples
+#     If you have downloaded the full PWscf distribution, they should
+#     be already in $TOPDIR/pseudo; otherwise you may download them
+#     from www.pwscf.org/pseudo.
+# TMP_DIR = temporary directory to be used by the examples
+#     Make sure that it exists, is writable by you, and doesn't
+#     contain any valuable data (everything there will be destroyed!).
+
+BIN_DIR=$HOME/O-sesame/bin
+PSEUDO_DIR=$HOME/O-sesame/pseudo
+TMP_DIR=$HOME/tmp
+
+# To run the PWscf programs on a parallel machine, you may have to add
+# the appropriate commands (poe, mpirun, mpprun...) and/or options
+# (specifying number of processors, pools...) before and after the
+# executable's name.  That depends on how your machine is configured.
+# For example on an IBM SP4:
+#
+#     poe             pw.x -procs 4              < file.in > file.out
+#     ^^^ PARA_PREFIX      ^^^^^^^^ PARA_POSTFIX
+#
+# To run on a single processor, you can usually leave them empty.
+
+PARA_PREFIX=
+PARA_POSTFIX=

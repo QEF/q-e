@@ -1,0 +1,239 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, ph.x, and ram.x to calculate"
+$ECHO "the Raman tensor for AlAs."
+
+# set the needed environment variables 
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x ph.x ram.x"
+PSEUDO_LIST="Al.vbc.UPF As.gon.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if ! test -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if ! test -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if ! test -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if ! test -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+RAM_COMMAND="$PARA_PREFIX $BIN_DIR/ram.x $PARA_POSTFIX"
+
+$ECHO
+$ECHO "  running pw.x as:  $PW_COMMAND"
+$ECHO "  running ph.x as:  $PH_COMMAND"
+$ECHO "  running ram.x as: $RAM_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+#
+# self-consistent calculation
+#
+cat > alas.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    tstress = .true.
+    tprnfor = .true.
+    prefix='alas',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system    
+    nosym = .false.,
+    ibrav=  2, celldm(1) =10.575, nat=  2, ntyp= 2,
+    ecutwfc = 10.0
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Al  26.98  Al.vbc.UPF
+ As  74.92  As.gon.UPF
+ATOMIC_POSITIONS
+ Al 0.00 0.00 0.00 
+ As 0.25 0.25 0.25 
+K_POINTS {automatic}
+ 4 4 4 1 1 1  
+EOF
+
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND < alas.scf.in > alas.scf.out
+$ECHO " done"
+
+# response calculation for electric field
+
+cat > alas.phE.in << EOF
+phonons of AlAs at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  epsil=.true.,
+  trans=.false.,
+  zue=.false.,
+  amass(1)=69.72,
+  amass(2)=26.98,
+  outdir='$TMP_DIR/',
+  fildyn='alas.dynG',
+  fildrho='alas.drhoe',
+ /
+0.0 0.0 0.0
+EOF
+
+$ECHO "  running the electric-field response calculation...\c"
+$PH_COMMAND < alas.phE.in > alas.phE.out
+$ECHO " done"
+
+# response calculation for atomic displacement
+
+cat > alas.phA.in << EOF
+phonons of AlAs at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  epsil=.false.,
+  trans=.true., 
+  zue=.true., 
+  amass(1)=69.72,
+  amass(2)=26.98,
+  outdir='$TMP_DIR/',
+  fildyn='alas.dynG',
+  fildrho='alas.drhou',
+ /
+0.0 0.0 0.0
+EOF
+
+$ECHO "  running the atomic displacement response calculation...\c"
+$PH_COMMAND < alas.phA.in > alas.phA.out
+$ECHO " done"
+
+#
+# non self-consistent calculation
+#
+cat > alas.nscf.in <<EOF
+ &control
+    calculation='raman',
+    restart_mode='from_scratch',
+    tstress = .true.
+    tprnfor = .true.
+    prefix='alas',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system    
+    nosym = .false.,
+    ibrav=  2, celldm(1) =10.575, nat=  2, ntyp= 2,
+    ecutwfc = 10.0
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ &raman
+     b_length = 0.001,
+     lcart = .true., 
+  /
+ATOMIC_SPECIES
+ Al  26.98  Al.vbc.UPF
+ As  74.92  As.gon.UPF
+ATOMIC_POSITIONS
+ Al 0.00 0.00 0.00 
+ As 0.25 0.25 0.25 
+K_POINTS {automatic}
+ 4 4 4 1 1 1  
+EOF
+
+$ECHO "  running the non self-consitent calculation for the groundstate...\c"
+$PW_COMMAND < alas.nscf.in > alas.nscf.out
+$ECHO " done"
+
+cat > alas.ram.in << EOF
+phonons of AlAs at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  epsil=.true.,
+  trans=.false.,
+  zue=.false.,
+  amass(1)=69.72,
+  amass(2)=26.98,
+  outdir='$TMP_DIR/',
+  fildyn='alas.dynG',
+  fildrho='alas.drhoe',
+ /
+0.0 0.0 0.0
+ &inputram
+  b_length = 0.001,
+  lcart = .true.,  
+  lsus = .true., 
+  lram = .true., 
+  lboth = .true.,
+  latomic = .true.,
+  lelfield = .true.,	
+  fildrhou='alas.drhou',
+  filsus = 'alas.sus',
+  filram = 'alas.ram'	
+ /
+EOF
+
+$ECHO "  running the non self-consitent calculation for the perturbed"
+$ECHO "  wavefunctions and the Raman tensor ...\c"
+$RAM_COMMAND < alas.ram.in > alas.ram.out
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

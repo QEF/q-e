@@ -1,0 +1,261 @@
+
+     Program PWSCF     v.2.0    starts ...
+     Today is  3Feb2004 at 11:28:36 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+     ntypx =10   npk =40000  lmax = 3
+     nchix = 6  ndim = 2000  nbrx = 8 nqfm = 8
+
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =       6.7300  a.u.
+     unit-cell volume          =      76.2053 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     300.0000  Ry
+     convergence threshold     =      1.0E-06
+     beta                      =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     iswitch = -1
+
+     celldm(1)=   6.730000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.500000  0.000000  0.500000 )  
+               a(2) = (  0.000000  0.500000  0.500000 )  
+               a(3) = ( -0.500000  0.500000  0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PSEUDO 1 is Cu (US)    zval = 11.0   lmax= 2   lloc= 0
+     Version   0  0  0 of US pseudo code
+     Using log mesh of   899 points
+     The pseudopotential has  3 beta functions with: 
+                l(1) =   2
+                l(2) =   2
+                l(3) =   1
+     Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
+                                                             0.000   0.000
+
+     atomic species   valence    mass     pseudopotential
+        Cu            11.00    63.55000     Cu( 1.00)
+
+     48 Sym.Ops. (with inversion)
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           Cu  tau(  1) = (  0.0000000  0.0000000  0.0000000  )
+
+     number of k points=   28
+                       cart. coord. in units 2pi/a_0
+        k(   1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0714286
+        k(   2) = (   0.0000000   0.0000000   0.1000000), wk =   0.0714286
+        k(   3) = (   0.0000000   0.0000000   0.2000000), wk =   0.0714286
+        k(   4) = (   0.0000000   0.0000000   0.3000000), wk =   0.0714286
+        k(   5) = (   0.0000000   0.0000000   0.4000000), wk =   0.0714286
+        k(   6) = (   0.0000000   0.0000000   0.5000000), wk =   0.0714286
+        k(   7) = (   0.0000000   0.0000000   0.6000000), wk =   0.0714286
+        k(   8) = (   0.0000000   0.0000000   0.7000000), wk =   0.0714286
+        k(   9) = (   0.0000000   0.0000000   0.8000000), wk =   0.0714286
+        k(  10) = (   0.0000000   0.0000000   0.9000000), wk =   0.0714286
+        k(  11) = (   0.0000000   0.0000000   1.0000000), wk =   0.0714286
+        k(  12) = (   0.0000000   0.0000000   0.0000000), wk =   0.0714286
+        k(  13) = (   0.0000000   0.1000000   0.1000000), wk =   0.0714286
+        k(  14) = (   0.0000000   0.2000000   0.2000000), wk =   0.0714286
+        k(  15) = (   0.0000000   0.3000000   0.3000000), wk =   0.0714286
+        k(  16) = (   0.0000000   0.4000000   0.4000000), wk =   0.0714286
+        k(  17) = (   0.0000000   0.5000000   0.5000000), wk =   0.0714286
+        k(  18) = (   0.0000000   0.6000000   0.6000000), wk =   0.0714286
+        k(  19) = (   0.0000000   0.7000000   0.7000000), wk =   0.0714286
+        k(  20) = (   0.0000000   0.8000000   0.8000000), wk =   0.0714286
+        k(  21) = (   0.0000000   0.9000000   0.9000000), wk =   0.0714286
+        k(  22) = (   0.0000000   1.0000000   1.0000000), wk =   0.0714286
+        k(  23) = (   0.0000000   0.0000000   0.0000000), wk =   0.0714286
+        k(  24) = (   0.1000000   0.1000000   0.1000000), wk =   0.0714286
+        k(  25) = (   0.2000000   0.2000000   0.2000000), wk =   0.0714286
+        k(  26) = (   0.3000000   0.3000000   0.3000000), wk =   0.0714286
+        k(  27) = (   0.4000000   0.4000000   0.4000000), wk =   0.0714286
+        k(  28) = (   0.5000000   0.5000000   0.5000000), wk =   0.0714286
+
+     G cutoff =  344.1848  (   6735 G-vectors)     FFT grid: ( 27, 27, 27)
+     G cutoff =  114.7283  (   1243 G-vectors)  smooth grid: ( 15, 15, 15)
+
+     nbndx  =    32  nbnd   =     8  natomwfc =     6  npwx   =     170
+     nelec  =   11.00 nkb   =    13  ngl    =     118
+
+     The initial potential is read from file         cu.pot
+     Starting wfc are atomic +   2 random wfc
+
+     total cpu time spent up to now is      1.79 secs
+
+     Band Structure Calculation
+     Davidson diagonalization (with overlap)
+   WARNING:     1 eigenvalues not converged
+     ethr =  9.09E-09,  avg # of iterations = 12.5
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+     4.9905  11.2120  11.2120  11.2120  12.1016  12.1016  38.8598  41.0140
+
+          k = 0.0000 0.0000 0.1000     band energies (ev):
+
+     5.1161  11.1735  11.2434  11.2434  12.0666  12.1160  38.3444  39.7401
+
+          k = 0.0000 0.0000 0.2000     band energies (ev):
+
+     5.4882  11.0623  11.3366  11.3366  11.9682  12.1576  37.3090  37.7417
+
+          k = 0.0000 0.0000 0.3000     band energies (ev):
+
+     6.0908  10.8910  11.4879  11.4879  11.8267  12.2227  35.7823  35.7823
+
+          k = 0.0000 0.0000 0.4000     band energies (ev):
+
+     6.8877  10.6776  11.6869  11.6899  11.6899  12.3050  33.9686  33.9686
+
+          k = 0.0000 0.0000 0.5000     band energies (ev):
+
+     7.7953  10.4448  11.6424  11.9305  11.9305  12.3967  32.3410  32.3410
+
+          k = 0.0000 0.0000 0.6000     band energies (ev):
+
+     8.6223  10.2157  11.8918  12.1920  12.1920  12.4890  30.7582  30.9314
+
+          k = 0.0000 0.0000 0.7000     band energies (ev):
+
+     9.1078  10.0123  12.4485  12.4485  12.5730  12.6882  27.8404  29.7736
+
+          k = 0.0000 0.0000 0.8000     band energies (ev):
+
+     9.2580   9.8529  12.6397  12.6684  12.6684  13.9758  25.1940  28.9053
+
+          k = 0.0000 0.0000 0.9000     band energies (ev):
+
+     9.2717   9.7516  12.6827  12.8185  12.8185  15.3588  23.0599  28.3645
+
+          k = 0.0000 0.0000 1.0000     band energies (ev):
+
+     9.2661   9.7171  12.6976  12.8722  12.8722  16.0648  22.1125  28.1805
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+     4.9905  11.2120  11.2120  11.2120  12.1016  12.1016  38.8598  41.0140
+
+          k = 0.0000 0.1000 0.1000     band energies (ev):
+
+     5.2407  11.1529  11.2581  11.2702  12.0575  12.1091  37.2050  38.2101
+
+          k = 0.0000 0.2000 0.2000     band energies (ev):
+
+     5.9709  11.0006  11.3811  11.3907  11.9459  12.1825  33.7507  34.5141
+
+          k = 0.0000 0.3000 0.3000     band energies (ev):
+
+     7.1066  10.8194  11.3772  11.5930  11.8192  12.4681  30.4033  31.1652
+
+          k = 0.0000 0.4000 0.4000     band energies (ev):
+
+     8.4634  10.6903  11.2001  11.7389  11.8402  13.0730  27.3499  28.3108
+
+          k = 0.0000 0.5000 0.5000     band energies (ev):
+
+     9.6307  10.6869  10.9043  11.7537  12.1035  14.2124  24.5992  26.0271
+
+          k = 0.0000 0.6000 0.6000     band energies (ev):
+
+    10.1591  10.5472  10.8644  11.8842  12.3551  16.2003  22.1426  24.3532
+
+          k = 0.0000 0.7000 0.7000     band energies (ev):
+
+    10.0493  10.2433  11.2489  12.1135  12.5714  18.9516  19.9770  23.2606
+
+          k = 0.0000 0.8000 0.8000     band energies (ev):
+
+     9.6837   9.9912  11.8280  12.3849  12.7356  18.1252  22.0062  22.8489
+
+          k = 0.0000 0.9000 0.9000     band energies (ev):
+
+     9.3818   9.7906  12.4985  12.6096  12.8375  16.6922  22.1962  25.8681
+
+          k = 0.0000 1.0000 1.0000     band energies (ev):
+
+     9.2661   9.7171  12.6976  12.8722  12.8722  16.0648  22.1125  28.1805
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+     4.9905  11.2120  11.2120  11.2120  12.1016  12.1016  38.8598  41.0140
+
+          k = 0.1000 0.1000 0.1000     band energies (ev):
+
+     5.3645  11.1348  11.2820  11.2820  12.0776  12.0776  35.6754  39.3797
+
+          k = 0.2000 0.2000 0.2000     band energies (ev):
+
+     6.4310  10.9840  11.3865  11.3865  12.1027  12.1027  30.1339  38.8270
+
+          k = 0.3000 0.3000 0.3000     band energies (ev):
+
+     7.9100  11.0745  11.3388  11.3388  12.3291  12.3291  25.0884  38.0350
+
+          k = 0.4000 0.4000 0.4000     band energies (ev):
+
+     8.9175  11.2269  11.2269  12.1745  12.6018  12.6018  20.8537  37.3025
+
+          k = 0.5000 0.5000 0.5000     band energies (ev):
+
+     9.1196  11.1774  11.1774  12.7173  12.7173  13.4642  18.6473  37.0205
+
+     Writing file cu.pun        for program phonon
+ 
+     PWSCF        :     3.69s CPU time
+
+     init_run     :     1.75s CPU
+     electrons    :     1.47s CPU
+ 
+     electrons    :     1.47s CPU
+     c_bands      :     1.47s CPU
+     sum_band     :     0.33s CPU
+     newd         :     0.12s CPU
+ 
+     c_bands      :     1.47s CPU
+     init_us_2    :     0.03s CPU (      84 calls,   0.000 s avg)
+     cegterg      :     1.44s CPU (      29 calls,   0.050 s avg)
+ 
+     sum_band     :     0.33s CPU
+     sumbec       :     0.00s CPU (      28 calls,   0.000 s avg)
+     addusdens    :     0.11s CPU
+ 
+     wfcrot       :     0.16s CPU (      28 calls,   0.006 s avg)
+     cegterg      :     1.44s CPU (      29 calls,   0.050 s avg)
+     h_psi        :     0.88s CPU (     406 calls,   0.002 s avg)
+     g_psi        :     0.02s CPU (     349 calls,   0.000 s avg)
+     overlap      :     0.09s CPU (     349 calls,   0.000 s avg)
+     cdiaghg      :     0.39s CPU (     377 calls,   0.001 s avg)
+     update       :     0.07s CPU (     349 calls,   0.000 s avg)
+     last         :     0.05s CPU (      70 calls,   0.001 s avg)
+ 
+     h_psi        :     0.88s CPU (     406 calls,   0.002 s avg)
+     init         :     0.01s CPU (     406 calls,   0.000 s avg)
+     firstfft     :     0.34s CPU (    1812 calls,   0.000 s avg)
+     secondfft    :     0.40s CPU (    1812 calls,   0.000 s avg)
+     add_vuspsi   :     0.04s CPU (     406 calls,   0.000 s avg)
+     s_psi        :     0.05s CPU (     406 calls,   0.000 s avg)
+ 
+      General routines
+     ccalbec      :     0.05s CPU (     434 calls,   0.000 s avg)
+     cft3         :     0.03s CPU (       5 calls,   0.005 s avg)
+     cft3s        :     0.76s CPU (    3850 calls,   0.000 s avg)
+     interpolate  :     0.01s CPU (       2 calls,   0.007 s avg)
+     davcio       :     0.04s CPU (     113 calls,   0.000 s avg)
+ 

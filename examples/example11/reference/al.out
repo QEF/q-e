@@ -1,0 +1,150 @@
+
+     Program PWSCF     v.2.0    starts ...
+     Today is  3Feb2004 at 11:50:51 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+     ntypx =10   npk =40000  lmax = 3
+     nchix = 6  ndim = 2000  nbrx = 8 nqfm = 8
+
+
+     bravais-lattice index     =            1
+     lattice parameter (a_0)   =      20.0000  a.u.
+     unit-cell volume          =    8000.0000 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cutoff     =      15.0000  Ry
+     charge density cutoff     =      60.0000  Ry
+     convergence threshold     =      1.0E-08
+     beta                      =       0.3500
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     iswitch =  0
+
+     celldm(1)=  20.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  1.000000  0.000000  0.000000 )  
+               a(2) = (  0.000000  1.000000  0.000000 )  
+               a(3) = (  0.000000  0.000000  1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PSEUDO 1 is Al         zval =  3.0   lmax= 1   lloc= 0
+     (in numerical form:   171 grid points, xmin =  0.00, dx = 0.0000)
+
+     atomic species   valence    mass     pseudopotential
+        Al             3.00    26.98154     Al( 1.00)
+
+     No symmetry!
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           Al  tau(  1) = (  0.0000000  0.0000000  0.0000000  )
+
+     number of k points=    1
+                       cart. coord. in units 2pi/a_0
+        k(   1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     G cutoff =  607.9271  (  62669 G-vectors)     FFT grid: ( 50, 50, 50)
+
+     nbndx  =    24  nbnd   =     6  natomwfc =     4  npwx   =    7809
+     nelec  =    3.00 nkb   =     4  ngl    =     508
+
+     Initial potential from superposition of free atoms
+
+     starting charge =   2.99794
+     Starting wfc are atomic +   2 random wfc
+
+     total cpu time spent up to now is      0.97 secs
+
+     iteration #  1     ecut=    15.00 ryd     beta=0.35
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-02,  avg # of iterations =  7.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  1.99E-06,  avg # of iterations = 17.0
+
+     total energy              =    -3.87524806 ryd
+     estimated scf accuracy    <     0.00000632 ryd
+
+     total cpu time spent up to now is      6.03 secs
+
+     iteration #  2     ecut=    15.00 ryd     beta=0.35
+     Davidson diagonalization (with overlap)
+     ethr =  2.11E-07,  avg # of iterations =  6.0
+
+     total energy              =    -3.87524877 ryd
+     estimated scf accuracy    <     0.00000268 ryd
+
+     total cpu time spent up to now is      8.16 secs
+
+     iteration #  3     ecut=    15.00 ryd     beta=0.35
+     Davidson diagonalization (with overlap)
+     ethr =  8.94E-08,  avg # of iterations =  8.0
+
+          k = 0.0000 0.0000 0.0000 ( 7809 PWs)   bands (ev):
+
+    -7.5779  -2.5524  -2.5524  -2.5524  -0.4279   0.7009
+
+!    total energy              =    -3.87524911 ryd
+     estimated scf accuracy    <     0.00000001 ryd
+
+     band energy sum           =    -1.30152034 ryd
+     one-electron contribution =    -3.07453611 ryd
+     hartree contribution      =     1.65113978 ryd
+     xc contribution           =    -1.17506884 ryd
+     ewald contribution        =    -1.27678394 ryd
+
+     convergence has been achieved
+
+     Writing file pwscf.pun     for program phonon
+ 
+     PWSCF        :    10.42s CPU time
+
+     init_run     :     0.95s CPU
+     electrons    :     9.36s CPU
+ 
+     electrons    :     9.36s CPU
+     c_bands      :     6.19s CPU (       4 calls,   1.547 s avg)
+     sum_band     :     1.01s CPU (       4 calls,   0.252 s avg)
+     v_of_rho     :     1.35s CPU (       8 calls,   0.168 s avg)
+     mix_rho      :     0.87s CPU (       4 calls,   0.216 s avg)
+ 
+     c_bands      :     6.19s CPU (       4 calls,   1.547 s avg)
+     init_us_2    :     0.10s CPU (       9 calls,   0.011 s avg)
+     cegterg      :     6.13s CPU (       4 calls,   1.533 s avg)
+ 
+     sum_band     :     1.01s CPU (       4 calls,   0.252 s avg)
+ 
+     wfcrot       :     0.27s CPU
+     cegterg      :     6.13s CPU (       4 calls,   1.533 s avg)
+     h_psi        :     5.54s CPU (      43 calls,   0.129 s avg)
+     g_psi        :     0.07s CPU (      38 calls,   0.002 s avg)
+     overlap      :     0.27s CPU (      38 calls,   0.007 s avg)
+     cdiaghg      :     0.02s CPU (      39 calls,   0.001 s avg)
+     update       :     0.29s CPU (      38 calls,   0.008 s avg)
+     last         :     0.10s CPU (       8 calls,   0.013 s avg)
+ 
+     h_psi        :     5.54s CPU (      43 calls,   0.129 s avg)
+     init         :     0.04s CPU (      43 calls,   0.001 s avg)
+     firstfft     :     2.46s CPU (     126 calls,   0.020 s avg)
+     secondfft    :     2.44s CPU (     126 calls,   0.019 s avg)
+     add_vuspsi   :     0.11s CPU (      43 calls,   0.003 s avg)
+ 
+      General routines
+     ccalbec      :     0.05s CPU (      43 calls,   0.001 s avg)
+     cft3         :     1.47s CPU (      30 calls,   0.049 s avg)
+     cft3s        :     5.23s CPU (     276 calls,   0.019 s avg)
+     davcio       :     0.06s CPU (       4 calls,   0.015 s avg)
+ 

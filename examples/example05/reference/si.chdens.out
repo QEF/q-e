@@ -1,0 +1,8 @@
+
+     Program POST-PROC v.2.0    starts ...
+     Today is  3Feb2004 at 11:40:41 
+     Reading header from file  sicharge                                                                        
+     Reading data from file  sicharge                                                                        
+     Writing data on file si.rho.dat                                                                      
+     Min, Max, imaginary charge:     0.001411    0.087444    0.000000
+     Output format:   2

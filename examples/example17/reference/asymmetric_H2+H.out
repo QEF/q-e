@@ -1,0 +1,270 @@
+
+     Program PWSCF     v.2.0    starts ...
+     Today is 29Apr2004 at 12:59: 4 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+     ntypx =10   npk =40000  lmax = 3
+     nchix = 6  ndmx = 2000  nbrx = 8 nqfx = 8
+
+     gamma-point specific algorithms are used
+
+
+     reading file asymmetric_H2+H.neb
+
+     calculation                   = neb
+     restart_mode                  = restart
+     CI_scheme                     = manual
+     VEC_scheme                    = energy-weighted
+     minimization_scheme           = quick-min
+     num_of_images                 = 8
+     optimization                  = F
+     ds                            = 1.0000 a.u.
+     k_max                         = 0.6000 a.u.
+     k_min                         = 0.4000 a.u.
+     neb_thr                       = 0.0500 eV / A
+     initial path length           = 0.0000 bohr
+     initial inter-image distance  = 0.0000 bohr
+     climbing image                = 5
+
+
+     tcpu =     0.04;  self-consistency for image   1
+     tcpu =     4.13;  self-consistency for image   2
+     tcpu =     8.61;  self-consistency for image   3
+     tcpu =    12.61;  self-consistency for image   4
+     tcpu =    17.42;  self-consistency for image   5
+     tcpu =    22.24;  self-consistency for image   6
+     tcpu =    26.27;  self-consistency for image   7
+     tcpu =    30.72;  self-consistency for image   8
+
+     iteration:   1    E activation = 0.186 eV    error =  0.2467 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47893054 eV   error =   0.1221 eV / A
+     image:  3   E tot =     -49.40490903 eV   error =   0.2467 eV / A
+     image:  4   E tot =     -49.31654579 eV   error =   0.1304 eV / A
+     image:  5   E tot =     -49.31654585 eV   error =   0.1422 eV / A
+     image:  6   E tot =     -49.40490932 eV   error =   0.2467 eV / A
+     image:  7   E tot =     -49.47893091 eV   error =   0.1222 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    34.78;  self-consistency for image   3
+     tcpu =    37.27;  self-consistency for image   4
+     tcpu =    40.16;  self-consistency for image   5
+     tcpu =    43.06;  self-consistency for image   6
+
+     iteration:   2    E activation = 0.189 eV    error =  0.2041 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47893054 eV   error =   0.1677 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0899 eV / A
+     image:  4   E tot =     -49.31406095 eV   error =   0.1099 eV / A
+     image:  5   E tot =     -49.31406123 eV   error =   0.2041 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0899 eV / A
+     image:  7   E tot =     -49.47893091 eV   error =   0.1677 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    45.53;  self-consistency for image   2
+     tcpu =    48.02;  self-consistency for image   4
+     tcpu =    51.69;  self-consistency for image   5
+     tcpu =    56.64;  self-consistency for image   7
+
+     iteration:   3    E activation = 0.190 eV    error =  0.2295 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0227 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.1125 eV / A
+     image:  4   E tot =     -49.31319161 eV   error =   0.2295 eV / A
+     image:  5   E tot =     -49.31379278 eV   error =   0.1999 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0213 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0227 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    59.21;  self-consistency for image   4
+     tcpu =    63.38;  self-consistency for image   5
+
+     iteration:   4    E activation = 0.190 eV    error =  0.1925 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0126 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0504 eV / A
+     image:  4   E tot =     -49.31437951 eV   error =   0.1102 eV / A
+     image:  5   E tot =     -49.31306458 eV   error =   0.1925 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0461 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0126 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    67.46;  self-consistency for image   4
+     tcpu =    70.56;  self-consistency for image   5
+
+     iteration:   5    E activation = 0.191 eV    error =  0.1762 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0069 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0287 eV / A
+     image:  4   E tot =     -49.31516375 eV   error =   0.0600 eV / A
+     image:  5   E tot =     -49.31213438 eV   error =   0.1762 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0541 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0069 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    73.84;  self-consistency for image   5
+
+     iteration:   6    E activation = 0.192 eV    error =  0.1568 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0054 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0261 eV / A
+     image:  4   E tot =     -49.31516375 eV   error =   0.0527 eV / A
+     image:  5   E tot =     -49.31082545 eV   error =   0.1568 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0493 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0054 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    77.43;  self-consistency for image   5
+
+     iteration:   7    E activation = 0.194 eV    error =  0.1372 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0052 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0253 eV / A
+     image:  4   E tot =     -49.31516375 eV   error =   0.0455 eV / A
+     image:  5   E tot =     -49.30912665 eV   error =   0.1372 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0401 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0052 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    81.00;  self-consistency for image   5
+
+     iteration:   8    E activation = 0.196 eV    error =  0.1186 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0052 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0252 eV / A
+     image:  4   E tot =     -49.31516375 eV   error =   0.0412 eV / A
+     image:  5   E tot =     -49.30715724 eV   error =   0.1186 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0313 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0052 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    84.60;  self-consistency for image   5
+
+     iteration:   9    E activation = 0.198 eV    error =  0.1004 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0052 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0251 eV / A
+     image:  4   E tot =     -49.31516375 eV   error =   0.0422 eV / A
+     image:  5   E tot =     -49.30508538 eV   error =   0.1004 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0279 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0052 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    87.82;  self-consistency for image   5
+
+     iteration:  10    E activation = 0.200 eV    error =  0.0820 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0052 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0251 eV / A
+     image:  4   E tot =     -49.31516375 eV   error =   0.0462 eV / A
+     image:  5   E tot =     -49.30308608 eV   error =   0.0820 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0286 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0052 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    91.03;  self-consistency for image   4
+     tcpu =    93.67;  self-consistency for image   5
+
+     iteration:  11    E activation = 0.201 eV    error =  0.0633 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0052 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0270 eV / A
+     image:  4   E tot =     -49.31565059 eV   error =   0.0226 eV / A
+     image:  5   E tot =     -49.30130333 eV   error =   0.0633 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0243 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0052 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+     tcpu =    96.98;  self-consistency for image   5
+
+     iteration:  12    E activation = 0.203 eV    error =  0.0436 eV / A
+
+     image:  1   E tot =     -49.50269268 eV   error =   0.0138 eV / A
+     image:  2   E tot =     -49.47812393 eV   error =   0.0052 eV / A
+     image:  3   E tot =     -49.40190757 eV   error =   0.0270 eV / A
+     image:  4   E tot =     -49.31565059 eV   error =   0.0251 eV / A
+     image:  5   E tot =     -49.29987974 eV   error =   0.0436 eV / A
+     image:  6   E tot =     -49.40190814 eV   error =   0.0229 eV / A
+     image:  7   E tot =     -49.47812391 eV   error =   0.0052 eV / A
+     image:  8   E tot =     -49.50269268 eV   error =   0.0137 eV / A
+
+     ---------------------------------------------------------------------------
+
+
+     NEB: convergence achieved in  12 iterations
+ 
+     PWSCF        :  1m40.25s CPU time
+
+     init_run     :     9.12s CPU (      28 calls,   0.326 s avg)
+     electrons    :    85.26s CPU (      28 calls,   3.045 s avg)
+     forces       :     1.53s CPU (      28 calls,   0.055 s avg)
+ 
+     electrons    :    85.26s CPU (      28 calls,   3.045 s avg)
+     c_bands      :     8.86s CPU (     218 calls,   0.041 s avg)
+     sum_band     :     7.63s CPU (     218 calls,   0.035 s avg)
+     v_of_rho     :    64.12s CPU (     482 calls,   0.133 s avg)
+     newd         :     1.85s CPU (     244 calls,   0.008 s avg)
+     mix_rho      :     5.24s CPU (     218 calls,   0.024 s avg)
+ 
+     c_bands      :     8.86s CPU (     218 calls,   0.041 s avg)
+     init_us_2    :     0.27s CPU (     944 calls,   0.000 s avg)
+     cegterg      :     8.33s CPU (     436 calls,   0.019 s avg)
+ 
+     sum_band     :     7.63s CPU (     218 calls,   0.035 s avg)
+     sumbec       :     0.00s CPU (     436 calls,   0.000 s avg)
+     addusdens    :     1.84s CPU (     218 calls,   0.008 s avg)
+ 
+     cegterg      :     8.33s CPU (     436 calls,   0.019 s avg)
+     h_psi        :     6.14s CPU (    1468 calls,   0.004 s avg)
+     g_psi        :     0.06s CPU (    1016 calls,   0.000 s avg)
+     overlap      :     0.28s CPU (    1016 calls,   0.000 s avg)
+     cdiaghg      :     0.70s CPU (    1032 calls,   0.001 s avg)
+     update       :     0.43s CPU (    1016 calls,   0.000 s avg)
+     last         :     0.10s CPU (     452 calls,   0.000 s avg)
+ 
+     h_psi        :     6.14s CPU (    1468 calls,   0.004 s avg)
+     init         :     0.04s CPU (    1468 calls,   0.000 s avg)
+     add_vuspsi   :     0.11s CPU (    1468 calls,   0.000 s avg)
+     s_psi        :     0.14s CPU (    1468 calls,   0.000 s avg)
+ 
+     General routines
+     cft3         :    10.93s CPU (   12344 calls,   0.001 s avg)
+     cft3s        :     4.51s CPU (   10002 calls,   0.000 s avg)
+     interpolate  :     3.26s CPU (     924 calls,   0.004 s avg)
+     davcio       :     0.36s CPU (    1680 calls,   0.000 s avg)
+ 

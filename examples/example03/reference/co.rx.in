@@ -1,0 +1,29 @@
+ &control
+    calculation='relax'
+    restart_mode='from_scratch',
+    prefix='CO',
+    pseudo_dir = '/home/giannozz/O-sesame/pseudo//',
+    outdir='/home/giannozz/tmp//'
+ /
+ &system
+    ibrav=0, nat=2, ntyp=2,
+    ecutwfc = 24.0, ecutrho = 144.0
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ &ions
+    upscale=10
+ /
+ATOMIC_SPECIES
+ O 16.00  O.LDA.US.RRKJ3.UPF
+ C 12.00  CUS.RRKJ3.UPF
+ATOMIC_POSITIONS {bohr}
+ C 2.256 0.0 0.0
+ O 0.0   0.0 0.0  0 0 0 
+CELL_PARAMETERS {cubic}
+ 12.0  0.0  0.0
+  0.0 12.0  0.0
+  0.0  0.0 12.0
+K_POINTS {Gamma}

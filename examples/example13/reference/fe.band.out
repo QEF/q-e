@@ -1,0 +1,310 @@
+
+     Program PWSCF     v.2.0    starts ...
+     Today is  3Feb2004 at 11:59:49 
+
+     non-colinear magnetization allowed
+
+     Warning: missing inequivalent points
+   Generating pointlists ...
+     new r_m :   0.357235479061081     
+
+
+     bravais-lattice index     =            3
+     lattice parameter (a_0)   =       5.2170  a.u.
+     unit-cell volume          =      70.9958 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     convergence threshold     =      1.0E-12
+     beta                      =       0.2000
+     number of iterations used =            8  potential mixing
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     iswitch = -1
+
+     celldm(1)=   5.217000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.500000  0.500000  0.500000 )  
+               a(2) = ( -0.500000  0.500000  0.500000 )  
+               a(3) = ( -0.500000 -0.500000  0.500000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.000000  0.000000  1.000000 )  
+               b(2) = ( -1.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000 -1.000000  1.000000 )  
+
+
+     PSEUDO 1 is Fe (US)    zval =  8.0   lmax= 2   lloc= 0
+     Version   0  0  0 of US pseudo code
+     Using log mesh of   957 points
+     The pseudopotential has  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
+                                                             0.000   0.000
+
+     atomic species   valence    mass     pseudopotential
+        Fe             8.00    55.84700     Fe( 1.00)
+
+      8 Sym.Ops. (no inversion)
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           Fe  tau(  1) = (  0.0000000  0.0000000  0.0000000  )
+
+     number of k points=   28  gaussian broad. (ryd)=  0.0500     ngauss =   0
+                       cart. coord. in units 2pi/a_0
+        k(   1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0357143
+        k(   2) = (   0.0000000   0.0000000   0.1000000), wk =   0.0238095
+        k(   3) = (   0.0000000   0.0000000   0.2000000), wk =   0.0238095
+        k(   4) = (   0.0000000   0.0000000   0.3000000), wk =   0.0238095
+        k(   5) = (   0.0000000   0.0000000   0.4000000), wk =   0.0238095
+        k(   6) = (   0.0000000   0.0000000   0.5000000), wk =   0.0238095
+        k(   7) = (   0.0000000   0.0000000   0.6000000), wk =   0.0238095
+        k(   8) = (   0.0000000   0.0000000   0.7000000), wk =   0.0238095
+        k(   9) = (   0.0000000   0.0000000   0.8000000), wk =   0.0238095
+        k(  10) = (   0.0000000   0.0000000   0.9000000), wk =   0.0238095
+        k(  11) = (   0.0000000   0.0000000   1.0000000), wk =   0.0357143
+        k(  12) = (   0.0000000   0.0000000   0.0000000), wk =   0.0357143
+        k(  13) = (   0.0000000   0.1000000   0.1000000), wk =   0.0119048
+        k(  14) = (   0.0000000   0.2000000   0.2000000), wk =   0.0119048
+        k(  15) = (   0.0000000   0.3000000   0.3000000), wk =   0.0119048
+        k(  16) = (   0.0000000   0.4000000   0.4000000), wk =   0.0119048
+        k(  17) = (   0.0000000   0.5000000   0.5000000), wk =   0.0119048
+        k(  18) = (   0.0000000   0.6000000   0.6000000), wk =   0.0119048
+        k(  19) = (   0.0000000   0.7000000   0.7000000), wk =   0.0119048
+        k(  20) = (   0.0000000   0.8000000   0.8000000), wk =   0.0119048
+        k(  21) = (   0.0000000   0.9000000   0.9000000), wk =   0.0119048
+        k(  22) = (   0.0000000   1.0000000   1.0000000), wk =   0.0357143
+        k(  23) = (   0.0000000   0.0000000   0.0000000), wk =   0.0357143
+        k(  24) = (   0.1000000   0.1000000   0.1000000), wk =   0.0178571
+        k(  25) = (   0.2000000   0.2000000   0.2000000), wk =   0.0178571
+        k(  26) = (   0.3000000   0.3000000   0.3000000), wk =   0.0178571
+        k(  27) = (   0.4000000   0.4000000   0.4000000), wk =   0.0178571
+        k(  28) = (   0.5000000   0.5000000   0.5000000), wk =   0.0357143
+
+     G cutoff =  137.8834  (   3367 G-vectors)     FFT grid: ( 24, 24, 24)
+     G cutoff =   68.9417  (   1205 G-vectors)  smooth grid: ( 15, 15, 15)
+
+     nbndx  =    64  nbnd   =    16  natomwfc =    12  npwx   =     164
+     nelec  =    8.00 nkb   =    18  ngl    =      64
+  warning: negative or imaginary core charge    -0.000013    0.000000
+
+     The initial potential is read from file         fe.pot
+     Starting wfc are atomic +   4 random wfc
+
+     total cpu time spent up to now is      2.95 secs
+
+     Band Structure Calculation
+     Davidson diagonalization (with overlap)
+   WARNING:     2 eigenvalues not converged
+ warning :   2 eigenvectors not converged after   0 attemps
+   WARNING:     2 eigenvalues not converged
+ warning :   2 eigenvectors not converged after   0 attemps
+   WARNING:     1 eigenvalues not converged
+ warning :   1 eigenvectors not converged after   0 attemps
+   WARNING:     1 eigenvalues not converged
+ warning :   1 eigenvectors not converged after   0 attemps
+   WARNING:     1 eigenvalues not converged
+ warning :   1 eigenvectors not converged after   0 attemps
+   WARNING:     2 eigenvalues not converged
+ warning :   2 eigenvectors not converged after   0 attemps
+   WARNING:     2 eigenvalues not converged
+ warning :   2 eigenvectors not converged after   0 attemps
+   WARNING:     2 eigenvalues not converged
+ warning :   2 eigenvectors not converged after   0 attemps
+   WARNING:     2 eigenvalues not converged
+ warning :   2 eigenvectors not converged after   0 attemps
+     ethr =  1.00E-07,  avg # of iterations = 17.1
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+     5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7540  40.2271
+
+          k = 0.0000 0.0000 0.1000     band energies (ev):
+
+     5.7004   6.3887  11.8155  11.8155  11.8806  13.4293  13.5824  14.5102
+    14.5102  14.5915  16.2262  16.4164  38.6427  39.2276  39.6414  39.6415
+
+          k = 0.0000 0.0000 0.2000     band energies (ev):
+
+     6.3439   7.0386  11.8258  11.8258  12.0663  13.1093  13.7052  14.4971
+    14.4971  14.7978  15.8289  16.5614  36.7594  37.5083  38.8967  38.8967
+
+          k = 0.0000 0.0000 0.3000     band energies (ev):
+
+     7.3321   8.0516  11.8851  11.8851  12.3586  12.6113  13.9049  14.5292
+    14.5292  15.1234  15.2159  16.7681  35.0644  35.9815  37.1473  37.1473
+
+          k = 0.0000 0.0000 0.4000     band energies (ev):
+
+     8.4929   9.2984  11.9874  12.0386  12.0386  12.7324  14.2428  14.4576
+    14.6639  14.6639  15.5410  17.0319  33.7227  34.8089  34.8748  34.8748
+
+          k = 0.0000 0.0000 0.5000     band energies (ev):
+
+     9.4884  10.5339  11.3045  12.3218  12.3218  13.1539  13.6399  14.9484
+    14.9484  14.9553  16.0139  17.4715  32.5075  32.5075  32.7278  33.7748
+
+          k = 0.0000 0.0000 0.6000     band energies (ev):
+
+     9.9403  10.6342  11.3850  12.7477  12.7477  12.8494  13.5829  15.4060
+    15.4060  16.3695  16.4973  18.3991  30.2255  30.2255  31.4570  31.4570
+
+          k = 0.0000 0.0000 0.7000     band energies (ev):
+
+     9.8660  10.0423  11.6367  12.1607  13.2939  13.2939  13.9766  16.0231
+    16.0231  16.9427  18.4821  20.0527  28.1673  28.1673  29.3165  29.3165
+
+          k = 0.0000 0.0000 0.8000     band energies (ev):
+
+     9.5682   9.5819  11.4943  11.6305  13.8842  13.8842  14.2934  16.7283
+    16.7283  17.3023  21.0063  22.2562  26.4614  26.4614  27.4859  27.4859
+
+          k = 0.0000 0.0000 0.9000     band energies (ev):
+
+     9.2908   9.2967  11.2774  11.2975  14.3735  14.3735  14.4990  17.3523
+    17.3523  17.5364  23.5238  24.5140  25.2912  25.2912  26.1741  26.1741
+
+          k = 0.0000 0.0000 1.0000     band energies (ev):
+
+     9.1913   9.1913  11.1842  11.1842  14.5700  14.5700  14.5700  17.6175
+    17.6175  17.6175  24.8652  24.8652  24.8652  25.6773  25.6773  25.6773
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+     5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7533  40.2271
+
+          k = 0.0000 0.1000 0.1000     band energies (ev):
+
+     5.9178   6.6081  11.6908  11.8035  12.0661  13.4172  13.5503  14.3673
+    14.4814  14.7939  16.2135  16.3766  37.6510  38.4047  39.2204  39.6294
+
+          k = 0.0000 0.2000 0.2000     band energies (ev):
+
+     7.1170   7.8432  11.3704  11.7262  12.7529  13.2649  13.5888  13.9806
+    14.2503  15.5517  16.0513  16.4260  33.4189  34.5286  37.3760  38.0090
+
+          k = 0.0000 0.3000 0.3000     band energies (ev):
+
+     8.4955   9.4851  10.9922  11.9862  13.3306  13.5299  13.6583  13.6855
+    14.0259  16.1581  16.5191  16.5963  28.7528  30.1330  35.2739  35.8802
+
+          k = 0.0000 0.4000 0.4000     band energies (ev):
+
+     8.9963  10.5868  10.6994  13.1846  13.3407  13.7137  13.7334  14.5297
+    14.7091  16.3366  16.6229  17.5623  24.5753  26.2637  33.7939  34.3484
+
+          k = 0.0000 0.5000 0.5000     band energies (ev):
+
+     9.0056  10.5904  10.8056  13.0568  13.5090  13.7668  14.8795  14.9641
+    15.6195  16.3589  16.6700  17.9701  22.4795  24.4552  33.2682  33.7991
+
+          k = 0.0000 0.6000 0.6000     band energies (ev):
+
+     8.9963  10.5868  10.6994  13.1846  13.3407  13.7137  13.7334  14.5297
+    14.7091  16.3366  16.6229  17.5623  24.5753  26.2637  33.7939  34.3484
+
+          k = 0.0000 0.7000 0.7000     band energies (ev):
+
+     8.4955   9.4851  10.9922  11.9862  13.3306  13.5299  13.6583  13.6855
+    14.0259  16.1581  16.5191  16.5963  28.7528  30.1330  35.2739  35.8802
+
+          k = 0.0000 0.8000 0.8000     band energies (ev):
+
+     7.1170   7.8432  11.3704  11.7262  12.7529  13.2649  13.5888  13.9806
+    14.2503  15.5517  16.0513  16.4260  33.4189  34.5286  37.3760  38.0090
+
+          k = 0.0000 0.9000 0.9000     band energies (ev):
+
+     5.9178   6.6081  11.6908  11.8035  12.0661  13.4172  13.5503  14.3673
+    14.4814  14.7939  16.2135  16.3766  37.6510  38.4047  39.2207  39.6281
+
+          k = 0.0000 1.0000 1.0000     band energies (ev):
+
+     5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7540  40.2271
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+     5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7533  40.2271
+
+          k = 0.1000 0.1000 0.1000     band energies (ev):
+
+     6.1313   6.8243  11.6726  11.6726  12.2574  13.4696  13.4696  14.3326
+    14.3326  14.9982  16.2796  16.2796  37.4948  37.4948  38.2769  38.2769
+
+          k = 0.2000 0.2000 0.2000     band energies (ev):
+
+     7.8617   8.6174  11.2332  11.2332  13.4663  13.4663  13.5493  13.7533
+    13.7533  16.2938  16.2938  16.3451  33.3401  33.3401  34.4049  34.4049
+
+          k = 0.3000 0.3000 0.3000     band energies (ev):
+
+     9.9040  10.7701  10.7701  10.9615  13.1239  13.1239  13.6103  13.6103
+    15.7430  16.4830  16.4830  18.3847  29.4170  29.4170  30.6780  30.6780
+
+          k = 0.4000 0.4000 0.4000     band energies (ev):
+
+    10.6162  10.6162  11.0246  12.7110  12.8291  12.8291  13.7549  13.7549
+    16.6594  16.6594  19.1624  21.2389  26.1443  26.1443  27.5819  27.5819
+
+          k = 0.5000 0.5000 0.5000     band energies (ev):
+
+    10.8105  10.8105  10.8105  12.9094  12.9094  12.9094  13.8096  13.8096
+    16.7237  16.7237  23.6322  23.6322  23.6322  25.2234  25.2234  25.2234
+
+     Writing file fe.pun        for program phonon
+ 
+     PWSCF        :    14.22s CPU time
+
+     init_run     :     2.85s CPU
+     electrons    :    10.41s CPU
+ 
+     electrons    :    10.41s CPU
+     c_bands      :    10.41s CPU
+     sum_band     :     0.76s CPU
+     newd         :     0.11s CPU
+ 
+     c_bands      :    10.41s CPU
+     init_us_2    :     0.04s CPU (      84 calls,   0.000 s avg)
+     cegterg      :    10.32s CPU (      28 calls,   0.369 s avg)
+ 
+     sum_band     :     0.76s CPU
+     sumbec       :     0.00s CPU (      28 calls,   0.000 s avg)
+     addusdens    :     0.15s CPU
+ 
+     wfcrot       :     1.00s CPU (      28 calls,   0.036 s avg)
+     cegterg      :    10.32s CPU (      28 calls,   0.369 s avg)
+     h_psi        :     6.97s CPU (     536 calls,   0.013 s avg)
+     g_psi        :     0.08s CPU (     480 calls,   0.000 s avg)
+     overlap      :     0.59s CPU (     480 calls,   0.001 s avg)
+     cdiaghg      :     2.11s CPU (     508 calls,   0.004 s avg)
+     update       :     0.61s CPU (     480 calls,   0.001 s avg)
+     last         :     0.37s CPU (      84 calls,   0.004 s avg)
+ 
+     h_psi        :     6.97s CPU (     536 calls,   0.013 s avg)
+     init         :     0.15s CPU (     536 calls,   0.000 s avg)
+     firstfft     :     3.76s CPU (    4363 calls,   0.001 s avg)
+     secondfft    :     1.88s CPU (    4363 calls,   0.000 s avg)
+     add_vuspsi   :     0.29s CPU (     536 calls,   0.001 s avg)
+     s_psi        :     0.30s CPU (     536 calls,   0.001 s avg)
+ 
+      General routines
+     ccalbec      :     0.14s CPU (     564 calls,   0.000 s avg)
+     cft3         :     0.05s CPU (      18 calls,   0.003 s avg)
+     cft3s        :     3.60s CPU (   18356 calls,   0.000 s avg)
+     interpolate  :     0.03s CPU (       8 calls,   0.004 s avg)
+     davcio       :     0.13s CPU (     112 calls,   0.001 s avg)
+ 

@@ -1,0 +1,11 @@
+phonons of AlAs at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  epsil=.true.,
+  amass(1)=26.98,
+  amass(2)=74.92,
+  outdir='/home/giannozz/tmp//',
+  fildyn='alas.dynG',
+ /
+0.0 0.0 0.0

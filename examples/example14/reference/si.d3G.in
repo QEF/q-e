@@ -1,0 +1,10 @@
+Anharm at Gamma
+&inputph
+   prefix = 'si', 
+   fildrho = 'si.drho_G',
+   fild0rho = 'si.drho_G',
+   amass(1) = 28.0855,
+   outdir = '/home/stefano/O3/tmp//',
+   fildyn = 'si.anh_G',
+ /
+0.0 0.0 0.0

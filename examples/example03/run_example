@@ -1,0 +1,217 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+                                                                                
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x to compute the equilibrium geometry"
+$ECHO "of a simple molecule, CO, and of an Al (001) slab."
+$ECHO "In the latter case the relaxation is performed in two ways:"
+$ECHO "1) using the quasi-Newton BFGS algorithm"
+$ECHO "2) using a damped dynamics algorithm."
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST=" O.LDA.US.RRKJ3.UPF CUS.RRKJ3.UPF Al.vbc.UPF "
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if ! test -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if ! test -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if ! test -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+ 
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if ! test -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation
+cat > co.rx.in << EOF
+ &control
+    calculation='relax'
+    restart_mode='from_scratch',
+    prefix='CO',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=0, nat=2, ntyp=2,
+    ecutwfc = 24.0, ecutrho = 144.0
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ &ions
+    upscale=10
+ /
+ATOMIC_SPECIES
+ O 16.00  O.LDA.US.RRKJ3.UPF
+ C 12.00  CUS.RRKJ3.UPF
+ATOMIC_POSITIONS {bohr}
+ C 2.256 0.0 0.0
+ O 0.0   0.0 0.0  0 0 0 
+CELL_PARAMETERS {cubic}
+ 12.0  0.0  0.0
+  0.0 12.0  0.0
+  0.0  0.0 12.0
+K_POINTS {Gamma}
+EOF
+$ECHO "  running the geometry relaxation for CO...\c"
+$PW_COMMAND < co.rx.in > co.rx.out
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation
+cat > al001.rx.in << EOF
+ &control
+    calculation='relax'
+    title='Al 001 7 layers +  4 vacuum'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav= 6, celldm(1) =5.3033, celldm(3) = 8.0, 
+    nat=7, ntyp=1,
+    ecutwfc = 12.0,
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.05
+ /
+ &electrons
+    conv_thr =  1.0d-6
+    mixing_beta = 0.3
+ /
+ &ions
+    upscale=10
+ /
+ATOMIC_SPECIES
+ Al 26.98 Al.vbc.UPF
+ATOMIC_POSITIONS
+ Al   0.5000000      0.5000000     -2.121320
+ Al   0.0000000      0.0000000     -1.414213
+ Al   0.5000000      0.5000000     -0.707107
+ Al   0.0000000      0.0000000      0.000000
+ Al   0.5000000      0.5000000      0.707107
+ Al   0.0000000      0.0000000      1.414213
+ Al   0.5000000      0.5000000      2.121320
+K_POINTS
+ 3
+ 0.125  0.125  0.0  1.0
+ 0.125  0.375  0.0  2.0
+ 0.375  0.375  0.0  1.0
+EOF
+$ECHO "  running the geometry relaxation for Al (001) using BFGS...\c"
+$PW_COMMAND < al001.rx.in > al001.rx.out
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation
+rm -f e eal ave p avec tv 
+cat > al001.mm.in << EOF
+ &control
+    calculation='relax'
+    title='Al 001 7 layers +  4 vacuum'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    disk_io='high',
+    dt=120,
+    forc_conv_thr =5.d-5,
+    nstep = 100
+ /
+ &system
+    ibrav= 6, celldm(1) =5.3033, celldm(3) = 8.0, 
+    nat=7, ntyp=1,
+    ecutwfc = 12.0,
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.05
+ /
+ &electrons
+    conv_thr =  1.0d-6
+    mixing_beta = 0.3
+ /
+ &ions
+    ion_dynamics='damp',
+    potential_extrapolation='wfc2'
+ /
+ATOMIC_SPECIES
+ Al 26.98 Al.vbc.UPF
+ATOMIC_POSITIONS
+ Al   0.5000000      0.5000000     -2.121320
+ Al   0.0000000      0.0000000     -1.414213
+ Al   0.5000000      0.5000000     -0.707107
+ Al   0.0000000      0.0000000      0.000000
+ Al   0.5000000      0.5000000      0.707107
+ Al   0.0000000      0.0000000      1.414213
+ Al   0.5000000      0.5000000      2.121320
+K_POINTS
+ 3
+ 0.125  0.125  0.0  1.0
+ 0.125  0.375  0.0  2.0
+ 0.375  0.375  0.0  1.0
+EOF
+$ECHO "  running the geometry relaxation for Al (001) using damped MD...\c"
+$PW_COMMAND < al001.mm.in > al001.mm.out
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

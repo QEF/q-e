@@ -1,0 +1,32 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '/home/dalcorso/O-sesame/pseudo//',
+    outdir='/home/dalcorso/tmp//'
+    prefix='ni'
+ /
+ &system
+    ibrav = 6, 
+    celldm(1) =4.57, 
+    celldm(3) =1.414, 
+    nat= 2, 
+    ntyp= 1,
+    nspin = 2,  
+    starting_magnetization(1)=0.7,
+    ecutwfc = 25.0, 
+    ecutrho = 250.0
+    occupations='smearing', 
+    smearing='methfessel-paxton', 
+    degauss=0.01
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Ni 58.69 NiUS.RRKJ3.UPF 
+ATOMIC_POSITIONS
+ Ni 0. 0. 0. 
+ Ni 0.5 0.5 0.707
+K_POINTS (automatic)
+ 4 4 3 1 1 1                

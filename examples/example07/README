@@ -1,0 +1,35 @@
+
+This example illustrates how to calculate electron-phonon interaction
+coefficients at X for fcc Al.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for Al.
+   (input=al.scf.in, output=al.scf.out) 
+
+2) make a non self-consistent calculation for X point.
+   (input=al.nscf.in, output=al.nscf.out)
+
+3) make a phonon calculation at X, saving the dynamical matrix in file
+   'al.dyn' and the self-consistent first-order variation of the
+   potential into file 'aldv' (variable fildvscf) written in the
+   directory $TMP_DIR.  The grid of k-points used in this step should be
+   large enough to get converged results for phonons (note that the grid
+   used in the example is NOT large enough)
+
+4) make a non scf calculation as required by a phonon calculation at X,
+   with a larger k-point grid.
+   (input=al.nscf2.in, output=al.nscf2.out)
+
+5) make the electron-phonon calculation by specifying
+   elph=.true., trans=-.false., and the input files:
+   fildvscf='aldv', fildyn='al.dyn'
+   The grid of k-points that is used in this step should be large enough
+   to get converged results for the electron-phonon coefficients at X
+   (note that the one used in the example is NOT large enough).
+
+In principle it should be possible to use the same grid of k-points to
+calculate both phonons and electron-phonon coefficients. However, this is
+not convenient, because the latter are much more difficult to converge
+with respect to the number of k-points than the former.

@@ -1,0 +1,12 @@
+normal modes for sih4
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='sih4',
+  amass(1)=28.086,
+  amass(2)=1.008,
+  outdir='/home/giannozz/tmp/', 
+  epsil=.true.,
+  trans=.true., asr=.true.
+  raman=.false.
+ /
+ 0.0 0.0 0.0

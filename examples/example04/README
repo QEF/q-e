@@ -1,0 +1,35 @@
+
+This example illustrates how to use pw.x to perform molecular dynamics
+for an 8-atom cell of Si starting with compressed bonds along 111
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the file 'INPUT_PW' in the directory 'pwdocs')
+
+1) make a MD run for Si in the diamond structure in a 2-atom cell starting
+   with the bond along (111) slightly compressed. Use the Gamma point only.
+
+2) make a MD run for Si in the diamond structure in a 8-atom cell starting
+   with the bond along (111) slightly compressed. Use the Gamma point only.
+   Note that the two calculations do not give exactly the same results 
+   because the BZ samplig is different.
+
+3) make a MD run for Si in the diamond structure in a 2-atom cell starting
+   with the bond along (111) slightly compressed. Use the Gamma and the
+   3 X points for the BZ sampling. 
+   It should give the same result as the calculation with 8 atoms (clearly 
+   the total energy is 4 times larger)
+
+   In all the three calculation above:
+     calculation='md' specifies that a MD run is performed.
+     dt=20            defines the time step in (Rydberg) atomic unit of time.
+     The mass of each type of atom is specified in the cards ATOMIC_SPECIES
+     (for Si, 28.086 is the atomic mass in a.m.u.)
+     nstep=100        is the number of steps in the MD run.
+     potential_extrapolation='wfc2' meansd that starting guess for the
+     potential and the wavefunctions at the new atomic positions will 
+     be extrapolated from previous history.
+     nosym=.true.     states that symmetry should not be used in the MD run.
+
+   Additional variables (such as temperature) could be set in a MD run.
+   Refer to INPUT_PW for their meaning.
+

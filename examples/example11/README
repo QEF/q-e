@@ -1,0 +1,18 @@
+This example illustrates the use of the option occupations='from_input'.
+
+1) make an LDA self-consistent calculation for an isolated Al atom by
+   specifying the occupancy of each band in the input file. There are 6 
+   bands (nbnd=6) whose occupancies are:
+   2.0 0.3333333333333 0.333333333333 0.3333333333333 0.0 0.0
+   (input=al.in, ouput=al.out)
+
+2) make a sigma-GGA spin-polarized (nspin=2) self-consistent calculation
+   for an isolated O atom by specifying the occupancies of each band in
+   each spin channel (for each k-point: only gamma in this example):
+   1.0 1.0 1.0 1.0 0.0 0.0 
+   1.0 0.33333333333 0.33333333333 0.33333333333 0.0 0.0 
+   (input=O.in, output=O.out)
+
+3) the sama as in point 2), but with the gamma version of the code.
+   (input=O_gamma.in, output=O_gamma.out)
+

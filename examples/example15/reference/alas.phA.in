@@ -1,0 +1,14 @@
+phonons of AlAs at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  epsil=.false.,
+  trans=.true., 
+  zue=.true., 
+  amass(1)=69.72,
+  amass(2)=26.98,
+  outdir='/home/deinzer/tmp_ram2//',
+  fildyn='alas.dynG',
+  fildrho='alas.drhou',
+ /
+0.0 0.0 0.0

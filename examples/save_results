@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+
+# get list of directories to be saved from command line
+# if none is given, save all
+if test $# = 0 ; then EXAMPLES="example*" ; else EXAMPLES="$*" ; fi
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# save results to reference
+for dir in $EXAMPLES
+do
+    if test -d $dir/reference/CVS
+    then
+        cd $dir
+        $ECHO "saving `pwd`...\c"
+        /bin/rm -r reference.old
+        mv reference reference.old
+        mv results reference
+        mv reference.old/CVS reference
+        $ECHO " done"
+        cd ..
+    fi
+done
+$ECHO "saving all : done"

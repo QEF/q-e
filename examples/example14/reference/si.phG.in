@@ -1,0 +1,14 @@
+phonons of Si at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='si',
+  epsil=.false.,
+  trans=.true., 
+  zue=.false.,
+  amass(1)=28.0855,
+  amass(2)=28.0855,
+  outdir='/home/stefano/O3/tmp//',
+  fildyn='si.dyn_G',
+  fildrho='si.drho_G',
+ /
+0.0 0.0 0.0

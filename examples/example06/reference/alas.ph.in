@@ -1,0 +1,10 @@
+phonons of AlAs at -0.50,0.00,1.00
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  amass(1)=26.98,
+  amass(2)=74.92,
+  outdir='/home/giannozz/tmp//',
+  fildyn='dyn.-0.50,0.00,1.00'
+ /
+-0.50,0.00,1.00

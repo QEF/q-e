@@ -1,0 +1,26 @@
+
+This example illustrates how to calculate interatomic force 
+constants (IFC) in real space for AlAs in zincblende structure.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation (input=alas.scf.in,
+   output=alas.scf.out)
+
+2) make a phonon calculation for a uniform grid of q-points. We chose
+   a 444 Monkhorst-Pack grid, not translated. We separately calculate
+   the dynamical matrix at Gamma together with effective charges 
+   (AlAs is a polar system).  All dynamical matrices are saved with
+   a different name.
+
+3) call program q2r.x to calculate IFC's in real space.
+   All dynamical matrices are read and Fourier-transformed. Note that
+   nr1,nr2,nr3  in file q2r.in are the Monkhorst-Pack indexes of the 
+   q-point uniform grid (4,4,4 in this case).
+   The output file containing the force constants in a format suitable 
+   for program matdyn.x is alas444.fc.
+
+4) call program matdyn.x to recalculate phonons at any q-vector from
+   previously calculated IFC's. See the header of matdyn.f90 for
+   input documentation.

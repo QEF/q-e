@@ -1,0 +1,27 @@
+
+This example shows how to use pw.x and dos.x to calculate the 
+Density of States (DOS) of Ni .
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for Ni (like in example 1).
+   (input=ni.scf.in, output=ni.scf.out)
+
+2) make a band structure calculation for Ni (input=ni.dos.in,
+   output=ni.dos.out) on a uniform k-point grid (automatically
+   generated). In this example the Fermi level is calculated with the
+   tetrahedra method (not in the actual band structure calculation but in
+   the subsequent DOS calculation). If preferred, a gaussian broadening
+   may be specified in this or in the subsequent step.
+
+3) the program dos.x reads file filpun (ni.pun) and calculates the DOS on a
+   uniform grid of energies from Emin to Emax, with grid step Delta E.
+   The output DOS is in file ni.dos, ready for plotting.
+
+4) the program projfwc.x projects the crystal wavefunctions on an
+   orthogonalized basis set of atomic orbitals, calculates the Loewdin
+   charges, spilling parameter, and the projected DOS (total DOS in file
+   'ni.pdos_tot', s and d component in files 'ni.pdos_atm#1(Ni)_wfc#1(s)'
+   and 'ni.pdos_atm#1(Ni)_wfc#2(d)' respectively).  (input=ni.pdos.in,
+   output=ni.pdos.in)

@@ -1,0 +1,4869 @@
+
+     Program PWSCF     v.2.0    starts ...
+     Today is 11Feb2004 at 18:26:33 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+     ntypx =10   npk =40000  lmax = 3
+     nchix = 6  ndim = 2000  nbrx = 8 nqfm = 8
+
+     Title: 
+     Al 001 7 layers +  4 vacuum                                                
+
+
+     bravais-lattice index     =            6
+     lattice parameter (a_0)   =       5.3033  a.u.
+     unit-cell volume          =    1193.2421 (a.u.)^3
+     number of atoms/cell      =            7
+     number of atomic types    =            1
+     kinetic-energy cutoff     =      12.0000  Ry
+     charge density cutoff     =      48.0000  Ry
+     convergence threshold     =      1.0E-06
+     beta                      =       0.3000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     iswitch =  3  nstep  =  100
+
+     celldm(1)=   5.303300  celldm(2)=   0.000000  celldm(3)=   8.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  1.000000  0.000000  0.000000 )  
+               a(2) = (  0.000000  1.000000  0.000000 )  
+               a(3) = (  0.000000  0.000000  8.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  0.125000 )  
+
+
+     PSEUDO 1 is Al         zval =  3.0   lmax= 1   lloc= 0
+     (in numerical form:   171 grid points, xmin =  0.00, dx = 0.0000)
+
+     atomic species   valence    mass     pseudopotential
+        Al             3.00    26.98000     Al( 1.00)
+
+     16 Sym.Ops. (with inversion)
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           Al  tau(  1) = (  0.5000000  0.5000000 -2.1213200  )
+         2           Al  tau(  2) = (  0.0000000  0.0000000 -1.4142130  )
+         3           Al  tau(  3) = (  0.5000000  0.5000000 -0.7071070  )
+         4           Al  tau(  4) = (  0.0000000  0.0000000  0.0000000  )
+         5           Al  tau(  5) = (  0.5000000  0.5000000  0.7071070  )
+         6           Al  tau(  6) = (  0.0000000  0.0000000  1.4142130  )
+         7           Al  tau(  7) = (  0.5000000  0.5000000  2.1213200  )
+
+     number of k points=    3  gaussian broad. (ryd)=  0.0500     ngauss =   1
+                       cart. coord. in units 2pi/a_0
+        k(   1) = (   0.1250000   0.1250000   0.0000000), wk =   0.5000000
+        k(   2) = (   0.1250000   0.3750000   0.0000000), wk =   1.0000000
+        k(   3) = (   0.3750000   0.3750000   0.0000000), wk =   0.5000000
+
+     G cutoff =   34.1959  (   6689 G-vectors)     FFT grid: ( 12, 12, 96)
+
+     nbndx  =    60  nbnd   =    15  natomwfc =    28  npwx   =     860
+     nelec  =   21.00 nkb   =    28  ngl    =     351
+
+     Initial potential from superposition of free atoms
+
+     starting charge =  20.98560
+     Starting wfc are atomic
+
+     total cpu time spent up to now is      0.62 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-02,  avg # of iterations =  3.0
+
+     total energy              =   -28.23570843 ryd
+     estimated scf accuracy    <     1.14009656 ryd
+
+     total cpu time spent up to now is      1.78 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.43E-03,  avg # of iterations =  6.0
+
+     total energy              =    18.21792866 ryd
+     estimated scf accuracy    <    49.92874539 ryd
+
+     total cpu time spent up to now is      3.29 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.43E-03,  avg # of iterations =  5.7
+
+     total energy              =   -29.04695247 ryd
+     estimated scf accuracy    <     0.21274755 ryd
+
+     total cpu time spent up to now is      4.81 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.01E-03,  avg # of iterations =  2.3
+
+     total energy              =   -29.18765361 ryd
+     estimated scf accuracy    <     0.04957739 ryd
+
+     total cpu time spent up to now is      5.70 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.36E-04,  avg # of iterations =  3.3
+
+     total energy              =   -29.21791258 ryd
+     estimated scf accuracy    <     0.00504493 ryd
+
+     total cpu time spent up to now is      6.67 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.40E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.21978728 ryd
+     estimated scf accuracy    <     0.00134365 ryd
+
+     total cpu time spent up to now is      7.66 secs
+
+     iteration #  7     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.40E-06,  avg # of iterations =  2.7
+
+     total energy              =   -29.21995773 ryd
+     estimated scf accuracy    <     0.00007837 ryd
+
+     total cpu time spent up to now is      8.61 secs
+
+     iteration #  8     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.73E-07,  avg # of iterations =  4.3
+
+     total energy              =   -29.21993880 ryd
+     estimated scf accuracy    <     0.00006397 ryd
+
+     total cpu time spent up to now is      9.79 secs
+
+     iteration #  9     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.05E-07,  avg # of iterations =  2.3
+
+     total energy              =   -29.21998058 ryd
+     estimated scf accuracy    <     0.00001127 ryd
+
+     total cpu time spent up to now is     10.66 secs
+
+     iteration # 10     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.37E-08,  avg # of iterations =  4.0
+
+     total energy              =   -29.21998721 ryd
+     estimated scf accuracy    <     0.00000150 ryd
+
+     total cpu time spent up to now is     11.78 secs
+
+     iteration # 11     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.16E-09,  avg # of iterations =  3.0
+
+!    total energy              =   -29.21998830 ryd
+     estimated scf accuracy    <     0.00000014 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.01009862
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00104584
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00248150
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00248150
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00104584
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.01009862
+
+     Total force =     0.014781     Total SCF correction =     0.000472
+
+     Damped Dynamics Minimization
+     convergence thresholds: EPSE = 0.10E-03  EPSF = 0.50E-04
+
+     Entering Dynamics;  it =     1   time =  0.00000 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.265072069
+Al       0.000000000   0.000000000  -0.176786249
+Al       0.500000000   0.500000000  -0.088365539
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.088365539
+Al       0.000000000   0.000000000   0.176786249
+Al       0.500000000   0.500000000   0.265072069
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.120576550
+Al       0.000000000   0.000000000  -1.414289994
+Al       0.500000000   0.500000000  -0.706924315
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.706924315
+Al       0.000000000   0.000000000   1.414289994
+Al       0.500000000   0.500000000   2.120576550
+
+     Ekin =     0.00000000 Ryd   T =    0.0 K  Etot =   -29.21998830
+
+     NEW-OLD atomic charge density approx. for the potential
+
+     total cpu time spent up to now is     12.96 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  1.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  5.66E-07,  avg # of iterations =  2.0
+
+     total energy              =   -29.22006008 ryd
+     estimated scf accuracy    <     0.00001474 ryd
+
+     total cpu time spent up to now is     14.61 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.02E-08,  avg # of iterations =  5.3
+
+     total energy              =   -29.21955734 ryd
+     estimated scf accuracy    <     0.00051647 ryd
+
+     total cpu time spent up to now is     15.91 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.02E-08,  avg # of iterations =  3.3
+
+     total energy              =   -29.22004408 ryd
+     estimated scf accuracy    <     0.00000136 ryd
+
+     total cpu time spent up to now is     17.07 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.48E-09,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22004506 ryd
+     estimated scf accuracy    <     0.00000009 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00988537
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00084449
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00242334
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00242334
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00084449
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00988537
+
+     Total force =     0.014443     Total SCF correction =     0.000344
+
+     Entering Dynamics;  it =     2   time =  0.00581 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.264842684
+Al       0.000000000   0.000000000  -0.176807530
+Al       0.500000000   0.500000000  -0.088309253
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.088309253
+Al       0.000000000   0.000000000   0.176807530
+Al       0.500000000   0.500000000   0.264842684
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.118741475
+Al       0.000000000   0.000000000  -1.414460244
+Al       0.500000000   0.500000000  -0.706474024
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.706474024
+Al       0.000000000   0.000000000   1.414460244
+Al       0.500000000   0.500000000   2.118741475
+
+     Ekin =     0.00008594 Ryd   T =    1.5 K  Etot =   -29.21995912
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is     18.18 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  6.92E-07,  avg # of iterations =  1.3
+
+     total energy              =   -29.22023003 ryd
+     estimated scf accuracy    <     0.00001512 ryd
+
+     total cpu time spent up to now is     19.89 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.20E-08,  avg # of iterations =  4.0
+
+     total energy              =   -29.21967458 ryd
+     estimated scf accuracy    <     0.00060211 ryd
+
+     total cpu time spent up to now is     21.10 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.20E-08,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22024317 ryd
+     estimated scf accuracy    <     0.00000046 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00926479
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00011570
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00208384
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00208384
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00011570
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00926479
+
+     Total force =     0.013431     Total SCF correction =     0.000742
+
+     Entering Dynamics;  it =     3   time =  0.01162 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.264485413
+Al       0.000000000   0.000000000  -0.176830409
+Al       0.500000000   0.500000000  -0.088224202
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.088224202
+Al       0.000000000   0.000000000   0.176830409
+Al       0.500000000   0.500000000   0.264485413
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.115883304
+Al       0.000000000   0.000000000  -1.414643271
+Al       0.500000000   0.500000000  -0.705793618
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.705793618
+Al       0.000000000   0.000000000   1.414643271
+Al       0.500000000   0.500000000   2.115883304
+
+     Ekin =     0.00028446 Ryd   T =    3.2 K  Etot =   -29.21995870
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     22.46 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.21672974 ryd
+     estimated scf accuracy    <     0.00407951 ryd
+
+     total cpu time spent up to now is     23.49 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.94E-05,  avg # of iterations =  3.7
+
+     total energy              =   -29.06436139 ryd
+     estimated scf accuracy    <     0.16554492 ryd
+
+     total cpu time spent up to now is     24.72 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.94E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22043046 ryd
+     estimated scf accuracy    <     0.00010874 ryd
+
+     total cpu time spent up to now is     25.90 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.18E-07,  avg # of iterations =  3.7
+
+     total energy              =   -29.22051994 ryd
+     estimated scf accuracy    <     0.00000733 ryd
+
+     total cpu time spent up to now is     26.98 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.49E-08,  avg # of iterations =  3.7
+
+!    total energy              =   -29.22052293 ryd
+     estimated scf accuracy    <     0.00000030 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00831906
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00085631
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00170151
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00170151
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00085631
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00831906
+
+     Total force =     0.012069     Total SCF correction =     0.000598
+
+     Entering Dynamics;  it =     4   time =  0.01742 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.264013309
+Al       0.000000000   0.000000000  -0.176822263
+Al       0.500000000   0.500000000  -0.088115665
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.088115665
+Al       0.000000000   0.000000000   0.176822263
+Al       0.500000000   0.500000000   0.264013309
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.112106471
+Al       0.000000000   0.000000000  -1.414578101
+Al       0.500000000   0.500000000  -0.704925317
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.704925317
+Al       0.000000000   0.000000000   1.414578101
+Al       0.500000000   0.500000000   2.112106471
+
+     Ekin =     0.00056457 Ryd   T =    5.5 K  Etot =   -29.21995836
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     28.24 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.20458923 ryd
+     estimated scf accuracy    <     0.01735379 ryd
+
+     total cpu time spent up to now is     29.40 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.26E-05,  avg # of iterations =  3.3
+
+     total energy              =   -28.47077708 ryd
+     estimated scf accuracy    <     0.79255309 ryd
+
+     total cpu time spent up to now is     30.60 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.26E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.22030970 ryd
+     estimated scf accuracy    <     0.00063456 ryd
+
+     total cpu time spent up to now is     31.81 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.02E-06,  avg # of iterations =  2.7
+
+     total energy              =   -29.22082692 ryd
+     estimated scf accuracy    <     0.00002021 ryd
+
+     total cpu time spent up to now is     32.75 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.63E-08,  avg # of iterations =  4.3
+
+     total energy              =   -29.22083992 ryd
+     estimated scf accuracy    <     0.00000746 ryd
+
+     total cpu time spent up to now is     33.97 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.55E-08,  avg # of iterations =  2.7
+
+     total energy              =   -29.22084521 ryd
+     estimated scf accuracy    <     0.00000105 ryd
+
+     total cpu time spent up to now is     34.89 secs
+
+     iteration #  7     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.01E-09,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22084614 ryd
+     estimated scf accuracy    <     0.00000006 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00709658
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00209928
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00121741
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00121741
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00209928
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00709658
+
+     Total force =     0.010607     Total SCF correction =     0.000429
+
+     Entering Dynamics;  it =     5   time =  0.02323 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.263443247
+Al       0.000000000   0.000000000  -0.176785139
+Al       0.500000000   0.500000000  -0.087990322
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087990322
+Al       0.000000000   0.000000000   0.176785139
+Al       0.500000000   0.500000000   0.263443247
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.107545975
+Al       0.000000000   0.000000000  -1.414281110
+Al       0.500000000   0.500000000  -0.703922580
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.703922580
+Al       0.000000000   0.000000000   1.414281110
+Al       0.500000000   0.500000000   2.107545975
+
+     Ekin =     0.00088763 Ryd   T =    8.0 K  Etot =   -29.21995851
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     36.06 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     total energy              =   -29.21961522 ryd
+     estimated scf accuracy    <     0.00165187 ryd
+
+     total cpu time spent up to now is     37.06 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.87E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.15515858 ryd
+     estimated scf accuracy    <     0.06995765 ryd
+
+     total cpu time spent up to now is     38.27 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.87E-06,  avg # of iterations =  3.7
+
+!    total energy              =   -29.22117179 ryd
+     estimated scf accuracy    <     0.00000082 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00563432
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00346717
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00067708
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00067708
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00346717
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00563432
+
+     Total force =     0.009405     Total SCF correction =     0.001129
+
+     Entering Dynamics;  it =     6   time =  0.02904 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.262795411
+Al       0.000000000   0.000000000  -0.176700156
+Al       0.500000000   0.500000000  -0.087855634
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087855634
+Al       0.000000000   0.000000000   0.176700156
+Al       0.500000000   0.500000000   0.262795411
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.102363289
+Al       0.000000000   0.000000000  -1.413601244
+Al       0.500000000   0.500000000  -0.702845074
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.702845074
+Al       0.000000000   0.000000000   1.413601244
+Al       0.500000000   0.500000000   2.102363289
+
+     Ekin =     0.00121563 Ryd   T =   10.7 K  Etot =   -29.21995616
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     39.62 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.22115172 ryd
+     estimated scf accuracy    <     0.00039141 ryd
+
+     total cpu time spent up to now is     40.63 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.86E-06,  avg # of iterations =  4.3
+
+     total energy              =   -29.21789339 ryd
+     estimated scf accuracy    <     0.00384392 ryd
+
+     total cpu time spent up to now is     41.84 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.86E-06,  avg # of iterations =  3.3
+
+     total energy              =   -29.22021233 ryd
+     estimated scf accuracy    <     0.00135661 ryd
+
+     total cpu time spent up to now is     42.99 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.86E-06,  avg # of iterations =  3.0
+
+!    total energy              =   -29.22147445 ryd
+     estimated scf accuracy    <     0.00000074 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00396428
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00493503
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00025482
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00025482
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00493503
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00396428
+
+     Total force =     0.008959     Total SCF correction =     0.000921
+
+     Entering Dynamics;  it =     7   time =  0.03485 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.262092854
+Al       0.000000000   0.000000000  -0.176547051
+Al       0.500000000   0.500000000  -0.087717429
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087717429
+Al       0.000000000   0.000000000   0.176547051
+Al       0.500000000   0.500000000   0.262092854
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.096742834
+Al       0.000000000   0.000000000  -1.412376412
+Al       0.500000000   0.500000000  -0.701739428
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.701739428
+Al       0.000000000   0.000000000   1.412376412
+Al       0.500000000   0.500000000   2.096742834
+
+     Ekin =     0.00151637 Ryd   T =   13.3 K  Etot =   -29.21995808
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     44.19 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.22103494 ryd
+     estimated scf accuracy    <     0.00087325 ryd
+
+     total cpu time spent up to now is     45.25 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.16E-06,  avg # of iterations =  3.3
+
+     total energy              =   -29.21878224 ryd
+     estimated scf accuracy    <     0.00328187 ryd
+
+     total cpu time spent up to now is     46.38 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.16E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.21755567 ryd
+     estimated scf accuracy    <     0.00445118 ryd
+
+     total cpu time spent up to now is     47.53 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.16E-06,  avg # of iterations =  3.0
+
+     total energy              =   -29.22173789 ryd
+     estimated scf accuracy    <     0.00000118 ryd
+
+     total cpu time spent up to now is     48.55 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.63E-09,  avg # of iterations =  5.3
+
+!    total energy              =   -29.22173873 ryd
+     estimated scf accuracy    <     0.00000073 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00236143
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00621544
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00011311
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00011311
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00621544
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00236143
+
+     Total force =     0.009404     Total SCF correction =     0.001332
+
+     Entering Dynamics;  it =     8   time =  0.04066 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.261357701
+Al       0.000000000   0.000000000  -0.176308152
+Al       0.500000000   0.500000000  -0.087719056
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087719056
+Al       0.000000000   0.000000000   0.176308152
+Al       0.500000000   0.500000000   0.261357701
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.090861609
+Al       0.000000000   0.000000000  -1.410465218
+Al       0.500000000   0.500000000  -0.701752446
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.701752446
+Al       0.000000000   0.000000000   1.410465218
+Al       0.500000000   0.500000000   2.090861609
+
+     Ekin =     0.00177794 Ryd   T =   15.9 K  Etot =   -29.21996079
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     50.05 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.3
+
+     total energy              =   -29.22104855 ryd
+     estimated scf accuracy    <     0.00100060 ryd
+
+     total cpu time spent up to now is     51.07 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.76E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.18654807 ryd
+     estimated scf accuracy    <     0.03758146 ryd
+
+     total cpu time spent up to now is     52.29 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.76E-06,  avg # of iterations =  3.3
+
+     total energy              =   -29.22191855 ryd
+     estimated scf accuracy    <     0.00006273 ryd
+
+     total cpu time spent up to now is     53.45 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.99E-07,  avg # of iterations =  3.0
+
+     total energy              =   -29.22196996 ryd
+     estimated scf accuracy    <     0.00000281 ryd
+
+     total cpu time spent up to now is     54.39 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.34E-08,  avg # of iterations =  5.0
+
+     total energy              =   -29.22196986 ryd
+     estimated scf accuracy    <     0.00000238 ryd
+
+     total cpu time spent up to now is     55.54 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.13E-08,  avg # of iterations =  1.3
+
+!    total energy              =   -29.22197114 ryd
+     estimated scf accuracy    <     0.00000099 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00077225
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00697665
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00031820
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00031820
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00697665
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00077225
+
+     Total force =     0.009937     Total SCF correction =     0.001793
+
+     Entering Dynamics;  it =     9   time =  0.04646 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260611888
+Al       0.000000000   0.000000000  -0.175972950
+Al       0.500000000   0.500000000  -0.087715867
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087715867
+Al       0.000000000   0.000000000   0.175972950
+Al       0.500000000   0.500000000   0.260611888
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.084895107
+Al       0.000000000   0.000000000  -1.407783603
+Al       0.500000000   0.500000000  -0.701726938
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.701726938
+Al       0.000000000   0.000000000   1.407783603
+Al       0.500000000   0.500000000   2.084895107
+
+     Ekin =     0.00195215 Ryd   T =   18.2 K  Etot =   -29.22001898
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     56.46 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     total energy              =   -29.22156410 ryd
+     estimated scf accuracy    <     0.00065642 ryd
+
+     total cpu time spent up to now is     57.46 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.13E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.19708798 ryd
+     estimated scf accuracy    <     0.02660731 ryd
+
+     total cpu time spent up to now is     58.67 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.13E-06,  avg # of iterations =  3.3
+
+     total energy              =   -29.22217897 ryd
+     estimated scf accuracy    <     0.00000134 ryd
+
+     total cpu time spent up to now is     59.84 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.40E-09,  avg # of iterations =  5.0
+
+!    total energy              =   -29.22218078 ryd
+     estimated scf accuracy    <     0.00000008 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000   -0.00060222
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00727594
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00089173
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00089173
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00727594
+     atom   7 type  1   force =     0.00000000    0.00000000    0.00060222
+
+     Total force =     0.010402     Total SCF correction =     0.000369
+
+     Entering Dynamics;  it =    10   time =  0.05227 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260619207
+Al       0.000000000   0.000000000  -0.175537315
+Al       0.500000000   0.500000000  -0.087700370
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087700370
+Al       0.000000000   0.000000000   0.175537315
+Al       0.500000000   0.500000000   0.260619207
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.084953655
+Al       0.000000000   0.000000000  -1.404298518
+Al       0.500000000   0.500000000  -0.701602959
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.701602959
+Al       0.000000000   0.000000000   1.404298518
+Al       0.500000000   0.500000000   2.084953655
+
+     Ekin =     0.00216023 Ryd   T =   20.4 K  Etot =   -29.22002055
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     61.23 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.19711331 ryd
+     estimated scf accuracy    <     0.02683038 ryd
+
+     total cpu time spent up to now is     62.37 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.28E-04,  avg # of iterations =  4.0
+
+     total energy              =   -28.07031944 ryd
+     estimated scf accuracy    <     1.21826163 ryd
+
+     total cpu time spent up to now is     63.58 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.28E-04,  avg # of iterations =  4.0
+
+     total energy              =   -29.22234355 ryd
+     estimated scf accuracy    <     0.00005813 ryd
+
+     total cpu time spent up to now is     64.78 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.77E-07,  avg # of iterations =  4.7
+
+     total energy              =   -29.22239668 ryd
+     estimated scf accuracy    <     0.00001678 ryd
+
+     total cpu time spent up to now is     65.88 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.99E-08,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22241208 ryd
+     estimated scf accuracy    <     0.00000024 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00054432
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00517527
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00166350
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00166350
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00517527
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00054432
+
+     Total force =     0.007726     Total SCF correction =     0.000466
+
+     Entering Dynamics;  it =    11   time =  0.05808 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260612812
+Al       0.000000000   0.000000000  -0.175030242
+Al       0.500000000   0.500000000  -0.087661910
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087661910
+Al       0.000000000   0.000000000   0.175030242
+Al       0.500000000   0.500000000   0.260612812
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.084902499
+Al       0.000000000   0.000000000  -1.400241936
+Al       0.500000000   0.500000000  -0.701295282
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.701295282
+Al       0.000000000   0.000000000   1.400241936
+Al       0.500000000   0.500000000   2.084902499
+
+     Ekin =     0.00069902 Ryd   T =   19.6 K  Etot =   -29.22171306
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     67.01 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  8.97E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22240817 ryd
+     estimated scf accuracy    <     0.00019381 ryd
+
+     total cpu time spent up to now is     68.84 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.23E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.21540983 ryd
+     estimated scf accuracy    <     0.00761236 ryd
+
+     total cpu time spent up to now is     70.05 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.23E-07,  avg # of iterations =  3.3
+
+     total energy              =   -29.22258546 ryd
+     estimated scf accuracy    <     0.00000448 ryd
+
+     total cpu time spent up to now is     71.22 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.13E-08,  avg # of iterations =  4.0
+
+!    total energy              =   -29.22258916 ryd
+     estimated scf accuracy    <     0.00000024 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00184123
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00272010
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00249783
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00249783
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00272010
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00184123
+
+     Total force =     0.005836     Total SCF correction =     0.000847
+
+     Entering Dynamics;  it =    12   time =  0.06389 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260581002
+Al       0.000000000   0.000000000  -0.174485622
+Al       0.500000000   0.500000000  -0.087588972
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087588972
+Al       0.000000000   0.000000000   0.174485622
+Al       0.500000000   0.500000000   0.260581002
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.084648019
+Al       0.000000000   0.000000000  -1.395884977
+Al       0.500000000   0.500000000  -0.700711774
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.700711774
+Al       0.000000000   0.000000000   1.395884977
+Al       0.500000000   0.500000000   2.084648019
+
+     Ekin =     0.00087793 Ryd   T =   19.2 K  Etot =   -29.22171123
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     72.43 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.21829399 ryd
+     estimated scf accuracy    <     0.00466034 ryd
+
+     total cpu time spent up to now is     73.51 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.22E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.03509243 ryd
+     estimated scf accuracy    <     0.19862754 ryd
+
+     total cpu time spent up to now is     74.71 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.22E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22266156 ryd
+     estimated scf accuracy    <     0.00002148 ryd
+
+     total cpu time spent up to now is     75.88 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.02E-07,  avg # of iterations =  5.0
+
+     total energy              =   -29.22268257 ryd
+     estimated scf accuracy    <     0.00000129 ryd
+
+     total cpu time spent up to now is     77.06 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.12E-09,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22268368 ryd
+     estimated scf accuracy    <     0.00000004 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00307494
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00028525
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00325982
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00325982
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00028525
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00307494
+
+     Total force =     0.006350     Total SCF correction =     0.000122
+
+     Entering Dynamics;  it =    13   time =  0.06970 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260506747
+Al       0.000000000   0.000000000  -0.173937065
+Al       0.500000000   0.500000000  -0.087471036
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087471036
+Al       0.000000000   0.000000000   0.173937065
+Al       0.500000000   0.500000000   0.260506747
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.084053978
+Al       0.000000000   0.000000000  -1.391496519
+Al       0.500000000   0.500000000  -0.699768289
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.699768289
+Al       0.000000000   0.000000000   1.391496519
+Al       0.500000000   0.500000000   2.084053978
+
+     Ekin =     0.00097190 Ryd   T =   19.0 K  Etot =   -29.22171178
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     78.29 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.7
+
+     total energy              =   -29.22061473 ryd
+     estimated scf accuracy    <     0.00221627 ryd
+
+     total cpu time spent up to now is     79.33 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.06E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.14004688 ryd
+     estimated scf accuracy    <     0.08770571 ryd
+
+     total cpu time spent up to now is     80.52 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.06E-05,  avg # of iterations =  3.7
+
+     total energy              =   -29.22269220 ryd
+     estimated scf accuracy    <     0.00001031 ryd
+
+     total cpu time spent up to now is     81.69 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.91E-08,  avg # of iterations =  5.0
+
+!    total energy              =   -29.22270223 ryd
+     estimated scf accuracy    <     0.00000013 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00419497
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00200665
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00388484
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00388484
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00200665
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00419497
+
+     Total force =     0.008569     Total SCF correction =     0.000150
+
+     Entering Dynamics;  it =    14   time =  0.07550 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260374587
+Al       0.000000000   0.000000000  -0.173956187
+Al       0.500000000   0.500000000  -0.087299476
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087299476
+Al       0.000000000   0.000000000   0.173956187
+Al       0.500000000   0.500000000   0.260374587
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.082996693
+Al       0.000000000   0.000000000  -1.391649496
+Al       0.500000000   0.500000000  -0.698395808
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.698395808
+Al       0.000000000   0.000000000   1.391649496
+Al       0.500000000   0.500000000   2.082996693
+
+     Ekin =     0.00099044 Ryd   T =   18.9 K  Etot =   -29.22171179
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     83.06 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.3
+
+     total energy              =   -29.22226989 ryd
+     estimated scf accuracy    <     0.00056833 ryd
+
+     total cpu time spent up to now is     84.10 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.71E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.20176735 ryd
+     estimated scf accuracy    <     0.02229309 ryd
+
+     total cpu time spent up to now is     85.31 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.71E-06,  avg # of iterations =  3.3
+
+     total energy              =   -29.22278921 ryd
+     estimated scf accuracy    <     0.00001147 ryd
+
+     total cpu time spent up to now is     86.48 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.46E-08,  avg # of iterations =  4.3
+
+     total energy              =   -29.22279812 ryd
+     estimated scf accuracy    <     0.00000134 ryd
+
+     total cpu time spent up to now is     87.53 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.38E-09,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22279876 ryd
+     estimated scf accuracy    <     0.00000032 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00377534
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00124390
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00294618
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00294618
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00124390
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00377534
+
+     Total force =     0.006997     Total SCF correction =     0.001003
+
+     Entering Dynamics;  it =    15   time =  0.08131 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.260190313
+Al       0.000000000   0.000000000  -0.173992479
+Al       0.500000000   0.500000000  -0.087087248
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.087087248
+Al       0.000000000   0.000000000   0.173992479
+Al       0.500000000   0.500000000   0.260190313
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.081522504
+Al       0.000000000   0.000000000  -1.391939835
+Al       0.500000000   0.500000000  -0.696697984
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.696697984
+Al       0.000000000   0.000000000   1.391939835
+Al       0.500000000   0.500000000   2.081522504
+
+     Ekin =     0.00019629 Ryd   T =   17.8 K  Etot =   -29.22260246
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     88.78 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     total energy              =   -29.22210953 ryd
+     estimated scf accuracy    <     0.00083770 ryd
+
+     total cpu time spent up to now is     89.78 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.99E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.19062514 ryd
+     estimated scf accuracy    <     0.03421098 ryd
+
+     total cpu time spent up to now is     90.98 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.99E-06,  avg # of iterations =  3.3
+
+     total energy              =   -29.22289615 ryd
+     estimated scf accuracy    <     0.00000128 ryd
+
+     total cpu time spent up to now is     92.16 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.11E-09,  avg # of iterations =  5.7
+
+!    total energy              =   -29.22289782 ryd
+     estimated scf accuracy    <     0.00000029 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00315143
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00013570
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00181779
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00181779
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00013570
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00315143
+
+     Total force =     0.005149     Total SCF correction =     0.000952
+
+     Entering Dynamics;  it =    16   time =  0.08712 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.259962538
+Al       0.000000000   0.000000000  -0.174030645
+Al       0.500000000   0.500000000  -0.086849928
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086849928
+Al       0.000000000   0.000000000   0.174030645
+Al       0.500000000   0.500000000   0.259962538
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.079700306
+Al       0.000000000   0.000000000  -1.392245160
+Al       0.500000000   0.500000000  -0.694799425
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.694799425
+Al       0.000000000   0.000000000   1.392245160
+Al       0.500000000   0.500000000   2.079700306
+
+     Ekin =     0.00029604 Ryd   T =   16.9 K  Etot =   -29.22260178
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     93.64 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.21928020 ryd
+     estimated scf accuracy    <     0.00391748 ryd
+
+     total cpu time spent up to now is     94.67 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.87E-05,  avg # of iterations =  7.3
+
+     total energy              =   -29.07905471 ryd
+     estimated scf accuracy    <     0.15280980 ryd
+
+     total cpu time spent up to now is     96.03 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.87E-05,  avg # of iterations =  6.3
+
+     total energy              =   -29.22296759 ryd
+     estimated scf accuracy    <     0.00000324 ryd
+
+     total cpu time spent up to now is     97.33 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.54E-08,  avg # of iterations =  5.7
+
+!    total energy              =   -29.22297374 ryd
+     estimated scf accuracy    <     0.00000020 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00240872
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00109010
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00054642
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00054642
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00109010
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00240872
+
+     Total force =     0.003818     Total SCF correction =     0.000660
+
+     Entering Dynamics;  it =    17   time =  0.09293 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.259701515
+Al       0.000000000   0.000000000  -0.174020301
+Al       0.500000000   0.500000000  -0.086605066
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086605066
+Al       0.000000000   0.000000000   0.174020301
+Al       0.500000000   0.500000000   0.259701515
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.077612117
+Al       0.000000000   0.000000000  -1.392162410
+Al       0.500000000   0.500000000  -0.692840525
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.692840525
+Al       0.000000000   0.000000000   1.392162410
+Al       0.500000000   0.500000000   2.077612117
+
+     Ekin =     0.00037262 Ryd   T =   16.3 K  Etot =   -29.22260112
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is     98.85 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.7
+
+     total energy              =   -29.22002240 ryd
+     estimated scf accuracy    <     0.00318488 ryd
+
+     total cpu time spent up to now is     99.88 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.52E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.09917921 ryd
+     estimated scf accuracy    <     0.13123467 ryd
+
+     total cpu time spent up to now is    101.08 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.52E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22301452 ryd
+     estimated scf accuracy    <     0.00000173 ryd
+
+     total cpu time spent up to now is    102.26 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.22E-09,  avg # of iterations =  6.7
+
+!    total energy              =   -29.22301873 ryd
+     estimated scf accuracy    <     0.00000054 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00170322
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00218510
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00070245
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00070245
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00218510
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00170322
+
+     Total force =     0.004042     Total SCF correction =     0.001065
+
+     Entering Dynamics;  it =    18   time =  0.09874 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.259416981
+Al       0.000000000   0.000000000  -0.173979795
+Al       0.500000000   0.500000000  -0.086612787
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086612787
+Al       0.000000000   0.000000000   0.173979795
+Al       0.500000000   0.500000000   0.259416981
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.075335845
+Al       0.000000000   0.000000000  -1.391838363
+Al       0.500000000   0.500000000  -0.692902296
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.692902296
+Al       0.000000000   0.000000000   1.391838363
+Al       0.500000000   0.500000000   2.075335845
+
+     Ekin =     0.00041437 Ryd   T =   15.8 K  Etot =   -29.22260436
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    103.90 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     total energy              =   -29.22234204 ryd
+     estimated scf accuracy    <     0.00077456 ryd
+
+     total cpu time spent up to now is    104.89 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.69E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.19682174 ryd
+     estimated scf accuracy    <     0.02786578 ryd
+
+     total cpu time spent up to now is    106.09 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.69E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.22302822 ryd
+     estimated scf accuracy    <     0.00003632 ryd
+
+     total cpu time spent up to now is    107.30 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.73E-07,  avg # of iterations =  3.3
+
+     total energy              =   -29.22305797 ryd
+     estimated scf accuracy    <     0.00000184 ryd
+
+     total cpu time spent up to now is    108.25 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.74E-09,  avg # of iterations =  4.3
+
+!    total energy              =   -29.22305882 ryd
+     estimated scf accuracy    <     0.00000084 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00089897
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00270507
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00052968
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00052968
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00270507
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00089897
+
+     Total force =     0.004100     Total SCF correction =     0.001563
+
+     Entering Dynamics;  it =    19   time =  0.10454 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.259120038
+Al       0.000000000   0.000000000  -0.173901950
+Al       0.500000000   0.500000000  -0.086627820
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086627820
+Al       0.000000000   0.000000000   0.173901950
+Al       0.500000000   0.500000000   0.259120038
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.072960300
+Al       0.000000000   0.000000000  -1.391215601
+Al       0.500000000   0.500000000  -0.693022558
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.693022558
+Al       0.000000000   0.000000000   1.391215601
+Al       0.500000000   0.500000000   2.072960300
+
+     Ekin =     0.00027388 Ryd   T =   15.1 K  Etot =   -29.22278493
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    109.53 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.3
+
+     total energy              =   -29.22249928 ryd
+     estimated scf accuracy    <     0.00063866 ryd
+
+     total cpu time spent up to now is    110.53 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.04E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.20161646 ryd
+     estimated scf accuracy    <     0.02280049 ryd
+
+     total cpu time spent up to now is    111.73 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.04E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22305882 ryd
+     estimated scf accuracy    <     0.00004132 ryd
+
+     total cpu time spent up to now is    112.96 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.97E-07,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22309316 ryd
+     estimated scf accuracy    <     0.00000036 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00021981
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00297175
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00026380
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00026380
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00297175
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00021981
+
+     Total force =     0.004231     Total SCF correction =     0.001033
+
+     Entering Dynamics;  it =    20   time =  0.11035 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258820060
+Al       0.000000000   0.000000000  -0.173783084
+Al       0.500000000   0.500000000  -0.086646494
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086646494
+Al       0.000000000   0.000000000   0.173783084
+Al       0.500000000   0.500000000   0.258820060
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.070560482
+Al       0.000000000   0.000000000  -1.390264672
+Al       0.500000000   0.500000000  -0.693171950
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.693171950
+Al       0.000000000   0.000000000   1.390264672
+Al       0.500000000   0.500000000   2.070560482
+
+     Ekin =     0.00030697 Ryd   T =   14.6 K  Etot =   -29.22278619
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    114.14 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.21650532 ryd
+     estimated scf accuracy    <     0.00702917 ryd
+
+     total cpu time spent up to now is    115.30 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.35E-05,  avg # of iterations =  4.0
+
+     total energy              =   -28.94746209 ryd
+     estimated scf accuracy    <     0.29203751 ryd
+
+     total cpu time spent up to now is    116.51 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.35E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22310195 ryd
+     estimated scf accuracy    <     0.00001585 ryd
+
+     total cpu time spent up to now is    117.69 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.55E-08,  avg # of iterations =  5.7
+
+     total energy              =   -29.22312075 ryd
+     estimated scf accuracy    <     0.00000264 ryd
+
+     total cpu time spent up to now is    118.98 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.26E-08,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22312302 ryd
+     estimated scf accuracy    <     0.00000008 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000   -0.00039687
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00314597
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00006117
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00006117
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00314597
+     atom   7 type  1   force =     0.00000000    0.00000000    0.00039687
+
+     Total force =     0.004485     Total SCF correction =     0.000402
+
+     Entering Dynamics;  it =    21   time =  0.11616 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258824218
+Al       0.000000000   0.000000000  -0.173620792
+Al       0.500000000   0.500000000  -0.086645324
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086645324
+Al       0.000000000   0.000000000   0.173620792
+Al       0.500000000   0.500000000   0.258824218
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.070593745
+Al       0.000000000   0.000000000  -1.388966338
+Al       0.500000000   0.500000000  -0.693162592
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.693162592
+Al       0.000000000   0.000000000   1.388966338
+Al       0.500000000   0.500000000   2.070593745
+
+     Ekin =     0.00033566 Ryd   T =   14.2 K  Etot =   -29.22278737
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    120.06 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.7
+
+     total energy              =   -29.18815949 ryd
+     estimated scf accuracy    <     0.03713241 ryd
+
+     total cpu time spent up to now is    121.23 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.77E-04,  avg # of iterations =  6.0
+
+     total energy              =   -27.94045780 ryd
+     estimated scf accuracy    <     1.36458763 ryd
+
+     total cpu time spent up to now is    122.54 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.77E-04,  avg # of iterations =  5.3
+
+     total energy              =   -29.22303848 ryd
+     estimated scf accuracy    <     0.00012295 ryd
+
+     total cpu time spent up to now is    123.82 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.85E-07,  avg # of iterations =  5.0
+
+     total energy              =   -29.22314447 ryd
+     estimated scf accuracy    <     0.00001716 ryd
+
+     total cpu time spent up to now is    124.98 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.17E-08,  avg # of iterations =  3.3
+
+     total energy              =   -29.22315954 ryd
+     estimated scf accuracy    <     0.00000131 ryd
+
+     total cpu time spent up to now is    125.97 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.22E-09,  avg # of iterations =  3.7
+
+!    total energy              =   -29.22316029 ryd
+     estimated scf accuracy    <     0.00000043 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00003811
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00229386
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00043319
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00043319
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00229386
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00003811
+
+     Total force =     0.003302     Total SCF correction =     0.000945
+
+     Entering Dynamics;  it =    22   time =  0.12197 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258822954
+Al       0.000000000   0.000000000  -0.173426837
+Al       0.500000000   0.500000000  -0.086638175
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086638175
+Al       0.000000000   0.000000000   0.173426837
+Al       0.500000000   0.500000000   0.258822954
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.070583635
+Al       0.000000000   0.000000000  -1.387414698
+Al       0.500000000   0.500000000  -0.693105397
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.693105397
+Al       0.000000000   0.000000000   1.387414698
+Al       0.500000000   0.500000000   2.070583635
+
+     Ekin =     0.00009978 Ryd   T =   13.6 K  Etot =   -29.22306050
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    127.24 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  4.3
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  8.09E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22303306 ryd
+     estimated scf accuracy    <     0.00017130 ryd
+
+     total cpu time spent up to now is    129.16 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.16E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.21776391 ryd
+     estimated scf accuracy    <     0.00576203 ryd
+
+     total cpu time spent up to now is    130.38 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.16E-07,  avg # of iterations =  3.7
+
+     total energy              =   -29.22317372 ryd
+     estimated scf accuracy    <     0.00002012 ryd
+
+     total cpu time spent up to now is    131.61 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.58E-08,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22319073 ryd
+     estimated scf accuracy    <     0.00000008 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00053335
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00131024
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00076535
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00076535
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00131024
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00053335
+
+     Total force =     0.002275     Total SCF correction =     0.000480
+
+     Entering Dynamics;  it =    23   time =  0.12778 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258814329
+Al       0.000000000   0.000000000  -0.173214796
+Al       0.500000000   0.500000000  -0.086620461
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086620461
+Al       0.000000000   0.000000000   0.173214796
+Al       0.500000000   0.500000000   0.258814329
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.070514628
+Al       0.000000000   0.000000000  -1.385718370
+Al       0.500000000   0.500000000  -0.692963686
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.692963686
+Al       0.000000000   0.000000000   1.385718370
+Al       0.500000000   0.500000000   2.070514628
+
+     Ekin =     0.00012996 Ryd   T =   13.1 K  Etot =   -29.22306077
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    132.77 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.22120988 ryd
+     estimated scf accuracy    <     0.00213103 ryd
+
+     total cpu time spent up to now is    133.85 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.01E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.14475533 ryd
+     estimated scf accuracy    <     0.08318384 ryd
+
+     total cpu time spent up to now is    135.18 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.01E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22316530 ryd
+     estimated scf accuracy    <     0.00004874 ryd
+
+     total cpu time spent up to now is    136.41 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.32E-07,  avg # of iterations =  4.3
+
+!    total energy              =   -29.22320687 ryd
+     estimated scf accuracy    <     0.00000068 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00105779
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00033141
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00109571
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00109571
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00033141
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00105779
+
+     Total force =     0.002204     Total SCF correction =     0.001503
+
+     Entering Dynamics;  it =    24   time =  0.13358 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258791101
+Al       0.000000000   0.000000000  -0.172998181
+Al       0.500000000   0.500000000  -0.086587622
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086587622
+Al       0.000000000   0.000000000   0.172998181
+Al       0.500000000   0.500000000   0.258791101
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.070328811
+Al       0.000000000   0.000000000  -1.383985445
+Al       0.500000000   0.500000000  -0.692700977
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.692700977
+Al       0.000000000   0.000000000   1.383985445
+Al       0.500000000   0.500000000   2.070328811
+
+     Ekin =     0.00014669 Ryd   T =   12.6 K  Etot =   -29.22306018
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    137.72 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  4.7
+
+     total energy              =   -29.21225977 ryd
+     estimated scf accuracy    <     0.01161911 ryd
+
+     total cpu time spent up to now is    138.98 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.53E-05,  avg # of iterations =  6.7
+
+     total energy              =   -28.81185363 ryd
+     estimated scf accuracy    <     0.43717874 ryd
+
+     total cpu time spent up to now is    140.35 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.53E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.22317449 ryd
+     estimated scf accuracy    <     0.00002767 ryd
+
+     total cpu time spent up to now is    141.67 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.32E-07,  avg # of iterations =  5.0
+
+     total energy              =   -29.22320789 ryd
+     estimated scf accuracy    <     0.00000262 ryd
+
+     total cpu time spent up to now is    142.89 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.25E-08,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22321024 ryd
+     estimated scf accuracy    <     0.00000011 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00151249
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00064728
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00139649
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00139649
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00064728
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00151249
+
+     Total force =     0.003052     Total SCF correction =     0.000513
+
+     Entering Dynamics;  it =    25   time =  0.13939 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258746996
+Al       0.000000000   0.000000000  -0.173004900
+Al       0.500000000   0.500000000  -0.086535507
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086535507
+Al       0.000000000   0.000000000   0.173004900
+Al       0.500000000   0.500000000   0.258746996
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.069975971
+Al       0.000000000   0.000000000  -1.384039196
+Al       0.500000000   0.500000000  -0.692284056
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.692284056
+Al       0.000000000   0.000000000   1.384039196
+Al       0.500000000   0.500000000   2.069975971
+
+     Ekin =     0.00014992 Ryd   T =   12.2 K  Etot =   -29.22306031
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    144.12 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  4.7
+
+     total energy              =   -29.21021084 ryd
+     estimated scf accuracy    <     0.01381657 ryd
+
+     total cpu time spent up to now is    145.40 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.58E-05,  avg # of iterations =  5.0
+
+     total energy              =   -28.67512473 ryd
+     estimated scf accuracy    <     0.58047358 ryd
+
+     total cpu time spent up to now is    146.72 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.58E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22319546 ryd
+     estimated scf accuracy    <     0.00001135 ryd
+
+     total cpu time spent up to now is    147.92 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.40E-08,  avg # of iterations =  5.3
+
+     total energy              =   -29.22322035 ryd
+     estimated scf accuracy    <     0.00000150 ryd
+
+     total cpu time spent up to now is    149.26 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.13E-09,  avg # of iterations =  2.0
+
+!    total energy              =   -29.22322099 ryd
+     estimated scf accuracy    <     0.00000078 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00136210
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00039504
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00115185
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00115185
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00039504
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00136210
+
+     Total force =     0.002584     Total SCF correction =     0.001486
+
+     Entering Dynamics;  it =    26   time =  0.14520 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258684090
+Al       0.000000000   0.000000000  -0.173017072
+Al       0.500000000   0.500000000  -0.086467492
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086467492
+Al       0.000000000   0.000000000   0.173017072
+Al       0.500000000   0.500000000   0.258684090
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.069472717
+Al       0.000000000   0.000000000  -1.384136572
+Al       0.500000000   0.500000000  -0.691739937
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.691739937
+Al       0.000000000   0.000000000   1.384136572
+Al       0.500000000   0.500000000   2.069472717
+
+     Ekin =     0.00002052 Ryd   T =   11.7 K  Etot =   -29.22320047
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    150.25 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.22215289 ryd
+     estimated scf accuracy    <     0.00115031 ryd
+
+     total cpu time spent up to now is    151.39 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.48E-06,  avg # of iterations =  5.0
+
+     total energy              =   -29.18231893 ryd
+     estimated scf accuracy    <     0.04344657 ryd
+
+     total cpu time spent up to now is    152.70 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.48E-06,  avg # of iterations =  5.3
+
+     total energy              =   -29.22322307 ryd
+     estimated scf accuracy    <     0.00001217 ryd
+
+     total cpu time spent up to now is    153.97 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.80E-08,  avg # of iterations =  4.3
+
+!    total energy              =   -29.22323389 ryd
+     estimated scf accuracy    <     0.00000009 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00115634
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00005196
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00075177
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00075177
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00005196
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00115634
+
+     Total force =     0.001952     Total SCF correction =     0.000345
+
+     Entering Dynamics;  it =    27   time =  0.15101 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258605221
+Al       0.000000000   0.000000000  -0.173029961
+Al       0.500000000   0.500000000  -0.086389100
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086389100
+Al       0.000000000   0.000000000   0.173029961
+Al       0.500000000   0.500000000   0.258605221
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.068841770
+Al       0.000000000   0.000000000  -1.384239686
+Al       0.500000000   0.500000000  -0.691112802
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.691112802
+Al       0.000000000   0.000000000   1.384239686
+Al       0.500000000   0.500000000   2.068841770
+
+     Ekin =     0.00003308 Ryd   T =   11.3 K  Etot =   -29.22320081
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    155.29 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.0
+
+     total energy              =   -29.22093649 ryd
+     estimated scf accuracy    <     0.00245116 ryd
+
+     total cpu time spent up to now is    156.43 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.17E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.13042805 ryd
+     estimated scf accuracy    <     0.09842242 ryd
+
+     total cpu time spent up to now is    157.78 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.17E-05,  avg # of iterations =  3.7
+
+     total energy              =   -29.22324049 ryd
+     estimated scf accuracy    <     0.00000150 ryd
+
+     total cpu time spent up to now is    159.03 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.12E-09,  avg # of iterations =  6.0
+
+!    total energy              =   -29.22324364 ryd
+     estimated scf accuracy    <     0.00000066 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00088468
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00037455
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00035741
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00035741
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00037455
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00088468
+
+     Total force =     0.001450     Total SCF correction =     0.001223
+
+     Entering Dynamics;  it =    28   time =  0.15682 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258514141
+Al       0.000000000   0.000000000  -0.173026394
+Al       0.500000000   0.500000000  -0.086305775
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086305775
+Al       0.000000000   0.000000000   0.173026394
+Al       0.500000000   0.500000000   0.258514141
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.068113130
+Al       0.000000000   0.000000000  -1.384211156
+Al       0.500000000   0.500000000  -0.690446198
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690446198
+Al       0.000000000   0.000000000   1.384211156
+Al       0.500000000   0.500000000   2.068113130
+
+     Ekin =     0.00004346 Ryd   T =   10.9 K  Etot =   -29.22320018
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    160.66 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.21136087 ryd
+     estimated scf accuracy    <     0.01264619 ryd
+
+     total cpu time spent up to now is    161.80 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.02E-05,  avg # of iterations =  6.7
+
+     total energy              =   -28.78828774 ryd
+     estimated scf accuracy    <     0.46236083 ryd
+
+     total cpu time spent up to now is    163.15 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.02E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.22307719 ryd
+     estimated scf accuracy    <     0.00020110 ryd
+
+     total cpu time spent up to now is    164.41 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.58E-07,  avg # of iterations =  4.3
+
+     total energy              =   -29.22324749 ryd
+     estimated scf accuracy    <     0.00000369 ryd
+
+     total cpu time spent up to now is    165.49 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.76E-08,  avg # of iterations =  4.0
+
+!    total energy              =   -29.22325014 ryd
+     estimated scf accuracy    <     0.00000095 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00064887
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00080801
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00022669
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00022669
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00080801
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00064887
+
+     Total force =     0.001500     Total SCF correction =     0.001429
+
+     Entering Dynamics;  it =    29   time =  0.16262 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258414104
+Al       0.000000000   0.000000000  -0.173011675
+Al       0.500000000   0.500000000  -0.086308683
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086308683
+Al       0.000000000   0.000000000   0.173011675
+Al       0.500000000   0.500000000   0.258414104
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.067312836
+Al       0.000000000   0.000000000  -1.384093398
+Al       0.500000000   0.500000000  -0.690469465
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690469465
+Al       0.000000000   0.000000000   1.384093398
+Al       0.500000000   0.500000000   2.067312836
+
+     Ekin =     0.00004982 Ryd   T =   10.6 K  Etot =   -29.22320033
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    166.86 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.21688799 ryd
+     estimated scf accuracy    <     0.00686818 ryd
+
+     total cpu time spent up to now is    167.98 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.27E-05,  avg # of iterations =  5.3
+
+     total energy              =   -28.98600369 ryd
+     estimated scf accuracy    <     0.25151922 ryd
+
+     total cpu time spent up to now is    169.27 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.27E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22274106 ryd
+     estimated scf accuracy    <     0.00060130 ryd
+
+     total cpu time spent up to now is    170.43 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.86E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22324986 ryd
+     estimated scf accuracy    <     0.00000538 ryd
+
+     total cpu time spent up to now is    171.38 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.56E-08,  avg # of iterations =  4.7
+
+!    total energy              =   -29.22325592 ryd
+     estimated scf accuracy    <     0.00000055 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00036942
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00090696
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00000404
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00000404
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00090696
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00036942
+
+     Total force =     0.001385     Total SCF correction =     0.000981
+
+     Entering Dynamics;  it =    30   time =  0.16843 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258308968
+Al       0.000000000   0.000000000  -0.172984436
+Al       0.500000000   0.500000000  -0.086311647
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086311647
+Al       0.000000000   0.000000000   0.172984436
+Al       0.500000000   0.500000000   0.258308968
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.066471746
+Al       0.000000000   0.000000000  -1.383875487
+Al       0.500000000   0.500000000  -0.690493178
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690493178
+Al       0.000000000   0.000000000   1.383875487
+Al       0.500000000   0.500000000   2.066471746
+
+     Ekin =     0.00003411 Ryd   T =   10.2 K  Etot =   -29.22322181
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    172.77 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.3
+
+     total energy              =   -29.22299839 ryd
+     estimated scf accuracy    <     0.00030510 ryd
+
+     total cpu time spent up to now is    173.77 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.45E-06,  avg # of iterations =  6.7
+
+     total energy              =   -29.21828380 ryd
+     estimated scf accuracy    <     0.00530737 ryd
+
+     total cpu time spent up to now is    175.11 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.45E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22292514 ryd
+     estimated scf accuracy    <     0.00036943 ryd
+
+     total cpu time spent up to now is    176.29 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.45E-06,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22325957 ryd
+     estimated scf accuracy    <     0.00000076 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00013299
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00097502
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00004709
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00004709
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00097502
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00013299
+
+     Total force =     0.001393     Total SCF correction =     0.001493
+
+     Entering Dynamics;  it =    31   time =  0.17424 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258201996
+Al       0.000000000   0.000000000  -0.172943738
+Al       0.500000000   0.500000000  -0.086311205
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086311205
+Al       0.000000000   0.000000000   0.172943738
+Al       0.500000000   0.500000000   0.258201996
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065615971
+Al       0.000000000   0.000000000  -1.383549906
+Al       0.500000000   0.500000000  -0.690489637
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690489637
+Al       0.000000000   0.000000000   1.383549906
+Al       0.500000000   0.500000000   2.065615971
+
+     Ekin =     0.00003846 Ryd   T =    9.9 K  Etot =   -29.22322111
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    177.36 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.21838636 ryd
+     estimated scf accuracy    <     0.00521287 ryd
+
+     total cpu time spent up to now is    178.62 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.48E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.03268959 ryd
+     estimated scf accuracy    <     0.20203827 ryd
+
+     total cpu time spent up to now is    179.93 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.48E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22312312 ryd
+     estimated scf accuracy    <     0.00016459 ryd
+
+     total cpu time spent up to now is    181.10 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.84E-07,  avg # of iterations =  3.7
+
+     total energy              =   -29.22326244 ryd
+     estimated scf accuracy    <     0.00000217 ryd
+
+     total cpu time spent up to now is    182.10 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.04E-08,  avg # of iterations =  5.0
+
+     total energy              =   -29.22326365 ryd
+     estimated scf accuracy    <     0.00000133 ryd
+
+     total cpu time spent up to now is    183.38 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  6.35E-09,  avg # of iterations =  2.0
+
+!    total energy              =   -29.22326480 ryd
+     estimated scf accuracy    <     0.00000005 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000   -0.00009361
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00110749
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00010644
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00010644
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00110749
+     atom   7 type  1   force =     0.00000000    0.00000000    0.00009361
+
+     Total force =     0.001579     Total SCF correction =     0.000350
+
+     Entering Dynamics;  it =    32   time =  0.18005 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258203164
+Al       0.000000000   0.000000000  -0.172887753
+Al       0.500000000   0.500000000  -0.086309293
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086309293
+Al       0.000000000   0.000000000   0.172887753
+Al       0.500000000   0.500000000   0.258203164
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065625310
+Al       0.000000000   0.000000000  -1.383102026
+Al       0.500000000   0.500000000  -0.690474342
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690474342
+Al       0.000000000   0.000000000   1.383102026
+Al       0.500000000   0.500000000   2.065625310
+
+     Ekin =     0.00004218 Ryd   T =    9.6 K  Etot =   -29.22322261
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    184.47 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.7
+
+     total energy              =   -29.20576720 ryd
+     estimated scf accuracy    <     0.01859667 ryd
+
+     total cpu time spent up to now is    185.80 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.86E-05,  avg # of iterations =  6.3
+
+     total energy              =   -28.58408317 ryd
+     estimated scf accuracy    <     0.67967726 ryd
+
+     total cpu time spent up to now is    187.15 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.86E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.22311867 ryd
+     estimated scf accuracy    <     0.00017896 ryd
+
+     total cpu time spent up to now is    188.43 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.52E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.22326394 ryd
+     estimated scf accuracy    <     0.00000669 ryd
+
+     total cpu time spent up to now is    189.51 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.19E-08,  avg # of iterations =  5.3
+
+     total energy              =   -29.22326878 ryd
+     estimated scf accuracy    <     0.00000107 ryd
+
+     total cpu time spent up to now is    190.67 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.10E-09,  avg # of iterations =  3.7
+
+!    total energy              =   -29.22326927 ryd
+     estimated scf accuracy    <     0.00000034 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00003395
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00082489
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00025891
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00025891
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00082489
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00003395
+
+     Total force =     0.001224     Total SCF correction =     0.000790
+
+     Entering Dynamics;  it =    33   time =  0.18586 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258202636
+Al       0.000000000   0.000000000  -0.172820382
+Al       0.500000000   0.500000000  -0.086303807
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086303807
+Al       0.000000000   0.000000000   0.172820382
+Al       0.500000000   0.500000000   0.258202636
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065621088
+Al       0.000000000   0.000000000  -1.382563055
+Al       0.500000000   0.500000000  -0.690430455
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690430455
+Al       0.000000000   0.000000000   1.382563055
+Al       0.500000000   0.500000000   2.065621088
+
+     Ekin =     0.00001198 Ryd   T =    9.3 K  Etot =   -29.22325729
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    191.90 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  9.50E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22308914 ryd
+     estimated scf accuracy    <     0.00020059 ryd
+
+     total cpu time spent up to now is    193.71 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.55E-07,  avg # of iterations =  5.7
+
+     total energy              =   -29.21716459 ryd
+     estimated scf accuracy    <     0.00648906 ryd
+
+     total cpu time spent up to now is    194.99 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.55E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.22324952 ryd
+     estimated scf accuracy    <     0.00002810 ryd
+
+     total cpu time spent up to now is    196.16 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.34E-07,  avg # of iterations =  3.0
+
+!    total energy              =   -29.22327331 ryd
+     estimated scf accuracy    <     0.00000008 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00021289
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00047206
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00034979
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00034979
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00047206
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00021289
+
+     Total force =     0.000884     Total SCF correction =     0.000485
+
+     Entering Dynamics;  it =    34   time =  0.19166 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258199170
+Al       0.000000000   0.000000000  -0.172746494
+Al       0.500000000   0.500000000  -0.086293493
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086293493
+Al       0.000000000   0.000000000   0.172746494
+Al       0.500000000   0.500000000   0.258199170
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065593357
+Al       0.000000000   0.000000000  -1.381971956
+Al       0.500000000   0.500000000  -0.690347942
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690347942
+Al       0.000000000   0.000000000   1.381971956
+Al       0.500000000   0.500000000   2.065593357
+
+     Ekin =     0.00001588 Ryd   T =    9.0 K  Etot =   -29.22325743
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    197.25 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.22167028 ryd
+     estimated scf accuracy    <     0.00171463 ryd
+
+     total cpu time spent up to now is    198.39 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.16E-06,  avg # of iterations =  5.7
+
+     total energy              =   -29.16173525 ryd
+     estimated scf accuracy    <     0.06528112 ryd
+
+     total cpu time spent up to now is    199.68 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.16E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22323685 ryd
+     estimated scf accuracy    <     0.00004544 ryd
+
+     total cpu time spent up to now is    200.87 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.16E-07,  avg # of iterations =  3.7
+
+!    total energy              =   -29.22327535 ryd
+     estimated scf accuracy    <     0.00000048 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00040617
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00017917
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00039978
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00039978
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00017917
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00040617
+
+     Total force =     0.000845     Total SCF correction =     0.001267
+
+     Entering Dynamics;  it =    35   time =  0.19747 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258190097
+Al       0.000000000   0.000000000  -0.172670134
+Al       0.500000000   0.500000000  -0.086277660
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086277660
+Al       0.000000000   0.000000000   0.172670134
+Al       0.500000000   0.500000000   0.258190097
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065520773
+Al       0.000000000   0.000000000  -1.381361071
+Al       0.500000000   0.500000000  -0.690221283
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690221283
+Al       0.000000000   0.000000000   1.381361071
+Al       0.500000000   0.500000000   2.065520773
+
+     Ekin =     0.00001828 Ryd   T =    8.8 K  Etot =   -29.22325707
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    202.07 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.21721533 ryd
+     estimated scf accuracy    <     0.00643491 ryd
+
+     total cpu time spent up to now is    203.28 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.06E-05,  avg # of iterations =  7.0
+
+     total energy              =   -28.99614587 ryd
+     estimated scf accuracy    <     0.24139007 ryd
+
+     total cpu time spent up to now is    204.64 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.06E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.22326666 ryd
+     estimated scf accuracy    <     0.00000432 ryd
+
+     total cpu time spent up to now is    205.87 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.06E-08,  avg # of iterations =  6.3
+
+!    total energy              =   -29.22327664 ryd
+     estimated scf accuracy    <     0.00000020 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00057616
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00019768
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00053932
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00053932
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00019768
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00057616
+
+     Total force =     0.001151     Total SCF correction =     0.000692
+
+     Entering Dynamics;  it =    36   time =  0.20328 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258173071
+Al       0.000000000   0.000000000  -0.172672365
+Al       0.500000000   0.500000000  -0.086254383
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086254383
+Al       0.000000000   0.000000000   0.172672365
+Al       0.500000000   0.500000000   0.258173071
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065384565
+Al       0.000000000   0.000000000  -1.381378921
+Al       0.500000000   0.500000000  -0.690035067
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.690035067
+Al       0.000000000   0.000000000   1.381378921
+Al       0.500000000   0.500000000   2.065384565
+
+     Ekin =     0.00001932 Ryd   T =    8.5 K  Etot =   -29.22325732
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    207.44 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.21369445 ryd
+     estimated scf accuracy    <     0.01020033 ryd
+
+     total cpu time spent up to now is    208.65 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.86E-05,  avg # of iterations =  5.0
+
+     total energy              =   -28.83140137 ryd
+     estimated scf accuracy    <     0.41529569 ryd
+
+     total cpu time spent up to now is    209.89 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.86E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22322950 ryd
+     estimated scf accuracy    <     0.00004614 ryd
+
+     total cpu time spent up to now is    211.06 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.20E-07,  avg # of iterations =  5.0
+
+     total energy              =   -29.22327537 ryd
+     estimated scf accuracy    <     0.00000331 ryd
+
+     total cpu time spent up to now is    212.28 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.57E-08,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22327839 ryd
+     estimated scf accuracy    <     0.00000011 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00050079
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00006429
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00036511
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00036511
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00006429
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00050079
+
+     Total force =     0.000881     Total SCF correction =     0.000421
+
+     Entering Dynamics;  it =    37   time =  0.20909 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258149132
+Al       0.000000000   0.000000000  -0.172675484
+Al       0.500000000   0.500000000  -0.086226066
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086226066
+Al       0.000000000   0.000000000   0.172675484
+Al       0.500000000   0.500000000   0.258149132
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.065193056
+Al       0.000000000   0.000000000  -1.381403871
+Al       0.500000000   0.500000000  -0.689808532
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689808532
+Al       0.000000000   0.000000000   1.381403871
+Al       0.500000000   0.500000000   2.065193056
+
+     Ekin =     0.00000345 Ryd   T =    8.3 K  Etot =   -29.22327495
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    213.38 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  2.85E-07,  avg # of iterations =  1.0
+
+     total energy              =   -29.22327544 ryd
+     estimated scf accuracy    <     0.00000611 ryd
+
+     total cpu time spent up to now is    215.22 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.91E-08,  avg # of iterations =  6.3
+
+     total energy              =   -29.22325374 ryd
+     estimated scf accuracy    <     0.00002873 ryd
+
+     total cpu time spent up to now is    216.48 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.91E-08,  avg # of iterations =  4.0
+
+     total energy              =   -29.22325619 ryd
+     estimated scf accuracy    <     0.00002560 ryd
+
+     total cpu time spent up to now is    217.64 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.91E-08,  avg # of iterations =  3.0
+
+!    total energy              =   -29.22328011 ryd
+     estimated scf accuracy    <     0.00000004 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00042397
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00004765
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00023898
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00023898
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00004765
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00042397
+
+     Total force =     0.000692     Total SCF correction =     0.000281
+
+     Entering Dynamics;  it =    38   time =  0.21490 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258119341
+Al       0.000000000   0.000000000  -0.172674897
+Al       0.500000000   0.500000000  -0.086194451
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086194451
+Al       0.000000000   0.000000000   0.172674897
+Al       0.500000000   0.500000000   0.258119341
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.064954729
+Al       0.000000000   0.000000000  -1.381399180
+Al       0.500000000   0.500000000  -0.689555608
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689555608
+Al       0.000000000   0.000000000   1.381399180
+Al       0.500000000   0.500000000   2.064954729
+
+     Ekin =     0.00000509 Ryd   T =    8.1 K  Etot =   -29.22327502
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    218.83 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.3
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  4.99E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22318632 ryd
+     estimated scf accuracy    <     0.00010660 ryd
+
+     total cpu time spent up to now is    220.79 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.08E-07,  avg # of iterations =  4.3
+
+     total energy              =   -29.22047649 ryd
+     estimated scf accuracy    <     0.00298427 ryd
+
+     total cpu time spent up to now is    222.05 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.08E-07,  avg # of iterations =  3.7
+
+     total energy              =   -29.22325195 ryd
+     estimated scf accuracy    <     0.00003344 ryd
+
+     total cpu time spent up to now is    223.23 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.59E-07,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22328128 ryd
+     estimated scf accuracy    <     0.00000020 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00030578
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00022527
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00005465
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00005465
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00022527
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00030578
+
+     Total force =     0.000543     Total SCF correction =     0.000744
+
+     Entering Dynamics;  it =    39   time =  0.22070 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258085329
+Al       0.000000000   0.000000000  -0.172671201
+Al       0.500000000   0.500000000  -0.086162081
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086162081
+Al       0.000000000   0.000000000   0.172671201
+Al       0.500000000   0.500000000   0.258085329
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.064682635
+Al       0.000000000   0.000000000  -1.381369612
+Al       0.500000000   0.500000000  -0.689296648
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689296648
+Al       0.000000000   0.000000000   1.381369612
+Al       0.500000000   0.500000000   2.064682635
+
+     Ekin =     0.00000642 Ryd   T =    7.9 K  Etot =   -29.22327486
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    224.32 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.7
+
+     total energy              =   -29.22217849 ryd
+     estimated scf accuracy    <     0.00117547 ryd
+
+     total cpu time spent up to now is    225.39 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.60E-06,  avg # of iterations =  8.0
+
+     total energy              =   -29.18182121 ryd
+     estimated scf accuracy    <     0.04405036 ryd
+
+     total cpu time spent up to now is    226.77 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.60E-06,  avg # of iterations =  5.7
+
+     total energy              =   -29.22327709 ryd
+     estimated scf accuracy    <     0.00000590 ryd
+
+     total cpu time spent up to now is    228.08 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.81E-08,  avg # of iterations =  5.0
+
+!    total energy              =   -29.22328231 ryd
+     estimated scf accuracy    <     0.00000008 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00027934
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00031742
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00010312
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00010312
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00031742
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00027934
+
+     Total force =     0.000616     Total SCF correction =     0.000333
+
+     Entering Dynamics;  it =    40   time =  0.22651 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258047462
+Al       0.000000000   0.000000000  -0.172663124
+Al       0.500000000   0.500000000  -0.086163156
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086163156
+Al       0.000000000   0.000000000   0.172663124
+Al       0.500000000   0.500000000   0.258047462
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.064379694
+Al       0.000000000   0.000000000  -1.381304991
+Al       0.500000000   0.500000000  -0.689305246
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689305246
+Al       0.000000000   0.000000000   1.381304991
+Al       0.500000000   0.500000000   2.064379694
+
+     Ekin =     0.00000723 Ryd   T =    7.7 K  Etot =   -29.22327508
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    229.43 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.7
+
+     total energy              =   -29.20459643 ryd
+     estimated scf accuracy    <     0.01987364 ryd
+
+     total cpu time spent up to now is    230.60 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.46E-05,  avg # of iterations =  5.0
+
+     total energy              =   -28.44042672 ryd
+     estimated scf accuracy    <     0.82911813 ryd
+
+     total cpu time spent up to now is    231.86 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.46E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.22319777 ryd
+     estimated scf accuracy    <     0.00008630 ryd
+
+     total cpu time spent up to now is    233.05 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.11E-07,  avg # of iterations =  5.0
+
+     total energy              =   -29.22327222 ryd
+     estimated scf accuracy    <     0.00001247 ryd
+
+     total cpu time spent up to now is    234.23 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.94E-08,  avg # of iterations =  2.3
+
+!    total energy              =   -29.22328307 ryd
+     estimated scf accuracy    <     0.00000041 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00015017
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00041690
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00012525
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00012525
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00041690
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00015017
+
+     Total force =     0.000651     Total SCF correction =     0.000661
+
+     Entering Dynamics;  it =    41   time =  0.23232 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.258007521
+Al       0.000000000   0.000000000  -0.172649292
+Al       0.500000000   0.500000000  -0.086165959
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086165959
+Al       0.000000000   0.000000000   0.172649292
+Al       0.500000000   0.500000000   0.258007521
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.064060170
+Al       0.000000000   0.000000000  -1.381194333
+Al       0.500000000   0.500000000  -0.689327674
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689327674
+Al       0.000000000   0.000000000   1.381194333
+Al       0.500000000   0.500000000   2.064060170
+
+     Ekin =     0.00000509 Ryd   T =    7.5 K  Etot =   -29.22327798
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    235.33 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  1.71E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22325352 ryd
+     estimated scf accuracy    <     0.00003649 ryd
+
+     total cpu time spent up to now is    237.16 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.74E-07,  avg # of iterations =  6.3
+
+     total energy              =   -29.22275406 ryd
+     estimated scf accuracy    <     0.00056567 ryd
+
+     total cpu time spent up to now is    238.46 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.74E-07,  avg # of iterations =  3.7
+
+     total energy              =   -29.22323680 ryd
+     estimated scf accuracy    <     0.00005190 ryd
+
+     total cpu time spent up to now is    239.62 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.74E-07,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22328401 ryd
+     estimated scf accuracy    <     0.00000012 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00007360
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00042403
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00003411
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00003411
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00042403
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00007360
+
+     Total force =     0.000611     Total SCF correction =     0.000430
+
+     Entering Dynamics;  it =    42   time =  0.23813 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257966565
+Al       0.000000000   0.000000000  -0.172629606
+Al       0.500000000   0.500000000  -0.086169234
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086169234
+Al       0.000000000   0.000000000   0.172629606
+Al       0.500000000   0.500000000   0.257966565
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063732518
+Al       0.000000000   0.000000000  -1.381036850
+Al       0.500000000   0.500000000  -0.689353870
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689353870
+Al       0.000000000   0.000000000   1.381036850
+Al       0.500000000   0.500000000   2.063732518
+
+     Ekin =     0.00000597 Ryd   T =    7.3 K  Etot =   -29.22327805
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    240.67 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     total energy              =   -29.22274398 ryd
+     estimated scf accuracy    <     0.00058453 ryd
+
+     total cpu time spent up to now is    241.65 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.78E-06,  avg # of iterations =  5.7
+
+     total energy              =   -29.20453023 ryd
+     estimated scf accuracy    <     0.01992281 ryd
+
+     total cpu time spent up to now is    242.94 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.78E-06,  avg # of iterations =  4.0
+
+     total energy              =   -29.22324859 ryd
+     estimated scf accuracy    <     0.00004306 ryd
+
+     total cpu time spent up to now is    244.11 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.05E-07,  avg # of iterations =  3.7
+
+!    total energy              =   -29.22328440 ryd
+     estimated scf accuracy    <     0.00000070 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000   -0.00003558
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00037631
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00004947
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00004947
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00037631
+     atom   7 type  1   force =     0.00000000    0.00000000    0.00003558
+
+     Total force =     0.000539     Total SCF correction =     0.001169
+
+     Entering Dynamics;  it =    43   time =  0.24394 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257967061
+Al       0.000000000   0.000000000  -0.172604726
+Al       0.500000000   0.500000000  -0.086168700
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086168700
+Al       0.000000000   0.000000000   0.172604726
+Al       0.500000000   0.500000000   0.257967061
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063736492
+Al       0.000000000   0.000000000  -1.380837811
+Al       0.500000000   0.500000000  -0.689349600
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689349600
+Al       0.000000000   0.000000000   1.380837811
+Al       0.500000000   0.500000000   2.063736492
+
+     Ekin =     0.00000673 Ryd   T =    7.1 K  Etot =   -29.22327767
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    245.25 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.20318989 ryd
+     estimated scf accuracy    <     0.02136476 ryd
+
+     total cpu time spent up to now is    246.51 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.02E-04,  avg # of iterations =  5.0
+
+     total energy              =   -28.37926641 ryd
+     estimated scf accuracy    <     0.89381474 ryd
+
+     total cpu time spent up to now is    247.77 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.02E-04,  avg # of iterations =  4.0
+
+     total energy              =   -29.22322665 ryd
+     estimated scf accuracy    <     0.00005252 ryd
+
+     total cpu time spent up to now is    248.96 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.50E-07,  avg # of iterations =  5.3
+
+     total energy              =   -29.22327766 ryd
+     estimated scf accuracy    <     0.00001047 ryd
+
+     total cpu time spent up to now is    250.14 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.99E-08,  avg # of iterations =  3.0
+
+     total energy              =   -29.22328388 ryd
+     estimated scf accuracy    <     0.00000202 ryd
+
+     total cpu time spent up to now is    251.11 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.61E-09,  avg # of iterations =  3.0
+
+!    total energy              =   -29.22328562 ryd
+     estimated scf accuracy    <     0.00000007 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00006940
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00026012
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00007055
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00007055
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00026012
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00006940
+
+     Total force =     0.000394     Total SCF correction =     0.000454
+
+     Entering Dynamics;  it =    44   time =  0.24974 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257966341
+Al       0.000000000   0.000000000  -0.172576256
+Al       0.500000000   0.500000000  -0.086167192
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086167192
+Al       0.000000000   0.000000000   0.172576256
+Al       0.500000000   0.500000000   0.257966341
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063730728
+Al       0.000000000   0.000000000  -1.380610048
+Al       0.500000000   0.500000000  -0.689337540
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689337540
+Al       0.000000000   0.000000000   1.380610048
+Al       0.500000000   0.500000000   2.063730728
+
+     Ekin =     0.00000223 Ryd   T =    7.0 K  Etot =   -29.22328338
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    252.22 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  9.58E-07,  avg # of iterations =  1.0
+
+     total energy              =   -29.22326751 ryd
+     estimated scf accuracy    <     0.00002076 ryd
+
+     total cpu time spent up to now is    254.06 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.89E-08,  avg # of iterations =  6.3
+
+     total energy              =   -29.22270137 ryd
+     estimated scf accuracy    <     0.00062198 ryd
+
+     total cpu time spent up to now is    255.36 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  9.89E-08,  avg # of iterations =  3.7
+
+     total energy              =   -29.22328246 ryd
+     estimated scf accuracy    <     0.00000425 ryd
+
+     total cpu time spent up to now is    256.54 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.03E-08,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22328614 ryd
+     estimated scf accuracy    <     0.00000005 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00014063
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00012074
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00013037
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00013037
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00012074
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00014063
+
+     Total force =     0.000320     Total SCF correction =     0.000332
+
+     Entering Dynamics;  it =    45   time =  0.25555 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257963679
+Al       0.000000000   0.000000000  -0.172546119
+Al       0.500000000   0.500000000  -0.086163885
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086163885
+Al       0.000000000   0.000000000   0.172546119
+Al       0.500000000   0.500000000   0.257963679
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063709435
+Al       0.000000000   0.000000000  -1.380368953
+Al       0.500000000   0.500000000  -0.689311082
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689311082
+Al       0.000000000   0.000000000   1.380368953
+Al       0.500000000   0.500000000   2.063709435
+
+     Ekin =     0.00000272 Ryd   T =    6.8 K  Etot =   -29.22328342
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    257.62 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.22301028 ryd
+     estimated scf accuracy    <     0.00029809 ryd
+
+     total cpu time spent up to now is    258.75 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.42E-06,  avg # of iterations =  6.0
+
+     total energy              =   -29.21330046 ryd
+     estimated scf accuracy    <     0.01060650 ryd
+
+     total cpu time spent up to now is    260.05 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.42E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22327350 ryd
+     estimated scf accuracy    <     0.00001503 ryd
+
+     total cpu time spent up to now is    261.24 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  7.15E-08,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22328591 ryd
+     estimated scf accuracy    <     0.00000051 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00016336
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00000085
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00022206
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00022206
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00000085
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00016336
+
+     Total force =     0.000390     Total SCF correction =     0.001148
+
+     Entering Dynamics;  it =    46   time =  0.26136 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257958763
+Al       0.000000000   0.000000000  -0.172515970
+Al       0.500000000   0.500000000  -0.086157513
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086157513
+Al       0.000000000   0.000000000   0.172515970
+Al       0.500000000   0.500000000   0.257958763
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063670102
+Al       0.000000000   0.000000000  -1.380127763
+Al       0.500000000   0.500000000  -0.689260104
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689260104
+Al       0.000000000   0.000000000   1.380127763
+Al       0.500000000   0.500000000   2.063670102
+
+     Ekin =     0.00000295 Ryd   T =    6.7 K  Etot =   -29.22328296
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    262.37 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22034041 ryd
+     estimated scf accuracy    <     0.00312994 ryd
+
+     total cpu time spent up to now is    263.44 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.49E-05,  avg # of iterations =  6.3
+
+     total energy              =   -29.11285685 ryd
+     estimated scf accuracy    <     0.11734257 ryd
+
+     total cpu time spent up to now is    264.75 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.49E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.22328294 ryd
+     estimated scf accuracy    <     0.00000273 ryd
+
+     total cpu time spent up to now is    266.04 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.30E-08,  avg # of iterations =  6.0
+
+!    total energy              =   -29.22328626 ryd
+     estimated scf accuracy    <     0.00000029 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00026708
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00013356
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00018875
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00018875
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00013356
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00026708
+
+     Total force =     0.000500     Total SCF correction =     0.000577
+
+     Entering Dynamics;  it =    47   time =  0.26717 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257950159
+Al       0.000000000   0.000000000  -0.172517201
+Al       0.500000000   0.500000000  -0.086148535
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086148535
+Al       0.000000000   0.000000000   0.172517201
+Al       0.500000000   0.500000000   0.257950159
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063601276
+Al       0.000000000   0.000000000  -1.380137611
+Al       0.500000000   0.500000000  -0.689188282
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689188282
+Al       0.000000000   0.000000000   1.380137611
+Al       0.500000000   0.500000000   2.063601276
+
+     Ekin =     0.00000300 Ryd   T =    6.5 K  Etot =   -29.22328327
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    267.62 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.21380378 ryd
+     estimated scf accuracy    <     0.01010324 ryd
+
+     total cpu time spent up to now is    268.75 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.81E-05,  avg # of iterations =  4.0
+
+     total energy              =   -28.84070231 ryd
+     estimated scf accuracy    <     0.40545441 ryd
+
+     total cpu time spent up to now is    269.95 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.81E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22319330 ryd
+     estimated scf accuracy    <     0.00009920 ryd
+
+     total cpu time spent up to now is    271.12 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.72E-07,  avg # of iterations =  8.0
+
+     total energy              =   -29.22328204 ryd
+     estimated scf accuracy    <     0.00000569 ryd
+
+     total cpu time spent up to now is    272.43 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.71E-08,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22328665 ryd
+     estimated scf accuracy    <     0.00000018 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00023525
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00011083
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00018752
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00018752
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00011083
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00023525
+
+     Total force =     0.000453     Total SCF correction =     0.000365
+
+     Entering Dynamics;  it =    48   time =  0.27298 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257938309
+Al       0.000000000   0.000000000  -0.172519962
+Al       0.500000000   0.500000000  -0.086136969
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086136969
+Al       0.000000000   0.000000000   0.172519962
+Al       0.500000000   0.500000000   0.257938309
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063506471
+Al       0.000000000   0.000000000  -1.380159699
+Al       0.500000000   0.500000000  -0.689095753
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.689095753
+Al       0.000000000   0.000000000   1.380159699
+Al       0.500000000   0.500000000   2.063506471
+
+     Ekin =     0.00000066 Ryd   T =    6.4 K  Etot =   -29.22328599
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    273.65 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  3.89E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22321277 ryd
+     estimated scf accuracy    <     0.00008374 ryd
+
+     total cpu time spent up to now is    275.57 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.99E-07,  avg # of iterations =  6.0
+
+     total energy              =   -29.22107628 ryd
+     estimated scf accuracy    <     0.00235202 ryd
+
+     total cpu time spent up to now is    276.88 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.99E-07,  avg # of iterations =  3.3
+
+     total energy              =   -29.22326588 ryd
+     estimated scf accuracy    <     0.00002409 ryd
+
+     total cpu time spent up to now is    278.05 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.15E-07,  avg # of iterations =  2.3
+
+!    total energy              =   -29.22328691 ryd
+     estimated scf accuracy    <     0.00000024 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00015510
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00000376
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00008858
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00008858
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00000376
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00015510
+
+     Total force =     0.000253     Total SCF correction =     0.000698
+
+     Entering Dynamics;  it =    49   time =  0.27878 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257924317
+Al       0.000000000   0.000000000  -0.172519673
+Al       0.500000000   0.500000000  -0.086124180
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086124180
+Al       0.000000000   0.000000000   0.172519673
+Al       0.500000000   0.500000000   0.257924317
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063394539
+Al       0.000000000   0.000000000  -1.380157382
+Al       0.500000000   0.500000000  -0.688993442
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688993442
+Al       0.000000000   0.000000000   1.380157382
+Al       0.500000000   0.500000000   2.063394539
+
+     Ekin =     0.00000103 Ryd   T =    6.2 K  Etot =   -29.22328588
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    279.15 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.3
+
+     total energy              =   -29.22300069 ryd
+     estimated scf accuracy    <     0.00032207 ryd
+
+     total cpu time spent up to now is    280.20 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.53E-06,  avg # of iterations =  5.7
+
+     total energy              =   -29.21473314 ryd
+     estimated scf accuracy    <     0.00909934 ryd
+
+     total cpu time spent up to now is    281.51 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.53E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22320773 ryd
+     estimated scf accuracy    <     0.00009031 ryd
+
+     total cpu time spent up to now is    282.72 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.30E-07,  avg # of iterations =  2.3
+
+!    total energy              =   -29.22328658 ryd
+     estimated scf accuracy    <     0.00000092 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00008077
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00009403
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00002082
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00002082
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00009403
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00008077
+
+     Total force =     0.000178     Total SCF correction =     0.001439
+
+     Entering Dynamics;  it =    50   time =  0.28459 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257909211
+Al       0.000000000   0.000000000  -0.172518085
+Al       0.500000000   0.500000000  -0.086111104
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086111104
+Al       0.000000000   0.000000000   0.172518085
+Al       0.500000000   0.500000000   0.257909211
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063273687
+Al       0.000000000   0.000000000  -1.380144683
+Al       0.500000000   0.500000000  -0.688888831
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688888831
+Al       0.000000000   0.000000000   1.380144683
+Al       0.500000000   0.500000000   2.063273687
+
+     Ekin =     0.00000119 Ryd   T =    6.1 K  Etot =   -29.22328538
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    283.80 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     total energy              =   -29.22276815 ryd
+     estimated scf accuracy    <     0.00055284 ryd
+
+     total cpu time spent up to now is    284.85 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.63E-06,  avg # of iterations =  5.3
+
+     total energy              =   -29.20376379 ryd
+     estimated scf accuracy    <     0.02073832 ryd
+
+     total cpu time spent up to now is    286.11 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.63E-06,  avg # of iterations =  4.3
+
+!    total energy              =   -29.22328669 ryd
+     estimated scf accuracy    <     0.00000058 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00010327
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00003980
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00001577
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00001577
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00003980
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00010327
+
+     Total force =     0.000158     Total SCF correction =     0.001343
+
+     Entering Dynamics;  it =    51   time =  0.29040 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257892679
+Al       0.000000000   0.000000000  -0.172515948
+Al       0.500000000   0.500000000  -0.086111297
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086111297
+Al       0.000000000   0.000000000   0.172515948
+Al       0.500000000   0.500000000   0.257892679
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063141431
+Al       0.000000000   0.000000000  -1.380127587
+Al       0.500000000   0.500000000  -0.688890375
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688890375
+Al       0.000000000   0.000000000   1.380127587
+Al       0.500000000   0.500000000   2.063141431
+
+     Ekin =     0.00000130 Ryd   T =    6.0 K  Etot =   -29.22328539
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     Message from extrapolate_wfcs: 
+     the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
+
+     total cpu time spent up to now is    287.49 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.18788574 ryd
+     estimated scf accuracy    <     0.03762619 ryd
+
+     total cpu time spent up to now is    288.75 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.79E-04,  avg # of iterations =  5.0
+
+     total energy              =   -27.70505564 ryd
+     estimated scf accuracy    <     1.60698692 ryd
+
+     total cpu time spent up to now is    290.01 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.79E-04,  avg # of iterations =  4.0
+
+     total energy              =   -29.22317111 ryd
+     estimated scf accuracy    <     0.00010221 ryd
+
+     total cpu time spent up to now is    291.21 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.87E-07,  avg # of iterations =  5.7
+
+     total energy              =   -29.22327221 ryd
+     estimated scf accuracy    <     0.00001747 ryd
+
+     total cpu time spent up to now is    292.50 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.32E-08,  avg # of iterations =  3.0
+
+!    total energy              =   -29.22328754 ryd
+     estimated scf accuracy    <     0.00000042 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00004744
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00014478
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00004801
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00004801
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00014478
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00004744
+
+     Total force =     0.000226     Total SCF correction =     0.000477
+
+     Entering Dynamics;  it =    52   time =  0.29621 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257875492
+Al       0.000000000   0.000000000  -0.172511813
+Al       0.500000000   0.500000000  -0.086112153
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086112153
+Al       0.000000000   0.000000000   0.172511813
+Al       0.500000000   0.500000000   0.257875492
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.063003936
+Al       0.000000000   0.000000000  -1.380094504
+Al       0.500000000   0.500000000  -0.688897221
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688897221
+Al       0.000000000   0.000000000   1.380094504
+Al       0.500000000   0.500000000   2.063003936
+
+     Ekin =     0.00000091 Ryd   T =    5.9 K  Etot =   -29.22328663
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    293.59 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  1.92E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22324903 ryd
+     estimated scf accuracy    <     0.00004212 ryd
+
+     total cpu time spent up to now is    295.41 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.01E-07,  avg # of iterations =  5.3
+
+     total energy              =   -29.22186706 ryd
+     estimated scf accuracy    <     0.00150875 ryd
+
+     total cpu time spent up to now is    296.67 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.01E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.22328702 ryd
+     estimated scf accuracy    <     0.00000101 ryd
+
+     total cpu time spent up to now is    297.87 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.82E-09,  avg # of iterations =  4.0
+
+!    total energy              =   -29.22328772 ryd
+     estimated scf accuracy    <     0.00000017 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00004566
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00013063
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00002378
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00002378
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00013063
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00004566
+
+     Total force =     0.000199     Total SCF correction =     0.000490
+
+     Entering Dynamics;  it =    53   time =  0.30202 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257857675
+Al       0.000000000   0.000000000  -0.172505875
+Al       0.500000000   0.500000000  -0.086113337
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086113337
+Al       0.000000000   0.000000000   0.172505875
+Al       0.500000000   0.500000000   0.257857675
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.062861398
+Al       0.000000000   0.000000000  -1.380046996
+Al       0.500000000   0.500000000  -0.688906693
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688906693
+Al       0.000000000   0.000000000   1.380046996
+Al       0.500000000   0.500000000   2.062861398
+
+     Ekin =     0.00000102 Ryd   T =    5.8 K  Etot =   -29.22328669
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    299.05 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  5.14E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22318768 ryd
+     estimated scf accuracy    <     0.00011172 ryd
+
+     total cpu time spent up to now is    300.88 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.32E-07,  avg # of iterations =  4.7
+
+     total energy              =   -29.22010133 ryd
+     estimated scf accuracy    <     0.00338491 ryd
+
+     total cpu time spent up to now is    302.11 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.32E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.22326925 ryd
+     estimated scf accuracy    <     0.00002173 ryd
+
+     total cpu time spent up to now is    303.30 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.03E-07,  avg # of iterations =  2.7
+
+!    total energy              =   -29.22328758 ryd
+     estimated scf accuracy    <     0.00000050 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000   -0.00003523
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00020322
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00000856
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00000856
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00020322
+     atom   7 type  1   force =     0.00000000    0.00000000    0.00003523
+
+     Total force =     0.000292     Total SCF correction =     0.000881
+
+     Entering Dynamics;  it =    54   time =  0.30782 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257858104
+Al       0.000000000   0.000000000  -0.172497131
+Al       0.500000000   0.500000000  -0.086114639
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086114639
+Al       0.000000000   0.000000000   0.172497131
+Al       0.500000000   0.500000000   0.257858104
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.062864833
+Al       0.000000000   0.000000000  -1.379977047
+Al       0.500000000   0.500000000  -0.688917110
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688917110
+Al       0.000000000   0.000000000   1.379977047
+Al       0.500000000   0.500000000   2.062864833
+
+     Ekin =     0.00000113 Ryd   T =    5.7 K  Etot =   -29.22328644
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    304.35 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  4.0
+
+     total energy              =   -29.21691237 ryd
+     estimated scf accuracy    <     0.00683954 ryd
+
+     total cpu time spent up to now is    305.50 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.26E-05,  avg # of iterations =  5.7
+
+     total energy              =   -28.99740572 ryd
+     estimated scf accuracy    <     0.24011044 ryd
+
+     total cpu time spent up to now is    306.77 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  3.26E-05,  avg # of iterations =  5.3
+
+     total energy              =   -29.22308954 ryd
+     estimated scf accuracy    <     0.00024647 ryd
+
+     total cpu time spent up to now is    308.02 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.17E-06,  avg # of iterations =  3.7
+
+     total energy              =   -29.22328618 ryd
+     estimated scf accuracy    <     0.00000436 ryd
+
+     total cpu time spent up to now is    309.04 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.08E-08,  avg # of iterations =  4.7
+
+     total energy              =   -29.22328725 ryd
+     estimated scf accuracy    <     0.00000103 ryd
+
+     total cpu time spent up to now is    310.24 secs
+
+     iteration #  6     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.90E-09,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22328784 ryd
+     estimated scf accuracy    <     0.00000019 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000   -0.00000206
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00008798
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00007463
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00007463
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00008798
+     atom   7 type  1   force =     0.00000000    0.00000000    0.00000206
+
+     Total force =     0.000163     Total SCF correction =     0.000627
+
+     Entering Dynamics;  it =    55   time =  0.31363 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257858042
+Al       0.000000000   0.000000000  -0.172487173
+Al       0.500000000   0.500000000  -0.086113932
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086113932
+Al       0.000000000   0.000000000   0.172487173
+Al       0.500000000   0.500000000   0.257858042
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.062864336
+Al       0.000000000   0.000000000  -1.379897382
+Al       0.500000000   0.500000000  -0.688911458
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688911458
+Al       0.000000000   0.000000000   1.379897382
+Al       0.500000000   0.500000000   2.062864336
+
+     Ekin =     0.00000029 Ryd   T =    5.6 K  Etot =   -29.22328755
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    311.45 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  2.31E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22324528 ryd
+     estimated scf accuracy    <     0.00004907 ryd
+
+     total cpu time spent up to now is    313.27 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.34E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.22225022 ryd
+     estimated scf accuracy    <     0.00110620 ryd
+
+     total cpu time spent up to now is    314.48 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.34E-07,  avg # of iterations =  3.7
+
+     total energy              =   -29.22325924 ryd
+     estimated scf accuracy    <     0.00003198 ryd
+
+     total cpu time spent up to now is    315.65 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.52E-07,  avg # of iterations =  2.3
+
+!    total energy              =   -29.22328794 ryd
+     estimated scf accuracy    <     0.00000010 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00000135
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00007970
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00004496
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00004496
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00007970
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00000135
+
+     Total force =     0.000129     Total SCF correction =     0.000527
+
+     Entering Dynamics;  it =    56   time =  0.31944 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257858025
+Al       0.000000000   0.000000000  -0.172476114
+Al       0.500000000   0.500000000  -0.086112605
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086112605
+Al       0.000000000   0.000000000   0.172476114
+Al       0.500000000   0.500000000   0.257858025
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.062864198
+Al       0.000000000   0.000000000  -1.379808916
+Al       0.500000000   0.500000000  -0.688900841
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688900841
+Al       0.000000000   0.000000000   1.379808916
+Al       0.500000000   0.500000000   2.062864198
+
+     Ekin =     0.00000034 Ryd   T =    5.5 K  Etot =   -29.22328759
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    316.71 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization (with overlap)
+     ethr =  8.32E-06,  avg # of iterations =  1.0
+
+     total energy              =   -29.22312423 ryd
+     estimated scf accuracy    <     0.00017699 ryd
+
+     total cpu time spent up to now is    318.55 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.43E-07,  avg # of iterations =  4.3
+
+     total energy              =   -29.21744842 ryd
+     estimated scf accuracy    <     0.00620569 ryd
+
+     total cpu time spent up to now is    319.76 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  8.43E-07,  avg # of iterations =  4.0
+
+     total energy              =   -29.22328043 ryd
+     estimated scf accuracy    <     0.00000894 ryd
+
+     total cpu time spent up to now is    320.96 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  4.26E-08,  avg # of iterations =  3.3
+
+!    total energy              =   -29.22328791 ryd
+     estimated scf accuracy    <     0.00000016 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00009849
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00001525
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00005084
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00005084
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00001525
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00009849
+
+     Total force =     0.000158     Total SCF correction =     0.000699
+
+     Entering Dynamics;  it =    57   time =  0.32525 pico-seconds
+
+  new positions in cryst coord
+Al       0.500000000   0.500000000  -0.257856648
+Al       0.000000000   0.000000000  -0.172476438
+Al       0.500000000   0.500000000  -0.086110576
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.086110576
+Al       0.000000000   0.000000000   0.172476438
+Al       0.500000000   0.500000000   0.257856648
+  new positions in cart coord (alat unit)
+Al       0.500000000   0.500000000  -2.062853184
+Al       0.000000000   0.000000000  -1.379811505
+Al       0.500000000   0.500000000  -0.688884610
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688884610
+Al       0.000000000   0.000000000   1.379811505
+Al       0.500000000   0.500000000   2.062853184
+
+     Ekin =     0.00000039 Ryd   T =    5.4 K  Etot =   -29.22328751
+
+     NEW-OLD atomic charge density approx. for the potential
+     Extrapolating wave-functions (second order) ...
+
+     total cpu time spent up to now is    322.05 secs
+
+     iteration #  1     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.00E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.21838712 ryd
+     estimated scf accuracy    <     0.00522137 ryd
+
+     total cpu time spent up to now is    323.18 secs
+
+     iteration #  2     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.49E-05,  avg # of iterations =  5.0
+
+     total energy              =   -29.02877058 ryd
+     estimated scf accuracy    <     0.20629810 ryd
+
+     total cpu time spent up to now is    324.44 secs
+
+     iteration #  3     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  2.49E-05,  avg # of iterations =  3.3
+
+     total energy              =   -29.22325346 ryd
+     estimated scf accuracy    <     0.00003572 ryd
+
+     total cpu time spent up to now is    325.61 secs
+
+     iteration #  4     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  1.70E-07,  avg # of iterations =  4.7
+
+     total energy              =   -29.22328698 ryd
+     estimated scf accuracy    <     0.00000120 ryd
+
+     total cpu time spent up to now is    326.78 secs
+
+     iteration #  5     ecut=    12.00 ryd     beta=0.30
+     Davidson diagonalization (with overlap)
+     ethr =  5.70E-09,  avg # of iterations =  4.0
+
+!    total energy              =   -29.22328808 ryd
+     estimated scf accuracy    <     0.00000006 ryd
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00004866
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00002592
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00004656
+     atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00004656
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00002592
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00004866
+
+     Total force =     0.000102     Total SCF correction =     0.000281
+
+     Damped Dynamics: convergence achieved, Efinal=   -29.22328808
+CELL_PARAMETERS (alat)
+   1.000000000   0.000000000   0.000000000
+   0.000000000   1.000000000   0.000000000
+   0.000000000   0.000000000   8.000000000
+ATOMIC_POSITIONS (alat)
+Al       0.500000000   0.500000000  -2.062853184
+Al       0.000000000   0.000000000  -1.379811505
+Al       0.500000000   0.500000000  -0.688884610
+Al       0.000000000   0.000000000   0.000000000
+Al       0.500000000   0.500000000   0.688884610
+Al       0.000000000   0.000000000   1.379811505
+Al       0.500000000   0.500000000   2.062853184
+
+
+
+     Writing file pwscf.pun     for program phonon
+ 
+     PWSCF        :  5m28.04s CPU time
+
+     init_run     :     0.62s CPU
+     electrons    :   316.64s CPU (      58 calls,   5.459 s avg)
+     forces       :     4.44s CPU (      58 calls,   0.077 s avg)
+ 
+     electrons    :   316.64s CPU (      58 calls,   5.459 s avg)
+     c_bands      :   265.62s CPU (     281 calls,   0.945 s avg)
+     sum_band     :    38.66s CPU (     281 calls,   0.138 s avg)
+     v_of_rho     :     8.34s CPU (     606 calls,   0.014 s avg)
+     mix_rho      :     3.84s CPU (     281 calls,   0.014 s avg)
+ 
+     c_bands      :   265.62s CPU (     281 calls,   0.945 s avg)
+     init_us_2    :     2.31s CPU (    1863 calls,   0.001 s avg)
+     cegterg      :   262.44s CPU (     843 calls,   0.311 s avg)
+ 
+     sum_band     :    38.66s CPU (     281 calls,   0.138 s avg)
+ 
+     wfcrot       :     0.49s CPU (       3 calls,   0.163 s avg)
+     cegterg      :   262.44s CPU (     843 calls,   0.311 s avg)
+     h_psi        :   217.22s CPU (    4086 calls,   0.053 s avg)
+     g_psi        :     1.85s CPU (    3240 calls,   0.001 s avg)
+     overlap      :    10.18s CPU (    3240 calls,   0.003 s avg)
+     cdiaghg      :    13.37s CPU (    3243 calls,   0.004 s avg)
+     update       :    10.66s CPU (    3240 calls,   0.003 s avg)
+     last         :     3.45s CPU (     863 calls,   0.004 s avg)
+ 
+     h_psi        :   217.22s CPU (    4086 calls,   0.053 s avg)
+     init         :     1.01s CPU (    4086 calls,   0.000 s avg)
+     firstfft     :    95.03s CPU (   40116 calls,   0.002 s avg)
+     secondfft    :    98.76s CPU (   40116 calls,   0.002 s avg)
+     add_vuspsi   :     5.86s CPU (    4086 calls,   0.001 s avg)
+ 
+      General routines
+     ccalbec      :     5.48s CPU (    4260 calls,   0.001 s avg)
+     cft3         :     5.32s CPU (    2481 calls,   0.002 s avg)
+     cft3s        :   210.61s CPU (   92877 calls,   0.002 s avg)
+     davcio       :     3.27s CPU (    5731 calls,   0.001 s avg)
+ 
