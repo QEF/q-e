@@ -105,18 +105,22 @@ subroutine cg_readin
   !
   !  various checks
   !
+  if (.not. gamma_only) call errore('cg_readin', &
+      'need pw.x data file produced using Gamma tricks',1)
+  if (okvan) call errore('cg_readin', &
+      'ultrasoft pseudopotential not implemented',1)
   if (.not.trans .and. .not.epsil)                                  &
-       &     call errore('data','nothing to do',1)
-  if (nks.ne.1) call errore('data','too many k-points',1)
+       &     call errore('cg_readin','nothing to do',1)
+  if (nks.ne.1) call errore('cg_readin','too many k-points',1)
   !      if (xk(1,1).ne.0.0 .or. xk(2,1).ne.0.0 .or. xk(3,1).ne.0.0)
   !     &    call errore('data','only k=0 allowed',1)
   if (nmodes.gt.3*nat .or. nmodes.lt.0)                             &
-       &     call errore('data','wrong number of normal modes',1)
-  if (epsil .and. nmodes.ne.0) call errore('data','not allowed',1)
+       &     call errore('cg_readin','wrong number of normal modes',1)
+  if (epsil .and. nmodes.ne.0) call errore('cg_readin','not allowed',1)
   if (raman .and. deltatau.le.0.d0)                                 &
-       &     call errore('data','deltatau > 0 needed for raman CS',1)
+       &     call errore('cg_readin','deltatau > 0 needed for raman CS',1)
   if (nderiv.ne.2 .and. nderiv.ne.4) &
-       call errore('data','nderiv not allowed',1)
+       call errore('cg_readin','nderiv not allowed',1)
   !
   if (last.eq.0) last=3*nat
   !

@@ -32,7 +32,6 @@ program cg_raman
   call start_clock('raman')
   call startup( nd_nmbr, code, version_number )
   !
-  gamma_only = .true.
   call cg_readin
   !
   call cg_setup

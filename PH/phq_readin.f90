@@ -190,6 +190,9 @@ subroutine phq_readin
   !
   call read_file
   !
+  if (gamma_only) call errore('phq_readin',&
+     'cannot start from pw.x data file using Gamma-point tricks',1)
+  !
   !  workaround if modenum is set here
   !  and set the right iswitch
   !
@@ -252,17 +255,15 @@ subroutine phq_readin
   call bcast_ph_input1
 #endif
 
-  if (epsil.and.degauss.ne.0.d0) call errore ('phq_readin', 'no elec. &
-       &field with metals', 1)
+  if (epsil.and.degauss.ne.0.d0) &
+	call errore ('phq_readin', 'no elec. field with metals', 1)
 
 !  if (iswitch.ne. - 2 .and. iswitch.ne. - 3 .and. iswitch.ne. -4 &
 !       .and. .not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', &
 !       & 1 + abs (iswitch) )
 
-
   do it = 1, ntyp
-     if (amass (it) .le.0.d0) call errore ('phq_readin', 'Wrong masses', &
-          it)
+     if (amass (it) <= 0.d0) call errore ('phq_readin', 'Wrong masses', it)
   enddo
 
   if (maxirr.lt.0.or.maxirr.gt.3 * nat) call errore ('phq_readin', ' &
@@ -277,7 +278,7 @@ subroutine phq_readin
   
   if (iswitch == -4 .and. ldisp) &
        call errore('phq_readin','Dispersion calculation and &
-       & single mode calculation nort possibile !',1)
+       & single mode calculation not possibile !',1)
   !
   !  broadcast the values of nq1, nq2, nq3
   !
