@@ -1,3 +1,7 @@
+ 7 Sep 2004 File diis_module splitted in three separate files, each 
+            containing a module with the same name.
+            Fixed some severe bugs. (CS)
+
  6 Sep 2004 Example 9 updated (PG)
             changed name par2.x to fpmd.x, documentation updated [Gerardo]
 
@@ -25,9 +29,9 @@
             dynmat.x may calculate Raman cross sections as well (PG)
 
 30 Aug 2004 Some cleanup of the path code, fixed a small bug in the prefix.dat 
-            file. (C.S.)
+            file. (CS)
 
-27 Aug 2004  Misc Alpha fixes (C.S.)
+27 Aug 2004  Misc Alpha fixes (CS)
              Z* are  written on output in a consistent way (Gernot)
              More merging between CP and FPMD:
              - initialization (both code uses the same ggen)
@@ -43,7 +47,7 @@
 25 Aug 2004  Fixed some errors in constrained dynamics. "Fixed atoms" and
              explicit constraints are now compatible when they do not involve
              the same atoms. Fixed a bug in the definition of the tangent
-             in the Fourier string method dynamics. (C.S.)
+             in the Fourier string method dynamics. (CS)
              Makefiles, examples 8-11 updated. Old Raman code renamed 
              "phcg.f90" in order to avoid confusion with new cod3 (PG)
 
@@ -93,7 +97,7 @@
 16 Aug 2004  The fix for the problem "PBE on hydrogen atom" (see commit 
              10-05-2004) has been moved from gradcorr.f90 to 
              lsda_functionals.f90 so that both pwscf and the atomic code
-             share the same fix (C.S.)
+             share the same fix (CS)
 
 13 Aug 2004  Documentation for Raman updated (PG)
 
@@ -111,7 +115,7 @@
              "QUICK-MIN FIELDS". Old restart files can be easily converted
              removing in the "ENERGIES, POSITIONS AND GRADIENTS" field all 
              logical variables and removing all the "QUICK-MIN FIELDS".
-             (C.S.)
+             (CS)
 
  1 Aug 2004  same variable accessed from 2 different modules, some
              compilers complain, fixed (CC)
