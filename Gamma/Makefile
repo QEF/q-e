@@ -132,7 +132,6 @@ PWOBJS = \
 ../PW/mode_group.o \
 ../PW/move_ions.o \
 ../PW/multable.o \
-../PW/neb_variables.o \
 ../PW/newd.o \
 ../PW/new_ns.o \
 ../PW/ns_adj.o \
