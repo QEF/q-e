@@ -14,7 +14,7 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
   integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
   real(kind=dp) :: oc(nwfx)
   ! local variables
-  integer ::  i, n, l, len, n0, first, start(18), finish(18)
+  integer ::  i, n, l, len, n0, first, start(nwfx), finish(nwfx)
   character ::  occup*10, core*2, prev*1, curr*1, capital*1
   external :: capital
   ! core states
@@ -30,32 +30,32 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
   ! len is the length of the string, excluding trailing blanks
   !
   len=len_trim(config)
-  if (len.eq.0) call errore('el_config','empty string',1)
+  if (len == 0) call errore('el_config','empty string',1)
   !
   ! first is the position of the first nonblank character in the string
   !
   do first=1,len
-     if (config(first:first).ne.' ') go to 10
+     if (config(first:first) /= ' ') go to 10
   end do
 10 continue
   !
   ! find core wavefunctions (if any)
   !
   if (all_elec .and. &
-       &    config(first  :first  ).eq.'[' .and. &
-       &    config(first+3:first+3).eq.']') then
+       &    config(first  :first  ) == '[' .and. &
+       &    config(first+3:first+3) == ']') then
      core = config(first+1:first+2)
-     if (core.eq.'He'.or.core.eq.'he'.or.core.eq.'HE') then
+     if (core == 'He'.or.core == 'he'.or.core == 'HE') then
         nwfc =1
-     else if (core.eq.'Ne'.or.core.eq.'ne'.or.core.eq.'NE') then
+     else if (core == 'Ne'.or.core == 'ne'.or.core == 'NE') then
         nwfc =3
-     else if (core.eq.'Ar'.or.core.eq.'ar'.or.core.eq.'AR') then
+     else if (core == 'Ar'.or.core == 'ar'.or.core == 'AR') then
         nwfc =5
-     else if (core.eq.'Kr'.or.core.eq.'kr'.or.core.eq.'KR') then
+     else if (core == 'Kr'.or.core == 'kr'.or.core == 'KR') then
         nwfc =8
-     else if (core.eq.'Xe'.or.core.eq.'xe'.or.core.eq.'XE') then
+     else if (core == 'Xe'.or.core == 'xe'.or.core == 'XE') then
         nwfc =11
-     else if (core.eq.'Rn'.or.core.eq.'rn'.or.core.eq.'RN') then
+     else if (core == 'Rn'.or.core == 'rn'.or.core == 'RN') then
         nwfc =15
      else
         call errore('el_config','wrong core: '//core,1)
@@ -69,14 +69,14 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
      end do
      ! find first nonblank character after core term
      do i=first+4,len
-        if (config(i:i).ne.' ') go to 20
+        if (config(i:i) /= ' ') go to 20
      end do
 20   first=i
   else
      nwfc=0
      first=1
   end if
-  if (first.ge.len) then
+  if (first >= len) then
      nwf=nwfc
      return
   endif
@@ -85,16 +85,17 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
   ! N=main quantum number, L=angular quantum number, f=occupancy
   !
   nwf=nwfc+1
+  if (nwf > nwfx) call errore('config','too many states',nwf)
   start(nwf)=first
   do i=first+1,len
      prev=config(i-1:i-1)
      curr=config(i  :i  )
-     if ((curr.eq.' '.or. curr.eq.',') .and.  &
-          &  prev.ne.' '.and.prev.ne.',') then
+     if ((curr == ' ' .or.  curr == ',') .and.  &
+       &  prev /= ' ' .and. prev /= ',') then
         finish(nwf)=i-1
      nwf=nwf+1
-  else if (curr.ne.' '.and.curr.ne.',' .and.  &
-       &  (prev.eq.' '.or. prev.eq.',')) then
+  else if (curr /= ' ' .and. curr /= ',' .and.  &
+       &  (prev == ' ' .or.  prev == ',')) then
      start(nwf)=i
   endif
 enddo
@@ -105,24 +106,24 @@ finish(nwf)=len
 do n=nwfc+1,nwf
    prev = config(start(n):start(n))
    read(prev,*) nn(n)
-   if (nn(n).le.0 .or. nn(n).gt.7) &
+   if (nn(n) <= 0 .or. nn(n) > 7) &
   &    call errore('el_config','wrong main quantum number',n)
 
    curr = capital(config(start(n)+1:start(n)+1))
    ll(n)=-1
-   if (curr.eq.'S') ll(n)=0
-   if (curr.eq.'P') ll(n)=1
-   if (curr.eq.'D') ll(n)=2
-   if (curr.eq.'F') ll(n)=3
-   if (ll(n).eq.-1) call errore('el_config','l not found:'//curr,n)
+   if (curr == 'S') ll(n)=0
+   if (curr == 'P') ll(n)=1
+   if (curr == 'D') ll(n)=2
+   if (curr == 'F') ll(n)=3
+   if (ll(n) == -1) call errore('el_config','l not found:'//curr,n)
    if (ll(n).ge.nn(n)) call errore('el_config', &
        &              'main/angular quantum number mismatch',n)
 
    el(n)=prev//curr
    isw(n)=1
    do i=1,n-1
-      if (el(i).eq.el(n)) then
-         if (isw(i).eq.2) then
+      if (el(i) == el(n)) then
+         if (isw(i) == 2) then
             call errore('el_config',  &
         &         'wavefunction '//el(n)//' found too many times',n)
          else
@@ -131,11 +132,11 @@ do n=nwfc+1,nwf
       endif
    enddo
 
-   if (start(n)+2.gt.finish(n))  &
+   if (start(n)+2 > finish(n))  &
    &   call errore('el_config','no occupancy field?',n)
       occup = config(start(n)+2:finish(n))
       read(occup,*) oc(n)
-      if (oc(n).gt.2*(2*ll(n)+1)) &
+      if (oc(n) > 2*(2*ll(n)+1)) &
    &     call errore('el_config','wrong occupancy:'//occup,n)
 enddo
 ! pseudopotentials: N quantum number .ne. wavefunction label
@@ -144,10 +145,10 @@ if (.not.all_elec) then
    do l=0,3
       n0=1000
       do n=1,nwf
-         if (ll(n).eq.l) n0=min(n0,nn(n))
+         if (ll(n) == l) n0=min(n0,nn(n))
       end do
       do n=1,nwf
-         if (ll(n).eq.l) nn(n)=nn(n)-n0+1+l
+         if (ll(n) == l) nn(n)=nn(n)-n0+1+l
       end do
    end do
 endif

@@ -99,6 +99,6 @@ ld1.x: $(LD1OBJS) ld1.o
 	$(LD) -o ld1.x ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LDFLAGS)
 
 clean:
-	-/bin/rm -f *.o *.x $(LIB) *~ *.tmp.* make.* work.pc
+	-/bin/rm -f *.o *.x $(LIB) *~ *.d *.mod *.tmp.* make.* work.pc
 
 include .dependencies

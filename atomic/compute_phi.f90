@@ -288,7 +288,6 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      if ( phis(n,ns) .ne. sign(phis(n,ns),phis(n+1,ns)) ) then
         write(6,150) lam,ns,r(n)
 150     format (5x,'l=',i4,' ns=',i4,' Node at ',f10.8)
-        print *, n, r(n), phis(n,ns), phis(n+1,ns)
         nnode=nnode+1
      endif
   enddo
