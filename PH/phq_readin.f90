@@ -37,6 +37,7 @@ SUBROUTINE phq_readin()
   USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix
+  USE noncollin_module, ONLY : noncolin
   USE control_flags, ONLY : iverbosity, reduce_io, modenum
   USE io_global,     ONLY : ionode
   !
@@ -212,6 +213,9 @@ SUBROUTINE phq_readin()
   !
   IF (gamma_only) CALL errore('phq_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
+
+  IF (noncolin) CALL errore('phq_readin', &
+     'The non collinear phonon code is not yet available',1)
   !
   !  workaround if modenum is set here
   !

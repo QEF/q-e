@@ -16,6 +16,7 @@ SUBROUTINE cg_readin()
   USE cgcom
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
+  USE noncollin_module, ONLY : noncolin
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -98,6 +99,8 @@ SUBROUTINE cg_readin()
   !  allocate memory and recalculate what is needed
   !
   CALL read_file
+
+  if (noncolin) call errore('cg_readin','noncolinear version not available',1)
   !
   !  various checks
   !

@@ -21,6 +21,7 @@ SUBROUTINE d3_readin()
   USE control_flags, ONLY : iverbosity
   USE phcom
   USE d3com
+  USE noncollin_module, ONLY : noncolin
   USE io_files,      ONLY : tmp_dir, prefix
   USE io_global,     ONLY : ionode
   !
@@ -125,6 +126,9 @@ SUBROUTINE d3_readin()
   !
   IF (lsda) CALL errore ('d3_readin', 'lsda not implemented', 1)
   IF (okvan) CALL errore ('d3_readin', 'US not implemented', 1)
+  IF (noncolin) call errore('d3_readin', &
+     'd3 is not working in the noncolinear case', 1)
+
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
