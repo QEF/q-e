@@ -16,7 +16,7 @@
       use cvan
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use elct
+      use electrons_base, only: n => nbnd
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
@@ -331,7 +331,6 @@ subroutine pc2(a,beca,b,becb)
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan 
-      use elct
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
@@ -406,7 +405,6 @@ subroutine pcdaga2(a,as ,b )
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan
-      use elct
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
