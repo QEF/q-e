@@ -60,7 +60,9 @@ found in:
                            {mailto:pw_forum@pwscf.org})
 
         See the PWscf web site for instructions on how to subscribe
-        and how to browse the archives of the mailing list.
+        and how to browse and search the archives of the mailing list.
+        Please search the archives before posting to the list: your
+        question might already have been answered.
   \item the ``Scientific Software'' page of the Democritos web site
         \hfill\break
         (\htmladdnormallink%
@@ -1460,7 +1462,7 @@ you need to specify a suitable uniform k-point grid (card
 \texttt{K\_POINTS} with option \texttt{automatic}). 
 Spin-polarized systems must be treated as metallic system,
 except the special cases of a single k-point for which
-occupancies can be fixed (\texttt{occupations='from_input'}
+occupancies can be fixed (\texttt{occupations='from\_input'}
 and card \texttt{OCCUPATIONS}).
 
 Explanations for the meaning of variables \texttt{ibrav} and
@@ -2681,6 +2683,22 @@ is still present in the last steps of self-consistency, and
 if the number of unconverged eigevector is a significant 
 part of the total, it may signal serious trouble in self-consistency
 (see next point) or something badly wrong in input data.
+
+\paragraph{``warning : negative or imaginary charge...'', or
+``...core charge ...''}
+
+This is a warning message that can be safely ignored 
+unless the negative or imaginary charge is sizable,
+let us say {\cal O(0.1)}. If it is, something seriously 
+wrong is going on. Otherwise, the origin of the negative
+charge is the following. When one transforms a positive 
+function in real space to Fourier space and truncates at 
+some finite cutoff, the positive function is no longer 
+guaranteed to be positive when transformed back to real 
+space. This happens only with core corrections and with 
+ultrasoft pseudopotentials. In some cases it may be a 
+source of trouble (see next point) but it is usually 
+solved by increasing the cutoff for the charge density.
 
 \paragraph{self-consistency is slow or does not converge.}
 

@@ -1,7 +1,12 @@
+29 Nov 2004 Documentation updated (PG)
+
 26 Nov 2004 Cleanup of the pwscf molecular dynamics stuff. Velocity 
             rescaling fully implemented.
             Documentation updated. Unused variables and routines removed.
 	    (CS)
+            - more CP/FPMD merging
+            - CP/FPMD specific modules moved back from Modules to CPV
+            (CC)
 
 25 Nov 2004 workaround for configure problem with systems where you
             can't run interactively [Gerardo]
