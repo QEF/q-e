@@ -28,12 +28,12 @@ subroutine stres_hub ( sigmah )
    real (kind=DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
    logical :: exst
    real (kind=DP), allocatable :: dns(:,:,:,:)
-   !       dns(nat,nspin,ldim,ldim), ! the derivative of the atomic occupations
+   !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
  
    sigmah(:,:) = 0.d0
 
    ldim = 2 * Hubbard_lmax + 1
-   allocate (dns(nat,nspin,ldim,ldim))
+   allocate (dns(ldim,ldim,nspin,nat))
    dns(:,:,:,:) = 0.d0
 
 #ifdef __PARA
@@ -61,7 +61,7 @@ subroutine stres_hub ( sigmah )
          if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
             write (*,'(a,2i3)') 'NS(NA,IS) ', na,is
             do m1=1,ldim
-               write (*,'(7f10.4)') (ns(na,is,m1,m2),m2=1,ldim)
+               write (*,'(7f10.4)') (ns(m1,m2,is,na),m2=1,ldim)
             end do
          end if
       end do
@@ -77,14 +77,14 @@ subroutine stres_hub ( sigmah )
                do is = 1,nspin
 #ifdef DEBUG
                   write (*,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
-                  write (*,'(5f10.4)') ((dns(na,is,m1,m2),m2=1,5),m1=1,5)
+                  write (*,'(5f10.4)') ((dns(m1,m2,is,na),m2=1,5),m1=1,5)
 #endif
                   do m2 = 1, 2 * Hubbard_l(nt) + 1
                      sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
-                           Hubbard_U(nt) * 0.5d0 * dns(na,is,m2,m2) 
+                           Hubbard_U(nt) * 0.5d0 * dns(m2,m2,is,na) 
                      do m1 = 1, 2 * Hubbard_l(nt) + 1
                         sigmah(ipol,jpol) = sigmah(ipol,jpol) + omin1 * &
-                           Hubbard_U(nt) * ns(na,is,m2,m1) * dns(na,is,m1,m2)
+                           Hubbard_U(nt) * ns(m2,m1,is,na) * dns(m1,m2,is,na)
                      end do
                   end do
                end do
@@ -97,7 +97,6 @@ subroutine stres_hub ( sigmah )
    !
    ! Symmetryze the stress tensor
    !
-   !      write(6,*) 'ns =', ns(1,2,1,1)
    do ipol = 1,3
       do jpol = ipol,3
          sigmah(ipol,jpol) = sigmah(jpol,ipol)

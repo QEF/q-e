@@ -29,7 +29,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
               i, na, nt, n, alpha, ipol, counter, m1,m2, l
    integer :: ldim
    real (kind=DP) :: &
-             dns(nat,nspin,ldim,ldim), &
+             dns(ldim,ldim,nspin,nat), &
              t0, scnds       ! cpu time spent
    complex (kind=DP) :: ZDOTC
    integer, allocatable :: offset(:)
@@ -109,7 +109,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
             do m1 = 1,ldim
                do m2 = m1,ldim
                   do ibnd = 1,nbnd
-                     dns(na,current_spin,m1,m2) = dns(na,current_spin,m1,m2) + &
+                     dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                              wg(ibnd,ik) *            &
                                 DREAL(  proj(offset(na)+m1,ibnd)  *   &
                                 conjg(dproj(offset(na)+m2,ibnd))  +   &
@@ -124,7 +124,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    end do                 ! on k-points
 
 #ifdef __PARA
-   call poolreduce(nat*nspin*ldim*ldim,dns)
+   call poolreduce(ldim*ldim*nspin*nat,dns)
 #endif
    !
    ! impose hermiticity of dn_{m1,m2}
@@ -133,7 +133,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
       do is = 1,nspin
          do m1 = 1,ldim
             do m2 = m1+1,ldim
-               dns(na,is,m2,m1) = dns(na,is,m1,m2)
+               dns(m2,m1,is,na) = dns(m1,m2,is,na)
             end do
          end do
       end do

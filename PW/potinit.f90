@@ -96,10 +96,10 @@ subroutine potinit
         else  
            ns(:,:,:,:) = 0.d0
         endif
-        call reduce (nat * nspin * ldim * ldim, ns)  
-        call poolreduce (nat * nspin * ldim * ldim, ns)  
+        call reduce (ldim * ldim * nspin * nat, ns)  
+        call poolreduce (ldim * ldim * nspin * nat, ns)  
 #endif
-        call DCOPY(nat*nspin*ldim*ldim,ns,1,nsnew,1)
+        call DCOPY(ldim*ldim*nspin*nat,ns,1,nsnew,1)
      endif
   else
      !
@@ -115,7 +115,7 @@ subroutine potinit
      if (lda_plus_u) then
         ldim = 2 * Hubbard_lmax + 1
         call init_ns  
-        call DCOPY(nat*nspin*ldim*ldim,ns,1,nsnew,1)
+        call DCOPY(ldim*ldim*nspin*nat,ns,1,nsnew,1)
      end if
 
      call atomic_rho (rho, nspin)

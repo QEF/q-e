@@ -47,19 +47,19 @@ subroutine init_ns
          if (.not.nm) then  
             if (totoc.gt.2*Hubbard_l(nt)+1) then  
                do m1 = 1, 2*Hubbard_l(nt)+1  
-                  ns (na, majs, m1, m1) = 1.d0  
-                  ns (na, mins, m1, m1) = (totoc - 2*Hubbard_l(nt)+1 ) / &
+                  ns (m1, m1, majs, na) = 1.d0  
+                  ns (m1, m1, mins, na) = (totoc - 2*Hubbard_l(nt)+1 ) / &
                                                   (2*Hubbard_l(nt)+1)  
                enddo  
             else  
                do m1 = 1, 2*Hubbard_l(nt)+1  
-                  ns (na, majs, m1, m1) = totoc / (2*Hubbard_l(nt)+1)
+                  ns (m1, m1, majs, na) = totoc / (2*Hubbard_l(nt)+1)
                enddo  
             endif  
          else  
             do is = 1,nspin
                do m1 = 1, 2*Hubbard_l(nt)+1  
-                  ns (na, is, m1, m1) = totoc /  2.d0 / (2*Hubbard_l(nt)+1)
+                  ns (m1, m1, is, na) = totoc /  2.d0 / (2*Hubbard_l(nt)+1)
                enddo  
             enddo  
          endif  

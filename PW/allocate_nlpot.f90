@@ -98,8 +98,8 @@ subroutine allocate_nlpot
   !
   if (lda_plus_u) then  
      ldim = 2 * Hubbard_lmax + 1
-     allocate( ns (nat, nspin, ldim, ldim) )
-     allocate( nsnew (nat, nspin, ldim, ldim) ) 
+     allocate( ns    (ldim, ldim, nspin, nat) )
+     allocate( nsnew (ldim, ldim, nspin, nat) ) 
   endif
   !
   !     Calculate dimensions for array tab (including a possible factor

@@ -33,8 +33,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   real (kind=DP) :: &
                 rhout(nrxx,nspin), &! (in) the "out" density; (out) rhout-rhoin
                 rhoin(nrxx,nspin), &! (in) the "in" density; (out) the new dens.
-                nsout(nat,nspin,5,5), &!
-                nsin(nat,nspin,5,5),  &!
+                nsout(5,5,nspin,nat), &!
+                nsin(5,5,nspin,nat),  &!
                 alphamix,          &! (in) mixing factor
                 dr2                 ! (out) the estimated errr on the energy
 
@@ -72,8 +72,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 ! rhoutsave(ngm0*nspin): work space
                 ! df(ngm0*nspin,n_iter): information from preceding iterations
                 ! dv(ngm0*nspin,n_iter):    "  "       "     "        "  "
-                ! df_ns(nat,nspin,5,5,n_iter):  idem
-                ! dv_ns(nat,nspin,5,5,n_iter):  idem
+                ! df_ns(5,5,nspin,nat,n_iter):  idem
+                ! dv_ns(5,5,nspin,nat,n_iter):  idem
 
   real (kind=DP) :: betamix(maxmix,maxmix), gamma0, work(maxmix), &
                     fn_dehar, dehar
@@ -144,7 +144,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call diropn (iunmix, filename, 2*ngm0*nspin, exst)
         close (unit=iunmix, status='delete')
         if (lda_plus_u) then
-           call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*25, exst)
+           call diropn (iunmix2, trim(filename)//'.ns',25*nspin*nat, exst)
            close (unit=iunmix2, status='delete')
         end if
         deallocate (aux, rhocin, rhocout)
@@ -153,7 +153,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end if
 
      call diropn(iunmix,filename,2*ngm0*nspin,exst)
-     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*25, exst)
+     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',25*nspin*nat, exst)
 
     if (iter.gt.1 .and. .not.exst) then
         call errore('mix_rho','file not found, restarting',-1)
@@ -161,12 +161,12 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end if
      allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
      if (lda_plus_u) &
-        allocate (df_ns(nat,nspin,5,5,n_iter), dv_ns(nat,nspin,5,5,n_iter))
+        allocate (df_ns(5,5,nspin,nat,n_iter), dv_ns(5,5,nspin,nat,n_iter))
  else
      if (iter.eq.1) then
         allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
         if (lda_plus_u) &
-           allocate (df_ns(nat,nspin,5,5,n_iter), dv_ns(nat,nspin,5,5,n_iter))
+           allocate (df_ns(5,5,nspin,nat,n_iter), dv_ns(5,5,nspin,nat,n_iter))
      end if
      if (conv) then
         if (lda_plus_u) deallocate(df_ns, dv_ns)
@@ -176,7 +176,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         return
      end if
      allocate (rhoinsave(ngm0*nspin), rhoutsave(ngm0*nspin))
-     if (lda_plus_u) allocate(nsinsave(nat,nspin,5,5),nsoutsave(nat,nspin,5,5))
+     if (lda_plus_u) allocate(nsinsave(5,5,nspin,nat),nsoutsave(5,5,nspin,nat))
   end if
   !
   ! copy only the high frequency Fourier component into rhoin
@@ -208,8 +208,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call davcio(df(1,ipos),2*ngm0*nspin,iunmix,1,-1)
         call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2,-1)
         if (lda_plus_u) then
-           call davcio(df_ns(1,1,1,1,ipos),nat*nspin*25,iunmix2,1,-1)
-           call davcio(dv_ns(1,1,1,1,ipos),nat*nspin*25,iunmix2,2,-1)
+           call davcio(df_ns(1,1,1,1,ipos),25*nspin*nat,iunmix2,1,-1)
+           call davcio(dv_ns(1,1,1,1,ipos),25*nspin*nat,iunmix2,2,-1)
         end if
      end if
      call DAXPY(2*ngm0*nspin,-1.d0,rhocout,1,df(1,ipos),1)
@@ -218,8 +218,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 !        call DSCAL (2*ngm0*nspin,-1.d0/norm,df(1,ipos),1)
 !        call DSCAL (2*ngm0*nspin,-1.d0/norm,dv(1,ipos),1)
      if (lda_plus_u) then
-        call DAXPY(nat*nspin*25,-1.d0,nsout,1,df_ns(1,1,1,1,ipos),1)
-        call DAXPY(nat*nspin*25,-1.d0,nsin ,1,dv_ns(1,1,1,1,ipos),1)
+        call DAXPY(25*nspin*nat,-1.d0,nsout,1,df_ns(1,1,1,1,ipos),1)
+        call DAXPY(25*nspin*nat,-1.d0,nsin ,1,dv_ns(1,1,1,1,ipos),1)
      end if
   end if
   !
@@ -229,8 +229,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
            call davcio(df(1,i),2*ngm0*nspin,iunmix,2*i+1,-1)
            call davcio(dv(1,i),2*ngm0*nspin,iunmix,2*i+2,-1)
            if (lda_plus_u) then
-              call davcio(df_ns(1,1,1,1,i),nat*nspin*25,iunmix2,2*i+1,-1)
-              call davcio(dv_ns(1,1,1,1,i),nat*nspin*25,iunmix2,2*i+2,-1)
+              call davcio(df_ns(1,1,1,1,i),25*nspin*nat,iunmix2,2*i+1,-1)
+              call davcio(dv_ns(1,1,1,1,i),25*nspin*nat,iunmix2,2*i+2,-1)
            end if
         end if
      end do
@@ -241,19 +241,19 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2*ipos+2,1)
      end if
      if (lda_plus_u) then
-        call davcio(nsout,nat*nspin*25,iunmix2,1,1)
-        call davcio(nsin ,nat*nspin*25,iunmix2,2,1)
+        call davcio(nsout,25*nspin*nat,iunmix2,1,1)
+        call davcio(nsin ,25*nspin*nat,iunmix2,2,1)
         if (iter.gt.1) then
-           call davcio(df_ns(1,1,1,1,ipos),nat*nspin*25,iunmix2,2*ipos+1,1)
-           call davcio(dv_ns(1,1,1,1,ipos),nat*nspin*25,iunmix2,2*ipos+2,1)
+           call davcio(df_ns(1,1,1,1,ipos),25*nspin*nat,iunmix2,2*ipos+1,1)
+           call davcio(dv_ns(1,1,1,1,ipos),25*nspin*nat,iunmix2,2*ipos+2,1)
         end if
      end if
   else
      call DCOPY(2*ngm0*nspin,rhocin ,1,rhoinsave,1)
      call DCOPY(2*ngm0*nspin,rhocout,1,rhoutsave,1)
      if (lda_plus_u) then
-        call DCOPY(nat*nspin*25,nsin ,1,nsinsave ,1)
-        call DCOPY(nat*nspin*25,nsout,1,nsoutsave,1)
+        call DCOPY(25*nspin*nat,nsin ,1,nsinsave ,1)
+        call DCOPY(25*nspin*nat,nsout,1,nsoutsave,1)
      end if
 end if
   !
@@ -287,8 +287,8 @@ end if
      call DAXPY(2*ngm0*nspin,-gamma0,dv(1,i),1,rhocin,1)
      call DAXPY(2*ngm0*nspin,-gamma0,df(1,i),1,rhocout,1)
      if (lda_plus_u) then
-        call DAXPY(nat*nspin*25,-gamma0,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
-        call DAXPY(nat*nspin*25,-gamma0,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
+        call DAXPY(25*nspin*nat,-gamma0,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
+        call DAXPY(25*nspin*nat,-gamma0,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
      end if
   end do
   !
@@ -309,8 +309,8 @@ end if
   else
      inext=iter-((iter-1)/n_iter)*n_iter
      if (lda_plus_u) then
-        call DCOPY(nat*nspin*25,nsoutsave,1,df_ns(1,1,1,1,inext),1)
-        call DCOPY(nat*nspin*25,nsinsave ,1,dv_ns(1,1,1,1,inext),1)
+        call DCOPY(25*nspin*nat,nsoutsave,1,df_ns(1,1,1,1,inext),1)
+        call DCOPY(25*nspin*nat,nsinsave ,1,dv_ns(1,1,1,1,inext),1)
         deallocate (nsinsave, nsoutsave)
      end if
      call DCOPY(2*ngm0*nspin,rhoutsave,1,df(1,inext),1)
@@ -339,7 +339,7 @@ end if
      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      rhoin(:,is) = rhoin(:,is) + DREAL(aux(:))
   end do
-  if (lda_plus_u) call DAXPY(nat*nspin*25,alphamix,nsout,1,nsin,1)
+  if (lda_plus_u) call DAXPY(25*nspin*nat,alphamix,nsout,1,nsin,1)
 
   ! - clean up
 

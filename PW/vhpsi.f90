@@ -55,7 +55,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
            do m1 = 1, 2 * Hubbard_l(nt) + 1 
               temp = proj (offset(na)+m1, ibnd)  
               do m2 = 1, 2 * Hubbard_l(nt) + 1 
-                 temp = temp - 2.d0 * ns (na, current_spin, m1, m2) * &
+                 temp = temp - 2.d0 * ns ( m1, m2, current_spin, na) * &
                                       proj (offset(na)+m2, ibnd)
               enddo
 

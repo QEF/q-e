@@ -41,7 +41,7 @@ subroutine new_ns
 
   t0 = scnds ()  
   ldim = 2 * Hubbard_lmax + 1
-  allocate( offset(nat), proj(natomwfc,nbnd), nr(nat,nspin,ldim,ldim) )  
+  allocate( offset(nat), proj(natomwfc,nbnd), nr(ldim,ldim,nspin,nat) )  
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
   !
@@ -94,7 +94,7 @@ subroutine new_ns
            do m1 = 1, 2 * Hubbard_l(nt) + 1  
               do m2 = m1, 2 * Hubbard_l(nt) + 1
                  do ibnd = 1, nbnd  
-                    nr(na,current_spin,m1,m2) = nr(na,current_spin,m1,m2) + &
+                    nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) + &
                             wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
                                            conjg(proj(offset(na)+m1,ibnd)) )
                  enddo
@@ -107,7 +107,7 @@ subroutine new_ns
 
   enddo
 #ifdef __PARA
-  call poolreduce (nat * nspin * ldim * ldim, nr)  
+  call poolreduce (ldim * ldim * nspin * nat , nr)  
 #endif
   if (nspin.eq.1) nr = 0.5d0 * nr
   !
@@ -118,7 +118,7 @@ subroutine new_ns
      do is = 1, nspin  
         do m1 = 1, 2 * Hubbard_l(nt) + 1
            do m2 = m1 + 1, 2 * Hubbard_l(nt) + 1  
-              nr (na, is, m2, m1) = nr (na, is, m1, m2)  
+              nr (m2, m1, is, na) = nr (m1, m2, is, na)  
            enddo
         enddo
      enddo
@@ -136,19 +136,19 @@ subroutine new_ns
                     do m0 = 1, 2 * Hubbard_l(nt) + 1  
                        do m00 = 1, 2 * Hubbard_l(nt) + 1  
                           if (Hubbard_l(nt).eq.0) then
-                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   nr(nb,is,m0,m00) / nsym
+                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                                   nr(m0,m00,is,nb) / nsym
                           else if (Hubbard_l(nt).eq.1) then
-                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   d1(m0 ,m1,isym) * nr(nb,is,m0,m00) * &
+                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                                   d1(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d1(m00,m2,isym) / nsym
                           else if (Hubbard_l(nt).eq.2) then
-                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   d2(m0 ,m1,isym) * nr(nb,is,m0,m00) * &
+                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                                   d2(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d2(m00,m2,isym) / nsym
                           else if (Hubbard_l(nt).eq.3) then
-                             nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   d3(m0 ,m1,isym) * nr(nb,is,m0,m00) * &
+                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                                   d3(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d3(m00,m2,isym) / nsym
                           else
                              call errore ('new_ns', &
@@ -171,16 +171,16 @@ subroutine new_ns
         do is = 1, nspin  
            do m1 = 1, 2 * Hubbard_l(nt) + 1  
               do m2 = m1, 2 * Hubbard_l(nt) + 1  
-                 psum = abs ( nsnew(na,is,m1,m2) - nsnew(na,is,m2,m1) )  
+                 psum = abs ( nsnew(m1,m2,is,na) - nsnew(m1,m2,is,na) )  
                  if (psum.gt.1.d-10) then  
                     write (6, * ) na, is, m1, m2  
-                    write (6, * ) nsnew (na, is, m1, m2)  
-                    write (6, * ) nsnew (na, is, m2, m1)  
+                    write (6, * ) nsnew (m1, m2, is, na)  
+                    write (6, * ) nsnew (m2, m1, is, na)  
                     call errore ('new_ns', 'non hermitean matrix', 1)  
                  else  
-                    nsnew(na,is,m1,m2) = 0.5d0 * (nsnew(na,is,m1,m2) + &
-                                                  nsnew(na,is,m2,m1) )
-                    nsnew(na,is,m2,m1) = nsnew(na,is,m1,m2)
+                    nsnew(m1,m2,is,na) = 0.5d0 * (nsnew(m1,m2,is,na) + &
+                                                  nsnew(m2,m1,is,na) )
+                    nsnew(m2,m1,is,na) = nsnew(m1,m2,is,na)
                  endif
               enddo
            enddo
@@ -198,8 +198,8 @@ subroutine new_ns
         do is = 1, nspin  
            do m1 = 1, 2 * Hubbard_l(nt) + 1  
               do m2 = 1, 2 * Hubbard_l(nt) + 1  
-                 eth = eth + Hubbard_U(nt) * nsnew(na,is,m1,m2) * &
-                          (ns(na,is,m2,m1) - nsnew(na,is,m2,m1) * 0.5d0)
+                 eth = eth + Hubbard_U(nt) * nsnew(m1,m2,is,na) * &
+                          (ns(m2,m1,is,na) - nsnew(m2,m1,is,na) * 0.5d0)
               enddo
            enddo
         enddo

@@ -30,10 +30,10 @@ subroutine force_hub(forceh)
    logical ::  exst
 
    real (kind=DP), allocatable :: dns(:,:,:,:)
-   !       dns(nat,nspin,5,5) ! the derivative of the atomic occupations
+   !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
 
    ldim= 2 * Hubbard_lmax + 1
-   allocate(dns(nat,nspin,ldim,ldim))
+   allocate(dns(ldim,ldim,nspin,nat))
    forceh(:,:) = 0.d0
    dns(:,:,:,:) = 0.d0
 
@@ -56,10 +56,10 @@ subroutine force_hub(forceh)
                do is = 1,nspin
                   do m2 = 1,ldim
                      forceh(ipol,alpha) = forceh(ipol,alpha) -  &
-                           Hubbard_U(nt) * 0.5d0           * dns(na,is,m2,m2)
+                           Hubbard_U(nt) * 0.5d0           * dns(m2,m2,is,na)
                      do m1 = 1,ldim
                         forceh(ipol,alpha) = forceh(ipol,alpha) +    &
-                           Hubbard_U(nt) * ns(na,is,m2,m1) * dns(na,is,m1,m2)
+                           Hubbard_U(nt) * ns(m2,m1,is,na) * dns(m1,m2,is,na)
                      end do
                   end do
                end do

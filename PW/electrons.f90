@@ -196,6 +196,11 @@ implicit none
 
      if (imix.ge.0) then
 
+        if (lda_plus_u .and. iter.le.niter_with_fixed_ns ) then
+            ldim2 = ( 2 * Hubbard_lmax + 1 )**2
+            call DCOPY(ldim2*nspin*nat, ns,1, nsnew,1)
+        end if
+
         call mix_rho (rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
                       nmix, flmix, conv_elec)
 
@@ -225,7 +230,7 @@ implicit none
      if (lda_plus_u) then  
         ldim2 = ( 2 * Hubbard_lmax + 1 )**2
         if (iter.gt.niter_with_fixed_ns .and. imix.lt.0) &
-            call DCOPY(nat*nspin*ldim2,nsnew,1,ns,1)
+            call DCOPY(ldim2*nspin*nat,nsnew,1,ns,1)
 #ifdef __PARA
         if (me.eq.1.and.mypool.eq.1) then
 #endif

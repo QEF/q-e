@@ -37,7 +37,7 @@ subroutine write_ns
         nsuma = 0.d0
         do is = 1, nspin
            do m1 = 1, ldim
-              nsuma = nsuma + nsnew (na, is, m1, m1)
+              nsuma = nsuma + nsnew (m1, m1, is, na)
            end do
         end do
         if (nspin.eq.1) nsuma = 2.d0 * nsuma
@@ -46,7 +46,7 @@ subroutine write_ns
         do is = 1, nspin
            do m1 = 1, ldim
               do m2 = 1, ldim
-                 f (m1, m2) = nsnew (na, is, m1, m2)
+                 f (m1, m2) = nsnew (m1, m2, is, na)
               enddo
            enddo
            call cdiagh(ldim, f, ldmx, lambda, vet)
@@ -58,7 +58,7 @@ subroutine write_ns
            end do
            write(6,*) 'occupations'
            do m1 = 1, ldim
-              write (6,'(7(f6.3,x))') (nsnew(na,is,m1,m2),m2=1,ldim)
+              write (6,'(7(f6.3,x))') (nsnew(m1,m2,is,na),m2=1,ldim)
            end do
         enddo
      endif

@@ -32,8 +32,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   real (kind=DP) :: &
                 rhout(nrxx,nspin), &! (in) the "out" density; (out) rhout-rhoin
                 rhoin(nrxx,nspin), &! (in) the "in" density; (out) the new dens.
-                nsout(nat,nspin,2*Hubbard_lmax+1,2*Hubbard_lmax+1), &!
-                nsin(nat,nspin,2*Hubbard_lmax+1,2*Hubbard_lmax+1),  &!
+                nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
+                nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
                 alphamix,          &! (in) mixing factor
                 dr2                 ! (out) the estimated errr on the energy
 
@@ -70,8 +70,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 ! rhoutsave(ngm0*nspin): work space
                 ! df(ngm0*nspin,n_iter): information from preceding iterations
                 ! dv(ngm0*nspin,n_iter):    "  "       "     "        "  "
-                ! df_ns(nat,nspin,2*Hubbard_lmax+1,2*Hubbard_lmax+1,n_iter):idem
-                ! dv_ns(nat,nspin,2*Hubbard_lmax+1,2*Hubbard_lmax+1,n_iter):idem
+                ! df_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
+                ! dv_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
 
   integer :: ldim
 
@@ -145,7 +145,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call diropn (iunmix, filename, 2*ngm0*nspin, exst)
         close (unit=iunmix, status='delete')
         if (lda_plus_u) then
-           call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*ldim*ldim, exst)
+           call diropn (iunmix2, trim(filename)//'.ns',ldim*ldim*nspin*nat, exst)
            close (unit=iunmix2, status='delete')
         end if
         deallocate (rhocin, rhocout)
@@ -154,7 +154,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end if
 
      call diropn(iunmix,filename,2*ngm0*nspin,exst)
-     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*ldim*ldim, exst)
+     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',ldim*ldim*nspin*nat, exst)
 
      if (iter > 1 .and. .not.exst) then
         call errore('mix_rho','file not found, restarting',-1)
@@ -162,14 +162,14 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end if
      allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
      if (lda_plus_u) &
-        allocate (df_ns(nat,nspin,ldim,ldim,n_iter), &
-                  dv_ns(nat,nspin,ldim,ldim,n_iter))
+        allocate (df_ns(ldim,ldim,nspin,nat,n_iter), &
+                  dv_ns(ldim,ldim,nspin,nat,n_iter))
   else
      if (iter == 1) then
         allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
         if (lda_plus_u) &
-           allocate (df_ns(nat,nspin,ldim,ldim,n_iter),&
-                     dv_ns(nat,nspin,ldim,ldim,n_iter))
+           allocate (df_ns(ldim,ldim,nspin,nat,n_iter),&
+                     dv_ns(ldim,ldim,nspin,nat,n_iter))
      end if
      if (conv) then
         if (lda_plus_u) deallocate(df_ns, dv_ns)
@@ -180,8 +180,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end if
      allocate (rhoinsave(ngm0*nspin), rhoutsave(ngm0*nspin))
      if (lda_plus_u) &
-        allocate(nsinsave (nat,nspin,ldim,ldim), &
-                 nsoutsave(nat,nspin,ldim,ldim))
+        allocate(nsinsave (ldim,ldim,nspin,nat), &
+                 nsoutsave(ldim,ldim,nspin,nat))
   end if
   !
   ! copy only the high frequency Fourier component into rhoin
@@ -212,8 +212,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call davcio(df(1,ipos),2*ngm0*nspin,iunmix,1,-1)
         call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2,-1)
         if (lda_plus_u) then
-           call davcio(df_ns(1,1,1,1,ipos),nat*nspin*ldim*ldim,iunmix2,1,-1)
-           call davcio(dv_ns(1,1,1,1,ipos),nat*nspin*ldim*ldim,iunmix2,2,-1)
+           call davcio(df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,1,-1)
+           call davcio(dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2,-1)
         end if
      end if
         call DAXPY(2*ngm0*nspin,-1.d0,rhocout,1,df(1,ipos),1)
@@ -223,8 +223,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 !        call DSCAL (2*ngm0*nspin,-1.d0/norm,df(1,ipos),1)
 !        call DSCAL (2*ngm0*nspin,-1.d0/norm,dv(1,ipos),1)
      if (lda_plus_u) then
-        call DAXPY(nat*nspin*ldim*ldim,-1.d0,nsout,1,df_ns(1,1,1,1,ipos),1)
-        call DAXPY(nat*nspin*ldim*ldim,-1.d0,nsin ,1,dv_ns(1,1,1,1,ipos),1)
+        call DAXPY(ldim*ldim*nspin*nat,-1.d0,nsout,1,df_ns(1,1,1,1,ipos),1)
+        call DAXPY(ldim*ldim*nspin*nat,-1.d0,nsin ,1,dv_ns(1,1,1,1,ipos),1)
      end if
   end if
   !
@@ -234,8 +234,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
            call davcio(df(1,i),2*ngm0*nspin,iunmix,2*i+1,-1)
            call davcio(dv(1,i),2*ngm0*nspin,iunmix,2*i+2,-1)
            if (lda_plus_u) then
-              call davcio(df_ns(1,1,1,1,i),nat*nspin*ldim*ldim,iunmix2,2*i+1,-1)
-              call davcio(dv_ns(1,1,1,1,i),nat*nspin*ldim*ldim,iunmix2,2*i+2,-1)
+              call davcio(df_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix2,2*i+1,-1)
+              call davcio(dv_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix2,2*i+2,-1)
            end if
         end if
      end do
@@ -246,19 +246,19 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2*ipos+2,1)
      end if
      if (lda_plus_u) then
-        call davcio(nsout,nat*nspin*ldim*ldim,iunmix2,1,1)
-        call davcio(nsin ,nat*nspin*ldim*ldim,iunmix2,2,1)
+        call davcio(nsout,ldim*ldim*nspin*nat,iunmix2,1,1)
+        call davcio(nsin ,ldim*ldim*nspin*nat,iunmix2,2,1)
         if (iter > 1) then
-           call davcio(df_ns(1,1,1,1,ipos),nat*nspin*ldim*ldim,iunmix2,2*ipos+1,1)
-           call davcio(dv_ns(1,1,1,1,ipos),nat*nspin*ldim*ldim,iunmix2,2*ipos+2,1)
+           call davcio(df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2*ipos+1,1)
+           call davcio(dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2*ipos+2,1)
         end if
      end if
   else
      call DCOPY(2*ngm0*nspin,rhocin ,1,rhoinsave,1)
      call DCOPY(2*ngm0*nspin,rhocout,1,rhoutsave,1)
      if (lda_plus_u) then
-        call DCOPY(nat*nspin*ldim*ldim,nsin ,1,nsinsave ,1)
-        call DCOPY(nat*nspin*ldim*ldim,nsout,1,nsoutsave,1)
+        call DCOPY(ldim*ldim*nspin*nat,nsin ,1,nsinsave ,1)
+        call DCOPY(ldim*ldim*nspin*nat,nsout,1,nsoutsave,1)
      end if
   end if
   !
@@ -294,8 +294,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      call DAXPY(2*ngm0*nspin,-gamma0,dv(1,i),1,rhocin,1)
      call DAXPY(2*ngm0*nspin,-gamma0,df(1,i),1,rhocout,1)
      if (lda_plus_u) then
-        call DAXPY(nat*nspin*ldim*ldim,-gamma0,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
-        call DAXPY(nat*nspin*ldim*ldim,-gamma0,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
+        call DAXPY(ldim*ldim*nspin*nat,-gamma0,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
+        call DAXPY(ldim*ldim*nspin*nat,-gamma0,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
      end if
   end do
   !
@@ -317,8 +317,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   else
      inext=iter-((iter-1)/n_iter)*n_iter
      if (lda_plus_u) then
-        call DCOPY(nat*nspin*ldim*ldim,nsoutsave,1,df_ns(1,1,1,1,inext),1)
-        call DCOPY(nat*nspin*ldim*ldim,nsinsave ,1,dv_ns(1,1,1,1,inext),1)
+        call DCOPY(ldim*ldim*nspin*nat,nsoutsave,1,df_ns(1,1,1,1,inext),1)
+        call DCOPY(ldim*ldim*nspin*nat,nsinsave ,1,dv_ns(1,1,1,1,inext),1)
         deallocate (nsinsave, nsoutsave)
      end if
      call DCOPY(2*ngm0*nspin,rhoutsave,1,df(1,inext),1)
@@ -346,7 +346,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      call DAXPY(nrxx,1.d0,psic,2,rhoin(1,is),1)
   end do
-  if (lda_plus_u) call DAXPY(nat*nspin*ldim*ldim,alphamix,nsout,1,nsin,1)
+  if (lda_plus_u) call DAXPY(ldim*ldim*nspin*nat,alphamix,nsout,1,nsin,1)
 
   ! - clean up
 
@@ -423,8 +423,8 @@ function ns_dot_product (ns1,ns2)
   !
   real (kind=DP) :: ns_dot_product ! (out) the function value
 
-  real (kind=DP) :: ns1(nat,nspin,2*Hubbard_lmax+1,2*Hubbard_lmax+1), &
-                    ns2(nat,nspin,2*Hubbard_lmax+1,2*Hubbard_lmax+1) 
+  real (kind=DP) :: ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
+                    ns2(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
                     ! (in) the two ns 
   !
   ! and the local variables
@@ -442,7 +442,7 @@ function ns_dot_product (ns1,ns2)
         do is = 1,nspin
            do m1 = 1, 2 * Hubbard_l(nt) + 1
               do m2 = m1, 2 * Hubbard_l(nt) + 1
-                 sum = sum + ns1(na,is,m1,m2)*ns2(na,is,m2,m1)
+                 sum = sum + ns1(m1,m2,is,na)*ns2(m2,m1,is,na)
               enddo
            enddo
         end do
