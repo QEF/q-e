@@ -43,6 +43,7 @@ SUBROUTINE potinit()
   ! ... local variables
   !
   REAL (KIND=DP) :: charge               ! the starting charge
+  REAL (KIND=DP) :: etotefield           ! 
   INTEGER        :: ios
   INTEGER        :: ldim                 ! integer variable for I/O control
   LOGICAL        :: exst 
@@ -85,7 +86,7 @@ SUBROUTINE potinit()
         !
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, charge, vr )
+                       ehart, etxc, vtxc, etotefield, charge, vr )
         !       
         IF ( ABS( charge - nelec ) / charge > 1.0D-4 ) &
            WRITE( stdout, '(/5X,"starting charge =",F10.5)') charge
@@ -163,7 +164,7 @@ SUBROUTINE potinit()
      !
      CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                    ehart, etxc, vtxc, charge, vr )
+                    ehart, etxc, vtxc, etotefield, charge, vr )
      !   
      IF ( ABS( charge - nelec ) / charge > 1.0D-4 ) &
           WRITE( stdout, '(/5X,"starting charge =",F10.5)') charge

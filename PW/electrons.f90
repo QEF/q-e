@@ -88,6 +88,7 @@ SUBROUTINE electrons()
       ehart_new,     &!
       etxc_new,      &!
       vtxc_new,      &!
+      etotefield_new, &!
       charge_new      !
   REAL (KIND=DP) :: &
       ethr_min        ! minimal threshold for diagonalization at the first scf
@@ -257,7 +258,7 @@ SUBROUTINE electrons()
      !
      CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                    ehart, etxc, vtxc, charge, vnew )
+                    ehart, etxc, vtxc, etotefield, charge, vnew )
      !
      CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
                    deband, nspin )
@@ -318,7 +319,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                          ehart, etxc, vtxc, charge, vnew )
+                          ehart, etxc, vtxc, etotefield, charge, vnew )
            !
            CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
                          deband, nspin )              
@@ -341,7 +342,8 @@ SUBROUTINE electrons()
         !
         CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart_new, etxc_new, vtxc_new, charge_new, vr )
+                       ehart_new, etxc_new, vtxc_new, etotefield_new, &
+                       charge_new, vr )
         !
      ELSE 
         !
@@ -453,7 +455,11 @@ SUBROUTINE electrons()
         !  
         IF ( imix >= 0 ) THEN
            !
-           WRITE( stdout, 9081 ) etot, dr2
+           if (dr2>1.d-8) then
+              WRITE( stdout, 9081 ) etot, dr2
+           else
+              WRITE( stdout, 9083 ) etot, dr2
+           endif
            !
         ELSE
            !
@@ -472,7 +478,11 @@ SUBROUTINE electrons()
         !
         IF ( imix >= 0 ) THEN
            !   
-           WRITE( stdout, 9081 ) etot, dr2
+           if (dr2>1.d-8) then
+              WRITE( stdout, 9081 ) etot, dr2
+           else
+              WRITE( stdout, 9083 ) etot, dr2
+           endif
            !   
         ELSE
            !   
@@ -484,7 +494,11 @@ SUBROUTINE electrons()
         !
         IF ( imix >=  0 ) THEN
            !   
-           WRITE( stdout, 9080 ) etot, dr2
+           if (dr2>1.d-8) then
+              WRITE( stdout, 9080 ) etot, dr2
+           else
+              WRITE( stdout, 9082 ) etot, dr2
+           endif
            !   
         ELSE
            !   
@@ -559,6 +573,10 @@ SUBROUTINE electrons()
             /'     estimated scf accuracy    <',0PF15.8,' ryd')
 9081 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',0PF15.8,' ryd')
+9082 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
+            /'     estimated scf accuracy    <',1PE15.1,' ryd')
+9083 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
+            /'     estimated scf accuracy    <',1PE15.1,' ryd')
 9085 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
             /'     potential mean squ. error =',1PE15.1,' ryd^2')
 9086 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &

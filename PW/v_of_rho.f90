@@ -9,7 +9,7 @@
 !--------------------------------------------------------------------
 subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
      nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-     ehart, etxc, vtxc, charge, v)
+     ehart, etxc, vtxc, etotefield, charge, v)
   !--------------------------------------------------------------------
   !
   !     This routine computes the Hartree and Exchange and Correlation
@@ -35,7 +35,8 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   ! input: correspondence G <-> FFT
   ! input: first nonzero G-vector
   real(kind=DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
-       gg (ngm), alat, omega, vtxc, etxc, ehart, charge, v (nrxx, nspin)
+       gg (ngm), alat, omega, vtxc, etxc, ehart, charge, etotefield, &
+       v (nrxx, nspin)
   ! input: the valence charge
   ! input: the core charge
   ! input: the G vectors
@@ -63,7 +64,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
        nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, v)
   !
   do is=1,nspin
-     call add_efield(v(1,is))
+     call add_efield(rho,v(1,is),etotefield)
   enddo
   call stop_clock ('v_of_rho')
   return

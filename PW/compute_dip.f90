@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine compute_dip(dip, dipion, z0)
+subroutine compute_dip(rho, dip, dipion, z0)
   !
   ! This routine computes the integral 1/Omega \int \rho(r) r d^3r 
   ! and gives as output the projection of the dipole in the direction of
@@ -19,19 +19,25 @@ subroutine compute_dip(dip, dipion, z0)
   USE cell_base, ONLY : alat, at, bg, omega
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho
   USE extfield, ONLY: edir
 #ifdef __PARA
   use para
 #endif
   implicit none
-  real(kind=dp) :: dip, dipion
+!
+! I/O variables
+!
+  real(kind=dp) :: rho(nrxx,nspin)
+  real(kind=dp) :: dip, dipion,z0
+!
+! local variables
+!
   real(kind=dp), allocatable :: rrho (:), aux(:), rws(:,:)
   real(kind=dp) :: dipol_ion(3), dipol(3)
 
   integer:: ipol, i, j, k, i1, j1, k11, na, is, ir
   integer:: nrws, nrwsx
-  real(kind=dp) :: deltax, deltay, deltaz, rijk(3), bmod, proj, x0(3), z0
+  real(kind=dp) :: deltax, deltay, deltaz, rijk(3), bmod, proj, x0(3)
   real(kind=dp) :: weight, wsweight
   !
   !  calculate ionic dipole

@@ -130,6 +130,7 @@ SUBROUTINE extrapolate_charge( rho_order )
   USE scf,           ONLY : rho, rho_core, vr
   USE control_flags, ONLY : alpha0, beta0, imix
   USE ener,          ONLY : ehart, etxc, vtxc
+  USE extfield,      ONLY : etotefield
   USE cellmd,        ONLY : lmovecell, omega_old
   USE vlocal,        ONLY : strf
   USE io_files,      ONLY : prefix
@@ -246,7 +247,7 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                  nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                 ehart, etxc, vtxc, charge, vr )
+                 ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... write potential (and rho) on file
   !

@@ -14,7 +14,7 @@
 !
 !
 !--------------------------------------------------------------------------
-  subroutine add_efield(vpoten)
+  subroutine add_efield(rho,vpoten,etotefield)
 !--------------------------------------------------------------------------
 !
 !   This routine adds an electric field to the local potential. The
@@ -40,11 +40,12 @@
     USE basis, ONLY : nat, ityp, zv
     USE cell_base, ONLY : alat, bg, omega
     USE extfield, ONLY: tefield, dipfield, edir, eamp, emaxpos, eopreg, &
-         etotefield, forcefield
+                        forcefield
     USE force_mod, ONLY: lforce
     USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE io_global,  ONLY : stdout
     USE control_flags, ONLY: mixing_beta
+    USE lsda_mod, ONLY: nspin
 #ifdef __PARA
     USE mp_global,     ONLY : intra_image_comm
     use para
@@ -52,17 +53,24 @@
 #endif
 
   implicit none
-
+!
+! I/O variables
+!
+  real(kind=dp) :: rho(nrxx,nspin) ! the density whose dipole is computed
+  real(kind=dp) :: vpoten(nrxx) ! the ef is added to this potential
+  real(kind=dp) :: etotefield   ! the contribution to etot due to ef
+!
+! local variables
+!
   integer :: npoints, nmax, ndesc
   integer :: ii, ij, ik, itmp, ir, izlb, izub, na, ipol, n3
   real(kind=dp) :: length, vamp, value
   real(kind=dp), parameter :: eps=1.d-8
-  real(kind=dp) :: vpoten(nrxx) ! the ef is added to this potential
-  real(kind=dp) :: dip, dipion, bmod, z0, dipold
+  real(kind=dp) :: dip, dipion, bmod, z0
   real(kind=dp) :: deltal
 
   logical :: first=.true.
-  save first, dipold
+  save first
 
 #ifndef __PARA
   integer me, npp(1)
@@ -104,17 +112,8 @@
   z0=z0/alat
 
   if (first.and.dipfield) z0=0.d0
-  call compute_dip(dip,dipion,z0)
+  call compute_dip(rho,dip,dipion,z0)
 !
-!  This is used to reach self-consistency. Mixing the dipole field improves
-!  convergence. 
-!
-  if (first) then
-     dipold=dip
-  else
-     dip=dip*mixing_beta+dipold*(1.d0-mixing_beta)
-     dipold=dip
-  endif
 #ifdef __PARA
   call mp_bcast(dip,0,intra_image_comm)
 #endif

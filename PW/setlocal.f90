@@ -15,12 +15,13 @@ subroutine setlocal
 #include "machine.h"
   USE kinds, ONLY: DP
   USE basis,  ONLY: ntyp
-  USE extfield, ONLY: tefield, dipfield
+  USE extfield, ONLY: tefield, dipfield, etotefield
   USE gvect,  ONLY: igtongl
   USE scf,    ONLY: vltot
   USE vlocal, ONLY : strf, vloc
   USE wvfct,  ONLY: gamma_only
   USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, ngm
+  USE scf,    ONLY: rho
   implicit none
   complex(kind=DP), allocatable :: aux (:)
   ! auxiliary variable
@@ -55,7 +56,9 @@ subroutine setlocal
 !
 
   if (tefield.and.(.not.dipfield)) then
-     call add_efield(vltot)
+     call add_efield(rho,vltot,etotefield)
+! NB rho is not actually used by add_efield in this case ...
+!    it should be fixed and removed from this routine
   endif
 
   deallocate(aux)

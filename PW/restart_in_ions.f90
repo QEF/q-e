@@ -33,7 +33,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! check for number of atoms
   logical :: exst
 
-  real(kind=DP) :: dr2, charge
+  real(kind=DP) :: dr2, charge, etotefield
   call seqopn (iunres, 'restart', 'unformatted', exst)
 
   if (.not.exst) goto 10
@@ -69,7 +69,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, charge, psic)
+       ehart, etxc, vtxc, etotefield, charge, psic)
   !
   !  restart procedure completed
   !
