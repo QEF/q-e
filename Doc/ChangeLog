@@ -1,4 +1,29 @@
-27 Sep 2004 suport for alpha-linux with compaq compiler (Axel)
+27 Sep 2004 support for alpha-linux with compaq compiler 
+             PBC used in "cubefile" format (Axel)
+            Bug in Modules/cell_base.f90 (dt2 not defined) fixed
+            Bug in CPV/wf.f90 (iss2 not defined) temporarily fixed
+            shmem_include only used if __SHMEM macro is defined
+            More mergings between CPV and FPMD (init, grids setup)
+            (CC)
+            References to para module replaced (everywhere in PW ) by 
+            references to mp_global, pfft, pffts.
+            Old parallel variables me and mypool have been replaced by
+            me_pool ( = ( me - 1 ) ) and my_pool_id ( = ( mypool - 1) ), 
+            defined in mp_global.
+            The old combination ( me == 1 .AND. mypool == 1 ) used in the I/O
+            should be replaced by the logical variable ionode.
+            All parallel variables (communicators included) are properly defined
+            in the serial case too, so that "#ifdef __PARA" is not needed.
+            (C.S.)
+            Fourier String Method Dynamics improved: the number of fourier
+            modes used to represent the path are gradually included (starting 
+            from one up to num_of_images-2), so that the overall number of scf
+            loops needed to reach convergence is considerably reduced (of a
+            factor of 2-3). (C.S.)
+            matdyn.f90, q2r.f90 modified to work in a parallel environment
+            (only the first cpu does the job). (C.S.)
+            Cleanup in phonon: variable max_time replaced by max_seconds.
+            Doc updated (C.S.)
 
 24 Sep 2004 atomic_number : patch from Axel, fixes the case of 
             atomic symobols with one letter

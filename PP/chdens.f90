@@ -402,7 +402,7 @@ program chdens
      elseif (output_format == 6 ) then
         !
         ! GAUSSIAN CUBE FORMAT
-        call write_cubefile (alat, at, nat, tau, atm, ityp, rhor, &
+        call write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
              nrx1, nrx2, nrx3, ounit)
 
      else

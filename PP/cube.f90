@@ -1,7 +1,7 @@
 !
 ! This file holds gaussian cube generation subroutines.
 ! Adapted by Axel Kohlmeyer from xsf.f90.
-! last update by Axel Kohlmeyer on Sep 19, 2004.
+! last update by Axel Kohlmeyer on Sep 27, 2004.
 !
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -11,21 +11,24 @@
 
 ! -------------------------------------------------------------------
 ! this routine writes a gaussian 98 like formatted cubefile.
-! plain dumping of the density for now. no ups, no extras.
+! atoms outside the supercell are wrapped back according to PBC.
+! plain dumping of the data. no re-gridding or transformation to an
+! orthorhombic box (needed for most .cube aware programs :-/).
 ! -------------------------------------------------------------------
-subroutine write_cubefile (alat, at, nat, tau, atm, ityp,   &
-     &  rho, nrx1, nrx2, nrx3, ounit )
+subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
+     nrx1, nrx2, nrx3, ounit )
+
   USE kinds,  only : DP
 
   implicit none
-  integer          :: nat, ityp (nat), ounit, nrx1, nrx2, nrx3
+  integer          :: nat, ityp(nat), ounit, nrx1, nrx2, nrx3
   character(len=3) :: atm(*)
-  real(kind=DP)    :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3)
+  real(kind=DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nrx1,nrx2,nrx3)
 
   ! --
   integer          :: i, nt, i1, i2, i3, at_num
   integer, external:: atomic_number
-  real(kind=DP)    :: at_chrg
+  real(kind=DP)    :: at_chrg, tpos(3), inpos(3)
 
 !C     WRITE A FORMATTED 'DENSITY-STYLE' CUBEFILE VERY SIMILAR
 !C     TO THOSE CREATED BY THE GAUSSIAN PROGRAM OR THE CUBEGEN UTILITY.
@@ -58,8 +61,12 @@ subroutine write_cubefile (alat, at, nat, tau, atm, ityp,   &
      at_chrg= float(at_num)
      ! at_chrg could be alternatively set to valence charge
      ! positions are in cartesian coordinates and a.u.
-     write(ounit,'(I5,5F12.6)') at_num, at_chrg, &
-          tau(1,i)*alat, tau(2,i)*alat, tau(3,i)*alat
+     !
+     ! wrap coordinates back into cell.
+     tpos = MATMUL( TRANSPOSE(bg), tau(:,i) )
+     tpos = tpos - NINT(tpos - 0.5)
+     inpos = alat * MATMUL( at, tpos )
+     write(ounit,'(I5,5F12.6)') at_num, at_chrg, inpos
   enddo
   
   do i1=1,nrx1
