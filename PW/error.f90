@@ -36,11 +36,11 @@ subroutine errore (routin, messag, ierr)
   integer :: ierr
   ! the error flag
   if (ierr.eq.0) return
-  WRITE( stdout, * ) ' '
-  WRITE( stdout, '(1x,78("%"))')
-  WRITE( stdout , '(5x,"from ",a," : error #",i10)') routin, ierr
-  WRITE( stdout , '(5x,a)') messag
-  WRITE( stdout, '(1x,78("%"))')
+  WRITE( * , * ) ' '
+  WRITE( * , '(1x,78("%"))' )
+  WRITE( * , '(5x,"from ",a," : error #",i10)' ) routin, ierr
+  WRITE( * , '(5x,a)' ) messag
+  WRITE( * , '(1x,78("%"))' )
 #ifdef __PARA
 #ifdef __AIX
   write (0, * ) ' '
