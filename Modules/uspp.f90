@@ -56,6 +56,7 @@ MODULE uspp
   SAVE
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, vkb, dvan, &
        deeq, qq, nhtoj, beta, becsum, deallocate_uspp
+  PUBLIC :: qq_so, dvan_so!!!, deeq_so, 
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
@@ -75,14 +76,21 @@ MODULE uspp
   !
   COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
-       dvan(:,:,:,:),         &! the D functions of the solid
-       deeq(:,:,:,:)           ! the integral of V_eff and Q_{nm}
-  ! NB: dvan and deeq are complex because of spin-orbit
   REAL(KIND=DP), ALLOCATABLE :: &
+       dvan(:,:,:,:),         &! the D functions of the solid
+!!!       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
        becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
+  !
+  COMPLEX(KIND=DP), ALLOCATABLE :: & ! variables for spin-orbit case:
+       qq_so(:,:,:,:),           &! Q_{nm}
+       dvan_so(:,:,:,:),         &! D_{nm}
+       deeq(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
+  !
+  ! In a spin-orbit calculations these variable are complex instead of real;
+  ! qq_so has and additional spin index. In order to avoid to make the code
+  ! more complex or slower, separate variables are defined and used
   !
   REAL(KIND=DP), ALLOCATABLE :: &
        beta(:,:,:)           ! beta functions for CP (without struct.factor)
@@ -246,10 +254,13 @@ CONTAINS
     IF( ALLOCATED( nhtolm ) ) DEALLOCATE( nhtolm )
     IF( ALLOCATED( nhtoj ) ) DEALLOCATE( nhtoj )
     IF( ALLOCATED( vkb ) ) DEALLOCATE( vkb )
+    IF( ALLOCATED( becsum ) ) DEALLOCATE( becsum )
     IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
     IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
     IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
-    IF( ALLOCATED( becsum ) ) DEALLOCATE( becsum )
+    IF( ALLOCATED( qq_so ) ) DEALLOCATE( qq_so )
+    IF( ALLOCATED( dvan_so ) ) DEALLOCATE( dvan_so )
+!!    IF( ALLOCATED( deeq_so ) ) DEALLOCATE( deeq_so )
   end subroutine deallocate_uspp
 
 end module uspp

@@ -37,11 +37,11 @@ subroutine init_us_1
   USE pseud, ONLY: lloc, lmax
   USE lsda_mod, ONLY : nspin
   USE us, ONLY: okvan, nqxq, dq, nqx, tab, qrad
-  USE uspp, ONLY: nhtol, nhtoj, nhtolm, dvan, qq, indv
+  USE uspp, ONLY: nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
+	qq_so, dvan_so
   USE uspp_param, ONLY: lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
        kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm
-  USE uspp, ONLY : ap, aainit
-  USE spin_orb, ONLY : lspinorb, rot_ylm, qq_spinorb, fcoef
+  USE spin_orb, ONLY : lspinorb, rot_ylm, fcoef
   implicit none
   !
   !     here a few local variables
@@ -77,13 +77,12 @@ subroutine init_us_1
   allocate (besr( ndm))    
   allocate (qtot( ndm , nbrx , nbrx))    
   allocate (ylmk0( lmaxq * lmaxq))    
-  dvan = 0.d0
-  qq (:,:,:)   = 0.d0
   ap (:,:,:)   = 0.d0
   if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
 
   prefr = fpi / omega
   if (lspinorb) then
+    dvan_so = 0.d0
 !
 !  In the spin-orbit case we need the unitary matrix u which rotates the
 !  real spherical harmonics and yields the complex ones.
@@ -102,7 +101,10 @@ subroutine init_us_1
        rot_ylm(n,n1+1)=dcmplx(0.d0, sqrt2)
      enddo
      fcoef=(0.d0,0.d0)
-     qq_spinorb=(0.d0,0.d0)
+     qq_so=(0.d0,0.d0)
+  else
+     qq (:,:,:)   = 0.d0
+     dvan = 0.d0
   endif
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtolm,
@@ -169,7 +171,8 @@ subroutine init_us_1
               do is1=1,2
                  do is2=1,2
                     ijs=ijs+1
-                    dvan(ih,jh,ijs,nt)=dion(vi,vj,nt)*fcoef(ih,jh,is1,is2,nt)
+                    dvan_so(ih,jh,ijs,nt) = dion(vi,vj,nt) * &
+                                            fcoef(ih,jh,is1,is2,nt)
                     if (vi.ne.vj) fcoef(ih,jh,is1,is2,nt)=(0.d0,0.d0)
                  enddo
               enddo
@@ -283,8 +286,8 @@ subroutine init_us_1
                   do is2=1,2
                     ijs=ijs+1
                     do is=1,2
-                      qq_spinorb(kh,lh,ijs,nt) = qq_spinorb(kh,lh,ijs,nt) &
-                          + omega*DREAL(qgm(1))*fcoef(kh,ih,is1,is,nt)    &
+                      qq_so(kh,lh,ijs,nt) = qq_so(kh,lh,ijs,nt)       &
+                          + omega*DREAL(qgm(1))*fcoef(kh,ih,is1,is,nt)&
                                                *fcoef(jh,lh,is,is2,nt)
                     enddo
                   enddo
@@ -307,7 +310,7 @@ subroutine init_us_1
 #ifdef __PARA
 100 continue
   if (lspinorb) then
-    call reduce ( nhm * nhm * ntyp * 8, qq_spinorb )
+    call reduce ( nhm * nhm * ntyp * 8, qq_so )
   else
     call reduce ( nhm * nhm * ntyp, qq )
   endif

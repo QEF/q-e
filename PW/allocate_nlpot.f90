@@ -34,9 +34,10 @@ subroutine allocate_nlpot
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
   USE us, ONLY: qrad, tab, tab_at, dq, nqx, nqxq
-  USE uspp, ONLY: indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, nhtoj, becsum
+  USE uspp, ONLY: indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, nhtoj, &
+      becsum, qq_so, dvan_so
   USE uspp_param, ONLY: lmaxq, lmaxkb, lll, nbeta, nh, nhm
-  USE spin_orb, ONLY: lspinorb, qq_spinorb, fcoef
+  USE spin_orb, ONLY: lspinorb, fcoef
   implicit none
   !
   !    a few local variables
@@ -83,14 +84,15 @@ subroutine allocate_nlpot
   allocate (nhtol(nhm, ntyp))    
   allocate (nhtolm(nhm, ntyp))    
   allocate (nhtoj(nhm, ntyp))    
-  allocate (qq(   nhm, nhm, ntyp))    
-  allocate (dvan( nhm, nhm, nspin, ntyp))    
   allocate (deeq( nhm, nhm, nat, nspin))    
   if (lspinorb) then
-    allocate (qq_spinorb(nhm, nhm, 4, ntyp))    
+    allocate (qq_so(nhm, nhm, 4, ntyp))    
+    allocate (dvan_so( nhm, nhm, nspin, ntyp))    
     allocate (fcoef(nhm,nhm,2,2,ntyp))
+  else
+    allocate (qq(   nhm, nhm, ntyp))    
+    allocate (dvan( nhm, nhm, nspin, ntyp))    
   endif
-
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
           / dq + 4) * cell_factor

@@ -23,7 +23,7 @@ SUBROUTINE clean_pw()
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, rho_save,vr, vltot, rho_core, vrs
   USE relax,                ONLY : if_pos
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at
   USE uspp,                 ONLY : deallocate_uspp
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
@@ -35,9 +35,9 @@ SUBROUTINE clean_pw()
   USE afftnec,              ONLY : auxp
 #endif  
   USE fft_types,            ONLY : fft_dlay_deallocate
-  USE spin_orb,             ONLY : lspinorb, qq_spinorb, fcoef
+  USE spin_orb,             ONLY : lspinorb, fcoef
   USE constraints_module,   ONLY : constr, target
-
+  USE noncollin_module,     ONLY : deallocate_noncol
   !
   IMPLICIT NONE
   !
@@ -74,6 +74,7 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( vnew ) )       DEALLOCATE( vnew )
   IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
+  IF ( ALLOCATED( psic_nc ) )       DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
   IF ( doublegrid ) THEN
     IF ( ASSOCIATED( nls ) )     DEALLOCATE( nls )
@@ -101,10 +102,12 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   IF (lspinorb) then
-     IF ( ALLOCATED( qq_spinorb ) ) DEALLOCATE( qq_spinorb )
      IF ( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
   END IF
+  !
   call deallocate_uspp () 
+  !
+  call deallocate_noncol () 
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
@@ -112,6 +115,7 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  IF ( ALLOCATED( evc_nc ) )        DEALLOCATE( evc_nc )
   !
 #ifdef __SX6
   !

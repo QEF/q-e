@@ -574,13 +574,6 @@ MODULE spin_orb
                          ! spherical harmonics into complex ones
   COMPLEX (kind=dp), ALLOCATABLE :: fcoef(:,:,:,:,:) ! function needed to
                          ! account for spinors.
-  COMPLEX (kind=dp),ALLOCATABLE :: qq_spinorb(:,:,:,:) ! the qq coefficients
-                         ! in the spin_orbit case. NB: This variable should
-                         ! not be necessary, but to introduce an additional
-                         ! index in any place where qq is used was too
-                         ! cumbersome. As a first step I have introduced
-                         ! another variable with the required index 
-                         ! (ADC 26/3/04)
 END MODULE spin_orb
 !
 

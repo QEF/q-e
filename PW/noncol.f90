@@ -44,4 +44,13 @@ MODULE noncollin_module
       m_loc(:,:)            ! local integrated magnetization
      ! mcons(:,:),           ! constrained values for local variables
   !
+CONTAINS
+  subroutine deallocate_noncol()
+    IF ( ALLOCATED( pointlist) )       DEALLOCATE( pointlist )
+    IF ( ALLOCATED( factlist ) )       DEALLOCATE( factlist )
+    IF ( ALLOCATED( pointnum ) )       DEALLOCATE( pointnum )
+    IF ( ALLOCATED( r_loc    ) )       DEALLOCATE( r_loc )
+    IF ( ALLOCATED( m_loc    ) )       DEALLOCATE( m_loc )
+  end subroutine deallocate_noncol
+  !
 END MODULE noncollin_module
