@@ -138,7 +138,7 @@ subroutine phq_setup
      enddo
   enddo
   !
-  ! 5) Computes the number of occupated bands for each k point
+  ! 5) Computes the number of occupied bands for each k point
   !
   if (degauss.ne.0.d0) then
      !

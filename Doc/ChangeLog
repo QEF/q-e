@@ -1,6 +1,18 @@
+18 Nov 2004 Reduction in memory requirements for phonon calculation
+            with uspp (routine dvanqq) - courtesy of N. Mounet
+
+17 Nov 2004 Cleanup and merge of spherical bessel function routines (C.S.)
+            added script to compute dependencies of a subroutine [Gerardo]
+
+16 Nov 2004 Some non-declared variables explicitly declared (C.S.)
+
 15 Nov 2004 punch_plot can now write the charge density, the total potential
             and V_bare+V_H also in the noncollinear case. (ADC)
             Small update of the documentation in example02. (ADC)
+
+14 Nov 2004 - more FPMD/CP merging
+            - new module for merged FPMD/CP restart subroutines
+            - starting work on XML restart/punchx  (cp_restart.f90)
 
 5 Nov 2004  Fixed a bug in the way tetrahedra variables were read/written
             on the restart file: since tetra is not alway allocated, the

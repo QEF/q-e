@@ -39,8 +39,8 @@ subroutine dvanqq
   ! the spherical harmonics
 
   complex(kind=DP) :: fact, fact1, ZDOTC
-  complex(kind=DP), allocatable :: sk (:), aux1 (:), aux2 (:),&
-       aux3 (:), aux5 (:,:,:), veff (:,:)
+  complex(kind=DP), allocatable :: aux1 (:), aux2 (:),&
+       aux3 (:), aux5 (:), veff (:,:)
   ! work space
   complex(kind=DP), allocatable, target :: qgm(:)
   ! the augmentation function at G
@@ -56,11 +56,10 @@ subroutine dvanqq
   int2(:,:,:,:,:) = (0.d0, 0.d0)
   int4(:,:,:,:,:) = (0.d0, 0.d0)
   int5(:,:,:,:,:) = (0.d0, 0.d0)
-  allocate (sk  (  ngm))    
   allocate (aux1(  ngm))    
   allocate (aux2(  ngm))    
   allocate (aux3(  ngm))    
-  allocate (aux5(  ngm ,nat,  3 ))    
+  allocate (aux5(  ngm))    
   allocate (qmodg( ngm))    
   allocate (veff ( nrxx , nspin))    
   allocate (ylmk0( ngm , lmaxq * lmaxq))    
@@ -101,19 +100,19 @@ subroutine dvanqq
   !     We compute here four of the five integrals needed in the phonon
   !
   fact1 = DCMPLX (0.d0, - tpiba * omega)
-  do na = 1, nat
-     nta = ityp (na)
-     do ig = 1, ngm
-        sk (ig) = vlocq (ig, nta) * eigts1 (ig1 (ig), na) &
-                                  * eigts2 (ig2 (ig), na) &
-                                  * eigts3 (ig3 (ig), na)
-     enddo
-     do ipol = 1, 3
-        do ig = 1, ngm
-           aux5 (ig, na, ipol) = sk (ig) * (g (ipol, ig) + xq (ipol) )
-        enddo
-     enddo
-  enddo
+  !do na = 1, nat
+  !   nta = ityp (na)
+  !   do ig = 1, ngm
+  !      sk (ig) = vlocq (ig, nta) * eigts1 (ig1 (ig), na) &
+  !                                * eigts2 (ig2 (ig), na) &
+  !                                * eigts3 (ig3 (ig), na)
+  !   enddo
+  !   do ipol = 1, 3
+  !      do ig = 1, ngm
+  !         aux5 (ig, na, ipol) = sk (ig) * (g (ipol, ig) + xq (ipol) )
+  !      enddo
+  !   enddo
+  !enddo
   do ntb = 1, ntyp
      if (tvanp (ntb) ) then
         ijh = 0
@@ -143,13 +142,20 @@ subroutine dvanqq
                        !
                        !    nb is the atom of the augmentation function
                        !
+                       nta = ityp (na)
                        do ipol = 1, 3
+                          do ig=1, ngm
+                            aux5(ig)=vlocq(ig,nta)*eigts1(ig1 (ig),na) &
+                                  * eigts2 (ig2 (ig), na) &
+                                  * eigts3 (ig3 (ig), na) &
+                                  * (g (ipol, ig) + xq (ipol) )
+                          enddo
                           int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
-                                ZDOTC (ngm, aux1, 1, aux5(1,na,ipol), 1)
+                                ZDOTC (ngm, aux1, 1, aux5, 1)
                           do jpol = 1, 3
                              if (jpol >= ipol) then
                                 do ig = 1, ngm
-                                   aux3 (ig) = aux5 (ig, na, ipol) * &
+                                   aux3 (ig) = aux5 (ig) * &
                                                (g (jpol, ig) + xq (jpol) )
                                 enddo
                                 int5 (ijh, ipol, jpol, na, nb) = &
@@ -243,7 +249,6 @@ subroutine dvanqq
   deallocate (aux3)
   deallocate (aux2)
   deallocate (aux1)
-  deallocate (sk)
 
   call stop_clock ('dvanqq')
   return
