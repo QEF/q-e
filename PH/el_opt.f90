@@ -17,7 +17,9 @@ subroutine el_opt
   use pwcom
   use phcom
   USE ramanm
+  USE io_global, ONLY: ionode_id
 #ifdef __PARA
+  USE mp, ONLY: mp_bcast
   USE mp_global, ONLY: my_pool_id
 #endif
   implicit none
@@ -141,7 +143,7 @@ subroutine el_opt
 #ifdef __PARA
   call reduce (27, ps3)
 100 continue
-  call poolbcast (27, ps3)
+  call mp_bcast(ps3, ionode_id)
 #endif
 
   call DCOPY (27, elop_ (1,1,1,1), 1, elop_ (1,1,1,2), 1)

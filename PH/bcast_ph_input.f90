@@ -21,6 +21,9 @@ subroutine bcast_ph_input
   use mp, only: mp_bcast
   use io_files
   USE control_flags, only: iverbosity, reduce_io
+  USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
+  USE check_stop, ONLY: time_max => max_seconds
+
 
   implicit none
   integer :: root = 0
