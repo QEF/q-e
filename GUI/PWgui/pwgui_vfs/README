@@ -1,0 +1,6 @@
+
+This directory is used for building a pwgui starkit---a
+self-contained, installation-free StandAlone Runtime TclKIT.
+
+The starkit will be build in ./pwgui.vfs subdirectory.
+

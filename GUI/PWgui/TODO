@@ -1,6 +1,8 @@
-* write help for diago_diis_buff, diago_diis_keep, k_min variables
+* it would be nice to edit the file with editor in $PWD
+
+* write help for diago_diis_buff, diago_diis_keep (no desc. in INPUT_PW)
+
 * write help for OCUUPATIONS card 
-* NEB: button "read coordinates" should be adjusted to NEB specialties
 
 
 
@@ -8,6 +10,7 @@ DONE ------------------------------------------------------------------- DONE
 DONE -----below this point are items that were already implemented------ DONE
 DONE ------------------------------------------------------------------- DONE
 
+* NEB: button "read coordinates" should be adjusted to NEB specialties DONE
 * write fortranreal-to-real translation for cards-input DONE
 * check the modules definition. Instead of -infmt/-outfmt use -validate. DONE.
 * code for A,B,C,COSAB,... DONE.

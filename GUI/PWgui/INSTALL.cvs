@@ -4,8 +4,8 @@
         * * *         from O-sesame CVS repository              * * *
  ==============================================================================
 
-This INSTALL.cvs file is located in O-sesame/GUI/PWgui/
-directory. To "install" the PWgui do the following:
+This INSTALL.cvs file is located in O-sesame/GUI/PWgui/ directory. To
+"install" the PWgui do the following:
 
   (i)   from O-sesame/GUI/PWgui/ directory call: make cvsinit
                                                  ^^^^^^^^^^^^

@@ -1,10 +1,15 @@
+Version: 0.6.2
+* PWgui is available as self-contained, installation-free standalone
+	executable which run out of the box
+* a few small bug fixes
+
 Version: 0.6.1 
 * adding internal EDITOR and PAGER to PWgui (better porting to
-non-unix systems)
+	non-unix systems)
 
 Version: 0.6.0
 * PWgui compatible with PWscf 2.0
 * D3.X module added
 * PWgui is avaiable via anonymous CVS
 * There is now a `NEWS' file (this one), giving a history of
-  user-visible changes.
+	user-visible changes.
