@@ -20,6 +20,7 @@ subroutine phq_readin
   use parameters, only : DP
   use phcom
   use io
+  use control_flags, only : twfcollect
 #ifdef __PARA
   use para
 #endif
@@ -31,9 +32,11 @@ subroutine phq_readin
   ! counter on atoms
   ! counter on types
   character(len=256) :: outdir
+  logical :: wf_collect ! ( see module input_parameters )
   namelist / inputph / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph, &
        maxirr, nat_todo, iverbosity, outdir, epsil, trans, elph, zue, nrapp, &
-       time_max, reduce_io, prefix, fildyn, filelph, fildvscf, fildrho
+       time_max, reduce_io, prefix, fildyn, filelph, fildvscf, fildrho, &
+       wf_collect
   ! tr2_ph   : convergence threshold
   ! amass    : atomic masses
   ! alpha_mix: the mixing parameter
@@ -103,6 +106,9 @@ subroutine phq_readin
 #endif
 
 200 call errore ('phq_readin', 'reading inputph namelist', abs (ios) )
+  !
+  !
+  twfcollect = wf_collect
   !
   !     Check all namelist variables
   !

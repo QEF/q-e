@@ -53,14 +53,25 @@ subroutine openfilq
     ndr      = 4
     kunittmp = 1
 
-#ifdef __PARA
+#  ifdef __PARA
+
     kunittmp = kunit
-#endif
+
+#  endif
+
     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
+
+    if( ierr > 0 ) then
 
 #else
 
-    call errore ('openfilq', 'file '//filint//' not found', 1)
+      call errore ('openfilq', 'file '//filint//' not found', 1)
+
+#endif
+
+#if defined __NEW_PUNCH
+
+    end if
 
 #endif
 

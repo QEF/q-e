@@ -77,6 +77,7 @@
         lberry   = .FALSE.
         gdir     = 0
         nppstr   = 0
+        wf_collect = .FALSE.
         RETURN
       END SUBROUTINE
 
@@ -305,6 +306,7 @@
         CALL mp_bcast( lberry, ionode_id )
         CALL mp_bcast( gdir, ionode_id )
         CALL mp_bcast( nppstr, ionode_id )
+        CALL mp_bcast( wf_collect, ionode_id )
         RETURN
       END SUBROUTINE
 

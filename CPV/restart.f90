@@ -86,7 +86,6 @@ CONTAINS
       REAL(dbl) :: ef, rnel, wfc_scal_cp90
       character(len=4) :: atom_label(nsp)
 
-      LOGICAL :: twrite
       LOGICAL :: tscal
       LOGICAL :: teig
       LOGICAL :: tmill
@@ -143,7 +142,6 @@ CONTAINS
       kunit = 1
       lgauss = .FALSE.
       ltetra = .FALSE.
-      twrite = .TRUE.
       tupf   = .TRUE.
       lgamma = .TRUE.
       tfixed_occ_ = .FALSE.
@@ -153,7 +151,7 @@ CONTAINS
       emaxpos_ = 0.0d0
       eopreg_ = 0.0d0
       eamp_ = 0.0d0
-      CALL write_restart_header(ndw, twrite, nfi, iswitch, trutime, nr1, nr2, nr3, &
+      CALL write_restart_header(ndw, nfi, iswitch, trutime, nr1, nr2, nr3, &
         nr1s, nr2s, nr3s, ng_g, nk, ngwkg, nspin, nbnd, rnel, nelu, &
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
@@ -176,8 +174,7 @@ CONTAINS
       htm = TRANSPOSE(hold) 
       htvel = TRANSPOSE(velh) 
       htm2 = 0.0d0
-      twrite = .TRUE. 
-      CALL write_restart_cell( ndw, twrite, ibrav, celldm, ht, htm, &
+      CALL write_restart_cell( ndw, ibrav, celldm, ht, htm, &
           htm2, htvel, vnhh, xnhh0, xnhhm, hdum)
 
 !     ==--------------------------------------------------------------==
@@ -210,8 +207,7 @@ CONTAINS
       xdum = 0.0d0
       cdmi = 0.0d0
       tscal = .TRUE.
-      twrite = .TRUE. 
-      CALL write_restart_ions(ndw, twrite, atom_label, tscal, stau0, svel0, &
+      CALL write_restart_ions(ndw, atom_label, tscal, stau0, svel0, &
         staum, svelm, tautmp, fiontmp, cdmi, nat, ntyp, ityp, na, mass,     &
         vnhp, xnhp0, xnhpm, xdum)
 
@@ -228,7 +224,7 @@ CONTAINS
 !     ==--------------------------------------------------------------==
 
       DO i = 1, nsp
-!       CALL write_restart_pseudo( ndw, twrite, &
+!       CALL write_restart_pseudo( ndw, &
 !         zmesh_, xmin_, dx_, r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
 !         rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
 !         numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
@@ -254,8 +250,7 @@ CONTAINS
       tocc = .FALSE.
       tlam = .TRUE.
       teig = .FALSE.
-      twrite = .TRUE.
-      CALL write_restart_electrons( ndw, twrite, occ, occ, tocc, lambda, lambdam, &
+      CALL write_restart_electrons( ndw, occ, occ, tocc, lambda, lambdam, &
         nx, tlam, nbnd, ispin, nspin, ik, nk, rnel, nelu, neld, vnhe, xnhe0, xnhem, xdum, &
         ef, teig, eigtmp, eigtmp)
 
@@ -273,8 +268,7 @@ CONTAINS
       END DO
       CALL mp_sum( mill )
       tmill = .TRUE.
-      twrite = .TRUE.
-      CALL write_restart_gvec( ndw, twrite, ng_g, bi1, bi2, bi3, &
+      CALL write_restart_gvec( ndw, ng_g, bi1, bi2, bi3, &
         bi1, bi2, bi3, tmill, mill )
       DEALLOCATE( mill )
 
@@ -290,8 +284,7 @@ CONTAINS
         wk = 1.0d0
         tetra = 0.0d0
         isk = 1
-        twrite = .TRUE.
-        CALL write_restart_gkvec(ndw, twrite, i, nk, ngwkg(i), xk, wk, tetra, isk)
+        CALL write_restart_gkvec(ndw, i, nk, ngwkg(i), xk, wk, tetra, isk)
       END DO
 
 !     ==--------------------------------------------------------------==
@@ -300,13 +293,12 @@ CONTAINS
 
       trho = .FALSE.
       tv   = .FALSE.
-      twrite = .TRUE.
       DO j = 1, nspin
         ALLOCATE( rhog(ng), vg(ng) )
 !        CALL fft_initialize
 !        CALL pfwfft( rhog(:,i), rho(i)%r(:,:,:) )
 !        CALL pfwfft( vg(:,i)  , vpot(:,:,:,i) )
-        CALL write_restart_charge(ndw, twrite, rhog, trho, vg, tv, ng_g, &
+        CALL write_restart_charge(ndw, rhog, trho, vg, tv, ng_g, &
           j, nspin, ig_l2g, ng )
         DEALLOCATE( rhog, vg )
       END DO
@@ -318,14 +310,13 @@ CONTAINS
 
       tw0 = .TRUE.
       twm = .TRUE.
-      twrite = .TRUE.
         
       call invmat3(h,ainv,deth)
       wfc_scal_cp90 = 1.0d0 / SQRT(ABS(deth))
       DO j = 1, nspin
         DO i = 1, nk
           nb_g = nx
-          CALL write_restart_wfc(ndw, twrite, i, nk, kunit, j, nspin, &
+          CALL write_restart_wfc(ndw, i, nk, kunit, j, nspin, &
             wfc_scal_cp90, c0, tw0, cm, twm, ngwt, nb_g, ig_l2g, ngw )
         END DO
       END DO
@@ -419,7 +410,6 @@ CONTAINS
       real(kind=8) :: vnhp_, xnhp0_, xnhpm_
       integer :: strlen, ibrav_, kunit_
       character(len=80) :: filename
-      LOGICAL :: tread
       LOGICAL :: tscal
       LOGICAL :: tmill, tigl, lgamma_
       LOGICAL :: teig, tupf_
@@ -466,8 +456,7 @@ CONTAINS
 !     ==  READ HEADER INFORMATION                                     ==
 !     ==--------------------------------------------------------------==
 
-      tread = .TRUE.
-      CALL read_restart_header( ndr, tread, nfi_, iswitch_, trutime_, &
+      CALL read_restart_header( ndr, nfi_, iswitch_, trutime_, &
         nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, nk_, ngwkg_, nspin_, nbnd_, &
         rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
         alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
@@ -503,8 +492,7 @@ CONTAINS
       hdum = 0.0d0
       htm2 = 0.0d0
         
-      tread = .TRUE.
-      CALL read_restart_cell( ndr, tread, ibrav_, celldm_, ht, htm, &
+      CALL read_restart_cell( ndr, ibrav_, celldm_, ht, htm, &
         htm2, htvel, vnhh, xnhh0, xnhhm, hdum)
 
       h    = TRANSPOSE( ht    ) 
@@ -528,8 +516,7 @@ CONTAINS
 
         xdum = 0.0d0
         cdmi = 0.0d0
-        tread = .TRUE.
-        CALL read_restart_ions(ndr, tread, atom_label, tscal, stau0, svel0, &
+        CALL read_restart_ions(ndr, atom_label, tscal, stau0, svel0, &
           staum, svelm, tautmp, fiontmp, cdmi, nat_, ntyp_, ityp, na_, mass, vnhp_,   &
           xnhp0_, xnhpm_, xdum)
 
@@ -588,8 +575,7 @@ CONTAINS
           tlam = .FALSE.
         END IF
         teig = .FALSE.
-        tread = .TRUE.
-        CALL read_restart_electrons( ndr, tread, occ, occ, tocc, lambda, &
+        CALL read_restart_electrons( ndr, occ, occ, tocc, lambda, &
           lambdam, nx_, tlam, nbnd_, ispin_, nspin_, ik_, nk_, rnel_, nelu_, neld_,    &
           vnhe, xnhe0, xnhem, xdum, ef, teig, eigtmp, eigtmp)
 
@@ -605,9 +591,8 @@ CONTAINS
           mill(:,ig_l2g(i)) = mill_l(:,i)
         END DO
         CALL mp_sum( mill )
-        tread = .TRUE.
         tmill = .FALSE.
-        CALL read_restart_gvec( ndr, tread, ng_g_, bi1_, bi2_, bi3_,  &
+        CALL read_restart_gvec( ndr, ng_g_, bi1_, bi2_, bi3_,  &
           bi1_, bi2_, bi3_, tmill, mill )
         DEALLOCATE( mill )
 
@@ -620,8 +605,7 @@ CONTAINS
           xk(2) = 0.0d0
           xk(3) = 0.0d0
           wk = 1.0d0
-          tread = .TRUE.
-          CALL read_restart_gkvec(ndr, tread, ik_, nk_, ngwkg_(i), &
+          CALL read_restart_gkvec(ndr, ik_, nk_, ngwkg_(i), &
             xk, wk, tetra_, isk_)
         END DO
 
@@ -633,8 +617,7 @@ CONTAINS
         tv   = .FALSE.
         DO j = 1, nspin
           ALLOCATE( rhog(ng), vg(ng) )
-          tread = .TRUE.
-          CALL read_restart_charge(ndr, tread, rhog, trho, vg, tv, ng_g_, &
+          CALL read_restart_charge(ndr, rhog, trho, vg, tv, ng_g_, &
             ispin_, nspin_, ig_l2g, ng )
 !          CALL fft_initialize
 !          CALL pinvfft( vpot(:,:,:,i), rhog(:,i) )
@@ -659,8 +642,7 @@ CONTAINS
         END IF
         DO j = 1, nspin
           DO i = 1, nk
-            tread = .TRUE.
-            CALL read_restart_wfc(ndr, tread, ik_, nk_, kunit_, ispin_, nspin_, &
+            CALL read_restart_wfc(ndr, ik_, nk_, kunit_, ispin_, nspin_, &
               wfc_scal, c0, tw0, cm, twm, ngwt_, nbnd_, ig_l2g, ngw )
           END DO
         END DO

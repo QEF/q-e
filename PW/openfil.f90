@@ -15,8 +15,14 @@ subroutine openfil
   !
   use pwcom
   use io, only: prefix
+  use restart_module, only: readfile_new
+#ifdef __PARA
+  use para
+#endif
   implicit none
   logical :: exst
+  integer :: ndr, kunittmp, ierr
+  real(kind=DP) :: edum(1,1), wdum(1,1)
   !
   !     iunwfc contains the wavefunctions
   !
@@ -32,10 +38,35 @@ subroutine openfil
   nwordwfc = 2 * nbnd * npwx
   !
   call diropn (iunwfc, trim(prefix)//'.wfc', nwordwfc, exst)
+
   if (startingwfc.eq.'file'.and..not.exst) then
-     write (6, '(5x,"Cannot read wfc file: not found")')
-     startingwfc='atomic'
+
+#if defined __NEW_PUNCH
+
+     ndr      = 4
+     kunittmp = 1
+#  ifdef __PARA
+     kunittmp = kunit
+#  endif
+
+     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, nwordwfc, iunwfc, ierr )
+     if ( ierr > 0 ) then
+
+#else
+
+       write (6, '(5x,"Cannot read wfc file: not found")')
+       startingwfc='atomic'
+
+#endif
+
+#if defined __NEW_PUNCH
+
+     end if
+
+#endif
+
   endif
+  !
   !
   ! Needed for LDA+U
   !

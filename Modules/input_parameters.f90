@@ -208,10 +208,18 @@
 
         INTEGER :: nppstr = 0
 
+        LOGICAL :: wf_collect = .FALSE.
+          ! This flag is effective only with PW code, and controls the way 
+          ! in which wave functions are stored to disk, 
+          !  .TRUE.  collect all wave functions and store them in restart file 
+          !          ( .save )
+          !  .FALSE. do not collect wave function they are left in temporary
+          !          local file
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
-          pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr
+          pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, wf_collect
 
 
 !

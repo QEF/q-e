@@ -109,7 +109,9 @@ subroutine iosys
   use wvfct, only: &
      nbnd_ => nbnd
   use fixed_occ, only : &
-      tfixed_occ
+     tfixed_occ
+  use control_flags, only : &
+     twfcollect 
   !
   ! CONTROL namelist
 
@@ -118,7 +120,7 @@ subroutine iosys
        restart_mode, nstep, iprint, tstress, tprnfor, &
        dt, outdir, prefix, max_seconds, &
        etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io, tefield, &
-       dipfield, lberry, gdir, nppstr
+       dipfield, lberry, gdir, nppstr, wf_collect
 
   ! SYSTEM namelist
 
@@ -194,6 +196,8 @@ subroutine iosys
   if (tefield.and.(nspin.eq.2)) then
      call errore('input','LSDA not available with electric field',1)
   endif
+
+  twfcollect = wf_collect
 
   ! ...   Set Values for electron and bands
 

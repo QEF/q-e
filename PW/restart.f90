@@ -137,24 +137,14 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
       twrgvec   = .TRUE.
       twrgkvec  = .TRUE.
       twrchden  = .TRUE.
-      twrwfc    = .TRUE.
-    CASE ( 'wave' )
-      twrwfc    = .TRUE.
+      if( twfcollect ) twrwfc    = .TRUE.
     CASE ( 'config' )
       twrhead   = .TRUE.
       twrxdim   = .TRUE.
       twrcell   = .TRUE.
       twrpos    = .TRUE.
     CASE DEFAULT
-      twrhead   = .TRUE.
-      twrxdim   = .TRUE.
-      twrcell   = .TRUE.
-      twrpos    = .TRUE.
-      twrsym    = .TRUE.
-      twrpseudo = .TRUE.
-      twrocc    = .TRUE.
-      twrgvec   = .TRUE.
-      twrgkvec  = .TRUE.
+      CALL errore( ' writefile_new ', ' unknown value for what ', 1 )
   END SELECT
 
 
@@ -224,20 +214,28 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    ! tupf = .TRUE.  ! the pseudopotential are saved in UPF format
    lgamma = gamma_only
 
-   CALL write_restart_header(ndw, twrhead, istep, iswitch, trutime, nr1, nr2, nr3, &
-     nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
-     nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
-     kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-     natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
-     title, crystal, tmp_dir, tupf, lgamma, &
-     tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
+   if( twrhead ) then
+     CALL write_restart_header(ndw, istep, iswitch, trutime, nr1, nr2, nr3, &
+       nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
+       nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
+       kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
+       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
+       title, crystal, tmp_dir, tupf, lgamma, &
+       tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
+   else
+     CALL write_restart_header(ndw)
+   end if
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==
 !  ==--------------------------------------------------------------==
 
-   CALL write_restart_xdim( ndw, twrxdim,  &
-      npwx, nbndx, nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs )
+   if( twrxdim ) then
+     CALL write_restart_xdim( ndw, &
+       npwx, nbndx, nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs )
+   else
+     CALL write_restart_xdim( ndw )
+   end if
 
 !  ==--------------------------------------------------------------==
 !  ==  CELL & METRIC                                               ==
@@ -251,8 +249,12 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    htm = ht0
    htm2 = ht0
    htvel = 0.0d0
-   CALL write_restart_cell( ndw, twrcell, ibrav, celldm, ht0, htm, &
+   if( twrcell ) then
+     CALL write_restart_cell( ndw, ibrav, celldm, ht0, htm, &
           htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2)
+   else
+     CALL write_restart_cell( ndw )
+   end if
 
 !  ==--------------------------------------------------------------==
 !  ==  IONS                                                        ==
@@ -279,9 +281,13 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    cdmi = 0.0d0
    tscal = .FALSE.
 
-   CALL write_restart_ions(ndw, twrpos, atm, tscal, stau0, svel0, &
-     staum, svelm, tautmp, force, cdmi, nat, ntyp, ityp, na, amass, xnosp,  &
-     xnos0, xnosm, xnosm2)
+   if( twrpos ) then
+     CALL write_restart_ions(ndw, atm, tscal, stau0, svel0, &
+       staum, svelm, tautmp, force, cdmi, nat, ntyp, ityp, na, amass, xnosp,  &
+       xnos0, xnosm, xnosm2)
+   else
+     CALL write_restart_ions(ndw)
+   end if
 
    DEALLOCATE( stau0, svel0, staum, svelm, tautmp )
 
@@ -290,7 +296,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 !  ==--------------------------------------------------------------==
 
    IF( twrsym ) THEN
-     CALL write_restart_symmetry( ndw, twrsym,  &
+     CALL write_restart_symmetry( ndw, &
         symm_type, sname, s, irt, nat, ftau, nsym, invsym, noinv )
    ELSE
      CALL write_restart_symmetry( ndw )
@@ -318,7 +324,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
          call read_pseudo_upf(iunps, upf, ierr)
 
-         CALL write_restart_pseudo( ndw, twrpseudo, &
+         CALL write_restart_pseudo( ndw, &
            upf%generated, upf%date_author, upf%comment, upf%psd, upf%typ, upf%tvanp,  &
            upf%nlcc, upf%dft, upf%zp, upf%etotps, upf%ecutwfc, upf%ecutrho, upf%nv,   &
            upf%lmax, upf%mesh, upf%nwfc, upf%nbeta, upf%els(:), upf%lchi(:), upf%oc(:), &
@@ -329,7 +335,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          CALL deallocate_pseudo_upf( upf )
          close( iunps )
        ELSE
-         CALL write_restart_pseudo( ndw, twrpseudo, &
+         CALL write_restart_pseudo( ndw, &
            zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
@@ -363,7 +369,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        ALLOCATE( lambda(1,1) )
        occtmp = 0.0d0
        ispin = isk( ik )
-       CALL write_restart_electrons( ndw, twrocc, occtmp, occtmp, tocc, lambda, lambda, &
+       CALL write_restart_electrons( ndw, occtmp, occtmp, tocc, lambda, lambda, &
          ldim, tlam, nbnd, ispin, nspin, ik, nkstot, nelec, nelu, neld, &
          xenosp, xenos0, xenosm, xenosm2, &
          ef, teig, et_g(:,ik), wg_g(:,ik) )
@@ -385,7 +391,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
      bg1_ = bg(:,1) 
      bg2_ = bg(:,2)
      bg3_ = bg(:,3)
-     CALL write_restart_gvec( ndw, twrgvec, ngm_g, bg1_, bg2_, bg3_, &
+     CALL write_restart_gvec( ndw, ngm_g, bg1_, bg2_, bg3_, &
        bg1_, bg2_, bg3_, tmill, mill )
      DEALLOCATE( mill )
    ELSE
@@ -404,7 +410,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          tetratmp = 0
        END IF
        npwt = npwx
-       CALL write_restart_gkvec(ndw, twrgkvec, ik, nkstot, ngk_g(ik), &
+       CALL write_restart_gkvec(ndw, ik, nkstot, ngk_g(ik), &
          xk(:,ik), wk(ik), tetratmp, isk(ik))
      ELSE
        CALL write_restart_gkvec( ndw )
@@ -425,7 +431,6 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
    IF( twrwfc ) THEN
 
-     twrite = .TRUE.
      twf0   = .TRUE.
      twfm   = .FALSE.
      wfc_scal = 1.0d0
@@ -439,7 +444,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        END IF
        ispin = isk( ik )
        ! write(6,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
-       CALL write_restart_wfc(ndw, twrite, ik, nkstot, kunit, ispin, nspin, &
+       CALL write_restart_wfc(ndw, ik, nkstot, kunit, ispin, nspin, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), ngk(ik-iks+1) )
 
      END DO
@@ -514,7 +519,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   integer, intent(inout) :: kunit
   !
   !
-  logical :: tovrw, exst
+  logical :: exst
   real(kind=DP), allocatable :: stau0(:,:), staum(:,:), amass_(:)
   real(kind=DP), allocatable :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
   real(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
@@ -600,12 +605,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
       trdgkvec  = .TRUE.
       trdchden  = .TRUE.
       trdwfc    = .TRUE.
-    CASE ( 'wave' )
-      trdwfc    = .TRUE.
-    CASE ( 'dim' )
-      trdhead   = .TRUE.
-      trdxdim   = .TRUE.
-    CASE DEFAULT
+    CASE ( 'nowave' )
       trdhead   = .TRUE.
       trdxdim   = .TRUE.
       trdcell   = .TRUE.
@@ -615,6 +615,14 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
       trdocc    = .TRUE.
       trdgvec   = .TRUE.
       trdgkvec  = .TRUE.
+      trdchden  = .TRUE.
+    CASE ( 'wave' )
+      trdwfc    = .TRUE.
+    CASE ( 'dim' )
+      trdhead   = .TRUE.
+      trdxdim   = .TRUE.
+    CASE DEFAULT
+      CALL errore( ' writefile_new ', ' unknown value for what ', 1 )
   END SELECT
 
 
@@ -625,7 +633,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
    IF( trdhead ) THEN
 
-     CALL read_restart_header(ndr, trdhead, istep, iswitch, trutime_, nr1, nr2, nr3, &
+     CALL read_restart_header(ndr, istep, iswitch, trutime_, nr1, nr2, nr3, &
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu_, &
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
@@ -686,8 +694,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
    IF( trdxdim ) THEN
 
-     CALL read_restart_xdim( ndr, trdxdim, &
-        npwx, nbndx, nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs )
+     CALL read_restart_xdim( ndr, npwx, nbndx, nrx1, nrx2, nrx3, &
+       nrxx, nrx1s, nrx2s, nrx3s, nrxxs )
 
    ELSE
 
@@ -703,7 +711,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
    IF( trdcell ) THEN
 
-     CALL read_restart_cell( ndr, trdcell, ibrav, celldm, ht0, htm, &
+     CALL read_restart_cell( ndr, ibrav, celldm, ht0, htm, &
           htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2)
 
      at = TRANSPOSE( ht0 / alat )
@@ -734,7 +742,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      ALLOCATE( ityp_(nat) )
      ALLOCATE( amass_(ntyp) )
 
-     CALL read_restart_ions(ndr, trdpos, atom_label(1:ntyp), tscal, stau0, svel0, &
+     CALL read_restart_ions(ndr, atom_label(1:ntyp), tscal, stau0, svel0, &
        staum, svelm, tautmp, force_, cdmi, nat_, ntyp_, ityp_, na_, amass_, xnosp,  &
        xnos0, xnosm, xnosm2)
      !
@@ -759,7 +767,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 !  ==--------------------------------------------------------------==
 
    if( trdsym ) then
-     CALL read_restart_symmetry( ndr, trdsym, &
+     CALL read_restart_symmetry( ndr, &
         symm_type, sname, s, irt, nat_, ftau, nsym, invsym, noinv )
    else
      CALL read_restart_symmetry( ndr )
@@ -768,8 +776,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 !  ==--------------------------------------------------------------==
 !  ==  PSEUDOPOTENTIALS                                            ==
 !  ==--------------------------------------------------------------==
-
-   tovrw = .TRUE.
 
    DO i = 1, ntyp
 
@@ -784,7 +790,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
             upf%qfunc( 0:ndm, 1:nbrx, 1:nbrx ), upf%qfcoef( 1:nqfm, 1:lqmax, 1:nbrx, 1:nbrx ), &
             upf%chi( 0:ndm, nchix ), upf%rho_at( 0:ndm ) )
 
-         CALL read_restart_pseudo( ndr, trdpseudo, &
+         CALL read_restart_pseudo( ndr, &
            upf%generated, upf%date_author, upf%comment, upf%psd, upf%typ, upf%tvanp,  &
            upf%nlcc, upf%dft, upf%zp, upf%etotps, upf%ecutwfc, upf%ecutrho, upf%nv,   &
            upf%lmax, upf%mesh, upf%nwfc, upf%nbeta, upf%els, upf%lchi, upf%oc, &
@@ -807,7 +813,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
        else
 
-         CALL read_restart_pseudo( ndr, trdpseudo, &
+         CALL read_restart_pseudo( ndr, &
            zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
@@ -827,11 +833,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
    END DO
 
-!   IF( what == 'nowave' ) THEN
-!     CALL mp_end()
-!     stop 'qui'
-!   END IF
-
 !  ==--------------------------------------------------------------==
 !  ==  OCCUPATION NUMBER                                           ==
 !  ==--------------------------------------------------------------==
@@ -846,8 +847,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        ALLOCATE( occtmp(nbnd) )
        ALLOCATE( lambda(1,1) )
        occtmp = 0.0d0
-       CALL read_restart_electrons( ndr, trdocc, &
-         occtmp, occtmp, tocc, lambda, lambda, &
+       CALL read_restart_electrons( ndr, occtmp, occtmp, tocc, lambda, lambda, &
          ldim, tlam, nbnd_, ispin_, nspin_, ik_, nkstot_, nelec_, nelu_, neld_, &
          xenosp_, xenos0_, xenosm_, xenosm2_, ef, teig, et_g(:,ik), wg_g(:,ik) )
        DEALLOCATE( occtmp )
@@ -865,7 +865,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      ALLOCATE( mill(3,1) )
      mill = 0
      tmill = .FALSE.
-     CALL read_restart_gvec( ndr, trdgvec, &
+     CALL read_restart_gvec( ndr, &
        ngm_g, bg_(:,1), bg_(:,2), bg_(:,3), bg_(:,1), bg_(:,2), bg_(:,3), tmill, mill )
      DEALLOCATE( mill )
    ELSE
@@ -878,7 +878,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
    DO ik = 1, nkstot
      IF ( trdgkvec ) THEN
-       CALL read_restart_gkvec(ndr, trdgkvec, &
+       CALL read_restart_gkvec(ndr, &
          ik_, nkstot_, ngk_g(ik), xk(:,ik), wk(ik), tetratmp, isk(ik))
        IF( ltetra ) THEN
          tetra(:,ik) = tetratmp
@@ -934,7 +934,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
    END IF
 
-   tovrw  = .FALSE.
    twf0   = .TRUE.
    twfm   = .FALSE.
    tigl   = .FALSE.
@@ -969,15 +968,18 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
        CALL mp_bcast( npw_g, ipdest )
 
-       CALL read_restart_wfc(ndr, trdwfc, ik, nkstot, kunit, ispin_, nspin_, &
+       CALL read_restart_wfc(ndr, ik, nkstot, kunit, ispin_, nspin_, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd_, igk_l2g(:,ik-iks+1), npw )
 
-       ! WRITE(6,*) ' *** DEBUG readfile ', evc(1,1), nsizwfc, iunitwfc, (ik-iks+1)
-       IF( (ik >= iks) .AND. (ik <= ike) ) THEN
-         IF( wfc_scal /= 1.0d0 ) THEN
-           CALL DSCAL( 2*nsizwfc, wfc_scal, evc, 1)
+       IF( twf0 ) THEN
+         IF( (ik >= iks) .AND. (ik <= ike) ) THEN
+           IF( wfc_scal /= 1.0d0 ) THEN
+             CALL DSCAL( 2*nsizwfc, wfc_scal, evc, 1)
+           END IF
+           call davcio (evc(1,1), nsizwfc, iunitwfc, (ik-iks+1), 1)
          END IF
-         call davcio (evc(1,1), nsizwfc, iunitwfc, (ik-iks+1), 1)
+       ELSE
+         ierr = 1
        END IF
 
      ELSE
@@ -1023,21 +1025,17 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
 
   use parameters, only: nacx, nsx
 
-#ifdef __PARA
-  use para, only: nproc
-#endif
-
   implicit none
   !
   integer, intent(in) :: ndr
-  integer, intent(out) :: ibrav, nat, ierr
+  integer, intent(out)       :: ibrav, nat, ierr
   real(kind=DP), intent(out) :: alat, at(:,:), tau(:,:)
   !
-  logical :: tread, tovrw, exst
+  logical :: tread, exst
   real(kind=DP), allocatable :: stau0(:,:), staum(:,:), amass_(:)
   real(kind=DP), allocatable :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
   real(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
-  character(len=4) :: atom_label(nsx)
+  character(len=4) :: atom_label( nsx )
   real(kind=DP), dimension(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
   logical :: tscal
   real(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
@@ -1053,7 +1051,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   real(kind=DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
   real(kind=DP) :: degauss_, gcutm_, gcutms_, dual_
   real(kind=DP) :: acc_(nacx)
-  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf, lgamma
+  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, lgamma_
   character(len=80) :: title_, crystal_, tmp_dir_
 
   real(kind=DP) :: celldm_(6)
@@ -1068,19 +1066,25 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   ! ... end of declarations
   !
   !
+  !  read configuration from .save file
+  !
   ierr = 0
-  filename = trim(prefix)//'.save'
+  filename = trim( prefix )//'.save'
   write (6, '(/,5x,"Reading file ",a14)') filename
   !
   if( ionode ) THEN
     call seqopn (ndr, filename, 'unformatted', exst)
-    if (.not.exst) then
+    if ( .not. exst ) then
        close (unit = ndr, status = 'delete')
        ierr = 1
     endif
     rewind ndr
   end if
   call mp_bcast( ierr, ionode_id )
+  !
+  !  if the file is not present or unreadable
+  !  return immediately
+  !
   if( ierr /= 0 ) then
     return
   end if
@@ -1089,22 +1093,19 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
 !  ==  HEADER INFORMATION                                          ==
 !  ==--------------------------------------------------------------==
 
-   tread = .TRUE.
-
-   CALL read_restart_header(ndr, tread, istep_, iswitch_, trutime_, nr1_, nr2_, nr3_, &
+   CALL read_restart_header(ndr, istep_, iswitch_, trutime_, nr1_, nr2_, nr3_, &
      nr1s_, nr2s_, nr3s_, ngmg_, nkstot_, ngk_g, nspin_, nbnd_, nelec_, nelu_, &
      neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
      kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, ntetra_, ltetra_, &
      natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, lforce_, &
-     title_, crystal_, tmp_dir_, tupf, lgamma, &
+     title_, crystal_, tmp_dir_, tupf_, lgamma_, &
      tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==
 !  ==--------------------------------------------------------------==
 
-   tread = .TRUE.
-   CALL read_restart_xdim( ndr, tread, &
+   CALL read_restart_xdim( ndr, &
       npwx_, nbndx_, nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_ )
 
 
@@ -1112,15 +1113,12 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
 !  ==  CELL & METRIC                                               ==
 !  ==--------------------------------------------------------------==
 
-   tread = .TRUE.
-   CALL read_restart_cell( ndr, tread, ibrav_, celldm_, ht0, htm, &
+   CALL read_restart_cell( ndr, ibrav_, celldm_, ht0, htm, &
           htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2)
 
 !  ==--------------------------------------------------------------==
 !  ==  IONS                                                        ==
 !  ==--------------------------------------------------------------==
-
-   tread = .TRUE.
 
    ALLOCATE( stau0(3, nat_) )
    ALLOCATE( staum(3, nat_) )
@@ -1131,7 +1129,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
    ALLOCATE( ityp_(nat_) )
    ALLOCATE( amass_(ntyp_) )
 
-   CALL read_restart_ions(ndr, tread, atom_label(1:ntyp_), tscal, stau0, svel0, &
+   CALL read_restart_ions(ndr, atom_label(1:ntyp_), tscal, stau0, svel0, &
      staum, svelm, tautmp, force_, cdmi, nat_, ntyp_, ityp_, na_, amass_, xnosp,  &
      xnos0, xnosm, xnosm2)
 
