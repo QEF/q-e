@@ -925,8 +925,6 @@ MODULE read_namelists_module
        IF( ekincw <= 0.0d0 ) &
           CALL errore( sub_name, ' ekincw less or equal 0 ',-1)
        IF( prog == 'FP' ) THEN
-          IF( grease /= 0.0d0 ) &
-             CALL errore( sub_name, ' grease not used in FPMD ',-1)
           IF( twall ) &
              CALL errore( sub_name, ' twall not used in FPMD ',-1)
        END IF
@@ -1056,10 +1054,6 @@ MODULE read_namelists_module
        IF( prog == 'FP' ) THEN
           IF( temph /= 0.0d0 ) &
              CALL errore( sub_name,' temph not used in FPMD ',-1)
-          IF( fnoseh /= 0.0d0 ) &
-             CALL errore( sub_name,' fnoseh not used in FPMD ',-1)
-          IF( greash /= 0.0d0 ) &
-             CALL errore( sub_name,' greash not used in FPMD ',-1)
           IF( cell_factor /= 0.0d0 ) &
              CALL errore( sub_name,' cell_factor not used in FPMD ',-1)
        END IF
