@@ -17,9 +17,11 @@
         PRIVATE
         SAVE
 
-        PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist1, &
-          sticks_dist2
+        PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
 
+        INTERFACE sticks_dist
+          MODULE PROCEDURE sticks_dist1
+        END INTERFACE
 
 !=----------------------------------------------------------------------=
    CONTAINS
@@ -48,10 +50,11 @@
           st   = 0
           sts  = 0
 
-! ...     Here find the basic maps of sticks st and stw for the potential
-! ...     cut-off gcut and the wavefunction cut-off gcutw
-! ...     st(i,j) will contain the number of G vectors of the stick whose
-! ...     indices are (i,j). 
+! ...       Here find the basic maps of sticks st, stw and sts for the potential
+! ...       cut-off gcut, wavefunction cut-off gcutw, and smooth mesh cut-off gcuts
+
+! ...       st(i,j) will contain the number of G vectors of the stick whose
+! ...       indices are (i,j). 
  
           IF( .NOT. tk ) THEN
 
@@ -139,12 +142,12 @@
                     gsq=gsq+(REAL(i)*b1(3)+REAL(j)*b2(3)+REAL(k)*b3(3) )**2
                     IF(gsq.LE.gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.LE.gcutw) THEN
-                        stw(i,j) = stw(i,j) + 1
-                      END IF
-                      IF(gsq.LE.gcuts) THEN
-                        sts(i,j) = sts(i,j) + 1
-                      END IF
+                    END IF
+                    IF(gsq.LE.gcutw) THEN
+                      stw(i,j) = stw(i,j) + 1
+                    END IF
+                    IF(gsq.LE.gcuts) THEN
+                      sts(i,j) = sts(i,j) + 1
                     END IF
                   END IF
                 END DO
@@ -173,9 +176,24 @@
 !=----------------------------------------------------------------------=
 
       SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, index )
-        INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:)
-        INTEGER, INTENT(IN) :: nct
-        INTEGER, INTENT(OUT) :: index(:)
+
+! ...     This subroutine sorts the sticks indexes, according to 
+! ...     the lenght and type of the sticks, wave functions sticks
+! ...     first, then smooth mesh sticks, and finally potential
+! ...     sticks
+
+        ! lenghts of sticks, ngc for potential mesh, ngcw for wave functions mesh
+        ! and ngcs for smooth mesh
+
+        INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:) 
+
+        ! nct, total number of sticks
+
+        INTEGER, INTENT(IN) :: nct                      
+
+        ! index, on output, new sticks indexes
+
+        INTEGER, INTENT(OUT) :: index(:)                
 
         INTEGER :: mc, nr3x
         REAL(dbl), ALLOCATABLE :: aux(:)
@@ -189,22 +207,30 @@
         CALL hpsort( nct, aux(1), index(1))
         DEALLOCATE( aux )
 
+        ! WRITE(6,*) '-----------------'
+        ! WRITE(6,*) 'STICKS_SORT DEBUG'
+        ! DO mc = 1, nct
+        !   WRITE(6, fmt="(4I10)" ) index(mc), ngcw( index(mc) ), ngcs( index(mc) ), ngc( index(mc) )
+        ! END DO
+        ! WRITE(6,*) '-----------------'
+
         RETURN
       END SUBROUTINE
 
 !=----------------------------------------------------------------------=
 
-    SUBROUTINE sticks_countg( ub, lb, st, stw, sts, in1, in2, ngc, ngcw, ngcs )
+    SUBROUTINE sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngcw, ngcs )
 
       INTEGER, INTENT(IN) :: ub(:), lb(:)
       INTEGER, INTENT(IN) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
       INTEGER, INTENT(IN) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
       INTEGER, INTENT(IN) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
+      LOGICAL, INTENT(IN) :: tk
 
       INTEGER, INTENT(OUT) :: in1(:), in2(:)
       INTEGER, INTENT(OUT) :: ngc(:), ngcw(:), ngcs(:)
 
-      INTEGER :: i1, i2, nct, min_size
+      INTEGER :: j1, j2, i1, i2, nct, min_size
 
 !
 ! ...     initialize the sticks indexes array ist
@@ -219,12 +245,18 @@
 
       min_size = MIN( SIZE( in1 ), SIZE( in2 ), SIZE( ngc ), SIZE( ngcw ), SIZE( ngcs ) )
 
-      DO i1 = lb(1), ub(1)
-        DO i2 = lb(2), ub(2)
+      DO j2 = 0, ( ub(2) - lb(2) )
+        DO j1 = 0, ( ub(1) - lb(1) )
 
-          IF( st( i1, i2 ) .GT. 0 ) THEN
+          i1 = j1
+          if( i1 > ub(1) ) i1 = lb(1) + ( i1 - ub(1) ) - 1
 
-! this column contains G-vectors
+          i2 = j2
+          if( i2 > ub(2) ) i2 = lb(2) + ( i2 - ub(2) ) - 1
+
+          IF( st( i1, i2 ) > 0 ) THEN
+
+            ! this sticks contains G-vectors
 
             nct = nct + 1
             IF( nct > min_size ) &
@@ -232,6 +264,7 @@
 
             in1(nct) = i1
             in2(nct) = i2
+
             ngc(nct) = st( i1 , i2)
             IF( stw( i1, i2 ) .GT. 0 ) ngcw(nct) = stw( i1 , i2)
             IF( sts( i1, i2 ) .GT. 0 ) ngcs(nct) = sts( i1 , i2)
@@ -248,14 +281,17 @@
 
 !=----------------------------------------------------------------------=
 
-    SUBROUTINE sticks_dist1( ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
-                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stowns )
+    SUBROUTINE sticks_dist1( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
       USE mp_global, ONLY: nproc
 
+      LOGICAL, INTENT(IN) :: tk
+
       INTEGER, INTENT(IN) :: ub(:), lb(:), index(:)
       INTEGER, INTENT(OUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-      INTEGER, INTENT(OUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(OUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(OUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
 
       INTEGER, INTENT(IN) :: in1(:), in2(:)
       INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:)
@@ -272,73 +308,67 @@
       ngps = 0
       ngpw = 0
 
+      stown  = 0
+      stownw = 0
+      stowns = 0
+
       DO mc = 1, nct
 
          i = index( mc )
 !
-! index contains the desired ordering of columns (see above)
+! index contains the desired ordering of sticks (see above)
 !
-         i1=in1(i)
-         i2=in2(i)
+         i1 = in1( i )
+         i2 = in2( i )
 !
-         if ( i1.lt.0.or.(i1.eq.0.and.i2.lt.0) ) go to 30
+         if ( ( .NOT. tk ) .AND. ( (i1 < 0) .or. ( (i1 == 0) .and. (i2 < 0) ) ) ) go to 30
 !
-         jj=1
-         if (ngcw(i).gt.0) then
+         jj = 1
+
+         if ( ngcw(i) > 0 ) then
 !
-! this is an active column: find which processor has currently
+! this is an active sticks: find which processor has currently
 ! the smallest number of plane waves
 !
-            do j=1,nproc
-               if (ngpw(j).lt.ngpw(jj)) jj = j
+            do j = 1, nproc
+               if ( ngpw(j) < ngpw(jj) ) then
+                 jj = j
+               else if ( ( ngpw(j) == ngpw(jj) ) .AND. ( ncpw(j) < ncpw(jj) ) ) then
+                 jj = j
+               end if
             end do
+
          else
 !
-! this is an inactive column: find which processor has currently
+! this is an inactive sticks: find which processor has currently
 ! the smallest number of G-vectors
 !
-            do j=1,nproc
-               if (ngp(j).lt.ngp(jj)) jj = j
+            do j = 1, nproc
+               if ( ngp(j) < ngp(jj) ) jj = j
             end do
+
          end if
 !
-! jj is the processor to which this column is assigned
-! use -jj for inactive columns, jj for active columns
-!
-         stown(i1,i2) = -jj
+         ! potential mesh
+
          ncp(jj) = ncp(jj) + 1
          ngp(jj) = ngp(jj) + ngc(i)
-         if (ngcs(i).gt.0) then
-            ncps(jj)=ncps(jj)+1
-            ngps(jj)=ngps(jj)+ngcs(i)
-            stowns(i1,i2)=-jj
+         stown(i1,i2) = jj
+
+         ! smooth mesh
+
+         if ( ngcs(i) > 0 ) then
+            ncps(jj) = ncps(jj) + 1
+            ngps(jj) = ngps(jj) + ngcs(i)
+            stowns(i1,i2) = jj
          endif
-         if (ngcw(i).gt.0) then
-            stowns(i1,i2)=jj
-            stown(i1,i2) = jj
-            ngpw(jj)= ngpw(jj) + ngcw(i)
-            ncpw(jj)= ncpw(jj) + 1
-         endif
-!
-! now assign the (-i1,-i2) column to the same processor
-!
-         if (i1.eq.0.and.i2.eq.0) go to 30
-!
-! do not count twice column (0,0) !
-!
-         stown(-i1,-i2) = -jj
-         ncp(jj) = ncp(jj) + 1
-         ngp(jj) = ngp(jj) + ngc(i)
-         if (ngcs(i).gt.0) then
-            ncps(jj)=ncps(jj)+1
-            ngps(jj)=ngps(jj)+ngcs(i)
-            stowns(-i1,-i2)=-jj
-         endif
-         if (ngcw(i).gt.0) then
-            stowns(-i1,-i2)=jj
-            stown(-i1,-i2) = jj
-            ngpw(jj)= ngpw(jj) + ngcw(i)
-            ncpw(jj)= ncpw(jj) + 1
+
+         ! wave functions mesh
+
+         if ( ngcw(i) > 0 ) then
+            ncpw(jj) = ncpw(jj) + 1
+            ngpw(jj) = ngpw(jj) + ngcw(i)
+            stownw(i1,i2) = jj
          endif
 
  30      continue
@@ -349,14 +379,17 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------=
-
-    SUBROUTINE sticks_dist2( ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
-                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stowns )
+    
+    SUBROUTINE sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
       USE mp_global, ONLY: nproc
 
+      LOGICAL, INTENT(IN) :: tk
+
       INTEGER, INTENT(IN) :: ub(:), lb(:), index(:)
       INTEGER, INTENT(OUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(OUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
       INTEGER, INTENT(OUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
 
       INTEGER, INTENT(IN) :: in1(:), in2(:)
@@ -367,49 +400,38 @@
 
       INTEGER :: mc, i1, i2, i, j, jj, iss, is, ip
 
-      ncp  = 0
-      ncps = 0
-      ncpw = 0
-      ngp  = 0
-      ngps = 0
-      ngpw = 0
-      stown = 0
+      IF ( .NOT. tk ) THEN
 
-      DO iss = 1, nct
-        is = index( iss )
-        ip = mod((iss-1),nproc) + 1
-        IF( ngcw(is) > 0 ) THEN
-          IF( in1(is) .LT. lb(1) .OR. in1(is) .GT. ub(1) ) THEN
-            write (6,*) ' ## ist1 ', in1(is)
-          END IF
-          IF( in2(is) .LT. lb(2) .OR. in2(is) .GT. ub(2) ) THEN
-            write (6,*) ' ## ist2 ', in2(is)
-          END IF
-          stown( in1(is), in2(is) ) = ip
-          ncpw(ip) = ncpw(ip) + 1
-        END IF
-      END DO
-
-! ...       Set an initial owner for the sticks (potential)
-
-      ncp = ncpw
-      DO iss = 1, nct
-        is = index( iss )
-        ip = mod((iss-1),nproc) + 1
-        IF( ngcw(is) .EQ. 0 ) THEN
-          IF( in1(is) .LT. lb(1) .OR. in1(is) .GT. ub(1) ) THEN
-            write (6,*) ' ## ist1 ', in1(is)
-          END IF
-          IF( in2(is) .LT. lb(2) .OR. in2(is) .GT. ub(2) ) THEN
-            write (6,*) ' ## ist2 ', in2(is)
-          END IF
-          stown( in1(is), in2(is) ) = ip
-          ncp(ip) = ncp(ip) + 1
-        END IF
-      END DO
+        DO mc = 1, nct
+           i = index(mc)
+           i1 = in1(i)
+           i2 = in2(i)
+           IF( i1 == 0 .and. i2 == 0 ) CYCLE
+           jj = stown( i1, i2 )
+           if( jj > 0 ) then
+             stown( -i1, -i2 ) = jj
+             ncp( jj ) = ncp( jj ) + 1
+             ngp( jj ) = ngp( jj ) + ngc( i )
+           end if
+           jj = stowns( i1, i2 )
+           if( jj > 0 ) then
+             stowns( -i1, -i2 ) = jj
+             ncps( jj ) = ncps( jj ) + 1
+             ngps( jj ) = ngps( jj ) + ngcs( i )
+           end if
+           jj = stownw( i1, i2 )
+           if( jj > 0 ) then
+             stownw( -i1, -i2 ) = jj
+             ncpw( jj ) = ncpw( jj ) + 1
+             ngpw( jj ) = ngpw( jj ) + ngcw( i )
+           end if
+        END DO
+      END IF
 
       RETURN
     END SUBROUTINE
+
+!=----------------------------------------------------------------------=
 
 !=----------------------------------------------------------------------=
    END MODULE stick_base

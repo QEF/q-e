@@ -19,6 +19,7 @@ subroutine data_structure
 #endif
   use mp, only: mp_sum
   use mp_global, only: intra_pool_comm
+  use stick_base
   !
   implicit none
   integer :: n1, n2, n3, i1, i2, i3
@@ -33,9 +34,8 @@ subroutine data_structure
   ! counters on planes
 
   integer :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &
-       m2, i, mc, nct_
-  integer, allocatable :: ngc (:), ngcs (:), ngkc (:), &
-       ic (:), ics (:)
+       m2, i, mc, nct_, ic, ics
+  integer, allocatable :: ngc (:), ngcs (:), ngkc (:)
   integer  ::  ngp (maxproc), ngps(maxproc), ngkp (maxproc), ncp_(maxproc),&
        j, jj, idum
   ! counters on planes
@@ -53,6 +53,16 @@ subroutine data_structure
   ! counter on processors
   ! counter on processors
   ! used for swap
+
+  integer, allocatable :: st(:,:), stw(:,:), sts(:,:) 
+  ! sticks maps
+  integer :: ub(3), lb(3)  
+  ! upper and lower bounds for maps
+  logical :: tk = .TRUE.   
+  ! map type: true for full space sticks map, false for half space sticks map
+  integer, allocatable :: in1(:), in2(:), index(:)
+  ! sticks coordinates
+
 
   real(kind=DP) :: gkcut
   ! cut-off for the wavefunctions
@@ -79,14 +89,6 @@ subroutine data_structure
   !
   allocate (ipc( ncplane))    
   allocate (ipcs( ncplanes))    
-  !
-  !   local pointers deallocated at the end
-  !
-  allocate (ngc(   ncplane))    
-  allocate (ngcs(  ncplane))    
-  allocate (ngkc(  ncplane))    
-  allocate (ic(   ncplane))    
-  allocate (ics(  ncplane))    
   !
   ! set the number of plane per process
   !
@@ -150,92 +152,68 @@ subroutine data_structure
   n2 = nr2 + 1
   n3 = nr3 + 1
   !
-  do mc = 1, ncplane
-     ngc (mc) = 0
-     ngcs (mc) = 0
-     ngkc (mc) = 0
-     ipc (mc) = 0
-     ic (mc) = 0
-  enddo
-  do mc = 1, ncplanes
-     ipcs (mc) = 0
-  enddo
-  do i1 = - n1, n1
-     m1 = mod (i1, nr1) + 1
-     if (m1.lt.1) m1 = m1 + nr1
-     do i2 = - n2, n2
-        m2 = mod (i2, nr2) + 1
-        if (m2.lt.1) m2 = m2 + nr2
-        mc = m1 + (m2 - 1) * nrx1
-        if (mc.lt.1.or.mc.gt.ncplane) call errore ('data_structure', &
-             'mc is wrong', 1)
-        do i3 = - n3, n3
-           amod = (bg (1, 1) * i1 + bg (1, 2) * i2 + bg (1, 3) * i3) **2 + &
-                (bg (2, 1) * i1 + bg (2, 2) * i2 + bg (2, 3) * i3) **2 + (bg (3, &
-                1) * i1 + bg (3, 2) * i2 + bg (3, 3) * i3) **2
-           if (amod.le.gcutm) ngc (mc) = ngc (mc) + 1
-           if (amod.le.gcutms) ngcs (mc) = ngcs (mc) + 1
-           if (amod.le.gkcut) ngkc (mc) = ngkc (mc) + 1
-        enddo
-     enddo
-  enddo
+  lb(1) = -n1
+  lb(2) = -n2
+  lb(3) = -n3
+  ub(1) =  n1
+  ub(2) =  n2
+  ub(3) =  n3
+!
+  ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
+  ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
+  ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
+
+  
+  ipc  = 0
+  ic   = 0
+  ipcs = 0
+
+!
+! ...     Fill in the stick maps, for given g-space base (b1,b2,b3)
+! ...     and cut-offs
+! ...     The value of the element (i,j) of the map ( st ) is equal to the
+! ...     number of G-vector belonging to the (i,j) stick.
+!
+
+  CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), gcutm, gkcut, gcutms, st, stw, sts )
+
+  nct  = COUNT( st  > 0 )
+  ncts = COUNT( sts > 0 )
+
+  if (nct.gt.ncplane)    &
+     &    call errore('data_structure','too many sticks',1)
+
+  if (ncts.gt.ncplanes)  &
+     &    call errore('data_structure','too many sticks',2)
+
+  if (nct .eq.0) &
+     &    call errore('data_structure','number of sticks 0', 1)
+
+  if (ncts.eq.0) &
+     &    call errore('data_structure','number smooth sticks 0', 1)
+
   !
-  !   Now compute the total number of nonzero columns
+  !   local pointers deallocated at the end
   !
-  nct = 0
-  ncts = 0
-  do mc = 1, ncplane
-     if (ngcs (mc) .gt.0) ncts = ncts + 1
-     if (ngc (mc) .gt.0) then
-        nct = nct + 1
-        ngc (nct) = ngc (mc)
-        ngcs (nct) = ngcs (mc)
-        ngkc (nct) = ngkc (mc)
-        ic (nct) = mc
-        !           write (*,*) nct, ngc(nct), mc
-     endif
-  enddo
-  do mc = nct + 1, ncplane
-     ngc (mc) = 0
-     ngcs (mc) = 0
-     ngkc (mc) = 0
+  ALLOCATE( in1( nct ), in2( nct ) )
+  ALLOCATE( ngc( nct ), ngcs( nct ), ngkc( nct ) )
+  ALLOCATE( index( nct ) )
 
-  enddo
-  if (nct.eq.0) call errore ('data_structure', 'number of column 0', 1)
-  if (ncts.eq.0) call errore ('data_structure', 'number smooth column 0', 1)
+!
+! ...     initialize the sticks indexes array ist
+! ...     nct counts columns containing G-vectors for the dense grid
+! ...     ncts counts columns contaning G-vectors for the smooth grid
+!
+
+  CALL sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngkc, ngcs )
+
+  CALL sticks_sort( ngc, ngkc, ngcs, nct, index )
+
+  CALL sticks_dist( tk, ub, lb, index, in1, in2, ngc, ngkc, ngcs, nct, &
+          ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts )
+
   !
-  !   Now sort the columns. First the column with the largest number of G
-  !   vectors on the wavefunction sphere, then on the smooth sphere,
-  !   then on the big sphere
-  !
-  do i = 1, nct
-     do j = i + 1, nct
-
-        if ( (ngkc (i) .lt.ngkc (j) ) .or. (ngkc (i) .eq.ngkc (j) &
-             .and.ngcs (i) .lt.ngcs (j) ) .or. (ngkc (i) .eq.ngkc (j) &
-             .and.ngcs (i) .eq.ngcs (j) .and.ngc (i) .lt.ngc (j) ) ) then
-           idum = ngkc (i)
-           ngkc (i) = ngkc (j)
-
-           ngkc (j) = idum
-           idum = ngc (i)
-           ngc (i) = ngc (j)
-
-           ngc (j) = idum
-           idum = ngcs (i)
-           ngcs (i) = ngcs (j)
-
-           ngcs (j) = idum
-           idum = ic (i)
-           ic (i) = ic (j)
-
-           ic (j) = idum
-        endif
-     enddo
-  enddo
-  !
-  !  Set the ics index with the correspondence between planes in the smooth
-  !  thick mesh
+  !  Set the the correspondence between planes in the smooth thick mesh
   !
   if (mod (nr1s, 2) .eq.0) then
      max1 = nr1s / 2
@@ -243,99 +221,96 @@ subroutine data_structure
   else
      max1 = (nr1s - 1) / 2 + 1
      min1 = nr1 - (nr1s - 1) / 2 + 1
-
   endif
+
   if (mod (nr2s, 2) .eq.0) then
      max2 = nr2s / 2
      min2 = nr2 - nr2s / 2 + 1
   else
      max2 = (nr2s - 1) / 2 + 1
      min2 = nr2 - (nr2s - 1) / 2 + 1
-
   endif
-  do i = 1, nct
-     if (ngcs (i) .gt.0) then
-        !
-        ! this column contain smooth vectors, find the indices on the thick
-        ! mesh i1,i2, and the corresponding indices on the smooth mesh n1,n2
-        !
-        i1 = mod (ic (i) - 1, nrx1) + 1
-        i2 = (ic (i) - i1) / nrx1 + 1
-        if (i1.le.max1) then
-           n1 = i1
-        elseif (i1.ge.min1) then
-           n1 = nr1s - (nr1 - i1)
-        else
-           call errore ('data_structure', 'something wrong with n1', 1)
-        endif
-        if (i2.le.max2) then
-           n2 = i2
-        elseif (i2.ge.min2) then
-           n2 = nr2s - (nr2 - i2)
-        else
-           call errore ('data_structure', 'something wrong with n2', 1)
-        endif
-        !
-        !   check that the indices are within bounds
-        !
-        if (n1.lt.1.or.n1.gt.nr1s.or.n2.lt.1.or.n2.gt.nr2s) &
-             call errore ('data_structure', 'something wrong with n1,n2', 1)
-        ics (i) = n1 + (n2 - 1) * nrx1s
-     else
-        ics (i) = 0
-     endif
-  enddo
-  !
-  ! assign columns to processes, set the ipc index
-  !
-  do j = 1, nprocp
-     ncp (j) = 0
-     ncps (j) = 0
-     nkcp (j) = 0
-     ngp (j) = 0
-     ngps (j) = 0
-     ngkp (j) = 0
-  enddo
-  do i = 1, nct
-     jj = 1
-     if (ngkc (i) .gt.0) then
-        do j = 1, nprocp
-           if (ngkp (j) .lt.ngkp (jj) ) jj = j
-        enddo
-     else
-        do j = 1, nprocp
-           if (ngp (j) .lt.ngp (jj) ) jj = j
-        enddo
-     endif
-     ipc (ic (i) ) = - jj
-     ncp (jj) = ncp (jj) + 1
-     ngp (jj) = ngp (jj) + ngc (i)
-     if (ngcs (i) .gt.0) then
-        ncps (jj) = ncps (jj) + 1
-        ngps (jj) = ngps (jj) + ngcs (i)
-        ipcs (ics (i) ) = - jj
-     endif
-     if (ngkc (i) .gt.0) then
-        ipcs (ics (i) ) = jj
-        ipc (ic (i) ) = jj
-        ngkp (jj) = ngkp (jj) + ngkc (i)
-        nkcp (jj) = nkcp (jj) + 1
-     endif
-  enddo
-  !
-  deallocate (ics)
-  deallocate (ic)
-  deallocate (ngkc)
-  deallocate (ngcs)
-  deallocate (ngc)
+
+
+  DO mc = 1, nct
+
+    i = index( mc )
+
+    i1 = in1( i )
+    i2 = in2( i )
+
+    m1 = mod ( i1 , nr1 ) + 1
+    if ( m1 < 1 ) m1 = m1 + nr1
+    m2 = mod ( i2 , nr2 ) + 1
+    if ( m2 < 1 ) m2 = m2 + nr2
+    ic = m1 + (m2 - 1) * nrx1 
+
+    IF( st( i1, i2 ) > 0 .AND. stw( i1, i2 ) > 0 ) THEN
+      ipc( ic  ) = st(  i1,  i2 )
+    ELSE IF( st( i1, i2 ) > 0 ) THEN
+      ipc( ic  ) = -st(  i1,  i2 )
+    END IF
+
+    IF( sts( i1, i2 ) > 0 ) THEN
+
+      if ( m1 <= max1 ) then
+         n1 = m1
+      elseif ( m1 >= min1 ) then
+         n1 = nr1s - (nr1 - m1)
+      else
+         call errore ('data_structure', 'something wrong with n1', 1)
+      endif
+
+      if ( m2 <= max2 ) then
+         n2 = m2
+      elseif ( m2 >= min2 ) then
+         n2 = nr2s - (nr2 - m2)
+      else
+         call errore ('data_structure', 'something wrong with n2', 1)
+      endif
+
+      !   check that the indices are within bounds
+      !
+      if (n1.lt.1.or.n1.gt.nr1s.or.n2.lt.1.or.n2.gt.nr2s) &
+         call errore ('data_structure', 'something wrong with n1,n2', 1)
+
+      ics = n1 + (n2 - 1) * nrx1s
+
+      IF( stw( i1, i2 ) > 0 ) THEN
+        ipcs( ics ) = sts(  i1,  i2 )
+      ELSE
+        ipcs( ics ) = -sts(  i1,  i2 )
+      END IF
+
+    END IF
+
+  END DO
+
+  write(6,*)
+  write(6,'(                                                        &
+    & '' Proc  planes cols    G   planes cols    G    columns  G''/    &
+    & ''         (dense grid)      (smooth grid)   (wavefct grid)'')')
+  do i=1,nproc
+    write(6,'(i3,2x,3(i5,2i7))') i, npp(i), ncp(i), ngp(i),          &
+      &        npps(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
+  end do
+  write(6,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc)), SUM(ncp(1:nproc)), &
+    &   SUM(ngp(1:nproc)), SUM(npps(1:nproc)), SUM(ncps(1:nproc)), &
+    &   SUM(ngps(1:nproc)), SUM(nkcp(1:nproc)), SUM(ngkp(1:nproc))
+  write(6,*)
+
+
+  DEALLOCATE( stw, st, sts, in1, in2, index, ngc, ngcs, ngkc )
+
   !
   !   computing the starting column for each processor
   !   and the total number of G vectors
   !
   ngm = ngp (me)
   ngms = ngps (me)
+
   do i = 1, nprocp
-     !        write(6,*) i, ncp(i), ngp(i), nkcp(i), ngkp(i)
+
      if (ngkp (i) .eq.0) call errore ('data_structure', &
           'some processors have no pencils, not yet implemented', 1)
      if (i.eq.1) then
@@ -346,8 +321,8 @@ subroutine data_structure
         ncp0s (i) = ncp0s (i - 1) + ncps (i - 1)
      endif
 
-
   enddo
+
   allocate (icpl( nct))    
 
   allocate (icpls( ncts))    

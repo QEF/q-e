@@ -261,6 +261,7 @@ end module para_mod
 !
       integer, allocatable :: st(:,:), stw(:,:), sts(:,:) ! sticks maps
       integer :: ub(3), lb(3)  ! upper and lower bounds for maps
+      logical :: tk = .FALSE.
 !
       call tictac(27,0)
 !
@@ -349,22 +350,22 @@ end module para_mod
 ! ...     number of G-vector belonging to the (i,j) stick.
 !
 
-      CALL sticks_maps( .TRUE., ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
+      CALL sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
 
       nct  = COUNT( st  > 0 )
       ncts = COUNT( sts > 0 )
 
       if (nct.gt.ncplane)    &
-     &    call errore('set_fft_para','too many columns',1)
+     &    call errore('set_fft_para','too many sticks',1)
 
       if (ncts.gt.ncplanes)  &
-     &    call errore('set_fft_para','too many columns',2)
+     &    call errore('set_fft_para','too many sticks',2)
 
       if (nct .eq.0) & 
-     &    call errore('set_fft_para','number of column 0', 1)
+     &    call errore('set_fft_para','number of sticks 0', 1)
 
       if (ncts.eq.0) &
-     &    call errore('set_fft_para','number smooth column 0', 1)
+     &    call errore('set_fft_para','number smooth sticks 0', 1)
 
 !
 ! ...     initialize the sticks indexes array ist
@@ -372,7 +373,7 @@ end module para_mod
 ! ...     ncts counts columns contaning G-vectors for the smooth grid
 !
 
-      CALL sticks_countg( ub, lb, st, stw, sts, in1, in2, ngc, ngcw, ngcs )
+      CALL sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngcw, ngcs )
 
 !
 !   Sort the columns. First the column with the largest number of G
@@ -382,23 +383,24 @@ end module para_mod
 
       CALL sticks_sort( ngc, ngcw, ngcs, nct, index )
 
-      st  = 0
-      stw = 0
-      sts = 0
-
 !
 !   assign columns to processes
 !
 
-      CALL sticks_dist1( ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
-                ncp, ncpw, ncps, ngp, ngpw, ngps, st, sts )
+      CALL sticks_dist( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+                ncp, ncpw, ncps, ngp, ngpw, ngps, st, stw, sts )
+
+      CALL sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+                ncp, ncpw, ncps, ngp, ngpw, ngps, st, stw, sts )
+
+      ! WRITE(*,*) ' DEBUG : ', COUNT( st > 0 ), COUNT( sts > 0 ), COUNT( stw > 0 )
 
       DO mc = 1, nct
 
          i = index(mc)
 
-         i1=in1(i)
-         i2=in2(i)
+         i1 = in1(i)
+         i2 = in2(i)
 
          if ( i1.lt.0.or.(i1.eq.0.and.i2.lt.0) ) go to 29
 !
@@ -434,14 +436,20 @@ end module para_mod
          if (n2.lt.1) n2 = n2 + nr2s
          icms = n1 + (n2-1)*nr1sx
 
-         IF( st( i1, i2 ) /= 0 ) THEN
+         IF( st( i1, i2 ) > 0 .AND. stw( i1, i2 ) > 0 ) THEN
            ipc( ic  ) = st(  i1,  i2 )
            ipc( icm ) = st( -i1, -i2 )
+         ELSE IF( st( i1, i2 ) > 0 ) THEN
+           ipc( ic  ) = -st(  i1,  i2 )
+           ipc( icm ) = -st( -i1, -i2 )
          END IF
 
-         IF( sts( i1, i2 ) /= 0 ) THEN
+         IF( sts( i1, i2 ) > 0 .AND. stw( i1, i2 ) > 0 ) THEN
            ipcs( ics  ) = sts(  i1,  i2 )
            ipcs( icms ) = sts( -i1, -i2 )
+         ELSE IF( sts( i1, i2 ) > 0 ) THEN
+           ipcs( ics  ) = -sts(  i1,  i2 )
+           ipcs( icms ) = -sts( -i1, -i2 )
          END IF
 
 29       CONTINUE
@@ -449,6 +457,11 @@ end module para_mod
       END DO
       
       DEALLOCATE( st, stw, sts )
+
+      IF( .NOT. tk ) THEN
+        nct  = nct*2  - 1
+        ncts = ncts*2 - 1
+      END IF
 
 !
 ! ipc  is the processor for this column in the dense grid
@@ -461,6 +474,9 @@ end module para_mod
          write(6,'(i3,2x,3(i5,2i7))') i, npp(i),ncp(i),ngp(i),          &
      &        npps(i),ncps(i),ngps(i), ncpw(i), ngpw(i)
       end do
+      write(6,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc)), SUM(ncp(1:nproc)), &
+        SUM(ngp(1:nproc)), SUM(npps(1:nproc)), SUM(ncps(1:nproc)), &
+        SUM(ngps(1:nproc)), SUM(ncpw(1:nproc)), SUM(ngpw(1:nproc))
 !
 ! nnr_ and nnrs_ are copies of nnr and nnrs, the local fft data size,
 ! to be stored in "parallel" commons. Not a very elegant solution.
