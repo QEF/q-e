@@ -196,52 +196,52 @@
   !
   !
   REAL(KIND=DP), PUBLIC  :: &
-       mixing_beta,      &! the mixing parameter
-       tr2,              &! the convergence threshold for potential
-       upscale,          &! maximum reduction of convergence threshold
-       ethr,             &! the convergence threshold for eigenvalues
-       alpha0,           &! the mixing parameters for the extrapolation
-       beta0              ! of the starting potential
+    mixing_beta,      &! the mixing parameter
+    tr2,              &! the convergence threshold for potential
+    upscale,          &! maximum reduction of convergence threshold
+    ethr,             &! the convergence threshold for eigenvalues
+    alpha0,           &! the mixing parameters for the extrapolation
+    beta0              ! of the starting potential
   !
   INTEGER, PUBLIC :: &
-       ngm0,             &! used in mix_rho
-       niter,            &! the maximum number of iteration
-       nmix,             &! the number of iteration kept in the history
-       imix,             &! the type of mixing (0=plain,1=TF,2=local-TF)
-       ! iprint,           &! the interval between full writing of results
-       iverbosity,       &! type of printing ( 0 few, 1 all )
-       david,            &! used on Davidson diagonalization
-       nstep,            &! number of minimization steps
-       istep,            &! current minimization step
-       isolve,           &! Davidson or CG diagonalization
-       modenum,          &! for single mode phonon calculation
-       max_cg_iter,      &! maximum number of iterations in a CG di
-       diis_buff,        &! dimension of the buffer in diis
-       diis_ndim,        &! dimension of reduced basis in DIIS
-       history,          &! number of old steps available for potential updating
-       pot_order,        &! type of potential updating ( see update_pot )
-       wfc_order          ! type of wavefunctions updating ( see update_pot )
+    ngm0,             &! used in mix_rho
+    niter,            &! the maximum number of iteration
+    nmix,             &! the number of iteration kept in the history
+    imix,             &! the type of mixing (0=plain,1=TF,2=local-TF)
+    iverbosity,       &! type of printing ( 0 few, 1 all )
+    david,            &! used on Davidson diagonalization
+    nstep,            &! number of minimization steps
+    istep,            &! current minimization step
+    isolve,           &! Davidson or CG diagonalization
+    modenum,          &! for single mode phonon calculation
+    max_cg_iter,      &! maximum number of iterations in a CG di
+    diis_buff,        &! dimension of the buffer in diis
+    diis_ndim,        &! dimension of reduced basis in DIIS
+    history,          &! number of old steps available for potential updating
+    pot_order,        &! type of potential updating ( see update_pot )
+    wfc_order          ! type of wavefunctions updating ( see update_pot )
   !
   LOGICAL, PUBLIC :: &
-       lfixatom,         &! if .TRUE. some atom is kept fixed
-       lscf,             &! if .TRUE. the calculation is selfconsistent
-       lbfgs,            &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
-       loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme
-       lmd,              &! if .TRUE. the calculation is a dynamics
-       lpath,            &! if .TRUE. the calculation is a path optimizations
-       lneb,             &! if .TRUE. the calculation is NEB dynamics
-       lsmd,             &! if .TRUE. the calculation is string dynamics
-       lwf,              &! if .TRUE. the calculation is with wannier functions
-       lphonon,          &! if .TRUE. the calculation is phonon
-       lraman,           &! if .TRUE. the calculation is raman
-       lconstrain,       &! if .TRUE. the calculation is constraint
-       ldamped,          &! if .TRUE. the calculation is a damped dynamics
-       conv_elec,        &! if .TRUE. electron convergence has been reached
-       conv_ions,        &! if .TRUE. ionic convergence has been reached
-       nosym,            &! if .TRUE. no symmetry is used
-       noinv = .FALSE.,  &! if .TRUE. eliminates inversion symmetry
-       restart,          &! if .TRUE. restart from results of a preceding run
-       reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
+    lfixatom,         &! if .TRUE. some atom is kept fixed
+    lscf,             &! if .TRUE. the calculation is selfconsistent
+    lbfgs,            &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
+    loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme
+    lmd,              &! if .TRUE. the calculation is a dynamics
+    lpath,            &! if .TRUE. the calculation is a path optimizations
+    lneb,             &! if .TRUE. the calculation is NEB dynamics
+    lsmd,             &! if .TRUE. the calculation is string dynamics
+    lwf,              &! if .TRUE. the calculation is with wannier functions
+    lphonon,          &! if .TRUE. the calculation is phonon
+    lraman,           &! if .TRUE. the calculation is raman
+    lconstrain,       &! if .TRUE. the calculation is constraint
+    ldamped,          &! if .TRUE. the calculation is a damped dynamics
+    conv_elec,        &! if .TRUE. electron convergence has been reached
+    conv_ions,        &! if .TRUE. ionic convergence has been reached
+    nosym,            &! if .TRUE. no symmetry is used
+    noinv = .FALSE.,  &! if .TRUE. eliminates inversion symmetry
+    restart,          &! if .TRUE. restart from results of a preceding run
+    reduce_io,        &! if .TRUE. reduce the I/O to the strict minimum
+    wg_setted = .FALSE.
   !
 
    INTEGER   :: ortho_max = 0     ! maximum number of iterations in routine ortho

@@ -34,7 +34,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
   USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
-                                   isolve, reduce_io
+                                   isolve, reduce_io, wg_setted
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -86,15 +86,19 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... allocate arrays
   !
-  IF (noncolin) THEN
-     ALLOCATE( h_diag_nc( npwx, npol ) )    
-     ALLOCATE( s_diag_nc( npwx, npol ) )   
+  IF ( noncolin ) THEN
+     !
+     ALLOCATE( h_diag_nc( npwx, npol ) )
+     ALLOCATE( s_diag_nc( npwx, npol ) )
+     !
   ELSE
-     ALLOCATE( h_diag( npwx ) )    
-     ALLOCATE( s_diag( npwx ) )   
+     !
+     ALLOCATE( h_diag( npwx ) )
+     ALLOCATE( s_diag( npwx ) )
+     !
   END IF
-
-  ALLOCATE( btype(  nbnd ) )       
+  !
+  ALLOCATE( btype( nbnd ) )       
   !
   IF ( gamma_only ) THEN
      !
@@ -108,13 +112,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... deallocate arrays
   !
-  IF (noncolin) THEN
+  IF ( noncolin ) THEN
+     !
      DEALLOCATE( s_diag_nc )
      DEALLOCATE( h_diag_nc )
+     !
   ELSE
+     !
      DEALLOCATE( s_diag )
      DEALLOCATE( h_diag )
-  ENDIF
+     !
+  END IF
   !
   DEALLOCATE( btype )
   !       
@@ -216,8 +224,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           IF ( qcutz > 0.D0 ) THEN
              !
              DO ig = 1, npw
+                !
                 g2kin(ig) = g2kin(ig) + qcutz * &
                             ( 1.D0 + erf( (g2kin(ig) - ecfixed ) / q2sigma ) )
+                !
              END DO
              !
           END IF
@@ -227,7 +237,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... a band is considered empty when its occupation is less 
           ! ... than 1.0 %  ( the occupation is known after the first step )
           !
-          IF ( iter > 1 ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          IF ( wg_setted ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 2 ) THEN
              !
@@ -328,8 +338,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        RETURN
        !
-     END SUBROUTINE c_bands_gamma  
-     !
+     END SUBROUTINE c_bands_gamma
      !     
      !-----------------------------------------------------------------------
      SUBROUTINE c_bands_k()
@@ -353,16 +362,20 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... here the local variables
        !
        REAL(KIND=DP) :: cg_iter
-       ! number of iteration in CG
-       ! number of iteration in DIIS
+         ! number of iteration in CG
+         ! number of iteration in DIIS
        INTEGER :: ipol
        !
        ! ... becp contains <beta|psi> - used in h_psi and s_psi
        !
-       IF (noncolin) THEN
+       IF ( noncolin ) THEN
+          !
           ALLOCATE( becp_nc( nkb, npol, nbnd ) )
+          !
        ELSE
+          !
           ALLOCATE( becp( nkb, nbnd ) )
+          !
        END IF
        !
        ! ... allocate specific array for DIIS
@@ -423,12 +436,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... read in wavefunctions from the previous iteration
           !
-          IF (noncolin) THEN
+          IF ( noncolin ) THEN
+             !
              IF ( nks > 1 .OR. .NOT. reduce_io ) &
                 CALL davcio( evc_nc, nwordwfc, iunwfc, ik, -1 )
+             !
           ELSE
+             !
              IF ( nks > 1 .OR. .NOT. reduce_io ) &
                 CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             !
           END IF
           !   
           ! ... Needed for LDA+U
@@ -441,12 +458,15 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                            ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
                            ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2
           !
-          !
           IF ( qcutz > 0.D0 ) THEN
+             !
              DO ig = 1, npw
-                g2kin (ig) = g2kin(ig) + qcutz * &
-                             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+                !
+                g2kin(ig) = g2kin(ig) + qcutz * &
+                            ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+                !
              END DO
+             !
           END IF
           !
           btype(:) = 1
@@ -454,7 +474,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... a band is considered empty when its occupation is less 
           ! ... than 1.0 %  ( the occupation is known after the first step )
           !
-          IF ( iter > 1 ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          IF ( wg_setted ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 1 ) THEN
              !
@@ -462,13 +482,19 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              ! ... h_diag is the precondition matrix
              !
-             IF (noncolin) THEN
-                DO ipol=1,npol
+             IF ( noncolin ) THEN
+                !
+                DO ipol = 1, npol
+                   !
                    h_diag_nc(1:npw,ipol) = MAX( 1.D0, g2kin(1:npw) )
-                ENDDO
+                   !
+                END DO
+                !
              ELSE
+                !
                 h_diag(1:npw) = MAX( 1.D0, g2kin(1:npw) )
-             ENDIF
+                !
+             END IF
              !
              ntry = 0
              !
@@ -476,23 +502,33 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
                    !
-                   IF (noncolin) THEN
-                      CALL cinitcgg_nc(npwx,npw,nbnd,nbnd,evc_nc, &
-                                             evc_nc,et(1,ik),okvan,npol)
+                   IF ( noncolin ) THEN
+                      !
+                      CALL cinitcgg_nc( npwx, npw, nbnd, nbnd, evc_nc, &
+                                        evc_nc, et(1,ik), okvan, npol )
+                       !                      
                    ELSE
+                      !
                       CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+                      !
                    END IF
                    !
                    avg_iter = avg_iter + 1.D0
                    !
                 END IF
                 !
-                IF (noncolin) THEN
-                   CALL ccgdiagg_nc(npwx,npw,nbnd,evc_nc,et(1,ik),h_diag_nc, &
-                           ethr,max_cg_iter,.NOT.lscf,notconv,cg_iter,npol)
+                IF ( noncolin ) THEN
+                   !
+                   CALL ccgdiagg_nc( npwx, npw, nbnd, evc_nc, et(1,ik), &
+                                     h_diag_nc, ethr, max_cg_iter,      &
+                                     .NOT. lscf, notconv, cg_iter, npol )
+                   !
                 ELSE
-                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), h_diag, &
-                               ethr,max_cg_iter,.NOT.lscf,notconv,cg_iter )
+                   !
+                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), &
+                                  h_diag, ethr, max_cg_iter, .NOT. lscf, &
+                                  notconv, cg_iter )
+                   !
                 END IF
                 !
                 avg_iter = avg_iter + cg_iter
@@ -501,12 +537,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 ! ... iterative diagonalization of the next scf iteration 
                 ! ... and for rho calculation
                 !
-                IF (noncolin) THEN
+                IF ( noncolin ) THEN
+                   !
                    IF ( nks > 1 .OR. .NOT. reduce_io ) &
                       CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
+                   !
                 ELSE
+                   !
                    IF ( nks > 1 .OR. .NOT. reduce_io ) &
                       CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                   !
                 END IF
                 !
                 ntry = ntry + 1                
@@ -521,12 +561,18 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              ! ... RMM-DIIS method
              !
-             IF (noncolin) THEN
-                DO ipol=1,npol
+             IF ( noncolin ) THEN
+                !
+                DO ipol = 1, npol
+                   !
                    h_diag_nc(1:npw,ipol) = g2kin(1:npw) + v_of_0
-                ENDDO
+                   !
+                END DO
+                !
              ELSE
+                !
                 h_diag(1:npw) = g2kin(1:npw) + v_of_0
+                !
              END IF
              !
              CALL usnldiag( h_diag_nc, s_diag_nc )
@@ -535,13 +581,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              RMMDIIS_loop: DO
                 !
-                IF (noncolin) THEN
-                   CALL cdiisg_nc( npw, npwx, nbnd, diis_ndim, evc_nc, &
-                        et(1,ik), ethr, btype, notconv, diis_iter, iter, npol)
-                !
+                IF ( noncolin ) THEN
+                   !
+                   CALL cdiisg_nc( npw, npwx, nbnd, diis_ndim, &
+                                   evc_nc, et(1,ik), ethr, btype, &
+                                   notconv, diis_iter, iter, npol )
+                   !
                 ELSE
+                   !
                    CALL cdiisg( npw, npwx, nbnd, evc, &
-                             et(1,ik), btype, notconv, diis_iter, iter )
+                                et(1,ik), btype, notconv, diis_iter, iter )
+                   !
                 END IF
                 !  
                 avg_iter = avg_iter + diis_iter
@@ -550,12 +600,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 ! ... iterative diagonalization of the next scf iteration 
                 ! ... and for rho calculation
                 !
-                IF (noncolin) THEN
+                IF ( noncolin ) THEN
+                   !
                    IF ( nks > 1 .OR. .NOT. reduce_io ) &
                       CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
+                   !
                 ELSE
+                   !
                    IF ( nks > 1 .OR. .NOT. reduce_io ) &
                       CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                   !
                 END IF
                 !
                 ntry = ntry + 1                
@@ -574,27 +628,38 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              ! ... hamiltonian used in g_psi to evaluate the correction 
              ! ... to the trial eigenvectors
              !
-             IF (noncolin) THEN
-                DO ipol=1,npol
+             IF ( noncolin ) THEN
+                !
+                DO ipol = 1, npol
+                   !
                    h_diag_nc(1:npw,ipol) = g2kin(1:npw) + v_of_0
-                ENDDO
+                   !
+                END DO
+                !
                 CALL usnldiag_nc( h_diag_nc, s_diag_nc )
+                !
              ELSE
+                !
                 h_diag(1:npw) = g2kin(1:npw) + v_of_0
+                !
                 CALL usnldiag( h_diag, s_diag )
+                !
              END IF
-             !
              !
              ntry = 0
              !
              david_loop: DO
                 !
-                IF (noncolin) THEN
+                IF ( noncolin ) THEN
+                   !
                    CALL cegterg_nc( npw, npwx, nbnd, nbndx, evc_nc, ethr, &
-                              okvan, et(1,ik), notconv, dav_iter, npol )
+                                    okvan, et(1,ik), notconv, dav_iter, npol )
+                   !
                 ELSE
+                   !
                    CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-                              okvan, et(1,ik), btype, notconv, dav_iter )
+                                 okvan, et(1,ik), btype, notconv, dav_iter )
+                   !
                 END IF
                 !
                 avg_iter = avg_iter + dav_iter
@@ -603,12 +668,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 ! ... iterative diagonalization of the next scf iteration 
                 ! ... and for rho calculation
                 !
-                IF (noncolin) THEN
+                IF ( noncolin ) THEN
+                   !
                    IF ( nks > 1 .OR. .NOT. reduce_io ) &
                       CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
+                   !
                 ELSE
+                   !
                    IF ( nks > 1 .OR. .NOT. reduce_io ) &
                       CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                   !
                 END IF
                 !
                 ntry = ntry + 1                
@@ -646,16 +715,19 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... deallocate work space
        !
-       IF (noncolin) THEN
+       IF ( noncolin ) THEN
+          !
           DEALLOCATE( becp_nc )
+          !
        ELSE
+          !
           DEALLOCATE( becp )
+          !
        END IF
        !
        RETURN
        !
      END SUBROUTINE c_bands_k
-     !
      !
      !-----------------------------------------------------------------------
      FUNCTION test_exit_cond()
