@@ -11,7 +11,7 @@ do
     # set inter-directory dependencies
     case $DIR in
 	Modules )                         DEPENDS=""                       ;;
-	PW | FPMD | CPV | flib | pwtools | upftools | atomic )
+	PW | CPV | flib | pwtools | upftools | atomic )
 	                                  DEPENDS="../Modules"             ;;
 	PP | PWCOND | PWNC | Gamma | PH ) DEPENDS="../Modules ../PW"       ;;
 	D3 | Raman | Nmr)                 DEPENDS="../Modules ../PW ../PH" ;;

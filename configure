@@ -2913,7 +2913,7 @@ linux32:ifc )
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
 		pcl_ph="D3"
 		pcl_pw="PH PP Gamma PWNC PWCOND pwtools $pcl_ph"
-		pcl_modules="PW FPMD CPV flib upftools $pcl_pw"
+		pcl_modules="PW CPV flib upftools $pcl_pw"
 		pcl_dot=". Modules $pcl_modules"
 		for dir in $pcl_dot
 		do

@@ -58,9 +58,6 @@ then
 		echo $PWD/Modules/work.pc >> $PWD/pwtools/intel.pcl
 		echo $PWD/PW/work.pc >> $PWD/pwtools/intel.pcl
 
-		echo work.pc > $PWD/FPMD/intel.pcl
-		echo $PWD/Modules/work.pc >> $PWD/FPMD/intel.pcl
-
                 echo work.pc > $PWD/CPV/intel.pcl
                 echo $PWD/Modules/work.pc >> $PWD/CPV/intel.pcl
 

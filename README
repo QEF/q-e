@@ -59,9 +59,7 @@ PWNC/      Source files for scf calculations with noncolinear magnetism (pwnc.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
 
-CPV/       Source files for CP
-
-FPMD/      Source files for FPMD
+CPV/       Source files for CP/FPMD
 
 GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
                  PWgui-*/ for the tarball *.tar.gz).

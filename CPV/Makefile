@@ -135,11 +135,11 @@ fpmd.x : start.o $(FOBJS) $(LIBOBJ)
 	$(LD) -o fpmd.x start.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
 		../flib/eispack.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
 		$(LDFLAGS)
-	- (cd ../bin ; ln -fs ../FPMD/fpmd.x . )
+	- (cd ../bin ; ln -fs ../CPV/fpmd.x . )
 
 fpmdpp.x : fpmdpp.o
 	$(LD) -o fpmdpp.x fpmdpp.o $(LDFLAGS)
-	- (cd ../bin ; ln -fs ../FPMD/fpmdpp.x . )
+	- (cd ../bin ; ln -fs ../CPV/fpmdpp.x . )
 
 clean :
 	- /bin/rm -f fpmd.x fpmdpp.x *.o *.mod version.h *.i core* *.F90 fort* \

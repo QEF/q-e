@@ -679,6 +679,17 @@
 
 CONTAINS
 
+  subroutine cell_nose_init( temph_init, fnoseh_init )
+     USE constants, ONLY: factem, pi, terahertz
+     REAL(dbl), INTENT(IN) :: temph_init, fnoseh_init
+     ! set thermostat parameter for cell
+     qnh    = 0.0d0
+     temph  = temph_init
+     fnoseh = fnoseh_init
+     if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 )*temph/factem/(fnoseh*(2.d0*pi)*terahertz)**2
+    return
+  end subroutine
+
   subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
     implicit none
     real(kind=8), intent(inout) :: vnhh(3,3), velh(3,3)

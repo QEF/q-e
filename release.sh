@@ -44,7 +44,7 @@ tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
 tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ Doc/ Modules/ clib/ flib/ \
-                      FPMD/
+                      CPV/
 
 tar -czf ../$GUI.tar.gz $GUI
 
@@ -59,7 +59,7 @@ tar -czf ../espresso.tar.gz  bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ Doc/ Modules/ clib/ flib/ \
                       PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ Raman/ pwtools/ \
-		      CPV/ FPMD/ atomic/ atomic_doc/ examples/ pseudo/ $GUI
+		      CPV/ atomic/ atomic_doc/ examples/ pseudo/ $GUI
 
 scp Doc/README Doc/ChangeLog Doc/BUGS Doc/manual.tex \
     Doc/*.png  Doc/manual.pdf ../pw.tar.gz ../espresso.tar.gz \

@@ -194,8 +194,6 @@ CONTAINS
       USE printout_base, ONLY: &
            title_ => title
 
-#ifdef __PPPP
-#endif
       USE grid_dimensions, ONLY: &
            nnrx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1_ => nr1, &
@@ -956,7 +954,7 @@ END MODULE input_cp
 !  END manual
 ! ----------------------------------------------------------------------
 
-        USE kinds
+        USE kinds, ONLY: dbl
         USE constants, ONLY: UMA_AU, pi
         USE io_global, ONLY: ionode, stdout
 
@@ -1050,7 +1048,7 @@ END MODULE input_cp
           outdir, prefix, k3, nk3, k1, k2, woptical, noptical, boptical, &
           electron_maxstep, tprnks, tprnks_empty, ks_path, diis_nreset, &
           diis_temp, diis_nrot, diis_maxstep, diis_fthr, diis_size, diis_hcut, &
-          k_points, nk1, nk2, ortho_eps, diis_rothr, tchi2_inp, ortho_max, &
+          k_points, nk1, nk2, diis_rothr, tchi2_inp, ortho_max, ortho_eps, &
           ekin_conv_thr, na_inp, ibrav, press, atom_mass, nkstot, xk, wmass, &
           nbnd, nelec, nelup, tf_inp, cell_dofree, t2dpegrid_inp, &
           diis_chguess, tpstab_inp, pstab_size_inp, ion_radius, atom_pfile, &
@@ -1068,6 +1066,13 @@ END MODULE input_cp
           psfile, &
           pseudo_dir_ => pseudo_dir, &
           prefix_     => prefix
+
+        USE control_flags, ONLY: program_name, lneb, tnoseh, &
+              ortho_max_ => ortho_max, &
+              tolp_      => tolp, &
+              ortho_eps_ => ortho_eps
+#ifdef __PPPP
+#endif
 
         USE nose_ions, ONLY: nose_ions_setup
         USE nose_electrons, ONLY: nose_electrons_setup
@@ -1097,20 +1102,14 @@ END MODULE input_cp
         USE optical_properties, ONLY: optical_setup
         USE reciprocal_space_mesh, ONLY: recvecs_units
         USE cell_base, ONLY: cell_base_init, a1, a2, a3
-        USE cell_nose, ONLY: temph_ => temph, fnoseh_ => fnoseh, qnh_ => qnh
-        USE ions_base, ONLY: ions_base_init
+        USE cell_nose, ONLY: cell_nose_init
+        USE ions_base, ONLY: ions_base_init, self_interaction
         USE ions_nose, ONLY: ions_noseinit
         USE check_stop, ONLY: check_stop_init
-        !
-        USE control_flags, ONLY: lneb, tnoseh, &
-              tolp_ => tolp, &
-              ortho_max_ => ortho_max, &
-              ortho_eps_ => ortho_eps
-        !
         USE constants, ONLY: factem, terahertz, pi, eps8
-        USE ions_base, ONLY: self_interaction
         USE smallbox_grid_dimensions, ONLY: &
-              nr1b_ => nr1b, nr2b_ => nr2b, nr3b_ => nr3b
+           nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+           nr1b_ => nr1b, nr2b_ => nr2b, nr3b_ => nr3b
         !
         USE printout_base, ONLY: &
               title_ => title
@@ -1165,11 +1164,7 @@ END MODULE input_cp
         CALL metric_setup( wmass, press, cell_damping, greash, cell_dofree )
 
         ! set thermostat parameter for cell
-        qnh_    = 0.0d0
-        temph_  = temph
-        fnoseh_ = fnoseh
-        if( fnoseh > 0.0d0 ) qnh_ = 2.d0 * ( 3 * 3 )*temph/factem/(fnoseh*(2.d0*pi)*terahertz)**2
-
+        CALL cell_nose_init( temph, fnoseh )
 
         CALL real_space_mesh_setup( t2dpegrid_inp )
 
