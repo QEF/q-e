@@ -102,10 +102,10 @@ cat > H2+H.in << EOF
 /
 &IONS
   num_of_images           = 7,
-  k_max                   = 0.6D0,
-  k_min                   = 0.4D0,
+  k_max                   = 0.3D0,
+  k_min                   = 0.2D0,
   potential_extrapolation = "wfc2",
-  neb_thr                 = 0.1D0,  
+  path_thr                = 0.1D0,  
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
@@ -161,10 +161,10 @@ cat > symmetric_H2+H.in << EOF
 /
 &IONS
   num_of_images           = 8,
-  k_max                   = 0.6D0,
-  k_min                   = 0.4D0,
+  k_max                   = 0.3D0,
+  k_min                   = 0.2D0,
   potential_extrapolation = "wfc2",
-  neb_thr                 = 0.2D0,
+  path_thr                = 0.2D0,
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
@@ -196,8 +196,8 @@ $ECHO " done"
 # prefix of the new run 
 # the restart file asymmetric_H2+H.neb is modified (second row)
 # since a new simulation (from the old path) is started
-cat symmetric_H2+H.neb | \
-    awk '{if(NR==2){printf"   0\n"}; if(NR!=2){print}}' > asymmetric_H2+H.neb
+cat symmetric_H2+H.path | \
+    awk '{if(NR==2){printf"   0\n"}; if(NR!=2){print}}' > asymmetric_H2+H.path
 
 # NEB calculation. The image that has to climb is manually chosen
 cat > asymmetric_H2+H.in << EOF
@@ -229,11 +229,11 @@ cat > asymmetric_H2+H.in << EOF
   num_of_images           = 8,
   reset_vel               = .TRUE.,
   ds                      = 1.D0,
-  k_max                   = 0.6D0,
-  k_min                   = 0.4D0,
+  k_max                   = 0.3D0,
+  k_min                   = 0.2D0,
   CI_scheme               = "manual",
   potential_extrapolation = "wfc2",
-  neb_thr                 = 0.05D0,
+  path_thr                = 0.05D0,
 /
 CLIMBING_IMAGES
  5
