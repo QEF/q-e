@@ -333,13 +333,29 @@ subroutine ld1_readin
      call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
           isws, jjs, enls, rcut, rcutus )
      !
-     lmax=0
+     lmax = maxval(lls(1:nwfs))
+     !
+     zdum = zed
+     do n=1,nwf
+        if ( oc(n) > 0.0_dp) zdum = zdum - oc(n)
+     end do
+     do ns=1,nwfs
+        if ( ocs(ns) > 0.0_dp) zdum = zdum + ocs(ns)
+     end do
+     if ( abs(nint(zdum)-zdum) > 1.d-8 ) call errore &
+          ('ld1_readin',' calculated valence charge not integer?',1)
+     if (zval == 0) then
+        zval = zdum
+     else if ( abs(zval-zdum) > 1.d-8 ) then
+        call errore ('ld1_readin',&
+             ' suppied and calculated valence charge do not match',1)
+     end if
+     !
      do ns=1,nwfs
         do ns1=1,ns-1
            if (lls(ns) == lls(ns1).and.pseudotype == 1) &
                 call errore('ld1_readin','two wavefunctions for same l',1)
         enddo
-        lmax=max(lmax,lls(ns))
         !
         ! flag unbound states, i.e. those with negative occupancy
         ! and those with zero occupancy and nonzero reference energy
