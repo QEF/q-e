@@ -785,18 +785,6 @@ then
 	echo "${ECHO_T}done"
 fi
 
-# check sizes of types (not really needed, but Carlo wanted it)
-CFLAGS="$test_cflags"
-CPPFLAGS="$test_cppflags"
-LDFLAGS="$c_ldflags"
-LIBS=""
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(float)
-AC_CHECK_SIZEOF(double)
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(void *)
-
 # export settings to generated files
 AC_SUBST(cc)
 AC_SUBST(cflags)
