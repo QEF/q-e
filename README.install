@@ -37,9 +37,14 @@ and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
 HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
 assistance also on other architectures (see below).
 
-Cross-compilation isn't currently supported.  It might be in some
-future release, but don't hold your breath.  Volunteers to implement
-it are welcome.
+Cross-compilation is theoretically supported, but has never been
+tested; you have to specify the target machine with the "--host"
+option (see below).
+
+Cross-compilation probably works, but we don't make guarantees.  It
+has been reported to work in one case (compile on PC for NEC SX6); to
+our knowledge, it hasn't been tried by anyone else.
+So that's 100% success...
 
 Specifically, "configure" generates the following files:
 
@@ -106,8 +111,13 @@ Finally, "configure" recognizes the following command-line options:
 
   --disable-parallel : compile serial code, even if parallel
                        environment is available
-  --disable-shared : compile statically (don't use shared libraries)
+  --disable-shared : don't use shared libraries: generate static
+                     executables
   --enable-shared : use shared libraries
+  --host=target : specify target machine for cross-compilation.
+            "Target" must be a string identifying the architecture
+            that you want to compile for; you can obtain it by running
+            "config.guess" on the target machine.
 
 If you want to modify the "configure" script itself (advanced users
 only!), you'll need GNU Autoconf
