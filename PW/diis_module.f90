@@ -2393,7 +2393,7 @@ MODULE complex_diis_module
              all_hpsi(:,1) = hpsi(:,ib)
              all_spsi(:,1) = spsi(:,ib)
              !
-	     all_psi(:,2:nbase)  = psi_old(:,1:dim,ib)
+             all_psi(:,2:nbase)  = psi_old(:,1:dim,ib)
              all_hpsi(:,2:nbase) = hpsi_old(:,1:dim,ib)
              all_spsi(:,2:nbase) = spsi_old(:,1:dim,ib)
              !
