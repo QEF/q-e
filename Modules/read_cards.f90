@@ -1739,8 +1739,6 @@ MODULE read_cards_module
              !
              CALL read_line( input_line )
              !
-             ALLOCATE( climbing(num_of_images) )
-             !
              DO i = 1, num_of_images
                 !
                 i_char = int_to_char( i ) 

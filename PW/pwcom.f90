@@ -592,8 +592,7 @@ MODULE us
        indv(:,:),        &! correspondence of betas atomic <-> soli
        nhtol(:,:),       &! correspondence n <-> angular momentum
        nhtom(:,:)         ! correspondence n <-> magnetic angular m
-
-  complex(KIND=DP), ALLOCATABLE, TARGET :: &
+  COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
        vkb(:,:),              &! all beta functions in reciprocal space
        qgm(:)                  ! complete fourier transform of Q
   REAL(KIND=DP), ALLOCATABLE :: &
