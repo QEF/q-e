@@ -56,8 +56,9 @@ SUBROUTINE clean_pw
   !
   ! ... arrays allocated in allocate_fft.f90 ( and never deallocated )
   !
+  IF ( ALLOCATED( g ) )          DEALLOCATE( g )
   IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
-  IF ( ALLOCATED( nl ) )         DEALLOCATE( nl)  
+  IF ( ALLOCATED( nl ) )         DEALLOCATE( nl )  
   IF ( gamma_only ) THEN
      IF ( ALLOCATED( nlm ) )     DEALLOCATE( nlm )
   END IF

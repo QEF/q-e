@@ -94,13 +94,18 @@ subroutine allocate_nlpot
   allocate (qgm( ngm))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
-  !     Allocate space for Hubbard potential
+  ! ... Allocate space for Hubbard potential
+  ! ... These arrays are allocated ALWAYS even if lda_plus_u = .FALSE.
+  ! ... This is needed since they are passed as arguments of mix_rho
+  ! ... no matter lda_plus_u is .TRUE. or .FALSE.   ( 23/10/2003 C.S. )
   !
-  if (lda_plus_u) then  
-     ldim = 2 * Hubbard_lmax + 1
-     allocate( ns    (ldim, ldim, nspin, nat) )
-     allocate( nsnew (ldim, ldim, nspin, nat) ) 
-  endif
+  ! if (lda_plus_u) then  
+  !
+  ldim = 2 * Hubbard_lmax + 1
+  ALLOCATE( ns( ldim, ldim, nspin, nat ) )
+  ALLOCATE( nsnew( ldim, ldim, nspin, nat ) ) 
+  !
+  ! endif
   !
   !     Calculate dimensions for array tab (including a possible factor
   !     coming from cell contraction during variable cell relaxation/MD)
