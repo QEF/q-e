@@ -11,6 +11,7 @@ what:
 	@echo '   d3        (third-order derivatives)'
 	@echo '   pwcond    (ballistic conductance)'
 	@echo '   gamma     (Gamma-only version of pw and ph)'
+	@echo '   pwneb     (basic code for scf, struct. optimization, MD and NEB)'
 	@echo '   upf       (utilities for pseudopotential conversion)'
 	@echo '   tools     (misc tools for data analysis)'
 	@echo '   tar       (create a tar file containing the distribution)'
@@ -33,6 +34,9 @@ upf: libs
 
 gamma: pw
 	( cd Gamma; make all )
+
+pwneb: pw
+	( cd NEB; make all )
 
 d3: ph
 	( cd D3; make all )
@@ -73,6 +77,7 @@ clean:
 	( cd D3 ; make clean_ ) ; \
 	( cd PWCOND ; make clean_ ) ; \
 	( cd Gamma ; make clean_ ) ; \
+	( cd NEB ; make clean_ ) ; \
 	( cd pwtools ; make clean_ ) ; \
 	( cd upftools ; make clean_ ) ; \
         ( cd Modules ; make clean_ ) ; \
@@ -96,7 +101,7 @@ veryclean: clean
 tar:
 	rm -f pw.tar pw.tar.gz
 	find License README */README INSTALL configure \
-	     makedeps.sh moduledep.sh Makefile */Makefile \
+	     makedeps.sh moduledep.sh Makefile */Makefile Makefile.neb NEB/make.dep \
 	     configure.new configure.ac config.guess config.sub \
 	     install-sh make.rules.in make.sys.in \
 	     */*.f90 */*.c */*.f clib/*.h include/*.h* \
