@@ -22,6 +22,9 @@ subroutine phqscf
   use pwcom
   USE kinds, only : DP
   use phcom
+#ifdef DEBUG
+  USE para, ONLY : me, mypool
+#endif
   implicit none
 
   integer :: irr, irr1, irrc, imode0

@@ -18,6 +18,11 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
   !
 #include "machine.h"
   USE kinds, only : DP
+
+#ifdef DEBUG
+  USE io_global,  ONLY :  stdout
+#endif
+
   implicit none
   !
   logical :: reorder
