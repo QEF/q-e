@@ -128,7 +128,7 @@ subroutine dvpsi_e(kpoint,ipol)
   end if
   !
   startwith0= .true.
-  call setv(2*npwx*nbnd,0.d0,dvpsi,1)
+  dvpsi(:,:) = (0.d0, 0.d0)
   !
   call cgsolve (H_h,npw,evc,npwx,nbnd,overlap,nbnd,   &
        orthonormal,precondition,q,startwith0,et(1,kpoint),&

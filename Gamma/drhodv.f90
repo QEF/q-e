@@ -23,7 +23,7 @@ subroutine drhodv(nu_i)
   !
   call start_clock('drhodv')
   !
-  call setv(nmodes,0.d0,dynel,1)
+  dynel(:) = 0.d0
   kpoint = 1
   ! do kpoint=1,nks
   !

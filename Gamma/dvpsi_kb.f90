@@ -32,8 +32,8 @@ subroutine dvpsi_kb(kpoint,nu)
   dv     => auxr
   dvloc  => aux2
   dvb_cc => aux3
-  call setv(2*nrxx,0.d0,dvloc,1)
-  call setv(2*nrxx,0.d0,dvb_cc,1)
+  dvloc(:) = (0.d0, 0.d0)
+  dvb_cc(:)= (0.d0, 0.d0)
   do na = 1,nat
      mu = 3*(na-1)
      if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2.gt. 1.0e-12) then
@@ -77,7 +77,7 @@ subroutine dvpsi_kb(kpoint,nu)
   !
   !   vloc_psi calculates dVloc/dtau*psi(G)
   !
-  call setv(2*npwx*nbnd,0.d0,dvpsi,1)
+  dvpsi(:,:) = (0.d0, 0.d0)
   call vloc_psi(npwx, npw, nbnd, evc, dv, dvpsi)
   !
   !   nonlocal (Kleinman-Bylander) contribution.

@@ -958,8 +958,8 @@
       allocate(dqgbs(ngb,3,3))
       allocate(qgbs(ngb))
 !
-      call zero(ngb*nbrx*nbrx*lx*nsp,qradb)
-      call zero(9*ngb*nbrx*nbrx*lx*nsp,dqrad)
+      qradb(:,:,:,:,:) = 0.d0
+      dqrad(:,:,:,:,:,:,:) = 0.d0
 !
 !     ===============================================================
 !     initialization for vanderbilt species
@@ -1147,14 +1147,14 @@
       real(kind=8) fpre(3,3), tmpbec(nhx,nx), tmpdh(nx,nhx), temp(nx,nx),&
      &       SSUM, tt
 !
-      call zero(9,fpre)
+      fpre(:,:) = 0.d0
       do ii=1,3
          do jj=1,3
             do is=1,nvb
                do ia=1,na(is)
 !
-                  call zero(nhx*n,tmpbec)
-                  call zero(nhx*n,tmpdh)
+                  tmpbec(:, 1:n) = 0.d0
+                  tmpdh (1:n, :) = 0.d0
 !
                   do iv=1,nh(is)
                      do jv=1,nh(is)
@@ -1176,7 +1176,7 @@
                   end do
 !
                   if(nh(is).gt.0)then
-                     call zero(nx*n,temp)
+                     temp(:, 1:n) = 0.d0
 !
                      call MXMA                                          &
      &                    (tmpdh,1,nx,tmpbec,1,nhx,temp,1,nx,n,nh(is),n)
@@ -1296,10 +1296,10 @@
       allocate(qradx(mmx,nbrx,nbrx,lx,nsp))
       allocate(dqradx(mmx,nbrx,nbrx,lx,nsp))
 !
-      call zero(ngb*nbrx*nbrx*lx*nsp,qradb)
-      call zero(nhx*nhx*nsp,qq)
-      call zero(nhx*nhx*nsp,dvan)
-      if(tpre) call zero(9*ngb*nbrx*nbrx*lx*nsp,dqrad)
+      qradb(:,:,:,:,:) = 0.d0
+      qq  (:,:,:) =0.d0
+      dvan(:,:,:) =0.d0
+      if(tpre) dqrad(:,:,:,:,:,:,:) = 0.d0
 !
 !     ------------------------------------------------------------------
 !     definition of indices nhtol, indv, indlm
@@ -1584,11 +1584,11 @@
       if(ivl.gt.nlx)  call errore(' qvan ',' ivl.gt.nlx  ',ivl)
       if(jvl.gt.nlx)  call errore(' qvan ',' jvl.gt.nlx  ',jvl)
 !
-      call zero(2*ngb,qg)
+      qg(:) = (0.d0, 0.d0)
       allocate(ylm(ngb))
       if(tpre) then
          allocate(dylm(ngb,3,3))
-         call zero(2*9*ngb,dqg)
+         dqg(:,:,:) = (0.d0, 0.d0)
       end if
 !
 !     lpx = max number of allowed y_lm

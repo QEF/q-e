@@ -34,7 +34,7 @@ subroutine generate_effective_charges &
         call trntns(zstar(1,1,na),at,bg,-1)
         done(na)=.true.
      else
-        call setv(9,0.d0,zstar(1,1,na),1)
+        zstar(:,:,na) = 0.d0
         done(na)=.false.
      end if
   end do

@@ -85,6 +85,7 @@ set_irr_nosym.o  \
 setlocq.o  \
 setqmod.o  \
 setup_dgc.o  \
+setv.o  \
 smallgq.o  \
 solve_e.o  \
 solve_linter.o  \
@@ -284,7 +285,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/set_rhoc.o  \
 ../PW/setup.o  \
 ../PW/setupkpt.o  \
-../PW/setv.o  \
 ../PW/set_vrs.o  \
 ../PW/sgama.o  \
 ../PW/sgam_at.o  \

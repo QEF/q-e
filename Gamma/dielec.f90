@@ -31,8 +31,8 @@ subroutine dielec(do_zstar)
   allocate (dpsi3( npwx, nbnd))    
   allocate (work( nbnd, 3))    
   !
-  call setv(9,0.d0,epsilon0,1)
-  if (do_zstar) call setv(9*nat,0.d0,zstar,1)
+  epsilon0(:,:) = 0.d0
+  if (do_zstar) zstar (:,:,:) = 0.d0
   !  do kpoint=1,nks
   kpoint=1
   weight = wk(kpoint)

@@ -71,7 +71,7 @@ subroutine solve_e
      call  seqopn (iudwf,fildwf,'unformatted',here)
 !!!         if (.not.here) then
      !  calculate Delta*psi  (if not already done)
-     call setv(2*nbnd*npwx,0.d0,dpsi,1)
+     dpsi(:,:) = (0.d0, 0.d0)
      startwith0= .true.
 !!!         else
      !  otherwise restart from Delta*psi that is found on file

@@ -23,7 +23,7 @@ subroutine dynmatcc(dyncc)
   real(kind=DP) :: exg
   !
   !
-  call setv(3*nat*nmodes,0.d0,dyncc,1)
+  dyncc(:,:) = 0.d0
   !
   do nt=1,ntyp
      if(nlcc(nt)) go to 10
@@ -42,7 +42,7 @@ subroutine dynmatcc(dyncc)
   !
   call cft3(vxc,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
   !
-  call setv(3*nat*3*nat,0.d0,dyncc1,1)
+  dyncc1(:,:,:,:) = 0.d0
   do na=1,nat
      nta=ityp(na)
      if (nlcc(nta)) then
@@ -68,7 +68,7 @@ subroutine dynmatcc(dyncc)
            end do
         end do
         do i=1,3
-           call dvb_cc  (nlcc,nt,ngm,nr1,nr2,nr3,nrx1, &
+           call dvb_cc  (nlcc,nt,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3, &
                 nl,drhocc,dmuxc,gc(1,i),aux3,gc(1,i))
         end do
         do nb=1,nat

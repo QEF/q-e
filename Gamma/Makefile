@@ -112,7 +112,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \
 ../PW/rho2zeta.o \
-../PW/setv.o \
 ../PW/ruotaijk.o \
 ../PW/s_axis_to_ca.o \
 ../PW/save_in_cbands.o \

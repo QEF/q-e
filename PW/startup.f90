@@ -90,9 +90,9 @@ subroutine startup (nd_nmbr, code, version)
      nargs = iargc () 
      !
      do iiarg=1,nargs-1
-        call getarg (iiarg, np)  
+        call getarg(iiarg, np)  
         if (trim(np) == '-npool' .or. trim(np) == '-npools' ) then
-          call getarg (iiarg+1, np)  
+          call getarg(iiarg+1, np)  
           read (np,*) npool  
         end if
      end do

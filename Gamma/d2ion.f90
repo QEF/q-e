@@ -42,7 +42,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   ! appropriate for c60
   write(6,'("     d2ion: alpha = ",f6.2)') alpha
   !
-  call setv(3*nat*nmodes,0.d0,dyn,1)
+  dyn (:,:) = 0.d0
   !
   ! G-space sum here
   !

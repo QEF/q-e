@@ -37,7 +37,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   if (.not.startwith0) then
      call operator(e,x,u)
   else
-     call setv(2*npwx*nbnd,0.d0,u,1)
+     u (:,:) = (0.d0, 0.d0)
      ! note that we assume x=0 on input
   end if
   !

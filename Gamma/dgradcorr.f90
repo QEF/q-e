@@ -40,7 +40,7 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
   allocate (h(  3, nrxx , nspin))    
   allocate (dh( nrxx))    
 
-  call setv (6 * nrxx * nspin, 0.d0, h, 1)
+  h (:,:,:) = (0.d0, 0.d0)
   do is = 1, nspin
      call gradient1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
          drhoc(1, is), ngm, g, nl, nlm, alat, gdrho (1, 1, is) )
@@ -74,7 +74,7 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
         !
         !    LSDA case
         !
-        call setv (8, 0.d0, ps, 1)
+        ps (:,:) = (0.d0, 0.d0)
         do is = 1, nspin
            do js = 1, nspin
               do ipol = 1, 3

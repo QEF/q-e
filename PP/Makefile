@@ -209,7 +209,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/set_rhoc.o  \
 ../PW/setup.o  \
 ../PW/setupkpt.o  \
-../PW/setv.o  \
 ../PW/set_vrs.o  \
 ../PW/sgama.o  \
 ../PW/sgam_at.o  \

@@ -83,7 +83,7 @@ CONTAINS
          if ( sign /= 2 ) then
             call cft_1z( f, dfft%nsp(me), nr3, nr3x, sign, aux)
             call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsp, dfft%npp, sign)
-            call zero(2*dfft%nnr,f)
+            f(:) = (0.d0, 0.d0)
             do i = 1, dfft%nst
                mc = dfft%ismap( i )
                do j = 1, dfft%npp(me)
@@ -94,7 +94,7 @@ CONTAINS
          else
             call cft_1z( f, dfft%nsw(me), nr3, nr3x, sign, aux)
             call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, sign)
-            call zero( 2*dfft%nnr, f )
+            f(:) = (0.d0, 0.d0)
             ii = 0
             do proc=1,nproc
                do i=1,dfft%nsw(proc)

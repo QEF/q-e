@@ -32,7 +32,7 @@ subroutine A_h(e,h,ah)
   dpsic => aux2
   drhoc => aux3
   !
-  call setv(nrxx,0.d0,drho,1)
+  drho(:) = 0.d0
   !
   ! [(k+G)^2 - e ]psi
   do ibnd = 1,nbnd
@@ -45,8 +45,8 @@ subroutine A_h(e,h,ah)
   end do
   !     V_Loc psi
   do ibnd = 1,nbnd, 2
-     call setv(2*nrxx,0.d0,dpsic,1)
-     call setv(2*nrxx,0.d0, psic,1)
+     dpsic(:)= (0.d0, 0.d0)
+     psic(:) = (0.d0, 0.d0)
      if (ibnd.lt.nbnd) then
         ! two ffts at the same time
         do j = 1,npw

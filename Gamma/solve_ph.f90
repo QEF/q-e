@@ -89,7 +89,7 @@ subroutine solve_ph
      call dvpsi_kb(kpoint,nu)
      ! initialize delta psi
      startwith0=.true.
-     call setv(2*nbnd*npwx,0.d0,dpsi,1)
+     dpsi(:,:) = (0.d0, 0.d0)
      ! solve the linear system
      ! NB: dvpsi is used also as work space and is destroyed by cgsolve
      call cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &

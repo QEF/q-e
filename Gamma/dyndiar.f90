@@ -87,7 +87,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   write (6,'(5x,"diagonalizing the dynamical matrix ..."//)')
   write (6,'(1x,74("*"))')
   !
-  call setv(nat3*nmodes,0.0,dynout,1)
+  dynout (:,:) = 0.0
   do nu_i = 1,nmodes
      w1 = sqrt(abs(w2(nu_i)))
      if (w2(nu_i).lt.0.0) w1 = -w1

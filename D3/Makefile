@@ -139,6 +139,7 @@ PHOBJS = ../PH/phcom.o  \
 ../PH/setlocq.o  \
 ../PH/setqmod.o  \
 ../PH/setup_dgc.o  \
+../PH/setv.o  \
 ../PH/smallgq.o  \
 ../PH/solve_e.o  \
 ../PH/solve_linter.o  \
@@ -338,7 +339,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/set_rhoc.o  \
 ../PW/setup.o  \
 ../PW/setupkpt.o  \
-../PW/setv.o  \
 ../PW/set_vrs.o  \
 ../PW/sgama.o  \
 ../PW/sgam_at.o  \

@@ -46,7 +46,8 @@ PW
 - remove residual direct calls to MPI routines,
   use (or merge with) existing routines in mp.f90 instead
 
-- remove all calls to setv and to blas copy, scal
+- remove all calls to setv in PH and D3; all calls to zero and SSUM in
+  CPV; calls to level-1 blas copy, scal
 
 - remove potential mixing, save and start from rho instead of V,
   at least for scf calculations. For non-scf calculations: we may

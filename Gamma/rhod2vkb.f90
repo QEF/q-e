@@ -32,7 +32,7 @@ subroutine rhod2vkb(dyn0)
   ! contribution from local potential
   !
   allocate  ( dynloc( 3*nat, nmodes))    
-  call setv(3*nat*nmodes,0.d0,dynloc,1)
+  dynloc (:,:) = 0.d0
   do ir = 1,nrxx
      psic(ir) = rho(ir,current_spin)
   end do
@@ -166,14 +166,15 @@ subroutine rhod2vkb(dyn0)
   deallocate ( becp1)
   deallocate ( dvkb)
   !
-  call setv(3*nat*nmodes,0.d0,dyn0,1)
+  dyn0 (:,:) = 0.d0
   !
   do nu_i = 1,nmodes
      if (has_equivalent( (nu_i-1)/3+1).eq.0 ) then
         do nu_j=1,nmodes
            do mu_i=1,3*nat
               do mu_j=1,3*nat
-                 dyn0(nu_i,nu_j) = dyn0(nu_i,nu_j) + dynkb(mu_i,mu_j)*u(mu_i,nu_i)*u(mu_j,nu_j)
+                 dyn0(nu_i,nu_j) = dyn0(nu_i,nu_j) + &
+                      dynkb(mu_i,mu_j)*u(mu_i,nu_i)*u(mu_j,nu_j)
               end do
            end do
         end do

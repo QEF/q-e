@@ -27,7 +27,7 @@ subroutine macro
         call seqopn (iubar,filbar,'unformatted',here)
 !!!            if (.not.here) then
         ! calculate x * psi  (if not already done)
-        call setv(2*nbnd*npwx,0.d0,dvpsi,1)
+        dvpsi(:,:) = (0.d0, 0.d0)
 !!!            else
         ! otherwise restart from x * psi that is present on from file
 !!!               read(iubar) dvpsi

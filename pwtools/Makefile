@@ -9,7 +9,7 @@ PWOBJS = ../PW/error.o \
          ../PW/kpoint_grid.o ../PW/sgama.o ../PW/sgam_at.o  \
          ../PW/sgam_ph.o ../PW/coset.o ../PW/multable.o \
          ../PW/smallg_q.o ../PW/dsum.o ../PW/trnvecc.o ../PW/invmat.o \
-         ../PW/checksym.o ../PW/eqvect.o ../PW/setv.o  \
+         ../PW/checksym.o ../PW/eqvect.o  \
          ../PW/irrek.o ../PW/mode_group.o \
          ../PW/cft_3.o ../PW/error_handler.o
 MODULES = ../Modules/parameters.o ../Modules/kind.o ../Modules/fft_scalar.o

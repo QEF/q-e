@@ -383,7 +383,7 @@ SUBROUTINE c_phase
    CALL ylm_q(lqx*lqx,dk,dkmod,ylm_dk)
 
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-   CALL setv(nhm*nhm*ntyp,0.d0,q_dk,1)
+   q_dk(:,:,:) = (0.d0, 0.d0)
    DO np =1, ntyp
       DO iv = 1, nh(np)
          DO jv = iv, nh(np)
@@ -448,11 +448,11 @@ SUBROUTINE c_phase
                ENDIF
 
 !              --- Matrix elements calculation ---
-               CALL setv(2*nbnd*nbnd,0.d0,mat,1)
+               mat(:,:) = (0.d0, 0.d0)
                DO nb=1,nbnd
                   DO mb=1,nbnd
-                     CALL setv(2*ngm,0.d0,aux,1)
-                     CALL setv(2*ngm,0.d0,aux0,1)
+                     aux(:) = (0.d0, 0.d0)
+                     aux0(:)= (0.d0, 0.d0)
                      DO ik=1,npw0
                         aux0(igk0(ik))=psi(ik,nb)
                      END DO    

@@ -33,11 +33,11 @@ subroutine cg_setupdgc
   if (igcx.eq.0 .and. igcc.eq.0) return
   call start_clock('setup_dgc')
   !
-  call setv(nrxx*nspin*nspin,0.d0,dvxc_rr,1)
-  call setv(nrxx*nspin*nspin,0.d0,dvxc_sr,1)
-  call setv(nrxx*nspin*nspin,0.d0,dvxc_ss,1)
-  call setv(nrxx*nspin*nspin,0.d0,dvxc_s ,1)
-  call setv(3*nrxx*nspin,0.d0,grho ,1)
+  dvxc_rr(:,:,:) = 0.d0
+  dvxc_sr(:,:,:) = 0.d0
+  dvxc_ss(:,:,:) = 0.d0
+  dvxc_s (:,:,:) = 0.d0
+  grho (:,:,:) = 0.d0
   !
   !    add rho_core
   !

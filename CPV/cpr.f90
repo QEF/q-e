@@ -304,7 +304,7 @@
       allocate(rhor(nnr,nspin))
       allocate(rhos(nnrsx,nspin))
       allocate(rhog(ng,nspin))
-      if (nlcc.gt.0) allocate(rhoc(nnr))
+      if (nlcc > 0) allocate(rhoc(nnr))
       allocate(wrk1(nnr))
       allocate(qv(nnrb))
       allocate(c2(ngw))
@@ -332,7 +332,7 @@
 #ifdef __PARA
       allocate(aux(nnr))
 #endif
-      call zero(nat*nhx*nhx*nspin,deeq)
+      deeq(:,:,:,:) = 0.d0
 !
  666  continue
 !
@@ -357,12 +357,9 @@
 !
       hnew=h
 !
-      do i=1,n
-         call zero(n,lambda(1,i))
-!
-         call zero(2*ngw,cm(1,i))
-         call zero(2*ngw,c0(1,i))
-      end do
+      lambda(:,:)=0.d0
+      cm(:,:) = (0.d0, 0.d0)
+      c0(:,:) = (0.d0, 0.d0)
 !
 !     mass preconditioning: ema0bg(i) = ratio of emass(g=0) to emass(g)
 !     for g**2>emaec the electron mass ema0bg(g) rises quadratically
@@ -372,7 +369,7 @@
          if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
       end do
 !
-      if (nbeg.lt.0) then
+      if (nbeg < 0) then
 !======================================================================
 !       nbeg = -1 or nbeg = -2 or nbeg = -3
 !======================================================================
@@ -571,22 +568,18 @@
          xnhp0=0.
          xnhpm=0.
          vnhp =0.
+         fionm(:,:,:)=0.
          do is=1,nsp
             do ia=1,na(is)
                do i=1,3
-                  fionm(i,ia,is)=0.
-                  vels(i,ia,is)=(taus(i,ia,is)-tausm(i,ia,is))/delt
+                  vels (i,ia,is)=(taus(i,ia,is)-tausm(i,ia,is))/delt
                end do
             end do
          end do
-         do j=1,3
-            do i=1,3
-               xnhh0(i,j)=0.
-               xnhhm(i,j)=0.
-               vnhh(i,j) =0.
-               velh(i,j)=(h(i,j)-hold(i,j))/delt
-            end do
-         end do
+         xnhh0(:,:)=0.
+         xnhhm(:,:)=0.
+         vnhh (:,:) =0.
+         velh (:,:)=(h(:,:)-hold(:,:))/delt
 !     
 !     ======================================================
 !     kinetic energy of the electrons
@@ -610,11 +603,7 @@
          xnhem=0.
          vnhe =0.
 !     
-         do j=1,n
-            do i=1,n
-               lambdam(i,j)=lambda(i,j)
-            end do
-         end do
+         lambdam(:,:)=lambda(:,:)
 !     
       else
 !======================================================================
@@ -639,11 +628,7 @@
          if(trane.and.trhor) then
             call prefor(eigr,betae)
             call graham(betae,bec,c0)
-            do i=1,n
-               do j=1,ngw
-                  cm(j,i)=c0(j,i)
-               end do
-            end do
+            cm(:, 1:n)=c0(:, 1:n)
          endif
 !
          if(iprsta.gt.2) then
@@ -673,21 +658,11 @@
       end if
 !
       if(.not.tfor) then
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  fion(i,ia,is)=0.d0
-               end do
-            end do
-         end do
+         fion (:,:,:) = 0.d0
       end if
 !
       if(.not.tpre) then
-         do j=1,3
-            do i=1,3
-               stress(i,j)=0.
-            end do
-         end do
+         stress (:,:) = 0.d0
       endif
 !         
       fccc=1.
@@ -717,12 +692,8 @@
          fccc=1./(1.+0.5*delt*vnhe)
       endif
       if(tnoseh) then
-         do i=1,3
-            do j=1,3
-               vnhh(i,j)=2.*(xnhh0(i,j)-xnhhm(i,j))/delt-vnhh(i,j)
-               velh(i,j)=2.*(h(i,j)-hold(i,j))/delt-velh(i,j)
-            end do
-        end do
+         vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
+         velh(:,:)=2.*(h(:,:)-hold(:,:))/delt-velh(:,:)
       endif
 ! 
       if (tfor.or.thdyn.or.tfirst) then 
@@ -831,17 +802,13 @@
 !
       if (tfor) call nlfq(c0,deeq,eigr,bec,becdr,fion)
 !
-      if(tfor.or.thdyn)then
-         do j=1,n
-            do i=1,n
+      if(tfor.or.thdyn) then
 !
 ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
 !
-               lambdap(i,j)=2.*lambda(i,j)-lambdam(i,j)
-               lambdam(i,j)=lambda(i,j)
-               lambda (i,j)=lambdap(i,j)
-            end do
-         end do
+         lambdap(:,:) = 2.d0*lambda(:,:)-lambdam(:,:)
+         lambdam(:,:)=lambda (:,:)
+         lambda (:,:)=lambdap(:,:)
       endif
 !
 !     calphi calculates phi
@@ -903,11 +870,7 @@
 !           guessed displacement of ions
 !=======================================================================
 !
-      do j=1,3
-         do i=1,3
-            hgamma(i,j)=0.
-         enddo
-      enddo
+      hgamma(:,:) = 0.d0
       if(thdyn) then
          verl1=2./(1.+frich)
          verl2=1.-verl1
@@ -935,11 +898,9 @@
                enddo
             enddo
          endif
-         do j=1,3
-            do i=1,3
-               velh(i,j) = (hnew(i,j)-hold(i,j))/twodel
-            enddo
-         enddo
+         !
+         velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
+         !
          do i=1,3
             do j=1,3
                do k=1,3
@@ -1337,12 +1298,8 @@
             xnhe0 = xnhep
          endif
          if(tnoseh) then
-            do j=1,3
-               do i=1,3
-                  xnhhm(i,j) = xnhh0(i,j)
-                  xnhh0(i,j) = xnhhp(i,j)
-               enddo
-            enddo
+            xnhhm(:,:) = xnhh0(:,:)
+            xnhh0(:,:) = xnhhp(:,:)
          endif
       end if
 !

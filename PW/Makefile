@@ -196,7 +196,6 @@ setqf.o  \
 set_rhoc.o  \
 setup.o  \
 setupkpt.o  \
-setv.o  \
 set_vrs.o  \
 sgama.o  \
 sgam_at.o  \
