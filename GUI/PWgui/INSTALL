@@ -9,11 +9,46 @@ scripting language----no compilation is needed.
 *** HOWEVER *** the package depends on the [incr Tcl] and related
 software. Therefore you have two possibility: 
 
-   (i)  to use source package if required Tcl software is installed
-        (see SOFTWARE REQUIREMENTS section below)
-   (ii) to use self-contained "binary" package (which contains
-        needed Tcl software)
+   (i)  to use a standalone executable which run out of the box (works
+	only on the platform for which it have been built)
 
+   (ii) to use source package if required Tcl software is installed
+        (see SOFTWARE REQUIREMENTS section below)
+
+
+
+--
+(I) INSTALLATION INSTRUCTIONS FOR STANDALONE EXECUTABLE
+
+The standalone executable run out of the box. It is a self-contained,
+and installation-free. Simply download and unzip (or untar). For
+zipped pwgui-xxx.zip package do:
+	
+	* unzip pwgui-xxx.zip, 
+
+while for tarred pwgui-xxx.tgz package do either:
+
+	* tar zxvf pwgui-xxx.tgz 
+or: 
+	* gunzip -c pwgui-xxx.tgz | tar xvf -
+
+That' all!!! To launch the program type: pwgui.
+
+Here is a list of platforms on which standalone pwgui executables are
+available:
+
++ Linux-i386
++ Windows
++ Macintosh (for MACOSX, pwgui requires X11)
+
+
+
+--
+(II) INSTALLATION INSTRUCTIONS FOR SOURCE PACKAGE
+
+To use the source package you need required Tcl software (see SOFTWARE
+REQUIREMENTS section below). If you are using PWgui's CVS sources see
+also the INSTALL.cvs file.
 
 VERY SHORT INSTALLATION INSTRUCTIONS:
 -------------------------------------
@@ -59,8 +94,8 @@ SOFTWARE REQUIREMENTS FOR SOURCE PACKAGE
 The PWgui source package depends on the following Tcl-related
 software:
 
-	Tcl+ Tk    >= 8.3
-	Itcl+ Itk  >= 3.1
+	Tcl + Tk   >= 8.3
+	Itcl + Itk >= 3.1
 	Iwidgets   >= 3.0
 
 The Itcl, Itk, and Iwidgets stand for: [incr Tcl], [incr Tk], and
@@ -85,19 +120,5 @@ troubles then replace the call to "wish" ("itkwish") with "itkwish"
 ("wish") in file pwgui.
 
 
-SELF-CONTAINED "BINARY" PACKAGES
---------------------------------
-
-For a few operating systems also self-contained "binary" packages are
-available, which come with statically linked "itkwish" interpreter and
-necessary Tcl + Tk + Itcl + Itk + Iwidgets library files. Use this
-package if your computer does not have the necessary Tcl-related
-software installed.
-
-Current list of self-contained "binary" packages:
-
-+ Linux-i386
-
-
 --
-Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 06:45:59 CET 2004
+Anton Kokalj (tone.kokalj@ijs.si), Mon Apr  5 10:34:59 CEST 2004

@@ -10,9 +10,12 @@ language no compilation is needed for the PWgui. However the package
 depends on the [incr Tcl] and related software. Therefore you have two
 possibilities:
 
-   (i)  to use source package if required Tcl software is installed
-   (ii) to use self-contained "binary" package (which contains
-        needed Tcl software)
+   (i)  to use a standalone executable which run out of the box. Works
+	only on the platform fot which it have been built. Currently
+	the following plaforms are supported: Linux, Windows, MacOSX. 
+
+   (ii) to use source package if required Tcl software is installed
+        (see SOFTWARE REQUIREMENTS section below)
 
 See the file "INSTALL" for installation instructions.
 
@@ -37,7 +40,7 @@ Currently, the following PWscf programs (modules) are supported:
  * d3.x
 
 
-Directory structure of the PWgui package:
+Directory structure of the PWgui package (source package):
 
 src/		main source directory of the PWgui
 modules/	GUIB definition files for PWscf programs (modules)
@@ -49,12 +52,13 @@ bin/		contains the itkwish interpreter (self-contained packages only)
 external/	external Tcl-related software (self-contained packages only)
 
 
+
 COPYING
 -------
 
-The PWgui is covered by the GNU General Public License. Note that
-the PWgui uses also some external software, which is covered by other
-free software licenses.
+The PWgui is covered by the GNU General Public License. Note that the
+PWgui uses also some external Tcl software, which is covered by other
+modified BSD-like free software licenses.
 
 The material included in the directory external/ (self-contained
 packages only) is the Tcl-related software. For the corresponding
@@ -74,6 +78,28 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+
+NOTE ABOUT THE STANDALONE EXECUTABLES
+-------------------------------------
+
+Standalone executables are build using the Starkit's SDX
+utility. These executables are starkits---a STAandalone Runtime
+tclKITs (http://www.equi4.com/starkit.html). The Tclkit license is the
+following:
+
+"Tclkit is a combination of Tcl/Tk, IncrTcl, TclVFS, Zlib, and
+ Metakit. Metakit is open source, using an X/MIT-style license. Tcl/Tk,
+ IncrTcl, TclVFS, and Zlib have their own, BSD-ish open source
+ licenses, so in my understanding this code can be used freely, also
+ commercially.
+
+ When Tclkit is distributed as part of a commercial package, copyright
+ attributions and license terms for the above need to be included in
+ the distribution.
+
+ A reference to the origin of Tclkit is appreciated but not required."
 
 
 --
