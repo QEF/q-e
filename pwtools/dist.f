@@ -379,10 +379,10 @@
       character*1 capital, character
 !
       character*26 minuscole, maiuscole
-      parameter (minuscole='abcdefghijklmnopqrstuvwxyz',
-     &           maiuscole='ABCDEFGHIJKLMNOPQRSTUVWXYZ')
       integer  i
 !
+      minuscole='abcdefghijklmnopqrstuvwxyz'
+      maiuscole='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
       do i=1,26
          if (character.eq.minuscole(i:i)) then
             capital=maiuscole(i:i)
