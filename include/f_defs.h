@@ -315,7 +315,7 @@
 #  define ZGEMM       c_gemm
 #endif
 
-#if defined(__LAM) || defined (__LINUX)
+#if defined(__LAM) && defined (__LINUX)
 #define MPI_REAL8 MPI_DOUBLE_PRECISION
 #endif
 
