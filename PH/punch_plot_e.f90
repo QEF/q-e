@@ -31,7 +31,7 @@ subroutine punch_plot_e
 #endif
   implicit none
 
-  integer :: plot_num, iunplot, ios, ipol, jpol, na, ir
+  integer :: plot_num, iunplot, ios, ipol, jpol, na, ir, nt
   ! type of plot (not used)
   ! unit of the plot file
   ! integer variable for I/O contr
@@ -110,9 +110,11 @@ subroutine punch_plot_e
              ntyp
         write (iunplot, '(i6,6f12.8)') ibrav, celldm
         write (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
-        write (iunplot, 200) (na, atm (ityp (na) ), zv (ityp (na) ), &
-             (tau (jpol, na), jpol = 1, 3), na = 1, nat)
-200     format      (3x,i2,3x,a6,3x,f5.2,3x,3f14.10)
+        write (iunplot, '(i4,3x,a2,3x,f5.2)') &
+                                (nt, atm (nt), zv (nt), nt=1, ntyp)
+        write (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
+          (tau (jpol, na), jpol = 1, 3), ityp (na), na = 1, nat)
+
 #ifdef __PARA
      endif
 #endif
@@ -124,11 +126,11 @@ subroutine punch_plot_e
 #ifdef __PARA
      allocate (raux1( nrx1 * nrx2 * nrx3))    
      call gather (raux, raux1)
-     if (me.eq.1.and.mypool.eq.1) write (iunplot, '(5(1pe16.9))') &
+     if (me.eq.1.and.mypool.eq.1) write (iunplot, '(5(1pe17.9))') &
           (raux1 (ir) , ir = 1, nrx1 * nrx2 * nrx3)
      deallocate (raux1)
 #else
-     write (iunplot, '( 5( 1pe16.9 ) )') (raux (ir) , ir = 1, nrxx)
+     write (iunplot, '( 5( 1pe17.9 ) )') (raux (ir) , ir = 1, nrxx)
 #endif
      close (unit = iunplot)
   enddo

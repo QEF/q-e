@@ -29,13 +29,14 @@ subroutine punch_plot_ph
 #endif
   implicit none
 
-  integer :: iunplot, ios, ipert, irr, na, ir, imode0, plot_num, jpol
+  integer :: iunplot, ios, ipert, irr, na, ir, nt, imode0, plot_num, jpol
   ! unit of the plot file
   ! integer variable for I/O contr
   ! counter on polarizations
   ! counter on polarizations
   ! counter on atoms
   ! counter on mesh points
+  ! counter on atom types
   ! the starting mode
   ! compatibility variable
   ! counter on polarization
@@ -112,9 +113,11 @@ subroutine punch_plot_ph
           ntyp
      write (iunplot, '(i6,6f12.8)') ibrav, celldm
      write (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
-     write (iunplot, 200) (na, atm (ityp (na) ), zv (ityp (na) ), &
-          (tau (jpol, na), jpol = 1, 3), na = 1, nat)
-200  format   (3x,i2,3x,a6,3x,f5.2,3x,3f14.10)
+     write (iunplot, '(i4,3x,a2,3x,f5.2)') &
+                                (nt, atm (nt), zv (nt), nt=1, ntyp)
+     write (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
+          (tau (jpol, na), jpol = 1, 3), ityp (na), na = 1, nat)
+
 #ifdef __PARA
   endif
 #endif
