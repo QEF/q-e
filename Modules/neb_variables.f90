@@ -19,8 +19,10 @@ MODULE neb_variables
   LOGICAL :: &
        optimization,             &! if .TRUE. the first and the last image
                                   ! will be optimized (see free_minimization)
-       conv_neb                   ! .TRUE. if NEB convergence has been
+       conv_neb,                 &! .TRUE. if NEB convergence has been
                                   ! achieved
+       reset_vel                  ! .TRUE. if velocities have to be reset at
+                                  ! restart time           
   LOGICAL, ALLOCATABLE :: &
        climbing(:),              &! .TRUE. if the image is required to climb
        free_minimization(:),     &! .TRUE. if the image is required to be

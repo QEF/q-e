@@ -170,7 +170,6 @@ MODULE read_namelists_module
        ! ... non collinear program variables
        !
        noncolin = .FALSE.
-       lspinorb = .FALSE.
        mcons = 0.0
        lambda = 1.0
        i_cons = 0
@@ -326,6 +325,7 @@ MODULE read_namelists_module
        CI_scheme           = 'no-CI'
        VEC_scheme          = 'energy-weighted'
        optimization        = .FALSE.
+       reset_vel           = .FALSE.
        minimization_scheme = 'quick-min'
        damp                = 1.D0
        temp_req            = 0.D0
@@ -333,6 +333,16 @@ MODULE read_namelists_module
        k_max               = 0.1D0
        k_min               = 0.1D0
        neb_thr             = 0.05D0
+       !
+       ! ... BFGS defaults
+       !
+       lbfgs_ndim       = 1                            
+       trust_radius_max = 0.5D0
+       trust_radius_min = 1.D-5
+       trust_radius_ini = 0.5D0
+       trust_radius_end = 1.D-7                               
+       w_1              = 0.5D-1
+       w_2              = 0.5D0 
        !
        sic_rloc    = 0.0D0
        !
@@ -518,7 +528,6 @@ MODULE read_namelists_module
        !
        ! ... non collinear broadcast
        !
-       CALL mp_bcast( lspinorb, ionode_id )
        CALL mp_bcast( noncolin, ionode_id )
        CALL mp_bcast( angle1, ionode_id )
        CALL mp_bcast( angle2, ionode_id )
@@ -644,6 +653,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( num_of_images, ionode_id )
        CALL mp_bcast( optimization, ionode_id )
+       CALL mp_bcast( reset_vel, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
        CALL mp_bcast( VEC_scheme, ionode_id )
        CALL mp_bcast( minimization_scheme, ionode_id )
@@ -653,7 +663,17 @@ MODULE read_namelists_module
        CALL mp_bcast( k_max, ionode_id )
        CALL mp_bcast( k_min, ionode_id )
        CALL mp_bcast( neb_thr, ionode_id )
-
+       !
+       ! ... BFGS
+       !
+       CALL mp_bcast( lbfgs_ndim, ionode_id )
+       CALL mp_bcast( trust_radius_max, ionode_id )
+       CALL mp_bcast( trust_radius_min, ionode_id )
+       CALL mp_bcast( trust_radius_ini, ionode_id )
+       CALL mp_bcast( trust_radius_end, ionode_id )
+       CALL mp_bcast( w_1, ionode_id )
+       CALL mp_bcast( w_2, ionode_id )
+       !
        CALL mp_bcast( sic_rloc, ionode_id )
        ! 
        RETURN
@@ -1246,6 +1266,7 @@ MODULE read_namelists_module
                calculation == 'phonon' ) THEN
              !
              startingpot = 'file'
+             startingwfc = 'file'
              !
           END IF   
           !      

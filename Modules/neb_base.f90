@@ -43,7 +43,7 @@ MODULE neb_base
       USE neb_variables,    ONLY : ds_       => ds, &
                                    pos_      => pos, &
                                    climbing_ => climbing, &
-                                   pos_old, grad_old, frozen, &
+                                   pos_old, grad_old, frozen, reset_vel, &
                                    vel, num_of_images, dim, PES, PES_gradient, &
                                    elastic_gradient, tangent, grad, norm_grad, &
                                    error, mass, free_minimization, CI_scheme,  &
@@ -231,6 +231,8 @@ MODULE neb_base
              "num_of_images", TRIM( num_of_images_char )
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"optimization",T35," = ",L1))' ) optimization
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"reset_vel",T35," = ",L1))' ) reset_vel
          WRITE( UNIT = iunneb, &
                 FMT = '(5X,"ds",T35," = ",F6.4," a.u.")' ) ds
          WRITE( UNIT = iunneb, &
@@ -608,9 +610,9 @@ MODULE neb_base
          !
          ! ... tangent to the path ( normalized )
          !
-         !!!tangent(:,image) = path_tangent( image )
+         tangent(:,image) = path_tangent( image )
          !!! workaround for ifc8 compiler internal error
-         CALL path_tangent_( image, tangent(:,image) )
+         !!!CALL path_tangent_( image, tangent(:,image) )
          !
          tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
          !
@@ -622,9 +624,9 @@ MODULE neb_base
     !
     !    
     !-----------------------------------------------------------------------
-    !!!FUNCTION path_tangent( index )
+    FUNCTION path_tangent( index )
     !!! workaround for ifc8 compiler internal error
-    SUBROUTINE path_tangent_( index, path_tangent )
+    !!!SUBROUTINE path_tangent_( index, path_tangent )
       !-----------------------------------------------------------------------
       !
       USE supercell,     ONLY : pbc
@@ -687,9 +689,9 @@ MODULE neb_base
       !
       RETURN
       !
-    !!!END FUNCTION path_tangent
+    END FUNCTION path_tangent
     !!! workaround for ifc8 compiler internal error
-    END SUBROUTINE path_tangent_
+    !!!END SUBROUTINE path_tangent_
     !
     !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_PES( flag, stat )

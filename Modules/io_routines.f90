@@ -27,7 +27,8 @@ MODULE io_routines
        USE neb_variables,    ONLY : pos, vel, num_of_images, dim, PES, &
                                     PES_gradient, suspended_image, Emax, &
                                     Emin, Emax_index, istep_neb, nstep_neb, &
-                                    lquick_min , ldamped_dyn, lmol_dyn
+                                    lquick_min , ldamped_dyn, lmol_dyn, &
+                                    reset_vel
        USE io_global,        ONLY : ionode, ionode_id
        USE mp,               ONLY : mp_bcast
        !
@@ -117,7 +118,8 @@ MODULE io_routines
              !  
           END DO
           !
-          IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
+          IF ( .NOT. reset_vel .AND. &
+               ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
              !
              READ( UNIT = iunrestart, FMT = * )
              ! 
@@ -170,7 +172,7 @@ MODULE io_routines
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : if_pos       
-       USE io_files,         ONLY : iunrestart, neb_file 
+       USE io_files,         ONLY : iunrestart, neb_file, tmp_dir 
        USE neb_variables,    ONLY : pos, vel, num_of_images, PES, &
                                     PES_gradient, dim, suspended_image, &
                                     lquick_min , ldamped_dyn, lmol_dyn, &
@@ -178,22 +180,26 @@ MODULE io_routines
        USE formats,          ONLY : energy, restart_first, restart_others, &
                                     velocities
        USE io_global,        ONLY : ionode
+       USE parser,           ONLY : int_to_char
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER :: i, j, ia
+       INTEGER             :: i, j, ia
+       CHARACTER (LEN=120) :: file
        !
        ! ... end of local variables
        !
        !
        IF ( ionode ) THEN
-
+          !
+          ! ... first tho restart file is written in the working directory
+          !
           OPEN( UNIT = iunrestart, FILE = neb_file, STATUS = "UNKNOWN", &
                 ACTION = "WRITE" )
           !
-          WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATIONS")' )
+          WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATION")' )
           !
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_neb
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
@@ -244,8 +250,7 @@ MODULE io_routines
           !
           IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
              !
-             WRITE( UNIT = iunrestart, &
-                    FMT = '("VELOCITIES")' )
+             WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' )
              !
              DO i = 1, num_of_images
                 !
@@ -265,6 +270,87 @@ MODULE io_routines
           END IF
           !
           CLOSE( iunrestart )
+          !
+          ! ... then it is written on the scratch direcoty 
+          ! ... (a backup copy at each iteration)
+          !
+          file = TRIM( tmp_dir ) // &
+                 TRIM( neb_file ) // TRIM( int_to_char( istep_neb ) )
+          !       
+          OPEN( UNIT = iunrestart, FILE = TRIM( file ), STATUS = "UNKNOWN", &
+                ACTION = "WRITE" )
+          !
+          WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATION")' )
+          !
+          WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_neb
+          WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
+          WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
+          !
+          WRITE( UNIT = iunrestart, &
+                 FMT = '("ENERGY, POSITIONS AND GRADIENTS")' )
+          !
+          DO i = 1, num_of_images
+             !
+             WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+             WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
+             !
+             ia = 0
+             !
+             DO j = 1, dim, 3
+                !
+                ia = ia + 1
+                !
+                IF ( i == 1 ) THEN
+                   !
+                   WRITE( UNIT = iunrestart, FMT = restart_first ) &
+                       pos(j,i),                             &
+                       pos((j+1),i),                         &
+                       pos((j+2),i),                         &
+                       PES_gradient(j,i),                    &
+                       PES_gradient((j+1),i),                & 
+                       PES_gradient((j+2),i),                &
+                       if_pos(1,ia),                         &
+                       if_pos(2,ia),                         &
+                       if_pos(3,ia) 
+                   !
+                ELSE
+                   !
+                   WRITE( UNIT = iunrestart, FMT = restart_others ) &
+                       pos(j,i),                              &
+                       pos((j+1),i),                          &
+                       pos((j+2),i),                          &
+                       PES_gradient(j,i),                     &
+                       PES_gradient((j+1),i),                 & 
+                       PES_gradient((j+2),i)
+                   !
+                END IF
+                !
+             END DO
+             !
+          END DO
+          !
+          IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
+             !
+             WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' )
+             !
+             DO i = 1, num_of_images
+                !
+                WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+                !
+                DO j = 1, dim, 3
+                   !
+                   WRITE( UNIT = iunrestart, FMT = velocities ) &
+                       vel(j,i),                          & 
+                       vel((j+1),i),                      &
+                       vel((j+2),i)
+                   !
+                END DO
+                !
+             END DO
+             ! 
+          END IF
+          !
+          CLOSE( iunrestart )          
           !
        END IF
        !

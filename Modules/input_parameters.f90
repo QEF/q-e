@@ -410,8 +410,6 @@ MODULE input_parameters
 
         LOGICAL :: noncolin = .FALSE.
 
-        LOGICAL :: lspinorb = .FALSE.
-
         REAL(dbl) :: lambda = 1.0D0
 
         INTEGER :: i_cons = 0
@@ -460,8 +458,8 @@ MODULE input_parameters
              occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
-             U_projection_type, noncolin, &
-             lspinorb, mcons, lambda, i_cons, angle1, angle2, report, &
+             U_projection_type, &
+             noncolin, mcons, lambda, i_cons, angle1, angle2, report, &
              sic, sic_epsilon, force_pairing
 
 
@@ -886,6 +884,8 @@ MODULE input_parameters
         DATA VEC_scheme_allowed / 'energy-weighted', 'gradient-weighted' /
         
         LOGICAL :: optimization = .FALSE.
+        
+        LOGICAL :: reset_vel = .FALSE.
 
         CHARACTER(LEN=80) :: minimization_scheme = 'quick-min' 
           ! minimization_scheme = 'quick-min' | 'damped-dyn' | 
@@ -932,7 +932,7 @@ MODULE input_parameters
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
           num_of_images, CI_scheme, VEC_scheme, minimization_scheme, &
-          optimization, damp, temp_req, ds, k_max, k_min, neb_thr, &
+          optimization, reset_vel, damp, temp_req, ds, k_max, k_min, neb_thr, &
           trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
           w_1, w_2, lbfgs_ndim, sic_rloc
 

@@ -85,12 +85,13 @@ MODULE bfgs_module
       trust_radius_end = 1.D-7   ! bfgs stops when trust_radius is less than
                                  ! this value
   REAL(KIND=DP)  :: &
-      w_1 = 1.0D-5,             &! parameters for Wolfe conditions
-      w_2 = 0.2D0                ! parameters for Wolfe conditions
+      w_1 = 0.5D-1,             &! parameters for Wolfe conditions
+      w_2 = 0.5D0                ! parameters for Wolfe conditions
   !
   ! ... Note that m, trust_radius_max, trust_radius_min, trust_radius_ini,
   ! ... trust_radius_end, w_1, w_2 have a default value, but can also be 
-  ! ... assigned in input
+  ! ... assigned in input. These defaul values are overwritten by those set
+  ! ... Modules/read_namelist.f90
   !  
   ! Workaround for IBM xlf compiler bug
   !

@@ -105,6 +105,7 @@ SUBROUTINE iosys()
                             CI_scheme_      => CI_scheme, &
                             VEC_scheme_     => VEC_scheme, &
                             optimization_   => optimization, &
+                            reset_vel_      => reset_vel, &
                             damp_           => damp, &
                             temp_req_       => temp_req, &
                             k_max_          => k_max, & 
@@ -119,9 +120,6 @@ SUBROUTINE iosys()
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
-
-  USE spin_orb, ONLY : lspinorb_ => lspinorb
-
   USE bfgs_module,   ONLY : bfgs_xlf_bug, &
                             lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -153,7 +151,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type, &
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, i_cons, mcons, angle1, &
-                               angle2, report, lspinorb
+                               angle2, report
   !
   ! ELECTRONS namelist
   !
@@ -167,11 +165,11 @@ SUBROUTINE iosys()
   !
   ! IONS namelist
   !
-  USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
+  USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature,  &
                                tempw, tolp, upscale, potential_extrapolation, &
-                               CI_scheme, VEC_scheme, minimization_scheme, &
-                               num_of_images, optimization, damp, temp_req, &
-                               k_max, k_min, neb_thr, &
+                               CI_scheme, VEC_scheme, minimization_scheme,    &
+                               num_of_images, optimization, reset_vel, damp,  &
+                               temp_req, k_max, k_min, neb_thr,    &
                                trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, &
                                w_1, w_2, lbfgs_ndim
@@ -765,7 +763,6 @@ SUBROUTINE iosys()
   degauss_ = degauss
   nelec_   = nelec
   !
-  lspinorb_ = lspinorb
   noncolin_ = noncolin
   angle1_   = angle1
   angle2_   = angle2
@@ -800,6 +797,7 @@ SUBROUTINE iosys()
   CI_scheme_     = CI_scheme
   VEC_scheme_    = VEC_scheme
   optimization_  = optimization
+  reset_vel_     = reset_vel
   damp_          = damp
   temp_req_      = temp_req
   k_max_         = k_max 
@@ -985,7 +983,7 @@ SUBROUTINE iosys()
      lstres    = .TRUE.
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      IF ( cmass <= 0.D0 ) &
-        CALL errore( 'iosys', &
+        CALL errore( 'readin', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
   ELSE
      cell_factor_ = 1.D0
