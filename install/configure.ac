@@ -709,9 +709,11 @@ then
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
 			AC_SEARCH_LIBS(zggev, mkl_lapack,
-				       have_blas=1 have_lapack=1
-				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ipf -lguide $libs", , -lmkl_ipf -lguide)
+				       have_blas=1 have_lapack=1, ,
+				       -lmkl_ipf -lguide)
+			if test "$ac_cv_search_zggev" = "-lmkl_lapack"
+			then libs="$try_loption -lmkl_lapack -lmkl_ipf \
+-lguide $libs" ; fi
 			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
@@ -732,10 +734,11 @@ $ac_cv_search_zggev -lmkl_ipf -lguide $libs", , -lmkl_ipf -lguide)
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
 			AC_SEARCH_LIBS(zggev, mkl_lapack,
-				       have_blas=1 have_lapack=1
-				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
+				       have_blas=1 have_lapack=1, ,
 				       -lmkl_ia32 -lguide -lpthread)
+			if test "$ac_cv_search_zggev" = "-lmkl_lapack"
+			then libs="$try_loption -lmkl_lapack -lmkl_ia32 \
+-lguide -lpthread $libs" ; fi
 			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
@@ -755,10 +758,13 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
-			AC_SEARCH_LIBS(vexp, massvp4 massv,
-				       libs="$try_loption $ac_cv_search_vexp \
--lmass $libs", , -lmass)
-			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
+			AC_SEARCH_LIBS(vexp, massvp4 massv, , , -lmass)
+			if test "$ac_cv_search_vexp" = "massvp4" -or \
+			    "$ac_cv_search_vexp" = "massv"
+			then libs="$try_loption $ac_cv_search_vexp -lmass"
+			fi
+			if test "$ac_cv_search_vexp" != "no"
+			then break ; fi
 		done
 
 		# check for essl
@@ -806,9 +812,10 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
 			LDFLAGS="$c_ldflags"
 			LIBS="$libs"
 			AC_SEARCH_LIBS(elan_baseInit, elan, libs="$LIBS")
-			AC_SEARCH_LIBS(mpi_waitany_, fmpi, have_mpi=1
-				       libs="$ac_cv_search_mpi_waitany_ \
--lmpi $libs", , -lmpi)
+			AC_SEARCH_LIBS(mpi_waitany_, fmpi, have_mpi=1, ,
+				       -lmpi)
+			if test "$ac_cv_search_mpi_waitany_" = "-lfmpi"
+			then libs="-lfmpi -lmpi $libs" ; fi
 			AC_LANG_POP(C)
 
 			LIBS="$libs"
@@ -861,9 +868,10 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
-			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1
-				       libs="$try_loption \
-$ac_cv_search_dgemm -latlas -lg2c $libs", , -latlas -lg2c)
+			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1, ,
+				       -latlas -lg2c)
+			if test "$ac_cv_search_dgemm" = "-lf77blas"
+			then libs="$try_loption -lf77blas -latlas -lg2c" ; fi
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done

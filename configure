@@ -3581,10 +3581,11 @@ echo "${ECHO_T}$ac_cv_search_zggev" >&6
 if test "$ac_cv_search_zggev" != no; then
   test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
   have_blas=1 have_lapack=1
-				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ipf -lguide $libs"
 fi
 
+			if test "$ac_cv_search_zggev" = "-lmkl_lapack"
+			then libs="$try_loption -lmkl_lapack -lmkl_ipf \
+-lguide $libs" ; fi
 			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
@@ -3692,10 +3693,11 @@ echo "${ECHO_T}$ac_cv_search_zggev" >&6
 if test "$ac_cv_search_zggev" != no; then
   test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
   have_blas=1 have_lapack=1
-				       libs="$try_loption \
-$ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs"
 fi
 
+			if test "$ac_cv_search_zggev" = "-lmkl_lapack"
+			then libs="$try_loption -lmkl_lapack -lmkl_ia32 \
+-lguide -lpthread $libs" ; fi
 			if test "$ac_cv_search_zggev" != "no"
 			then break ; fi
 		done
@@ -3802,11 +3804,15 @@ echo "$as_me:$LINENO: result: $ac_cv_search_vexp" >&5
 echo "${ECHO_T}$ac_cv_search_vexp" >&6
 if test "$ac_cv_search_vexp" != no; then
   test "$ac_cv_search_vexp" = "none required" || LIBS="$ac_cv_search_vexp $LIBS"
-  libs="$try_loption $ac_cv_search_vexp \
--lmass $libs"
+
 fi
 
-			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
+			if test "$ac_cv_search_vexp" = "massvp4" -or \
+			    "$ac_cv_search_vexp" = "massv"
+			then libs="$try_loption $ac_cv_search_vexp -lmass"
+			fi
+			if test "$ac_cv_search_vexp" != "no"
+			then break ; fi
 		done
 
 		# check for essl
@@ -4461,10 +4467,10 @@ echo "${ECHO_T}$ac_cv_search_mpi_waitany_" >&6
 if test "$ac_cv_search_mpi_waitany_" != no; then
   test "$ac_cv_search_mpi_waitany_" = "none required" || LIBS="$ac_cv_search_mpi_waitany_ $LIBS"
   have_mpi=1
-				       libs="$ac_cv_search_mpi_waitany_ \
--lmpi $libs"
 fi
 
+			if test "$ac_cv_search_mpi_waitany_" = "-lfmpi"
+			then libs="-lfmpi -lmpi $libs" ; fi
 			ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
 ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -4830,10 +4836,10 @@ echo "${ECHO_T}$ac_cv_search_dgemm" >&6
 if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
   have_blas=1
-				       libs="$try_loption \
-$ac_cv_search_dgemm -latlas -lg2c $libs"
 fi
 
+			if test "$ac_cv_search_dgemm" = "-lf77blas"
+			then libs="$try_loption -lf77blas -latlas -lg2c" ; fi
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
