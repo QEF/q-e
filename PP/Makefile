@@ -161,6 +161,7 @@ PWOBJS = \
 ../PW/neb_variables.o \
 ../PW/new_ns.o \
 ../PW/newd.o \
+../PW/noncol.o \
 ../PW/openfil.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \

@@ -181,6 +181,7 @@ PWOBJS = \
 ../PW/neb_variables.o \
 ../PW/new_ns.o \
 ../PW/newd.o \
+../PW/noncol.o \
 ../PW/openfil.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
@@ -198,6 +199,7 @@ PWOBJS = \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
 ../PW/random.o \
+../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \

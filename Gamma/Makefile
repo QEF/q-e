@@ -17,6 +17,7 @@ PWOBJS = \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/bachel.o \
+../PW/becmod.o \
 ../PW/bfgs.o \
 ../PW/bp_bess.o \
 ../PW/bp_calc_btq.o \
@@ -135,6 +136,7 @@ PWOBJS = \
 ../PW/neb_variables.o \
 ../PW/newd.o \
 ../PW/new_ns.o \
+../PW/noncol.o \
 ../PW/n_plane_waves.o \
 ../PW/openfil.o \
 ../PW/orthoatwfc.o \

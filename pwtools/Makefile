@@ -29,6 +29,7 @@ PWOBJS = \
 
 MODULES = \
 ../Modules/constants.o \
+../Modules/io_global.o \
 ../Modules/fft_scalar.o \
 ../Modules/kind.o \
 ../Modules/parameters.o
