@@ -39,7 +39,7 @@ SUBROUTINE setup()
   !  + LDA+U-related quantities.
   !
   !
-  USE kinds,  ONLY :  DP
+  USE kinds,       ONLY :  DP
   USE parameters,  ONLY :  npsx, nchix, npk
   USE io_global,   ONLY :  stdout
   USE constants,   ONLY :  pi
@@ -94,9 +94,10 @@ SUBROUTINE setup()
       is,             &!
       ibnd             !
   LOGICAL :: &
-      minus_q          !
+      minus_q,        &!
+      ltest            !
   REAL(KIND=DP) :: &
-      iocc             ! 
+      iocc             !
   INTEGER, EXTERNAL :: &
       n_atom_wfc,     &!
       set_Hubbard_l
@@ -161,7 +162,7 @@ SUBROUTINE setup()
         !
         ! ... metallic case: add 20% more bands, with a minimum of 4
         !
-        nbnd = MAX( NINT( 1.20D0 * nelec / 2.D0 ), ( nbnd + 4 ) )
+        nbnd = MAX( NINT( 1.2D0 * nelec / 2.D0 ), ( nbnd + 4 ) )
      END IF
   ELSE
      IF ( nbnd < NINT( nelec / 2.D0 ) .AND. lscf ) &
@@ -172,21 +173,23 @@ SUBROUTINE setup()
   ! ... iteration of for the first ionic step
   ! ... for subsequent steps ethr is automatically updated in electrons
   !
+  ltest = ( ethr == 0.D0 )
+  !
   IF ( lphonon ) THEN
      !
      ! ... in the case of a phonon calculation ethr can not be specified
      ! ... in the input file
      !
-     IF ( ethr == 0.D0 ) &
+     IF ( .NOT. ltest ) &
         WRITE( UNIT = stdout, &
-             & FMT = '(5X,"WARNING: diago_thr_init ", &
-             &            "overwritten with conv_thr / nelec")' )
+             & FMT = '(5X,"diago_thr_init overwritten ", &
+             &            "with conv_thr / nelec")' )
      IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-     IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.0D-6, SQRT( tr2 ) )     
+     IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.D-6, SQRT( tr2 ) )     
      !
   ELSE IF ( .NOT. lscf ) THEN
      !
-     IF ( ethr == 0.D0 ) THEN
+     IF ( ltest ) THEN
         !
         !IF ( imix >= 0 ) ethr = 1.D-6
         ! ... I think ethr should not be more strict than that in a simple band
@@ -194,13 +197,13 @@ SUBROUTINE setup()
         ! ... in the Davidson diagonalization convergence. SdG 20/03/2003
         !
         IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-        IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.0D-6, SQRT( tr2 ) )
+        IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.D-6, SQRT( tr2 ) )
         !
      END IF   
      !
   ELSE   
      !
-     IF ( ethr == 0.D0 ) THEN
+     IF ( ltest ) THEN
         !
         IF ( startingpot == 'file' ) THEN
            !
