@@ -1072,7 +1072,7 @@
             a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
           WRITE(iuni) r( 1:mesh_ ), rab( 1:mesh_ ), &
             vloc_at( 1:mesh_ ), chi( 1:mesh_, 1:nchi_ ), &
-            oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_ ), lchi( 1:nchi_ )
+            oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_), lchi( 1:nchi_)
           WRITE(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
           WRITE(iuni) dion( 1:nbeta_, 1:nbeta_ ), betar( 1:mesh_, 1:nbeta_ ), &
             qqq( 1:nbeta_, 1:nbeta_ ), qfunc( 1:mesh_, 1:nbeta_, 1:nbeta_ ), &
@@ -1196,11 +1196,13 @@
           WRITE(iuni) generated, date_author, comment, psd, typ, tvanp, nlcc, dft, &
            zp, etotps, ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, nd, nqf, nqlc
 !           
-          WRITE(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(1:mesh), rab(1:mesh), &
-            rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), kkbeta(1:nbeta), beta(1:mesh,1:nbeta), &
-            dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
-            qfunc(1:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
-            chi(1:mesh, nwfc), rho_at(1:mesh) 
+          WRITE(iuni) els(1:nwfc), lchi(1:nwfc), oc(1:nwfc), r(1:mesh), &
+               rab(1:mesh), rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), &
+               kkbeta(1:nbeta), beta(1:mesh,1:nbeta), dion(1:nbeta,1:nbeta), &
+               rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
+               qfunc(1:mesh, 1:nbeta, 1:nbeta), &
+               qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+               chi(1:mesh, 1:nwfc), rho_at(1:mesh) 
 
           WRITE(iuni) idum
           WRITE(iuni) idum
@@ -1571,12 +1573,13 @@
 
         IF( ionode ) THEN
 !           
-          READ(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(1:mesh), rab(1:mesh), &
-            rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), kkbeta(1:nbeta), &
-            beta(1:mesh,1:nbeta), &
-            dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
-            qfunc(1:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
-            chi(1:mesh, nwfc), rho_at(1:mesh) 
+          READ(iuni) els(1:nwfc), lchi(1:nwfc), oc(1:nwfc), r(1:mesh), &
+               rab(1:mesh), rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), &
+               kkbeta(1:nbeta), beta(1:mesh,1:nbeta), dion(1:nbeta,1:nbeta), &
+               rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
+               qfunc(1:mesh, 1:nbeta, 1:nbeta), &
+               qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+               chi(1:mesh, 1:nwfc), rho_at(1:mesh) 
 
           READ(iuni) idum
           READ(iuni) idum
@@ -1584,12 +1587,12 @@
         END IF
 
         CALL mp_bcast( els(1:nwfc), ionode_id ) 
-        CALL mp_bcast( lchi(nwfc), ionode_id ) 
-        CALL mp_bcast( oc(nwfc), ionode_id ) 
-        CALL mp_bcast( r(mesh), ionode_id ) 
-        CALL mp_bcast( rab(mesh), ionode_id ) 
-        CALL mp_bcast( rho_atc(mesh), ionode_id ) 
-        CALL mp_bcast( vloc(mesh), ionode_id ) 
+        CALL mp_bcast( lchi(1:nwfc), ionode_id ) 
+        CALL mp_bcast( oc(1:nwfc), ionode_id ) 
+        CALL mp_bcast( r(1:mesh), ionode_id ) 
+        CALL mp_bcast( rab(1:mesh), ionode_id ) 
+        CALL mp_bcast( rho_atc(1:mesh), ionode_id ) 
+        CALL mp_bcast( vloc(1:mesh), ionode_id ) 
         CALL mp_bcast( lll(1:nbeta), ionode_id ) 
         CALL mp_bcast( kkbeta(1:nbeta), ionode_id ) 
         CALL mp_bcast( beta(1:mesh,1:nbeta), ionode_id ) 
@@ -1598,7 +1601,7 @@
         CALL mp_bcast( qqq(1:nbeta,1:nbeta), ionode_id ) 
         CALL mp_bcast( qfunc(1:mesh, 1:nbeta, 1:nbeta), ionode_id )
         CALL mp_bcast( qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), ionode_id ) 
-        CALL mp_bcast( chi(1:mesh, nwfc), ionode_id ) 
+        CALL mp_bcast( chi(1:mesh, 1:nwfc), ionode_id ) 
         CALL mp_bcast( rho_at(1:mesh), ionode_id )
 !
       RETURN

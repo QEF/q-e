@@ -83,14 +83,13 @@ MODULE uspp
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: & ! variables for spin-orbit case:
+  COMPLEX(KIND=DP), ALLOCATABLE :: & ! variables for spin-orbit/noncolinear case:
        qq_so(:,:,:,:),           &! Q_{nm}
        dvan_so(:,:,:,:),         &! D_{nm}
        deeq(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
   !
-  ! In a spin-orbit calculations these variable are complex instead of real;
-  ! qq_so has and additional spin index. In order to avoid to make the code
-  ! more complex or slower, separate variables are defined and used
+  ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
+  ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
   !
   REAL(KIND=DP), ALLOCATABLE :: &
        beta(:,:,:)           ! beta functions for CP (without struct.factor)

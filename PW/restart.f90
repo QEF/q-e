@@ -238,7 +238,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
        nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
        kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
+       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
        title, crystal, tmp_dir, tupf, lgamma, lda_plus_u, &
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
 
@@ -684,7 +684,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu_, &
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
+       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
        title_, crystal_, tmp_dir_, tupf, lgamma, lda_plus_u,&
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
