@@ -176,12 +176,12 @@ MODULE bfgs_module
       IF ( scf_iter == 1 ) &
          WRITE( UNIT = stdout, FMT = '(/,5x,"BFGS Geometry Optimization")' )
       !
-      ! ... convergence is checked here
-      !
-      conv_bfgs = ( ( energy_old - energy ) < energy_thr )
-      !
       energy_error   = ABS( energy_old - energy )
       gradient_error = 0.D0
+      !
+      ! ... convergence is checked here
+      !
+      conv_bfgs = ( energy_error < energy_thr )
       !
       DO i = 1, dim
          !
@@ -471,12 +471,12 @@ MODULE bfgs_module
       !
       scf_iter = scf_iter + 1       
       !       
-      ! ... convergence is checked here
-      !
-      conv_bfgs = ( ( energy_old - energy ) < energy_thr )
-      !
       energy_error   = ABS( energy_old - energy )
       gradient_error = 0.D0
+      !
+      ! ... convergence is checked here
+      !
+      conv_bfgs = ( energy_error < energy_thr )
       !
       DO i = 1, dim
          !
