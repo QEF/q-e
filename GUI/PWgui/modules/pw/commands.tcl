@@ -313,6 +313,10 @@ proc ::pwscf::pwLoadKPoints {moduleObj} {
 
 # ------------------------------------------------------------------------
 #  ::pwscf::pwReadFilter --
+#  
+# TODO: check is &SYSTEM exists, if not the input file is not pw.x input
+#       (this is done by checking the existence of SYSTEM_namelist_content
+#       variable !!!
 # ------------------------------------------------------------------------
 
 proc ::pwscf::pwReadFilter {moduleObj channel} {
@@ -322,6 +326,27 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     set pwscf($moduleObj,inputHeadContent) {}
     #set pwscf($moduleObj,inputTailContent) {}
     set pwscf($moduleObj,OCCUPATIONS)      {}
+
+    #
+    # Check if input file is a pw.x formatted ...
+    #    
+
+    # Any properly formated pw.x input should have the following namelists:
+    #    CONTROL, SYSTEM, and ELECTRONS 
+    
+    set namelists {CONTROL SYSTEM ELECTRONS}
+    
+    # Any properly formated pw.x input should have the following cards:
+    #    ATOMIC_SPECIES, ATOMIC_POSITIONS, and K_POINTS
+    
+    set cards {ATOMIC_SPECIES ATOMIC_POSITIONS K_POINTS}
+
+    set status [::pwscf::readFilter::findNamelistsAndCards $moduleObj $channel pw.x $namelists $cards errMsg]
+    if { $status == 0 } {
+	$moduleObj readFileWrongFormat pw.x $errMsg
+	return $channel
+    }
+
 
     #
     # check if lattice is specified by celldm() or A,B,C,...
@@ -340,6 +365,14 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	    append SYSTEM_namelist_content ${_line}\n
 	}
     }
+
+    #if { ! [info exists SYSTEM_namelist_content] } {	
+    #	# there is no SYSTEM namlist. The input file is not a pw.x
+    #	# input file	
+    #	$moduleObj readFileError "Input file is not in a pw.x input-file format"
+    #	return
+    #}
+
     foreach record [split $SYSTEM_namelist_content ,\n] {
 	set var [lindex [split $record =] 0]
 	if { [::tclu::stringMatch celldm* $var $::guib::settings(INPUT.nocase)] } {
