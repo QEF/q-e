@@ -59,7 +59,7 @@
       use core, only: deallocate_core
       use uspp_param, only: nhm
       use cvan, only: nvb
-      use uspp, only : nhsa=> nkb
+      use uspp, only : nhsa=> nkb, deeq
       use uspp, only: deallocate_uspp
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
@@ -167,7 +167,7 @@
       complex(kind=8), allocatable::   betae(:,:)
       real(kind=8), allocatable:: bec(:,:), becdr(:,:,:)
       real(kind=8), allocatable:: bephi(:,:), becp(:,:)
-      real(kind=8), allocatable:: rhovan(:,:,:), deeq(:,:,:,:)
+      real(kind=8), allocatable:: rhovan(:,:,:)
 !
 !  mass preconditioning
 !
@@ -388,7 +388,7 @@
       allocate(bec  (nhsa,n))
       allocate(bephi(nhsa,n))
       allocate(becp (nhsa,n))
-      allocate(deeq(nat,nhm,nhm,nspin))
+      allocate(deeq(nhm,nhm,nat,nspin))
       allocate(rhovan(nat,nhm*(nhm+1)/2,nspin))
       allocate(dbec (nhsa,n,3,3))
       allocate(dvps(ngs,nsp))
@@ -1624,7 +1624,6 @@
       IF( ALLOCATED( bephi ) ) DEALLOCATE( bephi )
       IF( ALLOCATED( becp ) ) DEALLOCATE( becp )
       IF( ALLOCATED( rhovan ) ) DEALLOCATE( rhovan )
-      IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
       IF( ALLOCATED( ema0bg ) ) DEALLOCATE( ema0bg )
       IF( ALLOCATED( lambda ) ) DEALLOCATE( lambda )
       IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )

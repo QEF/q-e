@@ -55,7 +55,7 @@ MODULE uspp
   PRIVATE
   SAVE
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, vkb, dvan, &
-       deeq, qq, becsum, nhtoj, deallocate_uspp, beta
+       deeq, qq, nhtoj, deallocate_uspp, beta
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
@@ -79,7 +79,6 @@ MODULE uspp
        deeq(:,:,:,:)           ! the integral of V_eff and Q_{nm}
   REAL(KIND=DP), ALLOCATABLE :: &
        qq(:,:,:),             &! the q functions in the solid
-       becsum(:,:,:),         &! the sum of bec = <beta|psi>
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !
   REAL(KIND=DP), ALLOCATABLE :: &
@@ -246,6 +245,7 @@ CONTAINS
     IF( ALLOCATED( vkb ) ) DEALLOCATE( vkb )
     IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
     IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
+    IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
   end subroutine deallocate_uspp
 
 end module uspp

@@ -806,7 +806,7 @@
       implicit none
 !
       complex(kind=8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      real(kind=8) bec(nhsa,n), deeq(nat,nhm,nhm,nspin), v(nnrsx,nspin)
+      real(kind=8) bec(nhsa,n), deeq(nhm,nhm,nat,nspin), v(nnrsx,nspin)
       integer i
 ! local variables
       integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
@@ -904,9 +904,9 @@
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      isa=isa+1
-                     dd = deeq(isa,iv,jv,iss1)+dvan(iv,jv,1,is)
+                     dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,1,is)
                      af(inl)=af(inl)-  f(i)*dd*bec(jnl,  i)
-                     dd = deeq(isa,iv,jv,iss2)+dvan(iv,jv,1,is)
+                     dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,1,is)
                      if (i.ne.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
                   end do
                end do
@@ -3384,7 +3384,7 @@
       complex(kind=8) eigrb(ngb,nas,nsp)
       real(kind=8)  vr(nnr,nspin), rhovan(nat,nhm*(nhm+1)/2,nspin)
 ! output
-      real(kind=8)  deeq(nat,nhm,nhm,nspin), fion(3,natx,nsp)
+      real(kind=8)  deeq(nhm,nhm,nat,nspin), fion(3,natx,nsp)
 ! local
       integer isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
       integer irb3, imin3, imax3
@@ -3441,16 +3441,16 @@
                   call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
                   do iss=1,nspin
-                     deeq(isa,iv,jv,iss) = fac *                        &
+                     deeq(iv,jv,isa,iss) = fac *                        &
      &                    boxdotgrid(irb(1,ia,is),1,qv,vr(1,iss))
                      if (iv.ne.jv)                                      &
-     &                    deeq(isa,jv,iv,iss)=deeq(isa,iv,jv,iss)
+     &                    deeq(jv,iv,isa,iss)=deeq(iv,jv,isa,iss)
 !
                      if (nfft.eq.2) then
-                        deeq(isa+1,iv,jv,iss) = fac*                    &
+                        deeq(iv,jv,isa+1,iss) = fac*                    &
      &                       boxdotgrid(irb(1,ia+1,is),2,qv,vr(1,iss))
                         if (iv.ne.jv)                                   &
-     &                       deeq(isa+1,jv,iv,iss)=deeq(isa+1,iv,jv,iss)
+     &                       deeq(jv,iv,isa+1,iss)=deeq(iv,jv,isa+1,iss)
                      end if
                   end do
                end do
@@ -3687,7 +3687,7 @@
       !use parm
 ! 
       implicit none
-      real(kind=8) deeq(nat,nhm,nhm,nspin), bec(nhsa,n), becdr(nhsa,n,3),&
+      real(kind=8) deeq(nhm,nhm,nat,nspin), bec(nhsa,n), becdr(nhsa,n,3),&
      &       c(2,ngw,n)
       complex(kind=8) eigr(ngw,nas,nsp)
       real(kind=8) fion(3,natx,nsx)
@@ -3716,7 +3716,7 @@
                      inl=ish(is)+(jv-1)*na(is)+ia
                      do i=1,n
                         iss=ispin(i)
-                        temp=dvan(iv,jv,1,is)+deeq(isa,jv,iv,iss)
+                        temp=dvan(iv,jv,1,is)+deeq(jv,iv,isa,iss)
                         tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i)
                      end do
                   end do

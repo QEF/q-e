@@ -33,8 +33,8 @@ subroutine allocate_nlpot
   USE lsda_mod, ONLY: nspin
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
-  USE us, ONLY: qrad, tab, tab_at, dq, nqx, nqxq
-  USE uspp, ONLY: indv, nhtol, nhtolm, qq, dvan, deeq, vkb, becsum, nkb, nhtoj
+  USE us, ONLY: qrad, tab, tab_at, dq, nqx, nqxq, becsum
+  USE uspp, ONLY: indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, nhtoj
   USE uspp_param, ONLY: lmaxq, lmaxkb, lll, nbeta, nh, nhm
   USE spin_orb, ONLY: lspinorb, qq_spinorb, fcoef
   implicit none
