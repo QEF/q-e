@@ -7,11 +7,11 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine h_psi (lda, n, m, psi, hpsi, spsi)
+subroutine h_psi (lda, n, m, psi, hpsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the product of the Hamiltonian
-  !     and of the S matrix with m wavefunctions contained in psi
+  !     operator with m wavefunctions contained in psi
   ! input:
   !     lda   leading dimension of arrays psi, spsi, hpsi
   !     n     true dimension of psi, spsi, hpsi
@@ -19,7 +19,6 @@ subroutine h_psi (lda, n, m, psi, hpsi, spsi)
   !     psi   (G=0 component of psi is forced to be real)
   ! output:
   !     hpsi  H*psi
-  !     spsi  S*psi
   !
   use pwcom
   use gamma
@@ -27,7 +26,7 @@ subroutine h_psi (lda, n, m, psi, hpsi, spsi)
   implicit none
   !
   integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, m), hpsi (lda, m), spsi (lda, m)
+  complex(kind=DP) :: psi (lda, m), hpsi (lda, m)
   !
   integer :: ibnd, j
 
@@ -57,8 +56,7 @@ subroutine h_psi (lda, n, m, psi, hpsi, spsi)
   !  Here the product with the non local potential V_NL psi
   !
   call pw_gemm ('Y', nkb, m, n, vkb, npwx, psi, npwx, becp, nkb)
-  if (nkb.gt.0) call add_vuspsi (lda, n, m, psi, hpsi)
-  call s_psi (lda, n, m, psi, spsi)
+  if (nkb > 0) call add_vuspsi (lda, n, m, psi, hpsi)
   call stop_clock ('h_psi')
   return
 end subroutine h_psi

@@ -47,7 +47,7 @@ subroutine c_bands (iter, ik_, dr2)
   ! number or repeated call to EGTER
   ! number of notconverged elements
 
-  if (ik_.eq.nks) then
+  if (ik_ == nks) then
      ik_ = 0
      return
   endif
@@ -60,7 +60,7 @@ subroutine c_bands (iter, ik_, dr2)
 
   allocate (s_diag( npwx))    
 
-  if (isolve.eq.0.and.loverlap) then
+  if (isolve == 0) then
      write (6, '("     Davidson diagonalization with overlap")')
   else
      call errore ('c_bands', 'not implemented', 1)
@@ -75,7 +75,7 @@ subroutine c_bands (iter, ik_, dr2)
 #endif
   !
 
-  if (nks.gt.1) rewind (iunigk)
+  if (nks > 1) rewind (iunigk)
   !
   !    For each k point diagonalizes the hamiltonian
   !
@@ -84,11 +84,11 @@ subroutine c_bands (iter, ik_, dr2)
      !
      !   Reads the Hamiltonian and the list k+G <-> G of this k point
      !
-     if (nks.gt.1) read (iunigk) npw, igk
+     if (nks > 1) read (iunigk) npw, igk
      !
      !   do not recalculate k-points if restored from a previous run
      !
-     if (ik.le.ik_) goto 20
+     if (ik <= ik_) goto 20
      !
      !   various initializations
      !
@@ -97,7 +97,7 @@ subroutine c_bands (iter, ik_, dr2)
      !   read in wavefunctions from the previous iteration
      !
 
-     if (nks.gt.1.or..not.reduce_io) call davcio (evc, nwordwfc, &
+     if (nks > 1 .or..not.reduce_io) call davcio (evc, nwordwfc, &
           iunwfc, ik, - 1)
      ! Needed for LDA+U
      if (lda_plus_u) call davcio (swfcatom, nwordatwfc, iunat, ik,- 1)
@@ -105,18 +105,12 @@ subroutine c_bands (iter, ik_, dr2)
      !    sets the kinetic energy
      !
      do ig = 1, npw
-        g2kin (ig) = (xk (1, ik) + g (1, igk (ig) ) ) **2 + &
+        g2kin (ig) =((xk (1, ik) + g (1, igk (ig) ) ) **2 + &
                      (xk (2, ik) + g (2, igk (ig) ) ) **2 + &
-                     (xk (3, ik) + g (3, igk (ig) ) ) **2
+                     (xk (3, ik) + g (3, igk (ig) ) ) **2 ) * tpiba2
      enddo
      !
-     ! Put the correct units on the kinetic energy
-     !
-     call DSCAL (npw, tpiba2, g2kin, 1)
-     !
-     ! Put the correct units on the kinetic energy
-     !
-     if (qcutz.gt.0.d0) then
+     if (qcutz > 0.d0) then
         do ig = 1, npw
            g2kin (ig) = g2kin (ig) + qcutz * (1.d0 + erf ( (g2kin (ig) &
                 - ecfixed) / q2sigma) )
@@ -135,14 +129,14 @@ subroutine c_bands (iter, ik_, dr2)
 
 15   continue
 
-     call regterg (npw, npwx, nbnd, nbndx, evc, ethr, gstart, &
+     call regterg (npw, npwx, nbnd, nbndx, evc, ethr, okvan, gstart, &
              et (1, ik), notconv, ntrt)
      avg_iter = avg_iter + ntrt
      !
      !   save wave-functions to be used as input for the iterative
      !   diagonalization of the next scf iteration and for rho calculation
      !
-     if (nks.gt.1.or..not.reduce_io) call davcio (evc, nwordwfc, &
+     if (nks > 1 .or. .not.reduce_io) call davcio (evc, nwordwfc, &
           iunwfc, ik, 1)
      ntry = ntry + 1
      if (ntry.le.5.and. ( &

@@ -7,13 +7,13 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, evc, e)
+subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, overlap, evc, e)
   !----------------------------------------------------------------------
   !
   !   Hamiltonian diagonalization in the subspace spanned
   !   by nstart states psi (atomic or random wavefunctions).
   !   Produces on output nbnd eigenvectors (nbnd <= nstart) in evc.
-  !   Calls h_psi to calculate H|psi> ans S|psi>
+  !   Calls h_psi, s_psi to calculate H|psi> ans S|psi>
   !
 #include "machine.h"
   use parameters
@@ -25,6 +25,8 @@ subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, evc, e)
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
   ! output number of states
+  logical :: overlap
+  ! if .false. : S|psi> not needed
 
   complex(kind=DP) :: psi (npwx, nstart), evc (npwx,nbnd)
   ! input and output eigenvectors (may overlap)
@@ -40,7 +42,7 @@ subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, evc, e)
   !
   call start_clock ('wfcrot')
   allocate (hpsi(  npwx , nstart))    
-  allocate (spsi(  npwx , nstart))    
+  if (overlap) allocate (spsi(  npwx , nstart))    
   allocate (hc( nstart , nstart))    
   allocate (sc( nstart , nstart))    
   allocate (vc( nstart , nstart))    
@@ -48,15 +50,21 @@ subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, evc, e)
   !
   ! Set up the Hamiltonian and Overlap matrix
   !
-  call h_psi (npwx, npw, nstart, psi, hpsi, spsi)
+  call h_psi (npwx, npw, nstart, psi, hpsi)
+  if (overlap) call s_psi (npwx, npw, nstart, psi, spsi)
 
   call ZGEMM ('c', 'n', nstart, nstart, npw, (1.d0, 0.d0) , psi, npwx, &
        hpsi, npwx, (0.d0, 0.d0) , hc, nstart)
 #ifdef __PARA
   call reduce (2 * nstart * nstart, hc)
 #endif
-  call ZGEMM ('c', 'n', nstart, nstart, npw, (1.d0, 0.d0) , psi, npwx, &
+  if (overlap) then
+     call ZGEMM ('c', 'n', nstart, nstart, npw, (1.d0, 0.d0) , psi, npwx, &
        spsi, npwx, (0.d0, 0.d0) , sc, nstart)
+  else
+     call ZGEMM ('c', 'n', nstart, nstart, npw, (1.d0, 0.d0) , psi, npwx, &
+       psi, npwx, (0.d0, 0.d0) , sc, nstart)
+  end if
 #ifdef __PARA
   call reduce (2 * nstart * nstart, sc)
 #endif
@@ -77,7 +85,7 @@ subroutine rotate_wfc (npwx, npw, nstart, nbnd, psi, evc, e)
   deallocate (vc)
   deallocate (sc)
   deallocate (hc)
-  deallocate (spsi)
+  if (overlap) deallocate (spsi)
   deallocate (hpsi)
 
   call stop_clock ('wfcrot')

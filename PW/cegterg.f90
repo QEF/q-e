@@ -36,8 +36,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !   root improvement is stopped, when two consecutive estimates of the root
   !   differ by less than ethr.
   logical :: overlap
-  ! if .true.  : use overlap matrix
-  ! if .false. : use orthogonalization
+  ! if .false. : do not calculate S|psi>
   ! on OUTPUT
   !  evc   contains the  refined estimates of the eigenvectors
   real(kind=DP) :: e (nvec)
@@ -75,9 +74,11 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   ! true if the root is converged
   !
   ! Called routines:
-  external h_psi, g_psi
-  ! h_psi(ndmx,ndim,nvec,psi,hpsi,spsi)
-  !     calculates nvec H|psi> and S|psi> (if needed) products.
+  external h_psi, s_psi, g_psi
+  ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+  !     calculates H|psi>
+  ! s_psi(ndmx,ndim,nvec,spsi)
+  !     calculates S|psi> (if needed)
   !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
   ! g_psi(ndmx,ndim,notcnv,psi,e)
   !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
@@ -91,8 +92,8 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   call start_clock ('cegterg')
   allocate( psi (ndmx,  nvecx))
   allocate(hpsi (ndmx,  nvecx))
-  allocate(spsi (ndmx,  nvecx))
-  if (overlap) allocate(sc(nvecx, nvecx))
+  if (overlap) allocate(spsi (ndmx,  nvecx))
+  allocate(sc(nvecx, nvecx))
   allocate(hc (nvecx,  nvecx))
   allocate(vc (nvecx,  nvecx))
   allocate(ew (nvecx))
@@ -105,19 +106,21 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !
   notcnv = nvec
   nbase = nvec
-  spsi = (0.d0, 0.d0)
+  if (overlap) spsi = (0.d0, 0.d0)
   psi  = (0.d0, 0.d0)
   hpsi = (0.d0, 0.d0)
   psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
   !
-  call h_psi (ndmx, ndim, nvec, psi, hpsi, spsi)
+  call h_psi (ndmx, ndim, nvec, psi, hpsi)
+  if (overlap) call s_psi (ndmx, ndim, nvec, psi, spsi)
   !
   !   hc contains the projection of the hamiltonian onto the reduced space
   !   vc contains the eigenvectors of hc
   !
   hc(:,:) = (0.d0, 0.d0)
+  sc(:,:) = (0.d0, 0.d0)
   vc(:,:) = (0.d0, 0.d0)
   call ZGEMM ('c', 'n', nbase, nbase, ndim, (1.d0, 0.d0) , psi, &
        ndmx, hpsi, ndmx, (0.d0, 0.d0) , hc, nvecx)
@@ -125,13 +128,15 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   call reduce (2 * nbase * nvecx, hc)
 #endif
   if (overlap) then
-     sc(:,:) = (0.d0, 0.d0)
      call ZGEMM ('c', 'n', nbase, nbase, ndim, (1.d0, 0.d0) , psi, &
           ndmx, spsi, ndmx, (0.d0, 0.d0) , sc, nvecx)
-#ifdef __PARA
-     call reduce (2 * nbase * nvecx, sc)
-#endif
+  else
+     call ZGEMM ('c', 'n', nbase, nbase, ndim, (1.d0, 0.d0) , psi, &
+          ndmx,  psi, ndmx, (0.d0, 0.d0) , sc, nvecx)
   endif
+#ifdef __PARA
+  call reduce (2 * nbase * nvecx, sc)
+#endif
 
   do n = 1, nbase
      e (n) = hc (n, n)
@@ -166,8 +171,13 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      !
      !     expand the basis set with new basis vectors (h-es)psi ...
      !
-     call ZGEMM ('n', 'n', ndim, notcnv, nbase, (1.d0, 0.d0), spsi, &
-          ndmx, vc, nvecx, (0.d0, 0.d0), psi (1, nbase+1), ndmx)
+     if (overlap) then
+        call ZGEMM ('n', 'n', ndim, notcnv, nbase, (1.d0, 0.d0), spsi, &
+             ndmx, vc, nvecx, (0.d0, 0.d0), psi (1, nbase+1), ndmx)
+     else
+        call ZGEMM ('n', 'n', ndim, notcnv, nbase, (1.d0, 0.d0), psi, &
+             ndmx, vc, nvecx, (0.d0, 0.d0), psi (1, nbase+1), ndmx)
+     end if
      do np = 1, notcnv
         psi (:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
      end do
@@ -212,12 +222,9 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      !   here compute the hpsi and spsi of the new functions
      !
      call h_psi (ndmx, ndim, notcnv, psi (1, nbase+1), &
-                 hpsi (1, nbase+1), spsi (1, nbase+1) )
-     !
-     !  orthonormalize (if not using diagonalization with overlap matrix)
-     !
-     if (.not.overlap) call cgramg1 (ndmx, nvecx, ndim, nbase+1, &
-                                     nbase+notcnv, psi, spsi, hpsi)
+                 hpsi (1, nbase+1) )
+     if (overlap) call s_psi (ndmx, ndim, notcnv, psi (1, nbase+1), &
+                 spsi (1, nbase+1) )
      !
      !     update the reduced hamiltonian
      !
@@ -232,12 +239,16 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
         call ZGEMM ('c', 'n', nbase+notcnv, notcnv, ndim, (1.d0, 0.d0), &
              psi, ndmx, spsi (1, nbase+1) , ndmx, (0.d0, 0.d0) , &
              sc (1, nbase+1) , nvecx)
+     else
+        call ZGEMM ('c', 'n', nbase+notcnv, notcnv, ndim, (1.d0, 0.d0), &
+             psi, ndmx,  psi (1, nbase+1) , ndmx, (0.d0, 0.d0) , &
+             sc (1, nbase+1) , nvecx)
+     end if
 #ifdef __PARA
-        call reduce (2 * nvecx * notcnv, sc (1, nbase+1) )
+     call reduce (2 * nvecx * notcnv, sc (1, nbase+1) )
 #endif
-     endif
-
      call stop_clock ('overlap')
+
      nbase = nbase+notcnv
      do n = 1, nbase
         !  the diagonal of hc must be strictly real 
@@ -249,22 +260,18 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      !
      !     diagonalize the reduced hamiltonian
      !
-     if (overlap) then
-        do n = 1, nbase
-           sc (n, n) = DCMPLX (DREAL (sc (n, n) ), 0.d0)
-           do m = n + 1, nbase
-              sc (m, n) = conjg (sc (n, m) )
-           enddo
+     do n = 1, nbase
+        sc (n, n) = DCMPLX (DREAL (sc (n, n) ), 0.d0)
+        do m = n + 1, nbase
+           sc (m, n) = conjg (sc (n, m) )
         enddo
-        call cdiaghg (nbase, nvec, hc, sc, nvecx, ew, vc)
+     enddo
+     call cdiaghg (nbase, nvec, hc, sc, nvecx, ew, vc)
 #ifdef DEBUG_DAVIDSON
-        write (6,'(a,18f10.6)') 'EIG=',(e(n),n=1,nvec)
-        write (6,'(a,18f10.6)') 'EIG=',(ew(n),n=1,nvec)
-        write (6,*) 
+     write (6,'(a,18f10.6)') 'EIG=',(e(n),n=1,nvec)
+     write (6,'(a,18f10.6)') 'EIG=',(ew(n),n=1,nvec)
+     write (6,*) 
 #endif
-     else
-        call cdiagh (nbase, hc, nvecx, ew, vc)
-     endif
      !
      !     test for convergence
      !
@@ -314,9 +321,11 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
         !
         psi(:, 1:nvec) = evc(:, 1:nvec)
 
-        call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , spsi, &
-             ndmx, vc, nvecx, (0.d0, 0.d0) , psi(1, nvec + 1), ndmx)
-        spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
+        if (overlap) then
+           call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , spsi, &
+                ndmx, vc, nvecx, (0.d0, 0.d0) , psi(1, nvec + 1), ndmx)
+           spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
+        endif
 
         call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , hpsi, &
              ndmx, vc, nvecx, (0.d0, 0.d0) , psi (1, nvec + 1) , ndmx)
@@ -326,17 +335,13 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
         !
         nbase = nvec
         hc (:, 1:nbase) = (0.d0, 0.d0)
+        sc (:, 1:nbase) = (0.d0, 0.d0)
         vc (:, 1:nbase) = (0.d0, 0.d0)
         do n = 1, nbase
            hc (n, n) = e(n)
+           sc (n, n) = (1.d0, 0.d0)
            vc (n, n) = (1.d0, 0.d0)
         enddo
-        if (overlap) then
-           sc (:, 1:nbase) = (0.d0, 0.d0)
-           do n = 1, nbase
-              sc (n, n) = (1.d0, 0.d0)
-           enddo
-        endif
         call stop_clock ('last')
 
      endif
@@ -347,8 +352,8 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   deallocate (ew)
   deallocate (vc)
   deallocate (hc)
-  if (overlap) deallocate (sc)
-  deallocate (spsi)
+  deallocate (sc)
+  if (overlap) deallocate (spsi)
   deallocate (hpsi)
   deallocate ( psi)
 

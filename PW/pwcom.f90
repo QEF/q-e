@@ -396,8 +396,7 @@ module varie
        order             ! type of potential updating ( see update_pot )
   !
   logical                  :: &
-       loverlap,         &!if .t. the diagonalization with overlap
-       lscf,             &! if true the calculation is selfconsiste
+       lscf,             &! if true the calculation is selfconsistent
        conv_elec,        &! if true electron convergence has been reached
        conv_ions,        &! if true    ionic convergence has been reached
        nosym,            &! if true no symmetry is used

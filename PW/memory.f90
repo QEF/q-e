@@ -144,18 +144,20 @@ subroutine memory_estimate
   ! workspace : diagonalization
   !
   if (isolve == 0) then
-     wspace_diago = comp_size * 3 * npwx * nbndx  ! cegter: psi hpsi spsi
-     nonscalable_wspace=comp_size * 3 * nbndx * nbndx  ! hc sc vc
-  else if (isolve == 1) then
+     if (okvan) then 
+        wspace_diago = comp_size * 3 * npwx * nbndx  ! cegter: psi hpsi spsi
+     else
+        wspace_diago = comp_size * 2 * npwx * nbndx  ! cegter: psi hpsi
+     end if
+  else if (isolve == 1 ) then
      wspace_diago = comp_size * 7 * npwx
-     nonscalable_wspace=comp_size * 3 * nbndx * nbndx  ! hc sc vc
   else if (isolve == 2) then
-     diis_steps = 4
-     wspace_diago = comp_size * npwx * (2*diis_steps + 3) * diis_buff
-     nonscalable_wspace=comp_size * 2 * diis_steps*(diis_steps+1)*diis_buff
+     wspace_diago = comp_size * npwx * 4*diis_ndim
   end if
+  nonscalable_wspace=comp_size * 3 * nbndx * nbndx  ! hc sc vc
 #ifdef PARA
-  nonscalable_wspace = real_size * nr1x*nr2x*nr3x  ! psymrho, io_pot
+  nonscalable_wspace = nonscalable_wspace + real_size * nr1x*nr2x*nr3x
+  ! psymrho, io_pot
 #endif
   !
   ! workspace : mixing (mix_rho, save on file, ngm0 = ngm)

@@ -65,24 +65,17 @@ subroutine c_bands (iter, ik_, dr2)
   !   allocate arrays
   !
   allocate (btype(  nbnd))    
-  allocate (h_diag( npwx))    
-
+  allocate (h_diag( npwx))
   allocate (s_diag( npwx))    
 
-  if (isolve.eq.0) then
-     if (loverlap) then
-        write (6, '("     Davidson diagonalization with overlap")')
-     else
-        write (6, '("     Davidson diagonalization")')
-     endif
-  elseif (isolve.eq.1) then
+  if (isolve == 0) then
+     write (6, '("     Davidson diagonalization (with overlap)")')
+  elseif (isolve == 1) then
      write (6, '("     Conjugate-gradient style diagonalization")')
-  elseif (isolve.eq.2) then
-     if (.not.loverlap) call errore ('c_bands', &
-          'diis not implemented without overlap', 1)
+  elseif (isolve == 2) then
      write (6, '("     DIIS style diagonalization")')
-     if (iter.le.diis_start_cg) &
-          write (6, '(6x,i3," of ",i3," CG iterations")')iter,diis_start_cg
+     if (iter < diis_start_cg) &
+          write (6, '(6x,i3," of ",i3," CG iterations")') iter,diis_start_cg
   else
      call errore ('c_bands', 'isolve not implemented', 1)
 
@@ -214,7 +207,7 @@ subroutine c_bands (iter, ik_, dr2)
 
 15      continue
 
-        call cegterg (npw, npwx, nbnd, nbndx, evc, ethr, loverlap, &
+        call cegterg (npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
                 et (1, ik), notconv, dav_iter)
         avg_iter = avg_iter + dav_iter
         !

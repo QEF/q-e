@@ -13,7 +13,7 @@ subroutine s_psi (lda, n, m, psi, spsi )
   !    This routine applies the S matrix to m wavefunctions psi
   !    and puts the results in spsi.
   !    Requires the products of psi with all beta functions
-  !    in array becp(nkb,m) (calculated by ccalbec)
+  !    in array becp(nkb,m) (calculated in h_psi or by ccalbec)
   ! input:
   !     lda   leading dimension of arrays psi, spsi
   !     n     true dimension of psi, spsi
@@ -46,7 +46,7 @@ subroutine s_psi (lda, n, m, psi, spsi )
   !
   !  The product with the beta functions
   !
-  if (nkb.eq.0.or..not.okvan) goto 10
+  if (nkb == 0 .or..not.okvan) goto 10
   !
   allocate (ps(nkb,m))    
   ps(:,:) = (0.d0,0.d0)

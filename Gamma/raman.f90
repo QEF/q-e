@@ -434,7 +434,6 @@ subroutine newscf
   !
   max_cg_iter=20
   isolve=0
-  loverlap=.true.
   tr2 =1.d-8
   ethr=1.d-8
   mixing_beta=0.7

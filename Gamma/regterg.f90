@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
+subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, gstart, &
      e, notcnv, iter)
   !----------------------------------------------------------------------
   !
@@ -34,6 +34,8 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   real(kind=DP) :: ethr
   ! energy threshold for convergence: root improvement is stopped,
   ! when two consecutive estimates of the root differ by less than ethr.
+  logical :: overlap
+  ! if .false. : S|psi> not needed
   !
   ! on OUTPUT
   !  evc   contains the  refined estimates of the eigenvectors
@@ -68,9 +70,11 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   ! true if the root is converged
   !
   ! Called routines:
-  external h_psi, g_psi
-  ! h_psi(ndmx,ndim,nvec,psi,hpsi,spsi)
-  !     calculates nvec H|psi> and S|psi> (if needed) products.
+  external h_psi, s_psi, g_psi
+  ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+  !     calculates H|psi> 
+  ! s_psi(ndmx,ndim,nvec,psi,spsi)
+  !     calculates S|psi> (if needed)
   !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
   ! g_psi(ndmx,ndim,notcnv,psi,e)
   !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
@@ -84,7 +88,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   call start_clock ('cegterg')
   allocate ( psi( ndmx, nvecx))    
   allocate (hpsi( ndmx, nvecx))    
-  allocate (spsi( ndmx, nvecx))    
+  if (overlap) allocate (spsi( ndmx, nvecx))    
   allocate (sr( nvecx, nvecx))    
   allocate (hr( nvecx, nvecx))    
   allocate (vr( nvecx, nvecx))    
@@ -97,14 +101,15 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   !
   notcnv = nvec
   nbase = nvec
-  spsi = (0.d0, 0.d0)
+  if (overlap) spsi = (0.d0, 0.d0)
   psi  = (0.d0, 0.d0)
   hpsi = (0.d0, 0.d0)
   psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
   !
-  call h_psi (ndmx, ndim, nvec, psi, hpsi, spsi)
+  call h_psi (ndmx, ndim, nvec, psi, hpsi)
+  if (overlap) call s_psi (ndmx, ndim, nvec, psi, spsi)
   !
   !     hr contains the projection of the hamiltonian onto the reduced space
   !     vr contains the eigenvectors of hr
@@ -119,10 +124,17 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   call reduce (nbase * nvecx, hr)
 #endif
   sr(:,:) = 0.d0
-  call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0, psi, &
-       2*ndmx, spsi, 2*ndmx, 0.d0, sr, nvecx)
-  if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
-       spsi, 2*ndmx, sr, nvecx)
+  if (overlap) then
+     call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0, psi, &
+          2*ndmx, spsi, 2*ndmx, 0.d0, sr, nvecx)
+     if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
+          spsi, 2*ndmx, sr, nvecx)
+  else
+     call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0, psi, &
+          2*ndmx, psi, 2*ndmx, 0.d0, sr, nvecx)
+     if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
+          psi, 2*ndmx, sr, nvecx)
+  end if
 #ifdef __PARA
   call reduce (nbase * nvecx, sr)
 #endif
@@ -158,11 +170,17 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
      !
      !     expand the basis set with new basis vectors (h-es)psi ...
      !
-     call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, spsi, &
-          2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
+     if (overlap) then
+        call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, spsi, &
+             2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
+     else
+        call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, psi, &
+             2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
+     end if
      do np = 1, notcnv
         psi (:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
      end do
+
      call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, hpsi, &
           2*ndmx, vr, nvecx, 1.d0, psi (1, nbase+1), 2*ndmx)
 
@@ -190,7 +208,9 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
      !   here compute the hpsi and spsi of the new functions
      !
      call h_psi (ndmx, ndim, notcnv, psi (1, nbase+1), &
-                 hpsi (1, nbase+1), spsi (1, nbase+1) )
+                 hpsi (1, nbase+1) )
+     if (overlap) call s_psi (ndmx, ndim, notcnv, psi (1, nbase+1), &
+                 spsi (1, nbase+1) )
      !
      !     update the reduced hamiltonian
      !
@@ -205,11 +225,19 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
 #ifdef __PARA
      call reduce (nvecx * notcnv, hr (1, nbase+1) )
 #endif
-     call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
-          psi, 2*ndmx, spsi (1, nbase+1) , 2*ndmx, 0.d0, &
-          sr (1, nbase+1) , nvecx)
-     if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
-          spsi(1,nbase+1), 2*ndmx, sr (1, nbase+1), nvecx)
+     if (overlap) then
+        call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
+             psi, 2*ndmx, spsi (1, nbase+1) , 2*ndmx, 0.d0, &
+             sr (1, nbase+1) , nvecx)
+        if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
+             spsi(1,nbase+1), 2*ndmx, sr (1, nbase+1), nvecx)
+     else
+        call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
+             psi, 2*ndmx, psi (1, nbase+1) , 2*ndmx, 0.d0, &
+             sr (1, nbase+1) , nvecx)
+        if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
+             psi(1,nbase+1), 2*ndmx, sr (1, nbase+1), nvecx)
+     end if
 #ifdef __PARA
      call reduce (nvecx * notcnv, sr (1, nbase+1) )
 #endif
@@ -274,10 +302,11 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
         !
         psi(:, 1:nvec) = evc(:, 1:nvec)
 
-        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, spsi, &
-             2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
-        spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
-
+        if (overlap) then
+           call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, spsi, &
+                2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
+           spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
+        end if
         call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, hpsi, &
              2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
         hpsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
@@ -304,7 +333,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   deallocate (vr)
   deallocate (hr)
   deallocate (sr)
-  deallocate (spsi)
+  if (overlap) deallocate (spsi)
   deallocate (hpsi)
   deallocate ( psi)
 

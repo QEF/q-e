@@ -39,12 +39,7 @@ subroutine hinit1
   !
   call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   !
-  ! orthogonalize the wavefunctions with the new S if Davidson without
-  ! overlap is used
-  !
-  if (.not.loverlap.and.isolve.eq.0) call ortho
-  !
-  ! and update the D matrix
+  ! update the D matrix
   !
   call newd
   !

@@ -19,7 +19,7 @@ subroutine iosys
        ecutwfc, lsda, nspin, dual, lxkcry, noinv, starting_magnetization, &
        lda_plus_U, Hubbard_U, Hubbard_alpha, niter_with_fixed_ns, rytoev, &
        niter, tr2, ethr, mixing_beta, nmix,&
-       isolve, max_cg_iter, david, loverlap, diis_buff, diis_wfc_keep, &
+       isolve, max_cg_iter, david, diis_buff, diis_wfc_keep, &
        diis_start_cg, diis_ndim, startingwfc, startingpot, startingconfig, &
        restart_bfgs, nstep, epse, epsf, amass, &
        temperature, lforce, ttol, delta_t, nraise, ntcheck, upscale, &
@@ -709,7 +709,6 @@ subroutine iosys
   CASE ('cg')
      isolve = 1
      max_cg_iter= diago_cg_maxiter
-     loverlap =.false.
   CASE ('diis')
      isolve = 2
      max_cg_iter= diago_cg_maxiter
@@ -717,19 +716,12 @@ subroutine iosys
      diis_start_cg = diago_diis_start   ! SF
      diis_ndim = diago_diis_ndim        ! SF
      diis_wfc_keep  = diago_diis_keep
-     loverlap =.true.
-  CASE ('david', 'david_overlap')
+  CASE ('david')
      isolve = 0
      david = diago_david_ndim
-     loverlap =.true.
-  CASE ('david_nooverlap')
-     isolve = 0
-     david = diago_david_ndim
-     loverlap =.false.
   CASE DEFAULT
      isolve = 0
      david = diago_david_ndim
-     loverlap =.true.
   END SELECT
 
   tr2  = conv_thr

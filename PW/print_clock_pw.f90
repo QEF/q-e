@@ -59,20 +59,16 @@ subroutine print_clock_pw
    call print_clock ('addus:aux')
 #endif
    write (6, * )
+   call print_clock ('wfcrot')
+   call print_clock ('wfcrot1')
    call print_clock ('cegterg')
    call print_clock ('ccdiagg')
    call print_clock ('cdiisg')
    if (isolve == 0) then
       call print_clock ('h_psi')
       call print_clock ('g_psi')
-      call print_clock ('wfcrot')
-      if (loverlap) then
-         call print_clock ('overlap')
-         call print_clock ('cdiaghg')
-      else
-         call print_clock ('cdiagh')
-         call print_clock ('cgramg1')
-      endif
+      call print_clock ('overlap')
+      call print_clock ('cdiaghg')
       call print_clock ('update')
       call print_clock ('last')
       write (6, * )
@@ -85,7 +81,6 @@ subroutine print_clock_pw
    else
       call print_clock ('h_1psi')
       call print_clock ('s_1psi')
-      call print_clock ('wfcrot1')
       call print_clock ('cdiaghg')
       write (6, * )
       call print_clock ('h_1psi')

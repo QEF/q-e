@@ -120,8 +120,8 @@ subroutine wfcinit
      !!!   call cinitcgg &
      !!!        (npwx, npw, n_starting_wfc, nbnd, wfcatom, evc, et (1, ik))
      !!! else
-        call rotate_wfc &
-             (npwx, npw, n_starting_wfc, gstart, nbnd, wfcatom, evc, et(1, ik))
+     call rotate_wfc (npwx, npw, n_starting_wfc, gstart, nbnd, wfcatom, &
+          okvan, evc, et(1, ik))
      !!! endif
 
      do ibnd = 1, nbnd

@@ -7,13 +7,14 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
+subroutine rotate_wfc &
+     (npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e)
   !----------------------------------------------------------------------
   !
   !   Hamiltonian diagonalization in the subspace spanned
   !   by nstart states psi (atomic or random wavefunctions).
   !   Produces on output nbnd eigenvectors (nbnd <= nstart) in evc.
-  !   (nbnd <= nvec). Calls h_psi to calculate H|psi> and S|psi>.
+  !   (nbnd <= nvec). Calls h_psi, s_psi to calculate H|psi> and S|psi>.
   !   This version assumes real wavefunctions (k=0) with only
   !   half plane waves stored: psi(-G)=psi*(G), except G=0
   !
@@ -26,6 +27,8 @@ subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
   ! output number of states
+  logical :: overlap
+  ! if .false. : S|psi> not needed
 
   complex(kind=DP) :: psi (npwx, nstart), evc (npwx,nbnd)
   ! input and output eigenvectors (may overlap)
@@ -39,7 +42,7 @@ subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
   !
   call start_clock ('wfcrot')
   allocate (hpsi(  npwx , nstart))    
-  allocate (spsi(  npwx , nstart))    
+  if (overlap) allocate (spsi(  npwx , nstart))    
   allocate (hr( nstart , nstart))    
   allocate (sr( nstart , nstart))    
   allocate (vr( nstart , nstart))    
@@ -47,7 +50,8 @@ subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
   !
   ! Set up the Hamiltonian and Overlap matrix
   !
-  call h_psi (npwx, npw, nstart, psi, hpsi, spsi)
+  call h_psi (npwx, npw, nstart, psi, hpsi)
+  if (overlap) call s_psi (npwx, npw, nstart, psi, spsi)
 
   call DGEMM ('t', 'n', nstart, nstart, 2*npw, 2.d0 , psi, 2*npwx, &
        hpsi, 2*npwx, 0.d0, hr, nstart)
@@ -56,10 +60,17 @@ subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
 #ifdef __PARA
   call reduce (nstart * nstart, hr)
 #endif
-  call DGEMM ('t', 'n', nstart, nstart, 2*npw, 2.d0 , psi, 2*npwx, &
-       spsi, 2*npwx, 0.d0, sr, nstart)
-  if (gstart==2) call DGER (nstart, nstart,-1.d0, psi, 2*npwx, &
-       spsi, 2*npwx, sr, nstart)
+  if (overlap) then
+     call DGEMM ('t', 'n', nstart, nstart, 2*npw, 2.d0 , psi, 2*npwx, &
+          spsi, 2*npwx, 0.d0, sr, nstart)
+     if (gstart==2) call DGER (nstart, nstart,-1.d0, psi, 2*npwx, &
+          spsi, 2*npwx, sr, nstart)
+  else
+     call DGEMM ('t', 'n', nstart, nstart, 2*npw, 2.d0 , psi, 2*npwx, &
+          psi, 2*npwx, 0.d0, sr, nstart)
+     if (gstart==2) call DGER (nstart, nstart,-1.d0, psi, 2*npwx, &
+          psi, 2*npwx, sr, nstart)
+  end if
 #ifdef __PARA
   call reduce (nstart * nstart, sr)
 #endif
@@ -80,7 +91,7 @@ subroutine rotate_wfc (npwx, npw, nstart, gstart, nbnd, psi, evc, e)
   deallocate (vr)
   deallocate (sr)
   deallocate (hr)
-  deallocate (spsi)
+  if (overlap) deallocate (spsi)
   deallocate (hpsi)
 
   call stop_clock ('wfcrot')

@@ -121,7 +121,7 @@ subroutine wfcinit
              (npwx, npw, n_starting_wfc, nbnd, wfcatom, evc, et (1, ik))
      else
         call rotate_wfc &
-             (npwx, npw, n_starting_wfc, nbnd, wfcatom, evc, et (1, ik))
+             (npwx, npw, n_starting_wfc, nbnd, wfcatom, okvan, evc, et (1, ik))
      endif
 
      do ibnd = 1, nbnd
