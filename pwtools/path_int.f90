@@ -297,7 +297,7 @@ PROGRAM images_interpolator
   OPEN( UNIT = iunrestart, FILE = new_restart_file, STATUS = "UNKNOWN", &
        ACTION = "WRITE" )
   !
-  WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATIONS")' )
+  WRITE( UNIT = iunrestart, FMT = '("RESTART INFORMATION")' )
   !
   ! ... by default istep and nstep are set to zero
   !
