@@ -234,11 +234,7 @@ SUBROUTINE iosys
   END IF
   lsda = ( nspin == 2 )
   !noncolin = ( nspin == 4 )
-  IF (noncolin) THEN
-    WRITE( stdout,*) 'noncolin = true'
-  ELSE
-    WRITE( stdout,*) 'noncolin = false'
-  ENDIF
+  WRITE( stdout, '(/,5X,"noncolin = ",L1)' ) noncolin
   !  starting_magnetization(ia) = -2.d0 means "not set" -- set it to 0
   DO ia = 1, ntyp
      IF (starting_magnetization(ia) == -2.d0) &

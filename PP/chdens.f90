@@ -364,7 +364,7 @@ program chdens
           ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
           ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0) 
 
-     if (output_format == 3) then
+     if (output_format == 5) then
         !
         ! XCRYSDEN FORMAT
         !
