@@ -22,14 +22,16 @@ SUBROUTINE dynamics()
   ! ...              to the starting temperature, in random directions.
   ! ...              The initial velocity distribution is therefore a constant
   !
-  ! ... delta_T, nraise are used to change the temperature as follows:
+  ! ... delta_t, nraise are used to change the temperature as follows:
   !
-  ! ... delta_T = 1 :                  nothing is done.
-  ! ... delta_T /= 1 and delta_T > 0 : at each step the actual temperature is
-  ! ...                                multiplied by delta_T; this is done
+  ! ... delta_t = 1 :                  every 'nraise' step the actual 
+  ! ...                                temperature is rescaled to the initial 
+  ! ...                                value
+  ! ... delta_t /= 1 and delta_t > 0 : at each step the actual temperature is
+  ! ...                                multiplied by delta_t; this is done
   ! ...                                rescaling all the velocities
-  ! ... delta_T < 0 :                  every 'nraise' step the temperature
-  ! ...                                reduced by -delta_T
+  ! ... delta_t < 0 :                  every 'nraise' step the temperature
+  ! ...                                reduced by -delta_t
   !
   ! ... Dario Alfe 1997  and  Carlo Sbraccia 2004
   !
@@ -156,19 +158,28 @@ SUBROUTINE dynamics()
   !
   istep = istep + 1
   !
-  IF ( MOD( istep, nraise ) == 0 .AND. delta_T < 0 ) THEN
+  IF ( MOD( istep, nraise ) == 0 ) THEN
      !
-     WRITE( stdout, '(/,5X,"Thermalization: delta_T = ",F6.3, &
-                         & ", T = ",F6.1)' )  - delta_T, ( temp_new - delta_T )
+     IF ( delta_t == 1.D0 ) THEN
+        !
+        CALL thermalize( temp_new, temperature )
+        !
+     ELSE IF ( delta_t < 0 ) THEN
+        !
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
+                          & ", T = ",F6.1)' )  - delta_t, ( temp_new - delta_t )
+        !
+        CALL thermalize( temp_new, ( temp_new - delta_t ) )
+        !
+     END IF
      !
-     CALL thermalize( temp_new, ( temp_new - delta_T ) )
+  ELSE IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
      !
-  ELSE IF ( delta_T /= 1.D0 .AND. delta_T >= 0 ) THEN
+     WRITE( stdout, '(/,5X,"Thermalization: delta_t = ",F6.3, &
+                         & ", T = ",F6.1)' ) delta_t, temp_new * delta_t
      !
-     WRITE( stdout, '(/,5X,"Thermalization: delta_T = ",F6.3, &
-                         & ", T = ",F6.1)' ) delta_T, temp_new * delta_T
-     !
-     CALL thermalize( temp_new, temp_new * delta_T )
+     CALL thermalize( temp_new, temp_new * delta_t )
      !
   END IF
   !
@@ -179,9 +190,13 @@ SUBROUTINE dynamics()
      conv_ions = ( etotold - etot ) < epse
      !
      DO i = 1, 3
+        !
         DO na = 1, nat
+           !
            conv_ions = conv_ions .AND. ( ABS( force(i,na) ) < epsf )
+           !
         END DO
+        !
      END DO
      !
      IF ( conv_ions ) THEN
@@ -356,12 +371,9 @@ SUBROUTINE dynamics()
        !
        IMPLICIT NONE
        !
-       ! ... local variables
-       !
        INTEGER                :: na, nb
        REAL(KIND=DP)          :: total_mass, aux, velox, ek, &
                                  ml(3), dir_x, dir_y, dir_z, module
-         ! ek = kinetic energy
        !  
        REAL(KIND=DP),EXTERNAL :: rndm
        !
@@ -455,26 +467,21 @@ SUBROUTINE dynamics()
      END SUBROUTINE start_therm 
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE thermalize( temp_old, temp_new )
+     SUBROUTINE thermalize( system_temp, required_temp )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       ! ... INPUT variables
+       REAL(KIND=DP), INTENT(IN) :: system_temp, required_temp
        !
-       REAL(KIND=DP) :: temp_new, temp_old
-       !
-       ! ... local variables
-       !
-       INTEGER       :: na
        REAL(KIND=DP) :: aux
        !
        !
        ! ... rescale the velocities by a factor 3 / 2KT / Ek
        !
-       IF ( temp_new > 0.D0 .AND. temp_old > 0.D0 ) THEN
+       IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
           !
-          aux = SQRT( temp_new / temp_old )
+          aux = SQRT( required_temp / system_temp )
           !
        ELSE
           !
