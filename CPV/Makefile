@@ -17,7 +17,7 @@ WRAPPERS= wrapper.o
 FOBJS= modules.o ibmfft.o crayfft.o fftw.o para.o \
 read_pseudo.o cplib.o cpr.o input.o \
 macdep.o which_dft.o $(WRAPPERS) \
-restart.o cpr_mod.o cell_module.o cprsub.o
+restart.o cpr_mod.o cell_module.o cprsub.o fft_cp.o
 
 ######################################################################
 

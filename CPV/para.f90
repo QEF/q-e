@@ -10,6 +10,9 @@
 
 module para_mod
 
+  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_deallocate, &
+                       fft_dlay_set
+
   integer maxproc, ncplanex
   parameter (maxproc=64, ncplanex=37000)
   
@@ -18,9 +21,10 @@ module para_mod
   integer nproc, me, mygroup
 ! nproc:   number of processors
 ! me:      number of this processor
+!
 ! parallel fft information for the dense grid
 !
-! npp:     number of plane per processor                  
+! npp:     number of plane per processor                      
 ! n3:      n3(me)+1 = first  plane on proc. me            
 ! ncp:     number of (density) columns per proc  
 ! ncp0:    starting column for each processor
@@ -28,10 +32,19 @@ module para_mod
 ! nct:     total number of non-zero columns               
 ! nnr_:    local fft data size                            
 ! ipc:     index saying which proc owns columns in a plane
-! ocpl:    index relating columns and pos. in the plane   
+! icpl:    index relating columns and pos. in the plane   
 !
-  integer  npp(maxproc), n3(maxproc), ncp(maxproc), ncp0(maxproc), &
-           ncplane, nct, nnr_, ipc(ncplanex), icpl(ncplanex)
+! n3 -> dfftp%ipp
+! ncplane -> dfftp%nnp
+! ncp  -> dfftp%nsp
+! ncp0 -> dfftp%iss
+! npp  -> dfftp%npp
+! ipc  -> dfftp%isind
+! icpl -> dfftp%ismap
+! nnr_ -> dfftp%nnr
+!
+!  integer  npp(maxproc), n3(maxproc), ncp(maxproc), ncp0(maxproc), &
+!           ncplane, nct, nnr_, ipc(ncplanex), icpl(ncplanex)
 !
 ! parallel fft information for the smooth mesh
 !
@@ -45,8 +58,25 @@ module para_mod
 ! ipcs:    saying which proc owns columns in a plane
 ! icpls:   index relating columns and pos. in the plane 
 !
-  integer npps(maxproc), ncps(maxproc), ncpw(maxproc), ncp0s(maxproc), &
-       ncplanes, ncts,  nnrs_, ipcs(ncplanex), icpls(ncplanex)
+! ncpw -> dffts%ncpw
+! n3s -> dffts%ipp
+! ncplanes -> dffts%nnp
+! ncps  -> dffts%nsp
+! ncps0 -> dffts%iss
+! npps  -> dffts%npp
+! ipcs  -> dffts%isind
+! icpls -> dffts%ismap
+! nnrs_ -> dffts%nnr
+!
+!  integer npps(maxproc), ncps(maxproc), ncpw(maxproc), ncp0s(maxproc), &
+!       ncplanes, ncts,  nnrs_, ipcs(ncplanex), icpls(ncplanex)
+
+  TYPE ( fft_dlay_descriptor ) :: dfftp  ! fft descriptor for potentials
+  TYPE ( fft_dlay_descriptor ) :: dffts  ! fft descriptor for smooth mesh
+
+!  PRIVATE :: ipcs, icpls, ipc, icpl, ncp0s, ncp0, npp, npps, ncp, ncps, &
+!    ncplane, ncplanes, n3, ncpw, nnr_, nnrs_, nct, ncts
+
 
 end module para_mod
 !
@@ -127,7 +157,7 @@ end module para_mod
       if (me.eq.1) allocate(rhodist(nr1x*nr2x*nr3x))
       root = 0
       do proc=1,nproc
-         sendcount(proc) =  ncplane*npp(proc)
+         sendcount(proc) =  dfftp%nnp * ( dfftp%npp(proc) )
          if (proc.eq.1) then
             displs(proc)=0
          else
@@ -181,7 +211,7 @@ end module para_mod
 !
       root = 0
       do proc=1,nproc
-         recvcount(proc) =  ncplane*npp(proc)
+         recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
          if (proc.eq.1) then
             displs(proc)=0
          else
@@ -258,9 +288,18 @@ end module para_mod
      &        aux(ncplanex), &! used to order columns
      &        amod            ! modulus of G vectors
 !
+      integer  ncp0(maxproc), ipc(ncplanex), icpl(ncplanex)
+      integer  ncp0s(maxproc), ipcs(ncplanex), icpls(ncplanex)
+      integer  npp(maxproc), npps(maxproc)
+      integer  ncp(maxproc), ncps(maxproc)
+      integer  n3(maxproc)
+      integer  ncplane, ncplanes
+      integer  ncpw(maxproc)
+      integer  nnr_, nnrs_, nct, ncts
 !
       integer, allocatable :: st(:,:), stw(:,:), sts(:,:) ! sticks maps
       integer :: ub(3), lb(3)  ! upper and lower bounds for maps
+      integer :: nctw
       logical :: tk = .FALSE.
 !
       call tictac(27,0)
@@ -312,12 +351,8 @@ end module para_mod
 !     Now compute for each point of the big plane how many column have
 !     non zero vectors on the smooth and dense grid
 !
-      do mc = 1,ncplane
-         ipc(mc) = 0
-      end do 
-      do mc = 1,ncplanes
-         ipcs(mc)= 0
-      end do 
+      ipc  = 0
+      ipcs = 0
 !
       nct = 0
       ncts= 0
@@ -353,18 +388,19 @@ end module para_mod
       CALL sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
 
       nct  = COUNT( st  > 0 )
+      nctw = COUNT( stw > 0 )
       ncts = COUNT( sts > 0 )
 
-      if (nct.gt.ncplane)    &
+      if ( nct > ncplane )    &
      &    call errore('set_fft_para','too many sticks',1)
 
-      if (ncts.gt.ncplanes)  &
+      if ( ncts > ncplanes )  &
      &    call errore('set_fft_para','too many sticks',2)
 
-      if (nct .eq.0) & 
+      if ( nct == 0 ) & 
      &    call errore('set_fft_para','number of sticks 0', 1)
 
-      if (ncts.eq.0) &
+      if ( ncts == 0 ) &
      &    call errore('set_fft_para','number smooth sticks 0', 1)
 
 !
@@ -394,6 +430,17 @@ end module para_mod
                 ncp, ncpw, ncps, ngp, ngpw, ngps, st, stw, sts )
 
       ! WRITE(*,*) ' DEBUG : ', COUNT( st > 0 ), COUNT( sts > 0 ), COUNT( stw > 0 )
+
+
+      CALL fft_dlay_allocate( dfftp, nproc, nr1x, nr2x )
+      CALL fft_dlay_allocate( dffts, nproc, nr1sx, nr2sx )
+
+
+      CALL fft_dlay_set( dfftp, tk, nct, nr1, nr2, nr3, nr1x, nr2x, nr3x, me, &
+                nproc, ub, lb, index, in1, in2, ncp, ncpw, ngp, ngpw, st, stw)
+      CALL fft_dlay_set( dffts, tk, ncts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, me, &
+                nproc, ub, lb, index, in1, in2, ncps, ncpw, ngps, ngpw, sts, stw)
+
 
       DO mc = 1, nct
 
@@ -481,7 +528,7 @@ end module para_mod
 ! nnr_ and nnrs_ are copies of nnr and nnrs, the local fft data size,
 ! to be stored in "parallel" commons. Not a very elegant solution.
 !
-      if (nproc.eq.1) then
+      if ( nproc == 1 ) then
          nnr =nr1x*nr2x*nr3x
          nnrs=nr1sx*nr2sx*nr3sx
       else
@@ -617,6 +664,15 @@ end module para_mod
       if (nct_.ne.ncts)                                                 &
      &     call errore('set_fft_para','nct_.ne.ncts',1)
       call tictac(27,1)
+
+!      do i = 1, nproc
+!        write(6,fmt="('DEBUG fft_setup ',3I5 )" ) i, npp(i), dfftp%npp(i)
+!        write(6,fmt="('DEBUG fft_setup ',3I5 )" ) i, npps(i), dffts%npp(i)
+!      end do
+!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) nnr_, dfftp%nnr
+!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) nnrs_, dffts%nnr
+!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) nct, dfftp%nst
+!      write(6,fmt="('DEBUG fft_setup ',3I9 )" ) ncts, dffts%nst
 !
       return
       end
@@ -642,10 +698,11 @@ end module para_mod
 !
       use para_mod
       use work_fft
+      use fft_base, only: fft_scatter
 !
       implicit none
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x, sign, nppx
-      complex(kind=8)  f(nnr_)
+      complex(kind=8)  f( dfftp%nnr )
       integer  mc, i, j, ii
 !
 ! the following is needed if the fft is distributed over only one processor
@@ -653,36 +710,46 @@ end module para_mod
 ! and better than the preceding one that did not work in some cases. Note 
 ! that fft_scatter does nothing if nproc=1. PG
 !
+
+      if ( nr1  /= dfftp%nr1  ) call errore(' cfftp ',' wrong dims ', 1)
+      if ( nr2  /= dfftp%nr2  ) call errore(' cfftp ',' wrong dims ', 2)
+      if ( nr3  /= dfftp%nr3  ) call errore(' cfftp ',' wrong dims ', 3)
+      if ( nr1x /= dfftp%nr1x ) call errore(' cfftp ',' wrong dims ', 4)
+      if ( nr2x /= dfftp%nr2x ) call errore(' cfftp ',' wrong dims ', 5)
+      if ( nr3x /= dfftp%nr3x ) call errore(' cfftp ',' wrong dims ', 6)
+
       if (nproc.eq.1) then
          nppx=nr3x
       else
-         nppx=npp(me)
+         nppx=dfftp%npp(me)
       end if
+
       if (sign.eq.1) then
-         call cft_1(f,ncp(me),nr3,nr3x,sign,aux)
-         call fft_scatter(nproc,me,aux,nr3x,nnr_,f,ncp,npp,sign)
-         call zero(2*nnr_,f)
-         do i=1,nct
-            mc = icpl(i)
-            do j=1,npp(me)
-               f(mc+(j-1)*ncplane) = aux(j + (i-1)*nppx)
+
+         call cft_1(f,dfftp%nsp(me),nr3,nr3x,sign,aux)
+         call fft_scatter(aux,nr3x,dfftp%nnr,f,dfftp%nsp,dfftp%npp,sign)
+         call zero(2*dfftp%nnr,f)
+         do i=1,dfftp%nst
+            mc = dfftp%ismap( i )
+            do j=1,dfftp%npp(me)
+               f(mc+(j-1)*dfftp%nnp) = aux(j + (i-1)*nppx)
             end do
          end do
 !
-         call cft_2(f,npp(me),nr1,nr2,nr1x,nr2x,sign)
+         call cft_2(f,dfftp%npp(me),nr1,nr2,nr1x,nr2x,sign)
 !
       else if (sign.eq.-1) then
 !
-         call cft_2(f,npp(me),nr1,nr2,nr1x,nr2x,sign)
+         call cft_2(f,dfftp%npp(me),nr1,nr2,nr1x,nr2x,sign)
 !
-         do i=1,nct
-            mc = icpl(i)
-            do j=1,npp(me)
-               aux(j + (i-1)*nppx) = f(mc+(j-1)*ncplane)
+         do i=1,dfftp%nst
+            mc = dfftp%ismap( i )
+            do j=1,dfftp%npp(me)
+               aux(j + (i-1)*nppx) = f(mc+(j-1)*dfftp%nnp)
             end do
          end do
-         call fft_scatter(nproc,me,aux,nr3x,nnr_,f,ncp,npp,sign)
-         call cft_1(aux,ncp(me),nr3,nr3x,sign,f)
+         call fft_scatter(aux,nr3x,dfftp%nnr,f,dfftp%nsp,dfftp%npp,sign)
+         call cft_1(aux,dfftp%nsp(me),nr3,nr3x,sign,f)
       else
           call errore('cftp','not allowed',abs(sign))
       end if
@@ -721,100 +788,92 @@ end module para_mod
 !
       use para_mod
       use work_fft
+      use fft_base, only: fft_scatter
 !
       implicit none
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x,sign
-      complex(kind=8)  f(nnrs_)
+      complex(kind=8)  f( dffts%nnr )
       integer  mc, i, j, ii, proc, k, nppx
       integer planes(nr1x)
 !
 ! see comments in cfftp for the logic (or lack of it) of the following
 !
-      if (nproc.eq.1) then
-         nppx=nr3x
+      if ( nr1  /= dffts%nr1  ) call errore(' cfftps ',' wrong dims ', 1)
+      if ( nr2  /= dffts%nr2  ) call errore(' cfftps ',' wrong dims ', 2)
+      if ( nr3  /= dffts%nr3  ) call errore(' cfftps ',' wrong dims ', 3)
+      if ( nr1x /= dffts%nr1x ) call errore(' cfftps ',' wrong dims ', 4)
+      if ( nr2x /= dffts%nr2x ) call errore(' cfftps ',' wrong dims ', 5)
+      if ( nr3x /= dffts%nr3x ) call errore(' cfftps ',' wrong dims ', 6)
+
+      if ( nproc == 1 ) then
+         nppx = dffts%nr3x
       else
-         nppx=npps(me)
+         nppx = dffts%npp(me)
       end if
-      if (sign.gt.0) then
-         if (sign.ne.2) then
-            call cft_1s(f,ncps(me),nr3,nr3x,sign,aux)
-            call fft_scatter(nproc,me,aux,nr3x,nnrs_,f,ncps,npps,sign)
-            call zero(2*nnrs_,f)
-            do i=1,ncts
-               mc = icpls(i)
-               do j=1,npps(me)
-                  f(mc+(j-1)*ncplanes) = aux(j + (i-1)*nppx)
+
+      if ( sign > 0 ) then
+         if ( sign /= 2 ) then
+            call cft_1s(f,dffts%nsp(me),nr3,nr3x,sign,aux)
+            call fft_scatter( aux, nr3x, dffts%nnr, f, dffts%nsp, dffts%npp, sign)
+            call zero(2*dffts%nnr,f)
+            do i = 1, dffts%nst
+               mc = dffts%ismap( i )
+               do j = 1, dffts%npp(me)
+                  f( mc + (j-1) * dffts%nnp ) = aux( j + (i-1) * nppx)
                end do
             end do
-            do i=1,nr1x
-              planes(i) = 1 
-            enddo
+            planes = dffts%iplp
          else
-            call cft_1s(f,ncpw(me),nr3,nr3x,sign,aux)
-            call fft_scatter(nproc,me,aux,nr3x,nnrs_,f,ncpw,npps,sign)
-            call zero(2*nnrs_,f)
+            call cft_1s(f,dffts%nsw(me),nr3,nr3x,sign,aux)
+            call fft_scatter( aux, nr3x, dffts%nnr, f, dffts%nsw, dffts%npp, sign)
+            call zero( 2*dffts%nnr, f )
             ii = 0
-            do i=1,nr1x
-              planes(i) = 0 
-            enddo
             do proc=1,nproc
-               do i=1,ncpw(proc)
-                  mc = icpls(i+ncp0s(proc))
+               do i=1,dffts%nsw(proc)
+                  mc = dffts%ismap( i + dffts%iss(proc) )
                   ii = ii + 1 
-		  k=mod(mc-1,nr1x)+1
-                  planes(k) = 1
-                  do j=1,npps(me)
-                     f(mc+(j-1)*ncplanes) = aux(j + (ii-1)*nppx)
+                  do j=1,dffts%npp(me)
+                     f(mc+(j-1)*dffts%nnp) = aux(j + (ii-1)*nppx)
                   end do
                end do
             end do
+            planes = dffts%iplw
          end if
 !
-         call cft_2s(f,npps(me),nr1,nr2,nr1x,nr2x,sign,planes)
+         call cft_2s(f,dffts%npp(me),nr1,nr2,nr1x,nr2x,sign,planes)
 !
       else
 !
          if (sign.ne.-2) then
-            do i=1,nr1x
-               planes(i) = 1
-            end do
+            planes = dffts%iplp
          else
-            do i=1,nr1x
-               planes(i) = 0
-            end do
-            do proc=1,nproc
-               do i=1,ncpw(proc)
-                  mc = icpls(i+ncp0s(proc))
-	          k=mod(mc-1,nr1x)+1	
-                  planes(k) = 1
-               enddo
-            enddo
+            planes = dffts%iplw
          endif
 !
-         call cft_2s(f,npps(me),nr1,nr2,nr1x,nr2x,sign,planes)
+         call cft_2s(f,dffts%npp(me),nr1,nr2,nr1x,nr2x,sign,planes)
 !
          if (sign.ne.-2) then
-            do i=1,ncts
-               mc = icpls(i)
-               do j=1,npps(me)
-                  aux(j + (i-1)*nppx) = f(mc+(j-1)*ncplanes)
+            do i=1,dffts%nst
+               mc = dffts%ismap( i )
+               do j=1,dffts%npp(me)
+                  aux(j + (i-1)*nppx) = f(mc+(j-1)*dffts%nnp)
                end do
             end do
-            call fft_scatter(nproc,me,aux,nr3x,nnrs_,f,ncps,npps,sign)
-            call cft_1s(aux,ncps(me),nr3,nr3x,sign,f)
+            call fft_scatter(aux,nr3x,dffts%nnr,f,dffts%nsp,dffts%npp,sign)
+            call cft_1s(aux,dffts%nsp(me),nr3,nr3x,sign,f)
          else
             ii = 0
             do proc=1,nproc
-               do i=1,ncpw(proc)
-                  mc = icpls(i+ncp0s(proc))
+               do i=1,dffts%nsw(proc)
+                  mc = dffts%ismap( i + dffts%iss(proc) )
                   ii = ii + 1 
-                  do j=1,npps(me)
-                     aux(j + (ii-1)*nppx) = f(mc+(j-1)*ncplanes)
+                  do j=1,dffts%npp(me)
+                     aux(j + (ii-1)*nppx) = f(mc+(j-1)*dffts%nnp)
                   end do
                end do
             end do
-            call fft_scatter(nproc,me,aux,nr3x,nnrs_,f,ncpw,npps,sign)
-            call cft_1s(aux,ncpw(me),nr3,nr3x,sign,f)
+            call fft_scatter(aux,nr3x,dffts%nnr,f,dffts%nsw,dffts%npp,sign)
+            call cft_1s(aux,dffts%nsw(me),nr3,nr3x,sign,f)
          end if
       end if
 !
@@ -873,8 +932,8 @@ end module para_mod
          ibig3=1+mod(irb3+ir3-2,nr3)
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
      &        call errore('cfftpb','ibig3 wrong',ibig3)
-         ibig3=ibig3-n3(me)
-         if (ibig3.gt.0.and.ibig3.le.npp(me)) then
+         ibig3=ibig3-dfftp%ipp(me)
+         if (ibig3.gt.0.and.ibig3.le.dfftp%npp(me)) then
             imin3=min(imin3,ir3)
             imax3=max(imax3,ir3)
          end if
@@ -884,7 +943,7 @@ end module para_mod
       end
 !
 !------------------------------------------------------------------------
-      subroutine fft_scatter                                            &
+      subroutine fft_scatter2                                           &
      &     (nproc, me, f_in, nr3x, nnr_, f_aux, ncp_, npp_, sign)
 !------------------------------------------------------------------------
 !
@@ -1136,7 +1195,7 @@ end module para_mod
 ! root is the first node
       ntot = 0
       do proc=1,nproc
-         recvcount(proc) = ncpw(proc)*nzx
+         recvcount(proc) = dffts%nsw(proc)*nzx
 !
 ! recvcount(proc) = size of data received from processor proc
 !                   (number of columns times length of each column)
@@ -1183,7 +1242,7 @@ end module para_mod
             nz  =nz_-1
             if (nz.ge.nr3s/2) nz=nz-nr3s
 !
-! ncpw(me) columns along z are stored in contiguous order on each node 
+! dffts%nsw(me) columns along z are stored in contiguous order on each node 
 !
             psis(nz-nmin(3)+1+ncol*nzx)=c(ig,i)
          end do
@@ -1207,9 +1266,10 @@ end module para_mod
          if (me.eq.1) then
             ncol=0
             do proc=1,nproc
-               do ii=1,ncpw(proc)
+               do ii=1,dffts%nsw(proc)
                   ncol=ncol+1
-                  mc=icpls(ii+ncp0s(proc))
+                  ! mc=icpls(ii+ncp0s(proc))
+                  mc = dffts%ismap( ii + dffts%iss(proc) )
 !
 ! mc is the position in the xy plane of this column in FFT style
 ! we need to calculate "natural" indexes n1,n2, centered on the 
@@ -1370,7 +1430,7 @@ end module para_mod
 ! root is the first node
       ntot = 0
       do proc=1,nproc
-         sendcount(proc) =  ncpw(proc)*nzx
+         sendcount(proc) =  dffts%nsw(proc)*nzx
 !
 ! sendcount(proc) = size of data send to processor proc
 !                   (number of columns times length of each column)
@@ -1423,9 +1483,10 @@ end module para_mod
 !
             ncol=0
             do proc=1,nproc
-               do ii=1,ncpw(proc)
+               do ii=1,dffts%nsw(proc)
                   ncol=ncol+1
-                  mc=icpls(ii+ncp0s(proc))
+                  ! mc=icpls(ii+ncp0s(proc))
+                  mc = dffts%ismap( ii + dffts%iss(proc) )
                   n2=(mc-1)/nr1sx
                   n1= mc-1-n2*nr1sx
                   if (n2.ge.nr2s/2) n2=n2-nr2s

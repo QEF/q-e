@@ -670,8 +670,8 @@
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
      &        call errore('box2grid','ibig3 wrong',ibig3)
 #ifdef __PARA
-         ibig3=ibig3-n3(me)
-         if (ibig3.gt.0.and.ibig3.le.npp(me)) then
+         ibig3=ibig3-dfftp%ipp(me)
+         if (ibig3.gt.0.and.ibig3.le. ( dfftp%npp(me) ) ) then
 #endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
@@ -722,8 +722,8 @@
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
      &        call errore('box2grid2','ibig3 wrong',ibig3)
 #ifdef __PARA
-         ibig3=ibig3-n3(me)
-         if (ibig3.gt.0.and.ibig3.le.npp(me)) then
+         ibig3=ibig3-dfftp%ipp(me)
+         if (ibig3.gt.0.and.ibig3.le. dfftp%npp(me) ) then
 #endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
@@ -779,8 +779,8 @@
          ibig3=irb(3)+ir3-1
          ibig3=1+mod(ibig3-1,nr3)
 #ifdef __PARA
-         ibig3=ibig3-n3(me)
-         if (ibig3.gt.0.and.ibig3.le.npp(me)) then
+         ibig3=ibig3-dfftp%ipp(me)
+         if (ibig3.gt.0.and.ibig3.le. dfftp%npp(me) ) then
 #endif
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
@@ -2242,11 +2242,14 @@
 ! forward fourier transform of potentials and charge density 
 ! on the dense grid . On output, f is overwritten
 !
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dfftp
       complex(kind=8) f(*)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
       call tictac(22,0)
 #ifdef __PARA
-      call cfftp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+      ! call cfftp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+      call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
 #else
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 #endif
@@ -2259,11 +2262,14 @@
 ! forward fourier transform of potentials and charge density 
 ! on the smooth grid . On output, f is overwritten
 !
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
       complex(kind=8) f(*)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(23,0)
 #ifdef __PARA
-      call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+      ! call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts)
 #else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
 #endif
@@ -2276,11 +2282,14 @@
 ! forward fourier transform of potentials and charge density 
 ! on the smooth grid . On output, f is overwritten
 !
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
       complex(kind=8) f(*)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(24,0)
 #ifdef __PARA
-      call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2)
+      ! call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2)
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2,dffts)
 #else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
 #endif
@@ -2547,7 +2556,8 @@
                if (n1p.lt.1) n1p = n1p + nr1
                n2p = j + 1
                if (n2p.lt.1) n2p = n2p + nr2
-               if (ipc(n1p+(n2p-1)*nr1x).eq.0) go to 20
+               ! if (ipc(n1p+(n2p-1)*nr1x).eq.0) go to 20
+               if ( dfftp%isind(n1p+(n2p-1)*dfftp%nr1x).eq.0) go to 20
 #endif
                g2=0.d0
                do ir=1,3
@@ -2682,7 +2692,8 @@
         if (n1p.lt.1) n1p = n1p + nr1
         n2p = j + 1
         if (n2p.lt.1) n2p = n2p + nr2
-        if (ipc(n1p+(n2p-1)*nr1x).eq.0) cycle loop_allg
+        ! if (ipc(n1p+(n2p-1)*nr1x).eq.0) cycle loop_allg
+        if (dfftp%isind(n1p+(n2p-1)*dfftp%nr1x).eq.0) cycle loop_allg
 #endif
         ng=ng+1
         g(ng)=g2_g(ig)
@@ -2815,8 +2826,10 @@
 ! conversion from (i,j,k) index to combined 1-d ijk index
 ! for the parallel case: columns along z are stored contiguously
 !
-         np(ig) = n3p + (ipc(n1p+(n2p-1)*nr1x)-1)*nr3x
-         nm(ig) = n3m + (ipc(n1m+(n2m-1)*nr1x)-1)*nr3x
+         ! np(ig) = n3p + (ipc(n1p+(n2p-1)*nr1x)-1)*nr3x
+         np(ig) = n3p + (dfftp%isind(n1p+(n2p-1)*dfftp%nr1x)-1)*dfftp%nr3x
+         ! nm(ig) = n3m + (ipc(n1m+(n2m-1)*nr1x)-1)*nr3x
+         nm(ig) = n3m + (dfftp%isind(n1m+(n2m-1)*dfftp%nr1x)-1)*dfftp%nr3x
 #else
 !
 ! conversion from (i,j,k) index to combined 1-d ijk index:
@@ -2897,8 +2910,10 @@
 ! conversion from (i,j,k) index to combined 1-d ijk index
 ! for the parallel case: columns along z are stored contiguously
 !
-         nps(ig) = n3ps + (ipcs(n1ps+(n2ps-1)*nr1sx)-1)*nr3sx
-         nms(ig) = n3ms + (ipcs(n1ms+(n2ms-1)*nr1sx)-1)*nr3sx
+         ! nps(ig) = n3ps + (ipcs(n1ps+(n2ps-1)*nr1sx)-1)*nr3sx
+         nps(ig) = n3ps + (dffts%isind(n1ps+(n2ps-1)*dffts%nr1x)-1)*dffts%nr3x
+         ! nms(ig) = n3ms + (ipcs(n1ms+(n2ms-1)*nr1sx)-1)*nr3sx
+         nms(ig) = n3ms + (dffts%isind(n1ms+(n2ms-1)*dffts%nr1x)-1)*dffts%nr3x
 #else
 !
 ! conversion from (i,j,k) index to combined 1-d ijk index:
@@ -3787,11 +3802,14 @@
 ! inverse fourier transform of  potentials and charge density
 ! on the smooth grid . On output, f is overwritten
 !
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
       complex(kind=8) f(*)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(23,0)
 #ifdef __PARA
-      call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+      !call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts)
 #else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
 #endif
@@ -3805,11 +3823,14 @@
 ! inverse fourier transform of wavefunctions 
 ! on the smooth grid . On output, f is overwritten
 !
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
       complex(kind=8) f(*)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call tictac(24,0)
 #ifdef __PARA
-      call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2)
+      !call cfftps(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2)
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2,dffts)
 #else
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
 #endif

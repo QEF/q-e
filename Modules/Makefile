@@ -18,7 +18,9 @@ pseudodata.o  \
 cell_base.o  \
 pseudo_types.o \
 ptoolkit.o \
-stick_base.o
+stick_base.o \
+fft_types.o \
+fft_base.o
 #
 include ../make.rules
 #
