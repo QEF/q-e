@@ -9,6 +9,24 @@
 MODULE basic_algebra_routines
   !----------------------------------------------------------------------------
   !
+  ! ... Written by Carlo Sbraccia ( 16/12/2003 )
+  !
+  ! ... This module contains a limited number of functions and operators
+  ! ... for vectorial algebra. Wherever possible the appropriate BLAS routine
+  ! ... ( always the double precision version ) is used.
+  ! ... If BLAS are not available compile this module with the -D__NOBLAS
+  ! ... precompiler option.
+  !
+  ! ... List of public methods :
+  !
+  !  x .dot. y		implements the dot product between vectors ( <x|y> )
+  !  norm( x )		computes the norm of a vector ( SQRT(<x|x>) )
+  !  A .times. x	implements the matrix-vector multiplication ( A|x> )
+  !  x .times. A	implements the vector-matrix multiplication ( <x|A )
+  !  matrix( x, y )	implements the vector-vector multiplication ( |x><y| )
+  !  identity( N )	the identity matrix in dimension N
+  !
+  !
   USE parameters,  ONLY : DP
   !
   IMPLICIT NONE
@@ -35,7 +53,7 @@ MODULE basic_algebra_routines
        !
        REAL (KIND=DP), INTENT(IN) :: vector1(:), vector2(:)
        REAL (KIND=DP)             :: internal_dot_product
-#if defined (__BLAS)              
+#if ! defined (__NOBLAS)              
        REAL (KIND=DP)             :: DDOT
        EXTERNAL                      DDOT
        !
@@ -56,7 +74,7 @@ MODULE basic_algebra_routines
        !
        REAL (KIND=DP), INTENT(IN) :: vector(:)
        REAL (KIND=DP)             :: norm
-#if defined (__BLAS)       
+#if ! defined (__NOBLAS)       
        REAL (KIND=DP)             :: DNRM2
        EXTERNAL                      DNRM2   
        !
@@ -79,16 +97,14 @@ MODULE basic_algebra_routines
        REAL (KIND=DP), INTENT(IN) :: matrix(:,:)
        REAL (KIND=DP)             :: matrix_times_vector(SIZE( vector ))
        INTEGER                    :: dim
-#if defined (__BLAS)
-       EXTERNAL                      DGEMV
-#else
+#if defined (__NOBLAS)
        INTEGER                    :: i
 #endif       
        !
        !
        dim = SIZE( vector )
        !
-#if defined (__BLAS)              
+#if ! defined (__NOBLAS)              
        CALL DGEMV( 'N', dim, dim, 1.D0, matrix, dim, vector, 1, &
                    0.D0, matrix_times_vector, 1 )       
 #else
@@ -134,9 +150,7 @@ MODULE basic_algebra_routines
        REAL (KIND=DP), INTENT(IN) :: vector1(:), vector2(:)
        REAL (KIND=DP)             :: matrix(SIZE( vector1 ),SIZE( vector2 ))
        INTEGER                    :: dim1, dim2
-#if defined (__BLAS)       
-       EXTERNAL                      DGER
-#else
+#if defined (__NOBLAS)
        INTEGER                    :: i, j
 #endif
        !
@@ -144,7 +158,7 @@ MODULE basic_algebra_routines
        dim1 = SIZE( vector1 )
        dim2 = SIZE( vector2 )
        !
-#if defined (__BLAS)              
+#if ! defined (__NOBLAS)              
        CALL DGER( dim1, dim2, 1.D0, &
                   vector1, 1, vector2, 1, matrix, MAX( dim1, dim2 )  )
 #else
