@@ -21,7 +21,7 @@ subroutine gen_us_dj (ik, dvkb)
   !
   ! local variables
   !
-  integer :: ikb, nb, ih, ig, i0, nt
+  integer :: ikb, nb, ih, ig, i0, i1, i2, i3 , nt
   ! counter on beta functions
   ! counter on beta functions
   ! counter on beta functions
@@ -29,7 +29,7 @@ subroutine gen_us_dj (ik, dvkb)
   ! index of the first nonzero point in the r
   ! counter on atomic type
 
-  real(kind=DP) :: arg
+  real(kind=DP) :: arg, px, ux, vx, wx
   ! argument of the atomic phase factor
 
   complex(kind=DP) :: phase, pref
@@ -43,6 +43,8 @@ subroutine gen_us_dj (ik, dvkb)
 
   complex(kind=DP), allocatable :: sk (:)
 
+  call start_clock('stres_us31')
+
   if (nkb.eq.0) return
   allocate (djl( npw , nbrx , ntyp))    
   allocate (ylm( npw ,(lmaxkb + 1) **2))    
@@ -55,51 +57,33 @@ subroutine gen_us_dj (ik, dvkb)
      q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   enddo
 
+  call stop_clock('stres_us31')
+  call start_clock('stres_us32')
   call ylmr2 ((lmaxkb+1)**2, npw, gk, q, ylm)
+  call stop_clock('stres_us32')
+  call start_clock('stres_us33')
 
   do nt = 1, ntyp
      do nb = 1, nbeta (nt)
-        l = lll (nb, nt)
         do ig = 1, npw
            qt = sqrt(q (ig)) * tpiba
-           if (qt.lt.eps) then
-              if (l.ne.1) then
-                 do i = 1, kkbeta (nt)
-                    jl (i) = 0.0d0
-                 enddo
-              else
-                 ! Note that dj_1/dx (x=0) = 1/3
-                 do i = 1, kkbeta (nt)
-                    jl (i) = 1.0d0 / 3.d0
-                 enddo
-              endif
-           else
-              !
-              !    in order to avoid a division by zero i0 is defined as
-              !    the first point in the radial mesh such that q*r>eps
-              !    NB: eps value must be consistent with its value in sph_bes
-              !
-              i0 = 1
-              do while ( qt * r(i0,nt) .lt. eps )
-                 i0 = i0 + 1
-              end do
-              call sph_bes (kkbeta(nt)+1-i0, r(i0, nt), qt, l, jl (i0))
-              call sph_bes (kkbeta(nt)+1-i0, r(i0, nt), qt, l - 1, jlm1(i0) )
-              ! recurrence relation for jl
-              do i = i0, kkbeta (nt)
-                 jl (i) = jlm1 (i) - (l + 1) / (qt * r (i, nt) ) * jl (i)
-              enddo
-              if (i0.eq.2) jl (1) = jl (2)
-           endif
-           ! jl is now the derivative of the Bessel functions
-           do i = 1, kkbeta (nt)
-              jlm1 (i) = jl (i) * betar (i, nb, nt) * r (i, nt) **2
-           enddo
-           call simpson (kkbeta (nt), jlm1, rab (1, nt), dv)
-           djl (ig, nb, nt) = dv * fpi / sqrt (omega)
+           px = qt / dq - int (qt / dq)
+           ux = 1.d0 - px
+           vx = 2.d0 - px
+           wx = 3.d0 - px
+           i0 = qt / dq + 1
+           i1 = i0 + 1
+           i2 = i0 + 2
+           i3 = i0 + 3
+           djl(ig,nb,nt) = ( tab (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                             tab (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                             tab (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                             tab (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
         enddo
      enddo
   enddo
+  call stop_clock('stres_us33')
+  call start_clock('stres_us34')
 
   deallocate (q)
   deallocate (gk)
@@ -136,6 +120,7 @@ subroutine gen_us_dj (ik, dvkb)
      enddo
 
   enddo
+  call stop_clock('stres_us34')
 
   if (ikb.ne.nkb) call errore ('gen_us_dj', 'unexpected error', 1)
   deallocate (sk)
