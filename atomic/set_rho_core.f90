@@ -88,8 +88,7 @@ subroutine set_rho_core
   end do
   write(6,'(/,5x,''  r > '',f4.2,'' : true rho core'')') r(ik)
   write(6,110) r(ik), a, b
-110 format  write(6,*) '***',file_core,'***'
- (5x, '  r < ',f4.2,' : rho core = a sin(br)/r', &
+110 format (5x, '  r < ',f4.2,' : rho core = a sin(br)/r', &
        '    a=',f7.2,'  b=',f7.2/)
   file_core=' '
   if (file_core .ne. ' ') then
@@ -104,6 +103,6 @@ subroutine set_rho_core
   endif
   deallocate (rhoco, rhov)
   totrho = int_0_inf_dr(rhoc,r,r2,dx,mesh,2)
-  write(6,'(13x,''integrated pseudo core charge : '',f6.2)')  totrho
+  write(6,'(13x,''integrated core pseudo-charge : '',f6.2)')  totrho
   return
 end subroutine set_rho_core
