@@ -214,13 +214,13 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
      ike = iks + nkl - 1
 
      ngk_g(iks:ike) = ngk(1:nkl)
-     CALL mp_sum( ngk_g, intra_pool_comm(my_image_id) )
+     CALL mp_sum( ngk_g, intra_pool_comm )
 
      !write(400+mpime,*) what, ngk(1:nks), nkstot
      !write(400+mpime,*) what, ngk_g(1:nkstot)
 
      IF( npool > 1 ) THEN
-       CALL mp_sum( ngk_g, inter_pool_comm(my_image_id) )
+       CALL mp_sum( ngk_g, inter_pool_comm )
        !write(400+mpime,*) what, ngk_g(1:nkstot)
      END IF
 
@@ -993,7 +993,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
          CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
          CALL gk_l2gmap (ngm, ig_l2g(1), npw, igk, igk_l2g(1,ik-iks+1))
          npw_g = MAXVAL( igk_l2g(:,ik-iks+1) )
-         CALL mp_max( npw_g, intra_pool_comm(my_image_id) )
+         CALL mp_max( npw_g, intra_pool_comm )
        END IF
 
        CALL mp_bcast( npw_g, ipdest, intra_image_comm )

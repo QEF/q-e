@@ -120,7 +120,7 @@ SUBROUTINE reduce( dim, ps )
   !
 #if defined (__PARA)
   !
-  USE mp_global, ONLY : intra_pool_comm, my_pool_id, nproc_pool, my_image_id
+  USE mp_global, ONLY : intra_pool_comm, my_pool_id, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
   USE parallel_include  
@@ -149,13 +149,13 @@ SUBROUTINE reduce( dim, ps )
 #  endif
   !
   !
-  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
+  IF ( dim <= 0 .OR. npool <= 1 ) RETURN
   !
   CALL start_clock( 'reduce' )
   !
   ! ... syncronize processes - maybe unneeded on T3D but necessary on T3E !!!
   !
-  CALL mp_barrier( intra_pool_comm(my_image_id) )
+  CALL mp_barrier( intra_pool_comm )
   !
   nbuf = dim / maxb
   !
@@ -175,7 +175,7 @@ SUBROUTINE reduce( dim, ps )
 #  else
      !
      CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_REAL8, &
-                         MPI_SUM, intra_pool_comm(my_image_id), info )
+                         MPI_SUM, intra_pool_comm, info )
      !                    
      CALL errore( 'reduce', 'error in allreduce1', info )
      !
@@ -197,7 +197,7 @@ SUBROUTINE reduce( dim, ps )
 #  else
      !
      CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_REAL8, &
-                         MPI_SUM, intra_pool_comm(my_image_id), info )
+                         MPI_SUM, intra_pool_comm, info )
      !
      CALL errore( 'reduce', 'error in allreduce2', info )
      !
@@ -223,7 +223,7 @@ SUBROUTINE ireduce( dim, is )
   !
 #if defined (__PARA)
   !
-  USE mp_global, ONLY : intra_pool_comm, nproc_pool, my_image_id
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
   USE parallel_include    
   !
@@ -235,18 +235,18 @@ SUBROUTINE ireduce( dim, is )
   INTEGER            :: buff(maxi)
   !
   !
-  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
+  IF ( dim <= 0 .OR. npool <= 1 ) RETURN
   !
   ! ... syncronize processes
   !
-  CALL mp_barrier( intra_pool_comm(my_image_id) )
+  CALL mp_barrier( intra_pool_comm )
   !
   nbuf = dim / maxi
   !
   DO n = 1, nbuf
      !
      CALL MPI_ALLREDUCE( is(1+(n-1)*maxi), buff, maxi, MPI_INTEGER, &
-                         MPI_SUM, intra_pool_comm(my_image_id), info )
+                         MPI_SUM, intra_pool_comm, info )
      !   
      CALL errore( 'ireduce', 'error in allreduce 1', info )
      !
@@ -259,7 +259,7 @@ SUBROUTINE ireduce( dim, is )
   IF ( ( dim - nbuf * maxi ) > 0 ) THEN
      !
      CALL MPI_ALLREDUCE( is(1+nbuf*maxi), buff, (dim-nbuf*maxi), MPI_INTEGER, &
-                         MPI_SUM, intra_pool_comm(my_image_id), info )
+                         MPI_SUM, intra_pool_comm, info )
      !
      CALL errore( 'reduce', 'error in allreduce 2', info )
      !
@@ -283,7 +283,7 @@ SUBROUTINE poolreduce( dim, ps )
 #if defined (__PARA)
   !  
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        my_pool_id, nproc_pool, my_image_id
+                        my_pool_id, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
   USE parallel_include    
@@ -291,13 +291,13 @@ SUBROUTINE poolreduce( dim, ps )
   IMPLICIT NONE
   !
   INTEGER            :: dim
-  REAL (KIND=DP)     :: ps(*)
+  REAL (KIND=DP)     :: ps(dim)
   INTEGER, PARAMETER :: maxb = 10000
   REAL (KIND=DP)     :: buff(maxb)
   INTEGER            :: info, nbuf, n
   !
   !
-  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
+  IF ( dim <= 0 .OR. npool <= 1 ) RETURN
   !
   CALL start_clock( 'poolreduce' )
   !
@@ -310,7 +310,7 @@ SUBROUTINE poolreduce( dim, ps )
   DO n = 1, nbuf
      !
      CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_REAL8, &
-                         MPI_SUM, inter_pool_comm(my_image_id), info )
+                         MPI_SUM, inter_pool_comm, info )
      !
      CALL errore( 'poolreduce', 'info<>0 at allreduce1', info )
      !
@@ -322,11 +322,11 @@ SUBROUTINE poolreduce( dim, ps )
   IF ( ( dim - nbuf * maxb ) > 0 ) THEN
      !
      CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_REAL8, &
-                         MPI_SUM, inter_pool_comm(my_image_id), info )
+                         MPI_SUM, inter_pool_comm, info )
      !
      CALL errore( 'poolreduce', 'info<>0 at allreduce2', info )
      !
-     ps((1+nbuf*maxb):dim) = buff(1:dim-nbuf*maxb)
+     ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
      !CALL DCOPY( dim-nbuf*maxb, buff, 1, ps(1+nbuf*maxb), 1 )
      !
   END IF
@@ -353,8 +353,7 @@ SUBROUTINE gather( f_in, f_out )
 #if defined (__PARA)
   !
   USE pfft,      ONLY : ncplane, npp, nxx   
-  USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, &
-                        root_pool, my_image_id
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
   USE parallel_include    
@@ -384,11 +383,11 @@ SUBROUTINE gather( f_in, f_out )
      !
   END DO
   !
-  CALL mp_barrier( intra_pool_comm(my_image_id) )
+  CALL mp_barrier( intra_pool_comm )
   !
   CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_REAL8, f_out, &
                     recvcount, displs, MPI_REAL8, root_pool,    &
-                    intra_pool_comm(my_image_id), info )
+                    intra_pool_comm, info )
   !
   CALL errore( 'gather', 'info<>0', info )
   !
@@ -412,7 +411,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   USE pfft,      ONLY : ncplane, npp, nxx     
   USE mp_global, ONLY : intra_pool_comm, intra_image_comm, &
-                        nproc_pool, me_pool, my_image_id
+                        nproc_pool, me_pool
   USE mp,        ONLY : mp_barrier
   USE parallel_include    
   !
@@ -441,11 +440,11 @@ SUBROUTINE cgather_sym( f_in, f_out )
      !
   END DO
   !
-  CALL mp_barrier( intra_pool_comm(my_image_id) )
+  CALL mp_barrier( intra_pool_comm )
   !
   CALL MPI_ALLGATHERV( f_in, recvcount(me_pool), MPI_REAL8, &
                        f_out, recvcount, displs, MPI_REAL8, &
-                       intra_pool_comm(my_image_id), info )
+                       intra_pool_comm, info )
   !
   CALL errore( 'cgather_sym', 'info<>0', info )
   !
@@ -474,7 +473,7 @@ SUBROUTINE scatter( f_in, f_out )
   !
   USE pfft,      ONLY : ncplane, npp, nxx 
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
-                        me_pool, root_pool, my_image_id
+                        me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
   USE parallel_include    
@@ -504,11 +503,11 @@ SUBROUTINE scatter( f_in, f_out )
      !
   END DO
   !
-  CALL mp_barrier( intra_pool_comm(my_image_id) )
+  CALL mp_barrier( intra_pool_comm )
   !  
   CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_REAL8,   &
                      f_out, sendcount(me_pool), MPI_REAL8, &
-                     root_pool, intra_pool_comm(my_image_id), info )
+                     root_pool, intra_pool_comm, info )
   !
   CALL errore( 'scatter', 'info<>0', info )
   !
@@ -536,7 +535,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   !
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, &
-                        my_pool_id, npool, me_pool, root_pool, my_image_id
+                        my_pool_id, npool, me_pool, root_pool
   USE para,      ONLY : kunit
   USE mp,        ONLY : mp_bcast  
   !
@@ -558,7 +557,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... to the first node of all the other pools
   !
   IF ( me_pool == root_pool ) &
-     CALL mp_bcast( f_in, root_pool, inter_pool_comm(my_image_id) )
+     CALL mp_bcast( f_in, root_pool, inter_pool_comm )
   !
   ! ... distribute the vector on the first node of each pool
   !
@@ -574,7 +573,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... copy from the first node of every pool
   ! ... to the other nodes of every pool
   !
-  CALL mp_bcast( f_out, root_pool, intra_pool_comm(my_image_id) )
+  CALL mp_bcast( f_out, root_pool, intra_pool_comm )
   !
 #endif
   !
@@ -618,7 +617,7 @@ SUBROUTINE fft_scatter1( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign )
 #if defined (__PARA)
   !
   USE para_const, ONLY : maxproc
-  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id
+  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool
   USE mp,         ONLY : mp_barrier
   USE parallel_include    
   !
@@ -690,11 +689,11 @@ SUBROUTINE fft_scatter1( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign )
      !
      ! ... step two: communication
      !
-     CALL mp_barrier( intra_pool_comm(my_image_id) )
+     CALL mp_barrier( intra_pool_comm )
      !
      CALL MPI_ALLTOALLV( f_aux, sendcount, sdispls, MPI_REAL8, &
                          f_in, recvcount, rdispls, MPI_REAL8,  &
-                         intra_pool_comm(my_image_id), ierr )
+                         intra_pool_comm, ierr )
      !     
      CALL errore( 'fft_scatter', 'info<>0', ierr )
      !
@@ -704,11 +703,11 @@ SUBROUTINE fft_scatter1( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign )
      !
      ! ... step two: communication
      !
-     CALL mp_barrier( intra_pool_comm(my_image_id) )
+     CALL mp_barrier( intra_pool_comm )
      !
      CALL MPI_ALLTOALLV( f_in, recvcount, rdispls, MPI_REAL8,  &
                          f_aux, sendcount, sdispls, MPI_REAL8, &
-                         intra_pool_comm(my_image_id), ierr )
+                         intra_pool_comm, ierr )
      !     
      CALL errore( 'fft_scatter', 'info<>0', ierr )
      !
@@ -753,7 +752,7 @@ SUBROUTINE poolextreme( ps, iflag )
   !       
 #if defined (__PARA)
   !
-  USE mp_global, ONLY : inter_pool_comm, intra_image_comm, npool, my_image_id
+  USE mp_global, ONLY : inter_pool_comm, intra_image_comm, npool
   USE mp,        ONLY : mp_barrier  
   USE parallel_include  
   !
@@ -770,14 +769,14 @@ SUBROUTINE poolextreme( ps, iflag )
   IF ( iflag > 0 ) THEN
      !
      CALL MPI_ALLREDUCE( ps, psr, 1, MPI_REAL8, MPI_MAX, &
-                         inter_pool_comm(my_image_id), info )
+                         inter_pool_comm, info )
      !
      CALL errore( 'poolextreme', 'info<>0 in allreduce1', info )
      !
   ELSE
      !
      CALL MPI_ALLREDUCE( ps, psr, 1, MPI_REAL8, MPI_MIN, &
-                         inter_pool_comm(my_image_id), info )
+                         inter_pool_comm, info )
      !
      CALL errore( 'poolextreme', 'info<>0 in allreduce2', info )
      !
@@ -801,7 +800,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
 #if defined (__PARA)
   !
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        npool, me_pool, root_pool, my_pool_id, my_image_id
+                        npool, me_pool, root_pool, my_pool_id
   USE para,      ONLY : kunit
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
@@ -827,7 +826,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   IF ( me_pool == root_pool .AND. my_pool_id > 0 ) THEN
      !
      CALL MPI_SEND( vec, (length*nks), MPI_REAL8, 0, 17, &
-                    inter_pool_comm(my_image_id), info )
+                    inter_pool_comm, info )
      !     
      CALL errore( 'poolrecover', 'info<>0 in send', info )
      !
@@ -852,7 +851,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
      IF ( me_pool == root_pool .AND. my_pool_id == 0 ) THEN
         !
         CALL MPI_RECV( vec(1,nbase+1), (length*fine), MPI_REAL8, &
-                       (i-1), 17, inter_pool_comm(my_image_id), status, info )
+                       (i-1), 17, inter_pool_comm, status, info )
         !
         CALL errore( 'poolrecover', 'info<>0 in recv', info )
         !
@@ -875,7 +874,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
 #if defined (__PARA)
   !  
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        npool, me_pool, root_pool, my_pool_id, my_image_id
+                        npool, me_pool, root_pool, my_pool_id
   USE para,      ONLY : kunit
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
@@ -901,7 +900,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   IF ( me_pool == root_pool .AND. my_pool_id > 0 ) THEN
      !
      CALL MPI_SEND( ivec, (length*nks), MPI_INTEGER, 0, 17, &
-                    inter_pool_comm(my_image_id), info )
+                    inter_pool_comm, info )
      !
      CALL errore( 'ipoolrecover', 'info<>0 in send', info )
      !
@@ -926,7 +925,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
      IF ( me_pool == root_pool .AND. my_pool_id == 0 ) THEN
         !
         CALL MPI_RECV( ivec(1,nbase+1), (length*fine), MPI_INTEGER, &
-                       (i-1), 17, inter_pool_comm(my_image_id), status, info )
+                       (i-1), 17, inter_pool_comm, status, info )
         !
         CALL errore( 'ipoolrecover', 'info<>0 in recv', info )
         !

@@ -171,7 +171,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
 
   ! find out the global number of G vectors: ngm_g  
   ngm_g = ngm
-  call mp_sum( ngm_g, intra_pool_comm(my_image_id) )
+  call mp_sum( ngm_g, intra_pool_comm )
 
   allocate ( ei_k ( nbnd, nkstot ) )  ! eigenvectors
   allocate ( ei_kw( nbnd, nkstot/nspin ) )  ! eigenvectors
@@ -238,7 +238,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
     itmp( 2, ig_l2g( ig ) ) = ig2( ig )
     itmp( 3, ig_l2g( ig ) ) = ig3( ig )
   end do
-  call mp_sum( itmp, intra_pool_comm(my_image_id) )
+  call mp_sum( itmp, intra_pool_comm )
 
   ! write G space parameters and vectors
   if( ionode ) then

@@ -376,8 +376,8 @@ subroutine data_structure( lgamma )
   ngms_l = ngms
   ngm_g  = ngm
   ngms_g = ngms
-  call mp_sum( ngm_g , intra_pool_comm(my_image_id) )
-  call mp_sum( ngms_g, intra_pool_comm(my_image_id) )
+  call mp_sum( ngm_g , intra_pool_comm )
+  call mp_sum( ngms_g, intra_pool_comm )
 
   return
 

@@ -142,8 +142,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast the eigenvectors and the eigenvalues
   !
-  CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
-  CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )
+  CALL mp_bcast( e, root_pool, intra_pool_comm )
+  CALL mp_bcast( v, root_pool, intra_pool_comm )
   !
   ! ... deallocate workspace
   !

@@ -77,7 +77,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   IF ( iop == - 1 ) THEN
      !
      IF ( me_pool == root_pool ) &
-        CALL mp_bcast( allv, root_pool, inter_pool_comm(my_image_id) )
+        CALL mp_bcast( allv, root_pool, inter_pool_comm )
      !
      DO ic = 1, nc
         !        

@@ -212,7 +212,7 @@ SUBROUTINE print_this_clock( n )
   !
 #ifndef DEBUG
   CALL mp_max( elapsed_cpu_time, group )
-  CALL mp_max( elapsed_cpu_time, inter_pool_comm(my_image_id) )
+  CALL mp_max( elapsed_cpu_time, inter_pool_comm )
 #endif
 #endif
   IF ( n == 1 ) THEN
@@ -286,7 +286,7 @@ FUNCTION get_clock( label )
         ! ... In the parallel case, use the maximum over all nodes and pools
         !
         CALL mp_max( get_clock, intra_image_comm )
-       ! CALL mp_max( get_clock, inter_pool_comm(my_image_id) )
+       ! CALL mp_max( get_clock, inter_pool_comm )
 #endif
         RETURN
      END IF

@@ -689,9 +689,9 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      !
      ! step two: communication
      !
-     call mpi_barrier (intra_pool_comm(my_image_id), ierr)
+     call mpi_barrier (intra_pool_comm, ierr)
      call mpi_alltoallv (f_aux(1), sendcount, sdispls, MPI_DOUBLE_COMPLEX, f_in(1), &
-          recvcount, rdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm(my_image_id), ierr)
+          recvcount, rdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm, ierr)
      if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
      !
   else
@@ -700,9 +700,9 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      !
      !  step two: communication
      !
-     call mpi_barrier (intra_pool_comm(my_image_id), ierr)
+     call mpi_barrier (intra_pool_comm, ierr)
      call mpi_alltoallv (f_in(1), recvcount, rdispls, MPI_DOUBLE_COMPLEX, f_aux(1), &
-          sendcount, sdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm(my_image_id), ierr)
+          sendcount, sdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm, ierr)
      if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
      !
      !  step one: store contiguously the columns

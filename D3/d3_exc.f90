@@ -77,7 +77,7 @@ subroutine d3_exc
 #ifdef __PARA
 100 continue  
   IF ( npool /= 1 ) &
-     CALL mp_bcast( d3dyn1, ionode_id, inter_pool_comm(my_image_id) )
+     CALL mp_bcast( d3dyn1, ionode_id, inter_pool_comm )
 #endif
 
   d3dyn = d3dyn  + d3dyn1

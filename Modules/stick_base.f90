@@ -163,9 +163,9 @@
 
           END IF
 
-          CALL mp_sum(st  ,intra_pool_comm(my_image_id) )
-          CALL mp_sum(stw ,intra_pool_comm(my_image_id) )
-          CALL mp_sum(sts ,intra_pool_comm(my_image_id) )
+          CALL mp_sum(st  ,intra_pool_comm )
+          CALL mp_sum(stw ,intra_pool_comm )
+          CALL mp_sum(sts ,intra_pool_comm )
 
 ! Test sticks
 !          WRITE( stdout,*) 'testtesttesttesttesttesttesttesttesttest'

@@ -13,7 +13,7 @@ MODULE mp_global
   USE parallel_include
   USE kinds
   !
-  IMPLICIT NONE
+  IMPLICIT NONE 
   !
   SAVE
   !
@@ -31,11 +31,10 @@ MODULE mp_global
   INTEGER :: nimage      = 1  ! number of "neb-images"-pools
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
   INTEGER :: nproc_image = 1  ! number of processor within an image
+  INTEGER :: inter_pool_comm  = 0  ! inter pool communicator
+  INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
   INTEGER :: inter_image_comm = 0  ! inter image communicator
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
-  !
-  INTEGER, ALLOCATABLE :: inter_pool_comm(:)   ! inter pool communicator
-  INTEGER, ALLOCATABLE :: intra_pool_comm(:)   ! intra pool communicator
   !
   CONTAINS
      !

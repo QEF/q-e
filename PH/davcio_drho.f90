@@ -61,7 +61,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      IF ( me_pool == root_pool ) CALL davcio( ddrho, lrec, iunit, nrec, - 1 )
      !
-     CALL mp_bcast( ddrho, root_pool, intra_pool_comm(my_image_id) )
+     CALL mp_bcast( ddrho, root_pool, intra_pool_comm )
      !
      ! ... Distributes ddrho between between the tasks of the pool
      !

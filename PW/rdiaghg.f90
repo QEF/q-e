@@ -127,8 +127,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
-  CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )
+  CALL mp_bcast( e, root_pool, intra_pool_comm )
+  CALL mp_bcast( v, root_pool, intra_pool_comm )
   !
   ! ... deallocate workspace
   !

@@ -105,8 +105,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-      CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
-      CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )
+      CALL mp_bcast( e, root_pool, intra_pool_comm )
+      CALL mp_bcast( v, root_pool, intra_pool_comm )
       !
 # endif
       !
@@ -227,8 +227,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-      CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
-      CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )      
+      CALL mp_bcast( e, root_pool, intra_pool_comm )
+      CALL mp_bcast( v, root_pool, intra_pool_comm )      
       !
 #  endif
       !

@@ -24,6 +24,7 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
   ! Calculate the Fermi energy ef
 
   call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef)
+
   demet = 0.d0
   do kpoint = 1, nks
      do ibnd = 1, nbnd
