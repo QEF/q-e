@@ -923,7 +923,7 @@
  12  FORMAT(/,3X,'Atomic Velocities (AU)',/)
  13  FORMAT(/,3X,'Atomic Forces (AU)',/)
  17  FORMAT(/,3X,'Total Stress (GPa)',/)
- 2948 format(f8.5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5))
+ 2948 format(f8.5,1x,f8.5,1x,f6.1,1x,f6.1,3(1x,f11.5))
  2949 format(f8.5,1x,4(1x,f7.4))
 
 

@@ -1664,7 +1664,7 @@ subroutine smdmain( tau, fion_out, etot_out )
         !
 
         ! Y.K.
-        !      write(8,2948) tps,ekinc,int(temphc),int(tempp),enthal,econs,      &
+        !      write(8,2948) tps,ekinc,temphc,tempp,enthal,econs,      &
         !     &              econt,                                              &
         !     &              vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
 
@@ -1687,7 +1687,7 @@ subroutine smdmain( tau, fion_out, etot_out )
         !
         !
         ! 
-2948    format(f8.5,1x,f8.5,1x,i6,1x,i5,3(1x,f11.5),4(1x,f7.4))
+2948    format(f8.5,1x,f8.5,1x,f6.1,1x,f6.1,3(1x,f11.5),4(1x,f7.4))
         !
         If( tfor ) then
            if ( ionode ) then
