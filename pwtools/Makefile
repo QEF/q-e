@@ -42,7 +42,7 @@ MODULES = \
 ../Modules/splinelib.o 
 
 all : band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x \
-      kpoints.x pwi2xsf pwi2xsf_new path_int
+      kpoints.x pwi2xsf pwi2xsf_new path_int.x
 
 band_plot.x : band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
@@ -75,7 +75,7 @@ pwi2xsf_new : pwi2xsf_new.o pwi2xsflib.o
 	$(LD) -o pwi2xsf_new pwi2xsf_new.o pwi2xsflib.o \
         $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-path_int : path_int.o
+path_int.x : path_int.o
 	$(LD) -o path_int.x path_int.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean :
