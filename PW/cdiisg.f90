@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,473 +7,355 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
-     ethr, e, notcnv, iter, keep_flag)
+subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
+      btype, notcnv, diis_iter, iter)
+  !----------------------------------------------------------------------
   !----------------------------------------------------------------------
   !
   !     iterative solution of the eigenvalue problem:
   !
-  !     ( H - e S ) * psi = 0
+  !     ( H - e S ) * evc = 0
   !
-  !     where h is a complex hermitean matrix, e is a real scalar,
-  !     and S is a complex hermitean matrix and psi is a complex vector
-  !
-  !     Gabriele Cipriani 3/00
-  !
+  !     where H is an hermitean operator, e is a real scalar,
+  !     S is an overlap matrix, evc is a complex vector.
+  !     The band-by-band RMM-DIIS method is used. 
 #include "machine.h"
   use parameters, only : DP
+  use g_psi_mod
+  use pwcom, only : nelec, lgauss, ltetra
+
   implicit none
-  logical :: keep_flag
-  ! if to keep the old wfc in the subspac
-
-  integer :: ndim, ndmx, nvec, nvecx, buflen
-  ! dimension of the matrix to be
-  ! diagonalized
-  ! leading dimension of matrix psi,
-  ! as declared in the calling pgm unit
-  !      number of sought eigeipairs
-  ! max  ""
-  ! wfc buffer lenght
-  complex(kind=DP) :: psi (ndmx, nvecx)
-  ! wfc
+  ! on INPUT
+  integer :: ndim, ndmx, nvec, nvecx, btype(nvec), iter
+  ! dimension of the matrix to be diagonalized
+  ! leading dimension of matrix evc, as declared in the calling pgm unit
+  ! integer number of searched low-lying roots
+  ! maximum dimension of the reduced basis set
+  !    (the basis set is refreshed when its dimension would exceed nvecx)
+  ! band type (0=occupied, 1=empty)
+  ! scf iteration
   real(kind=DP) :: ethr
-  ! energy threshold for convergence.
-  ! root improvement is stopped, when two
-  ! consecutive estimates of the root dif
-  ! by less than ethr.
-  integer :: btype (nvecx)
+  ! energy threshold for convergence
+  !   root improvement is stopped, when two consecutive estimates of the root
+  !   differ by less than ethr.
   ! on OUTPUT
-  !     complex*16 psi             ! the first nvec columns contain the
-  !                                ! refined estimates of the eigenvectors
-  real(kind=DP) :: e (nvec)
-  real(kind=DP), allocatable ::  et (:)
-  ! energies
-  ! idem
+  complex(kind=DP) :: evc (ndmx, nvec)
+  !  evc   contains the  refined estimates of the eigenvectors
+  real(kind=DP) :: e (nvec), diis_iter
+  ! contains the estimated roots.
+  ! average number of iterations performed per band
+  integer :: notcnv
+  ! number of unconverged roots
 
-  integer :: iter, notcnv
-  ! number of iterations performed.
-  ! number of unconverged (valence) roots
   ! LOCAL variables
   !
-  ! parameters
-  !
-  integer :: maxter, diis_steps, cbnd_steps
+  integer, parameter :: maxter=20
   ! maximum number of iterations
-  ! maximum number  diis refinements
-  ! maximum number  diis refinements for co
-  real(kind=DP) :: pi, min_tstep, max_tstep, small, big, shift, cfact
   !
-  ! minimum diis step lenght
-  ! maximum diis step lenght
-  ! diagonal shift for rmat
-  ! convergence factor for the norm of the
-
-  parameter (maxter = 1, diis_steps = 4, cbnd_steps = 2, pi = &
-       3.14159265359d0, min_tstep = 0.1d0, max_tstep = 1.d0, small = &
-       1.d-10, big = 1.d10, shift = 1.d-12, cfact = 0.01d0)
-  integer :: kter
-  integer, allocatable  :: conv (:)
-  integer ::nc, n, nb, ns, wfoff, &
-       bufoff, nopt, bufwfc, i, j, ib, nvectot, nbuf, ibuf, jbuf, ipos
-  integer, allocatable ::  buf2wfc (:), wfc2buf (:,:)
+  integer :: kter, minter, nbase, ib, n, m , np
   ! counter on iterations
-  ! conv flag
-  ! bnd type
-  ! counter on wfc buffers
-  ! counter on wfc
-  ! counter on wfc in the buffer
-  ! counter on diis steps
-  ! first wfc of a given buffer
-  ! buffer offset
-  ! number of wfc still to optimize
-  ! number of wfc in the buffer
-  ! dimension of the iterative subspace
-  ! indexing table for the buffe
-  ! idem
-  complex(kind=DP), allocatable :: vc (:,:), vcc (:,:),&
-       rmat (:,:,:), smat (:,:,:), psip (:,:), psis (:,:), &
-       pres (:,:), dwfc (:,:), dres (:,:), eau(:), cstep(:)
-  complex(kind=DP) ::  ZDOTC, hh (2, 2), ss (2, 2), hv (2, 2)
-  !
-  !
-  ! residues matrix
-  ! overlap  matrix
-  ! the product of H and
-  ! the product of S and
-  ! preconditioned residu
-  ! iterative space
-  ! residues
-  ! scalar product routin
-  ! auxiliary complex var
-  !  diis trial step leng
+  ! lower extreme for iteration loop
+  ! dimension of the reduced basis
+  ! counter on the reduced basis vectors
+  ! do-loop counters
+  complex(kind=DP), allocatable :: rc (:,:),  hc (:,:), sc (:,:), &
+       vc (:), vcn(:,:)
+  ! <res_i|res_j> matrix
+  ! H matrix on the reduced basis
+  ! S matrix on the reduced basis
+  ! the eigenvectors of the Hamiltonian
+  ! workspace
+  complex(kind=DP), allocatable :: psi(:,:), hpsi (:,:), spsi (:,:), res(:,:)
+  ! work space, contains psi
+  ! the product of H and psi
+  ! the product of S and psi
+  ! residual vector
+  complex(kind=DP) :: hevc(ndmx, nvec), sevc(ndmx, nvec)
+  ! the product of H and the best estimate of the eigenvectors evc
+  ! the product of S and the best estimate of the eigenvectors evc
+  real(kind=DP), allocatable :: ew (:)
+  ! eigenvalues of the reduced hamiltonian
+  real(kind=DP) :: ec, snorm, snorm0, lam, ew0, denm, x
+  ! dummy variable
+  ! squared norm of current residual
+  ! squared norm of initial residual calculated with the old evc
+  ! initial eigenvalue from previous iteration
+  ! variables for teter preconditioning (not used)
+  logical :: verb
+  ! controlling verbosity of printout
+  complex(kind=DP), external ::  ZDOTC
+  external h_1psi, cdiagh
 
-  real(kind=DP), allocatable :: nrm (:), ew (:), ep (:), np (:), ec (:)
-  real(kind=DP) :: h (2), tstep
+  call start_clock ('diis')
 
-  external ZDOTC
+  verb = .false.
+
   !
   ! allocate the work arrays
   !
+  allocate( psi (ndmx, nvecx))
+  allocate(hpsi (ndmx, nvecx))
+  allocate(spsi (ndmx, nvecx))
+  allocate( res (ndmx, nvecx))
+  allocate( rc (nvecx, nvecx))
+  allocate( hc (nvecx, nvecx))
+  allocate( sc (nvecx, nvecx))
+  allocate( vc (nvecx))
+  allocate( vcn(nvecx, nvecx))
+  allocate( ew (nvecx))
 
-  call start_clock ('cdiisg')
-  allocate (vc(  diis_steps , diis_steps))    
-  allocate (vcc( diis_steps , buflen))    
-  allocate (psip(  ndmx , buflen))    
-  allocate (psis(  ndmx , buflen))    
-  allocate (pres(  ndmx , buflen))    
-  allocate (dwfc(  ndmx , diis_steps * buflen))    
-  allocate (dres(  ndmx , diis_steps * buflen))    
-  allocate (ec( diis_steps))    
-  allocate (ep( nvec))    
-  allocate (ew( buflen))    
-  allocate (et( 2 * nvec))    
-  allocate (np( nvec))    
-  allocate (eau( buflen))    
-  allocate (nrm( buflen))    
-  allocate (rmat(  diis_steps,  diis_steps,  buflen))    
-  allocate (smat(  diis_steps,  diis_steps,  buflen))    
-  allocate (conv( nvec))    
-  allocate (cstep( buflen))    
-  allocate (buf2wfc(  buflen * diis_steps))    
-  allocate (wfc2buf(  buflen , diis_steps))    
-
-  if (diis_steps.lt.cbnd_steps) call errore ('cdiisg', 'wrong diis_steps', 1)
   !
-  do n = 1, nvec
-     conv (n) = 0
-     ep (n) = 0.d0
-     np (n) = 0.d0
-  enddo
-  do n = 1, buflen
-     ew (n) = 0.d0
-  enddo
-  do n = 1, 2 * nvec
-     et (n) = 0.d0
-  enddo
-  do j = 1, diis_steps
-     do i = 1, buflen
-        buf2wfc (i * j) = 0
-        wfc2buf (i, j) = 0
-     enddo
-  enddo
-  ! number of wfc buffers
-  nbuf = nvec / buflen
+  ! rotate
+  !
+  call rotate_wfc (ndmx, ndim, nvec, nvec, evc, evc, e)
 
-  if (mod (nvec, buflen) .ne.0) nbuf = nbuf + 1
-  ! DIIS
+  notcnv = nvec
+  lam = 1.d0
+  minter = 1
 
-  do kter = 1, maxter
-     iter = kter
+  ! Loop over bands
+  do ib = 1, nvec
 
-     if (kter.eq.1) nvectot = nvec
-
-     call rotate_wfc (ndmx, ndim, nvectot, nvectot, psi, psi, et)
-     !        write(*,'(4f12.6)')(et(n),n=1,nvec)
-     ! save bands
-     if (keep_flag) then
-        call ZCOPY (ndmx * nvec, psi (1, 1), 1, psi (1, nvec + 1), &
-             1)
-        nvectot = 2 * nvec
-     else
-        nvectot = nvec
+10   continue
+     !
+     !     prepare the hamiltonian for the first iteration
+     !
+     nbase = 1     
+     ew  (:) = 0.d0
+     vc  (:) = (0.d0, 0.d0)
+     vcn (:, :) = (0.d0, 0.d0)
+     psi (:, :) = (0.d0, 0.d0)
+     res (:, :) = (0.d0, 0.d0)
+     hc  (:, :) = (0.d0, 0.d0)
+     sc  (:, :) = (0.d0, 0.d0)
+     rc  (:, :) = (0.d0, 0.d0)
+     if (minter.eq.1) then
+        ew0 = 1.d10
+        snorm0 = 1.d-20
      endif
-     ! buffers' loop
+     ! |psi_1> is the best approximated eigenvector
+     psi(:,nbase) = evc(:, ib)
+     vc(nbase) = (1.d0, 0.d0)
+     !
+     !     calculate hpsi=H|psi_1> and spsi=S|psi_1> 
+     !
+     call h_1psi (ndmx, ndim, psi(1,nbase), hpsi(1,nbase), spsi(1,nbase))
+     !  
+     !     calculate the first element of the reduced hamiltonian 
+     !     and overlap matrices
+     !     hc(1,1)=<psi_1|H|psi_1>    sc(1,1)=<psi_1|S|psi_1>
+     !
+     hc (1, 1) = ZDOTC (ndim, psi (1, 1), 1, hpsi (1, 1), 1)
+     sc (1, 1) = ZDOTC (ndim, psi (1, 1), 1, spsi (1, 1), 1)
+     !
+     !   calculate the residual vector |R>=H|psi> - e S|psi>
+     !
+     call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0.d0), spsi, &
+          ndmx, vc , nvecx, (0.d0, 0.d0), res (1, nbase), ndmx)
+     call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), hpsi, &
+          ndmx, vc , nvecx, DCMPLX(- e(ib), 0.d0), res (1, nbase), ndmx)
+     !
+     !   calculate the first element of the <res_i|res_j> matrix
+     rc (1, 1) = ZDOTC (ndim, res (1, 1), 1, res (1, 1), 1)
+     !
+     !  iterate
+     !
+     do kter = minter, maxter
+     !
+     !   preconditionate the  residual vector |P_n>= K*|R_n>
+     !   and add it to the basis => |psi_n+1>
+     !
+        call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0.d0) , res, &
+             ndmx, vc , nvecx, (0.d0, 0.d0) , psi (1, nbase+1), ndmx)
 
-     do nc = 1, nbuf
-        wfoff = (nc - 1) * buflen + 1
-        bufwfc = min (nvec - wfoff + 1, buflen)
-        ! starting indexing
-        nopt = bufwfc
-        bufoff = 1
+        call g_psi( ndmx, ndim, 1, psi (1, nbase+1), e(ib) )
 
-        ipos = bufwfc
-        do ib = 1, bufwfc
-           buf2wfc (ib) = ib
-           wfc2buf (ib, 1) = ib
+     ! 
+     ! add a new vector to the basis: kresse method
+     ! |psi_n+1> = |psi_n> + \lambda * K * |res_n>
+!        call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0.d0), psi, &
+!             ndmx, vc , nvecx, DCMPLX (lam, 0.d0) , &
+!             psi (1, nbase+1), ndmx)
+
+        nbase = nbase + 1
+     !
+     ! normalize new basis vector
+        ec = ZDOTC (ndim, psi (1, nbase), 1, psi (1, nbase), 1)
+        call ZSCAL (ndim, DCMPLX (1/dsqrt(ec), 0.d0), psi (1, nbase), 1)
+     ! new eigenvector, normalize eigenvectors
+        vc(nbase) = (1.d0, 0.d0)
+        ec = DREAL(ZDOTC (nbase, vc , 1, vc , 1))
+        call ZSCAL (nvecx, DCMPLX (1/dsqrt(ec), 0.d0), vc, 1)
+     !
+     !     calculate hpsi=H|psi> and spsi=S|psi> 
+     !
+        call h_1psi (ndmx, ndim, psi(1,nbase), hpsi(1,nbase), spsi(1,nbase))
+     !
+     !     orthogonalize
+     !
+        call cgramg1 (ndmx, nvecx, ndim, 1, nbase, psi, spsi, hpsi)
+     !
+     !     calculate the new elements of the reduced hamiltonian
+     !     and overlap matrices
+     !     hc(i,j) =<psi_i|H|psi_j>  and sc(i,j)=<psi_i|S|psi_j>
+     !
+        call ZGEMM ('c', 'n', nbase, 1, ndim, (1.d0, 0.d0) , psi, &
+             ndmx, hpsi (1, nbase) , ndmx, (0.d0, 0.d0) , hc (1, nbase), &
+             nvecx)
+        call ZGEMM ('c', 'n', nbase, 1, ndim, (1.d0, 0.d0) , psi, &
+             ndmx, spsi (1, nbase) , ndmx, (0.d0, 0.d0) , sc (1, nbase), &
+             nvecx)
+     !
+     !   calculate the residual vector |R>=H|psi> - e S|psi>
+     !
+        call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0 , 0.d0), spsi, &
+             ndmx, vc , nvecx, (0.d0, 0.d0), res (1, nbase), ndmx)
+        call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), hpsi, &
+             ndmx, vc , nvecx, DCMPLX (-e(ib), 0.d0), res (1, nbase), ndmx)
+     !
+     !   calculate the new elements of the <res_i|res_j> matrix
+        call ZGEMM ('c', 'n', nbase, 1, ndim, (1.d0, 0.d0) , &
+             res , ndmx, res (1, nbase) , ndmx, (0.d0, 0.d0) , &
+             rc (1, nbase) , nvecx)
+        ew(nbase) = rc (nbase, nbase)
+     !
+     !     rc, hc, and sc are hermitian
+     !
+     do n = 1, nbase
+        !  the diagonal of rc and sc must be strictly real 
+        rc (n, n) = DCMPLX (DREAL (rc (n, n) ), 0.d0)
+        hc (n, n) = DCMPLX (DREAL (hc (n, n) ), 0.d0)
+        sc (n, n) = DCMPLX (DREAL (sc (n, n) ), 0.d0)
+        do m = n + 1, nbase
+           rc (m, n) = CONJG (rc (n, m) )
+           hc (m, n) = CONJG (hc (n, m) )
+           sc (m, n) = CONJG (sc (n, m) )
         enddo
-        ! workspaces:
-        rmat(:,:,:) = (0.d0,0.d0)
-        smat(:,:,:) = (0.d0,0.d0)
-        dwfc(:,:)   = (0.d0,0.d0)
-        dres(:,:)   = (0.d0,0.d0)
-        psip(:,:)   = (0.d0,0.d0)
-        psis(:,:)   = (0.d0,0.d0)
+     enddo
+     if (verb) then
+        write(6,*) 'overlap' 
+        write(6,*) ((m,n,sc(n,m), n=1,nbase), m=1,nbase)
+        write(6,*)  
+        write(6,*) 'rc' 
+        write(6,*) ((m,n,rc(n,m), n=1,nbase), m=1,nbase)
+        write(6,*)  
+        write(6,*) 'eigval'
+     endif
+     
+     !
+     !     diagonalize the reduced hamiltonian
+     !
+     call cdiaghg (nbase, 1, rc, sc, nvecx, ew, vcn )
+     call ZCOPY (nvecx, vcn (1, 1), 1, vc, 1 )
 
-        call ZCOPY (ndmx * nopt, psi (1, wfoff), 1, dwfc (1, 1), 1)
-        ! diis optimization:
-
-        do ns = 1, diis_steps
-           ! residues
-           call h_psi (ndmx, ndim, nopt, dwfc (1, bufoff), psip, psis)
-           !
-           do ib = 1, nopt
-              ibuf = bufoff + ib - 1
-              nrm (ib) = 0.d0
-              nrm (ib) = DREAL (ZDOTC (ndim, dwfc (1,ibuf),1,psis (1,ib),1) )
-           enddo
-#ifdef __PARA
-           call reduce (nopt, nrm)
-#endif
-           ! rescale
-           do ib = 1, nopt
-              ibuf = bufoff + ib - 1
-              nrm (ib) = 1.d0 / dsqrt (nrm (ib) )
-              call DSCAL (2 * ndmx, nrm (ib), dwfc (1, ibuf), 1)
-              call DSCAL (2 * ndmx, nrm (ib), psip (1, ib), 1)
-              call DSCAL (2 * ndmx, nrm (ib), psis (1, ib), 1)
-              eau (ib) = - ZDOTC (ndim, dwfc (1, ibuf), 1, psip (1, ib),1)
-           enddo
-#ifdef __PARA
-           call reduce (2 * nopt, eau)
-#endif
-           ! energies
-           do ib = 1, nopt
-              ew (ib) = - DREAL (eau (ib) )
-           enddo
-           ! residues
-           call ZCOPY (ndmx * nopt, psip, 1, dres (1, bufoff), 1)
-           do ib = 1, nopt
-              ibuf = bufoff + ib - 1
-              call ZAXPY (ndmx, eau (ib), psis (1,ib),1,dres (1,ibuf),1)
-           enddo
-           ! update rmat/smat
-           do ib = 1, nopt
-              ibuf = bufoff + ib - 1
-              nb = buf2wfc (ibuf)
-              do j = 1, ns
-                 jbuf = wfc2buf (nb, j)
-                 rmat (j, ns, nb) = ZDOTC (ndim,dres(1,jbuf),1,dres(1,ibuf),1)
-#ifdef __PARA
-                 call reduce (2, rmat (j, ns, nb) )
-#endif
-                 rmat (ns, j, nb) = conjg (rmat (j, ns, nb) )
-                 if (ns.eq.1) then
-                    smat (ns, ns, nb) = (1.d0, 0.d0)
-                 else
-                    smat (ns, j, nb) = ZDOTC(ndim,psis(1,ib),1,dwfc(1,jbuf),1)
-#ifdef __PARA
-                    call reduce (2, smat (ns, j, nb) )
-#endif
-                    smat (j, ns, nb) = conjg (smat (ns, j, nb) )
-                 endif
-              enddo
-           enddo
-           ! diagonal shift
-           do ib = 1, nopt
-              ibuf = bufoff + ib - 1
-              nb = buf2wfc (ibuf)
-              rmat (ns, ns, nb) = rmat (ns, ns, nb) + shift
-              smat (ns, ns, nb) = smat (ns, ns, nb) + shift
-           enddo
-           ! dump
-           !          write(6,*)
-           !          do ib=1,nopt
-           !             ibuf = bufoff+ib-1
-           !             nb = buf2wfc(ibuf)
-           !             n = wfoff+nb-1
-           !             write(6,"('n ns rmat ew de ',2i5,3e14.6)")n,ns,
-           !     +            DREAL(rmat(ns,ns,nb)),ew(ib),
-           !     +            dabs(ew(ib)-ep(n))
-           !          enddo
-           !          write(6,*)
-
-           if (ns.eq.1) then
-              ! first iteration
-              ! ep np
-              do ib = 1, nopt
-                 ibuf = bufoff + ib - 1
-                 nb = buf2wfc (ibuf)
-                 n = wfoff + nb - 1
-                 ep (n) = ew (ib)
-                 np (n) = rmat (ns, ns, nb)
-              enddo
-              ! preconditioned residue
-              call ZCOPY (ndmx * nopt, dres (1, 1), 1, pres, 1)
-              call g_psi (ndmx, ndim, nopt, pres, ew)
-              ! minimize rayleigh quotient
-              call h_psi (ndmx, ndim, nopt, pres, psip, psis)
-              if (.true.) then
-                 do ib = 1, nopt
-                    ibuf = bufoff + ib - 1
-                    nb = buf2wfc (ibuf)
-
-                    n = wfoff + nb - 1
-                    hh(:,:) = 0.d0
-                    ss(:,:) = 0.d0
-                    hh (1, 1) = DCMPLX (ew (ib), 0.d0)
-                    hh (1, 2) = ZDOTC (ndim, dwfc (1, ib), 1, psip (1, ib),1)
-                    hh (2, 1) = conjg (hh (1, 2) )
-                    hh (2, 2) = ZDOTC (ndim, pres (1, ib), 1, psip (1, ib),1)
-                    ss (1, 1) = smat (1, 1, ib)
-                    ss (1, 2) = ZDOTC (ndim, dwfc (1, ib), 1, psis (1, ib),1)
-                    ss (2, 1) = conjg (ss (1, 2) )
-                    ss (2, 2) = ZDOTC (ndim, pres (1, ib), 1, psis (1, ib),1)
-#ifdef __PARA
-                    call reduce (8, hh)
-                    call reduce (8, ss)
-                    hh (1, 1) = DCMPLX (ew (ib), 0.d0)
-                    ss (1, 1) = smat (1, 1, ib)
-#endif
-
-                    call cdiaghg (2, 2, hh, ss, 2, h, hv)
-                    if (abs (hv (1, 1) ) .lt.small) then
-                       cstep (ib) = DCMPLX(min_tstep, 0.d0)
-                    else
-                       cstep (ib) = hv (2, 1) / hv (1, 1)
-                       !                          write(6,*)'cstep0 ',n,cstep(ib)
-                       tstep = abs (cstep (ib) )
-                       cstep (ib) = cstep (ib) / tstep
-                       tstep = max (tstep, min_tstep)
-                       tstep = min (tstep, max_tstep)
-                       cstep (ib) = cstep (ib) * tstep
-                    endif
-                    !                       write(6,*)'cstep1 ',n,cstep(ib)
-                 enddo
-              else
-                 do ib = 1, nopt
-                    cstep (ib) = ( - 1.d0, 0.d0)
-                 enddo
-              endif
-              ! next dwfc
-              if (diis_steps.eq.1) then
-                 do ib = 1, nopt
-                    ibuf = bufoff + ib - 1
-                    nb = buf2wfc (ibuf)
-                    n = wfoff + nb - 1
-                    call ZCOPY (ndmx, dwfc (1, ib), 1, psi (1, n), 1)
-                    call ZAXPY (ndmx, cstep (ib), pres(1,ib),1,psi (1, n),1)
-                 enddo
-              else
-                 do ib = 1, nopt
-                    ibuf = bufoff + ib - 1
-                    nb = buf2wfc (ibuf)
-                    ipos = ipos + 1
-                    call ZCOPY (ndmx, dwfc (1, ib), 1, dwfc (1, ipos), 1)
-                    call ZAXPY (ndmx,cstep(ib),pres(1,ib),1,dwfc(1,ipos),1)
-                    wfc2buf (nb, ns + 1) = ipos
-                    buf2wfc (ipos) = nb
-                 enddo
-              endif
-              !
-              bufoff = bufoff + nopt
-
-              nopt = ipos - bufoff + 1
-              ! ns > 1
-           else
-              ! check convergence
-              do ib = 1, nopt
-                 ibuf = bufoff + ib - 1
-                 nb = buf2wfc (ibuf)
-                 n = wfoff + nb - 1
-                 if (dabs (ew (ib) - ep (n) ) .lt.ethr .or. &
-                     DREAL (rmat (ns, ns, nb) ) .lt.cfact * np (n) .or. &
-                     ((btype (n).eq.1) .and. (ns.eq.cbnd_steps)) ) conv(n)=1
-                 ep (n) = ew (ib)
-              enddo
-              ! solve diis eigenproblem
-              do ib = 1, nopt
-                 ibuf = bufoff + ib - 1
-                 nb = buf2wfc (ibuf)
-                 call cdiaghg (ns, ns, rmat (1, 1, nb), smat (1, 1, nb), &
-                      diis_steps, ec, vc)
-                 if (ec (1) .lt.0.d0.and. (dabs (ec (1) ) .gt.small) ) then
-                    write ( * , * ) ' *********** ec *********** '
-                    write ( *, * ) (ec (i), i = 1, diis_steps)
-                    call errore ('cdiisg', 'ec(1) < 0', 1)
-                 endif
-                 do j = 1, ns
-                    vcc (j, nb) = vc (j, 1)
-                 enddo
-              enddo
-              ! new residue
-              pres(:,1:nopt) = (0.d0,0.d0)
-              do ib = 1, nopt
-                 ibuf = bufoff + ib - 1
-                 nb = buf2wfc (ibuf)
-                 do j = 1, ns
-                    jbuf = wfc2buf (nb, j)
-                    call ZAXPY (ndmx,vcc(j,nb),dres(1,jbuf),1,pres(1,ib),1)
-                 enddo
-              enddo
-              !
-              call g_psi (ndmx, ndim, nopt, pres, ew)
-              ! new wfc
-              do ib = 1, nopt
-                 ibuf = bufoff + ib - 1
-                 nb = buf2wfc (ibuf)
-                 n = wfoff + nb - 1
-                 if (conv (n) .eq.1.or.ns.eq.diis_steps) then
-                    psi(:,n) = (0.d0,0.d0)
-                    do j = 1, ns
-                       jbuf = wfc2buf (nb, j)
-                       call ZAXPY (ndmx,vcc(j,nb),dwfc(1,jbuf),1,psi(1,n),1)
-                    enddo
-                    call ZAXPY (ndmx,cstep(ib),pres(1,ib),1,psi(1,n),1)
-                 else
-                    ipos = ipos + 1
-                    do j = 1, ns
-                       jbuf = wfc2buf (nb, j)
-                       call ZAXPY (ndmx, vcc(j,nb), dwfc(1,jbuf), 1, &
-                            dwfc(1,ipos),1)
-                    enddo
-                    call ZAXPY (ndmx, cstep (ib), pres (1, ib), 1, &
-                         dwfc (1,ipos), 1)
-                    wfc2buf (nb, ns + 1) = ipos
-                    buf2wfc (ipos) = nb
-                 endif
-              enddo
-              !
-              bufoff = bufoff + nopt
-              !
-              nopt = ipos - bufoff + 1
-              if (nopt.eq.0) goto 10
-           endif
-           ! ns loop
+     if (verb) then
+        do n=1, nbase
+           write(6,*) n,ew(n)
         enddo
-        !
-10      continue
-        ! nc loop
-     enddo
-     ! update convergence flags
-     notcnv = 0
-     do n = 1, nvec
-        if (btype (n) .eq.0.and.conv (n) .ne.1) notcnv = notcnv + 1
-     enddo
-     ! exit?
-     if (notcnv.eq.0) goto 100
-     ! kter loop
-  enddo
+        write(6,*)  
+        do n=1,nbase
+        enddo
+        write(6,*) 'eigvec' 
+        do n=1, nbase
+           write(6,*) n, vc(n)
+        enddo
+     endif
 
-100 continue
+     ! squared norm of current residual
+     snorm = ew(1)
+     !
+     ! calculate new eigenvalues
+     vcn(:,:)= (0.d0,0.d0)
+     call ZGEMM ('n', 'n', nbase, 1, nbase, (1.d0 , 0.d0), hc, &
+          nvecx, vc , nvecx, (0.d0, 0.d0), vcn (1, 1), nvecx)
+     ec = DREAL( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
+     call ZGEMM ('n', 'n', nbase, 1, nbase, (1.d0 , 0.d0), sc, &
+          nvecx, vc , nvecx, (0.d0, 0.d0), vcn (1, 1), nvecx)
+     ec = ec / DREAL( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
+
+     if (verb) write(6,*) 'NORM RES=',snorm,'DELTA EIG=',ec-e(ib)
+
+     !
+     ! Convergence?
+     ! Non occupied levels are converged with a lower precision than 
+     ! occupied ones.
+     !
+     if (btype(ib) .eq. 0) then 
+        if ( (snorm.lt.snorm0*0.3 .or. abs(ec-e(ib)).lt.ethr) &
+             .and. ec.le.ew0) goto 20
+     else
+        if ( (snorm.lt.snorm0*0.3 .or. abs(ec-e(ib)).lt.max(ethr*50.0,1.D-4)) &
+             .and. ec.le.ew0) goto 20
+     endif
+        
+     if (minter.eq.1) then
+        snorm0 = snorm
+        ew0 = ec
+     endif
+     e(ib) = ec
+     
+     !
+     ! Size of reduced basis is exceeded: refresh
+     !
+     if (nbase.ge.nvecx) then
+        call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), psi, &
+             ndmx, vc , nvecx, (0.d0, 0.d0), evc (1, ib), ndmx)
+        if (verb) write(6,*) 'rotate band ',ib
+        minter = kter + 1
+        goto 10
+     endif
+
+     enddo ! iterate
+20   continue
+
+     e(ib) = ec
+     diis_iter = diis_iter + kter
+
+     if (kter .gt. maxter) then
+        write (6, '("   WARNING: eigenvalue ",i5," not converged")') &
+             ib
+     else
+        notcnv = notcnv - 1
+        minter = 1
+        if (verb) then
+           write(6,*) 'BAND ',ib, ' CONVERGED'
+           write(6,*)
+        endif
+     endif
+     !
+     ! calculate best approximated wavefunction and corresponding hpsi and spsi
+     !
+     call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), psi, &
+          ndmx, vc , nvecx, (0.d0, 0.d0), evc (1, ib), ndmx)
+     call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), hpsi, &
+          ndmx, vc , nvecx, (0.d0, 0.d0), hevc (1, ib), ndmx)
+     call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), spsi, &
+          ndmx, vc , nvecx, (0.d0, 0.d0), sevc (1, ib), ndmx)
+
+  enddo ! loop over bands     
+
+  diis_iter = diis_iter / nvec
+
+  deallocate( psi )
+  deallocate(hpsi )
+  deallocate(spsi )
+  deallocate( res )
+  deallocate( rc )
+  deallocate( hc )
+  deallocate( sc )
+  deallocate( vc )
+  deallocate(vcn )
+  deallocate( ew )
+
   !
-  call rotate_wfc (ndmx, ndim, nvectot, nvectot, psi, psi, et)
+  ! orthonormalize bands
   !
-  do n = 1, nvec
-     e (n) = et (n)
-  enddo
+!  if (mod(iter,6).eq.0) &
+       call cgramg1 (ndmx, nvec, ndim, 1, nvec, evc, sevc, hevc)
 
-  deallocate (wfc2buf)
-  deallocate (buf2wfc)
-  deallocate (cstep)
-  deallocate (conv)
-  deallocate (smat)
-  deallocate (rmat)
-  deallocate (nrm)
-  deallocate (eau)
-  deallocate (np)
-  deallocate (et)
-  deallocate (ew)
-  deallocate (ep)
-  deallocate (ec)
-  deallocate (dres)
-  deallocate (dwfc)
-  deallocate (pres)
-  deallocate (psis)
-  deallocate (psip)
-  deallocate (vcc)
-  deallocate (vc)
 
-  call stop_clock ('cdiisg')
+  call stop_clock ('diis')
   return
 end subroutine cdiisg
+
 
