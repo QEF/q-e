@@ -29,7 +29,6 @@ subroutine do_wannier(nodenumber)
 
   implicit none
   character(len=3) :: nodenumber
-  character(len=80) :: prefix
   integer , dimension(3):: nk
   real(kind=8), dimension(3):: s0
   integer :: ik, i
