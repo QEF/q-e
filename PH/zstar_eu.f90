@@ -131,7 +131,7 @@ subroutine zstar_eu
   do na = 1, nat
      WRITE( stdout, '(10x," atom ",i6)') na
      WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstareu (ipol, jpol, na) &
-          , ipol = 1, 3) , jpol = 1, 3)
+          , jpol = 1, 3) , ipol = 1, 3)
   enddo
   call stop_clock ('zstar_eu')
   return
