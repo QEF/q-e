@@ -187,24 +187,6 @@ contains
     return
   end subroutine
 
-  subroutine elec_nosevel( vnhe,xnhe0,xnhem,delt, fccc )
-    implicit none
-    real(kind=8), intent(inout) :: vnhe
-    real(kind=8), intent(out) :: fccc
-    real(kind=8), intent(in) :: xnhe0, xnhem, delt
-    vnhe=2.*(xnhe0-xnhem)/delt-vnhe
-    fccc=1./(1.+0.5*delt*vnhe)
-    return
-  end subroutine
-
-  subroutine elec_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
-    implicit none
-    real(kind=8), intent(out) :: xnhep, vnhe
-    real(kind=8), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
-    xnhep=2.*xnhe0-xnhem+2.*(delt**2/qne)*(ekinc-ekincw)
-    vnhe =(xnhep-xnhem)/( 2.0d0 * delt )
-    return
-  end subroutine
  
   subroutine print_lambda( lambda, n, nshow, ccc, iunit )
     use io_global, only: stdout, ionode

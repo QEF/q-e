@@ -24,9 +24,7 @@
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
 !  routines in this module:
-!  SUBROUTINE neighbo(atoms,rcutg,ht)
 !  SUBROUTINE print_scaled_positions(unit)
-!  SUBROUTINE anneions(ht)
 !  SUBROUTINE displacement(ht)
 !  SUBROUTINE cdm_displacement(cdm_ref, atoms, ht)
 !  SUBROUTINE set_reference_positions(cdm_ref, tau_ref, atoms, ht)
@@ -35,7 +33,7 @@
 !  SUBROUTINE ions_print_info(tfor,tsdp,tzerop,tv0rd,nv0rd,nbeg, &
 !                             taurdr,iunit)
 !  SUBROUTINE deallocate_ions
-!  REAL(dbl) FUNCTION moveions(tsdp,thdyn,nfi,htm2,htm,ht0)
+!  REAL(dbl) FUNCTION moveions(tsdp,thdyn,nfi,htm,ht0)
 !  SUBROUTINE update_ions
 !  SUBROUTINE velocity_scaling(nfi,delt,ht)
 !  ----------------------------------------------
@@ -65,45 +63,16 @@
 
         TYPE (constrains_class) :: constrains
 
-        REAL(dbl), ALLOCATABLE ::  taui(:,:)   
-! ...     taui = real ionic positions in the center of mass reference
-! ...     system at istep = 0 
-! ...     this array is used to compute mean square displacements, 
-! ...     it is initialized when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
-! ...     first index: x,y,z, second index: atom sortred by specie with respect input
-! ...     this array is saved in the restart file
-
-        REAL(dbl) ::  cdmi(3)
-! ...     center of mass reference system (related to the taui)
-! ...     this vector is computed when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
-! ...     this array is saved in the restart file
-
-! ...   velocity rescaling
-        INTEGER   :: icapstep
-
-! ...   annealing
-        LOGICAL   :: tanne
-        REAL(dbl) :: anner
-
-! ...   Damped dynamics
-        REAL(dbl)  :: gdelt
-
-        LOGICAL   :: tneighbo   ! print neigbours list for each atom
-        REAL(dbl) :: neighbo_radius
-
-
 ! ...   Module private control flag
         LOGICAL :: tsetup = .FALSE.
 
 
-        PUBLIC :: neighbo, print_scaled_positions, anneions, displacement
+        PUBLIC :: neighbo, print_scaled_positions, displacement
         PUBLIC :: cdm_displacement, set_velocities
         PUBLIC :: set_reference_positions, ions_setup, atoms_init
         PUBLIC :: ions_print_info, deallocate_ions, constraints_setup
         PUBLIC :: apply_constraints, update_ions
         PUBLIC :: velocity_scaling
-        PUBLIC :: cdmi, taui
-        PUBLIC :: tneighbo, neighbo_radius
         PUBLIC :: max_ion_forces, moveions
         PUBLIC :: resort_position
        
@@ -124,7 +93,7 @@
 
 !  BEGIN manual -------------------------------------------------------------   
 
-      SUBROUTINE neighbo(atoms, rcutg, ht) 
+      SUBROUTINE neighbo( taus, na, nsp, rcutg, ht ) 
 
 !  Calculate, for each atom, the neighbouring atom in a radius rcutg            
 !    and print the distance                                                     
@@ -133,39 +102,48 @@
 
 
 ! ... declare modules
-        USE cell_module, ONLY: s_to_r
-        USE cell_module, ONLY: boxdimensions, pbcs
+        USE cell_module, ONLY: s_to_r, pbcs
 
         IMPLICIT NONE
 
 ! ... declare subroutine arguments
-        REAL(dbl), INTENT(IN) :: rcutg
-        TYPE (boxdimensions), INTENT(IN) :: ht
-        TYPE (atoms_type), INTENT(IN) :: atoms
+        REAL(dbl), INTENT(IN) :: taus(:,:)   !  scaled positions
+        INTEGER,   INTENT(IN) :: na(:)       !  number of atoms x specie
+        INTEGER,   INTENT(IN) :: nsp         !  number of specie
+        REAL(dbl), INTENT(IN) :: rcutg       !  radius to compute neighbour
+        REAL(dbl), INTENT(IN) :: ht(3,3)     !  system cell
     
 ! ... declare other variables
-        REAL(dbl) :: rcutg2,sdist(3),rdist(3),xlm,ylm,zlm,erre2,erre
-        INTEGER :: is1,ia,ja,is2,icoor(atoms%nax,atoms%nsp)
+        REAL(dbl) :: rcutg2, sdist(3), rdist(3), xlm, ylm, zlm, erre2, erre
+        INTEGER :: is1, ia, ja, is2
+        INTEGER, ALLOCATABLE :: icoor( :, : ), isa( : )
         INTEGER :: is1ia, is2ja
 
 ! ... end of declarations
 !  ----------------------------------------------
 
+        ALLOCATE( icoor( MAXVAL( na ), nsp ), isa( nsp ) )
+
+        isa( 1 ) = 1
+        DO is1 = 2, nsp
+          isa( is1 ) = isa( is1 - 1 ) + na( is1 - 1 )
+        END DO
+
         rcutg2 = rcutg**2 
 
         WRITE( stdout,125)
         WRITE( stdout,126)
-        DO is1 = 1, atoms%nsp
-          DO ia = 1, atoms%na(is1)
+        DO is1 = 1, nsp
+          DO ia = 1, na(is1)
             icoor(ia,is1) = 0
-            is1ia = atoms%isa(is1) + ia - 1
-            DO is2 = 1, atoms%nsp
-              DO ja = 1, atoms%na(is2)
-                is2ja = atoms%isa(is2) + ja - 1
+            is1ia = isa(is1) + ia - 1
+            DO is2 = 1, nsp
+              DO ja = 1, na(is2)
+                is2ja = isa(is2) + ja - 1
                 IF(.NOT.(is1 == is2 .AND. ja == ia)) THEN
-                  xlm = atoms%taus(1,is1ia) - atoms%taus(1,is2ja)
-                  ylm = atoms%taus(2,is1ia) - atoms%taus(2,is2ja)
-                  zlm = atoms%taus(3,is1ia) - atoms%taus(3,is2ja)
+                  xlm = taus(1,is1ia) - taus(1,is2ja)
+                  ylm = taus(2,is1ia) - taus(2,is2ja)
+                  zlm = taus(3,is1ia) - taus(3,is2ja)
                   CALL pbcs(xlm,ylm,zlm,sdist(1),sdist(2),sdist(3),1)
                   CALL s_to_r(sdist,rdist,ht)
                   erre2 = rdist(1)**2 + rdist(2)**2 + rdist(3)**2
@@ -185,12 +163,16 @@
           END DO
         END DO
 
-      RETURN
-  125     FORMAT(3X,'Neighbours')
-  126     FORMAT(3X,'----------')
-  254     FORMAT(2(I3))
-  255     FORMAT(2X,F12.6,2(I3))
+        DEALLOCATE( icoor, isa )
+
+125     FORMAT(3X,'Neighbours')
+126     FORMAT(3X,'----------')
+254     FORMAT(2(I3))
+255     FORMAT(2X,F12.6,2(I3))
+
+        RETURN
       END SUBROUTINE neighbo
+
 
 !  BEGIN manual -------------------------------------------------------------   
 
@@ -220,7 +202,7 @@
 
 !  BEGIN manual -------------------------------------------------------------   
 
-      SUBROUTINE anneions(atoms_m, atoms_0, atoms_p, ht)
+      SUBROUTINE anneions( anner, atoms_m, atoms_0, atoms_p, ht)
 
 !  Descrive briefly what it does
 !  --------------------------------------------------------------------------   
@@ -234,6 +216,7 @@
       IMPLICIT NONE
  
 ! ... declare subroutine arguments
+      REAL(dbl) :: anner
       TYPE (boxdimensions), INTENT(IN) :: ht
       TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
       TYPE (atoms_type) :: atoms_p
@@ -431,8 +414,8 @@
 
 !  BEGIN manual -------------------------------------------------------------   
 
-        SUBROUTINE ions_setup(  anne_inp, anner_inp, nconstr_inp, constr_tol_inp, &
-           constr_type_inp, constr_dist_inp, constr_inp, gdeltions_inp, tneig, neig_radius)
+        SUBROUTINE ions_setup(  nconstr_inp, constr_tol_inp, &
+           constr_type_inp, constr_dist_inp, constr_inp )
 
 
 !  Check the number of atoms and of species. Does something about constrains    
@@ -448,16 +431,11 @@
 ! ...
           IMPLICIT NONE
 
-          LOGICAL, INTENT(IN) :: anne_inp
-          REAL(dbl), INTENT(IN) :: anner_inp
           INTEGER, INTENT(IN) :: nconstr_inp
           REAL(dbl), INTENT(IN) :: constr_tol_inp
           INTEGER, INTENT(IN) :: constr_type_inp(:)
           REAL(dbl), INTENT(IN) :: constr_dist_inp(:)
           INTEGER, INTENT(IN) :: constr_inp(:,:)
-          REAL(dbl), INTENT(IN) :: gdeltions_inp
-          LOGICAL, INTENT(IN) :: tneig
-          REAL(dbl), INTENT(IN) :: neig_radius
 ! ...
 ! ...     declare other variables
           INTEGER :: is, ia, idd1, idd2, k, istep, isa, ic
@@ -475,29 +453,12 @@
             CALL errore(' ions_setup ', ' ions base module not initializeda ', 0)
           END IF
 
-          tanne = anne_inp
-          anner = anner_inp
-
-          tneighbo = tneig
-          neighbo_radius = neig_radius
-
-          gdelt = gdeltions_inp
-          IF(tdampions .AND. ABS(gdelt+1.0d0) < 1.0d-10 ) THEN
-            CALL errore(' ions_setup ', ' gdelt too small ', 1)
-          END IF
-
           if(nax < 1) &
             call errore(' IONS ', ' NAX OUT OF RANGE ',1)
           if(nsp < 1) &
             call errore(' IONS ',' NSP OUT OF RANGE ',1)
           if(nsp > SIZE( na ) ) &
             call errore(' IONS ',' NSP too large, increase NSX parameter ',nsp)
-
-          ALLOCATE( taui(3,nat), STAT=ierr )
-          IF( ierr /= 0 ) &
-            CALL errore(' ions_setup ',' allocating memory ',ierr)
-
-          taui     = 0.0d0
 
 ! ...     Constraints Allocation
           CALL allocate_constrains(constrains, na, constr_inp, &
@@ -728,22 +689,17 @@
          RETURN
        END SUBROUTINE ions_print_info
 
-!  BEGIN manual -------------------------------------------------------------   
-!     SUBROUTINE deallocate_ions
-!  Deallocate ions input variables
 !  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
 
         SUBROUTINE deallocate_ions
+
+          !  Deallocate ions input variables
 
           INTEGER :: ierr
 
           IF( .NOT. tsetup ) THEN
             CALL errore(' deallocate_ions ', ' module ions not yet started ', 0)
           END IF
-          ierr = 0
-          IF( ALLOCATED( taui ) ) DEALLOCATE( taui, STAT = ierr )
-          IF( ierr /= 0 ) CALL errore(' deallocate_ions ', ' deallocating memory 1', ierr)
     
           CALL deallocate_constrains(constrains)
 
@@ -753,29 +709,26 @@
         END SUBROUTINE deallocate_ions
 
 
-!  BEGIN manual -------------------------------------------------------------   
-
-      REAL(dbl) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, &
-        atoms_p, htm2, htm, ht0, vnosep)
-
-!  Moves the ions
 !  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
 
 
+   REAL(dbl) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, atoms_p, htm, ht0, vnosep)
+
+      !  Moves the ions
 
 ! ... declare modules
       USE cell_module, ONLY: dgcell, r_to_s, s_to_r, boxdimensions
       use control_flags, ONLY: tnosep, tcap, tcp, tdampions
       use time_step, ONLY: delt
       use mp_global, ONLY: mpime
+      use ions_base, ONLY: fricp
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       LOGICAL, INTENT(IN) :: tsdp, thdyn
       INTEGER, INTENT(IN) :: nfi
-      TYPE (boxdimensions), INTENT(IN)    :: htm2, htm
+      TYPE (boxdimensions), INTENT(IN)    :: htm
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
       TYPE (atoms_type) :: atoms_m, atoms_0, atoms_p
       REAL(dbl), INTENT(IN) :: vnosep
@@ -794,23 +747,24 @@
       fordt2  = 4.0d0 * dt2
       delthal = 0.5d0 * delt
  
-! ...   Determines DGCELL/DT dynamically and GCM1
+      ! ...   Determines DGCELL/DT dynamically and GCM1
 
-        IF( thdyn ) THEN
-          CALL dgcell( gcm1, gcdot, htm2, htm, ht0, delt )
-        END IF
+      IF( thdyn ) THEN
+        CALL invmat( 3, ht0%g, gcm1, dumm )
+        CALL dgcell( gcdot, htm, ht0, delt )
+      END IF
 
-        IF( tnosep ) THEN
-          vrnos = vnosep
-        ELSE
-          vrnos = 0.0d0
-        END IF
+      IF( tnosep ) THEN
+        vrnos = vnosep
+      ELSE
+        vrnos = 0.0d0
+      END IF
 
 !....   Steepest descent of ionic degrees of freedom 
 
-        IF( tdampions ) THEN
+      IF( tdampions ) THEN
 
-          gfact = 1.0_dbl / (1.0_dbl + gdelt)
+          gfact = 1.0_dbl / (1.0_dbl + fricp )
           isa = 0
           DO is = 1, atoms_0%nsp
             dt2bym = dt2 / atoms_0%m(is)
@@ -829,7 +783,7 @@
             ENDDO
           ENDDO
 
-        ELSE IF( tsdp ) THEN
+      ELSE IF( tsdp ) THEN
 
           IF(thdyn) THEN
             annep = MATMUL(gcm1,gcdot)
@@ -867,13 +821,14 @@
             END DO
           END DO
 
-        ELSE  !....   NEWTON DYNAMICS FOR IONIC DEGREES OF FREEDOM
+      ELSE  !....   NEWTON DYNAMICS FOR IONIC DEGREES OF FREEDOM
 
           IF(TNOSEP.OR.thdyn) THEN
     
 !....       Determines friction matrix annep according to nose dynamics
 ! ...       ANNEP = 1 + (GCM1*GCDOT + VRNOS)*DELT/2 
 ! ...       SVARPD = ANNEP^-1
+
             DO j = 1, 3
               DO i = 1, 3
                 annep(i,j) = 0.0d0
@@ -930,10 +885,6 @@
           CALL ions_vel( atoms_0%vels, atoms_p%taus, atoms_m%taus, atoms_0%na, atoms_0%nsp, delt )
           CALL ions_kinene( atoms_0%ekint, atoms_0%vels, atoms_0%na, atoms_0%nsp, ht0%hmat, atoms_0%m )
           CALL velocity_scaling(nfi, tcap, atoms_m, atoms_0, atoms_p, delt, ht0) 
-        END IF
-
-        IF (tanne) THEN
-          CALL anneions(atoms_m, atoms_0, atoms_p, ht0)
         END IF
 
         CALL apply_constraints(ht0, atoms_0, atoms_p, dumm)
@@ -1100,13 +1051,12 @@
       END SUBROUTINE apply_constraints
 
 
-!  BEGIN manual -------------------------------------------------------------   
+!  --------------------------------------------------------------------------   
+
 
       SUBROUTINE update_ions(atoms_m, atoms_0, atoms_p)
 
-!  Update ionic positions and velocities in atoms structures
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
+        !  Update ionic positions and velocities in atoms structures
 
         IMPLICIT NONE
         TYPE(atoms_type) :: atoms_m, atoms_0, atoms_p
@@ -1159,9 +1109,6 @@
 !
 ! ... Subroutine body
 !
-        IF(MOD(nfi,icapstep) /= 0) THEN
-          RETURN
-        END IF
 
         tempp   = atoms_0%ekint * factem
         tempp   = tempp * 2.0_dbl / atoms_0%doft

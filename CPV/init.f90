@@ -32,7 +32,7 @@
 !  BEGIN manual
 
       SUBROUTINE init0s(gv, kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m2, ht_m, ht, fnl, eigr, nspin)
+        wempt, ht_m, ht, fnl, eigr, nspin)
 
 !  this routine handles data initialization
 !  ----------------------------------------------
@@ -42,7 +42,6 @@
       use mp_global, only: nproc
       USE parameters, ONLY: nspinx
       USE phase_factors_module, ONLY: strucf
-      USE nose_electrons, ONLY: noseeinit
       USE cp_types
       USE atoms_type_module, ONLY: atoms_type
       USE time_step, ONLY: delt
@@ -83,12 +82,11 @@
       TYPE (phase_factors) :: eigr
       TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
-      TYPE (boxdimensions) :: ht_m2, ht_m, ht
+      TYPE (boxdimensions) :: ht_m, ht
       INTEGER :: nspin
 
 ! ... declare other variables
       REAL(dbl) :: s1, s2, s3, s4, s5
-      REAL(dbl) :: annee
       REAL(dbl) :: a1(3), a2(3), a3(3)
       real(dbl) :: b1(3), b2(3), b3(3)
       INTEGER :: i, ispin, isym
@@ -138,11 +136,9 @@
       IF( tbeg ) THEN
         CALL cell_init( ht, rd_ht )
         CALL cell_init( ht_m, rd_ht )
-        CALL cell_init( ht_m2, rd_ht )
       ELSE
         CALL cell_init( ht, a1, a2, a3 )
         CALL cell_init( ht_m, a1, a2, a3 )
-        CALL cell_init( ht_m2, a1, a2, a3 )
       END IF
 
 ! ... initialize atomic configuration (should be called after metric_init)
@@ -203,7 +199,7 @@
 !  BEGIN manual
 
     SUBROUTINE init1s(gv, kp, ps, atoms_m, atoms_0, atoms_p, cm, c0, wfill, &
-      ce, wempt, ht_m2, ht_m, ht, fnl, eigr, occ)
+      ce, wempt, ht_m, ht, fnl, eigr, occ)
 
 !  this routine handles data initialization
 !  ----------------------------------------------
@@ -212,7 +208,6 @@
 ! ... declare modules
       USE phase_factors_module, ONLY: strucf
       USE wave_init, ONLY: pw_atomic_init
-      USE nose_electrons, ONLY: noseeinit
       USE cp_types
       USE atoms_type_module, ONLY: atoms_type
       USE time_step, ONLY: delt
@@ -245,11 +240,10 @@
       TYPE (phase_factors) :: eigr
       TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
-      TYPE (boxdimensions) :: ht_m2, ht_m, ht
+      TYPE (boxdimensions) :: ht_m, ht
 
 ! ... declare other variables
       REAL(dbl) :: s1, s2, s3, s4, s5
-      REAL(dbl) :: annee
       REAL(dbl) :: a1(3), a2(3), a3(3)
       INTEGER :: i
       LOGICAL :: tk
@@ -281,9 +275,6 @@
 
 ! ... initialize nonlocal pseudopotentials coefficients
       CALL allocate_projector(fnl, nsanl, nbnd, ngh, kp%gamma_only)
-
-      annee = 0.0d0
-      CALL noseeinit( annee )
 
       IF(t_diis) THEN
 ! ...   arrange for DIIS minimization

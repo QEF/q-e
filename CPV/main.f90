@@ -95,13 +95,10 @@
       USE energies, ONLY: dft_energy_type, debug_energies
       USE recvecs_indexes, ONLY: deallocate_recvecs_indexes
       USE turbo, ONLY: tturbo, deallocate_turbo
-      USE nose_ions, ONLY: movenosep, nosep_velocity
-      USE nose_electrons, ONLY: movenosee, nosee_velocity, update_nose_electrons
       USE pseudopotential
       USE potentials, ONLY: vofrhos, localisation
-      USE ions_module, ONLY: taui, cdmi, moveions, max_ion_forces, &
-          deallocate_ions, neighbo, update_ions, tneighbo, neighbo_radius, &
-          resort_position
+      USE ions_module, ONLY: moveions, max_ion_forces, &
+          deallocate_ions, update_ions, resort_position
       USE fft, ONLY : fft_closeup
       USE electrons_module, ONLY: ei, nspin, deallocate_electrons
       USE diis, ONLY: allocate_diis, deallocate_diis
@@ -137,13 +134,16 @@
       USE electrons_module, ONLY: bmeshset
       USE mp_global, ONLY: nproc, mpime, group
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
-      USE ions_base, ONLY: deallocate_ions_base
+      USE ions_base, ONLY: deallocate_ions_base, taui, cdmi
       USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
                             ind_localisation, pos_localisation, deallocate_sic
       USE ions_base, ONLY: ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
       USE electrons_base, ONLY: nupdwn, deallocate_elct
-      USE cell_nose, ONLY: cell_nosevel, cell_noseupd, vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
+      USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
+                                vnhe, xnhe0, xnhem, xnhep, qne, ekincw
+      USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
+                           vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
       USE cell_base, ONLY: cell_gamma
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
       !
@@ -170,7 +170,8 @@
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
       !
-      USE ions_nose, ONLY: ions_nose_shiftvar, xnhpp, xnhp0, xnhpm, xnhpm2
+      USE ions_nose, ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
+                           ions_noseupd, qnp, gkbt, kbt, nhpcl
 
       IMPLICIT NONE
 
@@ -187,7 +188,7 @@
       INTEGER :: n1s, n2s, n3s
       INTEGER :: ngm_ , ngw_ , ngs_
 
-      REAL(dbl) :: ekinc, ekcell, annee, ekinp, erhoold, maxfion
+      REAL(dbl) :: ekinc, ekcell, ekinp, erhoold, maxfion
       REAL(dbl) :: derho
       REAL(dbl) :: ekincs( nspinx )
       REAL(dbl) :: s1, s2, s3, s4, s5, s6, s7, s8
@@ -238,7 +239,7 @@
       TYPE (recvecs) :: gv           ! reciprocal lattice
 
       ! cell geometry
-      TYPE (boxdimensions) :: ht_m2, ht_m, ht_0, ht_p  ! cell metrics
+      TYPE (boxdimensions) :: ht_m, ht_0, ht_p  ! cell metrics
 
       TYPE (projector), ALLOCATABLE :: fnl( :, : )
       TYPE (dft_energy_type) :: edft
@@ -277,7 +278,6 @@
 
       nfi     = 0
       nstep_this_run  = 0
-      annee   = 0.0_dbl
       ekinc   = 0.0_dbl
       ekcell  = 0.0_dbl
       avgs    = 0.0_dbl
@@ -303,7 +303,7 @@
 ! ... initialization routines
 !
       CALL init0s(gv, kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m2, ht_m, ht_0, fnl, eigr, nspin)
+        wempt, ht_m, ht_0, fnl, eigr, nspin)
 
       lds_wfc = wfill%lds
       IF( force_pairing ) lds_wfc = 1
@@ -321,7 +321,7 @@
       fi = 0.0d0
 
       CALL init1s(gv, kp, ps, atoms_m, atoms_0, atoms_p, cm, c0, wfill, &
-        ce, wempt, ht_m2, ht_m, ht_0, fnl, eigr, fi )
+        ce, wempt, ht_m, ht_0, fnl, eigr, fi )
 
       CALL print_legend( )
 
@@ -355,7 +355,7 @@
 ! ...   (Fortran I/O unit number ndr, file fort.<ndr>)
 
         CALL readfile( nfi, tps, c0, cm, wfill, fi, &
-           atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, ht_m2, ht_m, ht_0, rhoe, &
+           atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, ht_m, ht_0, rhoe, &
            desc, vpot, gv, kp)
 
         CALL from_restart( nfi, avgs, gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, &
@@ -406,7 +406,6 @@
         IF(memchk) CALL memstat(0)
 
         IF( thdyn .AND. tnoseh ) THEN
-          ! WRITE(6,*) xnhh0(1:3,1:3)  ! DEBUG
           CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, ht_0%hmat, ht_m%hmat )
         END IF
 
@@ -505,7 +504,8 @@
         IF( ttcarpar ) THEN
 ! ...     calculate thermostat velocity
           IF(tnosee) THEN
-            vnosee = nosee_velocity()
+            call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
+            vnosee = vnhe
           END IF
 ! ...     move electronic degrees of freedom by Verlet's algorithm
 ! ...     on input, c0 are the wave functions at time "t" , cm at time "t-dt"
@@ -526,7 +526,7 @@
           ekinc = SUM( ekincs )
 ! ...     propagate thermostat for the electronic variables
           IF(tnosee) THEN
-            CALL movenosee(ekinc)
+            CALL electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe ) 
           END IF
           IF( tfor .AND. tionstep ) THEN
             doions = .FALSE.
@@ -547,13 +547,14 @@
         IF(tfor .AND. doions) THEN
 ! ...     Determines DXNOS/DT dynamically
           IF (tnosep) THEN
-            vnosep = nosep_velocity()
+            CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, 1 )
+            vnosep = vnhp(1)
           END IF
 ! ...     move ionic degrees of freedom
           ! ... WRITE( stdout,*) '* TSDP *', tsdp
-          ekinp = moveions(tsdp, thdyn, nfi, atoms_m, atoms_0, atoms_p, ht_m2, ht_m, ht_0, vnosep)
+          ekinp = moveions(tsdp, thdyn, nfi, atoms_m, atoms_0, atoms_p, ht_m, ht_0, vnosep)
           IF (tnosep) THEN
-            CALL movenosep(atoms_0%ekint)
+            CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, atoms_0%ekint, gkbt, vnhp, kbt, nhpcl )
           END IF
         END IF
 
@@ -633,7 +634,7 @@
         IF ( .NOT. ttdiis ) THEN
           CALL update_wave_functions(cm, c0, cp, wfill)
           IF ( tnosee ) THEN
-            CALL update_nose_electrons()
+            CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
           END IF
         ELSE
           IF( .NOT. tfor ) THEN
@@ -656,15 +657,14 @@
           IF ( tfor ) THEN
             CALL update_ions( atoms_m, atoms_0, atoms_p )
             IF ( tnosep ) THEN
-              CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm, xnhpm2 )
+              CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
             END IF
           END IF
 
           IF ( thdyn ) THEN
-            CALL updatecell(ht_m2, ht_m, ht_0, ht_p)
+            CALL updatecell( ht_m, ht_0, ht_p)
             IF( tnoseh ) THEN
-              xnhhm(:,:) = xnhh0(:,:)
-              xnhh0(:,:) = xnhhp(:,:)
+              CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
             END IF
           END IF
 
@@ -710,7 +710,7 @@
 ! ...   write the restart file
         IF( ttsave .OR. ttexit ) THEN
           CALL writefile( nfi, tps, c0, cm, wfill, &
-            fi, atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, ht_m2,  &
+            fi, atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, &
             ht_m, ht_0, rhoe, desc, vpot, gv, kp)
       
         END IF
@@ -751,13 +751,7 @@
         CALL print_sfac(gv, rhoe, desc, sfac)
       END IF
 
-      IF(tneighbo) THEN
-        CALL neighbo(atoms_0, neighbo_radius, ht_0)
-      END IF
-
-
 ! ... report statistics
-
 
       CALL printacc(nfi, rhoe, desc, rhoout, atoms_m, ht_m, nstep_this_run, avgs, avgs_this_run)
       CALL mp_report_buffers()

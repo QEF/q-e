@@ -176,7 +176,7 @@ END FUNCTION
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE readpp( )
+   SUBROUTINE readpp( xc_type )
 
      !  this subroutine reads pseudopotential parameters from file
      !
@@ -191,9 +191,11 @@ END FUNCTION
       use cvan, only: nvb, ipp
       use read_pseudo_module, only: read_pseudo_upf
       use control_flags, only: program_name, tuspp
-      use funct, only: iexch, icorr, igcx, igcc
+      use funct, only: iexch, icorr, igcx, igcc, dft, which_dft
 
       IMPLICIT NONE
+
+      CHARACTER(LEN=*), INTENT(IN) :: xc_type
 
 ! ... declare other variables
       CHARACTER(LEN=20)  :: pottyp
@@ -344,20 +346,6 @@ END FUNCTION
           !     ipp= 3 norm-conserving bhs pp
           !     ipp= 4 UPF format, non-vanderbilt (TEMP)
           !
-          ! check for consistency of DFT
-          !
-          if (is == 1) then
-            iexch_ = iexch
-            icorr_ = icorr
-            igcx_ = igcx
-            igcc_ = igcc
-          else
-            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
-                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
-               CALL errore( 'readpp','inconsistent DFT read',is)
-            end if
-          end if
-          !
           !     check on ipp value and input order
           !
           if(is > 1) then
@@ -371,6 +359,31 @@ END FUNCTION
           if (ipp(is) <= 1) nvb=nvb+1
 
         END IF
+
+        if ( xc_type /= 'none' ) then
+          ! 
+          !  DFT xc functional, given from input
+          !
+          dft = TRIM( xc_type )
+          CALL which_dft( dft )
+          WRITE( stdout, fmt="(/,3X,'Warning XC functionals forced to be: ',A)" ) dft
+          !
+        else
+          !
+          ! check for consistency of DFT
+          !
+          if (is == 1) then
+            iexch_ = iexch
+            icorr_ = icorr
+            igcx_ = igcx
+            igcc_ = igcc
+          else
+            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
+                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
+               CALL errore( 'readpp','inconsistent DFT read',is)
+            end if
+          end if
+        end if
 
       END DO
 

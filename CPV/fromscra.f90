@@ -53,8 +53,8 @@
       USE cell_module, only: boxdimensions
       USE electrons_module, ONLY: nspin, pmss
       USE cp_electronic_mass, ONLY: emass
-      USE ions_module, ONLY: taui, cdmi, set_reference_positions, &
-          constraints_setup
+      USE ions_base, ONLY: taui, cdmi
+      USE ions_module, ONLY: set_reference_positions, constraints_setup
       USE mp, ONLY: mp_end
       USE nl, ONLY: nlrh_m
       USE energies, ONLY: dft_energy_type, debug_energies

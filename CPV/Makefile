@@ -66,8 +66,6 @@ modules.o \
 nl_base.o \
 nlcc.o \
 nl.o \
-noseele.o \
-noseion.o \
 optical.o \
 ortho_base.o \
 ortho.o \

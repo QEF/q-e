@@ -68,14 +68,12 @@
       integer, INTENT(in) :: ibrav
       real(kind=8), INTENT(in) :: mat_z(:,:,:), occ_f(:)
 
-      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), htm2_(3,3) , xnhhp_(3,3)
+      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
       real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:) 
-      real(kind=8) :: xnhpp_ ( SIZE( xnhp0 ) ), xnhpm2_ ( SIZE( xnhp0 ) )
       real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(kind=8) :: xnhep_ , xnhem2_
       real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
 
 !
@@ -91,15 +89,13 @@
       ht     = TRANSPOSE( h ) 
       htm    = TRANSPOSE( hold ) 
       htvel  = TRANSPOSE( velh ) 
-      htm2_  = htm
-      xnhhp_ = 0.0d0
+      gvel   = 0.0d0
+      
 
       ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
       CALL s_to_r( taus, taui_ , na, nsp, h )
 
       cdmi_ = 0.0d0
-      xnhpp_  = xnhp0
-      xnhpm2_ = xnhpm
 
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
       occ_ = 0.0d0
@@ -115,14 +111,11 @@
       b2 = htm1(:,2)
       b3 = htm1(:,3)
 
-      xnhep_ = 0.0d0
-      xnhem2_ = 0.0d0
-
       CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
-        ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
-        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , nhpcl, occ_ , &
+        ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm, mat_z  )
+        xnhe0, xnhem, vnhe, ekincm, mat_z  )
 
       DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
@@ -174,21 +167,19 @@
       real(kind=8), INTENT(OUT) :: tps
       real(kind=8), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       !
-      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), htm2_(3,3) , xnhhp_(3,3)
+      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
       real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:)
       real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(kind=8) :: xnhep_ , xnhem2_
       real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
-      real(kind=8) :: xnhpp_ ( SIZE( xnhp0 ) ), xnhpm2_ ( SIZE( xnhp0 ) )
 
 
       IF( nspin /= 1 ) CALL errore( ' writefile ', ' nspin > 1 ', 1 )
 
       IF( flag == -1 ) THEN
-        CALL cp_read_cell( ndr, ' ', .TRUE., ht, htm, htvel, xnhh0, xnhhm, xnhhp_ , vnhh )
+        CALL cp_read_cell( ndr, ' ', .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
         h     = TRANSPOSE( ht )
         hold  = TRANSPOSE( htm )
         velh  = TRANSPOSE( htvel )
@@ -205,10 +196,10 @@
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
 
       CALL cp_readfile( ndr, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
-        ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
-        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , nhpcl , occ_ , &
+        ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm, mat_z, tens  )
+        xnhe0, xnhem, vnhe, ekincm, mat_z, tens  )
 
       DEALLOCATE( taui_ )
 
@@ -238,7 +229,7 @@
 
    SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, cdesc, occ, &
      atoms_0, atoms_m, acc, taui, cdmi, ibrav, celldm, &
-     ht_m2, ht_m, ht_0, rho, desc, vpot, gv, kp)
+     ht_m, ht_0, rho, desc, vpot, gv, kp)
                                                                         
         use electrons_module, only: nspin
         use cp_types, only: recvecs
@@ -251,10 +242,10 @@
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
         USE charge_types, ONLY: charge_descriptor
-        USE electrons_nose, ONLY: xnhe0, xnhem, xnhep, xnhem2, vnhe
+        USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
         USE electrons_base, ONLY: nbsp
-        USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl
+        USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
+        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_writefile, cp_write_wfc
                                                                         
         IMPLICIT NONE 
@@ -263,7 +254,7 @@
         COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:) 
         REAL(dbl), INTENT(IN) :: occ(:,:,:)
         TYPE (kpoints), INTENT(IN) :: kp 
-        TYPE (boxdimensions), INTENT(IN) :: ht_m2, ht_m, ht_0
+        TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
         TYPE (recvecs), INTENT(IN) :: gv
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
         REAL(dbl), INTENT(IN) :: rho(:,:,:,:)
@@ -295,10 +286,10 @@
         mat_z = 0.0d0
 
         CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
-          ht_0%a, ht_m%a, ht_m2%a, ht_0%hvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
+          ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, occ, occ, lambda, lambda, gv%b1, gv%b2, gv%b3, &
-          xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z )
+          xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda, gv%b1, gv%b2, gv%b3, &
+          xnhe0, xnhem, vnhe, ekincm, mat_z )
 
         DEALLOCATE( lambda )
 
@@ -322,7 +313,7 @@
 
         SUBROUTINE readfile_fpmd( nfi, trutime, &
           c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, ibrav, celldm, &
-          ht_m2, ht_m, ht_0, rho, desc, vpot, gv, kp)
+          ht_m, ht_0, rho, desc, vpot, gv, kp)
                                                                         
         use electrons_base, only: nbsp
         use cp_types, ONLY: recvecs
@@ -346,9 +337,9 @@
         USE control_flags, ONLY: twfcollect, force_pairing
         USE wave_functions, ONLY: gram
         USE grid_dimensions, ONLY: nr1, nr2, nr3
-        USE electrons_nose, ONLY: xnhe0, xnhem, xnhep, xnhem2, vnhe
-        USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl
+        USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
+        USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
+        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_readfile, cp_read_wfc
  
         IMPLICIT NONE 
@@ -358,7 +349,7 @@
         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:) 
         REAL(dbl), INTENT(INOUT) :: occ(:,:,:)
         TYPE (kpoints), INTENT(INOUT) :: kp 
-        TYPE (boxdimensions), INTENT(INOUT) :: ht_m2, ht_m, ht_0
+        TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
         TYPE (recvecs), INTENT(INOUT) :: gv
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
         REAL(dbl), INTENT(INOUT) :: rho(:,:,:,:)
@@ -377,7 +368,7 @@
         REAL(dbl) :: ekincm
         REAL(dbl) :: hp0_ (3,3)
         REAL(dbl) :: hm1_ (3,3)
-        REAL(dbl) :: hm2_ (3,3)
+        REAL(dbl) :: gvel_ (3,3)
         REAL(dbl) :: hvel_ (3,3)
         REAL(dbl) :: mat_z_(1,1,nspin)
         LOGICAL :: tens = .FALSE.
@@ -389,10 +380,10 @@
         lambda_  = 0.0d0
 
         CALL cp_readfile( ndr, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
-          hp0_ , hm1_ , hm2_ , hvel_ , xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
+          hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
-          gv%b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z_ , tens )
+          xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
+          gv%b3, xnhe0, xnhem, vnhe, ekincm, mat_z_ , tens )
 
         DEALLOCATE( lambda_ )
 
@@ -401,8 +392,8 @@
         IF( .NOT. tbeg ) THEN
           CALL cell_init( ht_0, hp0_ )
           CALL cell_init( ht_m, hm1_ )
-          CALL cell_init( ht_m2, hm2_ )
           ht_0%hvel = hvel_  !  set cell velocity
+          ht_0%gvel = gvel_  !  set cell velocity
         END IF
 
         CALL mp_barrier()

@@ -19,28 +19,15 @@
 
 ! ... Gradient Correction & exchange and correlation
 
-        LOGICAL :: tgc
         REAL(dbl), PARAMETER :: small_rho = 1.0d-10
 
         PUBLIC :: v2gc, exch_corr_energy, stress_xc
-        PUBLIC :: exch_corr_init, exch_corr_print_info
-        PUBLIC :: tgc
+        PUBLIC :: exch_corr_print_info
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
-      SUBROUTINE exch_corr_init( xc_type )
-        USE funct, ONLY: dft, which_dft, igcx, igcc
-        CHARACTER(LEN = 20) :: xc_type
-          dft = TRIM( xc_type )
-          CALL which_dft( dft )
-          tgc       = .FALSE.
-          if( ( igcx > 0 ) .OR. ( igcc > 0 ) ) tgc = .TRUE.
-        RETURN
-      END SUBROUTINE exch_corr_init
-
-!=----------------------------------------------------------------------------=!
       SUBROUTINE exch_corr_print_info(iunit)
         USE funct, ONLY: dft, iexch, icorr, igcx, igcc
         INTEGER, INTENT(IN) :: iunit
@@ -113,7 +100,7 @@
           WRITE(iunit,910)
           WRITE(iunit,fmt='(5X,"Exchange functional: ",A)') exch_info
           WRITE(iunit,fmt='(5X,"Correlation functional: ",A)') corr_info
-          IF(tgc) THEN
+          IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
             WRITE(iunit,810)
             WRITE(iunit,fmt='(5X,"Exchange functional: ",A)') exgc_info
             WRITE(iunit,fmt='(5X,"Correlation functional: ",A)') cogc_info
@@ -266,13 +253,14 @@
 
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE stress_xc( dexc, strvxc, sfac, vxc, tgc, grho, v2xc, &
+    SUBROUTINE stress_xc( dexc, strvxc, sfac, vxc, grho, v2xc, &
         gagx_l, gv, tnlcc, rhocp, box)
 
       use ions_base, only: nsp
       USE cell_module, only: boxdimensions
       USE cell_base, ONLY: tpiba
       USE cp_types, ONLY: recvecs
+      USE funct, ONLY: igcx, igcc 
 
       IMPLICIT NONE
 
@@ -280,7 +268,7 @@
 
       type (recvecs), intent(in) :: gv
       type (boxdimensions), intent(in) :: box
-      LOGICAL :: tgc, tnlcc(:)
+      LOGICAL :: tnlcc(:)
       COMPLEX(dbl) :: vxc(:,:)
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
       REAL(dbl) :: dexc(:), strvxc
@@ -332,7 +320,7 @@
 
       dexc = dexc + strvxc * dalbe
 
-      IF (tgc) THEN
+      IF ( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
         CALL stress_gc(grho, v2xc, gcpail, omega)
         dexc = dexc + gcpail
       END IF
@@ -349,6 +337,7 @@
         USE kinds, ONLY: dbl
         USE cp_types, ONLY: recvecs
         USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
+        USE funct, ONLY: igcx, igcc 
 
         REAL (dbl) :: rhoetr(:,:,:,:)
         COMPLEX(dbl) :: rhoetg(:,:)
@@ -371,7 +360,7 @@
                                   sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
 
           !
-          IF(tgc) THEN
+          IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
             ! ... vpot additional term for gradient correction
             CALL v2gc( v2xc, grho, rhoetr, vpot, gv )
           END If

@@ -58,7 +58,7 @@
 !  BEGIN manual
 
       SUBROUTINE pstress(prn, strvxc, rhoeg, vxc, pail, desr, &
-        gv, fnl, ps, c0, cdesc, occ, eigr, sfac, tgc, grho, v2xc, box, edft) 
+        gv, fnl, ps, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
 
 !  this routine computes stress tensor from dft total energy
 !  ----------------------------------------------
@@ -80,7 +80,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL, INTENT(IN) :: prn, tgc
+      LOGICAL, INTENT(IN) :: prn
       REAL(dbl) :: pail(:,:), desr(:), strvxc
       REAL(dbl) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
       COMPLEX(dbl) :: rhoeg(:,:), vxc(:,:)
@@ -139,7 +139,7 @@
       IF(timing) s3 = cclock()
 
 ! ... compute exchange & correlation energy contribution
-      CALL stress_xc(dexc, strvxc, sfac, vxc, tgc, grho, v2xc, gagx_l, gv, &
+      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagx_l, gv, &
         ps%tnlcc, ps%rhocp, box)
 
       IF(timing) s4 = cclock()

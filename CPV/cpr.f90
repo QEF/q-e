@@ -145,7 +145,7 @@
       use ions_nose, only: gkbt, kbt, ndega, nhpcl, qnp, vnhp, xnhp0, xnhpm, xnhpp, &
             ions_nosevel, ions_noseupd, tempw, ions_nose_nrg, ions_nose_shiftvar
       use electrons_nose, only: qne, ekincw, xnhe0, xnhep, xnhem, vnhe, &
-            electrons_nose_nrg, electrons_nose_shiftvar
+            electrons_nose_nrg, electrons_nose_shiftvar, electrons_nosevel, electrons_noseupd
       use from_scratch_module, only: from_scratch
       use from_restart_module, only: from_restart
 
@@ -469,7 +469,8 @@
          call ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl )
       endif
       if(tnosee)then
-         call elec_nosevel( vnhe, xnhe0, xnhem, delt, fccc )
+         call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
+         fccc=1./(1.+0.5*delt*vnhe)
       endif
       if(tnoseh) then
          call cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
@@ -793,7 +794,7 @@
         call ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp, kbt, nhpcl )
       endif
       if(tnosee)then
-        call elec_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
+        call electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
       endif
       if(tnoseh)then
         call cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )

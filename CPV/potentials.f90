@@ -253,7 +253,8 @@
       USE energies, ONLY: total_energy, dft_energy_type
       USE stress, ONLY: pstress
       USE gvecw, ONLY: tecfix
-      USE exchange_correlation, ONLY: tgc, exch_corr_energy
+      USE exchange_correlation, ONLY: exch_corr_energy
+      USE funct, ONLY: igcx, igcc
       USE charge_density, ONLY: gradrho
       USE non_local_core_correction, ONLY: add_core_charge, core_charge_forces
       USE chi2, ONLY: rhochi, allocate_chi2, deallocate_chi2
@@ -333,7 +334,7 @@
       REAL(dbl)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
       REAL(dbl)  :: rsum( SIZE( rhoe, 4 ) )
 
-      LOGICAL :: ttstress, ttforce, ttscreen, ttsic
+      LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
 
       INTEGER ig1, ig2, ig3, is, ia, ig, isc, iflag, ispin
       INTEGER ik, i, j, k, isa, idum, nspin
@@ -372,6 +373,7 @@
       ttscreen = .FALSE.
       ttsic    = ( ABS(self_interaction) /= 0 )
       omega    = box%deth
+      tgc      = ( igcx > 0 ) .OR. ( igcc > 0 )
 
 
       IF(tchi2) THEN
@@ -444,9 +446,11 @@
       edft%ekin  = edft%ekin  * tpiba2
       edft%emkin = edft%emkin * tpiba2
 
-      IF( ttstress .OR. ttforce .OR. iflag.EQ.0 )  THEN
+      IF( ttstress .OR. ttforce .OR. iflag == 0 )  THEN
+        CALL vofesr( edft%esr, desr, fion, ps, atoms, ttstress, box )
+        IF( iflag == 0 ) &
+          WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
         iflag = 1
-        CALL vofesr(edft%esr, desr, fion, ps, atoms, ttstress, box)
       END IF
 
       IF(timing) s2 = cclock()
@@ -731,7 +735,7 @@
       IF( ttstress .AND. kp%gamma_only ) THEN
         s8 = cclock()
         CALL pstress(prn, strvxc, rhoeg, rhoetg, pail, desr, gv, fnl, &
-          ps, c0, cdesc, fi, eigr, sfac, tgc, grho, v2xc, box, edft)
+          ps, c0, cdesc, fi, eigr, sfac, grho, v2xc, box, edft)
         timepre = cclock() - s8
       END IF
 

@@ -78,11 +78,11 @@
    !
    SUBROUTINE iosys_pseudo( )
 
-        use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, prefix, scradir
+        use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, prefix, scradir, xc_type
         use control_flags, only:  program_name
         use parameters, only: nsx
         use read_pseudo_module_fpmd, only: readpp
-        USE io_files, ONLY: &
+        USE io_files,  ONLY: &
               psfile_ => psfile , &
               pseudo_dir_ => pseudo_dir, &
               scradir_ => scradir, &
@@ -104,7 +104,7 @@
         !
         !  read in pseudopotentials and wavefunctions files
         !
-        call readpp( )
+        call readpp( xc_type )
         !
         return
    END SUBROUTINE
@@ -485,7 +485,7 @@
 
       ! ... Ions dynamics
 
-      tdampions_        = .FALSE.
+      tdampions_       = .FALSE.
       tconvthrs%active = .FALSE.
       tconvthrs%nstep  = 1
       tconvthrs%ekin   = 0.0d0
@@ -747,7 +747,7 @@
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, dt, wmass,               &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           tturbo_inp, nturbo_inp, outdir, prefix, xc_type, woptical,         &
+           tturbo_inp, nturbo_inp, outdir, prefix, woptical,                  &
            noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
@@ -760,10 +760,10 @@
            diis_nchmix, diis_g1chmix, empty_states_maxstep, empty_states_delt, &
            empty_states_emass, empty_states_ethr, empty_states_nbnd,           &
            tprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
-           tvhmean_inp, vhasse_inp, ion_damping, anner_inp, constr_dist_inp,   &
+           tvhmean_inp, vhasse_inp, constr_dist_inp,                           &
            constr_inp, nconstr_inp, constr_tol_inp, constr_type_inp, iesr_inp, &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
-           nelec, anne_inp, tprnks, ks_path, tneighbo, neighbo_radius, press,  &
+           nelec, tprnks, ks_path, press,                                      &
            cell_damping, cell_dofree, tf_inp, tpstab_inp, pstab_size_inp,      &
            greash, grease, greasp, epol, efield, tcg, maxiter, etresh, passop
 
@@ -807,7 +807,6 @@
            nr2s_ => nr2s, &
            nr3s_ => nr3s
      !
-     USE exchange_correlation,     ONLY: exch_corr_init
      USE brillouin,                ONLY: kpoint_setup
      USE optical_properties,       ONLY: optical_setup
      USE pseudopotential,          ONLY: pseudopotential_setup
@@ -914,8 +913,6 @@
      nr2s_ = nr2s
      nr3s_ = nr3s
 
-     IF( program_name == 'FPMD' ) CALL exch_corr_init( xc_type )
-
      CALL turbo_init( tturbo_inp, nturbo_inp )
 
      CALL printout_base_init( outdir, prefix )
@@ -962,9 +959,8 @@
 
         CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
-        CALL ions_setup( anne_inp, anner_inp,   &
-             nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
-             constr_inp, ion_damping, tneighbo, neighbo_radius )
+        CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
+             constr_inp )
         !
 
         o_diis_inp        = .TRUE.
@@ -1180,9 +1176,7 @@
            ndega_ => ndega, &
            tempw, &
            ions_nose_info
-      USE electrons_nose, ONLY: &
-           qne_ => qne, &
-           ekincw_ => ekincw
+      USE electrons_nose, ONLY: electrons_nose_info
       USE path_variables, ONLY: &
            sm_p_ => smd_p, &
            smcp_ => smd_cp, &
@@ -1313,7 +1307,7 @@
             CALL ions_nose_info()
          end if
          if(tnosee_) then
-            WRITE( stdout,566) ekincw_ , qne_
+            CALL electrons_nose_info()
          end if
       end if
 !
@@ -1450,6 +1444,7 @@
     USE cutoffs, ONLY: cutoffs_print_info
     USE ions_module, ONLY: print_scaled_positions, ions_print_info
     USE ions_nose, ONLY: ions_nose_info
+    USE electrons_nose, ONLY: electrons_nose_info
     USE empty_states, ONLY: empty_print_info
     USE electrons_module, ONLY: electrons_print_info
     USE exchange_correlation, ONLY: exch_corr_print_info
@@ -1490,6 +1485,7 @@
         CALL exch_corr_print_info( stdout )
         CALL ions_print_info( stdout )
         CALL ions_nose_info()
+        CALL electrons_nose_info()
         CALL potential_print_info( stdout )
         CALL metric_print_info( stdout )
         CALL sic_info( )

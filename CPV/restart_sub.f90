@@ -342,9 +342,9 @@ CONTAINS
       USE wave_functions, ONLY: gram, rande, fixwave
       USE wave_base, ONLY: wave_verlet
       USE electrons_module, ONLY: pmss,emass, nspin
-      USE ions_base, ONLY: na, nsp, nax, randpos
-      USE ions_module, ONLY: taui, cdmi, &
-          set_reference_positions, print_scaled_positions, constraints_setup, set_velocities
+      USE ions_base, ONLY: na, nsp, nax, randpos, taui, cdmi
+      USE ions_module, ONLY: set_reference_positions, print_scaled_positions, &
+                             constraints_setup, set_velocities
       USE energies, ONLY: dft_energy_type
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE pseudopotential, ONLY: formf
@@ -487,8 +487,11 @@ CONTAINS
       END IF
 
       IF( tzerop .AND. tfor ) THEN
-! ...     set initial velocities
+          !
+          ! ...     set initial velocities
+          !
           CALL set_velocities( atoms_m, atoms_0, vel_srt, ht_0, delt )
+          !
       END IF
 
 
@@ -536,15 +539,15 @@ CONTAINS
       END IF
 
 
-! ... reset some variables if nbeg .LE. 0 (new simulation or step counter
-! ... reset to 0)
-      IF (nbeg .LE. 0) THEN
+      ! ... reset some variables if nbeg .LE. 0 (new simulation or step counter reset to 0)
+      !
+      IF ( nbeg <= 0 ) THEN
         acc   = 0.0d0
         nfi   = 0
-        CALL set_reference_positions(cdmi, taui, atoms_0, ht_0)
+        CALL set_reference_positions( cdmi, taui, atoms_0, ht_0 )
       END IF
 
-      CALL constraints_setup(ht_0, atoms_0)
+      CALL constraints_setup( ht_0, atoms_0 )
 
 
   100 FORMAT( /,3X,'MD PARAMETERS READ FROM RESTART FILE',/ &

@@ -11,7 +11,7 @@ module funct
   SAVE
   PUBLIC :: dft, iexch, icorr, igcx, igcc, which_dft
   !
-  character (len=20) :: dft
+  character (len=20) :: dft = ' '
   !
   ! dft is the exchange-correlation functional, described by
   ! any nonconflicting combination of the following keywords
@@ -74,7 +74,12 @@ module funct
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
 
-  integer :: iexch, icorr, igcx, igcc
+  integer, parameter:: notset = -1
+  !
+  integer :: iexch = notset
+  integer :: icorr = notset
+  integer :: igcx  = notset
+  integer :: igcc  = notset
   !
   ! internal indices for exchange-correlation
   !    iexch: type of exchange
@@ -103,7 +108,6 @@ CONTAINS
     dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
     ! local
     integer :: len, l, i
-    integer, parameter:: notset = -1
     character (len=50):: dftout
     logical, external :: matches
     character (len=1), external :: capital
@@ -224,7 +228,6 @@ CONTAINS
     implicit none
     integer :: m, i
     ! local
-    integer, parameter :: notset = - 1
 
     if ( m /= notset .and. m /= i) &
          call errore ('set_dft_value', 'two conflicting matching values', 1)

@@ -208,7 +208,8 @@
 
           box_tp1%a = TRANSPOSE( box_tp1%hmat(:,:) )
           CALL gethinv( box_tp1 )
-          box_tp1%g = MATMUL( box_tp1%a(:,:), box_tp1%hmat(:,:) )
+          box_tp1%g    = MATMUL( box_tp1%a(:,:), box_tp1%hmat(:,:) )
+          box_tp1%gvel = ( box_tp1%g(:,:) - box_tm1%g(:,:) ) / ( 2.0d0 * delt )
         
           RETURN
         END SUBROUTINE MOVECELL

@@ -51,15 +51,15 @@
       use electrons_module, only: ei, ei_emp, n_emp
       use brillouin, only: kpoints
       use time_step, ONLY: tps
-      USE nose_electrons, ONLY: enosee
-      USE ions_module, ONLY: displacement, taui, cdm_displacement, cdmi
+      USE electrons_nose, ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
+      USE ions_module, ONLY: displacement, cdm_displacement
       USE polarization, ONLY: pdipole, pdipolt, p
       USE optical_properties, ONLY:  WRITE_DIELEC
       USE control_flags, ONLY: tdipole, tnosee, tnosep, tnoseh
       USE atoms_type_module, ONLY: atoms_type
       USE sic_module, ONLY: ind_localisation, pos_localisation, nat_localisation, self_interaction
       USE sic_module, ONLY: rad_localisation
-      USE ions_base, ONLY: ions_temp
+      USE ions_base, ONLY: ions_temp, cdmi, taui
       USE ions_nose, ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, kbt, nhpcl
       USE cell_nose, ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
       USE cell_base, ONLY: iforceh
@@ -81,7 +81,7 @@
 ! ...
       INTEGER is, ia, k, i, j, ik, isa, iunit, nfill, nempt
       REAL(dbl) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
-      REAL(dbl) :: tempp, econs, ettt, out_press, ekinpr
+      REAL(dbl) :: tempp, econs, ettt, out_press, ekinpr, enosee
       REAL(dbl) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(dbl) :: dis(atoms%nsp), h(3,3)
       LOGICAL :: tfile, topen
@@ -137,6 +137,12 @@
         enosep = ions_nose_nrg( xnhp0, vnhp, qnp, gkbt, kbt, nhpcl )
       ELSE
         enosep = 0
+      END IF
+
+      IF( tnosee ) THEN
+        enosee = electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
+      ELSE
+        enosee = 0
       END IF
 
 

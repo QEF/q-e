@@ -25,6 +25,7 @@
           REAL(dbl) :: m1(3,3)   ! reciprocal lattice generators
           REAL(dbl) :: omega     ! cell volume = determinant of a
           REAL(dbl) :: g(3,3)    ! metric tensor
+          REAL(dbl) :: gvel(3,3) ! metric velocity
           REAL(dbl) :: pail(3,3) ! stress tensor
           REAL(dbl) :: hmat(3,3) ! cell parameters ( transpose of "a" )
           REAL(dbl) :: hvel(3,3) ! cell velocity
@@ -111,9 +112,8 @@
 !
 
 
-        SUBROUTINE updatecell(box_tm2, box_tm1, box_t0, box_tp1)
-          type (boxdimensions) :: box_tm2, box_tm1, box_t0, box_tp1
-            box_tm2  = box_tm1
+        SUBROUTINE updatecell(box_tm1, box_t0, box_tp1)
+          type (boxdimensions) :: box_tm1, box_t0, box_tp1
             box_tm1  = box_t0
             box_t0   = box_tp1
           RETURN
@@ -121,16 +121,18 @@
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE dgcell(gcm1, gcdot, box_tm2, box_tm1, box_t0, delt)
-          REAL(dbl) :: GCM1(3,3)
-          REAL(dbl) :: GCDOT(3,3)
-          REAL(dbl) :: delt
-          type (boxdimensions), intent(in) :: box_tm2, box_tm1, box_t0
-          REAL(dbl) :: DUM
-            CALL invmat(3,box_t0%G,GCM1,DUM)
-            GCDOT = (3.D0*box_t0%G - 4.D0*box_tm1%G + box_tm2%G)/ (2.0d0 * delt )
-          RETURN
-        END SUBROUTINE DGCELL
+        SUBROUTINE dgcell( gcdot, box_tm1, box_t0, delt )
+          REAL(dbl), INTENT(OUT) :: GCDOT(3,3)
+          REAL(dbl), INTENT(IN) :: delt
+          type (boxdimensions), intent(in) :: box_tm1, box_t0
+            !
+            GCDOT = 2.0d0 * ( box_t0%g - box_tm1%g ) / delt - box_t0%gvel
+            !
+            ! this is equivalent to:
+            ! GCDOT = (3.D0*box_t0%G - 4.D0*box_tm1%G + box_tm2%G)/ (2.0d0 * delt )
+            !
+          RETURN 
+        END SUBROUTINE dgcell
 
 !------------------------------------------------------------------------------!
 ! ...     set box
@@ -147,6 +149,7 @@
             box%hmat = TRANSPOSE( ht )
             CALL gethinv( box )
             box%g = MATMUL( box%a(:,:), box%hmat(:,:) )
+            box%gvel = 0.0d0
             box%hvel = 0.0d0
             box%pail = 0.0d0
           RETURN
@@ -169,7 +172,8 @@
             box%pail = 0.0d0
             box%hvel = 0.0d0
             CALL gethinv(box)
-            box%g = MATMUL( box%a(:,:), box%hmat(:,:) )
+            box%g    = MATMUL( box%a(:,:), box%hmat(:,:) )
+            box%gvel = 0.0d0
           RETURN
         END SUBROUTINE
 

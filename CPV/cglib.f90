@@ -93,37 +93,6 @@
 
 
 
-
-!-------------------------------------------------------------------------
-      subroutine cofmass(tau,cdm)
-!-----------------------------------------------------------------------
-!
-      use ions_base, only: na, nsp, pmass
-      use parameters, only: natx
-!
-      implicit none
-      real(kind=8) tau(3,natx,nsp), cdm(3)
-! local variables
-      real(kind=8) tmas
-      integer is,i,ia
-!
-      tmas=0.0
-      do is=1,nsp
-         tmas=tmas+na(is)*pmass(is)
-      end do
-!
-      do i=1,3
-         cdm(i)=0.0
-         do is=1,nsp
-            do ia=1,na(is)
-               cdm(i)=cdm(i)+tau(i,ia,is)*pmass(is)
-            end do
-         end do
-         cdm(i)=cdm(i)/tmas
-      end do
-!
-      return
-      end
 !***ensemble-DFT
 !-----------------------------------------------------------------------
       subroutine calcmt(fdiag,zmat,fmat)

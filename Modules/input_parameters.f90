@@ -377,7 +377,7 @@ MODULE input_parameters
           !   of the energy step for reciprocal vector whose square modulus 
           !   is greater than  "ecfixed"
 
-        CHARACTER(LEN=80) :: xc_type = 'PZ'
+        CHARACTER(LEN=80) :: xc_type = 'none'
           ! xc_type = 'BLYP' | 'BP' | 'PBE' | 'PZ' | 'PW' | 'LDA'
           ! select the exchange and correlation functionals
           ! 'BLYP'  use Becke-Lee-Yang-Parr GCC-XC Functional
@@ -1384,17 +1384,6 @@ MODULE input_parameters
 !    CHI2
 !
       LOGICAL :: tchi2_inp = .FALSE.
-!
-!    ELECTRONIC ANNEALING (obsolete)
-!
-      LOGICAL   :: anne_inp  = .FALSE.
-      REAL(dbl) :: anner_inp = 0.0d0
-
-!
-!   EXCHANGE AND CORRELATION
-!
-      INTEGER   :: narray_inp = 50000
-      REAL(dbl) :: rmxxc_inp  = 5.0d0
 !
 !   SCRATCH DIRECTORY
 !

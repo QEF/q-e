@@ -134,9 +134,9 @@
 !------------------------------------------------------------------------------!
 
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
-        ht, htm, htm2, htvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, stau0, &
-        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, occ0, &
-        occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, &
+        ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
+        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, occ0, &
+        occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
         ekincm, mat_z )
       !
       USE iotk_module
@@ -169,11 +169,10 @@
       REAL(dbl), INTENT(IN) :: wk(:)   ! k points weights
       REAL(dbl), INTENT(IN) :: ht(3,3) ! 
       REAL(dbl), INTENT(IN) :: htm(3,3) ! 
-      REAL(dbl), INTENT(IN) :: htm2(3,3) ! 
       REAL(dbl), INTENT(IN) :: htvel(3,3) ! 
+      REAL(dbl), INTENT(IN) :: gvel(3,3) ! 
       REAL(dbl), INTENT(IN) :: xnhh0(3,3) ! 
       REAL(dbl), INTENT(IN) :: xnhhm(3,3) ! 
-      REAL(dbl), INTENT(IN) :: xnhhp(3,3) ! 
       REAL(dbl), INTENT(IN) :: vnhh(3,3) ! 
       REAL(dbl), INTENT(IN) :: taui(:,:) ! 
       REAL(dbl), INTENT(IN) :: cdmi(:) ! 
@@ -183,9 +182,7 @@
       REAL(dbl), INTENT(IN) :: svelm(:,:) ! 
       REAL(dbl), INTENT(IN) :: force(:,:) ! 
       REAL(dbl), INTENT(IN) :: xnhp0(:)  ! 
-      REAL(dbl), INTENT(IN) :: xnhpp(:)  ! 
       REAL(dbl), INTENT(IN) :: xnhpm(:)  ! 
-      REAL(dbl), INTENT(IN) :: xnhpm2(:) ! 
       REAL(dbl), INTENT(IN) :: vnhp(:) ! 
       INTEGER,   INTENT(IN) :: nhpcl ! 
       REAL(dbl), INTENT(IN) :: occ0(:,:,:) ! 
@@ -196,9 +193,7 @@
       REAL(dbl), INTENT(IN) :: b2(3) ! 
       REAL(dbl), INTENT(IN) :: b3(3) ! 
       REAL(dbl), INTENT(IN) :: xnhe0 ! 
-      REAL(dbl), INTENT(IN) :: xnhep ! 
       REAL(dbl), INTENT(IN) :: xnhem ! 
-      REAL(dbl), INTENT(IN) :: xnhem2 ! 
       REAL(dbl), INTENT(IN) :: vnhe ! 
       REAL(dbl), INTENT(IN) :: ekincm ! 
       REAL(dbl), INTENT(IN) :: mat_z(:,:,:) ! 
@@ -305,12 +300,11 @@
         call iotk_write_dat (iunpun, "CELLDM", celldm(1:6))
         call iotk_write_dat (iunpun, "ht", ht)
         call iotk_write_dat (iunpun, "htm", htm)
-        call iotk_write_dat (iunpun, "htm2", htm2)
         call iotk_write_dat (iunpun, "htvel", htvel)
+        call iotk_write_dat (iunpun, "gvel", gvel)
         call iotk_write_begin(iunpun,"NOSE")
           call iotk_write_dat (iunpun, "xnhh0", xnhh0)
           call iotk_write_dat (iunpun, "xnhhm", xnhhm)
-          call iotk_write_dat (iunpun, "xnhhp", xnhhp)
           call iotk_write_dat (iunpun, "vnhh", vnhh)
         call iotk_write_end(iunpun,"NOSE")
         call iotk_write_begin(iunpun,"RECIPROCAL_BASIS")
@@ -341,8 +335,6 @@
           call iotk_write_dat (iunpun, "nhpcl", nhpcl)
           call iotk_write_dat (iunpun, "xnhp0", xnhp0 )
           call iotk_write_dat (iunpun, "xnhpm", xnhpm )
-          call iotk_write_dat (iunpun, "xnhpm2", xnhpm2 )
-          call iotk_write_dat (iunpun, "xnhpp", xnhpp )
           call iotk_write_dat (iunpun, "vnhp", vnhp)
         call iotk_write_end(iunpun,"NOSE")
         call iotk_write_end(iunpun,"IONS")
@@ -351,8 +343,6 @@
         call iotk_write_begin(iunpun,"NOSE")
           call iotk_write_dat (iunpun, "xnhe0", xnhe0)
           call iotk_write_dat (iunpun, "xnhem", xnhem)
-          call iotk_write_dat (iunpun, "xnhem2", xnhem2)
-          call iotk_write_dat (iunpun, "xnhep", xnhep)
           call iotk_write_dat (iunpun, "vnhe", vnhe)
         call iotk_write_end(iunpun,"NOSE")
         call iotk_write_dat (iunpun, "ekincm", ekincm)
@@ -506,10 +496,10 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
-        ht, htm, htm2, htvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, stau0, &
-        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, &
-        occ0, occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, &
-        xnhem2, vnhe, ekincm, mat_z, tens  )
+        ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
+        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, &
+        occ0, occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, &
+        vnhe, ekincm, mat_z, tens  )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -542,11 +532,10 @@
       REAL(dbl), INTENT(INOUT) :: wk(:)   ! k points weights
       REAL(dbl), INTENT(INOUT) :: ht(3,3) !
       REAL(dbl), INTENT(INOUT) :: htm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: htm2(3,3) !
       REAL(dbl), INTENT(INOUT) :: htvel(3,3) !
+      REAL(dbl), INTENT(INOUT) :: gvel(3,3) !
       REAL(dbl), INTENT(INOUT) :: xnhh0(3,3) !
       REAL(dbl), INTENT(INOUT) :: xnhhm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: xnhhp(3,3) !
       REAL(dbl), INTENT(INOUT) :: vnhh(3,3) !
       REAL(dbl), INTENT(INOUT) :: taui(:,:) !
       REAL(dbl), INTENT(INOUT) :: cdmi(:) !
@@ -556,9 +545,7 @@
       REAL(dbl), INTENT(INOUT) :: svelm(:,:) !
       REAL(dbl), INTENT(INOUT) :: force(:,:) ! 
       REAL(dbl), INTENT(INOUT) :: xnhp0(:) !     
-      REAL(dbl), INTENT(INOUT) :: xnhpp(:) ! 
       REAL(dbl), INTENT(INOUT) :: xnhpm(:) ! 
-      REAL(dbl), INTENT(INOUT) :: xnhpm2(:) !
       REAL(dbl), INTENT(INOUT) :: vnhp(:) !  
       INTEGER,   INTENT(INOUT) :: nhpcl !  
       REAL(dbl), INTENT(INOUT) :: occ0(:,:,:) !
@@ -569,9 +556,7 @@
       REAL(dbl), INTENT(INOUT) :: b2(3) !
       REAL(dbl), INTENT(INOUT) :: b3(3) !
       REAL(dbl), INTENT(INOUT) :: xnhe0 !
-      REAL(dbl), INTENT(INOUT) :: xnhep ! 
       REAL(dbl), INTENT(INOUT) :: xnhem !
-      REAL(dbl), INTENT(INOUT) :: xnhem2 !
       REAL(dbl), INTENT(INOUT) :: vnhe !  
       REAL(dbl), INTENT(INOUT) :: ekincm !  
       REAL(dbl), INTENT(INOUT) :: mat_z(:,:,:) ! 
@@ -593,8 +578,8 @@
       !
       INTEGER :: ibrav_
       INTEGER :: nat_ , nsp_, na_
-      INTEGER :: nk_ , ik_
-      LOGICAL :: gamma_only_
+      INTEGER :: nk_ , ik_ 
+      LOGICAL :: gamma_only_ , found
       REAL(dbl) :: alat_
       REAL(dbl) :: pmass_ , zv_
       REAL(dbl) :: celldm_ ( 6 )
@@ -648,12 +633,15 @@
         call iotk_scan_dat (iunpun, "CELLDM", celldm_ (1:6) )
         call iotk_scan_dat (iunpun, "ht", ht)
         call iotk_scan_dat (iunpun, "htm", htm)
-        call iotk_scan_dat (iunpun, "htm2", htm2)
         call iotk_scan_dat (iunpun, "htvel", htvel)
+        call iotk_scan_dat (iunpun, "gvel", gvel, FOUND=found, IERR=ierr )
+        if ( .NOT. found ) then
+          gvel = 0.0d0
+        end if
+
         call iotk_scan_begin(iunpun,"NOSE")
           call iotk_scan_dat (iunpun, "xnhh0", xnhh0)
           call iotk_scan_dat (iunpun, "xnhhm", xnhhm)
-          call iotk_scan_dat (iunpun, "xnhhp", xnhhp)
           call iotk_scan_dat (iunpun, "vnhh", vnhh)
         call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_begin(iunpun,"RECIPROCAL_BASIS")
@@ -693,8 +681,6 @@
           call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
           call iotk_scan_dat (iunpun, "xnhp0", xnhp0 )
           call iotk_scan_dat (iunpun, "xnhpm", xnhpm )
-          call iotk_scan_dat (iunpun, "xnhpm2", xnhpm2 )
-          call iotk_scan_dat (iunpun, "xnhpp", xnhpp )
           call iotk_scan_dat (iunpun, "vnhp", vnhp)
           ! nhpcl = nhpcl_  ! maybe we would like to change lenght
         call iotk_scan_end(iunpun,"NOSE")
@@ -704,8 +690,6 @@
         call iotk_scan_begin(iunpun,"NOSE")
           call iotk_scan_dat (iunpun, "xnhe0", xnhe0)
           call iotk_scan_dat (iunpun, "xnhem", xnhem)
-          call iotk_scan_dat (iunpun, "xnhem2", xnhem2)
-          call iotk_scan_dat (iunpun, "xnhep", xnhep)
           call iotk_scan_dat (iunpun, "vnhe", vnhe)
         call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_dat (iunpun, "ekincm", ekincm)
@@ -767,11 +751,10 @@
       !
       CALL mp_bcast( ht, ionode_id )
       CALL mp_bcast( htm, ionode_id )
-      CALL mp_bcast( htm2, ionode_id )
       CALL mp_bcast( htvel, ionode_id )
+      CALL mp_bcast( gvel, ionode_id )
       CALL mp_bcast( xnhh0, ionode_id )
       CALL mp_bcast( xnhhm, ionode_id )
-      CALL mp_bcast( xnhhp, ionode_id )
       CALL mp_bcast( vnhh, ionode_id )
       CALL mp_bcast( b1, ionode_id )
       CALL mp_bcast( b2, ionode_id )
@@ -786,14 +769,10 @@
       CALL mp_bcast(cdmi, ionode_id)
       CALL mp_bcast(xnhp0, ionode_id)
       CALL mp_bcast(xnhpm, ionode_id)
-      CALL mp_bcast(xnhpm2, ionode_id)
-      CALL mp_bcast(xnhpp, ionode_id)
       CALL mp_bcast(vnhp, ionode_id)
       !
       CALL mp_bcast(xnhe0, ionode_id)
       CALL mp_bcast(xnhem, ionode_id)
-      CALL mp_bcast(xnhem2, ionode_id)
-      CALL mp_bcast(xnhep, ionode_id)
       CALL mp_bcast(vnhe, ionode_id)
       !
       CALL mp_bcast(kunit, ionode_id)
@@ -895,7 +874,7 @@
 
 !=----------------------------------=!
 
-    SUBROUTINE cp_read_cell( ndr, scradir, ascii, ht, htm, htvel, xnhh0, xnhhm, xnhhp, vnhh )
+    SUBROUTINE cp_read_cell( ndr, scradir, ascii, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -911,9 +890,9 @@
       REAL(dbl), INTENT(INOUT) :: ht(3,3) !
       REAL(dbl), INTENT(INOUT) :: htm(3,3) !
       REAL(dbl), INTENT(INOUT) :: htvel(3,3) !
+      REAL(dbl), INTENT(INOUT) :: gvel(3,3) !
       REAL(dbl), INTENT(INOUT) :: xnhh0(3,3) !
       REAL(dbl), INTENT(INOUT) :: xnhhm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: xnhhp(3,3) !
       REAL(dbl), INTENT(INOUT) :: vnhh(3,3) !
       !
       CHARACTER(LEN=256) :: dirname, filename
@@ -949,10 +928,10 @@
         call iotk_scan_dat (iunpun, "ht", ht)
         call iotk_scan_dat (iunpun, "htm", htm)
         call iotk_scan_dat (iunpun, "htvel", htvel)
+        call iotk_scan_dat (iunpun, "gvel", gvel)
         call iotk_scan_begin(iunpun,"NOSE")
           call iotk_scan_dat (iunpun, "xnhh0", xnhh0)
           call iotk_scan_dat (iunpun, "xnhhm", xnhhm)
-          call iotk_scan_dat (iunpun, "xnhhp", xnhhp)
           call iotk_scan_dat (iunpun, "vnhh", vnhh)
         call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_end(iunpun,"LATTICE")
@@ -970,9 +949,9 @@
       CALL mp_bcast( ht, ionode_id )
       CALL mp_bcast( htm, ionode_id )
       CALL mp_bcast( htvel, ionode_id )
+      CALL mp_bcast( gvel, ionode_id )
       CALL mp_bcast( xnhh0, ionode_id )
       CALL mp_bcast( xnhhm, ionode_id )
-      CALL mp_bcast( xnhhp, ionode_id )
       CALL mp_bcast( vnhh, ionode_id )
       !
       IF( ionode ) THEN

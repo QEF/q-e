@@ -260,7 +260,6 @@
       REAL(dbl) :: xnhe0   = 0.0d0   
       REAL(dbl) :: xnhep   = 0.0d0   
       REAL(dbl) :: xnhem   = 0.0d0   
-      REAL(dbl) :: xnhem2  = 0.0d0   
       REAL(dbl) :: vnhe    = 0.0d0   
 !
 !------------------------------------------------------------------------------!
@@ -271,10 +270,14 @@
      USE constants, ONLY: factem, pi, terahertz
      REAL(dbl), INTENT(IN) :: ekincw_, fnosee_
      ! set thermostat parameter for electrons
-     qne    = 0.0d0
+     qne     = 0.0d0
      ekincw  = ekincw_
-     fnosee = fnosee_
-     if( fnosee > 0.0d0 ) qne = 4.d0*ekincw/(fnosee*(2.d0*pi)*terahertz)**2
+     fnosee  = fnosee_
+     xnhe0   = 0.0d0
+     xnhep   = 0.0d0
+     xnhem   = 0.0d0
+     vnhe    = 0.0d0
+     if( fnosee > 0.0d0 ) qne = 4.d0 * ekincw / ( fnosee * ( 2.d0 * pi ) * terahertz )**2
     return
   end subroutine
 
@@ -302,6 +305,60 @@
       !
     return
   end subroutine
+
+  subroutine electrons_nosevel( vnhe, xnhe0, xnhem, delt )
+    implicit none
+    real(kind=8), intent(inout) :: vnhe
+    real(kind=8), intent(in) :: xnhe0, xnhem, delt 
+    vnhe=2.*(xnhe0-xnhem)/delt-vnhe
+    return
+  end subroutine
+
+  subroutine electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
+    implicit none
+    real(kind=8), intent(out) :: xnhep, vnhe
+    real(kind=8), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
+    xnhep = 2.0d0 * xnhe0 - xnhem + 2.0d0 * ( delt**2 / qne ) * ( ekinc - ekincw )
+    vnhe  = ( xnhep - xnhem ) / ( 2.0d0 * delt )
+    return
+  end subroutine
+
+
+  SUBROUTINE electrons_nose_info()
+
+      use constants,     only: factem, terahertz, pi
+      use time_step,     only: delt
+      USE io_global,     ONLY: stdout
+      USE control_flags, ONLY: tnosee
+
+      IMPLICIT NONE
+
+      INTEGER   :: nsvar, i
+      REAL(dbl) :: wnosee
+
+      IF( tnosee ) THEN
+        !
+        IF( fnosee <= 0.D0) &
+          CALL errore(' electrons_nose_info ', ' fnosee less than zero ', 1)
+        IF( delt <= 0.D0) &
+          CALL errore(' electrons_nose_info ', ' delt less than zero ', 1)
+
+        wnosee = fnosee * ( 2.d0 * pi ) * terahertz
+        nsvar  = ( 2.d0 * pi ) / ( wnosee * delt )
+
+        WRITE( stdout,563) ekincw, nsvar, fnosee, qne
+      END IF
+
+ 563  format( //, &
+            & 3X,'electrons dynamics with nose` temperature control:', /, &
+            & 3X,'Kinetic energy required   = ', f10.5, ' (a.u.) ', /, &
+            & 3X,'time steps per nose osc.  = ', i5, /, &
+            & 3X,'nose` frequency           = ', f10.3, ' (THz) ', /, &
+            & 3X,'nose` mass(es)            = ', 20(1X,f10.3),//)
+
+
+    RETURN
+  END SUBROUTINE electrons_nose_info
 
 
 

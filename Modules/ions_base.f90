@@ -58,6 +58,23 @@
       REAL(dbl) :: fricp   ! friction parameter for damped dynamics
       REAL(dbl) :: greasp  ! friction parameter for damped dynamics
 
+
+      ! ...     taui = real ionic positions in the center of mass reference
+      ! ...     system at istep = 0
+      ! ...     this array is used to compute mean square displacements,
+      ! ...     it is initialized when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
+      ! ...     first index: x,y,z, second index: atom sortred by specie with respect input
+      ! ...     this array is saved in the restart file
+
+      REAL(dbl), ALLOCATABLE ::  taui(:,:)
+
+      ! ...     cdmi = center of mass reference system (related to the taui)
+      ! ...     this vector is computed when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
+      ! ...     this array is saved in the restart file
+
+      REAL(dbl) ::  cdmi(3)
+
+
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
 
@@ -212,6 +229,7 @@
       ALLOCATE( ind_srt( nat ) )
       ALLOCATE( if_pos( 3, nat ) )
       ALLOCATE( iforce( 3, nat ) )
+      ALLOCATE( taui( 3, nat ) )
 
       ityp( 1:nat )      = ityp_ ( 1:nat )
       vel( : , 1:nat )   = vel_ ( : , 1:nat )
@@ -336,6 +354,11 @@
         CALL errore( ' ions_base_init ', ' invalid  mass ', 1 ) 
       pmass( 1:nsp ) = amass_ ( 1:nsp ) * scmass
 
+      CALL ions_cofmass( tau_srt, pmass, na, nsp, cdmi )
+      DO ia = 1, nat
+        taui( 1:3, ia ) = tau_srt( 1:3, ia ) - cdmi(1:3)
+      END DO
+
       tions_base_init = .TRUE.
 
       RETURN
@@ -353,6 +376,7 @@
       IF( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
       IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
       IF( ALLOCATED( iforce ) ) DEALLOCATE( iforce )
+      IF( ALLOCATED( taui ) ) DEALLOCATE( taui )
       tions_base_init = .FALSE.
       RETURN
     END SUBROUTINE
@@ -838,7 +862,6 @@
       REAL(dbl) :: xnhp0( nhclm ) = 0.0d0
       REAL(dbl) :: xnhpm( nhclm ) = 0.0d0
       REAL(dbl) :: xnhpp( nhclm ) = 0.0d0
-      REAL(dbl) :: xnhpm2( nhclm ) = 0.0d0
       REAL(dbl) :: qnp( nhclm ) = 0.0d0
       REAL(dbl) :: gkbt = 0.0d0
       REAL(dbl) :: kbt = 0.0d0
@@ -865,7 +888,6 @@
     vnhp  = 0.0d0
     xnhp0 = 0.0d0
     xnhpm = 0.0d0 
-    xnhpm2 = 0.0d0 
     xnhpp = 0.0d0
 
     tempw     = tempw_
@@ -953,7 +975,9 @@
         wnosep = fnosep(1) * ( 2.d0 * pi ) * terahertz
         nsvar  = ( 2.d0 * pi ) / ( wnosep * delt )
 
-        WRITE( stdout,563) tempw, nhpcl, ndega, (qnp(i),i=1,nhpcl), nsvar
+        WRITE( stdout,563) tempw, nhpcl, ndega, nsvar
+        WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
+        WRITE( stdout,565) (qnp(i),i=1,nhpcl)
       END IF
 
  563  format( //, &
@@ -961,8 +985,11 @@
             & 3X,'temperature required      = ', f10.5, ' (kelvin) ', /, &
             & 3X,'NH chain length           = ', i3, /, &
             & 3X,'active degrees of freedom = ', i3, /, &
-            & 3X,'time steps per nose osc.  = ', i5, /, &
-            & 3X,'nose` mass(es)            = ', 20(1X,f10.3),//) 
+            & 3X,'time steps per nose osc.  = ', i5 )
+ 564  format( //, &
+            & 3X,'nose` frequency(es)       = ', 20(1X,f10.3) ) 
+ 565  format( //, &
+            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
 
 
     RETURN
@@ -979,6 +1006,11 @@
     do i=1,nhpcl
        vnhp(i)=2.*(xnhp0(i)-xnhpm(i))/delt-vnhp(i)
     enddo
+        !
+        !  this is equivalent to:
+        !  velocity = ( 3.D0 * xnos0(1) - 4.D0 * xnosm(1) + xnos2m(1) ) / ( 2.0d0 * delt )
+        !  but we do not need variables at time t-2dt ( xnos2m )
+        !
     return
   end subroutine
 
@@ -1036,14 +1068,12 @@
 
 
 
-  subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm, xnhpm2 )
+  subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), optional, intent(out) :: xnhpm2(:)
     real(kind=8), intent(inout) :: xnhpm(:), xnhp0(:)
     real(kind=8), intent(in)  :: xnhpp(:)
       !
-      IF( PRESENT( xnhpm2 ) ) xnhpm2 = xnhpm
       xnhpm = xnhp0
       xnhp0 = xnhpp
       !

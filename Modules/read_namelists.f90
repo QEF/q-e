@@ -152,7 +152,7 @@ MODULE read_namelists_module
        ecfixed = 0.D0
        qcutz   = 0.D0
        q2sigma = 0.01D0
-       xc_type = 'PZ'
+       xc_type = 'none'
 !
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
