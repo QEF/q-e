@@ -34,7 +34,7 @@ subroutine output_tau
   CASE ('crystal')
      !
      write (6, '("ATOMIC_POSITIONS (crystal)")')
-     call cryst_to_cart (nat, tau_out, at, 1)
+     call cryst_to_cart (nat, tau_out, bg,-1)
   CASE ('angstrom')
      !
      write (6, '("ATOMIC_POSITIONS (angstrom)")')

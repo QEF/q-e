@@ -53,13 +53,13 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 #
 # Libraries:
 # Serial Version:
-LIBS = L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB) -lm
+LIBS = -L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB) -lm
 # Parallel version:
 #LIBS = -L/opt/mpi/lib/pa2.0 -lmpi -ldmpi -lmpio -lmtmpi -L/opt/mlib/lib/pa2.0 -lveclib -llapack$(FFTW_LIB) -lm
 # Loader:
 LD=$(F90)
 
-LFLAGS = +U77 +DA2.0 +DS2.0 +O2 -lpthread $(LIBS)
+LDFLAGS =  $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a +U77 +DA2.0 +DS2.0 +O2 -lpthread $(LIBS)
 
 #
 # ar:

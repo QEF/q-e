@@ -253,7 +253,7 @@ SUBROUTINE c_phase
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: struc(nat)
    COMPLEX(dp) :: theta0
-   COMPLEX(dp) :: zdotc
+   COMPLEX(dp) :: ZDOTC
    COMPLEX(dp) :: zeta
 
 
@@ -501,7 +501,7 @@ SUBROUTINE c_phase
                            aux(ng)=evc(ik,mb)
                         ENDIF
                      END DO
-                     mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                     mat(nb,mb) = ZDOTC (ngm,aux0,1,aux,1)
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
