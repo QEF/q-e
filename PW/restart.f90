@@ -601,8 +601,9 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
     if (.not.exst) then
        close (unit = ndr, status = 'delete')
        ierr = 1
-    endif
-    rewind ndr
+    else
+       rewind ndr
+    endif   
   end if
   call mp_bcast( ierr, ionode_id, intra_image_comm )
   if( ierr /= 0 ) then
