@@ -30,7 +30,7 @@ subroutine init_us_1
   USE kinds, ONLY: DP
   USE parameters, ONLY: lmaxx, nbrx, lqmax
   USE constants, ONLY: fpi
-  USE atom, ONLY: r, rab, msh
+  USE atom, ONLY: r, rab
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba
   USE gvect, ONLY: g, gg
@@ -64,7 +64,7 @@ subroutine init_us_1
   !
   !    Initialization of the variables
   !
-  ndm = MAXVAL (msh(1:ntyp))
+  ndm = MAXVAL (kkbeta(1:ntyp))
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    
   allocate (besr( ndm))    
@@ -129,17 +129,17 @@ subroutine init_us_1
            !
            do nb = 1, nbeta (nt)
               do mb = nb, nbeta (nt)
-                 if ( (l.ge.abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
-                      (l.le.lll (nb, nt) + lll (mb, nt) )        .and. &
-                      (mod (l + lll (nb, nt) + lll (mb, nt), 2) .eq.0) ) then
+                 if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
+                      (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
+                      (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
                     do ir = 1, kkbeta (nt)
-                       if (r (ir, nt) .ge.rinner (l + 1, nt) ) then
+                       if (r (ir, nt) >= rinner (l + 1, nt) ) then
                           qtot (ir, nb, mb) = qfunc (ir, nb, mb, nt)
                        else
                           ilast = ir
                        endif
                     enddo
-                    if (rinner (l + 1, nt) .gt.0.d0) &
+                   if (rinner (l + 1, nt) > 0.d0) &
                          call setqf(qfcoef (1, l+1, nb, mb, nt), &
                                     qtot(1,nb,mb), r(1,nt), nqf(nt),l,ilast)
                  endif
@@ -160,9 +160,9 @@ subroutine init_us_1
                  !
                  do mb = nb, nbeta (nt)
                     nmb = mb * (mb - 1) / 2 + nb
-                    if ( (l.ge.abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
-                         (l.le.lll (nb, nt) + lll (mb, nt) )        .and. &
-                         (mod (l + lll(nb, nt) + lll(mb, nt), 2) .eq.0) ) then
+                    if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
+                         (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
+                         (mod (l + lll(nb, nt) + lll(mb, nt), 2) == 0) ) then
                        do ir = 1, kkbeta (nt)
                           aux1 (ir) = aux (ir) * qtot (ir, nb, mb)
                        enddo
@@ -175,8 +175,7 @@ subroutine init_us_1
            enddo
            ! l
         enddo
-        call DSCAL (nqxq * nbrx * (nbrx + 1) / 2 * lqx, prefr, &
-                    qrad (1, 1, 1, nt), 1)
+        qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
 #ifdef __PARA
         call reduce (nqxq * nbrx * (nbrx + 1) / 2 * lqx, qrad (1, 1, 1, nt) )
 #endif
