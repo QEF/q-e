@@ -63,7 +63,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
      write (iunplot, '(3f20.10,i6)') gcutm, dual, ecut, plot_num
      write (iunplot, '(i4,3x,a2,3x,f5.2)') &
           (nt, atm (nt), zv (nt), nt=1, ntyp)
-     write (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
+     write (iunplot, '(i4,3x,3f15.9,3x,i2)') (na, &
           (tau (ipol, na), ipol = 1, 3), ityp (na), na = 1, nat)
      if (plot_num.ne.9) write (iunplot, '(5(1pe17.9))') (plot (ir) , &
           ir = 1, nrx1 * nrx2 * nr3)
