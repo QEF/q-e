@@ -461,7 +461,7 @@ END {
 scriptdir=$XCRYSDEN_TOPDIR/scripts; # take advantage of XCRYSDEN if it exists
 
 AWK=`type awk`
-if test "$AWK" == ""; then 
+if test "$AWK" = ""; then 
     echo "ERROR: awk program not found"
     pwoExit 1
 fi
