@@ -113,7 +113,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -validate nonnegint
 		}
 
-		separator -label "--- Ionic Minization ---"
+		separator -label "--- Ionic Minimization ---"
 
 		#-text     "threshold on total energy for ionic minimization"
 		var etot_conv_thr {
@@ -999,15 +999,16 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    "Load atomic coordinates from file ..."
 	
  	# only for calculation == 'neb'
+	packwidgets left
 	keyword last_image last_image\n
 	table atomic_coordinates2 {
 	    -caption   "Enter atomic coordinates for last image:"
-	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate X-iforce Y-iforce Z-iforce}
-	    -validate  {string real real real numeric numeric numeric}
-	    -cols      7
+	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate}
+	    -validate  {string real real real}
+	    -cols      4
 	    -rows      1
-	    -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f "  %2d" %2d %2d}
-	    -widgets   {entry entry entry entry checkbutton}
+	    -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
+	    -widgets   {entry entry entry entry}
 	    -onvalues  1
 	    -offvalues 0
 	}
