@@ -56,7 +56,7 @@ subroutine saveall (iun, iflag)
      write (iun) ef, degauss, nelec, nks, nkstot, ngauss, lgauss
      write (iun) k1, k2, k3, nk1, nk2, nk3, ntetra, ltetra
      write (iun) s, ftau, nsym, invsym, noinv
-     write (iun) zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+     write (iun) zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
           rho_atc, mesh, msh, nchi, lchi, numeric
      write (iun) cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc, bhstype
      write (iun) dion, betar, qqq, qfunc, qfcoef, rinner, nbeta, &
@@ -87,7 +87,7 @@ subroutine saveall (iun, iflag)
           ntetra, ltetra
      read (iun, err = 100, iostat = ios) s, ftau, nsym, invsym, noinv
      read (iun, err = 100, iostat = ios) zmesh, xmin, dx, r, rab, &
-          vnl, chi, oc, rho_at, rho_atc, mesh, msh, nchi, lchi, numeric
+          vloc_at, chi, oc, rho_at, rho_atc, mesh, msh, nchi, lchi, numeric
      read (iun, err = 100, iostat = ios) cc, alpc, zp, aps, alps, &
           zv, nlc, nnl, lmax, lloc, bhstype
      read (iun, err = 100, iostat = ios) dion, betar, qqq, qfunc, &

@@ -92,8 +92,8 @@ subroutine set_pseudo (is, upf, ierr)
   rho_at (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   !!! TEMP
   lloc(is) = 0
-  vnl(1:upf%mesh,lloc(is),is) = upf%vloc(1:upf%mesh)
   !!!
+  vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)
 
   do ir = 1, mesh (is)
     if (r (ir, is) .gt.rcut) then

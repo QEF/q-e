@@ -433,15 +433,6 @@ SUBROUTINE setup()
   nkstot = nks
 #endif
   !
-  ! ... For Bachelet-Hamann-Schluter pseudopotentials only
-  !
-  DO nt = 1, ntyp
-     IF ( .NOT. tvanp(nt) ) THEN
-        IF ( nlc(nt) == 2 .AND. nnl(nt) == 3 .AND. bhstype(nt) ) &
-           CALL bachel( alps(1,0,nt), aps(1,0,nt), 1, lmax(nt) )
-     END IF
-  END DO
-  !
   ! ... okvan = .TRUE. : at least one pseudopotential is US
   !
   okvan = .FALSE.

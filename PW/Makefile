@@ -53,7 +53,6 @@ close_files.o \
 compute_dip.o \
 compute_scf.o \
 constraints_module.o \
-conv_to_num.o \
 coset.o \
 cryst_to_car.o \
 cubicsym.o \

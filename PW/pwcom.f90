@@ -248,7 +248,7 @@ MODULE atom
        dx(npsx),                 &! linear interval for logaritmic mesh
        r(ndmx,npsx),             &! radial logaritmic mesh
        rab(ndmx,npsx),           &! derivative of the radial mesh
-       vnl(ndmx,0:lmaxx,npsx),   &! non local radial potential (KB type)
+       vloc_at(ndmx,npsx),       &! local potential
        chi(ndmx,nchix,npsx),     &! radial atomic orbitals
        oc(nchix,npsx),           &! atomic level occupation
        rho_at(ndmx,npsx),        &! radial atomic charge density

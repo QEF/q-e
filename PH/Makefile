@@ -176,7 +176,6 @@ PWOBJS = \
 ../PW/cinitcgg.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
-../PW/conv_to_num.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \

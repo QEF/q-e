@@ -17,7 +17,7 @@ subroutine readnewvan (is, iunps)
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, lqmax
   use constants, only: fpi
-  use atom,  only: zmesh, mesh, xmin, dx, r, rab, vnl, chi, oc, nchi, &
+  use atom,  only: zmesh, mesh, xmin, dx, r, rab, vloc_at, chi, oc, nchi, &
        lchi, rho_at, rho_atc
   use char,  only: psd
   use pseud, only: zp, lmax, lloc
@@ -128,7 +128,7 @@ subroutine readnewvan (is, iunps)
   !
   lloc (is) = 0
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) rdum, &
-       (vnl (ir, lloc (is) , is) , ir = 1, mesh (is) )
+       (vloc_at (ir, is) , ir = 1, mesh (is) )
   !
   !     reads the atomic charge
   !

@@ -30,7 +30,7 @@ subroutine init_us_1
   USE kinds, ONLY: DP
   USE parameters, ONLY: lmaxx, nbrx, lqmax
   USE constants, ONLY: fpi
-  USE atom, ONLY: r, rab, vnl, chi, msh
+  USE atom, ONLY: r, rab, msh
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba
   USE gvect, ONLY: g, gg
@@ -83,62 +83,16 @@ subroutine init_us_1
   !   atomic D terms
   !
   do nt = 1, ntyp
-     if (tvanp (nt) .or.newpseudo (nt) ) then
-        ih = 1
-        do nb = 1, nbeta (nt)
-           l = lll (nb, nt)
-           do m = 1, 2 * l + 1
-              nhtol (ih, nt) = l
-              nhtom (ih, nt) = m
-              indv (ih, nt) = nb
-              ih = ih + 1
-           enddo
+     ih = 1
+     do nb = 1, nbeta (nt)
+        l = lll (nb, nt)
+        do m = 1, 2 * l + 1
+           nhtol (ih, nt) = l
+           nhtom (ih, nt) = m
+           indv (ih, nt) = nb
+           ih = ih + 1
         enddo
-     else
-        !
-        !     In this case we simulate a KB pseudopotential as a US one
-        !     We set the important dimensions,
-        !
-        nbeta (nt) = lmax (nt)
-        kkbeta (nt) = msh (nt)
-        !
-        !     And we compute the equivalent of D which is the energy parameter
-        !
-        do l = 0, lmax (nt)
-           if (l.ne.lloc (nt) ) then
-              !
-              !      simpson integration of the chi functions
-              !
-              do ir = 1, msh (nt)
-                 aux (ir) = chi (ir, l + 1, nt) **2 * vnl (ir, l, nt)
-              enddo
-              call simpson (msh (nt), aux, rab (1, nt), vll (l) )
-           endif
-
-        enddo
-        !
-        !    Here we set the D functions and the beta functions
-        !
-        dion (:,:,nt) = 0.d0
-        nb = 1
-        ih = 1
-        do l = 0, lmax (nt)
-           if (l.ne.lloc (nt) ) then
-              dion (nb, nb, nt) = 1.d0 / vll (l)
-              do ir = 1, kkbeta (nt)
-                 betar (ir, nb, nt) = vnl (ir, l, nt) * chi (ir, l + 1, nt)
-              enddo
-              lll (nb, nt) = l
-              do m = 1, 2 * l + 1
-                 nhtol (ih, nt) = l
-                 nhtom (ih, nt) = m
-                 indv (ih, nt) = nb
-                 ih = ih + 1
-              enddo
-              nb = nb + 1
-           endif
-        enddo
-     endif
+     enddo
      !
      !    From now on the only difference between KB and US pseudopotentials
      !    is in the presence of the q and Q functions.

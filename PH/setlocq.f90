@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------
 subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
-     vnl, cc, alpc, nlc, nnl, zp, aps, alps, tpiba2, ngm, g, omega, &
+     vloc_at, cc, alpc, nlc, nnl, zp, aps, alps, tpiba2, ngm, g, omega, &
      vloc)
   !----------------------------------------------------------------------
   !
@@ -45,7 +45,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   ! input: mesh points for radial integration
 
   real(kind=DP) :: xq (3), cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
-       zp, rab (mesh), r (mesh), vnl (mesh), tpiba2, omega, g (3, ngm), &
+       zp, rab (mesh), r (mesh), vloc_at(mesh), tpiba2, omega, g (3, ngm), &
        vloc (ngm)
   ! input: the q point
   ! input: analytic, c of the erf functions
@@ -139,7 +139,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
      ! first the G=0 term
      !
      do ir = 1, msh
-        aux (ir) = r (ir) * (r (ir) * vnl (ir) + zp * e2)
+        aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2)
      enddo
      call simpson (msh, aux, rab, vloc0)
      !
@@ -147,7 +147,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
      !   indipendent of |G| in real space
      !
      do ir = 1, msh
-        aux1 (ir) = r (ir) * vnl (ir) + zp * e2 * erf (r (ir) )
+        aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * erf (r (ir) )
      enddo
      fac = zp * e2 / tpiba2
      !

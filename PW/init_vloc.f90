@@ -14,7 +14,7 @@ subroutine init_vloc
   !    potential vloc(ig,it) for each type of atom
   !
 #include"machine.h"
-  USE atom, ONLY: numeric, msh, mesh, r, rab, vnl
+  USE atom, ONLY: numeric, msh, mesh, r, rab, vloc_at
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba2
   USE vlocal, ONLY: vloc
@@ -32,7 +32,7 @@ subroutine init_vloc
      ! compute V_loc(G) for a given type of atom
      !
      call vloc_of_g (lloc (nt), lmax (nt), numeric (nt), mesh (nt), &
-          msh (nt), rab (1, nt), r (1, nt), vnl (1, lloc (nt), nt), cc (1, &
+          msh (nt), rab (1, nt), r (1, nt), vloc_at (1, nt), cc (1, &
           nt), alpc (1, nt), nlc (nt), nnl (nt), zp (nt), aps (1, 0, nt), &
           alps (1, 0, nt), tpiba2, ngl, gl, omega, vloc (1, nt) )
 

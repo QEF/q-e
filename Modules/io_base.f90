@@ -809,7 +809,7 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_pseudo1(iuni, &
-      zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+      zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
       rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
       nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, iexch, icorr, &
@@ -823,7 +823,7 @@
 !
       INTEGER, INTENT(IN) :: iuni
       REAL(dbl), INTENT(IN) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(IN) :: r(:), rab(:), vnl(:,0:), chi(:,:)
+      REAL(dbl), INTENT(IN) :: r(:), rab(:), vloc_at(:), chi(:,:)
       REAL(dbl), INTENT(IN) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(IN) :: mesh, msh, nchi, lchi(:)
       LOGICAL, INTENT(IN) :: numeric
@@ -857,29 +857,29 @@
         nqf_   = MAX( nqf, 1 )
         nqlc_  = MAX( nqlc, 1 )
 
-        IF( SIZE(r) < ( mesh_ + 1 ) ) &
+        IF( SIZE(r) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 1 )
-        IF( SIZE(rab) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rab) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 2 )
-        IF( ( SIZE(vnl,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(vnl,2) < ( lloc_ + 1 ) ) ) &
+        IF( SIZE(vloc_at) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 3 )
-        IF( ( SIZE(chi,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(chi,2) < nchi_ ) ) &
+        IF( ( SIZE(chi,1) < mesh_ ) .OR. ( SIZE(chi,2) < nchi_ ) ) &
           CALL errore( sub_name, ' wrong size ', 4 )
         IF( SIZE(oc) < nchi_ ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(rho_at) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rho_at) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 6 )
-        IF( SIZE(rho_atc) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rho_atc) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lchi) < nchi_ ) &
           CALL errore( sub_name, ' wrong size ', 8 )
         IF( ( SIZE(dion,1) < nbeta_ ) .OR. ( SIZE(dion,2) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE(betar,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(betar,2) < nbeta_ ) ) &
+        IF( ( SIZE(betar,1) < mesh_ ) .OR. ( SIZE(betar,2) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(qqq,1) < nbeta_  ) .OR. ( SIZE(qqq,2) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 1 )
-        IF( ( SIZE(qfunc,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
+        IF( ( SIZE(qfunc,1) < mesh_ ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
             ( SIZE(qfunc,3) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 11 )
         IF( ( SIZE(qfcoef,1) < nqf_ ) .OR. ( SIZE(qfcoef,2) < nqlc_ ) .OR. &
@@ -897,7 +897,7 @@
             bhstype, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
             iexch, icorr, igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
           WRITE(iuni) r( 1:mesh_ ), rab( 1:mesh_ ), &
-            vnl( 1:mesh_, 0:lloc_ ), chi( 1:mesh_, 1:nchi_ ), &
+            vloc_at( 1:mesh_ ), chi( 1:mesh_, 1:nchi_ ), &
             oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_ ), lchi( 1:nchi_ )
           WRITE(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
           WRITE(iuni) dion( 1:nbeta_, 1:nbeta_ ), betar( 1:mesh_, 1:nbeta_ ), &
@@ -1068,7 +1068,7 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_pseudo1(iuni, &
-      zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+      zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
       rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
       nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, iexch, icorr, &
@@ -1083,7 +1083,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       REAL(dbl), INTENT(OUT) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(OUT) :: r(:), rab(:), vnl(:,0:), chi(:,:)
+      REAL(dbl), INTENT(OUT) :: r(:), rab(:), vloc_at(:), chi(:,:)
       REAL(dbl), INTENT(OUT) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(OUT) :: mesh, msh, nchi, lchi(:)
       LOGICAL, INTENT(OUT) :: numeric
@@ -1181,29 +1181,29 @@
           CALL errore( sub_name, ' wrong value ', 6 )
 
 ! ...   Check dummy variables
-        IF( SIZE(r) < ( mesh_ + 1 ) ) &
+        IF( SIZE(r) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 1 )
-        IF( SIZE(rab) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rab) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 2 )
-        IF( ( SIZE(vnl,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(vnl,2) < ( lloc_ + 1 ) ) ) &
+        IF( SIZE(vloc_at) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 3 )
-        IF( ( SIZE(chi,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(chi,2) < nchi_ ) ) &
+        IF( ( SIZE(chi,1) < mesh_ ) .OR. ( SIZE(chi,2) < nchi_ ) ) &
           CALL errore( sub_name, ' wrong size ', 4 )
         IF( SIZE(oc) < nchi_ ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(rho_at) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rho_at) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 6 )
-        IF( SIZE(rho_atc) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rho_atc) < mesh_ ) &
           CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lchi) < nchi_ ) &
           CALL errore( sub_name, ' wrong size ', 8 )
         IF( ( SIZE(dion,1) < nbeta_ ) .OR. ( SIZE(dion,2) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE(betar,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(betar,2) < nbeta_ ) ) &
+        IF( ( SIZE(betar,1) < mesh_ ) .OR. ( SIZE(betar,2) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(qqq,1) < nbeta_ ) .OR. ( SIZE(qqq,2) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 1 )
-        IF( ( SIZE(qfunc,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
+        IF( ( SIZE(qfunc,1) < mesh_ ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
             ( SIZE(qfunc,3) < nbeta_ ) ) &
           CALL errore( sub_name, ' wrong size ', 11 )
         IF( ( SIZE(qfcoef,1) < nqf_ ) .OR. ( SIZE(qfcoef,2) < nqlc_ ) .OR. &
@@ -1215,7 +1215,7 @@
           CALL errore( sub_name, ' wrong size ', 14 )
 
         IF( ionode ) THEN
-          READ(iuni) r(1:mesh_), rab(1:mesh_), vnl(1:mesh_,0:lloc_), chi(1:mesh_,1:nchi_), &
+          READ(iuni) r(1:mesh_), rab(1:mesh_), vloc_at(1:mesh_), chi(1:mesh_,1:nchi_), &
             oc(1:nchi_), rho_at(1:mesh_), rho_atc(1:mesh_), lchi(1:nchi_)
           READ(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
           READ(iuni) dion(1:nbeta_,1:nbeta_), betar(1:mesh_,1:nbeta_), qqq(1:nbeta_,1:nbeta_), &
@@ -1225,7 +1225,7 @@
 
         CALL mp_bcast( r, ionode_id )
         CALL mp_bcast( rab, ionode_id )
-        CALL mp_bcast( vnl, ionode_id )
+        CALL mp_bcast( vloc_at, ionode_id )
         CALL mp_bcast( chi, ionode_id )
         CALL mp_bcast( oc, ionode_id )
         CALL mp_bcast( rho_at, ionode_id )

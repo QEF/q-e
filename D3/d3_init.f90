@@ -65,7 +65,7 @@ subroutine d3_init
      work = 0.d0
      do nt = 1, ntyp
         call setlocq (work, lloc(nt), lmax(nt), numeric(nt), &
-             mesh(nt), msh(nt), rab(1,nt), r(1,nt), vnl(1,lloc(nt),nt), &
+             mesh(nt), msh(nt), rab(1,nt), r(1,nt), vloc_at(1,nt), &
              cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), zp(nt), aps(1,0,nt), &
              alps(1,0,nt), tpiba2, ngm, g, omega, vlocg0(1,nt) )
      enddo

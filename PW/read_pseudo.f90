@@ -9,7 +9,7 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   ! PWSCF modules
   !
-  use atom,  only: zmesh, mesh,dx, r, rab, vnl, chi, oc, nchi, lchi, &
+  use atom,  only: zmesh, mesh,dx, r, rab, vloc_at, chi, oc, nchi, lchi, &
        rho_at, rho_atc
   use char,  only: psd
   use pseud, only: zp, lmax, lloc
@@ -78,8 +78,8 @@ subroutine read_pseudo (is, iunps, ierr)
   rho_at (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   !!! TEMP
   lloc(is) = 0
-  vnl(1:upf%mesh,lloc(is),is) = upf%vloc(1:upf%mesh)
   !!!
+  vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)
   CALL deallocate_pseudo_upf( upf )
 
 end subroutine read_pseudo

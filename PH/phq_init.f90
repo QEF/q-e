@@ -93,7 +93,7 @@ SUBROUTINE phq_init()
   DO nt = 1, ntyp
      !
      CALL setlocq( xq, lloc(nt), lmax(nt), numeric(nt), mesh(nt),    &
-                   msh(nt), rab(1,nt), r(1,nt), vnl(1,lloc(nt),nt),  &
+                   msh(nt), rab(1,nt), r(1,nt), vloc_at(1,nt),       &
                    cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), zp(nt),   &
                    aps(1,0,nt), alps(1,0,nt), tpiba2, ngm, g, omega, &
                    vlocq(1,nt) )
@@ -102,12 +102,7 @@ SUBROUTINE phq_init()
   !
   ! ... c) the parameters defining the pseudopotential
   !
-  ! ... for the analytic potentials we need to convert in a radial mesh
-  !
-  CALL convert_to_num( ntyp, numeric, ndmx, mesh, r, lmaxx, lmax, &
-                       lloc, nnl, aps, alps, vnl )
-  !
-  ! ... then we compute the denominators of the KB types, or the
+  ! ... we compute the denominators of the KB types, or the
   ! ... parameters which define the non-local pseudopotential and
   ! ... which are independent of the k point for the US case
   !

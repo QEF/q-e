@@ -42,7 +42,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   USE dynam, ONLY: amass
   USE symme, ONLY: s, irt, ftau, nsym, invsym
   USE ener, ONLY: ef
-  USE atom, ONLY: zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+  USE atom, ONLY: zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
        rho_atc, mesh, msh, nchi, lchi, numeric
   USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc,&
        bhstype
@@ -352,7 +352,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          close( iunps )
        ELSE
          CALL write_restart_pseudo( ndw, &
-           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
+           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
            zv(i), nlc(i), nnl(i), lmax(i), lloc(i), bhstype(i), dion(:,:,i), &
@@ -513,7 +513,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE dynam, ONLY: amass
   USE symme, ONLY: s, irt, ftau, nsym, invsym
   USE ener, ONLY: ef
-  USE atom, ONLY: zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+  USE atom, ONLY: zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
        rho_atc, mesh, msh, nchi, lchi, numeric
   USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc,&
        bhstype
@@ -844,7 +844,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        else
 
          CALL read_restart_pseudo( ndr, &
-           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
+           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
            zv(i), nlc(i), nnl(i), lmax(i), lloc(i), bhstype(i), dion(:,:,i), &

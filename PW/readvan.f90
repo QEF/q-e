@@ -19,7 +19,7 @@ subroutine readvan (is, iunps)
   !
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, nqfx, lqmax
-  use atom,  only: zmesh, mesh,dx, r, rab, vnl, chi, oc, nchi, lchi, &
+  use atom,  only: zmesh, mesh,dx, r, rab, vloc_at, chi, oc, nchi, lchi, &
        rho_at, rho_atc
   use char,  only: psd
   use pseud, only: zp, lmax, lloc
@@ -227,7 +227,7 @@ subroutine readvan (is, iunps)
   !   reads the local potential of the vanderbilt
   !
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) rcloc, &
-       (vnl (ir, 0, is) , ir = 1, mesh (is) )
+       (vloc_at (ir, is) , ir = 1, mesh (is) )
   !
   !   If present reads the core charge
   !
@@ -264,14 +264,14 @@ subroutine readvan (is, iunps)
      rho_atc (1, is) = 0.d0
   endif
   !
-  !     Put the local potential in the variables of the code, with the sam
+  !     Put the local potential in the variables of the code, with the same
   !     units
   !
   lloc (is) = 0
   do ir = 2, mesh (is)
-     vnl (ir, lloc (is), is) = vnl (ir, 0, is) / r (ir, is)
+     vloc_at (ir, is) = vloc_at (ir, is) / r (ir, is)
   enddo
-  vnl (1, lloc (is), is) = vnl (2, lloc (is), is)
+  vloc_at (1, is) = vloc_at (2, is)
   !
   !    Set lmax in the range 0-lmax
   !

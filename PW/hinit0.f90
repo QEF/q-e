@@ -11,8 +11,6 @@ subroutine hinit0
   !
   ! configuration-independent hamiltonian initialization
   !
-  USE parameters, ONLY: ndmx, lmaxx
-  USE atom, ONLY: numeric, mesh, r, vnl
   USE basis, ONLY: nat, ntyp, ityp, tau, startingconfig
   USE cell_base, ONLY: at, bg, omega, tpiba2
   USE cellmd, ONLY: omega_old, at_old, lmovecell
@@ -30,11 +28,6 @@ subroutine hinit0
   ! calculate the local part of the pseudopotentials
   !
   call init_vloc
-  !
-  ! bring analytic potentials into numerical form on a radial mesh
-  !
-  call convert_to_num (ntyp, numeric, ndmx, mesh, r, lmaxx, lmax, &
-       lloc, nnl, aps, alps, vnl)
   !
   !   k-point independent parameters of non-local pseudopotentials
   !

@@ -73,9 +73,6 @@ subroutine cg_setup
   !
   call init_vloc
   !
-  call convert_to_num                                               &
-       &   (ntyp,numeric,ndmx,mesh,r,lmaxx,lmax,lloc,nnl,aps,alps,vnl)
-  !
   call init_us_1
   !
   call newd
