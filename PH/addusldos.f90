@@ -36,13 +36,12 @@ subroutine addusldos (ldos, becsum1)
   ! counter on spin
   ! counter on mesh points
 
-  real(kind=DP),pointer :: ylmk0 (:,:), qmod (:)
+  real(kind=DP), allocatable :: ylmk0 (:,:), qmod (:)
   ! the spherical harmonics
   ! the modulus of G
 
   complex(kind=DP), allocatable :: aux (:,:)
-  ! auxiliary variable for FFT
-  ! auxiliary variable for rho(G)
+  ! work space
 
   allocate (aux ( ngm , nspin))    
   allocate (qmod( ngm))    

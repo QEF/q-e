@@ -1,82 +1,54 @@
 #!/bin/sh
-
-DIR=install
-
+#
+INSTALL=install
+#
 make moduledep.x 
-
+#
+# Dipendencies on modules contained in Modules/
+#
 cd ../Modules
 rm -f .dependencies
 touch .dependencies
 ls *.f90 > dum1
 ls *.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../PW
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../PP
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../PWNC
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../Gamma
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../PH
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../D3
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../PW/*.f90 ../PH/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../PWCOND
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../PW/*.f90 ../PH/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../FPMD
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../flib
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../FPMD/*.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
-
-cd ../CPV
-rm -f .dependencies
-touch .dependencies
-ls *.f90 > dum1
-ls *.f90 ../Modules/*.f90 > dum2
-../$DIR/moduledep.x dum1 dum2 >> .dependencies
+../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
+#
+# Directories that contain dependencies on modules in ./ and Modules/
+#
+DIRS="PW FPMD CPV flib"
+for DIR in $DIRS ; do
+  if test -d ../$DIR ; then
+    cd ../$DIR
+    rm -f .dependencies
+    touch .dependencies
+    ls *.f90 > dum1
+    ls *.f90 ../Modules/*.f90 > dum2
+    ../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
+  fi
+done
+#
+# Directories that contain dependencies on modules in  ./, Modules/, PW/
+#
+DIRS="PP PWCOND PWNC Gamma PH"
+for DIR in $DIRS ; do
+  if test -d ../$DIR ; then
+     cd ../$DIR
+     rm -f .dependencies
+     touch .dependencies
+     ls *.f90 > dum1
+     ls *.f90 ../PW/*.f90 ../Modules/*.f90 > dum2
+     ../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
+  fi
+done
+#
+# Directories that contain dependencies on modules in ./, Modules/, PW/, PH/
+#
+DIR=D3
+if test -d ../$DIR ; then
+  cd ../$DIR
+  rm -f .dependencies
+  touch .dependencies
+  ls *.f90 > dum1
+  ls *.f90 ../PW/*.f90 ../PH/*.f90 ../Modules/*.f90 > dum2
+  ../$INSTALL/moduledep.x dum1 dum2 >> .dependencies
+fi

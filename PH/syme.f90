@@ -25,7 +25,7 @@ subroutine syme (dvsym)
   implicit none
 
   complex(kind=DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)
-  complex(kind=DP),pointer ::  aux (:,:,:,:)
+  complex(kind=DP), allocatable ::  aux (:,:,:,:)
   ! the potential to symme
   ! auxiliary quantity
 

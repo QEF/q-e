@@ -53,13 +53,10 @@ subroutine dvqpsi_us_only (ik, mode, uact)
 
   real(kind=DP), parameter :: eps = 1.d-12
 
-  complex(kind=DP), pointer :: ps1 (:,:), ps2 (:,:,:), aux (:)
-  ! the scalar product
-  ! the scalar product
-  ! a mesh space for psi
+  complex(kind=DP), allocatable :: ps1 (:,:), ps2 (:,:,:), aux (:)
+  ! work space
 
   logical :: ok
-  ! used to save time
 
   call start_clock ('dvqpsi_us_on')
   allocate (ps1 ( nkb , nbnd))    

@@ -45,20 +45,11 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   ! counter on bands
   ! counter on real mesh
 
-  complex(kind=DP) :: gtau, gu
-  ! auxiliary variable
-  ! auxiliary variable
-
-  complex(kind=DP) :: fact, u1, u2, u3, gu0
-  complex(kind=DP) , pointer :: aux (:), auxs (:), &
-       aux1 (:), aux2 (:)
-  ! auxiliaty factor
-  ! auxiliary factors
-  ! auxiliary term
-  ! a mesh space for d rhoc /dtau
-  ! a mesh space for d rhoc /dtau
-  ! a mesh space for d V_loc /dtau
-  ! a mesh space for psi
+  complex(kind=DP) :: gtau, gu, fact, u1, u2, u3, gu0
+  complex(kind=DP) , allocatable, target :: aux (:)
+  complex(kind=DP) , allocatable :: aux1 (:), aux2 (:)
+  complex(kind=DP) , pointer :: auxs (:)
+  ! work space
 
   call start_clock ('dvqpsi_us')
   if (nlcc_any) then

@@ -41,11 +41,11 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! counter on modes
   ! the total number of mesh points
 
-  complex(kind=DP) :: dyn1 (3 * nat, 3 * nat), ZDOTC
-  complex(kind=DP),pointer ::  drhous (:,:,:)
+  complex(kind=DP) :: dyn1 (3 * nat, 3 * nat)
   ! the dynamical matrix
+  complex(kind=DP), allocatable ::  drhous (:,:,:)
   ! the change of the charge
-  ! the scalar product functions
+  complex(kind=DP), external :: ZDOTC
 
   if (.not.okvan) return
   call start_clock ('drhodvus')

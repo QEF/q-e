@@ -30,7 +30,7 @@ subroutine solve_e
   implicit none
 
   real(kind=DP) ::  thresh, weight, anorm, averlt, dr2
-  real(kind=DP), pointer :: h_diag (:,:), eprec(:)
+  real(kind=DP), allocatable :: h_diag (:,:), eprec(:)
   ! the diagonal part of the Hamiltonia
   ! the convergence threshold
   ! used for summation over k points
