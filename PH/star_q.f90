@@ -56,7 +56,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! R vector involved
   ! output: list of vectors in the star of q
   !-local variables
-  integer :: nsq (48), nrot, isym, jsym, ism1, table (48, 48), &
+  integer :: nsq (48), ftau(3,48), nrot, isym, jsym, ism1, table (48, 48), &
        iq, i, j, nks, npk, izero
   ! number of symmetry ops. of bravais lattice.
   ! counters on symmetry ops.
@@ -67,8 +67,8 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! number of dummy k-points
   ! maximum allowed number of dummy k-points
   ! dummy (zero) value of iswitch passed to sgama
-  real(kind=DP) :: saq (3, 48), aq (3), raq (3), ftau (3, 48), xk0 (3), &
-       wk, zero (3)
+  real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), &
+       wk(1), zero (3)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates
   ! rotated q in crystal coordinates
@@ -94,9 +94,9 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   izero = 0
   npk = 1
   nks = 1
-  wk = 1.d0
-  call setv (3, 0.d0, xk0, 1)
-  call setv (3, 0.d0, zero, 1)
+  wk(:) = 1.d0
+  xk0(:)= 0.d0
+  zero(:) = 0.d0
   !
   !  generate transformation matrices for the bravais lattice
   !
@@ -135,7 +135,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   nosym = .false.
   call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       izero, nosym, modenum)
+       izero, modenum)
   do isym = 1, nsym
      sym (isym) = .true.
   enddo
