@@ -90,7 +90,7 @@ subroutine setup
   !
   if (lscf .and. abs (nint (nelec / 2.d0) - nelec / 2.d0) > 1.0d-8 &
            .and. .not.lgauss .and. .not.ltetra ) call errore ('setup', &
-       'the crystal is a metal', 1)
+       'the system is metallic, specify occupations', 1)
   !
   !     Set the number of occupied bands if not given in input
   !

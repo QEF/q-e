@@ -63,7 +63,7 @@ subroutine c_bands (iter, ik_, dr2)
   if (isolve == 0) then
      write (6, '("     Davidson diagonalization with overlap")')
   else
-     call errore ('c_bands', 'not implemented', 1)
+     call errore ('c_bands', 'CG and DIIS diagonalization not implemented', 1)
   endif
   avg_iter = 0.d0
   !
