@@ -20,6 +20,7 @@ default :
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
+	@echo '  tar-gui      create a tarball of the GUI sources'
 
 pw : modules libs
 	( cd PW; make all )
@@ -89,6 +90,7 @@ veryclean : clean
 		      config.log config.status */dum1 */dum2 bin/*.x \
 		      autom4te.cache pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
+	- cd GUI; $(MAKE) veryclean
 
 tar :
 	tar cvf pw.tar \
@@ -102,4 +104,18 @@ tar :
 	find install *docs *_examples pseudo -type f \
 		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
 	gzip pw.tar
+
+
+# TAR-GUI works only if we have CVS-sources !!!
+tar-gui :
+	@if test -d GUI/TkPWscf ; then \
+		cd GUI/TkPWscf; \
+		$(MAKE) clean cvsinit tkpwscf-source-notcl; \
+		mv TkPWscf-*.tgz ../../; \
+	else \
+		echo ""; \
+		echo "  Sorry tar-gui works only for CVS-sources !!!"; \
+		echo  ""; \
+	fi
+
 
