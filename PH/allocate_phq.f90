@@ -20,6 +20,7 @@ subroutine allocate_phq
   USE kinds, only : DP
   use phcom
   use el_phon
+  USE becmod, ONLY: becp
   implicit none
   !
   !  allocate space for the quantities needed in the phonon program
@@ -36,14 +37,14 @@ subroutine allocate_phq
      !
      allocate (evq ( npwx , nbnd))    
      allocate (igkq ( npwx))    
-
   endif
+  !
   allocate (dvpsi ( npwx , nbnd))    
   allocate ( dpsi ( npwx , nbnd))    
-
+  !
   allocate (vlocq ( ngm , ntyp))    
   allocate (dmuxc ( nrxx , nspin , nspin))    
-
+  !
   allocate (eigqts ( nat))    
   allocate (rtau ( 3, 48, nat))    
   allocate (u ( 3 * nat, 3 * nat))    
@@ -71,9 +72,8 @@ subroutine allocate_phq
   endif
   allocate (this_pcxpsi_is_on_file(nksq,3))
   this_pcxpsi_is_on_file(:,:)=.false.
-  allocate (alphap ( nkb , nbnd , 3 , nksq))    
-  allocate (becp1 ( nkb , nbnd , nksq))    
-
+  allocate ( alphap ( nkb , nbnd , 3 , nksq))    
+  allocate ( becp1 (nkb, nbnd, nksq), becp(nkb, nbnd) )
   if (elph) allocate (el_ph_mat( nbnd, nbnd, nks, 3*nat))    
   return
 end subroutine allocate_phq

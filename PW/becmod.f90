@@ -13,6 +13,6 @@ MODULE becmod
   SAVE
   !
   COMPLEX(KIND=DP), ALLOCATABLE ::  &
-       becp(:,:)      !  contains products of wavefunctions and beta
+       becp (:,:) !  contains products of wavefunctions and beta
   !
 END MODULE becmod

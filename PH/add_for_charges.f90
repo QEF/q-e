@@ -8,7 +8,6 @@ subroutine add_for_charges (ik, uact)
 
   use pwcom
   USE kinds, only : DP
-  use becmod
   use phcom
   implicit none
   !

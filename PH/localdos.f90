@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-
 subroutine localdos (ldos, ldoss, dos_ef)
   !-----------------------------------------------------------------------
   !
@@ -21,7 +20,6 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
-  use becmod
   USE kinds, only : DP
   use phcom
   USE io_files, ONLY: iunigk
@@ -37,8 +35,9 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !    local variables for Ultrasoft PP's
   !
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
-  ! countera
+  ! counters
   real(kind=DP), allocatable :: becsum1 (:,:,:)
+  complex(kind=DP), allocatable :: becp(:,:)
   !
   ! local variables
   !
@@ -54,7 +53,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !  initialize ldos and dos_ef
   !
   call start_clock ('localdos')
-  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))    
+  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin), becp(nkb,nbnd) )  
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -157,7 +156,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !      WRITE( stdout,*) ' check ', check, dos_ef
   !check
   !
-  deallocate(becsum1)
+  deallocate(becsum1, becp)
   call stop_clock ('localdos')
   return
 end subroutine localdos

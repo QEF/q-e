@@ -123,10 +123,7 @@ subroutine read_file
   !
   !    allocate wavefunctions and related quantities (including et and wg)
   !
-  ! TEMP: dimension natomwfc required in projwave by variable becp
-  !       this is not a good reason - eventually nbndx must be = nbnd
-  !
-  nbndx = max(nbnd,natomwfc)
+  nbndx = nbnd
   call allocate_wfc
   !
   et = et_g

@@ -258,8 +258,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        ! ... k-points version
        !
-       USE becmod,  ONLY : becp
-       !
        IMPLICIT NONE
        !
        ! ... local variables
@@ -268,6 +266,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                         ikb, jkb, ih, jh, ijkb0
        REAL(KIND=DP)                 :: fac, xyz (3, 3), q, evps, DDOT
        REAL(KIND=DP), ALLOCATABLE    :: qm1(:)
+       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:)
        COMPLEX(KIND=DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(KIND=DP)              :: ps
@@ -279,6 +278,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+       !
+       ALLOCATE( becp( nkb, nbnd ) )
        !
        CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
        !
@@ -441,6 +442,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
 10     CONTINUE
        !
+       DEALLOCATE( becp )
        DEALLOCATE( dvkb )
        DEALLOCATE( work1, work2, qm1 )
        !

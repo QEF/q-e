@@ -33,7 +33,7 @@ subroutine plan_avg (averag, plan, ninter)
   USE wvfct, ONLY: npw, npwx, nbnd, wg, igk, g2kin
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunwfc, nwordwfc
-  use becmod
+  USE becmod, ONLY: becp
 
   implicit none
   integer :: ninter
@@ -121,6 +121,7 @@ subroutine plan_avg (averag, plan, ninter)
   !
   averag(:,:,:) = 0.d0
   plan(:,:,:) = 0.d0
+  allocate(becp(nkb,nbnd))
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -150,6 +151,7 @@ subroutine plan_avg (averag, plan, ninter)
         enddo
      enddo
   enddo
+  deallocate (becp)
 #ifdef __PARA
   call poolrecover (plan, nr3 * nbnd, nkstot, nks)
   call poolrecover (averag, nat * nbnd, nkstot, nks)

@@ -12,7 +12,11 @@ subroutine H_h(e,h,Ah)
 #include "machine.h"
   !
   USE kinds, only: DP
-  use pwcom
+  USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
+  USE gvect, ONLY : gstart
+  USE us,       ONLY : vkb, nkb
+  USE lsda_mod, ONLY : current_spin
+  USE scf,      ONLY : vrs
   use rbecmod, only: becp
   use cgcom
   !
@@ -29,7 +33,7 @@ subroutine H_h(e,h,Ah)
   do ibnd = 1,nbnd
      ! set to zero the imaginary part of h at G=0
      !  needed for numerical stability
-     if (gstart==2) h(1,ibnd) = cmplx(DREAl(h(1,ibnd)),0.d0)
+     if (gstart==2) h(1,ibnd) = cmplx(DREAL(h(1,ibnd)),0.d0)
      do j = 1,npw
         ah(j,ibnd) = (g2kin(j)-e(ibnd)) * h(j,ibnd)
      end do

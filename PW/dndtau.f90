@@ -49,7 +49,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
 
    allocate ( offset(nat) )
    allocate ( proj(natomwfc,nbnd), dproj(natomwfc,nbnd), &
-              spsi(npwx,nbnd), wfcatom(npwx,natomwfc) )
+              spsi(npwx,nbnd), wfcatom(npwx,natomwfc), becp(nkb,nbnd) )
 
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
@@ -143,7 +143,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
       end do
    end do
 
-   deallocate ( proj, dproj, spsi, wfcatom )
+   deallocate ( proj, dproj, spsi, wfcatom, becp )
    deallocate ( offset )
 
    CALL stop_clock('dndtau')

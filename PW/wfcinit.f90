@@ -13,11 +13,11 @@ SUBROUTINE wfcinit()
   ! ... This routine computes an estimate of the starting wavefunctions
   ! ... from superposition of atomic wavefunctions.
   !
-  USE kinds,           ONLY : DP
+  USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only   
   USE constants,            ONLY : tpi, rytoev
-  USE cell_base,                ONLY : tpiba2
+  USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, nks, nkstot
@@ -58,7 +58,7 @@ SUBROUTINE wfcinit()
        ! ... gamma version       
        !
        USE gvect,   ONLY : gstart
-       USE rbecmod, ONLY : becp, becp_
+       USE rbecmod, ONLY : becp
        !
        IMPLICIT NONE
        !
@@ -118,10 +118,9 @@ SUBROUTINE wfcinit()
        !
        ! ... we start a loop on k points
        !
-       ! ... becp, becp_ contain <beta|psi> - used in h_psi and s_psi
-       ! ... they are allocate once here in order to reduce overhead
+       ! ... becp contains <beta|psi> - used in h_psi and s_psi
        !
-       ALLOCATE( becp( nkb, n_starting_wfc ), becp_( nkb, n_starting_wfc ) )
+       ALLOCATE( becp( nkb, n_starting_wfc ) )
        ALLOCATE( wfcatom( npwx, n_starting_wfc ) )
        !
        DO ik = 1, nks
@@ -199,7 +198,7 @@ SUBROUTINE wfcinit()
           !
        END DO
        !
-       DEALLOCATE( becp, becp_ )
+       DEALLOCATE( becp )
        DEALLOCATE( wfcatom )
        !
        IF ( iprint == 1 ) THEN
@@ -229,6 +228,8 @@ SUBROUTINE wfcinit()
        !-----------------------------------------------------------------------
        !
        ! ... k-points version       
+       !
+       USE becmod, ONLY : becp
        !
        IMPLICIT NONE
        !
@@ -285,6 +286,9 @@ SUBROUTINE wfcinit()
        !
        ! ... we start a loop on k points
        !
+       ! ... becp contains <beta|psi> - used in h_psi and s_psi
+       !
+       ALLOCATE( becp( nkb, n_starting_wfc ) )
        ALLOCATE( wfcatom(npwx,n_starting_wfc) )
        !
        DO ik = 1, nks
@@ -361,6 +365,7 @@ SUBROUTINE wfcinit()
           !
        END DO
        !
+       DEALLOCATE( becp )
        DEALLOCATE( wfcatom )
        !
        IF ( iprint == 1 ) THEN

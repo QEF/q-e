@@ -17,7 +17,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
-  USE cell_base,                ONLY : omega
+  USE cell_base,            ONLY : omega
   USE basis,                ONLY : nat, ntyp, ityp
   USE ener,                 ONLY : eband, demet, ef
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
@@ -182,9 +182,9 @@ SUBROUTINE sum_band()
        ! ... local variables
        !
        REAL(KIND=DP) :: w1, w2
-         ! weights
+       ! weights
        REAL(KIND=DP), ALLOCATABLE :: becp(:,:)
-         ! contains <beta|psi>
+       ! contains <beta|psi>
        !
        !
        ALLOCATE( becp( nkb, nbnd ) )
@@ -354,15 +354,17 @@ SUBROUTINE sum_band()
        !
        ! ... k-points version
        !
-       USE becmod,  ONLY : becp
-       !
        IMPLICIT NONE
        !
        ! ... local variables
        !
        REAL(KIND=DP) :: w1
-         ! weight
+       ! weights
+       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:)
+       ! contains <beta|psi>
        !
+       !
+       ALLOCATE( becp( nkb, nbnd ) )
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -487,6 +489,8 @@ SUBROUTINE sum_band()
           CALL stop_clock( 'sumbec' )
           !
        END DO k_loop
+       !
+       DEALLOCATE( becp )
        !
        RETURN
        !

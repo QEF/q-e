@@ -130,15 +130,14 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... a) Davidson algorithm (all-band)
        ! ... c) DIIS algorithm (all-band) 
        !
-       USE rbecmod, ONLY: becp, becp_
+       USE rbecmod, ONLY: becp
        !
        IMPLICIT NONE
        !     
        !
-       ! ... becp, becp_ contain <beta|psi> - used in h_psi and s_psi
-       ! ... they are allocate once here in order to reduce overhead
+       ! ... becp contains <beta|psi> - used in h_psi and s_psi
        !
-       ALLOCATE( becp( nkb, nbnd ), becp_( nkb, nbnd ) )
+       ALLOCATE( becp( nkb, nbnd ) )
        !
        IF ( isolve == 0 ) THEN
           !
@@ -328,7 +327,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... deallocate work space
        !
-       DEALLOCATE( becp, becp_ )
+       DEALLOCATE( becp )
        !
        RETURN
        !
@@ -349,12 +348,21 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... b) Conjugate Gradient (band-by-band)
        ! ... c) DIIS algorithm
        !
+       USE becmod, ONLY: becp
+       !
        IMPLICIT NONE
        !
        ! ... here the local variables
        !
        REAL(KIND=DP) :: cg_iter
-         ! number of iteration in CG
+       ! number of iteration in CG
+       ! number of iteration in DIIS
+       !
+       ! ... becp contains <beta|psi> - used in h_psi and s_psi
+       !
+       ALLOCATE( becp( nkb, nbnd ) )
+       !
+       ! ... allocate specific array for DIIS
        !
        !
        IF ( isolve == 0 ) THEN
@@ -423,7 +431,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk(1:npw)) )**2 + &
                            ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
-                           ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2          
+                           ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2
           !
           !
           IF ( qcutz > 0.D0 ) THEN
@@ -585,6 +593,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        WRITE( stdout, &
               '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
            ethr, avg_iter
+       !
+       ! ... deallocate work space
+       !
+       DEALLOCATE( becp )
        !
        RETURN
        !

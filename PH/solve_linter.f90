@@ -26,11 +26,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE check_stop,            ONLY : time_max => max_seconds
   USE wavefunctions_module,  ONLY : evc
   USE constants,             ONLY : degspin
-  use becmod
   USE kinds,                 ONLY : DP
   use phcom
   USE control_flags,         ONLY : reduce_io
-  
+  USE becmod,                ONLY : becp  
   implicit none
 
 
@@ -131,7 +130,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux1 ( nrxxs))    
   allocate (spsi ( npwx))    
   allocate (h_diag ( npwx , nbnd))    
-  allocate (eprec ( nbnd))    
+  allocate (eprec ( nbnd))
   !
   !    if this is a recover run
   !

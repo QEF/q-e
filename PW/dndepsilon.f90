@@ -50,8 +50,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    ! spsi(npwx,nbnd), dproj(natomwfc,nbnd)
 
    allocate (offset(nat), proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),  &
-             spsi(npwx,nbnd), dproj(natomwfc,nbnd) )
-
+             spsi(npwx,nbnd), dproj(natomwfc,nbnd), becp(nkb,nbnd) )
 
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
@@ -148,7 +147,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
       end do
    end do
 
-   deallocate (offset, proj, wfcatom, spsi, dproj )
+   deallocate (offset, proj, wfcatom, spsi, dproj, becp )
 
    return
 end subroutine dndepsilon

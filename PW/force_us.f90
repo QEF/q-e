@@ -14,9 +14,9 @@ SUBROUTINE force_us( forcenl )
   ! ... nonlocal potential contribution to forces
   ! ... wrapper
   !
-  USE kinds,           ONLY : DP
+  USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
-  USE cell_base,                ONLY : at, bg, tpiba
+  USE cell_base,            ONLY : at, bg, tpiba
   USE basis,                ONLY : nat, ntyp, ityp
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g
@@ -187,12 +187,10 @@ SUBROUTINE force_us( forcenl )
      SUBROUTINE force_us_k()
        !-----------------------------------------------------------------------
        !  
-       USE becmod, ONLY : becp
-       !
        IMPLICIT NONE
        !
-       COMPLEX(KIND=DP), ALLOCATABLE :: dbecp(:,:,:)
-       ! auxiliary variable contains <dbeta|psi>
+       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:), dbecp(:,:,:)
+       ! auxiliary variable contains <beta|psi> and <dbeta|psi>
        COMPLEX(KIND=DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
        REAL(KIND=DP) :: ps
@@ -202,7 +200,7 @@ SUBROUTINE force_us( forcenl )
        !
        forcenl(:,:) = 0.D0
        !
-       ALLOCATE( dbecp( nkb, nbnd, 3 ) )    
+       ALLOCATE( becp( nkb, nbnd ), dbecp( nkb, nbnd, 3 ) )    
        ALLOCATE( vkb1( npwx, nkb ) )   
        ! 
        IF ( nks > 1 ) REWIND iunigk
@@ -285,7 +283,7 @@ SUBROUTINE force_us( forcenl )
 #endif
        !
        DEALLOCATE( vkb1 )
-       DEALLOCATE( dbecp )
+       DEALLOCATE( becp, dbecp )
        !
        ! ... The total D matrix depends on the ionic position via the
        ! ... augmentation part \int V_eff Q dr, the term deriving from the 

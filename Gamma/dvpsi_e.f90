@@ -17,7 +17,7 @@ subroutine dvpsi_e(kpoint,ipol)
   USE kinds, only: DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  USE rbecmod, ONLY: becp, becp_
+  USE rbecmod, ONLY: becp
   use cgcom
   !
   implicit none
@@ -25,7 +25,7 @@ subroutine dvpsi_e(kpoint,ipol)
   integer :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(kind=DP) :: upol(3,3)
   real(kind=DP), allocatable :: gk(:,:), q(:), overlap(:,:), &
-       dbec(:,:), dbec_(:,:)
+       becp_(:,:), dbec(:,:), dbec_(:,:)
   complex(kind=DP), allocatable :: dvkb(:,:), dvkb1(:,:), work(:,:), &
        &           gr(:,:), h(:,:)
   logical:: precondition, orthonormal,startwith0
@@ -34,13 +34,13 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   call start_clock('dvpsi_e')
   !
-  !   becp, becp_ contain <beta|psi> - used in H_h
+  !   becp contains <beta|psi> - used in H_h
   !
-  allocate ( becp( nkb,nbnd), becp_(nkb,nbnd) )
+  allocate ( becp( nkb,nbnd) )
   allocate ( gk   ( 3, npwx) )
   allocate ( dvkb ( npwx, nkb) )
   allocate ( dvkb1( npwx, nkb) )
-  allocate ( dbec ( nkb, nbnd), dbec_(nkb, nbnd) )
+  allocate ( becp_(nkb,nbnd), dbec ( nkb, nbnd), dbec_(nkb, nbnd) )
   !
   do i = 1,npw
      gk(1,i) = (xk(1,kpoint)+g(1,igk(i)))*tpiba
@@ -102,7 +102,7 @@ subroutine dvpsi_e(kpoint,ipol)
   call DGEMM ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
        2*npwx, becp_, nkb, 1.d0, dpsi, 2*npwx)
   !
-  deallocate(dbec, dbec_)
+  deallocate(dbec, dbec_, becp_)
   deallocate(dvkb1)
   deallocate(dvkb)
   deallocate(gk)
@@ -141,7 +141,7 @@ subroutine dvpsi_e(kpoint,ipol)
   deallocate(gr)
   deallocate(work)
   deallocate(overlap)
-  deallocate(becp, becp_)
+  deallocate(becp)
   !
   call stop_clock('dvpsi_e')
   !

@@ -96,6 +96,7 @@ subroutine compute_casino
 
   allocate (hpsi(npwx, nbnd))
   allocate (aux(nrxx))
+  allocate (becp (nkb,nbnd))
   ! four times npwx should be enough
   allocate (index (4*npwx) )
   allocate (igtog (4*npwx) )
@@ -152,7 +153,6 @@ subroutine compute_casino
                 call errore ('pw2casino','increase allocation of index', ig)
            index( igk(ig) ) = 1
         enddo
-
         !
         ! calculate the kinetic energy
         !
@@ -295,8 +295,6 @@ subroutine compute_casino
            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
            call davcio(evc,nwordwfc,iunwfc,ikk,-1)
         endif
-
-
         do ibnd = 1, nbnd
            write(io,'(a)') ' Band, spin, eigenvalue (au)'
            write(io,*) ibnd, ispin, et(ibnd,ikk)/2 
@@ -327,6 +325,11 @@ subroutine compute_casino
   write (stdout,*) 'hartree energy   ', ehart/2
   write (stdout,*) 'Total energy     ', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
 
+  deallocate (igtog)
+  deallocate (index)
+  deallocate (becp)
+  deallocate (aux)
+  deallocate (hpsi)
 
 end subroutine compute_casino
 

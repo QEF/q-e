@@ -46,7 +46,7 @@ subroutine orthoatwfc
   ! cpu time spent
   logical :: orthogonalize_wfc
      
-  complex(kind=DP) :: ZDOTC, temp, t (5)
+  complex(kind=DP) :: temp, t (5)
   complex(kind=DP) , allocatable :: wfcatom (:,:), work (:,:), overlap (:,:)
   real(kind=DP) , allocatable :: e (:)
 
@@ -79,17 +79,18 @@ subroutine orthoatwfc
      call errore ("orthoatwfc"," this U_projection_type is not valid",1)
   end if
 
+  ! Allocate the array becp = <beta|wfcatom>
   if ( gamma_only ) then 
-     ! Allocate the array rbecp=<beta|wfcatom>, which is not allocated by 
-     ! allocate_wfc() in a gamma-point calculation: 
      allocate (rbecp (nkb,natomwfc)) 
+  else
+     allocate ( becp (nkb,natomwfc)) 
   end if
   
-  if (nks.gt.1) rewind (iunigk)
+  if (nks > 1) rewind (iunigk)
   
   do ik = 1, nks
      
-     if (nks.gt.1) read (iunigk) npw, igk
+     if (nks > 1) read (iunigk) npw, igk
      
      overlap(:,:) = (0.d0,0.d0)
      work(:,:) = (0.d0,0.d0)
@@ -155,6 +156,8 @@ subroutine orthoatwfc
   deallocate (wfcatom)
   if ( gamma_only ) then 
      deallocate (rbecp) 
+  else
+     deallocate ( becp) 
   end if
   !
   return

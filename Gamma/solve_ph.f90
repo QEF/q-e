@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -12,10 +12,10 @@ subroutine solve_ph
   !-----------------------------------------------------------------------
   !
   USE io_global,             ONLY : stdout
-   use io_files,             ONLY : iunres
+  use io_files,              ONLY : iunres
   use pwcom
   USE wavefunctions_module,  ONLY : evc
-  USE rbecmod,               ONLY : becp, becp_
+  USE rbecmod,               ONLY : becp
   use cgcom
 #ifdef __PARA
   use para
@@ -32,7 +32,7 @@ subroutine solve_ph
   !
   call start_clock('solve_ph')
   !
-  allocate ( becp( nkb,nbnd), becp_(nkb,nbnd) )
+  allocate ( becp( nkb,nbnd) )
   allocate ( diag( npwx) )
   allocate ( overlap( nbnd, nbnd) )
   allocate ( work( npwx, nbnd) )
@@ -127,7 +127,7 @@ subroutine solve_ph
   deallocate(overlap)
   deallocate(work)
   deallocate(diag)
-  deallocate(becp, becp_)
+  deallocate(becp)
   !
   call stop_clock('solve_ph')
   !

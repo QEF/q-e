@@ -84,7 +84,6 @@ SUBROUTINE allocate_wfc()
        USE klist,                ONLY : nkstot
        USE ldaU,                 ONLY : swfcatom, lda_plus_u
        USE wavefunctions_module, ONLY : evc
-       USE becmod,               ONLY : becp
        !
        IMPLICIT NONE
        !
@@ -93,7 +92,6 @@ SUBROUTINE allocate_wfc()
        ALLOCATE( et( nbnd, nkstot ) )    
        ALLOCATE( wg( nbnd, nkstot ) )    
        ALLOCATE( evc( npwx, nbnd ) )    
-       ALLOCATE( becp( nkb, nbndx ) )
        !
        ! ... needed for LDA+U
        !

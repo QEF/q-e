@@ -26,7 +26,7 @@ subroutine solve_e
   USE check_stop,            ONLY : time_max => max_seconds
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
-  use becmod
+  USE becmod,                ONLY : becp
   use phcom
   USE control_flags,         ONLY : reduce_io
   
@@ -79,8 +79,7 @@ subroutine solve_e
   ! timing variables
 
   character (len=42) :: flmixdpot
-  ! the name of the file with the
-  ! mixing potential
+  ! the name of the file with the mixing potential
 
   external ch_psi_all, cg_psi
 
@@ -95,12 +94,12 @@ subroutine solve_e
   endif
   allocate (dvscfout( nrxx , nspin, 3))    
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
-  allocate (auxg(  npwx))    
-  allocate (aux1(  nrxxs))    
-  allocate (spsi( npwx))    
-  allocate (ps(  nbnd))    
-  allocate (h_diag( npwx , nbnd))    
-  allocate (eprec(  nbnd))    
+  allocate (auxg(npwx))    
+  allocate (aux1(nrxxs))    
+  allocate (spsi(npwx))    
+  allocate (ps  (nbnd))    
+  allocate (h_diag(npwx, nbnd))    
+  allocate (eprec(nbnd))
   if (iter0.ne.0) then
      if (okvan) read(iunrec) int3
      read (iunrec) dr2, dvscfin
@@ -112,7 +111,6 @@ subroutine solve_e
            enddo
         enddo
      endif
-
   endif
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef

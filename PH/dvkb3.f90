@@ -10,7 +10,6 @@ subroutine dvkb3(kpoint,dvkb)
   use pwcom
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
-  use becmod
   use phcom
   
   implicit none

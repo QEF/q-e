@@ -13,8 +13,7 @@ MODULE rbecmod
   SAVE
   !
   REAL(KIND=DP), ALLOCATABLE :: &
-       becp (:,:), & !  contains products of wavefunctions and beta
-       becp_(:,:)    !  the same as above, times D^{-1}
+       becp (:,:) !  contains products of wavefunctions and beta
   !     
 END MODULE rbecmod
 

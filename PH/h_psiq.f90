@@ -19,7 +19,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
 
   use pwcom
   USE wavefunctions_module,  ONLY: psic
-  use becmod
+  USE becmod, ONLY: becp
   USE kinds, only : DP
   use phcom
   implicit none
@@ -41,9 +41,10 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   ! output: H times psi
   ! output: S times psi (Us PP's only)
 
-  call start_clock ('h_psiq')
 
+  call start_clock ('h_psiq')
   call start_clock ('init')
+
   call ccalbec (nkb, npwx, n, m, becp, vkb, psi)
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
@@ -88,9 +89,11 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !
   !  Here the product with the non local potential V_NL psi
   !
+
   call add_vuspsi (lda, n, m, psi, hpsi)
 
   call s_psi (lda, n, m, psi, spsi)
+
   call stop_clock ('h_psiq')
   return
 end subroutine h_psiq

@@ -21,7 +21,7 @@ subroutine local_dos1d (ik, kband, plan)
   USE us, ONLY: becsum, nh, tvanp
   USE wvfct, ONLY: npw, wg, igk
   USE wavefunctions_module,  ONLY: evc, psic
-  use becmod
+  USE becmod, ONLY: becp
   implicit none
   !
   ! input variables
@@ -48,8 +48,6 @@ subroutine local_dos1d (ik, kband, plan)
   !
   !    And here the local variables
   !
-
-
   integer :: ir, is, ig, ibnd
   ! counter on 3D r points
   ! counter on spin polarizations
@@ -63,7 +61,6 @@ subroutine local_dos1d (ik, kband, plan)
 
   complex(kind=DP), allocatable :: prho (:)
   ! complex charge for fft
-
 
   allocate (prho(nrxx))    
   allocate (aux(nrxx))    
@@ -98,7 +95,7 @@ subroutine local_dos1d (ik, kband, plan)
   do np = 1, ntyp
      if (tvanp (np) ) then
         do na = 1, nat
-           if (ityp (na) .eq.np) then
+           if (ityp (na) == np) then
               ijh = 1
               do ih = 1, nh (np)
                  ikb = ijkb0 + ih
@@ -137,9 +134,10 @@ subroutine local_dos1d (ik, kband, plan)
   !    Here we add the US contribution to the charge for the atoms which n
   !    it. Or compute the planar average in the NC case.
   !
-
   call addusdens1d (plan, prho)
+  !
   deallocate (aux)
   deallocate (prho)
+  !
   return
 end subroutine local_dos1d

@@ -86,41 +86,30 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   ! input: the routine computing h_psi
   ! input: the routine computing cg_psi
   !
-  !  three parameters
-  !
-
-  integer :: maxter
-  ! the maximum number of iterations
-  parameter (maxter = 200)
-  !
   !  here the local variables
   !
-
+  integer, parameter :: maxter = 200
+  ! the maximum number of iterations
   integer :: iter, ibnd, lbnd
+  ! counters on iteration, bands
   integer , allocatable :: conv (:)
-  ! counter on iteration
-  ! counter on bands
   ! if 1 the root is converged
 
   complex(kind=DP), allocatable :: g (:,:), gp (:,:), t (:,:), &
        h (:,:), hold (:,:), aux (:,:), aux1 (:,:)
-  complex(kind=DP) ::  dcgamma, dclambda, ZDOTC
   !  the gradient of psi
   !  the preconditioned gradient
   !  the delta gradient
   !  the conjugate gradient
-  !  the the old h
-  !  the the old h
-  !  the the old h
+  !  work space
+  complex(kind=DP) ::  dcgamma, dclambda, ZDOTC
   !  the ratio between rho
-  !  step lenght
+  !  step length
   !  the scalar product
-
-
   real(kind=DP), allocatable :: rho (:), rhoold (:), auxr (:,:), eu (:)
-  real(kind=DP) :: kter_eff, a, c
   ! the residue
   ! auxiliary for h_diag
+  real(kind=DP) :: kter_eff, a, c
   ! account the number of iterations with b
   ! coefficient of quadratic form
   !
@@ -143,7 +132,6 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   kter_eff = 0.d0
   do ibnd = 1, nbnd
      conv (ibnd) = 0
-
   enddo
   do iter = 1, maxter
      !
@@ -151,11 +139,10 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !
      !
      kter = kter + 1
-     if (iter.eq.1) then
+     if (iter == 1) then
         call h_psi (ndim, dpsi, g, e, ik, nbnd)
         do ibnd = 1, nbnd
-           call ZAXPY (ndim, (-1.d0, 0.d0), d0psi (1, ibnd), 1, g (1, &
-                ibnd), 1)
+           call ZAXPY (ndim, (-1.d0, 0.d0), d0psi (1, ibnd), 1, g (1, ibnd), 1)
         enddo
      endif
      !

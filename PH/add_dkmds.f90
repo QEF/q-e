@@ -1,19 +1,17 @@
 !--------------------------------------------------------------------------
 subroutine add_dkmds(kpoint, uact, jpol, dvkb)
-!----------=========-------------------------------------------------------
-!
-!
-! This subdoutine adds to dvpsi the terms which depend on the augmentation
-! charge. It assume that the variable dpqq, has been set.
-!
+  !--------=========-------------------------------------------------------
+  !
+  ! This subroutine adds to dvpsi the terms which depend on the augmentation
+  ! charge. It assume that the variable dpqq, has been set.
+  !
 #include "machine.h"
 
   use pwcom
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
-  use becmod
   use phcom
-  
+
   implicit none
 
   integer, intent(in) :: kpoint, jpol
@@ -36,7 +34,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
 
   integer :: i,j 
-  
+
 #ifdef TIMING_ADD_DKMDS
   call start_clock('add_dkmds')
   call start_clock('add_dkmds2')
@@ -51,10 +49,10 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
   ps1 = (0.d0, 0.d0)
   ps2 = (0.d0, 0.d0)
-!
-!   First we calculate the alphadk = <d/dk d/du beta|psi>
-!   and becp2 = < d/dk beta | psi>
-!
+  !
+  !   First we calculate the alphadk = <d/dk d/du beta|psi>
+  !   and becp2 = < d/dk beta | psi>
+  !
   if (lsda) current_spin = isk (kpoint)
   call ccalbec (nkb, npwx, npw, nbnd, becp2, dvkb(1,1,jpol), evc)
 
@@ -62,12 +60,12 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   call stop_clock('add_dkmds2')
   call start_clock('add_dkmds3')
 #endif
-     
+
   do ipol = 1, 3
      do ibnd = 1, nbnd
         do ig = 1, npw
-              aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * & 
-                   ( xk(ipol,kpoint) + g(ipol,igk(ig)) )
+           aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * & 
+                ( xk(ipol,kpoint) + g(ipol,igk(ig)) )
         enddo
      enddo
      call ccalbec (nkb, npwx, npw, nbnd, alphadk(1,1,ipol), dvkb(1,1,jpol), aux1)
@@ -90,8 +88,8 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                  do jh = 1, nh (nt)
                     jkb = ijkb0 + jh
                     fact = at(1,jpol)*dpqq(ih,jh,1,nt) +  &
-                           at(2,jpol)*dpqq(ih,jh,2,nt) +  &
-                           at(3,jpol)*dpqq(ih,jh,3,nt)
+                         at(2,jpol)*dpqq(ih,jh,2,nt) +  &
+                         at(3,jpol)*dpqq(ih,jh,3,nt)
                     do ipol = 1, 3 
                        do ibnd=1, nbnd_occ(kpoint)
                           !

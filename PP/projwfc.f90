@@ -157,9 +157,9 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   if ( gamma_only ) then 
      allocate(roverlap (natomwfc, natomwfc) ) 
      roverlap= 0.d0 
-     ! Allocate the array rbecp=<beta|wfcatom>, which is not allocated by 
-     ! allocate_wfc() in a gamma-point calculation: 
      allocate (rbecp (nkb,natomwfc)) 
+  else
+     allocate ( becp (nkb,natomwfc)) 
   end if 
  
   proj   = 0.d0 
@@ -365,7 +365,9 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   ! 
   if ( gamma_only ) then 
      deallocate (roverlap) 
-     deallocate (rbecp) 
+     deallocate (rbecp)
+  else
+     deallocate ( becp)
   end if 
   ! 
 #ifdef __PARA 

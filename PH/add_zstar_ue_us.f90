@@ -15,7 +15,6 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
   USE phcom
-  USE becmod
   implicit none
 
   integer, intent(in) :: imode0, npe

@@ -128,10 +128,11 @@ subroutine projection (first_band, last_band)
   ! 
   allocate(proj (natomwfc, nbnd, nkstot) ) 
   allocate(wfcatom (npwx, natomwfc) ) 
+  ! Allocate the array rbecp=<beta|wfcatom>
   if ( gamma_only ) then 
-     ! Allocate the array rbecp=<beta|wfcatom>, which is not allocated by 
-     ! allocate_wfc() in a gamma-point calculation: 
      allocate (rbecp (nkb,natomwfc)) 
+  else
+     allocate ( becp (nkb,natomwfc)) 
   end if 
 
   if (first_band == -1)  first_band = 1
@@ -321,7 +322,9 @@ subroutine projection (first_band, last_band)
   ! 
   if ( gamma_only ) then 
      deallocate (rbecp) 
-  end if 
+  else
+     deallocate (becp)
+   end if
   ! 
 
   deallocate (wfcatom) 

@@ -28,7 +28,6 @@ SUBROUTINE clean_pw()
                                    vkb, becsum, tab, tab_at, nhtoj
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
   USE extfield,             ONLY : forcefield
-  USE becmod,               ONLY : becp
   USE sticks,               ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
   USE berry_phase,          ONLY : berry_closeup
@@ -121,7 +120,6 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
-  IF ( ALLOCATED( becp ) )       DEALLOCATE( becp )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
 #ifdef __SX6

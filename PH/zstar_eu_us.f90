@@ -6,33 +6,27 @@ subroutine zstar_eu_us
   ! in the case of USPP
   !
 #include "machine.h"
-
+  !
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
   use pwcom
   use phcom
-  use becmod
+  !
   implicit none
-
-
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
   integer :: ik,  ig, ir, is, i,j 
-
   integer :: iuhxc, lrhxc
-
+  !
   real(kind = dp) :: weight
-
+  !
   complex(kind = dp) , allocatable :: dbecsum(:,:,:,:), aux1 (:)
   ! the becsum with dpsi
-  ! auxillary working space for fft
-
- complex(kind=DP) , pointer ::      &
+  ! auxillary work space for fft
+  complex(kind=DP) , pointer ::      &
       dvscf(:,:,:), &
       dvscfins (:,:,:)    ! change of the scf potential (smooth)
-
-  complex(kind = dp), allocatable :: pdsp(:,:)
-
+  complex(kind =dp), allocatable :: pdsp(:,:)
   complex(kind =dp), allocatable :: drhoscfh (:,:,:)
   complex(kind =dp), allocatable :: dbecsum2 (:,:,:,:)
   complex(kind =dp), allocatable :: dvkb (:,:,:)

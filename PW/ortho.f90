@@ -20,7 +20,7 @@ subroutine ortho
   USE wvfct, ONLY: npw, npwx, nbnd, nbndx, igk
   USE wavefunctions_module,    ONLY : evc
   USE us, ONLY: nkb, vkb
-  use becmod
+  USE becmod, ONLY: becp
   implicit none
   integer :: ik
 
@@ -28,6 +28,7 @@ subroutine ortho
 
   allocate (sevc ( npwx , nbnd))    
   allocate (dummy( npwx , nbnd))    
+  allocate (becp ( nkb, nbnd))    
   sevc(:,:) = (0.d0,0.d0)
   dummy(:,:) = (0.d0,0.d0)
   if (nks.gt.1) rewind (iunigk)
@@ -57,6 +58,7 @@ subroutine ortho
      call davcio (evc, nwordwfc, iunwfc, ik, 1)
 
   enddo
+  deallocate (becp)
   deallocate (sevc)
   deallocate (dummy)
   return

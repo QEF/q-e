@@ -66,14 +66,16 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
      SUBROUTINE add_vuspsi_gamma()
        !-----------------------------------------------------------------------
        !
-       USE rbecmod,    ONLY: becp, becp_
+       USE rbecmod,    ONLY: becp
        !
        IMPLICIT NONE
+       REAL(KIND=DP), ALLOCATABLE :: ps (:,:)
        !
        !
        IF ( nkb == 0 ) RETURN
        !
-       becp_(:,:) = 0.D0
+       ALLOCATE (ps (nkb,m))
+       ps(:,:) = 0.D0
        !
        ijkb0 = 0
        !
@@ -93,7 +95,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
                          !
                          ikb = ijkb0 + ih
                          !
-                         becp_(ikb,ibnd) = becp_(ikb,ibnd) + &
+                         ps(ikb,ibnd) = ps(ikb,ibnd) + &
                                     deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
                          !
                       END DO
@@ -111,7 +113,9 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        END DO
        !
        CALL DGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
-                   ( 2 * lda ), becp_, nkb, 1.D0, hpsi, ( 2 * lda ) )
+                   ( 2 * lda ), ps, nkb, 1.D0, hpsi, ( 2 * lda ) )
+       !
+       DEALLOCATE (ps)
        !
        RETURN
        !
@@ -122,20 +126,15 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
      SUBROUTINE add_vuspsi_k()
        !-----------------------------------------------------------------------
        !
-       USE becmod,     ONLY : becp
+       USE becmod,    ONLY: becp
        !
        IMPLICIT NONE
-       !
-       ! ... here the local variables
-       !
-       COMPLEX(KIND=DP), ALLOCATABLE :: ps(:,:)
-         ! the product vkb and psi
+       cOMPLEX(KIND=DP), ALLOCATABLE :: ps (:,:)
        !
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE( ps( nkb, m ) )
-       !
+       ALLOCATE (ps (nkb,m))
        ps(:,:) = ( 0.D0, 0.D0 )
        !
        ijkb0 = 0
@@ -176,7 +175,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
        !
-       DEALLOCATE( ps )
+       DEALLOCATE (ps)
        !
        RETURN
        !
