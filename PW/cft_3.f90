@@ -290,7 +290,6 @@ end subroutine cft_3
 
 #ifdef __SX6
 #define PRESENT
-#define ASL
 
 module afftnec
 
@@ -344,7 +343,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   complex(kind=DP), dimension(:), allocatable :: cw2   
 
   !     allocate auxp at the first call (independently of the grid)
-  if (.not.allocated(auxp)) allocate(auxp(2*(nr1+nr2+nr3),ngrid))
+  if (.not.allocated(auxp)) allocate(auxp(100+2*(nr1+nr2+nr3),ngrid))
 
   !
   !    test the sign and put the correct normalization on f

@@ -8,7 +8,9 @@ MAKE=sxmake
 CPP = /SX/usr/lib/sxcpp
 INC_DIR = ../include
 #
-CPPFLAGS = -P -E -DLANGUAGE_FORTRAN -D__SX6 -I$(INC_DIR)
+CPPFLAGS = -P -E -DZZFFT3D=ccfft3d -DHAS_ZHEGVX -DLANGUAGE_FORTRAN -D__SX6 -I$(INC_DIR)
+#CPPFLAGS = -P -E -DLANGUAGE_FORTRAN -DHAS_ZHEGVX -D__SX6 -I$(INC_DIR)
+#CPPFLAGS = -P -E -DASL -DHAS_ZHEGVX -DLANGUAGE_FORTRAN -D__SX6 -I$(INC_DIR)
 
 HOST=-sx6
 BASIC=-float0 -P stack $(HOST)
@@ -38,11 +40,12 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 F90 = sxf90
 F77 = sxf90
 
-FFLAGS = $(BASIC) $(MISC) $(OPT) $(FTRACE)
+FFLAGS = $(BASIC) $(MISC) $(OPT) 
+#$(FTRACE)
 #FFLAGS = $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
 #FCAUTIOUS=$(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
 F90FLAGS=$(FFLAGS)
-F77FLAGS=$(FFLAGS)
+F77FLAGS=-f3 $(FFLAGS)
 
 #
 # C compiler:
@@ -55,13 +58,16 @@ CCFLAGS = -DSXCROSS -I$(INC_DIR)
 #
 # Libraries:
 #
-LIBS = -llapack -lblas -lasl
-#LIBS = -llapack_64 -lblas_64 -lfft_64
-#../liblapack.a ../libblas.a ../libfft.a 
+LIBS = -llapack -lblas -L$(HOME)/mylocal/lib -ljmfft
+# You can find the jmfft Cary compatible library written
+#i by Jean-Marie Teuler on www.idris.fr (search for jmfft)
+#LIBS = -llapack -lblas -lfft
+#LIBS = -llapack -lblas -lasl
+
 #
 # Loader flags:
 #
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 
 LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/ptools.a \
-          $(OSHOME)/flib/flib.a $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)
+          $(OSHOME)/flib/flib.a $(LIBS) -p -Wl" -f zero " $(LIBS)
