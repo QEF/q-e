@@ -70,7 +70,7 @@ MODULE io_routines
           !
           READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
           !
-          IF ( matches( "ELSATIC CONSTANTS", input_line ) ) THEN
+          IF ( matches( "ELASTIC CONSTANTS", input_line ) ) THEN
              !
              ! ... optional fields
              !
@@ -272,7 +272,7 @@ MODULE io_routines
           WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
           WRITE( UNIT = iunrestart, FMT = '(L1)' ) conv_elec
           !
-          WRITE( UNIT = iunrestart, FMT = '("ELSATIC CONSTANTS")' )
+          WRITE( UNIT = iunrestart, FMT = '("ELASTIC CONSTANTS")' )
           !
           WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_max
           WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min
@@ -367,7 +367,7 @@ MODULE io_routines
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
              !
-             WRITE( UNIT = iunrestart, FMT = '("ELSATIC CONSTANTS")' )
+             WRITE( UNIT = iunrestart, FMT = '("ELASTIC CONSTANTS")' )
              !
              WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_max
              WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min             
