@@ -38,7 +38,7 @@ Directory structure of GUIB:
      images/ 	some icons 
      src/ 	GUIB source code directory
 
-Description of some guib-src/ files:
+Description of some src/ files:
      
      moduleObj.itcl 	   implementation of moduleObj class
      keywordObj.itcl 	   implementation of keywordObj class
