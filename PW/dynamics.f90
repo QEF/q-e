@@ -145,6 +145,10 @@ subroutine dynamics
   enddo
   norm_of_dtau = sqrt (norm_of_dtau)
   !
+  ! ... ethr is now updated in electrons with a different procedure
+  ! ... this value of ethr is overwritten apart when the old style
+  ! ... update is used (see OLDSTYLE precompiler variable in electrons)
+  !       
   if (imix.lt.0) then
      ethr = starting_diag_threshold * &
          max (1.d0 / upscale, min (1.d0, norm_of_dtau / dtau_ref) ) **2

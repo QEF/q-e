@@ -8,7 +8,7 @@
 #include "machine.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup
+SUBROUTINE setup()
   !----------------------------------------------------------------------------
   !
   !  This routine 
@@ -167,9 +167,12 @@ SUBROUTINE setup
         CALL errore( 'setup', 'too few bands', 1 )
   END IF
   !
-  ! ... Here we  set the precision of the diagonalization
+  ! ... Here we  set the precision of the diagonalization for the first scf
+  ! ... iteration of for the first ionic step
+  ! ... for subsequent steps ethr is automatically updated in electrons
   !
   IF ( ethr == 0.D0 ) THEN
+     !
      IF ( startingpot == 'file' ) THEN
         !
         ! ... starting potential is expected to be a good one :
@@ -177,6 +180,7 @@ SUBROUTINE setup
         !
         IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
         IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.0D-6, SQRT( tr2 ) )
+        !
      ELSE
         !
         ! ... starting atomic potential is probably far from scf
@@ -184,7 +188,9 @@ SUBROUTINE setup
         !
         IF ( imix >= 0 ) ethr = 1.0D-2
         IF ( imix < 0 )  ethr = 1.0D-5
+        !
      END IF
+     !
   END IF
   !
   IF ( .NOT. lscf ) niter = 1

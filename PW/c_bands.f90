@@ -205,11 +205,15 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !  
              ntry = ntry + 1
              !
-             ltest = ( ntry <= 5 ) .AND. &
-                     ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                       (       lscf .AND. ( notconv > 5 ) ) )
              !
-             IF ( .NOT. ltest ) EXIT david_loop
+             ! ... exit condition
+             !
+             ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                             ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                               (       lscf .AND. ( notconv > 5 ) .AND.  &
+                                                  ( iter > 1 ) ) ) )
+             !
+             IF ( ltest ) EXIT david_loop
              !
           END DO david_loop
           !
@@ -414,21 +418,14 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( nks > 1 .OR. .NOT. reduce_io ) &
                    CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                 !
+                ntry = ntry + 1                
+                !
                 ! ... exit condition
-                !                
-                IF ( iter > 1 ) THEN
-                   !
-                   ntry = ntry + 1
-                   !
-                   ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                                   ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                     (       lscf .AND. ( notconv > 5 ) ) ) )
-                   !
-                ELSE
-                   !
-                   ltest = .TRUE.
-                   !
-                END IF                
+                !
+                ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                  (       lscf .AND. ( notconv > 5 ) .AND.  &
+                                                     ( iter > 1 ) ) ) )
                 !
                 IF ( ltest ) EXIT CG_loop
                 !
@@ -471,21 +468,14 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( nks > 1 .OR. .NOT. reduce_io ) &
                    CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                 !
+                ntry = ntry + 1                
+                !
                 ! ... exit condition
-                !                
-                IF ( iter > 1 ) THEN
-                   !
-                   ntry = ntry + 1
-                   !
-                   ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                                   ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                     (       lscf .AND. ( notconv > 5 ) ) ) )
-                   !
-                ELSE
-                   !
-                   ltest = .TRUE.
-                   !
-                END IF                
+                !
+                ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                  (       lscf .AND. ( notconv > 5 ) .AND.  &
+                                                     ( iter > 1 ) ) ) )
                 !
                 IF ( ltest ) EXIT RMMDIIS_loop
                 !
@@ -523,21 +513,14 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( nks > 1 .OR. .NOT. reduce_io ) &
                    CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                 !
+                ntry = ntry + 1                
+                !
                 ! ... exit condition
                 !
-                IF ( iter > 1 ) THEN
-                   !
-                   ntry = ntry + 1
-                   !
-                   ltest = .NOT. ( ( ntry <= 5 ) .AND. &
-                                   ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                     (       lscf .AND. ( notconv > 5 ) ) ) )
-                   !
-                ELSE
-                   !
-                   ltest = .TRUE.
-                   !
-                END IF
+                ltest = .NOT. ( ( ntry <= 5 ) .AND. &
+                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+                                  (       lscf .AND. ( notconv > 5 ) .AND.  &
+                                                     ( iter > 1 ) ) ) )
                 !
                 IF ( ltest ) EXIT david_loop                
                 !

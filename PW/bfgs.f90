@@ -204,6 +204,10 @@ SUBROUTINE bfgs()
      !
      ! ... set appropriate (?) thresholds for self-consistency
      !
+     ! ... ethr is now updated in electrons with a different procedure
+     ! ... this value of ethr is overwritten apart when the old style
+     ! ... update is used (see OLDSTYLE precompiler variable in electrons)
+     !     
      IF ( imix < 0 ) THEN
         tr2 = ( starting_scf_threshold * MAX( 1.D0 / upscale, MIN( 1.D0, &
                 ABS( xnew - x ) / dtau_ref ) ) )**2

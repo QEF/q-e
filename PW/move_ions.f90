@@ -44,7 +44,7 @@ SUBROUTINE move_ions()
   USE symme,       ONLY : s, ftau, nsym, irt
   USE ener,        ONLY : etot
   USE force_mod,   ONLY : force
-  USE varie,       ONLY : tr2, upscale, ethr, iswitch, lbfgs, lnewbfgs, &
+  USE varie,       ONLY : tr2, upscale, iswitch, lbfgs, lnewbfgs, &
                           conv_ions
   USE relax,       ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,      ONLY : lmovecell, calc
@@ -133,12 +133,10 @@ SUBROUTINE move_ions()
            !
            IF ( step_accepted ) THEN
               !
-              ethr = tr2 / nelec
               tr2  = starting_scf_threshold * &
                      MIN( 1.D0, ( energy_error / ( epse * upscale ) ), &
                                 ( gradient_error / ( epsf * upscale ) ) )
               tr2  = MAX( ( starting_scf_threshold / upscale ), tr2 ) 
-              ethr = MIN( ethr, tr2 / nelec )               
               !       
            END IF       
            !
@@ -162,7 +160,6 @@ SUBROUTINE move_ions()
      CALL mp_bcast( tau, ionode_id )
      CALL mp_bcast( force, ionode_id )
      CALL mp_bcast( tr2, ionode_id )
-     CALL mp_bcast( ethr, ionode_id )
      CALL mp_bcast( conv_ions, ionode_id )
 #endif 
      !
@@ -358,4 +355,3 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
   RETURN
   !
 END SUBROUTINE check_constrain
-
