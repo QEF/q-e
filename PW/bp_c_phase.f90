@@ -150,15 +150,15 @@ SUBROUTINE c_phase
 !  --- Make use of the module with common information ---
    USE kinds, ONLY: DP
    USE parameters, ONLY: nbrx
-   USE io_global,        ONLY : stdout
+   USE io_global,  ONLY: stdout
    USE io_files, ONLY: iunwfc, nwordwfc
    USE basis, ONLY: nat, ntyp, ityp, tau, zv, atm
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE constants, ONLY: pi, tpi
    USE gvect, ONLY: ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, ecutwfc, &
         g, gcutm
-   USE us, ONLY: nhm, nkb, vkb, nh
-   USE uspp_param, ONLY: lqx
+   USE uspp, ONLY: nkb, vkb
+   USE uspp_param, ONLY: lmaxq, nh, nhm
    USE lsda_mod, ONLY: nspin
    USE klist, ONLY: nelec, degauss, nks, xk, wk
    USE wvfct, ONLY: npwx, npw, nbnd
@@ -243,11 +243,11 @@ SUBROUTINE c_phase
    REAL(dp) :: phidw
    REAL(dp) :: phiup
    REAL(dp) :: rmod
-   REAL(dp) :: qrad_dk(nbrx,nbrx,lqx,ntyp)
+   REAL(dp) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
    REAL(dp) :: upol(3)
    REAL(dp) :: weight
    REAL(dp), ALLOCATABLE :: wstring(:)
-   REAL(dp) :: ylm_dk(lqx*lqx)
+   REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
    COMPLEX(dp) :: aux(ngm)
    COMPLEX(dp) :: aux0(ngm)
@@ -395,7 +395,7 @@ SUBROUTINE c_phase
    CALL calc_btq(dkmod,qrad_dk,0)
 
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-   CALL ylm_q(lqx*lqx,dk,dkmod,ylm_dk)
+   CALL ylm_q(lmaxq*lmaxq,dk,dkmod,ylm_dk)
 
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
    q_dk(:,:,:) = (0.d0, 0.d0)

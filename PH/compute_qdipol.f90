@@ -7,10 +7,9 @@ subroutine compute_qdipol
   USE constants, ONLY: fpi
   USE atom, ONLY: r, rab
   USE ions_base, ONLY: ntyp => nsp
-  USE us, only: nh, nhtol, nhtolm, indv, tvanp
+  USE uspp, only: nhtol, nhtolm, indv, nlx, ap
   USE uspp_param, only: nbrx, nbeta, lll, kkbeta, qfunc, rinner, &
-       qfcoef, nqf
-  USE uspp, ONLY: nlx, ap
+       qfcoef, nqf, tvanp, nh
   USE phus, ONLY: dpqq
 
   implicit none

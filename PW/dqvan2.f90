@@ -24,9 +24,9 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   USE kinds, ONLY: DP
   USE parameters, ONLY: nbrx
   USE gvect, ONLY: g
-  USE us, ONLY: dq, indv, nhtol, nhtolm, qrad
-  USE uspp_param, ONLY: lqx
-  USE uspp, ONLY: nlx, lpl, lpx, ap
+  USE us, ONLY: dq, qrad
+  USE uspp_param, ONLY: lmaxq
+  USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   implicit none
   integer :: ngy, ih, jh, np, ipol
   ! input: the number of G vectors to compute
@@ -35,7 +35,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   ! input: the number of the pseudopotential
   ! input: the polarization of the derivative
 
-  real(kind=DP) :: ylmk0 (ngy, lqx * lqx), dylmk0 (ngy, lqx * lqx), &
+  real(kind=DP) :: ylmk0 (ngy, lmaxq * lmaxq), dylmk0 (ngy, lmaxq * lmaxq), &
        qmod (ngy)
   ! the spherical harmonics
   ! the spherical harmonics derivetives

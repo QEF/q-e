@@ -327,11 +327,7 @@ MODULE read_cards_module
        DO is = 1, ntyp
           !
           CALL read_line( input_line )
-          IF ( prog == 'CP' ) THEN
-             READ( input_line, * ) lb_pos, atom_mass(is), psfile, atom_ptyp(is)
-          ELSE
-             READ( input_line, * ) lb_pos, atom_mass(is), psfile
-          END IF
+          READ( input_line, * ) lb_pos, atom_mass(is), psfile
           atom_pfile(is) = TRIM( psfile )
           lb_pos         = ADJUSTL( lb_pos )
           atom_label(is) = TRIM( lb_pos )

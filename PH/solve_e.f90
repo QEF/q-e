@@ -27,6 +27,7 @@ subroutine solve_e
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp
+  USE uspp_param,            ONLY : nhm
   use phcom
   USE control_flags,         ONLY : reduce_io
   

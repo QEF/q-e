@@ -20,7 +20,7 @@ subroutine addusddense (drhoscf, dbecsum)
   use pwcom
   use phcom
   USE kinds, only : DP
-  USE uspp_param, ONLY: lqx
+  USE uspp_param, ONLY: lmaxq, nh, nhm, tvanp
   implicit none
   !
   !   the dummy variables
@@ -55,13 +55,13 @@ subroutine addusddense (drhoscf, dbecsum)
   allocate (aux(  ngm, nspin, 3))    
   allocate (sk (  ngm))    
   allocate (qg (  nrxx))    
-  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm  (ngm))    
   allocate (qmod (ngm))    
   !
   !  And then we compute the additional charge in reciprocal space
   !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo

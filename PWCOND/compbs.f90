@@ -15,6 +15,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 #include "machine.h"
   use pwcom
+  USE uspp_param, ONLY: tvanp
   use cond
   implicit none
   integer ::   &

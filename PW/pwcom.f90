@@ -434,37 +434,20 @@ MODULE us
   !
   ! ... These parameters are needed with the US pseudopotentials
   !  
-  USE parameters, ONLY :  npsx
   USE kinds,      ONLY : DP
   !
   SAVE
   !
   INTEGER :: &
-       nh(npsx),         &! number of beta functions per atomic type
-       nhm,              &! max number of different beta functions per atom
-       nkb,              &! total number of beta functions, with struct.fact.
        nqxq,             &! size of interpolation table
        nqx                ! number of interpolation points
-  INTEGER, ALLOCATABLE ::&
-       indv(:,:),        &! correspondence of betas atomic <-> soli
-       nhtol(:,:),       &! correspondence n <-> angular momentum l
-       nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
-  COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
-       vkb(:,:),              &! all beta functions in reciprocal space
-       dvan(:,:,:,:),         &! the D functions of the solid
-       deeq(:,:,:,:)           ! the integral of V_eff and Q_{nm}
   REAL(KIND=DP), PARAMETER:: &
        dq = 0.01D0           ! space between points in the pseudopotential tab.
   REAL(KIND=DP), ALLOCATABLE :: &
-       qq(:,:,:),             &! the q functions in the solid
-       becsum(:,:,:),         &! the sum of bec functions
-       nhtoj(:,:),            &! correspondence n <-> total angular momentum
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
   LOGICAL :: &
-       tvanp(npsx),          &! if .TRUE. the atom is of Vanderbilt type
-       newpseudo(npsx),      &! if .TRUE. multiple projectors are allowed
        okvan                  ! if .TRUE. at least one pseudo is Vanderbilt
   !
 END MODULE us
@@ -606,6 +589,9 @@ MODULE pwcom
   USE constants, ONLY : e2, rytoev, amconv, uakbar, pi, tpi, fpi
   USE cell_base, ONLY : celldm, at, bg, alat, omega, tpiba, tpiba2, &
                         ibrav, symm_type
+  ! TEMP
+  USE uspp
+  ! TEMP
   USE basis
   USE dynam
   USE gvect

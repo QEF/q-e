@@ -20,6 +20,7 @@ subroutine addusdynmat (dynwrk)
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, only: tvanp, nh
   use phcom
   implicit none
 

@@ -23,7 +23,7 @@ subroutine orthoatwfc
   USE klist, ONLY: nks, xk
   USE ldaU, ONLY: swfcatom, U_projection
   USE wvfct, ONLY: npwx, npw, igk, gamma_only
-  USE us, ONLY: nkb, vkb
+  USE uspp, ONLY: nkb, vkb
   use becmod,   only: becp
   use rbecmod,  only: rbecp => becp 
 #ifdef __PARA

@@ -20,7 +20,7 @@ SUBROUTINE allocate_wfc()
   USE klist,     ONLY : nelec
   USE basis,     ONLY : natomwfc
   USE gvect,     ONLY : ngl
-  USE us,        ONLY : nkb
+  USE uspp,      ONLY : nkb
   !
   IMPLICIT NONE
   !

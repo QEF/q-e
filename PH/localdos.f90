@@ -21,6 +21,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
   USE kinds, only : DP
+  USE uspp_param, ONLY: nh, nhm, tvanp
   use phcom
   USE io_files, ONLY: iunigk
   implicit none

@@ -29,7 +29,7 @@ subroutine plan_avg (averag, plan, ninter)
   USE gvect
   USE klist, ONLY: nks, nkstot, xk
   USE lsda_mod, ONLY: lsda, current_spin, isk
-  USE us, ONLY: vkb, nkb
+  USE uspp, ONLY: vkb, nkb
   USE wvfct, ONLY: npw, npwx, nbnd, wg, igk, g2kin
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunwfc, nwordwfc

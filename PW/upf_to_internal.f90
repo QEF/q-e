@@ -26,9 +26,8 @@ subroutine set_pseudo_upf (is, upf)
   USE atom,  ONLY: zmesh, mesh, msh, dx, r, rab, &
        chi, oc, nchi, lchi, jchi, rho_at, rho_atc, nlcc
   USE pseud, ONLY: lloc, lmax, zp
-  USE us, ONLY: tvanp
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nbeta, kkbeta, lll, jjj, psd
+       rinner, nbeta, kkbeta, lll, jjj, psd, tvanp
   USE funct, ONLY: dft, which_dft
   !
   USE ions_base, ONLY: zv

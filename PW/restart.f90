@@ -47,9 +47,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
   USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
-  USE us, ONLY:  nh, tvanp, okvan, newpseudo
+  USE us, ONLY:  okvan
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, &
-       psd, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver
+       psd, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, nh, tvanp, newpseudo
   USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
   USE fixed_occ, ONLY: tfixed_occ 
@@ -518,9 +518,9 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
   USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
-  USE us, ONLY:  nh, tvanp, okvan, newpseudo
+  USE us, ONLY:  okvan
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, &
-       psd, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver
+       psd, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, nh, tvanp, newpseudo
   USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
   USE fixed_occ, ONLY: tfixed_occ 

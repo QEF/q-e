@@ -16,9 +16,9 @@ module pseudo
   ! lmaxx : maximum non local angular momentum in PP      
   ! nchix : maximum number of atomic wavefunctions per PP
   ! ndm   : maximum number of points in the radial mesh
-  integer, parameter :: nbrx = 8, lqx = 5, nqfx = 8
+  integer, parameter :: nbrx = 8, lqmax = 5, nqfx = 8
   ! nbrx  : maximum number of beta functions         
-  ! lqx   : maximum number of angular momentum of Q  
+  ! lqmax : maximum number of angular momentum of Q  
   ! nqfx  : maximum number of coefficients in Q smoothing
   !
   ! pp_header
@@ -48,10 +48,10 @@ module pseudo
   real(kind=8) :: dion(nbrx,nbrx,npsx)
   ! pp_qij
   integer ::  nqf(npsx), nqlc(npsx)
-  real(kind=8) :: rinner(lqx,npsx), qqq(nbrx,nbrx,npsx), &
+  real(kind=8) :: rinner(lqmax,npsx), qqq(nbrx,nbrx,npsx), &
        qfunc(ndm,nbrx,nbrx,npsx)
   ! pp_qfcoef
-  real(kind=8) :: qfcoef(nqfx,lqx,nbrx,nbrx,npsx)
+  real(kind=8) :: qfcoef(nqfx,lqmax,nbrx,nbrx,npsx)
   !
   ! pp_pswfc
   real(kind=8) :: chi(ndm,nchix,npsx)
@@ -296,7 +296,7 @@ subroutine read_pseudo_nl (is, iunps)
      call scan_begin (iunps, "QIJ", .false.)  
      read (iunps, *, err = 100, iostat = ios) nqf(is)
      nqlc (is)= 2 * lmax (is) + 1
-     if (nqlc(is).gt.lqx .or. nqlc(is).lt.0) &
+     if (nqlc(is).gt.lqmax .or. nqlc(is).lt.0) &
           call errore (' read_pseudo_nl', 'Wrong  nqlc', nqlc (is) )
      if (nqf(is).ne.0) then
         call scan_begin (iunps, "RINNER", .false.)  

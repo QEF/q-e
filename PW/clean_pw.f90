@@ -24,8 +24,8 @@ SUBROUTINE clean_pw()
   USE scf,                  ONLY : rho, rho_save,vr, vltot, rho_core, vrs
   USE relax,                ONLY : if_pos
   USE wavefunctions_module, ONLY : evc, psic
-  USE us,                   ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, qrad, &
-                                   vkb, becsum, tab, tab_at, nhtoj
+  USE us,                   ONLY : qrad, tab, tab_at
+  USE uspp,                 ONLY : deallocate_uspp
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
   USE extfield,             ONLY : forcefield
   USE sticks,               ONLY : dfftp, dffts  
@@ -95,16 +95,7 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
   IF ( ALLOCATED( igk_l2g ) )    DEALLOCATE( igk_l2g )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  IF ( ALLOCATED( indv ) )       DEALLOCATE( indv )
-  IF ( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
-  IF ( ALLOCATED( nhtolm ) )      DEALLOCATE( nhtolm )
-  IF ( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
-  IF ( ALLOCATED( qq ) )         DEALLOCATE( qq )
-  IF ( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
-  IF ( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
-  IF ( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
-  IF ( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
   IF ( ALLOCATED( ns ) )         DEALLOCATE( ns )
   IF ( ALLOCATED( nsnew ) )      DEALLOCATE( nsnew )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
@@ -113,7 +104,7 @@ SUBROUTINE clean_pw()
      IF ( ALLOCATED( qq_spinorb ) ) DEALLOCATE( qq_spinorb )
      IF ( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
   END IF
- 
+  call deallocate_uspp () 
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !

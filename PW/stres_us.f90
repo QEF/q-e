@@ -19,8 +19,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE klist,                ONLY : nks, xk
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wvfct,                ONLY : gamma_only, npw, npwx, nbnd, igk, wg, et
-  USE uspp_param,           ONLY : lmaxkb
-  USE us,                   ONLY : nkb, vkb, nh, qq, deeq, tvanp, newpseudo
+  USE uspp_param,           ONLY : lmaxkb, nh, tvanp, newpseudo
+  USE uspp,                 ONLY : nkb, vkb, qq, deeq
   USE wavefunctions_module, ONLY : evc
 #ifdef __PARA
   USE para,                 ONLY : me

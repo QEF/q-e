@@ -19,7 +19,7 @@ MODULE paw
        paw_nkb,              &! total number of beta functions, with st.fact.
        paw_nqxq,             &! size of interpolation table
        paw_lmaxkb,           &! max angular momentum
-       paw_lqx,              &! max angular momentum + 1 for Q functions
+       paw_lmaxq,              &! max angular momentum + 1 for Q functions
        paw_nqx                ! number of interpolation points
   INTEGER, ALLOCATABLE ::&
        paw_indv(:,:),        &! correspondence of betas atomic <-> soli

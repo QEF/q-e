@@ -20,6 +20,7 @@ subroutine drho
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, only: nhm
   use phcom
   implicit none
 

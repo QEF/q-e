@@ -18,7 +18,8 @@ subroutine local_dos1d (ik, kband, plan)
   USE gvect
   USE gsmooth
   USE lsda_mod, ONLY: current_spin
-  USE us, ONLY: becsum, nh, tvanp
+  USE uspp, ONLY: becsum
+  USE uspp_param, ONLY: nh, tvanp
   USE wvfct, ONLY: npw, wg, igk
   USE wavefunctions_module,  ONLY: evc, psic
   USE becmod, ONLY: becp

@@ -19,6 +19,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, ONLY: nh
   use phcom
   implicit none
 

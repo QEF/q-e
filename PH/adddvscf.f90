@@ -17,8 +17,10 @@ subroutine adddvscf (ipert, ik)
 #include "machine.h"
 
   USE kinds,      ONLY : DP
+  USE uspp_param, ONLY : nh, tvanp
+  USE uspp,       ONLY : vkb
 ! modules from pwcom
-  USE us,         ONLY : okvan, tvanp, nh, vkb
+  USE us,         ONLY : okvan
   USE lsda_mod,   ONLY : lsda, current_spin, isk
   USE basis,      ONLY : ntyp, nat, ityp
   USE wvfct,      ONLY : nbnd

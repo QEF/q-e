@@ -51,8 +51,9 @@ subroutine setup2()
   USE gvect, ONLY: ecutwfc, gcutm, ngl, ngm
   USE klist, ONLY: xqq
   USE pseud, ONLY: lmax, lloc
-  USE uspp_param, ONLY: lmaxkb, nbeta, lll, lqx
-  USE us, ONLY: tvanp, nh, nqx, nqxq, nhm, nkb, dq
+  USE uspp_param, ONLY: lmaxkb, nbeta, lll, lmaxq, nhm, tvanp, nh
+  USE us, ONLY: nqx, nqxq, dq
+  USE uspp, ONLY: nkb
   USE wvfct, ONLY: npwx
   implicit none
   !
@@ -69,7 +70,7 @@ subroutine setup2()
         lmaxkb = max (lmaxkb, lll (nb, nt) )
      enddo
   enddo
-  lqx = 2*lmaxkb+1
+  lmaxq = 2*lmaxkb+1
   !
   ! maximum number of projectors (beta) per atom
   !
@@ -113,8 +114,9 @@ subroutine memory_estimate ( )
   USE gsmooth,ONLY: ngms, doublegrid
   USE ldaU,  ONLY: Hubbard_lmax, lda_plus_u
   USE lsda_mod, ONLY: nspin
-  USE us,    ONLY: okvan, nkb,  nqx, nqxq, nhm
-  USE uspp_param,    ONLY: lqx
+  USE us,    ONLY: okvan,  nqx, nqxq
+  USE uspp,  ONLY: nkb
+  USE uspp_param,    ONLY: lmaxq, nhm
   USE control_flags, ONLY: nmix, isolve, diis_ndim
   USE wvfct, ONLY: gamma_only, npwx, nbnd, nbndx
 #ifdef __PARA
@@ -150,7 +152,7 @@ subroutine memory_estimate ( )
   nonscalable_mem = nonscalable_mem + int_size * ngm_l + & ! ig_l2g
        real_size * nqx * nbrx * ntyp +                   & ! tab
        real_size * nhm * (nhm + 1)/2 * nat * nspin +     & ! becsum
-       real_size * nqxq* nbrx * (nbrx+1)/2 * lqx * ntyp +& ! qrad
+       real_size * nqxq* nbrx * (nbrx+1)/2 * lmaxq * ntyp +& ! qrad
        comp_size * ( 2*nr1 + 2*nr2 + 2*nr3 + 3) * nat +  & ! eigts
        real_size * ( nhm * nhm * ( nat*nspin + 2*ntyp) )+& ! qq dvan deeq
        real_size * 2 * nbnd * nkstot  +                  & ! et wg

@@ -11,7 +11,7 @@ subroutine allocate_cond
 !
 #include "machine.h"
   use pwcom
-  USE uspp_param, ONLY : nbrx, nbeta, lll, betar
+  USE uspp_param, ONLY : nbrx, nbeta, lll, betar, tvanp
   use atom, only: mesh, r
   use cond 
   implicit none

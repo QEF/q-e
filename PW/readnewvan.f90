@@ -21,8 +21,7 @@ subroutine readnewvan (is, iunps)
        lchi, rho_at, rho_atc, nlcc
   use pseud, only: zp, lmax, lloc
   use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqlc, &
-       rinner, nbeta, kkbeta, lll, psd
-  use us, only: tvanp
+       rinner, nbeta, kkbeta, lll, psd, tvanp
   use funct
   !
   implicit none

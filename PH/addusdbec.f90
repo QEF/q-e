@@ -18,6 +18,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, only: nh, tvanp, nhm
   use phcom
   implicit none
   !

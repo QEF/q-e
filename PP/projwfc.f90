@@ -27,6 +27,7 @@ program projwfc
   USE io_global,  ONLY : stdout 
   USE kinds, only : DP 
   use io_files,   only : nd_nmbr, prefix, tmp_dir 
+  USE uspp, ONLY: vkb
 #ifdef __PARA 
   use para,       only : me 
   use mp 
@@ -132,7 +133,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use lsda_mod 
   use symme, only: nsym, irt 
   use wvfct 
-  use us 
+  use uspp, only: nkb, vkb
   use becmod,   only: becp 
   use rbecmod,  only: rbecp => becp 
   use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 

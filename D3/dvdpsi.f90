@@ -17,6 +17,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   use pwcom
   use phcom
   use d3com
+  USE uspp_param, ONLY: nh
 !
   implicit none
   integer :: nu_i

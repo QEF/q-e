@@ -19,7 +19,7 @@ subroutine ortho
   USE klist, ONLY: nks, xk
   USE wvfct, ONLY: npw, npwx, nbnd, nbndx, igk
   USE wavefunctions_module,    ONLY : evc
-  USE us, ONLY: nkb, vkb
+  USE uspp, ONLY: nkb, vkb
   USE becmod, ONLY: becp
   implicit none
   integer :: ik

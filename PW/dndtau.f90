@@ -20,7 +20,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE wavefunctions_module,    ONLY : evc
-   USE us, ONLY: nkb, vkb
+   USE uspp, ONLY: nkb, vkb
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
    use becmod
    use io_files

@@ -21,7 +21,8 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   USE wavefunctions_module,  ONLY: psic
   use phcom
   USE kinds, only : DP
-  USE uspp_param, ONLY: lqx
+  USE uspp_param, ONLY: lmaxq, nh, nhm, tvanp
+
   implicit none
   !
   !   the dummy variables
@@ -72,7 +73,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   call start_clock ('addusddens')
   allocate (aux(  ngm , nspin , npertx))    
   allocate (sk (  ngm))    
-  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm(  ngm))    
   allocate (qmod( ngm))    
   if (.not.lgamma) allocate (qpg( 3  , ngm))    
@@ -82,12 +83,12 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !
   if (.not.lgamma) then
      call setqmod (ngm, xq, g, qmod, qpg)
-     call ylmr2 (lqx * lqx, ngm, qpg, qmod, ylmk0)
+     call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmk0)
      do ig = 1, ngm
         qmod (ig) = sqrt (qmod (ig) )
      enddo
   else
-     call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+     call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
      do ig = 1, ngm
         qmod (ig) = sqrt (gg (ig) )
      enddo

@@ -20,7 +20,7 @@ subroutine d3_summary
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use pwcom
-  USE uspp_param, ONLY : rinner, nqlc, nqf, lll, nbeta, psd, iver
+  USE uspp_param, ONLY : rinner, nqlc, nqf, lll, nbeta, psd, iver, tvanp
   USE atom, ONLY: mesh, numeric, xmin, dx, nlcc
   USE control_flags, ONLY : iverbosity
   use phcom

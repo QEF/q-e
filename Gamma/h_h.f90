@@ -14,7 +14,7 @@ subroutine H_h(e,h,Ah)
   USE kinds, only: DP
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
   USE gvect, ONLY : gstart
-  USE us,       ONLY : vkb, nkb
+  USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs
   use rbecmod, only: becp

@@ -22,8 +22,9 @@ subroutine newd
        gstart, ig1, ig2, ig3, eigts1, eigts2, eigts3, nl
   USE lsda_mod, ONLY: nspin
   USE scf,   ONLY: vr, vltot
-  USE us,    ONLY: deeq, dvan, okvan, nh, nhm, tvanp
-  USE uspp_param,  ONLY: lqx
+  USE us,    ONLY: okvan
+  USE uspp,  ONLY: deeq, dvan
+  USE uspp_param,  ONLY: lmaxq, nh, nhm, tvanp
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
@@ -59,11 +60,11 @@ subroutine newd
   end if
   call start_clock ('newd')
   allocate ( aux(ngm,nspin), qgm_na(ngm), qgm(ngm), qmod(ngm), &
-       ylmk0(ngm, lqx*lqx) )
+       ylmk0(ngm, lmaxq*lmaxq) )
   !
   deeq(:,:,:,:) = 0.d0
   !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo

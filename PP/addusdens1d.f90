@@ -21,8 +21,8 @@ subroutine addusdens1d (plan, prho)
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
   USE gvect, ONLY: nr3, nrx3, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
   USE lsda_mod, ONLY: current_spin
-  USE us, ONLY: becsum, nh, tvanp
-  USE uspp_param, ONLY: lqx
+  USE uspp, ONLY: becsum
+  USE uspp_param, ONLY: lmaxq, nh, tvanp
   !
   !     here the local variables
   !
@@ -41,7 +41,7 @@ subroutine addusdens1d (plan, prho)
   ! correspondence 1D FFT mesh G with array G
 
   real(kind=DP) :: plan (nr3), dimz, g1d (3, nr3), gg1d (nr3), qmod (nr3), &
-       qgr (nr3), qgi (nr3), ylmk0 (nr3, lqx * lqx)
+       qgr (nr3), qgi (nr3), ylmk0 (nr3, lmaxq * lmaxq)
   !  the planar average
   !  dimension along z
   !  ngm1d 3D vectors with the 1D G of this proc
@@ -67,7 +67,7 @@ subroutine addusdens1d (plan, prho)
   aux(:) = (0.d0, 0.d0)
 
   if (ngm1d > 0) then
-     call ylmr2 (lqx * lqx, ngm1d, g1d, gg1d, ylmk0)
+     call ylmr2 (lmaxq * lmaxq, ngm1d, g1d, gg1d, ylmk0)
      do nt = 1, ntyp
         if (tvanp (nt) ) then
            ijh = 0

@@ -59,8 +59,8 @@ SUBROUTINE setup()
                             restart, nosym, modenum, lraman
   USE relax,         ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,        ONLY : calc
-  USE uspp_param,    ONLY : psd, betar, nbeta, dion, jjj, lll
-  USE us,            ONLY : tvanp, okvan
+  USE uspp_param,    ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
+  USE us,            ONLY : okvan
   USE ldaU,          ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
                             Hubbard_alpha, Hubbard_lmax
   USE bp,            ONLY : gdir, lberry, nppstr

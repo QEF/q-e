@@ -1067,17 +1067,14 @@ MODULE input_parameters
 !  CARDS parameters
 !=----------------------------------------------------------------------------=!  
 !
-!  Note: See file read_cards.f90 for the cards syntax and usage
+!  Note: See file read_cards.f90 for card syntax and usage
 !
 !    ATOMIC_SPECIES
 !
         CHARACTER(LEN=4)  :: atom_label(nsx) = 'XX'  ! label of the atomic species being read
         CHARACTER(LEN=80) :: atom_pfile(nsx) = 'YY'  ! pseudopotential file name
-        REAL(dbl)         :: atom_mass(nsx)  = 0.0d0 ! atomic mass
-        INTEGER           :: atom_ptyp(nsx)  = 0     ! pseudopotential type
-          ! unsorted atomic masses
+        REAL(dbl)         :: atom_mass(nsx)  = 0.0d0 ! atomic mass of the i-th atomic species
           ! in atomic mass units: 1 a.m.u. = 1822.9 a.u. = 1.6605 * 10^-27 kg
-          ! atomic mass of the i-th atomic species
         LOGICAL   :: taspc = .FALSE.
 
 !
@@ -1090,7 +1087,7 @@ MODULE input_parameters
         INTEGER   :: na_inp(nsx)    = 0     ! number of atom for each specie
         LOGICAL   :: tapos = .FALSE.
         CHARACTER(LEN=80) :: atomic_positions = 'crystal'
-          ! atomic_positions = 'bohr' | 'armstrong' | 'crystal' | 'alat'
+          ! atomic_positions = 'bohr' | 'angstrong' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin
 
         !

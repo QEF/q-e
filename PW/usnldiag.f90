@@ -17,7 +17,8 @@ subroutine usnldiag (h_diag, s_diag)
   USE basis,  ONLY: ntyp, nat, ityp
   USE wvfct, ONLY: npw
   USE lsda_mod, ONLY: current_spin 
-  USE us,  ONLY: nh, deeq, vkb, qq, tvanp, newpseudo
+  USE uspp,  ONLY: deeq, vkb, qq
+  USE uspp_param,  ONLY: nh, tvanp, newpseudo
   implicit none
   !
   !    here the dummy variables

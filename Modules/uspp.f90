@@ -27,6 +27,8 @@ MODULE uspp_param
        rinner(lqmax,npsx)                  ! values of r_L
   INTEGER :: &
        nbeta(npsx),          &! number of beta functions
+       nh(npsx),             &! number of beta functions per atomic type
+       nhm,                  &! max number of different beta functions per atom
        kkbeta(npsx),         &! point where the beta are zero
        nqf(npsx),            &! number of coefficients for Q
        nqlc(npsx),           &! number of angular momenta in Q
@@ -35,21 +37,25 @@ MODULE uspp_param
        iver(3,npsx)           ! version of the atomic code
   INTEGER :: &
        lmaxkb,               &! max angular momentum
-       lqx                    ! max angular momentum + 1 for Q functions
+       lmaxq                  ! max angular momentum + 1 for Q functions
+  LOGICAL :: &
+       tvanp(npsx),          &! if .TRUE. the atom is of Vanderbilt type
+       newpseudo(npsx)        ! if .TRUE. multiple projectors are allowed
 END MODULE uspp_param
-!
 !
 MODULE uspp
   !
   ! Ultrasoft PPs:
   ! - Clebsch-Gordan coefficients "ap", auxiliary variables "lpx", "lpl"
+  ! - beta and q functions of the solid
   !
   USE kinds, ONLY: DP
   USE parameters, ONLY: lmaxx, lqmax
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: nlx, lpx, lpl, ap, aainit
+  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, vkb, dvan, &
+       deeq, qq, becsum, nhtoj, deallocate_uspp, beta
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
@@ -59,6 +65,25 @@ MODULE uspp
   REAL(KIND=DP) :: &
        ap(lqmax*lqmax,nlx,nlx)
   ! Clebsch-Gordan coefficients for spherical harmonics
+  !
+  INTEGER :: nkb          ! total number of beta functions, with struct.fact.
+  !
+  INTEGER, ALLOCATABLE ::&
+       indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
+       nhtol(:,:),       &! correspondence n <-> angular momentum l
+       nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
+  !
+  COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
+       vkb(:,:),              &! all beta functions in reciprocal space
+       dvan(:,:,:,:),         &! the D functions of the solid
+       deeq(:,:,:,:)           ! the integral of V_eff and Q_{nm}
+  REAL(KIND=DP), ALLOCATABLE :: &
+       qq(:,:,:),             &! the q functions in the solid
+       becsum(:,:,:),         &! the sum of bec = <beta|psi>
+       nhtoj(:,:)              ! correspondence n <-> total angular momentum
+  !
+  REAL(KIND=DP), ALLOCATABLE :: &
+       beta(:,:,:)            ! beta functions for CP (without struct.factor)
   !
 CONTAINS
   !
@@ -212,6 +237,16 @@ CONTAINS
     
     return
   end function compute_ap
+
+  subroutine deallocate_uspp()
+    IF( ALLOCATED( nhtol ) ) DEALLOCATE( nhtol )
+    IF( ALLOCATED( indv ) ) DEALLOCATE( indv )
+    IF( ALLOCATED( nhtolm ) ) DEALLOCATE( nhtolm )
+    IF( ALLOCATED( nhtoj ) ) DEALLOCATE( nhtoj )
+    IF( ALLOCATED( vkb ) ) DEALLOCATE( vkb )
+    IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
+    IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
+  end subroutine deallocate_uspp
 
 end module uspp
 

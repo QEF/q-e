@@ -19,6 +19,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
+  USE uspp_param, ONLY: nhm
   use phcom
   implicit none
 

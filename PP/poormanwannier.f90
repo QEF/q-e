@@ -85,7 +85,7 @@ subroutine projection (first_band, last_band)
   use lsda_mod 
   use symme, only: nsym, irt 
   use wvfct 
-  use us 
+  use uspp, only: nkb, vkb
   use becmod,   only: becp 
   use rbecmod,  only: rbecp => becp 
   use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &

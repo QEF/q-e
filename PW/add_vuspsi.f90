@@ -28,7 +28,8 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   USE basis,      ONLY : nat, ntyp, ityp
   USE lsda_mod,   ONLY : current_spin
   USE wvfct,      ONLY : gamma_only
-  USE us,         ONLY : vkb, nkb, nh, deeq
+  USE uspp,       ONLY : vkb, nkb, deeq
+  USE uspp_param, ONLY : nh
   !
   IMPLICIT NONE
   !

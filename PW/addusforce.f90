@@ -22,8 +22,9 @@ subroutine addusforce (forcenl)
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: vr, vltot
-  USE us, ONLY : okvan, nh, nhm, becsum, tvanp
-  USE uspp_param, ONLY : lqx
+  USE us, ONLY : okvan
+  USE uspp, ONLY : becsum
+  USE uspp_param, ONLY : lmaxq, tvanp, nh, nhm
   USE wvfct, ONLY: gamma_only
   implicit none
   real(kind=DP) :: forcenl (3, nat)
@@ -63,11 +64,11 @@ subroutine addusforce (forcenl)
   allocate (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin))    
   allocate (qgm( ngm))
   allocate (qmod( ngm))    
-  allocate (ylmk0(ngm,lqx*lqx))    
+  allocate (ylmk0(ngm,lmaxq*lmaxq))    
   !
   ddeeq(:,:,:,:) = 0.d0
   !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   !
   qmod (:) = sqrt (gg (:) )
   !

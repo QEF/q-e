@@ -20,8 +20,9 @@ subroutine addusdens
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
-  USE us, ONLY : okvan, nh, becsum, tvanp
-  USE uspp_param, ONLY : lqx
+  USE us, ONLY : okvan
+  USE uspp, ONLY: becsum
+  USE uspp_param, ONLY : lmaxq, tvanp, nh
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
@@ -48,10 +49,10 @@ subroutine addusdens
   allocate (aux ( ngm, nspin))    
   allocate (qmod( ngm))    
   allocate (qgm( ngm))    
-  allocate (ylmk0( ngm, lqx * lqx))    
+  allocate (ylmk0( ngm, lmaxq * lmaxq))    
 
   aux (:,:) = (0.d0, 0.d0)
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo

@@ -21,7 +21,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
-   USE us, ONLY: nkb, vkb
+   USE uspp, ONLY: nkb, vkb
    use becmod
    use io_files
 #ifdef __PARA

@@ -19,6 +19,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, ONLY: nh
   use phcom
   implicit none
   !

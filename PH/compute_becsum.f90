@@ -19,6 +19,7 @@ subroutine compute_becsum
 #include "machine.h"
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, ONLY: nh, tvanp
   use phcom
   implicit none
 

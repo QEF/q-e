@@ -16,7 +16,7 @@ subroutine addusldos (ldos, becsum1)
 #include "machine.h"
   use pwcom
   USE wavefunctions_module,  ONLY: psic
-  USE uspp_param, ONLY: lqx
+  USE uspp_param, ONLY: lmaxq, tvanp, nh, nhm
   implicit none
   complex(kind=DP) :: ldos (nrxx, nspin)
   ! local density of states
@@ -38,12 +38,12 @@ subroutine addusldos (ldos, becsum1)
   ! work space
 
   allocate (aux ( ngm , nspin))    
-  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm ( ngm))
   allocate (qmod( ngm))
 
   aux (:,:) = (0.d0,0.d0)
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo

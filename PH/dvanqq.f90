@@ -21,7 +21,7 @@ subroutine dvanqq
   use pwcom
   USE kinds, only : DP
   use phcom
-  USE uspp_param, ONLY: lqx
+  USE uspp_param, ONLY: lmaxq, nh, tvanp
   implicit none
   !
   !   And the local variables
@@ -62,10 +62,10 @@ subroutine dvanqq
   allocate (aux5(  ngm ,nat,  3 ))    
   allocate (qmodg( ngm))    
   allocate (veff ( nrxx , nspin))    
-  allocate (ylmk0( ngm , lqx * lqx))    
+  allocate (ylmk0( ngm , lmaxq * lmaxq))    
   allocate (qgm  ( ngm))    
   if (.not.lgamma) then
-     allocate (ylmkq(ngm , lqx * lqx))    
+     allocate (ylmkq(ngm , lmaxq * lmaxq))    
      allocate (qpg (3, ngm))    
      allocate (qmod( ngm))    
      allocate (qgmq( ngm))    
@@ -75,13 +75,13 @@ subroutine dvanqq
   !
   !     compute spherical harmonics
   !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmodg (ig) = sqrt (gg (ig) )
   enddo
   if (.not.lgamma) then
      call setqmod (ngm, xq, g, qmod, qpg)
-     call ylmr2 (lqx * lqx, ngm, qpg, qmod, ylmkq)
+     call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
      do ig = 1, ngm
         qmod (ig) = sqrt (qmod (ig) )
      enddo

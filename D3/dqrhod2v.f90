@@ -17,6 +17,7 @@ subroutine dqrhod2v (ipert, drhoscf)
 #include "machine.h"
   USE kinds, only : DP
   use pwcom
+  USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : iunigk
   use phcom

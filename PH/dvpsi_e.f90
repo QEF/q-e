@@ -23,6 +23,7 @@ subroutine dvpsi_e (kpoint, ipol)
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
   USE becmod, ONLY: becp
+  USE uspp_param, ONLY: nh
   use phcom
   implicit none
   !

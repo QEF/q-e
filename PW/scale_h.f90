@@ -20,7 +20,7 @@ subroutine scale_h
   USE cellmd, ONLY : at_old, omega_old
   USE gvect, ONLY: g, gg, ngm
   USE klist, ONLY: xk, wk, nkstot
-  USE uspp_param, ONLY: lqx, nbrx
+  USE uspp_param, ONLY: lmaxq, nbrx
   USE us, ONLY: nqxq, nqx, qrad, tab
   implicit none
 
@@ -50,7 +50,7 @@ subroutine scale_h
   ! scale the non-local pseudopotential tables
   !
   call DSCAL (nqx * nbrx * ntyp, sqrt (omega_old / omega), tab, 1)
-  call DSCAL (nqxq * nbrx * (nbrx + 1) / 2 * lqx * ntyp, omega_old / &
+  call DSCAL (nqxq * nbrx * (nbrx + 1) / 2 * lmaxq * ntyp, omega_old / &
        omega, qrad, 1)
   !
   ! recalculate the local part of the pseudopotential

@@ -20,8 +20,9 @@ subroutine addusstres (sigmanlc)
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: vr, vltot
-  USE us, ONLY : okvan, nh, nhm, becsum, tvanp
-  USE uspp_param, ONLY : lqx
+  USE us, ONLY : okvan
+  USE uspp, ONLY : becsum
+  USE uspp_param, ONLY : lmaxq, tvanp, nh, nhm
   USE wvfct, ONLY: gamma_only
   implicit none
   real(kind=DP) :: sigmanlc (3, 3)
@@ -56,12 +57,12 @@ subroutine addusstres (sigmanlc)
   ! function which compute the scal.
 
   allocate ( aux(ngm,nspin), aux1(ngm), vg(nrxx), qgm(ngm), qmod(ngm) )
-  allocate ( ylmk0(ngm,lqx*lqx), dylmk0(ngm,lqx*lqx) )
+  allocate ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
 
   !
   sus(:,:) = 0.d0
   !
-  call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo
@@ -83,7 +84,7 @@ subroutine addusstres (sigmanlc)
   ! (no contribution from G=0)
   !
   do ipol = 1, 3
-     call dylmr2 (lqx * lqx, ngm, g, gg, dylmk0, ipol)
+     call dylmr2 (lmaxq * lmaxq, ngm, g, gg, dylmk0, ipol)
      do nt = 1, ntyp
         if (tvanp (nt) ) then
            ijh = 1

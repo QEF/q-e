@@ -1039,7 +1039,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   USE control_flags,      ONLY : lconstrain
   USE constraints_module, ONLY : nconstr, constr_tol, constr, target
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, &
-                                 atom_ptyp, taspc, tapos, rd_pos, &
+                                 taspc, tapos, rd_pos, &
                                  atomic_positions, if_pos, sp_pos, &
                                  k_points, xk, wk, nk1, nk2, nk3, &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &

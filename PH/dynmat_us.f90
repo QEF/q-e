@@ -19,6 +19,7 @@ subroutine dynmat_us
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE kinds, only : DP
+  USE uspp_param, ONLY: nh
   use phcom
 #ifdef __PARA
   use para

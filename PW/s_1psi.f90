@@ -15,7 +15,7 @@ subroutine s_1psi (lda, n, psi, spsi)
   USE kinds, only: DP
   use becmod, only: becp
   use wvfct, only: npwx
-  use us, only: vkb, nkb
+  use uspp, only: vkb, nkb
   implicit none
   !
   integer :: lda, n

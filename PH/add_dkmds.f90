@@ -10,6 +10,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   use pwcom
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
+  USE uspp_param, only: nh
   use phcom
 
   implicit none

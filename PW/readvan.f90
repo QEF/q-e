@@ -23,8 +23,7 @@ subroutine readvan (is, iunps)
        rho_at, rho_atc, nlcc
   use pseud, only: zp, lmax, lloc
   use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nbeta, kkbeta, lll, iver, ifqopt, psd
-  use us, only: tvanp
+       rinner, nbeta, kkbeta, lll, iver, ifqopt, psd, tvanp
   use funct, only: dft, which_dft
   implicit none
 

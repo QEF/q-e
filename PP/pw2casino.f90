@@ -71,7 +71,8 @@ subroutine compute_casino
   use scf, only: rho, rho_core
   use vlocal, only: vloc, vnew, strf
   use wvfct, only: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
-  use us, only: nkb, vkb, nh, dvan
+  use uspp, only: nkb, vkb, dvan
+  use uspp_param, only: nh
   use becmod,   only: becp 
   use io_global, only: stdout
   use io_files, only: nd_nmbr, nwordwfc, iunwfc

@@ -14,6 +14,7 @@ subroutine transmit(ik, ien)
 !
 #include "machine.h"
   USE io_global,  ONLY :  stdout
+  USE uspp_param, ONLY :  tvanp
   use pwcom
   use cond
 implicit none

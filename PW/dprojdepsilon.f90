@@ -24,7 +24,8 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
-   USE us, ONLY: nkb, vkb, nhm, nh, qq
+   USE uspp, ONLY: nkb, vkb, qq
+   USE uspp_param, ONLY: nhm, nh
    USE wavefunctions_module,    ONLY : evc
    use becmod
    use io_files

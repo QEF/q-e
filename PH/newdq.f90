@@ -19,7 +19,7 @@ subroutine newdq (dvscf, npe)
   use pwcom
   USE kinds, only : DP
   use phcom
-  USE uspp_param, ONLY: lqx
+  USE uspp_param, ONLY: nh, nhm, tvanp, lmaxq
   implicit none
   !
   !   The dummy variables
@@ -54,7 +54,7 @@ subroutine newdq (dvscf, npe)
   allocate (aux1 (ngm))    
   allocate (aux2 (ngm , nspin))    
   allocate (veff (nrxx))    
-  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm  (ngm))    
   allocate (qmod (ngm))    
 
@@ -64,12 +64,12 @@ subroutine newdq (dvscf, npe)
   !
   if (.not.lgamma) then
      call setqmod (ngm, xq, g, qmod, qg)
-     call ylmr2 (lqx * lqx, ngm, qg, qmod, ylmk0)
+     call ylmr2 (lmaxq * lmaxq, ngm, qg, qmod, ylmk0)
      do ig = 1, ngm
         qmod (ig) = sqrt (qmod (ig) )
      enddo
   else
-     call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
+     call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
      do ig = 1, ngm
         qmod (ig) = sqrt (gg (ig) )
      enddo

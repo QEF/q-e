@@ -14,6 +14,7 @@ subroutine dvpsi_kb(kpoint,nu)
 #include "machine.h"
   USE kinds, only: DP
   use pwcom
+  USE uspp_param, ONLY: nh, nhm
   USE atom, ONLY: nlcc, mesh, dx, r, rab, rho_atc, numeric
   USE wavefunctions_module,  ONLY: evc, psic
   use cgcom

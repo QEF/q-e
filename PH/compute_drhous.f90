@@ -20,6 +20,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE kinds, only : DP
+  USE uspp_param, ONLY: nhm
   use phcom
   implicit none
   !

@@ -36,10 +36,10 @@ subroutine init_us_1
   USE gvect, ONLY: g, gg
   USE pseud, ONLY: lloc, lmax
   USE lsda_mod, ONLY : nspin
-  USE us, ONLY: nh,tvanp, okvan, nqxq, dq, nqx, tab,nhtol, nhtoj, nhtolm, &
-       dvan, qq, qrad, indv, nhm
-  USE uspp_param, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nbeta, &
-       kkbeta, nqf, nqlc, lll, jjj, lmaxkb
+  USE us, ONLY: okvan, nqxq, dq, nqx, tab, qrad
+  USE uspp, ONLY: nhtol, nhtoj, nhtolm, dvan, qq, indv
+  USE uspp_param, ONLY: lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
+       kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm
   USE uspp, ONLY : ap, aainit
   USE spin_orb, ONLY : lspinorb, rot_ylm, qq_spinorb, fcoef
   implicit none
@@ -76,11 +76,11 @@ subroutine init_us_1
   allocate (aux1( ndm))    
   allocate (besr( ndm))    
   allocate (qtot( ndm , nbrx , nbrx))    
-  allocate (ylmk0( lqx * lqx))    
+  allocate (ylmk0( lmaxq * lmaxq))    
   dvan = 0.d0
   qq (:,:,:)   = 0.d0
   ap (:,:,:)   = 0.d0
-  if (lqx > 0) qrad(:,:,:,:)= 0.d0
+  if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
 
   prefr = fpi / omega
   if (lspinorb) then
@@ -256,7 +256,7 @@ subroutine init_us_1
         enddo
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
 #ifdef __PARA
-        call reduce (nqxq * nbrx * (nbrx + 1) / 2 * lqx, qrad (1, 1, 1, nt) )
+        call reduce (nqxq * nbrx * (nbrx + 1) / 2 * lmaxq, qrad (1, 1, 1, nt) )
 #endif
      endif
      ! ntyp
@@ -269,7 +269,7 @@ subroutine init_us_1
 #ifdef __PARA
   if (gg (1) > 1.0d-8) goto 100
 #endif
-  call ylmr2 (lqx * lqx, 1, g, gg, ylmk0)
+  call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
   do nt = 1, ntyp
     if (tvanp (nt) ) then
       if (lspinorb) then

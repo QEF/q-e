@@ -29,6 +29,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE control_flags,        ONLY: reduce_io
   USE becmod,               ONLY: becp  
   use pwcom
+  USE uspp_param,           ONLY : nhm
 !  use phcom
   USE control_ph,           ONLY: iter0, niter_ph, nmix_ph, tr2_ph, elph, &
                                   alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
@@ -43,6 +44,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE qpoint,               ONLY: npwq, igkq, nksq
   USE partial,              ONLY: comp_irr, done_irr, ifat
   USE modes,                ONLY: npert, u
+  !
   implicit none
 
   integer :: irr, npe, imode0

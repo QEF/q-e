@@ -17,6 +17,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 #include "machine.h"
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, only: nh
   use phcom
   implicit none
   integer :: ik, ikk, nper, nu_i0

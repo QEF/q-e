@@ -18,6 +18,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, ONLY: nhm, nh
   use phcom
   implicit none
 

@@ -12,7 +12,7 @@ subroutine A_h(e,h,ah)
 #include "machine.h"
   USE kinds, only: DP
   USE cell_base,ONLY : alat, omega, tpiba2
-  USE us,       ONLY : vkb, nkb
+  USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin, nspin
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic

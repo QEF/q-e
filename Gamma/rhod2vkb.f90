@@ -15,6 +15,7 @@ subroutine rhod2vkb(dyn0)
 #include "machine.h"
   use pwcom
   USE wavefunctions_module,  ONLY: evc, psic
+  USE uspp_param, only: nh
   use cgcom
   !
   implicit none

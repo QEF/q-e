@@ -6,15 +6,15 @@
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
       USE kinds, ONLY: DP
       USE basis, ONLY: ntyp
-      USE us, ONLY: dq, indv, qrad, nhtol, nhtolm
-      USE uspp_param, ONLY: lqx, nbrx
-      USE uspp, ONLY: nlx, lpl, lpx, ap
+      USE us, ONLY: dq, qrad
+      USE uspp_param, ONLY: lmaxq, nbrx
+      USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
 
       implicit none
       integer :: iv,jv,is
       complex(DP) :: qg,sig
-      real(DP) :: ylm_k(lqx*lqx)
-      real(DP) :: qr(nbrx,nbrx,lqx,ntyp)
+      real(DP) :: ylm_k(lmaxq*lmaxq)
+      real(DP) :: qr(nbrx,nbrx,lmaxq,ntyp)
       
       integer ivs,jvs,ivl,jvl,ig,lp,l,i
 !       IV  = 1..8    ! s_1 p_x1 p_y1 p_z1 s_2 p_x2 p_z2 p_y2

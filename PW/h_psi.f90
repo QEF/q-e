@@ -21,8 +21,16 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ... output:
   ! ...    hpsi  H*psi
   !
-  USE kinds,      ONLY : DP
-  USE wvfct,      ONLY : gamma_only 
+  USE kinds,    ONLY : DP
+  USE wvfct,    ONLY : gamma_only 
+  USE uspp,     ONLY : vkb, nkb
+  USE wvfct,    ONLY : igk, g2kin
+  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE ldaU,     ONLY : lda_plus_u
+  USE lsda_mod, ONLY : current_spin
+  USE scf,      ONLY : vrs  
+  USE gvect,    ONLY : gstart
+  USE rbecmod,  ONLY : becp
   !
   IMPLICIT NONE
   !
@@ -37,11 +45,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !  
   IF ( gamma_only ) THEN
      !
-     CALL h_psi_gamma( lda, n, m, psi, hpsi )
+     CALL h_psi_gamma( )
      !
   ELSE  
      !
-     CALL h_psi_k( lda, n, m, psi, hpsi )
+     CALL h_psi_k( )
      !
   END IF  
   !
@@ -49,32 +57,16 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   RETURN
   !
-END SUBROUTINE h_psi
-  !  CONTAINS
+  CONTAINS
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE h_psi_gamma( lda, n, m, psi, hpsi )
+     SUBROUTINE h_psi_gamma( )
        !-----------------------------------------------------------------------
        ! 
        ! ... gamma version
        !
-       USE kinds,    ONLY : DP
-       USE us,       ONLY : vkb, nkb
-       USE wvfct,    ONLY : igk, g2kin
-       USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-       USE ldaU,     ONLY : lda_plus_u
-       USE lsda_mod, ONLY : current_spin
-       USE scf,      ONLY : vrs  
-       USE gvect,    ONLY : gstart
-       USE rbecmod,  ONLY : becp
        !
        IMPLICIT NONE
-       !
-       ! ... input/output arguments
-       !
-       INTEGER          :: lda, n, m
-       COMPLEX(KIND=DP) :: psi(lda,m) 
-       COMPLEX(KIND=DP) :: hpsi(lda,m)   
        !
        INTEGER :: ibnd, j
        !
@@ -117,29 +109,14 @@ END SUBROUTINE h_psi
      !
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE h_psi_k( lda, n, m, psi, hpsi )
+     SUBROUTINE h_psi_k( )
        !-----------------------------------------------------------------------
        !
        ! ... k-points version
        !
-       USE kinds,    ONLY : DP
-       USE us,       ONLY : vkb, nkb
-       USE wvfct,    ONLY : igk, g2kin
-       USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-       USE ldaU,     ONLY : lda_plus_u
-       USE lsda_mod, ONLY : current_spin
-       USE scf,      ONLY : vrs  
-       USE gvect,    ONLY : gstart
-       USE becmod,   ONLY : becp
        USE wavefunctions_module, ONLY : psic
        !
        IMPLICIT NONE
-       !
-       ! ... input/output arguments
-       !
-       INTEGER          :: lda, n, m
-       COMPLEX(KIND=DP) :: psi(lda,m) 
-       COMPLEX(KIND=DP) :: hpsi(lda,m)   
        !
        INTEGER :: ibnd, j
        ! counters
@@ -210,4 +187,4 @@ END SUBROUTINE h_psi
        !
      END SUBROUTINE h_psi_k     
      !
-! END SUBROUTINE h_psi
+END SUBROUTINE h_psi

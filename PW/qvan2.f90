@@ -21,9 +21,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE us, ONLY: dq, indv, qrad, nhtolm
-  USE uspp_param, ONLY: lqx, nbrx
-  USE uspp, ONLY: nlx, lpl, lpx, ap
+  USE us, ONLY: dq, qrad
+  USE uspp_param, ONLY: lmaxq, nbrx
+  USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   implicit none
 
   integer :: ngy, ih, jh, np
@@ -32,7 +32,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! input: the second index of Q
   ! input: the number of the pseudopotential
 
-  real(kind=DP) :: ylmk0 (ngy, lqx * lqx), qmod (ngy)
+  real(kind=DP) :: ylmk0 (ngy, lmaxq * lmaxq), qmod (ngy)
   ! the spherical harmonics
   ! input: moduli of the q+g vectors
   complex(kind=DP) :: qg (ngy)

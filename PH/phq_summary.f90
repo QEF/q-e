@@ -20,7 +20,8 @@ subroutine phq_summary
   USE io_global,     ONLY : stdout
   use pwcom
   USE atom,          ONLY : numeric, mesh, msh, dx, r , rab, xmin, nlcc
-  USE uspp_param,    ONLY : psd, lll, iver, nbeta, nqf, rinner, nqlc
+  USE uspp_param,    ONLY : psd, lll, iver, nbeta, nqf, rinner, nqlc, &
+       tvanp
   use phcom
   USE control_flags, ONLY : iverbosity
   

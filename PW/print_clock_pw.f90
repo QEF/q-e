@@ -42,7 +42,7 @@ SUBROUTINE print_clock_pw()
    !
 #ifdef DEBUG_NEWD
    WRITE( stdout,*) "nhm*(nhm+1)/2       = ", nhm*(nhm+1)/2, nhm
-   WRITE( stdout,*) "nbrx*(nbrx+1)/2*lqx = ", nbrx*(nbrx+1)/2*lqx, nbrx,lqx
+   WRITE( stdout,*) "nbrx*(nbrx+1)/2*lmaxq = ", nbrx*(nbrx+1)/2*lmaxq, nbrx,lmaxq
    !
    CALL print_clock( 'newd:fftvg' )
    CALL print_clock( 'newd:qvan2' )

@@ -21,6 +21,7 @@ subroutine allocate_phq
   use phcom
   use el_phon
   USE becmod, ONLY: becp
+  USE uspp_param, ONLY: nhm
   implicit none
   !
   !  allocate space for the quantities needed in the phonon program

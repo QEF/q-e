@@ -12,14 +12,13 @@
       USE parameters, only:  ndmx, nbrx
       USE kinds, only: DP
       use constants, only: fpi
-      USE uspp_param, only: lqx, qfunc, qfcoef, nqf, rinner, lll, &
-           nbeta, kkbeta
-      USE us, ONLY: tvanp
+      USE uspp_param, only: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
+           nbeta, kkbeta, tvanp
       implicit none
       integer :: ik,  msh_bp, i, np, m, k, l
       integer :: n,idbes,ilmin,ilmax,iv,jv
       real(DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
-             qr_k(nbrx,nbrx,lqx,ntyp)
+             qr_k(nbrx,nbrx,lmaxq,ntyp)
 
 ! declaration readvan quantities
 !      integer NBETA,KKBETA,iver,nqf,ifqopt,nqlc,lll
@@ -29,11 +28,11 @@
 !     C           QFUNC(0:ndm,NBRX,NBRX,NPSX),
 !     C           NBETA(NPSX),KKBETA(NPSX),NVALES(NPSX),lll(nbrx,npsx),
 !     C           iver(3,npsx),nqf(npsx),ifqopt(npsx),nqlc(npsx),
-!     C           qfcoef(nqfx,lqx,NBRX,NBRX,npsx),rinner(lqx,npsx)
+!     C           qfcoef(nqfx,lmaxq,NBRX,NBRX,npsx),rinner(lmaxq,npsx)
 !      common/ncprm/dion(nbrx,nbrx,npsx),
 !     +           betar(0:ndm,nbrx,npsx), qqq(nbrx,nbrx,npsx),
 !     +           qfunc(0:ndm,nbrx,nbrx,npsx),
-!     +           qfcoef(nqfx,lqx,nbrx,nbrx,npsx), rinner(lqx,npsx),
+!     +           qfcoef(nqfx,lmaxq,nbrx,nbrx,npsx), rinner(lmaxq,npsx),
 !     +           nbeta(npsx), kkbeta(npsx),
 !     +           nqf(npsx), nqlc(npsx), ifqopt(npsx), lll(nbrx,npsx),
 !     +           iver(3,npsx)

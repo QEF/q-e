@@ -8,6 +8,7 @@ subroutine add_for_charges (ik, uact)
 
   use pwcom
   USE kinds, only : DP
+  USE uspp_param, only: nh
   use phcom
   implicit none
   !

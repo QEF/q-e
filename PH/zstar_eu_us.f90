@@ -10,6 +10,7 @@ subroutine zstar_eu_us
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
+  USE uspp_param,            ONLY : nhm
   use pwcom
   use phcom
   !

@@ -33,9 +33,9 @@ subroutine allocate_nlpot
   USE lsda_mod, ONLY: nspin
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
-  USE us, ONLY: nh, indv, nhtol, nhtolm, qq, dvan, deeq, qrad, vkb, tab, &
-       tab_at, dq, becsum, nhm, nqx, nqxq, nkb, nhtoj
-  USE uspp_param, ONLY: lqx, lmaxkb, lll, nbeta
+  USE us, ONLY: qrad, tab, tab_at, dq, nqx, nqxq
+  USE uspp, ONLY: indv, nhtol, nhtolm, qq, dvan, deeq, vkb, becsum, nkb, nhtoj
+  USE uspp_param, ONLY: lmaxq, lmaxkb, lll, nbeta, nh, nhm
   USE spin_orb, ONLY: lspinorb, qq_spinorb, fcoef
   implicit none
   !
@@ -94,9 +94,9 @@ subroutine allocate_nlpot
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
           / dq + 4) * cell_factor
-  lqx = 2*lmaxkb+1
+  lmaxq = 2*lmaxkb+1
   !
-  if (lqx > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lqx, ntyp))    
+  if (lmaxq > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lmaxq, ntyp))    
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !

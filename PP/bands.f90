@@ -110,7 +110,8 @@ subroutine punch_band (filband)
   use klist
   use io_files, only: iunpun, nwordwfc, iunwfc
   use wvfct
-  use us
+  use uspp, only: nkb, vkb, qq
+  use uspp_param, only: tvanp, nh, nhm
   use wavefunctions_module, only: evc
 
   implicit none
