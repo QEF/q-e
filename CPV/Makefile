@@ -22,7 +22,7 @@ modules.o \
 para.o \
 read_pseudo.o \
 restart.o \
-neb_routines.o \
+path_routines.o \
 stop_pw.o \
 smd.o  \
 redis.o \

@@ -16,11 +16,11 @@ PROGRAM pwscf
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lneb
-  USE io_files,         ONLY : nd_nmbr, iunneb, tmp_dir
-  USE neb_variables,    ONLY : conv_neb
-  USE neb_base,         ONLY : io_neb_start, io_neb_stop, &
-                               initialize_neb, search_mep
+  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lpath
+  USE io_files,         ONLY : nd_nmbr, iunpath, tmp_dir
+  USE path_variables,   ONLY : conv_path
+  USE path_base,        ONLY : io_path_start, io_path_stop, &
+                               initialize_path, search_mep
   USE io_global,        ONLY : ionode
   !
   IMPLICIT NONE
@@ -59,19 +59,19 @@ PROGRAM pwscf
   !
   CALL show_memory()
   !
-  IF ( lneb ) THEN
+  IF ( lpath ) THEN
      !
-     CALL io_neb_start()
+     CALL io_path_start()
      !
-     CALL initialize_neb( 'PW' )
+     CALL initialize_path( 'PW' )
      !
-     ! ... this routine does all the NEB job
+     ! ... this routine does all the "string" job
      !   
      CALL search_mep()
      !
-     CALL io_neb_stop()
+     CALL io_path_stop()
      !  
-     CALL stop_pw( conv_neb )
+     CALL stop_pw( conv_path )
      !
   ELSE
      !

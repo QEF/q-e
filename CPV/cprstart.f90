@@ -138,50 +138,54 @@
     END SUBROUTINE
 
 
-   SUBROUTINE neb_loop( iloop )
-
-     USE kinds
-     USE io_global,        ONLY: ionode, stdout
-     USE neb_variables,    ONLY: conv_neb
-     USE neb_variables,    ONLY: neb_deallocation
-     USE neb_routines,     ONLY: initialize_neb, search_mep, iosys_neb
-     USE io_routines,      ONLY: write_output
-     USE ions_base,        ONLY: deallocate_ions_base
-
-     IMPLICIT NONE
-
-     INTEGER :: iloop
-
-     ! ... stdout is connected to a file ( specific for each image )
-     ! ... via unit 17
-
-     IF( ionode ) THEN
+    SUBROUTINE neb_loop( iloop )
+      !
+      USE kinds
+      USE io_global,        ONLY : ionode, stdout
+      USE path_variables,   ONLY : conv_path
+      USE path_variables,   ONLY : path_deallocation
+      USE path_base,        ONLY : initialize_path, search_mep
+      USE path_routines,    ONLY : iosys_path
+      USE path_io_routines, ONLY : write_output
+      USE ions_base,        ONLY : deallocate_ions_base
+      !
+      IMPLICIT NONE
        !
-       stdout = 17
-       !
-     END IF
-
-     CALL iosys_neb()
-
-     CALL initialize_neb( 'FP' )
-     !
-     ! ... this routine does all the NEB job
-     !
-     CALL search_mep()
-     !
-     ! ... output is written
-     !
-     CALL write_output()
-
-     CALL deallocate_ions_base()
-     !
-     ! ... stdout is reconnected to standard output
-     !
-     stdout = 6
-     !
-
-     RETURN
-   END SUBROUTINE neb_loop
+      INTEGER :: iloop
+      !
+      !
+      ! ... stdout is connected to a file ( specific for each image )
+      ! ... via unit 17
+      !
+      IF( ionode ) THEN
+        !
+        stdout = 17
+        !
+      END IF
+      !
+      CALL iosys_path()
+      !
+      CALL initialize_path( 'FP' )
+      !
+      ! ... this routine does all the NEB job
+      !
+      CALL search_mep()
+      !
+      ! ... output is written
+      !
+      CALL write_output()
+      !
+      CALL deallocate_ions_base( )
+      !
+      CALL path_deallocation( 'neb' )
+      !
+      ! ... stdout is reconnected to standard output
+      !
+      stdout = 6
+      !
+      RETURN
+      !
+    END SUBROUTINE neb_loop
 
 
     SUBROUTINE smd_loop( nloop )

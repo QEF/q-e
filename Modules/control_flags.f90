@@ -214,7 +214,8 @@
        lbfgs,            &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
        loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme
        lmd,              &! if .TRUE. the calculation is a dynamics
-       lneb,             &! if .TRUE. the calculation is neb
+       lpath,            &! if .TRUE. the calculation is a path optimizations
+       lneb,             &! if .TRUE. the calculation is NEB dynamics
        lsmd,             &! if .TRUE. the calculation is string dynamics
        lwf,              &! if .TRUE. the calculation is with wannier functions
        lphonon,          &! if .TRUE. the calculation is phonon

@@ -323,19 +323,24 @@ MODULE read_namelists_module
        upscale                 = 10
        potential_extrapolation = 'default'
        !
-       ! ... NEB defaults ( C.S. 17/10/2003 )
-       ! 
+       ! ... defaults for "path" optimizations
+       !
+       ! ... general input variables
+       !
        num_of_images       = 0
-       CI_scheme           = 'no-CI'
-       optimization        = .FALSE.
+       first_last_opt      = .FALSE.
        reset_vel           = .FALSE.
        minimization_scheme = 'quick-min'
        damp                = 1.D0
        temp_req            = 0.D0
        ds                  = 1.5D0
-       k_max               = 0.1D0
-       k_min               = 0.1D0
-       neb_thr             = 0.05D0
+       path_thr            = 0.05D0
+       !
+       ! ... NEB specific
+       !
+       CI_scheme = 'no-CI'
+       k_max     = 0.1D0
+       k_min     = 0.1D0
        !
        ! ... BFGS defaults
        !
@@ -693,10 +698,10 @@ MODULE read_namelists_module
        CALL mp_bcast( upscale, ionode_id )
        CALL mp_bcast( potential_extrapolation, ionode_id )
        !
-       ! ... NEB broadcast ( C.S. 17/10/2003 )
+       ! ... "path" variables broadcast
        !
        CALL mp_bcast( num_of_images, ionode_id )
-       CALL mp_bcast( optimization, ionode_id )
+       CALL mp_bcast( first_last_opt, ionode_id )
        CALL mp_bcast( reset_vel, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
        CALL mp_bcast( minimization_scheme, ionode_id )
@@ -705,7 +710,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ds, ionode_id )
        CALL mp_bcast( k_max, ionode_id )
        CALL mp_bcast( k_min, ionode_id )
-       CALL mp_bcast( neb_thr, ionode_id )
+       CALL mp_bcast( path_thr, ionode_id )
        !
        ! ... BFGS
        !
@@ -906,15 +911,11 @@ MODULE read_namelists_module
              CALL infomsg( sub_name,' nppstr not used ',-1)
        END IF
        !
-       IF( calculation == 'smd' .AND. prog /= 'CP' ) THEN
-         CALL errore( sub_name,' SMD implemented only with CP ',-1)
-       END IF
-
        IF( prog == 'PW' .AND. TRIM( restart_mode ) == 'reset_counters' ) THEN
-         CALL errore( sub_name,' restart_mode == reset_counters not implemented in PW  ',-1)
+         CALL errore( sub_name, &
+                    & ' restart_mode == reset_counters' // &
+                    & ' not implemented in PW ', -1 )
        END IF
-       
-
        !
        RETURN
        !
@@ -1163,14 +1164,25 @@ MODULE read_namelists_module
        IF( ion_maxstep < 0 ) &
           CALL errore( sub_name,' ion_maxstep out of range ',1)
        !
-       ! ... NEB checkin ( C.S. 17/10/2003 )
+       ! ... general "path" variables checkin
        !
        IF ( ds < 0.D0 ) &
           CALL errore( sub_name,' ds out of range ',1)
        IF ( damp < 0.D0 ) &
           CALL errore( sub_name,' damp out of range ',1)
        IF ( temp_req < 0.D0 ) &
-          CALL errore( sub_name,' temp_req out of range ',1)  
+          CALL errore( sub_name,' temp_req out of range ',1)
+       !
+       DO i = 1, SIZE( minimization_scheme_allowed )
+          IF ( TRIM( minimization_scheme ) == &
+               minimization_scheme_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF ( .NOT. allowed ) &
+          CALL errore( sub_name, ' minimization_scheme '''// &
+                       & TRIM( minimization_scheme )//''' not allowed ', 1 )
+       !
+       ! ... NEB specific checkin
+       !
        IF ( k_max < 0.D0 ) &
           CALL errore( sub_name,' k_max out of range ',1)
        IF ( k_min < 0.D0 ) &
@@ -1185,14 +1197,6 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' CI_scheme '''// &
                        & TRIM( CI_scheme )//''' not allowed ', 1 )        
        !
-       DO i = 1, SIZE( minimization_scheme_allowed )
-          IF ( TRIM( minimization_scheme ) == &
-               minimization_scheme_allowed(i) ) allowed = .TRUE.
-       END DO
-       IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' minimization_scheme '''// &
-                       & TRIM( minimization_scheme )//''' not allowed ', 1 )       
-
        ! ... SMD checking ( Y.K. 15/04/2004 )
        !
        IF ( smd_polm .AND. smd_linr ) &
@@ -1356,14 +1360,6 @@ MODULE read_namelists_module
                   CALL errore( sub_name,' calculation '//calculation// &
                   & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
-          !
-          ! ... SMD calculation ( Y.K. 15/04/2004)
-          !
-          CASE ( 'smd' )
-             IF( prog == 'CP' ) THEN
-                electron_dynamics = 'damp'
-                ion_dynamics = 'damp'
-             END IF
           CASE ( 'cp-wf' )
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
@@ -1406,10 +1402,10 @@ MODULE read_namelists_module
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'beeman'
              END IF
-          !
-          ! ... NEB calculation ( C.S. 17/10/2003 )
-          ! 
-          CASE ( 'neb' )
+          CASE ( 'neb' , 'smd' )
+             !
+             ! ... "path" optimizations
+             ! 
              IF( prog == 'PW' ) startingpot  = 'atomic'
              IF( prog == 'PW' ) startingwfc  = 'atomic'
              IF( prog == 'FP' ) THEN
@@ -1417,11 +1413,14 @@ MODULE read_namelists_module
                  ion_dynamics      = 'none'
                  cell_dynamics     = 'none'
              END IF
+             IF( prog == 'CP' ) THEN
+                electron_dynamics = 'damp'
+                ion_dynamics      = 'damp'
+             END IF
           CASE DEFAULT
              CALL errore( sub_name,' calculation '// & 
                           & calculation//' not implemented ',1)
        END SELECT
-
        !              
        IF ( prog == 'PW' ) THEN
           !       
@@ -1438,7 +1437,6 @@ MODULE read_namelists_module
           END IF
           !
           IF ( calculation == 'nscf' .OR. &
-               calculation == 'raman'.OR. &
                calculation == 'phonon' ) THEN
              !
              startingpot = 'file'
@@ -1447,13 +1445,12 @@ MODULE read_namelists_module
           END IF   
           !      
        END IF                   
-
+       !
        IF ( TRIM( sic ) /= 'none' ) THEN 
          IF ( nspin == 2 .and. nelec > 1 .and. ( nelup == neldw .or. nelup == (neldw+1) ) ) THEN
             force_pairing = .true.
          END IF
        END IF
-
        !
        RETURN
        !

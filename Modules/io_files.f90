@@ -49,7 +49,7 @@ MODULE io_files
   CHARACTER (LEN=80) :: &
     dat_file  = 'os.dat',   &! file containing the enegy profile
     int_file  = 'os.int',   &! file containing the interpolated energy profile
-    neb_file  = 'os.neb',   &! file containing informations needed to restart a neb simulation
+    path_file = 'os.path',  &! file containing informations needed to restart a string simulation
     xyz_file  = 'os.xyz',   &! file containing coordinates of all images in xyz format
     axsf_file = 'os.axsf'    ! file containing coordinates of all images in axsf format
   CHARACTER (LEN=85) :: &
@@ -88,9 +88,9 @@ MODULE io_files
   INTEGER :: iunnewimage = 28 ! unit for parallelization among images
   INTEGER :: iunblock    = 29 ! as above (blocking file)
   !
-  ! ... NEB specific
+  ! ... "path" specific
   !
-  INTEGER :: iunneb      =  6 ! unit for NEB output ( stdout or what else )
+  INTEGER :: iunpath     =  6 ! unit for string output ( stdout or what else )
   INTEGER :: iunrestart  = 21 ! unit for saving the restart file ( neb_file )
   INTEGER :: iundat      = 22 ! unit for saving the enegy profile
   INTEGER :: iunint      = 23 ! unit for saving the interpolated energy profile

@@ -14,13 +14,13 @@ SUBROUTINE stop_pw( flag )
   ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  USE io_global,         ONLY :  stdout, ionode
-  USE control_flags,     ONLY :  lneb, twfcollect
-  USE io_files,          ONLY :  prefix, iunwfc, iunigk, iunres
-  USE input_parameters,  ONLY :  deallocate_input_parameters
-  USE io_routines,       ONLY :  write_restart
-  USE neb_variables,     ONLY :  neb_deallocation
-  USE mp,                ONLY :  mp_barrier, mp_end
+  USE io_global,        ONLY : stdout, ionode
+  USE control_flags,    ONLY : lpath, lneb, lsmd, twfcollect
+  USE io_files,         ONLY : prefix, iunwfc, iunigk, iunres
+  USE input_parameters, ONLY : deallocate_input_parameters
+  USE path_variables,   ONLY : path_deallocation
+  USE path_base,        ONLY : io_path_stop
+  USE mp,               ONLY : mp_barrier, mp_end
   !
   IMPLICIT NONE
   !
@@ -28,9 +28,7 @@ SUBROUTINE stop_pw( flag )
   LOGICAL             :: exst
   !
   !
-  ! ... in case of neb calculation stdout is reconnected to standard output
-  !
-  IF ( lneb ) stdout = 6
+  IF ( lpath ) CALL io_path_stop()
   !
   ! ... iunwfc contains wavefunctions and is kept open during
   ! ... the execution - close the file and save it (or delete it 
@@ -73,10 +71,6 @@ SUBROUTINE stop_pw( flag )
   !
   CALL print_clock_pw()
   !
-  ! ... NEB specific
-  !
-  IF ( lneb ) CALL write_restart()
-  !
   CALL show_memory()
   !
   CALL mp_barrier()
@@ -91,20 +85,36 @@ SUBROUTINE stop_pw( flag )
 #endif
   !
   CALL clean_pw(.true.)
+  !
   CALL deallocate_input_parameters()
-  CALL neb_deallocation()
+  !
+  ! ... deallocation of variables specific of "path" optimizations
+  !
+  IF ( lneb ) THEN
+     !
+     CALL path_deallocation( 'neb' )
+     !
+  ELSE IF ( lsmd ) THEN
+     !
+     CALL path_deallocation( 'smd' )
+     !
+  END IF
   !
   IF ( flag ) THEN
+     !
      STOP
+     !
   ELSE
+     !
      STOP 1
+     !
   END IF
   !
 END SUBROUTINE stop_pw
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE closefile
+SUBROUTINE closefile()
   !----------------------------------------------------------------------------
   !
   USE io_global,  ONLY :  stdout

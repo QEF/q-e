@@ -41,9 +41,9 @@ SUBROUTINE electrons()
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, iswitch, &
-                                   lscf, lneb, lmd, conv_elec, restart, &
+                                   lscf, lpath, lmd, conv_elec, restart, &
                                    reduce_io
-  USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunneb, &
+  USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
                                    output_drho
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
                                    niter_with_fixed_ns, Hubbard_lmax, &
@@ -224,7 +224,7 @@ SUBROUTINE electrons()
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
-     IF ( lneb ) THEN
+     IF ( lpath ) THEN
         !
         CALL flush( stdout )
         !
@@ -298,14 +298,14 @@ SUBROUTINE electrons()
            ! ... for the first scf iteration ethr_min is set for a check 
            ! ... in mix_rho ( in mix_rho ethr_min = dr2 * ethr_min )
            !
-           ethr_min = 1.d0 / nelec
+           ethr_min = 1.D0 / nelec
            !
         ELSE
            !
            ! ... otherwise ethr_min is set to a negative number: 
            ! ... no check is needed
            !
-           ethr_min = -1.d0
+           ethr_min = - 1.D0
            !
         END IF      
         !
@@ -427,7 +427,7 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
      !
-     IF ( lneb ) THEN
+     IF ( lpath ) THEN
         !
         CALL flush( stdout )
         !
@@ -547,7 +547,7 @@ SUBROUTINE electrons()
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
-     IF ( lneb ) THEN
+     IF ( lpath ) THEN
         !
         CALL flush( stdout )
         !
@@ -565,7 +565,7 @@ SUBROUTINE electrons()
         !
         ! ... jump to the end
         !
-        IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+        IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
         !
         CALL stop_clock( 'electrons' )
         !
@@ -585,7 +585,7 @@ SUBROUTINE electrons()
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 )
   !
-  IF ( lneb ) THEN
+  IF ( lpath ) THEN
      !
      CALL flush( stdout )
      !
@@ -689,9 +689,9 @@ SUBROUTINE electrons()
        INTEGER :: unit
        !
        !
-       IF ( lneb ) THEN  
+       IF ( lpath ) THEN  
           !
-          unit = iunneb
+          unit = iunpath
           !  
        ELSE
           !

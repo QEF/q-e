@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 PWSCF group
+! Copyright (C) 2002-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -96,23 +96,23 @@ SUBROUTINE iosys()
                             iprint_      => iprint, &
                             nosym_       => nosym, &
                             modenum_     => modenum, &
-                            reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
-                            noinv, restart, loldbfgs, lconstrain,   &
-                            ldamped, lraman
+                            reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
+                            lsmd, lphonon, ldamped, lraman, &
+                            noinv, restart, loldbfgs, lconstrain
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
   USE control_flags, ONLY : twfcollect 
-  USE neb_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
-                            num_of_images_  => num_of_images, &
-                            CI_scheme_      => CI_scheme, &
-                            optimization_   => optimization, &
-                            damp_           => damp, &
-                            temp_req_       => temp_req, &
-                            k_max_          => k_max, & 
-                            k_min_          => k_min, &
-                            neb_thr_        => neb_thr, &
-                            nstep_neb
+  USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
+                             CI_scheme_      => CI_scheme, &
+                             k_max_          => k_max, & 
+                             k_min_          => k_min, &
+                             num_of_images_  => num_of_images, &
+                             first_last_opt_ => first_last_opt, &
+                             damp_           => damp, &
+                             temp_req_       => temp_req, &
+                             path_thr_       => path_thr, &
+                             nstep_path
   USE noncollin_module, ONLY : baco_ibm_xlf, &
                                noncolin_  => noncolin, &
                                lambda_    => lambda, &
@@ -171,8 +171,8 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
                                tempw, tolp, upscale, potential_extrapolation, &
                                CI_scheme, minimization_scheme, &
-                               num_of_images, optimization, damp, temp_req, &
-                               k_max, k_min, neb_thr, &
+                               num_of_images, first_last_opt, damp, temp_req, &
+                               k_max, k_min, path_thr, &
                                trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, &
                                w_1, w_2, lbfgs_ndim
@@ -191,7 +191,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : b_length, lcart
   !
-  ! ... NEB specific
+  ! ... "path" specific
   !
   USE input_parameters, ONLY : pos 
   !
@@ -332,9 +332,9 @@ SUBROUTINE iosys()
      startingconfig = 'input'
   CASE ( 'restart' )
      !
-     ! ... NEB specific
+     ! ... "path" specific
      !       
-     IF ( calculation == 'neb' ) THEN
+     IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
         restart      = .FALSE.
         restart_bfgs = .FALSE.     
      ELSE
@@ -368,7 +368,9 @@ SUBROUTINE iosys()
   !
   lscf      = .FALSE.
   lmd       = .FALSE.
-  lneb      = .FALSE.     
+  lpath     = .FALSE.
+  lneb      = .FALSE.
+  lsmd      = .FALSE.
   lforce    = tprnfor
   lmovecell = .FALSE.
   lphonon   = .FALSE.
@@ -379,7 +381,7 @@ SUBROUTINE iosys()
      lscf      = .TRUE.   
      iswitch   = 0 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      nstep     = 1
- CASE ( 'nscf' )
+  CASE ( 'nscf' )
      iswitch   = -1
      lforce    = .FALSE.
      nstep     = 1
@@ -398,7 +400,7 @@ SUBROUTINE iosys()
      iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lmovecell = .TRUE.
      lforce    = .TRUE.
- CASE ( 'phonon' )
+  CASE ( 'phonon' )
      iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lphonon   = .TRUE.
      nstep     = 1
@@ -406,13 +408,20 @@ SUBROUTINE iosys()
      lraman    = .TRUE.
      nstep     = 1
   !
-  ! ... NEB specific
+  ! ... "path" specific
   !   
   CASE ( 'neb' )
      lscf      = .TRUE.
+     lpath     = .TRUE.
      lneb      = .TRUE.
      iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = tprnfor
+  CASE ( 'smd' )
+     lscf      = .TRUE.
+     lpath     = .TRUE.
+     lsmd      = .TRUE.
+     iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+     lforce    = tprnfor   
   CASE DEFAULT
      CALL errore( ' iosys ', ' calculation ' // &
                 & TRIM( calculation ) // ' not implemented', 1 )
@@ -429,7 +438,7 @@ SUBROUTINE iosys()
   END IF
   !
   IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
-     CALL errore( ' iosys', 'wrong startingpot: use default', -2 )
+     CALL errore( ' iosys', 'wrong startingpot: use default', -1 )
      startingpot = 'file'
   END IF
   !
@@ -454,7 +463,7 @@ SUBROUTINE iosys()
   CASE ( 'diis' )
      isolve = 2
      max_cg_iter   = diago_cg_maxiter
-     diis_ndim     = diago_diis_ndim   ! ... SF
+     diis_ndim     = diago_diis_ndim
   CASE ( 'david' )
      isolve = 0
      david = diago_david_ndim
@@ -615,11 +624,11 @@ SUBROUTINE iosys()
                    & ' not supported', 1 )
      END IF
      !
-  ELSE IF ( TRIM( calculation ) == 'neb' ) THEN
+  ELSE IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
      !
-     ! ... NEB specific
+     ! ... "path" specific
      !
-     nstep_neb = nstep
+     nstep_path = nstep
      !
      IF ( num_of_images < 2 ) THEN
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
@@ -635,7 +644,6 @@ SUBROUTINE iosys()
                    & ': unknown CI_scheme', 1 )  
         !   
      END IF
-     !
      ! ... initialization of logical variables
      !
      lsteep_des  = .FALSE.     
@@ -705,7 +713,7 @@ SUBROUTINE iosys()
   CASE DEFAULT
      CALL errore( ' iosys ', ' unknown mixing ' // TRIM( mixing_mode ), 1 )
   END SELECT
-
+  !
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns
   !
@@ -789,16 +797,19 @@ SUBROUTINE iosys()
   b_length_    = b_length
   lcart_       = lcart
   !
+  ! ... general "path" variables
+  !
+  num_of_images_  = num_of_images
+  first_last_opt_ = first_last_opt
+  damp_           = damp
+  temp_req_       = temp_req
+  path_thr_       = path_thr
+  !
   ! ... NEB specific
   !
-  num_of_images_ = num_of_images
-  CI_scheme_     = CI_scheme
-  optimization_  = optimization
-  damp_          = damp
-  temp_req_      = temp_req
-  k_max_         = k_max 
-  k_min_         = k_min
-  neb_thr_       = neb_thr
+  CI_scheme_ = CI_scheme
+  k_max_     = k_max 
+  k_min_     = k_min
   !
   ! ... new BFGS specific
   !
@@ -840,6 +851,7 @@ SUBROUTINE iosys()
      ! ... input at are in units of alat
      !
      alat = celldm_(1)
+     !
   ELSE IF ( ibrav_ == 0 .AND. celldm_(1) == 0.D0 ) THEN
      !
      ! ... input at are in atomic units: define alat
@@ -850,6 +862,7 @@ SUBROUTINE iosys()
      ! ... bring at to alat units
      !
      at(:,:) = at(:,:) / alat
+     !
   ELSE
      !
      ! ... generate at (atomic units)
@@ -860,13 +873,14 @@ SUBROUTINE iosys()
      ! ... bring at to alat units
      !
      at(:,:) = at(:,:) / alat
+     !
   END IF
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
   !
-  IF ( calculation == 'neb' ) THEN
+  IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
      !
-     ! ... NEB specific
+     ! ... "path" optimizations specific
      !
      DO image = 1, num_of_images_
         !
@@ -886,19 +900,24 @@ SUBROUTINE iosys()
            ! ... input atomic positions are in a.u.: divide by alat
            !
            tau = tau / alat
+           !
         CASE ( 'crystal' )
            !
            ! ... input atomic positions are in crystal axis
            !
            CALL cryst_to_cart( nat_, tau, at, 1 )
+           !
         CASE ( 'angstrom' )
            !
            ! ... atomic positions in A: convert to a.u. and divide by alat
            !
            tau = tau / bohr_radius_angs / alat
+           !
         CASE DEFAULT
+           !
            CALL errore( ' iosys ',' atomic_positions=' // &
                       & TRIM( atomic_positions ) // ' not implemented ', 1 )
+           !
         END SELECT
         !
         pos(1:3*nat_,image) = RESHAPE( SOURCE = tau, SHAPE = (/ 3 * nat_ /) )
@@ -921,19 +940,24 @@ SUBROUTINE iosys()
         ! ... input atomic positions are in a.u.: divide by alat
         !
         tau = tau / alat
+        !
      CASE ( 'crystal' )
         !
         ! ... input atomic positions are in crystal axis
         !
         CALL cryst_to_cart( nat_, tau, at, 1 )
+        !
      CASE ( 'angstrom' )
         !
         ! ... atomic positions in A: convert to a.u. and divide by alat
         !
         tau = tau / bohr_radius_angs / alat
+        !
      CASE DEFAULT
+        !
         CALL errore( ' iosys ',' atomic_positions=' // &
                    & TRIM( atomic_positions ) // ' not implemented ', 1 )
+        !
      END SELECT
      !
   END IF        
@@ -1070,7 +1094,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      ityp(ia)  = sp_pos(ia)
   END DO
   !
-  ! ... TEMP: calculate fixatom
+  ! ... calculate fixatom
   !
   fixatom = 0
   !
@@ -1226,9 +1250,9 @@ SUBROUTINE verify_tmpdir()
   !-----------------------------------------------------------------------
   !
   USE input_parameters, ONLY : restart_mode
-  USE control_flags,    ONLY : lneb
+  USE control_flags,    ONLY : lpath
   USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr, exit_file
-  USE neb_variables,    ONLY : num_of_images
+  USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
@@ -1239,7 +1263,7 @@ SUBROUTINE verify_tmpdir()
   !
   INTEGER            :: l, ios, image
   CHARACTER (LEN=80) :: file_path, tmp_dir_saved
-  INTEGER, EXTERNAL  :: C_MKDIR
+  INTEGER, EXTERNAL  :: c_mkdir
   !
   !
   ! ... verify if tmp_dir ends with /, add one if needed
@@ -1300,11 +1324,11 @@ SUBROUTINE verify_tmpdir()
      !
   END IF    
   !
-  ! ... NEB specific
-  ! ... in the scratch directory the tree of subdirectories needed by neb are
-  ! ... created
+  ! ... "path" optimization specific:
+  ! ... in the scratch directory the tree of subdirectories needed by "path"
+  ! ... calculations are created
   !
-  IF ( lneb ) THEN
+  IF ( lpath ) THEN
      !
      IF ( ionode ) THEN
         !
@@ -1328,7 +1352,7 @@ SUBROUTINE verify_tmpdir()
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
            !
-           ios = C_MKDIR( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
+           ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
            !
         END IF
         !

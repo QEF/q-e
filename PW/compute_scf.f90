@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF group
+! Copyright (C) 2003-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,14 +9,15 @@
 SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !----------------------------------------------------------------------------
   !
-  ! ... this subroutine is the main scf-driver for NEB 
-  ! ... ( called by Modules/neb_base.f90/born_oppenheimer() subroutine ) 
+  ! ... this subroutine is the main scf-driver for all "path" calculations
+  ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine ) 
   !
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot, &
                                diago_thr_init
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, history, alpha0, beta0, ethr
+  USE control_flags,    ONLY : lneb, lsmd, conv_elec, istep, &
+                               history, alpha0, beta0, ethr
   USE check_stop,       ONLY : check_stop_now
   USE cell_base,        ONLY : alat
   USE ions_base,        ONLY : tau, ityp, nat
@@ -27,13 +28,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE ions_base,        ONLY : if_pos_ => if_pos
   USE extfield,         ONLY : tefield, forcefield
   USE io_files,         ONLY : prefix, tmp_dir, &
-                               iunneb, iunupdate, exit_file, iunexit
+                               iunpath, iunupdate, exit_file, iunexit
   USE io_global,        ONLY : stdout
-  USE formats,          ONLY : scf_fmt, scf_fmt_para
-  USE neb_variables,    ONLY : pos, PES, PES_gradient, num_of_images, &
-                               dim, suspended_image, istep_neb, frozen
+  USE path_formats,     ONLY : scf_iter_fmt, scf_fmt, scf_fmt_para
+  USE path_variables,   ONLY : pos, pes, grad_pes, num_of_images, &
+                               dim, suspended_image, istep_path,  &
+                               first_last_opt, frozen
   USE parser,           ONLY : int_to_char
-  USE io_global,        ONLY : ionode
+  USE io_global,        ONLY : ionode, ionode_id
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, me_image, root_image, nimage
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
@@ -63,12 +65,16 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... end of external functions definition
   !
   !
+  ! ... print-out
+  !
+  WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep_path + 1
+  !
   ! ... all processes are syncronized (needed to have an ordered output)
   !
   CALL mp_barrier( intra_image_comm )
   CALL mp_barrier( inter_image_comm )  
   !
-  istep = istep_neb + 1
+  istep = istep_path + 1
   istat = 0 
   !
   ! ... only the first cpu on each image needs the tauold vector
@@ -77,22 +83,23 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   tmp_dir_saved = tmp_dir
   !
-  ! ... vectors PES and PES_gradient are initalized to zero for all images on
+  ! ... vectors pes and grad_pes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
   !
-  IF ( my_image_id == root_image ) THEN
+  IF ( ( my_image_id == root_image ) .AND. &
+       ( lneb .OR. ( lsmd .AND. first_last_opt ) ) ) THEN
      !
      FORALL( image = N_in:N_fin, ( .NOT. frozen(image) ) )
         !
-        PES(image)            = 0.D0
-        PES_gradient(:,image) = 0.D0
+        pes(image)        = 0.D0
+        grad_pes(:,image) = 0.D0
         !
      END FORALL     
      !
   ELSE
      !
-     PES(N_in:N_fin)            = 0.D0
-     PES_gradient(:,N_in:N_fin) = 0.D0
+     pes(N_in:N_fin)        = 0.D0
+     grad_pes(:,N_in:N_fin) = 0.D0
      !   
   END IF
   !
@@ -107,7 +114,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !     
      suspended_image = image
      !
-     IF ( check_stop_now( iunneb ) ) THEN
+     IF ( check_stop_now( iunpath ) ) THEN
         !   
         istat = 1
         !
@@ -120,23 +127,23 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !    
      END IF
      !
-     ! ... self-consistency only for non-frozen images
+     ! ... self-consistency ( for non-frozen images only, in neb case )
      !
-     IF ( .NOT. frozen(image) ) THEN
+     IF ( lsmd .OR. &
+          lneb .AND. .NOT. frozen(image) ) THEN
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
-                  TRIM( int_to_char( image ) ) // "/" 
-               
+                  TRIM( int_to_char( image ) ) // "/"             
         !
         tcpu = get_clock( 'PWSCF' )
         !
         IF ( nimage > 1 ) THEN
            !
-           WRITE( UNIT = iunneb, FMT = scf_fmt_para ) my_image_id, tcpu, image
+           WRITE( UNIT = iunpath, FMT = scf_fmt_para ) my_image_id, tcpu, image
            !
         ELSE
            !
-           WRITE( UNIT = iunneb, FMT = scf_fmt ) tcpu, image
+           WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
            !
         END IF   
         !
@@ -163,9 +170,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                            ALLOCATE( forcefield( 3, nat ) )
         !
         ! ... tau is in alat units ( pos is in bohr )
-        !     
-        tau = RESHAPE( SOURCE = pos(:,image), &
-                       SHAPE = SHAPE( tau ) ) / alat
+        !
+        tau = RESHAPE( SOURCE = pos(:,image), SHAPE = SHAPE( tau ) ) / alat
         !
         if_pos_(:,:) = if_pos(:,1:nat) 
         ityp(:)      = sp_pos(1:nat)
@@ -174,7 +180,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         CALL init_run()
         !
-        IF ( me_image == root_image ) THEN 
+         IF ( ionode ) THEN 
            !     
            ! ... the file containing old positions is opened 
            ! ... ( needed for extrapolation )
@@ -201,14 +207,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
         END IF
         !
-        CALL mp_bcast( history, root_image, intra_image_comm )
+        CALL mp_bcast( history, ionode_id, intra_image_comm )
         !
         IF ( conv_elec ) THEN
            !
            ! ... potential and wavefunctions are extrapolated only if
            ! ... scf on the previous image was achieved :
            !
-           IF ( me_image == root_image ) THEN 
+           IF ( ionode ) THEN 
               !
               ! ... find the best coefficients for the extrapolation of 
               ! ... the potential
@@ -217,8 +223,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
               !
            END IF
            !
-           CALL mp_bcast( alpha0, root_image, intra_image_comm )
-           CALL mp_bcast( beta0,  root_image, intra_image_comm )                
+           CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
+           CALL mp_bcast( beta0,  ionode_id, intra_image_comm )                
            !
            CALL update_pot()
            !
@@ -228,11 +234,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         CALL electrons()
         !
+        ! ... scf convergence is checked
+        !
         IF ( .NOT. conv_elec ) THEN
            !   
            istat = 1
            !
-           WRITE( UNIT = iunneb, &
+           WRITE( UNIT = iunpath, &
                   FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
            !
            ! ... in case of parallelization on images a stop signal
@@ -250,13 +258,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         ! ... energy is converted from rydberg to hartree
         !
-        PES(image) = etot / e2
+        pes(image) = etot / e2
         !
         ! ... gradients are converted from ( rydberg / bohr ) 
         ! ... to ( hartree / bohr )
         !
-        PES_gradient(:,image) = - RESHAPE( SOURCE = force, &
-                                           SHAPE = (/ dim /) ) / e2 
+        grad_pes(:,image) = - RESHAPE( SOURCE = force, SHAPE = (/ dim /) ) / e2 
         !
         IF ( me_image == root_image ) THEN 
            !
@@ -279,7 +286,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
         END IF
         !
-     END IF   
+     END IF
      !
      ! ... the new image is obtained
      !
@@ -309,17 +316,17 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   IF ( nimage > 1 ) THEN
      !
-     WRITE( UNIT = iunneb, &
+     WRITE( UNIT = iunpath, &
             FMT = '(/"image ",I2," waiting at the barrier")' ) my_image_id
      !
      CALL mp_barrier( intra_image_comm )
      CALL mp_barrier( inter_image_comm )
      !
-     ! ... PES and PES_gradient are communicated among "image" pools
+     ! ... pes and grad_pes are communicated among "image" pools
      !
-     CALL mp_sum( PES(N_in:N_fin),            inter_image_comm )
-     CALL mp_sum( PES_gradient(:,N_in:N_fin), inter_image_comm )
-     CALL mp_sum( istat,                      inter_image_comm )
+     CALL mp_sum( pes(N_in:N_fin),        inter_image_comm )
+     CALL mp_sum( grad_pes(:,N_in:N_fin), inter_image_comm )
+     CALL mp_sum( istat,                  inter_image_comm )
      !
   END IF
   !

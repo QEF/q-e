@@ -103,7 +103,7 @@ MODULE input_parameters
           ! 'vc-relax' = ionic + cell minimization
           ! 'vc-cp'    = variable-cell Car-Parrinello (-Rahman) dynamics
           ! 'vc-md'    = variable-cell Car-Parrinello (-Rahman) dynamics
-          ! 'neb'      = VEC-CI-NEB search of the Minimum Energy Path (MEP)
+          ! 'neb'      = NEB    Method search of the Minimum Energy Path (MEP)
           ! 'smd'      = String Method search of the Minimum Energy Path (MEP)
           ! 'cp-wf'    = Car-Parrinello with wannier functions
 
@@ -124,7 +124,7 @@ MODULE input_parameters
           ! specify how to start/restart the simulation
           !   'from_scratch'    start a new simulation from scratch,
           !                     with random wave functions
-          !                     for NEB only : a simulation is started
+          !                     for path only : a simulation is started
           !                     from scratch and the initial guess for the
           !                     path is the linear interpolation between
           !                     the initial and the final images
@@ -866,7 +866,7 @@ MODULE input_parameters
           ! NOT used in FPMD
 
         !
-        ! ... variable added for NEB  ( C.S. 17/10/2003 )
+        ! ... variables added for "path" calculations
         !
         
         INTEGER   :: input_images = 0
@@ -884,7 +884,7 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: CI_scheme_allowed(4)
         DATA CI_scheme_allowed / 'no-CI', 'highest-TS', 'all-SP', 'manual' /
         
-        LOGICAL :: optimization = .FALSE.
+        LOGICAL :: first_last_opt = .FALSE.
         
         LOGICAL :: reset_vel = .FALSE.
         
@@ -907,11 +907,11 @@ MODULE input_parameters
         REAL (KIND=DP)  :: temp_req = 0.D0
           ! meaningful only when minimization_scheme = 'sim-annealing'
 
-        REAL (KIND=DP)  :: ds = 0.6D0
+        REAL (KIND=DP)  :: ds = 1.5D0
 
         REAL (KIND=DP)  :: k_max = 0.1D0, k_min = 0.1D0
 
-        REAL (KIND=DP)  :: neb_thr = 0.05D0
+        REAL (KIND=DP)  :: path_thr = 0.05D0
 
         !
         ! ... variables added for new BFGS algorithm
@@ -987,8 +987,8 @@ MODULE input_parameters
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
           ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp, &
           tolp, ion_nstepe, ion_maxstep, upscale, potential_extrapolation, &
-          num_of_images, CI_scheme, minimization_scheme, optimization, &
-          reset_vel, damp, temp_req, ds, k_max, k_min, neb_thr, &
+          num_of_images, CI_scheme, minimization_scheme, first_last_opt, &
+          reset_vel, damp, temp_req, ds, k_max, k_min, path_thr, &
           trust_radius_max, trust_radius_min, trust_radius_ini, trust_radius_end, &
           w_1, w_2, lbfgs_ndim, sic_rloc, &
           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, &

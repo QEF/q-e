@@ -9,20 +9,19 @@
 SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !-----------------------------------------------------------------------
   !
-  ! ... this subroutine is the main scf-driver for NEB 
-  ! ... ( called by Modules/neb_base.f90/born_oppenheimer() subroutine ) 
+  ! ... this subroutine is the main scf-driver for all "path" calculations
+  ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine )
   !
   USE kinds,             ONLY : DP
   USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos, ion_positions
   USE input_parameters,  ONLY : outdir, prefix, nat, restart_mode
-  ! USE input_parameters,  ONLY : scradir => tscradir_inp, ndr
   USE input_parameters,  ONLY : scradir, ndr
   USE constants,         ONLY : e2
   USE control_flags,     ONLY : conv_elec, ethr
-  USE io_files,          ONLY : iunneb, iunexit
+  USE io_files,          ONLY : iunpath, iunexit
   USE io_global,         ONLY : stdout
-  USE formats,           ONLY : scf_fmt
-  USE neb_variables,     ONLY : pos, PES, PES_gradient, num_of_images, &
+  USE path_formats,      ONLY : scf_fmt
+  USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
                                 dim, suspended_image, frozen
   USE parser,            ONLY : int_to_char
   USE mp_global,         ONLY : mpime, my_pool_id
@@ -38,7 +37,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   LOGICAL, INTENT(OUT)  :: stat
   !
   ! ... local variables definition
-  !  
+  ! 
   INTEGER               :: image
   REAL (KIND=DP)        :: tcpu 
   CHARACTER (LEN=80)    :: outdir_saved, restart_mode_saved
@@ -64,7 +63,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! 
   DO image = N_in, N_fin
      !
-     IF ( frozen(image) ) CYCLE         
+     IF ( frozen(image) ) CYCLE
      !
      suspended_image = image
      !
@@ -78,7 +77,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !          
      scradir = outdir
      !
-     WRITE( UNIT = iunneb, FMT = scf_fmt ) tcpu, image
+     WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
      !
      ! ... unit stdout is connected to the appropriate file
      !
@@ -100,17 +99,16 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      ion_positions = 'from_input'
      !
      IF( check_restartfile( outdir, ndr ) ) THEN
-        WRITE( 6, * ) ' restarting calling readfile '
+        WRITE( iunpath, * ) ' restarting calling readfile '
         restart_mode = 'restart'
      ELSE
-        WRITE( 6, * ) ' restarting from scratch '
+        WRITE( iunpath, * ) ' restarting from scratch '
         restart_mode = 'from_scratch'
      END IF
      !
      ! ... perform an electronic minimization using CPMAIN
      !
-     !
-     CALL cprmain( tau(1,1), fion(1,1), etot )
+     CALL cprmain( tau, fion, etot )
      !
      IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
         INQUIRE( UNIT = stdout, OPENED = opnd )
@@ -119,7 +117,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF ( .NOT. conv_elec ) THEN
         !
-        WRITE( iunneb, '(/,5X,"WARNING :  scf convergence NOT achieved"/)' )
+        WRITE( iunpath, '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
         !   
         stat = .FALSE.
         !
@@ -130,13 +128,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      ! ... gradients already in ( hartree / bohr )
      !
      DO ia = 1, nat
-        PES_gradient( 1 + ( ia - 1 ) * 3, image ) = - fion( 1, ia )
-        PES_gradient( 2 + ( ia - 1 ) * 3, image ) = - fion( 2, ia )
-        PES_gradient( 3 + ( ia - 1 ) * 3, image ) = - fion( 3, ia )
+        grad_pes( 1 + ( ia - 1 ) * 3, image ) = - fion( 1, ia )
+        grad_pes( 2 + ( ia - 1 ) * 3, image ) = - fion( 2, ia )
+        grad_pes( 3 + ( ia - 1 ) * 3, image ) = - fion( 3, ia )
      END DO
      !
      !
-     PES(image) = etot  ! energy already in hartree
+     pes(image) = etot  ! energy already in hartree
      !
      ! ... input values are restored at the end of each iteration
      !

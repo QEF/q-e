@@ -10,7 +10,7 @@ MODULE read_cards_module
   !---------------------------------------------------------------------------
   !
   ! ...  This module handles the reading of cards from standard input
-  ! ...  Written by Carlo Cavazzoni and modified for NEB implementation
+  ! ...  Written by Carlo Cavazzoni and modified for "path" implementation
   ! ...  by Carlo Sbraccia
   !
   USE kinds
@@ -400,7 +400,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
-       IF ( (calculation == 'neb') .OR. (calculation == 'smd') ) &
+       IF ( ( calculation == 'neb ') .OR. ( calculation == 'smd' ) ) &
           ALLOCATE( pos( ( 3 * natx ) , num_of_images ) )
        !
        IF ( tread ) THEN
@@ -442,7 +442,8 @@ MODULE read_cards_module
           IF ( prog == 'PW' ) atomic_positions = 'alat'
        END IF
        !
-       IF ( calculation == 'neb' ) THEN
+       IF ( calculation == 'neb' .OR. &
+            ( calculation == 'smd' .AND. prog == 'PW' ) ) THEN
           !
           CALL read_line( input_line )
           !
@@ -450,7 +451,7 @@ MODULE read_cards_module
              !                
              input_images = 1
              !
-             CALL neb_read_images( input_images )
+             CALL path_read_images( input_images )
              !
           ELSE
              !
@@ -471,7 +472,7 @@ MODULE read_cards_module
              !
              IF ( matches( "intermediate_image", input_line )  ) THEN
                 !
-                CALL neb_read_images( input_images )
+                CALL path_read_images( input_images )
                 !
              ELSE
                 !
@@ -483,7 +484,7 @@ MODULE read_cards_module
           !
           IF ( matches( "last_image", input_line ) ) THEN
              !
-             CALL neb_read_images( input_images )
+             CALL path_read_images( input_images )
              !
           ELSE
              !
@@ -492,82 +493,81 @@ MODULE read_cards_module
              !
           END IF
           !
-       ELSE IF(calculation == 'smd') THEN
+       ELSE IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
           !
           rep_loop : DO rep_i = 1, smd_kwnp
-          !
-          CALL read_line( input_line )
-          !
-          IF ( matches( "first_image", input_line )  &
-             & .OR. matches( "image", input_line )      &
-             & .OR. matches( "last_image", input_line) ) THEN
              !
-             DO ia = 1, nat
+             CALL read_line( input_line )
+             !
+             IF ( matches( "first_image", input_line ) .OR. &
+                  matches( "image", input_line )       .OR. &
+                  matches( "last_image", input_line) ) THEN
                 !
-                index = 3 * ( ia - 1 )
-                !
-                CALL read_line( input_line )
-                CALL field_count( nfield, input_line )
-                !
-                IF ( nfield == 4 ) THEN
+                DO ia = 1, nat
                    !
-                   READ(input_line,*) lb_pos, ( pos(k+index,rep_i), k = 1, 3 )
+                   index = 3 * ( ia - 1 )
                    !
-                ELSE IF ( nfield == 7 .AND. rep_i == 1 ) THEN
+                   CALL read_line( input_line )
+                   CALL field_count( nfield, input_line )
                    !
-                   READ(input_line,*) lb_pos, pos((index+1),rep_i), &
-                                              pos((index+2),rep_i), &
-                                              pos((index+3),rep_i), &
-                                              if_pos(1,ia), &
-                                              if_pos(2,ia), &
-                                              if_pos(3,ia)
-                   !
-                ELSE
-                   !
-                   CALL errore( ' read_cards ', &
-                              & ' wrong number of columns  in' // &
-                              & ' ATOMIC_POSITIONS, image input ', sp_pos(ia) )
-                   !
-                END IF
-                !
-                !
-                !
-                IF(rep_i ==1) THEN
-                   !
-                   lb_pos = ADJUSTL( lb_pos )
-                   !
-                   match_label_smd: DO is = 1, ntyp
+                   IF ( nfield == 4 ) THEN
                       !
-                      IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
-                         !
-                         sp_pos(ia) = is
-                         EXIT match_label_smd
-                         !
-                      END IF
+                      READ(input_line,*) lb_pos, ( pos(k+index,rep_i), k = 1, 3 )
                       !
-                   END DO match_label_smd
-                   !
-                   IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
+                   ELSE IF ( nfield == 7 .AND. rep_i == 1 ) THEN
+                      !
+                      READ(input_line,*) lb_pos, pos((index+1),rep_i), &
+                                                 pos((index+2),rep_i), &
+                                                 pos((index+3),rep_i), &
+                                                 if_pos(1,ia), &
+                                                 if_pos(2,ia), &
+                                                 if_pos(3,ia)
+                      !
+                   ELSE
                       !
                       CALL errore( ' read_cards ', &
-                              & ' wrong index in ATOMIC_POSITIONS ', ia )
+                                 & ' wrong number of columns  in' // &
+                                 & ' ATOMIC_POSITIONS, image input ', sp_pos(ia) )
                       !
                    END IF
                    !
-                   is  =  sp_pos(ia)
-                   na_inp( is ) = na_inp( is ) + 1
+                   IF ( rep_i == 1 ) THEN
+                      !
+                      lb_pos = ADJUSTL( lb_pos )
+                      !
+                      match_label_smd: DO is = 1, ntyp
+                         !
+                         IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
+                            !
+                            sp_pos(ia) = is
+                            !
+                            EXIT match_label_smd
+                            !
+                         END IF
+                         !
+                      END DO match_label_smd
+                      !
+                      IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
+                         !
+                         CALL errore( ' read_cards ', &
+                                 & ' wrong index in ATOMIC_POSITIONS ', ia )
+                         !
+                      END IF
+                      !
+                      is  =  sp_pos(ia)
+                      na_inp( is ) = na_inp( is ) + 1
+                      !
+                   END IF
                    !
-                ENDIF
-              !
-             END DO
+                END DO
+                !
+             ELSE
+                CALL errore( ' read_cards ', ' missing or wrong image' // &
+                           & ' identifier in ATOMIC_POSITION', 1 )
+             ENDIF
              !
-          ELSE
-             CALL errore( ' read_cards ', ' missing or wrong image' // &
-                        & ' identifier in ATOMIC_POSITION', 1 )
-          ENDIF
-           !
           END DO rep_loop
-
+          !
        ELSE
           !
           DO ia = 1, nat
@@ -643,7 +643,7 @@ MODULE read_cards_module
        CONTAINS
          !
          !-------------------------------------------------------------------
-         SUBROUTINE neb_read_images( image )
+         SUBROUTINE path_read_images( image )
            !-------------------------------------------------------------------
            !
            IMPLICIT NONE
@@ -693,17 +693,17 @@ MODULE read_cards_module
                  !
                  lb_pos = ADJUSTL( lb_pos )
                  !
-                 match_label_neb: DO is = 1, ntyp
+                 match_label_path: DO is = 1, ntyp
                     !
                     IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
                        !
                        sp_pos(ia) = is
                        !
-                       EXIT match_label_neb
+                       EXIT match_label_path
                        !
                     END IF
                     !
-                 END DO match_label_neb
+                 END DO match_label_path
                  !
                  IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
                     !     
@@ -713,6 +713,7 @@ MODULE read_cards_module
                  END IF
                  !
                  is  =  sp_pos(ia)
+                 !
                  na_inp( is ) = na_inp( is ) + 1
                  !
               END IF     
@@ -721,7 +722,7 @@ MODULE read_cards_module
            !
            RETURN
            !
-         END SUBROUTINE neb_read_images
+         END SUBROUTINE path_read_images
          !
      END SUBROUTINE
      !
