@@ -15,9 +15,10 @@ subroutine dynmatrix
   ! output.
   !
 #include "machine.h"
-  USE io_global,  ONLY : stdout
+  USE io_global,     ONLY : stdout
+  USE control_flags, ONLY : iswitch, modenum, noinv
   use pwcom
-  USE kinds, only : DP
+  USE kinds,         ONLY : DP
   use phcom
   implicit none
   ! local variables

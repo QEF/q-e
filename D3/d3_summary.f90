@@ -20,6 +20,7 @@ subroutine d3_summary
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use pwcom
+  USE control_flags, ONLY : iverbosity
   use phcom
   use d3com
 !

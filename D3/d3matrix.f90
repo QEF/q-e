@@ -16,6 +16,7 @@ subroutine d3matrix
   !
   USE kinds, only : DP
   use pwcom
+  USE control_flags, ONLY : noinv, modenum
   use phcom
   use d3com
   implicit none

@@ -20,14 +20,16 @@ subroutine solve_e
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
-  USE io_global,      ONLY : stdout
-  USE io_files, ONLY: iunigk
+  USE io_global,             ONLY : stdout
+  USE io_files,              ONLY : iunigk
   use pwcom
-  USE check_stop, ONLY: time_max => max_seconds
-  USE wavefunctions_module,  ONLY: evc
-  USE kinds, only : DP
+  USE check_stop,            ONLY : time_max => max_seconds
+  USE wavefunctions_module,  ONLY : evc
+  USE kinds,                 ONLY : DP
   use becmod
   use phcom
+  USE control_flags,         ONLY : reduce_io
+  
   implicit none
 
   real(kind=DP) ::  thresh, weight, anorm, averlt, dr2

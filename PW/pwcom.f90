@@ -8,16 +8,17 @@
 !--------------------------------------------------------------------------
 !
 MODULE basis
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: ntypx
-  USE ions_base, ONLY: &
-       nat,            &! number of atoms in the unit cell
-       ntyp => nsp,    &! number of different types of atoms
-       tau,            &! the positions of each atom
-       atm,            &! name of the type of the atoms
-       ityp             ! the type of each atom
   !
   ! ... The variables needed to describe the atoms in the unit cell
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : ntypx
+  USE ions_base,  ONLY : &
+       nat,              &! number of atoms in the unit cell
+       ntyp => nsp,      &! number of different types of atoms
+       tau,              &! the positions of each atom
+       atm,              &! name of the type of the atoms
+       ityp              ! the type of each atom
   !
   SAVE
   !
@@ -34,11 +35,12 @@ END MODULE basis
 !
 !
 MODULE dynam
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: ntypx
-  USE ions_base, ONLY: amass
   !
   ! ... Variables needed for the dynamics
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : ntypx
+  USE ions_base,  ONLY : amass
   !
   SAVE
   !
@@ -53,10 +55,11 @@ END MODULE dynam
 !
 !
 MODULE gvect
-  USE kinds, ONLY: DP
-  USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
   !
   ! ...The variables describing the reciprocal lattice vectors
+  !
+  USE kinds,              ONLY : DP
+  USE reciprocal_vectors, ONLY : ig_l2g, sortedig_l2g
   !
   SAVE
   !
@@ -108,10 +111,11 @@ END MODULE gvect
 !
 !
 MODULE gsmooth
-  USE kinds, ONLY: DP
   !
   ! ... the variables for the smooth mesh of the wavefunction. It can
   ! ... be different from the large mesh if dual > 4
+  !
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -140,10 +144,11 @@ END MODULE gsmooth
 !
 !
 MODULE klist
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: npk
   !
   ! ... The variables for the k-points
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npk
   !
   SAVE
   !
@@ -166,10 +171,11 @@ END MODULE klist
 !
 !
 MODULE lsda_mod
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: ntypx, npk
   !
   ! ... The variables needed for the lsda calculation
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : ntypx, npk
   !
   SAVE
   !
@@ -186,9 +192,10 @@ END MODULE lsda_mod
 !
 !
 MODULE ktetra
-  USE kinds, ONLY: DP
   !
   ! ... The variables for the tetrahedron method
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -206,9 +213,10 @@ END MODULE ktetra
 !
 !
 MODULE symme
-  USE kinds, ONLY: DP
   !
   ! ... The variables needed to describe the symmetry properties
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -225,10 +233,11 @@ END MODULE symme
 !
 !
 MODULE atom
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: npsx, ndm, lmaxx, nchix
   !
   ! ... The variables needed to describe the atoms and related quantities
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npsx, ndm, lmaxx, nchix
   !
   SAVE
   !
@@ -255,10 +264,11 @@ END MODULE atom
 !
 !
 MODULE pseud
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: npsx, ntypx
   !
   ! ... The variables needed to compute the BHS pseudopotentials
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npsx, ntypx
   !
   SAVE
   !
@@ -281,10 +291,11 @@ END MODULE pseud
 !
 !
 MODULE nl_c_c
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: npsx
   !
   ! ... The variable needed for the Non Linear Core Correction
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npsx
   !
   SAVE
   !
@@ -299,9 +310,10 @@ END MODULE nl_c_c
 !
 !
 MODULE vlocal
-  USE kinds, ONLY: DP
   !
   ! ... The variables needed for the local potential in reciprocal space
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -315,9 +327,10 @@ END MODULE vlocal
 !
 !
 MODULE wvfct
-  USE kinds, ONLY: DP
   !
   ! ... The variables needed to compute the band structure
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -343,9 +356,10 @@ END MODULE wvfct
 !
 !
 MODULE ener
-  USE kinds, ONLY: DP
   !
   ! ... The variables needed to compute the energies
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -365,9 +379,10 @@ END MODULE ener
 !
 !
 MODULE force_mod
-  USE kinds, ONLY: DP
   !
   ! ... The variables for the first derivative of the energy
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -383,9 +398,10 @@ END MODULE force_mod
 !
 !
 MODULE scf
-  USE kinds, ONLY: DP
   !
   ! ... The variables needed to define the self-consistent cycle
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -400,59 +416,14 @@ MODULE scf
 END MODULE scf
 !
 !
-MODULE varie
-  USE kinds, ONLY: DP
-  !
-  ! ... Several variables controlling the run
-  !
-  USE control_flags, ONLY: &
-      mixing_beta,      &! the mixing parameter
-      tr2,              &! the convergence threshold for potential
-      upscale,          &! maximum reduction of convergence threshold
-      ethr,             &! the convergence threshold for eigenvalues
-      alpha0,           &! the mixing parameters for the extrapolation
-      beta0,            &! of the starting potential
-      diis_ethr_cg,     &! threshold in eigval for starting DIIS
-      ngm0,             &! used in mix_rho
-      niter,            &! the maximum number of iteration
-      nmix,             &! the number of iteration kept in the history
-      imix,             &! the type of mixing (0=plain,1=TF,2=local-TF)
-      iprint,           &! the interval between full writing of results
-      iverbosity,       &! type of printing ( 0 few, 1 all )
-      david,            &! used on Davidson diagonalization
-      nstep,            &! number of minimization steps
-      istep,            &! current minimization step
-      isolve,           &! Davidson or CG diagonalization
-      iswitch,          &! general switch for the calculation type
-      modenum,          &! used with iswitch=-4
-      max_cg_iter,      &! maximum number of iterations in a CG di
-      diis_buff,        &! dimension of the buffer in diis
-      diis_ndim,        &! dimension of reduced basis in DIIS
-      order,            &! type of potential updating ( see update_pot )
-      lscf,             &! if .TRUE. the calculation is selfconsistent
-      lbfgs,            &! if .TRUE. the calculation is a relaxation based on new BFGS scheme
-      loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme
-      lmd,              &! if .TRUE. the calculation is a dynamics            
-      lneb,             &! if .TRUE. the calculation is neb
-      lphonon,          &! if .TRUE. the calculation is phonon
-      conv_elec,        &! if .TRUE. electron convergence has been reached
-      conv_ions,        &! if .TRUE.    ionic convergence has been reached
-      nosym,            &! if .TRUE. no symmetry is used
-      noinv,            &! if .TRUE. eliminates inversion symmetry
-      diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
-      restart,          &! if .TRUE. restart from results of a preceding run
-      reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
-  !
-END MODULE varie
-!
-!
 MODULE relax
-  USE kinds, ONLY: DP
-  USE ions_base, ONLY: &
-       if_pos,                  &! if 0 that coordinate will be kept fixed
-       fixatom                   ! last "fixatom" are kept fixed
   !
   ! ... The variables used to control ionic relaxations
+  !  
+  USE kinds,     ONLY : DP
+  USE ions_base, ONLY : &
+       if_pos,                  &! if 0 that coordinate will be kept fixed
+       fixatom                   ! last "fixatom" are kept fixed
   !
   SAVE
   !
@@ -469,9 +440,10 @@ END MODULE relax
 !
 !
 MODULE cellmd
-  USE kinds, ONLY: DP
   !
   ! ... The variables used to control cell relaxation
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -497,10 +469,11 @@ END MODULE cellmd
 !
 !
 MODULE char
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: npsx
   !
   ! ... The names of the atoms, of the solid and of the symmetries
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npsx
   !
   SAVE
   !
@@ -515,10 +488,11 @@ END MODULE char
 !
 !
 MODULE us
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: lmaxx, lqmax, nbrx, npsx, nqfm, ndm
   !
   ! ... These parameters are needed with the US pseudopotentials
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : lmaxx, lqmax, nbrx, npsx, nqfm, ndm
   !
   SAVE
   !
@@ -579,14 +553,14 @@ MODULE us
        okvan                   ! if .TRUE. at least one pseudo is Vanderbilt
   !
 END MODULE us
-
 !
 !
 MODULE ldaU
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: lqmax, nspinx, ntypx
   !
   ! ... The quantities needed in lda+U calculations
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : lqmax, nspinx, ntypx
   !
   SAVE
   !
@@ -615,9 +589,10 @@ END MODULE ldaU
 !
 !
 MODULE extfield
-  USE kinds, ONLY: DP
   !
-  ! ... 
+  ! ... The quantities needed in calculations with external field
+  !  
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -632,7 +607,6 @@ MODULE extfield
       eopreg,        &! amplitude of the inverse region (0<eopreg<1)
       eamp,          &! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
       etotefield      ! energy correction due to the field
-
   REAL(KIND=DP), ALLOCATABLE :: &
       forcefield(:,:)
   !
@@ -640,6 +614,11 @@ END MODULE extfield
 !
 !
 MODULE sticks
+  !
+  ! ... data structure containing all information
+  ! ... about fft data distribution for a given 
+  ! ... potential grid, and its wave functions sub-grid.
+  !  
   USE fft_types, ONLY : fft_dlay_descriptor
   !
   SAVE
@@ -647,17 +626,14 @@ MODULE sticks
   TYPE ( fft_dlay_descriptor ) :: dfftp   ! dense grid
   TYPE ( fft_dlay_descriptor ) :: dffts   ! smooth grid
   !
-  !   data structure containing all information
-  !   about fft data distribution for a given 
-  !   potential grid, and its wave functions sub-grid.
-  !
 END MODULE
 !  
 !  
 MODULE bp
-  USE kinds, ONLY: DP
   !
   ! ... The variables needed for the Berry phase polarization calculation
+  !
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -671,10 +647,11 @@ END MODULE bp
 !
 !
 MODULE fixed_occ
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: nbndxx, nspinx
   !
-  ! ...
+  ! ... The quantities needed in calculations with fixed occupations
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : nbndxx, nspinx
   !
   SAVE
   !
@@ -687,6 +664,7 @@ END MODULE fixed_occ
 !
 !
 MODULE pwcom
+  !
   USE constants, ONLY : e2, rytoev, amconv, uakbar, pi, tpi, fpi
   USE cell_base, ONLY : celldm, at, bg, alat, omega, tpiba, tpiba2, &
                         ibrav, symm_type
@@ -706,7 +684,6 @@ MODULE pwcom
   USE ener
   USE force_mod
   USE scf
-  USE varie
   USE relax
   USE cellmd
   USE char
@@ -716,4 +693,5 @@ MODULE pwcom
   USE sticks
   USE bp
   USE fixed_occ
+  !
 END MODULE pwcom

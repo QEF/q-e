@@ -15,10 +15,12 @@ subroutine phq_recover
   !
 #include "machine.h"
 
-  USE io_global,  ONLY : stdout
+  USE io_global,     ONLY : stdout
   use pwcom
-  USE kinds, only : DP
+  USE kinds,         ONLY : DP
   use phcom
+  USE control_flags, ONLY : iswitch
+  
   implicit none
 
   integer :: ifat0 (nat), comp_irr0 (3 * nat), irr, na

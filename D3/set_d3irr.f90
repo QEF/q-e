@@ -25,6 +25,7 @@ subroutine set_d3irr
 #include "machine.h"
   USE kinds, only : DP
   use pwcom
+  USE control_flags, ONLY : iverbosity
   use phcom
   use d3com
 

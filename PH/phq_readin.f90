@@ -17,14 +17,13 @@ subroutine phq_readin
 #include "machine.h"
 
   use pwcom
-  USE check_stop, ONLY: time_max => max_seconds
-  USE kinds, only : DP
+  USE check_stop,    ONLY : time_max => max_seconds
+  USE kinds,         ONLY : DP
   use phcom
-  use io_files, only: tmp_dir, prefix
-  use control_flags, only : twfcollect
-#ifdef __PARA
+  use io_files,      ONLY : tmp_dir, prefix
+  use control_flags, ONLY : twfcollect, iverbosity, reduce_io, iswitch, modenum
   use para
-#endif
+
   implicit none
   integer :: ios, ipol, iter, na, it
   ! integer variable for I/O control

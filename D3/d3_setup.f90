@@ -46,6 +46,7 @@ subroutine d3_setup
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use pwcom
+  USE control_flags, ONLY : iswitch, iverbosity, modenum
   USE constants,  ONLY : degspin
   use phcom
   use d3com

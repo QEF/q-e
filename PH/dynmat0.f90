@@ -20,7 +20,8 @@ subroutine dynmat0
 #include "machine.h"
 
   use pwcom
-  USE kinds, only : DP
+  USE control_flags, ONLY : iswitch
+  USE kinds,         ONLY : DP
   use phcom
   implicit none
 

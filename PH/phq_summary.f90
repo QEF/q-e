@@ -17,10 +17,12 @@ subroutine phq_summary
   !    if iverbosity = 0 only a partial summary is done.
   !
 #include"machine.h"
-  USE io_global,  ONLY : stdout
+  USE io_global,     ONLY : stdout
   use pwcom
-  USE kinds, only : DP
+  USE kinds,         ONLY : DP
   use phcom
+  USE control_flags, ONLY : iverbosity
+  
   implicit none
 
   integer :: i, l, nt, mu, nu, ipol, apol, na, isymq, isym, nsymtot, &

@@ -14,12 +14,12 @@ program cg_raman
   use pwcom
   use io_files
   use cgcom
-  use mp, only: mp_end
+  use mp,             ONLY : mp_end
   use global_version
-#ifdef __PARA
   use para
-#endif
+
   implicit none
+
   real(kind=DP), allocatable :: deps_dtau(:,:,:,:), dynout(:,:)
   real(kind=DP), allocatable :: w2(:)
   character(len=9) :: cdate, ctime, code = 'RAMAN'
@@ -402,6 +402,9 @@ subroutine newscf
   use pwcom
   use funct
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
+  USE control_flags, ONLY : restart, reduce_io, lscf, istep, iprint, &
+                            order, david, max_cg_iter, isolve, tr2,  &
+                            ethr, mixing_beta, nmix, niter
   !
   implicit none
   integer :: iter

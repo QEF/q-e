@@ -16,6 +16,7 @@ subroutine d3_readin
   !
 #include "machine.h"
   use pwcom
+  USE control_flags, ONLY : iverbosity, iswitch
   use phcom
   use d3com
   use io_files, only: tmp_dir, prefix

@@ -43,11 +43,13 @@ subroutine phq_setup
   !  Oct-Nov 1998: minor stuff added (SdG)
   !
 #include "machine.h"
-  USE io_global,  ONLY : stdout
+  USE io_global,     ONLY : stdout
   use pwcom
-  USE constants,  ONLY: degspin
-  USE kinds, only : DP
+  USE constants,     ONLY : degspin
+  USE kinds,         ONLY : DP
   use phcom
+  USE control_flags, ONLY : iswitch, iverbosity, modenum
+  
   implicit none
 
   real(kind=DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &

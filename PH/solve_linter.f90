@@ -20,15 +20,17 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
-  USE io_global,      ONLY : stdout
-  USE io_files, ONLY: iunigk
+  USE io_global,             ONLY : stdout
+  USE io_files,              ONLY : iunigk
   use pwcom
-  USE check_stop, ONLY: time_max => max_seconds
-  USE wavefunctions_module,  ONLY: evc
-  USE constants,  ONLY: degspin
+  USE check_stop,            ONLY : time_max => max_seconds
+  USE wavefunctions_module,  ONLY : evc
+  USE constants,             ONLY : degspin
   use becmod
-  USE kinds, only : DP
+  USE kinds,                 ONLY : DP
   use phcom
+  USE control_flags,         ONLY : reduce_io
+  
   implicit none
 
 
