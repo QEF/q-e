@@ -827,7 +827,7 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
 			LIBS="$libs"
 			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1
 				       libs="$try_loption \
-$ac_cv_search_dgemm -latlas $libs", , -latlas)
+$ac_cv_search_dgemm -latlas -lg2c $libs", , -latlas -lg2c)
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
