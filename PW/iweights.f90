@@ -13,14 +13,17 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg)
   !     (bands are either empty or filled)
   !     On output, Ef is the highest occupied Kohn-Sham level
   USE kinds
+  USE noncollin_module, ONLY: noncolin
   implicit none
   !
   integer :: nks, nbnd
   real(kind=DP), intent(IN ) :: wk (nks), et(nbnd, nks), nelec
   real(kind=DP), intent(OUT) :: wg (nbnd, nks), Ef
-  real(kind=DP), parameter :: degspin = 2.d0
+  real(kind=DP) :: degspin 
   integer :: kpoint, ibnd
 
+  degspin=2.d0
+  if (noncolin) degspin=1.d0
   Ef = - 1.0e+20
   do kpoint = 1, nks
      do ibnd = 1, nbnd
