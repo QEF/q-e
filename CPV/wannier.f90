@@ -377,7 +377,7 @@ SUBROUTINE get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, i
       what1=.true.
       jwf=1
       call wf (calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
-      write(6,*) "WFC Obtianed"
+      write(6,*) "WFC Obtained"
       what1=.false.
     end if
   end if
