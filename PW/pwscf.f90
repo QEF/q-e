@@ -111,8 +111,8 @@ PROGRAM pwscf
   !
   STOP
   !
-9010 FORMAT( /5X,'Current dimensions of program pwscf are:' &
-           & /5X,'ntypx =',I2,'   npk =',I5,'  lmax =',I2   &
-           & /5X,'nchix =',I2,'  ndmx =',I5,'  nbrx =',I2,' nqfx =',I2 )
+9010 FORMAT( /,5X,'Current dimensions of program pwscf are:', /, &
+           & /,5X,'ntypx = ',I2,'   npk = ',I5,'  lmax = ',I2   &
+           & /,5X,'nchix = ',I2,'  ndmx = ',I5,'  nbrx = ',I2,'  nqfx = ',I2 )
   !
 END PROGRAM pwscf

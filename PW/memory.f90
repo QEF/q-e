@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -126,9 +126,9 @@ subroutine memory_estimate ( )
   USE uspp_param,    ONLY : lmaxq, nhm
   USE control_flags, ONLY : nmix, isolve, diis_ndim
   USE wvfct,         ONLY : gamma_only, npwx, nbnd, nbndx
-#ifdef __PARA
-  USE para,          ONLY : nprocp, npool, nct, ncplane, ncts, ncplanes
-#endif
+  USE mp_global,     ONLY : nproc_pool, npool
+  USE pfft,          ONLY : nct, ncplane
+  USE pffts,         ONLY : ncts, ncplanes
   !
   implicit none
   !
@@ -218,7 +218,7 @@ subroutine memory_estimate ( )
   total_mem = scalable_mem + nonscalable_mem + &
               scalable_wspace + nonscalable_wspace
 #ifdef __PARA
-  print '(5x,"Number of processors/pools:",2i4)', nprocp, npool  
+  print '(5x,"Number of processors/pools:",2i4)', nproc_pool, npool
 #endif
   if (gamma_only) then
      print '(5x,"Estimated Max memory (Gamma-only code): ",f8.2,"Mb")', &

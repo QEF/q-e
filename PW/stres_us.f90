@@ -22,9 +22,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE uspp_param,           ONLY : lmaxkb, nh, tvanp, newpseudo
   USE uspp,                 ONLY : nkb, vkb, qq, deeq
   USE wavefunctions_module, ONLY : evc
-#ifdef __PARA
-  USE para,                 ONLY : me
-#endif
+  USE mp_global,            ONLY : me_pool, root_pool
   !
   IMPLICIT NONE
   !
@@ -90,9 +88,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           END IF
        END DO
        !
-#ifdef __PARA
-       IF ( me /=  1 ) GO TO 100
-#endif
+       IF ( me_pool /= root_pool ) GO TO 100
        !
        ! ... diagonal contribution
        !
@@ -294,9 +290,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           END IF
        END DO
        !
-#ifdef __PARA
-       IF ( me /= 1 ) GO TO 100
-#endif
+       IF ( me_pool /= root_pool ) GO TO 100
        !
        ! ... diagonal contribution
        !

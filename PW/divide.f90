@@ -11,8 +11,10 @@ subroutine divide (ntodiv, startn, lastn)
   !-----------------------------------------------------------------------
   ! Divide the bands among processors in the phonon code
   !
+  USE mp_global, ONLY : me_pool, nproc_pool
+  !
 #ifdef __PARA
-  use para
+  !
   implicit none
 
   integer :: ntodiv, startn, lastn
@@ -22,21 +24,21 @@ subroutine divide (ntodiv, startn, lastn)
 
   integer :: nb, resto, index, ip
   ! number of bands per processor
-  ! one additional band if me <= resto
+  ! one additional band if me_pool+1 <= resto
   ! counter on bands
   ! counter on processors
-  nb = ntodiv / nprocp
-  resto = ntodiv - nb * nprocp
+  nb = ntodiv / nproc_pool
+  resto = ntodiv - nb * nproc_pool
   index = 0
-  do ip = 1, nprocp
+  do ip = 1, nproc_pool
      if (ip.le.resto) then
-        if (me.eq.ip) then
+        if (me_pool+1.eq.ip) then
            startn = index + 1
            lastn = startn + nb
         endif
         index = index + nb + 1
      else
-        if (me.eq.ip) then
+        if (me_pool+1.eq.ip) then
            startn = index + 1
            lastn = startn + nb - 1
         endif

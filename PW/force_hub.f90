@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------
-subroutine force_hub(forceh)
+SUBROUTINE force_hub(forceh)
    !----------------------------------------------------------------------
    !
    ! This routine computes the Hubbard contribution to the force. It gives
@@ -24,80 +24,77 @@ subroutine force_hub(forceh)
    USE lsda_mod,  ONLY : nspin
    USE symme,     ONLY : s, nsym, irt
    USE io_files,  ONLY : prefix, iunocc
-   USE wvfct,     ONLY : gamma_only   
-#ifdef __PARA
-   use para
-#endif
-   implicit none
-   real (kind=DP) :: forceh(3,nat)  ! output: the Hubbard forces
+   USE wvfct,     ONLY : gamma_only
+   USE mp_global, ONLY : me_pool, my_pool_id
 
-   integer :: alpha, na, nt, is, m1, m2, ipol, ldim
+   IMPLICIT NONE
+   REAL (kind=DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
-   logical ::  exst
+   INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim
 
-   real (kind=DP), allocatable :: dns(:,:,:,:)
+   LOGICAL ::  exst
+
+   REAL (kind=DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
 
-   if (U_projection .ne. "atomic") call errore("force_hub", &
+   IF (U_projection .NE. "atomic") CALL errore("force_hub", &
                    " forces for this U_projection_type not implemented",1)
-   if (gamma_only) call errore('force_huh',&
+   IF (gamma_only) CALL errore('force_huh',&
                    ' LDA+U, forces AND gamma-only not implemented yet',1)
    ldim= 2 * Hubbard_lmax + 1
-   allocate(dns(ldim,ldim,nspin,nat))
+   ALLOCATE(dns(ldim,ldim,nspin,nat))
    forceh(:,:) = 0.d0
    dns(:,:,:,:) = 0.d0
 
-#ifdef __PARA
-   if (me.eq.1.and.mypool.eq.1) then
-#endif
-      call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
-      read(iunocc,*) ns
-      close(unit=iunocc,status='keep')
-#ifdef __PARA
-   end if
-#endif
+   IF ( me_pool == 0 .AND. my_pool_id == 0 ) THEN
 
-   do ipol = 1,3
-      do alpha = 1,nat                 ! the displaced atom
-         call dndtau(dns,ldim,alpha,ipol)
-         do na = 1,nat                 ! the Hubbard atom
+      CALL seqopn (iunocc, TRIM(prefix)//'.occup', 'formatted', exst)
+      READ(iunocc,*) ns
+      CLOSE(unit=iunocc,status='keep')
+
+   END IF
+
+   DO ipol = 1,3
+      DO alpha = 1,nat                 ! the displaced atom
+         CALL dndtau(dns,ldim,alpha,ipol)
+         DO na = 1,nat                 ! the Hubbard atom
             nt = ityp(na)
-            if (Hubbard_U(nt).ne.0.d0.or. Hubbard_alpha(nt).ne.0.d0) then
-               do is = 1,nspin
-                  do m2 = 1,ldim
+            IF (Hubbard_U(nt).NE.0.d0.OR. Hubbard_alpha(nt).NE.0.d0) THEN
+               DO is = 1,nspin
+                  DO m2 = 1,ldim
                      forceh(ipol,alpha) = forceh(ipol,alpha) -  &
                            Hubbard_U(nt) * 0.5d0           * dns(m2,m2,is,na)
-                     do m1 = 1,ldim
+                     DO m1 = 1,ldim
                         forceh(ipol,alpha) = forceh(ipol,alpha) +    &
                            Hubbard_U(nt) * ns(m2,m1,is,na) * dns(m1,m2,is,na)
-                     end do
-                  end do
-               end do
-            end if
-         end do
-      end do
-   end do
+                     END DO
+                  END DO
+               END DO
+            END IF
+         END DO
+      END DO
+   END DO
 
-   deallocate(dns)
+   DEALLOCATE(dns)
    
-   if (nspin.eq.1) forceh(:,:) = 2.d0 * forceh(:,:)
+   IF (nspin.EQ.1) forceh(:,:) = 2.d0 * forceh(:,:)
    !
    ! The symmetry matrices are in the crystal basis so...
    ! Transform to crystal axis...
    !
-   do na=1, nat
-      call trnvect(forceh(1,na),at,bg,-1)
-   end do
+   DO na=1, nat
+      CALL trnvect(forceh(1,na),at,bg,-1)
+   END DO
    !
    ! ...symmetrize...
    !
-   call symvect(nat,forceh,nsym,s,irt)
+   CALL symvect(nat,forceh,nsym,s,irt)
    !
    ! ... and transform back to cartesian axis
    !
-   do na=1, nat
-      call trnvect(forceh(1,na),at,bg, 1)
-   end do
+   DO na=1, nat
+      CALL trnvect(forceh(1,na),at,bg, 1)
+   END DO
 
-   return
-end subroutine force_hub
+   RETURN
+END SUBROUTINE force_hub

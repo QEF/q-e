@@ -1,18 +1,15 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 # if defined __AIX || __FFTW || __SGI
 #  define __FFT_MODULE_DRV
 # endif
-
-
+!
 #ifdef __PARA
-
 !
 !----------------------------------------------------------------------
 subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -50,7 +47,8 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   use fft_base, only: fft_scatter
 
   USE kinds, only: DP
-  use para, only: ncts, ncplanes, ncp0s, nkcp, nprocp, nxxs, npps, ncps, me
+  USE mp_global, ONLY : me_pool, nproc_pool
+  use pffts, only: ncts, ncplanes, ncp0s, nkcp, nxxs, npps, ncps
   use sticks, only: dffts
 
   implicit none
@@ -82,24 +80,24 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   ! see comments in cft3.F for the logic (or lack of it) of the following
   !
 
-  if (nprocp.eq.1) then
+  if (nproc_pool.eq.1) then
      nppx = nx3
   else
-     nppx = npps (me)
+     nppx = npps (me_pool+1)
   endif
 
   if (sign.gt.0) then
      if (sign.ne.2) then
 #if defined __FFT_MODULE_DRV
-        call cft_1z (f, ncps (me), n3, nx3, sign, aux)
+        call cft_1z (f, ncps (me_pool+1), n3, nx3, sign, aux)
 #else
-        call CFT_1S (f, ncps (me), n3, nx3, sign, aux)
+        call CFT_1S (f, ncps (me_pool+1), n3, nx3, sign, aux)
 #endif
         call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
         f(:) = (0.d0,0.d0)
         do i = 1, ncts
            mc = dffts%ismap (i)
-           do j = 1, npps (me)
+           do j = 1, npps (me_pool+1)
               f (mc + (j - 1) * ncplanes) = aux (j + (i - 1) * nppx)
            enddo
         enddo
@@ -108,9 +106,9 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         enddo
      else
 #if defined __FFT_MODULE_DRV
-        call cft_1z (f, nkcp (me), n3, nx3, sign, aux)
+        call cft_1z (f, nkcp (me_pool+1), n3, nx3, sign, aux)
 #else
-        call CFT_1S (f, nkcp (me), n3, nx3, sign, aux)
+        call CFT_1S (f, nkcp (me_pool+1), n3, nx3, sign, aux)
 #endif
         call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
         f(:) = (0.d0,0.d0)
@@ -118,22 +116,22 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         do i = 1, nx1
            planes (i) = 0
         enddo
-        do iproc = 1, nprocp
+        do iproc = 1, nproc_pool
            do i = 1, nkcp (iproc)
               mc = dffts%ismap (i + ncp0s (iproc) )
               ii = ii + 1
               k = mod (mc - 1, nx1) + 1
               planes (k) = 1
-              do j = 1, npps (me)
+              do j = 1, npps (me_pool+1)
                  f (mc + (j - 1) * ncplanes) = aux (j + (ii - 1) * nppx)
               enddo
            enddo
         enddo
      endif
 #if defined __FFT_MODULE_DRV
-     call cft_2xy (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+     call cft_2xy (f, npps (me_pool+1), n1, n2, nx1, nx2, sign, planes)
 #else
-     call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+     call CFT_2S (f, npps (me_pool+1), n1, n2, nx1, nx2, sign, planes)
 #endif
   else
      if (sign.ne. - 2) then
@@ -144,7 +142,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         do i = 1, nx1
            planes (i) = 0
         enddo
-        do iproc = 1, nprocp
+        do iproc = 1, nproc_pool
            do i = 1, nkcp (iproc)
               mc = dffts%ismap (i + ncp0s (iproc) )
               k = mod (mc - 1, nx1) + 1
@@ -153,39 +151,39 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         enddo
      endif
 #if defined __FFT_MODULE_DRV
-     call cft_2xy (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+     call cft_2xy (f, npps (me_pool+1), n1, n2, nx1, nx2, sign, planes)
 #else
-     call CFT_2S (f, npps (me), n1, n2, nx1, nx2, sign, planes)
+     call CFT_2S (f, npps (me_pool+1), n1, n2, nx1, nx2, sign, planes)
 #endif
      if (sign.ne. - 2) then
         do i = 1, ncts
            mc = dffts%ismap (i)
-           do j = 1, npps (me)
+           do j = 1, npps (me_pool+1)
               aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplanes)
            enddo
         enddo
         call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
 #if defined __FFT_MODULE_DRV
-        call cft_1z (aux, ncps (me), n3, nx3, sign, f)
+        call cft_1z (aux, ncps (me_pool+1), n3, nx3, sign, f)
 #else
-        call CFT_1S (aux, ncps (me), n3, nx3, sign, f)
+        call CFT_1S (aux, ncps (me_pool+1), n3, nx3, sign, f)
 #endif
      else
         ii = 0
-        do iproc = 1, nprocp
+        do iproc = 1, nproc_pool
            do i = 1, nkcp (iproc)
               mc = dffts%ismap (i + ncp0s (iproc) )
               ii = ii + 1
-              do j = 1, npps (me)
+              do j = 1, npps (me_pool+1)
                  aux (j + (ii - 1) * nppx) = f (mc + (j - 1) * ncplanes)
               enddo
            enddo
         enddo
         call fft_scatter (aux, nx3, nxxs, f, nkcp, npps, sign)
 #if defined __FFT_MODULE_DRV
-        call cft_1z (aux, nkcp (me), n3, nx3, sign, f)
+        call cft_1z (aux, nkcp (me_pool+1), n3, nx3, sign, f)
 #else
-        call CFT_1S (aux, nkcp (me), n3, nx3, sign, f)
+        call CFT_1S (aux, nkcp (me_pool+1), n3, nx3, sign, f)
 #endif
      endif
   endif

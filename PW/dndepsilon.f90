@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 PWSCF group
+! Copyright (C) 2002-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine dndepsilon ( dns,ldim,ipol,jpol )
+SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    !-----------------------------------------------------------------------
    ! This routine computes the derivative of the ns atomic occupations with
    ! respect to the strain epsilon(ipol,jpol) used to obtain the hubbard
@@ -25,132 +25,130 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
-   use becmod
-   use io_files
-#ifdef __PARA
-   use para
-#endif
-   implicit none
+   USE becmod,               ONLY : becp
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunat
+
+   IMPLICIT NONE
    !
    ! I/O variables first
    !
-   integer :: ipol, jpol, ldim
-   real (kind=DP) :: dns(ldim,ldim,nspin,nat)
+   INTEGER :: ipol, jpol, ldim
+   REAL (kind=DP) :: dns(ldim,ldim,nspin,nat)
    !
    ! local variable
    !
-   integer :: ik,    & ! counter on k points
+   INTEGER :: ik,    & ! counter on k points
               ibnd,  & !    "    "  bands
               is,    & !    "    "  spins
               i, na, nt, n, counter, m1, m2, l
-   complex (kind=DP) :: ZDOTC
+   COMPLEX (kind=DP) :: ZDOTC
 
-   integer, allocatable :: offset(:)
+   INTEGER, ALLOCATABLE :: offset(:)
    ! offset(nat)  ! offset of d electrons of atom d in the natomwfc ordering
-   complex (kind=DP), allocatable :: &
+   COMPLEX (kind=DP), ALLOCATABLE :: &
                       proj(:,:), wfcatom(:,:), spsi(:,:), dproj(:,:)
    ! proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),
    ! spsi(npwx,nbnd), dproj(natomwfc,nbnd)
 
-   allocate (offset(nat), proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),  &
+   ALLOCATE (offset(nat), proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),  &
              spsi(npwx,nbnd), dproj(natomwfc,nbnd), becp(nkb,nbnd) )
 
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
    counter = 0
-   do na=1,nat
+   DO na=1,nat
       offset(na) = 0
       nt=ityp(na)
-      do n=1,nchi(nt)
-         if (oc(n,nt) >= 0.d0) then
+      DO n=1,nchi(nt)
+         IF (oc(n,nt) >= 0.d0) THEN
             l=lchi(n,nt)
-            if (l.eq.Hubbard_l(nt)) offset(na) = counter
+            IF (l.EQ.Hubbard_l(nt)) offset(na) = counter
             counter = counter + 2 * l + 1
-         end if
-      end do
-   end do
+         END IF
+      END DO
+   END DO
 
-   if(counter.ne.natomwfc) call errore('new_ns','nstart<>counter',1)
+   IF(counter.NE.natomwfc) CALL errore('new_ns','nstart<>counter',1)
 
    dns(:,:,:,:) = 0.d0
    !
    !    we start a loop on k points
    !
-   if (nks.gt.1) rewind (iunigk)
+   IF (nks.GT.1) REWIND (iunigk)
 
-   do ik = 1, nks
-      if (lsda) current_spin = isk(ik)
-      if (nks.gt.1) read (iunigk) npw, igk
+   DO ik = 1, nks
+      IF (lsda) current_spin = isk(ik)
+      IF (nks.GT.1) READ (iunigk) npw, igk
 
       !
       ! now we need the first derivative of proj with respect to
       ! epsilon(ipol,jpol)
       !
-      call davcio(evc,nwordwfc,iunwfc,ik,-1)
-      call init_us_2 (npw,igk,xk(1,ik),vkb)
-      call ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
+      CALL davcio(evc,nwordwfc,iunwfc,ik,-1)
+      CALL init_us_2 (npw,igk,xk(1,ik),vkb)
+      CALL ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
 
-      call s_psi  (npwx, npw, nbnd, evc, spsi )
-      call atomic_wfc( ik, wfcatom )
+      CALL s_psi  (npwx, npw, nbnd, evc, spsi )
+      CALL atomic_wfc( ik, wfcatom )
 
       dproj(:,:) = (0.d0,0.d0)
 
-      call dprojdepsilon(ik,dproj,wfcatom,spsi,ipol,jpol)
+      CALL dprojdepsilon(ik,dproj,wfcatom,spsi,ipol,jpol)
 
-      call davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+      CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
 
-      do ibnd = 1, nbnd
-         do i=1,natomwfc
+      DO ibnd = 1, nbnd
+         DO i=1,natomwfc
             proj(i,ibnd) = ZDOTC(npw,swfcatom(1,i),1,evc(1,ibnd),1)
-         enddo
-      enddo
+         ENDDO
+      ENDDO
 
 #ifdef __PARA
-       call reduce(2*natomwfc*nbnd,proj)
+       CALL reduce(2*natomwfc*nbnd,proj)
 #endif
       !
       ! compute the derivative of the occupation numbers (quantities dn(m1,m2))
       ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
       !
-      do na = 1,nat
+      DO na = 1,nat
          nt = ityp(na)
-         if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then        
-            do m1 = 1, 2 * Hubbard_l(nt) + 1
-               do m2 = m1, 2 * Hubbard_l(nt) + 1
-                  do ibnd = 1,nbnd
+         IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN        
+            DO m1 = 1, 2 * Hubbard_l(nt) + 1
+               DO m2 = m1, 2 * Hubbard_l(nt) + 1
+                  DO ibnd = 1,nbnd
                      dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                              wg(ibnd,ik) *           &
                               DREAL( proj(offset(na)+m1,ibnd) *      &
-                              conjg(dproj(offset(na)+m2,ibnd) ) +    &
+                              CONJG(dproj(offset(na)+m2,ibnd) ) +    &
                                     dproj(offset(na)+m1,ibnd)*       &
-                              conjg( proj(offset(na)+m2,ibnd) ) )
-                  end do
-               end do
-            end do
-         end if
-      end do
+                              CONJG( proj(offset(na)+m2,ibnd) ) )
+                  END DO
+               END DO
+            END DO
+         END IF
+      END DO
 
-   end do                 ! on k-points
+   END DO                 ! on k-points
 
 #ifdef __PARA
-   call poolreduce(ldim*ldim*nspin*nat,dns)
+   CALL poolreduce(ldim*ldim*nspin*nat,dns)
 #endif
    !
    ! impose hermeticity of dn_{m1,m2}
    !
-   do na = 1,nat
+   DO na = 1,nat
       nt = ityp(na)
-      do is = 1,nspin
-         do m1 = 1, 2 * Hubbard_l(nt) + 1
-            do m2 = m1+1, 2 * Hubbard_l(nt) + 1
+      DO is = 1,nspin
+         DO m1 = 1, 2 * Hubbard_l(nt) + 1
+            DO m2 = m1+1, 2 * Hubbard_l(nt) + 1
                dns(m2,m1,is,na) = dns(m1,m2,is,na)
-            end do
-         end do
-      end do
-   end do
+            END DO
+         END DO
+      END DO
+   END DO
 
-   deallocate (offset, proj, wfcatom, spsi, dproj, becp )
+   DEALLOCATE (offset, proj, wfcatom, spsi, dproj, becp )
 
-   return
-end subroutine dndepsilon
+   RETURN
+END SUBROUTINE dndepsilon

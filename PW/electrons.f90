@@ -7,6 +7,13 @@
 !  
 #include "f_defs.h"
 !
+#if defined (__PARA)
+#define NRXX ncplane*npp(me_image+1)
+  ! This is needed in mix_pot whenever nproc is not a divisor of nr3.
+#else
+#define NRXX nrxx
+#endif
+!
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
@@ -58,45 +65,42 @@ SUBROUTINE electrons()
   !
   ! ... a few local variables
   !  
-#if defined (__PARA)
   INTEGER :: &
-      ngkp(npk)       !  number of plane waves summed on all nodes
-#define NRXX ncplane*npp(me_image+1)
-  ! This is needed in mix_pot whenever nproc is not a divisor of nr3.
-#else
-#define NRXX nrxx
-#endif
-  CHARACTER :: &
-      flmix * 42      !
+      ngkp(npk)        !  number of plane waves summed on all nodes
+  CHARACTER (LEN=42) :: &
+      flmix            !
   REAL(KIND=DP) :: &
-      de,            &!  the correction energy
-      dr2,           &!  the norm of the diffence between potential
-      charge,        &!  the total charge
-      mag,           &!  local magnetization
-      tcpu            !  cpu time
+      de,             &!  the correction energy
+      dr2,            &!  the norm of the diffence between potential
+      charge,         &!  the total charge
+      mag,            &!  local magnetization
+      tcpu             !  cpu time
    INTEGER :: &
-      i,             &!  counter on polarization
-      ir,            &!  counter on the mesh points
-      ig,            &!
-      ik,            &!  counter on k points
-      ibnd,          &!  counter on bands
-      idum,          &!  dummy counter on iterations
-      iter,          &!  counter on iterations
-      ik_             !  used to read ik from restart file
+      i,              &!  counter on polarization
+      ir,             &!  counter on the mesh points
+      ig,             &!
+      ik,             &!  counter on k points
+      ibnd,           &!  counter on bands
+      idum,           &!  dummy counter on iterations
+      iter,           &!  counter on iterations
+      ik_              !  used to read ik from restart file
   INTEGER :: &
       ldim2           !
   REAL (KIND=DP) :: &
-      ehart_new,     &!
-      etxc_new,      &!
-      vtxc_new,      &!
+      ehart_new,      &!
+      etxc_new,       &!
+      vtxc_new,       &!
       etotefield_new, &!
       charge_new      !
   REAL (KIND=DP) :: &
-      ethr_min        ! minimal threshold for diagonalization at the first scf
-                      ! iteration 
-  REAL (KIND=DP), EXTERNAL :: ewald, get_clock
+      ethr_min         ! minimal threshold for diagonalization at the first scf
+                       ! iteration 
   LOGICAL :: &
       exst
+  !
+  ! ... external functions
+  !
+  REAL (KIND=DP), EXTERNAL :: ewald, get_clock
   !
   !
   CALL start_clock( 'electrons' )

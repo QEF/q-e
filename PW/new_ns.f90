@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine new_ns
+SUBROUTINE new_ns()
   !-----------------------------------------------------------------------
   !
   ! This routine computes the new value for ns (the occupation numbers of
@@ -30,209 +30,207 @@ subroutine new_ns
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, gamma_only
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
-  use io_files
-#ifdef __PARA
-  use para
-#endif
-  implicit none
+  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunat
+
+  IMPLICIT NONE
   !
-  integer :: ik, ibnd, is, i, na, nb, nt, isym, n, counter, m1, m2, &
+  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, n, counter, m1, m2, &
        m0, m00, l, ldim
-  integer, allocatable ::  offset (:)
+  INTEGER, ALLOCATABLE ::  offset (:)
   ! counter on k points
   !    "    "  bands
   !    "    "  spins
   ! offset of d electrons of atom d
   ! in the natomwfc ordering
-  real(kind=DP) , allocatable :: nr (:,:,:,:)
-  real(kind=DP) ::  t0, scnds
+  REAL(kind=DP) , ALLOCATABLE :: nr (:,:,:,:)
+  REAL(kind=DP) ::  t0, scnds
   ! cpu time spent
 
-  real(kind=DP), external :: DDOT
-  complex(kind=DP) :: ZDOTC
-  complex(kind=DP) , allocatable :: proj(:,:)
+  REAL(kind=DP), EXTERNAL :: DDOT
+  COMPLEX(kind=DP) :: ZDOTC
+  COMPLEX(kind=DP) , ALLOCATABLE :: proj(:,:)
 
-  real(kind=DP) :: psum
+  REAL(kind=DP) :: psum
 
   t0 = scnds ()  
   ldim = 2 * Hubbard_lmax + 1
-  allocate( offset(nat), proj(natomwfc,nbnd), nr(ldim,ldim,nspin,nat) )  
+  ALLOCATE( offset(nat), proj(natomwfc,nbnd), nr(ldim,ldim,nspin,nat) )  
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
   !
   counter = 0  
-  do na = 1, nat  
+  DO na = 1, nat  
      nt = ityp (na)  
-     do n = 1, nchi (nt)  
-        if (oc (n, nt) >= 0.d0) then  
+     DO n = 1, nchi (nt)  
+        IF (oc (n, nt) >= 0.d0) THEN  
            l = lchi (n, nt)  
-           if (l == Hubbard_l(nt)) offset (na) = counter  
+           IF (l == Hubbard_l(nt)) offset (na) = counter  
            counter = counter + 2 * l + 1  
-        endif
-     enddo
+        ENDIF
+     ENDDO
 
-  enddo
+  ENDDO
 
-  if (counter.ne.natomwfc) call errore ('new_ns', 'nstart<>counter', 1)
+  IF (counter.NE.natomwfc) CALL errore ('new_ns', 'nstart<>counter', 1)
   nr    (:,:,:,:) = 0.d0
   nsnew (:,:,:,:) = 0.d0
   !
   !    we start a loop on k points
   !
 
-  if (nks.gt.1) rewind (iunigk)
+  IF (nks.GT.1) REWIND (iunigk)
 
-  do ik = 1, nks
-     if (lsda) current_spin = isk(ik)
-     if (nks.gt.1) read (iunigk) npw, igk
-     if (nks.gt.1) call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+  DO ik = 1, nks
+     IF (lsda) current_spin = isk(ik)
+     IF (nks.GT.1) READ (iunigk) npw, igk
+     IF (nks.GT.1) CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      
-     call davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
+     CALL davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
      !
      ! make the projection
      !
-        do ibnd = 1, nbnd
-           do i = 1, natomwfc
-              if ( gamma_only ) then 
+        DO ibnd = 1, nbnd
+           DO i = 1, natomwfc
+              IF ( gamma_only ) THEN 
                  proj (i, ibnd) = 2.d0 * &
                       DDOT(2*npw, swfcatom (1, i), 1, evc (1, ibnd), 1) 
-                 if (gstart.eq.2) proj (i, ibnd) = proj (i, ibnd) - &
+                 IF (gstart.EQ.2) proj (i, ibnd) = proj (i, ibnd) - &
                       swfcatom (1, i) * evc (1, ibnd)
-              else 
+              ELSE 
                  proj (i, ibnd) = ZDOTC (npw, swfcatom (1, i), 1, evc (1, ibnd), 1)
-              endif
-           enddo
-        enddo
+              ENDIF
+           ENDDO
+        ENDDO
 
 #ifdef __PARA
-        call reduce (2 * natomwfc * nbnd, proj)
+        CALL reduce (2 * natomwfc * nbnd, proj)
 #endif
 
      !
      ! compute the occupation numbers (the quantities n(m1,m2)) of the
      ! atomic orbitals
      !
-     do na = 1, nat  
+     DO na = 1, nat  
         nt = ityp (na)  
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-           do m1 = 1, 2 * Hubbard_l(nt) + 1  
-              do m2 = m1, 2 * Hubbard_l(nt) + 1
-                 do ibnd = 1, nbnd  
+        IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+              DO m2 = m1, 2 * Hubbard_l(nt) + 1
+                 DO ibnd = 1, nbnd  
                     nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) + &
                          wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
-                         conjg(proj(offset(na)+m1,ibnd)) )
-                 enddo
-              enddo
-           enddo
-        endif
-    enddo
+                         CONJG(proj(offset(na)+m1,ibnd)) )
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDIF
+    ENDDO
 ! on k-points
 
-  enddo
+  ENDDO
 #ifdef __PARA
-  call poolreduce (ldim * ldim * nspin * nat , nr)  
+  CALL poolreduce (ldim * ldim * nspin * nat , nr)  
 #endif
-  if (nspin.eq.1) nr = 0.5d0 * nr
+  IF (nspin.EQ.1) nr = 0.5d0 * nr
   !
   ! impose hermiticity of n_{m1,m2}
   !
-  do na = 1, nat  
+  DO na = 1, nat  
      nt = ityp(na)
-     do is = 1, nspin  
-        do m1 = 1, 2 * Hubbard_l(nt) + 1
-           do m2 = m1 + 1, 2 * Hubbard_l(nt) + 1  
+     DO is = 1, nspin  
+        DO m1 = 1, 2 * Hubbard_l(nt) + 1
+           DO m2 = m1 + 1, 2 * Hubbard_l(nt) + 1  
               nr (m2, m1, is, na) = nr (m1, m2, is, na)  
-           enddo
-        enddo
-     enddo
-  enddo
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
 
   ! symmetryze the quantities nr -> nsnew
-  do na = 1, nat  
+  DO na = 1, nat  
      nt = ityp (na)  
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-        do is = 1, nspin  
-           do m1 = 1, 2 * Hubbard_l(nt) + 1  
-              do m2 = 1, 2 * Hubbard_l(nt) + 1  
-                 do isym = 1, nsym  
+     IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
+        DO is = 1, nspin  
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
+                 DO isym = 1, nsym  
                     nb = irt (isym, na)  
-                    do m0 = 1, 2 * Hubbard_l(nt) + 1  
-                       do m00 = 1, 2 * Hubbard_l(nt) + 1  
-                          if (Hubbard_l(nt).eq.0) then
+                    DO m0 = 1, 2 * Hubbard_l(nt) + 1  
+                       DO m00 = 1, 2 * Hubbard_l(nt) + 1  
+                          IF (Hubbard_l(nt).EQ.0) THEN
                              nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
                                    nr(m0,m00,is,nb) / nsym
-                          else if (Hubbard_l(nt).eq.1) then
+                          ELSE IF (Hubbard_l(nt).EQ.1) THEN
                              nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
                                    d1(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d1(m00,m2,isym) / nsym
-                          else if (Hubbard_l(nt).eq.2) then
+                          ELSE IF (Hubbard_l(nt).EQ.2) THEN
                              nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
                                    d2(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d2(m00,m2,isym) / nsym
-                          else if (Hubbard_l(nt).eq.3) then
+                          ELSE IF (Hubbard_l(nt).EQ.3) THEN
                              nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
                                    d3(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d3(m00,m2,isym) / nsym
-                          else
-                             call errore ('new_ns', &
+                          ELSE
+                             CALL errore ('new_ns', &
                                          'angular momentum not implemented', &
-                                          abs(Hubbard_l(nt)) )
-                          end if
-                       enddo
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
-     endif
-  enddo
+                                          ABS(Hubbard_l(nt)) )
+                          END IF
+                       ENDDO
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDIF
+  ENDDO
 
   ! Now we make the matrix ns(m1,m2) strictly hermitean
-  do na = 1, nat  
+  DO na = 1, nat  
      nt = ityp (na)  
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-        do is = 1, nspin  
-           do m1 = 1, 2 * Hubbard_l(nt) + 1  
-              do m2 = m1, 2 * Hubbard_l(nt) + 1  
-                 psum = abs ( nsnew(m1,m2,is,na) - nsnew(m1,m2,is,na) )  
-                 if (psum.gt.1.d-10) then  
+     IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
+        DO is = 1, nspin  
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+              DO m2 = m1, 2 * Hubbard_l(nt) + 1  
+                 psum = ABS ( nsnew(m1,m2,is,na) - nsnew(m1,m2,is,na) )  
+                 IF (psum.GT.1.d-10) THEN  
                     WRITE( stdout, * ) na, is, m1, m2  
                     WRITE( stdout, * ) nsnew (m1, m2, is, na)  
                     WRITE( stdout, * ) nsnew (m2, m1, is, na)  
-                    call errore ('new_ns', 'non hermitean matrix', 1)  
-                 else  
+                    CALL errore ('new_ns', 'non hermitean matrix', 1)  
+                 ELSE  
                     nsnew(m1,m2,is,na) = 0.5d0 * (nsnew(m1,m2,is,na) + &
                                                   nsnew(m2,m1,is,na) )
                     nsnew(m2,m1,is,na) = nsnew(m1,m2,is,na)
-                 endif
-              enddo
-           enddo
-        enddo
-     endif 
-  enddo
+                 ENDIF
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDIF 
+  ENDDO
 
   !
   ! Now the contribution to the total energy is computed. The corrections
   ! needed to obtain a variational expression are already included
   !
   eth = 0.d0  
-  do na = 1, nat  
+  DO na = 1, nat  
      nt = ityp (na)  
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
-        do is = 1, nspin  
-           do m1 = 1, 2 * Hubbard_l(nt) + 1  
-              do m2 = 1, 2 * Hubbard_l(nt) + 1  
+     IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
+        DO is = 1, nspin  
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
                  eth = eth + Hubbard_U(nt) * nsnew(m1,m2,is,na) * &
                           (ns(m2,m1,is,na) - nsnew(m2,m1,is,na) * 0.5d0)
-              enddo
-           enddo
-        enddo
-     endif
-  enddo
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDIF
+  ENDDO
 
-  deallocate ( offset, proj, nr )
-  if (nspin.eq.1) eth = 2.d0 * eth
+  DEALLOCATE ( offset, proj, nr )
+  IF (nspin.EQ.1) eth = 2.d0 * eth
 
-  return
+  RETURN
 
-end subroutine new_ns
+END SUBROUTINE new_ns

@@ -1,12 +1,14 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !-----------------------------------------------------------------------
-subroutine ggen
+SUBROUTINE ggen()
   !----------------------------------------------------------------------
   !
   !     This routine generates all the reciprocal lattice vectors
@@ -14,40 +16,40 @@ subroutine ggen
   !     computes the indices nl which give the correspondence
   !     between the fft mesh points and the array of g vectors.
   !
-#include "f_defs.h"
-  USE kinds, only: DP
-  use cell_base
-  use gvect
-  use gsmooth
-  use wvfct, only : gamma_only
-  use cellmd, only: lmovecell
-  use constants, only: eps8
-  use sticks, only: dfftp, dffts
-  
-#ifdef __PARA
-  use para
-#endif
-  implicit none
+  USE kinds,              ONLY : DP
+  USE cell_base,          ONLY : at, bg
+  USE reciprocal_vectors, ONLY : ig_l2g
+  USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, nr1, nr2, nr3, &
+                                 gcutm, nrx1, nrx3, nl, ig1, ig2, ig3,    &
+                                 gstart, gl, ngl, igtongl
+  USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nr1s, nr2s, nr3s, &
+                                 nrx1s, nrx3s, nls
+  USE wvfct,              ONLY : gamma_only
+  USE cellmd,             ONLY : lmovecell
+  USE constants,          ONLY : eps8
+  USE sticks,             ONLY : dfftp, dffts
+
+  IMPLICIT NONE
   !
   !     here a few local variables
   !
-  real(kind=DP) ::  t (3), tt, swap, dnorm
-  real(kind=DP), allocatable ::  esort (:)
+  REAL(kind=DP) ::  t (3), tt, swap, dnorm
+  REAL(kind=DP), ALLOCATABLE ::  esort (:)
   !
-  integer :: ngmx, n1, n2, n3, n1s, n2s, n3s
+  INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s
   !
-  real(kind=DP), allocatable :: g2sort_g(:)
+  REAL(kind=DP), ALLOCATABLE :: g2sort_g(:)
   ! array containing all g vectors, on all processors: replicated data
-  integer, allocatable :: mill_g(:,:)
+  INTEGER, ALLOCATABLE :: mill_g(:,:)
   ! array containing all g vectors generators, on all processors:
   !     replicated data
-  integer, allocatable :: igsrt(:)
+  INTEGER, ALLOCATABLE :: igsrt(:)
   !
 #ifdef __PARA
-  integer :: m1, m2, m3, mc
+  INTEGER :: m1, m2, m3, mc
   !
 #endif
-  integer :: i, j, k, ipol, ng, igl, iswap, indsw
+  INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw
   !
   ! counters
   !
@@ -61,11 +63,11 @@ subroutine ggen
   !
   !    and computes all the g vectors inside a sphere
   !
-  allocate( igsrt( ngm_g ) )
-  allocate( g2sort_g( ngm_g ) )
+  ALLOCATE( igsrt( ngm_g ) )
+  ALLOCATE( g2sort_g( ngm_g ) )
   g2sort_g(:) = 1.0d20
-  allocate( mill_g( 3, ngm_g ) )
-  allocate( ig_l2g( ngm_l ) )
+  ALLOCATE( mill_g( 3, ngm_g ) )
+  ALLOCATE( ig_l2g( ngm_l ) )
   !
   n1 = nr1 + 1
   n2 = nr2 + 1
@@ -77,53 +79,53 @@ subroutine ggen
   !
   ngm = 0
   ngms = 0
-  do i = - n1, n1
+  DO i = - n1, n1
      !
      ! Gamma-only: exclude space with x < 0
      !
-     if ( gamma_only .and. i < 0) go to 10
-     do j = - n2, n2
+     IF ( gamma_only .AND. i < 0) go to 10
+     DO j = - n2, n2
         !
         ! exclude plane with x = 0, y < 0
         !
-        if ( gamma_only .and. i == 0 .and. j < 0) go to 11
-        do k = - n3, n3
+        IF ( gamma_only .AND. i == 0 .AND. j < 0) go to 11
+        DO k = - n3, n3
            !
            ! exclude line with x = 0, y = 0, z < 0
            !
-           if ( gamma_only .and. i == 0 .and. j == 0 .and. k < 0) go to 12
+           IF ( gamma_only .AND. i == 0 .AND. j == 0 .AND. k < 0) go to 12
            tt = 0.d0
-           do ipol = 1, 3
+           DO ipol = 1, 3
               t (ipol) = i * bg (ipol, 1) + j * bg (ipol, 2) + k * bg (ipol, 3)
               tt = tt + t (ipol) * t (ipol)
-           enddo
-           if (tt <= gcutm) then
+           ENDDO
+           IF (tt <= gcutm) THEN
               ngm = ngm + 1
-              if (tt <= gcutms) ngms = ngms + 1
-              if (ngm > ngm_g) call errore ('ggen', 'too many g-vectors', ngm)
+              IF (tt <= gcutms) ngms = ngms + 1
+              IF (ngm > ngm_g) CALL errore ('ggen', 'too many g-vectors', ngm)
               mill_g( 1, ngm ) = i
               mill_g( 2, ngm ) = j
               mill_g( 3, ngm ) = k
-              if ( tt > eps8 ) then
+              IF ( tt > eps8 ) THEN
                  g2sort_g(ngm) = tt
-              else
+              ELSE
                  g2sort_g(ngm) = 0.d0
-              endif
-           end if
-12         continue
-        enddo
-11      continue
-     enddo
-10   continue
-  enddo
+              ENDIF
+           END IF
+12         CONTINUE
+        ENDDO
+11      CONTINUE
+     ENDDO
+10   CONTINUE
+  ENDDO
 
-  if (ngm  /= ngm_g ) &
-       call errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_g))
-  if (ngms /= ngms_g) &
-       call errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
+  IF (ngm  /= ngm_g ) &
+       CALL errore ('ggen', 'g-vectors missing !', ABS(ngm - ngm_g))
+  IF (ngms /= ngms_g) &
+       CALL errore ('ggen', 'smooth g-vectors missing !', ABS(ngms - ngms_g))
 
   igsrt(1) = 0
-  call hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
+  CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
   DO ng = 1, ngm_g-1
     indsw = ng
 7   IF(igsrt(indsw) /= ng) THEN
@@ -143,37 +145,37 @@ subroutine ggen
     END IF
   END DO
 
-  deallocate( igsrt )
+  DEALLOCATE( igsrt )
 
   ! WRITE( stdout, fmt="(//,' --- Executing new GGEN Loop ---',//)" )
 
-  allocate(esort(ngm) )
+  ALLOCATE(esort(ngm) )
   esort(:) = 1.0d20
   ngm = 0
   ngms = 0
-  do ng = 1, ngm_g
+  DO ng = 1, ngm_g
     i = mill_g(1, ng)
     j = mill_g(2, ng)
     k = mill_g(3, ng)
 
 #ifdef __PARA
-    m1 = mod (i, nr1) + 1
-    if (m1.lt.1) m1 = m1 + nr1
-    m2 = mod (j, nr2) + 1
-    if (m2.lt.1) m2 = m2 + nr2
+    m1 = MOD (i, nr1) + 1
+    IF (m1.LT.1) m1 = m1 + nr1
+    m2 = MOD (j, nr2) + 1
+    IF (m2.LT.1) m2 = m2 + nr2
     mc = m1 + (m2 - 1) * nrx1
-    if ( dfftp%isind ( mc ) .eq.0) goto 1
+    IF ( dfftp%isind ( mc ) .EQ.0) GOTO 1
 #endif
 
     tt = 0.d0
-    do ipol = 1, 3
+    DO ipol = 1, 3
       t (ipol) = i * bg (ipol, 1) + j * bg (ipol, 2) + k * bg (ipol, 3)
       tt = tt + t (ipol) * t (ipol)
-    enddo
+    ENDDO
 
     ngm = ngm + 1
-    if (tt <= gcutms) ngms = ngms + 1
-    if (ngm > ngmx) call errore ('ggen', 'too many g-vectors', ngm)
+    IF (tt <= gcutms) ngms = ngms + 1
+    IF (ngm > ngmx) CALL errore ('ggen', 'too many g-vectors', ngm)
     !
     !  Here map local and global g index !!!
     !
@@ -182,17 +184,17 @@ subroutine ggen
     g (1:3, ngm) = t (1:3)
     gg (ngm) = tt
 
-    if (tt > eps8) then
+    IF (tt > eps8) THEN
       esort (ngm) = tt 
-    else
+    ELSE
       esort (ngm) = 0.d0
-    endif
+    ENDIF
 
-1   continue
-  enddo
+1   CONTINUE
+  ENDDO
 
-     if (ngm.ne.ngmx) &
-          call errore ('ggen', 'g-vectors missing !', abs(ngm - ngmx))
+     IF (ngm.NE.ngmx) &
+          CALL errore ('ggen', 'g-vectors missing !', ABS(ngm - ngmx))
      !
      !   reorder the g's in order of increasing magnitude. On exit
      !   from hpsort esort is ordered, and nl contains the new order.
@@ -200,20 +202,20 @@ subroutine ggen
      !   initialize the index inside sorting routine
 
      nl (1) = 0
-     call hpsort_eps ( ngm, esort, nl, eps8 )
+     CALL hpsort_eps ( ngm, esort, nl, eps8 )
      !
-     deallocate( esort  )
+     DEALLOCATE( esort  )
      !
      !   reorder also the g vectors, and nl
      !
-     do ng = 1, ngm - 1
+     DO ng = 1, ngm - 1
 20      indsw = nl (ng)
-        if (indsw.ne.ng) then
-           do ipol = 1, 3
+        IF (indsw.NE.ng) THEN
+           DO ipol = 1, 3
               swap = g (ipol, indsw)
               g (ipol, indsw) = g (ipol, nl (indsw) )
               g (ipol, nl (indsw) ) = swap
-           enddo
+           ENDDO
            swap = gg (indsw)
            gg (indsw) = gg (nl (indsw) )
            gg (nl (indsw) ) = swap
@@ -231,10 +233,10 @@ subroutine ggen
            nl (ng) = nl (indsw)
            nl (indsw) = iswap
 
-           goto 20
-        endif
+           GOTO 20
+        ENDIF
 
-     enddo
+     ENDDO
      !
      !  here to initialize berry_phase
      !  work in progress ...
@@ -242,146 +244,146 @@ subroutine ggen
      !
      !     determine first nonzero g vector
      !
-     if (gg(1).le.eps8) then
+     IF (gg(1).LE.eps8) THEN
         gstart=2
-     else
+     ELSE
         gstart=1
-     end if
+     END IF
      !
      !     Now set nl and nls with the correct fft correspondence
      !
-     do ng = 1, ngm
-        n1 = nint (g (1, ng) * at (1, 1) + g (2, ng) * at (2, 1) + g (3, &
+     DO ng = 1, ngm
+        n1 = NINT (g (1, ng) * at (1, 1) + g (2, ng) * at (2, 1) + g (3, &
              ng) * at (3, 1) ) + 1
         ig1 (ng) = n1 - 1
         n1s = n1
-        if (n1.lt.1) n1 = n1 + nr1
-        if (n1s.lt.1) n1s = n1s + nr1s
-        n2 = nint (g (1, ng) * at (1, 2) + g (2, ng) * at (2, 2) + g (3, &
+        IF (n1.LT.1) n1 = n1 + nr1
+        IF (n1s.LT.1) n1s = n1s + nr1s
+        n2 = NINT (g (1, ng) * at (1, 2) + g (2, ng) * at (2, 2) + g (3, &
              ng) * at (3, 2) ) + 1
         ig2 (ng) = n2 - 1
         n2s = n2
-        if (n2.lt.1) n2 = n2 + nr2
-        if (n2s.lt.1) n2s = n2s + nr2s
-        n3 = nint (g (1, ng) * at (1, 3) + g (2, ng) * at (2, 3) + g (3, &
+        IF (n2.LT.1) n2 = n2 + nr2
+        IF (n2s.LT.1) n2s = n2s + nr2s
+        n3 = NINT (g (1, ng) * at (1, 3) + g (2, ng) * at (2, 3) + g (3, &
              ng) * at (3, 3) ) + 1
         ig3 (ng) = n3 - 1
         n3s = n3
-        if (n3.lt.1) n3 = n3 + nr3
-        if (n3s.lt.1) n3s = n3s + nr3s
-        if (n1.le.nr1.and.n2.le.nr2.and.n3.le.nr3) then
+        IF (n3.LT.1) n3 = n3 + nr3
+        IF (n3s.LT.1) n3s = n3s + nr3s
+        IF (n1.LE.nr1.AND.n2.LE.nr2.AND.n3.LE.nr3) THEN
 #ifdef __PARA
            nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
-           if (ng.le.ngms) nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) &
+           IF (ng.LE.ngms) nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
 #else
            nl (ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
-           if (ng.le.ngms) nls (ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
+           IF (ng.LE.ngms) nls (ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
                 * nrx1s * nr2s
 #endif
-        else
-           call errore('ggen','Mesh too small?',ng)
-        endif
-     enddo
+        ELSE
+           CALL errore('ggen','Mesh too small?',ng)
+        ENDIF
+     ENDDO
      !
      ! calculate number of G shells: ngl
      !
-     if (lmovecell) then
+     IF (lmovecell) THEN
         !
         ! in case of a variable cell run each G vector has its shell
         !
         ngl = ngm
         gl => gg
-        do ng = 1, ngm
+        DO ng = 1, ngm
            igtongl (ng) = ng
 
-        enddo
+        ENDDO
 
-     else
+     ELSE
         !
         ! G vectors are grouped in shells with the same norm
         !
         ngl = 1
         igtongl (1) = 1
-        do ng = 2, ngm
-           if (gg (ng) > gg (ng - 1) + eps8) then
+        DO ng = 2, ngm
+           IF (gg (ng) > gg (ng - 1) + eps8) THEN
               ngl = ngl + 1
-           endif
+           ENDIF
            igtongl (ng) = ngl
 
-        enddo
+        ENDDO
 
-        allocate (gl( ngl))    
+        ALLOCATE (gl( ngl))    
         gl (1) = gg (1)
         igl = 1
-        do ng = 2, ngm
-           if (gg (ng) > gg (ng - 1) + eps8) then
+        DO ng = 2, ngm
+           IF (gg (ng) > gg (ng - 1) + eps8) THEN
               igl = igl + 1
               gl (igl) = gg (ng)
-           endif
+           ENDIF
 
-        enddo
+        ENDDO
 
-        if (igl.ne.ngl) call errore ('setup', 'igl <> ngl', ngl)
+        IF (igl.NE.ngl) CALL errore ('setup', 'igl <> ngl', ngl)
 
-     endif
+     ENDIF
 
 
-     deallocate( g2sort_g )
-     deallocate( mill_g )
+     DEALLOCATE( g2sort_g )
+     DEALLOCATE( mill_g )
 
-     call index_minusg
+     CALL index_minusg
 
-     return
-   end subroutine ggen
+     RETURN
+   END SUBROUTINE ggen
 
 !
 !-----------------------------------------------------------------------
-subroutine index_minusg
+SUBROUTINE index_minusg
   !----------------------------------------------------------------------
   !
   !     compute indices nlm and nlms giving the correspondence
   !     between the fft mesh points and -G (for gamma-only calculations)
   !
-#include "f_defs.h"
-  use gvect
-  use gsmooth
-  use wvfct, only :  gamma_only
-  use sticks, only: dfftp, dffts
-  implicit none
+  USE gvect,   ONLY : ngm, nr1, nr2, nr3, &
+                      nrx1, nrx3, nlM, ig1, ig2, ig3
+  USE gsmooth, ONLY : nr1s, nr2s, nr3s, nrx1s, nrx3s, nlsm, ngms
+  USE wvfct,   ONLY : gamma_only
+  USE sticks,  ONLY : dfftp, dffts
+  IMPLICIT NONE
   !
-  integer :: n1, n2, n3, n1s, n2s, n3s, ng
+  INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
   !
   !
-  if (gamma_only) then
-     do ng = 1, ngm
+  IF (gamma_only) THEN
+     DO ng = 1, ngm
         n1 = -ig1 (ng) + 1
         n1s = n1
-        if (n1 < 1) n1 = n1 + nr1
-        if (n1s < 1) n1s = n1s + nr1s
+        IF (n1 < 1) n1 = n1 + nr1
+        IF (n1s < 1) n1s = n1s + nr1s
         n2 = -ig2 (ng) + 1
         n2s = n2
-        if (n2 < 1) n2 = n2 + nr2
-        if (n2s < 1) n2s = n2s + nr2s
+        IF (n2 < 1) n2 = n2 + nr2
+        IF (n2s < 1) n2s = n2s + nr2s
         n3 = -ig3 (ng) + 1
         n3s = n3
-        if (n3 < 1) n3 = n3 + nr3
-        if (n3s < 1) n3s = n3s + nr3s
-        if (n1.le.nr1 .and. n2.le.nr2 .and. n3.le.nr3) then
+        IF (n3 < 1) n3 = n3 + nr3
+        IF (n3s < 1) n3s = n3s + nr3s
+        IF (n1.LE.nr1 .AND. n2.LE.nr2 .AND. n3.LE.nr3) THEN
 #ifdef __PARA
            nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
-           if (ng.le.ngms) nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) &
+           IF (ng.LE.ngms) nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
 #else
            nlm(ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
-           if (ng.le.ngms) nlsm(ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
+           IF (ng.LE.ngms) nlsm(ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
                 * nrx1s * nr2s
 #endif
-        else
-           call errore('index_minusg','Mesh too small?',ng)
-        endif
-     enddo
-  end if
-  return
-end subroutine index_minusg
+        ELSE
+           CALL errore('index_minusg','Mesh too small?',ng)
+        ENDIF
+     ENDDO
+  END IF
+  RETURN
+END SUBROUTINE index_minusg
 

@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !-----------------------------------------------------------------------
 subroutine data_structure( lgamma )
   !-----------------------------------------------------------------------
@@ -12,26 +14,24 @@ subroutine data_structure( lgamma )
   ! In the parallel case distributes columns to processes, too
   ! This version computes also the smooth and hard mesh
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
-  USE sticks, ONLY: dfftp, dffts
-  USE kinds, ONLY: DP
-  USE cell_base, ONLY: bg,  tpiba
-  USE klist, ONLY: xk, nks
-  USE gvect, ONLY:  nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-       ngm, ngm_l, ngm_g, gcutm, ecutwfc
-  USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
-       ngms, ngms_l, ngms_g, gcutms
-       
-#ifdef __PARA
-  use para, only: maxproc, ncplane, ncplanes, nkcp, npp, npps, &
-    ncp0, ncp0s, nxx, nxxs, nct, ncts, ncp, ncps
-#endif
-  use mp, only: mp_sum
-  use mp_global, only: intra_pool_comm, nproc_pool, me_pool, my_image_id
-  use stick_base
-  use fft_scalar, only: good_fft_dimension
-  use fft_types, only: fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
+  USE sticks,     ONLY : dfftp, dffts
+  USE kinds,      ONLY : DP
+  USE cell_base,  ONLY : bg,  tpiba
+  USE klist,      ONLY : xk, nks
+  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                         ngm, ngm_l, ngm_g, gcutm, ecutwfc
+  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+                         ngms, ngms_l, ngms_g, gcutms
+  USE para_const, ONLY : maxproc
+  USE pfft,       ONLY : ncplane, npp, ncp0, nxx, nct, ncp
+  USE pffts,      ONLY : nkcp, ncplanes, npps, ncp0s, nxxs, ncts, ncps
+
+  USE mp,         ONLY : mp_sum
+  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id
+  USE stick_base
+  USE fft_scalar, ONLY : good_fft_dimension
+  USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
   !
   implicit none
   logical, intent(in) :: lgamma

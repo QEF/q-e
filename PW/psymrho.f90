@@ -1,35 +1,45 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
-  !-----------------------------------------------------------------------
-  !  p-symmetrize the charge density.
-  !
 #include "f_defs.h"
-#ifdef __PARA
-  use para
-  USE kinds, only : DP
-  implicit none
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
-
-  real (kind=DP) :: rho (nxx)
-  real (kind=DP), allocatable :: rrho (:)
-  allocate (rrho( nrx1 * nrx2 * nrx3))    
-
-  call gather (rho, rrho)
-  if (me.eq.1) call symrho (rrho, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-       nsym, s, ftau)
-
-  call scatter (rrho, rho)
-
-  deallocate (rrho)
+!
+!----------------------------------------------------------------------------
+SUBROUTINE psymrho( rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+  !----------------------------------------------------------------------------
+  !
+  ! ...  p-symmetrize the charge density.
+  !
+#if defined  (__PARA)
+  !
+  USE kinds,     ONLY : DP
+  USE pfft,      ONLY : nxx
+  USE mp_global, ONLY : me_pool
+  !
+  IMPLICIT NONE
+  !
+  INTEGER                     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
+  REAL (KIND=DP)              :: rho (nxx)
+  REAL (KIND=DP), ALLOCATABLE :: rrho (:)
+  !
+  !
+  ALLOCATE (rrho( nrx1 * nrx2 * nrx3))    
+  !
+  CALL gather( rho, rrho )
+  !
+  IF ( me_pool == 0 ) &
+     CALL symrho( rrho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+  !
+  CALL scatter( rrho, rho )
+  !
+  DEALLOCATE( rrho )
+  !
 #endif
-  return
-end subroutine psymrho
+  !
+  RETURN
+  !
+END SUBROUTINE psymrho
 

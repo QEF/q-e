@@ -1,17 +1,15 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 # if defined __AIX || defined __FFTW || defined __SGI
 #  define __FFT_MODULE_DRV
 # endif
-
+!
 #ifdef __PARA
-
 !
 !----------------------------------------------------------------------
 subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -38,7 +36,8 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   use sticks, only: dfftp
   use fft_base, only: fft_scatter
   USE kinds, only : DP
-  use para, only: nct, ncp, ncplane, nprocp, nxx, me, npp
+  USE mp_global, ONLY : nproc_pool, me_pool
+  use pfft, only: nct, ncp, ncplane, nxx, npp
 
   implicit none
 
@@ -56,54 +55,54 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   ! the following is needed if the fft is distributed over only one proces
   ! for the special case nx3.ne.n3. Not an elegant solution, but simple, f
   ! and better than the preceding one that did not work in some cases. Not
-  ! that fft_scatter does nothing if nprocp=1. PG
+  ! that fft_scatter does nothing if nproc_pool=1. PG
   !
-  if (nprocp.eq.1) then
+  if (nproc_pool.eq.1) then
      nppx = nx3
   else
-     nppx = npp (me)
+     nppx = npp (me_pool+1)
   endif
   !
   if (sign.eq.1) then
 #if defined __FFT_MODULE_DRV
-     call cft_1z (f, ncp (me), n3, nx3, sign, aux)
-     ! call cft_1z (f, dfftp%nsp(me), n3, nx3, sign, aux)
+     call cft_1z (f, ncp (me_pool+1), n3, nx3, sign, aux)
+     ! call cft_1z (f, dfftp%nsp(me_pool+1), n3, nx3, sign, aux)
 #else
-     call cft_1 (f, ncp (me), n3, nx3, sign, aux)
+     call cft_1 (f, ncp (me_pool+1), n3, nx3, sign, aux)
 #endif
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
      f(:) = (0.d0,0.d0)
      do i = 1, nct
         mc = dfftp%ismap (i)
-        do j = 1, npp (me)
+        do j = 1, npp (me_pool+1)
            f (mc + (j - 1) * ncplane) = aux (j + (i - 1) * nppx)
         enddo
      enddo
 #if defined __FFT_MODULE_DRV
-     call cft_2xy (f, npp (me), n1, n2, nx1, nx2, sign)
-     ! call cft_2xy (f, dfftp%npp (me), n1, n2, nx1, nx2, sign)
+     call cft_2xy (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
+     ! call cft_2xy (f, dfftp%npp (me_pool+1), n1, n2, nx1, nx2, sign)
 #else
-     call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
+     call cft_2 (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
 #endif
   elseif (sign.eq. - 1) then
 #if defined __FFT_MODULE_DRV
-     call cft_2xy (f, npp (me), n1, n2, nx1, nx2, sign)
-     ! call cft_2xy (f, dfftp%npp (me), n1, n2, nx1, nx2, sign)
+     call cft_2xy (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
+     ! call cft_2xy (f, dfftp%npp (me_pool+1), n1, n2, nx1, nx2, sign)
 #else
-     call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
+     call cft_2 (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
 #endif
      do i = 1, nct
         mc = dfftp%ismap (i)
-        do j = 1, npp (me)
+        do j = 1, npp (me_pool+1)
            aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplane)
         enddo
      enddo
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
 #if defined __FFT_MODULE_DRV
-     call cft_1z (aux, ncp (me), n3, nx3, sign, f)
-     ! call cft_1z (aux, dfftp%nsp (me), n3, nx3, sign, f)
+     call cft_1z (aux, ncp (me_pool+1), n3, nx3, sign, f)
+     ! call cft_1z (aux, dfftp%nsp (me_pool+1), n3, nx3, sign, f)
 #else
-     call cft_1 (aux, ncp (me), n3, nx3, sign, f)
+     call cft_1 (aux, ncp (me_pool+1), n3, nx3, sign, f)
 #endif
   else
      call errore ('cft3', 'not allowed', abs (sign) )

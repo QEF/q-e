@@ -1,8 +1,11 @@
-! Copyright (C) 2003 J. Tobik 
+!
+! Copyright (C) 2003-2004 PWSCF-FPMD-CP90 group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! ... written by J. Tobik
 !
 ! Changes 30/06/2003 (ADC) : 
 !               Calculation of corrections to energy and forces due
@@ -15,237 +18,232 @@
 #include "f_defs.h"
 !
 !--------------------------------------------------------------------------
-  subroutine add_efield(rho,vpoten,etotefield)
-!--------------------------------------------------------------------------
-!
-!   This routine adds an electric field to the local potential. The
-!   field is made artificially periodic by introducing a saw-tooth
-!   potential. The field is parallel to a reciprocal lattice vector bg, 
-!   according to the index edir.
-!
-!   if dipfield is false the electric field correction is added to the
-!   potential given as input (the bare local potential) only
-!   at the first call to this routine. In the following calls
-!   the routine exit.
-!
-!   if dipfield is true the dipole moment per unit surface is calculated
-!   and used to cancel the electric field due to periodic boundary
-!   conditions. This potential is added to the Hartree and xc potential
-!   in v_of_rho. NB: in this case the electric field contribution to the 
-!   band energy is subtracted by deband.
-!
-!
-    USE kinds,         ONLY : DP
-    USE constants,     ONLY : fpi
-    USE ions_base,     ONLY : nat, ityp, zv
-    USE cell_base,     ONLY : alat, bg, omega
-    USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
-                              eopreg, forcefield
-    USE force_mod,     ONLY : lforce
-    USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-    USE io_global,     ONLY : stdout
-    USE control_flags, ONLY : mixing_beta
-    USE lsda_mod,      ONLY : nspin
-#ifdef __PARA
-    USE mp_global,     ONLY : intra_image_comm
-    use para
-    use mp
-#endif
+SUBROUTINE add_efield(rho,vpoten,etotefield)
+  !--------------------------------------------------------------------------
+  !
+  !   This routine adds an electric field to the local potential. The
+  !   field is made artificially periodic by introducing a saw-tooth
+  !   potential. The field is parallel to a reciprocal lattice vector bg, 
+  !   according to the index edir.
+  !
+  !   if dipfield is false the electric field correction is added to the
+  !   potential given as input (the bare local potential) only
+  !   at the first call to this routine. In the following calls
+  !   the routine exit.
+  !
+  !   if dipfield is true the dipole moment per unit surface is calculated
+  !   and used to cancel the electric field due to periodic boundary
+  !   conditions. This potential is added to the Hartree and xc potential
+  !   in v_of_rho. NB: in this case the electric field contribution to the 
+  !   band energy is subtracted by deband.
+  !
+  !
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : fpi, eps8
+  USE ions_base,     ONLY : nat, ityp, zv
+  USE cell_base,     ONLY : alat, bg, omega
+  USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
+                            eopreg, forcefield
+  USE force_mod,     ONLY : lforce
+  USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE io_global,     ONLY : stdout
+  USE control_flags, ONLY : mixing_beta
+  USE lsda_mod,      ONLY : nspin
+  USE mp_global,     ONLY : intra_image_comm, me_pool
+  USE pfft,          ONLY : npp
+  USE mp,            ONLY : mp_bcast
 
-  implicit none
-!
-! I/O variables
-!
-  real(kind=dp) :: rho(nrxx,nspin) ! the density whose dipole is computed
-  real(kind=dp) :: vpoten(nrxx) ! the ef is added to this potential
-  real(kind=dp) :: etotefield   ! the contribution to etot due to ef
-!
-! local variables
-!
-  integer :: npoints, nmax, ndesc
-  integer :: ii, ij, ik, itmp, ir, izlb, izub, na, ipol, n3
-  real(kind=dp) :: length, vamp, value
-  real(kind=dp), parameter :: eps=1.d-8
-  real(kind=dp) :: dip, dipion, bmod, z0
-  real(kind=dp) :: deltal
+  IMPLICIT NONE
+  !
+  ! I/O variables
+  !
+  REAL(KIND=DP) :: rho(nrxx,nspin) ! the density whose dipole is computed
+  REAL(KIND=DP) :: vpoten(nrxx) ! the ef is added to this potential
+  REAL(KIND=DP) :: etotefield   ! the contribution to etot due to ef
+  !
+  ! local variables
+  !
+  INTEGER :: npoints, nmax, ndesc
+  INTEGER :: ii, ij, ik, itmp, ir, izlb, izub, na, ipol, n3
+  REAL(KIND=DP) :: length, vamp, value
+  REAL(KIND=DP) :: dip, dipion, bmod, z0
+  REAL(KIND=DP) :: deltal
 
-  logical :: first=.true.
-  save first
+  LOGICAL :: first=.TRUE.
+  SAVE first
 
 #ifndef __PARA
-  integer me, npp(1)
-  me=1
-  npp(1)=nr3
+  npp(1) = nr3
 #endif
-  
 
-  if (.not.tefield) return
-  if ((.not.dipfield).and. (.not.first)) return
 
-  bmod=sqrt(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
-  if(edir.eq.1) then
+  IF (.NOT.tefield) RETURN
+  IF ((.NOT.dipfield).AND. (.NOT.first)) RETURN
+
+  bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
+  IF(edir.EQ.1) THEN
      npoints=nr1
-  else if (edir.eq.2) then
+  ELSE IF (edir.EQ.2) THEN
      npoints=nr2
-  elseif (edir.eq.3) then
+  ELSEIF (edir.EQ.3) THEN
      npoints=nr3
-  else
-     call errore('add_efield',' wrong edir',1)
-  endif
+  ELSE
+     CALL errore('add_efield',' wrong edir',1)
+  ENDIF
   length=alat/bmod
   deltal=length/npoints
 
-  nmax =int(real(npoints,dp)*(emaxpos-eps))+1
-  if (nmax.lt.1.or.nmax.gt.npoints) &
-     call errore('add_efield','nmax out of range',1)
+  nmax =INT(REAL(npoints,dp)*(emaxpos-eps8))+1
+  IF (nmax.LT.1.OR.nmax.GT.npoints) &
+       CALL errore('add_efield','nmax out of range',1)
 
-  ndesc=int(real(npoints,dp)*(eopreg-eps))+1
-  if (ndesc.lt.1.or.ndesc.gt.npoints) &
-     call errore('add_efield','ndesc out of range',1)
+  ndesc=INT(REAL(npoints,dp)*(eopreg-eps8))+1
+  IF (ndesc.LT.1.OR.ndesc.GT.npoints) &
+       CALL errore('add_efield','ndesc out of range',1)
 
   dip=0.d0
   dipion=0.d0
   n3=nmax+ndesc+(nr3-ndesc)/2
-  if (n3.gt.nr3) n3=n3-nr3
+  IF (n3.GT.nr3) n3=n3-nr3
   z0=(n3-1)*deltal
-  if (mod(nr3-ndesc,2).ne.0) z0=z0+deltal*0.5d0
+  IF (MOD(nr3-ndesc,2).NE.0) z0=z0+deltal*0.5d0
   z0=z0/alat
 
-  if (first.and.dipfield) z0=0.d0
-  call compute_dip(rho,dip,dipion,z0)
-!
+  IF (first.AND.dipfield) z0=0.d0
+  CALL compute_dip(rho,dip,dipion,z0)
+  !
 #ifdef __PARA
-  call mp_bcast(dip,0,intra_image_comm)
+  CALL mp_bcast(dip,0,intra_image_comm)
 #endif
-  if (.not.dipfield) then
+  IF (.NOT.dipfield) THEN
      etotefield=-2.d0*dipion*eamp*omega/fpi 
      dip=0.d0
-  else
+  ELSE
      etotefield=-2.d0*(eamp-dip/2.d0)*dip*omega/fpi 
-  endif
+  ENDIF
 
-  if (lforce) then
-     do na=1,nat
-        do ipol=1,3
+  IF (lforce) THEN
+     DO na=1,nat
+        DO ipol=1,3
            forcefield(ipol,na)=2.d0*(eamp-dip) &
-                                    *zv(ityp(na))*bg(ipol,edir)/bmod
-        enddo
-     enddo
-  endif
-     
-!
-!    The electric field is assumed in a.u.( 1 a.u. of field changes the
-!    potential energy of an electron of 1 Hartree in a distance of 1 Bohr. 
-!    The factor 2 converts potential energy to Ry. 
-!    NB: dip is the dipole moment per unit area divided by length and
-!        multiplied by four pi
-!    
-  vamp=2.0d0*(eamp-dip)*length*real(npoints-ndesc,dp)&
-                                               /real(npoints,dp)
-  if (first) then
+                *zv(ityp(na))*bg(ipol,edir)/bmod
+        ENDDO
+     ENDDO
+  ENDIF
+
+  !
+  !    The electric field is assumed in a.u.( 1 a.u. of field changes the
+  !    potential energy of an electron of 1 Hartree in a distance of 1 Bohr. 
+  !    The factor 2 converts potential energy to Ry. 
+  !    NB: dip is the dipole moment per unit area divided by length and
+  !        multiplied by four pi
+  !    
+  vamp=2.0d0*(eamp-dip)*length*REAL(npoints-ndesc,dp)&
+       /REAL(npoints,dp)
+  IF (first) THEN
      WRITE( stdout,*)
      WRITE( stdout,'(5x,"Adding an external electric field")')
      WRITE( stdout,'(5x,"Intensity [a.u.]: ",f15.8)') eamp
-  endif
-  if (dipfield) WRITE( stdout,'(5x,"Dipole field [a.u.]: ", f15.8)') dip
-  if (first) then
+  ENDIF
+  IF (dipfield) WRITE( stdout,'(5x,"Dipole field [a.u.]: ", f15.8)') dip
+  IF (first) THEN
      WRITE( stdout,'(5x,"Potential amplitude [Ry]: ", f15.8)') vamp
      WRITE( stdout,'(5x,"Total length [points]: ", i5)') npoints
      WRITE( stdout,'(5x,"Total length [bohr rad]: ", f15.8)') length
      WRITE( stdout,'(5x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
-  endif
-!
-! in this case x direction
-!
-  if(edir.eq.1) then
-    do ij=1,nr2
-      do ik=1,npp(me)
-        do ii=nmax,nmax+ndesc-1
-           value=vamp*(real(nmax+ndesc-ii,dp)/real(ndesc,dp)-0.5d0)
-           itmp=ii
-           if (itmp.gt.nr1) itmp=itmp-nr1
-           ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
-           vpoten(ir)=vpoten(ir)+value
-        end do
-        do ii=nmax+ndesc,nmax+nr1-1
-           value=vamp*(real(ii-nmax-ndesc,dp)/real(nr1-ndesc,dp)-0.5d0)
-           itmp=ii
-           if (itmp.gt.nr1) itmp=itmp-nr1
-           ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
-           vpoten(ir)=vpoten(ir)+value
-        end do
-      end do
-    end do
-!
-! in this case y direction
-!
-  else if (edir.eq.2) then
-    do ii=1,nr1
-      do ik=1,npp(me)
-        do ij=nmax,nmax+ndesc-1
-           value=vamp*(real(nmax+ndesc-ij,dp)/real(ndesc,dp)-0.5d0)
-           itmp=ij
-           if (itmp.gt.nr2) itmp=itmp-nr2
-           ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
-           vpoten(ir)=vpoten(ir)+value
-        end do
-        do ij=nmax+ndesc,nmax+nr2-1
-           value=vamp*(real(ij-nmax-ndesc,dp)/real(nr2-ndesc,dp)-0.5d0)
-           itmp=ij
-           if (itmp.gt.nr2) itmp=itmp-nr2
-           ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
-           vpoten(ir)=vpoten(ir)+value
-        end do
-      end do
-    end do
-!
-! and in other cases in z direction
-!
-  elseif (edir.eq.3) then
-#ifdef __PARA
-    izub=0
-    do itmp=1,me
-       izlb=izub+1
-       izub=izub+npp(itmp)
-    end do
-#else
-    izlb=1
-    izub=nr3
-#endif
-!
-!  now we have set up boundaries - let's calculate potential
-!
-    do ii=1,nr1
-      do ij=1,nr2
-        do ik=nmax,nmax+ndesc-1
-          value=vamp*(real(nmax+ndesc-ik,dp)/real(ndesc,dp)-0.5d0)
-          itmp=ik
-          if (itmp.gt.nr3) itmp=itmp-nr3
-          if((itmp.ge.izlb).and.(itmp.le.izub)) then
-!
-! Yes - this point belongs to me
-!
-            itmp=itmp-izlb+1
-            ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
-            vpoten(ir)=vpoten(ir)+value
-          end if
-        end do
-        do ik=nmax+ndesc,nmax+nr3-1
-           value=vamp*(real(ik-nmax-ndesc,dp)/real(nr3-ndesc,dp)-0.5d0)
-           itmp=ik
-           if (itmp.gt.nr3) itmp=itmp-nr3
-           if((itmp.ge.izlb).and.(itmp.le.izub)) then
-              itmp=itmp-izlb+1
-              ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
+  ENDIF
+  !
+  ! in this case x direction
+  !
+  IF(edir.EQ.1) THEN
+     DO ij=1,nr2
+        DO ik=1,npp(me_pool + 1)
+           DO ii=nmax,nmax+ndesc-1
+              value=vamp*(REAL(nmax+ndesc-ii,dp)/REAL(ndesc,dp)-0.5d0)
+              itmp=ii
+              IF (itmp.GT.nr1) itmp=itmp-nr1
+              ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
               vpoten(ir)=vpoten(ir)+value
-           end if
-        end do
-      end do
-    end do
-  else
-     call errore('add_efield', 'wrong edir', 1)
-  endif
-  first=.false.
-  return
-end subroutine add_efield
+           END DO
+           DO ii=nmax+ndesc,nmax+nr1-1
+              value=vamp*(REAL(ii-nmax-ndesc,dp)/REAL(nr1-ndesc,dp)-0.5d0)
+              itmp=ii
+              IF (itmp.GT.nr1) itmp=itmp-nr1
+              ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
+              vpoten(ir)=vpoten(ir)+value
+           END DO
+        END DO
+     END DO
+     !
+     ! in this case y direction
+     !
+  ELSE IF (edir.EQ.2) THEN
+     DO ii=1,nr1
+        DO ik=1,npp(me_pool + 1)
+           DO ij=nmax,nmax+ndesc-1
+              value=vamp*(REAL(nmax+ndesc-ij,dp)/REAL(ndesc,dp)-0.5d0)
+              itmp=ij
+              IF (itmp.GT.nr2) itmp=itmp-nr2
+              ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
+              vpoten(ir)=vpoten(ir)+value
+           END DO
+           DO ij=nmax+ndesc,nmax+nr2-1
+              value=vamp*(REAL(ij-nmax-ndesc,dp)/REAL(nr2-ndesc,dp)-0.5d0)
+              itmp=ij
+              IF (itmp.GT.nr2) itmp=itmp-nr2
+              ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
+              vpoten(ir)=vpoten(ir)+value
+           END DO
+        END DO
+     END DO
+     !
+     ! and in other cases in z direction
+     !
+  ELSEIF (edir.EQ.3) THEN
+#ifdef __PARA
+     izub=0
+     DO itmp=1,me_pool + 1
+        izlb=izub+1
+        izub=izub+npp(itmp)
+     END DO
+#else
+     izlb=1
+     izub=nr3
+#endif
+     !
+     !  now we have set up boundaries - let's calculate potential
+     !
+     DO ii=1,nr1
+        DO ij=1,nr2
+           DO ik=nmax,nmax+ndesc-1
+              value=vamp*(REAL(nmax+ndesc-ik,dp)/REAL(ndesc,dp)-0.5d0)
+              itmp=ik
+              IF (itmp.GT.nr3) itmp=itmp-nr3
+              IF((itmp.GE.izlb).AND.(itmp.LE.izub)) THEN
+                 !
+                 ! Yes - this point belongs to me
+                 !
+                 itmp=itmp-izlb+1
+                 ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
+                 vpoten(ir)=vpoten(ir)+value
+              END IF
+           END DO
+           DO ik=nmax+ndesc,nmax+nr3-1
+              value=vamp*(REAL(ik-nmax-ndesc,dp)/REAL(nr3-ndesc,dp)-0.5d0)
+              itmp=ik
+              IF (itmp.GT.nr3) itmp=itmp-nr3
+              IF((itmp.GE.izlb).AND.(itmp.LE.izub)) THEN
+                 itmp=itmp-izlb+1
+                 ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
+                 vpoten(ir)=vpoten(ir)+value
+              END IF
+           END DO
+        END DO
+     END DO
+  ELSE
+     CALL errore('add_efield', 'wrong edir', 1)
+  ENDIF
+  first=.FALSE.
+  RETURN
+END SUBROUTINE add_efield
 

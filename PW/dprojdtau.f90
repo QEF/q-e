@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 PWSCF group
+! Copyright (C) 2002-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
+SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -30,27 +30,25 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
-   use becmod
-#ifdef __PARA
-   use para
-#endif
-   implicit none
-   integer :: &
+   USE becmod,               ONLY : becp
+   
+   IMPLICIT NONE
+   INTEGER :: &
               alpha,   &! input: the displaced atom
               ipol,    &! input: the component of displacement
               offset    ! input: the offset of the wfcs of the atom "alpha"
-   complex (kind=DP) :: &
+   COMPLEX (kind=DP) :: &
            wfcatom(npwx,natomwfc), &! input: the atomic wfc
            spsi(npwx,nbnd),        &! input: S|evc>
            dproj(natomwfc,nbnd)     ! output: the derivative of the projection
 
-   integer :: ig, jkb2, na, m1, ibnd, iwf, nt, ib, ih,jh, ldim
+   INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ib, ih,jh, ldim
 
-   real (kind=DP) :: gvec, a1, a2
+   REAL (kind=DP) :: gvec, a1, a2
 
-   complex (kind=DP):: ZDOTC
+   COMPLEX (kind=DP):: ZDOTC
 
-   complex (kind=DP), allocatable :: dwfc(:,:), work(:), dbeta(:), &
+   COMPLEX (kind=DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
                                      betapsi(:,:), dbetapsi(:,:), &
                                      wfatbeta(:,:), wfatdbeta(:,:)
    !      dwfc(npwx,ldim),          ! the derivative of the atomic d wfc
@@ -65,7 +63,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
 
    ldim = 2 * Hubbard_l(nt) + 1
 
-   allocate ( dwfc(npwx,ldim), work(npwx), dbeta(npwx), betapsi(nhm,nbnd), &
+   ALLOCATE ( dwfc(npwx,ldim), work(npwx), dbeta(npwx), betapsi(nhm,nbnd), &
          dbetapsi(nhm,nbnd), wfatbeta(natomwfc,nhm), wfatdbeta(natomwfc,nhm) )
 
    dproj(:,:) = (0.d0, 0.d0)
@@ -73,74 +71,74 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
 
-   if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
-      do ig = 1,npw
+   IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
+      DO ig = 1,npw
          gvec = g(ipol,igk(ig)) * tpiba
 
          ! in the expression of dwfc we don't need (k+G) but just G; k always
          ! multiplies the underived quantity and gives an opposite contribution
          ! in c.c. term because the sign of the imaginary unit.
    
-         do m1 = 1, ldim
+         DO m1 = 1, ldim
             dwfc(ig,m1) = dcmplx(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
-         end do
-      end do
+         END DO
+      END DO
 
-      call ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+      CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                   dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
                   dproj(offset+1,1), natomwfc)
-   end if
+   END IF
 
 #ifdef __PARA
-   call reduce(2*natomwfc*nbnd,dproj)
+   CALL reduce(2*natomwfc*nbnd,dproj)
 #endif
 
    jkb2 = 0
-   do nt=1,ntyp
-      do na=1,nat
-         if ( ityp(na) .eq. nt ) then
-            do ih=1,nh(nt)
+   DO nt=1,ntyp
+      DO na=1,nat
+         IF ( ityp(na) .EQ. nt ) THEN
+            DO ih=1,nh(nt)
                jkb2 = jkb2 + 1
-               if (na.eq.alpha) then
-                  do ig = 1, npw
+               IF (na.EQ.alpha) THEN
+                  DO ig = 1, npw
                      gvec = g(ipol,igk(ig)) * tpiba
-                     dbeta(ig) = cmplx(0.d0,-1.d0) * vkb(ig,jkb2) * gvec
+                     dbeta(ig) = CMPLX(0.d0,-1.d0) * vkb(ig,jkb2) * gvec
                      work(ig) = vkb(ig,jkb2)
-                  end do
-                  do ibnd=1,nbnd
+                  END DO
+                  DO ibnd=1,nbnd
                      dbetapsi(ih,ibnd)= ZDOTC(npw,dbeta,1,evc(1,ibnd),1)
                      betapsi(ih,ibnd) = becp(jkb2,ibnd)
-                  end do
-                  do iwf=1,natomwfc
+                  END DO
+                  DO iwf=1,natomwfc
                      wfatbeta(iwf,ih) = ZDOTC(npw,wfcatom(1,iwf),1,work,1)
                      wfatdbeta(iwf,ih)= ZDOTC(npw,wfcatom(1,iwf),1,dbeta,1)
-                  end do
-               end if
-            end do
+                  END DO
+               END IF
+            END DO
 #ifdef __PARA
-            call reduce(2*nhm*nbnd,dbetapsi)
-            call reduce(2*natomwfc*nhm,wfatbeta)
-            call reduce(2*natomwfc*nhm,wfatdbeta)
+            CALL reduce(2*nhm*nbnd,dbetapsi)
+            CALL reduce(2*natomwfc*nhm,wfatbeta)
+            CALL reduce(2*natomwfc*nhm,wfatdbeta)
 #endif
-            if (na.eq.alpha) then
-               do ibnd=1,nbnd
-                  do ih=1,nh(nt)
-                     do jh=1,nh(nt)
-                        do iwf=1,natomwfc
+            IF (na.EQ.alpha) THEN
+               DO ibnd=1,nbnd
+                  DO ih=1,nh(nt)
+                     DO jh=1,nh(nt)
+                        DO iwf=1,natomwfc
                            dproj(iwf,ibnd) = &
                                dproj(iwf,ibnd) + qq(ih,jh,nt) *         &
                                ( wfatdbeta(iwf,ih)*betapsi(jh,ibnd) +   &
                                   wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )
-                        end do
-                     end do
-                  end do
-               end do
-            end if
-         end if
-      end do
-   end do
+                        END DO
+                     END DO
+                  END DO
+               END DO
+            END IF
+         END IF
+      END DO
+   END DO
 
-   deallocate ( dwfc, work, dbeta, betapsi, dbetapsi, wfatbeta, wfatdbeta )
+   DEALLOCATE ( dwfc, work, dbeta, betapsi, dbetapsi, wfatbeta, wfatdbeta )
 
-   return
-end subroutine dprojdtau
+   RETURN
+END SUBROUTINE dprojdtau

@@ -18,8 +18,7 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool
-  USE para,      ONLY : kunit
+  USE mp_global, ONLY : my_pool_id, npool, kunit
   !
   IMPLICIT NONE
   !

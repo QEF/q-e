@@ -14,17 +14,17 @@ SUBROUTINE openfil()
   ! ... sets various file names, units, record lengths
   ! ... All units are set in Modules/io_files.f90
   !
-  USE kinds,          ONLY : DP
-  USE io_global,      ONLY : stdout
-  USE basis,          ONLY : natomwfc, startingwfc
-  USE wvfct,          ONLY : nbnd, npwx
-  USE control_flags,  ONLY : order, lneb
-  USE ldaU,           ONLY : lda_plus_U
-  USE io_files,       ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
-                             nwordwfc, nwordatwfc
-  USE restart_module, ONLY : readfile_new
+  USE kinds,            ONLY : DP
+  USE io_global,        ONLY : stdout
+  USE basis,            ONLY : natomwfc, startingwfc
+  USE wvfct,            ONLY : nbnd, npwx
+  USE control_flags,    ONLY : order, lneb
+  USE ldaU,             ONLY : lda_plus_U
+  USE io_files,         ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
+                               nwordwfc, nwordatwfc
+  USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : npol
-  USE para,           ONLY : kunit
+  USE mp_global,        ONLY : kunit
   !
   IMPLICIT NONE
   !
