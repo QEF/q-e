@@ -38,7 +38,7 @@ subroutine init_us_1
   USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
        kkbeta, nqf, nqlc, lll, tvanp, okvan, newpseudo, lmaxkb, mx, &
        nlx, ap, lpx, lpl, nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, &
-       nhtom, qrad, indv
+       nhtom, qrad, indv, nhm
   implicit none
   !
   !     here a few local variables
