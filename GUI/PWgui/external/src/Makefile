@@ -5,6 +5,9 @@
 #
 ########################################################################
 
+# what is our Tcl/Tk version ?
+include ../../Make.include
+
 #------------------------------------------------------------------------
 # if you have a GNU make it is better to set the MAKE variable to point
 # to gnu make
@@ -37,18 +40,20 @@ X_LIB     = -L/usr/X11R6/lib -lXmu -lX11 -lXext
 #
 # Libraries (static loading)
 #
-TCL_LIB   = /usr/lib/libtcl8.3.a
-ITCL_LIB  = /usr/lib/libtk8.3.a
-TK_LIB    = /usr/lib/libitcl3.1.a
-ITK_LIB   = /usr/lib/libitk3.1.a
+TCL_LIB   = /usr/lib/libtcl$(TCL_VERSION).a
+TK_LIB    = /usr/lib/libtk$(TCL_VERSION).a
+ITCL_LIB  = /usr/lib/libitcl$(ITCL_VERSION).a /usr/lib/libitclstub$(ITCL_VERSION).a
+ITK_LIB   = /usr/lib/libitk$(ITCL_VERSION).a /usr/lib/libitkstub$(ITCL_VERSION).a
 
 #
 # Include directories
 #
-TCL_INCDIR  = -I/usr/include/tcl8.3 -I/usr/include/tcl8.3/tcl-private/generic
-ITCL_INCDIR = -I/usr/include/tcl8.3/itcl-private/generic
-TK_INCDIR   = -I/usr/include/tk8.3 -I/usr/include/tcl8.3/tk-private/generic
-ITK_INCDIR  = -I/usr/include/tcl8.3/itk-private/generic
+TCL_INCDIR  = -I/usr/include/tcl$(TCL_VERSION) \
+	-I/usr/include/tcl$(TCL_VERSION)/tcl-private/generic
+ITCL_INCDIR = -I/usr/include/tcl$(TCL_VERSION)/itcl-private/generic
+TK_INCDIR   = -I/usr/include/tk$(TCL_VERSION) \
+	-I/usr/include/tcl$(TCL_VERSION)/tk-private/generic
+ITK_INCDIR  = -I/usr/include/tcl8.4/itk-private/generic
 
 INCS = $(TCL_INCDIR) $(TK_INCDIR) $(ITCL_INCDIR) $(ITK_INCDIR)
 
@@ -68,4 +73,6 @@ install:
 	if test -d ../../bin; then mv itkwish ../../bin; fi
 
 clean:
-	-rm *.o itkwish *~
+	-rm *.o 
+	-rm itkwish 
+	-rm *~
