@@ -8,33 +8,34 @@
 program pw2casino
   !----------------------------------------------------------------------- 
 
-! This subroutine writes the file pwfn.data containing the plane wave
-! coefficients and other stuff needed by the QMC code CASINO. 
+  ! This subroutine writes the file pwfn.data containing the plane wave
+  ! coefficients and other stuff needed by the QMC code CASINO. 
 
-! #include "machine.h"
+  ! #include "machine.h"
 
-  use io_files, only: nd_nmbr,prefix
+  use io_files, only: nd_nmbr, prefix, outdir
 #ifdef __PARA 
   use para,       only : me 
   use mp, only: mp_bcast
 #endif 
   implicit none
   integer :: ios, ionode_id = 0
- 
-  namelist / inputpp / prefix
+
+  namelist / inputpp / prefix, outdir
 
   call start_postproc(nd_nmbr)
   ! 
   !   set default values for variables in namelist 
   ! 
   prefix = 'pwscf'
+  outdir = './'
 #ifdef __PARA 
   if (me == 1)  then 
 #endif 
-  read (5, inputpp, err=200, iostat=ios)
-200 call errore('pw2casino', 'reading inputpp namelist', abs(ios))
+     read (5, inputpp, err=200, iostat=ios)
+200  call errore('pw2casino', 'reading inputpp namelist', abs(ios))
 #ifdef __PARA 
-  end if 
+  end if
   ! 
   ! ... Broadcast variables 
   ! 
@@ -51,15 +52,29 @@ program pw2casino
 
 end program pw2casino
 
- 
+
 subroutine compute_casino
- 
+
   use kinds, ONLY: DP
-  use pwcom 
-  USE io_global,  ONLY : stdout
-  use io_files, only: nd_nmbr,prefix,nwordwfc,iunwfc
+  use atom, only: zmesh
+  use basis, only: nat, ntyp, ityp, tau
+  use brilz, only: omega, alat, tpiba2, at, bg
+  use char, only: title
+  use constants, only: tpi
+  use ener, only: ewld, ehart, etxc, vtxc, etot, etxcc
+  use gvect, only: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
+  use klist , only: nks, nelec, xk
+  use lsda_mod, only: lsda, nspin
+  use pseud, only: zv
+  use scf, only: rho, rho_core
+  use vlocal, only: vloc, vnew, strf
+  use wvfct, only: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
+  use us, only: nkb, vkb, nh, dvan
+  use becmod,   only: becp 
+  use io_global, only: stdout
+  use io_files, only: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
-  use becmod
   implicit none
   integer :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb 
@@ -92,32 +107,30 @@ subroutine compute_casino
      nbndup = nbnd
      nbnddown = nbnd
      nk = nks/2
-!     nspin = 2
+     !     nspin = 2
   else
      nbndup = nbnd
      nbnddown = 0
      nk = nks
-!     nspin = 1
+     !     nspin = 1
   endif
 
-!  if(nks > 1) rewind(iunigk)
-!  do ik=1,nks
-!     if(nks > 1) read(iunigk) npw, igk
-!     
-!  if(nks > 1) rewind(iunigk)
+  !  if(nks > 1) rewind(iunigk)
+  !  do ik=1,nks
+  !     if(nks > 1) read(iunigk) npw, igk
+  !     
+  !  if(nks > 1) rewind(iunigk)
   ek  = 0.d0
   eloc= 0.d0
   enl = 0.d0
   do ispin = 1, nspin 
      !
-     ! calculate the local energy
+     !     calculate the local contribution to the total energy
      !
      !      bring rho to G-space
      !
      aux(:) = DCMPLX ( rho(:,ispin), 0.d0)
      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-     !
-     !     calculate the local contribution to the total energy
      !
      do nt=1,ntyp
         do ig = gstart, ngm
@@ -126,22 +139,18 @@ subroutine compute_casino
         enddo
      enddo
 
-     call reduce(1,eloc)
+     do ik = 1, nk
+        ikk = ik + nk*(ispin-1)
+        call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+        call davcio (evc, nwordwfc, iunwfc, ikk, - 1)
+        call init_us_2 (npw, igk, xk (1, ikk), vkb)
+        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
 
-     eloc = eloc * omega 
-  do ik = 1, nk
-     ikk = ik + nk*(ispin-1)
-     call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ikk, - 1)
-     call init_us_2 (npw, igk, xk (1, ikk), vkb)
-     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
-
-     do ig =1, npw
-        if( igk(ig) > 4*npwx ) & 
-             call errore ('pw2casino','increase allocation of index', ig)
-        index( igk(ig) ) = 1
-     enddo
-
+        do ig =1, npw
+           if( igk(ig) > 4*npwx ) & 
+                call errore ('pw2casino','increase allocation of index', ig)
+           index( igk(ig) ) = 1
+        enddo
 
         !
         ! calculate the kinetic energy
@@ -151,43 +160,45 @@ subroutine compute_casino
               hpsi(j,ibnd) =  g2kin(j) * evc(j,ibnd)
               ek = ek +  conjg(evc(j,ibnd))*hpsi(j,ibnd) * wg(ibnd,ikk)
            end do
-        
-	!
-	! Calculate Non-local energy
-	!
-	   ijkb0 = 0
+
+           !
+           ! Calculate Non-local energy
+           !
+           ijkb0 = 0
            do nt = 1, ntyp
               do na = 1, nat
                  if (ityp (na) .eq.nt) then
                     do ih = 1, nh (nt)
                        ikb = ijkb0 + ih
                        enl=enl+conjg(becp(ikb,ibnd))*becp(ikb,ibnd) &
-                       *wg(ibnd,ikk)* &
-                            dvan(ih,ih,nt)
+                            *wg(ibnd,ikk)* dvan(ih,ih,nt)
                        DO jh = ( ih + 1 ), nh(nt)
-                            jkb = ijkb0 + jh
-                            enl=enl+ &
-                                 (conjg(becp(ikb,ibnd))*becp(jkb,ibnd)+&
-                                 conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
-                                 * wg(ibnd,ikk) * &
-                                 dvan(ih,jh,nt)
-                            
-                         END DO
+                          jkb = ijkb0 + jh
+                          enl=enl + &
+                               (conjg(becp(ikb,ibnd))*becp(jkb,ibnd)+&
+                               conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
+                               * wg(ibnd,ikk) * dvan(ih,jh,nt)
 
-                      enddo
+                       END DO
+
+                    enddo
                     ijkb0 = ijkb0 + nh (nt)
                  endif
               enddo
            enddo
         enddo
-
-
      enddo
   enddo
 
-
+#ifdef __PARA
+  call reduce(1,eloc)
   call reduce(1,ek)
+  call poolreduce(1,ek)
+  call poolreduce(1,enl)
+#endif
+  eloc = eloc * omega 
   ek = ek * tpiba2
+
   ngtot = 0
   do ig = 1, 4*npwx
      if( index(ig) == 1 ) then
@@ -195,25 +206,20 @@ subroutine compute_casino
         igtog(ngtot) = ig
      endif
   enddo
-
-
-#ifdef __PARA
-  call poolreduce(1,ek)
-  call poolreduce(1,enl)
-#endif
-
-!Compute ewald contribution
+  !
+  ! compute ewald contribution
+  !
   ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
        g, gg, ngm, gcutm, gstart, gamma_only, strf )
-
-!compute hartree and xc contribution
-
+  !
+  ! compute hartree and xc contribution
+  !
   CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
        ehart, etxc, vtxc, charge, vnew )
-
-etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
-
+  !
+  etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
+  !
   write(io,'(a)') title
   write(io,'(a)')
   write(io,'(a)') ' BASIC INFO'
@@ -275,12 +281,12 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   write(io,'(a)') ' -------------'
   write(io,'(a)') ' Number of k-points'
   write(io,*) nks
-!  if(nks > 1) rewind(iunigk)
+  !  if(nks > 1) rewind(iunigk)
   do ispin = 1, nspin 
      do ik = 1, nks
         ikk = ik + nks*(ispin-1)
         if( nks > 1 ) then
-!           read(iunigk) npw, igk
+           !           read(iunigk) npw, igk
            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
            call davcio(evc,nwordwfc,iunwfc,ikk,-1)
         endif
@@ -310,13 +316,13 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
      enddo
   enddo
 
-  write(stdout,*) 'Kinetic energy', ek/2
-  write(stdout,*) 'Local energy', eloc/2
-  write(stdout,*) 'Non-Local energy', enl/2
-  write(stdout,*) 'Ewald energy', ewld/2
-  write(stdout,*) 'xc contribution',(etxc-etxcc)/2
-  write(stdout,*) 'hartree contribution', ehart/2
-  write(stdout,*)  'Total energy', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
+  write (stdout,*) 'Kinetic energy   '  , ek/2
+  write (stdout,*) 'Local energy     ', eloc/2
+  write (stdout,*) 'Non-Local energy ', enl/2
+  write (stdout,*) 'Ewald energy     ', ewld/2
+  write (stdout,*) 'xc contribution  ',(etxc-etxcc)/2
+  write (stdout,*) 'hartree energy   ', ehart/2
+  write (stdout,*) 'Total energy     ', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
 
 
 end subroutine compute_casino

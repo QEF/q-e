@@ -28,7 +28,7 @@ program chdens
   USE wavefunctions_module,  ONLY: psic
   use io_files, only: nd_nmbr
 #ifdef __PARA
-  use para, only: me
+  use para, only: nprocp, npool
 #endif
 
   implicit none
@@ -65,7 +65,8 @@ program chdens
   !
   ! Works for parallel machines but only for one processor !!!
   !
-  if (me == 1) then
+  if (nprocp /= 1 .or. npool /= 1) &
+       call errore ('chdens','please run on a single processor',1)
 #endif
   !
   !   set the DEFAULT values
@@ -408,9 +409,6 @@ program chdens
 
   deallocate(rhor)
   deallocate(rhog)
-#ifdef __PARA
-  end if
-#endif
   call stop_pp
 1100 call errore ('chdens', 'reading input data', abs (ios) )
 end program chdens
