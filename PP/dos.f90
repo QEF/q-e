@@ -19,7 +19,7 @@ PROGRAM dos
   !    prefix        prefix of input file produced by pw.x    'pwscf'
   !                    (wavefunctions are not needed)
   !    outdir        directory containing the input file       ./
-  !    ngauss        Type pf gaussian broadening (optional)    0
+  !    ngauss        Type of gaussian broadening (optional)    0
   !            =  0  Simple Gaussian (default)
   !            =  1  Methfessel-Paxton of order 1
   !            = -1  Marzari-Vanderbilt "cold smearing"

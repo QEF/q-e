@@ -238,8 +238,6 @@ SUBROUTINE projwave( )
      WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
   END IF
   ! 
-  IF (lmax_wfc > 3) CALL errore ('projwave', 'l > 3 not yet implemented', 1) 
-  ! 
   ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1 
   ! 
   CALL d_matrix (d1, d2, d3)   
@@ -265,10 +263,10 @@ SUBROUTINE projwave( )
         ENDIF 
      ENDDO 
   ENDDO 
+  ! 
+  IF (lmax_wfc > 3) CALL errore ('projwave', 'l > 3 not yet implemented', 1) 
   IF (nwfc /= natomwfc) CALL errore ('projwave', 'wrong # of atomic wfcs?', 1) 
   ! 
-
-! 
   ALLOCATE(proj (natomwfc, nbnd, nkstot) ) 
   proj   = 0.d0 
   IF (.NOT. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) ) 
