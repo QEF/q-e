@@ -117,7 +117,7 @@ clean :
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch make.depend ; \
 		if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
-		else $(MAKE) $(MFLAGS) clean ; fi )
+		else $(MAKE) $(MFLAGS) clean ; fi ) \
 	    fi \
 	done
 	- /bin/rm -rf bin/*.x
