@@ -1,4 +1,4 @@
-TODO LIST - 7 Apr 2003
+TODO LIST - 14 Apr 2003
 
 INSTALLATION
 
@@ -24,6 +24,8 @@ COMMON
 - real vs dreal, cmplx vs dcmplx, dfloat etc
 
 PW
+
+- add traceback (error_handler module)
 
 - bfgs, md : atomic positions should be written in the same
   format as they are read (but this should not spoil scripts
@@ -56,6 +58,8 @@ PW
 - memory estimator tool, or memory report 
 
 - ultrasoft PP: newd and addusdens are too slow
+
+- output should be more informative and less confused
 
 POSTPROCESSING
 

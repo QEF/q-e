@@ -57,12 +57,12 @@ MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW -I $(OSHOME)/PH
 # Loader:
 #
 # The following is for Intel MKL libraries v. 5.1 on Pentium-3
-# For MKL v. 5.2, add "-lguide"
+# !!! DO NOT USE MKL v. 5.2 or 6beta !!!
 # Use libmkl_p3.a for Pentium-3, libmkl_p4.a for Pentium-4 machines 
-# (MKL will likely not work for other CPUs like Athlon)
+# (MKL will not work for other CPUs like Athlon)
 
 LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
-      /opt/intel/mkl/lib/32/libmkl_p3.a -lguide -lpthread
+      /opt/intel/mkl/lib/32/libmkl_p3.a -lpthread
 MYLIB=lapack_mkl
 # The following is for Atlas optimized blas/lapack libraries
 # You may not actually need -lcblas . See the manual for details
