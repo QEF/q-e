@@ -23,7 +23,6 @@ PROGRAM pwscf
   USE neb_variables,    ONLY : neb_deallocation
   USE input_parameters, ONLY : deallocate_input_parameters
   USE neb_routines,     ONLY : initialize_neb, search_mep
-  USE io_routines,      ONLY : write_output
 #ifdef __PARA
   USE para,             ONLY : me, mypool
 #endif
@@ -77,10 +76,6 @@ PROGRAM pwscf
      ! ... this routine does all the NEB job
      !   
      CALL search_mep()
-     !
-     ! ... output is written 
-     !
-     CALL write_output()
      !
      ! ... stdout is reconnected to standard output
      !

@@ -163,16 +163,16 @@ MODULE neb_routines
       !
       ! ... details of the calculation are written on output
       !
-      WRITE( UNIT = iunneb, &
-             FMT = stringfmt ) "calculation", TRIM( calculation )
-      WRITE( UNIT = iunneb, &
-             FMT = stringfmt ) "restart_mode", TRIM( restart_mode )
-      WRITE( UNIT = iunneb, &
-             FMT = stringfmt ) "CI_scheme", TRIM( CI_scheme )
-      WRITE( UNIT = iunneb, &
-             FMT = stringfmt ) "VEC_scheme", TRIM( VEC_scheme )
-      WRITE( UNIT = iunneb, &
-             FMT = stringfmt ) "minimization_scheme", TRIM( minimization_scheme )
+      WRITE( UNIT = iunneb, FMT = stringfmt ) &
+          "calculation", TRIM( calculation )
+      WRITE( UNIT = iunneb, FMT = stringfmt ) &
+          "restart_mode", TRIM( restart_mode )
+      WRITE( UNIT = iunneb, FMT = stringfmt ) &
+          "CI_scheme", TRIM( CI_scheme )
+      WRITE( UNIT = iunneb, FMT = stringfmt ) &
+          "VEC_scheme", TRIM( VEC_scheme )
+      WRITE( UNIT = iunneb, FMT = stringfmt ) &
+          "minimization_scheme", TRIM( minimization_scheme )
       WRITE( UNIT = iunneb, &
              FMT = '(5X,"optimization",T35," = ",L1))' ) optimization
       WRITE( UNIT = iunneb, &
@@ -224,13 +224,13 @@ MODULE neb_routines
       USE varie,          ONLY : time_max, istep, nstep
       USE io_files,       ONLY : iunneb, iunexit, exit_file     
       USE formats,        ONLY : run_output, run_output_T_const
-      USE neb_variables,  ONLY : num_of_images, dim, pos, PES, error, &
-                                 climbing, optimization,  CI_scheme, &
+      USE neb_variables,  ONLY : num_of_images, dim, pos, PES, error,       &
+                                 climbing, optimization,  CI_scheme,        &
                                  Emax_index, temp, Emax, neb_thr, conv_neb, &
-                                 suspended_image, lsteep_des, lquick_min , &
+                                 suspended_image, lsteep_des, lquick_min ,  &
                                  ldamped_dyn, lmol_dyn 
-      USE io_routines,    ONLY : write_restart, write_dat_files 
-#ifdef __PARA
+      USE io_routines,    ONLY : write_restart, write_dat_files, write_output 
+#if defined (__PARA)
       USE para,           ONLY : me, mypool
       USE mp,             ONLY : mp_barrier      
 #endif
@@ -411,22 +411,26 @@ MODULE neb_routines
          CALL write_dat_files()
          !
          istep = istep + 1
-         !  
+         !
+         ! ... informations are writte on the standard output
+         !
          IF ( lmol_dyn ) THEN
             !
             WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
-                istep, &
+                istep,                    &
                 temp * AU * eV_to_kelvin, &
                 err * ( AU / BOHR_RADIUS_ANGS ) 
             !
          ELSE
             !
             WRITE( UNIT = iunneb, FMT = run_output ) &
-                istep, &
+                istep,                  &
                 ( Emax - PES(1) ) * AU, &
                 err * ( AU / BOHR_RADIUS_ANGS )
             !   
-         END IF     
+         END IF
+         !
+         CALL write_output()
          !
          ! ... the program checks if the convergence has been achieved
          ! 

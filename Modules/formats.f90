@@ -34,8 +34,8 @@ MODULE formats
                        & " F10.6,5X,'error =',F10.6,/)", &
     run_output_T_const = "(/,5X,'iteration: ',I3,5X,'temperature ='," // &
                        & " F10.2,5X,'forces =',F10.6)", &  
-    final_output       = "(5X,'image: ',I2,'   Energy=  ',F16.8," // &
-                       & "'   Error=',F8.5)"
+    final_output       = "(5X,'image: ',I2,'   Energy = ',F16.8," // &
+                       & "'   Error = ',F8.5)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
     stringfmt = "(5X,A,T35,' = ',A)"      

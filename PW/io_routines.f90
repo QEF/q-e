@@ -477,7 +477,6 @@ MODULE io_routines
        !
        ! ... end of local variables
        !
-       !
        DO image = 1, num_of_images
           !
           WRITE( UNIT = iunneb, FMT = final_output ) &
@@ -486,6 +485,8 @@ MODULE io_routines
               error(image) * ( AU / BOHR_RADIUS_ANGS )
           !
        END DO
+       !
+       WRITE( UNIT = iunneb, FMT = '(/,5X,75("-")/)' )       
        !
      END SUBROUTINE write_output
      !
