@@ -51,7 +51,7 @@ SUBROUTINE move_ions()
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,        ONLY : lmovecell, calc
 #if defined (__PARA)
-  USE para,          ONLY : me, mypool
+  USE para,          ONLY : me, mypool, MPI_COMM_POOL
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
 #endif
@@ -226,8 +226,8 @@ SUBROUTINE move_ions()
   IF ( me == 1 ) CALL poolbcast( 1, alpha0 )
   IF ( me == 1 ) CALL poolbcast( 1, beta0 )
   !
-  CALL mp_bcast( alpha0, ionode_id )
-  CALL mp_bcast( beta0,  ionode_id )
+  CALL mp_bcast( alpha0, ionode_id, MPI_COMM_POOL )
+  CALL mp_bcast( beta0,  ionode_id, MPI_COMM_POOL )
   !  
   ! 
 #endif     

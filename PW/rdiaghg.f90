@@ -17,8 +17,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !   Uses LAPACK routines
   !
   USE kinds,     ONLY : DP
-#ifdef __PARA
-  USE para,      ONLY : me
+#if defined (__PARA)
+  USE para,      ONLY : me, MPI_COMM_POOL
   USE mp,        ONLY : mp_bcast
   USE io_global, ONLY : ionode_id
 #endif
@@ -85,14 +85,14 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   sdum = s
   !
-#ifdef __PARA
+#if defined (__PARA)
   !
   ! ... only the first processor diagonalize the matrix
   !
   IF ( me == 1 ) THEN
      !
 #endif
-#ifdef HAS_DSYGVX
+#if defined (HAS_DSYGVX)
      IF ( all_eigenvalues ) THEN
 #endif
         !
@@ -100,7 +100,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
         v(:,1:n) = h(:,:)
         !
-#ifdef __AIX
+#if defined (__AIX)
         !
         ! ... there is a name conflict between essl and lapack ...
         !
@@ -112,7 +112,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, sdum, ldh, e, work, &
                     lwork, info )
 #endif
-#ifdef HAS_DSYGVX
+#if defined (HAS_DSYGVX)
      ELSE
         !
         ! ... calculate only m lowest eigenvalues
@@ -128,13 +128,13 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
      !
-#ifdef __PARA
+#if defined (__PARA)
   END IF
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, ionode_id )
-  CALL mp_bcast( v, ionode_id )
+  CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
+  CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )
   !
 #endif
   !

@@ -58,7 +58,7 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
      ! processors of the pool
      !
      if (me == 1) call davcio (ddrho, lrec, iunit, nrec, - 1)
-     call mp_bcast( ddrho, ionode_id )
+     call mp_bcast( ddrho, ionode_id, MPI_COMM_POOL )
      !
      ! Distributes ddrho between between the tasks of the pool
      !

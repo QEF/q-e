@@ -21,7 +21,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   USE kinds,     ONLY : DP
 #if defined (__PARA)
-  USE para,      ONLY : me, npool
+  USE para,      ONLY : me, npool, MPI_COMM_POOL
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_bcast  
 #endif
@@ -166,8 +166,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast the eigenvectors and the eigenvalues
   !
-  CALL mp_bcast( e, ionode_id )
-  CALL mp_bcast( v, ionode_id )
+  CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
+  CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )
   !
 #endif
   !

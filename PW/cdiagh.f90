@@ -16,7 +16,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   !
   USE kinds,     ONLY : DP
 #if defined (__PARA)
-  USE para,      ONLY : me, mypool, npool
+  USE para,      ONLY : me, mypool, npool, MPI_COMM_POOL
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_bcast  
 #endif
@@ -106,8 +106,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-      CALL mp_bcast( e, ionode_id )
-      CALL mp_bcast( v, ionode_id )
+      CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
+      CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )
       !
 # endif
       !
@@ -226,8 +226,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-      CALL mp_bcast( e, ionode_id )
-      CALL mp_bcast( v, ionode_id )      
+      CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
+      CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )      
       !
 #  endif
       !
