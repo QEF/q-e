@@ -337,10 +337,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !
      WRITE( stdout, &
-            '(/,5X,"extrapolated charge =",F10.5)') charge
-     !
-     WRITE( stdout, &
-            '(/,5X,"extrapolated charge renormalised to ",F10.5,/)') nelec
+            '(/,5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
+               charge, nelec
      !
      rho = rho / charge * nelec
      !
