@@ -52,6 +52,8 @@
        neb_file  = 'os.neb',   &! file containing informations needed to restart a neb simulation
        xyz_file  = 'os.xyz',   &! file containing coordinates of all images in xyz format
        axsf_file = 'os.axsf'    ! file containing coordinates of all images in axsf format
+     CHARACTER (LEN=4), PARAMETER :: &
+       exit_file = "EXIT"       ! file required for a soft exit  
   !
   ! ... The units where various variables are saved
   !
@@ -84,6 +86,7 @@
      INTEGER :: iunint      = 23 ! unit for saving the interpolated energy profile
      INTEGER :: iunxyz      = 24 ! unit for saving coordinates ( xyz format )
      INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
+     INTEGER :: iunexit     = 26 ! unit for a soft exit  
 
 !=----------------------------------------------------------------------------=!
    END MODULE io_files
