@@ -64,7 +64,7 @@ MODULE neb_base
       !
       ! ... input variables
       !
-      CHARACTER(LEN=2) :: prog   
+      CHARACTER (LEN=2) :: prog   
         ! ... specify the calling program
       !
       ! ... local variables
@@ -75,8 +75,6 @@ MODULE neb_base
       CHARACTER (LEN=20)          :: num_of_images_char, i_char
       !
       !    
-      ALLOCATE( path_length( input_images - 1 ) )
-      !
       ! ... output files are set
       !
       neb_file  = TRIM( prefix ) // ".neb"
@@ -144,6 +142,8 @@ MODULE neb_base
       !
       IF ( restart_mode == "restart" ) THEN
          !
+         ALLOCATE( path_length( num_of_images - 1 ) )
+         !
          CALL read_restart()
          !
          ! ... consistency between the input value of nstep and the value
@@ -172,7 +172,7 @@ MODULE neb_base
          !
          ! ... path length is computed here
          !
-         DO i = 1, ( input_images - 1 )
+         DO i = 1, ( num_of_images - 1 )
             !
             path_length(i) = norm( pos_(:,i+1) - pos_(:,i) )
             !
@@ -193,6 +193,7 @@ MODULE neb_base
          !
          ! ... linear interpolation
          !
+         ALLOCATE( path_length( input_images - 1 ) )
          ALLOCATE( d_R( dim, ( input_images - 1 ) ) )
          !
          DO i = 1, ( input_images - 1 )
