@@ -44,32 +44,48 @@ MODULES = \
 all : band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
       path_int.x pwi2xsf.x q2r.x
 
-# dependencies
 band_plot.x : band_plot.o
-fqha.x : fqha.o
+	$(LD) -o $@ band_plot.o $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 dist.x : dist.o
-ev.x : ev.o
-kpoints.x : kpoints.o
-lambda.x : lambda.o
-path_int.x : path_int.o
-pwi2xsf.x : pwi2xsf.o
+	$(LD) -o $@ dist.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 dynmat.x : dynmat.o rigid.o
+	$(LD) -o $@ dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+ev.x : ev.o
+	$(LD) -o $@ ev.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+fqha.x : fqha.o
+	$(LD) -o $@ fqha.o $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+kpoints.x : kpoints.o
+	$(LD) -o $@ kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+lambda.x : lambda.o
+	$(LD) -o $@ lambda.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
 matdyn.x : matdyn.o rigid.o
+	$(LD) -o $@ matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+path_int.x : path_int.o
+	$(LD) -o $@ path_int.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+pwi2xsf.x : pwi2xsf.o
+	$(LD) -o $@ pwi2xsf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
 q2r.x : q2r.o rigid.o
-
-# compilation rules
-band_plot.x fqha.x :
-	$(LD) -o $@ $<  $(LDFLAGS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
-dist.x ev.x kpoints.x lambda.x path_int.x pwi2xsf.x :
-	$(LD) -o $@ $< $(PWOBJS) $(MODULES) $(LDFLAGS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
-dynmat.x matdyn.x q2r.x :
-	$(LD) -o $@ $< rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	$(LD) -o $@ q2r.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 clean :

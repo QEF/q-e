@@ -262,25 +262,56 @@ PWOBJS = \
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x
 
-# dependencies
 average.x : average.o $(PPOBJS)
-bands.x : bands.o $(PPOBJS)
-chdens.x : chdens.o $(PPOBJS)
-dos.x : dos.o $(PPOBJS)
-efg.x : efg.o $(PPOBJS)
-plotband.x : plotband.o $(PPOBJS)
-plotrho.x : plotrho.o $(PPOBJS)
-pmw.x : poormanwannier.o $(PPOBJS)
-pp.x : postproc.o $(PPOBJS)
-projwfc.x : projwfc.o $(PPOBJS)
-pw2casino.x : pw2casino.o $(PPOBJS)
-pw2wan.x : pw2wan.o $(PPOBJS)
-voronoy.x : voronoy.o $(PPOBJS)
+	$(LD) -o $@ average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-# compilation rule
-average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x pmw.x \
-pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x :
-	$(LD) -o $@ $< $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+bands.x : bands.o $(PPOBJS)
+	$(LD) -o $@ bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+chdens.x : chdens.o $(PPOBJS)
+	$(LD) -o $@ chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+dos.x : dos.o $(PPOBJS)
+	$(LD) -o $@ dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+efg.x : efg.o $(PPOBJS)
+	$(LD) -o $@ efg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+plotband.x : plotband.o $(PPOBJS)
+	$(LD) -o $@ plotband.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+plotrho.x : plotrho.o $(PPOBJS)
+	$(LD) -o $@ plotrho.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+pmw.x : poormanwannier.o $(PPOBJS)
+	$(LD) -o $@ poormanwannier.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+pp.x : postproc.o $(PPOBJS)
+	$(LD) -o $@ postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+projwfc.x : projwfc.o $(PPOBJS)
+	$(LD) -o $@ projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+pw2casino.x : pw2casino.o $(PPOBJS)
+	$(LD) -o $@ pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+pw2wan.x : pw2wan.o $(PPOBJS)
+	$(LD) -o $@ pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+voronoy.x : voronoy.o $(PPOBJS)
+	$(LD) -o $@ voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 clean :

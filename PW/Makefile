@@ -287,13 +287,12 @@ MODULES = \
 
 all : memory.x pw.x
 
-# dependencies
 memory.x : memory.o $(PWOBJS)
-pw.x : pwscf.o $(PWOBJS)
+	$(LD) -o $@ memory.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin; ln -fs ../PW/$@ . )
 
-# compilation rule
-memory.x pw.x :
-	$(LD) -o $@ $< $(PWOBJS) $(MODULES) $(LDFLAGS)
+pw.x : pwscf.o $(PWOBJS)
+	$(LD) -o $@ pwscf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 clean :
