@@ -69,7 +69,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
 
   if (.not.okvan) return
   call start_clock ('addusddens')
-  allocate (aux(   ngm , nspin , 3))    
+  allocate (aux(   ngm , nspin , npertx))    
   allocate (sk (  ngm))    
   allocate (ylmk0(  ngm , lqx * lqx))    
   allocate (qmod (  ngm))    
@@ -91,7 +91,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
      enddo
   endif
   fact = 0.5d0 * DCMPLX (0.d0, - tpiba)
-  call setv (6 * ngm * nspin, 0.d0, aux, 1)
+  aux(:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
      if (tvanp (nt) ) then
         ijh = 0
@@ -155,7 +155,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   do ipert = 1, npert (irr)
      mu = mode0 + ipert
      do is = 1, nspin
-        call setv (2 * nrxx, 0.d0, psic, 1)
+        psic(:) = (0.d0, 0.d0)
         do ig = 1, ngm
            psic (nl (ig) ) = aux (ig, is, ipert)
         enddo
@@ -169,7 +169,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   deallocate (sk)
   deallocate (aux)
 
-  if (iflag.eq.0) then
+  if (iflag == 0) then
      allocate (drhous( nrxx, nspin))    
      do ipert = 1, npert (irr)
         mu = mode0 + ipert

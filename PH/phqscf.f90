@@ -46,25 +46,24 @@ subroutine phqscf
   !    of the wavefunctions
   !
   irrc = 0
-  if (irr0.lt.0) then
+  if (irr0 < 0) then
      irr0 = 0
-     iter0 = 0
-
+     iter0= 0
   endif
 
  allocate (drhoscf( nrxx , nspin, npertx))    
   do irr = 1, nirr
-     if ( (comp_irr (irr) .eq.1) .and. (done_irr (irr) .eq.0) ) then
+     if ( (comp_irr (irr) == 1) .and. (done_irr (irr) == 0) ) then
         irrc = irrc + 1
         imode0 = 0
         do irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
         enddo
-        if (npert (irr) .eq.1) then
+        if (npert (irr) == 1) then
            WRITE( stdout, '(//,5x,"Representation #", i3," mode # ",i3)') &
                               irr, imode0 + 1
         else
-           WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",3i3)') &
+           WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",4i3)') &
                               irr, (imode0+irr1, irr1=1,npert(irr))
         endif
         !
@@ -105,7 +104,7 @@ subroutine phqscf
 
         close (unit = iunrec, status = 'keep')
         tcpu = get_clock ('PHONON')
-        if (tcpu.gt.1000000000) then
+        if (tcpu > 1000000000) then
            !
            !            if (tcpu.gt.time_max) then
            ! temporary fix: recover does not work if program stop here
@@ -116,10 +115,10 @@ subroutine phqscf
 
         endif
 
-        if (irrc.ge.maxirr) then
+        if (irrc >= maxirr) then
            WRITE( stdout, '(/,5x,"Stopping at Representation #",i6)') irr
 #ifdef DEBUG
-           if (me.ne.1.or.mypool.ne.1) close (6)
+           if (me /= 1 .or. mypool /= 1) close (6)
 #endif
            call stop_ph (.false.)
         endif

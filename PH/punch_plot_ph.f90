@@ -64,14 +64,14 @@ subroutine punch_plot_ph
   !
   !    reads drho from the file
   !
-  allocate (aux  (  nrxx,nspin,3))    
+  allocate (aux  (  nrxx,nspin,npertx))    
   allocate (aux1 (  nrxx,nspin))    
   allocate (raux (  nrxx))    
   !
   !
   !     reads the delta_rho on the aux variable
   !
-  call setv (2 * nrxx * nspin, 0.d0, aux1, 1)
+  aux1(:,:) = (0.d0, 0d.0)
   imode0 = 0
   do irr = 1, nirr
      if (comp_irr (irr) .eq.1) then

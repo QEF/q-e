@@ -138,7 +138,7 @@ subroutine drho
   !
   !    add the augmentation term to the charge density and save it
   !
-  allocate (drhoust( nrxx , nspin , 3))    
+  allocate (drhoust( nrxx , nspin , npertx))    
   call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, dbecsum, 1)
 #ifdef __PARA
   !
