@@ -26,6 +26,7 @@ subroutine addusforce (forcenl)
   ! work space
   complex(kind=DP), allocatable :: aux(:,:), aux1(:,:), vg(:)
   real(kind=DP) , allocatable :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:)
+
   !
   if (.not.okvan) return
   !
@@ -39,8 +40,13 @@ subroutine addusforce (forcenl)
   ! fourier transform of the total effective potential
   !
   allocate (vg(nrxx))    
+
   do is = 1, nspin
-     vg (:) = vltot (:) + vr (:, is)
+     if (nspin.eq.4.and.is.ne.1) then
+        vg (:) = vr(:,is)
+     else
+        vg (:) = vltot (:) + vr (:, is)
+     endif
      call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      aux (:, is) = vg (nl (:) ) * tpiba * (0.d0, - 1.d0)
   enddo
