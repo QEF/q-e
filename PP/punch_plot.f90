@@ -56,7 +56,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   REAL(kind=DP) :: sample_bias, z, dz
   REAL(kind=DP) :: emin, emax, wf, charge
 
-  INTEGER :: is, ik, ibnd, ir, ninter
+  INTEGER :: is, ik, ibnd, ir, ninter, nspin_eff
 #ifdef __PARA
   ! auxiliary vector (parallel case)
   REAL(kind=DP), ALLOCATABLE :: raux1 (:)
@@ -85,30 +85,38 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !      plot of the charge density
      !
-     IF (spin_component == 0) THEN
-        CALL DCOPY (nrxx, rho (1, 1), 1, raux, 1)
-        DO is = 2, nspin
-           CALL DAXPY (nrxx, 1.d0, rho (1, is), 1, raux, 1)
-        ENDDO
+     IF (noncolin) THEN
+        call DCOPY (nrxx, rho, 1, raux, 1)
      ELSE
-        IF (nspin == 2) current_spin = spin_component
-        CALL DCOPY (nrxx, rho (1, current_spin), 1, raux, 1)
-        CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
+        IF (spin_component == 0) THEN
+           CALL DCOPY (nrxx, rho (1, 1), 1, raux, 1)
+           DO is = 2, nspin
+              CALL DAXPY (nrxx, 1.d0, rho (1, is), 1, raux, 1)
+           ENDDO
+        ELSE
+           IF (nspin == 2) current_spin = spin_component
+           CALL DCOPY (nrxx, rho (1, current_spin), 1, raux, 1)
+           CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
+        ENDIF
      ENDIF
 
   ELSEIF (plot_num == 1) THEN
      !
      !       The total self-consistent potential V_H+V_xc on output
      !
-     IF (spin_component == 0) THEN
-        CALL DCOPY (nrxx, vr (1, 1), 1, raux, 1)
-        DO is = 2, nspin
-           CALL DAXPY (nrxx, 1.0d0, vr (1, is), 1, raux, 1)
-        ENDDO
-        CALL DSCAL (nrxx, 1.d0 / nspin, raux, 1)
+     IF (noncolin) THEN
+        call DCOPY (nrxx, vr, 1, raux, 1)
      ELSE
-        IF (nspin == 2) current_spin = spin_component
-        CALL DCOPY (nrxx, vr (1, current_spin), 1, raux, 1)
+        IF (spin_component == 0) THEN
+           CALL DCOPY (nrxx, vr, 1, raux, 1)
+           DO is = 2, nspin
+              CALL DAXPY (nrxx, 1.0d0, vr (1, is), 1, raux, 1)
+           ENDDO
+           CALL DSCAL (nrxx, 1.d0 / nspin, raux, 1)
+        ELSE
+           IF (nspin == 2) current_spin = spin_component
+           CALL DCOPY (nrxx, vr (1, current_spin), 1, raux, 1)
+        ENDIF
      ENDIF
      CALL DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
 
@@ -122,16 +130,19 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !       The local density of states at e_fermi on output
      !
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL local_dos (1, lsign, kpoint, kband, emin, emax, raux)
 
   ELSEIF (plot_num == 4) THEN
      !
      !       The local density of electronic entropy on output
      !
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL local_dos (2, lsign, kpoint, kband, emin, emax, raux)
 
   ELSEIF (plot_num == 5) THEN
 
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL work_function (wf)
 #ifdef __PARA
      CALL stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
@@ -161,20 +172,24 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 7) THEN
 
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
 
   ELSEIF (plot_num == 8) THEN
 
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL do_elf (raux)
 
   ELSEIF (plot_num == 9) THEN
 
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      ALLOCATE (averag( nat, nbnd, nkstot))    
      ALLOCATE (plan(nr3, nbnd, nkstot))    
      CALL plan_avg (averag, plan, ninter)
 
   ELSEIF (plot_num == 10) THEN
 
+     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL local_dos (3, lsign, kpoint, kband, emin, emax, raux)
 
   ELSEIF (plot_num == 11) THEN
@@ -184,8 +199,10 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         rho(:,1) =  rho(:,1) +  rho(:,2)
         nspin = 1
      END IF
+     nspin_eff=nspin
+     if (noncolin) nspin_eff=1
      CALL v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-       nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, raux)
+       nl, ngm, gg, gstart, nspin_eff, alat, omega, ehart, charge, raux)
      IF (tefield.AND.dipfield) CALL add_efield(raux)
   ELSEIF (plot_num == 12) THEN
      raux=0.d0

@@ -1,3 +1,7 @@
+15 Nov 2004 punch_plot can now write the charge density, the total potential
+            and V_bare+V_H also in the noncollinear case. (ADC)
+            Small update of the documentation in example02. (ADC)
+
 5 Nov 2004  Fixed a bug in the way tetrahedra variables were read/written
             on the restart file: since tetra is not alway allocated, the
             read_restart_tetra() and write_restart_tetra() can be called
