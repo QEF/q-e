@@ -7513,8 +7513,8 @@
 !
       deallocate (overlap)
 !
-      write(6,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Slater) '',  &
-     &          f5.2,'' (Becke) '',f5.2,'' (expected)'')')              &
+      write(6,'(/" Spin contamination: s(s+1)=",f5.2," (Slater) ",  &
+     &          f5.2," (Becke) ",f5.2," (expected)")')              &
      &     spin2,spin1, abs(fup-fdw)/2.d0*(abs(fup-fdw)/2.d0+1.d0)
 !
       return
