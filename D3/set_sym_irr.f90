@@ -213,9 +213,9 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !        u(na+3*nat/2,1)=(0.d0,0.d0)
 !      enddo
 !      u(1,1)=(-1.d0,0.d0)
-!      write(6,'(" Setting mode for testing ")')
+!      WRITE( stdout,'(" Setting mode for testing ")')
 !      do na=1,3*nat
-!         write(6,*) u(na,1)
+!         WRITE( stdout,*) u(na,1)
 !      enddo
 !      nsymq=1
 !      minus_q=.false.

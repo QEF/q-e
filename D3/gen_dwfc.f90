@@ -18,6 +18,7 @@ subroutine gen_dwfc (isw_sl)
   !  isw_sl = 3,4 : it calculates | d/du(0) psi_k >
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use phcom
   use d3com
@@ -51,10 +52,10 @@ subroutine gen_dwfc (isw_sl)
         imode0 = imode0 + npert_x (irr1)
      enddo
      if (npert_x (irr) .eq.1) then
-        write (6, '(//,5x,"Representation #", i3, &
+        WRITE( stdout, '(//,5x,"Representation #", i3, &
              &                        " mode # ",i3)') irr, imode0 + 1
      else
-        write (6, '(//,5x,"Representation #", i3, &
+        WRITE( stdout, '(//,5x,"Representation #", i3, &
              &                 " modes # ",3i3)') irr,  (imode0 + irr1, irr1 = &
              & 1, npert_x (irr) )
 

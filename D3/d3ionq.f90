@@ -19,6 +19,9 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !    are included.
   !
 #include "machine.h"
+  !
+  USE io_global,  ONLY : stdout
+  !
   implicit none
   !
   !  first the I/O variables
@@ -137,7 +140,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
   if (upperbound.gt.1.d-9) goto 11
 
-  write (6, '(/5x,"Alpha used in Ewald sum = ",f8.4)') alpha
+  WRITE( stdout, '(/5x,"Alpha used in Ewald sum = ",f8.4)') alpha
   call setv (2 * 9 * nat * nat * nmodes, 0.d0, d3dy1, 1)
   call setv (2 * 9 * nat * nat * nmodes, 0.d0, d3dy2, 1)
 

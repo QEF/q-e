@@ -43,9 +43,9 @@ subroutine d3_setup
   !  8) set the variables needed to calculate only selected q=0 modes
   !
 #include "machine.h"
-
+  USE io_global,  ONLY : stdout
   use pwcom
-  USE constants, ONLY: degspin
+  USE constants,  ONLY : degspin
   use phcom
   use d3com
 #ifdef __PARA
@@ -141,7 +141,7 @@ subroutine d3_setup
            if (et (ibnd, ik) .lt.target) nbnd_occ (ik) = ibnd
         enddo
         if (nbnd_occ (ik) .eq.nbnd) &
-             write (6, '(5x,/,"Possibly too few bands at point ", &
+             WRITE( stdout, '(5x,/,"Possibly too few bands at point ", &
              & i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
      enddo
   else

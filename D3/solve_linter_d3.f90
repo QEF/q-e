@@ -29,8 +29,9 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   !  isw_sl = 3  : calculates <psi_k  |dH/du(0)|psi_k > and writes on: iupd0vp
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions,  ONLY : evc
   use phcom
   use d3com
 
@@ -254,7 +255,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 
         ltaver = ltaver + lter
         lintercall = lintercall + 1
-        if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4, &
+        if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4, &
              & " linter: root not converged ",e10.3)') ikk, ibnd, anorm
 120     continue
         !
@@ -316,7 +317,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   averlt = aux_avg (1) / aux_avg (2)
   tcpu = get_clock ('D3TOTEN')
 
-  write (6, '(//,5x," thresh=",e10.3," total cpu time : ",f7.1, &
+  WRITE( stdout, '(//,5x," thresh=",e10.3," total cpu time : ",f7.1, &
        &      " secs   av.it.: ",f5.1)') thresh, tcpu, averlt
 #ifdef FLUSH
 

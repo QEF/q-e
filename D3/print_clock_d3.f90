@@ -7,15 +7,15 @@
 !
 
 subroutine print_clock_d3
-
+  USE io_global,  ONLY : stdout
   use d3com
   implicit none
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('D3TOTEN')
   call print_clock ('d3_setup')
 
   call print_clock ('phq_init')
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('solve_linter')
   call print_clock ('ortho')
   call print_clock ('cgsolve')
@@ -28,31 +28,31 @@ subroutine print_clock_d3
 
   call print_clock ('symdvscf')
 #endif
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('cgsolve')
 
   call print_clock ('ch_psi')
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('ch_psi')
   call print_clock ('h_psiq')
 
   call print_clock ('last')
-  write (6, * )
+  WRITE( stdout, * )
   call print_clock ('h_psiq')
   call print_clock ('firstfft')
   call print_clock ('product')
 
   call print_clock ('secondfft')
-  write (6, * )
-  write (6,  * ) '     General routines'
+  WRITE( stdout, * )
+  WRITE( stdout,  * ) '     General routines'
   call print_clock ('ccalbec')
   call print_clock ('cft3')
   call print_clock ('cft3s')
   call print_clock ('cinterpolate')
   call print_clock ('davcio')
-  write (6, * )
+  WRITE( stdout, * )
 #ifdef __PARA
-  write (6,  * ) '     Parallel routines'
+  WRITE( stdout,  * ) '     Parallel routines'
   call print_clock ('reduce')
   call print_clock ('poolreduce')
 #endif

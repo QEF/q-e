@@ -97,14 +97,14 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
      call cft3s (dpsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
      do ir = 1, nrxxs
         drhoscf (ir) = drhoscf (ir) + wgt * conjg (psi (ir) ) * dpsic (ir)
-        !            if (ir.lt.20) write (6,*)   drhoscf(ir)
+        !            if (ir.lt.20) WRITE( stdout,*)   drhoscf(ir)
      enddo
 
   enddo
   call addusdbec (ik, wgt, dvpsi, dbecsum)
-  !      write(6,*) '*********************'
+  !      WRITE( stdout,*) '*********************'
   !      do ig=1,20
-  !         write(6,*) dbecsum(ig,1)
+  !         WRITE( stdout,*) dbecsum(ig,1)
   !      enddo
   !      call stoallocate  (ph(.true.))    
   deallocate (psi)

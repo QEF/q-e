@@ -12,6 +12,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !   and stores it in the variable ef_sh
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use phcom
   use d3com
@@ -67,7 +68,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
-  write (6, * )
+  WRITE( stdout, * )
   do ipert = 1, npe
      call cft3 (drhoscf (1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, &
           - 1)
@@ -88,7 +89,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
      ef_sh (imode0 + ipert) = DREAL (def (ipert) )
   enddo
 
-  write (6, '(5x,"Pert. #",i3,": Fermi energy shift (Ryd) =", &
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ryd) =", &
        &            2f10.4)')  (ipert, def (ipert) , ipert = 1, npe)
   return
 end subroutine set_efsh

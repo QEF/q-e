@@ -14,8 +14,9 @@ subroutine d0rhod2v (ipert, drhoscf)
 ! perturbation at q=0
 !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions,  ONLY : evc
   use phcom
   use d3com
 #ifdef __PARA
@@ -90,8 +91,8 @@ subroutine d0rhod2v (ipert, drhoscf)
            enddo
         enddo
      enddo
-     write (*,*) na
-     write (*,'(3(2f10.6,2x))') &
+     WRITE( stdout,*) na
+     WRITE( stdout,'(3(2f10.6,2x))') &
            ((d3dywrk(3*(na-1)+icart,3*(na-1)+jcart), &
            jcart=1,3),icart=1,3)
 
