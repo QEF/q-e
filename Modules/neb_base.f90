@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#undef DEBUG_ELASTIC_CONSTANTS
 !
 !-----------------------------------------------------------------------
 MODULE neb_base
@@ -354,9 +355,13 @@ MODULE neb_base
       rescale_coeff = MAX( ( F_ortho_max / F_para_max ), rescale_coeff_min )
       rescale_coeff = MIN( rescale_coeff, rescale_coeff_max )
       !
+#if defined (DEBUG_ELASTIC_CONSTANTS)
+      !
       PRINT '(/5X,"F_ortho_max = ",F10.6)', F_ortho_max
       PRINT '( 5X,"F_para_max  = ",F10.6)', F_para_max
       PRINT '( 5X,"ALPHA       = ",F10.6)', rescale_coeff
+      !
+#endif      
       !
       k     = k * rescale_coeff
       k_max = k_max * rescale_coeff
@@ -704,7 +709,7 @@ MODULE neb_base
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE io_files,      ONLY : iunneb, iunexit, exit_file
+      USE io_files,      ONLY : iunneb
       USE formats,       ONLY : run_output, run_output_T_const
       USE neb_variables, ONLY : num_of_images, dim, pos, PES, error,       &
                                 climbing, optimization,  CI_scheme,        &

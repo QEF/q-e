@@ -1228,7 +1228,7 @@ SUBROUTINE verify_tmpdir()
   !
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lneb
-  USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr
+  USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr, exit_file
   USE neb_variables,    ONLY : num_of_images
   USE mp_global,        ONLY : mpime
   USE io_global,        ONLY : ionode
@@ -1247,13 +1247,24 @@ SUBROUTINE verify_tmpdir()
   ! ... verify if tmp_dir ends with /, add one if needed
   !
   l = LEN_TRIM( tmp_dir )
+  !
   IF ( tmp_dir(l:l) /= '/' ) THEN
+     !
      IF ( l > 0 .AND. l < LEN( tmp_dir ) ) THEN
-        tmp_dir(l+1:l+1)='/'
+        !
+        tmp_dir(l+1:l+1) = '/'
+        !
      ELSE
+        !
         CALL errore( 'outdir: ', tmp_dir // ' truncated or empty', 1 )
+        !
      END IF
+     !
   END IF
+  !
+  ! ... the exit_file name is set here
+  !
+  exit_file = TRIM( prefix ) // '.EXIT'
   !
   ios = 0
   !

@@ -44,7 +44,7 @@ SUBROUTINE electrons()
                                    lscf, lneb, lmd, conv_elec, restart, &
                                    reduce_io  
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunneb, &
-                                   output_drho, iunexit, exit_file
+                                   output_drho
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
                                    niter_with_fixed_ns, Hubbard_lmax, &
                                    lda_plus_u  

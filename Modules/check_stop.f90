@@ -53,11 +53,11 @@ MODULE check_stop
        !
        IF ( ionode ) THEN
           !
-          INQUIRE( FILE = exit_file, EXIST = tex )
+          INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
           !
           IF ( tex ) THEN
              !
-             OPEN( stopunit, FILE = exit_file, STATUS = 'OLD' )
+             OPEN( stopunit, FILE = TRIM( exit_file ), STATUS = 'OLD' )
              CLOSE( stopunit, STATUS = 'DELETE' )
              !
           END IF

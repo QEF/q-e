@@ -18,7 +18,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, istep, history, alpha0, beta0, ethr
   USE check_stop,       ONLY : check_stop_now
-  USE cell_base,            ONLY : alat
+  USE cell_base,        ONLY : alat
   USE basis,            ONLY : tau, ityp, nat, &
                                startingwfc_ => startingwfc, &
                                startingpot_ => startingpot    
@@ -268,6 +268,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   tmp_dir = tmp_dir_saved
   !
+  IF ( nimage > 1 ) THEN
+        !
+        WRITE( UNIT = iunneb, &
+               FMT = '(/"image ",I2," waiting at the barrier")' ) my_image_id
+        !
+  END IF   
+  !     
   CALL mp_barrier( intra_image_comm )
   CALL mp_barrier( inter_image_comm )
   !
@@ -331,8 +338,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to get the new image to work on
-       ! ... the *.BLOCK file is needed to avoid (when present) that 
-       ! ... other jobs try to read/write on file "para" 
+       ! ... the "prefix.BLOCK" file is needed to avoid (when present) that 
+       ! ... other jobs try to read/write on file "prefix.newimage" 
        !
        USE io_files,  ONLY : iunnewimage, iunblock
        !
@@ -392,13 +399,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to send a stop signal to other images
+       ! ... this is done by creating the exit_file on the working directory
        !
        USE io_files,  ONLY : iunexit, exit_file
        !
        IMPLICIT NONE
        !
        !
-       OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
+       OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
        CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               
        !
        RETURN       
