@@ -17,7 +17,7 @@
       npz = nproc
 
       if((npy*npz*npx).ne.nproc) then
-        call error("proc_grid_init"," npx*npy*npz .ne. nproc ",
+        call errore("proc_grid_init"," npx*npy*npz .ne. nproc ",
      c       npx*npy*npz)
       end if
 
@@ -56,7 +56,7 @@
       DESCA(9) = nr2
 
       if(err.ne.0) then
-        call error(' mesh_desc_init ',' descinit3d ',err)
+        call errore(' mesh_desc_init ',' descinit3d ',err)
       end if                                          
 
       return

@@ -255,7 +255,7 @@
       CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
       CALL MPI_ALLREDUCE(ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
       IF( ng_g > SIZE( rhot ) ) THEN
-        CALL ERROR(' mergerho ',' wrong size for rho ',1 )
+        CALL errore(' mergerho ',' wrong size for rho ',1 )
       END IF
 
       DO ip = 1, nproc
@@ -429,7 +429,7 @@
       CALL MPI_ALLREDUCE( ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
       CALL MPI_ALLREDUCE( ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, gid, IERR )
       IF( ng_g > SIZE( igtot ) ) THEN
-        CALL ERROR(' mergeig ',' wrong size for igtot ',SIZE(igtot) )
+        CALL errore(' mergeig ',' wrong size for igtot ',SIZE(igtot) )
       END IF
 
       igs = 1
@@ -519,7 +519,7 @@
       CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
       CALL MPI_ALLREDUCE(ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, gid, IERR )
       IF( ng_g > SIZE( igtot ) ) THEN
-        CALL ERROR(' splitig ',' wrong size for igtot ', SIZE(igtot) )
+        CALL errore(' splitig ',' wrong size for igtot ', SIZE(igtot) )
       END IF
 
       igs = 1
