@@ -17,4 +17,8 @@ MODULE g_psi_mod
     h_diag (:),&   ! diagonal part of the Hamiltonian
     s_diag (:)     ! diagonal part of the overlap matrix
   !
+  REAL(KIND=DP), ALLOCATABLE :: &
+    h_diag_nc (:,:),&   ! diagonal part of the Hamiltonian
+    s_diag_nc (:,:)     ! diagonal part of the overlap matrix
+  !
 END MODULE g_psi_mod

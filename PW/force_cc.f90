@@ -23,6 +23,7 @@ subroutine force_cc (forcecc)
   USE pseud,                ONLY : a_nlcc, b_nlcc, alpha_nlcc
   USE scf,                  ONLY : rho, rho_core
   USE wvfct,                ONLY : gamma_only
+  USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : psic
   !
   implicit none
@@ -63,8 +64,13 @@ subroutine force_cc (forcecc)
   !
   allocate ( vxc(nrxx,nspin) )
   !
-  call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  if (noncolin) then
+     call v_xc_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+          nl, ngm, g, nspin, alat, omega, etxc, vtxc, vxc)
+  else
+     call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, g, nspin, alat, omega, etxc, vtxc, vxc)
+  end if
   !
   if (nspin == 1 .or. nspin == 4) then
      do ir = 1, nrxx

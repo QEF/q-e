@@ -12,6 +12,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE io_files,   ONLY : iunwfc, nwordwfc, iunres
   USE kinds, ONLY: DP
   USE cell_base, ONLY: omega, alat
+  USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ener,  ONLY: etot, ehart, etxc, vtxc
   USE gvect, ONLY: gstart, g, gg, nl, ngm, nr1,nr2,nr3, nrx1,nrx2,nrx3, &
        nrxx
@@ -21,6 +22,8 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE control_flags, ONLY: restart, tr2, ethr
   USE vlocal, ONLY: vnew
   USE wvfct, ONLY: nbnd, et
+  USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, mcons,&
+                               i_cons, lambda, vtcon, report
   USE wavefunctions_module,    ONLY : evc, psic
   implicit none
   character :: where * 20
@@ -67,9 +70,16 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
-  call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, etotefield, charge, psic)
+  IF (noncolin) THEN
+     call v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
+          ehart, etxc, vtxc, charge, psic, lambda, vtcon, i_cons, mcons, &
+          pointlist, pointnum, factlist, nat, ntyp, ityp)
+  ELSE
+     call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,         &
+          ehart, etxc, vtxc, etotefield, charge, psic)
+  END IF
   !
   !  restart procedure completed
   !

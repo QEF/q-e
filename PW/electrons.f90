@@ -29,7 +29,7 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
-  USE parameters,           ONLY : npk
+  USE parameters,           ONLY : npk 
   USE constants,            ONLY : eps8, rytoev
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
@@ -58,7 +58,11 @@ SUBROUTINE electrons()
                                    lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
   USE bp,                   ONLY : lberry  
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE noncollin_module,     ONLY : noncolin, npol, magtot_nc
+  USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
+                                   i_cons, lambda, vtcon, report
+  USE spin_orb,             ONLY : domag
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
   !
@@ -280,11 +284,18 @@ SUBROUTINE electrons()
      !
      ! ... calculate total and absolute magnetization
      !
-     IF ( lsda ) CALL compute_magnetization()
+     IF ( lsda.OR.noncolin ) CALL compute_magnetization()
      !
-     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+     IF (noncolin) THEN
+        CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+               nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+               ehart, etxc, vtxc, charge, vnew, lambda, vtcon, i_cons, mcons, &
+               pointlist, pointnum, factlist, nat, ntyp, ityp)
+     ELSE
+        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                     ehart, etxc, vtxc, etotefield, charge, vnew )
+     ENDIF
      !
      CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
                    deband, nspin )
@@ -314,8 +325,13 @@ SUBROUTINE electrons()
            !
         END IF      
         !
-        CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
+        IF (noncolin) THEN
+           CALL mix_rho_nc (rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
+                      nmix, flmix, conv_elec)
+        ELSE
+           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
                       ethr_min, iter, nmix, flmix, conv_elec )
+        END IF
         !
         ! ... for the first scf iteration it is controlled that the threshold 
         ! ... is small enough for the diagonalization to be adequate
@@ -341,11 +357,18 @@ SUBROUTINE electrons()
            !
            ! ... calculate total and absolute magnetization
            !
-           IF ( lsda ) CALL compute_magnetization()
+           IF ( lsda.OR.noncolin ) CALL compute_magnetization()
            !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+           IF (noncolin) THEN
+              CALL v_of_rho_nc (rho,rho_core,nr1,nr2,nr3,nrx1,nrx2,nrx3, &
+                  nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,      &
+                  ehart,etxc,vtxc,charge,vnew,lambda,vtcon,i_cons, mcons,  &
+                  pointlist, pointnum, factlist, nat, ntyp, ityp)
+           ELSE
+              CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                           ehart, etxc, vtxc, etotefield, charge, vnew )
+           END IF
            !
            CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
                          deband, nspin )              
@@ -359,17 +382,30 @@ SUBROUTINE electrons()
            !
            ! ... ethr_min is set to a negative number: no check is needed
            !
-           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
+           IF (noncolin) THEN
+              CALL mix_rho_nc(rho,rho_save,nsnew,ns,mixing_beta,dr2,iter, &
+                      nmix, flmix, conv_elec)
+           ELSE
+              CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
                          -1.d0, iter, nmix, flmix, conv_elec )
-           !
+           END IF
         END IF             
         !
         vnew =  vnew - vr
         !
-        CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart_new, etxc_new, vtxc_new, etotefield_new, &
-                       charge_new, vr )
+        IF (noncolin) THEN
+           CALL v_of_rho_nc &
+               (rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
+                ehart_new, etxc_new, vtxc_new, charge_new, vr,       &
+                lambda, vtcon, i_cons, mcons,                        &
+                pointlist, pointnum, factlist, nat, ntyp, ityp)
+        ELSE
+           CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                    ehart_new, etxc_new, vtxc_new, etotefield_new, &
+                    charge_new, vr )
+        END IF
         !
      ELSE 
         !
@@ -420,12 +456,21 @@ SUBROUTINE electrons()
      !
      ! ... save converged wfc if they have not been written previously
      !     
-     IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
+     IF (noncolin) THEN
+        IF ( nks == 1 .AND. reduce_io ) &
+           CALL davcio( evc_nc, nwordwfc, iunwfc, nks, 1 )
+     ELSE
+        IF ( nks == 1 .AND. reduce_io ) &
+           CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
+     END IF
      !
      ! ... write recover file
      !
      CALL save_in_electrons( iter, dr2 )
+     IF ((MOD(iter,report).EQ.0).OR. &
+          (report.NE.0.AND.conv_elec)) THEN
+        IF (noncolin.and.domag) CALL report_mag
+     ENDIF
      !
      tcpu = get_clock( 'PWSCF' )
      WRITE( stdout, 9000 ) tcpu
@@ -445,7 +490,7 @@ SUBROUTINE electrons()
      END IF
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
-          ( .NOT. lmd ) ) THEN
+          (.NOT. lmd) ) THEN
         !
 #if defined (__PARA)
         !
@@ -483,17 +528,17 @@ SUBROUTINE electrons()
         IF ( lgauss .OR. ltetra ) WRITE( stdout, 9040 ) ef * rytoev
         !
      END IF
-     !     
+     !
      IF ( ( ABS( charge - nelec ) / charge ) > 1.D-7 ) &
         WRITE( stdout, 9050 ) charge
      !
-     IF ( (imix>=0).AND.( ABS( charge_new - nelec ) / charge_new ) > 1.D-7 ) &
-        WRITE( stdout, 9051 ) charge_new   
+     IF ((imix>=0).AND.(ABS(charge_new-nelec)/charge_new)>1.D-7) &
+       WRITE( stdout, 9051 ) charge_new
+     !
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
      !
      IF ( lda_plus_u ) etot = etot + eth
-     !
      IF ( tefield ) etot = etot + etotefield
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
@@ -501,14 +546,10 @@ SUBROUTINE electrons()
         !  
         IF ( imix >= 0 ) THEN
            !
-           IF ( dr2 > eps8 ) THEN
-              !
+           IF (dr2 > eps8 ) THEN
               WRITE( stdout, 9081 ) etot, dr2
-              !
            ELSE
-              !
               WRITE( stdout, 9083 ) etot, dr2
-              !
            END IF
            !
         ELSE
@@ -522,13 +563,13 @@ SUBROUTINE electrons()
         !
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
-        IF ( degauss /= 0.D0 ) WRITE( stdout, 9070 ) demet
+        IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
         !
         IF ( imix >= 0 ) THEN
            !   
-           IF ( dr2 > eps8 ) THEN
+           IF (dr2 > eps8 ) THEN
               WRITE( stdout, 9081 ) etot, dr2
            ELSE
               WRITE( stdout, 9083 ) etot, dr2
@@ -544,14 +585,10 @@ SUBROUTINE electrons()
         !
         IF ( imix >=  0 ) THEN
            !   
-           IF ( dr2 > eps8 ) THEN
-              !
+           IF (dr2 > eps8 ) THEN
               WRITE( stdout, 9080 ) etot, dr2
-              !
            ELSE
-              !
               WRITE( stdout, 9082 ) etot, dr2
-              !
            END IF
            !   
         ELSE
@@ -563,6 +600,7 @@ SUBROUTINE electrons()
      END IF
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
+     IF (noncolin.and.domag) WRITE( stdout,9018) (magtot_nc(i),i=1,3),absmag
      !
      IF ( lpath ) THEN
         !
@@ -631,6 +669,8 @@ SUBROUTINE electrons()
 9016 FORMAT(/' ------ SPIN DOWN ----------'/)
 9017 FORMAT(/'     total magnetization       =',F9.2,' Bohr mag/cell', &
             /'     absolute magnetization    =',F9.2,' Bohr mag/cell')
+9018 FORMAT(/'     total magnetization     =',3f12.8,' Bohr mag/cell' &
+       &   ,/'     absolute magnetization    =',f9.2,' Bohr mag/cell')
 9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
 9021 FORMAT(/'          k =',3F7.4,' (',I5,' PWs)   bands (ev):'/)
 9030 FORMAT( '  ',8F9.4)
@@ -673,24 +713,48 @@ SUBROUTINE electrons()
        IMPLICIT NONE
        !
        !
-       magtot = 0.d0
-       absmag = 0.d0
-       !
-       DO ir = 1, nrxx
-          !   
-          mag = rho(ir,1) - rho(ir,2)
+       IF (lsda) THEN
+          magtot = 0.d0
+          absmag = 0.d0
           !
-          magtot = magtot + mag
-          absmag = absmag + ABS( mag )
+          DO ir = 1, nrxx
+             !   
+             mag = rho(ir,1) - rho(ir,2)
+             !
+             magtot = magtot + mag
+             absmag = absmag + ABS( mag )
+             !
+          END DO
           !
-       END DO
-       !
-       magtot = magtot * omega / ( nr1 * nr2 * nr3 )
-       absmag = absmag * omega / ( nr1 * nr2 * nr3 )
-       !
-       CALL reduce( 1, magtot )
-       CALL reduce( 1, absmag )
-       !
+          magtot = magtot * omega / ( nr1 * nr2 * nr3 )
+          absmag = absmag * omega / ( nr1 * nr2 * nr3 )
+          !
+          !
+          CALL reduce( 1, magtot )
+          CALL reduce( 1, absmag )
+          !
+       ELSEIF (noncolin) THEN
+          magtot_nc = 0.d0
+          absmag = 0.0d0
+          DO ir = 1,nrxx
+             mag=SQRT( rho(ir,2)**2 + rho(ir,3)**2 &
+                     + rho(ir,4)**2 )
+             DO i=1,3
+                magtot_nc(i) = magtot_nc(i) + rho(ir,i+1)
+             ENDDO
+             absmag = absmag + ABS(mag)
+          END DO
+#ifdef __PARA
+          CALL reduce(3,magtot_nc)
+          CALL reduce(1,absmag)
+#endif
+          DO i = 1,3
+             magtot_nc(i)=magtot_nc(i)*omega/(nr1*nr2*nr3)
+          ENDDO
+          absmag=absmag*omega/(nr1*nr2*nr3)
+       ENDIF
+
+
        RETURN
        !
      END SUBROUTINE compute_magnetization

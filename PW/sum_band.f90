@@ -17,7 +17,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
-  USE cell_base,            ONLY : omega
+  USE cell_base,            ONLY : at, bg, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : eband, demet, ef
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
@@ -33,9 +33,11 @@ SUBROUTINE sum_band()
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE us,                   ONLY : okvan
-  USE uspp,                 ONLY : nkb, vkb, becsum
-  USE uspp_param,           ONLY : nh, tvanp
-  USE wavefunctions_module, ONLY : evc, psic
+  USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
+  USE uspp_param,           ONLY : nh, tvanp, nhm
+  USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE mp_global,            ONLY : intra_image_comm, me_image, root_image
   USE mp,                   ONLY : mp_bcast
@@ -137,6 +139,7 @@ SUBROUTINE sum_band()
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   IF ( okvan ) CALL addusdens()
+  IF (noncolin.AND..NOT.domag) rho(:,2:4)=0.d0
   !
   CALL poolreduce( 1, eband )
   CALL poolreduce( 1, demet )
@@ -148,20 +151,41 @@ SUBROUTINE sum_band()
   ! ... reduce charge density across pools
   !
   CALL poolreduce( nspin * nrxx, rho )
-  !
-  DO is = 1, nspin
+  IF ( noncolin ) THEN
      !
-     CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+     CALL psymrho(rho(1,1),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau)
      !
-  END DO
+     IF (domag) &
+     CALL psymrho_mag(rho(1,2),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau,bg,at)
+     !
+  ELSE
+     !
+     DO is = 1, nspin
+        !
+        CALL psymrho(rho(1,is),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau)
+        !
+     END DO
+     !
+  END IF
   !
 #else
   !
-  DO is = 1, nspin
+  IF ( noncolin ) THEN
      !
-     CALL symrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+     CALL symrho(rho(1,1),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau)
      !
-  END DO
+     if (domag) &
+     CALL symrho_mag(rho(1,2),nrx1,nrx2,nrx3,nr1,nr2,nr3,nsym,s,ftau,bg,at)
+     !
+  ELSE
+     !
+     DO is = 1, nspin
+        !
+        CALL symrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+        !
+     END DO
+     !
+  END IF
   !
 #endif
   !  
@@ -361,11 +385,19 @@ SUBROUTINE sum_band()
        !
        REAL(KIND=DP) :: w1
        ! weights
-       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:)
+       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:), becp_nc(:,:,:)
        ! contains <beta|psi>
        !
+       COMPLEX(KIND=DP), ALLOCATABLE :: be1(:,:), be2(:,:)
        !
-       ALLOCATE( becp( nkb, nbnd ) )
+       INTEGER :: ipol, kh, kkb, is1, is2
+       !
+       IF (noncolin) THEN
+          ALLOCATE( becp_nc( nkb, npol, nbnd ) )
+          IF (lspinorb) ALLOCATE(be1(nhm,2), be2(nhm,2))
+       ELSE
+          ALLOCATE( becp( nkb, nbnd ) )
+       ENDIF
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -379,7 +411,11 @@ SUBROUTINE sum_band()
           IF ( nks > 1 ) THEN
              !
              READ( iunigk ) npw, igk
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             IF (noncolin) THEN
+                CALL davcio( evc_nc, nwordwfc, iunwfc, ik, -1 )
+             ELSE
+                CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             ENDIF
              !
           END IF
           !
@@ -395,25 +431,68 @@ SUBROUTINE sum_band()
              ! ... the sum of eband and demet is the integral for e < ef of 
              ! ... e n(e) which reduces for degauss=0 to the sum of the 
              ! ... eigenvalues 
-             ! ... the factor two is for spin degeneracy
-             !
-             psic(:) = ( 0.D0, 0.D0 )
-             !
-             psic(nls(igk(1:npw))) = evc(1:npw,ibnd)
-             !
-             CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
-             !
              w1 = wg(ibnd,ik) / omega
-             !
-             ! ... increment the charge density ...
-             !
-             DO ir = 1, nrxxs
+             IF (noncolin) THEN
+                psic_nc = (0.D0,0.D0)
+                DO ipol=1,npol
+                   DO ig = 1, npw
+                      psic_nc(nls(igk(ig)),ipol)=evc_nc(ig,ipol,ibnd)
+                   END DO
+                   call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, &
+                                                           nrx2s, nrx3s, 2)
+                END DO
+                w1 = wg (ibnd, ik) / omega
                 !
-                rho(ir,current_spin) = rho(ir,current_spin) + &
-                                                 w1 * ( REAL( psic(ir) )**2 + &
+                ! increment the charge density ...
+                !
+                DO ipol=1,npol
+                   DO ir = 1, nrxxs
+                      rho (ir, 1) = rho (ir, 1) + &
+                      w1*(DREAL(psic_nc(ir,ipol))**2+DIMAG(psic_nc(ir,ipol))**2)
+                   END DO
+                END DO
+                !
+                ! In this case, calculate also the three
+                ! components of the magnetization (stored in rho(ir,2-4) )
+                !
+                IF (domag) THEN
+                   DO ir = 1,nrxxs
+                      rho(ir,2) = rho(ir,2) + w1*2.D0* &
+                         (real(psic_nc(ir,1))*real(psic_nc(ir,2)) + &
+                         DIMAG(psic_nc(ir,1))*DIMAG(psic_nc(ir,2)))
+
+                      rho(ir,3) = rho(ir,3) + w1*2.D0* &
+                         (real(psic_nc(ir,1))*DIMAG(psic_nc(ir,2)) - &
+                         real(psic_nc(ir,2))*DIMAG(psic_nc(ir,1)))
+
+                      rho(ir,4) = rho(ir,4) + w1* &
+                         (real(psic_nc(ir,1))**2+DIMAG(psic_nc(ir,1))**2 &
+                         -real(psic_nc(ir,2))**2-DIMAG(psic_nc(ir,2))**2)
+                   END DO
+                ELSE
+                   rho(ir,2:4)=0.d0
+                END IF
+                !
+             ELSE
+                !
+                psic(:) = ( 0.D0, 0.D0 )
+                !
+                psic(nls(igk(1:npw))) = evc(1:npw,ibnd)
+                !
+                CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                !
+                !
+                ! ... increment the charge density ...
+                !
+                DO ir = 1, nrxxs
+                   !
+                   rho(ir,current_spin) = rho(ir,current_spin) + &
+                                            w1 * ( REAL( psic(ir) )**2 + &
                                                         AIMAG( psic(ir) )**2 )
+                   !
+                END DO
                 !
-             END DO
+             END IF
              !
           END DO
           !
@@ -421,8 +500,14 @@ SUBROUTINE sum_band()
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
-          IF ( nkb > 0 ) &
-             CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+          IF (noncolin) THEN
+             IF ( nkb > 0 ) &
+                CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, &
+                                                 becp_nc, vkb, evc_nc )
+          ELSE
+             IF ( nkb > 0 ) &
+                CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+          ENDIF
           !
           CALL start_clock( 'becsum' )
           !
@@ -437,18 +522,81 @@ SUBROUTINE sum_band()
                    !
                    DO na = 1, nat
                       !
-                      IF ( ityp(na) == np ) THEN
+                      IF (ityp(na)==np) THEN
                          !
+                         IF (lspinorb) THEN
+                            be1=(0.d0,0.d0)
+                            be2=(0.d0,0.d0)
+                            DO ih = 1, nh(np)
+                               ikb = ijkb0 + ih
+                               DO kh = 1, nh(np)
+                                  IF ((nhtol(kh,np)==nhtol(ih,np)).AND. &
+                                  (nhtoj(kh,np)==nhtoj(ih,np)).AND.     &
+                                  (indv(kh,np)==indv(ih,np))) THEN
+                                     kkb=ijkb0 + kh
+                                     DO is1=1,2
+                                        DO is2=1,2
+                                           be1(ih,is1)=be1(ih,is1)+  &
+                                               fcoef(ih,kh,is1,is2,np)*  &
+                                                    becp_nc(kkb,is2,ibnd)
+                                           be2(ih,is1)=be2(ih,is1)+ &
+                                               fcoef(kh,ih,is2,is1,np)* &
+                                               CONJG(becp_nc(kkb,is2,ibnd))
+                                        END DO
+                                     END DO
+                                  END IF
+                               END DO
+                            END DO
+                         END IF
                          ijh = 1
                          !
                          DO ih = 1, nh(np)
                             !
                             ikb = ijkb0 + ih
                             !
-                            becsum(ijh,na,current_spin) = &
-                                          becsum(ijh,na,current_spin) + &
-                                          w1 * REAL( CONJG( becp(ikb,ibnd) ) * &
-                                                     becp(ikb,ibnd) )
+                            IF (noncolin) THEN
+                               !
+                               IF (lspinorb) THEN
+                                  becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*&
+                                     (be1(ih,1)*be2(ih,1)+ be1(ih,2)*be2(ih,2))
+                                  IF (domag) THEN
+                                     becsum(ijh,na,2)=becsum(ijh,na,2)+ w1*&
+                                     (be1(ih,2)*be2(ih,1)+ be1(ih,1)*be2(ih,2))
+                                     becsum(ijh,na,3)=becsum(ijh,na,3)+ &
+                                               w1*(0.d0,-1.d0)*      &  
+                                     (be1(ih,2)*be2(ih,1)-be1(ih,1)*be2(ih,2))
+                                     becsum(ijh,na,4)=becsum(ijh,na,4)+ w1* &
+                                     (be1(ih,1)*be2(ih,1)-be1(ih,2)*be2(ih,2))
+                                  ENDIF
+                               ELSE
+                                  becsum(ijh,na,1) = becsum(ijh,na,1)   &
+                                    + w1*( CONJG(becp_nc(ikb,1,ibnd))   &
+                                                *becp_nc(ikb,1,ibnd)    &
+                                    +      CONJG(becp_nc(ikb,2,ibnd))   &
+                                                *becp_nc(ikb,2,ibnd) )
+                                  IF (domag) THEN
+                                     becsum(ijh,na,2)=becsum(ijh,na,2)  &
+                                     + w1*(CONJG(becp_nc(ikb,2,ibnd))   &
+                                                 *becp_nc(ikb,1,ibnd)   &
+                                     +     CONJG(becp_nc(ikb,1,ibnd))   &
+                                                 *becp_nc(ikb,2,ibnd) )
+                                     becsum(ijh,na,3)=becsum(ijh,na,3)  &
+                                          + w1*2.d0     &
+                                      *DIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
+                                                   becp_nc(ikb,2,ibnd) )
+                                     becsum(ijh,na,4) = becsum(ijh,na,4)    &
+                                          + w1*( CONJG(becp_nc(ikb,1,ibnd)) &
+                                                      *becp_nc(ikb,1,ibnd)  &
+                                          -      CONJG(becp_nc(ikb,2,ibnd)) &
+                                                      *becp_nc(ikb,2,ibnd) )
+                                  END IF
+                               END IF
+                            ELSE
+                               becsum(ijh,na,current_spin) = &
+                                        becsum(ijh,na,current_spin) + &
+                                        w1 * REAL( CONJG( becp(ikb,ibnd) ) * &
+                                                          becp(ikb,ibnd) )
+                            END IF                       
                             !
                             ijh = ijh + 1
                             !
@@ -456,10 +604,61 @@ SUBROUTINE sum_band()
                                !
                                jkb = ijkb0 + jh
                                !
-                               becsum(ijh,na,current_spin) = &
+                               IF (noncolin) THEN
+                                  IF (lspinorb) THEN
+                                     becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*(  &
+                                   (be1(jh,1)*be2(ih,1)+be1(jh,2)*be2(ih,2))+ &
+                                   (be1(ih,1)*be2(jh,1)+be1(ih,2)*be2(jh,2)))
+                                     IF (domag) THEN
+                                       becsum(ijh,na,2)=becsum(ijh,na,2)+w1*( &
+                                     (be1(jh,2)*be2(ih,1)+be1(jh,1)*be2(ih,2))+&
+                                     (be1(ih,2)*be2(jh,1)+be1(ih,1)*be2(jh,2)))
+                                       becsum(ijh,na,3)=becsum(ijh,na,3)+ &
+                                          w1*(0.d0,-1.d0)*((be1(jh,2)*&
+                                          be2(ih,1)-be1(jh,1)*be2(ih,2))+ &
+                                         (be1(ih,2)*be2(jh,1)-be1(ih,1)*&
+                                                    be2(jh,2)) )
+                                       becsum(ijh,na,4)=becsum(ijh,na,4)+ &
+                                              w1*((be1(jh,1)*be2(ih,1)- &
+                                             be1(jh,2)*be2(ih,2))+  &
+                                             (be1(ih,1)*be2(jh,1)-  &
+                                              be1(ih,2)*be2(jh,2)) )
+                                     END IF
+                                  ELSE
+                                     becsum(ijh,na,1)= becsum(ijh,na,1)+ &
+                                                      w1*2.d0* &
+                                     REAL(CONJG(becp_nc(ikb,1,ibnd))* &
+                                                becp_nc(jkb,1,ibnd) + &
+                                          CONJG(becp_nc(ikb,2,ibnd))* &
+                                                becp_nc(jkb,2,ibnd) )
+                                     IF (domag) THEN
+                                        becsum(ijh,na,2)=becsum(ijh,na,2)+ &
+                                                          w1*2.d0* &
+                                           REAL(CONJG(becp_nc(ikb,2,ibnd))* &
+                                                      becp_nc(jkb,1,ibnd) + &
+                                                CONJG(becp_nc(ikb,1,ibnd))* &
+                                                      becp_nc(jkb,2,ibnd) )
+                                        becsum(ijh,na,3)=becsum(ijh,na,3)+ &
+                                                       w1*2.d0* &
+                                            DIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
+                                                        becp_nc(jkb,2,ibnd) + &
+                                                  CONJG(becp_nc(ikb,1,ibnd))* &
+                                                        becp_nc(jkb,2,ibnd) )
+                                        becsum(ijh,na,4)=becsum(ijh,na,4)+ &
+                                                       w1*2.d0* &
+                                            REAL(CONJG(becp_nc(ikb,1,ibnd))* &
+                                                       becp_nc(jkb,1,ibnd) - &
+                                                 CONJG(becp_nc(ikb,2,ibnd))* &
+                                                       becp_nc(jkb,2,ibnd) )
+                                     END IF
+                                  END IF
+                               ELSE
+                               !
+                                   becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + w1 * 2.D0 * &
                                      REAL( CONJG( becp(ikb,ibnd) ) * &
                                            becp(jkb,ibnd) )
+                               ENDIF
                                !            
                                ijh = ijh + 1
                                !
@@ -491,7 +690,12 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
        !
-       DEALLOCATE( becp )
+       IF (noncolin) THEN
+          DEALLOCATE( becp_nc )
+          IF (lspinorb) DEALLOCATE(be1, be2)
+       ELSE
+          DEALLOCATE( becp )
+       ENDIF
        !
        RETURN
        !

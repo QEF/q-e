@@ -61,7 +61,7 @@ SUBROUTINE openfil()
   ! ... iunocc contains the atomic occupations computed in new_ns
   ! ... it is opened and closed for each reading-writing operation  
   !
-  nwordatwfc = 2 * npwx * natomwfc
+  nwordatwfc = 2 * npwx * natomwfc * npol
   !
   IF ( lda_plus_u ) &
      CALL diropn( iunat, TRIM( prefix )//'.atwfc', nwordatwfc, exst )

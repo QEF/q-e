@@ -135,6 +135,9 @@ SUBROUTINE extrapolate_charge( rho_order )
   USE extfield,      ONLY : etotefield
   USE cellmd,        ONLY : lmovecell, omega_old
   USE vlocal,        ONLY : strf
+  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : factlist, pointlist, pointnum, mcons,&
+                               i_cons, lambda, vtcon, report
   USE io_files,      ONLY : prefix
   USE klist,         ONLY : nelec
   !
@@ -147,6 +150,8 @@ SUBROUTINE extrapolate_charge( rho_order )
     !   at time t
     ! work1 is the same thing at time t-dt
   REAL(KIND=DP) :: charge
+  !
+  INTEGER :: ir, is
   !
   !
   IF ( rho_order == 0 ) RETURN 
@@ -166,6 +171,21 @@ SUBROUTINE extrapolate_charge( rho_order )
   ! ... total valence charge
   !
   IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, 1 )
+  !
+  IF (noncolin) THEN
+     DO is = 2, nspin
+        DO ir = 1, nrxx
+           IF ( rho(ir,1) .GT. 1.D-30 ) THEN
+              rho(ir,is) = rho(ir,is) / rho(ir,1)
+           ELSE
+              rho(ir,is) = 0.D0
+           END IF
+           !
+        END DO
+        !
+     END DO
+     !
+  END IF
   !
   ! ... subtract the old atomic charge density
   !
@@ -246,9 +266,26 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, -1 )
   !
-  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+  IF (noncolin) THEN
+     DO is = 2, nspin
+        DO ir = 1, nrxx
+           IF ( rho(ir,1) .GT. 1.D-30 ) THEN
+              rho(ir,is) = rho(ir,is) * rho(ir,1)
+           ELSE
+              rho(ir,is) = 0.D0
+           END IF
+        END DO
+     END DO
+
+     CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,            &
+          ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons, &
+          pointlist, pointnum, factlist, nat, nsp, ityp)
+  ELSE
+     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,  &
                  ehart, etxc, vtxc, etotefield, charge, vr )
+  END IF
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !
@@ -290,6 +327,7 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
   USE wvfct,                ONLY : nbnd, npw, npwx, igk
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
                                    iunoldwfc2, prefix
+  USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE
@@ -317,7 +355,10 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
   LOGICAL :: exst
   !
   !
-  IF ( wfc_order == 0 ) THEN
+  IF (noncolin) call errore('extrapolate_wfcs', &
+                     'not implemented in the noncollinear case',-1)
+
+  IF ( wfc_order == 0 .or. noncolin) THEN
      !
      RETURN
      !

@@ -23,7 +23,7 @@ SUBROUTINE potinit()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : alat, omega
-  USE ions_base,     ONLY : nat
+  USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE basis,         ONLY : startingpot
   USE klist,         ONLY : nelec
   USE lsda_mod,      ONLY : lsda, nspin
@@ -35,6 +35,8 @@ SUBROUTINE potinit()
   USE ener,          ONLY : ehart, etxc, vtxc
   USE ldaU,          ONLY : niter_with_fixed_ns
   USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
+  USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, mcons,&
+                               i_cons, lambda, vtcon, report
   USE io_files,      ONLY : prefix, iunocc, input_drho
   USE mp,            ONLY : mp_bcast
   USE mp_global,     ONLY : intra_image_comm
@@ -80,15 +82,23 @@ SUBROUTINE potinit()
         !      
         CALL io_pot( -1, TRIM( prefix )//'.rho', rho, nspin )
         !       
-        WRITE( stdout, '(/5X,"The initial density is read from file ",A20)' ) &
+        WRITE( stdout, '(/5X,"The initial density is read from file ", A20)' ) &
             TRIM( prefix ) // '.rho'
         !
         ! ... here we compute the potential which correspond to the 
         ! ... initial charge
         !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+        IF (noncolin) THEN
+          CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+               nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+               ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons, &
+               pointlist, pointnum, factlist, nat, ntyp, ityp)
+        ELSE
+          CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                        ehart, etxc, vtxc, etotefield, charge, vr )
+        ENDIF
+        !       
         !
         IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
            !
@@ -107,7 +117,7 @@ SUBROUTINE potinit()
         CALL io_pot( -1, TRIM( prefix )//'.pot', vr, nspin )
         !
         WRITE( stdout, &
-               '(/5X,"The initial potential is read from file ",A20)' ) &
+               '(/5X,"The initial potential is read from file ", A20)' ) &
             TRIM( prefix ) // '.pot'
         !    
      END IF
@@ -131,7 +141,7 @@ SUBROUTINE potinit()
            !
         END IF
         !
-        CALL reduce(     ( ldim * ldim * nspin * nat ), ns )  
+        CALL reduce( ( ldim * ldim * nspin * nat ), ns )  
         CALL poolreduce( ( ldim * ldim * nspin * nat ), ns )  
         !
         nsnew = ns
@@ -156,7 +166,7 @@ SUBROUTINE potinit()
         !
         ldim = 2 * Hubbard_lmax + 1
         !
-        CALL init_ns()
+        CALL init_ns()  
         !
         nsnew = ns
         !
@@ -170,21 +180,28 @@ SUBROUTINE potinit()
         !
         CALL io_pot( -1, input_drho, vr, nspin )
         !
-        WRITE( stdout, &
-               '(/5X,"a scf correction to at. rho is read from",A20)' ) &
+        WRITE( UNIT = stdout, &
+               FMT = '(/5X,"a scf correction to at. rho is read from", A20)' ) &
             input_drho
         !
         rho = rho + vr
         !
      END IF
      !
-     ! ... here we compute the potential which correspond to the 
+     ! ... here we compute the potential which corresponds to the 
      ! ... initial charge
      !
-     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                    ehart, etxc, vtxc, etotefield, charge, vr )
-     !
+     IF (noncolin) then
+        CALL v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
+           ehart, etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons,   &
+           pointlist, pointnum, factlist, nat, ntyp, ityp)
+     ELSE
+        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                  nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
+                  ehart, etxc, vtxc, etotefield, charge, vr )
+     ENDIF
+     !   
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         !
         WRITE( stdout, &
@@ -207,14 +224,16 @@ SUBROUTINE potinit()
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(/5X,"Parameters of the lda+U calculation:")' )
-     WRITE( stdout, '(5X,"Number of iteration with fixed ns = ",I3)' ) &
+     WRITE( stdout, '(/5X,"Parameters of the lda+U calculation:")')
+     WRITE( stdout, '(5X,"Number of iteration with fixed ns =",I3)') &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting ns and Hubbard U :")' )
+     WRITE( stdout, '(5X,"Starting ns and Hubbard U :")')
      !
      CALL write_ns()
      !
   END IF
+  !
+  IF (report.NE.0.AND.noncolin.AND.lscf) CALL report_mag
   !
   RETURN
   !

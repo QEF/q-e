@@ -15,8 +15,8 @@ MODULE becmod
   REAL(KIND=DP), ALLOCATABLE :: &
        rbecp(:,:) !   <beta|psi> for real (at Gamma) wavefunctions 
   COMPLEX(KIND=DP), ALLOCATABLE ::  &
-       becp (:,:) !  as above for complex wavefunctions
-  !!!       becp_nc(:,:,:) !  as above for spinors
+       becp (:,:), &            !  as above for complex wavefunctions
+       becp_nc(:,:,:)           !  as above for spinors
   !
 END MODULE becmod
 

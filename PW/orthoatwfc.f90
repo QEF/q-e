@@ -22,21 +22,19 @@ SUBROUTINE orthoatwfc
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk
-  USE ldaU,       ONLY : swfcatom, U_projection
+  USE ldaU,       ONLY : swfcatom, swfcatom_nc, U_projection
   USE wvfct,      ONLY : npwx, npw, igk, gamma_only
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : becp, rbecp
+  USE becmod,     ONLY : becp, rbecp, becp_nc
+  USE noncollin_module, ONLY : noncolin, npol
   ! 
   IMPLICIT NONE
   !
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
-       l, lm, ltot, ntot
-  INTEGER, ALLOCATABLE ::  nwfc (:), ml (:)
+       l, lm, ltot, ntot, ipol
   ! the k point under consideration
   ! counter on bands
-  ! number of wfc of atom na
-  ! corrispondence m <-> natomwfc
   INTEGER :: nchi_, lchi_ (nchix)
   LOGICAL :: exst
   REAL(kind=DP) :: t0, scnds
@@ -45,16 +43,20 @@ SUBROUTINE orthoatwfc
      
   COMPLEX(kind=DP) :: temp, t (5)
   COMPLEX(kind=DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: wfcatom_nc(:,:,:)
   REAL(kind=DP) , ALLOCATABLE :: e (:)
 
   t0 = scnds ()
   
-  ALLOCATE (wfcatom( npwx, natomwfc))    
+  IF (noncolin) THEN
+     ALLOCATE (wfcatom_nc( npwx, npol, natomwfc))    
+     wfcatom_nc=(0.D0,0.D0)
+  ELSE
+     ALLOCATE (wfcatom( npwx, natomwfc))    
+  END IF
   ALLOCATE (overlap( natomwfc , natomwfc))    
   ALLOCATE (work   ( natomwfc , natomwfc))    
   ALLOCATE (e      ( natomwfc))    
-  ALLOCATE (ml     ( natomwfc))    
-  ALLOCATE (nwfc   ( nat))    
 
   IF (U_projection=="file") THEN
      WRITE( stdout,*) 'LDA+U Projector read from file '
@@ -80,7 +82,11 @@ SUBROUTINE orthoatwfc
   IF ( gamma_only ) THEN 
      ALLOCATE (rbecp (nkb,natomwfc)) 
   ELSE
-     ALLOCATE ( becp (nkb,natomwfc)) 
+     IF (noncolin) THEN
+        ALLOCATE ( becp_nc (nkb, npol, natomwfc)) 
+     ELSE
+        ALLOCATE ( becp (nkb,natomwfc)) 
+     END IF
   END IF
   
   IF (nks > 1) REWIND (iunigk)
@@ -92,24 +98,41 @@ SUBROUTINE orthoatwfc
      overlap(:,:) = (0.d0,0.d0)
      work(:,:) = (0.d0,0.d0)
      
-     CALL atomic_wfc (ik, wfcatom)
+     IF (noncolin) THEN
+        CALL atomic_wfc_nc (ik, wfcatom_nc)
+     ELSE
+        CALL atomic_wfc (ik, wfcatom)
+     END IF
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      
      IF ( gamma_only ) THEN 
         CALL pw_gemm ('Y', nkb, natomwfc, npw, vkb, npwx, &
              wfcatom, npwx, rbecp, nkb) 
      ELSE
-        CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
+        IF (noncolin) THEN
+           CALL ccalbec_nc(nkb,npwx,npw,npol,natomwfc,becp_nc,vkb,wfcatom_nc)
+        ELSE
+           CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
+        END IF
      ENDIF
 
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     IF (noncolin) THEN
+        CALL s_psi_nc (npwx, npw, natomwfc, wfcatom_nc, swfcatom_nc)
+     ELSE
+        CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     ENDIF
 
      IF (orthogonalize_wfc) THEN
         !
         ! calculate overlap matrix
         !
-        CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
-             wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
+        IF (noncolin) THEN
+           CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
+            wfcatom_nc,npwx,swfcatom_nc,npwx,(0.d0,0.d0),overlap,natomwfc)
+        ELSE
+            CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
+                wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
+        END IF
 #ifdef __PARA
         CALL reduce (2 * natomwfc * natomwfc, overlap)
 #endif
@@ -135,30 +158,47 @@ SUBROUTINE orthoatwfc
         !
         DO i = 1, npw
            work(:,1) = (0.d0,0.d0)
-           CALL ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
-                natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-           CALL ZCOPY (natomwfc, work, 1, swfcatom (i, 1), npwx)
+           IF (noncolin) THEN
+              DO ipol=1,npol
+                 CALL ZGEMV ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
+                      natomwfc,swfcatom_nc(i,ipol,1),npwx*npol, &
+                                          (0.d0,0.d0),work,1)
+                 CALL ZCOPY (natomwfc,work,1,swfcatom_nc(i,ipol,1),npwx*npol)
+              END DO
+           ELSE
+              CALL ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
+                   natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
+              CALL ZCOPY (natomwfc, work, 1, swfcatom (i, 1), npwx)
+           END IF
         ENDDO
         
      END IF
      
-     CALL davcio (swfcatom, nwordatwfc, iunat, ik, 1)
+     IF (noncolin) THEN
+        CALL davcio (swfcatom_nc, nwordatwfc, iunat, ik, 1)
+     ELSE
+        CALL davcio (swfcatom, nwordatwfc, iunat, ik, 1)
+     ENDIF
      
   ENDDO
-  DEALLOCATE (nwfc)
-  DEALLOCATE (ml)
   DEALLOCATE (overlap)
   DEALLOCATE (work)
   DEALLOCATE (e)
-  DEALLOCATE (wfcatom)
+  IF (noncolin) THEN
+     DEALLOCATE (wfcatom_nc)
+  ELSE
+     DEALLOCATE (wfcatom)
+  END IF
   IF ( gamma_only ) THEN 
      DEALLOCATE (rbecp) 
   ELSE
-     DEALLOCATE ( becp) 
+     IF (noncolin) THEN
+        DEALLOCATE (becp_nc) 
+     ELSE
+        DEALLOCATE (becp) 
+     END IF
   END IF
   !
   RETURN
      
 END SUBROUTINE orthoatwfc
-
-

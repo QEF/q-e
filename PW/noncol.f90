@@ -31,6 +31,7 @@ MODULE noncollin_module
       angle1(ntypx),       &!  Define the polar coordinates of the starting
       angle2(ntypx),       &!  magnetization's direction for each atom
       mcons(3,ntypx),      &!  constrained values for local variables
+      magtot_nc(3),        &!  total magnetization
       vtcon,               &!  contribution of the constraining fields to
                             !  the total energy
       r_m,                 &!  Radius for local integrations
