@@ -27,7 +27,7 @@ variables see the appropriate INPUT_* file)
    self-consistent calculations and computing the forces on atoms
    (input=al001.rx.in, output=al001.rx.out).
    This is a 7-atomic-layer slab separated by about 4 vacuum layers.
-   The unit cell in tetragonal (ibrav=4) with celldm(1)=alat_fcc/sqrt(2).
+   The unit cell in tetragonal (ibrav=6) with celldm(1)=alat_fcc/sqrt(2).
    Calculation is set to 'relax'.
    While approaching the minimum, the scf threshold (initially
    conv_thr=1.0d-6)  will automatically become smaller (stricter
