@@ -22,7 +22,7 @@ subroutine write_ns
   write (*,*) 'enter write_ns'
 
   if ( 2 * Hubbard_lmax + 1 .gt. ldmx ) &
-       call error ('write_ns', 'ldmx is too small', 1)
+       call errore ('write_ns', 'ldmx is too small', 1)
 
   write (6,'(6(a,i2,a,f8.4,6x))') &
         ('U(',nt,') =', Hubbard_U(nt) * rytoev, nt=1,ntyp)
